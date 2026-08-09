@@ -3,6 +3,7 @@ import {
   fileRevision as toFileRevision,
   type CollectionId,
   type DocumentHandle,
+  type DocumentOpenOptions,
   type DocumentRepository,
   type DocumentTarget,
 } from "@mdbase-reader/core";
@@ -13,8 +14,9 @@ export interface ReaderFileClient {
   list(options?: {
     readonly folder?: string;
     readonly pageSize?: number;
+    readonly signal?: AbortSignal;
   }): AsyncIterable<CollectionFileDescriptor>;
-  download(file: CollectionFileDescriptor): Promise<Blob>;
+  download(file: CollectionFileDescriptor, options?: DocumentOpenOptions): Promise<Blob>;
 }
 
 export interface ObjectUrlFactory {
@@ -43,15 +45,21 @@ export class ConnectDocumentRepository implements DocumentRepository {
     private readonly objectUrls: ObjectUrlFactory = browserObjectUrls,
   ) {}
 
-  public async open(_collectionId: CollectionId, target: DocumentTarget): Promise<DocumentHandle> {
-    const descriptor = await this.#find(target);
+  public async open(
+    _collectionId: CollectionId,
+    target: DocumentTarget,
+    options: DocumentOpenOptions = {},
+  ): Promise<DocumentHandle> {
+    const descriptor = await this.#find(target, options);
     if (!descriptor) {
       throw new ConnectDocumentError("open document", "file_not_found");
     }
     if (descriptor.contentDigest !== target.revision) {
       throw new ConnectDocumentError("open document", "file_revision_changed");
     }
-    const blob = await this.files.download(descriptor);
+    const blob = options.signal
+      ? await this.files.download(descriptor, options)
+      : await this.files.download(descriptor);
     const url = this.objectUrls.create(blob);
     let closed = false;
     return {
@@ -69,7 +77,10 @@ export class ConnectDocumentRepository implements DocumentRepository {
     };
   }
 
-  async #find(target: DocumentTarget): Promise<CollectionFileDescriptor | null> {
+  async #find(
+    target: DocumentTarget,
+    options: DocumentOpenOptions,
+  ): Promise<CollectionFileDescriptor | null> {
     const cached = this.#descriptorsById.get(target.fileId);
     if (cached) {
       return cached;
@@ -82,7 +93,8 @@ export class ConnectDocumentRepository implements DocumentRepository {
     const folder = parentFolder(path);
     for await (const descriptor of this.files.list({
       ...(folder ? { folder } : {}),
-      pageSize: 1_000,
+      pageSize: 100,
+      ...options,
     })) {
       this.#descriptorsById.set(descriptor.fileId, descriptor);
       this.#descriptorsByPath.set(descriptor.path, descriptor);

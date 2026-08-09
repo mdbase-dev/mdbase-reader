@@ -71,7 +71,7 @@ describe("ConnectDocumentRepository", () => {
       readonly folder?: string;
     }): AsyncIterable<CollectionFileDescriptor> {
       await Promise.resolve();
-      expect(options).toEqual({ folder: "files/example", pageSize: 1_000 });
+      expect(options).toEqual({ folder: "files/example", pageSize: 100 });
       yield { ...descriptor, path: "files/example/article.pdf" };
     });
     const client = {
@@ -125,5 +125,31 @@ describe("ConnectDocumentRepository", () => {
         message: "mdbase Connect could not open document: file_not_found",
       }),
     );
+  });
+
+  it("forwards cancellation through descriptor lookup and download", async () => {
+    const controller = new AbortController();
+    const list = vi.fn(async function* (options?: {
+      readonly signal?: AbortSignal;
+    }): AsyncIterable<CollectionFileDescriptor> {
+      await Promise.resolve();
+      expect(options?.signal).toBe(controller.signal);
+      yield descriptor;
+    });
+    const download = vi.fn().mockResolvedValue(new Blob(["pdf"], { type: "application/pdf" }));
+    const repository = new ConnectDocumentRepository(
+      { list, download },
+      {
+        create: vi.fn(() => "blob:reader-file"),
+        revoke: vi.fn(),
+      },
+    );
+
+    const handle = await repository.open(collectionId("reading"), target, {
+      signal: controller.signal,
+    });
+
+    expect(download).toHaveBeenCalledWith(descriptor, { signal: controller.signal });
+    await handle.close();
   });
 });

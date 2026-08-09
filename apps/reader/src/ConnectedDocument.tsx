@@ -52,8 +52,9 @@ function OpenConnectedDocument({
   useEffect(() => {
     let active = true;
     let opened: DocumentHandle | null = null;
+    const controller = new AbortController();
     void repository
-      .open(source.collectionId, descriptor)
+      .open(source.collectionId, descriptor, { signal: controller.signal })
       .then((handle) => {
         opened = handle;
         if (active) {
@@ -69,6 +70,7 @@ function OpenConnectedDocument({
       });
     return () => {
       active = false;
+      controller.abort();
       if (opened) {
         void opened.close();
       }

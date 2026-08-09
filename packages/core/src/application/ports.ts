@@ -45,8 +45,16 @@ export interface DocumentHandle {
   close(): Promise<void>;
 }
 
+export interface DocumentOpenOptions {
+  readonly signal?: AbortSignal;
+}
+
 export interface DocumentRepository {
-  open(collectionId: CollectionId, target: DocumentTarget): Promise<DocumentHandle>;
+  open(
+    collectionId: CollectionId,
+    target: DocumentTarget,
+    options?: DocumentOpenOptions,
+  ): Promise<DocumentHandle>;
 }
 
 export type MutationStage =
