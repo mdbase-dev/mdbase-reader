@@ -1,8 +1,15 @@
 import { EpubNavigator, type EpubNavigatorListeners } from "@readium/navigator";
 import { HttpFetcher, Locator, LocatorLocations, Manifest, Publication } from "@readium/shared";
 
+import { annotationToEpubDecoration } from "./epub-decoration.js";
+import {
+  sessionReadiumLocatorForPublication,
+  stableEpubHref,
+  stableReadiumLocator,
+} from "./epub-locator.js";
 import { safePublicationFetch } from "./epub-safe-fetch.js";
 
+import type { Annotation } from "@mdbase-reader/core";
 import type { TextSelectionDraft, Unsubscribe } from "@mdbase-reader/reading-surface";
 
 export interface ReadiumRuntime {
@@ -11,6 +18,7 @@ export interface ReadiumRuntime {
   clearSelection(): void;
   onLocationChanged(listener: (locator: Readonly<Record<string, unknown>>) => void): Unsubscribe;
   onTextSelected(listener: (selection: TextSelectionDraft) => void): Unsubscribe;
+  setAnnotations(annotations: readonly Annotation[]): void;
   destroy(): Promise<void>;
 }
 
@@ -30,10 +38,15 @@ export function readiumSelectionToDraft(input: {
   readonly text: string;
   readonly targetFrameSrc: string;
   readonly locator?: Locator;
+  readonly publicationBaseUrl: string;
 }): TextSelectionDraft {
   const serialized = input.locator
-    ? serializeReadiumLocator(input.locator)
-    : { href: input.targetFrameSrc, type: "application/xhtml+xml" };
+    ? stableReadiumLocator(input.locator, input.publicationBaseUrl)
+    : {
+        href: stableEpubHref(input.targetFrameSrc, input.publicationBaseUrl),
+        type: "application/xhtml+xml",
+      };
+  const cfi = input.locator?.locations.fragments[0];
   return {
     target: {
       quote: {
@@ -41,9 +54,7 @@ export function readiumSelectionToDraft(input: {
         ...(input.locator?.text?.before ? { prefix: input.locator.text.before } : {}),
         ...(input.locator?.text?.after ? { suffix: input.locator.text.after } : {}),
       },
-      ...(input.locator?.locations.fragments[0]
-        ? { epub: { cfi: input.locator.locations.fragments[0] } }
-        : {}),
+      ...(cfi ? { epub: { cfi } } : {}),
     },
     locator: { kind: "epub", locator: serialized },
   };
@@ -52,6 +63,7 @@ export function readiumSelectionToDraft(input: {
 export async function createReadiumRuntime(input: {
   readonly container: HTMLElement;
   readonly manifest: unknown;
+  readonly publicationBaseUrl: string;
   readonly initialLocator?: Readonly<Record<string, unknown>>;
 }): Promise<ReadiumRuntime> {
   const manifest = Manifest.deserialize(input.manifest);
@@ -65,7 +77,13 @@ export async function createReadiumRuntime(input: {
   if (positions.length === 0) {
     throw new Error("Readium cannot open an EPUB with an empty reading order.");
   }
-  const requestedLocator = input.initialLocator ? Locator.deserialize(input.initialLocator) : null;
+  const requestedLocator = input.initialLocator
+    ? sessionReadiumLocatorForPublication(
+        input.initialLocator,
+        publication,
+        input.publicationBaseUrl,
+      )
+    : null;
   const initialLocator =
     requestedLocator && publication.readingOrder.findWithHref(requestedLocator.href)
       ? requestedLocator
@@ -74,7 +92,7 @@ export async function createReadiumRuntime(input: {
   const listeners: EpubNavigatorListeners = {
     frameLoaded: () => undefined,
     positionChanged: (locator) => {
-      const serialized = serializeReadiumLocator(locator);
+      const serialized = stableReadiumLocator(locator, input.publicationBaseUrl);
       for (const listener of locationListeners) {
         listener(serialized);
       }
@@ -88,7 +106,10 @@ export async function createReadiumRuntime(input: {
     customEvent: () => undefined,
     handleLocator: () => false,
     textSelected: (selection) => {
-      const draft = readiumSelectionToDraft(selection);
+      const draft = readiumSelectionToDraft({
+        ...selection,
+        publicationBaseUrl: input.publicationBaseUrl,
+      });
       for (const listener of selectionListeners) {
         listener(draft);
       }
@@ -107,9 +128,13 @@ export async function createReadiumRuntime(input: {
   await navigator.load();
 
   return {
-    currentLocator: () => serializeReadiumLocator(navigator.currentLocator),
+    currentLocator: () => stableReadiumLocator(navigator.currentLocator, input.publicationBaseUrl),
     goTo(locator) {
-      const destination = Locator.deserialize(locator);
+      const destination = sessionReadiumLocatorForPublication(
+        locator,
+        publication,
+        input.publicationBaseUrl,
+      );
       if (!destination) {
         return Promise.resolve(false);
       }
@@ -127,6 +152,19 @@ export async function createReadiumRuntime(input: {
     onTextSelected(listener) {
       selectionListeners.add(listener);
       return () => selectionListeners.delete(listener);
+    },
+    setAnnotations(annotations) {
+      navigator.applyDecorations(
+        annotations.flatMap((annotation) => {
+          const decoration = annotationToEpubDecoration(
+            annotation,
+            publication,
+            input.publicationBaseUrl,
+          );
+          return decoration ? [decoration] : [];
+        }),
+        "mdbase-reader-annotations",
+      );
     },
     async destroy() {
       locationListeners.clear();

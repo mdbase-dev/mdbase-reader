@@ -37,6 +37,18 @@ export class ReadiumEpubSurface implements ReadingSurface {
         selections: this.#selections,
         clearSelection: () => runtime.clearSelection(),
       },
+      decorations: {
+        setAnnotations: (annotations) => {
+          runtime.setAnnotations(
+            annotations.filter(
+              ({ document }) =>
+                document?.fileId === this.document.document.fileId &&
+                document.revision === this.document.document.revision,
+            ),
+          );
+          return Promise.resolve();
+        },
+      },
     };
   }
 

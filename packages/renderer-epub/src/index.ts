@@ -1,5 +1,7 @@
 export * from "./epub-archive.js";
+export * from "./epub-decoration.js";
 export * from "./epub-manifest.js";
+export * from "./epub-locator.js";
 export * from "./epub-path.js";
 export * from "./epub-resource-store.js";
 export * from "./epub-safe-fetch.js";

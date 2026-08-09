@@ -123,3 +123,36 @@ describe("Connect contract mapping", () => {
     });
   });
 });
+
+describe("Connect EPUB annotation mapping", () => {
+  it("round-trips an EPUB CFI", () => {
+    const annotation = annotationFromDocument(collectionId("reading"), {
+      path: "annotations/ann_epub.md",
+      frontmatter: {},
+      effectiveFrontmatter: {
+        id: "ann_epub",
+        source: "[[src_01]]",
+        annotation_type: "highlight",
+        created_at: "2026-08-09T14:21:00+10:00",
+        target: {
+          quote: { exact: "Selected EPUB text" },
+          epub: {
+            cfi: "epubcfi(/6/4!/4/2,/1:0,/1:12)",
+          },
+        },
+      },
+      body: "> Selected EPUB text",
+    });
+
+    expect(annotation.target?.epub).toEqual({
+      cfi: "epubcfi(/6/4!/4/2,/1:0,/1:12)",
+    });
+    expect(annotationFrontmatter(annotation)).toMatchObject({
+      target: {
+        epub: {
+          cfi: "epubcfi(/6/4!/4/2,/1:0,/1:12)",
+        },
+      },
+    });
+  });
+});

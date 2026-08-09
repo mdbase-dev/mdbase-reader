@@ -199,5 +199,13 @@ function openAnnotation(
   }
   if (annotation.target?.pdf) {
     void surface.goTo({ kind: "pdf", pageIndex: annotation.target.pdf.pageIndex });
+  } else if (annotation.target?.epub) {
+    void surface.goTo({
+      kind: "epub",
+      locator: {
+        type: "application/xhtml+xml",
+        locations: { fragments: [annotation.target.epub.cfi] },
+      },
+    });
   }
 }

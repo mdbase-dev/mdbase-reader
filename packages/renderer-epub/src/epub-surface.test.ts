@@ -8,11 +8,13 @@ import type { TextSelectionDraft } from "@mdbase-reader/reading-surface";
 
 function runtimeFixture(): {
   readonly runtime: ReadiumRuntime;
+  readonly setAnnotations: ReturnType<typeof vi.fn>;
   emitLocation(locator: Readonly<Record<string, unknown>>): void;
   emitSelection(selection: TextSelectionDraft): void;
 } {
   let locationListener: ((locator: Readonly<Record<string, unknown>>) => void) | undefined;
   let selectionListener: ((selection: TextSelectionDraft) => void) | undefined;
+  const setAnnotations = vi.fn();
   return {
     runtime: {
       currentLocator: () => ({ href: "chapter-1.xhtml", locations: { progression: 0.1 } }),
@@ -30,8 +32,10 @@ function runtimeFixture(): {
           selectionListener = undefined;
         };
       },
+      setAnnotations,
       destroy: () => Promise.resolve(),
     },
+    setAnnotations,
     emitLocation: (locator) => locationListener?.(locator),
     emitSelection: (selection) => selectionListener?.(selection),
   };
@@ -84,5 +88,36 @@ describe("ReadiumEpubSurface", () => {
     const surface = new ReadiumEpubSurface(document, fixture.runtime);
 
     await expect(surface.goTo({ kind: "pdf", pageIndex: 1 })).resolves.toBe(false);
+  });
+
+  it("passes only exact-document annotations to Readium decorations", async () => {
+    const fixture = runtimeFixture();
+    const surface = new ReadiumEpubSurface(document, fixture.runtime);
+    const matching = {
+      collectionId: "reading" as never,
+      id: "ann-1" as never,
+      sourceId: "source-1" as never,
+      source: "[[source-1]]",
+      document: document.document,
+      annotationType: "highlight",
+      target: {
+        quote: { exact: "Selected text" },
+        epub: { cfi: "epubcfi(/6/4!/4/2:8)" },
+      },
+      tags: [],
+      body: "",
+      createdAt: "2026-08-10T00:00:00.000Z" as never,
+    };
+
+    await surface.capabilities.decorations?.setAnnotations([
+      matching,
+      {
+        ...matching,
+        id: "ann-2" as never,
+        document: { ...matching.document, fileId: fileId("other") },
+      },
+    ]);
+
+    expect(fixture.setAnnotations).toHaveBeenCalledWith([matching]);
   });
 });

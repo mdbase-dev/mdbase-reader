@@ -46,6 +46,7 @@ export function EpubViewerSurface({
         const runtime = await createReadiumRuntime({
           container,
           manifest: publication.manifest,
+          publicationBaseUrl: publication.baseUrl,
         });
         if (isAborted(lifetime.signal)) {
           await runtime.destroy();
