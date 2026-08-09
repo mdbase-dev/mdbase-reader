@@ -141,22 +141,49 @@ async function listAllSources(
   collectionId: CollectionId,
   options: ReaderRequestOptions,
 ): Promise<readonly SourceSummary[]> {
-  const sources: SourceSummary[] = [];
-  const seenCursors = new Set<string>();
-  let cursor: string | undefined;
-  do {
-    const page = await repository.list(
-      { collectionId, limit: 100, ...(cursor ? { cursor } : {}) },
-      options,
+  const first = await repository.list({ collectionId, limit: 100 }, options);
+  if (first.totalCount && first.totalCount > first.items.length) {
+    const offsets = Array.from(
+      { length: Math.ceil(first.totalCount / 100) - 1 },
+      (_value, index) => (index + 1) * 100,
     );
-    sources.push(...page.items);
-    cursor = page.nextCursor;
-    if (cursor && seenCursors.has(cursor)) {
+    const pages = await mapWithConcurrency(offsets, 4, async (offset) =>
+      repository.list({ collectionId, limit: 100, cursor: String(offset) }, options),
+    );
+    return [first, ...pages].flatMap(({ items }) => items);
+  }
+  const sources: SourceSummary[] = [...first.items];
+  const seenCursors = new Set<string>();
+  let cursor = first.nextCursor;
+  while (cursor) {
+    if (seenCursors.has(cursor)) {
       throw new Error("Reader received a repeated source-library cursor.");
     }
-    if (cursor) {
-      seenCursors.add(cursor);
-    }
-  } while (cursor);
+    seenCursors.add(cursor);
+    const page = await repository.list({ collectionId, limit: 100, cursor }, options);
+    sources.push(...page.items);
+    cursor = page.nextCursor;
+  }
   return sources;
+}
+
+async function mapWithConcurrency<Input, Output>(
+  inputs: readonly Input[],
+  concurrency: number,
+  operation: (input: Input) => Promise<Output>,
+): Promise<readonly Output[]> {
+  const results: Output[] = new Array<Output>(inputs.length);
+  let nextIndex = 0;
+  const worker = async (): Promise<void> => {
+    while (nextIndex < inputs.length) {
+      const index = nextIndex;
+      nextIndex += 1;
+      const input = inputs[index];
+      if (input !== undefined) {
+        results[index] = await operation(input);
+      }
+    }
+  };
+  await Promise.all(Array.from({ length: Math.min(concurrency, inputs.length) }, worker));
+  return results;
 }

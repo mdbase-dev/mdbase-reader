@@ -61,6 +61,9 @@ export class ConnectSourceRepository implements SourceRepository {
     return {
       items,
       ...(hasMore ? { nextCursor: String(offset + result.results.length) } : {}),
+      ...(typeof result.meta?.totalCount === "number"
+        ? { totalCount: result.meta.totalCount }
+        : {}),
     };
   }
 

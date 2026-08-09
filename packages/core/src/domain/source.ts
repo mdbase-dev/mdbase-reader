@@ -56,4 +56,5 @@ export interface SourceQuery {
 export interface Page<Item> {
   readonly items: readonly Item[];
   readonly nextCursor?: string;
+  readonly totalCount?: number;
 }

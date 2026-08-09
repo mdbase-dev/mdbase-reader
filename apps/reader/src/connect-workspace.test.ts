@@ -74,13 +74,21 @@ describe("ConnectWorkspaceGateway", () => {
       body: "Updated",
     });
   });
+});
 
+describe("ConnectWorkspaceGateway pagination", () => {
   it("follows contract-query cursors so sources beyond the authority page cap remain visible", async () => {
     const pageTwo = { ...source, id: sourceId("src_101"), title: "Page two" };
-    const list = vi
-      .fn()
-      .mockResolvedValueOnce({ items: [source], nextCursor: "100" })
-      .mockResolvedValueOnce({ items: [pageTwo] });
+    const pageThree = { ...source, id: sourceId("src_201"), title: "Page three" };
+    const list = vi.fn((query: { readonly cursor?: string }) => {
+      if (query.cursor === "100") {
+        return Promise.resolve({ items: [pageTwo], totalCount: 201 });
+      }
+      if (query.cursor === "200") {
+        return Promise.resolve({ items: [pageThree], totalCount: 201 });
+      }
+      return Promise.resolve({ items: [source], nextCursor: "100", totalCount: 201 });
+    });
     const gateway = new ConnectWorkspaceGateway(
       { list } as unknown as SourceRepository,
       { listForSource: vi.fn() } as unknown as AnnotationRepository,
@@ -91,14 +99,25 @@ describe("ConnectWorkspaceGateway", () => {
       createReaderRuntimeServices(new MemoryStorage()),
     );
 
-    expect((await gateway.library()).sources.map(({ id }) => id)).toEqual(["src_01", "src_101"]);
+    expect((await gateway.library()).sources.map(({ id }) => id)).toEqual([
+      "src_01",
+      "src_101",
+      "src_201",
+    ]);
     expect(list).toHaveBeenNthCalledWith(
       2,
       { collectionId: source.collectionId, limit: 100, cursor: "100" },
       {},
     );
+    expect(list).toHaveBeenNthCalledWith(
+      3,
+      { collectionId: source.collectionId, limit: 100, cursor: "200" },
+      {},
+    );
   });
+});
 
+describe("ConnectWorkspaceGateway imports", () => {
   it("adds an imported source to the warm library and source caches", async () => {
     const imported = {
       ...source,
