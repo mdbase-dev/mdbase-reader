@@ -35,11 +35,14 @@ export function PdfViewerSurface({
       unsubscribe();
     }
     subscriptionsRef.current = [];
-    nativeUiCleanupRef.current?.();
-    nativeUiCleanupRef.current = null;
     void surfaceRef.current?.destroy();
     surfaceRef.current = null;
   }, []);
+  const clearViewer = useCallback(() => {
+    clearRuntime();
+    nativeUiCleanupRef.current?.();
+    nativeUiCleanupRef.current = null;
+  }, [clearRuntime]);
   const handleReady = useCallback(
     (registry: PluginRegistry) => {
       clearRuntime();
@@ -70,7 +73,7 @@ export function PdfViewerSurface({
     [clearRuntime, document, onDocumentError, onDocumentReady, onSurfaceReady],
   );
 
-  useEffect(() => () => clearRuntime(), [clearRuntime]);
+  useEffect(() => () => clearViewer(), [clearViewer]);
 
   const handleInit = useCallback((container: EmbedPdfContainer): void => {
     nativeUiCleanupRef.current?.();
