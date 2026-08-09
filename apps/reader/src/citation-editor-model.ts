@@ -1,4 +1,9 @@
-import { cslProblemSummary, validateCslItem, type Source } from "@mdbase-reader/core";
+import {
+  cslProblemSummary,
+  suggestSourceCitation,
+  validateCslItem,
+  type Source,
+} from "@mdbase-reader/core";
 
 export type CitationDraftAssessment =
   | { readonly valid: true; readonly value: Readonly<Record<string, unknown>> }
@@ -13,7 +18,7 @@ export function citationDraftForSource(source: Source): string {
   const value =
     typeof existing === "object" && existing !== null && !Array.isArray(existing)
       ? existing
-      : { id: "", type: "article", title: source.title };
+      : suggestSourceCitation(source);
   return JSON.stringify(value, null, 2);
 }
 

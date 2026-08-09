@@ -76,7 +76,7 @@ try {
     const source = await opened.collection.getContractView(
       "sources/example.md",
       "dev.mdbase.reader.source",
-      "1.0.0-beta.1",
+      "1.0.0-beta.2",
     );
     if (!source.valid || source.view.title !== "Example source") {
       fail("Reader source contract did not project a valid source view.");

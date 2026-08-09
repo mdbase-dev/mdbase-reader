@@ -13,7 +13,9 @@ import type { JsonObject, QueryRecord, RecordDocument } from "@mdbase-dev/connec
 const sourceFrontmatter: JsonObject = {
   id: "src_01",
   title: "Gravity and Grace",
+  kind: "book",
   authors: ["Simone Weil"],
+  published: 2002,
   tags: ["attention"],
   reading: {
     status: "reading",
@@ -50,6 +52,7 @@ describe("Connect contract mapping", () => {
       id: "src_01",
       title: "Gravity and Grace",
       creators: ["Simone Weil"],
+      published: 2002,
       readingStatus: "reading",
       reading: {
         documentFileId: "file-01",

@@ -70,7 +70,15 @@ export function filterSources(
     return sources;
   }
   return sources.filter((source) =>
-    [source.title, ...source.creators, ...source.tags]
+    [
+      source.title,
+      ...source.creators,
+      ...source.tags,
+      source.publication,
+      source.site,
+      source.published === undefined ? undefined : String(source.published),
+    ]
+      .filter((value): value is string => value !== undefined)
       .join("\n")
       .toLocaleLowerCase()
       .includes(normalized),

@@ -138,6 +138,7 @@ export function ReaderApp({
           canSelectArea={composer.canSelectArea}
           selectingArea={composer.selectingArea}
           sourceExport={sourceExport}
+          onAddSource={sourceAddition.open}
           onBackToLibrary={() => setMobileLibraryOpen(true)}
           onToggleFocus={() => setFocusMode((value) => !value)}
           onToggleAreaSelection={composer.toggleAreaSelection}
@@ -198,7 +199,7 @@ function useStatusFilteredSources(
     () =>
       library.status === "ready"
         ? library.value.sources.filter(
-            ({ readingStatus }) => filter === "all" || readingStatus === filter,
+            ({ readingStatus }) => filter === "all" || (readingStatus ?? "inbox") === filter,
           )
         : [],
     [filter, library],

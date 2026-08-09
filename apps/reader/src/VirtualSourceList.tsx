@@ -77,9 +77,7 @@ export function VirtualSourceList({
                 <strong>{source.title}</strong>
                 <small>{source.creators.join(", ") || "Unknown creator"}</small>
                 <span className="source-row-meta">
-                  {searchMatchLabel(searchMatches.get(source.id)) ??
-                    source.readingStatus ??
-                    "inbox"}
+                  {searchMatchLabel(searchMatches.get(source.id)) ?? sourceStatusLabel(source)}
                 </span>
               </button>
             );
@@ -90,12 +88,25 @@ export function VirtualSourceList({
   );
 }
 
-function sourceFormat(source: SourceSummary): "PDF" | "EPUB" | "WEB" {
+function sourceFormat(source: SourceSummary): "PDF" | "EPUB" | "WEB" | "NOTE" {
   const mediaType = source.documents[0]?.mediaType ?? "";
+  if (!source.documents[0]) {
+    return "NOTE";
+  }
   if (mediaType.includes("pdf")) {
     return "PDF";
   }
   return mediaType.includes("epub") ? "EPUB" : "WEB";
+}
+
+function sourceStatusLabel(source: SourceSummary): string {
+  const status = source.readingStatus ?? "inbox";
+  const citation = source.citation
+    ? "cited"
+    : source.citationProblems?.length
+      ? "citation issue"
+      : "no citation";
+  return `${status} · ${citation}`;
 }
 
 function searchMatchLabel(match: SourceTextSearchMatch | undefined): string | null {

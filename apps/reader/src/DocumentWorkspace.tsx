@@ -17,6 +17,7 @@ export interface DocumentWorkspaceProps {
   readonly canSelectArea: boolean;
   readonly selectingArea: boolean;
   readonly sourceExport: SourceExportController;
+  readonly onAddSource: () => void;
   readonly onBackToLibrary: () => void;
   readonly onToggleFocus: () => void;
   readonly onToggleInspector: () => void;
@@ -33,6 +34,7 @@ export function DocumentWorkspace({
   canSelectArea,
   selectingArea,
   sourceExport,
+  onAddSource,
   onBackToLibrary,
   onToggleFocus,
   onToggleInspector,
@@ -92,10 +94,12 @@ export function DocumentWorkspace({
               <SourceActions sourceExport={sourceExport} />
             </div>
           </div>
-          <div className="document-canvas">{document ?? <DocumentEmpty />}</div>
+          <div className="document-canvas">
+            {document ?? <DocumentEmpty onAddSource={onAddSource} />}
+          </div>
         </>
       ) : (
-        <EmptyCollection />
+        <EmptyCollection onAddSource={onAddSource} />
       )}
     </section>
   );
@@ -178,7 +182,7 @@ function documentLabel(source: SourceSummary): string {
   return source.documents[0]?.title ?? "Web archive";
 }
 
-function DocumentEmpty(): JSX.Element {
+function DocumentEmpty({ onAddSource }: { readonly onAddSource: () => void }): JSX.Element {
   return (
     <div className="document-empty">
       <div>
@@ -188,20 +192,20 @@ function DocumentEmpty(): JSX.Element {
           The literature note is available now. Document controls appear when a supported
           representation is attached.
         </p>
-        <ReaderButton>Add a representation</ReaderButton>
+        <ReaderButton onClick={onAddSource}>Add another source</ReaderButton>
       </div>
     </div>
   );
 }
 
-function EmptyCollection(): JSX.Element {
+function EmptyCollection({ onAddSource }: { readonly onAddSource: () => void }): JSX.Element {
   return (
     <div className="document-empty">
       <div>
         <span className="mono">Your library is empty</span>
         <h2>Begin with something worth returning to.</h2>
         <p>Save a web page, upload a PDF or EPUB, or import an existing library.</p>
-        <ReaderButton>Upload PDF or EPUB</ReaderButton>
+        <ReaderButton onClick={onAddSource}>Add your first source</ReaderButton>
       </div>
     </div>
   );

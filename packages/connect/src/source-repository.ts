@@ -228,7 +228,15 @@ function positionFrontmatter(position: ReadingPosition): Readonly<Record<string,
 function matchesSearch(source: SourceSummary, search: string | undefined): boolean {
   const normalized = search?.trim().toLocaleLowerCase();
   return normalized
-    ? [source.title, ...source.creators, ...source.tags]
+    ? [
+        source.title,
+        ...source.creators,
+        ...source.tags,
+        source.publication,
+        source.site,
+        source.published === undefined ? undefined : String(source.published),
+      ]
+        .filter((value): value is string => value !== undefined)
         .join("\n")
         .toLocaleLowerCase()
         .includes(normalized)

@@ -8,20 +8,24 @@ const source: Source = {
   id: sourceId("src_one"),
   path: "sources/one.md",
   title: "Gravity and Grace",
-  creators: [],
+  creators: ["Simone Weil"],
   tags: [],
   documents: [],
   body: "",
   recordRevision: recordRevision("rev-one"),
+  kind: "book",
+  published: 2002,
   frontmatter: {},
 };
 
 describe("citation editor model", () => {
   it("starts an uncited source with a repairable CSL template", () => {
     expect(JSON.parse(citationDraftForSource(source))).toEqual({
-      id: "",
-      type: "article",
+      id: "weilgravity2002",
+      type: "book",
       title: "Gravity and Grace",
+      author: [{ literal: "Simone Weil" }],
+      issued: { "date-parts": [[2002]] },
     });
   });
 

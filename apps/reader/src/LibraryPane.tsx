@@ -1,3 +1,10 @@
+import {
+  readingStatuses,
+  type ReadingStatus,
+  type SourceId,
+  type SourceSummary,
+  type SourceTextSearchMatch,
+} from "@mdbase-reader/core";
 import { ReaderButton } from "@mdbase-reader/ui";
 
 import { DownloadIcon, LibraryIcon, MoreIcon, PlusIcon, SearchIcon } from "./icons.js";
@@ -6,7 +13,6 @@ import { VirtualSourceList } from "./VirtualSourceList.js";
 import type { BibliographyExportController } from "./use-bibliography-export.js";
 import type { LibrarySearchStatus } from "./use-library-search.js";
 import type { ReaderLibrarySnapshot } from "./workspace-model.js";
-import type { SourceId, SourceSummary, SourceTextSearchMatch } from "@mdbase-reader/core";
 import type { JSX } from "react";
 
 export interface LibraryPaneProps {
@@ -27,7 +33,8 @@ export interface LibraryPaneProps {
   readonly sourceIndex?: ReaderLibrarySnapshot["sourceIndex"];
 }
 
-export type LibraryFilter = "all" | "queued" | "reading";
+export type LibraryFilter = "all" | ReadingStatus;
+const libraryFilters: readonly LibraryFilter[] = ["all", ...readingStatuses];
 
 export function LibraryPane({
   sources,
@@ -77,32 +84,22 @@ export function LibraryPane({
           : ""}
       </span>
       <nav className="status-nav" aria-label="Reading status">
-        <button
-          className={filter === "all" ? "is-active" : undefined}
-          type="button"
-          aria-pressed={filter === "all"}
-          onClick={() => onFilterChange("all")}
-        >
-          All <span>{sourceCountLabel(sources.length, sourceIndex)}</span>
-        </button>
-        <button
-          className={filter === "reading" ? "is-active" : undefined}
-          type="button"
-          aria-pressed={filter === "reading"}
-          onClick={() => onFilterChange("reading")}
-        >
-          Reading{" "}
-          <span>{sources.filter(({ readingStatus }) => readingStatus === "reading").length}</span>
-        </button>
-        <button
-          className={filter === "queued" ? "is-active" : undefined}
-          type="button"
-          aria-pressed={filter === "queued"}
-          onClick={() => onFilterChange("queued")}
-        >
-          Queued
-          <span>{sources.filter(({ readingStatus }) => readingStatus === "queued").length}</span>
-        </button>
+        {libraryFilters.map((status) => (
+          <button
+            key={status}
+            className={filter === status ? "is-active" : undefined}
+            type="button"
+            aria-pressed={filter === status}
+            onClick={() => onFilterChange(status)}
+          >
+            {statusLabel(status)}
+            <span>
+              {status === "all"
+                ? sourceCountLabel(sources.length, sourceIndex)
+                : sources.filter((source) => effectiveReadingStatus(source) === status).length}
+            </span>
+          </button>
+        ))}
       </nav>
       <span className="sr-only" role="status" aria-live="polite">
         {sourceIndex?.complete === false
@@ -138,6 +135,14 @@ export function LibraryPane({
       </div>
     </aside>
   );
+}
+
+function effectiveReadingStatus(source: SourceSummary): ReadingStatus {
+  return source.readingStatus ?? "inbox";
+}
+
+function statusLabel(status: LibraryFilter): string {
+  return status.charAt(0).toLocaleUpperCase() + status.slice(1);
 }
 
 function sourceCountLabel(
