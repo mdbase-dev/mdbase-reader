@@ -5,9 +5,10 @@ The first-party reading and annotation application for mdbase collections.
 The repository is a pnpm workspace. Its architecture keeps the canonical source and annotation
 model independent of React, mdbase Connect, document renderers, and native shells.
 
-The standalone development build opens an explicitly labelled, in-memory interface preview. It
-does not create collection records or files. Production hosts construct `ReaderApp` with a
-`ConnectWorkspaceGateway` backed by the exact Reader source and annotation contracts.
+The web app opens mdbase Connect by default. It discovers and authorizes collections, reviews any
+required Reader setup, queries sources and annotations through the exact Reader contracts, and
+downloads readable files through Connect. Add `?preview=1` to open the explicitly labelled,
+in-memory interface preview without creating collection records or files.
 
 ## Commands
 
@@ -17,6 +18,34 @@ pnpm check
 pnpm build
 pnpm dev
 ```
+
+## Test a local collection
+
+Start mdbase Connect in its explicit local-development mode, then start Reader:
+
+```sh
+mdbase-connect --allow-local
+pnpm dev
+```
+
+Open <http://127.0.0.1:5173/> and choose the registered collection. If the collection has no Reader
+contracts yet, Connect shows the exact type-pack changes and installs them only after approval.
+
+The Reader fixture used during development is already registered at
+`~/testvault/mdbase-reader`. On another machine, register a collection first:
+
+```sh
+mdbase connect collection add ~/testvault/mdbase-reader
+```
+
+For an isolated development Connect server, supply its origin without rebuilding Reader:
+
+```text
+http://127.0.0.1:5173/?server=http://127.0.0.1:8787
+```
+
+Reader preserves that server selection through the authorization callback. Loopback manifests are
+never used outside explicit localhost development.
 
 The web build is emitted by `apps/reader`. `apps/electron` contains a sandboxed Electron main
 process and isolated preload bridge; set `MDBASE_READER_DEV_URL=http://127.0.0.1:5173` when running

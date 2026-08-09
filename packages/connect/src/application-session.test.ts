@@ -20,11 +20,15 @@ const manifest = {
 describe("ReaderApplicationSession helpers", () => {
   it("creates a same-origin localhost manifest for explicit local development", () => {
     expect(
-      manifestForApplicationUrl(manifest, "http://127.0.0.1:5173/?collection=one"),
+      manifestForApplicationUrl(
+        manifest,
+        "http://127.0.0.1:5173/?collection=one",
+        "http://127.0.0.1:5173/?server=http%3A%2F%2F127.0.0.1%3A8787",
+      ),
     ).toMatchObject({
       homepage: "http://127.0.0.1:5173/",
       icon: "http://127.0.0.1:5173/favicon.svg",
-      redirect_uris: ["http://127.0.0.1:5173/"],
+      redirect_uris: ["http://127.0.0.1:5173/?server=http%3A%2F%2F127.0.0.1%3A8787"],
     });
   });
 

@@ -108,6 +108,7 @@ export class ReaderApplicationSession {
 export function manifestForApplicationUrl(
   manifest: MdbaseAppManifest,
   applicationUrl: string,
+  redirectUri = applicationUrl,
 ): MdbaseAppManifest {
   if (manifest.distribution === "portable") {
     throw new Error("A portable application manifest cannot be localized to a web origin.");
@@ -116,12 +117,16 @@ export function manifestForApplicationUrl(
   url.search = "";
   url.hash = "";
   const homepage = url.href;
+  const callback = new URL(redirectUri);
+  if (callback.origin !== url.origin) {
+    throw new Error("The development callback must use the application origin.");
+  }
   return {
     ...manifest,
     distribution: "web",
     homepage,
     icon: new URL("favicon.svg", homepage).href,
-    redirect_uris: [homepage],
+    redirect_uris: [callback.href],
   };
 }
 
