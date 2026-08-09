@@ -6,7 +6,7 @@ import {
 } from "./selector.js";
 
 import type { DocumentTarget } from "./document.js";
-import type { AnnotationId, CollectionId, SourceId } from "./identity.js";
+import type { AnnotationId, CollectionId, RecordRevision, SourceId } from "./identity.js";
 import type { DateTime } from "./time.js";
 
 export const initialAnnotationTypes = ["highlight", "note", "bookmark", "area"] as const;
@@ -33,6 +33,9 @@ export interface AnnotationDraft {
 
 export interface Annotation extends AnnotationDraft {
   readonly id: AnnotationId;
+  readonly path?: string;
+  readonly frontmatter?: Readonly<Record<string, unknown>>;
+  readonly recordRevision?: RecordRevision;
   readonly createdAt: DateTime;
   readonly modifiedAt?: DateTime;
   readonly createdBy?: string;

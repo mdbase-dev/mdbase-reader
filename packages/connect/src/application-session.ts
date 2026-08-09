@@ -12,6 +12,7 @@ import {
   type AnnotationRepository,
   type AnnotationAssetRepository,
   type CollectionId,
+  type CollectionFileRepository,
   type ContentSearchRepository,
   type DocumentRepository,
   type SourceRepository,
@@ -19,6 +20,7 @@ import {
 } from "@mdbase-reader/core";
 
 import { connectAnnotationAssetRepository } from "./annotation-assets.js";
+import { connectCollectionFileRepository } from "./collection-files.js";
 import { connectDocumentRepository } from "./documents.js";
 import {
   ConnectAnnotationRepository,
@@ -39,6 +41,7 @@ export interface ReaderConnectedCollection {
   readonly annotationAssets: AnnotationAssetRepository;
   readonly documents: DocumentRepository;
   readonly contentSearch: ContentSearchRepository;
+  readonly files: CollectionFileRepository;
 }
 
 export interface ReaderApplicationSessionOptions {
@@ -116,6 +119,7 @@ export class ReaderApplicationSession {
       annotationAssets: connectAnnotationAssetRepository(connection),
       documents: connectDocumentRepository(connection),
       contentSearch: new ConnectContentSearchRepository(client),
+      files: connectCollectionFileRepository(connection),
     };
   }
 }

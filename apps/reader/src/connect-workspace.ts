@@ -7,6 +7,7 @@ import type {
   AnnotationCreationRequest,
   AnnotationRepository,
   Clock,
+  CollectionFileRepository,
   CollectionId,
   ContentHasher,
   ContentSearchRepository,
@@ -42,6 +43,7 @@ export class ConnectWorkspaceGateway implements ReaderWorkspaceGateway {
       readonly journal: MutationJournal;
     },
     private readonly contentSearch?: ContentSearchRepository,
+    private readonly files?: CollectionFileRepository,
   ) {}
 
   async library(options: ReaderRequestOptions = {}): Promise<ReaderLibrarySnapshot> {
@@ -106,6 +108,17 @@ export class ConnectWorkspaceGateway implements ReaderWorkspaceGateway {
     options: ReaderRequestOptions = {},
   ): ReturnType<ReaderWorkspaceGateway["searchText"]> {
     return this.contentSearch?.search(this.collectionId, query, options) ?? Promise.resolve([]);
+  }
+
+  readFile(
+    file: string,
+    expectedRevision?: Parameters<ReaderWorkspaceGateway["readFile"]>[1],
+    options: ReaderRequestOptions = {},
+  ): ReturnType<ReaderWorkspaceGateway["readFile"]> {
+    if (!this.files) {
+      return Promise.reject(new Error("File export is unavailable for this connection."));
+    }
+    return this.files.read(this.collectionId, file, expectedRevision, options);
   }
 
   async importSourceFile(request: Omit<SourceFileImportRequest, "collectionId">): Promise<Source> {

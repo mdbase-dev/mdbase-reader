@@ -80,6 +80,7 @@ function OpenedReader({ collectionId }: { readonly collectionId: string }): JSX.
             opened.collectionName,
             runtimeServices,
             opened.contentSearch,
+            opened.files,
           )
         : null,
     [opened],

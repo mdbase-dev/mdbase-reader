@@ -101,6 +101,21 @@ export interface DocumentRepository {
   ): Promise<DocumentHandle>;
 }
 
+export interface ExportedCollectionFile {
+  readonly path: string;
+  readonly mediaType: string;
+  readonly bytes: Uint8Array;
+}
+
+export interface CollectionFileRepository {
+  read(
+    collectionId: CollectionId,
+    file: string,
+    expectedRevision?: FileRevision,
+    options?: ReaderRequestOptions,
+  ): Promise<ExportedCollectionFile>;
+}
+
 export type MutationStage =
   "planned" | "asset-stored" | "annotation-created" | "source-transcluded" | "complete" | "failed";
 

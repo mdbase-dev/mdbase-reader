@@ -114,12 +114,18 @@ importers:
       '@mdbase-reader/ui':
         specifier: workspace:*
         version: link:../../packages/ui
+      '@zip.js/zip.js':
+        specifier: ^2.8.36
+        version: 2.8.36
       react:
         specifier: ^19.2.8
         version: 19.2.8
       react-dom:
         specifier: ^19.2.8
         version: 19.2.8(react@19.2.8)
+      yaml:
+        specifier: ^2.9.0
+        version: 2.9.0
     devDependencies:
       '@types/react':
         specifier: ^19.2.14

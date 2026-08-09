@@ -3,6 +3,7 @@ import { ReaderButton } from "@mdbase-reader/ui";
 import { AreaIcon, BackIcon, FocusIcon, MoreIcon, PanelIcon } from "./icons.js";
 
 import type { ReadingResumeState } from "./use-reading-resume.js";
+import type { SourceExportController } from "./use-source-export.js";
 import type { SourceSummary } from "@mdbase-reader/core";
 import type { JSX, ReactNode } from "react";
 
@@ -15,6 +16,7 @@ export interface DocumentWorkspaceProps {
   readonly decorationProblem: string | null;
   readonly canSelectArea: boolean;
   readonly selectingArea: boolean;
+  readonly sourceExport: SourceExportController;
   readonly onBackToLibrary: () => void;
   readonly onToggleFocus: () => void;
   readonly onToggleInspector: () => void;
@@ -30,6 +32,7 @@ export function DocumentWorkspace({
   decorationProblem,
   canSelectArea,
   selectingArea,
+  sourceExport,
   onBackToLibrary,
   onToggleFocus,
   onToggleInspector,
@@ -86,9 +89,7 @@ export function DocumentWorkspace({
               >
                 <FocusIcon /> <span className="tool-label">Focus</span>
               </button>
-              <button className="icon-button" type="button" aria-label="Document actions">
-                <MoreIcon />
-              </button>
+              <SourceActions sourceExport={sourceExport} />
             </div>
           </div>
           <div className="document-canvas">{document ?? <DocumentEmpty />}</div>
@@ -97,6 +98,38 @@ export function DocumentWorkspace({
         <EmptyCollection />
       )}
     </section>
+  );
+}
+
+function SourceActions({
+  sourceExport,
+}: {
+  readonly sourceExport: SourceExportController;
+}): JSX.Element {
+  return (
+    <details className="source-actions">
+      <summary className="icon-button" aria-label="Source actions" title="Source actions">
+        <MoreIcon />
+      </summary>
+      <div className="source-actions-menu">
+        <button
+          type="button"
+          disabled={!sourceExport.available || sourceExport.status === "exporting"}
+          onClick={sourceExport.run}
+        >
+          <span>{sourceExport.status === "exporting" ? "Preparing export…" : "Export source"}</span>
+          <small>Records, materialized note, citations, and originals</small>
+        </button>
+        {sourceExport.message ? (
+          <p
+            className={`source-export-message is-${sourceExport.status}`}
+            role={sourceExport.status === "error" ? "alert" : "status"}
+          >
+            {sourceExport.message}
+          </p>
+        ) : null}
+      </div>
+    </details>
   );
 }
 

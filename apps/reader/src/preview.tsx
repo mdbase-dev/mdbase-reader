@@ -161,6 +161,9 @@ class PreviewGateway implements ReaderWorkspaceGateway {
   searchText(): Promise<readonly []> {
     return Promise.resolve([]);
   }
+  readFile(): Promise<never> {
+    return Promise.reject(new Error("Preview files cannot be exported."));
+  }
   importSourceFile(_request: Omit<SourceFileImportRequest, "collectionId">): Promise<Source> {
     return Promise.reject(new Error("File import is unavailable in the interface preview."));
   }

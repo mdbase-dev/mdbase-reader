@@ -104,6 +104,7 @@ describe("Connect contract mapping", () => {
   it("normalizes independently addressable annotations", () => {
     const annotation = annotationFromDocument(collectionId("reading"), {
       path: "annotations/ann_01.md",
+      revision: "ann-rev-1",
       frontmatter: {},
       effectiveFrontmatter: {
         id: "ann_01",
@@ -159,6 +160,7 @@ describe("Connect EPUB annotation mapping", () => {
   it("round-trips an EPUB CFI", () => {
     const annotation = annotationFromDocument(collectionId("reading"), {
       path: "annotations/ann_epub.md",
+      revision: "ann-rev-2",
       frontmatter: {},
       effectiveFrontmatter: {
         id: "ann_epub",

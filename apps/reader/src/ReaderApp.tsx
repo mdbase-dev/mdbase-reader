@@ -21,6 +21,7 @@ import { useDocumentDecorations } from "./use-document-decorations.js";
 import { useLibrarySearch } from "./use-library-search.js";
 import { useReaderWorkspace, type ReaderWorkspaceController } from "./use-reader-workspace.js";
 import { useReadingResume, type ReadingResumeState } from "./use-reading-resume.js";
+import { useSourceExport } from "./use-source-export.js";
 import { useSourceImport } from "./use-source-import.js";
 
 import type { ReaderWorkspaceGateway } from "./workspace-model.js";
@@ -66,6 +67,13 @@ export function ReaderApp({
     workspace.library.status === "ready" ? workspace.library.value.sources : [],
     saveFile,
   );
+  const sourceExport = useSourceExport({
+    gateway,
+    source: workspace.sourceRecord,
+    annotations: workspace.annotations,
+    citationSources: workspace.library.status === "ready" ? workspace.library.value.sources : [],
+    saveFile,
+  });
 
   useEffect(() => {
     const query = window.matchMedia("(max-width: 760px)");
@@ -128,6 +136,7 @@ export function ReaderApp({
           decorationProblem={decorationProblem}
           canSelectArea={composer.canSelectArea}
           selectingArea={composer.selectingArea}
+          sourceExport={sourceExport}
           onBackToLibrary={() => setMobileLibraryOpen(true)}
           onToggleFocus={() => setFocusMode((value) => !value)}
           onToggleAreaSelection={composer.toggleAreaSelection}

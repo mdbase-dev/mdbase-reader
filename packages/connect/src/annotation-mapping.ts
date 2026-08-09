@@ -3,6 +3,7 @@ import {
   dateTime,
   fileId,
   fileRevision,
+  recordRevision,
   sourceId,
   type Annotation,
   type AnnotationTarget,
@@ -141,7 +142,10 @@ function annotationTarget(value: unknown): AnnotationTarget | undefined {
 
 export function annotationFromDocument(
   collection: CollectionId,
-  record: Pick<RecordDocument, "path" | "frontmatter" | "effectiveFrontmatter" | "body">,
+  record: Pick<
+    RecordDocument,
+    "path" | "frontmatter" | "effectiveFrontmatter" | "body" | "revision"
+  >,
 ): Annotation {
   const fields = record.effectiveFrontmatter;
   const id = text(fields["id"]);
@@ -161,6 +165,9 @@ export function annotationFromDocument(
   return {
     collectionId: collection,
     id: annotationId(id),
+    path: record.path,
+    frontmatter: record.frontmatter,
+    recordRevision: recordRevision(record.revision),
     sourceId: sourceId(source),
     source: text(fields["source"]) ?? source,
     annotationType,

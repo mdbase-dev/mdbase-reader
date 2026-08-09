@@ -19,13 +19,15 @@
     "@mdbase-reader/core": "workspace:*",
     "@mdbase-reader/markdown-editor": "workspace:*",
     "@mdbase-reader/platform": "workspace:*",
+    "@mdbase-reader/reading-surface": "workspace:*",
     "@mdbase-reader/renderer-epub": "workspace:*",
     "@mdbase-reader/renderer-html": "workspace:*",
-    "@mdbase-reader/reading-surface": "workspace:*",
     "@mdbase-reader/renderer-pdf": "workspace:*",
     "@mdbase-reader/ui": "workspace:*",
+    "@zip.js/zip.js": "^2.8.36",
     "react": "^19.2.8",
-    "react-dom": "^19.2.8"
+    "react-dom": "^19.2.8",
+    "yaml": "^2.9.0"
   },
   "devDependencies": {
     "@types/react": "^19.2.14",

@@ -913,6 +913,85 @@ button {
   height: 16px;
 }
 
+.source-actions {
+  position: relative;
+}
+
+.source-actions > summary {
+  display: grid;
+  place-items: center;
+  list-style: none;
+}
+
+.source-actions > summary::-webkit-details-marker {
+  display: none;
+}
+
+.source-actions[open] > summary {
+  color: var(--ink);
+  background: var(--hover);
+}
+
+.source-actions-menu {
+  position: absolute;
+  top: calc(100% + 6px);
+  right: 0;
+  z-index: 20;
+  width: min(284px, calc(100vw - 24px));
+  padding: 5px;
+  border: 1px solid var(--line-strong);
+  border-radius: 5px;
+  background: var(--paper);
+  box-shadow: 0 18px 44px -24px var(--color-scrim);
+}
+
+.source-actions-menu > button {
+  width: 100%;
+  display: grid;
+  gap: 3px;
+  padding: 10px;
+  border-radius: 3px;
+  color: var(--ink);
+  background: transparent;
+  text-align: left;
+  cursor: pointer;
+}
+
+.source-actions-menu > button:hover {
+  background: var(--hover);
+}
+
+.source-actions-menu > button:disabled {
+  color: var(--muted);
+  cursor: wait;
+}
+
+.source-actions-menu > button span {
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.source-actions-menu > button small,
+.source-export-message {
+  color: var(--muted);
+  font-size: 9px;
+  line-height: 1.45;
+}
+
+.source-export-message {
+  margin: 0;
+  padding: 8px 10px;
+  border-top: 1px solid var(--line);
+}
+
+.source-export-message.is-success {
+  color: var(--success);
+}
+
+.source-export-message.is-error {
+  color: var(--danger);
+}
+
 .mobile-back {
   display: none;
 }

@@ -1,7 +1,9 @@
 import type {
   Annotation,
   AnnotationCreationRequest,
+  ExportedCollectionFile,
   FileId,
+  FileRevision,
   ReaderRequestOptions,
   ReadingPosition,
   Source,
@@ -27,6 +29,11 @@ export interface ReaderWorkspaceGateway {
     query: string,
     options?: ReaderRequestOptions,
   ): Promise<readonly SourceTextSearchMatch[]>;
+  readFile(
+    file: string,
+    expectedRevision?: FileRevision,
+    options?: ReaderRequestOptions,
+  ): Promise<ExportedCollectionFile>;
   importSourceFile(request: Omit<SourceFileImportRequest, "collectionId">): Promise<Source>;
   createAnnotation(request: AnnotationCreationRequest): Promise<Annotation>;
   saveReadingPosition(
