@@ -1,3 +1,5 @@
+import { inlinePublicationResources } from "./epub-resource-inlining.js";
+
 import type { FetchImplementation } from "@readium/shared";
 
 const ACTIVE_ELEMENTS = "script, iframe, frame, frameset, object, embed, form, base";
@@ -12,7 +14,9 @@ export const safePublicationFetch: FetchImplementation = async (input, init) => 
   if (mediaType !== "text/html" && mediaType !== "application/xhtml+xml") {
     return response;
   }
-  const sanitized = sanitizePublicationMarkup(await response.text(), mediaType);
+  const publication = sanitizePublicationDocument(await response.text(), mediaType);
+  await inlinePublicationResources(publication, response.url);
+  const sanitized = new XMLSerializer().serializeToString(publication);
   const headers = new Headers(response.headers);
   headers.delete("content-length");
   headers.set("content-type", `${mediaType}; charset=utf-8`);
@@ -24,6 +28,10 @@ export const safePublicationFetch: FetchImplementation = async (input, init) => 
 };
 
 export function sanitizePublicationMarkup(markup: string, mediaType: string): string {
+  return new XMLSerializer().serializeToString(sanitizePublicationDocument(markup, mediaType));
+}
+
+function sanitizePublicationDocument(markup: string, mediaType: string): Document {
   const document = new DOMParser().parseFromString(markup, parserMediaType(mediaType));
   if (document.querySelector("parsererror")) {
     throw new Error("EPUB content document contains invalid markup.");
@@ -41,7 +49,7 @@ export function sanitizePublicationMarkup(markup: string, mediaType: string): st
     }
   });
   document.querySelectorAll("*").forEach((element) => sanitizeElement(element));
-  return new XMLSerializer().serializeToString(document);
+  return document;
 }
 
 function sanitizeElement(element: Element): void {
