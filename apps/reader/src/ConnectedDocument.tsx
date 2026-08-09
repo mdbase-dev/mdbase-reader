@@ -1,4 +1,4 @@
-import { lazy, Suspense, useEffect, useState, type JSX } from "react";
+import { lazy, Suspense, useCallback, useEffect, useState, type JSX, type ReactNode } from "react";
 
 import type {
   DocumentDescriptor,
@@ -11,6 +11,11 @@ import type { ReadingSurface, SurfaceDocument } from "@mdbase-reader/reading-sur
 const PdfViewerSurface = lazy(async () => {
   const module = await import("@mdbase-reader/renderer-pdf");
   return { default: module.PdfViewerSurface };
+});
+
+const EpubViewerSurface = lazy(async () => {
+  const module = await import("@mdbase-reader/renderer-epub");
+  return { default: module.EpubViewerSurface };
 });
 
 export interface ConnectedDocumentProps {
@@ -51,10 +56,6 @@ function OpenConnectedDocument({
   onSurfaceChange,
 }: ConnectedDocumentProps & { readonly descriptor: DocumentDescriptor }): JSX.Element {
   const [state, setState] = useState<OpenDocumentState>({ status: "opening" });
-  const [rendererState, setRendererState] = useState<
-    | { readonly status: "opening" | "ready" }
-    | { readonly status: "error"; readonly message: string }
-  >({ status: "opening" });
 
   useEffect(() => {
     let active = true;
@@ -98,53 +99,96 @@ function OpenConnectedDocument({
     url: state.handle.url,
   };
   if (isPdf(document.mediaType, descriptor.file)) {
-    return (
-      <div className="pdf-stage">
-        <Suspense fallback={<DocumentMessage label="Loading the PDF renderer…" />}>
-          <PdfViewerSurface
-            className="pdf-viewer"
-            document={document}
-            onDocumentError={(rendererMessage) =>
-              setRendererState({ status: "error", message: rendererMessage })
-            }
-            onDocumentReady={() => setRendererState({ status: "ready" })}
-            onSurfaceReady={onSurfaceChange}
-          />
-        </Suspense>
-        {rendererState.status === "opening" ? (
-          <div className="pdf-stage-status">
-            <DocumentMessage label="Preparing PDF pages…" />
-          </div>
-        ) : null}
-        {rendererState.status === "error" ? (
-          <div className="pdf-stage-status">
-            <DocumentMessage
-              label={`EmbedPDF could not render this file: ${rendererState.message}`}
-              tone="error"
-            />
-          </div>
-        ) : null}
-      </div>
-    );
+    return <PdfStage document={document} onSurfaceChange={onSurfaceChange} />;
   }
   if (isEpub(document.mediaType, descriptor.file)) {
-    return (
-      <div className="document-empty">
-        <div>
-          <span className="mono">EPUB connected</span>
-          <h2>The publication is available from this collection.</h2>
-          <p>
-            Reader has verified and downloaded the exact EPUB revision. Publication unpacking is not
-            yet available in this web build.
-          </p>
-          <a className="mdbase-button" href={state.handle.url} download>
-            Download EPUB
-          </a>
-        </div>
-      </div>
-    );
+    return <EpubStage document={document} onSurfaceChange={onSurfaceChange} />;
   }
   return <DocumentMessage label={`No renderer is registered for ${document.mediaType}.`} />;
+}
+
+type RendererState =
+  { readonly status: "opening" | "ready" } | { readonly status: "error"; readonly message: string };
+
+function PdfStage({
+  document,
+  onSurfaceChange,
+}: {
+  readonly document: SurfaceDocument;
+  readonly onSurfaceChange: ConnectedDocumentProps["onSurfaceChange"];
+}): JSX.Element {
+  const [state, setState] = useState<RendererState>({ status: "opening" });
+  const ready = useCallback(() => setState({ status: "ready" }), []);
+  const failed = useCallback((message: string) => setState({ status: "error", message }), []);
+  return (
+    <RendererStage state={state} openingLabel="Preparing PDF pages…" errorName="EmbedPDF">
+      <Suspense fallback={<DocumentMessage label="Loading the PDF renderer…" />}>
+        <PdfViewerSurface
+          className="pdf-viewer"
+          document={document}
+          onDocumentError={failed}
+          onDocumentReady={ready}
+          onSurfaceReady={onSurfaceChange}
+        />
+      </Suspense>
+    </RendererStage>
+  );
+}
+
+function EpubStage({
+  document,
+  onSurfaceChange,
+}: {
+  readonly document: SurfaceDocument;
+  readonly onSurfaceChange: ConnectedDocumentProps["onSurfaceChange"];
+}): JSX.Element {
+  const [state, setState] = useState<RendererState>({ status: "opening" });
+  const ready = useCallback(() => setState({ status: "ready" }), []);
+  const failed = useCallback((message: string) => setState({ status: "error", message }), []);
+  return (
+    <RendererStage state={state} openingLabel="Preparing publication…" errorName="Readium">
+      <Suspense fallback={<DocumentMessage label="Loading the EPUB renderer…" />}>
+        <EpubViewerSurface
+          className="epub-viewer"
+          document={document}
+          onDocumentError={failed}
+          onDocumentReady={ready}
+          onSurfaceReady={onSurfaceChange}
+        />
+      </Suspense>
+    </RendererStage>
+  );
+}
+
+function RendererStage({
+  state,
+  openingLabel,
+  errorName,
+  children,
+}: {
+  readonly state: RendererState;
+  readonly openingLabel: string;
+  readonly errorName: string;
+  readonly children: ReactNode;
+}): JSX.Element {
+  return (
+    <div className="document-renderer-stage">
+      {children}
+      {state.status === "opening" ? (
+        <div className="document-renderer-status">
+          <DocumentMessage label={openingLabel} />
+        </div>
+      ) : null}
+      {state.status === "error" ? (
+        <div className="document-renderer-status">
+          <DocumentMessage
+            label={`${errorName} could not render this file: ${state.message}`}
+            tone="error"
+          />
+        </div>
+      ) : null}
+    </div>
+  );
 }
 
 function DocumentMessage({

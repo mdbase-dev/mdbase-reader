@@ -1,5 +1,7 @@
 import { EpubNavigator, type EpubNavigatorListeners } from "@readium/navigator";
-import { Locator, Manifest, Publication } from "@readium/shared";
+import { HttpFetcher, Locator, Manifest, Publication } from "@readium/shared";
+
+import { safePublicationFetch } from "./epub-safe-fetch.js";
 
 import type { TextSelectionDraft, Unsubscribe } from "@mdbase-reader/reading-surface";
 
@@ -56,7 +58,7 @@ export async function createReadiumRuntime(input: {
   if (!manifest) {
     throw new Error("Readium could not parse the publication manifest.");
   }
-  const publication = new Publication({ manifest });
+  const publication = new Publication({ manifest, fetcher: new HttpFetcher(safePublicationFetch) });
   const locationListeners = new Set<(locator: Readonly<Record<string, unknown>>) => void>();
   const selectionListeners = new Set<(selection: TextSelectionDraft) => void>();
   const initialLocator = input.initialLocator
@@ -107,7 +109,11 @@ export async function createReadiumRuntime(input: {
       }
       return new Promise((resolve) => navigator.go(destination, false, resolve));
     },
-    clearSelection: () => undefined,
+    clearSelection() {
+      input.container
+        .querySelectorAll<HTMLIFrameElement>(".readium-navigator-iframe")
+        .forEach((frame) => frame.contentWindow?.getSelection()?.removeAllRanges());
+    },
     onLocationChanged(listener) {
       locationListeners.add(listener);
       return () => locationListeners.delete(listener);

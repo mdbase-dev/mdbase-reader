@@ -725,22 +725,33 @@ button {
   }
 }
 
-.pdf-stage,
-.pdf-viewer {
+.document-renderer-stage,
+.pdf-viewer,
+.epub-viewer {
   width: 100%;
   height: 100%;
   min-height: 0;
 }
 
-.pdf-stage {
+.document-renderer-stage {
   position: relative;
   overflow: hidden;
 }
 
-.pdf-stage-status {
+.document-renderer-status {
   position: absolute;
   inset: 0;
   background: var(--reader-canvas);
+}
+
+.epub-viewer {
+  position: relative;
+  overflow: hidden;
+  background: var(--reader-canvas);
+}
+
+.epub-viewer .readium-navigator-iframe {
+  border: 0;
 }
 
 .document-empty {

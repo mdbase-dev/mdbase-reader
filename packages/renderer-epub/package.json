@@ -15,9 +15,12 @@
     "@mdbase-reader/reading-surface": "workspace:*",
     "@readium/navigator": "^2.8.2",
     "@readium/shared": "^2.4.0",
+    "@zip.js/zip.js": "^2.8.36",
+    "fast-xml-parser": "^5.10.1",
     "react": "^19.2.8"
   },
   "devDependencies": {
-    "@types/react": "^19.2.14"
+    "@types/react": "^19.2.14",
+    "happy-dom": "^20.11.2"
   }
 }
