@@ -4,10 +4,13 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "build": "vite build",
-    "dev": "vite --host 127.0.0.1",
+    "build": "pnpm manifest && pnpm manifest:validate && vite build",
+    "dev": "pnpm manifest && vite --host 127.0.0.1",
+    "manifest": "node scripts/write-manifest.mjs",
+    "manifest:validate": "mdbase-connect-dev validate-manifest public/.well-known/mdbase-app.json",
+    "manifest:verify": "node scripts/verify-manifest.mjs",
     "preview": "vite preview --host 127.0.0.1",
-    "test": "vitest run --passWithNoTests",
+    "test": "pnpm manifest && pnpm manifest:verify && vitest run --passWithNoTests",
     "typecheck": "tsc -p tsconfig.json"
   },
   "dependencies": {
