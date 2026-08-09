@@ -81,6 +81,11 @@ export const PlusIcon = (props: IconProps): JSX.Element => (
     <path d="M12 5v14M5 12h14" />
   </Icon>
 );
+export const DownloadIcon = (props: IconProps): JSX.Element => (
+  <Icon {...props}>
+    <path d="M12 3v12M7.5 10.5 12 15l4.5-4.5M5 20h14" />
+  </Icon>
+);
 export const AreaIcon = (props: IconProps): JSX.Element => (
   <Icon {...props}>
     <path d="M8 4H4v4M16 4h4v4M8 20H4v-4M16 20h4v-4" />

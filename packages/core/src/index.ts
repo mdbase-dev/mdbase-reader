@@ -1,4 +1,5 @@
 export * from "./application/create-annotation.js";
+export * from "./application/build-csl-bibliography.js";
 export * from "./application/import-source-file.js";
 export * from "./application/save-source-citation.js";
 export type * from "./application/ports.js";

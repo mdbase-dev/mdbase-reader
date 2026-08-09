@@ -89,6 +89,7 @@ function OpenedReader({ collectionId }: { readonly collectionId: string }): JSX.
   return (
     <ReaderApp
       gateway={gateway}
+      saveFile={(name, blob) => readerPlatform.saveFile(name, blob)}
       pickSourceFile={() =>
         readerPlatform.pickFile([
           ".pdf",

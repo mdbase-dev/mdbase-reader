@@ -1,7 +1,8 @@
 import { ReaderButton } from "@mdbase-reader/ui";
 
-import { LibraryIcon, MoreIcon, PlusIcon, SearchIcon } from "./icons.js";
+import { DownloadIcon, LibraryIcon, MoreIcon, PlusIcon, SearchIcon } from "./icons.js";
 
+import type { BibliographyExportController } from "./use-bibliography-export.js";
 import type { SourceId, SourceSummary } from "@mdbase-reader/core";
 import type { JSX } from "react";
 
@@ -16,6 +17,7 @@ export interface LibraryPaneProps {
   readonly onSelectSource: (id: SourceId) => void;
   readonly onAddSource: () => void;
   readonly addingSource: boolean;
+  readonly bibliographyExport: BibliographyExportController;
 }
 
 export type LibraryFilter = "all" | "queued" | "reading";
@@ -31,6 +33,7 @@ export function LibraryPane({
   onSelectSource,
   onAddSource,
   addingSource,
+  bibliographyExport,
 }: LibraryPaneProps): JSX.Element {
   return (
     <aside className="library-pane" aria-label="Library">
@@ -38,9 +41,7 @@ export function LibraryPane({
         <span>
           <LibraryIcon /> Library
         </span>
-        <button className="icon-button" type="button" aria-label="Library actions">
-          <MoreIcon />
-        </button>
+        <LibraryActions bibliographyExport={bibliographyExport} />
       </div>
       <label className="library-search">
         <SearchIcon />
@@ -108,6 +109,52 @@ export function LibraryPane({
         </ReaderButton>
       </div>
     </aside>
+  );
+}
+
+function LibraryActions({
+  bibliographyExport,
+}: {
+  readonly bibliographyExport: BibliographyExportController;
+}): JSX.Element {
+  const actionLabel = bibliographyExport.itemCount
+    ? `${String(bibliographyExport.itemCount)} ready to export`
+    : "No citations ready";
+  return (
+    <details className="library-actions">
+      <summary className="icon-button" aria-label="Library actions" title="Library actions">
+        <MoreIcon />
+      </summary>
+      <div className="library-actions-menu">
+        <button
+          type="button"
+          className="library-action"
+          disabled={bibliographyExport.status === "exporting"}
+          onClick={bibliographyExport.run}
+        >
+          <DownloadIcon />
+          <span>
+            <strong>
+              {bibliographyExport.status === "exporting"
+                ? "Preparing bibliography…"
+                : "Export bibliography"}
+            </strong>
+            <small>{actionLabel}</small>
+          </span>
+        </button>
+        {bibliographyExport.problemSummary ? (
+          <p className="library-export-problems">{bibliographyExport.problemSummary}</p>
+        ) : null}
+        {bibliographyExport.message ? (
+          <p
+            className={`library-export-message is-${bibliographyExport.status}`}
+            role={bibliographyExport.status === "error" ? "alert" : "status"}
+          >
+            {bibliographyExport.message}
+          </p>
+        ) : null}
+      </div>
+    </details>
   );
 }
 

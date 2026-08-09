@@ -16,6 +16,7 @@ import {
   useAnnotationComposer,
   type AnnotationComposerController,
 } from "./use-annotation-composer.js";
+import { useBibliographyExport } from "./use-bibliography-export.js";
 import { useDocumentDecorations } from "./use-document-decorations.js";
 import { useReaderWorkspace, type ReaderWorkspaceController } from "./use-reader-workspace.js";
 import { useReadingResume, type ReadingResumeState } from "./use-reading-resume.js";
@@ -33,12 +34,14 @@ export interface ReaderAppProps {
     onSurfaceChange: (surface: ReadingSurface | null) => void,
   ) => ReactNode;
   readonly pickSourceFile?: () => Promise<PickedFile | null>;
+  readonly saveFile?: (name: string, blob: Blob) => Promise<void>;
 }
 
 export function ReaderApp({
   gateway,
   renderDocument,
   pickSourceFile,
+  saveFile,
 }: ReaderAppProps): JSX.Element {
   const workspace = useReaderWorkspace(gateway);
   const [search, setSearch] = useState("");
@@ -57,6 +60,10 @@ export function ReaderApp({
   const decorationProblem = useDocumentDecorations(surface, workspace.annotations);
   const sourceImport = useSourceImport(workspace, pickSourceFile, () =>
     setMobileLibraryOpen(false),
+  );
+  const bibliographyExport = useBibliographyExport(
+    workspace.library.status === "ready" ? workspace.library.value.sources : [],
+    saveFile,
   );
 
   useEffect(() => {
@@ -116,6 +123,7 @@ export function ReaderApp({
           }}
           onAddSource={() => void sourceImport.choose()}
           addingSource={sourceImport.importing}
+          bibliographyExport={bibliographyExport}
         />
         <DocumentWorkspace
           source={source}

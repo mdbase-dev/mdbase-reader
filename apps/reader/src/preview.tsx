@@ -22,6 +22,12 @@ import { ReaderApp } from "./ReaderApp.js";
 import type { ReaderLibrarySnapshot, ReaderWorkspaceGateway } from "./workspace-model.js";
 
 const collection = collectionId("reader-preview");
+const previewCitation = {
+  id: "weil1952gravity",
+  type: "book",
+  title: "Gravity and Grace",
+  author: [{ family: "Weil", given: "Simone" }],
+};
 const sources: readonly Source[] = [
   {
     collectionId: collection,
@@ -30,6 +36,7 @@ const sources: readonly Source[] = [
     title: "Gravity and Grace",
     creators: ["Simone Weil"],
     tags: ["philosophy", "attention"],
+    citation: previewCitation,
     readingStatus: "reading",
     documents: [
       {
@@ -43,7 +50,7 @@ const sources: readonly Source[] = [
     ],
     body: "## Notes\n\nAttention is not effort but a patient availability to truth.\n\n![[annotations/ann_attention]]\n",
     recordRevision: recordRevision("preview-revision-1"),
-    frontmatter: {},
+    frontmatter: { csl: previewCitation },
   },
   {
     collectionId: collection,
@@ -208,5 +215,11 @@ function PreviewDocument(): JSX.Element {
 
 export function PreviewReader(): JSX.Element {
   const gateway = useMemo(() => new PreviewGateway(), []);
-  return <ReaderApp gateway={gateway} renderDocument={() => <PreviewDocument />} />;
+  return (
+    <ReaderApp
+      gateway={gateway}
+      renderDocument={() => <PreviewDocument />}
+      saveFile={() => Promise.resolve()}
+    />
+  );
 }
