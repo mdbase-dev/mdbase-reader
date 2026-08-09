@@ -9,6 +9,7 @@ export * from "./domain/document.js";
 export * from "./domain/errors.js";
 export * from "./domain/identity.js";
 export * from "./domain/revision.js";
+export type * from "./domain/search.js";
 export * from "./domain/selector.js";
 export * from "./domain/source.js";
 export * from "./domain/time.js";

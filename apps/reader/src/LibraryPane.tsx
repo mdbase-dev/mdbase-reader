@@ -3,7 +3,8 @@ import { ReaderButton } from "@mdbase-reader/ui";
 import { DownloadIcon, LibraryIcon, MoreIcon, PlusIcon, SearchIcon } from "./icons.js";
 
 import type { BibliographyExportController } from "./use-bibliography-export.js";
-import type { SourceId, SourceSummary } from "@mdbase-reader/core";
+import type { LibrarySearchStatus } from "./use-library-search.js";
+import type { SourceId, SourceSummary, SourceTextSearchMatch } from "@mdbase-reader/core";
 import type { JSX } from "react";
 
 export interface LibraryPaneProps {
@@ -18,6 +19,9 @@ export interface LibraryPaneProps {
   readonly onAddSource: () => void;
   readonly addingSource: boolean;
   readonly bibliographyExport: BibliographyExportController;
+  readonly searchMatches: ReadonlyMap<SourceId, SourceTextSearchMatch>;
+  readonly searchStatus: LibrarySearchStatus;
+  readonly searchProblem: string | null;
 }
 
 export type LibraryFilter = "all" | "queued" | "reading";
@@ -34,6 +38,9 @@ export function LibraryPane({
   onAddSource,
   addingSource,
   bibliographyExport,
+  searchMatches,
+  searchStatus,
+  searchProblem,
 }: LibraryPaneProps): JSX.Element {
   return (
     <aside className="library-pane" aria-label="Library">
@@ -52,8 +59,17 @@ export function LibraryPane({
           onChange={(event) => onSearchChange(event.target.value)}
           placeholder="Search library"
         />
-        <kbd>⌘K</kbd>
+        {searchStatus === "searching" ? (
+          <span className="library-search-progress" aria-hidden="true">
+            ···
+          </span>
+        ) : (
+          <kbd>⌘K</kbd>
+        )}
       </label>
+      <span className="sr-only" role="status" aria-live="polite">
+        {searchStatus === "searching" ? "Searching source notes and annotations." : ""}
+      </span>
       <nav className="status-nav" aria-label="Reading status">
         <button
           className={filter === "all" ? "is-active" : undefined}
@@ -93,13 +109,22 @@ export function LibraryPane({
             <span className="source-format">{sourceFormat(source)}</span>
             <strong>{source.title}</strong>
             <small>{source.creators.join(", ") || "Unknown creator"}</small>
-            <span className="source-row-meta">{source.readingStatus ?? "inbox"}</span>
+            <span className="source-row-meta">
+              {searchMatchLabel(searchMatches.get(source.id)) ?? source.readingStatus ?? "inbox"}
+            </span>
           </button>
         ))}
         {visibleSources.length === 0 ? (
           <div className="library-empty">
-            <strong>No matching sources</strong>
-            <span>Try another search or reading status.</span>
+            <strong>
+              {searchStatus === "searching" ? "Searching notes…" : "No matching sources"}
+            </strong>
+            <span>
+              {searchProblem ??
+                (searchStatus === "searching"
+                  ? "Checking source notes and annotations."
+                  : "Try another search or reading status.")}
+            </span>
           </div>
         ) : null}
       </div>
@@ -110,6 +135,13 @@ export function LibraryPane({
       </div>
     </aside>
   );
+}
+
+function searchMatchLabel(match: SourceTextSearchMatch | undefined): string | null {
+  if (!match) {
+    return null;
+  }
+  return match.kinds.includes("source-note") ? "note match" : "annotation match";
 }
 
 function LibraryActions({

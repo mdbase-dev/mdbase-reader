@@ -18,11 +18,12 @@ import {
 } from "./use-annotation-composer.js";
 import { useBibliographyExport } from "./use-bibliography-export.js";
 import { useDocumentDecorations } from "./use-document-decorations.js";
+import { useLibrarySearch } from "./use-library-search.js";
 import { useReaderWorkspace, type ReaderWorkspaceController } from "./use-reader-workspace.js";
 import { useReadingResume, type ReadingResumeState } from "./use-reading-resume.js";
 import { useSourceImport } from "./use-source-import.js";
-import { filterSources, type ReaderWorkspaceGateway } from "./workspace-model.js";
 
+import type { ReaderWorkspaceGateway } from "./workspace-model.js";
 import type { SourceSummary } from "@mdbase-reader/core";
 import type { PickedFile } from "@mdbase-reader/platform";
 import type { ReadingSurface } from "@mdbase-reader/reading-surface";
@@ -73,20 +74,10 @@ export function ReaderApp({
     return () => query.removeEventListener("change", update);
   }, []);
 
-  useEffect(() => {
-    const handleShortcut = (event: KeyboardEvent): void => {
-      if ((event.metaKey || event.ctrlKey) && event.key.toLocaleLowerCase() === "k") {
-        event.preventDefault();
-        document.querySelector<HTMLInputElement>("#reader-library-search")?.focus();
-      } else if (event.key === "Escape" && focusMode) {
-        setFocusMode(false);
-      }
-    };
-    window.addEventListener("keydown", handleShortcut);
-    return () => window.removeEventListener("keydown", handleShortcut);
-  }, [focusMode]);
+  useReaderShortcuts(focusMode, setFocusMode);
 
-  const visibleSources = useVisibleSources(workspace.library, filter, search);
+  const filteredSources = useStatusFilteredSources(workspace.library, filter);
+  const librarySearch = useLibrarySearch(gateway, filteredSources, search);
 
   if (workspace.library.status !== "ready") {
     return (
@@ -111,7 +102,7 @@ export function ReaderApp({
       <main className={readerMainClass(mobileLibraryOpen, focusMode, inspectorOpen)}>
         <LibraryPane
           sources={library.sources}
-          visibleSources={visibleSources}
+          visibleSources={librarySearch.sources}
           selectedSourceId={source?.id ?? null}
           search={search}
           filter={filter}
@@ -124,6 +115,9 @@ export function ReaderApp({
           onAddSource={() => void sourceImport.choose()}
           addingSource={sourceImport.importing}
           bibliographyExport={bibliographyExport}
+          searchMatches={librarySearch.matches}
+          searchStatus={librarySearch.status}
+          searchProblem={librarySearch.problem}
         />
         <DocumentWorkspace
           source={source}
@@ -162,22 +156,33 @@ export function ReaderApp({
   );
 }
 
-function useVisibleSources(
+function useReaderShortcuts(focusMode: boolean, setFocusMode: (value: boolean) => void): void {
+  useEffect(() => {
+    const handleShortcut = (event: KeyboardEvent): void => {
+      if ((event.metaKey || event.ctrlKey) && event.key.toLocaleLowerCase() === "k") {
+        event.preventDefault();
+        document.querySelector<HTMLInputElement>("#reader-library-search")?.focus();
+      } else if (event.key === "Escape" && focusMode) {
+        setFocusMode(false);
+      }
+    };
+    window.addEventListener("keydown", handleShortcut);
+    return () => window.removeEventListener("keydown", handleShortcut);
+  }, [focusMode, setFocusMode]);
+}
+
+function useStatusFilteredSources(
   library: ReaderWorkspaceController["library"],
   filter: LibraryFilter,
-  search: string,
 ): readonly SourceSummary[] {
   return useMemo(
     () =>
-      filterSources(
-        library.status === "ready"
-          ? library.value.sources.filter(
-              ({ readingStatus }) => filter === "all" || readingStatus === filter,
-            )
-          : [],
-        search,
-      ),
-    [filter, library, search],
+      library.status === "ready"
+        ? library.value.sources.filter(
+            ({ readingStatus }) => filter === "all" || readingStatus === filter,
+          )
+        : [],
+    [filter, library],
   );
 }
 

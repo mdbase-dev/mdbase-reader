@@ -158,6 +158,9 @@ class PreviewGateway implements ReaderWorkspaceGateway {
     this.#sources = this.#sources.map((item) => (item.id === source.id ? updated : item));
     return Promise.resolve(updated);
   }
+  searchText(): Promise<readonly []> {
+    return Promise.resolve([]);
+  }
   importSourceFile(_request: Omit<SourceFileImportRequest, "collectionId">): Promise<Source> {
     return Promise.reject(new Error("File import is unavailable in the interface preview."));
   }

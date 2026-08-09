@@ -9,6 +9,7 @@ import type {
   Clock,
   CollectionId,
   ContentHasher,
+  ContentSearchRepository,
   FileId,
   MutationJournal,
   ReaderRequestOptions,
@@ -40,6 +41,7 @@ export class ConnectWorkspaceGateway implements ReaderWorkspaceGateway {
       readonly ids: ReaderIdGenerator;
       readonly journal: MutationJournal;
     },
+    private readonly contentSearch?: ContentSearchRepository,
   ) {}
 
   async library(options: ReaderRequestOptions = {}): Promise<ReaderLibrarySnapshot> {
@@ -97,6 +99,13 @@ export class ConnectWorkspaceGateway implements ReaderWorkspaceGateway {
     const updated = await saveSourceCitation(this.sources, source, this.#library ?? [], citation);
     this.#replaceSource(updated);
     return updated;
+  }
+
+  searchText(
+    query: string,
+    options: ReaderRequestOptions = {},
+  ): ReturnType<ReaderWorkspaceGateway["searchText"]> {
+    return this.contentSearch?.search(this.collectionId, query, options) ?? Promise.resolve([]);
   }
 
   async importSourceFile(request: Omit<SourceFileImportRequest, "collectionId">): Promise<Source> {

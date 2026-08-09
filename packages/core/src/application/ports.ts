@@ -10,6 +10,7 @@ import type {
   SourceId,
 } from "../domain/identity.js";
 import type { FileRevision } from "../domain/revision.js";
+import type { SourceTextSearchMatch } from "../domain/search.js";
 import type {
   Page,
   ReadingPosition,
@@ -54,6 +55,14 @@ export interface SourceRepository {
     readonly embed: string;
     readonly idempotencyKey: MutationId;
   }): Promise<RecordRevision>;
+}
+
+export interface ContentSearchRepository {
+  search(
+    collectionId: CollectionId,
+    query: string,
+    options?: ReaderRequestOptions,
+  ): Promise<readonly SourceTextSearchMatch[]>;
 }
 
 export interface AnnotationRepository {

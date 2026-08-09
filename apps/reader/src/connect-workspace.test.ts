@@ -103,6 +103,28 @@ describe("ConnectWorkspaceGateway", () => {
     expect(updated.citation).toEqual(citation);
     expect((await gateway.library()).sources[0]?.citation).toEqual(citation);
   });
+
+  it("searches note text within the connected collection", async () => {
+    const controller = new AbortController();
+    const search = vi.fn().mockResolvedValue([{ sourceId: source.id, kinds: ["annotation"] }]);
+    const gateway = new ConnectWorkspaceGateway(
+      { list: vi.fn() } as unknown as SourceRepository,
+      { listForSource: vi.fn() } as unknown as AnnotationRepository,
+      { store: vi.fn() },
+      { commitFile: vi.fn() },
+      source.collectionId,
+      "Reading",
+      createReaderRuntimeServices(new MemoryStorage()),
+      { search },
+    );
+
+    await expect(
+      gateway.searchText("cannot be measured", { signal: controller.signal }),
+    ).resolves.toEqual([{ sourceId: source.id, kinds: ["annotation"] }]);
+    expect(search).toHaveBeenCalledWith(source.collectionId, "cannot be measured", {
+      signal: controller.signal,
+    });
+  });
 });
 
 describe("ConnectWorkspaceGateway pagination", () => {

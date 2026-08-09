@@ -8,6 +8,7 @@ import type {
   SourceId,
   SourceSummary,
   SourceFileImportRequest,
+  SourceTextSearchMatch,
 } from "@mdbase-reader/core";
 
 export interface ReaderLibrarySnapshot {
@@ -22,6 +23,10 @@ export interface ReaderWorkspaceGateway {
   annotations(id: SourceId, options?: ReaderRequestOptions): Promise<readonly Annotation[]>;
   saveSourceBody(source: Source, body: string): Promise<Source>;
   saveSourceCitation(source: Source, citation: unknown): Promise<Source>;
+  searchText(
+    query: string,
+    options?: ReaderRequestOptions,
+  ): Promise<readonly SourceTextSearchMatch[]>;
   importSourceFile(request: Omit<SourceFileImportRequest, "collectionId">): Promise<Source>;
   createAnnotation(request: AnnotationCreationRequest): Promise<Annotation>;
   saveReadingPosition(
