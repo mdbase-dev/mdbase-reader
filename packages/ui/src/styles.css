@@ -1,0 +1,173 @@
+@import "@fontsource/atkinson-hyperlegible/400.css";
+@import "@fontsource/atkinson-hyperlegible/700.css";
+@import "@fontsource/azeret-mono/500.css";
+@import "@fontsource/azeret-mono/600.css";
+
+:root {
+  color-scheme: light;
+  color: var(--ink);
+  background: var(--paper);
+  font-family: "Atkinson Hyperlegible", "Segoe UI", sans-serif;
+  font-synthesis: none;
+  --color-canvas: oklch(99.5% 0.002 255);
+  --color-surface: oklch(99.5% 0.002 255);
+  --color-surface-subtle: oklch(97.5% 0.004 255);
+  --color-selected: oklch(96.4% 0.016 238);
+  --color-text: oklch(21% 0.018 255);
+  --color-text-soft: oklch(39% 0.016 255);
+  --color-text-muted: oklch(54% 0.014 255);
+  --color-text-faint: oklch(70% 0.009 255);
+  --color-border: oklch(92% 0.006 255);
+  --color-border-strong: oklch(82% 0.008 255);
+  --color-accent: oklch(45% 0.105 238);
+  --color-accent-strong: oklch(35% 0.09 238);
+  --color-success: oklch(43% 0.09 153);
+  --color-warning: oklch(60% 0.09 75);
+  --color-danger: oklch(50% 0.11 28);
+  --color-scrim: oklch(20% 0.006 250 / 0.22);
+  --paper: var(--color-surface);
+  --canvas: var(--color-canvas);
+  --hover: var(--color-surface-subtle);
+  --selected: var(--color-selected);
+  --ink: var(--color-text);
+  --ink-soft: var(--color-text-soft);
+  --muted: var(--color-text-muted);
+  --faint: var(--color-text-faint);
+  --line: var(--color-border);
+  --line-strong: var(--color-border-strong);
+  --accent: var(--color-accent);
+  --action: var(--color-accent-strong);
+  --connected: var(--color-success);
+  --warning: var(--color-warning);
+  --danger: var(--color-danger);
+  --mono: "Azeret Mono", "SFMono-Regular", "Cascadia Code", monospace;
+  --ease: cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --color-canvas: oklch(17.5% 0.012 255);
+  --color-surface: oklch(19.5% 0.012 255);
+  --color-surface-subtle: oklch(23.5% 0.014 255);
+  --color-selected: oklch(27% 0.035 238);
+  --color-text: oklch(92% 0.008 255);
+  --color-text-soft: oklch(80% 0.01 255);
+  --color-text-muted: oklch(68% 0.012 255);
+  --color-text-faint: oklch(56% 0.011 255);
+  --color-border: oklch(29% 0.012 255);
+  --color-border-strong: oklch(40% 0.014 255);
+  --color-accent: oklch(73% 0.105 238);
+  --color-accent-strong: oklch(79% 0.085 238);
+  --color-success: oklch(72% 0.09 153);
+  --color-warning: oklch(78% 0.09 75);
+  --color-danger: oklch(72% 0.115 28);
+  --color-scrim: oklch(5% 0.006 250 / 0.62);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme]) {
+    color-scheme: dark;
+    --color-canvas: oklch(17.5% 0.012 255);
+    --color-surface: oklch(19.5% 0.012 255);
+    --color-surface-subtle: oklch(23.5% 0.014 255);
+    --color-selected: oklch(27% 0.035 238);
+    --color-text: oklch(92% 0.008 255);
+    --color-text-soft: oklch(80% 0.01 255);
+    --color-text-muted: oklch(68% 0.012 255);
+    --color-text-faint: oklch(56% 0.011 255);
+    --color-border: oklch(29% 0.012 255);
+    --color-border-strong: oklch(40% 0.014 255);
+    --color-accent: oklch(73% 0.105 238);
+    --color-accent-strong: oklch(79% 0.085 238);
+    --color-success: oklch(72% 0.09 153);
+    --color-warning: oklch(78% 0.09 75);
+    --color-danger: oklch(72% 0.115 28);
+    --color-scrim: oklch(5% 0.006 250 / 0.62);
+  }
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+html,
+body,
+#root {
+  width: 100%;
+  min-height: 100%;
+  margin: 0;
+}
+body {
+  color: var(--ink);
+  background: var(--paper);
+  -webkit-font-smoothing: antialiased;
+}
+button,
+input,
+select,
+textarea {
+  color: inherit;
+  font: inherit;
+}
+button:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible,
+a:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+.mono {
+  font-family: var(--mono);
+}
+
+.mdbase-product-brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  color: var(--ink);
+  font-family: var(--mono);
+}
+.mdbase-product-brand strong {
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+.mdbase-product-brand > span {
+  color: var(--muted);
+  font-size: 11px;
+}
+.mdbase-product-mark {
+  width: 20px;
+  height: 20px;
+  overflow: visible;
+}
+.mdbase-mark-ink {
+  fill: currentColor;
+}
+.mdbase-mark-accent {
+  fill: var(--accent);
+}
+.mdbase-button {
+  min-height: 34px;
+  padding: 0 12px;
+  border: 1px solid var(--line-strong);
+  border-radius: 4px;
+  color: var(--ink-soft);
+  background: transparent;
+  cursor: pointer;
+  transition:
+    color 150ms var(--ease),
+    border-color 150ms var(--ease),
+    background 150ms var(--ease);
+}
+.mdbase-button:hover {
+  color: var(--ink);
+  border-color: var(--muted);
+  background: var(--hover);
+}
+.mdbase-button:disabled {
+  color: var(--faint);
+  cursor: default;
+}
