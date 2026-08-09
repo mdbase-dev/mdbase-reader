@@ -131,7 +131,10 @@ export class ConnectSourceRepository implements SourceRepository {
     const updated = outcomeValue(
       await this.client.update({
         path,
-        ifRevision: input.expectedRevision,
+        // Reading position is a mergeable field. Rebase it on the whole record
+        // we just read so an earlier autosave or another benign source update
+        // cannot strand the session on a stale caller revision.
+        ifRevision: recordRevision(current.revision),
         patch: { reading },
         includeDocument: true,
       }),

@@ -11,7 +11,7 @@ function success<Value>(value: Value): ConnectOutcome<Value> {
 }
 
 describe("Connect source reading state", () => {
-  it("preserves extension fields and patches only reading through whole-record access", async () => {
+  it("rebases a reading update on the latest whole record and preserves extension fields", async () => {
     const frontmatter = {
       id: "src_01",
       title: "Gravity and Grace",
@@ -52,7 +52,7 @@ describe("Connect source reading state", () => {
     await repository.updateReading({
       collectionId: collectionId("reading"),
       sourceId: sourceId("src_01"),
-      expectedRevision: "rev-1" as never,
+      expectedRevision: "stale-caller-revision" as never,
       documentFileId: "file-01" as never,
       position: { kind: "pdf", pageIndex: 7 },
       openedAt: dateTime("2026-08-09T00:00:00.000Z"),
