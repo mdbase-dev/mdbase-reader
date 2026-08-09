@@ -1,4 +1,4 @@
-import { collectionId, sourceId } from "@mdbase-reader/core";
+import { annotationId, collectionId, dateTime, sourceId } from "@mdbase-reader/core";
 import { describe, expect, it, vi } from "vitest";
 
 import { annotationContract, sourceContract } from "./contracts.js";
@@ -102,6 +102,60 @@ describe("ConnectSourceRepository", () => {
 });
 
 describe("ConnectAnnotationRepository", () => {
+  it("creates annotation bodies through explicitly approved whole-record access", async () => {
+    const document = {
+      path: "annotations/ann_01.md",
+      revision: "rev-1",
+      types: ["reader-annotation"],
+      frontmatter: {
+        type: "reader-annotation",
+        id: "ann_01",
+        source: "[[src_01]]",
+        annotation_type: "highlight",
+        created_at: "2026-08-09T00:00:00.000Z",
+        tags: [],
+      },
+      effectiveFrontmatter: {
+        id: "ann_01",
+        source: "[[src_01]]",
+        annotation_type: "highlight",
+        created_at: "2026-08-09T00:00:00.000Z",
+        tags: [],
+      },
+      body: "> Selected text",
+      file: {},
+    } satisfies RecordDocument;
+    const create = vi.fn(() => Promise.resolve(success(document)));
+    const repository = new ConnectAnnotationRepository({
+      create,
+    } as unknown as ReaderConnectClient);
+
+    await repository.create(
+      {
+        collectionId: collectionId("reading"),
+        id: annotationId("ann_01"),
+        sourceId: sourceId("src_01"),
+        source: "[[src_01]]",
+        annotationType: "highlight",
+        target: { quote: { exact: "Selected text" } },
+        tags: [],
+        body: "> Selected text",
+        createdAt: dateTime("2026-08-09T00:00:00.000Z"),
+      },
+      "mutation-1" as never,
+    );
+
+    expect(create).toHaveBeenCalledWith(
+      expect.objectContaining({
+        type: "reader-annotation",
+        body: "> Selected text",
+      }),
+    );
+    expect(create).not.toHaveBeenCalledWith(
+      expect.objectContaining({ contract: annotationContract }),
+    );
+  });
+
   it("filters normalized contract fields locally and reads only matching annotation bodies", async () => {
     const query = vi.fn(() =>
       Promise.resolve(

@@ -47,7 +47,6 @@ export class ConnectAnnotationRepository implements AnnotationRepository {
       await this.client.create({
         path: `annotations/${annotation.id}.md`,
         type: "reader-annotation",
-        contract: annotationContract,
         frontmatter: annotationFrontmatter(annotation),
         body: annotation.body,
         includeDocument: true,
