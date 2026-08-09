@@ -1,4 +1,4 @@
-import { lazy, Suspense, type JSX } from "react";
+import { lazy, Suspense, useState, type JSX } from "react";
 
 import { AnnotationComposer } from "./AnnotationComposer.js";
 import { CitationEditor } from "./CitationEditor.js";
@@ -163,24 +163,49 @@ function SourceNoteEditor({
 }: {
   readonly workspace: ReaderWorkspaceController;
 }): JSX.Element {
-  if (workspace.sourceRecord.status === "idle" || workspace.sourceRecord.status === "loading") {
-    return <div className="editor-loading">Opening source note…</div>;
-  }
-  if (workspace.sourceRecord.status === "error") {
-    return (
+  const [citationInsertion, setCitationInsertion] = useState(0);
+  const sourceRecord = workspace.sourceRecord;
+  if (sourceRecord.status !== "ready") {
+    return sourceRecord.status === "error" ? (
       <div className="inspector-status is-error" role="alert">
-        {workspace.sourceRecord.message}
+        {sourceRecord.message}
       </div>
+    ) : (
+      <div className="editor-loading">Opening source note…</div>
     );
   }
+  const citekey = sourceRecord.value.citation?.id;
   return (
     <>
+      <div className="source-note-toolbar">
+        <span>Markdown</span>
+        <button
+          type="button"
+          disabled={!citekey}
+          title={citekey ? `Insert [@${citekey}] at the cursor` : "Add citation metadata first"}
+          onPointerDown={(event) => event.preventDefault()}
+          onClick={() => setCitationInsertion((value) => value + 1)}
+        >
+          <CitationIcon />
+          {citekey ? `Insert [@${citekey}]` : "Citation required"}
+        </button>
+      </div>
       <Suspense fallback={<div className="editor-loading">Opening source note…</div>}>
         <MarkdownEditor
+          className="source-note-editor-surface"
           value={workspace.draft}
           ariaLabel="Source literature note"
           onChange={workspace.setDraft}
           onBlur={workspace.saveDraft}
+          insertion={
+            citekey && citationInsertion > 0
+              ? {
+                  requestId: citationInsertion,
+                  text: `[@${citekey}]`,
+                  wordBounded: true,
+                }
+              : null
+          }
         />
       </Suspense>
       {workspace.saveStatus === "saving" ? (

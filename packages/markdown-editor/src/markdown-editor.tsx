@@ -4,6 +4,8 @@ import { EditorState } from "@codemirror/state";
 import { EditorView, keymap } from "@codemirror/view";
 import { useEffect, useRef, type JSX } from "react";
 
+import { textInsertionAtCursor, type TextInsertionRequest } from "./text-insertion.js";
+
 export interface MarkdownEditorProps {
   readonly value: string;
   readonly ariaLabel: string;
@@ -11,6 +13,7 @@ export interface MarkdownEditorProps {
   readonly className?: string;
   readonly onChange: (value: string) => void;
   readonly onBlur?: () => void;
+  readonly insertion?: TextInsertionRequest | null;
 }
 
 const readerEditorTheme = EditorView.theme({
@@ -39,12 +42,14 @@ export function MarkdownEditor({
   className,
   onChange,
   onBlur,
+  insertion,
 }: MarkdownEditorProps): JSX.Element {
   const hostRef = useRef<HTMLDivElement>(null);
   const viewRef = useRef<EditorView | null>(null);
   const initialValueRef = useRef(value);
   const changeRef = useRef(onChange);
   const blurRef = useRef(onBlur);
+  const insertedRequestRef = useRef<number | null>(null);
 
   useEffect(() => {
     changeRef.current = onChange;
@@ -89,6 +94,24 @@ export function MarkdownEditor({
     }
     view.dispatch({ changes: { from: 0, to: view.state.doc.length, insert: value } });
   }, [value]);
+
+  useEffect(() => {
+    const view = viewRef.current;
+    if (!view || !insertion || insertedRequestRef.current === insertion.requestId) {
+      return;
+    }
+    const change = textInsertionAtCursor(
+      view.state.doc.toString(),
+      view.state.selection.main.to,
+      insertion,
+    );
+    insertedRequestRef.current = insertion.requestId;
+    view.dispatch({
+      changes: { from: change.from, insert: change.insert },
+      selection: { anchor: change.cursor },
+    });
+    view.focus();
+  }, [insertion]);
 
   return <div ref={hostRef} className={className} />;
 }

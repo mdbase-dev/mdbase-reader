@@ -1377,10 +1377,65 @@ button {
 .note-editor {
   position: relative;
   min-height: 0;
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
 }
 
-.note-editor > div {
+.source-note-editor-surface {
+  min-height: 0;
   height: 100%;
+}
+
+.source-note-toolbar {
+  min-width: 0;
+  min-height: 38px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 0 10px 0 14px;
+  border-bottom: 1px solid var(--line);
+  color: var(--faint);
+  font-family: var(--mono);
+  font-size: 8px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.source-note-toolbar button {
+  min-width: 0;
+  max-width: 210px;
+  min-height: 28px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0 7px;
+  overflow: hidden;
+  border: 1px solid var(--line);
+  border-radius: 3px;
+  color: var(--ink-soft);
+  background: transparent;
+  font-family: var(--mono);
+  font-size: 8px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.source-note-toolbar button:hover {
+  border-color: var(--line-strong);
+  color: var(--ink);
+  background: var(--hover);
+}
+
+.source-note-toolbar button:disabled {
+  color: var(--faint);
+  cursor: not-allowed;
+}
+
+.source-note-toolbar svg {
+  width: 13px;
+  flex: 0 0 auto;
 }
 
 .editor-save-status {
