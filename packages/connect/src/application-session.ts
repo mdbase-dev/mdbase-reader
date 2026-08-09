@@ -1,0 +1,130 @@
+import {
+  MdbaseBrowserSelection,
+  MdbaseConnect,
+  type ConnectOutcome,
+  type JsonObject,
+  type MdbaseAppManifest,
+  type MdbaseApplicationSessionSnapshot,
+} from "@mdbase-dev/connect";
+import {
+  collectionId,
+  type AnnotationRepository,
+  type CollectionId,
+  type DocumentRepository,
+  type SourceRepository,
+} from "@mdbase-reader/core";
+
+import { connectDocumentRepository } from "./documents.js";
+import {
+  ConnectAnnotationRepository,
+  connectClient,
+  ConnectSourceRepository,
+} from "./repositories.js";
+
+export type ReaderConnectSnapshot = MdbaseApplicationSessionSnapshot;
+
+export interface ReaderConnectedCollection {
+  readonly collectionId: CollectionId;
+  readonly collectionName: string;
+  readonly sources: SourceRepository;
+  readonly annotations: AnnotationRepository;
+  readonly documents: DocumentRepository;
+}
+
+export interface ReaderApplicationSessionOptions {
+  readonly serverUrl: string;
+  readonly loopbackUrl?: string;
+  readonly manifest: MdbaseAppManifest;
+  readonly redirectUri: string;
+  readonly fallbackPath: string;
+}
+
+export class ReaderApplicationSession {
+  readonly #session;
+
+  public constructor(options: ReaderApplicationSessionOptions) {
+    const connect = new MdbaseConnect<JsonObject>({
+      serverUrl: options.serverUrl,
+      manifest: options.manifest,
+      redirectUri: options.redirectUri,
+      directAccess: "auto",
+      ...(options.loopbackUrl ? { loopbackUrl: options.loopbackUrl } : {}),
+    });
+    this.#session = connect.application({
+      selection: new MdbaseBrowserSelection({ fallbackPath: options.fallbackPath }),
+      autoSelect: "never",
+    });
+  }
+
+  public start(): Promise<ConnectOutcome<ReaderConnectSnapshot>> {
+    return this.#session.start();
+  }
+
+  public destroy(): void {
+    this.#session.destroy();
+  }
+
+  public getSnapshot(): ReaderConnectSnapshot {
+    return this.#session.getSnapshot();
+  }
+
+  public subscribe(listener: () => void): () => void {
+    return this.#session.subscribe(listener);
+  }
+
+  public select(selectedCollectionId: string): ConnectOutcome<unknown> {
+    return this.#session.select(selectedCollectionId, { history: "replace" });
+  }
+
+  public authorize(target: "choose" | "selected"): Promise<ConnectOutcome<unknown>> {
+    return this.#session.authorize(target);
+  }
+
+  public applyCollectionSetup(): Promise<ConnectOutcome<ReaderConnectSnapshot>> {
+    return this.#session.applyCollectionSetup();
+  }
+
+  public connectedCollection(expectedCollectionId?: string): ReaderConnectedCollection | null {
+    const snapshot = this.#session.getSnapshot();
+    const connection = snapshot.status === "ready" ? this.#session.connection() : null;
+    if (
+      !connection ||
+      snapshot.status !== "ready" ||
+      (expectedCollectionId !== undefined && connection.collectionId !== expectedCollectionId)
+    ) {
+      return null;
+    }
+    const client = connectClient(connection);
+    return {
+      collectionId: collectionId(connection.collectionId),
+      collectionName: snapshot.info.displayName,
+      sources: new ConnectSourceRepository(client),
+      annotations: new ConnectAnnotationRepository(client),
+      documents: connectDocumentRepository(connection),
+    };
+  }
+}
+
+export function manifestForApplicationUrl(
+  manifest: MdbaseAppManifest,
+  applicationUrl: string,
+): MdbaseAppManifest {
+  if (manifest.distribution === "portable") {
+    throw new Error("A portable application manifest cannot be localized to a web origin.");
+  }
+  const url = new URL(applicationUrl);
+  url.search = "";
+  url.hash = "";
+  const homepage = url.href;
+  return {
+    ...manifest,
+    distribution: "web",
+    homepage,
+    icon: new URL("favicon.svg", homepage).href,
+    redirect_uris: [homepage],
+  };
+}
+
+export function connectProblemMessage(outcome: ConnectOutcome<unknown>): string | null {
+  return outcome.ok ? null : outcome.problem.message;
+}

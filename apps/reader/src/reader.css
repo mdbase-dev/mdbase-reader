@@ -26,6 +26,114 @@ button {
   font-family: var(--mono);
   font-size: 12px;
 }
+.connection-screen {
+  min-height: 100%;
+  display: grid;
+  place-items: center;
+  padding: 32px 20px;
+  background:
+    linear-gradient(var(--line) 1px, transparent 1px),
+    linear-gradient(90deg, var(--line) 1px, transparent 1px), var(--canvas);
+  background-size: 32px 32px;
+}
+.connection-card {
+  width: min(520px, 100%);
+  padding: 28px;
+  border: 1px solid var(--line-strong);
+  border-radius: 6px;
+  background: var(--paper);
+  box-shadow: 0 20px 60px var(--color-scrim);
+}
+.connection-copy {
+  margin: 44px 0 26px;
+}
+.connection-copy > .mono {
+  color: var(--accent);
+  font-size: 9px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.connection-copy h1 {
+  margin: 8px 0 9px;
+  font-size: clamp(25px, 6vw, 34px);
+  line-height: 1;
+  letter-spacing: -0.025em;
+}
+.connection-copy p,
+.connection-setup p {
+  margin: 0;
+  color: var(--muted);
+  line-height: 1.5;
+}
+.connection-error {
+  margin-top: 12px !important;
+  color: var(--danger) !important;
+  font-size: 12px;
+}
+.connection-actions {
+  display: grid;
+  gap: 8px;
+}
+.connection-actions .mdbase-button {
+  width: 100%;
+}
+.connection-secondary {
+  min-height: 32px;
+  padding: 0 8px;
+  color: var(--muted);
+  background: transparent;
+  cursor: pointer;
+}
+.connection-secondary:hover {
+  color: var(--ink);
+}
+.connection-setup {
+  margin: 0 0 20px;
+  padding: 16px;
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  background: var(--hover);
+}
+.connection-setup h2 {
+  margin: 0 0 6px;
+  font-size: 15px;
+}
+.connection-setup ul {
+  margin: 12px 0;
+  padding-left: 20px;
+  color: var(--ink-soft);
+  font-family: var(--mono);
+  font-size: 9px;
+  line-height: 1.6;
+}
+.connection-local-note {
+  margin: 22px 0 0;
+  color: var(--faint);
+  font-size: 10px;
+  text-align: center;
+}
+.connection-local-note code {
+  color: var(--muted);
+  font-family: var(--mono);
+}
+.connected-document-message {
+  height: 100%;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  color: var(--muted);
+  font-family: var(--mono);
+  font-size: 10px;
+  text-align: center;
+}
+.connected-document-message.is-error {
+  color: var(--danger);
+}
+.document-empty a.mdbase-button {
+  display: inline-flex;
+  align-items: center;
+  text-decoration: none;
+}
 .reader-shell {
   height: 100%;
   display: grid;

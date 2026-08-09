@@ -1,0 +1,30 @@
+import {
+  ReaderApplicationSession,
+  manifestForApplicationUrl,
+  type ReaderApplicationSessionOptions,
+} from "@mdbase-reader/connect";
+
+import bundledManifest from "./generated/mdbase-app.json";
+
+const applicationUrl = new URL(import.meta.env.BASE_URL, location.origin).href;
+const declaredManifest = bundledManifest as ReaderApplicationSessionOptions["manifest"];
+const manifest = isLoopbackApplication(location)
+  ? manifestForApplicationUrl(declaredManifest, applicationUrl)
+  : declaredManifest;
+const serverParameter = new URL(location.href).searchParams.get("server");
+
+export const readerSession = new ReaderApplicationSession({
+  serverUrl:
+    serverParameter ?? import.meta.env.VITE_MDBASE_CONNECT_URL ?? "https://connect.mdbase.dev",
+  loopbackUrl: import.meta.env.VITE_MDBASE_CONNECT_LOOPBACK_URL ?? "http://127.0.0.1:28485",
+  manifest,
+  redirectUri: applicationUrl,
+  fallbackPath: import.meta.env.BASE_URL,
+});
+
+function isLoopbackApplication(current: Location): boolean {
+  return (
+    current.protocol === "http:" &&
+    ["localhost", "127.0.0.1", "::1", "[::1]"].includes(current.hostname)
+  );
+}

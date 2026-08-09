@@ -4,9 +4,7 @@
   "name": "mdbase Reader",
   "homepage": "https://reader.mdbase.dev/",
   "icon": "https://reader.mdbase.dev/favicon.svg",
-  "redirect_uris": [
-    "https://reader.mdbase.dev/"
-  ],
+  "redirect_uris": ["https://reader.mdbase.dev/"],
   "requirements": {
     "access": "full_collection",
     "contracts": [
@@ -35,15 +33,7 @@
         "collection.setup.apply"
       ]
     },
-    "files": {
-      "actions": [
-        "list",
-        "read"
-      ],
-      "scope": {
-        "kind": "collection"
-      }
-    }
+    "files": { "actions": ["list", "read"], "scope": { "kind": "collection" } }
   },
   "provisions": {
     "type_packs": [

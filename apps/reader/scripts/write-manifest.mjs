@@ -1,6 +1,8 @@
 import { mkdir, writeFile } from "node:fs/promises";
 import { resolve } from "node:path";
 
+import { format } from "prettier";
+
 import { buildReaderManifest } from "./reader-manifest.mjs";
 
 const projectRoot = resolve(import.meta.dirname, "..");
@@ -8,7 +10,7 @@ const manifest = await buildReaderManifest({
   origin: process.env.MDBASE_READER_ORIGIN ?? "https://reader.mdbase.dev",
   basePath: process.env.MDBASE_READER_BASE_PATH ?? "/",
 });
-const document = `${JSON.stringify(manifest, null, 2)}\n`;
+const document = await format(JSON.stringify(manifest), { parser: "json" });
 const targets = [
   resolve(projectRoot, "public", ".well-known", "mdbase-app.json"),
   resolve(projectRoot, "src", "generated", "mdbase-app.json"),
