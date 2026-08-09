@@ -81,11 +81,7 @@ export class ConnectSourceRepository implements SourceRepository {
     }
     this.#pathsById.set(id, path);
     const result = outcomeValue(
-      await readWithOptions(
-        this.client,
-        { path, contract: sourceContract, includeDocument: true },
-        options,
-      ),
+      await readWithOptions(this.client, { path, includeDocument: true }, options),
       "read source",
     );
     return sourceFromDocument(collection, result);

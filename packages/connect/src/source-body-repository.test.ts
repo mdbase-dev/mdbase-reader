@@ -22,6 +22,7 @@ const document = {
 
 function repositoryFixture(): {
   readonly repository: ConnectSourceRepository;
+  readonly read: ReturnType<typeof vi.fn>;
   readonly update: ReturnType<typeof vi.fn>;
 } {
   const query = vi.fn(() =>
@@ -48,11 +49,25 @@ function repositoryFixture(): {
       read,
       update,
     } as unknown as ReaderConnectClient),
+    read,
     update,
   };
 }
 
 describe("Connect source Markdown bodies", () => {
+  it("reads a source note as a whole record after resolving its contract identity", async () => {
+    const { repository, read } = repositoryFixture();
+
+    const source = await repository.get(collectionId("reading"), sourceId("src_01"));
+
+    expect(source?.body).toBe("Notes");
+    expect(read).toHaveBeenCalledWith({
+      path: document.path,
+      includeDocument: true,
+    });
+    expect(read).not.toHaveBeenCalledWith(expect.objectContaining({ contract: expect.anything() }));
+  });
+
   it("updates source notes through explicitly approved whole-record access", async () => {
     const { repository, update } = repositoryFixture();
     await repository.get(collectionId("reading"), sourceId("src_01"));

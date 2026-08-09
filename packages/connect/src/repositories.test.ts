@@ -15,7 +15,7 @@ function success<Value>(value: Value): ConnectOutcome<Value> {
 }
 
 describe("ConnectSourceRepository", () => {
-  it("always scopes library queries to the exact Reader source contract", async () => {
+  it("scopes discovery to the source contract and opens the selected whole record", async () => {
     const query = vi.fn(() =>
       Promise.resolve(
         success<QueryResult>({
@@ -53,7 +53,6 @@ describe("ConnectSourceRepository", () => {
     expect(query).toHaveBeenCalledOnce();
     expect(read).toHaveBeenCalledWith({
       path: "sources/gravity.md",
-      contract: sourceContract,
       includeDocument: true,
     });
     expect(page.items[0]?.title).toBe("Gravity and Grace");
