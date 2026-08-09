@@ -4,6 +4,7 @@ import { DownloadIcon, LibraryIcon, MoreIcon, PlusIcon, SearchIcon } from "./ico
 
 import type { BibliographyExportController } from "./use-bibliography-export.js";
 import type { LibrarySearchStatus } from "./use-library-search.js";
+import type { ReaderLibrarySnapshot } from "./workspace-model.js";
 import type { SourceId, SourceSummary, SourceTextSearchMatch } from "@mdbase-reader/core";
 import type { JSX } from "react";
 
@@ -22,6 +23,7 @@ export interface LibraryPaneProps {
   readonly searchMatches: ReadonlyMap<SourceId, SourceTextSearchMatch>;
   readonly searchStatus: LibrarySearchStatus;
   readonly searchProblem: string | null;
+  readonly sourceIndex?: ReaderLibrarySnapshot["sourceIndex"];
 }
 
 export type LibraryFilter = "all" | "queued" | "reading";
@@ -41,6 +43,7 @@ export function LibraryPane({
   searchMatches,
   searchStatus,
   searchProblem,
+  sourceIndex,
 }: LibraryPaneProps): JSX.Element {
   return (
     <aside className="library-pane" aria-label="Library">
@@ -79,7 +82,7 @@ export function LibraryPane({
           aria-pressed={filter === "all"}
           onClick={() => onFilterChange("all")}
         >
-          All <span>{sources.length}</span>
+          All <span>{sourceCountLabel(sources.length, sourceIndex)}</span>
         </button>
         <button
           className={filter === "reading" ? "is-active" : undefined}
@@ -100,7 +103,12 @@ export function LibraryPane({
           <span>{sources.filter(({ readingStatus }) => readingStatus === "queued").length}</span>
         </button>
       </nav>
-      <div className="source-list">
+      <div className="source-list" aria-busy={sourceIndex?.complete === false}>
+        <span className="sr-only" role="status" aria-live="polite">
+          {sourceIndex?.complete === false
+            ? `Loaded ${String(sourceIndex.loaded)}${sourceIndex.total ? ` of ${String(sourceIndex.total)}` : ""} sources.`
+            : ""}
+        </span>
         {visibleSources.map((source) => (
           <button
             key={source.id}
@@ -137,6 +145,15 @@ export function LibraryPane({
       </div>
     </aside>
   );
+}
+
+function sourceCountLabel(
+  loaded: number,
+  sourceIndex: ReaderLibrarySnapshot["sourceIndex"],
+): string {
+  return sourceIndex?.complete === false && sourceIndex.total
+    ? `${String(loaded)}/${String(sourceIndex.total)}`
+    : String(loaded);
 }
 
 function searchMatchLabel(match: SourceTextSearchMatch | undefined): string | null {

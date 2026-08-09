@@ -18,10 +18,19 @@ export interface ReaderLibrarySnapshot {
   readonly collectionName: string;
   readonly sources: readonly SourceSummary[];
   readonly connectionState: "connected" | "offline" | "syncing";
+  readonly sourceIndex?: {
+    readonly loaded: number;
+    readonly total?: number;
+    readonly complete: boolean;
+  };
+}
+
+export interface ReaderLibraryRequestOptions extends ReaderRequestOptions {
+  readonly onProgress?: (snapshot: ReaderLibrarySnapshot) => void;
 }
 
 export interface ReaderWorkspaceGateway {
-  library(options?: ReaderRequestOptions): Promise<ReaderLibrarySnapshot>;
+  library(options?: ReaderLibraryRequestOptions): Promise<ReaderLibrarySnapshot>;
   source(id: SourceId, options?: ReaderRequestOptions): Promise<Source | null>;
   annotations(id: SourceId, options?: ReaderRequestOptions): Promise<readonly Annotation[]>;
   saveSourceBody(source: Source, body: string): Promise<Source>;

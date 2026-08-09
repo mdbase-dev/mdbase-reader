@@ -8,7 +8,13 @@ import {
   updateAnnotationBody,
 } from "@mdbase-reader/core";
 
-import type { ReaderLibrarySnapshot, ReaderWorkspaceGateway } from "./workspace-model.js";
+import { completeLibrarySnapshot, loadSourceLibrary } from "./source-library-loader.js";
+
+import type {
+  ReaderLibraryRequestOptions,
+  ReaderLibrarySnapshot,
+  ReaderWorkspaceGateway,
+} from "./workspace-model.js";
 import type {
   Annotation,
   AnnotationDeletionPlan,
@@ -55,15 +61,20 @@ export class ConnectWorkspaceGateway implements ReaderWorkspaceGateway {
     private readonly files?: CollectionFileRepository,
   ) {}
 
-  async library(options: ReaderRequestOptions = {}): Promise<ReaderLibrarySnapshot> {
-    if (!this.#library) {
-      this.#library = await listAllSources(this.sources, this.collectionId, options);
+  async library(options: ReaderLibraryRequestOptions = {}): Promise<ReaderLibrarySnapshot> {
+    const { onProgress, ...requestOptions } = options;
+    if (this.#library) {
+      return completeLibrarySnapshot(this.collectionName, this.#library);
     }
-    return {
+    const snapshot = await loadSourceLibrary({
+      repository: this.sources,
+      collectionId: this.collectionId,
       collectionName: this.collectionName,
-      sources: this.#library,
-      connectionState: "connected",
-    };
+      options: requestOptions,
+      ...(onProgress ? { onProgress } : {}),
+    });
+    this.#library = snapshot.sources;
+    return snapshot;
   }
 
   async source(id: SourceId, options: ReaderRequestOptions = {}): Promise<Source | null> {
@@ -224,56 +235,4 @@ function replaceInOrder(
   replacement: SourceSummary,
 ): readonly SourceSummary[] {
   return sources.map((source) => (source.id === replacement.id ? replacement : source));
-}
-
-async function listAllSources(
-  repository: SourceRepository,
-  collectionId: CollectionId,
-  options: ReaderRequestOptions,
-): Promise<readonly SourceSummary[]> {
-  const first = await repository.list({ collectionId, limit: 100 }, options);
-  if (first.totalCount && first.totalCount > first.items.length) {
-    const offsets = Array.from(
-      { length: Math.ceil(first.totalCount / 100) - 1 },
-      (_value, index) => (index + 1) * 100,
-    );
-    const pages = await mapWithConcurrency(offsets, 4, async (offset) =>
-      repository.list({ collectionId, limit: 100, cursor: String(offset) }, options),
-    );
-    return [first, ...pages].flatMap(({ items }) => items);
-  }
-  const sources: SourceSummary[] = [...first.items];
-  const seenCursors = new Set<string>();
-  let cursor = first.nextCursor;
-  while (cursor) {
-    if (seenCursors.has(cursor)) {
-      throw new Error("Reader received a repeated source-library cursor.");
-    }
-    seenCursors.add(cursor);
-    const page = await repository.list({ collectionId, limit: 100, cursor }, options);
-    sources.push(...page.items);
-    cursor = page.nextCursor;
-  }
-  return sources;
-}
-
-async function mapWithConcurrency<Input, Output>(
-  inputs: readonly Input[],
-  concurrency: number,
-  operation: (input: Input) => Promise<Output>,
-): Promise<readonly Output[]> {
-  const results: Output[] = new Array<Output>(inputs.length);
-  let nextIndex = 0;
-  const worker = async (): Promise<void> => {
-    while (nextIndex < inputs.length) {
-      const index = nextIndex;
-      nextIndex += 1;
-      const input = inputs[index];
-      if (input !== undefined) {
-        results[index] = await operation(input);
-      }
-    }
-  };
-  await Promise.all(Array.from({ length: Math.min(concurrency, inputs.length) }, worker));
-  return results;
 }

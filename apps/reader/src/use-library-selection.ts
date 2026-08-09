@@ -39,21 +39,22 @@ export function useLibrarySelection(gateway: ReaderWorkspaceGateway): LibrarySel
 
   useEffect(() => {
     const controller = new AbortController();
+    const updateLibrary = (snapshot: ReaderLibrarySnapshot): void => {
+      if (controller.signal.aborted) {
+        return;
+      }
+      setLibrary({ status: "ready", value: snapshot });
+      const current = selectedSourceIdRef.current;
+      const next =
+        current && snapshot.sources.some(({ id }) => id === current)
+          ? current
+          : (snapshot.sources[0]?.id ?? null);
+      selectedSourceIdRef.current = next;
+      setSelectedSourceId(next);
+    };
     void gateway
-      .library({ signal: controller.signal })
-      .then((snapshot) => {
-        if (controller.signal.aborted) {
-          return;
-        }
-        setLibrary({ status: "ready", value: snapshot });
-        const current = selectedSourceIdRef.current;
-        const next =
-          current && snapshot.sources.some(({ id }) => id === current)
-            ? current
-            : (snapshot.sources[0]?.id ?? null);
-        selectedSourceIdRef.current = next;
-        setSelectedSourceId(next);
-      })
+      .library({ signal: controller.signal, onProgress: updateLibrary })
+      .then(updateLibrary)
       .catch((reason: unknown) => {
         if (!controller.signal.aborted) {
           setLibrary({

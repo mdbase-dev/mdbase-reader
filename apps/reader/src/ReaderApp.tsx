@@ -75,13 +75,7 @@ export function ReaderApp({
     citationSources: workspace.library.status === "ready" ? workspace.library.value.sources : [],
     saveFile,
   });
-
-  useEffect(() => {
-    const query = window.matchMedia("(max-width: 760px)");
-    const update = (event: MediaQueryListEvent): void => setInspectorOpen(!event.matches);
-    query.addEventListener("change", update);
-    return () => query.removeEventListener("change", update);
-  }, []);
+  useResponsiveInspector(setInspectorOpen);
 
   useReaderShortcuts(focusMode, setFocusMode);
 
@@ -128,6 +122,7 @@ export function ReaderApp({
           searchMatches={librarySearch.matches}
           searchStatus={librarySearch.status}
           searchProblem={librarySearch.problem}
+          sourceIndex={library.sourceIndex}
         />
         <DocumentWorkspace
           source={source}
@@ -165,6 +160,15 @@ export function ReaderApp({
       <SourceImportOverlay flow={sourceImport} />
     </div>
   );
+}
+
+function useResponsiveInspector(setInspectorOpen: (open: boolean) => void): void {
+  useEffect(() => {
+    const query = window.matchMedia("(max-width: 760px)");
+    const update = (event: MediaQueryListEvent): void => setInspectorOpen(!event.matches);
+    query.addEventListener("change", update);
+    return () => query.removeEventListener("change", update);
+  }, [setInspectorOpen]);
 }
 
 function useReaderShortcuts(focusMode: boolean, setFocusMode: (value: boolean) => void): void {
