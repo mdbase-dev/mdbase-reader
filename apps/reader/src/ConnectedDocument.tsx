@@ -4,7 +4,7 @@ import type {
   DocumentDescriptor,
   DocumentHandle,
   DocumentRepository,
-  Source,
+  SourceSummary,
 } from "@mdbase-reader/core";
 import type { SurfaceDocument } from "@mdbase-reader/reading-surface";
 
@@ -15,7 +15,7 @@ const PdfViewerSurface = lazy(async () => {
 
 export interface ConnectedDocumentProps {
   readonly repository: DocumentRepository;
-  readonly source: Source;
+  readonly source: SourceSummary;
 }
 
 type OpenDocumentState =

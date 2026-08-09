@@ -25,6 +25,7 @@ const source: Source = {
 
 describe("ConnectWorkspaceGateway", () => {
   it("loads summaries before source bodies and saves notes revision-safely", async () => {
+    const controller = new AbortController();
     const updateBody = vi.fn().mockResolvedValue({ ...source, body: "Updated" });
     const list = vi.fn().mockResolvedValue({ items: [source] });
     const get = vi.fn().mockResolvedValue(source);
@@ -44,13 +45,24 @@ describe("ConnectWorkspaceGateway", () => {
       "Reading",
     );
 
-    const snapshot = await gateway.snapshot();
-    expect(snapshot.selectedSource?.id).toBe(source.id);
-    await gateway.selectSource(source.id);
-    await gateway.saveSourceBody(source, "Updated");
+    const library = await gateway.library({ signal: controller.signal });
+    expect(library.sources[0]?.id).toBe(source.id);
+    expect(await gateway.source(source.id, { signal: controller.signal })).toBe(source);
+    expect(await gateway.annotations(source.id, { signal: controller.signal })).toEqual([]);
+    expect(await gateway.saveSourceBody(source, "Updated")).toMatchObject({ body: "Updated" });
     expect(list).toHaveBeenCalledOnce();
+    expect(list).toHaveBeenCalledWith(
+      { collectionId: source.collectionId, limit: 100 },
+      { signal: controller.signal },
+    );
     expect(get).toHaveBeenCalledOnce();
+    expect(get).toHaveBeenCalledWith(source.collectionId, source.id, {
+      signal: controller.signal,
+    });
     expect(listForSource).toHaveBeenCalledOnce();
+    expect(listForSource).toHaveBeenCalledWith(source.collectionId, source.id, {
+      signal: controller.signal,
+    });
     expect(updateBody).toHaveBeenCalledWith({
       collectionId: source.collectionId,
       sourceId: source.id,

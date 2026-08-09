@@ -6,6 +6,7 @@ import {
   type CollectionId,
   type MutationId,
   type Page,
+  type ReaderRequestOptions,
   type Source,
   type SourceId,
   type SourceQuery,
@@ -33,8 +34,8 @@ import type {
 } from "@mdbase-dev/connect";
 
 export interface ReaderConnectClient {
-  read(input: ReadInput): Promise<ConnectOutcome<RecordDocument>>;
-  query(input: QueryInput): Promise<ConnectOutcome<QueryResult>>;
+  read(input: ReadInput, options?: ReaderRequestOptions): Promise<ConnectOutcome<RecordDocument>>;
+  query(input: QueryInput, options?: ReaderRequestOptions): Promise<ConnectOutcome<QueryResult>>;
   create(input: CreateInput): Promise<ConnectOutcome<RecordDocument>>;
   update(input: UpdateInput): Promise<ConnectOutcome<RecordDocument>>;
 }
@@ -61,13 +62,30 @@ function cursorOffset(cursor: string | undefined): number {
   return Number.isSafeInteger(offset) && offset >= 0 ? offset : 0;
 }
 
+function queryWithOptions(
+  client: ReaderConnectClient,
+  input: QueryInput,
+  options: ReaderRequestOptions,
+): Promise<ConnectOutcome<QueryResult>> {
+  return options.signal ? client.query(input, options) : client.query(input);
+}
+
+function readWithOptions(
+  client: ReaderConnectClient,
+  input: ReadInput,
+  options: ReaderRequestOptions,
+): Promise<ConnectOutcome<RecordDocument>> {
+  return options.signal ? client.read(input, options) : client.read(input);
+}
+
 async function recordPathById(
   client: ReaderConnectClient,
   contract: typeof sourceContract | typeof annotationContract,
   id: string,
+  options: ReaderRequestOptions = {},
 ): Promise<string | null> {
   const result = value(
-    await client.query({ contract, frontmatterMode: "effective", limit: 500 }),
+    await queryWithOptions(client, { contract, frontmatterMode: "effective", limit: 500 }, options),
     "query records",
   );
   return (
@@ -83,14 +101,18 @@ export class ConnectSourceRepository implements SourceRepository {
 
   constructor(private readonly client: ReaderConnectClient) {}
 
-  async list(query: SourceQuery): Promise<Page<SourceSummary>> {
+  async list(query: SourceQuery, options: ReaderRequestOptions = {}): Promise<Page<SourceSummary>> {
     const offset = cursorOffset(query.cursor);
-    const outcome = await this.client.query({
-      contract: sourceContract,
-      frontmatterMode: "effective",
-      limit: query.limit,
-      offset,
-    });
+    const outcome = await queryWithOptions(
+      this.client,
+      {
+        contract: sourceContract,
+        frontmatterMode: "effective",
+        limit: query.limit,
+        offset,
+      },
+      options,
+    );
     const result = value(outcome, "query sources");
     const normalized = result.results
       .map((record) => sourceSummaryFromQuery(query.collectionId, record))
@@ -118,14 +140,23 @@ export class ConnectSourceRepository implements SourceRepository {
     };
   }
 
-  async get(collection: CollectionId, id: SourceId): Promise<Source | null> {
-    const path = this.#pathsById.get(id) ?? (await recordPathById(this.client, sourceContract, id));
+  async get(
+    collection: CollectionId,
+    id: SourceId,
+    options: ReaderRequestOptions = {},
+  ): Promise<Source | null> {
+    const path =
+      this.#pathsById.get(id) ?? (await recordPathById(this.client, sourceContract, id, options));
     if (!path) {
       return null;
     }
     this.#pathsById.set(id, path);
     const result = value(
-      await this.client.read({ path, contract: sourceContract, includeDocument: true }),
+      await readWithOptions(
+        this.client,
+        { path, contract: sourceContract, includeDocument: true },
+        options,
+      ),
       "read source",
     );
     return sourceFromDocument(collection, result);
@@ -202,18 +233,26 @@ export class ConnectAnnotationRepository implements AnnotationRepository {
 
   constructor(private readonly client: ReaderConnectClient) {}
 
-  async listForSource(collection: CollectionId, source: SourceId): Promise<readonly Annotation[]> {
+  async listForSource(
+    collection: CollectionId,
+    source: SourceId,
+    options: ReaderRequestOptions = {},
+  ): Promise<readonly Annotation[]> {
     await this.#ensureIndex();
     const matchingPaths = this.#pathsBySource.get(source) ?? [];
 
     return Promise.all(
       matchingPaths.map(async (path) => {
         const document = value(
-          await this.client.read({
-            path,
-            contract: annotationContract,
-            includeDocument: true,
-          }),
+          await readWithOptions(
+            this.client,
+            {
+              path,
+              contract: annotationContract,
+              includeDocument: true,
+            },
+            options,
+          ),
           "read annotation",
         );
         return annotationFromDocument(collection, document);
@@ -287,14 +326,23 @@ export class ConnectAnnotationRepository implements AnnotationRepository {
     return created;
   }
 
-  async get(collection: CollectionId, id: AnnotationId): Promise<Annotation | null> {
+  async get(
+    collection: CollectionId,
+    id: AnnotationId,
+    options: ReaderRequestOptions = {},
+  ): Promise<Annotation | null> {
     const path =
-      this.#pathsById.get(id) ?? (await recordPathById(this.client, annotationContract, id));
+      this.#pathsById.get(id) ??
+      (await recordPathById(this.client, annotationContract, id, options));
     if (!path) {
       return null;
     }
     const result = value(
-      await this.client.read({ path, contract: annotationContract, includeDocument: true }),
+      await readWithOptions(
+        this.client,
+        { path, contract: annotationContract, includeDocument: true },
+        options,
+      ),
       "read annotation",
     );
     return annotationFromDocument(collection, result);
@@ -317,8 +365,8 @@ function linkedRecordId(candidate: unknown): string | undefined {
 
 export function connectClient(connection: MdbaseConnection): ReaderConnectClient {
   return {
-    read: (input) => connection.read(input),
-    query: (input) => connection.query(input),
+    read: (input, options) => connection.read(input, options),
+    query: (input, options) => connection.query(input, options),
     create: (input) => connection.create(input),
     update: (input) => connection.update(input),
   };

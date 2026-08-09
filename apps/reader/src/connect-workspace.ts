@@ -1,92 +1,78 @@
-import type { ReaderWorkspaceGateway, ReaderWorkspaceSnapshot } from "./workspace-model.js";
+import type { ReaderLibrarySnapshot, ReaderWorkspaceGateway } from "./workspace-model.js";
 import type {
+  Annotation,
   AnnotationRepository,
   CollectionId,
+  ReaderRequestOptions,
   Source,
   SourceId,
   SourceRepository,
 } from "@mdbase-reader/core";
 
 export class ConnectWorkspaceGateway implements ReaderWorkspaceGateway {
-  #selectedId: SourceId | null = null;
-  #library: ReaderWorkspaceSnapshot["sources"] | null = null;
-  readonly #sourcesById = new Map<SourceId, Promise<Source | null>>();
-  readonly #annotationsBySource = new Map<
-    SourceId,
-    Promise<ReaderWorkspaceSnapshot["annotations"]>
-  >();
+  #library: ReaderLibrarySnapshot["sources"] | null = null;
+  readonly #sourcesById = new Map<SourceId, Source>();
+  readonly #annotationsBySource = new Map<SourceId, readonly Annotation[]>();
 
   constructor(
     private readonly sources: SourceRepository,
-    private readonly annotations: AnnotationRepository,
+    private readonly annotationsRepository: AnnotationRepository,
     private readonly collectionId: CollectionId,
     private readonly collectionName: string,
   ) {}
 
-  async snapshot(): Promise<ReaderWorkspaceSnapshot> {
-    return this.#load();
+  async library(options: ReaderRequestOptions = {}): Promise<ReaderLibrarySnapshot> {
+    if (!this.#library) {
+      const library = await this.sources.list(
+        { collectionId: this.collectionId, limit: 100 },
+        options,
+      );
+      this.#library = library.items;
+    }
+    return {
+      collectionName: this.collectionName,
+      sources: this.#library,
+      connectionState: "connected",
+    };
   }
 
-  async selectSource(id: SourceId): Promise<ReaderWorkspaceSnapshot> {
-    this.#selectedId = id;
-    return this.#load();
+  async source(id: SourceId, options: ReaderRequestOptions = {}): Promise<Source | null> {
+    const cached = this.#sourcesById.get(id);
+    if (cached) {
+      return cached;
+    }
+    const source = await this.sources.get(this.collectionId, id, options);
+    if (source) {
+      this.#sourcesById.set(id, source);
+    }
+    return source;
   }
 
-  async saveSourceBody(source: Source, body: string): Promise<ReaderWorkspaceSnapshot> {
+  async annotations(
+    id: SourceId,
+    options: ReaderRequestOptions = {},
+  ): Promise<readonly Annotation[]> {
+    const cached = this.#annotationsBySource.get(id);
+    if (cached) {
+      return cached;
+    }
+    const annotations = await this.annotationsRepository.listForSource(
+      this.collectionId,
+      id,
+      options,
+    );
+    this.#annotationsBySource.set(id, annotations);
+    return annotations;
+  }
+
+  async saveSourceBody(source: Source, body: string): Promise<Source> {
     const updated = await this.sources.updateBody({
       collectionId: this.collectionId,
       sourceId: source.id,
       expectedRevision: source.recordRevision,
       body,
     });
-    this.#sourcesById.set(source.id, Promise.resolve(updated));
-    return this.#load();
-  }
-
-  async #load(): Promise<ReaderWorkspaceSnapshot> {
-    if (!this.#library) {
-      const library = await this.sources.list({ collectionId: this.collectionId, limit: 100 });
-      this.#library = library.items;
-    }
-    this.#selectedId ??= this.#library[0]?.id ?? null;
-    const selectedId = this.#selectedId;
-    const [selectedSource, annotations] = selectedId
-      ? await Promise.all([this.#source(selectedId), this.#annotations(selectedId)])
-      : [null, []];
-    return {
-      collectionName: this.collectionName,
-      sources: this.#library,
-      selectedSource,
-      annotations,
-      connectionState: "connected",
-    };
-  }
-
-  #source(id: SourceId): Promise<Source | null> {
-    const cached = this.#sourcesById.get(id);
-    if (cached) {
-      return cached;
-    }
-    const pending = this.sources.get(this.collectionId, id).catch((reason: unknown) => {
-      this.#sourcesById.delete(id);
-      throw reason;
-    });
-    this.#sourcesById.set(id, pending);
-    return pending;
-  }
-
-  #annotations(id: SourceId): Promise<ReaderWorkspaceSnapshot["annotations"]> {
-    const cached = this.#annotationsBySource.get(id);
-    if (cached) {
-      return cached;
-    }
-    const pending = this.annotations
-      .listForSource(this.collectionId, id)
-      .catch((reason: unknown) => {
-        this.#annotationsBySource.delete(id);
-        throw reason;
-      });
-    this.#annotationsBySource.set(id, pending);
-    return pending;
+    this.#sourcesById.set(source.id, updated);
+    return updated;
   }
 }

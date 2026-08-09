@@ -13,8 +13,12 @@ import type { Page, Source, SourceQuery, SourceSummary } from "../domain/source.
 import type { DateTime } from "../domain/time.js";
 
 export interface SourceRepository {
-  list(query: SourceQuery): Promise<Page<SourceSummary>>;
-  get(collectionId: CollectionId, id: SourceId): Promise<Source | null>;
+  list(query: SourceQuery, options?: ReaderRequestOptions): Promise<Page<SourceSummary>>;
+  get(
+    collectionId: CollectionId,
+    id: SourceId,
+    options?: ReaderRequestOptions,
+  ): Promise<Source | null>;
   updateBody(input: {
     readonly collectionId: CollectionId;
     readonly sourceId: SourceId;
@@ -32,9 +36,17 @@ export interface SourceRepository {
 }
 
 export interface AnnotationRepository {
-  listForSource(collectionId: CollectionId, sourceId: SourceId): Promise<readonly Annotation[]>;
+  listForSource(
+    collectionId: CollectionId,
+    sourceId: SourceId,
+    options?: ReaderRequestOptions,
+  ): Promise<readonly Annotation[]>;
   create(annotation: Annotation, idempotencyKey: MutationId): Promise<Annotation>;
-  get(collectionId: CollectionId, id: AnnotationId): Promise<Annotation | null>;
+  get(
+    collectionId: CollectionId,
+    id: AnnotationId,
+    options?: ReaderRequestOptions,
+  ): Promise<Annotation | null>;
 }
 
 export interface DocumentHandle {
@@ -45,9 +57,11 @@ export interface DocumentHandle {
   close(): Promise<void>;
 }
 
-export interface DocumentOpenOptions {
+export interface ReaderRequestOptions {
   readonly signal?: AbortSignal;
 }
+
+export type DocumentOpenOptions = ReaderRequestOptions;
 
 export interface DocumentRepository {
   open(

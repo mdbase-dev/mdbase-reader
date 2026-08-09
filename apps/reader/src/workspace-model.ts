@@ -1,17 +1,22 @@
-import type { Annotation, Source, SourceId, SourceSummary } from "@mdbase-reader/core";
+import type {
+  Annotation,
+  ReaderRequestOptions,
+  Source,
+  SourceId,
+  SourceSummary,
+} from "@mdbase-reader/core";
 
-export interface ReaderWorkspaceSnapshot {
+export interface ReaderLibrarySnapshot {
   readonly collectionName: string;
   readonly sources: readonly SourceSummary[];
-  readonly selectedSource: Source | null;
-  readonly annotations: readonly Annotation[];
   readonly connectionState: "connected" | "offline" | "syncing";
 }
 
 export interface ReaderWorkspaceGateway {
-  snapshot(): Promise<ReaderWorkspaceSnapshot>;
-  selectSource(id: SourceId): Promise<ReaderWorkspaceSnapshot>;
-  saveSourceBody(source: Source, body: string): Promise<ReaderWorkspaceSnapshot>;
+  library(options?: ReaderRequestOptions): Promise<ReaderLibrarySnapshot>;
+  source(id: SourceId, options?: ReaderRequestOptions): Promise<Source | null>;
+  annotations(id: SourceId, options?: ReaderRequestOptions): Promise<readonly Annotation[]>;
+  saveSourceBody(source: Source, body: string): Promise<Source>;
 }
 
 export function filterSources(

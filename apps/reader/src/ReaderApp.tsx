@@ -6,18 +6,8 @@ import {
   saveThemePreference,
   type ThemePreference,
 } from "@mdbase-reader/ui";
-import {
-  lazy,
-  Suspense,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-  type JSX,
-  type ReactNode,
-} from "react";
+import { lazy, Suspense, useEffect, useMemo, useState, type JSX, type ReactNode } from "react";
 
-import { readerErrorMessage } from "./errors.js";
 import {
   BackIcon,
   HighlightIcon,
@@ -28,14 +18,17 @@ import {
   ThemeIcon,
 } from "./icons.js";
 import {
-  filterSources,
-  type ReaderWorkspaceGateway,
-  type ReaderWorkspaceSnapshot,
-} from "./workspace-model.js";
+  type AsyncResource,
+  type ReaderWorkspaceController,
+  useReaderWorkspace,
+} from "./use-reader-workspace.js";
+import { filterSources, type ReaderWorkspaceGateway } from "./workspace-model.js";
+
+import type { Annotation, SourceSummary } from "@mdbase-reader/core";
 
 export interface ReaderAppProps {
   readonly gateway: ReaderWorkspaceGateway;
-  readonly renderDocument?: (snapshot: ReaderWorkspaceSnapshot) => ReactNode;
+  readonly renderDocument?: (source: SourceSummary) => ReactNode;
 }
 
 type InspectorTab = "note" | "annotations";
@@ -53,16 +46,9 @@ function nextTheme(theme: ThemePreference): ThemePreference {
 }
 
 export function ReaderApp({ gateway, renderDocument }: ReaderAppProps): JSX.Element {
-  const [snapshot, setSnapshot] = useState<ReaderWorkspaceSnapshot | null>(null);
-  const [loadAttempt, setLoadAttempt] = useState(0);
-  const [workspaceError, setWorkspaceError] = useState<string | null>(null);
+  const workspace = useReaderWorkspace(gateway);
   const [search, setSearch] = useState("");
   const [tab, setTab] = useState<InspectorTab>("annotations");
-  const [draft, setDraft] = useState("");
-  const [openingSourceId, setOpeningSourceId] = useState<
-    NonNullable<ReaderWorkspaceSnapshot["selectedSource"]>["id"] | null
-  >(null);
-  const selectionRequest = useRef(0);
   const [inspectorOpen, setInspectorOpen] = useState(
     () => !window.matchMedia("(max-width: 760px)").matches,
   );
@@ -80,69 +66,18 @@ export function ReaderApp({ gateway, renderDocument }: ReaderAppProps): JSX.Elem
     return () => query.removeEventListener("change", update);
   }, []);
 
-  useEffect(() => {
-    let active = true;
-    void gateway
-      .snapshot()
-      .then((next) => {
-        if (active) {
-          setWorkspaceError(null);
-          setSnapshot(next);
-          setDraft(next.selectedSource?.body ?? "");
-        }
-      })
-      .catch((reason: unknown) => {
-        if (active) {
-          setWorkspaceError(readerErrorMessage(reason, "Reader could not load this collection."));
-        }
-      });
-    return () => {
-      active = false;
-    };
-  }, [gateway, loadAttempt]);
-
   const sources = useMemo(
-    () => filterSources(snapshot?.sources ?? [], search),
-    [search, snapshot?.sources],
+    () =>
+      filterSources(
+        workspace.library.status === "ready" ? workspace.library.value.sources : [],
+        search,
+      ),
+    [search, workspace.library],
   );
 
-  const selectSource = (id: NonNullable<ReaderWorkspaceSnapshot["selectedSource"]>["id"]): void => {
-    const request = selectionRequest.current + 1;
-    selectionRequest.current = request;
-    setOpeningSourceId(id);
-    setWorkspaceError(null);
-    void gateway
-      .selectSource(id)
-      .then((next) => {
-        if (request !== selectionRequest.current) {
-          return;
-        }
-        setSnapshot(next);
-        setDraft(next.selectedSource?.body ?? "");
-        setMobileLibraryOpen(false);
-        setOpeningSourceId(null);
-      })
-      .catch((reason: unknown) => {
-        if (request !== selectionRequest.current) {
-          return;
-        }
-        setOpeningSourceId(null);
-        setWorkspaceError(readerErrorMessage(reason, "Reader could not open that source."));
-      });
-  };
-
-  const saveDraft = (): void => {
-    const source = snapshot?.selectedSource;
-    if (!source || draft === source.body) {
-      return;
-    }
-    setWorkspaceError(null);
-    void gateway
-      .saveSourceBody(source, draft)
-      .then(setSnapshot)
-      .catch((reason: unknown) => {
-        setWorkspaceError(readerErrorMessage(reason, "Reader could not save the source note."));
-      });
+  const selectSource = (id: SourceSummary["id"]): void => {
+    workspace.selectSource(id);
+    setMobileLibraryOpen(false);
   };
 
   const changeTheme = (): void => {
@@ -151,28 +86,26 @@ export function ReaderApp({ gateway, renderDocument }: ReaderAppProps): JSX.Elem
     setTheme(next);
   };
 
-  if (!snapshot) {
+  if (workspace.library.status !== "ready") {
     return (
       <ReaderLoading
-        error={workspaceError}
-        onRetry={() => {
-          setWorkspaceError(null);
-          setLoadAttempt((attempt) => attempt + 1);
-        }}
+        error={workspace.library.status === "error" ? workspace.library.message : null}
+        onRetry={workspace.retryLibrary}
       />
     );
   }
 
-  const source = snapshot.selectedSource;
+  const library = workspace.library.value;
+  const source = workspace.selectedSource;
   return (
     <div className="reader-shell">
       <header className="reader-header">
         <ProductBrand />
         <div className="reader-header-context">
-          <span>{snapshot.collectionName}</span>
+          <span>{library.collectionName}</span>
           <i aria-hidden="true" />
-          <span className={`connection-state is-${snapshot.connectionState}`}>
-            {snapshot.connectionState}
+          <span className={`connection-state is-${library.connectionState}`}>
+            {library.connectionState}
           </span>
         </div>
         <div className="reader-header-actions">
@@ -193,8 +126,6 @@ export function ReaderApp({ gateway, renderDocument }: ReaderAppProps): JSX.Elem
           </button>
         </div>
       </header>
-
-      <WorkspaceError error={workspaceError} onDismiss={() => setWorkspaceError(null)} />
 
       <main className={mobileLibraryOpen ? "reader-main is-library-open" : "reader-main"}>
         <aside className="library-pane" aria-label="Library">
@@ -218,12 +149,12 @@ export function ReaderApp({ gateway, renderDocument }: ReaderAppProps): JSX.Elem
           </label>
           <nav className="status-nav" aria-label="Reading status">
             <button className="is-active" type="button">
-              All <span>{snapshot.sources.length}</span>
+              All <span>{library.sources.length}</span>
             </button>
             <button type="button">
               Reading{" "}
               <span>
-                {snapshot.sources.filter(({ readingStatus }) => readingStatus === "reading").length}
+                {library.sources.filter(({ readingStatus }) => readingStatus === "reading").length}
               </span>
             </button>
             <button type="button">Queued</button>
@@ -233,11 +164,7 @@ export function ReaderApp({ gateway, renderDocument }: ReaderAppProps): JSX.Elem
               <button
                 key={item.id}
                 type="button"
-                className={[
-                  "source-row",
-                  source?.id === item.id ? "is-selected" : "",
-                  openingSourceId === item.id ? "is-opening" : "",
-                ]
+                className={["source-row", source?.id === item.id ? "is-selected" : ""]
                   .filter(Boolean)
                   .join(" ")}
                 onClick={() => selectSource(item.id)}
@@ -295,9 +222,7 @@ export function ReaderApp({ gateway, renderDocument }: ReaderAppProps): JSX.Elem
                   </button>
                 </div>
               </div>
-              <div className="document-canvas">
-                {renderDocument?.(snapshot) ?? <DocumentEmpty />}
-              </div>
+              <div className="document-canvas">{renderDocument?.(source) ?? <DocumentEmpty />}</div>
             </>
           ) : (
             <EmptyCollection />
@@ -325,7 +250,12 @@ export function ReaderApp({ gateway, renderDocument }: ReaderAppProps): JSX.Elem
                 onClick={() => setTab("annotations")}
               >
                 <HighlightIcon />
-                Annotations <span>{snapshot.annotations.length}</span>
+                Annotations{" "}
+                <span>
+                  {workspace.annotations.status === "ready"
+                    ? workspace.annotations.value.length
+                    : "—"}
+                </span>
               </button>
               <button
                 type="button"
@@ -338,17 +268,10 @@ export function ReaderApp({ gateway, renderDocument }: ReaderAppProps): JSX.Elem
               </button>
             </div>
             {tab === "annotations" ? (
-              <AnnotationList snapshot={snapshot} />
+              <AnnotationList annotations={workspace.annotations} />
             ) : (
               <div className="note-editor">
-                <Suspense fallback={<div className="editor-loading">Opening source note…</div>}>
-                  <MarkdownEditor
-                    value={draft}
-                    ariaLabel="Source literature note"
-                    onChange={setDraft}
-                    onBlur={saveDraft}
-                  />
-                </Suspense>
+                <SourceNoteEditor workspace={workspace} />
               </div>
             )}
           </aside>
@@ -380,34 +303,28 @@ function ReaderLoading({
   );
 }
 
-function WorkspaceError({
-  error,
-  onDismiss,
+function AnnotationList({
+  annotations,
 }: {
-  readonly error: string | null;
-  readonly onDismiss: () => void;
-}): JSX.Element | null {
-  if (!error) {
-    return null;
+  readonly annotations: AsyncResource<readonly Annotation[]>;
+}): JSX.Element {
+  if (annotations.status !== "ready") {
+    if (annotations.status === "error") {
+      return (
+        <div className="inspector-status is-error" role="alert">
+          {annotations.message}
+        </div>
+      );
+    }
+    return <div className="inspector-status">Loading annotations…</div>;
   }
-  return (
-    <div className="workspace-error" role="alert">
-      <span>{error}</span>
-      <button type="button" onClick={onDismiss}>
-        Dismiss
-      </button>
-    </div>
-  );
-}
-
-function AnnotationList({ snapshot }: { readonly snapshot: ReaderWorkspaceSnapshot }): JSX.Element {
   return (
     <div className="annotation-list">
       <div className="annotation-list-heading">
         <span>On this source</span>
         <button type="button">Newest</button>
       </div>
-      {snapshot.annotations.map((annotation) => (
+      {annotations.value.map((annotation) => (
         <article key={annotation.id} className="annotation-card">
           <header>
             <span className={`annotation-kind is-${annotation.annotationType}`}>
@@ -433,6 +350,45 @@ function AnnotationList({ snapshot }: { readonly snapshot: ReaderWorkspaceSnapsh
         </article>
       ))}
     </div>
+  );
+}
+
+function SourceNoteEditor({
+  workspace,
+}: {
+  readonly workspace: ReaderWorkspaceController;
+}): JSX.Element {
+  if (workspace.sourceRecord.status === "idle" || workspace.sourceRecord.status === "loading") {
+    return <div className="editor-loading">Opening source note…</div>;
+  }
+  if (workspace.sourceRecord.status === "error") {
+    return (
+      <div className="inspector-status is-error" role="alert">
+        {workspace.sourceRecord.message}
+      </div>
+    );
+  }
+  return (
+    <>
+      <Suspense fallback={<div className="editor-loading">Opening source note…</div>}>
+        <MarkdownEditor
+          value={workspace.draft}
+          ariaLabel="Source literature note"
+          onChange={workspace.setDraft}
+          onBlur={workspace.saveDraft}
+        />
+      </Suspense>
+      {workspace.saveStatus === "saving" ? (
+        <span className="editor-save-status" role="status">
+          Saving…
+        </span>
+      ) : null}
+      {workspace.saveError ? (
+        <span className="editor-save-status is-error" role="alert">
+          {workspace.saveError}
+        </span>
+      ) : null}
+    </>
   );
 }
 

@@ -14,7 +14,7 @@ import { useMemo, type JSX } from "react";
 
 import { ReaderApp } from "./ReaderApp.js";
 
-import type { ReaderWorkspaceGateway, ReaderWorkspaceSnapshot } from "./workspace-model.js";
+import type { ReaderLibrarySnapshot, ReaderWorkspaceGateway } from "./workspace-model.js";
 
 const collection = collectionId("reader-preview");
 const sources: readonly Source[] = [
@@ -113,31 +113,24 @@ const annotations: readonly Annotation[] = [
 ];
 
 class PreviewGateway implements ReaderWorkspaceGateway {
-  #selectedId: SourceId = sources[0]?.id ?? sourceId("none");
   #sources = [...sources];
 
-  snapshot(): Promise<ReaderWorkspaceSnapshot> {
-    return Promise.resolve(this.#snapshot());
-  }
-  selectSource(id: SourceId): Promise<ReaderWorkspaceSnapshot> {
-    this.#selectedId = id;
-    return Promise.resolve(this.#snapshot());
-  }
-  saveSourceBody(source: Source, body: string): Promise<ReaderWorkspaceSnapshot> {
-    this.#sources = this.#sources.map((item) => (item.id === source.id ? { ...item, body } : item));
-    return Promise.resolve(this.#snapshot());
-  }
-  #snapshot(): ReaderWorkspaceSnapshot {
-    const selectedSource = this.#sources.find(({ id }) => id === this.#selectedId) ?? null;
-    return {
+  library(): Promise<ReaderLibrarySnapshot> {
+    return Promise.resolve({
       collectionName: "Reading",
       sources: this.#sources,
-      selectedSource,
-      annotations: selectedSource
-        ? annotations.filter(({ sourceId: id }) => id === selectedSource.id)
-        : [],
       connectionState: "connected",
-    };
+    });
+  }
+  source(id: SourceId): Promise<Source | null> {
+    return Promise.resolve(this.#sources.find((source) => source.id === id) ?? null);
+  }
+  annotations(id: SourceId): Promise<readonly Annotation[]> {
+    return Promise.resolve(annotations.filter(({ sourceId: source }) => source === id));
+  }
+  saveSourceBody(source: Source, body: string): Promise<Source> {
+    this.#sources = this.#sources.map((item) => (item.id === source.id ? { ...item, body } : item));
+    return Promise.resolve(this.#sources.find((item) => item.id === source.id) ?? source);
   }
 }
 

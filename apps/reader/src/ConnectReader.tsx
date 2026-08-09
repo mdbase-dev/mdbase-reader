@@ -83,11 +83,9 @@ function OpenedReader({ collectionId }: { readonly collectionId: string }): JSX.
   return (
     <ReaderApp
       gateway={gateway}
-      renderDocument={({ selectedSource }) =>
-        selectedSource ? (
-          <ConnectedDocument repository={opened.documents} source={selectedSource} />
-        ) : null
-      }
+      renderDocument={(source) => (
+        <ConnectedDocument repository={opened.documents} source={source} />
+      )}
     />
   );
 }
