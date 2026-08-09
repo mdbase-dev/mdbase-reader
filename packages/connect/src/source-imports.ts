@@ -6,6 +6,7 @@ import type { ReaderConnectClient } from "./repository-client.js";
 import type {
   CollectionFileDescriptor,
   ConnectOutcome,
+  MdbaseFileListOptions,
   MdbaseConnection,
   MdbaseFileUploadOptions,
   RecordDocument,
@@ -22,6 +23,7 @@ import type {
 } from "@mdbase-reader/core";
 
 export interface ReaderSourceFileClient {
+  list?(options?: MdbaseFileListOptions): AsyncIterable<CollectionFileDescriptor>;
   upload(
     path: string,
     source: Blob,
@@ -76,34 +78,38 @@ export class ConnectSourceImportRepository implements SourceImportRepository {
     const orderedUploads = [...plan.representations].sort(
       (left, right) => uploadRank[left.role] - uploadRank[right.role],
     );
+    const recoverableFiles = await this.recoverableFiles(options);
     const totalBytes = plan.representations.reduce((sum, item) => sum + item.bytes.byteLength, 0);
     let completedBytes = 0;
     for (const [index, representation] of orderedUploads.entries()) {
       options.signal?.throwIfAborted();
-      const descriptor = await this.files.upload(
-        representation.filePath,
-        new Blob([representation.bytes.slice().buffer], { type: representation.mediaType }),
-        {
-          mediaType: representation.mediaType,
-          transferId: representation.transferId,
-          ...(options.signal ? { signal: options.signal } : {}),
-          ...(options.onProgress
-            ? {
-                onProgress: (progress) => {
-                  if (progress.phase === "uploading") {
-                    options.onProgress?.({
-                      phase: "uploading",
-                      completedBytes: completedBytes + progress.transferredBytes,
-                      totalBytes,
-                      fileIndex: index + 1,
-                      fileCount: orderedUploads.length,
-                    });
-                  }
-                },
-              }
-            : {}),
-        },
-      );
+      const recovered = takeMatchingFile(recoverableFiles, representation.contentDigest);
+      const descriptor =
+        recovered ??
+        (await this.files.upload(
+          representation.filePath,
+          new Blob([representation.bytes.slice().buffer], { type: representation.mediaType }),
+          {
+            mediaType: representation.mediaType,
+            transferId: representation.transferId,
+            ...(options.signal ? { signal: options.signal } : {}),
+            ...(options.onProgress
+              ? {
+                  onProgress: (progress) => {
+                    if (progress.phase === "uploading") {
+                      options.onProgress?.({
+                        phase: "uploading",
+                        completedBytes: completedBytes + progress.transferredBytes,
+                        totalBytes,
+                        fileIndex: index + 1,
+                        fileCount: orderedUploads.length,
+                      });
+                    }
+                  },
+                }
+              : {}),
+          },
+        ));
       if (descriptor.contentDigest !== representation.contentDigest) {
         throw new ConnectRepositoryError(
           "verify imported file",
@@ -141,6 +147,25 @@ export class ConnectSourceImportRepository implements SourceImportRepository {
     return sourceFromDocument(plan.collectionId, document);
   }
 
+  private async recoverableFiles(
+    options: SourceImportOptions,
+  ): Promise<Map<string, CollectionFileDescriptor[]>> {
+    const byDigest = new Map<string, CollectionFileDescriptor[]>();
+    if (!this.files.list) {
+      return byDigest;
+    }
+    for await (const file of this.files.list({
+      folder: "files/reader",
+      pageSize: 500,
+      ...(options.signal ? { signal: options.signal } : {}),
+    })) {
+      const matches = byDigest.get(file.contentDigest) ?? [];
+      matches.push(file);
+      byDigest.set(file.contentDigest, matches);
+    }
+    return byDigest;
+  }
+
   private async recoverCreatedSource(
     plan: PlannedSourceFileImport,
     failure: Exclude<ConnectOutcome<RecordDocument>, { readonly ok: true }>,
@@ -155,6 +180,13 @@ export class ConnectSourceImportRepository implements SourceImportRepository {
     }
     return outcomeValue(failure, "create imported source");
   }
+}
+
+function takeMatchingFile(
+  files: Map<string, CollectionFileDescriptor[]>,
+  digest: string,
+): CollectionFileDescriptor | undefined {
+  return files.get(digest)?.shift();
 }
 
 function sourceFrontmatter(

@@ -139,3 +139,40 @@ describe("ConnectSourceImportRepository", () => {
     );
   });
 });
+
+describe("ConnectSourceImportRepository recovery", () => {
+  it("recovers a durably uploaded orphan before creating the source record", async () => {
+    const recovered = fileDescriptor({ path: "files/reader/previous-attempt/manuscript.pdf" });
+    const list = vi.fn(() => listFile(recovered));
+    const upload = vi.fn();
+    const create = vi.fn(() => Promise.resolve(success(recordDocument())));
+    const repository = new ConnectSourceImportRepository(
+      { create } as unknown as ReaderConnectClient,
+      { list, upload },
+    );
+
+    await repository.commitFile(plan());
+
+    expect(list).toHaveBeenCalledWith({ folder: "files/reader", pageSize: 500 });
+    expect(upload).not.toHaveBeenCalled();
+    expect(create).toHaveBeenCalledWith(
+      expect.objectContaining({
+        frontmatter: expect.objectContaining({
+          documents: [
+            expect.objectContaining({
+              file_id: recovered.fileId,
+              file: `[[${recovered.path}]]`,
+              revision: recovered.contentDigest,
+            }),
+          ],
+        }),
+      }),
+    );
+  });
+});
+
+async function* listFile(
+  file: ReturnType<typeof fileDescriptor>,
+): AsyncGenerator<ReturnType<typeof fileDescriptor>> {
+  yield await Promise.resolve(file);
+}
