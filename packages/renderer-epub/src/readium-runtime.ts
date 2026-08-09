@@ -1,5 +1,5 @@
 import { EpubNavigator, type EpubNavigatorListeners } from "@readium/navigator";
-import { HttpFetcher, Locator, Manifest, Publication } from "@readium/shared";
+import { HttpFetcher, Locator, LocatorLocations, Manifest, Publication } from "@readium/shared";
 
 import { safePublicationFetch } from "./epub-safe-fetch.js";
 
@@ -61,9 +61,15 @@ export async function createReadiumRuntime(input: {
   const publication = new Publication({ manifest, fetcher: new HttpFetcher(safePublicationFetch) });
   const locationListeners = new Set<(locator: Readonly<Record<string, unknown>>) => void>();
   const selectionListeners = new Set<(selection: TextSelectionDraft) => void>();
-  const initialLocator = input.initialLocator
-    ? Locator.deserialize(input.initialLocator)
-    : undefined;
+  const positions = publicationPositions(publication);
+  if (positions.length === 0) {
+    throw new Error("Readium cannot open an EPUB with an empty reading order.");
+  }
+  const requestedLocator = input.initialLocator ? Locator.deserialize(input.initialLocator) : null;
+  const initialLocator =
+    requestedLocator && publication.readingOrder.findWithHref(requestedLocator.href)
+      ? requestedLocator
+      : positions[0];
 
   const listeners: EpubNavigatorListeners = {
     frameLoaded: () => undefined,
@@ -95,7 +101,7 @@ export async function createReadiumRuntime(input: {
     input.container,
     publication,
     listeners,
-    undefined,
+    positions,
     initialLocator,
   );
   await navigator.load();
@@ -128,4 +134,21 @@ export async function createReadiumRuntime(input: {
       await navigator.destroy();
     },
   };
+}
+
+export function publicationPositions(publication: Publication): Locator[] {
+  const items = publication.readingOrder.items;
+  return items.map(
+    (link, index) =>
+      new Locator({
+        href: link.href,
+        type: link.type ?? "application/xhtml+xml",
+        ...(link.title ? { title: link.title } : {}),
+        locations: new LocatorLocations({
+          position: index + 1,
+          progression: 0,
+          totalProgression: items.length === 1 ? 0 : index / (items.length - 1),
+        }),
+      }),
+  );
 }
