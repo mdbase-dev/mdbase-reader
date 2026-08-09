@@ -2,6 +2,10 @@ import { useCallback, useEffect, useState } from "react";
 
 import { readerErrorMessage } from "./errors.js";
 import { selectedResource, selectedValue, type SelectedValue } from "./selected-resource.js";
+import {
+  useAnnotationTransclusion,
+  type AnnotationTransclusionController,
+} from "./use-annotation-transclusion.js";
 import { useCitationEditor, type CitationEditorController } from "./use-citation-editor.js";
 import { useLibrarySelection, type LibrarySelection } from "./use-library-selection.js";
 import { useAnnotationCreation, useReadingPositionSave } from "./use-workspace-mutations.js";
@@ -33,6 +37,7 @@ export interface ReaderWorkspaceController {
   readonly saveStatus: "idle" | "saving";
   readonly saveError: string | null;
   readonly citation: CitationEditorController;
+  readonly transclusion: AnnotationTransclusionController;
   readonly importStatus: "idle" | "importing";
   readonly importError: string | null;
   readonly selectSource: (id: SourceId) => void;
@@ -70,7 +75,6 @@ function useSelectedSourceWorkspace(
   const [draft, setDraftState] = useState<SelectedValue<string> | null>(null);
   const [saving, setSaving] = useState<SelectedValue<boolean> | null>(null);
   const [saveError, setSaveError] = useState<SelectedValue<string | null> | null>(null);
-
   useEffect(() => {
     if (!selectedSource) {
       return;
@@ -116,10 +120,7 @@ function useSelectedSourceWorkspace(
             sourceId,
             value: {
               status: "error",
-              message: readerErrorMessage(
-                reason,
-                "Reader could not load this source's annotations.",
-              ),
+              message: annotationLoadError(reason),
             },
           });
         }
@@ -159,11 +160,14 @@ function useSelectedSourceWorkspace(
   }, [draftValue, gateway, sourceId, sourceRecord]);
   const createSelectedAnnotation = useAnnotationCreation(gateway, setAnnotations);
   const saveReadingPosition = useReadingPositionSave(gateway, sourceRecord, setSource);
-  const citation = useCitationEditor({
+  const citation = useSelectedCitationEditor(gateway, sourceRecord, setSource);
+  const transclusion = useSelectedTransclusion(
     gateway,
-    source: sourceRecord.status === "ready" ? sourceRecord.value : null,
-    onSaved: (value) => setSource({ sourceId: value.id, value: { status: "ready", value } }),
-  });
+    sourceRecord,
+    draftValue,
+    setSource,
+    setDraftState,
+  );
 
   return {
     sourceRecord,
@@ -173,9 +177,44 @@ function useSelectedSourceWorkspace(
     saveStatus: sourceId && saving?.sourceId === sourceId && saving.value ? "saving" : "idle",
     saveError: sourceId && saveError?.sourceId === sourceId ? saveError.value : null,
     citation,
+    transclusion,
     setDraft,
     saveDraft,
     createAnnotation: createSelectedAnnotation,
     saveReadingPosition,
   };
+}
+
+function annotationLoadError(reason: unknown): string {
+  return readerErrorMessage(reason, "Reader could not load this source's annotations.");
+}
+
+function useSelectedCitationEditor(
+  gateway: ReaderWorkspaceGateway,
+  source: AsyncResource<Source>,
+  setSource: (value: SelectedValue<AsyncResource<Source>>) => void,
+): CitationEditorController {
+  return useCitationEditor({
+    gateway,
+    source: source.status === "ready" ? source.value : null,
+    onSaved: (value) => setSource({ sourceId: value.id, value: { status: "ready", value } }),
+  });
+}
+
+function useSelectedTransclusion(
+  gateway: ReaderWorkspaceGateway,
+  source: AsyncResource<Source>,
+  draft: string,
+  setSource: (value: SelectedValue<AsyncResource<Source>>) => void,
+  setDraft: (value: SelectedValue<string>) => void,
+): AnnotationTransclusionController {
+  return useAnnotationTransclusion({
+    gateway,
+    source,
+    draft,
+    onSaved: (value) => {
+      setSource({ sourceId: value.id, value: { status: "ready", value } });
+      setDraft({ sourceId: value.id, value: value.body });
+    },
+  });
 }

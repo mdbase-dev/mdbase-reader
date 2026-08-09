@@ -80,7 +80,11 @@ export function InspectorPane({
       {tab === "annotations" ? (
         <div className="annotation-workspace">
           <AnnotationComposer composer={composer} />
-          <AnnotationList annotations={workspace.annotations} onOpen={composer.open} />
+          <AnnotationList
+            annotations={workspace.annotations}
+            transclusion={workspace.transclusion}
+            onOpen={composer.open}
+          />
         </div>
       ) : tab === "note" ? (
         <div className="note-editor">
@@ -95,9 +99,11 @@ export function InspectorPane({
 
 function AnnotationList({
   annotations,
+  transclusion,
   onOpen,
 }: {
   readonly annotations: AsyncResource<readonly Annotation[]>;
+  readonly transclusion: ReaderWorkspaceController["transclusion"];
   readonly onOpen: (annotation: Annotation) => void;
 }): JSX.Element {
   if (annotations.status !== "ready") {
@@ -143,15 +149,33 @@ function AnnotationList({
                 day: "numeric",
               })}
             </time>
-            <button
-              className="icon-button"
-              type="button"
-              aria-label="Open annotation in document"
-              onClick={() => onOpen(annotation)}
-            >
-              <MoreIcon />
-            </button>
+            <div className="annotation-card-actions">
+              <button
+                type="button"
+                disabled={transclusion.busyId !== null || transclusion.isEmbedded(annotation)}
+                onClick={() => transclusion.insert(annotation)}
+              >
+                {transclusion.busyId === annotation.id
+                  ? "Inserting…"
+                  : transclusion.isEmbedded(annotation)
+                    ? "In source note"
+                    : "Insert in note"}
+              </button>
+              <button
+                className="icon-button"
+                type="button"
+                aria-label="Open annotation in document"
+                onClick={() => onOpen(annotation)}
+              >
+                <MoreIcon />
+              </button>
+            </div>
           </footer>
+          {transclusion.problemId === annotation.id ? (
+            <p className="annotation-card-problem" role="alert">
+              {transclusion.problem}
+            </p>
+          ) : null}
         </article>
       ))}
     </div>

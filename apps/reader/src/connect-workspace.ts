@@ -1,4 +1,9 @@
-import { createAnnotation, importSourceFile, saveSourceCitation } from "@mdbase-reader/core";
+import {
+  createAnnotation,
+  importSourceFile,
+  saveSourceCitation,
+  transcludeAnnotation,
+} from "@mdbase-reader/core";
 
 import type { ReaderLibrarySnapshot, ReaderWorkspaceGateway } from "./workspace-model.js";
 import type {
@@ -143,6 +148,17 @@ export class ConnectWorkspaceGateway implements ReaderWorkspaceGateway {
     const current = this.#annotationsBySource.get(request.sourceId) ?? [];
     this.#annotationsBySource.set(request.sourceId, [result.annotation, ...current]);
     return result.annotation;
+  }
+
+  async transcludeAnnotation(source: Source, annotation: Annotation): Promise<Source> {
+    const updated = await transcludeAnnotation(
+      this.sources,
+      source,
+      annotation,
+      this.runtime.ids.mutation(),
+    );
+    this.#replaceSource(updated);
+    return updated;
   }
 
   async saveReadingPosition(

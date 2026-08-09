@@ -1,8 +1,11 @@
 import {
+  annotationId,
   collectionId,
+  dateTime,
   recordRevision,
   sourceId,
   type AnnotationRepository,
+  type Annotation,
   type Source,
   type SourceRepository,
 } from "@mdbase-reader/core";
@@ -22,6 +25,18 @@ const source: Source = {
   body: "Original",
   recordRevision: recordRevision("rev-1"),
   frontmatter: {},
+};
+
+const annotation: Annotation = {
+  collectionId: source.collectionId,
+  id: annotationId("ann_01"),
+  path: "annotations/ann_01.md",
+  sourceId: source.id,
+  source: "[[src_01]]",
+  annotationType: "note",
+  tags: [],
+  body: "A note",
+  createdAt: dateTime("2026-08-09T00:00:00Z"),
 };
 
 describe("ConnectWorkspaceGateway", () => {
@@ -124,6 +139,32 @@ describe("ConnectWorkspaceGateway", () => {
     expect(search).toHaveBeenCalledWith(source.collectionId, "cannot be measured", {
       signal: controller.signal,
     });
+  });
+
+  it("transcludes an annotation and refreshes the source cache", async () => {
+    const updated = { ...source, body: "Original\n\n![[annotations/ann_01]]\n" };
+    const appendAnnotationEmbed = vi.fn().mockResolvedValue(recordRevision("rev-2"));
+    const get = vi.fn().mockResolvedValue(updated);
+    const gateway = new ConnectWorkspaceGateway(
+      { appendAnnotationEmbed, get } as unknown as SourceRepository,
+      { listForSource: vi.fn() } as unknown as AnnotationRepository,
+      { store: vi.fn() },
+      { commitFile: vi.fn() },
+      source.collectionId,
+      "Reading",
+      createReaderRuntimeServices(new MemoryStorage()),
+    );
+
+    await expect(gateway.transcludeAnnotation(source, annotation)).resolves.toBe(updated);
+    expect(appendAnnotationEmbed).toHaveBeenCalledWith(
+      expect.objectContaining({
+        sourceId: source.id,
+        annotationId: annotation.id,
+        embed: "![[annotations/ann_01]]",
+      }),
+    );
+    expect(await gateway.source(source.id)).toBe(updated);
+    expect(get).toHaveBeenCalledOnce();
   });
 });
 

@@ -1428,6 +1428,38 @@ button {
   height: 26px;
 }
 
+.annotation-card-actions {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.annotation-card-actions > button:not(.icon-button) {
+  min-height: 26px;
+  padding: 0 7px;
+  border-radius: 3px;
+  color: var(--muted);
+  background: transparent;
+  font: 8px/1 var(--mono);
+  cursor: pointer;
+}
+
+.annotation-card-actions > button:not(.icon-button):hover {
+  color: var(--ink);
+  background: var(--hover);
+}
+
+.annotation-card-actions > button:not(.icon-button):disabled {
+  color: var(--faint);
+  cursor: default;
+}
+
+.annotation-card-problem {
+  margin-bottom: 0;
+  color: var(--danger);
+  font-size: 10px;
+}
+
 .inspector-status,
 .editor-loading {
   display: grid;
