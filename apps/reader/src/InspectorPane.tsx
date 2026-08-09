@@ -3,7 +3,7 @@ import { lazy, Suspense, useState, type JSX } from "react";
 import { AnnotationComposer } from "./AnnotationComposer.js";
 import { AnnotationList } from "./AnnotationList.js";
 import { CitationEditor } from "./CitationEditor.js";
-import { CitationIcon, HighlightIcon, NoteIcon } from "./icons.js";
+import { CitationIcon, CloseIcon, HighlightIcon, NoteIcon } from "./icons.js";
 
 import type { AnnotationComposerController } from "./use-annotation-composer.js";
 import type { ReaderWorkspaceController } from "./use-reader-workspace.js";
@@ -43,7 +43,7 @@ export function InspectorPane({
         aria-label="Close source workspace"
         onClick={onClose}
       >
-        ×
+        <CloseIcon />
       </button>
       <div className="inspector-tabs" role="tablist">
         <button

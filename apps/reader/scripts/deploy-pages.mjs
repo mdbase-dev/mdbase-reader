@@ -18,10 +18,11 @@ try {
     ...process.env,
     MDBASE_READER_BUILD_ID: buildId,
     MDBASE_READER_ORIGIN: deploymentOrigin,
+    VITE_MDBASE_READER_BUILD_ID: buildId,
     VITE_MDBASE_CONNECT_URL: "https://connect-staging.mdbase.dev",
     VITE_MDBASE_CONNECT_LOOPBACK_URL: "http://127.0.0.1:28486",
   });
-  await verifyDeploymentManifest();
+  await verifyDeploymentArtifacts();
 } finally {
   await Promise.all(
     manifestTargets.map((target, index) => writeFile(target, originalManifests[index])),
@@ -41,9 +42,11 @@ await run(pnpm, [
   "--commit-dirty=true",
 ]);
 
-async function verifyDeploymentManifest() {
-  const path = resolve(projectRoot, "dist", ".well-known", "mdbase-app.json");
-  const manifest = JSON.parse(await readFile(path, "utf8"));
+async function verifyDeploymentArtifacts() {
+  const wellKnownDirectory = resolve(projectRoot, "dist", ".well-known");
+  const manifest = JSON.parse(
+    await readFile(resolve(wellKnownDirectory, "mdbase-app.json"), "utf8"),
+  );
   const homepage = `${deploymentOrigin}/`;
   if (
     manifest.homepage !== homepage ||
@@ -52,6 +55,13 @@ async function verifyDeploymentManifest() {
     manifest.redirect_uris[0] !== homepage
   ) {
     throw new Error(`Reader deployment manifest does not declare ${deploymentOrigin}.`);
+  }
+
+  const deploymentRevision = JSON.parse(
+    await readFile(resolve(wellKnownDirectory, "mdbase-reader-build.json"), "utf8"),
+  );
+  if (deploymentRevision.revision !== buildId) {
+    throw new Error(`Reader deployment revision does not match ${buildId}.`);
   }
 }
 

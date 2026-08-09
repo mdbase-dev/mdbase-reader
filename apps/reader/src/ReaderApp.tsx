@@ -7,6 +7,7 @@ import {
 } from "@mdbase-reader/ui";
 import { useCallback, useEffect, useMemo, useState, type JSX, type ReactNode } from "react";
 
+import { DeploymentUpdateNotice } from "./DeploymentUpdateNotice.js";
 import { DocumentWorkspace } from "./DocumentWorkspace.js";
 import { InspectorPane, type InspectorTab } from "./InspectorPane.js";
 import { LibraryPane, type LibraryFilter } from "./LibraryPane.js";
@@ -17,6 +18,7 @@ import {
   type AnnotationComposerController,
 } from "./use-annotation-composer.js";
 import { useBibliographyExport } from "./use-bibliography-export.js";
+import { useDeploymentUpdate } from "./use-deployment-update.js";
 import { useDocumentDecorations } from "./use-document-decorations.js";
 import { useLibrarySearch } from "./use-library-search.js";
 import { useReaderWorkspace, type ReaderWorkspaceController } from "./use-reader-workspace.js";
@@ -57,6 +59,7 @@ export function ReaderApp({
   const [focusMode, setFocusMode] = useState(false);
   const [theme, changeTheme] = useThemePreference();
   const [surface, setSurface] = useState<ReadingSurface | null>(null);
+  const deploymentUpdateAvailable = useDeploymentUpdate();
   const onSurfaceChange = useCallback((next: ReadingSurface | null): void => setSurface(next), []);
   const composer = useReaderAnnotationComposer(workspace, surface);
   const readingResume = useReaderReadingResume(workspace, surface);
@@ -95,7 +98,8 @@ export function ReaderApp({
   const library = workspace.library.value;
   const source = workspace.selectedSource;
   return (
-    <div className="reader-shell">
+    <div className={`reader-shell${deploymentUpdateAvailable ? " has-update" : ""}`}>
+      {deploymentUpdateAvailable ? <DeploymentUpdateNotice /> : null}
       <ReaderHeader
         collectionName={library.collectionName}
         connectionState={library.connectionState}
@@ -268,8 +272,5 @@ function ReaderLoading({
 }
 
 function nextTheme(theme: ThemePreference): ThemePreference {
-  if (theme === "system") {
-    return "light";
-  }
-  return theme === "light" ? "dark" : "system";
+  return theme === "system" ? "light" : theme === "light" ? "dark" : "system";
 }

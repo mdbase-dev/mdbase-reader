@@ -1,6 +1,8 @@
 import { ReaderButton } from "@mdbase-reader/ui";
 import { useEffect, useMemo } from "react";
 
+import { CloseIcon } from "./icons.js";
+
 import type { AnnotationComposerController } from "./use-annotation-composer.js";
 import type { JSX } from "react";
 
@@ -33,7 +35,7 @@ export function AnnotationComposer({
           aria-label="Discard selection"
           onClick={composer.dismiss}
         >
-          ×
+          <CloseIcon />
         </button>
       </header>
       {composer.selection.kind === "text" ? (

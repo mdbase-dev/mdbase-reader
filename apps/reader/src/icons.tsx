@@ -86,6 +86,11 @@ export const DownloadIcon = (props: IconProps): JSX.Element => (
     <path d="M12 3v12M7.5 10.5 12 15l4.5-4.5M5 20h14" />
   </Icon>
 );
+export const CloseIcon = (props: IconProps): JSX.Element => (
+  <Icon {...props}>
+    <path d="m6 6 12 12M18 6 6 18" />
+  </Icon>
+);
 export const AreaIcon = (props: IconProps): JSX.Element => (
   <Icon {...props}>
     <path d="M8 4H4v4M16 4h4v4M8 20H4v-4M16 20h4v-4" />
