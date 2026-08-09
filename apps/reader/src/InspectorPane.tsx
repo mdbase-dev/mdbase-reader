@@ -1,13 +1,14 @@
 import { lazy, Suspense, type JSX } from "react";
 
 import { AnnotationComposer } from "./AnnotationComposer.js";
-import { HighlightIcon, MoreIcon, NoteIcon } from "./icons.js";
+import { CitationEditor } from "./CitationEditor.js";
+import { CitationIcon, HighlightIcon, MoreIcon, NoteIcon } from "./icons.js";
 
 import type { AnnotationComposerController } from "./use-annotation-composer.js";
 import type { AsyncResource, ReaderWorkspaceController } from "./use-reader-workspace.js";
 import type { Annotation } from "@mdbase-reader/core";
 
-export type InspectorTab = "note" | "annotations";
+export type InspectorTab = "note" | "annotations" | "citation";
 
 export interface InspectorPaneProps {
   readonly open: boolean;
@@ -66,16 +67,27 @@ export function InspectorPane({
           <NoteIcon />
           Source note
         </button>
+        <button
+          type="button"
+          role="tab"
+          aria-selected={tab === "citation"}
+          onClick={() => onTabChange("citation")}
+        >
+          <CitationIcon />
+          Citation
+        </button>
       </div>
       {tab === "annotations" ? (
         <div className="annotation-workspace">
           <AnnotationComposer composer={composer} />
           <AnnotationList annotations={workspace.annotations} onOpen={composer.open} />
         </div>
-      ) : (
+      ) : tab === "note" ? (
         <div className="note-editor">
           <SourceNoteEditor workspace={workspace} />
         </div>
+      ) : (
+        <CitationEditor workspace={workspace} />
       )}
     </aside>
   );

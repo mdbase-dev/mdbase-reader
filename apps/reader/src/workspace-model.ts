@@ -21,6 +21,7 @@ export interface ReaderWorkspaceGateway {
   source(id: SourceId, options?: ReaderRequestOptions): Promise<Source | null>;
   annotations(id: SourceId, options?: ReaderRequestOptions): Promise<readonly Annotation[]>;
   saveSourceBody(source: Source, body: string): Promise<Source>;
+  saveSourceCitation(source: Source, citation: unknown): Promise<Source>;
   importSourceFile(request: Omit<SourceFileImportRequest, "collectionId">): Promise<Source>;
   createAnnotation(request: AnnotationCreationRequest): Promise<Annotation>;
   saveReadingPosition(

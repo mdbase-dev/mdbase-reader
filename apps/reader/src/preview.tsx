@@ -6,6 +6,7 @@ import {
   fileRevision,
   recordRevision,
   sourceId,
+  validateCslItem,
   type Annotation,
   type AnnotationCreationRequest,
   type FileId,
@@ -136,6 +137,19 @@ class PreviewGateway implements ReaderWorkspaceGateway {
   saveSourceBody(source: Source, body: string): Promise<Source> {
     this.#sources = this.#sources.map((item) => (item.id === source.id ? { ...item, body } : item));
     return Promise.resolve(this.#sources.find((item) => item.id === source.id) ?? source);
+  }
+  saveSourceCitation(source: Source, citation: unknown): Promise<Source> {
+    const validation = validateCslItem(citation);
+    if (!validation.valid) {
+      return Promise.reject(new Error("The preview citation is invalid."));
+    }
+    const updated: Source = {
+      ...source,
+      citation: validation.item,
+      frontmatter: { ...source.frontmatter, csl: validation.item },
+    };
+    this.#sources = this.#sources.map((item) => (item.id === source.id ? updated : item));
+    return Promise.resolve(updated);
   }
   importSourceFile(_request: Omit<SourceFileImportRequest, "collectionId">): Promise<Source> {
     return Promise.reject(new Error("File import is unavailable in the interface preview."));

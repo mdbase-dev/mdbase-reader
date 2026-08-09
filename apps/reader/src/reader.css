@@ -1,3 +1,5 @@
+@import "./citation-editor.css";
+
 :root {
   --reader-header-height: 56px;
   --reader-toolbar-height: 54px;

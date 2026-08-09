@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from "react";
 
 import { readerErrorMessage } from "./errors.js";
 import { selectedResource, type SelectedValue } from "./selected-resource.js";
+import { useCitationEditor, type CitationEditorController } from "./use-citation-editor.js";
 import { useLibrarySelection, type LibrarySelection } from "./use-library-selection.js";
 import { useAnnotationCreation, useReadingPositionSave } from "./use-workspace-mutations.js";
 
@@ -30,6 +31,7 @@ export interface ReaderWorkspaceController {
   readonly draft: string;
   readonly saveStatus: "idle" | "saving";
   readonly saveError: string | null;
+  readonly citation: CitationEditorController;
   readonly importStatus: "idle" | "importing";
   readonly importError: string | null;
   readonly selectSource: (id: SourceId) => void;
@@ -155,6 +157,11 @@ function useSelectedSourceWorkspace(
   }, [draftValue, gateway, sourceId, sourceRecord]);
   const createSelectedAnnotation = useAnnotationCreation(gateway, setAnnotations);
   const saveReadingPosition = useReadingPositionSave(gateway, sourceRecord, setSource);
+  const citation = useCitationEditor({
+    gateway,
+    source: sourceRecord.status === "ready" ? sourceRecord.value : null,
+    onSaved: (value) => setSource({ sourceId: value.id, value: { status: "ready", value } }),
+  });
 
   return {
     sourceRecord,
@@ -162,6 +169,7 @@ function useSelectedSourceWorkspace(
     draft: draftValue,
     saveStatus: sourceId && saving?.sourceId === sourceId && saving.value ? "saving" : "idle",
     saveError: sourceId && saveError?.sourceId === sourceId ? saveError.value : null,
+    citation,
     setDraft,
     saveDraft,
     createAnnotation: createSelectedAnnotation,

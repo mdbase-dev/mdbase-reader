@@ -35,6 +35,13 @@ export const NoteIcon = (props: IconProps): JSX.Element => (
     <path d="M15 3.5V7h3M9 11h6M9 15h6" />
   </Icon>
 );
+export const CitationIcon = (props: IconProps): JSX.Element => (
+  <Icon {...props}>
+    <path d="M6 5.5h11.5v13H6z" />
+    <path d="M9 9h5.5M9 12h5.5M9 15h3.5" />
+    <path d="M4 8v12.5h11" />
+  </Icon>
+);
 export const HighlightIcon = (props: IconProps): JSX.Element => (
   <Icon {...props}>
     <path d="m7 16 8.8-8.8 2 2L9 18H7zM5 21h14" />

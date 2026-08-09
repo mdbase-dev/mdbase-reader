@@ -1,0 +1,150 @@
+.citation-editor {
+  min-height: 0;
+  display: grid;
+  grid-template-rows: auto auto minmax(180px, 1fr) auto;
+  overflow: hidden;
+  background: var(--paper);
+}
+
+.citation-bookplate {
+  position: relative;
+  padding: 25px 22px 22px 27px;
+  border-bottom: 1px solid var(--line);
+  background: color-mix(in oklch, var(--paper) 92%, var(--accent) 8%);
+}
+
+.citation-bookplate::before {
+  content: "";
+  position: absolute;
+  inset: 24px auto 22px 14px;
+  width: 1px;
+  background: var(--accent);
+}
+
+.citation-bookplate > strong {
+  display: -webkit-box;
+  overflow: hidden;
+  color: var(--ink);
+  font-size: 17px;
+  font-weight: 650;
+  line-height: 1.22;
+  letter-spacing: -0.015em;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+}
+
+.citation-identity {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 13px;
+  color: var(--muted);
+  font-family: var(--mono);
+  font-size: 9px;
+}
+
+.citation-identity > span + span::before {
+  content: "/";
+  margin-right: 8px;
+  color: var(--faint);
+}
+
+.citation-key {
+  color: var(--accent);
+}
+
+.citation-key.is-empty {
+  color: var(--danger);
+}
+
+.citation-editor-heading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 15px 18px 13px;
+  border-bottom: 1px solid var(--line);
+}
+
+.citation-editor-heading > div {
+  min-width: 0;
+  display: grid;
+  gap: 3px;
+}
+
+.citation-editor-heading strong {
+  color: var(--ink);
+  font-size: 11px;
+}
+
+.citation-editor-heading div > span {
+  color: var(--muted);
+  font-size: 9px;
+  line-height: 1.4;
+}
+
+.citation-editor-heading > span {
+  flex: none;
+  padding: 3px 6px;
+  border-radius: 2px;
+  font-family: var(--mono);
+  font-size: 8px;
+  letter-spacing: 0.03em;
+}
+
+.citation-editor-heading > .is-valid {
+  color: var(--connected);
+  background: color-mix(in oklch, var(--connected) 10%, transparent);
+}
+
+.citation-editor-heading > .is-invalid {
+  color: var(--danger);
+  background: color-mix(in oklch, var(--danger) 10%, transparent);
+}
+
+.citation-json {
+  width: 100%;
+  min-height: 0;
+  resize: none;
+  padding: 17px 19px 28px;
+  border: 0;
+  border-bottom: 1px solid var(--line);
+  outline: 0;
+  color: var(--ink-soft);
+  background: var(--canvas);
+  caret-color: var(--accent);
+  font-family: var(--mono);
+  font-size: 10px;
+  line-height: 1.65;
+  tab-size: 2;
+}
+
+.citation-json:focus {
+  box-shadow: inset 2px 0 var(--accent);
+}
+
+.citation-json[aria-invalid="true"]:focus {
+  box-shadow: inset 2px 0 var(--danger);
+}
+
+.citation-editor-footer {
+  display: grid;
+  gap: 12px;
+  padding: 14px 18px 17px;
+  background: var(--paper);
+}
+
+.citation-feedback {
+  min-height: 28px;
+  color: var(--muted);
+  font-size: 9px;
+  line-height: 1.45;
+}
+
+.citation-feedback .is-error {
+  color: var(--danger);
+}
+
+.citation-editor-footer .mdbase-button {
+  width: 100%;
+}

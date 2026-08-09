@@ -74,6 +74,35 @@ describe("ConnectWorkspaceGateway", () => {
       body: "Updated",
     });
   });
+
+  it("saves valid citation metadata and refreshes the warm library", async () => {
+    const citation = { id: "example2026", type: "article", title: "Example" };
+    const updateCitation = vi.fn().mockResolvedValue({ ...source, citation });
+    const gateway = new ConnectWorkspaceGateway(
+      {
+        list: vi.fn().mockResolvedValue({ items: [source] }),
+        updateCitation,
+      } as unknown as SourceRepository,
+      { listForSource: vi.fn() } as unknown as AnnotationRepository,
+      { store: vi.fn() },
+      { commitFile: vi.fn() },
+      source.collectionId,
+      "Reading",
+      createReaderRuntimeServices(new MemoryStorage()),
+    );
+    await gateway.library();
+
+    const updated = await gateway.saveSourceCitation(source, citation);
+
+    expect(updateCitation).toHaveBeenCalledWith({
+      collectionId: source.collectionId,
+      sourceId: source.id,
+      expectedRevision: source.recordRevision,
+      citation,
+    });
+    expect(updated.citation).toEqual(citation);
+    expect((await gateway.library()).sources[0]?.citation).toEqual(citation);
+  });
 });
 
 describe("ConnectWorkspaceGateway pagination", () => {

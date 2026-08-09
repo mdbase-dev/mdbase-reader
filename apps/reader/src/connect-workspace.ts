@@ -1,4 +1,4 @@
-import { createAnnotation, importSourceFile } from "@mdbase-reader/core";
+import { createAnnotation, importSourceFile, saveSourceCitation } from "@mdbase-reader/core";
 
 import type { ReaderLibrarySnapshot, ReaderWorkspaceGateway } from "./workspace-model.js";
 import type {
@@ -89,7 +89,13 @@ export class ConnectWorkspaceGateway implements ReaderWorkspaceGateway {
       expectedRevision: source.recordRevision,
       body,
     });
-    this.#sourcesById.set(source.id, updated);
+    this.#replaceSource(updated);
+    return updated;
+  }
+
+  async saveSourceCitation(source: Source, citation: unknown): Promise<Source> {
+    const updated = await saveSourceCitation(this.sources, source, this.#library ?? [], citation);
+    this.#replaceSource(updated);
     return updated;
   }
 
@@ -98,8 +104,7 @@ export class ConnectWorkspaceGateway implements ReaderWorkspaceGateway {
       { imports: this.sourceImports, ...this.runtime },
       { ...request, collectionId: this.collectionId },
     );
-    this.#sourcesById.set(imported.id, imported);
-    this.#library = [imported, ...(this.#library ?? []).filter(({ id }) => id !== imported.id)];
+    this.#replaceSource(imported, true);
     return imported;
   }
 
@@ -131,9 +136,24 @@ export class ConnectWorkspaceGateway implements ReaderWorkspaceGateway {
       position,
       openedAt: this.runtime.clock.now(),
     });
-    this.#sourcesById.set(source.id, updated);
+    this.#replaceSource(updated);
     return updated;
   }
+
+  #replaceSource(source: Source, prepend = false): void {
+    this.#sourcesById.set(source.id, source);
+    if (this.#library) {
+      const remaining = this.#library.filter(({ id }) => id !== source.id);
+      this.#library = prepend ? [source, ...remaining] : replaceInOrder(this.#library, source);
+    }
+  }
+}
+
+function replaceInOrder(
+  sources: readonly SourceSummary[],
+  replacement: SourceSummary,
+): readonly SourceSummary[] {
+  return sources.map((source) => (source.id === replacement.id ? replacement : source));
 }
 
 async function listAllSources(
