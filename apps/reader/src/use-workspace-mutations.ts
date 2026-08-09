@@ -38,6 +38,33 @@ export function useAnnotationCreation(
   );
 }
 
+export function useAnnotationUpdate(
+  gateway: ReaderWorkspaceGateway,
+  setAnnotations: Dispatch<SetStateAction<AnnotationState>>,
+): (annotation: Annotation, body: string) => Promise<Annotation> {
+  return useCallback(
+    async (annotation, body) => {
+      const updated = await gateway.updateAnnotation(annotation, body);
+      setAnnotations((current) => {
+        if (current?.sourceId !== annotation.sourceId || current.value.status !== "ready") {
+          return current;
+        }
+        return {
+          sourceId: annotation.sourceId,
+          value: {
+            status: "ready",
+            value: current.value.value.map((candidate) =>
+              candidate.id === updated.id ? updated : candidate,
+            ),
+          },
+        };
+      });
+      return updated;
+    },
+    [gateway, setAnnotations],
+  );
+}
+
 export function useReadingPositionSave(
   gateway: ReaderWorkspaceGateway,
   source: AsyncResource<Source>,

@@ -72,6 +72,7 @@ function dependencies(source: Source | null = sourceFixture()): {
     annotations: {
       listForSource: vi.fn(() => Promise.resolve([])),
       get: vi.fn(() => Promise.resolve(null)),
+      updateBody: vi.fn(),
       create: vi.fn((annotation: Annotation) => {
         created.push(annotation);
         return Promise.resolve(annotation);

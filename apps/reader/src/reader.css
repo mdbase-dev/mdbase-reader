@@ -1339,13 +1339,12 @@ button {
   font-size: 10px;
 }
 
-.annotation-list-heading button {
+.annotation-list-heading > span:last-child {
   min-height: 30px;
-  padding: 0 4px;
+  display: flex;
+  align-items: center;
   color: var(--muted);
-  background: transparent;
   font-size: 10px;
-  cursor: pointer;
 }
 
 .annotation-card {
@@ -1458,6 +1457,60 @@ button {
   margin-bottom: 0;
   color: var(--danger);
   font-size: 10px;
+}
+
+.annotation-body-editor {
+  display: grid;
+  gap: 8px;
+  margin-top: 13px;
+}
+
+.annotation-body-editor label {
+  color: var(--ink-soft);
+  font: 9px/1.2 var(--mono);
+}
+
+.annotation-body-editor textarea {
+  width: 100%;
+  min-height: 126px;
+  resize: vertical;
+  padding: 10px;
+  border: 1px solid var(--line-strong);
+  border-radius: 4px;
+  color: var(--ink);
+  background: var(--surface-raised);
+  font: 11px/1.55 var(--mono);
+}
+
+.annotation-body-editor textarea:focus {
+  border-color: var(--accent);
+  outline: 2px solid color-mix(in srgb, var(--accent) 18%, transparent);
+  outline-offset: 1px;
+}
+
+.annotation-body-editor > span {
+  color: var(--faint);
+  font: 8px/1.4 var(--mono);
+}
+
+.annotation-body-editor > p {
+  margin: 0;
+  color: var(--danger);
+  font-size: 10px;
+}
+
+.annotation-body-editor > div {
+  display: flex;
+  justify-content: flex-end;
+  gap: 6px;
+}
+
+.annotation-body-editor > div > button:not(.mdbase-button) {
+  min-height: 30px;
+  padding: 0 8px;
+  color: var(--muted);
+  background: transparent;
+  cursor: pointer;
 }
 
 .inspector-status,

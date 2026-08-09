@@ -176,6 +176,17 @@ class PreviewGateway implements ReaderWorkspaceGateway {
     this.#annotations.unshift(annotation);
     return Promise.resolve(annotation);
   }
+  updateAnnotation(annotation: Annotation, body: string): Promise<Annotation> {
+    const updated = {
+      ...annotation,
+      body,
+      modifiedAt: dateTime(new Date().toISOString()),
+    };
+    this.#annotations = this.#annotations.map((candidate) =>
+      candidate.id === updated.id ? updated : candidate,
+    );
+    return Promise.resolve(updated);
+  }
   transcludeAnnotation(source: Source, annotation: Annotation): Promise<Source> {
     const embed = `![[${annotation.path?.replace(/\.md$/u, "") ?? `annotations/${annotation.id}`}]]`;
     return this.saveSourceBody(source, `${source.body.trimEnd()}\n\n${embed}\n`);

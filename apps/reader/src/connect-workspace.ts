@@ -3,6 +3,7 @@ import {
   importSourceFile,
   saveSourceCitation,
   transcludeAnnotation,
+  updateAnnotationBody,
 } from "@mdbase-reader/core";
 
 import type { ReaderLibrarySnapshot, ReaderWorkspaceGateway } from "./workspace-model.js";
@@ -148,6 +149,21 @@ export class ConnectWorkspaceGateway implements ReaderWorkspaceGateway {
     const current = this.#annotationsBySource.get(request.sourceId) ?? [];
     this.#annotationsBySource.set(request.sourceId, [result.annotation, ...current]);
     return result.annotation;
+  }
+
+  async updateAnnotation(annotation: Annotation, body: string): Promise<Annotation> {
+    const updated = await updateAnnotationBody(
+      this.annotationsRepository,
+      annotation,
+      body,
+      this.runtime.clock.now(),
+    );
+    const current = this.#annotationsBySource.get(annotation.sourceId) ?? [];
+    this.#annotationsBySource.set(
+      annotation.sourceId,
+      current.map((candidate) => (candidate.id === updated.id ? updated : candidate)),
+    );
+    return updated;
   }
 
   async transcludeAnnotation(source: Source, annotation: Annotation): Promise<Source> {

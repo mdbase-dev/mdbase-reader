@@ -1,12 +1,12 @@
 import { lazy, Suspense, useState, type JSX } from "react";
 
 import { AnnotationComposer } from "./AnnotationComposer.js";
+import { AnnotationList } from "./AnnotationList.js";
 import { CitationEditor } from "./CitationEditor.js";
-import { CitationIcon, HighlightIcon, MoreIcon, NoteIcon } from "./icons.js";
+import { CitationIcon, HighlightIcon, NoteIcon } from "./icons.js";
 
 import type { AnnotationComposerController } from "./use-annotation-composer.js";
-import type { AsyncResource, ReaderWorkspaceController } from "./use-reader-workspace.js";
-import type { Annotation } from "@mdbase-reader/core";
+import type { ReaderWorkspaceController } from "./use-reader-workspace.js";
 
 export type InspectorTab = "note" | "annotations" | "citation";
 
@@ -83,6 +83,7 @@ export function InspectorPane({
           <AnnotationList
             annotations={workspace.annotations}
             transclusion={workspace.transclusion}
+            onUpdate={workspace.updateAnnotation}
             onOpen={composer.open}
           />
         </div>
@@ -94,91 +95,6 @@ export function InspectorPane({
         <CitationEditor workspace={workspace} />
       )}
     </aside>
-  );
-}
-
-function AnnotationList({
-  annotations,
-  transclusion,
-  onOpen,
-}: {
-  readonly annotations: AsyncResource<readonly Annotation[]>;
-  readonly transclusion: ReaderWorkspaceController["transclusion"];
-  readonly onOpen: (annotation: Annotation) => void;
-}): JSX.Element {
-  if (annotations.status !== "ready") {
-    if (annotations.status === "error") {
-      return (
-        <div className="inspector-status is-error" role="alert">
-          {annotations.message}
-        </div>
-      );
-    }
-    return <div className="inspector-status">Loading annotations…</div>;
-  }
-  if (annotations.value.length === 0) {
-    return (
-      <div className="inspector-status annotation-empty">
-        <strong>No annotations yet</strong>
-        <span>Select text or an area in the document to begin.</span>
-      </div>
-    );
-  }
-  return (
-    <div className="annotation-list">
-      <div className="annotation-list-heading">
-        <span>On this source</span>
-        <button type="button">Newest</button>
-      </div>
-      {annotations.value.map((annotation) => (
-        <article key={annotation.id} className="annotation-card">
-          <header>
-            <span className={`annotation-kind is-${annotation.annotationType}`}>
-              {annotation.annotationType}
-            </span>
-            {annotation.locator ? <small>{annotation.locator.label}</small> : null}
-          </header>
-          {annotation.target?.quote?.exact ? (
-            <blockquote>{annotation.target.quote.exact}</blockquote>
-          ) : null}
-          {annotation.body ? <p>{annotation.body.replace(/^>.*$/gmu, "").trim()}</p> : null}
-          <footer>
-            <time>
-              {new Date(annotation.createdAt).toLocaleDateString(undefined, {
-                month: "short",
-                day: "numeric",
-              })}
-            </time>
-            <div className="annotation-card-actions">
-              <button
-                type="button"
-                disabled={transclusion.busyId !== null || transclusion.isEmbedded(annotation)}
-                onClick={() => transclusion.insert(annotation)}
-              >
-                {transclusion.busyId === annotation.id
-                  ? "Inserting…"
-                  : transclusion.isEmbedded(annotation)
-                    ? "In source note"
-                    : "Insert in note"}
-              </button>
-              <button
-                className="icon-button"
-                type="button"
-                aria-label="Open annotation in document"
-                onClick={() => onOpen(annotation)}
-              >
-                <MoreIcon />
-              </button>
-            </div>
-          </footer>
-          {transclusion.problemId === annotation.id ? (
-            <p className="annotation-card-problem" role="alert">
-              {transclusion.problem}
-            </p>
-          ) : null}
-        </article>
-      ))}
-    </div>
   );
 }
 

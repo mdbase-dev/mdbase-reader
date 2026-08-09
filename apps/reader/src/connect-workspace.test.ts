@@ -31,6 +31,7 @@ const annotation: Annotation = {
   collectionId: source.collectionId,
   id: annotationId("ann_01"),
   path: "annotations/ann_01.md",
+  recordRevision: recordRevision("rev-1"),
   sourceId: source.id,
   source: "[[src_01]]",
   annotationType: "note",
@@ -165,6 +166,35 @@ describe("ConnectWorkspaceGateway", () => {
     );
     expect(await gateway.source(source.id)).toBe(updated);
     expect(get).toHaveBeenCalledOnce();
+  });
+});
+
+describe("ConnectWorkspaceGateway annotation updates", () => {
+  it("updates an annotation and refreshes its source cache", async () => {
+    const updated = {
+      ...annotation,
+      body: "Revised note",
+      recordRevision: recordRevision("rev-2"),
+    };
+    const updateBody = vi.fn().mockResolvedValue(updated);
+    const listForSource = vi.fn().mockResolvedValue([annotation]);
+    const gateway = new ConnectWorkspaceGateway(
+      { get: vi.fn() } as unknown as SourceRepository,
+      { listForSource, updateBody } as unknown as AnnotationRepository,
+      { store: vi.fn() },
+      { commitFile: vi.fn() },
+      source.collectionId,
+      "Reading",
+      createReaderRuntimeServices(new MemoryStorage()),
+    );
+    await gateway.annotations(source.id);
+
+    await expect(gateway.updateAnnotation(annotation, updated.body)).resolves.toBe(updated);
+    expect(updateBody).toHaveBeenCalledWith(
+      expect.objectContaining({ annotation, body: updated.body }),
+    );
+    await expect(gateway.annotations(source.id)).resolves.toEqual([updated]);
+    expect(listForSource).toHaveBeenCalledOnce();
   });
 });
 

@@ -61,6 +61,30 @@ export class ConnectAnnotationRepository implements AnnotationRepository {
     return created;
   }
 
+  async updateBody(input: {
+    readonly annotation: Annotation;
+    readonly body: string;
+    readonly modifiedAt: Annotation["createdAt"];
+  }): Promise<Annotation> {
+    const { annotation } = input;
+    if (!annotation.path || !annotation.recordRevision) {
+      throw new Error("An annotation path and revision are required for editing.");
+    }
+    const result = outcomeValue(
+      await this.client.update({
+        path: annotation.path,
+        ifRevision: annotation.recordRevision,
+        patch: { modified_at: input.modifiedAt },
+        body: input.body,
+        includeDocument: true,
+      }),
+      "update annotation",
+    );
+    const updated = annotationFromDocument(annotation.collectionId, result);
+    this.#pathsById.set(updated.id, result.path);
+    return updated;
+  }
+
   async get(
     collection: CollectionId,
     id: AnnotationId,

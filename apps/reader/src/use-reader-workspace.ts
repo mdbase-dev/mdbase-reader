@@ -8,7 +8,11 @@ import {
 } from "./use-annotation-transclusion.js";
 import { useCitationEditor, type CitationEditorController } from "./use-citation-editor.js";
 import { useLibrarySelection, type LibrarySelection } from "./use-library-selection.js";
-import { useAnnotationCreation, useReadingPositionSave } from "./use-workspace-mutations.js";
+import {
+  useAnnotationCreation,
+  useAnnotationUpdate,
+  useReadingPositionSave,
+} from "./use-workspace-mutations.js";
 
 import type { ReaderLibrarySnapshot, ReaderWorkspaceGateway } from "./workspace-model.js";
 import type {
@@ -47,6 +51,7 @@ export interface ReaderWorkspaceController {
     request: Omit<SourceFileImportRequest, "collectionId">,
   ) => Promise<Source | null>;
   readonly createAnnotation: (request: AnnotationCreationRequest) => Promise<Annotation>;
+  readonly updateAnnotation: (annotation: Annotation, body: string) => Promise<Annotation>;
   readonly saveReadingPosition: (
     sourceId: SourceId,
     documentFileId: FileId,
@@ -159,6 +164,7 @@ function useSelectedSourceWorkspace(
       .finally(() => setSaving({ sourceId, value: false }));
   }, [draftValue, gateway, sourceId, sourceRecord]);
   const createSelectedAnnotation = useAnnotationCreation(gateway, setAnnotations);
+  const updateSelectedAnnotation = useAnnotationUpdate(gateway, setAnnotations);
   const saveReadingPosition = useReadingPositionSave(gateway, sourceRecord, setSource);
   const citation = useSelectedCitationEditor(gateway, sourceRecord, setSource);
   const transclusion = useSelectedTransclusion(
@@ -181,6 +187,7 @@ function useSelectedSourceWorkspace(
     setDraft,
     saveDraft,
     createAnnotation: createSelectedAnnotation,
+    updateAnnotation: updateSelectedAnnotation,
     saveReadingPosition,
   };
 }

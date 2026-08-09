@@ -36,6 +36,7 @@ export interface ReaderWorkspaceGateway {
   ): Promise<ExportedCollectionFile>;
   importSourceFile(request: Omit<SourceFileImportRequest, "collectionId">): Promise<Source>;
   createAnnotation(request: AnnotationCreationRequest): Promise<Annotation>;
+  updateAnnotation(annotation: Annotation, body: string): Promise<Annotation>;
   transcludeAnnotation(source: Source, annotation: Annotation): Promise<Source>;
   saveReadingPosition(
     source: Source,

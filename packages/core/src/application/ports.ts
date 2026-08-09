@@ -72,6 +72,11 @@ export interface AnnotationRepository {
     options?: ReaderRequestOptions,
   ): Promise<readonly Annotation[]>;
   create(annotation: Annotation, idempotencyKey: MutationId): Promise<Annotation>;
+  updateBody(input: {
+    readonly annotation: Annotation;
+    readonly body: string;
+    readonly modifiedAt: DateTime;
+  }): Promise<Annotation>;
   get(
     collectionId: CollectionId,
     id: AnnotationId,
