@@ -14,6 +14,12 @@ import type { DateTime } from "../domain/time.js";
 export interface SourceRepository {
   list(query: SourceQuery): Promise<Page<SourceSummary>>;
   get(collectionId: CollectionId, id: SourceId): Promise<Source | null>;
+  updateBody(input: {
+    readonly collectionId: CollectionId;
+    readonly sourceId: SourceId;
+    readonly expectedRevision: RecordRevision;
+    readonly body: string;
+  }): Promise<Source>;
   appendAnnotationEmbed(input: {
     readonly collectionId: CollectionId;
     readonly sourceId: SourceId;

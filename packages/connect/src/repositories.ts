@@ -124,6 +124,29 @@ export class ConnectSourceRepository implements SourceRepository {
     return sourceFromDocument(collection, result);
   }
 
+  async updateBody(input: {
+    readonly collectionId: CollectionId;
+    readonly sourceId: SourceId;
+    readonly expectedRevision: ReturnType<typeof recordRevision>;
+    readonly body: string;
+  }): Promise<Source> {
+    const path = await recordPathById(this.client, sourceContract, input.sourceId);
+    if (!path) {
+      throw new ConnectRepositoryError("update source note", "source_not_found");
+    }
+    const updated = value(
+      await this.client.update({
+        path,
+        contract: sourceContract,
+        ifRevision: input.expectedRevision,
+        patch: {},
+        body: input.body,
+      }),
+      "update source note",
+    );
+    return sourceFromDocument(input.collectionId, updated);
+  }
+
   async appendAnnotationEmbed(input: {
     readonly collectionId: CollectionId;
     readonly sourceId: SourceId;

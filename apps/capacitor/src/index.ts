@@ -1,1 +1,1 @@
-export {};
+export * from "./capacitor-platform.js";

@@ -4,10 +4,12 @@
   "private": true,
   "type": "module",
   "scripts": {
+    "build": "tsc -p tsconfig.build.json",
     "test": "vitest run --passWithNoTests",
     "typecheck": "tsc -p tsconfig.json"
   },
   "dependencies": {
-    "@mdbase-reader/platform": "workspace:*"
+    "@mdbase-reader/platform": "workspace:*",
+    "electron": "latest"
   }
 }
