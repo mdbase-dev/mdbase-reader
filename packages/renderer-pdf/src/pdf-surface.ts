@@ -48,6 +48,18 @@ export class EmbedPdfSurface implements ReadingSurface {
         beginAreaSelection: () => runtime.beginAreaSelection(),
         cancelAreaSelection: () => runtime.cancelAreaSelection(),
       },
+      decorations: {
+        setAnnotations: (annotations) => {
+          runtime.setAnnotations(
+            annotations.filter(
+              ({ document }) =>
+                document?.fileId === this.document.document.fileId &&
+                document.revision === this.document.document.revision,
+            ),
+          );
+          return Promise.resolve();
+        },
+      },
     };
   }
 

@@ -1,7 +1,11 @@
+import { AnnotationPlugin } from "@embedpdf/plugin-annotation";
 import { SelectionPlugin, type FormattedSelection } from "@embedpdf/plugin-selection";
 import { CapturePlugin, ScrollPlugin, type PluginRegistry } from "@embedpdf/react-pdf-viewer";
 
+import { annotationToPdfDecoration } from "./pdf-decoration.js";
+
 import type { CaptureAreaEvent } from "@embedpdf/plugin-capture";
+import type { Annotation } from "@mdbase-reader/core";
 import type {
   AreaSelectionDraft,
   TextSelectionDraft,
@@ -17,6 +21,7 @@ export interface EmbedPdfRuntime {
   onAreaSelected(listener: (selection: AreaSelectionDraft) => void): Unsubscribe;
   onTextSelected(listener: (selection: TextSelectionDraft) => void): Unsubscribe;
   clearTextSelection(): void;
+  setAnnotations(annotations: readonly Annotation[]): void;
   destroy(): void;
 }
 
@@ -81,14 +86,17 @@ export function createEmbedPdfRuntime(registry: PluginRegistry): EmbedPdfRuntime
   const capturePlugin = registry.getPlugin<CapturePlugin>(CapturePlugin.id);
   const scrollPlugin = registry.getPlugin<ScrollPlugin>(ScrollPlugin.id);
   const selectionPlugin = registry.getPlugin<SelectionPlugin>(SelectionPlugin.id);
-  if (!capturePlugin || !scrollPlugin || !selectionPlugin) {
+  const annotationPlugin = registry.getPlugin<AnnotationPlugin>(AnnotationPlugin.id);
+  if (!capturePlugin || !scrollPlugin || !selectionPlugin || !annotationPlugin) {
     throw new Error("EmbedPDF did not initialize the required Reader plugins.");
   }
 
   const capture = capturePlugin.provides();
   const scroll = scrollPlugin.provides();
   const selection = selectionPlugin.provides();
+  const annotationCapability = annotationPlugin.provides();
   const subscriptions = new Set<Unsubscribe>();
+  const decorationIds = new Set<string>();
 
   return {
     currentPageIndex: () => Math.max(0, scroll.getCurrentPage() - 1),
@@ -135,6 +143,15 @@ export function createEmbedPdfRuntime(registry: PluginRegistry): EmbedPdfRuntime
       };
     },
     clearTextSelection: () => selection.clear(),
+    setAnnotations(annotations) {
+      for (const annotation of annotations) {
+        const decoration = annotationToPdfDecoration(annotation);
+        if (decoration && !decorationIds.has(decoration.id)) {
+          annotationCapability.createAnnotation(decoration.pageIndex, decoration);
+          decorationIds.add(decoration.id);
+        }
+      }
+    },
     destroy() {
       for (const unsubscribe of subscriptions) {
         unsubscribe();

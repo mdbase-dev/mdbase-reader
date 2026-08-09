@@ -15,6 +15,7 @@ import {
   useAnnotationComposer,
   type AnnotationComposerController,
 } from "./use-annotation-composer.js";
+import { useDocumentDecorations } from "./use-document-decorations.js";
 import { useReaderWorkspace, type ReaderWorkspaceController } from "./use-reader-workspace.js";
 import { useReadingResume, type ReadingResumeState } from "./use-reading-resume.js";
 import { filterSources, type ReaderWorkspaceGateway } from "./workspace-model.js";
@@ -45,6 +46,7 @@ export function ReaderApp({ gateway, renderDocument }: ReaderAppProps): JSX.Elem
   const onSurfaceChange = useCallback((next: ReadingSurface | null): void => setSurface(next), []);
   const composer = useReaderAnnotationComposer(workspace, surface);
   const readingResume = useReaderReadingResume(workspace, surface);
+  const decorationProblem = useDocumentDecorations(surface, workspace.annotations);
 
   useEffect(() => applyThemePreference(theme, document.documentElement), [theme]);
 
@@ -127,6 +129,7 @@ export function ReaderApp({ gateway, renderDocument }: ReaderAppProps): JSX.Elem
           focusMode={focusMode}
           inspectorOpen={inspectorOpen && !focusMode}
           readingResume={readingResume}
+          decorationProblem={decorationProblem}
           onBackToLibrary={() => setMobileLibraryOpen(true)}
           onToggleFocus={() => setFocusMode((value) => !value)}
           onToggleInspector={() => {

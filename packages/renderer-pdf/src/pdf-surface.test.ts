@@ -9,6 +9,7 @@ import type { AreaSelectionDraft, TextSelectionDraft } from "@mdbase-reader/read
 function runtimeFixture(): {
   readonly runtime: EmbedPdfRuntime;
   readonly goToPage: ReturnType<typeof vi.fn>;
+  readonly setAnnotations: ReturnType<typeof vi.fn>;
   emitArea(selection: AreaSelectionDraft): void;
   emitText(selection: TextSelectionDraft): void;
   emitPage(pageIndex: number): void;
@@ -17,6 +18,7 @@ function runtimeFixture(): {
   let pageListener: ((pageIndex: number) => void) | undefined;
   let textListener: ((selection: TextSelectionDraft) => void) | undefined;
   const goToPage = vi.fn();
+  const setAnnotations = vi.fn();
   return {
     runtime: {
       currentPageIndex: () => 2,
@@ -24,6 +26,7 @@ function runtimeFixture(): {
       beginAreaSelection: vi.fn(),
       cancelAreaSelection: vi.fn(),
       clearTextSelection: vi.fn(),
+      setAnnotations,
       onAreaSelected: (listener) => {
         areaListener = listener;
         return () => {
@@ -45,6 +48,7 @@ function runtimeFixture(): {
       destroy: vi.fn(),
     },
     goToPage,
+    setAnnotations,
     emitArea: (selection) => areaListener?.(selection),
     emitText: (selection) => textListener?.(selection),
     emitPage: (pageIndex) => pageListener?.(pageIndex),
@@ -118,6 +122,31 @@ describe("EmbedPdfSurface", () => {
 
     fixture.emitText(selection);
     expect(listener).toHaveBeenCalledWith(selection);
+  });
+
+  it("passes only exact-document annotations to runtime decorations", async () => {
+    const fixture = runtimeFixture();
+    const surface = new EmbedPdfSurface(document, fixture.runtime);
+    const matching = {
+      collectionId: "reading" as never,
+      id: "ann-1" as never,
+      sourceId: "source-1" as never,
+      source: "[[source-1]]",
+      document: document.document,
+      annotationType: "highlight",
+      tags: [],
+      body: "",
+      createdAt: "2026-08-09T00:00:00.000Z" as never,
+    };
+    await surface.capabilities.decorations?.setAnnotations([
+      matching,
+      {
+        ...matching,
+        id: "ann-2" as never,
+        document: { ...matching.document, fileId: fileId("other") },
+      },
+    ]);
+    expect(fixture.setAnnotations).toHaveBeenCalledWith([matching]);
   });
 
   it("rejects incompatible locators and releases runtime subscriptions", async () => {

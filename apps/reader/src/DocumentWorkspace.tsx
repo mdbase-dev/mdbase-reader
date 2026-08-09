@@ -12,6 +12,7 @@ export interface DocumentWorkspaceProps {
   readonly focusMode: boolean;
   readonly inspectorOpen: boolean;
   readonly readingResume: ReadingResumeState;
+  readonly decorationProblem: string | null;
   readonly onBackToLibrary: () => void;
   readonly onToggleFocus: () => void;
   readonly onToggleInspector: () => void;
@@ -23,6 +24,7 @@ export function DocumentWorkspace({
   focusMode,
   inspectorOpen,
   readingResume,
+  decorationProblem,
   onBackToLibrary,
   onToggleFocus,
   onToggleInspector,
@@ -47,7 +49,7 @@ export function DocumentWorkspace({
                 {source.documents[0] ? ` · ${documentLabel(source)}` : " · Source note"}
               </span>
             </div>
-            <ReadingPositionStatus state={readingResume} />
+            <DocumentStatus reading={readingResume} decorationProblem={decorationProblem} />
             <div className="document-tools">
               <button
                 type="button"
@@ -81,23 +83,36 @@ export function DocumentWorkspace({
   );
 }
 
-function ReadingPositionStatus({ state }: { readonly state: ReadingResumeState }): JSX.Element {
-  if (state.status === "idle") {
+function DocumentStatus({
+  reading,
+  decorationProblem,
+}: {
+  readonly reading: ReadingResumeState;
+  readonly decorationProblem: string | null;
+}): JSX.Element {
+  if (decorationProblem) {
+    return (
+      <span className="reading-position-status is-error" role="alert" title={decorationProblem}>
+        Highlights unavailable
+      </span>
+    );
+  }
+  if (reading.status === "idle") {
     return <span className="reading-position-status" />;
   }
   const label =
-    state.status === "saving"
+    reading.status === "saving"
       ? "Saving position…"
-      : state.status === "saved"
+      : reading.status === "saved"
         ? "Position saved"
-        : (state.message ?? "Position not saved");
+        : (reading.message ?? "Position not saved");
   return (
     <span
-      className={`reading-position-status is-${state.status}`}
-      role={state.status === "error" ? "alert" : "status"}
+      className={`reading-position-status is-${reading.status}`}
+      role={reading.status === "error" ? "alert" : "status"}
       title={label}
     >
-      {state.status === "error" ? "Position not saved" : label}
+      {reading.status === "error" ? "Position not saved" : label}
     </span>
   );
 }

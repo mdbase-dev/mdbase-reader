@@ -11,6 +11,8 @@
     "typecheck": "tsc -p tsconfig.json"
   },
   "dependencies": {
+    "@embedpdf/models": "^2.15.0",
+    "@embedpdf/plugin-annotation": "^2.15.0",
     "@embedpdf/plugin-capture": "^2.15.0",
     "@embedpdf/plugin-selection": "^2.15.0",
     "@embedpdf/react-pdf-viewer": "^2.15.0",
