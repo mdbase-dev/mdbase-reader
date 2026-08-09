@@ -63,6 +63,11 @@ async function verifyDeploymentArtifacts() {
   if (deploymentRevision.revision !== buildId) {
     throw new Error(`Reader deployment revision does not match ${buildId}.`);
   }
+
+  const routes = JSON.parse(await readFile(resolve(projectRoot, "dist", "_routes.json"), "utf8"));
+  if (routes.version !== 1 || routes.include?.length !== 1 || routes.include[0] !== "/api/*") {
+    throw new Error("Reader deployment routes do not isolate the capture function to /api/*.");
+  }
 }
 
 async function run(command, arguments_, environment = process.env) {

@@ -74,11 +74,26 @@ function sourceFrontmatter(
   plan: PlannedSourceFileImport,
   descriptor: CollectionFileDescriptor,
 ): Readonly<Record<string, unknown>> {
+  const capture = plan.capture;
   return {
     id: plan.sourceId,
     title: plan.title,
     kind: plan.kind,
     saved_at: plan.savedAt,
+    ...(capture
+      ? {
+          url: capture.canonicalUrl,
+          ...(capture.submittedUrl !== capture.canonicalUrl
+            ? { original_url: capture.submittedUrl }
+            : {}),
+          capture: {
+            submitted_url: capture.submittedUrl,
+            canonical_url: capture.canonicalUrl,
+            retrieved_at: capture.retrievedAt,
+            method: "reader-web-capture",
+          },
+        }
+      : {}),
     documents: [
       {
         file_id: descriptor.fileId,
@@ -88,6 +103,7 @@ function sourceFrontmatter(
         media_type: plan.mediaType,
         revision: descriptor.contentDigest,
         label: plan.originalName,
+        ...(capture ? { origin_url: capture.canonicalUrl, retrieved_at: capture.retrievedAt } : {}),
       },
     ],
     reading: { status: "inbox" },

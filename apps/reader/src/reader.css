@@ -743,12 +743,25 @@ button {
 }
 
 .import-dialog {
+  position: relative;
   width: min(440px, 100%);
   overflow: hidden;
   border: 1px solid var(--line-strong);
   border-radius: 8px;
   background: var(--paper);
   box-shadow: 0 24px 70px color-mix(in srgb, #000 32%, transparent);
+}
+
+.source-add-close {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  z-index: 1;
+}
+
+.source-add-close svg {
+  width: 16px;
+  height: 16px;
 }
 
 .import-dialog-heading {
@@ -843,6 +856,110 @@ button {
 .import-title-field input:focus {
   border-color: var(--accent);
   box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent) 16%, transparent);
+}
+
+.capture-form {
+  display: grid;
+}
+
+.capture-url-field {
+  margin-bottom: 9px;
+}
+
+.capture-explainer {
+  margin: 0 28px 18px;
+  color: var(--muted);
+  font-size: 10px;
+  line-height: 1.55;
+}
+
+.capture-error {
+  margin-top: 0;
+}
+
+.capture-primary-action {
+  display: flex;
+  justify-content: flex-end;
+  margin: 0 28px 22px;
+}
+
+.capture-primary-action .mdbase-button,
+.source-file-choice {
+  min-height: 38px;
+}
+
+.capture-primary-action .mdbase-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+}
+
+.capture-primary-action svg,
+.source-file-choice svg {
+  width: 16px;
+  height: 16px;
+}
+
+.source-add-divider {
+  position: relative;
+  display: flex;
+  justify-content: center;
+  margin: 0 28px 16px;
+  color: var(--faint);
+  font: 8px/1 var(--mono);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.source-add-divider::before {
+  content: "";
+  position: absolute;
+  top: 50%;
+  right: 0;
+  left: 0;
+  border-top: 1px solid var(--line);
+}
+
+.source-add-divider span {
+  z-index: 1;
+  padding: 0 10px;
+  background: var(--paper);
+}
+
+.source-file-choice {
+  width: calc(100% - 56px);
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  margin: 0 28px 28px;
+  padding: 11px 13px;
+  border: 1px solid var(--line);
+  border-radius: 5px;
+  color: var(--muted);
+  background: var(--reader-canvas);
+  text-align: left;
+  cursor: pointer;
+}
+
+.source-file-choice:hover:not(:disabled) {
+  border-color: var(--line-strong);
+  color: var(--ink-soft);
+  background: var(--hover);
+}
+
+.source-file-choice > span {
+  display: grid;
+  gap: 3px;
+}
+
+.source-file-choice strong {
+  color: var(--ink-soft);
+  font-size: 11px;
+}
+
+.source-file-choice small {
+  color: var(--muted);
+  font: 8px/1.3 var(--mono);
 }
 
 .import-error {

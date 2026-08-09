@@ -1,5 +1,4 @@
 import {
-  ReaderButton,
   applyThemePreference,
   loadThemePreference,
   saveThemePreference,
@@ -12,7 +11,8 @@ import { DocumentWorkspace } from "./DocumentWorkspace.js";
 import { InspectorPane, type InspectorTab } from "./InspectorPane.js";
 import { LibraryPane, type LibraryFilter } from "./LibraryPane.js";
 import { ReaderHeader } from "./ReaderHeader.js";
-import { SourceImportOverlay } from "./SourceImportDialog.js";
+import { ReaderLoading } from "./ReaderLoading.js";
+import { SourceAdditionOverlays } from "./SourceAdditionOverlays.js";
 import {
   useAnnotationComposer,
   type AnnotationComposerController,
@@ -24,8 +24,8 @@ import { useLibrarySearch } from "./use-library-search.js";
 import { useReaderWorkspace, type ReaderWorkspaceController } from "./use-reader-workspace.js";
 import { useReadingResume, type ReadingResumeState } from "./use-reading-resume.js";
 import { useSessionDocumentSearch } from "./use-session-document-search.js";
+import { useSourceAddition } from "./use-source-addition.js";
 import { useSourceExport } from "./use-source-export.js";
-import { useSourceImport } from "./use-source-import.js";
 
 import type { ReaderWorkspaceGateway } from "./workspace-model.js";
 import type { SourceSummary } from "@mdbase-reader/core";
@@ -64,7 +64,7 @@ export function ReaderApp({
   const composer = useReaderAnnotationComposer(workspace, surface);
   const readingResume = useReaderReadingResume(workspace, surface);
   const decorationProblem = useDocumentDecorations(surface, workspace.annotations);
-  const sourceImport = useSourceImport(workspace, pickSourceFile, () =>
+  const sourceAddition = useSourceAddition(workspace, pickSourceFile, () =>
     setMobileLibraryOpen(false),
   );
   const bibliographyExport = useBibliographyExport(
@@ -120,8 +120,8 @@ export function ReaderApp({
             workspace.selectSource(id);
             setMobileLibraryOpen(false);
           }}
-          onAddSource={() => void sourceImport.choose()}
-          addingSource={sourceImport.importing}
+          onAddSource={sourceAddition.open}
+          addingSource={sourceAddition.adding}
           bibliographyExport={bibliographyExport}
           searchMatches={librarySearch.matches}
           searchStatus={librarySearch.status}
@@ -161,7 +161,7 @@ export function ReaderApp({
           />
         ) : null}
       </main>
-      <SourceImportOverlay flow={sourceImport} />
+      <SourceAdditionOverlays addition={sourceAddition} canChooseFile={Boolean(pickSourceFile)} />
     </div>
   );
 }
@@ -247,28 +247,6 @@ function useReaderAnnotationComposer(
     surface,
     create: workspace.createAnnotation,
   });
-}
-
-function ReaderLoading({
-  error,
-  onRetry,
-}: {
-  readonly error: string | null;
-  readonly onRetry: () => void;
-}): JSX.Element {
-  if (!error) {
-    return (
-      <div className="reader-loading" role="status">
-        Opening your reading collection…
-      </div>
-    );
-  }
-  return (
-    <div className="reader-loading is-error" role="alert">
-      <p>{error}</p>
-      <ReaderButton onClick={onRetry}>Try again</ReaderButton>
-    </div>
-  );
 }
 
 function nextTheme(theme: ThemePreference): ThemePreference {

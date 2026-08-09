@@ -174,6 +174,13 @@ export interface SourceFileImportRequest {
   readonly declaredMediaType?: string;
   readonly bytes: Uint8Array;
   readonly title?: string;
+  readonly capture?: SourceCaptureProvenance;
+}
+
+export interface SourceCaptureProvenance {
+  readonly submittedUrl: string;
+  readonly canonicalUrl: string;
+  readonly retrievedAt: DateTime;
 }
 
 export interface PlannedSourceFileImport {
@@ -181,7 +188,7 @@ export interface PlannedSourceFileImport {
   readonly sourceId: SourceId;
   readonly mutationId: MutationId;
   readonly title: string;
-  readonly kind: "document";
+  readonly kind: "document" | "webpage";
   readonly format: SourceDocumentFormat;
   readonly mediaType: string;
   readonly savedAt: DateTime;
@@ -190,6 +197,7 @@ export interface PlannedSourceFileImport {
   readonly recordPath: string;
   readonly filePath: string;
   readonly bytes: Uint8Array;
+  readonly capture?: SourceCaptureProvenance;
 }
 
 export interface AnnotationCreationRequest extends AnnotationDraft {

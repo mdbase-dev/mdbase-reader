@@ -86,6 +86,48 @@ describe("importSourceFile", () => {
     ).rejects.toThrow("not a recognizable PDF, EPUB, or HTML");
     expect(commitFile).not.toHaveBeenCalled();
   });
+
+  it("plans sanitized HTML captures with validated provenance", async () => {
+    const commitFile = vi.fn(() => Promise.resolve(sourceFixture()));
+    await importSourceFile(
+      {
+        clock: { now: () => dateTime("2026-08-10T12:00:00.000Z") },
+        hasher: { sha256: () => Promise.resolve(`sha256:${"a".repeat(64)}` as const) },
+        ids: {
+          source: () => sourceId("src_import"),
+          annotation: () => {
+            throw new Error("unused");
+          },
+          mutation: () => mutationId("83dd2f80-c7da-44d7-9844-6ea755a05f40"),
+        },
+        imports: { commitFile },
+      },
+      {
+        collectionId: collectionId("reading"),
+        name: "example-com.html",
+        declaredMediaType: "text/html",
+        bytes: new TextEncoder().encode("<!doctype html><title>Example</title>"),
+        title: "Example",
+        capture: {
+          submittedUrl: "https://example.com/story#part",
+          canonicalUrl: "https://www.example.com/story",
+          retrievedAt: dateTime("2026-08-10T11:59:00.000Z"),
+        },
+      },
+    );
+
+    expect(commitFile).toHaveBeenCalledWith(
+      expect.objectContaining({
+        kind: "webpage",
+        format: "html",
+        capture: {
+          submittedUrl: "https://example.com/story",
+          canonicalUrl: "https://www.example.com/story",
+          retrievedAt: "2026-08-10T11:59:00.000Z",
+        },
+      }),
+    );
+  });
 });
 
 describe("detectDocumentFormat", () => {

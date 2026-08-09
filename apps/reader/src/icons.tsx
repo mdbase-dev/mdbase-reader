@@ -91,6 +91,19 @@ export const CloseIcon = (props: IconProps): JSX.Element => (
     <path d="m6 6 12 12M18 6 6 18" />
   </Icon>
 );
+export const LinkIcon = (props: IconProps): JSX.Element => (
+  <Icon {...props}>
+    <path d="M9.5 14.5 14.5 9" />
+    <path d="M7.2 16.8 5.6 18.4a3.4 3.4 0 0 1-4.8-4.8l3.4-3.4A3.4 3.4 0 0 1 9 10" />
+    <path d="m14.9 14 4.9-4.2a3.4 3.4 0 1 0-4.8-4.8l-1.6 1.6" />
+  </Icon>
+);
+export const FileIcon = (props: IconProps): JSX.Element => (
+  <Icon {...props}>
+    <path d="M6 3.5h8l4 4V21H6z" />
+    <path d="M14 3.5V8h4" />
+  </Icon>
+);
 export const AreaIcon = (props: IconProps): JSX.Element => (
   <Icon {...props}>
     <path d="M8 4H4v4M16 4h4v4M8 20H4v-4M16 20h4v-4" />

@@ -41,12 +41,16 @@ async function planSourceFileImport(
   const title = normalizeTitle(request.title ?? titleFromFileName(originalName));
   const storedName = `${safeFileStem(originalName)}.${format}`;
   const contentDigest = await dependencies.hasher.sha256(request.bytes);
+  const capture = request.capture ? validateCapture(request.capture) : undefined;
+  if (capture && format !== "html") {
+    throw new DomainError("invalid-source-import", "Web captures must contain an HTML document.");
+  }
   return {
     collectionId: request.collectionId,
     sourceId: sourceIdentity,
     mutationId: dependencies.ids.mutation(),
     title,
-    kind: "document",
+    kind: capture ? "webpage" : "document",
     format,
     mediaType,
     savedAt: dependencies.clock.now(),
@@ -55,7 +59,36 @@ async function planSourceFileImport(
     recordPath: `sources/${sourceIdentity}.md`,
     filePath: `files/reader/${sourceIdentity}/${storedName}`,
     bytes: request.bytes,
+    ...(capture ? { capture } : {}),
   };
+}
+
+function validateCapture(
+  capture: NonNullable<SourceFileImportRequest["capture"]>,
+): NonNullable<SourceFileImportRequest["capture"]> {
+  const submittedUrl = httpsUrl(capture.submittedUrl);
+  const canonicalUrl = httpsUrl(capture.canonicalUrl);
+  return { submittedUrl, canonicalUrl, retrievedAt: capture.retrievedAt };
+}
+
+function httpsUrl(value: string): string {
+  let url: URL;
+  try {
+    url = new URL(value);
+  } catch {
+    throw new DomainError(
+      "invalid-source-import",
+      "Web capture provenance contains an invalid URL.",
+    );
+  }
+  if (url.protocol !== "https:" || url.username || url.password) {
+    throw new DomainError(
+      "invalid-source-import",
+      "Web capture provenance must use public HTTPS URLs.",
+    );
+  }
+  url.hash = "";
+  return url.href;
 }
 
 export function detectDocumentFormat(

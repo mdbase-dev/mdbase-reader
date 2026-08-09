@@ -108,6 +108,50 @@ describe("ConnectSourceImportRepository", () => {
   });
 });
 
+describe("ConnectSourceImportRepository web capture provenance", () => {
+  it("preserves web capture provenance on the source and representation", async () => {
+    const create = vi.fn(() => Promise.resolve(success(recordDocument())));
+    const repository = new ConnectSourceImportRepository(
+      { create } as unknown as ReaderConnectClient,
+      { upload: vi.fn(() => Promise.resolve(fileDescriptor())) },
+    );
+
+    await repository.commitFile({
+      ...plan(),
+      kind: "webpage",
+      format: "html",
+      mediaType: "text/html",
+      capture: {
+        submittedUrl: "https://example.com/submitted",
+        canonicalUrl: "https://example.com/canonical",
+        retrievedAt: dateTime("2026-08-10T11:59:00.000Z"),
+      },
+    });
+
+    expect(create).toHaveBeenCalledWith(
+      expect.objectContaining({
+        frontmatter: expect.objectContaining({
+          kind: "webpage",
+          url: "https://example.com/canonical",
+          original_url: "https://example.com/submitted",
+          capture: {
+            submitted_url: "https://example.com/submitted",
+            canonical_url: "https://example.com/canonical",
+            retrieved_at: "2026-08-10T11:59:00.000Z",
+            method: "reader-web-capture",
+          },
+          documents: [
+            expect.objectContaining({
+              origin_url: "https://example.com/canonical",
+              retrieved_at: "2026-08-10T11:59:00.000Z",
+            }),
+          ],
+        }),
+      }),
+    );
+  });
+});
+
 function plan(): PlannedSourceFileImport {
   return {
     collectionId: collectionId("reading"),
