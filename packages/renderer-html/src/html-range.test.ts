@@ -40,4 +40,26 @@ describe("HTML ranges", () => {
     expect(range?.toString()).toBe("repeated phrase");
     expect(range?.startContainer.parentElement?.textContent).toContain("Second");
   });
+
+  it("keeps quote context inside the selected block", () => {
+    document.body.innerHTML = `<main><p>Previous block</p><p>Selected block</p><p>Following block</p></main>`;
+    const text = document.querySelectorAll("p").item(1).firstChild;
+    if (!text) {
+      throw new Error("Fixture text is missing.");
+    }
+    const range = document.createRange();
+    range.selectNodeContents(text);
+
+    const draft = htmlSelectionDraft({
+      document,
+      range,
+      href: "[[files/essay.html]]",
+      progression: 0.5,
+    });
+
+    expect(draft?.target).toEqual({
+      quote: { exact: "Selected block" },
+      html: { css: "body > main:nth-of-type(1) > p:nth-of-type(2)" },
+    });
+  });
 });

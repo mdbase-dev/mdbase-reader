@@ -13,14 +13,14 @@ export function htmlSelectionDraft(input: {
   if (!exact || !input.document.body.contains(input.range.commonAncestorContainer)) {
     return null;
   }
-  const bodyText = input.document.body.textContent;
+  const container = commonElement(input.range, input.document.body);
+  const containerText = container.textContent;
   const selectedText = input.range.toString();
   const leading = selectedText.length - selectedText.trimStart().length;
-  const start = rangeStartOffset(input.document, input.range) + leading;
+  const start = rangeStartOffset(container, input.range) + leading;
   const end = start + exact.length;
-  const prefix = bodyText.slice(Math.max(0, start - contextLength), start);
-  const suffix = bodyText.slice(end, end + contextLength);
-  const container = commonElement(input.range, input.document.body);
+  const prefix = containerText.slice(Math.max(0, start - contextLength), start);
+  const suffix = containerText.slice(end, end + contextLength);
   return {
     target: {
       quote: {
@@ -56,9 +56,9 @@ export function htmlLocator(href: string, progression: number): ReaderLocator {
   };
 }
 
-function rangeStartOffset(document: Document, range: Range): number {
-  const prefix = document.createRange();
-  prefix.selectNodeContents(document.body);
+function rangeStartOffset(root: Element, range: Range): number {
+  const prefix = root.ownerDocument.createRange();
+  prefix.selectNodeContents(root);
   prefix.setEnd(range.startContainer, range.startOffset);
   return prefix.toString().length;
 }
