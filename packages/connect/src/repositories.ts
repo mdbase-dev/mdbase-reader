@@ -79,6 +79,8 @@ async function recordPathById(
 }
 
 export class ConnectSourceRepository implements SourceRepository {
+  readonly #pathsById = new Map<string, string>();
+
   constructor(private readonly client: ReaderConnectClient) {}
 
   async list(query: SourceQuery): Promise<Page<SourceSummary>> {
@@ -92,6 +94,10 @@ export class ConnectSourceRepository implements SourceRepository {
     const result = value(outcome, "query sources");
     const normalized = result.results
       .map((record) => sourceSummaryFromQuery(query.collectionId, record))
+      .map((source) => {
+        this.#pathsById.set(source.id, source.path);
+        return source;
+      })
       .filter(
         (source) =>
           query.readingStatus === undefined || source.readingStatus === query.readingStatus,
@@ -113,10 +119,11 @@ export class ConnectSourceRepository implements SourceRepository {
   }
 
   async get(collection: CollectionId, id: SourceId): Promise<Source | null> {
-    const path = await recordPathById(this.client, sourceContract, id);
+    const path = this.#pathsById.get(id) ?? (await recordPathById(this.client, sourceContract, id));
     if (!path) {
       return null;
     }
+    this.#pathsById.set(id, path);
     const result = value(
       await this.client.read({ path, contract: sourceContract, includeDocument: true }),
       "read source",
@@ -130,10 +137,13 @@ export class ConnectSourceRepository implements SourceRepository {
     readonly expectedRevision: ReturnType<typeof recordRevision>;
     readonly body: string;
   }): Promise<Source> {
-    const path = await recordPathById(this.client, sourceContract, input.sourceId);
+    const path =
+      this.#pathsById.get(input.sourceId) ??
+      (await recordPathById(this.client, sourceContract, input.sourceId));
     if (!path) {
       throw new ConnectRepositoryError("update source note", "source_not_found");
     }
+    this.#pathsById.set(input.sourceId, path);
     const updated = value(
       await this.client.update({
         path,
@@ -155,10 +165,13 @@ export class ConnectSourceRepository implements SourceRepository {
     readonly embed: string;
     readonly idempotencyKey: MutationId;
   }): Promise<ReturnType<typeof recordRevision>> {
-    const path = await recordPathById(this.client, sourceContract, input.sourceId);
+    const path =
+      this.#pathsById.get(input.sourceId) ??
+      (await recordPathById(this.client, sourceContract, input.sourceId));
     if (!path) {
       throw new ConnectRepositoryError("append annotation", "source_not_found");
     }
+    this.#pathsById.set(input.sourceId, path);
     const current = value(
       await this.client.read({ path, contract: sourceContract, includeDocument: true }),
       "read source before annotation",
@@ -183,35 +196,15 @@ export class ConnectSourceRepository implements SourceRepository {
 }
 
 export class ConnectAnnotationRepository implements AnnotationRepository {
+  readonly #pathsById = new Map<string, string>();
+  readonly #pathsBySource = new Map<string, string[]>();
+  #indexPromise: Promise<void> | null = null;
+
   constructor(private readonly client: ReaderConnectClient) {}
 
   async listForSource(collection: CollectionId, source: SourceId): Promise<readonly Annotation[]> {
-    const matchingPaths: string[] = [];
-    let offset = 0;
-    let hasMore: boolean;
-
-    do {
-      const result = value(
-        await this.client.query({
-          contract: annotationContract,
-          frontmatterMode: "effective",
-          limit: 500,
-          offset,
-        }),
-        "query annotations",
-      );
-      matchingPaths.push(
-        ...result.results
-          .filter(
-            ({ effectiveFrontmatter, frontmatter }) =>
-              (effectiveFrontmatter ?? frontmatter)?.["source"] === source,
-          )
-          .map(({ path }) => path),
-      );
-
-      hasMore = Boolean(result.meta?.hasMore && result.results.length > 0);
-      offset += result.results.length;
-    } while (hasMore);
+    await this.#ensureIndex();
+    const matchingPaths = this.#pathsBySource.get(source) ?? [];
 
     return Promise.all(
       matchingPaths.map(async (path) => {
@@ -228,6 +221,48 @@ export class ConnectAnnotationRepository implements AnnotationRepository {
     );
   }
 
+  async #buildIndex(): Promise<void> {
+    let offset = 0;
+    let hasMore: boolean;
+
+    do {
+      const result = value(
+        await this.client.query({
+          contract: annotationContract,
+          frontmatterMode: "effective",
+          limit: 500,
+          offset,
+        }),
+        "query annotations",
+      );
+      for (const record of result.results) {
+        const fields = record.effectiveFrontmatter ?? record.frontmatter;
+        const id = stringField(fields?.["id"]);
+        const source = linkedRecordId(fields?.["source"]);
+        if (!id || !source) {
+          continue;
+        }
+        this.#pathsById.set(id, record.path);
+        const paths = this.#pathsBySource.get(source) ?? [];
+        paths.push(record.path);
+        this.#pathsBySource.set(source, paths);
+      }
+
+      hasMore = Boolean(result.meta?.hasMore && result.results.length > 0);
+      offset += result.results.length;
+    } while (hasMore);
+  }
+
+  async #ensureIndex(): Promise<void> {
+    this.#indexPromise ??= this.#buildIndex().catch((reason: unknown) => {
+      this.#indexPromise = null;
+      this.#pathsById.clear();
+      this.#pathsBySource.clear();
+      throw reason;
+    });
+    return this.#indexPromise;
+  }
+
   async create(annotation: Annotation, _idempotencyKey: MutationId): Promise<Annotation> {
     const result = value(
       await this.client.create({
@@ -240,11 +275,21 @@ export class ConnectAnnotationRepository implements AnnotationRepository {
       }),
       "create annotation",
     );
-    return annotationFromDocument(annotation.collectionId, result);
+    const created = annotationFromDocument(annotation.collectionId, result);
+    this.#pathsById.set(created.id, result.path);
+    if (this.#indexPromise) {
+      const paths = this.#pathsBySource.get(created.sourceId) ?? [];
+      if (!paths.includes(result.path)) {
+        paths.push(result.path);
+        this.#pathsBySource.set(created.sourceId, paths);
+      }
+    }
+    return created;
   }
 
   async get(collection: CollectionId, id: AnnotationId): Promise<Annotation | null> {
-    const path = await recordPathById(this.client, annotationContract, id);
+    const path =
+      this.#pathsById.get(id) ?? (await recordPathById(this.client, annotationContract, id));
     if (!path) {
       return null;
     }
@@ -254,6 +299,20 @@ export class ConnectAnnotationRepository implements AnnotationRepository {
     );
     return annotationFromDocument(collection, result);
   }
+}
+
+function stringField(candidate: unknown): string | undefined {
+  return typeof candidate === "string" && candidate.trim().length > 0
+    ? candidate.trim()
+    : undefined;
+}
+
+function linkedRecordId(candidate: unknown): string | undefined {
+  const value = stringField(candidate);
+  if (!value) {
+    return undefined;
+  }
+  return /^\[\[([^\]|]+)(?:\|[^\]]+)?\]\]$/u.exec(value)?.[1] ?? value;
 }
 
 export function connectClient(connection: MdbaseConnection): ReaderConnectClient {

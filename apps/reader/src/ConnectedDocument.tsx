@@ -44,12 +44,16 @@ function OpenConnectedDocument({
   source,
 }: ConnectedDocumentProps & { readonly descriptor: DocumentDescriptor }): JSX.Element {
   const [state, setState] = useState<OpenDocumentState>({ status: "opening" });
+  const [rendererState, setRendererState] = useState<
+    | { readonly status: "opening" | "ready" }
+    | { readonly status: "error"; readonly message: string }
+  >({ status: "opening" });
 
   useEffect(() => {
     let active = true;
     let opened: DocumentHandle | null = null;
     void repository
-      .open(source.collectionId, descriptor.fileId, descriptor.revision)
+      .open(source.collectionId, descriptor)
       .then((handle) => {
         opened = handle;
         if (active) {
@@ -84,9 +88,32 @@ function OpenConnectedDocument({
   };
   if (isPdf(document.mediaType, descriptor.file)) {
     return (
-      <Suspense fallback={<DocumentMessage label="Loading the PDF renderer…" />}>
-        <PdfViewerSurface document={document} onSurfaceReady={() => undefined} />
-      </Suspense>
+      <div className="pdf-stage">
+        <Suspense fallback={<DocumentMessage label="Loading the PDF renderer…" />}>
+          <PdfViewerSurface
+            className="pdf-viewer"
+            document={document}
+            onDocumentError={(rendererMessage) =>
+              setRendererState({ status: "error", message: rendererMessage })
+            }
+            onDocumentReady={() => setRendererState({ status: "ready" })}
+            onSurfaceReady={() => undefined}
+          />
+        </Suspense>
+        {rendererState.status === "opening" ? (
+          <div className="pdf-stage-status">
+            <DocumentMessage label="Preparing PDF pages…" />
+          </div>
+        ) : null}
+        {rendererState.status === "error" ? (
+          <div className="pdf-stage-status">
+            <DocumentMessage
+              label={`EmbedPDF could not render this file: ${rendererState.message}`}
+              tone="error"
+            />
+          </div>
+        ) : null}
+      </div>
     );
   }
   if (isEpub(document.mediaType, descriptor.file)) {

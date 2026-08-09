@@ -1,4 +1,4 @@
-import { collectionId, fileId, fileRevision } from "@mdbase-reader/core";
+import { collectionId, fileId, fileRevision, type DocumentTarget } from "@mdbase-reader/core";
 import { describe, expect, it, vi } from "vitest";
 
 import { ConnectDocumentRepository } from "./documents.js";
@@ -27,16 +27,18 @@ function files(items: readonly CollectionFileDescriptor[]): ReaderFileClient {
   };
 }
 
+const target: DocumentTarget = {
+  fileId: fileId("file-01"),
+  file: "[[files/example.pdf]]",
+  revision: fileRevision(descriptor.contentDigest),
+};
+
 describe("ConnectDocumentRepository", () => {
   it("downloads the exact requested revision and revokes its object URL once", async () => {
     const client = files([descriptor]);
     const urls = { create: vi.fn(() => "blob:reader-file"), revoke: vi.fn() };
     const repository = new ConnectDocumentRepository(client, urls);
-    const handle = await repository.open(
-      collectionId("reading"),
-      fileId("file-01"),
-      fileRevision(descriptor.contentDigest),
-    );
+    const handle = await repository.open(collectionId("reading"), target);
 
     expect(handle).toMatchObject({
       fileId: "file-01",
@@ -53,15 +55,40 @@ describe("ConnectDocumentRepository", () => {
   it("refuses to render bytes after the source descriptor revision changes", async () => {
     const repository = new ConnectDocumentRepository(files([descriptor]));
     await expect(
-      repository.open(
-        collectionId("reading"),
-        fileId("file-01"),
-        fileRevision(`sha256:${"b".repeat(64)}`),
-      ),
+      repository.open(collectionId("reading"), {
+        ...target,
+        revision: fileRevision(`sha256:${"b".repeat(64)}`),
+      }),
     ).rejects.toEqual(
       expect.objectContaining<Partial<ConnectDocumentError>>({
         message: "mdbase Connect could not open document: file_revision_changed",
       }),
     );
+  });
+
+  it("scopes file discovery to the selected document folder and reuses descriptors", async () => {
+    const list = vi.fn(async function* (options?: {
+      readonly folder?: string;
+    }): AsyncIterable<CollectionFileDescriptor> {
+      await Promise.resolve();
+      expect(options).toEqual({ folder: "files/example", pageSize: 100 });
+      yield { ...descriptor, path: "files/example/article.pdf" };
+    });
+    const client = {
+      list,
+      download: vi.fn().mockResolvedValue(new Blob(["pdf"], { type: "application/pdf" })),
+    } satisfies ReaderFileClient;
+    const repository = new ConnectDocumentRepository(client, {
+      create: vi.fn(() => "blob:reader-file"),
+      revoke: vi.fn(),
+    });
+    const nestedTarget = { ...target, file: "[[files/example/article.pdf]]" };
+
+    const first = await repository.open(collectionId("reading"), nestedTarget);
+    await first.close();
+    const second = await repository.open(collectionId("reading"), nestedTarget);
+    await second.close();
+
+    expect(list).toHaveBeenCalledOnce();
   });
 });

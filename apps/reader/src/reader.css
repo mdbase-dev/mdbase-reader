@@ -139,6 +139,28 @@ button {
 .connected-document-message.is-error {
   color: var(--danger);
 }
+.pdf-stage,
+.pdf-viewer {
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+}
+.pdf-stage {
+  position: relative;
+  overflow: hidden;
+}
+.pdf-stage-status {
+  position: absolute;
+  inset: 0;
+  background: var(--canvas);
+}
+.source-row.is-opening {
+  cursor: progress;
+}
+.source-row.is-opening strong::after {
+  content: " …";
+  color: var(--accent);
+}
 .document-empty a.mdbase-button {
   display: inline-flex;
   align-items: center;

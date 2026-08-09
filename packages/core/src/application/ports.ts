@@ -1,4 +1,5 @@
 import type { Annotation, AnnotationDraft } from "../domain/annotation.js";
+import type { DocumentTarget } from "../domain/document.js";
 import type {
   AnnotationId,
   CollectionId,
@@ -45,7 +46,7 @@ export interface DocumentHandle {
 }
 
 export interface DocumentRepository {
-  open(collectionId: CollectionId, fileId: FileId, revision: FileRevision): Promise<DocumentHandle>;
+  open(collectionId: CollectionId, target: DocumentTarget): Promise<DocumentHandle>;
 }
 
 export type MutationStage =

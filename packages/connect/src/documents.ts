@@ -4,14 +4,16 @@ import {
   type CollectionId,
   type DocumentHandle,
   type DocumentRepository,
-  type FileId,
-  type FileRevision,
+  type DocumentTarget,
 } from "@mdbase-reader/core";
 
 import type { CollectionFileDescriptor, MdbaseConnection } from "@mdbase-dev/connect";
 
 export interface ReaderFileClient {
-  list(): AsyncIterable<CollectionFileDescriptor>;
+  list(options?: {
+    readonly folder?: string;
+    readonly pageSize?: number;
+  }): AsyncIterable<CollectionFileDescriptor>;
   download(file: CollectionFileDescriptor): Promise<Blob>;
 }
 
@@ -33,21 +35,19 @@ export class ConnectDocumentError extends Error {
 }
 
 export class ConnectDocumentRepository implements DocumentRepository {
+  readonly #descriptorsById = new Map<string, CollectionFileDescriptor>();
+
   public constructor(
     private readonly files: ReaderFileClient,
     private readonly objectUrls: ObjectUrlFactory = browserObjectUrls,
   ) {}
 
-  public async open(
-    _collectionId: CollectionId,
-    requestedFileId: FileId,
-    requestedRevision: FileRevision,
-  ): Promise<DocumentHandle> {
-    const descriptor = await this.#find(requestedFileId);
+  public async open(_collectionId: CollectionId, target: DocumentTarget): Promise<DocumentHandle> {
+    const descriptor = await this.#find(target);
     if (!descriptor) {
       throw new ConnectDocumentError("open document", "file_not_found");
     }
-    if (descriptor.contentDigest !== requestedRevision) {
+    if (descriptor.contentDigest !== target.revision) {
       throw new ConnectDocumentError("open document", "file_revision_changed");
     }
     const blob = await this.files.download(descriptor);
@@ -68,14 +68,30 @@ export class ConnectDocumentRepository implements DocumentRepository {
     };
   }
 
-  async #find(requestedFileId: FileId): Promise<CollectionFileDescriptor | null> {
-    for await (const descriptor of this.files.list()) {
-      if (descriptor.fileId === requestedFileId) {
-        return descriptor;
-      }
+  async #find(target: DocumentTarget): Promise<CollectionFileDescriptor | null> {
+    const cached = this.#descriptorsById.get(target.fileId);
+    if (cached) {
+      return cached;
     }
-    return null;
+    const folder = parentFolder(portableFilePath(target.file));
+    for await (const descriptor of this.files.list({
+      ...(folder ? { folder } : {}),
+      pageSize: 100,
+    })) {
+      this.#descriptorsById.set(descriptor.fileId, descriptor);
+    }
+    return this.#descriptorsById.get(target.fileId) ?? null;
   }
+}
+
+function portableFilePath(link: string): string {
+  const wikilink = /^\[\[([^\]|]+)(?:\|[^\]]+)?\]\]$/u.exec(link.trim());
+  return wikilink?.[1] ?? link.trim();
+}
+
+function parentFolder(path: string): string | undefined {
+  const separator = path.lastIndexOf("/");
+  return separator > 0 ? path.slice(0, separator) : undefined;
 }
 
 function mediaTypeFromPath(path: string): string {

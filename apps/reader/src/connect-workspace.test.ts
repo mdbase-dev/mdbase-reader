@@ -26,13 +26,16 @@ const source: Source = {
 describe("ConnectWorkspaceGateway", () => {
   it("loads summaries before source bodies and saves notes revision-safely", async () => {
     const updateBody = vi.fn().mockResolvedValue({ ...source, body: "Updated" });
+    const list = vi.fn().mockResolvedValue({ items: [source] });
+    const get = vi.fn().mockResolvedValue(source);
     const sources = {
-      list: vi.fn().mockResolvedValue({ items: [source] }),
-      get: vi.fn().mockResolvedValue(source),
+      list,
+      get,
       updateBody,
     } as unknown as SourceRepository;
+    const listForSource = vi.fn().mockResolvedValue([]);
     const annotations = {
-      listForSource: vi.fn().mockResolvedValue([]),
+      listForSource,
     } as unknown as AnnotationRepository;
     const gateway = new ConnectWorkspaceGateway(
       sources,
@@ -43,7 +46,11 @@ describe("ConnectWorkspaceGateway", () => {
 
     const snapshot = await gateway.snapshot();
     expect(snapshot.selectedSource?.id).toBe(source.id);
+    await gateway.selectSource(source.id);
     await gateway.saveSourceBody(source, "Updated");
+    expect(list).toHaveBeenCalledOnce();
+    expect(get).toHaveBeenCalledOnce();
+    expect(listForSource).toHaveBeenCalledOnce();
     expect(updateBody).toHaveBeenCalledWith({
       collectionId: source.collectionId,
       sourceId: source.id,

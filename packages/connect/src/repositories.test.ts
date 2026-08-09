@@ -31,12 +31,33 @@ describe("ConnectSourceRepository", () => {
         }),
       ),
     );
-    const client = { query } as unknown as ReaderConnectClient;
+    const read = vi.fn(() =>
+      Promise.resolve(
+        success<RecordDocument>({
+          path: "sources/gravity.md",
+          revision: "rev-1",
+          types: ["custom-source"],
+          frontmatter: { id: "src_01", title: "Gravity and Grace" },
+          effectiveFrontmatter: { id: "src_01", title: "Gravity and Grace" },
+          body: "Notes",
+          file: {},
+        }),
+      ),
+    );
+    const client = { query, read } as unknown as ReaderConnectClient;
     const repository = new ConnectSourceRepository(client);
     const page = await repository.list({ collectionId: collectionId("reading"), limit: 20 });
+    const selected = await repository.get(collectionId("reading"), sourceId("src_01"));
 
     expect(query).toHaveBeenCalledWith(expect.objectContaining({ contract: sourceContract }));
+    expect(query).toHaveBeenCalledOnce();
+    expect(read).toHaveBeenCalledWith({
+      path: "sources/gravity.md",
+      contract: sourceContract,
+      includeDocument: true,
+    });
     expect(page.items[0]?.title).toBe("Gravity and Grace");
+    expect(selected?.body).toBe("Notes");
   });
 
   it("makes source transclusion idempotent", async () => {
@@ -88,13 +109,13 @@ describe("ConnectAnnotationRepository", () => {
           results: [
             {
               path: "annotations/matching.md",
-              effectiveFrontmatter: { source: "src_01" },
+              effectiveFrontmatter: { id: "ann_01", source: "src_01" },
               types: ["reader-annotation"],
               file: {},
             },
             {
               path: "annotations/other.md",
-              effectiveFrontmatter: { source: "src_02" },
+              effectiveFrontmatter: { id: "ann_02", source: "src_02" },
               types: ["reader-annotation"],
               file: {},
             },
@@ -148,5 +169,8 @@ describe("ConnectAnnotationRepository", () => {
     });
     expect(annotations).toHaveLength(1);
     expect(annotations[0]?.body).toBe("A useful note.");
+
+    await repository.listForSource(collectionId("reading"), sourceId("src_02"));
+    expect(query).toHaveBeenCalledOnce();
   });
 });

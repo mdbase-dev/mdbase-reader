@@ -9,6 +9,12 @@ import type {
 
 export class ConnectWorkspaceGateway implements ReaderWorkspaceGateway {
   #selectedId: SourceId | null = null;
+  #library: ReaderWorkspaceSnapshot["sources"] | null = null;
+  readonly #sourcesById = new Map<SourceId, Promise<Source | null>>();
+  readonly #annotationsBySource = new Map<
+    SourceId,
+    Promise<ReaderWorkspaceSnapshot["annotations"]>
+  >();
 
   constructor(
     private readonly sources: SourceRepository,
@@ -27,30 +33,60 @@ export class ConnectWorkspaceGateway implements ReaderWorkspaceGateway {
   }
 
   async saveSourceBody(source: Source, body: string): Promise<ReaderWorkspaceSnapshot> {
-    await this.sources.updateBody({
+    const updated = await this.sources.updateBody({
       collectionId: this.collectionId,
       sourceId: source.id,
       expectedRevision: source.recordRevision,
       body,
     });
+    this.#sourcesById.set(source.id, Promise.resolve(updated));
     return this.#load();
   }
 
   async #load(): Promise<ReaderWorkspaceSnapshot> {
-    const library = await this.sources.list({ collectionId: this.collectionId, limit: 100 });
-    this.#selectedId ??= library.items[0]?.id ?? null;
-    const selectedSource = this.#selectedId
-      ? await this.sources.get(this.collectionId, this.#selectedId)
-      : null;
-    const annotations = selectedSource
-      ? await this.annotations.listForSource(this.collectionId, selectedSource.id)
-      : [];
+    if (!this.#library) {
+      const library = await this.sources.list({ collectionId: this.collectionId, limit: 100 });
+      this.#library = library.items;
+    }
+    this.#selectedId ??= this.#library[0]?.id ?? null;
+    const selectedId = this.#selectedId;
+    const [selectedSource, annotations] = selectedId
+      ? await Promise.all([this.#source(selectedId), this.#annotations(selectedId)])
+      : [null, []];
     return {
       collectionName: this.collectionName,
-      sources: library.items,
+      sources: this.#library,
       selectedSource,
       annotations,
       connectionState: "connected",
     };
+  }
+
+  #source(id: SourceId): Promise<Source | null> {
+    const cached = this.#sourcesById.get(id);
+    if (cached) {
+      return cached;
+    }
+    const pending = this.sources.get(this.collectionId, id).catch((reason: unknown) => {
+      this.#sourcesById.delete(id);
+      throw reason;
+    });
+    this.#sourcesById.set(id, pending);
+    return pending;
+  }
+
+  #annotations(id: SourceId): Promise<ReaderWorkspaceSnapshot["annotations"]> {
+    const cached = this.#annotationsBySource.get(id);
+    if (cached) {
+      return cached;
+    }
+    const pending = this.annotations
+      .listForSource(this.collectionId, id)
+      .catch((reason: unknown) => {
+        this.#annotationsBySource.delete(id);
+        throw reason;
+      });
+    this.#annotationsBySource.set(id, pending);
+    return pending;
   }
 }

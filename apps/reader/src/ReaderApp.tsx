@@ -6,7 +6,16 @@ import {
   saveThemePreference,
   type ThemePreference,
 } from "@mdbase-reader/ui";
-import { lazy, Suspense, useEffect, useMemo, useState, type JSX, type ReactNode } from "react";
+import {
+  lazy,
+  Suspense,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type JSX,
+  type ReactNode,
+} from "react";
 
 import { readerErrorMessage } from "./errors.js";
 import {
@@ -50,6 +59,10 @@ export function ReaderApp({ gateway, renderDocument }: ReaderAppProps): JSX.Elem
   const [search, setSearch] = useState("");
   const [tab, setTab] = useState<InspectorTab>("annotations");
   const [draft, setDraft] = useState("");
+  const [openingSourceId, setOpeningSourceId] = useState<
+    NonNullable<ReaderWorkspaceSnapshot["selectedSource"]>["id"] | null
+  >(null);
+  const selectionRequest = useRef(0);
   const [inspectorOpen, setInspectorOpen] = useState(
     () => !window.matchMedia("(max-width: 760px)").matches,
   );
@@ -94,15 +107,26 @@ export function ReaderApp({ gateway, renderDocument }: ReaderAppProps): JSX.Elem
   );
 
   const selectSource = (id: NonNullable<ReaderWorkspaceSnapshot["selectedSource"]>["id"]): void => {
+    const request = selectionRequest.current + 1;
+    selectionRequest.current = request;
+    setOpeningSourceId(id);
     setWorkspaceError(null);
     void gateway
       .selectSource(id)
       .then((next) => {
+        if (request !== selectionRequest.current) {
+          return;
+        }
         setSnapshot(next);
         setDraft(next.selectedSource?.body ?? "");
         setMobileLibraryOpen(false);
+        setOpeningSourceId(null);
       })
       .catch((reason: unknown) => {
+        if (request !== selectionRequest.current) {
+          return;
+        }
+        setOpeningSourceId(null);
         setWorkspaceError(readerErrorMessage(reason, "Reader could not open that source."));
       });
   };
@@ -209,7 +233,13 @@ export function ReaderApp({ gateway, renderDocument }: ReaderAppProps): JSX.Elem
               <button
                 key={item.id}
                 type="button"
-                className={source?.id === item.id ? "source-row is-selected" : "source-row"}
+                className={[
+                  "source-row",
+                  source?.id === item.id ? "is-selected" : "",
+                  openingSourceId === item.id ? "is-opening" : "",
+                ]
+                  .filter(Boolean)
+                  .join(" ")}
                 onClick={() => selectSource(item.id)}
               >
                 <span className="source-format">
