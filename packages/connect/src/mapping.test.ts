@@ -1,7 +1,12 @@
 import { collectionId } from "@mdbase-reader/core";
 import { describe, expect, it } from "vitest";
 
-import { annotationFromDocument, sourceFromDocument, sourceSummaryFromQuery } from "./mapping.js";
+import {
+  annotationFromDocument,
+  annotationFrontmatter,
+  sourceFromDocument,
+  sourceSummaryFromQuery,
+} from "./mapping.js";
 
 import type { JsonObject, QueryRecord, RecordDocument } from "@mdbase-dev/connect";
 
@@ -57,24 +62,55 @@ describe("Connect contract mapping", () => {
   });
 
   it("normalizes independently addressable annotations", () => {
-    expect(
-      annotationFromDocument(collectionId("reading"), {
-        path: "annotations/ann_01.md",
-        frontmatter: {},
-        effectiveFrontmatter: {
-          id: "ann_01",
-          source: "[[src_01|Gravity and Grace]]",
-          annotation_type: "highlight",
-          created_at: "2026-08-09T14:21:00+10:00",
-          target: { quote: { exact: "Attention consists of suspending thought" } },
+    const annotation = annotationFromDocument(collectionId("reading"), {
+      path: "annotations/ann_01.md",
+      frontmatter: {},
+      effectiveFrontmatter: {
+        id: "ann_01",
+        source: "[[src_01|Gravity and Grace]]",
+        annotation_type: "highlight",
+        created_at: "2026-08-09T14:21:00+10:00",
+        document: {
+          file_id: "file-01",
+          file: "[[files/gravity.pdf]]",
+          revision: "sha256:19e81c",
         },
-        body: "> Attention consists of suspending thought",
-      }),
-    ).toMatchObject({
+        locator: { label: "p. 16" },
+        target: {
+          quote: { exact: "Attention consists of suspending thought" },
+          pdf: {
+            page_index: 15,
+            coordinate_space: {
+              profile: "embedpdf-page-points-v1",
+              box: "crop",
+              origin: "top_left",
+            },
+            quad_points: [[91.2, 201.4, 477.8, 201.4, 91.2, 238.1, 477.8, 238.1]],
+          },
+        },
+      },
+      body: "> Attention consists of suspending thought",
+    });
+    expect(annotation).toMatchObject({
       id: "ann_01",
       sourceId: "src_01",
       annotationType: "highlight",
-      target: { quote: { exact: "Attention consists of suspending thought" } },
+      document: { fileId: "file-01", revision: "sha256:19e81c" },
+      locator: { label: "p. 16" },
+      target: {
+        quote: { exact: "Attention consists of suspending thought" },
+        pdf: { pageIndex: 15, coordinateSpace: { origin: "top_left" } },
+      },
+    });
+    expect(annotationFrontmatter(annotation)).toMatchObject({
+      document: { file_id: "file-01", revision: "sha256:19e81c" },
+      locator: { label: "p. 16" },
+      target: {
+        pdf: {
+          page_index: 15,
+          coordinate_space: { profile: "embedpdf-page-points-v1", origin: "top_left" },
+        },
+      },
     });
   });
 });
