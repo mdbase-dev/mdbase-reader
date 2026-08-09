@@ -21,31 +21,50 @@ pnpm dev
 
 ## Test a local collection
 
-Start mdbase Connect in its explicit local-development mode, then start Reader:
+An application served over HTTP from localhost cannot use the managed
+`https://connect.mdbase.dev` service. Use Connect's isolated local environment, which explicitly
+accepts loopback application manifests.
+
+From the sibling `mdbase-connect` checkout, start the local control plane:
 
 ```sh
-mdbase-connect --allow-local
+cd ../mdbase-connect
+# First use only: cp .env.example .env
+pnpm dev:environment:up
+```
+
+In another terminal, launch Connect with an isolated development profile:
+
+```sh
+cd ../mdbase-connect
+pnpm dev:desktop:fresh
+```
+
+Enter `http://127.0.0.1:8787` in the pairing screen, approve the computer in the local portal, then
+use **Add existing** to register `~/testvault/mdbase-reader` or another collection with that local
+environment. Collections registered with the managed service do not automatically appear in this
+isolated profile.
+
+Start Reader from its own checkout:
+
+```sh
 pnpm dev
 ```
 
-Open <http://127.0.0.1:5173/> and choose the registered collection. If the collection has no Reader
-contracts yet, Connect shows the exact type-pack changes and installs them only after approval.
-
-The Reader fixture used during development is already registered at
-`~/testvault/mdbase-reader`. On another machine, register a collection first:
-
-```sh
-mdbase connect collection add ~/testvault/mdbase-reader
-```
-
-For an isolated development Connect server, supply its origin without rebuilding Reader:
+Open Reader with the local Connect server selected:
 
 ```text
 http://127.0.0.1:5173/?server=http://127.0.0.1:8787
 ```
 
 Reader preserves that server selection through the authorization callback. Loopback manifests are
-never used outside explicit localhost development.
+never used outside explicit localhost development. If the collection has no Reader contracts yet,
+Connect shows the exact type-pack changes and installs them only after approval.
+
+`mdbase-connect-dev validate-manifest … --allow-local` only permits loopback URLs during static
+manifest validation. The desktop application does not expose an `--allow-local` option. To test
+against the managed service instead, deploy Reader at an HTTPS origin declared by its production
+manifest.
 
 The web build is emitted by `apps/reader`. `apps/electron` contains a sandboxed Electron main
 process and isolated preload bridge; set `MDBASE_READER_DEV_URL=http://127.0.0.1:5173` when running
