@@ -1,0 +1,10 @@
+node_modules/
+dist/
+coverage/
+.vite/
+.DS_Store
+*.tsbuildinfo
+apps/capacitor/android/
+apps/capacitor/ios/
+test-results/
+playwright-report/

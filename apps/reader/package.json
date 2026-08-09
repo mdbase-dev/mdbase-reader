@@ -1,0 +1,20 @@
+{
+  "name": "@mdbase-reader/app",
+  "version": "0.1.0-beta.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "vitest run --passWithNoTests",
+    "typecheck": "tsc -p tsconfig.json"
+  },
+  "dependencies": {
+    "@mdbase-reader/connect": "workspace:*",
+    "@mdbase-reader/core": "workspace:*",
+    "@mdbase-reader/markdown-editor": "workspace:*",
+    "@mdbase-reader/platform": "workspace:*",
+    "@mdbase-reader/renderer-epub": "workspace:*",
+    "@mdbase-reader/reading-surface": "workspace:*",
+    "@mdbase-reader/renderer-pdf": "workspace:*",
+    "@mdbase-reader/ui": "workspace:*"
+  }
+}

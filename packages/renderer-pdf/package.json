@@ -1,0 +1,22 @@
+{
+  "name": "@mdbase-reader/renderer-pdf",
+  "version": "0.1.0-beta.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "test": "vitest run --passWithNoTests",
+    "typecheck": "tsc -p tsconfig.json"
+  },
+  "dependencies": {
+    "@embedpdf/react-pdf-viewer": "^2.15.0",
+    "@mdbase-reader/core": "workspace:*",
+    "@mdbase-reader/reading-surface": "workspace:*",
+    "react": "^19.2.8"
+  },
+  "devDependencies": {
+    "@types/react": "^19.2.14"
+  }
+}

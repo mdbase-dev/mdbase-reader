@@ -1,0 +1,23 @@
+{
+  "name": "@mdbase-reader/renderer-epub",
+  "version": "0.1.0-beta.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "test": "vitest run --passWithNoTests",
+    "typecheck": "tsc -p tsconfig.json"
+  },
+  "dependencies": {
+    "@mdbase-reader/core": "workspace:*",
+    "@mdbase-reader/reading-surface": "workspace:*",
+    "@readium/navigator": "^2.8.2",
+    "@readium/shared": "^2.4.0",
+    "react": "^19.2.8"
+  },
+  "devDependencies": {
+    "@types/react": "^19.2.14"
+  }
+}

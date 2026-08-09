@@ -1,0 +1,7 @@
+SPEC.md
+DATA_MODEL.md
+pnpm-lock.yaml
+dist/
+coverage/
+apps/capacitor/android/
+apps/capacitor/ios/
