@@ -21,6 +21,7 @@ import { useDocumentDecorations } from "./use-document-decorations.js";
 import { useLibrarySearch } from "./use-library-search.js";
 import { useReaderWorkspace, type ReaderWorkspaceController } from "./use-reader-workspace.js";
 import { useReadingResume, type ReadingResumeState } from "./use-reading-resume.js";
+import { useSessionDocumentSearch } from "./use-session-document-search.js";
 import { useSourceExport } from "./use-source-export.js";
 import { useSourceImport } from "./use-source-import.js";
 
@@ -85,7 +86,8 @@ export function ReaderApp({
   useReaderShortcuts(focusMode, setFocusMode);
 
   const filteredSources = useStatusFilteredSources(workspace.library, filter);
-  const librarySearch = useLibrarySearch(gateway, filteredSources, search);
+  const documentSearch = useSessionDocumentSearch(workspace.selectedSource, surface, search);
+  const librarySearch = useLibrarySearch(gateway, filteredSources, search, documentSearch.matches);
 
   if (workspace.library.status !== "ready") {
     return (

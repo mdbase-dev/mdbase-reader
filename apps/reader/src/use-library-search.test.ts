@@ -1,7 +1,7 @@
 import { collectionId, sourceId } from "@mdbase-reader/core";
 import { describe, expect, it } from "vitest";
 
-import { mergeSearchResults } from "./use-library-search.js";
+import { mergeSearchMatches, mergeSearchResults } from "./use-library-search.js";
 
 import type { SourceSummary, SourceTextSearchMatch } from "@mdbase-reader/core";
 
@@ -42,5 +42,17 @@ describe("mergeSearchResults", () => {
 
   it("returns the complete library when the query is empty", () => {
     expect(mergeSearchResults(sources, " ", new Map())).toBe(sources);
+  });
+});
+
+describe("mergeSearchMatches", () => {
+  it("unifies canonical and extracted document evidence per source", () => {
+    const source = sourceId("source-1");
+    expect(
+      mergeSearchMatches(
+        [{ sourceId: source, kinds: ["source-note"] }],
+        [{ sourceId: source, kinds: ["document"] }],
+      ),
+    ).toEqual([{ sourceId: source, kinds: ["source-note", "document"] }]);
   });
 });

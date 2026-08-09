@@ -3,6 +3,7 @@ export * from "./application/delete-annotation.js";
 export * from "./application/build-csl-bibliography.js";
 export * from "./application/import-source-file.js";
 export * from "./application/materialize-source.js";
+export * from "./application/session-document-text-index.js";
 export * from "./application/save-source-citation.js";
 export * from "./application/transclude-annotation.js";
 export * from "./application/update-annotation-body.js";

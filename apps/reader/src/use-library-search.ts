@@ -26,6 +26,7 @@ export function useLibrarySearch(
   gateway: ReaderWorkspaceGateway,
   sources: readonly SourceSummary[],
   query: string,
+  documentMatches: readonly SourceTextSearchMatch[] = [],
 ): LibrarySearchResult {
   const normalized = query.trim().toLocaleLowerCase();
   const [content, setContent] = useState<ContentSearchState>({
@@ -68,14 +69,28 @@ export function useLibrarySearch(
 
   return useMemo(() => {
     const current = content.query === normalized ? content : emptySearch(normalized);
-    const matches = new Map(current.matches.map((match) => [match.sourceId, match]));
+    const matches = new Map(
+      mergeSearchMatches(current.matches, documentMatches).map((match) => [match.sourceId, match]),
+    );
     return {
       sources: mergeSearchResults(sources, query, matches),
       matches,
       status: current.status,
       problem: current.problem,
     };
-  }, [content, normalized, query, sources]);
+  }, [content, documentMatches, normalized, query, sources]);
+}
+
+export function mergeSearchMatches(
+  ...groups: readonly (readonly SourceTextSearchMatch[])[]
+): readonly SourceTextSearchMatch[] {
+  const kindsBySource = new Map<SourceId, Set<SourceTextSearchMatch["kinds"][number]>>();
+  for (const match of groups.flat()) {
+    const kinds = kindsBySource.get(match.sourceId) ?? new Set();
+    match.kinds.forEach((kind) => kinds.add(kind));
+    kindsBySource.set(match.sourceId, kinds);
+  }
+  return [...kindsBySource].map(([sourceId, kinds]) => ({ sourceId, kinds: [...kinds] }));
 }
 
 export function mergeSearchResults(

@@ -16,6 +16,7 @@ import {
   stableReadiumLocator,
 } from "./epub-locator.js";
 import { safePublicationFetch } from "./epub-safe-fetch.js";
+import { extractPublicationText } from "./epub-text.js";
 
 import type { Annotation } from "@mdbase-reader/core";
 import type { TextSelectionDraft, Unsubscribe } from "@mdbase-reader/reading-surface";
@@ -24,6 +25,7 @@ export interface ReadiumRuntime {
   currentLocator(): Readonly<Record<string, unknown>>;
   goTo(locator: Readonly<Record<string, unknown>>): Promise<boolean>;
   clearSelection(): void;
+  extractText(options?: { readonly signal?: AbortSignal }): Promise<string>;
   onLocationChanged(listener: (locator: Readonly<Record<string, unknown>>) => void): Unsubscribe;
   onTextSelected(listener: (selection: TextSelectionDraft) => void): Unsubscribe;
   setAnnotations(annotations: readonly Annotation[]): void;
@@ -160,6 +162,7 @@ export async function createReadiumRuntime(input: {
         .querySelectorAll<HTMLIFrameElement>(".readium-navigator-iframe")
         .forEach((frame) => frame.contentWindow?.getSelection()?.removeAllRanges());
     },
+    extractText: (options) => extractPublicationText(publication, options?.signal),
     onLocationChanged(listener) {
       locationListeners.add(listener);
       return () => locationListeners.delete(listener);

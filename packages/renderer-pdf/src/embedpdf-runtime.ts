@@ -1,9 +1,15 @@
 import { AnnotationPlugin } from "@embedpdf/plugin-annotation";
 import { SelectionPlugin, type FormattedSelection } from "@embedpdf/plugin-selection";
-import { CapturePlugin, ScrollPlugin, type PluginRegistry } from "@embedpdf/react-pdf-viewer";
+import {
+  CapturePlugin,
+  DocumentManagerPlugin,
+  ScrollPlugin,
+  type PluginRegistry,
+} from "@embedpdf/react-pdf-viewer";
 
 import { annotationToPdfDecoration } from "./pdf-decoration.js";
 
+import type { PdfDocumentObject, PdfEngine } from "@embedpdf/models";
 import type { CaptureAreaEvent } from "@embedpdf/plugin-capture";
 import type { Annotation } from "@mdbase-reader/core";
 import type {
@@ -21,6 +27,7 @@ export interface EmbedPdfRuntime {
   onAreaSelected(listener: (selection: AreaSelectionDraft) => void): Unsubscribe;
   onTextSelected(listener: (selection: TextSelectionDraft) => void): Unsubscribe;
   clearTextSelection(): void;
+  extractText(options?: { readonly signal?: AbortSignal }): Promise<string>;
   setAnnotations(annotations: readonly Annotation[]): void;
   destroy(): void;
 }
@@ -143,6 +150,14 @@ export function createEmbedPdfRuntime(registry: PluginRegistry): EmbedPdfRuntime
       };
     },
     clearTextSelection: () => selection.clear(),
+    async extractText(options) {
+      const manager = registry.getPlugin<DocumentManagerPlugin>(DocumentManagerPlugin.id);
+      if (!manager) {
+        throw new Error("EmbedPDF did not initialize its document manager.");
+      }
+      const document = await activePdfDocument(manager.provides(), options?.signal);
+      return extractPdfDocumentText(registry.getEngine(), document, options?.signal);
+    },
     setAnnotations(annotations) {
       for (const annotation of annotations) {
         const decoration = annotationToPdfDecoration(annotation);
@@ -159,4 +174,85 @@ export function createEmbedPdfRuntime(registry: PluginRegistry): EmbedPdfRuntime
       subscriptions.clear();
     },
   };
+}
+
+type DocumentManagerCapability = ReturnType<DocumentManagerPlugin["provides"]>;
+
+async function activePdfDocument(
+  documents: DocumentManagerCapability,
+  signal?: AbortSignal,
+): Promise<PdfDocumentObject> {
+  signal?.throwIfAborted();
+  const active = documents.getActiveDocument();
+  if (active) {
+    return active;
+  }
+  return new Promise((resolve, reject) => {
+    let unsubscribeOpened = (): void => undefined;
+    let unsubscribeError = (): void => undefined;
+    const aborted = (): void => finish(() => reject(abortReason(signal)));
+    const finish = (settle: () => void): void => {
+      unsubscribeOpened();
+      unsubscribeError();
+      signal?.removeEventListener("abort", aborted);
+      settle();
+    };
+    unsubscribeOpened = documents.onDocumentOpened(({ document }) => {
+      if (document) {
+        finish(() => resolve(document));
+      }
+    });
+    unsubscribeError = documents.onDocumentError(({ message }) => {
+      finish(() => reject(new Error(message)));
+    });
+    signal?.addEventListener("abort", aborted, { once: true });
+    if (signal?.aborted) {
+      aborted();
+      return;
+    }
+    const openedWhileSubscribing = documents.getActiveDocument();
+    if (openedWhileSubscribing) {
+      finish(() => resolve(openedWhileSubscribing));
+    }
+  });
+}
+
+export async function extractPdfDocumentText(
+  engine: PdfEngine,
+  document: PdfDocumentObject,
+  signal?: AbortSignal,
+  batchSize = 16,
+): Promise<string> {
+  const parts: string[] = [];
+  for (let start = 0; start < document.pageCount; start += batchSize) {
+    signal?.throwIfAborted();
+    const count = Math.min(batchSize, document.pageCount - start);
+    const pages = Array.from({ length: count }, (_value, index) => start + index);
+    parts.push(await engine.extractText(document, pages).toPromise());
+    await yieldToBrowser(signal);
+  }
+  return parts.join("\n");
+}
+
+function yieldToBrowser(signal?: AbortSignal): Promise<void> {
+  return new Promise((resolve, reject) => {
+    const complete = (): void => {
+      signal?.removeEventListener("abort", aborted);
+      resolve();
+    };
+    const aborted = (): void => {
+      clearTimeout(timer);
+      reject(abortReason(signal));
+    };
+    const timer = setTimeout(complete, 0);
+    signal?.addEventListener("abort", aborted, { once: true });
+  });
+}
+
+function abortError(): DOMException {
+  return new DOMException("PDF text extraction was cancelled.", "AbortError");
+}
+
+function abortReason(signal?: AbortSignal): Error {
+  return signal?.reason instanceof Error ? signal.reason : abortError();
 }

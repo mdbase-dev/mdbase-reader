@@ -65,11 +65,16 @@ export interface AnnotationNavigationCapability {
   goToAnnotation(annotation: Annotation): Promise<boolean>;
 }
 
+export interface TextExtractionCapability {
+  extractText(options?: { readonly signal?: AbortSignal }): Promise<string>;
+}
+
 export interface ReadingSurfaceCapabilities {
   readonly textSelection?: TextSelectionCapability;
   readonly areaSelection?: AreaSelectionCapability;
   readonly decorations?: DecorationCapability;
   readonly annotationNavigation?: AnnotationNavigationCapability;
+  readonly textExtraction?: TextExtractionCapability;
 }
 
 export interface ReadingSurface {

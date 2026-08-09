@@ -37,6 +37,9 @@ export class ReadiumEpubSurface implements ReadingSurface {
         selections: this.#selections,
         clearSelection: () => runtime.clearSelection(),
       },
+      textExtraction: {
+        extractText: (options) => runtime.extractText(options),
+      },
       decorations: {
         setAnnotations: (annotations) => {
           runtime.setAnnotations(

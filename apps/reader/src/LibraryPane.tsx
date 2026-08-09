@@ -68,7 +68,9 @@ export function LibraryPane({
         )}
       </label>
       <span className="sr-only" role="status" aria-live="polite">
-        {searchStatus === "searching" ? "Searching source notes and annotations." : ""}
+        {searchStatus === "searching"
+          ? "Searching source notes, annotations, and opened documents."
+          : ""}
       </span>
       <nav className="status-nav" aria-label="Reading status">
         <button
@@ -140,6 +142,9 @@ export function LibraryPane({
 function searchMatchLabel(match: SourceTextSearchMatch | undefined): string | null {
   if (!match) {
     return null;
+  }
+  if (match.kinds.includes("document")) {
+    return match.kinds.length > 1 ? "document + note match" : "document match";
   }
   return match.kinds.includes("source-note") ? "note match" : "annotation match";
 }

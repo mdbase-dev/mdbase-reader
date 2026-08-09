@@ -40,6 +40,9 @@ export class HtmlReadingSurface implements ReadingSurface {
       annotationNavigation: {
         goToAnnotation: (annotation) => Promise.resolve(runtime.goToAnnotation(annotation)),
       },
+      textExtraction: {
+        extractText: () => Promise.resolve(runtime.extractText()),
+      },
     };
   }
 

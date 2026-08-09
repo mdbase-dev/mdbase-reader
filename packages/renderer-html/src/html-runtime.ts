@@ -75,6 +75,10 @@ export class HtmlDocumentRuntime {
     this.#view.getSelection()?.removeAllRanges();
   }
 
+  public extractText(): string {
+    return this.#document.body.textContent;
+  }
+
   public destroy(): void {
     if (this.#destroyed) {
       return;
