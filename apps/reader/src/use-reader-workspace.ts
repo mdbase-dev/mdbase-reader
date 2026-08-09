@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 
 import { readerErrorMessage } from "./errors.js";
-import { selectedResource, type SelectedValue } from "./selected-resource.js";
+import { selectedResource, selectedValue, type SelectedValue } from "./selected-resource.js";
 import { useCitationEditor, type CitationEditorController } from "./use-citation-editor.js";
 import { useLibrarySelection, type LibrarySelection } from "./use-library-selection.js";
 import { useAnnotationCreation, useReadingPositionSave } from "./use-workspace-mutations.js";
@@ -29,6 +29,7 @@ export interface ReaderWorkspaceController {
   readonly sourceRecord: AsyncResource<Source>;
   readonly annotations: AsyncResource<readonly Annotation[]>;
   readonly draft: string;
+  readonly draftReady: boolean;
   readonly saveStatus: "idle" | "saving";
   readonly saveError: string | null;
   readonly citation: CitationEditorController;
@@ -80,15 +81,15 @@ function useSelectedSourceWorkspace(
       .source(sourceId, { signal: controller.signal })
       .then((value) => {
         if (!controller.signal.aborted) {
+          if (value) {
+            setDraftState({ sourceId, value: value.body });
+          }
           setSource({
             sourceId,
             value: value
               ? { status: "ready", value }
               : { status: "error", message: "This source record no longer exists." },
           });
-          if (value) {
-            setDraftState({ sourceId, value: value.body });
-          }
         }
       })
       .catch((reason: unknown) => {
@@ -129,7 +130,8 @@ function useSelectedSourceWorkspace(
   const sourceId = selectedSource?.id ?? null;
   const sourceRecord = selectedResource(sourceId, source);
   const annotationResource = selectedResource(sourceId, annotations);
-  const draftValue = sourceId && draft?.sourceId === sourceId ? draft.value : "";
+  const selectedDraft = selectedValue(sourceId, draft);
+  const draftValue = selectedDraft.matched ? selectedDraft.value : "";
   const setDraft = useCallback(
     (value: string): void => {
       if (sourceId) {
@@ -167,6 +169,7 @@ function useSelectedSourceWorkspace(
     sourceRecord,
     annotations: annotationResource,
     draft: draftValue,
+    draftReady: selectedDraft.matched,
     saveStatus: sourceId && saving?.sourceId === sourceId && saving.value ? "saving" : "idle",
     saveError: sourceId && saveError?.sourceId === sourceId ? saveError.value : null,
     citation,

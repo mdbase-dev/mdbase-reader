@@ -174,6 +174,9 @@ function SourceNoteEditor({
       <div className="editor-loading">Opening source note…</div>
     );
   }
+  if (!workspace.draftReady) {
+    return <div className="editor-loading">Opening source note…</div>;
+  }
   const citekey = sourceRecord.value.citation?.id;
   return (
     <>
