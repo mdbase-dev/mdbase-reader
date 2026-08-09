@@ -1,6 +1,12 @@
-import { DocumentManagerPlugin, PDFViewer, type PluginRegistry } from "@embedpdf/react-pdf-viewer";
+import {
+  DocumentManagerPlugin,
+  PDFViewer,
+  type EmbedPdfContainer,
+  type PluginRegistry,
+} from "@embedpdf/react-pdf-viewer";
 import { useCallback, useEffect, useRef } from "react";
 
+import { suppressNativeCapturePreview } from "./embedpdf-native-capture-preview.js";
 import { createEmbedPdfRuntime } from "./embedpdf-runtime.js";
 import { EmbedPdfSurface } from "./pdf-surface.js";
 
@@ -23,11 +29,14 @@ export function PdfViewerSurface({
 }: PdfViewerSurfaceProps): React.JSX.Element {
   const surfaceRef = useRef<EmbedPdfSurface | null>(null);
   const subscriptionsRef = useRef<(() => void)[]>([]);
+  const nativeUiCleanupRef = useRef<(() => void) | null>(null);
   const clearRuntime = useCallback(() => {
     for (const unsubscribe of subscriptionsRef.current) {
       unsubscribe();
     }
     subscriptionsRef.current = [];
+    nativeUiCleanupRef.current?.();
+    nativeUiCleanupRef.current = null;
     void surfaceRef.current?.destroy();
     surfaceRef.current = null;
   }, []);
@@ -63,10 +72,16 @@ export function PdfViewerSurface({
 
   useEffect(() => () => clearRuntime(), [clearRuntime]);
 
+  const handleInit = useCallback((container: EmbedPdfContainer): void => {
+    nativeUiCleanupRef.current?.();
+    nativeUiCleanupRef.current = suppressNativeCapturePreview(container);
+  }, []);
+
   return (
     <PDFViewer
       {...(className === undefined ? {} : { className })}
       config={{ src: document.url }}
+      onInit={handleInit}
       onReady={handleReady}
       style={{ height: "100%", width: "100%" }}
     />
