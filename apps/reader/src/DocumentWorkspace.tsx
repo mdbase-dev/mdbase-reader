@@ -1,6 +1,6 @@
 import { ReaderButton } from "@mdbase-reader/ui";
 
-import { BackIcon, HighlightIcon, MoreIcon, NoteIcon } from "./icons.js";
+import { BackIcon, FocusIcon, MoreIcon, PanelIcon } from "./icons.js";
 
 import type { SourceSummary } from "@mdbase-reader/core";
 import type { JSX, ReactNode } from "react";
@@ -8,15 +8,21 @@ import type { JSX, ReactNode } from "react";
 export interface DocumentWorkspaceProps {
   readonly source: SourceSummary | null;
   readonly document: ReactNode;
+  readonly focusMode: boolean;
+  readonly inspectorOpen: boolean;
   readonly onBackToLibrary: () => void;
-  readonly onOpenInspector: () => void;
+  readonly onToggleFocus: () => void;
+  readonly onToggleInspector: () => void;
 }
 
 export function DocumentWorkspace({
   source,
   document,
+  focusMode,
+  inspectorOpen,
   onBackToLibrary,
-  onOpenInspector,
+  onToggleFocus,
+  onToggleInspector,
 }: DocumentWorkspaceProps): JSX.Element {
   return (
     <section className="document-workspace" aria-label="Document reader">
@@ -34,21 +40,29 @@ export function DocumentWorkspace({
             <div className="document-identity">
               <strong>{source.title}</strong>
               <span>
-                {source.documents[0]?.title ?? source.documents[0]?.mediaType ?? "Source note"}
+                {source.creators.join(", ") || "Unknown creator"}
+                {source.documents[0] ? ` · ${documentLabel(source)}` : " · Source note"}
               </span>
             </div>
             <div className="document-tools">
               <button
                 type="button"
-                className="mobile-inspector-toggle tool-button"
-                onClick={onOpenInspector}
+                className={inspectorOpen ? "tool-button is-active" : "tool-button"}
+                aria-pressed={inspectorOpen}
+                aria-label={inspectorOpen ? "Hide source workspace" : "Show source workspace"}
+                onClick={onToggleInspector}
               >
-                <NoteIcon /> Annotations
+                <PanelIcon /> <span className="tool-label">Workspace</span>
               </button>
-              <button type="button" className="tool-button">
-                <HighlightIcon /> Highlight
+              <button
+                type="button"
+                className={focusMode ? "tool-button is-active" : "tool-button"}
+                aria-pressed={focusMode}
+                aria-label={focusMode ? "Exit focus mode" : "Enter focus mode"}
+                onClick={onToggleFocus}
+              >
+                <FocusIcon /> <span className="tool-label">Focus</span>
               </button>
-              <span className="page-position">42 / 218</span>
               <button className="icon-button" type="button" aria-label="Document actions">
                 <MoreIcon />
               </button>
@@ -61,6 +75,17 @@ export function DocumentWorkspace({
       )}
     </section>
   );
+}
+
+function documentLabel(source: SourceSummary): string {
+  const mediaType = source.documents[0]?.mediaType ?? "";
+  if (mediaType.includes("pdf")) {
+    return "PDF";
+  }
+  if (mediaType.includes("epub")) {
+    return "EPUB";
+  }
+  return source.documents[0]?.title ?? "Web archive";
 }
 
 function DocumentEmpty(): JSX.Element {

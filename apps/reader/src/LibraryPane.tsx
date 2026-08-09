@@ -1,6 +1,6 @@
 import { ReaderButton } from "@mdbase-reader/ui";
 
-import { LibraryIcon, MoreIcon, SearchIcon } from "./icons.js";
+import { LibraryIcon, MoreIcon, PlusIcon, SearchIcon } from "./icons.js";
 
 import type { SourceId, SourceSummary } from "@mdbase-reader/core";
 import type { JSX } from "react";
@@ -10,16 +10,22 @@ export interface LibraryPaneProps {
   readonly visibleSources: readonly SourceSummary[];
   readonly selectedSourceId: SourceId | null;
   readonly search: string;
+  readonly filter: LibraryFilter;
   readonly onSearchChange: (value: string) => void;
+  readonly onFilterChange: (filter: LibraryFilter) => void;
   readonly onSelectSource: (id: SourceId) => void;
 }
+
+export type LibraryFilter = "all" | "queued" | "reading";
 
 export function LibraryPane({
   sources,
   visibleSources,
   selectedSourceId,
   search,
+  filter,
   onSearchChange,
+  onFilterChange,
   onSelectSource,
 }: LibraryPaneProps): JSX.Element {
   return (
@@ -36,6 +42,7 @@ export function LibraryPane({
         <SearchIcon />
         <span className="sr-only">Search sources</span>
         <input
+          id="reader-library-search"
           value={search}
           onChange={(event) => onSearchChange(event.target.value)}
           placeholder="Search library"
@@ -43,14 +50,32 @@ export function LibraryPane({
         <kbd>⌘K</kbd>
       </label>
       <nav className="status-nav" aria-label="Reading status">
-        <button className="is-active" type="button">
+        <button
+          className={filter === "all" ? "is-active" : undefined}
+          type="button"
+          aria-pressed={filter === "all"}
+          onClick={() => onFilterChange("all")}
+        >
           All <span>{sources.length}</span>
         </button>
-        <button type="button">
+        <button
+          className={filter === "reading" ? "is-active" : undefined}
+          type="button"
+          aria-pressed={filter === "reading"}
+          onClick={() => onFilterChange("reading")}
+        >
           Reading{" "}
           <span>{sources.filter(({ readingStatus }) => readingStatus === "reading").length}</span>
         </button>
-        <button type="button">Queued</button>
+        <button
+          className={filter === "queued" ? "is-active" : undefined}
+          type="button"
+          aria-pressed={filter === "queued"}
+          onClick={() => onFilterChange("queued")}
+        >
+          Queued
+          <span>{sources.filter(({ readingStatus }) => readingStatus === "queued").length}</span>
+        </button>
       </nav>
       <div className="source-list">
         {visibleSources.map((source) => (
@@ -66,9 +91,17 @@ export function LibraryPane({
             <span className="source-row-meta">{source.readingStatus ?? "inbox"}</span>
           </button>
         ))}
+        {visibleSources.length === 0 ? (
+          <div className="library-empty">
+            <strong>No matching sources</strong>
+            <span>Try another search or reading status.</span>
+          </div>
+        ) : null}
       </div>
       <div className="library-footer">
-        <ReaderButton>+ Add source</ReaderButton>
+        <ReaderButton>
+          <PlusIcon /> Add source
+        </ReaderButton>
       </div>
     </aside>
   );

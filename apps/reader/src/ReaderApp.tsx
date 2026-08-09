@@ -1,5 +1,4 @@
 import {
-  ProductBrand,
   ReaderButton,
   applyThemePreference,
   loadThemePreference,
@@ -9,9 +8,9 @@ import {
 import { useEffect, useMemo, useState, type JSX, type ReactNode } from "react";
 
 import { DocumentWorkspace } from "./DocumentWorkspace.js";
-import { ThemeIcon } from "./icons.js";
 import { InspectorPane, type InspectorTab } from "./InspectorPane.js";
-import { LibraryPane } from "./LibraryPane.js";
+import { LibraryPane, type LibraryFilter } from "./LibraryPane.js";
+import { ReaderHeader } from "./ReaderHeader.js";
 import { useReaderWorkspace } from "./use-reader-workspace.js";
 import { filterSources, type ReaderWorkspaceGateway } from "./workspace-model.js";
 
@@ -25,11 +24,13 @@ export interface ReaderAppProps {
 export function ReaderApp({ gateway, renderDocument }: ReaderAppProps): JSX.Element {
   const workspace = useReaderWorkspace(gateway);
   const [search, setSearch] = useState("");
+  const [filter, setFilter] = useState<LibraryFilter>("all");
   const [tab, setTab] = useState<InspectorTab>("annotations");
   const [inspectorOpen, setInspectorOpen] = useState(
     () => !window.matchMedia("(max-width: 760px)").matches,
   );
   const [mobileLibraryOpen, setMobileLibraryOpen] = useState(false);
+  const [focusMode, setFocusMode] = useState(false);
   const [theme, setTheme] = useState<ThemePreference>(() => loadThemePreference(localStorage));
 
   useEffect(() => applyThemePreference(theme, document.documentElement), [theme]);
@@ -41,13 +42,30 @@ export function ReaderApp({ gateway, renderDocument }: ReaderAppProps): JSX.Elem
     return () => query.removeEventListener("change", update);
   }, []);
 
+  useEffect(() => {
+    const handleShortcut = (event: KeyboardEvent): void => {
+      if ((event.metaKey || event.ctrlKey) && event.key.toLocaleLowerCase() === "k") {
+        event.preventDefault();
+        document.querySelector<HTMLInputElement>("#reader-library-search")?.focus();
+      } else if (event.key === "Escape" && focusMode) {
+        setFocusMode(false);
+      }
+    };
+    window.addEventListener("keydown", handleShortcut);
+    return () => window.removeEventListener("keydown", handleShortcut);
+  }, [focusMode]);
+
   const visibleSources = useMemo(
     () =>
       filterSources(
-        workspace.library.status === "ready" ? workspace.library.value.sources : [],
+        workspace.library.status === "ready"
+          ? workspace.library.value.sources.filter(
+              ({ readingStatus }) => filter === "all" || readingStatus === filter,
+            )
+          : [],
         search,
       ),
-    [search, workspace.library],
+    [filter, search, workspace.library],
   );
 
   if (workspace.library.status !== "ready") {
@@ -69,41 +87,31 @@ export function ReaderApp({ gateway, renderDocument }: ReaderAppProps): JSX.Elem
 
   return (
     <div className="reader-shell">
-      <header className="reader-header">
-        <ProductBrand />
-        <div className="reader-header-context">
-          <span>{library.collectionName}</span>
-          <i aria-hidden="true" />
-          <span className={`connection-state is-${library.connectionState}`}>
-            {library.connectionState}
-          </span>
-        </div>
-        <div className="reader-header-actions">
-          <button
-            className="icon-button"
-            type="button"
-            aria-label={`Theme: ${theme}. Change theme`}
-            onClick={changeTheme}
-          >
-            <ThemeIcon />
-          </button>
-          <button
-            className="profile-button"
-            type="button"
-            aria-label="Account and collection settings"
-          >
-            CB
-          </button>
-        </div>
-      </header>
+      <ReaderHeader
+        collectionName={library.collectionName}
+        connectionState={library.connectionState}
+        theme={theme}
+        onChangeTheme={changeTheme}
+      />
 
-      <main className={mobileLibraryOpen ? "reader-main is-library-open" : "reader-main"}>
+      <main
+        className={[
+          "reader-main",
+          mobileLibraryOpen ? "is-library-open" : "",
+          focusMode ? "is-focus-mode" : "",
+          !inspectorOpen ? "is-inspector-closed" : "",
+        ]
+          .filter(Boolean)
+          .join(" ")}
+      >
         <LibraryPane
           sources={library.sources}
           visibleSources={visibleSources}
           selectedSourceId={source?.id ?? null}
           search={search}
+          filter={filter}
           onSearchChange={setSearch}
+          onFilterChange={setFilter}
           onSelectSource={(id) => {
             workspace.selectSource(id);
             setMobileLibraryOpen(false);
@@ -112,8 +120,18 @@ export function ReaderApp({ gateway, renderDocument }: ReaderAppProps): JSX.Elem
         <DocumentWorkspace
           source={source}
           document={source ? renderDocument?.(source) : null}
+          focusMode={focusMode}
+          inspectorOpen={inspectorOpen && !focusMode}
           onBackToLibrary={() => setMobileLibraryOpen(true)}
-          onOpenInspector={() => setInspectorOpen(true)}
+          onToggleFocus={() => setFocusMode((value) => !value)}
+          onToggleInspector={() => {
+            if (focusMode) {
+              setFocusMode(false);
+              setInspectorOpen(true);
+            } else {
+              setInspectorOpen((value) => !value);
+            }
+          }}
         />
         {source ? (
           <InspectorPane

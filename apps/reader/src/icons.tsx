@@ -58,3 +58,19 @@ export const BackIcon = (props: IconProps): JSX.Element => (
     <path d="m15 5-7 7 7 7" />
   </Icon>
 );
+export const FocusIcon = (props: IconProps): JSX.Element => (
+  <Icon {...props}>
+    <path d="M9 4H4v5M15 4h5v5M9 20H4v-5M15 20h5v-5" />
+  </Icon>
+);
+export const PanelIcon = (props: IconProps): JSX.Element => (
+  <Icon {...props}>
+    <rect x="3.5" y="4" width="17" height="16" rx="1" />
+    <path d="M14.5 4v16" />
+  </Icon>
+);
+export const PlusIcon = (props: IconProps): JSX.Element => (
+  <Icon {...props}>
+    <path d="M12 5v14M5 12h14" />
+  </Icon>
+);

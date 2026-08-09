@@ -89,6 +89,14 @@ function AnnotationList({
     }
     return <div className="inspector-status">Loading annotations…</div>;
   }
+  if (annotations.value.length === 0) {
+    return (
+      <div className="inspector-status annotation-empty">
+        <strong>No annotations yet</strong>
+        <span>Select text or an area in the document to begin.</span>
+      </div>
+    );
+  }
   return (
     <div className="annotation-list">
       <div className="annotation-list-heading">
