@@ -5,6 +5,7 @@
   "type": "module",
   "scripts": {
     "build": "pnpm manifest && pnpm manifest:validate && vite build",
+    "deploy:dev": "node scripts/deploy-pages.mjs",
     "dev": "pnpm manifest && vite --host 127.0.0.1",
     "manifest": "node scripts/write-manifest.mjs",
     "manifest:validate": "mdbase-connect-dev validate-manifest public/.well-known/mdbase-app.json",

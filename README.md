@@ -10,6 +10,20 @@ required Reader setup, queries sources and annotations through the exact Reader 
 downloads readable files through Connect. Add `?preview=1` to open the explicitly labelled,
 in-memory interface preview without creating collection records or files.
 
+## Deploy the development site
+
+Publish a production build to the stable Cloudflare Pages development origin:
+
+```sh
+pnpm deploy:dev
+```
+
+This builds Reader with an HTTPS manifest for <https://mdbase-reader.pages.dev>, validates the
+manifest, restores the repository's generated manifest files, and uploads `apps/reader/dist` to the
+`mdbase-reader` Pages project. The deployed app uses the managed Connect service and therefore works
+with the normal desktop connector and its registered collections. It does not use or modify an
+`mdbase.dev` custom domain.
+
 ## Commands
 
 ```sh
