@@ -24,29 +24,34 @@ export interface ReaderWorkspaceController {
   readonly retryLibrary: () => void;
 }
 
+interface LibrarySelection {
+  readonly library: AsyncResource<ReaderLibrarySnapshot>;
+  readonly selectedSource: SourceSummary | null;
+  readonly selectSource: (id: SourceId) => void;
+  readonly retryLibrary: () => void;
+}
+
+interface SelectedValue<Value> {
+  readonly sourceId: SourceId;
+  readonly value: Value;
+}
+
 export function useReaderWorkspace(gateway: ReaderWorkspaceGateway): ReaderWorkspaceController {
+  const library = useLibrarySelection(gateway);
+  const source = useSelectedSourceWorkspace(gateway, library.selectedSource);
+  return {
+    ...library,
+    ...source,
+  };
+}
+
+function useLibrarySelection(gateway: ReaderWorkspaceGateway): LibrarySelection {
   const [library, setLibrary] = useState<AsyncResource<ReaderLibrarySnapshot>>({
     status: "loading",
   });
-  const [libraryAttempt, setLibraryAttempt] = useState(0);
+  const [attempt, setAttempt] = useState(0);
   const [selectedSourceId, setSelectedSourceId] = useState<SourceId | null>(null);
   const selectedSourceIdRef = useRef<SourceId | null>(null);
-  const [sourceRecord, setSourceRecord] = useState<AsyncResource<Source>>({ status: "idle" });
-  const [annotations, setAnnotations] = useState<AsyncResource<readonly Annotation[]>>({
-    status: "idle",
-  });
-  const [draft, setDraft] = useState("");
-  const [saveStatus, setSaveStatus] = useState<"idle" | "saving">("idle");
-  const [saveError, setSaveError] = useState<string | null>(null);
-
-  const selectSource = useCallback((id: SourceId): void => {
-    selectedSourceIdRef.current = id;
-    setSelectedSourceId(id);
-    setSourceRecord({ status: "loading" });
-    setAnnotations({ status: "loading" });
-    setDraft("");
-    setSaveError(null);
-  }, []);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -64,10 +69,6 @@ export function useReaderWorkspace(gateway: ReaderWorkspaceGateway): ReaderWorks
             : (snapshot.sources[0]?.id ?? null);
         selectedSourceIdRef.current = next;
         setSelectedSourceId(next);
-        if (next) {
-          setSourceRecord({ status: "loading" });
-          setAnnotations({ status: "loading" });
-        }
       })
       .catch((reason: unknown) => {
         if (!controller.signal.aborted) {
@@ -78,7 +79,7 @@ export function useReaderWorkspace(gateway: ReaderWorkspaceGateway): ReaderWorks
         }
       });
     return () => controller.abort();
-  }, [gateway, libraryAttempt]);
+  }, [attempt, gateway]);
 
   const selectedSource = useMemo(() => {
     if (library.status !== "ready" || !selectedSourceId) {
@@ -87,84 +88,133 @@ export function useReaderWorkspace(gateway: ReaderWorkspaceGateway): ReaderWorks
     return library.value.sources.find(({ id }) => id === selectedSourceId) ?? null;
   }, [library, selectedSourceId]);
 
+  const selectSource = useCallback((id: SourceId): void => {
+    selectedSourceIdRef.current = id;
+    setSelectedSourceId(id);
+  }, []);
+  const retryLibrary = useCallback((): void => {
+    setLibrary({ status: "loading" });
+    setAttempt((value) => value + 1);
+  }, []);
+
+  return { library, selectedSource, selectSource, retryLibrary };
+}
+
+function useSelectedSourceWorkspace(
+  gateway: ReaderWorkspaceGateway,
+  selectedSource: SourceSummary | null,
+): Omit<ReaderWorkspaceController, keyof LibrarySelection> {
+  const [source, setSource] = useState<SelectedValue<AsyncResource<Source>> | null>(null);
+  const [annotations, setAnnotations] = useState<SelectedValue<
+    AsyncResource<readonly Annotation[]>
+  > | null>(null);
+  const [draft, setDraftState] = useState<SelectedValue<string> | null>(null);
+  const [saving, setSaving] = useState<SelectedValue<boolean> | null>(null);
+  const [saveError, setSaveError] = useState<SelectedValue<string | null> | null>(null);
+
   useEffect(() => {
     if (!selectedSource) {
       return;
     }
-
+    const sourceId = selectedSource.id;
     const controller = new AbortController();
     void gateway
-      .source(selectedSource.id, { signal: controller.signal })
-      .then((source) => {
-        if (controller.signal.aborted) {
-          return;
+      .source(sourceId, { signal: controller.signal })
+      .then((value) => {
+        if (!controller.signal.aborted) {
+          setSource({
+            sourceId,
+            value: value
+              ? { status: "ready", value }
+              : { status: "error", message: "This source record no longer exists." },
+          });
+          if (value) {
+            setDraftState({ sourceId, value: value.body });
+          }
         }
-        if (!source) {
-          setSourceRecord({ status: "error", message: "This source record no longer exists." });
-          return;
-        }
-        setSourceRecord({ status: "ready", value: source });
-        setDraft(source.body);
       })
       .catch((reason: unknown) => {
         if (!controller.signal.aborted) {
-          setSourceRecord({
-            status: "error",
-            message: readerErrorMessage(reason, "Reader could not open the source note."),
+          setSource({
+            sourceId,
+            value: {
+              status: "error",
+              message: readerErrorMessage(reason, "Reader could not open the source note."),
+            },
           });
         }
       });
-
     void gateway
-      .annotations(selectedSource.id, { signal: controller.signal })
-      .then((items) => {
+      .annotations(sourceId, { signal: controller.signal })
+      .then((value) => {
         if (!controller.signal.aborted) {
-          setAnnotations({ status: "ready", value: items });
+          setAnnotations({ sourceId, value: { status: "ready", value } });
         }
       })
       .catch((reason: unknown) => {
         if (!controller.signal.aborted) {
           setAnnotations({
-            status: "error",
-            message: readerErrorMessage(reason, "Reader could not load this source's annotations."),
+            sourceId,
+            value: {
+              status: "error",
+              message: readerErrorMessage(
+                reason,
+                "Reader could not load this source's annotations.",
+              ),
+            },
           });
         }
       });
-
     return () => controller.abort();
   }, [gateway, selectedSource]);
 
+  const sourceId = selectedSource?.id ?? null;
+  const sourceRecord = selectedResource(sourceId, source);
+  const annotationResource = selectedResource(sourceId, annotations);
+  const draftValue = sourceId && draft?.sourceId === sourceId ? draft.value : "";
+  const setDraft = useCallback(
+    (value: string): void => {
+      if (sourceId) {
+        setDraftState({ sourceId, value });
+      }
+    },
+    [sourceId],
+  );
   const saveDraft = useCallback((): void => {
-    if (sourceRecord.status !== "ready" || sourceRecord.value.body === draft) {
+    if (!sourceId || sourceRecord.status !== "ready" || sourceRecord.value.body === draftValue) {
       return;
     }
-    setSaveStatus("saving");
-    setSaveError(null);
+    setSaving({ sourceId, value: true });
+    setSaveError({ sourceId, value: null });
     void gateway
-      .saveSourceBody(sourceRecord.value, draft)
-      .then((updated) => setSourceRecord({ status: "ready", value: updated }))
+      .saveSourceBody(sourceRecord.value, draftValue)
+      .then((value) => setSource({ sourceId, value: { status: "ready", value } }))
       .catch((reason: unknown) =>
-        setSaveError(readerErrorMessage(reason, "Reader could not save the source note.")),
+        setSaveError({
+          sourceId,
+          value: readerErrorMessage(reason, "Reader could not save the source note."),
+        }),
       )
-      .finally(() => setSaveStatus("idle"));
-  }, [draft, gateway, sourceRecord]);
-
-  const retryLibrary = useCallback((): void => {
-    setLibrary({ status: "loading" });
-    setLibraryAttempt((attempt) => attempt + 1);
-  }, []);
+      .finally(() => setSaving({ sourceId, value: false }));
+  }, [draftValue, gateway, sourceId, sourceRecord]);
 
   return {
-    library,
-    selectedSource,
     sourceRecord,
-    annotations,
-    draft,
-    saveStatus,
-    saveError,
-    selectSource,
+    annotations: annotationResource,
+    draft: draftValue,
+    saveStatus: sourceId && saving?.sourceId === sourceId && saving.value ? "saving" : "idle",
+    saveError: sourceId && saveError?.sourceId === sourceId ? saveError.value : null,
     setDraft,
     saveDraft,
-    retryLibrary,
   };
+}
+
+function selectedResource<Value>(
+  sourceId: SourceId | null,
+  selected: SelectedValue<AsyncResource<Value>> | null,
+): AsyncResource<Value> {
+  if (!sourceId) {
+    return { status: "idle" };
+  }
+  return selected?.sourceId === sourceId ? selected.value : { status: "loading" };
 }
