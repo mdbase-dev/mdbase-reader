@@ -1,4 +1,13 @@
-import { lazy, Suspense, useCallback, useEffect, useState, type JSX, type ReactNode } from "react";
+import {
+  lazy,
+  Suspense,
+  useCallback,
+  useEffect,
+  useMemo,
+  useState,
+  type JSX,
+  type ReactNode,
+} from "react";
 
 import type {
   DocumentDescriptor,
@@ -56,13 +65,31 @@ function OpenConnectedDocument({
   onSurfaceChange,
 }: ConnectedDocumentProps & { readonly descriptor: DocumentDescriptor }): JSX.Element {
   const [state, setState] = useState<OpenDocumentState>({ status: "opening" });
+  const stableDescriptor = useMemo(
+    (): DocumentDescriptor => ({
+      file: descriptor.file,
+      fileId: descriptor.fileId,
+      mediaType: descriptor.mediaType,
+      revision: descriptor.revision,
+      role: descriptor.role,
+      ...(descriptor.title ? { title: descriptor.title } : {}),
+    }),
+    [
+      descriptor.file,
+      descriptor.fileId,
+      descriptor.mediaType,
+      descriptor.revision,
+      descriptor.role,
+      descriptor.title,
+    ],
+  );
 
   useEffect(() => {
     let active = true;
     let opened: DocumentHandle | null = null;
     const controller = new AbortController();
     void repository
-      .open(source.collectionId, descriptor, { signal: controller.signal })
+      .open(source.collectionId, stableDescriptor, { signal: controller.signal })
       .then((handle) => {
         opened = handle;
         if (active) {
@@ -83,7 +110,7 @@ function OpenConnectedDocument({
         void opened.close();
       }
     };
-  }, [descriptor, repository, source.collectionId]);
+  }, [repository, source.collectionId, stableDescriptor]);
 
   useEffect(() => () => onSurfaceChange(null), [onSurfaceChange]);
 
@@ -93,11 +120,28 @@ function OpenConnectedDocument({
   if (state.status === "error") {
     return <DocumentMessage label={state.message} tone="error" />;
   }
-  const document: SurfaceDocument = {
-    document: descriptor,
-    mediaType: state.handle.mediaType,
-    url: state.handle.url,
-  };
+  return (
+    <OpenedDocumentRenderer
+      descriptor={stableDescriptor}
+      handle={state.handle}
+      onSurfaceChange={onSurfaceChange}
+    />
+  );
+}
+
+function OpenedDocumentRenderer({
+  descriptor,
+  handle,
+  onSurfaceChange,
+}: {
+  readonly descriptor: DocumentDescriptor;
+  readonly handle: DocumentHandle;
+  readonly onSurfaceChange: ConnectedDocumentProps["onSurfaceChange"];
+}): JSX.Element {
+  const document = useMemo<SurfaceDocument>(
+    () => ({ document: descriptor, mediaType: handle.mediaType, url: handle.url }),
+    [descriptor, handle],
+  );
   if (isPdf(document.mediaType, descriptor.file)) {
     return <PdfStage document={document} onSurfaceChange={onSurfaceChange} />;
   }
