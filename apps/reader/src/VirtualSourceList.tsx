@@ -1,0 +1,109 @@
+import { useVirtualSourceWindow } from "./use-virtual-source-window.js";
+import { keyboardSourceIndex } from "./virtual-source-list.js";
+
+import type { SourceId, SourceSummary, SourceTextSearchMatch } from "@mdbase-reader/core";
+import type { CSSProperties, JSX, KeyboardEvent } from "react";
+
+export interface VirtualSourceListProps {
+  readonly sources: readonly SourceSummary[];
+  readonly selectedSourceId: SourceId | null;
+  readonly searchMatches: ReadonlyMap<SourceId, SourceTextSearchMatch>;
+  readonly resetKey: string;
+  readonly busy: boolean;
+  readonly onSelectSource: (id: SourceId) => void;
+}
+
+export function VirtualSourceList({
+  sources,
+  selectedSourceId,
+  searchMatches,
+  resetKey,
+  busy,
+  onSelectSource,
+}: VirtualSourceListProps): JSX.Element {
+  const { containerRef, range, measure, focusIndex } = useVirtualSourceWindow(
+    sources.length,
+    resetKey,
+  );
+
+  function navigateFrom(event: KeyboardEvent, currentIndex: number): void {
+    const nextIndex = keyboardSourceIndex(event.key, currentIndex, sources.length);
+    if (nextIndex === null) {
+      return;
+    }
+    const nextSource = sources[nextIndex];
+    if (!nextSource) {
+      return;
+    }
+    event.preventDefault();
+    onSelectSource(nextSource.id);
+    focusIndex(nextIndex);
+  }
+
+  const windowStyle = {
+    transform: `translateY(${String(range.offset)}px)`,
+  } satisfies CSSProperties;
+  const spacerStyle = { height: `${String(range.totalHeight)}px` } satisfies CSSProperties;
+
+  return (
+    <div
+      ref={containerRef}
+      className="source-list"
+      role="listbox"
+      aria-label="Sources"
+      aria-busy={busy}
+      onScroll={measure}
+    >
+      <div className="source-list-spacer" style={spacerStyle}>
+        <div className="source-list-window" style={windowStyle}>
+          {sources.slice(range.start, range.end).map((source, relativeIndex) => {
+            const index = range.start + relativeIndex;
+            const selected = source.id === selectedSourceId;
+            return (
+              <button
+                key={source.id}
+                type="button"
+                role="option"
+                aria-selected={selected}
+                aria-posinset={index + 1}
+                aria-setsize={sources.length}
+                data-source-index={index}
+                tabIndex={selected || index === range.start ? 0 : -1}
+                className={selected ? "source-row is-selected" : "source-row"}
+                onClick={() => onSelectSource(source.id)}
+                onKeyDown={(event) => navigateFrom(event, index)}
+              >
+                <span className="source-format">{sourceFormat(source)}</span>
+                <strong>{source.title}</strong>
+                <small>{source.creators.join(", ") || "Unknown creator"}</small>
+                <span className="source-row-meta">
+                  {searchMatchLabel(searchMatches.get(source.id)) ??
+                    source.readingStatus ??
+                    "inbox"}
+                </span>
+              </button>
+            );
+          })}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function sourceFormat(source: SourceSummary): "PDF" | "EPUB" | "WEB" {
+  const mediaType = source.documents[0]?.mediaType ?? "";
+  if (mediaType.includes("pdf")) {
+    return "PDF";
+  }
+  return mediaType.includes("epub") ? "EPUB" : "WEB";
+}
+
+function searchMatchLabel(match: SourceTextSearchMatch | undefined): string | null {
+  if (!match) {
+    return null;
+  }
+  if (match.kinds.includes("document")) {
+    return match.kinds.length > 1 ? "document + note match" : "document match";
+  }
+  return match.kinds.includes("source-note") ? "note match" : "annotation match";
+}

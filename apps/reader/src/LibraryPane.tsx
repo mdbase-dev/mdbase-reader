@@ -1,6 +1,7 @@
 import { ReaderButton } from "@mdbase-reader/ui";
 
 import { DownloadIcon, LibraryIcon, MoreIcon, PlusIcon, SearchIcon } from "./icons.js";
+import { VirtualSourceList } from "./VirtualSourceList.js";
 
 import type { BibliographyExportController } from "./use-bibliography-export.js";
 import type { LibrarySearchStatus } from "./use-library-search.js";
@@ -103,41 +104,33 @@ export function LibraryPane({
           <span>{sources.filter(({ readingStatus }) => readingStatus === "queued").length}</span>
         </button>
       </nav>
-      <div className="source-list" aria-busy={sourceIndex?.complete === false}>
-        <span className="sr-only" role="status" aria-live="polite">
-          {sourceIndex?.complete === false
-            ? `Loaded ${String(sourceIndex.loaded)}${sourceIndex.total ? ` of ${String(sourceIndex.total)}` : ""} sources.`
-            : ""}
-        </span>
-        {visibleSources.map((source) => (
-          <button
-            key={source.id}
-            type="button"
-            className={source.id === selectedSourceId ? "source-row is-selected" : "source-row"}
-            onClick={() => onSelectSource(source.id)}
-          >
-            <span className="source-format">{sourceFormat(source)}</span>
-            <strong>{source.title}</strong>
-            <small>{source.creators.join(", ") || "Unknown creator"}</small>
-            <span className="source-row-meta">
-              {searchMatchLabel(searchMatches.get(source.id)) ?? source.readingStatus ?? "inbox"}
-            </span>
-          </button>
-        ))}
-        {visibleSources.length === 0 ? (
-          <div className="library-empty">
-            <strong>
-              {searchStatus === "searching" ? "Searching notes…" : "No matching sources"}
-            </strong>
-            <span>
-              {searchProblem ??
-                (searchStatus === "searching"
-                  ? "Checking source notes and annotations."
-                  : "Try another search or reading status.")}
-            </span>
-          </div>
-        ) : null}
-      </div>
+      <span className="sr-only" role="status" aria-live="polite">
+        {sourceIndex?.complete === false
+          ? `Loaded ${String(sourceIndex.loaded)}${sourceIndex.total ? ` of ${String(sourceIndex.total)}` : ""} sources.`
+          : ""}
+      </span>
+      {visibleSources.length > 0 ? (
+        <VirtualSourceList
+          sources={visibleSources}
+          selectedSourceId={selectedSourceId}
+          searchMatches={searchMatches}
+          resetKey={`${filter}:${search}`}
+          busy={sourceIndex?.complete === false}
+          onSelectSource={onSelectSource}
+        />
+      ) : (
+        <div className="library-empty">
+          <strong>
+            {searchStatus === "searching" ? "Searching notes…" : "No matching sources"}
+          </strong>
+          <span>
+            {searchProblem ??
+              (searchStatus === "searching"
+                ? "Checking source notes and annotations."
+                : "Try another search or reading status.")}
+          </span>
+        </div>
+      )}
       <div className="library-footer">
         <ReaderButton disabled={addingSource} onClick={onAddSource}>
           <PlusIcon /> {addingSource ? "Adding…" : "Add source"}
@@ -154,16 +147,6 @@ function sourceCountLabel(
   return sourceIndex?.complete === false && sourceIndex.total
     ? `${String(loaded)}/${String(sourceIndex.total)}`
     : String(loaded);
-}
-
-function searchMatchLabel(match: SourceTextSearchMatch | undefined): string | null {
-  if (!match) {
-    return null;
-  }
-  if (match.kinds.includes("document")) {
-    return match.kinds.length > 1 ? "document + note match" : "document match";
-  }
-  return match.kinds.includes("source-note") ? "note match" : "annotation match";
 }
 
 function LibraryActions({
@@ -210,12 +193,4 @@ function LibraryActions({
       </div>
     </details>
   );
-}
-
-function sourceFormat(source: SourceSummary): "PDF" | "EPUB" | "WEB" {
-  const mediaType = source.documents[0]?.mediaType ?? "";
-  if (mediaType.includes("pdf")) {
-    return "PDF";
-  }
-  return mediaType.includes("epub") ? "EPUB" : "WEB";
 }

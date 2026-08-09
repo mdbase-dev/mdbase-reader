@@ -558,13 +558,24 @@ button {
 .source-list {
   min-height: 0;
   overflow: auto;
-  padding: 6px 0 12px;
+  overflow-anchor: none;
+}
+
+.source-list-spacer {
+  position: relative;
+  width: 100%;
+}
+
+.source-list-window {
+  position: absolute;
+  inset: 0 0 auto;
+  will-change: transform;
 }
 
 .source-row {
   position: relative;
   width: 100%;
-  min-height: 72px;
+  height: 72px;
   display: grid;
   grid-template-columns: 38px minmax(0, 1fr);
   grid-template-rows: auto auto auto;
@@ -575,8 +586,6 @@ button {
   background: transparent;
   text-align: left;
   cursor: pointer;
-  content-visibility: auto;
-  contain-intrinsic-size: 72px;
 }
 
 .source-row::before {
@@ -589,6 +598,12 @@ button {
 
 .source-row:hover {
   background: var(--hover);
+}
+
+.source-row:focus-visible {
+  z-index: 1;
+  outline: 1px solid var(--accent);
+  outline-offset: -2px;
 }
 
 .source-row.is-selected {
