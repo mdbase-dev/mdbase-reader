@@ -22,7 +22,13 @@ export function useSessionDocumentSearch(
 
   useEffect(() => {
     const extraction = surface?.capabilities.textExtraction;
-    if (!source || !surface || !extraction || !surfaceBelongsToSource(surface, source)) {
+    if (
+      !hasDocumentSearchIntent(query) ||
+      !source ||
+      !surface ||
+      !extraction ||
+      !surfaceBelongsToSource(surface, source)
+    ) {
       return undefined;
     }
     if (index.has(source.id, surface.document.document)) {
@@ -45,9 +51,13 @@ export function useSessionDocumentSearch(
       window.clearTimeout(timer);
       controller.abort();
     };
-  }, [index, source, surface]);
+  }, [index, query, source, surface]);
 
   return { matches: index.search(query) };
+}
+
+export function hasDocumentSearchIntent(query: string): boolean {
+  return query.trim().length > 0;
 }
 
 function surfaceBelongsToSource(surface: ReadingSurface, source: SourceSummary): boolean {
