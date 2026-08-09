@@ -12,6 +12,7 @@ import {
 import { ConnectWorkspaceGateway } from "./connect-workspace.js";
 import { readerSession } from "./connect.js";
 import { ConnectedDocument } from "./ConnectedDocument.js";
+import { readerErrorMessage } from "./errors.js";
 import { ReaderApp } from "./ReaderApp.js";
 
 const subscribe = (listener: () => void): (() => void) => readerSession.subscribe(listener);
@@ -21,13 +22,29 @@ export function ConnectReader(): JSX.Element {
   const session = useSyncExternalStore(subscribe, snapshot, snapshot);
   const [error, setError] = useState<string | null>(null);
 
+  const start = async (): Promise<void> => {
+    setError(null);
+    try {
+      setError(connectProblemMessage(await readerSession.start()));
+    } catch (reason) {
+      setError(readerErrorMessage(reason, "Reader could not open this collection."));
+    }
+  };
+
   useEffect(() => {
     let active = true;
-    void readerSession.start().then((outcome) => {
-      if (active) {
-        setError(connectProblemMessage(outcome));
-      }
-    });
+    void readerSession
+      .start()
+      .then((outcome) => {
+        if (active) {
+          setError(connectProblemMessage(outcome));
+        }
+      })
+      .catch((reason: unknown) => {
+        if (active) {
+          setError(readerErrorMessage(reason, "Reader could not open this collection."));
+        }
+      });
     return () => {
       active = false;
     };
@@ -36,7 +53,14 @@ export function ConnectReader(): JSX.Element {
   if (session.status === "ready") {
     return <OpenedReader collectionId={session.collectionId} />;
   }
-  return <ConnectionScreen session={session} error={error} onError={setError} />;
+  return (
+    <ConnectionScreen
+      session={session}
+      error={error}
+      onError={setError}
+      onRetry={() => void start()}
+    />
+  );
 }
 
 function OpenedReader({ collectionId }: { readonly collectionId: string }): JSX.Element {
@@ -72,10 +96,12 @@ function ConnectionScreen({
   session,
   error,
   onError,
+  onRetry,
 }: {
   readonly session: Exclude<ReaderConnectSnapshot, { status: "ready" }>;
   readonly error: string | null;
   readonly onError: (message: string | null) => void;
+  readonly onRetry: () => void;
 }): JSX.Element {
   const [working, setWorking] = useState(false);
   const selectedCollectionId = "collectionId" in session ? session.collectionId : null;
@@ -135,6 +161,7 @@ function ConnectionScreen({
         </section>
       ) : null}
       <div className="connection-actions">
+        <ConnectionRetry error={error} onRetry={onRetry} />
         {session.connections
           .filter(({ collectionId }) => collectionId !== selectedCollectionId)
           .map((connection) => (
@@ -167,6 +194,16 @@ function ConnectionScreen({
       ) : null}
     </ConnectionLayout>
   );
+}
+
+function ConnectionRetry({
+  error,
+  onRetry,
+}: {
+  readonly error: string | null;
+  readonly onRetry: () => void;
+}): JSX.Element | null {
+  return error ? <ReaderButton onClick={onRetry}>Try again</ReaderButton> : null;
 }
 
 function ConnectionLayout({

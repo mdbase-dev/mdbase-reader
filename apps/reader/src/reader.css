@@ -26,6 +26,16 @@ button {
   font-family: var(--mono);
   font-size: 12px;
 }
+.reader-loading.is-error {
+  gap: 12px;
+  align-content: center;
+  color: var(--danger);
+  text-align: center;
+}
+.reader-loading.is-error p {
+  max-width: 520px;
+  margin: 0;
+}
 .connection-screen {
   min-height: 100%;
   display: grid;
@@ -139,6 +149,30 @@ button {
   display: grid;
   grid-template-rows: 52px minmax(0, 1fr);
   background: var(--canvas);
+}
+.workspace-error {
+  position: fixed;
+  top: 64px;
+  right: 12px;
+  z-index: 20;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  max-width: min(520px, calc(100vw - 24px));
+  padding: 10px 12px;
+  border: 1px solid color-mix(in oklab, var(--danger), var(--line) 55%);
+  border-radius: 4px;
+  color: var(--danger);
+  background: var(--paper);
+  box-shadow: 0 12px 32px var(--color-scrim);
+  font-family: var(--mono);
+  font-size: 10px;
+}
+.workspace-error button {
+  padding: 4px 6px;
+  color: var(--muted);
+  background: transparent;
+  cursor: pointer;
 }
 .reader-header {
   display: grid;

@@ -4,6 +4,7 @@ import {
   type ConnectOutcome,
   type JsonObject,
   type MdbaseAppManifest,
+  type MdbaseConnectTimeouts,
   type MdbaseApplicationSessionSnapshot,
 } from "@mdbase-dev/connect";
 import {
@@ -37,6 +38,7 @@ export interface ReaderApplicationSessionOptions {
   readonly manifest: MdbaseAppManifest;
   readonly redirectUri: string;
   readonly fallbackPath: string;
+  readonly timeouts?: MdbaseConnectTimeouts;
 }
 
 export class ReaderApplicationSession {
@@ -49,6 +51,7 @@ export class ReaderApplicationSession {
       redirectUri: options.redirectUri,
       directAccess: "auto",
       ...(options.loopbackUrl ? { loopbackUrl: options.loopbackUrl } : {}),
+      ...(options.timeouts ? { timeouts: options.timeouts } : {}),
     });
     this.#session = connect.application({
       selection: new MdbaseBrowserSelection({ fallbackPath: options.fallbackPath }),

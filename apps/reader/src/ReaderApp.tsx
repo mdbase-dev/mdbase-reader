@@ -8,6 +8,7 @@ import {
 } from "@mdbase-reader/ui";
 import { lazy, Suspense, useEffect, useMemo, useState, type JSX, type ReactNode } from "react";
 
+import { readerErrorMessage } from "./errors.js";
 import {
   BackIcon,
   HighlightIcon,
@@ -44,6 +45,8 @@ function nextTheme(theme: ThemePreference): ThemePreference {
 
 export function ReaderApp({ gateway, renderDocument }: ReaderAppProps): JSX.Element {
   const [snapshot, setSnapshot] = useState<ReaderWorkspaceSnapshot | null>(null);
+  const [loadAttempt, setLoadAttempt] = useState(0);
+  const [workspaceError, setWorkspaceError] = useState<string | null>(null);
   const [search, setSearch] = useState("");
   const [tab, setTab] = useState<InspectorTab>("annotations");
   const [draft, setDraft] = useState("");
@@ -66,16 +69,24 @@ export function ReaderApp({ gateway, renderDocument }: ReaderAppProps): JSX.Elem
 
   useEffect(() => {
     let active = true;
-    void gateway.snapshot().then((next) => {
-      if (active) {
-        setSnapshot(next);
-        setDraft(next.selectedSource?.body ?? "");
-      }
-    });
+    void gateway
+      .snapshot()
+      .then((next) => {
+        if (active) {
+          setWorkspaceError(null);
+          setSnapshot(next);
+          setDraft(next.selectedSource?.body ?? "");
+        }
+      })
+      .catch((reason: unknown) => {
+        if (active) {
+          setWorkspaceError(readerErrorMessage(reason, "Reader could not load this collection."));
+        }
+      });
     return () => {
       active = false;
     };
-  }, [gateway]);
+  }, [gateway, loadAttempt]);
 
   const sources = useMemo(
     () => filterSources(snapshot?.sources ?? [], search),
@@ -83,11 +94,17 @@ export function ReaderApp({ gateway, renderDocument }: ReaderAppProps): JSX.Elem
   );
 
   const selectSource = (id: NonNullable<ReaderWorkspaceSnapshot["selectedSource"]>["id"]): void => {
-    void gateway.selectSource(id).then((next) => {
-      setSnapshot(next);
-      setDraft(next.selectedSource?.body ?? "");
-      setMobileLibraryOpen(false);
-    });
+    setWorkspaceError(null);
+    void gateway
+      .selectSource(id)
+      .then((next) => {
+        setSnapshot(next);
+        setDraft(next.selectedSource?.body ?? "");
+        setMobileLibraryOpen(false);
+      })
+      .catch((reason: unknown) => {
+        setWorkspaceError(readerErrorMessage(reason, "Reader could not open that source."));
+      });
   };
 
   const saveDraft = (): void => {
@@ -95,7 +112,13 @@ export function ReaderApp({ gateway, renderDocument }: ReaderAppProps): JSX.Elem
     if (!source || draft === source.body) {
       return;
     }
-    void gateway.saveSourceBody(source, draft).then(setSnapshot);
+    setWorkspaceError(null);
+    void gateway
+      .saveSourceBody(source, draft)
+      .then(setSnapshot)
+      .catch((reason: unknown) => {
+        setWorkspaceError(readerErrorMessage(reason, "Reader could not save the source note."));
+      });
   };
 
   const changeTheme = (): void => {
@@ -106,9 +129,13 @@ export function ReaderApp({ gateway, renderDocument }: ReaderAppProps): JSX.Elem
 
   if (!snapshot) {
     return (
-      <div className="reader-loading" role="status">
-        Opening your reading collection…
-      </div>
+      <ReaderLoading
+        error={workspaceError}
+        onRetry={() => {
+          setWorkspaceError(null);
+          setLoadAttempt((attempt) => attempt + 1);
+        }}
+      />
     );
   }
 
@@ -142,6 +169,8 @@ export function ReaderApp({ gateway, renderDocument }: ReaderAppProps): JSX.Elem
           </button>
         </div>
       </header>
+
+      <WorkspaceError error={workspaceError} onDismiss={() => setWorkspaceError(null)} />
 
       <main className={mobileLibraryOpen ? "reader-main is-library-open" : "reader-main"}>
         <aside className="library-pane" aria-label="Library">
@@ -295,6 +324,48 @@ export function ReaderApp({ gateway, renderDocument }: ReaderAppProps): JSX.Elem
           </aside>
         ) : null}
       </main>
+    </div>
+  );
+}
+
+function ReaderLoading({
+  error,
+  onRetry,
+}: {
+  readonly error: string | null;
+  readonly onRetry: () => void;
+}): JSX.Element {
+  if (!error) {
+    return (
+      <div className="reader-loading" role="status">
+        Opening your reading collection…
+      </div>
+    );
+  }
+  return (
+    <div className="reader-loading is-error" role="alert">
+      <p>{error}</p>
+      <ReaderButton onClick={onRetry}>Try again</ReaderButton>
+    </div>
+  );
+}
+
+function WorkspaceError({
+  error,
+  onDismiss,
+}: {
+  readonly error: string | null;
+  readonly onDismiss: () => void;
+}): JSX.Element | null {
+  if (!error) {
+    return null;
+  }
+  return (
+    <div className="workspace-error" role="alert">
+      <span>{error}</span>
+      <button type="button" onClick={onDismiss}>
+        Dismiss
+      </button>
     </div>
   );
 }

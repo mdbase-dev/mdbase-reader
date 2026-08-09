@@ -40,8 +40,8 @@ export interface ReaderConnectClient {
 }
 
 export class ConnectRepositoryError extends Error {
-  constructor(operation: string, code: string) {
-    super(`mdbase Connect could not ${operation}: ${code}`);
+  constructor(operation: string, code: string, detail?: string) {
+    super(`mdbase Connect could not ${operation}: ${detail ?? code}`);
     this.name = "ConnectRepositoryError";
   }
 }
@@ -50,7 +50,7 @@ function value<Value>(outcome: ConnectOutcome<Value>, operation: string): Value 
   if (outcome.ok) {
     return outcome.value;
   }
-  throw new ConnectRepositoryError(operation, outcome.problem.code);
+  throw new ConnectRepositoryError(operation, outcome.problem.code, outcome.problem.message);
 }
 
 function cursorOffset(cursor: string | undefined): number {

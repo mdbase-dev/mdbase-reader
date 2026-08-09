@@ -24,6 +24,9 @@ export const readerSession = new ReaderApplicationSession({
   manifest,
   redirectUri: callbackUrl.href,
   fallbackPath: import.meta.env.BASE_URL,
+  // Application startup includes collection setup verification. A remote connector
+  // may need more than the SDK's interactive 10-second discovery default.
+  timeouts: { watchStartMs: 60_000 },
 });
 
 function isLoopbackApplication(current: Location): boolean {
