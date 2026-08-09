@@ -157,7 +157,7 @@ describe("ConnectAnnotationRepository", () => {
 });
 
 describe("Connect annotation reads", () => {
-  it("filters normalized contract fields locally and reads only matching annotation bodies", async () => {
+  it("discovers annotations by contract and reads matching bodies as whole records", async () => {
     const query = vi.fn(() =>
       Promise.resolve(
         success<QueryResult>({
@@ -219,7 +219,6 @@ describe("Connect annotation reads", () => {
     expect(read).toHaveBeenCalledOnce();
     expect(read).toHaveBeenCalledWith({
       path: "annotations/matching.md",
-      contract: annotationContract,
       includeDocument: true,
     });
     expect(annotations).toHaveLength(1);

@@ -30,11 +30,7 @@ export class ConnectAnnotationRepository implements AnnotationRepository {
     return Promise.all(
       matchingPaths.map(async (path) => {
         const document = outcomeValue(
-          await readWithOptions(
-            this.client,
-            { path, contract: annotationContract, includeDocument: true },
-            options,
-          ),
+          await readWithOptions(this.client, { path, includeDocument: true }, options),
           "read annotation",
         );
         return annotationFromDocument(collection, document);
@@ -77,11 +73,7 @@ export class ConnectAnnotationRepository implements AnnotationRepository {
       return null;
     }
     const result = outcomeValue(
-      await readWithOptions(
-        this.client,
-        { path, contract: annotationContract, includeDocument: true },
-        options,
-      ),
+      await readWithOptions(this.client, { path, includeDocument: true }, options),
       "read annotation",
     );
     return annotationFromDocument(collection, result);
