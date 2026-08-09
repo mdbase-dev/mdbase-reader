@@ -1,19 +1,14 @@
-import {
-  useCallback,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-  type Dispatch,
-  type SetStateAction,
-} from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import { readerErrorMessage } from "./errors.js";
+import { useAnnotationCreation, useReadingPositionSave } from "./use-workspace-mutations.js";
 
 import type { ReaderLibrarySnapshot, ReaderWorkspaceGateway } from "./workspace-model.js";
 import type {
   Annotation,
   AnnotationCreationRequest,
+  FileId,
+  ReadingPosition,
   Source,
   SourceId,
   SourceSummary,
@@ -36,6 +31,11 @@ export interface ReaderWorkspaceController {
   readonly setDraft: (value: string) => void;
   readonly saveDraft: () => void;
   readonly createAnnotation: (request: AnnotationCreationRequest) => Promise<Annotation>;
+  readonly saveReadingPosition: (
+    sourceId: SourceId,
+    documentFileId: FileId,
+    position: ReadingPosition,
+  ) => Promise<void>;
   readonly retryLibrary: () => void;
 }
 
@@ -46,7 +46,7 @@ interface LibrarySelection {
   readonly retryLibrary: () => void;
 }
 
-interface SelectedValue<Value> {
+export interface SelectedValue<Value> {
   readonly sourceId: SourceId;
   readonly value: Value;
 }
@@ -213,6 +213,7 @@ function useSelectedSourceWorkspace(
       .finally(() => setSaving({ sourceId, value: false }));
   }, [draftValue, gateway, sourceId, sourceRecord]);
   const createSelectedAnnotation = useAnnotationCreation(gateway, setAnnotations);
+  const saveReadingPosition = useReadingPositionSave(gateway, sourceRecord, setSource);
 
   return {
     sourceRecord,
@@ -223,32 +224,8 @@ function useSelectedSourceWorkspace(
     setDraft,
     saveDraft,
     createAnnotation: createSelectedAnnotation,
+    saveReadingPosition,
   };
-}
-
-function useAnnotationCreation(
-  gateway: ReaderWorkspaceGateway,
-  setAnnotations: Dispatch<
-    SetStateAction<SelectedValue<AsyncResource<readonly Annotation[]>> | null>
-  >,
-): (request: AnnotationCreationRequest) => Promise<Annotation> {
-  return useCallback(
-    async (request: AnnotationCreationRequest): Promise<Annotation> => {
-      const created = await gateway.createAnnotation(request);
-      setAnnotations((current) => {
-        const values =
-          current?.sourceId === request.sourceId && current.value.status === "ready"
-            ? current.value.value
-            : [];
-        return {
-          sourceId: request.sourceId,
-          value: { status: "ready", value: [created, ...values] },
-        };
-      });
-      return created;
-    },
-    [gateway, setAnnotations],
-  );
 }
 
 function selectedResource<Value>(

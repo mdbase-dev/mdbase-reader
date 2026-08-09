@@ -11,6 +11,7 @@ export class ReadiumEpubSurface implements ReadingSurface {
   public readonly kind = "epub" as const;
   public readonly document: SurfaceDocument;
   public readonly capabilities: ReadingSurface["capabilities"];
+  public readonly locations = createEventEmitter<ReaderLocator>();
 
   readonly #runtime: ReadiumRuntime;
   readonly #selections =
@@ -26,6 +27,7 @@ export class ReadiumEpubSurface implements ReadingSurface {
     this.#locator = runtime.currentLocator();
     this.#unsubscribeLocation = runtime.onLocationChanged((locator) => {
       this.#locator = locator;
+      this.locations.emit({ kind: "epub", locator });
     });
     this.#unsubscribeSelection = runtime.onTextSelected((selection) =>
       this.#selections.emit(selection),
@@ -58,6 +60,7 @@ export class ReadiumEpubSurface implements ReadingSurface {
       this.#unsubscribeLocation();
       this.#unsubscribeSelection();
       this.#selections.clear();
+      this.locations.clear();
       await this.#runtime.destroy();
       this.#destroyed = true;
     }

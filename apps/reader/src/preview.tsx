@@ -8,6 +8,8 @@ import {
   sourceId,
   type Annotation,
   type AnnotationCreationRequest,
+  type FileId,
+  type ReadingPosition,
   type Source,
   type SourceId,
 } from "@mdbase-reader/core";
@@ -142,6 +144,13 @@ class PreviewGateway implements ReaderWorkspaceGateway {
     };
     this.#annotations.unshift(annotation);
     return Promise.resolve(annotation);
+  }
+  saveReadingPosition(
+    source: Source,
+    _documentFileId: FileId,
+    _position: ReadingPosition,
+  ): Promise<Source> {
+    return Promise.resolve(source);
   }
 }
 

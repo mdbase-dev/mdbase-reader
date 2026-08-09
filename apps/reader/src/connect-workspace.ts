@@ -7,8 +7,10 @@ import type {
   AnnotationRepository,
   Clock,
   CollectionId,
+  FileId,
   MutationJournal,
   ReaderRequestOptions,
+  ReadingPosition,
   ReaderIdGenerator,
   Source,
   SourceId,
@@ -99,5 +101,22 @@ export class ConnectWorkspaceGateway implements ReaderWorkspaceGateway {
     const current = this.#annotationsBySource.get(request.sourceId) ?? [];
     this.#annotationsBySource.set(request.sourceId, [result.annotation, ...current]);
     return result.annotation;
+  }
+
+  async saveReadingPosition(
+    source: Source,
+    documentFileId: FileId,
+    position: ReadingPosition,
+  ): Promise<Source> {
+    const updated = await this.sources.updateReading({
+      collectionId: this.collectionId,
+      sourceId: source.id,
+      expectedRevision: source.recordRevision,
+      documentFileId,
+      position,
+      openedAt: this.runtime.clock.now(),
+    });
+    this.#sourcesById.set(source.id, updated);
+    return updated;
   }
 }

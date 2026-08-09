@@ -612,6 +612,37 @@ button {
   font-size: 10px;
 }
 
+.reading-position-status {
+  min-width: 86px;
+  margin-left: auto;
+  color: var(--faint);
+  font-family: var(--mono);
+  font-size: 8px;
+  text-align: right;
+  white-space: nowrap;
+}
+
+.reading-position-status.is-saving::before {
+  content: "";
+  display: inline-block;
+  width: 5px;
+  height: 5px;
+  margin-right: 6px;
+  border-radius: 50%;
+  background: var(--accent);
+  animation: position-pulse 1s ease-in-out infinite alternate;
+}
+
+.reading-position-status.is-error {
+  color: var(--danger);
+}
+
+@keyframes position-pulse {
+  to {
+    opacity: 0.28;
+  }
+}
+
 .tool-button {
   height: 34px;
   display: flex;

@@ -1,5 +1,6 @@
 import type { DocumentDescriptor } from "./document.js";
-import type { CollectionId, RecordRevision, SourceId } from "./identity.js";
+import type { CollectionId, FileId, RecordRevision, SourceId } from "./identity.js";
+import type { DateTime } from "./time.js";
 
 export const readingStatuses = [
   "inbox",
@@ -11,6 +12,21 @@ export const readingStatuses = [
 ] as const;
 export type ReadingStatus = (typeof readingStatuses)[number];
 
+export type ReadingPosition =
+  | { readonly kind: "pdf"; readonly pageIndex: number }
+  | { readonly kind: "epub"; readonly locator: Readonly<Record<string, unknown>> }
+  | { readonly kind: "html"; readonly href: string; readonly progression?: number };
+
+export interface CurrentReadingState {
+  readonly status: ReadingStatus;
+  readonly progress?: number;
+  readonly documentFileId?: FileId;
+  readonly position?: ReadingPosition;
+  readonly startedAt?: DateTime;
+  readonly lastOpenedAt?: DateTime;
+  readonly finishedAt?: DateTime;
+}
+
 export interface SourceSummary {
   readonly collectionId: CollectionId;
   readonly id: SourceId;
@@ -19,6 +35,7 @@ export interface SourceSummary {
   readonly creators: readonly string[];
   readonly tags: readonly string[];
   readonly readingStatus?: ReadingStatus;
+  readonly reading?: CurrentReadingState;
   readonly documents: readonly DocumentDescriptor[];
 }
 

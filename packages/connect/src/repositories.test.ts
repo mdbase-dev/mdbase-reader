@@ -155,7 +155,9 @@ describe("ConnectAnnotationRepository", () => {
       expect.objectContaining({ contract: annotationContract }),
     );
   });
+});
 
+describe("Connect annotation reads", () => {
   it("filters normalized contract fields locally and reads only matching annotation bodies", async () => {
     const query = vi.fn(() =>
       Promise.resolve(

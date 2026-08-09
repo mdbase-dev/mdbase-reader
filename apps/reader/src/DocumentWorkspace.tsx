@@ -2,6 +2,7 @@ import { ReaderButton } from "@mdbase-reader/ui";
 
 import { BackIcon, FocusIcon, MoreIcon, PanelIcon } from "./icons.js";
 
+import type { ReadingResumeState } from "./use-reading-resume.js";
 import type { SourceSummary } from "@mdbase-reader/core";
 import type { JSX, ReactNode } from "react";
 
@@ -10,6 +11,7 @@ export interface DocumentWorkspaceProps {
   readonly document: ReactNode;
   readonly focusMode: boolean;
   readonly inspectorOpen: boolean;
+  readonly readingResume: ReadingResumeState;
   readonly onBackToLibrary: () => void;
   readonly onToggleFocus: () => void;
   readonly onToggleInspector: () => void;
@@ -20,6 +22,7 @@ export function DocumentWorkspace({
   document,
   focusMode,
   inspectorOpen,
+  readingResume,
   onBackToLibrary,
   onToggleFocus,
   onToggleInspector,
@@ -44,6 +47,7 @@ export function DocumentWorkspace({
                 {source.documents[0] ? ` · ${documentLabel(source)}` : " · Source note"}
               </span>
             </div>
+            <ReadingPositionStatus state={readingResume} />
             <div className="document-tools">
               <button
                 type="button"
@@ -74,6 +78,27 @@ export function DocumentWorkspace({
         <EmptyCollection />
       )}
     </section>
+  );
+}
+
+function ReadingPositionStatus({ state }: { readonly state: ReadingResumeState }): JSX.Element {
+  if (state.status === "idle") {
+    return <span className="reading-position-status" />;
+  }
+  const label =
+    state.status === "saving"
+      ? "Saving position…"
+      : state.status === "saved"
+        ? "Position saved"
+        : (state.message ?? "Position not saved");
+  return (
+    <span
+      className={`reading-position-status is-${state.status}`}
+      role={state.status === "error" ? "alert" : "status"}
+      title={label}
+    >
+      {state.status === "error" ? "Position not saved" : label}
+    </span>
   );
 }
 

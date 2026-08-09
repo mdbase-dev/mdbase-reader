@@ -65,12 +65,15 @@ describe("EmbedPdfSurface", () => {
   it("translates zero-based Reader locations to the EmbedPDF runtime", async () => {
     const fixture = runtimeFixture();
     const surface = new EmbedPdfSurface(document, fixture.runtime);
+    const locations = vi.fn();
+    surface.locations.subscribe(locations);
 
     expect(surface.currentLocation()).toEqual({ kind: "pdf", pageIndex: 2 });
     await expect(surface.goTo({ kind: "pdf", pageIndex: 7 })).resolves.toBe(true);
     expect(fixture.goToPage).toHaveBeenCalledWith(7);
     fixture.emitPage(8);
     expect(surface.currentLocation()).toEqual({ kind: "pdf", pageIndex: 8 });
+    expect(locations).toHaveBeenCalledWith({ kind: "pdf", pageIndex: 8 });
   });
 
   it("forwards durable capture data without persisting renderer state", () => {

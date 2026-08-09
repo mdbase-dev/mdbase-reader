@@ -16,6 +16,7 @@ import {
   type AnnotationComposerController,
 } from "./use-annotation-composer.js";
 import { useReaderWorkspace, type ReaderWorkspaceController } from "./use-reader-workspace.js";
+import { useReadingResume, type ReadingResumeState } from "./use-reading-resume.js";
 import { filterSources, type ReaderWorkspaceGateway } from "./workspace-model.js";
 
 import type { SourceSummary } from "@mdbase-reader/core";
@@ -43,6 +44,7 @@ export function ReaderApp({ gateway, renderDocument }: ReaderAppProps): JSX.Elem
   const [surface, setSurface] = useState<ReadingSurface | null>(null);
   const onSurfaceChange = useCallback((next: ReadingSurface | null): void => setSurface(next), []);
   const composer = useReaderAnnotationComposer(workspace, surface);
+  const readingResume = useReaderReadingResume(workspace, surface);
 
   useEffect(() => applyThemePreference(theme, document.documentElement), [theme]);
 
@@ -124,6 +126,7 @@ export function ReaderApp({ gateway, renderDocument }: ReaderAppProps): JSX.Elem
           document={source ? renderDocument?.(source, onSurfaceChange) : null}
           focusMode={focusMode}
           inspectorOpen={inspectorOpen && !focusMode}
+          readingResume={readingResume}
           onBackToLibrary={() => setMobileLibraryOpen(true)}
           onToggleFocus={() => setFocusMode((value) => !value)}
           onToggleInspector={() => {
@@ -148,6 +151,17 @@ export function ReaderApp({ gateway, renderDocument }: ReaderAppProps): JSX.Elem
       </main>
     </div>
   );
+}
+
+function useReaderReadingResume(
+  workspace: ReaderWorkspaceController,
+  surface: ReadingSurface | null,
+): ReadingResumeState {
+  return useReadingResume({
+    source: workspace.sourceRecord.status === "ready" ? workspace.sourceRecord.value : null,
+    surface,
+    save: workspace.saveReadingPosition,
+  });
 }
 
 function readerMainClass(libraryOpen: boolean, focusMode: boolean, inspectorOpen: boolean): string {

@@ -51,6 +51,8 @@ describe("ReadiumEpubSurface", () => {
   it("tracks Readium locations without treating visual pages as stable", async () => {
     const fixture = runtimeFixture();
     const surface = new ReadiumEpubSurface(document, fixture.runtime);
+    const locations = vi.fn();
+    surface.locations.subscribe(locations);
 
     expect(surface.currentLocation()).toEqual({
       kind: "epub",
@@ -59,6 +61,8 @@ describe("ReadiumEpubSurface", () => {
     const destination = { href: "chapter-2.xhtml", locations: { progression: 0.3 } };
     await expect(surface.goTo({ kind: "epub", locator: destination })).resolves.toBe(true);
     expect(surface.currentLocation()).toEqual({ kind: "epub", locator: destination });
+    fixture.emitLocation(destination);
+    expect(locations).toHaveBeenCalledWith({ kind: "epub", locator: destination });
   });
 
   it("publishes text selections with locator evidence", () => {

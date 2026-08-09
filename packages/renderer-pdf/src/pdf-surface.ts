@@ -11,6 +11,7 @@ export class EmbedPdfSurface implements ReadingSurface {
   public readonly kind = "pdf" as const;
   public readonly document: SurfaceDocument;
   public readonly capabilities: ReadingSurface["capabilities"];
+  public readonly locations = createEventEmitter<ReaderLocator>();
 
   readonly #runtime: EmbedPdfRuntime;
   readonly #areaSelections =
@@ -35,6 +36,7 @@ export class EmbedPdfSurface implements ReadingSurface {
     );
     this.#unsubscribePage = runtime.onPageChanged((pageIndex) => {
       this.#pageIndex = pageIndex;
+      this.locations.emit({ kind: "pdf", pageIndex });
     });
     this.capabilities = {
       textSelection: {
@@ -69,6 +71,7 @@ export class EmbedPdfSurface implements ReadingSurface {
       this.#unsubscribeText();
       this.#areaSelections.clear();
       this.#textSelections.clear();
+      this.locations.clear();
       this.#runtime.destroy();
       this.#destroyed = true;
     }

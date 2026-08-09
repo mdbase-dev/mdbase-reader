@@ -5,6 +5,7 @@ import {
   type MutationId,
   type Page,
   type ReaderRequestOptions,
+  type ReadingPosition,
   type Source,
   type SourceId,
   type SourceQuery,
@@ -95,12 +96,45 @@ export class ConnectSourceRepository implements SourceRepository {
     const updated = outcomeValue(
       await this.client.update({
         path,
-        contract: sourceContract,
         ifRevision: input.expectedRevision,
         patch: {},
         body: input.body,
       }),
       "update source note",
+    );
+    return sourceFromDocument(input.collectionId, updated);
+  }
+
+  async updateReading(input: {
+    readonly collectionId: CollectionId;
+    readonly sourceId: SourceId;
+    readonly expectedRevision: ReturnType<typeof recordRevision>;
+    readonly documentFileId: Parameters<SourceRepository["updateReading"]>[0]["documentFileId"];
+    readonly position: ReadingPosition;
+    readonly openedAt: Parameters<SourceRepository["updateReading"]>[0]["openedAt"];
+  }): Promise<Source> {
+    const path = await this.#path(input.sourceId, "save reading position");
+    const current = outcomeValue(
+      await this.client.read({ path, includeDocument: true }),
+      "read source before saving position",
+    );
+    const existing = objectValue(current.frontmatter["reading"]);
+    const reading = {
+      ...existing,
+      status: typeof existing["status"] === "string" ? existing["status"] : "reading",
+      document_file_id: input.documentFileId,
+      position: positionFrontmatter(input.position),
+      started_at: existing["started_at"] ?? input.openedAt,
+      last_opened_at: input.openedAt,
+    };
+    const updated = outcomeValue(
+      await this.client.update({
+        path,
+        ifRevision: input.expectedRevision,
+        patch: { reading },
+        includeDocument: true,
+      }),
+      "save reading position",
     );
     return sourceFromDocument(input.collectionId, updated);
   }
@@ -115,7 +149,7 @@ export class ConnectSourceRepository implements SourceRepository {
   }): Promise<ReturnType<typeof recordRevision>> {
     const path = await this.#path(input.sourceId, "append annotation");
     const current = outcomeValue(
-      await this.client.read({ path, contract: sourceContract, includeDocument: true }),
+      await this.client.read({ path, includeDocument: true }),
       "read source before annotation",
     );
     const body = current.body ?? "";
@@ -126,7 +160,6 @@ export class ConnectSourceRepository implements SourceRepository {
     const updated = outcomeValue(
       await this.client.update({
         path,
-        contract: sourceContract,
         ifRevision: input.expectedRevision,
         patch: {},
         body: `${body}${separator}\n${input.embed}\n`,
@@ -144,6 +177,27 @@ export class ConnectSourceRepository implements SourceRepository {
     this.#pathsById.set(id, path);
     return path;
   }
+}
+
+function objectValue(value: unknown): Readonly<Record<string, unknown>> {
+  return typeof value === "object" && value !== null && !Array.isArray(value)
+    ? (value as Readonly<Record<string, unknown>>)
+    : {};
+}
+
+function positionFrontmatter(position: ReadingPosition): Readonly<Record<string, unknown>> {
+  if (position.kind === "pdf") {
+    return { pdf: { page_index: position.pageIndex } };
+  }
+  if (position.kind === "epub") {
+    return { epub: { locator: position.locator } };
+  }
+  return {
+    html: {
+      href: position.href,
+      ...(position.progression === undefined ? {} : { progression: position.progression }),
+    },
+  };
 }
 
 function matchesSearch(source: SourceSummary, search: string | undefined): boolean {

@@ -9,7 +9,13 @@ import type {
   SourceId,
 } from "../domain/identity.js";
 import type { FileRevision } from "../domain/revision.js";
-import type { Page, Source, SourceQuery, SourceSummary } from "../domain/source.js";
+import type {
+  Page,
+  ReadingPosition,
+  Source,
+  SourceQuery,
+  SourceSummary,
+} from "../domain/source.js";
 import type { DateTime } from "../domain/time.js";
 
 export interface SourceRepository {
@@ -24,6 +30,14 @@ export interface SourceRepository {
     readonly sourceId: SourceId;
     readonly expectedRevision: RecordRevision;
     readonly body: string;
+  }): Promise<Source>;
+  updateReading(input: {
+    readonly collectionId: CollectionId;
+    readonly sourceId: SourceId;
+    readonly expectedRevision: RecordRevision;
+    readonly documentFileId: FileId;
+    readonly position: ReadingPosition;
+    readonly openedAt: DateTime;
   }): Promise<Source>;
   appendAnnotationEmbed(input: {
     readonly collectionId: CollectionId;

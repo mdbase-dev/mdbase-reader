@@ -71,6 +71,7 @@ export interface ReadingSurface {
   readonly kind: SurfaceKind;
   readonly document: SurfaceDocument;
   readonly capabilities: ReadingSurfaceCapabilities;
+  readonly locations: EventSource<ReaderLocator>;
   currentLocation(): ReaderLocator | null;
   goTo(locator: ReaderLocator): Promise<boolean>;
   destroy(): Promise<void>;

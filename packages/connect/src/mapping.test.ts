@@ -15,7 +15,12 @@ const sourceFrontmatter: JsonObject = {
   title: "Gravity and Grace",
   authors: ["Simone Weil"],
   tags: ["attention"],
-  reading: { status: "reading" },
+  reading: {
+    status: "reading",
+    document_file_id: "file-01",
+    position: { pdf: { page_index: 15 } },
+    last_opened_at: "2026-08-09T14:21:00+10:00",
+  },
   documents: [
     {
       file_id: "file-01",
@@ -40,6 +45,10 @@ describe("Connect contract mapping", () => {
       title: "Gravity and Grace",
       creators: ["Simone Weil"],
       readingStatus: "reading",
+      reading: {
+        documentFileId: "file-01",
+        position: { kind: "pdf", pageIndex: 15 },
+      },
       documents: [{ fileId: "file-01", mediaType: "application/pdf" }],
     });
   });
