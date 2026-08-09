@@ -1,18 +1,13 @@
 import { connectProblemMessage, type ReaderConnectSnapshot } from "@mdbase-reader/connect";
 import { createReaderRuntimeServices, createWebPlatform } from "@mdbase-reader/platform";
-import { ProductBrand, ReaderButton } from "@mdbase-reader/ui";
-import {
-  useEffect,
-  useMemo,
-  useState,
-  useSyncExternalStore,
-  type JSX,
-  type ReactNode,
-} from "react";
+import { ReaderButton } from "@mdbase-reader/ui";
+import { useEffect, useMemo, useState, useSyncExternalStore, type JSX } from "react";
 
 import { ConnectWorkspaceGateway } from "./connect-workspace.js";
 import { readerSession } from "./connect.js";
 import { ConnectedDocument } from "./ConnectedDocument.js";
+import { connectionStatus, isLocalhost, requiresAccessReview } from "./connection-recovery.js";
+import { ConnectionLayout, ConnectionRetry } from "./ConnectionLayout.js";
 import { readerErrorMessage } from "./errors.js";
 import { ReaderApp } from "./ReaderApp.js";
 
@@ -132,38 +127,33 @@ function ConnectionScreen({
   const authorize = async (target: "choose" | "selected"): Promise<void> => {
     setWorking(true);
     onError(null);
-    const outcome = await readerSession.authorize(target);
-    onError(connectProblemMessage(outcome));
-    setWorking(false);
+    try {
+      const outcome = await readerSession.authorize(target);
+      onError(connectProblemMessage(outcome));
+    } catch (reason) {
+      onError(readerErrorMessage(reason, "Reader could not review application access."));
+    } finally {
+      setWorking(false);
+    }
   };
   const applySetup = async (): Promise<void> => {
     setWorking(true);
     onError(null);
-    const outcome = await readerSession.applyCollectionSetup();
-    onError(connectProblemMessage(outcome));
-    setWorking(false);
+    try {
+      const outcome = await readerSession.applyCollectionSetup();
+      onError(connectProblemMessage(outcome));
+    } catch (reason) {
+      onError(readerErrorMessage(reason, "Reader could not apply the reviewed setup."));
+    } finally {
+      setWorking(false);
+    }
   };
   const select = (collectionId: string): void => {
     onError(connectProblemMessage(readerSession.select(collectionId)));
   };
 
-  let status = "Choose a collection to open in Reader.";
-  if (session.status === "opening") {
-    status = "Finding mdbase Connect…";
-  } else if (session.status === "authorization_required") {
-    status = "Reader needs your approval to open this collection.";
-  } else if (session.status === "checking_setup") {
-    status = "Checking the collection’s Reader contracts…";
-  } else if (session.status === "unavailable") {
-    status = `This collection is ${session.reason.replaceAll("_", " ")}.`;
-  } else if (session.status === "blocked") {
-    status = session.problem.message;
-  } else if (session.status === "setup_review_required") {
-    status = "Review the Reader definitions before they are installed.";
-  }
-
   return (
-    <ConnectionLayout status={status} error={error}>
+    <ConnectionLayout status={connectionStatus(session)} error={error}>
       {session.status === "setup_review_required" ? (
         <section className="connection-setup" aria-labelledby="reader-setup-title">
           <h2 id="reader-setup-title">Set up this reading collection</h2>
@@ -195,11 +185,13 @@ function ConnectionScreen({
               Open {connection.displayName}
             </ReaderButton>
           ))}
-        {session.status === "authorization_required" ? (
-          <ReaderButton disabled={working} onClick={() => void authorize("selected")}>
-            {working ? "Opening mdbase…" : "Authorize this collection"}
-          </ReaderButton>
-        ) : null}
+        <SelectedAuthorizationAction
+          session={session}
+          error={error}
+          working={working}
+          hasSelectedCollection={Boolean(selectedCollectionId)}
+          onAuthorize={() => void authorize("selected")}
+        />
         <button
           className="connection-secondary"
           disabled={working}
@@ -219,45 +211,26 @@ function ConnectionScreen({
   );
 }
 
-function ConnectionRetry({
+function SelectedAuthorizationAction({
+  session,
   error,
-  onRetry,
+  working,
+  hasSelectedCollection,
+  onAuthorize,
 }: {
+  readonly session: Exclude<ReaderConnectSnapshot, { status: "ready" }>;
   readonly error: string | null;
-  readonly onRetry: () => void;
+  readonly working: boolean;
+  readonly hasSelectedCollection: boolean;
+  readonly onAuthorize: () => void;
 }): JSX.Element | null {
-  return error ? <ReaderButton onClick={onRetry}>Try again</ReaderButton> : null;
-}
-
-function ConnectionLayout({
-  status,
-  error,
-  children,
-}: {
-  readonly status: string;
-  readonly error?: string | null;
-  readonly children?: ReactNode;
-}): JSX.Element {
+  const staleGrant = hasSelectedCollection && requiresAccessReview(error);
+  if (session.status !== "authorization_required" && !staleGrant) {
+    return null;
+  }
   return (
-    <main className="connection-screen">
-      <section className="connection-card">
-        <ProductBrand />
-        <div className="connection-copy">
-          <span className="mono">Your library, directly</span>
-          <h1>Open mdbase Reader</h1>
-          <p role="status">{status}</p>
-          {error ? (
-            <p className="connection-error" role="alert">
-              {error}
-            </p>
-          ) : null}
-        </div>
-        {children}
-      </section>
-    </main>
+    <ReaderButton disabled={working} onClick={onAuthorize}>
+      {working ? "Opening mdbase…" : staleGrant ? "Review updated access" : "Authorize collection"}
+    </ReaderButton>
   );
-}
-
-function isLocalhost(current: Location): boolean {
-  return ["localhost", "127.0.0.1", "::1", "[::1]"].includes(current.hostname);
 }
