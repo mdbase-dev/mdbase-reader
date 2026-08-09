@@ -44,7 +44,7 @@ export class ConnectWorkspaceGateway implements ReaderWorkspaceGateway {
   async library(options: ReaderRequestOptions = {}): Promise<ReaderLibrarySnapshot> {
     if (!this.#library) {
       const library = await this.sources.list(
-        { collectionId: this.collectionId, limit: 100 },
+        { collectionId: this.collectionId, limit: 500 },
         options,
       );
       this.#library = library.items;

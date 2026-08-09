@@ -56,7 +56,7 @@ describe("ConnectWorkspaceGateway", () => {
     expect(await gateway.saveSourceBody(source, "Updated")).toMatchObject({ body: "Updated" });
     expect(list).toHaveBeenCalledOnce();
     expect(list).toHaveBeenCalledWith(
-      { collectionId: source.collectionId, limit: 100 },
+      { collectionId: source.collectionId, limit: 500 },
       { signal: controller.signal },
     );
     expect(get).toHaveBeenCalledOnce();
