@@ -2,7 +2,7 @@ import { annotationId, collectionId, mutationId, sourceId } from "@mdbase-reader
 import { describe, expect, it } from "vitest";
 
 import { MemoryStorage } from "./platform.js";
-import { StorageMutationJournal } from "./reader-services.js";
+import { createReaderRuntimeServices, StorageMutationJournal } from "./reader-services.js";
 
 describe("MemoryStorage", () => {
   it("implements the same asynchronous contract as native secure stores", async () => {
@@ -32,5 +32,15 @@ describe("StorageMutationJournal", () => {
     );
     await journal.mark(id, "complete");
     await expect(storage.get("mdbase-reader:mutation:mutation-1")).resolves.toBeNull();
+  });
+});
+
+describe("createReaderRuntimeServices", () => {
+  it("creates UUID mutation identities accepted by resumable file transfers", () => {
+    const services = createReaderRuntimeServices(new MemoryStorage());
+
+    expect(services.ids.mutation()).toMatch(
+      /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/u,
+    );
   });
 });

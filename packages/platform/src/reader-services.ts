@@ -62,7 +62,9 @@ export function createReaderRuntimeServices(storage: KeyValueStorage): {
     clock: { now: () => dateTime(new Date().toISOString()) },
     ids: {
       annotation: () => annotationId(`ann_${crypto.randomUUID()}`),
-      mutation: () => mutationId(`mutation_${crypto.randomUUID()}`),
+      // Connect uses mutation identities as resumable file-transfer identities.
+      // Keep them as UUIDs so the same identifier is valid at both boundaries.
+      mutation: () => mutationId(crypto.randomUUID()),
     },
     journal: new StorageMutationJournal(storage),
   };
