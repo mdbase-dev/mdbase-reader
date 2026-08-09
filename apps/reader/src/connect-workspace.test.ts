@@ -43,6 +43,7 @@ describe("ConnectWorkspaceGateway", () => {
       sources,
       annotations,
       { store: vi.fn() },
+      { commitFile: vi.fn() },
       source.collectionId,
       "Reading",
       createReaderRuntimeServices(new MemoryStorage()),
@@ -72,5 +73,42 @@ describe("ConnectWorkspaceGateway", () => {
       expectedRevision: source.recordRevision,
       body: "Updated",
     });
+  });
+
+  it("adds an imported source to the warm library and source caches", async () => {
+    const imported = {
+      ...source,
+      id: sourceId("src_imported"),
+      path: "sources/src_imported.md",
+      title: "Imported paper",
+    };
+    const commitFile = vi.fn().mockResolvedValue(imported);
+    const gateway = new ConnectWorkspaceGateway(
+      {
+        list: vi.fn().mockResolvedValue({ items: [source] }),
+      } as unknown as SourceRepository,
+      { listForSource: vi.fn() } as unknown as AnnotationRepository,
+      { store: vi.fn() },
+      { commitFile },
+      source.collectionId,
+      "Reading",
+      createReaderRuntimeServices(new MemoryStorage()),
+    );
+    await gateway.library();
+
+    const result = await gateway.importSourceFile({
+      name: "paper.pdf",
+      declaredMediaType: "application/pdf",
+      bytes: new TextEncoder().encode("%PDF-1.7\nfixture"),
+      title: "Imported paper",
+    });
+
+    expect(result).toBe(imported);
+    expect(commitFile).toHaveBeenCalledOnce();
+    expect((await gateway.library()).sources.map(({ id }) => id)).toEqual([
+      "src_imported",
+      "src_01",
+    ]);
+    expect(await gateway.source(imported.id)).toBe(imported);
   });
 });

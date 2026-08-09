@@ -12,6 +12,7 @@ import {
   type ReadingPosition,
   type Source,
   type SourceId,
+  type SourceFileImportRequest,
 } from "@mdbase-reader/core";
 import { useMemo, type JSX } from "react";
 
@@ -135,6 +136,9 @@ class PreviewGateway implements ReaderWorkspaceGateway {
   saveSourceBody(source: Source, body: string): Promise<Source> {
     this.#sources = this.#sources.map((item) => (item.id === source.id ? { ...item, body } : item));
     return Promise.resolve(this.#sources.find((item) => item.id === source.id) ?? source);
+  }
+  importSourceFile(_request: Omit<SourceFileImportRequest, "collectionId">): Promise<Source> {
+    return Promise.reject(new Error("File import is unavailable in the interface preview."));
   }
   createAnnotation(request: AnnotationCreationRequest): Promise<Annotation> {
     const annotation: Annotation = {

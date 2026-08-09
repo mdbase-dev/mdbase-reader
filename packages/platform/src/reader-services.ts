@@ -2,7 +2,9 @@ import {
   annotationId,
   dateTime,
   mutationId,
+  sourceId,
   type Clock,
+  type ContentHasher,
   type MutationId,
   type MutationJournal,
   type MutationStage,
@@ -55,12 +57,23 @@ export class StorageMutationJournal implements MutationJournal {
 
 export function createReaderRuntimeServices(storage: KeyValueStorage): {
   readonly clock: Clock;
+  readonly hasher: ContentHasher;
   readonly ids: ReaderIdGenerator;
   readonly journal: MutationJournal;
 } {
   return {
     clock: { now: () => dateTime(new Date().toISOString()) },
+    hasher: {
+      async sha256(bytes) {
+        const buffer = await crypto.subtle.digest("SHA-256", bytes.slice().buffer);
+        const digest = Array.from(new Uint8Array(buffer), (byte) =>
+          byte.toString(16).padStart(2, "0"),
+        ).join("");
+        return `sha256:${digest}`;
+      },
+    },
     ids: {
+      source: () => sourceId(`src_${crypto.randomUUID()}`),
       annotation: () => annotationId(`ann_${crypto.randomUUID()}`),
       // Connect uses mutation identities as resumable file-transfer identities.
       // Keep them as UUIDs so the same identifier is valid at both boundaries.

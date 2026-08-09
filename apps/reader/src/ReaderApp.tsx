@@ -11,6 +11,7 @@ import { DocumentWorkspace } from "./DocumentWorkspace.js";
 import { InspectorPane, type InspectorTab } from "./InspectorPane.js";
 import { LibraryPane, type LibraryFilter } from "./LibraryPane.js";
 import { ReaderHeader } from "./ReaderHeader.js";
+import { SourceImportOverlay } from "./SourceImportDialog.js";
 import {
   useAnnotationComposer,
   type AnnotationComposerController,
@@ -18,9 +19,11 @@ import {
 import { useDocumentDecorations } from "./use-document-decorations.js";
 import { useReaderWorkspace, type ReaderWorkspaceController } from "./use-reader-workspace.js";
 import { useReadingResume, type ReadingResumeState } from "./use-reading-resume.js";
+import { useSourceImport } from "./use-source-import.js";
 import { filterSources, type ReaderWorkspaceGateway } from "./workspace-model.js";
 
 import type { SourceSummary } from "@mdbase-reader/core";
+import type { PickedFile } from "@mdbase-reader/platform";
 import type { ReadingSurface } from "@mdbase-reader/reading-surface";
 
 export interface ReaderAppProps {
@@ -29,9 +32,14 @@ export interface ReaderAppProps {
     source: SourceSummary,
     onSurfaceChange: (surface: ReadingSurface | null) => void,
   ) => ReactNode;
+  readonly pickSourceFile?: () => Promise<PickedFile | null>;
 }
 
-export function ReaderApp({ gateway, renderDocument }: ReaderAppProps): JSX.Element {
+export function ReaderApp({
+  gateway,
+  renderDocument,
+  pickSourceFile,
+}: ReaderAppProps): JSX.Element {
   const workspace = useReaderWorkspace(gateway);
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState<LibraryFilter>("all");
@@ -41,14 +49,15 @@ export function ReaderApp({ gateway, renderDocument }: ReaderAppProps): JSX.Elem
   );
   const [mobileLibraryOpen, setMobileLibraryOpen] = useState(false);
   const [focusMode, setFocusMode] = useState(false);
-  const [theme, setTheme] = useState<ThemePreference>(() => loadThemePreference(localStorage));
+  const [theme, changeTheme] = useThemePreference();
   const [surface, setSurface] = useState<ReadingSurface | null>(null);
   const onSurfaceChange = useCallback((next: ReadingSurface | null): void => setSurface(next), []);
   const composer = useReaderAnnotationComposer(workspace, surface);
   const readingResume = useReaderReadingResume(workspace, surface);
   const decorationProblem = useDocumentDecorations(surface, workspace.annotations);
-
-  useEffect(() => applyThemePreference(theme, document.documentElement), [theme]);
+  const sourceImport = useSourceImport(workspace, pickSourceFile, () =>
+    setMobileLibraryOpen(false),
+  );
 
   useEffect(() => {
     const query = window.matchMedia("(max-width: 760px)");
@@ -70,18 +79,7 @@ export function ReaderApp({ gateway, renderDocument }: ReaderAppProps): JSX.Elem
     return () => window.removeEventListener("keydown", handleShortcut);
   }, [focusMode]);
 
-  const visibleSources = useMemo(
-    () =>
-      filterSources(
-        workspace.library.status === "ready"
-          ? workspace.library.value.sources.filter(
-              ({ readingStatus }) => filter === "all" || readingStatus === filter,
-            )
-          : [],
-        search,
-      ),
-    [filter, search, workspace.library],
-  );
+  const visibleSources = useVisibleSources(workspace.library, filter, search);
 
   if (workspace.library.status !== "ready") {
     return (
@@ -94,12 +92,6 @@ export function ReaderApp({ gateway, renderDocument }: ReaderAppProps): JSX.Elem
 
   const library = workspace.library.value;
   const source = workspace.selectedSource;
-  const changeTheme = (): void => {
-    const next = nextTheme(theme);
-    saveThemePreference(next, localStorage, document.documentElement);
-    setTheme(next);
-  };
-
   return (
     <div className="reader-shell">
       <ReaderHeader
@@ -122,6 +114,8 @@ export function ReaderApp({ gateway, renderDocument }: ReaderAppProps): JSX.Elem
             workspace.selectSource(id);
             setMobileLibraryOpen(false);
           }}
+          onAddSource={() => void sourceImport.choose()}
+          addingSource={sourceImport.importing}
         />
         <DocumentWorkspace
           source={source}
@@ -155,8 +149,39 @@ export function ReaderApp({ gateway, renderDocument }: ReaderAppProps): JSX.Elem
           />
         ) : null}
       </main>
+      <SourceImportOverlay flow={sourceImport} />
     </div>
   );
+}
+
+function useVisibleSources(
+  library: ReaderWorkspaceController["library"],
+  filter: LibraryFilter,
+  search: string,
+): readonly SourceSummary[] {
+  return useMemo(
+    () =>
+      filterSources(
+        library.status === "ready"
+          ? library.value.sources.filter(
+              ({ readingStatus }) => filter === "all" || readingStatus === filter,
+            )
+          : [],
+        search,
+      ),
+    [filter, library, search],
+  );
+}
+
+function useThemePreference(): readonly [ThemePreference, () => void] {
+  const [theme, setTheme] = useState<ThemePreference>(() => loadThemePreference(localStorage));
+  useEffect(() => applyThemePreference(theme, document.documentElement), [theme]);
+  const change = (): void => {
+    const next = nextTheme(theme);
+    saveThemePreference(next, localStorage, document.documentElement);
+    setTheme(next);
+  };
+  return [theme, change];
 }
 
 function useReaderReadingResume(

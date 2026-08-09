@@ -1,6 +1,8 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 
 import { readerErrorMessage } from "./errors.js";
+import { selectedResource, type SelectedValue } from "./selected-resource.js";
+import { useLibrarySelection, type LibrarySelection } from "./use-library-selection.js";
 import { useAnnotationCreation, useReadingPositionSave } from "./use-workspace-mutations.js";
 
 import type { ReaderLibrarySnapshot, ReaderWorkspaceGateway } from "./workspace-model.js";
@@ -10,6 +12,7 @@ import type {
   FileId,
   ReadingPosition,
   Source,
+  SourceFileImportRequest,
   SourceId,
   SourceSummary,
 } from "@mdbase-reader/core";
@@ -27,9 +30,14 @@ export interface ReaderWorkspaceController {
   readonly draft: string;
   readonly saveStatus: "idle" | "saving";
   readonly saveError: string | null;
+  readonly importStatus: "idle" | "importing";
+  readonly importError: string | null;
   readonly selectSource: (id: SourceId) => void;
   readonly setDraft: (value: string) => void;
   readonly saveDraft: () => void;
+  readonly importSourceFile: (
+    request: Omit<SourceFileImportRequest, "collectionId">,
+  ) => Promise<Source | null>;
   readonly createAnnotation: (request: AnnotationCreationRequest) => Promise<Annotation>;
   readonly saveReadingPosition: (
     sourceId: SourceId,
@@ -39,18 +47,6 @@ export interface ReaderWorkspaceController {
   readonly retryLibrary: () => void;
 }
 
-interface LibrarySelection {
-  readonly library: AsyncResource<ReaderLibrarySnapshot>;
-  readonly selectedSource: SourceSummary | null;
-  readonly selectSource: (id: SourceId) => void;
-  readonly retryLibrary: () => void;
-}
-
-export interface SelectedValue<Value> {
-  readonly sourceId: SourceId;
-  readonly value: Value;
-}
-
 export function useReaderWorkspace(gateway: ReaderWorkspaceGateway): ReaderWorkspaceController {
   const library = useLibrarySelection(gateway);
   const source = useSelectedSourceWorkspace(gateway, library.selectedSource);
@@ -58,61 +54,6 @@ export function useReaderWorkspace(gateway: ReaderWorkspaceGateway): ReaderWorks
     ...library,
     ...source,
   };
-}
-
-function useLibrarySelection(gateway: ReaderWorkspaceGateway): LibrarySelection {
-  const [library, setLibrary] = useState<AsyncResource<ReaderLibrarySnapshot>>({
-    status: "loading",
-  });
-  const [attempt, setAttempt] = useState(0);
-  const [selectedSourceId, setSelectedSourceId] = useState<SourceId | null>(null);
-  const selectedSourceIdRef = useRef<SourceId | null>(null);
-
-  useEffect(() => {
-    const controller = new AbortController();
-    void gateway
-      .library({ signal: controller.signal })
-      .then((snapshot) => {
-        if (controller.signal.aborted) {
-          return;
-        }
-        setLibrary({ status: "ready", value: snapshot });
-        const current = selectedSourceIdRef.current;
-        const next =
-          current && snapshot.sources.some(({ id }) => id === current)
-            ? current
-            : (snapshot.sources[0]?.id ?? null);
-        selectedSourceIdRef.current = next;
-        setSelectedSourceId(next);
-      })
-      .catch((reason: unknown) => {
-        if (!controller.signal.aborted) {
-          setLibrary({
-            status: "error",
-            message: readerErrorMessage(reason, "Reader could not load this collection."),
-          });
-        }
-      });
-    return () => controller.abort();
-  }, [attempt, gateway]);
-
-  const selectedSource = useMemo(() => {
-    if (library.status !== "ready" || !selectedSourceId) {
-      return null;
-    }
-    return library.value.sources.find(({ id }) => id === selectedSourceId) ?? null;
-  }, [library, selectedSourceId]);
-
-  const selectSource = useCallback((id: SourceId): void => {
-    selectedSourceIdRef.current = id;
-    setSelectedSourceId(id);
-  }, []);
-  const retryLibrary = useCallback((): void => {
-    setLibrary({ status: "loading" });
-    setAttempt((value) => value + 1);
-  }, []);
-
-  return { library, selectedSource, selectSource, retryLibrary };
 }
 
 function useSelectedSourceWorkspace(
@@ -226,14 +167,4 @@ function useSelectedSourceWorkspace(
     createAnnotation: createSelectedAnnotation,
     saveReadingPosition,
   };
-}
-
-function selectedResource<Value>(
-  sourceId: SourceId | null,
-  selected: SelectedValue<AsyncResource<Value>> | null,
-): AsyncResource<Value> {
-  if (!sourceId) {
-    return { status: "idle" };
-  }
-  return selected?.sourceId === sourceId ? selected.value : { status: "loading" };
 }

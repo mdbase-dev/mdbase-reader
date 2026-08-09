@@ -1,4 +1,4 @@
-import { createAnnotation } from "@mdbase-reader/core";
+import { createAnnotation, importSourceFile } from "@mdbase-reader/core";
 
 import type { ReaderLibrarySnapshot, ReaderWorkspaceGateway } from "./workspace-model.js";
 import type {
@@ -8,6 +8,7 @@ import type {
   AnnotationRepository,
   Clock,
   CollectionId,
+  ContentHasher,
   FileId,
   MutationJournal,
   ReaderRequestOptions,
@@ -15,6 +16,8 @@ import type {
   ReaderIdGenerator,
   Source,
   SourceId,
+  SourceFileImportRequest,
+  SourceImportRepository,
   SourceRepository,
 } from "@mdbase-reader/core";
 
@@ -27,10 +30,12 @@ export class ConnectWorkspaceGateway implements ReaderWorkspaceGateway {
     private readonly sources: SourceRepository,
     private readonly annotationsRepository: AnnotationRepository,
     private readonly annotationAssets: AnnotationAssetRepository,
+    private readonly sourceImports: SourceImportRepository,
     private readonly collectionId: CollectionId,
     private readonly collectionName: string,
     private readonly runtime: {
       readonly clock: Clock;
+      readonly hasher: ContentHasher;
       readonly ids: ReaderIdGenerator;
       readonly journal: MutationJournal;
     },
@@ -89,6 +94,16 @@ export class ConnectWorkspaceGateway implements ReaderWorkspaceGateway {
     });
     this.#sourcesById.set(source.id, updated);
     return updated;
+  }
+
+  async importSourceFile(request: Omit<SourceFileImportRequest, "collectionId">): Promise<Source> {
+    const imported = await importSourceFile(
+      { imports: this.sourceImports, ...this.runtime },
+      { ...request, collectionId: this.collectionId },
+    );
+    this.#sourcesById.set(imported.id, imported);
+    this.#library = [imported, ...(this.#library ?? []).filter(({ id }) => id !== imported.id)];
+    return imported;
   }
 
   async createAnnotation(request: AnnotationCreationRequest): Promise<Annotation> {

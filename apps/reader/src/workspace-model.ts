@@ -7,6 +7,7 @@ import type {
   Source,
   SourceId,
   SourceSummary,
+  SourceFileImportRequest,
 } from "@mdbase-reader/core";
 
 export interface ReaderLibrarySnapshot {
@@ -20,6 +21,7 @@ export interface ReaderWorkspaceGateway {
   source(id: SourceId, options?: ReaderRequestOptions): Promise<Source | null>;
   annotations(id: SourceId, options?: ReaderRequestOptions): Promise<readonly Annotation[]>;
   saveSourceBody(source: Source, body: string): Promise<Source>;
+  importSourceFile(request: Omit<SourceFileImportRequest, "collectionId">): Promise<Source>;
   createAnnotation(request: AnnotationCreationRequest): Promise<Annotation>;
   saveReadingPosition(
     source: Source,

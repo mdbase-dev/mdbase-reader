@@ -14,6 +14,8 @@ export interface LibraryPaneProps {
   readonly onSearchChange: (value: string) => void;
   readonly onFilterChange: (filter: LibraryFilter) => void;
   readonly onSelectSource: (id: SourceId) => void;
+  readonly onAddSource: () => void;
+  readonly addingSource: boolean;
 }
 
 export type LibraryFilter = "all" | "queued" | "reading";
@@ -27,6 +29,8 @@ export function LibraryPane({
   onSearchChange,
   onFilterChange,
   onSelectSource,
+  onAddSource,
+  addingSource,
 }: LibraryPaneProps): JSX.Element {
   return (
     <aside className="library-pane" aria-label="Library">
@@ -99,8 +103,8 @@ export function LibraryPane({
         ) : null}
       </div>
       <div className="library-footer">
-        <ReaderButton>
-          <PlusIcon /> Add source
+        <ReaderButton disabled={addingSource} onClick={onAddSource}>
+          <PlusIcon /> {addingSource ? "Adding…" : "Add source"}
         </ReaderButton>
       </div>
     </aside>

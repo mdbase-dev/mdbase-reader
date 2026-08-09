@@ -14,6 +14,7 @@ import {
   type CollectionId,
   type DocumentRepository,
   type SourceRepository,
+  type SourceImportRepository,
 } from "@mdbase-reader/core";
 
 import { connectAnnotationAssetRepository } from "./annotation-assets.js";
@@ -23,6 +24,7 @@ import {
   connectClient,
   ConnectSourceRepository,
 } from "./repositories.js";
+import { connectSourceImportRepository } from "./source-imports.js";
 
 export type ReaderConnectSnapshot = MdbaseApplicationSessionSnapshot;
 
@@ -30,6 +32,7 @@ export interface ReaderConnectedCollection {
   readonly collectionId: CollectionId;
   readonly collectionName: string;
   readonly sources: SourceRepository;
+  readonly sourceImports: SourceImportRepository;
   readonly annotations: AnnotationRepository;
   readonly annotationAssets: AnnotationAssetRepository;
   readonly documents: DocumentRepository;
@@ -105,6 +108,7 @@ export class ReaderApplicationSession {
       collectionId: collectionId(connection.collectionId),
       collectionName: snapshot.info.displayName,
       sources: new ConnectSourceRepository(client),
+      sourceImports: connectSourceImportRepository(connection, client),
       annotations: new ConnectAnnotationRepository(client),
       annotationAssets: connectAnnotationAssetRepository(connection),
       documents: connectDocumentRepository(connection),

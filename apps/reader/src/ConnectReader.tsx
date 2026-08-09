@@ -75,6 +75,7 @@ function OpenedReader({ collectionId }: { readonly collectionId: string }): JSX.
             opened.sources,
             opened.annotations,
             opened.annotationAssets,
+            opened.sourceImports,
             opened.collectionId,
             opened.collectionName,
             runtimeServices,
@@ -88,6 +89,17 @@ function OpenedReader({ collectionId }: { readonly collectionId: string }): JSX.
   return (
     <ReaderApp
       gateway={gateway}
+      pickSourceFile={() =>
+        readerPlatform.pickFile([
+          ".pdf",
+          ".epub",
+          ".html",
+          ".htm",
+          "application/pdf",
+          "application/epub+zip",
+          "text/html",
+        ])
+      }
       renderDocument={(source, onSurfaceChange) => (
         <ConnectedDocument
           repository={opened.documents}

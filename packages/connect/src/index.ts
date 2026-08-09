@@ -4,3 +4,4 @@ export * from "./contracts.js";
 export * from "./documents.js";
 export * from "./mapping.js";
 export * from "./repositories.js";
+export * from "./source-imports.js";

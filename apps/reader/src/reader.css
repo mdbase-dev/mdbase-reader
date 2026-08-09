@@ -570,6 +570,136 @@ button {
   height: 15px;
 }
 
+.import-backdrop {
+  position: fixed;
+  z-index: 100;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  background: color-mix(in srgb, var(--reader-canvas) 76%, transparent);
+  backdrop-filter: blur(7px);
+}
+
+.import-dialog {
+  width: min(440px, 100%);
+  overflow: hidden;
+  border: 1px solid var(--line-strong);
+  border-radius: 8px;
+  background: var(--paper);
+  box-shadow: 0 24px 70px color-mix(in srgb, #000 32%, transparent);
+}
+
+.import-dialog-heading {
+  padding: 26px 28px 20px;
+}
+
+.import-dialog-heading .mono {
+  color: var(--accent);
+  font-size: 10px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.import-dialog-heading h2 {
+  margin: 8px 0 6px;
+  color: var(--ink);
+  font-size: 22px;
+  letter-spacing: -0.025em;
+}
+
+.import-dialog-heading p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.import-file-summary {
+  display: flex;
+  align-items: center;
+  gap: 13px;
+  margin: 0 28px 20px;
+  padding: 12px;
+  border: 1px solid var(--line);
+  border-radius: 5px;
+  background: var(--reader-canvas);
+}
+
+.import-format {
+  display: grid;
+  place-items: center;
+  width: 46px;
+  height: 46px;
+  flex: 0 0 auto;
+  border-top: 2px solid var(--accent);
+  background: var(--paper);
+  color: var(--muted);
+  font-family: var(--mono);
+  font-size: 9px;
+}
+
+.import-file-summary > span:last-child {
+  min-width: 0;
+  display: grid;
+  gap: 4px;
+}
+
+.import-file-summary strong {
+  overflow: hidden;
+  color: var(--ink-soft);
+  font-size: 12px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.import-file-summary small {
+  color: var(--faint);
+  font-family: var(--mono);
+  font-size: 9px;
+}
+
+.import-title-field {
+  display: grid;
+  gap: 7px;
+  margin: 0 28px 22px;
+  color: var(--muted);
+  font-family: var(--mono);
+  font-size: 10px;
+}
+
+.import-title-field input {
+  width: 100%;
+  box-sizing: border-box;
+  border: 1px solid var(--line-strong);
+  border-radius: 4px;
+  padding: 10px 11px;
+  outline: none;
+  background: var(--reader-canvas);
+  color: var(--ink);
+  font: 13px/1.4 var(--sans);
+}
+
+.import-title-field input:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent) 16%, transparent);
+}
+
+.import-error {
+  margin: -8px 28px 20px;
+  color: var(--danger, #e36b6b);
+  font-size: 11px;
+  line-height: 1.45;
+}
+
+.import-dialog-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  padding: 14px 28px;
+  border-top: 1px solid var(--line);
+  background: var(--reader-canvas);
+}
+
 .document-workspace {
   min-width: 0;
   min-height: 0;

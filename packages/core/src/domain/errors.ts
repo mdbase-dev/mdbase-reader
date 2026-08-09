@@ -4,6 +4,8 @@ export type DomainProblemCode =
   | "invalid-datetime"
   | "invalid-selector"
   | "invalid-annotation"
+  | "invalid-source-import"
+  | "unsupported-source-file"
   | "annotation-assets-unavailable"
   | "source-not-found"
   | "document-not-found"

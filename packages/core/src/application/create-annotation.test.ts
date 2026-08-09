@@ -85,6 +85,7 @@ function dependencies(source: Source | null = sourceFixture()): {
     },
     clock: { now: () => dateTime("2026-08-09T15:18:00+10:00") },
     ids: {
+      source: () => sourceId("src_unused"),
       annotation: (): AnnotationId => annotationId("ann_01"),
       mutation: (): MutationId => mutationId("mutation-1"),
     },

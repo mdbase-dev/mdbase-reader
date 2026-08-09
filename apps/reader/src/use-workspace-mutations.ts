@@ -1,6 +1,7 @@
 import { useCallback, type Dispatch, type SetStateAction } from "react";
 
-import type { AsyncResource, SelectedValue } from "./use-reader-workspace.js";
+import type { SelectedValue } from "./selected-resource.js";
+import type { AsyncResource } from "./use-reader-workspace.js";
 import type { ReaderWorkspaceGateway } from "./workspace-model.js";
 import type {
   Annotation,

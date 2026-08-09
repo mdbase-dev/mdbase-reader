@@ -1,4 +1,5 @@
 export * from "./application/create-annotation.js";
+export * from "./application/import-source-file.js";
 export type * from "./application/ports.js";
 export * from "./domain/annotation.js";
 export * from "./domain/document.js";

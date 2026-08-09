@@ -115,8 +115,43 @@ export interface Clock {
 }
 
 export interface ReaderIdGenerator {
+  source(): SourceId;
   annotation(): AnnotationId;
   mutation(): MutationId;
+}
+
+export interface ContentHasher {
+  sha256(bytes: Uint8Array): Promise<`sha256:${string}`>;
+}
+
+export interface SourceImportRepository {
+  commitFile(plan: PlannedSourceFileImport): Promise<Source>;
+}
+
+export type SourceDocumentFormat = "pdf" | "epub" | "html";
+
+export interface SourceFileImportRequest {
+  readonly collectionId: CollectionId;
+  readonly name: string;
+  readonly declaredMediaType?: string;
+  readonly bytes: Uint8Array;
+  readonly title?: string;
+}
+
+export interface PlannedSourceFileImport {
+  readonly collectionId: CollectionId;
+  readonly sourceId: SourceId;
+  readonly mutationId: MutationId;
+  readonly title: string;
+  readonly kind: "document";
+  readonly format: SourceDocumentFormat;
+  readonly mediaType: string;
+  readonly savedAt: DateTime;
+  readonly contentDigest: `sha256:${string}`;
+  readonly originalName: string;
+  readonly recordPath: string;
+  readonly filePath: string;
+  readonly bytes: Uint8Array;
 }
 
 export interface AnnotationCreationRequest extends AnnotationDraft {
