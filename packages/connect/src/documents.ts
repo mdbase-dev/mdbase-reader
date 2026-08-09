@@ -82,7 +82,7 @@ export class ConnectDocumentRepository implements DocumentRepository {
     const folder = parentFolder(path);
     for await (const descriptor of this.files.list({
       ...(folder ? { folder } : {}),
-      pageSize: 100,
+      pageSize: 1_000,
     })) {
       this.#descriptorsById.set(descriptor.fileId, descriptor);
       this.#descriptorsByPath.set(descriptor.path, descriptor);

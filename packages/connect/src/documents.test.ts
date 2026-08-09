@@ -71,7 +71,7 @@ describe("ConnectDocumentRepository", () => {
       readonly folder?: string;
     }): AsyncIterable<CollectionFileDescriptor> {
       await Promise.resolve();
-      expect(options).toEqual({ folder: "files/example", pageSize: 100 });
+      expect(options).toEqual({ folder: "files/example", pageSize: 1_000 });
       yield { ...descriptor, path: "files/example/article.pdf" };
     });
     const client = {

@@ -275,9 +275,12 @@ button {
   min-height: 0;
   display: grid;
   grid-template-columns: 238px minmax(420px, 1fr) minmax(280px, 326px);
+  grid-template-rows: minmax(0, 1fr);
+  overflow: hidden;
 }
 
 .library-pane {
+  min-height: 0;
   min-width: 0;
   display: grid;
   grid-template-rows: 46px auto auto minmax(0, 1fr) auto;
