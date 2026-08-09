@@ -13,7 +13,13 @@ import { readerErrorMessage } from "./errors.js";
 
 import type { AsyncResource } from "./use-reader-workspace.js";
 import type { ReaderLibrarySnapshot, ReaderWorkspaceGateway } from "./workspace-model.js";
-import type { Source, SourceFileImportRequest, SourceId, SourceSummary } from "@mdbase-reader/core";
+import type {
+  Source,
+  SourceFileImportRequest,
+  SourceId,
+  SourceImportOptions,
+  SourceSummary,
+} from "@mdbase-reader/core";
 
 export interface LibrarySelection {
   readonly library: AsyncResource<ReaderLibrarySnapshot>;
@@ -24,6 +30,7 @@ export interface LibrarySelection {
   readonly importError: string | null;
   readonly importSourceFile: (
     request: Omit<SourceFileImportRequest, "collectionId">,
+    options?: SourceImportOptions,
   ) => Promise<Source | null>;
 }
 
@@ -108,17 +115,19 @@ function useImportSourceFile(
   setImportError: Dispatch<SetStateAction<string | null>>,
 ): LibrarySelection["importSourceFile"] {
   return useCallback(
-    async (request) => {
+    async (request, options) => {
       setImportStatus("importing");
       setImportError(null);
       try {
-        const imported = await gateway.importSourceFile(request);
+        const imported = await gateway.importSourceFile(request, options);
         setLibrary((current) => addImportedSource(current, imported));
         selectedSourceIdRef.current = imported.id;
         setSelectedSourceId(imported.id);
         return imported;
       } catch (reason) {
-        setImportError(readerErrorMessage(reason, "Reader could not import this document."));
+        if (!isAbortError(reason)) {
+          setImportError(readerErrorMessage(reason, "Reader could not import this document."));
+        }
         return null;
       } finally {
         setImportStatus("idle");
@@ -133,6 +142,10 @@ function useImportSourceFile(
       setSelectedSourceId,
     ],
   );
+}
+
+function isAbortError(reason: unknown): boolean {
+  return reason instanceof DOMException && reason.name === "AbortError";
 }
 
 function addImportedSource(

@@ -30,6 +30,8 @@ export function useWebCapture(
           bytes: captured.bytes,
           title: captured.title,
           capture: captured.capture,
+          archive: captured.archive,
+          metadata: captured.metadata,
         });
         if (imported) {
           onImported();

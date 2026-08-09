@@ -104,8 +104,8 @@ function OpenSourceAddDialog({
             />
           </label>
           <p className="capture-explainer">
-            Reader fetches without cookies, blocks private networks and scripts, and saves a clean
-            HTML copy.
+            Reader fetches without cookies, blocks private networks and scripts, and preserves the
+            original HTML beside a clean reading copy.
           </p>
           {error ? (
             <p className="import-error capture-error" role="alert">

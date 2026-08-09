@@ -8,6 +8,7 @@ import {
   type Annotation,
   type Source,
   type SourceRepository,
+  type SourceImportRepository,
 } from "@mdbase-reader/core";
 import { createReaderRuntimeServices, MemoryStorage } from "@mdbase-reader/platform";
 import { describe, expect, it, vi } from "vitest";
@@ -59,7 +60,7 @@ describe("ConnectWorkspaceGateway", () => {
       sources,
       annotations,
       { store: vi.fn() },
-      { commitFile: vi.fn() },
+      emptyImports(),
       source.collectionId,
       "Reading",
       createReaderRuntimeServices(new MemoryStorage()),
@@ -101,7 +102,7 @@ describe("ConnectWorkspaceGateway", () => {
       } as unknown as SourceRepository,
       { listForSource: vi.fn() } as unknown as AnnotationRepository,
       { store: vi.fn() },
-      { commitFile: vi.fn() },
+      emptyImports(),
       source.collectionId,
       "Reading",
       createReaderRuntimeServices(new MemoryStorage()),
@@ -127,7 +128,7 @@ describe("ConnectWorkspaceGateway", () => {
       { list: vi.fn() } as unknown as SourceRepository,
       { listForSource: vi.fn() } as unknown as AnnotationRepository,
       { store: vi.fn() },
-      { commitFile: vi.fn() },
+      emptyImports(),
       source.collectionId,
       "Reading",
       createReaderRuntimeServices(new MemoryStorage()),
@@ -150,7 +151,7 @@ describe("ConnectWorkspaceGateway", () => {
       { appendAnnotationEmbed, get } as unknown as SourceRepository,
       { listForSource: vi.fn() } as unknown as AnnotationRepository,
       { store: vi.fn() },
-      { commitFile: vi.fn() },
+      emptyImports(),
       source.collectionId,
       "Reading",
       createReaderRuntimeServices(new MemoryStorage()),
@@ -186,7 +187,7 @@ describe("ConnectWorkspaceGateway pagination", () => {
       { list } as unknown as SourceRepository,
       { listForSource: vi.fn() } as unknown as AnnotationRepository,
       { store: vi.fn() },
-      { commitFile: vi.fn() },
+      emptyImports(),
       source.collectionId,
       "Reading",
       createReaderRuntimeServices(new MemoryStorage()),
@@ -225,7 +226,7 @@ describe("ConnectWorkspaceGateway imports", () => {
       } as unknown as SourceRepository,
       { listForSource: vi.fn() } as unknown as AnnotationRepository,
       { store: vi.fn() },
-      { commitFile },
+      { findExactDuplicate: vi.fn().mockResolvedValue(null), commitFile },
       source.collectionId,
       "Reading",
       createReaderRuntimeServices(new MemoryStorage()),
@@ -248,3 +249,10 @@ describe("ConnectWorkspaceGateway imports", () => {
     expect(await gateway.source(imported.id)).toBe(imported);
   });
 });
+
+function emptyImports(): SourceImportRepository {
+  return {
+    findExactDuplicate: vi.fn().mockResolvedValue(null),
+    commitFile: vi.fn(),
+  };
+}

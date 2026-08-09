@@ -24,6 +24,7 @@ import type {
   ReadingPosition,
   Source,
   SourceFileImportRequest,
+  SourceImportOptions,
   SourceId,
   SourceSummary,
 } from "@mdbase-reader/core";
@@ -53,6 +54,7 @@ export interface ReaderWorkspaceController {
   readonly saveDraft: () => void;
   readonly importSourceFile: (
     request: Omit<SourceFileImportRequest, "collectionId">,
+    options?: SourceImportOptions,
   ) => Promise<Source | null>;
   readonly createAnnotation: (request: AnnotationCreationRequest) => Promise<Annotation>;
   readonly updateAnnotation: (annotation: Annotation, body: string) => Promise<Annotation>;

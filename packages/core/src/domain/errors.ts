@@ -5,6 +5,7 @@ export type DomainProblemCode =
   | "invalid-selector"
   | "invalid-annotation"
   | "invalid-source-import"
+  | "duplicate-source-import"
   | "invalid-citation"
   | "duplicate-citekey"
   | "unsupported-source-file"

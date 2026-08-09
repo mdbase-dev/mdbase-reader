@@ -11,6 +11,7 @@ import type {
   SourceId,
   SourceSummary,
   SourceFileImportRequest,
+  SourceImportOptions,
   SourceTextSearchMatch,
 } from "@mdbase-reader/core";
 
@@ -44,7 +45,10 @@ export interface ReaderWorkspaceGateway {
     expectedRevision?: FileRevision,
     options?: ReaderRequestOptions,
   ): Promise<ExportedCollectionFile>;
-  importSourceFile(request: Omit<SourceFileImportRequest, "collectionId">): Promise<Source>;
+  importSourceFile(
+    request: Omit<SourceFileImportRequest, "collectionId">,
+    options?: SourceImportOptions,
+  ): Promise<Source>;
   createAnnotation(request: AnnotationCreationRequest): Promise<Annotation>;
   updateAnnotation(annotation: Annotation, body: string): Promise<Annotation>;
   planAnnotationDeletion(annotation: Annotation): Promise<AnnotationDeletionPlan>;

@@ -34,6 +34,7 @@ import type {
   Source,
   SourceId,
   SourceFileImportRequest,
+  SourceImportOptions,
   SourceImportRepository,
   SourceRepository,
   SourceSummary,
@@ -141,10 +142,14 @@ export class ConnectWorkspaceGateway implements ReaderWorkspaceGateway {
     return this.files.read(this.collectionId, file, expectedRevision, options);
   }
 
-  async importSourceFile(request: Omit<SourceFileImportRequest, "collectionId">): Promise<Source> {
+  async importSourceFile(
+    request: Omit<SourceFileImportRequest, "collectionId">,
+    options: SourceImportOptions = {},
+  ): Promise<Source> {
     const imported = await importSourceFile(
       { imports: this.sourceImports, ...this.runtime },
       { ...request, collectionId: this.collectionId },
+      options,
     );
     this.#replaceSource(imported, true);
     return imported;

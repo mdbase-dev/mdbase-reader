@@ -1,4 +1,8 @@
-import { dateTime, type SourceCaptureProvenance } from "@mdbase-reader/core";
+import {
+  dateTime,
+  type SourceCaptureProvenance,
+  type SourceImportMetadata,
+} from "@mdbase-reader/core";
 
 interface CaptureResponseDocument {
   readonly submittedUrl: string;
@@ -11,7 +15,12 @@ export interface WebCaptureImport {
   readonly name: string;
   readonly title: string;
   readonly bytes: Uint8Array;
+  readonly archive: {
+    readonly name: string;
+    readonly bytes: Uint8Array;
+  };
   readonly capture: SourceCaptureProvenance;
+  readonly metadata: SourceImportMetadata;
 }
 
 export async function fetchWebCapture(
@@ -42,16 +51,57 @@ export async function webCaptureImport(
   const title = captureTitle(parsed, canonicalUrl.hostname);
   const { prepareHtmlDocument } = await import("@mdbase-reader/renderer-html");
   const prepared = prepareHtmlDocument(capture.html);
+  const stem = safeStem(canonicalUrl.hostname);
   return {
-    name: `${safeStem(canonicalUrl.hostname)}.html`,
+    name: `${stem}.readable.html`,
     title,
     bytes: new TextEncoder().encode(prepared),
+    archive: {
+      name: `${stem}.archive.html`,
+      bytes: new TextEncoder().encode(capture.html),
+    },
     capture: {
       submittedUrl: capture.submittedUrl,
       canonicalUrl: capture.canonicalUrl,
       retrievedAt: dateTime(capture.retrievedAt),
     },
+    metadata: captureMetadata(parsed, canonicalUrl),
   };
+}
+
+function captureMetadata(document: Document, canonicalUrl: URL): SourceImportMetadata {
+  const authorValues = [
+    ...document.querySelectorAll<HTMLMetaElement>(
+      'meta[name="author"], meta[property="article:author"]',
+    ),
+  ]
+    .map(({ content }) => normalizeTitle(content))
+    .filter((value): value is string => value !== null);
+  const published = firstNormalized([
+    document.querySelector<HTMLMetaElement>('meta[property="article:published_time"]')?.content,
+    document.querySelector<HTMLMetaElement>('meta[name="date"]')?.content,
+    document.querySelector<HTMLTimeElement>("time[datetime]")?.dateTime,
+  ]);
+  const description = firstNormalized([
+    document.querySelector<HTMLMetaElement>('meta[name="description"]')?.content,
+    document.querySelector<HTMLMetaElement>('meta[property="og:description"]')?.content,
+  ]);
+  const language = normalizeTitle(document.documentElement.lang);
+  const site =
+    normalizeTitle(
+      document.querySelector<HTMLMetaElement>('meta[property="og:site_name"]')?.content,
+    ) ?? canonicalUrl.hostname;
+  return {
+    ...(authorValues.length ? { authors: [...new Set(authorValues)] } : {}),
+    ...(published ? { published } : {}),
+    ...(description ? { description } : {}),
+    ...(language ? { language } : {}),
+    ...(site ? { site } : {}),
+  };
+}
+
+function firstNormalized(values: readonly (string | null | undefined)[]): string | undefined {
+  return values.map((value) => normalizeTitle(value)).find((value) => value !== null) ?? undefined;
 }
 
 function parseCaptureResponse(value: unknown): CaptureResponseDocument {

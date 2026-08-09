@@ -1,6 +1,6 @@
 import { sourceContract } from "./contracts.js";
-import { sourceFromDocument } from "./mapping.js";
-import { ConnectRepositoryError, outcomeValue } from "./repository-client.js";
+import { sourceFromDocument, sourceSummaryFromQuery } from "./mapping.js";
+import { ConnectRepositoryError, outcomeValue, queryWithOptions } from "./repository-client.js";
 
 import type { ReaderConnectClient } from "./repository-client.js";
 import type {
@@ -10,7 +10,16 @@ import type {
   MdbaseFileUploadOptions,
   RecordDocument,
 } from "@mdbase-dev/connect";
-import type { PlannedSourceFileImport, Source, SourceImportRepository } from "@mdbase-reader/core";
+import type {
+  CollectionId,
+  PlannedSourceFileImport,
+  PlannedSourceRepresentation,
+  ReaderRequestOptions,
+  Source,
+  SourceImportOptions,
+  SourceImportRepository,
+  SourceSummary,
+} from "@mdbase-reader/core";
 
 export interface ReaderSourceFileClient {
   upload(
@@ -26,27 +35,105 @@ export class ConnectSourceImportRepository implements SourceImportRepository {
     private readonly files: ReaderSourceFileClient,
   ) {}
 
-  public async commitFile(plan: PlannedSourceFileImport): Promise<Source> {
-    const descriptor = await this.files.upload(
-      plan.filePath,
-      new Blob([plan.bytes.slice().buffer], { type: plan.mediaType }),
-      {
-        mediaType: plan.mediaType,
-        transferId: plan.mutationId,
-      },
-    );
-    if (descriptor.contentDigest !== plan.contentDigest) {
-      throw new ConnectRepositoryError(
-        "verify imported file",
-        "content_digest_mismatch",
-        "The stored file did not match the selected bytes.",
+  public async findExactDuplicate(
+    collectionId: CollectionId,
+    contentDigests: readonly `sha256:${string}`[],
+    options: ReaderRequestOptions = {},
+  ): Promise<SourceSummary | null> {
+    const expected = new Set<string>(contentDigests);
+    let offset = 0;
+    let hasMore = true;
+    while (hasMore) {
+      const result = outcomeValue(
+        await queryWithOptions(
+          this.records,
+          { contract: sourceContract, frontmatterMode: "effective", limit: 500, offset },
+          options,
+        ),
+        "check imported file duplicates",
       );
+      for (const record of result.results) {
+        const source = sourceSummaryFromQuery(collectionId, record);
+        if (source.documents.some(({ revision }) => expected.has(revision))) {
+          return source;
+        }
+      }
+      hasMore = (result.meta?.hasMore ?? false) && result.results.length > 0;
+      offset += result.results.length;
     }
+    return null;
+  }
+
+  public async commitFile(
+    plan: PlannedSourceFileImport,
+    options: SourceImportOptions = {},
+  ): Promise<Source> {
+    const descriptors = new Map<PlannedSourceRepresentation["role"], CollectionFileDescriptor>();
+    const uploadRank: Readonly<Record<PlannedSourceRepresentation["role"], number>> = {
+      archive: 0,
+      primary: 1,
+    };
+    const orderedUploads = [...plan.representations].sort(
+      (left, right) => uploadRank[left.role] - uploadRank[right.role],
+    );
+    const totalBytes = plan.representations.reduce((sum, item) => sum + item.bytes.byteLength, 0);
+    let completedBytes = 0;
+    for (const [index, representation] of orderedUploads.entries()) {
+      options.signal?.throwIfAborted();
+      const descriptor = await this.files.upload(
+        representation.filePath,
+        new Blob([representation.bytes.slice().buffer], { type: representation.mediaType }),
+        {
+          mediaType: representation.mediaType,
+          transferId: representation.transferId,
+          ...(options.signal ? { signal: options.signal } : {}),
+          ...(options.onProgress
+            ? {
+                onProgress: (progress) => {
+                  if (progress.phase === "uploading") {
+                    options.onProgress?.({
+                      phase: "uploading",
+                      completedBytes: completedBytes + progress.transferredBytes,
+                      totalBytes,
+                      fileIndex: index + 1,
+                      fileCount: orderedUploads.length,
+                    });
+                  }
+                },
+              }
+            : {}),
+        },
+      );
+      if (descriptor.contentDigest !== representation.contentDigest) {
+        throw new ConnectRepositoryError(
+          "verify imported file",
+          "content_digest_mismatch",
+          "The stored file did not match the selected bytes.",
+        );
+      }
+      descriptors.set(representation.role, descriptor);
+      completedBytes += representation.bytes.byteLength;
+      options.onProgress?.({
+        phase: "uploading",
+        completedBytes,
+        totalBytes,
+        fileIndex: index + 1,
+        fileCount: orderedUploads.length,
+      });
+    }
+    options.signal?.throwIfAborted();
+    options.onProgress?.({
+      phase: "creating",
+      completedBytes: totalBytes,
+      totalBytes,
+      fileIndex: orderedUploads.length,
+      fileCount: orderedUploads.length,
+    });
 
     const created = await this.records.create({
       path: plan.recordPath,
       type: "reader-source",
-      frontmatter: sourceFrontmatter(plan, descriptor),
+      frontmatter: sourceFrontmatter(plan, descriptors),
       body: `# ${plan.title}\n`,
       includeDocument: true,
     });
@@ -72,14 +159,20 @@ export class ConnectSourceImportRepository implements SourceImportRepository {
 
 function sourceFrontmatter(
   plan: PlannedSourceFileImport,
-  descriptor: CollectionFileDescriptor,
+  descriptors: ReadonlyMap<PlannedSourceRepresentation["role"], CollectionFileDescriptor>,
 ): Readonly<Record<string, unknown>> {
   const capture = plan.capture;
+  const metadata = plan.metadata;
   return {
     id: plan.sourceId,
     title: plan.title,
     kind: plan.kind,
     saved_at: plan.savedAt,
+    ...(metadata?.authors?.length ? { authors: metadata.authors } : {}),
+    ...(metadata?.published ? { published: metadata.published } : {}),
+    ...(metadata?.description ? { description: metadata.description } : {}),
+    ...(metadata?.language ? { language: metadata.language } : {}),
+    ...(metadata?.site ? { site: metadata.site } : {}),
     ...(capture
       ? {
           url: capture.canonicalUrl,
@@ -87,25 +180,40 @@ function sourceFrontmatter(
             ? { original_url: capture.submittedUrl }
             : {}),
           capture: {
+            method: "url",
+            application: "dev.mdbase.reader",
+            captured_at: capture.retrievedAt,
             submitted_url: capture.submittedUrl,
             canonical_url: capture.canonicalUrl,
-            retrieved_at: capture.retrievedAt,
-            method: "reader-web-capture",
           },
         }
       : {}),
-    documents: [
-      {
+    documents: plan.representations.map((representation) => {
+      const descriptor = descriptors.get(representation.role);
+      if (!descriptor) {
+        throw new ConnectRepositoryError(
+          "create imported source",
+          "missing_file_descriptor",
+          `The ${representation.role} representation was not committed.`,
+        );
+      }
+      const derivedFrom = representation.derivedFromRole
+        ? descriptors.get(representation.derivedFromRole)
+        : undefined;
+      return {
         file_id: descriptor.fileId,
         file: `[[${descriptor.path}]]`,
-        role: "primary",
-        format: plan.format,
-        media_type: plan.mediaType,
+        role: representation.role,
+        format: representation.format,
+        media_type: representation.mediaType,
         revision: descriptor.contentDigest,
-        label: plan.originalName,
-        ...(capture ? { origin_url: capture.canonicalUrl, retrieved_at: capture.retrievedAt } : {}),
-      },
-    ],
+        label: representation.originalName,
+        ...(derivedFrom ? { derived_from_file_id: derivedFrom.fileId } : {}),
+        ...(capture && representation.role === "archive"
+          ? { origin_url: capture.canonicalUrl, retrieved_at: capture.retrievedAt }
+          : {}),
+      };
+    }),
     reading: { status: "inbox" },
   };
 }
