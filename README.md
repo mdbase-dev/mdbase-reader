@@ -20,9 +20,10 @@ pnpm deploy:dev
 
 This builds Reader with an HTTPS manifest for <https://mdbase-reader.pages.dev>, validates the
 manifest, restores the repository's generated manifest files, and uploads `apps/reader/dist` to the
-`mdbase-reader` Pages project. The deployed app uses the managed Connect service and therefore works
-with the normal desktop connector and its registered collections. It does not use or modify an
-`mdbase.dev` custom domain.
+`mdbase-reader` Pages project. The deployed app uses the staging Connect service and the isolated
+staging connector at `http://127.0.0.1:28486`. Start that connector from the sibling
+`mdbase-connect` checkout with `pnpm dev:desktop:staging`, then sign in with a staging account. The
+deployment does not use or modify an `mdbase.dev` custom domain.
 
 ## Commands
 

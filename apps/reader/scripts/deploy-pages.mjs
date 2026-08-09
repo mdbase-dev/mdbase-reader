@@ -16,7 +16,8 @@ try {
   await run(pnpm, ["build"], {
     ...process.env,
     MDBASE_READER_ORIGIN: deploymentOrigin,
-    VITE_MDBASE_CONNECT_URL: "https://connect.mdbase.dev",
+    VITE_MDBASE_CONNECT_URL: "https://mdbase-connect-staging.onrender.com",
+    VITE_MDBASE_CONNECT_LOOPBACK_URL: "http://127.0.0.1:28486",
   });
   await verifyDeploymentManifest();
 } finally {
