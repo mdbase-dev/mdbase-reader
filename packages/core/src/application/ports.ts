@@ -1,4 +1,5 @@
 import type { Annotation, AnnotationDraft } from "../domain/annotation.js";
+import type { CslItem } from "../domain/citation.js";
 import type { DocumentTarget } from "../domain/document.js";
 import type {
   AnnotationId,
@@ -38,6 +39,12 @@ export interface SourceRepository {
     readonly documentFileId: FileId;
     readonly position: ReadingPosition;
     readonly openedAt: DateTime;
+  }): Promise<Source>;
+  updateCitation(input: {
+    readonly collectionId: CollectionId;
+    readonly sourceId: SourceId;
+    readonly expectedRevision: RecordRevision;
+    readonly citation: CslItem;
   }): Promise<Source>;
   appendAnnotationEmbed(input: {
     readonly collectionId: CollectionId;

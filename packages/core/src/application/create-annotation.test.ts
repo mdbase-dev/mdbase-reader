@@ -66,6 +66,7 @@ function dependencies(source: Source | null = sourceFixture()): {
       get: vi.fn(() => Promise.resolve(source)),
       updateBody: vi.fn(),
       updateReading: vi.fn(),
+      updateCitation: vi.fn(),
       appendAnnotationEmbed: append,
     },
     annotations: {

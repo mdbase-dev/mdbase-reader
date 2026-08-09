@@ -1,5 +1,7 @@
 import {
+  cslProblemSummary,
   recordRevision,
+  validateCslItem,
   type AnnotationId,
   type CollectionId,
   type MutationId,
@@ -138,6 +140,27 @@ export class ConnectSourceRepository implements SourceRepository {
         includeDocument: true,
       }),
       "save reading position",
+    );
+    return sourceFromDocument(input.collectionId, updated);
+  }
+
+  async updateCitation(input: Parameters<SourceRepository["updateCitation"]>[0]): Promise<Source> {
+    const validation = validateCslItem(input.citation);
+    if (!validation.valid) {
+      throw new ConnectRepositoryError(
+        "save citation metadata",
+        cslProblemSummary(validation.problems),
+      );
+    }
+    const path = await this.#path(input.sourceId, "save citation metadata");
+    const updated = outcomeValue(
+      await this.client.update({
+        path,
+        ifRevision: input.expectedRevision,
+        patch: { csl: validation.item },
+        includeDocument: true,
+      }),
+      "save citation metadata",
     );
     return sourceFromDocument(input.collectionId, updated);
   }
