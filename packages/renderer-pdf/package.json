@@ -12,6 +12,7 @@
   },
   "dependencies": {
     "@embedpdf/plugin-capture": "^2.15.0",
+    "@embedpdf/plugin-selection": "^2.15.0",
     "@embedpdf/react-pdf-viewer": "^2.15.0",
     "@mdbase-reader/core": "workspace:*",
     "@mdbase-reader/reading-surface": "workspace:*",

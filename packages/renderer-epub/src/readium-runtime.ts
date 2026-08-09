@@ -33,10 +33,15 @@ export function readiumSelectionToDraft(input: {
     ? serializeReadiumLocator(input.locator)
     : { href: input.targetFrameSrc, type: "application/xhtml+xml" };
   return {
-    quote: {
-      exact: input.text,
-      ...(input.locator?.text?.before ? { prefix: input.locator.text.before } : {}),
-      ...(input.locator?.text?.after ? { suffix: input.locator.text.after } : {}),
+    target: {
+      quote: {
+        exact: input.text,
+        ...(input.locator?.text?.before ? { prefix: input.locator.text.before } : {}),
+        ...(input.locator?.text?.after ? { suffix: input.locator.text.after } : {}),
+      },
+      ...(input.locator?.locations.fragments[0]
+        ? { epub: { cfi: input.locator.locations.fragments[0] } }
+        : {}),
     },
     locator: { kind: "epub", locator: serialized },
   };

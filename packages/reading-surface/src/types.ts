@@ -1,5 +1,5 @@
 import type { EventSource } from "./events.js";
-import type { Annotation, DocumentTarget, QuoteSelector } from "@mdbase-reader/core";
+import type { Annotation, AnnotationTarget, DocumentTarget } from "@mdbase-reader/core";
 
 export type SurfaceKind = "pdf" | "epub" | "html";
 
@@ -27,7 +27,7 @@ export interface SurfaceDocument {
 }
 
 export interface TextSelectionDraft {
-  readonly quote: QuoteSelector;
+  readonly target: AnnotationTarget & { readonly quote: NonNullable<AnnotationTarget["quote"]> };
   readonly locator: ReaderLocator;
 }
 

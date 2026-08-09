@@ -6,7 +6,7 @@ import type {
   DocumentRepository,
   SourceSummary,
 } from "@mdbase-reader/core";
-import type { SurfaceDocument } from "@mdbase-reader/reading-surface";
+import type { ReadingSurface, SurfaceDocument } from "@mdbase-reader/reading-surface";
 
 const PdfViewerSurface = lazy(async () => {
   const module = await import("@mdbase-reader/renderer-pdf");
@@ -16,6 +16,7 @@ const PdfViewerSurface = lazy(async () => {
 export interface ConnectedDocumentProps {
   readonly repository: DocumentRepository;
   readonly source: SourceSummary;
+  readonly onSurfaceChange: (surface: ReadingSurface | null) => void;
 }
 
 type OpenDocumentState =
@@ -23,7 +24,11 @@ type OpenDocumentState =
   | { readonly status: "open"; readonly handle: DocumentHandle }
   | { readonly status: "error"; readonly message: string };
 
-export function ConnectedDocument({ repository, source }: ConnectedDocumentProps): JSX.Element {
+export function ConnectedDocument({
+  repository,
+  source,
+  onSurfaceChange,
+}: ConnectedDocumentProps): JSX.Element {
   const descriptor = source.documents[0];
   if (!descriptor) {
     return <DocumentMessage label="This source has no readable representation." />;
@@ -34,6 +39,7 @@ export function ConnectedDocument({ repository, source }: ConnectedDocumentProps
       descriptor={descriptor}
       repository={repository}
       source={source}
+      onSurfaceChange={onSurfaceChange}
     />
   );
 }
@@ -42,6 +48,7 @@ function OpenConnectedDocument({
   descriptor,
   repository,
   source,
+  onSurfaceChange,
 }: ConnectedDocumentProps & { readonly descriptor: DocumentDescriptor }): JSX.Element {
   const [state, setState] = useState<OpenDocumentState>({ status: "opening" });
   const [rendererState, setRendererState] = useState<
@@ -77,6 +84,8 @@ function OpenConnectedDocument({
     };
   }, [descriptor, repository, source.collectionId]);
 
+  useEffect(() => () => onSurfaceChange(null), [onSurfaceChange]);
+
   if (state.status === "opening") {
     return <DocumentMessage label="Opening exact file revision…" />;
   }
@@ -99,7 +108,7 @@ function OpenConnectedDocument({
               setRendererState({ status: "error", message: rendererMessage })
             }
             onDocumentReady={() => setRendererState({ status: "ready" })}
-            onSurfaceReady={() => undefined}
+            onSurfaceReady={onSurfaceChange}
           />
         </Suspense>
         {rendererState.status === "opening" ? (

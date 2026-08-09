@@ -822,6 +822,120 @@ button {
   padding: 0 18px 28px;
 }
 
+.annotation-workspace {
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.annotation-workspace .annotation-list {
+  flex: 1;
+}
+
+.annotation-composer {
+  margin: 14px;
+  padding: 14px;
+  border: 1px solid color-mix(in srgb, var(--accent) 36%, var(--line));
+  border-radius: 5px;
+  background: color-mix(in srgb, var(--paper) 96%, var(--accent));
+  box-shadow: 0 12px 28px -24px var(--color-scrim);
+}
+
+.annotation-composer header,
+.annotation-composer footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.annotation-composer header > div {
+  display: grid;
+  gap: 3px;
+}
+
+.annotation-composer header .mono {
+  color: var(--accent);
+  font-size: 8px;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+}
+
+.annotation-composer header strong {
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.annotation-composer blockquote {
+  max-height: 92px;
+  margin: 14px 0;
+  padding-left: 11px;
+  overflow: auto;
+  border-left: 2px solid var(--reader-highlight);
+  color: var(--ink-soft);
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.annotation-composer label {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 6px;
+  color: var(--muted);
+  font-size: 9px;
+}
+
+.annotation-composer label span {
+  color: var(--faint);
+}
+
+.annotation-composer textarea {
+  width: 100%;
+  min-height: 68px;
+  resize: vertical;
+  padding: 9px 10px;
+  border: 1px solid var(--line-strong);
+  border-radius: 3px;
+  color: var(--ink);
+  background: var(--canvas);
+  font: 11px/1.45 var(--sans);
+}
+
+.annotation-composer textarea:focus {
+  border-color: var(--accent);
+  outline: 2px solid color-mix(in srgb, var(--accent) 18%, transparent);
+  outline-offset: 1px;
+}
+
+.annotation-composer footer {
+  justify-content: flex-end;
+  margin-top: 10px;
+}
+
+.annotation-composer footer > button:not(.mdbase-button) {
+  min-height: 30px;
+  padding: 0 8px;
+  color: var(--muted);
+  background: transparent;
+  cursor: pointer;
+}
+
+.annotation-composer p,
+.annotation-compose-error {
+  color: var(--danger);
+  font-size: 10px;
+}
+
+.annotation-compose-error {
+  margin: 14px;
+  padding: 10px 12px;
+  border: 1px solid color-mix(in srgb, var(--danger) 35%, var(--line));
+  border-radius: 4px;
+  background: color-mix(in srgb, var(--danger) 6%, var(--surface));
+}
+
 .annotation-list-heading {
   height: 46px;
   display: flex;

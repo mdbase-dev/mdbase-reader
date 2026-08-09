@@ -67,7 +67,7 @@ describe("ReadiumEpubSurface", () => {
     const listener = vi.fn();
     surface.capabilities.textSelection?.selections.subscribe(listener);
     const selection: TextSelectionDraft = {
-      quote: { exact: "Selected EPUB text", prefix: "Before", suffix: "After" },
+      target: { quote: { exact: "Selected EPUB text", prefix: "Before", suffix: "After" } },
       locator: { kind: "epub", locator: { href: "chapter-1.xhtml" } },
     };
 

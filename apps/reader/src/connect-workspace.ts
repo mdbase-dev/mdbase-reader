@@ -1,9 +1,15 @@
+import { createAnnotation } from "@mdbase-reader/core";
+
 import type { ReaderLibrarySnapshot, ReaderWorkspaceGateway } from "./workspace-model.js";
 import type {
   Annotation,
+  AnnotationCreationRequest,
   AnnotationRepository,
+  Clock,
   CollectionId,
+  MutationJournal,
   ReaderRequestOptions,
+  ReaderIdGenerator,
   Source,
   SourceId,
   SourceRepository,
@@ -19,6 +25,11 @@ export class ConnectWorkspaceGateway implements ReaderWorkspaceGateway {
     private readonly annotationsRepository: AnnotationRepository,
     private readonly collectionId: CollectionId,
     private readonly collectionName: string,
+    private readonly runtime: {
+      readonly clock: Clock;
+      readonly ids: ReaderIdGenerator;
+      readonly journal: MutationJournal;
+    },
   ) {}
 
   async library(options: ReaderRequestOptions = {}): Promise<ReaderLibrarySnapshot> {
@@ -74,5 +85,19 @@ export class ConnectWorkspaceGateway implements ReaderWorkspaceGateway {
     });
     this.#sourcesById.set(source.id, updated);
     return updated;
+  }
+
+  async createAnnotation(request: AnnotationCreationRequest): Promise<Annotation> {
+    const result = await createAnnotation(
+      {
+        annotations: this.annotationsRepository,
+        sources: this.sources,
+        ...this.runtime,
+      },
+      request,
+    );
+    const current = this.#annotationsBySource.get(request.sourceId) ?? [];
+    this.#annotationsBySource.set(request.sourceId, [result.annotation, ...current]);
+    return result.annotation;
   }
 }

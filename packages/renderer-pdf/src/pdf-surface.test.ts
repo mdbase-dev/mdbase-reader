@@ -4,16 +4,18 @@ import { describe, expect, it, vi } from "vitest";
 import { EmbedPdfSurface } from "./pdf-surface.js";
 
 import type { EmbedPdfRuntime } from "./embedpdf-runtime.js";
-import type { AreaSelectionDraft } from "@mdbase-reader/reading-surface";
+import type { AreaSelectionDraft, TextSelectionDraft } from "@mdbase-reader/reading-surface";
 
 function runtimeFixture(): {
   readonly runtime: EmbedPdfRuntime;
   readonly goToPage: ReturnType<typeof vi.fn>;
   emitArea(selection: AreaSelectionDraft): void;
+  emitText(selection: TextSelectionDraft): void;
   emitPage(pageIndex: number): void;
 } {
   let areaListener: ((selection: AreaSelectionDraft) => void) | undefined;
   let pageListener: ((pageIndex: number) => void) | undefined;
+  let textListener: ((selection: TextSelectionDraft) => void) | undefined;
   const goToPage = vi.fn();
   return {
     runtime: {
@@ -21,6 +23,7 @@ function runtimeFixture(): {
       goToPage,
       beginAreaSelection: vi.fn(),
       cancelAreaSelection: vi.fn(),
+      clearTextSelection: vi.fn(),
       onAreaSelected: (listener) => {
         areaListener = listener;
         return () => {
@@ -33,10 +36,17 @@ function runtimeFixture(): {
           pageListener = undefined;
         };
       },
+      onTextSelected: (listener) => {
+        textListener = listener;
+        return () => {
+          textListener = undefined;
+        };
+      },
       destroy: vi.fn(),
     },
     goToPage,
     emitArea: (selection) => areaListener?.(selection),
+    emitText: (selection) => textListener?.(selection),
     emitPage: (pageIndex) => pageListener?.(pageIndex),
   };
 }
@@ -79,6 +89,31 @@ describe("EmbedPdfSurface", () => {
     };
 
     fixture.emitArea(selection);
+    expect(listener).toHaveBeenCalledWith(selection);
+  });
+
+  it("publishes text selections with quote and PDF geometry", () => {
+    const fixture = runtimeFixture();
+    const surface = new EmbedPdfSurface(document, fixture.runtime);
+    const listener = vi.fn();
+    surface.capabilities.textSelection?.selections.subscribe(listener);
+    const selection: TextSelectionDraft = {
+      target: {
+        quote: { exact: "Selected text" },
+        pdf: {
+          pageIndex: 4,
+          coordinateSpace: {
+            profile: "embedpdf-selection-page-points-v1",
+            box: "crop",
+            origin: "top_left",
+          },
+          quadPoints: [[10, 20, 40, 20, 10, 60, 40, 60]],
+        },
+      },
+      locator: { kind: "pdf", pageIndex: 4 },
+    };
+
+    fixture.emitText(selection);
     expect(listener).toHaveBeenCalledWith(selection);
   });
 

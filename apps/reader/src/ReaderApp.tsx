@@ -5,20 +5,28 @@ import {
   saveThemePreference,
   type ThemePreference,
 } from "@mdbase-reader/ui";
-import { useEffect, useMemo, useState, type JSX, type ReactNode } from "react";
+import { useCallback, useEffect, useMemo, useState, type JSX, type ReactNode } from "react";
 
 import { DocumentWorkspace } from "./DocumentWorkspace.js";
 import { InspectorPane, type InspectorTab } from "./InspectorPane.js";
 import { LibraryPane, type LibraryFilter } from "./LibraryPane.js";
 import { ReaderHeader } from "./ReaderHeader.js";
-import { useReaderWorkspace } from "./use-reader-workspace.js";
+import {
+  useAnnotationComposer,
+  type AnnotationComposerController,
+} from "./use-annotation-composer.js";
+import { useReaderWorkspace, type ReaderWorkspaceController } from "./use-reader-workspace.js";
 import { filterSources, type ReaderWorkspaceGateway } from "./workspace-model.js";
 
 import type { SourceSummary } from "@mdbase-reader/core";
+import type { ReadingSurface } from "@mdbase-reader/reading-surface";
 
 export interface ReaderAppProps {
   readonly gateway: ReaderWorkspaceGateway;
-  readonly renderDocument?: (source: SourceSummary) => ReactNode;
+  readonly renderDocument?: (
+    source: SourceSummary,
+    onSurfaceChange: (surface: ReadingSurface | null) => void,
+  ) => ReactNode;
 }
 
 export function ReaderApp({ gateway, renderDocument }: ReaderAppProps): JSX.Element {
@@ -32,6 +40,9 @@ export function ReaderApp({ gateway, renderDocument }: ReaderAppProps): JSX.Elem
   const [mobileLibraryOpen, setMobileLibraryOpen] = useState(false);
   const [focusMode, setFocusMode] = useState(false);
   const [theme, setTheme] = useState<ThemePreference>(() => loadThemePreference(localStorage));
+  const [surface, setSurface] = useState<ReadingSurface | null>(null);
+  const onSurfaceChange = useCallback((next: ReadingSurface | null): void => setSurface(next), []);
+  const composer = useReaderAnnotationComposer(workspace, surface);
 
   useEffect(() => applyThemePreference(theme, document.documentElement), [theme]);
 
@@ -94,16 +105,7 @@ export function ReaderApp({ gateway, renderDocument }: ReaderAppProps): JSX.Elem
         onChangeTheme={changeTheme}
       />
 
-      <main
-        className={[
-          "reader-main",
-          mobileLibraryOpen ? "is-library-open" : "",
-          focusMode ? "is-focus-mode" : "",
-          !inspectorOpen ? "is-inspector-closed" : "",
-        ]
-          .filter(Boolean)
-          .join(" ")}
-      >
+      <main className={readerMainClass(mobileLibraryOpen, focusMode, inspectorOpen)}>
         <LibraryPane
           sources={library.sources}
           visibleSources={visibleSources}
@@ -119,7 +121,7 @@ export function ReaderApp({ gateway, renderDocument }: ReaderAppProps): JSX.Elem
         />
         <DocumentWorkspace
           source={source}
-          document={source ? renderDocument?.(source) : null}
+          document={source ? renderDocument?.(source, onSurfaceChange) : null}
           focusMode={focusMode}
           inspectorOpen={inspectorOpen && !focusMode}
           onBackToLibrary={() => setMobileLibraryOpen(true)}
@@ -138,6 +140,7 @@ export function ReaderApp({ gateway, renderDocument }: ReaderAppProps): JSX.Elem
             open={inspectorOpen}
             tab={tab}
             workspace={workspace}
+            composer={composer}
             onClose={() => setInspectorOpen(false)}
             onTabChange={setTab}
           />
@@ -145,6 +148,28 @@ export function ReaderApp({ gateway, renderDocument }: ReaderAppProps): JSX.Elem
       </main>
     </div>
   );
+}
+
+function readerMainClass(libraryOpen: boolean, focusMode: boolean, inspectorOpen: boolean): string {
+  return [
+    "reader-main",
+    libraryOpen ? "is-library-open" : "",
+    focusMode ? "is-focus-mode" : "",
+    !inspectorOpen ? "is-inspector-closed" : "",
+  ]
+    .filter(Boolean)
+    .join(" ");
+}
+
+function useReaderAnnotationComposer(
+  workspace: ReaderWorkspaceController,
+  surface: ReadingSurface | null,
+): AnnotationComposerController {
+  return useAnnotationComposer({
+    source: workspace.selectedSource,
+    surface,
+    create: workspace.createAnnotation,
+  });
 }
 
 function ReaderLoading({

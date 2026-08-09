@@ -1,7 +1,9 @@
 import { lazy, Suspense, type JSX } from "react";
 
+import { AnnotationComposer } from "./AnnotationComposer.js";
 import { HighlightIcon, MoreIcon, NoteIcon } from "./icons.js";
 
+import type { AnnotationComposerController } from "./use-annotation-composer.js";
 import type { AsyncResource, ReaderWorkspaceController } from "./use-reader-workspace.js";
 import type { Annotation } from "@mdbase-reader/core";
 
@@ -11,6 +13,7 @@ export interface InspectorPaneProps {
   readonly open: boolean;
   readonly tab: InspectorTab;
   readonly workspace: ReaderWorkspaceController;
+  readonly composer: AnnotationComposerController;
   readonly onClose: () => void;
   readonly onTabChange: (tab: InspectorTab) => void;
 }
@@ -24,6 +27,7 @@ export function InspectorPane({
   open,
   tab,
   workspace,
+  composer,
   onClose,
   onTabChange,
 }: InspectorPaneProps): JSX.Element {
@@ -64,7 +68,10 @@ export function InspectorPane({
         </button>
       </div>
       {tab === "annotations" ? (
-        <AnnotationList annotations={workspace.annotations} />
+        <div className="annotation-workspace">
+          <AnnotationComposer composer={composer} />
+          <AnnotationList annotations={workspace.annotations} onOpen={composer.open} />
+        </div>
       ) : (
         <div className="note-editor">
           <SourceNoteEditor workspace={workspace} />
@@ -76,8 +83,10 @@ export function InspectorPane({
 
 function AnnotationList({
   annotations,
+  onOpen,
 }: {
   readonly annotations: AsyncResource<readonly Annotation[]>;
+  readonly onOpen: (annotation: Annotation) => void;
 }): JSX.Element {
   if (annotations.status !== "ready") {
     if (annotations.status === "error") {
@@ -109,7 +118,7 @@ function AnnotationList({
             <span className={`annotation-kind is-${annotation.annotationType}`}>
               {annotation.annotationType}
             </span>
-            <small>{annotation.locator?.label ?? "Page 42"}</small>
+            {annotation.locator ? <small>{annotation.locator.label}</small> : null}
           </header>
           {annotation.target?.quote?.exact ? (
             <blockquote>{annotation.target.quote.exact}</blockquote>
@@ -122,7 +131,12 @@ function AnnotationList({
                 day: "numeric",
               })}
             </time>
-            <button className="icon-button" type="button" aria-label="Annotation actions">
+            <button
+              className="icon-button"
+              type="button"
+              aria-label="Open annotation in document"
+              onClick={() => onOpen(annotation)}
+            >
               <MoreIcon />
             </button>
           </footer>

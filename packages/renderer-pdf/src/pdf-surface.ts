@@ -15,8 +15,11 @@ export class EmbedPdfSurface implements ReadingSurface {
   readonly #runtime: EmbedPdfRuntime;
   readonly #areaSelections =
     createEventEmitter<Parameters<Parameters<EmbedPdfRuntime["onAreaSelected"]>[0]>[0]>();
+  readonly #textSelections =
+    createEventEmitter<Parameters<Parameters<EmbedPdfRuntime["onTextSelected"]>[0]>[0]>();
   readonly #unsubscribeArea: () => void;
   readonly #unsubscribePage: () => void;
+  readonly #unsubscribeText: () => void;
   #pageIndex: number;
   #destroyed = false;
 
@@ -27,10 +30,17 @@ export class EmbedPdfSurface implements ReadingSurface {
     this.#unsubscribeArea = runtime.onAreaSelected((selection) =>
       this.#areaSelections.emit(selection),
     );
+    this.#unsubscribeText = runtime.onTextSelected((selection) =>
+      this.#textSelections.emit(selection),
+    );
     this.#unsubscribePage = runtime.onPageChanged((pageIndex) => {
       this.#pageIndex = pageIndex;
     });
     this.capabilities = {
+      textSelection: {
+        selections: this.#textSelections,
+        clearSelection: () => runtime.clearTextSelection(),
+      },
       areaSelection: {
         selections: this.#areaSelections,
         beginAreaSelection: () => runtime.beginAreaSelection(),
@@ -56,7 +66,9 @@ export class EmbedPdfSurface implements ReadingSurface {
     if (!this.#destroyed) {
       this.#unsubscribeArea();
       this.#unsubscribePage();
+      this.#unsubscribeText();
       this.#areaSelections.clear();
+      this.#textSelections.clear();
       this.#runtime.destroy();
       this.#destroyed = true;
     }

@@ -7,6 +7,7 @@ import {
   recordRevision,
   sourceId,
   type Annotation,
+  type AnnotationCreationRequest,
   type Source,
   type SourceId,
 } from "@mdbase-reader/core";
@@ -114,6 +115,7 @@ const annotations: readonly Annotation[] = [
 
 class PreviewGateway implements ReaderWorkspaceGateway {
   #sources = [...sources];
+  #annotations = [...annotations];
 
   library(): Promise<ReaderLibrarySnapshot> {
     return Promise.resolve({
@@ -126,11 +128,20 @@ class PreviewGateway implements ReaderWorkspaceGateway {
     return Promise.resolve(this.#sources.find((source) => source.id === id) ?? null);
   }
   annotations(id: SourceId): Promise<readonly Annotation[]> {
-    return Promise.resolve(annotations.filter(({ sourceId: source }) => source === id));
+    return Promise.resolve(this.#annotations.filter(({ sourceId: source }) => source === id));
   }
   saveSourceBody(source: Source, body: string): Promise<Source> {
     this.#sources = this.#sources.map((item) => (item.id === source.id ? { ...item, body } : item));
     return Promise.resolve(this.#sources.find((item) => item.id === source.id) ?? source);
+  }
+  createAnnotation(request: AnnotationCreationRequest): Promise<Annotation> {
+    const annotation: Annotation = {
+      ...request,
+      id: annotationId(`preview-${String(this.#annotations.length + 1)}`),
+      createdAt: dateTime(new Date().toISOString()),
+    };
+    this.#annotations.unshift(annotation);
+    return Promise.resolve(annotation);
   }
 }
 

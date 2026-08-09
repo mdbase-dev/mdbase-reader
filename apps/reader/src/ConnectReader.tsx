@@ -1,4 +1,5 @@
 import { connectProblemMessage, type ReaderConnectSnapshot } from "@mdbase-reader/connect";
+import { createReaderRuntimeServices, createWebPlatform } from "@mdbase-reader/platform";
 import { ProductBrand, ReaderButton } from "@mdbase-reader/ui";
 import {
   useEffect,
@@ -17,6 +18,8 @@ import { ReaderApp } from "./ReaderApp.js";
 
 const subscribe = (listener: () => void): (() => void) => readerSession.subscribe(listener);
 const snapshot = (): ReaderConnectSnapshot => readerSession.getSnapshot();
+const readerPlatform = createWebPlatform();
+const runtimeServices = createReaderRuntimeServices(readerPlatform.storage);
 
 export function ConnectReader(): JSX.Element {
   const session = useSyncExternalStore(subscribe, snapshot, snapshot);
@@ -73,6 +76,7 @@ function OpenedReader({ collectionId }: { readonly collectionId: string }): JSX.
             opened.annotations,
             opened.collectionId,
             opened.collectionName,
+            runtimeServices,
           )
         : null,
     [opened],
@@ -83,8 +87,12 @@ function OpenedReader({ collectionId }: { readonly collectionId: string }): JSX.
   return (
     <ReaderApp
       gateway={gateway}
-      renderDocument={(source) => (
-        <ConnectedDocument repository={opened.documents} source={source} />
+      renderDocument={(source, onSurfaceChange) => (
+        <ConnectedDocument
+          repository={opened.documents}
+          source={source}
+          onSurfaceChange={onSurfaceChange}
+        />
       )}
     />
   );

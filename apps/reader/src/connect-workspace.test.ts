@@ -6,6 +6,7 @@ import {
   type Source,
   type SourceRepository,
 } from "@mdbase-reader/core";
+import { createReaderRuntimeServices, MemoryStorage } from "@mdbase-reader/platform";
 import { describe, expect, it, vi } from "vitest";
 
 import { ConnectWorkspaceGateway } from "./connect-workspace.js";
@@ -43,6 +44,7 @@ describe("ConnectWorkspaceGateway", () => {
       annotations,
       source.collectionId,
       "Reading",
+      createReaderRuntimeServices(new MemoryStorage()),
     );
 
     const library = await gateway.library({ signal: controller.signal });

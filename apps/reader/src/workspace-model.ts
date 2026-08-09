@@ -1,5 +1,6 @@
 import type {
   Annotation,
+  AnnotationCreationRequest,
   ReaderRequestOptions,
   Source,
   SourceId,
@@ -17,6 +18,7 @@ export interface ReaderWorkspaceGateway {
   source(id: SourceId, options?: ReaderRequestOptions): Promise<Source | null>;
   annotations(id: SourceId, options?: ReaderRequestOptions): Promise<readonly Annotation[]>;
   saveSourceBody(source: Source, body: string): Promise<Source>;
+  createAnnotation(request: AnnotationCreationRequest): Promise<Annotation>;
 }
 
 export function filterSources(
