@@ -105,6 +105,9 @@ importers:
       '@mdbase-reader/renderer-epub':
         specifier: workspace:*
         version: link:../../packages/renderer-epub
+      '@mdbase-reader/renderer-html':
+        specifier: workspace:*
+        version: link:../../packages/renderer-html
       '@mdbase-reader/renderer-pdf':
         specifier: workspace:*
         version: link:../../packages/renderer-pdf
@@ -205,6 +208,25 @@ importers:
       fast-xml-parser:
         specifier: ^5.10.1
         version: 5.10.1
+      react:
+        specifier: ^19.2.8
+        version: 19.2.8
+    devDependencies:
+      '@types/react':
+        specifier: ^19.2.14
+        version: 19.2.18
+      happy-dom:
+        specifier: ^20.11.2
+        version: 20.11.2
+
+  packages/renderer-html:
+    dependencies:
+      '@mdbase-reader/core':
+        specifier: workspace:*
+        version: link:../core
+      '@mdbase-reader/reading-surface':
+        specifier: workspace:*
+        version: link:../reading-surface
       react:
         specifier: ^19.2.8
         version: 19.2.8

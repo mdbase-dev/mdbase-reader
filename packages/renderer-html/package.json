@@ -1,0 +1,22 @@
+{
+  "name": "@mdbase-reader/renderer-html",
+  "version": "0.1.0-beta.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "test": "vitest run --passWithNoTests",
+    "typecheck": "tsc -p tsconfig.json"
+  },
+  "dependencies": {
+    "@mdbase-reader/core": "workspace:*",
+    "@mdbase-reader/reading-surface": "workspace:*",
+    "react": "^19.2.8"
+  },
+  "devDependencies": {
+    "@types/react": "^19.2.14",
+    "happy-dom": "^20.11.2"
+  }
+}

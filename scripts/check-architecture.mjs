@@ -16,6 +16,10 @@ const allowedInternalDependencies = new Map([
     "@mdbase-reader/renderer-epub",
     new Set(["@mdbase-reader/core", "@mdbase-reader/reading-surface"]),
   ],
+  [
+    "@mdbase-reader/renderer-html",
+    new Set(["@mdbase-reader/core", "@mdbase-reader/reading-surface"]),
+  ],
   ["@mdbase-reader/markdown-editor", new Set(["@mdbase-reader/core"])],
   ["@mdbase-reader/platform", new Set(["@mdbase-reader/core"])],
   ["@mdbase-reader/ui", new Set()],
@@ -28,6 +32,7 @@ const allowedInternalDependencies = new Map([
       "@mdbase-reader/reading-surface",
       "@mdbase-reader/renderer-pdf",
       "@mdbase-reader/renderer-epub",
+      "@mdbase-reader/renderer-html",
       "@mdbase-reader/markdown-editor",
       "@mdbase-reader/platform",
       "@mdbase-reader/ui",

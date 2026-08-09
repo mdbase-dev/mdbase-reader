@@ -708,6 +708,14 @@ button {
   background: var(--reader-canvas);
 }
 
+.html-viewer {
+  width: 100%;
+  height: 100%;
+  display: block;
+  border: 0;
+  background: #f4f1eb;
+}
+
 .document-toolbar {
   min-width: 0;
   display: flex;

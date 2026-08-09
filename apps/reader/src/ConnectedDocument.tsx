@@ -1,13 +1,6 @@
-import {
-  lazy,
-  Suspense,
-  useCallback,
-  useEffect,
-  useMemo,
-  useState,
-  type JSX,
-  type ReactNode,
-} from "react";
+import { lazy, Suspense, useCallback, useEffect, useMemo, useState, type JSX } from "react";
+
+import { DocumentMessage, RendererStage, type RendererState } from "./DocumentRendererStage.js";
 
 import type {
   DocumentDescriptor,
@@ -25,6 +18,11 @@ const PdfViewerSurface = lazy(async () => {
 const EpubViewerSurface = lazy(async () => {
   const module = await import("@mdbase-reader/renderer-epub");
   return { default: module.EpubViewerSurface };
+});
+
+const HtmlViewerSurface = lazy(async () => {
+  const module = await import("@mdbase-reader/renderer-html");
+  return { default: module.HtmlViewerSurface };
 });
 
 export interface ConnectedDocumentProps {
@@ -148,11 +146,11 @@ function OpenedDocumentRenderer({
   if (isEpub(document.mediaType, descriptor.file)) {
     return <EpubStage document={document} onSurfaceChange={onSurfaceChange} />;
   }
+  if (isHtml(document.mediaType, descriptor.file)) {
+    return <HtmlStage document={document} onSurfaceChange={onSurfaceChange} />;
+  }
   return <DocumentMessage label={`No renderer is registered for ${document.mediaType}.`} />;
 }
-
-type RendererState =
-  { readonly status: "opening" | "ready" } | { readonly status: "error"; readonly message: string };
 
 function PdfStage({
   document,
@@ -204,51 +202,28 @@ function EpubStage({
   );
 }
 
-function RendererStage({
-  state,
-  openingLabel,
-  errorName,
-  children,
+function HtmlStage({
+  document,
+  onSurfaceChange,
 }: {
-  readonly state: RendererState;
-  readonly openingLabel: string;
-  readonly errorName: string;
-  readonly children: ReactNode;
+  readonly document: SurfaceDocument;
+  readonly onSurfaceChange: ConnectedDocumentProps["onSurfaceChange"];
 }): JSX.Element {
+  const [state, setState] = useState<RendererState>({ status: "opening" });
+  const ready = useCallback(() => setState({ status: "ready" }), []);
+  const failed = useCallback((message: string) => setState({ status: "error", message }), []);
   return (
-    <div className="document-renderer-stage">
-      {children}
-      {state.status === "opening" ? (
-        <div className="document-renderer-status">
-          <DocumentMessage label={openingLabel} />
-        </div>
-      ) : null}
-      {state.status === "error" ? (
-        <div className="document-renderer-status">
-          <DocumentMessage
-            label={`${errorName} could not render this file: ${state.message}`}
-            tone="error"
-          />
-        </div>
-      ) : null}
-    </div>
-  );
-}
-
-function DocumentMessage({
-  label,
-  tone = "neutral",
-}: {
-  readonly label: string;
-  readonly tone?: "neutral" | "error";
-}): JSX.Element {
-  return (
-    <div
-      className={`connected-document-message is-${tone}`}
-      role={tone === "error" ? "alert" : "status"}
-    >
-      {label}
-    </div>
+    <RendererStage state={state} openingLabel="Preparing saved page…" errorName="HTML reader">
+      <Suspense fallback={<DocumentMessage label="Loading the HTML renderer…" />}>
+        <HtmlViewerSurface
+          className="html-viewer"
+          document={document}
+          onDocumentError={failed}
+          onDocumentReady={ready}
+          onSurfaceReady={onSurfaceChange}
+        />
+      </Suspense>
+    </RendererStage>
   );
 }
 
@@ -258,6 +233,12 @@ function isPdf(mediaType: string, file: string): boolean {
 
 function isEpub(mediaType: string, file: string): boolean {
   return mediaType === "application/epub+zip" || /\.epub(?:\]\])?$/iu.test(file);
+}
+
+function isHtml(mediaType: string, file: string): boolean {
+  return (
+    ["text/html", "application/xhtml+xml"].includes(mediaType) || /\.html?(?:\]\])?$/iu.test(file)
+  );
 }
 
 function message(reason: unknown): string {

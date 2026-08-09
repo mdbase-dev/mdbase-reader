@@ -207,5 +207,7 @@ function openAnnotation(
         locations: { fragments: [annotation.target.epub.cfi] },
       },
     });
+  } else if (annotation.target?.html) {
+    void surface.capabilities.annotationNavigation?.goToAnnotation(annotation);
   }
 }

@@ -61,10 +61,15 @@ export interface DecorationCapability {
   setAnnotations(annotations: readonly Annotation[]): Promise<void>;
 }
 
+export interface AnnotationNavigationCapability {
+  goToAnnotation(annotation: Annotation): Promise<boolean>;
+}
+
 export interface ReadingSurfaceCapabilities {
   readonly textSelection?: TextSelectionCapability;
   readonly areaSelection?: AreaSelectionCapability;
   readonly decorations?: DecorationCapability;
+  readonly annotationNavigation?: AnnotationNavigationCapability;
 }
 
 export interface ReadingSurface {
