@@ -186,25 +186,46 @@ export class ConnectAnnotationRepository implements AnnotationRepository {
   constructor(private readonly client: ReaderConnectClient) {}
 
   async listForSource(collection: CollectionId, source: SourceId): Promise<readonly Annotation[]> {
-    const result = value(
-      await this.client.query({
-        contract: annotationContract,
-        frontmatterMode: "both",
-        includeBody: true,
-        limit: 500,
-      }),
-      "query annotations",
-    );
-    return result.results
-      .map((record) =>
-        annotationFromDocument(collection, {
-          path: record.path,
-          frontmatter: record.frontmatter ?? {},
-          effectiveFrontmatter: record.effectiveFrontmatter ?? record.frontmatter ?? {},
-          ...(record.body === undefined ? {} : { body: record.body }),
+    const matchingPaths: string[] = [];
+    let offset = 0;
+    let hasMore: boolean;
+
+    do {
+      const result = value(
+        await this.client.query({
+          contract: annotationContract,
+          frontmatterMode: "effective",
+          limit: 500,
+          offset,
         }),
-      )
-      .filter((annotation) => annotation.sourceId === source);
+        "query annotations",
+      );
+      matchingPaths.push(
+        ...result.results
+          .filter(
+            ({ effectiveFrontmatter, frontmatter }) =>
+              (effectiveFrontmatter ?? frontmatter)?.["source"] === source,
+          )
+          .map(({ path }) => path),
+      );
+
+      hasMore = Boolean(result.meta?.hasMore && result.results.length > 0);
+      offset += result.results.length;
+    } while (hasMore);
+
+    return Promise.all(
+      matchingPaths.map(async (path) => {
+        const document = value(
+          await this.client.read({
+            path,
+            contract: annotationContract,
+            includeDocument: true,
+          }),
+          "read annotation",
+        );
+        return annotationFromDocument(collection, document);
+      }),
+    );
   }
 
   async create(annotation: Annotation, _idempotencyKey: MutationId): Promise<Annotation> {

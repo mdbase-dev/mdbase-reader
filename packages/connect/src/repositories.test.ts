@@ -1,8 +1,12 @@
-import { collectionId } from "@mdbase-reader/core";
+import { collectionId, sourceId } from "@mdbase-reader/core";
 import { describe, expect, it, vi } from "vitest";
 
-import { sourceContract } from "./contracts.js";
-import { ConnectSourceRepository, type ReaderConnectClient } from "./repositories.js";
+import { annotationContract, sourceContract } from "./contracts.js";
+import {
+  ConnectAnnotationRepository,
+  ConnectSourceRepository,
+  type ReaderConnectClient,
+} from "./repositories.js";
 
 import type { ConnectOutcome, QueryResult, RecordDocument } from "@mdbase-dev/connect";
 
@@ -73,5 +77,76 @@ describe("ConnectSourceRepository", () => {
       idempotencyKey: "mutation-1" as never,
     });
     expect(client.update).not.toHaveBeenCalled();
+  });
+});
+
+describe("ConnectAnnotationRepository", () => {
+  it("filters normalized contract fields locally and reads only matching annotation bodies", async () => {
+    const query = vi.fn(() =>
+      Promise.resolve(
+        success<QueryResult>({
+          results: [
+            {
+              path: "annotations/matching.md",
+              effectiveFrontmatter: { source: "src_01" },
+              types: ["reader-annotation"],
+              file: {},
+            },
+            {
+              path: "annotations/other.md",
+              effectiveFrontmatter: { source: "src_02" },
+              types: ["reader-annotation"],
+              file: {},
+            },
+          ],
+          meta: { totalCount: 2, hasMore: false },
+        }),
+      ),
+    );
+    const read = vi.fn(() =>
+      Promise.resolve(
+        success<RecordDocument>({
+          path: "annotations/matching.md",
+          revision: "rev-1",
+          types: ["reader-annotation"],
+          frontmatter: {
+            id: "ann_01",
+            source: "src_01",
+            annotation_type: "note",
+            created_at: "2026-08-09T00:00:00.000Z",
+          },
+          effectiveFrontmatter: {
+            id: "ann_01",
+            source: "src_01",
+            annotation_type: "note",
+            created_at: "2026-08-09T00:00:00.000Z",
+          },
+          body: "A useful note.",
+          file: {},
+        }),
+      ),
+    );
+    const repository = new ConnectAnnotationRepository({
+      query,
+      read,
+    } as unknown as ReaderConnectClient);
+
+    const annotations = await repository.listForSource(collectionId("reading"), sourceId("src_01"));
+
+    expect(query).toHaveBeenCalledWith({
+      contract: annotationContract,
+      frontmatterMode: "effective",
+      limit: 500,
+      offset: 0,
+    });
+    expect(query).not.toHaveBeenCalledWith(expect.objectContaining({ includeBody: true }));
+    expect(read).toHaveBeenCalledOnce();
+    expect(read).toHaveBeenCalledWith({
+      path: "annotations/matching.md",
+      contract: annotationContract,
+      includeDocument: true,
+    });
+    expect(annotations).toHaveLength(1);
+    expect(annotations[0]?.body).toBe("A useful note.");
   });
 });
