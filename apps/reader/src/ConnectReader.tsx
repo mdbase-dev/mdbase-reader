@@ -161,7 +161,8 @@ function ConnectionScreen({
       </div>
       {isLocalhost(location) ? (
         <p className="connection-local-note">
-          Local development requires <code>mdbase-connect --allow-local</code>.
+          Local HTTP development uses the local Connect stack at <code>http://127.0.0.1:8787</code>.
+          The managed service requires an HTTPS Reader origin.
         </p>
       ) : null}
     </ConnectionLayout>
