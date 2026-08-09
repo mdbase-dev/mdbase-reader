@@ -23,14 +23,8 @@ schema:
           - type: string
           - type: number
       url: { type: string }
-      original_url: { type: string }
       description: { type: string }
       language: { type: string }
-      site: { type: string }
-      image: { type: string }
-      capture:
-        type: object
-        additionalProperties: true
       saved_at: { type: string, format: date-time }
       documents:
         type: array
@@ -82,7 +76,7 @@ collection:
       validate_exists: false
 implements:
   - contract: dev.mdbase.reader.source
-    version: 1.0.0-beta.2
+    version: 1.0.0-beta.1
     fields:
       id: id
       title: title
@@ -90,12 +84,8 @@ implements:
       authors: authors
       published: published
       url: url
-      original_url: original_url
       description: description
       language: language
-      site: site
-      image: image
-      capture: capture
       saved_at: saved_at
       documents: documents
       reading: reading

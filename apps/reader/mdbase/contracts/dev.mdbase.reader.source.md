@@ -2,7 +2,7 @@
 kind: mdbase.contract
 contract_type: record
 id: dev.mdbase.reader.source
-version: 1.0.0-beta.2
+version: 1.0.0-beta.1
 name: mdbase Reader source
 description: A saved source, its readable representations, and its literature note.
 record_schema:
@@ -31,25 +31,10 @@ record_schema:
           - type: number
       url:
         type: string
-      original_url:
-        type: string
       description:
         type: string
       language:
         type: string
-      site:
-        type: string
-      image:
-        type: string
-      capture:
-        type: object
-        additionalProperties: true
-        properties:
-          method: { type: string }
-          application: { type: string }
-          captured_at: { type: string, format: date-time }
-          submitted_url: { type: string }
-          canonical_url: { type: string }
       saved_at:
         type: string
         format: date-time

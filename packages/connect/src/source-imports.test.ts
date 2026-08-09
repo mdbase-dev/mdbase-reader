@@ -116,7 +116,7 @@ describe("ConnectSourceImportRepository", () => {
     expect(create).toHaveBeenCalledOnce();
     expect(read).toHaveBeenCalledWith({
       path: "sources/src_import.md",
-      contract: { id: "dev.mdbase.reader.source", version: "1.0.0-beta.2" },
+      contract: { id: "dev.mdbase.reader.source", version: "1.0.0-beta.1" },
       includeDocument: true,
     });
   });

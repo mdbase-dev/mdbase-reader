@@ -5,7 +5,7 @@ import { resolve } from "node:path";
 import { dataContractDigest } from "@callumalpass/mdbase";
 import { parse as parseYaml } from "yaml";
 
-export const READER_TYPE_PACK_VERSION = "1.0.0-beta.2";
+export const READER_TYPE_PACK_VERSION = "1.0.0-beta.1";
 
 const projectRoot = resolve(import.meta.dirname, "..");
 const resources = [
