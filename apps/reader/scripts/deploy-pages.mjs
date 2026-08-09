@@ -11,10 +11,12 @@ const manifestTargets = [
   resolve(projectRoot, "src", "generated", "mdbase-app.json"),
 ];
 const originalManifests = await Promise.all(manifestTargets.map((target) => readFile(target)));
+const buildId = await capture("git", ["rev-parse", "--short=12", "HEAD"]);
 
 try {
   await run(pnpm, ["build"], {
     ...process.env,
+    MDBASE_READER_BUILD_ID: buildId,
     MDBASE_READER_ORIGIN: deploymentOrigin,
     VITE_MDBASE_CONNECT_URL: "https://connect-staging.mdbase.dev",
     VITE_MDBASE_CONNECT_LOOPBACK_URL: "http://127.0.0.1:28486",
@@ -66,4 +68,25 @@ async function run(command, arguments_, environment = process.env) {
   if (code !== 0) {
     throw new Error(`${command} ${arguments_.join(" ")} exited with status ${String(code)}.`);
   }
+}
+
+async function capture(command, arguments_) {
+  const child = spawn(command, arguments_, {
+    cwd: projectRoot,
+    env: process.env,
+    stdio: ["ignore", "pipe", "inherit"],
+  });
+  let output = "";
+  child.stdout.setEncoding("utf8");
+  child.stdout.on("data", (chunk) => {
+    output += chunk;
+  });
+  const code = await new Promise((resolveExit, reject) => {
+    child.once("error", reject);
+    child.once("exit", resolveExit);
+  });
+  if (code !== 0) {
+    throw new Error(`${command} ${arguments_.join(" ")} exited with status ${String(code)}.`);
+  }
+  return output.trim();
 }
