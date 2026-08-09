@@ -36,6 +36,7 @@ export class ConnectDocumentError extends Error {
 
 export class ConnectDocumentRepository implements DocumentRepository {
   readonly #descriptorsById = new Map<string, CollectionFileDescriptor>();
+  readonly #descriptorsByPath = new Map<string, CollectionFileDescriptor>();
 
   public constructor(
     private readonly files: ReaderFileClient,
@@ -73,15 +74,31 @@ export class ConnectDocumentRepository implements DocumentRepository {
     if (cached) {
       return cached;
     }
-    const folder = parentFolder(portableFilePath(target.file));
+    const path = portableFilePath(target.file);
+    const cachedByPath = this.#descriptorsByPath.get(path);
+    if (cachedByPath?.contentDigest === target.revision) {
+      return cachedByPath;
+    }
+    const folder = parentFolder(path);
     for await (const descriptor of this.files.list({
       ...(folder ? { folder } : {}),
       pageSize: 100,
     })) {
       this.#descriptorsById.set(descriptor.fileId, descriptor);
+      this.#descriptorsByPath.set(descriptor.path, descriptor);
     }
-    return this.#descriptorsById.get(target.fileId) ?? null;
+    return (
+      this.#descriptorsById.get(target.fileId) ??
+      exactRevision(this.#descriptorsByPath.get(path), target.revision)
+    );
   }
+}
+
+function exactRevision(
+  descriptor: CollectionFileDescriptor | undefined,
+  revision: string,
+): CollectionFileDescriptor | null {
+  return descriptor?.contentDigest === revision ? descriptor : null;
 }
 
 function portableFilePath(link: string): string {

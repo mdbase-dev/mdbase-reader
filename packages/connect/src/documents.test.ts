@@ -91,4 +91,39 @@ describe("ConnectDocumentRepository", () => {
 
     expect(list).toHaveBeenCalledOnce();
   });
+
+  it("recovers a migrated file reference only when its path and digest are exact", async () => {
+    const migrated = {
+      ...descriptor,
+      fileId: "file-02",
+      path: "files/example.pdf",
+    } satisfies CollectionFileDescriptor;
+    const client = files([migrated]);
+    const repository = new ConnectDocumentRepository(client, {
+      create: vi.fn(() => "blob:reader-file"),
+      revoke: vi.fn(),
+    });
+
+    const handle = await repository.open(collectionId("reading"), target);
+
+    expect(handle.fileId).toBe("file-02");
+    expect(client.download).toHaveBeenCalledWith(migrated);
+    await handle.close();
+  });
+
+  it("rejects a path match when the referenced digest is stale", async () => {
+    const migrated = {
+      ...descriptor,
+      fileId: "file-02",
+      path: "files/example.pdf",
+      contentDigest: `sha256:${"b".repeat(64)}` as const,
+    } satisfies CollectionFileDescriptor;
+    const repository = new ConnectDocumentRepository(files([migrated]));
+
+    await expect(repository.open(collectionId("reading"), target)).rejects.toEqual(
+      expect.objectContaining<Partial<ConnectDocumentError>>({
+        message: "mdbase Connect could not open document: file_not_found",
+      }),
+    );
+  });
 });
