@@ -1,0 +1,81 @@
+import { describe, expect, it } from "vitest";
+
+import { annotationEmbed, validateAnnotationDraft } from "./annotation.js";
+import { DomainError } from "./errors.js";
+import { collectionId, fileId, sourceId } from "./identity.js";
+import { fileRevision } from "./revision.js";
+
+const baseDraft = {
+  collectionId: collectionId("collection-1"),
+  sourceId: sourceId("src_01"),
+  source: "[[sources/example]]",
+  tags: [],
+  body: "A note.",
+} as const;
+
+describe("validateAnnotationDraft", () => {
+  it("accepts a source-level note without a document or selector", () => {
+    expect(() => validateAnnotationDraft({ ...baseDraft, annotationType: "note" })).not.toThrow();
+  });
+
+  it("requires quotation evidence for a highlight", () => {
+    expect(() => validateAnnotationDraft({ ...baseDraft, annotationType: "highlight" })).toThrow(
+      expect.objectContaining<Partial<DomainError>>({ code: "invalid-annotation" }),
+    );
+  });
+
+  it("requires exact document identity for PDF geometry", () => {
+    expect(() =>
+      validateAnnotationDraft({
+        ...baseDraft,
+        annotationType: "area",
+        target: {
+          pdf: {
+            pageIndex: 0,
+            coordinateSpace: {
+              profile: "pdf-default-user-space-v1",
+              box: "crop",
+              origin: "bottom_left",
+            },
+            quadPoints: [[72, 398, 510, 398, 72, 144, 510, 144]],
+          },
+        },
+      }),
+    ).toThrow(expect.objectContaining<Partial<DomainError>>({ code: "invalid-annotation" }));
+  });
+
+  it("accepts finite area geometry tied to an exact revision", () => {
+    expect(() =>
+      validateAnnotationDraft({
+        ...baseDraft,
+        annotationType: "area",
+        document: {
+          fileId: fileId("file-1"),
+          file: "[[files/example.pdf]]",
+          revision: fileRevision("sha256:a8ca22"),
+        },
+        target: {
+          pdf: {
+            pageIndex: 6,
+            coordinateSpace: {
+              profile: "pdf-default-user-space-v1",
+              box: "crop",
+              origin: "bottom_left",
+            },
+            quadPoints: [[72, 398, 510, 398, 72, 144, 510, 144]],
+          },
+        },
+      }),
+    ).not.toThrow();
+  });
+});
+
+describe("annotationEmbed", () => {
+  it("normalizes a Markdown path to an Obsidian transclusion", () => {
+    expect(annotationEmbed("annotations/ann_01.md")).toBe("![[annotations/ann_01]]");
+  });
+
+  it("rejects a path that can terminate the wikilink", () => {
+    expect(() => annotationEmbed("annotations/unsafe]]suffix")).toThrow(DomainError);
+  });
+});
