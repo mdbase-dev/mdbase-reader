@@ -14,7 +14,7 @@ type FetchResource = (input: RequestInfo | URL, init?: RequestInit) => Promise<R
 export async function inlinePublicationResources(
   document: Document,
   documentUrl: string,
-  fetchResource: FetchResource = fetch,
+  fetchResource: FetchResource = (input, init) => fetch(input, init),
 ): Promise<void> {
   const inliner = new PublicationResourceInliner(documentUrl, fetchResource);
   await Promise.all([
