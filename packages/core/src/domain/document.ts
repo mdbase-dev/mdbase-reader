@@ -1,8 +1,17 @@
 import type { FileId } from "./identity.js";
 import type { FileRevision } from "./revision.js";
 
-export const documentRoles = ["primary", "alternate", "supplement", "original", "reading"] as const;
-export type DocumentRole = (typeof documentRoles)[number];
+export const documentRoles = [
+  "primary",
+  "alternative",
+  "archive",
+  "readable",
+  "transcript",
+  "supplement",
+  "cover",
+  "attachment",
+] as const;
+export type DocumentRole = (typeof documentRoles)[number] | (string & {});
 
 export interface DocumentDescriptor {
   readonly fileId: FileId;
