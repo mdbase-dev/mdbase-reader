@@ -1,3 +1,4 @@
+import type { CslItem, CslValidationProblem } from "./citation.js";
 import type { DocumentDescriptor } from "./document.js";
 import type { CollectionId, FileId, RecordRevision, SourceId } from "./identity.js";
 import type { DateTime } from "./time.js";
@@ -36,6 +37,8 @@ export interface SourceSummary {
   readonly tags: readonly string[];
   readonly readingStatus?: ReadingStatus;
   readonly reading?: CurrentReadingState;
+  readonly citation?: CslItem;
+  readonly citationProblems?: readonly CslValidationProblem[];
   readonly documents: readonly DocumentDescriptor[];
 }
 

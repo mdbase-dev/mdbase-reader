@@ -5,6 +5,7 @@ import {
   fileRevision,
   recordRevision,
   sourceId,
+  validateCslItem,
   type CollectionId,
   type CurrentReadingState,
   type DocumentDescriptor,
@@ -139,6 +140,7 @@ function sourceFields(
     throw new Error(`Source ${path} is missing its contract identity or title.`);
   }
   const reading = readingState(frontmatter["reading"]);
+  const citation = citationFields(frontmatter["csl"]);
   return {
     collectionId: collection,
     id: sourceId(id),
@@ -147,8 +149,14 @@ function sourceFields(
     creators: textArray(frontmatter["authors"]),
     tags: textArray(frontmatter["tags"]),
     ...(reading ? { readingStatus: reading.status, reading } : {}),
+    ...(citation?.valid ? { citation: citation.item } : {}),
+    ...(citation && !citation.valid ? { citationProblems: citation.problems } : {}),
     documents: documents(frontmatter["documents"]),
   };
+}
+
+function citationFields(value: unknown): ReturnType<typeof validateCslItem> | undefined {
+  return value === undefined ? undefined : validateCslItem(value);
 }
 
 export function sourceSummaryFromQuery(

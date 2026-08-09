@@ -30,6 +30,12 @@ const sourceFrontmatter: JsonObject = {
       revision: "sha256:19e81c",
     },
   ],
+  csl: {
+    id: "weil2002gravity",
+    type: "book",
+    title: "Gravity and Grace",
+    author: [{ family: "Weil", given: "Simone" }],
+  },
 };
 
 describe("Connect contract mapping", () => {
@@ -49,7 +55,32 @@ describe("Connect contract mapping", () => {
         documentFileId: "file-01",
         position: { kind: "pdf", pageIndex: 15 },
       },
+      citation: {
+        id: "weil2002gravity",
+        type: "book",
+        author: [{ family: "Weil", given: "Simone" }],
+      },
       documents: [{ fileId: "file-01", mediaType: "application/pdf" }],
+    });
+  });
+
+  it("keeps invalid citation metadata visible without dropping the source", () => {
+    const record = {
+      path: "sources/gravity.md",
+      effectiveFrontmatter: {
+        ...sourceFrontmatter,
+        csl: { id: "bad key", type: "novel" },
+      },
+      types: ["reader-source"],
+      file: {},
+    } satisfies QueryRecord;
+
+    expect(sourceSummaryFromQuery(collectionId("reading"), record)).toMatchObject({
+      id: "src_01",
+      citationProblems: [
+        { path: "csl.id", message: expect.stringContaining("Pandoc-compatible") },
+        { path: "csl.type", message: expect.stringContaining("recognized CSL") },
+      ],
     });
   });
 
