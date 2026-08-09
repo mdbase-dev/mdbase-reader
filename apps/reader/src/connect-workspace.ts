@@ -1,6 +1,8 @@
 import {
   createAnnotation,
+  deleteAnnotation,
   importSourceFile,
+  planAnnotationDeletion,
   saveSourceCitation,
   transcludeAnnotation,
   updateAnnotationBody,
@@ -9,6 +11,7 @@ import {
 import type { ReaderLibrarySnapshot, ReaderWorkspaceGateway } from "./workspace-model.js";
 import type {
   Annotation,
+  AnnotationDeletionPlan,
   AnnotationAssetRepository,
   AnnotationCreationRequest,
   AnnotationRepository,
@@ -164,6 +167,19 @@ export class ConnectWorkspaceGateway implements ReaderWorkspaceGateway {
       current.map((candidate) => (candidate.id === updated.id ? updated : candidate)),
     );
     return updated;
+  }
+
+  planAnnotationDeletion(annotation: Annotation): Promise<AnnotationDeletionPlan> {
+    return planAnnotationDeletion(this.annotationsRepository, annotation);
+  }
+
+  async deleteAnnotation(annotation: Annotation, plan: AnnotationDeletionPlan): Promise<void> {
+    await deleteAnnotation(this.annotationsRepository, annotation, plan);
+    const current = this.#annotationsBySource.get(annotation.sourceId) ?? [];
+    this.#annotationsBySource.set(
+      annotation.sourceId,
+      current.filter((candidate) => candidate.id !== annotation.id),
+    );
   }
 
   async transcludeAnnotation(source: Source, annotation: Annotation): Promise<Source> {

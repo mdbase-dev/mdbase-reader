@@ -1,4 +1,4 @@
-import type { Annotation, AnnotationDraft } from "../domain/annotation.js";
+import type { Annotation, AnnotationDeletionPlan, AnnotationDraft } from "../domain/annotation.js";
 import type { CslItem } from "../domain/citation.js";
 import type { DocumentTarget } from "../domain/document.js";
 import type {
@@ -77,6 +77,8 @@ export interface AnnotationRepository {
     readonly body: string;
     readonly modifiedAt: DateTime;
   }): Promise<Annotation>;
+  preflightDelete(annotation: Annotation): Promise<AnnotationDeletionPlan>;
+  delete(annotation: Annotation, plan: AnnotationDeletionPlan): Promise<void>;
   get(
     collectionId: CollectionId,
     id: AnnotationId,

@@ -73,6 +73,8 @@ function dependencies(source: Source | null = sourceFixture()): {
       listForSource: vi.fn(() => Promise.resolve([])),
       get: vi.fn(() => Promise.resolve(null)),
       updateBody: vi.fn(),
+      preflightDelete: vi.fn(),
+      delete: vi.fn(),
       create: vi.fn((annotation: Annotation) => {
         created.push(annotation);
         return Promise.resolve(annotation);

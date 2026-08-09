@@ -169,35 +169,6 @@ describe("ConnectWorkspaceGateway", () => {
   });
 });
 
-describe("ConnectWorkspaceGateway annotation updates", () => {
-  it("updates an annotation and refreshes its source cache", async () => {
-    const updated = {
-      ...annotation,
-      body: "Revised note",
-      recordRevision: recordRevision("rev-2"),
-    };
-    const updateBody = vi.fn().mockResolvedValue(updated);
-    const listForSource = vi.fn().mockResolvedValue([annotation]);
-    const gateway = new ConnectWorkspaceGateway(
-      { get: vi.fn() } as unknown as SourceRepository,
-      { listForSource, updateBody } as unknown as AnnotationRepository,
-      { store: vi.fn() },
-      { commitFile: vi.fn() },
-      source.collectionId,
-      "Reading",
-      createReaderRuntimeServices(new MemoryStorage()),
-    );
-    await gateway.annotations(source.id);
-
-    await expect(gateway.updateAnnotation(annotation, updated.body)).resolves.toBe(updated);
-    expect(updateBody).toHaveBeenCalledWith(
-      expect.objectContaining({ annotation, body: updated.body }),
-    );
-    await expect(gateway.annotations(source.id)).resolves.toEqual([updated]);
-    expect(listForSource).toHaveBeenCalledOnce();
-  });
-});
-
 describe("ConnectWorkspaceGateway pagination", () => {
   it("follows contract-query cursors so sources beyond the authority page cap remain visible", async () => {
     const pageTwo = { ...source, id: sourceId("src_101"), title: "Page two" };

@@ -1,22 +1,25 @@
-import { ReaderButton } from "@mdbase-reader/ui";
 import { useState, type JSX } from "react";
 
-import { readerErrorMessage } from "./errors.js";
+import { AnnotationBodyEditor } from "./AnnotationEditor.js";
 import { MoreIcon } from "./icons.js";
 
 import type { AnnotationTransclusionController } from "./use-annotation-transclusion.js";
 import type { AsyncResource } from "./use-reader-workspace.js";
-import type { Annotation, AnnotationId } from "@mdbase-reader/core";
+import type { Annotation, AnnotationDeletionPlan, AnnotationId } from "@mdbase-reader/core";
 
 export function AnnotationList({
   annotations,
   transclusion,
   onUpdate,
+  onPlanDelete,
+  onDelete,
   onOpen,
 }: {
   readonly annotations: AsyncResource<readonly Annotation[]>;
   readonly transclusion: AnnotationTransclusionController;
   readonly onUpdate: (annotation: Annotation, body: string) => Promise<Annotation>;
+  readonly onPlanDelete: (annotation: Annotation) => Promise<AnnotationDeletionPlan>;
+  readonly onDelete: (annotation: Annotation, plan: AnnotationDeletionPlan) => Promise<void>;
   readonly onOpen: (annotation: Annotation) => void;
 }): JSX.Element {
   const [editingId, setEditingId] = useState<AnnotationId | null>(null);
@@ -55,6 +58,8 @@ export function AnnotationList({
             await onUpdate(annotation, body);
             setEditingId(null);
           }}
+          onPlanDelete={() => onPlanDelete(annotation)}
+          onDelete={(plan) => onDelete(annotation, plan)}
           onOpen={() => onOpen(annotation)}
         />
       ))}
@@ -69,6 +74,8 @@ function AnnotationCard({
   onEdit,
   onCancel,
   onSave,
+  onPlanDelete,
+  onDelete,
   onOpen,
 }: {
   readonly annotation: Annotation;
@@ -77,6 +84,8 @@ function AnnotationCard({
   readonly onEdit: () => void;
   readonly onCancel: () => void;
   readonly onSave: (body: string) => Promise<void>;
+  readonly onPlanDelete: () => Promise<AnnotationDeletionPlan>;
+  readonly onDelete: (plan: AnnotationDeletionPlan) => Promise<void>;
   readonly onOpen: () => void;
 }): JSX.Element {
   return (
@@ -88,7 +97,13 @@ function AnnotationCard({
         {annotation.locator ? <small>{annotation.locator.label}</small> : null}
       </header>
       {editing ? (
-        <AnnotationBodyEditor annotation={annotation} onCancel={onCancel} onSave={onSave} />
+        <AnnotationBodyEditor
+          annotation={annotation}
+          onCancel={onCancel}
+          onSave={onSave}
+          onPlanDelete={onPlanDelete}
+          onDelete={onDelete}
+        />
       ) : (
         <AnnotationBody annotation={annotation} />
       )}
@@ -144,51 +159,5 @@ function AnnotationBody({ annotation }: { readonly annotation: Annotation }): JS
       ) : null}
       {note ? <p>{note}</p> : null}
     </>
-  );
-}
-
-function AnnotationBodyEditor({
-  annotation,
-  onCancel,
-  onSave,
-}: {
-  readonly annotation: Annotation;
-  readonly onCancel: () => void;
-  readonly onSave: (body: string) => Promise<void>;
-}): JSX.Element {
-  const [body, setBody] = useState(annotation.body);
-  const [status, setStatus] = useState<"idle" | "saving">("idle");
-  const [problem, setProblem] = useState<string | null>(null);
-  const save = (): void => {
-    if (status === "saving" || body === annotation.body) {
-      return;
-    }
-    setStatus("saving");
-    setProblem(null);
-    void onSave(body).catch((reason: unknown) => {
-      setProblem(readerErrorMessage(reason, "Reader could not update this annotation."));
-      setStatus("idle");
-    });
-  };
-  return (
-    <div className="annotation-body-editor">
-      <label htmlFor={`annotation-body-${annotation.id}`}>Annotation Markdown</label>
-      <textarea
-        id={`annotation-body-${annotation.id}`}
-        value={body}
-        rows={6}
-        onChange={(event) => setBody(event.target.value)}
-      />
-      <span>Captured selector evidence stays unchanged.</span>
-      {problem ? <p role="alert">{problem}</p> : null}
-      <div>
-        <button type="button" disabled={status === "saving"} onClick={onCancel}>
-          Cancel
-        </button>
-        <ReaderButton disabled={status === "saving" || body === annotation.body} onClick={save}>
-          {status === "saving" ? "Saving…" : "Save changes"}
-        </ReaderButton>
-      </div>
-    </div>
   );
 }

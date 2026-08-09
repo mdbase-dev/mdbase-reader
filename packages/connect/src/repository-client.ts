@@ -2,6 +2,10 @@ import type { annotationContract, sourceContract } from "./contracts.js";
 import type {
   ConnectOutcome,
   CreateInput,
+  DeleteInput,
+  DeletePreflightResult,
+  DeleteProgressOptions,
+  DeleteResult,
   MdbaseConnection,
   QueryInput,
   QueryResult,
@@ -16,6 +20,11 @@ export interface ReaderConnectClient {
   query(input: QueryInput, options?: ReaderRequestOptions): Promise<ConnectOutcome<QueryResult>>;
   create(input: CreateInput): Promise<ConnectOutcome<RecordDocument>>;
   update(input: UpdateInput): Promise<ConnectOutcome<RecordDocument>>;
+  preflightDelete(input: DeleteInput): Promise<ConnectOutcome<DeletePreflightResult>>;
+  deleteWithProgress(
+    input: DeleteInput,
+    options?: DeleteProgressOptions,
+  ): Promise<ConnectOutcome<DeleteResult>>;
 }
 
 export class ConnectRepositoryError extends Error {
@@ -80,5 +89,7 @@ export function connectClient(connection: MdbaseConnection): ReaderConnectClient
     query: (input, options) => connection.query(input, options),
     create: (input) => connection.create(input),
     update: (input) => connection.update(input),
+    preflightDelete: (input) => connection.preflightDelete(input),
+    deleteWithProgress: (input, options) => connection.deleteWithProgress(input, options),
   };
 }

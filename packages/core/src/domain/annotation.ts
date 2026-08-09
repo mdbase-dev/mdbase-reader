@@ -41,6 +41,13 @@ export interface Annotation extends AnnotationDraft {
   readonly createdBy?: string;
 }
 
+export interface AnnotationDeletionPlan {
+  readonly annotationId: AnnotationId;
+  readonly path: string;
+  readonly expectedRevision: RecordRevision;
+  readonly brokenLinkPaths: readonly string[];
+}
+
 export function validateAnnotationDraft(draft: AnnotationDraft): void {
   const annotationType = draft.annotationType.trim();
   if (annotationType.length === 0) {

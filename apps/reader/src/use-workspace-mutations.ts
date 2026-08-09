@@ -6,6 +6,7 @@ import type { ReaderWorkspaceGateway } from "./workspace-model.js";
 import type {
   Annotation,
   AnnotationCreationRequest,
+  AnnotationDeletionPlan,
   FileId,
   ReadingPosition,
   Source,
@@ -63,6 +64,38 @@ export function useAnnotationUpdate(
     },
     [gateway, setAnnotations],
   );
+}
+
+export function useAnnotationDeletion(
+  gateway: ReaderWorkspaceGateway,
+  setAnnotations: Dispatch<SetStateAction<AnnotationState>>,
+): {
+  readonly plan: (annotation: Annotation) => Promise<AnnotationDeletionPlan>;
+  readonly remove: (annotation: Annotation, plan: AnnotationDeletionPlan) => Promise<void>;
+} {
+  const plan = useCallback(
+    (annotation: Annotation) => gateway.planAnnotationDeletion(annotation),
+    [gateway],
+  );
+  const remove = useCallback(
+    async (annotation: Annotation, deletionPlan: AnnotationDeletionPlan): Promise<void> => {
+      await gateway.deleteAnnotation(annotation, deletionPlan);
+      setAnnotations((current) => {
+        if (current?.sourceId !== annotation.sourceId || current.value.status !== "ready") {
+          return current;
+        }
+        return {
+          sourceId: annotation.sourceId,
+          value: {
+            status: "ready",
+            value: current.value.value.filter((candidate) => candidate.id !== annotation.id),
+          },
+        };
+      });
+    },
+    [gateway, setAnnotations],
+  );
+  return { plan, remove };
 }
 
 export function useReadingPositionSave(

@@ -1499,18 +1499,65 @@ button {
   font-size: 10px;
 }
 
-.annotation-body-editor > div {
+.annotation-editor-actions {
   display: flex;
+  align-items: center;
   justify-content: flex-end;
   gap: 6px;
 }
 
-.annotation-body-editor > div > button:not(.mdbase-button) {
+.annotation-editor-actions > span {
+  flex: 1;
+}
+
+.annotation-editor-actions > button:not(.mdbase-button),
+.annotation-delete-confirmation button {
   min-height: 30px;
   padding: 0 8px;
   color: var(--muted);
   background: transparent;
   cursor: pointer;
+}
+
+.annotation-editor-actions .is-danger,
+.annotation-delete-confirmation .is-danger {
+  color: var(--danger);
+}
+
+.annotation-delete-confirmation {
+  display: grid;
+  gap: 8px;
+  padding: 10px;
+  border: 1px solid color-mix(in srgb, var(--danger) 38%, var(--line));
+  border-radius: 4px;
+  background: color-mix(in srgb, var(--danger) 5%, var(--surface));
+}
+
+.annotation-delete-confirmation strong {
+  color: var(--ink);
+  font-size: 11px;
+}
+
+.annotation-delete-confirmation p,
+.annotation-delete-confirmation ul {
+  margin: 0;
+  color: var(--muted);
+  font-size: 10px;
+  line-height: 1.5;
+}
+
+.annotation-delete-confirmation ul {
+  max-height: 72px;
+  overflow: auto;
+  padding-left: 16px;
+  font-family: var(--mono);
+  font-size: 8px;
+}
+
+.annotation-delete-confirmation > div {
+  display: flex;
+  justify-content: flex-end;
+  gap: 6px;
 }
 
 .inspector-status,

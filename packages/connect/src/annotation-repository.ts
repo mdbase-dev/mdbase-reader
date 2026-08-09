@@ -3,8 +3,10 @@ import { annotationFromDocument, annotationFrontmatter } from "./mapping.js";
 import { outcomeValue, readWithOptions, recordPathById } from "./repository-client.js";
 
 import type { ReaderConnectClient } from "./repository-client.js";
+import type { DeletePreflightResult } from "@mdbase-dev/connect";
 import type {
   Annotation,
+  AnnotationDeletionPlan,
   AnnotationId,
   AnnotationRepository,
   CollectionId,
@@ -16,6 +18,7 @@ import type {
 export class ConnectAnnotationRepository implements AnnotationRepository {
   readonly #pathsById = new Map<string, string>();
   readonly #pathsBySource = new Map<string, string[]>();
+  readonly #deletePreflights = new Map<string, DeletePreflightResult>();
   #indexPromise: Promise<void> | null = null;
 
   constructor(private readonly client: ReaderConnectClient) {}
@@ -85,6 +88,52 @@ export class ConnectAnnotationRepository implements AnnotationRepository {
     return updated;
   }
 
+  async preflightDelete(annotation: Annotation): Promise<AnnotationDeletionPlan> {
+    const { path, recordRevision } = canonicalIdentity(annotation);
+    const result = outcomeValue(
+      await this.client.preflightDelete({ path, ifRevision: recordRevision }),
+      "check annotation deletion",
+    );
+    this.#deletePreflights.set(deletionKey(path, recordRevision), result);
+    return {
+      annotationId: annotation.id,
+      path,
+      expectedRevision: recordRevision,
+      brokenLinkPaths: uniquePaths(result.brokenLinks),
+    };
+  }
+
+  async delete(annotation: Annotation, plan: AnnotationDeletionPlan): Promise<void> {
+    const { path, recordRevision } = canonicalIdentity(annotation);
+    const key = deletionKey(path, recordRevision);
+    const preflight = this.#deletePreflights.get(key);
+    if (!preflight || plan.path !== path || plan.expectedRevision !== recordRevision) {
+      throw new Error("Annotation deletion requires a current preflight confirmation.");
+    }
+    try {
+      const result = outcomeValue(
+        await this.client.deleteWithProgress(
+          { path, ifRevision: recordRevision, checkBacklinks: true },
+          { preflight },
+        ),
+        "delete annotation",
+      );
+      if (!result.deleted) {
+        throw new Error(`mdbase Connect did not delete annotation ${annotation.id}.`);
+      }
+      this.#pathsById.delete(annotation.id);
+      const paths = this.#pathsBySource.get(annotation.sourceId);
+      if (paths) {
+        this.#pathsBySource.set(
+          annotation.sourceId,
+          paths.filter((candidate) => candidate !== path),
+        );
+      }
+    } finally {
+      this.#deletePreflights.delete(key);
+    }
+  }
+
   async get(
     collection: CollectionId,
     id: AnnotationId,
@@ -141,6 +190,26 @@ export class ConnectAnnotationRepository implements AnnotationRepository {
     });
     return this.#indexPromise;
   }
+}
+
+function canonicalIdentity(annotation: Annotation): {
+  readonly path: string;
+  readonly recordRevision: NonNullable<Annotation["recordRevision"]>;
+} {
+  if (!annotation.path || !annotation.recordRevision) {
+    throw new Error("An annotation path and revision are required for deletion.");
+  }
+  return { path: annotation.path, recordRevision: annotation.recordRevision };
+}
+
+function deletionKey(path: string, revision: string): string {
+  return `${path}\n${revision}`;
+}
+
+function uniquePaths(links: readonly { readonly path: string }[] | undefined): readonly string[] {
+  return [...new Set(links?.map(({ path }) => path) ?? [])].sort((left, right) =>
+    left.localeCompare(right),
+  );
 }
 
 function stringField(candidate: unknown): string | undefined {

@@ -83,6 +83,7 @@ export async function buildReaderManifest({
           "records.query",
           "records.create",
           "records.update",
+          "records.delete",
           "files.list",
           "files.read",
           "files.add",

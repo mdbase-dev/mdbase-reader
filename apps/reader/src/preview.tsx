@@ -9,6 +9,7 @@ import {
   validateCslItem,
   type Annotation,
   type AnnotationCreationRequest,
+  type AnnotationDeletionPlan,
   type FileId,
   type ReadingPosition,
   type Source,
@@ -186,6 +187,20 @@ class PreviewGateway implements ReaderWorkspaceGateway {
       candidate.id === updated.id ? updated : candidate,
     );
     return Promise.resolve(updated);
+  }
+  planAnnotationDeletion(annotation: Annotation): Promise<AnnotationDeletionPlan> {
+    const source = this.#sources.find(({ id }) => id === annotation.sourceId);
+    return Promise.resolve({
+      annotationId: annotation.id,
+      path: annotation.path ?? `annotations/${annotation.id}.md`,
+      expectedRevision: annotation.recordRevision ?? recordRevision(`preview-${annotation.id}`),
+      brokenLinkPaths:
+        source?.body.includes(`annotations/${annotation.id}`) === true ? [source.path] : [],
+    });
+  }
+  deleteAnnotation(annotation: Annotation): Promise<void> {
+    this.#annotations = this.#annotations.filter((candidate) => candidate.id !== annotation.id);
+    return Promise.resolve();
   }
   transcludeAnnotation(source: Source, annotation: Annotation): Promise<Source> {
     const embed = `![[${annotation.path?.replace(/\.md$/u, "") ?? `annotations/${annotation.id}`}]]`;

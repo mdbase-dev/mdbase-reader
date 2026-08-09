@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useState, type Dispatch, type SetStateAction } from "react";
 
 import { readerErrorMessage } from "./errors.js";
 import { selectedResource, selectedValue, type SelectedValue } from "./selected-resource.js";
@@ -10,6 +10,7 @@ import { useCitationEditor, type CitationEditorController } from "./use-citation
 import { useLibrarySelection, type LibrarySelection } from "./use-library-selection.js";
 import {
   useAnnotationCreation,
+  useAnnotationDeletion,
   useAnnotationUpdate,
   useReadingPositionSave,
 } from "./use-workspace-mutations.js";
@@ -18,6 +19,7 @@ import type { ReaderLibrarySnapshot, ReaderWorkspaceGateway } from "./workspace-
 import type {
   Annotation,
   AnnotationCreationRequest,
+  AnnotationDeletionPlan,
   FileId,
   ReadingPosition,
   Source,
@@ -30,6 +32,8 @@ export type AsyncResource<Value> =
   | { readonly status: "idle" | "loading" }
   | { readonly status: "ready"; readonly value: Value }
   | { readonly status: "error"; readonly message: string };
+
+type AnnotationState = SelectedValue<AsyncResource<readonly Annotation[]>> | null;
 
 export interface ReaderWorkspaceController {
   readonly library: AsyncResource<ReaderLibrarySnapshot>;
@@ -52,6 +56,11 @@ export interface ReaderWorkspaceController {
   ) => Promise<Source | null>;
   readonly createAnnotation: (request: AnnotationCreationRequest) => Promise<Annotation>;
   readonly updateAnnotation: (annotation: Annotation, body: string) => Promise<Annotation>;
+  readonly planAnnotationDeletion: (annotation: Annotation) => Promise<AnnotationDeletionPlan>;
+  readonly deleteAnnotation: (
+    annotation: Annotation,
+    plan: AnnotationDeletionPlan,
+  ) => Promise<void>;
   readonly saveReadingPosition: (
     sourceId: SourceId,
     documentFileId: FileId,
@@ -74,9 +83,7 @@ function useSelectedSourceWorkspace(
   selectedSource: SourceSummary | null,
 ): Omit<ReaderWorkspaceController, keyof LibrarySelection> {
   const [source, setSource] = useState<SelectedValue<AsyncResource<Source>> | null>(null);
-  const [annotations, setAnnotations] = useState<SelectedValue<
-    AsyncResource<readonly Annotation[]>
-  > | null>(null);
+  const [annotations, setAnnotations] = useState<AnnotationState>(null);
   const [draft, setDraftState] = useState<SelectedValue<string> | null>(null);
   const [saving, setSaving] = useState<SelectedValue<boolean> | null>(null);
   const [saveError, setSaveError] = useState<SelectedValue<string | null> | null>(null);
@@ -163,8 +170,7 @@ function useSelectedSourceWorkspace(
       )
       .finally(() => setSaving({ sourceId, value: false }));
   }, [draftValue, gateway, sourceId, sourceRecord]);
-  const createSelectedAnnotation = useAnnotationCreation(gateway, setAnnotations);
-  const updateSelectedAnnotation = useAnnotationUpdate(gateway, setAnnotations);
+  const annotationMutations = useSelectedAnnotationMutations(gateway, setAnnotations);
   const saveReadingPosition = useReadingPositionSave(gateway, sourceRecord, setSource);
   const citation = useSelectedCitationEditor(gateway, sourceRecord, setSource);
   const transclusion = useSelectedTransclusion(
@@ -186,9 +192,24 @@ function useSelectedSourceWorkspace(
     transclusion,
     setDraft,
     saveDraft,
-    createAnnotation: createSelectedAnnotation,
-    updateAnnotation: updateSelectedAnnotation,
+    ...annotationMutations,
     saveReadingPosition,
+  };
+}
+
+function useSelectedAnnotationMutations(
+  gateway: ReaderWorkspaceGateway,
+  setAnnotations: Dispatch<SetStateAction<AnnotationState>>,
+): Pick<
+  ReaderWorkspaceController,
+  "createAnnotation" | "updateAnnotation" | "planAnnotationDeletion" | "deleteAnnotation"
+> {
+  const deletion = useAnnotationDeletion(gateway, setAnnotations);
+  return {
+    createAnnotation: useAnnotationCreation(gateway, setAnnotations),
+    updateAnnotation: useAnnotationUpdate(gateway, setAnnotations),
+    planAnnotationDeletion: deletion.plan,
+    deleteAnnotation: deletion.remove,
   };
 }
 

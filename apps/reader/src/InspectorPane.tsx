@@ -84,6 +84,8 @@ export function InspectorPane({
             annotations={workspace.annotations}
             transclusion={workspace.transclusion}
             onUpdate={workspace.updateAnnotation}
+            onPlanDelete={workspace.planAnnotationDeletion}
+            onDelete={workspace.deleteAnnotation}
             onOpen={composer.open}
           />
         </div>

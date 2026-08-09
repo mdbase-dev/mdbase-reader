@@ -1,5 +1,6 @@
 import type {
   Annotation,
+  AnnotationDeletionPlan,
   AnnotationCreationRequest,
   ExportedCollectionFile,
   FileId,
@@ -37,6 +38,8 @@ export interface ReaderWorkspaceGateway {
   importSourceFile(request: Omit<SourceFileImportRequest, "collectionId">): Promise<Source>;
   createAnnotation(request: AnnotationCreationRequest): Promise<Annotation>;
   updateAnnotation(annotation: Annotation, body: string): Promise<Annotation>;
+  planAnnotationDeletion(annotation: Annotation): Promise<AnnotationDeletionPlan>;
+  deleteAnnotation(annotation: Annotation, plan: AnnotationDeletionPlan): Promise<void>;
   transcludeAnnotation(source: Source, annotation: Annotation): Promise<Source>;
   saveReadingPosition(
     source: Source,
