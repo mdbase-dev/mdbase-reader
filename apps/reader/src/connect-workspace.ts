@@ -19,6 +19,7 @@ import type {
   SourceFileImportRequest,
   SourceImportRepository,
   SourceRepository,
+  SourceSummary,
 } from "@mdbase-reader/core";
 
 export class ConnectWorkspaceGateway implements ReaderWorkspaceGateway {
@@ -43,11 +44,7 @@ export class ConnectWorkspaceGateway implements ReaderWorkspaceGateway {
 
   async library(options: ReaderRequestOptions = {}): Promise<ReaderLibrarySnapshot> {
     if (!this.#library) {
-      const library = await this.sources.list(
-        { collectionId: this.collectionId, limit: 500 },
-        options,
-      );
-      this.#library = library.items;
+      this.#library = await listAllSources(this.sources, this.collectionId, options);
     }
     return {
       collectionName: this.collectionName,
@@ -137,4 +134,29 @@ export class ConnectWorkspaceGateway implements ReaderWorkspaceGateway {
     this.#sourcesById.set(source.id, updated);
     return updated;
   }
+}
+
+async function listAllSources(
+  repository: SourceRepository,
+  collectionId: CollectionId,
+  options: ReaderRequestOptions,
+): Promise<readonly SourceSummary[]> {
+  const sources: SourceSummary[] = [];
+  const seenCursors = new Set<string>();
+  let cursor: string | undefined;
+  do {
+    const page = await repository.list(
+      { collectionId, limit: 100, ...(cursor ? { cursor } : {}) },
+      options,
+    );
+    sources.push(...page.items);
+    cursor = page.nextCursor;
+    if (cursor && seenCursors.has(cursor)) {
+      throw new Error("Reader received a repeated source-library cursor.");
+    }
+    if (cursor) {
+      seenCursors.add(cursor);
+    }
+  } while (cursor);
+  return sources;
 }

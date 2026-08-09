@@ -56,7 +56,7 @@ describe("ConnectWorkspaceGateway", () => {
     expect(await gateway.saveSourceBody(source, "Updated")).toMatchObject({ body: "Updated" });
     expect(list).toHaveBeenCalledOnce();
     expect(list).toHaveBeenCalledWith(
-      { collectionId: source.collectionId, limit: 500 },
+      { collectionId: source.collectionId, limit: 100 },
       { signal: controller.signal },
     );
     expect(get).toHaveBeenCalledOnce();
@@ -73,6 +73,30 @@ describe("ConnectWorkspaceGateway", () => {
       expectedRevision: source.recordRevision,
       body: "Updated",
     });
+  });
+
+  it("follows contract-query cursors so sources beyond the authority page cap remain visible", async () => {
+    const pageTwo = { ...source, id: sourceId("src_101"), title: "Page two" };
+    const list = vi
+      .fn()
+      .mockResolvedValueOnce({ items: [source], nextCursor: "100" })
+      .mockResolvedValueOnce({ items: [pageTwo] });
+    const gateway = new ConnectWorkspaceGateway(
+      { list } as unknown as SourceRepository,
+      { listForSource: vi.fn() } as unknown as AnnotationRepository,
+      { store: vi.fn() },
+      { commitFile: vi.fn() },
+      source.collectionId,
+      "Reading",
+      createReaderRuntimeServices(new MemoryStorage()),
+    );
+
+    expect((await gateway.library()).sources.map(({ id }) => id)).toEqual(["src_01", "src_101"]);
+    expect(list).toHaveBeenNthCalledWith(
+      2,
+      { collectionId: source.collectionId, limit: 100, cursor: "100" },
+      {},
+    );
   });
 
   it("adds an imported source to the warm library and source caches", async () => {
