@@ -1,6 +1,6 @@
 import { ReaderButton } from "@mdbase-reader/ui";
 
-import { BackIcon, FocusIcon, MoreIcon, PanelIcon } from "./icons.js";
+import { AreaIcon, BackIcon, FocusIcon, MoreIcon, PanelIcon } from "./icons.js";
 
 import type { ReadingResumeState } from "./use-reading-resume.js";
 import type { SourceSummary } from "@mdbase-reader/core";
@@ -13,9 +13,12 @@ export interface DocumentWorkspaceProps {
   readonly inspectorOpen: boolean;
   readonly readingResume: ReadingResumeState;
   readonly decorationProblem: string | null;
+  readonly canSelectArea: boolean;
+  readonly selectingArea: boolean;
   readonly onBackToLibrary: () => void;
   readonly onToggleFocus: () => void;
   readonly onToggleInspector: () => void;
+  readonly onToggleAreaSelection: () => void;
 }
 
 export function DocumentWorkspace({
@@ -25,9 +28,12 @@ export function DocumentWorkspace({
   inspectorOpen,
   readingResume,
   decorationProblem,
+  canSelectArea,
+  selectingArea,
   onBackToLibrary,
   onToggleFocus,
   onToggleInspector,
+  onToggleAreaSelection,
 }: DocumentWorkspaceProps): JSX.Element {
   return (
     <section className="document-workspace" aria-label="Document reader">
@@ -51,6 +57,17 @@ export function DocumentWorkspace({
             </div>
             <DocumentStatus reading={readingResume} decorationProblem={decorationProblem} />
             <div className="document-tools">
+              {canSelectArea ? (
+                <button
+                  type="button"
+                  className={selectingArea ? "tool-button is-active" : "tool-button"}
+                  aria-pressed={selectingArea}
+                  aria-label={selectingArea ? "Cancel area selection" : "Select an area"}
+                  onClick={onToggleAreaSelection}
+                >
+                  <AreaIcon /> <span className="tool-label">Area</span>
+                </button>
+              ) : null}
               <button
                 type="button"
                 className={inspectorOpen ? "tool-button is-active" : "tool-button"}

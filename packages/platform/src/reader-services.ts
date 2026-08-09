@@ -16,6 +16,7 @@ interface JournalEntry {
   readonly collectionId: string;
   readonly sourceId: string;
   readonly annotationId: string;
+  readonly assetPath?: string;
   readonly stage: MutationStage;
   readonly problem?: string;
 }
@@ -29,6 +30,7 @@ export class StorageMutationJournal implements MutationJournal {
       collectionId: input.collectionId,
       sourceId: input.sourceId,
       annotationId: input.annotationId,
+      ...(input.assetPath ? { assetPath: input.assetPath } : {}),
       stage: "planned",
     });
   }

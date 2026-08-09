@@ -910,6 +910,34 @@ button {
   line-height: 1.5;
 }
 
+.annotation-area-preview {
+  max-height: 180px;
+  margin: 14px 0;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  border: 1px solid var(--line);
+  border-radius: 3px;
+  background:
+    linear-gradient(45deg, var(--line) 25%, transparent 25%) 0 0 / 12px 12px,
+    linear-gradient(45deg, transparent 75%, var(--line) 75%) 0 0 / 12px 12px,
+    var(--canvas);
+}
+
+.annotation-area-preview img {
+  display: block;
+  max-width: 100%;
+  max-height: 180px;
+  object-fit: contain;
+}
+
+.annotation-area-preview.is-loading {
+  min-height: 80px;
+  color: var(--faint);
+  font-family: var(--mono);
+  font-size: 9px;
+}
+
 .annotation-composer label {
   display: flex;
   justify-content: space-between;
@@ -1032,6 +1060,12 @@ button {
 
 .annotation-kind.is-note::before {
   background: var(--accent);
+}
+
+.annotation-kind.is-area::before {
+  height: 7px;
+  border: 1px dashed var(--accent);
+  background: transparent;
 }
 
 .annotation-card blockquote {

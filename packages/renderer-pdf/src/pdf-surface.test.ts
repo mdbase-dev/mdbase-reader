@@ -88,7 +88,7 @@ describe("EmbedPdfSurface", () => {
     const selection: AreaSelectionDraft = {
       pageIndex: 4,
       rect: { x: 10, y: 20, width: 30, height: 40 },
-      coordinateProfile: "embedpdf-pdf-points-v1",
+      coordinateProfile: "embedpdf-capture-page-points-v1",
       image: new Blob(["png"]),
       imageType: "image/png",
       scale: 4,

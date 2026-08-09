@@ -1,19 +1,36 @@
-import { PdfAnnotationSubtype, type PdfHighlightAnnoObject, type Rect } from "@embedpdf/models";
+import {
+  PdfAnnotationBorderStyle,
+  PdfAnnotationSubtype,
+  type PdfHighlightAnnoObject,
+  type PdfSquareAnnoObject,
+  type Rect,
+} from "@embedpdf/models";
 
 import type { Annotation, PdfQuadPoints } from "@mdbase-reader/core";
 
 const supportedCoordinateProfile = "embedpdf-selection-page-points-v1";
+const supportedAreaCoordinateProfile = "embedpdf-capture-page-points-v1";
 
-export function annotationToPdfDecoration(annotation: Annotation): PdfHighlightAnnoObject | null {
+export function annotationToPdfDecoration(
+  annotation: Annotation,
+): PdfHighlightAnnoObject | PdfSquareAnnoObject | null {
   const pdf = annotation.target?.pdf;
-  if (
-    annotation.annotationType !== "highlight" ||
-    pdf?.coordinateSpace.profile !== supportedCoordinateProfile ||
-    pdf.coordinateSpace.origin !== "top_left"
-  ) {
+  if (pdf?.coordinateSpace.origin !== "top_left") {
     return null;
   }
   const segmentRects = pdf.quadPoints.map(quadToRect);
+  if (
+    annotation.annotationType === "area" &&
+    pdf.coordinateSpace.profile === supportedAreaCoordinateProfile
+  ) {
+    return areaDecoration(annotation, pdf.pageIndex, boundingRect(segmentRects));
+  }
+  if (
+    annotation.annotationType !== "highlight" ||
+    pdf.coordinateSpace.profile !== supportedCoordinateProfile
+  ) {
+    return null;
+  }
   return {
     id: `mdbase-reader:${annotation.id}`,
     type: PdfAnnotationSubtype.HIGHLIGHT,
@@ -23,6 +40,31 @@ export function annotationToPdfDecoration(annotation: Annotation): PdfHighlightA
     contents: annotation.body,
     strokeColor: highlightColor(annotation.color),
     opacity: 0.38,
+    ...(annotation.createdBy ? { author: annotation.createdBy } : {}),
+    created: new Date(annotation.createdAt),
+    modified: new Date(annotation.modifiedAt ?? annotation.createdAt),
+    custom: { source: "mdbase-reader", annotationId: annotation.id },
+  };
+}
+
+function areaDecoration(
+  annotation: Annotation,
+  pageIndex: number,
+  rect: Rect,
+): PdfSquareAnnoObject {
+  return {
+    id: `mdbase-reader:${annotation.id}`,
+    type: PdfAnnotationSubtype.SQUARE,
+    pageIndex,
+    rect,
+    contents: annotation.body,
+    flags: ["readOnly", "locked", "lockedContents"],
+    color: "#5bb9f5",
+    strokeColor: "#5bb9f5",
+    strokeWidth: 1.25,
+    strokeStyle: PdfAnnotationBorderStyle.DASHED,
+    strokeDashArray: [4, 3],
+    opacity: 0.86,
     ...(annotation.createdBy ? { author: annotation.createdBy } : {}),
     created: new Date(annotation.createdAt),
     modified: new Date(annotation.modifiedAt ?? annotation.createdAt),

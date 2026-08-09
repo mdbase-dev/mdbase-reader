@@ -3,6 +3,7 @@ import { createAnnotation } from "@mdbase-reader/core";
 import type { ReaderLibrarySnapshot, ReaderWorkspaceGateway } from "./workspace-model.js";
 import type {
   Annotation,
+  AnnotationAssetRepository,
   AnnotationCreationRequest,
   AnnotationRepository,
   Clock,
@@ -25,6 +26,7 @@ export class ConnectWorkspaceGateway implements ReaderWorkspaceGateway {
   constructor(
     private readonly sources: SourceRepository,
     private readonly annotationsRepository: AnnotationRepository,
+    private readonly annotationAssets: AnnotationAssetRepository,
     private readonly collectionId: CollectionId,
     private readonly collectionName: string,
     private readonly runtime: {
@@ -93,6 +95,7 @@ export class ConnectWorkspaceGateway implements ReaderWorkspaceGateway {
     const result = await createAnnotation(
       {
         annotations: this.annotationsRepository,
+        assets: this.annotationAssets,
         sources: this.sources,
         ...this.runtime,
       },

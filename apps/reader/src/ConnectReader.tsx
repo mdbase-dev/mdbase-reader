@@ -74,6 +74,7 @@ function OpenedReader({ collectionId }: { readonly collectionId: string }): JSX.
         ? new ConnectWorkspaceGateway(
             opened.sources,
             opened.annotations,
+            opened.annotationAssets,
             opened.collectionId,
             opened.collectionName,
             runtimeServices,

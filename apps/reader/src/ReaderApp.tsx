@@ -130,8 +130,11 @@ export function ReaderApp({ gateway, renderDocument }: ReaderAppProps): JSX.Elem
           inspectorOpen={inspectorOpen && !focusMode}
           readingResume={readingResume}
           decorationProblem={decorationProblem}
+          canSelectArea={composer.canSelectArea}
+          selectingArea={composer.selectingArea}
           onBackToLibrary={() => setMobileLibraryOpen(true)}
           onToggleFocus={() => setFocusMode((value) => !value)}
+          onToggleAreaSelection={composer.toggleAreaSelection}
           onToggleInspector={() => {
             if (focusMode) {
               setFocusMode(false);

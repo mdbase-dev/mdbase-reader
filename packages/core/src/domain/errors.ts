@@ -4,6 +4,7 @@ export type DomainProblemCode =
   | "invalid-datetime"
   | "invalid-selector"
   | "invalid-annotation"
+  | "annotation-assets-unavailable"
   | "source-not-found"
   | "document-not-found"
   | "document-revision-mismatch";

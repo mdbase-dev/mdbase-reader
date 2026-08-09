@@ -3,6 +3,7 @@ import { DomainError } from "../domain/errors.js";
 
 import type {
   AnnotationCreationRequest,
+  AnnotationAssetRepository,
   AnnotationRepository,
   Clock,
   MutationJournal,
@@ -12,6 +13,7 @@ import type {
 
 export interface CreateAnnotationDependencies {
   readonly annotations: AnnotationRepository;
+  readonly assets?: AnnotationAssetRepository;
   readonly clock: Clock;
   readonly ids: ReaderIdGenerator;
   readonly journal: MutationJournal;
@@ -20,7 +22,18 @@ export interface CreateAnnotationDependencies {
 
 export interface CreateAnnotationResult {
   readonly annotation: Annotation;
+  readonly assetStored: boolean;
   readonly transcluded: boolean;
+}
+
+function assetPath(annotationId: Annotation["id"]): string {
+  return `files/annotation-${annotationId}.png`;
+}
+
+function bodyWithAsset(body: string, path: string): string {
+  const embed = annotationEmbed(path);
+  const note = body.trim();
+  return note ? `${embed}\n\n${note}` : embed;
 }
 
 function assertCurrentDocument(
@@ -58,8 +71,11 @@ export async function createAnnotation(
 
   const annotationId = dependencies.ids.annotation();
   const mutationId = dependencies.ids.mutation();
+  const attachmentPath = request.attachment ? assetPath(annotationId) : undefined;
+  const { attachment, transclude, ...draft } = request;
   const annotation: Annotation = {
-    ...request,
+    ...draft,
+    body: attachmentPath ? bodyWithAsset(request.body, attachmentPath) : request.body,
     id: annotationId,
     createdAt: dependencies.clock.now(),
     createdBy: "dev.mdbase.reader",
@@ -71,24 +87,45 @@ export async function createAnnotation(
     collectionId: request.collectionId,
     sourceId: request.sourceId,
     annotationId,
+    ...(attachmentPath ? { assetPath: attachmentPath } : {}),
   });
 
   try {
+    if (attachment && attachmentPath) {
+      if (!dependencies.assets) {
+        throw new DomainError(
+          "annotation-assets-unavailable",
+          "This Reader connection cannot store annotation images.",
+        );
+      }
+      await dependencies.assets.store({
+        collectionId: request.collectionId,
+        path: attachmentPath,
+        bytes: attachment.bytes,
+        mediaType: attachment.mediaType,
+        idempotencyKey: mutationId,
+      });
+      await dependencies.journal.mark(mutationId, "asset-stored");
+    }
     const created = await dependencies.annotations.create(annotation, mutationId);
     await dependencies.journal.mark(mutationId, "annotation-created");
-    if (request.transclude) {
+    if (transclude) {
       await dependencies.sources.appendAnnotationEmbed({
         collectionId: request.collectionId,
         sourceId: request.sourceId,
         expectedRevision: source.recordRevision,
         annotationId,
-        embed: annotationEmbed(request.transclude.path),
+        embed: annotationEmbed(transclude.path),
         idempotencyKey: mutationId,
       });
       await dependencies.journal.mark(mutationId, "source-transcluded");
     }
     await dependencies.journal.mark(mutationId, "complete");
-    return { annotation: created, transcluded: Boolean(request.transclude) };
+    return {
+      annotation: created,
+      assetStored: Boolean(attachment),
+      transcluded: Boolean(transclude),
+    };
   } catch (error) {
     const problem = error instanceof Error ? error.message : "Unknown annotation creation failure";
     await dependencies.journal.mark(mutationId, "failed", problem);

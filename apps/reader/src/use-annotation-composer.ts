@@ -1,34 +1,31 @@
 import { useCallback, useEffect, useState } from "react";
 
+import { annotationRequest, type ComposerSelection } from "./annotation-composer-request.js";
 import { readerErrorMessage } from "./errors.js";
 
-import type {
-  Annotation,
-  AnnotationCreationRequest,
-  Locator,
-  SourceSummary,
-} from "@mdbase-reader/core";
-import type {
-  ReaderLocator,
-  ReadingSurface,
-  TextSelectionDraft,
-} from "@mdbase-reader/reading-surface";
+import type { Annotation, AnnotationCreationRequest, SourceSummary } from "@mdbase-reader/core";
+import type { ReadingSurface } from "@mdbase-reader/reading-surface";
+
+export type { ComposerSelection } from "./annotation-composer-request.js";
 
 export interface AnnotationComposerController {
-  readonly selection: TextSelectionDraft | null;
+  readonly selection: ComposerSelection | null;
   readonly note: string;
   readonly status: "idle" | "saving";
   readonly error: string | null;
+  readonly canSelectArea: boolean;
+  readonly selectingArea: boolean;
   readonly setNote: (note: string) => void;
   readonly dismiss: () => void;
   readonly save: () => void;
+  readonly toggleAreaSelection: () => void;
   readonly open: (annotation: Annotation) => void;
 }
 
 interface SelectedDraft {
   readonly sourceId: string;
   readonly surface: ReadingSurface;
-  readonly value: TextSelectionDraft;
+  readonly value: ComposerSelection;
 }
 
 export function useAnnotationComposer(input: {
@@ -36,129 +33,171 @@ export function useAnnotationComposer(input: {
   readonly surface: ReadingSurface | null;
   readonly create: (request: AnnotationCreationRequest) => Promise<Annotation>;
 }): AnnotationComposerController {
+  const { source, surface, create } = input;
   const [selected, setSelected] = useState<SelectedDraft | null>(null);
   const [note, setNote] = useState("");
   const [status, setStatus] = useState<"idle" | "saving">("idle");
-  const [problem, setProblem] = useState<{
-    readonly sourceId: string;
-    readonly message: string;
-  } | null>(null);
-  const sourceId = input.source?.id;
+  const [areaSelectionSurface, setAreaSelectionSurface] = useState<ReadingSurface | null>(null);
+  const [problem, setProblem] = useState<{ sourceId: string; message: string } | null>(null);
+  const sourceId = source?.id;
   const selection =
-    sourceId && selected?.sourceId === sourceId && selected.surface === input.surface
+    sourceId && selected?.sourceId === sourceId && selected.surface === surface
       ? selected.value
       : null;
   const error = sourceId && problem?.sourceId === sourceId ? problem.message : null;
 
-  useEffect(() => {
-    const capability = input.surface?.capabilities.textSelection;
-    return capability?.selections.subscribe((draft) => {
-      if (input.source && input.surface) {
-        setSelected({ sourceId: input.source.id, surface: input.surface, value: draft });
-        setNote("");
-        setProblem(null);
-      }
-    });
-  }, [input.source, input.surface]);
+  useEffect(
+    () =>
+      subscribeToSelections(
+        source,
+        surface,
+        setSelected,
+        setNote,
+        setProblem,
+        setAreaSelectionSurface,
+      ),
+    [source, surface],
+  );
 
   const dismiss = useCallback((): void => {
-    input.surface?.capabilities.textSelection?.clearSelection();
+    surface?.capabilities.textSelection?.clearSelection();
+    surface?.capabilities.areaSelection?.cancelAreaSelection();
     setSelected(null);
     setNote("");
     setProblem(null);
-  }, [input.surface]);
+    setAreaSelectionSurface(null);
+  }, [surface]);
 
   const save = useCallback((): void => {
-    if (!selection || !input.source || !input.surface || status === "saving") {
+    if (!selection || !source || !surface || status === "saving") {
       return;
     }
     setStatus("saving");
     setProblem(null);
-    void input
-      .create(annotationRequest(input.source, input.surface, selection, note))
-      .then(() => dismiss())
-      .catch((reason: unknown) =>
-        input.source
-          ? setProblem({
-              sourceId: input.source.id,
-              message: readerErrorMessage(reason, "Reader could not save this annotation."),
-            })
-          : undefined,
-      )
-      .finally(() => setStatus("idle"));
-  }, [dismiss, input, note, selection, status]);
+    void saveSelection(
+      { source, surface, create },
+      selection,
+      note,
+      dismiss,
+      setProblem,
+      setStatus,
+    );
+  }, [create, dismiss, note, selection, source, status, surface]);
+
+  const toggleAreaSelection = useCallback((): void => {
+    const capability = surface?.capabilities.areaSelection;
+    if (!capability) {
+      return;
+    }
+    if (areaSelectionSurface === surface) {
+      capability.cancelAreaSelection();
+      setAreaSelectionSurface(null);
+      return;
+    }
+    surface.capabilities.textSelection?.clearSelection();
+    setSelected(null);
+    setProblem(null);
+    capability.beginAreaSelection();
+    setAreaSelectionSurface(surface);
+  }, [areaSelectionSurface, surface]);
 
   const open = useCallback(
-    (annotation: Annotation): void => {
-      const surface = input.surface;
-      if (!surface) {
-        return;
-      }
-      if (
-        annotation.document &&
-        (annotation.document.fileId !== surface.document.document.fileId ||
-          annotation.document.revision !== surface.document.document.revision)
-      ) {
-        if (input.source) {
-          setProblem({
-            sourceId: input.source.id,
-            message:
-              "This annotation targets a different document revision and must be re-anchored.",
-          });
-        }
-        return;
-      }
-      const locator = annotationLocator(annotation);
-      if (locator) {
-        void surface.goTo(locator);
-      }
-    },
-    [input.source, input.surface],
+    (annotation: Annotation): void => openAnnotation(annotation, { source, surface }, setProblem),
+    [source, surface],
   );
 
-  return { selection, note, status, error, setNote, dismiss, save, open };
-}
-
-function annotationRequest(
-  source: SourceSummary,
-  surface: ReadingSurface,
-  selection: TextSelectionDraft,
-  note: string,
-): AnnotationCreationRequest {
   return {
-    collectionId: source.collectionId,
-    sourceId: source.id,
-    source: `[[${source.id}]]`,
-    document: surface.document.document,
-    annotationType: "highlight",
-    motivation: note.trim() ? "commenting" : "highlighting",
-    color: "yellow",
-    locator: locatorLabel(selection.locator),
-    target: selection.target,
-    tags: [],
-    body: annotationBody(selection.target.quote.exact, note),
+    selection,
+    note,
+    status,
+    error,
+    canSelectArea: Boolean(surface?.capabilities.areaSelection),
+    selectingArea: areaSelectionSurface === surface,
+    setNote,
+    dismiss,
+    save,
+    toggleAreaSelection,
+    open,
   };
 }
 
-function locatorLabel(locator: ReaderLocator): Locator {
-  if (locator.kind === "pdf") {
-    return { label: `p. ${String(locator.pageIndex + 1)}` };
+function subscribeToSelections(
+  source: SourceSummary | null,
+  surface: ReadingSurface | null,
+  setSelected: (value: SelectedDraft | null) => void,
+  setNote: (value: string) => void,
+  setProblem: (value: null) => void,
+  setAreaSelectionSurface: (value: ReadingSurface | null) => void,
+): (() => void) | undefined {
+  if (!source || !surface) {
+    return undefined;
   }
-  return { label: locator.kind === "epub" ? "EPUB location" : locator.href };
+  const select = (value: ComposerSelection): void => {
+    setSelected({ sourceId: source.id, surface, value });
+    setNote("");
+    setProblem(null);
+    setAreaSelectionSurface(null);
+  };
+  const text = surface.capabilities.textSelection?.selections.subscribe((value) =>
+    select({ kind: "text", value }),
+  );
+  const area = surface.capabilities.areaSelection?.selections.subscribe((value) =>
+    select({ kind: "area", value }),
+  );
+  return () => {
+    text?.();
+    area?.();
+  };
 }
 
-function annotationBody(quote: string, note: string): string {
-  const quotation = quote
-    .split("\n")
-    .map((line) => `> ${line}`)
-    .join("\n");
-  const commentary = note.trim();
-  return commentary ? `${quotation}\n\n${commentary}` : quotation;
+async function saveSelection(
+  input: {
+    readonly source: SourceSummary;
+    readonly surface: ReadingSurface;
+    readonly create: (request: AnnotationCreationRequest) => Promise<Annotation>;
+  },
+  selection: ComposerSelection,
+  note: string,
+  dismiss: () => void,
+  setProblem: (value: { sourceId: string; message: string }) => void,
+  setStatus: (value: "idle" | "saving") => void,
+): Promise<void> {
+  try {
+    await input.create(await annotationRequest(input.source, input.surface, selection, note));
+    dismiss();
+  } catch (reason) {
+    setProblem({
+      sourceId: input.source.id,
+      message: readerErrorMessage(reason, "Reader could not save this annotation."),
+    });
+  } finally {
+    setStatus("idle");
+  }
 }
 
-function annotationLocator(annotation: Annotation): ReaderLocator | null {
+function openAnnotation(
+  annotation: Annotation,
+  input: { readonly source: SourceSummary | null; readonly surface: ReadingSurface | null },
+  setProblem: (value: { sourceId: string; message: string }) => void,
+): void {
+  const surface = input.surface;
+  if (!surface) {
+    return;
+  }
+  if (
+    annotation.document &&
+    (annotation.document.fileId !== surface.document.document.fileId ||
+      annotation.document.revision !== surface.document.document.revision)
+  ) {
+    if (input.source) {
+      setProblem({
+        sourceId: input.source.id,
+        message: "This annotation targets a different document revision and must be re-anchored.",
+      });
+    }
+    return;
+  }
   if (annotation.target?.pdf) {
-    return { kind: "pdf", pageIndex: annotation.target.pdf.pageIndex };
+    void surface.goTo({ kind: "pdf", pageIndex: annotation.target.pdf.pageIndex });
   }
-  return null;
 }

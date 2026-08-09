@@ -86,7 +86,17 @@ export interface DocumentRepository {
 }
 
 export type MutationStage =
-  "planned" | "annotation-created" | "source-transcluded" | "complete" | "failed";
+  "planned" | "asset-stored" | "annotation-created" | "source-transcluded" | "complete" | "failed";
+
+export interface AnnotationAssetRepository {
+  store(input: {
+    readonly collectionId: CollectionId;
+    readonly path: string;
+    readonly bytes: Uint8Array;
+    readonly mediaType: "image/png";
+    readonly idempotencyKey: MutationId;
+  }): Promise<void>;
+}
 
 export interface MutationJournal {
   start(input: {
@@ -95,6 +105,7 @@ export interface MutationJournal {
     readonly collectionId: CollectionId;
     readonly sourceId: SourceId;
     readonly annotationId: AnnotationId;
+    readonly assetPath?: string;
   }): Promise<void>;
   mark(id: MutationId, stage: MutationStage, problem?: string): Promise<void>;
 }
@@ -109,6 +120,10 @@ export interface ReaderIdGenerator {
 }
 
 export interface AnnotationCreationRequest extends AnnotationDraft {
+  readonly attachment?: {
+    readonly bytes: Uint8Array;
+    readonly mediaType: "image/png";
+  };
   readonly transclude?: {
     readonly path: string;
   };

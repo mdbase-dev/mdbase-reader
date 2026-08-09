@@ -53,11 +53,14 @@ function dependencies(source: Source | null = sourceFixture()): {
   readonly created: Annotation[];
   readonly stages: MutationStage[];
   readonly append: ReturnType<typeof vi.fn>;
+  readonly storeAsset: ReturnType<typeof vi.fn>;
 } {
   const created: Annotation[] = [];
   const stages: MutationStage[] = [];
   const append = vi.fn(() => Promise.resolve(recordRevision("record-r2")));
+  const storeAsset = vi.fn(() => Promise.resolve());
   const value: CreateAnnotationDependencies = {
+    assets: { store: storeAsset },
     sources: {
       list: vi.fn(),
       get: vi.fn(() => Promise.resolve(source)),
@@ -86,7 +89,7 @@ function dependencies(source: Source | null = sourceFixture()): {
       mutation: (): MutationId => mutationId("mutation-1"),
     },
   };
-  return { value, created, stages, append };
+  return { value, created, stages, append, storeAsset };
 }
 
 const request = {
@@ -141,8 +144,41 @@ describe("createAnnotation", () => {
     const result = await createAnnotation(fixture.value, request);
 
     expect(result.transcluded).toBe(false);
+    expect(result.assetStored).toBe(false);
     expect(fixture.append).not.toHaveBeenCalled();
     expect(fixture.stages).toEqual(["annotation-created", "complete"]);
+  });
+
+  it("stores a PNG before creating an area annotation with a durable embed", async () => {
+    const fixture = dependencies();
+    const result = await createAnnotation(fixture.value, {
+      ...request,
+      annotationType: "area",
+      target: {
+        pdf: {
+          pageIndex: 0,
+          coordinateSpace: {
+            profile: "embedpdf-capture-page-points-v1",
+            box: "crop",
+            origin: "top_left",
+          },
+          quadPoints: [[10, 20, 110, 20, 10, 70, 110, 70]],
+        },
+      },
+      body: "A useful diagram.",
+      attachment: { bytes: new Uint8Array([1, 2, 3]), mediaType: "image/png" },
+    });
+
+    expect(fixture.storeAsset).toHaveBeenCalledWith({
+      collectionId: collection,
+      path: "files/annotation-ann_01.png",
+      bytes: new Uint8Array([1, 2, 3]),
+      mediaType: "image/png",
+      idempotencyKey: "mutation-1",
+    });
+    expect(result.annotation.body).toBe("![[files/annotation-ann_01.png]]\n\nA useful diagram.");
+    expect(result.assetStored).toBe(true);
+    expect(fixture.stages).toEqual(["asset-stored", "annotation-created", "complete"]);
   });
 
   it("rejects a stale document revision before writing anything", async () => {

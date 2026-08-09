@@ -74,7 +74,7 @@ export function captureEventToAreaSelection(event: CaptureAreaEvent): AreaSelect
       width: event.rect.size.width,
       height: event.rect.size.height,
     },
-    coordinateProfile: "embedpdf-pdf-points-v1",
+    coordinateProfile: "embedpdf-capture-page-points-v1",
     image: event.blob,
     imageType: event.imageType,
     scale: event.scale,

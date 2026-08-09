@@ -57,4 +57,30 @@ describe("PDF annotation decorations", () => {
       }),
     ).toBeNull();
   });
+
+  it("renders exact capture geometry as a locked area outline", () => {
+    expect(
+      annotationToPdfDecoration({
+        ...annotation,
+        annotationType: "area",
+        target: {
+          pdf: {
+            pageIndex: 6,
+            coordinateSpace: {
+              profile: "embedpdf-capture-page-points-v1",
+              box: "crop",
+              origin: "top_left",
+            },
+            quadPoints: [[12, 24, 92, 24, 12, 69, 92, 69]],
+          },
+        },
+      }),
+    ).toMatchObject({
+      id: "mdbase-reader:ann-1",
+      type: PdfAnnotationSubtype.SQUARE,
+      pageIndex: 6,
+      rect: { origin: { x: 12, y: 24 }, size: { width: 80, height: 45 } },
+      flags: ["readOnly", "locked", "lockedContents"],
+    });
+  });
 });

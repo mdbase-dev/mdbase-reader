@@ -29,11 +29,15 @@
         "records.update",
         "files.list",
         "files.read",
+        "files.add",
         "definitions.contracts.current",
         "collection.setup.apply"
       ]
     },
-    "files": { "actions": ["list", "read"], "scope": { "kind": "collection" } }
+    "files": {
+      "actions": ["list", "read", "add"],
+      "scope": { "kind": "collection" }
+    }
   },
   "provisions": {
     "type_packs": [

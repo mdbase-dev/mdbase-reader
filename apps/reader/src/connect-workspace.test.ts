@@ -42,6 +42,7 @@ describe("ConnectWorkspaceGateway", () => {
     const gateway = new ConnectWorkspaceGateway(
       sources,
       annotations,
+      { store: vi.fn() },
       source.collectionId,
       "Reading",
       createReaderRuntimeServices(new MemoryStorage()),
