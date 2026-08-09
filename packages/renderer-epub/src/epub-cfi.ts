@@ -136,7 +136,11 @@ function selectionContext(
   after.selectNodeContents(document.body);
   after.setStart(range.endContainer, range.endOffset);
   return {
-    prefix: before.toString().slice(-CONTEXT_LENGTH),
-    suffix: after.toString().slice(0, CONTEXT_LENGTH),
+    prefix: normalizedContext(before.toString()).slice(-CONTEXT_LENGTH),
+    suffix: normalizedContext(after.toString()).slice(0, CONTEXT_LENGTH),
   };
+}
+
+function normalizedContext(value: string): string {
+  return value.replace(/\s+/gu, " ").trim();
 }

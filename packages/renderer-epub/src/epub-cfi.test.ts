@@ -17,8 +17,8 @@ describe("epubSelectionEvidence", () => {
 
     expect(epubSelectionEvidence(range, 1)).toEqual({
       cfi: "epubcfi(/6/4!/4/2/2,/1:7,/1:23)",
-      prefix: "Before ",
-      suffix: " after",
+      prefix: "Before",
+      suffix: "after",
     });
   });
 
