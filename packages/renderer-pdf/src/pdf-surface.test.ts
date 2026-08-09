@@ -8,6 +8,7 @@ import type { AreaSelectionDraft, TextSelectionDraft } from "@mdbase-reader/read
 
 function runtimeFixture(): {
   readonly runtime: EmbedPdfRuntime;
+  readonly cancelAreaSelection: ReturnType<typeof vi.fn>;
   readonly goToPage: ReturnType<typeof vi.fn>;
   readonly setAnnotations: ReturnType<typeof vi.fn>;
   emitArea(selection: AreaSelectionDraft): void;
@@ -18,13 +19,14 @@ function runtimeFixture(): {
   let pageListener: ((pageIndex: number) => void) | undefined;
   let textListener: ((selection: TextSelectionDraft) => void) | undefined;
   const goToPage = vi.fn();
+  const cancelAreaSelection = vi.fn();
   const setAnnotations = vi.fn();
   return {
     runtime: {
       currentPageIndex: () => 2,
       goToPage,
       beginAreaSelection: vi.fn(),
-      cancelAreaSelection: vi.fn(),
+      cancelAreaSelection,
       clearTextSelection: vi.fn(),
       setAnnotations,
       onAreaSelected: (listener) => {
@@ -47,6 +49,7 @@ function runtimeFixture(): {
       },
       destroy: vi.fn(),
     },
+    cancelAreaSelection,
     goToPage,
     setAnnotations,
     emitArea: (selection) => areaListener?.(selection),
@@ -96,6 +99,7 @@ describe("EmbedPdfSurface", () => {
     };
 
     fixture.emitArea(selection);
+    expect(fixture.cancelAreaSelection).toHaveBeenCalledOnce();
     expect(listener).toHaveBeenCalledWith(selection);
   });
 

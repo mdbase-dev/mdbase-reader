@@ -28,9 +28,13 @@ export class EmbedPdfSurface implements ReadingSurface {
     this.document = document;
     this.#runtime = runtime;
     this.#pageIndex = runtime.currentPageIndex();
-    this.#unsubscribeArea = runtime.onAreaSelected((selection) =>
-      this.#areaSelections.emit(selection),
-    );
+    this.#unsubscribeArea = runtime.onAreaSelected((selection) => {
+      // EmbedPDF's marquee is a modal, viewport-sized capture layer. Area
+      // selection is a one-shot Reader interaction, so release that layer as
+      // soon as a capture completes and before the composer becomes active.
+      runtime.cancelAreaSelection();
+      this.#areaSelections.emit(selection);
+    });
     this.#unsubscribeText = runtime.onTextSelected((selection) =>
       this.#textSelections.emit(selection),
     );
