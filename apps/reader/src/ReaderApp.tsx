@@ -83,10 +83,12 @@ function OpenedReaderApp({
   const [theme, changeTheme] = useThemePreference();
   const [surfaces, setSurfaces] = useState<ReadonlyMap<SourceId, ReadingSurface>>(new Map());
   const deploymentUpdateAvailable = useDeploymentUpdate();
-  const sourceWorkspace = useSourceWorkspace(
-    workspace.selectedSource?.id ?? null,
-    workspace.selectSource,
-  );
+  const sourceWorkspace = useSourceWorkspace({
+    selectedSourceId: workspace.selectedSource?.id ?? null,
+    sourceIds: library.sources.map(({ id }) => id),
+    collectionKey: library.sources[0]?.collectionId ?? library.collectionName,
+    selectSource: workspace.selectSource,
+  });
   const surface = sourceWorkspace.activeSourceId
     ? (surfaces.get(sourceWorkspace.activeSourceId) ?? null)
     : null;
