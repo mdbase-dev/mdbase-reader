@@ -2,7 +2,7 @@ import { CommandPalette } from "./CommandPalette.js";
 import { DeploymentUpdateNotice } from "./DeploymentUpdateNotice.js";
 import { DocumentWorkspace } from "./DocumentWorkspace.js";
 import { InspectorPane } from "./InspectorPane.js";
-import { LibraryPane, type LibraryFilter } from "./LibraryPane.js";
+import { LibraryPane } from "./LibraryPane.js";
 import { InspectorResizeHandle, LibraryResizeHandle } from "./PanelResizeHandle.js";
 import { readerMainClass } from "./reader-app-hooks.js";
 import { readerCommands } from "./reader-command-list.js";
@@ -12,6 +12,7 @@ import { SourceAdditionOverlays } from "./SourceAdditionOverlays.js";
 import { useWorkspaceShellPreferences } from "./use-workspace-shell-preferences.js";
 import { WorkspaceToolTab } from "./WorkspaceToolTab.js";
 
+import type { LibraryLensId } from "./library-lenses.js";
 import type { SourceDocumentRenderer } from "./RenderedSourceDocument.js";
 import type { AnnotationComposerController } from "./use-annotation-composer.js";
 import type { BibliographyExportController } from "./use-bibliography-export.js";
@@ -50,8 +51,8 @@ export interface ReaderWorkspaceViewModel {
   readonly changeTheme: () => void;
   readonly search: string;
   readonly setSearch: (value: string) => void;
-  readonly filter: LibraryFilter;
-  readonly setFilter: (value: LibraryFilter) => void;
+  readonly lens: LibraryLensId;
+  readonly setLens: (value: LibraryLensId) => void;
   readonly focusMode: boolean;
   readonly setFocusMode: (value: boolean | ((current: boolean) => boolean)) => void;
   readonly inspectorOpen: boolean;
@@ -93,9 +94,11 @@ export function ReaderWorkspaceView({
           visibleSources={librarySearch.sources}
           selectedSourceId={source?.id ?? null}
           search={model.search}
-          filter={model.filter}
+          lens={model.lens}
           onSearchChange={model.setSearch}
-          onFilterChange={model.setFilter}
+          onLensChange={model.setLens}
+          presentation={shell.value.libraryPresentation}
+          onPresentationChange={(libraryPresentation) => shell.update({ libraryPresentation })}
           onSelectSource={(id) => {
             sourceWorkspace.preview(id);
             model.setMobileLibraryOpen(false);

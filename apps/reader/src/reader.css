@@ -793,55 +793,58 @@ button {
   letter-spacing: 0.08em;
 }
 
-.status-nav {
+.library-lens-bar {
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 8px;
   padding: 0 12px 10px;
   border-bottom: 1px solid var(--line);
 }
 
-.status-nav button {
-  position: relative;
+.library-lens-bar label {
   min-width: 0;
-  min-height: 29px;
   display: flex;
   align-items: center;
-  justify-content: center;
-  gap: 5px;
-  padding: 0 5px;
-  color: var(--muted);
-  background: transparent;
+  gap: 7px;
+}
+
+.library-lens-bar select {
+  min-width: 0;
+  max-width: 100%;
+  height: 29px;
+  padding: 0 24px 0 7px;
+  border: 1px solid var(--line);
+  border-radius: 3px;
+  color: var(--ink-soft);
+  background: var(--paper);
   font-size: 10px;
+}
+
+.library-lens-bar small {
+  color: var(--faint);
+  font: 7px/1 var(--mono);
+  white-space: nowrap;
+}
+
+.library-lens-bar > div {
+  display: flex;
+  border: 1px solid var(--line);
+  border-radius: 3px;
+}
+
+.library-lens-bar > div button {
+  width: 25px;
+  height: 27px;
+  color: var(--faint);
+  background: transparent;
+  font-size: 11px;
   cursor: pointer;
 }
 
-.status-nav button::after {
-  content: "";
-  position: absolute;
-  right: 8px;
-  bottom: 0;
-  left: 8px;
-  height: 1px;
-  background: transparent;
-}
-
-.status-nav button:hover {
+.library-lens-bar > div button[aria-pressed="true"] {
   color: var(--ink);
-}
-
-.status-nav button.is-active {
-  color: var(--ink);
-  font-weight: 700;
-}
-
-.status-nav button.is-active::after {
-  background: var(--accent);
-}
-
-.status-nav span {
-  color: var(--muted);
-  font-family: var(--mono);
-  font-size: 8px;
+  background: var(--selected);
 }
 
 .source-list {
@@ -944,6 +947,34 @@ button {
   font-size: 8px;
   letter-spacing: 0.03em;
   text-transform: uppercase;
+}
+
+.source-list.is-bibliography .source-row {
+  height: 96px;
+  align-content: start;
+  padding-block: 15px;
+}
+
+.source-list.is-bibliography .source-row strong {
+  overflow: visible;
+  line-height: 1.25;
+  white-space: normal;
+}
+
+.source-list.is-grid .source-row {
+  height: 124px;
+  margin: 0 8px;
+  width: calc(100% - 16px);
+  padding: 18px;
+  border-bottom: 1px solid var(--line);
+  background: color-mix(in oklch, var(--paper) 92%, var(--canvas));
+}
+
+.source-list.is-grid .source-row strong {
+  overflow: visible;
+  font-size: 14px;
+  line-height: 1.25;
+  white-space: normal;
 }
 
 .library-empty {

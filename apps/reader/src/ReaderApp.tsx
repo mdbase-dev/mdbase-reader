@@ -5,12 +5,13 @@ import {
   useReaderReadingResume,
   useReaderShortcuts,
   useResponsiveInspector,
-  useStatusFilteredSources,
+  useLensFilteredSources,
   useThemePreference,
 } from "./reader-app-hooks.js";
 import { ReaderLoading } from "./ReaderLoading.js";
 import { ReaderWorkspaceView, type ReaderWorkspaceViewModel } from "./ReaderWorkspaceView.js";
 import { updateSurface } from "./RenderedSourceDocument.js";
+import { useAnnotationSourceIndex } from "./use-annotation-source-index.js";
 import { useBibliographyExport } from "./use-bibliography-export.js";
 import { useDeploymentUpdate } from "./use-deployment-update.js";
 import { useDocumentDecorations } from "./use-document-decorations.js";
@@ -21,7 +22,7 @@ import { useSourceAddition } from "./use-source-addition.js";
 import { useSourceExport } from "./use-source-export.js";
 import { useSourceWorkspace } from "./use-source-workspace.js";
 
-import type { LibraryFilter } from "./LibraryPane.js";
+import type { LibraryLensId } from "./library-lenses.js";
 import type { SourceDocumentRenderer } from "./RenderedSourceDocument.js";
 import type { ReaderWorkspaceGateway } from "./workspace-model.js";
 import type { PickedFile } from "@mdbase-reader/platform";
@@ -73,7 +74,7 @@ function OpenedReaderApp({
   readonly library: ReaderWorkspaceViewModel["library"];
 }): JSX.Element {
   const [search, setSearch] = useState("");
-  const [filter, setFilter] = useState<LibraryFilter>("all");
+  const [lens, setLens] = useState<LibraryLensId>("all");
   const [inspectorOpen, setInspectorOpen] = useState(
     () => !window.matchMedia("(max-width: 760px)").matches,
   );
@@ -89,6 +90,7 @@ function OpenedReaderApp({
     collectionKey: library.sources[0]?.collectionId ?? library.collectionName,
     selectSource: workspace.selectSource,
   });
+  const annotatedSourceIds = useAnnotationSourceIndex(gateway);
   const surface = sourceWorkspace.activeSourceId
     ? (surfaces.get(`${sourceWorkspace.layout.focusedPaneId}:${sourceWorkspace.activeSourceId}`) ??
       null)
@@ -122,7 +124,12 @@ function OpenedReaderApp({
     navigate: sourceWorkspace.navigate,
   });
 
-  const filteredSources = useStatusFilteredSources(workspace.library, filter);
+  const filteredSources = useLensFilteredSources(
+    workspace.library,
+    lens,
+    sourceWorkspace.layout.recentSourceIds,
+    annotatedSourceIds,
+  );
   const documentSearch = useSessionDocumentSearch(workspace.selectedSource, surface, search);
   const librarySearch = useLibrarySearch(gateway, filteredSources, search, documentSearch.matches);
 
@@ -151,8 +158,8 @@ function OpenedReaderApp({
     changeTheme,
     search,
     setSearch,
-    filter,
-    setFilter,
+    lens,
+    setLens,
     focusMode,
     setFocusMode,
     inspectorOpen,

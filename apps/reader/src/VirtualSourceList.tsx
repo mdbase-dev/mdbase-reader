@@ -1,6 +1,7 @@
 import { useVirtualSourceWindow } from "./use-virtual-source-window.js";
 import { keyboardSourceIndex } from "./virtual-source-list.js";
 
+import type { LibraryPresentation } from "./workspace-shell-preferences.js";
 import type { SourceId, SourceSummary, SourceTextSearchMatch } from "@mdbase-reader/core";
 import type { CSSProperties, JSX, KeyboardEvent } from "react";
 
@@ -10,6 +11,7 @@ export interface VirtualSourceListProps {
   readonly searchMatches: ReadonlyMap<SourceId, SourceTextSearchMatch>;
   readonly resetKey: string;
   readonly busy: boolean;
+  readonly presentation: LibraryPresentation;
   readonly onSelectSource: (id: SourceId) => void;
   readonly onOpenSource: (id: SourceId) => void;
   readonly onOpenBeside: (id: SourceId) => void;
@@ -21,6 +23,7 @@ export function VirtualSourceList({
   searchMatches,
   resetKey,
   busy,
+  presentation,
   onSelectSource,
   onOpenSource,
   onOpenBeside,
@@ -28,6 +31,7 @@ export function VirtualSourceList({
   const { containerRef, range, measure, focusIndex } = useVirtualSourceWindow(
     sources.length,
     resetKey,
+    sourceRowHeight(presentation),
   );
 
   function navigateFrom(event: KeyboardEvent, currentIndex: number): void {
@@ -52,7 +56,7 @@ export function VirtualSourceList({
   return (
     <div
       ref={containerRef}
-      className="source-list"
+      className={`source-list is-${presentation}`}
       role="listbox"
       aria-label="Sources"
       aria-busy={busy}
@@ -95,6 +99,10 @@ export function VirtualSourceList({
       </div>
     </div>
   );
+}
+
+function sourceRowHeight(presentation: LibraryPresentation): number {
+  return presentation === "compact" ? 72 : presentation === "bibliography" ? 96 : 124;
 }
 
 function sourceFormat(source: SourceSummary): "PDF" | "EPUB" | "WEB" | "NOTE" {

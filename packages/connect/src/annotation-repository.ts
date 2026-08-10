@@ -23,6 +23,11 @@ export class ConnectAnnotationRepository implements AnnotationRepository {
 
   constructor(private readonly client: ReaderConnectClient) {}
 
+  async sourceIdsWithAnnotations(): Promise<readonly SourceId[]> {
+    await this.#ensureIndex();
+    return [...this.#pathsBySource.keys()] as SourceId[];
+  }
+
   async listForSource(
     collection: CollectionId,
     source: SourceId,

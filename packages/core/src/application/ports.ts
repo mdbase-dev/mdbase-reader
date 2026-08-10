@@ -66,6 +66,10 @@ export interface ContentSearchRepository {
 }
 
 export interface AnnotationRepository {
+  sourceIdsWithAnnotations?(
+    collectionId: CollectionId,
+    options?: ReaderRequestOptions,
+  ): Promise<readonly SourceId[]>;
   listForSource(
     collectionId: CollectionId,
     sourceId: SourceId,

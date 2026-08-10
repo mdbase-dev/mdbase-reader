@@ -6,13 +6,14 @@ import {
 } from "@mdbase-reader/ui";
 import { useEffect, useMemo, useState } from "react";
 
+import { applyLibraryLens } from "./library-lenses.js";
 import {
   useAnnotationComposer,
   type AnnotationComposerController,
 } from "./use-annotation-composer.js";
 import { useReadingResume, type ReadingResumeState } from "./use-reading-resume.js";
 
-import type { LibraryFilter } from "./LibraryPane.js";
+import type { LibraryLensId } from "./library-lenses.js";
 import type { ReaderWorkspaceController } from "./use-reader-workspace.js";
 import type { SourceSummary } from "@mdbase-reader/core";
 import type { ReadingSurface } from "@mdbase-reader/reading-surface";
@@ -88,18 +89,18 @@ function handleHistoryShortcut(event: KeyboardEvent, actions: ReaderShortcutActi
   return true;
 }
 
-export function useStatusFilteredSources(
+export function useLensFilteredSources(
   library: ReaderWorkspaceController["library"],
-  filter: LibraryFilter,
+  lens: LibraryLensId,
+  recentSourceIds: readonly SourceSummary["id"][],
+  annotatedSourceIds: ReadonlySet<SourceSummary["id"]>,
 ): readonly SourceSummary[] {
   return useMemo(
     () =>
       library.status === "ready"
-        ? library.value.sources.filter(
-            ({ readingStatus }) => filter === "all" || (readingStatus ?? "inbox") === filter,
-          )
+        ? applyLibraryLens(library.value.sources, lens, { recentSourceIds, annotatedSourceIds })
         : [],
-    [filter, library],
+    [annotatedSourceIds, lens, library, recentSourceIds],
   );
 }
 

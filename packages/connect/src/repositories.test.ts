@@ -223,6 +223,7 @@ describe("Connect annotation reads", () => {
     });
     expect(annotations).toHaveLength(1);
     expect(annotations[0]?.body).toBe("A useful note.");
+    await expect(repository.sourceIdsWithAnnotations()).resolves.toEqual(["src_01", "src_02"]);
 
     await repository.listForSource(collectionId("reading"), sourceId("src_02"));
     expect(query).toHaveBeenCalledOnce();

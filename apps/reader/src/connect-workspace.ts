@@ -107,6 +107,13 @@ export class ConnectWorkspaceGateway implements ReaderWorkspaceGateway {
     return annotations;
   }
 
+  annotationSourceIds(options: ReaderRequestOptions = {}): Promise<readonly SourceId[]> {
+    return (
+      this.annotationsRepository.sourceIdsWithAnnotations?.(this.collectionId, options) ??
+      Promise.resolve([...this.#annotationsBySource.keys()])
+    );
+  }
+
   async saveSourceBody(source: Source, body: string): Promise<Source> {
     const updated = await this.sources.updateBody({
       collectionId: this.collectionId,

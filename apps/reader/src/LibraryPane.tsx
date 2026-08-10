@@ -1,18 +1,15 @@
-import {
-  readingStatuses,
-  type ReadingStatus,
-  type SourceId,
-  type SourceSummary,
-  type SourceTextSearchMatch,
-} from "@mdbase-reader/core";
 import { ReaderButton } from "@mdbase-reader/ui";
 
 import { DownloadIcon, LibraryIcon, MoreIcon, PlusIcon, SearchIcon } from "./icons.js";
+import { libraryLensIds, libraryLensLabel } from "./library-lenses.js";
 import { VirtualSourceList } from "./VirtualSourceList.js";
 
+import type { LibraryLensId } from "./library-lenses.js";
 import type { BibliographyExportController } from "./use-bibliography-export.js";
 import type { LibrarySearchStatus } from "./use-library-search.js";
 import type { ReaderLibrarySnapshot } from "./workspace-model.js";
+import type { LibraryPresentation } from "./workspace-shell-preferences.js";
+import type { SourceId, SourceSummary, SourceTextSearchMatch } from "@mdbase-reader/core";
 import type { JSX } from "react";
 
 export interface LibraryPaneProps {
@@ -20,9 +17,11 @@ export interface LibraryPaneProps {
   readonly visibleSources: readonly SourceSummary[];
   readonly selectedSourceId: SourceId | null;
   readonly search: string;
-  readonly filter: LibraryFilter;
+  readonly lens: LibraryLensId;
   readonly onSearchChange: (value: string) => void;
-  readonly onFilterChange: (filter: LibraryFilter) => void;
+  readonly onLensChange: (lens: LibraryLensId) => void;
+  readonly presentation: LibraryPresentation;
+  readonly onPresentationChange: (presentation: LibraryPresentation) => void;
   readonly onSelectSource: (id: SourceId) => void;
   readonly onOpenSource: (id: SourceId) => void;
   readonly onOpenBeside: (id: SourceId) => void;
@@ -35,17 +34,16 @@ export interface LibraryPaneProps {
   readonly sourceIndex?: ReaderLibrarySnapshot["sourceIndex"];
 }
 
-export type LibraryFilter = "all" | ReadingStatus;
-const libraryFilters: readonly LibraryFilter[] = ["all", ...readingStatuses];
-
 export function LibraryPane({
   sources,
   visibleSources,
   selectedSourceId,
   search,
-  filter,
+  lens,
   onSearchChange,
-  onFilterChange,
+  onLensChange,
+  presentation,
+  onPresentationChange,
   onSelectSource,
   onOpenSource,
   onOpenBeside,
@@ -87,24 +85,13 @@ export function LibraryPane({
           ? "Searching source notes, annotations, and opened documents."
           : ""}
       </span>
-      <nav className="status-nav" aria-label="Reading status">
-        {libraryFilters.map((status) => (
-          <button
-            key={status}
-            className={filter === status ? "is-active" : undefined}
-            type="button"
-            aria-pressed={filter === status}
-            onClick={() => onFilterChange(status)}
-          >
-            {statusLabel(status)}
-            <span>
-              {status === "all"
-                ? sourceCountLabel(sources.length, sourceIndex)
-                : sources.filter((source) => effectiveReadingStatus(source) === status).length}
-            </span>
-          </button>
-        ))}
-      </nav>
+      <LibraryLensBar
+        lens={lens}
+        count={`${String(visibleSources.length)} / ${sourceCountLabel(sources.length, sourceIndex)}`}
+        presentation={presentation}
+        onLensChange={onLensChange}
+        onPresentationChange={onPresentationChange}
+      />
       <span className="sr-only" role="status" aria-live="polite">
         {sourceIndex?.complete === false
           ? `Loaded ${String(sourceIndex.loaded)}${sourceIndex.total ? ` of ${String(sourceIndex.total)}` : ""} sources.`
@@ -115,7 +102,8 @@ export function LibraryPane({
           sources={visibleSources}
           selectedSourceId={selectedSourceId}
           searchMatches={searchMatches}
-          resetKey={`${filter}:${search}`}
+          resetKey={`${lens}:${search}:${presentation}`}
+          presentation={presentation}
           busy={sourceIndex?.complete === false}
           onSelectSource={onSelectSource}
           onOpenSource={onOpenSource}
@@ -143,12 +131,50 @@ export function LibraryPane({
   );
 }
 
-function effectiveReadingStatus(source: SourceSummary): ReadingStatus {
-  return source.readingStatus ?? "inbox";
-}
-
-function statusLabel(status: LibraryFilter): string {
-  return status.charAt(0).toLocaleUpperCase() + status.slice(1);
+function LibraryLensBar({
+  lens,
+  count,
+  presentation,
+  onLensChange,
+  onPresentationChange,
+}: {
+  readonly lens: LibraryLensId;
+  readonly count: string;
+  readonly presentation: LibraryPresentation;
+  readonly onLensChange: (lens: LibraryLensId) => void;
+  readonly onPresentationChange: (presentation: LibraryPresentation) => void;
+}): JSX.Element {
+  return (
+    <div className="library-lens-bar">
+      <label>
+        <span className="sr-only">Library lens</span>
+        <select
+          value={lens}
+          onChange={(event) => onLensChange(event.target.value as LibraryLensId)}
+        >
+          {libraryLensIds.map((id) => (
+            <option key={id} value={id}>
+              {libraryLensLabel(id)}
+            </option>
+          ))}
+        </select>
+        <small>{count}</small>
+      </label>
+      <div aria-label="Library presentation">
+        {(["compact", "bibliography", "grid"] as const).map((mode) => (
+          <button
+            key={mode}
+            type="button"
+            aria-pressed={presentation === mode}
+            title={`${mode} view`}
+            onClick={() => onPresentationChange(mode)}
+          >
+            {mode === "compact" ? "≡" : mode === "bibliography" ? "☷" : "▦"}
+          </button>
+        ))}
+      </div>
+    </div>
+  );
 }
 
 function sourceCountLabel(
