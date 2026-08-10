@@ -7,7 +7,12 @@ import {
   type SourceTextSearchMatch,
 } from "@mdbase-reader/core";
 
-import { outcomeValue, queryWithOptions } from "./repository-client.js";
+import {
+  mapConcurrent,
+  outcomeValue,
+  queryWithOptions,
+  readerConnectBulkConcurrency,
+} from "./repository-client.js";
 
 import type { ReaderConnectClient } from "./repository-client.js";
 import type { QueryInput, QueryRecord } from "@mdbase-dev/connect";
@@ -36,16 +41,14 @@ export class ConnectContentSearchRepository implements ContentSearchRepository {
       { length: Math.max(0, Math.ceil(total / pageSize) - 1) },
       (_value, index) => (index + 1) * pageSize,
     );
-    const pages = await Promise.all(
-      offsets.map(async (offset) =>
-        outcomeValue(
-          await queryWithOptions(
-            this.client,
-            searchInput(normalized, offset, first.meta?.snapshot),
-            options,
-          ),
-          "search source and annotation text",
+    const pages = await mapConcurrent(offsets, readerConnectBulkConcurrency, async (offset) =>
+      outcomeValue(
+        await queryWithOptions(
+          this.client,
+          searchInput(normalized, offset, first.meta?.snapshot),
+          options,
         ),
+        "search source and annotation text",
       ),
     );
     return mergeMatches([first, ...pages].flatMap(({ results }) => results));

@@ -1,3 +1,8 @@
+import {
+  ConnectOperationScheduler,
+  readerConnectGlobalConcurrency,
+} from "./operation-scheduler.js";
+
 import type { annotationContract, sourceContract } from "./contracts.js";
 import type {
   ConnectOutcome,
@@ -14,6 +19,9 @@ import type {
   UpdateInput,
 } from "@mdbase-dev/connect";
 import type { ReaderRequestOptions } from "@mdbase-reader/core";
+
+const connectorBusyRetryDelaysMs = [75, 200, 500] as const;
+export const readerConnectBulkConcurrency = 4;
 
 export interface ReaderConnectClient {
   read(input: ReadInput, options?: ReaderRequestOptions): Promise<ConnectOutcome<RecordDocument>>;
@@ -65,6 +73,49 @@ export function readWithOptions(
   return options.signal ? client.read(input, options) : client.read(input);
 }
 
+export async function retryRejectedConnectorBusy<Value>(
+  operation: () => Promise<ConnectOutcome<Value>>,
+  options: { readonly signal?: AbortSignal } = {},
+): Promise<ConnectOutcome<Value>> {
+  let outcome = await operation();
+  for (const delayMs of connectorBusyRetryDelaysMs) {
+    if (!isRejectedConnectorBusy(outcome)) {
+      return outcome;
+    }
+    await abortableDelay(delayMs, options.signal);
+    outcome = await operation();
+  }
+  return outcome;
+}
+
+export async function mapConcurrent<Input, Output>(
+  values: readonly Input[],
+  concurrency: number,
+  operation: (value: Input, index: number) => Promise<Output>,
+): Promise<Output[]> {
+  if (!Number.isInteger(concurrency) || concurrency < 1) {
+    throw new Error("Concurrent repository work requires at least one worker.");
+  }
+  const results = new Array<Output>(values.length);
+  let nextIndex = 0;
+  let stopped = false;
+  await Promise.all(
+    Array.from({ length: Math.min(concurrency, values.length) }, async () => {
+      while (!stopped && nextIndex < values.length) {
+        const index = nextIndex;
+        nextIndex += 1;
+        try {
+          results[index] = await operation(values[index] as Input, index);
+        } catch (error) {
+          stopped = true;
+          throw error;
+        }
+      }
+    }),
+  );
+  return results;
+}
+
 export async function recordPathById(
   client: ReaderConnectClient,
   contract: typeof sourceContract | typeof annotationContract,
@@ -83,13 +134,69 @@ export async function recordPathById(
   );
 }
 
-export function connectClient(connection: MdbaseConnection): ReaderConnectClient {
+export function connectClient(
+  connection: MdbaseConnection,
+  scheduler = new ConnectOperationScheduler(readerConnectGlobalConcurrency),
+): ReaderConnectClient {
   return {
-    read: (input, options) => connection.read(input, options),
-    query: (input, options) => connection.query(input, options),
-    create: (input) => connection.create(input),
-    update: (input) => connection.update(input),
-    preflightDelete: (input) => connection.preflightDelete(input),
-    deleteWithProgress: (input, options) => connection.deleteWithProgress(input, options),
+    read: (input, options) =>
+      retryRejectedConnectorBusy(
+        () => scheduler.run(() => connection.read(input, options), { signal: options?.signal }),
+        options,
+      ),
+    query: (input, options) =>
+      retryRejectedConnectorBusy(
+        () => scheduler.run(() => connection.query(input, options), { signal: options?.signal }),
+        options,
+      ),
+    create: (input) =>
+      retryRejectedConnectorBusy(() =>
+        scheduler.run(() => connection.create(input), { priority: "foreground" }),
+      ),
+    update: (input) =>
+      retryRejectedConnectorBusy(() =>
+        scheduler.run(() => connection.update(input), { priority: "foreground" }),
+      ),
+    preflightDelete: (input) =>
+      retryRejectedConnectorBusy(() =>
+        scheduler.run(() => connection.preflightDelete(input), { priority: "foreground" }),
+      ),
+    deleteWithProgress: (input, options) =>
+      scheduler.run(() => connection.deleteWithProgress(input, options), {
+        priority: "foreground",
+        signal: options?.signal,
+      }),
   };
+}
+
+function isRejectedConnectorBusy(outcome: ConnectOutcome<unknown>): boolean {
+  return (
+    !outcome.ok &&
+    outcome.problem.code === "connector_busy" &&
+    (outcome.problem.operation_outcome === "rejected" ||
+      outcome.problem.operation_outcome === "not_sent")
+  );
+}
+
+function abortableDelay(delayMs: number, signal?: AbortSignal): Promise<void> {
+  if (signal?.aborted) {
+    return Promise.reject(abortReason(signal));
+  }
+  return new Promise((resolve, reject) => {
+    const timeout = setTimeout(() => {
+      signal?.removeEventListener("abort", abort);
+      resolve();
+    }, delayMs);
+    const abort = (): void => {
+      clearTimeout(timeout);
+      reject(abortReason(signal));
+    };
+    signal?.addEventListener("abort", abort, { once: true });
+  });
+}
+
+function abortReason(signal: AbortSignal | undefined): Error {
+  return signal?.reason instanceof Error
+    ? signal.reason
+    : new DOMException("The operation was cancelled.", "AbortError");
 }

@@ -1,6 +1,12 @@
 import { annotationContract } from "./contracts.js";
 import { annotationFromDocument, annotationFrontmatter } from "./mapping.js";
-import { outcomeValue, readWithOptions, recordPathById } from "./repository-client.js";
+import {
+  mapConcurrent,
+  outcomeValue,
+  readWithOptions,
+  readerConnectBulkConcurrency,
+  recordPathById,
+} from "./repository-client.js";
 
 import type { ReaderConnectClient } from "./repository-client.js";
 import type { DeletePreflightResult } from "@mdbase-dev/connect";
@@ -35,15 +41,13 @@ export class ConnectAnnotationRepository implements AnnotationRepository {
   ): Promise<readonly Annotation[]> {
     await this.#ensureIndex();
     const matchingPaths = this.#pathsBySource.get(source) ?? [];
-    return Promise.all(
-      matchingPaths.map(async (path) => {
-        const document = outcomeValue(
-          await readWithOptions(this.client, { path, includeDocument: true }, options),
-          "read annotation",
-        );
-        return annotationFromDocument(collection, document);
-      }),
-    );
+    return mapConcurrent(matchingPaths, readerConnectBulkConcurrency, async (path) => {
+      const document = outcomeValue(
+        await readWithOptions(this.client, { path, includeDocument: true }, options),
+        "read annotation",
+      );
+      return annotationFromDocument(collection, document);
+    });
   }
 
   async create(annotation: Annotation, _idempotencyKey: MutationId): Promise<Annotation> {

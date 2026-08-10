@@ -1,4 +1,8 @@
-import { outcomeValue } from "./repository-client.js";
+import {
+  ConnectOperationScheduler,
+  readerConnectGlobalConcurrency,
+} from "./operation-scheduler.js";
+import { outcomeValue, retryRejectedConnectorBusy } from "./repository-client.js";
 
 import type {
   ExecuteViewInput,
@@ -24,31 +28,62 @@ export interface LibraryViewRepository {
   save(input: LibraryViewSaveInput): Promise<SavedViewSourceDocument>;
 }
 
-export function connectLibraryViewRepository(connection: MdbaseConnection): LibraryViewRepository {
+export function connectLibraryViewRepository(
+  connection: MdbaseConnection,
+  scheduler = new ConnectOperationScheduler(readerConnectGlobalConcurrency),
+): LibraryViewRepository {
   return {
     async list(options = {}) {
-      return outcomeValue(await connection.listViews(options), "list library views");
+      return outcomeValue(
+        await retryRejectedConnectorBusy(
+          () => scheduler.run(() => connection.listViews(options), { signal: options.signal }),
+          options,
+        ),
+        "list library views",
+      );
     },
     async execute(input, options = {}) {
-      return outcomeValue(await connection.executeView(input, options), "execute library view");
+      return outcomeValue(
+        await retryRejectedConnectorBusy(
+          () =>
+            scheduler.run(() => connection.executeView(input, options), {
+              signal: options.signal,
+            }),
+          options,
+        ),
+        "execute library view",
+      );
     },
     async save(input) {
       if (input.path) {
+        const path = input.path;
         return outcomeValue(
-          await connection.updateViewSource({
-            path: input.path,
-            document: input.document,
-            ...(input.revision ? { ifRevision: input.revision } : {}),
-          }),
+          await retryRejectedConnectorBusy(() =>
+            scheduler.run(
+              () =>
+                connection.updateViewSource({
+                  path,
+                  document: input.document,
+                  ...(input.revision ? { ifRevision: input.revision } : {}),
+                }),
+              { priority: "foreground" },
+            ),
+          ),
           "save library view",
         );
       }
       return outcomeValue(
-        await connection.createViewSource({
-          document: input.document,
-          ...(input.name ? { name: input.name } : {}),
-          format: "mdbase.view",
-        }),
+        await retryRejectedConnectorBusy(() =>
+          scheduler.run(
+            () =>
+              connection.createViewSource({
+                document: input.document,
+                ...(input.name ? { name: input.name } : {}),
+                format: "mdbase.view",
+              }),
+            { priority: "foreground" },
+          ),
+        ),
         "create library view",
       );
     },

@@ -24,6 +24,10 @@ import { connectCollectionFileRepository } from "./collection-files.js";
 import { connectDocumentRepository } from "./documents.js";
 import { connectLibraryViewRepository, type LibraryViewRepository } from "./library-views.js";
 import {
+  ConnectOperationScheduler,
+  readerConnectGlobalConcurrency,
+} from "./operation-scheduler.js";
+import {
   ConnectAnnotationRepository,
   ConnectContentSearchRepository,
   connectClient,
@@ -111,7 +115,8 @@ export class ReaderApplicationSession {
     ) {
       return null;
     }
-    const client = connectClient(connection);
+    const scheduler = new ConnectOperationScheduler(readerConnectGlobalConcurrency);
+    const client = connectClient(connection, scheduler);
     return {
       collectionId: collectionId(connection.collectionId),
       collectionName: snapshot.info.displayName,
@@ -122,7 +127,7 @@ export class ReaderApplicationSession {
       documents: connectDocumentRepository(connection),
       contentSearch: new ConnectContentSearchRepository(client),
       files: connectCollectionFileRepository(connection),
-      libraryViews: connectLibraryViewRepository(connection),
+      libraryViews: connectLibraryViewRepository(connection, scheduler),
     };
   }
 }

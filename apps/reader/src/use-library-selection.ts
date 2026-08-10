@@ -63,18 +63,23 @@ export function useLibrarySelection(gateway: ReaderWorkspaceGateway): LibrarySel
       selectedSourceIdRef.current = next;
       setSelectedSourceId(next);
     };
-    void gateway
-      .library({ signal: controller.signal, onProgress: updateLibrary })
-      .then(updateLibrary)
-      .catch((reason: unknown) => {
-        if (!controller.signal.aborted) {
-          setLibrary({
-            status: "error",
-            message: readerErrorMessage(reason, "Reader could not load this collection."),
-          });
-        }
-      });
-    return () => controller.abort();
+    const timer = window.setTimeout(() => {
+      void gateway
+        .library({ signal: controller.signal, onProgress: updateLibrary })
+        .then(updateLibrary)
+        .catch((reason: unknown) => {
+          if (!controller.signal.aborted) {
+            setLibrary({
+              status: "error",
+              message: readerErrorMessage(reason, "Reader could not load this collection."),
+            });
+          }
+        });
+    }, 0);
+    return () => {
+      window.clearTimeout(timer);
+      controller.abort();
+    };
   }, [attempt, gateway]);
 
   const selectedSource = useMemo(() => {
