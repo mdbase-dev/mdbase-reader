@@ -23,6 +23,8 @@ export function CitationEditor({
   return <ReadyCitationEditor source={sourceRecord.value} editor={workspace.citation} />;
 }
 
+// The editor deliberately renders validity, quality, and mode states in one transaction.
+// eslint-disable-next-line complexity
 function ReadyCitationEditor({
   source,
   editor,
@@ -84,6 +86,7 @@ function ReadyCitationEditor({
             <CitationLookup citation={citation} editor={editor} />
             <CitationStructuredEditor
               citation={citation}
+              problems={editor.assessment.valid ? [] : (editor.assessment.problems ?? [])}
               onChange={editor.setCitation}
               onRegenerateCitekey={editor.regenerateCitekey}
             />

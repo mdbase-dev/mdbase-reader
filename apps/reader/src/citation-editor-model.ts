@@ -3,6 +3,7 @@ import {
   suggestSourceCitation,
   validateCslItem,
   type CslItem,
+  type CslValidationProblem,
   type Source,
 } from "@mdbase-reader/core";
 
@@ -12,6 +13,7 @@ export type CitationDraftAssessment =
       readonly valid: false;
       readonly message: string;
       readonly value?: Readonly<Record<string, unknown>>;
+      readonly problems?: readonly CslValidationProblem[];
     };
 
 export function citationDraftForSource(source: Source): string {
@@ -45,6 +47,7 @@ export function assessCitationDraft(draft: string): CitationDraftAssessment {
     : {
         valid: false,
         message: cslProblemSummary(validation.problems),
+        problems: validation.problems,
         ...(editableValue ? { value: editableValue } : {}),
       };
 }

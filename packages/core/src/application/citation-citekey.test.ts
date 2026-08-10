@@ -36,4 +36,17 @@ describe("citation citekeys and quality", () => {
       "A journal article normally needs a journal title.",
     ]);
   });
+
+  it("flags a DOI URL without treating it as invalid CSL", () => {
+    expect(
+      citationCompletenessWarnings({
+        id: "work",
+        type: "book",
+        title: "A work",
+        author: [{ literal: "Press" }],
+        issued: { "date-parts": [[2026]] },
+        DOI: "https://doi.org/10.1234/example",
+      }),
+    ).toContain("Store the bare DOI rather than its https://doi.org/ URL.");
+  });
 });

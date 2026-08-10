@@ -29,25 +29,44 @@ The local BibLib implementations demonstrate three useful boundaries:
 Reader adopts those boundaries without importing BibLib's Obsidian service/UI
 architecture or making Citation.js its domain model.
 
+## Editing and rendering
+
+Reader exposes the canonical object through two lossless surfaces:
+
+- a structured editor for identity, contributors, partial or literal dates,
+  publication details, identifiers, access, and the common CSL item types;
+- a Raw CSL editor for the complete schema and specialist fields.
+
+Both surfaces edit the same draft. Structured edits remove only the field being
+cleared and preserve every other property. Validity errors identify affected
+fields; publication-quality suggestions remain non-blocking. Citekey
+regeneration consults the complete library and resolves collisions
+deterministically.
+
+Live proofs run citeproc in the browser against bundled styles and locales.
+Style selection changes presentation only. Citation drags expose Pandoc
+Markdown and CSL JSON, with the portable Pandoc citekey as the default text.
+
 ## Enrichment boundary
 
-Future identifier lookup belongs behind a same-origin Reader service. That
-service may use Translation Server, Citoid, Crossref, or another reviewed
-provider, but it returns provenance-bearing CSL candidates and never receives
-collection credentials. The browser validates and presents the candidate;
-Connect persists it only after user approval.
+Identifier lookup belongs behind the optional `ReaderWorkspaceGateway`
+resolution capability. The production resolver will use a private Zotero
+Translation Server behind an authenticated mdbase façade. It returns
+provenance-bearing CSL candidates and never receives collection credentials.
+The browser validates and presents a field-level comparison; Connect persists
+it only after user approval.
 
 URL capture remains useful when no external metadata service succeeds. Its
 HTML metadata extraction produces a conservative candidate from title,
 authors, publication date, site, language, description, and canonical URL.
 Missing evidence stays missing rather than being fabricated.
 
-## Import and conflicts
+## Deferred import and library maintenance
 
-A single CSL object can be pasted and validated in the citation editor. Batch
-CSL JSON, BibTeX, RIS, and Zotero imports require a content-free review plan
-before mutation. That plan must report source matches, new sources, citekey
-collisions, invalid entries, and preserved unsupported fields.
+Batch CSL JSON, BibTeX, RIS, and Zotero imports are intentionally outside the
+current feature. They require a review plan before mutation. Library-wide
+citation maintenance views are also deferred until the mdbase view model can
+represent them without a second custom filtering system.
 
 Library-wide bibliography construction is the authority for duplicate
 citekeys. Exports include every valid unique item and visibly report missing,

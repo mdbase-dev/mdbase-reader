@@ -231,6 +231,16 @@
   border-color: var(--accent);
 }
 
+.citation-field [aria-invalid="true"] {
+  border-color: color-mix(in oklch, var(--danger) 72%, var(--line));
+}
+
+.citation-field-problem {
+  color: var(--danger);
+  font: 8px/1.35 var(--mono);
+  letter-spacing: 0;
+}
+
 .citation-citekey-field > div {
   display: grid;
   grid-template-columns: auto minmax(0, 1fr);

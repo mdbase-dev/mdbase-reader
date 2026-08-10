@@ -49,6 +49,9 @@ export function citationCompletenessWarnings(citation: CslItem): readonly string
   if (citation.type === "chapter" && !text(citation["container-title"])) {
     warnings.push("A chapter normally needs a book or collection title.");
   }
+  if (/^https?:\/\/(?:dx\.)?doi\.org\//iu.test(text(citation["DOI"]) ?? "")) {
+    warnings.push("Store the bare DOI rather than its https://doi.org/ URL.");
+  }
   return warnings;
 }
 
