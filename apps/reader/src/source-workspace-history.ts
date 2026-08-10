@@ -1,9 +1,11 @@
 import {
   activeTab,
+  createLibraryWorkspaceTab,
   createWorkspaceTab,
   paneById,
   tabLocation,
   updatePane,
+  libraryWorkspaceTabId,
   workspaceTabId,
 } from "./source-workspace-layout.js";
 
@@ -56,18 +58,35 @@ function activateHistoryLocation(
   location: WorkspaceLocation,
   index: number,
 ): SourceWorkspacePane {
-  const id = workspaceTabId(location.sourceId, location.view);
+  const id =
+    location.kind === "source"
+      ? workspaceTabId(location.sourceId, location.view)
+      : libraryWorkspaceTabId(location.libraryViewId);
   const exists = pane.tabs.some((tab) => tab.id === id);
   return {
     ...pane,
-    tabs: exists ? pane.tabs : [...pane.tabs, createWorkspaceTab(location.sourceId, location.view)],
+    tabs: exists
+      ? pane.tabs
+      : [
+          ...pane.tabs,
+          location.kind === "source"
+            ? createWorkspaceTab(location.sourceId, location.view)
+            : createLibraryWorkspaceTab(location.libraryViewId, location.title),
+        ],
     activeTabId: id,
     history: { ...pane.history, index },
   };
 }
 
 function sameLocation(left: WorkspaceLocation | undefined, right: WorkspaceLocation): boolean {
-  return left?.sourceId === right.sourceId && left.view === right.view;
+  if (left?.kind !== right.kind) {
+    return false;
+  }
+  return left.kind === "source" && right.kind === "source"
+    ? left.sourceId === right.sourceId && left.view === right.view
+    : left.kind === "library" &&
+        right.kind === "library" &&
+        left.libraryViewId === right.libraryViewId;
 }
 
 export function currentPaneLocation(pane: SourceWorkspacePane): WorkspaceLocation | null {

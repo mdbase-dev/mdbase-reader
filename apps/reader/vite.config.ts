@@ -10,6 +10,15 @@ const buildId = (process.env["MDBASE_READER_BUILD_ID"] ?? "local").replaceAll(
 
 export default defineConfig({
   plugins: [react(), deploymentRevision(buildId)],
+  resolve: {
+    dedupe: [
+      "@codemirror/autocomplete",
+      "@codemirror/commands",
+      "@codemirror/language",
+      "@codemirror/state",
+      "@codemirror/view",
+    ],
+  },
   build: {
     sourcemap: true,
     target: "es2022",

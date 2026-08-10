@@ -3,7 +3,7 @@ import { ReaderButton } from "@mdbase-reader/ui";
 import { MoreIcon } from "./icons.js";
 import { draggedWorkspaceTab } from "./source-tab-drag.js";
 
-import type { SourceWorkspacePane, WorkspaceTab } from "./source-workspace-layout.js";
+import type { SourceWorkspacePane } from "./source-workspace-layout.js";
 import type { ReadingResumeState } from "./use-reading-resume.js";
 import type { SourceExportController } from "./use-source-export.js";
 import type { SourceWorkspaceController } from "./use-source-workspace.js";
@@ -20,7 +20,7 @@ export function PaneSplitTargets({
     event.preventDefault();
     const dragged = draggedWorkspaceTab(event.dataTransfer);
     if (dragged?.paneId === pane.id) {
-      workspace.splitTab(dragged.tabId as WorkspaceTab["id"], pane.id, direction);
+      workspace.splitTab(dragged.tabId, pane.id, direction);
     }
   };
   return (

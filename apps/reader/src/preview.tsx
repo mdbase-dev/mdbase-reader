@@ -1,3 +1,4 @@
+/* eslint-disable max-lines */
 import {
   annotationId,
   collectionId,
@@ -18,6 +19,14 @@ import {
 } from "@mdbase-reader/core";
 import { useMemo, type JSX } from "react";
 
+import {
+  applyLibraryViewConfiguration,
+  defaultLibraryView,
+  defaultLibraryViewConfiguration,
+  type ExecutedLibraryView,
+  type LibraryViewSaveRequest,
+  type MdbaseLibraryView,
+} from "./mdbase-library-views.js";
 import { ReaderApp } from "./ReaderApp.js";
 
 import type { ReaderLibrarySnapshot, ReaderWorkspaceGateway } from "./workspace-model.js";
@@ -128,6 +137,34 @@ const annotations: readonly Annotation[] = [
 class PreviewGateway implements ReaderWorkspaceGateway {
   #sources = [...sources];
   #annotations = [...annotations];
+  #views: MdbaseLibraryView[] = [
+    defaultLibraryView,
+    {
+      ...defaultLibraryView,
+      key: "preview/reading.md::reading",
+      path: "preview/reading.md",
+      revision: "preview-view-1",
+      viewId: "reading",
+      name: "Currently reading",
+      writable: true,
+      owned: true,
+      configuration: {
+        ...defaultLibraryViewConfiguration,
+        filter: { ...defaultLibraryViewConfiguration.filter, status: "reading" },
+      },
+    },
+    {
+      ...defaultLibraryView,
+      key: "preview/cards.md::visual-library",
+      path: "preview/cards.md",
+      revision: "preview-view-2",
+      viewId: "visual-library",
+      name: "Visual library",
+      writable: true,
+      owned: true,
+      configuration: { ...defaultLibraryViewConfiguration, presentation: "cards" },
+    },
+  ];
 
   library(): Promise<ReaderLibrarySnapshot> {
     return Promise.resolve({
@@ -135,6 +172,36 @@ class PreviewGateway implements ReaderWorkspaceGateway {
       sources: this.#sources,
       connectionState: "connected",
     });
+  }
+  listLibraryViews(): Promise<readonly MdbaseLibraryView[]> {
+    return Promise.resolve(this.#views);
+  }
+  executeLibraryView(view: MdbaseLibraryView): Promise<ExecutedLibraryView> {
+    const visible = applyLibraryViewConfiguration(this.#sources, view.configuration);
+    return Promise.resolve({
+      sources: visible,
+      valuesByPath: new Map(),
+      totalCount: visible.length,
+    });
+  }
+  saveLibraryView(request: LibraryViewSaveRequest): Promise<MdbaseLibraryView> {
+    const slug = request.name
+      .trim()
+      .toLocaleLowerCase()
+      .replace(/[^a-z0-9]+/gu, "-");
+    const saved: MdbaseLibraryView = {
+      key: request.existing?.key ?? `preview/${slug}.md::${slug}`,
+      path: request.existing?.path ?? `preview/${slug}.md`,
+      revision: `preview-view-${String(this.#views.length + 1)}`,
+      viewId: request.existing?.viewId ?? slug,
+      name: request.name.trim(),
+      writable: true,
+      owned: true,
+      properties: [],
+      configuration: request.configuration,
+    };
+    this.#views = [...this.#views.filter(({ key }) => key !== saved.key), saved];
+    return Promise.resolve(saved);
   }
   source(id: SourceId): Promise<Source | null> {
     return Promise.resolve(this.#sources.find((source) => source.id === id) ?? null);

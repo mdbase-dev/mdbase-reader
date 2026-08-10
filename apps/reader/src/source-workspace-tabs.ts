@@ -1,6 +1,7 @@
 import { pushPaneHistory } from "./source-workspace-history.js";
 import {
   activeTab,
+  createLibraryWorkspaceTab,
   createWorkspaceTab,
   focusedPane,
   paneById,
@@ -15,7 +16,7 @@ import type {
   WorkspacePaneId,
   WorkspaceTab,
   WorkspaceTabId,
-  WorkspaceView,
+  SourceWorkspaceView,
 } from "./source-workspace-layout.js";
 import type { SourceId } from "@mdbase-reader/core";
 
@@ -23,9 +24,16 @@ const recentSourceLimit = 80;
 
 export interface OpenWorkspaceTabOptions {
   readonly paneId?: WorkspacePaneId;
-  readonly view?: WorkspaceView;
+  readonly view?: SourceWorkspaceView;
   readonly preview?: boolean;
   readonly pinned?: boolean;
+}
+
+export interface OpenLibraryTabOptions {
+  readonly paneId?: WorkspacePaneId;
+  readonly preview?: boolean;
+  readonly pinned?: boolean;
+  readonly title?: string;
 }
 
 export function openSource(
@@ -81,13 +89,32 @@ export function openWorkspaceTab(
   return next;
 }
 
+export function openLibraryTab(
+  layout: SourceWorkspaceLayout,
+  libraryViewId = "all-sources",
+  options: OpenLibraryTabOptions = {},
+): SourceWorkspaceLayout {
+  const paneId = options.paneId ?? layout.focusedPaneId;
+  const tab = {
+    ...createLibraryWorkspaceTab(
+      libraryViewId,
+      options.title ?? "Library",
+      options.preview ?? false,
+    ),
+    pinned: options.pinned ?? false,
+  };
+  return updatePane(layout, paneId, (pane) => openTabInPane(pane, tab));
+}
+
 export function activateSource(
   layout: SourceWorkspaceLayout,
   sourceId: SourceId,
   paneId: WorkspacePaneId = layout.focusedPaneId,
 ): SourceWorkspaceLayout {
   const pane = paneById(layout, paneId);
-  const tab = pane?.tabs.find((candidate) => candidate.sourceId === sourceId);
+  const tab = pane?.tabs.find(
+    (candidate) => candidate.kind === "source" && candidate.sourceId === sourceId,
+  );
   return tab ? activateWorkspaceTab(layout, tab.id, paneId) : layout;
 }
 
@@ -100,10 +127,8 @@ export function activateWorkspaceTab(
   if (!tab) {
     return layout;
   }
-  return rememberWorkspaceSource(
-    updatePane(layout, paneId, (pane) => activatePaneTab(pane, tabId)),
-    tab.sourceId,
-  );
+  const next = updatePane(layout, paneId, (pane) => activatePaneTab(pane, tabId));
+  return tab.kind === "source" ? rememberWorkspaceSource(next, tab.sourceId) : next;
 }
 
 export function promoteWorkspaceTab(
@@ -182,7 +207,10 @@ export function matchingWorkspaceTabs(
     .filter(
       (tab) =>
         !normalized ||
-        title(tab.sourceId).toLocaleLowerCase().includes(normalized) ||
+        (tab.kind === "source"
+          ? title(tab.sourceId).toLocaleLowerCase()
+          : tab.title.toLocaleLowerCase()
+        ).includes(normalized) ||
         tab.view.includes(normalized),
     );
 }
@@ -213,5 +241,36 @@ export function rememberWorkspaceSource(
 }
 
 export function activeSourceId(layout: SourceWorkspaceLayout): SourceId | null {
-  return activeTab(focusedPane(layout))?.sourceId ?? null;
+  const tab = activeTab(focusedPane(layout));
+  return tab?.kind === "source" ? tab.sourceId : null;
+}
+
+function openTabInPane(pane: SourceWorkspacePane, tab: WorkspaceTab): SourceWorkspacePane {
+  const existing = pane.tabs.find((candidate) => candidate.id === tab.id);
+  if (existing) {
+    const promoted = !tab.preview || tab.pinned;
+    const tabs = promoted
+      ? pane.tabs.map((candidate) =>
+          candidate.id === tab.id
+            ? candidate.kind === "library" && tab.kind === "library"
+              ? {
+                  ...candidate,
+                  title: tab.title,
+                  preview: false,
+                  pinned: tab.pinned || candidate.pinned,
+                }
+              : { ...candidate, preview: false, pinned: tab.pinned || candidate.pinned }
+            : candidate,
+        )
+      : pane.tabs;
+    return activatePaneTab({ ...pane, tabs }, tab.id);
+  }
+  const replacementIndex = tab.preview ? reusablePreviewIndex(pane) : -1;
+  const tabs = [...pane.tabs];
+  if (replacementIndex >= 0) {
+    tabs[replacementIndex] = tab;
+  } else {
+    tabs.push(tab);
+  }
+  return activatePaneTab({ ...pane, tabs }, tab.id);
 }

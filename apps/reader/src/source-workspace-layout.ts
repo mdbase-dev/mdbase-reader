@@ -1,24 +1,52 @@
 import type { SourceId } from "@mdbase-reader/core";
 
-export const workspaceViews = ["document", "note", "annotations", "citation"] as const;
+export const sourceWorkspaceViews = ["document", "note", "annotations", "citation"] as const;
+export type SourceWorkspaceView = (typeof sourceWorkspaceViews)[number];
+export const workspaceViews = ["library", ...sourceWorkspaceViews] as const;
 export type WorkspaceView = (typeof workspaceViews)[number];
 export type WorkspacePaneId = "primary" | "secondary";
 export type WorkspaceSplitDirection = "horizontal" | "vertical";
-export type WorkspaceTabId = `${string}::${WorkspaceView}`;
+export type WorkspaceTabId = string;
 
-export interface WorkspaceTab {
+interface WorkspaceTabBase {
   readonly id: WorkspaceTabId;
-  readonly sourceId: SourceId;
-  readonly view: WorkspaceView;
   readonly preview: boolean;
   readonly pinned: boolean;
   readonly dirty: boolean;
 }
 
-export interface WorkspaceLocation {
+export interface SourceWorkspaceTab extends WorkspaceTabBase {
+  readonly kind: "source";
   readonly sourceId: SourceId;
-  readonly view: WorkspaceView;
+  readonly libraryViewId?: undefined;
+  readonly title?: undefined;
+  readonly view: SourceWorkspaceView;
 }
+
+export interface LibraryWorkspaceTab extends WorkspaceTabBase {
+  readonly kind: "library";
+  readonly sourceId?: undefined;
+  readonly view: "library";
+  /** `all-sources` is Reader's unsaved default; saved views use `path::viewId`. */
+  readonly libraryViewId: string;
+  readonly title: string;
+}
+
+export type WorkspaceTab = SourceWorkspaceTab | LibraryWorkspaceTab;
+
+export interface SourceWorkspaceLocation {
+  readonly kind: "source";
+  readonly sourceId: SourceId;
+  readonly view: SourceWorkspaceView;
+}
+
+export interface LibraryWorkspaceLocation {
+  readonly kind: "library";
+  readonly libraryViewId: string;
+  readonly title: string;
+}
+
+export type WorkspaceLocation = SourceWorkspaceLocation | LibraryWorkspaceLocation;
 
 export interface WorkspaceHistory {
   readonly entries: readonly WorkspaceLocation[];
@@ -77,10 +105,11 @@ export function createPane(
 
 export function createWorkspaceTab(
   sourceId: SourceId,
-  view: WorkspaceView = "document",
+  view: SourceWorkspaceView = "document",
   preview = false,
-): WorkspaceTab {
+): SourceWorkspaceTab {
   return {
+    kind: "source",
     id: workspaceTabId(sourceId, view),
     sourceId,
     view,
@@ -90,8 +119,29 @@ export function createWorkspaceTab(
   };
 }
 
-export function workspaceTabId(sourceId: SourceId, view: WorkspaceView): WorkspaceTabId {
+export function createLibraryWorkspaceTab(
+  libraryViewId = "all-sources",
+  title = "Library",
+  preview = false,
+): LibraryWorkspaceTab {
+  return {
+    kind: "library",
+    id: libraryWorkspaceTabId(libraryViewId),
+    libraryViewId,
+    title,
+    view: "library",
+    preview,
+    pinned: false,
+    dirty: false,
+  };
+}
+
+export function workspaceTabId(sourceId: SourceId, view: SourceWorkspaceView): WorkspaceTabId {
   return `${sourceId}::${view}`;
+}
+
+export function libraryWorkspaceTabId(libraryViewId: string): WorkspaceTabId {
+  return `library::${libraryViewId}`;
 }
 
 export function focusedPane(layout: SourceWorkspaceLayout): SourceWorkspacePane {
@@ -114,7 +164,13 @@ export function activeWorkspaceTab(layout: SourceWorkspaceLayout): WorkspaceTab 
 }
 
 export function tabLocation(tab: WorkspaceTab): WorkspaceLocation {
-  return { sourceId: tab.sourceId, view: tab.view };
+  return tab.kind === "source"
+    ? { kind: "source", sourceId: tab.sourceId, view: tab.view }
+    : {
+        kind: "library",
+        libraryViewId: tab.libraryViewId,
+        title: tab.title,
+      };
 }
 
 export function allWorkspaceTabs(layout: SourceWorkspaceLayout): readonly WorkspaceTab[] {
@@ -122,7 +178,15 @@ export function allWorkspaceTabs(layout: SourceWorkspaceLayout): readonly Worksp
 }
 
 export function sourceIdsInWorkspace(layout: SourceWorkspaceLayout): readonly SourceId[] {
-  return [...new Set(allWorkspaceTabs(layout).map(({ sourceId }) => sourceId))];
+  return [
+    ...new Set(
+      allWorkspaceTabs(layout).flatMap((tab) => (tab.kind === "source" ? [tab.sourceId] : [])),
+    ),
+  ];
+}
+
+export function workspaceTabSourceId(tab: WorkspaceTab | null | undefined): SourceId | null {
+  return tab?.kind === "source" ? tab.sourceId : null;
 }
 
 export function updatePane(

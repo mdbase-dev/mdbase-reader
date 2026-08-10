@@ -22,6 +22,7 @@ import {
 import { connectAnnotationAssetRepository } from "./annotation-assets.js";
 import { connectCollectionFileRepository } from "./collection-files.js";
 import { connectDocumentRepository } from "./documents.js";
+import { connectLibraryViewRepository, type LibraryViewRepository } from "./library-views.js";
 import {
   ConnectAnnotationRepository,
   ConnectContentSearchRepository,
@@ -42,6 +43,7 @@ export interface ReaderConnectedCollection {
   readonly documents: DocumentRepository;
   readonly contentSearch: ContentSearchRepository;
   readonly files: CollectionFileRepository;
+  readonly libraryViews: LibraryViewRepository;
 }
 
 export interface ReaderApplicationSessionOptions {
@@ -120,6 +122,7 @@ export class ReaderApplicationSession {
       documents: connectDocumentRepository(connection),
       contentSearch: new ConnectContentSearchRepository(client),
       files: connectCollectionFileRepository(connection),
+      libraryViews: connectLibraryViewRepository(connection),
     };
   }
 }

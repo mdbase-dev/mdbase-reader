@@ -13,13 +13,35 @@ import {
   restoreSourceWorkspace,
   workspaceStorageKey,
 } from "./source-workspace-persistence.js";
-import { openSource, previewSource, setWorkspaceTabDirty } from "./source-workspace-tabs.js";
+import {
+  openLibraryTab,
+  openSource,
+  previewSource,
+  setWorkspaceTabDirty,
+} from "./source-workspace-tabs.js";
 
 const first = sourceId("first");
 const second = sourceId("second");
 const known = new Set([first, second]);
 
 describe("source workspace persistence", () => {
+  it("persists collection-level mdbase view tabs alongside source tabs", () => {
+    const layout = openLibraryTab(createSourceWorkspaceLayout(first), "views/reading.md::queue", {
+      title: "Reading queue",
+      pinned: true,
+    });
+    const restored = parseSourceWorkspace(JSON.parse(JSON.stringify(layout)), known, null);
+    expect(focusedPane(restored).tabs).toEqual([
+      expect.objectContaining({ kind: "source", sourceId: first }),
+      expect.objectContaining({
+        kind: "library",
+        libraryViewId: "views/reading.md::queue",
+        title: "Reading queue",
+        pinned: true,
+      }),
+    ]);
+  });
+
   it("restores open tabs, previews, split layout, history, and focus", () => {
     const opened = previewSource(openSource(createSourceWorkspaceLayout(first), second), first);
     const split = openBeside(opened, second, "note", "vertical");

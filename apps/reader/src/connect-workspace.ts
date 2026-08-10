@@ -1,3 +1,4 @@
+/* eslint-disable max-lines */
 import {
   createAnnotation,
   deleteAnnotation,
@@ -8,6 +9,16 @@ import {
   updateAnnotationBody,
 } from "@mdbase-reader/core";
 
+import {
+  buildLibraryViewDocument,
+  defaultLibraryView,
+  libraryViewConfiguration,
+  libraryViewKey,
+  isReaderLibraryPresentation,
+  type ExecutedLibraryView,
+  type LibraryViewSaveRequest,
+  type MdbaseLibraryView,
+} from "./mdbase-library-views.js";
 import { completeLibrarySnapshot, loadSourceLibrary } from "./source-library-loader.js";
 
 import type {
@@ -15,6 +26,7 @@ import type {
   ReaderLibrarySnapshot,
   ReaderWorkspaceGateway,
 } from "./workspace-model.js";
+import type { LibraryViewRepository } from "@mdbase-reader/connect";
 import type {
   Annotation,
   AnnotationDeletionPlan,
@@ -60,6 +72,7 @@ export class ConnectWorkspaceGateway implements ReaderWorkspaceGateway {
     },
     private readonly contentSearch?: ContentSearchRepository,
     private readonly files?: CollectionFileRepository,
+    private readonly libraryViewRepository?: LibraryViewRepository,
   ) {}
 
   async library(options: ReaderLibraryRequestOptions = {}): Promise<ReaderLibrarySnapshot> {
@@ -88,6 +101,84 @@ export class ConnectWorkspaceGateway implements ReaderWorkspaceGateway {
       this.#sourcesById.set(id, source);
     }
     return source;
+  }
+
+  async listLibraryViews(
+    options: ReaderRequestOptions = {},
+  ): Promise<readonly MdbaseLibraryView[]> {
+    if (!this.libraryViewRepository) {
+      return [defaultLibraryView];
+    }
+    const listed = await this.libraryViewRepository.list(options);
+    return [
+      defaultLibraryView,
+      ...listed.views.flatMap((document) =>
+        document.views.map((view) => ({
+          key: libraryViewKey(document.source.path, view.id),
+          path: document.source.path,
+          revision: document.source.revision,
+          viewId: view.id,
+          name: view.name,
+          writable: document.source.writable,
+          owned: isReaderLibraryPresentation(view.presentation),
+          properties: view.properties.map(({ key, label }) => ({
+            key,
+            ...(label ? { label } : {}),
+          })),
+          configuration: libraryViewConfiguration(view.presentation),
+        })),
+      ),
+    ];
+  }
+
+  async executeLibraryView(
+    view: MdbaseLibraryView,
+    options: ReaderRequestOptions = {},
+  ): Promise<ExecutedLibraryView> {
+    const library = await this.library(options);
+    if (!view.path || !this.libraryViewRepository) {
+      return {
+        sources: library.sources,
+        valuesByPath: new Map(),
+        totalCount: library.sources.length,
+      };
+    }
+    const execution = await this.libraryViewRepository.execute(
+      { path: view.path, view: view.viewId },
+      options,
+    );
+    const byPath = new Map(library.sources.map((source) => [source.path, source]));
+    const valuesByPath = new Map<string, Readonly<Record<string, unknown>>>();
+    const sources = execution.results.flatMap((row) => {
+      const source = byPath.get(row.path);
+      if (!source) {
+        return [];
+      }
+      valuesByPath.set(row.path, row.values ?? {});
+      return [source];
+    });
+    return { sources, valuesByPath, totalCount: execution.meta.totalCount };
+  }
+
+  async saveLibraryView(request: LibraryViewSaveRequest): Promise<MdbaseLibraryView> {
+    if (!this.libraryViewRepository) {
+      throw new Error("Saved mdbase views are unavailable for this collection.");
+    }
+    const saved = await this.libraryViewRepository.save({
+      document: buildLibraryViewDocument(request),
+      ...(request.existing?.path ? { path: request.existing.path } : { name: request.name }),
+      ...(request.existing?.revision ? { revision: request.existing.revision } : {}),
+    });
+    const views = await this.listLibraryViews();
+    const match = views.find(
+      (view) =>
+        view.path === saved.path &&
+        view.name.toLocaleLowerCase() === request.name.trim().toLocaleLowerCase(),
+    );
+    if (!match) {
+      throw new Error("The view was saved, but Reader could not reopen it.");
+    }
+    return match;
   }
 
   async annotations(

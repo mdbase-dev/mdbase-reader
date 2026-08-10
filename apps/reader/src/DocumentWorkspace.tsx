@@ -16,6 +16,8 @@ import {
 
 import type {
   SourceWorkspacePane,
+  LibraryWorkspaceTab,
+  SourceWorkspaceTab,
   WorkspacePaneId,
   WorkspaceTab,
 } from "./source-workspace-layout.js";
@@ -29,18 +31,17 @@ export interface DocumentWorkspaceProps {
   readonly sources: readonly SourceSummary[];
   readonly sourceWorkspace: SourceWorkspaceController;
   readonly focusMode: boolean;
-  readonly inspectorOpen: boolean;
   readonly readingResume: ReadingResumeState;
   readonly decorationProblem: string | null;
   readonly canSelectArea: boolean;
   readonly selectingArea: boolean;
   readonly sourceExport: SourceExportController;
   readonly renderDocument: (source: SourceSummary, paneId: WorkspacePaneId) => ReactNode;
-  readonly renderTool: (tab: WorkspaceTab, focused: boolean) => ReactNode;
+  readonly renderTool: (tab: SourceWorkspaceTab, focused: boolean) => ReactNode;
+  readonly renderLibrary: (tab: LibraryWorkspaceTab, focused: boolean) => ReactNode;
   readonly onAddSource: () => void;
   readonly onBackToLibrary: () => void;
   readonly onToggleFocus: () => void;
-  readonly onToggleInspector: () => void;
   readonly onToggleAreaSelection: () => void;
 }
 
@@ -74,6 +75,8 @@ export function DocumentWorkspace(props: DocumentWorkspaceProps): JSX.Element {
   );
 }
 
+// The branching mirrors the three distinct workspace surfaces: library, tools, and documents.
+// eslint-disable-next-line complexity
 function WorkspacePane({
   pane,
   sources,
@@ -82,6 +85,7 @@ function WorkspacePane({
   hydratedTabs,
   renderDocument,
   renderTool,
+  renderLibrary,
   ...toolbar
 }: DocumentWorkspaceProps & {
   readonly pane: SourceWorkspacePane;
@@ -90,12 +94,18 @@ function WorkspacePane({
 }): JSX.Element {
   const active = pane.tabs.find(({ id }) => id === pane.activeTabId) ?? null;
   const sourceFor = (tab: WorkspaceTab): SourceSummary | null =>
-    sources.find(({ id }) => id === tab.sourceId) ?? null;
+    tab.kind === "source" ? (sources.find(({ id }) => id === tab.sourceId) ?? null) : null;
   const source = active ? sourceFor(active) : null;
   const focused = sourceWorkspace.layout.focusedPaneId === pane.id;
+  const surfaceClass =
+    active?.kind === "library"
+      ? " is-library-pane"
+      : active?.kind === "source" && active.view !== "document"
+        ? " is-tool-pane"
+        : "";
   return (
     <section
-      className={`workspace-pane${focused ? " is-focused" : ""}`}
+      className={`workspace-pane${focused ? " is-focused" : ""}${surfaceClass}`}
       aria-label={`Reading pane ${pane.id === "primary" ? "A" : "B"}`}
       onPointerDown={() => sourceWorkspace.focus(pane.id)}
     >
@@ -109,12 +119,40 @@ function WorkspacePane({
         onCloseOthers={(tab) => sourceWorkspace.closeOthers(tab.id, pane.id)}
         onCloseToRight={(tab) => sourceWorkspace.closeToRight(tab.id, pane.id)}
         onOpenBeside={(tab, direction) =>
-          sourceWorkspace.openBeside(tab.sourceId, tab.view, direction)
+          tab.kind === "source"
+            ? sourceWorkspace.openBeside(tab.sourceId, tab.view, direction)
+            : sourceWorkspace.openLibraryBeside(tab.libraryViewId, tab.title, direction)
         }
         onReorder={(from, to) => sourceWorkspace.reorder(pane.id, from, to)}
         onMoveFromPane={(tabId, fromPaneId) => sourceWorkspace.moveTab(tabId, fromPaneId, pane.id)}
       />
-      {active && source ? (
+      {active?.kind === "library" ? (
+        <div className="document-canvas is-library-canvas">
+          <WorkspaceSessions
+            pane={pane}
+            sources={sources}
+            renderDocument={renderDocument}
+            renderTool={renderTool}
+            renderLibrary={renderLibrary}
+            focused={focused}
+            hydratedTabs={hydratedTabs}
+            onAddSource={toolbar.onAddSource}
+          />
+        </div>
+      ) : active?.kind === "source" && active.view !== "document" && source ? (
+        <div className="document-canvas is-tool-canvas">
+          <WorkspaceSessions
+            pane={pane}
+            sources={sources}
+            renderDocument={renderDocument}
+            renderTool={renderTool}
+            renderLibrary={renderLibrary}
+            focused={focused}
+            hydratedTabs={hydratedTabs}
+            onAddSource={toolbar.onAddSource}
+          />
+        </div>
+      ) : active && source ? (
         <>
           <DocumentContextualToolbar
             source={source}
@@ -135,6 +173,7 @@ function WorkspacePane({
               sources={sources}
               renderDocument={renderDocument}
               renderTool={renderTool}
+              renderLibrary={renderLibrary}
               focused={focused}
               hydratedTabs={hydratedTabs}
               onAddSource={toolbar.onAddSource}
@@ -156,10 +195,14 @@ function WorkspaceSessions({
   sources,
   renderDocument,
   renderTool,
+  renderLibrary,
   focused,
   hydratedTabs,
   onAddSource,
-}: Pick<DocumentWorkspaceProps, "sources" | "renderDocument" | "renderTool" | "onAddSource"> & {
+}: Pick<
+  DocumentWorkspaceProps,
+  "sources" | "renderDocument" | "renderTool" | "renderLibrary" | "onAddSource"
+> & {
   readonly pane: SourceWorkspacePane;
   readonly focused: boolean;
   readonly hydratedTabs: ReadonlySet<WorkspaceSessionKey>;
@@ -167,19 +210,26 @@ function WorkspaceSessions({
   return (
     <div className="document-session-deck">
       {pane.tabs.map((tab) => {
-        const source = sources.find(({ id }) => id === tab.sourceId);
+        const source =
+          tab.kind === "source" ? sources.find(({ id }) => id === tab.sourceId) : undefined;
         const active = tab.id === pane.activeTabId;
         const hydrated = active || hydratedTabs.has(workspaceSessionKey(pane.id, tab.id));
-        return source ? (
+        return tab.kind === "library" || source ? (
           <div
             className={active ? "document-session is-active" : "document-session"}
             key={tab.id}
             aria-hidden={!active}
           >
             {hydrated
-              ? tab.view === "document"
-                ? (renderDocument(source, pane.id) ?? <DocumentEmpty onAddSource={onAddSource} />)
-                : renderTool(tab, focused)
+              ? tab.kind === "library"
+                ? renderLibrary(tab, focused)
+                : tab.view === "document"
+                  ? source
+                    ? (renderDocument(source, pane.id) ?? (
+                        <DocumentEmpty onAddSource={onAddSource} />
+                      ))
+                    : null
+                  : renderTool(tab, focused)
               : null}
           </div>
         ) : null;

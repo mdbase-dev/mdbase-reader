@@ -78,19 +78,19 @@ export function LibraryPane({
       </div>
       <label className="library-search">
         <SearchIcon />
-        <span className="sr-only">Search sources</span>
+        <span className="sr-only">Filter library</span>
         <input
           id="reader-library-search"
           value={search}
           onChange={(event) => onSearchChange(event.target.value)}
-          placeholder="Search library"
+          placeholder="Filter library"
         />
         {searchStatus === "searching" ? (
           <span className="library-search-progress" aria-hidden="true">
             ···
           </span>
         ) : (
-          <kbd>⌘K</kbd>
+          <kbd>⌘F</kbd>
         )}
       </label>
       <span className="sr-only" role="status" aria-live="polite">
@@ -102,7 +102,7 @@ export function LibraryPane({
         lens={lens}
         sort={sort}
         savedLenses={savedLenses}
-        count={`${String(visibleSources.length)} / ${sourceCountLabel(sources.length, sourceIndex)}`}
+        count={sourceCountSummary(visibleSources.length, sources.length, sourceIndex)}
         presentation={presentation}
         onLensChange={onLensChange}
         onSortChange={onSortChange}
@@ -157,6 +157,17 @@ function sourceCountLabel(
   return sourceIndex?.complete === false && sourceIndex.total
     ? `${String(loaded)}/${String(sourceIndex.total)}`
     : String(loaded);
+}
+
+function sourceCountSummary(
+  visible: number,
+  loaded: number,
+  sourceIndex: ReaderLibrarySnapshot["sourceIndex"],
+): string {
+  const total = sourceCountLabel(loaded, sourceIndex);
+  return visible === loaded
+    ? `${total} ${visible === 1 ? "source" : "sources"}`
+    : `${String(visible)} of ${total} sources`;
 }
 
 function LibraryActions({

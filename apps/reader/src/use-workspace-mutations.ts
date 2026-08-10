@@ -1,3 +1,4 @@
+import { annotationId, dateTime } from "@mdbase-reader/core";
 import { useCallback, type Dispatch, type SetStateAction } from "react";
 
 import type { SelectedValue } from "./selected-resource.js";
@@ -22,7 +23,7 @@ export function useAnnotationCreation(
 ): (request: AnnotationCreationRequest) => Promise<Annotation> {
   return useCallback(
     async (request: AnnotationCreationRequest): Promise<Annotation> => {
-      const created = await gateway.createAnnotation(request);
+      const pending = pendingAnnotation(request);
       setAnnotations((current) => {
         const values =
           current?.sourceId === request.sourceId && current.value.status === "ready"
@@ -30,13 +31,69 @@ export function useAnnotationCreation(
             : [];
         return {
           sourceId: request.sourceId,
-          value: { status: "ready", value: [created, ...values] },
+          value: { status: "ready", value: [pending, ...values] },
         };
       });
-      return created;
+      try {
+        const created = await gateway.createAnnotation(request);
+        setAnnotations((current) => replacePendingAnnotation(current, pending, created));
+        return created;
+      } catch (reason) {
+        setAnnotations((current) => removePendingAnnotation(current, pending));
+        throw reason;
+      }
     },
     [gateway, setAnnotations],
   );
+}
+
+function pendingAnnotation(request: AnnotationCreationRequest): Annotation {
+  return {
+    collectionId: request.collectionId,
+    sourceId: request.sourceId,
+    source: request.source,
+    ...(request.document ? { document: request.document } : {}),
+    annotationType: request.annotationType,
+    ...(request.motivation ? { motivation: request.motivation } : {}),
+    ...(request.color ? { color: request.color } : {}),
+    ...(request.locator ? { locator: request.locator } : {}),
+    ...(request.target ? { target: request.target } : {}),
+    tags: request.tags,
+    body: request.body,
+    id: annotationId(`pending_${crypto.randomUUID()}`),
+    createdAt: dateTime(new Date().toISOString()),
+    createdBy: "dev.mdbase.reader",
+  };
+}
+
+function replacePendingAnnotation(
+  current: AnnotationState,
+  pending: Annotation,
+  created: Annotation,
+): AnnotationState {
+  if (current?.sourceId !== pending.sourceId || current.value.status !== "ready") {
+    return current;
+  }
+  const withoutPending = current.value.value.filter(
+    (candidate) => candidate.id !== pending.id && candidate.id !== created.id,
+  );
+  return {
+    sourceId: pending.sourceId,
+    value: { status: "ready", value: [created, ...withoutPending] },
+  };
+}
+
+function removePendingAnnotation(current: AnnotationState, pending: Annotation): AnnotationState {
+  if (current?.sourceId !== pending.sourceId || current.value.status !== "ready") {
+    return current;
+  }
+  return {
+    sourceId: pending.sourceId,
+    value: {
+      status: "ready",
+      value: current.value.value.filter((candidate) => candidate.id !== pending.id),
+    },
+  };
 }
 
 export function useAnnotationUpdate(

@@ -3,6 +3,7 @@ export * from "./annotation-assets.js";
 export * from "./collection-files.js";
 export * from "./contracts.js";
 export * from "./documents.js";
+export * from "./library-views.js";
 export * from "./mapping.js";
 export * from "./repositories.js";
 export * from "./source-imports.js";

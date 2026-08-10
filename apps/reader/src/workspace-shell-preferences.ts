@@ -48,6 +48,15 @@ export function snapPanelSize(value: number, points: readonly number[], threshol
   return points.find((point) => Math.abs(point - value) <= threshold) ?? value;
 }
 
+export function workspaceShellStyle(
+  preferences: WorkspaceShellPreferences,
+): Record<string, string> {
+  return {
+    "--reader-library-width": `${String(preferences.libraryWidth)}px`,
+    "--reader-inspector-width": `${String(preferences.inspectorWidth)}px`,
+  };
+}
+
 function clamp(value: unknown, minimum: number, maximum: number, fallback: number): number {
   return typeof value === "number" && Number.isFinite(value)
     ? Math.min(maximum, Math.max(minimum, value))

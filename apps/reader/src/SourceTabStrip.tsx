@@ -44,7 +44,7 @@ export function SourceTabStrip({
       <div className="source-tab-track">
         {pane.tabs.map((tab, index) => {
           const source = sourceFor(tab);
-          if (!source) {
+          if (tab.kind === "source" && !source) {
             return null;
           }
           const active = tab.id === pane.activeTabId;
@@ -63,7 +63,7 @@ export function SourceTabStrip({
                 role="tab"
                 aria-selected={active}
                 tabIndex={active ? 0 : -1}
-                title={`${source.title}${tab.preview ? " — preview" : ""}`}
+                title={`${tabTitle(tab, source)}${tab.preview ? " — preview" : ""}`}
                 onClick={() => onActivate(tab)}
                 onDoubleClick={() => onPromote(tab)}
                 onKeyDown={(event) => handleTabKey(event, pane.tabs, tab, onActivate)}
@@ -74,7 +74,7 @@ export function SourceTabStrip({
                   </span>
                 ) : null}
                 <span className="source-tab-format">{tabLabel(tab, source)}</span>
-                <span className="source-tab-title">{source.title}</span>
+                <span className="source-tab-title">{tabTitle(tab, source)}</span>
                 {tab.dirty ? (
                   <span className="source-tab-dirty" aria-label="Unsaved changes" />
                 ) : null}
@@ -91,7 +91,7 @@ export function SourceTabStrip({
               <button
                 className="source-tab-close"
                 type="button"
-                aria-label={`Close ${source.title}`}
+                aria-label={`Close ${tabTitle(tab, source)}`}
                 title="Close tab"
                 onClick={(event) => {
                   event.stopPropagation();
@@ -124,11 +124,12 @@ function TabActions({
   "onPin" | "onClose" | "onCloseOthers" | "onCloseToRight" | "onOpenBeside"
 > & {
   readonly tab: WorkspaceTab;
-  readonly source: SourceSummary;
+  readonly source: SourceSummary | null;
 }): JSX.Element {
+  const title = tabTitle(tab, source);
   return (
     <details className="source-tab-actions">
-      <summary aria-label={`Actions for ${source.title}`} title="Tab actions">
+      <summary aria-label={`Actions for ${title}`} title="Tab actions">
         <MoreIcon />
       </summary>
       <div className="source-tab-menu">
@@ -183,14 +184,21 @@ function tabClassName(tab: WorkspaceTab, active: boolean): string {
     .join(" ");
 }
 
-function tabLabel(tab: WorkspaceTab, source: SourceSummary): string {
+function tabLabel(tab: WorkspaceTab, source: SourceSummary | null): string {
+  if (tab.kind === "library") {
+    return "VIEW";
+  }
   if (tab.view === "note") {
     return "NOTE";
   }
   if (tab.view === "annotations") {
     return "MARKS";
   }
-  return tab.view === "citation" ? "CSL" : sourceFormat(source);
+  return tab.view === "citation" ? "CSL" : source ? sourceFormat(source) : "SOURCE";
+}
+
+function tabTitle(tab: WorkspaceTab, source: SourceSummary | null): string {
+  return tab.kind === "library" ? tab.title : (source?.title ?? "Unavailable source");
 }
 
 export function tabDestination(key: string, current: number, count: number): number | null {

@@ -1,4 +1,9 @@
 import type {
+  ExecutedLibraryView,
+  LibraryViewSaveRequest,
+  MdbaseLibraryView,
+} from "./mdbase-library-views.js";
+import type {
   Annotation,
   AnnotationDeletionPlan,
   AnnotationCreationRequest,
@@ -32,6 +37,12 @@ export interface ReaderLibraryRequestOptions extends ReaderRequestOptions {
 
 export interface ReaderWorkspaceGateway {
   library(options?: ReaderLibraryRequestOptions): Promise<ReaderLibrarySnapshot>;
+  listLibraryViews(options?: ReaderRequestOptions): Promise<readonly MdbaseLibraryView[]>;
+  executeLibraryView(
+    view: MdbaseLibraryView,
+    options?: ReaderRequestOptions,
+  ): Promise<ExecutedLibraryView>;
+  saveLibraryView(request: LibraryViewSaveRequest): Promise<MdbaseLibraryView>;
   source(id: SourceId, options?: ReaderRequestOptions): Promise<Source | null>;
   annotations(id: SourceId, options?: ReaderRequestOptions): Promise<readonly Annotation[]>;
   annotationSourceIds?(options?: ReaderRequestOptions): Promise<readonly SourceId[]>;

@@ -1,91 +1,61 @@
-# Source views: Reader library lenses, not mdbase saved views
+# Source views: mdbase-backed library workspaces
 
-Status: accepted for the initial Reader product
+Status: accepted and implemented
 
 ## Decision
 
-Reader will model configurable library views as **library lenses** over the
-Reader source contract. Native mdbase saved views will not power the default
-library navigation or its saved filters.
+Reader uses ordinary mdbase saved-view records as the durable definition of a
+library view. A view can open as a first-class workspace tab, execute through
+mdbase Connect, and render as a bibliographic table or card grid.
 
-A library lens is an application-domain value. It can combine:
+Reader no longer maintains a parallel saved-lens format in browser storage.
+Temporary search, filter, sort, column, and presentation changes remain local
+until the user explicitly chooses **Save changes** or **Save as view**.
 
-- lifecycle states such as inbox, queued, reading, finished, archived, and
-  abandoned;
-- representation format and availability;
-- creators, publications, tags, and free-text search;
-- citation completeness and unresolved-annotation state;
-- a stable sort and one Reader-owned presentation mode.
+## Ownership and authorization
 
-Built-in lenses and user-saved lenses share the same schema. User lenses are
-stored as application preferences scoped by collection. The initial web
-implementation may use local storage; native shells use their platform
-preference adapter. Cross-device persistence requires an explicit future
-product decision rather than silently adding a third collection contract.
+The Reader manifest requests `full_collection` access, which is required for
+saved-view discovery and execution. Source and annotation data continue to be
+interpreted through their exact Reader contracts. Executed view rows are
+resolved back to known Reader source paths; arbitrary collection rows never
+become source records merely because a view returned them.
 
-## Why native mdbase saved views are not the default
+Reader-created views are ordinary `type: view` Markdown records. Their query
+targets the seeded `reader-source` type, while presentation metadata records:
 
-Saved views are portable, collection-owned query resources intended to query
-arbitrary record types and return open-ended selected values and presentation
-identifiers. They are useful infrastructure, but their authorization and data
-shape do not match Reader's default library:
+- table or card presentation;
+- visible bibliographic columns;
+- Reader field mappings;
+- sort direction;
+- editable filter state.
 
-1. Connect requires `full_collection` access for saved-view discovery and
-   execution. Reader's specification deliberately limits ordinary library
-   access to its source and annotation contracts.
-2. A collection view may target manuscripts, tasks, projects, or any other
-   record type. Reader currently promises special handling only for sources
-   and annotations.
-3. Saved-view result columns and renderer identifiers are open-ended. Treating
-   them as Reader navigation would make arbitrary collection configuration part
-   of the core source-list contract.
-4. Application preferences and collection query resources have different
-   ownership. Saving a compact Reader filter should not create or modify a
-   shared collection artifact without an explicit user decision.
+Presentation options carry `readerViewVersion: 1`. Reader may execute any valid
+mdbase view, but it only overwrites views bearing that marker. An external view
+can always be adapted with **Save as view**, preserving its original source.
 
-Requesting broader access merely to reuse view persistence would therefore
-weaken least privilege and blur product boundaries.
+## Runtime model
 
-## Query and performance model
+Connect owns saved-view discovery, execution, and source mutation:
 
-The source repository remains contract-scoped and returns metadata projections
-without source bodies or representation bytes. Reader renders the first page
-immediately, then incrementally builds a metadata-only local index from later
-pages. Lenses filter and sort that index. Collection change notifications
-invalidate or update individual summaries.
+- `listViews()` discovers view records and named views;
+- `executeView()` returns ordered rows and selected values;
+- `createViewSource()` and `updateViewSource()` persist explicit user saves.
 
-This gives Reader:
+The default **All sources** working view is not written to the collection. It
+uses the already-loaded contract projection so the first library surface is
+immediate. Saved views execute lazily when their workspace tab is hydrated.
 
-- fast first interaction without downloading every source;
-- deterministic filters over normalized source fields;
-- one query path for built-in and user-defined lenses;
-- virtualization for large result sets;
-- explicit indexing progress when a whole-library count is not yet complete.
+Reader filters executed rows against its normalized source index by record path.
+This preserves the application contract boundary while allowing mdbase to own
+query semantics, persistence, grouping, ordering, and presentation metadata.
 
-Search over note bodies and document text belongs to the derived search index,
-not to the lens definition. A lens may reference a search term, but it must not
-force bodies or files into the library metadata path.
+## Workspace relationship
 
-## Domain boundary
+Library views, documents, source notes, annotations, and citation metadata are
+peer workspace tabs. They can be reordered, previewed, pinned, restored, moved
+between panes, or split right/below. The left library region is therefore a
+navigator and quick switcher, not the canonical library presentation.
 
-The lens evaluator belongs in the application/core layer and is independent of
-React, Connect, local storage, Capacitor, and Electron. Persistence and source
-summary pagination are ports. UI components receive evaluated results and
-indexing state; they do not interpret raw mdbase queries.
-
-The first schema should be deliberately closed and versioned. Unknown fields
-must be retained when possible but ignored safely. Predicates should be data,
-not executable CEL supplied to the browser.
-
-## Possible future bridge
-
-Reader may later offer **Open an mdbase view** as a separate, explicitly
-authorized feature. That bridge would:
-
-- request `full_collection` access visibly;
-- execute a chosen saved view without rewriting it;
-- accept only rows that can be resolved to Reader source records;
-- fall back to a generic table for unsupported presentation identifiers;
-- never make arbitrary saved views part of the default library startup path.
-
-This bridge is interoperability, not the implementation of Reader lenses.
+This unifies the former inspector dock and document split concepts into one
+pane system and leaves the reading surface dominant when supporting tools are
+closed.

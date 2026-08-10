@@ -19,7 +19,9 @@ export function closeSource(
   paneId: WorkspacePaneId = layout.focusedPaneId,
 ): SourceWorkspaceLayout {
   const pane = paneById(layout, paneId);
-  const tab = pane?.tabs.find((candidate) => candidate.sourceId === sourceId);
+  const tab = pane?.tabs.find(
+    (candidate) => candidate.kind === "source" && candidate.sourceId === sourceId,
+  );
   return tab ? closeWorkspaceTab(layout, tab.id, paneId) : layout;
 }
 
@@ -74,7 +76,10 @@ export function reopenClosedWorkspaceTab(layout: SourceWorkspaceLayout): SourceW
     tabs.splice(Math.min(closed.index, tabs.length), 0, closed.tab);
     return activatePaneTab({ ...pane, tabs }, closed.tab.id);
   });
-  return rememberWorkspaceSource({ ...next, recentlyClosed }, closed.tab.sourceId);
+  const reopened = { ...next, recentlyClosed };
+  return closed.tab.kind === "source"
+    ? rememberWorkspaceSource(reopened, closed.tab.sourceId)
+    : reopened;
 }
 
 function closePaneTab(

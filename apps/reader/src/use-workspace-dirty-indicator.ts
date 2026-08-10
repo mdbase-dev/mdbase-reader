@@ -12,9 +12,11 @@ export function useWorkspaceDirtyIndicator(
     workspace.sourceRecord.status === "ready" &&
     workspace.draft !== workspace.sourceRecord.value.body;
   const dirty =
-    tab?.view === "note" ? noteDirty : tab?.view === "citation" && workspace.citation.dirty;
+    tab?.kind === "source" && tab.view === "note"
+      ? noteDirty
+      : tab?.kind === "source" && tab.view === "citation" && workspace.citation.dirty;
   useEffect(() => {
-    if (tab && tab.sourceId === workspace.selectedSource?.id) {
+    if (tab?.kind === "source" && tab.sourceId === workspace.selectedSource?.id) {
       sourceWorkspace.markDirty(tab.id, sourceWorkspace.activePane.id, dirty);
     }
   }, [dirty, sourceWorkspace, tab, workspace.selectedSource?.id]);

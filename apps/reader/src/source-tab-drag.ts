@@ -35,7 +35,7 @@ export function dropTab(
     reorder(dragged.index, index);
     return;
   }
-  moveFromPane(dragged.tabId as WorkspaceTab["id"], dragged.paneId);
+  moveFromPane(dragged.tabId, dragged.paneId);
 }
 
 export function draggedWorkspaceTab(dataTransfer: DataTransfer): DraggedWorkspaceTab | null {

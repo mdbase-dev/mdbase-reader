@@ -1,4 +1,5 @@
-import { AreaIcon, BackIcon, FocusIcon, PanelIcon } from "./icons.js";
+import { AreaIcon, BackIcon, CitationIcon, FocusIcon, HighlightIcon, NoteIcon } from "./icons.js";
+import { canNavigateHistory } from "./source-workspace-history.js";
 import { sourceFormat } from "./SourceTabStrip.js";
 import { DocumentStatus, SourceActions } from "./WorkspacePaneSupport.js";
 
@@ -14,7 +15,6 @@ export interface DocumentContextualToolbarProps {
   readonly pane: SourceWorkspacePane;
   readonly workspace: SourceWorkspaceController;
   readonly focusMode: boolean;
-  readonly inspectorOpen: boolean;
   readonly readingResume: ReadingResumeState;
   readonly decorationProblem: string | null;
   readonly canSelectArea: boolean;
@@ -22,7 +22,6 @@ export interface DocumentContextualToolbarProps {
   readonly sourceExport: SourceExportController;
   readonly onBackToLibrary: () => void;
   readonly onToggleFocus: () => void;
-  readonly onToggleInspector: () => void;
   readonly onToggleAreaSelection: () => void;
 }
 
@@ -31,7 +30,6 @@ export function DocumentContextualToolbar({
   pane,
   workspace,
   focusMode,
-  inspectorOpen,
   readingResume,
   decorationProblem,
   canSelectArea,
@@ -39,7 +37,6 @@ export function DocumentContextualToolbar({
   sourceExport,
   onBackToLibrary,
   onToggleFocus,
-  onToggleInspector,
   onToggleAreaSelection,
 }: DocumentContextualToolbarProps): JSX.Element {
   return (
@@ -53,10 +50,22 @@ export function DocumentContextualToolbar({
         <BackIcon />
       </button>
       <div className="document-history">
-        <button type="button" title="Back" onClick={() => workspace.navigate(-1, pane.id)}>
+        <button
+          type="button"
+          aria-label="Back"
+          title="Back · Alt+Left"
+          disabled={!canNavigateHistory(pane, -1)}
+          onClick={() => workspace.navigate(-1, pane.id)}
+        >
           ‹
         </button>
-        <button type="button" title="Forward" onClick={() => workspace.navigate(1, pane.id)}>
+        <button
+          type="button"
+          aria-label="Forward"
+          title="Forward · Alt+Right"
+          disabled={!canNavigateHistory(pane, 1)}
+          onClick={() => workspace.navigate(1, pane.id)}
+        >
           ›
         </button>
       </div>
@@ -68,17 +77,6 @@ export function DocumentContextualToolbar({
       </div>
       <DocumentStatus reading={readingResume} decorationProblem={decorationProblem} />
       <div className="document-tools">
-        <details className="toolbar-menu">
-          <summary>View</summary>
-          <div>
-            <button type="button" onClick={onToggleFocus}>
-              {focusMode ? "Exit focus mode" : "Focus mode"}
-            </button>
-            <button type="button" onClick={onToggleInspector}>
-              {inspectorOpen ? "Hide workspace" : "Show workspace"}
-            </button>
-          </div>
-        </details>
         {canSelectArea ? (
           <details className="toolbar-menu">
             <summary>Annotate</summary>
@@ -93,21 +91,39 @@ export function DocumentContextualToolbar({
             </div>
           </details>
         ) : null}
-        <button
-          type="button"
-          className={inspectorOpen ? "tool-button is-active" : "tool-button"}
-          aria-label="Toggle source workspace"
-          onClick={onToggleInspector}
-        >
-          <PanelIcon />
-        </button>
+        <details className="toolbar-menu source-tool-menu">
+          <summary>Tools</summary>
+          <div>
+            <button
+              type="button"
+              onClick={() => workspace.openView(source.id, "annotations", pane.id)}
+            >
+              <HighlightIcon /> Annotations
+            </button>
+            <button type="button" onClick={() => workspace.openView(source.id, "note", pane.id)}>
+              <NoteIcon /> Source note
+            </button>
+            <button
+              type="button"
+              onClick={() => workspace.openView(source.id, "citation", pane.id)}
+            >
+              <CitationIcon /> Citation
+            </button>
+            <i />
+            <button type="button" onClick={() => workspace.openBeside(source.id, "note")}>
+              Open note beside
+            </button>
+          </div>
+        </details>
         <button
           type="button"
           className={focusMode ? "tool-button is-active" : "tool-button"}
           aria-label="Toggle focus mode"
+          title={`${focusMode ? "Exit" : "Enter"} focus mode · Esc to exit`}
           onClick={onToggleFocus}
         >
           <FocusIcon />
+          <span className="tool-label">Focus</span>
         </button>
         <SourceActions sourceExport={sourceExport} />
       </div>

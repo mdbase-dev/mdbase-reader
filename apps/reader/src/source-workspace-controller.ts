@@ -4,6 +4,7 @@ import {
   closeSecondaryPane,
   focusPane,
   moveWorkspaceTabToPane,
+  openLibraryBeside,
   openBeside,
   resizeWorkspaceSplit,
   setWorkspaceSplitDirection,
@@ -18,6 +19,7 @@ import {
 } from "./source-workspace-tab-closing.js";
 import {
   activateWorkspaceTab,
+  openLibraryTab,
   openSource,
   openWorkspaceTab,
   previewSource,
@@ -33,14 +35,24 @@ import type {
   WorkspaceSplitDirection,
   WorkspaceTab,
   WorkspaceTabId,
-  WorkspaceView,
+  SourceWorkspaceView,
 } from "./source-workspace-layout.js";
 import type { SourceId } from "@mdbase-reader/core";
 
 export interface SourceWorkspaceActions {
   readonly preview: (sourceId: SourceId, paneId?: WorkspacePaneId) => void;
   readonly open: (sourceId: SourceId, paneId?: WorkspacePaneId) => void;
-  readonly openView: (sourceId: SourceId, view: WorkspaceView, paneId?: WorkspacePaneId) => void;
+  readonly openView: (
+    sourceId: SourceId,
+    view: SourceWorkspaceView,
+    paneId?: WorkspacePaneId,
+  ) => void;
+  readonly openLibrary: (libraryViewId?: string, title?: string, paneId?: WorkspacePaneId) => void;
+  readonly openLibraryBeside: (
+    libraryViewId: string,
+    title: string,
+    direction?: WorkspaceSplitDirection,
+  ) => void;
   readonly activateTab: (tabId: WorkspaceTabId, paneId: WorkspacePaneId) => void;
   readonly activate: (sourceId: SourceId) => void;
   readonly promote: (tabId: WorkspaceTabId, paneId: WorkspacePaneId) => void;
@@ -57,7 +69,7 @@ export interface SourceWorkspaceActions {
   readonly focus: (paneId: WorkspacePaneId) => void;
   readonly openBeside: (
     sourceId: SourceId,
-    view?: WorkspaceView,
+    view?: SourceWorkspaceView,
     direction?: WorkspaceSplitDirection,
   ) => void;
   readonly splitTab: (
@@ -94,6 +106,12 @@ export function createSourceWorkspaceActions({
     open: (sourceId, paneId) => commit((layout) => openSource(layout, sourceId, paneId)),
     openView: (sourceId, view, paneId) =>
       commit((layout) => openWorkspaceTab(layout, sourceId, paneId ? { paneId, view } : { view })),
+    openLibrary: (libraryViewId = "all-sources", title = "Library", paneId) =>
+      commit((layout) =>
+        openLibraryTab(layout, libraryViewId, paneId ? { paneId, title } : { title }),
+      ),
+    openLibraryBeside: (libraryViewId, title, direction = "horizontal") =>
+      commit((layout) => openLibraryBeside(layout, libraryViewId, title, direction)),
     activateTab,
     activate: (sourceId) => activateSourceTab(current(), sourceId, activateTab),
     promote: (tabId, paneId) => commit((layout) => promoteWorkspaceTab(layout, tabId, paneId)),
@@ -139,7 +157,7 @@ function activateSourceTab(
 ): void {
   const location = layout.panes
     .flatMap((pane) => pane.tabs.map((tab) => ({ pane, tab })))
-    .find(({ tab }) => tab.sourceId === sourceId);
+    .find(({ tab }) => tab.kind === "source" && tab.sourceId === sourceId);
   if (location) {
     activate(location.tab.id, location.pane.id);
   }
@@ -152,7 +170,9 @@ function closeActiveSource(
   commit: WorkspaceActionContext["commit"],
 ): void {
   const pane = focusedPane(layout);
-  const tab = pane.tabs.find((candidate) => candidate.sourceId === sourceId);
+  const tab = pane.tabs.find(
+    (candidate) => candidate.kind === "source" && candidate.sourceId === sourceId,
+  );
   if (canClose(tab)) {
     commit((current) => closeSource(current, sourceId, pane.id));
   }

@@ -1,6 +1,6 @@
 # Source workspace: cross-format tabs and pane-ready sessions
 
-Status: accepted and implemented for the single-pane Reader workspace
+Status: accepted and implemented for the unified Reader workspace
 
 ## Decision
 
@@ -10,12 +10,13 @@ navigation, even when a renderer offers its own document tabs.
 The workspace layout is a renderer-neutral value containing:
 
 - ordered panes and one focused pane;
-- ordered source IDs in each pane;
-- one active source ID per pane.
+- ordered collection-view or source-view tabs in each pane;
+- one active tab per pane.
 
-The initial UI renders only the primary pane. The model already supports
-independent pane tab sets and focus, so adding a split does not change document
-identity, selection, annotations, or renderer contracts.
+Tabs may represent an mdbase library view, document, source note, annotation
+workspace, or citation record. Two panes may be split right or below, and tabs
+can be dragged between them without changing document identity, selection,
+annotations, or renderer contracts.
 
 ## Session lifecycle
 
@@ -29,6 +30,19 @@ Closing the active tab selects the source that took its place, or the previous
 source when closing the final tab in the order. Closing the only tab leaves the
 pane present and empty. A pane is therefore a durable workspace region, not a
 side effect of whichever renderer happens to be mounted.
+
+## Contextual tools and stable tool sessions
+
+The right source-tools sidebar follows the focused pane. It uses the selected
+source controller for that pane and changes context when pane focus changes.
+Library tabs have no source context, so the sidebar presents a directional empty
+state rather than silently retaining an unrelated source.
+
+Promoting annotations, a source note, or CSL metadata into the workbench creates
+a source-bound workspace tab. That tab owns an independent source-tools session:
+after its first activation it stays mounted, retains editor state, and continues
+to render when its pane is visible but not focused. Pane focus therefore changes
+the contextual sidebar without replacing or suspending stable workbench tools.
 
 ## File caching
 
@@ -56,9 +70,9 @@ open.
 ESLint enforces the renderer boundary and prevents framework or adapter imports
 from entering the pure workspace layout model.
 
-## Future panes
+## Pane behavior
 
-A split-pane UI can render each `SourceWorkspacePane` as a document-session deck.
+The split-pane UI renders each `SourceWorkspacePane` as a document-session deck.
 Pane focus determines which surface drives the inspector and global commands.
 Opening a source may target the focused pane or a chosen pane. Dragging a tab is
 an ordered source-ID move between panes. No PDF-specific tab migration is

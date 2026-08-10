@@ -2,7 +2,7 @@ import type {
   AnnotationCreationRequest,
   Locator,
   PdfQuadPoints,
-  SourceSummary,
+  Source,
 } from "@mdbase-reader/core";
 import type {
   AreaSelectionDraft,
@@ -16,7 +16,7 @@ export type ComposerSelection =
   | { readonly kind: "area"; readonly value: AreaSelectionDraft };
 
 export async function annotationRequest(
-  source: SourceSummary,
+  source: Source,
   surface: ReadingSurface,
   selection: ComposerSelection,
   note: string,
@@ -28,7 +28,7 @@ export async function annotationRequest(
 }
 
 function textAnnotationRequest(
-  source: SourceSummary,
+  source: Source,
   surface: ReadingSurface,
   selection: TextSelectionDraft,
   note: string,
@@ -46,7 +46,7 @@ function textAnnotationRequest(
 }
 
 async function areaAnnotationRequest(
-  source: SourceSummary,
+  source: Source,
   surface: ReadingSurface,
   selection: AreaSelectionDraft,
   note: string,
@@ -80,10 +80,14 @@ async function areaAnnotationRequest(
 }
 
 function annotationIdentity(
-  source: SourceSummary,
+  source: Source,
   surface: ReadingSurface,
-): Pick<AnnotationCreationRequest, "collectionId" | "sourceId" | "source" | "document"> {
+): Pick<
+  AnnotationCreationRequest,
+  "sourceRecord" | "collectionId" | "sourceId" | "source" | "document"
+> {
   return {
+    sourceRecord: source,
     collectionId: source.collectionId,
     sourceId: source.id,
     source: `[[${source.id}]]`,

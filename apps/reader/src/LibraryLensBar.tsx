@@ -30,23 +30,35 @@ export function LibraryLensBar(props: LibraryLensBarProps): JSX.Element {
   };
   return (
     <div className="library-lens-bar">
-      <div className="library-lens-selectors">
+      <div className="library-filter-row">
+        <details className="library-filter-menu">
+          <summary>Filter{props.lens === "all" ? "" : " · 1"}</summary>
+          <div>
+            <label>
+              <span>Reading view</span>
+              <select
+                value={props.lens}
+                onChange={(event) => props.onLensChange(event.target.value as LibraryLensId)}
+              >
+                {libraryLensIds.map((id) => (
+                  <option key={id} value={id}>
+                    {libraryLensLabel(id)}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <SavedLenses
+              {...props}
+              naming={naming}
+              name={name}
+              setNaming={setNaming}
+              setName={setName}
+              finishSave={finishSave}
+            />
+          </div>
+        </details>
         <label>
-          <span className="sr-only">Library lens</span>
-          <select
-            value={props.lens}
-            onChange={(event) => props.onLensChange(event.target.value as LibraryLensId)}
-          >
-            {libraryLensIds.map((id) => (
-              <option key={id} value={id}>
-                {libraryLensLabel(id)}
-              </option>
-            ))}
-          </select>
-          <small>{props.count}</small>
-        </label>
-        <label>
-          <span className="sr-only">Sort sources</span>
+          <span>Sort</span>
           <select
             value={props.sort}
             onChange={(event) => props.onSortChange(event.target.value as LibrarySort)}
@@ -57,63 +69,80 @@ export function LibraryLensBar(props: LibraryLensBarProps): JSX.Element {
             <option value="published">Published</option>
           </select>
         </label>
+        <label className="library-presentation-select">
+          <span>View</span>
+          <select
+            value={props.presentation}
+            onChange={(event) =>
+              props.onPresentationChange(event.target.value as LibraryPresentation)
+            }
+          >
+            <option value="compact">Compact</option>
+            <option value="bibliography">Details</option>
+            <option value="grid">Covers</option>
+          </select>
+        </label>
       </div>
-      <div className="library-view-actions">
-        <details className="saved-lenses">
-          <summary title="Saved library lenses">Lenses</summary>
-          <div>
-            {props.savedLenses.map((item) => (
-              <span key={item.id}>
-                <button type="button" onClick={() => props.onApplySavedLens(item.id)}>
-                  {item.name}
-                </button>
-                <button
-                  type="button"
-                  aria-label={`Remove ${item.name}`}
-                  onClick={() => props.onRemoveSavedLens(item.id)}
-                >
-                  ×
-                </button>
-              </span>
-            ))}
-            {naming ? (
-              <form
-                onSubmit={(event) => {
-                  event.preventDefault();
-                  finishSave();
-                }}
-              >
-                <input
-                  value={name}
-                  aria-label="Lens name"
-                  placeholder="Lens name"
-                  onChange={(event) => setName(event.target.value)}
-                />
-                <button type="submit" disabled={!name.trim()}>
-                  Save
-                </button>
-              </form>
-            ) : (
-              <button type="button" onClick={() => setNaming(true)}>
-                Save current lens…
-              </button>
-            )}
-          </div>
-        </details>
-        <div aria-label="Library presentation">
-          {(["compact", "bibliography", "grid"] as const).map((mode) => (
-            <button
-              key={mode}
-              type="button"
-              aria-pressed={props.presentation === mode}
-              title={`${mode} view`}
-              onClick={() => props.onPresentationChange(mode)}
-            >
-              {mode === "compact" ? "≡" : mode === "bibliography" ? "☷" : "▦"}
-            </button>
-          ))}
-        </div>
+      <div className="library-filter-summary">
+        {props.lens !== "all" ? (
+          <button type="button" onClick={() => props.onLensChange("all")}>
+            {libraryLensLabel(props.lens)} <span aria-hidden="true">×</span>
+          </button>
+        ) : null}
+        <span>{props.count}</span>
       </div>
+    </div>
+  );
+}
+
+function SavedLenses(
+  props: LibraryLensBarProps & {
+    readonly naming: boolean;
+    readonly name: string;
+    readonly setNaming: (value: boolean) => void;
+    readonly setName: (value: string) => void;
+    readonly finishSave: () => void;
+  },
+): JSX.Element {
+  return (
+    <div className="saved-lenses-list">
+      <strong>Saved filters</strong>
+      {props.savedLenses.map((item) => (
+        <span key={item.id}>
+          <button type="button" onClick={() => props.onApplySavedLens(item.id)}>
+            {item.name}
+          </button>
+          <button
+            type="button"
+            aria-label={`Remove ${item.name}`}
+            onClick={() => props.onRemoveSavedLens(item.id)}
+          >
+            ×
+          </button>
+        </span>
+      ))}
+      {props.naming ? (
+        <form
+          onSubmit={(event) => {
+            event.preventDefault();
+            props.finishSave();
+          }}
+        >
+          <input
+            value={props.name}
+            aria-label="Filter name"
+            placeholder="Filter name"
+            onChange={(event) => props.setName(event.target.value)}
+          />
+          <button type="submit" disabled={!props.name.trim()}>
+            Save
+          </button>
+        </form>
+      ) : (
+        <button type="button" onClick={() => props.setNaming(true)}>
+          Save current filter…
+        </button>
+      )}
     </div>
   );
 }

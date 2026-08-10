@@ -250,6 +250,7 @@ export interface PlannedSourceFileImport {
 }
 
 export interface AnnotationCreationRequest extends AnnotationDraft {
+  readonly sourceRecord: Source;
   readonly attachment?: {
     readonly bytes: Uint8Array;
     readonly mediaType: "image/png";

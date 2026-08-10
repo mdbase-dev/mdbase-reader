@@ -1,8 +1,14 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 
 import { createSourceWorkspaceActions } from "./source-workspace-controller.js";
-import { activeTab, focusedPane, sourceIdsInWorkspace } from "./source-workspace-layout.js";
+import {
+  activeTab,
+  focusedPane,
+  sourceIdsInWorkspace,
+  workspaceTabSourceId,
+} from "./source-workspace-layout.js";
 import { persistSourceWorkspace, restoreSourceWorkspace } from "./source-workspace-persistence.js";
+import { openLibraryTab } from "./source-workspace-tabs.js";
 
 import type { SourceWorkspaceActions } from "./source-workspace-controller.js";
 import type {
@@ -29,17 +35,20 @@ export interface SourceWorkspaceController extends SourceWorkspaceActions {
 }
 
 export function useSourceWorkspace(options: SourceWorkspaceOptions): SourceWorkspaceController {
-  const { collectionKey, confirmDiscard, selectSource, selectedSourceId, sourceIds } = options;
+  const { collectionKey, confirmDiscard, selectSource, sourceIds } = options;
   const knownSourceIds = useMemo(() => new Set(sourceIds), [sourceIds]);
-  const [layout, setLayout] = useState(() =>
-    restoreSourceWorkspace(browserStorage(), collectionKey, knownSourceIds, selectedSourceId),
-  );
+  const [layout, setLayout] = useState(() => initialWorkspace(collectionKey, knownSourceIds));
   useEffect(() => {
     persistSourceWorkspace(browserStorage(), collectionKey, layout);
   }, [collectionKey, layout]);
 
   useEffect(() => {
-    selectSource(activeTab(focusedPane(layout))?.sourceId ?? null);
+    const sourceId = workspaceTabSourceId(activeTab(focusedPane(layout)));
+    // A collection-level library tab must not discard the source that a preview
+    // or an adjacent research tool is still using.
+    if (sourceId) {
+      selectSource(sourceId);
+    }
   }, [layout, selectSource]);
 
   const commit = useCallback(
@@ -62,10 +71,20 @@ export function useSourceWorkspace(options: SourceWorkspaceOptions): SourceWorks
     layout,
     activePane,
     activeTab: currentTab,
-    activeSourceId: currentTab?.sourceId ?? null,
+    activeSourceId: workspaceTabSourceId(currentTab),
     openSourceIds: sourceIdsInWorkspace(layout),
     ...actions,
   };
+}
+
+function initialWorkspace(
+  collectionKey: string,
+  knownSourceIds: ReadonlySet<SourceId>,
+): SourceWorkspaceLayout {
+  const restored = restoreSourceWorkspace(browserStorage(), collectionKey, knownSourceIds, null);
+  return restored.panes.some(({ tabs }) => tabs.length > 0)
+    ? restored
+    : openLibraryTab(restored, "all-sources", { title: "Library", pinned: true });
 }
 
 function browserStorage(): Storage | null {

@@ -1,6 +1,6 @@
 import { ProductBrand, type ThemePreference } from "@mdbase-reader/ui";
 
-import { SearchIcon, ThemeIcon } from "./icons.js";
+import { PanelIcon, SearchIcon, ThemeIcon } from "./icons.js";
 
 import type { JSX } from "react";
 
@@ -10,6 +10,9 @@ interface ReaderHeaderProps {
   readonly theme: ThemePreference;
   readonly onChangeTheme: () => void;
   readonly onOpenCommands: () => void;
+  readonly onToggleLibrary: () => void;
+  readonly inspectorOpen: boolean;
+  readonly onToggleInspector: () => void;
 }
 
 export function ReaderHeader({
@@ -18,18 +21,49 @@ export function ReaderHeader({
   theme,
   onChangeTheme,
   onOpenCommands,
+  onToggleLibrary,
+  inspectorOpen,
+  onToggleInspector,
 }: ReaderHeaderProps): JSX.Element {
   return (
     <header className="reader-header">
-      <ProductBrand />
+      <div className="reader-header-brand">
+        <button
+          type="button"
+          className="header-library-toggle"
+          aria-label="Toggle library navigator"
+          aria-controls="reader-library-navigator"
+          onClick={onToggleLibrary}
+        >
+          <span />
+        </button>
+        <ProductBrand />
+      </div>
       <div className="reader-header-context">
-        <span>{collectionName}</span>
-        <i aria-hidden="true" />
+        <span className="collection-context" title={collectionName}>
+          {collectionName}
+        </span>
         <span className={`connection-state is-${connectionState}`}>{connectionState}</span>
       </div>
       <div className="reader-header-actions">
-        <button className="header-command-button" type="button" onClick={onOpenCommands}>
-          <SearchIcon /> Commands <kbd>⌘K</kbd>
+        <button
+          className="header-command-button"
+          type="button"
+          aria-label="Search and commands"
+          title="Search and commands · ⌘K"
+          onClick={onOpenCommands}
+        >
+          <SearchIcon /> <span>Search</span> <kbd>⌘K</kbd>
+        </button>
+        <button
+          className="icon-button header-inspector-toggle"
+          type="button"
+          aria-label="Toggle source tools"
+          aria-controls="reader-source-tools"
+          aria-pressed={inspectorOpen}
+          onClick={onToggleInspector}
+        >
+          <PanelIcon />
         </button>
         <button
           className="icon-button"

@@ -1,6 +1,6 @@
 import { activeTab, createPane, paneById } from "./source-workspace-layout.js";
 import { closeWorkspaceTab } from "./source-workspace-tab-closing.js";
-import { activateWorkspaceTab, openWorkspaceTab } from "./source-workspace-tabs.js";
+import { activateWorkspaceTab, openLibraryTab, openWorkspaceTab } from "./source-workspace-tabs.js";
 
 import type {
   SourceWorkspaceLayout,
@@ -8,7 +8,7 @@ import type {
   WorkspaceSplitDirection,
   WorkspaceTab,
   WorkspaceTabId,
-  WorkspaceView,
+  SourceWorkspaceView,
 } from "./source-workspace-layout.js";
 import type { SourceId } from "@mdbase-reader/core";
 
@@ -23,7 +23,7 @@ export function splitPane(
   layout: SourceWorkspaceLayout,
   sourceId: SourceId | null,
   direction: WorkspaceSplitDirection = "horizontal",
-  view: WorkspaceView = "document",
+  view: SourceWorkspaceView = "document",
 ): SourceWorkspaceLayout {
   if (layout.panes.length === 2) {
     return sourceId
@@ -43,7 +43,7 @@ export function splitPane(
 export function openBeside(
   layout: SourceWorkspaceLayout,
   sourceId: SourceId,
-  view: WorkspaceView = "document",
+  view: SourceWorkspaceView = "document",
   direction: WorkspaceSplitDirection = "horizontal",
 ): SourceWorkspaceLayout {
   return splitPane(layout, sourceId, direction, view);
@@ -62,11 +62,7 @@ export function moveWorkspaceTabToPane(
   if (!tab || !paneById(layout, toPaneId)) {
     return layout;
   }
-  const opened = openWorkspaceTab(layout, tab.sourceId, {
-    paneId: toPaneId,
-    view: tab.view,
-    pinned: tab.pinned,
-  });
+  const opened = openTab(layout, tab, toPaneId);
   return closeWorkspaceTab(opened, tab.id, fromPaneId);
 }
 
@@ -80,7 +76,11 @@ export function splitWorkspaceTab(
   if (!tab) {
     return layout;
   }
-  const split = splitPane(focusPane(layout, paneId), tab.sourceId, direction, tab.view);
+  const focused = focusPane(layout, paneId);
+  const split =
+    tab.kind === "source"
+      ? splitPane(focused, tab.sourceId, direction, tab.view)
+      : openLibraryBeside(focused, tab.libraryViewId, tab.title, direction);
   return split.panes.length === 2 ? closeWorkspaceTab(split, tab.id, paneId) : split;
 }
 
@@ -97,11 +97,7 @@ export function closeSecondaryPane(layout: SourceWorkspaceLayout): SourceWorkspa
     splitDirection: null,
   };
   for (const tab of secondary.tabs) {
-    next = openWorkspaceTab(next, tab.sourceId, {
-      paneId: "primary",
-      view: tab.view,
-      pinned: tab.pinned,
-    });
+    next = openTab(next, tab, "primary");
   }
   return next;
 }
@@ -128,4 +124,41 @@ export function otherPaneId(paneId: WorkspacePaneId): WorkspacePaneId {
 
 export function focusedPaneActiveTab(layout: SourceWorkspaceLayout): WorkspaceTab | null {
   return activeTab(paneById(layout, layout.focusedPaneId) ?? createPane("primary"));
+}
+
+export function openLibraryBeside(
+  layout: SourceWorkspaceLayout,
+  libraryViewId: string,
+  title: string,
+  direction: WorkspaceSplitDirection = "horizontal",
+): SourceWorkspaceLayout {
+  const paneId = otherPaneId(layout.focusedPaneId);
+  const split =
+    layout.panes.length === 2
+      ? focusPane(layout, paneId)
+      : {
+          ...layout,
+          panes: [...layout.panes, createPane("secondary")],
+          focusedPaneId: "secondary" as const,
+          splitDirection: direction,
+        };
+  return openLibraryTab(split, libraryViewId, { paneId: split.focusedPaneId, title });
+}
+
+function openTab(
+  layout: SourceWorkspaceLayout,
+  tab: WorkspaceTab,
+  paneId: WorkspacePaneId,
+): SourceWorkspaceLayout {
+  return tab.kind === "source"
+    ? openWorkspaceTab(layout, tab.sourceId, {
+        paneId,
+        view: tab.view,
+        pinned: tab.pinned,
+      })
+    : openLibraryTab(layout, tab.libraryViewId, {
+        paneId,
+        title: tab.title,
+        pinned: tab.pinned,
+      });
 }

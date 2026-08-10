@@ -1,5 +1,4 @@
 import type { ReaderCommand } from "./CommandPalette.js";
-import type { InspectorTab } from "./InspectorPane.js";
 import type { BibliographyExportController } from "./use-bibliography-export.js";
 import type { SourceExportController } from "./use-source-export.js";
 import type { SourceWorkspaceController } from "./use-source-workspace.js";
@@ -12,11 +11,9 @@ export interface ReaderCommandInput {
   readonly sourceExport: SourceExportController;
   readonly bibliographyExport: BibliographyExportController;
   readonly focusMode: boolean;
-  readonly inspectorOpen: boolean;
   readonly toggleFocus: () => void;
-  readonly toggleInspector: () => void;
   readonly toggleLibrary: () => void;
-  readonly openInspector: (tab: InspectorTab) => void;
+  readonly toggleInspector: () => void;
   readonly searchLibrary: () => void;
 }
 
@@ -40,12 +37,13 @@ function navigationCommands(input: ReaderCommandInput): readonly ReaderCommand[]
   }));
   const switchTabs = input.workspace.layout.panes.flatMap((pane) =>
     pane.tabs.flatMap((tab): readonly ReaderCommand[] => {
-      const source = input.sources.find(({ id }) => id === tab.sourceId);
-      return source
+      const source =
+        tab.kind === "source" ? input.sources.find(({ id }) => id === tab.sourceId) : null;
+      return tab.kind === "library" || source
         ? [
             {
               id: `switch:${pane.id}:${tab.id}`,
-              label: `Switch to ${source.title}`,
+              label: `Switch to ${tab.kind === "library" ? tab.title : (source?.title ?? "source")}`,
               detail: `${tab.view} · pane ${pane.id === "primary" ? "A" : "B"}`,
               group: "Navigate",
               keywords: "tab switch",
@@ -56,6 +54,12 @@ function navigationCommands(input: ReaderCommandInput): readonly ReaderCommand[]
     }),
   );
   return [
+    {
+      id: "open-library-view",
+      label: "Open library",
+      group: "Navigate",
+      run: () => input.workspace.openLibrary(),
+    },
     {
       id: "search",
       label: "Search library and documents",
@@ -73,8 +77,8 @@ function workspaceCommands(input: ReaderCommandInput): readonly ReaderCommand[] 
   return [
     { id: "toggle-library", label: "Toggle library", group: "Workspace", run: input.toggleLibrary },
     {
-      id: "toggle-workspace",
-      label: `${input.inspectorOpen ? "Hide" : "Show"} source workspace`,
+      id: "toggle-source-tools",
+      label: "Toggle source tools",
       group: "Workspace",
       run: input.toggleInspector,
     },
@@ -121,9 +125,21 @@ function sourceCommands(input: ReaderCommandInput): readonly ReaderCommand[] {
   return [
     {
       id: "annotations",
-      label: "Show annotations",
+      label: "Open annotations",
       group: "Source",
-      run: () => input.openInspector("annotations"),
+      run: () => input.workspace.openView(sourceId, "annotations"),
+    },
+    {
+      id: "note",
+      label: "Open source note",
+      group: "Source",
+      run: () => input.workspace.openView(sourceId, "note"),
+    },
+    {
+      id: "citation",
+      label: "Open citation data",
+      group: "Source",
+      run: () => input.workspace.openView(sourceId, "citation"),
     },
     {
       id: "note-beside",

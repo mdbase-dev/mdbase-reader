@@ -98,6 +98,7 @@ function dependencies(source: Source | null = sourceFixture()): {
 }
 
 const request = {
+  sourceRecord: sourceFixture(),
   collectionId: collection,
   sourceId: sourceIdentity,
   source: "[[sources/example|Example]]",
@@ -151,6 +152,8 @@ describe("createAnnotation", () => {
     expect(result.transcluded).toBe(false);
     expect(result.assetStored).toBe(false);
     expect(fixture.append).not.toHaveBeenCalled();
+    expect(fixture.value.sources.get).not.toHaveBeenCalled();
+    expect(result.annotation).not.toHaveProperty("sourceRecord");
     expect(fixture.stages).toEqual(["annotation-created", "complete"]);
   });
 
@@ -192,7 +195,12 @@ describe("createAnnotation", () => {
     await expect(
       createAnnotation(fixture.value, {
         ...request,
-        document: { ...request.document, revision: fileRevision("sha256:bbbbbb") },
+        sourceRecord: {
+          ...request.sourceRecord,
+          documents: [
+            { ...request.sourceRecord.documents[0]!, revision: fileRevision("sha256:bbbbbb") },
+          ],
+        },
       }),
     ).rejects.toEqual(
       expect.objectContaining<Partial<DomainError>>({ code: "document-revision-mismatch" }),

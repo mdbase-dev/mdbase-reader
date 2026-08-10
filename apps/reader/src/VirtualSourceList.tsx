@@ -35,6 +35,14 @@ export function VirtualSourceList({
   );
 
   function navigateFrom(event: KeyboardEvent, currentIndex: number): void {
+    if (event.key === "Enter") {
+      event.preventDefault();
+      const source = sources[currentIndex];
+      if (source) {
+        onOpenSource(source.id);
+      }
+      return;
+    }
     const nextIndex = keyboardSourceIndex(event.key, currentIndex, sources.length);
     if (nextIndex === null) {
       return;

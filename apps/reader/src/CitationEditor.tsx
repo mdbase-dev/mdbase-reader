@@ -3,14 +3,14 @@ import { ReaderButton } from "@mdbase-reader/ui";
 import { MultilineCodeEditor } from "./MultilineCodeEditor.js";
 
 import type { CitationEditorController } from "./use-citation-editor.js";
-import type { ReaderWorkspaceController } from "./use-reader-workspace.js";
+import type { ReaderSourceWorkspaceController } from "./use-reader-workspace.js";
 import type { Source } from "@mdbase-reader/core";
 import type { JSX } from "react";
 
 export function CitationEditor({
   workspace,
 }: {
-  readonly workspace: ReaderWorkspaceController;
+  readonly workspace: ReaderSourceWorkspaceController;
 }): JSX.Element {
   const sourceRecord = workspace.sourceRecord;
   if (sourceRecord.status !== "ready") {
@@ -72,7 +72,7 @@ function ReadyCitationEditor({
 function CitationLoadStatus({
   resource,
 }: {
-  readonly resource: Exclude<ReaderWorkspaceController["sourceRecord"], { status: "ready" }>;
+  readonly resource: Exclude<ReaderSourceWorkspaceController["sourceRecord"], { status: "ready" }>;
 }): JSX.Element {
   return resource.status === "error" ? (
     <div className="inspector-status is-error" role="alert">

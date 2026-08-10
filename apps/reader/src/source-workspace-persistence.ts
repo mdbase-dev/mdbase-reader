@@ -1,8 +1,9 @@
 import {
   createPane,
+  createLibraryWorkspaceTab,
   createSourceWorkspaceLayout,
   createWorkspaceTab,
-  workspaceViews,
+  sourceWorkspaceViews,
 } from "./source-workspace-layout.js";
 
 import type {
@@ -14,7 +15,7 @@ import type {
   WorkspacePaneId,
   WorkspaceSplitDirection,
   WorkspaceTab,
-  WorkspaceView,
+  SourceWorkspaceView,
 } from "./source-workspace-layout.js";
 import type { SourceId } from "@mdbase-reader/core";
 
@@ -127,9 +128,10 @@ function parsePane(
     (tab, index, all) => all.findIndex(({ id: candidateId }) => candidateId === tab.id) === index,
   );
   const requestedActive = typeof value["activeTabId"] === "string" ? value["activeTabId"] : null;
-  const activeTabId = uniqueTabs.some(({ id: tabId }) => tabId === requestedActive)
-    ? (requestedActive as WorkspaceTab["id"])
-    : (uniqueTabs[0]?.id ?? null);
+  const activeTabId =
+    requestedActive && uniqueTabs.some(({ id }) => id === requestedActive)
+      ? requestedActive
+      : (uniqueTabs[0]?.id ?? null);
   return [
     {
       id,
@@ -141,7 +143,22 @@ function parsePane(
 }
 
 function parseTab(value: unknown, knownSourceIds: ReadonlySet<SourceId>): readonly WorkspaceTab[] {
-  if (!isRecord(value) || typeof value["sourceId"] !== "string") {
+  if (!isRecord(value)) {
+    return [];
+  }
+  if (value["kind"] === "library" || value["view"] === "library") {
+    const libraryViewId =
+      typeof value["libraryViewId"] === "string" ? value["libraryViewId"] : "all-sources";
+    const title = typeof value["title"] === "string" ? value["title"] : "Library";
+    return [
+      {
+        ...createLibraryWorkspaceTab(libraryViewId, title, value["preview"] === true),
+        pinned: value["pinned"] === true,
+        dirty: false,
+      },
+    ];
+  }
+  if (typeof value["sourceId"] !== "string") {
     return [];
   }
   const sourceId = value["sourceId"] as SourceId;
@@ -190,12 +207,25 @@ function parseLocation(
   value: unknown,
   knownSourceIds: ReadonlySet<SourceId>,
 ): readonly WorkspaceLocation[] {
-  if (!isRecord(value) || typeof value["sourceId"] !== "string") {
+  if (!isRecord(value)) {
+    return [];
+  }
+  if (value["kind"] === "library" || value["view"] === "library") {
+    return [
+      {
+        kind: "library",
+        libraryViewId:
+          typeof value["libraryViewId"] === "string" ? value["libraryViewId"] : "all-sources",
+        title: typeof value["title"] === "string" ? value["title"] : "Library",
+      },
+    ];
+  }
+  if (typeof value["sourceId"] !== "string") {
     return [];
   }
   const sourceId = value["sourceId"] as SourceId;
   const view = parseView(value["view"]);
-  return knownSourceIds.has(sourceId) && view ? [{ sourceId, view }] : [];
+  return knownSourceIds.has(sourceId) && view ? [{ kind: "source", sourceId, view }] : [];
 }
 
 function cleanLayout(layout: SourceWorkspaceLayout): SourceWorkspaceLayout {
@@ -216,9 +246,9 @@ function hasAnyTab(layout: SourceWorkspaceLayout): boolean {
   return layout.panes.some(({ tabs }) => tabs.length > 0);
 }
 
-function parseView(value: unknown): WorkspaceView | null {
-  return typeof value === "string" && workspaceViews.includes(value as WorkspaceView)
-    ? (value as WorkspaceView)
+function parseView(value: unknown): SourceWorkspaceView | null {
+  return typeof value === "string" && sourceWorkspaceViews.includes(value as SourceWorkspaceView)
+    ? (value as SourceWorkspaceView)
     : null;
 }
 

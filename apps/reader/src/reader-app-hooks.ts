@@ -22,8 +22,12 @@ import type { ReadingSurface } from "@mdbase-reader/reading-surface";
 
 export function useResponsiveInspector(setInspectorOpen: (open: boolean) => void): void {
   useEffect(() => {
-    const query = window.matchMedia("(max-width: 760px)");
-    const update = (event: MediaQueryListEvent): void => setInspectorOpen(!event.matches);
+    const query = window.matchMedia("(max-width: 1120px)");
+    const update = (event: MediaQueryListEvent): void => {
+      if (event.matches) {
+        setInspectorOpen(false);
+      }
+    };
     query.addEventListener("change", update);
     return () => query.removeEventListener("change", update);
   }, [setInspectorOpen]);
@@ -167,7 +171,7 @@ export function useReaderAnnotationComposer(
   surface: ReadingSurface | null,
 ): AnnotationComposerController {
   return useAnnotationComposer({
-    source: workspace.selectedSource,
+    source: workspace.sourceRecord.status === "ready" ? workspace.sourceRecord.value : null,
     surface,
     create: workspace.createAnnotation,
   });
@@ -176,13 +180,15 @@ export function useReaderAnnotationComposer(
 export function readerMainClass(
   libraryOpen: boolean,
   focusMode: boolean,
-  inspectorOpen: boolean,
+  libraryCollapsed = false,
+  inspectorOpen = true,
 ): string {
   return [
     "reader-main",
     libraryOpen ? "is-library-open" : "",
     focusMode ? "is-focus-mode" : "",
-    !inspectorOpen ? "is-inspector-closed" : "",
+    libraryCollapsed ? "is-library-collapsed" : "",
+    inspectorOpen ? "" : "is-inspector-closed",
   ]
     .filter(Boolean)
     .join(" ");

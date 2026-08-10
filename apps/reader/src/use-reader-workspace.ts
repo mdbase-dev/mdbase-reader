@@ -7,7 +7,7 @@ import {
   type AnnotationTransclusionController,
 } from "./use-annotation-transclusion.js";
 import { useCitationEditor, type CitationEditorController } from "./use-citation-editor.js";
-import { useLibrarySelection, type LibrarySelection } from "./use-library-selection.js";
+import { useLibrarySelection } from "./use-library-selection.js";
 import {
   useSelectedSourceResources,
   type AnnotationState,
@@ -38,9 +38,7 @@ export type AsyncResource<Value> =
   | { readonly status: "ready"; readonly value: Value }
   | { readonly status: "error"; readonly message: string };
 
-export interface ReaderWorkspaceController {
-  readonly library: AsyncResource<ReaderLibrarySnapshot>;
-  readonly selectedSource: SourceSummary | null;
+export interface ReaderSourceWorkspaceController {
   readonly sourceRecord: AsyncResource<Source>;
   readonly annotations: AsyncResource<readonly Annotation[]>;
   readonly draft: string;
@@ -49,15 +47,8 @@ export interface ReaderWorkspaceController {
   readonly saveError: string | null;
   readonly citation: CitationEditorController;
   readonly transclusion: AnnotationTransclusionController;
-  readonly importStatus: "idle" | "importing";
-  readonly importError: string | null;
-  readonly selectSource: (id: SourceId | null) => void;
   readonly setDraft: (value: string) => void;
   readonly saveDraft: () => void;
-  readonly importSourceFile: (
-    request: Omit<SourceFileImportRequest, "collectionId">,
-    options?: SourceImportOptions,
-  ) => Promise<Source | null>;
   readonly createAnnotation: (request: AnnotationCreationRequest) => Promise<Annotation>;
   readonly updateAnnotation: (annotation: Annotation, body: string) => Promise<Annotation>;
   readonly planAnnotationDeletion: (annotation: Annotation) => Promise<AnnotationDeletionPlan>;
@@ -70,24 +61,40 @@ export interface ReaderWorkspaceController {
     documentFileId: FileId,
     position: ReadingPosition,
   ) => Promise<void>;
+}
+
+export interface ReaderWorkspaceController extends ReaderSourceWorkspaceController {
+  readonly library: AsyncResource<ReaderLibrarySnapshot>;
+  readonly selectedSource: SourceSummary | null;
+  readonly reconcileSource: (source: Source) => void;
+  readonly selectSource: (id: SourceId | null) => void;
+  readonly importSourceFile: (
+    request: Omit<SourceFileImportRequest, "collectionId">,
+    options?: SourceImportOptions,
+  ) => Promise<Source | null>;
+  readonly importStatus: "idle" | "importing";
+  readonly importError: string | null;
   readonly retryLibrary: () => void;
 }
 
 export function useReaderWorkspace(gateway: ReaderWorkspaceGateway): ReaderWorkspaceController {
-  const { reconcileSource, ...library } = useLibrarySelection(gateway);
-  const source = useSelectedSourceWorkspace(gateway, library.selectedSource, reconcileSource);
+  const library = useLibrarySelection(gateway);
+  const source = useSourceToolsWorkspace(
+    gateway,
+    library.selectedSource?.id ?? null,
+    library.reconcileSource,
+  );
   return {
     ...library,
     ...source,
   };
 }
 
-function useSelectedSourceWorkspace(
+export function useSourceToolsWorkspace(
   gateway: ReaderWorkspaceGateway,
-  selectedSource: SourceSummary | null,
+  selectedSourceId: SourceId | null,
   reconcileSource: (source: Source) => void,
-): Omit<ReaderWorkspaceController, keyof LibrarySelection> {
-  const selectedSourceId = selectedSource?.id ?? null;
+): ReaderSourceWorkspaceController {
   const resources = useSelectedSourceResources(gateway, selectedSourceId);
   const {
     source,
@@ -169,7 +176,7 @@ function useSelectedAnnotationMutations(
   gateway: ReaderWorkspaceGateway,
   setAnnotations: Dispatch<SetStateAction<AnnotationState>>,
 ): Pick<
-  ReaderWorkspaceController,
+  ReaderSourceWorkspaceController,
   "createAnnotation" | "updateAnnotation" | "planAnnotationDeletion" | "deleteAnnotation"
 > {
   const deletion = useAnnotationDeletion(gateway, setAnnotations);

@@ -1,38 +1,40 @@
+import { useState, type JSX } from "react";
+
 import { CommandPalette } from "./CommandPalette.js";
 import { DeploymentUpdateNotice } from "./DeploymentUpdateNotice.js";
 import { DocumentWorkspace } from "./DocumentWorkspace.js";
 import { InspectorPane } from "./InspectorPane.js";
-import { LibraryPane } from "./LibraryPane.js";
+import { LibraryNavigator } from "./LibraryNavigator.js";
+import { LibraryWorkspace } from "./LibraryWorkspace.js";
 import { InspectorResizeHandle, LibraryResizeHandle } from "./PanelResizeHandle.js";
-import { readerMainClass } from "./reader-app-hooks.js";
+import { readerMainClass, useResponsiveInspector } from "./reader-app-hooks.js";
 import { readerCommands } from "./reader-command-list.js";
 import { ReaderHeader } from "./ReaderHeader.js";
 import { RenderedSourceDocument } from "./RenderedSourceDocument.js";
 import { SourceAdditionOverlays } from "./SourceAdditionOverlays.js";
 import { useWorkspaceShellPreferences } from "./use-workspace-shell-preferences.js";
+import { workspaceShellStyle } from "./workspace-shell-preferences.js";
 import { WorkspaceToolTab } from "./WorkspaceToolTab.js";
 
-import type { LibraryViewState } from "./library-view-state.js";
 import type { SourceDocumentRenderer } from "./RenderedSourceDocument.js";
 import type { AnnotationComposerController } from "./use-annotation-composer.js";
 import type { BibliographyExportController } from "./use-bibliography-export.js";
-import type { LibrarySearchResult } from "./use-library-search.js";
+import type { MdbaseLibraryViewsController } from "./use-mdbase-library-views.js";
 import type { ReaderWorkspaceController } from "./use-reader-workspace.js";
 import type { ReadingResumeState } from "./use-reading-resume.js";
 import type { SourceAdditionController } from "./use-source-addition.js";
 import type { SourceExportController } from "./use-source-export.js";
 import type { SourceWorkspaceController } from "./use-source-workspace.js";
-import type { WorkspaceShellPreferencesController } from "./use-workspace-shell-preferences.js";
-import type { ReaderLibrarySnapshot } from "./workspace-model.js";
-import type { WorkspaceShellPreferences } from "./workspace-shell-preferences.js";
+import type { ReaderLibrarySnapshot, ReaderWorkspaceGateway } from "./workspace-model.js";
 import type { SourceSummary } from "@mdbase-reader/core";
 import type { PickedFile } from "@mdbase-reader/platform";
 import type { ReadingSurface } from "@mdbase-reader/reading-surface";
 import type { ThemePreference } from "@mdbase-reader/ui";
-import type { CSSProperties, JSX } from "react";
 
 export interface ReaderWorkspaceViewModel {
   readonly library: ReaderLibrarySnapshot;
+  readonly gateway: ReaderWorkspaceGateway;
+  readonly libraryViews: MdbaseLibraryViewsController;
   readonly source: SourceSummary | null;
   readonly openSources: readonly SourceSummary[];
   readonly workspace: ReaderWorkspaceController;
@@ -40,7 +42,6 @@ export interface ReaderWorkspaceViewModel {
   readonly composer: AnnotationComposerController;
   readonly readingResume: ReadingResumeState;
   readonly decorationProblem: string | null;
-  readonly librarySearch: LibrarySearchResult;
   readonly sourceAddition: SourceAdditionController;
   readonly bibliographyExport: BibliographyExportController;
   readonly sourceExport: SourceExportController;
@@ -49,30 +50,37 @@ export interface ReaderWorkspaceViewModel {
   readonly deploymentUpdateAvailable: boolean;
   readonly theme: ThemePreference;
   readonly changeTheme: () => void;
-  readonly libraryView: LibraryViewState;
   readonly focusMode: boolean;
   readonly focusChromeVisible: boolean;
   readonly setFocusMode: (value: boolean | ((current: boolean) => boolean)) => void;
-  readonly inspectorOpen: boolean;
-  readonly setInspectorOpen: (value: boolean | ((current: boolean) => boolean)) => void;
   readonly mobileLibraryOpen: boolean;
   readonly setMobileLibraryOpen: (value: boolean) => void;
+  readonly libraryCollapsed: boolean;
+  readonly setLibraryCollapsed: (value: boolean | ((current: boolean) => boolean)) => void;
   readonly commandsOpen: boolean;
   readonly setCommandsOpen: (value: boolean) => void;
   readonly pickSourceFile: (() => Promise<PickedFile | null>) | undefined;
 }
 
+// eslint-disable-next-line complexity, max-lines-per-function
 export function ReaderWorkspaceView({
   model,
 }: {
   readonly model: ReaderWorkspaceViewModel;
 }): JSX.Element {
-  const { library, source, workspace, sourceWorkspace, composer, sourceAddition, librarySearch } =
-    model;
+  const { library, source, workspace, sourceWorkspace, composer, sourceAddition } = model;
   const shell = useWorkspaceShellPreferences(
     library.sources[0]?.collectionId ?? library.collectionName,
   );
-  const commands = commandsForView(model, shell);
+  const [inspectorOpen, setInspectorOpen] = useState(
+    () => !window.matchMedia("(max-width: 1120px)").matches,
+  );
+  useResponsiveInspector(setInspectorOpen);
+  const commands = commandsForView(model, () => setInspectorOpen((value) => !value));
+  const activeSource = sourceWorkspace.activeSourceId
+    ? (library.sources.find(({ id }) => id === sourceWorkspace.activeSourceId) ?? null)
+    : null;
+  const inspectorSource = activeSource?.id === workspace.selectedSource?.id ? activeSource : null;
   return (
     <div
       className={`reader-shell${model.deploymentUpdateAvailable ? " has-update" : ""}${model.focusChromeVisible ? "" : " is-focus-chrome-hidden"}`}
@@ -84,28 +92,42 @@ export function ReaderWorkspaceView({
         theme={model.theme}
         onChangeTheme={model.changeTheme}
         onOpenCommands={() => model.setCommandsOpen(true)}
+        onToggleLibrary={() => toggleLibrary(model)}
+        inspectorOpen={inspectorOpen}
+        onToggleInspector={() => setInspectorOpen((value) => !value)}
       />
       <main
-        className={`${readerMainClass(model.mobileLibraryOpen, model.focusMode, model.inspectorOpen)} is-inspector-${shell.value.inspectorDock}`}
-        style={shellStyle(shell.value)}
+        className={readerMainClass(
+          model.mobileLibraryOpen,
+          model.focusMode,
+          model.libraryCollapsed,
+          inspectorOpen,
+        )}
+        style={workspaceShellStyle(shell.value)}
       >
-        <LibraryPane
+        {model.mobileLibraryOpen ? (
+          <button
+            className="mobile-sheet-dismiss"
+            type="button"
+            aria-label="Close library"
+            onClick={() => model.setMobileLibraryOpen(false)}
+          />
+        ) : null}
+        {inspectorOpen ? (
+          <button
+            className="mobile-inspector-dismiss"
+            type="button"
+            aria-label="Close source tools"
+            onClick={() => setInspectorOpen(false)}
+          />
+        ) : null}
+        <LibraryNavigator
           sources={library.sources}
-          visibleSources={librarySearch.sources}
           selectedSourceId={source?.id ?? null}
-          search={model.libraryView.query}
-          lens={model.libraryView.lens}
-          sort={model.libraryView.sort}
-          savedLenses={model.libraryView.saved}
-          onSearchChange={model.libraryView.setQuery}
-          onLensChange={model.libraryView.setLens}
-          onSortChange={model.libraryView.setSort}
-          onSaveLens={model.libraryView.save}
-          onApplySavedLens={model.libraryView.apply}
-          onRemoveSavedLens={model.libraryView.remove}
-          presentation={shell.value.libraryPresentation}
-          onPresentationChange={(libraryPresentation) => shell.update({ libraryPresentation })}
-          onSelectSource={(id) => {
+          views={model.libraryViews.views}
+          viewsLoading={model.libraryViews.loading}
+          problem={model.libraryViews.problem}
+          onPreviewSource={(id) => {
             sourceWorkspace.preview(id);
             model.setMobileLibraryOpen(false);
           }}
@@ -114,20 +136,19 @@ export function ReaderWorkspaceView({
             model.setMobileLibraryOpen(false);
           }}
           onOpenBeside={(id) => sourceWorkspace.openBeside(id)}
+          onOpenView={(view) => {
+            sourceWorkspace.openLibrary(view.key, view.name);
+            model.setMobileLibraryOpen(false);
+          }}
           onAddSource={sourceAddition.open}
           addingSource={sourceAddition.adding}
           bibliographyExport={model.bibliographyExport}
-          searchMatches={librarySearch.matches}
-          searchStatus={librarySearch.status}
-          searchProblem={librarySearch.problem}
-          sourceIndex={library.sourceIndex}
         />
         <LibraryResizeHandle onResize={(libraryWidth) => shell.update({ libraryWidth })} />
         <DocumentWorkspace
           sources={library.sources}
           sourceWorkspace={sourceWorkspace}
           focusMode={model.focusMode}
-          inspectorOpen={model.inspectorOpen && !model.focusMode}
           readingResume={model.readingResume}
           decorationProblem={model.decorationProblem}
           canSelectArea={composer.canSelectArea}
@@ -144,23 +165,61 @@ export function ReaderWorkspaceView({
               />
             ) : null
           }
-          renderTool={(workspaceTab, focused) => (
-            <WorkspaceToolTab
-              tab={workspaceTab}
-              focused={focused}
-              source={source}
-              workspace={workspace}
-              sourceWorkspace={sourceWorkspace}
-              composer={composer}
-            />
-          )}
+          renderTool={(workspaceTab) => {
+            const toolSource = library.sources.find(({ id }) => id === workspaceTab.sourceId);
+            return toolSource ? (
+              <WorkspaceToolTab
+                tab={workspaceTab}
+                source={toolSource}
+                gateway={model.gateway}
+                reconcileSource={workspace.reconcileSource}
+                composer={composer}
+              />
+            ) : null;
+          }}
+          renderLibrary={(workspaceTab, focused) => {
+            const libraryView = model.libraryViews.view(workspaceTab.libraryViewId);
+            return (
+              <LibraryWorkspace
+                key={libraryView.key}
+                view={libraryView}
+                availableViews={model.libraryViews.views}
+                allSources={library.sources}
+                gateway={model.gateway}
+                controller={model.libraryViews}
+                focused={focused}
+                onOpenView={(next) => sourceWorkspace.openLibrary(next.key, next.name)}
+                onPreviewSource={(id) => sourceWorkspace.preview(id)}
+                onOpenSource={(id) => sourceWorkspace.open(id)}
+                onOpenBeside={(id) => sourceWorkspace.openBeside(id)}
+                onAddSource={sourceAddition.open}
+              />
+            );
+          }}
           onAddSource={sourceAddition.open}
           onBackToLibrary={() => model.setMobileLibraryOpen(true)}
           onToggleFocus={() => model.setFocusMode((value) => !value)}
           onToggleAreaSelection={composer.toggleAreaSelection}
-          onToggleInspector={() => toggleInspector(model)}
         />
-        <SourceInspectorRegion model={model} shell={shell} />
+        <InspectorResizeHandle
+          dock="right"
+          onResize={(inspectorWidth) => shell.update({ inspectorWidth })}
+        />
+        <InspectorPane
+          open={inspectorOpen}
+          tab={shell.value.inspectorTab}
+          source={inspectorSource}
+          paneLabel={`pane ${sourceWorkspace.activePane.id === "primary" ? "A" : "B"}`}
+          workspace={workspace}
+          composer={composer}
+          onClose={() => setInspectorOpen(false)}
+          onTabChange={(inspectorTab) => shell.update({ inspectorTab })}
+          onPromote={(tab) => {
+            if (inspectorSource) {
+              sourceWorkspace.openView(inspectorSource.id, tab, sourceWorkspace.activePane.id);
+            }
+          }}
+        />
       </main>
       <SourceAdditionOverlays
         addition={sourceAddition}
@@ -175,43 +234,6 @@ export function ReaderWorkspaceView({
   );
 }
 
-function SourceInspectorRegion({
-  model,
-  shell,
-}: {
-  readonly model: ReaderWorkspaceViewModel;
-  readonly shell: WorkspaceShellPreferencesController;
-}): JSX.Element {
-  return (
-    <>
-      {model.source ? (
-        <InspectorPane
-          open={model.inspectorOpen}
-          tab={shell.value.inspectorTab}
-          workspace={model.workspace}
-          composer={model.composer}
-          onClose={() => model.setInspectorOpen(false)}
-          onTabChange={(inspectorTab) => shell.update({ inspectorTab })}
-          dock={shell.value.inspectorDock}
-          onDockChange={(inspectorDock) => shell.update({ inspectorDock })}
-        />
-      ) : null}
-      {model.inspectorOpen ? (
-        <InspectorResizeHandle
-          dock={shell.value.inspectorDock}
-          onResize={(size) => resizeInspector(shell, size)}
-        />
-      ) : null}
-    </>
-  );
-}
-
-function resizeInspector(shell: WorkspaceShellPreferencesController, size: number): void {
-  shell.update(
-    shell.value.inspectorDock === "right" ? { inspectorWidth: size } : { inspectorHeight: size },
-  );
-}
-
 function focusLibrarySearch(): void {
   globalThis.setTimeout(
     () => document.querySelector<HTMLInputElement>("#reader-library-search")?.focus(),
@@ -221,7 +243,7 @@ function focusLibrarySearch(): void {
 
 function commandsForView(
   model: ReaderWorkspaceViewModel,
-  shell: WorkspaceShellPreferencesController,
+  toggleInspector: () => void,
 ): ReturnType<typeof readerCommands> {
   return readerCommands({
     sources: model.library.sources,
@@ -230,31 +252,17 @@ function commandsForView(
     sourceExport: model.sourceExport,
     bibliographyExport: model.bibliographyExport,
     focusMode: model.focusMode,
-    inspectorOpen: model.inspectorOpen,
     toggleFocus: () => model.setFocusMode((value) => !value),
-    toggleInspector: () => toggleInspector(model),
-    toggleLibrary: () => model.setMobileLibraryOpen(!model.mobileLibraryOpen),
-    openInspector: (inspectorTab) => {
-      shell.update({ inspectorTab });
-      model.setInspectorOpen(true);
-    },
+    toggleLibrary: () => toggleLibrary(model),
+    toggleInspector,
     searchLibrary: focusLibrarySearch,
   });
 }
 
-function shellStyle(preferences: WorkspaceShellPreferences): CSSProperties {
-  return {
-    "--reader-library-width": `${String(preferences.libraryWidth)}px`,
-    "--reader-inspector-width": `${String(preferences.inspectorWidth)}px`,
-    "--reader-inspector-height": `${String(preferences.inspectorHeight)}px`,
-  } as CSSProperties;
-}
-
-function toggleInspector(model: ReaderWorkspaceViewModel): void {
-  if (model.focusMode) {
-    model.setFocusMode(false);
-    model.setInspectorOpen(true);
-  } else {
-    model.setInspectorOpen((value) => !value);
+function toggleLibrary(model: ReaderWorkspaceViewModel): void {
+  if (window.matchMedia("(max-width: 680px)").matches) {
+    model.setMobileLibraryOpen(!model.mobileLibraryOpen);
+    return;
   }
+  model.setLibraryCollapsed((value) => !value);
 }

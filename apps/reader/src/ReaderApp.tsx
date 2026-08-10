@@ -1,25 +1,20 @@
 import { useCallback, useState, type JSX } from "react";
 
-import { useLibraryViewState } from "./library-view-state.js";
 import {
   useReaderAnnotationComposer,
   useFocusChrome,
   useReaderReadingResume,
   useReaderShortcuts,
-  useResponsiveInspector,
-  useLensFilteredSources,
   useThemePreference,
 } from "./reader-app-hooks.js";
 import { ReaderLoading } from "./ReaderLoading.js";
 import { ReaderWorkspaceView, type ReaderWorkspaceViewModel } from "./ReaderWorkspaceView.js";
 import { updateSurface } from "./RenderedSourceDocument.js";
-import { useAnnotationSourceIndex } from "./use-annotation-source-index.js";
 import { useBibliographyExport } from "./use-bibliography-export.js";
 import { useDeploymentUpdate } from "./use-deployment-update.js";
 import { useDocumentDecorations } from "./use-document-decorations.js";
-import { useLibrarySearch } from "./use-library-search.js";
+import { useMdbaseLibraryViews } from "./use-mdbase-library-views.js";
 import { useReaderWorkspace, type ReaderWorkspaceController } from "./use-reader-workspace.js";
-import { useSessionDocumentSearch } from "./use-session-document-search.js";
 import { useSourceAddition } from "./use-source-addition.js";
 import { useSourceExport } from "./use-source-export.js";
 import { useSourceWorkspace } from "./use-source-workspace.js";
@@ -76,11 +71,9 @@ function OpenedReaderApp({
   readonly library: ReaderWorkspaceViewModel["library"];
 }): JSX.Element {
   const collectionKey = library.sources[0]?.collectionId ?? library.collectionName;
-  const libraryView = useLibraryViewState(collectionKey);
-  const [inspectorOpen, setInspectorOpen] = useState(
-    () => !window.matchMedia("(max-width: 760px)").matches,
-  );
+  const libraryViews = useMdbaseLibraryViews(gateway);
   const [mobileLibraryOpen, setMobileLibraryOpen] = useState(false);
+  const [libraryCollapsed, setLibraryCollapsed] = useState(false);
   const [focusMode, setFocusMode] = useState(false);
   const focusChromeVisible = useFocusChrome(focusMode);
   const [commandsOpen, setCommandsOpen] = useState(false);
@@ -93,7 +86,6 @@ function OpenedReaderApp({
     collectionKey,
     selectSource: workspace.selectSource,
   });
-  const annotatedSourceIds = useAnnotationSourceIndex(gateway);
   const surface = sourceWorkspace.activeSourceId
     ? (surfaces.get(`${sourceWorkspace.layout.focusedPaneId}:${sourceWorkspace.activeSourceId}`) ??
       null)
@@ -117,7 +109,6 @@ function OpenedReaderApp({
     citationSources: library.sources,
     saveFile,
   });
-  useResponsiveInspector(setInspectorOpen);
 
   useReaderShortcuts({
     focusMode,
@@ -129,25 +120,6 @@ function OpenedReaderApp({
     navigate: sourceWorkspace.navigate,
   });
 
-  const filteredSources = useLensFilteredSources(
-    workspace.library,
-    libraryView.lens,
-    libraryView.sort,
-    sourceWorkspace.layout.recentSourceIds,
-    annotatedSourceIds,
-  );
-  const documentSearch = useSessionDocumentSearch(
-    workspace.selectedSource,
-    surface,
-    libraryView.query,
-  );
-  const librarySearch = useLibrarySearch(
-    gateway,
-    filteredSources,
-    libraryView.query,
-    documentSearch.matches,
-  );
-
   const source = workspace.selectedSource;
   const openSources = sourceWorkspace.openSourceIds.flatMap((sourceId) => {
     const openSource = library.sources.find(({ id }) => id === sourceId);
@@ -155,6 +127,8 @@ function OpenedReaderApp({
   });
   const model = {
     library,
+    gateway,
+    libraryViews,
     source,
     openSources,
     workspace,
@@ -162,7 +136,6 @@ function OpenedReaderApp({
     composer,
     readingResume,
     decorationProblem,
-    librarySearch,
     sourceAddition,
     bibliographyExport,
     sourceExport,
@@ -171,14 +144,13 @@ function OpenedReaderApp({
     deploymentUpdateAvailable,
     theme,
     changeTheme,
-    libraryView,
     focusMode,
     focusChromeVisible,
     setFocusMode,
-    inspectorOpen,
-    setInspectorOpen,
     mobileLibraryOpen,
     setMobileLibraryOpen,
+    libraryCollapsed,
+    setLibraryCollapsed,
     commandsOpen,
     setCommandsOpen,
     pickSourceFile,
