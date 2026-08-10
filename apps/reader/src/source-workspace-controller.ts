@@ -104,9 +104,14 @@ export function createSourceWorkspaceActions({
     close: (sourceId) => closeActiveSource(current(), sourceId, canClose, commit),
     closeTab: (tabId, paneId) => closeTab(current(), tabId, paneId, canClose, commit),
     closeOthers: (tabId, paneId) =>
-      commit((layout) => closeOtherWorkspaceTabs(layout, tabId, paneId)),
-    closeToRight: (tabId, paneId) =>
-      commit((layout) => closeWorkspaceTabsToRight(layout, tabId, paneId)),
+      closeMany(
+        current(),
+        paneId,
+        (tab) => tab.id !== tabId && !tab.pinned,
+        canClose,
+        () => commit((layout) => closeOtherWorkspaceTabs(layout, tabId, paneId)),
+      ),
+    closeToRight: (tabId, paneId) => closeTabsToRight(current(), tabId, paneId, canClose, commit),
     reopenClosed: () => commit(reopenClosedWorkspaceTab),
     reorder: (paneId, fromIndex, toIndex) =>
       commit((layout) => reorderWorkspaceTab(layout, paneId, fromIndex, toIndex)),
@@ -177,4 +182,35 @@ function switchRelativeTab(
   }
   const destination = pane.tabs[(index + direction + pane.tabs.length) % pane.tabs.length];
   return destination ? activateWorkspaceTab(layout, destination.id, pane.id) : layout;
+}
+
+function closeTabsToRight(
+  layout: SourceWorkspaceLayout,
+  tabId: WorkspaceTabId,
+  paneId: WorkspacePaneId,
+  canClose: WorkspaceActionContext["canClose"],
+  commit: WorkspaceActionContext["commit"],
+): void {
+  const tabs = paneById(layout, paneId)?.tabs ?? [];
+  const index = tabs.findIndex(({ id }) => id === tabId);
+  closeMany(
+    layout,
+    paneId,
+    (tab, candidateIndex) => candidateIndex > index && !tab.pinned,
+    canClose,
+    () => commit((current) => closeWorkspaceTabsToRight(current, tabId, paneId)),
+  );
+}
+
+function closeMany(
+  layout: SourceWorkspaceLayout,
+  paneId: WorkspacePaneId,
+  predicate: (tab: WorkspaceTab, index: number) => boolean,
+  canClose: WorkspaceActionContext["canClose"],
+  close: () => void,
+): void {
+  const closing = (paneById(layout, paneId)?.tabs ?? []).filter(predicate);
+  if (closing.every(canClose)) {
+    close();
+  }
 }

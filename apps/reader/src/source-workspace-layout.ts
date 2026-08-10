@@ -130,12 +130,17 @@ export function updatePane(
   paneId: WorkspacePaneId,
   update: (pane: SourceWorkspacePane) => SourceWorkspacePane,
 ): SourceWorkspaceLayout {
-  if (!layout.panes.some(({ id }) => id === paneId)) {
+  const current = paneById(layout, paneId);
+  if (!current) {
+    return layout;
+  }
+  const next = update(current);
+  if (next === current && layout.focusedPaneId === paneId) {
     return layout;
   }
   return {
     ...layout,
-    panes: layout.panes.map((current) => (current.id === paneId ? update(current) : current)),
+    panes: layout.panes.map((pane) => (pane.id === paneId ? next : pane)),
     focusedPaneId: paneId,
   };
 }

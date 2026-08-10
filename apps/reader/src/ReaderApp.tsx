@@ -21,6 +21,7 @@ import { useSessionDocumentSearch } from "./use-session-document-search.js";
 import { useSourceAddition } from "./use-source-addition.js";
 import { useSourceExport } from "./use-source-export.js";
 import { useSourceWorkspace } from "./use-source-workspace.js";
+import { useWorkspaceDirtyIndicator } from "./use-workspace-dirty-indicator.js";
 
 import type { LibraryLensId } from "./library-lenses.js";
 import type { SourceDocumentRenderer } from "./RenderedSourceDocument.js";
@@ -99,6 +100,7 @@ function OpenedReaderApp({
     setSurfaces((current) => updateSurface(current, sessionId, next));
   }, []);
   const composer = useReaderAnnotationComposer(workspace, surface);
+  useWorkspaceDirtyIndicator(workspace, sourceWorkspace);
   const readingResume = useReaderReadingResume(workspace, surface);
   const decorationProblem = useDocumentDecorations(surface, workspace.annotations);
   const sourceAddition = useSourceAddition(workspace, pickSourceFile, (sourceId) => {
@@ -114,6 +116,7 @@ function OpenedReaderApp({
     saveFile,
   });
   useResponsiveInspector(setInspectorOpen);
+
 
   useReaderShortcuts({
     focusMode,

@@ -137,12 +137,20 @@ export function setWorkspaceTabDirty(
   dirty: boolean,
   paneId: WorkspacePaneId = layout.focusedPaneId,
 ): SourceWorkspaceLayout {
-  return updatePane(layout, paneId, (pane) => ({
-    ...pane,
-    tabs: pane.tabs.map((tab) =>
-      tab.id === tabId ? { ...tab, dirty, preview: dirty ? false : tab.preview } : tab,
-    ),
-  }));
+  return updatePane(layout, paneId, (pane) => {
+    const tab = pane.tabs.find(({ id }) => id === tabId);
+    if (!tab || tab.dirty === dirty) {
+      return pane;
+    }
+    return {
+      ...pane,
+      tabs: pane.tabs.map((candidate) =>
+        candidate.id === tabId
+          ? { ...candidate, dirty, preview: dirty ? false : candidate.preview }
+          : candidate,
+      ),
+    };
+  });
 }
 
 export function reorderWorkspaceTab(
