@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { formatCitation } from "./CitationPreview.js";
+import { formatCitation } from "./citation-renderer.js";
 
 describe("CSL citation rendering", () => {
   it("formats the same record with bundled CSL styles and locales", async () => {

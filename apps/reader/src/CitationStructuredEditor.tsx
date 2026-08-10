@@ -276,7 +276,7 @@ function TextField({
   readonly field: string;
   readonly label: string;
   readonly wide?: boolean;
-  readonly problem?: string;
+  readonly problem?: string | undefined;
   readonly onChange: (field: string, value: unknown) => void;
 }): JSX.Element {
   return (
@@ -301,7 +301,7 @@ function DateField({
   readonly label: string;
   readonly value: string;
   readonly onChange: (value: string) => void;
-  readonly problem?: string;
+  readonly problem?: string | undefined;
 }): JSX.Element {
   return (
     <label className="citation-field">
@@ -317,7 +317,7 @@ function DateField({
   );
 }
 
-function FieldProblem({ message }: { readonly message?: string }): JSX.Element | null {
+function FieldProblem({ message }: { readonly message?: string | undefined }): JSX.Element | null {
   return message ? <small className="citation-field-problem">{message}</small> : null;
 }
 
