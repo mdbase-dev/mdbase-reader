@@ -15,7 +15,6 @@
     "typecheck": "tsc -p tsconfig.json"
   },
   "dependencies": {
-    "@citation-js/core": "0.8.2",
     "@citation-js/plugin-csl": "0.8.2",
     "@mdbase-reader/connect": "workspace:*",
     "@mdbase-reader/core": "workspace:*",
@@ -27,6 +26,7 @@
     "@mdbase-reader/renderer-pdf": "workspace:*",
     "@mdbase-reader/ui": "workspace:*",
     "@zip.js/zip.js": "^2.8.36",
+    "citeproc": "2.4.63",
     "react": "^19.2.8",
     "react-dom": "^19.2.8",
     "yaml": "^2.9.0"
