@@ -23,13 +23,16 @@ export function useSourceImport(
   const [pickError, setPickError] = useState<string | null>(null);
   const [progress, setProgress] = useState<SourceImportProgress | null>(null);
   const importController = useRef<AbortController | null>(null);
+  const recoveryFile = useRef<PickedFile | null>(null);
   const choose = useCallback(async (): Promise<void> => {
     if (!pickSourceFile) {
       return;
     }
     setPickError(null);
     try {
-      setFile(await pickSourceFile());
+      const selected = await pickSourceFile();
+      recoveryFile.current = null;
+      setFile(selected);
     } catch (reason) {
       setPickError(
         reason instanceof Error ? reason.message : "Reader could not open the file picker.",
@@ -41,12 +44,14 @@ export function useSourceImport(
       if (progress?.phase === "creating") {
         return;
       }
+      recoveryFile.current = file;
       importController.current.abort();
       setProgress(null);
       return;
     }
+    recoveryFile.current = null;
     setFile(null);
-  }, [progress?.phase]);
+  }, [file, progress?.phase]);
   const importFile = useCallback(
     async (title: string): Promise<void> => {
       if (!file) {
@@ -63,11 +68,18 @@ export function useSourceImport(
             bytes: new Uint8Array(file.bytes),
             title,
           },
-          { signal: controller.signal, onProgress: setProgress },
+          {
+            signal: controller.signal,
+            onProgress: setProgress,
+            ...(recoveryFile.current === file ? { recoverExistingFiles: true } : {}),
+          },
         );
         if (imported) {
+          recoveryFile.current = null;
           setFile(null);
           onImported();
+        } else if (!controller.signal.aborted) {
+          recoveryFile.current = file;
         }
       } finally {
         if (importController.current === controller) {

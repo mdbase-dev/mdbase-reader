@@ -213,6 +213,12 @@ export interface SourceImportProgress {
 
 export interface SourceImportOptions extends ReaderRequestOptions {
   readonly onProgress?: (progress: SourceImportProgress) => void;
+  /**
+   * Search for exact uploaded bytes left by an earlier failed attempt before
+   * starting a new transfer. Ordinary first attempts keep this disabled so a
+   * large collection does not pay an orphan-recovery scan on every import.
+   */
+  readonly recoverExistingFiles?: boolean;
 }
 
 export interface PlannedSourceRepresentation {

@@ -1,4 +1,4 @@
-import { useCallback, useState } from "react";
+import { useCallback, useRef, useState } from "react";
 
 import { readerErrorMessage } from "./errors.js";
 import { fetchWebCapture } from "./web-capture-client.js";
@@ -18,23 +18,30 @@ export function useWebCapture(
 ): WebCaptureFlow {
   const [status, setStatus] = useState<WebCaptureFlow["status"]>("idle");
   const [error, setError] = useState<string | null>(null);
+  const recoveryUrl = useRef<string | null>(null);
   const capture = useCallback(
     async (url: string): Promise<void> => {
       setStatus("capturing");
       setError(null);
       try {
         const captured = await fetchWebCapture(url);
-        const imported = await workspace.importSourceFile({
-          name: captured.name,
-          declaredMediaType: "text/html",
-          bytes: captured.bytes,
-          title: captured.title,
-          capture: captured.capture,
-          archive: captured.archive,
-          metadata: captured.metadata,
-        });
+        const imported = await workspace.importSourceFile(
+          {
+            name: captured.name,
+            declaredMediaType: "text/html",
+            bytes: captured.bytes,
+            title: captured.title,
+            capture: captured.capture,
+            archive: captured.archive,
+            metadata: captured.metadata,
+          },
+          recoveryUrl.current === url ? { recoverExistingFiles: true } : {},
+        );
         if (imported) {
+          recoveryUrl.current = null;
           onImported();
+        } else {
+          recoveryUrl.current = url;
         }
       } catch (reason) {
         setError(readerErrorMessage(reason, "Reader could not capture that page."));

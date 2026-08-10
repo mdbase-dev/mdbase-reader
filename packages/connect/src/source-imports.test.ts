@@ -151,7 +151,7 @@ describe("ConnectSourceImportRepository recovery", () => {
       { list, upload },
     );
 
-    await repository.commitFile(plan());
+    await repository.commitFile(plan(), { recoverExistingFiles: true });
 
     expect(list).toHaveBeenCalledWith({ folder: "files/reader", pageSize: 500 });
     expect(upload).not.toHaveBeenCalled();
@@ -168,6 +168,21 @@ describe("ConnectSourceImportRepository recovery", () => {
         }),
       }),
     );
+  });
+
+  it("does not scan all Reader files on an ordinary first attempt", async () => {
+    const list = vi.fn(() => listFile(fileDescriptor()));
+    const upload = vi.fn(() => Promise.resolve(fileDescriptor()));
+    const create = vi.fn(() => Promise.resolve(success(recordDocument())));
+    const repository = new ConnectSourceImportRepository(
+      { create } as unknown as ReaderConnectClient,
+      { list, upload },
+    );
+
+    await repository.commitFile(plan());
+
+    expect(list).not.toHaveBeenCalled();
+    expect(upload).toHaveBeenCalledOnce();
   });
 });
 

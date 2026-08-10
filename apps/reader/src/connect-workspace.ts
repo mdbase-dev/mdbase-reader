@@ -147,7 +147,11 @@ export class ConnectWorkspaceGateway implements ReaderWorkspaceGateway {
     options: SourceImportOptions = {},
   ): Promise<Source> {
     const imported = await importSourceFile(
-      { imports: this.sourceImports, ...this.runtime },
+      {
+        imports: this.sourceImports,
+        ...this.runtime,
+        ...(this.#library ? { knownSources: this.#library } : {}),
+      },
       { ...request, collectionId: this.collectionId },
       options,
     );

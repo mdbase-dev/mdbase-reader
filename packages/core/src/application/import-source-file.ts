@@ -16,13 +16,15 @@ import type {
   SourceImportRepository,
 } from "./ports.js";
 import type { SourceId } from "../domain/identity.js";
-import type { Source } from "../domain/source.js";
+import type { Source, SourceSummary } from "../domain/source.js";
 
 export interface ImportSourceFileDependencies {
   readonly clock: Clock;
   readonly hasher: ContentHasher;
   readonly ids: ReaderIdGenerator;
   readonly imports: SourceImportRepository;
+  /** Complete source summaries already loaded for this collection. */
+  readonly knownSources?: readonly SourceSummary[];
 }
 
 export async function importSourceFile(
@@ -40,11 +42,10 @@ export async function importSourceFile(
     fileIndex: 0,
     fileCount: plan.representations.length,
   });
-  const duplicate = await dependencies.imports.findExactDuplicate(
-    plan.collectionId,
-    plan.representations.map(({ contentDigest }) => contentDigest),
-    options,
-  );
+  const digests = plan.representations.map(({ contentDigest }) => contentDigest);
+  const duplicate = dependencies.knownSources
+    ? exactDuplicateIn(dependencies.knownSources, digests)
+    : await dependencies.imports.findExactDuplicate(plan.collectionId, digests, options);
   options.signal?.throwIfAborted();
   if (duplicate) {
     throw new DomainError(
@@ -53,6 +54,17 @@ export async function importSourceFile(
     );
   }
   return dependencies.imports.commitFile(plan, options);
+}
+
+function exactDuplicateIn(
+  sources: readonly SourceSummary[],
+  contentDigests: readonly `sha256:${string}`[],
+): SourceSummary | null {
+  const expected = new Set<string>(contentDigests);
+  return (
+    sources.find((source) => source.documents.some(({ revision }) => expected.has(revision))) ??
+    null
+  );
 }
 
 async function planSourceFileImport(

@@ -1,6 +1,7 @@
 import { describe, expect, it, vi } from "vitest";
 
-import { collectionId, mutationId, recordRevision, sourceId } from "../domain/identity.js";
+import { collectionId, fileId, mutationId, recordRevision, sourceId } from "../domain/identity.js";
+import { fileRevision } from "../domain/revision.js";
 import { dateTime } from "../domain/time.js";
 
 import { importSourceFile } from "./import-source-file.js";
@@ -171,6 +172,46 @@ describe("importSourceFile web and duplicate safeguards", () => {
         },
       ),
     ).rejects.toThrow("already stored in");
+    expect(commitFile).not.toHaveBeenCalled();
+  });
+
+  it("uses a complete in-memory library for duplicate checks", async () => {
+    const findExactDuplicate = vi.fn(() => Promise.resolve(null));
+    const commitFile = vi.fn(() => Promise.resolve(sourceFixture()));
+    await expect(
+      importSourceFile(
+        {
+          clock: { now: () => dateTime("2026-08-10T12:00:00.000Z") },
+          hasher: { sha256: () => Promise.resolve(`sha256:${"a".repeat(64)}` as const) },
+          ids: {
+            source: () => sourceId("src_import"),
+            annotation: () => {
+              throw new Error("unused");
+            },
+            mutation: () => mutationId("83dd2f80-c7da-44d7-9844-6ea755a05f40"),
+          },
+          imports: { findExactDuplicate, commitFile },
+          knownSources: [
+            {
+              ...sourceFixture(),
+              title: "Already here",
+              documents: [
+                {
+                  fileId: fileId("file-known"),
+                  file: "files/known.pdf",
+                  role: "primary",
+                  mediaType: "application/pdf",
+                  revision: fileRevision(`sha256:${"a".repeat(64)}`),
+                },
+              ],
+            },
+          ],
+        },
+        { collectionId: collectionId("reading"), name: "duplicate.pdf", bytes },
+      ),
+    ).rejects.toThrow("Already here");
+
+    expect(findExactDuplicate).not.toHaveBeenCalled();
     expect(commitFile).not.toHaveBeenCalled();
   });
 });
