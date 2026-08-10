@@ -1,6 +1,10 @@
 import { useCallback, useState } from "react";
 
-import { assessCitationDraft, citationDraftForSource } from "./citation-editor-model.js";
+import {
+  assessCitationDraft,
+  citationDraftForSource,
+  storedCitationDraftForSource,
+} from "./citation-editor-model.js";
 import { readerErrorMessage } from "./errors.js";
 
 import type { SelectedValue } from "./selected-resource.js";
@@ -13,6 +17,7 @@ export interface CitationEditorController {
   readonly status: "idle" | "saving" | "saved";
   readonly error: string | null;
   readonly dirty: boolean;
+  readonly suggested: boolean;
   readonly setDraft: (value: string) => void;
   readonly save: () => void;
 }
@@ -36,7 +41,9 @@ export function useCitationEditor(input: {
         : "";
   const status = sourceId && statusState?.sourceId === sourceId ? statusState.value : "idle";
   const error = sourceId && errorState?.sourceId === sourceId ? errorState.value : null;
-  const dirty = input.source ? draft !== citationDraftForSource(input.source) : false;
+  const storedDraft = storedDraftFor(input.source);
+  const suggested = hasSuggestedDraft(input.source, storedDraft);
+  const dirty = isCitationDirty(input.source, storedDraft, draft);
   const assessment = assessCitationDraft(draft);
   const setDraft = useCallback(
     (value: string): void => {
@@ -70,5 +77,21 @@ export function useCitationEditor(input: {
       });
   }, [assessment, dirty, input, status]);
 
-  return { draft, assessment, status, error, dirty, setDraft, save };
+  return { draft, assessment, status, error, dirty, suggested, setDraft, save };
+}
+
+function storedDraftFor(source: Source | null): string | null {
+  return source ? storedCitationDraftForSource(source) : null;
+}
+
+function hasSuggestedDraft(source: Source | null, storedDraft: string | null): boolean {
+  return source !== null && storedDraft === null;
+}
+
+function isCitationDirty(
+  source: Source | null,
+  storedDraft: string | null,
+  draft: string,
+): boolean {
+  return source !== null && (storedDraft === null || draft !== storedDraft);
 }

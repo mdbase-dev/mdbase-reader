@@ -14,11 +14,18 @@ export type CitationDraftAssessment =
     };
 
 export function citationDraftForSource(source: Source): string {
-  const existing = source.frontmatter["csl"];
-  const value =
-    typeof existing === "object" && existing !== null && !Array.isArray(existing)
-      ? existing
-      : suggestSourceCitation(source);
+  const stored = storedCitationDraftForSource(source);
+  if (stored) {
+    return stored;
+  }
+  return JSON.stringify(suggestSourceCitation(source), null, 2);
+}
+
+export function storedCitationDraftForSource(source: Source): string | null {
+  const value = source.frontmatter["csl"];
+  if (typeof value !== "object" || value === null || Array.isArray(value)) {
+    return null;
+  }
   return JSON.stringify(value, null, 2);
 }
 

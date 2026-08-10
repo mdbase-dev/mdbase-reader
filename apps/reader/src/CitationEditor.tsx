@@ -101,9 +101,13 @@ function CitationFeedback({ editor }: { readonly editor: CitationEditorControlle
     );
   }
   const message = editor.assessment.valid
-    ? editor.status === "saved" || !editor.dirty
+    ? editor.status === "saved"
       ? "Saved to this source."
-      : "Ready to save."
+      : editor.suggested
+        ? "Suggested from source metadata. Review before saving."
+        : !editor.dirty
+          ? "Saved to this source."
+          : "Ready to save."
     : editor.assessment.message;
   return (
     <div className="citation-feedback" aria-live="polite">
