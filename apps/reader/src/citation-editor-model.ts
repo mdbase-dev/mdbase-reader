@@ -2,11 +2,12 @@ import {
   cslProblemSummary,
   suggestSourceCitation,
   validateCslItem,
+  type CslItem,
   type Source,
 } from "@mdbase-reader/core";
 
 export type CitationDraftAssessment =
-  | { readonly valid: true; readonly value: Readonly<Record<string, unknown>> }
+  | { readonly valid: true; readonly value: CslItem }
   | {
       readonly valid: false;
       readonly message: string;

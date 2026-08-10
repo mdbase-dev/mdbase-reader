@@ -11,6 +11,8 @@ import {
   type Annotation,
   type AnnotationCreationRequest,
   type AnnotationDeletionPlan,
+  type CitationCandidate,
+  type CitationResolutionRequest,
   type FileId,
   type ReadingPosition,
   type Source,
@@ -225,6 +227,28 @@ class PreviewGateway implements ReaderWorkspaceGateway {
     };
     this.#sources = this.#sources.map((item) => (item.id === source.id ? updated : item));
     return Promise.resolve(updated);
+  }
+  resolveCitation(request: CitationResolutionRequest): Promise<CitationCandidate> {
+    return Promise.resolve({
+      citation: {
+        id: "weil1952gravity",
+        type: "book",
+        title: "Gravity and Grace",
+        author: [{ family: "Weil", given: "Simone" }],
+        translator: [{ family: "Crawford", given: "Emma" }],
+        issued: { "date-parts": [[1952]] },
+        publisher: "Routledge and Kegan Paul",
+        "publisher-place": "London",
+        language: "en",
+        ISBN: "9780415290012",
+      },
+      provenance: {
+        provider: "Zotero Translation Server (preview)",
+        query: request.value,
+        retrievedAt: "2026-08-10T00:00:00.000Z",
+      },
+      warnings: [],
+    });
   }
   searchText(): Promise<readonly []> {
     return Promise.resolve([]);

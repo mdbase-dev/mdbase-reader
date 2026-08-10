@@ -1,4 +1,5 @@
 import type { Annotation, AnnotationDeletionPlan, AnnotationDraft } from "../domain/annotation.js";
+import type { CitationCandidate, CitationResolutionRequest } from "../domain/citation-metadata.js";
 import type { CslItem } from "../domain/citation.js";
 import type { DocumentTarget } from "../domain/document.js";
 import type {
@@ -63,6 +64,13 @@ export interface ContentSearchRepository {
     query: string,
     options?: ReaderRequestOptions,
   ): Promise<readonly SourceTextSearchMatch[]>;
+}
+
+export interface CitationMetadataRepository {
+  resolve(
+    request: CitationResolutionRequest,
+    options?: ReaderRequestOptions,
+  ): Promise<CitationCandidate>;
 }
 
 export interface AnnotationRepository {

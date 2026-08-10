@@ -1,6 +1,7 @@
 export * from "./application/create-annotation.js";
 export * from "./application/delete-annotation.js";
 export * from "./application/build-csl-bibliography.js";
+export * from "./application/citation-citekey.js";
 export * from "./application/import-source-file.js";
 export * from "./application/source-document-format.js";
 export * from "./application/suggest-source-citation.js";
@@ -12,6 +13,7 @@ export * from "./application/update-annotation-body.js";
 export type * from "./application/ports.js";
 export * from "./domain/annotation.js";
 export * from "./domain/citation.js";
+export type * from "./domain/citation-metadata.js";
 export * from "./domain/document.js";
 export * from "./domain/errors.js";
 export * from "./domain/identity.js";

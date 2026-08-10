@@ -18,6 +18,8 @@ import type {
   SourceFileImportRequest,
   SourceImportOptions,
   SourceTextSearchMatch,
+  CitationCandidate,
+  CitationResolutionRequest,
 } from "@mdbase-reader/core";
 
 export interface ReaderLibrarySnapshot {
@@ -48,6 +50,10 @@ export interface ReaderWorkspaceGateway {
   annotationSourceIds?(options?: ReaderRequestOptions): Promise<readonly SourceId[]>;
   saveSourceBody(source: Source, body: string): Promise<Source>;
   saveSourceCitation(source: Source, citation: unknown): Promise<Source>;
+  resolveCitation?(
+    request: CitationResolutionRequest,
+    options?: ReaderRequestOptions,
+  ): Promise<CitationCandidate>;
   searchText(
     query: string,
     options?: ReaderRequestOptions,
