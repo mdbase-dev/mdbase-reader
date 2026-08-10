@@ -77,26 +77,34 @@ export function InspectorPane({
           Citation
         </button>
       </div>
-      {tab === "annotations" ? (
-        <div className="annotation-workspace">
-          <AnnotationComposer composer={composer} />
-          <AnnotationList
-            annotations={workspace.annotations}
-            transclusion={workspace.transclusion}
-            onUpdate={workspace.updateAnnotation}
-            onPlanDelete={workspace.planAnnotationDeletion}
-            onDelete={workspace.deleteAnnotation}
-            onOpen={composer.open}
-          />
-        </div>
-      ) : tab === "note" ? (
-        <div className="note-editor">
-          <SourceNoteEditor workspace={workspace} />
-        </div>
-      ) : (
-        <CitationEditor workspace={workspace} />
-      )}
+      <InspectorContent tab={tab} workspace={workspace} composer={composer} />
     </aside>
+  );
+}
+
+export function InspectorContent({
+  tab,
+  workspace,
+  composer,
+}: Pick<InspectorPaneProps, "tab" | "workspace" | "composer">): JSX.Element {
+  return tab === "annotations" ? (
+    <div className="annotation-workspace">
+      <AnnotationComposer composer={composer} />
+      <AnnotationList
+        annotations={workspace.annotations}
+        transclusion={workspace.transclusion}
+        onUpdate={workspace.updateAnnotation}
+        onPlanDelete={workspace.planAnnotationDeletion}
+        onDelete={workspace.deleteAnnotation}
+        onOpen={composer.open}
+      />
+    </div>
+  ) : tab === "note" ? (
+    <div className="note-editor">
+      <SourceNoteEditor workspace={workspace} />
+    </div>
+  ) : (
+    <CitationEditor workspace={workspace} />
   );
 }
 

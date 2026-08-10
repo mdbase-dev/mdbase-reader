@@ -1015,11 +1015,33 @@ button {
 }
 
 .document-workspace {
+  position: relative;
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
+  background: var(--reader-canvas);
+}
+
+.workspace-pane-deck {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  gap: 1px;
+  background: var(--line-strong);
+}
+
+.workspace-pane {
+  position: relative;
   min-width: 0;
   min-height: 0;
   display: grid;
   grid-template-rows: 36px var(--reader-toolbar-height) minmax(0, 1fr);
+  overflow: hidden;
   background: var(--reader-canvas);
+}
+
+.workspace-pane.is-focused {
+  box-shadow: inset 0 0 0 1px color-mix(in oklch, var(--accent) 28%, transparent);
 }
 
 .source-tab-strip {
@@ -1048,7 +1070,7 @@ button {
   min-width: 132px;
   max-width: 238px;
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 26px;
+  grid-template-columns: minmax(0, 1fr) 22px 24px;
   align-items: center;
   border-right: 1px solid var(--line);
   color: var(--muted);
@@ -1079,17 +1101,97 @@ button {
   background: var(--accent);
 }
 
+.source-tab.is-preview .source-tab-title {
+  font-style: italic;
+  font-weight: 500;
+}
+
 .source-tab-select {
   min-width: 0;
   height: 35px;
   display: grid;
-  grid-template-columns: auto minmax(0, 1fr);
+  grid-template-columns: auto auto minmax(0, 1fr) auto;
   align-items: center;
   gap: 8px;
   padding: 0 4px 0 11px;
   color: inherit;
   background: transparent;
   cursor: pointer;
+}
+
+.source-tab-pin {
+  color: var(--accent);
+  font-size: 5px;
+}
+
+.source-tab-dirty {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--accent);
+}
+
+.source-tab-actions {
+  position: relative;
+}
+
+.source-tab-actions > summary {
+  width: 22px;
+  height: 34px;
+  display: grid;
+  place-items: center;
+  color: var(--faint);
+  list-style: none;
+  cursor: pointer;
+  opacity: 0;
+}
+
+.source-tab:hover .source-tab-actions > summary,
+.source-tab-actions[open] > summary,
+.source-tab-actions > summary:focus-visible {
+  opacity: 1;
+}
+
+.source-tab-actions > summary::-webkit-details-marker {
+  display: none;
+}
+
+.source-tab-actions svg {
+  width: 13px;
+}
+
+.source-tab-menu {
+  position: fixed;
+  z-index: 40;
+  width: 190px;
+  padding: 5px;
+  border: 1px solid var(--line-strong);
+  border-radius: 5px;
+  background: var(--paper);
+  box-shadow: 0 18px 48px -24px var(--color-scrim);
+}
+
+.source-tab-menu button {
+  width: 100%;
+  padding: 8px 9px;
+  border-radius: 3px;
+  color: var(--ink-soft);
+  background: transparent;
+  font-size: 10px;
+  text-align: left;
+  cursor: pointer;
+}
+
+.source-tab-menu button:hover {
+  color: var(--ink);
+  background: var(--hover);
+}
+
+.source-tab-menu i {
+  height: 1px;
+  display: block;
+  margin: 4px;
+  background: var(--line);
 }
 
 .source-tab-format {
@@ -1165,6 +1267,81 @@ button {
   padding: 0 12px 0 18px;
   border-bottom: 1px solid var(--line);
   background: var(--paper);
+}
+
+.document-history {
+  display: flex;
+  border: 1px solid var(--line);
+  border-radius: 3px;
+}
+
+.document-history button {
+  width: 25px;
+  height: 27px;
+  color: var(--muted);
+  background: transparent;
+  font-size: 17px;
+  cursor: pointer;
+}
+
+.document-history button:hover {
+  color: var(--ink);
+  background: var(--hover);
+}
+
+.toolbar-menu {
+  position: relative;
+}
+
+.toolbar-menu > summary {
+  padding: 8px;
+  border-radius: 3px;
+  color: var(--muted);
+  font-size: 10px;
+  list-style: none;
+  cursor: pointer;
+}
+
+.toolbar-menu > summary:hover,
+.toolbar-menu[open] > summary {
+  color: var(--ink);
+  background: var(--hover);
+}
+
+.toolbar-menu > div {
+  position: absolute;
+  top: calc(100% + 5px);
+  right: 0;
+  z-index: 30;
+  min-width: 170px;
+  padding: 5px;
+  border: 1px solid var(--line-strong);
+  border-radius: 5px;
+  background: var(--paper);
+  box-shadow: 0 18px 44px -24px var(--color-scrim);
+}
+
+.toolbar-menu button {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px;
+  color: var(--ink-soft);
+  background: transparent;
+  font-size: 10px;
+  text-align: left;
+  cursor: pointer;
+}
+
+.toolbar-menu button:hover,
+.toolbar-menu button.is-active {
+  color: var(--ink);
+  background: var(--hover);
+}
+
+.toolbar-menu svg {
+  width: 15px;
 }
 
 .document-identity {
@@ -1366,6 +1543,88 @@ button {
 
 .document-workspace > .document-empty {
   grid-row: 1 / -1;
+}
+
+.workspace-tool-surface {
+  height: 100%;
+  overflow: auto;
+  background: var(--paper);
+}
+
+.workspace-tool-activate {
+  width: 100%;
+  height: 100%;
+  color: var(--muted);
+  background: var(--paper);
+  font: 10px/1.5 var(--mono);
+  cursor: pointer;
+}
+
+.workspace-split-handle {
+  position: absolute;
+  z-index: 12;
+  border: 0;
+  background: transparent;
+  touch-action: none;
+  cursor: col-resize;
+}
+
+.document-workspace.is-horizontal .workspace-split-handle {
+  top: 0;
+  bottom: 0;
+  left: calc(var(--workspace-split, 50%) - 4px);
+  width: 8px;
+}
+
+.document-workspace.is-vertical .workspace-split-handle {
+  top: calc(var(--workspace-split, 50%) - 4px);
+  right: 0;
+  left: 0;
+  height: 8px;
+  cursor: row-resize;
+}
+
+.workspace-split-handle span {
+  position: absolute;
+  inset: 0 3px;
+  background: transparent;
+}
+
+.workspace-split-handle:hover span {
+  background: var(--accent);
+}
+
+.pane-split-targets {
+  position: absolute;
+  inset: 36px 0 0;
+  z-index: 25;
+  pointer-events: none;
+}
+
+.split-target {
+  position: absolute;
+  display: grid;
+  place-items: center;
+  border: 1px solid color-mix(in oklch, var(--accent) 70%, var(--line));
+  color: var(--ink);
+  background: color-mix(in oklch, var(--accent) 12%, var(--paper));
+  font: 9px/1 var(--mono);
+  pointer-events: auto;
+  opacity: 0.9;
+}
+
+.split-target.is-right {
+  top: 12%;
+  right: 0;
+  bottom: 12%;
+  width: 20%;
+}
+
+.split-target.is-bottom {
+  right: 24%;
+  bottom: 0;
+  left: 12%;
+  height: 18%;
 }
 
 .connected-document-message {
@@ -2196,16 +2455,47 @@ button {
 
   .reader-main.is-library-open .library-pane {
     position: fixed;
-    inset: var(--reader-header-height) 0 0;
+    right: 8px;
+    bottom: 8px;
+    left: 8px;
     z-index: 12;
     display: grid;
     width: 100%;
+    max-height: min(78vh, 720px);
+    border: 1px solid var(--line-strong);
+    border-radius: 10px;
+    box-shadow: 0 -24px 72px -40px var(--color-scrim);
     translate: 0;
     opacity: 1;
   }
 
   .inspector-pane {
-    width: min(360px, 94vw);
+    top: auto;
+    right: 8px;
+    bottom: 8px;
+    left: 8px;
+    width: auto;
+    height: min(68vh, 620px);
+    border: 1px solid var(--line-strong);
+    border-radius: 10px;
+    box-shadow: 0 -24px 72px -40px var(--color-scrim);
+  }
+
+  .workspace-pane-deck {
+    display: block;
+  }
+
+  .workspace-pane {
+    position: absolute;
+    inset: 0;
+  }
+
+  .workspace-pane:not(.is-focused) {
+    display: none;
+  }
+
+  .workspace-split-handle {
+    display: none;
   }
 
   .mobile-back {

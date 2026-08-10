@@ -24,6 +24,8 @@ export interface LibraryPaneProps {
   readonly onSearchChange: (value: string) => void;
   readonly onFilterChange: (filter: LibraryFilter) => void;
   readonly onSelectSource: (id: SourceId) => void;
+  readonly onOpenSource: (id: SourceId) => void;
+  readonly onOpenBeside: (id: SourceId) => void;
   readonly onAddSource: () => void;
   readonly addingSource: boolean;
   readonly bibliographyExport: BibliographyExportController;
@@ -45,6 +47,8 @@ export function LibraryPane({
   onSearchChange,
   onFilterChange,
   onSelectSource,
+  onOpenSource,
+  onOpenBeside,
   onAddSource,
   addingSource,
   bibliographyExport,
@@ -114,6 +118,8 @@ export function LibraryPane({
           resetKey={`${filter}:${search}`}
           busy={sourceIndex?.complete === false}
           onSelectSource={onSelectSource}
+          onOpenSource={onOpenSource}
+          onOpenBeside={onOpenBeside}
         />
       ) : (
         <div className="library-empty">

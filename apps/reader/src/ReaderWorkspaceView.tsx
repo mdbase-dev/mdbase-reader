@@ -2,7 +2,7 @@ import { useState, type JSX } from "react";
 
 import { DeploymentUpdateNotice } from "./DeploymentUpdateNotice.js";
 import { DocumentWorkspace } from "./DocumentWorkspace.js";
-import { InspectorPane, type InspectorTab } from "./InspectorPane.js";
+import { InspectorContent, InspectorPane, type InspectorTab } from "./InspectorPane.js";
 import { LibraryPane, type LibraryFilter } from "./LibraryPane.js";
 import { readerMainClass } from "./reader-app-hooks.js";
 import { ReaderHeader } from "./ReaderHeader.js";
@@ -19,7 +19,7 @@ import type { SourceAdditionController } from "./use-source-addition.js";
 import type { SourceExportController } from "./use-source-export.js";
 import type { SourceWorkspaceController } from "./use-source-workspace.js";
 import type { ReaderLibrarySnapshot } from "./workspace-model.js";
-import type { SourceId, SourceSummary } from "@mdbase-reader/core";
+import type { SourceSummary } from "@mdbase-reader/core";
 import type { PickedFile } from "@mdbase-reader/platform";
 import type { ReadingSurface } from "@mdbase-reader/reading-surface";
 import type { ThemePreference } from "@mdbase-reader/ui";
@@ -38,7 +38,7 @@ export interface ReaderWorkspaceViewModel {
   readonly bibliographyExport: BibliographyExportController;
   readonly sourceExport: SourceExportController;
   readonly renderDocument: SourceDocumentRenderer | undefined;
-  readonly onSurfaceChange: (sourceId: SourceId, surface: ReadingSurface | null) => void;
+  readonly onSurfaceChange: (sessionId: string, surface: ReadingSurface | null) => void;
   readonly deploymentUpdateAvailable: boolean;
   readonly theme: ThemePreference;
   readonly changeTheme: () => void;
@@ -61,16 +61,8 @@ export function ReaderWorkspaceView({
   readonly model: ReaderWorkspaceViewModel;
 }): JSX.Element {
   const [tab, setTab] = useState<InspectorTab>("annotations");
-  const {
-    library,
-    source,
-    openSources,
-    workspace,
-    sourceWorkspace,
-    composer,
-    sourceAddition,
-    librarySearch,
-  } = model;
+  const { library, source, workspace, sourceWorkspace, composer, sourceAddition, librarySearch } =
+    model;
   return (
     <div className={`reader-shell${model.deploymentUpdateAvailable ? " has-update" : ""}`}>
       {model.deploymentUpdateAvailable ? <DeploymentUpdateNotice /> : null}
@@ -92,9 +84,14 @@ export function ReaderWorkspaceView({
           onSearchChange={model.setSearch}
           onFilterChange={model.setFilter}
           onSelectSource={(id) => {
+            sourceWorkspace.preview(id);
+            model.setMobileLibraryOpen(false);
+          }}
+          onOpenSource={(id) => {
             sourceWorkspace.open(id);
             model.setMobileLibraryOpen(false);
           }}
+          onOpenBeside={(id) => sourceWorkspace.openBeside(id)}
           onAddSource={sourceAddition.open}
           addingSource={sourceAddition.adding}
           bibliographyExport={model.bibliographyExport}
@@ -104,18 +101,8 @@ export function ReaderWorkspaceView({
           sourceIndex={library.sourceIndex}
         />
         <DocumentWorkspace
-          source={source}
-          openDocuments={openSources.map((openSource) => ({
-            source: openSource,
-            document: model.renderDocument ? (
-              <RenderedSourceDocument
-                key={openSource.id}
-                source={openSource}
-                render={model.renderDocument}
-                onSurfaceChange={model.onSurfaceChange}
-              />
-            ) : null,
-          }))}
+          sources={library.sources}
+          sourceWorkspace={sourceWorkspace}
           focusMode={model.focusMode}
           inspectorOpen={model.inspectorOpen && !model.focusMode}
           readingResume={model.readingResume}
@@ -123,12 +110,46 @@ export function ReaderWorkspaceView({
           canSelectArea={composer.canSelectArea}
           selectingArea={composer.selectingArea}
           sourceExport={model.sourceExport}
+          renderDocument={(openSource, paneId) =>
+            model.renderDocument ? (
+              <RenderedSourceDocument
+                key={`${paneId}:${openSource.id}`}
+                sessionId={`${paneId}:${openSource.id}`}
+                source={openSource}
+                render={model.renderDocument}
+                onSurfaceChange={model.onSurfaceChange}
+              />
+            ) : null
+          }
+          renderTool={(workspaceTab, focused) =>
+            focused && source?.id === workspaceTab.sourceId ? (
+              <div className="workspace-tool-surface">
+                <InspectorContent
+                  tab={workspaceTab.view === "document" ? "annotations" : workspaceTab.view}
+                  workspace={workspace}
+                  composer={composer}
+                />
+              </div>
+            ) : (
+              <button
+                className="workspace-tool-activate"
+                type="button"
+                onClick={() =>
+                  sourceWorkspace.focus(
+                    sourceWorkspace.layout.panes.find(({ tabs }) =>
+                      tabs.some(({ id }) => id === workspaceTab.id),
+                    )?.id ?? "primary",
+                  )
+                }
+              >
+                Activate this pane to load {workspaceTab.view}.
+              </button>
+            )
+          }
           onAddSource={sourceAddition.open}
           onBackToLibrary={() => model.setMobileLibraryOpen(true)}
           onToggleFocus={() => model.setFocusMode((value) => !value)}
           onToggleAreaSelection={composer.toggleAreaSelection}
-          onActivateSource={sourceWorkspace.activate}
-          onCloseSource={sourceWorkspace.close}
           onToggleInspector={() => toggleInspector(model)}
         />
         {source ? (

@@ -11,6 +11,8 @@ export interface VirtualSourceListProps {
   readonly resetKey: string;
   readonly busy: boolean;
   readonly onSelectSource: (id: SourceId) => void;
+  readonly onOpenSource: (id: SourceId) => void;
+  readonly onOpenBeside: (id: SourceId) => void;
 }
 
 export function VirtualSourceList({
@@ -20,6 +22,8 @@ export function VirtualSourceList({
   resetKey,
   busy,
   onSelectSource,
+  onOpenSource,
+  onOpenBeside,
 }: VirtualSourceListProps): JSX.Element {
   const { containerRef, range, measure, focusIndex } = useVirtualSourceWindow(
     sources.length,
@@ -71,6 +75,11 @@ export function VirtualSourceList({
                 tabIndex={selected || index === range.start ? 0 : -1}
                 className={selected ? "source-row is-selected" : "source-row"}
                 onClick={() => onSelectSource(source.id)}
+                onDoubleClick={() => onOpenSource(source.id)}
+                onContextMenu={(event) => {
+                  event.preventDefault();
+                  onOpenBeside(source.id);
+                }}
                 onKeyDown={(event) => navigateFrom(event, index)}
               >
                 <span className="source-format">{sourceFormat(source)}</span>

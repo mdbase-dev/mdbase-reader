@@ -1,16 +1,30 @@
-import { ReaderButton } from "@mdbase-reader/ui";
+import { useState, type JSX, type ReactNode } from "react";
 
-import { AreaIcon, BackIcon, FocusIcon, MoreIcon, PanelIcon } from "./icons.js";
+import { AreaIcon, BackIcon, FocusIcon, PanelIcon } from "./icons.js";
 import { SourceTabStrip, sourceFormat } from "./SourceTabStrip.js";
+import {
+  DocumentEmpty,
+  DocumentStatus,
+  EmptyWorkspace,
+  PaneSplitTargets,
+  SourceActions,
+  SplitHandle,
+  splitStyle,
+} from "./WorkspacePaneSupport.js";
 
+import type {
+  SourceWorkspacePane,
+  WorkspacePaneId,
+  WorkspaceTab,
+} from "./source-workspace-layout.js";
 import type { ReadingResumeState } from "./use-reading-resume.js";
 import type { SourceExportController } from "./use-source-export.js";
+import type { SourceWorkspaceController } from "./use-source-workspace.js";
 import type { SourceSummary } from "@mdbase-reader/core";
-import type { JSX, ReactNode } from "react";
 
 export interface DocumentWorkspaceProps {
-  readonly source: SourceSummary | null;
-  readonly openDocuments: readonly OpenSourceDocument[];
+  readonly sources: readonly SourceSummary[];
+  readonly sourceWorkspace: SourceWorkspaceController;
   readonly focusMode: boolean;
   readonly inspectorOpen: boolean;
   readonly readingResume: ReadingResumeState;
@@ -18,23 +32,111 @@ export interface DocumentWorkspaceProps {
   readonly canSelectArea: boolean;
   readonly selectingArea: boolean;
   readonly sourceExport: SourceExportController;
+  readonly renderDocument: (source: SourceSummary, paneId: WorkspacePaneId) => ReactNode;
+  readonly renderTool: (tab: WorkspaceTab, focused: boolean) => ReactNode;
   readonly onAddSource: () => void;
   readonly onBackToLibrary: () => void;
   readonly onToggleFocus: () => void;
   readonly onToggleInspector: () => void;
   readonly onToggleAreaSelection: () => void;
-  readonly onActivateSource: (sourceId: SourceSummary["id"]) => void;
-  readonly onCloseSource: (sourceId: SourceSummary["id"]) => void;
 }
 
-export interface OpenSourceDocument {
-  readonly source: SourceSummary;
-  readonly document: ReactNode;
+export function DocumentWorkspace(props: DocumentWorkspaceProps): JSX.Element {
+  const { sourceWorkspace } = props;
+  const [dragging, setDragging] = useState(false);
+  return (
+    <section
+      className={`document-workspace is-${sourceWorkspace.layout.splitDirection ?? "single"}`}
+      aria-label="Document reader"
+      onDragEnter={() => setDragging(true)}
+      onDragEnd={() => setDragging(false)}
+      onDrop={() => setDragging(false)}
+    >
+      <div className="workspace-pane-deck" style={splitStyle(sourceWorkspace)}>
+        {sourceWorkspace.layout.panes.map((pane) => (
+          <WorkspacePane key={pane.id} pane={pane} dragging={dragging} {...props} />
+        ))}
+        {sourceWorkspace.layout.panes.length === 2 ? (
+          <SplitHandle workspace={sourceWorkspace} />
+        ) : null}
+      </div>
+    </section>
+  );
 }
 
-export function DocumentWorkspace({
+function WorkspacePane({
+  pane,
+  sources,
+  sourceWorkspace,
+  dragging,
+  renderDocument,
+  renderTool,
+  ...toolbar
+}: DocumentWorkspaceProps & {
+  readonly pane: SourceWorkspacePane;
+  readonly dragging: boolean;
+}): JSX.Element {
+  const active = pane.tabs.find(({ id }) => id === pane.activeTabId) ?? null;
+  const sourceFor = (tab: WorkspaceTab): SourceSummary | null =>
+    sources.find(({ id }) => id === tab.sourceId) ?? null;
+  const source = active ? sourceFor(active) : null;
+  const focused = sourceWorkspace.layout.focusedPaneId === pane.id;
+  return (
+    <section
+      className={`workspace-pane${focused ? " is-focused" : ""}`}
+      aria-label={`Reading pane ${pane.id === "primary" ? "A" : "B"}`}
+      onPointerDown={() => sourceWorkspace.focus(pane.id)}
+    >
+      <SourceTabStrip
+        pane={pane}
+        sourceFor={sourceFor}
+        onActivate={(tab) => sourceWorkspace.activateTab(tab.id, pane.id)}
+        onPromote={(tab) => sourceWorkspace.promote(tab.id, pane.id)}
+        onPin={(tab, pinned) => sourceWorkspace.pin(tab.id, pane.id, pinned)}
+        onClose={(tab) => sourceWorkspace.closeTab(tab.id, pane.id)}
+        onCloseOthers={(tab) => sourceWorkspace.closeOthers(tab.id, pane.id)}
+        onCloseToRight={(tab) => sourceWorkspace.closeToRight(tab.id, pane.id)}
+        onOpenBeside={(tab, direction) =>
+          sourceWorkspace.openBeside(tab.sourceId, tab.view, direction)
+        }
+        onReorder={(from, to) => sourceWorkspace.reorder(pane.id, from, to)}
+        onMoveFromPane={(tabId, fromPaneId) => sourceWorkspace.moveTab(tabId, fromPaneId, pane.id)}
+      />
+      {active && source ? (
+        <>
+          <ContextualToolbar source={source} pane={pane} workspace={sourceWorkspace} {...toolbar} />
+          <div
+            className="document-canvas"
+            onPointerDownCapture={() => {
+              if (active.preview) {
+                sourceWorkspace.promote(active.id, pane.id);
+              }
+            }}
+          >
+            <WorkspaceSessions
+              pane={pane}
+              sources={sources}
+              renderDocument={renderDocument}
+              renderTool={renderTool}
+              focused={focused}
+              onAddSource={toolbar.onAddSource}
+            />
+          </div>
+        </>
+      ) : (
+        <EmptyWorkspace hasSources={sources.length > 0} onAddSource={toolbar.onAddSource} />
+      )}
+      {dragging && sourceWorkspace.layout.panes.length === 1 ? (
+        <PaneSplitTargets pane={pane} workspace={sourceWorkspace} />
+      ) : null}
+    </section>
+  );
+}
+
+function ContextualToolbar({
   source,
-  openDocuments,
+  pane,
+  workspace,
   focusMode,
   inspectorOpen,
   readingResume,
@@ -42,213 +144,119 @@ export function DocumentWorkspace({
   canSelectArea,
   selectingArea,
   sourceExport,
-  onAddSource,
   onBackToLibrary,
   onToggleFocus,
   onToggleInspector,
   onToggleAreaSelection,
-  onActivateSource,
-  onCloseSource,
-}: DocumentWorkspaceProps): JSX.Element {
+}: Omit<
+  DocumentWorkspaceProps,
+  "sources" | "sourceWorkspace" | "renderDocument" | "renderTool" | "onAddSource"
+> & {
+  readonly source: SourceSummary;
+  readonly pane: SourceWorkspacePane;
+  readonly workspace: SourceWorkspaceController;
+}): JSX.Element {
   return (
-    <section className="document-workspace" aria-label="Document reader">
-      <SourceTabStrip
-        sources={openDocuments.map(({ source: openSource }) => openSource)}
-        activeSourceId={source?.id ?? null}
-        onActivate={onActivateSource}
-        onClose={onCloseSource}
-      />
-      {source ? (
-        <>
-          <div className="document-toolbar">
-            <button
-              className="mobile-back icon-button"
-              type="button"
-              aria-label="Back to library"
-              onClick={onBackToLibrary}
-            >
-              <BackIcon />
+    <div className="document-toolbar">
+      <button
+        className="mobile-back icon-button"
+        type="button"
+        aria-label="Back to library"
+        onClick={onBackToLibrary}
+      >
+        <BackIcon />
+      </button>
+      <div className="document-history">
+        <button type="button" title="Back" onClick={() => workspace.navigate(-1, pane.id)}>
+          ‹
+        </button>
+        <button type="button" title="Forward" onClick={() => workspace.navigate(1, pane.id)}>
+          ›
+        </button>
+      </div>
+      <div className="document-identity">
+        <strong>{source.title}</strong>
+        <span>
+          {source.creators.join(", ") || "Unknown creator"} · {sourceFormat(source)}
+        </span>
+      </div>
+      <DocumentStatus reading={readingResume} decorationProblem={decorationProblem} />
+      <div className="document-tools">
+        <details className="toolbar-menu">
+          <summary>View</summary>
+          <div>
+            <button type="button" onClick={onToggleFocus}>
+              {focusMode ? "Exit focus mode" : "Focus mode"}
             </button>
-            <div className="document-identity">
-              <strong>{source.title}</strong>
-              <span>
-                {source.creators.join(", ") || "Unknown creator"}
-                {source.documents[0] ? ` · ${sourceFormat(source)}` : " · Source note"}
-              </span>
-            </div>
-            <DocumentStatus reading={readingResume} decorationProblem={decorationProblem} />
-            <div className="document-tools">
-              {canSelectArea ? (
-                <button
-                  type="button"
-                  className={selectingArea ? "tool-button is-active" : "tool-button"}
-                  aria-pressed={selectingArea}
-                  aria-label={selectingArea ? "Cancel area selection" : "Select an area"}
-                  onClick={onToggleAreaSelection}
-                >
-                  <AreaIcon /> <span className="tool-label">Area</span>
-                </button>
-              ) : null}
+            <button type="button" onClick={onToggleInspector}>
+              {inspectorOpen ? "Hide workspace" : "Show workspace"}
+            </button>
+          </div>
+        </details>
+        {canSelectArea ? (
+          <details className="toolbar-menu">
+            <summary>Annotate</summary>
+            <div>
               <button
                 type="button"
-                className={inspectorOpen ? "tool-button is-active" : "tool-button"}
-                aria-pressed={inspectorOpen}
-                aria-label={inspectorOpen ? "Hide source workspace" : "Show source workspace"}
-                onClick={onToggleInspector}
+                className={selectingArea ? "is-active" : undefined}
+                onClick={onToggleAreaSelection}
               >
-                <PanelIcon /> <span className="tool-label">Workspace</span>
+                <AreaIcon /> {selectingArea ? "Cancel area selection" : "Select area"}
               </button>
-              <button
-                type="button"
-                className={focusMode ? "tool-button is-active" : "tool-button"}
-                aria-pressed={focusMode}
-                aria-label={focusMode ? "Exit focus mode" : "Enter focus mode"}
-                onClick={onToggleFocus}
-              >
-                <FocusIcon /> <span className="tool-label">Focus</span>
-              </button>
-              <SourceActions sourceExport={sourceExport} />
             </div>
-          </div>
-          <div className="document-canvas">
-            <DocumentSessions
-              documents={openDocuments}
-              activeSourceId={source.id}
-              onAddSource={onAddSource}
-            />
-          </div>
-        </>
-      ) : (
-        <EmptyWorkspace hasSources={openDocuments.length > 0} onAddSource={onAddSource} />
-      )}
-    </section>
+          </details>
+        ) : null}
+        <button
+          type="button"
+          className={inspectorOpen ? "tool-button is-active" : "tool-button"}
+          aria-label="Toggle source workspace"
+          onClick={onToggleInspector}
+        >
+          <PanelIcon />
+        </button>
+        <button
+          type="button"
+          className={focusMode ? "tool-button is-active" : "tool-button"}
+          aria-label="Toggle focus mode"
+          onClick={onToggleFocus}
+        >
+          <FocusIcon />
+        </button>
+        <SourceActions sourceExport={sourceExport} />
+      </div>
+    </div>
   );
 }
 
-function DocumentSessions({
-  documents,
-  activeSourceId,
+function WorkspaceSessions({
+  pane,
+  sources,
+  renderDocument,
+  renderTool,
+  focused,
   onAddSource,
-}: {
-  readonly documents: readonly OpenSourceDocument[];
-  readonly activeSourceId: SourceSummary["id"];
-  readonly onAddSource: () => void;
+}: Pick<DocumentWorkspaceProps, "sources" | "renderDocument" | "renderTool" | "onAddSource"> & {
+  readonly pane: SourceWorkspacePane;
+  readonly focused: boolean;
 }): JSX.Element {
   return (
     <div className="document-session-deck">
-      {documents.map(({ source, document }) => {
-        const active = source.id === activeSourceId;
-        return (
+      {pane.tabs.map((tab) => {
+        const source = sources.find(({ id }) => id === tab.sourceId);
+        const active = tab.id === pane.activeTabId;
+        return source ? (
           <div
             className={active ? "document-session is-active" : "document-session"}
-            key={source.id}
+            key={tab.id}
             aria-hidden={!active}
           >
-            {document ?? <DocumentEmpty onAddSource={onAddSource} />}
+            {tab.view === "document"
+              ? (renderDocument(source, pane.id) ?? <DocumentEmpty onAddSource={onAddSource} />)
+              : renderTool(tab, focused)}
           </div>
-        );
+        ) : null;
       })}
-    </div>
-  );
-}
-
-function SourceActions({
-  sourceExport,
-}: {
-  readonly sourceExport: SourceExportController;
-}): JSX.Element {
-  return (
-    <details className="source-actions">
-      <summary className="icon-button" aria-label="Source actions" title="Source actions">
-        <MoreIcon />
-      </summary>
-      <div className="source-actions-menu">
-        <button
-          type="button"
-          disabled={!sourceExport.available || sourceExport.status === "exporting"}
-          onClick={sourceExport.run}
-        >
-          <span>{sourceExport.status === "exporting" ? "Preparing export…" : "Export source"}</span>
-          <small>Records, materialized note, citations, and originals</small>
-        </button>
-        {sourceExport.message ? (
-          <p
-            className={`source-export-message is-${sourceExport.status}`}
-            role={sourceExport.status === "error" ? "alert" : "status"}
-          >
-            {sourceExport.message}
-          </p>
-        ) : null}
-      </div>
-    </details>
-  );
-}
-
-function DocumentStatus({
-  reading,
-  decorationProblem,
-}: {
-  readonly reading: ReadingResumeState;
-  readonly decorationProblem: string | null;
-}): JSX.Element {
-  if (decorationProblem) {
-    return (
-      <span className="reading-position-status is-error" role="alert" title={decorationProblem}>
-        Highlights unavailable
-      </span>
-    );
-  }
-  if (reading.status === "idle") {
-    return <span className="reading-position-status" />;
-  }
-  const label =
-    reading.status === "saving"
-      ? "Saving position…"
-      : reading.status === "saved"
-        ? "Position saved"
-        : (reading.message ?? "Position not saved");
-  return (
-    <span
-      className={`reading-position-status is-${reading.status}`}
-      role={reading.status === "error" ? "alert" : "status"}
-      title={label}
-    >
-      {reading.status === "error" ? "Position not saved" : label}
-    </span>
-  );
-}
-
-function DocumentEmpty({ onAddSource }: { readonly onAddSource: () => void }): JSX.Element {
-  return (
-    <div className="document-empty">
-      <div>
-        <span className="mono">No readable representation</span>
-        <h2>Add a PDF, EPUB, or saved web page.</h2>
-        <p>
-          The literature note is available now. Document controls appear when a supported
-          representation is attached.
-        </p>
-        <ReaderButton onClick={onAddSource}>Add another source</ReaderButton>
-      </div>
-    </div>
-  );
-}
-
-function EmptyWorkspace({
-  hasSources,
-  onAddSource,
-}: {
-  readonly hasSources: boolean;
-  readonly onAddSource: () => void;
-}): JSX.Element {
-  return (
-    <div className="document-empty">
-      <div>
-        <span className="mono">{hasSources ? "No source selected" : "Working set is empty"}</span>
-        <h2>{hasSources ? "Choose an open source." : "Open something worth returning to."}</h2>
-        <p>Select a source in the library, or add a PDF, EPUB, or saved web page.</p>
-        <ReaderButton onClick={onAddSource}>Add a source</ReaderButton>
-      </div>
     </div>
   );
 }

@@ -24,7 +24,6 @@ import { useSourceWorkspace } from "./use-source-workspace.js";
 import type { LibraryFilter } from "./LibraryPane.js";
 import type { SourceDocumentRenderer } from "./RenderedSourceDocument.js";
 import type { ReaderWorkspaceGateway } from "./workspace-model.js";
-import type { SourceId } from "@mdbase-reader/core";
 import type { PickedFile } from "@mdbase-reader/platform";
 import type { ReadingSurface } from "@mdbase-reader/reading-surface";
 
@@ -81,7 +80,7 @@ function OpenedReaderApp({
   const [mobileLibraryOpen, setMobileLibraryOpen] = useState(false);
   const [focusMode, setFocusMode] = useState(false);
   const [theme, changeTheme] = useThemePreference();
-  const [surfaces, setSurfaces] = useState<ReadonlyMap<SourceId, ReadingSurface>>(new Map());
+  const [surfaces, setSurfaces] = useState<ReadonlyMap<string, ReadingSurface>>(new Map());
   const deploymentUpdateAvailable = useDeploymentUpdate();
   const sourceWorkspace = useSourceWorkspace({
     selectedSourceId: workspace.selectedSource?.id ?? null,
@@ -90,10 +89,11 @@ function OpenedReaderApp({
     selectSource: workspace.selectSource,
   });
   const surface = sourceWorkspace.activeSourceId
-    ? (surfaces.get(sourceWorkspace.activeSourceId) ?? null)
+    ? (surfaces.get(`${sourceWorkspace.layout.focusedPaneId}:${sourceWorkspace.activeSourceId}`) ??
+      null)
     : null;
-  const onSurfaceChange = useCallback((sourceId: SourceId, next: ReadingSurface | null): void => {
-    setSurfaces((current) => updateSurface(current, sourceId, next));
+  const onSurfaceChange = useCallback((sessionId: string, next: ReadingSurface | null): void => {
+    setSurfaces((current) => updateSurface(current, sessionId, next));
   }, []);
   const composer = useReaderAnnotationComposer(workspace, surface);
   const readingResume = useReaderReadingResume(workspace, surface);
