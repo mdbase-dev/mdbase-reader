@@ -56,6 +56,7 @@ export interface ReaderShortcutActions {
   readonly focusMode: boolean;
   readonly setFocusMode: (value: boolean) => void;
   readonly openCommands: () => void;
+  readonly focusSearch: () => void;
   readonly switchTab: (direction: -1 | 1) => void;
   readonly reopenTab: () => void;
   readonly navigate: (direction: -1 | 1) => void;
@@ -86,6 +87,11 @@ function handleCommandShortcut(event: KeyboardEvent, actions: ReaderShortcutActi
   if (modifier && event.key.toLocaleLowerCase() === "k") {
     event.preventDefault();
     actions.openCommands();
+    return true;
+  }
+  if (modifier && event.key.toLocaleLowerCase() === "f") {
+    event.preventDefault();
+    actions.focusSearch();
     return true;
   }
   if (modifier && event.shiftKey && event.key.toLocaleLowerCase() === "t") {

@@ -123,6 +123,7 @@ function OpenedReaderApp({
     focusMode,
     setFocusMode,
     openCommands: () => setCommandsOpen(true),
+    focusSearch: () => focusLibrarySearch(setMobileLibraryOpen),
     switchTab: sourceWorkspace.switchRelative,
     reopenTab: sourceWorkspace.reopenClosed,
     navigate: sourceWorkspace.navigate,
@@ -183,4 +184,12 @@ function OpenedReaderApp({
     pickSourceFile,
   } satisfies ReaderWorkspaceViewModel;
   return <ReaderWorkspaceView model={model} />;
+}
+
+function focusLibrarySearch(setLibraryOpen: (open: boolean) => void): void {
+  setLibraryOpen(true);
+  globalThis.setTimeout(
+    () => document.querySelector<HTMLInputElement>("#reader-library-search")?.focus(),
+    0,
+  );
 }
