@@ -98,7 +98,9 @@ describe("ConnectDocumentRepository", () => {
 
     expect(list).toHaveBeenCalledOnce();
   });
+});
 
+describe("ConnectDocumentRepository recovery and caching", () => {
   it("recovers a migrated file reference only when its path and digest are exact", async () => {
     const migrated = {
       ...descriptor,

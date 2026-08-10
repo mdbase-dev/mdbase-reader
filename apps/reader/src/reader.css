@@ -2182,6 +2182,14 @@ button {
     grid-column: 1;
   }
 
+  .source-tab-context {
+    display: none;
+  }
+
+  .source-tab {
+    min-width: 142px;
+  }
+
   .library-pane {
     display: none;
   }

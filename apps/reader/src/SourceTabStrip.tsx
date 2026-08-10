@@ -1,7 +1,7 @@
 import { CloseIcon } from "./icons.js";
 
 import type { SourceId, SourceSummary } from "@mdbase-reader/core";
-import type { JSX } from "react";
+import type { JSX, KeyboardEvent } from "react";
 
 export interface SourceTabStripProps {
   readonly sources: readonly SourceSummary[];
@@ -31,8 +31,10 @@ export function SourceTabStrip({
                 type="button"
                 role="tab"
                 aria-selected={active}
+                tabIndex={active ? 0 : -1}
                 title={source.title}
                 onClick={() => onActivate(source.id)}
+                onKeyDown={(event) => handleTabKey(event, sources, source.id, onActivate)}
               >
                 <span className="source-tab-format">{sourceFormat(source)}</span>
                 <span className="source-tab-title">{source.title}</span>
@@ -55,6 +57,44 @@ export function SourceTabStrip({
       </span>
     </div>
   );
+}
+
+function handleTabKey(
+  event: KeyboardEvent<HTMLButtonElement>,
+  sources: readonly SourceSummary[],
+  sourceId: SourceId,
+  activate: (sourceId: SourceId) => void,
+): void {
+  const index = sources.findIndex(({ id }) => id === sourceId);
+  const nextIndex = tabDestination(event.key, index, sources.length);
+  if (nextIndex === null) {
+    return;
+  }
+  const next = sources[nextIndex];
+  if (!next) {
+    return;
+  }
+  event.preventDefault();
+  const tabList = event.currentTarget.closest<HTMLElement>('[role="tablist"]');
+  const destination = tabList?.querySelectorAll<HTMLButtonElement>('[role="tab"]')[nextIndex];
+  destination?.focus();
+  activate(next.id);
+}
+
+export function tabDestination(key: string, current: number, count: number): number | null {
+  if (count < 1 || current < 0) {
+    return null;
+  }
+  if (key === "ArrowRight") {
+    return (current + 1) % count;
+  }
+  if (key === "ArrowLeft") {
+    return (current - 1 + count) % count;
+  }
+  if (key === "Home") {
+    return 0;
+  }
+  return key === "End" ? count - 1 : null;
 }
 
 export function sourceFormat(source: SourceSummary): string {

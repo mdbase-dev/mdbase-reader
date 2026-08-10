@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useRef, useState } from "react";
 
 import {
   activateSource,
@@ -26,13 +26,6 @@ export function useSourceWorkspace(
 ): SourceWorkspaceController {
   const [layout, setLayout] = useState(() => createSourceWorkspaceLayout(selectedSourceId));
   const layoutRef = useRef(layout);
-  layoutRef.current = layout;
-
-  useEffect(() => {
-    if (selectedSourceId) {
-      setLayout((current) => openSource(current, selectedSourceId));
-    }
-  }, [selectedSourceId]);
 
   const commit = useCallback(
     (next: SourceWorkspaceLayout): void => {

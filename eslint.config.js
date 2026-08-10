@@ -14,6 +14,7 @@ export default tseslint.config(
       "**/dist/**",
       "**/coverage/**",
       "**/node_modules/**",
+      "**/.wrangler/**",
       "apps/capacitor/android/**",
       "apps/capacitor/ios/**",
     ],
@@ -130,6 +131,40 @@ export default tseslint.config(
             {
               group: ["react", "react/*", "electron", "@capacitor/*", "@embedpdf/*", "@readium/*"],
               message: "The Connect adapter must not depend on UI, shells, or renderers.",
+            },
+          ],
+        },
+      ],
+    },
+  },
+  {
+    files: ["apps/reader/src/**/*.{ts,tsx}"],
+    ignores: ["apps/reader/src/ConnectedDocument.tsx"],
+    rules: {
+      "no-restricted-imports": [
+        "error",
+        {
+          patterns: [
+            {
+              group: ["@mdbase-reader/renderer-*", "@embedpdf/*", "@readium/*"],
+              message:
+                "Reader workspace code is renderer-neutral. Add renderer integration through ConnectedDocument.",
+            },
+          ],
+        },
+      ],
+    },
+  },
+  {
+    files: ["apps/reader/src/source-workspace-layout.ts"],
+    rules: {
+      "no-restricted-imports": [
+        "error",
+        {
+          patterns: [
+            {
+              group: ["react", "react/*", "@mdbase-reader/connect", "@mdbase-reader/renderer-*"],
+              message: "Workspace layout state must remain a framework-free application model.",
             },
           ],
         },

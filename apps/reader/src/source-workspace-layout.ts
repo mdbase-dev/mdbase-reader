@@ -118,8 +118,12 @@ function updatePane(
 
 function nextPaneId(panes: readonly SourceWorkspacePane[]): WorkspacePaneId {
   let suffix = 2;
-  while (panes.some(({ id }) => id === `pane-${suffix}`)) {
+  while (panes.some(({ id }) => id === paneId(suffix))) {
     suffix += 1;
   }
-  return `pane-${suffix}`;
+  return paneId(suffix);
+}
+
+function paneId(suffix: number): WorkspacePaneId {
+  return `pane-${String(suffix)}` as WorkspacePaneId;
 }

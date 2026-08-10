@@ -1,7 +1,7 @@
 import { useCallback, useRef, useState } from "react";
 
 import type { ReaderWorkspaceController } from "./use-reader-workspace.js";
-import type { SourceImportProgress } from "@mdbase-reader/core";
+import type { SourceId, SourceImportProgress } from "@mdbase-reader/core";
 import type { PickedFile } from "@mdbase-reader/platform";
 
 export interface SourceImportFlow {
@@ -17,7 +17,7 @@ export interface SourceImportFlow {
 export function useSourceImport(
   workspace: ReaderWorkspaceController,
   pickSourceFile: (() => Promise<PickedFile | null>) | undefined,
-  onImported: () => void,
+  onImported: (sourceId: SourceId) => void,
 ): SourceImportFlow {
   const [file, setFile] = useState<PickedFile | null>(null);
   const [pickError, setPickError] = useState<string | null>(null);
@@ -77,7 +77,7 @@ export function useSourceImport(
         if (imported) {
           recoveryFile.current = null;
           setFile(null);
-          onImported();
+          onImported(imported.id);
         } else if (!controller.signal.aborted) {
           recoveryFile.current = file;
         }
