@@ -1,108 +1,131 @@
 import type { SourceId } from "@mdbase-reader/core";
 
-export type WorkspacePaneId = "primary" | `pane-${number}`;
+export const workspaceViews = ["document", "note", "annotations", "citation"] as const;
+export type WorkspaceView = (typeof workspaceViews)[number];
+export type WorkspacePaneId = "primary" | "secondary";
+export type WorkspaceSplitDirection = "horizontal" | "vertical";
+export type WorkspaceTabId = `${string}::${WorkspaceView}`;
+
+export interface WorkspaceTab {
+  readonly id: WorkspaceTabId;
+  readonly sourceId: SourceId;
+  readonly view: WorkspaceView;
+  readonly preview: boolean;
+  readonly pinned: boolean;
+  readonly dirty: boolean;
+}
+
+export interface WorkspaceLocation {
+  readonly sourceId: SourceId;
+  readonly view: WorkspaceView;
+}
+
+export interface WorkspaceHistory {
+  readonly entries: readonly WorkspaceLocation[];
+  readonly index: number;
+}
 
 export interface SourceWorkspacePane {
   readonly id: WorkspacePaneId;
-  readonly sourceIds: readonly SourceId[];
-  readonly activeSourceId: SourceId | null;
+  readonly tabs: readonly WorkspaceTab[];
+  readonly activeTabId: WorkspaceTabId | null;
+  readonly history: WorkspaceHistory;
+}
+
+export interface ClosedWorkspaceTab {
+  readonly paneId: WorkspacePaneId;
+  readonly tab: WorkspaceTab;
+  readonly index: number;
 }
 
 export interface SourceWorkspaceLayout {
+  readonly version: 2;
   readonly panes: readonly SourceWorkspacePane[];
   readonly focusedPaneId: WorkspacePaneId;
+  readonly splitDirection: WorkspaceSplitDirection | null;
+  readonly splitRatio: number;
+  readonly recentlyClosed: readonly ClosedWorkspaceTab[];
+  readonly recentSourceIds: readonly SourceId[];
 }
 
 export function createSourceWorkspaceLayout(sourceId: SourceId | null): SourceWorkspaceLayout {
+  const initialTab = sourceId ? createWorkspaceTab(sourceId, "document", true) : null;
   return {
-    panes: [pane("primary", sourceId)],
+    version: 2,
+    panes: [createPane("primary", initialTab)],
     focusedPaneId: "primary",
+    splitDirection: null,
+    splitRatio: 0.5,
+    recentlyClosed: [],
+    recentSourceIds: sourceId ? [sourceId] : [],
   };
+}
+
+export function createPane(
+  id: WorkspacePaneId,
+  initialTab: WorkspaceTab | null = null,
+): SourceWorkspacePane {
+  return {
+    id,
+    tabs: initialTab ? [initialTab] : [],
+    activeTabId: initialTab?.id ?? null,
+    history: initialTab
+      ? { entries: [tabLocation(initialTab)], index: 0 }
+      : { entries: [], index: -1 },
+  };
+}
+
+export function createWorkspaceTab(
+  sourceId: SourceId,
+  view: WorkspaceView = "document",
+  preview = false,
+): WorkspaceTab {
+  return {
+    id: workspaceTabId(sourceId, view),
+    sourceId,
+    view,
+    preview,
+    pinned: false,
+    dirty: false,
+  };
+}
+
+export function workspaceTabId(sourceId: SourceId, view: WorkspaceView): WorkspaceTabId {
+  return `${sourceId}::${view}`;
 }
 
 export function focusedPane(layout: SourceWorkspaceLayout): SourceWorkspacePane {
-  return (
-    layout.panes.find(({ id }) => id === layout.focusedPaneId) ??
-    layout.panes[0] ??
-    pane("primary", null)
-  );
+  return paneById(layout, layout.focusedPaneId) ?? layout.panes[0] ?? createPane("primary");
 }
 
-export function openSource(
-  layout: SourceWorkspaceLayout,
-  sourceId: SourceId,
-  paneId: WorkspacePaneId = layout.focusedPaneId,
-): SourceWorkspaceLayout {
-  return updatePane(layout, paneId, (current) => ({
-    ...current,
-    sourceIds: current.sourceIds.includes(sourceId)
-      ? current.sourceIds
-      : [...current.sourceIds, sourceId],
-    activeSourceId: sourceId,
-  }));
-}
-
-export function activateSource(
-  layout: SourceWorkspaceLayout,
-  sourceId: SourceId,
-  paneId: WorkspacePaneId = layout.focusedPaneId,
-): SourceWorkspaceLayout {
-  const target = layout.panes.find(({ id }) => id === paneId);
-  return target?.sourceIds.includes(sourceId) ? openSource(layout, sourceId, paneId) : layout;
-}
-
-export function closeSource(
-  layout: SourceWorkspaceLayout,
-  sourceId: SourceId,
-  paneId: WorkspacePaneId = layout.focusedPaneId,
-): SourceWorkspaceLayout {
-  return updatePane(layout, paneId, (current) => {
-    const closingIndex = current.sourceIds.indexOf(sourceId);
-    if (closingIndex < 0) {
-      return current;
-    }
-    const sourceIds = current.sourceIds.filter((id) => id !== sourceId);
-    const nextIndex = Math.min(closingIndex, sourceIds.length - 1);
-    return {
-      ...current,
-      sourceIds,
-      activeSourceId:
-        current.activeSourceId === sourceId
-          ? (sourceIds[nextIndex] ?? null)
-          : current.activeSourceId,
-    };
-  });
-}
-
-export function splitPane(
-  layout: SourceWorkspaceLayout,
-  sourceId: SourceId | null,
-): SourceWorkspaceLayout {
-  const id = nextPaneId(layout.panes);
-  return {
-    panes: [...layout.panes, pane(id, sourceId)],
-    focusedPaneId: id,
-  };
-}
-
-export function focusPane(
+export function paneById(
   layout: SourceWorkspaceLayout,
   paneId: WorkspacePaneId,
-): SourceWorkspaceLayout {
-  return layout.panes.some(({ id }) => id === paneId)
-    ? { ...layout, focusedPaneId: paneId }
-    : layout;
+): SourceWorkspacePane | null {
+  return layout.panes.find(({ id }) => id === paneId) ?? null;
 }
 
-function pane(id: WorkspacePaneId, sourceId: SourceId | null): SourceWorkspacePane {
-  return {
-    id,
-    sourceIds: sourceId ? [sourceId] : [],
-    activeSourceId: sourceId,
-  };
+export function activeTab(pane: SourceWorkspacePane): WorkspaceTab | null {
+  return pane.tabs.find(({ id }) => id === pane.activeTabId) ?? null;
 }
 
-function updatePane(
+export function activeWorkspaceTab(layout: SourceWorkspaceLayout): WorkspaceTab | null {
+  return activeTab(focusedPane(layout));
+}
+
+export function tabLocation(tab: WorkspaceTab): WorkspaceLocation {
+  return { sourceId: tab.sourceId, view: tab.view };
+}
+
+export function allWorkspaceTabs(layout: SourceWorkspaceLayout): readonly WorkspaceTab[] {
+  return layout.panes.flatMap(({ tabs }) => tabs);
+}
+
+export function sourceIdsInWorkspace(layout: SourceWorkspaceLayout): readonly SourceId[] {
+  return [...new Set(allWorkspaceTabs(layout).map(({ sourceId }) => sourceId))];
+}
+
+export function updatePane(
   layout: SourceWorkspaceLayout,
   paneId: WorkspacePaneId,
   update: (pane: SourceWorkspacePane) => SourceWorkspacePane,
@@ -111,19 +134,8 @@ function updatePane(
     return layout;
   }
   return {
+    ...layout,
     panes: layout.panes.map((current) => (current.id === paneId ? update(current) : current)),
     focusedPaneId: paneId,
   };
-}
-
-function nextPaneId(panes: readonly SourceWorkspacePane[]): WorkspacePaneId {
-  let suffix = 2;
-  while (panes.some(({ id }) => id === paneId(suffix))) {
-    suffix += 1;
-  }
-  return paneId(suffix);
-}
-
-function paneId(suffix: number): WorkspacePaneId {
-  return `pane-${String(suffix)}` as WorkspacePaneId;
 }
