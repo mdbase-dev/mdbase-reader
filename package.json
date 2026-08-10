@@ -25,7 +25,7 @@
   "devDependencies": {
     "@callumalpass/mdbase": "0.3.0-rc.5",
     "@eslint/js": "^9.39.2",
-    "@mdbase-dev/connect-dev": "0.1.0-beta.56",
+    "@mdbase-dev/connect-dev": "0.1.0-beta.61",
     "@types/node": "^22.19.11",
     "eslint": "^9.39.2",
     "eslint-import-resolver-typescript": "^4.4.5",
