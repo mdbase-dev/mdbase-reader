@@ -105,26 +105,25 @@
 .citation-json {
   width: 100%;
   min-height: 0;
-  resize: none;
-  padding: 17px 19px 28px;
   border: 0;
   border-bottom: 1px solid var(--line);
-  outline: 0;
+  background: var(--canvas);
+}
+
+.citation-json .cm-editor {
+  height: 100%;
   color: var(--ink-soft);
   background: var(--canvas);
-  caret-color: var(--accent);
   font-family: var(--mono);
   font-size: 10px;
-  line-height: 1.65;
-  tab-size: 2;
 }
 
-.citation-json:focus {
+.citation-json .cm-content {
+  padding: 17px 19px 28px;
+}
+
+.citation-json .cm-editor.cm-focused {
   box-shadow: inset 2px 0 var(--accent);
-}
-
-.citation-json[aria-invalid="true"]:focus {
-  box-shadow: inset 2px 0 var(--danger);
 }
 
 .citation-editor-footer {

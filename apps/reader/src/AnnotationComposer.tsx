@@ -2,6 +2,7 @@ import { ReaderButton } from "@mdbase-reader/ui";
 import { useEffect, useMemo } from "react";
 
 import { CloseIcon } from "./icons.js";
+import { MultilineCodeEditor } from "./MultilineCodeEditor.js";
 
 import type { AnnotationComposerController } from "./use-annotation-composer.js";
 import type { JSX } from "react";
@@ -43,15 +44,15 @@ export function AnnotationComposer({
       ) : (
         <AreaPreview image={composer.selection.value.image} />
       )}
-      <label htmlFor="reader-annotation-note">
+      <div className="annotation-composer-label">
         Note <span>optional</span>
-      </label>
-      <textarea
-        id="reader-annotation-note"
+      </div>
+      <MultilineCodeEditor
         value={composer.note}
-        rows={3}
+        ariaLabel="Annotation note"
+        className="annotation-composer-editor"
         placeholder="Why does this matter?"
-        onChange={(event) => composer.setNote(event.target.value)}
+        onChange={composer.setNote}
       />
       {composer.error ? <p role="alert">{composer.error}</p> : null}
       <footer>

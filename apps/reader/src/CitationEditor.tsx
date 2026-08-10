@@ -1,5 +1,7 @@
 import { ReaderButton } from "@mdbase-reader/ui";
 
+import { MultilineCodeEditor } from "./MultilineCodeEditor.js";
+
 import type { CitationEditorController } from "./use-citation-editor.js";
 import type { ReaderWorkspaceController } from "./use-reader-workspace.js";
 import type { Source } from "@mdbase-reader/core";
@@ -47,13 +49,12 @@ function ReadyCitationEditor({
         </div>
         <CitationValidity valid={editor.assessment.valid} />
       </div>
-      <textarea
+      <MultilineCodeEditor
         className="citation-json"
-        aria-label="CSL JSON citation metadata"
-        aria-invalid={!editor.assessment.valid}
-        spellCheck={false}
+        ariaLabel="CSL JSON citation metadata"
+        language="json"
         value={editor.draft}
-        onChange={(event) => editor.setDraft(event.target.value)}
+        onChange={editor.setDraft}
       />
       <footer className="citation-editor-footer">
         <CitationFeedback editor={editor} />

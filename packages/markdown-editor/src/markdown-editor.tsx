@@ -1,20 +1,27 @@
 import { defaultKeymap, history, historyKeymap } from "@codemirror/commands";
+import { json } from "@codemirror/lang-json";
 import { markdown } from "@codemirror/lang-markdown";
 import { EditorState } from "@codemirror/state";
-import { EditorView, keymap } from "@codemirror/view";
+import { EditorView, keymap, placeholder as placeholderExtension } from "@codemirror/view";
 import { useEffect, useRef, type JSX } from "react";
 
 import { textInsertionAtCursor, type TextInsertionRequest } from "./text-insertion.js";
 
-export interface MarkdownEditorProps {
+export type EditorLanguage = "markdown" | "json" | "plain";
+
+export interface CodeEditorProps {
   readonly value: string;
   readonly ariaLabel: string;
+  readonly language?: EditorLanguage;
+  readonly placeholder?: string;
   readonly readOnly?: boolean;
   readonly className?: string;
   readonly onChange: (value: string) => void;
   readonly onBlur?: () => void;
   readonly insertion?: TextInsertionRequest | null;
 }
+
+export type MarkdownEditorProps = Omit<CodeEditorProps, "language">;
 
 const readerEditorTheme = EditorView.theme({
   "&": {
@@ -35,15 +42,17 @@ const readerEditorTheme = EditorView.theme({
   "&.cm-focused": { outline: "none" },
 });
 
-export function MarkdownEditor({
+export function CodeEditor({
   value,
   ariaLabel,
+  language = "plain",
+  placeholder,
   readOnly = false,
   className,
   onChange,
   onBlur,
   insertion,
-}: MarkdownEditorProps): JSX.Element {
+}: CodeEditorProps): JSX.Element {
   const hostRef = useRef<HTMLDivElement>(null);
   const viewRef = useRef<EditorView | null>(null);
   const initialValueRef = useRef(value);
@@ -64,7 +73,8 @@ export function MarkdownEditor({
     const state = EditorState.create({
       doc: initialValueRef.current,
       extensions: [
-        markdown(),
+        languageExtension(language),
+        placeholder ? placeholderExtension(placeholder) : [],
         history(),
         keymap.of([...defaultKeymap, ...historyKeymap]),
         EditorView.lineWrapping,
@@ -85,7 +95,7 @@ export function MarkdownEditor({
       view.destroy();
       viewRef.current = null;
     };
-  }, [ariaLabel, readOnly]);
+  }, [ariaLabel, language, placeholder, readOnly]);
 
   useEffect(() => {
     const view = viewRef.current;
@@ -114,4 +124,15 @@ export function MarkdownEditor({
   }, [insertion]);
 
   return <div ref={hostRef} className={className} />;
+}
+
+export function MarkdownEditor(props: MarkdownEditorProps): JSX.Element {
+  return <CodeEditor {...props} language="markdown" />;
+}
+
+function languageExtension(language: EditorLanguage): ReturnType<typeof markdown> | readonly [] {
+  if (language === "markdown") {
+    return markdown();
+  }
+  return language === "json" ? json() : [];
 }
