@@ -26,22 +26,66 @@ export function useResponsiveInspector(setInspectorOpen: (open: boolean) => void
   }, [setInspectorOpen]);
 }
 
-export function useReaderShortcuts(
-  focusMode: boolean,
-  setFocusMode: (value: boolean) => void,
-): void {
+export interface ReaderShortcutActions {
+  readonly focusMode: boolean;
+  readonly setFocusMode: (value: boolean) => void;
+  readonly openCommands: () => void;
+  readonly switchTab: (direction: -1 | 1) => void;
+  readonly reopenTab: () => void;
+  readonly navigate: (direction: -1 | 1) => void;
+}
+
+export function useReaderShortcuts(actions: ReaderShortcutActions): void {
   useEffect(() => {
-    const handleShortcut = (event: KeyboardEvent): void => {
-      if ((event.metaKey || event.ctrlKey) && event.key.toLocaleLowerCase() === "k") {
-        event.preventDefault();
-        document.querySelector<HTMLInputElement>("#reader-library-search")?.focus();
-      } else if (event.key === "Escape" && focusMode) {
-        setFocusMode(false);
-      }
-    };
+    const handleShortcut = (event: KeyboardEvent): void => handleReaderShortcut(event, actions);
     window.addEventListener("keydown", handleShortcut);
     return () => window.removeEventListener("keydown", handleShortcut);
-  }, [focusMode, setFocusMode]);
+  }, [actions]);
+}
+
+function handleReaderShortcut(event: KeyboardEvent, actions: ReaderShortcutActions): void {
+  if (handleCommandShortcut(event, actions) || handleTabShortcut(event, actions)) {
+    return;
+  }
+  if (handleHistoryShortcut(event, actions)) {
+    return;
+  }
+  if (event.key === "Escape" && actions.focusMode) {
+    actions.setFocusMode(false);
+  }
+}
+
+function handleCommandShortcut(event: KeyboardEvent, actions: ReaderShortcutActions): boolean {
+  const modifier = event.metaKey || event.ctrlKey;
+  if (modifier && event.key.toLocaleLowerCase() === "k") {
+    event.preventDefault();
+    actions.openCommands();
+    return true;
+  }
+  if (modifier && event.shiftKey && event.key.toLocaleLowerCase() === "t") {
+    event.preventDefault();
+    actions.reopenTab();
+    return true;
+  }
+  return false;
+}
+
+function handleTabShortcut(event: KeyboardEvent, actions: ReaderShortcutActions): boolean {
+  if (event.key !== "Tab" || !event.ctrlKey) {
+    return false;
+  }
+  event.preventDefault();
+  actions.switchTab(event.shiftKey ? -1 : 1);
+  return true;
+}
+
+function handleHistoryShortcut(event: KeyboardEvent, actions: ReaderShortcutActions): boolean {
+  if (!event.altKey || !["ArrowLeft", "ArrowRight"].includes(event.key)) {
+    return false;
+  }
+  event.preventDefault();
+  actions.navigate(event.key === "ArrowLeft" ? -1 : 1);
+  return true;
 }
 
 export function useStatusFilteredSources(

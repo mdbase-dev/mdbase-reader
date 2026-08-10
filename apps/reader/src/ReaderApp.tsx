@@ -79,6 +79,7 @@ function OpenedReaderApp({
   );
   const [mobileLibraryOpen, setMobileLibraryOpen] = useState(false);
   const [focusMode, setFocusMode] = useState(false);
+  const [commandsOpen, setCommandsOpen] = useState(false);
   const [theme, changeTheme] = useThemePreference();
   const [surfaces, setSurfaces] = useState<ReadonlyMap<string, ReadingSurface>>(new Map());
   const deploymentUpdateAvailable = useDeploymentUpdate();
@@ -112,7 +113,14 @@ function OpenedReaderApp({
   });
   useResponsiveInspector(setInspectorOpen);
 
-  useReaderShortcuts(focusMode, setFocusMode);
+  useReaderShortcuts({
+    focusMode,
+    setFocusMode,
+    openCommands: () => setCommandsOpen(true),
+    switchTab: sourceWorkspace.switchRelative,
+    reopenTab: sourceWorkspace.reopenClosed,
+    navigate: sourceWorkspace.navigate,
+  });
 
   const filteredSources = useStatusFilteredSources(workspace.library, filter);
   const documentSearch = useSessionDocumentSearch(workspace.selectedSource, surface, search);
@@ -151,6 +159,8 @@ function OpenedReaderApp({
     setInspectorOpen,
     mobileLibraryOpen,
     setMobileLibraryOpen,
+    commandsOpen,
+    setCommandsOpen,
     pickSourceFile,
   } satisfies ReaderWorkspaceViewModel;
   return <ReaderWorkspaceView model={model} />;

@@ -1,6 +1,6 @@
 import { ProductBrand, type ThemePreference } from "@mdbase-reader/ui";
 
-import { ThemeIcon } from "./icons.js";
+import { SearchIcon, ThemeIcon } from "./icons.js";
 
 import type { JSX } from "react";
 
@@ -9,6 +9,7 @@ interface ReaderHeaderProps {
   readonly connectionState: "connected" | "offline" | "syncing";
   readonly theme: ThemePreference;
   readonly onChangeTheme: () => void;
+  readonly onOpenCommands: () => void;
 }
 
 export function ReaderHeader({
@@ -16,6 +17,7 @@ export function ReaderHeader({
   connectionState,
   theme,
   onChangeTheme,
+  onOpenCommands,
 }: ReaderHeaderProps): JSX.Element {
   return (
     <header className="reader-header">
@@ -26,6 +28,9 @@ export function ReaderHeader({
         <span className={`connection-state is-${connectionState}`}>{connectionState}</span>
       </div>
       <div className="reader-header-actions">
+        <button className="header-command-button" type="button" onClick={onOpenCommands}>
+          <SearchIcon /> Commands <kbd>⌘K</kbd>
+        </button>
         <button
           className="icon-button"
           type="button"

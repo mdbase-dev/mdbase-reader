@@ -286,6 +286,174 @@ button {
   gap: 4px;
 }
 
+.header-command-button {
+  height: 30px;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 0 7px;
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  color: var(--muted);
+  background: transparent;
+  font-size: 9px;
+  cursor: pointer;
+}
+
+.header-command-button:hover {
+  color: var(--ink);
+  border-color: var(--line-strong);
+  background: var(--hover);
+}
+
+.header-command-button svg {
+  width: 13px;
+}
+
+.header-command-button kbd {
+  color: var(--faint);
+  font: 7px/1 var(--mono);
+}
+
+.command-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  width: 100%;
+  max-width: none;
+  height: 100%;
+  max-height: none;
+  display: grid;
+  justify-items: center;
+  align-items: start;
+  padding: min(14vh, 124px) 18px 18px;
+  margin: 0;
+  border: 0;
+  background: color-mix(in oklch, var(--color-scrim) 36%, transparent);
+  backdrop-filter: blur(3px);
+}
+
+.command-dismiss {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  background: transparent;
+  cursor: default;
+}
+
+.command-palette {
+  position: relative;
+  z-index: 1;
+  width: min(620px, 100%);
+  overflow: hidden;
+  border: 1px solid var(--line-strong);
+  border-radius: 8px;
+  background: var(--paper);
+  box-shadow: 0 32px 90px -32px var(--color-scrim);
+}
+
+.command-search {
+  height: 54px;
+  display: grid;
+  grid-template-columns: 22px minmax(0, 1fr);
+  align-items: center;
+  gap: 8px;
+  padding: 0 16px;
+  border-bottom: 1px solid var(--line);
+}
+
+.command-search svg {
+  width: 18px;
+  color: var(--muted);
+}
+
+.command-search input {
+  min-width: 0;
+  border: 0;
+  outline: 0;
+  color: var(--ink);
+  background: transparent;
+  font-size: 15px;
+}
+
+.command-results {
+  max-height: min(58vh, 520px);
+  overflow: auto;
+  padding: 6px;
+}
+
+.command-results > button {
+  width: 100%;
+  min-height: 46px;
+  display: grid;
+  grid-template-columns: 66px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 10px;
+  padding: 7px 10px;
+  border-radius: 4px;
+  color: var(--ink-soft);
+  background: transparent;
+  text-align: left;
+  cursor: pointer;
+}
+
+.command-results > button[aria-selected="true"],
+.command-results > button:hover {
+  color: var(--ink);
+  background: var(--selected);
+}
+
+.command-group {
+  color: var(--faint);
+  font: 7px/1 var(--mono);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.command-results button > span:nth-child(2) {
+  min-width: 0;
+  display: grid;
+  gap: 2px;
+}
+
+.command-results strong,
+.command-results small {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.command-results strong {
+  font-size: 11px;
+}
+
+.command-results small {
+  color: var(--muted);
+  font-size: 9px;
+}
+
+.command-results kbd,
+.command-palette footer {
+  color: var(--faint);
+  font: 8px/1 var(--mono);
+}
+
+.command-empty {
+  padding: 30px;
+  color: var(--muted);
+  font-size: 11px;
+  text-align: center;
+}
+
+.command-palette footer {
+  display: flex;
+  gap: 14px;
+  padding: 10px 16px;
+  border-top: 1px solid var(--line);
+  background: var(--canvas);
+}
+
 .icon-button {
   width: 34px;
   height: 34px;
