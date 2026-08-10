@@ -54,6 +54,7 @@ export interface ReaderWorkspaceViewModel {
   readonly lens: LibraryLensId;
   readonly setLens: (value: LibraryLensId) => void;
   readonly focusMode: boolean;
+  readonly focusChromeVisible: boolean;
   readonly setFocusMode: (value: boolean | ((current: boolean) => boolean)) => void;
   readonly inspectorOpen: boolean;
   readonly setInspectorOpen: (value: boolean | ((current: boolean) => boolean)) => void;
@@ -76,7 +77,9 @@ export function ReaderWorkspaceView({
   );
   const commands = commandsForView(model, shell);
   return (
-    <div className={`reader-shell${model.deploymentUpdateAvailable ? " has-update" : ""}`}>
+    <div
+      className={`reader-shell${model.deploymentUpdateAvailable ? " has-update" : ""}${model.focusChromeVisible ? "" : " is-focus-chrome-hidden"}`}
+    >
       {model.deploymentUpdateAvailable ? <DeploymentUpdateNotice /> : null}
       <ReaderHeader
         collectionName={library.collectionName}

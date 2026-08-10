@@ -198,6 +198,40 @@ button {
   grid-template-rows: auto var(--reader-header-height) minmax(0, 1fr);
 }
 
+.reader-shell.is-focus-chrome-hidden {
+  grid-template-rows: 0 minmax(0, 1fr);
+}
+
+.reader-shell.has-update.is-focus-chrome-hidden {
+  grid-template-rows: 0 0 minmax(0, 1fr);
+}
+
+.reader-shell.is-focus-chrome-hidden .reader-header {
+  overflow: hidden;
+  pointer-events: none;
+  opacity: 0;
+}
+
+.reader-shell.is-focus-chrome-hidden .workspace-pane {
+  grid-template-rows: 0 0 minmax(0, 1fr);
+}
+
+.reader-shell.is-focus-chrome-hidden .source-tab-strip,
+.reader-shell.is-focus-chrome-hidden .document-toolbar {
+  overflow: hidden;
+  pointer-events: none;
+  opacity: 0;
+}
+
+.reader-header,
+.workspace-pane,
+.source-tab-strip,
+.document-toolbar {
+  transition:
+    grid-template-rows 160ms var(--ease),
+    opacity 140ms var(--ease);
+}
+
 .deployment-update {
   z-index: 20;
   min-height: 38px;

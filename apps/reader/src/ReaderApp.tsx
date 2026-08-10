@@ -2,6 +2,7 @@ import { useCallback, useState, type JSX } from "react";
 
 import {
   useReaderAnnotationComposer,
+  useFocusChrome,
   useReaderReadingResume,
   useReaderShortcuts,
   useResponsiveInspector,
@@ -81,6 +82,7 @@ function OpenedReaderApp({
   );
   const [mobileLibraryOpen, setMobileLibraryOpen] = useState(false);
   const [focusMode, setFocusMode] = useState(false);
+  const focusChromeVisible = useFocusChrome(focusMode);
   const [commandsOpen, setCommandsOpen] = useState(false);
   const [theme, changeTheme] = useThemePreference();
   const [surfaces, setSurfaces] = useState<ReadonlyMap<string, ReadingSurface>>(new Map());
@@ -116,7 +118,6 @@ function OpenedReaderApp({
     saveFile,
   });
   useResponsiveInspector(setInspectorOpen);
-
 
   useReaderShortcuts({
     focusMode,
@@ -164,6 +165,7 @@ function OpenedReaderApp({
     lens,
     setLens,
     focusMode,
+    focusChromeVisible,
     setFocusMode,
     inspectorOpen,
     setInspectorOpen,
