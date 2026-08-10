@@ -75,6 +75,22 @@ describe("source workspace tabs", () => {
     expect(focusedPane(next).tabs.map(({ sourceId }) => sourceId)).toEqual([first, second]);
   });
 
+  it("promotes the current preview when opened explicitly", () => {
+    const preview = previewSource(createSourceWorkspaceLayout(null), first);
+    const opened = openSource(preview, first);
+    const nextPreview = previewSource(opened, second);
+
+    expect(
+      focusedPane(nextPreview).tabs.map(({ sourceId, preview: isPreview }) => ({
+        sourceId,
+        preview: isPreview,
+      })),
+    ).toEqual([
+      { sourceId: first, preview: false },
+      { sourceId: second, preview: true },
+    ]);
+  });
+
   it("closes neighbouring tabs and reopens the most recently closed tab", () => {
     const opened = openSource(openSource(createSourceWorkspaceLayout(first), second), third);
     const closed = closeSource(opened, third);

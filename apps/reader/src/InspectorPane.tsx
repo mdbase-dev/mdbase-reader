@@ -7,6 +7,7 @@ import { CitationIcon, CloseIcon, HighlightIcon, NoteIcon } from "./icons.js";
 
 import type { AnnotationComposerController } from "./use-annotation-composer.js";
 import type { ReaderWorkspaceController } from "./use-reader-workspace.js";
+import type { InspectorDock } from "./workspace-shell-preferences.js";
 
 export type InspectorTab = "note" | "annotations" | "citation";
 
@@ -17,6 +18,8 @@ export interface InspectorPaneProps {
   readonly composer: AnnotationComposerController;
   readonly onClose: () => void;
   readonly onTabChange: (tab: InspectorTab) => void;
+  readonly dock: InspectorDock;
+  readonly onDockChange: (dock: InspectorDock) => void;
 }
 
 const MarkdownEditor = lazy(async () => {
@@ -31,6 +34,8 @@ export function InspectorPane({
   composer,
   onClose,
   onTabChange,
+  dock,
+  onDockChange,
 }: InspectorPaneProps): JSX.Element {
   return (
     <aside
@@ -45,6 +50,18 @@ export function InspectorPane({
       >
         <CloseIcon />
       </button>
+      <div className="inspector-dock-controls" aria-label="Workspace position">
+        <button type="button" aria-pressed={dock === "right"} onClick={() => onDockChange("right")}>
+          Right
+        </button>
+        <button
+          type="button"
+          aria-pressed={dock === "bottom"}
+          onClick={() => onDockChange("bottom")}
+        >
+          Below
+        </button>
+      </div>
       <div className="inspector-tabs" role="tablist">
         <button
           type="button"

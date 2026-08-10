@@ -1,15 +1,16 @@
-import { useState, type JSX } from "react";
-
 import { DeploymentUpdateNotice } from "./DeploymentUpdateNotice.js";
 import { DocumentWorkspace } from "./DocumentWorkspace.js";
-import { InspectorContent, InspectorPane, type InspectorTab } from "./InspectorPane.js";
+import { InspectorContent, InspectorPane } from "./InspectorPane.js";
 import { LibraryPane, type LibraryFilter } from "./LibraryPane.js";
+import { InspectorResizeHandle, LibraryResizeHandle } from "./PanelResizeHandle.js";
 import { readerMainClass } from "./reader-app-hooks.js";
 import { ReaderHeader } from "./ReaderHeader.js";
 import { RenderedSourceDocument } from "./RenderedSourceDocument.js";
 import { SourceAdditionOverlays } from "./SourceAdditionOverlays.js";
+import { useWorkspaceShellPreferences } from "./use-workspace-shell-preferences.js";
 
 import type { SourceDocumentRenderer } from "./RenderedSourceDocument.js";
+import type { WorkspaceTab } from "./source-workspace-layout.js";
 import type { AnnotationComposerController } from "./use-annotation-composer.js";
 import type { BibliographyExportController } from "./use-bibliography-export.js";
 import type { LibrarySearchResult } from "./use-library-search.js";
@@ -19,10 +20,12 @@ import type { SourceAdditionController } from "./use-source-addition.js";
 import type { SourceExportController } from "./use-source-export.js";
 import type { SourceWorkspaceController } from "./use-source-workspace.js";
 import type { ReaderLibrarySnapshot } from "./workspace-model.js";
+import type { WorkspaceShellPreferences } from "./workspace-shell-preferences.js";
 import type { SourceSummary } from "@mdbase-reader/core";
 import type { PickedFile } from "@mdbase-reader/platform";
 import type { ReadingSurface } from "@mdbase-reader/reading-surface";
 import type { ThemePreference } from "@mdbase-reader/ui";
+import type { CSSProperties, JSX } from "react";
 
 export interface ReaderWorkspaceViewModel {
   readonly library: ReaderLibrarySnapshot;
@@ -60,9 +63,11 @@ export function ReaderWorkspaceView({
 }: {
   readonly model: ReaderWorkspaceViewModel;
 }): JSX.Element {
-  const [tab, setTab] = useState<InspectorTab>("annotations");
   const { library, source, workspace, sourceWorkspace, composer, sourceAddition, librarySearch } =
     model;
+  const shell = useWorkspaceShellPreferences(
+    library.sources[0]?.collectionId ?? library.collectionName,
+  );
   return (
     <div className={`reader-shell${model.deploymentUpdateAvailable ? " has-update" : ""}`}>
       {model.deploymentUpdateAvailable ? <DeploymentUpdateNotice /> : null}
@@ -73,7 +78,8 @@ export function ReaderWorkspaceView({
         onChangeTheme={model.changeTheme}
       />
       <main
-        className={readerMainClass(model.mobileLibraryOpen, model.focusMode, model.inspectorOpen)}
+        className={`${readerMainClass(model.mobileLibraryOpen, model.focusMode, model.inspectorOpen)} is-inspector-${shell.value.inspectorDock}`}
+        style={shellStyle(shell.value)}
       >
         <LibraryPane
           sources={library.sources}
@@ -100,6 +106,7 @@ export function ReaderWorkspaceView({
           searchProblem={librarySearch.problem}
           sourceIndex={library.sourceIndex}
         />
+        <LibraryResizeHandle onResize={(libraryWidth) => shell.update({ libraryWidth })} />
         <DocumentWorkspace
           sources={library.sources}
           sourceWorkspace={sourceWorkspace}
@@ -121,31 +128,16 @@ export function ReaderWorkspaceView({
               />
             ) : null
           }
-          renderTool={(workspaceTab, focused) =>
-            focused && source?.id === workspaceTab.sourceId ? (
-              <div className="workspace-tool-surface">
-                <InspectorContent
-                  tab={workspaceTab.view === "document" ? "annotations" : workspaceTab.view}
-                  workspace={workspace}
-                  composer={composer}
-                />
-              </div>
-            ) : (
-              <button
-                className="workspace-tool-activate"
-                type="button"
-                onClick={() =>
-                  sourceWorkspace.focus(
-                    sourceWorkspace.layout.panes.find(({ tabs }) =>
-                      tabs.some(({ id }) => id === workspaceTab.id),
-                    )?.id ?? "primary",
-                  )
-                }
-              >
-                Activate this pane to load {workspaceTab.view}.
-              </button>
-            )
-          }
+          renderTool={(workspaceTab, focused) => (
+            <WorkspaceToolTab
+              tab={workspaceTab}
+              focused={focused}
+              source={source}
+              workspace={workspace}
+              sourceWorkspace={sourceWorkspace}
+              composer={composer}
+            />
+          )}
           onAddSource={sourceAddition.open}
           onBackToLibrary={() => model.setMobileLibraryOpen(true)}
           onToggleFocus={() => model.setFocusMode((value) => !value)}
@@ -155,11 +147,25 @@ export function ReaderWorkspaceView({
         {source ? (
           <InspectorPane
             open={model.inspectorOpen}
-            tab={tab}
+            tab={shell.value.inspectorTab}
             workspace={workspace}
             composer={composer}
             onClose={() => model.setInspectorOpen(false)}
-            onTabChange={setTab}
+            onTabChange={(inspectorTab) => shell.update({ inspectorTab })}
+            dock={shell.value.inspectorDock}
+            onDockChange={(inspectorDock) => shell.update({ inspectorDock })}
+          />
+        ) : null}
+        {model.inspectorOpen ? (
+          <InspectorResizeHandle
+            dock={shell.value.inspectorDock}
+            onResize={(size) =>
+              shell.update(
+                shell.value.inspectorDock === "right"
+                  ? { inspectorWidth: size }
+                  : { inspectorHeight: size },
+              )
+            }
           />
         ) : null}
       </main>
@@ -168,6 +174,54 @@ export function ReaderWorkspaceView({
         canChooseFile={Boolean(model.pickSourceFile)}
       />
     </div>
+  );
+}
+
+function shellStyle(preferences: WorkspaceShellPreferences): CSSProperties {
+  return {
+    "--reader-library-width": `${String(preferences.libraryWidth)}px`,
+    "--reader-inspector-width": `${String(preferences.inspectorWidth)}px`,
+    "--reader-inspector-height": `${String(preferences.inspectorHeight)}px`,
+  } as CSSProperties;
+}
+
+function WorkspaceToolTab({
+  tab,
+  focused,
+  source,
+  workspace,
+  sourceWorkspace,
+  composer,
+}: {
+  readonly tab: WorkspaceTab;
+  readonly focused: boolean;
+  readonly source: SourceSummary | null;
+  readonly workspace: ReaderWorkspaceController;
+  readonly sourceWorkspace: SourceWorkspaceController;
+  readonly composer: AnnotationComposerController;
+}): JSX.Element {
+  if (focused && source?.id === tab.sourceId) {
+    return (
+      <div className="workspace-tool-surface">
+        <InspectorContent
+          tab={tab.view === "document" ? "annotations" : tab.view}
+          workspace={workspace}
+          composer={composer}
+        />
+      </div>
+    );
+  }
+  const paneId =
+    sourceWorkspace.layout.panes.find(({ tabs }) => tabs.some(({ id }) => id === tab.id))?.id ??
+    "primary";
+  return (
+    <button
+      className="workspace-tool-activate"
+      type="button"
+      onClick={() => sourceWorkspace.focus(paneId)}
+    >
+      Activate this pane to load {tab.view}.
+    </button>
   );
 }
 

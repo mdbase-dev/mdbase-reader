@@ -33,7 +33,7 @@ export function openSource(
   sourceId: SourceId,
   paneId: WorkspacePaneId = layout.focusedPaneId,
 ): SourceWorkspaceLayout {
-  return openWorkspaceTab(layout, sourceId, { paneId });
+  return openWorkspaceTab(layout, sourceId, { paneId, preview: false });
 }
 
 export function previewSource(
