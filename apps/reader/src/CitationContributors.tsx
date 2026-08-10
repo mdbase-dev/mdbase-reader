@@ -2,6 +2,8 @@ import { citationNames, type CslName } from "./citation-form-model.js";
 
 import type { JSX } from "react";
 
+// Name rows intentionally keep the official CSL name surface together for auditability.
+// eslint-disable-next-line max-lines-per-function
 export function CitationContributors({
   citation,
   field,
@@ -52,6 +54,63 @@ export function CitationContributors({
                 value={name.family ?? ""}
                 onChange={(event) => update(index, { ...name, family: event.target.value })}
               />
+              <details className="citation-name-details">
+                <summary>Name details</summary>
+                <div>
+                  <input
+                    aria-label={`${label} ${String(index + 1)} suffix`}
+                    placeholder="Suffix"
+                    value={name.suffix ?? ""}
+                    onChange={(event) => update(index, { ...name, suffix: event.target.value })}
+                  />
+                  <input
+                    aria-label={`${label} ${String(index + 1)} dropping particle`}
+                    placeholder="Dropping particle"
+                    value={name["dropping-particle"] ?? ""}
+                    onChange={(event) =>
+                      update(index, { ...name, "dropping-particle": event.target.value })
+                    }
+                  />
+                  <input
+                    aria-label={`${label} ${String(index + 1)} non-dropping particle`}
+                    placeholder="Non-dropping particle"
+                    value={name["non-dropping-particle"] ?? ""}
+                    onChange={(event) =>
+                      update(index, { ...name, "non-dropping-particle": event.target.value })
+                    }
+                  />
+                  <label>
+                    <input
+                      type="checkbox"
+                      checked={Boolean(name["comma-suffix"])}
+                      onChange={(event) =>
+                        update(index, { ...name, "comma-suffix": event.target.checked })
+                      }
+                    />
+                    Comma before suffix
+                  </label>
+                  <label>
+                    <input
+                      type="checkbox"
+                      checked={Boolean(name["static-ordering"])}
+                      onChange={(event) =>
+                        update(index, { ...name, "static-ordering": event.target.checked })
+                      }
+                    />
+                    Keep name order
+                  </label>
+                  <label>
+                    <input
+                      type="checkbox"
+                      checked={Boolean(name["parse-names"])}
+                      onChange={(event) =>
+                        update(index, { ...name, "parse-names": event.target.checked })
+                      }
+                    />
+                    Parse literal name
+                  </label>
+                </div>
+              </details>
             </>
           ) : (
             <input

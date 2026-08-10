@@ -109,6 +109,12 @@ export interface CslName {
   readonly family?: string;
   readonly given?: string;
   readonly literal?: string;
+  readonly suffix?: string;
+  readonly "dropping-particle"?: string;
+  readonly "non-dropping-particle"?: string;
+  readonly "comma-suffix"?: string | number | boolean;
+  readonly "static-ordering"?: string | number | boolean;
+  readonly "parse-names"?: string | number | boolean;
 }
 
 export function citationDateText(

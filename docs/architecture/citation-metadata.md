@@ -36,7 +36,9 @@ Reader exposes the canonical object through two lossless surfaces:
 - a structured editor for identity, contributors, partial or literal dates,
   publication details, identifiers, access, and the common CSL item types;
 - a schema-driven field shelf where every other official CSL variable can be
-  added, edited, and removed without leaving the structured editor;
+  added, edited, and removed without leaving the structured editor. Scalar,
+  name, date, list, and custom-object shapes receive native controls, with
+  scoped JSON available only as an advanced escape hatch;
 - a Raw CSL editor for whole-record inspection and advanced editing.
 
 Reader vendors the official `csl-data.json` schema at a pinned revision of the

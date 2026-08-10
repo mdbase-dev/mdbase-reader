@@ -305,6 +305,31 @@
 .citation-contributor button {
   grid-column: 2;
 }
+.citation-name-details {
+  grid-column: 1 / -1;
+  margin: 0;
+  padding: 0 0 0 94px;
+}
+.citation-name-details > div {
+  display: grid;
+  gap: 6px;
+  margin-top: 7px;
+}
+.citation-name-details label,
+.citation-check-field {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--muted);
+  font: 8px var(--mono);
+}
+.citation-name-details label input,
+.citation-check-field input {
+  width: auto;
+  height: auto;
+  margin: 0;
+  accent-color: var(--accent);
+}
 .citation-abstract-section > summary {
   margin-bottom: 14px;
 }
@@ -409,6 +434,126 @@
 }
 .citation-specialist-field > header button:hover {
   color: var(--danger);
+}
+
+.citation-scalar-editor {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: end;
+  gap: 7px;
+}
+.citation-scalar-editor > select,
+.citation-date-editor select,
+.citation-list-row input,
+.citation-custom-row > input,
+.citation-custom-row > select,
+.citation-json-value textarea {
+  min-width: 0;
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  color: var(--ink);
+  background: var(--canvas);
+  font: 10px/1.35 var(--sans);
+}
+.citation-scalar-editor > select,
+.citation-date-editor select,
+.citation-list-row input,
+.citation-custom-row > input,
+.citation-custom-row > select {
+  height: 34px;
+  padding: 0 8px;
+}
+.citation-date-editor,
+.citation-date-grid {
+  display: grid;
+  gap: 9px;
+}
+.citation-date-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+.citation-date-grid .citation-check-field {
+  align-self: end;
+  min-height: 34px;
+}
+.citation-list-editor,
+.citation-custom-editor {
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+.citation-list-editor legend,
+.citation-custom-editor legend {
+  margin-bottom: 7px;
+  color: var(--muted);
+  font: 8px var(--mono);
+}
+.citation-list-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 7px;
+  margin-bottom: 6px;
+}
+.citation-list-row > button,
+.citation-custom-row > button,
+.citation-json-value > button {
+  padding: 0;
+  border: 0;
+  color: var(--muted);
+  background: transparent;
+  font: 8px var(--mono);
+  cursor: pointer;
+}
+.citation-custom-row {
+  display: grid;
+  grid-template-columns: minmax(88px, 0.8fr) minmax(82px, 0.65fr) minmax(110px, 1fr) auto;
+  gap: 6px;
+  margin-bottom: 6px;
+}
+.citation-advanced-value {
+  margin: 2px 0 0;
+  padding-top: 7px;
+  border-top: 1px solid color-mix(in oklch, var(--line) 70%, transparent);
+}
+.citation-advanced-value summary {
+  color: var(--muted);
+  font: 8px var(--mono);
+}
+.citation-json-value {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: end;
+  gap: 7px;
+  margin-top: 7px;
+}
+.citation-json-value textarea {
+  resize: vertical;
+  padding: 8px;
+  font-family: var(--mono);
+}
+.citation-json-value > button {
+  min-height: 28px;
+  color: var(--accent);
+}
+.citation-json-value > button:disabled {
+  color: var(--faint);
+  cursor: default;
+}
+.citation-json-value.is-compact {
+  margin: 0;
+}
+.citation-json-value.is-compact textarea {
+  min-height: 34px;
+}
+
+@container (max-width: 430px) {
+  .citation-date-grid,
+  .citation-custom-row {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .citation-custom-row > button {
+    justify-self: start;
+  }
 }
 
 .citation-lookup {

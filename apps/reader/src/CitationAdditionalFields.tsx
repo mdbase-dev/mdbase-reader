@@ -6,6 +6,7 @@ import {
   emptyCslFieldValue,
   updateCitationField,
 } from "./citation-form-model.js";
+import { CitationTypedFieldEditor } from "./CitationTypedFieldEditors.js";
 
 import type { CslFieldDefinition, CslValidationProblem } from "@mdbase-reader/core";
 
@@ -116,59 +117,16 @@ function AdditionalField({
           Remove
         </button>
       </header>
-      {definition.kind === "string" || definition.kind === "number" ? (
-        <label className="citation-field">
-          <span>{definition.kind === "number" ? "Text or number" : "Text"}</span>
-          <input
-            aria-invalid={problem ? true : undefined}
-            value={scalarText(value)}
-            onChange={(event) => onChange(event.target.value)}
-          />
-        </label>
-      ) : (
-        <JsonField label={label} value={value} problem={problem} onChange={onChange} />
-      )}
+      <CitationTypedFieldEditor
+        field={definition.name}
+        kind={definition.kind}
+        label={label}
+        value={value}
+        problem={problem}
+        onChange={onChange}
+      />
       {problem ? <small className="citation-field-problem">{problem}</small> : null}
     </article>
-  );
-}
-
-function JsonField({
-  label,
-  value,
-  problem,
-  onChange,
-}: {
-  readonly label: string;
-  readonly value: unknown;
-  readonly problem: string | undefined;
-  readonly onChange: (value: unknown) => void;
-}): JSX.Element {
-  const serialized = JSON.stringify(value, null, 2);
-  const [draft, setDraft] = useState(serialized);
-  const [parseError, setParseError] = useState<string | null>(null);
-  return (
-    <label className="citation-field">
-      <span>Structured value · JSON</span>
-      <textarea
-        aria-label={`${label} JSON value`}
-        aria-invalid={parseError || problem ? true : undefined}
-        rows={Math.min(8, Math.max(3, draft.split("\n").length))}
-        value={draft}
-        onChange={(event) => {
-          const next = event.target.value;
-          setDraft(next);
-          try {
-            onChange(JSON.parse(next));
-            setParseError(null);
-          } catch {
-            onChange(next);
-            setParseError("Enter valid JSON for this field.");
-          }
-        }}
-      />
-      {parseError ? <small className="citation-field-problem">{parseError}</small> : null}
-    </label>
   );
 }
 
@@ -182,8 +140,4 @@ function fieldProblem(
       path.startsWith(`csl.${field}.`) ||
       path.startsWith(`csl.${field}[`),
   )?.message;
-}
-
-function scalarText(value: unknown): string {
-  return typeof value === "string" || typeof value === "number" ? String(value) : "";
 }
