@@ -51,7 +51,7 @@ export interface ReaderWorkspaceController {
   readonly transclusion: AnnotationTransclusionController;
   readonly importStatus: "idle" | "importing";
   readonly importError: string | null;
-  readonly selectSource: (id: SourceId) => void;
+  readonly selectSource: (id: SourceId | null) => void;
   readonly setDraft: (value: string) => void;
   readonly saveDraft: () => void;
   readonly importSourceFile: (

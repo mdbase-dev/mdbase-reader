@@ -1,6 +1,7 @@
 import { ReaderButton } from "@mdbase-reader/ui";
 
 import { AreaIcon, BackIcon, FocusIcon, MoreIcon, PanelIcon } from "./icons.js";
+import { SourceTabStrip, sourceFormat } from "./SourceTabStrip.js";
 
 import type { ReadingResumeState } from "./use-reading-resume.js";
 import type { SourceExportController } from "./use-source-export.js";
@@ -9,7 +10,7 @@ import type { JSX, ReactNode } from "react";
 
 export interface DocumentWorkspaceProps {
   readonly source: SourceSummary | null;
-  readonly document: ReactNode;
+  readonly openDocuments: readonly OpenSourceDocument[];
   readonly focusMode: boolean;
   readonly inspectorOpen: boolean;
   readonly readingResume: ReadingResumeState;
@@ -22,11 +23,18 @@ export interface DocumentWorkspaceProps {
   readonly onToggleFocus: () => void;
   readonly onToggleInspector: () => void;
   readonly onToggleAreaSelection: () => void;
+  readonly onActivateSource: (sourceId: SourceSummary["id"]) => void;
+  readonly onCloseSource: (sourceId: SourceSummary["id"]) => void;
+}
+
+export interface OpenSourceDocument {
+  readonly source: SourceSummary;
+  readonly document: ReactNode;
 }
 
 export function DocumentWorkspace({
   source,
-  document,
+  openDocuments,
   focusMode,
   inspectorOpen,
   readingResume,
@@ -39,9 +47,17 @@ export function DocumentWorkspace({
   onToggleFocus,
   onToggleInspector,
   onToggleAreaSelection,
+  onActivateSource,
+  onCloseSource,
 }: DocumentWorkspaceProps): JSX.Element {
   return (
     <section className="document-workspace" aria-label="Document reader">
+      <SourceTabStrip
+        sources={openDocuments.map(({ source: openSource }) => openSource)}
+        activeSourceId={source?.id ?? null}
+        onActivate={onActivateSource}
+        onClose={onCloseSource}
+      />
       {source ? (
         <>
           <div className="document-toolbar">
@@ -57,7 +73,7 @@ export function DocumentWorkspace({
               <strong>{source.title}</strong>
               <span>
                 {source.creators.join(", ") || "Unknown creator"}
-                {source.documents[0] ? ` · ${documentLabel(source)}` : " · Source note"}
+                {source.documents[0] ? ` · ${sourceFormat(source)}` : " · Source note"}
               </span>
             </div>
             <DocumentStatus reading={readingResume} decorationProblem={decorationProblem} />
@@ -95,13 +111,44 @@ export function DocumentWorkspace({
             </div>
           </div>
           <div className="document-canvas">
-            {document ?? <DocumentEmpty onAddSource={onAddSource} />}
+            <DocumentSessions
+              documents={openDocuments}
+              activeSourceId={source.id}
+              onAddSource={onAddSource}
+            />
           </div>
         </>
       ) : (
-        <EmptyCollection onAddSource={onAddSource} />
+        <EmptyWorkspace hasSources={openDocuments.length > 0} onAddSource={onAddSource} />
       )}
     </section>
+  );
+}
+
+function DocumentSessions({
+  documents,
+  activeSourceId,
+  onAddSource,
+}: {
+  readonly documents: readonly OpenSourceDocument[];
+  readonly activeSourceId: SourceSummary["id"];
+  readonly onAddSource: () => void;
+}): JSX.Element {
+  return (
+    <div className="document-session-deck">
+      {documents.map(({ source, document }) => {
+        const active = source.id === activeSourceId;
+        return (
+          <div
+            className={active ? "document-session is-active" : "document-session"}
+            key={source.id}
+            aria-hidden={!active}
+          >
+            {document ?? <DocumentEmpty onAddSource={onAddSource} />}
+          </div>
+        );
+      })}
+    </div>
   );
 }
 
@@ -171,17 +218,6 @@ function DocumentStatus({
   );
 }
 
-function documentLabel(source: SourceSummary): string {
-  const mediaType = source.documents[0]?.mediaType ?? "";
-  if (mediaType.includes("pdf")) {
-    return "PDF";
-  }
-  if (mediaType.includes("epub")) {
-    return "EPUB";
-  }
-  return source.documents[0]?.title ?? "Web archive";
-}
-
 function DocumentEmpty({ onAddSource }: { readonly onAddSource: () => void }): JSX.Element {
   return (
     <div className="document-empty">
@@ -198,14 +234,20 @@ function DocumentEmpty({ onAddSource }: { readonly onAddSource: () => void }): J
   );
 }
 
-function EmptyCollection({ onAddSource }: { readonly onAddSource: () => void }): JSX.Element {
+function EmptyWorkspace({
+  hasSources,
+  onAddSource,
+}: {
+  readonly hasSources: boolean;
+  readonly onAddSource: () => void;
+}): JSX.Element {
   return (
     <div className="document-empty">
       <div>
-        <span className="mono">Your library is empty</span>
-        <h2>Begin with something worth returning to.</h2>
-        <p>Save a web page, upload a PDF or EPUB, or import an existing library.</p>
-        <ReaderButton onClick={onAddSource}>Add your first source</ReaderButton>
+        <span className="mono">{hasSources ? "No source selected" : "Working set is empty"}</span>
+        <h2>{hasSources ? "Choose an open source." : "Open something worth returning to."}</h2>
+        <p>Select a source in the library, or add a PDF, EPUB, or saved web page.</p>
+        <ReaderButton onClick={onAddSource}>Add a source</ReaderButton>
       </div>
     </div>
   );

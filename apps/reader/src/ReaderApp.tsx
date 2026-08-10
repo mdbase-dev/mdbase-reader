@@ -26,9 +26,10 @@ import { useReadingResume, type ReadingResumeState } from "./use-reading-resume.
 import { useSessionDocumentSearch } from "./use-session-document-search.js";
 import { useSourceAddition } from "./use-source-addition.js";
 import { useSourceExport } from "./use-source-export.js";
+import { useSourceWorkspace } from "./use-source-workspace.js";
 
 import type { ReaderWorkspaceGateway } from "./workspace-model.js";
-import type { SourceSummary } from "@mdbase-reader/core";
+import type { SourceId, SourceSummary } from "@mdbase-reader/core";
 import type { PickedFile } from "@mdbase-reader/platform";
 import type { ReadingSurface } from "@mdbase-reader/reading-surface";
 
@@ -58,9 +59,18 @@ export function ReaderApp({
   const [mobileLibraryOpen, setMobileLibraryOpen] = useState(false);
   const [focusMode, setFocusMode] = useState(false);
   const [theme, changeTheme] = useThemePreference();
-  const [surface, setSurface] = useState<ReadingSurface | null>(null);
+  const [surfaces, setSurfaces] = useState<ReadonlyMap<SourceId, ReadingSurface>>(new Map());
   const deploymentUpdateAvailable = useDeploymentUpdate();
-  const onSurfaceChange = useCallback((next: ReadingSurface | null): void => setSurface(next), []);
+  const sourceWorkspace = useSourceWorkspace(
+    workspace.selectedSource?.id ?? null,
+    workspace.selectSource,
+  );
+  const surface = sourceWorkspace.activeSourceId
+    ? (surfaces.get(sourceWorkspace.activeSourceId) ?? null)
+    : null;
+  const onSurfaceChange = useCallback((sourceId: SourceId, next: ReadingSurface | null): void => {
+    setSurfaces((current) => updateSurface(current, sourceId, next));
+  }, []);
   const composer = useReaderAnnotationComposer(workspace, surface);
   const readingResume = useReaderReadingResume(workspace, surface);
   const decorationProblem = useDocumentDecorations(surface, workspace.annotations);
@@ -97,6 +107,10 @@ export function ReaderApp({
 
   const library = workspace.library.value;
   const source = workspace.selectedSource;
+  const openSources = sourceWorkspace.openSourceIds.flatMap((sourceId) => {
+    const openSource = library.sources.find(({ id }) => id === sourceId);
+    return openSource ? [openSource] : [];
+  });
   return (
     <div className={`reader-shell${deploymentUpdateAvailable ? " has-update" : ""}`}>
       {deploymentUpdateAvailable ? <DeploymentUpdateNotice /> : null}
@@ -117,7 +131,7 @@ export function ReaderApp({
           onSearchChange={setSearch}
           onFilterChange={setFilter}
           onSelectSource={(id) => {
-            workspace.selectSource(id);
+            sourceWorkspace.open(id);
             setMobileLibraryOpen(false);
           }}
           onAddSource={sourceAddition.open}
@@ -130,7 +144,17 @@ export function ReaderApp({
         />
         <DocumentWorkspace
           source={source}
-          document={source ? renderDocument?.(source, onSurfaceChange) : null}
+          openDocuments={openSources.map((openSource) => ({
+            source: openSource,
+            document: renderDocument ? (
+              <RenderedSourceDocument
+                key={openSource.id}
+                source={openSource}
+                render={renderDocument}
+                onSurfaceChange={onSurfaceChange}
+              />
+            ) : null,
+          }))}
           focusMode={focusMode}
           inspectorOpen={inspectorOpen && !focusMode}
           readingResume={readingResume}
@@ -142,6 +166,8 @@ export function ReaderApp({
           onBackToLibrary={() => setMobileLibraryOpen(true)}
           onToggleFocus={() => setFocusMode((value) => !value)}
           onToggleAreaSelection={composer.toggleAreaSelection}
+          onActivateSource={sourceWorkspace.activate}
+          onCloseSource={sourceWorkspace.close}
           onToggleInspector={() => {
             if (focusMode) {
               setFocusMode(false);
@@ -165,6 +191,39 @@ export function ReaderApp({
       <SourceAdditionOverlays addition={sourceAddition} canChooseFile={Boolean(pickSourceFile)} />
     </div>
   );
+}
+
+function RenderedSourceDocument({
+  source,
+  render,
+  onSurfaceChange,
+}: {
+  readonly source: SourceSummary;
+  readonly render: NonNullable<ReaderAppProps["renderDocument"]>;
+  readonly onSurfaceChange: (sourceId: SourceId, surface: ReadingSurface | null) => void;
+}): ReactNode {
+  const update = useCallback(
+    (surface: ReadingSurface | null): void => onSurfaceChange(source.id, surface),
+    [onSurfaceChange, source.id],
+  );
+  return render(source, update);
+}
+
+function updateSurface(
+  current: ReadonlyMap<SourceId, ReadingSurface>,
+  sourceId: SourceId,
+  surface: ReadingSurface | null,
+): ReadonlyMap<SourceId, ReadingSurface> {
+  if (current.get(sourceId) === surface || (!surface && !current.has(sourceId))) {
+    return current;
+  }
+  const next = new Map(current);
+  if (surface) {
+    next.set(sourceId, surface);
+  } else {
+    next.delete(sourceId);
+  }
+  return next;
 }
 
 function useResponsiveInspector(setInspectorOpen: (open: boolean) => void): void {

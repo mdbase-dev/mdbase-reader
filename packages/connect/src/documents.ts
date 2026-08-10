@@ -39,10 +39,13 @@ export class ConnectDocumentError extends Error {
 export class ConnectDocumentRepository implements DocumentRepository {
   readonly #descriptorsById = new Map<string, CollectionFileDescriptor>();
   readonly #descriptorsByPath = new Map<string, CollectionFileDescriptor>();
+  readonly #documents = new Map<string, CachedDocument>();
+  #accessSequence = 0;
 
   public constructor(
     private readonly files: ReaderFileClient,
     private readonly objectUrls: ObjectUrlFactory = browserObjectUrls,
+    private readonly maxCachedDocuments = 6,
   ) {}
 
   public async open(
@@ -57,24 +60,74 @@ export class ConnectDocumentRepository implements DocumentRepository {
     if (descriptor.contentDigest !== target.revision) {
       throw new ConnectDocumentError("open document", "file_revision_changed");
     }
-    const blob = options.signal
-      ? await this.files.download(descriptor, options)
-      : await this.files.download(descriptor);
-    const url = this.objectUrls.create(blob);
+    const cached = await this.#load(descriptor, options);
+    cached.leases += 1;
+    cached.lastAccess = ++this.#accessSequence;
+    this.#trimCache();
     let closed = false;
     return {
       fileId: toFileId(descriptor.fileId),
       revision: toFileRevision(descriptor.contentDigest),
-      mediaType: descriptor.mediaType ?? (blob.type || mediaTypeFromPath(descriptor.path)),
-      url,
+      mediaType: cached.mediaType,
+      url: cached.url,
       close: () => {
         if (!closed) {
-          this.objectUrls.revoke(url);
+          cached.leases -= 1;
           closed = true;
+          this.#trimCache();
         }
         return Promise.resolve();
       },
     };
+  }
+
+  public dispose(): void {
+    for (const document of this.#documents.values()) {
+      this.objectUrls.revoke(document.url);
+    }
+    this.#documents.clear();
+  }
+
+  async #load(
+    descriptor: CollectionFileDescriptor,
+    options: DocumentOpenOptions,
+  ): Promise<CachedDocument> {
+    const key = documentCacheKey(descriptor);
+    const cached = this.#documents.get(key);
+    if (cached) {
+      return cached;
+    }
+    const blob = options.signal
+      ? await this.files.download(descriptor, options)
+      : await this.files.download(descriptor);
+    const loadedElsewhere = this.#documents.get(key);
+    if (loadedElsewhere) {
+      return loadedElsewhere;
+    }
+    const document = {
+      url: this.objectUrls.create(blob),
+      mediaType: descriptor.mediaType ?? (blob.type || mediaTypeFromPath(descriptor.path)),
+      leases: 0,
+      lastAccess: ++this.#accessSequence,
+    } satisfies CachedDocument;
+    this.#documents.set(key, document);
+    return document;
+  }
+
+  #trimCache(): void {
+    if (this.#documents.size <= this.maxCachedDocuments) {
+      return;
+    }
+    const removable = [...this.#documents.entries()]
+      .filter(([, document]) => document.leases === 0)
+      .sort((left, right) => left[1].lastAccess - right[1].lastAccess);
+    for (const [key, document] of removable) {
+      if (this.#documents.size <= this.maxCachedDocuments) {
+        break;
+      }
+      this.objectUrls.revoke(document.url);
+      this.#documents.delete(key);
+    }
   }
 
   async #find(
@@ -104,6 +157,17 @@ export class ConnectDocumentRepository implements DocumentRepository {
       exactRevision(this.#descriptorsByPath.get(path), target.revision)
     );
   }
+}
+
+interface CachedDocument {
+  readonly url: string;
+  readonly mediaType: string;
+  leases: number;
+  lastAccess: number;
+}
+
+function documentCacheKey(descriptor: CollectionFileDescriptor): string {
+  return `${descriptor.fileId}:${descriptor.contentDigest}`;
 }
 
 function exactRevision(

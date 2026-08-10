@@ -34,7 +34,7 @@ const target: DocumentTarget = {
 };
 
 describe("ConnectDocumentRepository", () => {
-  it("downloads the exact requested revision and revokes its object URL once", async () => {
+  it("downloads the exact requested revision and retains its object URL for reuse", async () => {
     const client = files([descriptor]);
     const urls = { create: vi.fn(() => "blob:reader-file"), revoke: vi.fn() };
     const repository = new ConnectDocumentRepository(client, urls);
@@ -49,6 +49,13 @@ describe("ConnectDocumentRepository", () => {
     expect(client.download).toHaveBeenCalledWith(descriptor);
     await handle.close();
     await handle.close();
+    expect(urls.revoke).not.toHaveBeenCalled();
+
+    const reopened = await repository.open(collectionId("reading"), target);
+    expect(reopened.url).toBe("blob:reader-file");
+    expect(client.download).toHaveBeenCalledOnce();
+    await reopened.close();
+    repository.dispose();
     expect(urls.revoke).toHaveBeenCalledTimes(1);
   });
 
@@ -151,5 +158,34 @@ describe("ConnectDocumentRepository", () => {
 
     expect(download).toHaveBeenCalledWith(descriptor, { signal: controller.signal });
     await handle.close();
+  });
+
+  it("evicts the least recently used closed document but never an open handle", async () => {
+    const secondDescriptor = {
+      ...descriptor,
+      fileId: "file-02",
+      path: "files/second.pdf",
+      contentDigest: `sha256:${"b".repeat(64)}` as const,
+    } satisfies CollectionFileDescriptor;
+    const client = files([descriptor, secondDescriptor]);
+    let urlSequence = 0;
+    const urls = {
+      create: vi.fn(() => `blob:reader-${String(++urlSequence)}`),
+      revoke: vi.fn(),
+    };
+    const repository = new ConnectDocumentRepository(client, urls, 1);
+    const first = await repository.open(collectionId("reading"), target);
+    const second = await repository.open(collectionId("reading"), {
+      fileId: fileId(secondDescriptor.fileId),
+      file: secondDescriptor.path,
+      revision: fileRevision(secondDescriptor.contentDigest),
+    });
+
+    expect(urls.revoke).not.toHaveBeenCalled();
+    await second.close();
+    expect(urls.revoke).toHaveBeenCalledTimes(1);
+    expect(urls.revoke).toHaveBeenCalledWith(second.url);
+    await first.close();
+    repository.dispose();
   });
 });

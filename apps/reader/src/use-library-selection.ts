@@ -24,7 +24,7 @@ import type {
 export interface LibrarySelection {
   readonly library: AsyncResource<ReaderLibrarySnapshot>;
   readonly selectedSource: SourceSummary | null;
-  readonly selectSource: (id: SourceId) => void;
+  readonly selectSource: (id: SourceId | null) => void;
   readonly retryLibrary: () => void;
   readonly importStatus: "idle" | "importing";
   readonly importError: string | null;
@@ -83,7 +83,7 @@ export function useLibrarySelection(gateway: ReaderWorkspaceGateway): LibrarySel
     }
     return library.value.sources.find(({ id }) => id === selectedSourceId) ?? null;
   }, [library, selectedSourceId]);
-  const selectSource = useCallback((id: SourceId): void => {
+  const selectSource = useCallback((id: SourceId | null): void => {
     selectedSourceIdRef.current = id;
     setSelectedSourceId(id);
   }, []);
