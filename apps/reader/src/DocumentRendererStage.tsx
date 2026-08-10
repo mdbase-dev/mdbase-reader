@@ -37,16 +37,23 @@ export function RendererStage({
 export function DocumentMessage({
   label,
   tone = "neutral",
+  action,
 }: {
   readonly label: string;
   readonly tone?: "neutral" | "error";
+  readonly action?: { readonly label: string; readonly run: () => void };
 }): JSX.Element {
   return (
     <div
       className={`connected-document-message is-${tone}`}
       role={tone === "error" ? "alert" : "status"}
     >
-      {label}
+      <span>{label}</span>
+      {action ? (
+        <button type="button" onClick={action.run}>
+          {action.label}
+        </button>
+      ) : null}
     </div>
   );
 }

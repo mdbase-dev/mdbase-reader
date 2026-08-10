@@ -1,13 +1,15 @@
 import { useState, type JSX, type ReactNode } from "react";
 
-import { AreaIcon, BackIcon, FocusIcon, PanelIcon } from "./icons.js";
-import { SourceTabStrip, sourceFormat } from "./SourceTabStrip.js";
+import { DocumentContextualToolbar } from "./DocumentContextualToolbar.js";
+import { SourceTabStrip } from "./SourceTabStrip.js";
+import {
+  useProgressiveWorkspaceTabs,
+  workspaceSessionKey,
+} from "./use-progressive-workspace-tabs.js";
 import {
   DocumentEmpty,
-  DocumentStatus,
   EmptyWorkspace,
   PaneSplitTargets,
-  SourceActions,
   SplitHandle,
   splitStyle,
 } from "./WorkspacePaneSupport.js";
@@ -17,6 +19,7 @@ import type {
   WorkspacePaneId,
   WorkspaceTab,
 } from "./source-workspace-layout.js";
+import type { WorkspaceSessionKey } from "./use-progressive-workspace-tabs.js";
 import type { ReadingResumeState } from "./use-reading-resume.js";
 import type { SourceExportController } from "./use-source-export.js";
 import type { SourceWorkspaceController } from "./use-source-workspace.js";
@@ -44,6 +47,7 @@ export interface DocumentWorkspaceProps {
 export function DocumentWorkspace(props: DocumentWorkspaceProps): JSX.Element {
   const { sourceWorkspace } = props;
   const [dragging, setDragging] = useState(false);
+  const hydratedTabs = useProgressiveWorkspaceTabs(sourceWorkspace.layout);
   return (
     <section
       className={`document-workspace is-${sourceWorkspace.layout.splitDirection ?? "single"}`}
@@ -54,7 +58,13 @@ export function DocumentWorkspace(props: DocumentWorkspaceProps): JSX.Element {
     >
       <div className="workspace-pane-deck" style={splitStyle(sourceWorkspace)}>
         {sourceWorkspace.layout.panes.map((pane) => (
-          <WorkspacePane key={pane.id} pane={pane} dragging={dragging} {...props} />
+          <WorkspacePane
+            key={pane.id}
+            pane={pane}
+            dragging={dragging}
+            hydratedTabs={hydratedTabs}
+            {...props}
+          />
         ))}
         {sourceWorkspace.layout.panes.length === 2 ? (
           <SplitHandle workspace={sourceWorkspace} />
@@ -69,12 +79,14 @@ function WorkspacePane({
   sources,
   sourceWorkspace,
   dragging,
+  hydratedTabs,
   renderDocument,
   renderTool,
   ...toolbar
 }: DocumentWorkspaceProps & {
   readonly pane: SourceWorkspacePane;
   readonly dragging: boolean;
+  readonly hydratedTabs: ReadonlySet<WorkspaceSessionKey>;
 }): JSX.Element {
   const active = pane.tabs.find(({ id }) => id === pane.activeTabId) ?? null;
   const sourceFor = (tab: WorkspaceTab): SourceSummary | null =>
@@ -104,7 +116,12 @@ function WorkspacePane({
       />
       {active && source ? (
         <>
-          <ContextualToolbar source={source} pane={pane} workspace={sourceWorkspace} {...toolbar} />
+          <DocumentContextualToolbar
+            source={source}
+            pane={pane}
+            workspace={sourceWorkspace}
+            {...toolbar}
+          />
           <div
             className="document-canvas"
             onPointerDownCapture={() => {
@@ -119,6 +136,7 @@ function WorkspacePane({
               renderDocument={renderDocument}
               renderTool={renderTool}
               focused={focused}
+              hydratedTabs={hydratedTabs}
               onAddSource={toolbar.onAddSource}
             />
           </div>
@@ -133,127 +151,36 @@ function WorkspacePane({
   );
 }
 
-function ContextualToolbar({
-  source,
-  pane,
-  workspace,
-  focusMode,
-  inspectorOpen,
-  readingResume,
-  decorationProblem,
-  canSelectArea,
-  selectingArea,
-  sourceExport,
-  onBackToLibrary,
-  onToggleFocus,
-  onToggleInspector,
-  onToggleAreaSelection,
-}: Omit<
-  DocumentWorkspaceProps,
-  "sources" | "sourceWorkspace" | "renderDocument" | "renderTool" | "onAddSource"
-> & {
-  readonly source: SourceSummary;
-  readonly pane: SourceWorkspacePane;
-  readonly workspace: SourceWorkspaceController;
-}): JSX.Element {
-  return (
-    <div className="document-toolbar">
-      <button
-        className="mobile-back icon-button"
-        type="button"
-        aria-label="Back to library"
-        onClick={onBackToLibrary}
-      >
-        <BackIcon />
-      </button>
-      <div className="document-history">
-        <button type="button" title="Back" onClick={() => workspace.navigate(-1, pane.id)}>
-          ‹
-        </button>
-        <button type="button" title="Forward" onClick={() => workspace.navigate(1, pane.id)}>
-          ›
-        </button>
-      </div>
-      <div className="document-identity">
-        <strong>{source.title}</strong>
-        <span>
-          {source.creators.join(", ") || "Unknown creator"} · {sourceFormat(source)}
-        </span>
-      </div>
-      <DocumentStatus reading={readingResume} decorationProblem={decorationProblem} />
-      <div className="document-tools">
-        <details className="toolbar-menu">
-          <summary>View</summary>
-          <div>
-            <button type="button" onClick={onToggleFocus}>
-              {focusMode ? "Exit focus mode" : "Focus mode"}
-            </button>
-            <button type="button" onClick={onToggleInspector}>
-              {inspectorOpen ? "Hide workspace" : "Show workspace"}
-            </button>
-          </div>
-        </details>
-        {canSelectArea ? (
-          <details className="toolbar-menu">
-            <summary>Annotate</summary>
-            <div>
-              <button
-                type="button"
-                className={selectingArea ? "is-active" : undefined}
-                onClick={onToggleAreaSelection}
-              >
-                <AreaIcon /> {selectingArea ? "Cancel area selection" : "Select area"}
-              </button>
-            </div>
-          </details>
-        ) : null}
-        <button
-          type="button"
-          className={inspectorOpen ? "tool-button is-active" : "tool-button"}
-          aria-label="Toggle source workspace"
-          onClick={onToggleInspector}
-        >
-          <PanelIcon />
-        </button>
-        <button
-          type="button"
-          className={focusMode ? "tool-button is-active" : "tool-button"}
-          aria-label="Toggle focus mode"
-          onClick={onToggleFocus}
-        >
-          <FocusIcon />
-        </button>
-        <SourceActions sourceExport={sourceExport} />
-      </div>
-    </div>
-  );
-}
-
 function WorkspaceSessions({
   pane,
   sources,
   renderDocument,
   renderTool,
   focused,
+  hydratedTabs,
   onAddSource,
 }: Pick<DocumentWorkspaceProps, "sources" | "renderDocument" | "renderTool" | "onAddSource"> & {
   readonly pane: SourceWorkspacePane;
   readonly focused: boolean;
+  readonly hydratedTabs: ReadonlySet<WorkspaceSessionKey>;
 }): JSX.Element {
   return (
     <div className="document-session-deck">
       {pane.tabs.map((tab) => {
         const source = sources.find(({ id }) => id === tab.sourceId);
         const active = tab.id === pane.activeTabId;
+        const hydrated = active || hydratedTabs.has(workspaceSessionKey(pane.id, tab.id));
         return source ? (
           <div
             className={active ? "document-session is-active" : "document-session"}
             key={tab.id}
             aria-hidden={!active}
           >
-            {tab.view === "document"
-              ? (renderDocument(source, pane.id) ?? <DocumentEmpty onAddSource={onAddSource} />)
-              : renderTool(tab, focused)}
+            {hydrated
+              ? tab.view === "document"
+                ? (renderDocument(source, pane.id) ?? <DocumentEmpty onAddSource={onAddSource} />)
+                : renderTool(tab, focused)
+              : null}
           </div>
         ) : null;
       })}

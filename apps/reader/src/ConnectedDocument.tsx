@@ -63,6 +63,7 @@ function OpenConnectedDocument({
   onSurfaceChange,
 }: ConnectedDocumentProps & { readonly descriptor: DocumentDescriptor }): JSX.Element {
   const [state, setState] = useState<OpenDocumentState>({ status: "opening" });
+  const [attempt, setAttempt] = useState(0);
   const stableDescriptor = useMemo(
     (): DocumentDescriptor => ({
       file: descriptor.file,
@@ -108,7 +109,7 @@ function OpenConnectedDocument({
         void opened.close();
       }
     };
-  }, [repository, source.collectionId, stableDescriptor]);
+  }, [attempt, repository, source.collectionId, stableDescriptor]);
 
   useEffect(() => () => onSurfaceChange(null), [onSurfaceChange]);
 
@@ -116,7 +117,19 @@ function OpenConnectedDocument({
     return <DocumentMessage label="Opening exact file revision…" />;
   }
   if (state.status === "error") {
-    return <DocumentMessage label={state.message} tone="error" />;
+    return (
+      <DocumentMessage
+        label={state.message}
+        tone="error"
+        action={{
+          label: "Try this tab again",
+          run: () => {
+            setState({ status: "opening" });
+            setAttempt((value) => value + 1);
+          },
+        }}
+      />
+    );
   }
   return (
     <OpenedDocumentRenderer
