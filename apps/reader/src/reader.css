@@ -828,15 +828,21 @@ button {
 }
 
 .library-lens-bar {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
-  align-items: center;
+  display: flex;
+  flex-direction: column;
   gap: 8px;
   padding: 0 12px 10px;
   border-bottom: 1px solid var(--line);
 }
 
-.library-lens-bar label {
+.library-lens-selectors,
+.library-view-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.library-lens-selectors label {
   min-width: 0;
   display: flex;
   align-items: center;
@@ -861,13 +867,21 @@ button {
   white-space: nowrap;
 }
 
-.library-lens-bar > div {
+.library-lens-selectors label:first-child {
+  flex: 1;
+}
+
+.library-view-actions {
+  justify-content: space-between;
+}
+
+.library-view-actions > div {
   display: flex;
   border: 1px solid var(--line);
   border-radius: 3px;
 }
 
-.library-lens-bar > div button {
+.library-view-actions > div button {
   width: 25px;
   height: 27px;
   color: var(--faint);
@@ -876,9 +890,54 @@ button {
   cursor: pointer;
 }
 
-.library-lens-bar > div button[aria-pressed="true"] {
+.library-view-actions > div button[aria-pressed="true"] {
   color: var(--ink);
   background: var(--selected);
+}
+
+.saved-lenses {
+  position: relative;
+}
+
+.saved-lenses > summary {
+  color: var(--faint);
+  font: 8px/1 var(--mono);
+  cursor: pointer;
+  list-style: none;
+}
+
+.saved-lenses > div {
+  position: absolute;
+  z-index: 30;
+  top: 22px;
+  left: 0;
+  width: 210px;
+  padding: 6px;
+  border: 1px solid var(--line-strong);
+  border-radius: 4px;
+  background: var(--paper);
+  box-shadow: 0 16px 36px -20px var(--color-scrim);
+}
+
+.saved-lenses span,
+.saved-lenses form {
+  display: flex;
+  width: 100%;
+}
+
+.saved-lenses button,
+.saved-lenses input {
+  min-width: 0;
+  padding: 7px;
+  color: var(--ink-soft);
+  background: transparent;
+  font-size: 10px;
+}
+
+.saved-lenses span button:first-child,
+.saved-lenses input {
+  flex: 1;
+  text-align: left;
 }
 
 .source-list {

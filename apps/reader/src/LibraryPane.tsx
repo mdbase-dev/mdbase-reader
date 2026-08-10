@@ -1,10 +1,11 @@
 import { ReaderButton } from "@mdbase-reader/ui";
 
 import { DownloadIcon, LibraryIcon, MoreIcon, PlusIcon, SearchIcon } from "./icons.js";
-import { libraryLensIds, libraryLensLabel } from "./library-lenses.js";
+import { LibraryLensBar } from "./LibraryLensBar.js";
 import { VirtualSourceList } from "./VirtualSourceList.js";
 
 import type { LibraryLensId } from "./library-lenses.js";
+import type { LibrarySort, SavedLibraryLens } from "./library-view-state.js";
 import type { BibliographyExportController } from "./use-bibliography-export.js";
 import type { LibrarySearchStatus } from "./use-library-search.js";
 import type { ReaderLibrarySnapshot } from "./workspace-model.js";
@@ -18,8 +19,14 @@ export interface LibraryPaneProps {
   readonly selectedSourceId: SourceId | null;
   readonly search: string;
   readonly lens: LibraryLensId;
+  readonly sort: LibrarySort;
+  readonly savedLenses: readonly SavedLibraryLens[];
   readonly onSearchChange: (value: string) => void;
   readonly onLensChange: (lens: LibraryLensId) => void;
+  readonly onSortChange: (sort: LibrarySort) => void;
+  readonly onSaveLens: (name: string) => void;
+  readonly onApplySavedLens: (id: string) => void;
+  readonly onRemoveSavedLens: (id: string) => void;
   readonly presentation: LibraryPresentation;
   readonly onPresentationChange: (presentation: LibraryPresentation) => void;
   readonly onSelectSource: (id: SourceId) => void;
@@ -40,8 +47,14 @@ export function LibraryPane({
   selectedSourceId,
   search,
   lens,
+  sort,
+  savedLenses,
   onSearchChange,
   onLensChange,
+  onSortChange,
+  onSaveLens,
+  onApplySavedLens,
+  onRemoveSavedLens,
   presentation,
   onPresentationChange,
   onSelectSource,
@@ -87,9 +100,15 @@ export function LibraryPane({
       </span>
       <LibraryLensBar
         lens={lens}
+        sort={sort}
+        savedLenses={savedLenses}
         count={`${String(visibleSources.length)} / ${sourceCountLabel(sources.length, sourceIndex)}`}
         presentation={presentation}
         onLensChange={onLensChange}
+        onSortChange={onSortChange}
+        onSaveLens={onSaveLens}
+        onApplySavedLens={onApplySavedLens}
+        onRemoveSavedLens={onRemoveSavedLens}
         onPresentationChange={onPresentationChange}
       />
       <span className="sr-only" role="status" aria-live="polite">
@@ -128,52 +147,6 @@ export function LibraryPane({
         </ReaderButton>
       </div>
     </aside>
-  );
-}
-
-function LibraryLensBar({
-  lens,
-  count,
-  presentation,
-  onLensChange,
-  onPresentationChange,
-}: {
-  readonly lens: LibraryLensId;
-  readonly count: string;
-  readonly presentation: LibraryPresentation;
-  readonly onLensChange: (lens: LibraryLensId) => void;
-  readonly onPresentationChange: (presentation: LibraryPresentation) => void;
-}): JSX.Element {
-  return (
-    <div className="library-lens-bar">
-      <label>
-        <span className="sr-only">Library lens</span>
-        <select
-          value={lens}
-          onChange={(event) => onLensChange(event.target.value as LibraryLensId)}
-        >
-          {libraryLensIds.map((id) => (
-            <option key={id} value={id}>
-              {libraryLensLabel(id)}
-            </option>
-          ))}
-        </select>
-        <small>{count}</small>
-      </label>
-      <div aria-label="Library presentation">
-        {(["compact", "bibliography", "grid"] as const).map((mode) => (
-          <button
-            key={mode}
-            type="button"
-            aria-pressed={presentation === mode}
-            title={`${mode} view`}
-            onClick={() => onPresentationChange(mode)}
-          >
-            {mode === "compact" ? "≡" : mode === "bibliography" ? "☷" : "▦"}
-          </button>
-        ))}
-      </div>
-    </div>
   );
 }
 

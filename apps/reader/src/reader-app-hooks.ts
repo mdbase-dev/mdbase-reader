@@ -7,6 +7,7 @@ import {
 import { useEffect, useMemo, useState } from "react";
 
 import { applyLibraryLens } from "./library-lenses.js";
+import { sortLibrarySources } from "./library-view-state.js";
 import {
   useAnnotationComposer,
   type AnnotationComposerController,
@@ -14,6 +15,7 @@ import {
 import { useReadingResume, type ReadingResumeState } from "./use-reading-resume.js";
 
 import type { LibraryLensId } from "./library-lenses.js";
+import type { LibrarySort } from "./library-view-state.js";
 import type { ReaderWorkspaceController } from "./use-reader-workspace.js";
 import type { SourceSummary } from "@mdbase-reader/core";
 import type { ReadingSurface } from "@mdbase-reader/reading-surface";
@@ -115,15 +117,20 @@ function handleHistoryShortcut(event: KeyboardEvent, actions: ReaderShortcutActi
 export function useLensFilteredSources(
   library: ReaderWorkspaceController["library"],
   lens: LibraryLensId,
+  sort: LibrarySort,
   recentSourceIds: readonly SourceSummary["id"][],
   annotatedSourceIds: ReadonlySet<SourceSummary["id"]>,
 ): readonly SourceSummary[] {
   return useMemo(
     () =>
       library.status === "ready"
-        ? applyLibraryLens(library.value.sources, lens, { recentSourceIds, annotatedSourceIds })
+        ? sortLibrarySources(
+            applyLibraryLens(library.value.sources, lens, { recentSourceIds, annotatedSourceIds }),
+            sort,
+            recentSourceIds,
+          )
         : [],
-    [annotatedSourceIds, lens, library, recentSourceIds],
+    [annotatedSourceIds, lens, library, recentSourceIds, sort],
   );
 }
 

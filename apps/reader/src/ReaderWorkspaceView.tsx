@@ -12,7 +12,7 @@ import { SourceAdditionOverlays } from "./SourceAdditionOverlays.js";
 import { useWorkspaceShellPreferences } from "./use-workspace-shell-preferences.js";
 import { WorkspaceToolTab } from "./WorkspaceToolTab.js";
 
-import type { LibraryLensId } from "./library-lenses.js";
+import type { LibraryViewState } from "./library-view-state.js";
 import type { SourceDocumentRenderer } from "./RenderedSourceDocument.js";
 import type { AnnotationComposerController } from "./use-annotation-composer.js";
 import type { BibliographyExportController } from "./use-bibliography-export.js";
@@ -49,10 +49,7 @@ export interface ReaderWorkspaceViewModel {
   readonly deploymentUpdateAvailable: boolean;
   readonly theme: ThemePreference;
   readonly changeTheme: () => void;
-  readonly search: string;
-  readonly setSearch: (value: string) => void;
-  readonly lens: LibraryLensId;
-  readonly setLens: (value: LibraryLensId) => void;
+  readonly libraryView: LibraryViewState;
   readonly focusMode: boolean;
   readonly focusChromeVisible: boolean;
   readonly setFocusMode: (value: boolean | ((current: boolean) => boolean)) => void;
@@ -96,10 +93,16 @@ export function ReaderWorkspaceView({
           sources={library.sources}
           visibleSources={librarySearch.sources}
           selectedSourceId={source?.id ?? null}
-          search={model.search}
-          lens={model.lens}
-          onSearchChange={model.setSearch}
-          onLensChange={model.setLens}
+          search={model.libraryView.query}
+          lens={model.libraryView.lens}
+          sort={model.libraryView.sort}
+          savedLenses={model.libraryView.saved}
+          onSearchChange={model.libraryView.setQuery}
+          onLensChange={model.libraryView.setLens}
+          onSortChange={model.libraryView.setSort}
+          onSaveLens={model.libraryView.save}
+          onApplySavedLens={model.libraryView.apply}
+          onRemoveSavedLens={model.libraryView.remove}
           presentation={shell.value.libraryPresentation}
           onPresentationChange={(libraryPresentation) => shell.update({ libraryPresentation })}
           onSelectSource={(id) => {

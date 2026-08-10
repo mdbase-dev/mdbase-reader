@@ -1,5 +1,6 @@
 import { useCallback, useState, type JSX } from "react";
 
+import { useLibraryViewState } from "./library-view-state.js";
 import {
   useReaderAnnotationComposer,
   useFocusChrome,
@@ -24,7 +25,6 @@ import { useSourceExport } from "./use-source-export.js";
 import { useSourceWorkspace } from "./use-source-workspace.js";
 import { useWorkspaceDirtyIndicator } from "./use-workspace-dirty-indicator.js";
 
-import type { LibraryLensId } from "./library-lenses.js";
 import type { SourceDocumentRenderer } from "./RenderedSourceDocument.js";
 import type { ReaderWorkspaceGateway } from "./workspace-model.js";
 import type { PickedFile } from "@mdbase-reader/platform";
@@ -75,8 +75,8 @@ function OpenedReaderApp({
   readonly workspace: ReaderWorkspaceController;
   readonly library: ReaderWorkspaceViewModel["library"];
 }): JSX.Element {
-  const [search, setSearch] = useState("");
-  const [lens, setLens] = useState<LibraryLensId>("all");
+  const collectionKey = library.sources[0]?.collectionId ?? library.collectionName;
+  const libraryView = useLibraryViewState(collectionKey);
   const [inspectorOpen, setInspectorOpen] = useState(
     () => !window.matchMedia("(max-width: 760px)").matches,
   );
@@ -90,7 +90,7 @@ function OpenedReaderApp({
   const sourceWorkspace = useSourceWorkspace({
     selectedSourceId: workspace.selectedSource?.id ?? null,
     sourceIds: library.sources.map(({ id }) => id),
-    collectionKey: library.sources[0]?.collectionId ?? library.collectionName,
+    collectionKey,
     selectSource: workspace.selectSource,
   });
   const annotatedSourceIds = useAnnotationSourceIndex(gateway);
@@ -130,12 +130,22 @@ function OpenedReaderApp({
 
   const filteredSources = useLensFilteredSources(
     workspace.library,
-    lens,
+    libraryView.lens,
+    libraryView.sort,
     sourceWorkspace.layout.recentSourceIds,
     annotatedSourceIds,
   );
-  const documentSearch = useSessionDocumentSearch(workspace.selectedSource, surface, search);
-  const librarySearch = useLibrarySearch(gateway, filteredSources, search, documentSearch.matches);
+  const documentSearch = useSessionDocumentSearch(
+    workspace.selectedSource,
+    surface,
+    libraryView.query,
+  );
+  const librarySearch = useLibrarySearch(
+    gateway,
+    filteredSources,
+    libraryView.query,
+    documentSearch.matches,
+  );
 
   const source = workspace.selectedSource;
   const openSources = sourceWorkspace.openSourceIds.flatMap((sourceId) => {
@@ -160,10 +170,7 @@ function OpenedReaderApp({
     deploymentUpdateAvailable,
     theme,
     changeTheme,
-    search,
-    setSearch,
-    lens,
-    setLens,
+    libraryView,
     focusMode,
     focusChromeVisible,
     setFocusMode,
