@@ -1,15 +1,28 @@
 import { describe, expect, it } from "vitest";
 
 import {
+  additionalCslFieldDefinitions,
   citationDateText,
   citationDifferences,
   cslDate,
+  cslFieldLabel,
+  emptyCslFieldValue,
   mergeCitation,
   resolutionRequest,
   updateCitationField,
 } from "./citation-form-model.js";
 
 describe("citation form model", () => {
+  it("offers every non-core CSL variable with a schema-shaped initial value", () => {
+    expect(additionalCslFieldDefinitions.some(({ name }) => name === "accessed")).toBe(true);
+    expect(additionalCslFieldDefinitions.some(({ name }) => name === "reviewed-author")).toBe(true);
+    expect(additionalCslFieldDefinitions.some(({ name }) => name === "custom")).toBe(true);
+    expect(emptyCslFieldValue("date")).toEqual({});
+    expect(emptyCslFieldValue("name")).toEqual([]);
+    expect(cslFieldLabel("original-publisher-place")).toBe("Original publisher place");
+    expect(cslFieldLabel("PMCID")).toBe("PMCID");
+  });
+
   it("updates known fields without losing unknown structured data", () => {
     expect(
       updateCitationField(

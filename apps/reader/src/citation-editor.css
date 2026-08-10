@@ -314,6 +314,103 @@
   font: 8px/1.5 var(--mono);
 }
 
+.citation-field-picker {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: end;
+  gap: 7px;
+}
+.citation-field-picker label {
+  display: grid;
+  gap: 5px;
+  color: var(--muted);
+  font: 8px var(--mono);
+}
+.citation-field-picker input {
+  min-width: 0;
+  width: 100%;
+  height: 34px;
+  padding: 0 9px;
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  color: var(--ink);
+  background: var(--canvas);
+  font: 11px/1.35 var(--sans);
+}
+.citation-field-picker input:focus {
+  outline: 2px solid color-mix(in oklch, var(--accent) 28%, transparent);
+  border-color: var(--accent);
+}
+.citation-field-picker > button {
+  height: 34px;
+  padding: 0 11px;
+  border: 1px solid var(--accent);
+  border-radius: 4px;
+  color: var(--paper);
+  background: var(--accent);
+  font: 8px var(--mono);
+  cursor: pointer;
+}
+.citation-field-picker > button:disabled {
+  border-color: var(--line);
+  color: var(--faint);
+  background: var(--canvas);
+  cursor: default;
+}
+.citation-field-picker-note,
+.citation-field-shelf-empty {
+  display: block;
+  margin: 8px 0 0;
+  color: var(--muted);
+  font: 8px/1.45 var(--mono);
+}
+.citation-specialist-fields {
+  display: grid;
+  gap: 9px;
+  margin-top: 14px;
+}
+.citation-specialist-field {
+  display: grid;
+  gap: 9px;
+  padding: 11px;
+  border: 1px solid var(--line);
+  border-left: 2px solid color-mix(in oklch, var(--accent) 55%, var(--line));
+  border-radius: 4px;
+  background: color-mix(in oklch, var(--canvas) 66%, var(--paper));
+}
+.citation-specialist-field > header {
+  display: flex;
+  align-items: start;
+  gap: 10px;
+}
+.citation-specialist-field > header > div {
+  min-width: 0;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 6px;
+  margin-right: auto;
+}
+.citation-specialist-field > header strong {
+  color: var(--ink-soft);
+  font-size: 10px;
+}
+.citation-specialist-field > header code {
+  color: var(--muted);
+  font: 8px var(--mono);
+}
+.citation-specialist-field > header button {
+  padding: 0;
+  border: 0;
+  color: var(--muted);
+  background: transparent;
+  font: 8px var(--mono);
+  cursor: pointer;
+}
+.citation-specialist-field > header button:hover {
+  color: var(--danger);
+}
+
 .citation-lookup {
   background: color-mix(in oklch, var(--canvas) 72%, var(--paper));
 }

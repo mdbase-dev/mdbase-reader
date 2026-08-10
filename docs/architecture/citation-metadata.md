@@ -35,7 +35,16 @@ Reader exposes the canonical object through two lossless surfaces:
 
 - a structured editor for identity, contributors, partial or literal dates,
   publication details, identifiers, access, and the common CSL item types;
-- a Raw CSL editor for the complete schema and specialist fields.
+- a schema-driven field shelf where every other official CSL variable can be
+  added, edited, and removed without leaving the structured editor;
+- a Raw CSL editor for whole-record inspection and advanced editing.
+
+Reader vendors the official `csl-data.json` schema at a pinned revision of the
+Citation Style Language schema repository. Item types, field names, and field
+kinds are derived from that artifact rather than maintained as parallel lists.
+Conformance tests construct and validate an item containing every official
+variable. Reader deliberately narrows the schema envelope to one item per
+source and a string Pandoc-compatible `id`.
 
 Both surfaces edit the same draft. Structured edits remove only the field being
 cleared and preserve every other property. Validity errors identify affected

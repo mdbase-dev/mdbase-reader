@@ -1,4 +1,11 @@
-import type { CitationResolutionRequest, CslItem } from "@mdbase-reader/core";
+import { cslFieldDefinitions, cslTypes } from "@mdbase-reader/core";
+
+import type {
+  CitationResolutionRequest,
+  CslFieldDefinition,
+  CslFieldKind,
+  CslItem,
+} from "@mdbase-reader/core";
 
 export const commonCslTypes = [
   ["article-journal", "Journal article"],
@@ -16,40 +23,10 @@ export const commonCslTypes = [
   ["document", "Document"],
 ] as const;
 
-export const specialistCslTypes = [
-  ["article", "Article"],
-  ["bill", "Bill"],
-  ["broadcast", "Broadcast"],
-  ["classic", "Classic work"],
-  ["collection", "Collection"],
-  ["entry", "Entry"],
-  ["entry-dictionary", "Dictionary entry"],
-  ["entry-encyclopedia", "Encyclopedia entry"],
-  ["event", "Event"],
-  ["figure", "Figure"],
-  ["graphic", "Graphic"],
-  ["hearing", "Hearing"],
-  ["interview", "Interview"],
-  ["legal_case", "Legal case"],
-  ["legislation", "Legislation"],
-  ["manuscript", "Manuscript"],
-  ["map", "Map"],
-  ["motion_picture", "Motion picture"],
-  ["musical_score", "Musical score"],
-  ["pamphlet", "Pamphlet"],
-  ["patent", "Patent"],
-  ["performance", "Performance"],
-  ["periodical", "Periodical"],
-  ["personal_communication", "Personal communication"],
-  ["post", "Post"],
-  ["regulation", "Regulation"],
-  ["review", "Review"],
-  ["review-book", "Book review"],
-  ["song", "Song"],
-  ["speech", "Speech"],
-  ["standard", "Standard"],
-  ["treaty", "Treaty"],
-] as const;
+export const specialistCslTypes = [...cslTypes]
+  .filter((type) => !commonCslTypes.some(([common]) => common === type))
+  .sort((left, right) => left.localeCompare(right))
+  .map((type) => [type, cslFieldLabel(type)] as const);
 
 export const primaryCitationFields = new Set([
   "id",
@@ -73,6 +50,34 @@ export const primaryCitationFields = new Set([
   "language",
   "abstract",
 ]);
+
+export const additionalCslFieldDefinitions: readonly CslFieldDefinition[] =
+  cslFieldDefinitions.filter(({ name }) => !primaryCitationFields.has(name));
+
+export function cslFieldLabel(field: string): string {
+  const knownAcronyms = new Map([
+    ["DOI", "DOI"],
+    ["ISBN", "ISBN"],
+    ["ISSN", "ISSN"],
+    ["PMCID", "PMCID"],
+    ["PMID", "PMID"],
+    ["URL", "URL"],
+  ]);
+  return (
+    knownAcronyms.get(field) ??
+    field.replaceAll(/[-_]/gu, " ").replace(/^./u, (letter) => letter.toLocaleUpperCase())
+  );
+}
+
+export function emptyCslFieldValue(kind: CslFieldKind): unknown {
+  if (kind === "name" || kind === "string-list") {
+    return [];
+  }
+  if (kind === "date" || kind === "object") {
+    return {};
+  }
+  return "";
+}
 
 export function serializeCitation(citation: Readonly<Record<string, unknown>>): string {
   return JSON.stringify(citation, null, 2);

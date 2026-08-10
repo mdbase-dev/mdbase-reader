@@ -4,10 +4,10 @@ import {
   citationDateText,
   commonCslTypes,
   cslDate,
-  primaryCitationFields,
   specialistCslTypes,
   updateCitationField,
 } from "./citation-form-model.js";
+import { CitationAdditionalFields } from "./CitationAdditionalFields.js";
 import { CitationContributors } from "./CitationContributors.js";
 
 import type { CslValidationProblem } from "@mdbase-reader/core";
@@ -28,7 +28,6 @@ export function CitationStructuredEditor({
 }): JSX.Element {
   const update = (field: string, value: unknown): void =>
     onChange(updateCitationField(citation, field, value));
-  const additional = Object.keys(citation).filter((field) => !primaryCitationFields.has(field));
   const problem = (field: string): string | undefined =>
     problems.find(
       ({ path }) =>
@@ -251,15 +250,8 @@ export function CitationStructuredEditor({
           />
           <FieldProblem message={problem("abstract")} />
         </label>
-        {additional.length ? (
-          <p>
-            {additional.length} specialist {additional.length === 1 ? "field is" : "fields are"}{" "}
-            preserved in Raw CSL: {additional.join(", ")}.
-          </p>
-        ) : (
-          <p>No additional CSL fields.</p>
-        )}
       </details>
+      <CitationAdditionalFields citation={citation} problems={problems} onChange={onChange} />
     </div>
   );
 }
