@@ -101,7 +101,7 @@ export function useAnnotationDeletion(
 export function useReadingPositionSave(
   gateway: ReaderWorkspaceGateway,
   source: AsyncResource<Source>,
-  setSource: Dispatch<SetStateAction<SourceState>>,
+  setSource: (value: Exclude<SourceState, null>) => void,
 ): (sourceId: SourceId, documentFileId: FileId, position: ReadingPosition) => Promise<void> {
   return useCallback(
     async (sourceId, documentFileId, position): Promise<void> => {

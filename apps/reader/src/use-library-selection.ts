@@ -34,7 +34,11 @@ export interface LibrarySelection {
   ) => Promise<Source | null>;
 }
 
-export function useLibrarySelection(gateway: ReaderWorkspaceGateway): LibrarySelection {
+export interface LibrarySelectionState extends LibrarySelection {
+  readonly reconcileSource: (source: Source) => void;
+}
+
+export function useLibrarySelection(gateway: ReaderWorkspaceGateway): LibrarySelectionState {
   const [library, setLibrary] = useState<AsyncResource<ReaderLibrarySnapshot>>({
     status: "loading",
   });
@@ -95,6 +99,10 @@ export function useLibrarySelection(gateway: ReaderWorkspaceGateway): LibrarySel
     setImportStatus,
     setImportError,
   );
+  const reconcileSource = useCallback(
+    (source: Source): void => setLibrary((current) => replaceLibrarySource(current, source)),
+    [],
+  );
   return {
     library,
     selectedSource,
@@ -103,6 +111,7 @@ export function useLibrarySelection(gateway: ReaderWorkspaceGateway): LibrarySel
     importStatus,
     importError,
     importSourceFile,
+    reconcileSource,
   };
 }
 
@@ -161,4 +170,23 @@ function addImportedSource(
         },
       }
     : current;
+}
+
+export function replaceLibrarySource(
+  current: AsyncResource<ReaderLibrarySnapshot>,
+  replacement: Source,
+): AsyncResource<ReaderLibrarySnapshot> {
+  if (current.status !== "ready") {
+    return current;
+  }
+  const index = current.value.sources.findIndex(({ id }) => id === replacement.id);
+  if (index < 0) {
+    return current;
+  }
+  const sources = [...current.value.sources];
+  sources[index] = replacement;
+  return {
+    status: "ready",
+    value: { ...current.value, sources },
+  };
 }
