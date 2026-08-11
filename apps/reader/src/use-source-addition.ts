@@ -4,6 +4,7 @@ import { useSourceImport, type SourceImportFlow } from "./use-source-import.js";
 import { useWebCapture, type WebCaptureFlow } from "./use-web-capture.js";
 
 import type { ReaderWorkspaceController } from "./use-reader-workspace.js";
+import type { SourceId } from "@mdbase-reader/core";
 import type { PickedFile } from "@mdbase-reader/platform";
 
 export interface SourceAdditionController {
@@ -21,13 +22,16 @@ export interface SourceAdditionController {
 export function useSourceAddition(
   workspace: ReaderWorkspaceController,
   pickSourceFile: (() => Promise<PickedFile | null>) | undefined,
-  onImported: () => void,
+  onImported: (sourceId: SourceId) => void,
 ): SourceAdditionController {
   const [dialogOpen, setDialogOpen] = useState(false);
-  const finish = useCallback((): void => {
-    setDialogOpen(false);
-    onImported();
-  }, [onImported]);
+  const finish = useCallback(
+    (sourceId: SourceId): void => {
+      setDialogOpen(false);
+      onImported(sourceId);
+    },
+    [onImported],
+  );
   const fileImport = useSourceImport(workspace, pickSourceFile, finish);
   const webCapture = useWebCapture(workspace, finish);
   const close = useCallback((): void => setDialogOpen(false), []);

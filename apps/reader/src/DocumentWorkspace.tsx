@@ -1,208 +1,239 @@
-import { ReaderButton } from "@mdbase-reader/ui";
+import { useState, type JSX, type ReactNode } from "react";
 
-import { AreaIcon, BackIcon, FocusIcon, MoreIcon, PanelIcon } from "./icons.js";
+import { DocumentContextualToolbar } from "./DocumentContextualToolbar.js";
+import { SourceTabStrip } from "./SourceTabStrip.js";
+import {
+  useProgressiveWorkspaceTabs,
+  workspaceSessionKey,
+} from "./use-progressive-workspace-tabs.js";
+import {
+  DocumentEmpty,
+  EmptyWorkspace,
+  PaneSplitTargets,
+  SplitHandle,
+  splitStyle,
+} from "./WorkspacePaneSupport.js";
 
+import type {
+  SourceWorkspacePane,
+  LibraryWorkspaceTab,
+  SourceWorkspaceTab,
+  WorkspacePaneId,
+  WorkspaceTab,
+} from "./source-workspace-layout.js";
+import type { WorkspaceSessionKey } from "./use-progressive-workspace-tabs.js";
 import type { ReadingResumeState } from "./use-reading-resume.js";
 import type { SourceExportController } from "./use-source-export.js";
+import type { SourceWorkspaceController } from "./use-source-workspace.js";
 import type { SourceSummary } from "@mdbase-reader/core";
-import type { JSX, ReactNode } from "react";
 
 export interface DocumentWorkspaceProps {
-  readonly source: SourceSummary | null;
-  readonly document: ReactNode;
+  readonly sources: readonly SourceSummary[];
+  readonly sourceWorkspace: SourceWorkspaceController;
   readonly focusMode: boolean;
-  readonly inspectorOpen: boolean;
   readonly readingResume: ReadingResumeState;
   readonly decorationProblem: string | null;
   readonly canSelectArea: boolean;
   readonly selectingArea: boolean;
   readonly sourceExport: SourceExportController;
+  readonly renderDocument: (source: SourceSummary, paneId: WorkspacePaneId) => ReactNode;
+  readonly renderTool: (tab: SourceWorkspaceTab, focused: boolean) => ReactNode;
+  readonly renderLibrary: (tab: LibraryWorkspaceTab, focused: boolean) => ReactNode;
+  readonly onAddSource: () => void;
   readonly onBackToLibrary: () => void;
   readonly onToggleFocus: () => void;
-  readonly onToggleInspector: () => void;
   readonly onToggleAreaSelection: () => void;
 }
 
-export function DocumentWorkspace({
-  source,
-  document,
-  focusMode,
-  inspectorOpen,
-  readingResume,
-  decorationProblem,
-  canSelectArea,
-  selectingArea,
-  sourceExport,
-  onBackToLibrary,
-  onToggleFocus,
-  onToggleInspector,
-  onToggleAreaSelection,
-}: DocumentWorkspaceProps): JSX.Element {
+export function DocumentWorkspace(props: DocumentWorkspaceProps): JSX.Element {
+  const { sourceWorkspace } = props;
+  const [dragging, setDragging] = useState(false);
+  const hydratedTabs = useProgressiveWorkspaceTabs(sourceWorkspace.layout);
   return (
-    <section className="document-workspace" aria-label="Document reader">
-      {source ? (
-        <>
-          <div className="document-toolbar">
-            <button
-              className="mobile-back icon-button"
-              type="button"
-              aria-label="Back to library"
-              onClick={onBackToLibrary}
-            >
-              <BackIcon />
-            </button>
-            <div className="document-identity">
-              <strong>{source.title}</strong>
-              <span>
-                {source.creators.join(", ") || "Unknown creator"}
-                {source.documents[0] ? ` · ${documentLabel(source)}` : " · Source note"}
-              </span>
-            </div>
-            <DocumentStatus reading={readingResume} decorationProblem={decorationProblem} />
-            <div className="document-tools">
-              {canSelectArea ? (
-                <button
-                  type="button"
-                  className={selectingArea ? "tool-button is-active" : "tool-button"}
-                  aria-pressed={selectingArea}
-                  aria-label={selectingArea ? "Cancel area selection" : "Select an area"}
-                  onClick={onToggleAreaSelection}
-                >
-                  <AreaIcon /> <span className="tool-label">Area</span>
-                </button>
-              ) : null}
-              <button
-                type="button"
-                className={inspectorOpen ? "tool-button is-active" : "tool-button"}
-                aria-pressed={inspectorOpen}
-                aria-label={inspectorOpen ? "Hide source workspace" : "Show source workspace"}
-                onClick={onToggleInspector}
-              >
-                <PanelIcon /> <span className="tool-label">Workspace</span>
-              </button>
-              <button
-                type="button"
-                className={focusMode ? "tool-button is-active" : "tool-button"}
-                aria-pressed={focusMode}
-                aria-label={focusMode ? "Exit focus mode" : "Enter focus mode"}
-                onClick={onToggleFocus}
-              >
-                <FocusIcon /> <span className="tool-label">Focus</span>
-              </button>
-              <SourceActions sourceExport={sourceExport} />
-            </div>
-          </div>
-          <div className="document-canvas">{document ?? <DocumentEmpty />}</div>
-        </>
-      ) : (
-        <EmptyCollection />
-      )}
+    <section
+      className={`document-workspace is-${sourceWorkspace.layout.splitDirection ?? "single"}`}
+      aria-label="Document reader"
+      onDragEnter={() => setDragging(true)}
+      onDragEnd={() => setDragging(false)}
+      onDrop={() => setDragging(false)}
+    >
+      <div className="workspace-pane-deck" style={splitStyle(sourceWorkspace)}>
+        {sourceWorkspace.layout.panes.map((pane) => (
+          <WorkspacePane
+            key={pane.id}
+            pane={pane}
+            dragging={dragging}
+            hydratedTabs={hydratedTabs}
+            {...props}
+          />
+        ))}
+        {sourceWorkspace.layout.panes.length === 2 ? (
+          <SplitHandle workspace={sourceWorkspace} />
+        ) : null}
+      </div>
     </section>
   );
 }
 
-function SourceActions({
-  sourceExport,
-}: {
-  readonly sourceExport: SourceExportController;
+// The branching mirrors the three distinct workspace surfaces: library, tools, and documents.
+// eslint-disable-next-line complexity
+function WorkspacePane({
+  pane,
+  sources,
+  sourceWorkspace,
+  dragging,
+  hydratedTabs,
+  renderDocument,
+  renderTool,
+  renderLibrary,
+  ...toolbar
+}: DocumentWorkspaceProps & {
+  readonly pane: SourceWorkspacePane;
+  readonly dragging: boolean;
+  readonly hydratedTabs: ReadonlySet<WorkspaceSessionKey>;
 }): JSX.Element {
+  const active = pane.tabs.find(({ id }) => id === pane.activeTabId) ?? null;
+  const sourceFor = (tab: WorkspaceTab): SourceSummary | null =>
+    tab.kind === "source" ? (sources.find(({ id }) => id === tab.sourceId) ?? null) : null;
+  const source = active ? sourceFor(active) : null;
+  const focused = sourceWorkspace.layout.focusedPaneId === pane.id;
+  const surfaceClass =
+    active?.kind === "library"
+      ? " is-library-pane"
+      : active?.kind === "source" && active.view !== "document"
+        ? " is-tool-pane"
+        : "";
   return (
-    <details className="source-actions">
-      <summary className="icon-button" aria-label="Source actions" title="Source actions">
-        <MoreIcon />
-      </summary>
-      <div className="source-actions-menu">
-        <button
-          type="button"
-          disabled={!sourceExport.available || sourceExport.status === "exporting"}
-          onClick={sourceExport.run}
-        >
-          <span>{sourceExport.status === "exporting" ? "Preparing export…" : "Export source"}</span>
-          <small>Records, materialized note, citations, and originals</small>
-        </button>
-        {sourceExport.message ? (
-          <p
-            className={`source-export-message is-${sourceExport.status}`}
-            role={sourceExport.status === "error" ? "alert" : "status"}
-          >
-            {sourceExport.message}
-          </p>
-        ) : null}
-      </div>
-    </details>
-  );
-}
-
-function DocumentStatus({
-  reading,
-  decorationProblem,
-}: {
-  readonly reading: ReadingResumeState;
-  readonly decorationProblem: string | null;
-}): JSX.Element {
-  if (decorationProblem) {
-    return (
-      <span className="reading-position-status is-error" role="alert" title={decorationProblem}>
-        Highlights unavailable
-      </span>
-    );
-  }
-  if (reading.status === "idle") {
-    return <span className="reading-position-status" />;
-  }
-  const label =
-    reading.status === "saving"
-      ? "Saving position…"
-      : reading.status === "saved"
-        ? "Position saved"
-        : (reading.message ?? "Position not saved");
-  return (
-    <span
-      className={`reading-position-status is-${reading.status}`}
-      role={reading.status === "error" ? "alert" : "status"}
-      title={label}
+    <section
+      className={`workspace-pane${focused ? " is-focused" : ""}${surfaceClass}`}
+      aria-label={`Reading pane ${pane.id === "primary" ? "A" : "B"}`}
+      onPointerDown={() => sourceWorkspace.focus(pane.id)}
     >
-      {reading.status === "error" ? "Position not saved" : label}
-    </span>
+      <SourceTabStrip
+        pane={pane}
+        sourceFor={sourceFor}
+        onActivate={(tab) => sourceWorkspace.activateTab(tab.id, pane.id)}
+        onPromote={(tab) => sourceWorkspace.promote(tab.id, pane.id)}
+        onPin={(tab, pinned) => sourceWorkspace.pin(tab.id, pane.id, pinned)}
+        onClose={(tab) => sourceWorkspace.closeTab(tab.id, pane.id)}
+        onCloseOthers={(tab) => sourceWorkspace.closeOthers(tab.id, pane.id)}
+        onCloseToRight={(tab) => sourceWorkspace.closeToRight(tab.id, pane.id)}
+        onOpenBeside={(tab, direction) =>
+          tab.kind === "source"
+            ? sourceWorkspace.openBeside(tab.sourceId, tab.view, direction)
+            : sourceWorkspace.openLibraryBeside(tab.libraryViewId, tab.title, direction)
+        }
+        onReorder={(from, to) => sourceWorkspace.reorder(pane.id, from, to)}
+        onMoveFromPane={(tabId, fromPaneId) => sourceWorkspace.moveTab(tabId, fromPaneId, pane.id)}
+      />
+      {active?.kind === "library" ? (
+        <div className="document-canvas is-library-canvas">
+          <WorkspaceSessions
+            pane={pane}
+            sources={sources}
+            renderDocument={renderDocument}
+            renderTool={renderTool}
+            renderLibrary={renderLibrary}
+            focused={focused}
+            hydratedTabs={hydratedTabs}
+            onAddSource={toolbar.onAddSource}
+          />
+        </div>
+      ) : active?.kind === "source" && active.view !== "document" && source ? (
+        <div className="document-canvas is-tool-canvas">
+          <WorkspaceSessions
+            pane={pane}
+            sources={sources}
+            renderDocument={renderDocument}
+            renderTool={renderTool}
+            renderLibrary={renderLibrary}
+            focused={focused}
+            hydratedTabs={hydratedTabs}
+            onAddSource={toolbar.onAddSource}
+          />
+        </div>
+      ) : active && source ? (
+        <>
+          <DocumentContextualToolbar
+            source={source}
+            pane={pane}
+            workspace={sourceWorkspace}
+            {...toolbar}
+          />
+          <div
+            className="document-canvas"
+            onPointerDownCapture={() => {
+              if (active.preview) {
+                sourceWorkspace.promote(active.id, pane.id);
+              }
+            }}
+          >
+            <WorkspaceSessions
+              pane={pane}
+              sources={sources}
+              renderDocument={renderDocument}
+              renderTool={renderTool}
+              renderLibrary={renderLibrary}
+              focused={focused}
+              hydratedTabs={hydratedTabs}
+              onAddSource={toolbar.onAddSource}
+            />
+          </div>
+        </>
+      ) : (
+        <EmptyWorkspace hasSources={sources.length > 0} onAddSource={toolbar.onAddSource} />
+      )}
+      {dragging && sourceWorkspace.layout.panes.length === 1 ? (
+        <PaneSplitTargets pane={pane} workspace={sourceWorkspace} />
+      ) : null}
+    </section>
   );
 }
 
-function documentLabel(source: SourceSummary): string {
-  const mediaType = source.documents[0]?.mediaType ?? "";
-  if (mediaType.includes("pdf")) {
-    return "PDF";
-  }
-  if (mediaType.includes("epub")) {
-    return "EPUB";
-  }
-  return source.documents[0]?.title ?? "Web archive";
-}
-
-function DocumentEmpty(): JSX.Element {
+function WorkspaceSessions({
+  pane,
+  sources,
+  renderDocument,
+  renderTool,
+  renderLibrary,
+  focused,
+  hydratedTabs,
+  onAddSource,
+}: Pick<
+  DocumentWorkspaceProps,
+  "sources" | "renderDocument" | "renderTool" | "renderLibrary" | "onAddSource"
+> & {
+  readonly pane: SourceWorkspacePane;
+  readonly focused: boolean;
+  readonly hydratedTabs: ReadonlySet<WorkspaceSessionKey>;
+}): JSX.Element {
   return (
-    <div className="document-empty">
-      <div>
-        <span className="mono">No readable representation</span>
-        <h2>Add a PDF, EPUB, or saved web page.</h2>
-        <p>
-          The literature note is available now. Document controls appear when a supported
-          representation is attached.
-        </p>
-        <ReaderButton>Add a representation</ReaderButton>
-      </div>
-    </div>
-  );
-}
-
-function EmptyCollection(): JSX.Element {
-  return (
-    <div className="document-empty">
-      <div>
-        <span className="mono">Your library is empty</span>
-        <h2>Begin with something worth returning to.</h2>
-        <p>Save a web page, upload a PDF or EPUB, or import an existing library.</p>
-        <ReaderButton>Upload PDF or EPUB</ReaderButton>
-      </div>
+    <div className="document-session-deck">
+      {pane.tabs.map((tab) => {
+        const source =
+          tab.kind === "source" ? sources.find(({ id }) => id === tab.sourceId) : undefined;
+        const active = tab.id === pane.activeTabId;
+        const hydrated = active || hydratedTabs.has(workspaceSessionKey(pane.id, tab.id));
+        return tab.kind === "library" || source ? (
+          <div
+            className={active ? "document-session is-active" : "document-session"}
+            key={tab.id}
+            aria-hidden={!active}
+          >
+            {hydrated
+              ? tab.kind === "library"
+                ? renderLibrary(tab, focused)
+                : tab.view === "document"
+                  ? source
+                    ? (renderDocument(source, pane.id) ?? (
+                        <DocumentEmpty onAddSource={onAddSource} />
+                      ))
+                    : null
+                  : renderTool(tab, focused)
+              : null}
+          </div>
+        ) : null;
+      })}
     </div>
   );
 }

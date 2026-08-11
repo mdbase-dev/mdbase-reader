@@ -7,29 +7,32 @@ import type { PickedFile } from "@mdbase-reader/platform";
 export function SourceImportDialog({
   file,
   importing,
+  progress,
   error,
   onCancel,
   onImport,
 }: {
   readonly file: PickedFile;
   readonly importing: boolean;
+  readonly progress: SourceImportFlow["progress"];
   readonly error: string | null;
   readonly onCancel: () => void;
   readonly onImport: (title: string) => void;
 }): JSX.Element {
   const [title, setTitle] = useState(() => titleFromName(file.name));
   const titleInput = useRef<HTMLInputElement>(null);
+  const isFinalizing = importing && progress?.phase === "creating";
 
   useEffect(() => {
     titleInput.current?.focus();
     const close = (event: KeyboardEvent): void => {
-      if (event.key === "Escape" && !importing) {
+      if (event.key === "Escape" && !isFinalizing) {
         onCancel();
       }
     };
     window.addEventListener("keydown", close);
     return () => window.removeEventListener("keydown", close);
-  }, [importing, onCancel]);
+  }, [isFinalizing, onCancel]);
 
   return (
     <div className="import-backdrop" role="presentation">
@@ -70,14 +73,15 @@ export function SourceImportDialog({
             {error}
           </p>
         ) : null}
+        {importing ? <ImportProgress progress={progress} /> : null}
         <div className="import-dialog-actions">
           <button
             className="connection-secondary"
             type="button"
-            disabled={importing}
             onClick={onCancel}
+            disabled={isFinalizing}
           >
-            Cancel
+            {isFinalizing ? "Finishing…" : importing ? "Stop import" : "Cancel"}
           </button>
           <ReaderButton disabled={importing || !title.trim()} onClick={() => onImport(title)}>
             {importing ? "Importing…" : "Add source"}
@@ -97,11 +101,37 @@ export function SourceImportOverlay({
     <SourceImportDialog
       file={flow.file}
       importing={flow.importing}
+      progress={flow.progress}
       error={flow.error}
       onCancel={flow.cancel}
       onImport={(title) => void flow.importFile(title)}
     />
   ) : null;
+}
+
+function ImportProgress({
+  progress,
+}: {
+  readonly progress: SourceImportFlow["progress"];
+}): JSX.Element {
+  const value =
+    progress?.phase === "uploading" && progress.totalBytes
+      ? Math.round((progress.completedBytes / progress.totalBytes) * 100)
+      : undefined;
+  const label =
+    progress?.phase === "uploading"
+      ? `Uploading file ${String(progress.fileIndex)} of ${String(progress.fileCount)}`
+      : progress?.phase === "creating"
+        ? "Creating source record"
+        : "Checking file and library";
+  return (
+    <div className="import-progress" role="status" aria-live="polite">
+      <span>
+        {label} {value === undefined ? null : <strong>{String(value)}%</strong>}
+      </span>
+      <progress max={100} {...(value === undefined ? {} : { value })} aria-label={label} />
+    </div>
+  );
 }
 
 function titleFromName(name: string): string {

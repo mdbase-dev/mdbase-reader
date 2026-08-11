@@ -1,6 +1,7 @@
 import { useVirtualSourceWindow } from "./use-virtual-source-window.js";
 import { keyboardSourceIndex } from "./virtual-source-list.js";
 
+import type { LibraryPresentation } from "./workspace-shell-preferences.js";
 import type { SourceId, SourceSummary, SourceTextSearchMatch } from "@mdbase-reader/core";
 import type { CSSProperties, JSX, KeyboardEvent } from "react";
 
@@ -10,7 +11,10 @@ export interface VirtualSourceListProps {
   readonly searchMatches: ReadonlyMap<SourceId, SourceTextSearchMatch>;
   readonly resetKey: string;
   readonly busy: boolean;
+  readonly presentation: LibraryPresentation;
   readonly onSelectSource: (id: SourceId) => void;
+  readonly onOpenSource: (id: SourceId) => void;
+  readonly onOpenBeside: (id: SourceId) => void;
 }
 
 export function VirtualSourceList({
@@ -19,14 +23,26 @@ export function VirtualSourceList({
   searchMatches,
   resetKey,
   busy,
+  presentation,
   onSelectSource,
+  onOpenSource,
+  onOpenBeside,
 }: VirtualSourceListProps): JSX.Element {
   const { containerRef, range, measure, focusIndex } = useVirtualSourceWindow(
     sources.length,
     resetKey,
+    sourceRowHeight(presentation),
   );
 
   function navigateFrom(event: KeyboardEvent, currentIndex: number): void {
+    if (event.key === "Enter") {
+      event.preventDefault();
+      const source = sources[currentIndex];
+      if (source) {
+        onOpenSource(source.id);
+      }
+      return;
+    }
     const nextIndex = keyboardSourceIndex(event.key, currentIndex, sources.length);
     if (nextIndex === null) {
       return;
@@ -48,7 +64,7 @@ export function VirtualSourceList({
   return (
     <div
       ref={containerRef}
-      className="source-list"
+      className={`source-list is-${presentation}`}
       role="listbox"
       aria-label="Sources"
       aria-busy={busy}
@@ -71,15 +87,18 @@ export function VirtualSourceList({
                 tabIndex={selected || index === range.start ? 0 : -1}
                 className={selected ? "source-row is-selected" : "source-row"}
                 onClick={() => onSelectSource(source.id)}
+                onDoubleClick={() => onOpenSource(source.id)}
+                onContextMenu={(event) => {
+                  event.preventDefault();
+                  onOpenBeside(source.id);
+                }}
                 onKeyDown={(event) => navigateFrom(event, index)}
               >
                 <span className="source-format">{sourceFormat(source)}</span>
                 <strong>{source.title}</strong>
                 <small>{source.creators.join(", ") || "Unknown creator"}</small>
                 <span className="source-row-meta">
-                  {searchMatchLabel(searchMatches.get(source.id)) ??
-                    source.readingStatus ??
-                    "inbox"}
+                  {searchMatchLabel(searchMatches.get(source.id)) ?? sourceStatusLabel(source)}
                 </span>
               </button>
             );
@@ -90,12 +109,29 @@ export function VirtualSourceList({
   );
 }
 
-function sourceFormat(source: SourceSummary): "PDF" | "EPUB" | "WEB" {
+function sourceRowHeight(presentation: LibraryPresentation): number {
+  return presentation === "compact" ? 72 : presentation === "bibliography" ? 96 : 124;
+}
+
+function sourceFormat(source: SourceSummary): "PDF" | "EPUB" | "WEB" | "NOTE" {
   const mediaType = source.documents[0]?.mediaType ?? "";
+  if (!source.documents[0]) {
+    return "NOTE";
+  }
   if (mediaType.includes("pdf")) {
     return "PDF";
   }
   return mediaType.includes("epub") ? "EPUB" : "WEB";
+}
+
+function sourceStatusLabel(source: SourceSummary): string {
+  const status = source.readingStatus ?? "inbox";
+  const citation = source.citation
+    ? "cited"
+    : source.citationProblems?.length
+      ? "citation issue"
+      : "no citation";
+  return `${status} · ${citation}`;
 }
 
 function searchMatchLabel(match: SourceTextSearchMatch | undefined): string | null {

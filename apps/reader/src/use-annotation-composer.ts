@@ -3,7 +3,7 @@ import { useCallback, useEffect, useState } from "react";
 import { annotationRequest, type ComposerSelection } from "./annotation-composer-request.js";
 import { readerErrorMessage } from "./errors.js";
 
-import type { Annotation, AnnotationCreationRequest, SourceSummary } from "@mdbase-reader/core";
+import type { Annotation, AnnotationCreationRequest, Source } from "@mdbase-reader/core";
 import type { ReadingSurface } from "@mdbase-reader/reading-surface";
 
 export type { ComposerSelection } from "./annotation-composer-request.js";
@@ -29,7 +29,7 @@ interface SelectedDraft {
 }
 
 export function useAnnotationComposer(input: {
-  readonly source: SourceSummary | null;
+  readonly source: Source | null;
   readonly surface: ReadingSurface | null;
   readonly create: (request: AnnotationCreationRequest) => Promise<Annotation>;
 }): AnnotationComposerController {
@@ -122,7 +122,7 @@ export function useAnnotationComposer(input: {
 }
 
 function subscribeToSelections(
-  source: SourceSummary | null,
+  source: Source | null,
   surface: ReadingSurface | null,
   setSelected: (value: SelectedDraft | null) => void,
   setNote: (value: string) => void,
@@ -152,7 +152,7 @@ function subscribeToSelections(
 
 async function saveSelection(
   input: {
-    readonly source: SourceSummary;
+    readonly source: Source;
     readonly surface: ReadingSurface;
     readonly create: (request: AnnotationCreationRequest) => Promise<Annotation>;
   },
@@ -162,12 +162,13 @@ async function saveSelection(
   setProblem: (value: { sourceId: string; message: string }) => void,
   setStatus: (value: "idle" | "saving") => void,
 ): Promise<void> {
+  const sourceId = input.source.id;
+  dismiss();
   try {
     await input.create(await annotationRequest(input.source, input.surface, selection, note));
-    dismiss();
   } catch (reason) {
     setProblem({
-      sourceId: input.source.id,
+      sourceId,
       message: readerErrorMessage(reason, "Reader could not save this annotation."),
     });
   } finally {
@@ -177,7 +178,7 @@ async function saveSelection(
 
 function openAnnotation(
   annotation: Annotation,
-  input: { readonly source: SourceSummary | null; readonly surface: ReadingSurface | null },
+  input: { readonly source: Source | null; readonly surface: ReadingSurface | null },
   setProblem: (value: { sourceId: string; message: string }) => void,
 ): void {
   const surface = input.surface;

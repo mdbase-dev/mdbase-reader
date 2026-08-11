@@ -13,21 +13,32 @@ import { readerErrorMessage } from "./errors.js";
 
 import type { AsyncResource } from "./use-reader-workspace.js";
 import type { ReaderLibrarySnapshot, ReaderWorkspaceGateway } from "./workspace-model.js";
-import type { Source, SourceFileImportRequest, SourceId, SourceSummary } from "@mdbase-reader/core";
+import type {
+  Source,
+  SourceFileImportRequest,
+  SourceId,
+  SourceImportOptions,
+  SourceSummary,
+} from "@mdbase-reader/core";
 
 export interface LibrarySelection {
   readonly library: AsyncResource<ReaderLibrarySnapshot>;
   readonly selectedSource: SourceSummary | null;
-  readonly selectSource: (id: SourceId) => void;
+  readonly selectSource: (id: SourceId | null) => void;
   readonly retryLibrary: () => void;
   readonly importStatus: "idle" | "importing";
   readonly importError: string | null;
   readonly importSourceFile: (
     request: Omit<SourceFileImportRequest, "collectionId">,
+    options?: SourceImportOptions,
   ) => Promise<Source | null>;
 }
 
-export function useLibrarySelection(gateway: ReaderWorkspaceGateway): LibrarySelection {
+export interface LibrarySelectionState extends LibrarySelection {
+  readonly reconcileSource: (source: Source) => void;
+}
+
+export function useLibrarySelection(gateway: ReaderWorkspaceGateway): LibrarySelectionState {
   const [library, setLibrary] = useState<AsyncResource<ReaderLibrarySnapshot>>({
     status: "loading",
   });
@@ -52,18 +63,23 @@ export function useLibrarySelection(gateway: ReaderWorkspaceGateway): LibrarySel
       selectedSourceIdRef.current = next;
       setSelectedSourceId(next);
     };
-    void gateway
-      .library({ signal: controller.signal, onProgress: updateLibrary })
-      .then(updateLibrary)
-      .catch((reason: unknown) => {
-        if (!controller.signal.aborted) {
-          setLibrary({
-            status: "error",
-            message: readerErrorMessage(reason, "Reader could not load this collection."),
-          });
-        }
-      });
-    return () => controller.abort();
+    const timer = window.setTimeout(() => {
+      void gateway
+        .library({ signal: controller.signal, onProgress: updateLibrary })
+        .then(updateLibrary)
+        .catch((reason: unknown) => {
+          if (!controller.signal.aborted) {
+            setLibrary({
+              status: "error",
+              message: readerErrorMessage(reason, "Reader could not load this collection."),
+            });
+          }
+        });
+    }, 0);
+    return () => {
+      window.clearTimeout(timer);
+      controller.abort();
+    };
   }, [attempt, gateway]);
 
   const selectedSource = useMemo(() => {
@@ -72,7 +88,7 @@ export function useLibrarySelection(gateway: ReaderWorkspaceGateway): LibrarySel
     }
     return library.value.sources.find(({ id }) => id === selectedSourceId) ?? null;
   }, [library, selectedSourceId]);
-  const selectSource = useCallback((id: SourceId): void => {
+  const selectSource = useCallback((id: SourceId | null): void => {
     selectedSourceIdRef.current = id;
     setSelectedSourceId(id);
   }, []);
@@ -88,6 +104,10 @@ export function useLibrarySelection(gateway: ReaderWorkspaceGateway): LibrarySel
     setImportStatus,
     setImportError,
   );
+  const reconcileSource = useCallback(
+    (source: Source): void => setLibrary((current) => replaceLibrarySource(current, source)),
+    [],
+  );
   return {
     library,
     selectedSource,
@@ -96,6 +116,7 @@ export function useLibrarySelection(gateway: ReaderWorkspaceGateway): LibrarySel
     importStatus,
     importError,
     importSourceFile,
+    reconcileSource,
   };
 }
 
@@ -108,17 +129,19 @@ function useImportSourceFile(
   setImportError: Dispatch<SetStateAction<string | null>>,
 ): LibrarySelection["importSourceFile"] {
   return useCallback(
-    async (request) => {
+    async (request, options) => {
       setImportStatus("importing");
       setImportError(null);
       try {
-        const imported = await gateway.importSourceFile(request);
+        const imported = await gateway.importSourceFile(request, options);
         setLibrary((current) => addImportedSource(current, imported));
         selectedSourceIdRef.current = imported.id;
         setSelectedSourceId(imported.id);
         return imported;
       } catch (reason) {
-        setImportError(readerErrorMessage(reason, "Reader could not import this document."));
+        if (!isAbortError(reason)) {
+          setImportError(readerErrorMessage(reason, "Reader could not import this document."));
+        }
         return null;
       } finally {
         setImportStatus("idle");
@@ -135,6 +158,10 @@ function useImportSourceFile(
   );
 }
 
+function isAbortError(reason: unknown): boolean {
+  return reason instanceof DOMException && reason.name === "AbortError";
+}
+
 function addImportedSource(
   current: AsyncResource<ReaderLibrarySnapshot>,
   imported: Source,
@@ -148,4 +175,23 @@ function addImportedSource(
         },
       }
     : current;
+}
+
+export function replaceLibrarySource(
+  current: AsyncResource<ReaderLibrarySnapshot>,
+  replacement: Source,
+): AsyncResource<ReaderLibrarySnapshot> {
+  if (current.status !== "ready") {
+    return current;
+  }
+  const index = current.value.sources.findIndex(({ id }) => id === replacement.id);
+  if (index < 0) {
+    return current;
+  }
+  const sources = [...current.value.sources];
+  sources[index] = replacement;
+  return {
+    status: "ready",
+    value: { ...current.value, sources },
+  };
 }

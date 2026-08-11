@@ -1,4 +1,6 @@
-import type { KeyValueStorage, PickedFile, ReaderPlatform } from "./platform.js";
+import { pickBrowserFile } from "./browser-file-picker.js";
+
+import type { KeyValueStorage, ReaderPlatform } from "./platform.js";
 
 class BrowserStorage implements KeyValueStorage {
   get(key: string): Promise<string | null> {
@@ -14,31 +16,6 @@ class BrowserStorage implements KeyValueStorage {
     localStorage.removeItem(key);
     return Promise.resolve();
   }
-}
-
-async function pickBrowserFile(accept: readonly string[]): Promise<PickedFile | null> {
-  return new Promise((resolve) => {
-    const input = document.createElement("input");
-    input.type = "file";
-    input.accept = accept.join(",");
-    input.addEventListener(
-      "change",
-      () => {
-        const file = input.files?.[0];
-        if (!file) {
-          resolve(null);
-          return;
-        }
-        void file
-          .arrayBuffer()
-          .then((bytes) =>
-            resolve({ name: file.name, mediaType: file.type, size: file.size, bytes }),
-          );
-      },
-      { once: true },
-    );
-    input.click();
-  });
 }
 
 export function createWebPlatform(): ReaderPlatform {

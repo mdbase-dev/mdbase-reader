@@ -1,6 +1,11 @@
 export interface WikiLinkCandidate {
   readonly label: string;
   readonly path: string;
+  readonly kind?: string;
+  readonly detail?: string;
+  readonly quote?: string;
+  readonly note?: string;
+  readonly embed?: boolean;
 }
 
 export interface WikiLinkCompletion {

@@ -4,7 +4,7 @@ import { describe, expect, it, vi } from "vitest";
 import { ConnectContentSearchRepository } from "./content-search-repository.js";
 
 import type { ReaderConnectClient } from "./repository-client.js";
-import type { ConnectOutcome, QueryResult } from "@mdbase-dev/connect";
+import type { ConnectOutcome, QueryInput, QueryResult } from "@mdbase-dev/connect";
 
 function success(value: QueryResult): ConnectOutcome<QueryResult> {
   return { ok: true, value, diagnostics: [] };
@@ -77,5 +77,34 @@ describe("ConnectContentSearchRepository", () => {
         where: 'file.body.lower().contains("x\\") || true")',
       }),
     );
+  });
+
+  it("bounds concurrent follow-up pages", async () => {
+    let active = 0;
+    let maximum = 0;
+    const query = vi.fn(async (input: QueryInput) => {
+      if ((input.offset ?? 0) === 0) {
+        return success({
+          results: [],
+          meta: { totalCount: 3_500, hasMore: true, snapshot: "search-snapshot" },
+        });
+      }
+      active += 1;
+      maximum = Math.max(maximum, active);
+      await Promise.resolve();
+      active -= 1;
+      return success({
+        results: [],
+        meta: { totalCount: 3_500, hasMore: false, snapshot: "search-snapshot" },
+      });
+    });
+    const repository = new ConnectContentSearchRepository({
+      query,
+    } as unknown as ReaderConnectClient);
+
+    await repository.search(collectionId("reading"), "measured");
+
+    expect(maximum).toBe(4);
+    expect(query).toHaveBeenCalledTimes(7);
   });
 });

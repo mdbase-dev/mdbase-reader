@@ -93,7 +93,7 @@ function annotationGateway(repository: Partial<AnnotationRepository>): {
       { get: vi.fn() } as unknown as SourceRepository,
       { listForSource, ...repository } as unknown as AnnotationRepository,
       { store: vi.fn() },
-      { commitFile: vi.fn() },
+      { findExactDuplicate: vi.fn().mockResolvedValue(null), commitFile: vi.fn() },
       source.collectionId,
       "Reading",
       createReaderRuntimeServices(new MemoryStorage()),

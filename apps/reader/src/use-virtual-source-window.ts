@@ -22,7 +22,11 @@ interface ViewportMetrics {
   readonly height: number;
 }
 
-export function useVirtualSourceWindow(itemCount: number, resetKey: string): VirtualSourceWindow {
+export function useVirtualSourceWindow(
+  itemCount: number,
+  resetKey: string,
+  rowHeight = SOURCE_ROW_HEIGHT,
+): VirtualSourceWindow {
   const containerRef = useRef<HTMLDivElement>(null);
   const pendingFocusIndex = useRef<number | null>(null);
   const [viewport, setViewport] = useState<ViewportMetrics>({ scrollTop: 0, height: 0 });
@@ -32,8 +36,9 @@ export function useVirtualSourceWindow(itemCount: number, resetKey: string): Vir
         itemCount,
         scrollTop: viewport.scrollTop,
         viewportHeight: viewport.height,
+        rowHeight,
       }),
-    [itemCount, viewport],
+    [itemCount, rowHeight, viewport],
   );
 
   const measure = useCallback(() => {
@@ -69,13 +74,13 @@ export function useVirtualSourceWindow(itemCount: number, resetKey: string): Vir
         return;
       }
       pendingFocusIndex.current = index;
-      revealSourceRow(container, index);
+      revealSourceRow(container, index, rowHeight);
       measure();
       if (focusRenderedRow(container, index)) {
         pendingFocusIndex.current = null;
       }
     },
-    [measure],
+    [measure, rowHeight],
   );
 
   useEffect(() => {
@@ -91,9 +96,9 @@ export function useVirtualSourceWindow(itemCount: number, resetKey: string): Vir
   return { containerRef, range, measure, focusIndex };
 }
 
-function revealSourceRow(container: HTMLDivElement, index: number): void {
-  const rowTop = SOURCE_LIST_PADDING_START + index * SOURCE_ROW_HEIGHT;
-  const rowBottom = rowTop + SOURCE_ROW_HEIGHT;
+function revealSourceRow(container: HTMLDivElement, index: number, rowHeight: number): void {
+  const rowTop = SOURCE_LIST_PADDING_START + index * rowHeight;
+  const rowBottom = rowTop + rowHeight;
   if (rowTop < container.scrollTop) {
     container.scrollTop = rowTop - SOURCE_LIST_PADDING_START;
   } else if (rowBottom > container.scrollTop + container.clientHeight) {

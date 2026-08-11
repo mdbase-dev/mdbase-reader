@@ -3,7 +3,8 @@ import {
   fileId,
   fileRevision,
   sourceId,
-  type SourceSummary,
+  recordRevision,
+  type Source,
 } from "@mdbase-reader/core";
 import { describe, expect, it } from "vitest";
 
@@ -11,7 +12,7 @@ import { annotationRequest } from "./annotation-composer-request.js";
 
 import type { ReadingSurface } from "@mdbase-reader/reading-surface";
 
-const source: SourceSummary = {
+const source: Source = {
   collectionId: collectionId("reading"),
   id: sourceId("src_01"),
   path: "sources/example.md",
@@ -19,6 +20,9 @@ const source: SourceSummary = {
   creators: [],
   tags: [],
   documents: [],
+  body: "",
+  recordRevision: recordRevision("source-r1"),
+  frontmatter: {},
 };
 
 const surface = {

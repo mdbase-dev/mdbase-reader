@@ -1,43 +1,33 @@
-import {
-  applyThemePreference,
-  loadThemePreference,
-  saveThemePreference,
-  type ThemePreference,
-} from "@mdbase-reader/ui";
-import { useCallback, useEffect, useMemo, useState, type JSX, type ReactNode } from "react";
+import { useCallback, useState, type JSX } from "react";
 
-import { DeploymentUpdateNotice } from "./DeploymentUpdateNotice.js";
-import { DocumentWorkspace } from "./DocumentWorkspace.js";
-import { InspectorPane, type InspectorTab } from "./InspectorPane.js";
-import { LibraryPane, type LibraryFilter } from "./LibraryPane.js";
-import { ReaderHeader } from "./ReaderHeader.js";
-import { ReaderLoading } from "./ReaderLoading.js";
-import { SourceAdditionOverlays } from "./SourceAdditionOverlays.js";
 import {
-  useAnnotationComposer,
-  type AnnotationComposerController,
-} from "./use-annotation-composer.js";
+  useReaderAnnotationComposer,
+  useFocusChrome,
+  useReaderReadingResume,
+  useReaderShortcuts,
+  useThemePreference,
+} from "./reader-app-hooks.js";
+import { ReaderLoading } from "./ReaderLoading.js";
+import { ReaderWorkspaceView, type ReaderWorkspaceViewModel } from "./ReaderWorkspaceView.js";
+import { updateSurface } from "./RenderedSourceDocument.js";
 import { useBibliographyExport } from "./use-bibliography-export.js";
 import { useDeploymentUpdate } from "./use-deployment-update.js";
 import { useDocumentDecorations } from "./use-document-decorations.js";
-import { useLibrarySearch } from "./use-library-search.js";
+import { useMdbaseLibraryViews } from "./use-mdbase-library-views.js";
 import { useReaderWorkspace, type ReaderWorkspaceController } from "./use-reader-workspace.js";
-import { useReadingResume, type ReadingResumeState } from "./use-reading-resume.js";
-import { useSessionDocumentSearch } from "./use-session-document-search.js";
 import { useSourceAddition } from "./use-source-addition.js";
 import { useSourceExport } from "./use-source-export.js";
+import { useSourceWorkspace } from "./use-source-workspace.js";
+import { useWorkspaceDirtyIndicator } from "./use-workspace-dirty-indicator.js";
 
+import type { SourceDocumentRenderer } from "./RenderedSourceDocument.js";
 import type { ReaderWorkspaceGateway } from "./workspace-model.js";
-import type { SourceSummary } from "@mdbase-reader/core";
 import type { PickedFile } from "@mdbase-reader/platform";
 import type { ReadingSurface } from "@mdbase-reader/reading-surface";
 
 export interface ReaderAppProps {
   readonly gateway: ReaderWorkspaceGateway;
-  readonly renderDocument?: (
-    source: SourceSummary,
-    onSurfaceChange: (surface: ReadingSurface | null) => void,
-  ) => ReactNode;
+  readonly renderDocument?: SourceDocumentRenderer;
   readonly pickSourceFile?: () => Promise<PickedFile | null>;
   readonly saveFile?: (name: string, blob: Blob) => Promise<void>;
 }
@@ -49,43 +39,6 @@ export function ReaderApp({
   saveFile,
 }: ReaderAppProps): JSX.Element {
   const workspace = useReaderWorkspace(gateway);
-  const [search, setSearch] = useState("");
-  const [filter, setFilter] = useState<LibraryFilter>("all");
-  const [tab, setTab] = useState<InspectorTab>("annotations");
-  const [inspectorOpen, setInspectorOpen] = useState(
-    () => !window.matchMedia("(max-width: 760px)").matches,
-  );
-  const [mobileLibraryOpen, setMobileLibraryOpen] = useState(false);
-  const [focusMode, setFocusMode] = useState(false);
-  const [theme, changeTheme] = useThemePreference();
-  const [surface, setSurface] = useState<ReadingSurface | null>(null);
-  const deploymentUpdateAvailable = useDeploymentUpdate();
-  const onSurfaceChange = useCallback((next: ReadingSurface | null): void => setSurface(next), []);
-  const composer = useReaderAnnotationComposer(workspace, surface);
-  const readingResume = useReaderReadingResume(workspace, surface);
-  const decorationProblem = useDocumentDecorations(surface, workspace.annotations);
-  const sourceAddition = useSourceAddition(workspace, pickSourceFile, () =>
-    setMobileLibraryOpen(false),
-  );
-  const bibliographyExport = useBibliographyExport(
-    workspace.library.status === "ready" ? workspace.library.value.sources : [],
-    saveFile,
-  );
-  const sourceExport = useSourceExport({
-    gateway,
-    source: workspace.sourceRecord,
-    annotations: workspace.annotations,
-    citationSources: workspace.library.status === "ready" ? workspace.library.value.sources : [],
-    saveFile,
-  });
-  useResponsiveInspector(setInspectorOpen);
-
-  useReaderShortcuts(focusMode, setFocusMode);
-
-  const filteredSources = useStatusFilteredSources(workspace.library, filter);
-  const documentSearch = useSessionDocumentSearch(workspace.selectedSource, surface, search);
-  const librarySearch = useLibrarySearch(gateway, filteredSources, search, documentSearch.matches);
-
   if (workspace.library.status !== "ready") {
     return (
       <ReaderLoading
@@ -94,161 +47,121 @@ export function ReaderApp({
       />
     );
   }
-
-  const library = workspace.library.value;
-  const source = workspace.selectedSource;
   return (
-    <div className={`reader-shell${deploymentUpdateAvailable ? " has-update" : ""}`}>
-      {deploymentUpdateAvailable ? <DeploymentUpdateNotice /> : null}
-      <ReaderHeader
-        collectionName={library.collectionName}
-        connectionState={library.connectionState}
-        theme={theme}
-        onChangeTheme={changeTheme}
-      />
-
-      <main className={readerMainClass(mobileLibraryOpen, focusMode, inspectorOpen)}>
-        <LibraryPane
-          sources={library.sources}
-          visibleSources={librarySearch.sources}
-          selectedSourceId={source?.id ?? null}
-          search={search}
-          filter={filter}
-          onSearchChange={setSearch}
-          onFilterChange={setFilter}
-          onSelectSource={(id) => {
-            workspace.selectSource(id);
-            setMobileLibraryOpen(false);
-          }}
-          onAddSource={sourceAddition.open}
-          addingSource={sourceAddition.adding}
-          bibliographyExport={bibliographyExport}
-          searchMatches={librarySearch.matches}
-          searchStatus={librarySearch.status}
-          searchProblem={librarySearch.problem}
-          sourceIndex={library.sourceIndex}
-        />
-        <DocumentWorkspace
-          source={source}
-          document={source ? renderDocument?.(source, onSurfaceChange) : null}
-          focusMode={focusMode}
-          inspectorOpen={inspectorOpen && !focusMode}
-          readingResume={readingResume}
-          decorationProblem={decorationProblem}
-          canSelectArea={composer.canSelectArea}
-          selectingArea={composer.selectingArea}
-          sourceExport={sourceExport}
-          onBackToLibrary={() => setMobileLibraryOpen(true)}
-          onToggleFocus={() => setFocusMode((value) => !value)}
-          onToggleAreaSelection={composer.toggleAreaSelection}
-          onToggleInspector={() => {
-            if (focusMode) {
-              setFocusMode(false);
-              setInspectorOpen(true);
-            } else {
-              setInspectorOpen((value) => !value);
-            }
-          }}
-        />
-        {source ? (
-          <InspectorPane
-            open={inspectorOpen}
-            tab={tab}
-            workspace={workspace}
-            composer={composer}
-            onClose={() => setInspectorOpen(false)}
-            onTabChange={setTab}
-          />
-        ) : null}
-      </main>
-      <SourceAdditionOverlays addition={sourceAddition} canChooseFile={Boolean(pickSourceFile)} />
-    </div>
+    <OpenedReaderApp
+      gateway={gateway}
+      workspace={workspace}
+      library={workspace.library.value}
+      {...(renderDocument ? { renderDocument } : {})}
+      {...(pickSourceFile ? { pickSourceFile } : {})}
+      {...(saveFile ? { saveFile } : {})}
+    />
   );
 }
 
-function useResponsiveInspector(setInspectorOpen: (open: boolean) => void): void {
-  useEffect(() => {
-    const query = window.matchMedia("(max-width: 760px)");
-    const update = (event: MediaQueryListEvent): void => setInspectorOpen(!event.matches);
-    query.addEventListener("change", update);
-    return () => query.removeEventListener("change", update);
-  }, [setInspectorOpen]);
+function OpenedReaderApp({
+  gateway,
+  workspace,
+  library,
+  renderDocument,
+  pickSourceFile,
+  saveFile,
+}: ReaderAppProps & {
+  readonly workspace: ReaderWorkspaceController;
+  readonly library: ReaderWorkspaceViewModel["library"];
+}): JSX.Element {
+  const collectionKey = library.sources[0]?.collectionId ?? library.collectionName;
+  const libraryViews = useMdbaseLibraryViews(gateway);
+  const [mobileLibraryOpen, setMobileLibraryOpen] = useState(false);
+  const [libraryCollapsed, setLibraryCollapsed] = useState(false);
+  const [focusMode, setFocusMode] = useState(false);
+  const focusChromeVisible = useFocusChrome(focusMode);
+  const [commandsOpen, setCommandsOpen] = useState(false);
+  const [theme, changeTheme] = useThemePreference();
+  const [surfaces, setSurfaces] = useState<ReadonlyMap<string, ReadingSurface>>(new Map());
+  const deploymentUpdateAvailable = useDeploymentUpdate();
+  const sourceWorkspace = useSourceWorkspace({
+    selectedSourceId: workspace.selectedSource?.id ?? null,
+    sourceIds: library.sources.map(({ id }) => id),
+    collectionKey,
+    selectSource: workspace.selectSource,
+  });
+  const surface = sourceWorkspace.activeSourceId
+    ? (surfaces.get(`${sourceWorkspace.layout.focusedPaneId}:${sourceWorkspace.activeSourceId}`) ??
+      null)
+    : null;
+  const onSurfaceChange = useCallback((sessionId: string, next: ReadingSurface | null): void => {
+    setSurfaces((current) => updateSurface(current, sessionId, next));
+  }, []);
+  const composer = useReaderAnnotationComposer(workspace, surface);
+  useWorkspaceDirtyIndicator(workspace, sourceWorkspace);
+  const readingResume = useReaderReadingResume(workspace, surface);
+  const decorationProblem = useDocumentDecorations(surface, workspace.annotations);
+  const sourceAddition = useSourceAddition(workspace, pickSourceFile, (sourceId) => {
+    sourceWorkspace.open(sourceId);
+    setMobileLibraryOpen(false);
+  });
+  const bibliographyExport = useBibliographyExport(library.sources, saveFile);
+  const sourceExport = useSourceExport({
+    gateway,
+    source: workspace.sourceRecord,
+    annotations: workspace.annotations,
+    citationSources: library.sources,
+    saveFile,
+  });
+
+  useReaderShortcuts({
+    focusMode,
+    setFocusMode,
+    openCommands: () => setCommandsOpen(true),
+    focusSearch: () => focusLibrarySearch(setMobileLibraryOpen),
+    switchTab: sourceWorkspace.switchRelative,
+    reopenTab: sourceWorkspace.reopenClosed,
+    navigate: sourceWorkspace.navigate,
+  });
+
+  const source = workspace.selectedSource;
+  const openSources = sourceWorkspace.openSourceIds.flatMap((sourceId) => {
+    const openSource = library.sources.find(({ id }) => id === sourceId);
+    return openSource ? [openSource] : [];
+  });
+  const model = {
+    library,
+    gateway,
+    libraryViews,
+    source,
+    openSources,
+    workspace,
+    sourceWorkspace,
+    composer,
+    readingResume,
+    decorationProblem,
+    sourceAddition,
+    bibliographyExport,
+    sourceExport,
+    renderDocument,
+    onSurfaceChange,
+    deploymentUpdateAvailable,
+    theme,
+    changeTheme,
+    focusMode,
+    focusChromeVisible,
+    setFocusMode,
+    mobileLibraryOpen,
+    setMobileLibraryOpen,
+    libraryCollapsed,
+    setLibraryCollapsed,
+    commandsOpen,
+    setCommandsOpen,
+    pickSourceFile,
+  } satisfies ReaderWorkspaceViewModel;
+  return <ReaderWorkspaceView model={model} />;
 }
 
-function useReaderShortcuts(focusMode: boolean, setFocusMode: (value: boolean) => void): void {
-  useEffect(() => {
-    const handleShortcut = (event: KeyboardEvent): void => {
-      if ((event.metaKey || event.ctrlKey) && event.key.toLocaleLowerCase() === "k") {
-        event.preventDefault();
-        document.querySelector<HTMLInputElement>("#reader-library-search")?.focus();
-      } else if (event.key === "Escape" && focusMode) {
-        setFocusMode(false);
-      }
-    };
-    window.addEventListener("keydown", handleShortcut);
-    return () => window.removeEventListener("keydown", handleShortcut);
-  }, [focusMode, setFocusMode]);
-}
-
-function useStatusFilteredSources(
-  library: ReaderWorkspaceController["library"],
-  filter: LibraryFilter,
-): readonly SourceSummary[] {
-  return useMemo(
-    () =>
-      library.status === "ready"
-        ? library.value.sources.filter(
-            ({ readingStatus }) => filter === "all" || readingStatus === filter,
-          )
-        : [],
-    [filter, library],
+function focusLibrarySearch(setLibraryOpen: (open: boolean) => void): void {
+  setLibraryOpen(true);
+  globalThis.setTimeout(
+    () => document.querySelector<HTMLInputElement>("#reader-library-search")?.focus(),
+    0,
   );
-}
-
-function useThemePreference(): readonly [ThemePreference, () => void] {
-  const [theme, setTheme] = useState<ThemePreference>(() => loadThemePreference(localStorage));
-  useEffect(() => applyThemePreference(theme, document.documentElement), [theme]);
-  const change = (): void => {
-    const next = nextTheme(theme);
-    saveThemePreference(next, localStorage, document.documentElement);
-    setTheme(next);
-  };
-  return [theme, change];
-}
-
-function useReaderReadingResume(
-  workspace: ReaderWorkspaceController,
-  surface: ReadingSurface | null,
-): ReadingResumeState {
-  return useReadingResume({
-    source: workspace.sourceRecord.status === "ready" ? workspace.sourceRecord.value : null,
-    surface,
-    save: workspace.saveReadingPosition,
-  });
-}
-
-function readerMainClass(libraryOpen: boolean, focusMode: boolean, inspectorOpen: boolean): string {
-  return [
-    "reader-main",
-    libraryOpen ? "is-library-open" : "",
-    focusMode ? "is-focus-mode" : "",
-    !inspectorOpen ? "is-inspector-closed" : "",
-  ]
-    .filter(Boolean)
-    .join(" ");
-}
-
-function useReaderAnnotationComposer(
-  workspace: ReaderWorkspaceController,
-  surface: ReadingSurface | null,
-): AnnotationComposerController {
-  return useAnnotationComposer({
-    source: workspace.selectedSource,
-    surface,
-    create: workspace.createAnnotation,
-  });
-}
-
-function nextTheme(theme: ThemePreference): ThemePreference {
-  return theme === "system" ? "light" : theme === "light" ? "dark" : "system";
 }

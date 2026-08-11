@@ -1,19 +1,34 @@
-import { cslProblemSummary, validateCslItem, type Source } from "@mdbase-reader/core";
+import {
+  cslProblemSummary,
+  suggestSourceCitation,
+  validateCslItem,
+  type CslItem,
+  type CslValidationProblem,
+  type Source,
+} from "@mdbase-reader/core";
 
 export type CitationDraftAssessment =
-  | { readonly valid: true; readonly value: Readonly<Record<string, unknown>> }
+  | { readonly valid: true; readonly value: CslItem }
   | {
       readonly valid: false;
       readonly message: string;
       readonly value?: Readonly<Record<string, unknown>>;
+      readonly problems?: readonly CslValidationProblem[];
     };
 
 export function citationDraftForSource(source: Source): string {
-  const existing = source.frontmatter["csl"];
-  const value =
-    typeof existing === "object" && existing !== null && !Array.isArray(existing)
-      ? existing
-      : { id: "", type: "article", title: source.title };
+  const stored = storedCitationDraftForSource(source);
+  if (stored) {
+    return stored;
+  }
+  return JSON.stringify(suggestSourceCitation(source), null, 2);
+}
+
+export function storedCitationDraftForSource(source: Source): string | null {
+  const value = source.frontmatter["csl"];
+  if (typeof value !== "object" || value === null || Array.isArray(value)) {
+    return null;
+  }
   return JSON.stringify(value, null, 2);
 }
 
@@ -32,6 +47,7 @@ export function assessCitationDraft(draft: string): CitationDraftAssessment {
     : {
         valid: false,
         message: cslProblemSummary(validation.problems),
+        problems: validation.problems,
         ...(editableValue ? { value: editableValue } : {}),
       };
 }

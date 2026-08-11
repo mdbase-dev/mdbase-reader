@@ -4,11 +4,12 @@ import {
   type EmbedPdfContainer,
   type PluginRegistry,
 } from "@embedpdf/react-pdf-viewer";
-import { useCallback, useEffect, useRef } from "react";
+import { useCallback, useEffect, useMemo, useRef } from "react";
 
 import { suppressNativeCapturePreview } from "./embedpdf-native-capture-preview.js";
 import { createEmbedPdfRuntime } from "./embedpdf-runtime.js";
 import { EmbedPdfSurface } from "./pdf-surface.js";
+import { createReaderPdfViewerConfig } from "./pdf-viewer-policy.js";
 
 import type { SurfaceDocument } from "@mdbase-reader/reading-surface";
 
@@ -27,6 +28,7 @@ export function PdfViewerSurface({
   onDocumentReady,
   onDocumentError,
 }: PdfViewerSurfaceProps): React.JSX.Element {
+  const viewerConfig = useMemo(() => createReaderPdfViewerConfig(document.url), [document.url]);
   const surfaceRef = useRef<EmbedPdfSurface | null>(null);
   const subscriptionsRef = useRef<(() => void)[]>([]);
   const nativeUiCleanupRef = useRef<(() => void) | null>(null);
@@ -83,7 +85,7 @@ export function PdfViewerSurface({
   return (
     <PDFViewer
       {...(className === undefined ? {} : { className })}
-      config={{ src: document.url }}
+      config={viewerConfig}
       onInit={handleInit}
       onReady={handleReady}
       style={{ height: "100%", width: "100%" }}

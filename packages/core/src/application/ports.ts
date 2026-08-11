@@ -1,4 +1,5 @@
 import type { Annotation, AnnotationDeletionPlan, AnnotationDraft } from "../domain/annotation.js";
+import type { CitationCandidate, CitationResolutionRequest } from "../domain/citation-metadata.js";
 import type { CslItem } from "../domain/citation.js";
 import type { DocumentTarget } from "../domain/document.js";
 import type {
@@ -65,7 +66,18 @@ export interface ContentSearchRepository {
   ): Promise<readonly SourceTextSearchMatch[]>;
 }
 
+export interface CitationMetadataRepository {
+  resolve(
+    request: CitationResolutionRequest,
+    options?: ReaderRequestOptions,
+  ): Promise<CitationCandidate>;
+}
+
 export interface AnnotationRepository {
+  sourceIdsWithAnnotations?(
+    collectionId: CollectionId,
+    options?: ReaderRequestOptions,
+  ): Promise<readonly SourceId[]>;
   listForSource(
     collectionId: CollectionId,
     sourceId: SourceId,
@@ -163,7 +175,12 @@ export interface ContentHasher {
 }
 
 export interface SourceImportRepository {
-  commitFile(plan: PlannedSourceFileImport): Promise<Source>;
+  findExactDuplicate(
+    collectionId: CollectionId,
+    contentDigests: readonly `sha256:${string}`[],
+    options?: ReaderRequestOptions,
+  ): Promise<SourceSummary | null>;
+  commitFile(plan: PlannedSourceFileImport, options?: SourceImportOptions): Promise<Source>;
 }
 
 export type SourceDocumentFormat = "pdf" | "epub" | "html";
@@ -175,6 +192,8 @@ export interface SourceFileImportRequest {
   readonly bytes: Uint8Array;
   readonly title?: string;
   readonly capture?: SourceCaptureProvenance;
+  readonly archive?: SourceCaptureArchive;
+  readonly metadata?: SourceImportMetadata;
 }
 
 export interface SourceCaptureProvenance {
@@ -183,24 +202,63 @@ export interface SourceCaptureProvenance {
   readonly retrievedAt: DateTime;
 }
 
+export interface SourceCaptureArchive {
+  readonly name: string;
+  readonly bytes: Uint8Array;
+}
+
+export interface SourceImportMetadata {
+  readonly authors?: readonly string[];
+  readonly published?: string;
+  readonly description?: string;
+  readonly language?: string;
+  readonly site?: string;
+}
+
+export interface SourceImportProgress {
+  readonly phase: "checking" | "uploading" | "creating";
+  readonly completedBytes: number;
+  readonly totalBytes: number;
+  readonly fileIndex: number;
+  readonly fileCount: number;
+}
+
+export interface SourceImportOptions extends ReaderRequestOptions {
+  readonly onProgress?: (progress: SourceImportProgress) => void;
+  /**
+   * Search for exact uploaded bytes left by an earlier failed attempt before
+   * starting a new transfer. Ordinary first attempts keep this disabled so a
+   * large collection does not pay an orphan-recovery scan on every import.
+   */
+  readonly recoverExistingFiles?: boolean;
+}
+
+export interface PlannedSourceRepresentation {
+  readonly transferId: MutationId;
+  readonly role: "primary" | "archive";
+  readonly format: SourceDocumentFormat;
+  readonly mediaType: string;
+  readonly contentDigest: `sha256:${string}`;
+  readonly originalName: string;
+  readonly filePath: string;
+  readonly bytes: Uint8Array;
+  readonly derivedFromRole?: "archive";
+}
+
 export interface PlannedSourceFileImport {
   readonly collectionId: CollectionId;
   readonly sourceId: SourceId;
-  readonly mutationId: MutationId;
   readonly title: string;
   readonly kind: "document" | "webpage";
-  readonly format: SourceDocumentFormat;
-  readonly mediaType: string;
   readonly savedAt: DateTime;
-  readonly contentDigest: `sha256:${string}`;
-  readonly originalName: string;
   readonly recordPath: string;
-  readonly filePath: string;
-  readonly bytes: Uint8Array;
+  readonly representations: readonly PlannedSourceRepresentation[];
   readonly capture?: SourceCaptureProvenance;
+  readonly metadata?: SourceImportMetadata;
 }
 
 export interface AnnotationCreationRequest extends AnnotationDraft {
+  readonly sourceRecord: Source;
   readonly attachment?: {
     readonly bytes: Uint8Array;
     readonly mediaType: "image/png";

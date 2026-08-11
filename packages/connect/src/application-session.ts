@@ -22,6 +22,11 @@ import {
 import { connectAnnotationAssetRepository } from "./annotation-assets.js";
 import { connectCollectionFileRepository } from "./collection-files.js";
 import { connectDocumentRepository } from "./documents.js";
+import { connectLibraryViewRepository, type LibraryViewRepository } from "./library-views.js";
+import {
+  ConnectOperationScheduler,
+  readerConnectGlobalConcurrency,
+} from "./operation-scheduler.js";
 import {
   ConnectAnnotationRepository,
   ConnectContentSearchRepository,
@@ -42,6 +47,7 @@ export interface ReaderConnectedCollection {
   readonly documents: DocumentRepository;
   readonly contentSearch: ContentSearchRepository;
   readonly files: CollectionFileRepository;
+  readonly libraryViews: LibraryViewRepository;
 }
 
 export interface ReaderApplicationSessionOptions {
@@ -109,7 +115,8 @@ export class ReaderApplicationSession {
     ) {
       return null;
     }
-    const client = connectClient(connection);
+    const scheduler = new ConnectOperationScheduler(readerConnectGlobalConcurrency);
+    const client = connectClient(connection, scheduler);
     return {
       collectionId: collectionId(connection.collectionId),
       collectionName: snapshot.info.displayName,
@@ -120,6 +127,7 @@ export class ReaderApplicationSession {
       documents: connectDocumentRepository(connection),
       contentSearch: new ConnectContentSearchRepository(client),
       files: connectCollectionFileRepository(connection),
+      libraryViews: connectLibraryViewRepository(connection, scheduler),
     };
   }
 }

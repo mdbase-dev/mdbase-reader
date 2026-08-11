@@ -1,9 +1,10 @@
-import { useCallback, useState } from "react";
+import { useCallback, useRef, useState } from "react";
 
 import { readerErrorMessage } from "./errors.js";
 import { fetchWebCapture } from "./web-capture-client.js";
 
 import type { ReaderWorkspaceController } from "./use-reader-workspace.js";
+import type { SourceId } from "@mdbase-reader/core";
 
 export interface WebCaptureFlow {
   readonly status: "idle" | "capturing";
@@ -14,25 +15,34 @@ export interface WebCaptureFlow {
 
 export function useWebCapture(
   workspace: ReaderWorkspaceController,
-  onImported: () => void,
+  onImported: (sourceId: SourceId) => void,
 ): WebCaptureFlow {
   const [status, setStatus] = useState<WebCaptureFlow["status"]>("idle");
   const [error, setError] = useState<string | null>(null);
+  const recoveryUrl = useRef<string | null>(null);
   const capture = useCallback(
     async (url: string): Promise<void> => {
       setStatus("capturing");
       setError(null);
       try {
         const captured = await fetchWebCapture(url);
-        const imported = await workspace.importSourceFile({
-          name: captured.name,
-          declaredMediaType: "text/html",
-          bytes: captured.bytes,
-          title: captured.title,
-          capture: captured.capture,
-        });
+        const imported = await workspace.importSourceFile(
+          {
+            name: captured.name,
+            declaredMediaType: "text/html",
+            bytes: captured.bytes,
+            title: captured.title,
+            capture: captured.capture,
+            archive: captured.archive,
+            metadata: captured.metadata,
+          },
+          recoveryUrl.current === url ? { recoverExistingFiles: true } : {},
+        );
         if (imported) {
-          onImported();
+          recoveryUrl.current = null;
+          onImported(imported.id);
+        } else {
+          recoveryUrl.current = url;
         }
       } catch (reason) {
         setError(readerErrorMessage(reason, "Reader could not capture that page."));

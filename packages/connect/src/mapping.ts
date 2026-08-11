@@ -33,6 +33,10 @@ function textArray(value: unknown): readonly string[] {
     : [];
 }
 
+function textOrNumber(value: unknown): string | number | undefined {
+  return typeof value === "string" || typeof value === "number" ? value : undefined;
+}
+
 function documents(value: unknown): readonly DocumentDescriptor[] {
   if (!Array.isArray(value)) {
     return [];
@@ -148,10 +152,31 @@ function sourceFields(
     title,
     creators: textArray(frontmatter["authors"]),
     tags: textArray(frontmatter["tags"]),
+    ...sourceMetadataFields(frontmatter, citation),
     ...(reading ? { readingStatus: reading.status, reading } : {}),
     ...(citation?.valid ? { citation: citation.item } : {}),
     ...(citation && !citation.valid ? { citationProblems: citation.problems } : {}),
     documents: documents(frontmatter["documents"]),
+  };
+}
+
+function sourceMetadataFields(
+  frontmatter: Readonly<Record<string, unknown>>,
+  citation: ReturnType<typeof citationFields>,
+): Partial<SourceSummary> {
+  const kind = text(frontmatter["kind"]);
+  const published = textOrNumber(frontmatter["published"]);
+  const url = text(frontmatter["url"]);
+  const site = text(frontmatter["site"]);
+  const publication = citation?.valid
+    ? (text(citation.item["container-title"]) ?? text(citation.item["publisher"]))
+    : undefined;
+  return {
+    ...(kind ? { kind } : {}),
+    ...(published !== undefined ? { published } : {}),
+    ...(publication ? { publication } : {}),
+    ...(url ? { url } : {}),
+    ...(site ? { site } : {}),
   };
 }
 

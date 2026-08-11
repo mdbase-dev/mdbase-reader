@@ -35,6 +35,11 @@ export interface SourceSummary {
   readonly title: string;
   readonly creators: readonly string[];
   readonly tags: readonly string[];
+  readonly kind?: string;
+  readonly published?: string | number;
+  readonly publication?: string;
+  readonly url?: string;
+  readonly site?: string;
   readonly readingStatus?: ReadingStatus;
   readonly reading?: CurrentReadingState;
   readonly citation?: CslItem;

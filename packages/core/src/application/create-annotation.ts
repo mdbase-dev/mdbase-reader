@@ -36,6 +36,30 @@ function bodyWithAsset(body: string, path: string): string {
   return note ? `${embed}\n\n${note}` : embed;
 }
 
+function annotationFromRequest(
+  request: AnnotationCreationRequest,
+  id: Annotation["id"],
+  createdAt: Annotation["createdAt"],
+  attachmentPath?: string,
+): Annotation {
+  return {
+    collectionId: request.collectionId,
+    sourceId: request.sourceId,
+    source: request.source,
+    ...(request.document ? { document: request.document } : {}),
+    annotationType: request.annotationType,
+    ...(request.motivation ? { motivation: request.motivation } : {}),
+    ...(request.color ? { color: request.color } : {}),
+    ...(request.locator ? { locator: request.locator } : {}),
+    ...(request.target ? { target: request.target } : {}),
+    tags: request.tags,
+    body: attachmentPath ? bodyWithAsset(request.body, attachmentPath) : request.body,
+    id,
+    createdAt,
+    createdBy: "dev.mdbase.reader",
+  };
+}
+
 function assertCurrentDocument(
   request: AnnotationCreationRequest,
   source: Awaited<ReturnType<SourceRepository["get"]>>,
@@ -63,23 +87,22 @@ export async function createAnnotation(
   request: AnnotationCreationRequest,
 ): Promise<CreateAnnotationResult> {
   validateAnnotationDraft(request);
-  const source = await dependencies.sources.get(request.collectionId, request.sourceId);
-  if (!source) {
-    throw new DomainError("source-not-found", "The annotation source no longer exists.");
+  const source = request.sourceRecord;
+  if (source.collectionId !== request.collectionId || source.id !== request.sourceId) {
+    throw new DomainError("source-not-found", "The loaded annotation source no longer matches.");
   }
   assertCurrentDocument(request, source);
 
   const annotationId = dependencies.ids.annotation();
   const mutationId = dependencies.ids.mutation();
   const attachmentPath = request.attachment ? assetPath(annotationId) : undefined;
-  const { attachment, transclude, ...draft } = request;
-  const annotation: Annotation = {
-    ...draft,
-    body: attachmentPath ? bodyWithAsset(request.body, attachmentPath) : request.body,
-    id: annotationId,
-    createdAt: dependencies.clock.now(),
-    createdBy: "dev.mdbase.reader",
-  };
+  const { attachment, transclude } = request;
+  const annotation = annotationFromRequest(
+    request,
+    annotationId,
+    dependencies.clock.now(),
+    attachmentPath,
+  );
 
   await dependencies.journal.start({
     id: mutationId,

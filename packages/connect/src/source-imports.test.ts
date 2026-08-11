@@ -1,15 +1,47 @@
-import { collectionId, dateTime, mutationId, sourceId } from "@mdbase-reader/core";
+import { collectionId } from "@mdbase-reader/core";
 import { describe, expect, it, vi } from "vitest";
 
+import {
+  digest,
+  fileDescriptor,
+  plan,
+  queryRecord,
+  recordDocument,
+  success,
+} from "./source-imports.fixtures.js";
 import { ConnectSourceImportRepository } from "./source-imports.js";
 
 import type { ReaderConnectClient } from "./repository-client.js";
-import type { CollectionFileDescriptor, ConnectOutcome, RecordDocument } from "@mdbase-dev/connect";
-import type { PlannedSourceFileImport } from "@mdbase-reader/core";
-
-const digest = `sha256:${"a".repeat(64)}` as const;
+import type { QueryResult } from "@mdbase-dev/connect";
 
 describe("ConnectSourceImportRepository", () => {
+  it("finds an exact duplicate from paged contract metadata without reading bodies", async () => {
+    const query = vi
+      .fn()
+      .mockResolvedValueOnce(
+        success<QueryResult>({
+          results: [queryRecord("src_other", `sha256:${"b".repeat(64)}`)],
+          meta: { totalCount: 2, hasMore: true },
+        }),
+      )
+      .mockResolvedValueOnce(
+        success<QueryResult>({
+          results: [queryRecord("src_import", digest)],
+          meta: { totalCount: 2, hasMore: false },
+        }),
+      );
+    const repository = new ConnectSourceImportRepository(
+      { query } as unknown as ReaderConnectClient,
+      { upload: vi.fn() },
+    );
+
+    const duplicate = await repository.findExactDuplicate(collectionId("reading"), [digest]);
+
+    expect(duplicate?.id).toBe("src_import");
+    expect(query).toHaveBeenNthCalledWith(1, expect.objectContaining({ limit: 500, offset: 0 }));
+    expect(query).toHaveBeenNthCalledWith(2, expect.objectContaining({ limit: 500, offset: 1 }));
+  });
+
   it("uploads exact bytes before creating a whole source record", async () => {
     const upload = vi.fn((_path: string, _source: Blob) => Promise.resolve(fileDescriptor()));
     const create = vi.fn(() => Promise.resolve(success(recordDocument())));
@@ -108,111 +140,54 @@ describe("ConnectSourceImportRepository", () => {
   });
 });
 
-describe("ConnectSourceImportRepository web capture provenance", () => {
-  it("preserves web capture provenance on the source and representation", async () => {
+describe("ConnectSourceImportRepository recovery", () => {
+  it("recovers a durably uploaded orphan before creating the source record", async () => {
+    const recovered = fileDescriptor({ path: "files/reader/previous-attempt/manuscript.pdf" });
+    const list = vi.fn(() => listFile(recovered));
+    const upload = vi.fn();
     const create = vi.fn(() => Promise.resolve(success(recordDocument())));
     const repository = new ConnectSourceImportRepository(
       { create } as unknown as ReaderConnectClient,
-      { upload: vi.fn(() => Promise.resolve(fileDescriptor())) },
+      { list, upload },
     );
 
-    await repository.commitFile({
-      ...plan(),
-      kind: "webpage",
-      format: "html",
-      mediaType: "text/html",
-      capture: {
-        submittedUrl: "https://example.com/submitted",
-        canonicalUrl: "https://example.com/canonical",
-        retrievedAt: dateTime("2026-08-10T11:59:00.000Z"),
-      },
-    });
+    await repository.commitFile(plan(), { recoverExistingFiles: true });
 
+    expect(list).toHaveBeenCalledWith({ folder: "files/reader", pageSize: 500 });
+    expect(upload).not.toHaveBeenCalled();
     expect(create).toHaveBeenCalledWith(
       expect.objectContaining({
         frontmatter: expect.objectContaining({
-          kind: "webpage",
-          url: "https://example.com/canonical",
-          original_url: "https://example.com/submitted",
-          capture: {
-            submitted_url: "https://example.com/submitted",
-            canonical_url: "https://example.com/canonical",
-            retrieved_at: "2026-08-10T11:59:00.000Z",
-            method: "reader-web-capture",
-          },
           documents: [
             expect.objectContaining({
-              origin_url: "https://example.com/canonical",
-              retrieved_at: "2026-08-10T11:59:00.000Z",
+              file_id: recovered.fileId,
+              file: `[[${recovered.path}]]`,
+              revision: recovered.contentDigest,
             }),
           ],
         }),
       }),
     );
   });
+
+  it("does not scan all Reader files on an ordinary first attempt", async () => {
+    const list = vi.fn(() => listFile(fileDescriptor()));
+    const upload = vi.fn(() => Promise.resolve(fileDescriptor()));
+    const create = vi.fn(() => Promise.resolve(success(recordDocument())));
+    const repository = new ConnectSourceImportRepository(
+      { create } as unknown as ReaderConnectClient,
+      { list, upload },
+    );
+
+    await repository.commitFile(plan());
+
+    expect(list).not.toHaveBeenCalled();
+    expect(upload).toHaveBeenCalledOnce();
+  });
 });
 
-function plan(): PlannedSourceFileImport {
-  return {
-    collectionId: collectionId("reading"),
-    sourceId: sourceId("src_import"),
-    mutationId: mutationId("83dd2f80-c7da-44d7-9844-6ea755a05f40"),
-    title: "Manuscript",
-    kind: "document",
-    format: "pdf",
-    mediaType: "application/pdf",
-    savedAt: dateTime("2026-08-10T12:00:00.000Z"),
-    contentDigest: digest,
-    originalName: "manuscript.pdf",
-    recordPath: "sources/src_import.md",
-    filePath: "files/reader/src_import/manuscript.pdf",
-    bytes: new Uint8Array([1, 2, 3]),
-  };
-}
-
-function fileDescriptor(): CollectionFileDescriptor {
-  return {
-    fileId: "file-import",
-    path: "files/reader/src_import/manuscript.pdf",
-    revision: "file-r1",
-    contentDigest: digest,
-    size: 3,
-    mediaType: "application/pdf",
-    mediaClass: "pdf",
-    modifiedAt: "2026-08-10T12:00:00.000Z",
-  };
-}
-
-function recordDocument(): RecordDocument {
-  const frontmatter = {
-    type: "reader-source",
-    id: "src_import",
-    title: "Manuscript",
-    kind: "document",
-    saved_at: "2026-08-10T12:00:00.000Z",
-    documents: [
-      {
-        file_id: "file-import",
-        file: "[[files/reader/src_import/manuscript.pdf]]",
-        role: "primary",
-        format: "pdf",
-        media_type: "application/pdf",
-        revision: digest,
-      },
-    ],
-    reading: { status: "inbox" },
-  };
-  return {
-    path: "sources/src_import.md",
-    revision: "record-r1",
-    types: ["reader-source"],
-    frontmatter,
-    effectiveFrontmatter: frontmatter,
-    body: "# Manuscript\n",
-    file: {},
-  };
-}
-
-function success<Value>(value: Value): ConnectOutcome<Value> {
-  return { ok: true, value, diagnostics: [] };
+async function* listFile(
+  file: ReturnType<typeof fileDescriptor>,
+): AsyncGenerator<ReturnType<typeof fileDescriptor>> {
+  yield await Promise.resolve(file);
 }

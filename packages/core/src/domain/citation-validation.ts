@@ -1,11 +1,4 @@
-import {
-  dateFields,
-  nameFields,
-  nameFlagFields,
-  nameStringFields,
-  numberFields,
-  stringFields,
-} from "./citation-schema.js";
+import { cslFieldKinds, nameFlagFields, nameStringFields } from "./citation-schema.js";
 
 import type { CslValidationProblem } from "./citation.js";
 
@@ -15,17 +8,18 @@ export function validateCslField(
   problems: CslValidationProblem[],
 ): void {
   const path = `csl.${field}`;
-  if (stringFields.has(field)) {
+  const kind = cslFieldKinds.get(field);
+  if (kind === "string") {
     expectString(candidate, path, problems);
-  } else if (numberFields.has(field)) {
+  } else if (kind === "number") {
     expectStringOrNumber(candidate, path, problems);
-  } else if (nameFields.has(field)) {
+  } else if (kind === "name") {
     validateNames(candidate, path, problems);
-  } else if (dateFields.has(field)) {
+  } else if (kind === "date") {
     validateDate(candidate, path, problems);
-  } else if (field === "categories") {
+  } else if (kind === "string-list") {
     validateStringArray(candidate, path, problems);
-  } else if (field === "custom") {
+  } else if (kind === "object") {
     if (!isObject(candidate)) {
       problems.push({ path, message: "must be an object" });
     }

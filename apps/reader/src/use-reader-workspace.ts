@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState, type Dispatch, type SetStateAction } from "react";
+import { useCallback, useState, type Dispatch, type SetStateAction } from "react";
 
 import { readerErrorMessage } from "./errors.js";
 import { selectedResource, selectedValue, type SelectedValue } from "./selected-resource.js";
@@ -7,7 +7,11 @@ import {
   type AnnotationTransclusionController,
 } from "./use-annotation-transclusion.js";
 import { useCitationEditor, type CitationEditorController } from "./use-citation-editor.js";
-import { useLibrarySelection, type LibrarySelection } from "./use-library-selection.js";
+import { useLibrarySelection } from "./use-library-selection.js";
+import {
+  useSelectedSourceResources,
+  type AnnotationState,
+} from "./use-selected-source-resources.js";
 import {
   useAnnotationCreation,
   useAnnotationDeletion,
@@ -24,6 +28,7 @@ import type {
   ReadingPosition,
   Source,
   SourceFileImportRequest,
+  SourceImportOptions,
   SourceId,
   SourceSummary,
 } from "@mdbase-reader/core";
@@ -33,11 +38,7 @@ export type AsyncResource<Value> =
   | { readonly status: "ready"; readonly value: Value }
   | { readonly status: "error"; readonly message: string };
 
-type AnnotationState = SelectedValue<AsyncResource<readonly Annotation[]>> | null;
-
-export interface ReaderWorkspaceController {
-  readonly library: AsyncResource<ReaderLibrarySnapshot>;
-  readonly selectedSource: SourceSummary | null;
+export interface ReaderSourceWorkspaceController {
   readonly sourceRecord: AsyncResource<Source>;
   readonly annotations: AsyncResource<readonly Annotation[]>;
   readonly draft: string;
@@ -46,14 +47,8 @@ export interface ReaderWorkspaceController {
   readonly saveError: string | null;
   readonly citation: CitationEditorController;
   readonly transclusion: AnnotationTransclusionController;
-  readonly importStatus: "idle" | "importing";
-  readonly importError: string | null;
-  readonly selectSource: (id: SourceId) => void;
   readonly setDraft: (value: string) => void;
   readonly saveDraft: () => void;
-  readonly importSourceFile: (
-    request: Omit<SourceFileImportRequest, "collectionId">,
-  ) => Promise<Source | null>;
   readonly createAnnotation: (request: AnnotationCreationRequest) => Promise<Annotation>;
   readonly updateAnnotation: (annotation: Annotation, body: string) => Promise<Annotation>;
   readonly planAnnotationDeletion: (annotation: Annotation) => Promise<AnnotationDeletionPlan>;
@@ -66,92 +61,72 @@ export interface ReaderWorkspaceController {
     documentFileId: FileId,
     position: ReadingPosition,
   ) => Promise<void>;
+}
+
+export interface ReaderWorkspaceController extends ReaderSourceWorkspaceController {
+  readonly library: AsyncResource<ReaderLibrarySnapshot>;
+  readonly selectedSource: SourceSummary | null;
+  readonly reconcileSource: (source: Source) => void;
+  readonly selectSource: (id: SourceId | null) => void;
+  readonly importSourceFile: (
+    request: Omit<SourceFileImportRequest, "collectionId">,
+    options?: SourceImportOptions,
+  ) => Promise<Source | null>;
+  readonly importStatus: "idle" | "importing";
+  readonly importError: string | null;
   readonly retryLibrary: () => void;
 }
 
 export function useReaderWorkspace(gateway: ReaderWorkspaceGateway): ReaderWorkspaceController {
   const library = useLibrarySelection(gateway);
-  const source = useSelectedSourceWorkspace(gateway, library.selectedSource);
+  const source = useSourceToolsWorkspace(
+    gateway,
+    library.selectedSource?.id ?? null,
+    library.reconcileSource,
+  );
   return {
     ...library,
     ...source,
   };
 }
 
-function useSelectedSourceWorkspace(
+export function useSourceToolsWorkspace(
   gateway: ReaderWorkspaceGateway,
-  selectedSource: SourceSummary | null,
-): Omit<ReaderWorkspaceController, keyof LibrarySelection> {
-  const [source, setSource] = useState<SelectedValue<AsyncResource<Source>> | null>(null);
-  const [annotations, setAnnotations] = useState<AnnotationState>(null);
-  const [draft, setDraftState] = useState<SelectedValue<string> | null>(null);
+  selectedSourceId: SourceId | null,
+  reconcileSource: (source: Source) => void,
+): ReaderSourceWorkspaceController {
+  const resources = useSelectedSourceResources(gateway, selectedSourceId);
+  const {
+    source,
+    setSource,
+    annotations,
+    setAnnotations,
+    draft,
+    setDraft: setDraftState,
+  } = resources;
   const [saving, setSaving] = useState<SelectedValue<boolean> | null>(null);
   const [saveError, setSaveError] = useState<SelectedValue<string | null> | null>(null);
-  useEffect(() => {
-    if (!selectedSource) {
-      return;
-    }
-    const sourceId = selectedSource.id;
-    const controller = new AbortController();
-    void gateway
-      .source(sourceId, { signal: controller.signal })
-      .then((value) => {
-        if (!controller.signal.aborted) {
-          if (value) {
-            setDraftState({ sourceId, value: value.body });
-          }
-          setSource({
-            sourceId,
-            value: value
-              ? { status: "ready", value }
-              : { status: "error", message: "This source record no longer exists." },
-          });
-        }
-      })
-      .catch((reason: unknown) => {
-        if (!controller.signal.aborted) {
-          setSource({
-            sourceId,
-            value: {
-              status: "error",
-              message: readerErrorMessage(reason, "Reader could not open the source note."),
-            },
-          });
-        }
-      });
-    void gateway
-      .annotations(sourceId, { signal: controller.signal })
-      .then((value) => {
-        if (!controller.signal.aborted) {
-          setAnnotations({ sourceId, value: { status: "ready", value } });
-        }
-      })
-      .catch((reason: unknown) => {
-        if (!controller.signal.aborted) {
-          setAnnotations({
-            sourceId,
-            value: {
-              status: "error",
-              message: annotationLoadError(reason),
-            },
-          });
-        }
-      });
-    return () => controller.abort();
-  }, [gateway, selectedSource]);
-
-  const sourceId = selectedSource?.id ?? null;
+  const sourceId = selectedSourceId;
   const sourceRecord = selectedResource(sourceId, source);
   const annotationResource = selectedResource(sourceId, annotations);
   const selectedDraft = selectedValue(sourceId, draft);
   const draftValue = selectedDraft.matched ? selectedDraft.value : "";
+  const publishSource = useCallback(
+    (value: SelectedValue<AsyncResource<Source>>): void => {
+      setSource(value);
+      if (value.value.status === "ready") {
+        reconcileSource(value.value.value);
+      }
+    },
+    [reconcileSource, setSource],
+  );
   const setDraft = useCallback(
     (value: string): void => {
       if (sourceId) {
         setDraftState({ sourceId, value });
       }
     },
-    [sourceId],
+    [setDraftState, sourceId],
   );
   const saveDraft = useCallback((): void => {
     if (!sourceId || sourceRecord.status !== "ready" || sourceRecord.value.body === draftValue) {
@@ -161,7 +136,7 @@ function useSelectedSourceWorkspace(
     setSaveError({ sourceId, value: null });
     void gateway
       .saveSourceBody(sourceRecord.value, draftValue)
-      .then((value) => setSource({ sourceId, value: { status: "ready", value } }))
+      .then((value) => publishSource({ sourceId, value: { status: "ready", value } }))
       .catch((reason: unknown) =>
         setSaveError({
           sourceId,
@@ -169,15 +144,15 @@ function useSelectedSourceWorkspace(
         }),
       )
       .finally(() => setSaving({ sourceId, value: false }));
-  }, [draftValue, gateway, sourceId, sourceRecord]);
+  }, [draftValue, gateway, publishSource, sourceId, sourceRecord]);
   const annotationMutations = useSelectedAnnotationMutations(gateway, setAnnotations);
-  const saveReadingPosition = useReadingPositionSave(gateway, sourceRecord, setSource);
-  const citation = useSelectedCitationEditor(gateway, sourceRecord, setSource);
+  const saveReadingPosition = useReadingPositionSave(gateway, sourceRecord, publishSource);
+  const citation = useSelectedCitationEditor(gateway, sourceRecord, publishSource);
   const transclusion = useSelectedTransclusion(
     gateway,
     sourceRecord,
     draftValue,
-    setSource,
+    publishSource,
     setDraftState,
   );
 
@@ -201,7 +176,7 @@ function useSelectedAnnotationMutations(
   gateway: ReaderWorkspaceGateway,
   setAnnotations: Dispatch<SetStateAction<AnnotationState>>,
 ): Pick<
-  ReaderWorkspaceController,
+  ReaderSourceWorkspaceController,
   "createAnnotation" | "updateAnnotation" | "planAnnotationDeletion" | "deleteAnnotation"
 > {
   const deletion = useAnnotationDeletion(gateway, setAnnotations);
@@ -211,10 +186,6 @@ function useSelectedAnnotationMutations(
     planAnnotationDeletion: deletion.plan,
     deleteAnnotation: deletion.remove,
   };
-}
-
-function annotationLoadError(reason: unknown): string {
-  return readerErrorMessage(reason, "Reader could not load this source's annotations.");
 }
 
 function useSelectedCitationEditor(

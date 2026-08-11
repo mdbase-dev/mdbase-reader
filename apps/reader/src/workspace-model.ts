@@ -1,4 +1,9 @@
 import type {
+  ExecutedLibraryView,
+  LibraryViewSaveRequest,
+  MdbaseLibraryView,
+} from "./mdbase-library-views.js";
+import type {
   Annotation,
   AnnotationDeletionPlan,
   AnnotationCreationRequest,
@@ -11,7 +16,10 @@ import type {
   SourceId,
   SourceSummary,
   SourceFileImportRequest,
+  SourceImportOptions,
   SourceTextSearchMatch,
+  CitationCandidate,
+  CitationResolutionRequest,
 } from "@mdbase-reader/core";
 
 export interface ReaderLibrarySnapshot {
@@ -31,10 +39,21 @@ export interface ReaderLibraryRequestOptions extends ReaderRequestOptions {
 
 export interface ReaderWorkspaceGateway {
   library(options?: ReaderLibraryRequestOptions): Promise<ReaderLibrarySnapshot>;
+  listLibraryViews(options?: ReaderRequestOptions): Promise<readonly MdbaseLibraryView[]>;
+  executeLibraryView(
+    view: MdbaseLibraryView,
+    options?: ReaderRequestOptions,
+  ): Promise<ExecutedLibraryView>;
+  saveLibraryView(request: LibraryViewSaveRequest): Promise<MdbaseLibraryView>;
   source(id: SourceId, options?: ReaderRequestOptions): Promise<Source | null>;
   annotations(id: SourceId, options?: ReaderRequestOptions): Promise<readonly Annotation[]>;
+  annotationSourceIds?(options?: ReaderRequestOptions): Promise<readonly SourceId[]>;
   saveSourceBody(source: Source, body: string): Promise<Source>;
   saveSourceCitation(source: Source, citation: unknown): Promise<Source>;
+  resolveCitation?(
+    request: CitationResolutionRequest,
+    options?: ReaderRequestOptions,
+  ): Promise<CitationCandidate>;
   searchText(
     query: string,
     options?: ReaderRequestOptions,
@@ -44,7 +63,10 @@ export interface ReaderWorkspaceGateway {
     expectedRevision?: FileRevision,
     options?: ReaderRequestOptions,
   ): Promise<ExportedCollectionFile>;
-  importSourceFile(request: Omit<SourceFileImportRequest, "collectionId">): Promise<Source>;
+  importSourceFile(
+    request: Omit<SourceFileImportRequest, "collectionId">,
+    options?: SourceImportOptions,
+  ): Promise<Source>;
   createAnnotation(request: AnnotationCreationRequest): Promise<Annotation>;
   updateAnnotation(annotation: Annotation, body: string): Promise<Annotation>;
   planAnnotationDeletion(annotation: Annotation): Promise<AnnotationDeletionPlan>;
@@ -66,7 +88,15 @@ export function filterSources(
     return sources;
   }
   return sources.filter((source) =>
-    [source.title, ...source.creators, ...source.tags]
+    [
+      source.title,
+      ...source.creators,
+      ...source.tags,
+      source.publication,
+      source.site,
+      source.published === undefined ? undefined : String(source.published),
+    ]
+      .filter((value): value is string => value !== undefined)
       .join("\n")
       .toLocaleLowerCase()
       .includes(normalized),

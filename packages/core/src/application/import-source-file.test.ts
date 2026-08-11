@@ -1,9 +1,11 @@
 import { describe, expect, it, vi } from "vitest";
 
-import { collectionId, mutationId, recordRevision, sourceId } from "../domain/identity.js";
+import { collectionId, fileId, mutationId, recordRevision, sourceId } from "../domain/identity.js";
+import { fileRevision } from "../domain/revision.js";
 import { dateTime } from "../domain/time.js";
 
-import { detectDocumentFormat, importSourceFile } from "./import-source-file.js";
+import { importSourceFile } from "./import-source-file.js";
+import { detectDocumentFormat } from "./source-document-format.js";
 
 import type { PlannedSourceFileImport } from "./ports.js";
 import type { Source } from "../domain/source.js";
@@ -32,7 +34,7 @@ describe("importSourceFile", () => {
           },
           mutation: () => mutationId("83dd2f80-c7da-44d7-9844-6ea755a05f40"),
         },
-        imports: { commitFile },
+        imports: { findExactDuplicate: vi.fn(() => Promise.resolve(null)), commitFile },
       },
       {
         collectionId: collectionId("reading"),
@@ -46,13 +48,18 @@ describe("importSourceFile", () => {
     expect(committed).toMatchObject({
       sourceId: "src_import",
       title: "manuscript final",
-      format: "pdf",
-      mediaType: "application/pdf",
       recordPath: "sources/src_import.md",
-      filePath: "files/reader/src_import/manuscript-final.pdf",
-      contentDigest: `sha256:${"a".repeat(64)}`,
+      representations: [
+        expect.objectContaining({
+          role: "primary",
+          format: "pdf",
+          mediaType: "application/pdf",
+          filePath: "files/reader/src_import/manuscript-final.pdf",
+          contentDigest: `sha256:${"a".repeat(64)}`,
+        }),
+      ],
     });
-    expect(committed?.bytes).toBe(bytes);
+    expect(committed?.representations[0]?.bytes).toBe(bytes);
   });
 
   it("rejects empty and disguised unsupported files before mutation", async () => {
@@ -67,7 +74,7 @@ describe("importSourceFile", () => {
         },
         mutation: () => mutationId("83dd2f80-c7da-44d7-9844-6ea755a05f40"),
       },
-      imports: { commitFile },
+      imports: { findExactDuplicate: vi.fn(() => Promise.resolve(null)), commitFile },
     };
 
     await expect(
@@ -86,7 +93,9 @@ describe("importSourceFile", () => {
     ).rejects.toThrow("not a recognizable PDF, EPUB, or HTML");
     expect(commitFile).not.toHaveBeenCalled();
   });
+});
 
+describe("importSourceFile web and duplicate safeguards", () => {
   it("plans sanitized HTML captures with validated provenance", async () => {
     const commitFile = vi.fn(() => Promise.resolve(sourceFixture()));
     await importSourceFile(
@@ -100,7 +109,7 @@ describe("importSourceFile", () => {
           },
           mutation: () => mutationId("83dd2f80-c7da-44d7-9844-6ea755a05f40"),
         },
-        imports: { commitFile },
+        imports: { findExactDuplicate: vi.fn(() => Promise.resolve(null)), commitFile },
       },
       {
         collectionId: collectionId("reading"),
@@ -113,20 +122,97 @@ describe("importSourceFile", () => {
           canonicalUrl: "https://www.example.com/story",
           retrievedAt: dateTime("2026-08-10T11:59:00.000Z"),
         },
+        archive: {
+          name: "example-com.archive.html",
+          bytes: new TextEncoder().encode("<!doctype html><title>Raw example</title>"),
+        },
       },
     );
 
     expect(commitFile).toHaveBeenCalledWith(
       expect.objectContaining({
         kind: "webpage",
-        format: "html",
         capture: {
           submittedUrl: "https://example.com/story",
           canonicalUrl: "https://www.example.com/story",
           retrievedAt: "2026-08-10T11:59:00.000Z",
         },
+        representations: [
+          expect.objectContaining({ role: "primary", derivedFromRole: "archive" }),
+          expect.objectContaining({ role: "archive" }),
+        ],
       }),
+      {},
     );
+  });
+
+  it("stops before upload when an exact representation already exists", async () => {
+    const commitFile = vi.fn(() => Promise.resolve(sourceFixture()));
+    await expect(
+      importSourceFile(
+        {
+          clock: { now: () => dateTime("2026-08-10T12:00:00.000Z") },
+          hasher: { sha256: () => Promise.resolve(`sha256:${"a".repeat(64)}` as const) },
+          ids: {
+            source: () => sourceId("src_import"),
+            annotation: () => {
+              throw new Error("unused");
+            },
+            mutation: () => mutationId("83dd2f80-c7da-44d7-9844-6ea755a05f40"),
+          },
+          imports: {
+            findExactDuplicate: vi.fn(() => Promise.resolve(sourceFixture())),
+            commitFile,
+          },
+        },
+        {
+          collectionId: collectionId("reading"),
+          name: "duplicate.pdf",
+          bytes,
+        },
+      ),
+    ).rejects.toThrow("already stored in");
+    expect(commitFile).not.toHaveBeenCalled();
+  });
+
+  it("uses a complete in-memory library for duplicate checks", async () => {
+    const findExactDuplicate = vi.fn(() => Promise.resolve(null));
+    const commitFile = vi.fn(() => Promise.resolve(sourceFixture()));
+    await expect(
+      importSourceFile(
+        {
+          clock: { now: () => dateTime("2026-08-10T12:00:00.000Z") },
+          hasher: { sha256: () => Promise.resolve(`sha256:${"a".repeat(64)}` as const) },
+          ids: {
+            source: () => sourceId("src_import"),
+            annotation: () => {
+              throw new Error("unused");
+            },
+            mutation: () => mutationId("83dd2f80-c7da-44d7-9844-6ea755a05f40"),
+          },
+          imports: { findExactDuplicate, commitFile },
+          knownSources: [
+            {
+              ...sourceFixture(),
+              title: "Already here",
+              documents: [
+                {
+                  fileId: fileId("file-known"),
+                  file: "files/known.pdf",
+                  role: "primary",
+                  mediaType: "application/pdf",
+                  revision: fileRevision(`sha256:${"a".repeat(64)}`),
+                },
+              ],
+            },
+          ],
+        },
+        { collectionId: collectionId("reading"), name: "duplicate.pdf", bytes },
+      ),
+    ).rejects.toThrow("Already here");
+
+    expect(findExactDuplicate).not.toHaveBeenCalled();
+    expect(commitFile).not.toHaveBeenCalled();
   });
 });
 

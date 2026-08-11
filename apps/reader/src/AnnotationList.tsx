@@ -89,7 +89,24 @@ function AnnotationCard({
   readonly onOpen: () => void;
 }): JSX.Element {
   return (
-    <article className="annotation-card">
+    // This article is a keyboard-operable card when it is not in editing mode.
+    // eslint-disable-next-line jsx-a11y/no-noninteractive-element-interactions
+    <article
+      className="annotation-card"
+      role={editing ? undefined : "button"}
+      tabIndex={editing ? undefined : 0}
+      onClick={() => {
+        if (!editing) {
+          onOpen();
+        }
+      }}
+      onKeyDown={(event) => {
+        if (!editing && (event.key === "Enter" || event.key === " ")) {
+          event.preventDefault();
+          onOpen();
+        }
+      }}
+    >
       <header>
         <span className={`annotation-kind is-${annotation.annotationType}`}>
           {annotation.annotationType}
@@ -116,13 +133,27 @@ function AnnotationCard({
             })}
           </time>
           <div className="annotation-card-actions">
-            <button type="button" onClick={onEdit}>
+            <button
+              type="button"
+              onClick={(event) => {
+                event.stopPropagation();
+                onEdit();
+              }}
+            >
               Edit
             </button>
             <button
               type="button"
               disabled={transclusion.busyId !== null || transclusion.isEmbedded(annotation)}
-              onClick={() => transclusion.insert(annotation)}
+              title={
+                transclusion.isEmbedded(annotation)
+                  ? "Already included in the source note"
+                  : "Insert this annotation in the source note"
+              }
+              onClick={(event) => {
+                event.stopPropagation();
+                transclusion.insert(annotation);
+              }}
             >
               {transclusion.busyId === annotation.id
                 ? "Inserting…"
@@ -134,7 +165,11 @@ function AnnotationCard({
               className="icon-button"
               type="button"
               aria-label="Open annotation in document"
-              onClick={onOpen}
+              title="Open in document"
+              onClick={(event) => {
+                event.stopPropagation();
+                onOpen();
+              }}
             >
               <MoreIcon />
             </button>

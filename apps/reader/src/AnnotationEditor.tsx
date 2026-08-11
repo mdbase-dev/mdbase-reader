@@ -2,6 +2,7 @@ import { ReaderButton } from "@mdbase-reader/ui";
 import { useState, type JSX } from "react";
 
 import { readerErrorMessage } from "./errors.js";
+import { MultilineCodeEditor } from "./MultilineCodeEditor.js";
 
 import type { Annotation, AnnotationDeletionPlan } from "@mdbase-reader/core";
 
@@ -64,12 +65,12 @@ export function AnnotationBodyEditor({
   };
   return (
     <div className="annotation-body-editor">
-      <label htmlFor={`annotation-body-${annotation.id}`}>Annotation Markdown</label>
-      <textarea
-        id={`annotation-body-${annotation.id}`}
+      <div className="annotation-editor-label">Annotation Markdown</div>
+      <MultilineCodeEditor
         value={body}
-        rows={6}
-        onChange={(event) => setBody(event.target.value)}
+        ariaLabel="Annotation Markdown"
+        className="annotation-code-editor"
+        onChange={setBody}
       />
       <span>Captured selector evidence stays unchanged.</span>
       {problem ? <p role="alert">{problem}</p> : null}

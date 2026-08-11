@@ -19,6 +19,8 @@ const sources: readonly SourceSummary[] = [
     path: "sources/visual-display.md",
     title: "The Visual Display of Quantitative Information",
     creators: ["Edward Tufte"],
+    publication: "Graphics Press",
+    published: 2001,
     tags: ["design"],
     documents: [],
   },
@@ -28,6 +30,8 @@ describe("filterSources", () => {
   it("searches title, creators, and tags without mutating the library", () => {
     expect(filterSources(sources, "attention")).toEqual([sources[0]]);
     expect(filterSources(sources, "tufte")).toEqual([sources[1]]);
+    expect(filterSources(sources, "graphics press")).toEqual([sources[1]]);
+    expect(filterSources(sources, "2001")).toEqual([sources[1]]);
     expect(sources).toHaveLength(2);
   });
 });

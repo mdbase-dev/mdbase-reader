@@ -1,35 +1,44 @@
 import { collectionId, recordRevision, sourceId, type Source } from "@mdbase-reader/core";
 import { describe, expect, it } from "vitest";
 
-import { assessCitationDraft, citationDraftForSource } from "./citation-editor-model.js";
+import {
+  assessCitationDraft,
+  citationDraftForSource,
+  storedCitationDraftForSource,
+} from "./citation-editor-model.js";
 
 const source: Source = {
   collectionId: collectionId("reading"),
   id: sourceId("src_one"),
   path: "sources/one.md",
   title: "Gravity and Grace",
-  creators: [],
+  creators: ["Simone Weil"],
   tags: [],
   documents: [],
   body: "",
   recordRevision: recordRevision("rev-one"),
+  kind: "book",
+  published: 2002,
   frontmatter: {},
 };
 
 describe("citation editor model", () => {
   it("starts an uncited source with a repairable CSL template", () => {
+    expect(storedCitationDraftForSource(source)).toBeNull();
     expect(JSON.parse(citationDraftForSource(source))).toEqual({
-      id: "",
-      type: "article",
+      id: "weilgravity2002",
+      type: "book",
       title: "Gravity and Grace",
+      author: [{ literal: "Simone Weil" }],
+      issued: { "date-parts": [[2002]] },
     });
   });
 
   it("preserves invalid embedded metadata so the user can repair it", () => {
     const invalid = { title: "Untyped" };
-    expect(
-      JSON.parse(citationDraftForSource({ ...source, frontmatter: { csl: invalid } })),
-    ).toEqual(invalid);
+    const stored = { ...source, frontmatter: { csl: invalid } };
+    expect(JSON.parse(citationDraftForSource(stored))).toEqual(invalid);
+    expect(JSON.parse(storedCitationDraftForSource(stored) ?? "null")).toEqual(invalid);
   });
 
   it("reports JSON and CSL validation problems before save", () => {
