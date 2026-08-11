@@ -1,0 +1,54 @@
+{
+  "lineCountWarningLines": 1000,
+  "lineCountErrorLines": 1500,
+  "legacyFileLineBudgets": {},
+  "workspacePackageDependencies": {
+    "@mdbase-reader/capacitor": ["@mdbase-reader/platform"],
+    "@mdbase-reader/electron": ["@mdbase-reader/platform"],
+    "@mdbase-reader/app": [
+      "@mdbase-reader/connect",
+      "@mdbase-reader/core",
+      "@mdbase-reader/markdown-editor",
+      "@mdbase-reader/platform",
+      "@mdbase-reader/reading-surface",
+      "@mdbase-reader/renderer-epub",
+      "@mdbase-reader/renderer-html",
+      "@mdbase-reader/renderer-pdf",
+      "@mdbase-reader/ui"
+    ],
+    "@mdbase-reader/connect": ["@mdbase-reader/core"],
+    "@mdbase-reader/core": [],
+    "@mdbase-reader/markdown-editor": ["@mdbase-reader/core"],
+    "@mdbase-reader/platform": ["@mdbase-reader/core"],
+    "@mdbase-reader/reading-surface": ["@mdbase-reader/core"],
+    "@mdbase-reader/renderer-epub": ["@mdbase-reader/core", "@mdbase-reader/reading-surface"],
+    "@mdbase-reader/renderer-html": ["@mdbase-reader/core", "@mdbase-reader/reading-surface"],
+    "@mdbase-reader/renderer-pdf": ["@mdbase-reader/core", "@mdbase-reader/reading-surface"],
+    "@mdbase-reader/testkit": ["@mdbase-reader/core", "@mdbase-reader/reading-surface"],
+    "@mdbase-reader/ui": []
+  },
+  "forbiddenImportRules": [
+    {
+      "name": "core domain and application stay platform-free",
+      "paths": ["packages/core/src/domain/**", "packages/core/src/application/**"],
+      "forbiddenSpecifiers": [
+        "electron",
+        "fastify",
+        "fs",
+        "fs/promises",
+        "path",
+        "pg",
+        "react",
+        "react-dom"
+      ],
+      "forbiddenPrefixes": [
+        "node:",
+        "@capacitor/",
+        "@mdbase-dev/",
+        "@mdbase-reader/connect",
+        "@mdbase-reader/platform",
+        "@mdbase-reader/renderer-"
+      ]
+    }
+  ]
+}

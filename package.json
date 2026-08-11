@@ -18,7 +18,8 @@
     "format:check": "prettier --check .",
     "lint": "pnpm lint:code && pnpm format:check && pnpm check:architecture && pnpm check:spec",
     "lint:code": "eslint . --max-warnings 0",
-    "test": "pnpm -r --if-present test",
+    "test": "pnpm test:architecture && pnpm -r --if-present test",
+    "test:architecture": "node --test scripts/lib/architecture-check.test.mjs",
     "test:coverage": "pnpm -r --if-present test:coverage",
     "typecheck": "pnpm -r --if-present typecheck"
   },
