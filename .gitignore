@@ -8,3 +8,4 @@ apps/capacitor/android/
 apps/capacitor/ios/
 test-results/
 playwright-report/
+.tmp/
