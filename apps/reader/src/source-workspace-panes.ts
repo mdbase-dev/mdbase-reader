@@ -1,6 +1,11 @@
 import { activeTab, createPane, paneById } from "./source-workspace-layout.js";
 import { closeWorkspaceTab } from "./source-workspace-tab-closing.js";
-import { activateWorkspaceTab, openLibraryTab, openWorkspaceTab } from "./source-workspace-tabs.js";
+import {
+  activatePaneTab,
+  activateWorkspaceTab,
+  openLibraryTab,
+  openWorkspaceTab,
+} from "./source-workspace-tabs.js";
 
 import type {
   SourceWorkspaceLayout,
@@ -85,21 +90,91 @@ export function splitWorkspaceTab(
 }
 
 export function closeSecondaryPane(layout: SourceWorkspaceLayout): SourceWorkspaceLayout {
-  const secondary = paneById(layout, "secondary");
-  const primary = paneById(layout, "primary");
-  if (!secondary || !primary) {
+  return mergeWorkspacePane(layout, "secondary");
+}
+
+/** Close one physical pane while preserving its tabs in the remaining pane. */
+export function mergeWorkspacePane(
+  layout: SourceWorkspaceLayout,
+  paneId: WorkspacePaneId,
+): SourceWorkspaceLayout {
+  const closing = paneById(layout, paneId);
+  const remaining = paneById(layout, otherPaneId(paneId));
+  if (!closing || !remaining || layout.panes.length !== 2) {
     return layout;
   }
-  let next: SourceWorkspaceLayout = {
+  const tabs = mergePaneTabs(remaining.tabs, closing.tabs);
+  const desiredActive =
+    layout.focusedPaneId === paneId ? closing.activeTabId : remaining.activeTabId;
+  const primary = activateMergedPane({ ...remaining, id: "primary", tabs }, desiredActive);
+  return {
     ...layout,
     panes: [primary],
     focusedPaneId: "primary",
     splitDirection: null,
+    splitRatio: 0.5,
   };
-  for (const tab of secondary.tabs) {
-    next = openTab(next, tab, "primary");
+}
+
+/** Close a pane and its tabs. Callers own dirty-tab confirmation. */
+export function discardWorkspacePane(
+  layout: SourceWorkspaceLayout,
+  paneId: WorkspacePaneId,
+): SourceWorkspaceLayout {
+  const pane = paneById(layout, paneId);
+  if (!pane || layout.panes.length !== 2) {
+    return layout;
   }
-  return next;
+  const emptied = pane.tabs.reduceRight(
+    (current, tab) => closeWorkspaceTab(current, tab.id, paneId),
+    layout,
+  );
+  return mergeWorkspacePane(emptied, paneId);
+}
+
+/** Move a pane's complete working set without removing the empty workspace region. */
+export function moveAllWorkspaceTabsToOtherPane(
+  layout: SourceWorkspaceLayout,
+  paneId: WorkspacePaneId,
+): SourceWorkspaceLayout {
+  const source = paneById(layout, paneId);
+  const destinationId = otherPaneId(paneId);
+  const destination = paneById(layout, destinationId);
+  if (!source || !destination || source.tabs.length === 0) {
+    return layout;
+  }
+  const tabs = mergePaneTabs(destination.tabs, source.tabs);
+  const nextDestination = activateMergedPane(
+    { ...destination, tabs },
+    source.activeTabId ?? destination.activeTabId,
+  );
+  return {
+    ...layout,
+    panes: layout.panes.map((pane) =>
+      pane.id === paneId ? createPane(paneId) : pane.id === destinationId ? nextDestination : pane,
+    ),
+    focusedPaneId: destinationId,
+  };
+}
+
+/** Exchange pane contents while keeping pane A and B in their physical positions. */
+export function swapWorkspacePanes(layout: SourceWorkspaceLayout): SourceWorkspaceLayout {
+  const primary = paneById(layout, "primary");
+  const secondary = paneById(layout, "secondary");
+  if (!primary || !secondary) {
+    return layout;
+  }
+  return {
+    ...layout,
+    panes: [
+      { ...secondary, id: "primary" },
+      { ...primary, id: "secondary" },
+    ],
+  };
+}
+
+export function focusNextWorkspacePane(layout: SourceWorkspaceLayout): SourceWorkspaceLayout {
+  return layout.panes.length === 2 ? focusPane(layout, otherPaneId(layout.focusedPaneId)) : layout;
 }
 
 export function resizeWorkspaceSplit(
@@ -161,4 +236,37 @@ function openTab(
         title: tab.title,
         pinned: tab.pinned,
       });
+}
+
+function mergePaneTabs(
+  destination: readonly WorkspaceTab[],
+  incoming: readonly WorkspaceTab[],
+): readonly WorkspaceTab[] {
+  const tabs = [...destination];
+  for (const tab of incoming) {
+    const index = tabs.findIndex(({ id }) => id === tab.id);
+    if (index < 0) {
+      tabs.push(tab);
+      continue;
+    }
+    const existing = tabs[index];
+    if (existing) {
+      tabs[index] = {
+        ...existing,
+        pinned: existing.pinned || tab.pinned,
+        dirty: existing.dirty || tab.dirty,
+        preview: existing.preview && tab.preview && !existing.dirty && !tab.dirty,
+      };
+    }
+  }
+  return tabs;
+}
+
+function activateMergedPane(
+  pane: ReturnType<typeof createPane>,
+  desiredActive: WorkspaceTabId | null,
+): ReturnType<typeof createPane> {
+  const fallback = pane.tabs.find(({ id }) => id === desiredActive)?.id ?? pane.activeTabId;
+  const active = pane.tabs.find(({ id }) => id === fallback)?.id ?? pane.tabs.at(-1)?.id ?? null;
+  return active ? activatePaneTab(pane, active) : { ...pane, activeTabId: null };
 }

@@ -17,6 +17,7 @@ describe("prepareHtmlDocument", () => {
     expect(prepared).toContain("data:image/png;base64,AAAA");
     expect(prepared).toContain("Content-Security-Policy");
     expect(prepared).toContain('data-mdbase-reader="document"');
+    expect(prepared).toContain("::highlight(reader-active-annotation)");
     expect(prepared).not.toContain("<script");
     expect(prepared).not.toContain("<iframe");
     expect(prepared).not.toContain("onclick");

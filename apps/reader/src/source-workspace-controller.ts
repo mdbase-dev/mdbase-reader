@@ -2,13 +2,18 @@ import { navigateWorkspaceHistory } from "./source-workspace-history.js";
 import { focusedPane, paneById } from "./source-workspace-layout.js";
 import {
   closeSecondaryPane,
+  discardWorkspacePane,
   focusPane,
+  focusNextWorkspacePane,
+  mergeWorkspacePane,
   moveWorkspaceTabToPane,
+  moveAllWorkspaceTabsToOtherPane,
   openLibraryBeside,
   openBeside,
   resizeWorkspaceSplit,
   setWorkspaceSplitDirection,
   splitWorkspaceTab,
+  swapWorkspacePanes,
 } from "./source-workspace-panes.js";
 import {
   closeOtherWorkspaceTabs,
@@ -67,6 +72,7 @@ export interface SourceWorkspaceActions {
   readonly navigate: (direction: -1 | 1, paneId?: WorkspacePaneId) => void;
   readonly switchRelative: (direction: -1 | 1) => void;
   readonly focus: (paneId: WorkspacePaneId) => void;
+  readonly focusNextPane: () => void;
   readonly openBeside: (
     sourceId: SourceId,
     view?: SourceWorkspaceView,
@@ -85,6 +91,10 @@ export interface SourceWorkspaceActions {
   readonly resizeSplit: (ratio: number) => void;
   readonly setSplitDirection: (direction: WorkspaceSplitDirection) => void;
   readonly closeSplit: () => void;
+  readonly closePane: (paneId: WorkspacePaneId) => void;
+  readonly closePaneAndTabs: (paneId: WorkspacePaneId) => void;
+  readonly moveAllTabs: (paneId: WorkspacePaneId) => void;
+  readonly swapPanes: () => void;
 }
 
 export interface WorkspaceActionContext {
@@ -137,6 +147,7 @@ export function createSourceWorkspaceActions({
       commit((layout) => navigateWorkspaceHistory(layout, direction, paneId)),
     switchRelative: (direction) => commit((layout) => switchRelativeTab(layout, direction)),
     focus: (paneId) => commit((layout) => focusPane(layout, paneId)),
+    focusNextPane: () => commit(focusNextWorkspacePane),
     openBeside: (sourceId, view = "document", direction = "horizontal") =>
       commit((layout) => openBeside(layout, sourceId, view, direction)),
     splitTab: (tabId, paneId, direction) =>
@@ -147,7 +158,23 @@ export function createSourceWorkspaceActions({
     setSplitDirection: (direction) =>
       commit((layout) => setWorkspaceSplitDirection(layout, direction)),
     closeSplit: () => commit(closeSecondaryPane),
+    closePane: (paneId) => commit((layout) => mergeWorkspacePane(layout, paneId)),
+    closePaneAndTabs: (paneId) => closePaneAndTabs(current(), paneId, canClose, commit),
+    moveAllTabs: (paneId) => commit((layout) => moveAllWorkspaceTabsToOtherPane(layout, paneId)),
+    swapPanes: () => commit(swapWorkspacePanes),
   };
+}
+
+function closePaneAndTabs(
+  layout: SourceWorkspaceLayout,
+  paneId: WorkspacePaneId,
+  canClose: WorkspaceActionContext["canClose"],
+  commit: WorkspaceActionContext["commit"],
+): void {
+  const dirtyTab = paneById(layout, paneId)?.tabs.find(({ dirty }) => dirty);
+  if (!dirtyTab || canClose(dirtyTab)) {
+    commit((current) => discardWorkspacePane(current, paneId));
+  }
 }
 
 function activateSourceTab(

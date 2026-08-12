@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import { readerErrorMessage } from "./errors.js";
 
 import type { AsyncResource } from "./use-reader-workspace.js";
-import type { Annotation } from "@mdbase-reader/core";
+import type { Annotation, AnnotationId } from "@mdbase-reader/core";
 import type { ReadingSurface } from "@mdbase-reader/reading-surface";
 
 interface DecorationProblem {
@@ -14,6 +14,7 @@ interface DecorationProblem {
 export function useDocumentDecorations(
   surface: ReadingSurface | null,
   annotations: AsyncResource<readonly Annotation[]>,
+  activeAnnotationId: AnnotationId | null = null,
 ): string | null {
   const [problem, setProblem] = useState<DecorationProblem | null>(null);
   useEffect(() => {
@@ -22,8 +23,10 @@ export function useDocumentDecorations(
       return;
     }
     let active = true;
+    const activeAnnotation = annotations.value.find(({ id }) => id === activeAnnotationId) ?? null;
     void capability
       .setAnnotations(annotations.value)
+      .then(() => (active ? capability.setActiveAnnotation(activeAnnotation) : undefined))
       .then(() => {
         if (active) {
           setProblem((current) => (current?.surface === surface ? null : current));
@@ -40,6 +43,6 @@ export function useDocumentDecorations(
     return () => {
       active = false;
     };
-  }, [annotations, surface]);
+  }, [activeAnnotationId, annotations, surface]);
   return problem?.surface === surface ? problem.message : null;
 }

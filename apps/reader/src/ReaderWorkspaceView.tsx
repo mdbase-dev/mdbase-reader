@@ -19,6 +19,7 @@ import { WorkspaceToolTab } from "./WorkspaceToolTab.js";
 import type { SourceDocumentRenderer } from "./RenderedSourceDocument.js";
 import type { AnnotationComposerController } from "./use-annotation-composer.js";
 import type { BibliographyExportController } from "./use-bibliography-export.js";
+import type { ReaderDirectAccessState } from "./use-direct-access.js";
 import type { MdbaseLibraryViewsController } from "./use-mdbase-library-views.js";
 import type { ReaderWorkspaceController } from "./use-reader-workspace.js";
 import type { ReadingResumeState } from "./use-reading-resume.js";
@@ -48,6 +49,7 @@ export interface ReaderWorkspaceViewModel {
   readonly renderDocument: SourceDocumentRenderer | undefined;
   readonly onSurfaceChange: (sessionId: string, surface: ReadingSurface | null) => void;
   readonly deploymentUpdateAvailable: boolean;
+  readonly directAccess: ReaderDirectAccessState;
   readonly theme: ThemePreference;
   readonly changeTheme: () => void;
   readonly focusMode: boolean;
@@ -89,6 +91,7 @@ export function ReaderWorkspaceView({
       <ReaderHeader
         collectionName={library.collectionName}
         connectionState={library.connectionState}
+        directAccess={model.directAccess}
         theme={model.theme}
         onChangeTheme={model.changeTheme}
         onOpenCommands={() => model.setCommandsOpen(true)}
@@ -241,10 +244,8 @@ function focusLibrarySearch(): void {
   );
 }
 
-function commandsForView(
-  model: ReaderWorkspaceViewModel,
-  toggleInspector: () => void,
-): ReturnType<typeof readerCommands> {
+// prettier-ignore
+function commandsForView(model: ReaderWorkspaceViewModel, toggle: () => void): ReturnType<typeof readerCommands> {
   return readerCommands({
     sources: model.library.sources,
     activeSource: model.source,
@@ -254,7 +255,7 @@ function commandsForView(
     focusMode: model.focusMode,
     toggleFocus: () => model.setFocusMode((value) => !value),
     toggleLibrary: () => toggleLibrary(model),
-    toggleInspector,
+    toggleInspector: toggle,
     searchLibrary: focusLibrarySearch,
   });
 }

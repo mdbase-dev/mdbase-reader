@@ -1,6 +1,6 @@
 import { AreaIcon, BackIcon, CitationIcon, FocusIcon, HighlightIcon, NoteIcon } from "./icons.js";
 import { canNavigateHistory } from "./source-workspace-history.js";
-import { sourceFormat } from "./SourceTabStrip.js";
+import { sourceFormat } from "./workspace-tab-display.js";
 import { DocumentStatus, SourceActions } from "./WorkspacePaneSupport.js";
 
 import type { SourceWorkspacePane } from "./source-workspace-layout.js";

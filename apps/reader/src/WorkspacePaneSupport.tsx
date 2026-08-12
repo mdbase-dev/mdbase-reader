@@ -1,13 +1,13 @@
 import { ReaderButton } from "@mdbase-reader/ui";
 
-import { MoreIcon } from "./icons.js";
+import { MergeIcon, MoreIcon } from "./icons.js";
 import { draggedWorkspaceTab } from "./source-tab-drag.js";
 
 import type { SourceWorkspacePane } from "./source-workspace-layout.js";
 import type { ReadingResumeState } from "./use-reading-resume.js";
 import type { SourceExportController } from "./use-source-export.js";
 import type { SourceWorkspaceController } from "./use-source-workspace.js";
-import type { CSSProperties, DragEvent, JSX, PointerEvent } from "react";
+import type { CSSProperties, DragEvent, JSX, KeyboardEvent, PointerEvent } from "react";
 
 export function PaneSplitTargets({
   pane,
@@ -51,32 +51,58 @@ export function SplitHandle({
   const vertical = workspace.layout.splitDirection === "vertical";
   const startResize = (event: PointerEvent<HTMLButtonElement>): void => {
     const deck = event.currentTarget.parentElement;
+    const handle = event.currentTarget;
     if (!deck) {
       return;
     }
-    event.currentTarget.setPointerCapture(event.pointerId);
+    handle.setPointerCapture(event.pointerId);
+    let closingPane: "primary" | "secondary" | null = null;
     const move = (moveEvent: globalThis.PointerEvent): void => {
       const rect = deck.getBoundingClientRect();
       const ratio = vertical
         ? (moveEvent.clientY - rect.top) / rect.height
         : (moveEvent.clientX - rect.left) / rect.width;
+      closingPane = ratio < 0.08 ? "primary" : ratio > 0.92 ? "secondary" : null;
+      handle.dataset["closingPane"] = closingPane ?? "";
       workspace.resizeSplit(ratio);
     };
     const finish = (): void => {
+      delete handle.dataset["closingPane"];
       globalThis.removeEventListener("pointermove", move);
       globalThis.removeEventListener("pointerup", finish);
+      globalThis.removeEventListener("pointercancel", finish);
+      if (closingPane) {
+        workspace.closePane(closingPane);
+      }
     };
     globalThis.addEventListener("pointermove", move);
     globalThis.addEventListener("pointerup", finish);
+    globalThis.addEventListener("pointercancel", finish);
+  };
+  const resizeWithKeyboard = (event: KeyboardEvent<HTMLButtonElement>): void => {
+    const decrement = vertical ? event.key === "ArrowUp" : event.key === "ArrowLeft";
+    const increment = vertical ? event.key === "ArrowDown" : event.key === "ArrowRight";
+    if (event.key === "Home") {
+      event.preventDefault();
+      workspace.resizeSplit(0.5);
+    } else if (decrement || increment) {
+      event.preventDefault();
+      workspace.resizeSplit(workspace.layout.splitRatio + (decrement ? -0.05 : 0.05));
+    }
   };
   return (
     <button
       type="button"
       className="workspace-split-handle"
       aria-label="Resize reading panes"
+      title="Resize panes · Double-click to reset · Drag to an edge to close"
       onPointerDown={startResize}
+      onDoubleClick={() => workspace.resizeSplit(0.5)}
+      onKeyDown={resizeWithKeyboard}
     >
-      <span />
+      <span>
+        <MergeIcon />
+      </span>
     </button>
   );
 }
@@ -175,18 +201,44 @@ export function DocumentEmpty({ onAddSource }: { readonly onAddSource: () => voi
 
 export function EmptyWorkspace({
   hasSources,
+  split = false,
+  paneLabel,
   onAddSource,
+  onOpenLibrary,
+  onClosePane,
 }: {
   readonly hasSources: boolean;
+  readonly split?: boolean;
+  readonly paneLabel?: string;
   readonly onAddSource: () => void;
+  readonly onOpenLibrary?: () => void;
+  readonly onClosePane?: () => void;
 }): JSX.Element {
   return (
     <div className="document-empty">
       <div>
-        <span className="mono">{hasSources ? "No source selected" : "Working set is empty"}</span>
-        <h2>{hasSources ? "Choose an open source." : "Open something worth returning to."}</h2>
-        <p>Select a source in the library, or add a readable document.</p>
-        <ReaderButton onClick={onAddSource}>Add a source</ReaderButton>
+        <span className="mono">
+          {split && paneLabel
+            ? `Pane ${paneLabel} is empty`
+            : hasSources
+              ? "No source selected"
+              : "Working set is empty"}
+        </span>
+        <h2>{hasSources ? "Open something here." : "Open something worth returning to."}</h2>
+        <p>
+          Select a source in the library, open the library here, or close this workspace region.
+        </p>
+        <div className="document-empty-actions">
+          {onOpenLibrary ? (
+            <ReaderButton onClick={onOpenLibrary}>Open library here</ReaderButton>
+          ) : null}
+          <ReaderButton onClick={onAddSource}>Add a source</ReaderButton>
+          {split && onClosePane ? (
+            <button type="button" className="document-empty-close-pane" onClick={onClosePane}>
+              Close pane
+            </button>
+          ) : null}
+        </div>
       </div>
     </div>
   );

@@ -9,6 +9,7 @@ import type { TextSelectionDraft } from "@mdbase-reader/reading-surface";
 function runtimeFixture(): {
   readonly runtime: ReadiumRuntime;
   readonly setAnnotations: ReturnType<typeof vi.fn>;
+  readonly setActiveAnnotation: ReturnType<typeof vi.fn>;
   readonly extractText: ReturnType<typeof vi.fn>;
   emitLocation(locator: Readonly<Record<string, unknown>>): void;
   emitSelection(selection: TextSelectionDraft): void;
@@ -16,6 +17,7 @@ function runtimeFixture(): {
   let locationListener: ((locator: Readonly<Record<string, unknown>>) => void) | undefined;
   let selectionListener: ((selection: TextSelectionDraft) => void) | undefined;
   const setAnnotations = vi.fn();
+  const setActiveAnnotation = vi.fn();
   const extractText = vi.fn().mockResolvedValue("Extracted EPUB text");
   return {
     runtime: {
@@ -36,9 +38,11 @@ function runtimeFixture(): {
         };
       },
       setAnnotations,
+      setActiveAnnotation,
       destroy: () => Promise.resolve(),
     },
     setAnnotations,
+    setActiveAnnotation,
     extractText,
     emitLocation: (locator) => locationListener?.(locator),
     emitSelection: (selection) => selectionListener?.(selection),
@@ -134,5 +138,7 @@ describe("ReadiumEpubSurface", () => {
     ]);
 
     expect(fixture.setAnnotations).toHaveBeenCalledWith([matching]);
+    await surface.capabilities.decorations?.setActiveAnnotation(matching);
+    expect(fixture.setActiveAnnotation).toHaveBeenCalledWith(matching);
   });
 });

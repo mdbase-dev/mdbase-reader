@@ -2,10 +2,15 @@ import {
   MdbaseBrowserSelection,
   MdbaseConnect,
   type ConnectOutcome,
+  type DirectAccessProblemCode,
+  type DirectAccessStatus,
   type JsonObject,
   type MdbaseAppManifest,
   type MdbaseConnectTimeouts,
   type MdbaseApplicationSessionSnapshot,
+  type MdbaseConnection,
+  type MdbaseConnectionInfo,
+  type MdbaseConnectionRoute,
 } from "@mdbase-dev/connect";
 import {
   collectionId,
@@ -33,6 +38,19 @@ import { connectSourceImportRepository } from "./source-imports.js";
 
 export type ReaderConnectSnapshot = MdbaseApplicationSessionSnapshot;
 
+export interface ReaderDirectAccessSnapshot {
+  readonly authority: "hosted" | "connector";
+  readonly route: MdbaseConnectionRoute;
+  readonly status: DirectAccessStatus;
+}
+
+export interface ReaderDirectAccessController {
+  readonly getSnapshot: () => ReaderDirectAccessSnapshot | null;
+  readonly subscribe: (listener: () => void) => () => void;
+  readonly check: () => Promise<ConnectOutcome<DirectAccessStatus, DirectAccessProblemCode>>;
+  readonly request: () => Promise<ConnectOutcome<DirectAccessStatus, DirectAccessProblemCode>>;
+}
+
 export interface ReaderConnectedCollection {
   readonly collectionId: CollectionId;
   readonly collectionName: string;
@@ -44,6 +62,7 @@ export interface ReaderConnectedCollection {
   readonly contentSearch: ContentSearchRepository;
   readonly files: CollectionFileRepository;
   readonly libraryViews: LibraryViewRepository;
+  readonly directAccess: ReaderDirectAccessController;
 }
 
 export interface ReaderApplicationSessionOptions {
@@ -123,8 +142,53 @@ export class ReaderApplicationSession {
       contentSearch: new ConnectContentSearchRepository(client),
       files: connectCollectionFileRepository(connection),
       libraryViews: connectLibraryViewRepository(connection),
+      directAccess: readerDirectAccessController(connection),
     };
   }
+}
+
+function readerDirectAccessController(connection: MdbaseConnection): ReaderDirectAccessController {
+  let snapshot = directAccessSnapshot(connection.info());
+  return {
+    getSnapshot: () => snapshot,
+    subscribe: (listener) =>
+      connection.onConnectionChange((info) => {
+        const next = directAccessSnapshot(info);
+        if (sameDirectAccessSnapshot(snapshot, next)) {
+          return;
+        }
+        snapshot = next;
+        listener();
+      }),
+    check: () => connection.checkDirectAccess(),
+    request: () => connection.requestDirectAccess(),
+  };
+}
+
+function directAccessSnapshot(
+  info: MdbaseConnectionInfo | null,
+): ReaderDirectAccessSnapshot | null {
+  return info
+    ? {
+        authority: info.authority.kind,
+        route: info.route,
+        status: info.directAccess,
+      }
+    : null;
+}
+
+function sameDirectAccessSnapshot(
+  left: ReaderDirectAccessSnapshot | null,
+  right: ReaderDirectAccessSnapshot | null,
+): boolean {
+  return (
+    left === right ||
+    (left !== null &&
+      right !== null &&
+      left.authority === right.authority &&
+      left.route === right.route &&
+      left.status === right.status)
+  );
 }
 
 export function manifestForApplicationUrl(

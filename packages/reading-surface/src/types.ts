@@ -59,6 +59,7 @@ export interface AreaSelectionCapability {
 
 export interface DecorationCapability {
   setAnnotations(annotations: readonly Annotation[]): Promise<void>;
+  setActiveAnnotation(annotation: Annotation | null): Promise<void>;
 }
 
 export interface AnnotationNavigationCapability {

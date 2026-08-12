@@ -1,16 +1,27 @@
-import { CloseIcon, MoreIcon } from "./icons.js";
-import { dropTab, startTabDrag } from "./source-tab-drag.js";
+import { useLayoutEffect, useRef, useState } from "react";
+
+import {
+  useDismissTabMenus,
+  useKeepActiveTabVisible,
+  useTabOverflow,
+} from "./source-tab-strip-hooks.js";
+import { SourceTab } from "./SourceTab.js";
+import { TabOverflowMenu, WorkspaceStripMenu } from "./SourceTabMenus.js";
+import { workspacePaneName } from "./workspace-tab-display.js";
 
 import type {
   SourceWorkspacePane,
   WorkspacePaneId,
   WorkspaceTab,
 } from "./source-workspace-layout.js";
+import type { TabContextMenuPosition } from "./tab-context-menu.js";
+import type { SourceWorkspaceController } from "./use-source-workspace.js";
 import type { SourceSummary } from "@mdbase-reader/core";
-import type { JSX, KeyboardEvent } from "react";
+import type { JSX } from "react";
 
 export interface SourceTabStripProps {
   readonly pane: SourceWorkspacePane;
+  readonly workspace: SourceWorkspaceController;
   readonly sourceFor: (tab: WorkspaceTab) => SourceSummary | null;
   readonly onActivate: (tab: WorkspaceTab) => void;
   readonly onPromote: (tab: WorkspaceTab) => void;
@@ -23,210 +34,145 @@ export interface SourceTabStripProps {
   readonly onMoveFromPane: (tabId: WorkspaceTab["id"], fromPaneId: WorkspacePaneId) => void;
 }
 
-export function SourceTabStrip({
-  pane,
-  sourceFor,
-  onActivate,
-  onPromote,
-  onPin,
-  onClose,
-  onCloseOthers,
-  onCloseToRight,
-  onOpenBeside,
-  onReorder,
-  onMoveFromPane,
-}: SourceTabStripProps): JSX.Element | null {
+export function SourceTabStrip(props: SourceTabStripProps): JSX.Element | null {
+  const { pane, workspace, sourceFor, onActivate, onPromote, onClose, onReorder, onMoveFromPane } =
+    props;
+  const trackRef = useRef<HTMLDivElement>(null);
+  const stripMenuRef = useRef<HTMLDetailsElement>(null);
+  const overflowMenuRef = useRef<HTMLDetailsElement>(null);
+  const [overflowing, setOverflowing] = useState(false);
+  const [context, setContext] = useState<{
+    readonly tabId: WorkspaceTab["id"];
+    readonly position: TabContextMenuPosition;
+  } | null>(null);
+  const [showPreviewHint, setShowPreviewHint] = useState(previewHintAvailable);
+  const split = workspace.layout.panes.length === 2;
+  const active = pane.tabs.find(({ id }) => id === pane.activeTabId) ?? null;
+  const menuTab = pane.tabs.find(({ id }) => id === context?.tabId) ?? active;
+
+  useTabOverflow(trackRef, setOverflowing, pane.tabs.length);
+  useKeepActiveTabVisible(trackRef, pane.activeTabId);
+  useDismissTabMenus(stripMenuRef, overflowMenuRef);
+  useLayoutEffect(() => {
+    if (context && stripMenuRef.current) {
+      stripMenuRef.current.open = true;
+    }
+  }, [context]);
+
   if (pane.tabs.length === 0) {
     return null;
   }
   return (
-    <div className="source-tab-strip" role="tablist" aria-label="Open sources">
-      <div className="source-tab-track">
-        {pane.tabs.map((tab, index) => {
-          const source = sourceFor(tab);
-          if (tab.kind === "source" && !source) {
-            return null;
-          }
-          const active = tab.id === pane.activeTabId;
-          return (
-            <div
-              className={tabClassName(tab, active)}
-              key={tab.id}
-              draggable
-              onDragStart={(event) => startTabDrag(event, pane.id, tab, index)}
-              onDragOver={(event) => event.preventDefault()}
-              onDrop={(event) => dropTab(event, pane.id, index, onReorder, onMoveFromPane)}
-            >
-              <button
-                className="source-tab-select"
-                type="button"
-                role="tab"
-                aria-selected={active}
-                tabIndex={active ? 0 : -1}
-                title={`${tabTitle(tab, source)}${tab.preview ? " — preview" : ""}`}
-                onClick={() => onActivate(tab)}
-                onDoubleClick={() => onPromote(tab)}
-                onKeyDown={(event) => handleTabKey(event, pane.tabs, tab, onActivate)}
-              >
-                {tab.pinned ? (
-                  <span className="source-tab-pin" aria-label="Pinned">
-                    ●
-                  </span>
-                ) : null}
-                <span className="source-tab-format">{tabLabel(tab, source)}</span>
-                <span className="source-tab-title">{tabTitle(tab, source)}</span>
-                {tab.dirty ? (
-                  <span className="source-tab-dirty" aria-label="Unsaved changes" />
-                ) : null}
-              </button>
-              <TabActions
-                tab={tab}
-                source={source}
-                onPin={onPin}
-                onClose={onClose}
-                onCloseOthers={onCloseOthers}
-                onCloseToRight={onCloseToRight}
-                onOpenBeside={onOpenBeside}
-              />
-              <button
-                className="source-tab-close"
-                type="button"
-                aria-label={`Close ${tabTitle(tab, source)}`}
-                title="Close tab"
-                onClick={(event) => {
-                  event.stopPropagation();
-                  onClose(tab);
-                }}
-              >
-                <CloseIcon />
-              </button>
-            </div>
-          );
-        })}
+    <div
+      className="source-tab-strip"
+      role="tablist"
+      aria-label={`Open tabs in pane ${workspacePaneName(pane.id)}`}
+    >
+      {split ? (
+        <PaneMarker
+          pane={pane}
+          focused={workspace.layout.focusedPaneId === pane.id}
+          onFocus={() => workspace.focus(pane.id)}
+        />
+      ) : null}
+      <div className="source-tab-track" ref={trackRef}>
+        {pane.tabs.map((tab, index) => (
+          <SourceTab
+            key={tab.id}
+            tab={tab}
+            index={index}
+            pane={pane}
+            source={sourceFor(tab)}
+            onContextTab={(tabId, position) => setContext({ tabId, position })}
+            onActivate={onActivate}
+            onPromote={onPromote}
+            onClose={onClose}
+            onReorder={onReorder}
+            onMoveFromPane={onMoveFromPane}
+          />
+        ))}
       </div>
-      <span className="source-tab-context" aria-hidden="true">
-        {pane.id === "primary" ? "A" : "B"}
-      </span>
+      {overflowing ? (
+        <TabOverflowMenu
+          detailsRef={overflowMenuRef}
+          pane={pane}
+          sourceFor={sourceFor}
+          onActivate={onActivate}
+        />
+      ) : null}
+      <WorkspaceStripMenu
+        detailsRef={stripMenuRef}
+        contextPosition={context?.position ?? null}
+        pane={pane}
+        tab={menuTab}
+        source={menuTab ? sourceFor(menuTab) : null}
+        workspace={workspace}
+        onMenuOpen={() => setContext(null)}
+        onPin={props.onPin}
+        onClose={props.onClose}
+        onCloseOthers={props.onCloseOthers}
+        onCloseToRight={props.onCloseToRight}
+        onOpenBeside={props.onOpenBeside}
+      />
+      {active?.preview && showPreviewHint ? (
+        <div className="source-tab-preview-tip" role="status">
+          <span>Preview tab</span>
+          Double-click the tab or start reading to keep it open.
+          <button
+            type="button"
+            onClick={() => {
+              dismissPreviewHint();
+              setShowPreviewHint(false);
+            }}
+          >
+            Got it
+          </button>
+        </div>
+      ) : null}
     </div>
   );
 }
 
-function TabActions({
-  tab,
-  source,
-  onPin,
-  onClose,
-  onCloseOthers,
-  onCloseToRight,
-  onOpenBeside,
-}: Pick<
-  SourceTabStripProps,
-  "onPin" | "onClose" | "onCloseOthers" | "onCloseToRight" | "onOpenBeside"
-> & {
-  readonly tab: WorkspaceTab;
-  readonly source: SourceSummary | null;
+function PaneMarker({
+  pane,
+  focused,
+  onFocus,
+}: {
+  readonly pane: SourceWorkspacePane;
+  readonly focused: boolean;
+  readonly onFocus: () => void;
 }): JSX.Element {
-  const title = tabTitle(tab, source);
   return (
-    <details className="source-tab-actions">
-      <summary aria-label={`Actions for ${title}`} title="Tab actions">
-        <MoreIcon />
-      </summary>
-      <div className="source-tab-menu">
-        <button type="button" onClick={() => onPin(tab, !tab.pinned)}>
-          {tab.pinned ? "Unpin tab" : "Pin tab"}
-        </button>
-        <button type="button" onClick={() => onOpenBeside(tab, "horizontal")}>
-          Open beside
-        </button>
-        <button type="button" onClick={() => onOpenBeside(tab, "vertical")}>
-          Open below
-        </button>
-        <i />
-        <button type="button" onClick={() => onCloseOthers(tab)}>
-          Close others
-        </button>
-        <button type="button" onClick={() => onCloseToRight(tab)}>
-          Close tabs to the right
-        </button>
-        <button type="button" onClick={() => onClose(tab)}>
-          Close tab
-        </button>
-      </div>
-    </details>
+    <button
+      className="source-tab-context"
+      type="button"
+      aria-label={`Pane ${workspacePaneName(pane.id)}${focused ? ", focused" : ""}`}
+      title={
+        focused
+          ? `Pane ${workspacePaneName(pane.id)} is focused`
+          : `Focus pane ${workspacePaneName(pane.id)}`
+      }
+      onClick={onFocus}
+    >
+      <span>Pane</span> {workspacePaneName(pane.id)}
+    </button>
   );
 }
 
-function handleTabKey(
-  event: KeyboardEvent<HTMLButtonElement>,
-  tabs: readonly WorkspaceTab[],
-  tab: WorkspaceTab,
-  activate: (tab: WorkspaceTab) => void,
-): void {
-  const index = tabs.findIndex(({ id }) => id === tab.id);
-  const nextIndex = tabDestination(event.key, index, tabs.length);
-  if (nextIndex === null) {
-    return;
+const previewHintKey = "mdbase-reader:preview-tab-hint";
+
+function previewHintAvailable(): boolean {
+  try {
+    return globalThis.localStorage.getItem(previewHintKey) !== "dismissed";
+  } catch {
+    return true;
   }
-  const next = tabs[nextIndex];
-  if (!next) {
-    return;
-  }
-  event.preventDefault();
-  const tabList = event.currentTarget.closest<HTMLElement>('[role="tablist"]');
-  tabList?.querySelectorAll<HTMLButtonElement>('[role="tab"]')[nextIndex]?.focus();
-  activate(next);
 }
 
-function tabClassName(tab: WorkspaceTab, active: boolean): string {
-  return ["source-tab", active ? "is-active" : "", tab.preview ? "is-preview" : ""]
-    .filter(Boolean)
-    .join(" ");
-}
-
-function tabLabel(tab: WorkspaceTab, source: SourceSummary | null): string {
-  if (tab.kind === "library") {
-    return "VIEW";
+function dismissPreviewHint(): void {
+  try {
+    globalThis.localStorage.setItem(previewHintKey, "dismissed");
+  } catch {
+    // The in-session dismissal still works when storage is unavailable.
   }
-  if (tab.view === "note") {
-    return "NOTE";
-  }
-  if (tab.view === "annotations") {
-    return "MARKS";
-  }
-  return tab.view === "citation" ? "CSL" : source ? sourceFormat(source) : "SOURCE";
-}
-
-function tabTitle(tab: WorkspaceTab, source: SourceSummary | null): string {
-  return tab.kind === "library" ? tab.title : (source?.title ?? "Unavailable source");
-}
-
-export function tabDestination(key: string, current: number, count: number): number | null {
-  if (count < 1 || current < 0) {
-    return null;
-  }
-  if (key === "ArrowRight") {
-    return (current + 1) % count;
-  }
-  if (key === "ArrowLeft") {
-    return (current - 1 + count) % count;
-  }
-  if (key === "Home") {
-    return 0;
-  }
-  return key === "End" ? count - 1 : null;
-}
-
-export function sourceFormat(source: SourceSummary): string {
-  const mediaType = source.documents[0]?.mediaType ?? "";
-  if (mediaType.includes("pdf")) {
-    return "PDF";
-  }
-  if (mediaType.includes("epub")) {
-    return "EPUB";
-  }
-  if (mediaType.includes("html")) {
-    return "WEB";
-  }
-  return source.documents[0] ? "FILE" : "NOTE";
 }

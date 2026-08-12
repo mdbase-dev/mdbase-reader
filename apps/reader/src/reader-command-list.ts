@@ -74,6 +74,11 @@ function navigationCommands(input: ReaderCommandInput): readonly ReaderCommand[]
 
 function workspaceCommands(input: ReaderCommandInput): readonly ReaderCommand[] {
   const sourceId = input.activeSource?.id;
+  const split = input.workspace.layout.panes.length === 2;
+  const paneLabel = input.workspace.layout.focusedPaneId === "primary" ? "A" : "B";
+  const otherPaneId = input.workspace.layout.focusedPaneId === "primary" ? "secondary" : "primary";
+  const otherPaneLabel = otherPaneId === "primary" ? "A" : "B";
+  const activeTab = input.workspace.activeTab;
   return [
     { id: "toggle-library", label: "Toggle library", group: "Workspace", run: input.toggleLibrary },
     {
@@ -96,18 +101,80 @@ function workspaceCommands(input: ReaderCommandInput): readonly ReaderCommand[] 
       shortcut: "⌘⇧T",
       run: input.workspace.reopenClosed,
     },
+    ...(split
+      ? ([
+          {
+            id: "focus-next-pane",
+            label: "Focus next pane",
+            detail: `Pane ${paneLabel} is focused`,
+            group: "Workspace",
+            shortcut: "F6",
+            run: input.workspace.focusNextPane,
+          },
+          {
+            id: "swap-panes",
+            label: "Swap panes",
+            group: "Workspace",
+            run: input.workspace.swapPanes,
+          },
+          ...(activeTab
+            ? [
+                {
+                  id: "move-active-tab-other-pane",
+                  label: `Move active tab to pane ${otherPaneLabel}`,
+                  group: "Workspace" as const,
+                  run: () =>
+                    input.workspace.moveTab(
+                      activeTab.id,
+                      input.workspace.layout.focusedPaneId,
+                      otherPaneId,
+                    ),
+                },
+              ]
+            : []),
+          {
+            id: "arrange-side-by-side",
+            label: "Arrange panes side by side",
+            group: "Workspace",
+            run: () => input.workspace.setSplitDirection("horizontal"),
+          },
+          {
+            id: "arrange-top-bottom",
+            label: "Stack panes top and bottom",
+            group: "Workspace",
+            run: () => input.workspace.setSplitDirection("vertical"),
+          },
+          {
+            id: "close-focused-pane",
+            label: "Close focused pane and keep its tabs",
+            detail: `Pane ${paneLabel}`,
+            group: "Workspace",
+            run: () => input.workspace.closePane(input.workspace.layout.focusedPaneId),
+          },
+        ] satisfies readonly ReaderCommand[])
+      : []),
+    ...(activeTab
+      ? ([
+          {
+            id: "close-active-tab",
+            label: "Close active tab",
+            group: "Workspace",
+            run: () => input.workspace.closeTab(activeTab.id, input.workspace.layout.focusedPaneId),
+          },
+        ] satisfies readonly ReaderCommand[])
+      : []),
     ...(sourceId
       ? ([
           {
             id: "split-right",
-            label: "Split right",
+            label: split ? "Duplicate in other pane" : "Duplicate in new pane right",
             detail: input.activeSource.title,
             group: "Workspace",
             run: () => input.workspace.openBeside(sourceId, "document", "horizontal"),
           },
           {
             id: "split-below",
-            label: "Split below",
+            label: "Duplicate in pane below",
             detail: input.activeSource.title,
             group: "Workspace",
             run: () => input.workspace.openBeside(sourceId, "document", "vertical"),

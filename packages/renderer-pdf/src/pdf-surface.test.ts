@@ -11,6 +11,7 @@ function runtimeFixture(): {
   readonly cancelAreaSelection: ReturnType<typeof vi.fn>;
   readonly goToPage: ReturnType<typeof vi.fn>;
   readonly setAnnotations: ReturnType<typeof vi.fn>;
+  readonly setActiveAnnotation: ReturnType<typeof vi.fn>;
   readonly extractText: ReturnType<typeof vi.fn>;
   emitArea(selection: AreaSelectionDraft): void;
   emitText(selection: TextSelectionDraft): void;
@@ -22,6 +23,7 @@ function runtimeFixture(): {
   const goToPage = vi.fn();
   const cancelAreaSelection = vi.fn();
   const setAnnotations = vi.fn();
+  const setActiveAnnotation = vi.fn();
   const extractText = vi.fn().mockResolvedValue("Extracted PDF text");
   return {
     runtime: {
@@ -32,6 +34,7 @@ function runtimeFixture(): {
       clearTextSelection: vi.fn(),
       extractText,
       setAnnotations,
+      setActiveAnnotation,
       onAreaSelected: (listener) => {
         areaListener = listener;
         return () => {
@@ -55,6 +58,7 @@ function runtimeFixture(): {
     cancelAreaSelection,
     goToPage,
     setAnnotations,
+    setActiveAnnotation,
     extractText,
     emitArea: (selection) => areaListener?.(selection),
     emitText: (selection) => textListener?.(selection),
@@ -155,6 +159,8 @@ describe("EmbedPdfSurface", () => {
       },
     ]);
     expect(fixture.setAnnotations).toHaveBeenCalledWith([matching]);
+    await surface.capabilities.decorations?.setActiveAnnotation(matching);
+    expect(fixture.setActiveAnnotation).toHaveBeenCalledWith(matching);
   });
 
   it("exposes bounded renderer text extraction through the surface capability", async () => {

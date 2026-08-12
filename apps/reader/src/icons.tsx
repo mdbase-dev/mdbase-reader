@@ -91,6 +91,22 @@ export const CloseIcon = (props: IconProps): JSX.Element => (
     <path d="m6 6 12 12M18 6 6 18" />
   </Icon>
 );
+export const PinIcon = (props: IconProps): JSX.Element => (
+  <Icon {...props}>
+    <path d="m9 4 6 2-1.5 4 3 3-4.5 1-3.5 6-.2-6.5-3.3-2.5 3.8-1.2z" />
+  </Icon>
+);
+export const TabsIcon = (props: IconProps): JSX.Element => (
+  <Icon {...props}>
+    <path d="M5 7.5h14v11H5z" />
+    <path d="M8 4.5h8M3 10.5v6" />
+  </Icon>
+);
+export const MergeIcon = (props: IconProps): JSX.Element => (
+  <Icon {...props}>
+    <path d="M4 5v14M20 5v14M8 12h8M13 9l3 3-3 3" />
+  </Icon>
+);
 export const LinkIcon = (props: IconProps): JSX.Element => (
   <Icon {...props}>
     <path d="M9.5 14.5 14.5 9" />

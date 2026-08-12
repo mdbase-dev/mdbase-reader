@@ -1,7 +1,8 @@
-import { useState, type JSX, type ReactNode } from "react";
+import { useRef, useState, type JSX, type ReactNode } from "react";
 
 import { DocumentContextualToolbar } from "./DocumentContextualToolbar.js";
 import { SourceTabStrip } from "./SourceTabStrip.js";
+import { useAdaptiveSplitDirection } from "./use-adaptive-split-direction.js";
 import {
   useProgressiveWorkspaceTabs,
   workspaceSessionKey,
@@ -48,9 +49,12 @@ export interface DocumentWorkspaceProps {
 export function DocumentWorkspace(props: DocumentWorkspaceProps): JSX.Element {
   const { sourceWorkspace } = props;
   const [dragging, setDragging] = useState(false);
+  const workspaceRef = useRef<HTMLElement>(null);
   const hydratedTabs = useProgressiveWorkspaceTabs(sourceWorkspace.layout);
+  useAdaptiveSplitDirection(workspaceRef, sourceWorkspace);
   return (
     <section
+      ref={workspaceRef}
       className={`document-workspace is-${sourceWorkspace.layout.splitDirection ?? "single"}`}
       aria-label="Document reader"
       onDragEnter={() => setDragging(true)}
@@ -111,6 +115,7 @@ function WorkspacePane({
     >
       <SourceTabStrip
         pane={pane}
+        workspace={sourceWorkspace}
         sourceFor={sourceFor}
         onActivate={(tab) => sourceWorkspace.activateTab(tab.id, pane.id)}
         onPromote={(tab) => sourceWorkspace.promote(tab.id, pane.id)}
@@ -181,7 +186,14 @@ function WorkspacePane({
           </div>
         </>
       ) : (
-        <EmptyWorkspace hasSources={sources.length > 0} onAddSource={toolbar.onAddSource} />
+        <EmptyWorkspace
+          hasSources={sources.length > 0}
+          split={sourceWorkspace.layout.panes.length === 2}
+          paneLabel={pane.id === "primary" ? "A" : "B"}
+          onAddSource={toolbar.onAddSource}
+          onOpenLibrary={() => sourceWorkspace.openLibrary("all-sources", "Library", pane.id)}
+          onClosePane={() => sourceWorkspace.closePane(pane.id)}
+        />
       )}
       {dragging && sourceWorkspace.layout.panes.length === 1 ? (
         <PaneSplitTargets pane={pane} workspace={sourceWorkspace} />

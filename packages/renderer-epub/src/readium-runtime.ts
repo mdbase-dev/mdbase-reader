@@ -29,6 +29,7 @@ export interface ReadiumRuntime {
   onLocationChanged(listener: (locator: Readonly<Record<string, unknown>>) => void): Unsubscribe;
   onTextSelected(listener: (selection: TextSelectionDraft) => void): Unsubscribe;
   setAnnotations(annotations: readonly Annotation[]): void;
+  setActiveAnnotation(annotation: Annotation | null): void;
   destroy(): Promise<void>;
 }
 
@@ -183,6 +184,12 @@ export async function createReadiumRuntime(input: {
         }),
         "mdbase-reader-annotations",
       );
+    },
+    setActiveAnnotation(annotation) {
+      const decoration = annotation
+        ? annotationToEpubDecoration(annotation, publication, input.publicationBaseUrl, true)
+        : null;
+      navigator.applyDecorations(decoration ? [decoration] : [], "mdbase-reader-active-annotation");
     },
     async destroy() {
       locationListeners.clear();

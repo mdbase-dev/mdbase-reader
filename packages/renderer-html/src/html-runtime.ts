@@ -71,6 +71,11 @@ export class HtmlDocumentRuntime {
     setCssHighlights(this.#view, ranges);
   }
 
+  public setActiveAnnotation(annotation: Annotation | null): void {
+    const range = annotation?.target ? locateHtmlTarget(this.#document, annotation.target) : null;
+    setCssHighlight(this.#view, "reader-active-annotation", range ? [range] : []);
+  }
+
   public clearSelection(): void {
     this.#view.getSelection()?.removeAllRanges();
   }
@@ -139,18 +144,24 @@ type HighlightWindow = Window & {
 };
 
 function setCssHighlights(view: Window, ranges: readonly Range[]): void {
+  setCssHighlight(view, "reader-annotations", ranges);
+}
+
+function setCssHighlight(view: Window, name: string, ranges: readonly Range[]): void {
   const target = view as HighlightWindow;
   const registry = target.CSS?.highlights;
   const Highlight = target.Highlight;
   if (!registry || !Highlight) {
     return;
   }
-  registry.delete("reader-annotations");
+  registry.delete(name);
   if (ranges.length > 0) {
-    registry.set("reader-annotations", new Highlight(...ranges));
+    registry.set(name, new Highlight(...ranges));
   }
 }
 
 function clearCssHighlights(view: Window): void {
-  (view as HighlightWindow).CSS?.highlights?.delete("reader-annotations");
+  const highlights = (view as HighlightWindow).CSS?.highlights;
+  highlights?.delete("reader-annotations");
+  highlights?.delete("reader-active-annotation");
 }

@@ -3,7 +3,12 @@ import { useCallback, useEffect, useState } from "react";
 import { annotationRequest, type ComposerSelection } from "./annotation-composer-request.js";
 import { readerErrorMessage } from "./errors.js";
 
-import type { Annotation, AnnotationCreationRequest, Source } from "@mdbase-reader/core";
+import type {
+  Annotation,
+  AnnotationCreationRequest,
+  AnnotationId,
+  Source,
+} from "@mdbase-reader/core";
 import type { ReadingSurface } from "@mdbase-reader/reading-surface";
 
 export type { ComposerSelection } from "./annotation-composer-request.js";
@@ -15,6 +20,7 @@ export interface AnnotationComposerController {
   readonly error: string | null;
   readonly canSelectArea: boolean;
   readonly selectingArea: boolean;
+  readonly activeAnnotationId: AnnotationId | null;
   readonly setNote: (note: string) => void;
   readonly dismiss: () => void;
   readonly save: () => void;
@@ -38,6 +44,7 @@ export function useAnnotationComposer(input: {
   const [note, setNote] = useState("");
   const [status, setStatus] = useState<"idle" | "saving">("idle");
   const [areaSelectionSurface, setAreaSelectionSurface] = useState<ReadingSurface | null>(null);
+  const [activeAnnotationId, setActiveAnnotationId] = useState<AnnotationId | null>(null);
   const [problem, setProblem] = useState<{ sourceId: string; message: string } | null>(null);
   const sourceId = source?.id;
   const selection =
@@ -55,6 +62,7 @@ export function useAnnotationComposer(input: {
         setNote,
         setProblem,
         setAreaSelectionSurface,
+        setActiveAnnotationId,
       ),
     [source, surface],
   );
@@ -66,6 +74,7 @@ export function useAnnotationComposer(input: {
     setNote("");
     setProblem(null);
     setAreaSelectionSurface(null);
+    setActiveAnnotationId(null);
   }, [surface]);
 
   const save = useCallback((): void => {
@@ -102,7 +111,11 @@ export function useAnnotationComposer(input: {
   }, [areaSelectionSurface, surface]);
 
   const open = useCallback(
-    (annotation: Annotation): void => openAnnotation(annotation, { source, surface }, setProblem),
+    (annotation: Annotation): void => {
+      if (openAnnotation(annotation, { source, surface }, setProblem)) {
+        setActiveAnnotationId(annotation.id);
+      }
+    },
     [source, surface],
   );
 
@@ -113,6 +126,7 @@ export function useAnnotationComposer(input: {
     error,
     canSelectArea: Boolean(surface?.capabilities.areaSelection),
     selectingArea: areaSelectionSurface === surface,
+    activeAnnotationId,
     setNote,
     dismiss,
     save,
@@ -128,6 +142,7 @@ function subscribeToSelections(
   setNote: (value: string) => void,
   setProblem: (value: null) => void,
   setAreaSelectionSurface: (value: ReadingSurface | null) => void,
+  setActiveAnnotationId: (value: AnnotationId | null) => void,
 ): (() => void) | undefined {
   if (!source || !surface) {
     return undefined;
@@ -137,6 +152,7 @@ function subscribeToSelections(
     setNote("");
     setProblem(null);
     setAreaSelectionSurface(null);
+    setActiveAnnotationId(null);
   };
   const text = surface.capabilities.textSelection?.selections.subscribe((value) =>
     select({ kind: "text", value }),
@@ -180,10 +196,10 @@ function openAnnotation(
   annotation: Annotation,
   input: { readonly source: Source | null; readonly surface: ReadingSurface | null },
   setProblem: (value: { sourceId: string; message: string }) => void,
-): void {
+): boolean {
   const surface = input.surface;
   if (!surface) {
-    return;
+    return false;
   }
   if (
     annotation.document &&
@@ -196,7 +212,7 @@ function openAnnotation(
         message: "This annotation targets a different document revision and must be re-anchored.",
       });
     }
-    return;
+    return false;
   }
   if (annotation.target?.pdf) {
     void surface.goTo({ kind: "pdf", pageIndex: annotation.target.pdf.pageIndex });
@@ -210,5 +226,8 @@ function openAnnotation(
     });
   } else if (annotation.target?.html) {
     void surface.capabilities.annotationNavigation?.goToAnnotation(annotation);
+  } else {
+    return false;
   }
+  return true;
 }

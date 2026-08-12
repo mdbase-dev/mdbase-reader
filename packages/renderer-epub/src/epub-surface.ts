@@ -51,6 +51,12 @@ export class ReadiumEpubSurface implements ReadingSurface {
           );
           return Promise.resolve();
         },
+        setActiveAnnotation: (annotation) => {
+          runtime.setActiveAnnotation(
+            annotation && this.forThisDocument(annotation) ? annotation : null,
+          );
+          return Promise.resolve();
+        },
       },
     };
   }
@@ -79,6 +85,15 @@ export class ReadiumEpubSurface implements ReadingSurface {
       await this.#runtime.destroy();
       this.#destroyed = true;
     }
+  }
+
+  private forThisDocument(annotation: {
+    readonly document?: SurfaceDocument["document"];
+  }): boolean {
+    return (
+      annotation.document?.fileId === this.document.document.fileId &&
+      annotation.document.revision === this.document.document.revision
+    );
   }
 }
 

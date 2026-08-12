@@ -332,6 +332,49 @@ button {
   background: var(--connected);
 }
 
+.connection-direct-action {
+  padding: 4px 7px;
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  color: var(--muted);
+  background: transparent;
+  font: inherit;
+  cursor: pointer;
+}
+
+.connection-direct-action::before {
+  background: var(--connected);
+}
+
+.connection-direct-action:hover {
+  border-color: var(--line-strong);
+  color: var(--ink);
+  background: var(--hover);
+}
+
+.connection-direct-action:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.connection-direct-action.has-problem {
+  border-color: color-mix(in oklch, var(--danger) 45%, var(--line));
+}
+
+.connection-state.is-direct::before {
+  box-shadow: 0 0 0 3px color-mix(in oklch, var(--connected) 16%, transparent);
+}
+
+.connection-state.is-checking::before {
+  animation: connection-pulse 900ms ease-in-out infinite alternate;
+}
+
+@keyframes connection-pulse {
+  to {
+    opacity: 0.35;
+  }
+}
+
 .reader-header-actions,
 .document-tools {
   display: flex;
@@ -1446,23 +1489,26 @@ button {
   grid-template-rows: 36px var(--reader-toolbar-height) minmax(0, 1fr);
   overflow: hidden;
   background: var(--reader-canvas);
+  container-name: reader-pane;
+  container-type: inline-size;
 }
 
 .workspace-pane.is-focused {
-  box-shadow: inset 0 0 0 1px color-mix(in oklch, var(--accent) 28%, transparent);
+  box-shadow: inset 0 0 0 1px color-mix(in oklch, var(--accent) 42%, transparent);
 }
 
 .source-tab-strip {
+  position: relative;
   min-width: 0;
   display: flex;
   align-items: stretch;
-  justify-content: space-between;
   border-bottom: 1px solid var(--line);
   background: color-mix(in oklch, var(--paper) 94%, var(--canvas));
 }
 
 .source-tab-track {
   min-width: 0;
+  flex: 1 1 auto;
   display: flex;
   overflow-x: auto;
   overflow-y: hidden;
@@ -1475,10 +1521,11 @@ button {
 
 .source-tab {
   position: relative;
-  min-width: 132px;
-  max-width: 238px;
+  flex: 0 1 218px;
+  min-width: 112px;
+  max-width: 218px;
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 22px 24px;
+  grid-template-columns: minmax(0, 1fr) 26px;
   align-items: center;
   border-right: 1px solid var(--line);
   color: var(--muted);
@@ -1509,9 +1556,9 @@ button {
   background: var(--accent);
 }
 
-.source-tab.is-preview .source-tab-title {
-  font-style: italic;
-  font-weight: 500;
+.source-tab.is-preview::after {
+  height: 2px;
+  background: repeating-linear-gradient(90deg, var(--accent) 0 5px, transparent 5px 8px);
 }
 
 .source-tab-select {
@@ -1520,16 +1567,17 @@ button {
   display: grid;
   grid-template-columns: auto auto minmax(0, 1fr) auto;
   align-items: center;
-  gap: 8px;
-  padding: 0 4px 0 11px;
+  gap: 6px;
+  padding: 0 3px 0 10px;
   color: inherit;
   background: transparent;
   cursor: pointer;
 }
 
 .source-tab-pin {
+  width: 10px;
+  height: 10px;
   color: var(--accent);
-  font-size: 5px;
 }
 
 .source-tab-dirty {
@@ -1539,71 +1587,8 @@ button {
   background: var(--accent);
 }
 
-.source-tab-actions {
-  position: relative;
-}
-
-.source-tab-actions > summary {
-  width: 22px;
-  height: 34px;
-  display: grid;
-  place-items: center;
-  color: var(--faint);
-  list-style: none;
-  cursor: pointer;
-  opacity: 0;
-}
-
-.source-tab:hover .source-tab-actions > summary,
-.source-tab-actions[open] > summary,
-.source-tab-actions > summary:focus-visible {
-  opacity: 1;
-}
-
-.source-tab-actions > summary::-webkit-details-marker {
-  display: none;
-}
-
-.source-tab-actions svg {
-  width: 13px;
-}
-
-.source-tab-menu {
-  position: fixed;
-  z-index: 40;
-  width: 190px;
-  padding: 5px;
-  border: 1px solid var(--line-strong);
-  border-radius: 5px;
-  background: var(--paper);
-  box-shadow: 0 18px 48px -24px var(--color-scrim);
-}
-
-.source-tab-menu button {
-  width: 100%;
-  padding: 8px 9px;
-  border-radius: 3px;
-  color: var(--ink-soft);
-  background: transparent;
-  font-size: 10px;
-  text-align: left;
-  cursor: pointer;
-}
-
-.source-tab-menu button:hover {
-  color: var(--ink);
-  background: var(--hover);
-}
-
-.source-tab-menu i {
-  height: 1px;
-  display: block;
-  margin: 4px;
-  background: var(--line);
-}
-
 .source-tab-format {
-  color: var(--accent);
+  color: var(--faint);
   font-family: var(--mono);
   font-size: 7px;
   letter-spacing: 0.06em;
@@ -1646,16 +1631,192 @@ button {
 }
 
 .source-tab-context {
-  flex: 0 0 auto;
-  display: flex;
-  align-items: center;
-  padding: 0 12px;
-  border-left: 1px solid var(--line);
+  flex: 0 0 46px;
+  display: grid;
+  place-items: center;
+  align-content: center;
+  gap: 0;
+  padding: 0;
+  border-right: 1px solid var(--line);
   color: var(--faint);
+  background: transparent;
   font-family: var(--mono);
-  font-size: 7px;
+  font-size: 9px;
+  font-weight: 600;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.source-tab-context span {
+  font-size: 6px;
+  font-weight: 500;
   letter-spacing: 0.08em;
   text-transform: uppercase;
+}
+
+.workspace-pane.is-focused .source-tab-context {
+  color: var(--accent);
+  background: color-mix(in oklch, var(--accent) 7%, var(--paper));
+}
+
+.workspace-strip-menu {
+  position: relative;
+  flex: 0 0 34px;
+}
+
+.workspace-strip-menu > summary {
+  width: 34px;
+  height: 35px;
+  display: grid;
+  place-items: center;
+  border-left: 1px solid var(--line);
+  color: var(--faint);
+  list-style: none;
+  cursor: pointer;
+}
+
+.workspace-strip-menu > summary::-webkit-details-marker {
+  display: none;
+}
+
+.workspace-strip-menu > summary:hover,
+.workspace-strip-menu[open] > summary {
+  color: var(--ink);
+  background: var(--hover);
+}
+
+.workspace-strip-menu > summary svg {
+  width: 14px;
+}
+
+.workspace-menu-popover {
+  position: absolute;
+  top: calc(100% + 5px);
+  right: 4px;
+  z-index: 45;
+  width: min(230px, calc(100vw - 24px));
+  max-height: min(560px, calc(100vh - 120px));
+  overflow: auto;
+  padding: 5px;
+  border: 1px solid var(--line-strong);
+  border-radius: 5px;
+  background: var(--paper);
+  box-shadow: 0 18px 48px -24px var(--color-scrim);
+}
+
+.workspace-strip-menu.is-context-positioned .workspace-menu-popover {
+  position: fixed;
+  top: var(--tab-context-y);
+  right: auto;
+  left: clamp(8px, var(--tab-context-x), calc(100vw - 238px));
+  max-height: calc(100vh - var(--tab-context-y) - 8px);
+}
+
+.workspace-strip-menu.is-context-positioned.opens-upward .workspace-menu-popover {
+  top: auto;
+  bottom: calc(100vh - var(--tab-context-y));
+  max-height: calc(var(--tab-context-y) - 8px);
+}
+
+.workspace-menu-popover > strong {
+  display: block;
+  overflow: hidden;
+  padding: 7px 9px 5px;
+  color: var(--faint);
+  font: 7px/1.3 var(--mono);
+  letter-spacing: 0.05em;
+  text-overflow: ellipsis;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.workspace-menu-popover button {
+  width: 100%;
+  min-height: 30px;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 7px 9px;
+  border-radius: 3px;
+  color: var(--ink-soft);
+  background: transparent;
+  font-size: 10px;
+  text-align: left;
+  cursor: pointer;
+}
+
+.workspace-menu-popover button:hover,
+.workspace-menu-popover button.is-active {
+  color: var(--ink);
+  background: var(--hover);
+}
+
+.workspace-menu-popover button.is-danger {
+  color: var(--danger);
+}
+
+.workspace-menu-popover button:disabled {
+  color: var(--faint);
+  cursor: default;
+  background: transparent;
+}
+
+.workspace-menu-popover button > span:not(.workspace-menu-format) {
+  min-width: 0;
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.workspace-menu-popover button svg {
+  width: 11px;
+}
+
+.workspace-menu-popover i {
+  height: 1px;
+  display: block;
+  margin: 4px;
+  background: var(--line);
+}
+
+.workspace-menu-format {
+  flex: 0 0 32px;
+  color: var(--accent);
+  font: 7px/1 var(--mono);
+  letter-spacing: 0.04em;
+}
+
+.source-tab-preview-tip {
+  position: absolute;
+  top: calc(100% + 7px);
+  left: 10px;
+  z-index: 35;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 6px 7px 6px 9px;
+  border: 1px solid var(--line-strong);
+  border-radius: 4px;
+  color: var(--muted);
+  background: var(--paper);
+  box-shadow: 0 12px 34px -22px var(--color-scrim);
+  font-size: 10px;
+}
+
+.source-tab-preview-tip span {
+  color: var(--accent);
+  font: 7px/1 var(--mono);
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.source-tab-preview-tip button {
+  padding: 4px 6px;
+  border-radius: 3px;
+  color: var(--ink-soft);
+  background: var(--hover);
+  cursor: pointer;
 }
 
 .html-viewer {
@@ -1977,6 +2138,8 @@ button {
 .workspace-split-handle {
   position: absolute;
   z-index: 12;
+  display: grid;
+  place-items: center;
   border: 0;
   background: transparent;
   touch-action: none;
@@ -1986,26 +2149,76 @@ button {
 .document-workspace.is-horizontal .workspace-split-handle {
   top: 0;
   bottom: 0;
-  left: calc(var(--workspace-split, 50%) - 4px);
-  width: 8px;
+  left: calc(var(--workspace-split, 50%) - 6px);
+  width: 12px;
 }
 
 .document-workspace.is-vertical .workspace-split-handle {
-  top: calc(var(--workspace-split, 50%) - 4px);
+  top: calc(var(--workspace-split, 50%) - 6px);
   right: 0;
   left: 0;
-  height: 8px;
+  height: 12px;
   cursor: row-resize;
 }
 
 .workspace-split-handle span {
-  position: absolute;
-  inset: 0 3px;
-  background: transparent;
+  width: 22px;
+  height: 34px;
+  display: grid;
+  place-items: center;
+  border: 1px solid var(--line-strong);
+  border-radius: 10px;
+  color: var(--faint);
+  background: var(--paper);
+  box-shadow: 0 4px 16px -10px var(--color-scrim);
 }
 
-.workspace-split-handle:hover span {
+.workspace-split-handle::before {
+  content: "";
+  position: absolute;
+  inset: 0 5px;
+  background: var(--line-strong);
+}
+
+.document-workspace.is-vertical .workspace-split-handle::before {
+  inset: 5px 0;
+}
+
+.document-workspace.is-vertical .workspace-split-handle span {
+  width: 34px;
+  height: 22px;
+}
+
+.document-workspace.is-vertical .workspace-split-handle svg {
+  rotate: 90deg;
+}
+
+.workspace-split-handle span,
+.workspace-split-handle svg {
+  position: relative;
+  z-index: 1;
+}
+
+.workspace-split-handle svg {
+  width: 13px;
+}
+
+.workspace-split-handle:hover::before,
+.workspace-split-handle:focus-visible::before {
   background: var(--accent);
+}
+
+.workspace-split-handle:hover span,
+.workspace-split-handle:focus-visible span {
+  color: var(--accent);
+  border-color: color-mix(in oklch, var(--accent) 60%, var(--line-strong));
+}
+
+.workspace-split-handle[data-closing-pane="primary"] span,
+.workspace-split-handle[data-closing-pane="secondary"] span {
+  color: var(--danger);
+  border-color: var(--danger);
+  background: color-mix(in oklch, var(--danger) 8%, var(--paper));
 }
 
 .pane-split-targets {
@@ -2171,6 +2384,26 @@ button {
   display: inline-flex;
   align-items: center;
   text-decoration: none;
+}
+
+.document-empty-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.document-empty-close-pane {
+  min-height: 34px;
+  padding: 0 10px;
+  color: var(--muted);
+  background: transparent;
+  cursor: pointer;
+}
+
+.document-empty-close-pane:hover {
+  color: var(--ink);
+  background: var(--hover);
 }
 
 .inspector-pane {
@@ -2956,6 +3189,64 @@ input:focus-visible {
 .mobile-sheet-dismiss,
 .mobile-inspector-dismiss {
   display: none;
+}
+
+@container reader-pane (max-width: 520px) {
+  .document-toolbar {
+    gap: 6px;
+    padding-inline: 8px;
+  }
+
+  .document-history,
+  .reading-position-status {
+    display: none;
+  }
+
+  .document-identity {
+    min-width: 0;
+    flex: 1;
+  }
+
+  .document-identity span,
+  .document-tools .tool-label {
+    display: none;
+  }
+
+  .document-tools {
+    flex: 0 0 auto;
+    gap: 1px;
+  }
+
+  .source-tab {
+    min-width: 96px;
+  }
+
+  .preview-document {
+    padding: 14px 10px 48px;
+  }
+
+  .preview-page {
+    min-height: 680px;
+    padding: 38px 28px 56px;
+  }
+
+  .document-empty {
+    padding: 28px;
+  }
+}
+
+@container reader-pane (max-width: 390px) {
+  .document-identity {
+    display: none;
+  }
+
+  .source-tab-format {
+    display: none;
+  }
+
+  .source-tab-select {
+    grid-template-columns: auto minmax(0, 1fr) auto;
+  }
 }
 
 @media (max-width: 1120px) {

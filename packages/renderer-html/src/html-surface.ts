@@ -36,6 +36,12 @@ export class HtmlReadingSurface implements ReadingSurface {
           runtime.setAnnotations(this.forThisDocument(annotations));
           return Promise.resolve();
         },
+        setActiveAnnotation: (annotation) => {
+          runtime.setActiveAnnotation(
+            annotation && this.forThisDocument([annotation])[0] ? annotation : null,
+          );
+          return Promise.resolve();
+        },
       },
       annotationNavigation: {
         goToAnnotation: (annotation) => Promise.resolve(runtime.goToAnnotation(annotation)),

@@ -68,4 +68,28 @@ describe("annotationToEpubDecoration", () => {
       ),
     ).toBeNull();
   });
+
+  it("uses an emphasized underline for the active annotation", () => {
+    const active = annotationToEpubDecoration(
+      {
+        collectionId: collectionId("reading"),
+        id: annotationId("ann-active"),
+        sourceId: sourceId("source-1"),
+        source: "[[source-1]]",
+        annotationType: "highlight",
+        target: {
+          quote: { exact: "Selected EPUB text" },
+          epub: { cfi: "epubcfi(/6/4!/4/2:8)" },
+        },
+        tags: [],
+        body: "",
+        createdAt: dateTime("2026-08-10T00:00:00.000Z"),
+      },
+      publication,
+      baseUrl,
+      true,
+    );
+
+    expect(active?.style).toMatchObject({ type: "highlightUnderline", tint: "#f2cf63" });
+  });
 });

@@ -88,6 +88,7 @@ function OpenedReader({ collectionId }: { readonly collectionId: string }): JSX.
     <ReaderApp
       key={collectionId}
       gateway={gateway}
+      directAccess={opened.directAccess}
       saveFile={(name, blob) => readerPlatform.saveFile(name, blob)}
       pickSourceFile={() =>
         readerPlatform.pickFile([

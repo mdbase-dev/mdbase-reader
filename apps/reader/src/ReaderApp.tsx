@@ -12,6 +12,7 @@ import { ReaderWorkspaceView, type ReaderWorkspaceViewModel } from "./ReaderWork
 import { updateSurface } from "./RenderedSourceDocument.js";
 import { useBibliographyExport } from "./use-bibliography-export.js";
 import { useDeploymentUpdate } from "./use-deployment-update.js";
+import { useDirectAccess } from "./use-direct-access.js";
 import { useDocumentDecorations } from "./use-document-decorations.js";
 import { useMdbaseLibraryViews } from "./use-mdbase-library-views.js";
 import { useReaderWorkspace, type ReaderWorkspaceController } from "./use-reader-workspace.js";
@@ -22,11 +23,13 @@ import { useWorkspaceDirtyIndicator } from "./use-workspace-dirty-indicator.js";
 
 import type { SourceDocumentRenderer } from "./RenderedSourceDocument.js";
 import type { ReaderWorkspaceGateway } from "./workspace-model.js";
+import type { ReaderDirectAccessController } from "@mdbase-reader/connect";
 import type { PickedFile } from "@mdbase-reader/platform";
 import type { ReadingSurface } from "@mdbase-reader/reading-surface";
 
 export interface ReaderAppProps {
   readonly gateway: ReaderWorkspaceGateway;
+  readonly directAccess?: ReaderDirectAccessController;
   readonly renderDocument?: SourceDocumentRenderer;
   readonly pickSourceFile?: () => Promise<PickedFile | null>;
   readonly saveFile?: (name: string, blob: Blob) => Promise<void>;
@@ -34,6 +37,7 @@ export interface ReaderAppProps {
 
 export function ReaderApp({
   gateway,
+  directAccess,
   renderDocument,
   pickSourceFile,
   saveFile,
@@ -50,6 +54,7 @@ export function ReaderApp({
   return (
     <OpenedReaderApp
       gateway={gateway}
+      {...(directAccess ? { directAccess } : {})}
       workspace={workspace}
       library={workspace.library.value}
       {...(renderDocument ? { renderDocument } : {})}
@@ -61,6 +66,7 @@ export function ReaderApp({
 
 function OpenedReaderApp({
   gateway,
+  directAccess,
   workspace,
   library,
   renderDocument,
@@ -80,11 +86,15 @@ function OpenedReaderApp({
   const [theme, changeTheme] = useThemePreference();
   const [surfaces, setSurfaces] = useState<ReadonlyMap<string, ReadingSurface>>(new Map());
   const deploymentUpdateAvailable = useDeploymentUpdate();
+  const directAccessState = useDirectAccess(directAccess);
   const sourceWorkspace = useSourceWorkspace({
     selectedSourceId: workspace.selectedSource?.id ?? null,
     sourceIds: library.sources.map(({ id }) => id),
     collectionKey,
     selectSource: workspace.selectSource,
+    // Native confirmation keeps tab and pane closing synchronous with the workspace action.
+    // eslint-disable-next-line no-alert
+    confirmDiscard: () => globalThis.confirm("Discard unsaved changes and close this tab?"),
   });
   const surface = sourceWorkspace.activeSourceId
     ? (surfaces.get(`${sourceWorkspace.layout.focusedPaneId}:${sourceWorkspace.activeSourceId}`) ??
@@ -96,7 +106,11 @@ function OpenedReaderApp({
   const composer = useReaderAnnotationComposer(workspace, surface);
   useWorkspaceDirtyIndicator(workspace, sourceWorkspace);
   const readingResume = useReaderReadingResume(workspace, surface);
-  const decorationProblem = useDocumentDecorations(surface, workspace.annotations);
+  const decorationProblem = useDocumentDecorations(
+    surface,
+    workspace.annotations,
+    composer.activeAnnotationId,
+  );
   const sourceAddition = useSourceAddition(workspace, pickSourceFile, (sourceId) => {
     sourceWorkspace.open(sourceId);
     setMobileLibraryOpen(false);
@@ -116,6 +130,7 @@ function OpenedReaderApp({
     openCommands: () => setCommandsOpen(true),
     focusSearch: () => focusLibrarySearch(setMobileLibraryOpen),
     switchTab: sourceWorkspace.switchRelative,
+    focusNextPane: sourceWorkspace.focusNextPane,
     reopenTab: sourceWorkspace.reopenClosed,
     navigate: sourceWorkspace.navigate,
   });
@@ -142,6 +157,7 @@ function OpenedReaderApp({
     renderDocument,
     onSurfaceChange,
     deploymentUpdateAvailable,
+    directAccess: directAccessState,
     theme,
     changeTheme,
     focusMode,

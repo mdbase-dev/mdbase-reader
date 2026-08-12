@@ -92,6 +92,7 @@ function readerStyle(document: Document): HTMLStyleElement {
     pre { overflow: auto; padding: 1rem; background: rgba(0,0,0,.06); }
     ::selection { background: rgba(64, 174, 224, .28); }
     ::highlight(reader-annotations) { background: rgba(247, 210, 78, .42); text-decoration: underline rgba(211, 159, 0, .38) 1px; }
+    ::highlight(reader-active-annotation) { background: rgba(247, 188, 48, .68); text-decoration: underline rgba(157, 103, 0, .86) 2px; }
     mark[data-reader-annotation] { background: rgba(247, 210, 78, .42); color: inherit; }
     @media (prefers-color-scheme: dark) {
       :root { background: #211d1e; color: #e7e3dc; }

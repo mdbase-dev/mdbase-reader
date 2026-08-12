@@ -62,6 +62,7 @@ export interface ReaderShortcutActions {
   readonly openCommands: () => void;
   readonly focusSearch: () => void;
   readonly switchTab: (direction: -1 | 1) => void;
+  readonly focusNextPane: () => void;
   readonly reopenTab: () => void;
   readonly navigate: (direction: -1 | 1) => void;
 }
@@ -79,6 +80,11 @@ function handleReaderShortcut(event: KeyboardEvent, actions: ReaderShortcutActio
     return;
   }
   if (handleHistoryShortcut(event, actions)) {
+    return;
+  }
+  if (event.key === "F6") {
+    event.preventDefault();
+    actions.focusNextPane();
     return;
   }
   if (event.key === "Escape" && actions.focusMode) {

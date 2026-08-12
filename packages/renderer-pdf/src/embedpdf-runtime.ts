@@ -29,6 +29,7 @@ export interface EmbedPdfRuntime {
   clearTextSelection(): void;
   extractText(options?: { readonly signal?: AbortSignal }): Promise<string>;
   setAnnotations(annotations: readonly Annotation[]): void;
+  setActiveAnnotation(annotation: Annotation | null): void;
   destroy(): void;
 }
 
@@ -165,6 +166,14 @@ export function createEmbedPdfRuntime(registry: PluginRegistry): EmbedPdfRuntime
           annotationCapability.createAnnotation(decoration.pageIndex, decoration);
           decorationIds.add(decoration.id);
         }
+      }
+    },
+    setActiveAnnotation(annotation) {
+      const pdf = annotation?.target?.pdf;
+      if (annotation && pdf) {
+        annotationCapability.selectAnnotation(pdf.pageIndex, `mdbase-reader:${annotation.id}`);
+      } else {
+        annotationCapability.deselectAnnotation();
       }
     },
     destroy() {

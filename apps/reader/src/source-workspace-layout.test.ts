@@ -11,11 +11,16 @@ import {
 } from "./source-workspace-layout.js";
 import {
   closeSecondaryPane,
+  discardWorkspacePane,
   focusPane,
+  focusNextWorkspacePane,
+  mergeWorkspacePane,
+  moveAllWorkspaceTabsToOtherPane,
   moveWorkspaceTabToPane,
   openBeside,
   resizeWorkspaceSplit,
   splitWorkspaceTab,
+  swapWorkspacePanes,
 } from "./source-workspace-panes.js";
 import {
   closeOtherWorkspaceTabs,
@@ -200,6 +205,37 @@ describe("source workspace panes", () => {
     expect(merged.splitDirection).toBeNull();
     expect(merged.panes).toHaveLength(1);
     expect(focusedPane(merged).tabs.map(({ sourceId }) => sourceId)).toEqual([first, second]);
+  });
+
+  it("can close either pane while preserving its tabs and active context", () => {
+    const split = openBeside(openSource(createSourceWorkspaceLayout(first), second), third);
+    const mergedPrimary = mergeWorkspacePane(focusPane(split, "primary"), "primary");
+
+    expect(mergedPrimary.panes).toHaveLength(1);
+    expect(focusedPane(mergedPrimary).tabs.map(({ sourceId }) => sourceId)).toEqual([
+      third,
+      first,
+      second,
+    ]);
+    expect(activeTab(focusedPane(mergedPrimary))?.sourceId).toBe(second);
+  });
+
+  it("can discard a pane, move all tabs, swap contents, and focus the next pane", () => {
+    const split = openBeside(openSource(createSourceWorkspaceLayout(first), second), third);
+    const moved = moveAllWorkspaceTabsToOtherPane(split, "primary");
+    const swapped = swapWorkspacePanes(split);
+    const discarded = discardWorkspacePane(split, "secondary");
+
+    expect(paneById(moved, "primary")?.tabs).toHaveLength(0);
+    expect(paneById(moved, "secondary")?.tabs.map(({ sourceId }) => sourceId)).toEqual([
+      third,
+      first,
+      second,
+    ]);
+    expect(paneById(swapped, "primary")?.tabs.map(({ sourceId }) => sourceId)).toEqual([third]);
+    expect(focusNextWorkspacePane(split).focusedPaneId).toBe("primary");
+    expect(discarded.panes).toHaveLength(1);
+    expect(focusedPane(discarded).tabs.map(({ sourceId }) => sourceId)).toEqual([first, second]);
   });
 
   it("opens multiple views of a source as distinct tabs", () => {

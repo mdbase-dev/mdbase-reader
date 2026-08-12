@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { tabDestination } from "./SourceTabStrip.js";
+import { tabDestination } from "./source-tab-keyboard.js";
 
 describe("source tab keyboard navigation", () => {
   it("wraps through tabs with horizontal arrow keys", () => {

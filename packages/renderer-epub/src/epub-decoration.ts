@@ -9,6 +9,7 @@ export function annotationToEpubDecoration(
   annotation: Annotation,
   publication: Publication,
   publicationBaseUrl: string,
+  active = false,
 ): Decoration | null {
   const selector = annotation.target?.epub;
   if (!selector) {
@@ -36,7 +37,7 @@ export function annotationToEpubDecoration(
         id: annotation.id,
         locator,
         style: {
-          type: DecorationStyleType.Highlight,
+          type: active ? DecorationStyleType.HighlightUnderline : DecorationStyleType.Highlight,
           tint: highlightTint(annotation.color),
         },
       }

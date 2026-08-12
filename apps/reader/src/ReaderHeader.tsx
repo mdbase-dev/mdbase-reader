@@ -2,11 +2,13 @@ import { ProductBrand, type ThemePreference } from "@mdbase-reader/ui";
 
 import { PanelIcon, SearchIcon, ThemeIcon } from "./icons.js";
 
+import type { ReaderDirectAccessState } from "./use-direct-access.js";
 import type { JSX } from "react";
 
 interface ReaderHeaderProps {
   readonly collectionName: string;
   readonly connectionState: "connected" | "offline" | "syncing";
+  readonly directAccess: ReaderDirectAccessState;
   readonly theme: ThemePreference;
   readonly onChangeTheme: () => void;
   readonly onOpenCommands: () => void;
@@ -18,6 +20,7 @@ interface ReaderHeaderProps {
 export function ReaderHeader({
   collectionName,
   connectionState,
+  directAccess,
   theme,
   onChangeTheme,
   onOpenCommands,
@@ -43,7 +46,7 @@ export function ReaderHeader({
         <span className="collection-context" title={collectionName}>
           {collectionName}
         </span>
-        <span className={`connection-state is-${connectionState}`}>{connectionState}</span>
+        <ConnectionState state={connectionState} directAccess={directAccess} />
       </div>
       <div className="reader-header-actions">
         <button
@@ -82,5 +85,55 @@ export function ReaderHeader({
         </button>
       </div>
     </header>
+  );
+}
+
+function ConnectionState({
+  state,
+  directAccess,
+}: {
+  readonly state: "connected" | "offline" | "syncing";
+  readonly directAccess: ReaderDirectAccessState;
+}): JSX.Element {
+  const { snapshot, working, problem, request } = directAccess;
+  if (snapshot?.authority !== "connector" || state !== "connected") {
+    return <span className={`connection-state is-${state}`}>{state}</span>;
+  }
+  if (snapshot.route === "direct") {
+    return (
+      <span
+        className="connection-state is-connected is-direct"
+        title="Connected directly to this computer"
+      >
+        direct
+      </span>
+    );
+  }
+  if (working || snapshot.status === "checking") {
+    return (
+      <span className="connection-state is-connected is-checking" aria-live="polite">
+        Connecting…
+      </span>
+    );
+  }
+  if (snapshot.status === "disabled") {
+    return <span className={`connection-state is-${state}`}>{state}</span>;
+  }
+  const denied = snapshot.status === "denied";
+  const title =
+    problem ??
+    (denied
+      ? "Local network access is blocked. Allow it in your browser’s site settings, then retry."
+      : "Request local network access and connect directly to the mdbase relay on this computer.");
+  return (
+    <button
+      className={`connection-state connection-direct-action${problem ? " has-problem" : ""}`}
+      type="button"
+      title={title}
+      aria-label={title}
+      onClick={request}
+    >
+      {denied ? "Retry local access" : "Connect directly"}
+    </button>
   );
 }
