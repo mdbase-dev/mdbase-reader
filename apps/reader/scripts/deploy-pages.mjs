@@ -5,6 +5,14 @@ import { resolve } from "node:path";
 const projectRoot = resolve(import.meta.dirname, "..");
 const projectName = "mdbase-reader";
 const deploymentOrigin = `https://${projectName}.pages.dev`;
+const deploymentTarget = process.env.MDBASE_READER_DEPLOY_TARGET ?? "staging";
+if (deploymentTarget !== "staging" && deploymentTarget !== "production") {
+  throw new Error(`Unsupported reader deployment target: ${deploymentTarget}.`);
+}
+const connectUrl =
+  deploymentTarget === "production"
+    ? "https://connect.mdbase.dev"
+    : "https://connect-staging.mdbase.dev";
 const pnpm = process.platform === "win32" ? "pnpm.cmd" : "pnpm";
 const manifestTargets = [
   resolve(projectRoot, "public", ".well-known", "mdbase-app.json"),
@@ -19,7 +27,7 @@ try {
     MDBASE_READER_BUILD_ID: buildId,
     MDBASE_READER_ORIGIN: deploymentOrigin,
     VITE_MDBASE_READER_BUILD_ID: buildId,
-    VITE_MDBASE_CONNECT_URL: "https://connect-staging.mdbase.dev",
+    VITE_MDBASE_CONNECT_URL: connectUrl,
     VITE_MDBASE_CONNECT_LOOPBACK_URL: "http://127.0.0.1:28486",
   });
   await verifyDeploymentArtifacts();
