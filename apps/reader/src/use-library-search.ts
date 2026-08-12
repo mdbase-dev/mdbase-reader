@@ -44,7 +44,10 @@ export function useLibrarySearch(
     const timer = window.setTimeout(() => {
       setContent({ query: normalized, status: "searching", matches: [], problem: null });
       void gateway
-        .searchText(normalized, { signal: controller.signal })
+        .searchText(normalized, {
+          signal: controller.signal,
+          replaceableFamily: "reader-library-content-search",
+        })
         .then((matches) => {
           if (!controller.signal.aborted) {
             setContent({ query: normalized, status: "ready", matches, problem: null });

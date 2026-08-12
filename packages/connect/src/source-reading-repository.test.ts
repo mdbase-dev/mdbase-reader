@@ -4,7 +4,7 @@ import { describe, expect, it, vi } from "vitest";
 import { ConnectSourceRepository } from "./source-repository.js";
 
 import type { ReaderConnectClient } from "./repository-client.js";
-import type { ConnectOutcome, QueryResult, RecordDocument } from "@mdbase-dev/connect";
+import type { ConnectOutcome, QueryPage, RecordDocument } from "@mdbase-dev/connect";
 
 function success<Value>(value: Value): ConnectOutcome<Value> {
   return { ok: true, value, diagnostics: [] };
@@ -26,24 +26,18 @@ describe("Connect source reading state", () => {
       last_opened_at: "2026-08-09T00:00:00.000Z",
     };
     const updated = record("rev-2", { ...frontmatter, reading: savedReading });
-    const query = vi.fn(() =>
-      Promise.resolve(
-        success<QueryResult>({
-          results: [
-            {
-              path: current.path,
-              effectiveFrontmatter: frontmatter,
-              types: current.types,
-              file: {},
-            },
-          ],
-        }),
-      ),
+    const queryPages = vi.fn(() =>
+      singleQueryPage({
+        path: current.path,
+        effectiveFrontmatter: frontmatter,
+        types: current.types,
+        file: {},
+      }),
     );
     const read = vi.fn(() => Promise.resolve(success(current)));
     const update = vi.fn(() => Promise.resolve(success(updated)));
     const repository = new ConnectSourceRepository({
-      query,
+      queryPages,
       read,
       update,
     } as unknown as ReaderConnectClient);
@@ -82,4 +76,18 @@ function record(revision: string, frontmatter: Record<string, unknown>): RecordD
     body: "Notes",
     file: {},
   };
+}
+
+async function* singleQueryPage(
+  record: QueryPage["results"][number],
+): AsyncGenerator<ConnectOutcome<QueryPage>> {
+  yield await Promise.resolve(
+    success({
+      results: [record],
+      page: 0,
+      offset: 0,
+      loaded: 1,
+      complete: true,
+    }),
+  );
 }

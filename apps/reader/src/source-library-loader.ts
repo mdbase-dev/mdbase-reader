@@ -13,6 +13,9 @@ export async function loadSourceLibrary(input: {
   readonly options: ReaderRequestOptions;
   readonly onProgress?: (snapshot: ReaderLibrarySnapshot) => void;
 }): Promise<ReaderLibrarySnapshot> {
+  if (input.repository.listPages) {
+    return loadStablePages(input, input.repository.listPages.bind(input.repository));
+  }
   const first = await input.repository.list(
     { collectionId: input.collectionId, limit: 100 },
     input.options,
@@ -40,6 +43,23 @@ export async function loadSourceLibrary(input: {
     }
   } else {
     await loadCursorPages(input, sources, first.nextCursor, first.totalCount);
+  }
+  return snapshot(input.collectionName, sources, true, sources.length);
+}
+
+async function loadStablePages(
+  input: Parameters<typeof loadSourceLibrary>[0],
+  listPages: NonNullable<SourceRepository["listPages"]>,
+): Promise<ReaderLibrarySnapshot> {
+  const sources: SourceSummary[] = [];
+  let total: number | undefined;
+  for await (const page of listPages(
+    { collectionId: input.collectionId, limit: 100 },
+    input.options,
+  )) {
+    sources.push(...page.items);
+    total = page.totalCount ?? total;
+    publish(input, sources, false, total);
   }
   return snapshot(input.collectionName, sources, true, sources.length);
 }

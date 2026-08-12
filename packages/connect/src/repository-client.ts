@@ -1,11 +1,7 @@
-import {
-  ConnectOperationScheduler,
-  readerConnectGlobalConcurrency,
-} from "./operation-scheduler.js";
-
 import type { annotationContract, sourceContract } from "./contracts.js";
 import type {
   ConnectOutcome,
+  ConnectRequestOptions,
   CreateInput,
   DeleteInput,
   DeletePreflightResult,
@@ -13,6 +9,7 @@ import type {
   DeleteResult,
   MdbaseConnection,
   QueryInput,
+  QueryPage,
   QueryResult,
   ReadInput,
   RecordDocument,
@@ -20,12 +17,20 @@ import type {
 } from "@mdbase-dev/connect";
 import type { ReaderRequestOptions } from "@mdbase-reader/core";
 
-const connectorBusyRetryDelaysMs = [75, 200, 500] as const;
 export const readerConnectBulkConcurrency = 4;
+
+export interface ReaderQueryPagesOptions extends ReaderRequestOptions {
+  readonly firstPageSize?: number;
+  readonly pageSize?: number;
+}
 
 export interface ReaderConnectClient {
   read(input: ReadInput, options?: ReaderRequestOptions): Promise<ConnectOutcome<RecordDocument>>;
   query(input: QueryInput, options?: ReaderRequestOptions): Promise<ConnectOutcome<QueryResult>>;
+  queryPages(
+    input: QueryInput,
+    options?: ReaderQueryPagesOptions,
+  ): AsyncIterable<ConnectOutcome<QueryPage>>;
   create(input: CreateInput): Promise<ConnectOutcome<RecordDocument>>;
   update(input: UpdateInput): Promise<ConnectOutcome<RecordDocument>>;
   preflightDelete(input: DeleteInput): Promise<ConnectOutcome<DeletePreflightResult>>;
@@ -49,20 +54,12 @@ export function outcomeValue<Value>(outcome: ConnectOutcome<Value>, operation: s
   throw new ConnectRepositoryError(operation, outcome.problem.code, outcome.problem.message);
 }
 
-export function cursorOffset(cursor: string | undefined): number {
-  if (!cursor) {
-    return 0;
-  }
-  const offset = Number.parseInt(cursor, 10);
-  return Number.isSafeInteger(offset) && offset >= 0 ? offset : 0;
-}
-
 export function queryWithOptions(
   client: ReaderConnectClient,
   input: QueryInput,
   options: ReaderRequestOptions,
 ): Promise<ConnectOutcome<QueryResult>> {
-  return options.signal ? client.query(input, options) : client.query(input);
+  return hasRequestOptions(options) ? client.query(input, options) : client.query(input);
 }
 
 export function readWithOptions(
@@ -70,22 +67,7 @@ export function readWithOptions(
   input: ReadInput,
   options: ReaderRequestOptions,
 ): Promise<ConnectOutcome<RecordDocument>> {
-  return options.signal ? client.read(input, options) : client.read(input);
-}
-
-export async function retryRejectedConnectorBusy<Value>(
-  operation: () => Promise<ConnectOutcome<Value>>,
-  options: { readonly signal?: AbortSignal } = {},
-): Promise<ConnectOutcome<Value>> {
-  let outcome = await operation();
-  for (const delayMs of connectorBusyRetryDelaysMs) {
-    if (!isRejectedConnectorBusy(outcome)) {
-      return outcome;
-    }
-    await abortableDelay(delayMs, options.signal);
-    outcome = await operation();
-  }
-  return outcome;
+  return hasRequestOptions(options) ? client.read(input, options) : client.read(input);
 }
 
 export async function mapConcurrent<Input, Output>(
@@ -122,81 +104,57 @@ export async function recordPathById(
   id: string,
   options: ReaderRequestOptions = {},
 ): Promise<string | null> {
-  const result = outcomeValue(
-    await queryWithOptions(client, { contract, frontmatterMode: "effective", limit: 500 }, options),
-    "query records",
-  );
-  return (
-    result.results.find(
+  for await (const outcome of client.queryPages(
+    { contract, frontmatterMode: "effective" },
+    { ...options, firstPageSize: 200, pageSize: 1_000 },
+  )) {
+    const page = outcomeValue(outcome, "query records");
+    const match = page.results.find(
       ({ effectiveFrontmatter, frontmatter }) =>
         (effectiveFrontmatter ?? frontmatter)?.["id"] === id,
-    )?.path ?? null
-  );
+    );
+    if (match) {
+      return match.path;
+    }
+  }
+  return null;
 }
 
-export function connectClient(
-  connection: MdbaseConnection,
-  scheduler = new ConnectOperationScheduler(readerConnectGlobalConcurrency),
-): ReaderConnectClient {
+/**
+ * Keep Reader's domain repositories independent of SDK types while leaving
+ * admission, retry, mutation ordering, and request budgets with the SDK.
+ */
+export function connectClient(connection: MdbaseConnection): ReaderConnectClient {
   return {
-    read: (input, options) =>
-      retryRejectedConnectorBusy(
-        () => scheduler.run(() => connection.read(input, options), { signal: options?.signal }),
-        options,
-      ),
-    query: (input, options) =>
-      retryRejectedConnectorBusy(
-        () => scheduler.run(() => connection.query(input, options), { signal: options?.signal }),
-        options,
-      ),
-    create: (input) =>
-      retryRejectedConnectorBusy(() =>
-        scheduler.run(() => connection.create(input), { priority: "foreground" }),
-      ),
-    update: (input) =>
-      retryRejectedConnectorBusy(() =>
-        scheduler.run(() => connection.update(input), { priority: "foreground" }),
-      ),
-    preflightDelete: (input) =>
-      retryRejectedConnectorBusy(() =>
-        scheduler.run(() => connection.preflightDelete(input), { priority: "foreground" }),
-      ),
-    deleteWithProgress: (input, options) =>
-      scheduler.run(() => connection.deleteWithProgress(input, options), {
-        priority: "foreground",
-        signal: options?.signal,
+    read: (input, options) => connection.read(input, connectOptions(options)),
+    query: (input, options) => connection.query(input, connectOptions(options)),
+    queryPages: (input, options) =>
+      connection.queryPages(input, {
+        ...(options?.firstPageSize === undefined ? {} : { firstPageSize: options.firstPageSize }),
+        ...(options?.pageSize === undefined ? {} : { pageSize: options.pageSize }),
+        ...connectOptions(options),
       }),
+    create: (input) => connection.create(input),
+    update: (input) => connection.update(input),
+    preflightDelete: (input) => connection.preflightDelete(input),
+    deleteWithProgress: (input, options) => connection.deleteWithProgress(input, options),
   };
 }
 
-function isRejectedConnectorBusy(outcome: ConnectOutcome<unknown>): boolean {
-  return (
-    !outcome.ok &&
-    outcome.problem.code === "connector_busy" &&
-    (outcome.problem.operation_outcome === "rejected" ||
-      outcome.problem.operation_outcome === "not_sent")
-  );
+export function connectOptions(options: ReaderRequestOptions | undefined): ConnectRequestOptions {
+  return {
+    ...(options?.signal ? { signal: options.signal } : {}),
+    ...(options?.replaceableFamily
+      ? {
+          coordination: {
+            family: options.replaceableFamily,
+            latestWins: true,
+          },
+        }
+      : {}),
+  };
 }
 
-function abortableDelay(delayMs: number, signal?: AbortSignal): Promise<void> {
-  if (signal?.aborted) {
-    return Promise.reject(abortReason(signal));
-  }
-  return new Promise((resolve, reject) => {
-    const timeout = setTimeout(() => {
-      signal?.removeEventListener("abort", abort);
-      resolve();
-    }, delayMs);
-    const abort = (): void => {
-      clearTimeout(timeout);
-      reject(abortReason(signal));
-    };
-    signal?.addEventListener("abort", abort, { once: true });
-  });
-}
-
-function abortReason(signal: AbortSignal | undefined): Error {
-  return signal?.reason instanceof Error
-    ? signal.reason
-    : new DOMException("The operation was cancelled.", "AbortError");
+function hasRequestOptions(options: ReaderRequestOptions): boolean {
+  return options.signal !== undefined || options.replaceableFamily !== undefined;
 }

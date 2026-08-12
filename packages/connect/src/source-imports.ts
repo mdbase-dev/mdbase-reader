@@ -1,6 +1,6 @@
 import { sourceContract } from "./contracts.js";
 import { sourceFromDocument, sourceSummaryFromQuery } from "./mapping.js";
-import { ConnectRepositoryError, outcomeValue, queryWithOptions } from "./repository-client.js";
+import { ConnectRepositoryError, outcomeValue } from "./repository-client.js";
 
 import type { ReaderConnectClient } from "./repository-client.js";
 import type {
@@ -43,25 +43,17 @@ export class ConnectSourceImportRepository implements SourceImportRepository {
     options: ReaderRequestOptions = {},
   ): Promise<SourceSummary | null> {
     const expected = new Set<string>(contentDigests);
-    let offset = 0;
-    let hasMore = true;
-    while (hasMore) {
-      const result = outcomeValue(
-        await queryWithOptions(
-          this.records,
-          { contract: sourceContract, frontmatterMode: "effective", limit: 500, offset },
-          options,
-        ),
-        "check imported file duplicates",
-      );
-      for (const record of result.results) {
+    for await (const outcome of this.records.queryPages(
+      { contract: sourceContract, frontmatterMode: "effective" },
+      { ...options, firstPageSize: 500, pageSize: 1_000 },
+    )) {
+      const page = outcomeValue(outcome, "check imported file duplicates");
+      for (const record of page.results) {
         const source = sourceSummaryFromQuery(collectionId, record);
         if (source.documents.some(({ revision }) => expected.has(revision))) {
           return source;
         }
       }
-      hasMore = (result.meta?.hasMore ?? false) && result.results.length > 0;
-      offset += result.results.length;
     }
     return null;
   }

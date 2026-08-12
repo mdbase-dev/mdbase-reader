@@ -7,12 +7,7 @@ import {
   type SourceTextSearchMatch,
 } from "@mdbase-reader/core";
 
-import {
-  mapConcurrent,
-  outcomeValue,
-  queryWithOptions,
-  readerConnectBulkConcurrency,
-} from "./repository-client.js";
+import { outcomeValue } from "./repository-client.js";
 
 import type { ReaderConnectClient } from "./repository-client.js";
 import type { QueryInput, QueryRecord } from "@mdbase-dev/connect";
@@ -31,38 +26,23 @@ export class ConnectContentSearchRepository implements ContentSearchRepository {
     if (!normalized) {
       return [];
     }
-    const input = searchInput(normalized, 0);
-    const first = outcomeValue(
-      await queryWithOptions(this.client, input, options),
-      "search source and annotation text",
-    );
-    const total = first.meta?.totalCount ?? first.results.length;
-    const offsets = Array.from(
-      { length: Math.max(0, Math.ceil(total / pageSize) - 1) },
-      (_value, index) => (index + 1) * pageSize,
-    );
-    const pages = await mapConcurrent(offsets, readerConnectBulkConcurrency, async (offset) =>
-      outcomeValue(
-        await queryWithOptions(
-          this.client,
-          searchInput(normalized, offset, first.meta?.snapshot),
-          options,
-        ),
-        "search source and annotation text",
-      ),
-    );
-    return mergeMatches([first, ...pages].flatMap(({ results }) => results));
+    const records: QueryRecord[] = [];
+    for await (const outcome of this.client.queryPages(searchInput(normalized), {
+      ...options,
+      firstPageSize: pageSize,
+      pageSize: 1_000,
+    })) {
+      records.push(...outcomeValue(outcome, "search source and annotation text").results);
+    }
+    return mergeMatches(records);
   }
 }
 
-function searchInput(query: string, offset: number, snapshot?: string): QueryInput {
+function searchInput(query: string): QueryInput {
   return {
     where: `file.body.lower().contains(${JSON.stringify(query)})`,
     frontmatterMode: "effective" as const,
     includeBody: false,
-    limit: pageSize,
-    offset,
-    ...(snapshot ? { snapshot } : {}),
   };
 }
 

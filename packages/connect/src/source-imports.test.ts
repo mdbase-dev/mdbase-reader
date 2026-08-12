@@ -12,34 +12,26 @@ import {
 import { ConnectSourceImportRepository } from "./source-imports.js";
 
 import type { ReaderConnectClient } from "./repository-client.js";
-import type { QueryResult } from "@mdbase-dev/connect";
+import type { ConnectOutcome, QueryPage } from "@mdbase-dev/connect";
 
 describe("ConnectSourceImportRepository", () => {
   it("finds an exact duplicate from paged contract metadata without reading bodies", async () => {
-    const query = vi
-      .fn()
-      .mockResolvedValueOnce(
-        success<QueryResult>({
-          results: [queryRecord("src_other", `sha256:${"b".repeat(64)}`)],
-          meta: { totalCount: 2, hasMore: true },
-        }),
-      )
-      .mockResolvedValueOnce(
-        success<QueryResult>({
-          results: [queryRecord("src_import", digest)],
-          meta: { totalCount: 2, hasMore: false },
-        }),
-      );
+    const queryPages = vi.fn(() => duplicatePages());
     const repository = new ConnectSourceImportRepository(
-      { query } as unknown as ReaderConnectClient,
+      { queryPages } as unknown as ReaderConnectClient,
       { upload: vi.fn() },
     );
 
     const duplicate = await repository.findExactDuplicate(collectionId("reading"), [digest]);
 
     expect(duplicate?.id).toBe("src_import");
-    expect(query).toHaveBeenNthCalledWith(1, expect.objectContaining({ limit: 500, offset: 0 }));
-    expect(query).toHaveBeenNthCalledWith(2, expect.objectContaining({ limit: 500, offset: 1 }));
+    expect(queryPages).toHaveBeenCalledWith(
+      {
+        contract: { id: "dev.mdbase.reader.source", version: "1.0.0-beta.1" },
+        frontmatterMode: "effective",
+      },
+      { firstPageSize: 500, pageSize: 1_000 },
+    );
   });
 
   it("uploads exact bytes before creating a whole source record", async () => {
@@ -190,4 +182,28 @@ async function* listFile(
   file: ReturnType<typeof fileDescriptor>,
 ): AsyncGenerator<ReturnType<typeof fileDescriptor>> {
   yield await Promise.resolve(file);
+}
+
+async function* duplicatePages(): AsyncGenerator<ConnectOutcome<QueryPage>> {
+  yield await Promise.resolve(
+    success<QueryPage>({
+      results: [queryRecord("src_other", `sha256:${"b".repeat(64)}`)],
+      meta: { totalCount: 2, hasMore: true, cursor: "next" },
+      page: 0,
+      offset: 0,
+      loaded: 1,
+      complete: false,
+      cursor: "next",
+    }),
+  );
+  yield await Promise.resolve(
+    success<QueryPage>({
+      results: [queryRecord("src_import", digest)],
+      meta: { totalCount: 2, hasMore: false },
+      page: 1,
+      offset: 1,
+      loaded: 2,
+      complete: true,
+    }),
+  );
 }

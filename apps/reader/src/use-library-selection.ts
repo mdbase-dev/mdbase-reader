@@ -65,7 +65,11 @@ export function useLibrarySelection(gateway: ReaderWorkspaceGateway): LibrarySel
     };
     const timer = window.setTimeout(() => {
       void gateway
-        .library({ signal: controller.signal, onProgress: updateLibrary })
+        .library({
+          signal: controller.signal,
+          replaceableFamily: "reader-library-load",
+          onProgress: updateLibrary,
+        })
         .then(updateLibrary)
         .catch((reason: unknown) => {
           if (!controller.signal.aborted) {

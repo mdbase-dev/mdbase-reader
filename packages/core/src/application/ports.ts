@@ -23,6 +23,11 @@ import type { DateTime } from "../domain/time.js";
 
 export interface SourceRepository {
   list(query: SourceQuery, options?: ReaderRequestOptions): Promise<Page<SourceSummary>>;
+  /** Stream one stable query when the backing store supports pinned pagination. */
+  listPages?(
+    query: Omit<SourceQuery, "cursor">,
+    options?: ReaderRequestOptions,
+  ): AsyncIterable<Page<SourceSummary>>;
   get(
     collectionId: CollectionId,
     id: SourceId,
@@ -108,6 +113,8 @@ export interface DocumentHandle {
 
 export interface ReaderRequestOptions {
   readonly signal?: AbortSignal;
+  /** Newer work in this family may replace an older, still-pending read. */
+  readonly replaceableFamily?: string;
 }
 
 export type DocumentOpenOptions = ReaderRequestOptions;

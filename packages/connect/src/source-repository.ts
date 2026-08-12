@@ -19,7 +19,6 @@ import { sourceContract } from "./contracts.js";
 import { sourceFromDocument, sourceSummaryFromQuery } from "./mapping.js";
 import {
   ConnectRepositoryError,
-  cursorOffset,
   outcomeValue,
   queryWithOptions,
   readWithOptions,
@@ -27,6 +26,7 @@ import {
 } from "./repository-client.js";
 
 import type { ReaderConnectClient } from "./repository-client.js";
+import type { QueryRecord } from "@mdbase-dev/connect";
 
 export class ConnectSourceRepository implements SourceRepository {
   readonly #pathsById = new Map<string, string>();
@@ -34,7 +34,8 @@ export class ConnectSourceRepository implements SourceRepository {
   constructor(private readonly client: ReaderConnectClient) {}
 
   async list(query: SourceQuery, options: ReaderRequestOptions = {}): Promise<Page<SourceSummary>> {
-    const offset = cursorOffset(query.cursor);
+    const parsedOffset = Number.parseInt(query.cursor ?? "", 10);
+    const offset = Number.isSafeInteger(parsedOffset) && parsedOffset >= 0 ? parsedOffset : 0;
     const result = outcomeValue(
       await queryWithOptions(
         this.client,
@@ -48,17 +49,7 @@ export class ConnectSourceRepository implements SourceRepository {
       ),
       "query sources",
     );
-    const items = result.results
-      .map((record) => sourceSummaryFromQuery(query.collectionId, record))
-      .map((source) => {
-        this.#pathsById.set(source.id, source.path);
-        return source;
-      })
-      .filter(
-        (source) =>
-          query.readingStatus === undefined || source.readingStatus === query.readingStatus,
-      )
-      .filter((source) => matchesSearch(source, query.search));
+    const items = this.#sourceItems(query, result.results);
     const hasMore = result.meta?.hasMore ?? false;
     return {
       items,
@@ -67,6 +58,31 @@ export class ConnectSourceRepository implements SourceRepository {
         ? { totalCount: result.meta.totalCount }
         : {}),
     };
+  }
+
+  async *listPages(
+    query: Omit<SourceQuery, "cursor">,
+    options: ReaderRequestOptions = {},
+  ): AsyncIterable<Page<SourceSummary>> {
+    for await (const outcome of this.client.queryPages(
+      {
+        contract: sourceContract,
+        frontmatterMode: "effective",
+      },
+      {
+        ...options,
+        firstPageSize: query.limit,
+        pageSize: 1_000,
+      },
+    )) {
+      const page = outcomeValue(outcome, "query sources");
+      const items = this.#sourceItems(query, page.results);
+      yield {
+        items,
+        ...(page.cursor ? { nextCursor: page.cursor } : {}),
+        ...(typeof page.meta?.totalCount === "number" ? { totalCount: page.meta.totalCount } : {}),
+      };
+    }
   }
 
   async get(
@@ -131,9 +147,6 @@ export class ConnectSourceRepository implements SourceRepository {
     const updated = outcomeValue(
       await this.client.update({
         path,
-        // Reading position is a mergeable field. Rebase it on the whole record
-        // we just read so an earlier autosave or another benign source update
-        // cannot strand the session on a stale caller revision.
         ifRevision: recordRevision(current.revision),
         patch: { reading },
         includeDocument: true,
@@ -201,6 +214,23 @@ export class ConnectSourceRepository implements SourceRepository {
     }
     this.#pathsById.set(id, path);
     return path;
+  }
+
+  #sourceItems(
+    query: Omit<SourceQuery, "cursor">,
+    records: readonly QueryRecord[],
+  ): SourceSummary[] {
+    return records
+      .map((record) => sourceSummaryFromQuery(query.collectionId, record))
+      .map((source) => {
+        this.#pathsById.set(source.id, source.path);
+        return source;
+      })
+      .filter(
+        (source) =>
+          query.readingStatus === undefined || source.readingStatus === query.readingStatus,
+      )
+      .filter((source) => matchesSearch(source, query.search));
   }
 }
 

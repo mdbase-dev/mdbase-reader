@@ -29,7 +29,10 @@ export class ConnectAnnotationRepository implements AnnotationRepository {
 
   constructor(private readonly client: ReaderConnectClient) {}
 
-  async sourceIdsWithAnnotations(): Promise<readonly SourceId[]> {
+  async sourceIdsWithAnnotations(
+    _collection: CollectionId,
+    _options: ReaderRequestOptions = {},
+  ): Promise<readonly SourceId[]> {
     await this.#ensureIndex();
     return [...this.#pathsBySource.keys()] as SourceId[];
   }
@@ -162,19 +165,15 @@ export class ConnectAnnotationRepository implements AnnotationRepository {
   }
 
   async #buildIndex(): Promise<void> {
-    let offset = 0;
-    let hasMore: boolean;
-    do {
-      const result = outcomeValue(
-        await this.client.query({
-          contract: annotationContract,
-          frontmatterMode: "effective",
-          limit: 500,
-          offset,
-        }),
-        "query annotations",
-      );
-      for (const record of result.results) {
+    for await (const outcome of this.client.queryPages(
+      {
+        contract: annotationContract,
+        frontmatterMode: "effective",
+      },
+      { firstPageSize: 500, pageSize: 1_000 },
+    )) {
+      const page = outcomeValue(outcome, "query annotations");
+      for (const record of page.results) {
         const fields = record.effectiveFrontmatter ?? record.frontmatter;
         const id = stringField(fields?.["id"]);
         const source = linkedRecordId(fields?.["source"]);
@@ -185,9 +184,7 @@ export class ConnectAnnotationRepository implements AnnotationRepository {
           this.#pathsBySource.set(source, paths);
         }
       }
-      hasMore = Boolean(result.meta?.hasMore && result.results.length > 0);
-      offset += result.results.length;
-    } while (hasMore);
+    }
   }
 
   async #ensureIndex(): Promise<void> {

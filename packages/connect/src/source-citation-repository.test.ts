@@ -4,7 +4,7 @@ import { describe, expect, it, vi } from "vitest";
 import { ConnectSourceRepository } from "./source-repository.js";
 
 import type { ReaderConnectClient } from "./repository-client.js";
-import type { ConnectOutcome, QueryResult, RecordDocument } from "@mdbase-dev/connect";
+import type { ConnectOutcome, QueryPage, RecordDocument } from "@mdbase-dev/connect";
 
 function success<Value>(value: Value): ConnectOutcome<Value> {
   return { ok: true, value, diagnostics: [] };
@@ -14,19 +14,13 @@ describe("Connect source citation metadata", () => {
   it("persists validated CSL metadata with the source revision", async () => {
     const path = "sources/gravity.md";
     const citation = { id: "weil2002", type: "book", title: "Gravity and Grace" };
-    const query = vi.fn(() =>
-      Promise.resolve(
-        success<QueryResult>({
-          results: [
-            {
-              path,
-              effectiveFrontmatter: { id: "src_01", title: "Gravity and Grace" },
-              types: ["reader-source"],
-              file: {},
-            },
-          ],
-        }),
-      ),
+    const queryPages = vi.fn(() =>
+      singleQueryPage({
+        path,
+        effectiveFrontmatter: { id: "src_01", title: "Gravity and Grace" },
+        types: ["reader-source"],
+        file: {},
+      }),
     );
     const update = vi.fn(() =>
       Promise.resolve(
@@ -42,7 +36,7 @@ describe("Connect source citation metadata", () => {
       ),
     );
     const repository = new ConnectSourceRepository({
-      query,
+      queryPages,
       update,
     } as unknown as ReaderConnectClient);
 
@@ -63,3 +57,17 @@ describe("Connect source citation metadata", () => {
     expect(updated.recordRevision).toBe("rev-2");
   });
 });
+
+async function* singleQueryPage(
+  record: QueryPage["results"][number],
+): AsyncGenerator<ConnectOutcome<QueryPage>> {
+  yield await Promise.resolve(
+    success({
+      results: [record],
+      page: 0,
+      offset: 0,
+      loaded: 1,
+      complete: true,
+    }),
+  );
+}

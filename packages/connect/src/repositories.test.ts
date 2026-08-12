@@ -8,7 +8,7 @@ import {
   type ReaderConnectClient,
 } from "./repositories.js";
 
-import type { ConnectOutcome, QueryResult, RecordDocument } from "@mdbase-dev/connect";
+import type { ConnectOutcome, QueryPage, QueryResult, RecordDocument } from "@mdbase-dev/connect";
 
 function success<Value>(value: Value): ConnectOutcome<Value> {
   return { ok: true, value, diagnostics: [] };
@@ -70,19 +70,15 @@ describe("ConnectSourceRepository", () => {
       file: {},
     } satisfies RecordDocument;
     const client = {
-      query: vi.fn(() =>
-        Promise.resolve(
-          success<QueryResult>({
-            results: [
-              {
-                path: document.path,
-                effectiveFrontmatter: document.frontmatter,
-                types: [],
-                file: {},
-              },
-            ],
-          }),
-        ),
+      queryPages: vi.fn(() =>
+        queryStream([
+          {
+            path: document.path,
+            effectiveFrontmatter: document.frontmatter,
+            types: [],
+            file: {},
+          },
+        ]),
       ),
       read: vi.fn(() => Promise.resolve(success(document))),
       update: vi.fn(),
@@ -158,26 +154,21 @@ describe("ConnectAnnotationRepository", () => {
 
 describe("Connect annotation reads", () => {
   it("discovers annotations by contract and reads matching bodies as whole records", async () => {
-    const query = vi.fn(() =>
-      Promise.resolve(
-        success<QueryResult>({
-          results: [
-            {
-              path: "annotations/matching.md",
-              effectiveFrontmatter: { id: "ann_01", source: "src_01" },
-              types: ["reader-annotation"],
-              file: {},
-            },
-            {
-              path: "annotations/other.md",
-              effectiveFrontmatter: { id: "ann_02", source: "src_02" },
-              types: ["reader-annotation"],
-              file: {},
-            },
-          ],
-          meta: { totalCount: 2, hasMore: false },
-        }),
-      ),
+    const queryPages = vi.fn(() =>
+      queryStream([
+        {
+          path: "annotations/matching.md",
+          effectiveFrontmatter: { id: "ann_01", source: "src_01" },
+          types: ["reader-annotation"],
+          file: {},
+        },
+        {
+          path: "annotations/other.md",
+          effectiveFrontmatter: { id: "ann_02", source: "src_02" },
+          types: ["reader-annotation"],
+          file: {},
+        },
+      ]),
     );
     const read = vi.fn(() =>
       Promise.resolve(
@@ -203,19 +194,16 @@ describe("Connect annotation reads", () => {
       ),
     );
     const repository = new ConnectAnnotationRepository({
-      query,
+      queryPages,
       read,
     } as unknown as ReaderConnectClient);
 
     const annotations = await repository.listForSource(collectionId("reading"), sourceId("src_01"));
 
-    expect(query).toHaveBeenCalledWith({
-      contract: annotationContract,
-      frontmatterMode: "effective",
-      limit: 500,
-      offset: 0,
-    });
-    expect(query).not.toHaveBeenCalledWith(expect.objectContaining({ includeBody: true }));
+    expect(queryPages).toHaveBeenCalledWith(
+      { contract: annotationContract, frontmatterMode: "effective" },
+      { firstPageSize: 500, pageSize: 1_000 },
+    );
     expect(read).toHaveBeenCalledOnce();
     expect(read).toHaveBeenCalledWith({
       path: "annotations/matching.md",
@@ -223,9 +211,27 @@ describe("Connect annotation reads", () => {
     });
     expect(annotations).toHaveLength(1);
     expect(annotations[0]?.body).toBe("A useful note.");
-    await expect(repository.sourceIdsWithAnnotations()).resolves.toEqual(["src_01", "src_02"]);
+    await expect(repository.sourceIdsWithAnnotations(collectionId("reading"))).resolves.toEqual([
+      "src_01",
+      "src_02",
+    ]);
 
     await repository.listForSource(collectionId("reading"), sourceId("src_02"));
-    expect(query).toHaveBeenCalledOnce();
+    expect(queryPages).toHaveBeenCalledOnce();
   });
 });
+
+async function* queryStream(
+  results: QueryPage["results"],
+): AsyncGenerator<ConnectOutcome<QueryPage>> {
+  yield await Promise.resolve(
+    success({
+      results,
+      meta: { totalCount: results.length, hasMore: false },
+      page: 0,
+      offset: 0,
+      loaded: results.length,
+      complete: true,
+    }),
+  );
+}

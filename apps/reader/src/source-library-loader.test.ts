@@ -3,7 +3,7 @@ import { describe, expect, it, vi } from "vitest";
 
 import { loadSourceLibrary } from "./source-library-loader.js";
 
-import type { SourceRepository, SourceSummary } from "@mdbase-reader/core";
+import type { Page, SourceRepository, SourceSummary } from "@mdbase-reader/core";
 
 const first: SourceSummary = {
   collectionId: collectionId("reading"),
@@ -20,14 +20,14 @@ describe("loadSourceLibrary", () => {
     const second = { ...first, id: sourceId("src_101"), title: "Second" };
     const progress = vi.fn();
     const repository = {
-      list: vi.fn((query: { readonly cursor?: string }) =>
-        Promise.resolve(
-          query.cursor === "100"
-            ? { items: [second], totalCount: 101 }
-            : { items: [first], nextCursor: "100", totalCount: 101 },
-        ),
-      ),
+      list: vi.fn(() => Promise.reject(new Error("offset fallback should not run"))),
+      listPages: vi.fn(() => pages()),
     } as unknown as SourceRepository;
+
+    async function* pages(): AsyncGenerator<Page<SourceSummary>> {
+      yield await Promise.resolve({ items: [first], nextCursor: "opaque", totalCount: 101 });
+      yield await Promise.resolve({ items: [second], totalCount: 101 });
+    }
 
     const complete = await loadSourceLibrary({
       repository,
@@ -51,5 +51,10 @@ describe("loadSourceLibrary", () => {
       }),
     );
     expect(complete.sourceIndex).toEqual({ loaded: 2, total: 2, complete: true });
+    expect(repository.list).not.toHaveBeenCalled();
+    expect(repository.listPages).toHaveBeenCalledWith(
+      { collectionId: first.collectionId, limit: 100 },
+      {},
+    );
   });
 });

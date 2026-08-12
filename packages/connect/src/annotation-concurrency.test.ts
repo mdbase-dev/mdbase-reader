@@ -4,7 +4,7 @@ import { describe, expect, it, vi } from "vitest";
 import { ConnectAnnotationRepository } from "./annotation-repository.js";
 
 import type { ReaderConnectClient } from "./repository-client.js";
-import type { ConnectOutcome, QueryResult, RecordDocument } from "@mdbase-dev/connect";
+import type { ConnectOutcome, QueryPage, RecordDocument } from "@mdbase-dev/connect";
 
 function success<Value>(value: Value): ConnectOutcome<Value> {
   return { ok: true, value, diagnostics: [] };
@@ -33,9 +33,10 @@ describe("Connect annotation concurrency", () => {
   it("bounds concurrent annotation body reads and retains index order", async () => {
     const ids = Array.from({ length: 12 }, (_value, index) => `ann_${String(index)}`);
     const paths = ids.map((id) => `annotations/${id}.md`);
-    const query = vi.fn(() =>
-      Promise.resolve(
-        success<QueryResult>({
+    const queryPages = vi.fn(() => annotationPages());
+    async function* annotationPages(): AsyncGenerator<ConnectOutcome<QueryPage>> {
+      yield await Promise.resolve(
+        success({
           results: paths.map((path, index) => ({
             path,
             effectiveFrontmatter: { id: ids[index], source: "src_01" },
@@ -43,9 +44,13 @@ describe("Connect annotation concurrency", () => {
             file: {},
           })),
           meta: { totalCount: paths.length, hasMore: false },
+          page: 0,
+          offset: 0,
+          loaded: paths.length,
+          complete: true,
         }),
-      ),
-    );
+      );
+    }
     let active = 0;
     let maximum = 0;
     const read = vi.fn(async (input: { readonly path: string }) => {
@@ -56,7 +61,7 @@ describe("Connect annotation concurrency", () => {
       return success(annotationDocument(input.path));
     });
     const repository = new ConnectAnnotationRepository({
-      query,
+      queryPages,
       read,
     } as unknown as ReaderConnectClient);
 

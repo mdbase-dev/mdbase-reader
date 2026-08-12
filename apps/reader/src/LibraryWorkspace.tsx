@@ -1,5 +1,5 @@
 /* eslint-disable complexity, max-lines, max-lines-per-function */
-import { useEffect, useMemo, useState, type JSX, type KeyboardEvent } from "react";
+import { useEffect, useId, useMemo, useState, type JSX, type KeyboardEvent } from "react";
 
 import { readerErrorMessage } from "./errors.js";
 import { LibraryIcon, PlusIcon, SearchIcon } from "./icons.js";
@@ -49,31 +49,35 @@ export function LibraryWorkspace({
   const [selected, setSelected] = useState<ReadonlySet<SourceId>>(new Set());
   const [saving, setSaving] = useState(false);
   const [saveName, setSaveName] = useState(view.name);
+  const executionFamily = `reader-library-view:${useId()}`;
 
   useEffect(() => {
-    let active = true;
+    const controller = new AbortController();
     void gateway
-      .executeLibraryView(view)
+      .executeLibraryView(view, {
+        signal: controller.signal,
+        replaceableFamily: executionFamily,
+      })
       .then((result) => {
-        if (active) {
+        if (!controller.signal.aborted) {
           setExecutedSources(result.sources);
         }
       })
       .catch((reason: unknown) => {
-        if (active) {
+        if (!controller.signal.aborted) {
           setProblem(readerErrorMessage(reason, "Reader could not execute this mdbase view."));
           setExecutedSources(allSources);
         }
       })
       .finally(() => {
-        if (active) {
+        if (!controller.signal.aborted) {
           setLoading(false);
         }
       });
     return () => {
-      active = false;
+      controller.abort();
     };
-  }, [allSources, gateway, view]);
+  }, [allSources, executionFamily, gateway, view]);
 
   const dirty = !sameConfiguration(configuration, view.configuration);
   const baseSources = dirty ? allSources : executedSources;

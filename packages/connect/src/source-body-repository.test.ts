@@ -4,7 +4,7 @@ import { describe, expect, it, vi } from "vitest";
 import { ConnectSourceRepository } from "./source-repository.js";
 
 import type { ReaderConnectClient } from "./repository-client.js";
-import type { ConnectOutcome, QueryResult, RecordDocument } from "@mdbase-dev/connect";
+import type { ConnectOutcome, QueryPage, RecordDocument } from "@mdbase-dev/connect";
 
 function success<Value>(value: Value): ConnectOutcome<Value> {
   return { ok: true, value, diagnostics: [] };
@@ -25,19 +25,13 @@ function repositoryFixture(): {
   readonly read: ReturnType<typeof vi.fn>;
   readonly update: ReturnType<typeof vi.fn>;
 } {
-  const query = vi.fn(() =>
-    Promise.resolve(
-      success<QueryResult>({
-        results: [
-          {
-            path: document.path,
-            effectiveFrontmatter: document.frontmatter,
-            types: document.types,
-            file: {},
-          },
-        ],
-      }),
-    ),
+  const queryPages = vi.fn(() =>
+    singleQueryPage({
+      path: document.path,
+      effectiveFrontmatter: document.frontmatter,
+      types: document.types,
+      file: {},
+    }),
   );
   const read = vi.fn(() => Promise.resolve(success(document)));
   const update = vi.fn((input: { readonly body?: string }) =>
@@ -45,13 +39,27 @@ function repositoryFixture(): {
   );
   return {
     repository: new ConnectSourceRepository({
-      query,
+      queryPages,
       read,
       update,
     } as unknown as ReaderConnectClient),
     read,
     update,
   };
+}
+
+async function* singleQueryPage(
+  record: QueryPage["results"][number],
+): AsyncGenerator<ConnectOutcome<QueryPage>> {
+  yield await Promise.resolve(
+    success({
+      results: [record],
+      page: 0,
+      offset: 0,
+      loaded: 1,
+      complete: true,
+    }),
+  );
 }
 
 describe("Connect source Markdown bodies", () => {
