@@ -26,6 +26,7 @@
     "@mdbase-reader/renderer-html": "workspace:*",
     "@mdbase-reader/renderer-pdf": "workspace:*",
     "@mdbase-reader/ui": "workspace:*",
+    "@mdbase-reader/web-capture": "workspace:*",
     "@zip.js/zip.js": "^2.8.36",
     "citeproc": "2.4.63",
     "react": "^19.2.8",

@@ -1,0 +1,27 @@
+{
+  "name": "@mdbase-reader/extension",
+  "version": "0.1.0-beta.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "pnpm manifest:mdbase && vite build",
+    "manifest:mdbase": "node scripts/write-mdbase-manifest.mjs",
+    "test": "pnpm manifest:mdbase && vitest run --passWithNoTests",
+    "typecheck": "tsc -p tsconfig.json"
+  },
+  "dependencies": {
+    "@mdbase-reader/connect": "workspace:*",
+    "@mdbase-reader/core": "workspace:*",
+    "@mdbase-reader/platform": "workspace:*",
+    "@mdbase-reader/web-capture": "workspace:*",
+    "react": "^19.2.8",
+    "react-dom": "^19.2.8"
+  },
+  "devDependencies": {
+    "@types/chrome": "^0.1.4",
+    "@types/react": "^19.2.14",
+    "@types/react-dom": "^19.2.3",
+    "@vitejs/plugin-react": "latest",
+    "vite": "latest"
+  }
+}

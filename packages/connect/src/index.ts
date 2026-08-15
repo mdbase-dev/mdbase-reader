@@ -5,5 +5,7 @@ export * from "./contracts.js";
 export * from "./documents.js";
 export * from "./library-views.js";
 export * from "./mapping.js";
+export * from "./portable-application-session.js";
 export * from "./repositories.js";
 export * from "./source-imports.js";
+export type { MdbaseAppManifest } from "@mdbase-dev/connect";

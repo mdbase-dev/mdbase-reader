@@ -1,6 +1,7 @@
 SPEC.md
 DATA_MODEL.md
 pnpm-lock.yaml
+.playwright-mcp/
 dist/
 coverage/
 apps/capacitor/android/

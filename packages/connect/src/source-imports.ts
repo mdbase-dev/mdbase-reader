@@ -3,13 +3,14 @@ import { sourceFromDocument, sourceSummaryFromQuery } from "./mapping.js";
 import { ConnectRepositoryError, outcomeValue } from "./repository-client.js";
 
 import type { ReaderConnectClient } from "./repository-client.js";
-import type {
-  CollectionFileDescriptor,
-  ConnectOutcome,
-  MdbaseFileListOptions,
-  MdbaseConnection,
-  MdbaseFileUploadOptions,
-  RecordDocument,
+import {
+  MdbaseConnectError,
+  type CollectionFileDescriptor,
+  type ConnectOutcome,
+  type MdbaseFileListOptions,
+  type MdbaseConnection,
+  type MdbaseFileUploadOptions,
+  type RecordDocument,
 } from "@mdbase-dev/connect";
 import type {
   CollectionId,
@@ -80,30 +81,24 @@ export class ConnectSourceImportRepository implements SourceImportRepository {
       const recovered = takeMatchingFile(recoverableFiles, representation.contentDigest);
       const descriptor =
         recovered ??
-        (await this.files.upload(
-          representation.filePath,
-          new Blob([representation.bytes.slice().buffer], { type: representation.mediaType }),
-          {
-            mediaType: representation.mediaType,
-            transferId: representation.transferId,
-            ...(options.signal ? { signal: options.signal } : {}),
-            ...(options.onProgress
-              ? {
-                  onProgress: (progress) => {
-                    if (progress.phase === "uploading") {
-                      options.onProgress?.({
-                        phase: "uploading",
-                        completedBytes: completedBytes + progress.transferredBytes,
-                        totalBytes,
-                        fileIndex: index + 1,
-                        fileCount: orderedUploads.length,
-                      });
-                    }
-                  },
-                }
-              : {}),
-          },
-        ));
+        (await this.uploadWithRecovery(representation, {
+          ...(options.signal ? { signal: options.signal } : {}),
+          ...(options.onProgress
+            ? {
+                onProgress: (progress) => {
+                  if (progress.phase === "uploading") {
+                    options.onProgress?.({
+                      phase: "uploading",
+                      completedBytes: completedBytes + progress.transferredBytes,
+                      totalBytes,
+                      fileIndex: index + 1,
+                      fileCount: orderedUploads.length,
+                    });
+                  }
+                },
+              }
+            : {}),
+        }));
       if (descriptor.contentDigest !== representation.contentDigest) {
         throw new ConnectRepositoryError(
           "verify imported file",
@@ -139,6 +134,33 @@ export class ConnectSourceImportRepository implements SourceImportRepository {
     });
     const document = created.ok ? created.value : await this.recoverCreatedSource(plan, created);
     return sourceFromDocument(plan.collectionId, document);
+  }
+
+  private async uploadWithRecovery(
+    representation: PlannedSourceRepresentation,
+    options: Omit<MdbaseFileUploadOptions, "mediaType" | "transferId">,
+  ): Promise<CollectionFileDescriptor> {
+    const upload = (): Promise<CollectionFileDescriptor> =>
+      this.files.upload(
+        representation.filePath,
+        new Blob([representation.bytes.slice().buffer], { type: representation.mediaType }),
+        {
+          ...options,
+          mediaType: representation.mediaType,
+          transferId: representation.transferId,
+        },
+      );
+    try {
+      return await upload();
+    } catch (error) {
+      if (!(error instanceof MdbaseConnectError) || !error.outcomeUnknown) {
+        throw error;
+      }
+      // File control has its own durable transfer journal rather than the
+      // connection's generic pending-mutation store. Reopening the exact same
+      // transfer with a fresh SDK deadline resumes it or replays its receipt.
+      return upload();
+    }
   }
 
   private async recoverableFiles(

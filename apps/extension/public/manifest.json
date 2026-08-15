@@ -1,0 +1,14 @@
+{
+  "manifest_version": 3,
+  "name": "mdbase Reader",
+  "description": "Save the page you are reading and revisit your mdbase annotations.",
+  "version": "0.1.0",
+  "minimum_chrome_version": "109",
+  "permissions": ["activeTab", "scripting", "storage"],
+  "host_permissions": ["https://connect-staging.mdbase.dev/*"],
+  "action": { "default_title": "Save to mdbase Reader" },
+  "background": {
+    "service_worker": "background.js",
+    "type": "module"
+  }
+}

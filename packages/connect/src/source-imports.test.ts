@@ -1,4 +1,5 @@
 import { collectionId } from "@mdbase-reader/core";
+import { MdbaseConnectError } from "@mdbase-dev/connect";
 import { describe, expect, it, vi } from "vitest";
 
 import {
@@ -111,6 +112,30 @@ describe("ConnectSourceImportRepository", () => {
       contract: { id: "dev.mdbase.reader.source", version: "1.0.0-beta.1" },
       includeDocument: true,
     });
+  });
+
+  it("recovers an ambiguous file commit with the same transfer identity", async () => {
+    const uncertain = new MdbaseConnectError({
+      problem_version: 1,
+      code: "operation_outcome_unknown",
+      category: "conflict",
+      recovery: "resolve_outcome",
+      message: "Outcome unknown",
+      operation_outcome: "unknown",
+      details: { request_id: "01977777-7777-7777-8777-777777777777" },
+    });
+    const upload = vi.fn().mockRejectedValueOnce(uncertain).mockResolvedValueOnce(fileDescriptor());
+    const create = vi.fn(() => Promise.resolve(success(recordDocument())));
+    const repository = new ConnectSourceImportRepository(
+      { create } as unknown as ReaderConnectClient,
+      { upload },
+    );
+
+    await repository.commitFile(plan());
+
+    expect(upload).toHaveBeenCalledTimes(2);
+    expect(upload.mock.calls[0]?.[2]?.transferId).toBe("83dd2f80-c7da-44d7-9844-6ea755a05f40");
+    expect(upload.mock.calls[1]?.[2]?.transferId).toBe("83dd2f80-c7da-44d7-9844-6ea755a05f40");
   });
 
   it("refuses a descriptor whose digest differs from the planned bytes", async () => {

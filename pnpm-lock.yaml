@@ -85,6 +85,43 @@ importers:
         specifier: latest
         version: 43.4.0
 
+  apps/extension:
+    dependencies:
+      '@mdbase-reader/connect':
+        specifier: workspace:*
+        version: link:../../packages/connect
+      '@mdbase-reader/core':
+        specifier: workspace:*
+        version: link:../../packages/core
+      '@mdbase-reader/platform':
+        specifier: workspace:*
+        version: link:../../packages/platform
+      '@mdbase-reader/web-capture':
+        specifier: workspace:*
+        version: link:../../packages/web-capture
+      react:
+        specifier: ^19.2.8
+        version: 19.2.8
+      react-dom:
+        specifier: ^19.2.8
+        version: 19.2.8(react@19.2.8)
+    devDependencies:
+      '@types/chrome':
+        specifier: ^0.1.4
+        version: 0.1.43
+      '@types/react':
+        specifier: ^19.2.14
+        version: 19.2.18
+      '@types/react-dom':
+        specifier: ^19.2.3
+        version: 19.2.4(@types/react@19.2.18)
+      '@vitejs/plugin-react':
+        specifier: latest
+        version: 6.0.5(vite@8.2.1(@types/node@24.13.3)(yaml@2.9.0))
+      vite:
+        specifier: latest
+        version: 8.2.1(@types/node@24.13.3)(yaml@2.9.0)
+
   apps/reader:
     dependencies:
       '@citation-js/plugin-csl':
@@ -117,6 +154,9 @@ importers:
       '@mdbase-reader/ui':
         specifier: workspace:*
         version: link:../../packages/ui
+      '@mdbase-reader/web-capture':
+        specifier: workspace:*
+        version: link:../../packages/web-capture
       '@zip.js/zip.js':
         specifier: ^2.8.36
         version: 2.8.36
@@ -311,6 +351,18 @@ importers:
       '@types/react':
         specifier: ^19.2.14
         version: 19.2.18
+
+  packages/web-capture:
+    dependencies:
+      '@mdbase-reader/core':
+        specifier: workspace:*
+        version: link:../core
+      '@mdbase-reader/renderer-html':
+        specifier: workspace:*
+        version: link:../renderer-html
+      '@mozilla/readability':
+        specifier: ^0.6.0
+        version: 0.6.0
 
 packages:
 
@@ -1019,6 +1071,10 @@ packages:
   '@mdbase-dev/connect@0.1.0-beta.69':
     resolution: {integrity: sha512-eodTZfuRsLuwRVfTT4/kSwJr1jWxKoY/7cBEKwoM9kIrI8/sGh+f15Fb1aFB8suCV11qVybJobl1EznvS/9/GQ==}
 
+  '@mozilla/readability@0.6.0':
+    resolution: {integrity: sha512-juG5VWh4qAivzTAeMzvY9xs9HY5rAcr2E4I7tiSSCokRFi7XIZCAu92ZkSTsIj1OPceCifL3cpfteP3pDT9/QQ==}
+    engines: {node: '>=14.0.0'}
+
   '@napi-rs/wasm-runtime@1.2.2':
     resolution: {integrity: sha512-JfB4kuJQjaoHuCTseIINHtHWeJnvgEcxjwA5t/Y00ZgaOO1Crz3fjT/p8kT28zA/Caz7oiUMn3d6H2yOVCVwuw==}
     engines: {node: ^20.19.0 || ^22.13.0 || >=23.5.0}
@@ -1153,14 +1209,26 @@ packages:
   '@types/chai@5.2.3':
     resolution: {integrity: sha512-Mw558oeA9fFbv65/y4mHtXDs9bPnFMZAL/jxdPFUpOHHIXX91mcgEHbS5Lahr+pwZFR8A7GQleRWeI6cGFC2UA==}
 
+  '@types/chrome@0.1.43':
+    resolution: {integrity: sha512-ukH/HhmR6ht+UTX3PLUWJxgJ/RQcK2Foj4lBzsF24SIWsXgqhGuXqjd8FFuwioPP7d/JUKLM4g8GZxw3F4HTcA==}
+
   '@types/deep-eql@4.0.2':
     resolution: {integrity: sha512-c9h9dVVMigMPc4bwTvC5dxqtqJZwQPePsWjPlpSOnojbor6pGqdk541lfA7AqFQr5pB1BRdq0juY9db81BwyFw==}
 
   '@types/estree@1.0.9':
     resolution: {integrity: sha512-GhdPgy1el4/ImP05X05Uw4cw2/M93BCUmnEvWZNStlCzEKME4Fkk+YpoA5OiHNQmoS7Cafb8Xa3Pya8m1Qrzeg==}
 
+  '@types/filesystem@0.0.36':
+    resolution: {integrity: sha512-vPDXOZuannb9FZdxgHnqSwAG/jvdGM8Wq+6N4D/d80z+D4HWH+bItqsZaVRQykAn6WEVeEkLm2oQigyHtgb0RA==}
+
+  '@types/filewriter@0.0.33':
+    resolution: {integrity: sha512-xFU8ZXTw4gd358lb2jw25nxY9QAgqn2+bKKjKOYfNCzN4DKCFetK7sPtrlpg66Ywe3vWY9FNxprZawAh9wfJ3g==}
+
   '@types/fs-extra@8.1.5':
     resolution: {integrity: sha512-0dzKcwO+S8s2kuF5Z9oUWatQJj5Uq/iqphEtE3GQJVRRYm/tD1LglU2UnXi2A8jLq5umkGouOXOR9y0n613ZwQ==}
+
+  '@types/har-format@1.2.16':
+    resolution: {integrity: sha512-fluxdy7ryD3MV6h8pTfTYpy/xQzCFC7m89nOH9y94cNqJ1mDIDPut7MnRHI3F6qRmh/cT2fUjG1MLdCNb4hE9A==}
 
   '@types/json-schema@7.0.15':
     resolution: {integrity: sha512-5+fP8P8MFNC+AyZCDxrB2pkZFPGzqQWUzpSeuuVLvm8VMcorNYavBqoFcxK8bQz4Qsbn4oUEEem4wDLfcysGHA==}
@@ -4055,6 +4123,8 @@ snapshots:
     dependencies:
       '@mdbase-dev/connect-protocol': 0.1.0-beta.69
 
+  '@mozilla/readability@0.6.0': {}
+
   '@napi-rs/wasm-runtime@1.2.2(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)':
     dependencies:
       '@emnapi/core': 1.10.0
@@ -4149,13 +4219,26 @@ snapshots:
       '@types/deep-eql': 4.0.2
       assertion-error: 2.0.1
 
+  '@types/chrome@0.1.43':
+    dependencies:
+      '@types/filesystem': 0.0.36
+      '@types/har-format': 1.2.16
+
   '@types/deep-eql@4.0.2': {}
 
   '@types/estree@1.0.9': {}
 
+  '@types/filesystem@0.0.36':
+    dependencies:
+      '@types/filewriter': 0.0.33
+
+  '@types/filewriter@0.0.33': {}
+
   '@types/fs-extra@8.1.5':
     dependencies:
       '@types/node': 22.20.1
+
+  '@types/har-format@1.2.16': {}
 
   '@types/json-schema@7.0.15': {}
 

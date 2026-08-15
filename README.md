@@ -25,6 +25,28 @@ staging connector at `http://127.0.0.1:28486`. Start that connector from the sib
 `mdbase-connect` checkout with `pnpm dev:desktop:staging`, then sign in with a staging account. The
 deployment does not use or modify an `mdbase.dev` custom domain.
 
+## Browser extension (staging)
+
+Build the unpacked Manifest V3 extension with:
+
+```sh
+pnpm --filter @mdbase-reader/extension build
+```
+
+Load `apps/extension/dist` as an unpacked extension in a Chromium browser. The toolbar action
+captures the active HTTPS tab, extracts its primary article with Mozilla Readability, and saves the
+readable HTML plus a form-value-free DOM archive directly through the mdbase SDK. The extension is
+currently pinned to `https://connect-staging.mdbase.dev` and opens saved sources in
+`https://mdbase-reader.pages.dev`.
+
+The first capture opens the SDK's device-code authorization flow. Reader stores the approved grant
+and non-extractable signing keys inside the extension origin. Capture access uses `activeTab`; the
+extension does not request permanent access to every website. Its sole persistent host permission
+is the staging mdbase Connect API, which is required for SDK record and binary-file traffic and
+cannot read browsing pages. When an already-saved page has text annotations, **Show annotations
+here** projects only uniquely matching text quotes onto the live page. The captured Reader document
+remains the canonical annotation target.
+
 ## Commands
 
 ```sh

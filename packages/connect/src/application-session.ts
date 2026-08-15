@@ -123,28 +123,36 @@ export class ReaderApplicationSession {
   public connectedCollection(expectedCollectionId?: string): ReaderConnectedCollection | null {
     const snapshot = this.#session.getSnapshot();
     const connection = snapshot.status === "ready" ? this.#session.connection() : null;
-    if (
-      !connection ||
-      snapshot.status !== "ready" ||
-      (expectedCollectionId !== undefined && connection.collectionId !== expectedCollectionId)
-    ) {
-      return null;
-    }
-    const client = connectClient(connection);
-    return {
-      collectionId: collectionId(connection.collectionId),
-      collectionName: snapshot.info.displayName,
-      sources: new ConnectSourceRepository(client),
-      sourceImports: connectSourceImportRepository(connection, client),
-      annotations: new ConnectAnnotationRepository(client),
-      annotationAssets: connectAnnotationAssetRepository(connection),
-      documents: connectDocumentRepository(connection),
-      contentSearch: new ConnectContentSearchRepository(client),
-      files: connectCollectionFileRepository(connection),
-      libraryViews: connectLibraryViewRepository(connection),
-      directAccess: readerDirectAccessController(connection),
-    };
+    return connectedReaderCollection(snapshot, connection, expectedCollectionId);
   }
+}
+
+export function connectedReaderCollection(
+  snapshot: ReaderConnectSnapshot,
+  connection: MdbaseConnection | null,
+  expectedCollectionId?: string,
+): ReaderConnectedCollection | null {
+  if (
+    !connection ||
+    snapshot.status !== "ready" ||
+    (expectedCollectionId !== undefined && connection.collectionId !== expectedCollectionId)
+  ) {
+    return null;
+  }
+  const client = connectClient(connection);
+  return {
+    collectionId: collectionId(connection.collectionId),
+    collectionName: snapshot.info.displayName,
+    sources: new ConnectSourceRepository(client),
+    sourceImports: connectSourceImportRepository(connection, client),
+    annotations: new ConnectAnnotationRepository(client),
+    annotationAssets: connectAnnotationAssetRepository(connection),
+    documents: connectDocumentRepository(connection),
+    contentSearch: new ConnectContentSearchRepository(client),
+    files: connectCollectionFileRepository(connection),
+    libraryViews: connectLibraryViewRepository(connection),
+    directAccess: readerDirectAccessController(connection),
+  };
 }
 
 function readerDirectAccessController(connection: MdbaseConnection): ReaderDirectAccessController {

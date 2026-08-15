@@ -5,6 +5,12 @@
   "workspacePackageDependencies": {
     "@mdbase-reader/capacitor": ["@mdbase-reader/platform"],
     "@mdbase-reader/electron": ["@mdbase-reader/platform"],
+    "@mdbase-reader/extension": [
+      "@mdbase-reader/connect",
+      "@mdbase-reader/core",
+      "@mdbase-reader/platform",
+      "@mdbase-reader/web-capture"
+    ],
     "@mdbase-reader/app": [
       "@mdbase-reader/connect",
       "@mdbase-reader/core",
@@ -14,7 +20,8 @@
       "@mdbase-reader/renderer-epub",
       "@mdbase-reader/renderer-html",
       "@mdbase-reader/renderer-pdf",
-      "@mdbase-reader/ui"
+      "@mdbase-reader/ui",
+      "@mdbase-reader/web-capture"
     ],
     "@mdbase-reader/connect": ["@mdbase-reader/core"],
     "@mdbase-reader/core": [],
@@ -25,7 +32,8 @@
     "@mdbase-reader/renderer-html": ["@mdbase-reader/core", "@mdbase-reader/reading-surface"],
     "@mdbase-reader/renderer-pdf": ["@mdbase-reader/core", "@mdbase-reader/reading-surface"],
     "@mdbase-reader/testkit": ["@mdbase-reader/core", "@mdbase-reader/reading-surface"],
-    "@mdbase-reader/ui": []
+    "@mdbase-reader/ui": [],
+    "@mdbase-reader/web-capture": ["@mdbase-reader/core", "@mdbase-reader/renderer-html"]
   },
   "forbiddenImportRules": [
     {
