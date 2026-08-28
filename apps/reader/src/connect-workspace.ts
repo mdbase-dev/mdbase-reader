@@ -248,7 +248,6 @@ export class ConnectWorkspaceGateway implements ReaderWorkspaceGateway {
       {
         imports: this.sourceImports,
         ...this.runtime,
-        ...(this.#library ? { knownSources: this.#library } : {}),
       },
       { ...request, collectionId: this.collectionId },
       options,

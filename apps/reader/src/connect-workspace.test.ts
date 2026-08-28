@@ -2,6 +2,8 @@ import {
   annotationId,
   collectionId,
   dateTime,
+  fileId,
+  fileRevision,
   recordRevision,
   sourceId,
   type AnnotationRepository,
@@ -212,35 +214,53 @@ describe("ConnectWorkspaceGateway pagination", () => {
 });
 
 describe("ConnectWorkspaceGateway imports", () => {
-  it("adds an imported source to the warm library and source caches", async () => {
+  it("validates a stale-positive warm library against authority before importing", async () => {
+    const digest = `sha256:${"a".repeat(64)}` as const;
+    const cachedDuplicate = {
+      ...source,
+      documents: [
+        {
+          fileId: fileId("file-cached"),
+          file: "files/cached.pdf",
+          role: "primary" as const,
+          mediaType: "application/pdf",
+          revision: fileRevision(digest),
+        },
+      ],
+    };
     const imported = {
       ...source,
       id: sourceId("src_imported"),
       path: "sources/src_imported.md",
       title: "Imported paper",
     };
+    const findExactDuplicate = vi.fn().mockResolvedValue(null);
     const commitFile = vi.fn().mockResolvedValue(imported);
+    const runtime = {
+      ...createReaderRuntimeServices(new MemoryStorage()),
+      hasher: { sha256: vi.fn().mockResolvedValue(digest) },
+    };
     const gateway = new ConnectWorkspaceGateway(
       {
-        list: vi.fn().mockResolvedValue({ items: [source] }),
+        list: vi.fn().mockResolvedValue({ items: [cachedDuplicate] }),
       } as unknown as SourceRepository,
       { listForSource: vi.fn() } as unknown as AnnotationRepository,
       { store: vi.fn() },
-      { findExactDuplicate: vi.fn().mockResolvedValue(null), commitFile },
+      { findExactDuplicate, commitFile },
       source.collectionId,
       "Reading",
-      createReaderRuntimeServices(new MemoryStorage()),
+      runtime,
     );
     await gateway.library();
 
     const result = await gateway.importSourceFile({
       name: "paper.pdf",
-      declaredMediaType: "application/pdf",
       bytes: new TextEncoder().encode("%PDF-1.7\nfixture"),
       title: "Imported paper",
     });
 
     expect(result).toBe(imported);
+    expect(findExactDuplicate).toHaveBeenCalledWith(source.collectionId, [digest], {});
     expect(commitFile).toHaveBeenCalledOnce();
     expect((await gateway.library()).sources.map(({ id }) => id)).toEqual([
       "src_imported",
