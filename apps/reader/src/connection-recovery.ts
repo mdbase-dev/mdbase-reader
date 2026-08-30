@@ -11,8 +11,10 @@ export function connectionStatus(
   session: Exclude<ReaderConnectSnapshot, { status: "ready" }>,
 ): string {
   switch (session.status) {
-    case "opening":
+    case "starting":
       return "Finding mdbase Connect…";
+    case "start_failed":
+      return session.problem.message;
     case "authorization_required":
       return "Reader needs your approval to open this collection.";
     case "checking_setup":

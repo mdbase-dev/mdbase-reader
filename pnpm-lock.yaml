@@ -15,8 +15,8 @@ importers:
         specifier: ^9.39.2
         version: 9.39.5
       '@mdbase-dev/connect-dev':
-        specifier: 0.1.0-beta.69
-        version: 0.1.0-beta.69
+        specifier: 0.1.0-beta.91
+        version: 0.1.0-beta.91
       '@types/node':
         specifier: ^22.19.11
         version: 22.20.1
@@ -189,8 +189,8 @@ importers:
   packages/connect:
     dependencies:
       '@mdbase-dev/connect':
-        specifier: 0.1.0-beta.69
-        version: 0.1.0-beta.69
+        specifier: 0.1.0-beta.91
+        version: 0.1.0-beta.91
       '@mdbase-reader/core':
         specifier: workspace:*
         version: link:../core
@@ -1061,15 +1061,15 @@ packages:
   '@marijn/find-cluster-break@1.0.3':
     resolution: {integrity: sha512-FY+MKLBoTsLNJF/eLWaOsXGdz6uh3Iu1axjPf6TUq92IYumcTcXWHoS747JARLkcdlJ/Waiaxc5wQfFO8jC6NA==}
 
-  '@mdbase-dev/connect-dev@0.1.0-beta.69':
-    resolution: {integrity: sha512-bHWVME4fV/4AKSeIo1ItMYAYMMyHk6LjyFJNqipsK7qnuzyNRb+ygS25/u1uceRtPtn8i349hpSufCebohrLww==}
+  '@mdbase-dev/connect-dev@0.1.0-beta.91':
+    resolution: {integrity: sha512-uQMcCzKsYxNRNk7jBxEhRUdxuWzDeGG/tNJF3qKWQqIFtxCOrf/EPRTdabr5wYjtlrfw/kbzc/FVYVyOAcZNvA==}
     hasBin: true
 
-  '@mdbase-dev/connect-protocol@0.1.0-beta.69':
-    resolution: {integrity: sha512-BDs378h5o7+bFcMc+u3cLAuk8zfjF333ZX9NsjSmZ39EasQQ3AqjG0Hgf79MezuSHczqskXUhgL5hqHZQ9ivsw==}
+  '@mdbase-dev/connect-protocol@0.1.0-beta.91':
+    resolution: {integrity: sha512-7CUgW1unwNLcQqhot+UzBTbwmqSpF9uTYxtZkwOYKVDyTg2mxDF4htW5G0sIhkrDu/JRr4UK4HlnQhEQXPmljA==}
 
-  '@mdbase-dev/connect@0.1.0-beta.69':
-    resolution: {integrity: sha512-eodTZfuRsLuwRVfTT4/kSwJr1jWxKoY/7cBEKwoM9kIrI8/sGh+f15Fb1aFB8suCV11qVybJobl1EznvS/9/GQ==}
+  '@mdbase-dev/connect@0.1.0-beta.91':
+    resolution: {integrity: sha512-XfvkxLaPpZf6e6IBVDt86J/bAlzI3alDhOvkJ5BJBfd5kVQOObKppVQE3fu8tH/fbRS/EliWRftJ9wEOaa/cXg==}
 
   '@mozilla/readability@0.6.0':
     resolution: {integrity: sha512-juG5VWh4qAivzTAeMzvY9xs9HY5rAcr2E4I7tiSSCokRFi7XIZCAu92ZkSTsIj1OPceCifL3cpfteP3pDT9/QQ==}
@@ -4107,21 +4107,21 @@ snapshots:
 
   '@marijn/find-cluster-break@1.0.3': {}
 
-  '@mdbase-dev/connect-dev@0.1.0-beta.69':
+  '@mdbase-dev/connect-dev@0.1.0-beta.91':
     dependencies:
-      '@mdbase-dev/connect': 0.1.0-beta.69
-      '@mdbase-dev/connect-protocol': 0.1.0-beta.69
+      '@mdbase-dev/connect': 0.1.0-beta.91
+      '@mdbase-dev/connect-protocol': 0.1.0-beta.91
       ajv: 8.20.0
       yaml: 2.9.0
 
-  '@mdbase-dev/connect-protocol@0.1.0-beta.69':
+  '@mdbase-dev/connect-protocol@0.1.0-beta.91':
     dependencies:
       ajv: 8.20.0
       ajv-formats: 3.0.1(ajv@8.20.0)
 
-  '@mdbase-dev/connect@0.1.0-beta.69':
+  '@mdbase-dev/connect@0.1.0-beta.91':
     dependencies:
-      '@mdbase-dev/connect-protocol': 0.1.0-beta.69
+      '@mdbase-dev/connect-protocol': 0.1.0-beta.91
 
   '@mozilla/readability@0.6.0': {}
 
