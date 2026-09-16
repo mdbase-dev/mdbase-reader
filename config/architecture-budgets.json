@@ -3,6 +3,7 @@
   "lineCountErrorLines": 1500,
   "legacyFileLineBudgets": {},
   "workspacePackageDependencies": {
+    "@mdbase-reader/zotero-exporter": [],
     "@mdbase-reader/capacitor": ["@mdbase-reader/platform"],
     "@mdbase-reader/electron": ["@mdbase-reader/platform"],
     "@mdbase-reader/extension": [

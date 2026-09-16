@@ -75,6 +75,23 @@ cannot read browsing pages. When an already-saved page has text annotations, **S
 here** projects only uniquely matching text quotes onto the live page. The captured Reader document
 remains the canonical annotation target.
 
+## Zotero migration exporter (experimental)
+
+Build the Zotero 10.0.x plugin with:
+
+```sh
+pnpm --filter @mdbase-reader/zotero-exporter build
+pnpm --filter @mdbase-reader/zotero-exporter test
+```
+
+Install `apps/zotero-exporter/dist/mdbase-reader-exporter-0.1.0.xpi` through
+Zotero's **Tools → Plugins → Install Plugin From File…**, then choose
+**Tools → Export for mdbase Reader…**. It exports a private migration bundle with
+original files, native annotations, notes, CSL and collection membership. It does not
+modify Zotero or create an mdbase collection. Reader's bundle importer is not shipped yet.
+See [the plugin documentation](apps/zotero-exporter/README.md) for scope, verification,
+known omissions and release status.
+
 ## Commands
 
 ```sh

@@ -195,6 +195,8 @@ importers:
         specifier: latest
         version: 8.3.0(@types/node@24.13.3)(yaml@2.9.0)
 
+  apps/zotero-exporter: {}
+
   packages/connect:
     dependencies:
       '@mdbase-dev/connect':

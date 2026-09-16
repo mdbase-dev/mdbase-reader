@@ -1,0 +1,15 @@
+{
+  "manifest_version": 2,
+  "name": "mdbase Reader Exporter",
+  "version": "0.1.0",
+  "description": "Export a private migration bundle for mdbase Reader, preserving original files, notes and native annotations. Experimental; personal libraries only.",
+  "author": "mdbase",
+  "applications": {
+    "zotero": {
+      "id": "reader-exporter@mdbase.dev",
+      "update_url": "https://reader.mdbase.dev/zotero/updates.json",
+      "strict_min_version": "10.0",
+      "strict_max_version": "10.0.*"
+    }
+  }
+}

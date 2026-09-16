@@ -1,0 +1,10 @@
+{
+  "name": "@mdbase-reader/zotero-exporter",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "node scripts/build.mjs",
+    "test": "node --test scripts/*.test.mjs ../../scripts/zotero-bundle/*.test.mjs"
+  }
+}

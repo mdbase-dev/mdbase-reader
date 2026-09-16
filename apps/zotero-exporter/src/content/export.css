@@ -1,0 +1,112 @@
+:root {
+  color-scheme: light dark;
+  font:
+    14px/1.55 system-ui,
+    sans-serif;
+  background: light-dark(#f7f7f5, #202020);
+  color: light-dark(#242424, #ededeb);
+}
+body {
+  margin: 0;
+}
+main {
+  max-width: 680px;
+  margin: 0 auto;
+  padding: 28px;
+}
+h1 {
+  margin: 4px 0 12px;
+  font-size: 27px;
+  font-weight: 600;
+  letter-spacing: -0.6px;
+}
+h2 {
+  font-size: 15px;
+  font-weight: 650;
+  margin: 0 0 8px;
+}
+p {
+  margin: 8px 0;
+}
+.eyebrow,
+.muted {
+  color: light-dark(#60605d, #aaa);
+  font-size: 12px;
+}
+section {
+  border-top: 1px solid light-dark(#dcdcd8, #444);
+  padding-top: 16px;
+  margin-top: 20px;
+}
+button {
+  font: inherit;
+  padding: 8px 13px;
+  border: 1px solid light-dark(#bcbcb8, #666);
+  border-radius: 6px;
+  background: light-dark(#fff, #303030);
+  color: inherit;
+  cursor: pointer;
+}
+button:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+button:focus-visible,
+summary:focus-visible {
+  outline: 2px solid light-dark(#305dcb, #9cb5fb);
+  outline-offset: 3px;
+}
+.primary {
+  background: light-dark(#242424, #ededeb);
+  color: light-dark(#fff, #202020);
+}
+.path {
+  overflow-wrap: anywhere;
+  font:
+    12px/1.5 ui-monospace,
+    monospace;
+}
+dl {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 4px 16px;
+  margin: 16px 0;
+}
+dt,
+dd {
+  margin: 0;
+}
+progress {
+  width: 100%;
+  height: 14px;
+  accent-color: light-dark(#333, #ccc);
+}
+footer {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 24px;
+}
+#problem {
+  color: light-dark(#972719, #ffab9f);
+}
+#warning-list {
+  max-height: 180px;
+  overflow-y: auto;
+  overflow-wrap: anywhere;
+  padding-left: 22px;
+}
+summary {
+  cursor: pointer;
+}
+[hidden] {
+  display: none !important;
+}
+@media (max-width: 500px) {
+  main {
+    padding: 18px;
+  }
+  h1 {
+    font-size: 23px;
+  }
+}
