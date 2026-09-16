@@ -4,7 +4,8 @@
 
 [Shared editing and autosave](shared-editing.md) supersede this audit's manual-save,
 read-only-during-save, and single-writable-owner behaviour for existing text edits.
-Creation remains explicit. The follow-up is tested locally but not deployed.
+Creation remains explicit. The follow-up was deployed as
+`1787d28d4880-production-mu40us0p`; its deployment evidence is recorded in that document.
 
 ## Scope
 

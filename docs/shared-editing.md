@@ -41,4 +41,16 @@ READER_AUDIT_SHARED_EDITING_ONLY=1 pnpm --filter @mdbase-reader/app test:browser
 
 These browser tests use disposable fixture data, not authenticated Connect acceptance. Physical-phone keyboards, native OS IME behaviour, and screen readers still require real-device checks. Shared live editing is within one Reader window, not cross-window/device collaboration. Other clients are protected by record revisions; existing single-slot local recovery is not an archive of independent drafts from multiple browser windows.
 
-This implementation has **not been deployed**. The production responsive release and the separately committed saved-view filter retain their previously recorded deployment status.
+## Production deployment
+
+Deployed on explicit request as **`1787d28d4880-production-mu40us0p`** to
+<https://mdbase-reader.pages.dev>. This also includes the Reader saved-view filter.
+Deployment URL: <https://54943305.mdbase-reader.pages.dev>.
+
+The live revision, manifest and HTML match the local deployment build on both URLs.
+Production entry JavaScript/CSS assets were also verified byte-for-byte. The build
+uses `https://connect.mdbase.dev` and loopback port `28485`, with no LAB/staging targets.
+This is artifact verification, not authenticated production editing acceptance.
+
+Evidence: `/tmp/reader-shared-editing-production-deploy.log` and
+`/tmp/reader-shared-editing-production-verification.json`.
