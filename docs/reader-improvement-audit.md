@@ -130,8 +130,18 @@ Dockview adds roughly 85 kB gzip to the main entry bundle compared with the prev
 build. This trades some download size for a single maintained docking engine; it is
 not claimed as an initial-load optimization. Core docking does not require an
 enterprise license. Dockview was deployed to the existing production Pages site as
-`353fc2e439d9-production-mu3iakho`. The subsequent, not-yet-deployed annotation polish
-is covered in [the annotation UX/UI audit](annotation-ux-audit.md).
+`353fc2e439d9-production-mu3iakho`. Subsequent annotation polish was deployed as
+`083c05701855-production-mu3mq3ht` and is covered in
+[the annotation UX/UI audit](annotation-ux-audit.md).
+
+## Responsive workspace follow-up (not deployed)
+
+The [combined edge/mobile integration](responsive-workspace.md) now uses native
+edge sidebars on desktop and a single native group with explicit navigation on
+phones. Fixture tests verify stable sidebar widths, editor/iframe and draft
+preservation, layout migration, focus transitions, mobile closes, and desktop
+arrangement recovery. The active annotation stripe is also removed locally.
+Production remains the annotation revision above.
 
 ## Validation and limits
 

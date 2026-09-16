@@ -40,7 +40,7 @@ describe("Dockview session commands", () => {
     const occupied = {
       panels: [],
       addPanel,
-      getPanel: () => ({ id: tab.id }),
+      getPanel: (id: string) => (id === tab.id ? { id: tab.id } : undefined),
     } as unknown as DockviewApi;
     addDockTab(occupied, tab);
     expect(addPanel.mock.calls[1]?.[0].id).not.toBe(tab.id);

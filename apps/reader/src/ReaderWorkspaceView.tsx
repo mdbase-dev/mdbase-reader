@@ -111,7 +111,8 @@ export function ReaderWorkspaceView({
   const mobile = useMediaQuery("(max-width: 680px)");
   const libraryOpen = dock.isSideVisible(navigatorPanelId);
   useEffect(() => {
-    dock.setSinglePane(model.focusMode || mobile);
+    dock.setMobile(mobile);
+    dock.setSinglePane(model.focusMode);
   }, [dock, mobile, model.focusMode]);
   const workbenchOwner = findWorkbenchOwner(
     sourceWorkspace.layout,

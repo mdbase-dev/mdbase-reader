@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <title>Disposable Dockview edge probe</title>
+    <style>
+      html,
+      body,
+      #root {
+        height: 100%;
+        margin: 0;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module">
+      import React from "react";
+      import { createRoot } from "react-dom/client";
+      import { DockviewReact } from "dockview-react";
+      import "dockview-react/dist/styles/dockview.css";
+      createRoot(document.getElementById("root")).render(
+        React.createElement(DockviewReact, {
+          components: {
+            panel: ({ api }) => React.createElement("div", { "data-probe-panel": api.id }, api.id),
+          },
+          dndStrategy: "pointer",
+          className: "dockview-theme-light",
+          onReady: ({ api }) => {
+            globalThis.edgeProbe = api;
+            api.addPanel({ id: "a", title: "Document A", component: "panel" });
+            api.addPanel({
+              id: "b",
+              title: "Document B",
+              component: "panel",
+              position: { direction: "right" },
+            });
+            const left = api.addEdgeGroup("left", { id: "left", initialSize: 260 });
+            api.addPanel({
+              id: "nav",
+              title: "Navigator",
+              component: "panel",
+              position: { referenceGroup: left.id },
+            });
+            api.getPanel("a").api.setActive();
+          },
+        }),
+      );
+    </script>
+  </body>
+</html>

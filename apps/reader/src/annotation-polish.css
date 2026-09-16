@@ -25,7 +25,6 @@
   color: var(--ink-soft);
 }
 .annotation-card.is-selected {
-  box-shadow: inset 3px 0 var(--accent);
   background: color-mix(in srgb, var(--accent) 6%, var(--paper));
 }
 .annotation-card.is-selected .annotation-card-actions {

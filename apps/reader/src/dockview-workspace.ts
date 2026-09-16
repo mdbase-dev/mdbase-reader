@@ -1,22 +1,17 @@
 import {
   moveDockPanel,
+  resetContentGroups,
   splitDockPanel,
   mergeDockGroup,
   focusNextDockGroup,
   switchDockTab,
 } from "./dockview-group-commands.js";
-import { DockviewNavigation } from "./dockview-navigation.js";
+import { ResponsiveDockLayout } from "./dockview-responsive-layout.js";
 import { DockviewSidePanels } from "./dockview-side-panels.js";
-import { addDockTab, openDockTab, patchDockTab } from "./dockview-tab-commands.js";
-import { restoreDockWorkspace } from "./dockview-workspace-migration.js";
-import {
-  dockStorageKey,
-  initialDockSnapshot,
-  navigatorPanelId,
-  panelTab,
-  projectDockLayout,
-  serializeDockState,
-} from "./dockview-workspace-state.js";
+import { addDockTab, openDockTab, patchDockTab, panelsForClose } from "./dockview-tab-commands.js";
+import { watchDockEvents } from "./dockview-workspace-events.js";
+import { DockviewWorkspaceSnapshot } from "./dockview-workspace-snapshot.js";
+import { navigatorPanelId, panelTab } from "./dockview-workspace-state.js";
 import {
   createLibraryWorkspaceTab,
   createWorkspaceTab,
@@ -28,93 +23,94 @@ import {
 
 import type { WorkspaceStorage } from "./source-workspace-persistence.js";
 import type { SourceId } from "@mdbase-reader/core";
-import type { DockviewApi, DockviewGroupPanel, IDockviewPanel } from "dockview-react";
+import type {
+  DockviewApi,
+  DockviewGroupPanel,
+  IDockviewPanel,
+  SerializedDockview,
+} from "dockview-react";
 
 /** Imperative commands go straight to Dockview. React only subscribes to a projection. */
 export class ReaderDockWorkspace {
   api: DockviewApi | null = null;
-  private snapshot = initialDockSnapshot();
-  private listeners = new Set<() => void>();
   private disposables: { dispose(): void }[] = [];
-  private focusedPanel: string | null = null;
-  private scheduled = false;
-  private persistTimer: ReturnType<typeof setTimeout> | undefined;
-  private navigation = new DockviewNavigation();
-  private sides = new DockviewSidePanels(() => this.api);
-  private ready = false;
+  private responsive = new ResponsiveDockLayout();
+  private sides = new DockviewSidePanels(
+    () => this.api,
+    () => this.responsive.mobile,
+  );
+  private state: DockviewWorkspaceSnapshot;
+  private mobileRequested = false;
+  private desktopMaximized = false;
+  private changingMode = false;
   private confirmDiscard: (tab: WorkspaceTab) => boolean = () => false;
   constructor(
-    private readonly collection: string,
-    private readonly storage: WorkspaceStorage | null,
-    private readonly knownSources: ReadonlySet<SourceId>,
-  ) {}
+    collection: string,
+    storage: WorkspaceStorage | null,
+    knownSources: ReadonlySet<SourceId>,
+  ) {
+    this.state = new DockviewWorkspaceSnapshot({
+      collection,
+      storage,
+      knownSources,
+      api: () => this.api,
+      serialize: (api, focused) => this.sides.serialize(this.responsive.serialize(api, focused)),
+      prepare: (api) => {
+        this.sides.hideEmpty();
+        if (
+          !this.changingMode &&
+          !this.mobile &&
+          !globalThis.matchMedia("(max-width: 680px)").matches
+        ) {
+          this.responsive.remember(api);
+        }
+      },
+    });
+  }
   setCloseGuard(guard: (tab: WorkspaceTab) => boolean): void {
     this.confirmDiscard = guard;
   }
-  subscribe = (listener: () => void): (() => void) => {
-    this.listeners.add(listener);
-    return () => this.listeners.delete(listener);
-  };
-  getSnapshot = (): SourceWorkspaceLayout => this.snapshot;
-
+  subscribe = (listener: () => void): (() => void) => this.state.subscribe(listener);
+  getSnapshot = (): SourceWorkspaceLayout => this.state.getSnapshot();
+  private schedule = (): void => this.state.schedule();
   attach(api: DockviewApi): () => void {
     this.api = api;
-    this.ready = false;
-    this.disposables = [
-      api.onDidLayoutChange(() => this.schedule()),
-      api.onDidActivePanelChange(({ panel }) => {
-        const tab = panelTab(panel);
-        if (tab) {
-          this.focusedPanel = tab.id;
-          this.navigation.visit(tab);
-          this.snapshot = { ...this.snapshot, recentSourceIds: this.navigation.recentSourceIds };
-        }
-        this.schedule();
-      }),
-      api.onDidMovePanel(() => this.schedule()),
-      api.onDidActiveGroupChange((group) => {
-        if (this.sides.singlePane && group && !group.api.isMaximized()) {
-          group.api.maximize();
-        }
-        this.schedule();
-      }),
-      api.onDidMaximizedGroupChange(() => this.schedule()),
-    ];
-    const restored = restoreDockWorkspace(
-      this,
-      this.navigation,
-      this.storage,
-      this.collection,
-      this.knownSources,
+    this.state.ready = false;
+    this.changingMode = true;
+    this.disposables = watchDockEvents(
+      api,
+      this.sides,
+      this.state,
+      () => this.changingMode,
+      () => this.mobile,
     );
-    if (restored) {
-      this.snapshot = { ...this.snapshot, recentSourceIds: restored.recentSourceIds };
-    }
-    this.focusedPanel =
-      restored?.focusedPanel ??
-      panelTab(api.activePanel)?.id ??
-      this.contentPanels()[0]?.id ??
-      null;
-    this.ready = true;
+    this.state.restore(this);
+    this.sides.initialize();
+    this.changingMode = false;
+    this.sides.syncFocus();
+    this.state.ready = true;
+    this.setMobile(this.mobileRequested);
+    this.setSinglePane(this.sides.singlePane);
     this.schedule();
-    const flush = (): void => this.persist();
-    globalThis.addEventListener("pagehide", flush);
+    globalThis.addEventListener("pagehide", this.state.persist);
     return () => {
-      this.persist();
-      globalThis.removeEventListener("pagehide", flush);
-      clearTimeout(this.persistTimer);
+      this.state.persist();
+      globalThis.removeEventListener("pagehide", this.state.persist);
+      this.state.detach();
       this.disposables.forEach((value) => value.dispose());
       this.disposables = [];
+      this.sides.detach();
       this.api = null;
-      this.ready = false;
+      this.responsive = new ResponsiveDockLayout();
     };
   }
   contentPanels = (): IDockviewPanel[] => this.api?.panels.filter(panelTab) ?? [];
   group(id?: string): DockviewGroupPanel | undefined {
     return (
       (id ? this.api?.groups.find((group) => group.id === id) : undefined) ??
-      this.api?.getPanel(this.focusedPanel ?? "")?.group ??
-      this.contentPanels()[0]?.group
+      this.api?.getPanel(this.state.focusedPanel ?? "")?.group ??
+      this.contentPanels()[0]?.group ??
+      (this.mobile ? this.api?.activeGroup : undefined)
     );
   }
   open(
@@ -136,7 +132,12 @@ export class ReaderDockWorkspace {
   }
   beside(tab: WorkspaceTab, direction: WorkspaceSplitDirection = "horizontal"): void {
     if (this.api) {
-      addDockTab(this.api, { ...tab, preview: false }, this.group(), direction);
+      addDockTab(
+        this.api,
+        { ...tab, preview: false },
+        this.group(),
+        this.mobile ? undefined : direction,
+      );
     }
   }
   activate(id: string): void {
@@ -151,34 +152,27 @@ export class ReaderDockWorkspace {
   }
   close = (id: string): void => this.closeMany([id]);
   closeMany(ids: readonly string[]): void {
-    const panels = ids.flatMap((id) => {
-      const panel = this.api?.getPanel(id);
-      return panel ? [panel] : [];
-    });
-    // Cancellation aborts the whole close operation before touching the layout.
-    if (
-      panels.some((panel) => {
-        const tab = panelTab(panel);
-        return tab?.dirty && !this.confirmDiscard(tab);
-      })
-    ) {
+    const panels = panelsForClose(this.api, ids, this.confirmDiscard);
+    if (!panels) {
       return;
     }
-    const returnTo = this.sides.returnTarget(panels, this.focusedPanel);
+    const onlySides = panels.every((panel) => !panelTab(panel));
     for (const panel of panels) {
       const tab = panelTab(panel);
       if (tab) {
-        this.navigation.close(tab);
-      } else {
-        this.sides.remember(panel);
+        this.state.navigation.close(tab);
+      } else if (this.mobile || this.sides.hide(panel)) {
+        continue;
       }
       this.api?.removePanel(panel);
     }
-    returnTo?.api.setActive();
+    if (onlySides && this.mobile) {
+      this.backToContent();
+    }
     this.schedule();
   }
   reopen(): void {
-    const tab = this.navigation.reopen();
+    const tab = this.state.navigation.reopen();
     if (tab && this.api) {
       openDockTab(this.api, tab, this.group());
     }
@@ -188,14 +182,16 @@ export class ReaderDockWorkspace {
     moveDockPanel(this.api, id, target, index);
   }
   split(id: string, direction: WorkspaceSplitDirection): void {
-    splitDockPanel(this.api, id, direction);
+    if (!this.mobile) {
+      splitDockPanel(this.api, id, direction);
+    }
   }
   merge = (groupId: string): void => mergeDockGroup(this.api, groupId);
   focusNext = (): void => focusNextDockGroup(this.api);
   switchRelative = (direction: -1 | 1): void =>
     switchDockTab(this.api?.activeGroup ?? this.group(), direction);
   navigate(direction: -1 | 1): void {
-    this.navigation.navigate(direction, (location) => {
+    this.state.navigation.navigate(direction, (location) => {
       if (location.kind === "source") {
         this.open(location.sourceId, location.view);
       } else {
@@ -203,63 +199,64 @@ export class ReaderDockWorkspace {
       }
     });
   }
+  layoutViewport = (width: number, height: number): void =>
+    this.responsive.layoutViewport(this.api, width, height);
+  seedDesktop = (layout: SerializedDockview): void => this.responsive.seed(layout);
+  get mobile(): boolean {
+    return this.responsive.mobile;
+  }
+  setMobile(value: boolean): void {
+    this.mobileRequested = value;
+    if (!this.api || !this.state.ready || value === this.mobile) {
+      return;
+    }
+    if (value) {
+      this.desktopMaximized = this.api.hasMaximizedGroup();
+    }
+    this.api.exitMaximizedGroup();
+    this.sides.syncFocus();
+    this.changingMode = true;
+    try {
+      this.responsive.setMobile(this.api, value, this.state.focusedPanel);
+      this.sides.initialize();
+    } finally {
+      this.changingMode = false;
+    }
+    this.sides.syncFocus();
+    this.setSinglePane(this.sides.singlePane);
+    if (!value && this.desktopMaximized && !this.sides.singlePane) {
+      this.group()?.api.maximize();
+    }
+    this.schedule();
+  }
+  backToContent = (): void => {
+    (this.api?.getPanel(this.state.focusedPanel ?? "") ?? this.contentPanels()[0])?.api.setActive();
+  };
   isSideVisible = (id: string): boolean => this.sides.visible(id);
-  setSinglePane = (value: boolean): void => this.sides.setSinglePane(value);
+  setSinglePane = (value: boolean): void =>
+    this.sides.setSinglePane(value, this.api?.getPanel(this.state.focusedPanel ?? ""));
   setSideVisible(id: string, visible: boolean, activate = true): void {
     if (visible) {
       this.sides.show(id, activate);
     } else {
       this.close(id);
     }
+    this.schedule();
   }
   reset(): void {
-    const active = this.api?.getPanel(this.focusedPanel ?? "");
-    const first = this.contentPanels()[0];
-    if (first) {
-      for (const panel of this.contentPanels().slice(1)) {
-        this.move(panel.id, first.group.id);
-      }
-    } else {
-      this.openLibrary();
-    }
+    const active = this.api?.getPanel(this.state.focusedPanel ?? "");
+    const first = resetContentGroups(this);
     this.setSideVisible(navigatorPanelId, true, false);
-    const target = this.group();
-    if (target) {
-      this.sides.resetAround(target);
-    }
+    this.sides.resetAround();
     (active ?? first)?.api.setActive();
-    if (!this.sides.singlePane) {
+    if (this.api && !this.mobile) {
+      this.responsive.remember(this.api);
+    }
+    if (this.sides.singlePane) {
+      this.setSinglePane(true);
+    } else {
       this.api?.exitMaximizedGroup();
     }
     this.schedule();
-  }
-  private schedule(): void {
-    if (this.scheduled) {
-      return;
-    }
-    this.scheduled = true;
-    queueMicrotask(() => {
-      this.scheduled = false;
-      if (!this.api || !this.ready) {
-        return;
-      }
-      this.snapshot = projectDockLayout(this.api, this.focusedPanel, this.snapshot);
-      this.listeners.forEach((listener) => listener());
-      clearTimeout(this.persistTimer);
-      this.persistTimer = setTimeout(() => this.persist(), 200);
-    });
-  }
-  private persist(): void {
-    if (!this.api || !this.ready) {
-      return;
-    }
-    try {
-      this.storage?.setItem(
-        dockStorageKey(this.collection),
-        serializeDockState(this.api, this.navigation.toJSON(), this.focusedPanel),
-      );
-    } catch {
-      /* Layout persistence must never prevent reading. */
-    }
   }
 }

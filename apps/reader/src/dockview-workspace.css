@@ -6,11 +6,48 @@
   overflow: hidden;
 }
 .reader-dock {
+  display: flex;
+  flex-direction: column;
   height: 100%;
   width: 100%;
   min-height: 0;
   min-width: 0;
   color-scheme: inherit;
+}
+.reader-dock-engine {
+  flex: 1;
+  min-height: 0;
+  min-width: 0;
+}
+.mobile-workspace-navigation {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 10px;
+  border-bottom: 1px solid var(--line);
+  background: var(--paper);
+}
+.mobile-workspace-navigation button,
+.mobile-workspace-navigation select {
+  min-height: 44px;
+  font: inherit;
+  color: inherit;
+  background: var(--paper);
+  border: 1px solid var(--line);
+  border-radius: 4px;
+}
+.mobile-workspace-navigation select {
+  flex: 1;
+  min-width: 0;
+  padding-inline: 8px 26px;
+  font-size: 16px;
+  text-overflow: ellipsis;
+}
+.reader-dock[data-mobile] .dv-tabs-and-actions-container {
+  display: none;
+}
+.reader-dock[data-mobile] .dv-sash {
+  pointer-events: none;
 }
 .dockview-theme-reader {
   --dv-background-color: var(--canvas);
@@ -39,6 +76,21 @@
   --dv-context-menu-color: var(--ink);
   --dv-context-menu-border-color: var(--line);
   color: var(--ink);
+}
+.reader-dock-sidebar {
+  height: 100%;
+  min-height: 0;
+  min-width: 0;
+}
+.reader-dock-sidebar[hidden] {
+  display: none;
+}
+/* Always-mounted edge panels can retain phone geometry while a hidden shell is 0px wide.
+   Hide the renderer overlay too: its empty React wrapper must not intercept other tabs. */
+.reader-dock .dv-render-overlay:has(.reader-dock-sidebar[hidden]),
+.reader-dock .dv-render-overlay:has(.workspace-pane[aria-hidden="true"]) {
+  visibility: hidden !important;
+  pointer-events: none !important;
 }
 .reader-dock .library-pane,
 .reader-dock .inspector-pane {

@@ -7,6 +7,8 @@ Status: implemented; supersedes the hand-built two-pane workspace.
 Reader uses **dockview-react 8.3.1** for the entire workspace: document/library/tool
 sessions, the library navigator, and the contextual Source tools panel. There is
 one Dockview instance, not a dock nested inside independently resized sidebars.
+Desktop shell panels use core left/right edge groups. Responsive presentation uses
+public native layout restoration with existing panels; see [responsive workspace](../responsive-workspace.md).
 
 Dockview owns groups, tab order, active panels, split geometry, resizing, drop
 hit-testing, overflow, and the serialized layout. Reader owns source identity,
@@ -69,7 +71,12 @@ entering the writable editor remains an explicit action.
 ## Persistence and migration
 
 Layouts are stored per collection under `mdbase-reader:dockview:v1:<collection>`.
-They contain Dockview geometry, validated panel descriptors, and Reader navigation
+The envelope is version 2; both v1 and v2 envelopes are accepted. Standalone v1
+shell groups migrate to edges, retaining a `:before-edges` backup when possible.
+Mixed groups keep their placement. Phone sessions save reconciled desktop geometry,
+not the temporary mobile group.
+
+Layouts contain Dockview geometry, validated panel descriptors, and Reader navigation
 metadata (recent sources, history, and recently closed sessions), not editor text,
 dirty flags, authentication data, or downloaded document bytes. Local drafts keep
 their existing independent durable store.
@@ -84,14 +91,18 @@ publishing a restored layout. Storage failures never prevent opening Reader.
 
 - Pointer-based docking works across tab strips and document content. Dockview
   shields embedded frames during dragging; Reader does not maintain custom drop zones.
-- Both side panels can dock on any edge or join a tab group.
+- Both side panels can move into reading groups or remain in their desktop edges.
+  Native edge-to-grid dragging targets the content center; move-to-pane menus also work.
 - Right-click a tab or use the native, keyboard-accessible pane-action popover to
   move/split/merge/maximize. F6 cycles groups, including side panels. Existing
   Reader tab/history shortcuts remain available.
 - Reset arrangement is also in the command palette.
-- On narrow screens, Dockview maximizes the active group instead of squeezing
-  desktop columns or maintaining a second mobile tree. Selecting another group
-  changes the maximized group. Returning to desktop restores the arrangement.
+- On narrow screens, `fromJSON(..., { reuseExistingPanels: true })` presents one
+  native group without replacing editors or iframe Windows. Explicit tab selection
+  and Back to workspace navigation replace desktop dragging. Returning to desktop
+  restores its arrangement, including tabs opened or closed on mobile.
+- Central-pane maximize hides the desktop edge shells and restores their prior
+  visibility on exit. Native edge-panel maximize is not supported.
 - Floating windows and popouts are deliberately not enabled.
 - This integration uses the MIT core. It does not enable paid enterprise modules
   such as Dockview's advanced keyboard docking or layout undo/history.
@@ -103,4 +114,7 @@ fixture audit. `scripts/audit-dockview.mjs` exercises real pointer gestures,
 iframe identity/position, source context, dirty close cancellation, both side
 panels, reload, and non-destructive reset. It is not an authenticated production
 Connect acceptance test. Unit tests cover descriptor validation, group projection,
-identity, preview replacement, tool reuse, and renderer residency.
+identity, preview replacement, tool reuse, renderer residency, edge validation, and
+responsive membership reconciliation. `READER_AUDIT_RESPONSIVE_ONLY=1` additionally
+checks repeated viewport transitions, draft/editor/iframe retention, sidebar geometry,
+mobile closes/reopening, focus transitions, and fresh mobile startup.

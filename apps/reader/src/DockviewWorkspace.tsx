@@ -12,15 +12,19 @@ import {
   useCallback,
   useSyncExternalStore,
   useEffect,
+  useLayoutEffect,
   useRef,
   useMemo,
-  useState,
   type JSX,
   type ReactNode,
 } from "react";
 
+import { DockPaneActions } from "./DockPaneActions.js";
 import { dockTabMenu } from "./dockview-menus.js";
+import { inspectorPanelId, navigatorPanelId } from "./dockview-panel-ids.js";
+import { dockPanelVisible } from "./dockview-panel-visibility.js";
 import { DocumentWorkspace, type DocumentWorkspaceProps } from "./DocumentWorkspace.js";
+import { MobileWorkspaceNavigation } from "./MobileWorkspaceNavigation.js";
 import { useProgressiveWorkspaceTabs } from "./use-progressive-workspace-tabs.js";
 import { workspaceTabAccessibleTitle } from "./workspace-tab-display.js";
 
@@ -42,8 +46,26 @@ function useDockContext(): DockContextValue {
   }
   return value;
 }
-const NavigatorPanel = (): JSX.Element => <>{useDockContext().navigator}</>;
-const InspectorPanel = (): JSX.Element => <>{useDockContext().inspector}</>;
+function SidePanel({
+  id,
+  children,
+}: {
+  readonly id: string;
+  readonly children: ReactNode;
+}): JSX.Element {
+  const visible = useDockContext().document.sourceWorkspace.dock.isSideVisible(id);
+  return (
+    <div className="reader-dock-sidebar" hidden={!visible} inert={!visible}>
+      {children}
+    </div>
+  );
+}
+const NavigatorPanel = (): JSX.Element => (
+  <SidePanel id={navigatorPanelId}>{useDockContext().navigator}</SidePanel>
+);
+const InspectorPanel = (): JSX.Element => (
+  <SidePanel id={inspectorPanelId}>{useDockContext().inspector}</SidePanel>
+);
 const components = {
   workspace: WorkspacePanel,
   navigator: NavigatorPanel,
@@ -62,13 +84,18 @@ export function DockviewWorkspace({
   const dock = document.sourceWorkspace.dock;
   const cleanup = useRef<(() => void) | undefined>(undefined);
   const layout = document.sourceWorkspace.layout;
+  const engine = useRef<HTMLDivElement>(null);
+  const mobile = dock.mobile;
+  useLayoutEffect(() => {
+    if (engine.current) {
+      dock.layoutViewport(engine.current.clientWidth, engine.current.clientHeight);
+    }
+  }, [dock, mobile]);
   const hydrationLayout = useMemo(
     () => ({
       ...layout,
       panes: layout.panes.map((pane) => {
-        const panel = dock.api?.getPanel(pane.activeTabId ?? "");
-        const visible =
-          panel?.api.isVisible && (!dock.api?.hasMaximizedGroup() || panel.group.api.isMaximized());
+        const visible = dockPanelVisible(dock.api, pane.activeTabId ?? "");
         return visible ? pane : { ...pane, activeTabId: null };
       }),
     }),
@@ -82,18 +109,25 @@ export function DockviewWorkspace({
   useEffect(() => () => cleanup.current?.(), []);
   return (
     <DockContext value={{ document, navigator, inspector, hydrated }}>
-      <div className="reader-dock dockview-theme-light" aria-label="Reader workspace">
-        <DockviewReact
-          components={components}
-          theme={theme}
-          onReady={ready}
-          defaultTabComponent={ReaderDockTab}
-          rightHeaderActionsComponent={PaneActions}
-          watermarkComponent={EmptyDock}
-          disableFloatingGroups
-          dndStrategy="pointer"
-          getTabContextMenuItems={({ panel }) => dockTabMenu(dock, panel)}
-        />
+      <div
+        className="reader-dock dockview-theme-light"
+        data-mobile={dock.mobile || undefined}
+        aria-label="Reader workspace"
+      >
+        <MobileWorkspaceNavigation dock={dock} />
+        <div className="reader-dock-engine" ref={engine}>
+          <DockviewReact
+            components={components}
+            theme={theme}
+            onReady={ready}
+            defaultTabComponent={ReaderDockTab}
+            rightHeaderActionsComponent={PaneActions}
+            watermarkComponent={EmptyDock}
+            disableFloatingGroups
+            dndStrategy="pointer"
+            getTabContextMenuItems={({ panel }) => dockTabMenu(dock, panel)}
+          />
+        </div>
       </div>
     </DockContext>
   );
@@ -109,7 +143,9 @@ function WorkspacePanel(props: IDockviewPanelProps<{ tab?: WorkspaceTab }>): JSX
     },
     [props.api],
   );
-  const visible = useSyncExternalStore(subscribe, () => props.api.isVisible);
+  const nativeVisible = useSyncExternalStore(subscribe, () => props.api.isVisible);
+  const visible =
+    nativeVisible && dockPanelVisible(context.document.sourceWorkspace.dock.api, props.api.id);
   const source =
     tab?.kind === "source" ? context.document.sources.find(({ id }) => id === tab.sourceId) : null;
   const title = tab ? workspaceTabAccessibleTitle(tab, source ?? null) : "Source";
@@ -162,91 +198,7 @@ function ReaderDockTab(props: IDockviewPanelHeaderProps<{ tab?: WorkspaceTab }>)
 }
 function PaneActions({ group }: IDockviewHeaderActionsProps): JSX.Element {
   const { document } = useDockContext();
-  const dock = document.sourceWorkspace.dock;
-  const menu = useRef<HTMLDivElement>(null);
-  const [position, setPosition] = useState({ top: 0, left: 0 });
-  const id = `reader-pane-menu-${group.id}`;
-  const run = (action: () => void): void => {
-    menu.current?.hidePopover();
-    action();
-  };
-  return (
-    <div className="dock-pane-menu">
-      <button
-        type="button"
-        aria-label="Pane actions"
-        title="Pane actions"
-        popoverTarget={id}
-        onClick={(event) => {
-          const bounds = event.currentTarget.getBoundingClientRect();
-          setPosition({
-            top: Math.max(8, Math.min(bounds.bottom + 4, globalThis.innerHeight - 260)),
-            left: Math.max(8, bounds.right - 245),
-          });
-        }}
-      >
-        ⋯
-      </button>
-      <div
-        ref={menu}
-        id={id}
-        popover="auto"
-        className="dock-pane-popover"
-        style={position}
-        role="group"
-        aria-label="Pane actions"
-      >
-        <button
-          type="button"
-          onClick={() =>
-            run(() => (group.api.isMaximized() ? group.api.exitMaximized() : group.api.maximize()))
-          }
-        >
-          Maximize / restore pane
-        </button>
-        <button
-          type="button"
-          disabled={group.panels.length < 2}
-          onClick={() =>
-            run(() => {
-              const panel = group.activePanel;
-              if (panel) {
-                dock.split(panel.id, "horizontal");
-              }
-            })
-          }
-        >
-          Move tab to pane right
-        </button>
-        <button
-          type="button"
-          disabled={group.panels.length < 2}
-          onClick={() =>
-            run(() => {
-              const panel = group.activePanel;
-              if (panel) {
-                dock.split(panel.id, "vertical");
-              }
-            })
-          }
-        >
-          Move tab to pane below
-        </button>
-        <button type="button" onClick={() => run(() => dock.merge(group.id))}>
-          Merge into another reading pane
-        </button>
-        <button
-          type="button"
-          onClick={() => run(() => dock.closeMany(group.panels.map(({ id }) => id)))}
-        >
-          Close pane and tabs…
-        </button>
-        <button type="button" onClick={() => run(() => dock.reset())}>
-          Reset arrangement (keep tabs)
-        </button>
-      </div>
-    </div>
-  );
+  return <DockPaneActions group={group} dock={document.sourceWorkspace.dock} />;
 }
 function EmptyDock(): JSX.Element {
   const { document } = useDockContext();

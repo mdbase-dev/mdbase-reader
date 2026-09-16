@@ -3,6 +3,31 @@ import { panelTab, navigatorPanelId, inspectorPanelId } from "./dockview-workspa
 import type { WorkspaceTab, WorkspaceSplitDirection } from "./source-workspace-layout.js";
 import type { DockviewApi, DockviewGroupPanel, IDockviewPanel } from "dockview-react";
 
+/** Confirm the complete batch before removing anything. */
+export function panelsForClose(
+  api: DockviewApi | null,
+  ids: readonly string[],
+  confirm: (tab: WorkspaceTab) => boolean,
+): IDockviewPanel[] | null {
+  const panels = ids.flatMap((id) => {
+    const panel = api?.getPanel(id);
+    return panel ? [panel] : [];
+  });
+  return panels.some((panel) => {
+    const tab = panelTab(panel);
+    return tab?.dirty && !confirm(tab);
+  })
+    ? null
+    : panels;
+}
+function defaultDockPosition(
+  api: DockviewApi,
+): { referenceGroup: DockviewGroupPanel; direction: "left" | "right" } | undefined {
+  const side = api.getPanel(navigatorPanelId) ?? api.getPanel(inspectorPanelId);
+  return side?.group.api.location.type === "grid"
+    ? { referenceGroup: side.group, direction: side.id === navigatorPanelId ? "right" : "left" }
+    : undefined;
+}
 export function addDockTab(
   api: DockviewApi,
   tab: WorkspaceTab,
@@ -25,13 +50,7 @@ export function addDockTab(
     tab.id.startsWith("reader:session:") && !api.getPanel(tab.id)
       ? tab.id
       : `reader:session:${crypto.randomUUID()}`;
-  const side = api.getPanel(navigatorPanelId) ?? api.getPanel(inspectorPanelId);
-  const defaultPosition = side
-    ? {
-        referenceGroup: side.group,
-        direction: side.id === navigatorPanelId ? ("right" as const) : ("left" as const),
-      }
-    : undefined;
+  const defaultPosition = defaultDockPosition(api);
   return api.addPanel({
     id,
     component: "workspace",

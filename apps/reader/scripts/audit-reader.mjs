@@ -10,8 +10,13 @@ import { auditDockview } from "./audit-dockview.mjs";
 import { auditDockviewMigration } from "./audit-dockview-migration.mjs";
 import { annotationFixture } from "./audit-annotation-fixture.mjs";
 import { auditAnnotations } from "./audit-annotations.mjs";
+import { auditSidebarLayout } from "./audit-sidebar-layout.mjs";
+import { auditEdgeGroupApi } from "./audit-edge-group-api.mjs";
+import { auditResponsiveWorkspace } from "./audit-responsive-workspace.mjs";
 
 const origin = process.env.READER_AUDIT_ORIGIN ?? "http://127.0.0.1:5193";
+const responsiveAudit = process.env.READER_AUDIT_RESPONSIVE_ONLY === "1";
+const sidebarComparison = responsiveAudit || process.env.READER_AUDIT_SIDEBARS_ONLY === "1";
 if (!/^http:\/\/(127\.0\.0\.1|localhost):\d+$/u.test(origin)) {
   throw new Error("Reader audits only run against an explicit loopback origin.");
 }
@@ -172,7 +177,22 @@ const screenshot = async (name) =>
 try {
   const started = performance.now();
   await navigate();
-  if (process.env.READER_AUDIT_ANNOTATIONS_ONLY !== "1") {
+  if (sidebarComparison) {
+    completed.push(...(await auditSidebarLayout(page, { screenshot, measurements })));
+    measurements.edgeApi = await auditEdgeGroupApi(context, origin);
+    if (responsiveAudit) {
+      expect(Object.values(measurements.sidebars.acceptance).every(Boolean)).toBe(true);
+      completed.push(
+        ...(await auditResponsiveWorkspace(page, {
+          screenshot,
+          blockWrites: (value) => {
+            writesBlocked = value;
+          },
+        })),
+      );
+    }
+  }
+  if (!sidebarComparison && process.env.READER_AUDIT_ANNOTATIONS_ONLY !== "1") {
     await expect(page.getByRole("grid", { name: "Sources" })).toBeVisible();
     measurements.libraryReadyMs = Math.round(performance.now() - started);
     measurements.renderedRows5000Sources = await page.getByRole("row").count();
@@ -385,14 +405,16 @@ try {
     );
     completed.push(...(await auditDockviewMigration(page)));
   }
-  completed.push(
-    ...(await auditAnnotations(page, {
-      screenshot,
-      blockWrites: (value) => {
-        writesBlocked = value;
-      },
-    })),
-  );
+  if (!sidebarComparison) {
+    completed.push(
+      ...(await auditAnnotations(page, {
+        screenshot,
+        blockWrites: (value) => {
+          writesBlocked = value;
+        },
+      })),
+    );
+  }
   expect(errors).toEqual([]);
   expect(consoleErrors).toEqual([]);
   expect(failedRequests).toEqual([]);
@@ -432,6 +454,14 @@ try {
     completed,
     measurements,
     error: error.message,
+    workspace: await page
+      .evaluate(() => ({
+        saved: localStorage.getItem("mdbase-reader:dockview:v1:test-reader-audit"),
+        mobileOptions: Array.from(
+          globalThis.document.querySelectorAll(".mobile-workspace-navigation option"),
+        ).map((option) => ({ value: option.value, title: option.textContent })),
+      }))
+      .catch(() => null),
     errors,
     consoleErrors,
     sandboxNotices,

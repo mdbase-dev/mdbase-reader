@@ -1,8 +1,30 @@
 import { panelTab } from "./dockview-workspace-state.js";
 
+import type { ReaderDockWorkspace } from "./dockview-workspace.js";
 import type { WorkspaceSplitDirection } from "./source-workspace-layout.js";
-import type { DockviewApi, DockviewGroupPanel } from "dockview-react";
+import type { DockviewApi, DockviewGroupPanel, IDockviewPanel } from "dockview-react";
 
+/** Reset brings content back to the central grid without recreating any panel. */
+export function resetContentGroups(dock: ReaderDockWorkspace): IDockviewPanel | undefined {
+  const panels = dock.contentPanels();
+  const first = panels.find((panel) => panel.group.api.location.type === "grid") ?? panels[0];
+  if (!first) {
+    dock.openLibrary();
+    return undefined;
+  }
+  const group =
+    first.group.api.location.type === "grid"
+      ? first.group
+      : dock.api?.addGroup({ direction: "right" });
+  if (group) {
+    for (const panel of panels) {
+      if (panel.group !== group) {
+        dock.move(panel.id, group.id);
+      }
+    }
+  }
+  return first;
+}
 export function moveDockPanel(
   api: DockviewApi | null,
   id: string,
@@ -42,8 +64,13 @@ export function focusNextDockGroup(api: DockviewApi | null): void {
   if (!api) {
     return;
   }
-  const index = api.groups.findIndex(({ id }) => id === api.activeGroup?.id);
-  const next = api.groups[(index + 1) % api.groups.length]?.activePanel;
+  const groups = api.groups.filter(
+    (group) =>
+      group.activePanel &&
+      (group.api.location.type !== "edge" || api.isEdgeGroupVisible(group.api.location.position)),
+  );
+  const index = groups.findIndex(({ id }) => id === api.activeGroup?.id);
+  const next = groups[(index + 1) % groups.length]?.activePanel;
   next?.api.setActive();
   next?.focus();
 }

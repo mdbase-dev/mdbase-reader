@@ -57,6 +57,7 @@ export async function auditAnnotations(page, { screenshot, blockWrites }) {
     .click({ position: { x: 20, y: 10 } });
   const tools = page.getByRole("complementary", { name: "Source workspace" });
   await expect(tools.locator(".annotation-card.is-selected")).toBeVisible();
+  await expect(tools.locator(".annotation-card.is-selected")).toHaveCSS("box-shadow", "none");
   await expect(tools.getByRole("textbox", { name: "Annotation note" })).toHaveCount(0);
   await expect(page.locator("iframe.html-viewer:visible")).toBeVisible();
   await expect

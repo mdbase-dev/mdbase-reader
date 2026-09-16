@@ -3,7 +3,9 @@
 ## Scope
 
 The pre-existing Reader work was checkpointed in `327249f`. This pass builds on the
-existing annotation system rather than replacing it. It has **not been deployed**.
+existing annotation system rather than replacing it. It was subsequently deployed as
+`083c05701855-production-mu3mq3ht`. The later active-card stripe removal and
+[responsive edge integration](responsive-workspace.md) have not been deployed.
 
 Browser checks use an owned Playwright browser, disposable collection fixtures,
 and the real HTML, PDF and EPUB renderers. They do not pair with Connect or write
@@ -97,7 +99,8 @@ READER_AUDIT_ANNOTATIONS_ONLY=1 pnpm --filter @mdbase-reader/app test:browser
   that unrelated pre-existing repository-wide lint/format failures were repaired.
 - Architecture check: 281 production files, 402 relative imports, 15 packages,
   zero warnings. Specification integrity passed.
-- Owned browser and Vite processes were stopped. No deployment was performed.
+- Owned browser and Vite processes were stopped. Deployment followed this original
+  validation pass, as recorded above.
 
 ## Remaining UX/UI opportunities
 
@@ -105,6 +108,9 @@ READER_AUDIT_ANNOTATIONS_ONLY=1 pnpm --filter @mdbase-reader/app test:browser
    allocate too much space to navigation or squeeze the inspector. Reset arrangement
    restores useful proportions. Opening the inspector is now steadier, but general
    structural-layout sizing needs its own focused pass; it is not completely solved.
+   The subsequent [responsive edge integration](responsive-workspace.md) fixes the
+   measured desktop drift and replaces the old mobile maximize mechanism. Its full
+   fixture regressions pass locally; it has not been deployed.
 2. **Read-only peek for a hidden annotation workbench.** The inspector still directs
    users to the existing writable owner. A lightweight preview could avoid that extra
    step without creating competing editors.

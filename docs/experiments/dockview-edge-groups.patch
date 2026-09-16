@@ -1,0 +1,102 @@
+diff --git a/apps/reader/src/dockview-side-panels.ts b/apps/reader/src/dockview-side-panels.ts
+index f64ff43..05c207b 100644
+--- a/apps/reader/src/dockview-side-panels.ts
++++ b/apps/reader/src/dockview-side-panels.ts
+@@ -2,8 +2,22 @@ import { inspectorPanelId, navigatorPanelId } from "./dockview-workspace-state.j
+
+ import type { DockviewApi, DockviewGroupPanel, IDockviewPanel } from "dockview-react";
+
+-function standaloneWidth(panel: IDockviewPanel | undefined): number | null {
+-  return panel?.group.panels.length === 1 ? panel.group.api.width : null;
++function edgeGroup(api: DockviewApi, id: string, width: number): DockviewGroupPanel {
++  const position = id === navigatorPanelId ? "left" : "right";
++  const edge =
++    api.getEdgeGroup(position) ??
++    api.addEdgeGroup(position, {
++      id: `reader:edge:${position}`,
++      initialSize: width,
++      minimumSize: 180,
++      autoReveal: true,
++    });
++  edge.setHeaderPosition("top");
++  edge.expand();
++  api.setEdgeGroupVisible(position, true);
++  const group = api.groups.find((candidate) => candidate.id === edge.id);
++  if (!group) throw new Error("Missing prototype edge group");
++  return group;
+ }
+
+ /** Sidebar commands use the same Dockview instance and native groups as documents. */
+@@ -53,12 +67,12 @@ export class DockviewSidePanels {
+       }
+       return;
+     }
+-    const other = api.getPanel(id === navigatorPanelId ? inspectorPanelId : navigatorPanelId);
+-    const otherWidth = standaloneWidth(other);
+     const previous = this.positions.get(id);
+-    const group = previous ? api.groups.find((group) => group.id === previous.group) : undefined;
+     const width = previous?.width ?? (id === navigatorPanelId ? 260 : 340);
+-    const added = api.addPanel({
++    const group =
++      (previous ? api.groups.find((group) => group.id === previous.group) : undefined) ??
++      edgeGroup(api, id, width);
++    api.addPanel({
+       id,
+       component: id === navigatorPanelId ? "navigator" : "inspector",
+       title: id === navigatorPanelId ? "Library navigator" : "Source tools",
+@@ -67,21 +81,8 @@ export class DockviewSidePanels {
+       minimumWidth: 180,
+       minimumHeight: 120,
+       initialWidth: width,
+-      position: group
+-        ? { referenceGroup: group, direction: "within" }
+-        : { direction: id === navigatorPanelId ? "left" : "right" },
++      position: { referenceGroup: group, direction: "within" },
+     });
+-    if (!group) {
+-      requestAnimationFrame(() => {
+-        // onReady can run before Dockview's first measured layout.
+-        if (this.current() === api && api.getPanel(id) === added && !this.singlePane) {
+-          added.group.api.setSize({ width });
+-          if (other && otherWidth !== null && api.getPanel(other.id) === other) {
+-            other.group.api.setSize({ width: otherWidth });
+-          }
+-        }
+-      });
+-    }
+   }
+   returnTarget(
+     panels: readonly IDockviewPanel[],
+@@ -92,7 +93,7 @@ export class DockviewSidePanels {
+       ? this.current()?.getPanel(focusedId ?? "")
+       : undefined;
+   }
+-  resetAround(target: DockviewGroupPanel): void {
++  resetAround(_target: DockviewGroupPanel): void {
+     const api = this.current();
+     if (!api) {
+       return;
+@@ -103,8 +104,8 @@ export class DockviewSidePanels {
+         continue;
+       }
+       panel.api.moveTo({
+-        group: target,
+-        position: id === navigatorPanelId ? "left" : "right",
++        group: edgeGroup(api, id, id === navigatorPanelId ? 260 : 340),
++        position: "center",
+         skipSetActive: true,
+       });
+       panel.group.api.setSize({ width: id === navigatorPanelId ? 260 : 340 });
+diff --git a/apps/reader/src/dockview-workspace-state.ts b/apps/reader/src/dockview-workspace-state.ts
+index 5466190..9b662ac 100644
+--- a/apps/reader/src/dockview-workspace-state.ts
++++ b/apps/reader/src/dockview-workspace-state.ts
+@@ -70,7 +70,7 @@ export function parseDockState(
+   if (!isRecord(layout) || !isRecord(layout["grid"]) || !isRecord(layout["panels"])) {
+     throw new Error("Invalid workspace");
+   }
+-  if (layout["floatingGroups"] || layout["popoutGroups"] || layout["edgeGroups"]) {
++  if (layout["floatingGroups"] || layout["popoutGroups"]) {
+     throw new Error("Unsupported workspace windows");
+   }
+   const state = layout as unknown as SerializedDockview;

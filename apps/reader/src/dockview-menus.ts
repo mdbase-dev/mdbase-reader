@@ -23,13 +23,14 @@ export function dockTabMenu(
     },
     {
       label: "Maximize / restore pane",
+      disabled: panel.group.api.location.type !== "grid",
       action: () => (panel.api.isMaximized() ? panel.api.exitMaximized() : panel.api.maximize()),
     },
   ];
   for (const group of dock.api?.groups ?? []) {
     if (group.id !== panel.group.id) {
       items.push({
-        label: `Move to ${group.activePanel?.title ?? "pane"}`,
+        label: `Move to ${group.activePanel?.title ?? (group.api.location.type === "edge" ? `${group.api.location.position} sidebar` : "pane")}`,
         action: () => dock.move(panel.id, group.id),
       });
     }

@@ -77,8 +77,11 @@ export async function auditAnnotationFormats(page, { open, screenshot }) {
   await screenshot("annotation-epub-selection");
   await composer.getByRole("button", { name: "Save highlight", exact: true }).click();
   await expect(composer).toHaveCount(0);
-  await page.getByRole("button", { name: "Toggle source tools" }).click();
   const tools = page.getByRole("complementary", { name: "Source workspace" });
+  // Desktop tool visibility survives mobile visits; do not accidentally close an already-open edge.
+  if (!(await tools.isVisible())) {
+    await page.getByRole("button", { name: "Toggle source tools" }).click();
+  }
   await expect(tools.locator(".annotation-card")).toHaveCount(1);
   await tools.getByRole("button", { name: "Open annotation in document" }).click();
   // Readium keeps an empty live alert region for announcements.

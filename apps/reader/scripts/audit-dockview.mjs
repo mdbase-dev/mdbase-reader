@@ -29,7 +29,12 @@ export async function auditDockview(page, { screenshot, blockWrites }) {
           ? node.data.id
           : null
         : node.data.map(visit).find(Boolean);
-    return visit(data.layout.grid.root);
+    return (
+      visit(data.layout.grid.root) ??
+      Object.values(data.layout.edgeGroups ?? {}).find((edge) => edge.group.views.includes(id))
+        ?.group.id ??
+      null
+    );
   };
   const drag = async (target, point) => {
     const rect = await target.boundingBox();
@@ -118,7 +123,8 @@ export async function auditDockview(page, { screenshot, blockWrites }) {
   );
   const inspectorId = "reader:inspector";
   const inspectorGroup = panelGroup(await state(), inspectorId);
-  const docRect = await tab("[test] Research 0001").boundingBox();
+  // Dockview 8.3.1 edge-to-header drops are unreliable; the native content-centre target works.
+  const docRect = await firstSession.locator("iframe.html-viewer").boundingBox();
   await drag(tab("Source tools"), {
     x: docRect.x + docRect.width / 2,
     y: docRect.y + docRect.height / 2,

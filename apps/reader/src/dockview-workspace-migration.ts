@@ -31,7 +31,10 @@ export function restoreDockWorkspace(
   try {
     saved = storage?.getItem(dockStorageKey(collection)) ?? null;
     if (saved) {
-      api.fromJSON(parseDockState(saved, knownSources));
+      const parsed = parseDockState(saved, knownSources);
+      preservePreEdgeLayout(storage, collection, saved);
+      dock.seedDesktop(parsed);
+      api.fromJSON(parsed);
       for (const panel of [...api.panels]) {
         if (panel.params?.["missing"]) {
           api.removePanel(panel);
@@ -62,6 +65,25 @@ export function restoreDockWorkspace(
     recentSourceIds: navigation.recentSourceIds,
     focusedPanel: panelTab(api.activePanel)?.id ?? null,
   };
+}
+
+function preservePreEdgeLayout(
+  storage: WorkspaceStorage | null,
+  collection: string,
+  saved: string,
+): void {
+  const envelope = JSON.parse(saved) as { version?: number };
+  if (envelope.version !== 1) {
+    return;
+  }
+  try {
+    const key = `${dockStorageKey(collection)}:before-edges`;
+    if (!storage?.getItem(key)) {
+      storage?.setItem(key, saved);
+    }
+  } catch {
+    /* Migration must work even if optional backup storage is full. */
+  }
 }
 
 function restoredFocus(api: DockviewApi, id: unknown): string | null {
