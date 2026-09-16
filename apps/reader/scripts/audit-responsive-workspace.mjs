@@ -1,4 +1,5 @@
 import { expect } from "@playwright/test";
+import { blockSourceDraftStorage } from "./audit-source-storage.mjs";
 
 export async function auditResponsiveWorkspace(page, { screenshot, blockWrites }) {
   const completed = [];
@@ -171,11 +172,17 @@ export async function auditResponsiveWorkspace(page, { screenshot, blockWrites }
   );
 
   await page.setViewportSize({ width: 390, height: 844 });
+  await blockSourceDraftStorage(page, true);
+  await editor.fill("[test] Responsive draft with an unstored change.");
+  await expect(page.locator(".draft-recovery.is-error")).toBeVisible();
   page.removeAllListeners("dialog");
   page.once("dialog", (dialog) => void dialog.dismiss());
   await page.getByRole("button", { name: "Close current tab", exact: true }).click();
   await expect(editor).toBeVisible();
   await expect(editor).toContainText("Responsive draft");
+  await blockSourceDraftStorage(page, false);
+  await editor.fill("[test] Responsive draft with storage recovered.");
+  await expect(page.getByText("Saved locally", { exact: true })).toBeVisible();
   page.on("dialog", (dialog) => void dialog.accept());
   await page.getByRole("combobox", { name: "Open workspace tab" }).selectOption(first);
   await page.getByRole("button", { name: "Close current tab", exact: true }).click();

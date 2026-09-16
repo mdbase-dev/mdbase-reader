@@ -1,11 +1,10 @@
-import { useEffect, useRef, type JSX, type RefObject } from "react";
+import { useEffect, useRef, useSyncExternalStore, type JSX, type RefObject } from "react";
 
 import { annotationBodyContent } from "./annotation-body-content.js";
-import { annotationDraftKey } from "./annotation-drafts.js";
 import { AnnotationBodyEditor } from "./AnnotationEditor.js";
 import { AnnotationImage, type AnnotationFileReader } from "./AnnotationImage.js";
 import { FocusIcon } from "./icons.js";
-import { useAnnotationDraft } from "./use-annotation-draft.js";
+import { useAnnotationSession } from "./use-annotation-session.js";
 
 import type { AnnotationTransclusionController } from "./use-annotation-transclusion.js";
 import type { Annotation, AnnotationDeletionPlan } from "@mdbase-reader/core";
@@ -28,16 +27,20 @@ export function AnnotationCard({
   readonly transclusion: AnnotationTransclusionController;
   readonly onEdit: () => void;
   readonly onCancel: () => void;
-  readonly onSave: (body: string) => Promise<void>;
-  readonly onPlanDelete: () => Promise<AnnotationDeletionPlan>;
-  readonly onDelete: (plan: AnnotationDeletionPlan) => Promise<void>;
+  readonly onSave: (annotation: Annotation, body: string) => Promise<Annotation>;
+  readonly onPlanDelete: (annotation: Annotation) => Promise<AnnotationDeletionPlan>;
+  readonly onDelete: (annotation: Annotation, plan: AnnotationDeletionPlan) => Promise<void>;
   readonly onOpen: () => void;
   readonly readFile: AnnotationFileReader;
 }): JSX.Element {
   const cardRef = useScrollToEditing(active || editing);
-  const draft = useAnnotationDraft(
-    annotationDraftKey(annotation.collectionId, annotation.sourceId, annotation.id),
+  const session = useAnnotationSession(annotation, onSave);
+  const snapshot = useSyncExternalStore(
+    session.subscribe,
+    session.getSnapshot,
+    session.getSnapshot,
   );
+  const needsAttention = Boolean(snapshot.problem ?? snapshot.conflict);
   return (
     // Pointer shortcut; keyboard users have explicit Edit and Open buttons.
     // eslint-disable-next-line jsx-a11y/no-noninteractive-element-interactions, jsx-a11y/click-events-have-key-events
@@ -62,8 +65,10 @@ export function AnnotationCard({
             {annotation.locator.label.replace(/^\[\[.*\]\]$/u, "Document passage")}
           </small>
         ) : null}
-        {draft.value && !editing ? (
-          <small className="annotation-draft-badge">Unfinished edit</small>
+        {snapshot.body !== annotation.body && !editing ? (
+          <small className="annotation-draft-badge">
+            {needsAttention ? "Changes need review" : "Changes syncing"}
+          </small>
         ) : null}
       </header>
       {editing ? (
@@ -75,7 +80,7 @@ export function AnnotationCard({
           onDelete={onDelete}
         />
       ) : (
-        <AnnotationBody annotation={annotation} readFile={readFile} />
+        <AnnotationBody annotation={{ ...annotation, body: snapshot.body }} readFile={readFile} />
       )}
       {!editing ? (
         <AnnotationCardFooter
@@ -83,7 +88,7 @@ export function AnnotationCard({
           transclusion={transclusion}
           onEdit={onEdit}
           onOpen={onOpen}
-          resume={draft.value !== null}
+          resume={needsAttention}
         />
       ) : null}
       {transclusion.problemId === annotation.id ? (
@@ -153,12 +158,18 @@ function AnnotationCardFooter({
       <div className="annotation-card-actions">
         <button
           type="button"
+          disabled={!annotation.path || !annotation.recordRevision}
+          title={
+            !annotation.path || !annotation.recordRevision
+              ? "Editing requires a saved annotation"
+              : undefined
+          }
           onClick={(event) => {
             event.stopPropagation();
             onEdit();
           }}
         >
-          {resume ? "Resume edit" : "Edit"}
+          {resume ? "Review changes" : "Edit"}
         </button>
         <button
           type="button"

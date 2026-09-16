@@ -100,6 +100,10 @@ class AuditGateway extends PreviewGateway {
   override createAnnotation(request: AnnotationCreationRequest): Promise<Annotation> {
     return api(`annotations/${request.sourceId}`, { op: "create", request });
   }
+  async refreshAnnotation(annotation: Annotation): Promise<Annotation | null> {
+    const records = await api<Annotation[]>(`annotations/${annotation.sourceId}`);
+    return records.find(({ id }) => id === annotation.id) ?? null;
+  }
   override updateAnnotation(annotation: Annotation, body: string): Promise<Annotation> {
     return api(`annotations/${annotation.sourceId}`, { op: "update", annotation, body });
   }

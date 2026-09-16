@@ -130,21 +130,10 @@ export function ReaderWorkspaceView({
     }
     routedEditingIdRef.current = revealId;
     const timer = globalThis.setTimeout(() => {
-      const annotationsOwner = findWorkbenchOwner(
-        sourceWorkspace.layout,
-        inspectorSource.id,
-        "annotations",
-      );
-      if (annotationsOwner && composer.editingAnnotationId) {
-        if (sourceWorkspace.activeTab?.id !== annotationsOwner.tab.id) {
-          sourceWorkspace.activateTab(annotationsOwner.tab.id, annotationsOwner.pane.id);
-        }
-      } else {
-        if (shell.value.inspectorTab !== "annotations") {
-          shell.update({ inspectorTab: "annotations" });
-        }
-        setInspectorOpen(true);
+      if (shell.value.inspectorTab !== "annotations") {
+        shell.update({ inspectorTab: "annotations" });
       }
+      setInspectorOpen(true);
     }, 0);
     return () => globalThis.clearTimeout(timer);
   }, [
@@ -345,7 +334,8 @@ function findWorkbenchOwner(
   sourceId: SourceId | null,
   view: InspectorTab,
 ): { readonly pane: SourceWorkspacePane; readonly tab: SourceWorkspaceTab } | undefined {
-  if (!sourceId) {
+  // Citation forms still use an explicit validated save; text editors share their writer.
+  if (!sourceId || view !== "citation") {
     return undefined;
   }
   for (const pane of layout.panes) {

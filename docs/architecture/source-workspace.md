@@ -30,8 +30,8 @@ migration; migration tests construct old-format fixtures directly.
 Each content panel has a unique `reader:session:…` ID. That ID survives dragging,
 splitting, merging, reset, and persisted-layout restoration. Two copies of a
 document are distinct sessions. Reopening a closed session reuses its identity
-when available. Source-note/citation/annotation tools are reused rather than
-creating competing writable editors for the same source and view.
+when available. Source-note and annotation tools may have multiple views of one
+shared editing session and autosave writer. Citation forms remain single-owner.
 
 Panels use Dockview's `always` renderer: relocating their groups does not reparent
 and reload an embedded HTML/EPUB iframe. Reader still owns hydration: unopened
@@ -52,8 +52,9 @@ independent of the docking engine.
 
 The contextual inspector follows the last focused content session. Focusing or
 moving the navigator/inspector does not replace the source context. Source-bound
-workbench tools continue to own independent editing sessions; the inspector
-recognizes an existing writable tool rather than offering a competing editor.
+workbench notes and annotation comments share record-level text/save state with
+the inspector while retaining independent editor views. Only citation forms still
+redirect to an existing writable owner. See [shared editing](../shared-editing.md).
 
 Every exposed close action goes through Reader's guard: tab close buttons,
 context menus, pane menus, and command-palette actions. A cancelled dirty close
@@ -64,8 +65,9 @@ panels without closing them, reloading renderers, or replacing drafts.
 Annotation drafts are shared across the inspector and source-bound workbench.
 Existing edits are keyed by collection/source/annotation; new selections are keyed
 by collection/source/exact document target. IndexedDB stores text and crop blobs,
-not live surfaces or object URLs. Relevant document and annotation tabs project
-this draft state into their close guards. A document highlight reveals its card;
+not live surfaces or object URLs. Existing edits autosave; closing a safely stored
+view leaves its writer running. Unstored edits and unfinished new annotations
+remain covered by close guards. A document highlight reveals its card;
 entering the writable editor remains an explicit action.
 
 ## Persistence and migration

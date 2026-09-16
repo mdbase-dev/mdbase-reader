@@ -1,35 +1,38 @@
-import { useState } from "react";
+import { useEffect, useMemo, useState, useSyncExternalStore } from "react";
 
-import { confirmAnnotationDiscard } from "./annotation-draft-actions.js";
-import {
-  annotationDraftKey,
-  annotationDraftSnapshot,
-  saveAnnotationDraft,
-} from "./annotation-drafts.js";
+import { AnnotationDeletionLease } from "./annotation-deletion-lease.js";
 import { readerErrorMessage } from "./errors.js";
 import { useAnnotationDraft } from "./use-annotation-draft.js";
+import { useAnnotationSession } from "./use-annotation-session.js";
 
+import type {
+  AnnotationEditSession,
+  AnnotationEditSnapshot,
+  PersistAnnotation,
+} from "./annotation-edit-session.js";
 import type { Annotation, AnnotationDeletionPlan } from "@mdbase-reader/core";
 export interface AnnotationEditProps {
   readonly annotation: Annotation;
   readonly onCancel: () => void;
-  readonly onSave: (body: string) => Promise<void>;
-  readonly onPlanDelete: () => Promise<AnnotationDeletionPlan>;
-  readonly onDelete: (plan: AnnotationDeletionPlan) => Promise<void>;
+  readonly onSave: PersistAnnotation;
+  readonly onPlanDelete: (annotation: Annotation) => Promise<AnnotationDeletionPlan>;
+  readonly onDelete: (annotation: Annotation, plan: AnnotationDeletionPlan) => Promise<void>;
 }
 interface AnnotationEditController {
   readonly body: string;
-  readonly canSave: boolean;
   readonly draft: ReturnType<typeof useAnnotationDraft>;
-  readonly conflict: boolean;
-  readonly status: "idle" | "saving";
-  readonly deleteStatus: "idle" | "checking" | "deleting";
+  readonly session: AnnotationEditSession;
+  readonly conflict: Annotation | null;
+  readonly status: AnnotationEditSnapshot["status"];
+  readonly locked: boolean;
   readonly problem: string | null;
-  readonly deletePlan: AnnotationDeletionPlan | null;
-  readonly setDeletePlan: (plan: AnnotationDeletionPlan | null) => void;
-  readonly setBody: (value: string) => void;
-  readonly cancel: () => void;
+  readonly canSave: boolean;
+  readonly setBody: (body: string) => void;
   readonly save: () => void;
+  readonly cancel: () => void;
+  readonly deletePlan: AnnotationDeletionPlan | null;
+  readonly setDeletePlan: () => void;
+  readonly deleteStatus: "idle" | "checking" | "deleting";
   readonly requestDelete: () => void;
   readonly confirmDelete: () => void;
 }
@@ -40,107 +43,107 @@ export function useAnnotationEdit({
   onPlanDelete,
   onDelete,
 }: AnnotationEditProps): AnnotationEditController {
-  const draftKey = annotationDraftKey(annotation.collectionId, annotation.sourceId, annotation.id);
-  const draft = useAnnotationDraft(draftKey);
-  const body = draft.value?.body ?? annotation.body;
-  const conflict = Boolean(
-    draft.value && draft.value.baseBody !== annotation.body && body !== annotation.body,
+  const session = useAnnotationSession(annotation, onSave);
+  const snapshot = useSyncExternalStore(
+    session.subscribe,
+    session.getSnapshot,
+    session.getSnapshot,
   );
-  const [status, setStatus] = useState<"idle" | "saving">("idle");
+  const draft = useAnnotationDraft(session.key);
   const [problem, setProblem] = useState<string | null>(null);
   const [deletePlan, setDeletePlan] = useState<AnnotationDeletionPlan | null>(null);
   const [deleteStatus, setDeleteStatus] = useState<"idle" | "checking" | "deleting">("idle");
-  const setBody = (value: string): void =>
-    draft.set(
-      value === annotation.body
-        ? null
-        : { body: value, baseBody: draft.value?.baseBody ?? annotation.body },
-    );
-  const cancel = (): void => {
-    if (status !== "idle" || deleteStatus !== "idle") {
-      return;
-    }
-    if (
-      body !== annotation.body &&
-      !confirmAnnotationDiscard("Discard your unfinished annotation edit?")
-    ) {
-      return;
-    }
-    draft.set(null);
-    onCancel();
-  };
-  const canSave =
-    draft.ready &&
-    !conflict &&
-    status === "idle" &&
-    deleteStatus === "idle" &&
-    deletePlan === null &&
-    body !== annotation.body;
-  const save = (): void => {
-    if (!canSave) {
-      return;
-    }
-    setStatus("saving");
-    setProblem(null);
-    void onSave(body)
-      .then(() => {
-        const latest = annotationDraftSnapshot(draftKey).value;
-        if (latest?.body === body) {
-          saveAnnotationDraft(draftKey, null);
-          onCancel();
-        } else if (latest) {
-          saveAnnotationDraft(draftKey, { ...latest, baseBody: body });
-        }
-        setStatus("idle");
-      })
-      .catch((reason: unknown) => {
-        setProblem(readerErrorMessage(reason, "Reader could not update this annotation."));
-        setStatus("idle");
-      });
+  const owner = useMemo(() => new AnnotationDeletionLease(session), [session]);
+  useEffect(() => owner.attach(), [owner]);
+  const cancelDelete = (): void => {
+    setDeletePlan(null);
+    owner.release();
   };
   const requestDelete = (): void => {
-    if (deleteStatus !== "idle") {
+    if (snapshot.locked || !draft.ready) {
       return;
     }
     setDeleteStatus("checking");
     setProblem(null);
-    void onPlanDelete()
-      .then((plan) => {
-        setDeletePlan(plan);
-        setDeleteStatus("idle");
+    void owner
+      .acquire()
+      .then(async (locked) => {
+        if (!locked) {
+          throw new Error(
+            "Resolve the save problem or finish the other editor's deletion check first.",
+          );
+        }
+        if (!owner.isMounted()) {
+          owner.release();
+          return;
+        }
+        const plan = await onPlanDelete(session.getAnnotation());
+        if (owner.isMounted()) {
+          setDeletePlan(plan);
+          setDeleteStatus("idle");
+        } else {
+          owner.release();
+        }
       })
       .catch((reason: unknown) => {
-        setProblem(readerErrorMessage(reason, "Reader could not check this annotation."));
-        setDeleteStatus("idle");
+        owner.release();
+        if (owner.isMounted()) {
+          setProblem(readerErrorMessage(reason, "Could not check this annotation."));
+          setDeleteStatus("idle");
+        }
       });
   };
   const confirmDelete = (): void => {
     if (!deletePlan || deleteStatus !== "idle") {
       return;
     }
+    owner.commit();
     setDeleteStatus("deleting");
-    setProblem(null);
-    void onDelete(deletePlan)
-      .then(() => saveAnnotationDraft(draftKey, null))
+    void onDelete(session.getAnnotation(), deletePlan)
+      .then(() => {
+        session.deleted();
+        if (owner.isMounted()) {
+          onCancel();
+        }
+      })
       .catch((reason: unknown) => {
-        setProblem(readerErrorMessage(reason, "Reader could not delete this annotation."));
-        setDeleteStatus("idle");
-        setDeletePlan(null);
+        owner.release();
+        if (owner.isMounted()) {
+          setProblem(readerErrorMessage(reason, "Could not delete this annotation."));
+          setDeleteStatus("idle");
+          setDeletePlan(null);
+        }
       });
   };
+  const cancel = (): void => {
+    if (snapshot.locked) {
+      return;
+    }
+    // Closing this editor never discards the shared draft or cancels its autosave.
+    onCancel();
+  };
   return {
-    canSave,
-    body,
+    body: snapshot.body,
     draft,
-    conflict,
-    setBody,
+    session,
+    conflict: snapshot.conflict,
+    status: snapshot.status,
+    locked: snapshot.locked,
+    problem: problem ?? snapshot.problem,
+    canSave:
+      draft.ready &&
+      !snapshot.locked &&
+      !snapshot.conflict &&
+      snapshot.status !== "saving" &&
+      snapshot.status !== "saved",
+    setBody: session.edit,
+    save: () => {
+      void session.save();
+    },
     cancel,
-    status,
-    problem,
     deletePlan,
-    setDeletePlan,
+    setDeletePlan: cancelDelete,
     deleteStatus,
-    save,
     requestDelete,
     confirmDelete,
   };

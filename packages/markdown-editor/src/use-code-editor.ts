@@ -5,6 +5,7 @@ import { useCallback, useEffect, useRef, type RefObject } from "react";
 
 import { annotationEditorExtensions } from "./annotation-widgets.js";
 import { dispatchPreservingFocus, editorConfiguration } from "./editor-configuration.js";
+import { scheduleInitialEditorFocus } from "./editor-initial-focus.js";
 import { readerEditorTheme } from "./editor-theme.js";
 import { minimalTextChange } from "./external-change.js";
 import { markdownCommand } from "./markdown-commands.js";
@@ -17,6 +18,7 @@ import type { CodeEditorProps } from "./markdown-editor.js";
 export function useCodeEditor(props: CodeEditorProps): RefObject<HTMLDivElement | null> {
   const {
     value,
+    sharedDocument,
     ariaLabel,
     language = "plain",
     profile,
@@ -124,9 +126,7 @@ export function useCodeEditor(props: CodeEditorProps): RefObject<HTMLDivElement 
 
   useEffect(() => {
     if (focusOnMount && viewRef.current) {
-      const view = viewRef.current;
-      const timer = globalThis.setTimeout(() => view.focus(), 50);
-      return () => globalThis.clearTimeout(timer);
+      return scheduleInitialEditorFocus(viewRef.current);
     }
     return undefined;
   }, [focusOnMount]);
@@ -136,7 +136,7 @@ export function useCodeEditor(props: CodeEditorProps): RefObject<HTMLDivElement 
     if (!view) {
       return;
     }
-    const change = minimalTextChange(view.state.doc.toString(), value);
+    const change = minimalTextChange(view.state.doc.toString(), sharedDocument?.getText() ?? value);
     if (!change) {
       return;
     }
@@ -144,7 +144,31 @@ export function useCodeEditor(props: CodeEditorProps): RefObject<HTMLDivElement 
       changes: change,
       annotations: [Transaction.addToHistory.of(false), Transaction.remote.of(true)],
     });
-  }, [value]);
+  }, [sharedDocument, value]);
+
+  // Receive edits synchronously, before another view can type against stale React props.
+  // Remote transactions map each view's selection and undo history without stealing focus.
+  useEffect(() => {
+    if (!sharedDocument) {
+      return undefined;
+    }
+    const sync = (): void => {
+      const view = viewRef.current;
+      if (!view) {
+        return;
+      }
+      const change = minimalTextChange(view.state.doc.toString(), sharedDocument.getText());
+      if (change) {
+        view.dispatch({
+          changes: change,
+          annotations: [Transaction.addToHistory.of(false), Transaction.remote.of(true)],
+        });
+      }
+    };
+    const unsubscribe = sharedDocument.subscribe(sync);
+    sync();
+    return unsubscribe;
+  }, [sharedDocument]);
 
   useEffect(() => {
     const view = viewRef.current;

@@ -1,5 +1,11 @@
 # Annotation UX/UI polish and audit
 
+## Editing follow-up
+
+[Shared editing and autosave](shared-editing.md) supersede this audit's manual-save,
+read-only-during-save, and single-writable-owner behaviour for existing text edits.
+Creation remains explicit. The follow-up is tested locally but not deployed.
+
 ## Scope
 
 The pre-existing Reader work was checkpointed in `327249f`. This pass builds on the

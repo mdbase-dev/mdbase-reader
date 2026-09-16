@@ -1,6 +1,10 @@
 import { lazy, Suspense, type JSX } from "react";
 
-import type { EditorLanguage, EditorProfile } from "@mdbase-reader/markdown-editor";
+import type {
+  EditorLanguage,
+  EditorProfile,
+  SharedTextDocument,
+} from "@mdbase-reader/markdown-editor";
 
 const CodeEditor = lazy(async () => {
   const module = await import("@mdbase-reader/markdown-editor");
@@ -9,6 +13,7 @@ const CodeEditor = lazy(async () => {
 
 export function MultilineCodeEditor({
   value,
+  sharedDocument,
   ariaLabel,
   language = "markdown",
   profile,
@@ -20,6 +25,7 @@ export function MultilineCodeEditor({
   onSave,
 }: {
   readonly value: string;
+  readonly sharedDocument?: SharedTextDocument;
   readonly ariaLabel: string;
   readonly language?: EditorLanguage;
   readonly profile?: EditorProfile;
@@ -34,6 +40,7 @@ export function MultilineCodeEditor({
     <Suspense fallback={<div className={`${className ?? ""} editor-loading`}>Opening editor…</div>}>
       <CodeEditor
         value={value}
+        {...(sharedDocument ? { sharedDocument } : {})}
         readOnly={readOnly}
         ariaLabel={ariaLabel}
         language={language}

@@ -32,8 +32,8 @@ export function WorkspaceToolTab({
   const workspace = useSourceToolsWorkspace(gateway, tab.sourceId, reconcileSource);
   const noteDirty =
     tab.view === "note" &&
-    workspace.sourceRecord.status === "ready" &&
-    workspace.draft !== workspace.sourceRecord.value.body;
+    workspace.saveStatus !== "saved" &&
+    !workspace.draftRecovery?.locallySaved;
   const annotationDirty = useAnnotationDraftDirty(source.collectionId, source.id);
   const dirty =
     noteDirty ||
@@ -45,7 +45,7 @@ export function WorkspaceToolTab({
       <InspectorContent
         tab={tab.view === "document" ? "annotations" : tab.view}
         workspace={workspace}
-        composer={{ ...composer, open: onOpenAnnotation }}
+        composer={{ ...composer, open: onOpenAnnotation, editingAnnotationId: null }}
         gateway={gateway}
         onOpenSourceView={onOpenSourceView}
       />

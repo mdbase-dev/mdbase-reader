@@ -303,6 +303,10 @@ export class ConnectWorkspaceGateway implements ReaderWorkspaceGateway {
     return planAnnotationDeletion(this.annotationsRepository, annotation);
   }
 
+  async refreshAnnotation(annotation: Annotation): Promise<Annotation | null> {
+    return this.annotationsRepository.get(annotation.collectionId, annotation.id);
+  }
+
   async deleteAnnotation(annotation: Annotation, plan: AnnotationDeletionPlan): Promise<void> {
     await deleteAnnotation(this.annotationsRepository, annotation, plan);
     const current = this.#annotationsBySource.get(annotation.sourceId) ?? [];

@@ -106,9 +106,9 @@ export function SourceNoteEditor({
         <MarkdownEditor
           className="source-note-editor-surface"
           value={workspace.draft}
+          {...(workspace.draftDocument ? { sharedDocument: workspace.draftDocument } : {})}
           ariaLabel="Source literature note"
           onChange={workspace.setDraft}
-          onBlur={() => (workspace.draftRecovery?.recovered ? undefined : workspace.saveDraft())}
           onSave={workspace.saveDraft}
           insertion={insertion}
           formatting={formatting}

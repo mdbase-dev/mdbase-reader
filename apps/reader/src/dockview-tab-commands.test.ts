@@ -8,20 +8,20 @@ import type { DockviewApi, DockviewGroupPanel } from "dockview-react";
 
 const source = "source-one" as SourceId;
 describe("Dockview session commands", () => {
-  it("reuses a writable tool in another group rather than creating a competing editor", () => {
-    const tab = { ...createWorkspaceTab(source, "note"), id: "reader:session:existing" };
+  it("keeps citation forms single-owner until they have a shared writer", () => {
+    const tab = { ...createWorkspaceTab(source, "citation"), id: "reader:session:existing" };
     const existing = { id: tab.id, params: { tab }, api: { setActive: vi.fn(), moveTo: vi.fn() } };
     const api = {
       panels: [existing],
       getPanel: () => existing,
       addPanel: vi.fn(),
     } as unknown as DockviewApi;
-    openDockTab(api, createWorkspaceTab(source, "note"));
+    openDockTab(api, createWorkspaceTab(source, "citation"));
     expect(existing.api.setActive).toHaveBeenCalledOnce();
     expect(api.addPanel).not.toHaveBeenCalled();
     addDockTab(
       api,
-      createWorkspaceTab(source, "note"),
+      createWorkspaceTab(source, "citation"),
       { id: "destination" } as DockviewGroupPanel,
       "horizontal",
     );

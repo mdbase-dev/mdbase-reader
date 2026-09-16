@@ -1,4 +1,5 @@
 import { expect } from "@playwright/test";
+import { blockSourceDraftStorage } from "./audit-source-storage.mjs";
 
 /** Real pointer gestures against the unified dock, not synthetic calls to its layout API. */
 export async function auditDockview(page, { screenshot, blockWrites }) {
@@ -152,15 +153,23 @@ export async function auditDockview(page, { screenshot, blockWrites }) {
   await expect(page.getByText("Saved locally", { exact: true })).toBeVisible();
   await menu(noteTab, "Move to new pane below");
   await expect(editor).toContainText("Docking never discards");
-  // Explicit close cancellation must be honored, including Dockview's own close button.
+  // Close confirmation is only needed when neither local nor collection storage is safe.
+  await blockSourceDraftStorage(page, true);
+  await editor.fill("[test] Docking never discards this local draft. Storage failure.");
+  await expect(page.locator(".draft-recovery.is-error")).toBeVisible();
   page.removeAllListeners("dialog");
   page.once("dialog", (dialog) => void dialog.dismiss());
   await noteTab.getByRole("button", { name: "Close tab", exact: true }).click();
   await expect(page.locator(`[data-panel-id="${noteId}"]`)).toBeVisible();
   await expect(editor).toContainText("Docking never discards");
   page.on("dialog", (dialog) => void dialog.accept());
+  await blockSourceDraftStorage(page, false);
+  await editor.fill("[test] Docking never discards this local draft. Storage recovered.");
+  await expect(page.getByText("Saved locally", { exact: true })).toBeVisible();
   await screenshot("dockview-dirty-note-and-tools");
-  completed.push("Dirty note survives docking and cancelled close");
+  completed.push(
+    "Unstored note survives docking and cancelled close; local recovery resumes after storage returns",
+  );
 
   const navigationLayout = JSON.stringify((await state()).layout.grid.root);
   const noteBounds = await page.locator(`[data-session-id="${noteId}"]`).boundingBox();

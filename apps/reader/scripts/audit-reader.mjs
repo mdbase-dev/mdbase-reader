@@ -10,11 +10,13 @@ import { auditDockview } from "./audit-dockview.mjs";
 import { auditDockviewMigration } from "./audit-dockview-migration.mjs";
 import { annotationFixture } from "./audit-annotation-fixture.mjs";
 import { auditAnnotations } from "./audit-annotations.mjs";
+import { auditSharedEditing } from "./audit-shared-editing.mjs";
 import { auditSidebarLayout } from "./audit-sidebar-layout.mjs";
 import { auditEdgeGroupApi } from "./audit-edge-group-api.mjs";
 import { auditResponsiveWorkspace } from "./audit-responsive-workspace.mjs";
 
 const origin = process.env.READER_AUDIT_ORIGIN ?? "http://127.0.0.1:5193";
+const sharedEditingAudit = process.env.READER_AUDIT_SHARED_EDITING_ONLY === "1";
 const responsiveAudit = process.env.READER_AUDIT_RESPONSIVE_ONLY === "1";
 const sidebarComparison = responsiveAudit || process.env.READER_AUDIT_SIDEBARS_ONLY === "1";
 if (!/^http:\/\/(127\.0\.0\.1|localhost):\d+$/u.test(origin)) {
@@ -177,6 +179,16 @@ const screenshot = async (name) =>
 try {
   const started = performance.now();
   await navigate();
+  if (sharedEditingAudit) {
+    completed.push(
+      ...(await auditSharedEditing(page, {
+        screenshot,
+        blockWrites: (value) => {
+          writesBlocked = value;
+        },
+      })),
+    );
+  }
   if (sidebarComparison) {
     completed.push(...(await auditSidebarLayout(page, { screenshot, measurements })));
     measurements.edgeApi = await auditEdgeGroupApi(context, origin);
@@ -192,7 +204,11 @@ try {
       );
     }
   }
-  if (!sidebarComparison && process.env.READER_AUDIT_ANNOTATIONS_ONLY !== "1") {
+  if (
+    !sharedEditingAudit &&
+    !sidebarComparison &&
+    process.env.READER_AUDIT_ANNOTATIONS_ONLY !== "1"
+  ) {
     await expect(page.getByRole("grid", { name: "Sources" })).toBeVisible();
     measurements.libraryReadyMs = Math.round(performance.now() - started);
     measurements.renderedRows5000Sources = await page.getByRole("row").count();
@@ -232,13 +248,13 @@ try {
     await expect(page.getByText("Saved locally", { exact: true })).toBeVisible();
     await page.waitForTimeout(1100);
     await page.reload();
-    await expect(page.getByText("Recovered a local draft", { exact: true })).toBeVisible({
+    await expect(page.getByText("Saved locally", { exact: true })).toBeVisible({
       timeout: 20000,
     });
     await expect(editor).toContainText("Unsaved draft survives a reload");
     await editor.focus();
     await page.getByRole("button", { name: /Interface density:/ }).focus();
-    await expect(page.getByText("Recovered a local draft", { exact: true })).toBeVisible();
+    await expect(page.getByText("Saved locally", { exact: true })).toBeVisible();
     completed.push("Failed autosave: durable draft survives reload and remains reviewable on blur");
     records[0].body = "[test] A different application edited the collection version.";
     records[0].recordRevision = "external-revision";
@@ -260,7 +276,11 @@ try {
     expect(records[0].body).toContain("Unsaved draft survives");
     await page.reload();
     await expect(editor).toContainText("Unsaved draft survives");
-    await expect(page.getByText("Recovered a local draft", { exact: true })).toHaveCount(0);
+    await expect(
+      page.getByText("Recovered changes saved on this device. Syncing to the collection…", {
+        exact: true,
+      }),
+    ).toHaveCount(0);
     completed.push("Conflict comparison, explicit resolution, and reload verification");
 
     await page.getByRole("tab", { name: "[test] Research 0000", exact: true }).click();
@@ -405,7 +425,7 @@ try {
     );
     completed.push(...(await auditDockviewMigration(page)));
   }
-  if (!sidebarComparison) {
+  if (!sharedEditingAudit && !sidebarComparison) {
     completed.push(
       ...(await auditAnnotations(page, {
         screenshot,

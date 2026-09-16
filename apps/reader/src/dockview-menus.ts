@@ -35,9 +35,12 @@ export function dockTabMenu(
       });
     }
   }
-  if (tab?.view === "document") {
+  if (tab && ["document", "note", "annotations"].includes(tab.view)) {
     items.push({
-      label: "Duplicate document in pane right",
+      label:
+        tab.view === "document"
+          ? "Duplicate document in pane right"
+          : "Open another editor in pane right",
       action: () => {
         dock.activate(panel.id);
         dock.beside(tab, "horizontal");

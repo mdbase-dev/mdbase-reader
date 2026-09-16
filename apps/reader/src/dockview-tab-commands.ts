@@ -115,7 +115,7 @@ export function openDockTab(api: DockviewApi, tab: WorkspaceTab, group?: Dockvie
   }
 }
 function existingTool(api: DockviewApi, tab: WorkspaceTab): IDockviewPanel | undefined {
-  return tab.kind === "source" && tab.view !== "document"
+  return tab.kind === "source" && tab.view === "citation"
     ? api.panels.find((panel) => sameLocation(panelTab(panel), tab))
     : undefined;
 }

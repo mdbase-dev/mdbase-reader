@@ -71,15 +71,5 @@ export function useSourceDraft(
       publish(snapshot.savedSource);
     }
   }, [snapshot.savedSource, publish]);
-  useEffect(() => {
-    if (snapshot.status === "saved") {
-      return undefined;
-    }
-    const warn = (event: BeforeUnloadEvent): void => {
-      event.preventDefault();
-    };
-    window.addEventListener("beforeunload", warn);
-    return () => window.removeEventListener("beforeunload", warn);
-  }, [snapshot.status]);
   return { session, snapshot };
 }

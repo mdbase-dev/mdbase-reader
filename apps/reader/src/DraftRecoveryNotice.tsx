@@ -42,11 +42,7 @@ export function DraftRecoveryNotice({
         </section>
       ) : state.recovered ? (
         <section className="draft-recovery" role="status">
-          <strong>Recovered a local draft</strong>
-          <p>Review your changes below. They have not been written to the collection.</p>
-          <button type="button" onClick={workspace.saveDraft}>
-            Save recovered draft
-          </button>
+          <span>Recovered changes saved on this device. Syncing to the collection…</span>
         </section>
       ) : null}
     </>

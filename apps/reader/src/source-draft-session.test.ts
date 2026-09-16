@@ -1,6 +1,15 @@
-import { collectionId, sourceId, recordRevision, type Source } from "@mdbase-reader/core";
+import {
+  annotationId,
+  dateTime,
+  collectionId,
+  sourceId,
+  recordRevision,
+  type Annotation,
+  type Source,
+} from "@mdbase-reader/core";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
+import { insertAnnotationInDraft } from "./insert-annotation-in-draft.js";
 import { SourceDraftSession } from "./source-draft-session.js";
 import {
   readSourceDraft,
@@ -57,6 +66,80 @@ afterEach(() => {
   vi.useRealTimers();
 });
 describe("durable source drafts", () => {
+  it("ignores stale values from other views after saving a newer revision", async () => {
+    vi.useFakeTimers();
+    const { session } = fixture();
+    session.edit("New revision");
+    await session.save();
+    session.receive(source);
+    expect(session.getText()).toBe("New revision");
+  });
+  it("serializes annotation insertion with typing and an already pending source save", async () => {
+    vi.useFakeTimers();
+    const { session, persist, changeRemote } = fixture();
+    let finish!: (value: Source) => void;
+    persist.mockImplementationOnce(
+      () =>
+        new Promise((resolve) => {
+          finish = resolve;
+        }),
+    );
+    session.edit("First");
+    const saving = session.save();
+    await Promise.resolve();
+    const annotation: Annotation = {
+      id: annotationId("a"),
+      collectionId: source.collectionId,
+      sourceId: source.id,
+      source: "[[note]]",
+      path: "annotations/a.md",
+      annotationType: "note",
+      tags: [],
+      body: "Comment",
+      createdAt: dateTime("2026-08-01T00:00:00Z"),
+    };
+    const inserting = insertAnnotationInDraft(session, source, annotation);
+    session.edit(`${session.getText()}After the embed`);
+    expect(persist).toHaveBeenCalledOnce();
+    const first = { ...source, body: "First", recordRevision: recordRevision("2") };
+    changeRemote(first);
+    finish(first);
+    await saving;
+    const saved = await inserting;
+    expect(saved.body).toBe("First\n\n![[annotations/a]]\nAfter the embed");
+    expect(persist).toHaveBeenCalledTimes(2);
+    await insertAnnotationInDraft(session, saved, annotation);
+    expect(persist).toHaveBeenCalledTimes(2);
+  });
+  it("resumes safe recovery on mount and saves even after the last view closes", async () => {
+    vi.useFakeTimers();
+    const storage = memory();
+    writeSourceDraft(storage, source, "Recovered");
+    const { session, persist } = fixture(storage);
+    const detach = session.subscribe(vi.fn());
+    detach();
+    await vi.advanceTimersByTimeAsync(999);
+    expect(persist).not.toHaveBeenCalled();
+    await vi.advanceTimersByTimeAsync(1);
+    expect(persist).toHaveBeenCalledOnce();
+    expect(session.getSnapshot()).toMatchObject({ body: "Recovered", status: "saved" });
+  });
+  it("notifies every editing view synchronously and never cancels their shared save", async () => {
+    vi.useFakeTimers();
+    const { session, persist } = fixture();
+    let otherView = "Original";
+    const detach = session.subscribe(() => {
+      otherView = session.getText();
+    });
+    session.edit("First editor");
+    expect(otherView).toBe("First editor");
+    session.edit(`${otherView} plus second editor`);
+    detach();
+    await vi.advanceTimersByTimeAsync(1000);
+    expect(persist).toHaveBeenCalledExactlyOnceWith(source, "First editor plus second editor");
+  });
+});
+describe("revision-checked source drafts", () => {
   it("persists before the debounce and recovers without writing to the collection", async () => {
     vi.useFakeTimers();
     const { session, storage, persist } = fixture();

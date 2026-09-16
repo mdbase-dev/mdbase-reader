@@ -1,5 +1,6 @@
 import { useCallback, type JSX } from "react";
 
+import { AnnotationEditingContext } from "./AnnotationEditingContext.js";
 import { AnnotationList } from "./AnnotationList.js";
 import { CitationEditor } from "./CitationEditor.js";
 import { CitationIcon, CloseIcon, HighlightIcon, NoteIcon, PanelIcon } from "./icons.js";
@@ -178,22 +179,23 @@ export function InspectorContent({
   );
   return tab === "annotations" ? (
     <div className="annotation-workspace">
-      <AnnotationList
-        key={
-          workspace.sourceRecord.status === "ready" ? workspace.sourceRecord.value.id : "loading"
-        }
-        annotations={workspace.annotations}
-        activeId={composer.activeAnnotationId}
-        transclusion={workspace.transclusion}
-        onUpdate={workspace.updateAnnotation}
-        onPlanDelete={workspace.planAnnotationDeletion}
-        onDelete={workspace.deleteAnnotation}
-        onOpen={composer.open}
-        editingId={composer.editingAnnotationId}
-        onEdit={composer.edit}
-        onCancelEdit={composer.stopEditing}
-        readFile={readFile}
-      />
+      <AnnotationEditingContext value={gateway}>
+        <AnnotationList
+          key={
+            workspace.sourceRecord.status === "ready" ? workspace.sourceRecord.value.id : "loading"
+          }
+          annotations={workspace.annotations}
+          activeId={composer.activeAnnotationId}
+          transclusion={workspace.transclusion}
+          onUpdate={workspace.updateAnnotation}
+          onPlanDelete={workspace.planAnnotationDeletion}
+          onDelete={workspace.deleteAnnotation}
+          onOpen={composer.open}
+          editingId={composer.editingAnnotationId}
+          onCancelEdit={composer.stopEditing}
+          readFile={readFile}
+        />
+      </AnnotationEditingContext>
     </div>
   ) : tab === "note" ? (
     <div className="note-editor">

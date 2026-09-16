@@ -1,5 +1,6 @@
 import { readerErrorMessage } from "./errors.js";
 import { clearSourceDraft, readSourceDraft, writeSourceDraft } from "./source-draft-storage.js";
+import { trackUnstoredSourceChanges } from "./unsaved-source-drafts.js";
 
 import type { DraftStorage } from "./source-draft-storage.js";
 import type { Source } from "@mdbase-reader/core";
@@ -21,6 +22,8 @@ export class SourceDraftSession {
   private readonly listeners = new Set<() => void>();
   private timer: ReturnType<typeof setTimeout> | undefined;
   private saving = false;
+  private inFlight: Promise<void> | null = null;
+  private seen = new Set<Source["recordRevision"]>();
   private generation = 0;
 
   constructor(
@@ -30,6 +33,7 @@ export class SourceDraftSession {
     private readonly refresh: () => Promise<Source | null>,
     private readonly publish: (source: Source) => void,
   ) {
+    this.seen.add(base.recordRevision);
     this.snapshot = {
       body: base.body,
       status: "saved",
@@ -50,7 +54,7 @@ export class SourceDraftSession {
           recovered: true,
           conflict: draft.baseBody !== base.body ? base : null,
         };
-        // Recovery is reviewable: do not write a recovered draft until explicitly requested.
+        // The first mounted subscriber resumes safe recovery; conflicts still require a decision.
       } else if (draft) {
         clearSourceDraft(storage, base, base.body);
       }
@@ -64,13 +68,14 @@ export class SourceDraftSession {
   }
 
   getSnapshot = (): SourceDraftSnapshot => this.snapshot;
+  getText = (): string => this.snapshot.body;
   subscribe = (listener: () => void): (() => void) => {
     this.listeners.add(listener);
+    if (this.snapshot.recovered && !this.snapshot.conflict && !this.timer) {
+      this.schedule();
+    }
     return () => {
       this.listeners.delete(listener);
-      if (this.listeners.size === 0) {
-        clearTimeout(this.timer);
-      }
     };
   };
 
@@ -88,9 +93,10 @@ export class SourceDraftSession {
 
   /** External metadata-only changes can advance the revision without disturbing a draft. */
   receive(source: Source): void {
-    if (source.recordRevision === this.base.recordRevision) {
+    if (this.seen.has(source.recordRevision)) {
       return;
     }
+    this.seen.add(source.recordRevision);
     if (
       this.snapshot.body !== this.base.body &&
       source.body !== this.base.body &&
@@ -107,11 +113,31 @@ export class SourceDraftSession {
     }
   }
 
-  save = async (): Promise<void> => {
+  save = (): Promise<void> => {
     clearTimeout(this.timer);
-    if (this.saving || this.snapshot.conflict || this.snapshot.status === "saved") {
-      return;
+    if (this.inFlight) {
+      return this.inFlight;
     }
+    if (this.snapshot.conflict || this.snapshot.status === "saved") {
+      return Promise.resolve();
+    }
+    this.inFlight = this.write().finally(() => {
+      this.inFlight = null;
+    });
+    return this.inFlight;
+  };
+
+  async flush(): Promise<Source> {
+    do {
+      await this.save();
+    } while (this.snapshot.status === "unsaved" && !this.snapshot.conflict);
+    if (this.snapshot.status !== "saved" || this.snapshot.conflict) {
+      throw new Error(this.snapshot.error ?? "Resolve the source note conflict before continuing.");
+    }
+    return this.base;
+  }
+
+  private async write(): Promise<void> {
     const body = this.snapshot.body;
     const generation = this.generation;
     this.saving = true;
@@ -122,12 +148,14 @@ export class SourceDraftSession {
       if (!current) {
         throw new Error("This source no longer exists. Your local draft has been retained.");
       }
+      this.seen.add(current.recordRevision);
       if (current.body !== this.base.body && current.body !== body) {
         this.update({ conflict: current, status: "unsaved" });
         return;
       }
       const saved = current.body === body ? current : await this.persist(current, body);
       this.base = saved;
+      this.seen.add(saved.recordRevision);
       this.publish(saved);
       this.update({ savedSource: saved });
       try {
@@ -161,7 +189,7 @@ export class SourceDraftSession {
     } finally {
       this.saving = false;
     }
-  };
+  }
 
   resolve = (choice: "local" | "remote"): void => {
     const remote = this.snapshot.conflict;
@@ -187,7 +215,7 @@ export class SourceDraftSession {
   private schedule(): void {
     clearTimeout(this.timer);
     if (!this.snapshot.conflict) {
-      this.timer = setTimeout(() => void this.save(), 800);
+      this.timer = setTimeout(() => void this.save(), 1000);
     }
   }
 
@@ -206,6 +234,10 @@ export class SourceDraftSession {
 
   private update(patch: Partial<SourceDraftSnapshot>): void {
     this.snapshot = { ...this.snapshot, ...patch };
+    trackUnstoredSourceChanges(
+      this,
+      this.snapshot.status !== "saved" && !this.snapshot.locallySaved,
+    );
     this.listeners.forEach((listener) => listener());
   }
 }

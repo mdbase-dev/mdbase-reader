@@ -20,8 +20,9 @@ export function useAnnotationTransclusion(input: {
   readonly source: AsyncResource<Source>;
   readonly draft: string;
   readonly onSaved: (source: Source) => void;
+  readonly persist?: (source: Source, annotation: Annotation) => Promise<Source>;
 }): AnnotationTransclusionController {
-  const { gateway, source, draft, onSaved } = input;
+  const { gateway, source, draft, onSaved, persist } = input;
   const [state, setState] = useState<{
     readonly busyId: AnnotationId | null;
     readonly problemId: AnnotationId | null;
@@ -33,9 +34,14 @@ export function useAnnotationTransclusion(input: {
         return;
       }
       setState({ busyId: annotation.id, problemId: null, problem: null });
-      void persistAnnotationTransclusion(gateway, source.value, draft, annotation)
+      const saving = persist
+        ? persist(source.value, annotation)
+        : persistAnnotationTransclusion(gateway, source.value, draft, annotation);
+      void saving
         .then((updated) => {
-          onSaved(updated);
+          if (!persist) {
+            onSaved(updated);
+          }
           setState({ busyId: null, problemId: null, problem: null });
         })
         .catch((reason: unknown) =>
@@ -46,12 +52,12 @@ export function useAnnotationTransclusion(input: {
           }),
         );
     },
-    [draft, gateway, onSaved, source, state.busyId],
+    [draft, gateway, onSaved, persist, source, state.busyId],
   );
   const isEmbedded = useCallback(
     (annotation: Annotation): boolean =>
-      source.status === "ready" && source.value.body.includes(embedFor(annotation)),
-    [source],
+      source.status === "ready" && draft.includes(embedFor(annotation)),
+    [draft, source],
   );
   return { ...state, insert, isEmbedded };
 }

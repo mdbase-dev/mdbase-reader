@@ -3,7 +3,7 @@ import { useEffect, useSyncExternalStore } from "react";
 import {
   annotationDraftSnapshot,
   annotationDraftVersion,
-  hasAnnotationDrafts,
+  hasBlockingAnnotationDrafts,
   loadAnnotationDraft,
   saveAnnotationDraft,
   subscribeAnnotationDrafts,
@@ -40,7 +40,7 @@ export function useAnnotationDraft(key: string): AnnotationDraftSnapshot & {
 }
 export function useAnnotationDraftDirty(collection: string, source: string): boolean {
   useSyncExternalStore(subscribeAnnotationDrafts, annotationDraftVersion, annotationDraftVersion);
-  return hasAnnotationDrafts(collection, source);
+  return hasBlockingAnnotationDrafts(collection, source);
 }
 export function useDocumentAnnotationDirty(
   dock: ReaderDockWorkspace,

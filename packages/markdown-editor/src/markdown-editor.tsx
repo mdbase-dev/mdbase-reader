@@ -8,7 +8,14 @@ import type { JSX } from "react";
 export type EditorLanguage = "markdown" | "json" | "plain";
 export type EditorProfile = "prose" | "compact" | "code";
 
+/** A synchronous record session, shared by otherwise independent editor views. */
+export interface SharedTextDocument {
+  readonly getText: () => string;
+  readonly subscribe: (listener: () => void) => () => void;
+}
+
 export interface CodeEditorProps {
+  readonly sharedDocument?: SharedTextDocument;
   readonly value: string;
   readonly ariaLabel: string;
   readonly language?: EditorLanguage;

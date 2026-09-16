@@ -116,6 +116,15 @@ export function hasAnnotationDrafts(collection: string, source: string): boolean
     ([key, snapshot]) => key.startsWith(prefix) && snapshot.value !== null,
   );
 }
+export function hasBlockingAnnotationDrafts(collection: string, source: string): boolean {
+  const prefix = JSON.stringify([collection, source]).slice(0, -1) + ",";
+  return [...snapshots].some(
+    ([key, snapshot]) =>
+      key.startsWith(prefix) &&
+      snapshot.value !== null &&
+      (snapshot.value.selection !== undefined || !snapshot.saved),
+  );
+}
 // IndexedDB writes are asynchronous, including image drafts. Never silently leave mid-write.
 if (typeof window !== "undefined") {
   window.addEventListener("beforeunload", (event) => {

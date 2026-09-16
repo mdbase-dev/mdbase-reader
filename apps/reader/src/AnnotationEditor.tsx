@@ -10,6 +10,8 @@ import type { JSX } from "react";
 export function AnnotationBodyEditor(props: AnnotationEditProps): JSX.Element {
   const {
     body,
+    session,
+    locked,
     canSave,
     draft,
     conflict,
@@ -37,7 +39,8 @@ export function AnnotationBodyEditor(props: AnnotationEditProps): JSX.Element {
       {draft.ready ? (
         <MultilineCodeEditor
           value={body}
-          readOnly={status === "saving" || deleteStatus !== "idle"}
+          readOnly={locked}
+          sharedDocument={session}
           ariaLabel="Annotation note"
           className="annotation-code-editor"
           focusOnMount
@@ -50,19 +53,36 @@ export function AnnotationBodyEditor(props: AnnotationEditProps): JSX.Element {
       <span>
         Edit the Markdown quotation and comment. The saved passage anchor stays unchanged.
       </span>
-      {draft.value ? <small role="status">{draft.label}</small> : null}
+      <small role="status">
+        {status === "saved"
+          ? "Saved to collection"
+          : status === "saving"
+            ? "Saving to collection…"
+            : draft.saved
+              ? "Saved on this device"
+              : "Saving on this device…"}
+      </small>
       {conflict ? (
-        <p role="alert">
-          This annotation changed since your edit began. Copy your draft before discarding it to
-          load the latest version.
-        </p>
+        <section role="alert">
+          <p>This annotation changed in the collection. Your changes are retained.</p>
+          <details>
+            <summary>Compare collection version</summary>
+            <pre>{conflict.body}</pre>
+          </details>
+          <button type="button" disabled={locked} onClick={() => session.resolve("local")}>
+            Keep my changes
+          </button>
+          <button type="button" disabled={locked} onClick={() => session.resolve("remote")}>
+            Use collection version
+          </button>
+        </section>
       ) : null}
       {problem || draft.problem ? <p role="alert">{problem ?? draft.problem}</p> : null}
       {deletePlan ? (
         <AnnotationDeleteConfirmation
           plan={deletePlan}
           deleting={deleteStatus === "deleting"}
-          onCancel={() => setDeletePlan(null)}
+          onCancel={setDeletePlan}
           onConfirm={confirmDelete}
         />
       ) : null}
@@ -70,22 +90,20 @@ export function AnnotationBodyEditor(props: AnnotationEditProps): JSX.Element {
         <button
           className="is-danger"
           type="button"
-          disabled={status === "saving" || deleteStatus !== "idle" || deletePlan !== null}
+          disabled={locked || !draft.ready || deletePlan !== null}
           onClick={requestDelete}
         >
           {deleteStatus === "checking" ? "Checking…" : "Delete"}
         </button>
         <span />
-        <button
-          type="button"
-          disabled={status === "saving" || deleteStatus !== "idle"}
-          onClick={cancel}
-        >
-          Cancel
+        <button type="button" disabled={locked} onClick={cancel}>
+          Done
         </button>
-        <ReaderButton disabled={!canSave} onClick={save}>
-          {status === "saving" ? "Saving…" : "Save changes"}
-        </ReaderButton>
+        {status === "error" && !conflict ? (
+          <ReaderButton disabled={!canSave} onClick={save}>
+            Retry save
+          </ReaderButton>
+        ) : null}
       </div>
     </div>
   );

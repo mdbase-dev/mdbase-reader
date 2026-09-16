@@ -17,7 +17,6 @@ export function AnnotationList({
   onOpen,
   editingId,
   activeId,
-  onEdit,
   onCancelEdit,
   readFile,
 }: {
@@ -29,10 +28,17 @@ export function AnnotationList({
   readonly onOpen: (annotation: Annotation) => void;
   readonly editingId: AnnotationId | null;
   readonly activeId: AnnotationId | null;
-  readonly onEdit: (annotation: Annotation) => void;
   readonly onCancelEdit: () => void;
   readonly readFile: AnnotationFileReader;
 }): JSX.Element {
+  const [editing, setEditing] = useState({ external: editingId, id: editingId });
+  const currentEditing = editing.external === editingId ? editing.id : editingId;
+  const closeEditor = (): void => {
+    setEditing({ external: editingId, id: null });
+    if (currentEditing === editingId) {
+      onCancelEdit();
+    }
+  };
   const [query, setQuery] = useState("");
   const [filter, setFilter] = useState<AnnotationFilter>("all");
   const [order, setOrder] = useState<"document" | "newest">("document");
@@ -99,19 +105,14 @@ export function AnnotationList({
           <AnnotationCard
             key={annotation.id}
             annotation={annotation}
-            editing={editingId === annotation.id}
+            editing={currentEditing === annotation.id}
             active={activeId === annotation.id}
             transclusion={transclusion}
-            onEdit={() => onEdit(annotation)}
-            onCancel={onCancelEdit}
-            onSave={async (body) => {
-              await onUpdate(annotation, body);
-            }}
-            onPlanDelete={() => onPlanDelete(annotation)}
-            onDelete={async (plan) => {
-              await onDelete(annotation, plan);
-              onCancelEdit();
-            }}
+            onEdit={() => setEditing({ external: editingId, id: annotation.id })}
+            onCancel={closeEditor}
+            onSave={onUpdate}
+            onPlanDelete={onPlanDelete}
+            onDelete={onDelete}
             onOpen={() => onOpen(annotation)}
             readFile={readFile}
           />

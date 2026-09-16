@@ -1,5 +1,6 @@
 import { useCallback, type Dispatch, type SetStateAction } from "react";
 
+import { insertAnnotationInDraft } from "./insert-annotation-in-draft.js";
 import { selectedResource, type SelectedValue } from "./selected-resource.js";
 import {
   useAnnotationTransclusion,
@@ -19,7 +20,7 @@ import {
   useReadingPositionSave,
 } from "./use-workspace-mutations.js";
 
-import type { SourceDraftSnapshot } from "./source-draft-session.js";
+import type { SourceDraftSession, SourceDraftSnapshot } from "./source-draft-session.js";
 import type { ReaderLibrarySnapshot, ReaderWorkspaceGateway } from "./workspace-model.js";
 import type {
   Annotation,
@@ -33,6 +34,7 @@ import type {
   SourceId,
   SourceSummary,
 } from "@mdbase-reader/core";
+import type { SharedTextDocument } from "@mdbase-reader/markdown-editor";
 
 export type AsyncResource<Value> =
   | { readonly status: "idle" | "loading" }
@@ -44,6 +46,7 @@ export interface ReaderSourceWorkspaceController {
   readonly annotations: AsyncResource<readonly Annotation[]>;
   readonly draft: string;
   readonly draftReady: boolean;
+  readonly draftDocument?: SharedTextDocument;
   readonly saveStatus: "saved" | "unsaved" | "saving" | "error";
   readonly saveError: string | null;
   readonly draftRecovery?: SourceDraftSnapshot;
@@ -145,6 +148,7 @@ export function useSourceToolsWorkspace(
     draftValue,
     publishSource,
     setDraftState,
+    session,
   );
 
   return {
@@ -152,6 +156,7 @@ export function useSourceToolsWorkspace(
     annotations: annotationResource,
     draft: draftValue,
     draftReady: session !== null,
+    ...(session ? { draftDocument: session } : {}),
     saveStatus: snapshot.status,
     saveError: snapshot.error,
     draftRecovery: snapshot,
@@ -199,11 +204,18 @@ function useSelectedTransclusion(
   draft: string,
   setSource: (value: SelectedValue<AsyncResource<Source>>) => void,
   setDraft: (value: SelectedValue<string>) => void,
+  session: SourceDraftSession | null,
 ): AnnotationTransclusionController {
   return useAnnotationTransclusion({
     gateway,
     source,
     draft,
+    ...(session
+      ? {
+          persist: (source: Source, annotation: Annotation) =>
+            insertAnnotationInDraft(session, source, annotation),
+        }
+      : {}),
     onSaved: (value) => {
       setSource({ sourceId: value.id, value: { status: "ready", value } });
       setDraft({ sourceId: value.id, value: value.body });

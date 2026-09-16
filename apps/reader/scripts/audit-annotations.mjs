@@ -75,18 +75,21 @@ export async function auditAnnotations(page, { screenshot, blockWrites }) {
   const editor = tools.getByRole("textbox", { name: "Annotation note" });
   const editText =
     "> A durable reading library makes patient attention possible.\n\n[test] A recoverable annotation comment.";
-  await editor.fill(editText);
-  await expect(tools.getByText("Draft saved on this device", { exact: true })).toBeVisible();
-  await page.reload();
-  await tools.getByRole("button", { name: "Resume edit", exact: true }).click();
-  await expect(editor).toContainText("recoverable annotation comment");
   blockWrites(true);
-  await editor.press("Control+s");
+  await editor.fill(editText);
+  await expect(tools.getByText("Saved on this device", { exact: true })).toBeVisible();
+  await page.reload();
+  // Recovery retries without requiring the user to reopen an editor.
+  await tools.getByRole("button", { name: "Review changes", exact: true }).click();
+  await expect(editor).toContainText("recoverable annotation comment");
   await expect(tools.getByRole("alert")).toContainText("offline");
   await expect(editor).toContainText("recoverable annotation comment");
   await screenshot("annotation-failed-save");
   blockWrites(false);
   await editor.press("Control+s");
+  await expect(tools.getByText("Saved to collection", { exact: true })).toBeVisible();
+  await expect(editor).toBeVisible();
+  await tools.getByRole("button", { name: "Done", exact: true }).click();
   await expect(tools.getByRole("textbox", { name: "Annotation note" })).toHaveCount(0);
   await page.reload();
   await expect(tools).toContainText("recoverable annotation comment");
@@ -158,9 +161,7 @@ export async function auditAnnotations(page, { screenshot, blockWrites }) {
   await screenshot("annotation-mobile-inspector");
   await tools.getByRole("button", { name: "Edit", exact: true }).click();
   await expect(tools.getByRole("textbox", { name: "Annotation note" })).toBeVisible();
-  const saveRect = await tools
-    .getByRole("button", { name: "Save changes", exact: true })
-    .boundingBox();
+  const saveRect = await tools.getByRole("button", { name: "Done", exact: true }).boundingBox();
   expect(saveRect.y + saveRect.height).toBeLessThanOrEqual(844);
   await screenshot("annotation-mobile-edit");
   await tools.getByRole("textbox", { name: "Annotation note" }).press("Escape");
