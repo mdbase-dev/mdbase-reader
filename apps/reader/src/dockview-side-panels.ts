@@ -2,6 +2,10 @@ import { inspectorPanelId, navigatorPanelId } from "./dockview-workspace-state.j
 
 import type { DockviewApi, DockviewGroupPanel, IDockviewPanel } from "dockview-react";
 
+function standaloneWidth(panel: IDockviewPanel | undefined): number | null {
+  return panel?.group.panels.length === 1 ? panel.group.api.width : null;
+}
+
 /** Sidebar commands use the same Dockview instance and native groups as documents. */
 export class DockviewSidePanels {
   singlePane = false;
@@ -49,6 +53,8 @@ export class DockviewSidePanels {
       }
       return;
     }
+    const other = api.getPanel(id === navigatorPanelId ? inspectorPanelId : navigatorPanelId);
+    const otherWidth = standaloneWidth(other);
     const previous = this.positions.get(id);
     const group = previous ? api.groups.find((group) => group.id === previous.group) : undefined;
     const width = previous?.width ?? (id === navigatorPanelId ? 260 : 340);
@@ -70,9 +76,21 @@ export class DockviewSidePanels {
         // onReady can run before Dockview's first measured layout.
         if (this.current() === api && api.getPanel(id) === added && !this.singlePane) {
           added.group.api.setSize({ width });
+          if (other && otherWidth !== null && api.getPanel(other.id) === other) {
+            other.group.api.setSize({ width: otherWidth });
+          }
         }
       });
     }
+  }
+  returnTarget(
+    panels: readonly IDockviewPanel[],
+    focusedId: string | null,
+  ): IDockviewPanel | undefined {
+    return this.singlePane &&
+      panels.every((panel) => panel.id === navigatorPanelId || panel.id === inspectorPanelId)
+      ? this.current()?.getPanel(focusedId ?? "")
+      : undefined;
   }
   resetAround(target: DockviewGroupPanel): void {
     const api = this.current();

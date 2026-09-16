@@ -1,0 +1,141 @@
+.annotation-browser-controls {
+  display: grid;
+  gap: 8px;
+  padding: 12px;
+  border-bottom: 1px solid var(--line);
+  background: var(--paper);
+}
+.annotation-browser-controls > input,
+.annotation-browser-controls select {
+  min-width: 0;
+  width: 100%;
+  padding: 7px 8px;
+  color: inherit;
+  font: inherit;
+  border: 1px solid var(--line);
+  border-radius: 5px;
+  background: var(--paper);
+}
+.annotation-browser-controls > div {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px;
+}
+.annotation-browser-controls small {
+  color: var(--ink-soft);
+}
+.annotation-card.is-selected {
+  box-shadow: inset 3px 0 var(--accent);
+  background: color-mix(in srgb, var(--accent) 6%, var(--paper));
+}
+.annotation-card.is-selected .annotation-card-actions {
+  opacity: 1;
+}
+.annotation-draft-badge {
+  margin-left: auto;
+  color: var(--accent);
+}
+.annotation-add-comment {
+  background: transparent;
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  font-size: 13px;
+  margin: 0 16px 12px;
+  padding: 6px;
+  color: var(--accent);
+}
+.annotation-draft-status {
+  display: block;
+  padding: 0 16px 8px;
+}
+.document-annotation-composer {
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+}
+.document-annotation-composer > .annotation-compose-error {
+  background: var(--paper);
+  color: var(--danger);
+  font-size: 13px;
+  line-height: 1.5;
+  padding: 12px 14px;
+  border: 1px solid color-mix(in srgb, var(--danger) 40%, var(--line));
+  border-radius: 6px;
+  box-shadow: 0 2px 8px #0002;
+}
+.annotation-return {
+  pointer-events: auto;
+  background: var(--paper);
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  padding: 8px 12px;
+  box-shadow: 0 2px 8px #0002;
+}
+.annotation-editor-actions {
+  flex-wrap: wrap;
+}
+.annotation-body-editor > small {
+  display: block;
+  margin: 8px 0;
+}
+.annotation-workspace {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+.annotation-workspace > .annotation-list {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+}
+.annotation-workspace .annotation-card,
+.annotation-workspace .annotation-card:hover,
+.annotation-workspace .annotation-card:has(.annotation-body-editor):hover {
+  margin-inline: 0;
+  padding: 14px 12px;
+  border-radius: 6px;
+}
+.annotation-workspace .annotation-card blockquote,
+.annotation-workspace .annotation-card > p {
+  font-size: 14px;
+  line-height: 1.55;
+}
+.annotation-card-actions > button:not(.icon-button) {
+  font-size: 12px;
+  min-height: 32px;
+}
+.annotation-editor-label {
+  font-size: 12px;
+}
+.annotation-body-editor > span {
+  font-size: 11px;
+  color: var(--ink-soft);
+}
+.annotation-code-editor,
+.annotation-code-editor:focus-within,
+.workspace-pane.is-tool-pane .annotation-code-editor,
+.workspace-pane.is-tool-pane .annotation-code-editor:focus-within {
+  min-height: 160px;
+  height: clamp(160px, 26vh, 280px);
+  transition: none;
+}
+.document-annotation-composer > .annotation-composer {
+  background: var(--paper);
+}
+@media (max-width: 680px) {
+  .annotation-card-actions {
+    opacity: 1;
+  }
+  .annotation-card-actions > button {
+    min-height: 40px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .annotation-card {
+    scroll-behavior: auto;
+  }
+  .document-annotation-composer > .annotation-composer {
+    animation: none;
+  }
+}

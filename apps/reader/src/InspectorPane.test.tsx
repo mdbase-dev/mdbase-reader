@@ -9,6 +9,7 @@ import type { ReaderSourceWorkspaceController } from "./use-reader-workspace.js"
 describe("InspectorContent", () => {
   it("keeps an in-progress highlight out of the saved annotations pane", () => {
     const workspace = {
+      sourceRecord: { status: "loading" },
       annotations: { status: "ready", value: [] },
     } as unknown as ReaderSourceWorkspaceController;
     const composer = {
@@ -38,6 +39,7 @@ describe("InspectorContent", () => {
 
   it("projects an embedded screenshot into the annotation card", () => {
     const workspace = {
+      sourceRecord: { status: "loading" },
       annotations: {
         status: "ready",
         value: [

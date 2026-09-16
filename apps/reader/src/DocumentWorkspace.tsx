@@ -2,6 +2,7 @@ import { useCallback, useRef, type JSX, type ReactNode } from "react";
 
 import { AnnotationComposer } from "./AnnotationComposer.js";
 import { DocumentContextualToolbar } from "./DocumentContextualToolbar.js";
+import { useDocumentAnnotationDirty } from "./use-annotation-draft.js";
 import { useDockPanelFocus } from "./use-dock-panel-focus.js";
 import { workspaceSessionKey } from "./use-progressive-workspace-tabs.js";
 import { DocumentEmpty } from "./WorkspacePaneSupport.js";
@@ -67,6 +68,7 @@ export function DocumentWorkspace({
   const source = tab.kind === "source" ? props.sources.find(({ id }) => id === tab.sourceId) : null;
   const resident = visible || hydrated.has(workspaceSessionKey(paneId, tab.id));
   const document = tab.view === "document";
+  useDocumentAnnotationDirty(dock, tab, source);
   const surfaceClass = workspaceSurfaceClass(tab);
   return (
     <section

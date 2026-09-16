@@ -1,9 +1,7 @@
-import { useEffect, useRef, type JSX, type RefObject } from "react";
+import { useState, type JSX } from "react";
 
-import { annotationBodyContent } from "./annotation-body-content.js";
-import { AnnotationBodyEditor } from "./AnnotationEditor.js";
-import { AnnotationImage } from "./AnnotationImage.js";
-import { FocusIcon } from "./icons.js";
+import { browseAnnotations, type AnnotationFilter } from "./annotation-list-order.js";
+import { AnnotationCard } from "./AnnotationCard.js";
 
 import type { AnnotationFileReader } from "./AnnotationImage.js";
 import type { AnnotationTransclusionController } from "./use-annotation-transclusion.js";
@@ -18,6 +16,7 @@ export function AnnotationList({
   onDelete,
   onOpen,
   editingId,
+  activeId,
   onEdit,
   onCancelEdit,
   readFile,
@@ -29,9 +28,103 @@ export function AnnotationList({
   readonly onDelete: (annotation: Annotation, plan: AnnotationDeletionPlan) => Promise<void>;
   readonly onOpen: (annotation: Annotation) => void;
   readonly editingId: AnnotationId | null;
+  readonly activeId: AnnotationId | null;
   readonly onEdit: (annotation: Annotation) => void;
   readonly onCancelEdit: () => void;
   readonly readFile: AnnotationFileReader;
+}): JSX.Element {
+  const [query, setQuery] = useState("");
+  const [filter, setFilter] = useState<AnnotationFilter>("all");
+  const [order, setOrder] = useState<"document" | "newest">("document");
+  if (annotations.status !== "ready" || !annotations.value.length) {
+    return <AnnotationListStatus annotations={annotations} />;
+  }
+  const results = browseAnnotations(annotations.value, query, filter, order);
+  const clear = (): void => {
+    setQuery("");
+    setFilter("all");
+  };
+  const hiddenActive =
+    annotations.value.some(({ id }) => id === activeId) &&
+    !results.some(({ id }) => id === activeId);
+  return (
+    <>
+      <div className="annotation-browser-controls">
+        <input
+          type="search"
+          aria-label="Search annotations"
+          placeholder="Search quotes and comments…"
+          value={query}
+          onChange={(event) => setQuery(event.target.value)}
+        />
+        <div>
+          <select
+            aria-label="Filter annotations"
+            value={filter}
+            onChange={(event) => setFilter(event.target.value as AnnotationFilter)}
+          >
+            <option value="all">All annotations</option>
+            <option value="comments">With comments</option>
+            <option value="highlight">Highlights</option>
+            <option value="area">Area captures</option>
+          </select>
+          <select
+            aria-label="Sort annotations"
+            value={order}
+            onChange={(event) => setOrder(event.target.value as "document" | "newest")}
+          >
+            <option value="document">Document order</option>
+            <option value="newest">Newest first</option>
+          </select>
+        </div>
+        <small role="status">
+          {results.length} of {annotations.value.length} annotations
+        </small>
+        {hiddenActive ? (
+          <button type="button" onClick={clear}>
+            Show selected annotation (clear filters)
+          </button>
+        ) : null}
+      </div>
+      <div className="annotation-list">
+        {!results.length ? (
+          <div className="inspector-status">
+            <strong>No matching annotations</strong>
+            <button type="button" onClick={clear}>
+              Clear filters
+            </button>
+          </div>
+        ) : null}
+        {results.map((annotation) => (
+          <AnnotationCard
+            key={annotation.id}
+            annotation={annotation}
+            editing={editingId === annotation.id}
+            active={activeId === annotation.id}
+            transclusion={transclusion}
+            onEdit={() => onEdit(annotation)}
+            onCancel={onCancelEdit}
+            onSave={async (body) => {
+              await onUpdate(annotation, body);
+            }}
+            onPlanDelete={() => onPlanDelete(annotation)}
+            onDelete={async (plan) => {
+              await onDelete(annotation, plan);
+              onCancelEdit();
+            }}
+            onOpen={() => onOpen(annotation)}
+            readFile={readFile}
+          />
+        ))}
+      </div>
+    </>
+  );
+}
+
+function AnnotationListStatus({
+  annotations,
+}: {
+  readonly annotations: AsyncResource<readonly Annotation[]>;
 }): JSX.Element {
   if (annotations.status !== "ready") {
     return annotations.status === "error" ? (
@@ -42,7 +135,7 @@ export function AnnotationList({
       <div className="inspector-status">Loading annotations…</div>
     );
   }
-  if (annotations.value.length === 0) {
+  if (!annotations.value.length) {
     return (
       <div className="inspector-status annotation-empty">
         <strong>No annotations yet</strong>
@@ -50,180 +143,5 @@ export function AnnotationList({
       </div>
     );
   }
-  return (
-    <div className="annotation-list">
-      {annotations.value.map((annotation) => (
-        <AnnotationCard
-          key={annotation.id}
-          annotation={annotation}
-          editing={editingId === annotation.id}
-          transclusion={transclusion}
-          onEdit={() => onEdit(annotation)}
-          onCancel={onCancelEdit}
-          onSave={async (body) => {
-            await onUpdate(annotation, body);
-            onCancelEdit();
-          }}
-          onPlanDelete={() => onPlanDelete(annotation)}
-          onDelete={async (plan) => {
-            await onDelete(annotation, plan);
-            onCancelEdit();
-          }}
-          onOpen={() => onOpen(annotation)}
-          readFile={readFile}
-        />
-      ))}
-    </div>
-  );
-}
-
-function AnnotationCard({
-  annotation,
-  editing,
-  transclusion,
-  onEdit,
-  onCancel,
-  onSave,
-  onPlanDelete,
-  onDelete,
-  onOpen,
-  readFile,
-}: {
-  readonly annotation: Annotation;
-  readonly editing: boolean;
-  readonly transclusion: AnnotationTransclusionController;
-  readonly onEdit: () => void;
-  readonly onCancel: () => void;
-  readonly onSave: (body: string) => Promise<void>;
-  readonly onPlanDelete: () => Promise<AnnotationDeletionPlan>;
-  readonly onDelete: (plan: AnnotationDeletionPlan) => Promise<void>;
-  readonly onOpen: () => void;
-  readonly readFile: AnnotationFileReader;
-}): JSX.Element {
-  const cardRef = useScrollToEditing(editing);
-  return (
-    // This article is a keyboard-operable card when it is not in editing mode.
-    // eslint-disable-next-line jsx-a11y/no-noninteractive-element-interactions
-    <article
-      ref={cardRef}
-      className={`annotation-card${editing ? " is-editing" : ""}`}
-      role={editing ? undefined : "button"}
-      tabIndex={editing ? undefined : 0}
-      onClick={() => {
-        if (!editing) {
-          onOpen();
-        }
-      }}
-      onKeyDown={(event) => {
-        if (!editing && (event.key === "Enter" || event.key === " ")) {
-          event.preventDefault();
-          onOpen();
-        }
-      }}
-    >
-      <header>
-        <span className={`annotation-kind is-${annotation.annotationType}`}>
-          {annotation.annotationType}
-        </span>
-        {annotation.locator ? <small>{annotation.locator.label}</small> : null}
-      </header>
-      {editing ? (
-        <AnnotationBodyEditor
-          annotation={annotation}
-          onCancel={onCancel}
-          onSave={onSave}
-          onPlanDelete={onPlanDelete}
-          onDelete={onDelete}
-        />
-      ) : (
-        <AnnotationBody annotation={annotation} readFile={readFile} />
-      )}
-      {!editing ? (
-        <footer>
-          <time>
-            {new Date(annotation.createdAt).toLocaleDateString(undefined, {
-              month: "short",
-              day: "numeric",
-            })}
-          </time>
-          <div className="annotation-card-actions">
-            <button
-              type="button"
-              onClick={(event) => {
-                event.stopPropagation();
-                onEdit();
-              }}
-            >
-              Edit
-            </button>
-            <button
-              type="button"
-              disabled={transclusion.busyId !== null || transclusion.isEmbedded(annotation)}
-              title={
-                transclusion.isEmbedded(annotation)
-                  ? "Already included in the source note"
-                  : "Insert this annotation in the source note"
-              }
-              onClick={(event) => {
-                event.stopPropagation();
-                transclusion.insert(annotation);
-              }}
-            >
-              {transclusion.busyId === annotation.id
-                ? "Inserting…"
-                : transclusion.isEmbedded(annotation)
-                  ? "In source note"
-                  : "Insert in note"}
-            </button>
-            <button
-              className="icon-button"
-              type="button"
-              aria-label="Open annotation in document"
-              title="Open in document"
-              onClick={(event) => {
-                event.stopPropagation();
-                onOpen();
-              }}
-            >
-              <FocusIcon />
-            </button>
-          </div>
-        </footer>
-      ) : null}
-      {transclusion.problemId === annotation.id ? (
-        <p className="annotation-card-problem" role="alert">
-          {transclusion.problem}
-        </p>
-      ) : null}
-    </article>
-  );
-}
-
-function useScrollToEditing(editing: boolean): RefObject<HTMLElement | null> {
-  const ref = useRef<HTMLElement>(null);
-  useEffect(() => {
-    if (editing) {
-      ref.current?.scrollIntoView({ block: "nearest", behavior: "smooth" });
-    }
-  }, [editing]);
-  return ref;
-}
-
-function AnnotationBody({
-  annotation,
-  readFile,
-}: {
-  readonly annotation: Annotation;
-  readonly readFile: AnnotationFileReader;
-}): JSX.Element {
-  const content = annotationBodyContent(annotation.body);
-  return (
-    <>
-      {content.images.map((image) => (
-        <AnnotationImage key={image.path} image={image} readFile={readFile} />
-      ))}
-      {content.quote ? <blockquote>{content.quote}</blockquote> : null}
-      {content.note ? <p>{content.note}</p> : null}
-    </>
-  );
+  return <></>;
 }

@@ -8,6 +8,8 @@ import { chromium, expect } from "@playwright/test";
 import { auditPdf, auditEpub } from "./reader-audit-documents.mjs";
 import { auditDockview } from "./audit-dockview.mjs";
 import { auditDockviewMigration } from "./audit-dockview-migration.mjs";
+import { annotationFixture } from "./audit-annotation-fixture.mjs";
+import { auditAnnotations } from "./audit-annotations.mjs";
 
 const origin = process.env.READER_AUDIT_ORIGIN ?? "http://127.0.0.1:5193";
 if (!/^http:\/\/(127\.0\.0\.1|localhost):\d+$/u.test(origin)) {
@@ -102,12 +104,15 @@ for (const [fileId, file] of specialDocuments) {
   ];
   specialIndex += 1;
 }
+const annotationApi = annotationFixture(records, () => writesBlocked);
 await context.route(`${origin}/__reader-audit/**`, async (route) => {
   const request = route.request();
   const url = new URL(request.url());
   const path = url.pathname.replace("/__reader-audit/", "");
   const respond = (value, status = 200) =>
     route.fulfill({ status, contentType: "application/json", body: JSON.stringify(value) });
+  if (path.startsWith("annotations/"))
+    return annotationApi(path.slice("annotations/".length), request, respond);
   if (path === "library") {
     return respond(records);
   }
@@ -162,222 +167,232 @@ const navigate = async () => {
   await page.goto(`${origin}/test-fixtures/audit-reader.html`);
   await expect(page.getByRole("button", { name: "Toggle library navigator" })).toBeVisible();
 };
-const screenshot = async (name) => page.screenshot({ path: join(directory, `${name}.png`) });
+const screenshot = async (name) =>
+  page.screenshot({ path: join(directory, `${name}.png`), animations: "disabled" });
 try {
   const started = performance.now();
   await navigate();
-  await expect(page.getByRole("grid", { name: "Sources" })).toBeVisible();
-  measurements.libraryReadyMs = Math.round(performance.now() - started);
-  measurements.renderedRows5000Sources = await page.getByRole("row").count();
-  expect(measurements.renderedRows5000Sources).toBeLessThanOrEqual(101);
-  await expect(page.getByRole("navigation", { name: "Library result pages" })).toContainText(
-    "5000 sources",
-  );
-  await page.getByRole("button", { name: "Next", exact: true }).click();
-  await expect(page.getByRole("navigation", { name: "Library result pages" })).toContainText(
-    "Page 2",
-  );
-  await page.getByRole("button", { name: "Previous", exact: true }).click();
-  await screenshot("desktop-library");
-  completed.push("5,000-source library: bounded rows and pagination");
+  if (process.env.READER_AUDIT_ANNOTATIONS_ONLY !== "1") {
+    await expect(page.getByRole("grid", { name: "Sources" })).toBeVisible();
+    measurements.libraryReadyMs = Math.round(performance.now() - started);
+    measurements.renderedRows5000Sources = await page.getByRole("row").count();
+    expect(measurements.renderedRows5000Sources).toBeLessThanOrEqual(101);
+    await expect(page.getByRole("navigation", { name: "Library result pages" })).toContainText(
+      "5000 sources",
+    );
+    await page.getByRole("button", { name: "Next", exact: true }).click();
+    await expect(page.getByRole("navigation", { name: "Library result pages" })).toContainText(
+      "Page 2",
+    );
+    await page.getByRole("button", { name: "Previous", exact: true }).click();
+    await screenshot("desktop-library");
+    completed.push("5,000-source library: bounded rows and pagination");
 
-  await page.getByRole("button", { name: "Continue reading", exact: false }).click();
-  await expect(page.locator("iframe.html-viewer")).toBeVisible({ timeout: 30000 });
-  await page.getByRole("button", { name: "Keep offline", exact: true }).click();
-  await expect(page.getByText("Exact revision saved on this device")).toBeVisible();
-  const requestsBeforeReload = documentRequests;
-  documentsBlocked = true;
-  await page.reload();
-  await expect(page.getByText("Exact revision saved on this device")).toBeVisible({
-    timeout: 30000,
-  });
-  expect(documentRequests).toBe(requestsBeforeReload);
-  await screenshot("offline-document");
-  completed.push("Exact-revision offline copy reopens without document network traffic");
-  documentsBlocked = false;
+    await page.getByRole("button", { name: "Continue reading", exact: false }).click();
+    await expect(page.locator("iframe.html-viewer")).toBeVisible({ timeout: 30000 });
+    await page.getByRole("button", { name: "Keep offline", exact: true }).click();
+    await expect(page.getByText("Exact revision saved on this device")).toBeVisible();
+    const requestsBeforeReload = documentRequests;
+    documentsBlocked = true;
+    await page.reload();
+    await expect(page.getByText("Exact revision saved on this device")).toBeVisible({
+      timeout: 30000,
+    });
+    expect(documentRequests).toBe(requestsBeforeReload);
+    await screenshot("offline-document");
+    completed.push("Exact-revision offline copy reopens without document network traffic");
+    documentsBlocked = false;
 
-  await page.getByLabel("More document actions", { exact: true }).click();
-  await page.getByRole("button", { name: "Source note", exact: true }).click();
-  const editor = page.getByRole("textbox", { name: "Source literature note" });
-  await expect(editor).toBeVisible();
-  writesBlocked = true;
-  await editor.fill("[test] Unsaved draft survives a reload. Patient attention.");
-  await expect(page.getByText("Saved locally", { exact: true })).toBeVisible();
-  await page.waitForTimeout(1100);
-  await page.reload();
-  await expect(page.getByText("Recovered a local draft", { exact: true })).toBeVisible({
-    timeout: 20000,
-  });
-  await expect(editor).toContainText("Unsaved draft survives a reload");
-  await editor.focus();
-  await page.getByRole("button", { name: /Interface density:/ }).focus();
-  await expect(page.getByText("Recovered a local draft", { exact: true })).toBeVisible();
-  completed.push("Failed autosave: durable draft survives reload and remains reviewable on blur");
-  records[0].body = "[test] A different application edited the collection version.";
-  records[0].recordRevision = "external-revision";
-  await page.reload();
-  await expect(page.getByRole("region", { name: "Source note conflict" })).toBeVisible({
-    timeout: 20000,
-  });
-  await page.getByText("Compare versions", { exact: true }).click();
-  await expect(page.getByRole("region", { name: "Source note conflict" })).toContainText(
-    "A different application",
-  );
-  expect(
-    (await page.getByRole("region", { name: "Source note conflict" }).boundingBox()).height,
-  ).toBeGreaterThan(180);
-  await screenshot("draft-conflict");
-  writesBlocked = false;
-  await page.getByRole("button", { name: "Save my draft instead", exact: true }).click();
-  await expect(page.getByText("Saved to collection", { exact: true })).toBeVisible();
-  expect(records[0].body).toContain("Unsaved draft survives");
-  await page.reload();
-  await expect(editor).toContainText("Unsaved draft survives");
-  await expect(page.getByText("Recovered a local draft", { exact: true })).toHaveCount(0);
-  completed.push("Conflict comparison, explicit resolution, and reload verification");
-
-  await page.getByRole("tab", { name: "[test] Research 0000", exact: true }).click();
-  await expect(page.locator("iframe.html-viewer")).toBeVisible();
-  await page.locator(".navigator-heading > button").first().click();
-  await page.getByRole("combobox", { name: "Search scope" }).selectOption("notes");
-  await page.getByRole("textbox", { name: "Search this view" }).fill("Unsaved draft survives");
-  await expect(
-    page.getByRole("region", { name: "Text search results" }).locator("mark"),
-  ).toHaveText("Unsaved draft survives");
-  await screenshot("passage-search");
-  await page.getByRole("combobox", { name: "Search scope" }).selectOption("documents");
-  await page.getByRole("textbox", { name: "Search this view" }).fill("patient attention");
-  await expect(page.getByRole("region", { name: "Text search results" })).toContainText(
-    "Only loaded, supported documents",
-  );
-  await expect(
-    page.getByRole("region", { name: "Text search results" }).locator("mark").first(),
-  ).toHaveText("patient attention", { timeout: 20000 });
-  completed.push(
-    "Notes and loaded-document search: snippets, highlighted matches, explicit coverage",
-  );
-
-  await page.getByRole("button", { name: /Interface density:/ }).click();
-  await expect(page.locator(".reader-shell")).toHaveAttribute("data-density", "compact");
-  await page.reload();
-  await expect(page.locator(".reader-shell")).toHaveAttribute("data-density", "compact");
-  await page.getByRole("button", { name: /Interface density:/ }).click();
-  await page.setViewportSize({ width: 390, height: 844 });
-  await expect(page.getByRole("complementary", { name: "Library navigator" })).toHaveCount(0);
-  expect(
-    await page.evaluate(
-      () => globalThis.document.documentElement.scrollWidth <= globalThis.innerWidth,
-    ),
-  ).toBe(true);
-  await screenshot("mobile-library");
-  await page.getByRole("button", { name: "Toggle library navigator" }).click();
-  await expect(page.getByRole("complementary", { name: "Library navigator" })).toBeVisible();
-  await page.getByRole("button", { name: "Toggle library navigator" }).click();
-  await page.keyboard.press("Control+Shift+f");
-  await expect(
-    page.getByRole("textbox", { name: "Find a source by title, author or tag" }),
-  ).toBeFocused();
-  completed.push("Density persists; mobile sheets, overflow, and keyboard library shortcut");
-
-  await page.setViewportSize({ width: 1440, height: 1000 });
-  const navigatorSearch = page.getByRole("textbox", {
-    name: "Find a source by title, author or tag",
-  });
-  const residency = [];
-  writesBlocked = true; // Local position restoration must not depend on a successful server save.
-  const activeHtml = page
-    .frameLocator(".document-session.is-active iframe.html-viewer")
-    .locator("html");
-  for (let index = 1; index <= 19; index += 1) {
-    await navigatorSearch.fill(`Research ${String(index).padStart(4, "0")}`);
-    await page
-      .getByRole("option", { name: new RegExp(`Research ${String(index).padStart(4, "0")}`) })
-      .dblclick();
-    await expect(page.locator(".document-session.is-active iframe.html-viewer")).toBeVisible({
+    await page.getByLabel("More document actions", { exact: true }).click();
+    await page.getByRole("button", { name: "Source note", exact: true }).click();
+    const editor = page.getByRole("textbox", { name: "Source literature note" });
+    await expect(editor).toBeVisible();
+    writesBlocked = true;
+    await editor.fill("[test] Unsaved draft survives a reload. Patient attention.");
+    await expect(page.getByText("Saved locally", { exact: true })).toBeVisible();
+    await page.waitForTimeout(1100);
+    await page.reload();
+    await expect(page.getByText("Recovered a local draft", { exact: true })).toBeVisible({
       timeout: 20000,
     });
-    if (index === 1) {
-      await activeHtml.evaluate((element) => element.ownerDocument.defaultView.scrollTo(0, 1200));
-      await expect
-        .poll(() => activeHtml.evaluate((element) => element.ownerDocument.defaultView.scrollY))
-        .toBeGreaterThan(1000);
-    }
-    await page.waitForTimeout(350);
-    residency.push(await page.locator("iframe.html-viewer").count());
-  }
-  expect(Math.max(...residency)).toBeLessThanOrEqual(4);
-  measurements.residentRenderersAfterEachOpen = residency;
-  measurements.domNodes = await page.locator("*").count();
-  await screenshot("bounded-document-tabs");
-  completed.push("Twenty visited HTML documents retain at most four renderers");
-  writesBlocked = false;
-  await navigatorSearch.fill("Research 0001");
-  await page.getByRole("option", { name: /Research 0001/ }).dblclick();
-  await expect
-    .poll(() => activeHtml.evaluate((element) => element.ownerDocument.defaultView.scrollY))
-    .toBeGreaterThan(1000);
-  completed.push("Evicted document restores its location even when position saves failed");
-
-  await page.emulateMedia({ colorScheme: "dark", reducedMotion: "reduce" });
-  await screenshot("dark-reading");
-  await page.emulateMedia({ colorScheme: "light", reducedMotion: "reduce" });
-  for (const [index, format] of [
-    [20, "pdf"],
-    [21, "epub"],
-  ]) {
-    await navigatorSearch.fill(`Research ${String(index).padStart(4, "0")}`);
-    await page
-      .getByRole("option", { name: new RegExp(`Research ${String(index).padStart(4, "0")}`) })
-      .dblclick();
-    await expect(page.locator(`.document-session.is-active .${format}-viewer`)).toBeVisible({
-      timeout: 60000,
+    await expect(editor).toContainText("Unsaved draft survives a reload");
+    await editor.focus();
+    await page.getByRole("button", { name: /Interface density:/ }).focus();
+    await expect(page.getByText("Recovered a local draft", { exact: true })).toBeVisible();
+    completed.push("Failed autosave: durable draft survives reload and remains reviewable on blur");
+    records[0].body = "[test] A different application edited the collection version.";
+    records[0].recordRevision = "external-revision";
+    await page.reload();
+    await expect(page.getByRole("region", { name: "Source note conflict" })).toBeVisible({
+      timeout: 20000,
     });
-    await expect(page.locator(".document-session.is-active .document-renderer-status")).toHaveCount(
-      0,
-      { timeout: 60000 },
+    await page.getByText("Compare versions", { exact: true }).click();
+    await expect(page.getByRole("region", { name: "Source note conflict" })).toContainText(
+      "A different application",
     );
-    if (format === "pdf") {
-      await expect
-        .poll(
-          () =>
-            page
-              .locator(".document-session.is-active .pdf-viewer img")
-              .evaluateAll((images) =>
-                images.some((image) => image.complete && image.naturalWidth > 100),
-              ),
-          { timeout: 30000 },
-        )
-        .toBe(true);
-      await page.waitForTimeout(500);
+    expect(
+      (await page.getByRole("region", { name: "Source note conflict" }).boundingBox()).height,
+    ).toBeGreaterThan(180);
+    await screenshot("draft-conflict");
+    writesBlocked = false;
+    await page.getByRole("button", { name: "Save my draft instead", exact: true }).click();
+    await expect(page.getByText("Saved to collection", { exact: true })).toBeVisible();
+    expect(records[0].body).toContain("Unsaved draft survives");
+    await page.reload();
+    await expect(editor).toContainText("Unsaved draft survives");
+    await expect(page.getByText("Recovered a local draft", { exact: true })).toHaveCount(0);
+    completed.push("Conflict comparison, explicit resolution, and reload verification");
+
+    await page.getByRole("tab", { name: "[test] Research 0000", exact: true }).click();
+    await expect(page.locator("iframe.html-viewer")).toBeVisible();
+    await page.locator(".navigator-heading > button").first().click();
+    await page.getByRole("combobox", { name: "Search scope" }).selectOption("notes");
+    await page.getByRole("textbox", { name: "Search this view" }).fill("Unsaved draft survives");
+    await expect(
+      page.getByRole("region", { name: "Text search results" }).locator("mark"),
+    ).toHaveText("Unsaved draft survives");
+    await screenshot("passage-search");
+    await page.getByRole("combobox", { name: "Search scope" }).selectOption("documents");
+    await page.getByRole("textbox", { name: "Search this view" }).fill("patient attention");
+    await expect(page.getByRole("region", { name: "Text search results" })).toContainText(
+      "Only loaded, supported documents",
+    );
+    await expect(
+      page.getByRole("region", { name: "Text search results" }).locator("mark").first(),
+    ).toHaveText("patient attention", { timeout: 20000 });
+    completed.push(
+      "Notes and loaded-document search: snippets, highlighted matches, explicit coverage",
+    );
+
+    await page.getByRole("button", { name: /Interface density:/ }).click();
+    await expect(page.locator(".reader-shell")).toHaveAttribute("data-density", "compact");
+    await page.reload();
+    await expect(page.locator(".reader-shell")).toHaveAttribute("data-density", "compact");
+    await page.getByRole("button", { name: /Interface density:/ }).click();
+    await page.setViewportSize({ width: 390, height: 844 });
+    await expect(page.getByRole("complementary", { name: "Library navigator" })).toHaveCount(0);
+    expect(
+      await page.evaluate(
+        () => globalThis.document.documentElement.scrollWidth <= globalThis.innerWidth,
+      ),
+    ).toBe(true);
+    await screenshot("mobile-library");
+    await page.getByRole("button", { name: "Toggle library navigator" }).click();
+    await expect(page.getByRole("complementary", { name: "Library navigator" })).toBeVisible();
+    await page.getByRole("button", { name: "Toggle library navigator" }).click();
+    await page.keyboard.press("Control+Shift+f");
+    await expect(
+      page.getByRole("textbox", { name: "Find a source by title, author or tag" }),
+    ).toBeFocused();
+    completed.push("Density persists; mobile sheets, overflow, and keyboard library shortcut");
+
+    await page.setViewportSize({ width: 1440, height: 1000 });
+    const navigatorSearch = page.getByRole("textbox", {
+      name: "Find a source by title, author or tag",
+    });
+    const residency = [];
+    writesBlocked = true; // Local position restoration must not depend on a successful server save.
+    const activeHtml = page
+      .frameLocator(".document-session.is-active iframe.html-viewer")
+      .locator("html");
+    for (let index = 1; index <= 19; index += 1) {
+      await navigatorSearch.fill(`Research ${String(index).padStart(4, "0")}`);
+      await page
+        .getByRole("option", { name: new RegExp(`Research ${String(index).padStart(4, "0")}`) })
+        .dblclick();
+      await expect(page.locator(".document-session.is-active iframe.html-viewer")).toBeVisible({
+        timeout: 20000,
+      });
+      if (index === 1) {
+        await activeHtml.evaluate((element) => element.ownerDocument.defaultView.scrollTo(0, 1200));
+        await expect
+          .poll(() => activeHtml.evaluate((element) => element.ownerDocument.defaultView.scrollY))
+          .toBeGreaterThan(1000);
+      }
+      await page.waitForTimeout(350);
+      residency.push(await page.locator("iframe.html-viewer").count());
     }
-    await screenshot(`${format}-reading`);
-    completed.push(`${format.toUpperCase()} fixture renders through the real renderer`);
-    if (format === "epub") {
-      await page.getByRole("button", { name: "Next page", exact: true }).click();
-      await expect
-        .poll(() => records[21].reading?.position?.locator?.locations?.progression ?? 0, {
-          timeout: 10000,
-        })
-        .toBeGreaterThan(0);
-      await page.getByRole("button", { name: "Previous page", exact: true }).focus();
-      await page.keyboard.press("Enter");
-      await expect
-        .poll(() => records[21].reading?.position?.locator?.locations?.progression ?? -1, {
-          timeout: 10000,
-        })
-        .toBe(0);
-      completed.push("EPUB page controls work with pointer and keyboard, persisting location");
+    expect(Math.max(...residency)).toBeLessThanOrEqual(4);
+    measurements.residentRenderersAfterEachOpen = residency;
+    measurements.domNodes = await page.locator("*").count();
+    await screenshot("bounded-document-tabs");
+    completed.push("Twenty visited HTML documents retain at most four renderers");
+    writesBlocked = false;
+    await navigatorSearch.fill("Research 0001");
+    await page.getByRole("option", { name: /Research 0001/ }).dblclick();
+    await expect
+      .poll(() => activeHtml.evaluate((element) => element.ownerDocument.defaultView.scrollY))
+      .toBeGreaterThan(1000);
+    completed.push("Evicted document restores its location even when position saves failed");
+
+    await page.emulateMedia({ colorScheme: "dark", reducedMotion: "reduce" });
+    await screenshot("dark-reading");
+    await page.emulateMedia({ colorScheme: "light", reducedMotion: "reduce" });
+    for (const [index, format] of [
+      [20, "pdf"],
+      [21, "epub"],
+    ]) {
+      await navigatorSearch.fill(`Research ${String(index).padStart(4, "0")}`);
+      await page
+        .getByRole("option", { name: new RegExp(`Research ${String(index).padStart(4, "0")}`) })
+        .dblclick();
+      await expect(page.locator(`.document-session.is-active .${format}-viewer`)).toBeVisible({
+        timeout: 60000,
+      });
+      await expect(
+        page.locator(".document-session.is-active .document-renderer-status"),
+      ).toHaveCount(0, { timeout: 60000 });
+      if (format === "pdf") {
+        await expect
+          .poll(
+            () =>
+              page
+                .locator(".document-session.is-active .pdf-viewer img")
+                .evaluateAll((images) =>
+                  images.some((image) => image.complete && image.naturalWidth > 100),
+                ),
+            { timeout: 30000 },
+          )
+          .toBe(true);
+        await page.waitForTimeout(500);
+      }
+      await screenshot(`${format}-reading`);
+      completed.push(`${format.toUpperCase()} fixture renders through the real renderer`);
+      if (format === "epub") {
+        await page.getByRole("button", { name: "Next page", exact: true }).click();
+        await expect
+          .poll(() => records[21].reading?.position?.locator?.locations?.progression ?? 0, {
+            timeout: 10000,
+          })
+          .toBeGreaterThan(0);
+        await page.getByRole("button", { name: "Previous page", exact: true }).focus();
+        await page.keyboard.press("Enter");
+        await expect
+          .poll(() => records[21].reading?.position?.locator?.locations?.progression ?? -1, {
+            timeout: 10000,
+          })
+          .toBe(0);
+        completed.push("EPUB page controls work with pointer and keyboard, persisting location");
+      }
     }
+    completed.push(
+      ...(await auditDockview(page, {
+        screenshot,
+        blockWrites: (value) => {
+          writesBlocked = value;
+        },
+      })),
+    );
+    completed.push(...(await auditDockviewMigration(page)));
   }
   completed.push(
-    ...(await auditDockview(page, {
+    ...(await auditAnnotations(page, {
       screenshot,
       blockWrites: (value) => {
         writesBlocked = value;
       },
     })),
   );
-  completed.push(...(await auditDockviewMigration(page)));
   expect(errors).toEqual([]);
   expect(consoleErrors).toEqual([]);
   expect(failedRequests).toEqual([]);

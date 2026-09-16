@@ -59,6 +59,13 @@ leaves the complete operation untouched. Pinned tabs are protected from preview
 replacement and “close other unpinned tabs.” Reset arrangement moves existing
 panels without closing them, reloading renderers, or replacing drafts.
 
+Annotation drafts are shared across the inspector and source-bound workbench.
+Existing edits are keyed by collection/source/annotation; new selections are keyed
+by collection/source/exact document target. IndexedDB stores text and crop blobs,
+not live surfaces or object URLs. Relevant document and annotation tabs project
+this draft state into their close guards. A document highlight reveals its card;
+entering the writable editor remains an explicit action.
+
 ## Persistence and migration
 
 Layouts are stored per collection under `mdbase-reader:dockview:v1:<collection>`.

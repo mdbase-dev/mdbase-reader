@@ -1,81 +1,63 @@
 import { ReaderButton } from "@mdbase-reader/ui";
-import { useState, type JSX } from "react";
 
-import { readerErrorMessage } from "./errors.js";
+import { annotationEditorKeys } from "./annotation-draft-actions.js";
 import { MultilineCodeEditor } from "./MultilineCodeEditor.js";
+import { useAnnotationEdit, type AnnotationEditProps } from "./use-annotation-edit.js";
 
-import type { Annotation, AnnotationDeletionPlan } from "@mdbase-reader/core";
+import type { AnnotationDeletionPlan } from "@mdbase-reader/core";
+import type { JSX } from "react";
 
-export function AnnotationBodyEditor({
-  annotation,
-  onCancel,
-  onSave,
-  onPlanDelete,
-  onDelete,
-}: {
-  readonly annotation: Annotation;
-  readonly onCancel: () => void;
-  readonly onSave: (body: string) => Promise<void>;
-  readonly onPlanDelete: () => Promise<AnnotationDeletionPlan>;
-  readonly onDelete: (plan: AnnotationDeletionPlan) => Promise<void>;
-}): JSX.Element {
-  const [body, setBody] = useState(annotation.body);
-  const [status, setStatus] = useState<"idle" | "saving">("idle");
-  const [problem, setProblem] = useState<string | null>(null);
-  const [deletePlan, setDeletePlan] = useState<AnnotationDeletionPlan | null>(null);
-  const [deleteStatus, setDeleteStatus] = useState<"idle" | "checking" | "deleting">("idle");
-  const save = (): void => {
-    if (status === "saving" || body === annotation.body) {
-      return;
-    }
-    setStatus("saving");
-    setProblem(null);
-    void onSave(body).catch((reason: unknown) => {
-      setProblem(readerErrorMessage(reason, "Reader could not update this annotation."));
-      setStatus("idle");
-    });
-  };
-  const requestDelete = (): void => {
-    if (deleteStatus !== "idle") {
-      return;
-    }
-    setDeleteStatus("checking");
-    setProblem(null);
-    void onPlanDelete()
-      .then((plan) => {
-        setDeletePlan(plan);
-        setDeleteStatus("idle");
-      })
-      .catch((reason: unknown) => {
-        setProblem(readerErrorMessage(reason, "Reader could not check this annotation."));
-        setDeleteStatus("idle");
-      });
-  };
-  const confirmDelete = (): void => {
-    if (!deletePlan || deleteStatus !== "idle") {
-      return;
-    }
-    setDeleteStatus("deleting");
-    setProblem(null);
-    void onDelete(deletePlan).catch((reason: unknown) => {
-      setProblem(readerErrorMessage(reason, "Reader could not delete this annotation."));
-      setDeleteStatus("idle");
-      setDeletePlan(null);
-    });
-  };
+export function AnnotationBodyEditor(props: AnnotationEditProps): JSX.Element {
+  const {
+    body,
+    canSave,
+    draft,
+    conflict,
+    setBody,
+    cancel,
+    status,
+    problem,
+    deletePlan,
+    setDeletePlan,
+    deleteStatus,
+    save,
+    requestDelete,
+    confirmDelete,
+  } = useAnnotationEdit(props);
   return (
-    <div className="annotation-body-editor">
-      <div className="annotation-editor-label">Note</div>
-      <MultilineCodeEditor
-        value={body}
-        ariaLabel="Annotation note"
-        className="annotation-code-editor"
-        focusOnMount
-        onChange={setBody}
-        onSave={save}
-      />
-      <span>The highlighted passage and its location stay unchanged.</span>
-      {problem ? <p role="alert">{problem}</p> : null}
+    // Delegate shortcuts from buttons and editors without stealing completion-menu keys.
+    // eslint-disable-next-line jsx-a11y/no-noninteractive-element-interactions
+    <div
+      className="annotation-body-editor"
+      role="group"
+      aria-label="Edit annotation"
+      onKeyDown={(event) => annotationEditorKeys(event, cancel, save)}
+    >
+      <div className="annotation-editor-label">Quotation and comment</div>
+      {draft.ready ? (
+        <MultilineCodeEditor
+          value={body}
+          readOnly={status === "saving" || deleteStatus !== "idle"}
+          ariaLabel="Annotation note"
+          className="annotation-code-editor"
+          focusOnMount
+          onChange={setBody}
+          onSave={save}
+        />
+      ) : (
+        <p role="status">Checking for a saved draft…</p>
+      )}
+      <span>
+        Edit the Markdown quotation and comment. The saved passage anchor stays unchanged.
+      </span>
+      {draft.value ? <small role="status">{draft.label}</small> : null}
+      {conflict ? (
+        <p role="alert">
+          This annotation changed since your edit began. Copy your draft before discarding it to
+          load the latest version.
+        </p>
+      ) : null}
+      {problem || draft.problem ? <p role="alert">{problem ?? draft.problem}</p> : null}
       {deletePlan ? (
         <AnnotationDeleteConfirmation
           plan={deletePlan}
@@ -94,10 +76,14 @@ export function AnnotationBodyEditor({
           {deleteStatus === "checking" ? "Checking…" : "Delete"}
         </button>
         <span />
-        <button type="button" disabled={status === "saving"} onClick={onCancel}>
+        <button
+          type="button"
+          disabled={status === "saving" || deleteStatus !== "idle"}
+          onClick={cancel}
+        >
           Cancel
         </button>
-        <ReaderButton disabled={status === "saving" || body === annotation.body} onClick={save}>
+        <ReaderButton disabled={!canSave} onClick={save}>
           {status === "saving" ? "Saving…" : "Save changes"}
         </ReaderButton>
       </div>

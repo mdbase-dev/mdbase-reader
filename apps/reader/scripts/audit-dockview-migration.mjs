@@ -2,6 +2,7 @@ import { expect } from "@playwright/test";
 
 export async function auditDockviewMigration(page) {
   await page.addInitScript(() => {
+    if (globalThis.top !== globalThis || globalThis.location.protocol !== "http:") return;
     if (sessionStorage.getItem("test:dock-migration-seeded")) return;
     sessionStorage.setItem("test:dock-migration-seeded", "yes");
     const tab = (sourceId, view) => ({
@@ -90,6 +91,7 @@ export async function auditDockviewMigration(page) {
   await expect(page.locator('.workspace-pane[aria-hidden="false"]')).toHaveCount(2);
 
   await page.addInitScript(() => {
+    if (globalThis.top !== globalThis || globalThis.location.protocol !== "http:") return;
     if (sessionStorage.getItem("test:dock-invalid-seeded")) return;
     sessionStorage.setItem("test:dock-invalid-seeded", "yes");
     localStorage.setItem("mdbase-reader:dockview:v1:test-reader-audit", "{broken-layout");

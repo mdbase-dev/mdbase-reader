@@ -179,7 +179,11 @@ export function InspectorContent({
   return tab === "annotations" ? (
     <div className="annotation-workspace">
       <AnnotationList
+        key={
+          workspace.sourceRecord.status === "ready" ? workspace.sourceRecord.value.id : "loading"
+        }
         annotations={workspace.annotations}
+        activeId={composer.activeAnnotationId}
         transclusion={workspace.transclusion}
         onUpdate={workspace.updateAnnotation}
         onPlanDelete={workspace.planAnnotationDeletion}

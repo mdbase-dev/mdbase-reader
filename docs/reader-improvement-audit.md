@@ -129,7 +129,9 @@ recorded separately in `sandboxNotices`; sandbox permissions were not relaxed.
 Dockview adds roughly 85 kB gzip to the main entry bundle compared with the previous
 build. This trades some download size for a single maintained docking engine; it is
 not claimed as an initial-load optimization. Core docking does not require an
-enterprise license. This rearchitecture has not been deployed to production.
+enterprise license. Dockview was deployed to the existing production Pages site as
+`353fc2e439d9-production-mu3iakho`. The subsequent, not-yet-deployed annotation polish
+is covered in [the annotation UX/UI audit](annotation-ux-audit.md).
 
 ## Validation and limits
 

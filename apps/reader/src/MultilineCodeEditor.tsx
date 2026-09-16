@@ -15,6 +15,7 @@ export function MultilineCodeEditor({
   placeholder,
   className,
   focusOnMount,
+  readOnly = false,
   onChange,
   onSave,
 }: {
@@ -25,6 +26,7 @@ export function MultilineCodeEditor({
   readonly placeholder?: string;
   readonly className?: string;
   readonly focusOnMount?: boolean;
+  readonly readOnly?: boolean;
   readonly onChange: (value: string) => void;
   readonly onSave?: () => void;
 }): JSX.Element {
@@ -32,6 +34,7 @@ export function MultilineCodeEditor({
     <Suspense fallback={<div className={`${className ?? ""} editor-loading`}>Opening editor…</div>}>
       <CodeEditor
         value={value}
+        readOnly={readOnly}
         ariaLabel={ariaLabel}
         language={language}
         profile={profile ?? (language === "json" ? "code" : "compact")}

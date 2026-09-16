@@ -152,6 +152,10 @@ See [the implementation and audit report](docs/reader-improvement-audit.md) for 
 SDK compatibility, remaining work and the repeatable `test:browser` scenario. Browser testing
 uses disposable fixtures; it does not authorize or mutate real Connect collections.
 
+Annotations support compact highlighting, explicit comment editing, device-local draft recovery
+(including PDF crops), search/filter/order controls, and return-to-reading navigation.
+See the [annotation UX/UI audit](docs/annotation-ux-audit.md) for coverage and remaining gaps.
+
 ## Dependency rule
 
 Dependencies point inward: platform shells and renderers adapt the framework-free core. The core

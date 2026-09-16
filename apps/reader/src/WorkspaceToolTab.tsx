@@ -1,6 +1,7 @@
 import { useEffect } from "react";
 
 import { InspectorContent } from "./InspectorPane.js";
+import { useAnnotationDraftDirty } from "./use-annotation-draft.js";
 import { useSourceToolsWorkspace } from "./use-reader-workspace.js";
 
 import type { SourceWorkspaceTab } from "./source-workspace-layout.js";
@@ -11,6 +12,7 @@ import type { JSX } from "react";
 
 export function WorkspaceToolTab({
   tab,
+  source,
   gateway,
   reconcileSource,
   composer,
@@ -32,7 +34,11 @@ export function WorkspaceToolTab({
     tab.view === "note" &&
     workspace.sourceRecord.status === "ready" &&
     workspace.draft !== workspace.sourceRecord.value.body;
-  const dirty = noteDirty || (tab.view === "citation" && workspace.citation.dirty);
+  const annotationDirty = useAnnotationDraftDirty(source.collectionId, source.id);
+  const dirty =
+    noteDirty ||
+    (tab.view === "citation" && workspace.citation.dirty) ||
+    (tab.view === "annotations" && annotationDirty);
   useEffect(() => onDirtyChange(dirty), [dirty, onDirtyChange]);
   return (
     <div className="workspace-tool-surface is-session-bound">

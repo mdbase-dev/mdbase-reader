@@ -119,21 +119,22 @@ export function ReaderWorkspaceView({
     shell.value.inspectorTab,
   );
   useEffect(() => {
-    if (!composer.editingAnnotationId) {
+    const revealId = composer.editingAnnotationId ?? composer.revealedAnnotationId;
+    if (!revealId) {
       routedEditingIdRef.current = null;
       return;
     }
-    if (composer.editingAnnotationId === routedEditingIdRef.current || !inspectorSource) {
+    if (revealId === routedEditingIdRef.current || !inspectorSource) {
       return;
     }
-    routedEditingIdRef.current = composer.editingAnnotationId;
+    routedEditingIdRef.current = revealId;
     const timer = globalThis.setTimeout(() => {
       const annotationsOwner = findWorkbenchOwner(
         sourceWorkspace.layout,
         inspectorSource.id,
         "annotations",
       );
-      if (annotationsOwner) {
+      if (annotationsOwner && composer.editingAnnotationId) {
         if (sourceWorkspace.activeTab?.id !== annotationsOwner.tab.id) {
           sourceWorkspace.activateTab(annotationsOwner.tab.id, annotationsOwner.pane.id);
         }
@@ -147,6 +148,7 @@ export function ReaderWorkspaceView({
     return () => globalThis.clearTimeout(timer);
   }, [
     composer.editingAnnotationId,
+    composer.revealedAnnotationId,
     inspectorSource,
     model,
     shell,

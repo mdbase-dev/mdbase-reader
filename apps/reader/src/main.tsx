@@ -4,6 +4,7 @@ import { createRoot } from "react-dom/client";
 import "@mdbase-reader/ui/styles.css";
 import "./reader.css";
 import "./reader-improvements.css";
+import "./annotation-polish.css";
 
 import { ConnectReader } from "./ConnectReader.js";
 import { EnvironmentBadge } from "./EnvironmentBadge.js";

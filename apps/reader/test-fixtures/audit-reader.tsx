@@ -5,6 +5,7 @@ import { createRoot } from "react-dom/client";
 import "@mdbase-reader/ui/styles.css";
 import "../src/reader.css";
 import "../src/reader-improvements.css";
+import "../src/annotation-polish.css";
 
 import { ConnectedDocument } from "../src/ConnectedDocument.js";
 import {
@@ -17,6 +18,9 @@ import { ReaderApp } from "../src/ReaderApp.js";
 
 import type { ReaderLibrarySnapshot } from "../src/workspace-model.js";
 import type {
+  Annotation,
+  AnnotationCreationRequest,
+  AnnotationDeletionPlan,
   DocumentRepository,
   FileId,
   ReadingPosition,
@@ -89,6 +93,27 @@ class AuditGateway extends PreviewGateway {
         lastOpenedAt: new Date().toISOString(),
       },
     });
+  }
+  override annotations(id: SourceId): Promise<readonly Annotation[]> {
+    return api(`annotations/${id}`);
+  }
+  override createAnnotation(request: AnnotationCreationRequest): Promise<Annotation> {
+    return api(`annotations/${request.sourceId}`, { op: "create", request });
+  }
+  override updateAnnotation(annotation: Annotation, body: string): Promise<Annotation> {
+    return api(`annotations/${annotation.sourceId}`, { op: "update", annotation, body });
+  }
+  override planAnnotationDeletion(annotation: Annotation): Promise<AnnotationDeletionPlan> {
+    return api(`annotations/${annotation.sourceId}`, { op: "plan-delete", annotation });
+  }
+  override deleteAnnotation(annotation: Annotation): Promise<void> {
+    return api(`annotations/${annotation.sourceId}`, { op: "delete", annotation });
+  }
+  override transcludeAnnotation(source: Source, annotation: Annotation): Promise<Source> {
+    return this.saveSourceBody(
+      source,
+      `${source.body}\n\n![[${annotation.path?.replace(/\.md$/u, "") ?? `annotations/${annotation.id}`}]]\n`,
+    );
   }
   override searchText(): Promise<readonly []> {
     return Promise.resolve([]);

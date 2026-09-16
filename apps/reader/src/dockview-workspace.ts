@@ -109,9 +109,7 @@ export class ReaderDockWorkspace {
       this.ready = false;
     };
   }
-  contentPanels(): IDockviewPanel[] {
-    return this.api?.panels.filter((panel) => panelTab(panel)) ?? [];
-  }
+  contentPanels = (): IDockviewPanel[] => this.api?.panels.filter(panelTab) ?? [];
   group(id?: string): DockviewGroupPanel | undefined {
     return (
       (id ? this.api?.groups.find((group) => group.id === id) : undefined) ??
@@ -166,6 +164,7 @@ export class ReaderDockWorkspace {
     ) {
       return;
     }
+    const returnTo = this.sides.returnTarget(panels, this.focusedPanel);
     for (const panel of panels) {
       const tab = panelTab(panel);
       if (tab) {
@@ -175,6 +174,7 @@ export class ReaderDockWorkspace {
       }
       this.api?.removePanel(panel);
     }
+    returnTo?.api.setActive();
     this.schedule();
   }
   reopen(): void {
@@ -192,9 +192,8 @@ export class ReaderDockWorkspace {
   }
   merge = (groupId: string): void => mergeDockGroup(this.api, groupId);
   focusNext = (): void => focusNextDockGroup(this.api);
-  switchRelative(direction: -1 | 1): void {
+  switchRelative = (direction: -1 | 1): void =>
     switchDockTab(this.api?.activeGroup ?? this.group(), direction);
-  }
   navigate(direction: -1 | 1): void {
     this.navigation.navigate(direction, (location) => {
       if (location.kind === "source") {
