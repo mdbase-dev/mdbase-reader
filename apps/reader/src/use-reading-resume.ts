@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 
 import { readerErrorMessage } from "./errors.js";
+import { restoredSessionLocation } from "./session-reading-locations.js";
 
 import type { FileId, ReadingPosition, Source, SourceId } from "@mdbase-reader/core";
 import type { ReaderLocator, ReadingSurface } from "@mdbase-reader/reading-surface";
@@ -20,39 +21,61 @@ export function useReadingResume(input: {
   ) => Promise<void>;
 }): ReadingResumeState {
   const [state, setState] = useState<ReadingResumeState>({ status: "idle" });
-  const resumed = useRef<string | null>(null);
+  const resumed = useRef<ReadingSurface | null>(null);
   const saveRef = useRef(input.save);
   const queue = useRef(Promise.resolve());
   const { source, surface } = input;
-  const sourceId = source?.id;
+  const sourceId =
+    source &&
+    surface &&
+    source.documents.some(
+      (document) =>
+        document.fileId === surface.document.document.fileId &&
+        document.revision === surface.document.document.revision,
+    )
+      ? source.id
+      : undefined;
 
   useEffect(() => {
     saveRef.current = input.save;
   }, [input.save]);
 
   useEffect(() => {
-    if (!source || !surface) {
+    if (!source || !surface || !sourceId) {
       return;
     }
-    const key = `${source.id}:${surface.document.document.fileId}:${surface.document.document.revision}`;
-    if (resumed.current === key) {
+    if (resumed.current === surface) {
       return;
     }
-    resumed.current = key;
+    resumed.current = surface;
+    const local = restoredSessionLocation(surface);
+    if (local) {
+      void surface
+        .goTo(local)
+        .catch(() =>
+          setState({ status: "error", message: "Could not restore this tab’s reading position." }),
+        );
+      return;
+    }
     const reading = source.reading;
     if (
       reading?.position &&
       reading.documentFileId === surface.document.document.fileId &&
       reading.position.kind === surface.kind
     ) {
-      void surface.goTo(reading.position);
+      void surface
+        .goTo(reading.position)
+        .catch(() =>
+          setState({ status: "error", message: "Could not restore the saved reading position." }),
+        );
     }
-  }, [source, surface]);
+  }, [source, sourceId, surface]);
 
   useEffect(() => {
     if (!sourceId || !surface) {
       return;
     }
+    const saveForSource = saveRef.current;
     let timer: ReturnType<typeof setTimeout> | undefined;
     let latest: ReaderLocator | null = null;
     const persist = (locator: ReaderLocator, report = true): void => {
@@ -60,7 +83,7 @@ export function useReadingResume(input: {
         setState({ status: "saving" });
       }
       queue.current = queue.current
-        .then(() => saveRef.current(sourceId, surface.document.document.fileId, locator))
+        .then(() => saveForSource(sourceId, surface.document.document.fileId, locator))
         .then(() => (report ? setState({ status: "saved" }) : undefined))
         .catch((reason: unknown) => {
           if (report) {
@@ -71,6 +94,12 @@ export function useReadingResume(input: {
           }
         });
     };
+    // Opening at the top is still reading: record it even if no scroll event fires.
+    const initialLocation = restoredSessionLocation(surface) ?? surface.currentLocation();
+    if (initialLocation) {
+      latest = initialLocation;
+      timer = setTimeout(() => persist(initialLocation), 1_200);
+    }
     const unsubscribe = surface.locations.subscribe((locator) => {
       latest = locator;
       clearTimeout(timer);

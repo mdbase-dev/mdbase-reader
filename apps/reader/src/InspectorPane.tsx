@@ -1,15 +1,14 @@
-import { lazy, Suspense, useMemo, useState, type JSX } from "react";
+import { useCallback, type JSX } from "react";
 
-import { annotationWikiCandidate, annotationWikiPath } from "./annotation-wiki-candidates.js";
-import { AnnotationComposer } from "./AnnotationComposer.js";
 import { AnnotationList } from "./AnnotationList.js";
 import { CitationEditor } from "./CitationEditor.js";
 import { CitationIcon, CloseIcon, HighlightIcon, NoteIcon, PanelIcon } from "./icons.js";
+import { SourceNoteEditor } from "./SourceNoteEditor.js";
 
 import type { AnnotationComposerController } from "./use-annotation-composer.js";
 import type { ReaderSourceWorkspaceController } from "./use-reader-workspace.js";
-import type { SourceSummary } from "@mdbase-reader/core";
-import type { TextInsertionRequest } from "@mdbase-reader/markdown-editor";
+import type { ReaderWorkspaceGateway } from "./workspace-model.js";
+import type { SourceId, SourceSummary } from "@mdbase-reader/core";
 
 export type InspectorTab = "note" | "annotations" | "citation";
 
@@ -20,15 +19,17 @@ export interface InspectorPaneProps {
   readonly paneLabel: string;
   readonly workspace: ReaderSourceWorkspaceController;
   readonly composer: AnnotationComposerController;
+  readonly gateway: ReaderWorkspaceGateway;
+  readonly workbenchOwner?: {
+    readonly tab: InspectorTab;
+    readonly paneLabel: string;
+    readonly onOpen: () => void;
+  } | null;
   readonly onClose: () => void;
   readonly onTabChange: (tab: InspectorTab) => void;
   readonly onPromote: (tab: InspectorTab) => void;
+  readonly onOpenSourceView?: (sourceId: SourceId, view: "document" | "citation") => void;
 }
-
-const MarkdownEditor = lazy(async () => {
-  const module = await import("@mdbase-reader/markdown-editor");
-  return { default: module.MarkdownEditor };
-});
 
 export function InspectorPane({
   open,
@@ -37,19 +38,24 @@ export function InspectorPane({
   paneLabel,
   workspace,
   composer,
+  gateway,
+  workbenchOwner,
   onClose,
   onTabChange,
   onPromote,
+  onOpenSourceView,
 }: InspectorPaneProps): JSX.Element {
   return (
     <aside
       id="reader-source-tools"
       className={open ? "inspector-pane" : "inspector-pane is-mobile-closed"}
       aria-label="Source workspace"
+      aria-hidden={!open}
+      inert={!open}
     >
       <header className="inspector-context">
         <div>
-          <span>Follows {paneLabel}</span>
+          <span className="sr-only">{paneLabel}</span>
           <strong title={source?.title}>{source?.title ?? "No source in this pane"}</strong>
         </div>
         <button
@@ -61,7 +67,6 @@ export function InspectorPane({
           onClick={() => onPromote(tab)}
         >
           <PanelIcon />
-          <span>Keep open</span>
         </button>
         <button
           className="inspector-close icon-button"
@@ -72,43 +77,32 @@ export function InspectorPane({
           <CloseIcon />
         </button>
       </header>
-      <div className="inspector-tabs" role="tablist">
-        <button
-          type="button"
-          role="tab"
-          disabled={!source}
-          aria-selected={tab === "annotations"}
-          onClick={() => onTabChange("annotations")}
-        >
-          <HighlightIcon />
-          Annotations{" "}
-          <span>
-            {workspace.annotations.status === "ready" ? workspace.annotations.value.length : "—"}
-          </span>
-        </button>
-        <button
-          type="button"
-          role="tab"
-          disabled={!source}
-          aria-selected={tab === "note"}
-          onClick={() => onTabChange("note")}
-        >
-          <NoteIcon />
-          Source note
-        </button>
-        <button
-          type="button"
-          role="tab"
-          disabled={!source}
-          aria-selected={tab === "citation"}
-          onClick={() => onTabChange("citation")}
-        >
-          <CitationIcon />
-          Citation
-        </button>
-      </div>
-      {source ? (
-        <InspectorContent tab={tab} workspace={workspace} composer={composer} />
+      <InspectorTabs
+        tab={tab}
+        enabled={source !== null}
+        annotationCount={
+          workspace.annotations.status === "ready" ? workspace.annotations.value.length : null
+        }
+        onChange={onTabChange}
+      />
+      {source && workbenchOwner?.tab === tab ? (
+        <div className="inspector-status inspector-workbench-owner">
+          <strong>
+            {tabLabel(tab)} is open in {workbenchOwner.paneLabel}
+          </strong>
+          <span>Reader keeps one writable editor for each source record.</span>
+          <button type="button" onClick={workbenchOwner.onOpen}>
+            Go to workbench
+          </button>
+        </div>
+      ) : source ? (
+        <InspectorContent
+          tab={tab}
+          workspace={workspace}
+          composer={composer}
+          gateway={gateway}
+          {...(onOpenSourceView ? { onOpenSourceView } : {})}
+        />
       ) : (
         <div className="inspector-status inspector-context-empty">
           <strong>Source tools follow the active pane</strong>
@@ -119,14 +113,71 @@ export function InspectorPane({
   );
 }
 
+function InspectorTabs({
+  tab,
+  enabled,
+  annotationCount,
+  onChange,
+}: {
+  readonly tab: InspectorTab;
+  readonly enabled: boolean;
+  readonly annotationCount: number | null;
+  readonly onChange: (tab: InspectorTab) => void;
+}): JSX.Element {
+  return (
+    <div className="inspector-tabs" role="tablist">
+      <button
+        type="button"
+        role="tab"
+        disabled={!enabled}
+        aria-selected={tab === "annotations"}
+        onClick={() => onChange("annotations")}
+      >
+        <HighlightIcon /> Annotations <span>{annotationCount ?? "—"}</span>
+      </button>
+      <button
+        type="button"
+        role="tab"
+        disabled={!enabled}
+        aria-selected={tab === "note"}
+        onClick={() => onChange("note")}
+      >
+        <NoteIcon /> Source note
+      </button>
+      <button
+        type="button"
+        role="tab"
+        disabled={!enabled}
+        aria-selected={tab === "citation"}
+        onClick={() => onChange("citation")}
+      >
+        <CitationIcon /> Citation
+      </button>
+    </div>
+  );
+}
+
+function tabLabel(tab: InspectorTab): string {
+  return tab === "note" ? "Source note" : tab === "citation" ? "Citation" : "Annotations";
+}
+
 export function InspectorContent({
   tab,
   workspace,
   composer,
-}: Pick<InspectorPaneProps, "tab" | "workspace" | "composer">): JSX.Element {
+  gateway,
+  onOpenSourceView,
+}: Pick<
+  InspectorPaneProps,
+  "tab" | "workspace" | "composer" | "gateway" | "onOpenSourceView"
+>): JSX.Element {
+  const readFile = useCallback(
+    (path: string, options?: Parameters<ReaderWorkspaceGateway["readFile"]>[2]) =>
+      gateway.readFile(path, undefined, options),
+    [gateway],
+  );
   return tab === "annotations" ? (
     <div className="annotation-workspace">
-      <AnnotationComposer composer={composer} />
       <AnnotationList
         annotations={workspace.annotations}
         transclusion={workspace.transclusion}
@@ -134,126 +185,22 @@ export function InspectorContent({
         onPlanDelete={workspace.planAnnotationDeletion}
         onDelete={workspace.deleteAnnotation}
         onOpen={composer.open}
+        editingId={composer.editingAnnotationId}
+        onEdit={composer.edit}
+        onCancelEdit={composer.stopEditing}
+        readFile={readFile}
       />
     </div>
   ) : tab === "note" ? (
     <div className="note-editor">
-      <SourceNoteEditor workspace={workspace} composer={composer} />
+      <SourceNoteEditor
+        workspace={workspace}
+        composer={composer}
+        gateway={gateway}
+        {...(onOpenSourceView ? { onOpenSourceView } : {})}
+      />
     </div>
   ) : (
     <CitationEditor workspace={workspace} />
-  );
-}
-
-function SourceNoteEditor({
-  workspace,
-  composer,
-}: {
-  readonly workspace: ReaderSourceWorkspaceController;
-  readonly composer: AnnotationComposerController;
-}): JSX.Element {
-  const [insertion, setInsertion] = useState<TextInsertionRequest | null>(null);
-  const annotationCandidates = useMemo(
-    () =>
-      workspace.annotations.status === "ready"
-        ? workspace.annotations.value.map(annotationWikiCandidate)
-        : [],
-    [workspace.annotations],
-  );
-  const insert = (text: string, wordBounded = false): void => {
-    setInsertion((current) => ({ requestId: (current?.requestId ?? 0) + 1, text, wordBounded }));
-  };
-  const sourceRecord = workspace.sourceRecord;
-  if (sourceRecord.status !== "ready") {
-    return sourceRecord.status === "error" ? (
-      <div className="inspector-status is-error" role="alert">
-        {sourceRecord.message}
-      </div>
-    ) : (
-      <div className="editor-loading">Opening source note…</div>
-    );
-  }
-  if (!workspace.draftReady) {
-    return <div className="editor-loading">Opening source note…</div>;
-  }
-  const citekey = sourceRecord.value.citation?.id;
-  return (
-    <>
-      <div className="source-note-toolbar">
-        <span>Source note</span>
-        <div>
-          <details className="annotation-insert-menu">
-            <summary aria-disabled={annotationCandidates.length === 0}>Insert annotation</summary>
-            <div>
-              <strong>Annotations on this source</strong>
-              {annotationCandidates.map((candidate) => (
-                <button
-                  key={candidate.path}
-                  type="button"
-                  disabled={workspace.draft.includes(`![[${candidate.path}]]`)}
-                  title={
-                    workspace.draft.includes(`![[${candidate.path}]]`)
-                      ? "Already embedded in this note"
-                      : "Insert at the cursor"
-                  }
-                  onClick={() => insert(`![[${candidate.path}]]`)}
-                >
-                  <span>
-                    {workspace.draft.includes(`![[${candidate.path}]]`)
-                      ? "In note"
-                      : candidate.kind}{" "}
-                    · {candidate.detail}
-                  </span>
-                  <strong>{candidate.label}</strong>
-                  {candidate.quote ? <small>{candidate.quote}</small> : null}
-                </button>
-              ))}
-            </div>
-          </details>
-          <button
-            type="button"
-            disabled={!citekey}
-            title={citekey ? `Insert [@${citekey}] at the cursor` : "Add citation metadata first"}
-            onPointerDown={(event) => event.preventDefault()}
-            onClick={() => citekey && insert(`[@${citekey}]`, true)}
-          >
-            <CitationIcon />
-            {citekey ? `Insert [@${citekey}]` : "Citation required"}
-          </button>
-        </div>
-      </div>
-      <Suspense fallback={<div className="editor-loading">Opening source note…</div>}>
-        <MarkdownEditor
-          className="source-note-editor-surface"
-          value={workspace.draft}
-          ariaLabel="Source literature note"
-          onChange={workspace.setDraft}
-          onBlur={workspace.saveDraft}
-          insertion={insertion}
-          wikiLinks={annotationCandidates}
-          onOpenWikiLink={(path) => {
-            if (workspace.annotations.status !== "ready") {
-              return;
-            }
-            const annotation = workspace.annotations.value.find(
-              (item) => annotationWikiPath(item) === path,
-            );
-            if (annotation) {
-              composer.open(annotation);
-            }
-          }}
-        />
-      </Suspense>
-      {workspace.saveStatus === "saving" ? (
-        <span className="editor-save-status" role="status">
-          Saving…
-        </span>
-      ) : null}
-      {workspace.saveError ? (
-        <span className="editor-save-status is-error" role="alert">
-          {workspace.saveError}
-        </span>
-      ) : null}
-    </>
   );
 }

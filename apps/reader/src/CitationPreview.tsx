@@ -20,9 +20,9 @@ export function CitationPreview({ citation }: { readonly citation: CslItem }): J
     };
   }, [citation, locale, style]);
   return (
-    <section className="citation-proof" aria-label="Formatted citation preview">
-      <div className="citation-proof-controls">
-        <span>Live proof</span>
+    <section className="citation-proof" aria-label="Citation preview">
+      <header className="citation-proof-controls">
+        <strong>Preview</strong>
         <label>
           <span>Style</span>
           <select value={style} onChange={(event) => setStyle(event.target.value)}>
@@ -42,7 +42,7 @@ export function CitationPreview({ citation }: { readonly citation: CslItem }): J
             <option value="fr-FR">Français</option>
           </select>
         </label>
-      </div>
+      </header>
       <blockquote>{preview}</blockquote>
     </section>
   );

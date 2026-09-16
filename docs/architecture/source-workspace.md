@@ -1,79 +1,99 @@
-# Source workspace: cross-format tabs and pane-ready sessions
+# Unified Dockview workspace
 
-Status: accepted and implemented for the unified Reader workspace
+Status: implemented; supersedes the hand-built two-pane workspace.
 
-## Decision
+## One layout engine
 
-Reader owns tabs and panes. PDF, EPUB, and HTML renderers do not own application
-navigation, even when a renderer offers its own document tabs.
+Reader uses **dockview-react 8.3.1** for the entire workspace: document/library/tool
+sessions, the library navigator, and the contextual Source tools panel. There is
+one Dockview instance, not a dock nested inside independently resized sidebars.
 
-The workspace layout is a renderer-neutral value containing:
+Dockview owns groups, tab order, active panels, split geometry, resizing, drop
+hit-testing, overflow, and the serialized layout. Reader owns source identity,
+drafts, dirty-close policy, reading history, renderer residency, and source context.
 
-- ordered panes and one focused pane;
-- ordered collection-view or source-view tabs in each pane;
-- one active tab per pane.
+`ReaderDockWorkspace` translates application commands into Dockview API calls.
+`useSourceWorkspace` subscribes with `useSyncExternalStore`. Its `layout` is a
+**read-only projection** for existing source commands, never a second layout tree
+to synchronize back into Dockview. Group IDs are opaque strings; groups are not
+limited to `primary` and `secondary`.
 
-Tabs may represent an mdbase library view, document, source note, annotation
-workspace, or citation record. Two panes may be split right or below, and tabs
-can be dragged between them without changing document identity, selection,
-annotations, or renderer contracts.
+The old tab strips, HTML drag transport, split drop targets, resize handles, and
+adaptive split-direction hook have been removed, along with the old pane/tab
+mutation engine. Only the legacy v2 data schema and persistence parser remain for
+migration; migration tests construct old-format fixtures directly.
 
-## Session lifecycle
+## Stable sessions, not pane-scoped renderers
 
-Opening a library source adds it to the focused pane and activates it. Switching
-tabs changes only the active source. Every open source session remains mounted
-until its tab closes; inactive sessions are visually hidden and removed from the
-accessibility tree. This preserves renderer state such as page position, EPUB
-location, search state, and parsed document data.
+Each content panel has a unique `reader:session:…` ID. That ID survives dragging,
+splitting, merging, reset, and persisted-layout restoration. Two copies of a
+document are distinct sessions. Reopening a closed session reuses its identity
+when available. Source-note/citation/annotation tools are reused rather than
+creating competing writable editors for the same source and view.
 
-Closing the active tab selects the source that took its place, or the previous
-source when closing the final tab in the order. Closing the only tab leaves the
-pane present and empty. A pane is therefore a durable workspace region, not a
-side effect of whichever renderer happens to be mounted.
+Panels use Dockview's `always` renderer: relocating their groups does not reparent
+and reload an embedded HTML/EPUB iframe. Reader still owns hydration: unopened
+documents remain dormant, visited documents have a four-renderer budget (visible
+reading panes are protected), and open editors retain their state. Reading
+locations are cached by session ID plus immutable file/revision identity.
 
-## Contextual tools and stable tool sessions
+`useDockPanelFocus` listens to input in same-origin reading frames, including
+nested frames. Iframe events do not bubble into Dockview. Without this bridge,
+clicking the document in a second pane can leave the inspector and annotation
+commands attached to the first source. This observer neither injects scripts nor
+relaxes document sandboxing, and disposes listeners when frames/panels disappear.
 
-The right source-tools sidebar follows the focused pane. It uses the selected
-source controller for that pane and changes context when pane focus changes.
-Library tabs have no source context, so the sidebar presents a directional empty
-state rather than silently retaining an unrelated source.
+Renderer contracts, exact-revision file caching, and annotation features remain
+independent of the docking engine.
 
-Promoting annotations, a source note, or CSL metadata into the workbench creates
-a source-bound workspace tab. That tab owns an independent source-tools session:
-after its first activation it stays mounted, retains editor state, and continues
-to render when its pane is visible but not focused. Pane focus therefore changes
-the contextual sidebar without replacing or suspending stable workbench tools.
+## Source tools and close policy
 
-## File caching
+The contextual inspector follows the last focused content session. Focusing or
+moving the navigator/inspector does not replace the source context. Source-bound
+workbench tools continue to own independent editing sessions; the inspector
+recognizes an existing writable tool rather than offering a competing editor.
 
-The Connect document adapter keys cached object URLs by immutable file ID and
-content digest. Closed handles remain in a bounded least-recently-used cache,
-while open handles are leased and cannot be evicted. Reopening an unchanged
-source therefore avoids another file download. A changed digest always produces
-a distinct cache entry and retains the exact-revision safety check.
+Every exposed close action goes through Reader's guard: tab close buttons,
+context menus, pane menus, and command-palette actions. A cancelled dirty close
+leaves the complete operation untouched. Pinned tabs are protected from preview
+replacement and “close other unpinned tabs.” Reset arrangement moves existing
+panels without closing them, reloading renderers, or replacing drafts.
 
-This cache is renderer-independent and benefits PDF, EPUB, and HTML. Renderer
-instances provide a second, session-level warm layer while their tabs remain
-open.
+## Persistence and migration
 
-## Boundaries
+Layouts are stored per collection under `mdbase-reader:dockview:v1:<collection>`.
+They contain Dockview geometry, validated panel descriptors, and Reader navigation
+metadata (recent sources, history, and recently closed sessions), not editor text,
+dirty flags, authentication data, or downloaded document bytes. Local drafts keep
+their existing independent durable store.
 
-- `source-workspace-layout.ts` is pure application state and imports only core
-  domain identities.
-- React coordination belongs in `use-source-workspace.ts`.
-- `ConnectedDocument.tsx` is the sole application integration point for
-  renderer packages.
-- renderers expose only the shared `ReadingSurface` contract upward.
-- the Connect adapter owns discovery, exact-revision checks, bytes, and object
-  URL lifetime; it does not know about tabs or panes.
+The first run imports the old `mdbase-reader:workspace:v2:<collection>` layout,
+including the selected tabs in both panes. The old entry is left intact for
+rollback. Invalid state falls back to the legacy/default workspace, retaining one
+`:recovery` copy when storage permits. Missing-source panels are removed before
+publishing a restored layout. Storage failures never prevent opening Reader.
 
-ESLint enforces the renderer boundary and prevents framework or adapter imports
-from entering the pure workspace layout model.
+## Interaction and mobile
 
-## Pane behavior
+- Pointer-based docking works across tab strips and document content. Dockview
+  shields embedded frames during dragging; Reader does not maintain custom drop zones.
+- Both side panels can dock on any edge or join a tab group.
+- Right-click a tab or use the native, keyboard-accessible pane-action popover to
+  move/split/merge/maximize. F6 cycles groups, including side panels. Existing
+  Reader tab/history shortcuts remain available.
+- Reset arrangement is also in the command palette.
+- On narrow screens, Dockview maximizes the active group instead of squeezing
+  desktop columns or maintaining a second mobile tree. Selecting another group
+  changes the maximized group. Returning to desktop restores the arrangement.
+- Floating windows and popouts are deliberately not enabled.
+- This integration uses the MIT core. It does not enable paid enterprise modules
+  such as Dockview's advanced keyboard docking or layout undo/history.
 
-The split-pane UI renders each `SourceWorkspacePane` as a document-session deck.
-Pane focus determines which surface drives the inspector and global commands.
-Opening a source may target the focused pane or a chosen pane. Dragging a tab is
-an ordered source-ID move between panes. No PDF-specific tab migration is
-required, and mixed PDF/EPUB/HTML panes remain coherent.
+## Verification
+
+`pnpm --filter @mdbase-reader/app test:browser` runs the isolated, loopback-only
+fixture audit. `scripts/audit-dockview.mjs` exercises real pointer gestures,
+iframe identity/position, source context, dirty close cancellation, both side
+panels, reload, and non-destructive reset. It is not an authenticated production
+Connect acceptance test. Unit tests cover descriptor validation, group projection,
+identity, preview replacement, tool reuse, and renderer residency.

@@ -156,6 +156,9 @@ export function connectedReaderCollection(
 }
 
 function readerDirectAccessController(connection: MdbaseConnection): ReaderDirectAccessController {
+  // Direct loopback probes should complete quickly and should not inherit the
+  // longer watch-start budget used while opening very large collections.
+  const probeTimeoutMs = 10_000;
   let snapshot = directAccessSnapshot(connection.info());
   return {
     getSnapshot: () => snapshot,
@@ -168,8 +171,8 @@ function readerDirectAccessController(connection: MdbaseConnection): ReaderDirec
         snapshot = next;
         listener();
       }),
-    check: () => connection.checkDirectAccess(),
-    request: () => connection.requestDirectAccess(),
+    check: () => connection.checkDirectAccess({ timeoutMs: probeTimeoutMs }),
+    request: () => connection.requestDirectAccess({ timeoutMs: probeTimeoutMs }),
   };
 }
 

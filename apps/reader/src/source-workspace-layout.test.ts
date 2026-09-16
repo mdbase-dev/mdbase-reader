@@ -1,248 +1,41 @@
 import { sourceId } from "@mdbase-reader/core";
-import { describe, expect, it } from "vitest";
+import { expect, it } from "vitest";
 
-import { navigateWorkspaceHistory } from "./source-workspace-history.js";
 import {
   activeTab,
+  createLibraryWorkspaceTab,
+  createPane,
   createSourceWorkspaceLayout,
+  createWorkspaceTab,
   focusedPane,
-  paneById,
-  workspaceTabId,
+  sourceIdsInWorkspace,
+  workspaceTabSourceId,
 } from "./source-workspace-layout.js";
-import {
-  closeSecondaryPane,
-  discardWorkspacePane,
-  focusPane,
-  focusNextWorkspacePane,
-  mergeWorkspacePane,
-  moveAllWorkspaceTabsToOtherPane,
-  moveWorkspaceTabToPane,
-  openBeside,
-  resizeWorkspaceSplit,
-  splitWorkspaceTab,
-  swapWorkspacePanes,
-} from "./source-workspace-panes.js";
-import {
-  closeOtherWorkspaceTabs,
-  closeSource,
-  closeWorkspaceTabsToRight,
-  reopenClosedWorkspaceTab,
-} from "./source-workspace-tab-closing.js";
-import {
-  activateSource,
-  matchingWorkspaceTabs,
-  openSource,
-  openWorkspaceTab,
-  previewSource,
-  promoteWorkspaceTab,
-  reorderWorkspaceTab,
-  setWorkspaceTabDirty,
-  setWorkspaceTabPinned,
-} from "./source-workspace-tabs.js";
 
-const first = sourceId("first");
-const second = sourceId("second");
-const third = sourceId("third");
-const fourth = sourceId("fourth");
-
-describe("source workspace tabs", () => {
-  it("reuses one preview tab while browsing", () => {
-    const initial = createSourceWorkspaceLayout(null);
-    const firstPreview = previewSource(initial, first);
-    const secondPreview = previewSource(firstPreview, second);
-
-    expect(focusedPane(secondPreview).tabs).toEqual([
-      expect.objectContaining({ sourceId: second, preview: true }),
-    ]);
-    expect(activeTab(focusedPane(secondPreview))?.sourceId).toBe(second);
-  });
-
-  it("promotes previews through interaction, pinning, or edits", () => {
-    const preview = previewSource(createSourceWorkspaceLayout(null), first);
-    const id = workspaceTabId(first, "document");
-
-    expect(activeTab(focusedPane(promoteWorkspaceTab(preview, id)))?.preview).toBe(false);
-    expect(activeTab(focusedPane(setWorkspaceTabPinned(preview, id, true)))).toMatchObject({
-      pinned: true,
-      preview: false,
-    });
-    expect(activeTab(focusedPane(setWorkspaceTabDirty(preview, id, true)))).toMatchObject({
-      dirty: true,
-      preview: false,
-    });
-  });
-
-  it("keeps promoted tabs when the next source is previewed", () => {
-    const firstPreview = previewSource(createSourceWorkspaceLayout(null), first);
-    const promoted = promoteWorkspaceTab(firstPreview, workspaceTabId(first, "document"));
-    const next = previewSource(promoted, second);
-
-    expect(focusedPane(next).tabs.map(({ sourceId }) => sourceId)).toEqual([first, second]);
-  });
-
-  it("promotes the current preview when opened explicitly", () => {
-    const preview = previewSource(createSourceWorkspaceLayout(null), first);
-    const opened = openSource(preview, first);
-    const nextPreview = previewSource(opened, second);
-
-    expect(
-      focusedPane(nextPreview).tabs.map(({ sourceId, preview: isPreview }) => ({
-        sourceId,
-        preview: isPreview,
-      })),
-    ).toEqual([
-      { sourceId: first, preview: false },
-      { sourceId: second, preview: true },
-    ]);
-  });
-
-  it("closes neighbouring tabs and reopens the most recently closed tab", () => {
-    const opened = openSource(openSource(createSourceWorkspaceLayout(first), second), third);
-    const closed = closeSource(opened, third);
-
-    expect(activeTab(focusedPane(closed))?.sourceId).toBe(second);
-    expect(activeTab(focusedPane(reopenClosedWorkspaceTab(closed)))?.sourceId).toBe(third);
-  });
-
-  it("pins tabs across close-others and close-to-right actions", () => {
-    const opened = openSource(
-      openSource(openSource(createSourceWorkspaceLayout(first), second), third),
-      fourth,
-    );
-    const pinned = setWorkspaceTabPinned(opened, workspaceTabId(third, "document"), true);
-    const rightClosed = closeWorkspaceTabsToRight(pinned, workspaceTabId(second, "document"));
-    const othersClosed = closeOtherWorkspaceTabs(pinned, workspaceTabId(second, "document"));
-
-    expect(focusedPane(rightClosed).tabs.map(({ sourceId }) => sourceId)).toEqual([
-      first,
-      second,
-      third,
-    ]);
-    expect(focusedPane(othersClosed).tabs.map(({ sourceId }) => sourceId)).toEqual([second, third]);
-  });
-
-  it("reorders tabs and filters the searchable switcher", () => {
-    const opened = openSource(openSource(createSourceWorkspaceLayout(first), second), third);
-    const reordered = reorderWorkspaceTab(opened, "primary", 2, 0);
-    const matches = matchingWorkspaceTabs(reordered, "sec", (id) => `${id} title`);
-
-    expect(focusedPane(reordered).tabs.map(({ sourceId }) => sourceId)).toEqual([
-      third,
-      first,
-      second,
-    ]);
-    expect(matches.map(({ sourceId }) => sourceId)).toEqual([second]);
-  });
-
-  it("moves back and forward through source history", () => {
-    const opened = openSource(openSource(createSourceWorkspaceLayout(first), second), third);
-    const back = navigateWorkspaceHistory(opened, -1);
-    const furtherBack = navigateWorkspaceHistory(back, -1);
-    const forward = navigateWorkspaceHistory(furtherBack, 1);
-
-    expect(activeTab(focusedPane(back))?.sourceId).toBe(second);
-    expect(activeTab(focusedPane(furtherBack))?.sourceId).toBe(first);
-    expect(activeTab(focusedPane(forward))?.sourceId).toBe(second);
-  });
+it("keeps source identity distinct from a Dockview session and group identity", () => {
+  const source = sourceId("source-one");
+  const tab = { ...createWorkspaceTab(source), id: "reader:session:one" };
+  const pane = createPane("arbitrary-dockview-group", tab);
+  const layout = { ...createSourceWorkspaceLayout(null), panes: [pane], focusedPaneId: pane.id };
+  expect(focusedPane(layout)).toBe(pane);
+  expect(activeTab(pane)).toBe(tab);
+  expect(workspaceTabSourceId(tab)).toBe(source);
 });
-
-describe("source workspace panes", () => {
-  it("opens document and source tools beside one another", () => {
-    const split = openBeside(createSourceWorkspaceLayout(first), first, "note", "horizontal");
-
-    expect(split.splitDirection).toBe("horizontal");
-    expect(paneById(split, "primary")?.tabs[0]).toMatchObject({
-      sourceId: first,
-      view: "document",
-    });
-    expect(paneById(split, "secondary")?.tabs[0]).toMatchObject({
-      sourceId: first,
-      view: "note",
-    });
-  });
-
-  it("joins an existing split and keeps pane-local active tabs", () => {
-    const split = openBeside(createSourceWorkspaceLayout(first), second, "document", "vertical");
-    const joined = openBeside(focusPane(split, "primary"), third, "citation", "vertical");
-
-    expect(joined.panes).toHaveLength(2);
-    expect(activeTab(paneById(joined, "primary") ?? focusedPane(joined))?.sourceId).toBe(first);
-    expect(activeTab(paneById(joined, "secondary") ?? focusedPane(joined))).toMatchObject({
-      sourceId: third,
-      view: "citation",
-    });
-  });
-
-  it("moves a tab between panes and can create a split by dragging", () => {
-    const opened = openSource(createSourceWorkspaceLayout(first), second);
-    const split = splitWorkspaceTab(
-      opened,
-      workspaceTabId(second, "document"),
-      "primary",
-      "horizontal",
-    );
-    const movedBack = moveWorkspaceTabToPane(
-      split,
-      workspaceTabId(second, "document"),
-      "secondary",
-      "primary",
-    );
-
-    expect(paneById(split, "primary")?.tabs.map(({ sourceId }) => sourceId)).toEqual([first]);
-    expect(paneById(split, "secondary")?.tabs.map(({ sourceId }) => sourceId)).toEqual([second]);
-    expect(paneById(movedBack, "primary")?.tabs.map(({ sourceId }) => sourceId)).toEqual([
-      first,
-      second,
-    ]);
-  });
-
-  it("clamps split resizing and merges secondary tabs without losing them", () => {
-    const split = openBeside(createSourceWorkspaceLayout(first), second);
-    const resized = resizeWorkspaceSplit(split, 0.95);
-    const merged = closeSecondaryPane(resized);
-
-    expect(resized.splitRatio).toBe(0.72);
-    expect(merged.splitDirection).toBeNull();
-    expect(merged.panes).toHaveLength(1);
-    expect(focusedPane(merged).tabs.map(({ sourceId }) => sourceId)).toEqual([first, second]);
-  });
-
-  it("can close either pane while preserving its tabs and active context", () => {
-    const split = openBeside(openSource(createSourceWorkspaceLayout(first), second), third);
-    const mergedPrimary = mergeWorkspacePane(focusPane(split, "primary"), "primary");
-
-    expect(mergedPrimary.panes).toHaveLength(1);
-    expect(focusedPane(mergedPrimary).tabs.map(({ sourceId }) => sourceId)).toEqual([
-      third,
-      first,
-      second,
-    ]);
-    expect(activeTab(focusedPane(mergedPrimary))?.sourceId).toBe(second);
-  });
-
-  it("can discard a pane, move all tabs, swap contents, and focus the next pane", () => {
-    const split = openBeside(openSource(createSourceWorkspaceLayout(first), second), third);
-    const moved = moveAllWorkspaceTabsToOtherPane(split, "primary");
-    const swapped = swapWorkspacePanes(split);
-    const discarded = discardWorkspacePane(split, "secondary");
-
-    expect(paneById(moved, "primary")?.tabs).toHaveLength(0);
-    expect(paneById(moved, "secondary")?.tabs.map(({ sourceId }) => sourceId)).toEqual([
-      third,
-      first,
-      second,
-    ]);
-    expect(paneById(swapped, "primary")?.tabs.map(({ sourceId }) => sourceId)).toEqual([third]);
-    expect(focusNextWorkspacePane(split).focusedPaneId).toBe("primary");
-    expect(discarded.panes).toHaveLength(1);
-    expect(focusedPane(discarded).tabs.map(({ sourceId }) => sourceId)).toEqual([first, second]);
-  });
-
-  it("opens multiple views of a source as distinct tabs", () => {
-    const document = createSourceWorkspaceLayout(first);
-    const withNote = openWorkspaceTab(document, first, { view: "note" });
-
-    expect(focusedPane(withNote).tabs.map(({ view }) => view)).toEqual(["document", "note"]);
-    expect(activeTab(focusedPane(activateSource(withNote, first)))?.view).toBe("document");
-  });
+it("lists each source once even when multiple independent sessions are open", () => {
+  const source = sourceId("source-one");
+  const layout = {
+    ...createSourceWorkspaceLayout(null),
+    panes: [
+      createPane("left", { ...createWorkspaceTab(source), id: "reader:session:one" }),
+      createPane("right", { ...createWorkspaceTab(source, "note"), id: "reader:session:two" }),
+      createPane("library", createLibraryWorkspaceTab()),
+    ],
+  };
+  expect(sourceIdsInWorkspace(layout)).toEqual([source]);
+  expect(workspaceTabSourceId(createLibraryWorkspaceTab())).toBeNull();
+});
+it("provides a safe empty projection while Dockview initializes or all panels close", () => {
+  const layout = createSourceWorkspaceLayout(null);
+  expect(activeTab(focusedPane(layout))).toBeNull();
+  expect(sourceIdsInWorkspace(layout)).toEqual([]);
 });

@@ -1,8 +1,11 @@
-import { useState, type JSX } from "react";
+import { useEffect, useRef, type JSX, type RefObject } from "react";
 
+import { annotationBodyContent } from "./annotation-body-content.js";
 import { AnnotationBodyEditor } from "./AnnotationEditor.js";
-import { MoreIcon } from "./icons.js";
+import { AnnotationImage } from "./AnnotationImage.js";
+import { FocusIcon } from "./icons.js";
 
+import type { AnnotationFileReader } from "./AnnotationImage.js";
 import type { AnnotationTransclusionController } from "./use-annotation-transclusion.js";
 import type { AsyncResource } from "./use-reader-workspace.js";
 import type { Annotation, AnnotationDeletionPlan, AnnotationId } from "@mdbase-reader/core";
@@ -14,6 +17,10 @@ export function AnnotationList({
   onPlanDelete,
   onDelete,
   onOpen,
+  editingId,
+  onEdit,
+  onCancelEdit,
+  readFile,
 }: {
   readonly annotations: AsyncResource<readonly Annotation[]>;
   readonly transclusion: AnnotationTransclusionController;
@@ -21,8 +28,11 @@ export function AnnotationList({
   readonly onPlanDelete: (annotation: Annotation) => Promise<AnnotationDeletionPlan>;
   readonly onDelete: (annotation: Annotation, plan: AnnotationDeletionPlan) => Promise<void>;
   readonly onOpen: (annotation: Annotation) => void;
+  readonly editingId: AnnotationId | null;
+  readonly onEdit: (annotation: Annotation) => void;
+  readonly onCancelEdit: () => void;
+  readonly readFile: AnnotationFileReader;
 }): JSX.Element {
-  const [editingId, setEditingId] = useState<AnnotationId | null>(null);
   if (annotations.status !== "ready") {
     return annotations.status === "error" ? (
       <div className="inspector-status is-error" role="alert">
@@ -42,25 +52,25 @@ export function AnnotationList({
   }
   return (
     <div className="annotation-list">
-      <div className="annotation-list-heading">
-        <span>On this source</span>
-        <span>Newest first</span>
-      </div>
       {annotations.value.map((annotation) => (
         <AnnotationCard
           key={annotation.id}
           annotation={annotation}
           editing={editingId === annotation.id}
           transclusion={transclusion}
-          onEdit={() => setEditingId(annotation.id)}
-          onCancel={() => setEditingId(null)}
+          onEdit={() => onEdit(annotation)}
+          onCancel={onCancelEdit}
           onSave={async (body) => {
             await onUpdate(annotation, body);
-            setEditingId(null);
+            onCancelEdit();
           }}
           onPlanDelete={() => onPlanDelete(annotation)}
-          onDelete={(plan) => onDelete(annotation, plan)}
+          onDelete={async (plan) => {
+            await onDelete(annotation, plan);
+            onCancelEdit();
+          }}
           onOpen={() => onOpen(annotation)}
+          readFile={readFile}
         />
       ))}
     </div>
@@ -77,6 +87,7 @@ function AnnotationCard({
   onPlanDelete,
   onDelete,
   onOpen,
+  readFile,
 }: {
   readonly annotation: Annotation;
   readonly editing: boolean;
@@ -87,12 +98,15 @@ function AnnotationCard({
   readonly onPlanDelete: () => Promise<AnnotationDeletionPlan>;
   readonly onDelete: (plan: AnnotationDeletionPlan) => Promise<void>;
   readonly onOpen: () => void;
+  readonly readFile: AnnotationFileReader;
 }): JSX.Element {
+  const cardRef = useScrollToEditing(editing);
   return (
     // This article is a keyboard-operable card when it is not in editing mode.
     // eslint-disable-next-line jsx-a11y/no-noninteractive-element-interactions
     <article
-      className="annotation-card"
+      ref={cardRef}
+      className={`annotation-card${editing ? " is-editing" : ""}`}
       role={editing ? undefined : "button"}
       tabIndex={editing ? undefined : 0}
       onClick={() => {
@@ -122,7 +136,7 @@ function AnnotationCard({
           onDelete={onDelete}
         />
       ) : (
-        <AnnotationBody annotation={annotation} />
+        <AnnotationBody annotation={annotation} readFile={readFile} />
       )}
       {!editing ? (
         <footer>
@@ -171,7 +185,7 @@ function AnnotationCard({
                 onOpen();
               }}
             >
-              <MoreIcon />
+              <FocusIcon />
             </button>
           </div>
         </footer>
@@ -185,14 +199,31 @@ function AnnotationCard({
   );
 }
 
-function AnnotationBody({ annotation }: { readonly annotation: Annotation }): JSX.Element {
-  const note = annotation.body.replace(/^>.*$/gmu, "").trim();
+function useScrollToEditing(editing: boolean): RefObject<HTMLElement | null> {
+  const ref = useRef<HTMLElement>(null);
+  useEffect(() => {
+    if (editing) {
+      ref.current?.scrollIntoView({ block: "nearest", behavior: "smooth" });
+    }
+  }, [editing]);
+  return ref;
+}
+
+function AnnotationBody({
+  annotation,
+  readFile,
+}: {
+  readonly annotation: Annotation;
+  readonly readFile: AnnotationFileReader;
+}): JSX.Element {
+  const content = annotationBodyContent(annotation.body);
   return (
     <>
-      {annotation.target?.quote?.exact ? (
-        <blockquote>{annotation.target.quote.exact}</blockquote>
-      ) : null}
-      {note ? <p>{note}</p> : null}
+      {content.images.map((image) => (
+        <AnnotationImage key={image.path} image={image} readFile={readFile} />
+      ))}
+      {content.quote ? <blockquote>{content.quote}</blockquote> : null}
+      {content.note ? <p>{content.note}</p> : null}
     </>
   );
 }

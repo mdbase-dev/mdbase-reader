@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState, useSyncExternalStore } from "react";
+import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from "react";
 
 import { readerErrorMessage } from "./errors.js";
 
@@ -17,6 +17,45 @@ export interface ReaderDirectAccessState {
 const unavailableSnapshot = (): null => null;
 const unavailableSubscribe = (): (() => void) => () => undefined;
 
+type DirectAccessOutcome = Awaited<ReturnType<ReaderDirectAccessController["request"]>>;
+
+export function directAccessProblemMessage(outcome: DirectAccessOutcome): string | null {
+  if (!outcome.ok) {
+    return outcome.problem.message;
+  }
+  switch (outcome.value) {
+    case "available":
+      return null;
+    case "denied":
+      return "Local network access is blocked. Allow it in your browser’s site settings, then retry.";
+    case "unavailable":
+      return "Reader could not reach the local mdbase connector. The relayed connection is still active.";
+    case "permission_required":
+      return "Local network access was not granted. Allow it when your browser asks, then retry.";
+    case "disabled":
+      return "Direct local access is not available for this connection.";
+    case "checking":
+      return null;
+  }
+}
+
+export function claimDirectAccessCheck(
+  checkedControllers: WeakSet<ReaderDirectAccessController>,
+  controller: ReaderDirectAccessController | undefined,
+  snapshot: ReaderDirectAccessSnapshot | null,
+): controller is ReaderDirectAccessController {
+  if (
+    !controller ||
+    checkedControllers.has(controller) ||
+    snapshot?.authority !== "connector" ||
+    snapshot.status !== "unavailable"
+  ) {
+    return false;
+  }
+  checkedControllers.add(controller);
+  return true;
+}
+
 export function useDirectAccess(
   controller: ReaderDirectAccessController | undefined,
 ): ReaderDirectAccessState {
@@ -31,18 +70,20 @@ export function useDirectAccess(
   const snapshot = useSyncExternalStore(subscribe, getSnapshot, getSnapshot);
   const [working, setWorking] = useState(false);
   const [problem, setProblem] = useState<string | null>(null);
+  const checkedControllers = useRef(new WeakSet<ReaderDirectAccessController>());
 
   useEffect(() => {
-    if (!controller || snapshot?.authority !== "connector" || snapshot.status !== "unavailable") {
+    if (!claimDirectAccessCheck(checkedControllers.current, controller, snapshot)) {
       return;
     }
-    void controller.check();
-  }, [controller, snapshot?.authority, snapshot?.status]);
+    void controller.check().catch(() => undefined);
+  }, [controller, snapshot]);
 
   const request = useCallback((): void => {
     if (!controller) {
       return;
     }
+    checkedControllers.current.add(controller);
     setWorking(true);
     setProblem(null);
     // Keep this call synchronous with the click. Browsers only show the local-network
@@ -50,9 +91,7 @@ export function useDirectAccess(
     const requested = controller.request();
     void requested
       .then((outcome) => {
-        if (!outcome.ok) {
-          setProblem(outcome.problem.message);
-        }
+        setProblem(directAccessProblemMessage(outcome));
       })
       .catch((reason: unknown) => {
         setProblem(readerErrorMessage(reason, "Reader could not request local network access."));

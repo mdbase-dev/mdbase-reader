@@ -6,6 +6,7 @@ import {
   citationDifferences,
   cslDate,
   cslFieldLabel,
+  displayCslValue,
   emptyCslFieldValue,
   mergeCitation,
   resolutionRequest,
@@ -55,5 +56,11 @@ describe("citation form model", () => {
     expect(resolutionRequest("10.1234/example").kind).toBe("identifier");
     expect(resolutionRequest("https://example.com/paper").kind).toBe("url");
     expect(resolutionRequest("A paper title").kind).toBe("text");
+  });
+
+  it("presents structured metadata as human-readable review text", () => {
+    expect(displayCslValue([{ given: "Simone", family: "Weil" }])).toBe("Simone Weil");
+    expect(displayCslValue({ "date-parts": [[1952, 4]] })).toBe("1952-4");
+    expect(displayCslValue(undefined)).toBe("Not recorded");
   });
 });

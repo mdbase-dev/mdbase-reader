@@ -1,6 +1,6 @@
 import { htmlLocator, htmlSelectionDraft, locateHtmlTarget } from "./html-range.js";
 
-import type { Annotation } from "@mdbase-reader/core";
+import type { Annotation, AnnotationId } from "@mdbase-reader/core";
 import type { ReaderLocator, TextSelectionDraft } from "@mdbase-reader/reading-surface";
 
 type Unsubscribe = () => void;
@@ -11,9 +11,15 @@ export class HtmlDocumentRuntime {
   readonly #href: string;
   readonly #locationListeners = new Set<(locator: ReaderLocator) => void>();
   readonly #selectionListeners = new Set<(selection: TextSelectionDraft) => void>();
+  readonly #activationListeners = new Set<(annotationId: AnnotationId) => void>();
   readonly #onSelection = (): void => this.captureSelection();
+  readonly #onPointerUp = (event: PointerEvent): void => {
+    this.captureSelection();
+    this.captureAnnotationActivation(event);
+  };
   readonly #onScroll = (): void => this.emitLocation();
   #destroyed = false;
+  #annotationRanges: readonly { readonly annotation: Annotation; readonly range: Range }[] = [];
 
   public constructor(frame: HTMLIFrameElement, href: string) {
     const document = frame.contentDocument;
@@ -24,7 +30,7 @@ export class HtmlDocumentRuntime {
     this.#document = document;
     this.#view = view;
     this.#href = href;
-    document.addEventListener("pointerup", this.#onSelection);
+    document.addEventListener("pointerup", this.#onPointerUp);
     document.addEventListener("keyup", this.#onSelection);
     view.addEventListener("scroll", this.#onScroll, { passive: true });
   }
@@ -37,6 +43,11 @@ export class HtmlDocumentRuntime {
   public onSelection(listener: (selection: TextSelectionDraft) => void): Unsubscribe {
     this.#selectionListeners.add(listener);
     return () => this.#selectionListeners.delete(listener);
+  }
+
+  public onAnnotationActivated(listener: (annotationId: AnnotationId) => void): Unsubscribe {
+    this.#activationListeners.add(listener);
+    return () => this.#activationListeners.delete(listener);
   }
 
   public currentLocation(): ReaderLocator {
@@ -64,11 +75,14 @@ export class HtmlDocumentRuntime {
   }
 
   public setAnnotations(annotations: readonly Annotation[]): void {
-    const ranges = annotations.flatMap((annotation) => {
+    this.#annotationRanges = annotations.flatMap((annotation) => {
       const range = annotation.target ? locateHtmlTarget(this.#document, annotation.target) : null;
-      return range ? [range] : [];
+      return range ? [{ annotation, range }] : [];
     });
-    setCssHighlights(this.#view, ranges);
+    setCssHighlights(
+      this.#view,
+      this.#annotationRanges.map(({ range }) => range),
+    );
   }
 
   public setActiveAnnotation(annotation: Annotation | null): void {
@@ -88,12 +102,14 @@ export class HtmlDocumentRuntime {
     if (this.#destroyed) {
       return;
     }
-    this.#document.removeEventListener("pointerup", this.#onSelection);
+    this.#document.removeEventListener("pointerup", this.#onPointerUp);
     this.#document.removeEventListener("keyup", this.#onSelection);
     this.#view.removeEventListener("scroll", this.#onScroll);
     clearCssHighlights(this.#view);
     this.#locationListeners.clear();
     this.#selectionListeners.clear();
+    this.#activationListeners.clear();
+    this.#annotationRanges = [];
     this.#destroyed = true;
   }
 
@@ -115,12 +131,40 @@ export class HtmlDocumentRuntime {
     }
   }
 
+  private captureAnnotationActivation(event: PointerEvent): void {
+    const selection = this.#view.getSelection();
+    if (selection && !selection.isCollapsed) {
+      return;
+    }
+    const position = caretPositionAtPoint(this.#document, event.clientX, event.clientY);
+    if (!position) {
+      return;
+    }
+    const matched = this.#annotationRanges.find(({ range }) =>
+      range.isPointInRange(position.node, position.offset),
+    );
+    if (matched) {
+      for (const listener of this.#activationListeners) {
+        listener(matched.annotation.id);
+      }
+    }
+  }
+
   private emitLocation(): void {
     const locator = this.currentLocation();
     for (const listener of this.#locationListeners) {
       listener(locator);
     }
   }
+}
+
+function caretPositionAtPoint(
+  document: Document,
+  x: number,
+  y: number,
+): { readonly node: Node; readonly offset: number } | null {
+  const position = document.caretPositionFromPoint(x, y);
+  return position ? { node: position.offsetNode, offset: position.offset } : null;
 }
 
 function scrollProgression(document: Document): number {

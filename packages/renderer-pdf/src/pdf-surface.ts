@@ -1,6 +1,7 @@
 import { createEventEmitter } from "@mdbase-reader/reading-surface";
 
 import type { EmbedPdfRuntime } from "./embedpdf-runtime.js";
+import type { AnnotationId } from "@mdbase-reader/core";
 import type {
   ReadingSurface,
   ReaderLocator,
@@ -18,9 +19,11 @@ export class EmbedPdfSurface implements ReadingSurface {
     createEventEmitter<Parameters<Parameters<EmbedPdfRuntime["onAreaSelected"]>[0]>[0]>();
   readonly #textSelections =
     createEventEmitter<Parameters<Parameters<EmbedPdfRuntime["onTextSelected"]>[0]>[0]>();
+  readonly #annotationActivations = createEventEmitter<AnnotationId>();
   readonly #unsubscribeArea: () => void;
   readonly #unsubscribePage: () => void;
   readonly #unsubscribeText: () => void;
+  readonly #unsubscribeAnnotationActivation: () => void;
   #pageIndex: number;
   #destroyed = false;
 
@@ -37,6 +40,9 @@ export class EmbedPdfSurface implements ReadingSurface {
     });
     this.#unsubscribeText = runtime.onTextSelected((selection) =>
       this.#textSelections.emit(selection),
+    );
+    this.#unsubscribeAnnotationActivation = runtime.onAnnotationActivated((annotationId) =>
+      this.#annotationActivations.emit(annotationId),
     );
     this.#unsubscribePage = runtime.onPageChanged((pageIndex) => {
       this.#pageIndex = pageIndex;
@@ -59,9 +65,7 @@ export class EmbedPdfSurface implements ReadingSurface {
         setAnnotations: (annotations) => {
           runtime.setAnnotations(
             annotations.filter(
-              ({ document }) =>
-                document?.fileId === this.document.document.fileId &&
-                document.revision === this.document.document.revision,
+              ({ document }) => document?.fileId === this.document.document.fileId,
             ),
           );
           return Promise.resolve();
@@ -73,6 +77,7 @@ export class EmbedPdfSurface implements ReadingSurface {
           return Promise.resolve();
         },
       },
+      annotationActivation: { activations: this.#annotationActivations },
     };
   }
 
@@ -94,8 +99,10 @@ export class EmbedPdfSurface implements ReadingSurface {
       this.#unsubscribeArea();
       this.#unsubscribePage();
       this.#unsubscribeText();
+      this.#unsubscribeAnnotationActivation();
       this.#areaSelections.clear();
       this.#textSelections.clear();
+      this.#annotationActivations.clear();
       this.locations.clear();
       this.#runtime.destroy();
       this.#destroyed = true;
@@ -106,9 +113,6 @@ export class EmbedPdfSurface implements ReadingSurface {
   private forThisDocument(annotation: {
     readonly document?: SurfaceDocument["document"];
   }): boolean {
-    return (
-      annotation.document?.fileId === this.document.document.fileId &&
-      annotation.document.revision === this.document.document.revision
-    );
+    return annotation.document?.fileId === this.document.document.fileId;
   }
 }

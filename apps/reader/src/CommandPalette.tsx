@@ -98,11 +98,6 @@ function OpenCommandPalette({
             <div className="command-empty">No matching command or source</div>
           )}
         </div>
-        <footer>
-          <span>↑↓ choose</span>
-          <span>↵ run</span>
-          <span>esc close</span>
-        </footer>
       </section>
     </dialog>
   );
@@ -140,7 +135,6 @@ function CommandRow({
 }): JSX.Element {
   return (
     <button type="button" role="option" aria-selected={active} onMouseDown={() => onRun(command)}>
-      <span className="command-group">{command.group}</span>
       <span>
         <strong>{command.label}</strong>
         {command.detail ? <small>{command.detail}</small> : null}

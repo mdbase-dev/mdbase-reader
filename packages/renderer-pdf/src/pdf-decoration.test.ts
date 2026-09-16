@@ -1,4 +1,4 @@
-import { PdfAnnotationSubtype } from "@embedpdf/models";
+import { PdfAnnotationBorderStyle, PdfAnnotationSubtype } from "@embedpdf/models";
 import { annotationId, collectionId, dateTime } from "@mdbase-reader/core";
 import { describe, expect, it } from "vitest";
 
@@ -36,6 +36,7 @@ describe("PDF annotation decorations", () => {
       pageIndex: 3,
       rect: { origin: { x: 10, y: 20 }, size: { width: 30, height: 8 } },
       segmentRects: [{ origin: { x: 10, y: 20 }, size: { width: 30, height: 8 } }],
+      flags: ["locked", "lockedContents"],
     });
   });
 
@@ -80,7 +81,11 @@ describe("PDF annotation decorations", () => {
       type: PdfAnnotationSubtype.SQUARE,
       pageIndex: 6,
       rect: { origin: { x: 12, y: 24 }, size: { width: 80, height: 45 } },
-      flags: ["readOnly", "locked", "lockedContents"],
+      flags: ["locked", "lockedContents"],
+      color: "transparent",
+      strokeColor: "#5bb9f5",
+      strokeWidth: 1.25,
+      strokeStyle: PdfAnnotationBorderStyle.DASHED,
     });
   });
 });

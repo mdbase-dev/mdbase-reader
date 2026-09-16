@@ -100,6 +100,8 @@ function readerStyle(document: Document): HTMLStyleElement {
       pre { background: rgba(255,255,255,.06); }
     }
     @media (max-width: 640px) { body { padding: 3rem 1.5rem 7rem; font-size: 17px; } }
+    @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
+    @media (forced-colors: active) { :root { background: Canvas; color: CanvasText; } blockquote { color: CanvasText; } }
   `;
   return style;
 }

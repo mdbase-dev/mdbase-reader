@@ -67,10 +67,36 @@ describe("ConnectContentSearchRepository", () => {
       {
         where: 'file.body.lower().contains("measured")',
         frontmatterMode: "effective",
-        includeBody: false,
+        includeBody: true,
       },
-      { firstPageSize: 500, pageSize: 1_000 },
+      { firstPageSize: 100, pageSize: 250 },
     );
+  });
+
+  it("includes bounded passage context without losing record destinations", async () => {
+    const queryPages = vi.fn(() =>
+      queryStream([
+        page([
+          {
+            path: "sources/one.md",
+            types: ["reader-source"],
+            file: {},
+            effectiveFrontmatter: { id: "src_one", type: "reader-source" },
+            body: `${"x".repeat(1000)} Measured passage ${"y".repeat(1000)}`,
+          },
+        ]),
+      ]),
+    );
+    const repository = new ConnectContentSearchRepository({
+      queryPages,
+    } as unknown as ReaderConnectClient);
+    const matches = await repository.search(collectionId("reading"), "measured");
+    expect(matches[0]?.passages?.[0]).toMatchObject({
+      path: "sources/one.md",
+      kind: "source-note",
+    });
+    expect(matches[0]?.passages?.[0]?.text).toContain("Measured passage");
+    expect(matches[0]?.passages?.[0]?.text.length).toBeLessThan(300);
   });
 
   it("quotes user text as one expression string", async () => {
@@ -104,8 +130,8 @@ describe("ConnectContentSearchRepository", () => {
     expect(queryPages).toHaveBeenCalledOnce();
     expect(queryPages).toHaveBeenCalledWith(expect.anything(), {
       replaceableFamily: "reader-library-content-search",
-      firstPageSize: 500,
-      pageSize: 1_000,
+      firstPageSize: 100,
+      pageSize: 250,
     });
   });
 });

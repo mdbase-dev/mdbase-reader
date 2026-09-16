@@ -1,8 +1,11 @@
 /* eslint-disable complexity, max-lines, max-lines-per-function */
 import { useEffect, useId, useMemo, useState, type JSX, type KeyboardEvent } from "react";
 
+import { ContinueReading } from "./ContinueReading.js";
 import { readerErrorMessage } from "./errors.js";
-import { LibraryIcon, PlusIcon, SearchIcon } from "./icons.js";
+import { LibraryIcon, MoreIcon, PlusIcon, SearchIcon } from "./icons.js";
+import { publicationDateLabel } from "./library-publication-date.js";
+import { LibraryTextSearch, type LibrarySearchScope } from "./LibraryTextSearch.js";
 import {
   applyLibraryViewConfiguration,
   columnLabel,
@@ -16,6 +19,7 @@ import {
 import type { MdbaseLibraryViewsController } from "./use-mdbase-library-views.js";
 import type { ReaderWorkspaceGateway } from "./workspace-model.js";
 import type { SourceId, SourceSummary } from "@mdbase-reader/core";
+import type { ReadingSurface } from "@mdbase-reader/reading-surface";
 
 export function LibraryWorkspace({
   view,
@@ -29,7 +33,11 @@ export function LibraryWorkspace({
   onOpenSource,
   onOpenBeside,
   onAddSource,
+  onOpenSourceView,
+  surfaces,
 }: {
+  readonly surfaces?: ReadonlyMap<string, ReadingSurface>;
+  readonly onOpenSourceView?: (id: SourceId, view: "document" | "note" | "annotations") => void;
   readonly view: MdbaseLibraryView;
   readonly availableViews: readonly MdbaseLibraryView[];
   readonly allSources: readonly SourceSummary[];
@@ -43,6 +51,9 @@ export function LibraryWorkspace({
   readonly onAddSource: () => void;
 }): JSX.Element {
   const [configuration, setConfiguration] = useState(view.configuration);
+  const [searchScope, setSearchScope] = useState<LibrarySearchScope>("sources");
+  const [contentQuery, setContentQuery] = useState("");
+  const [page, setPage] = useState(0);
   const [executedSources, setExecutedSources] = useState<readonly SourceSummary[]>(allSources);
   const [loading, setLoading] = useState(Boolean(view.path));
   const [problem, setProblem] = useState<string | null>(null);
@@ -82,16 +93,29 @@ export function LibraryWorkspace({
   const dirty = !sameConfiguration(configuration, view.configuration);
   const baseSources = dirty ? allSources : executedSources;
   const sources = useMemo(
-    () => applyLibraryViewConfiguration(baseSources, configuration),
-    [baseSources, configuration],
+    () =>
+      applyLibraryViewConfiguration(
+        baseSources,
+        searchScope === "sources"
+          ? configuration
+          : {
+              ...configuration,
+              filter: { ...configuration.filter, query: "" },
+            },
+      ),
+    [baseSources, configuration, searchScope],
   );
-  const update = (value: Partial<LibraryViewConfiguration>): void =>
+  const update = (value: Partial<LibraryViewConfiguration>): void => {
+    setPage(0);
     setConfiguration((current) => ({ ...current, ...value }));
-  const updateFilter = (value: Partial<LibraryViewConfiguration["filter"]>): void =>
-    setConfiguration((current) => ({
-      ...current,
-      filter: { ...current.filter, ...value },
-    }));
+  };
+  const updateFilter = (value: Partial<LibraryViewConfiguration["filter"]>): void => {
+    setPage(0);
+    setConfiguration((current) => ({ ...current, filter: { ...current.filter, ...value } }));
+  };
+  const pageCount = Math.max(1, Math.ceil(sources.length / 100));
+  const currentPage = Math.min(page, pageCount - 1);
+  const pageSources = sources.slice(currentPage * 100, (currentPage + 1) * 100);
 
   const save = async (replace: boolean): Promise<void> => {
     const name = saveName.trim();
@@ -130,155 +154,185 @@ export function LibraryWorkspace({
               ))}
             </select>
           </label>
-          <span>{view.path ? "mdbase view" : "working view"}</span>
         </div>
-        <div className="library-presentation-toggle" aria-label="Library presentation">
-          {(["table", "cards"] as const).map((presentation) => (
-            <button
-              key={presentation}
-              type="button"
-              aria-pressed={configuration.presentation === presentation}
-              onClick={() => update({ presentation })}
-            >
-              <PresentationGlyph presentation={presentation} />
-              {presentation === "table" ? "Table" : "Cards"}
-            </button>
-          ))}
-        </div>
-        <button className="library-add-button" type="button" onClick={onAddSource}>
-          <PlusIcon /> Add source
-        </button>
-      </header>
-
-      <div className="library-workspace-tools">
         <label className="library-workspace-search">
           <SearchIcon />
           <span className="sr-only">Search this view</span>
           <input
-            value={configuration.filter.query}
-            placeholder="Search this view"
-            onChange={(event) => updateFilter({ query: event.target.value })}
+            value={searchScope === "sources" ? configuration.filter.query : contentQuery}
+            placeholder={searchScope === "sources" ? "Title, author or tag" : "Find a passage"}
+            onChange={(event) =>
+              searchScope === "sources"
+                ? updateFilter({ query: event.target.value })
+                : setContentQuery(event.target.value)
+            }
           />
         </label>
-        <details className="library-workspace-popover">
-          <summary>
-            Filter
-            {activeFilterCount(configuration)
-              ? ` · ${String(activeFilterCount(configuration))}`
-              : ""}
-          </summary>
-          <div className="library-filter-panel">
-            <label>
-              <span>Reading status</span>
-              <select
-                value={configuration.filter.status}
-                onChange={(event) =>
-                  updateFilter({
-                    status: event.target.value as LibraryViewConfiguration["filter"]["status"],
-                  })
-                }
-              >
-                <option value="all">Any status</option>
-                <option value="inbox">Inbox</option>
-                <option value="queued">Queued</option>
-                <option value="reading">Reading</option>
-                <option value="finished">Finished</option>
-                <option value="archived">Archived</option>
-              </select>
-            </label>
-            <label>
-              <span>Format</span>
-              <select
-                value={configuration.filter.format}
-                onChange={(event) =>
-                  updateFilter({
-                    format: event.target.value as LibraryViewConfiguration["filter"]["format"],
-                  })
-                }
-              >
-                <option value="all">Any format</option>
-                <option value="pdf">PDF</option>
-                <option value="epub">EPUB</option>
-                <option value="web">Saved web page</option>
-                <option value="note">Note only</option>
-              </select>
-            </label>
-            <label>
-              <span>Tag</span>
-              <input
-                value={configuration.filter.tag}
-                placeholder="Exact tag"
-                onChange={(event) => updateFilter({ tag: event.target.value })}
-              />
-            </label>
-            <button
-              type="button"
-              onClick={() => updateFilter({ query: "", status: "all", format: "all", tag: "" })}
-            >
-              Clear filters
-            </button>
-          </div>
-        </details>
-        <label className="library-sort-control">
-          <span>Sort</span>
-          <select
-            value={configuration.sortField}
-            onChange={(event) =>
-              update({ sortField: event.target.value as LibraryViewConfiguration["sortField"] })
-            }
-          >
-            <option value="saved">Recently saved</option>
-            <option value="title">Title</option>
-            <option value="creator">Creator</option>
-            <option value="published">Published</option>
-            <option value="status">Status</option>
-          </select>
-          <button
-            type="button"
-            aria-label={`Sort ${configuration.sortDirection === "asc" ? "descending" : "ascending"}`}
-            onClick={() =>
-              update({ sortDirection: configuration.sortDirection === "asc" ? "desc" : "asc" })
-            }
-          >
-            {configuration.sortDirection === "asc" ? "↑" : "↓"}
-          </button>
-        </label>
-        {configuration.presentation === "table" ? (
-          <details className="library-workspace-popover is-columns">
-            <summary>Columns</summary>
-            <div className="library-column-panel">
-              {allColumns.map((column) => (
-                <label key={column}>
-                  <input
-                    type="checkbox"
-                    checked={configuration.columns.includes(column)}
-                    disabled={column === "title"}
-                    onChange={() =>
-                      update({ columns: toggleColumn(configuration.columns, column) })
-                    }
-                  />
-                  {columnLabel(column)}
-                </label>
-              ))}
-            </div>
-          </details>
+        <select
+          aria-label="Search scope"
+          className="library-search-scope"
+          value={searchScope}
+          onChange={(event) => {
+            setSearchScope(event.target.value as LibrarySearchScope);
+            setPage(0);
+          }}
+        >
+          <option value="sources">Sources</option>
+          <option value="notes">Notes & annotations</option>
+          <option value="documents">Loaded documents</option>
+        </select>
+        {searchScope === "sources" ? (
+          <span className="library-result-count" role="status">
+            {loading
+              ? "Loading view…"
+              : `${String(sources.length)} ${sources.length === 1 ? "source" : "sources"}`}
+          </span>
         ) : null}
-        <span className="library-result-count" role="status">
-          {loading
-            ? "Loading view…"
-            : `${String(sources.length)} ${sources.length === 1 ? "source" : "sources"}`}
-        </span>
         <div className="library-save-actions">
           {dirty && view.owned && view.writable ? (
             <button type="button" disabled={controller.saving} onClick={() => void save(true)}>
-              Save changes
+              Save
             </button>
           ) : null}
-          <button type="button" onClick={() => setSaving(true)}>
-            Save as view…
-          </button>
         </div>
-      </div>
+        <details className="library-workspace-more">
+          <summary
+            aria-label={`View options${activeFilterCount(configuration) ? `, ${String(activeFilterCount(configuration))} active filters` : ""}`}
+            title="View options"
+          >
+            <MoreIcon />
+          </summary>
+          <div>
+            <strong>Filters</strong>
+            <div className="library-filter-panel is-inline">
+              <label>
+                <span>Reading status</span>
+                <select
+                  value={configuration.filter.status}
+                  onChange={(event) =>
+                    updateFilter({
+                      status: event.target.value as LibraryViewConfiguration["filter"]["status"],
+                    })
+                  }
+                >
+                  <option value="all">Any status</option>
+                  <option value="inbox">Inbox</option>
+                  <option value="queued">Queued</option>
+                  <option value="reading">Reading</option>
+                  <option value="finished">Finished</option>
+                  <option value="archived">Archived</option>
+                </select>
+              </label>
+              <label>
+                <span>Format</span>
+                <select
+                  value={configuration.filter.format}
+                  onChange={(event) =>
+                    updateFilter({
+                      format: event.target.value as LibraryViewConfiguration["filter"]["format"],
+                    })
+                  }
+                >
+                  <option value="all">Any format</option>
+                  <option value="pdf">PDF</option>
+                  <option value="epub">EPUB</option>
+                  <option value="web">Saved web page</option>
+                  <option value="note">Note only</option>
+                </select>
+              </label>
+              <label>
+                <span>Tag</span>
+                <input
+                  value={configuration.filter.tag}
+                  placeholder="Exact tag"
+                  onChange={(event) => updateFilter({ tag: event.target.value })}
+                />
+              </label>
+              {activeFilterCount(configuration) > 0 ? (
+                <button
+                  type="button"
+                  onClick={() => updateFilter({ query: "", status: "all", format: "all", tag: "" })}
+                >
+                  Clear filters
+                </button>
+              ) : null}
+            </div>
+            <strong>Sort</strong>
+            <label className="library-sort-control">
+              <select
+                aria-label="Sort field"
+                value={configuration.sortField}
+                onChange={(event) =>
+                  update({ sortField: event.target.value as LibraryViewConfiguration["sortField"] })
+                }
+              >
+                <option value="saved">Recently saved</option>
+                <option value="title">Title</option>
+                <option value="creator">Creator</option>
+                <option value="published">Published</option>
+                <option value="status">Status</option>
+              </select>
+              <button
+                type="button"
+                aria-label={`Sort ${configuration.sortDirection === "asc" ? "descending" : "ascending"}`}
+                onClick={() =>
+                  update({ sortDirection: configuration.sortDirection === "asc" ? "desc" : "asc" })
+                }
+              >
+                {configuration.sortDirection === "asc" ? "↑" : "↓"}
+              </button>
+            </label>
+            <i />
+            <strong>Layout</strong>
+            <div className="library-presentation-toggle" aria-label="Library presentation">
+              {(["table", "cards"] as const).map((presentation) => (
+                <button
+                  key={presentation}
+                  type="button"
+                  aria-pressed={configuration.presentation === presentation}
+                  onClick={() => update({ presentation })}
+                >
+                  <PresentationGlyph presentation={presentation} />
+                  {presentation === "table" ? "Table" : "Cards"}
+                </button>
+              ))}
+            </div>
+            {configuration.presentation === "table" ? (
+              <>
+                <strong>Columns</strong>
+                <div className="library-column-panel">
+                  {allColumns.map((column) => (
+                    <label key={column}>
+                      <input
+                        type="checkbox"
+                        checked={configuration.columns.includes(column)}
+                        disabled={column === "title"}
+                        onChange={() =>
+                          update({ columns: toggleColumn(configuration.columns, column) })
+                        }
+                      />
+                      {columnLabel(column)}
+                    </label>
+                  ))}
+                </div>
+              </>
+            ) : null}
+            <i />
+            <button type="button" onClick={() => setSaving(true)}>
+              Save as view…
+            </button>
+          </div>
+        </details>
+        <button
+          className="library-add-button"
+          type="button"
+          aria-label="Add source"
+          title="Add source"
+          onClick={onAddSource}
+        >
+          <PlusIcon />
+        </button>
+      </header>
 
       {(problem ?? controller.problem) ? (
         <div className="library-view-problem" role="alert">
@@ -296,7 +350,22 @@ export function LibraryWorkspace({
       ) : null}
 
       <div className="library-workspace-results">
-        {sources.length === 0 && !loading ? (
+        {searchScope === "sources" && !configuration.filter.query && !view.path ? (
+          <ContinueReading sources={allSources} onOpen={onOpenSource} />
+        ) : null}
+        {searchScope !== "sources" ? (
+          <LibraryTextSearch
+            key={searchScope}
+            scope={searchScope}
+            query={contentQuery}
+            sources={sources}
+            gateway={gateway}
+            surfaces={surfaces}
+            onOpen={(id, view) =>
+              onOpenSourceView ? onOpenSourceView(id, view) : onOpenSource(id)
+            }
+          />
+        ) : sources.length === 0 && !loading ? (
           <div className="library-workspace-empty">
             <LibraryIcon />
             <strong>No sources match this view</strong>
@@ -304,7 +373,7 @@ export function LibraryWorkspace({
           </div>
         ) : configuration.presentation === "table" ? (
           <LibraryTable
-            sources={sources}
+            sources={pageSources}
             columns={configuration.columns}
             selected={selected}
             focused={focused}
@@ -315,7 +384,7 @@ export function LibraryWorkspace({
           />
         ) : (
           <LibraryCards
-            sources={sources}
+            sources={pageSources}
             selected={selected}
             onSelected={setSelected}
             onPreview={onPreviewSource}
@@ -324,6 +393,27 @@ export function LibraryWorkspace({
         )}
       </div>
 
+      {searchScope === "sources" && pageCount > 1 ? (
+        <nav className="library-pagination" aria-label="Library result pages">
+          <button
+            type="button"
+            disabled={currentPage === 0}
+            onClick={() => setPage(currentPage - 1)}
+          >
+            Previous
+          </button>
+          <span role="status">
+            Page {currentPage + 1} of {pageCount} · {sources.length} sources
+          </span>
+          <button
+            type="button"
+            disabled={currentPage + 1 === pageCount}
+            onClick={() => setPage(currentPage + 1)}
+          >
+            Next
+          </button>
+        </nav>
+      ) : null}
       {saving ? (
         <div
           className="library-save-dialog-backdrop"
@@ -490,7 +580,7 @@ function LibraryCards({
             <span>{source.creators.join(", ") || "Unknown creator"}</span>
             <h3>{source.title}</h3>
             <div>
-              <small>{String(source.published ?? "Undated")}</small>
+              <small>{publicationDateLabel(source.published) ?? "Undated"}</small>
               <small>{source.readingStatus ?? "inbox"}</small>
             </div>
             {source.tags.length > 0 ? (
@@ -521,7 +611,7 @@ function TableValue({
     case "creator":
       return <>{source.creators.join(", ") || "—"}</>;
     case "published":
-      return <>{source.published ?? "—"}</>;
+      return <>{publicationDateLabel(source.published) ?? "—"}</>;
     case "status":
       return (
         <span className={`library-status is-${source.readingStatus ?? "inbox"}`}>
@@ -565,12 +655,12 @@ const allColumns: readonly LibraryColumn[] = [
 
 function columnWidth(column: LibraryColumn): string {
   return {
-    title: "minmax(240px, 2.2fr)",
-    creator: "minmax(150px, 1.2fr)",
-    published: "100px",
+    title: "minmax(220px, 1fr)",
+    creator: "140px",
+    published: "90px",
     status: "112px",
     format: "82px",
-    tags: "minmax(150px, 1fr)",
+    tags: "220px",
   }[column];
 }
 
@@ -602,6 +692,9 @@ function rowKeyDown(
   open: (id: SourceId) => void,
   openBeside: (id: SourceId) => void,
 ): void {
+  if (event.target !== event.currentTarget) {
+    return;
+  }
   if (event.key === "Enter") {
     event.preventDefault();
     if (event.metaKey || event.ctrlKey) {

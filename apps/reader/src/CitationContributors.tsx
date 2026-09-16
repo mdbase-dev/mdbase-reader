@@ -16,6 +16,7 @@ export function CitationContributors({
   readonly onChange: (field: string, value: unknown) => void;
 }): JSX.Element {
   const names = citationNames(citation, field);
+  const itemLabel = singular(label);
   const update = (index: number, name: CslName): void => {
     onChange(
       field,
@@ -27,111 +28,120 @@ export function CitationContributors({
       <legend>{label}</legend>
       {names.map((name, index) => (
         <div className="citation-contributor" key={`${field}-${String(index)}`}>
-          <select
-            aria-label={`${label} ${String(index + 1)} kind`}
-            value={name.literal === undefined ? "person" : "organisation"}
-            onChange={(event) =>
-              update(
-                index,
-                event.target.value === "person" ? { given: "", family: "" } : { literal: "" },
-              )
-            }
-          >
-            <option value="person">Person</option>
-            <option value="organisation">Organisation</option>
-          </select>
+          <header>
+            <span>
+              {itemLabel} {String(index + 1)}
+            </span>
+            <select
+              aria-label={`${itemLabel} ${String(index + 1)} kind`}
+              value={name.literal === undefined ? "person" : "organisation"}
+              onChange={(event) =>
+                update(
+                  index,
+                  event.target.value === "person" ? { given: "", family: "" } : { literal: "" },
+                )
+              }
+            >
+              <option value="person">Person</option>
+              <option value="organisation">Organisation</option>
+            </select>
+            <button
+              type="button"
+              aria-label={`Remove ${itemLabel.toLocaleLowerCase()} ${String(index + 1)}`}
+              onClick={() =>
+                onChange(
+                  field,
+                  names.filter((_, position) => position !== index),
+                )
+              }
+            >
+              Remove
+            </button>
+          </header>
+          <div className="citation-contributor-fields">
+            {name.literal === undefined ? (
+              <>
+                <input
+                  aria-label={`${itemLabel} ${String(index + 1)} given name`}
+                  placeholder="Given names"
+                  value={name.given ?? ""}
+                  onChange={(event) => update(index, { ...name, given: event.target.value })}
+                />
+                <input
+                  aria-label={`${itemLabel} ${String(index + 1)} family name`}
+                  placeholder="Family name"
+                  value={name.family ?? ""}
+                  onChange={(event) => update(index, { ...name, family: event.target.value })}
+                />
+              </>
+            ) : (
+              <input
+                aria-label={`${itemLabel} ${String(index + 1)} organisation`}
+                placeholder="Organisation name"
+                value={name.literal}
+                onChange={(event) => update(index, { literal: event.target.value })}
+              />
+            )}
+          </div>
           {name.literal === undefined ? (
-            <>
-              <input
-                aria-label={`${label} ${String(index + 1)} given name`}
-                placeholder="Given names"
-                value={name.given ?? ""}
-                onChange={(event) => update(index, { ...name, given: event.target.value })}
-              />
-              <input
-                aria-label={`${label} ${String(index + 1)} family name`}
-                placeholder="Family name"
-                value={name.family ?? ""}
-                onChange={(event) => update(index, { ...name, family: event.target.value })}
-              />
-              <details className="citation-name-details">
-                <summary>Name details</summary>
-                <div>
+            <details className="citation-name-details">
+              <summary>More name details</summary>
+              <div>
+                <input
+                  aria-label={`${itemLabel} ${String(index + 1)} suffix`}
+                  placeholder="Suffix"
+                  value={name.suffix ?? ""}
+                  onChange={(event) => update(index, { ...name, suffix: event.target.value })}
+                />
+                <input
+                  aria-label={`${itemLabel} ${String(index + 1)} dropping particle`}
+                  placeholder="Dropping particle"
+                  value={name["dropping-particle"] ?? ""}
+                  onChange={(event) =>
+                    update(index, { ...name, "dropping-particle": event.target.value })
+                  }
+                />
+                <input
+                  aria-label={`${itemLabel} ${String(index + 1)} non-dropping particle`}
+                  placeholder="Non-dropping particle"
+                  value={name["non-dropping-particle"] ?? ""}
+                  onChange={(event) =>
+                    update(index, { ...name, "non-dropping-particle": event.target.value })
+                  }
+                />
+                <label>
                   <input
-                    aria-label={`${label} ${String(index + 1)} suffix`}
-                    placeholder="Suffix"
-                    value={name.suffix ?? ""}
-                    onChange={(event) => update(index, { ...name, suffix: event.target.value })}
-                  />
-                  <input
-                    aria-label={`${label} ${String(index + 1)} dropping particle`}
-                    placeholder="Dropping particle"
-                    value={name["dropping-particle"] ?? ""}
+                    type="checkbox"
+                    checked={Boolean(name["comma-suffix"])}
                     onChange={(event) =>
-                      update(index, { ...name, "dropping-particle": event.target.value })
+                      update(index, { ...name, "comma-suffix": event.target.checked })
                     }
                   />
+                  Comma before suffix
+                </label>
+                <label>
                   <input
-                    aria-label={`${label} ${String(index + 1)} non-dropping particle`}
-                    placeholder="Non-dropping particle"
-                    value={name["non-dropping-particle"] ?? ""}
+                    type="checkbox"
+                    checked={Boolean(name["static-ordering"])}
                     onChange={(event) =>
-                      update(index, { ...name, "non-dropping-particle": event.target.value })
+                      update(index, { ...name, "static-ordering": event.target.checked })
                     }
                   />
-                  <label>
-                    <input
-                      type="checkbox"
-                      checked={Boolean(name["comma-suffix"])}
-                      onChange={(event) =>
-                        update(index, { ...name, "comma-suffix": event.target.checked })
-                      }
-                    />
-                    Comma before suffix
-                  </label>
-                  <label>
-                    <input
-                      type="checkbox"
-                      checked={Boolean(name["static-ordering"])}
-                      onChange={(event) =>
-                        update(index, { ...name, "static-ordering": event.target.checked })
-                      }
-                    />
-                    Keep name order
-                  </label>
-                  <label>
-                    <input
-                      type="checkbox"
-                      checked={Boolean(name["parse-names"])}
-                      onChange={(event) =>
-                        update(index, { ...name, "parse-names": event.target.checked })
-                      }
-                    />
-                    Parse literal name
-                  </label>
-                </div>
-              </details>
-            </>
-          ) : (
-            <input
-              aria-label={`${label} ${String(index + 1)} organisation`}
-              placeholder="Organisation name"
-              value={name.literal}
-              onChange={(event) => update(index, { literal: event.target.value })}
-            />
-          )}
-          <button
-            type="button"
-            aria-label={`Remove ${label.toLocaleLowerCase()} ${String(index + 1)}`}
-            onClick={() =>
-              onChange(
-                field,
-                names.filter((_, position) => position !== index),
-              )
-            }
-          >
-            Remove
-          </button>
+                  Keep name order
+                </label>
+                <label>
+                  <input
+                    type="checkbox"
+                    checked={Boolean(name["parse-names"])}
+                    onChange={(event) =>
+                      update(index, { ...name, "parse-names": event.target.checked })
+                    }
+                  />
+                  Parse literal name
+                </label>
+              </div>
+            </details>
+          ) : null}
         </div>
       ))}
       <button
@@ -139,8 +149,12 @@ export function CitationContributors({
         className="citation-add-row"
         onClick={() => onChange(field, [...names, { given: "", family: "" }])}
       >
-        Add {label.toLocaleLowerCase()}
+        + Add {itemLabel.toLocaleLowerCase()}
       </button>
     </fieldset>
   );
+}
+
+function singular(label: string): string {
+  return label.endsWith("s") ? label.slice(0, -1) : label;
 }

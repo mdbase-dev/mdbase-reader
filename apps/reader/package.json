@@ -12,7 +12,8 @@
     "manifest:validate": "mdbase-connect-dev validate-manifest public/.well-known/mdbase-app.json",
     "manifest:verify": "node scripts/verify-manifest.mjs",
     "preview": "vite preview --host 127.0.0.1",
-    "test": "pnpm manifest && pnpm manifest:verify && vitest run --passWithNoTests",
+    "test": "pnpm manifest && pnpm manifest:verify && node --test scripts/*.test.mjs && vitest run src capture --maxWorkers=2 --testTimeout=15000",
+    "test:browser": "node scripts/audit-reader.mjs",
     "typecheck": "tsc -p tsconfig.json"
   },
   "dependencies": {
@@ -29,14 +30,17 @@
     "@mdbase-reader/web-capture": "workspace:*",
     "@zip.js/zip.js": "^2.8.36",
     "citeproc": "2.4.63",
+    "dockview-react": "8.3.1",
     "react": "^19.2.8",
     "react-dom": "^19.2.8",
     "yaml": "^2.9.0"
   },
   "devDependencies": {
+    "@playwright/test": "1.61.1",
     "@types/react": "^19.2.14",
     "@types/react-dom": "^19.2.3",
     "@vitejs/plugin-react": "latest",
+    "fake-indexeddb": "6.2.4",
     "vite": "latest"
   }
 }

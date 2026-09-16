@@ -74,9 +74,8 @@ function OpenSourceAddDialog({
           <CloseIcon />
         </button>
         <div className="import-dialog-heading">
-          <span className="mono">New source</span>
-          <h2 id="reader-add-source-title">Add to your library</h2>
-          <p>Keep a readable copy with its source and provenance.</p>
+          <h2 id="reader-add-source-title">Add source</h2>
+          <p>Save a web page or choose a document.</p>
         </div>
         <form
           className="capture-form"
@@ -103,10 +102,6 @@ function OpenSourceAddDialog({
               }}
             />
           </label>
-          <p className="capture-explainer">
-            Reader fetches without cookies, blocks private networks and scripts, and preserves the
-            original HTML beside a clean reading copy.
-          </p>
           {error ? (
             <p className="import-error capture-error" role="alert">
               {error}
@@ -119,7 +114,7 @@ function OpenSourceAddDialog({
           </div>
         </form>
         <div className="source-add-divider">
-          <span>or add a document</span>
+          <span>or</span>
         </div>
         <button
           className="source-file-choice"

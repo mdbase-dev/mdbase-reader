@@ -1,7 +1,7 @@
 import { createEventEmitter } from "@mdbase-reader/reading-surface";
 
 import type { HtmlDocumentRuntime } from "./html-runtime.js";
-import type { Annotation } from "@mdbase-reader/core";
+import type { Annotation, AnnotationId } from "@mdbase-reader/core";
 import type {
   ReaderLocator,
   ReadingSurface,
@@ -14,8 +14,10 @@ export class HtmlReadingSurface implements ReadingSurface {
   public readonly locations = createEventEmitter<ReaderLocator>();
   public readonly capabilities: ReadingSurface["capabilities"];
   readonly #selections = createEventEmitter<TextSelectionDraft>();
+  readonly #annotationActivations = createEventEmitter<AnnotationId>();
   readonly #unsubscribeLocation: () => void;
   readonly #unsubscribeSelection: () => void;
+  readonly #unsubscribeAnnotationActivation: () => void;
   #destroyed = false;
 
   public constructor(
@@ -25,6 +27,9 @@ export class HtmlReadingSurface implements ReadingSurface {
     this.#unsubscribeLocation = runtime.onLocation((locator) => this.locations.emit(locator));
     this.#unsubscribeSelection = runtime.onSelection((selection) =>
       this.#selections.emit(selection),
+    );
+    this.#unsubscribeAnnotationActivation = runtime.onAnnotationActivated((annotationId) =>
+      this.#annotationActivations.emit(annotationId),
     );
     this.capabilities = {
       textSelection: {
@@ -46,6 +51,7 @@ export class HtmlReadingSurface implements ReadingSurface {
       annotationNavigation: {
         goToAnnotation: (annotation) => Promise.resolve(runtime.goToAnnotation(annotation)),
       },
+      annotationActivation: { activations: this.#annotationActivations },
       textExtraction: {
         extractText: () => Promise.resolve(runtime.extractText()),
       },
@@ -64,8 +70,10 @@ export class HtmlReadingSurface implements ReadingSurface {
     if (!this.#destroyed) {
       this.#unsubscribeLocation();
       this.#unsubscribeSelection();
+      this.#unsubscribeAnnotationActivation();
       this.locations.clear();
       this.#selections.clear();
+      this.#annotationActivations.clear();
       this.runtime.destroy();
       this.#destroyed = true;
     }

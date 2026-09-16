@@ -7,6 +7,7 @@ import {
 import { useCallback, useEffect, useMemo, useRef } from "react";
 
 import { suppressNativeCapturePreview } from "./embedpdf-native-capture-preview.js";
+import { installReaderPdfChrome } from "./embedpdf-reader-chrome.js";
 import { createEmbedPdfRuntime } from "./embedpdf-runtime.js";
 import { EmbedPdfSurface } from "./pdf-surface.js";
 import { createReaderPdfViewerConfig } from "./pdf-viewer-policy.js";
@@ -79,7 +80,12 @@ export function PdfViewerSurface({
 
   const handleInit = useCallback((container: EmbedPdfContainer): void => {
     nativeUiCleanupRef.current?.();
-    nativeUiCleanupRef.current = suppressNativeCapturePreview(container);
+    const cleanups = [suppressNativeCapturePreview(container), installReaderPdfChrome(container)];
+    nativeUiCleanupRef.current = () => {
+      for (const cleanup of cleanups) {
+        cleanup();
+      }
+    };
   }, []);
 
   return (

@@ -1,0 +1,168 @@
+.reader-main.reader-dock-main {
+  display: block;
+  position: relative;
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
+}
+.reader-dock {
+  height: 100%;
+  width: 100%;
+  min-height: 0;
+  min-width: 0;
+  color-scheme: inherit;
+}
+.dockview-theme-reader {
+  --dv-background-color: var(--canvas);
+  --dv-paneview-header-border-color: var(--line);
+  --dv-tabs-and-actions-container-background-color: var(--surface);
+  --dv-activegroup-visiblepanel-tab-background-color: var(--canvas);
+  --dv-activegroup-hiddenpanel-tab-background-color: var(--surface);
+  --dv-inactivegroup-visiblepanel-tab-background-color: var(--canvas);
+  --dv-inactivegroup-hiddenpanel-tab-background-color: var(--surface);
+  --dv-activegroup-visiblepanel-tab-color: var(--ink);
+  --dv-activegroup-hiddenpanel-tab-color: var(--muted);
+  --dv-inactivegroup-visiblepanel-tab-color: var(--ink);
+  --dv-inactivegroup-hiddenpanel-tab-color: var(--muted);
+  --dv-tab-divider-color: var(--line);
+  --dv-separator-border: var(--line);
+  --dv-active-sash-color: var(--accent);
+  --dv-drag-over-background-color: color-mix(in oklch, var(--accent) 18%, transparent);
+  --dv-drag-over-border-color: var(--accent);
+  --dv-tabs-and-actions-container-height: 36px;
+  --dv-font-family: var(--sans);
+  --dv-tab-font-size: 12px;
+  --dv-group-view-background-color: var(--canvas);
+  --dv-tab-close-icon: var(--muted);
+  --dv-icon-hover-background-color: color-mix(in oklch, var(--ink) 8%, transparent);
+  --dv-context-menu-background-color: var(--canvas);
+  --dv-context-menu-color: var(--ink);
+  --dv-context-menu-border-color: var(--line);
+  color: var(--ink);
+}
+.reader-dock .library-pane,
+.reader-dock .inspector-pane {
+  display: grid;
+  position: relative;
+  inset: auto;
+  width: 100%;
+  height: 100%;
+  max-height: none;
+  max-width: none;
+  min-width: 0;
+  transform: none;
+  visibility: inherit;
+  opacity: 1;
+  border: 0;
+  box-shadow: none;
+  z-index: auto;
+}
+.reader-dock .workspace-pane {
+  height: 100%;
+  width: 100%;
+  min-width: 0;
+  border: 0;
+  display: flex;
+  flex-direction: column;
+}
+.reader-dock .document-canvas {
+  flex: 1;
+  min-height: 0;
+}
+.reader-dock .document-session-deck {
+  flex: 1;
+  min-height: 0;
+}
+.reader-dock .dv-tab {
+  min-width: 70px;
+  max-width: 260px;
+}
+.reader-dock-tab {
+  display: flex;
+  align-items: center;
+  height: 100%;
+  min-width: 0;
+  gap: 4px;
+}
+.reader-dock-tab .dv-default-tab {
+  min-width: 0;
+  flex: 1;
+}
+.reader-dock-tab.is-preview .dv-default-tab-content {
+  font-style: italic;
+}
+.reader-dock-tab .dv-default-tab-content {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.dock-tab-marker {
+  flex-shrink: 0;
+  font-size: 9px;
+  color: var(--accent);
+}
+.reader-dock .dv-groupview.dv-active-group > .dv-tabs-and-actions-container {
+  box-shadow: inset 0 -2px var(--accent);
+}
+.dock-pane-menu {
+  position: relative;
+  color: var(--muted);
+  font-size: 12px;
+}
+.dock-pane-menu > button {
+  cursor: pointer;
+  padding: 6px 10px;
+  font-size: 17px;
+  background: transparent;
+  color: var(--muted);
+}
+.dock-pane-popover {
+  position: fixed;
+  inset: auto;
+  margin: 0;
+  width: 245px;
+  padding: 5px;
+  border: 1px solid var(--line);
+  background: var(--canvas);
+  border-radius: 6px;
+  box-shadow: 0 8px 24px #0002;
+}
+.dock-pane-popover:popover-open {
+  display: grid;
+}
+.dock-pane-popover button {
+  text-align: left;
+  color: var(--ink);
+  background: transparent;
+  padding: 8px;
+  border-radius: 4px;
+  cursor: pointer;
+}
+.dock-pane-popover button:hover {
+  background: var(--surface);
+}
+.dock-empty {
+  height: 100%;
+  display: grid;
+  place-content: center;
+  text-align: center;
+  padding: 24px;
+  color: var(--muted);
+}
+.dock-empty h2 {
+  color: var(--ink);
+}
+.dock-empty button {
+  padding: 10px;
+  color: var(--ink);
+  background: var(--surface);
+  cursor: pointer;
+}
+@media (max-width: 680px) {
+  .reader-dock .dv-tab {
+    max-width: 190px;
+  }
+  .reader-dock .inspector-close {
+    display: inline-flex;
+  }
+}

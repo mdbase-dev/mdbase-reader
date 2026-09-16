@@ -4,7 +4,8 @@ export const sourceWorkspaceViews = ["document", "note", "annotations", "citatio
 export type SourceWorkspaceView = (typeof sourceWorkspaceViews)[number];
 export const workspaceViews = ["library", ...sourceWorkspaceViews] as const;
 export type WorkspaceView = (typeof workspaceViews)[number];
-export type WorkspacePaneId = "primary" | "secondary";
+/** Dockview group identity; legacy layouts used only primary/secondary. */
+export type WorkspacePaneId = string;
 export type WorkspaceSplitDirection = "horizontal" | "vertical";
 export type WorkspaceTabId = string;
 
@@ -187,24 +188,4 @@ export function sourceIdsInWorkspace(layout: SourceWorkspaceLayout): readonly So
 
 export function workspaceTabSourceId(tab: WorkspaceTab | null | undefined): SourceId | null {
   return tab?.kind === "source" ? tab.sourceId : null;
-}
-
-export function updatePane(
-  layout: SourceWorkspaceLayout,
-  paneId: WorkspacePaneId,
-  update: (pane: SourceWorkspacePane) => SourceWorkspacePane,
-): SourceWorkspaceLayout {
-  const current = paneById(layout, paneId);
-  if (!current) {
-    return layout;
-  }
-  const next = update(current);
-  if (next === current && layout.focusedPaneId === paneId) {
-    return layout;
-  }
-  return {
-    ...layout,
-    panes: layout.panes.map((pane) => (pane.id === paneId ? next : pane)),
-    focusedPaneId: paneId,
-  };
 }

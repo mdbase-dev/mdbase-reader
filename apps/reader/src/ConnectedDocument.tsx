@@ -1,6 +1,8 @@
 import { lazy, Suspense, useCallback, useEffect, useMemo, useState, type JSX } from "react";
 
 import { DocumentMessage, RendererStage, type RendererState } from "./DocumentRendererStage.js";
+import { openDocumentWithOfflineCopy } from "./offline-documents.js";
+import { OfflineDocumentControl } from "./OfflineDocumentControl.js";
 
 import type {
   DocumentDescriptor,
@@ -33,7 +35,7 @@ export interface ConnectedDocumentProps {
 
 type OpenDocumentState =
   | { readonly status: "opening" }
-  | { readonly status: "open"; readonly handle: DocumentHandle }
+  | { readonly status: "open"; readonly handle: DocumentHandle; readonly cached: boolean }
   | { readonly status: "error"; readonly message: string };
 
 export function ConnectedDocument({
@@ -87,12 +89,13 @@ function OpenConnectedDocument({
     let active = true;
     let opened: DocumentHandle | null = null;
     const controller = new AbortController();
-    void repository
-      .open(source.collectionId, stableDescriptor, { signal: controller.signal })
-      .then((handle) => {
+    void openDocumentWithOfflineCopy(source.collectionId, stableDescriptor, repository, {
+      signal: controller.signal,
+    })
+      .then(({ handle, cached }) => {
         opened = handle;
         if (active) {
-          setState({ status: "open", handle });
+          setState({ status: "open", handle, cached });
         } else {
           void handle.close();
         }
@@ -132,11 +135,21 @@ function OpenConnectedDocument({
     );
   }
   return (
-    <OpenedDocumentRenderer
-      descriptor={stableDescriptor}
-      handle={state.handle}
-      onSurfaceChange={onSurfaceChange}
-    />
+    <div className="connected-document-frame">
+      <OfflineDocumentControl
+        collection={source.collectionId}
+        target={stableDescriptor}
+        handle={state.handle}
+        initiallyCached={state.cached}
+      />
+      <div className="connected-document-content">
+        <OpenedDocumentRenderer
+          descriptor={stableDescriptor}
+          handle={state.handle}
+          onSurfaceChange={onSurfaceChange}
+        />
+      </div>
+    </div>
   );
 }
 

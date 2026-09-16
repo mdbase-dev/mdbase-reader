@@ -10,20 +10,48 @@ required Reader setup, queries sources and annotations through the exact Reader 
 downloads readable files through Connect. Add `?preview=1` to open the explicitly labelled,
 in-memory interface preview without creating collection records or files.
 
+## Dockable workspace
+
+Documents, library views, source tools, and the library navigator share one Dockview workspace.
+Drag a tab onto another tab strip to move it, or onto a pane edge to split. Both side panels
+can be repositioned or tabbed with documents. Use a tab's context menu or a pane's **⋯** menu
+for equivalent explicit actions; **F6** cycles groups. The command palette includes
+**Reset pane arrangement (keep all tabs)**.
+
+Layouts are saved per collection and old two-pane layouts migrate automatically. Moving panels
+preserves document/editor identity; dirty closes require confirmation. Mobile shows one maximized
+group while retaining the desktop arrangement. See [the architecture](docs/architecture/source-workspace.md)
+for session, persistence, and renderer-lifetime boundaries.
+
 ## Deploy the development site
 
 Publish a production build to the stable Cloudflare Pages development origin:
 
 ```sh
-pnpm deploy:dev
+pnpm deploy:dev                         # lab (experimental default)
+MDBASE_ENV=staging pnpm deploy:dev      # staging release rehearsal
 ```
 
-This builds Reader with an HTTPS manifest for <https://mdbase-reader.pages.dev>, validates the
+This builds Reader with an HTTPS manifest for <https://lab.mdbase-reader.pages.dev>, validates the
 manifest, restores the repository's generated manifest files, and uploads `apps/reader/dist` to the
-`mdbase-reader` Pages project. The deployed app uses the staging Connect service and the isolated
-staging connector at `http://127.0.0.1:28486`. Start that connector from the sibling
-`mdbase-connect` checkout with `pnpm dev:desktop:staging`, then sign in with a staging account. The
-deployment does not use or modify an `mdbase.dev` custom domain.
+`lab` branch of the `mdbase-reader` Pages project. The deployed app uses the lab Connect service and
+the isolated lab connector at `http://127.0.0.1:28487`. Start that profile from the cloud-ops
+checkout with `bin/mdbase-env lab desktop`, then sign in with a lab account. Staging remains an
+explicit release-rehearsal target and production remains on its protected deployment command.
+
+## Production deployment
+
+The existing production site is <https://mdbase-reader.pages.dev>, connected to
+<https://connect.mdbase.dev>. Deploy with:
+
+```sh
+MDBASE_ENV=production pnpm deploy:prod
+```
+
+Staging builds use the separate `staging` Pages branch and
+<https://staging.mdbase-reader.pages.dev>; only production targets `main`.
+Conflicting environment selectors are rejected. Switching from the former staging-backed
+site may require authorizing Reader against production; collection data is not migrated.
 
 ## Browser extension (staging)
 
@@ -111,6 +139,18 @@ android` or `cap add ios` on a machine with the corresponding native SDK.
 
 `SPEC.md` and `DATA_MODEL.md` are normative design inputs. The integrity check deliberately fails
 if either document changes during implementation work.
+
+## Reading reliability and browser audits
+
+Reader keeps recoverable local source-note drafts, offers explicit conflict review and
+revision-verified offline document copies, and limits resident document renderers to four.
+Use the library's search scope selector to distinguish metadata, note text and loaded-document
+text; suspended and unopened documents are not included in document search. Sidebar search uses
+Ctrl/Cmd+Shift+F, leaving Ctrl/Cmd+F available to the reading surface.
+
+See [the implementation and audit report](docs/reader-improvement-audit.md) for offline limits,
+SDK compatibility, remaining work and the repeatable `test:browser` scenario. Browser testing
+uses disposable fixtures; it does not authorize or mutate real Connect collections.
 
 ## Dependency rule
 

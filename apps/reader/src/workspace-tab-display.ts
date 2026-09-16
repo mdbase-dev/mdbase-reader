@@ -3,19 +3,30 @@ import type { SourceSummary } from "@mdbase-reader/core";
 
 export function workspaceTabLabel(tab: WorkspaceTab, source: SourceSummary | null): string {
   if (tab.kind === "library") {
-    return "VIEW";
+    return "Library";
   }
   if (tab.view === "note") {
-    return "NOTE";
+    return "Source note";
   }
   if (tab.view === "annotations") {
-    return "MARKS";
+    return "Annotations";
   }
-  return tab.view === "citation" ? "CSL" : source ? sourceFormat(source) : "SOURCE";
+  return tab.view === "citation" ? "Citation" : source ? sourceFormat(source) : "Source";
 }
 
 export function workspaceTabTitle(tab: WorkspaceTab, source: SourceSummary | null): string {
   return tab.kind === "library" ? tab.title : (source?.title ?? "Unavailable source");
+}
+
+export function workspaceTabAccessibleTitle(
+  tab: WorkspaceTab,
+  source: SourceSummary | null,
+): string {
+  const title = workspaceTabTitle(tab, source);
+  if (tab.kind === "source" && tab.view !== "document") {
+    return `${workspaceTabLabel(tab, source)} — ${title}`;
+  }
+  return title;
 }
 
 export function workspacePaneName(paneId: WorkspacePaneId): string {

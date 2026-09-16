@@ -76,6 +76,18 @@ export const PanelIcon = (props: IconProps): JSX.Element => (
     <path d="M14.5 4v16" />
   </Icon>
 );
+export const LeftPaneIcon = (props: IconProps): JSX.Element => (
+  <Icon {...props}>
+    <rect x="3.5" y="4" width="17" height="16" rx="1" />
+    <path d="M9.5 4v16" />
+  </Icon>
+);
+export const RightPaneIcon = (props: IconProps): JSX.Element => (
+  <Icon {...props}>
+    <rect x="3.5" y="4" width="17" height="16" rx="1" />
+    <path d="M14.5 4v16" />
+  </Icon>
+);
 export const PlusIcon = (props: IconProps): JSX.Element => (
   <Icon {...props}>
     <path d="M12 5v14M5 12h14" />

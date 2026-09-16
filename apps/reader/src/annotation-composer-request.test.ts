@@ -6,9 +6,9 @@ import {
   recordRevision,
   type Source,
 } from "@mdbase-reader/core";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 
-import { annotationRequest } from "./annotation-composer-request.js";
+import { annotationRequest, prepareAnnotationSelection } from "./annotation-composer-request.js";
 
 import type { ReadingSurface } from "@mdbase-reader/reading-surface";
 
@@ -113,5 +113,30 @@ describe("annotationRequest", () => {
       attachment: { mediaType: "image/png" },
     });
     expect(request.attachment?.bytes).toEqual(new Uint8Array([1, 2, 3]));
+  });
+
+  it("prepares capture bytes eagerly and reuses them when saving", async () => {
+    const image = new Blob([new Uint8Array([4, 5, 6])], { type: "image/png" });
+    const arrayBuffer = vi.spyOn(image, "arrayBuffer");
+    const selection = {
+      kind: "area",
+      value: {
+        pageIndex: 0,
+        rect: { x: 10, y: 20, width: 30, height: 40 },
+        coordinateProfile: "embedpdf-capture-page-points-v1",
+        image,
+        imageType: "image/png",
+        scale: 2,
+        withAnnotations: true,
+      },
+    } as const;
+
+    prepareAnnotationSelection(selection);
+    expect(arrayBuffer).toHaveBeenCalledOnce();
+
+    const request = await annotationRequest(source, surface, selection, "");
+
+    expect(arrayBuffer).toHaveBeenCalledOnce();
+    expect(request.attachment?.bytes).toEqual(new Uint8Array([4, 5, 6]));
   });
 });

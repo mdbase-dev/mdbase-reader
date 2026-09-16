@@ -1,6 +1,7 @@
 import { useMemo, useState, type JSX, type SyntheticEvent } from "react";
 
 import { citationDifferences, displayCslValue } from "./citation-form-model.js";
+import { SearchIcon } from "./icons.js";
 
 import type { CitationEditorController } from "./use-citation-editor.js";
 
@@ -17,11 +18,14 @@ export function CitationLookup({
     editor.resolve(query);
   };
   return (
-    <section className="citation-lookup">
-      <header>
-        <span>Find metadata</span>
-        <small>DOI, ISBN, PMID, arXiv, URL, or title</small>
-      </header>
+    <details className="citation-lookup">
+      <summary>
+        <SearchIcon />
+        <span>
+          <strong>Find citation details</strong>
+          <small>Search by DOI, ISBN, URL, or title</small>
+        </span>
+      </summary>
       <form onSubmit={submit}>
         <input
           aria-label="Citation identifier, URL, or title"
@@ -57,7 +61,7 @@ export function CitationLookup({
           editor={editor}
         />
       ) : null}
-    </section>
+    </details>
   );
 }
 
@@ -96,14 +100,23 @@ function CitationMergeReview({
         <div className="citation-differences">
           {differences.map((difference) => (
             <label key={difference.field}>
+              <span className="sr-only">Use found {fieldLabel(difference.field)}</span>
               <input
                 type="checkbox"
                 checked={selected.has(difference.field)}
                 onChange={() => setSelected(toggle(selected, difference.field))}
               />
-              <span>{fieldLabel(difference.field)}</span>
-              <del>{displayCslValue(difference.current)}</del>
-              <ins>{displayCslValue(difference.candidate)}</ins>
+              <span className="citation-difference-copy">
+                <strong>{fieldLabel(difference.field)}</strong>
+                <span>
+                  <small>Current</small>
+                  <del>{displayCslValue(difference.current)}</del>
+                </span>
+                <span>
+                  <small>Found</small>
+                  <ins>{displayCslValue(difference.candidate)}</ins>
+                </span>
+              </span>
             </label>
           ))}
         </div>
@@ -123,7 +136,7 @@ function CitationMergeReview({
       >
         Apply{" "}
         {selected.size === 0
-          ? "selected changes"
+          ? "selected details"
           : `${String(selected.size)} ${selected.size === 1 ? "change" : "changes"}`}
       </button>
     </div>

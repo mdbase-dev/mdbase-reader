@@ -15,6 +15,15 @@ export type ComposerSelection =
   | { readonly kind: "text"; readonly value: TextSelectionDraft }
   | { readonly kind: "area"; readonly value: AreaSelectionDraft };
 
+const preparedAreaImages = new WeakMap<Blob, Promise<Uint8Array>>();
+
+/** Start decoding the captured Blob as soon as EmbedPDF emits it. */
+export function prepareAnnotationSelection(selection: ComposerSelection): void {
+  if (selection.kind === "area") {
+    void areaImageBytes(selection.value.image).catch(() => undefined);
+  }
+}
+
 export async function annotationRequest(
   source: Source,
   surface: ReadingSurface,
@@ -73,10 +82,26 @@ async function areaAnnotationRequest(
     tags: [],
     body: note.trim(),
     attachment: {
-      bytes: new Uint8Array(await selection.image.arrayBuffer()),
+      bytes: await areaImageBytes(selection.image),
       mediaType: "image/png",
     },
   };
+}
+
+function areaImageBytes(image: Blob): Promise<Uint8Array> {
+  const prepared = preparedAreaImages.get(image);
+  if (prepared) {
+    return prepared;
+  }
+  const pending = image.arrayBuffer().then(
+    (buffer) => new Uint8Array(buffer),
+    (reason: unknown) => {
+      preparedAreaImages.delete(image);
+      throw reason;
+    },
+  );
+  preparedAreaImages.set(image, pending);
+  return pending;
 }
 
 function annotationIdentity(

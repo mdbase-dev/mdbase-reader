@@ -49,7 +49,7 @@ export interface LibraryViewSaveRequest {
 
 export const defaultLibraryViewConfiguration: LibraryViewConfiguration = {
   presentation: "table",
-  columns: ["title", "creator", "published", "status", "format", "tags"],
+  columns: ["title", "creator", "published"],
   sortField: "title",
   sortDirection: "asc",
   filter: { query: "", status: "all", format: "all", tag: "" },

@@ -12,6 +12,7 @@ const manifest = {
   icon: "https://reader.mdbase.dev/favicon.svg",
   redirect_uris: ["https://reader.mdbase.dev/"],
   requirements: {
+    access: "full_collection",
     contracts: [],
     capabilities: { contract_version: 1, required: ["collection.inspect"] },
   },

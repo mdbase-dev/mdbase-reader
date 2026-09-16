@@ -15,8 +15,6 @@ export interface SelectedSourceResources {
   readonly setSource: Dispatch<SetStateAction<SourceState>>;
   readonly annotations: AnnotationState;
   readonly setAnnotations: Dispatch<SetStateAction<AnnotationState>>;
-  readonly draft: SelectedValue<string> | null;
-  readonly setDraft: Dispatch<SetStateAction<SelectedValue<string> | null>>;
 }
 
 export function useSelectedSourceResources(
@@ -25,7 +23,6 @@ export function useSelectedSourceResources(
 ): SelectedSourceResources {
   const [source, setSource] = useState<SourceState>(null);
   const [annotations, setAnnotations] = useState<AnnotationState>(null);
-  const [draft, setDraft] = useState<SelectedValue<string> | null>(null);
   useEffect(() => {
     if (!sourceId) {
       return;
@@ -35,9 +32,6 @@ export function useSelectedSourceResources(
       .source(sourceId, { signal: controller.signal })
       .then((value) => {
         if (!controller.signal.aborted) {
-          if (value) {
-            setDraft({ sourceId, value: value.body });
-          }
           setSource({
             sourceId,
             value: value
@@ -80,5 +74,5 @@ export function useSelectedSourceResources(
       });
     return () => controller.abort();
   }, [gateway, sourceId]);
-  return { source, setSource, annotations, setAnnotations, draft, setDraft };
+  return { source, setSource, annotations, setAnnotations };
 }

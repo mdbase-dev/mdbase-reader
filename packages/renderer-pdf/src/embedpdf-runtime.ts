@@ -7,11 +7,12 @@ import {
   type PluginRegistry,
 } from "@embedpdf/react-pdf-viewer";
 
-import { annotationToPdfDecoration } from "./pdf-decoration.js";
+import { createEmbedPdfAnnotationActivations } from "./embedpdf-annotation-activation.js";
+import { createPdfDecorationController } from "./pdf-decoration-controller.js";
 
 import type { PdfDocumentObject, PdfEngine } from "@embedpdf/models";
 import type { CaptureAreaEvent } from "@embedpdf/plugin-capture";
-import type { Annotation } from "@mdbase-reader/core";
+import type { Annotation, AnnotationId } from "@mdbase-reader/core";
 import type {
   AreaSelectionDraft,
   TextSelectionDraft,
@@ -26,6 +27,7 @@ export interface EmbedPdfRuntime {
   onPageChanged(listener: (pageIndex: number) => void): Unsubscribe;
   onAreaSelected(listener: (selection: AreaSelectionDraft) => void): Unsubscribe;
   onTextSelected(listener: (selection: TextSelectionDraft) => void): Unsubscribe;
+  onAnnotationActivated(listener: (annotationId: AnnotationId) => void): Unsubscribe;
   clearTextSelection(): void;
   extractText(options?: { readonly signal?: AbortSignal }): Promise<string>;
   setAnnotations(annotations: readonly Annotation[]): void;
@@ -103,8 +105,9 @@ export function createEmbedPdfRuntime(registry: PluginRegistry): EmbedPdfRuntime
   const scroll = scrollPlugin.provides();
   const selection = selectionPlugin.provides();
   const annotationCapability = annotationPlugin.provides();
+  const decorations = createPdfDecorationController(annotationCapability);
+  const annotationActivations = createEmbedPdfAnnotationActivations(annotationCapability);
   const subscriptions = new Set<Unsubscribe>();
-  const decorationIds = new Set<string>();
 
   return {
     currentPageIndex: () => Math.max(0, scroll.getCurrentPage() - 1),
@@ -150,6 +153,9 @@ export function createEmbedPdfRuntime(registry: PluginRegistry): EmbedPdfRuntime
         unsubscribe();
       };
     },
+    onAnnotationActivated(listener) {
+      return annotationActivations.subscribe(listener);
+    },
     clearTextSelection: () => selection.clear(),
     async extractText(options) {
       const manager = registry.getPlugin<DocumentManagerPlugin>(DocumentManagerPlugin.id);
@@ -159,24 +165,11 @@ export function createEmbedPdfRuntime(registry: PluginRegistry): EmbedPdfRuntime
       const document = await activePdfDocument(manager.provides(), options?.signal);
       return extractPdfDocumentText(registry.getEngine(), document, options?.signal);
     },
-    setAnnotations(annotations) {
-      for (const annotation of annotations) {
-        const decoration = annotationToPdfDecoration(annotation);
-        if (decoration && !decorationIds.has(decoration.id)) {
-          annotationCapability.createAnnotation(decoration.pageIndex, decoration);
-          decorationIds.add(decoration.id);
-        }
-      }
-    },
-    setActiveAnnotation(annotation) {
-      const pdf = annotation?.target?.pdf;
-      if (annotation && pdf) {
-        annotationCapability.selectAnnotation(pdf.pageIndex, `mdbase-reader:${annotation.id}`);
-      } else {
-        annotationCapability.deselectAnnotation();
-      }
-    },
+    setAnnotations: (annotations) => decorations.setAnnotations(annotations),
+    setActiveAnnotation: (annotation) => decorations.setActiveAnnotation(annotation),
     destroy() {
+      decorations.destroy();
+      annotationActivations.destroy();
       for (const unsubscribe of subscriptions) {
         unsubscribe();
       }

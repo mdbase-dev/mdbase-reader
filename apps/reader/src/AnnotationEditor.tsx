@@ -65,14 +65,16 @@ export function AnnotationBodyEditor({
   };
   return (
     <div className="annotation-body-editor">
-      <div className="annotation-editor-label">Annotation Markdown</div>
+      <div className="annotation-editor-label">Note</div>
       <MultilineCodeEditor
         value={body}
-        ariaLabel="Annotation Markdown"
+        ariaLabel="Annotation note"
         className="annotation-code-editor"
+        focusOnMount
         onChange={setBody}
+        onSave={save}
       />
-      <span>Captured selector evidence stays unchanged.</span>
+      <span>The highlighted passage and its location stay unchanged.</span>
       {problem ? <p role="alert">{problem}</p> : null}
       {deletePlan ? (
         <AnnotationDeleteConfirmation

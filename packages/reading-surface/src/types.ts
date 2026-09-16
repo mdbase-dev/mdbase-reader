@@ -1,5 +1,10 @@
 import type { EventSource } from "./events.js";
-import type { Annotation, AnnotationTarget, DocumentTarget } from "@mdbase-reader/core";
+import type {
+  Annotation,
+  AnnotationId,
+  AnnotationTarget,
+  DocumentTarget,
+} from "@mdbase-reader/core";
 
 export type SurfaceKind = "pdf" | "epub" | "html";
 
@@ -66,6 +71,10 @@ export interface AnnotationNavigationCapability {
   goToAnnotation(annotation: Annotation): Promise<boolean>;
 }
 
+export interface AnnotationActivationCapability {
+  readonly activations: EventSource<AnnotationId>;
+}
+
 export interface TextExtractionCapability {
   extractText(options?: { readonly signal?: AbortSignal }): Promise<string>;
 }
@@ -75,6 +84,7 @@ export interface ReadingSurfaceCapabilities {
   readonly areaSelection?: AreaSelectionCapability;
   readonly decorations?: DecorationCapability;
   readonly annotationNavigation?: AnnotationNavigationCapability;
+  readonly annotationActivation?: AnnotationActivationCapability;
   readonly textExtraction?: TextExtractionCapability;
 }
 

@@ -1,11 +1,13 @@
 import { ProductBrand, type ThemePreference } from "@mdbase-reader/ui";
 
-import { PanelIcon, SearchIcon, ThemeIcon } from "./icons.js";
+import { LeftPaneIcon, RightPaneIcon, SearchIcon, ThemeIcon } from "./icons.js";
 
 import type { ReaderDirectAccessState } from "./use-direct-access.js";
 import type { JSX } from "react";
 
 interface ReaderHeaderProps {
+  readonly density?: "comfortable" | "compact";
+  readonly onToggleDensity?: () => void;
   readonly collectionName: string;
   readonly connectionState: "connected" | "offline" | "syncing";
   readonly directAccess: ReaderDirectAccessState;
@@ -13,11 +15,15 @@ interface ReaderHeaderProps {
   readonly onChangeTheme: () => void;
   readonly onOpenCommands: () => void;
   readonly onToggleLibrary: () => void;
+  readonly libraryOpen: boolean;
   readonly inspectorOpen: boolean;
+  readonly inspectorAvailable: boolean;
   readonly onToggleInspector: () => void;
 }
 
 export function ReaderHeader({
+  density = "comfortable",
+  onToggleDensity,
   collectionName,
   connectionState,
   directAccess,
@@ -25,7 +31,9 @@ export function ReaderHeader({
   onChangeTheme,
   onOpenCommands,
   onToggleLibrary,
+  libraryOpen,
   inspectorOpen,
+  inspectorAvailable,
   onToggleInspector,
 }: ReaderHeaderProps): JSX.Element {
   return (
@@ -33,12 +41,14 @@ export function ReaderHeader({
       <div className="reader-header-brand">
         <button
           type="button"
-          className="header-library-toggle"
+          className="icon-button header-pane-toggle is-library"
           aria-label="Toggle library navigator"
           aria-controls="reader-library-navigator"
+          aria-expanded={libraryOpen}
+          title="Toggle library navigator"
           onClick={onToggleLibrary}
         >
-          <span />
+          <LeftPaneIcon />
         </button>
         <ProductBrand />
       </div>
@@ -49,24 +59,37 @@ export function ReaderHeader({
         <ConnectionState state={connectionState} directAccess={directAccess} />
       </div>
       <div className="reader-header-actions">
+        {onToggleDensity ? (
+          <button
+            className="header-density-button"
+            type="button"
+            aria-label={`Interface density: ${density}. Change density`}
+            title="Change interface density"
+            onClick={onToggleDensity}
+          >
+            {density === "comfortable" ? "Aa" : "Aa−"}
+          </button>
+        ) : null}
         <button
           className="header-command-button"
           type="button"
-          aria-label="Search and commands"
-          title="Search and commands · ⌘K"
+          aria-label="Commands and quick source switcher"
+          title="Commands and quick source switcher · Ctrl/⌘K"
           onClick={onOpenCommands}
         >
-          <SearchIcon /> <span>Search</span> <kbd>⌘K</kbd>
+          <SearchIcon /> <span>Commands</span> <kbd>⌘K</kbd>
         </button>
         <button
-          className="icon-button header-inspector-toggle"
+          className="icon-button header-pane-toggle is-inspector"
           type="button"
           aria-label="Toggle source tools"
           aria-controls="reader-source-tools"
           aria-pressed={inspectorOpen}
+          disabled={!inspectorAvailable}
+          title={inspectorAvailable ? "Toggle source tools" : "Open a source to use source tools"}
           onClick={onToggleInspector}
         >
-          <PanelIcon />
+          <RightPaneIcon />
         </button>
         <button
           className="icon-button"
@@ -75,13 +98,6 @@ export function ReaderHeader({
           onClick={onChangeTheme}
         >
           <ThemeIcon />
-        </button>
-        <button
-          className="profile-button"
-          type="button"
-          aria-label="Account and collection settings"
-        >
-          CB
         </button>
       </div>
     </header>
@@ -105,7 +121,7 @@ function ConnectionState({
         className="connection-state is-connected is-direct"
         title="Connected directly to this computer"
       >
-        direct
+        <span className="sr-only">Direct connection</span>
       </span>
     );
   }

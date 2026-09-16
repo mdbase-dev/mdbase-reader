@@ -20,16 +20,14 @@ export function AnnotationComposer({
     ) : null;
   }
   return (
-    <section className="annotation-composer" aria-labelledby="annotation-composer-title">
+    <section
+      className={`annotation-composer is-${composer.selection.kind === "area" ? "area" : "highlight"}`}
+      aria-labelledby="annotation-composer-title"
+    >
       <header>
-        <div>
-          <span className="mono">
-            {composer.selection.kind === "area" ? "New area annotation" : "New highlight"}
-          </span>
-          <strong id="annotation-composer-title">
-            {composer.selection.kind === "area" ? "Save this area" : "Save this passage"}
-          </strong>
-        </div>
+        <strong id="annotation-composer-title">
+          {composer.selection.kind === "area" ? "New area annotation" : "New highlight"}
+        </strong>
         <button
           type="button"
           className="icon-button"

@@ -44,7 +44,7 @@ function navigationCommands(input: ReaderCommandInput): readonly ReaderCommand[]
             {
               id: `switch:${pane.id}:${tab.id}`,
               label: `Switch to ${tab.kind === "library" ? tab.title : (source?.title ?? "source")}`,
-              detail: `${tab.view} · pane ${pane.id === "primary" ? "A" : "B"}`,
+              detail: `${tab.view} · pane ${String(input.workspace.layout.panes.indexOf(pane) + 1)}`,
               group: "Navigate",
               keywords: "tab switch",
               run: () => input.workspace.activateTab(tab.id, pane.id),
@@ -74,12 +74,23 @@ function navigationCommands(input: ReaderCommandInput): readonly ReaderCommand[]
 
 function workspaceCommands(input: ReaderCommandInput): readonly ReaderCommand[] {
   const sourceId = input.activeSource?.id;
-  const split = input.workspace.layout.panes.length === 2;
-  const paneLabel = input.workspace.layout.focusedPaneId === "primary" ? "A" : "B";
-  const otherPaneId = input.workspace.layout.focusedPaneId === "primary" ? "secondary" : "primary";
-  const otherPaneLabel = otherPaneId === "primary" ? "A" : "B";
+  const panes = input.workspace.layout.panes;
+  const split = panes.length > 1;
+  const paneLabel = String(
+    panes.findIndex(({ id }) => id === input.workspace.layout.focusedPaneId) + 1,
+  );
+  const otherPaneId =
+    panes.find(({ id }) => id !== input.workspace.layout.focusedPaneId)?.id ??
+    input.workspace.layout.focusedPaneId;
+  const otherPaneLabel = String(panes.findIndex(({ id }) => id === otherPaneId) + 1);
   const activeTab = input.workspace.activeTab;
   return [
+    {
+      id: "reset-panes",
+      label: "Reset pane arrangement (keep all tabs)",
+      group: "Workspace",
+      run: () => input.workspace.dock.reset(),
+    },
     { id: "toggle-library", label: "Toggle library", group: "Workspace", run: input.toggleLibrary },
     {
       id: "toggle-source-tools",
@@ -110,12 +121,6 @@ function workspaceCommands(input: ReaderCommandInput): readonly ReaderCommand[] 
             group: "Workspace",
             shortcut: "F6",
             run: input.workspace.focusNextPane,
-          },
-          {
-            id: "swap-panes",
-            label: "Swap panes",
-            group: "Workspace",
-            run: input.workspace.swapPanes,
           },
           ...(activeTab
             ? [
@@ -167,7 +172,7 @@ function workspaceCommands(input: ReaderCommandInput): readonly ReaderCommand[] 
       ? ([
           {
             id: "split-right",
-            label: split ? "Duplicate in other pane" : "Duplicate in new pane right",
+            label: "Duplicate in new pane right",
             detail: input.activeSource.title,
             group: "Workspace",
             run: () => input.workspace.openBeside(sourceId, "document", "horizontal"),

@@ -1,7 +1,13 @@
-import { AreaIcon, BackIcon, CitationIcon, FocusIcon, HighlightIcon, NoteIcon } from "./icons.js";
-import { canNavigateHistory } from "./source-workspace-history.js";
-import { sourceFormat } from "./workspace-tab-display.js";
-import { DocumentStatus, SourceActions } from "./WorkspacePaneSupport.js";
+import {
+  AreaIcon,
+  CitationIcon,
+  DownloadIcon,
+  FocusIcon,
+  HighlightIcon,
+  MoreIcon,
+  NoteIcon,
+} from "./icons.js";
+import { DocumentStatus } from "./WorkspacePaneSupport.js";
 
 import type { SourceWorkspacePane } from "./source-workspace-layout.js";
 import type { ReadingResumeState } from "./use-reading-resume.js";
@@ -20,7 +26,6 @@ export interface DocumentContextualToolbarProps {
   readonly canSelectArea: boolean;
   readonly selectingArea: boolean;
   readonly sourceExport: SourceExportController;
-  readonly onBackToLibrary: () => void;
   readonly onToggleFocus: () => void;
   readonly onToggleAreaSelection: () => void;
 }
@@ -35,98 +40,67 @@ export function DocumentContextualToolbar({
   canSelectArea,
   selectingArea,
   sourceExport,
-  onBackToLibrary,
   onToggleFocus,
   onToggleAreaSelection,
 }: DocumentContextualToolbarProps): JSX.Element {
   return (
-    <div className="document-toolbar">
-      <button
-        className="mobile-back icon-button"
-        type="button"
-        aria-label="Back to library"
-        onClick={onBackToLibrary}
-      >
-        <BackIcon />
-      </button>
-      <div className="document-history">
+    <div className="document-toolbar" aria-label="Document actions">
+      {canSelectArea ? (
         <button
           type="button"
-          aria-label="Back"
-          title="Back · Alt+Left"
-          disabled={!canNavigateHistory(pane, -1)}
-          onClick={() => workspace.navigate(-1, pane.id)}
+          className={selectingArea ? "document-area-action is-active" : "document-area-action"}
+          aria-pressed={selectingArea}
+          title={selectingArea ? "Cancel area selection" : "Select an area to annotate"}
+          onClick={onToggleAreaSelection}
         >
-          ‹
+          <AreaIcon />
+          <span>{selectingArea ? "Cancel" : "Select area"}</span>
         </button>
-        <button
-          type="button"
-          aria-label="Forward"
-          title="Forward · Alt+Right"
-          disabled={!canNavigateHistory(pane, 1)}
-          onClick={() => workspace.navigate(1, pane.id)}
-        >
-          ›
-        </button>
-      </div>
-      <div className="document-identity">
-        <strong>{source.title}</strong>
-        <span>
-          {source.creators.join(", ") || "Unknown creator"} · {sourceFormat(source)}
-        </span>
-      </div>
-      <DocumentStatus reading={readingResume} decorationProblem={decorationProblem} />
-      <div className="document-tools">
-        {canSelectArea ? (
-          <details className="toolbar-menu">
-            <summary>Annotate</summary>
-            <div>
-              <button
-                type="button"
-                className={selectingArea ? "is-active" : undefined}
-                onClick={onToggleAreaSelection}
-              >
-                <AreaIcon /> {selectingArea ? "Cancel area selection" : "Select area"}
-              </button>
-            </div>
-          </details>
-        ) : null}
-        <details className="toolbar-menu source-tool-menu">
-          <summary>Tools</summary>
-          <div>
-            <button
-              type="button"
-              onClick={() => workspace.openView(source.id, "annotations", pane.id)}
-            >
-              <HighlightIcon /> Annotations
-            </button>
-            <button type="button" onClick={() => workspace.openView(source.id, "note", pane.id)}>
-              <NoteIcon /> Source note
-            </button>
-            <button
-              type="button"
-              onClick={() => workspace.openView(source.id, "citation", pane.id)}
-            >
-              <CitationIcon /> Citation
-            </button>
-            <i />
-            <button type="button" onClick={() => workspace.openBeside(source.id, "note")}>
-              Open note beside
-            </button>
-          </div>
-        </details>
-        <button
-          type="button"
-          className={focusMode ? "tool-button is-active" : "tool-button"}
-          aria-label="Toggle focus mode"
-          title={`${focusMode ? "Exit" : "Enter"} focus mode · Esc to exit`}
-          onClick={onToggleFocus}
-        >
-          <FocusIcon />
-          <span className="tool-label">Focus</span>
-        </button>
-        <SourceActions sourceExport={sourceExport} />
-      </div>
+      ) : null}
+      <details className="document-actions-menu toolbar-menu">
+        <summary className="icon-button" aria-label="More document actions" title="More actions">
+          <MoreIcon />
+        </summary>
+        <div>
+          <button
+            type="button"
+            onClick={() => workspace.openView(source.id, "annotations", pane.id)}
+          >
+            <HighlightIcon /> Annotations
+          </button>
+          <button type="button" onClick={() => workspace.openView(source.id, "note", pane.id)}>
+            <NoteIcon /> Source note
+          </button>
+          <button type="button" onClick={() => workspace.openView(source.id, "citation", pane.id)}>
+            <CitationIcon /> Citation
+          </button>
+          <i />
+          <button type="button" onClick={() => workspace.openBeside(source.id, "note")}>
+            <NoteIcon /> Open note beside
+          </button>
+          <button
+            type="button"
+            className={focusMode ? "is-active" : undefined}
+            onClick={onToggleFocus}
+          >
+            <FocusIcon /> {focusMode ? "Exit focus mode" : "Focus on document"}
+          </button>
+          <button
+            type="button"
+            disabled={!sourceExport.available || sourceExport.status === "exporting"}
+            onClick={sourceExport.run}
+          >
+            <DownloadIcon />
+            {sourceExport.status === "exporting" ? "Preparing export…" : "Export source"}
+          </button>
+          <DocumentStatus reading={readingResume} decorationProblem={decorationProblem} />
+          {sourceExport.message ? (
+            <p className={`source-export-message is-${sourceExport.status}`}>
+              {sourceExport.message}
+            </p>
+          ) : null}
+        </div>
+      </details>
     </div>
   );
 }

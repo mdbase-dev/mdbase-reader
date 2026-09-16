@@ -1,3 +1,4 @@
+import { appendAnnotationQuoteFooter } from "../domain/annotation-body.js";
 import { validateCslItem, type CslItem } from "../domain/citation.js";
 
 import type { Annotation } from "../domain/annotation.js";
@@ -98,26 +99,14 @@ function annotationBody(annotation: Annotation): string {
   if (annotation.body.trim()) {
     return annotation.body.trim();
   }
-  const quote = annotation.target?.quote?.exact;
-  if (quote) {
-    return quote
-      .split("\n")
-      .map((line) => `> ${line}`)
-      .join("\n");
-  }
   return `*[${annotation.annotationType} annotation]*`;
 }
 
 function addAttribution(body: string, source: Source, annotation: Annotation): string {
   const attribution = annotationAttribution(source, annotation);
-  const lines = body.split("\n");
-  let quoteEnd = 0;
-  while (quoteEnd < lines.length && /^\s*>/u.test(lines[quoteEnd] ?? "")) {
-    quoteEnd += 1;
-  }
-  if (quoteEnd > 0) {
-    lines.splice(quoteEnd, 0, ">", `> ${attribution}`);
-    return lines.join("\n").trim();
+  const quoted = appendAnnotationQuoteFooter(body, attribution);
+  if (quoted !== null) {
+    return quoted.trim();
   }
   return `${body.trim()}\n\n${attribution}`.trim();
 }

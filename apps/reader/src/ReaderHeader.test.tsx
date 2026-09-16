@@ -19,13 +19,28 @@ function renderHeader(directAccess: ReaderDirectAccessState): string {
       connectionState="connected"
       directAccess={directAccess}
       theme="system"
+      libraryOpen
       inspectorOpen={false}
+      inspectorAvailable
       {...actions}
     />,
   );
 }
 
 describe("ReaderHeader direct access", () => {
+  it("uses one coherent control treatment for both pane toggles", () => {
+    const markup = renderHeader({
+      snapshot: null,
+      working: false,
+      problem: null,
+      request: vi.fn(),
+    });
+
+    expect(markup.match(/header-pane-toggle/g)).toHaveLength(2);
+    expect(markup).toContain('class="icon-button header-pane-toggle is-library"');
+    expect(markup).toContain('class="icon-button header-pane-toggle is-inspector"');
+  });
+
   it("offers a user-initiated local network request for a relayed connector", () => {
     const request = vi.fn();
     const markup = renderHeader({
@@ -47,7 +62,7 @@ describe("ReaderHeader direct access", () => {
       request: vi.fn(),
     });
 
-    expect(markup).toContain(">direct</span>");
+    expect(markup).toContain("Direct connection</span>");
     expect(markup).not.toContain("Connect directly");
   });
 });

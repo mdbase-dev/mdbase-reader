@@ -87,4 +87,28 @@ describe("materializeSource", () => {
     expect(result.markdown).toContain("> — Gravity and Grace, p. 16");
     expect(result.bibliography).toEqual([]);
   });
+
+  it("materializes the authored blockquote rather than selector evidence", () => {
+    const edited = {
+      ...annotation,
+      target: { quote: { exact: "Noisy text extracted from the PDF." } },
+      body: "> A carefully corrected quotation.\n\nEditorial commentary.",
+    };
+    const result = materializeSource(source, [edited], [source]);
+
+    expect(result.markdown).toContain("> A carefully corrected quotation.");
+    expect(result.markdown).not.toContain("Noisy text extracted from the PDF.");
+  });
+
+  it("does not restore selector evidence after the authored blockquote is removed", () => {
+    const edited = {
+      ...annotation,
+      target: { quote: { exact: "Anchor evidence that should remain hidden." } },
+      body: "Editorial commentary only.",
+    };
+    const result = materializeSource(source, [edited], [source]);
+
+    expect(result.markdown).toContain("Editorial commentary only.\n\n— [@weil2002, p. 16]");
+    expect(result.markdown).not.toContain("Anchor evidence that should remain hidden.");
+  });
 });

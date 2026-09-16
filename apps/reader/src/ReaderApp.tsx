@@ -1,5 +1,6 @@
-import { useCallback, useState, type JSX } from "react";
+import { useCallback, useEffect, useState, type JSX } from "react";
 
+import { navigatorPanelId } from "./dockview-workspace-state.js";
 import {
   useReaderAnnotationComposer,
   useFocusChrome,
@@ -10,6 +11,8 @@ import {
 import { ReaderLoading } from "./ReaderLoading.js";
 import { ReaderWorkspaceView, type ReaderWorkspaceViewModel } from "./ReaderWorkspaceView.js";
 import { updateSurface } from "./RenderedSourceDocument.js";
+import { SessionReadingLocations } from "./session-reading-locations.js";
+import { SourceLibraryContext } from "./SourceLibraryContext.js";
 import { useBibliographyExport } from "./use-bibliography-export.js";
 import { useDeploymentUpdate } from "./use-deployment-update.js";
 import { useDirectAccess } from "./use-direct-access.js";
@@ -19,7 +22,6 @@ import { useReaderWorkspace, type ReaderWorkspaceController } from "./use-reader
 import { useSourceAddition } from "./use-source-addition.js";
 import { useSourceExport } from "./use-source-export.js";
 import { useSourceWorkspace } from "./use-source-workspace.js";
-import { useWorkspaceDirtyIndicator } from "./use-workspace-dirty-indicator.js";
 
 import type { SourceDocumentRenderer } from "./RenderedSourceDocument.js";
 import type { ReaderWorkspaceGateway } from "./workspace-model.js";
@@ -78,13 +80,13 @@ function OpenedReaderApp({
 }): JSX.Element {
   const collectionKey = library.sources[0]?.collectionId ?? library.collectionName;
   const libraryViews = useMdbaseLibraryViews(gateway);
-  const [mobileLibraryOpen, setMobileLibraryOpen] = useState(false);
-  const [libraryCollapsed, setLibraryCollapsed] = useState(false);
   const [focusMode, setFocusMode] = useState(false);
   const focusChromeVisible = useFocusChrome(focusMode);
   const [commandsOpen, setCommandsOpen] = useState(false);
   const [theme, changeTheme] = useThemePreference();
   const [surfaces, setSurfaces] = useState<ReadonlyMap<string, ReadingSurface>>(new Map());
+  const [sessionLocations] = useState(() => new SessionReadingLocations());
+  useEffect(() => () => sessionLocations.clear(), [sessionLocations]);
   const deploymentUpdateAvailable = useDeploymentUpdate();
   const directAccessState = useDirectAccess(directAccess);
   const sourceWorkspace = useSourceWorkspace({
@@ -92,19 +94,20 @@ function OpenedReaderApp({
     sourceIds: library.sources.map(({ id }) => id),
     collectionKey,
     selectSource: workspace.selectSource,
-    // Native confirmation keeps tab and pane closing synchronous with the workspace action.
-    // eslint-disable-next-line no-alert
-    confirmDiscard: () => globalThis.confirm("Discard unsaved changes and close this tab?"),
+    confirmDiscard: confirmCloseDirtyTab,
   });
-  const surface = sourceWorkspace.activeSourceId
-    ? (surfaces.get(`${sourceWorkspace.layout.focusedPaneId}:${sourceWorkspace.activeSourceId}`) ??
-      null)
-    : null;
-  const onSurfaceChange = useCallback((sessionId: string, next: ReadingSurface | null): void => {
-    setSurfaces((current) => updateSurface(current, sessionId, next));
-  }, []);
-  const composer = useReaderAnnotationComposer(workspace, surface);
-  useWorkspaceDirtyIndicator(workspace, sourceWorkspace);
+  const surface =
+    sourceWorkspace.activeTab?.kind === "source" && sourceWorkspace.activeTab.view === "document"
+      ? (surfaces.get(sourceWorkspace.activeTab.id) ?? null)
+      : null;
+  const onSurfaceChange = useCallback(
+    (sessionId: string, next: ReadingSurface | null): void => {
+      sessionLocations.attach(sessionId, next);
+      setSurfaces((current) => updateSurface(current, sessionId, next));
+    },
+    [sessionLocations],
+  );
+  const composer = useReaderAnnotationComposer(workspace, sourceWorkspace.activeSourceId, surface);
   const readingResume = useReaderReadingResume(workspace, surface);
   const decorationProblem = useDocumentDecorations(
     surface,
@@ -113,7 +116,6 @@ function OpenedReaderApp({
   );
   const sourceAddition = useSourceAddition(workspace, pickSourceFile, (sourceId) => {
     sourceWorkspace.open(sourceId);
-    setMobileLibraryOpen(false);
   });
   const bibliographyExport = useBibliographyExport(library.sources, saveFile);
   const sourceExport = useSourceExport({
@@ -128,7 +130,10 @@ function OpenedReaderApp({
     focusMode,
     setFocusMode,
     openCommands: () => setCommandsOpen(true),
-    focusSearch: () => focusLibrarySearch(setMobileLibraryOpen),
+    focusSearch: () => {
+      sourceWorkspace.dock.setSideVisible(navigatorPanelId, true);
+      focusLibrarySearch();
+    },
     switchTab: sourceWorkspace.switchRelative,
     focusNextPane: sourceWorkspace.focusNextPane,
     reopenTab: sourceWorkspace.reopenClosed,
@@ -156,6 +161,7 @@ function OpenedReaderApp({
     sourceExport,
     renderDocument,
     onSurfaceChange,
+    surfaces,
     deploymentUpdateAvailable,
     directAccess: directAccessState,
     theme,
@@ -163,19 +169,26 @@ function OpenedReaderApp({
     focusMode,
     focusChromeVisible,
     setFocusMode,
-    mobileLibraryOpen,
-    setMobileLibraryOpen,
-    libraryCollapsed,
-    setLibraryCollapsed,
     commandsOpen,
     setCommandsOpen,
     pickSourceFile,
   } satisfies ReaderWorkspaceViewModel;
-  return <ReaderWorkspaceView model={model} />;
+  return (
+    <SourceLibraryContext value={library.sources}>
+      <ReaderWorkspaceView model={model} />
+    </SourceLibraryContext>
+  );
 }
 
-function focusLibrarySearch(setLibraryOpen: (open: boolean) => void): void {
-  setLibraryOpen(true);
+function confirmCloseDirtyTab(): boolean {
+  // Native confirmation keeps tab and pane closing synchronous with the workspace action.
+  // eslint-disable-next-line no-alert
+  return globalThis.confirm(
+    "Close this tab? Locally saved note drafts can be recovered. Other unsaved changes will be discarded.",
+  );
+}
+
+function focusLibrarySearch(): void {
   globalThis.setTimeout(
     () => document.querySelector<HTMLInputElement>("#reader-library-search")?.focus(),
     0,

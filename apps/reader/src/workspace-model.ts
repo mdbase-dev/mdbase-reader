@@ -46,6 +46,8 @@ export interface ReaderWorkspaceGateway {
   ): Promise<ExecutedLibraryView>;
   saveLibraryView(request: LibraryViewSaveRequest): Promise<MdbaseLibraryView>;
   source(id: SourceId, options?: ReaderRequestOptions): Promise<Source | null>;
+  /** Bypass session caches when comparing revisions before a draft write. */
+  refreshSource?(id: SourceId, options?: ReaderRequestOptions): Promise<Source | null>;
   annotations(id: SourceId, options?: ReaderRequestOptions): Promise<readonly Annotation[]>;
   annotationSourceIds?(options?: ReaderRequestOptions): Promise<readonly SourceId[]>;
   saveSourceBody(source: Source, body: string): Promise<Source>;

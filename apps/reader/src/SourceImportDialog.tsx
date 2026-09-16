@@ -43,9 +43,8 @@ export function SourceImportDialog({
         aria-labelledby="reader-import-title"
       >
         <div className="import-dialog-heading">
-          <span className="mono">New source</span>
-          <h2 id="reader-import-title">Add to your library</h2>
-          <p>The original file stays intact in this collection.</p>
+          <h2 id="reader-import-title">Add source</h2>
+          <p>The original file stays intact in your collection.</p>
         </div>
         <div className="import-file-summary">
           <span className="import-format">{formatLabel(file)}</span>

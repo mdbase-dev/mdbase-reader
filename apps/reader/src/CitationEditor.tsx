@@ -36,49 +36,43 @@ function ReadyCitationEditor({
   const citation = editor.assessment.value ?? {};
   const validCitation = editor.assessment.valid ? editor.assessment.value : null;
   const citekey = textField(citation["id"]);
-  const type = textField(citation["type"]);
   const title = textField(citation["title"]) ?? source.title;
   return (
     <div className="citation-editor">
       <header
         className="citation-bookplate"
+        aria-label={`Citation metadata for ${title}`}
         draggable={validCitation !== null}
         title={validCitation ? "Drag to insert this citation" : undefined}
         onDragStart={(event) =>
           validCitation && writeCitationDrag(event.dataTransfer, validCitation)
         }
       >
-        <div className="citation-bookplate-copy">
-          <span>Citation record</span>
-          <strong>{title}</strong>
-        </div>
-        <div className="citation-identity">
-          <span className={citekey ? "citation-key" : "citation-key is-empty"}>
-            {citekey ? `@${citekey}` : "citekey required"}
-          </span>
-          <span>{type ?? "type required"}</span>
+        <div className="citation-readiness">
           <CitationValidity valid={editor.assessment.valid} warnings={editor.warnings.length} />
+          <code className={citekey ? undefined : "is-empty"}>
+            {citekey ? `@${citekey}` : "Citation key needed"}
+          </code>
         </div>
+        <nav className="citation-editor-tabs" aria-label="Citation editor mode">
+          <button
+            type="button"
+            aria-current={mode === "fields" ? "page" : undefined}
+            onClick={() => setMode("fields")}
+          >
+            Details
+          </button>
+          <button
+            type="button"
+            aria-current={mode === "raw" ? "page" : undefined}
+            onClick={() => setMode("raw")}
+          >
+            Raw CSL
+          </button>
+        </nav>
       </header>
 
       {validCitation ? <CitationPreview citation={validCitation} /> : null}
-
-      <nav className="citation-editor-tabs" aria-label="Citation editor mode">
-        <button
-          type="button"
-          aria-current={mode === "fields" ? "page" : undefined}
-          onClick={() => setMode("fields")}
-        >
-          Fields
-        </button>
-        <button
-          type="button"
-          aria-current={mode === "raw" ? "page" : undefined}
-          onClick={() => setMode("raw")}
-        >
-          Raw CSL
-        </button>
-      </nav>
 
       <main className="citation-editor-body">
         {mode === "fields" ? (
@@ -103,6 +97,7 @@ function ReadyCitationEditor({
               language="json"
               value={editor.draft}
               onChange={editor.setDraft}
+              onSave={editor.save}
             />
           </div>
         )}
@@ -114,7 +109,7 @@ function ReadyCitationEditor({
           disabled={!editor.assessment.valid || !editor.dirty || editor.status === "saving"}
           onClick={editor.save}
         >
-          {editor.status === "saving" ? "Saving…" : "Save citation"}
+          {editor.status === "saving" ? "Saving…" : "Save changes"}
         </ReaderButton>
       </footer>
     </div>
@@ -146,9 +141,9 @@ function CitationValidity({
     <span className={valid ? (warnings ? "is-warning" : "is-valid") : "is-invalid"}>
       {valid
         ? warnings
-          ? `${String(warnings)} ${warnings === 1 ? "suggestion" : "suggestions"}`
-          : "Complete"
-        : "Needs attention"}
+          ? `Ready · ${String(warnings)} ${warnings === 1 ? "suggestion" : "suggestions"}`
+          : "Ready to cite"
+        : "Citation incomplete"}
     </span>
   );
 }
@@ -186,12 +181,12 @@ function CitationFeedback({ editor }: { readonly editor: CitationEditorControlle
   }
   const message =
     editor.status === "saved"
-      ? "Saved to this source."
+      ? "Saved"
       : editor.suggested
-        ? "Suggested from source metadata. Review before saving."
+        ? "Review the suggested details before saving."
         : !editor.dirty
-          ? "Saved to this source."
-          : "Ready to save.";
+          ? "Saved"
+          : "Unsaved changes";
   return (
     <div className="citation-feedback" aria-live="polite">
       <span>{message}</span>

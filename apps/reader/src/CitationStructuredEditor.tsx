@@ -39,8 +39,8 @@ export function CitationStructuredEditor({
     <div className="citation-form">
       <section className="citation-field-section is-primary">
         <header>
-          <span>Identity</span>
-          <small>The stable handle and kind of work</small>
+          <strong>Citation details</strong>
+          <small>Title, work type, and citation key</small>
         </header>
         <div className="citation-field-grid">
           <label className="citation-field is-wide">
@@ -101,8 +101,8 @@ export function CitationStructuredEditor({
 
       <section className="citation-field-section">
         <header>
-          <span>Contributors</span>
-          <small>People and organisations responsible for this work</small>
+          <strong>Contributors</strong>
+          <small>Authors, editors, translators, and organisations</small>
         </header>
         <CitationContributors
           citation={citation}
@@ -130,7 +130,7 @@ export function CitationStructuredEditor({
 
       <section className="citation-field-section">
         <header>
-          <span>Publication</span>
+          <strong>Publication</strong>
           <small>Where and when the work appeared</small>
         </header>
         <div className="citation-field-grid">
@@ -193,11 +193,13 @@ export function CitationStructuredEditor({
         </div>
       </section>
 
-      <section className="citation-field-section">
-        <header>
-          <span>Identifiers and access</span>
-          <small>Portable links back to the work</small>
-        </header>
+      <details className="citation-field-section">
+        <summary>
+          <span>
+            <strong>Identifiers and access</strong>
+            <small>DOI, ISBN, URL, and language</small>
+          </span>
+        </summary>
         <div className="citation-field-grid">
           <TextField
             citation={citation}
@@ -236,10 +238,15 @@ export function CitationStructuredEditor({
             problem={problem("language")}
           />
         </div>
-      </section>
+      </details>
 
       <details className="citation-field-section citation-abstract-section">
-        <summary>Abstract and preserved fields</summary>
+        <summary>
+          <span>
+            <strong>Abstract</strong>
+            <small>Optional descriptive text</small>
+          </span>
+        </summary>
         <label className="citation-field">
           <span>Abstract</span>
           <textarea

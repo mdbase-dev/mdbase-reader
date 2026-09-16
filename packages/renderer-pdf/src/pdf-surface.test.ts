@@ -1,4 +1,4 @@
-import { fileId, fileRevision } from "@mdbase-reader/core";
+import { annotationId, fileId, fileRevision } from "@mdbase-reader/core";
 import { describe, expect, it, vi } from "vitest";
 
 import { EmbedPdfSurface } from "./pdf-surface.js";
@@ -16,10 +16,12 @@ function runtimeFixture(): {
   emitArea(selection: AreaSelectionDraft): void;
   emitText(selection: TextSelectionDraft): void;
   emitPage(pageIndex: number): void;
+  emitActivation(id: ReturnType<typeof annotationId>): void;
 } {
   let areaListener: ((selection: AreaSelectionDraft) => void) | undefined;
   let pageListener: ((pageIndex: number) => void) | undefined;
   let textListener: ((selection: TextSelectionDraft) => void) | undefined;
+  let activationListener: ((id: ReturnType<typeof annotationId>) => void) | undefined;
   const goToPage = vi.fn();
   const cancelAreaSelection = vi.fn();
   const setAnnotations = vi.fn();
@@ -53,6 +55,12 @@ function runtimeFixture(): {
           textListener = undefined;
         };
       },
+      onAnnotationActivated: (listener) => {
+        activationListener = listener;
+        return () => {
+          activationListener = undefined;
+        };
+      },
       destroy: vi.fn(),
     },
     cancelAreaSelection,
@@ -63,6 +71,7 @@ function runtimeFixture(): {
     emitArea: (selection) => areaListener?.(selection),
     emitText: (selection) => textListener?.(selection),
     emitPage: (pageIndex) => pageListener?.(pageIndex),
+    emitActivation: (id) => activationListener?.(id),
   };
 }
 
@@ -77,6 +86,18 @@ const document = {
 } as const;
 
 describe("EmbedPdfSurface", () => {
+  it("publishes activated saved annotations", () => {
+    const fixture = runtimeFixture();
+    const surface = new EmbedPdfSurface(document, fixture.runtime);
+    const activated = vi.fn();
+    surface.capabilities.annotationActivation?.activations.subscribe(activated);
+
+    const id = annotationId("ann-pdf");
+    fixture.emitActivation(id);
+
+    expect(activated).toHaveBeenCalledWith(id);
+  });
+
   it("translates zero-based Reader locations to the EmbedPDF runtime", async () => {
     const fixture = runtimeFixture();
     const surface = new EmbedPdfSurface(document, fixture.runtime);
@@ -136,7 +157,7 @@ describe("EmbedPdfSurface", () => {
     expect(listener).toHaveBeenCalledWith(selection);
   });
 
-  it("passes only exact-document annotations to runtime decorations", async () => {
+  it("binds decorations by stable file identity rather than byte revision", async () => {
     const fixture = runtimeFixture();
     const surface = new EmbedPdfSurface(document, fixture.runtime);
     const matching = {
@@ -150,17 +171,26 @@ describe("EmbedPdfSurface", () => {
       body: "",
       createdAt: "2026-08-09T00:00:00.000Z" as never,
     };
-    await surface.capabilities.decorations?.setAnnotations([
-      matching,
-      {
-        ...matching,
-        id: "ann-2" as never,
-        document: { ...matching.document, fileId: fileId("other") },
+    const previousRevision = {
+      ...matching,
+      id: "ann-previous-revision" as never,
+      document: {
+        ...matching.document,
+        revision: fileRevision(`sha256:${"b".repeat(64)}`),
       },
-    ]);
-    expect(fixture.setAnnotations).toHaveBeenCalledWith([matching]);
-    await surface.capabilities.decorations?.setActiveAnnotation(matching);
-    expect(fixture.setActiveAnnotation).toHaveBeenCalledWith(matching);
+    };
+    const otherFile = {
+      ...matching,
+      id: "ann-other-file" as never,
+      document: { ...matching.document, fileId: fileId("other") },
+    };
+    await surface.capabilities.decorations?.setAnnotations([matching, previousRevision, otherFile]);
+    expect(fixture.setAnnotations).toHaveBeenCalledWith([matching, previousRevision]);
+
+    await surface.capabilities.decorations?.setActiveAnnotation(previousRevision);
+    expect(fixture.setActiveAnnotation).toHaveBeenLastCalledWith(previousRevision);
+    await surface.capabilities.decorations?.setActiveAnnotation(otherFile);
+    expect(fixture.setActiveAnnotation).toHaveBeenLastCalledWith(null);
   });
 
   it("exposes bounded renderer text extraction through the surface capability", async () => {

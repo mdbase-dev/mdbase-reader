@@ -37,11 +37,13 @@ export function CitationAdditionalFields({
     setSelected("");
   };
   return (
-    <section className="citation-field-section citation-field-shelf">
-      <header>
-        <span>More CSL fields</span>
-        <small>Add any variable from the official CSL-JSON schema</small>
-      </header>
+    <details className="citation-field-section citation-field-shelf">
+      <summary>
+        <span>
+          <strong>Additional fields</strong>
+          <small>Add less common CSL metadata</small>
+        </span>
+      </summary>
       <div className="citation-field-picker">
         <label>
           <span>Find a field</span>
@@ -88,7 +90,7 @@ export function CitationAdditionalFields({
       ) : (
         <p className="citation-field-shelf-empty">This record only uses the core fields above.</p>
       )}
-    </section>
+    </details>
   );
 }
 

@@ -17,7 +17,7 @@ import { useReadingResume, type ReadingResumeState } from "./use-reading-resume.
 import type { LibraryLensId } from "./library-lenses.js";
 import type { LibrarySort } from "./library-view-state.js";
 import type { ReaderWorkspaceController } from "./use-reader-workspace.js";
-import type { SourceSummary } from "@mdbase-reader/core";
+import type { SourceId, SourceSummary } from "@mdbase-reader/core";
 import type { ReadingSurface } from "@mdbase-reader/reading-surface";
 
 export function useResponsiveInspector(setInspectorOpen: (open: boolean) => void): void {
@@ -76,6 +76,9 @@ export function useReaderShortcuts(actions: ReaderShortcutActions): void {
 }
 
 function handleReaderShortcut(event: KeyboardEvent, actions: ReaderShortcutActions): void {
+  if (event.defaultPrevented) {
+    return;
+  }
   if (handleCommandShortcut(event, actions) || handleTabShortcut(event, actions)) {
     return;
   }
@@ -94,12 +97,15 @@ function handleReaderShortcut(event: KeyboardEvent, actions: ReaderShortcutActio
 
 function handleCommandShortcut(event: KeyboardEvent, actions: ReaderShortcutActions): boolean {
   const modifier = event.metaKey || event.ctrlKey;
-  if (modifier && event.key.toLocaleLowerCase() === "k") {
+  const editing =
+    event.target instanceof Element &&
+    Boolean(event.target.closest("input, textarea, [contenteditable='true']"));
+  if (modifier && !editing && event.key.toLocaleLowerCase() === "k") {
     event.preventDefault();
     actions.openCommands();
     return true;
   }
-  if (modifier && event.key.toLocaleLowerCase() === "f") {
+  if (modifier && event.shiftKey && event.key.toLocaleLowerCase() === "f") {
     event.preventDefault();
     actions.focusSearch();
     return true;
@@ -174,12 +180,16 @@ export function useReaderReadingResume(
 
 export function useReaderAnnotationComposer(
   workspace: ReaderWorkspaceController,
+  sourceId: SourceId | null,
   surface: ReadingSurface | null,
 ): AnnotationComposerController {
+  const source = workspace.sourceRecord.status === "ready" ? workspace.sourceRecord.value : null;
   return useAnnotationComposer({
-    source: workspace.sourceRecord.status === "ready" ? workspace.sourceRecord.value : null,
+    sourceId,
+    source: source?.id === sourceId ? source : null,
     surface,
     create: workspace.createAnnotation,
+    annotations: workspace.annotations.status === "ready" ? workspace.annotations.value : [],
   });
 }
 

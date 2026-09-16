@@ -26,7 +26,6 @@ export function ConnectionLayout({
       <section className="connection-card">
         <ProductBrand />
         <div className="connection-copy">
-          <span className="mono">Your library, directly</span>
           <h1>Open mdbase Reader</h1>
           <p role="status">{status}</p>
           {error ? (

@@ -1,6 +1,7 @@
 import { createEventEmitter } from "@mdbase-reader/reading-surface";
 
 import type { ReadiumRuntime } from "./readium-runtime.js";
+import type { AnnotationId } from "@mdbase-reader/core";
 import type {
   ReadingSurface,
   ReaderLocator,
@@ -16,8 +17,10 @@ export class ReadiumEpubSurface implements ReadingSurface {
   readonly #runtime: ReadiumRuntime;
   readonly #selections =
     createEventEmitter<Parameters<Parameters<ReadiumRuntime["onTextSelected"]>[0]>[0]>();
+  readonly #annotationActivations = createEventEmitter<AnnotationId>();
   readonly #unsubscribeLocation: () => void;
   readonly #unsubscribeSelection: () => void;
+  readonly #unsubscribeAnnotationActivation: () => void;
   #locator: Readonly<Record<string, unknown>>;
   #destroyed = false;
 
@@ -31,6 +34,9 @@ export class ReadiumEpubSurface implements ReadingSurface {
     });
     this.#unsubscribeSelection = runtime.onTextSelected((selection) =>
       this.#selections.emit(selection),
+    );
+    this.#unsubscribeAnnotationActivation = runtime.onAnnotationActivated((annotationId) =>
+      this.#annotationActivations.emit(annotationId),
     );
     this.capabilities = {
       textSelection: {
@@ -58,6 +64,7 @@ export class ReadiumEpubSurface implements ReadingSurface {
           return Promise.resolve();
         },
       },
+      annotationActivation: { activations: this.#annotationActivations },
     };
   }
 
@@ -80,7 +87,9 @@ export class ReadiumEpubSurface implements ReadingSurface {
     if (!this.#destroyed) {
       this.#unsubscribeLocation();
       this.#unsubscribeSelection();
+      this.#unsubscribeAnnotationActivation();
       this.#selections.clear();
+      this.#annotationActivations.clear();
       this.locations.clear();
       await this.#runtime.destroy();
       this.#destroyed = true;

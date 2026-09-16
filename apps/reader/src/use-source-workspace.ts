@@ -1,14 +1,13 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, useSyncExternalStore } from "react";
 
-import { createSourceWorkspaceActions } from "./source-workspace-controller.js";
+import { dockWorkspaceActions } from "./dockview-workspace-actions.js";
+import { ReaderDockWorkspace } from "./dockview-workspace.js";
 import {
   activeTab,
   focusedPane,
   sourceIdsInWorkspace,
   workspaceTabSourceId,
 } from "./source-workspace-layout.js";
-import { persistSourceWorkspace, restoreSourceWorkspace } from "./source-workspace-persistence.js";
-import { openLibraryTab } from "./source-workspace-tabs.js";
 
 import type { SourceWorkspaceActions } from "./source-workspace-controller.js";
 import type {
@@ -25,68 +24,43 @@ export interface SourceWorkspaceOptions {
   readonly selectSource: (sourceId: SourceId | null) => void;
   readonly confirmDiscard?: (tab: WorkspaceTab) => boolean;
 }
-
 export interface SourceWorkspaceController extends SourceWorkspaceActions {
+  readonly dock: ReaderDockWorkspace;
   readonly layout: SourceWorkspaceLayout;
   readonly activePane: SourceWorkspacePane;
   readonly activeTab: WorkspaceTab | null;
   readonly activeSourceId: SourceId | null;
   readonly openSourceIds: readonly SourceId[];
 }
-
 export function useSourceWorkspace(options: SourceWorkspaceOptions): SourceWorkspaceController {
-  const { collectionKey, confirmDiscard, selectSource, sourceIds } = options;
-  const knownSourceIds = useMemo(() => new Set(sourceIds), [sourceIds]);
-  const [layout, setLayout] = useState(() => initialWorkspace(collectionKey, knownSourceIds));
+  const [dock] = useState(
+    () =>
+      new ReaderDockWorkspace(options.collectionKey, browserStorage(), new Set(options.sourceIds)),
+  );
+  const { confirmDiscard, selectSource } = options;
   useEffect(() => {
-    persistSourceWorkspace(browserStorage(), collectionKey, layout);
-  }, [collectionKey, layout]);
-
+    dock.setCloseGuard(confirmDiscard ?? (() => false));
+  }, [dock, confirmDiscard]);
+  const layout = useSyncExternalStore(dock.subscribe, dock.getSnapshot, dock.getSnapshot);
+  const pane = focusedPane(layout);
+  const tab = activeTab(pane);
+  const sourceId = workspaceTabSourceId(tab);
   useEffect(() => {
-    const sourceId = workspaceTabSourceId(activeTab(focusedPane(layout)));
-    // A collection-level library tab must not discard the source that a preview
-    // or an adjacent research tool is still using.
     if (sourceId) {
       selectSource(sourceId);
     }
-  }, [layout, selectSource]);
-
-  const commit = useCallback(
-    (update: (current: SourceWorkspaceLayout) => SourceWorkspaceLayout): void => {
-      setLayout(update);
-    },
-    [],
-  );
-  const canClose = useCallback(
-    (tab: WorkspaceTab | undefined): boolean => !tab?.dirty || confirmDiscard?.(tab) === true,
-    [confirmDiscard],
-  );
-  const actions = useMemo(
-    () => createSourceWorkspaceActions({ current: () => layout, commit, canClose }),
-    [canClose, commit, layout],
-  );
-  const activePane = focusedPane(layout);
-  const currentTab = activeTab(activePane);
+  }, [sourceId, selectSource]);
+  const actions = useMemo(() => dockWorkspaceActions(dock), [dock]);
   return {
+    dock,
     layout,
-    activePane,
-    activeTab: currentTab,
-    activeSourceId: workspaceTabSourceId(currentTab),
+    activePane: pane,
+    activeTab: tab,
+    activeSourceId: sourceId,
     openSourceIds: sourceIdsInWorkspace(layout),
     ...actions,
   };
 }
-
-function initialWorkspace(
-  collectionKey: string,
-  knownSourceIds: ReadonlySet<SourceId>,
-): SourceWorkspaceLayout {
-  const restored = restoreSourceWorkspace(browserStorage(), collectionKey, knownSourceIds, null);
-  return restored.panes.some(({ tabs }) => tabs.length > 0)
-    ? restored
-    : openLibraryTab(restored, "all-sources", { title: "Library", pinned: true });
-}
-
 function browserStorage(): Storage | null {
   try {
     return globalThis.localStorage;

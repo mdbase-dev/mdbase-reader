@@ -1,4 +1,4 @@
-import { fileId, fileRevision } from "@mdbase-reader/core";
+import { annotationId, fileId, fileRevision } from "@mdbase-reader/core";
 import { describe, expect, it, vi } from "vitest";
 
 import { ReadiumEpubSurface } from "./epub-surface.js";
@@ -13,9 +13,11 @@ function runtimeFixture(): {
   readonly extractText: ReturnType<typeof vi.fn>;
   emitLocation(locator: Readonly<Record<string, unknown>>): void;
   emitSelection(selection: TextSelectionDraft): void;
+  emitActivation(id: ReturnType<typeof annotationId>): void;
 } {
   let locationListener: ((locator: Readonly<Record<string, unknown>>) => void) | undefined;
   let selectionListener: ((selection: TextSelectionDraft) => void) | undefined;
+  let activationListener: ((id: ReturnType<typeof annotationId>) => void) | undefined;
   const setAnnotations = vi.fn();
   const setActiveAnnotation = vi.fn();
   const extractText = vi.fn().mockResolvedValue("Extracted EPUB text");
@@ -37,6 +39,12 @@ function runtimeFixture(): {
           selectionListener = undefined;
         };
       },
+      onAnnotationActivated: (listener) => {
+        activationListener = listener;
+        return () => {
+          activationListener = undefined;
+        };
+      },
       setAnnotations,
       setActiveAnnotation,
       destroy: () => Promise.resolve(),
@@ -46,6 +54,7 @@ function runtimeFixture(): {
     extractText,
     emitLocation: (locator) => locationListener?.(locator),
     emitSelection: (selection) => selectionListener?.(selection),
+    emitActivation: (id) => activationListener?.(id),
   };
 }
 
@@ -60,6 +69,18 @@ const document = {
 } as const;
 
 describe("ReadiumEpubSurface", () => {
+  it("publishes activated saved annotations", () => {
+    const fixture = runtimeFixture();
+    const surface = new ReadiumEpubSurface(document, fixture.runtime);
+    const activated = vi.fn();
+    surface.capabilities.annotationActivation?.activations.subscribe(activated);
+
+    const id = annotationId("ann-epub");
+    fixture.emitActivation(id);
+
+    expect(activated).toHaveBeenCalledWith(id);
+  });
+
   it("tracks Readium locations without treating visual pages as stable", async () => {
     const fixture = runtimeFixture();
     const surface = new ReadiumEpubSurface(document, fixture.runtime);

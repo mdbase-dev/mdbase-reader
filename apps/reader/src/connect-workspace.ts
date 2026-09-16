@@ -103,6 +103,16 @@ export class ConnectWorkspaceGateway implements ReaderWorkspaceGateway {
     return source;
   }
 
+  async refreshSource(id: SourceId, options: ReaderRequestOptions = {}): Promise<Source | null> {
+    const source = await this.sources.get(this.collectionId, id, options);
+    if (source) {
+      this.#replaceSource(source);
+    } else {
+      this.#sourcesById.delete(id);
+    }
+    return source;
+  }
+
   async listLibraryViews(
     options: ReaderRequestOptions = {},
   ): Promise<readonly MdbaseLibraryView[]> {

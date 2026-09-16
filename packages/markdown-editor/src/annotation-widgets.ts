@@ -12,25 +12,66 @@ import {
   type ViewUpdate,
 } from "@codemirror/view";
 
-import { wikiLinkCompletionAt, type WikiLinkCandidate } from "./completions.js";
+import { citationDecorations } from "./citation-widgets.js";
+import {
+  citationCompletionAt,
+  wikiLinkCompletionAt,
+  type CitationCompletionCandidate,
+  type WikiLinkCandidate,
+} from "./completions.js";
 
 import type { Extension, Range } from "@codemirror/state";
 
 export function annotationEditorExtensions(
   candidates: readonly WikiLinkCandidate[],
+  citations: readonly CitationCompletionCandidate[],
   onOpen: ((path: string) => void) | undefined,
+  onEdit: ((path: string) => void) | undefined,
+  onOpenCitation: ((id: string) => void) | undefined,
+  onEditCitation: ((id: string) => void) | undefined,
 ): readonly Extension[] {
-  return [annotationCompletions(candidates), annotationEmbeds(candidates, onOpen)];
+  return [
+    referenceCompletions(candidates, citations),
+    annotationEmbeds(candidates, onOpen, onEdit),
+    citationDecorations(citations, onOpenCitation, onEditCitation),
+  ];
 }
 
-function annotationCompletions(candidates: readonly WikiLinkCandidate[]): Extension {
+function referenceCompletions(
+  candidates: readonly WikiLinkCandidate[],
+  citations: readonly CitationCompletionCandidate[],
+): Extension {
   return autocompletion({
     activateOnTyping: true,
     maxRenderedOptions: 8,
     optionClass: (completion) =>
       completion.type === "annotation" ? "cm-completion-annotation" : "",
-    override: [(context) => annotationCompletionSource(context, candidates)],
+    override: [
+      (context) => annotationCompletionSource(context, candidates),
+      (context) => citationCompletionSource(context, citations),
+    ],
   });
+}
+
+function citationCompletionSource(
+  context: CompletionContext,
+  candidates: readonly CitationCompletionCandidate[],
+): CompletionResult | null {
+  const completion = citationCompletionAt(context.state.doc.toString(), context.pos, candidates);
+  if (!completion) {
+    return null;
+  }
+  return {
+    from: completion.from,
+    filter: false,
+    options: completion.options.map((candidate) => ({
+      label: candidate.id,
+      detail: candidate.label,
+      ...(candidate.detail ? { info: candidate.detail } : {}),
+      type: "citation",
+      apply: `[@${candidate.id}]`,
+    })),
+  };
 }
 
 function annotationCompletionSource(
@@ -58,6 +99,7 @@ function annotationCompletionSource(
 function annotationEmbeds(
   candidates: readonly WikiLinkCandidate[],
   onOpen: ((path: string) => void) | undefined,
+  onEdit: ((path: string) => void) | undefined,
 ): Extension {
   const byPath = new Map(candidates.map((candidate) => [candidate.path, candidate]));
   return ViewPlugin.fromClass(
@@ -65,12 +107,12 @@ function annotationEmbeds(
       decorations: DecorationSet;
 
       constructor(view: EditorView) {
-        this.decorations = embeddedDecorations(view, byPath, onOpen);
+        this.decorations = embeddedDecorations(view, byPath, onOpen, onEdit);
       }
 
       update(update: ViewUpdate): void {
         if (update.docChanged || update.viewportChanged || update.selectionSet) {
-          this.decorations = embeddedDecorations(update.view, byPath, onOpen);
+          this.decorations = embeddedDecorations(update.view, byPath, onOpen, onEdit);
         }
       }
     },
@@ -82,31 +124,39 @@ function embeddedDecorations(
   view: EditorView,
   candidates: ReadonlyMap<string, WikiLinkCandidate>,
   onOpen: ((path: string) => void) | undefined,
+  onEdit: ((path: string) => void) | undefined,
 ): DecorationSet {
   const ranges: Range<Decoration>[] = [];
-  const expression = /!\[\[([^\]]+)\]\]/gu;
+  const expression = /(!?)\[\[([^\]]+)\]\]/gu;
   for (const { from, to } of view.visibleRanges) {
     const text = view.state.doc.sliceString(from, to);
     for (const match of text.matchAll(expression)) {
-      const path = match[1];
-      if (path === undefined) {
+      const rawPath = match[2];
+      if (rawPath === undefined) {
         continue;
       }
+      const path = rawPath.split(/[|#]/u, 1)[0] ?? rawPath;
       const candidate = candidates.get(path);
-      if (!candidate) {
-        continue;
-      }
       const start = from + match.index;
       const end = start + match[0].length;
       const cursor = view.state.selection.main.head;
-      if (cursor >= start && cursor <= end) {
-        continue;
+      const editing = cursor >= start && cursor <= end;
+      if (match[1] === "!" && candidate?.embed && !editing) {
+        ranges.push(
+          Decoration.replace({
+            widget: new AnnotationEmbedWidget(candidate, onOpen, onEdit, start),
+          }).range(start, end),
+        );
+      } else {
+        ranges.push(
+          Decoration.mark({
+            class: candidate ? "cm-wikilink is-resolved" : "cm-wikilink is-unresolved",
+            attributes: candidate
+              ? { title: candidate.label }
+              : { title: `Linked record not found: ${path}` },
+          }).range(start, end),
+        );
       }
-      ranges.push(
-        Decoration.replace({
-          widget: new AnnotationEmbedWidget(candidate, onOpen),
-        }).range(start, end),
-      );
     }
   }
   return Decoration.set(ranges, true);
@@ -116,19 +166,21 @@ class AnnotationEmbedWidget extends WidgetType {
   constructor(
     readonly candidate: WikiLinkCandidate,
     readonly onOpen: ((path: string) => void) | undefined,
+    readonly onEdit: ((path: string) => void) | undefined,
+    readonly start: number,
   ) {
     super();
   }
 
   override eq(other: AnnotationEmbedWidget): boolean {
-    return other.candidate === this.candidate;
+    return other.candidate === this.candidate && other.start === this.start;
   }
 
-  override toDOM(): HTMLElement {
+  override toDOM(view: EditorView): HTMLElement {
     const card = document.createElement("aside");
     card.className = "cm-annotation-embed";
     card.setAttribute("aria-label", `Embedded annotation: ${this.candidate.label}`);
-    card.append(this.header(), ...this.content(), this.footer());
+    card.append(this.header(), ...this.content(), this.footer(view));
     return card;
   }
 
@@ -161,11 +213,28 @@ class AnnotationEmbedWidget extends WidgetType {
     return content;
   }
 
-  private footer(): HTMLElement {
+  private footer(view: EditorView): HTMLElement {
     const footer = document.createElement("footer");
     const path = document.createElement("code");
     path.textContent = `![[${this.candidate.path}]]`;
     footer.append(path);
+    const edit = document.createElement("button");
+    edit.type = "button";
+    edit.textContent = "Edit link";
+    edit.addEventListener("mousedown", (event) => event.preventDefault());
+    edit.addEventListener("click", () => {
+      view.dispatch({ selection: { anchor: this.start + 3 }, scrollIntoView: true });
+      view.focus();
+    });
+    footer.append(edit);
+    if (this.onEdit) {
+      const editAnnotation = document.createElement("button");
+      editAnnotation.type = "button";
+      editAnnotation.textContent = "Edit highlight";
+      editAnnotation.addEventListener("mousedown", (event) => event.preventDefault());
+      editAnnotation.addEventListener("click", () => this.onEdit?.(this.candidate.path));
+      footer.append(editAnnotation);
+    }
     if (this.onOpen) {
       const button = document.createElement("button");
       button.type = "button";

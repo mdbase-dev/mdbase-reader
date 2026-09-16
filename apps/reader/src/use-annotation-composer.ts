@@ -1,17 +1,27 @@
 import { useCallback, useEffect, useState } from "react";
 
-import { annotationRequest, type ComposerSelection } from "./annotation-composer-request.js";
+import {
+  annotationRequest,
+  prepareAnnotationSelection,
+  type ComposerSelection,
+} from "./annotation-composer-request.js";
+import { annotationMatchesSurface } from "./annotation-document-compatibility.js";
 import { readerErrorMessage } from "./errors.js";
+import { useAnnotationActivations } from "./use-annotation-activations.js";
 
 import type {
   Annotation,
   AnnotationCreationRequest,
   AnnotationId,
   Source,
+  SourceId,
 } from "@mdbase-reader/core";
 import type { ReadingSurface } from "@mdbase-reader/reading-surface";
 
 export type { ComposerSelection } from "./annotation-composer-request.js";
+
+const SOURCE_DETAILS_LOADING_MESSAGE =
+  "Source details are still loading. Try saving again in a moment.";
 
 export interface AnnotationComposerController {
   readonly selection: ComposerSelection | null;
@@ -20,53 +30,54 @@ export interface AnnotationComposerController {
   readonly error: string | null;
   readonly canSelectArea: boolean;
   readonly selectingArea: boolean;
+  readonly canOpenAnnotation: boolean;
   readonly activeAnnotationId: AnnotationId | null;
+  readonly editingAnnotationId: AnnotationId | null;
   readonly setNote: (note: string) => void;
   readonly dismiss: () => void;
   readonly save: () => void;
   readonly toggleAreaSelection: () => void;
   readonly open: (annotation: Annotation) => void;
+  readonly edit: (annotation: Annotation) => void;
+  readonly stopEditing: () => void;
 }
 
-interface SelectedDraft {
-  readonly sourceId: string;
+export interface SelectedDraft {
+  readonly sourceId: SourceId;
   readonly surface: ReadingSurface;
   readonly value: ComposerSelection;
 }
 
 export function useAnnotationComposer(input: {
+  readonly sourceId: SourceId | null;
   readonly source: Source | null;
   readonly surface: ReadingSurface | null;
   readonly create: (request: AnnotationCreationRequest) => Promise<Annotation>;
+  readonly annotations: readonly Annotation[];
 }): AnnotationComposerController {
-  const { source, surface, create } = input;
+  const { sourceId, source, surface, create, annotations } = input;
   const [selected, setSelected] = useState<SelectedDraft | null>(null);
   const [note, setNote] = useState("");
   const [status, setStatus] = useState<"idle" | "saving">("idle");
   const [areaSelectionSurface, setAreaSelectionSurface] = useState<ReadingSurface | null>(null);
   const [activeAnnotationId, setActiveAnnotationId] = useState<AnnotationId | null>(null);
+  const [editingAnnotationId, setEditingAnnotationId] = useState<AnnotationId | null>(null);
   const [problem, setProblem] = useState<{ sourceId: string; message: string } | null>(null);
-  const sourceId = source?.id;
   const selection =
     sourceId && selected?.sourceId === sourceId && selected.surface === surface
       ? selected.value
       : null;
   const error = sourceId && problem?.sourceId === sourceId ? problem.message : null;
-
-  useEffect(
-    () =>
-      subscribeToSelections(
-        source,
-        surface,
-        setSelected,
-        setNote,
-        setProblem,
-        setAreaSelectionSurface,
-        setActiveAnnotationId,
-      ),
-    [source, surface],
-  );
-
+  useEffect(() => {
+    return subscribeToSelections(sourceId, surface, (value) => {
+      setSelected(value);
+      setNote("");
+      setProblem(null);
+      setAreaSelectionSurface(null);
+      setActiveAnnotationId(null);
+      setEditingAnnotationId(null);
+    });
+  }, [sourceId, surface]);
   const dismiss = useCallback((): void => {
     surface?.capabilities.textSelection?.clearSelection();
     surface?.capabilities.areaSelection?.cancelAreaSelection();
@@ -75,10 +86,15 @@ export function useAnnotationComposer(input: {
     setProblem(null);
     setAreaSelectionSurface(null);
     setActiveAnnotationId(null);
+    setEditingAnnotationId(null);
   }, [surface]);
 
   const save = useCallback((): void => {
-    if (!selection || !source || !surface || status === "saving") {
+    if (!selection || !sourceId || !surface || status === "saving") {
+      return;
+    }
+    if (source?.id !== sourceId) {
+      setProblem({ sourceId, message: SOURCE_DETAILS_LOADING_MESSAGE });
       return;
     }
     setStatus("saving");
@@ -91,7 +107,7 @@ export function useAnnotationComposer(input: {
       setProblem,
       setStatus,
     );
-  }, [create, dismiss, note, selection, source, status, surface]);
+  }, [create, dismiss, note, selection, source, sourceId, status, surface]);
 
   const toggleAreaSelection = useCallback((): void => {
     const capability = surface?.capabilities.areaSelection;
@@ -119,6 +135,26 @@ export function useAnnotationComposer(input: {
     [source, surface],
   );
 
+  const edit = useCallback(
+    (annotation: Annotation): void => {
+      surface?.capabilities.textSelection?.clearSelection();
+      setSelected(null);
+      setNote("");
+      setProblem(null);
+      setEditingAnnotationId(annotation.id);
+      setActiveAnnotationId(annotation.id);
+      openAnnotation(annotation, { source, surface }, setProblem);
+    },
+    [source, surface],
+  );
+
+  const stopEditing = useCallback((): void => {
+    setEditingAnnotationId(null);
+    setActiveAnnotationId(null);
+  }, []);
+
+  useAnnotationActivations(surface, annotations, edit);
+
   return {
     selection,
     note,
@@ -126,47 +162,45 @@ export function useAnnotationComposer(input: {
     error,
     canSelectArea: Boolean(surface?.capabilities.areaSelection),
     selectingArea: areaSelectionSurface === surface,
+    canOpenAnnotation: surface !== null,
     activeAnnotationId,
+    editingAnnotationId,
     setNote,
     dismiss,
     save,
     toggleAreaSelection,
     open,
+    edit,
+    stopEditing,
   };
 }
 
-function subscribeToSelections(
-  source: Source | null,
+export function subscribeToSelections(
+  sourceId: SourceId | null,
   surface: ReadingSurface | null,
-  setSelected: (value: SelectedDraft | null) => void,
-  setNote: (value: string) => void,
-  setProblem: (value: null) => void,
-  setAreaSelectionSurface: (value: ReadingSurface | null) => void,
-  setActiveAnnotationId: (value: AnnotationId | null) => void,
+  select: (value: SelectedDraft) => void,
 ): (() => void) | undefined {
-  if (!source || !surface) {
+  if (!sourceId || !surface) {
     return undefined;
   }
-  const select = (value: ComposerSelection): void => {
-    setSelected({ sourceId: source.id, surface, value });
-    setNote("");
-    setProblem(null);
-    setAreaSelectionSurface(null);
-    setActiveAnnotationId(null);
+  const selectForSurface = (value: ComposerSelection): void => {
+    select({ sourceId, surface, value });
   };
   const text = surface.capabilities.textSelection?.selections.subscribe((value) =>
-    select({ kind: "text", value }),
+    selectForSurface({ kind: "text", value }),
   );
-  const area = surface.capabilities.areaSelection?.selections.subscribe((value) =>
-    select({ kind: "area", value }),
-  );
+  const area = surface.capabilities.areaSelection?.selections.subscribe((value) => {
+    const selection = { kind: "area", value } as const;
+    prepareAnnotationSelection(selection);
+    selectForSurface(selection);
+  });
   return () => {
     text?.();
     area?.();
   };
 }
 
-async function saveSelection(
+export async function saveSelection(
   input: {
     readonly source: Source;
     readonly surface: ReadingSurface;
@@ -179,9 +213,9 @@ async function saveSelection(
   setStatus: (value: "idle" | "saving") => void,
 ): Promise<void> {
   const sourceId = input.source.id;
-  dismiss();
   try {
     await input.create(await annotationRequest(input.source, input.surface, selection, note));
+    dismiss();
   } catch (reason) {
     setProblem({
       sourceId,
@@ -201,15 +235,11 @@ function openAnnotation(
   if (!surface) {
     return false;
   }
-  if (
-    annotation.document &&
-    (annotation.document.fileId !== surface.document.document.fileId ||
-      annotation.document.revision !== surface.document.document.revision)
-  ) {
+  if (!annotationMatchesSurface(annotation, surface)) {
     if (input.source) {
       setProblem({
         sourceId: input.source.id,
-        message: "This annotation targets a different document revision and must be re-anchored.",
+        message: "This annotation targets a different document and cannot be opened here.",
       });
     }
     return false;

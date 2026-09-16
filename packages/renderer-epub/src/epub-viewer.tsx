@@ -1,8 +1,9 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 
+import { EpubPageNavigation } from "./epub-page-navigation.js";
 import { prepareEpubPublication, type PreparedEpubPublication } from "./epub-resource-store.js";
 import { ReadiumEpubSurface } from "./epub-surface.js";
-import { createReadiumRuntime } from "./readium-runtime.js";
+import { createReadiumRuntime, type ReadiumRuntime } from "./readium-runtime.js";
 
 import type { SurfaceDocument } from "@mdbase-reader/reading-surface";
 
@@ -22,6 +23,7 @@ export function EpubViewerSurface({
   onDocumentError,
 }: EpubViewerSurfaceProps): React.JSX.Element {
   const containerRef = useRef<HTMLDivElement>(null);
+  const [readyRuntime, setReadyRuntime] = useState<ReadiumRuntime | null>(null);
 
   useEffect(() => {
     const container = containerRef.current;
@@ -33,7 +35,7 @@ export function EpubViewerSurface({
     let surface: ReadiumEpubSurface | null = null;
     const open = async (): Promise<void> => {
       try {
-        const response = await fetch(document.url);
+        const response = await fetch(document.url, { signal: lifetime.signal });
         if (!response.ok) {
           throw new Error(`EPUB download failed with HTTP ${String(response.status)}.`);
         }
@@ -55,6 +57,7 @@ export function EpubViewerSurface({
           return;
         }
         surface = new ReadiumEpubSurface(document, runtime);
+        setReadyRuntime(runtime);
         onSurfaceReady(surface);
         onDocumentReady?.();
       } catch (reason) {
@@ -77,7 +80,12 @@ export function EpubViewerSurface({
     };
   }, [document, onDocumentError, onDocumentReady, onSurfaceReady]);
 
-  return <div ref={containerRef} className={className} />;
+  return (
+    <div className={className}>
+      <EpubPageNavigation runtime={readyRuntime} />
+      <div ref={containerRef} className="epub-publication" />
+    </div>
+  );
 }
 
 function isAborted(signal: AbortSignal): boolean {

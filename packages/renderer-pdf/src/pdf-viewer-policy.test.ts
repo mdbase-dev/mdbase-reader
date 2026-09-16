@@ -44,8 +44,6 @@ describe("Reader EmbedPDF policy", () => {
       expect.arrayContaining([
         "panel:toggle-sidebar",
         "panel:toggle-search",
-        "pan:toggle",
-        "pointer:toggle",
         "selection:copy",
         "zoom:fit-page",
         "zoom:fit-width",
@@ -64,19 +62,18 @@ describe("Reader EmbedPDF policy", () => {
     expect(Object.keys(schema.toolbars)).toEqual(["main-toolbar"]);
     expect(Object.keys(schema.sidebars)).toEqual(["sidebar-panel", "search-panel"]);
     expect(Object.keys(schema.modals)).toEqual([]);
-    expect(Object.keys(schema.overlays ?? {})).toEqual(["page-controls"]);
+    expect(Object.keys(schema.overlays ?? {})).toEqual([]);
     expect(Object.keys(schema.selectionMenus)).toEqual(["selection"]);
     expect(commandIds(schema.selectionMenus)).toEqual(["selection:copy"]);
   });
 
-  it("restores direct interaction controls when the reading pane is wide enough", () => {
+  it("keeps zoom responsive without adding interaction-mode controls", () => {
     const breakpoints = readerPdfUiSchema.toolbars["main-toolbar"].responsive.breakpoints;
 
-    expect(breakpoints.compact.hide).toEqual(
-      expect.arrayContaining(["reader-pan", "reader-pointer"]),
-    );
-    expect(breakpoints.fullControls.show).toEqual(
-      expect.arrayContaining(["reader-pan", "reader-pointer"]),
+    expect(breakpoints.compact.hide).toContain("reader-zoom");
+    expect(breakpoints.readingPane.show).toContain("reader-zoom");
+    expect(commandIds(readerPdfUiSchema)).not.toEqual(
+      expect.arrayContaining(["pan:toggle", "pointer:toggle"]),
     );
   });
 
@@ -105,7 +102,7 @@ describe("Reader EmbedPDF policy", () => {
     expect(config.ui?.schema).toBe(readerPdfUiSchema);
     expect(config.annotations).toMatchObject({
       autoCommit: false,
-      locked: { type: LockModeType.All },
+      locked: { type: LockModeType.None },
     });
     expect(config.permissions?.overrides).toMatchObject({
       assembleDocument: false,

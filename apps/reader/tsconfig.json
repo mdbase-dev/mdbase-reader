@@ -6,6 +6,7 @@
     "functions/**/*.ts",
     "src/**/*.ts",
     "src/**/*.tsx",
+    "test-fixtures/**/*.tsx",
     "vite.config.ts"
   ]
 }

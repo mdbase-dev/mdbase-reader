@@ -1,34 +1,32 @@
 import { spawn } from "node:child_process";
 import { readFile, writeFile } from "node:fs/promises";
 import { resolve } from "node:path";
+import { readerDeploymentFor } from "./deployment-environment.mjs";
 
 const projectRoot = resolve(import.meta.dirname, "..");
 const projectName = "mdbase-reader";
-const deploymentOrigin = `https://${projectName}.pages.dev`;
-const deploymentTarget = process.env.MDBASE_READER_DEPLOY_TARGET ?? "staging";
-if (deploymentTarget !== "staging" && deploymentTarget !== "production") {
-  throw new Error(`Unsupported reader deployment target: ${deploymentTarget}.`);
-}
-const connectUrl =
-  deploymentTarget === "production"
-    ? "https://connect.mdbase.dev"
-    : "https://connect-staging.mdbase.dev";
+const { target: deploymentTarget, deployment } = readerDeploymentFor(process.env);
+const deploymentOrigin = deployment.origin;
+const connectUrl = deployment.connectUrl;
 const pnpm = process.platform === "win32" ? "pnpm.cmd" : "pnpm";
 const manifestTargets = [
   resolve(projectRoot, "public", ".well-known", "mdbase-app.json"),
   resolve(projectRoot, "src", "generated", "mdbase-app.json"),
 ];
 const originalManifests = await Promise.all(manifestTargets.map((target) => readFile(target)));
-const buildId = await capture("git", ["rev-parse", "--short=12", "HEAD"]);
+// Environment switches and dirty-tree redeploys must also trigger the update notice.
+const commitId = await capture("git", ["rev-parse", "--short=12", "HEAD"]);
+const buildId = `${commitId}-${deploymentTarget}-${Date.now().toString(36)}`;
 
 try {
   await run(pnpm, ["build"], {
     ...process.env,
     MDBASE_READER_BUILD_ID: buildId,
     MDBASE_READER_ORIGIN: deploymentOrigin,
+    VITE_MDBASE_ENV: deploymentTarget,
     VITE_MDBASE_READER_BUILD_ID: buildId,
     VITE_MDBASE_CONNECT_URL: connectUrl,
-    VITE_MDBASE_CONNECT_LOOPBACK_URL: "http://127.0.0.1:28486",
+    VITE_MDBASE_CONNECT_LOOPBACK_URL: deployment.loopbackUrl,
   });
   await verifyDeploymentArtifacts();
 } finally {
@@ -46,7 +44,7 @@ await run(pnpm, [
   "--project-name",
   projectName,
   "--branch",
-  "main",
+  deployment.branch,
   "--commit-dirty=true",
 ]);
 

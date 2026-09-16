@@ -1,7 +1,6 @@
-import { useCallback, useState, type Dispatch, type SetStateAction } from "react";
+import { useCallback, type Dispatch, type SetStateAction } from "react";
 
-import { readerErrorMessage } from "./errors.js";
-import { selectedResource, selectedValue, type SelectedValue } from "./selected-resource.js";
+import { selectedResource, type SelectedValue } from "./selected-resource.js";
 import {
   useAnnotationTransclusion,
   type AnnotationTransclusionController,
@@ -12,6 +11,7 @@ import {
   useSelectedSourceResources,
   type AnnotationState,
 } from "./use-selected-source-resources.js";
+import { useSourceDraft } from "./use-source-draft.js";
 import {
   useAnnotationCreation,
   useAnnotationDeletion,
@@ -19,6 +19,7 @@ import {
   useReadingPositionSave,
 } from "./use-workspace-mutations.js";
 
+import type { SourceDraftSnapshot } from "./source-draft-session.js";
 import type { ReaderLibrarySnapshot, ReaderWorkspaceGateway } from "./workspace-model.js";
 import type {
   Annotation,
@@ -43,8 +44,10 @@ export interface ReaderSourceWorkspaceController {
   readonly annotations: AsyncResource<readonly Annotation[]>;
   readonly draft: string;
   readonly draftReady: boolean;
-  readonly saveStatus: "idle" | "saving";
+  readonly saveStatus: "saved" | "unsaved" | "saving" | "error";
   readonly saveError: string | null;
+  readonly draftRecovery?: SourceDraftSnapshot;
+  readonly resolveDraftConflict?: (choice: "local" | "remote") => void;
   readonly citation: CitationEditorController;
   readonly transclusion: AnnotationTransclusionController;
   readonly setDraft: (value: string) => void;
@@ -90,61 +93,49 @@ export function useReaderWorkspace(gateway: ReaderWorkspaceGateway): ReaderWorks
   };
 }
 
+// Source-scoped editing keeps hydration, autosave, mutations, and revision state together.
+
 export function useSourceToolsWorkspace(
   gateway: ReaderWorkspaceGateway,
   selectedSourceId: SourceId | null,
   reconcileSource: (source: Source) => void,
 ): ReaderSourceWorkspaceController {
   const resources = useSelectedSourceResources(gateway, selectedSourceId);
-  const {
-    source,
-    setSource,
-    annotations,
-    setAnnotations,
-    draft,
-    setDraft: setDraftState,
-  } = resources;
-  const [saving, setSaving] = useState<SelectedValue<boolean> | null>(null);
-  const [saveError, setSaveError] = useState<SelectedValue<string | null> | null>(null);
-  const sourceId = selectedSourceId;
-  const sourceRecord = selectedResource(sourceId, source);
-  const annotationResource = selectedResource(sourceId, annotations);
-  const selectedDraft = selectedValue(sourceId, draft);
-  const draftValue = selectedDraft.matched ? selectedDraft.value : "";
+  const { source, setSource, annotations, setAnnotations } = resources;
+  const sourceRecord = selectedResource(selectedSourceId, source);
+  const annotationResource = selectedResource(selectedSourceId, annotations);
   const publishSource = useCallback(
     (value: SelectedValue<AsyncResource<Source>>): void => {
-      setSource(value);
+      setSource((current) => (current?.sourceId === value.sourceId ? value : current));
       if (value.value.status === "ready") {
         reconcileSource(value.value.value);
       }
     },
     [reconcileSource, setSource],
   );
-  const setDraft = useCallback(
-    (value: string): void => {
-      if (sourceId) {
-        setDraftState({ sourceId, value });
-      }
+  const publishDraft = useCallback(
+    (value: Source): void => {
+      publishSource({ sourceId: value.id, value: { status: "ready", value } });
     },
-    [setDraftState, sourceId],
+    [publishSource],
   );
-  const saveDraft = useCallback((): void => {
-    if (!sourceId || sourceRecord.status !== "ready" || sourceRecord.value.body === draftValue) {
-      return;
+  const { session, snapshot } = useSourceDraft(
+    gateway,
+    sourceRecord.status === "ready" ? sourceRecord.value : null,
+    publishDraft,
+  );
+  const draftValue = snapshot.body;
+  const setDraft = (value: string): void => {
+    session?.edit(value);
+  };
+  const saveDraft = (): void => {
+    void session?.save();
+  };
+  const setDraftState = (value: SelectedValue<string>): void => {
+    if (value.sourceId === selectedSourceId) {
+      session?.edit(value.value);
     }
-    setSaving({ sourceId, value: true });
-    setSaveError({ sourceId, value: null });
-    void gateway
-      .saveSourceBody(sourceRecord.value, draftValue)
-      .then((value) => publishSource({ sourceId, value: { status: "ready", value } }))
-      .catch((reason: unknown) =>
-        setSaveError({
-          sourceId,
-          value: readerErrorMessage(reason, "Reader could not save the source note."),
-        }),
-      )
-      .finally(() => setSaving({ sourceId, value: false }));
-  }, [draftValue, gateway, publishSource, sourceId, sourceRecord]);
+  };
   const annotationMutations = useSelectedAnnotationMutations(gateway, setAnnotations);
   const saveReadingPosition = useReadingPositionSave(gateway, sourceRecord, publishSource);
   const citation = useSelectedCitationEditor(gateway, sourceRecord, publishSource);
@@ -160,9 +151,11 @@ export function useSourceToolsWorkspace(
     sourceRecord,
     annotations: annotationResource,
     draft: draftValue,
-    draftReady: selectedDraft.matched,
-    saveStatus: sourceId && saving?.sourceId === sourceId && saving.value ? "saving" : "idle",
-    saveError: sourceId && saveError?.sourceId === sourceId ? saveError.value : null,
+    draftReady: session !== null,
+    saveStatus: snapshot.status,
+    saveError: snapshot.error,
+    draftRecovery: snapshot,
+    resolveDraftConflict: (choice) => session?.resolve(choice),
     citation,
     transclusion,
     setDraft,

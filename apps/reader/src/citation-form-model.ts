@@ -203,7 +203,30 @@ export function displayCslValue(value: unknown): string {
   if (typeof value === "string" || typeof value === "number") {
     return String(value);
   }
-  return JSON.stringify(value);
+  if (typeof value === "boolean") {
+    return value ? "Yes" : "No";
+  }
+  if (Array.isArray(value)) {
+    return value.map(displayCslValue).join("; ");
+  }
+  if (record(value)) {
+    const literal = text(value["literal"]);
+    if (literal) {
+      return literal;
+    }
+    const name = [text(value["given"]), text(value["family"])].filter(Boolean).join(" ");
+    if (name) {
+      return name;
+    }
+    const parts = value["date-parts"];
+    if (Array.isArray(parts) && Array.isArray(parts[0])) {
+      return parts[0].map(String).join("-");
+    }
+    return Object.entries(value)
+      .map(([field, fieldValue]) => `${cslFieldLabel(field)}: ${displayCslValue(fieldValue)}`)
+      .join(", ");
+  }
+  return "Unsupported value";
 }
 
 function emptyValue(value: unknown): boolean {

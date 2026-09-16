@@ -2,6 +2,7 @@ export type InspectorDock = "right" | "bottom";
 export type LibraryPresentation = "compact" | "bibliography" | "grid";
 
 export interface WorkspaceShellPreferences {
+  readonly density: "comfortable" | "compact";
   readonly libraryWidth: number;
   readonly inspectorWidth: number;
   readonly inspectorHeight: number;
@@ -11,6 +12,7 @@ export interface WorkspaceShellPreferences {
 }
 
 const defaults: WorkspaceShellPreferences = {
+  density: "comfortable",
   libraryWidth: 272,
   inspectorWidth: 340,
   inspectorHeight: 320,
@@ -29,6 +31,7 @@ export function parseShellPreferences(value: unknown): WorkspaceShellPreferences
   }
   const candidate = value as Partial<WorkspaceShellPreferences>;
   return {
+    density: candidate.density === "compact" ? "compact" : "comfortable",
     libraryWidth: clamp(candidate.libraryWidth, 220, 420, defaults.libraryWidth),
     inspectorWidth: clamp(candidate.inspectorWidth, 280, 560, defaults.inspectorWidth),
     inspectorHeight: clamp(candidate.inspectorHeight, 220, 520, defaults.inspectorHeight),

@@ -136,7 +136,7 @@ const annotations: readonly Annotation[] = [
   },
 ];
 
-class PreviewGateway implements ReaderWorkspaceGateway {
+export class PreviewGateway implements ReaderWorkspaceGateway {
   #sources = [...sources];
   #annotations = [...annotations];
   #views: MdbaseLibraryView[] = [

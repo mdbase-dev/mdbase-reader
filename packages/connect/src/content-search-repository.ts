@@ -12,7 +12,7 @@ import { outcomeValue } from "./repository-client.js";
 import type { ReaderConnectClient } from "./repository-client.js";
 import type { QueryInput, QueryRecord } from "@mdbase-dev/connect";
 
-const pageSize = 500;
+const pageSize = 100;
 
 export class ConnectContentSearchRepository implements ContentSearchRepository {
   constructor(private readonly client: ReaderConnectClient) {}
@@ -26,15 +26,35 @@ export class ConnectContentSearchRepository implements ContentSearchRepository {
     if (!normalized) {
       return [];
     }
-    const records: QueryRecord[] = [];
+    const matches = new Map<string, SourceTextSearchMatch>();
     for await (const outcome of this.client.queryPages(searchInput(normalized), {
       ...options,
       firstPageSize: pageSize,
-      pageSize: 1_000,
+      pageSize: 250,
     })) {
-      records.push(...outcomeValue(outcome, "search source and annotation text").results);
+      const records = outcomeValue(outcome, "search source and annotation text").results;
+      for (const match of mergeMatches(records, normalized)) {
+        const previous = matches.get(match.sourceId);
+        matches.set(
+          match.sourceId,
+          previous
+            ? {
+                sourceId: match.sourceId,
+                kinds: [...new Set([...previous.kinds, ...match.kinds])],
+                ...((previous.passages ?? match.passages)
+                  ? {
+                      passages: [...(previous.passages ?? []), ...(match.passages ?? [])].slice(
+                        0,
+                        3,
+                      ),
+                    }
+                  : {}),
+              }
+            : match,
+        );
+      }
     }
-    return mergeMatches(records);
+    return [...matches.values()];
   }
 }
 
@@ -42,12 +62,16 @@ function searchInput(query: string): QueryInput {
   return {
     where: `file.body.lower().contains(${JSON.stringify(query)})`,
     frontmatterMode: "effective" as const,
-    includeBody: false,
+    includeBody: true,
   };
 }
 
-function mergeMatches(records: readonly QueryRecord[]): readonly SourceTextSearchMatch[] {
+function mergeMatches(
+  records: readonly QueryRecord[],
+  query: string,
+): readonly SourceTextSearchMatch[] {
   const kindsBySource = new Map<string, Set<SourceTextMatchKind>>();
+  const passages = new Map<string, NonNullable<SourceTextSearchMatch["passages"]>[number][]>();
   for (const record of records) {
     const match = recordMatch(record);
     if (!match) {
@@ -56,10 +80,24 @@ function mergeMatches(records: readonly QueryRecord[]): readonly SourceTextSearc
     const kinds = kindsBySource.get(match.id) ?? new Set<SourceTextMatchKind>();
     kinds.add(match.kind);
     kindsBySource.set(match.id, kinds);
+    const text = record.body;
+    if (typeof text === "string") {
+      const index = text.toLocaleLowerCase().indexOf(query);
+      const items = passages.get(match.id) ?? [];
+      if (index >= 0 && items.length < 3) {
+        items.push({
+          kind: match.kind,
+          path: record.path,
+          text: text.slice(Math.max(0, index - 100), index + query.length + 150),
+        });
+        passages.set(match.id, items);
+      }
+    }
   }
   return [...kindsBySource.entries()].map(([id, kinds]) => ({
     sourceId: sourceId(id),
     kinds: [...kinds],
+    ...(passages.has(id) ? { passages: passages.get(id) ?? [] } : {}),
   }));
 }
 

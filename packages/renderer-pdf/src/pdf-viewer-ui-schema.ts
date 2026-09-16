@@ -39,18 +39,10 @@ export const readerPdfUiSchema = {
       permanent: true,
       responsive: {
         breakpoints: {
-          compact: {
-            maxWidth: 479,
-            hide: ["reader-interaction-divider", "reader-pan", "reader-pointer"],
-          },
-          narrow: { maxWidth: 319, hide: ["reader-zoom"] },
+          compact: { maxWidth: 479, hide: ["reader-zoom"] },
           readingPane: {
-            minWidth: 320,
-            show: ["reader-zoom"],
-          },
-          fullControls: {
             minWidth: 480,
-            show: ["reader-interaction-divider", "reader-pan", "reader-pointer"],
+            show: ["reader-zoom"],
           },
         },
       },
@@ -68,6 +60,13 @@ export const readerPdfUiSchema = {
               variant: "icon",
               categories: ["panel", "panel-sidebar"],
             },
+            {
+              type: "command-button",
+              id: "reader-search",
+              commandId: "panel:toggle-search",
+              variant: "icon",
+              categories: ["panel", "panel-search", "search"],
+            },
           ],
         },
         {
@@ -77,32 +76,12 @@ export const readerPdfUiSchema = {
           categories: ["zoom"],
         },
         {
-          type: "divider",
-          id: "reader-interaction-divider",
-          orientation: "vertical",
-        },
-        {
-          type: "command-button",
-          id: "reader-pan",
-          commandId: "pan:toggle",
-          variant: "icon",
-          categories: ["tools", "pan"],
-        },
-        {
-          type: "command-button",
-          id: "reader-pointer",
-          commandId: "pointer:toggle",
-          variant: "icon",
-          categories: ["tools", "pointer"],
+          type: "custom",
+          id: "reader-page-controls",
+          componentId: "page-controls",
+          categories: ["navigation", "page-navigation"],
         },
         { type: "spacer", id: "reader-toolbar-spacer", flex: true },
-        {
-          type: "command-button",
-          id: "reader-search",
-          commandId: "panel:toggle-search",
-          variant: "icon",
-          categories: ["panel", "panel-search", "search"],
-        },
       ],
     },
   },
@@ -166,14 +145,7 @@ export const readerPdfUiSchema = {
     },
   },
   modals: {},
-  overlays: {
-    "page-controls": {
-      id: "page-controls",
-      position: { anchor: "bottom-center", offset: { bottom: "1.25rem" } },
-      content: { type: "component", componentId: "page-controls" },
-      defaultEnabled: true,
-    },
-  },
+  overlays: {},
   selectionMenus: {
     selection: {
       id: "selection",

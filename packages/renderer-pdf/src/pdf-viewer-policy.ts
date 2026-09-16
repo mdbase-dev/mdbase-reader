@@ -28,7 +28,10 @@ export function createReaderPdfViewerConfig(src: string): PDFViewerConfig {
     },
     annotations: {
       autoCommit: false,
-      locked: { type: LockModeType.All },
+      // Reader annotations carry the PDF `locked` flags themselves. Keeping the document-level
+      // lock off lets EmbedPDF select them and publish an activation while permissions still
+      // prevent structural or content changes.
+      locked: { type: LockModeType.None },
     },
     render: {
       withAnnotations: false,
