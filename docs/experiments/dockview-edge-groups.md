@@ -3,8 +3,9 @@
 ## Historical decision
 
 **Superseded by the [completed responsive integration](../responsive-workspace.md).**
-The application now contains the combined desktop/mobile implementation, locally and
-not deployed. The measurements and minimal patch below remain historical evidence.
+The combined desktop/mobile implementation is deployed as
+`ca73f7765cee-production-mu3t04ql`. The measurements and minimal patch below remain
+historical evidence of the earlier, incomplete prototype.
 
 The initial conclusion was: **do not adopt this prototype by itself.** Edge groups solve the desktop width redistribution
 problem, but they are not a drop-in replacement for Reader's whole-workspace maximize
@@ -12,7 +13,8 @@ and mobile single-pane behaviour. The experiment was reverted from application c
 
 The requested active-annotation left stripe was removed independently. Selection keeps
 its subtle background and visible actions, without the inset accent line. This follow-up
-has not been deployed; the production baseline is `083c05701855-production-mu3mq3ht`.
+was initially undeployed against baseline `083c05701855-production-mu3mq3ht`;
+it is now included in the completed integration's production deployment.
 
 ## What was compared
 

@@ -134,14 +134,15 @@ enterprise license. Dockview was deployed to the existing production Pages site 
 `083c05701855-production-mu3mq3ht` and is covered in
 [the annotation UX/UI audit](annotation-ux-audit.md).
 
-## Responsive workspace follow-up (not deployed)
+## Responsive workspace follow-up (deployed)
 
 The [combined edge/mobile integration](responsive-workspace.md) now uses native
 edge sidebars on desktop and a single native group with explicit navigation on
 phones. Fixture tests verify stable sidebar widths, editor/iframe and draft
 preservation, layout migration, focus transitions, mobile closes, and desktop
-arrangement recovery. The active annotation stripe is also removed locally.
-Production remains the annotation revision above.
+arrangement recovery. The active annotation stripe is also removed.
+This follow-up is deployed as `ca73f7765cee-production-mu3t04ql`; live metadata,
+manifest, HTML, entry assets and production backend configuration were verified.
 
 ## Validation and limits
 

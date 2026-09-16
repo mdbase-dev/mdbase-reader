@@ -1,7 +1,12 @@
 # Responsive edge workspace
 
-Status: implemented locally; **not deployed**. Production remains revision
-`083c05701855-production-mu3mq3ht`.
+Status: **deployed to production** at https://mdbase-reader.pages.dev.
+Revision: `ca73f7765cee-production-mu3t04ql` (application commit `ca73f77`).
+Deployment: https://a5c3623d.mdbase-reader.pages.dev.
+Live build metadata, manifest, HTML and entry-asset hashes were verified against the
+uploaded output, including production Connect/loopback configuration and absence
+of staging/LAB markers. Evidence: `/tmp/reader-responsive-production-verification.json`;
+deploy log: `/tmp/reader-responsive-production-deploy.log`.
 
 This completes the desktop/mobile integration that the [initial edge experiment](experiments/dockview-edge-groups.md) deliberately did not attempt. That experiment demonstrated a desktop benefit, not an argument against mobile edge-group integration.
 
@@ -55,4 +60,4 @@ Workspace tests and typechecks pass (Reader: **59 files / 170 tests**, plus five
 - No enterprise modules, automatic hide/peek, floating windows, or popouts.
 - Native edge-group `maximize()` remains unsupported. Edge pane menus do not offer that operation; ordinary central reading panes support whole-workspace maximize. A document deliberately docked into an edge must be moved/reset into the central workspace to use that native operation.
 - On Dockview 8.3.1, dragging an edge tab into another group's content center works; dropping it directly onto a document tab header did not. Move-to-pane menu actions provide an alternative.
-- These are isolated Chromium fixture tests, not authenticated Connect/LAB acceptance, physical-phone keyboard/touch verification, or screen-reader certification. No production collection was used or deployment performed.
+- These are isolated Chromium fixture tests, not authenticated Connect/LAB acceptance, physical-phone keyboard/touch verification, or screen-reader certification. No production collection was used for these tests. Deployment was subsequently performed on explicit user request; live artifact verification is not authenticated collection acceptance.
