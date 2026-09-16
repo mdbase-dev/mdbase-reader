@@ -120,23 +120,26 @@ export class ConnectWorkspaceGateway implements ReaderWorkspaceGateway {
       return [defaultLibraryView];
     }
     const listed = await this.libraryViewRepository.list(options);
+    // Views are shared across apps; only explicitly Reader-marked presentations belong here.
     return [
       defaultLibraryView,
       ...listed.views.flatMap((document) =>
-        document.views.map((view) => ({
-          key: libraryViewKey(document.source.path, view.id),
-          path: document.source.path,
-          revision: document.source.revision,
-          viewId: view.id,
-          name: view.name,
-          writable: document.source.writable,
-          owned: isReaderLibraryPresentation(view.presentation),
-          properties: view.properties.map(({ key, label }) => ({
-            key,
-            ...(label ? { label } : {}),
+        document.views
+          .filter((view) => isReaderLibraryPresentation(view.presentation))
+          .map((view) => ({
+            key: libraryViewKey(document.source.path, view.id),
+            path: document.source.path,
+            revision: document.source.revision,
+            viewId: view.id,
+            name: view.name,
+            writable: document.source.writable,
+            owned: isReaderLibraryPresentation(view.presentation),
+            properties: view.properties.map(({ key, label }) => ({
+              key,
+              ...(label ? { label } : {}),
+            })),
+            configuration: libraryViewConfiguration(view.presentation),
           })),
-          configuration: libraryViewConfiguration(view.presentation),
-        })),
       ),
     ];
   }
