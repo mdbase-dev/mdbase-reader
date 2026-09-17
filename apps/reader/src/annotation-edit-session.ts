@@ -19,7 +19,7 @@ export class AnnotationEditSession {
   private body: string;
   private listeners = new Set<() => void>();
   private inFlight: Promise<void> | undefined;
-  private savingBody: string | undefined;
+  private incoming: Annotation[] = [];
   private timer: ReturnType<typeof setTimeout> | undefined;
   private editedAt = 0;
   private started = false;
@@ -84,29 +84,29 @@ export class AnnotationEditSession {
     if (annotation.recordRevision && this.seen.has(annotation.recordRevision)) {
       return;
     }
+    // Publication can precede the write result and contain serializer-normalized text.
+    if (this.inFlight || this.snapshot.status === "saving") {
+      this.incoming.push(annotation);
+      return;
+    }
     this.seen.add(annotation.recordRevision);
     if (this.snapshot.status === "loading") {
       this.base = annotation;
       return;
     }
-    if (annotation.body === this.body && !this.inFlight) {
+    if (annotation.body === this.body) {
       this.base = annotation;
       this.clear();
       return;
     }
     const dirty = this.body !== this.base.body;
-    if (
-      dirty &&
-      annotation.body !== this.base.body &&
-      annotation.body !== this.savingBody &&
-      annotation.body !== this.body
-    ) {
+    if (dirty && annotation.body !== this.base.body && annotation.body !== this.body) {
       clearTimeout(this.timer);
-      this.update({ conflict: annotation });
+      this.update({ conflict: annotation, problem: null });
       return;
     }
     this.base = annotation;
-    if (!dirty && !this.inFlight) {
+    if (!dirty) {
       this.clear();
     }
   }
@@ -131,11 +131,12 @@ export class AnnotationEditSession {
       this.clear();
       return Promise.resolve();
     }
-    this.savingBody = this.body;
     this.update({ status: "saving", problem: null });
     this.inFlight = this.write(this.base, this.body).finally(() => {
       this.inFlight = undefined;
-      this.savingBody = undefined;
+      for (const annotation of this.incoming.splice(0)) {
+        this.receive(annotation);
+      }
       this.update({});
       if (this.snapshot.status === "unsaved") {
         this.schedule();
@@ -236,10 +237,8 @@ export class AnnotationEditSession {
   private schedule(): void {
     clearTimeout(this.timer);
     if (!this.snapshot.locked && !this.snapshot.conflict) {
-      this.timer = setTimeout(
-        () => void this.save(),
-        Math.max(0, this.editedAt + 1000 - Date.now()),
-      );
+      const delay = Math.max(0, this.editedAt + 1000 - Date.now());
+      this.timer = setTimeout(() => void this.save(), delay);
     }
   }
   private update(value: Partial<AnnotationEditSnapshot>): void {
