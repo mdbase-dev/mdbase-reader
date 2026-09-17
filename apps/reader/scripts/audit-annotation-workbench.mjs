@@ -38,9 +38,7 @@ export async function auditAnnotationWorkbench(page, { screenshot, open }) {
     .click();
   await expect(editor).toHaveValue(/Dock-safe annotation draft/u);
   await expect(otherEditor).toHaveCount(0);
-  await expect(
-    tools.getByText("Draft kept on this device — not saved to collection", { exact: true }),
-  ).toBeVisible();
+  await expect(tools.getByText("Saved to collection", { exact: true })).toBeVisible();
   await screenshot("annotation-docked-edit");
   page.removeAllListeners("dialog");
   const dialogs = [];

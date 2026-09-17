@@ -1,13 +1,12 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 
-import { AnnotationCreationBuffer } from "./annotation-creation-buffer.js";
+import { annotationCreationBuffer } from "./annotation-creation-buffer.js";
 import {
   confirmAnnotationDiscard,
   saveAnnotationDraftToCollection,
 } from "./annotation-draft-actions.js";
 import { annotationDraftKey } from "./annotation-drafts.js";
 import { subscribeToSelections } from "./annotation-selection.js";
-import { useAnnotationDraft } from "./use-annotation-draft.js";
 
 import type { ComposerSelection } from "./annotation-composer-request.js";
 import type { Annotation, AnnotationCreationRequest, Source, SourceId } from "@mdbase-reader/core";
@@ -24,7 +23,6 @@ export interface AnnotationCreationController {
   readonly note: string;
   readonly status: "idle" | "saving";
   readonly error: string | null;
-  readonly draftSaved: boolean;
   readonly canSelectArea: boolean;
   readonly selectingArea: boolean;
   readonly resumeDraft: (() => void) | null;
@@ -45,9 +43,12 @@ export function useAnnotationCreation(
 ): AnnotationCreationController {
   const { sourceId, source, surface, create } = input;
   const key = creationKey(source, surface);
-  const draft = useAnnotationDraft(key);
-  const buffer = useMemo(() => new AnnotationCreationBuffer(key), [key]);
-  useEffect(() => () => buffer.flush(), [buffer]);
+  const buffer = annotationCreationBuffer(
+    key,
+    source ? { collectionId: source.collectionId, sourceId: source.id } : undefined,
+  );
+  const draft = useSyncExternalStore(buffer.subscribe, buffer.getSnapshot, buffer.getSnapshot);
+  useEffect(() => buffer.start(), [buffer]);
   const busy = useRef(false);
   const [saving, setSaving] = useState(false);
   const [pausedKey, setPausedKey] = useState<string | null>(null);
@@ -98,18 +99,24 @@ export function useAnnotationCreation(
     busy.current = true;
     setSaving(true);
     setProblem(null);
-    buffer.flush();
-    void saveAnnotationDraftToCollection(key, value, source, surface, create, setProblem, () => {
-      busy.current = false;
-      setSaving(false);
-    });
+    void saveAnnotationDraftToCollection(
+      () => buffer.clearIf(value),
+      value,
+      source,
+      surface,
+      create,
+      setProblem,
+      () => {
+        busy.current = false;
+        setSaving(false);
+      },
+    );
   };
   return {
     selection,
     note: buffer.get()?.body ?? "",
     status: saving ? "saving" : "idle",
-    error: (problem?.sourceId === sourceId ? problem.message : null) ?? draft.problem,
-    draftSaved: draft.saved,
+    error: problem?.sourceId === sourceId ? problem.message : null,
     canSelectArea: Boolean(surface?.capabilities.areaSelection),
     selectingArea: areaSurface !== null && areaSurface === surface,
     resumeDraft: draft.value && !selection ? () => setPausedKey(null) : null,

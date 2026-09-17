@@ -70,7 +70,7 @@ async function auditComposition(page, a, b) {
   await expect(b).toHaveText("Remote [test] IME あい");
 }
 
-export async function auditSharedEditing(page, { screenshot, blockWrites }) {
+export async function auditSharedEditing(page, { screenshot, blockWrites, measurements }) {
   const tab = (id) => page.locator(`.reader-dock-tab[data-panel-id="${id}"]`);
   const pane = (id) => page.locator(`[data-session-id="${id}"]`);
   const idOf = (editor) =>
@@ -129,6 +129,17 @@ export async function auditSharedEditing(page, { screenshot, blockWrites }) {
   await expect(page.getByText("Saved to collection", { exact: true })).toBeVisible();
 
   await tab(documentId).click();
+  await page.evaluate(() => {
+    globalThis.__creationDraftWrites = 0;
+    const original = globalThis.IDBObjectStore.prototype.put;
+    globalThis.__restoreCreationAudit = () => {
+      globalThis.IDBObjectStore.prototype.put = original;
+    };
+    globalThis.IDBObjectStore.prototype.put = function (...args) {
+      if (this.name === "drafts") globalThis.__creationDraftWrites += 1;
+      return original.apply(this, args);
+    };
+  });
   const paragraph = page.frameLocator("iframe.html-viewer:visible").locator("#p0");
   await paragraph.evaluate((element) => {
     const doc = element.ownerDocument,
@@ -150,6 +161,8 @@ export async function auditSharedEditing(page, { screenshot, blockWrites }) {
   await creatingText.pressSequentially(" characters saved immediately");
   await creatingText.press("Control+s");
   await expect(creator).toHaveCount(0);
+  expect(await page.evaluate(() => globalThis.__creationDraftWrites)).toBe(0);
+  await page.evaluate(() => globalThis.__restoreCreationAudit());
   const created = await page.evaluate(async () =>
     (await fetch("/__reader-audit/annotations/test_0000")).json(),
   );
@@ -161,6 +174,7 @@ export async function auditSharedEditing(page, { screenshot, blockWrites }) {
     documentId,
     screenshot,
     blockWrites,
+    measurements,
   });
   return [
     "Native browser typing shares text immediately while local recovery coalesces the burst into one checkpoint",

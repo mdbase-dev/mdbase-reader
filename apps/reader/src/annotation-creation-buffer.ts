@@ -1,46 +1,82 @@
 import {
   annotationDraftSnapshot,
-  flushAnnotationDraft,
-  saveAnnotationDraft,
-  stageAnnotationDraft,
+  whenAnnotationDraftReady,
   type AnnotationLocalDraft,
 } from "./annotation-drafts.js";
-import { LocalDraftCheckpoint } from "./local-draft-checkpoint.js";
+import { clearLegacyEdits } from "./annotation-edit-recovery.js";
+import { trackAnnotationEdits } from "./unsaved-annotation-edits.js";
 
-/** Creation text stays off the workspace subscription path until a recovery checkpoint. */
+import type { Annotation } from "@mdbase-reader/core";
+
+type Scope = Pick<Annotation, "collectionId" | "sourceId">;
+interface CreationSnapshot {
+  readonly ready: boolean;
+  readonly value: AnnotationLocalDraft | null;
+}
+/** An unfinished selection stays in memory across source switches, never in device storage. */
 export class AnnotationCreationBuffer {
-  private pending: AnnotationLocalDraft | undefined;
-  private readonly checkpoint = new LocalDraftCheckpoint(() => {
-    const value = this.pending;
-    this.pending = undefined;
-    if (value) {
-      saveAnnotationDraft(this.key, value);
-      flushAnnotationDraft(this.key);
-    }
-  });
-  constructor(private readonly key: string) {}
-  get(): AnnotationLocalDraft | null {
-    return this.pending ?? annotationDraftSnapshot(this.key).value;
-  }
-  edit(body: string): void {
-    const value = this.get();
-    if (!value) {
+  private value: AnnotationLocalDraft | null = null;
+  private snapshot: CreationSnapshot = { ready: false, value: null };
+  private readonly listeners = new Set<() => void>();
+  private started = false;
+  private legacy = false;
+  constructor(
+    private readonly key: string,
+    private readonly scope?: Scope,
+  ) {}
+  start(): void {
+    if (this.started) {
       return;
     }
-    this.pending = { ...value, body };
-    const pending = this.checkpoint.isPending();
-    this.checkpoint.schedule();
-    if (!pending) {
-      stageAnnotationDraft(this.key, this.pending);
+    this.started = true;
+    if (!this.key) {
+      this.publish();
+      return;
+    }
+    whenAnnotationDraftReady(this.key, () => {
+      this.value = annotationDraftSnapshot(this.key).value;
+      this.legacy = this.value !== null;
+      this.publish();
+    });
+  }
+  get = (): AnnotationLocalDraft | null => this.value;
+  getSnapshot = (): CreationSnapshot => this.snapshot;
+  subscribe = (listener: () => void): (() => void) => {
+    this.listeners.add(listener);
+    return () => void this.listeners.delete(listener);
+  };
+  edit(body: string): void {
+    if (this.value) {
+      this.value = { ...this.value, body };
     }
   }
   replace(value: AnnotationLocalDraft | null): void {
-    this.checkpoint.cancel();
-    this.pending = undefined;
-    saveAnnotationDraft(this.key, value);
+    if (this.legacy) {
+      clearLegacyEdits(this.key);
+      this.legacy = false;
+    }
+    this.value = value;
+    this.publish();
   }
-  flush = (): void => {
-    this.checkpoint.flush();
-    flushAnnotationDraft(this.key);
-  };
+  clearIf(value: AnnotationLocalDraft): void {
+    if (this.value === value) {
+      this.replace(null);
+    }
+  }
+  private publish(): void {
+    this.snapshot = { ready: true, value: this.value };
+    if (this.scope) {
+      trackAnnotationEdits(this, this.scope, this.value !== null);
+    }
+    this.listeners.forEach((listener) => listener());
+  }
+}
+const buffers = new Map<string, AnnotationCreationBuffer>();
+export function annotationCreationBuffer(key: string, scope?: Scope): AnnotationCreationBuffer {
+  let buffer = buffers.get(key);
+  if (!buffer) {
+    buffer = new AnnotationCreationBuffer(key, scope);
+    buffers.set(key, buffer);
+  }
+  return buffer;
 }

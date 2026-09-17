@@ -16,7 +16,6 @@ export function AnnotationBodyEditor(props: AnnotationEditProps): JSX.Element {
     discard,
     resolve,
     canSave,
-    draft,
     conflict,
     setBody,
     cancel,
@@ -29,6 +28,7 @@ export function AnnotationBodyEditor(props: AnnotationEditProps): JSX.Element {
     requestDelete,
     confirmDelete,
   } = useAnnotationEdit(props);
+  const busy = locked || status === "saving";
   if (editingElsewhere) {
     return (
       <div className="annotation-body-editor" role="group" aria-label="Edit annotation">
@@ -52,15 +52,15 @@ export function AnnotationBodyEditor(props: AnnotationEditProps): JSX.Element {
       onKeyDown={(event) => annotationEditorKeys(event, cancel, save)}
     >
       <div className="annotation-editor-label">Quotation and comment</div>
-      {draft.ready ? (
+      {status !== "loading" ? (
         <AnnotationTextArea value={body} readOnly={locked} onChange={setBody} />
       ) : (
-        <p role="status">Checking for a saved draft…</p>
+        <p role="status">Loading annotation…</p>
       )}
       <span>
-        Markdown is supported. Done saves your changes; the passage anchor stays unchanged.
+        Saves after a one-second pause. Keep Reader open until saved. Markdown is supported.
       </span>
-      <AnnotationSaveState status={status} locallySaved={draft.saved} />
+      <AnnotationSaveState status={status} />
       {conflict ? (
         <section role="alert">
           <p>This annotation changed in the collection. Your changes are retained.</p>
@@ -68,15 +68,15 @@ export function AnnotationBodyEditor(props: AnnotationEditProps): JSX.Element {
             <summary>Compare collection version</summary>
             <pre>{conflict.body}</pre>
           </details>
-          <button type="button" disabled={locked} onClick={() => resolve("local")}>
+          <button type="button" disabled={busy} onClick={() => resolve("local")}>
             Keep my changes
           </button>
-          <button type="button" disabled={locked} onClick={() => resolve("remote")}>
+          <button type="button" disabled={busy} onClick={() => resolve("remote")}>
             Use collection version
           </button>
         </section>
       ) : null}
-      {problem || draft.problem ? <p role="alert">{problem ?? draft.problem}</p> : null}
+      {problem ? <p role="alert">{problem}</p> : null}
       {deletePlan ? (
         <AnnotationDeleteConfirmation
           plan={deletePlan}
@@ -89,14 +89,14 @@ export function AnnotationBodyEditor(props: AnnotationEditProps): JSX.Element {
         <button
           className="is-danger"
           type="button"
-          disabled={locked || !draft.ready || deletePlan !== null}
+          disabled={locked || status === "loading" || deletePlan !== null}
           onClick={requestDelete}
         >
           {deleteStatus === "checking" ? "Checking…" : "Delete"}
         </button>
         <span />
         {status !== "saved" ? (
-          <button type="button" disabled={locked} onClick={discard}>
+          <button type="button" disabled={busy} onClick={discard}>
             Discard changes
           </button>
         ) : null}
@@ -115,22 +115,14 @@ export function AnnotationBodyEditor(props: AnnotationEditProps): JSX.Element {
   );
 }
 
-function AnnotationSaveState({
-  status,
-  locallySaved,
-}: {
-  readonly status: string;
-  readonly locallySaved: boolean;
-}): JSX.Element {
+function AnnotationSaveState({ status }: { readonly status: string }): JSX.Element {
   return (
     <small role="status">
       {status === "saved"
         ? "Saved to collection"
         : status === "saving"
           ? "Saving to collection…"
-          : locallySaved
-            ? "Draft kept on this device — not saved to collection"
-            : "Unsaved draft — kept in this window"}
+          : "Unsaved changes — only in memory"}
     </small>
   );
 }

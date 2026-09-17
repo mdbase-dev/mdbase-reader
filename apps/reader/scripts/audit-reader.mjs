@@ -183,6 +183,7 @@ try {
     completed.push(
       ...(await auditSharedEditing(page, {
         screenshot,
+        measurements,
         blockWrites: (value) => {
           writesBlocked = value;
         },

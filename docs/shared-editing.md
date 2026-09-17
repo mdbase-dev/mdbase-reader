@@ -1,25 +1,35 @@
 # Shared editing and autosave
 
-## Behaviour
+## Behaviour (local implementation; not yet deployed)
+
+Production remains `5c310047f773-production-mu4v9jes`, with explicit annotation saves and device recovery. The user still reported lag there. The memory-only autosave changes below require a separately authorized deployment.
 
 - Source notes still autosave after **one second of inactivity**, with shared text and independent CodeMirror selection, cursor, scroll and undo history across panes.
-- Annotation comments use a **native textarea and explicit Done save**. Close/Escape retains an unfinished draft; Discard changes asks for confirmation. Ctrl/Cmd+S also commits. Failed saves keep the editor open with Retry; successful commits close it.
-- Only one pane edits an annotation at a time. **Edit here** transfers its current buffer to another pane without saving or losing it. Other panes show committed text, not per-keystroke previews. Transfers are blocked while saving or checking/deleting.
-- New-highlight comments also use a native textarea and local buffer. Typing does not rerender the workspace on each character. Their explicit Save highlight/area action includes the latest characters even before the checkpoint timer fires.
+- Existing annotation comments use a **native textarea and one-second debounced mdbase autosave**. Typing remains enabled while saving; requests are serialized and older replies never replace newer text. Automatic saves leave the editor open. Done/Ctrl/Cmd+S remain optional save-now/close actions.
+- Only one pane edits an annotation at a time. **Edit here** transfers its buffer without losing text. Other panes show committed text, not per-keystroke previews. Deletion checks lock the editor, but ordinary saves do not.
+- Annotation comments and unfinished new-highlight/area selections are **memory-only**, with no localStorage writes or IndexedDB checkpoints. New comments and crop Blobs survive source switches within this window, not reloads. Save highlight/area includes the newest characters immediately.
 - New annotations still require explicit creation. Selecting a passage does not silently create a record. Citation forms retain their explicit validated save and single-owner policy.
-- Closing a safely stored editing view does not discard text or stop its pending writer. Unstored changes and unfinished new annotations still participate in close protection.
+- Failed saves retain text with Retry. Unsaved close/unload warnings remain; closing an editor does not stop its pending writer. **A crash, forced reload or bypassed unload warning can lose annotation changes not yet committed to mdbase.** Source-note recovery is unchanged.
 
 ## Implementation
 
-`SourceDraftSession` owns the source-note autosave pipeline. `AnnotationEditSession` owns an annotation's explicit editor lease, latest private buffer, recovery checkpoint and revision-checked commit. It has **no collection autosave timer**. Recovery restores unfinished comments for review rather than submitting them. The first dirty transition is published, but subsequent characters do not notify shared session/draft subscribers. `AnnotationCreationBuffer` similarly isolates new-highlight comment typing. Source-note annotation insertion still uses the source session, draining pending note edits instead of competing with autosave.
+`SourceDraftSession` retains its shared text, autosave and batched local checkpoints. `AnnotationEditSession` owns a single editor lease, private text, one-second collection timer and revision-checked writer. Only status/ownership/commit boundaries notify other subscribers, not every character. A later edit during a request is retained and saved afterward. `AnnotationCreationBuffer` keeps new-highlight text and selections in a window-local cache, without storage timers. `unsaved-annotation-edits.ts` tracks unsafe owners for tab/unload protection. Source-note annotation insertion still drains the source session instead of competing with its autosave.
 
 For source notes, `SharedTextDocument` supplies synchronous text/subscription access to CodeMirror. Minimal external changes use `Transaction.remote` and `addToHistory: false`. Delayed initial focus is cancelled by subsequent user interaction, so a newly opened editor cannot steal another view's click or keystroke.
 
 `SharedAnnotationResource` publishes query/mutation results to all panes. It deduplicates queries and overlays mutations made during an initial query, including deletion tombstones. Annotation editing mode is local to each list, rather than a global signal that opens/closes every editor.
 
-Source drafts use localStorage; annotation drafts retain their existing IndexedDB storage, including creation-time crop Blobs. These are recovery internals, not a second user-facing document version. Source unload protection outlives the final subscribed view when neither local nor collection storage is safe.
+Source drafts still use localStorage. A compatibility reader restores existing annotation drafts written by previous versions for review; merely loading one never submits it. Those entries are removed only after collection commit or an explicit discard/replacement/deletion. New typing does not update them. The old IndexedDB format remains solely for this compatibility path, not as a second save system.
 
-### Batched local checkpoints
+### Memory-only annotation validation (local)
+
+**68 Reader test files / 212 tests** pass, along with Reader typecheck/build, changed-file lint/format, architecture (337 production files / 484 relative imports / 17 packages; zero warnings) and specification checks. Storage tests cover zero device writes, memory-only unload protection, legacy recovery, newer edits during slow saves and a stale-response/verified-refresh race.
+
+The shared-editor fixture verifies zero annotation draft writes during creation and editing, serialized autosave, editable text during a delayed request, newer-text preservation, retry without background loops, close warnings, ownership transfer, revision conflicts, deletion leases and mobile textarea identity. Evidence: `/tmp/reader-audit-zCyOeZ`. Its 42 real browser keystrokes measured median next-frame latency **3.7 ms**, p95 **5.2 ms**, maximum **8.4 ms**, with no long tasks during that sample. These are fixture measurements, **not authenticated production performance acceptance** or proof that the user's remaining lag is resolved.
+
+Annotation/cross-format audit: `/tmp/reader-audit-qFm1pW`, including memory-only PDF crop retention across source switches. Full fixture audit: `/tmp/reader-audit-BOGuTq`.
+
+### Batched local checkpoints (historical; annotations superseded above)
 
 Edits update shared memory immediately, but no longer serialize a whole note or start an IndexedDB transaction on every keystroke. Recovery checkpoints run after **500 ms idle**, with a **3-second maximum scheduling delay** during continuous typing. Source-note collection autosave remains independently debounced at one second. The dirty-state subscription for annotation panes reads a boolean rather than rerendering on every global draft-version increment.
 
@@ -35,13 +45,13 @@ Known old record revisions cannot replace newer session state. Source writes ref
 
 Dockview still exclusively owns layout. Editor bodies and recovery state are not serialized into its layout envelope.
 
-## Annotation editor redesign
+## Explicit-save annotation redesign (historical; currently deployed)
 
-The Behaviour section above describes the redesigned implementation, now deployed. `AnnotationTextArea` replaces CodeMirror for creation and existing comments. The editor component holds typing state locally; session/recovery state changes only at dirty, checkpoint, ownership, conflict and commit boundaries. The staged recovery snapshot is not the authoritative latest buffer: save, close/transfer and lifecycle flushes read the editor/creation buffer. Async IndexedDB writes still require the unload guard; forcing through its warning can lose pending text.
+This earlier release uses explicit Done saves and persistent recovery, unlike the local implementation described above. `AnnotationTextArea` replaces CodeMirror for creation and existing comments. The editor component holds typing state locally; session/recovery state changes only at dirty, checkpoint, ownership, conflict and commit boundaries. The staged recovery snapshot is not the authoritative latest buffer: save, close/transfer and lifecycle flushes read the editor/creation buffer. Async IndexedDB writes still require the unload guard; forcing through its warning can lose pending text.
 
 Validation: **68 Reader test files / 210 tests**. Real storage tests verify 40 rapid changes cause one shared dirty notification, unloading checkpoints the final text, and recovered comments never autosave. The browser fixture counts zero annotation PUTs during typing, exactly one per explicit attempt, and verifies failed-save retry, transferable single-editor ownership, close/reload recovery, confirmed discard, conflict choice and mobile textarea identity (`/tmp/reader-audit-AaAyyz`). Cross-format/annotation audit passed (`/tmp/reader-audit-ryykCB`); full fixture audit passed (`/tmp/reader-audit-EpGutk`). Typecheck/build, changed-file lint/format, architecture and specification checks passed. Recovery tests also cover typing again while an older IndexedDB checkpoint is in flight: its completion cannot mark the newer buffer durable. These are fixture checks, not authenticated production acceptance or proof of resolved physical-device lag.
 
-Deployed on explicit user approval as **`5c310047f773-production-mu4v9jes`** to **https://mdbase-reader.pages.dev**, deployment **https://cceec126.mdbase-reader.pages.dev**. Build revision, manifest, HTML, entry JavaScript/CSS and runtime preload match local production artifacts byte-for-byte on both origins. Production Connect/loopback targets, native textarea markers, and removal of the annotation collection-autosave timer were verified. Pre-deploy comparison against the prior live entry source map showed only intended redesign changes; unrelated already-deployed import work was preserved. Evidence: `/tmp/reader-simple-production-deploy.log` and `/tmp/reader-simple-production-verification.json`. This is artifact verification; user live acceptance is pending.
+Deployed on explicit user approval as **`5c310047f773-production-mu4v9jes`** to **https://mdbase-reader.pages.dev**, deployment **https://cceec126.mdbase-reader.pages.dev**. Build revision, manifest, HTML, entry JavaScript/CSS and runtime preload match local production artifacts byte-for-byte on both origins. Production Connect/loopback targets, native textarea markers, and removal of the annotation collection-autosave timer were verified. Pre-deploy comparison against the prior live entry source map showed only intended redesign changes; unrelated already-deployed import work was preserved. Evidence: `/tmp/reader-simple-production-deploy.log` and `/tmp/reader-simple-production-verification.json`. This was artifact verification; the user subsequently tested it and still reported lag.
 
 ## Original shared-editor validation (historical)
 
@@ -62,7 +72,7 @@ READER_AUDIT_SHARED_EDITING_ONLY=1 pnpm --filter @mdbase-reader/app test:browser
 
 These browser tests use disposable fixture data, not authenticated Connect acceptance. Physical-phone keyboards, native OS IME behaviour, and screen readers still require real-device checks. Shared live editing is within one Reader window, not cross-window/device collaboration. Other clients are protected by record revisions; existing single-slot local recovery is not an archive of independent drafts from multiple browser windows.
 
-## Production deployment
+## Original production deployment (historical)
 
 Deployed on explicit request as **`1787d28d4880-production-mu40us0p`** to
 <https://mdbase-reader.pages.dev>. This also includes the Reader saved-view filter.

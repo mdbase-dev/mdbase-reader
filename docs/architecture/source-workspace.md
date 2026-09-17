@@ -32,7 +32,7 @@ splitting, merging, reset, and persisted-layout restoration. Two copies of a
 document are distinct sessions. Reopening a closed session reuses its identity
 when available. Source-note tools share live text and an autosave writer. Annotation
 tools show committed text in multiple views, with one transferable native textarea
-and an explicit Done commit. Citation forms remain single-owner.
+and a one-second serialized autosave writer. Citation forms remain single-owner.
 
 Panels use Dockview's `always` renderer: relocating their groups does not reparent
 and reload an embedded HTML/EPUB iframe. Reader still owns hydration: unopened
@@ -64,13 +64,15 @@ leaves the complete operation untouched. Pinned tabs are protected from preview
 replacement and “close other unpinned tabs.” Reset arrangement moves existing
 panels without closing them, reloading renderers, or replacing drafts.
 
-Annotation drafts are shared across the inspector and source-bound workbench.
-Existing edits are keyed by collection/source/annotation; new selections are keyed
-by collection/source/exact document target. IndexedDB stores text and crop blobs,
-not live surfaces or object URLs. Existing comments commit only on Done/Ctrl+S;
-Close/Escape keeps the draft, and recovery never silently commits it. Unstored edits and unfinished new annotations
-remain covered by close guards. A document highlight reveals its card;
-entering the writable editor remains an explicit action.
+Pending annotation text is held in memory across inspector/workbench views.
+Existing edits are keyed by collection/source/annotation; new selections and crop
+Blobs are cached by collection/source/exact document target. Existing comments
+save after one idle second, without disabling typing; newer text survives older
+responses. New annotations still require explicit creation. No new annotation
+drafts are written to device storage. Old IndexedDB drafts can be reviewed and
+consumed, but are not automatically submitted merely by loading them. Unsaved
+close/unload guards remain; crashes or forced reloads can lose uncommitted text.
+A document highlight reveals its card; entering editing remains explicit.
 
 ## Persistence and migration
 
@@ -82,8 +84,8 @@ not the temporary mobile group.
 
 Layouts contain Dockview geometry, validated panel descriptors, and Reader navigation
 metadata (recent sources, history, and recently closed sessions), not editor text,
-dirty flags, authentication data, or downloaded document bytes. Local drafts keep
-their existing independent durable store.
+dirty flags, authentication data, or downloaded document bytes. Source-note drafts
+keep their independent durable store; pending annotation edits remain memory-only.
 
 The first run imports the old `mdbase-reader:workspace:v2:<collection>` layout,
 including the selected tabs in both panes. The old entry is left intact for

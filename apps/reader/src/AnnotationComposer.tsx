@@ -49,7 +49,7 @@ export function AnnotationComposer({
       ) : (
         <AreaPreview image={composer.selection.value.image} />
       )}
-      {expanded || composer.note ? (
+      {expanded || note ? (
         <>
           <div className="annotation-composer-label">
             Note <span>optional</span>
@@ -70,13 +70,9 @@ export function AnnotationComposer({
           Add a comment
         </button>
       )}
-      {composer.note ? (
+      {note ? (
         <small className="annotation-draft-status" role="status">
-          {composer.draftSaved
-            ? "Draft saved on this device"
-            : composer.error
-              ? "Draft is only in this window"
-              : "Saving draft…"}
+          Not saved yet — keep Reader open until you save this annotation.
         </small>
       ) : null}
       {composer.error ? <p role="alert">{composer.error}</p> : null}

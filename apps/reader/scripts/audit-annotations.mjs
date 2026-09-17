@@ -77,15 +77,6 @@ export async function auditAnnotations(page, { screenshot, blockWrites }) {
     "> A durable reading library makes patient attention possible.\n\n[test] A recoverable annotation comment.";
   blockWrites(true);
   await editor.fill(editText);
-  await expect(
-    tools.getByText("Draft kept on this device — not saved to collection", { exact: true }),
-  ).toBeVisible();
-  await page.reload();
-  // Recovery retains the draft without silently submitting it.
-  await tools.getByRole("button", { name: "Resume draft", exact: true }).click();
-  await expect(editor).toHaveValue(/recoverable annotation comment/u);
-  await expect(tools.getByRole("alert")).toHaveCount(0);
-  await editor.press("Control+s");
   await expect(tools.getByRole("alert")).toContainText("offline");
   await expect(editor).toHaveValue(/recoverable annotation comment/u);
   await screenshot("annotation-failed-save");
@@ -95,7 +86,7 @@ export async function auditAnnotations(page, { screenshot, blockWrites }) {
   await page.reload();
   await expect(tools).toContainText("recoverable annotation comment");
   completed.push(
-    "Annotation edits recover after reload, survive failed saves, and persist through keyboard retry",
+    "Annotation autosave failures retain text in memory; keyboard retry persists it across reload",
   );
 
   await select(1);
@@ -103,7 +94,11 @@ export async function auditAnnotations(page, { screenshot, blockWrites }) {
   await composer
     .getByRole("textbox", { name: "Annotation note" })
     .fill("[test] New selection draft survives switching sources.");
-  await expect(composer.getByText("Draft saved on this device", { exact: true })).toBeVisible();
+  await expect(
+    composer.getByText("Not saved yet — keep Reader open until you save this annotation.", {
+      exact: true,
+    }),
+  ).toBeVisible();
   page.removeAllListeners("dialog");
   page.on("dialog", (dialog) => void dialog.dismiss());
   await select(2);
@@ -119,14 +114,10 @@ export async function auditAnnotations(page, { screenshot, blockWrites }) {
   await expect(composer.getByRole("textbox", { name: "Annotation note" })).toHaveValue(
     /New selection draft survives/u,
   );
-  await page.reload();
-  await expect(composer.getByRole("textbox", { name: "Annotation note" })).toHaveValue(
-    /New selection draft survives/u,
-  );
   await composer.getByRole("textbox", { name: "Annotation note" }).press("Control+s");
   await expect(composer).toHaveCount(0);
   completed.push(
-    "New comments survive source switching and reload; replacing or discarding unfinished comments requires confirmation",
+    "New comments remain in memory across source switching; replacing or discarding them requires confirmation",
   );
 
   await tools.getByRole("searchbox", { name: "Search annotations" }).fill("recoverable");

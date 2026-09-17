@@ -68,7 +68,7 @@ export function AnnotationCard({
         ) : null}
         {needsAttention && !editing ? (
           <small className="annotation-draft-badge">
-            {snapshot.conflict ? "Changes need review" : "Unfinished draft"}
+            {snapshot.conflict ? "Changes need review" : "Unsaved changes"}
           </small>
         ) : null}
       </header>
@@ -173,7 +173,7 @@ function AnnotationCardFooter({
             onEdit();
           }}
         >
-          {editingElsewhere ? "Edit here" : resume ? "Resume draft" : "Edit"}
+          {editingElsewhere ? "Edit here" : resume ? "Resume edits" : "Edit"}
         </button>
         <button
           type="button"

@@ -169,9 +169,11 @@ See [the implementation and audit report](docs/reader-improvement-audit.md) for 
 SDK compatibility, remaining work and the repeatable `test:browser` scenario. Browser testing
 uses disposable fixtures; it does not authorize or mutate real Connect collections.
 
-Annotations support compact highlighting, explicit comment editing, device-local draft recovery
-(including PDF crops), search/filter/order controls, and return-to-reading navigation.
-See the [annotation UX/UI audit](docs/annotation-ux-audit.md) for coverage and remaining gaps.
+Annotations support compact highlighting, native comment textareas with one-second autosave,
+search/filter/order controls, and return-to-reading navigation. Pending annotation text and new
+PDF crops stay in memory, not device drafts; a forced reload can lose unsaved work. New highlights
+still require explicit creation. See [shared editing](docs/shared-editing.md) for the local versus
+currently deployed behaviour, validation and remaining acceptance gaps.
 
 ## Dependency rule
 

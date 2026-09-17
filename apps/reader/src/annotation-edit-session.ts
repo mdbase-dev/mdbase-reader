@@ -1,25 +1,11 @@
-import {
-  annotationDraftKey,
-  annotationDraftSnapshot,
-  flushAnnotationDraft,
-  saveAnnotationDraft,
-  stageAnnotationDraft,
-  whenAnnotationDraftReady,
-} from "./annotation-drafts.js";
+import { clearLegacyEdits, readLegacyEdits } from "./annotation-edit-recovery.js";
 import { readerErrorMessage } from "./errors.js";
-import { LocalDraftCheckpoint } from "./local-draft-checkpoint.js";
+import { trackAnnotationEdits } from "./unsaved-annotation-edits.js";
 
+import type { AnnotationEditSnapshot, PersistAnnotation } from "./annotation-edit-types.js";
 import type { Annotation } from "@mdbase-reader/core";
 
-export interface AnnotationEditSnapshot {
-  readonly status: "loading" | "saved" | "unsaved" | "saving" | "error";
-  readonly problem: string | null;
-  readonly conflict: Annotation | null;
-  readonly locked: boolean;
-  readonly editing: boolean;
-  readonly textVersion: number;
-}
-export type PersistAnnotation = (base: Annotation, body: string) => Promise<Annotation>;
+export type { AnnotationEditSnapshot, PersistAnnotation } from "./annotation-edit-types.js";
 export class AnnotationEditSession {
   readonly key: string;
   private snapshot: AnnotationEditSnapshot = {
@@ -33,17 +19,20 @@ export class AnnotationEditSession {
   private body: string;
   private listeners = new Set<() => void>();
   private inFlight: Promise<void> | undefined;
+  private savingBody: string | undefined;
+  private timer: ReturnType<typeof setTimeout> | undefined;
+  private editedAt = 0;
   private started = false;
+  private legacy = false;
   private lockOwner: object | undefined;
   private editorOwner: object | undefined;
   private seen = new Set<string | undefined>();
-  private readonly checkpoint = new LocalDraftCheckpoint(() => this.store());
   constructor(
     private base: Annotation,
     private readonly persist: PersistAnnotation,
     private readonly refresh?: (annotation: Annotation) => Promise<Annotation | null>,
   ) {
-    this.key = annotationDraftKey(base.collectionId, base.sourceId, base.id);
+    this.key = JSON.stringify([base.collectionId, base.sourceId, base.id]);
     this.body = base.body;
     this.seen.add(base.recordRevision);
   }
@@ -52,7 +41,18 @@ export class AnnotationEditSession {
       return;
     }
     this.started = true;
-    whenAnnotationDraftReady(this.key, () => this.restore());
+    readLegacyEdits(this.key, (value) => {
+      this.legacy = value !== null;
+      this.body = value?.body ?? this.base.body;
+      this.update({
+        status: value ? "unsaved" : "saved",
+        textVersion: this.snapshot.textVersion + 1,
+        conflict:
+          value && value.baseBody !== this.base.body && value.body !== this.base.body
+            ? this.base
+            : null,
+      });
+    });
   }
   getSnapshot = (): AnnotationEditSnapshot => this.snapshot;
   getText = (): string => this.body;
@@ -63,17 +63,12 @@ export class AnnotationEditSession {
   };
   ownsEditor = (owner: object): boolean => this.editorOwner === owner;
   claimEditor(owner: object, transfer = false): boolean {
-    if (
-      this.snapshot.locked ||
-      this.inFlight ||
-      (this.editorOwner && this.editorOwner !== owner && !transfer)
-    ) {
+    if (this.snapshot.locked || (this.editorOwner && this.editorOwner !== owner && !transfer)) {
       return false;
     }
     if (this.editorOwner === owner) {
       return true;
     }
-    this.checkpoint.flush();
     this.editorOwner = owner;
     this.update({ editing: true, textVersion: this.snapshot.textVersion + 1 });
     return true;
@@ -82,7 +77,6 @@ export class AnnotationEditSession {
     if (!this.ownsEditor(owner)) {
       return;
     }
-    this.checkpoint.flush();
     this.editorOwner = undefined;
     this.update({ editing: false });
   }
@@ -95,41 +89,38 @@ export class AnnotationEditSession {
       this.base = annotation;
       return;
     }
-    if (annotation.body === this.body) {
+    if (annotation.body === this.body && !this.inFlight) {
       this.base = annotation;
       this.clear();
       return;
     }
     const dirty = this.body !== this.base.body;
-    if (dirty && annotation.body !== this.base.body) {
+    if (
+      dirty &&
+      annotation.body !== this.base.body &&
+      annotation.body !== this.savingBody &&
+      annotation.body !== this.body
+    ) {
+      clearTimeout(this.timer);
       this.update({ conflict: annotation });
       return;
     }
     this.base = annotation;
-    if (!dirty) {
+    if (!dirty && !this.inFlight) {
       this.clear();
     }
   }
   edit = (body: string): void => {
-    if (
-      this.snapshot.locked ||
-      this.inFlight ||
-      this.snapshot.status === "loading" ||
-      body === this.body
-    ) {
+    if (this.snapshot.locked || this.snapshot.status === "loading" || body === this.body) {
       return;
     }
     this.body = body;
-    const pending = this.checkpoint.isPending();
-    this.checkpoint.schedule();
-    // Each new batch invalidates older in-flight checkpoints, without broadcasting keystrokes.
-    if (!pending) {
-      stageAnnotationDraft(this.key, { body, baseBody: this.base.body });
-    }
-    this.update({ status: "unsaved", problem: null });
+    this.editedAt = Date.now();
+    this.update({ status: this.inFlight ? "saving" : "unsaved", problem: null });
+    this.schedule();
   };
   save = (): Promise<void> => {
-    this.checkpoint.flush();
+    clearTimeout(this.timer);
     if (this.inFlight) {
       return this.inFlight;
     }
@@ -140,9 +131,15 @@ export class AnnotationEditSession {
       this.clear();
       return Promise.resolve();
     }
+    this.savingBody = this.body;
     this.update({ status: "saving", problem: null });
     this.inFlight = this.write(this.base, this.body).finally(() => {
       this.inFlight = undefined;
+      this.savingBody = undefined;
+      this.update({});
+      if (this.snapshot.status === "unsaved") {
+        this.schedule();
+      }
     });
     return this.inFlight;
   };
@@ -157,7 +154,6 @@ export class AnnotationEditSession {
       this.clear();
     } else {
       this.update({ status: "unsaved" });
-      this.store();
     }
   };
   discard = (): void => {
@@ -172,8 +168,8 @@ export class AnnotationEditSession {
       return false;
     }
     this.lockOwner = owner;
+    clearTimeout(this.timer);
     this.update({ locked: true });
-    this.checkpoint.flush();
     await this.inFlight;
     if (this.snapshot.status === "error" || this.snapshot.conflict) {
       this.unlock(owner);
@@ -187,40 +183,30 @@ export class AnnotationEditSession {
     }
     this.lockOwner = undefined;
     this.update({ locked: false });
+    if (this.snapshot.status === "unsaved" && this.editedAt) {
+      this.schedule();
+    }
   };
   deleted = (): void => {
-    this.checkpoint.cancel();
-    saveAnnotationDraft(this.key, null);
-    this.update({ locked: true, status: "saved" });
+    this.clear();
+    this.update({ locked: true });
   };
-  private restore(): void {
-    const value = annotationDraftSnapshot(this.key).value;
-    this.body = value?.body ?? this.base.body;
-    this.update({
-      status: value ? "unsaved" : "saved",
-      textVersion: this.snapshot.textVersion + 1,
-      conflict:
-        value && value.baseBody !== this.base.body && value.body !== this.base.body
-          ? this.base
-          : null,
-    });
-  }
   private async write(base: Annotation, body: string): Promise<void> {
     try {
       const saved = await this.persist(base, body);
       this.base = saved;
       this.seen.add(saved.recordRevision);
-      if (!this.snapshot.conflict) {
+      if (this.body === body && !this.snapshot.conflict) {
         this.clear();
       } else {
         this.update({ status: "unsaved" });
-        this.store();
       }
     } catch (reason) {
       const latest = await this.refresh?.(this.base).catch(() => null);
       if (latest) {
         this.receive(latest);
-        if (latest.body === this.body && !this.snapshot.conflict) {
+        if (latest.body === this.body) {
+          this.base = latest;
           this.clear();
           return;
         }
@@ -229,17 +215,17 @@ export class AnnotationEditSession {
         status: "error",
         problem: this.snapshot.conflict
           ? null
-          : readerErrorMessage(
-              reason,
-              "Could not save changes to the collection. Your draft is retained.",
-            ),
+          : readerErrorMessage(reason, "Could not save. Keep Reader open and retry."),
       });
     }
   }
   private clear(): void {
-    this.checkpoint.cancel();
+    clearTimeout(this.timer);
     this.body = this.base.body;
-    saveAnnotationDraft(this.key, null);
+    if (this.legacy) {
+      clearLegacyEdits(this.key);
+      this.legacy = false;
+    }
     this.update({
       status: "saved",
       problem: null,
@@ -247,17 +233,30 @@ export class AnnotationEditSession {
       textVersion: this.snapshot.textVersion + 1,
     });
   }
-  private store(): void {
-    this.checkpoint.cancel();
-    saveAnnotationDraft(this.key, { body: this.body, baseBody: this.base.body });
-    flushAnnotationDraft(this.key);
+  private schedule(): void {
+    clearTimeout(this.timer);
+    if (!this.snapshot.locked && !this.snapshot.conflict) {
+      this.timer = setTimeout(
+        () => void this.save(),
+        Math.max(0, this.editedAt + 1000 - Date.now()),
+      );
+    }
   }
   private update(value: Partial<AnnotationEditSnapshot>): void {
+    const next = { ...this.snapshot, ...value };
+    trackAnnotationEdits(
+      this,
+      this.base,
+      this.body !== this.base.body ||
+        Boolean(next.conflict) ||
+        Boolean(this.inFlight) ||
+        next.status === "saving",
+    );
     const keys = Object.keys(value) as (keyof AnnotationEditSnapshot)[];
     if (keys.every((key) => this.snapshot[key] === value[key])) {
       return;
     }
-    this.snapshot = { ...this.snapshot, ...value };
+    this.snapshot = next;
     this.listeners.forEach((listener) => listener());
   }
 }

@@ -1,3 +1,5 @@
+// Legacy device-recovery format. New annotation editors only read/remove old entries;
+// non-null writes below remain for compatibility fixtures, never the typing path.
 import { LocalDraftCheckpoint, flushLocalDraftCheckpoints } from "./local-draft-checkpoint.js";
 
 import type { ComposerSelection } from "./annotation-composer-request.js";
@@ -91,12 +93,6 @@ export async function loadAnnotationDraft(key: string): Promise<void> {
       });
     }
   }
-}
-/** Mark recovery unsafe once; the editor owns a lifecycle-flushed checkpoint of its latest buffer. */
-export function stageAnnotationDraft(key: string, value: AnnotationLocalDraft): void {
-  checkpoints.get(key)?.cancel();
-  checkpoints.delete(key);
-  publish(key, { value, ready: true, saved: false, problem: null });
 }
 export function saveAnnotationDraft(key: string, value: AnnotationLocalDraft | null): void {
   publish(key, { value, ready: true, saved: false, problem: null });

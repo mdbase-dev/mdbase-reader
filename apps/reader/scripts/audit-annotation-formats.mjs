@@ -30,9 +30,14 @@ export async function auditAnnotationFormats(page, { open, screenshot }) {
   await area
     .getByRole("textbox", { name: "Annotation note" })
     .fill("[test] Recover this PDF crop and comment.");
-  await expect(area.getByText("Draft saved on this device", { exact: true })).toBeVisible();
+  await expect(
+    area.getByText("Not saved yet — keep Reader open until you save this annotation.", {
+      exact: true,
+    }),
+  ).toBeVisible();
   await screenshot("annotation-pdf-area-draft");
-  await page.reload();
+  await open(0);
+  await open(20);
   await expect(area.getByRole("textbox", { name: "Annotation note" })).toHaveValue(
     /Recover this PDF crop/u,
     { timeout: 60000 },
@@ -93,7 +98,7 @@ export async function auditAnnotationFormats(page, { open, screenshot }) {
     .toEqual([]);
   await screenshot("annotation-epub-saved");
   return [
-    "Real PDF area selection retains its crop image and comment across reload",
+    "Real PDF area selection retains its crop image and comment in memory across source switches",
     "Real EPUB mouse selection creates an anchored highlight and opens it from the inspector",
   ];
 }

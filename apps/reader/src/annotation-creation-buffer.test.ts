@@ -1,51 +1,48 @@
 import "fake-indexeddb/auto";
-import { afterEach, expect, it, vi } from "vitest";
+import { expect, it, vi } from "vitest";
 
-import { AnnotationCreationBuffer } from "./annotation-creation-buffer.js";
 import {
-  annotationDraftSnapshot,
-  loadAnnotationDraft,
-  subscribeAnnotationDrafts,
-} from "./annotation-drafts.js";
-import { flushLocalDraftCheckpoints } from "./local-draft-checkpoint.js";
+  AnnotationCreationBuffer,
+  annotationCreationBuffer,
+} from "./annotation-creation-buffer.js";
 
-afterEach(() => {
-  flushLocalDraftCheckpoints();
-  vi.clearAllTimers();
-  vi.useRealTimers();
-});
-
-it("keeps creation typing local and flushes the latest characters for explicit save", async () => {
-  const key = "creation-buffer-burst";
-  await loadAnnotationDraft(key);
-  const buffer = new AnnotationCreationBuffer(key);
+it("keeps selection/comment text in memory without notifications or device writes while typing", async () => {
+  const key = "memory-creation";
+  const buffer = annotationCreationBuffer(key);
+  buffer.start();
+  await vi.waitFor(() => expect(buffer.getSnapshot().ready).toBe(true));
+  const put = vi.spyOn(IDBObjectStore.prototype, "put"),
+    remove = vi.spyOn(IDBObjectStore.prototype, "delete");
   buffer.replace({ body: "" });
-  await vi.waitFor(() => expect(annotationDraftSnapshot(key).saved).toBe(true));
-  vi.useFakeTimers();
   const notify = vi.fn(),
-    detach = subscribeAnnotationDrafts(notify);
+    detach = buffer.subscribe(notify);
   for (let i = 0; i < 40; i += 1) {
     buffer.edit(`Latest ${String(i)}`);
   }
-  expect(notify).toHaveBeenCalledOnce();
+  expect(notify).not.toHaveBeenCalled();
   expect(buffer.get()?.body).toBe("Latest 39");
-  expect(annotationDraftSnapshot(key).saved).toBe(false);
-  buffer.flush();
-  expect(annotationDraftSnapshot(key).value?.body).toBe("Latest 39");
-  detach();
-  await vi.waitFor(() => expect(annotationDraftSnapshot(key).saved).toBe(true));
-});
-
-it("never revives pending text after a selection is discarded/replaced", async () => {
-  const key = "creation-buffer-replace";
-  await loadAnnotationDraft(key);
-  const buffer = new AnnotationCreationBuffer(key);
-  buffer.replace({ body: "Old" });
-  buffer.edit("Do not resurrect");
-  buffer.replace(null);
-  flushLocalDraftCheckpoints();
-  await vi.waitFor(() => expect(annotationDraftSnapshot(key).saved).toBe(true));
+  expect(annotationCreationBuffer(key)).toBe(buffer);
+  const reloaded = new AnnotationCreationBuffer(key);
+  reloaded.start();
+  expect(reloaded.get()).toBeNull();
+  const latest = buffer.get();
+  if (!latest) {
+    throw new Error("Missing memory buffer");
+  }
+  buffer.clearIf(latest);
   expect(buffer.get()).toBeNull();
+  expect(put).not.toHaveBeenCalled();
+  expect(remove).not.toHaveBeenCalled();
+  detach();
+  vi.restoreAllMocks();
+});
+it("does not clear a newer selection when an older creation finishes", () => {
+  const buffer = new AnnotationCreationBuffer("memory-replace");
+  const older = { body: "Old selection" };
+  buffer.replace(older);
   buffer.replace({ body: "New selection" });
+  buffer.clearIf(older);
   expect(buffer.get()?.body).toBe("New selection");
+  buffer.replace(null);
+  expect(buffer.get()).toBeNull();
 });

@@ -1,50 +1,14 @@
 import { useEffect, useSyncExternalStore } from "react";
 
-import {
-  annotationDraftSnapshot,
-  flushAnnotationDraft,
-  hasBlockingAnnotationDrafts,
-  loadAnnotationDraft,
-  saveAnnotationDraft,
-  subscribeAnnotationDrafts,
-} from "./annotation-drafts.js";
+import { hasUnsavedAnnotationEdits, subscribeAnnotationEdits } from "./unsaved-annotation-edits.js";
 
-import type { AnnotationDraftSnapshot, AnnotationLocalDraft } from "./annotation-drafts.js";
 import type { ReaderDockWorkspace } from "./dockview-workspace.js";
 import type { WorkspaceTab } from "./source-workspace-layout.js";
 import type { SourceSummary } from "@mdbase-reader/core";
 
-export function useAnnotationDraft(key: string): AnnotationDraftSnapshot & {
-  readonly label: string;
-  readonly set: (value: AnnotationLocalDraft | null) => void;
-} {
-  const snapshot = useSyncExternalStore(
-    subscribeAnnotationDrafts,
-    () => annotationDraftSnapshot(key),
-    () => annotationDraftSnapshot(key),
-  );
-  useEffect(() => {
-    if (key) {
-      void loadAnnotationDraft(key);
-    }
-    return () => flushAnnotationDraft(key);
-  }, [key]);
-  return {
-    ...snapshot,
-    label: snapshot.saved
-      ? "Draft saved on this device"
-      : snapshot.problem
-        ? "Draft is only in this window"
-        : "Saving draft…",
-    set: (value: Parameters<typeof saveAnnotationDraft>[1]) => saveAnnotationDraft(key, value),
-  };
-}
 export function useAnnotationDraftDirty(collection: string, source: string): boolean {
-  return useSyncExternalStore(
-    subscribeAnnotationDrafts,
-    () => hasBlockingAnnotationDrafts(collection, source),
-    () => hasBlockingAnnotationDrafts(collection, source),
-  );
+  const dirty = (): boolean => hasUnsavedAnnotationEdits(collection, source);
+  return useSyncExternalStore(subscribeAnnotationEdits, dirty, dirty);
 }
 export function useDocumentAnnotationDirty(
   dock: ReaderDockWorkspace,

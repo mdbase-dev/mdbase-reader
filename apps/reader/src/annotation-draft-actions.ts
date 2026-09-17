@@ -1,4 +1,3 @@
-import { annotationDraftSnapshot, saveAnnotationDraft } from "./annotation-drafts.js";
 import { saveSelection } from "./annotation-selection.js";
 
 import type { AnnotationLocalDraft } from "./annotation-drafts.js";
@@ -35,7 +34,7 @@ export function confirmAnnotationDiscard(message: string): boolean {
   return globalThis.confirm(message);
 }
 export async function saveAnnotationDraftToCollection(
-  key: string,
+  clear: () => void,
   draft: AnnotationLocalDraft,
   source: Source,
   surface: ReadingSurface,
@@ -52,9 +51,7 @@ export async function saveAnnotationDraftToCollection(
     draft.selection,
     draft.body,
     () => {
-      if (annotationDraftSnapshot(key).value === draft) {
-        saveAnnotationDraft(key, null);
-      }
+      clear();
       surface.capabilities.textSelection?.clearSelection();
     },
     problem,

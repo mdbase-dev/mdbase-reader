@@ -184,7 +184,7 @@ function confirmCloseDirtyTab(): boolean {
   // Native confirmation keeps tab and pane closing synchronous with the workspace action.
   // eslint-disable-next-line no-alert
   return globalThis.confirm(
-    "Close this tab? Locally saved note and annotation drafts can be recovered. Other unsaved changes will be discarded.",
+    "Close this tab with unsaved changes? Keep it open until saving finishes to avoid losing work.",
   );
 }
 

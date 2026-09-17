@@ -2,7 +2,6 @@ import { useEffect, useMemo, useState, useSyncExternalStore } from "react";
 
 import { confirmAnnotationDiscard } from "./annotation-draft-actions.js";
 import { useAnnotationDeletion } from "./use-annotation-deletion.js";
-import { useAnnotationDraft } from "./use-annotation-draft.js";
 import { useAnnotationSession } from "./use-annotation-session.js";
 
 import type {
@@ -21,7 +20,6 @@ export interface AnnotationEditProps {
 }
 interface AnnotationEditController {
   readonly body: string;
-  readonly draft: ReturnType<typeof useAnnotationDraft>;
   readonly session: AnnotationEditSession;
   readonly conflict: Annotation | null;
   readonly status: AnnotationEditSnapshot["status"];
@@ -49,7 +47,7 @@ export function useAnnotationEdit(props: AnnotationEditProps): AnnotationEditCon
     session.getSnapshot,
     session.getSnapshot,
   );
-  const draft = useAnnotationDraft(session.key);
+  const ready = snapshot.status !== "loading";
   const editorOwner = useMemo(() => ({ session }), [session]);
   useEffect(() => {
     session.claimEditor(editorOwner, true);
@@ -61,21 +59,24 @@ export function useAnnotationEdit(props: AnnotationEditProps): AnnotationEditCon
   }));
   const body = text.version === snapshot.textVersion ? text.body : session.getText();
   const editingElsewhere = !session.ownsEditor(editorOwner);
-  const locked = snapshot.locked || snapshot.status === "saving";
-  const deletion = useAnnotationDeletion(
-    session,
-    props,
-    !locked && !editingElsewhere && draft.ready,
-  );
+  const locked = snapshot.locked;
+  const deletion = useAnnotationDeletion(session, props, !locked && !editingElsewhere && ready);
   const cancel = (): void => {
     if (locked) {
       return;
     }
-    // Close/Escape keeps recovery text; only Done writes to the collection.
+    if (
+      session.getSnapshot().status !== "saved" &&
+      !confirmAnnotationDiscard(
+        "Close with unsaved changes? Saving may continue in this window, but reloading Reader before it finishes will lose them.",
+      )
+    ) {
+      return;
+    }
     onCancel();
   };
   const save = (): void => {
-    if (locked || !session.ownsEditor(editorOwner) || !draft.ready) {
+    if (locked || !session.ownsEditor(editorOwner) || !ready) {
       return;
     }
     void session.save().then(() => {
@@ -87,13 +88,13 @@ export function useAnnotationEdit(props: AnnotationEditProps): AnnotationEditCon
   return {
     ...deletion,
     body,
-    draft,
     session,
     conflict: snapshot.conflict,
     status: snapshot.status,
     locked,
     problem: deletion.problem ?? snapshot.problem,
-    canSave: draft.ready && !locked && !editingElsewhere && !snapshot.conflict,
+    canSave:
+      ready && !locked && !editingElsewhere && !snapshot.conflict && snapshot.status !== "saving",
     setBody: (value) => {
       if (locked || !session.ownsEditor(editorOwner)) {
         return;
@@ -110,6 +111,7 @@ export function useAnnotationEdit(props: AnnotationEditProps): AnnotationEditCon
     discard: () => {
       if (
         !locked &&
+        snapshot.status !== "saving" &&
         session.ownsEditor(editorOwner) &&
         confirmAnnotationDiscard(
           "Discard this annotation's unsaved changes? The collection version will be kept.",
