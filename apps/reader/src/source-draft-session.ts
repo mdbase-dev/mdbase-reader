@@ -1,4 +1,5 @@
 import { readerErrorMessage } from "./errors.js";
+import { LocalDraftCheckpoint } from "./local-draft-checkpoint.js";
 import { clearSourceDraft, readSourceDraft, writeSourceDraft } from "./source-draft-storage.js";
 import { trackUnstoredSourceChanges } from "./unsaved-source-drafts.js";
 
@@ -25,6 +26,8 @@ export class SourceDraftSession {
   private inFlight: Promise<void> | null = null;
   private seen = new Set<Source["recordRevision"]>();
   private generation = 0;
+  private storedBody: string | undefined;
+  private readonly checkpoint = new LocalDraftCheckpoint(() => this.store());
 
   constructor(
     private base: Source,
@@ -45,6 +48,7 @@ export class SourceDraftSession {
     };
     try {
       const draft = readSourceDraft(storage, base);
+      this.storedBody = draft?.body;
       if (draft && draft.body !== base.body) {
         this.snapshot = {
           ...this.snapshot,
@@ -76,18 +80,25 @@ export class SourceDraftSession {
     }
     return () => {
       this.listeners.delete(listener);
+      if (!this.listeners.size) {
+        this.checkpoint.flush();
+      }
     };
   };
 
   edit = (body: string): void => {
+    if (body === this.snapshot.body) {
+      return;
+    }
     this.generation += 1;
     this.update({
       body,
       status: this.saving ? "saving" : "unsaved",
       error: null,
       recovered: false,
+      locallySaved: false,
     });
-    this.store();
+    this.checkpoint.schedule();
     this.schedule();
   };
 
@@ -114,6 +125,7 @@ export class SourceDraftSession {
   }
 
   save = (): Promise<void> => {
+    this.checkpoint.flush();
     clearTimeout(this.timer);
     if (this.inFlight) {
       return this.inFlight;
@@ -160,10 +172,14 @@ export class SourceDraftSession {
       this.update({ savedSource: saved });
       try {
         clearSourceDraft(this.storage, saved, body);
+        if (this.storedBody === body) {
+          this.storedBody = undefined;
+        }
       } catch {
         // A stale recovery copy is safer than discarding unsaved work.
       }
       if (generation === this.generation) {
+        this.checkpoint.cancel();
         this.update({ status: "saved", locallySaved: false, conflict: null });
       } else {
         this.update({ status: "unsaved" });
@@ -199,8 +215,10 @@ export class SourceDraftSession {
     this.base = remote;
     this.update({ conflict: null, error: null, recovered: false });
     if (choice === "remote") {
+      this.checkpoint.cancel();
       try {
-        clearSourceDraft(this.storage, remote, this.snapshot.body);
+        clearSourceDraft(this.storage, remote, this.storedBody ?? this.snapshot.body);
+        this.storedBody = undefined;
       } catch {
         /* Retain on failure. */
       }
@@ -220,8 +238,10 @@ export class SourceDraftSession {
   }
 
   private store(): void {
+    this.checkpoint.cancel();
     try {
       writeSourceDraft(this.storage, this.base, this.snapshot.body);
+      this.storedBody = this.snapshot.body;
       this.update({ locallySaved: true, localProblem: null });
     } catch {
       this.update({

@@ -1,6 +1,7 @@
 import {
   annotationDraftKey,
   annotationDraftSnapshot,
+  flushAnnotationDraft,
   loadAnnotationDraft,
   saveAnnotationDraft,
   subscribeAnnotationDrafts,
@@ -67,6 +68,9 @@ export class AnnotationEditSession {
     this.listeners.add(listener);
     return () => {
       this.listeners.delete(listener);
+      if (!this.listeners.size) {
+        flushAnnotationDraft(this.key);
+      }
     };
   };
   receive(annotation: Annotation): void {
@@ -100,7 +104,7 @@ export class AnnotationEditSession {
     }
   }
   edit = (body: string): void => {
-    if (this.snapshot.locked || this.snapshot.status === "loading") {
+    if (this.snapshot.locked || this.snapshot.status === "loading" || body === this.snapshot.body) {
       return;
     }
     this.update({ body, status: this.inFlight ? "saving" : "unsaved", problem: null });
@@ -108,6 +112,7 @@ export class AnnotationEditSession {
     this.schedule();
   };
   save = (): Promise<void> => {
+    flushAnnotationDraft(this.key);
     clearTimeout(this.timer);
     if (this.inFlight) {
       return this.inFlight;
@@ -241,24 +246,4 @@ export class AnnotationEditSession {
     this.snapshot = { ...this.snapshot, ...value };
     this.listeners.forEach((listener) => listener());
   }
-}
-const sessions = new WeakMap<object, Map<string, AnnotationEditSession>>();
-export function annotationEditSession(
-  scope: object,
-  annotation: Annotation,
-  persist: PersistAnnotation,
-  refresh?: (annotation: Annotation) => Promise<Annotation | null>,
-): AnnotationEditSession {
-  let cache = sessions.get(scope);
-  if (!cache) {
-    cache = new Map();
-    sessions.set(scope, cache);
-  }
-  const key = annotationDraftKey(annotation.collectionId, annotation.sourceId, annotation.id);
-  let session = cache.get(key);
-  if (!session) {
-    session = new AnnotationEditSession(annotation, persist, refresh);
-    cache.set(key, session);
-  }
-  return session;
 }

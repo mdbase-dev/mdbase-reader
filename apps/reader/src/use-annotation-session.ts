@@ -1,6 +1,6 @@
 import { useContext, useEffect } from "react";
 
-import { annotationEditSession } from "./annotation-edit-session.js";
+import { annotationEditSession } from "./annotation-edit-session-cache.js";
 import { AnnotationEditingContext } from "./AnnotationEditingContext.js";
 import { refreshSharedAnnotation } from "./shared-annotation-resource.js";
 

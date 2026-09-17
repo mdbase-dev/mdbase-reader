@@ -10,6 +10,7 @@ import {
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { insertAnnotationInDraft } from "./insert-annotation-in-draft.js";
+import { flushLocalDraftCheckpoints } from "./local-draft-checkpoint.js";
 import { SourceDraftSession } from "./source-draft-session.js";
 import {
   readSourceDraft,
@@ -63,6 +64,8 @@ function fixture(storage = memory()) {
   };
 }
 afterEach(() => {
+  flushLocalDraftCheckpoints();
+  vi.clearAllTimers();
   vi.useRealTimers();
 });
 describe("durable source drafts", () => {
@@ -144,6 +147,8 @@ describe("revision-checked source drafts", () => {
     vi.useFakeTimers();
     const { session, storage, persist } = fixture();
     session.edit("Recovered text");
+    expect(readSourceDraft(storage, source)).toBeNull();
+    await vi.advanceTimersByTimeAsync(500);
     expect(readSourceDraft(storage, source)?.body).toBe("Recovered text");
     const recovered = fixture(storage);
     expect(recovered.session.getSnapshot()).toMatchObject({
@@ -232,7 +237,7 @@ describe("revision-checked source drafts", () => {
     const second = new SourceDraftSession(other, storage, vi.fn(), vi.fn(), vi.fn());
     expect(second.getSnapshot().conflict).toBe(other);
   });
-  it("reports storage failure instead of claiming the draft is saved locally", () => {
+  it("reports storage failure instead of claiming the draft is saved locally", async () => {
     vi.useFakeTimers();
     const storage = memory();
     storage.setItem = () => {
@@ -240,6 +245,7 @@ describe("revision-checked source drafts", () => {
     };
     const { session } = fixture(storage);
     session.edit("Important");
+    await vi.advanceTimersByTimeAsync(500);
     expect(session.getSnapshot().locallySaved).toBe(false);
     expect(session.getSnapshot().localProblem).toContain("could not be saved locally");
   });

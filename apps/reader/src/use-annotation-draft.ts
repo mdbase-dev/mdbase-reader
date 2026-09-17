@@ -2,7 +2,7 @@ import { useEffect, useSyncExternalStore } from "react";
 
 import {
   annotationDraftSnapshot,
-  annotationDraftVersion,
+  flushAnnotationDraft,
   hasBlockingAnnotationDrafts,
   loadAnnotationDraft,
   saveAnnotationDraft,
@@ -27,6 +27,7 @@ export function useAnnotationDraft(key: string): AnnotationDraftSnapshot & {
     if (key) {
       void loadAnnotationDraft(key);
     }
+    return () => flushAnnotationDraft(key);
   }, [key]);
   return {
     ...snapshot,
@@ -39,8 +40,11 @@ export function useAnnotationDraft(key: string): AnnotationDraftSnapshot & {
   };
 }
 export function useAnnotationDraftDirty(collection: string, source: string): boolean {
-  useSyncExternalStore(subscribeAnnotationDrafts, annotationDraftVersion, annotationDraftVersion);
-  return hasBlockingAnnotationDrafts(collection, source);
+  return useSyncExternalStore(
+    subscribeAnnotationDrafts,
+    () => hasBlockingAnnotationDrafts(collection, source),
+    () => hasBlockingAnnotationDrafts(collection, source),
+  );
 }
 export function useDocumentAnnotationDirty(
   dock: ReaderDockWorkspace,

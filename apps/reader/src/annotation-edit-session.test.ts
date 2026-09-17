@@ -9,7 +9,8 @@ import {
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { AnnotationDeletionLease } from "./annotation-deletion-lease.js";
-import { AnnotationEditSession, annotationEditSession } from "./annotation-edit-session.js";
+import { annotationEditSession } from "./annotation-edit-session-cache.js";
+import { AnnotationEditSession } from "./annotation-edit-session.js";
 
 const drafts = vi.hoisted(() => new Map<string, { body: string; baseBody?: string } | null>());
 vi.mock("./annotation-drafts.js", () => ({
@@ -22,6 +23,7 @@ vi.mock("./annotation-drafts.js", () => ({
   }),
   subscribeAnnotationDrafts: () => () => undefined,
   loadAnnotationDraft: () => Promise.resolve(),
+  flushAnnotationDraft: vi.fn(),
   saveAnnotationDraft: (key: string, value: { body: string; baseBody?: string } | null) =>
     drafts.set(key, value),
 }));

@@ -1,6 +1,32 @@
 import { expect } from "@playwright/test";
 import { realpathSync } from "node:fs";
 
+async function auditLocalCheckpoint(page, a, b) {
+  await page.evaluate(() => {
+    const original = globalThis.Storage.prototype.setItem;
+    globalThis.__readerCheckpointWrites = 0;
+    globalThis.__restoreCheckpointAudit = () => {
+      globalThis.Storage.prototype.setItem = original;
+    };
+    globalThis.Storage.prototype.setItem = function (key, value) {
+      if (key.startsWith("mdbase-reader:draft:v1:")) {
+        globalThis.__readerCheckpointWrites += 1;
+      }
+      return original.call(this, key, value);
+    };
+  });
+  try {
+    await a.fill("[test] ");
+    await a.press("Control+End");
+    await a.pressSequentially("checkpoints", { delay: 30 });
+    await expect(b).toHaveText("[test] checkpoints");
+    expect(await page.evaluate(() => globalThis.__readerCheckpointWrites)).toBe(0);
+    await expect.poll(() => page.evaluate(() => globalThis.__readerCheckpointWrites)).toBe(1);
+  } finally {
+    await page.evaluate(() => globalThis.__restoreCheckpointAudit());
+  }
+}
+
 async function auditComposition(page, a, b) {
   await a.fill("[test] IME ");
   await a.press("Control+End");
@@ -71,6 +97,7 @@ export async function auditSharedEditing(page, { screenshot, blockWrites }) {
   await expect(notes).toHaveCount(2);
   const a = notes.nth(0),
     b = notes.nth(1);
+  await auditLocalCheckpoint(page, a, b);
   await a.fill("[test] Shared first edit");
   await expect(b).toHaveText("[test] Shared first edit");
   await b.press("Control+End");
@@ -211,6 +238,7 @@ export async function auditSharedEditing(page, { screenshot, blockWrites }) {
   await page.setViewportSize({ width: 1440, height: 1000 });
   await expect(comments).toHaveAttribute("data-shared-editor-identity", "original");
   return [
+    "Native browser typing shares text immediately while local recovery coalesces the burst into one checkpoint",
     "Independent note editors synchronously share text, map remote edits through local undo and synthetic IME composition, and autosave",
     "Closing a safely recovered note view neither prompts nor loses the other editor's content",
     "New annotations require explicit creation; existing comments share one autosave writer and save status",

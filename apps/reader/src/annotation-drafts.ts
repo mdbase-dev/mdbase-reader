@@ -1,3 +1,5 @@
+import { LocalDraftCheckpoint, flushLocalDraftCheckpoints } from "./local-draft-checkpoint.js";
+
 import type { ComposerSelection } from "./annotation-composer-request.js";
 
 export interface AnnotationLocalDraft {
@@ -14,6 +16,7 @@ export interface AnnotationDraftSnapshot {
 const empty: AnnotationDraftSnapshot = { value: null, ready: false, saved: false, problem: null };
 const snapshots = new Map<string, AnnotationDraftSnapshot>();
 const listeners = new Set<() => void>();
+const checkpoints = new Map<string, LocalDraftCheckpoint>();
 let version = 0;
 let database: Promise<IDBDatabase> | undefined;
 
@@ -77,12 +80,38 @@ export async function loadAnnotationDraft(key: string): Promise<void> {
   }
 }
 export function saveAnnotationDraft(key: string, value: AnnotationLocalDraft | null): void {
-  const snapshot = { value, ready: true, saved: false, problem: null };
-  publish(key, snapshot);
+  publish(key, { value, ready: true, saved: false, problem: null });
+  if (value === null) {
+    // Deletion/collection success must cancel queued text before removing its recovery copy.
+    checkpoints.get(key)?.cancel();
+    checkpoints.delete(key);
+    writeAnnotationDraft(key);
+    return;
+  }
+  let checkpoint = checkpoints.get(key);
+  if (!checkpoint) {
+    checkpoint = new LocalDraftCheckpoint(() => {
+      checkpoints.delete(key);
+      writeAnnotationDraft(key);
+    });
+    checkpoints.set(key, checkpoint);
+  }
+  checkpoint.schedule();
+}
+export function flushAnnotationDraft(key: string): void {
+  checkpoints.get(key)?.flush();
+}
+function writeAnnotationDraft(key: string): void {
+  const snapshot = annotationDraftSnapshot(key);
+  const { value } = snapshot;
   void db()
     .then(
       (database) =>
         new Promise<void>((resolve, reject) => {
+          if (annotationDraftSnapshot(key) !== snapshot) {
+            resolve();
+            return;
+          }
           const transaction = database.transaction("drafts", "readwrite");
           const store = transaction.objectStore("drafts");
           if (value) {
@@ -128,6 +157,7 @@ export function hasBlockingAnnotationDrafts(collection: string, source: string):
 // IndexedDB writes are asynchronous, including image drafts. Never silently leave mid-write.
 if (typeof window !== "undefined") {
   window.addEventListener("beforeunload", (event) => {
+    flushLocalDraftCheckpoints();
     if (
       [...snapshots.values()].some(
         (snapshot) =>
