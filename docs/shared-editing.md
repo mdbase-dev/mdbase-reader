@@ -1,8 +1,8 @@
 # Shared editing and autosave
 
-## Behaviour (local implementation; not yet deployed)
+## Behaviour (deployed)
 
-Production remains `5c310047f773-production-mu4v9jes`, with explicit annotation saves and device recovery. The user still reported lag there. The memory-only autosave changes below require a separately authorized deployment.
+Production is now **`e8f5d8ba296d-production-mu4z5689`**, with memory-only annotation autosave, deployed on explicit user approval. The previous explicit-save release still felt slow to the user; authenticated performance acceptance of this replacement remains pending.
 
 - Source notes still autosave after **one second of inactivity**, with shared text and independent CodeMirror selection, cursor, scroll and undo history across panes.
 - Existing annotation comments use a **native textarea and one-second debounced mdbase autosave**. Typing remains enabled while saving; requests are serialized and older replies never replace newer text. Automatic saves leave the editor open. Done/Ctrl/Cmd+S remain optional save-now/close actions.
@@ -21,13 +21,15 @@ For source notes, `SharedTextDocument` supplies synchronous text/subscription ac
 
 Source drafts still use localStorage. A compatibility reader restores existing annotation drafts written by previous versions for review; merely loading one never submits it. Those entries are removed only after collection commit or an explicit discard/replacement/deletion. New typing does not update them. The old IndexedDB format remains solely for this compatibility path, not as a second save system.
 
-### Memory-only annotation validation (local)
+### Memory-only annotation validation and deployment
 
 **68 Reader test files / 212 tests** pass, along with Reader typecheck/build, changed-file lint/format, architecture (337 production files / 484 relative imports / 17 packages; zero warnings) and specification checks. Storage tests cover zero device writes, memory-only unload protection, legacy recovery, newer edits during slow saves and a stale-response/verified-refresh race.
 
 The shared-editor fixture verifies zero annotation draft writes during creation and editing, serialized autosave, editable text during a delayed request, newer-text preservation, retry without background loops, close warnings, ownership transfer, revision conflicts, deletion leases and mobile textarea identity. Evidence: `/tmp/reader-audit-zCyOeZ`. Its 42 real browser keystrokes measured median next-frame latency **3.7 ms**, p95 **5.2 ms**, maximum **8.4 ms**, with no long tasks during that sample. These are fixture measurements, **not authenticated production performance acceptance** or proof that the user's remaining lag is resolved.
 
 Annotation/cross-format audit: `/tmp/reader-audit-qFm1pW`, including memory-only PDF crop retention across source switches. Full fixture audit: `/tmp/reader-audit-BOGuTq`.
+
+Deployed to **https://mdbase-reader.pages.dev**, deployment **https://d271fd19.mdbase-reader.pages.dev**. Twelve live artifact checks passed across both origins: revision, manifest, HTML, entry JavaScript/CSS and runtime preload match local production output byte-for-byte. Production Connect/loopback endpoints and the annotation autosave/memory-only implementation markers were verified. Pre-deploy source-map comparison confirmed unrelated dirty import/application-session code already matched production and was preserved. Evidence: `/tmp/reader-memory-production-deploy.log` and `/tmp/reader-memory-production-verification.json`. This verifies deployed artifacts, not authenticated typing performance.
 
 ### Batched local checkpoints (historical; annotations superseded above)
 
@@ -45,7 +47,7 @@ Known old record revisions cannot replace newer session state. Source writes ref
 
 Dockview still exclusively owns layout. Editor bodies and recovery state are not serialized into its layout envelope.
 
-## Explicit-save annotation redesign (historical; currently deployed)
+## Explicit-save annotation redesign (historical)
 
 This earlier release uses explicit Done saves and persistent recovery, unlike the local implementation described above. `AnnotationTextArea` replaces CodeMirror for creation and existing comments. The editor component holds typing state locally; session/recovery state changes only at dirty, checkpoint, ownership, conflict and commit boundaries. The staged recovery snapshot is not the authoritative latest buffer: save, close/transfer and lifecycle flushes read the editor/creation buffer. Async IndexedDB writes still require the unload guard; forcing through its warning can lose pending text.
 
