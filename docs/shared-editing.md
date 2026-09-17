@@ -2,7 +2,7 @@
 
 ## Behaviour (deployed)
 
-Production is now **`e8f5d8ba296d-production-mu4z5689`**, with memory-only annotation autosave, deployed on explicit user approval. The user reports substantially better performance with this release, but still encounters conflicts. The local fix below addresses a reproduced false-conflict path; the affected production record has not been inspected.
+Production is now **`4fedb58bf5ea-production-mu5g7n4y`**, including memory-only annotation autosave and the acknowledgement/conflict fix below. The user reported substantially better performance with the preceding autosave release, but still encountered conflicts. The fix addresses a reproduced false-conflict path; the affected production record has not been inspected.
 
 - Source notes still autosave after **one second of inactivity**, with shared text and independent CodeMirror selection, cursor, scroll and undo history across panes.
 - Existing annotation comments use a **native textarea and one-second debounced mdbase autosave**. Typing remains enabled while saving; requests are serialized and older replies never replace newer text. Automatic saves leave the editor open. Done/Ctrl/Cmd+S remain optional save-now/close actions.
@@ -21,13 +21,15 @@ For source notes, `SharedTextDocument` supplies synchronous text/subscription ac
 
 Source drafts still use localStorage. A compatibility reader restores existing annotation drafts written by previous versions for review; merely loading one never submits it. Those entries are removed only after collection commit or an explicit discard/replacement/deletion. New typing does not update them. The old IndexedDB format remains solely for this compatibility path, not as a second save system.
 
-### Pending false-conflict fix (local; not deployed)
+### False-conflict fix (verified in production)
 
 An annotation update can be published to the shared resource before its save promise resolves. Markdown serialization can add a final newline, making that response differ from the submitted textarea text. Reader previously classified that as an external edit and retained a conflict even after acknowledging the same revision. A late own-response publication could also replace a genuine conflict candidate.
 
 The session now defers incoming record classification until the writer settles, then ignores its acknowledged revision and checks the remaining records normally. This uses record identity rather than trimming whitespace or disabling revision checks. Newer typing is retained. Regression tests cover normalized acknowledgements with and without newer typing, both publication orders alongside a real external edit, and a genuine external whitespace-only change. Existing legacy-draft conflicts are not discarded by this fix.
 
 Validation: **69 Reader files / 217 tests**, typecheck/build, changed-file lint/format, architecture and specification checks pass. Shared-editor browser audit: `/tmp/reader-audit-4gbYFb`. Three new regression cases failed against the deployed implementation before the fix (`/tmp/reader-conflict-before.log`). This is a deterministic reproduction, not confirmation that every reported production conflict has this cause.
+
+After the user authorized deployment of this fix, inspection found it already included in a newer production deployment: **https://96f75255.mdbase-reader.pages.dev**. No duplicate deployment was performed. Fourteen artifact checks across that origin and **https://mdbase-reader.pages.dev** passed, including byte-identical entry source maps; the deployed session source exactly matches the acknowledgement fix. Production Connect/loopback endpoints were verified. Existing unrelated changes were preserved. Evidence: `/tmp/reader-anchor-deploy.log` and `/tmp/reader-conflict-production-verification.json`. This verifies delivery, not authenticated resolution of the user's conflicts.
 
 ### Memory-only annotation validation and deployment
 
