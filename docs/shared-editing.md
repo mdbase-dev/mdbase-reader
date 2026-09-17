@@ -18,7 +18,7 @@
 
 Source drafts use localStorage; annotation drafts retain their existing IndexedDB storage, including creation-time crop Blobs. These are recovery internals, not a second user-facing document version. Source unload protection outlives the final subscribed view when neither local nor collection storage is safe.
 
-### Batched local checkpoints (not yet deployed)
+### Batched local checkpoints
 
 Edits update shared memory immediately, but no longer serialize a whole note or start an IndexedDB transaction on every keystroke. Recovery checkpoints run after **500 ms idle**, with a **3-second maximum scheduling delay** during continuous typing. Collection autosave remains independently debounced at one second. The dirty-state subscription for annotation panes reads a boolean rather than rerendering on every global draft-version increment.
 
@@ -27,6 +27,8 @@ Pending checkpoints flush when the last session view detaches, a draft hook unmo
 This deliberately introduces a small crash-recovery window: a hard process/device failure can lose text entered since the latest completed checkpoint. Three seconds is the foreground timer bound, not a guarantee against main-thread stalls, timer throttling, or delayed/failed storage. Normal lifecycle flushing does not guarantee asynchronous storage will finish if the process is forcibly killed.
 
 Validation: Reader **66 files / 205 tests**, typecheck, build, changed-file lint/format, architecture and specification checks passed. Tests cover a 120 KB note burst (20 changes, one checkpoint), continuous typing (60 changes over six seconds, two checkpoints), IndexedDB completion races, obsolete-checkpoint cancellation, remote-choice cleanup of an older stored note, storage failures, and unload guards. The shared-editor browser fixture additionally counts real storage calls during browser keystrokes: immediate two-pane text and one write after the burst (`/tmp/reader-audit-tfAdzG`). The full browser fixture audit passed (`/tmp/reader-audit-2qy538`). These checks are not authenticated production acceptance or proof that all perceived typing lag is resolved.
+
+Deployed on user approval as **`87e4c05c9901-production-mu4rpd5i`** to **https://mdbase-reader.pages.dev**, deployment **https://0a07b7de.mdbase-reader.pages.dev**. Live build revision, manifest, HTML, entry JS/CSS and runtime preload match the local production artifacts byte-for-byte on both origins; production Connect/loopback endpoints and the 500/3000 ms checkpoint constants were verified. Before deployment, the previous live entry source map matched the checkout's unrelated import/application-session source changes; that already-deployed work was preserved, not reverted. Evidence: `/tmp/reader-checkpoint-production-deploy.log` and `/tmp/reader-checkpoint-production-verification.json`. User live acceptance is pending; no annotation-editor redesign is included.
 
 Known old record revisions cannot replace newer session state. Source writes refresh before saving; failed annotation writes can fetch the current record and offer a revision-checked conflict choice without a page reload. Deletion checks acquire an owner-specific session lock, pause all editors, and drain an outstanding write. Closing the checking view releases its lock; an already committed deletion request retains the lock until it completes.
 
