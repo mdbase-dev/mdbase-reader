@@ -18,28 +18,29 @@ export async function auditAnnotationWorkbench(page, { screenshot, open }) {
   const workbench = page.locator(`[data-session-id="${panelId}"]`);
   await workbench
     .locator(`[data-annotation-id="${annotationId}"]`)
-    .getByRole("button", { name: "Edit", exact: true })
+    .getByRole("button", { name: "Edit here", exact: true })
     .click();
   const otherEditor = workbench.getByRole("textbox", { name: "Annotation note" });
-  await expect(otherEditor).toContainText("Dock-safe annotation draft");
+  await expect(otherEditor).toHaveValue(/Dock-safe annotation draft/u);
+  await expect(editor).toHaveCount(0);
   const menu = async (label) => {
     await tab.click({ button: "right" });
-    await page.getByText(label, { exact: true }).click();
+    await page.getByRole("menuitem", { name: label, exact: true }).click();
   };
   await menu("Move to new pane right");
-  // Promotion hides the inspector; reopen it against the same source, independently.
   await page.locator(".reader-dock-tab").getByText("[test] Research 0000", { exact: true }).click();
   await tab.click();
   if (!(await tools.isVisible()))
     await page.getByRole("button", { name: "Toggle source tools" }).click();
-  if (!(await editor.isVisible()))
-    await tools
-      .locator(`[data-annotation-id="${annotationId}"]`)
-      .getByRole("button", { name: "Edit", exact: true })
-      .click();
-  await expect(otherEditor).toContainText("Dock-safe annotation draft");
-  await expect(editor).toContainText("Dock-safe annotation draft");
-  await expect(workbench.getByText("Saved to collection", { exact: true })).toBeVisible();
+  await tools
+    .locator(`[data-annotation-id="${annotationId}"]`)
+    .getByRole("button", { name: "Edit here", exact: true })
+    .click();
+  await expect(editor).toHaveValue(/Dock-safe annotation draft/u);
+  await expect(otherEditor).toHaveCount(0);
+  await expect(
+    tools.getByText("Draft kept on this device — not saved to collection", { exact: true }),
+  ).toBeVisible();
   await screenshot("annotation-docked-edit");
   page.removeAllListeners("dialog");
   const dialogs = [];
@@ -50,11 +51,11 @@ export async function auditAnnotationWorkbench(page, { screenshot, open }) {
   await menu("Close");
   await expect(tab).toHaveCount(0);
   expect(dialogs).toEqual([]);
-  await expect(editor).toContainText("Dock-safe annotation draft");
+  await expect(editor).toHaveValue(/Dock-safe annotation draft/u);
   page.removeAllListeners("dialog");
   page.on("dialog", (dialog) => void dialog.accept());
   await open(0);
-  await expect(editor).toContainText("Dock-safe annotation draft");
+  await expect(editor).toHaveValue(/Dock-safe annotation draft/u);
   await tools.getByRole("button", { name: "Done", exact: true }).click();
   await expect(editor).toHaveCount(0);
   await tools.getByRole("button", { name: "Insert in note", exact: true }).first().click();
@@ -74,7 +75,7 @@ export async function auditAnnotationWorkbench(page, { screenshot, open }) {
   await page.reload();
   await expect(tools.locator(".annotation-card")).toHaveCount(1);
   return [
-    "Inspector and docked annotation editors share live content; docking and closing one retain the other",
+    "Annotation editing transfers explicitly between inspector and workbench; docking preserves the draft without simultaneous writers",
     "Linked note insertion, deletion warning, cancellation, and deletion persistence work",
   ];
 }

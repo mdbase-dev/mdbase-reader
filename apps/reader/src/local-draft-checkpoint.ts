@@ -9,6 +9,10 @@ export class LocalDraftCheckpoint {
 
   constructor(private readonly write: () => void) {}
 
+  isPending(): boolean {
+    return pending.has(this);
+  }
+
   schedule(): void {
     clearTimeout(this.idle);
     this.idle = setTimeout(() => this.flush(), LOCAL_DRAFT_IDLE_MS);

@@ -1,14 +1,11 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 
+import { AnnotationCreationBuffer } from "./annotation-creation-buffer.js";
 import {
   confirmAnnotationDiscard,
   saveAnnotationDraftToCollection,
 } from "./annotation-draft-actions.js";
-import {
-  annotationDraftKey,
-  annotationDraftSnapshot,
-  saveAnnotationDraft,
-} from "./annotation-drafts.js";
+import { annotationDraftKey } from "./annotation-drafts.js";
 import { subscribeToSelections } from "./annotation-selection.js";
 import { useAnnotationDraft } from "./use-annotation-draft.js";
 
@@ -49,6 +46,8 @@ export function useAnnotationCreation(
   const { sourceId, source, surface, create } = input;
   const key = creationKey(source, surface);
   const draft = useAnnotationDraft(key);
+  const buffer = useMemo(() => new AnnotationCreationBuffer(key), [key]);
+  useEffect(() => () => buffer.flush(), [buffer]);
   const busy = useRef(false);
   const [saving, setSaving] = useState(false);
   const [pausedKey, setPausedKey] = useState<string | null>(null);
@@ -60,7 +59,7 @@ export function useAnnotationCreation(
       return undefined;
     }
     return subscribeToSelections(sourceId, surface, ({ value }) => {
-      const previous = annotationDraftSnapshot(key).value;
+      const previous = buffer.get();
       if (
         busy.current ||
         (previous?.body.trim() &&
@@ -70,50 +69,44 @@ export function useAnnotationCreation(
       ) {
         return;
       }
-      saveAnnotationDraft(key, { body: "", selection: value });
+      buffer.replace({ body: "", selection: value });
       setPausedKey(null);
       setProblem(null);
       setAreaSurface(null);
       onSelection();
     });
-  }, [key, draft.ready, sourceId, surface, onSelection]);
+  }, [key, draft.ready, sourceId, surface, onSelection, buffer]);
   const dismiss = (): void => {
     if (
       busy.current ||
-      (draft.value?.body.trim() &&
+      (buffer.get()?.body.trim() &&
         !confirmAnnotationDiscard("Discard this unfinished annotation comment?"))
     ) {
       return;
     }
-    saveAnnotationDraft(key, null);
+    buffer.replace(null);
     surface?.capabilities.textSelection?.clearSelection();
     surface?.capabilities.areaSelection?.cancelAreaSelection();
     setProblem(null);
     setAreaSurface(null);
   };
   const save = (): void => {
-    if (!draft.value || !source || !surface || busy.current) {
+    const value = buffer.get();
+    if (!value || !source || !surface || busy.current) {
       return;
     }
     busy.current = true;
     setSaving(true);
     setProblem(null);
-    void saveAnnotationDraftToCollection(
-      key,
-      draft.value,
-      source,
-      surface,
-      create,
-      setProblem,
-      () => {
-        busy.current = false;
-        setSaving(false);
-      },
-    );
+    buffer.flush();
+    void saveAnnotationDraftToCollection(key, value, source, surface, create, setProblem, () => {
+      busy.current = false;
+      setSaving(false);
+    });
   };
   return {
     selection,
-    note: draft.value?.body ?? "",
+    note: buffer.get()?.body ?? "",
     status: saving ? "saving" : "idle",
     error: (problem?.sourceId === sourceId ? problem.message : null) ?? draft.problem,
     draftSaved: draft.saved,
@@ -122,8 +115,8 @@ export function useAnnotationCreation(
     resumeDraft: draft.value && !selection ? () => setPausedKey(null) : null,
     pause: () => setPausedKey(key),
     setNote: (body) => {
-      if (draft.value) {
-        draft.set({ ...draft.value, body });
+      if (!busy.current) {
+        buffer.edit(body);
       }
     },
     dismiss,

@@ -2,10 +2,11 @@
 
 ## Editing follow-up
 
-[Shared editing and autosave](shared-editing.md) supersede this audit's manual-save,
-read-only-during-save, and single-writable-owner behaviour for existing text edits.
-Creation remains explicit. The follow-up was deployed as
-`1787d28d4880-production-mu40us0p`; its deployment evidence is recorded in that document.
+[Shared editing and autosave](shared-editing.md) records the subsequent deployments
+and current editor contract. The latest local redesign returns annotation comments
+to explicit Done saves and one transferable native textarea, while retaining shared
+autosave for source notes. Creation remains explicit. See that document for the
+redesign's deployment status and validation; this audit remains historical evidence.
 
 ## Scope
 

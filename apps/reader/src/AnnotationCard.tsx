@@ -40,7 +40,8 @@ export function AnnotationCard({
     session.getSnapshot,
     session.getSnapshot,
   );
-  const needsAttention = Boolean(snapshot.problem ?? snapshot.conflict);
+  const needsAttention =
+    snapshot.status === "unsaved" || Boolean(snapshot.problem ?? snapshot.conflict);
   return (
     // Pointer shortcut; keyboard users have explicit Edit and Open buttons.
     // eslint-disable-next-line jsx-a11y/no-noninteractive-element-interactions, jsx-a11y/click-events-have-key-events
@@ -65,9 +66,9 @@ export function AnnotationCard({
             {annotation.locator.label.replace(/^\[\[.*\]\]$/u, "Document passage")}
           </small>
         ) : null}
-        {snapshot.body !== annotation.body && !editing ? (
+        {needsAttention && !editing ? (
           <small className="annotation-draft-badge">
-            {needsAttention ? "Changes need review" : "Changes syncing"}
+            {snapshot.conflict ? "Changes need review" : "Unfinished draft"}
           </small>
         ) : null}
       </header>
@@ -80,7 +81,7 @@ export function AnnotationCard({
           onDelete={onDelete}
         />
       ) : (
-        <AnnotationBody annotation={{ ...annotation, body: snapshot.body }} readFile={readFile} />
+        <AnnotationBody annotation={annotation} readFile={readFile} />
       )}
       {!editing ? (
         <AnnotationCardFooter
@@ -89,6 +90,7 @@ export function AnnotationCard({
           onEdit={onEdit}
           onOpen={onOpen}
           resume={needsAttention}
+          editingElsewhere={snapshot.editing}
         />
       ) : null}
       {transclusion.problemId === annotation.id ? (
@@ -140,12 +142,14 @@ function AnnotationCardFooter({
   onEdit,
   onOpen,
   resume,
+  editingElsewhere,
 }: {
   readonly annotation: Annotation;
   readonly transclusion: AnnotationTransclusionController;
   readonly onEdit: () => void;
   readonly onOpen: () => void;
   readonly resume: boolean;
+  readonly editingElsewhere: boolean;
 }): JSX.Element {
   return (
     <footer>
@@ -169,7 +173,7 @@ function AnnotationCardFooter({
             onEdit();
           }}
         >
-          {resume ? "Review changes" : "Edit"}
+          {editingElsewhere ? "Edit here" : resume ? "Resume draft" : "Edit"}
         </button>
         <button
           type="button"

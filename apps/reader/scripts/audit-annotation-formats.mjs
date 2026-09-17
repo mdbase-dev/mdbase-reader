@@ -33,8 +33,8 @@ export async function auditAnnotationFormats(page, { open, screenshot }) {
   await expect(area.getByText("Draft saved on this device", { exact: true })).toBeVisible();
   await screenshot("annotation-pdf-area-draft");
   await page.reload();
-  await expect(area.getByRole("textbox", { name: "Annotation note" })).toContainText(
-    "Recover this PDF crop",
+  await expect(area.getByRole("textbox", { name: "Annotation note" })).toHaveValue(
+    /Recover this PDF crop/u,
     { timeout: 60000 },
   );
   await expect

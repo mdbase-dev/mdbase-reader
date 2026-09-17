@@ -77,19 +77,20 @@ export async function auditAnnotations(page, { screenshot, blockWrites }) {
     "> A durable reading library makes patient attention possible.\n\n[test] A recoverable annotation comment.";
   blockWrites(true);
   await editor.fill(editText);
-  await expect(tools.getByText("Saved on this device", { exact: true })).toBeVisible();
+  await expect(
+    tools.getByText("Draft kept on this device — not saved to collection", { exact: true }),
+  ).toBeVisible();
   await page.reload();
-  // Recovery retries without requiring the user to reopen an editor.
-  await tools.getByRole("button", { name: "Review changes", exact: true }).click();
-  await expect(editor).toContainText("recoverable annotation comment");
+  // Recovery retains the draft without silently submitting it.
+  await tools.getByRole("button", { name: "Resume draft", exact: true }).click();
+  await expect(editor).toHaveValue(/recoverable annotation comment/u);
+  await expect(tools.getByRole("alert")).toHaveCount(0);
+  await editor.press("Control+s");
   await expect(tools.getByRole("alert")).toContainText("offline");
-  await expect(editor).toContainText("recoverable annotation comment");
+  await expect(editor).toHaveValue(/recoverable annotation comment/u);
   await screenshot("annotation-failed-save");
   blockWrites(false);
   await editor.press("Control+s");
-  await expect(tools.getByText("Saved to collection", { exact: true })).toBeVisible();
-  await expect(editor).toBeVisible();
-  await tools.getByRole("button", { name: "Done", exact: true }).click();
   await expect(tools.getByRole("textbox", { name: "Annotation note" })).toHaveCount(0);
   await page.reload();
   await expect(tools).toContainText("recoverable annotation comment");
@@ -106,16 +107,22 @@ export async function auditAnnotations(page, { screenshot, blockWrites }) {
   page.removeAllListeners("dialog");
   page.on("dialog", (dialog) => void dialog.dismiss());
   await select(2);
-  await expect(composer).toContainText("New selection draft survives");
+  await expect(composer.getByRole("textbox", { name: "Annotation note" })).toHaveValue(
+    /New selection draft survives/u,
+  );
   await composer.getByRole("button", { name: "Cancel", exact: true }).click();
   await expect(composer).toBeVisible();
   page.removeAllListeners("dialog");
   page.on("dialog", (dialog) => void dialog.accept());
   await open(1);
   await open(0);
-  await expect(composer).toContainText("New selection draft survives");
+  await expect(composer.getByRole("textbox", { name: "Annotation note" })).toHaveValue(
+    /New selection draft survives/u,
+  );
   await page.reload();
-  await expect(composer).toContainText("New selection draft survives");
+  await expect(composer.getByRole("textbox", { name: "Annotation note" })).toHaveValue(
+    /New selection draft survives/u,
+  );
   await composer.getByRole("textbox", { name: "Annotation note" }).press("Control+s");
   await expect(composer).toHaveCount(0);
   completed.push(

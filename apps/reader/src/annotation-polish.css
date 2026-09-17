@@ -111,13 +111,25 @@
   font-size: 11px;
   color: var(--ink-soft);
 }
-.annotation-code-editor,
-.annotation-code-editor:focus-within,
-.workspace-pane.is-tool-pane .annotation-code-editor,
-.workspace-pane.is-tool-pane .annotation-code-editor:focus-within {
-  min-height: 160px;
-  height: clamp(160px, 26vh, 280px);
-  transition: none;
+.annotation-textarea {
+  display: block;
+  width: 100%;
+  min-height: 140px;
+  max-height: 50vh;
+  box-sizing: border-box;
+  padding: 10px;
+  resize: vertical;
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  background: var(--paper);
+  color: var(--ink);
+  font: inherit;
+  font-size: 14px;
+  line-height: 1.5;
+}
+.annotation-textarea:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
 }
 .document-annotation-composer > .annotation-composer {
   background: var(--paper);

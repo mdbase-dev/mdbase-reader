@@ -30,6 +30,19 @@ export function subscribeAnnotationDrafts(listener: () => void): () => void {
     listeners.delete(listener);
   };
 }
+export function whenAnnotationDraftReady(key: string, ready: () => void): void {
+  if (annotationDraftSnapshot(key).ready) {
+    ready();
+    return;
+  }
+  const unsubscribe = subscribeAnnotationDrafts(() => {
+    if (annotationDraftSnapshot(key).ready) {
+      unsubscribe();
+      ready();
+    }
+  });
+  void loadAnnotationDraft(key);
+}
 export function annotationDraftSnapshot(key: string): AnnotationDraftSnapshot {
   return snapshots.get(key) ?? empty;
 }
@@ -78,6 +91,12 @@ export async function loadAnnotationDraft(key: string): Promise<void> {
       });
     }
   }
+}
+/** Mark recovery unsafe once; the editor owns a lifecycle-flushed checkpoint of its latest buffer. */
+export function stageAnnotationDraft(key: string, value: AnnotationLocalDraft): void {
+  checkpoints.get(key)?.cancel();
+  checkpoints.delete(key);
+  publish(key, { value, ready: true, saved: false, problem: null });
 }
 export function saveAnnotationDraft(key: string, value: AnnotationLocalDraft | null): void {
   publish(key, { value, ready: true, saved: false, problem: null });

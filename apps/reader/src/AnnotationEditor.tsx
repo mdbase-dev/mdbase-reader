@@ -1,7 +1,7 @@
 import { ReaderButton } from "@mdbase-reader/ui";
 
 import { annotationEditorKeys } from "./annotation-draft-actions.js";
-import { MultilineCodeEditor } from "./MultilineCodeEditor.js";
+import { AnnotationTextArea } from "./AnnotationTextArea.js";
 import { useAnnotationEdit, type AnnotationEditProps } from "./use-annotation-edit.js";
 
 import type { AnnotationDeletionPlan } from "@mdbase-reader/core";
@@ -10,8 +10,11 @@ import type { JSX } from "react";
 export function AnnotationBodyEditor(props: AnnotationEditProps): JSX.Element {
   const {
     body,
-    session,
     locked,
+    editingElsewhere,
+    claimEditor,
+    discard,
+    resolve,
     canSave,
     draft,
     conflict,
@@ -26,8 +29,21 @@ export function AnnotationBodyEditor(props: AnnotationEditProps): JSX.Element {
     requestDelete,
     confirmDelete,
   } = useAnnotationEdit(props);
+  if (editingElsewhere) {
+    return (
+      <div className="annotation-body-editor" role="group" aria-label="Edit annotation">
+        <p>Only one pane edits this annotation at a time. Other panes show the saved version.</p>
+        <button type="button" disabled={locked} onClick={claimEditor}>
+          Edit here
+        </button>
+        <button type="button" onClick={cancel}>
+          Close
+        </button>
+      </div>
+    );
+  }
   return (
-    // Delegate shortcuts from buttons and editors without stealing completion-menu keys.
+    // Delegate explicit save/close shortcuts from interactive children.
     // eslint-disable-next-line jsx-a11y/no-noninteractive-element-interactions
     <div
       className="annotation-body-editor"
@@ -37,31 +53,14 @@ export function AnnotationBodyEditor(props: AnnotationEditProps): JSX.Element {
     >
       <div className="annotation-editor-label">Quotation and comment</div>
       {draft.ready ? (
-        <MultilineCodeEditor
-          value={body}
-          readOnly={locked}
-          sharedDocument={session}
-          ariaLabel="Annotation note"
-          className="annotation-code-editor"
-          focusOnMount
-          onChange={setBody}
-          onSave={save}
-        />
+        <AnnotationTextArea value={body} readOnly={locked} onChange={setBody} />
       ) : (
         <p role="status">Checking for a saved draft…</p>
       )}
       <span>
-        Edit the Markdown quotation and comment. The saved passage anchor stays unchanged.
+        Markdown is supported. Done saves your changes; the passage anchor stays unchanged.
       </span>
-      <small role="status">
-        {status === "saved"
-          ? "Saved to collection"
-          : status === "saving"
-            ? "Saving to collection…"
-            : draft.saved
-              ? "Saved on this device"
-              : "Saving on this device…"}
-      </small>
+      <AnnotationSaveState status={status} locallySaved={draft.saved} />
       {conflict ? (
         <section role="alert">
           <p>This annotation changed in the collection. Your changes are retained.</p>
@@ -69,10 +68,10 @@ export function AnnotationBodyEditor(props: AnnotationEditProps): JSX.Element {
             <summary>Compare collection version</summary>
             <pre>{conflict.body}</pre>
           </details>
-          <button type="button" disabled={locked} onClick={() => session.resolve("local")}>
+          <button type="button" disabled={locked} onClick={() => resolve("local")}>
             Keep my changes
           </button>
-          <button type="button" disabled={locked} onClick={() => session.resolve("remote")}>
+          <button type="button" disabled={locked} onClick={() => resolve("remote")}>
             Use collection version
           </button>
         </section>
@@ -96,16 +95,43 @@ export function AnnotationBodyEditor(props: AnnotationEditProps): JSX.Element {
           {deleteStatus === "checking" ? "Checking…" : "Delete"}
         </button>
         <span />
-        <button type="button" disabled={locked} onClick={cancel}>
-          Done
-        </button>
-        {status === "error" && !conflict ? (
-          <ReaderButton disabled={!canSave} onClick={save}>
-            Retry save
-          </ReaderButton>
+        {status !== "saved" ? (
+          <button type="button" disabled={locked} onClick={discard}>
+            Discard changes
+          </button>
         ) : null}
+        <button type="button" disabled={locked} onClick={cancel}>
+          Close
+        </button>
+        <ReaderButton disabled={!canSave} onClick={save}>
+          {status === "saving"
+            ? "Saving…"
+            : status === "error" && !conflict
+              ? "Retry save"
+              : "Done"}
+        </ReaderButton>
       </div>
     </div>
+  );
+}
+
+function AnnotationSaveState({
+  status,
+  locallySaved,
+}: {
+  readonly status: string;
+  readonly locallySaved: boolean;
+}): JSX.Element {
+  return (
+    <small role="status">
+      {status === "saved"
+        ? "Saved to collection"
+        : status === "saving"
+          ? "Saving to collection…"
+          : locallySaved
+            ? "Draft kept on this device — not saved to collection"
+            : "Unsaved draft — kept in this window"}
+    </small>
   );
 }
 

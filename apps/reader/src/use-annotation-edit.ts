@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState, useSyncExternalStore } from "react";
 
-import { AnnotationDeletionLease } from "./annotation-deletion-lease.js";
-import { readerErrorMessage } from "./errors.js";
+import { confirmAnnotationDiscard } from "./annotation-draft-actions.js";
+import { useAnnotationDeletion } from "./use-annotation-deletion.js";
 import { useAnnotationDraft } from "./use-annotation-draft.js";
 import { useAnnotationSession } from "./use-annotation-session.js";
 
@@ -11,6 +11,7 @@ import type {
   PersistAnnotation,
 } from "./annotation-edit-session.js";
 import type { Annotation, AnnotationDeletionPlan } from "@mdbase-reader/core";
+
 export interface AnnotationEditProps {
   readonly annotation: Annotation;
   readonly onCancel: () => void;
@@ -30,19 +31,18 @@ interface AnnotationEditController {
   readonly setBody: (body: string) => void;
   readonly save: () => void;
   readonly cancel: () => void;
+  readonly discard: () => void;
+  readonly resolve: (choice: "local" | "remote") => void;
+  readonly editingElsewhere: boolean;
+  readonly claimEditor: () => void;
   readonly deletePlan: AnnotationDeletionPlan | null;
   readonly setDeletePlan: () => void;
   readonly deleteStatus: "idle" | "checking" | "deleting";
   readonly requestDelete: () => void;
   readonly confirmDelete: () => void;
 }
-export function useAnnotationEdit({
-  annotation,
-  onCancel,
-  onSave,
-  onPlanDelete,
-  onDelete,
-}: AnnotationEditProps): AnnotationEditController {
+export function useAnnotationEdit(props: AnnotationEditProps): AnnotationEditController {
+  const { annotation, onCancel, onSave } = props;
   const session = useAnnotationSession(annotation, onSave);
   const snapshot = useSyncExternalStore(
     session.subscribe,
@@ -50,101 +50,85 @@ export function useAnnotationEdit({
     session.getSnapshot,
   );
   const draft = useAnnotationDraft(session.key);
-  const [problem, setProblem] = useState<string | null>(null);
-  const [deletePlan, setDeletePlan] = useState<AnnotationDeletionPlan | null>(null);
-  const [deleteStatus, setDeleteStatus] = useState<"idle" | "checking" | "deleting">("idle");
-  const owner = useMemo(() => new AnnotationDeletionLease(session), [session]);
-  useEffect(() => owner.attach(), [owner]);
-  const cancelDelete = (): void => {
-    setDeletePlan(null);
-    owner.release();
-  };
-  const requestDelete = (): void => {
-    if (snapshot.locked || !draft.ready) {
-      return;
-    }
-    setDeleteStatus("checking");
-    setProblem(null);
-    void owner
-      .acquire()
-      .then(async (locked) => {
-        if (!locked) {
-          throw new Error(
-            "Resolve the save problem or finish the other editor's deletion check first.",
-          );
-        }
-        if (!owner.isMounted()) {
-          owner.release();
-          return;
-        }
-        const plan = await onPlanDelete(session.getAnnotation());
-        if (owner.isMounted()) {
-          setDeletePlan(plan);
-          setDeleteStatus("idle");
-        } else {
-          owner.release();
-        }
-      })
-      .catch((reason: unknown) => {
-        owner.release();
-        if (owner.isMounted()) {
-          setProblem(readerErrorMessage(reason, "Could not check this annotation."));
-          setDeleteStatus("idle");
-        }
-      });
-  };
-  const confirmDelete = (): void => {
-    if (!deletePlan || deleteStatus !== "idle") {
-      return;
-    }
-    owner.commit();
-    setDeleteStatus("deleting");
-    void onDelete(session.getAnnotation(), deletePlan)
-      .then(() => {
-        session.deleted();
-        if (owner.isMounted()) {
-          onCancel();
-        }
-      })
-      .catch((reason: unknown) => {
-        owner.release();
-        if (owner.isMounted()) {
-          setProblem(readerErrorMessage(reason, "Could not delete this annotation."));
-          setDeleteStatus("idle");
-          setDeletePlan(null);
-        }
-      });
-  };
+  const editorOwner = useMemo(() => ({ session }), [session]);
+  useEffect(() => {
+    session.claimEditor(editorOwner, true);
+    return () => session.releaseEditor(editorOwner);
+  }, [session, editorOwner]);
+  const [text, setText] = useState(() => ({
+    version: snapshot.textVersion,
+    body: session.getText(),
+  }));
+  const body = text.version === snapshot.textVersion ? text.body : session.getText();
+  const editingElsewhere = !session.ownsEditor(editorOwner);
+  const locked = snapshot.locked || snapshot.status === "saving";
+  const deletion = useAnnotationDeletion(
+    session,
+    props,
+    !locked && !editingElsewhere && draft.ready,
+  );
   const cancel = (): void => {
-    if (snapshot.locked) {
+    if (locked) {
       return;
     }
-    // Closing this editor never discards the shared draft or cancels its autosave.
+    // Close/Escape keeps recovery text; only Done writes to the collection.
     onCancel();
   };
+  const save = (): void => {
+    if (locked || !session.ownsEditor(editorOwner) || !draft.ready) {
+      return;
+    }
+    void session.save().then(() => {
+      if (session.getSnapshot().status === "saved" && deletion.isMounted()) {
+        onCancel();
+      }
+    });
+  };
   return {
-    body: snapshot.body,
+    ...deletion,
+    body,
     draft,
     session,
     conflict: snapshot.conflict,
     status: snapshot.status,
-    locked: snapshot.locked,
-    problem: problem ?? snapshot.problem,
-    canSave:
-      draft.ready &&
-      !snapshot.locked &&
-      !snapshot.conflict &&
-      snapshot.status !== "saving" &&
-      snapshot.status !== "saved",
-    setBody: session.edit,
-    save: () => {
-      void session.save();
+    locked,
+    problem: deletion.problem ?? snapshot.problem,
+    canSave: draft.ready && !locked && !editingElsewhere && !snapshot.conflict,
+    setBody: (value) => {
+      if (locked || !session.ownsEditor(editorOwner)) {
+        return;
+      }
+      session.edit(value);
+      setText({ version: snapshot.textVersion, body: session.getText() });
     },
+    save,
     cancel,
-    deletePlan,
-    setDeletePlan: cancelDelete,
-    deleteStatus,
-    requestDelete,
-    confirmDelete,
+    editingElsewhere,
+    claimEditor: () => {
+      session.claimEditor(editorOwner, true);
+    },
+    discard: () => {
+      if (
+        !locked &&
+        session.ownsEditor(editorOwner) &&
+        confirmAnnotationDiscard(
+          "Discard this annotation's unsaved changes? The collection version will be kept.",
+        )
+      ) {
+        session.discard();
+        onCancel();
+      }
+    },
+    resolve: (choice) => {
+      if (locked || !session.ownsEditor(editorOwner)) {
+        return;
+      }
+      session.resolve(choice);
+      if (choice === "local") {
+        save();
+      } else {
+        onCancel();
+      }
+    },
   };
 }

@@ -2,8 +2,8 @@ import { ReaderButton } from "@mdbase-reader/ui";
 import { useEffect, useRef, useState } from "react";
 
 import { annotationEditorKeys } from "./annotation-draft-actions.js";
+import { AnnotationTextArea } from "./AnnotationTextArea.js";
 import { CloseIcon } from "./icons.js";
-import { MultilineCodeEditor } from "./MultilineCodeEditor.js";
 
 import type { AnnotationComposerController } from "./use-annotation-composer.js";
 import type { JSX } from "react";
@@ -14,6 +14,11 @@ export function AnnotationComposer({
   readonly composer: AnnotationComposerController;
 }): JSX.Element | null {
   const [expanded, setExpanded] = useState(false);
+  const [comment, setComment] = useState(() => ({
+    selection: composer.selection,
+    body: composer.note,
+  }));
+  const note = comment.selection === composer.selection ? comment.body : composer.note;
   if (!composer.selection) {
     return <AnnotationComposerNotices composer={composer} />;
   }
@@ -49,15 +54,15 @@ export function AnnotationComposer({
           <div className="annotation-composer-label">
             Note <span>optional</span>
           </div>
-          <MultilineCodeEditor
-            value={composer.note}
+          <AnnotationTextArea
+            value={note}
             readOnly={composer.status === "saving"}
-            ariaLabel="Annotation note"
-            className="annotation-composer-editor"
             placeholder="Why does this matter?"
-            onChange={composer.setNote}
-            onSave={composer.save}
-            focusOnMount
+            onChange={(body) => {
+              setExpanded(true);
+              setComment({ selection: composer.selection, body });
+              composer.setNote(body);
+            }}
           />
         </>
       ) : (
