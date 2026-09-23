@@ -1,7 +1,7 @@
 export const readerDeployments = Object.freeze({
   lab: Object.freeze({
     origin: "https://lab.mdbase-reader.pages.dev",
-    connectUrl: "https://mdbase-connect-lab.onrender.com",
+    connectUrl: "https://connect-lab.mdbase.dev",
     loopbackUrl: "http://127.0.0.1:28487",
     branch: "lab",
   }),
