@@ -165,3 +165,21 @@ export const ImportIcon = (props: IconProps): JSX.Element => (
     <path d="M12 4v11M7.5 10.5 12 15l4.5-4.5" />
   </Icon>
 );
+export const QuoteIcon = (props: IconProps): JSX.Element => (
+  <Icon {...props}>
+    <path d="M9.5 7H6.5A1.5 1.5 0 0 0 5 8.5v3A1.5 1.5 0 0 0 6.5 13H9v1a3 3 0 0 1-3 3M19 7h-3a1.5 1.5 0 0 0-1.5 1.5v3A1.5 1.5 0 0 0 16 13h2.5v1a3 3 0 0 1-3 3" />
+  </Icon>
+);
+export const ListIcon = (props: IconProps): JSX.Element => (
+  <Icon {...props}>
+    <path d="M9.5 6.5H20M9.5 12H20M9.5 17.5H20" />
+    <circle cx="5" cy="6.5" r="1" fill="currentColor" />
+    <circle cx="5" cy="12" r="1" fill="currentColor" />
+    <circle cx="5" cy="17.5" r="1" fill="currentColor" />
+  </Icon>
+);
+export const CodeIcon = (props: IconProps): JSX.Element => (
+  <Icon {...props}>
+    <path d="m8.5 7-5 5 5 5M15.5 7l5 5-5 5" />
+  </Icon>
+);

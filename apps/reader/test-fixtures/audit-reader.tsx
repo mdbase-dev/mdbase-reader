@@ -25,6 +25,7 @@ import type {
   DocumentRepository,
   FileId,
   ReadingPosition,
+  ReadingStatus,
   Source,
   SourceId,
   SourceTextSearchMatch,
@@ -94,6 +95,10 @@ class AuditGateway extends PreviewGateway {
         lastOpenedAt: new Date().toISOString(),
       },
     });
+  }
+  override async saveReadingStatus(id: SourceId, status: ReadingStatus): Promise<Source> {
+    const source = await api<Source>(`source/${id}`);
+    return api(`source/${id}`, { reading: { ...source.reading, status } });
   }
   override annotations(id: SourceId): Promise<readonly Annotation[]> {
     return api(`annotations/${id}`);

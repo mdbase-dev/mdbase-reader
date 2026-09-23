@@ -4,8 +4,8 @@ import type { MigrationPlan } from "@mdbase-reader/migration";
 import type { JSX } from "react";
 export function ImportPreview({ plan }: { plan: MigrationPlan }): JSX.Element {
   return (
-    <section aria-labelledby="import-preview-title">
-      <h2 id="import-preview-title">2. Review your library</h2>
+    <section className="import-step" aria-labelledby="import-preview-title">
+      <h2 id="import-preview-title">Review what will be imported</h2>
       <dl className="import-counts">
         <div>
           <dt>Sources</dt>
@@ -60,8 +60,8 @@ export function ImportConfirm({
     preview?.collectionId === opened.collectionId &&
     (!boundTarget || boundTarget === opened.collectionId);
   return (
-    <section aria-labelledby="import-confirm-title">
-      <h2 id="import-confirm-title">3. Confirm import</h2>
+    <section className="import-step" aria-labelledby="import-confirm-title">
+      <h2 id="import-confirm-title">Confirm</h2>
       <button type="button" disabled={busy || !!boundTarget} onClick={controller.inspect}>
         Check destination: {opened.collectionName}
       </button>

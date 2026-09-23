@@ -1,11 +1,17 @@
 import { htmlLocator, htmlSelectionDraft, locateHtmlTarget } from "./html-range.js";
 
 import type { Annotation, AnnotationId } from "@mdbase-reader/core";
-import type { ReaderLocator, TextSelectionDraft } from "@mdbase-reader/reading-surface";
+import type {
+  ContentsEntry,
+  ReaderLocator,
+  TextSelectionDraft,
+  ViewportRect,
+} from "@mdbase-reader/reading-surface";
 
 type Unsubscribe = () => void;
 
 export class HtmlDocumentRuntime {
+  readonly #frame: HTMLIFrameElement;
   readonly #document: Document;
   readonly #view: Window;
   readonly #href: string;
@@ -27,6 +33,7 @@ export class HtmlDocumentRuntime {
     if (!document || !view) {
       throw new Error("The isolated HTML document is unavailable.");
     }
+    this.#frame = frame;
     this.#document = document;
     this.#view = view;
     this.#href = href;
@@ -48,6 +55,26 @@ export class HtmlDocumentRuntime {
   public onAnnotationActivated(listener: (annotationId: AnnotationId) => void): Unsubscribe {
     this.#activationListeners.add(listener);
     return () => this.#activationListeners.delete(listener);
+  }
+
+  /** Section headings, so long saved pages can be navigated like a book. */
+  public contents(): readonly ContentsEntry[] {
+    return headingElements(this.#document).map((heading, index) => ({
+      id: String(index),
+      title: heading.textContent.replace(/\s+/gu, " ").trim(),
+      level: Number(heading.tagName.charAt(1)) - 1,
+    }));
+  }
+
+  public goToContents(id: string): boolean {
+    const heading = headingElements(this.#document)[Number(id)];
+    if (!heading) {
+      return false;
+    }
+    heading.scrollIntoView({ block: "start" });
+    // Leave the heading a little room rather than pinning it to the edge.
+    this.#view.scrollBy(0, -24);
+    return true;
   }
 
   public currentLocation(): ReaderLocator {
@@ -118,15 +145,17 @@ export class HtmlDocumentRuntime {
     if (!selection || selection.rangeCount === 0 || selection.isCollapsed) {
       return;
     }
+    const range = selection.getRangeAt(0);
     const draft = htmlSelectionDraft({
       document: this.#document,
-      range: selection.getRangeAt(0),
+      range,
       href: this.#href,
       progression: scrollProgression(this.#document),
     });
     if (draft) {
+      const anchored = { ...draft, anchor: frameViewportRect(this.#frame, range) };
       for (const listener of this.#selectionListeners) {
-        listener(draft);
+        listener(anchored);
       }
     }
   }
@@ -208,4 +237,22 @@ function clearCssHighlights(view: Window): void {
   const highlights = (view as HighlightWindow).CSS?.highlights;
   highlights?.delete("reader-annotations");
   highlights?.delete("reader-active-annotation");
+}
+
+function headingElements(document: Document): HTMLElement[] {
+  return [...document.body.querySelectorAll<HTMLElement>("h1, h2, h3")].filter(
+    (heading) => heading.textContent.trim() !== "",
+  );
+}
+
+/** Converts a range inside the frame to the parent window's viewport. */
+export function frameViewportRect(frame: HTMLIFrameElement, range: Range): ViewportRect {
+  const inner = range.getBoundingClientRect();
+  const outer = frame.getBoundingClientRect();
+  return {
+    x: outer.left + frame.clientLeft + inner.left,
+    y: outer.top + frame.clientTop + inner.top,
+    width: inner.width,
+    height: inner.height,
+  };
 }

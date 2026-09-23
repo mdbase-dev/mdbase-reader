@@ -117,11 +117,11 @@ export function AnnotationBodyEditor(props: AnnotationEditProps): JSX.Element {
 
 function AnnotationSaveState({ status }: { readonly status: string }): JSX.Element {
   return (
-    <small role="status">
+    <small role="status" title={status === "saved" ? "Saved to your collection" : undefined}>
       {status === "saved"
-        ? "Saved to collection"
+        ? "Saved"
         : status === "saving"
-          ? "Saving to collection…"
+          ? "Saving…"
           : "Unsaved changes — only in memory"}
     </small>
   );

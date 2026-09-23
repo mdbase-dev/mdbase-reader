@@ -28,7 +28,7 @@ import { Menu } from "./Menu.js";
 import type { BibliographyExportController } from "./use-bibliography-export.js";
 import type { MdbaseLibraryViewsController } from "./use-mdbase-library-views.js";
 import type { ReaderWorkspaceGateway } from "./workspace-model.js";
-import type { SourceId, SourceSummary } from "@mdbase-reader/core";
+import type { ReadingStatus, Source, SourceId, SourceSummary } from "@mdbase-reader/core";
 import type { ReadingSurface } from "@mdbase-reader/reading-surface";
 
 export function LibraryWorkspace({
@@ -46,8 +46,10 @@ export function LibraryWorkspace({
   onOpenSourceView,
   surfaces,
   bibliographyExport,
+  onSourceChanged,
 }: {
   readonly bibliographyExport: BibliographyExportController;
+  readonly onSourceChanged?: (source: Source) => void;
   readonly surfaces?: ReadonlyMap<string, ReadingSurface>;
   readonly onOpenSourceView?: (id: SourceId, view: "document" | "note" | "annotations") => void;
   readonly view: MdbaseLibraryView;
@@ -69,6 +71,17 @@ export function LibraryWorkspace({
   const [executedSources, setExecutedSources] = useState<readonly SourceSummary[]>(allSources);
   const [loading, setLoading] = useState(Boolean(view.path));
   const [problem, setProblem] = useState<string | null>(null);
+  const saveStatus = gateway.saveReadingStatus?.bind(gateway);
+  const changeStatus = saveStatus
+    ? (id: SourceId, status: ReadingStatus): void => {
+        setProblem(null);
+        void saveStatus(id, status)
+          .then((updated) => onSourceChanged?.(updated))
+          .catch((reason: unknown) =>
+            setProblem(readerErrorMessage(reason, "Reader could not change the reading status.")),
+          );
+      }
+    : undefined;
   const [saving, setSaving] = useState(false);
   const [saveName, setSaveName] = useState("");
   const executionFamily = `reader-library-view:${useId()}`;
@@ -103,7 +116,12 @@ export function LibraryWorkspace({
 
   const dirty = !sameConfiguration(configuration, view.configuration);
   const filterCount = activeFilterCount(configuration);
-  const baseSources = dirty ? allSources : executedSources;
+  // Prefer the library's copy of each source, so edits such as a status change show at once.
+  const freshSources = useMemo(() => {
+    const byId = new Map(allSources.map((source) => [source.id, source]));
+    return executedSources.map((source) => byId.get(source.id) ?? source);
+  }, [allSources, executedSources]);
+  const baseSources = dirty ? allSources : freshSources;
   const sources = useMemo(
     () =>
       applyLibraryViewConfiguration(
@@ -439,6 +457,7 @@ export function LibraryWorkspace({
             onPreview={onPreviewSource}
             onOpen={onOpenSource}
             onOpenBeside={onOpenBeside}
+            {...(changeStatus ? { onChangeStatus: changeStatus } : {})}
           />
         ) : (
           <LibraryCards sources={pageSources} onPreview={onPreviewSource} onOpen={onOpenSource} />
@@ -524,7 +543,9 @@ function LibraryTable({
   onPreview,
   onOpen,
   onOpenBeside,
+  onChangeStatus,
 }: {
+  readonly onChangeStatus?: (id: SourceId, status: ReadingStatus) => void;
   readonly sources: readonly SourceSummary[];
   readonly columns: readonly LibraryColumn[];
   readonly focused: boolean;
@@ -562,7 +583,11 @@ function LibraryTable({
           >
             {columns.map((column) => (
               <span key={column} role="gridcell" className={`is-${column}`}>
-                <TableValue source={source} column={column} />
+                {column === "status" && onChangeStatus ? (
+                  <StatusPicker source={source} onChange={onChangeStatus} />
+                ) : (
+                  <TableValue source={source} column={column} />
+                )}
               </span>
             ))}
           </div>
@@ -658,6 +683,49 @@ function ReadingStatus({ source }: { readonly source: SourceSummary }): JSX.Elem
   );
 }
 
+const readingStatusChoices: readonly ReadingStatus[] = [
+  "inbox",
+  "queued",
+  "reading",
+  "finished",
+  "archived",
+  "abandoned",
+];
+
+function StatusPicker({
+  source,
+  onChange,
+}: {
+  readonly source: SourceSummary;
+  readonly onChange: (id: SourceId, status: ReadingStatus) => void;
+}): JSX.Element {
+  const progress = readingProgress(source);
+  const status = readingStatusOf(source);
+  return (
+    <span className={`library-status is-${status} is-editable`}>
+      <select
+        aria-label={`Reading status of ${source.title}`}
+        value={status}
+        onClick={(event) => event.stopPropagation()}
+        onDoubleClick={(event) => event.stopPropagation()}
+        onKeyDown={(event) => event.stopPropagation()}
+        onChange={(event) => onChange(source.id, event.target.value as ReadingStatus)}
+      >
+        {readingStatusChoices.map((choice) => (
+          <option key={choice} value={choice}>
+            {choice.charAt(0).toLocaleUpperCase() + choice.slice(1)}
+          </option>
+        ))}
+      </select>
+      {progress !== null ? (
+        <span className="library-progress" aria-label={`${String(progress)}% read`}>
+          <i style={{ width: `${String(progress)}%` }} />
+        </span>
+      ) : null}
+    </span>
+  );
+}
+
 function readingStatusOf(source: SourceSummary): string {
   return source.reading?.status ?? source.readingStatus ?? "inbox";
 }
@@ -737,6 +805,16 @@ function rowKeyDown(
   openBeside: (id: SourceId) => void,
 ): void {
   if (event.target !== event.currentTarget) {
+    return;
+  }
+  const step = { ArrowDown: 1, j: 1, ArrowUp: -1, k: -1 }[event.key];
+  if (step !== undefined && !event.metaKey && !event.ctrlKey && !event.altKey) {
+    const row = event.currentTarget;
+    const next = step > 0 ? row.nextElementSibling : row.previousElementSibling;
+    if (next instanceof HTMLElement) {
+      event.preventDefault();
+      next.focus();
+    }
     return;
   }
   if (event.key === "Enter") {

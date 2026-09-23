@@ -1,9 +1,12 @@
+import { useMemo } from "react";
+
 import {
   AreaIcon,
   CitationIcon,
   DownloadIcon,
   FocusIcon,
   HighlightIcon,
+  ListIcon,
   MoreIcon,
   NoteIcon,
 } from "./icons.js";
@@ -15,6 +18,7 @@ import type { ReadingResumeState } from "./use-reading-resume.js";
 import type { SourceExportController } from "./use-source-export.js";
 import type { SourceWorkspaceController } from "./use-source-workspace.js";
 import type { SourceSummary } from "@mdbase-reader/core";
+import type { ContentsCapability, ReadingSurface } from "@mdbase-reader/reading-surface";
 import type { JSX } from "react";
 
 export interface DocumentContextualToolbarProps {
@@ -29,6 +33,8 @@ export interface DocumentContextualToolbarProps {
   readonly sourceExport: SourceExportController;
   readonly onToggleFocus: () => void;
   readonly onToggleAreaSelection: () => void;
+  readonly surfaces: ReadonlyMap<string, ReadingSurface>;
+  readonly sessionId: string;
 }
 
 export function DocumentContextualToolbar({
@@ -43,7 +49,10 @@ export function DocumentContextualToolbar({
   sourceExport,
   onToggleFocus,
   onToggleAreaSelection,
+  surfaces,
+  sessionId,
 }: DocumentContextualToolbarProps): JSX.Element {
+  const contents = surfaces.get(sessionId)?.capabilities.contents;
   return (
     <div className="document-toolbar" aria-label="Document actions">
       {canSelectArea ? (
@@ -59,6 +68,7 @@ export function DocumentContextualToolbar({
         </button>
       ) : null}
       <DocumentStatus reading={readingResume} decorationProblem={decorationProblem} />
+      {contents ? <ContentsMenu contents={contents} /> : null}
       <Menu
         className="document-actions-menu"
         label="More document actions"
@@ -100,5 +110,31 @@ export function DocumentContextualToolbar({
         ) : null}
       </Menu>
     </div>
+  );
+}
+
+function ContentsMenu({ contents }: { readonly contents: ContentsCapability }): JSX.Element {
+  const entries = useMemo(() => contents.entries(), [contents]);
+  return (
+    <Menu
+      className="document-contents-menu"
+      label="Contents"
+      title="Contents"
+      trigger={<ListIcon />}
+    >
+      <span className="menu-label">Contents</span>
+      <div className="document-contents-list">
+        {entries.map((entry) => (
+          <button
+            key={entry.id}
+            type="button"
+            style={{ paddingLeft: `${String(9 + Math.min(entry.level, 3) * 14)}px` }}
+            onClick={() => void contents.goTo(entry.id)}
+          >
+            {entry.title}
+          </button>
+        ))}
+      </div>
+    </Menu>
   );
 }

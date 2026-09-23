@@ -55,6 +55,15 @@ export class HtmlReadingSurface implements ReadingSurface {
       textExtraction: {
         extractText: () => Promise.resolve(runtime.extractText()),
       },
+      // A page with fewer than two headings has no useful contents.
+      ...(runtime.contents().length > 1
+        ? {
+            contents: {
+              entries: () => runtime.contents(),
+              goTo: (id: string) => Promise.resolve(runtime.goToContents(id)),
+            },
+          }
+        : {}),
     };
   }
 

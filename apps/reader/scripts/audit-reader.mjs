@@ -273,7 +273,7 @@ try {
     await screenshot("draft-conflict");
     writesBlocked = false;
     await page.getByRole("button", { name: "Save my draft instead", exact: true }).click();
-    await expect(page.getByText("Saved to collection", { exact: true })).toBeVisible();
+    await expect(page.getByText("Saved", { exact: true })).toBeVisible();
     expect(records[0].body).toContain("Unsaved draft survives");
     await page.reload();
     await expect(editor).toContainText("Unsaved draft survives");

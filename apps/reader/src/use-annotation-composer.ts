@@ -7,8 +7,10 @@ import {
   type AnnotationCreationInput,
 } from "./use-annotation-creation.js";
 import { useAnnotationNavigation } from "./use-annotation-navigation.js";
+import { useSelectionAnchor } from "./use-selection-anchor.js";
 
 import type { Annotation, AnnotationId } from "@mdbase-reader/core";
+import type { ViewportRect } from "@mdbase-reader/reading-surface";
 export { saveSelection, subscribeToSelections } from "./annotation-selection.js";
 export type { ComposerSelection } from "./annotation-composer-request.js";
 
@@ -18,6 +20,8 @@ export interface AnnotationComposerController extends Omit<AnnotationCreationCon
   readonly revealedAnnotationId: AnnotationId | null;
   readonly editingAnnotationId: AnnotationId | null;
   readonly returnToReading: (() => void) | null;
+  /** Where the current, freshly made selection sits on screen, if known. */
+  readonly selectionAnchor: ViewportRect | null;
   readonly open: (annotation: Annotation) => void;
   readonly edit: (annotation: Annotation) => void;
   readonly stopEditing: () => void;
@@ -48,6 +52,8 @@ export function useAnnotationComposer(
     navigation.clearError();
   };
   useAnnotationActivations(surface, annotations, reveal);
+  const anchor = useSelectionAnchor(surface);
+  const selectionAnchor = anchor && creation.selection?.value === anchor.draft ? anchor.rect : null;
   return {
     ...creation,
     error: navigation.error ?? creation.error,
@@ -56,6 +62,7 @@ export function useAnnotationComposer(
     revealedAnnotationId: currentId(revealedId),
     editingAnnotationId: currentId(editingId),
     returnToReading: navigation.returnToReading,
+    selectionAnchor,
     open: (annotation) => {
       setActiveId(annotation.id);
       navigation.open(annotation);

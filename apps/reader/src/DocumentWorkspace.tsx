@@ -1,6 +1,6 @@
 import { useCallback, useRef, type JSX, type ReactNode } from "react";
 
-import { AnnotationComposer } from "./AnnotationComposer.js";
+import { AnnotationComposerLayer } from "./AnnotationComposerLayer.js";
 import { DocumentContextualToolbar } from "./DocumentContextualToolbar.js";
 import { useDocumentAnnotationDirty } from "./use-annotation-draft.js";
 import { useDockPanelFocus } from "./use-dock-panel-focus.js";
@@ -18,6 +18,7 @@ import type { ReadingResumeState } from "./use-reading-resume.js";
 import type { SourceExportController } from "./use-source-export.js";
 import type { SourceWorkspaceController } from "./use-source-workspace.js";
 import type { SourceSummary } from "@mdbase-reader/core";
+import type { ReadingSurface } from "@mdbase-reader/reading-surface";
 
 export interface DocumentWorkspaceProps {
   readonly sources: readonly SourceSummary[];
@@ -40,6 +41,7 @@ export interface DocumentWorkspaceProps {
   readonly renderLibrary: (tab: LibraryWorkspaceTab, focused: boolean) => ReactNode;
   readonly onAddSource: () => void;
   readonly onToggleFocus: () => void;
+  readonly surfaces: ReadonlyMap<string, ReadingSurface>;
 }
 
 /** One stable Dockview panel. Moving it never changes its React/session identity. */
@@ -93,6 +95,8 @@ export function DocumentWorkspace({
             onToggleAreaSelection={props.annotationComposer.toggleAreaSelection}
             sourceExport={props.sourceExport}
             onToggleFocus={props.onToggleFocus}
+            surfaces={props.surfaces}
+            sessionId={tab.id}
           />
         ) : null}
         <div className="document-session-deck">
@@ -101,9 +105,7 @@ export function DocumentWorkspace({
           </div>
         </div>
         {document && focused && visible ? (
-          <div className="document-annotation-composer">
-            <AnnotationComposer composer={props.annotationComposer} />
-          </div>
+          <AnnotationComposerLayer composer={props.annotationComposer} />
         ) : null}
       </div>
     </section>

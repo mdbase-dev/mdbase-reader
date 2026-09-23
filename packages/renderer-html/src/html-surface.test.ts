@@ -22,6 +22,8 @@ describe("HtmlReadingSurface", () => {
       goToAnnotation: () => true,
       clearSelection: vi.fn(),
       extractText: () => "Essay",
+      contents: () => [],
+      goToContents: () => false,
       destroy: vi.fn(),
     } as unknown as HtmlDocumentRuntime;
     const surface = new HtmlReadingSurface(
@@ -43,5 +45,37 @@ describe("HtmlReadingSurface", () => {
     activationListener?.(id);
 
     expect(activated).toHaveBeenCalledWith(id);
+  });
+
+  it("offers contents only when a page has more than one heading", () => {
+    const surfaceWith = (
+      contents: readonly { id: string; title: string; level: number }[],
+    ): HtmlReadingSurface =>
+      new HtmlReadingSurface(
+        {
+          document: {
+            fileId: fileId("file-html"),
+            file: "[[files/essay.html]]",
+            revision: fileRevision(`sha256:${"a".repeat(64)}`),
+          },
+          mediaType: "text/html",
+          url: "https://example.test/essay.html",
+        },
+        {
+          onLocation: () => vi.fn(),
+          onSelection: () => vi.fn(),
+          onAnnotationActivated: () => vi.fn(),
+          contents: () => contents,
+          goToContents: () => true,
+        } as unknown as HtmlDocumentRuntime,
+      );
+    expect(
+      surfaceWith([{ id: "0", title: "Essay", level: 0 }]).capabilities.contents,
+    ).toBeUndefined();
+    const sections = [
+      { id: "0", title: "Essay", level: 0 },
+      { id: "1", title: "Part one", level: 1 },
+    ];
+    expect(surfaceWith(sections).capabilities.contents?.entries()).toEqual(sections);
   });
 });

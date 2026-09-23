@@ -15,6 +15,7 @@ import type { SourceTextSearchMatch } from "../domain/search.js";
 import type {
   Page,
   ReadingPosition,
+  ReadingStatus,
   Source,
   SourceQuery,
   SourceSummary,
@@ -46,6 +47,12 @@ export interface SourceRepository {
     readonly documentFileId: FileId;
     readonly position: ReadingPosition;
     readonly openedAt: DateTime;
+  }): Promise<Source>;
+  updateReadingStatus?(input: {
+    readonly collectionId: CollectionId;
+    readonly sourceId: SourceId;
+    readonly status: ReadingStatus;
+    readonly changedAt: DateTime;
   }): Promise<Source>;
   updateCitation(input: {
     readonly collectionId: CollectionId;

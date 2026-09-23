@@ -9,12 +9,19 @@ import { extractPublicationText } from "./epub-text.js";
 import { selectedTextDraft } from "./readium-selection.js";
 
 import type { Annotation, AnnotationId } from "@mdbase-reader/core";
-import type { TextSelectionDraft, Unsubscribe } from "@mdbase-reader/reading-surface";
+import type {
+  ContentsEntry,
+  TextSelectionDraft,
+  Unsubscribe,
+} from "@mdbase-reader/reading-surface";
+import type { Link } from "@readium/shared";
 
 export interface ReadiumRuntime {
   currentLocator(): Readonly<Record<string, unknown>>;
   goTo(locator: Readonly<Record<string, unknown>>): Promise<boolean>;
   goPage?(direction: -1 | 1): Promise<boolean>;
+  contents?(): readonly ContentsEntry[];
+  goToContents?(id: string): Promise<boolean>;
   clearSelection(): void;
   extractText(options?: { readonly signal?: AbortSignal }): Promise<string>;
   onLocationChanged(listener: (locator: Readonly<Record<string, unknown>>) => void): Unsubscribe;
@@ -129,10 +136,7 @@ export async function createReadiumRuntime(input: {
       }
       return new Promise((resolve) => navigator.go(destination, false, resolve));
     },
-    goPage: (direction) =>
-      new Promise((resolve) =>
-        navigator[direction === 1 ? "goForward" : "goBackward"](false, resolve),
-      ),
+    ...sectionNavigation(publication, navigator),
     clearSelection: () => clearFrameSelections(input.container),
     extractText: (options) => extractPublicationText(publication, options?.signal),
     onLocationChanged(listener) {
@@ -201,4 +205,40 @@ export function publicationPositions(publication: Publication): Locator[] {
         }),
       }),
   );
+}
+
+/** Page turns and the publication's own table of contents. */
+function sectionNavigation(
+  publication: Publication,
+  navigator: EpubNavigator,
+): Pick<ReadiumRuntime, "goPage" | "contents" | "goToContents"> {
+  const contents = flattenContents(publication.toc?.items ?? []);
+  return {
+    goPage: (direction) =>
+      new Promise((resolve) =>
+        navigator[direction === 1 ? "goForward" : "goBackward"](false, resolve),
+      ),
+    contents: () => contents.map(({ entry }) => entry),
+    goToContents(id) {
+      const link = contents.find(({ entry }) => entry.id === id)?.link;
+      return link
+        ? new Promise((resolve) => navigator.goLink(link, false, resolve))
+        : Promise.resolve(false);
+    },
+  };
+}
+
+function flattenContents(
+  links: readonly Link[],
+  level = 0,
+  prefix = "",
+): { readonly entry: ContentsEntry; readonly link: Link }[] {
+  return links.flatMap((link, index) => {
+    const id = `${prefix}${String(index)}`;
+    const title = link.title?.trim();
+    return [
+      ...(title ? [{ entry: { id, title, level }, link }] : []),
+      ...flattenContents(link.children?.items ?? [], level + 1, `${id}.`),
+    ];
+  });
 }

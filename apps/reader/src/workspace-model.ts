@@ -12,6 +12,7 @@ import type {
   FileRevision,
   ReaderRequestOptions,
   ReadingPosition,
+  ReadingStatus,
   Source,
   SourceId,
   SourceSummary,
@@ -80,6 +81,8 @@ export interface ReaderWorkspaceGateway {
     documentFileId: FileId,
     position: ReadingPosition,
   ): Promise<Source>;
+  /** Moves a source through its reading lifecycle, e.g. from queued to finished. */
+  saveReadingStatus?(sourceId: SourceId, status: ReadingStatus): Promise<Source>;
 }
 
 export function filterSources(

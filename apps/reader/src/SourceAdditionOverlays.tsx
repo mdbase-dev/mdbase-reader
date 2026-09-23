@@ -22,6 +22,7 @@ export function SourceAdditionOverlays({
         onChooseFile={addition.chooseFile}
         onCapture={(url) => void addition.capture(url)}
         onEdit={addition.clearError}
+        onDropFile={(file) => void addition.addFile(file)}
       />
       <SourceImportOverlay flow={addition.fileImport} />
     </>

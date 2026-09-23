@@ -3,7 +3,7 @@ import { Locator, LocatorLocations, LocatorText } from "@readium/shared";
 import { epubSelectionEvidence } from "./epub-cfi.js";
 import { stableEpubHref, stableReadiumLocator } from "./epub-locator.js";
 
-import type { TextSelectionDraft } from "@mdbase-reader/reading-surface";
+import type { TextSelectionDraft, ViewportRect } from "@mdbase-reader/reading-surface";
 import type { EpubNavigatorListeners } from "@readium/navigator";
 import type { Publication } from "@readium/shared";
 
@@ -50,11 +50,8 @@ export function selectedTextDraft(input: {
   const readingOrderIndex = selection.locator
     ? input.publication.readingOrder.findIndexWithHref(selection.locator.href)
     : -1;
-  const evidence = selectionEvidenceFromFrame(
-    input.container,
-    selection.targetFrameSrc,
-    readingOrderIndex,
-  );
+  const range = frameSelectionRange(input.container, selection.targetFrameSrc);
+  const evidence = range ? epubSelectionEvidence(range.range, readingOrderIndex) : null;
   const locator =
     selection.locator && evidence
       ? new Locator({
@@ -69,24 +66,39 @@ export function selectedTextDraft(input: {
           }),
         })
       : selection.locator;
-  return readiumSelectionToDraft({
+  const draft = readiumSelectionToDraft({
     ...selection,
     ...(locator ? { locator } : {}),
     publicationBaseUrl: input.publicationBaseUrl,
     ...(evidence ?? {}),
   });
+  return range ? { ...draft, anchor: viewportRect(range.frame, range.range) } : draft;
 }
 
-function selectionEvidenceFromFrame(
+function frameSelectionRange(
   container: HTMLElement,
   targetFrameSrc: string,
-  readingOrderIndex: number,
-): ReturnType<typeof epubSelectionEvidence> {
+): { readonly frame: HTMLIFrameElement; readonly range: Range } | null {
   const frame = [
     ...container.querySelectorAll<HTMLIFrameElement>(".readium-navigator-iframe"),
   ].find((candidate) => candidate.contentWindow?.location.href === targetFrameSrc);
   const selection = frame?.contentWindow?.getSelection();
-  return selection && selection.rangeCount > 0
-    ? epubSelectionEvidence(selection.getRangeAt(0), readingOrderIndex)
+  return frame && selection && selection.rangeCount > 0
+    ? { frame, range: selection.getRangeAt(0) }
     : null;
+}
+
+/** Converts a range inside a Readium frame to the parent window's viewport. */
+function viewportRect(frame: HTMLIFrameElement, range: Range): ViewportRect {
+  const inner = range.getBoundingClientRect();
+  const outer = frame.getBoundingClientRect();
+  // Fixed-layout frames may be scaled with a transform.
+  const scaleX = frame.offsetWidth ? outer.width / frame.offsetWidth : 1;
+  const scaleY = frame.offsetHeight ? outer.height / frame.offsetHeight : 1;
+  return {
+    x: outer.left + inner.left * scaleX,
+    y: outer.top + inner.top * scaleY,
+    width: inner.width * scaleX,
+    height: inner.height * scaleY,
+  };
 }

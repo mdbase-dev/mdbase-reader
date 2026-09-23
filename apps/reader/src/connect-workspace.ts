@@ -42,6 +42,7 @@ import type {
   MutationJournal,
   ReaderRequestOptions,
   ReadingPosition,
+  ReadingStatus,
   ReaderIdGenerator,
   Source,
   SourceId,
@@ -339,6 +340,20 @@ export class ConnectWorkspaceGateway implements ReaderWorkspaceGateway {
       documentFileId,
       position,
       openedAt: this.runtime.clock.now(),
+    });
+    this.#replaceSource(updated);
+    return updated;
+  }
+
+  async saveReadingStatus(sourceId: SourceId, status: ReadingStatus): Promise<Source> {
+    if (!this.sources.updateReadingStatus) {
+      throw new Error("This collection cannot change reading status.");
+    }
+    const updated = await this.sources.updateReadingStatus({
+      collectionId: this.collectionId,
+      sourceId,
+      status,
+      changedAt: this.runtime.clock.now(),
     });
     this.#replaceSource(updated);
     return updated;

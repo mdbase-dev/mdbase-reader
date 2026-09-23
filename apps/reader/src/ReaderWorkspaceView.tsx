@@ -14,6 +14,7 @@ import { readerCommands } from "./reader-command-list.js";
 import { ReaderHeader } from "./ReaderHeader.js";
 import { RenderedSourceDocument } from "./RenderedSourceDocument.js";
 import { SourceAdditionOverlays } from "./SourceAdditionOverlays.js";
+import { useFileDrop } from "./use-file-drop.js";
 import { useMediaQuery } from "./use-media-query.js";
 import { useWorkspaceShellPreferences } from "./use-workspace-shell-preferences.js";
 import { annotationDocumentTarget } from "./workspace-annotation-navigation.js";
@@ -98,6 +99,7 @@ export function ReaderWorkspaceView({
     [dock],
   );
   const pendingAnnotationRef = useRef<PendingWorkspaceAnnotation | null>(null);
+  const fileDrop = useFileDrop((file) => void sourceAddition.addFile(file));
   const routedEditingIdRef = useRef(composer.editingAnnotationId);
   const commands = commandsForView(model, () => setInspectorOpen((value) => !value), {
     density: shell.value.density,
@@ -169,7 +171,16 @@ export function ReaderWorkspaceView({
     <div
       data-density={shell.value.density}
       className={`reader-shell${model.deploymentUpdateAvailable ? " has-update" : ""}${model.focusChromeVisible ? "" : " is-focus-chrome-hidden"}`}
+      {...fileDrop.handlers}
     >
+      {fileDrop.active ? (
+        <div className="file-drop-overlay" aria-hidden="true">
+          <div>
+            <strong>Drop to add to your library</strong>
+            <span>PDF, EPUB or saved web page</span>
+          </div>
+        </div>
+      ) : null}
       {model.deploymentUpdateAvailable ? <DeploymentUpdateNotice /> : null}
       <ReaderHeader
         density={shell.value.density}
@@ -207,6 +218,7 @@ export function ReaderWorkspaceView({
             />
           }
           sources={library.sources}
+          surfaces={model.surfaces}
           sourceWorkspace={sourceWorkspace}
           focusMode={model.focusMode}
           readingResume={model.readingResume}
@@ -277,6 +289,7 @@ export function ReaderWorkspaceView({
                 onOpenBeside={(id) => sourceWorkspace.openBeside(id)}
                 onAddSource={sourceAddition.open}
                 bibliographyExport={model.bibliographyExport}
+                onSourceChanged={workspace.reconcileSource}
               />
             );
           }}

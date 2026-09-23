@@ -96,7 +96,7 @@ export async function auditSimpleAnnotations(
   await page.waitForTimeout(1200);
   expect(requests).toBe(1);
   release();
-  await expect(panes.nth(0).getByText("Saved to collection", { exact: true })).toBeVisible();
+  await expect(panes.nth(0).getByText("Saved", { exact: true })).toBeVisible();
   await expect(comments).toHaveValue("[test] Newer typing during the first save");
   await expect(panes.nth(1)).toContainText("Newer typing during the first save");
   expect(requests).toBe(2);

@@ -27,7 +27,8 @@ export function ConnectionLayout({
         <ProductBrand />
         <div className="connection-copy">
           <h1>Open mdbase Reader</h1>
-          <p role="status">{status}</p>
+          {/* A failed step often reports the same message as its status; say it once. */}
+          {error !== status ? <p role="status">{status}</p> : null}
           {error ? (
             <p className="connection-error" role="alert">
               {error}

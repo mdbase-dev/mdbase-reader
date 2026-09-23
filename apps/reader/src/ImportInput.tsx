@@ -11,8 +11,8 @@ export function ImportInput({
   controller: ImportController;
 }): JSX.Element {
   return (
-    <section aria-labelledby="import-input-title">
-      <h2 id="import-input-title">1. Choose what to bring</h2>
+    <section className="import-step" aria-labelledby="import-input-title">
+      <h2 id="import-input-title">Choose what to bring</h2>
       {service === "zotero" ? (
         <ZoteroInput disabled={disabled} controller={controller} />
       ) : (
@@ -41,7 +41,7 @@ function ZoteroInput({
         </a>
       </p>
       <label className="import-file">
-        Export bundle folder
+        Exported folder
         <input
           type="file"
           multiple

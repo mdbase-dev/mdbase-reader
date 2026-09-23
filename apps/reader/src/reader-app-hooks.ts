@@ -105,6 +105,11 @@ function handleCommandShortcut(event: KeyboardEvent, actions: ReaderShortcutActi
     actions.openCommands();
     return true;
   }
+  if (isSlashSearch(event, editing)) {
+    event.preventDefault();
+    focusSearchForContext(actions);
+    return true;
+  }
   if (modifier && event.shiftKey && event.key.toLocaleLowerCase() === "f") {
     event.preventDefault();
     actions.focusSearch();
@@ -116,6 +121,22 @@ function handleCommandShortcut(event: KeyboardEvent, actions: ReaderShortcutActi
     return true;
   }
   return false;
+}
+
+function isSlashSearch(event: KeyboardEvent, editing: boolean): boolean {
+  return event.key === "/" && !editing && !event.metaKey && !event.ctrlKey && !event.altKey;
+}
+
+// In a library tab, "/" searches that view; elsewhere it filters the sidebar.
+function focusSearchForContext(actions: ReaderShortcutActions): void {
+  const librarySearch = document.querySelector<HTMLInputElement>(
+    ".workspace-pane.is-focused .library-search-field input",
+  );
+  if (librarySearch) {
+    librarySearch.focus();
+  } else {
+    actions.focusSearch();
+  }
 }
 
 function handleTabShortcut(event: KeyboardEvent, actions: ReaderShortcutActions): boolean {

@@ -15,6 +15,7 @@ import {
   type CitationResolutionRequest,
   type FileId,
   type ReadingPosition,
+  type ReadingStatus,
   type Source,
   type SourceId,
   type SourceFileImportRequest,
@@ -303,6 +304,19 @@ export class PreviewGateway implements ReaderWorkspaceGateway {
     _position: ReadingPosition,
   ): Promise<Source> {
     return Promise.resolve(source);
+  }
+  saveReadingStatus(id: SourceId, status: ReadingStatus): Promise<Source> {
+    const source = this.#sources.find((item) => item.id === id);
+    if (!source) {
+      return Promise.reject(new Error("The preview source no longer exists."));
+    }
+    const updated: Source = {
+      ...source,
+      readingStatus: status,
+      reading: { ...source.reading, status },
+    };
+    this.#sources = this.#sources.map((item) => (item.id === id ? updated : item));
+    return Promise.resolve(updated);
   }
 }
 

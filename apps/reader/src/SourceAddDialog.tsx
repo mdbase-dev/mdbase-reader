@@ -1,7 +1,7 @@
 import { ReaderButton } from "@mdbase-reader/ui";
 import { useEffect, useRef, useState, type JSX } from "react";
 
-import { CloseIcon, FileIcon, LinkIcon } from "./icons.js";
+import { CloseIcon, FileIcon } from "./icons.js";
 
 export function SourceAddDialog({
   open,
@@ -12,6 +12,7 @@ export function SourceAddDialog({
   onChooseFile,
   onCapture,
   onEdit,
+  onDropFile,
 }: {
   readonly open: boolean;
   readonly busy: boolean;
@@ -21,6 +22,7 @@ export function SourceAddDialog({
   readonly onChooseFile: () => void;
   readonly onCapture: (url: string) => void;
   readonly onEdit: () => void;
+  readonly onDropFile: (file: File) => void;
 }): JSX.Element | null {
   return open ? (
     <OpenSourceAddDialog
@@ -31,6 +33,7 @@ export function SourceAddDialog({
       onChooseFile={onChooseFile}
       onCapture={onCapture}
       onEdit={onEdit}
+      onDropFile={onDropFile}
     />
   ) : null;
 }
@@ -43,6 +46,7 @@ function OpenSourceAddDialog({
   onChooseFile,
   onCapture,
   onEdit,
+  onDropFile,
 }: Omit<Parameters<typeof SourceAddDialog>[0], "open">): JSX.Element {
   const [url, setUrl] = useState("");
   const input = useRef<HTMLInputElement>(null);
@@ -57,7 +61,15 @@ function OpenSourceAddDialog({
     return () => window.removeEventListener("keydown", close);
   }, [busy, onClose]);
   return (
-    <div className="import-backdrop" role="presentation">
+    <div
+      className="import-backdrop"
+      role="presentation"
+      onMouseDown={(event) => {
+        if (event.target === event.currentTarget && !busy) {
+          onClose();
+        }
+      }}
+    >
       <section
         className="import-dialog source-add-dialog"
         role="dialog"
@@ -74,8 +86,8 @@ function OpenSourceAddDialog({
           <CloseIcon />
         </button>
         <div className="import-dialog-heading">
-          <h2 id="reader-add-source-title">Add source</h2>
-          <p>Save a web page or choose a document.</p>
+          <h2 id="reader-add-source-title">Add a source</h2>
+          <p>Save a web page, or add a PDF or EPUB from your device.</p>
         </div>
         <form
           className="capture-form"
@@ -86,49 +98,79 @@ function OpenSourceAddDialog({
             }
           }}
         >
-          <label className="import-title-field capture-url-field">
-            <span>Web address</span>
-            <input
-              ref={input}
-              type="url"
-              inputMode="url"
-              autoComplete="url"
-              placeholder="https://…"
-              value={url}
-              disabled={busy}
-              onChange={(event) => {
-                setUrl(event.target.value);
-                onEdit();
-              }}
-            />
+          <label className="capture-url-field">
+            <span>Web page</span>
+            <span className="capture-url-row">
+              <input
+                ref={input}
+                type="url"
+                inputMode="url"
+                autoComplete="url"
+                placeholder="Paste a link: https://…"
+                value={url}
+                disabled={busy}
+                onChange={(event) => {
+                  setUrl(event.target.value);
+                  onEdit();
+                }}
+              />
+              <ReaderButton disabled={busy || !url.trim()}>
+                {busy ? "Saving…" : "Save"}
+              </ReaderButton>
+            </span>
           </label>
           {error ? (
             <p className="import-error capture-error" role="alert">
               {error}
             </p>
           ) : null}
-          <div className="capture-primary-action">
-            <ReaderButton disabled={busy || !url.trim()}>
-              <LinkIcon /> {busy ? "Saving page…" : "Save web page"}
-            </ReaderButton>
-          </div>
         </form>
         <div className="source-add-divider">
           <span>or</span>
         </div>
-        <button
-          className="source-file-choice"
-          type="button"
-          disabled={busy || !canChooseFile}
-          onClick={onChooseFile}
-        >
-          <FileIcon />
-          <span>
-            <strong>Choose a file</strong>
-            <small>PDF, EPUB, or saved HTML</small>
-          </span>
-        </button>
+        <FileChoice disabled={busy || !canChooseFile} onChoose={onChooseFile} onDrop={onDropFile} />
       </section>
     </div>
+  );
+}
+
+function FileChoice({
+  disabled,
+  onChoose,
+  onDrop,
+}: {
+  readonly disabled: boolean;
+  readonly onChoose: () => void;
+  readonly onDrop: (file: File) => void;
+}): JSX.Element {
+  const [dragging, setDragging] = useState(false);
+  return (
+    <button
+      className={`source-file-choice${dragging ? " is-dragging" : ""}`}
+      type="button"
+      disabled={disabled}
+      onClick={onChoose}
+      onDragOver={(event) => {
+        if (event.dataTransfer.types.includes("Files")) {
+          event.preventDefault();
+          setDragging(true);
+        }
+      }}
+      onDragLeave={() => setDragging(false)}
+      onDrop={(event) => {
+        const file = event.dataTransfer.files[0];
+        setDragging(false);
+        if (file) {
+          event.preventDefault();
+          onDrop(file);
+        }
+      }}
+    >
+      <FileIcon />
+      <span>
+        <strong>{dragging ? "Drop to add" : "Choose or drop a file"}</strong>
+        <small>PDF, EPUB or saved web page</small>
+      </span>
+    </button>
   );
 }

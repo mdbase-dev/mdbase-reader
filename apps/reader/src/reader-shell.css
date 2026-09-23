@@ -9,6 +9,9 @@
    Monospace is reserved for keyboard shortcuts and file-format tags. */
 
 :root {
+  --sans: "Atkinson Hyperlegible", "Segoe UI", sans-serif;
+  --serif: Georgia, "Times New Roman", serif;
+  --surface: var(--paper);
   --ui-meta: 11px;
   --ui-control: 12px;
   --ui-body: 13px;
@@ -50,6 +53,8 @@
 .reader-shell .navigator-search input:focus-visible,
 .reader-shell .library-search-field input:focus-visible,
 .reader-shell .annotation-search input:focus-visible,
+.reader-shell .capture-url-field input:focus-visible,
+.reader-shell .import-title-field input:focus-visible,
 .command-search input:focus-visible {
   outline: none;
 }
@@ -1570,6 +1575,7 @@
 }
 
 .document-area-action,
+.document-contents-menu > summary,
 .document-actions-menu > summary {
   width: 32px;
   height: 32px;
@@ -1584,6 +1590,7 @@
 }
 
 .document-area-action:hover,
+.document-contents-menu > summary:hover,
 .document-actions-menu > summary:hover {
   color: var(--ink);
   background: var(--hover);
@@ -1595,6 +1602,7 @@
 }
 
 .document-area-action svg,
+.document-contents-menu > summary svg,
 .document-actions-menu > summary svg {
   width: 16px;
   height: 16px;
@@ -2072,7 +2080,7 @@
   background: var(--hover);
 }
 
-.annotation-composer footer > .annotation-add-comment {
+.annotation-composer footer > button.annotation-add-comment:not(.mdbase-button) {
   margin-right: auto;
   margin-left: -10px;
   color: var(--action);
@@ -2175,4 +2183,580 @@
 .preview-notice span {
   font-family: inherit;
   font-weight: 600;
+}
+
+/* Source note editor --------------------------------------------------------- */
+
+.source-note-toolbar {
+  min-width: 0;
+  min-height: 40px;
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 8px 4px 10px;
+  border-bottom: 1px solid var(--reader-hairline);
+}
+
+.source-note-formatting {
+  min-width: 0;
+  flex: 1 1 auto;
+  display: flex;
+  align-items: center;
+  gap: 1px;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.source-note-formatting::-webkit-scrollbar {
+  display: none;
+}
+
+.source-note-formatting > button {
+  width: 28px;
+  min-width: 28px;
+  height: 28px;
+  display: grid;
+  place-items: center;
+  padding: 0;
+  border: 0;
+  border-radius: 5px;
+  color: var(--muted);
+  background: transparent;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.source-note-formatting > button:hover {
+  color: var(--ink);
+  background: var(--hover);
+}
+
+.source-note-formatting > button b {
+  font-weight: 750;
+}
+
+.source-note-formatting > button em {
+  font-family: var(--serif);
+  font-size: 15px;
+}
+
+.source-note-formatting svg {
+  width: 15px;
+  height: 15px;
+}
+
+.source-note-save-state {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  color: var(--muted);
+  font-size: var(--ui-meta);
+  white-space: nowrap;
+}
+
+.source-note-save-state::before {
+  content: "";
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--faint);
+}
+
+.source-note-save-state.is-saved::before {
+  background: var(--connected);
+}
+
+.source-note-save-state.is-saving::before {
+  background: var(--accent);
+}
+
+.source-note-save-state.is-error {
+  color: var(--danger);
+}
+
+.source-note-save-state.is-error::before {
+  background: var(--danger);
+}
+
+.annotation-insert-menu {
+  position: relative;
+  flex: 0 0 auto;
+}
+
+.annotation-insert-menu > summary {
+  height: 28px;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 0 9px 0 7px;
+  border: 1px solid var(--line);
+  border-radius: var(--ui-radius);
+  color: var(--ink-soft);
+  font-size: var(--ui-control);
+  list-style: none;
+  cursor: pointer;
+}
+
+.annotation-insert-menu > summary::-webkit-details-marker {
+  display: none;
+}
+
+.annotation-insert-menu > summary:hover,
+.annotation-insert-menu[open] > summary {
+  color: var(--ink);
+  background: var(--hover);
+}
+
+.annotation-insert-menu > summary svg {
+  width: 14px;
+  height: 14px;
+}
+
+.annotation-insert-menu > div {
+  position: absolute;
+  top: calc(100% + 6px);
+  right: 0;
+  z-index: 40;
+  width: min(340px, 80vw);
+  max-height: min(440px, 60vh);
+  display: grid;
+  gap: 1px;
+  padding: 6px;
+  overflow: auto;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--paper);
+  box-shadow: 0 12px 32px -12px color-mix(in oklch, var(--ink) 28%, transparent);
+}
+
+.annotation-insert-menu > div > strong {
+  padding: 8px 9px 4px;
+  color: var(--muted);
+  font-size: var(--ui-meta);
+  font-weight: 600;
+}
+
+.annotation-insert-menu > div > p {
+  margin: 2px 9px 8px;
+  color: var(--muted);
+  font-size: var(--ui-control);
+}
+
+.annotation-insert-menu > div > button {
+  width: 100%;
+  display: grid;
+  justify-items: start;
+  gap: 2px;
+  padding: 8px 9px;
+  border: 0;
+  border-radius: 5px;
+  color: var(--ink-soft);
+  background: transparent;
+  text-align: left;
+  cursor: pointer;
+}
+
+.annotation-insert-menu > div > button:hover:not(:disabled) {
+  background: var(--hover);
+}
+
+.annotation-insert-menu > div > button:disabled {
+  cursor: default;
+  opacity: 0.55;
+}
+
+.annotation-insert-menu > div > button.insert-citation {
+  grid-template-columns: 16px minmax(0, 1fr);
+  align-items: center;
+  gap: 10px;
+}
+
+.annotation-insert-menu .insert-citation svg {
+  width: 16px;
+  height: 16px;
+  color: var(--muted);
+}
+
+.annotation-insert-menu .insert-citation > span {
+  display: grid;
+  gap: 1px;
+}
+
+.annotation-insert-menu button > span:not(.insert-citation span) {
+  color: var(--muted);
+  font-size: var(--ui-meta);
+}
+
+.annotation-insert-menu button strong {
+  max-width: 100%;
+  overflow: hidden;
+  color: var(--ink);
+  font-size: var(--ui-body);
+  font-weight: 600;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.annotation-insert-menu button small {
+  max-width: 100%;
+  overflow: hidden;
+  color: var(--muted);
+  font-size: var(--ui-control);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.editor-loading {
+  display: grid;
+  place-items: center;
+  padding: 32px;
+  color: var(--muted);
+  font-size: var(--ui-control);
+}
+
+.editor-save-status {
+  position: absolute;
+  right: 12px;
+  bottom: 12px;
+  max-width: min(380px, calc(100% - 24px));
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 10px;
+  border: 1px solid color-mix(in oklch, var(--danger) 35%, var(--line));
+  border-radius: 8px;
+  color: var(--danger);
+  background: var(--paper);
+  font-size: var(--ui-control);
+}
+
+.editor-save-status span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.editor-save-status button {
+  flex: 0 0 auto;
+  height: 26px;
+  padding: 0 9px;
+  border: 1px solid var(--line);
+  border-radius: 5px;
+  color: var(--ink);
+  background: var(--paper);
+  font-size: var(--ui-control);
+  cursor: pointer;
+}
+
+.workspace-pane.is-tool-pane .source-note-toolbar {
+  padding-inline: 18px;
+}
+
+@media (pointer: coarse) {
+  .source-note-formatting > button,
+  .annotation-insert-menu > summary {
+    min-width: 40px;
+    height: 40px;
+  }
+}
+
+/* Add source and file import dialogs ----------------------------------------- */
+
+.import-dialog-heading {
+  padding: 24px 24px 18px;
+}
+
+.import-dialog-heading h2 {
+  margin: 0 0 4px;
+  color: var(--ink);
+  font-size: 18px;
+  font-weight: 650;
+  letter-spacing: -0.01em;
+}
+
+.import-dialog-heading p {
+  margin: 0;
+  color: var(--muted);
+  font-size: var(--ui-control);
+  line-height: 1.5;
+}
+
+.import-dialog-heading .mono {
+  color: var(--muted);
+  font: 600 var(--ui-meta) / 1 inherit;
+  letter-spacing: 0;
+  text-transform: none;
+}
+
+.capture-form {
+  display: grid;
+}
+
+.capture-url-field,
+.import-title-field {
+  display: grid;
+  gap: 6px;
+  margin: 0 24px 16px;
+  color: var(--muted);
+  font-size: var(--ui-control);
+}
+
+.capture-url-row {
+  display: flex;
+  gap: 6px;
+}
+
+.capture-url-field input,
+.import-title-field input {
+  min-width: 0;
+  flex: 1 1 auto;
+  width: 100%;
+  height: 36px;
+  padding: 0 11px;
+  border: 1px solid var(--line);
+  border-radius: var(--ui-radius);
+  outline: none;
+  color: var(--ink);
+  background: var(--paper);
+  font-size: var(--ui-body);
+}
+
+.capture-url-field input:focus,
+.import-title-field input:focus {
+  border-color: color-mix(in oklch, var(--accent) 60%, var(--line));
+  box-shadow: 0 0 0 3px color-mix(in oklch, var(--accent) 16%, transparent);
+}
+
+.capture-url-row .mdbase-button {
+  min-height: 36px;
+  padding: 0 14px;
+}
+
+.capture-url-row .mdbase-button:not(:disabled) {
+  border-color: var(--accent);
+  color: var(--paper);
+  background: var(--accent);
+}
+
+.import-error {
+  margin: -6px 24px 16px;
+  color: var(--danger);
+  font-size: var(--ui-control);
+  line-height: 1.45;
+}
+
+.source-add-divider {
+  position: relative;
+  display: flex;
+  justify-content: center;
+  margin: 4px 24px 16px;
+  color: var(--muted);
+  font-size: var(--ui-meta);
+}
+
+.source-add-divider::before {
+  content: "";
+  position: absolute;
+  top: 50%;
+  right: 0;
+  left: 0;
+  border-top: 1px solid var(--line);
+}
+
+.source-add-divider span {
+  z-index: 1;
+  padding: 0 10px;
+  background: var(--paper);
+}
+
+.source-file-choice {
+  width: calc(100% - 48px);
+  min-height: 72px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  margin: 0 24px 24px;
+  padding: 14px;
+  border: 1px dashed var(--line-strong);
+  border-radius: 8px;
+  color: var(--muted);
+  background: transparent;
+  text-align: left;
+  cursor: pointer;
+  transition:
+    border-color 120ms var(--ease),
+    background 120ms var(--ease);
+}
+
+.source-file-choice:hover:not(:disabled),
+.source-file-choice.is-dragging {
+  border-color: var(--accent);
+  color: var(--ink-soft);
+  background: color-mix(in oklch, var(--accent) 5%, var(--paper));
+}
+
+.source-file-choice svg {
+  width: 20px;
+  height: 20px;
+}
+
+.source-file-choice > span {
+  display: grid;
+  gap: 2px;
+}
+
+.source-file-choice strong {
+  color: var(--ink);
+  font-size: var(--ui-body);
+  font-weight: 600;
+}
+
+.source-file-choice small {
+  color: var(--muted);
+  font-size: var(--ui-meta);
+}
+
+/* Dropping a file anywhere in Reader. */
+
+.file-drop-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 120;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  background: color-mix(in oklch, var(--paper) 72%, transparent);
+  backdrop-filter: blur(3px);
+  pointer-events: none;
+}
+
+.file-drop-overlay > div {
+  width: min(420px, 100%);
+  display: grid;
+  gap: 4px;
+  padding: 36px 24px;
+  border: 2px dashed var(--accent);
+  border-radius: 14px;
+  background: var(--paper);
+  text-align: center;
+}
+
+.file-drop-overlay strong {
+  color: var(--ink);
+  font-size: var(--ui-heading);
+}
+
+.file-drop-overlay span {
+  color: var(--muted);
+  font-size: var(--ui-control);
+}
+
+/* A new-annotation card placed beside its selection. */
+
+.document-annotation-composer.is-anchored > .annotation-composer {
+  position: absolute;
+  margin: 0;
+  max-height: none;
+  box-shadow:
+    0 16px 40px -16px color-mix(in oklch, var(--ink) 35%, transparent),
+    0 0 0 1px var(--line);
+}
+
+.document-annotation-composer.is-anchored .annotation-composer blockquote {
+  max-height: 3.2em;
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .document-annotation-composer.is-anchored > .annotation-composer {
+    animation: composer-appear 140ms var(--ease) both;
+  }
+}
+
+@keyframes composer-appear {
+  from {
+    opacity: 0;
+    translate: 0 4px;
+  }
+}
+
+.document-contents-menu .reader-menu-panel {
+  width: min(320px, 80vw);
+}
+
+.document-contents-list {
+  max-height: min(60vh, 480px);
+  display: grid;
+  gap: 1px;
+  overflow: auto;
+}
+
+.document-contents-list > button {
+  min-height: 30px;
+  padding: 5px 9px;
+  border: 0;
+  border-radius: 4px;
+  color: var(--ink-soft);
+  background: transparent;
+  font-size: var(--ui-control);
+  line-height: 1.35;
+  text-align: left;
+  cursor: pointer;
+}
+
+.document-contents-list > button:hover {
+  color: var(--ink);
+  background: var(--hover);
+}
+
+/* Inline reading status: reads as text, becomes a control on hover or focus. */
+
+.library-status.is-editable select {
+  width: fit-content;
+  max-width: 100%;
+  height: 26px;
+  margin-left: -7px;
+  padding: 0 20px 0 6px;
+  border: 1px solid transparent;
+  border-radius: 5px;
+  color: inherit;
+  background: transparent
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23888' stroke-width='2'%3E%3Cpath d='m7 10 5 5 5-5'/%3E%3C/svg%3E")
+    no-repeat right 4px center / 12px;
+  font: inherit;
+  appearance: none;
+  cursor: pointer;
+}
+
+.library-status.is-editable select:not(:hover, :focus-visible) {
+  background-image: none;
+}
+
+.library-status.is-editable select:hover,
+.library-status.is-editable select:focus-visible {
+  border-color: var(--line);
+  background-color: var(--paper);
+}
+
+.library-status.is-editable .library-progress {
+  margin-top: -2px;
+}
+
+.annotation-composer .annotation-textarea {
+  width: calc(100% - 32px);
+  min-height: 96px;
+  margin: 0 16px;
+  font-size: var(--ui-body);
+}
+
+.annotation-composer .annotation-draft-status {
+  padding-top: 6px;
+  color: var(--muted);
+  font-size: var(--ui-meta);
 }

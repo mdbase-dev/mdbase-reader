@@ -102,10 +102,6 @@
   display: flex;
   flex-direction: column;
 }
-.source-note-toolbar {
-  flex: 0 0 auto;
-  flex-wrap: wrap;
-}
 .source-note-editor-surface,
 .workspace-pane.is-tool-pane .source-note-editor-surface {
   flex: 1 1 auto;
@@ -143,15 +139,8 @@
   cursor: pointer;
   min-height: 28px;
 }
-.source-note-save-state {
-  white-space: normal;
-}
-.reader-shell[data-density="comfortable"] .source-note-toolbar,
 .reader-shell[data-density="comfortable"] .reader-header button {
   font-size: 12px;
-}
-.reader-shell[data-density="comfortable"] .source-note-save-state {
-  font-size: 11px;
 }
 .reader-shell button:focus-visible,
 .reader-shell summary:focus-visible,
@@ -163,11 +152,6 @@
 @media (max-width: 680px) {
   .library-text-search {
     padding: 12px;
-  }
-}
-@media (pointer: coarse) {
-  .source-note-toolbar button {
-    min-height: 44px;
   }
 }
 @media (prefers-reduced-motion: reduce) {

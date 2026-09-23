@@ -15,6 +15,8 @@ export interface SourceAdditionController {
   readonly open: () => void;
   readonly close: () => void;
   readonly chooseFile: () => void;
+  /** Adds a file dropped onto Reader, after checking it is a readable format. */
+  readonly addFile: (file: File) => Promise<void>;
   readonly capture: WebCaptureFlow["capture"];
   readonly clearError: () => void;
 }
@@ -34,14 +36,32 @@ export function useSourceAddition(
   );
   const fileImport = useSourceImport(workspace, pickSourceFile, finish);
   const webCapture = useWebCapture(workspace, finish);
+  const [dropError, setDropError] = useState<string | null>(null);
   const close = useCallback((): void => setDialogOpen(false), []);
+  const acceptFile = fileImport.accept;
+  const addFile = useCallback(
+    async (file: File): Promise<void> => {
+      const mediaType = droppedMediaType(file);
+      if (!mediaType) {
+        setDropError(`${file.name} isn’t a PDF, EPUB or saved web page.`);
+        setDialogOpen(true);
+        return;
+      }
+      setDropError(null);
+      const bytes = await file.arrayBuffer();
+      setDialogOpen(false);
+      acceptFile({ name: file.name, mediaType, size: file.size, bytes });
+    },
+    [acceptFile],
+  );
   return {
     dialogOpen,
     adding: fileImport.importing || webCapture.status === "capturing",
-    error: webCapture.error,
+    error: dropError ?? webCapture.error,
     fileImport,
     open: () => {
       webCapture.clearError();
+      setDropError(null);
       setDialogOpen(true);
     },
     close,
@@ -49,7 +69,27 @@ export function useSourceAddition(
       setDialogOpen(false);
       void fileImport.choose();
     },
+    addFile,
     capture: webCapture.capture,
-    clearError: webCapture.clearError,
+    clearError: () => {
+      setDropError(null);
+      webCapture.clearError();
+    },
   };
+}
+
+const droppedTypes: readonly (readonly [RegExp, string])[] = [
+  [/\.pdf$/iu, "application/pdf"],
+  [/\.epub$/iu, "application/epub+zip"],
+  [/\.x?html?$/iu, "text/html"],
+];
+
+export function droppedMediaType(file: {
+  readonly name: string;
+  readonly type: string;
+}): string | null {
+  if (["application/pdf", "application/epub+zip", "text/html"].includes(file.type)) {
+    return file.type;
+  }
+  return droppedTypes.find(([pattern]) => pattern.test(file.name))?.[1] ?? null;
 }

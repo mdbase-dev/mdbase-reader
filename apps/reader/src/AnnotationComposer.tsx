@@ -6,12 +6,14 @@ import { AnnotationTextArea } from "./AnnotationTextArea.js";
 import { CloseIcon } from "./icons.js";
 
 import type { AnnotationComposerController } from "./use-annotation-composer.js";
-import type { JSX } from "react";
+import type { CSSProperties, JSX } from "react";
 
 export function AnnotationComposer({
   composer,
+  style,
 }: {
   readonly composer: AnnotationComposerController;
+  readonly style?: CSSProperties;
 }): JSX.Element | null {
   const [expanded, setExpanded] = useState(false);
   const [comment, setComment] = useState(() => ({
@@ -27,6 +29,7 @@ export function AnnotationComposer({
     // eslint-disable-next-line jsx-a11y/no-noninteractive-element-interactions
     <section
       className={`annotation-composer is-${composer.selection.kind === "area" ? "area" : "highlight"}`}
+      style={style}
       aria-labelledby="annotation-composer-title"
       onKeyDown={(event) => annotationEditorKeys(event, composer.dismiss, composer.save)}
     >

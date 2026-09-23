@@ -24,8 +24,8 @@ export function ImportDestination({
     }
   };
   return (
-    <section aria-labelledby="import-destination-title">
-      <h2 id="import-destination-title">Destination</h2>
+    <section className="import-step" aria-labelledby="import-destination-title">
+      <h2 id="import-destination-title">Choose a destination</h2>
       <p>
         Choose an existing collection, or create a fresh hosted collection in mdbase’s secure
         approval window.
@@ -100,9 +100,26 @@ export function ImportDestination({
           Review collection access
         </button>
       ) : null}
-      {session.status !== "ready" ? (
-        <p role="status">Collection connection: {session.status.replaceAll("_", " ")}</p>
-      ) : null}
+      {session.status !== "ready" ? <p role="status">{destinationStatus(session.status)}</p> : null}
     </section>
   );
+}
+
+function destinationStatus(status: ReaderConnectSnapshot["status"]): string {
+  switch (status) {
+    case "authorization_required":
+      return "Reader needs your approval to write to this collection.";
+    case "setup_review_required":
+      return "This collection needs Reader’s setup before importing.";
+    case "not_started":
+    case "starting":
+    case "checking_setup":
+      return "Connecting to mdbase…";
+    case "start_failed":
+    case "unavailable":
+    case "blocked":
+      return "mdbase isn’t reachable right now. Check your connection and try again.";
+    default:
+      return "Choose a collection to import into.";
+  }
 }

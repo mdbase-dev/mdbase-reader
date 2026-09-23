@@ -176,3 +176,70 @@
     margin-bottom: 36px;
   }
 }
+
+/* Steps are numbered by what is shown, so optional steps never leave gaps. */
+.import-page {
+  counter-reset: import-step;
+}
+.import-page section.import-step > h2 {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.import-page section.import-step > h2::before {
+  counter-increment: import-step;
+  content: counter(import-step);
+  width: 24px;
+  height: 24px;
+  flex: 0 0 auto;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  color: var(--paper);
+  background: var(--accent);
+  font-size: 12px;
+  font-weight: 700;
+}
+.import-page label.import-file input[type="file"] {
+  padding: 6px;
+  color: var(--muted);
+  cursor: pointer;
+}
+.import-page input[type="file"]::file-selector-button {
+  margin-right: 12px;
+  padding: 8px 14px;
+  border: 1px solid var(--accent);
+  border-radius: 6px;
+  color: var(--paper);
+  background: var(--accent);
+  font: inherit;
+  cursor: pointer;
+}
+.import-page input[type="file"]:disabled::file-selector-button {
+  opacity: 0.55;
+}
+.import-page label {
+  color: var(--ink-soft);
+}
+.import-page nav a,
+.import-page header a {
+  text-decoration: none;
+}
+.import-page nav a:hover,
+.import-page header a:hover {
+  text-decoration: underline;
+}
+.import-service-mark {
+  color: var(--accent);
+  font-size: 20px;
+  font-weight: 700;
+  background: color-mix(in oklch, var(--accent) 8%, var(--paper));
+  border-color: color-mix(in oklch, var(--accent) 25%, var(--line));
+}
+.import-tiles h2 {
+  margin: 18px 0 6px;
+}
+.import-tiles p {
+  margin: 0 0 16px;
+  color: var(--ink-soft);
+}

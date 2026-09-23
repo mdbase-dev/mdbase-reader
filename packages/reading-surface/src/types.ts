@@ -31,9 +31,19 @@ export interface SurfaceDocument {
   readonly url: string;
 }
 
+/** A rectangle in the top-level window's viewport, in CSS pixels. */
+export interface ViewportRect {
+  readonly x: number;
+  readonly y: number;
+  readonly width: number;
+  readonly height: number;
+}
+
 export interface TextSelectionDraft {
   readonly target: AnnotationTarget & { readonly quote: NonNullable<AnnotationTarget["quote"]> };
   readonly locator: ReaderLocator;
+  /** Where the selection appeared on screen when it was made, for placing selection UI. */
+  readonly anchor?: ViewportRect;
 }
 
 export interface AreaSelectionDraft {
@@ -75,6 +85,19 @@ export interface AnnotationActivationCapability {
   readonly activations: EventSource<AnnotationId>;
 }
 
+export interface ContentsEntry {
+  readonly id: string;
+  readonly title: string;
+  /** Nesting depth, starting at 0. */
+  readonly level: number;
+}
+
+/** A document's own table of contents, for moving between its sections. */
+export interface ContentsCapability {
+  entries(): readonly ContentsEntry[];
+  goTo(id: string): Promise<boolean>;
+}
+
 export interface TextExtractionCapability {
   extractText(options?: { readonly signal?: AbortSignal }): Promise<string>;
 }
@@ -86,6 +109,7 @@ export interface ReadingSurfaceCapabilities {
   readonly annotationNavigation?: AnnotationNavigationCapability;
   readonly annotationActivation?: AnnotationActivationCapability;
   readonly textExtraction?: TextExtractionCapability;
+  readonly contents?: ContentsCapability;
 }
 
 export interface ReadingSurface {

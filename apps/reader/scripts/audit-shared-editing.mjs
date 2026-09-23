@@ -107,7 +107,7 @@ export async function auditSharedEditing(page, { screenshot, blockWrites, measur
   await b.press("Control+z");
   await expect(a).toHaveText("[test] Shared first edit");
   await expect(b).toHaveText("[test] Shared first edit");
-  await expect(pane(first).getByText("Saved to collection", { exact: true })).toBeVisible();
+  await expect(pane(first).getByText("Saved", { exact: true })).toBeVisible();
   await auditComposition(page, a, b);
   await screenshot("shared-notes");
   blockWrites(true);
@@ -126,7 +126,7 @@ export async function auditSharedEditing(page, { screenshot, blockWrites, measur
   // Retry is explicit after a network error, while ordinary recovery resumes automatically.
   const retry = page.getByRole("button", { name: "Retry save", exact: true });
   if (await retry.isVisible()) await retry.click();
-  await expect(page.getByText("Saved to collection", { exact: true })).toBeVisible();
+  await expect(page.getByText("Saved", { exact: true })).toBeVisible();
 
   await tab(documentId).click();
   await page.evaluate(() => {

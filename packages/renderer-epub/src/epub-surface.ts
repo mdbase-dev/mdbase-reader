@@ -46,6 +46,14 @@ export class ReadiumEpubSurface implements ReadingSurface {
       textExtraction: {
         extractText: (options) => runtime.extractText(options),
       },
+      ...(runtime.contents && runtime.goToContents && runtime.contents().length > 0
+        ? {
+            contents: {
+              entries: () => runtime.contents?.() ?? [],
+              goTo: (id: string) => runtime.goToContents?.(id) ?? Promise.resolve(false),
+            },
+          }
+        : {}),
       decorations: {
         setAnnotations: (annotations) => {
           runtime.setAnnotations(

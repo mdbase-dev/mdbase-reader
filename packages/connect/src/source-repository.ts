@@ -18,6 +18,11 @@ import {
 import { sourceContract } from "./contracts.js";
 import { sourceFromDocument, sourceSummaryFromQuery } from "./mapping.js";
 import {
+  positionFrontmatter,
+  writeReadingStatus,
+  type ReadingStatusChange,
+} from "./reading-status.js";
+import {
   ConnectRepositoryError,
   outcomeValue,
   queryWithOptions,
@@ -156,6 +161,11 @@ export class ConnectSourceRepository implements SourceRepository {
     return sourceFromDocument(input.collectionId, updated);
   }
 
+  async updateReadingStatus(input: ReadingStatusChange): Promise<Source> {
+    const path = await this.#path(input.sourceId, "change reading status");
+    return writeReadingStatus(this.client, path, input);
+  }
+
   async updateCitation(input: Parameters<SourceRepository["updateCitation"]>[0]): Promise<Source> {
     const validation = validateCslItem(input.citation);
     if (!validation.valid) {
@@ -238,21 +248,6 @@ function objectValue(value: unknown): Readonly<Record<string, unknown>> {
   return typeof value === "object" && value !== null && !Array.isArray(value)
     ? (value as Readonly<Record<string, unknown>>)
     : {};
-}
-
-function positionFrontmatter(position: ReadingPosition): Readonly<Record<string, unknown>> {
-  if (position.kind === "pdf") {
-    return { pdf: { page_index: position.pageIndex } };
-  }
-  if (position.kind === "epub") {
-    return { epub: { locator: position.locator } };
-  }
-  return {
-    html: {
-      href: position.href,
-      ...(position.progression === undefined ? {} : { progression: position.progression }),
-    },
-  };
 }
 
 function matchesSearch(source: SourceSummary, search: string | undefined): boolean {

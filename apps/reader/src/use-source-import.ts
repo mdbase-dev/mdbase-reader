@@ -10,6 +10,7 @@ export interface SourceImportFlow {
   readonly progress: SourceImportProgress | null;
   readonly error: string | null;
   readonly choose: () => Promise<void>;
+  readonly accept: (file: PickedFile) => void;
   readonly cancel: () => void;
   readonly importFile: (title: string) => Promise<void>;
 }
@@ -39,6 +40,11 @@ export function useSourceImport(
       );
     }
   }, [pickSourceFile]);
+  const accept = useCallback((selected: PickedFile): void => {
+    setPickError(null);
+    recoveryFile.current = null;
+    setFile(selected);
+  }, []);
   const cancel = useCallback((): void => {
     if (importController.current) {
       if (progress?.phase === "creating") {
@@ -96,6 +102,7 @@ export function useSourceImport(
     progress,
     error: workspace.importError ?? pickError,
     choose,
+    accept,
     cancel,
     importFile,
   };

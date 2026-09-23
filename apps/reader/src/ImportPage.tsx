@@ -51,12 +51,12 @@ export function ImportPage({ service }: { service: "home" | "zotero" | "readwise
         <ProductBrand />
         <a href={`${import.meta.env.BASE_URL}${location.search}`}>Back to library</a>
       </header>
-      <nav aria-label="Import navigation">
-        <a href={importHref()}>Import a library</a>
-        {service !== "home" ? (
+      {service !== "home" ? (
+        <nav aria-label="Import navigation">
+          <a href={importHref()}>Import a library</a>
           <span> / {service === "zotero" ? "Zotero" : "Readwise Reader"}</span>
-        ) : null}
-      </nav>
+        </nav>
+      ) : null}
       <h1>
         {service === "home"
           ? "Bring your library with you."
@@ -84,7 +84,8 @@ export function ImportPage({ service }: { service: "home" | "zotero" | "readwise
           {opened ? <ImportConfirm state={state} opened={opened} controller={controller} /> : null}
         </>
       )}
-      <ImportStatus state={state} controller={controller} />
+      {/* Connection problems matter once a service is chosen, not on the landing page. */}
+      {service !== "home" ? <ImportStatus state={state} controller={controller} /> : null}
     </main>
   );
 }

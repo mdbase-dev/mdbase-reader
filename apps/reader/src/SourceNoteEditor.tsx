@@ -1,14 +1,15 @@
-import { lazy, Suspense, useContext, useMemo, useState, type JSX } from "react";
+import { lazy, Suspense, useContext, useMemo, useState, type JSX, type ReactNode } from "react";
 
 import { annotationWikiCandidate, annotationWikiPath } from "./annotation-wiki-candidates.js";
 import { DraftRecoveryNotice } from "./DraftRecoveryNotice.js";
-import { CitationIcon, HighlightIcon } from "./icons.js";
-import { shortcutLabel, useDismissableDetails } from "./Menu.js";
+import { CodeIcon, LinkIcon, ListIcon, QuoteIcon } from "./icons.js";
+import { shortcutLabel } from "./Menu.js";
 import {
   sourceNoteCitationCandidates,
   sourceNoteWikiCandidates,
 } from "./source-note-references.js";
 import { SourceLibraryContext } from "./SourceLibraryContext.js";
+import { SourceNoteInsertMenu } from "./SourceNoteInsertMenu.js";
 
 import type { AnnotationComposerController } from "./use-annotation-composer.js";
 import type { ReaderSourceWorkspaceController } from "./use-reader-workspace.js";
@@ -79,28 +80,18 @@ export function SourceNoteEditor({
     <>
       <div className="source-note-toolbar">
         <MarkdownFormatToolbar onFormat={format} />
-        <div className="source-note-actions">
-          <SaveStatus
-            status={workspace.saveStatus}
-            locallySaved={workspace.draftRecovery?.locallySaved ?? false}
-            conflict={Boolean(workspace.draftRecovery?.conflict)}
-          />
-          <AnnotationInsertMenu
-            candidates={annotationCandidates}
-            draft={workspace.draft}
-            onInsert={(path) => insert(`![[${path}]]`)}
-          />
-          <button
-            type="button"
-            disabled={!citekey}
-            title={citekey ? `Insert [@${citekey}] at the cursor` : "Add citation metadata first"}
-            aria-label={citekey ? `Insert citation ${citekey}` : "Citation metadata required"}
-            onPointerDown={(event) => event.preventDefault()}
-            onClick={() => citekey && insert(`[@${citekey}]`, true)}
-          >
-            <CitationIcon /> Citation
-          </button>
-        </div>
+        <SaveStatus
+          status={workspace.saveStatus}
+          locallySaved={workspace.draftRecovery?.locallySaved ?? false}
+          conflict={Boolean(workspace.draftRecovery?.conflict)}
+        />
+        <SourceNoteInsertMenu
+          citekey={citekey}
+          candidates={annotationCandidates}
+          draft={workspace.draft}
+          onInsertCitation={(key) => insert(`[@${key}]`, true)}
+          onInsertAnnotation={(path) => insert(`![[${path}]]`)}
+        />
       </div>
       <DraftRecoveryNotice workspace={workspace} />
       <Suspense fallback={<div className="editor-loading">Opening source note…</div>}>
@@ -179,72 +170,44 @@ function SaveStatus({
   const label = conflict
     ? "Conflict"
     : status === "saving"
-      ? "Saving to collection…"
+      ? "Saving…"
       : status === "saved"
-        ? "Saved to collection"
+        ? "Saved"
         : locallySaved
           ? "Saved locally"
           : "Not saved";
+  const detail = conflict
+    ? "The collection changed while you were editing. Review the conflict to continue."
+    : status === "saved"
+      ? "Saved to your collection"
+      : locallySaved
+        ? "Kept on this device until the collection can be reached"
+        : undefined;
   return (
-    <span className={`source-note-save-state is-${status}`} role="status" aria-live="polite">
+    <span
+      className={`source-note-save-state is-${conflict ? "error" : status}`}
+      role="status"
+      aria-live="polite"
+      title={detail}
+    >
       {label}
     </span>
-  );
-}
-
-function AnnotationInsertMenu({
-  candidates,
-  draft,
-  onInsert,
-}: {
-  readonly candidates: readonly ReturnType<typeof annotationWikiCandidate>[];
-  readonly draft: string;
-  readonly onInsert: (path: string) => void;
-}): JSX.Element {
-  const ref = useDismissableDetails();
-  return (
-    <details ref={ref} className="annotation-insert-menu">
-      <summary aria-disabled={candidates.length === 0}>
-        <HighlightIcon /> Annotation
-      </summary>
-      <div>
-        <strong>Annotations on this source</strong>
-        {candidates.map((candidate) => {
-          const embedded = draft.includes(`![[${candidate.path}]]`);
-          return (
-            <button
-              key={candidate.path}
-              type="button"
-              disabled={embedded}
-              title={embedded ? "Already embedded in this note" : "Insert at the cursor"}
-              onClick={() => onInsert(candidate.path)}
-            >
-              <span>
-                {embedded ? "In note" : candidate.kind} · {candidate.detail}
-              </span>
-              <strong>{candidate.label}</strong>
-              {candidate.quote ? <small>{candidate.quote}</small> : null}
-            </button>
-          );
-        })}
-      </div>
-    </details>
   );
 }
 
 const formatActions: readonly {
   readonly name: MarkdownCommandName;
   readonly label: string;
-  readonly symbol: string;
+  readonly symbol: ReactNode;
   readonly shortcut: string;
 }[] = [
-  { name: "strong", label: "Bold", symbol: "B", shortcut: "mod+b" },
-  { name: "emphasis", label: "Italic", symbol: "I", shortcut: "mod+i" },
-  { name: "link", label: "Link", symbol: "↗", shortcut: "mod+k" },
-  { name: "heading", label: "Heading", symbol: "H", shortcut: "mod+alt+2" },
-  { name: "quote", label: "Quote", symbol: "“", shortcut: "mod+shift+." },
-  { name: "bullet-list", label: "Bullet list", symbol: "•", shortcut: "mod+shift+8" },
-  { name: "inline-code", label: "Inline code", symbol: "<>", shortcut: "mod+`" },
+  { name: "strong", label: "Bold", symbol: <b>B</b>, shortcut: "mod+b" },
+  { name: "emphasis", label: "Italic", symbol: <em>I</em>, shortcut: "mod+i" },
+  { name: "heading", label: "Heading", symbol: <b>H</b>, shortcut: "mod+alt+2" },
+  { name: "link", label: "Link", symbol: <LinkIcon />, shortcut: "mod+k" },
+  { name: "quote", label: "Quote", symbol: <QuoteIcon />, shortcut: "mod+shift+." },
+  { name: "bullet-list", label: "Bullet list", symbol: <ListIcon />, shortcut: "mod+shift+8" },
+  { name: "inline-code", label: "Inline code", symbol: <CodeIcon />, shortcut: "mod+`" },
 ];
 
 function MarkdownFormatToolbar({
@@ -263,7 +226,7 @@ function MarkdownFormatToolbar({
           onPointerDown={(event) => event.preventDefault()}
           onClick={() => onFormat(action.name)}
         >
-          {action.name === "emphasis" ? <em>{action.symbol}</em> : action.symbol}
+          {action.symbol}
         </button>
       ))}
     </div>

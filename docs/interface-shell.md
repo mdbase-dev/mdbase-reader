@@ -34,6 +34,36 @@ action, and one stylesheet section for each redesigned component.
 - **Mobile.** The tab switcher reads as a title with a chevron and tab count; side panels show
   Back.
 
+## Reading and editing (second pass)
+
+- **Highlight card beside the selection.** Text selections carry an optional `anchor`
+  (`ViewportRect` in `@mdbase-reader/reading-surface`), filled by the HTML and EPUB renderers
+  from the selected range. PDF text and area selections fall back to where the pointer was
+  released. `useSelectionAnchor` keeps an anchor only for the selection just made and drops it
+  when the document moves, so resumed drafts and scrolled pages dock at the bottom as before.
+  Panes narrower than 520px always dock, leaving room for native selection handles.
+- **Contents.** An optional `contents` capability lists a document's sections: Readium's table
+  of contents for EPUB, and `h1`–`h3` headings for saved web pages with more than one heading.
+  The document toolbar shows a Contents menu when it exists. PDFs keep EmbedPDF's own outline.
+- **Reading status in the library.** The Status column is an inline control when the gateway
+  implements `saveReadingStatus`. Connect writes `reading.status`, sets `finished_at` (and a
+  missing `started_at`) on finishing, and clears `finished_at` when a source is reopened, per
+  DATA_MODEL §17. The library table prefers the library's copy of each source, so changes appear
+  at once.
+- **Keyboard.** `/` focuses the search of a focused library tab, otherwise the Sources filter.
+  Arrow keys and j/k move between library rows; Enter opens.
+- **Adding sources.** Drop a PDF, EPUB or saved page anywhere in Reader, or on the add dialog.
+  The dialog pastes a link and saves it in one row, and closes on an outside click.
+- **Source note.** One toolbar: formatting, a quiet save state, and an Insert menu for the
+  citation and the source's annotations. Annotation and note editors both say "Saved".
+- **Citation editor.** The panel no longer overflows its column, short fields share rows,
+  labels use the interface type scale, and Save is a compact primary button.
+- **Import pages and sign-in.** Steps are numbered by what is shown, the folder picker is
+  styled, connection states read as sentences, the landing page no longer reports Connect
+  errors, and the sign-in screen states an error once.
+- `--sans`, `--serif` and `--surface` were referenced but never defined, which silently
+  discarded several `font` declarations. They are now defined in `reader-shell.css`.
+
 ## Stylesheets
 
 `src/reader-shell.css` loads last and owns the header, menus, Sources sidebar, library tab,
@@ -55,6 +85,9 @@ buttons, selects and inputs now inherit the interface font.
 - `pnpm --filter @mdbase-reader/app test`, typecheck, architecture and specification checks.
 - `src/reader-shell.test.tsx` covers shortcut labels, palette grouping and de-duplication,
   empty-column hiding, the quiet connection state and the Display menu.
+- `src/reader-delight.test.ts`, `packages/connect/src/reading-status.test.ts` and
+  `packages/renderer-html/src/html-surface.test.ts` cover composer placement, dropped file types,
+  reading-status transitions and contents availability.
 - `pnpm --filter @mdbase-reader/app test:browser` passes all 37 checks with the audits updated
   for the renamed controls (Display menu, Search and commands, Sources tab, Available offline,
   annotation filter menu).
