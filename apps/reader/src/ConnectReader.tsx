@@ -10,6 +10,7 @@ import { connectionStatus, isLocalhost, requiresAccessReview } from "./connectio
 import { ConnectionLayout, ConnectionRetry } from "./ConnectionLayout.js";
 import { readerErrorMessage } from "./errors.js";
 import { ReaderApp } from "./ReaderApp.js";
+import { requestedSourceId } from "./SourceDeepLink.js";
 
 const subscribe = (listener: () => void): (() => void) => readerSession.subscribe(listener);
 const snapshot = (): ReaderConnectSnapshot => readerSession.getSnapshot();
@@ -88,6 +89,7 @@ function OpenedReader({ collectionId }: { readonly collectionId: string }): JSX.
     <ReaderApp
       key={collectionId}
       gateway={gateway}
+      initialSourceId={requestedSourceId(location.href, collectionId)}
       directAccess={opened.directAccess}
       saveFile={(name, blob) => readerPlatform.saveFile(name, blob)}
       pickSourceFile={() =>

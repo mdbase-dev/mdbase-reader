@@ -2,6 +2,13 @@ import type { ReaderConnectedCollection } from "@mdbase-reader/connect";
 import type { SourceSummary } from "@mdbase-reader/core";
 import type { KeyValueStorage } from "@mdbase-reader/platform";
 
+export function readerSourceUrl(source: Pick<SourceSummary, "collectionId" | "id">): string {
+  const url = new URL("https://lab.mdbase-reader.pages.dev/");
+  url.searchParams.set("collection", source.collectionId);
+  url.searchParams.set("source", source.id);
+  return url.href;
+}
+
 export async function sourceForUrl(
   collection: ReaderConnectedCollection,
   value: string,

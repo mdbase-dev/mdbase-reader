@@ -13,6 +13,7 @@ import { ReaderWorkspaceView, type ReaderWorkspaceViewModel } from "./ReaderWork
 import { updateSurface } from "./RenderedSourceDocument.js";
 import { SessionReadingLocations } from "./session-reading-locations.js";
 import { SourceLibraryContext } from "./SourceLibraryContext.js";
+import { SourceDeepLink } from "./SourceDeepLink.js";
 import { useBibliographyExport } from "./use-bibliography-export.js";
 import { useDeploymentUpdate } from "./use-deployment-update.js";
 import { useDirectAccess } from "./use-direct-access.js";
@@ -31,6 +32,7 @@ import type { ReadingSurface } from "@mdbase-reader/reading-surface";
 
 export interface ReaderAppProps {
   readonly gateway: ReaderWorkspaceGateway;
+  readonly initialSourceId?: string | null;
   readonly directAccess?: ReaderDirectAccessController;
   readonly renderDocument?: SourceDocumentRenderer;
   readonly pickSourceFile?: () => Promise<PickedFile | null>;
@@ -39,6 +41,7 @@ export interface ReaderAppProps {
 
 export function ReaderApp({
   gateway,
+  initialSourceId = null,
   directAccess,
   renderDocument,
   pickSourceFile,
@@ -56,6 +59,7 @@ export function ReaderApp({
   return (
     <OpenedReaderApp
       gateway={gateway}
+      initialSourceId={initialSourceId}
       {...(directAccess ? { directAccess } : {})}
       workspace={workspace}
       library={workspace.library.value}
@@ -68,6 +72,7 @@ export function ReaderApp({
 
 function OpenedReaderApp({
   gateway,
+  initialSourceId = null,
   directAccess,
   workspace,
   library,
@@ -177,6 +182,7 @@ function OpenedReaderApp({
   } satisfies ReaderWorkspaceViewModel;
   return (
     <SourceLibraryContext value={library.sources}>
+      <SourceDeepLink id={initialSourceId} library={library} open={sourceWorkspace.open} />
       <ReaderWorkspaceView model={model} />
     </SourceLibraryContext>
   );

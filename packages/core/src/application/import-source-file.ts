@@ -103,8 +103,20 @@ async function planSourceFileImport(
     savedAt: dependencies.clock.now(),
     recordPath: `sources/${sourceIdentity}.md`,
     representations: archive ? [primary, archive] : [primary],
+    ...authoredImportFields(request),
     ...(capture ? { capture } : {}),
     ...(request.metadata ? { metadata: validateMetadata(request.metadata) } : {}),
+  };
+}
+
+function authoredImportFields(
+  request: SourceFileImportRequest,
+): Pick<PlannedSourceFileImport, "body" | "tags"> {
+  return {
+    ...(request.body !== undefined ? { body: request.body } : {}),
+    ...(request.tags
+      ? { tags: [...new Set(request.tags.map((tag) => tag.trim()).filter(Boolean))] }
+      : {}),
   };
 }
 

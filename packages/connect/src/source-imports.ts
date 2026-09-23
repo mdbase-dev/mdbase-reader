@@ -1,8 +1,3 @@
-import { sourceContract } from "./contracts.js";
-import { sourceFromDocument, sourceSummaryFromQuery } from "./mapping.js";
-import { ConnectRepositoryError, outcomeValue } from "./repository-client.js";
-
-import type { ReaderConnectClient } from "./repository-client.js";
 import {
   MdbaseConnectError,
   type CollectionFileDescriptor,
@@ -12,6 +7,12 @@ import {
   type MdbaseFileUploadOptions,
   type RecordDocument,
 } from "@mdbase-dev/connect";
+
+import { sourceContract } from "./contracts.js";
+import { sourceFromDocument, sourceSummaryFromQuery } from "./mapping.js";
+import { ConnectRepositoryError, outcomeValue } from "./repository-client.js";
+
+import type { ReaderConnectClient } from "./repository-client.js";
 import type {
   CollectionId,
   PlannedSourceFileImport,
@@ -129,7 +130,7 @@ export class ConnectSourceImportRepository implements SourceImportRepository {
       path: plan.recordPath,
       type: "reader-source",
       frontmatter: sourceFrontmatter(plan, descriptors),
-      body: `# ${plan.title}\n`,
+      body: plan.body ?? `# ${plan.title}\n`,
       includeDocument: true,
     });
     const document = created.ok ? created.value : await this.recoverCreatedSource(plan, created);
@@ -216,6 +217,7 @@ function sourceFrontmatter(
     title: plan.title,
     kind: plan.kind,
     saved_at: plan.savedAt,
+    ...(plan.tags ? { tags: plan.tags } : {}),
     ...(metadata?.authors?.length ? { authors: metadata.authors } : {}),
     ...(metadata?.published ? { published: metadata.published } : {}),
     ...(metadata?.description ? { description: metadata.description } : {}),

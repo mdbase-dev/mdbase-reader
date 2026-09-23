@@ -1,7 +1,8 @@
 // @vitest-environment happy-dom
 import { beforeEach, describe, expect, it } from "vitest";
 
-import { capturePage, markQuotes } from "./page-capture.js";
+import { pageAnnotations } from "./page-annotations.js";
+import { capturePage } from "./page-capture.js";
 
 describe("extension page capture", () => {
   beforeEach(() => {
@@ -27,9 +28,11 @@ describe("extension page capture", () => {
   it("renders only uniquely anchored quotations", () => {
     document.body.innerHTML =
       "<p>The exact durable quotation appears here.</p><p>Repeated quote.</p><p>Repeated quote.</p>";
-    expect(markQuotes([{ exact: "exact durable quotation" }, { exact: "Repeated quote" }])).toBe(1);
-    expect(document.querySelector("mark[data-mdbase-reader-annotation]")?.textContent).toBe(
-      "exact durable quotation",
-    );
+    expect(
+      pageAnnotations({
+        action: "locate",
+        quotes: [{ exact: "exact durable quotation" }, { exact: "Repeated quote" }],
+      }).report,
+    ).toEqual({ total: 2, shown: 1, missing: 0, ambiguous: 1 });
   });
 });

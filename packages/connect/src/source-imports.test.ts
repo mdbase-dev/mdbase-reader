@@ -90,6 +90,21 @@ describe("ConnectSourceImportRepository", () => {
     });
   });
 
+  it("stores an authored capture note and tags in the source creation, not a later overwrite", async () => {
+    const create = vi.fn(() => Promise.resolve(success(recordDocument())));
+    const repository = new ConnectSourceImportRepository(
+      { create } as unknown as ReaderConnectClient,
+      { upload: vi.fn(() => Promise.resolve(fileDescriptor())) },
+    );
+    await repository.commitFile({ ...plan(), body: "An **authored** note.\n", tags: ["research"] });
+    expect(create).toHaveBeenCalledWith(
+      expect.objectContaining({
+        body: "An **authored** note.\n",
+        frontmatter: expect.objectContaining({ tags: ["research"] }),
+      }),
+    );
+  });
+
   it("recovers an ambiguous record create without issuing another mutation", async () => {
     const failure = {
       ok: false,

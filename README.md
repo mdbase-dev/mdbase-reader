@@ -54,7 +54,7 @@ Staging builds use the separate `staging` Pages branch and
 Conflicting environment selectors are rejected. Switching from the former staging-backed
 site may require authorizing Reader against production; collection data is not migrated.
 
-## Browser extension (staging)
+## Browser extension (LAB)
 
 Build the unpacked Manifest V3 extension with:
 
@@ -62,19 +62,37 @@ Build the unpacked Manifest V3 extension with:
 pnpm --filter @mdbase-reader/extension build
 ```
 
-Load `apps/extension/dist` as an unpacked extension in a Chromium browser. The toolbar action
-captures the active HTTPS tab, extracts its primary article with Mozilla Readability, and saves the
-readable HTML plus a form-value-free DOM archive directly through the mdbase SDK. The extension is
-currently pinned to `https://connect-staging.mdbase.dev` and opens saved sources in
-`https://mdbase-reader.pages.dev`.
+Load `apps/extension/dist` as an unpacked extension in Chrome 123 or newer (reload it after
+rebuilding). The toolbar action captures the active HTTPS tab. Choose the destination collection,
+edit the title, optionally add tags and a source note, then explicitly **Save source**. Reader extracts
+the primary article with Mozilla Readability and saves readable HTML plus a form-value-free DOM
+archive through the mdbase SDK. Opening the popup or changing collections never auto-saves. The extension is
+currently pinned to `https://connect-lab.mdbase.dev` and opens saved sources in
+`https://lab.mdbase-reader.pages.dev`. Start the isolated LAB desktop profile with
+`bin/mdbase-env lab desktop` from the cloud-ops checkout; its connector uses
+`http://127.0.0.1:28487`. Reload the unpacked extension and reauthorize it for LAB after
+switching environments. This build does not save to staging or production.
 
-The first capture opens the SDK's device-code authorization flow. Reader stores the approved grant
-and non-extractable signing keys inside the extension origin. Capture access uses `activeTab`; the
-extension does not request permanent access to every website. Its sole persistent host permission
-is the staging mdbase Connect API, which is required for SDK record and binary-file traffic and
-cannot read browsing pages. When an already-saved page has text annotations, **Show annotations
-here** projects only uniquely matching text quotes onto the live page. The captured Reader document
-remains the canonical annotation target.
+**Connect to LAB** opens the SDK's device-code authorization flow. Reader stores the approved grant
+and non-extractable signing keys inside the extension origin. Extension fetches explicitly omit
+portal cookies; the SDK's signed grants remain the authorization mechanism. Capture access uses
+`activeTab`; selection actions use `contextMenus`. The extension does not request permanent access
+to every website. Its sole persistent host permission
+is the LAB mdbase Connect API, which is required for SDK record and binary-file traffic and
+cannot read browsing pages.
+
+Select text on a website and use the toolbar or right-click **Save highlight to mdbase Reader** /
+**Add a note in mdbase Reader**. Review the selected passage, optionally add a comment, and explicitly
+save. Reader saves the source if necessary and verifies the saved HTML revision before anchoring the
+highlight. Missing or ambiguous passages never receive fabricated targets; the comment stays in the
+popup for retry. Existing source metadata is not overwritten. Unsaved comments are held in memory,
+not durable drafts: keep the popup open until saving completes.
+
+**Show highlights on this page** uses non-destructive CSS Highlights, supporting inline formatting,
+multiple and overlapping passages. It reports missing/ambiguous matches without guessing. **Open saved
+copy in Reader** links to the exact collection and source; the captured document remains canonical.
+The receiving Reader build must include the source deep-link handler. See
+[extension capture improvements and validation](docs/extension-capture-improvements.md).
 
 ## Zotero migration exporter (experimental)
 

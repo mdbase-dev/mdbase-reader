@@ -1,15 +1,16 @@
 import { describe, expect, it } from "vitest";
 
-import type { ReaderConnectedCollection } from "@mdbase-reader/connect";
-import type { SourceSummary } from "@mdbase-reader/core";
-
 import {
   normalizedUrl,
   problemMessage,
+  readerSourceUrl,
   sameNormalizedUrl,
   sourceForUrl,
   tabIdParameter,
 } from "./capture-model.js";
+
+import type { ReaderConnectedCollection } from "@mdbase-reader/connect";
+import type { SourceSummary } from "@mdbase-reader/core";
 
 describe("extension capture model", () => {
   it("normalizes tracking parameters without discarding meaningful query state", () => {
@@ -38,7 +39,7 @@ describe("extension capture model", () => {
       collectionId: "library",
       sources: {
         listPages: async function* () {
-          yield { items: [malformed, matching] };
+          yield await Promise.resolve({ items: [malformed, matching] });
         },
       },
     } as unknown as ReaderConnectedCollection;
@@ -46,6 +47,15 @@ describe("extension capture model", () => {
     await expect(
       sourceForUrl(collection, "https://en.wikipedia.org/wiki/European_rabbit"),
     ).resolves.toBe(matching);
+  });
+
+  it("links to the exact source and collection, not just the library", () => {
+    const url = new URL(
+      readerSourceUrl({ collectionId: "test collection", id: "source & id" } as SourceSummary),
+    );
+    expect(url.origin).toBe("https://lab.mdbase-reader.pages.dev");
+    expect(url.searchParams.get("collection")).toBe("test collection");
+    expect(url.searchParams.get("source")).toBe("source & id");
   });
 
   it("requires a valid source tab", () => {
