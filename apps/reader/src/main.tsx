@@ -7,6 +7,8 @@ import "./reader-improvements.css";
 import "./annotation-polish.css";
 
 import { ConnectReader } from "./ConnectReader.js";
+import { ImportPage } from "./ImportPage.js";
+import { importService } from "./import-navigation.js";
 import { EnvironmentBadge } from "./EnvironmentBadge.js";
 import { PreviewReader } from "./preview.js";
 import "./environment-badge.css";
@@ -15,9 +17,16 @@ const root = document.querySelector<HTMLElement>("#root");
 if (!root) {
   throw new Error("Reader root element is missing.");
 }
+const migrationService = importService(location.pathname);
 createRoot(root).render(
   <StrictMode>
     <EnvironmentBadge />
-    {new URL(location.href).searchParams.has("preview") ? <PreviewReader /> : <ConnectReader />}
+    {migrationService ? (
+      <ImportPage service={migrationService} />
+    ) : new URL(location.href).searchParams.has("preview") ? (
+      <PreviewReader />
+    ) : (
+      <ConnectReader />
+    )}
   </StrictMode>,
 );

@@ -1,18 +1,17 @@
 {
-  "name": "@mdbase-reader/connect",
-  "version": "0.1.0-beta.0",
+  "name": "@mdbase-reader/migration",
+  "version": "0.1.0",
   "private": true,
   "type": "module",
   "exports": {
     ".": "./src/index.ts"
   },
   "scripts": {
-    "test": "vitest run --passWithNoTests",
+    "test": "vitest run",
     "typecheck": "tsc -p tsconfig.json"
   },
   "dependencies": {
-    "@mdbase-dev/connect": "0.1.0-beta.100",
     "@mdbase-reader/core": "workspace:*",
-    "@mdbase-reader/migration": "workspace:*"
+    "pdf-lib": "1.17.1"
   }
 }

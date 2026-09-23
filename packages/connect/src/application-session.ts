@@ -28,6 +28,7 @@ import { connectAnnotationAssetRepository } from "./annotation-assets.js";
 import { connectCollectionFileRepository } from "./collection-files.js";
 import { connectDocumentRepository } from "./documents.js";
 import { connectLibraryViewRepository, type LibraryViewRepository } from "./library-views.js";
+import { ConnectMigrationTarget } from "./migration-target.js";
 import {
   ConnectAnnotationRepository,
   ConnectContentSearchRepository,
@@ -56,6 +57,7 @@ export interface ReaderConnectedCollection {
   readonly collectionName: string;
   readonly sources: SourceRepository;
   readonly sourceImports: SourceImportRepository;
+  readonly migration: ConnectMigrationTarget;
   readonly annotations: AnnotationRepository;
   readonly annotationAssets: AnnotationAssetRepository;
   readonly documents: DocumentRepository;
@@ -112,8 +114,12 @@ export class ReaderApplicationSession {
     return this.#session.select(selectedCollectionId, { history: "replace" });
   }
 
-  public authorize(target: "choose" | "selected"): Promise<ConnectOutcome<unknown>> {
-    return this.#session.authorize(target);
+  public authorize(target: "choose" | "selected", popup = false): Promise<ConnectOutcome<unknown>> {
+    // Human approval and hosted-collection creation must not inherit the 30s RPC budget.
+    return this.#session.authorize(
+      target,
+      popup ? { presentation: "popup", timeoutMs: 10 * 60_000 } : {},
+    );
   }
 
   public applyCollectionSetup(): Promise<ConnectOutcome<ReaderConnectSnapshot>> {
@@ -145,6 +151,7 @@ export function connectedReaderCollection(
     collectionName: snapshot.info.displayName,
     sources: new ConnectSourceRepository(client),
     sourceImports: connectSourceImportRepository(connection, client),
+    migration: new ConnectMigrationTarget(connection),
     annotations: new ConnectAnnotationRepository(client),
     annotationAssets: connectAnnotationAssetRepository(connection),
     documents: connectDocumentRepository(connection),

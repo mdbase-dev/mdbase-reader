@@ -1,6 +1,7 @@
 import { ProductBrand, type ThemePreference } from "@mdbase-reader/ui";
 
 import { LeftPaneIcon, RightPaneIcon, SearchIcon, ThemeIcon } from "./icons.js";
+import { importHref } from "./import-navigation.js";
 
 import type { ReaderDirectAccessState } from "./use-direct-access.js";
 import type { JSX } from "react";
@@ -59,6 +60,15 @@ export function ReaderHeader({
         <ConnectionState state={connectionState} directAccess={directAccess} />
       </div>
       <div className="reader-header-actions">
+        <a
+          className="header-command-button"
+          href={importHref()}
+          target="_blank"
+          rel="noopener noreferrer"
+          aria-label="Import a library (opens in a new tab)"
+        >
+          Import
+        </a>
         {onToggleDensity ? (
           <button
             className="header-density-button"

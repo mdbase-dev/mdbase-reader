@@ -15,6 +15,7 @@
     "@mdbase-reader/app": [
       "@mdbase-reader/connect",
       "@mdbase-reader/core",
+      "@mdbase-reader/migration",
       "@mdbase-reader/markdown-editor",
       "@mdbase-reader/platform",
       "@mdbase-reader/reading-surface",
@@ -24,7 +25,8 @@
       "@mdbase-reader/ui",
       "@mdbase-reader/web-capture"
     ],
-    "@mdbase-reader/connect": ["@mdbase-reader/core"],
+    "@mdbase-reader/migration": ["@mdbase-reader/core"],
+    "@mdbase-reader/connect": ["@mdbase-reader/core", "@mdbase-reader/migration"],
     "@mdbase-reader/core": [],
     "@mdbase-reader/markdown-editor": ["@mdbase-reader/core"],
     "@mdbase-reader/platform": ["@mdbase-reader/core"],

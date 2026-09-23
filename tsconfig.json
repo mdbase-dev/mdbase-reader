@@ -3,6 +3,7 @@
   "files": [],
   "references": [
     { "path": "./packages/core" },
+    { "path": "./packages/migration" },
     { "path": "./packages/reading-surface" },
     { "path": "./packages/connect" },
     { "path": "./packages/renderer-pdf" },
