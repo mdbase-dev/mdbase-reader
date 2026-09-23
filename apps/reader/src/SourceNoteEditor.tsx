@@ -3,6 +3,7 @@ import { lazy, Suspense, useContext, useMemo, useState, type JSX } from "react";
 import { annotationWikiCandidate, annotationWikiPath } from "./annotation-wiki-candidates.js";
 import { DraftRecoveryNotice } from "./DraftRecoveryNotice.js";
 import { CitationIcon, HighlightIcon } from "./icons.js";
+import { shortcutLabel, useDismissableDetails } from "./Menu.js";
 import {
   sourceNoteCitationCandidates,
   sourceNoteWikiCandidates,
@@ -200,8 +201,9 @@ function AnnotationInsertMenu({
   readonly draft: string;
   readonly onInsert: (path: string) => void;
 }): JSX.Element {
+  const ref = useDismissableDetails();
   return (
-    <details className="annotation-insert-menu">
+    <details ref={ref} className="annotation-insert-menu">
       <summary aria-disabled={candidates.length === 0}>
         <HighlightIcon /> Annotation
       </summary>
@@ -236,13 +238,13 @@ const formatActions: readonly {
   readonly symbol: string;
   readonly shortcut: string;
 }[] = [
-  { name: "strong", label: "Bold", symbol: "B", shortcut: "⌘B" },
-  { name: "emphasis", label: "Italic", symbol: "I", shortcut: "⌘I" },
-  { name: "link", label: "Link", symbol: "↗", shortcut: "⌘K" },
-  { name: "heading", label: "Heading", symbol: "H", shortcut: "⌘⌥2" },
-  { name: "quote", label: "Quote", symbol: "“", shortcut: "⌘⇧." },
-  { name: "bullet-list", label: "Bullet list", symbol: "•", shortcut: "⌘⇧8" },
-  { name: "inline-code", label: "Inline code", symbol: "<>", shortcut: "⌘`" },
+  { name: "strong", label: "Bold", symbol: "B", shortcut: "mod+b" },
+  { name: "emphasis", label: "Italic", symbol: "I", shortcut: "mod+i" },
+  { name: "link", label: "Link", symbol: "↗", shortcut: "mod+k" },
+  { name: "heading", label: "Heading", symbol: "H", shortcut: "mod+alt+2" },
+  { name: "quote", label: "Quote", symbol: "“", shortcut: "mod+shift+." },
+  { name: "bullet-list", label: "Bullet list", symbol: "•", shortcut: "mod+shift+8" },
+  { name: "inline-code", label: "Inline code", symbol: "<>", shortcut: "mod+`" },
 ];
 
 function MarkdownFormatToolbar({
@@ -257,7 +259,7 @@ function MarkdownFormatToolbar({
           key={action.name}
           type="button"
           aria-label={action.label}
-          title={`${action.label} · ${action.shortcut}`}
+          title={`${action.label} · ${shortcutLabel(action.shortcut)}`}
           onPointerDown={(event) => event.preventDefault()}
           onClick={() => onFormat(action.name)}
         >

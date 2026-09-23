@@ -9,6 +9,9 @@ import type {
 } from "dockview-react";
 
 const positions = ["left", "right"] as const;
+function sidePanelTitle(id: string): string {
+  return id === navigatorPanelId ? "Sources" : "Source tools";
+}
 function edgeGroup(api: DockviewApi, id: string, width: number): DockviewGroupPanel {
   const position = id === navigatorPanelId ? "left" : "right";
   const edge =
@@ -101,7 +104,17 @@ export class DockviewSidePanels {
   }
   initialize(): void {
     const api = this.current();
-    if (!api || this.mobile()) {
+    if (!api) {
+      return;
+    }
+    // Saved layouts keep the titles they were created with.
+    for (const id of [navigatorPanelId, inspectorPanelId]) {
+      const panel = api.getPanel(id);
+      if (panel && panel.title !== sidePanelTitle(id)) {
+        panel.api.setTitle(sidePanelTitle(id));
+      }
+    }
+    if (this.mobile()) {
       return;
     }
     for (const position of positions) {
@@ -142,7 +155,7 @@ export class DockviewSidePanels {
     api.addPanel({
       id,
       component: id === navigatorPanelId ? "navigator" : "inspector",
-      title: id === navigatorPanelId ? "Library navigator" : "Source tools",
+      title: sidePanelTitle(id),
       renderer: "always",
       inactive: !activate,
       minimumWidth: 180,

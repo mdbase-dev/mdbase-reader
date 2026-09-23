@@ -81,13 +81,7 @@ export function LibraryTextSearch({
           : "Searches source notes and annotation text, not PDF, EPUB or saved-page contents."}
       </p>
       {problem ? <p role="alert">{problem}</p> : null}
-      <p role="status">
-        {normalized.length < 2
-          ? "Enter at least two characters."
-          : scope === "notes" && !current
-            ? "Searching notes and annotations…"
-            : `${String(visible.length)} matching sources`}
-      </p>
+      <p role="status">{searchStatus(normalized, scope === "notes" && !current, visible.length)}</p>
       {scope === "documents" ? (
         <p className="search-coverage">
           Open a result, then use the document’s Find control to locate the passage.
@@ -144,4 +138,14 @@ function Excerpt({ value }: { readonly value: SearchExcerpt }): JSX.Element {
       {value.after}
     </p>
   );
+}
+
+function searchStatus(query: string, searching: boolean, count: number): string {
+  if (query.length < 2) {
+    return "Enter at least two characters.";
+  }
+  if (searching) {
+    return "Searching notes and annotations…";
+  }
+  return `${String(count)} matching ${count === 1 ? "source" : "sources"}`;
 }

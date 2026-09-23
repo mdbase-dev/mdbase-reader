@@ -1,5 +1,7 @@
 import { ReaderButton } from "@mdbase-reader/ui";
 
+import { NoteIcon } from "./icons.js";
+
 import type { ReadingResumeState } from "./use-reading-resume.js";
 import type { JSX } from "react";
 
@@ -17,30 +19,28 @@ export function DocumentStatus({
       </span>
     );
   }
-  if (reading.status === "idle") {
+  // Saving and saved are routine; only a failure needs the reader's attention.
+  if (reading.status !== "error") {
     return <span className="reading-position-status" />;
   }
-  const label =
-    reading.status === "saving"
-      ? "Saving position…"
-      : reading.status === "saved"
-        ? "Position saved"
-        : (reading.message ?? "Position not saved");
   return (
-    <span className={`reading-position-status is-${reading.status}`} title={label}>
-      {reading.status === "error" ? "Position not saved" : label}
+    <span
+      className="reading-position-status is-error"
+      title={reading.message ?? "Reader could not save your place in this document."}
+    >
+      Position not saved
     </span>
   );
 }
 
-export function DocumentEmpty({ onAddSource }: { readonly onAddSource: () => void }): JSX.Element {
+export function DocumentEmpty({ onOpenNote }: { readonly onOpenNote: () => void }): JSX.Element {
   return (
     <div className="document-empty">
       <div>
-        <span className="mono">Note-only source</span>
-        <h2>There’s no document to read.</h2>
-        <p>The source note, annotations, and citation remain available in Source tools.</p>
-        <ReaderButton onClick={onAddSource}>Add another source</ReaderButton>
+        <NoteIcon />
+        <h2>No document attached</h2>
+        <p>This is a note-only source. Its note, annotations and citation are in Source tools.</p>
+        <ReaderButton onClick={onOpenNote}>Open source note</ReaderButton>
       </div>
     </div>
   );

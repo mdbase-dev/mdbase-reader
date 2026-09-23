@@ -7,6 +7,7 @@ import {
   MoreIcon,
   NoteIcon,
 } from "./icons.js";
+import { Menu } from "./Menu.js";
 import { DocumentStatus } from "./WorkspacePaneSupport.js";
 
 import type { SourceWorkspacePane } from "./source-workspace-layout.js";
@@ -57,50 +58,47 @@ export function DocumentContextualToolbar({
           <span>{selectingArea ? "Cancel" : "Select area"}</span>
         </button>
       ) : null}
-      <details className="document-actions-menu toolbar-menu">
-        <summary className="icon-button" aria-label="More document actions" title="More actions">
-          <MoreIcon />
-        </summary>
-        <div>
-          <button
-            type="button"
-            onClick={() => workspace.openView(source.id, "annotations", pane.id)}
-          >
-            <HighlightIcon /> Annotations
-          </button>
-          <button type="button" onClick={() => workspace.openView(source.id, "note", pane.id)}>
-            <NoteIcon /> Source note
-          </button>
-          <button type="button" onClick={() => workspace.openView(source.id, "citation", pane.id)}>
-            <CitationIcon /> Citation
-          </button>
-          <i />
-          <button type="button" onClick={() => workspace.openBeside(source.id, "note")}>
-            <NoteIcon /> Open note beside
-          </button>
-          <button
-            type="button"
-            className={focusMode ? "is-active" : undefined}
-            onClick={onToggleFocus}
-          >
-            <FocusIcon /> {focusMode ? "Exit focus mode" : "Focus on document"}
-          </button>
-          <button
-            type="button"
-            disabled={!sourceExport.available || sourceExport.status === "exporting"}
-            onClick={sourceExport.run}
-          >
-            <DownloadIcon />
-            {sourceExport.status === "exporting" ? "Preparing export…" : "Export source"}
-          </button>
-          <DocumentStatus reading={readingResume} decorationProblem={decorationProblem} />
-          {sourceExport.message ? (
-            <p className={`source-export-message is-${sourceExport.status}`}>
-              {sourceExport.message}
-            </p>
-          ) : null}
-        </div>
-      </details>
+      <DocumentStatus reading={readingResume} decorationProblem={decorationProblem} />
+      <Menu
+        className="document-actions-menu"
+        label="More document actions"
+        title="More actions"
+        trigger={<MoreIcon />}
+      >
+        <button type="button" onClick={() => workspace.openView(source.id, "annotations", pane.id)}>
+          <HighlightIcon /> Annotations
+        </button>
+        <button type="button" onClick={() => workspace.openView(source.id, "note", pane.id)}>
+          <NoteIcon /> Source note
+        </button>
+        <button type="button" onClick={() => workspace.openView(source.id, "citation", pane.id)}>
+          <CitationIcon /> Citation
+        </button>
+        <hr />
+        <button type="button" onClick={() => workspace.openBeside(source.id, "note")}>
+          <NoteIcon /> Open note beside
+        </button>
+        <button
+          type="button"
+          className={focusMode ? "is-active" : undefined}
+          onClick={onToggleFocus}
+        >
+          <FocusIcon /> {focusMode ? "Exit focus mode" : "Focus on document"}
+        </button>
+        <button
+          type="button"
+          disabled={!sourceExport.available || sourceExport.status === "exporting"}
+          onClick={sourceExport.run}
+        >
+          <DownloadIcon />
+          {sourceExport.status === "exporting" ? "Preparing export…" : "Export source"}
+        </button>
+        {sourceExport.message ? (
+          <p className={`menu-note${sourceExport.status === "error" ? " is-error" : ""}`}>
+            {sourceExport.message}
+          </p>
+        ) : null}
+      </Menu>
     </div>
   );
 }

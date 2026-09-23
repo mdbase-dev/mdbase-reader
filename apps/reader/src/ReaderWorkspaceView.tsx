@@ -5,6 +5,7 @@ import { CommandPalette } from "./CommandPalette.js";
 import { DeploymentUpdateNotice } from "./DeploymentUpdateNotice.js";
 import { inspectorPanelId, navigatorPanelId } from "./dockview-workspace-state.js";
 import { DockviewWorkspace } from "./DockviewWorkspace.js";
+import { importHref } from "./import-navigation.js";
 import { inspectorSourceForTab } from "./inspector-source.js";
 import { InspectorPane, type InspectorTab } from "./InspectorPane.js";
 import { LibraryNavigator } from "./LibraryNavigator.js";
@@ -60,7 +61,7 @@ export interface ReaderWorkspaceViewModel {
   readonly deploymentUpdateAvailable: boolean;
   readonly directAccess: ReaderDirectAccessState;
   readonly theme: ThemePreference;
-  readonly changeTheme: () => void;
+  readonly changeTheme: (theme: ThemePreference) => void;
   readonly focusMode: boolean;
   readonly focusChromeVisible: boolean;
   readonly setFocusMode: (value: boolean | ((current: boolean) => boolean)) => void;
@@ -98,7 +99,10 @@ export function ReaderWorkspaceView({
   );
   const pendingAnnotationRef = useRef<PendingWorkspaceAnnotation | null>(null);
   const routedEditingIdRef = useRef(composer.editingAnnotationId);
-  const commands = commandsForView(model, () => setInspectorOpen((value) => !value));
+  const commands = commandsForView(model, () => setInspectorOpen((value) => !value), {
+    density: shell.value.density,
+    setDensity: (density) => shell.update({ density }),
+  });
   const activeSource = sourceWorkspace.activeSourceId
     ? (library.sources.find(({ id }) => id === sourceWorkspace.activeSourceId) ?? null)
     : null;
@@ -169,11 +173,7 @@ export function ReaderWorkspaceView({
       {model.deploymentUpdateAvailable ? <DeploymentUpdateNotice /> : null}
       <ReaderHeader
         density={shell.value.density}
-        onToggleDensity={() =>
-          shell.update({
-            density: shell.value.density === "comfortable" ? "compact" : "comfortable",
-          })
-        }
+        onChangeDensity={(density) => shell.update({ density })}
         collectionName={library.collectionName}
         connectionState={library.connectionState}
         directAccess={model.directAccess}
@@ -204,7 +204,6 @@ export function ReaderWorkspaceView({
               }}
               onAddSource={sourceAddition.open}
               addingSource={sourceAddition.adding}
-              bibliographyExport={model.bibliographyExport}
             />
           }
           sources={library.sources}
@@ -277,6 +276,7 @@ export function ReaderWorkspaceView({
                 onOpenSource={(id) => sourceWorkspace.open(id)}
                 onOpenBeside={(id) => sourceWorkspace.openBeside(id)}
                 onAddSource={sourceAddition.open}
+                bibliographyExport={model.bibliographyExport}
               />
             );
           }}
@@ -301,7 +301,6 @@ export function ReaderWorkspaceView({
                     }
                   : null
               }
-              onClose={() => setInspectorOpen(false)}
               onTabChange={(inspectorTab) => shell.update({ inspectorTab })}
               onPromote={(tab) => {
                 if (inspectorSource) {
@@ -353,8 +352,14 @@ function findWorkbenchOwner(
 // prettier-ignore
 function focusLibrarySearch(): void { globalThis.setTimeout(() => document.querySelector<HTMLInputElement>("#reader-library-search")?.focus(), 0); }
 
-// prettier-ignore
-function commandsForView(model: ReaderWorkspaceViewModel, toggle: () => void): ReturnType<typeof readerCommands> {
+function commandsForView(
+  model: ReaderWorkspaceViewModel,
+  toggleInspector: () => void,
+  display: {
+    readonly density: "comfortable" | "compact";
+    readonly setDensity: (density: "comfortable" | "compact") => void;
+  },
+): ReturnType<typeof readerCommands> {
   return readerCommands({
     sources: model.library.sources,
     activeSource: model.source,
@@ -364,8 +369,16 @@ function commandsForView(model: ReaderWorkspaceViewModel, toggle: () => void): R
     focusMode: model.focusMode,
     toggleFocus: () => model.setFocusMode((value) => !value),
     toggleLibrary: () => toggleLibrary(model),
-    toggleInspector: toggle,
-    searchLibrary: () => { model.sourceWorkspace.dock.setSideVisible(navigatorPanelId, true); focusLibrarySearch(); },
+    toggleInspector,
+    searchLibrary: () => {
+      model.sourceWorkspace.dock.setSideVisible(navigatorPanelId, true);
+      focusLibrarySearch();
+    },
+    addSource: model.sourceAddition.open,
+    importHref: importHref(),
+    theme: model.theme,
+    setTheme: model.changeTheme,
+    ...display,
   });
 }
 

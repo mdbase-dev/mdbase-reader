@@ -138,3 +138,30 @@ export const AreaIcon = (props: IconProps): JSX.Element => (
     <rect x="8" y="8" width="8" height="8" rx="0.5" strokeDasharray="2 2" />
   </Icon>
 );
+export const ChevronDownIcon = (props: IconProps): JSX.Element => (
+  <Icon {...props}>
+    <path d="m7 10 5 5 5-5" />
+  </Icon>
+);
+export const CheckIcon = (props: IconProps): JSX.Element => (
+  <Icon {...props}>
+    <path d="m5 12.5 4.5 4.5L19 7.5" />
+  </Icon>
+);
+export const OfflineIcon = (props: IconProps): JSX.Element => (
+  <Icon {...props}>
+    <path d="M7 18.5h10.5a4 4 0 0 0 .6-7.95A6 6 0 0 0 6.6 9.2 4.7 4.7 0 0 0 7 18.5Z" />
+    <path d="M12 10v6M9.5 13.5 12 16l2.5-2.5" />
+  </Icon>
+);
+export const FilterIcon = (props: IconProps): JSX.Element => (
+  <Icon {...props}>
+    <path d="M4 6.5h16M7 12h10M10 17.5h4" />
+  </Icon>
+);
+export const ImportIcon = (props: IconProps): JSX.Element => (
+  <Icon {...props}>
+    <path d="M4 14v4.5A1.5 1.5 0 0 0 5.5 20h13a1.5 1.5 0 0 0 1.5-1.5V14" />
+    <path d="M12 4v11M7.5 10.5 12 15l4.5-4.5" />
+  </Icon>
+);

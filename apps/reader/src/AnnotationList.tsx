@@ -2,6 +2,8 @@ import { useState, type JSX } from "react";
 
 import { browseAnnotations, type AnnotationFilter } from "./annotation-list-order.js";
 import { AnnotationCard } from "./AnnotationCard.js";
+import { FilterIcon, SearchIcon } from "./icons.js";
+import { Menu } from "./Menu.js";
 
 import type { AnnotationFileReader } from "./AnnotationImage.js";
 import type { AnnotationTransclusionController } from "./use-annotation-transclusion.js";
@@ -55,43 +57,18 @@ export function AnnotationList({
     !results.some(({ id }) => id === activeId);
   return (
     <>
-      <div className="annotation-browser-controls">
-        <input
-          type="search"
-          aria-label="Search annotations"
-          placeholder="Search quotes and comments…"
-          value={query}
-          onChange={(event) => setQuery(event.target.value)}
-        />
-        <div>
-          <select
-            aria-label="Filter annotations"
-            value={filter}
-            onChange={(event) => setFilter(event.target.value as AnnotationFilter)}
-          >
-            <option value="all">All annotations</option>
-            <option value="comments">With comments</option>
-            <option value="highlight">Highlights</option>
-            <option value="area">Area captures</option>
-          </select>
-          <select
-            aria-label="Sort annotations"
-            value={order}
-            onChange={(event) => setOrder(event.target.value as "document" | "newest")}
-          >
-            <option value="document">Document order</option>
-            <option value="newest">Newest first</option>
-          </select>
-        </div>
-        <small role="status">
-          {results.length} of {annotations.value.length} annotations
-        </small>
-        {hiddenActive ? (
-          <button type="button" onClick={clear}>
-            Show selected annotation (clear filters)
-          </button>
-        ) : null}
-      </div>
+      <AnnotationBrowserControls
+        query={query}
+        filter={filter}
+        order={order}
+        total={annotations.value.length}
+        results={results.length}
+        hiddenActive={hiddenActive}
+        onQueryChange={setQuery}
+        onFilterChange={setFilter}
+        onOrderChange={setOrder}
+        onClear={clear}
+      />
       <div className="annotation-list">
         {!results.length ? (
           <div className="inspector-status">
@@ -145,4 +122,92 @@ function AnnotationListStatus({
     );
   }
   return <></>;
+}
+
+type AnnotationOrder = "document" | "newest";
+
+function AnnotationBrowserControls({
+  query,
+  filter,
+  order,
+  total,
+  results,
+  hiddenActive,
+  onQueryChange,
+  onFilterChange,
+  onOrderChange,
+  onClear,
+}: {
+  readonly query: string;
+  readonly filter: AnnotationFilter;
+  readonly order: AnnotationOrder;
+  readonly total: number;
+  readonly results: number;
+  readonly hiddenActive: boolean;
+  readonly onQueryChange: (query: string) => void;
+  readonly onFilterChange: (filter: AnnotationFilter) => void;
+  readonly onOrderChange: (order: AnnotationOrder) => void;
+  readonly onClear: () => void;
+}): JSX.Element {
+  const filtered = query.trim() !== "" || filter !== "all";
+  return (
+    <div className="annotation-browser-controls">
+      <div className="annotation-search">
+        <SearchIcon />
+        <input
+          type="search"
+          aria-label="Search annotations"
+          placeholder="Search annotations"
+          value={query}
+          onChange={(event) => onQueryChange(event.target.value)}
+        />
+        <Menu
+          className="annotation-view-menu"
+          label={`Filter and sort annotations${filter === "all" ? "" : ", filtered"}`}
+          triggerClassName={`icon-button${filter === "all" ? "" : " is-active"}`}
+          trigger={<FilterIcon />}
+        >
+          <div className="library-options" data-menu-keep-open>
+            <label>
+              <span>Show</span>
+              <select
+                aria-label="Filter annotations"
+                value={filter}
+                onChange={(event) => onFilterChange(event.target.value as AnnotationFilter)}
+              >
+                <option value="all">All</option>
+                <option value="comments">With comments</option>
+                <option value="highlight">Highlights</option>
+                <option value="area">Area captures</option>
+              </select>
+            </label>
+            <label>
+              <span>Order</span>
+              <select
+                aria-label="Sort annotations"
+                value={order}
+                onChange={(event) => onOrderChange(event.target.value as AnnotationOrder)}
+              >
+                <option value="document">Document order</option>
+                <option value="newest">Newest first</option>
+              </select>
+            </label>
+          </div>
+        </Menu>
+      </div>
+      {filtered ? (
+        <small role="status">
+          {results} of {total}
+          <button type="button" onClick={onClear}>
+            Clear
+          </button>
+        </small>
+      ) : null}
+      {hiddenActive ? (
+        <button type="button" onClick={onClear}>
+          Show selected annotation (clear filters)
+        </button>
+      ) : null}
+    </div>
+  );
 }

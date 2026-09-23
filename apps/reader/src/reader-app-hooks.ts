@@ -156,11 +156,10 @@ export function useLensFilteredSources(
   );
 }
 
-export function useThemePreference(): readonly [ThemePreference, () => void] {
+export function useThemePreference(): readonly [ThemePreference, (next: ThemePreference) => void] {
   const [theme, setTheme] = useState<ThemePreference>(() => loadThemePreference(localStorage));
   useEffect(() => applyThemePreference(theme, document.documentElement), [theme]);
-  const change = (): void => {
-    const next = theme === "system" ? "light" : theme === "light" ? "dark" : "system";
+  const change = (next: ThemePreference): void => {
     saveThemePreference(next, localStorage, document.documentElement);
     setTheme(next);
   };
@@ -191,21 +190,4 @@ export function useReaderAnnotationComposer(
     create: workspace.createAnnotation,
     annotations: workspace.annotations.status === "ready" ? workspace.annotations.value : [],
   });
-}
-
-export function readerMainClass(
-  libraryOpen: boolean,
-  focusMode: boolean,
-  libraryCollapsed = false,
-  inspectorOpen = true,
-): string {
-  return [
-    "reader-main",
-    libraryOpen ? "is-library-open" : "",
-    focusMode ? "is-focus-mode" : "",
-    libraryCollapsed ? "is-library-collapsed" : "",
-    inspectorOpen ? "" : "is-inspector-closed",
-  ]
-    .filter(Boolean)
-    .join(" ");
 }

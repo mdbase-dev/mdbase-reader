@@ -65,11 +65,7 @@ export function AnnotationComposer({
             }}
           />
         </>
-      ) : (
-        <button className="annotation-add-comment" type="button" onClick={() => setExpanded(true)}>
-          Add a comment
-        </button>
-      )}
+      ) : null}
       {note ? (
         <small className="annotation-draft-status" role="status">
           Not saved yet — keep Reader open until you save this annotation.
@@ -77,6 +73,15 @@ export function AnnotationComposer({
       ) : null}
       {composer.error ? <p role="alert">{composer.error}</p> : null}
       <footer>
+        {expanded || note ? null : (
+          <button
+            className="annotation-add-comment"
+            type="button"
+            onClick={() => setExpanded(true)}
+          >
+            Add a comment
+          </button>
+        )}
         <button type="button" onClick={composer.dismiss} disabled={composer.status === "saving"}>
           Cancel
         </button>

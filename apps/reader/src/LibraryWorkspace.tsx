@@ -3,7 +3,16 @@ import { useEffect, useId, useMemo, useState, type JSX, type KeyboardEvent } fro
 
 import { ContinueReading } from "./ContinueReading.js";
 import { readerErrorMessage } from "./errors.js";
-import { LibraryIcon, MoreIcon, PlusIcon, SearchIcon } from "./icons.js";
+import {
+  ChevronDownIcon,
+  DownloadIcon,
+  FilterIcon,
+  ImportIcon,
+  LibraryIcon,
+  PlusIcon,
+  SearchIcon,
+} from "./icons.js";
+import { importHref } from "./import-navigation.js";
 import { publicationDateLabel } from "./library-publication-date.js";
 import { LibraryTextSearch, type LibrarySearchScope } from "./LibraryTextSearch.js";
 import {
@@ -11,11 +20,12 @@ import {
   columnLabel,
   sourceFormat,
   type LibraryColumn,
-  type LibraryPresentation,
   type LibraryViewConfiguration,
   type MdbaseLibraryView,
 } from "./mdbase-library-views.js";
+import { Menu } from "./Menu.js";
 
+import type { BibliographyExportController } from "./use-bibliography-export.js";
 import type { MdbaseLibraryViewsController } from "./use-mdbase-library-views.js";
 import type { ReaderWorkspaceGateway } from "./workspace-model.js";
 import type { SourceId, SourceSummary } from "@mdbase-reader/core";
@@ -35,7 +45,9 @@ export function LibraryWorkspace({
   onAddSource,
   onOpenSourceView,
   surfaces,
+  bibliographyExport,
 }: {
+  readonly bibliographyExport: BibliographyExportController;
   readonly surfaces?: ReadonlyMap<string, ReadingSurface>;
   readonly onOpenSourceView?: (id: SourceId, view: "document" | "note" | "annotations") => void;
   readonly view: MdbaseLibraryView;
@@ -57,9 +69,8 @@ export function LibraryWorkspace({
   const [executedSources, setExecutedSources] = useState<readonly SourceSummary[]>(allSources);
   const [loading, setLoading] = useState(Boolean(view.path));
   const [problem, setProblem] = useState<string | null>(null);
-  const [selected, setSelected] = useState<ReadonlySet<SourceId>>(new Set());
   const [saving, setSaving] = useState(false);
-  const [saveName, setSaveName] = useState(view.name);
+  const [saveName, setSaveName] = useState("");
   const executionFamily = `reader-library-view:${useId()}`;
 
   useEffect(() => {
@@ -91,6 +102,7 @@ export function LibraryWorkspace({
   }, [allSources, executionFamily, gateway, view]);
 
   const dirty = !sameConfiguration(configuration, view.configuration);
+  const filterCount = activeFilterCount(configuration);
   const baseSources = dirty ? allSources : executedSources;
   const sources = useMemo(
     () =>
@@ -134,79 +146,90 @@ export function LibraryWorkspace({
   return (
     <section className="library-workspace" aria-label={`${view.name} library view`}>
       <header className="library-workspace-header">
-        <div className="library-view-identity">
-          <LibraryIcon />
-          <label>
-            <span className="sr-only">Library view</span>
-            <select
-              value={view.key}
-              onChange={(event) => {
-                const next = availableViews.find(({ key }) => key === event.target.value);
-                if (next) {
-                  onOpenView(next);
-                }
-              }}
-            >
-              {availableViews.map((candidate) => (
-                <option key={candidate.key} value={candidate.key}>
-                  {candidate.name}
-                </option>
-              ))}
-            </select>
-          </label>
-        </div>
-        <label className="library-workspace-search">
-          <SearchIcon />
-          <span className="sr-only">Search this view</span>
-          <input
-            value={searchScope === "sources" ? configuration.filter.query : contentQuery}
-            placeholder={searchScope === "sources" ? "Title, author or tag" : "Find a passage"}
-            onChange={(event) =>
-              searchScope === "sources"
-                ? updateFilter({ query: event.target.value })
-                : setContentQuery(event.target.value)
-            }
-          />
+        <label className="library-view-identity">
+          <span className="sr-only">Library view</span>
+          <select
+            value={view.key}
+            onChange={(event) => {
+              const next = availableViews.find(({ key }) => key === event.target.value);
+              if (next) {
+                onOpenView(next);
+              }
+            }}
+          >
+            {availableViews.map((candidate) => (
+              <option key={candidate.key} value={candidate.key}>
+                {candidate.name}
+              </option>
+            ))}
+          </select>
+          <ChevronDownIcon aria-hidden="true" />
         </label>
-        <select
-          aria-label="Search scope"
-          className="library-search-scope"
-          value={searchScope}
-          onChange={(event) => {
-            setSearchScope(event.target.value as LibrarySearchScope);
-            setPage(0);
-          }}
-        >
-          <option value="sources">Sources</option>
-          <option value="notes">Notes & annotations</option>
-          <option value="documents">Loaded documents</option>
-        </select>
-        {searchScope === "sources" ? (
-          <span className="library-result-count" role="status">
-            {loading
-              ? "Loading view…"
-              : `${String(sources.length)} ${sources.length === 1 ? "source" : "sources"}`}
-          </span>
-        ) : null}
-        <div className="library-save-actions">
+        <div className="library-workspace-search">
+          <SearchIcon />
+          <label className="library-search-field">
+            <span className="sr-only">Search this view</span>
+            <input
+              value={searchScope === "sources" ? configuration.filter.query : contentQuery}
+              placeholder={
+                searchScope === "sources"
+                  ? "Search titles, authors and tags"
+                  : searchScope === "notes"
+                    ? "Search notes and annotations"
+                    : "Search open documents"
+              }
+              onChange={(event) =>
+                searchScope === "sources"
+                  ? updateFilter({ query: event.target.value })
+                  : setContentQuery(event.target.value)
+              }
+            />
+          </label>
+          <select
+            aria-label="Search scope"
+            className="library-search-scope"
+            value={searchScope}
+            onChange={(event) => {
+              setSearchScope(event.target.value as LibrarySearchScope);
+              setPage(0);
+            }}
+          >
+            <option value="sources">Sources</option>
+            <option value="notes">Notes</option>
+            <option value="documents">Open documents</option>
+          </select>
+        </div>
+        <div className="library-header-trailing">
+          {searchScope === "sources" ? (
+            <span className="library-result-count" role="status">
+              {loading ? "Loading…" : countLabel(sources.length, "source")}
+            </span>
+          ) : null}
           {dirty && view.owned && view.writable ? (
-            <button type="button" disabled={controller.saving} onClick={() => void save(true)}>
-              Save
+            <button
+              className="library-save-button"
+              type="button"
+              disabled={controller.saving}
+              onClick={() => void save(true)}
+            >
+              Save view
             </button>
           ) : null}
-        </div>
-        <details className="library-workspace-more">
-          <summary
-            aria-label={`View options${activeFilterCount(configuration) ? `, ${String(activeFilterCount(configuration))} active filters` : ""}`}
+          <Menu
+            className="library-workspace-more"
+            label={`View options${filterCount ? `, ${String(filterCount)} active filters` : ""}`}
             title="View options"
+            trigger={
+              <>
+                <FilterIcon />
+                {filterCount ? <span className="menu-badge">{filterCount}</span> : null}
+              </>
+            }
           >
-            <MoreIcon />
-          </summary>
-          <div>
-            <strong>Filters</strong>
-            <div className="library-filter-panel is-inline">
+            <div className="library-options" data-menu-keep-open>
+              <span className="menu-label">Filter</span>
               <label>
-                <span>Reading status</span>
+                <span>Status</span>
                 <select
                   value={configuration.filter.status}
                   onChange={(event) =>
@@ -244,108 +267,123 @@ export function LibraryWorkspace({
                 <span>Tag</span>
                 <input
                   value={configuration.filter.tag}
-                  placeholder="Exact tag"
+                  placeholder="Any tag"
                   onChange={(event) => updateFilter({ tag: event.target.value })}
                 />
               </label>
-              {activeFilterCount(configuration) > 0 ? (
+              {filterCount > 0 ? (
                 <button
+                  className="library-clear-filters"
                   type="button"
-                  onClick={() => updateFilter({ query: "", status: "all", format: "all", tag: "" })}
+                  onClick={() => updateFilter({ status: "all", format: "all", tag: "" })}
                 >
                   Clear filters
                 </button>
               ) : null}
-            </div>
-            <strong>Sort</strong>
-            <label className="library-sort-control">
-              <select
-                aria-label="Sort field"
-                value={configuration.sortField}
-                onChange={(event) =>
-                  update({ sortField: event.target.value as LibraryViewConfiguration["sortField"] })
-                }
-              >
-                <option value="saved">Recently saved</option>
-                <option value="title">Title</option>
-                <option value="creator">Creator</option>
-                <option value="published">Published</option>
-                <option value="status">Status</option>
-              </select>
-              <button
-                type="button"
-                aria-label={`Sort ${configuration.sortDirection === "asc" ? "descending" : "ascending"}`}
-                onClick={() =>
-                  update({ sortDirection: configuration.sortDirection === "asc" ? "desc" : "asc" })
-                }
-              >
-                {configuration.sortDirection === "asc" ? "↑" : "↓"}
-              </button>
-            </label>
-            <i />
-            <strong>Layout</strong>
-            <div className="library-presentation-toggle" aria-label="Library presentation">
-              {(["table", "cards"] as const).map((presentation) => (
-                <button
-                  key={presentation}
-                  type="button"
-                  aria-pressed={configuration.presentation === presentation}
-                  onClick={() => update({ presentation })}
+              <span className="menu-label">Sort</span>
+              <div className="library-sort-control">
+                <select
+                  aria-label="Sort field"
+                  value={configuration.sortField}
+                  onChange={(event) =>
+                    update({
+                      sortField: event.target.value as LibraryViewConfiguration["sortField"],
+                    })
+                  }
                 >
-                  <PresentationGlyph presentation={presentation} />
-                  {presentation === "table" ? "Table" : "Cards"}
+                  <option value="saved">Recently saved</option>
+                  <option value="title">Title</option>
+                  <option value="creator">Creator</option>
+                  <option value="published">Published</option>
+                  <option value="status">Status</option>
+                </select>
+                <button
+                  type="button"
+                  aria-label={`Sort ${configuration.sortDirection === "asc" ? "descending" : "ascending"}`}
+                  title={configuration.sortDirection === "asc" ? "Ascending" : "Descending"}
+                  onClick={() =>
+                    update({
+                      sortDirection: configuration.sortDirection === "asc" ? "desc" : "asc",
+                    })
+                  }
+                >
+                  {configuration.sortDirection === "asc" ? "↑" : "↓"}
                 </button>
-              ))}
+              </div>
+              <span className="menu-label">Layout</span>
+              <div className="segmented-control" aria-label="Library presentation">
+                {(["table", "cards"] as const).map((presentation) => (
+                  <button
+                    key={presentation}
+                    type="button"
+                    aria-pressed={configuration.presentation === presentation}
+                    onClick={() => update({ presentation })}
+                  >
+                    {presentation === "table" ? "Table" : "Cards"}
+                  </button>
+                ))}
+              </div>
+              {configuration.presentation === "table" ? (
+                <>
+                  <span className="menu-label">Columns</span>
+                  <div className="library-column-panel">
+                    {allColumns
+                      .filter((column) => column !== "title")
+                      .map((column) => (
+                        <label key={column}>
+                          <input
+                            type="checkbox"
+                            checked={configuration.columns.includes(column)}
+                            onChange={() =>
+                              update({ columns: toggleColumn(configuration.columns, column) })
+                            }
+                          />
+                          {columnLabel(column)}
+                        </label>
+                      ))}
+                  </div>
+                </>
+              ) : null}
             </div>
-            {configuration.presentation === "table" ? (
-              <>
-                <strong>Columns</strong>
-                <div className="library-column-panel">
-                  {allColumns.map((column) => (
-                    <label key={column}>
-                      <input
-                        type="checkbox"
-                        checked={configuration.columns.includes(column)}
-                        disabled={column === "title"}
-                        onChange={() =>
-                          update({ columns: toggleColumn(configuration.columns, column) })
-                        }
-                      />
-                      {columnLabel(column)}
-                    </label>
-                  ))}
-                </div>
-              </>
-            ) : null}
-            <i />
+            <hr />
             <button type="button" onClick={() => setSaving(true)}>
-              Save as view…
+              Save as new view…
             </button>
-          </div>
-        </details>
-        <button
-          className="library-add-button"
-          type="button"
-          aria-label="Add source"
-          title="Add source"
-          onClick={onAddSource}
-        >
-          <PlusIcon />
-        </button>
+            <button
+              type="button"
+              disabled={bibliographyExport.status === "exporting"}
+              onClick={bibliographyExport.run}
+            >
+              <DownloadIcon />
+              {bibliographyExport.status === "exporting"
+                ? "Preparing bibliography…"
+                : "Export bibliography"}
+            </button>
+            <a href={importHref()} target="_blank" rel="noopener noreferrer">
+              <ImportIcon />
+              Import a library…
+            </a>
+            {bibliographyExport.message ? (
+              <p className={`menu-note${bibliographyExport.status === "error" ? " is-error" : ""}`}>
+                {bibliographyExport.message}
+              </p>
+            ) : null}
+          </Menu>
+          <button
+            className="icon-button library-add-button"
+            type="button"
+            aria-label="Add source"
+            title="Add source"
+            onClick={onAddSource}
+          >
+            <PlusIcon />
+          </button>
+        </div>
       </header>
 
       {(problem ?? controller.problem) ? (
         <div className="library-view-problem" role="alert">
           {problem ?? controller.problem}
-        </div>
-      ) : null}
-
-      {selected.size > 0 ? (
-        <div className="library-selection-bar">
-          <strong>{selected.size} selected</strong>
-          <button type="button" onClick={() => setSelected(new Set())}>
-            Clear selection
-          </button>
         </div>
       ) : null}
 
@@ -368,28 +406,42 @@ export function LibraryWorkspace({
         ) : sources.length === 0 && !loading ? (
           <div className="library-workspace-empty">
             <LibraryIcon />
-            <strong>No sources match this view</strong>
-            <span>Adjust the filters, or add something new to the collection.</span>
+            {allSources.length === 0 ? (
+              <>
+                <strong>Your library is empty</strong>
+                <span>Add a PDF, EPUB or web page to start reading.</span>
+                <button type="button" onClick={onAddSource}>
+                  Add a source
+                </button>
+              </>
+            ) : (
+              <>
+                <strong>No sources match</strong>
+                <span>Try a different search, or clear the filters.</span>
+                {filterCount > 0 || configuration.filter.query ? (
+                  <button
+                    type="button"
+                    onClick={() =>
+                      updateFilter({ query: "", status: "all", format: "all", tag: "" })
+                    }
+                  >
+                    Clear search and filters
+                  </button>
+                ) : null}
+              </>
+            )}
           </div>
         ) : configuration.presentation === "table" ? (
           <LibraryTable
             sources={pageSources}
-            columns={configuration.columns}
-            selected={selected}
+            columns={visibleColumns(configuration.columns, pageSources)}
             focused={focused}
-            onSelected={setSelected}
             onPreview={onPreviewSource}
             onOpen={onOpenSource}
             onOpenBeside={onOpenBeside}
           />
         ) : (
-          <LibraryCards
-            sources={pageSources}
-            selected={selected}
-            onSelected={setSelected}
-            onPreview={onPreviewSource}
-            onOpen={onOpenSource}
-          />
+          <LibraryCards sources={pageSources} onPreview={onPreviewSource} onOpen={onOpenSource} />
         )}
       </div>
 
@@ -438,12 +490,17 @@ export function LibraryWorkspace({
               void save(false);
             }}
           >
-            <span className="mono">MDBASE VIEW</span>
-            <h2>Save this library view</h2>
-            <p>Filters, sorting, columns and presentation will travel with the collection.</p>
+            <h2>Save as a new view</h2>
+            <p>The filters, sort, columns and layout are saved in your collection.</p>
             <label>
-              <span>View name</span>
-              <input value={saveName} onChange={(event) => setSaveName(event.target.value)} />
+              <span>Name</span>
+              <input
+                value={saveName}
+                placeholder="e.g. Reading this month"
+                // eslint-disable-next-line jsx-a11y/no-autofocus -- the dialog exists only to take this name.
+                autoFocus
+                onChange={(event) => setSaveName(event.target.value)}
+              />
             </label>
             <div>
               <button type="button" onClick={() => setSaving(false)}>
@@ -463,23 +520,19 @@ export function LibraryWorkspace({
 function LibraryTable({
   sources,
   columns,
-  selected,
   focused,
-  onSelected,
   onPreview,
   onOpen,
   onOpenBeside,
 }: {
   readonly sources: readonly SourceSummary[];
   readonly columns: readonly LibraryColumn[];
-  readonly selected: ReadonlySet<SourceId>;
   readonly focused: boolean;
-  readonly onSelected: (selected: ReadonlySet<SourceId>) => void;
   readonly onPreview: (id: SourceId) => void;
   readonly onOpen: (id: SourceId) => void;
   readonly onOpenBeside: (id: SourceId) => void;
 }): JSX.Element {
-  const gridTemplateColumns = `42px ${columns.map(columnWidth).join(" ")}`;
+  const gridTemplateColumns = columns.map(columnWidth).join(" ");
   return (
     <div
       className="library-table"
@@ -488,17 +541,8 @@ function LibraryTable({
       aria-rowcount={sources.length + 1}
     >
       <div className="library-table-row is-header" role="row" style={{ gridTemplateColumns }}>
-        <span role="columnheader" aria-label="Select all">
-          <input
-            type="checkbox"
-            checked={sources.length > 0 && sources.every(({ id }) => selected.has(id))}
-            onChange={(event) =>
-              onSelected(event.target.checked ? new Set(sources.map(({ id }) => id)) : new Set())
-            }
-          />
-        </span>
         {columns.map((column) => (
-          <span key={column} role="columnheader">
+          <span key={column} role="columnheader" className={`is-${column}`}>
             {columnLabel(column)}
           </span>
         ))}
@@ -507,23 +551,15 @@ function LibraryTable({
         {sources.map((source) => (
           <div
             key={source.id}
-            className={`library-table-row${selected.has(source.id) ? " is-selected" : ""}`}
+            className="library-table-row"
             role="row"
             tabIndex={focused ? 0 : -1}
+            title="Double-click or press Enter to open"
             style={{ gridTemplateColumns }}
             onClick={() => onPreview(source.id)}
             onDoubleClick={() => onOpen(source.id)}
             onKeyDown={(event) => rowKeyDown(event, source.id, onOpen, onOpenBeside)}
           >
-            <span role="gridcell">
-              <input
-                type="checkbox"
-                aria-label={`Select ${source.title}`}
-                checked={selected.has(source.id)}
-                onClick={(event) => event.stopPropagation()}
-                onChange={() => onSelected(toggleSelection(selected, source.id))}
-              />
-            </span>
             {columns.map((column) => (
               <span key={column} role="gridcell" className={`is-${column}`}>
                 <TableValue source={source} column={column} />
@@ -538,24 +574,17 @@ function LibraryTable({
 
 function LibraryCards({
   sources,
-  selected,
-  onSelected,
   onPreview,
   onOpen,
 }: {
   readonly sources: readonly SourceSummary[];
-  readonly selected: ReadonlySet<SourceId>;
-  readonly onSelected: (selected: ReadonlySet<SourceId>) => void;
   readonly onPreview: (id: SourceId) => void;
   readonly onOpen: (id: SourceId) => void;
 }): JSX.Element {
   return (
     <div className="library-card-grid" role="list">
-      {sources.map((source, index) => (
-        <article
-          key={source.id}
-          className={`library-card${selected.has(source.id) ? " is-selected" : ""}`}
-        >
+      {sources.map((source) => (
+        <article key={source.id} className="library-card" role="listitem">
           <button
             type="button"
             className="library-card-hit-target"
@@ -563,25 +592,16 @@ function LibraryCards({
             onClick={() => onPreview(source.id)}
             onDoubleClick={() => onOpen(source.id)}
           />
-          <label className="library-card-select">
-            <span className="sr-only">Select {source.title}</span>
-            <input
-              type="checkbox"
-              checked={selected.has(source.id)}
-              onChange={() => onSelected(toggleSelection(selected, source.id))}
-            />
-          </label>
           <div className={`library-card-bookplate is-${sourceFormat(source)}`}>
-            <span>{sourceFormat(source).toLocaleUpperCase()}</span>
-            <strong>{String(index + 1).padStart(2, "0")}</strong>
-            <i />
+            <span>{formatLabel(source)}</span>
+            <strong aria-hidden="true">{source.title.trim().charAt(0).toLocaleUpperCase()}</strong>
           </div>
           <div className="library-card-copy">
             <span>{source.creators.join(", ") || "Unknown creator"}</span>
             <h3>{source.title}</h3>
             <div>
               <small>{publicationDateLabel(source.published) ?? "Undated"}</small>
-              <small>{source.readingStatus ?? "inbox"}</small>
+              <ReadingStatus source={source} />
             </div>
             {source.tags.length > 0 ? (
               <p>{source.tags.slice(0, 3).map(String).join(" · ")}</p>
@@ -604,8 +624,11 @@ function TableValue({
     case "title":
       return (
         <>
-          <i className={`source-format-dot is-${sourceFormat(source)}`} />
-          <strong>{source.title}</strong>
+          <span className="source-format-tag">{formatLabel(source)}</span>
+          <span className="library-title-copy">
+            <strong>{source.title}</strong>
+            <small>{source.creators.join(", ") || "Unknown creator"}</small>
+          </span>
         </>
       );
     case "creator":
@@ -613,34 +636,65 @@ function TableValue({
     case "published":
       return <>{publicationDateLabel(source.published) ?? "—"}</>;
     case "status":
-      return (
-        <span className={`library-status is-${source.readingStatus ?? "inbox"}`}>
-          {source.readingStatus ?? "inbox"}
-        </span>
-      );
+      return <ReadingStatus source={source} />;
     case "format":
-      return <span className="mono">{sourceFormat(source).toLocaleUpperCase()}</span>;
+      return <>{formatLabel(source)}</>;
     case "tags":
       return <>{source.tags.map(String).join(", ") || "—"}</>;
   }
 }
 
-function PresentationGlyph({
-  presentation,
-}: {
-  readonly presentation: LibraryPresentation;
-}): JSX.Element {
-  return presentation === "table" ? (
-    <svg viewBox="0 0 16 16" aria-hidden="true">
-      <path d="M2 3.5h12M2 8h12M2 12.5h12M5 3.5v9" />
-    </svg>
-  ) : (
-    <svg viewBox="0 0 16 16" aria-hidden="true">
-      <rect x="2" y="2" width="5" height="5" />
-      <rect x="9" y="2" width="5" height="5" />
-      <rect x="2" y="9" width="5" height="5" />
-      <rect x="9" y="9" width="5" height="5" />
-    </svg>
+function ReadingStatus({ source }: { readonly source: SourceSummary }): JSX.Element {
+  const progress = readingProgress(source);
+  return (
+    <span className={`library-status is-${readingStatusOf(source)}`}>
+      {statusLabel(source)}
+      {progress !== null ? (
+        <span className="library-progress" aria-label={`${String(progress)}% read`}>
+          <i style={{ width: `${String(progress)}%` }} />
+        </span>
+      ) : null}
+    </span>
+  );
+}
+
+function readingStatusOf(source: SourceSummary): string {
+  return source.reading?.status ?? source.readingStatus ?? "inbox";
+}
+
+function statusLabel(source: SourceSummary): string {
+  const status = readingStatusOf(source);
+  return status.charAt(0).toLocaleUpperCase() + status.slice(1);
+}
+
+function readingProgress(source: SourceSummary): number | null {
+  const progress = source.reading?.progress;
+  if (progress === undefined || readingStatusOf(source) !== "reading") {
+    return null;
+  }
+  return Math.round(Math.max(0, Math.min(1, progress)) * 100);
+}
+
+function formatLabel(source: SourceSummary): string {
+  const format = sourceFormat(source);
+  return format === "web" ? "Web" : format === "note" ? "Note" : format.toLocaleUpperCase();
+}
+
+/** Hide optional columns that have nothing to show for any visible source. */
+export function visibleColumns(
+  columns: readonly LibraryColumn[],
+  sources: readonly SourceSummary[],
+): readonly LibraryColumn[] {
+  const hasValue: Record<LibraryColumn, (source: SourceSummary) => boolean> = {
+    title: () => true,
+    creator: (source) => source.creators.length > 0,
+    published: (source) => publicationDateLabel(source.published) !== null,
+    status: () => true,
+    format: () => true,
+    tags: (source) => source.tags.length > 0,
+  };
+  return columns.filter(
+    (column) => column === "title" || sources.some((source) => hasValue[column](source)),
   );
 }
 
@@ -656,11 +710,11 @@ const allColumns: readonly LibraryColumn[] = [
 function columnWidth(column: LibraryColumn): string {
   return {
     title: "minmax(220px, 1fr)",
-    creator: "140px",
-    published: "90px",
-    status: "112px",
-    format: "82px",
-    tags: "220px",
+    creator: "minmax(120px, 0.35fr)",
+    published: "84px",
+    status: "120px",
+    format: "72px",
+    tags: "minmax(120px, 0.3fr)",
   }[column];
 }
 
@@ -674,16 +728,6 @@ function toggleColumn(
   return columns.includes(column)
     ? columns.filter((candidate) => candidate !== column)
     : [...columns, column];
-}
-
-function toggleSelection(selected: ReadonlySet<SourceId>, id: SourceId): ReadonlySet<SourceId> {
-  const next = new Set(selected);
-  if (next.has(id)) {
-    next.delete(id);
-  } else {
-    next.add(id);
-  }
-  return next;
 }
 
 function rowKeyDown(
@@ -703,6 +747,10 @@ function rowKeyDown(
       open(id);
     }
   }
+}
+
+function countLabel(count: number, noun: string): string {
+  return `${count.toLocaleString()} ${count === 1 ? noun : `${noun}s`}`;
 }
 
 function activeFilterCount(configuration: LibraryViewConfiguration): number {

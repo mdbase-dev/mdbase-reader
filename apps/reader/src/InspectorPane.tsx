@@ -3,7 +3,7 @@ import { useCallback, type JSX } from "react";
 import { AnnotationEditingContext } from "./AnnotationEditingContext.js";
 import { AnnotationList } from "./AnnotationList.js";
 import { CitationEditor } from "./CitationEditor.js";
-import { CitationIcon, CloseIcon, HighlightIcon, NoteIcon, PanelIcon } from "./icons.js";
+import { CitationIcon, HighlightIcon, NoteIcon, PanelIcon } from "./icons.js";
 import { SourceNoteEditor } from "./SourceNoteEditor.js";
 
 import type { AnnotationComposerController } from "./use-annotation-composer.js";
@@ -26,7 +26,6 @@ export interface InspectorPaneProps {
     readonly paneLabel: string;
     readonly onOpen: () => void;
   } | null;
-  readonly onClose: () => void;
   readonly onTabChange: (tab: InspectorTab) => void;
   readonly onPromote: (tab: InspectorTab) => void;
   readonly onOpenSourceView?: (sourceId: SourceId, view: "document" | "citation") => void;
@@ -41,7 +40,6 @@ export function InspectorPane({
   composer,
   gateway,
   workbenchOwner,
-  onClose,
   onTabChange,
   onPromote,
   onOpenSourceView,
@@ -68,14 +66,6 @@ export function InspectorPane({
           onClick={() => onPromote(tab)}
         >
           <PanelIcon />
-        </button>
-        <button
-          className="inspector-close icon-button"
-          type="button"
-          aria-label="Close source tools"
-          onClick={onClose}
-        >
-          <CloseIcon />
         </button>
       </header>
       <InspectorTabs

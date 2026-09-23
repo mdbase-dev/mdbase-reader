@@ -12,16 +12,17 @@ in-memory interface preview without creating collection records or files.
 
 ## Dockable workspace
 
-Documents, library views, source tools, and the library navigator share one Dockview workspace.
+Documents, library views, source tools, and the Sources sidebar share one Dockview workspace.
 Drag a tab onto another tab strip to move it, or onto a pane edge to split. Both side panels
 can be repositioned or tabbed with documents. Use a tab's context menu or a pane's **⋯** menu
 for equivalent explicit actions; **F6** cycles groups. The command palette includes
-**Reset pane arrangement (keep all tabs)**.
+**Reset pane arrangement**, which keeps all tabs open.
 
 Layouts are saved per collection and old two-pane layouts migrate automatically. Moving panels
 preserves document/editor identity; dirty closes require confirmation. Mobile shows one maximized
 group while retaining the desktop arrangement. See [the architecture](docs/architecture/source-workspace.md)
-for session, persistence, and renderer-lifetime boundaries.
+for session, persistence, and renderer-lifetime boundaries, and [the interface shell](docs/interface-shell.md)
+for the header, menus, command palette and stylesheet ownership.
 
 ## Deploy the development site
 

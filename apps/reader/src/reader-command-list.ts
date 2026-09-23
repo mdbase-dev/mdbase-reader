@@ -1,8 +1,11 @@
+import { displayCommands, libraryCommands } from "./reader-app-commands.js";
+
 import type { ReaderCommand } from "./CommandPalette.js";
 import type { BibliographyExportController } from "./use-bibliography-export.js";
 import type { SourceExportController } from "./use-source-export.js";
 import type { SourceWorkspaceController } from "./use-source-workspace.js";
 import type { SourceSummary } from "@mdbase-reader/core";
+import type { ThemePreference } from "@mdbase-reader/ui";
 
 export interface ReaderCommandInput {
   readonly sources: readonly SourceSummary[];
@@ -15,61 +18,69 @@ export interface ReaderCommandInput {
   readonly toggleLibrary: () => void;
   readonly toggleInspector: () => void;
   readonly searchLibrary: () => void;
+  readonly addSource: () => void;
+  readonly importHref: string;
+  readonly theme: ThemePreference;
+  readonly setTheme: (theme: ThemePreference) => void;
+  readonly density: "comfortable" | "compact";
+  readonly setDensity: (density: "comfortable" | "compact") => void;
 }
 
 export function readerCommands(input: ReaderCommandInput): readonly ReaderCommand[] {
   return [
     ...navigationCommands(input),
+    ...libraryCommands(input),
     ...workspaceCommands(input),
-    ...sourceCommands(input),
-    ...exportCommands(input),
+    ...displayCommands(input),
   ];
 }
 
 function navigationCommands(input: ReaderCommandInput): readonly ReaderCommand[] {
-  const openSources = input.sources.map((source): ReaderCommand => ({
-    id: `open:${source.id}`,
-    label: source.title,
-    detail: `${source.creators.join(", ") || "Unknown creator"} · ${source.readingStatus ?? "inbox"}`,
-    group: "Navigate",
-    keywords: "open source library",
-    run: () => input.workspace.open(source.id),
-  }));
-  const switchTabs = input.workspace.layout.panes.flatMap((pane) =>
+  const panes = input.workspace.layout.panes;
+  const openTabs = panes.flatMap((pane) =>
     pane.tabs.flatMap((tab): readonly ReaderCommand[] => {
-      const source =
-        tab.kind === "source" ? input.sources.find(({ id }) => id === tab.sourceId) : null;
-      return tab.kind === "library" || source
-        ? [
-            {
-              id: `switch:${pane.id}:${tab.id}`,
-              label: `Switch to ${tab.kind === "library" ? tab.title : (source?.title ?? "source")}`,
-              detail: `${tab.view} · pane ${String(input.workspace.layout.panes.indexOf(pane) + 1)}`,
-              group: "Navigate",
-              keywords: "tab switch",
-              run: () => input.workspace.activateTab(tab.id, pane.id),
-            },
-          ]
-        : [];
+      if (tab.kind !== "source") {
+        return [];
+      }
+      const source = input.sources.find(({ id }) => id === tab.sourceId);
+      if (!source) {
+        return [];
+      }
+      const place = panes.length > 1 ? ` · pane ${String(panes.indexOf(pane) + 1)}` : "";
+      return [
+        {
+          id: `switch:${pane.id}:${tab.id}`,
+          label: source.title,
+          detail: `${viewLabel(tab.view)}${place}`,
+          group: "Open tabs",
+          keywords: `tab switch ${source.creators.join(" ")}`,
+          run: () => input.workspace.activateTab(tab.id, pane.id),
+        },
+      ];
     }),
   );
-  return [
-    {
-      id: "open-library-view",
-      label: "Open library",
-      group: "Navigate",
-      run: () => input.workspace.openLibrary(),
-    },
-    {
-      id: "search",
-      label: "Search library and documents",
-      group: "Navigate",
-      shortcut: "⌘F",
-      run: input.searchLibrary,
-    },
-    ...switchTabs,
-    ...openSources,
-  ];
+  const open = new Set(input.workspace.openSourceIds);
+  const sources = input.sources
+    .filter((source) => !open.has(source.id))
+    .map((source): ReaderCommand => ({
+      id: `open:${source.id}`,
+      label: source.title,
+      detail: source.creators.join(", ") || "Unknown creator",
+      group: "Sources",
+      keywords: `open source ${source.readingStatus ?? "inbox"} ${source.tags.join(" ")}`,
+      run: () => input.workspace.open(source.id),
+    }));
+  return [...openTabs, ...sourceCommands(input), ...sources];
+}
+
+function viewLabel(view: string): string {
+  return view === "note"
+    ? "Source note"
+    : view === "annotations"
+      ? "Annotations"
+      : view === "citation"
+        ? "Citation"
+        : "Document";
 }
 
 function workspaceCommands(input: ReaderCommandInput): readonly ReaderCommand[] {
@@ -87,11 +98,17 @@ function workspaceCommands(input: ReaderCommandInput): readonly ReaderCommand[] 
   return [
     {
       id: "reset-panes",
-      label: "Reset pane arrangement (keep all tabs)",
+      label: "Reset pane arrangement",
+      detail: "Keeps all tabs open",
       group: "Workspace",
       run: () => input.workspace.dock.reset(),
     },
-    { id: "toggle-library", label: "Toggle library", group: "Workspace", run: input.toggleLibrary },
+    {
+      id: "toggle-library",
+      label: "Toggle sources sidebar",
+      group: "Workspace",
+      run: input.toggleLibrary,
+    },
     {
       id: "toggle-source-tools",
       label: "Toggle source tools",
@@ -109,55 +126,10 @@ function workspaceCommands(input: ReaderCommandInput): readonly ReaderCommand[] 
       id: "reopen",
       label: "Reopen closed tab",
       group: "Workspace",
-      shortcut: "⌘⇧T",
+      shortcut: "mod+shift+t",
       run: input.workspace.reopenClosed,
     },
-    ...(split
-      ? ([
-          {
-            id: "focus-next-pane",
-            label: "Focus next pane",
-            detail: `Pane ${paneLabel} is focused`,
-            group: "Workspace",
-            shortcut: "F6",
-            run: input.workspace.focusNextPane,
-          },
-          ...(activeTab
-            ? [
-                {
-                  id: "move-active-tab-other-pane",
-                  label: `Move active tab to pane ${otherPaneLabel}`,
-                  group: "Workspace" as const,
-                  run: () =>
-                    input.workspace.moveTab(
-                      activeTab.id,
-                      input.workspace.layout.focusedPaneId,
-                      otherPaneId,
-                    ),
-                },
-              ]
-            : []),
-          {
-            id: "arrange-side-by-side",
-            label: "Arrange panes side by side",
-            group: "Workspace",
-            run: () => input.workspace.setSplitDirection("horizontal"),
-          },
-          {
-            id: "arrange-top-bottom",
-            label: "Stack panes top and bottom",
-            group: "Workspace",
-            run: () => input.workspace.setSplitDirection("vertical"),
-          },
-          {
-            id: "close-focused-pane",
-            label: "Close focused pane and keep its tabs",
-            detail: `Pane ${paneLabel}`,
-            group: "Workspace",
-            run: () => input.workspace.closePane(input.workspace.layout.focusedPaneId),
-          },
-        ] satisfies readonly ReaderCommand[])
-      : []),
+    ...(split ? paneCommands(input, paneLabel, otherPaneId, otherPaneLabel) : []),
     ...(activeTab
       ? ([
           {
@@ -196,51 +168,93 @@ function sourceCommands(input: ReaderCommandInput): readonly ReaderCommand[] {
   }
   return [
     {
+      id: "export-source",
+      label: "Export current source",
+      group: "Current source",
+      run: input.sourceExport.run,
+    },
+    {
       id: "annotations",
       label: "Open annotations",
-      group: "Source",
+      group: "Current source",
       run: () => input.workspace.openView(sourceId, "annotations"),
     },
     {
       id: "note",
       label: "Open source note",
-      group: "Source",
+      group: "Current source",
       run: () => input.workspace.openView(sourceId, "note"),
     },
     {
       id: "citation",
       label: "Open citation data",
-      group: "Source",
+      group: "Current source",
       run: () => input.workspace.openView(sourceId, "citation"),
     },
     {
       id: "note-beside",
       label: "Open source note beside document",
-      group: "Source",
+      group: "Workspace",
       run: () => input.workspace.openBeside(sourceId, "note"),
     },
     {
       id: "citation-beside",
       label: "Open citation data beside document",
-      group: "Source",
+      group: "Workspace",
       run: () => input.workspace.openBeside(sourceId, "citation"),
     },
   ];
 }
 
-function exportCommands(input: ReaderCommandInput): readonly ReaderCommand[] {
+function paneCommands(
+  input: ReaderCommandInput,
+  paneLabel: string,
+  otherPaneId: string,
+  otherPaneLabel: string,
+): readonly ReaderCommand[] {
+  const activeTab = input.workspace.activeTab;
   return [
     {
-      id: "export-source",
-      label: "Export current source",
-      group: "Export",
-      run: input.sourceExport.run,
+      id: "focus-next-pane",
+      label: "Focus next pane",
+      detail: `Pane ${paneLabel} is focused`,
+      group: "Workspace",
+      shortcut: "F6",
+      run: input.workspace.focusNextPane,
+    },
+    ...(activeTab
+      ? [
+          {
+            id: "move-active-tab-other-pane",
+            label: `Move active tab to pane ${otherPaneLabel}`,
+            group: "Workspace" as const,
+            run: () =>
+              input.workspace.moveTab(
+                activeTab.id,
+                input.workspace.layout.focusedPaneId,
+                otherPaneId,
+              ),
+          },
+        ]
+      : []),
+    {
+      id: "arrange-side-by-side",
+      label: "Arrange panes side by side",
+      group: "Workspace",
+      run: () => input.workspace.setSplitDirection("horizontal"),
     },
     {
-      id: "export-bibliography",
-      label: "Export bibliography",
-      group: "Export",
-      run: input.bibliographyExport.run,
+      id: "arrange-top-bottom",
+      label: "Stack panes top and bottom",
+      group: "Workspace",
+      run: () => input.workspace.setSplitDirection("vertical"),
+    },
+    {
+      id: "close-focused-pane",
+      label: "Close focused pane and keep its tabs",
+      detail: `Pane ${paneLabel}`,
+      group: "Workspace",
+      run: () => input.workspace.closePane(input.workspace.layout.focusedPaneId),
     },
   ];
 }

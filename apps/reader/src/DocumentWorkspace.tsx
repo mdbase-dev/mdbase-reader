@@ -134,9 +134,9 @@ function sessionContent(
   if (tab.view !== "document") {
     return props.renderTool(tab, paneId, focused);
   }
-  return (
-    props.renderDocument(source, paneId, tab.id) ?? (
-      <DocumentEmpty onAddSource={props.onAddSource} />
-    )
-  );
+  const openNote = (): void => props.sourceWorkspace.openView(source.id, "note", paneId);
+  if (source.documents.length === 0) {
+    return <DocumentEmpty onOpenNote={openNote} />;
+  }
+  return props.renderDocument(source, paneId, tab.id) ?? <DocumentEmpty onOpenNote={openNote} />;
 }

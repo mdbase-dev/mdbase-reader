@@ -125,6 +125,7 @@ export async function auditAnnotations(page, { screenshot, blockWrites }) {
   await tools.getByRole("searchbox", { name: "Search annotations" }).fill("no such quotation");
   await expect(tools.getByText("No matching annotations", { exact: true })).toBeVisible();
   await tools.getByRole("button", { name: "Clear filters", exact: true }).click();
+  await tools.getByLabel("Filter and sort annotations", { exact: true }).click();
   await tools.getByRole("combobox", { name: "Filter annotations" }).selectOption("comments");
   await expect(tools.locator(".annotation-card")).toHaveCount(2);
   await tools.getByRole("combobox", { name: "Sort annotations" }).selectOption("newest");

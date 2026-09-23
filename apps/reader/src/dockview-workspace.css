@@ -19,30 +19,6 @@
   min-height: 0;
   min-width: 0;
 }
-.mobile-workspace-navigation {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 4px 10px;
-  border-bottom: 1px solid var(--line);
-  background: var(--paper);
-}
-.mobile-workspace-navigation button,
-.mobile-workspace-navigation select {
-  min-height: 44px;
-  font: inherit;
-  color: inherit;
-  background: var(--paper);
-  border: 1px solid var(--line);
-  border-radius: 4px;
-}
-.mobile-workspace-navigation select {
-  flex: 1;
-  min-width: 0;
-  padding-inline: 8px 26px;
-  font-size: 16px;
-  text-overflow: ellipsis;
-}
 .reader-dock[data-mobile] .dv-tabs-and-actions-container {
   display: none;
 }
@@ -52,11 +28,11 @@
 .dockview-theme-reader {
   --dv-background-color: var(--canvas);
   --dv-paneview-header-border-color: var(--line);
-  --dv-tabs-and-actions-container-background-color: var(--surface);
+  --dv-tabs-and-actions-container-background-color: var(--paper);
   --dv-activegroup-visiblepanel-tab-background-color: var(--canvas);
-  --dv-activegroup-hiddenpanel-tab-background-color: var(--surface);
+  --dv-activegroup-hiddenpanel-tab-background-color: var(--paper);
   --dv-inactivegroup-visiblepanel-tab-background-color: var(--canvas);
-  --dv-inactivegroup-hiddenpanel-tab-background-color: var(--surface);
+  --dv-inactivegroup-hiddenpanel-tab-background-color: var(--paper);
   --dv-activegroup-visiblepanel-tab-color: var(--ink);
   --dv-activegroup-hiddenpanel-tab-color: var(--muted);
   --dv-inactivegroup-visiblepanel-tab-color: var(--ink);
@@ -67,7 +43,7 @@
   --dv-drag-over-background-color: color-mix(in oklch, var(--accent) 18%, transparent);
   --dv-drag-over-border-color: var(--accent);
   --dv-tabs-and-actions-container-height: 36px;
-  --dv-font-family: var(--sans);
+  --dv-font-family: inherit;
   --dv-tab-font-size: 12px;
   --dv-group-view-background-color: var(--canvas);
   --dv-tab-close-icon: var(--muted);
@@ -150,10 +126,25 @@
 }
 .dock-tab-marker {
   flex-shrink: 0;
-  font-size: 9px;
-  color: var(--accent);
+  display: inline-grid;
+  place-items: center;
+  color: var(--muted);
 }
-.reader-dock .dv-groupview.dv-active-group > .dv-tabs-and-actions-container {
+.dock-tab-marker svg {
+  width: 12px;
+  height: 12px;
+}
+.dock-tab-marker.is-dirty {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--accent);
+}
+.reader-dock .dv-tabs-and-actions-container {
+  border-bottom: 1px solid var(--line);
+}
+/* The focused pane is shown by its active tab alone, not a rule across the strip. */
+.reader-dock .dv-groupview.dv-active-group .dv-tab.dv-active-tab {
   box-shadow: inset 0 -2px var(--accent);
 }
 .dock-pane-menu {
@@ -191,30 +182,10 @@
   cursor: pointer;
 }
 .dock-pane-popover button:hover {
-  background: var(--surface);
-}
-.dock-empty {
-  height: 100%;
-  display: grid;
-  place-content: center;
-  text-align: center;
-  padding: 24px;
-  color: var(--muted);
-}
-.dock-empty h2 {
-  color: var(--ink);
-}
-.dock-empty button {
-  padding: 10px;
-  color: var(--ink);
-  background: var(--surface);
-  cursor: pointer;
+  background: var(--paper);
 }
 @media (max-width: 680px) {
   .reader-dock .dv-tab {
     max-width: 190px;
-  }
-  .reader-dock .inspector-close {
-    display: inline-flex;
   }
 }

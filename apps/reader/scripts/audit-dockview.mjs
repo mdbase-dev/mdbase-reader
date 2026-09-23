@@ -173,7 +173,7 @@ export async function auditDockview(page, { screenshot, blockWrites }) {
 
   const navigationLayout = JSON.stringify((await state()).layout.grid.root);
   const noteBounds = await page.locator(`[data-session-id="${noteId}"]`).boundingBox();
-  await drag(tab("Library navigator"), {
+  await drag(tab(/^Sources$/), {
     x: noteBounds.x + noteBounds.width / 2,
     y: noteBounds.y + noteBounds.height - 20,
   });
@@ -187,7 +187,7 @@ export async function auditDockview(page, { screenshot, blockWrites }) {
   completed.push("Library navigator also docks to document edges");
 
   // Native touch input exercises Dockview's pointer strategy, not DOM-dispatched fake drags.
-  const touchSource = await tab("Library navigator").boundingBox();
+  const touchSource = await tab(/^Sources$/).boundingBox();
   const touchTarget = await page.locator(`[data-panel-id="${noteId}"]`).boundingBox();
   const touchStart = { x: touchSource.x + 55, y: touchSource.y + touchSource.height / 2 };
   const touchEnd = { x: touchTarget.x + 70, y: touchTarget.y + touchTarget.height / 2 };
@@ -235,7 +235,7 @@ export async function auditDockview(page, { screenshot, blockWrites }) {
 
   // Keyboard-accessible pane menu offers the same operations; reset never closes tabs.
   await page.locator(`[data-panel-id="${noteId}"]`).click();
-  await page.getByRole("button", { name: "Commands and quick source switcher" }).focus();
+  await page.getByRole("button", { name: "Search and commands" }).focus();
   await page.keyboard.press("Enter");
   await page
     .getByRole("textbox", { name: "Search commands and sources" })
@@ -294,7 +294,7 @@ export async function auditDockview(page, { screenshot, blockWrites }) {
     .click();
   await expect(page.locator(`[data-panel-id="${noteId}"]`)).toHaveCount(0);
   await page.reload();
-  await page.getByRole("button", { name: "Commands and quick source switcher" }).click();
+  await page.getByRole("button", { name: "Search and commands" }).click();
   await page
     .getByRole("textbox", { name: "Search commands and sources" })
     .fill("Reopen closed tab");

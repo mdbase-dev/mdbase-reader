@@ -228,11 +228,11 @@ try {
     await page.getByRole("button", { name: "Continue reading", exact: false }).click();
     await expect(page.locator("iframe.html-viewer")).toBeVisible({ timeout: 30000 });
     await page.getByRole("button", { name: "Keep offline", exact: true }).click();
-    await expect(page.getByText("Exact revision saved on this device")).toBeVisible();
+    await expect(page.getByText("Available offline", { exact: true })).toBeVisible();
     const requestsBeforeReload = documentRequests;
     documentsBlocked = true;
     await page.reload();
-    await expect(page.getByText("Exact revision saved on this device")).toBeVisible({
+    await expect(page.getByText("Available offline", { exact: true })).toBeVisible({
       timeout: 30000,
     });
     expect(documentRequests).toBe(requestsBeforeReload);
@@ -254,7 +254,7 @@ try {
     });
     await expect(editor).toContainText("Unsaved draft survives a reload");
     await editor.focus();
-    await page.getByRole("button", { name: /Interface density:/ }).focus();
+    await page.getByRole("button", { name: "Search and commands" }).focus();
     await expect(page.getByText("Saved locally", { exact: true })).toBeVisible();
     completed.push("Failed autosave: durable draft survives reload and remains reviewable on blur");
     records[0].body = "[test] A different application edited the collection version.";
@@ -286,7 +286,10 @@ try {
 
     await page.getByRole("tab", { name: "[test] Research 0000", exact: true }).click();
     await expect(page.locator("iframe.html-viewer")).toBeVisible();
-    await page.locator(".navigator-heading > button").first().click();
+    await page
+      .getByRole("navigation", { name: "Library views and sources" })
+      .getByRole("button", { name: "All sources", exact: true })
+      .click();
     await page.getByRole("combobox", { name: "Search scope" }).selectOption("notes");
     await page.getByRole("textbox", { name: "Search this view" }).fill("Unsaved draft survives");
     await expect(
@@ -305,11 +308,15 @@ try {
       "Notes and loaded-document search: snippets, highlighted matches, explicit coverage",
     );
 
-    await page.getByRole("button", { name: /Interface density:/ }).click();
+    const display = page.getByLabel("Display settings", { exact: true });
+    await display.click();
+    await page.getByRole("button", { name: "Compact", exact: true }).click();
     await expect(page.locator(".reader-shell")).toHaveAttribute("data-density", "compact");
     await page.reload();
     await expect(page.locator(".reader-shell")).toHaveAttribute("data-density", "compact");
-    await page.getByRole("button", { name: /Interface density:/ }).click();
+    await display.click();
+    await page.getByRole("button", { name: "Comfortable", exact: true }).click();
+    await page.keyboard.press("Escape");
     await page.setViewportSize({ width: 390, height: 844 });
     await expect(page.getByRole("complementary", { name: "Library navigator" })).toHaveCount(0);
     expect(

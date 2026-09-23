@@ -24,6 +24,7 @@ import { dockTabMenu } from "./dockview-menus.js";
 import { inspectorPanelId, navigatorPanelId } from "./dockview-panel-ids.js";
 import { dockPanelVisible } from "./dockview-panel-visibility.js";
 import { DocumentWorkspace, type DocumentWorkspaceProps } from "./DocumentWorkspace.js";
+import { PinIcon } from "./icons.js";
 import { MobileWorkspaceNavigation } from "./MobileWorkspaceNavigation.js";
 import { useProgressiveWorkspaceTabs } from "./use-progressive-workspace-tabs.js";
 import { workspaceTabAccessibleTitle } from "./workspace-tab-display.js";
@@ -180,14 +181,12 @@ function ReaderDockTab(props: IDockviewPanelHeaderProps<{ tab?: WorkspaceTab }>)
       onDoubleClick={() => document.sourceWorkspace.dock.patch(props.api.id, { preview: false })}
     >
       {tab?.pinned ? (
-        <span aria-label="Pinned" className="dock-tab-marker">
-          ◆
+        <span aria-label="Pinned" className="dock-tab-marker is-pinned">
+          <PinIcon />
         </span>
       ) : null}
       {tab?.dirty ? (
-        <span aria-label="Unsaved changes" className="dock-tab-marker">
-          ●
-        </span>
+        <span aria-label="Unsaved changes" className="dock-tab-marker is-dirty" />
       ) : null}
       <DockviewDefaultTab
         {...props}

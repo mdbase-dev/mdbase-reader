@@ -1,12 +1,21 @@
-import { useEffect, useMemo, useRef, useState, type JSX, type KeyboardEvent } from "react";
+import {
+  Fragment,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type JSX,
+  type KeyboardEvent,
+} from "react";
 
 import { SearchIcon } from "./icons.js";
+import { shortcutLabel } from "./Menu.js";
 
 export interface ReaderCommand {
   readonly id: string;
   readonly label: string;
   readonly detail?: string;
-  readonly group: "Navigate" | "Workspace" | "Source" | "Export";
+  readonly group: "Open tabs" | "Current source" | "Sources" | "Library" | "Workspace" | "Display";
   readonly keywords?: string;
   readonly shortcut?: string;
   readonly run: () => void;
@@ -35,7 +44,7 @@ function OpenCommandPalette({
   const [active, setActive] = useState(0);
   const inputRef = useRef<HTMLInputElement>(null);
   const paletteRef = useRef<HTMLElement>(null);
-  const matches = useMemo(() => matchingCommands(commands, query).slice(0, 14), [commands, query]);
+  const matches = useMemo(() => matchingCommands(commands, query), [commands, query]);
   useEffect(() => {
     const previous = document.activeElement instanceof HTMLElement ? document.activeElement : null;
     globalThis.setTimeout(() => inputRef.current?.focus(), 0);
@@ -76,7 +85,7 @@ function OpenCommandPalette({
           <input
             ref={inputRef}
             value={query}
-            placeholder="Type a command or source title…"
+            placeholder="Search sources and commands"
             onChange={(event) => {
               setQuery(event.target.value);
               setActive(0);
@@ -87,12 +96,14 @@ function OpenCommandPalette({
         <div className="command-results" role="listbox" aria-label="Search results">
           {matches.length > 0 ? (
             matches.map((command, index) => (
-              <CommandRow
-                key={command.id}
-                command={command}
-                active={index === active}
-                onRun={run}
-              />
+              <Fragment key={command.id}>
+                {command.group !== matches[index - 1]?.group ? (
+                  <div className="command-group-heading" role="presentation">
+                    {command.group}
+                  </div>
+                ) : null}
+                <CommandRow command={command} active={index === active} onRun={run} />
+              </Fragment>
             ))
           ) : (
             <div className="command-empty">No matching command or source</div>
@@ -133,27 +144,55 @@ function CommandRow({
   readonly active: boolean;
   readonly onRun: (command: ReaderCommand) => void;
 }): JSX.Element {
+  const ref = useRef<HTMLButtonElement>(null);
+  useEffect(() => {
+    if (active) {
+      ref.current?.scrollIntoView({ block: "nearest" });
+    }
+  }, [active]);
   return (
-    <button type="button" role="option" aria-selected={active} onMouseDown={() => onRun(command)}>
+    <button
+      ref={ref}
+      type="button"
+      role="option"
+      aria-selected={active}
+      onMouseDown={() => onRun(command)}
+    >
       <span>
         <strong>{command.label}</strong>
         {command.detail ? <small>{command.detail}</small> : null}
       </span>
-      {command.shortcut ? <kbd>{command.shortcut}</kbd> : null}
+      {command.shortcut ? <kbd>{shortcutLabel(command.shortcut)}</kbd> : null}
     </button>
   );
 }
 
-function matchingCommands(
+const browseLimit = 6;
+const searchLimit = 40;
+
+/** Without a query, show a few of each group; with one, rank label matches first. */
+export function matchingCommands(
   commands: readonly ReaderCommand[],
   query: string,
 ): readonly ReaderCommand[] {
   const terms = query.trim().toLocaleLowerCase().split(/\s+/u).filter(Boolean);
-  return commands.filter((command) => {
+  if (terms.length === 0) {
+    const counts = new Map<string, number>();
+    return commands.filter((command) => {
+      const count = counts.get(command.group) ?? 0;
+      counts.set(command.group, count + 1);
+      return command.group === "Open tabs" || count < browseLimit;
+    });
+  }
+  const matches = commands.filter((command) => {
     const content =
       `${command.label} ${command.detail ?? ""} ${command.group} ${command.keywords ?? ""}`.toLocaleLowerCase();
     return terms.every((term) => content.includes(term));
   });
+  const groups = [...new Set(matches.map(({ group }) => group))];
+  return groups
+    .flatMap((group) => matches.filter((command) => command.group === group))
+    .slice(0, searchLimit);
 }
 
 function handleKeys(

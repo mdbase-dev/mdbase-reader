@@ -1,12 +1,12 @@
 import { useMemo, useState, type CSSProperties, type JSX, type KeyboardEvent } from "react";
 
-import { DownloadIcon, LibraryIcon, PlusIcon, SearchIcon } from "./icons.js";
+import { PlusIcon, SearchIcon } from "./icons.js";
+import { shortcutLabel } from "./Menu.js";
 import { useVirtualSourceWindow } from "./use-virtual-source-window.js";
 import { keyboardSourceIndex } from "./virtual-source-list.js";
 import { filterSources } from "./workspace-model.js";
 
 import type { MdbaseLibraryView } from "./mdbase-library-views.js";
-import type { BibliographyExportController } from "./use-bibliography-export.js";
 import type { SourceId, SourceSummary } from "@mdbase-reader/core";
 
 const navigatorSourceRowHeight = 50;
@@ -19,7 +19,6 @@ interface LibraryNavigatorProps {
   readonly viewsLoading: boolean;
   readonly problem: string | null;
   readonly addingSource: boolean;
-  readonly bibliographyExport: BibliographyExportController;
   readonly onOpenView: (view: MdbaseLibraryView) => void;
   readonly onPreviewSource: (id: SourceId) => void;
   readonly onOpenSource: (id: SourceId) => void;
@@ -35,7 +34,6 @@ export function LibraryNavigator({
   viewsLoading,
   problem,
   addingSource,
-  bibliographyExport,
   onOpenView,
   onPreviewSource,
   onOpenSource,
@@ -44,7 +42,6 @@ export function LibraryNavigator({
 }: LibraryNavigatorProps): JSX.Element {
   const [query, setQuery] = useState("");
   const visibleSources = useMemo(() => filterSources(sources, query), [query, sources]);
-  const defaultView = views[0];
   return (
     <aside
       id="reader-library-navigator"
@@ -53,54 +50,26 @@ export function LibraryNavigator({
       aria-hidden={!open}
       inert={!open}
     >
-      <div className="navigator-heading">
-        <button type="button" onClick={() => defaultView && onOpenView(defaultView)}>
-          <LibraryIcon />
-          <span>
-            <strong>Library</strong>
-            <small>{String(sources.length)} sources</small>
-          </span>
-        </button>
-        <button
-          className="navigator-export-action"
-          type="button"
-          disabled={bibliographyExport.status === "exporting"}
-          aria-label={
-            bibliographyExport.status === "exporting"
-              ? "Preparing bibliography export"
-              : "Export bibliography"
-          }
-          title="Export bibliography"
-          onClick={bibliographyExport.run}
-        >
-          <DownloadIcon />
-        </button>
-        <button
-          className="navigator-add-action"
-          type="button"
-          disabled={addingSource}
-          aria-label={addingSource ? "Adding source" : "Add source"}
-          title="Add source"
-          onClick={onAddSource}
-        >
-          <PlusIcon />
-        </button>
-      </div>
-
       <label className="navigator-search">
         <SearchIcon />
         <span className="sr-only">Find a source by title, author or tag</span>
         <input
           id="reader-library-search"
           value={query}
-          placeholder="Title, author or tag"
+          placeholder="Filter sources"
           onChange={(event) => setQuery(event.target.value)}
+          onKeyDown={(event) => {
+            if (event.key === "Escape" && query) {
+              event.stopPropagation();
+              setQuery("");
+            }
+          }}
         />
-        <kbd>Ctrl/⌘⇧F</kbd>
+        <kbd>{shortcutLabel("mod+shift+f")}</kbd>
       </label>
 
       <nav className="navigator-sections" aria-label="Library views and sources">
-        {views.length > 1 || viewsLoading || problem ? (
+        {query ? null : (
           <section className="navigator-view-section">
             <header>
               <span>Views</span>
@@ -111,29 +80,40 @@ export function LibraryNavigator({
                 <button key={view.key} type="button" onClick={() => onOpenView(view)}>
                   <ViewGlyph presentation={view.configuration.presentation} />
                   <span>{view.name}</span>
-                  {view.path ? <i aria-label="Saved in mdbase" /> : null}
                 </button>
               ))}
             </div>
             {problem ? <p role="alert">{problem}</p> : null}
           </section>
-        ) : null}
+        )}
 
-        <section className={`navigator-source-section${query ? "" : " has-no-heading"}`}>
-          {query ? (
-            <header>
-              <span>Matches</span>
-              <small>{String(visibleSources.length)}</small>
-            </header>
-          ) : null}
-          <NavigatorSourceList
-            sources={visibleSources}
-            selectedSourceId={selectedSourceId}
-            resetKey={query}
-            onPreviewSource={onPreviewSource}
-            onOpenSource={onOpenSource}
-            onOpenBeside={onOpenBeside}
-          />
+        <section className="navigator-source-section">
+          <header>
+            <span>{query ? "Matches" : "Sources"}</span>
+            <small>{String(visibleSources.length)}</small>
+            <button
+              className="icon-button navigator-add-action"
+              type="button"
+              disabled={addingSource}
+              aria-label={addingSource ? "Adding source" : "Add source"}
+              title="Add source"
+              onClick={onAddSource}
+            >
+              <PlusIcon />
+            </button>
+          </header>
+          {visibleSources.length === 0 ? (
+            <p className="navigator-empty">{query ? "No sources match." : "No sources yet."}</p>
+          ) : (
+            <NavigatorSourceList
+              sources={visibleSources}
+              selectedSourceId={selectedSourceId}
+              resetKey={query}
+              onPreviewSource={onPreviewSource}
+              onOpenSource={onOpenSource}
+              onOpenBeside={onOpenBeside}
+            />
+          )}
         </section>
       </nav>
     </aside>

@@ -44,101 +44,6 @@
   flex: 1;
   min-height: 0;
 }
-.offline-document-control {
-  order: 2;
-  flex: 0 0 auto;
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 10px;
-  padding: 5px 12px;
-  border-bottom: 1px solid var(--line);
-  color: var(--muted);
-  font-size: 12px;
-  background: var(--paper);
-}
-.offline-document-control button {
-  margin-left: auto;
-  padding: 6px;
-  background: transparent;
-  color: var(--ink);
-  border: 1px solid var(--line);
-  border-radius: 4px;
-  cursor: pointer;
-}
-.offline-document-control details {
-  position: relative;
-}
-.offline-document-control summary {
-  cursor: pointer;
-}
-.offline-document-control details p {
-  position: absolute;
-  bottom: 100%;
-  z-index: 20;
-  width: min(300px, 75vw);
-  padding: 16px;
-  background: var(--paper);
-  border: 1px solid var(--line);
-  line-height: 1.6;
-}
-.library-workspace {
-  display: flex;
-  flex-direction: column;
-}
-.library-workspace-header {
-  flex: 0 0 auto;
-  min-height: 54px;
-  flex-wrap: wrap;
-  padding-block: 8px;
-}
-.library-workspace-results {
-  flex: 1 1 auto;
-}
-.library-search-scope,
-.header-density-button {
-  min-height: 32px;
-  max-width: 180px;
-  color: var(--ink-soft);
-  background: var(--paper);
-  border: 1px solid var(--line);
-  border-radius: 5px;
-  padding: 5px 8px;
-  font: inherit;
-  font-size: 12px;
-}
-.header-density-button {
-  cursor: pointer;
-}
-.continue-reading {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 20px;
-  padding: 24px;
-  margin: 16px;
-  border: 1px solid var(--line);
-  border-radius: 8px;
-  background: var(--canvas);
-}
-.continue-reading > div {
-  display: grid;
-  gap: 7px;
-  min-width: 0;
-}
-.continue-reading span,
-.continue-reading small {
-  color: var(--muted);
-  font-size: 13px;
-}
-.continue-reading strong {
-  color: var(--ink);
-  font-size: 20px;
-  line-height: 1.4;
-  overflow-wrap: anywhere;
-}
-.continue-reading button,
-.library-pagination button,
 .draft-recovery button {
   border: 1px solid var(--line);
   border-radius: 5px;
@@ -148,22 +53,6 @@
   font: inherit;
   cursor: pointer;
   min-height: 36px;
-}
-.continue-reading button {
-  flex-shrink: 0;
-}
-.library-pagination {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  gap: 16px;
-  padding: 10px;
-  border-top: 1px solid var(--line);
-  font-size: 13px;
-}
-.library-pagination button:disabled {
-  opacity: 0.45;
-  cursor: default;
 }
 .library-text-search {
   padding: 16px 24px;
@@ -257,29 +146,9 @@
 .source-note-save-state {
   white-space: normal;
 }
-.reader-shell[data-density="comfortable"] .navigator-source-window strong,
-.reader-shell[data-density="comfortable"] .library-table-row .is-title strong,
-.reader-shell[data-density="comfortable"] .source-tab-title,
-.reader-shell[data-density="comfortable"] .inspector-context strong {
-  font-size: 13px;
-}
-.reader-shell[data-density="comfortable"] .library-table-row {
-  font-size: 13px;
-  height: 46px;
-}
-.reader-shell[data-density="comfortable"] .library-table-row.is-header {
-  font-size: 11px;
-  height: 36px;
-}
-.reader-shell[data-density="comfortable"] .navigator-source-window small,
-.reader-shell[data-density="comfortable"] .navigator-view-section button,
-.reader-shell[data-density="comfortable"] .inspector-tabs button,
 .reader-shell[data-density="comfortable"] .source-note-toolbar,
 .reader-shell[data-density="comfortable"] .reader-header button {
   font-size: 12px;
-}
-.reader-shell[data-density="comfortable"] .inspector-tabs button {
-  min-height: 38px;
 }
 .reader-shell[data-density="comfortable"] .source-note-save-state {
   font-size: 11px;
@@ -292,42 +161,12 @@
   outline-offset: 2px;
 }
 @media (max-width: 680px) {
-  .continue-reading {
-    margin: 10px;
-    padding: 16px;
-    align-items: stretch;
-    flex-direction: column;
-    gap: 14px;
-  }
-  .continue-reading strong {
-    font-size: 18px;
-  }
-  .library-workspace-header {
-    padding-inline: 10px;
-  }
-  .library-search-scope {
-    flex: 1;
-    max-width: none;
-  }
-  .library-workspace-search {
-    flex: 1 1 150px;
-  }
   .library-text-search {
     padding: 12px;
   }
-  .library-pagination {
-    gap: 8px;
-  }
-  .reader-header .header-density-button {
-    min-width: 36px;
-  }
 }
 @media (pointer: coarse) {
-  .reader-header button,
-  .library-workspace-header button,
-  .library-search-scope,
-  .source-note-toolbar button,
-  .inspector-tabs button {
+  .source-note-toolbar button {
     min-height: 44px;
   }
 }

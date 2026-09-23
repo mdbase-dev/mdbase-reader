@@ -60,7 +60,7 @@ export function AnnotationCard({
     >
       <header>
         <span className={`annotation-kind is-${annotation.annotationType}`}>
-          {annotation.annotationType}
+          {annotationKindLabel(annotation.annotationType)}
         </span>
         {!hasPassageAnchor(annotation.target) ? (
           <small title="This annotation is not linked to a document passage.">
@@ -108,6 +108,10 @@ export function AnnotationCard({
   );
 }
 
+function annotationKindLabel(type: string): string {
+  return type === "area" ? "Area" : type.charAt(0).toLocaleUpperCase() + type.slice(1);
+}
+
 function useScrollToEditing(editing: boolean): RefObject<HTMLElement | null> {
   const ref = useRef<HTMLElement>(null);
   useEffect(() => {
@@ -131,12 +135,14 @@ function AnnotationBody({
   readonly readFile: AnnotationFileReader;
 }): JSX.Element {
   const content = annotationBodyContent(annotation.body);
+  // Older or externally written records may keep the passage only in the selector.
+  const quote = content.quote ?? annotation.target?.quote?.exact ?? null;
   return (
     <>
       {content.images.map((image) => (
         <AnnotationImage key={image.path} image={image} readFile={readFile} />
       ))}
-      {content.quote ? <blockquote>{content.quote}</blockquote> : null}
+      {quote ? <blockquote>{quote}</blockquote> : null}
       {content.note ? <p>{content.note}</p> : null}
     </>
   );

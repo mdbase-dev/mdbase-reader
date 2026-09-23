@@ -20,16 +20,22 @@ export function continueReadingSource(sources: readonly SourceSummary[]): Source
   );
 }
 
-export function readingLocationLabel(source: SourceSummary): string {
+export function readingProgressValue(source: SourceSummary): number | null {
   const reading = source.reading;
   const position = reading?.position;
-  const location =
-    position?.kind === "pdf" ? `Page ${String(position.pageIndex + 1)}` : "Resume reading";
   const progress =
     reading?.progress ?? (position?.kind === "html" ? position.progression : undefined);
-  return progress === undefined
-    ? location
-    : `${location} · ${String(Math.round(Math.max(0, Math.min(1, progress)) * 100))}%`;
+  return progress === undefined ? null : Math.round(Math.max(0, Math.min(1, progress)) * 100);
+}
+
+export function readingLocationLabel(source: SourceSummary): string {
+  const position = source.reading?.position;
+  const progress = readingProgressValue(source);
+  const parts = [
+    position?.kind === "pdf" ? `Page ${String(position.pageIndex + 1)}` : null,
+    progress === null ? null : `${String(progress)}%`,
+  ].filter((part): part is string => part !== null);
+  return parts.join(" · ");
 }
 
 export function ContinueReading({
@@ -43,18 +49,31 @@ export function ContinueReading({
   if (!source) {
     return null;
   }
+  const progress = readingProgressValue(source);
+  const location = readingLocationLabel(source);
+  const creators = source.creators.join(", ");
   return (
-    <section className="continue-reading" aria-label="Continue reading">
-      <div>
-        <span>Continue reading</span>
+    <button
+      className="continue-reading"
+      type="button"
+      aria-label={`Continue reading ${source.title}`}
+      onClick={() => onOpen(source.id)}
+    >
+      <span className="continue-reading-label">Continue reading</span>
+      <span className="continue-reading-title">
         <strong>{source.title}</strong>
-        <small>
-          {source.creators.join(", ")} · {readingLocationLabel(source)}
-        </small>
-      </div>
-      <button type="button" onClick={() => onOpen(source.id)}>
-        Continue reading <span aria-hidden="true">→</span>
-      </button>
-    </section>
+        {creators || location ? (
+          <small>{[creators, location].filter(Boolean).join(" · ")}</small>
+        ) : null}
+      </span>
+      {progress !== null ? (
+        <span className="library-progress" aria-hidden="true">
+          <i style={{ width: `${String(progress)}%` }} />
+        </span>
+      ) : null}
+      <span className="continue-reading-action" aria-hidden="true">
+        Resume →
+      </span>
+    </button>
   );
 }

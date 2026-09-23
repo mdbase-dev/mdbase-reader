@@ -1,19 +1,19 @@
-import { ProductBrand, type ThemePreference } from "@mdbase-reader/ui";
+import { ProductBrand, themePreferences, type ThemePreference } from "@mdbase-reader/ui";
 
-import { LeftPaneIcon, RightPaneIcon, SearchIcon, ThemeIcon } from "./icons.js";
-import { importHref } from "./import-navigation.js";
+import { LeftPaneIcon, RightPaneIcon, SearchIcon } from "./icons.js";
+import { Menu, shortcutLabel } from "./Menu.js";
 
 import type { ReaderDirectAccessState } from "./use-direct-access.js";
 import type { JSX } from "react";
 
 interface ReaderHeaderProps {
   readonly density?: "comfortable" | "compact";
-  readonly onToggleDensity?: () => void;
+  readonly onChangeDensity?: (density: "comfortable" | "compact") => void;
   readonly collectionName: string;
   readonly connectionState: "connected" | "offline" | "syncing";
   readonly directAccess: ReaderDirectAccessState;
   readonly theme: ThemePreference;
-  readonly onChangeTheme: () => void;
+  readonly onChangeTheme: (theme: ThemePreference) => void;
   readonly onOpenCommands: () => void;
   readonly onToggleLibrary: () => void;
   readonly libraryOpen: boolean;
@@ -24,7 +24,7 @@ interface ReaderHeaderProps {
 
 export function ReaderHeader({
   density = "comfortable",
-  onToggleDensity,
+  onChangeDensity,
   collectionName,
   connectionState,
   directAccess,
@@ -46,7 +46,7 @@ export function ReaderHeader({
           aria-label="Toggle library navigator"
           aria-controls="reader-library-navigator"
           aria-expanded={libraryOpen}
-          title="Toggle library navigator"
+          title="Toggle library"
           onClick={onToggleLibrary}
         >
           <LeftPaneIcon />
@@ -54,41 +54,47 @@ export function ReaderHeader({
         <ProductBrand />
       </div>
       <div className="reader-header-context">
-        <span className="collection-context" title={collectionName}>
+        <span className="collection-context" title={`Collection: ${collectionName}`}>
           {collectionName}
         </span>
         <ConnectionState state={connectionState} directAccess={directAccess} />
       </div>
       <div className="reader-header-actions">
-        <a
-          className="header-command-button"
-          href={importHref()}
-          target="_blank"
-          rel="noopener noreferrer"
-          aria-label="Import a library (opens in a new tab)"
-        >
-          Import
-        </a>
-        {onToggleDensity ? (
-          <button
-            className="header-density-button"
-            type="button"
-            aria-label={`Interface density: ${density}. Change density`}
-            title="Change interface density"
-            onClick={onToggleDensity}
-          >
-            {density === "comfortable" ? "Aa" : "Aa−"}
-          </button>
-        ) : null}
         <button
           className="header-command-button"
           type="button"
-          aria-label="Commands and quick source switcher"
-          title="Commands and quick source switcher · Ctrl/⌘K"
+          aria-label="Search and commands"
+          title={`Search sources and run commands · ${shortcutLabel("mod+k")}`}
           onClick={onOpenCommands}
         >
-          <SearchIcon /> <span>Commands</span> <kbd>⌘K</kbd>
+          <SearchIcon />
+          <span>Search</span>
+          <kbd>{shortcutLabel("mod+k")}</kbd>
         </button>
+        <Menu
+          className="header-display-menu"
+          label="Display settings"
+          triggerClassName="icon-button header-display-trigger"
+          trigger={<span aria-hidden="true">Aa</span>}
+        >
+          <DisplayChoice
+            legend="Theme"
+            value={theme}
+            options={themePreferences.map((value) => ({ value, label: capitalize(value) }))}
+            onChange={onChangeTheme}
+          />
+          {onChangeDensity ? (
+            <DisplayChoice
+              legend="Density"
+              value={density}
+              options={[
+                { value: "comfortable", label: "Comfortable" },
+                { value: "compact", label: "Compact" },
+              ]}
+              onChange={onChangeDensity}
+            />
+          ) : null}
+        </Menu>
         <button
           className="icon-button header-pane-toggle is-inspector"
           type="button"
@@ -101,17 +107,43 @@ export function ReaderHeader({
         >
           <RightPaneIcon />
         </button>
-        <button
-          className="icon-button"
-          type="button"
-          aria-label={`Theme: ${theme}. Change theme`}
-          onClick={onChangeTheme}
-        >
-          <ThemeIcon />
-        </button>
       </div>
     </header>
   );
+}
+
+function DisplayChoice<T extends string>({
+  legend,
+  value,
+  options,
+  onChange,
+}: {
+  readonly legend: string;
+  readonly value: T;
+  readonly options: readonly { readonly value: T; readonly label: string }[];
+  readonly onChange: (value: T) => void;
+}): JSX.Element {
+  return (
+    <fieldset className="display-choice" data-menu-keep-open>
+      <legend>{legend}</legend>
+      <div className="segmented-control">
+        {options.map((option) => (
+          <button
+            key={option.value}
+            type="button"
+            aria-pressed={option.value === value}
+            onClick={() => onChange(option.value)}
+          >
+            {option.label}
+          </button>
+        ))}
+      </div>
+    </fieldset>
+  );
+}
+
+function capitalize(value: string): string {
+  return value.charAt(0).toLocaleUpperCase() + value.slice(1);
 }
 
 function ConnectionState({
@@ -123,7 +155,7 @@ function ConnectionState({
 }): JSX.Element {
   const { snapshot, working, problem, request } = directAccess;
   if (snapshot?.authority !== "connector" || state !== "connected") {
-    return <span className={`connection-state is-${state}`}>{state}</span>;
+    return <PlainConnectionState state={state} />;
   }
   if (snapshot.route === "direct") {
     return (
@@ -143,7 +175,7 @@ function ConnectionState({
     );
   }
   if (snapshot.status === "disabled") {
-    return <span className={`connection-state is-${state}`}>{state}</span>;
+    return <PlainConnectionState state={state} />;
   }
   const denied = snapshot.status === "denied";
   const title =
@@ -161,5 +193,26 @@ function ConnectionState({
     >
       {denied ? "Retry local access" : "Connect directly"}
     </button>
+  );
+}
+
+const connectionLabels = {
+  connected: "Connected",
+  offline: "Offline",
+  syncing: "Syncing…",
+} as const;
+
+function PlainConnectionState({
+  state,
+}: {
+  readonly state: "connected" | "offline" | "syncing";
+}): JSX.Element {
+  // Connected is the normal state: a quiet dot, with the words kept for assistive technology.
+  return (
+    <span className={`connection-state is-${state}`} title={connectionLabels[state]}>
+      <span className={state === "connected" ? "sr-only" : undefined}>
+        {connectionLabels[state]}
+      </span>
+    </span>
   );
 }

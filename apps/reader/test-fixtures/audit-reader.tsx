@@ -6,6 +6,7 @@ import "@mdbase-reader/ui/styles.css";
 import "../src/reader.css";
 import "../src/reader-improvements.css";
 import "../src/annotation-polish.css";
+import "../src/reader-shell.css";
 
 import { ConnectedDocument } from "../src/ConnectedDocument.js";
 import {

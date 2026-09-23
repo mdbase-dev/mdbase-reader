@@ -1,4 +1,5 @@
 import { panelTab } from "./dockview-workspace-state.js";
+import { BackIcon, ChevronDownIcon, CloseIcon } from "./icons.js";
 
 import type { ReaderDockWorkspace } from "./dockview-workspace.js";
 import type { JSX } from "react";
@@ -14,35 +15,45 @@ export function MobileWorkspaceNavigation({
   const active = dock.api?.activePanel;
   const side = active && !panelTab(active);
   const tabs = dock.contentPanels();
+  if (side) {
+    return (
+      <nav className="mobile-workspace-navigation" aria-label="Mobile workspace navigation">
+        <button
+          className="mobile-back"
+          type="button"
+          aria-label="Back to workspace"
+          disabled={!tabs.length}
+          onClick={dock.backToContent}
+        >
+          <BackIcon />
+          <span>Back</span>
+        </button>
+        <strong>{active.title}</strong>
+      </nav>
+    );
+  }
   return (
     <nav className="mobile-workspace-navigation" aria-label="Mobile workspace navigation">
-      {side ? (
-        <button type="button" disabled={!tabs.length} onClick={dock.backToContent}>
-          Back to workspace
-        </button>
-      ) : (
-        <span>Open tab</span>
-      )}
-      <select
-        aria-label="Open workspace tab"
-        disabled={!tabs.length}
-        value={side ? "" : (active?.id ?? "")}
-        onChange={(event) => dock.activate(event.currentTarget.value)}
-      >
-        {side ? (
-          <option value="" disabled>
-            {active.title}
-          </option>
-        ) : null}
-        {tabs.map((panel) => (
-          <option key={panel.id} value={panel.id}>
-            {panel.title}
-            {panelTab(panel)?.dirty ? " — unsaved changes" : ""}
-          </option>
-        ))}
-      </select>
-      {!side && active ? (
+      <label className="mobile-tab-switcher">
+        <select
+          aria-label="Open workspace tab"
+          disabled={!tabs.length}
+          value={active?.id ?? ""}
+          onChange={(event) => dock.activate(event.currentTarget.value)}
+        >
+          {tabs.map((panel) => (
+            <option key={panel.id} value={panel.id}>
+              {panel.title}
+              {panelTab(panel)?.dirty ? " — unsaved changes" : ""}
+            </option>
+          ))}
+        </select>
+        {tabs.length > 1 ? <span className="mobile-tab-count">{tabs.length}</span> : null}
+        <ChevronDownIcon aria-hidden="true" />
+      </label>
+      {active ? (
         <button
+          className="icon-button"
           type="button"
           aria-label="Close current tab"
           onClick={() => {
@@ -52,7 +63,7 @@ export function MobileWorkspaceNavigation({
             }
           }}
         >
-          Close
+          <CloseIcon />
         </button>
       ) : null}
     </nav>
