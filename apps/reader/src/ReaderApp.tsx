@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState, type JSX } from "react";
 
-import { navigatorPanelId } from "./dockview-workspace-state.js";
+import { inspectorPanelId, navigatorPanelId } from "./dockview-workspace-state.js";
 import {
   useReaderAnnotationComposer,
   useFocusChrome,
@@ -138,6 +138,8 @@ function OpenedReaderApp({
     focusNextPane: sourceWorkspace.focusNextPane,
     reopenTab: sourceWorkspace.reopenClosed,
     navigate: sourceWorkspace.navigate,
+    toggleSidebar: () => toggleSide(sourceWorkspace.dock, navigatorPanelId),
+    toggleNotes: () => toggleSide(sourceWorkspace.dock, inspectorPanelId),
   });
 
   const source = workspace.selectedSource;
@@ -178,6 +180,13 @@ function OpenedReaderApp({
       <ReaderWorkspaceView model={model} />
     </SourceLibraryContext>
   );
+}
+
+function toggleSide(
+  dock: ReturnType<typeof useSourceWorkspace>["dock"],
+  id: typeof navigatorPanelId | typeof inspectorPanelId,
+): void {
+  dock.setSideVisible(id, !dock.isSideVisible(id));
 }
 
 function confirmCloseDirtyTab(): boolean {

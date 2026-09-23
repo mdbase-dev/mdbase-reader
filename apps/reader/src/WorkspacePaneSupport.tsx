@@ -39,7 +39,9 @@ export function DocumentEmpty({ onOpenNote }: { readonly onOpenNote: () => void 
       <div>
         <NoteIcon />
         <h2>No document attached</h2>
-        <p>This is a note-only source. Its note, annotations and citation are in Source tools.</p>
+        <p>
+          This is a note-only source. Its note, annotations and citation are in the Notes panel.
+        </p>
         <ReaderButton onClick={onOpenNote}>Open source note</ReaderButton>
       </div>
     </div>

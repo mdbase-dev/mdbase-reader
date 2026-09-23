@@ -64,6 +64,74 @@ action, and one stylesheet section for each redesigned component.
 - `--sans`, `--serif` and `--surface` were referenced but never defined, which silently
   discarded several `font` declarations. They are now defined in `reader-shell.css`.
 
+## Reading workspace (third pass)
+
+- **Reading comes first.** Opening a document hides the Sources sidebar, and returning to a
+  library tab restores it, but only when Reader hid it (Display → _Sidebar while reading_
+  turns this off). Focus mode is now **Reading mode**: a header button and `mod+.`, with the
+  tab strip fading alongside the header. `mod+\` toggles the sidebar and `mod+shift+\` the
+  notes panel. A side panel alone in its group has no close button, and its pane menu appears
+  on hover.
+- **Shortcuts from inside a saved page.** Once the reader clicks into an HTML document, key
+  events stay in its frame. `html-keyboard.ts` forwards modifier shortcuts, Escape, F6, `/`
+  and Alt+arrows to Reader, leaving the page's clipboard and editing keys alone. Readium
+  frames do not forward keys yet.
+- **Text settings.** The `typography` surface capability (`ReadingTypography`: scale, measure,
+  face) is implemented by the HTML renderer (an injected stylesheet) and the EPUB renderer
+  (Readium preferences). PDFs keep their layout. The Display menu sets text size, line length
+  and typeface, stored with the other shell preferences.
+- **Highlights and cards.** Saved pages draw a margin marker beside each highlight, darker when
+  it carries a note. Clicking one selects its card. The selected card and the active passage
+  share one gold tint. Cards no longer say "Unanchored note" or "No passage anchor". A card
+  without a passage selector shows its location label and omits _Show in document_.
+- **Sidebar.** The filter searches the whole library. Without a query the sidebar lists views,
+  open sources and up to eight recent ones (by `reading.last_opened_at`, then sources marked
+  _reading_), and ends with _Add source_. The full list lives in the library tab.
+- **Library.** Default columns are Title (with creator beneath), Published, Annotations, Last
+  opened and Status. Annotation counts come from the connector's annotation index
+  (`annotationCountsBySource`), corrected by the selected source's loaded annotations. They
+  are not stored, so saved views leave the column out of `select`. Views can sort by
+  _Recently opened_. Continue reading shows up to three sources, as a swipeable row on phones.
+  The search reads "… in Sources".
+- **Wording.** The right panel is **Notes**. The collection name in the header has its own
+  icon rather than a breadcrumb slash. The command palette gives open commands a Shift+Enter
+  _Open beside_ variant (replacing the separate "beside" commands), shows more shortcuts and
+  lists its keys in a footer.
+- **Mobile.** A lone library tab has no tab switcher above it, and library tabs have no close
+  button.
+- **Preview.** `?preview=1` renders Gravity and Grace through the real HTML renderer, so
+  selection, highlights, margin markers and typography can be tried there.
+
+## Library views (fourth pass)
+
+- **Virtualized, not paged.** The table renders only the rows in view (TanStack Virtual), against
+  the library's own scroller, so Continue reading scrolls away above it. `aria-rowcount` is the
+  full total and each row carries `aria-rowindex`. Cards are virtualized a row at a time at a
+  fixed card height. Each view keeps its scroll position across tab switches.
+- **Columns.** Headers sort on click (again to reverse) and carry a menu: sort, move left or
+  right, reset width, hide. Drag a header's label to reorder; drag its right edge to resize, or
+  focus that edge and use the arrow keys (Shift for larger steps). The trailing **+** adds a
+  Reader field, a property found in the collection, or any dotted frontmatter path
+  (`course`, `csl.volume`). Empty columns are no longer hidden automatically.
+- **Property columns** (`property:<key>`) read `SourceSummary.properties`, which the Connect
+  listing now keeps from each record's frontmatter. A saved view's selected values take
+  precedence. Values are formatted for reading: wikilinks show their alias, and lists are
+  comma-separated. Numbers sort numerically.
+- **Where layout lives.** Columns, widths (`columnWidths`), sort and presentation are remembered
+  on the device per view (`use-library-layout-draft.ts`) and take effect at once. _Save view_
+  writes them into the view file's presentation options, and a newer save discards the local
+  draft. The built-in _All sources_ view keeps its layout on the device. _Reset columns and
+  layout_ returns to the view's saved layout. Filters stay session state.
+- **Selection.** Click selects; Shift extends; Ctrl/⌘ toggles; double-click or Enter opens
+  (Ctrl/⌘+Enter beside). In the grid, arrows, j/k, Page and Home/End move focus (Shift extends
+  the range), Space toggles, Ctrl/⌘+A selects all, and Escape keeps only the focused row. The
+  sidebar keeps click-to-preview. With two or more selected, a toolbar offers _Set status…_
+  (written four at a time with progress), _Open_ (up to 12) and _Export citations_ for the
+  selection.
+- TanStack Table v9 is used headlessly for column sizing and resizing only (`use-library-columns.ts`).
+  Filtering and sorting remain `applyLibraryViewConfiguration`, which matches a saved view's
+  `order_by`.
+
 ## Stylesheets
 
 `src/reader-shell.css` loads last and owns the header, menus, Sources sidebar, library tab,
@@ -91,6 +159,12 @@ buttons, selects and inputs now inherit the interface font.
 - `pnpm --filter @mdbase-reader/app test:browser` passes all 37 checks with the audits updated
   for the renamed controls (Display menu, Search and commands, Sources tab, Available offline,
   annotation filter menu).
+
+- Third pass: `READER_AUDIT_READING_ONLY=1 pnpm --filter @mdbase-reader/app test:browser` runs
+  `scripts/audit-reading-workspace.mjs` (sidebar hiding and restoring, typography, reading
+  mode and panel shortcuts from inside the page, margin markers, annotation counts). The other
+  audits pin _Sidebar while reading_ to _Keep open_, because they test docking with the
+  sidebar present.
 
 The fixtures do not exercise a real Connect collection; physical touch and screen-reader
 walkthroughs remain outstanding, as in the earlier audits.

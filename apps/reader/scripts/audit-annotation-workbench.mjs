@@ -31,7 +31,7 @@ export async function auditAnnotationWorkbench(page, { screenshot, open }) {
   await page.locator(".reader-dock-tab").getByText("[test] Research 0000", { exact: true }).click();
   await tab.click();
   if (!(await tools.isVisible()))
-    await page.getByRole("button", { name: "Toggle source tools" }).click();
+    await page.getByRole("button", { name: "Toggle notes panel" }).click();
   await tools
     .locator(`[data-annotation-id="${annotationId}"]`)
     .getByRole("button", { name: "Edit here", exact: true })

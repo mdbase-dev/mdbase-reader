@@ -60,6 +60,7 @@ describe("mdbase library views", () => {
     expect(configuration).toEqual({
       presentation: "cards",
       columns: ["title", "creator", "tags"],
+      columnWidths: {},
       sortField: "creator",
       sortDirection: "asc",
       filter: { query: "weil", status: "reading", format: "pdf", tag: "attention" },

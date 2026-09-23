@@ -1,5 +1,27 @@
-.annotation-card.is-selected {
-  background: color-mix(in srgb, var(--accent) 6%, var(--paper));
+/* Cards without a passage to jump to do not pretend to be links. */
+.annotation-card:not(.is-linked) {
+  cursor: default;
+}
+
+/* The selected card and the passage share one colour, so the eye can match them. */
+.annotation-card.is-selected,
+.annotation-card.is-selected:hover {
+  position: relative;
+  margin-inline: -8px;
+  padding-inline: 8px;
+  /* sRGB, not OKLCH: interpolating hue would drift the tint toward the paper's blue. */
+  background: color-mix(in srgb, oklch(86% 0.12 86) 20%, var(--paper));
+}
+
+.annotation-card.is-selected blockquote {
+  border-left-color: oklch(66% 0.13 76);
+  color: var(--ink);
+}
+
+@media (forced-colors: active) {
+  .annotation-card.is-selected {
+    outline: 2px solid Highlight;
+  }
 }
 .annotation-draft-badge {
   margin-left: auto;

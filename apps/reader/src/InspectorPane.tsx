@@ -96,7 +96,7 @@ export function InspectorPane({
         />
       ) : (
         <div className="inspector-status inspector-context-empty">
-          <strong>Source tools follow the active pane</strong>
+          <strong>Notes follow the active pane</strong>
           <span>Focus a document, note, annotation, or citation tab to inspect its source.</span>
         </div>
       )}

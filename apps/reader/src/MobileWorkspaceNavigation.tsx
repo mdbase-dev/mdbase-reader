@@ -32,6 +32,11 @@ export function MobileWorkspaceNavigation({
       </nav>
     );
   }
+  const activeTab = active ? panelTab(active) : undefined;
+  // The library is home: alone, its own view title is the heading, and it is never closed.
+  if (activeTab?.kind === "library" && tabs.length === 1) {
+    return null;
+  }
   return (
     <nav className="mobile-workspace-navigation" aria-label="Mobile workspace navigation">
       <label className="mobile-tab-switcher">
@@ -51,7 +56,7 @@ export function MobileWorkspaceNavigation({
         {tabs.length > 1 ? <span className="mobile-tab-count">{tabs.length}</span> : null}
         <ChevronDownIcon aria-hidden="true" />
       </label>
-      {active ? (
+      {active && activeTab?.kind !== "library" ? (
         <button
           className="icon-button"
           type="button"

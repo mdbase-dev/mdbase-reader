@@ -30,7 +30,7 @@ export async function auditAnnotationNavigationFailure(page, { open, screenshot 
     .getByRole("complementary", { name: "Source workspace" })
     .locator(".annotation-card")
     .filter({ hasText: "no longer locatable" });
-  await card.getByRole("button", { name: "Open annotation in document", exact: true }).click();
+  await card.getByRole("button", { name: "Show in document", exact: true }).click();
   await expect(page.locator(".annotation-compose-error")).toContainText(
     "Could not locate this passage",
   );

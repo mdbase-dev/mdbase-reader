@@ -1,5 +1,14 @@
 /* eslint-disable complexity, max-lines, max-lines-per-function */
-import { useEffect, useId, useMemo, useState, type JSX, type KeyboardEvent } from "react";
+import {
+  useCallback,
+  useEffect,
+  useId,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+  type JSX,
+} from "react";
 
 import { ContinueReading } from "./ContinueReading.js";
 import { readerErrorMessage } from "./errors.js";
@@ -13,17 +22,24 @@ import {
   SearchIcon,
 } from "./icons.js";
 import { importHref } from "./import-navigation.js";
-import { publicationDateLabel } from "./library-publication-date.js";
+import { discoverPropertyKeys } from "./library-columns.js";
+import {
+  emptyRowSelection,
+  pruneRowSelection,
+  type RowSelection,
+} from "./library-row-selection.js";
+import { LibraryBulkBar, type BulkStatusProgress } from "./LibraryBulkBar.js";
+import { LibraryCards } from "./LibraryCards.js";
+import { countLabel } from "./LibraryCells.js";
+import { LibraryTable } from "./LibraryTable.js";
 import { LibraryTextSearch, type LibrarySearchScope } from "./LibraryTextSearch.js";
 import {
   applyLibraryViewConfiguration,
-  columnLabel,
-  sourceFormat,
-  type LibraryColumn,
   type LibraryViewConfiguration,
   type MdbaseLibraryView,
 } from "./mdbase-library-views.js";
 import { Menu } from "./Menu.js";
+import { layoutOf, useLibraryLayoutDraft } from "./use-library-layout-draft.js";
 
 import type { BibliographyExportController } from "./use-bibliography-export.js";
 import type { MdbaseLibraryViewsController } from "./use-mdbase-library-views.js";
@@ -39,7 +55,6 @@ export function LibraryWorkspace({
   controller,
   focused,
   onOpenView,
-  onPreviewSource,
   onOpenSource,
   onOpenBeside,
   onAddSource,
@@ -47,7 +62,9 @@ export function LibraryWorkspace({
   surfaces,
   bibliographyExport,
   onSourceChanged,
+  annotationCounts = noCounts,
 }: {
+  readonly annotationCounts?: ReadonlyMap<SourceId, number>;
   readonly bibliographyExport: BibliographyExportController;
   readonly onSourceChanged?: (source: Source) => void;
   readonly surfaces?: ReadonlyMap<string, ReadingSurface>;
@@ -59,16 +76,24 @@ export function LibraryWorkspace({
   readonly controller: MdbaseLibraryViewsController;
   readonly focused: boolean;
   readonly onOpenView: (view: MdbaseLibraryView) => void;
-  readonly onPreviewSource: (sourceId: SourceId) => void;
   readonly onOpenSource: (sourceId: SourceId) => void;
   readonly onOpenBeside: (sourceId: SourceId) => void;
   readonly onAddSource: () => void;
 }): JSX.Element {
-  const [configuration, setConfiguration] = useState(view.configuration);
+  const collectionKey = allSources[0]?.collectionId ?? "library";
+  const [layout, setLayout] = useLibraryLayoutDraft(collectionKey, view);
+  const [filter, setFilter] = useState(view.configuration.filter);
+  const configuration = useMemo<LibraryViewConfiguration>(
+    () => ({ ...layout, filter }),
+    [layout, filter],
+  );
   const [searchScope, setSearchScope] = useState<LibrarySearchScope>("sources");
   const [contentQuery, setContentQuery] = useState("");
-  const [page, setPage] = useState(0);
+  const [selection, setSelection] = useState<RowSelection>(emptyRowSelection);
   const [executedSources, setExecutedSources] = useState<readonly SourceSummary[]>(allSources);
+  const [valuesByPath, setValuesByPath] = useState<
+    ReadonlyMap<string, Readonly<Record<string, unknown>>>
+  >(() => new Map());
   const [loading, setLoading] = useState(Boolean(view.path));
   const [problem, setProblem] = useState<string | null>(null);
   const saveStatus = gateway.saveReadingStatus?.bind(gateway);
@@ -96,6 +121,7 @@ export function LibraryWorkspace({
       .then((result) => {
         if (!controller.signal.aborted) {
           setExecutedSources(result.sources);
+          setValuesByPath(result.valuesByPath);
         }
       })
       .catch((reason: unknown) => {
@@ -121,31 +147,52 @@ export function LibraryWorkspace({
     const byId = new Map(allSources.map((source) => [source.id, source]));
     return executedSources.map((source) => byId.get(source.id) ?? source);
   }, [allSources, executedSources]);
-  const baseSources = dirty ? allSources : freshSources;
+  // A changed filter searches the whole library; layout changes keep the view's own results.
+  const filterChanged = JSON.stringify(filter) !== JSON.stringify(view.configuration.filter);
+  const baseSources = filterChanged ? allSources : freshSources;
+  const { sortField, sortDirection } = layout;
   const sources = useMemo(
     () =>
-      applyLibraryViewConfiguration(
-        baseSources,
-        searchScope === "sources"
-          ? configuration
-          : {
-              ...configuration,
-              filter: { ...configuration.filter, query: "" },
-            },
+      applyLibraryViewConfiguration(baseSources, {
+        ...view.configuration,
+        sortField,
+        sortDirection,
+        filter: searchScope === "sources" ? filter : { ...filter, query: "" },
+      }),
+    [baseSources, filter, searchScope, sortDirection, sortField, view.configuration],
+  );
+  const visibleSelection = useMemo(
+    () =>
+      pruneRowSelection(
+        selection,
+        sources.map(({ id }) => id),
       ),
-    [baseSources, configuration, searchScope],
+    [selection, sources],
+  );
+  const selectedSources = useMemo(
+    () => sources.filter(({ id }) => visibleSelection.ids.has(id)),
+    [sources, visibleSelection],
+  );
+  const propertyKeys = useMemo(
+    () => discoverPropertyKeys(allSources, view.properties),
+    [allSources, view.properties],
   );
   const update = (value: Partial<LibraryViewConfiguration>): void => {
-    setPage(0);
-    setConfiguration((current) => ({ ...current, ...value }));
+    setLayout({ ...layout, ...value });
   };
   const updateFilter = (value: Partial<LibraryViewConfiguration["filter"]>): void => {
-    setPage(0);
-    setConfiguration((current) => ({ ...current, filter: { ...current.filter, ...value } }));
+    setFilter((current) => ({ ...current, ...value }));
   };
-  const pageCount = Math.max(1, Math.ceil(sources.length / 100));
-  const currentPage = Math.min(page, pageCount - 1);
-  const pageSources = sources.slice(currentPage * 100, (currentPage + 1) * 100);
+  const setStatuses = useBulkStatus(gateway, onSourceChanged);
+  const resultsRef = useRef<HTMLDivElement>(null);
+  const restoredScroll = useRef(false);
+  useLayoutEffect(() => {
+    // Returning to a view keeps its place once its rows exist to scroll to.
+    if (!restoredScroll.current && !loading && resultsRef.current) {
+      restoredScroll.current = true;
+      resultsRef.current.scrollTop = scrollPositions.get(view.key) ?? 0;
+    }
+  }, [loading, view.key]);
 
   const save = async (replace: boolean): Promise<void> => {
     const name = saveName.trim();
@@ -191,7 +238,7 @@ export function LibraryWorkspace({
               value={searchScope === "sources" ? configuration.filter.query : contentQuery}
               placeholder={
                 searchScope === "sources"
-                  ? "Search titles, authors and tags"
+                  ? "Title, author or tag"
                   : searchScope === "notes"
                     ? "Search notes and annotations"
                     : "Search open documents"
@@ -203,13 +250,15 @@ export function LibraryWorkspace({
               }
             />
           </label>
+          <span className="library-search-scope-label" aria-hidden="true">
+            in
+          </span>
           <select
             aria-label="Search scope"
             className="library-search-scope"
             value={searchScope}
             onChange={(event) => {
               setSearchScope(event.target.value as LibrarySearchScope);
-              setPage(0);
             }}
           >
             <option value="sources">Sources</option>
@@ -310,6 +359,7 @@ export function LibraryWorkspace({
                   }
                 >
                   <option value="saved">Recently saved</option>
+                  <option value="opened">Recently opened</option>
                   <option value="title">Title</option>
                   <option value="creator">Creator</option>
                   <option value="published">Published</option>
@@ -341,29 +391,15 @@ export function LibraryWorkspace({
                   </button>
                 ))}
               </div>
-              {configuration.presentation === "table" ? (
-                <>
-                  <span className="menu-label">Columns</span>
-                  <div className="library-column-panel">
-                    {allColumns
-                      .filter((column) => column !== "title")
-                      .map((column) => (
-                        <label key={column}>
-                          <input
-                            type="checkbox"
-                            checked={configuration.columns.includes(column)}
-                            onChange={() =>
-                              update({ columns: toggleColumn(configuration.columns, column) })
-                            }
-                          />
-                          {columnLabel(column)}
-                        </label>
-                      ))}
-                  </div>
-                </>
-              ) : null}
             </div>
             <hr />
+            <button
+              type="button"
+              disabled={JSON.stringify(layout) === JSON.stringify(layoutOf(view.configuration))}
+              onClick={() => setLayout(layoutOf(view.configuration))}
+            >
+              Reset columns and layout
+            </button>
             <button type="button" onClick={() => setSaving(true)}>
               Save as new view…
             </button>
@@ -405,7 +441,11 @@ export function LibraryWorkspace({
         </div>
       ) : null}
 
-      <div className="library-workspace-results">
+      <div
+        ref={resultsRef}
+        className="library-workspace-results"
+        onScroll={(event) => scrollPositions.set(view.key, event.currentTarget.scrollTop)}
+      >
         {searchScope === "sources" && !configuration.filter.query && !view.path ? (
           <ContinueReading sources={allSources} onOpen={onOpenSource} />
         ) : null}
@@ -451,39 +491,44 @@ export function LibraryWorkspace({
           </div>
         ) : configuration.presentation === "table" ? (
           <LibraryTable
-            sources={pageSources}
-            columns={visibleColumns(configuration.columns, pageSources)}
+            sources={sources}
+            layout={layout}
+            onLayoutChange={setLayout}
+            properties={view.properties}
+            propertyKeys={propertyKeys}
+            valuesByPath={valuesByPath}
+            annotationCounts={annotationCounts}
             focused={focused}
-            onPreview={onPreviewSource}
+            selection={visibleSelection}
+            onSelectionChange={setSelection}
+            scrollRef={resultsRef}
             onOpen={onOpenSource}
             onOpenBeside={onOpenBeside}
             {...(changeStatus ? { onChangeStatus: changeStatus } : {})}
           />
         ) : (
-          <LibraryCards sources={pageSources} onPreview={onPreviewSource} onOpen={onOpenSource} />
+          <LibraryCards
+            sources={sources}
+            selection={visibleSelection}
+            onSelectionChange={setSelection}
+            onOpen={onOpenSource}
+            scrollRef={resultsRef}
+          />
         )}
       </div>
 
-      {searchScope === "sources" && pageCount > 1 ? (
-        <nav className="library-pagination" aria-label="Library result pages">
-          <button
-            type="button"
-            disabled={currentPage === 0}
-            onClick={() => setPage(currentPage - 1)}
-          >
-            Previous
-          </button>
-          <span role="status">
-            Page {currentPage + 1} of {pageCount} · {sources.length} sources
-          </span>
-          <button
-            type="button"
-            disabled={currentPage + 1 === pageCount}
-            onClick={() => setPage(currentPage + 1)}
-          >
-            Next
-          </button>
-        </nav>
+      {selectedSources.length > 1 ? (
+        <LibraryBulkBar
+          selected={selectedSources}
+          onClear={() => setSelection(emptyRowSelection)}
+          {...(setStatuses ? { onSetStatus: setStatuses } : {})}
+          onOpen={(chosen) => {
+            for (const source of chosen) {
+              onOpenSource(source.id);
+            }
+          }}
+          onExport={bibliographyExport.runFor}
+        />
       ) : null}
       {saving ? (
         <div
@@ -536,300 +581,9 @@ export function LibraryWorkspace({
   );
 }
 
-function LibraryTable({
-  sources,
-  columns,
-  focused,
-  onPreview,
-  onOpen,
-  onOpenBeside,
-  onChangeStatus,
-}: {
-  readonly onChangeStatus?: (id: SourceId, status: ReadingStatus) => void;
-  readonly sources: readonly SourceSummary[];
-  readonly columns: readonly LibraryColumn[];
-  readonly focused: boolean;
-  readonly onPreview: (id: SourceId) => void;
-  readonly onOpen: (id: SourceId) => void;
-  readonly onOpenBeside: (id: SourceId) => void;
-}): JSX.Element {
-  const gridTemplateColumns = columns.map(columnWidth).join(" ");
-  return (
-    <div
-      className="library-table"
-      role="grid"
-      aria-label="Sources"
-      aria-rowcount={sources.length + 1}
-    >
-      <div className="library-table-row is-header" role="row" style={{ gridTemplateColumns }}>
-        {columns.map((column) => (
-          <span key={column} role="columnheader" className={`is-${column}`}>
-            {columnLabel(column)}
-          </span>
-        ))}
-      </div>
-      <div className="library-table-body">
-        {sources.map((source) => (
-          <div
-            key={source.id}
-            className="library-table-row"
-            role="row"
-            tabIndex={focused ? 0 : -1}
-            title="Double-click or press Enter to open"
-            style={{ gridTemplateColumns }}
-            onClick={() => onPreview(source.id)}
-            onDoubleClick={() => onOpen(source.id)}
-            onKeyDown={(event) => rowKeyDown(event, source.id, onOpen, onOpenBeside)}
-          >
-            {columns.map((column) => (
-              <span key={column} role="gridcell" className={`is-${column}`}>
-                {column === "status" && onChangeStatus ? (
-                  <StatusPicker source={source} onChange={onChangeStatus} />
-                ) : (
-                  <TableValue source={source} column={column} />
-                )}
-              </span>
-            ))}
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-}
-
-function LibraryCards({
-  sources,
-  onPreview,
-  onOpen,
-}: {
-  readonly sources: readonly SourceSummary[];
-  readonly onPreview: (id: SourceId) => void;
-  readonly onOpen: (id: SourceId) => void;
-}): JSX.Element {
-  return (
-    <div className="library-card-grid" role="list">
-      {sources.map((source) => (
-        <article key={source.id} className="library-card" role="listitem">
-          <button
-            type="button"
-            className="library-card-hit-target"
-            aria-label={`Preview ${source.title}`}
-            onClick={() => onPreview(source.id)}
-            onDoubleClick={() => onOpen(source.id)}
-          />
-          <div className={`library-card-bookplate is-${sourceFormat(source)}`}>
-            <span>{formatLabel(source)}</span>
-            <strong aria-hidden="true">{source.title.trim().charAt(0).toLocaleUpperCase()}</strong>
-          </div>
-          <div className="library-card-copy">
-            <span>{source.creators.join(", ") || "Unknown creator"}</span>
-            <h3>{source.title}</h3>
-            <div>
-              <small>{publicationDateLabel(source.published) ?? "Undated"}</small>
-              <ReadingStatus source={source} />
-            </div>
-            {source.tags.length > 0 ? (
-              <p>{source.tags.slice(0, 3).map(String).join(" · ")}</p>
-            ) : null}
-          </div>
-        </article>
-      ))}
-    </div>
-  );
-}
-
-function TableValue({
-  source,
-  column,
-}: {
-  readonly source: SourceSummary;
-  readonly column: LibraryColumn;
-}): JSX.Element {
-  switch (column) {
-    case "title":
-      return (
-        <>
-          <span className="source-format-tag">{formatLabel(source)}</span>
-          <span className="library-title-copy">
-            <strong>{source.title}</strong>
-            <small>{source.creators.join(", ") || "Unknown creator"}</small>
-          </span>
-        </>
-      );
-    case "creator":
-      return <>{source.creators.join(", ") || "—"}</>;
-    case "published":
-      return <>{publicationDateLabel(source.published) ?? "—"}</>;
-    case "status":
-      return <ReadingStatus source={source} />;
-    case "format":
-      return <>{formatLabel(source)}</>;
-    case "tags":
-      return <>{source.tags.map(String).join(", ") || "—"}</>;
-  }
-}
-
-function ReadingStatus({ source }: { readonly source: SourceSummary }): JSX.Element {
-  const progress = readingProgress(source);
-  return (
-    <span className={`library-status is-${readingStatusOf(source)}`}>
-      {statusLabel(source)}
-      {progress !== null ? (
-        <span className="library-progress" aria-label={`${String(progress)}% read`}>
-          <i style={{ width: `${String(progress)}%` }} />
-        </span>
-      ) : null}
-    </span>
-  );
-}
-
-const readingStatusChoices: readonly ReadingStatus[] = [
-  "inbox",
-  "queued",
-  "reading",
-  "finished",
-  "archived",
-  "abandoned",
-];
-
-function StatusPicker({
-  source,
-  onChange,
-}: {
-  readonly source: SourceSummary;
-  readonly onChange: (id: SourceId, status: ReadingStatus) => void;
-}): JSX.Element {
-  const progress = readingProgress(source);
-  const status = readingStatusOf(source);
-  return (
-    <span className={`library-status is-${status} is-editable`}>
-      <select
-        aria-label={`Reading status of ${source.title}`}
-        value={status}
-        onClick={(event) => event.stopPropagation()}
-        onDoubleClick={(event) => event.stopPropagation()}
-        onKeyDown={(event) => event.stopPropagation()}
-        onChange={(event) => onChange(source.id, event.target.value as ReadingStatus)}
-      >
-        {readingStatusChoices.map((choice) => (
-          <option key={choice} value={choice}>
-            {choice.charAt(0).toLocaleUpperCase() + choice.slice(1)}
-          </option>
-        ))}
-      </select>
-      {progress !== null ? (
-        <span className="library-progress" aria-label={`${String(progress)}% read`}>
-          <i style={{ width: `${String(progress)}%` }} />
-        </span>
-      ) : null}
-    </span>
-  );
-}
-
-function readingStatusOf(source: SourceSummary): string {
-  return source.reading?.status ?? source.readingStatus ?? "inbox";
-}
-
-function statusLabel(source: SourceSummary): string {
-  const status = readingStatusOf(source);
-  return status.charAt(0).toLocaleUpperCase() + status.slice(1);
-}
-
-function readingProgress(source: SourceSummary): number | null {
-  const progress = source.reading?.progress;
-  if (progress === undefined || readingStatusOf(source) !== "reading") {
-    return null;
-  }
-  return Math.round(Math.max(0, Math.min(1, progress)) * 100);
-}
-
-function formatLabel(source: SourceSummary): string {
-  const format = sourceFormat(source);
-  return format === "web" ? "Web" : format === "note" ? "Note" : format.toLocaleUpperCase();
-}
-
-/** Hide optional columns that have nothing to show for any visible source. */
-export function visibleColumns(
-  columns: readonly LibraryColumn[],
-  sources: readonly SourceSummary[],
-): readonly LibraryColumn[] {
-  const hasValue: Record<LibraryColumn, (source: SourceSummary) => boolean> = {
-    title: () => true,
-    creator: (source) => source.creators.length > 0,
-    published: (source) => publicationDateLabel(source.published) !== null,
-    status: () => true,
-    format: () => true,
-    tags: (source) => source.tags.length > 0,
-  };
-  return columns.filter(
-    (column) => column === "title" || sources.some((source) => hasValue[column](source)),
-  );
-}
-
-const allColumns: readonly LibraryColumn[] = [
-  "title",
-  "creator",
-  "published",
-  "status",
-  "format",
-  "tags",
-];
-
-function columnWidth(column: LibraryColumn): string {
-  return {
-    title: "minmax(220px, 1fr)",
-    creator: "minmax(120px, 0.35fr)",
-    published: "84px",
-    status: "120px",
-    format: "72px",
-    tags: "minmax(120px, 0.3fr)",
-  }[column];
-}
-
-function toggleColumn(
-  columns: readonly LibraryColumn[],
-  column: LibraryColumn,
-): readonly LibraryColumn[] {
-  if (column === "title") {
-    return columns;
-  }
-  return columns.includes(column)
-    ? columns.filter((candidate) => candidate !== column)
-    : [...columns, column];
-}
-
-function rowKeyDown(
-  event: KeyboardEvent,
-  id: SourceId,
-  open: (id: SourceId) => void,
-  openBeside: (id: SourceId) => void,
-): void {
-  if (event.target !== event.currentTarget) {
-    return;
-  }
-  const step = { ArrowDown: 1, j: 1, ArrowUp: -1, k: -1 }[event.key];
-  if (step !== undefined && !event.metaKey && !event.ctrlKey && !event.altKey) {
-    const row = event.currentTarget;
-    const next = step > 0 ? row.nextElementSibling : row.previousElementSibling;
-    if (next instanceof HTMLElement) {
-      event.preventDefault();
-      next.focus();
-    }
-    return;
-  }
-  if (event.key === "Enter") {
-    event.preventDefault();
-    if (event.metaKey || event.ctrlKey) {
-      openBeside(id);
-    } else {
-      open(id);
-    }
-  }
-}
-
-function countLabel(count: number, noun: string): string {
-  return `${count.toLocaleString()} ${count === 1 ? noun : `${noun}s`}`;
-}
+const noCounts: ReadonlyMap<SourceId, number> = new Map();
+// Scroll positions outlive a tab's renderer, so a view keeps its place across tab switches.
+const scrollPositions = new Map<string, number>();
 
 function activeFilterCount(configuration: LibraryViewConfiguration): number {
   return (
@@ -844,4 +598,42 @@ function sameConfiguration(
   right: LibraryViewConfiguration,
 ): boolean {
   return JSON.stringify(left) === JSON.stringify(right);
+}
+
+type BulkStatusSetter = (
+  sources: readonly SourceSummary[],
+  status: ReadingStatus,
+  progress: (value: BulkStatusProgress) => void,
+) => Promise<void>;
+
+/** Writes one reading status to many sources, a few at a time, reporting progress. */
+function useBulkStatus(
+  gateway: ReaderWorkspaceGateway,
+  onSourceChanged: ((source: Source) => void) | undefined,
+): BulkStatusSetter | undefined {
+  const save = gateway.saveReadingStatus?.bind(gateway);
+  const run = useCallback<BulkStatusSetter>(
+    async (sources, status, progress) => {
+      if (!save) {
+        return;
+      }
+      let done = 0;
+      let failed = 0;
+      const queue = [...sources];
+      const worker = async (): Promise<void> => {
+        for (let source = queue.shift(); source; source = queue.shift()) {
+          try {
+            onSourceChanged?.(await save(source.id, status));
+          } catch {
+            failed += 1;
+          }
+          done += 1;
+          progress({ done, total: sources.length, failed });
+        }
+      };
+      await Promise.all(Array.from({ length: Math.min(4, sources.length) }, worker));
+    },
+    [onSourceChanged, save],
+  );
+  return save ? run : undefined;
 }

@@ -183,3 +183,16 @@ export const CodeIcon = (props: IconProps): JSX.Element => (
     <path d="m8.5 7-5 5 5 5M15.5 7l5 5-5 5" />
   </Icon>
 );
+export const CollectionIcon = (props: IconProps): JSX.Element => (
+  <Icon {...props}>
+    <rect x="4" y="3.5" width="16" height="5" rx="1" />
+    <rect x="4" y="10" width="16" height="5" rx="1" />
+    <rect x="4" y="16.5" width="16" height="4" rx="1" />
+  </Icon>
+);
+export const ReadingModeIcon = (props: IconProps): JSX.Element => (
+  <Icon {...props}>
+    <path d="M12 6.5C10 5 7 4.5 3.5 5v13c3.5-.5 6.5 0 8.5 1.5 2-1.5 5-2 8.5-1.5V5C17 4.5 14 5 12 6.5Z" />
+    <path d="M12 6.5v13" />
+  </Icon>
+);

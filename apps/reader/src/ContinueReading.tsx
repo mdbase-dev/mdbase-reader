@@ -1,23 +1,32 @@
 import type { SourceId, SourceSummary } from "@mdbase-reader/core";
 import type { JSX } from "react";
 
+const continueLimit = 3;
+
+/** Sources worth resuming, most recently opened first. */
+export function continueReadingSources(
+  sources: readonly SourceSummary[],
+  limit = continueLimit,
+): readonly SourceSummary[] {
+  return [...sources]
+    .filter(
+      (source) =>
+        source.documents.length > 0 &&
+        !["finished", "archived", "abandoned"].includes(
+          source.reading?.status ?? source.readingStatus ?? "",
+        ) &&
+        (Boolean(source.reading?.lastOpenedAt) ||
+          source.readingStatus === "reading" ||
+          source.reading?.status === "reading"),
+    )
+    .sort((left, right) =>
+      (right.reading?.lastOpenedAt ?? "").localeCompare(left.reading?.lastOpenedAt ?? ""),
+    )
+    .slice(0, limit);
+}
+
 export function continueReadingSource(sources: readonly SourceSummary[]): SourceSummary | null {
-  return (
-    [...sources]
-      .filter(
-        (source) =>
-          source.documents.length > 0 &&
-          !["finished", "archived", "abandoned"].includes(
-            source.reading?.status ?? source.readingStatus ?? "",
-          ) &&
-          (Boolean(source.reading?.lastOpenedAt) ||
-            source.readingStatus === "reading" ||
-            source.reading?.status === "reading"),
-      )
-      .sort((left, right) =>
-        (right.reading?.lastOpenedAt ?? "").localeCompare(left.reading?.lastOpenedAt ?? ""),
-      )[0] ?? null
-  );
+  return continueReadingSources(sources, 1)[0] ?? null;
 }
 
 export function readingProgressValue(source: SourceSummary): number | null {
@@ -45,35 +54,52 @@ export function ContinueReading({
   readonly sources: readonly SourceSummary[];
   readonly onOpen: (id: SourceId) => void;
 }): JSX.Element | null {
-  const source = continueReadingSource(sources);
-  if (!source) {
+  const resumable = continueReadingSources(sources);
+  if (resumable.length === 0) {
     return null;
   }
+  return (
+    <section className="continue-reading" aria-labelledby="continue-reading-heading">
+      <h2 id="continue-reading-heading">Continue reading</h2>
+      <div className="continue-reading-list">
+        {resumable.map((source) => (
+          <ContinueReadingRow key={source.id} source={source} onOpen={onOpen} />
+        ))}
+      </div>
+    </section>
+  );
+}
+
+function ContinueReadingRow({
+  source,
+  onOpen,
+}: {
+  readonly source: SourceSummary;
+  readonly onOpen: (id: SourceId) => void;
+}): JSX.Element {
   const progress = readingProgressValue(source);
   const location = readingLocationLabel(source);
   const creators = source.creators.join(", ");
   return (
     <button
-      className="continue-reading"
+      className="continue-reading-item"
       type="button"
       aria-label={`Continue reading ${source.title}`}
       onClick={() => onOpen(source.id)}
     >
-      <span className="continue-reading-label">Continue reading</span>
       <span className="continue-reading-title">
         <strong>{source.title}</strong>
         {creators || location ? (
           <small>{[creators, location].filter(Boolean).join(" · ")}</small>
         ) : null}
       </span>
-      {progress !== null ? (
+      {progress !== null && progress > 0 ? (
         <span className="library-progress" aria-hidden="true">
           <i style={{ width: `${String(progress)}%` }} />
         </span>
-      ) : null}
-      <span className="continue-reading-action" aria-hidden="true">
-        Resume →
-      </span>
+      ) : (
+        <span className="continue-reading-state">{location || "Not started"}</span>
+      )}
     </button>
   );
 }

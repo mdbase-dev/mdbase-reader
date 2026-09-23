@@ -37,6 +37,16 @@ export class ConnectAnnotationRepository implements AnnotationRepository {
     return [...this.#pathsBySource.keys()] as SourceId[];
   }
 
+  async annotationCountsBySource(
+    _collection: CollectionId,
+    _options: ReaderRequestOptions = {},
+  ): Promise<ReadonlyMap<SourceId, number>> {
+    await this.#ensureIndex();
+    return new Map(
+      [...this.#pathsBySource].map(([source, paths]) => [source as SourceId, paths.length]),
+    );
+  }
+
   async listForSource(
     collection: CollectionId,
     source: SourceId,

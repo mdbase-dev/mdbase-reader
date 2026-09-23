@@ -1,9 +1,13 @@
+import { forwardApplicationShortcut } from "./html-keyboard.js";
+import { HtmlMarginMarkers } from "./html-margin-markers.js";
 import { htmlLocator, htmlSelectionDraft, locateHtmlTarget } from "./html-range.js";
+import { applyHtmlTypography } from "./html-typography.js";
 
 import type { Annotation, AnnotationId } from "@mdbase-reader/core";
 import type {
   ContentsEntry,
   ReaderLocator,
+  ReadingTypography,
   TextSelectionDraft,
   ViewportRect,
 } from "@mdbase-reader/reading-surface";
@@ -24,6 +28,12 @@ export class HtmlDocumentRuntime {
     this.captureAnnotationActivation(event);
   };
   readonly #onScroll = (): void => this.emitLocation();
+  readonly #onKeyDown = (event: KeyboardEvent): void =>
+    forwardApplicationShortcut(event, this.#frame.ownerDocument);
+  readonly #markers: HtmlMarginMarkers;
+  // Images and fonts reflow the page after load; markers follow the text.
+  readonly #reflow =
+    typeof ResizeObserver === "undefined" ? null : new ResizeObserver(() => this.#markers.layout());
   #destroyed = false;
   #annotationRanges: readonly { readonly annotation: Annotation; readonly range: Range }[] = [];
 
@@ -39,7 +49,14 @@ export class HtmlDocumentRuntime {
     this.#href = href;
     document.addEventListener("pointerup", this.#onPointerUp);
     document.addEventListener("keyup", this.#onSelection);
+    document.addEventListener("keydown", this.#onKeyDown);
     view.addEventListener("scroll", this.#onScroll, { passive: true });
+    this.#markers = new HtmlMarginMarkers(document, (annotationId) => {
+      for (const listener of this.#activationListeners) {
+        listener(annotationId);
+      }
+    });
+    this.#reflow?.observe(document.body);
   }
 
   public onLocation(listener: (locator: ReaderLocator) => void): Unsubscribe {
@@ -110,11 +127,24 @@ export class HtmlDocumentRuntime {
       this.#view,
       this.#annotationRanges.map(({ range }) => range),
     );
+    this.#markers.set(
+      this.#annotationRanges.map(({ annotation, range }) => ({
+        id: annotation.id,
+        range,
+        hasNote: hasWrittenNote(annotation.body),
+      })),
+    );
   }
 
   public setActiveAnnotation(annotation: Annotation | null): void {
     const range = annotation?.target ? locateHtmlTarget(this.#document, annotation.target) : null;
     setCssHighlight(this.#view, "reader-active-annotation", range ? [range] : []);
+    this.#markers.setActive(range && annotation ? annotation.id : null);
+  }
+
+  public setTypography(typography: ReadingTypography): void {
+    applyHtmlTypography(this.#document, typography);
+    this.#markers.layout();
   }
 
   public clearSelection(): void {
@@ -131,7 +161,10 @@ export class HtmlDocumentRuntime {
     }
     this.#document.removeEventListener("pointerup", this.#onPointerUp);
     this.#document.removeEventListener("keyup", this.#onSelection);
+    this.#document.removeEventListener("keydown", this.#onKeyDown);
     this.#view.removeEventListener("scroll", this.#onScroll);
+    this.#reflow?.disconnect();
+    this.#markers.destroy();
     clearCssHighlights(this.#view);
     this.#locationListeners.clear();
     this.#selectionListeners.clear();
@@ -185,6 +218,11 @@ export class HtmlDocumentRuntime {
       listener(locator);
     }
   }
+}
+
+/** Whether an annotation carries the reader's own words, beyond the quoted passage. */
+function hasWrittenNote(body: string): boolean {
+  return body.split("\n").some((line) => line.trim() !== "" && !line.trimStart().startsWith(">"));
 }
 
 function caretPositionAtPoint(

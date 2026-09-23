@@ -19,8 +19,9 @@ import {
   type Source,
   type SourceId,
   type SourceFileImportRequest,
+  type SourceSummary,
 } from "@mdbase-reader/core";
-import { useMemo, type JSX } from "react";
+import { lazy, Suspense, useMemo, type JSX } from "react";
 
 import {
   applyLibraryViewConfiguration,
@@ -33,8 +34,14 @@ import {
 import { ReaderApp } from "./ReaderApp.js";
 
 import type { ReaderLibrarySnapshot, ReaderWorkspaceGateway } from "./workspace-model.js";
+import type { ReadingSurface, SurfaceDocument } from "@mdbase-reader/reading-surface";
 
 const collection = collectionId("reader-preview");
+const previewDocument = {
+  fileId: fileId("file_weil_html"),
+  file: "[[files/gravity-and-grace.html]]",
+  revision: fileRevision("sha256:19e81c"),
+};
 const previewCitation = {
   id: "weil1952gravity",
   type: "book",
@@ -51,16 +58,28 @@ const sources: readonly Source[] = [
     tags: ["philosophy", "attention"],
     citation: previewCitation,
     readingStatus: "reading",
+    reading: {
+      status: "reading",
+      progress: 0.42,
+      lastOpenedAt: dateTime("2026-09-23T20:15:00+10:00"),
+    },
+    published: 1952,
     documents: [
       {
-        fileId: fileId("file_weil_pdf"),
-        file: "[[files/gravity-and-grace.pdf]]",
-        revision: fileRevision("sha256:19e81c"),
-        mediaType: "application/pdf",
+        fileId: previewDocument.fileId,
+        file: previewDocument.file,
+        revision: previewDocument.revision,
+        mediaType: "text/html",
         role: "primary",
-        title: "Publisher PDF",
+        title: "Saved page",
       },
     ],
+    properties: {
+      id: "src_weil",
+      title: "Gravity and Grace",
+      course: "[[courses/phil-attention|Philosophy of attention]]",
+      priority: 1,
+    },
     body: "## Notes\n\nAttention is not effort but a patient availability to truth.\n\n![[annotations/ann_attention]]\n",
     recordRevision: recordRevision("preview-revision-1"),
     frontmatter: { csl: previewCitation },
@@ -73,6 +92,8 @@ const sources: readonly Source[] = [
     creators: ["Edward Tufte"],
     tags: ["design", "visualisation"],
     readingStatus: "queued",
+    reading: { status: "queued", lastOpenedAt: dateTime("2026-09-18T09:02:00+10:00") },
+    published: 1983,
     documents: [
       {
         fileId: fileId("file_tufte_epub"),
@@ -82,6 +103,11 @@ const sources: readonly Source[] = [
         role: "primary",
       },
     ],
+    properties: {
+      id: "src_tufte",
+      title: "The Visual Display of Quantitative Information",
+      priority: 3,
+    },
     body: "## Questions\n\nHow does graphical integrity apply to interactive systems?",
     recordRevision: recordRevision("preview-revision-2"),
     frontmatter: {},
@@ -95,6 +121,12 @@ const sources: readonly Source[] = [
     tags: ["attention"],
     readingStatus: "finished",
     documents: [],
+    properties: {
+      id: "src_crawford",
+      title: "Attention as a Cultural Problem",
+      course: "[[courses/phil-attention|Philosophy of attention]]",
+      priority: 2,
+    },
     body: "Read alongside Weil.",
     recordRevision: recordRevision("preview-revision-3"),
     frontmatter: {},
@@ -107,18 +139,15 @@ const annotations: readonly Annotation[] = [
     id: annotationId("ann_attention"),
     sourceId: sourceId("src_weil"),
     source: "[[src_weil|Gravity and Grace]]",
-    document: {
-      fileId: fileId("file_weil_pdf"),
-      file: "[[files/gravity-and-grace.pdf]]",
-      revision: fileRevision("sha256:19e81c"),
-    },
+    document: previewDocument,
     annotationType: "highlight",
-    locator: { label: "Page 42" },
+    locator: { label: "Attention and Will" },
     target: {
       quote: {
         exact:
           "Attention consists of suspending our thought, leaving it detached, empty and ready to be penetrated by the object.",
       },
+      html: { css: "body" },
     },
     tags: ["attention"],
     body: "This is the practical core of Weil's account of study.",
@@ -130,10 +159,26 @@ const annotations: readonly Annotation[] = [
     sourceId: sourceId("src_weil"),
     source: "[[src_weil|Gravity and Grace]]",
     annotationType: "note",
-    locator: { label: "Page 44" },
+    locator: { label: "Introduction" },
     tags: [],
     body: "Compare this with the note on contradiction in the introduction.",
     createdAt: dateTime("2026-08-08T11:03:00+10:00"),
+  },
+  {
+    collectionId: collection,
+    id: annotationId("ann_hastily"),
+    sourceId: sourceId("src_weil"),
+    source: "[[src_weil|Gravity and Grace]]",
+    document: previewDocument,
+    annotationType: "highlight",
+    locator: { label: "Attention and Will" },
+    target: {
+      quote: { exact: "thought has seized upon some idea too hastily" },
+      html: { css: "body" },
+    },
+    tags: [],
+    body: "",
+    createdAt: dateTime("2026-08-10T09:40:00+10:00"),
   },
 ];
 
@@ -211,6 +256,13 @@ export class PreviewGateway implements ReaderWorkspaceGateway {
   }
   annotations(id: SourceId): Promise<readonly Annotation[]> {
     return Promise.resolve(this.#annotations.filter(({ sourceId: source }) => source === id));
+  }
+  annotationCounts(): Promise<ReadonlyMap<SourceId, number>> {
+    const counts = new Map<SourceId, number>();
+    for (const annotation of this.#annotations) {
+      counts.set(annotation.sourceId, (counts.get(annotation.sourceId) ?? 0) + 1);
+    }
+    return Promise.resolve(counts);
   }
   saveSourceBody(source: Source, body: string): Promise<Source> {
     this.#sources = this.#sources.map((item) => (item.id === source.id ? { ...item, body } : item));
@@ -320,33 +372,53 @@ export class PreviewGateway implements ReaderWorkspaceGateway {
   }
 }
 
-function PreviewDocument(): JSX.Element {
-  return (
-    <div className="preview-document" aria-label="Interface preview document">
-      <article className="preview-page">
-        <div className="preview-running-head">
-          <span>GRAVITY AND GRACE</span>
-          <span>42</span>
+const HtmlViewerSurface = lazy(async () => {
+  const module = await import("@mdbase-reader/renderer-html");
+  return { default: module.HtmlViewerSurface };
+});
+
+const previewHtml = `<!doctype html><html lang="en"><head><title>Gravity and Grace</title></head><body>
+<article>
+<h1>Attention and Will</h1>
+<p>We do not have to acquire humility. There is humility in us—only we humiliate ourselves before false gods.</p>
+<p>Attention consists of suspending our thought, leaving it detached, empty and ready to be penetrated by the object.</p>
+<p>Thought must be empty, waiting, not seeking anything, but ready to receive in its naked truth the object that is to penetrate it.</p>
+<p>All wrong translations, all absurdities in geometry problems, all clumsiness of style and all faulty connection of ideas in compositions and essays, all such things are due to the fact that thought has seized upon some idea too hastily.</p>
+</article>
+</body></html>`;
+// A data URL has no lifetime to manage across StrictMode's remounts.
+const previewUrl = `data:text/html;charset=utf-8,${encodeURIComponent(previewHtml)}`;
+
+function PreviewDocument({
+  source,
+  onSurfaceChange,
+}: {
+  readonly source: SourceSummary;
+  readonly onSurfaceChange: (surface: ReadingSurface | null) => void;
+}): JSX.Element {
+  const document = useMemo<SurfaceDocument>(
+    () => ({ document: previewDocument, mediaType: "text/html", url: previewUrl }),
+    [],
+  );
+  if (source.id !== sourceId("src_weil")) {
+    return (
+      <div className="preview-document">
+        <div className="document-message">
+          <strong>{source.title}</strong>
+          <span>The interface preview includes one sample document: Gravity and Grace.</span>
         </div>
-        <h1>Attention and Will</h1>
-        <p>
-          We do not have to acquire humility. There is humility in us—only we humiliate ourselves
-          before false gods.
-        </p>
-        <p className="preview-highlight">
-          Attention consists of suspending our thought, leaving it detached, empty and ready to be
-          penetrated by the object.
-        </p>
-        <p>
-          Thought must be empty, waiting, not seeking anything, but ready to receive in its naked
-          truth the object that is to penetrate it.
-        </p>
-        <p>
-          All wrong translations, all absurdities in geometry problems, all clumsiness of style and
-          all faulty connection of ideas in compositions and essays, all such things are due to the
-          fact that thought has seized upon some idea too hastily.
-        </p>
-      </article>
+      </div>
+    );
+  }
+  return (
+    <div className="preview-document is-rendered" aria-label="Interface preview document">
+      <Suspense fallback={null}>
+        <HtmlViewerSurface
+          className="html-viewer"
+          document={document}
+          onSurfaceReady={onSurfaceChange}
+        />
+      </Suspense>
       <div className="preview-notice">
         <span>Interface preview</span> No collection records or files are created.
       </div>
@@ -359,7 +431,9 @@ export function PreviewReader(): JSX.Element {
   return (
     <ReaderApp
       gateway={gateway}
-      renderDocument={() => <PreviewDocument />}
+      renderDocument={(source, onSurfaceChange) => (
+        <PreviewDocument source={source} onSurfaceChange={onSurfaceChange} />
+      )}
       saveFile={() => Promise.resolve()}
     />
   );

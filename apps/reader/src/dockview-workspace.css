@@ -147,6 +147,43 @@
 .reader-dock .dv-groupview.dv-active-group .dv-tab.dv-active-tab {
   box-shadow: inset 0 -2px var(--accent);
 }
+/* A side panel alone in its group reads as a quiet heading: the header toggles show and
+   hide it, so it needs no close button, and its pane menu appears on hover. */
+.reader-dock-tab.is-side .dv-default-tab-action {
+  display: none;
+}
+.reader-dock
+  .dv-groupview:has(.reader-dock-tab.is-side):not(:has(.dv-tab + .dv-tab))
+  .dv-tab.dv-active-tab {
+  box-shadow: none;
+  color: var(--muted);
+  font-weight: 600;
+}
+.reader-dock
+  .dv-groupview:has(.reader-dock-tab.is-side):not(:has(.dv-tab + .dv-tab))
+  .dv-tabs-and-actions-container {
+  border-bottom-color: var(--reader-hairline);
+}
+.reader-dock
+  .dv-groupview:has(.reader-dock-tab.is-side):not(:has(.dv-tab + .dv-tab))
+  .dock-pane-menu
+  > button {
+  opacity: 0;
+  transition: opacity 120ms var(--ease);
+}
+.reader-dock
+  .dv-groupview:has(.reader-dock-tab.is-side):not(:has(.dv-tab + .dv-tab))
+  .dv-tabs-and-actions-container:is(:hover, :focus-within)
+  .dock-pane-menu
+  > button,
+.reader-dock .dock-pane-menu > button[aria-expanded="true"] {
+  opacity: 1;
+}
+@media (hover: none) {
+  .reader-dock .dock-pane-menu > button {
+    opacity: 1 !important;
+  }
+}
 .dock-pane-menu {
   position: relative;
   color: var(--muted);

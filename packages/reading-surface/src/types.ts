@@ -98,6 +98,18 @@ export interface ContentsCapability {
   goTo(id: string): Promise<boolean>;
 }
 
+/** Reader-chosen presentation for reflowable text. Fixed-layout documents such as PDF ignore it. */
+export interface ReadingTypography {
+  /** Multiplier of the document's base text size, from 0.8 to 1.6. */
+  readonly scale: number;
+  readonly measure: "narrow" | "standard" | "wide";
+  readonly face: "serif" | "sans";
+}
+
+export interface TypographyCapability {
+  setTypography(typography: ReadingTypography): Promise<void>;
+}
+
 export interface TextExtractionCapability {
   extractText(options?: { readonly signal?: AbortSignal }): Promise<string>;
 }
@@ -110,6 +122,7 @@ export interface ReadingSurfaceCapabilities {
   readonly annotationActivation?: AnnotationActivationCapability;
   readonly textExtraction?: TextExtractionCapability;
   readonly contents?: ContentsCapability;
+  readonly typography?: TypographyCapability;
 }
 
 export interface ReadingSurface {

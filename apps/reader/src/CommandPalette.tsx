@@ -19,6 +19,8 @@ export interface ReaderCommand {
   readonly keywords?: string;
   readonly shortcut?: string;
   readonly run: () => void;
+  /** A variant run with Shift+Enter or Shift+click, such as opening beside the document. */
+  readonly alternate?: { readonly label: string; readonly run: () => void };
 }
 
 export function CommandPalette({
@@ -50,9 +52,9 @@ function OpenCommandPalette({
     globalThis.setTimeout(() => inputRef.current?.focus(), 0);
     return () => previous?.focus();
   }, []);
-  const run = (command: ReaderCommand): void => {
+  const run = (command: ReaderCommand, alternate = false): void => {
     onClose();
-    command.run();
+    (alternate && command.alternate ? command.alternate.run : command.run)();
   };
   return (
     <dialog className="command-backdrop" open>
@@ -93,7 +95,12 @@ function OpenCommandPalette({
             onKeyDown={(event) => handleKeys(event, matches, active, setActive, run, onClose)}
           />
         </label>
-        <div className="command-results" role="listbox" aria-label="Search results">
+        <div
+          className="command-results"
+          role="listbox"
+          aria-label="Search results"
+          aria-describedby="command-palette-hint"
+        >
           {matches.length > 0 ? (
             matches.map((command, index) => (
               <Fragment key={command.id}>
@@ -109,6 +116,24 @@ function OpenCommandPalette({
             <div className="command-empty">No matching command or source</div>
           )}
         </div>
+        <footer className="command-footer" id="command-palette-hint">
+          <span>
+            <kbd>↑</kbd>
+            <kbd>↓</kbd> to move
+          </span>
+          <span>
+            <kbd>↵</kbd> to open
+          </span>
+          {matches[active]?.alternate ? (
+            <span>
+              <kbd>{shortcutLabel("shift")}</kbd>
+              <kbd>↵</kbd> {matches[active].alternate.label.toLocaleLowerCase()}
+            </span>
+          ) : null}
+          <span>
+            <kbd>Esc</kbd> to close
+          </span>
+        </footer>
       </section>
     </dialog>
   );
@@ -142,7 +167,7 @@ function CommandRow({
 }: {
   readonly command: ReaderCommand;
   readonly active: boolean;
-  readonly onRun: (command: ReaderCommand) => void;
+  readonly onRun: (command: ReaderCommand, alternate?: boolean) => void;
 }): JSX.Element {
   const ref = useRef<HTMLButtonElement>(null);
   useEffect(() => {
@@ -156,12 +181,17 @@ function CommandRow({
       type="button"
       role="option"
       aria-selected={active}
-      onMouseDown={() => onRun(command)}
+      onMouseDown={(event) => onRun(command, event.shiftKey)}
     >
       <span>
         <strong>{command.label}</strong>
         {command.detail ? <small>{command.detail}</small> : null}
       </span>
+      {command.alternate && active ? (
+        <span className="command-alternate">
+          {shortcutLabel("shift")}↵ {command.alternate.label}
+        </span>
+      ) : null}
       {command.shortcut ? <kbd>{shortcutLabel(command.shortcut)}</kbd> : null}
     </button>
   );
@@ -200,7 +230,7 @@ function handleKeys(
   matches: readonly ReaderCommand[],
   active: number,
   setActive: (value: number) => void,
-  run: (command: ReaderCommand) => void,
+  run: (command: ReaderCommand, alternate?: boolean) => void,
   close: () => void,
 ): void {
   if (event.key === "Escape") {
@@ -214,7 +244,7 @@ function handleKeys(
     const command = matches[active];
     if (command) {
       event.preventDefault();
-      run(command);
+      run(command, event.shiftKey);
     }
   }
 }

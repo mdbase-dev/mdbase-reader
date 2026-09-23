@@ -97,11 +97,11 @@ export async function auditDockview(page, { screenshot, blockWrites }) {
   // Focusing an iframe must select its source, not leave the inspector on the sibling.
   const firstBounds = await firstSession.locator("iframe.html-viewer").boundingBox();
   await page.mouse.click(firstBounds.x + 30, firstBounds.y + 80);
-  await page.getByRole("button", { name: "Toggle source tools" }).click();
+  await page.getByRole("button", { name: "Toggle notes panel" }).click();
   await expect(page.getByRole("complementary", { name: "Source workspace" })).toContainText(
     "Research 0001",
   );
-  await page.getByRole("button", { name: "Toggle source tools" }).click();
+  await page.getByRole("button", { name: "Toggle notes panel" }).click();
   completed.push("Clicking an embedded document changes the inspector source correctly");
 
   // Drag the first document over the second document's content (across an iframe).
@@ -118,7 +118,7 @@ export async function auditDockview(page, { screenshot, blockWrites }) {
   completed.push("Pointer drop over document content works without iframe reload");
 
   // Source tools are a real panel: move alongside / tab with a document, preserving context.
-  await page.getByRole("button", { name: "Toggle source tools" }).click();
+  await page.getByRole("button", { name: "Toggle notes panel" }).click();
   await expect(page.getByRole("complementary", { name: "Source workspace" })).toContainText(
     "Research 0001",
   );
@@ -126,7 +126,7 @@ export async function auditDockview(page, { screenshot, blockWrites }) {
   const inspectorGroup = panelGroup(await state(), inspectorId);
   // Dockview 8.3.1 edge-to-header drops are unreliable; the native content-centre target works.
   const docRect = await firstSession.locator("iframe.html-viewer").boundingBox();
-  await drag(tab("Source tools"), {
+  await drag(tab("Notes"), {
     x: docRect.x + docRect.width / 2,
     y: docRect.y + docRect.height / 2,
   });

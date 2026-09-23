@@ -85,10 +85,10 @@ export async function auditAnnotationFormats(page, { open, screenshot }) {
   const tools = page.getByRole("complementary", { name: "Source workspace" });
   // Desktop tool visibility survives mobile visits; do not accidentally close an already-open edge.
   if (!(await tools.isVisible())) {
-    await page.getByRole("button", { name: "Toggle source tools" }).click();
+    await page.getByRole("button", { name: "Toggle notes panel" }).click();
   }
   await expect(tools.locator(".annotation-card")).toHaveCount(1);
-  await tools.getByRole("button", { name: "Open annotation in document" }).click();
+  await tools.getByRole("button", { name: "Show in document" }).click();
   // Readium keeps an empty live alert region for announcements.
   await expect(page.locator(".annotation-compose-error")).toHaveCount(0);
   await expect

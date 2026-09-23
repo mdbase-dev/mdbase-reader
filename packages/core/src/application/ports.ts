@@ -90,6 +90,11 @@ export interface AnnotationRepository {
     collectionId: CollectionId,
     options?: ReaderRequestOptions,
   ): Promise<readonly SourceId[]>;
+  /** How many annotations each source has, where an index makes that cheap. */
+  annotationCountsBySource?(
+    collectionId: CollectionId,
+    options?: ReaderRequestOptions,
+  ): Promise<ReadonlyMap<SourceId, number>>;
   listForSource(
     collectionId: CollectionId,
     sourceId: SourceId,
@@ -208,6 +213,9 @@ export interface SourceFileImportRequest {
   readonly capture?: SourceCaptureProvenance;
   readonly archive?: SourceCaptureArchive;
   readonly metadata?: SourceImportMetadata;
+  /** Authored note and tags for a newly created source; never applied to duplicates. */
+  readonly body?: string;
+  readonly tags?: readonly string[];
 }
 
 export interface SourceCaptureProvenance {
@@ -267,6 +275,8 @@ export interface PlannedSourceFileImport {
   readonly savedAt: DateTime;
   readonly recordPath: string;
   readonly representations: readonly PlannedSourceRepresentation[];
+  readonly body?: string;
+  readonly tags?: readonly string[];
   readonly capture?: SourceCaptureProvenance;
   readonly metadata?: SourceImportMetadata;
 }

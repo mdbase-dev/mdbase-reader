@@ -4,11 +4,11 @@ import {
   AreaIcon,
   CitationIcon,
   DownloadIcon,
-  FocusIcon,
   HighlightIcon,
   ListIcon,
   MoreIcon,
   NoteIcon,
+  ReadingModeIcon,
 } from "./icons.js";
 import { Menu } from "./Menu.js";
 import { DocumentStatus } from "./WorkspacePaneSupport.js";
@@ -93,7 +93,7 @@ export function DocumentContextualToolbar({
           className={focusMode ? "is-active" : undefined}
           onClick={onToggleFocus}
         >
-          <FocusIcon /> {focusMode ? "Exit focus mode" : "Focus on document"}
+          <ReadingModeIcon /> {focusMode ? "Leave reading mode" : "Reading mode"}
         </button>
         <button
           type="button"

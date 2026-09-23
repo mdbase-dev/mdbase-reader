@@ -73,6 +73,7 @@ export class ReadiumEpubSurface implements ReadingSurface {
         },
       },
       annotationActivation: { activations: this.#annotationActivations },
+      typography: { setTypography: (typography) => runtime.setTypography(typography) },
     };
   }
 

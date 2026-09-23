@@ -69,6 +69,7 @@ function navigationCommands(input: ReaderCommandInput): readonly ReaderCommand[]
       group: "Sources",
       keywords: `open source ${source.readingStatus ?? "inbox"} ${source.tags.join(" ")}`,
       run: () => input.workspace.open(source.id),
+      alternate: { label: "Open beside", run: () => input.workspace.openBeside(source.id) },
     }));
   return [...openTabs, ...sourceCommands(input), ...sources];
 }
@@ -104,23 +105,28 @@ function workspaceCommands(input: ReaderCommandInput): readonly ReaderCommand[] 
       run: () => input.workspace.dock.reset(),
     },
     {
+      id: "toggle-focus",
+      label: input.focusMode ? "Leave reading mode" : "Enter reading mode",
+      detail: "Only the page, with the chrome out of the way",
+      group: "Workspace",
+      keywords: "focus distraction",
+      shortcut: "mod+.",
+      run: input.toggleFocus,
+    },
+    {
       id: "toggle-library",
       label: "Toggle sources sidebar",
       group: "Workspace",
+      shortcut: "mod+\\",
       run: input.toggleLibrary,
     },
     {
       id: "toggle-source-tools",
-      label: "Toggle source tools",
+      label: "Toggle notes panel",
+      detail: "Annotations, source note and citation",
       group: "Workspace",
+      shortcut: "mod+shift+\\",
       run: input.toggleInspector,
-    },
-    {
-      id: "toggle-focus",
-      label: `${input.focusMode ? "Exit" : "Enter"} focus mode`,
-      group: "Workspace",
-      shortcut: "Esc",
-      run: input.toggleFocus,
     },
     {
       id: "reopen",
@@ -178,30 +184,29 @@ function sourceCommands(input: ReaderCommandInput): readonly ReaderCommand[] {
       label: "Open annotations",
       group: "Current source",
       run: () => input.workspace.openView(sourceId, "annotations"),
+      alternate: {
+        label: "Open beside",
+        run: () => input.workspace.openBeside(sourceId, "annotations"),
+      },
     },
     {
       id: "note",
       label: "Open source note",
       group: "Current source",
+      keywords: "write notes",
       run: () => input.workspace.openView(sourceId, "note"),
+      alternate: { label: "Open beside", run: () => input.workspace.openBeside(sourceId, "note") },
     },
     {
       id: "citation",
       label: "Open citation data",
       group: "Current source",
+      keywords: "bibliography csl metadata",
       run: () => input.workspace.openView(sourceId, "citation"),
-    },
-    {
-      id: "note-beside",
-      label: "Open source note beside document",
-      group: "Workspace",
-      run: () => input.workspace.openBeside(sourceId, "note"),
-    },
-    {
-      id: "citation-beside",
-      label: "Open citation data beside document",
-      group: "Workspace",
-      run: () => input.workspace.openBeside(sourceId, "citation"),
+      alternate: {
+        label: "Open beside",
+        run: () => input.workspace.openBeside(sourceId, "citation"),
+      },
     },
   ];
 }

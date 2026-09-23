@@ -45,6 +45,8 @@ export interface SourceSummary {
   readonly citation?: CslItem;
   readonly citationProblems?: readonly CslValidationProblem[];
   readonly documents: readonly DocumentDescriptor[];
+  /** The record's frontmatter as read, for views that show arbitrary fields. */
+  readonly properties?: Readonly<Record<string, unknown>>;
 }
 
 export interface Source extends SourceSummary {

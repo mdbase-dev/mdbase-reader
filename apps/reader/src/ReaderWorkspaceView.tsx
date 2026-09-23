@@ -1,5 +1,5 @@
 /* eslint-disable max-lines */
-import { useCallback, useEffect, useRef, type JSX } from "react";
+import { useCallback, useEffect, useMemo, useRef, type JSX } from "react";
 
 import { CommandPalette } from "./CommandPalette.js";
 import { DeploymentUpdateNotice } from "./DeploymentUpdateNotice.js";
@@ -14,9 +14,13 @@ import { readerCommands } from "./reader-command-list.js";
 import { ReaderHeader } from "./ReaderHeader.js";
 import { RenderedSourceDocument } from "./RenderedSourceDocument.js";
 import { SourceAdditionOverlays } from "./SourceAdditionOverlays.js";
+import { useAnnotationCounts } from "./use-annotation-counts.js";
 import { useFileDrop } from "./use-file-drop.js";
 import { useMediaQuery } from "./use-media-query.js";
-import { useWorkspaceShellPreferences } from "./use-workspace-shell-preferences.js";
+import {
+  useWorkspaceShellPreferences,
+  type WorkspaceShellPreferencesController,
+} from "./use-workspace-shell-preferences.js";
 import { annotationDocumentTarget } from "./workspace-annotation-navigation.js";
 import { WorkspaceToolTab } from "./WorkspaceToolTab.js";
 
@@ -39,7 +43,7 @@ import type { SourceWorkspaceController } from "./use-source-workspace.js";
 import type { ReaderLibrarySnapshot, ReaderWorkspaceGateway } from "./workspace-model.js";
 import type { Annotation, SourceId, SourceSummary } from "@mdbase-reader/core";
 import type { PickedFile } from "@mdbase-reader/platform";
-import type { ReadingSurface } from "@mdbase-reader/reading-surface";
+import type { ReadingSurface, ReadingTypography } from "@mdbase-reader/reading-surface";
 import type { ThemePreference } from "@mdbase-reader/ui";
 
 export interface ReaderWorkspaceViewModel {
@@ -120,6 +124,8 @@ export function ReaderWorkspaceView({
     dock.setMobile(mobile);
     dock.setSinglePane(model.focusMode);
   }, [dock, mobile, model.focusMode]);
+  const reading = useReadingPreferences(model, shell, mobile);
+  const annotationCounts = useLibraryAnnotationCounts(model);
   const workbenchOwner = findWorkbenchOwner(
     sourceWorkspace.layout,
     inspectorSource?.id ?? null,
@@ -183,6 +189,7 @@ export function ReaderWorkspaceView({
       ) : null}
       {model.deploymentUpdateAvailable ? <DeploymentUpdateNotice /> : null}
       <ReaderHeader
+        {...reading}
         density={shell.value.density}
         onChangeDensity={(density) => shell.update({ density })}
         collectionName={library.collectionName}
@@ -203,6 +210,7 @@ export function ReaderWorkspaceView({
             <LibraryNavigator
               open={true}
               sources={library.sources}
+              openSources={model.openSources}
               selectedSourceId={source?.id ?? null}
               views={model.libraryViews.views}
               viewsLoading={model.libraryViews.loading}
@@ -284,11 +292,11 @@ export function ReaderWorkspaceView({
                 controller={model.libraryViews}
                 focused={focused}
                 onOpenView={(next) => sourceWorkspace.openLibrary(next.key, next.name)}
-                onPreviewSource={(id) => sourceWorkspace.preview(id)}
                 onOpenSource={(id) => sourceWorkspace.open(id)}
                 onOpenBeside={(id) => sourceWorkspace.openBeside(id)}
                 onAddSource={sourceAddition.open}
                 bibliographyExport={model.bibliographyExport}
+                annotationCounts={annotationCounts}
                 onSourceChanged={workspace.reconcileSource}
               />
             );
@@ -339,6 +347,103 @@ export function ReaderWorkspaceView({
       />
     </div>
   );
+}
+
+/**
+ * Applies the reader's type settings and sidebar behaviour, and returns the header's controls
+ * for them.
+ */
+function useReadingPreferences(
+  model: ReaderWorkspaceViewModel,
+  shell: WorkspaceShellPreferencesController,
+  mobile: boolean,
+): Pick<
+  Parameters<typeof ReaderHeader>[0],
+  | "typography"
+  | "onChangeTypography"
+  | "sidebarWhileReading"
+  | "onChangeSidebarWhileReading"
+  | "readingMode"
+  | "readingModeAvailable"
+  | "onToggleReadingMode"
+> {
+  const { typography, sidebarWhileReading } = shell.value;
+  const activeTab = model.sourceWorkspace.activeTab;
+  useApplyTypography(model.surfaces, typography);
+  useSidebarWhileReading(
+    model.sourceWorkspace,
+    sidebarWhileReading === "hide" && !mobile && !model.focusMode,
+  );
+  return {
+    typography,
+    onChangeTypography: (next) => shell.update({ typography: next }),
+    sidebarWhileReading,
+    onChangeSidebarWhileReading: (next) => shell.update({ sidebarWhileReading: next }),
+    readingMode: model.focusMode,
+    readingModeAvailable: activeTab?.kind === "source" && activeTab.view === "document",
+    onToggleReadingMode: () => model.setFocusMode((value) => !value),
+  };
+}
+
+/** The index's counts, corrected by the annotations already loaded for the selected source. */
+function useLibraryAnnotationCounts(
+  model: ReaderWorkspaceViewModel,
+): ReadonlyMap<SourceId, number> {
+  const loaded = model.workspace.annotations;
+  const counts = useAnnotationCounts(model.gateway, loaded);
+  const sourceId =
+    model.workspace.sourceRecord.status === "ready" ? model.workspace.sourceRecord.value.id : null;
+  return useMemo(() => {
+    if (!sourceId || loaded.status !== "ready" || counts.get(sourceId) === loaded.value.length) {
+      return counts;
+    }
+    return new Map(counts).set(sourceId, loaded.value.length);
+  }, [counts, loaded, sourceId]);
+}
+
+/** Keeps every open reflowable document on the reader's chosen type settings. */
+function useApplyTypography(
+  surfaces: ReadonlyMap<string, ReadingSurface>,
+  typography: ReadingTypography,
+): void {
+  useEffect(() => {
+    for (const surface of surfaces.values()) {
+      void surface.capabilities.typography?.setTypography(typography).catch(() => undefined);
+    }
+  }, [surfaces, typography]);
+}
+
+/**
+ * Hides the Sources sidebar when a document takes focus, and restores it on returning to a
+ * library tab, but only if Reader was the one that hid it.
+ */
+function useSidebarWhileReading(workspace: SourceWorkspaceController, enabled: boolean): void {
+  const dock = workspace.dock;
+  const activeTab = workspace.activeTab;
+  const kind =
+    activeTab?.kind === "source"
+      ? activeTab.view === "document"
+        ? "document"
+        : "tool"
+      : "library";
+  const previousKind = useRef<string | null>(null);
+  const hiddenByReader = useRef(false);
+  useEffect(() => {
+    const previous = previousKind.current;
+    previousKind.current = kind;
+    if (!enabled || previous === kind || activeTab === null) {
+      return;
+    }
+    if (kind === "document" && dock.isSideVisible(navigatorPanelId)) {
+      hiddenByReader.current = true;
+      dock.setSideVisible(navigatorPanelId, false);
+    } else if (kind === "library" && hiddenByReader.current) {
+      hiddenByReader.current = false;
+      if (!dock.isSideVisible(navigatorPanelId)) {
+        dock.setSideVisible(navigatorPanelId, true);
+      }
+    }
+  }, [activeTab, dock, enabled, kind]);
 }
 
 function findWorkbenchOwner(

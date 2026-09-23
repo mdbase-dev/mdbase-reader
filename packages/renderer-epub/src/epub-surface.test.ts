@@ -26,6 +26,7 @@ function runtimeFixture(): {
       currentLocator: () => ({ href: "chapter-1.xhtml", locations: { progression: 0.1 } }),
       goTo: (locator) => Promise.resolve(locator["href"] !== "missing.xhtml"),
       clearSelection: vi.fn(),
+      setTypography: () => Promise.resolve(),
       extractText,
       onLocationChanged: (listener) => {
         locationListener = listener;

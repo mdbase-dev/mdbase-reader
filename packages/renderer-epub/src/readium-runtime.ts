@@ -1,4 +1,5 @@
-import { EpubNavigator, type EpubNavigatorListeners } from "@readium/navigator";
+import { readingMeasureCharacters } from "@mdbase-reader/reading-surface";
+import { EpubNavigator, EpubPreferences, type EpubNavigatorListeners } from "@readium/navigator";
 import { HttpFetcher, Locator, LocatorLocations, Manifest, Publication } from "@readium/shared";
 
 import { createEpubAnnotationActivations } from "./epub-annotation-activation.js";
@@ -11,6 +12,7 @@ import { selectedTextDraft } from "./readium-selection.js";
 import type { Annotation, AnnotationId } from "@mdbase-reader/core";
 import type {
   ContentsEntry,
+  ReadingTypography,
   TextSelectionDraft,
   Unsubscribe,
 } from "@mdbase-reader/reading-surface";
@@ -29,6 +31,7 @@ export interface ReadiumRuntime {
   onAnnotationActivated(listener: (annotationId: AnnotationId) => void): Unsubscribe;
   setAnnotations(annotations: readonly Annotation[]): void;
   setActiveAnnotation(annotation: Annotation | null): void;
+  setTypography(typography: ReadingTypography): Promise<void>;
   destroy(): Promise<void>;
 }
 
@@ -167,6 +170,7 @@ export async function createReadiumRuntime(input: {
         : null;
       navigator.applyDecorations(decoration ? [decoration] : [], "mdbase-reader-active-annotation");
     },
+    setTypography: (typography) => navigator.submitPreferences(epubPreferences(typography)),
     async destroy() {
       locationListeners.clear();
       selectionListeners.clear();
@@ -174,6 +178,14 @@ export async function createReadiumRuntime(input: {
       await navigator.destroy();
     },
   };
+}
+
+function epubPreferences(typography: ReadingTypography): EpubPreferences {
+  return new EpubPreferences({
+    fontSize: readerEpubDefaults.fontSize * Math.max(0.8, Math.min(1.6, typography.scale)),
+    optimalLineLength: readingMeasureCharacters[typography.measure],
+    fontFamily: typography.face === "sans" ? "sans-serif" : null,
+  });
 }
 
 function readiumPublication(value: unknown): Publication {

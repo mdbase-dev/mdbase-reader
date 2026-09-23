@@ -1,12 +1,28 @@
 /* eslint-disable max-lines */
 import { stringify as stringifyYaml } from "yaml";
 
+import {
+  columnLabel,
+  isLibraryColumn,
+  isPropertyKey,
+  maximumColumnWidth,
+  minimumColumnWidth,
+  propertyKey,
+  propertySortValue,
+  propertyValue,
+  type LibraryColumn,
+  type PropertyLibraryColumn,
+} from "./library-columns.js";
+
 import type { SourceSummary } from "@mdbase-reader/core";
 
+export { columnLabel };
+export type { LibraryColumn };
+
 export type LibraryPresentation = "table" | "cards";
-export type LibrarySortField = "title" | "creator" | "published" | "status" | "saved";
+export type LibrarySortField =
+  "title" | "creator" | "published" | "status" | "saved" | "opened" | PropertyLibraryColumn;
 export type LibrarySortDirection = "asc" | "desc";
-export type LibraryColumn = "title" | "creator" | "published" | "status" | "format" | "tags";
 
 export interface LibraryViewFilter {
   readonly query: string;
@@ -18,6 +34,8 @@ export interface LibraryViewFilter {
 export interface LibraryViewConfiguration {
   readonly presentation: LibraryPresentation;
   readonly columns: readonly LibraryColumn[];
+  /** Pixel widths by column, for columns the reader has resized. */
+  readonly columnWidths: Readonly<Record<string, number>>;
   readonly sortField: LibrarySortField;
   readonly sortDirection: LibrarySortDirection;
   readonly filter: LibraryViewFilter;
@@ -49,7 +67,8 @@ export interface LibraryViewSaveRequest {
 
 export const defaultLibraryViewConfiguration: LibraryViewConfiguration = {
   presentation: "table",
-  columns: ["title", "creator", "status", "published"],
+  columns: ["title", "published", "annotations", "opened", "status"],
+  columnWidths: {},
   sortField: "title",
   sortDirection: "asc",
   filter: { query: "", status: "all", format: "all", tag: "" },
@@ -94,6 +113,7 @@ export function libraryViewConfiguration(
   return {
     presentation: type === "cards" ? "cards" : "table",
     columns: columns.length > 0 ? columns : defaultLibraryViewConfiguration.columns,
+    columnWidths: parseColumnWidths(options["columnWidths"]),
     sortField,
     sortDirection,
     filter: {
@@ -123,7 +143,7 @@ export function buildLibraryViewDocument(request: LibraryViewSaveRequest): strin
     description: "A saved mdbase Reader library view.",
     query: { types: ["reader-source"] },
     properties: Object.fromEntries(
-      configuration.columns.map((column) => [
+      storedColumns(configuration.columns).map((column) => [
         columnSelection(column),
         { label: columnLabel(column) },
       ]),
@@ -133,7 +153,7 @@ export function buildLibraryViewDocument(request: LibraryViewSaveRequest): strin
         id: identifier,
         name: request.name.trim(),
         ...(where ? { where } : {}),
-        select: configuration.columns.map(columnSelection),
+        select: storedColumns(configuration.columns).map(columnSelection),
         order_by: [orderBy(configuration.sortField, configuration.sortDirection)],
         presentation: {
           type: configuration.presentation,
@@ -148,6 +168,7 @@ export function buildLibraryViewDocument(request: LibraryViewSaveRequest): strin
           options: {
             readerViewVersion: 1,
             columns: configuration.columns,
+            columnWidths: configuration.columnWidths,
             sortField: configuration.sortField,
             sortDirection: configuration.sortDirection,
             // Search is retained as presentation state because canonical view
@@ -232,35 +253,39 @@ function orderBy(
   field: LibrarySortField,
   direction: LibrarySortDirection,
 ): { field: string; direction: LibrarySortDirection } {
-  const fields: Record<LibrarySortField, string> = {
+  const key = propertyKey(field);
+  if (key !== null) {
+    return { field: key, direction };
+  }
+  const fields: Record<Exclude<LibrarySortField, PropertyLibraryColumn>, string> = {
     title: "title",
     creator: "authors",
     published: "published",
     status: "reading.status",
     saved: "saved_at",
+    opened: "reading.last_opened_at",
   };
-  return { field: fields[field], direction };
+  return { field: fields[field as Exclude<LibrarySortField, PropertyLibraryColumn>], direction };
+}
+
+/** Annotation counts are derived from annotation records, not stored on the source. */
+function storedColumns(columns: readonly LibraryColumn[]): readonly LibraryColumn[] {
+  return columns.filter((column) => column !== "annotations");
 }
 
 function columnSelection(column: LibraryColumn): string {
-  return column === "creator"
-    ? "authors"
-    : column === "status"
-      ? "reading.status"
-      : column === "format"
-        ? "kind"
-        : column;
-}
-
-export function columnLabel(column: LibraryColumn): string {
-  return {
-    title: "Title",
-    creator: "Creator",
-    published: "Published",
-    status: "Status",
-    format: "Format",
-    tags: "Tags",
-  }[column];
+  switch (column) {
+    case "creator":
+      return "authors";
+    case "status":
+      return "reading.status";
+    case "format":
+      return "kind";
+    case "opened":
+      return "reading.last_opened_at";
+    default:
+      return propertyKey(column) ?? column;
+  }
 }
 
 function compareSources(
@@ -268,7 +293,11 @@ function compareSources(
   right: SourceSummary,
   configuration: LibraryViewConfiguration,
 ): number {
+  const key = propertyKey(configuration.sortField);
   const value = (source: SourceSummary): string | number => {
+    if (key !== null) {
+      return propertySortValue(propertyValue(source, key));
+    }
     switch (configuration.sortField) {
       case "title":
         return source.title;
@@ -280,6 +309,10 @@ function compareSources(
         return source.readingStatus ?? "inbox";
       case "saved":
         return source.id;
+      case "opened":
+        return source.reading?.lastOpenedAt ?? "";
+      default:
+        return "";
     }
   };
   const a = value(left);
@@ -305,12 +338,21 @@ function objectValue(value: unknown): Readonly<Record<string, unknown>> {
     : {};
 }
 
-function isLibraryColumn(value: unknown): value is LibraryColumn {
-  return ["title", "creator", "published", "status", "format", "tags"].includes(String(value));
+function isSortField(value: unknown): value is LibrarySortField {
+  const key = propertyKey(String(value));
+  return key !== null
+    ? isPropertyKey(key)
+    : ["title", "creator", "published", "status", "saved", "opened"].includes(String(value));
 }
 
-function isSortField(value: unknown): value is LibrarySortField {
-  return ["title", "creator", "published", "status", "saved"].includes(String(value));
+function parseColumnWidths(value: unknown): Readonly<Record<string, number>> {
+  return Object.fromEntries(
+    Object.entries(objectValue(value)).flatMap(([column, width]) =>
+      isLibraryColumn(column) && typeof width === "number" && Number.isFinite(width)
+        ? [[column, Math.round(Math.min(maximumColumnWidth, Math.max(minimumColumnWidth, width)))]]
+        : [],
+    ),
+  );
 }
 
 function isStatus(value: unknown): value is LibraryViewFilter["status"] {

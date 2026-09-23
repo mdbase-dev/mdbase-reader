@@ -47,11 +47,11 @@ function markup(annotation: Annotation): string {
   );
 }
 it.each([undefined, { quote: { exact: "A quotation without coordinates" } }])(
-  "labels and disables navigation for notes without usable selectors",
+  "omits navigation, without a warning, for notes without usable selectors",
   (target) => {
     const html = markup({ ...base, ...(target ? { target } : {}) });
-    expect(html).toContain("Unanchored note");
-    expect(html).toMatch(/aria-label="Open annotation in document"[^>]*disabled=""/u);
+    expect(html).not.toMatch(/>[^<]*(unanchored|passage anchor)/iu);
+    expect(html).not.toContain('aria-label="Show in document"');
     expect(html).toContain("My commentary");
     expect(html).toMatch(/<button[^>]*>Edit<\/button>/u);
   },
@@ -73,6 +73,6 @@ it("offers navigation for a note with a verified PDF passage", () => {
       },
     },
   });
-  expect(html).not.toContain("Unanchored note");
-  expect(html).not.toMatch(/aria-label="Open annotation in document"[^>]*disabled/u);
+  expect(html).toContain('aria-label="Show in document"');
+  expect(html).toContain("is-linked");
 });

@@ -1,3 +1,5 @@
+import { defaultReadingTypography, type ReadingTypography } from "@mdbase-reader/reading-surface";
+
 export type InspectorDock = "right" | "bottom";
 export type LibraryPresentation = "compact" | "bibliography" | "grid";
 
@@ -9,6 +11,9 @@ export interface WorkspaceShellPreferences {
   readonly inspectorDock: InspectorDock;
   readonly inspectorTab: "annotations" | "note" | "citation";
   readonly libraryPresentation: LibraryPresentation;
+  readonly typography: ReadingTypography;
+  /** Hide the Sources sidebar while a document has focus, and bring it back for the library. */
+  readonly sidebarWhileReading: "hide" | "keep";
 }
 
 const defaults: WorkspaceShellPreferences = {
@@ -19,6 +24,8 @@ const defaults: WorkspaceShellPreferences = {
   inspectorDock: "right",
   inspectorTab: "annotations",
   libraryPresentation: "compact",
+  typography: defaultReadingTypography,
+  sidebarWhileReading: "hide",
 };
 
 export function defaultShellPreferences(): WorkspaceShellPreferences {
@@ -44,6 +51,25 @@ export function parseShellPreferences(value: unknown): WorkspaceShellPreferences
     )
       ? (candidate.libraryPresentation ?? defaults.libraryPresentation)
       : defaults.libraryPresentation,
+    typography: parseTypography(candidate.typography),
+    sidebarWhileReading: candidate.sidebarWhileReading === "keep" ? "keep" : "hide",
+  };
+}
+
+export const typographyScaleSteps = [0.85, 0.92, 1, 1.1, 1.2, 1.32, 1.46] as const;
+
+function parseTypography(value: unknown): ReadingTypography {
+  if (typeof value !== "object" || value === null) {
+    return defaultReadingTypography;
+  }
+  const candidate = value as Partial<ReadingTypography>;
+  return {
+    scale: clamp(candidate.scale, 0.8, 1.6, defaultReadingTypography.scale),
+    measure:
+      candidate.measure === "narrow" || candidate.measure === "wide"
+        ? candidate.measure
+        : "standard",
+    face: candidate.face === "sans" ? "sans" : "serif",
   };
 }
 

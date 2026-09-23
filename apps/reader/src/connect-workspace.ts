@@ -219,6 +219,15 @@ export class ConnectWorkspaceGateway implements ReaderWorkspaceGateway {
     );
   }
 
+  annotationCounts(options: ReaderRequestOptions = {}): Promise<ReadonlyMap<SourceId, number>> {
+    return (
+      this.annotationsRepository.annotationCountsBySource?.(this.collectionId, options) ??
+      Promise.resolve(
+        new Map([...this.#annotationsBySource].map(([id, items]) => [id, items.length])),
+      )
+    );
+  }
+
   async saveSourceBody(source: Source, body: string): Promise<Source> {
     const updated = await this.sources.updateBody({
       collectionId: this.collectionId,

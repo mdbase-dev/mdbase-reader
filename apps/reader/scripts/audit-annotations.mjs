@@ -14,6 +14,11 @@ export async function auditAnnotations(page, { screenshot, blockWrites }) {
     ) {
       globalThis.window.name = "annotation-reset-done";
       localStorage.clear();
+      // Keep the sidebar open while reading, as the docking checks below expect.
+      localStorage.setItem(
+        "mdbase-reader:shell:v1:test-reader-audit",
+        JSON.stringify({ sidebarWhileReading: "keep" }),
+      );
       globalThis.history.replaceState(null, "", globalThis.location.pathname);
     }
   });
@@ -130,7 +135,7 @@ export async function auditAnnotations(page, { screenshot, blockWrites }) {
   await expect(tools.locator(".annotation-card")).toHaveCount(2);
   await tools.getByRole("combobox", { name: "Sort annotations" }).selectOption("newest");
   await screenshot("annotation-browsing-desktop");
-  await tools.getByRole("button", { name: "Open annotation in document" }).first().click();
+  await tools.getByRole("button", { name: "Show in document" }).first().click();
   await expect(page.getByRole("button", { name: "Back to reading position" })).toBeVisible();
   await page.getByRole("button", { name: "Back to reading position" }).click();
   await expect(page.getByRole("button", { name: "Back to reading position" })).toHaveCount(0);
@@ -150,7 +155,7 @@ export async function auditAnnotations(page, { screenshot, blockWrites }) {
       ),
   );
   if (!(await tools.isVisible()))
-    await page.getByRole("button", { name: "Toggle source tools" }).click();
+    await page.getByRole("button", { name: "Toggle notes panel" }).click();
   await expect(tools.getByRole("searchbox", { name: "Search annotations" })).toBeVisible();
   expect(
     await page.evaluate(
@@ -165,7 +170,7 @@ export async function auditAnnotations(page, { screenshot, blockWrites }) {
   await screenshot("annotation-mobile-edit");
   await tools.getByRole("textbox", { name: "Annotation note" }).press("Escape");
   await expect(tools.getByRole("textbox", { name: "Annotation note" })).toHaveCount(0);
-  await page.getByRole("button", { name: "Toggle source tools" }).click();
+  await page.getByRole("button", { name: "Toggle notes panel" }).click();
   await expect(page.locator("iframe.html-viewer:visible")).toHaveCount(1);
   completed.push("Annotation inspector remains usable without horizontal overflow at 390px");
   await page.setViewportSize({ width: 1440, height: 1000 });

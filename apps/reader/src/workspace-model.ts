@@ -51,6 +51,7 @@ export interface ReaderWorkspaceGateway {
   refreshSource?(id: SourceId, options?: ReaderRequestOptions): Promise<Source | null>;
   annotations(id: SourceId, options?: ReaderRequestOptions): Promise<readonly Annotation[]>;
   annotationSourceIds?(options?: ReaderRequestOptions): Promise<readonly SourceId[]>;
+  annotationCounts?(options?: ReaderRequestOptions): Promise<ReadonlyMap<SourceId, number>>;
   saveSourceBody(source: Source, body: string): Promise<Source>;
   saveSourceCitation(source: Source, citation: unknown): Promise<Source>;
   resolveCitation?(

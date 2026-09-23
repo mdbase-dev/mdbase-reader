@@ -73,6 +73,7 @@ const components = {
   inspector: InspectorPanel,
 };
 const theme = { name: "reader", className: "dockview-theme-reader" };
+const sidePanelIds: ReadonlySet<string> = new Set([navigatorPanelId, inspectorPanelId]);
 
 export function DockviewWorkspace({
   navigator,
@@ -175,7 +176,7 @@ function ReaderDockTab(props: IDockviewPanelHeaderProps<{ tab?: WorkspaceTab }>)
   const tab = props.params.tab;
   return (
     <div
-      className={`reader-dock-tab${tab?.preview ? " is-preview" : ""}${tab?.dirty ? " is-dirty" : ""}`}
+      className={`reader-dock-tab${tab?.preview ? " is-preview" : ""}${tab?.dirty ? " is-dirty" : ""}${sidePanelIds.has(props.api.id) ? " is-side" : ""}`}
       data-panel-id={props.api.id}
       title="Drag to move or split · Right-click for pane actions · Use the pane menu for keyboard controls"
       onDoubleClick={() => document.sourceWorkspace.dock.patch(props.api.id, { preview: false })}

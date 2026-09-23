@@ -188,11 +188,9 @@ export function sourceSummaryFromQuery(
   collection: CollectionId,
   record: QueryRecord,
 ): SourceSummary {
-  return sourceFields(
-    collection,
-    record.path,
-    record.effectiveFrontmatter ?? record.frontmatter ?? {},
-  );
+  const frontmatter = record.effectiveFrontmatter ?? record.frontmatter ?? {};
+  // Library views can show any field as a column, so the listing keeps the frontmatter.
+  return { ...sourceFields(collection, record.path, frontmatter), properties: frontmatter };
 }
 
 export function sourceFromDocument(collection: CollectionId, record: RecordDocument): Source {

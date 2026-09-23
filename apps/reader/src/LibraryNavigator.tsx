@@ -1,7 +1,13 @@
 import { useMemo, useState, type CSSProperties, type JSX, type KeyboardEvent } from "react";
 
-import { PlusIcon, SearchIcon } from "./icons.js";
+import { SearchIcon } from "./icons.js";
 import { shortcutLabel } from "./Menu.js";
+import {
+  NavigatorFooter,
+  NavigatorShortList,
+  recentSources,
+  sourceFormat,
+} from "./NavigatorSections.js";
 import { useVirtualSourceWindow } from "./use-virtual-source-window.js";
 import { keyboardSourceIndex } from "./virtual-source-list.js";
 import { filterSources } from "./workspace-model.js";
@@ -14,6 +20,7 @@ const navigatorSourceRowHeight = 50;
 interface LibraryNavigatorProps {
   readonly open?: boolean;
   readonly sources: readonly SourceSummary[];
+  readonly openSources?: readonly SourceSummary[];
   readonly selectedSourceId: SourceId | null;
   readonly views: readonly MdbaseLibraryView[];
   readonly viewsLoading: boolean;
@@ -29,6 +36,7 @@ interface LibraryNavigatorProps {
 export function LibraryNavigator({
   open = true,
   sources,
+  openSources = [],
   selectedSourceId,
   views,
   viewsLoading,
@@ -42,6 +50,11 @@ export function LibraryNavigator({
 }: LibraryNavigatorProps): JSX.Element {
   const [query, setQuery] = useState("");
   const visibleSources = useMemo(() => filterSources(sources, query), [query, sources]);
+  // The open list is rebuilt on every workspace render; its identities are what matter.
+  const openKey = openSources.map(({ id }) => id).join("\n");
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  const recent = useMemo(() => recentSources(sources, openSources), [openKey, sources]);
+  const rowProps = { selectedSourceId, onPreviewSource, onOpenSource, onOpenBeside };
   return (
     <aside
       id="reader-library-navigator"
@@ -56,7 +69,7 @@ export function LibraryNavigator({
         <input
           id="reader-library-search"
           value={query}
-          placeholder="Filter sources"
+          placeholder="Find a source"
           onChange={(event) => setQuery(event.target.value)}
           onKeyDown={(event) => {
             if (event.key === "Escape" && query) {
@@ -87,35 +100,45 @@ export function LibraryNavigator({
           </section>
         )}
 
-        <section className="navigator-source-section">
-          <header>
-            <span>{query ? "Matches" : "Sources"}</span>
-            <small>{String(visibleSources.length)}</small>
-            <button
-              className="icon-button navigator-add-action"
-              type="button"
-              disabled={addingSource}
-              aria-label={addingSource ? "Adding source" : "Add source"}
-              title="Add source"
-              onClick={onAddSource}
-            >
-              <PlusIcon />
-            </button>
-          </header>
-          {visibleSources.length === 0 ? (
-            <p className="navigator-empty">{query ? "No sources match." : "No sources yet."}</p>
-          ) : (
-            <NavigatorSourceList
-              sources={visibleSources}
-              selectedSourceId={selectedSourceId}
-              resetKey={query}
-              onPreviewSource={onPreviewSource}
-              onOpenSource={onOpenSource}
-              onOpenBeside={onOpenBeside}
-            />
-          )}
-        </section>
+        {query ? (
+          <section className="navigator-source-section">
+            <header>
+              <span>Matches</span>
+              <small>{String(visibleSources.length)}</small>
+            </header>
+            {visibleSources.length === 0 ? (
+              <p className="navigator-empty">No sources match.</p>
+            ) : (
+              <NavigatorSourceList
+                sources={visibleSources}
+                selectedSourceId={selectedSourceId}
+                resetKey={query}
+                onPreviewSource={onPreviewSource}
+                onOpenSource={onOpenSource}
+                onOpenBeside={onOpenBeside}
+              />
+            )}
+          </section>
+        ) : (
+          <>
+            {openSources.length > 0 ? (
+              <NavigatorShortList label="Open" sources={openSources} {...rowProps} />
+            ) : null}
+            {recent.length > 0 ? (
+              <NavigatorShortList label="Recent" sources={recent} {...rowProps} />
+            ) : null}
+            {sources.length === 0 ? (
+              <p className="navigator-empty">
+                No sources yet.{" "}
+                <button type="button" className="navigator-inline-action" onClick={onAddSource}>
+                  Add one
+                </button>
+              </p>
+            ) : null}
+          </>
+        )}
       </nav>
+      <NavigatorFooter addingSource={addingSource} onAddSource={onAddSource} />
     </aside>
   );
 }
@@ -224,18 +247,4 @@ function ViewGlyph({ presentation }: { readonly presentation: "table" | "cards" 
       <path d="M2 3h12M2 8h12M2 13h12M6 3v10" />
     </svg>
   );
-}
-
-function sourceFormat(source: SourceSummary): string {
-  const media = source.documents[0]?.mediaType ?? "";
-  if (media.includes("pdf")) {
-    return "PDF";
-  }
-  if (media.includes("epub")) {
-    return "EPUB";
-  }
-  if (media.includes("html")) {
-    return "WEB";
-  }
-  return "NOTE";
 }

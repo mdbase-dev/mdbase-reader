@@ -65,6 +65,8 @@ export interface ReaderShortcutActions {
   readonly focusNextPane: () => void;
   readonly reopenTab: () => void;
   readonly navigate: (direction: -1 | 1) => void;
+  readonly toggleSidebar: () => void;
+  readonly toggleNotes: () => void;
 }
 
 export function useReaderShortcuts(actions: ReaderShortcutActions): void {
@@ -115,12 +117,33 @@ function handleCommandShortcut(event: KeyboardEvent, actions: ReaderShortcutActi
     actions.focusSearch();
     return true;
   }
-  if (modifier && event.shiftKey && event.key.toLocaleLowerCase() === "t") {
+  if (modifier && !event.altKey && handleLayoutShortcut(event, actions)) {
     event.preventDefault();
-    actions.reopenTab();
     return true;
   }
   return false;
+}
+
+/** Reading mode, the two side panels, and reopening a closed tab. */
+function handleLayoutShortcut(event: KeyboardEvent, actions: ReaderShortcutActions): boolean {
+  if (event.shiftKey && event.key.toLocaleLowerCase() === "t") {
+    actions.reopenTab();
+    return true;
+  }
+  if (event.key === ".") {
+    actions.setFocusMode(!actions.focusMode);
+    return true;
+  }
+  // The code, not the key, because Shift turns "\\" into "|" on most layouts.
+  if (event.code !== "Backslash") {
+    return false;
+  }
+  if (event.shiftKey) {
+    actions.toggleNotes();
+  } else {
+    actions.toggleSidebar();
+  }
+  return true;
 }
 
 function isSlashSearch(event: KeyboardEvent, editing: boolean): boolean {

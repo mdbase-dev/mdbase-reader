@@ -48,7 +48,7 @@ export function AnnotationCard({
     // eslint-disable-next-line jsx-a11y/no-noninteractive-element-interactions, jsx-a11y/click-events-have-key-events
     <article
       ref={cardRef}
-      className={`annotation-card${editing ? " is-editing" : ""}${active ? " is-selected" : ""}`}
+      className={`annotation-card${editing ? " is-editing" : ""}${active ? " is-selected" : ""}${hasPassageAnchor(annotation.target) ? " is-linked" : ""}`}
       data-annotation-id={annotation.id}
       role="group"
       aria-label={`${annotation.annotationType} annotation`}
@@ -62,13 +62,15 @@ export function AnnotationCard({
         <span className={`annotation-kind is-${annotation.annotationType}`}>
           {annotationKindLabel(annotation.annotationType)}
         </span>
-        {!hasPassageAnchor(annotation.target) ? (
-          <small title="This annotation is not linked to a document passage.">
-            {annotation.annotationType === "note" ? "Unanchored note" : "No passage anchor"}
-          </small>
-        ) : null}
         {annotation.locator ? (
-          <small title={annotation.locator.label}>
+          <small
+            className="annotation-locator"
+            title={
+              hasPassageAnchor(annotation.target)
+                ? annotation.locator.label
+                : `${annotation.locator.label} · saved without a link to the exact passage`
+            }
+          >
             {annotation.locator.label.replace(/^\[\[.*\]\]$/u, "Document passage")}
           </small>
         ) : null}
@@ -206,23 +208,20 @@ function AnnotationCardFooter({
               ? "In source note"
               : "Insert in note"}
         </button>
-        <button
-          className="icon-button"
-          type="button"
-          aria-label="Open annotation in document"
-          disabled={!hasPassageAnchor(annotation.target)}
-          title={
-            hasPassageAnchor(annotation.target)
-              ? "Open in document"
-              : "No passage anchor — navigation is unavailable"
-          }
-          onClick={(event) => {
-            event.stopPropagation();
-            onOpen();
-          }}
-        >
-          <FocusIcon />
-        </button>
+        {hasPassageAnchor(annotation.target) ? (
+          <button
+            className="icon-button"
+            type="button"
+            aria-label="Show in document"
+            title="Show in document"
+            onClick={(event) => {
+              event.stopPropagation();
+              onOpen();
+            }}
+          >
+            <FocusIcon />
+          </button>
+        ) : null}
       </div>
     </footer>
   );

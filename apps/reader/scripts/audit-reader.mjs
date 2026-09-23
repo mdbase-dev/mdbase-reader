@@ -13,10 +13,12 @@ import { auditAnnotations } from "./audit-annotations.mjs";
 import { auditSharedEditing } from "./audit-shared-editing.mjs";
 import { auditSidebarLayout } from "./audit-sidebar-layout.mjs";
 import { auditEdgeGroupApi } from "./audit-edge-group-api.mjs";
+import { auditReadingWorkspace } from "./audit-reading-workspace.mjs";
 import { auditResponsiveWorkspace } from "./audit-responsive-workspace.mjs";
 
 const origin = process.env.READER_AUDIT_ORIGIN ?? "http://127.0.0.1:5193";
 const sharedEditingAudit = process.env.READER_AUDIT_SHARED_EDITING_ONLY === "1";
+const readingAudit = process.env.READER_AUDIT_READING_ONLY === "1";
 const responsiveAudit = process.env.READER_AUDIT_RESPONSIVE_ONLY === "1";
 const sidebarComparison = responsiveAudit || process.env.READER_AUDIT_SIDEBARS_ONLY === "1";
 if (!/^http:\/\/(127\.0\.0\.1|localhost):\d+$/u.test(origin)) {
@@ -29,6 +31,18 @@ const specialDocuments = new Map([
 const directory = await mkdtemp(join(tmpdir(), "reader-audit-"));
 const browser = await chromium.launch({ headless: true });
 const context = await browser.newContext({ viewport: { width: 1440, height: 1000 } });
+// These audits exercise docking with the sidebar open throughout; the reading audit covers the
+// default, which hides it while a document has focus.
+await context.addInitScript(() => {
+  const key = "mdbase-reader:shell:v1:test-reader-audit";
+  try {
+    if (!sessionStorage.getItem("reader-audit-reading") && !localStorage.getItem(key)) {
+      localStorage.setItem(key, JSON.stringify({ sidebarWhileReading: "keep" }));
+    }
+  } catch {
+    // Sandboxed and opaque-origin documents have no storage and need no preference.
+  }
+});
 const page = await context.newPage();
 page.on("dialog", (dialog) => void dialog.accept());
 const errors = [];
@@ -179,6 +193,10 @@ const screenshot = async (name) =>
 try {
   const started = performance.now();
   await navigate();
+  if (readingAudit) {
+    await page.evaluate(() => sessionStorage.setItem("reader-audit-reading", "1"));
+    completed.push(...(await auditReadingWorkspace(page, { screenshot })));
+  }
   if (sharedEditingAudit) {
     completed.push(
       ...(await auditSharedEditing(page, {
@@ -206,6 +224,7 @@ try {
     }
   }
   if (
+    !readingAudit &&
     !sharedEditingAudit &&
     !sidebarComparison &&
     process.env.READER_AUDIT_ANNOTATIONS_ONLY !== "1"
@@ -214,18 +233,57 @@ try {
     measurements.libraryReadyMs = Math.round(performance.now() - started);
     measurements.renderedRows5000Sources = await page.getByRole("row").count();
     expect(measurements.renderedRows5000Sources).toBeLessThanOrEqual(101);
-    await expect(page.getByRole("navigation", { name: "Library result pages" })).toContainText(
-      "5000 sources",
+    const grid = page.getByRole("grid", { name: "Sources" });
+    await expect(grid).toHaveAttribute("aria-rowcount", "5001");
+    await grid.getByRole("row").nth(1).getByRole("gridcell").first().click();
+    await page.keyboard.press("End");
+    const last = grid.getByRole("row", { name: /Research 4999/u });
+    await expect(last).toBeFocused();
+    await expect(last).toHaveAttribute("aria-rowindex", "5001");
+    expect(await page.getByRole("row").count()).toBeLessThanOrEqual(101);
+    await page.keyboard.press("Home");
+    await expect(grid.getByRole("row", { name: /Research 0000/u })).toBeFocused();
+    await page.keyboard.press("Shift+ArrowDown");
+    await page.keyboard.press("Shift+ArrowDown");
+    await expect(page.getByRole("toolbar", { name: "Selected sources" })).toContainText(
+      "3 sources selected",
     );
-    await page.getByRole("button", { name: "Next", exact: true }).click();
-    await expect(page.getByRole("navigation", { name: "Library result pages" })).toContainText(
-      "Page 2",
-    );
-    await page.getByRole("button", { name: "Previous", exact: true }).click();
+    await page.keyboard.press("Escape");
+    await expect(page.getByRole("toolbar", { name: "Selected sources" })).toHaveCount(0);
     await screenshot("desktop-library");
-    completed.push("5,000-source library: bounded rows and pagination");
+    completed.push(
+      "5,000-source library: virtualized rows, keyboard travel to either end, range selection",
+    );
 
-    await page.getByRole("button", { name: "Continue reading", exact: false }).click();
+    const titleHeader = grid.getByRole("columnheader", { name: /^Title/u });
+    const titleWidth = async () => Math.round((await titleHeader.boundingBox()).width);
+    const before = await titleWidth();
+    const resizer = page.getByRole("separator", { name: "Resize Title column" });
+    await resizer.focus();
+    for (let step = 0; step < 3; step += 1) {
+      await page.keyboard.press("ArrowRight");
+    }
+    await expect.poll(titleWidth).toBe(before + 48);
+    await grid.getByRole("button", { name: "Published", exact: true }).click();
+    await expect(grid.getByRole("columnheader", { name: /^Published/u })).toHaveAttribute(
+      "aria-sort",
+      "descending",
+    );
+    await page.waitForTimeout(400);
+    await page.reload();
+    await expect(page.getByRole("grid", { name: "Sources" })).toBeVisible();
+    await expect.poll(titleWidth).toBe(before + 48);
+    await expect(
+      page
+        .getByRole("grid", { name: "Sources" })
+        .getByRole("columnheader", { name: /^Published/u }),
+    ).toHaveAttribute("aria-sort", "descending");
+    await page.getByLabel("View options").click();
+    await page.getByRole("button", { name: "Reset columns and layout" }).click();
+    await expect.poll(titleWidth).toBe(before);
+    completed.push("Column widths and header sorting persist on this device and reset cleanly");
+
+    await page.getByRole("button", { name: "Continue reading", exact: false }).first().click();
     await expect(page.locator("iframe.html-viewer")).toBeVisible({ timeout: 30000 });
     await page.getByRole("button", { name: "Keep offline", exact: true }).click();
     await expect(page.getByText("Available offline", { exact: true })).toBeVisible();
@@ -433,7 +491,7 @@ try {
     );
     completed.push(...(await auditDockviewMigration(page)));
   }
-  if (!sharedEditingAudit && !sidebarComparison) {
+  if (!readingAudit && !sharedEditingAudit && !sidebarComparison) {
     completed.push(
       ...(await auditAnnotations(page, {
         screenshot,

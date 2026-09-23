@@ -9,7 +9,6 @@ import { renderToStaticMarkup } from "react-dom/server";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { matchingCommands, type ReaderCommand } from "./CommandPalette.js";
-import { visibleColumns } from "./LibraryWorkspace.js";
 import { shortcutLabel } from "./Menu.js";
 import { readerCommands, type ReaderCommandInput } from "./reader-command-list.js";
 import { ReaderHeader } from "./ReaderHeader.js";
@@ -113,17 +112,6 @@ describe("command palette", () => {
     expect(titled(closed.title)).toEqual(["Sources"]);
     const themes = commands.filter(({ id }) => id.startsWith("theme:")).map(({ id }) => id);
     expect(themes).toEqual(["theme:system", "theme:light"]);
-  });
-});
-
-describe("library table", () => {
-  it("hides optional columns that are empty for every visible source", () => {
-    const sources = [source("a"), source("b", { creators: ["Simone Weil"] })];
-    expect(visibleColumns(["title", "creator", "published", "tags", "status"], sources)).toEqual([
-      "title",
-      "creator",
-      "status",
-    ]);
   });
 });
 

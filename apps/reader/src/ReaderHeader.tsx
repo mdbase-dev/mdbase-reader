@@ -1,12 +1,27 @@
-import { ProductBrand, themePreferences, type ThemePreference } from "@mdbase-reader/ui";
+import { ProductBrand, type ThemePreference } from "@mdbase-reader/ui";
 
-import { LeftPaneIcon, RightPaneIcon, SearchIcon } from "./icons.js";
-import { Menu, shortcutLabel } from "./Menu.js";
+import { DisplayMenu } from "./DisplayMenu.js";
+import {
+  CollectionIcon,
+  LeftPaneIcon,
+  ReadingModeIcon,
+  RightPaneIcon,
+  SearchIcon,
+} from "./icons.js";
+import { shortcutLabel } from "./Menu.js";
 
 import type { ReaderDirectAccessState } from "./use-direct-access.js";
+import type { ReadingTypography } from "@mdbase-reader/reading-surface";
 import type { JSX } from "react";
 
 interface ReaderHeaderProps {
+  readonly typography?: ReadingTypography;
+  readonly onChangeTypography?: (typography: ReadingTypography) => void;
+  readonly sidebarWhileReading?: "hide" | "keep";
+  readonly onChangeSidebarWhileReading?: (value: "hide" | "keep") => void;
+  readonly readingMode?: boolean;
+  readonly readingModeAvailable?: boolean;
+  readonly onToggleReadingMode?: () => void;
   readonly density?: "comfortable" | "compact";
   readonly onChangeDensity?: (density: "comfortable" | "compact") => void;
   readonly collectionName: string;
@@ -23,6 +38,13 @@ interface ReaderHeaderProps {
 }
 
 export function ReaderHeader({
+  typography,
+  onChangeTypography,
+  sidebarWhileReading = "hide",
+  onChangeSidebarWhileReading,
+  readingMode = false,
+  readingModeAvailable = false,
+  onToggleReadingMode,
   density = "comfortable",
   onChangeDensity,
   collectionName,
@@ -46,7 +68,7 @@ export function ReaderHeader({
           aria-label="Toggle library navigator"
           aria-controls="reader-library-navigator"
           aria-expanded={libraryOpen}
-          title="Toggle library"
+          title={`Toggle sidebar · ${shortcutLabel("mod+\\")}`}
           onClick={onToggleLibrary}
         >
           <LeftPaneIcon />
@@ -55,7 +77,9 @@ export function ReaderHeader({
       </div>
       <div className="reader-header-context">
         <span className="collection-context" title={`Collection: ${collectionName}`}>
-          {collectionName}
+          <CollectionIcon />
+          <span className="sr-only">Collection: </span>
+          <span className="collection-context-name">{collectionName}</span>
         </span>
         <ConnectionState state={connectionState} directAccess={directAccess} />
       </div>
@@ -71,38 +95,44 @@ export function ReaderHeader({
           <span>Search</span>
           <kbd>{shortcutLabel("mod+k")}</kbd>
         </button>
-        <Menu
-          className="header-display-menu"
-          label="Display settings"
-          triggerClassName="icon-button header-display-trigger"
-          trigger={<span aria-hidden="true">Aa</span>}
-        >
-          <DisplayChoice
-            legend="Theme"
-            value={theme}
-            options={themePreferences.map((value) => ({ value, label: capitalize(value) }))}
-            onChange={onChangeTheme}
-          />
-          {onChangeDensity ? (
-            <DisplayChoice
-              legend="Density"
-              value={density}
-              options={[
-                { value: "comfortable", label: "Comfortable" },
-                { value: "compact", label: "Compact" },
-              ]}
-              onChange={onChangeDensity}
-            />
-          ) : null}
-        </Menu>
+        {onToggleReadingMode ? (
+          <button
+            className="icon-button header-reading-mode"
+            type="button"
+            aria-label="Reading mode"
+            aria-pressed={readingMode}
+            disabled={!readingModeAvailable && !readingMode}
+            title={
+              readingModeAvailable || readingMode
+                ? `${readingMode ? "Leave" : "Enter"} reading mode · ${shortcutLabel("mod+.")}`
+                : "Open a document to use reading mode"
+            }
+            onClick={onToggleReadingMode}
+          >
+            <ReadingModeIcon />
+          </button>
+        ) : null}
+        <DisplayMenu
+          theme={theme}
+          onChangeTheme={onChangeTheme}
+          density={density}
+          sidebarWhileReading={sidebarWhileReading}
+          {...(typography && onChangeTypography ? { typography, onChangeTypography } : {})}
+          {...(onChangeDensity ? { onChangeDensity } : {})}
+          {...(onChangeSidebarWhileReading ? { onChangeSidebarWhileReading } : {})}
+        />
         <button
           className="icon-button header-pane-toggle is-inspector"
           type="button"
-          aria-label="Toggle source tools"
+          aria-label="Toggle notes panel"
           aria-controls="reader-source-tools"
           aria-pressed={inspectorOpen}
           disabled={!inspectorAvailable}
-          title={inspectorAvailable ? "Toggle source tools" : "Open a source to use source tools"}
+          title={
+            inspectorAvailable
+              ? `Annotations, note and citation · ${shortcutLabel("mod+shift+\\")}`
+              : "Open a source to see its notes"
+          }
           onClick={onToggleInspector}
         >
           <RightPaneIcon />
@@ -110,40 +140,6 @@ export function ReaderHeader({
       </div>
     </header>
   );
-}
-
-function DisplayChoice<T extends string>({
-  legend,
-  value,
-  options,
-  onChange,
-}: {
-  readonly legend: string;
-  readonly value: T;
-  readonly options: readonly { readonly value: T; readonly label: string }[];
-  readonly onChange: (value: T) => void;
-}): JSX.Element {
-  return (
-    <fieldset className="display-choice" data-menu-keep-open>
-      <legend>{legend}</legend>
-      <div className="segmented-control">
-        {options.map((option) => (
-          <button
-            key={option.value}
-            type="button"
-            aria-pressed={option.value === value}
-            onClick={() => onChange(option.value)}
-          >
-            {option.label}
-          </button>
-        ))}
-      </div>
-    </fieldset>
-  );
-}
-
-function capitalize(value: string): string {
-  return value.charAt(0).toLocaleUpperCase() + value.slice(1);
 }
 
 function ConnectionState({
