@@ -17,7 +17,6 @@ import { createAnnotation, type CreateAnnotationDependencies } from "./create-an
 
 import type { MutationStage } from "./ports.js";
 import type { Annotation } from "../domain/annotation.js";
-import type { DomainError } from "../domain/errors.js";
 import type { Source } from "../domain/source.js";
 
 const collection = collectionId("collection-1");
@@ -189,24 +188,20 @@ describe("createAnnotation", () => {
     expect(fixture.stages).toEqual(["asset-stored", "annotation-created", "complete"]);
   });
 
-  it("rejects a stale document revision before writing anything", async () => {
+  it("saves an annotation against the opened file even when source metadata is stale", async () => {
     const fixture = dependencies();
 
-    await expect(
-      createAnnotation(fixture.value, {
-        ...request,
-        sourceRecord: {
-          ...request.sourceRecord,
-          documents: [
-            { ...request.sourceRecord.documents[0]!, revision: fileRevision("sha256:bbbbbb") },
-          ],
-        },
-      }),
-    ).rejects.toEqual(
-      expect.objectContaining<Partial<DomainError>>({ code: "document-revision-mismatch" }),
-    );
-    expect(fixture.created).toHaveLength(0);
-    expect(fixture.stages).toEqual([]);
+    const result = await createAnnotation(fixture.value, {
+      ...request,
+      sourceRecord: {
+        ...request.sourceRecord,
+        documents: [
+          { ...request.sourceRecord.documents[0]!, revision: fileRevision("sha256:bbbbbb") },
+        ],
+      },
+    });
+    expect(result.annotation.document?.revision).toBe(request.document.revision);
+    expect(fixture.created).toHaveLength(1);
   });
 
   it("leaves a recoverable failed journal entry after a partial mutation", async () => {

@@ -59,21 +59,36 @@ describe("ConnectDocumentRepository", () => {
     expect(urls.revoke).toHaveBeenCalledTimes(1);
   });
 
-  it("refuses to render bytes after the source descriptor revision changes", async () => {
-    const repository = new ConnectDocumentRepository(files([descriptor]));
-    await expect(
-      repository.open(collectionId("reading"), {
-        ...target,
-        revision: fileRevision(`sha256:${"b".repeat(64)}`),
-      }),
-    ).rejects.toEqual(
-      expect.objectContaining<Partial<ConnectDocumentError>>({
-        message: "mdbase Connect could not open document: file_revision_changed",
-      }),
-    );
+  it("opens the current bytes and reports their revision when source metadata is stale", async () => {
+    const changed = { ...descriptor, contentDigest: `sha256:${"b".repeat(64)}` as const };
+    const client = files([changed]);
+    const repository = new ConnectDocumentRepository(client);
+    const handle = await repository.open(collectionId("reading"), target);
+    expect(handle.revision).toBe(changed.contentDigest);
+    expect(client.download).toHaveBeenCalledWith(changed);
+    await handle.close();
   });
 
-  it("scopes file discovery to the selected document folder and reuses descriptors", async () => {
+  it("does not reuse stale file metadata after the same file ID changes", async () => {
+    let current = descriptor;
+    const client: ReaderFileClient = {
+      async *list() {
+        await Promise.resolve();
+        yield current;
+      },
+      download: vi.fn().mockResolvedValue(new Blob(["pdf"], { type: "application/pdf" })),
+    };
+    const repository = new ConnectDocumentRepository(client);
+    const first = await repository.open(collectionId("reading"), target);
+    await first.close();
+    current = { ...descriptor, contentDigest: `sha256:${"b".repeat(64)}` };
+    const next = await repository.open(collectionId("reading"), target);
+    expect(next.revision).toBe(current.contentDigest);
+    expect(client.download).toHaveBeenCalledTimes(2);
+    await next.close();
+  });
+
+  it("scopes file discovery to the selected folder and refreshes descriptors on each open", async () => {
     const list = vi.fn(async function* (options?: {
       readonly folder?: string;
     }): AsyncIterable<CollectionFileDescriptor> {
@@ -96,7 +111,7 @@ describe("ConnectDocumentRepository", () => {
     const second = await repository.open(collectionId("reading"), nestedTarget);
     await second.close();
 
-    expect(list).toHaveBeenCalledOnce();
+    expect(list).toHaveBeenCalledTimes(2);
   });
 });
 

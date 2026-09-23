@@ -12,14 +12,28 @@ export async function openDocumentWithOfflineCopy(
   repository: DocumentRepository,
   options: DocumentOpenOptions,
 ): Promise<{ readonly handle: DocumentHandle; readonly cached: boolean }> {
-  const cached = await openOfflineDocument(collection, target).catch(() => null);
-  if (options.signal?.aborted) {
-    await cached?.close();
-    options.signal.throwIfAborted();
+  try {
+    // Check the current file before considering a device-local copy. An offline
+    // copy is deliberately a fallback, not a way to hide a changed online file.
+    const handle = await repository.open(collection, target, options);
+    const current = { ...target, fileId: handle.fileId, revision: handle.revision };
+    const copy = await openOfflineDocument(collection, current).catch(() => null);
+    await copy?.close();
+    return { handle, cached: copy !== null };
+  } catch (reason) {
+    if (options.signal?.aborted || isMissingFile(reason)) {
+      throw reason;
+    }
+    const cached = await openOfflineDocument(collection, target).catch(() => null);
+    if (cached) {
+      return { handle: cached, cached: true };
+    }
+    throw reason;
   }
-  return cached
-    ? { handle: cached, cached: true }
-    : { handle: await repository.open(collection, target, options), cached: false };
+}
+
+function isMissingFile(reason: unknown): boolean {
+  return reason instanceof Error && reason.message.includes("file_not_found");
 }
 
 const databaseName = "mdbase-reader-offline-v1";

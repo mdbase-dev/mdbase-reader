@@ -7,10 +7,11 @@ import {
   type DocumentHandle,
   type DocumentTarget,
 } from "@mdbase-reader/core";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 
 import {
   keepOfflineDocument,
+  openDocumentWithOfflineCopy,
   openOfflineDocument,
   removeOfflineDocument,
   verifyOfflineBytes,
@@ -57,6 +58,41 @@ describe("opt-in exact-revision offline copies", () => {
     await removeOfflineDocument(collection, target);
     expect(await openOfflineDocument(collection, target)).toBeNull();
   });
+  it("prefers the current online file over an older offline copy, but retains offline fallback", async () => {
+    const { target, handle } = await fixture("Earlier version");
+    const collection = collectionId("offline-updated-file");
+    await keepOfflineDocument(collection, target, handle);
+    const updated = await fixture("Current version");
+    const repository = { open: vi.fn().mockResolvedValue(updated.handle) };
+    const online = await openDocumentWithOfflineCopy(collection, target, repository, {});
+    expect(online.handle.revision).toBe(updated.handle.revision);
+    expect(online.cached).toBe(false);
+    repository.open.mockRejectedValueOnce(new Error("connection unavailable"));
+    const offline = await openDocumentWithOfflineCopy(collection, target, repository, {});
+    expect(offline.handle.revision).toBe(target.revision);
+    expect(offline.cached).toBe(true);
+    await offline.handle.close();
+    await removeOfflineDocument(collection, target);
+    await updated.handle.close();
+    await handle.close();
+  });
+
+  it("does not present an offline copy as a replacement for a deleted file", async () => {
+    const { target, handle } = await fixture("Deleted file");
+    const collection = collectionId("offline-deleted-file");
+    await keepOfflineDocument(collection, target, handle);
+    await expect(
+      openDocumentWithOfflineCopy(
+        collection,
+        target,
+        { open: vi.fn().mockRejectedValue(new Error("file_not_found")) },
+        {},
+      ),
+    ).rejects.toThrow("file_not_found");
+    await removeOfflineDocument(collection, target);
+    await handle.close();
+  });
+
   it("rejects corrupt or wrong-revision bytes instead of silently using them", async () => {
     const { target, handle } = await fixture("Expected");
     await expect(verifyOfflineBytes(new Blob(["Changed"]), target)).rejects.toThrow(

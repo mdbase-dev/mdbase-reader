@@ -34,7 +34,7 @@ database or export step.
 ## Operating Context
 
 Users connect an existing or new mdbase collection, browse source records,
-open exact file revisions, read and annotate documents, edit Markdown source
+open current files, read and annotate documents, edit Markdown source
 notes, enrich citation data when useful, search their library, and export or
 materialise their work. A collection may be hosted or owned by a user's
 computer, and connectivity can be intermittent.
@@ -44,8 +44,9 @@ computer, and connectivity can be intermittent.
 - The primary representations are PDF, EPUB, and safe archived HTML.
 - Source and annotation contracts are the initial collection boundary.
 - Bibliographic metadata follows CSL-JSON but remains optional.
-- File identity and selectors bind to exact revisions; silent fallback to a
-  different file is not acceptable.
+- Reading opens the current file by stable identity, even when its bytes change.
+  Annotations retain the revision they targeted; silent substitution of a
+  different file or an uncertain annotation location is not acceptable.
 - Reading must remain available while indexing, enrichment, or note hydration
   proceeds independently.
 - The web app uses mdbase Connect; Capacitor and Electron provide platform

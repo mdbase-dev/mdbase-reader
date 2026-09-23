@@ -37,8 +37,6 @@ export class ConnectDocumentError extends Error {
 }
 
 export class ConnectDocumentRepository implements DocumentRepository {
-  readonly #descriptorsById = new Map<string, CollectionFileDescriptor>();
-  readonly #descriptorsByPath = new Map<string, CollectionFileDescriptor>();
   readonly #documents = new Map<string, CachedDocument>();
   #accessSequence = 0;
 
@@ -56,9 +54,6 @@ export class ConnectDocumentRepository implements DocumentRepository {
     const descriptor = await this.#find(target, options);
     if (!descriptor) {
       throw new ConnectDocumentError("open document", "file_not_found");
-    }
-    if (descriptor.contentDigest !== target.revision) {
-      throw new ConnectDocumentError("open document", "file_revision_changed");
     }
     const cached = await this.#load(descriptor, options);
     cached.leases += 1;
@@ -134,28 +129,26 @@ export class ConnectDocumentRepository implements DocumentRepository {
     target: DocumentTarget,
     options: DocumentOpenOptions,
   ): Promise<CollectionFileDescriptor | null> {
-    const cached = this.#descriptorsById.get(target.fileId);
-    if (cached) {
-      return cached;
-    }
+    // Look up current metadata on every open: a previously discovered descriptor may
+    // describe bytes that have since been replaced at the same file ID.
     const path = portableFilePath(target.file);
-    const cachedByPath = this.#descriptorsByPath.get(path);
-    if (cachedByPath?.contentDigest === target.revision) {
-      return cachedByPath;
-    }
     const folder = parentFolder(path);
+    let byId: CollectionFileDescriptor | null = null;
+    let migratedByPath: CollectionFileDescriptor | null = null;
     for await (const descriptor of this.files.list({
       ...(folder ? { folder } : {}),
       pageSize: 100,
       ...options,
     })) {
-      this.#descriptorsById.set(descriptor.fileId, descriptor);
-      this.#descriptorsByPath.set(descriptor.path, descriptor);
+      if (descriptor.fileId === target.fileId) {
+        byId = descriptor;
+      }
+      // A path alone is not enough to assume a new file ID is the same document.
+      if (descriptor.path === path && descriptor.contentDigest === target.revision) {
+        migratedByPath = descriptor;
+      }
     }
-    return (
-      this.#descriptorsById.get(target.fileId) ??
-      exactRevision(this.#descriptorsByPath.get(path), target.revision)
-    );
+    return byId ?? migratedByPath;
   }
 }
 
@@ -168,13 +161,6 @@ interface CachedDocument {
 
 function documentCacheKey(descriptor: CollectionFileDescriptor): string {
   return `${descriptor.fileId}:${descriptor.contentDigest}`;
-}
-
-function exactRevision(
-  descriptor: CollectionFileDescriptor | undefined,
-  revision: string,
-): CollectionFileDescriptor | null {
-  return descriptor?.contentDigest === revision ? descriptor : null;
 }
 
 function portableFilePath(link: string): string {

@@ -74,12 +74,8 @@ function assertCurrentDocument(
       "The selected document does not belong to this source.",
     );
   }
-  if (current.revision !== request.document.revision) {
-    throw new DomainError(
-      "document-revision-mismatch",
-      "The selected document changed before the annotation was saved.",
-    );
-  }
+  // The source note can still name an older digest after its file changes.
+  // Keep the version actually read in the annotation without blocking its save.
 }
 
 export async function createAnnotation(

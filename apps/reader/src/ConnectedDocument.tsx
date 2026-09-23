@@ -117,7 +117,7 @@ function OpenConnectedDocument({
   useEffect(() => () => onSurfaceChange(null), [onSurfaceChange]);
 
   if (state.status === "opening") {
-    return <DocumentMessage label="Opening exact file revision…" />;
+    return <DocumentMessage label="Opening document…" />;
   }
   if (state.status === "error") {
     return (
@@ -138,13 +138,26 @@ function OpenConnectedDocument({
     <div className="connected-document-frame">
       <OfflineDocumentControl
         collection={source.collectionId}
-        target={stableDescriptor}
+        target={{
+          ...stableDescriptor,
+          fileId: state.handle.fileId,
+          revision: state.handle.revision,
+        }}
         handle={state.handle}
         initiallyCached={state.cached}
       />
+      {state.handle.revision !== stableDescriptor.revision ? (
+        <p className="document-change-notice" role="status">
+          This file has changed. Some saved annotation positions may need checking.
+        </p>
+      ) : null}
       <div className="connected-document-content">
         <OpenedDocumentRenderer
-          descriptor={stableDescriptor}
+          descriptor={{
+            ...stableDescriptor,
+            fileId: state.handle.fileId,
+            revision: state.handle.revision,
+          }}
           handle={state.handle}
           onSurfaceChange={onSurfaceChange}
         />

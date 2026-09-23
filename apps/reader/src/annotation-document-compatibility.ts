@@ -3,8 +3,9 @@ import type { ReadingSurface } from "@mdbase-reader/reading-surface";
 
 /**
  * PDF geometry remains attached to a stable file across incremental saves, native annotations,
- * metadata edits, and other byte-only revisions. Reflowable targets retain their stricter revision
- * check because their structural locators can change when the document bytes change.
+ * metadata edits, and other byte-only revisions. HTML quotations can be relocated in the
+ * current document by the HTML renderer. EPUB CFIs remain version-specific: following a stale
+ * CFI without checking its text could silently lead to the wrong passage.
  */
 export function annotationMatchesSurface(annotation: Annotation, surface: ReadingSurface): boolean {
   const target = annotation.document;
@@ -14,5 +15,9 @@ export function annotationMatchesSurface(annotation: Annotation, surface: Readin
   if (target.fileId !== surface.document.document.fileId) {
     return false;
   }
-  return Boolean(annotation.target?.pdf) || target.revision === surface.document.document.revision;
+  return (
+    Boolean(annotation.target?.pdf) ||
+    Boolean(annotation.target?.html && annotation.target.quote?.exact) ||
+    target.revision === surface.document.document.revision
+  );
 }

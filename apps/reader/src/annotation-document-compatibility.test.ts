@@ -64,7 +64,16 @@ describe("annotation document compatibility", () => {
     ).toBe(false);
   });
 
-  it("retains exact revision checks for reflowable document targets", () => {
+  it("allows HTML quotations to be relocated after the file changes", () => {
+    expect(
+      annotationMatchesSurface(
+        { ...annotation, target: { quote: { exact: "Selected text" }, html: { css: "p" } } },
+        surface,
+      ),
+    ).toBe(true);
+  });
+
+  it("retains exact revision checks for EPUB structural targets", () => {
     expect(
       annotationMatchesSurface(
         {

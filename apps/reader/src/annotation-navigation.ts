@@ -10,7 +10,7 @@ export async function navigateToAnnotation(
 ): Promise<void> {
   if (!annotationMatchesSurface(annotation, surface)) {
     throw new Error(
-      "This annotation belongs to a different document revision. Open its original document to locate it.",
+      "The file has changed, and this annotation's position cannot be verified in the current document. The annotation is still saved.",
     );
   }
   const target = annotation.target;
