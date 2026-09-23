@@ -104,6 +104,15 @@ it("delegates save and dismiss keys without stealing a handled completion-menu E
   expect(save).toHaveBeenCalledOnce();
 });
 
+it("distinguishes unsupported anchors from failed passage navigation", async () => {
+  const goTo = vi.fn();
+  const surface = { goTo, capabilities: {} } as unknown as ReadingSurface;
+  await expect(
+    navigateToAnnotation({ ...base, target: { quote: { exact: "Preserved quotation" } } }, surface),
+  ).rejects.toThrow("no supported passage anchor");
+  expect(goTo).not.toHaveBeenCalled();
+});
+
 it("reports missing passages and rejects failed navigation instead of silently succeeding", async () => {
   const goTo = vi.fn().mockResolvedValue(false);
   const surface = { goTo, capabilities: {} } as unknown as ReadingSurface;

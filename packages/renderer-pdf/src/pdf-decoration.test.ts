@@ -40,6 +40,27 @@ describe("PDF annotation decorations", () => {
     });
   });
 
+  it("renders a quoted note's verified passage without changing its note type", () => {
+    expect(annotationToPdfDecoration({ ...annotation, annotationType: "note" })).toMatchObject({
+      type: PdfAnnotationSubtype.HIGHLIGHT,
+      pageIndex: 3,
+    });
+    expect(
+      annotationToPdfDecoration({
+        ...annotation,
+        annotationType: "note",
+        target: { pdf: annotation.target.pdf },
+      }),
+    ).toBeNull();
+    expect(
+      annotationToPdfDecoration({
+        ...annotation,
+        annotationType: "note",
+        target: { quote: annotation.target.quote },
+      }),
+    ).toBeNull();
+  });
+
   it("refuses geometry profiles that have no fixture-backed conversion", () => {
     expect(
       annotationToPdfDecoration({

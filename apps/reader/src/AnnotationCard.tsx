@@ -1,5 +1,6 @@
 import { useEffect, useRef, useSyncExternalStore, type JSX, type RefObject } from "react";
 
+import { hasPassageAnchor } from "./annotation-anchor.js";
 import { annotationBodyContent } from "./annotation-body-content.js";
 import { AnnotationBodyEditor } from "./AnnotationEditor.js";
 import { AnnotationImage, type AnnotationFileReader } from "./AnnotationImage.js";
@@ -52,7 +53,7 @@ export function AnnotationCard({
       role="group"
       aria-label={`${annotation.annotationType} annotation`}
       onClick={() => {
-        if (!editing) {
+        if (!editing && hasPassageAnchor(annotation.target)) {
           onOpen();
         }
       }}
@@ -61,6 +62,11 @@ export function AnnotationCard({
         <span className={`annotation-kind is-${annotation.annotationType}`}>
           {annotation.annotationType}
         </span>
+        {!hasPassageAnchor(annotation.target) ? (
+          <small title="This annotation is not linked to a document passage.">
+            {annotation.annotationType === "note" ? "Unanchored note" : "No passage anchor"}
+          </small>
+        ) : null}
         {annotation.locator ? (
           <small title={annotation.locator.label}>
             {annotation.locator.label.replace(/^\[\[.*\]\]$/u, "Document passage")}
@@ -198,7 +204,12 @@ function AnnotationCardFooter({
           className="icon-button"
           type="button"
           aria-label="Open annotation in document"
-          title="Open in document"
+          disabled={!hasPassageAnchor(annotation.target)}
+          title={
+            hasPassageAnchor(annotation.target)
+              ? "Open in document"
+              : "No passage anchor — navigation is unavailable"
+          }
           onClick={(event) => {
             event.stopPropagation();
             onOpen();

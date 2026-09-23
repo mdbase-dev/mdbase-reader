@@ -26,7 +26,8 @@ export function annotationToPdfDecoration(
     return areaDecoration(annotation, pdf.pageIndex, boundingRect(segmentRects));
   }
   if (
-    annotation.annotationType !== "highlight" ||
+    (annotation.annotationType !== "highlight" &&
+      !(annotation.annotationType === "note" && annotation.target?.quote)) ||
     pdf.coordinateSpace.profile !== supportedCoordinateProfile
   ) {
     return null;
