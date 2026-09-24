@@ -23,6 +23,7 @@ import {
 } from "./icons.js";
 import { importHref } from "./import-navigation.js";
 import { discoverPropertyKeys } from "./library-columns.js";
+import { fieldShape, isActiveCondition } from "./library-conditions.js";
 import {
   emptyRowSelection,
   pruneRowSelection,
@@ -31,6 +32,7 @@ import {
 import { LibraryBulkBar, type BulkStatusProgress } from "./LibraryBulkBar.js";
 import { LibraryCards } from "./LibraryCards.js";
 import { countLabel } from "./LibraryCells.js";
+import { LibraryConditionsEditor } from "./LibraryConditionsEditor.js";
 import { LibraryTable } from "./LibraryTable.js";
 import { LibraryTextSearch, type LibrarySearchScope } from "./LibraryTextSearch.js";
 import {
@@ -204,6 +206,9 @@ export function LibraryWorkspace({
     const saved = await controller.save({
       name,
       configuration,
+      fieldShapes: Object.fromEntries(
+        configuration.filter.conditions.map(({ key }) => [key, fieldShape(allSources, key)]),
+      ),
       ...(replace && view.path && view.owned ? { existing: view } : {}),
     });
     setSaving(false);
@@ -340,11 +345,19 @@ export function LibraryWorkspace({
                   onChange={(event) => updateFilter({ tag: event.target.value })}
                 />
               </label>
+              <LibraryConditionsEditor
+                conditions={configuration.filter.conditions}
+                propertyKeys={propertyKeys}
+                sources={allSources}
+                onChange={(conditions) => updateFilter({ conditions })}
+              />
               {filterCount > 0 ? (
                 <button
                   className="library-clear-filters"
                   type="button"
-                  onClick={() => updateFilter({ status: "all", format: "all", tag: "" })}
+                  onClick={() =>
+                    updateFilter({ status: "all", format: "all", tag: "", conditions: [] })
+                  }
                 >
                   Clear filters
                 </button>
@@ -485,7 +498,13 @@ export function LibraryWorkspace({
                   <button
                     type="button"
                     onClick={() =>
-                      updateFilter({ query: "", status: "all", format: "all", tag: "" })
+                      updateFilter({
+                        query: "",
+                        status: "all",
+                        format: "all",
+                        tag: "",
+                        conditions: [],
+                      })
                     }
                   >
                     Clear search and filters
@@ -595,7 +614,8 @@ function activeFilterCount(configuration: LibraryViewConfiguration): number {
   return (
     Number(configuration.filter.status !== "all") +
     Number(configuration.filter.format !== "all") +
-    Number(Boolean(configuration.filter.tag.trim()))
+    Number(Boolean(configuration.filter.tag.trim())) +
+    configuration.filter.conditions.filter(isActiveCondition).length
   );
 }
 

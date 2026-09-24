@@ -19,7 +19,13 @@ describe("mdbase library views", () => {
         presentation: "cards",
         sortField: "published",
         sortDirection: "desc",
-        filter: { query: "attention", status: "reading", format: "pdf", tag: "study" },
+        filter: {
+          query: "attention",
+          status: "reading",
+          format: "pdf",
+          tag: "study",
+          conditions: [],
+        },
       },
     });
     const frontmatter = parseYaml(/^---\n([\s\S]*?)\n---/u.exec(document)?.[1] ?? "") as Record<
@@ -54,7 +60,13 @@ describe("mdbase library views", () => {
         columns: ["title", "creator", "tags"],
         sortField: "creator",
         sortDirection: "asc",
-        filter: { query: "weil", status: "reading", format: "pdf", tag: "attention" },
+        filter: {
+          query: "weil",
+          status: "reading",
+          format: "pdf",
+          tag: "attention",
+          conditions: [],
+        },
       },
     });
     expect(configuration).toEqual({
@@ -63,7 +75,7 @@ describe("mdbase library views", () => {
       columnWidths: {},
       sortField: "creator",
       sortDirection: "asc",
-      filter: { query: "weil", status: "reading", format: "pdf", tag: "attention" },
+      filter: { query: "weil", status: "reading", format: "pdf", tag: "attention", conditions: [] },
     });
   });
 
@@ -75,7 +87,13 @@ describe("mdbase library views", () => {
       ],
       {
         ...defaultLibraryViewConfiguration,
-        filter: { query: "attention", status: "reading", format: "pdf", tag: "study" },
+        filter: {
+          query: "attention",
+          status: "reading",
+          format: "pdf",
+          tag: "study",
+          conditions: [],
+        },
       },
     );
     expect(visible.map(({ title }) => title)).toEqual(["Attention"]);

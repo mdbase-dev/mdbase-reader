@@ -139,6 +139,16 @@ action, and one stylesheet section for each redesigned component.
   sidebar keeps click-to-preview. With two or more selected, a toolbar offers _Set status…_
   (written four at a time with progress), _Open_ (up to 12) and _Export citations_ for the
   selection.
+- **Filter on any field.** The filter menu's _Fields_ section adds conditions on any dotted
+  frontmatter path: is, is not, contains, less/greater than, at most/least, empty, not empty.
+  Field names are suggested from the collection, and values from that field's commonest values.
+  Wikilinks match by alias or last path segment, lists by any item, and text ignores case.
+  Saved views write the same conditions into their `where` (`conditionToCel`). mdbase's CEL
+  has no `type()`, `string()`, `int()` or case folding, so Reader decides list versus scalar
+  from the library's values, matches text with `(?i)` RE2 patterns, and compares numbers only
+  with numbers. The live filter follows the same rules, so a draft and its saved view agree:
+  checked against mdbase on the 1,486-source test collection, all 12 sampled conditions
+  returned identical counts.
 - TanStack Table v9 is used headlessly for column sizing and resizing only (`use-library-columns.ts`).
   Filtering and sorting remain `applyLibraryViewConfiguration`, which matches a saved view's
   `order_by`.

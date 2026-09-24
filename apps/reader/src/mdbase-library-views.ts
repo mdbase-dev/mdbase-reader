@@ -13,6 +13,13 @@ import {
   type LibraryColumn,
   type PropertyLibraryColumn,
 } from "./library-columns.js";
+import {
+  conditionToCel,
+  matchesCondition,
+  parseConditions,
+  type FieldCondition,
+  type FieldShape,
+} from "./library-conditions.js";
 
 import type { SourceSummary } from "@mdbase-reader/core";
 
@@ -29,6 +36,8 @@ export interface LibraryViewFilter {
   readonly status: "all" | "inbox" | "queued" | "reading" | "finished" | "archived";
   readonly format: "all" | "pdf" | "epub" | "web" | "note";
   readonly tag: string;
+  /** Conditions on any frontmatter field, all of which must hold. */
+  readonly conditions: readonly FieldCondition[];
 }
 
 export interface LibraryViewConfiguration {
@@ -62,6 +71,8 @@ export interface ExecutedLibraryView {
 export interface LibraryViewSaveRequest {
   readonly name: string;
   readonly configuration: LibraryViewConfiguration;
+  /** Whether each condition's field holds lists, which decides its CEL; default scalar. */
+  readonly fieldShapes?: Readonly<Record<string, FieldShape>>;
   readonly existing?: MdbaseLibraryView;
 }
 
@@ -71,7 +82,7 @@ export const defaultLibraryViewConfiguration: LibraryViewConfiguration = {
   columnWidths: {},
   sortField: "title",
   sortDirection: "asc",
-  filter: { query: "", status: "all", format: "all", tag: "" },
+  filter: { query: "", status: "all", format: "all", tag: "", conditions: [] },
 };
 
 export const defaultLibraryView: MdbaseLibraryView = {
@@ -121,6 +132,7 @@ export function libraryViewConfiguration(
       status: isStatus(filter["status"]) ? filter["status"] : "all",
       format: isFormat(filter["format"]) ? filter["format"] : "all",
       tag: typeof filter["tag"] === "string" ? filter["tag"] : "",
+      conditions: parseConditions(filter["conditions"]),
     },
   };
 }
@@ -134,7 +146,7 @@ export function isReaderLibraryPresentation(
 export function buildLibraryViewDocument(request: LibraryViewSaveRequest): string {
   const identifier = viewIdentifier(request.name);
   const configuration = request.configuration;
-  const where = durableWhere(configuration.filter);
+  const where = durableWhere(configuration.filter, request.fieldShapes ?? {});
   const frontmatter = {
     type: "view",
     id: `reader.library.${identifier}`,
@@ -205,6 +217,11 @@ export function applyLibraryViewConfiguration(
     if (tag && !source.tags.some((candidate) => candidate.toLocaleLowerCase() === tag)) {
       return false;
     }
+    if (
+      !configuration.filter.conditions.every((condition) => matchesCondition(source, condition))
+    ) {
+      return false;
+    }
     return (
       !query ||
       [source.title, ...source.creators, ...source.tags.map(String)]
@@ -230,7 +247,10 @@ export function sourceFormat(source: SourceSummary): LibraryViewFilter["format"]
   return "note";
 }
 
-function durableWhere(filter: LibraryViewFilter): string | null {
+function durableWhere(
+  filter: LibraryViewFilter,
+  shapes: Readonly<Record<string, FieldShape>>,
+): string | null {
   const terms: string[] = [];
   if (filter.status !== "all") {
     terms.push(`reading.status == ${JSON.stringify(filter.status)}`);
@@ -245,6 +265,12 @@ function durableWhere(filter: LibraryViewFilter): string | null {
   }
   if (filter.tag.trim()) {
     terms.push(`tags.contains(${JSON.stringify(filter.tag.trim())})`);
+  }
+  for (const condition of filter.conditions) {
+    const clause = conditionToCel(condition, shapes[condition.key] ?? "scalar");
+    if (clause) {
+      terms.push(clause);
+    }
   }
   return terms.length > 0 ? terms.join(" && ") : null;
 }

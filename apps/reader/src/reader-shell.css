@@ -1005,7 +1005,7 @@
 }
 
 .library-workspace-more .reader-menu-panel {
-  width: 260px;
+  width: min(320px, calc(100vw - 24px));
   max-height: min(560px, calc(100vh - 140px));
   overflow: auto;
 }
@@ -3371,4 +3371,86 @@
 .library-card.is-selected {
   border-color: color-mix(in oklch, var(--accent) 55%, var(--line));
   box-shadow: 0 0 0 1px color-mix(in oklch, var(--accent) 55%, transparent);
+}
+
+/* Field conditions in the library filter menu: field, comparison, value, remove. */
+
+.library-conditions {
+  display: grid;
+  gap: 6px;
+  min-width: 0;
+  margin: 4px 0 0;
+  padding: 0;
+  border: 0;
+}
+
+.library-condition {
+  display: grid;
+  grid-template-areas:
+    "field field remove"
+    "comparison value value";
+  grid-template-columns: auto minmax(0, 1fr) 24px;
+  align-items: center;
+  gap: 4px;
+  padding: 6px;
+  border: 1px solid var(--reader-hairline);
+  border-radius: 6px;
+}
+
+.library-condition-field {
+  grid-area: field;
+}
+
+.library-condition select {
+  grid-area: comparison;
+}
+
+.library-condition-value,
+.library-condition > span {
+  grid-area: value;
+}
+
+.library-condition .icon-button {
+  grid-area: remove;
+}
+
+.library-condition input,
+.library-condition select {
+  min-width: 0;
+  height: 28px;
+  padding: 0 7px;
+  border: 1px solid var(--line);
+  border-radius: 5px;
+  color: var(--ink);
+  background: var(--paper);
+  font: inherit;
+  font-size: var(--ui-control);
+}
+
+.library-condition-field {
+  font-family: var(--mono) !important;
+  font-size: 11px !important;
+}
+
+.library-condition .icon-button {
+  width: 24px;
+  height: 24px;
+  color: var(--muted);
+}
+
+.library-condition .icon-button svg {
+  width: 12px;
+  height: 12px;
+}
+
+.reader-menu-panel .library-condition-add {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--action);
+}
+
+.library-condition-add svg {
+  width: 13px;
+  height: 13px;
 }
