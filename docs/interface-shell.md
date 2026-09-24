@@ -163,9 +163,10 @@ action, and one stylesheet section for each redesigned component.
   on the annotation's source (the same conditions as the Sources view). Enter or double-click
   opens the annotation in its document, reusing a tab already showing it; Ctrl/⌘+Enter opens it
   beside. _Copy as Markdown_ copies the selection grouped by source, as blockquotes with a
-  wikilink back to each record. `AnnotationRepository.listAll` is one `queryPages` call limited
-  to `reader-annotation` records (211 KB rather than 7.6 MB on the test collection); the listed
-  annotations are read-only snapshots without revisions, so nothing is written from this view.
+  wikilink back to each record. `AnnotationRepository.listAll` lists paths with a
+  contract query limited to `reader-annotation`, then reads each record with the bulk read
+  concurrency: semantic contract views reject `includeBody` and every field but `types`,
+  `timezone`, pagination, `frontmatterMode` and `contract`. Nothing is written from this view.
 - TanStack Table v9 is used headlessly for column sizing and resizing only (`use-library-columns.ts`).
   Filtering and sorting remain `applyLibraryViewConfiguration`, which matches a saved view's
   `order_by`.

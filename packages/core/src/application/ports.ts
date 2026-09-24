@@ -95,7 +95,7 @@ export interface AnnotationRepository {
   sourceIdsWithAnnotations?: CollectionRead<readonly SourceId[]>;
   /** How many annotations each source has, where an index makes that cheap. */
   annotationCountsBySource?: CollectionRead<ReadonlyMap<SourceId, number>>;
-  /** Every annotation in the collection, read-only (without record revisions). */
+  /** Every annotation in the collection. */
   listAll?: CollectionRead<readonly Annotation[]>;
   listForSource(
     collectionId: CollectionId,

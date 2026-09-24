@@ -51,33 +51,32 @@ export class ConnectAnnotationRepository implements AnnotationRepository {
     collection: CollectionId,
     options: ReaderRequestOptions = {},
   ): Promise<readonly Annotation[]> {
-    const annotations: Annotation[] = [];
+    // Contract queries cannot include bodies, so list the paths and read each record.
+    const paths: string[] = [];
     for await (const outcome of this.client.queryPages(
       {
         contract: annotationContract,
         // Some authorities apply the contract as a view, not a filter; the type narrows the scan.
         types: ["reader-annotation"],
-        frontmatterMode: "both",
-        includeBody: true,
+        frontmatterMode: "effective",
       },
       { ...options, firstPageSize: 500, pageSize: 1_000 },
     )) {
-      for (const record of outcomeValue(outcome, "query annotations").results) {
-        try {
-          annotations.push(
-            annotationFromDocument(collection, {
-              path: record.path,
-              frontmatter: record.frontmatter ?? {},
-              effectiveFrontmatter: record.effectiveFrontmatter ?? record.frontmatter ?? {},
-              body: record.body ?? "",
-            }),
-          );
-        } catch {
-          // A record that does not satisfy the annotation contract is left out of the overview.
-        }
-      }
+      paths.push(...outcomeValue(outcome, "query annotations").results.map(({ path }) => path));
     }
-    return annotations;
+    const annotations = await mapConcurrent(paths, readerConnectBulkConcurrency, async (path) => {
+      const document = outcomeValue(
+        await readWithOptions(this.client, { path, includeDocument: true }, options),
+        "read annotation",
+      );
+      try {
+        return annotationFromDocument(collection, document);
+      } catch {
+        // A record that does not satisfy the annotation contract is left out of the overview.
+        return null;
+      }
+    });
+    return annotations.filter((annotation) => annotation !== null);
   }
 
   async listForSource(
