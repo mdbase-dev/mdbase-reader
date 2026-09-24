@@ -27,6 +27,7 @@ it("gives popup approval a human-scale budget without extending ordinary redirec
       id: "dev.mdbase.reader",
       name: "Reader",
       homepage: "https://reader.example.test/",
+      redirect_uris: ["https://reader.example.test/"],
       requirements: {
         access: "full_collection",
         contracts: [],

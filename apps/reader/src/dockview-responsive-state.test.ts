@@ -54,6 +54,13 @@ describe("responsive native layout projections", () => {
     expect(mobile.panels[a]?.params?.["tab"]).toEqual({ id: a, dirty: true });
     expect(gridGroups(desktop.grid.root)).toHaveLength(2);
   });
+  it("shows a content tab, not a side panel, when the focused tab no longer exists", () => {
+    const desktop = layout();
+    desktop.panels[inspectorPanelId] = { id: inspectorPanelId, contentComponent: "inspector" };
+    const [group] = gridGroups(mobileLayout(desktop, "reader:session:closed").grid.root);
+    expect(group?.activeView).toBe(a);
+    expect(gridGroups(mobileLayout(desktop, null).grid.root)[0]?.activeView).toBe(a);
+  });
   it("keeps desktop geometry and hidden edges, while merging mobile opens and closes", () => {
     const desktop = layout(),
       mobile = mobileLayout(structuredClone(desktop), a),

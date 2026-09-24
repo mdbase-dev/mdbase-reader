@@ -31,7 +31,8 @@ export type LibraryColumnsTable = ReactTable<typeof features, SourceSummary, Col
 
 /**
  * TanStack Table owns column sizes while a column is being dragged; the settled widths are
- * written back to the layout, so a drag is one layout change rather than hundreds.
+ * written back to the layout, so a drag is one layout change rather than hundreds. Sizes are read
+ * from the layout once: a caller that replaces widths wholesale (a reset) remounts the table.
  */
 export function useLibraryColumns({
   sources,
@@ -60,14 +61,6 @@ export function useLibraryColumns({
   const [columnSizing, setColumnSizing] = useState<ColumnSizingState>(() => ({
     ...layout.columnWidths,
   }));
-  // Widths can also change from outside, e.g. "Reset columns and layout"; follow them.
-  const [syncedWidths, setSyncedWidths] = useState(layout.columnWidths);
-  if (syncedWidths !== layout.columnWidths) {
-    setSyncedWidths(layout.columnWidths);
-    if (!sameWidths(columnSizing, layout.columnWidths)) {
-      setColumnSizing({ ...layout.columnWidths });
-    }
-  }
   const table = useTable(
     {
       features,

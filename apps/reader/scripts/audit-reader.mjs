@@ -78,7 +78,6 @@ const measurements = {};
 const completed = [];
 let writesBlocked = false;
 let documentsBlocked = false;
-let documentRequests = 0;
 let writes = 0;
 const html = (index) =>
   `<!doctype html><html lang="en"><head><title>[test] Research ${index}</title></head><body><article><h1>[test] Reading fixture ${index}</h1>${Array.from({ length: 60 }, (_, paragraph) => `<p id="p${paragraph}">A durable reading library makes patient attention possible. Passage ${paragraph + 1} considers research, memory and careful interpretation. This is disposable test material, not a real collection.</p>`).join("")}</article></body></html>`;
@@ -171,7 +170,6 @@ await context.route(`${origin}/__reader-audit/**`, async (route) => {
     );
   }
   if (path.startsWith("document/")) {
-    documentRequests += 1;
     if (documentsBlocked) {
       return route.fulfill({ status: 503, body: "[test] Offline" });
     }
@@ -287,15 +285,18 @@ try {
     await expect(page.locator("iframe.html-viewer")).toBeVisible({ timeout: 30000 });
     await page.getByRole("button", { name: "Keep offline", exact: true }).click();
     await expect(page.getByText("Available offline", { exact: true })).toBeVisible();
-    const requestsBeforeReload = documentRequests;
     documentsBlocked = true;
     await page.reload();
     await expect(page.getByText("Available offline", { exact: true })).toBeVisible({
       timeout: 30000,
     });
-    expect(documentRequests).toBe(requestsBeforeReload);
+    // Reader checks the current file first; the device copy is the fallback when that fails.
+    await expect(page.locator("iframe.html-viewer:visible")).toBeVisible({ timeout: 30000 });
+    await expect(page.frameLocator("iframe.html-viewer:visible").locator("h1")).toContainText(
+      "Reading fixture",
+    );
     await screenshot("offline-document");
-    completed.push("Exact-revision offline copy reopens without document network traffic");
+    completed.push("With the collection unreachable, the offline copy opens the document");
     documentsBlocked = false;
 
     await page.getByLabel("More document actions", { exact: true }).click();

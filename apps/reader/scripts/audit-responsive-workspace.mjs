@@ -196,16 +196,21 @@ export async function auditResponsiveWorkspace(page, { screenshot, blockWrites }
   const picker = page.getByRole("combobox", { name: "Open workspace tab" });
   // evaluateAll does not auto-wait for a newly mounted mobile selector.
   await expect(picker).toBeVisible();
+  // The library is home on a phone: every source tab closes, the library tab stays.
   const remaining = await picker
     .locator("option")
-    .evaluateAll((options) => options.map((option) => option.value).filter(Boolean));
+    .evaluateAll((options) =>
+      options.filter((option) => option.textContent.includes("[test]")).map(({ value }) => value),
+    );
   expect(remaining.length).toBeGreaterThan(0);
   for (const id of remaining) {
     await picker.selectOption(id);
     await page.getByRole("button", { name: "Close current tab", exact: true }).click();
-    await expect(picker.locator(`option[value="${id}"]`)).toHaveCount(0);
+    await expect(page.locator(`.mobile-tab-switcher option[value="${id}"]`)).toHaveCount(0);
   }
-  await expect(picker).toBeDisabled();
+  // With only the library left, its own view title is the heading and the switcher goes away.
+  await expect(picker).toHaveCount(0);
+  await expect(page.getByRole("grid", { name: "Sources" })).toBeVisible();
   if (!(await page.getByRole("complementary", { name: "Library navigator" }).isVisible())) {
     await page.getByRole("button", { name: "Toggle library navigator" }).click();
   }
@@ -230,7 +235,7 @@ export async function auditResponsiveWorkspace(page, { screenshot, blockWrites }
     localStorage.removeItem("mdbase-reader:workspace:v2:test-reader-audit");
   });
   await page.reload();
-  await expect(page.getByRole("combobox", { name: "Open workspace tab" })).toBeVisible();
+  await expect(page.getByRole("grid", { name: "Sources" })).toBeVisible();
   await expect(page.locator(".reader-dock .dv-groupview")).toHaveCount(1);
   await page.setViewportSize({ width: 1440, height: 1000 });
   await expect.poll(async () => (await state()).layout.edgeGroups?.left?.size).toBe(260);

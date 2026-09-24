@@ -39,3 +39,31 @@ export function readerDeploymentFor(environment) {
   }
   return { target, deployment };
 }
+
+/**
+ * Staging and production must be reproducible from a commit. Returns the uncommitted paths that
+ * would reach the build, from `git status --porcelain` output; untracked files outside the
+ * workspace sources (screenshots, scratch output) cannot and are ignored.
+ */
+export function uncommittedBuildInputs(porcelain) {
+  return porcelain
+    .split("\n")
+    .filter(Boolean)
+    .flatMap((line) => {
+      // Status letters, then the path; tolerate a trimmed leading space (" M path").
+      const [, status = "", path = ""] = /^\s*(\S{1,2})\s+(.*)$/u.exec(line) ?? [];
+      return status !== "??" || /^(apps|packages)\//u.test(path) ? [path] : [];
+    });
+}
+
+export function assertReproducibleDeployment(target, porcelain, environment) {
+  if (target === "lab" || environment.MDBASE_READER_ALLOW_DIRTY === "1") {
+    return;
+  }
+  const paths = uncommittedBuildInputs(porcelain);
+  if (paths.length > 0) {
+    throw new Error(
+      `Refusing to deploy ${target} with uncommitted changes (${paths.slice(0, 5).join(", ")}${paths.length > 5 ? ", …" : ""}). Commit them, or set MDBASE_READER_ALLOW_DIRTY=1 to override.`,
+    );
+  }
+}

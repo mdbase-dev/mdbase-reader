@@ -1,7 +1,7 @@
 import { spawn } from "node:child_process";
 import { readFile, writeFile } from "node:fs/promises";
 import { resolve } from "node:path";
-import { readerDeploymentFor } from "./deployment-environment.mjs";
+import { assertReproducibleDeployment, readerDeploymentFor } from "./deployment-environment.mjs";
 
 const projectRoot = resolve(import.meta.dirname, "..");
 const projectName = "mdbase-reader";
@@ -13,6 +13,11 @@ const manifestTargets = [
   resolve(projectRoot, "public", ".well-known", "mdbase-app.json"),
   resolve(projectRoot, "src", "generated", "mdbase-app.json"),
 ];
+assertReproducibleDeployment(
+  deploymentTarget,
+  await capture("git", ["status", "--porcelain", "--untracked-files=all"]),
+  process.env,
+);
 const originalManifests = await Promise.all(manifestTargets.map((target) => readFile(target)));
 // Environment switches and dirty-tree redeploys must also trigger the update notice.
 const commitId = await capture("git", ["rev-parse", "--short=12", "HEAD"]);

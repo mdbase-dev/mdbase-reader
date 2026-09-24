@@ -90,6 +90,8 @@ export function LibraryWorkspace({
   const [searchScope, setSearchScope] = useState<LibrarySearchScope>("sources");
   const [contentQuery, setContentQuery] = useState("");
   const [selection, setSelection] = useState<RowSelection>(emptyRowSelection);
+  // Remounts the table after a reset, since it reads column widths from the layout once.
+  const [layoutResets, setLayoutResets] = useState(0);
   const [executedSources, setExecutedSources] = useState<readonly SourceSummary[]>(allSources);
   const [valuesByPath, setValuesByPath] = useState<
     ReadonlyMap<string, Readonly<Record<string, unknown>>>
@@ -396,7 +398,10 @@ export function LibraryWorkspace({
             <button
               type="button"
               disabled={JSON.stringify(layout) === JSON.stringify(layoutOf(view.configuration))}
-              onClick={() => setLayout(layoutOf(view.configuration))}
+              onClick={() => {
+                setLayout(layoutOf(view.configuration));
+                setLayoutResets((count) => count + 1);
+              }}
             >
               Reset columns and layout
             </button>
@@ -491,6 +496,7 @@ export function LibraryWorkspace({
           </div>
         ) : configuration.presentation === "table" ? (
           <LibraryTable
+            key={layoutResets}
             sources={sources}
             layout={layout}
             onLayoutChange={setLayout}

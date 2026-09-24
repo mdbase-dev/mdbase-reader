@@ -1,5 +1,6 @@
 import { lazy, Suspense, useCallback, useEffect, useMemo, useState, type JSX } from "react";
 
+import { isEpub, isHtml, isPdf } from "./document-media.js";
 import { DocumentMessage, RendererStage, type RendererState } from "./DocumentRendererStage.js";
 import { openDocumentWithOfflineCopy } from "./offline-documents.js";
 import { OfflineDocumentControl } from "./OfflineDocumentControl.js";
@@ -115,6 +116,15 @@ function OpenConnectedDocument({
   }, [attempt, repository, source.collectionId, stableDescriptor]);
 
   useEffect(() => () => onSurfaceChange(null), [onSurfaceChange]);
+  const handle = state.status === "open" ? state.handle : null;
+  // The renderer reloads whenever this identity changes, so it must change only with the file.
+  const currentDescriptor = useMemo(
+    (): DocumentDescriptor =>
+      handle
+        ? { ...stableDescriptor, fileId: handle.fileId, revision: handle.revision }
+        : stableDescriptor,
+    [handle, stableDescriptor],
+  );
 
   if (state.status === "opening") {
     return <DocumentMessage label="Opening document…" />;
@@ -138,11 +148,7 @@ function OpenConnectedDocument({
     <div className="connected-document-frame">
       <OfflineDocumentControl
         collection={source.collectionId}
-        target={{
-          ...stableDescriptor,
-          fileId: state.handle.fileId,
-          revision: state.handle.revision,
-        }}
+        target={currentDescriptor}
         handle={state.handle}
         initiallyCached={state.cached}
       />
@@ -153,11 +159,7 @@ function OpenConnectedDocument({
       ) : null}
       <div className="connected-document-content">
         <OpenedDocumentRenderer
-          descriptor={{
-            ...stableDescriptor,
-            fileId: state.handle.fileId,
-            revision: state.handle.revision,
-          }}
+          descriptor={currentDescriptor}
           handle={state.handle}
           onSurfaceChange={onSurfaceChange}
         />
@@ -263,20 +265,6 @@ function HtmlStage({
         />
       </Suspense>
     </RendererStage>
-  );
-}
-
-function isPdf(mediaType: string, file: string): boolean {
-  return mediaType === "application/pdf" || /\.pdf(?:\]\])?$/iu.test(file);
-}
-
-function isEpub(mediaType: string, file: string): boolean {
-  return mediaType === "application/epub+zip" || /\.epub(?:\]\])?$/iu.test(file);
-}
-
-function isHtml(mediaType: string, file: string): boolean {
-  return (
-    ["text/html", "application/xhtml+xml"].includes(mediaType) || /\.html?(?:\]\])?$/iu.test(file)
   );
 }
 

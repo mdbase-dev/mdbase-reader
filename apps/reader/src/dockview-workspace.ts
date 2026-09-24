@@ -166,7 +166,9 @@ export class ReaderDockWorkspace {
       }
       this.api?.removePanel(panel);
     }
-    if (onlySides && this.mobile) {
+    // On a phone every panel shares one group, so closing a tab can leave Dockview showing the
+    // neighbouring side panel; the workspace should come forward instead.
+    if (this.mobile && (onlySides || !panelTab(this.api?.activePanel))) {
       this.backToContent();
     }
     this.schedule();

@@ -24,6 +24,12 @@ export function mobileLayout(
   active: string | null,
 ): SerializedDockview {
   const ids = Object.keys(desktop.panels);
+  // A stale or missing focus (e.g. the focused tab was closed) must fall back to content: left
+  // to itself, Dockview activates the last view, which is a side panel.
+  const activeView =
+    active && ids.includes(active)
+      ? active
+      : ids.find((id) => id !== navigatorPanelId && id !== inspectorPanelId);
   return {
     grid: {
       width: desktop.grid.width,
@@ -37,7 +43,7 @@ export function mobileLayout(
             data: {
               id: mobileGroupId,
               views: ids,
-              ...(active && ids.includes(active) ? { activeView: active } : {}),
+              ...(activeView ? { activeView } : {}),
             },
           },
         ],
