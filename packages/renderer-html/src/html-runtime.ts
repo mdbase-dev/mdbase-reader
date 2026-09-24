@@ -1,6 +1,7 @@
 import { MarginMarkers, forwardApplicationShortcut } from "@mdbase-reader/reading-surface";
 
 import { htmlLocator, htmlSelectionDraft, locateHtmlTarget } from "./html-range.js";
+import { scrollHtmlElement } from "./html-scroll.js";
 import { applyHtmlTypography } from "./html-typography.js";
 
 import type { Annotation, AnnotationId } from "@mdbase-reader/core";
@@ -88,9 +89,7 @@ export class HtmlDocumentRuntime {
     if (!heading) {
       return false;
     }
-    heading.scrollIntoView({ block: "start" });
-    // Leave the heading a little room rather than pinning it to the edge.
-    this.#view.scrollBy(0, -24);
+    scrollHtmlElement(this.#view, heading, "start");
     return true;
   }
 
@@ -114,7 +113,7 @@ export class HtmlDocumentRuntime {
     if (!range || !element) {
       return false;
     }
-    element.scrollIntoView({ block: "center", behavior: "smooth" });
+    scrollHtmlElement(this.#view, element, "center");
     return true;
   }
 
