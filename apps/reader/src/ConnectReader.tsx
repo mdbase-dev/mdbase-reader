@@ -3,6 +3,8 @@ import { createReaderRuntimeServices, createWebPlatform } from "@mdbase-reader/p
 import { ReaderButton } from "@mdbase-reader/ui";
 import { useEffect, useMemo, useState, useSyncExternalStore, type JSX } from "react";
 
+import { collectionSwitchUrl } from "./collection-switching.js";
+import { CollectionSwitchingContext } from "./CollectionPicker.js";
 import { ConnectWorkspaceGateway } from "./connect-workspace.js";
 import { readerSession } from "./connect.js";
 import { ConnectedDocument } from "./ConnectedDocument.js";
@@ -50,7 +52,30 @@ export function ConnectReader(): JSX.Element {
   }, []);
 
   if (session.status === "ready") {
-    return <OpenedReader collectionId={session.collectionId} />;
+    const checkOutcome = (message: string | null): void => {
+      setError(message);
+      if (message) {
+        throw new Error(message);
+      }
+    };
+    return (
+      <CollectionSwitchingContext
+        value={{
+          collectionId: session.collectionId,
+          connections: session.connections,
+          select: (id) => {
+            history.replaceState(history.state, "", collectionSwitchUrl(location.href));
+            checkOutcome(connectProblemMessage(readerSession.select(id)));
+          },
+          connect: async () => {
+            history.replaceState(history.state, "", collectionSwitchUrl(location.href));
+            checkOutcome(connectProblemMessage(await readerSession.authorize("choose")));
+          },
+        }}
+      >
+        <OpenedReader collectionId={session.collectionId} />
+      </CollectionSwitchingContext>
+    );
   }
   return (
     <ConnectionScreen

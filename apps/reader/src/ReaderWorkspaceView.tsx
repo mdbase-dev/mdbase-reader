@@ -1,6 +1,7 @@
 /* eslint-disable max-lines */
 import { useCallback, useEffect, useMemo, useRef, type JSX } from "react";
 
+import { confirmCollectionSwitch } from "./collection-switching.js";
 import { CommandPalette } from "./CommandPalette.js";
 import { DeploymentUpdateNotice } from "./DeploymentUpdateNotice.js";
 import { inspectorPanelId, navigatorPanelId } from "./dockview-workspace-state.js";
@@ -194,6 +195,9 @@ export function ReaderWorkspaceView({
         density={shell.value.density}
         onChangeDensity={(density) => shell.update({ density })}
         collectionName={library.collectionName}
+        beforeCollectionSwitch={() =>
+          confirmCollectionSwitch(sourceWorkspace.layout, library.sources)
+        }
         connectionState={library.connectionState}
         directAccess={model.directAccess}
         theme={model.theme}

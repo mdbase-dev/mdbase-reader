@@ -1,13 +1,8 @@
 import { ProductBrand, type ThemePreference } from "@mdbase-reader/ui";
 
+import { CollectionPicker } from "./CollectionPicker.js";
 import { DisplayMenu } from "./DisplayMenu.js";
-import {
-  CollectionIcon,
-  LeftPaneIcon,
-  ReadingModeIcon,
-  RightPaneIcon,
-  SearchIcon,
-} from "./icons.js";
+import { LeftPaneIcon, ReadingModeIcon, RightPaneIcon, SearchIcon } from "./icons.js";
 import { shortcutLabel } from "./Menu.js";
 
 import type { ReaderDirectAccessState } from "./use-direct-access.js";
@@ -25,6 +20,7 @@ interface ReaderHeaderProps {
   readonly density?: "comfortable" | "compact";
   readonly onChangeDensity?: (density: "comfortable" | "compact") => void;
   readonly collectionName: string;
+  readonly beforeCollectionSwitch?: () => boolean;
   readonly connectionState: "connected" | "offline" | "syncing";
   readonly directAccess: ReaderDirectAccessState;
   readonly theme: ThemePreference;
@@ -48,6 +44,7 @@ export function ReaderHeader({
   density = "comfortable",
   onChangeDensity,
   collectionName,
+  beforeCollectionSwitch,
   connectionState,
   directAccess,
   theme,
@@ -75,11 +72,10 @@ export function ReaderHeader({
         <ProductBrand />
       </div>
       <div className="reader-header-context">
-        <span className="collection-context" title={`Collection: ${collectionName}`}>
-          <CollectionIcon />
-          <span className="sr-only">Collection: </span>
-          <span className="collection-context-name">{collectionName}</span>
-        </span>
+        <CollectionPicker
+          name={collectionName}
+          {...(beforeCollectionSwitch ? { beforeSwitch: beforeCollectionSwitch } : {})}
+        />
         <ConnectionState state={connectionState} directAccess={directAccess} />
       </div>
       <div className="reader-header-actions">
