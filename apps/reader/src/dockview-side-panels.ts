@@ -61,6 +61,14 @@ export class DockviewSidePanels {
       return;
     }
     const visible = this.regionVisible(position);
+    const conventional = position === "left" ? navigatorPanelId : inspectorPanelId;
+    if (!visible && !this.edgeHasPanels(api, position) && !api.getPanel(conventional)) {
+      // An empty edge would render nothing, so a first toggle opens its conventional panel.
+      api.exitMaximizedGroup();
+      this.syncFocus();
+      this.show(conventional, false);
+      return;
+    }
     if (!visible) {
       api.exitMaximizedGroup();
       this.syncFocus();
@@ -75,6 +83,10 @@ export class DockviewSidePanels {
       api.getEdgeGroup(position)?.expand();
     }
     api.setEdgeGroupVisible(position, !visible);
+  }
+  private edgeHasPanels(api: DockviewApi, position: "left" | "right"): boolean {
+    const id = api.getEdgeGroup(position)?.id;
+    return (api.groups.find((group) => group.id === id)?.panels.length ?? 0) > 0;
   }
   setSinglePane(value: boolean, focused?: IDockviewPanel): void {
     const wasSinglePane = this.singlePane;

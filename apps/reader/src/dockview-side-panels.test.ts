@@ -11,15 +11,24 @@ interface Panel {
 }
 function fixture(): {
   sides: DockviewSidePanels;
-  api: Pick<Record<string, ReturnType<typeof vi.fn>>, "getPanel" | "addPanel" | "removePanel">;
+  api: Pick<
+    Record<string, ReturnType<typeof vi.fn>>,
+    "getPanel" | "addPanel" | "removePanel" | "getEdgeGroup" | "addEdgeGroup"
+  >;
   edge: { expand: ReturnType<typeof vi.fn>; activePanel: Panel };
   visible: { left: boolean; right: boolean };
   activePanel: Panel;
 } {
   const visible = { left: true, right: true };
   const activePanel = { id: "custom-tab", api: { setActive: vi.fn(), moveTo: vi.fn() } };
-  const edge = { expand: vi.fn(), activePanel };
+  const edge = { id: "reader:edge:test", expand: vi.fn(), activePanel };
+  const added = { id: "reader:edge:new", expand: vi.fn(), setHeaderPosition: vi.fn() };
   const api = {
+    groups: [
+      { id: edge.id, panels: [activePanel] },
+      { id: added.id, panels: [] },
+    ],
+    addEdgeGroup: vi.fn(() => added),
     isEdgeGroupVisible: (position: "left" | "right") => visible[position],
     setEdgeGroupVisible: vi.fn((position: "left" | "right", value: boolean) => {
       visible[position] = value;
@@ -57,6 +66,16 @@ describe("sidebar region toggles", () => {
       expect(api.removePanel).not.toHaveBeenCalled();
     },
   );
+
+  it("opens the conventional panel when a first toggle finds no edge to restore", () => {
+    const { sides, api, visible } = fixture();
+    visible.right = false;
+    api.getEdgeGroup.mockReturnValue(undefined);
+    sides.toggleRegion("right");
+    expect(api.addPanel).toHaveBeenCalledWith(
+      expect.objectContaining({ id: inspectorPanelId, component: "inspector", inactive: true }),
+    );
+  });
 
   it("reports edge visibility independently of where Sources and Notes were moved", () => {
     const { sides, api, visible } = fixture();
