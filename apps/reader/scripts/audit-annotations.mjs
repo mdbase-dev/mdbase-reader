@@ -155,7 +155,7 @@ export async function auditAnnotations(page, { screenshot, blockWrites }) {
       ),
   );
   if (!(await tools.isVisible()))
-    await page.getByRole("button", { name: "Toggle notes panel" }).click();
+    await page.getByRole("button", { name: "Toggle right sidebar" }).click();
   await expect(tools.getByRole("searchbox", { name: "Search annotations" })).toBeVisible();
   expect(
     await page.evaluate(
@@ -170,7 +170,7 @@ export async function auditAnnotations(page, { screenshot, blockWrites }) {
   await screenshot("annotation-mobile-edit");
   await tools.getByRole("textbox", { name: "Annotation note" }).press("Escape");
   await expect(tools.getByRole("textbox", { name: "Annotation note" })).toHaveCount(0);
-  await page.getByRole("button", { name: "Toggle notes panel" }).click();
+  await page.getByRole("button", { name: "Toggle right sidebar" }).click();
   await expect(page.locator("iframe.html-viewer:visible")).toHaveCount(1);
   completed.push("Annotation inspector remains usable without horizontal overflow at 390px");
   await page.setViewportSize({ width: 1440, height: 1000 });

@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState, type JSX } from "react";
 
-import { inspectorPanelId, navigatorPanelId } from "./dockview-workspace-state.js";
+import { navigatorPanelId } from "./dockview-workspace-state.js";
 import {
   useReaderAnnotationComposer,
   useFocusChrome,
@@ -12,8 +12,8 @@ import { ReaderLoading } from "./ReaderLoading.js";
 import { ReaderWorkspaceView, type ReaderWorkspaceViewModel } from "./ReaderWorkspaceView.js";
 import { updateSurface } from "./RenderedSourceDocument.js";
 import { SessionReadingLocations } from "./session-reading-locations.js";
-import { SourceLibraryContext } from "./SourceLibraryContext.js";
 import { SourceDeepLink } from "./SourceDeepLink.js";
+import { SourceLibraryContext } from "./SourceLibraryContext.js";
 import { useBibliographyExport } from "./use-bibliography-export.js";
 import { useDeploymentUpdate } from "./use-deployment-update.js";
 import { useDirectAccess } from "./use-direct-access.js";
@@ -143,8 +143,8 @@ function OpenedReaderApp({
     focusNextPane: sourceWorkspace.focusNextPane,
     reopenTab: sourceWorkspace.reopenClosed,
     navigate: sourceWorkspace.navigate,
-    toggleSidebar: () => toggleSide(sourceWorkspace.dock, navigatorPanelId),
-    toggleNotes: () => toggleSide(sourceWorkspace.dock, inspectorPanelId),
+    toggleSidebar: () => sourceWorkspace.dock.toggleSidebar("left"),
+    toggleNotes: () => sourceWorkspace.dock.toggleSidebar("right"),
   });
 
   const source = workspace.selectedSource;
@@ -186,13 +186,6 @@ function OpenedReaderApp({
       <ReaderWorkspaceView model={model} />
     </SourceLibraryContext>
   );
-}
-
-function toggleSide(
-  dock: ReturnType<typeof useSourceWorkspace>["dock"],
-  id: typeof navigatorPanelId | typeof inspectorPanelId,
-): void {
-  dock.setSideVisible(id, !dock.isSideVisible(id));
 }
 
 function confirmCloseDirtyTab(): boolean {

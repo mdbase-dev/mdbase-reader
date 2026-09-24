@@ -61,7 +61,7 @@ export async function auditSidebarLayout(page, { screenshot, measurements }) {
     element.ownerDocument.defaultView.__sidebarSentinel = "original";
     element.ownerDocument.defaultView.scrollTo(0, 900);
   });
-  await page.getByRole("button", { name: "Toggle notes panel" }).click();
+  await page.getByRole("button", { name: "Toggle right sidebar" }).click();
   await expect(inspector).toBeVisible();
   await measure("initial");
   for (const n of [1, 2, 3]) {
@@ -77,9 +77,9 @@ export async function auditSidebarLayout(page, { screenshot, measurements }) {
       element.ownerDocument.defaultView.__sidebarSentinel === "original" &&
       element.ownerDocument.defaultView.scrollY > 700,
   );
-  await page.getByRole("button", { name: "Toggle notes panel" }).click();
+  await page.getByRole("button", { name: "Toggle right sidebar" }).click();
   await measure("inspector-hidden");
-  await page.getByRole("button", { name: "Toggle notes panel" }).click();
+  await page.getByRole("button", { name: "Toggle right sidebar" }).click();
   await measure("inspector-restored");
   const beforeResize = await navigator.boundingBox();
   await page.mouse.move(
@@ -104,12 +104,12 @@ export async function auditSidebarLayout(page, { screenshot, measurements }) {
   await measure("restored");
   await page.setViewportSize({ width: 390, height: 844 });
   await measure("mobile-reading");
-  await page.getByRole("button", { name: "Toggle library navigator" }).click();
+  await page.getByRole("button", { name: "Toggle left sidebar" }).click();
   await measure("mobile-navigator");
-  await page.getByRole("button", { name: "Toggle library navigator" }).click();
-  await page.getByRole("button", { name: "Toggle notes panel" }).click();
+  await page.getByRole("button", { name: "Toggle left sidebar" }).click();
+  await page.getByRole("button", { name: "Toggle right sidebar" }).click();
   await measure("mobile-inspector");
-  await page.getByRole("button", { name: "Toggle notes panel" }).click();
+  await page.getByRole("button", { name: "Toggle right sidebar" }).click();
   await page.setViewportSize({ width: 1440, height: 1000 });
   await measure("desktop-again");
   results.acceptance = sidebarAcceptance(results);

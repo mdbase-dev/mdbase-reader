@@ -92,7 +92,6 @@ export function ReaderWorkspaceView({
     library.sources[0]?.collectionId ?? library.collectionName,
   );
   const dock = sourceWorkspace.dock;
-  const inspectorOpen = dock.isSideVisible(inspectorPanelId);
   const setInspectorOpen = useCallback(
     (value: boolean | ((current: boolean) => boolean)): void => {
       dock.setSideVisible(
@@ -105,7 +104,7 @@ export function ReaderWorkspaceView({
   const pendingAnnotationRef = useRef<PendingWorkspaceAnnotation | null>(null);
   const fileDrop = useFileDrop((file) => void sourceAddition.addFile(file));
   const routedEditingIdRef = useRef(composer.editingAnnotationId);
-  const commands = commandsForView(model, () => setInspectorOpen((value) => !value), {
+  const commands = commandsForView(model, () => dock.toggleSidebar("right"), {
     density: shell.value.density,
     setDensity: (density) => shell.update({ density }),
   });
@@ -117,9 +116,9 @@ export function ReaderWorkspaceView({
     activeSource,
     workspace.selectedSource,
   );
-  const sourceToolsOpen = inspectorOpen;
+  const sourceToolsOpen = dock.isSidebarVisible("right");
   const mobile = useMediaQuery("(max-width: 680px)");
-  const libraryOpen = dock.isSideVisible(navigatorPanelId);
+  const libraryOpen = dock.isSidebarVisible("left");
   useEffect(() => {
     dock.setMobile(mobile);
     dock.setSinglePane(model.focusMode);
@@ -202,7 +201,7 @@ export function ReaderWorkspaceView({
         libraryOpen={libraryOpen}
         inspectorOpen={sourceToolsOpen}
         inspectorAvailable={true}
-        onToggleInspector={() => setInspectorOpen((value) => !value)}
+        onToggleInspector={() => dock.toggleSidebar("right")}
       />
       <main className="reader-main reader-dock-main">
         <DockviewWorkspace
@@ -502,5 +501,5 @@ function commandsForView(
 
 function toggleLibrary(model: ReaderWorkspaceViewModel): void {
   const dock = model.sourceWorkspace.dock;
-  dock.setSideVisible(navigatorPanelId, !dock.isSideVisible(navigatorPanelId));
+  dock.toggleSidebar("left");
 }

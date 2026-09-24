@@ -88,7 +88,7 @@ export async function auditResponsiveWorkspace(page, { screenshot, blockWrites }
     await expect(editor).toContainText("Responsive draft");
     await expect(editor).toHaveAttribute("data-responsive-sentinel", "original-editor");
     await page.getByRole("combobox", { name: "Open workspace tab" }).selectOption(first);
-    for (const name of ["Toggle library navigator", "Toggle notes panel"]) {
+    for (const name of ["Toggle left sidebar", "Toggle right sidebar"]) {
       await page.getByRole("button", { name }).click();
       await expect(reading).not.toBeVisible();
       await page.getByRole("button", { name: "Back to workspace", exact: true }).click();
@@ -119,7 +119,7 @@ export async function auditResponsiveWorkspace(page, { screenshot, blockWrites }
     "Two desktop/mobile cycles preserve document Window, scroll, editor DOM, draft, split groups, and sidebar widths",
   );
   await page.setViewportSize({ width: 390, height: 844 });
-  await page.getByRole("button", { name: "Toggle library navigator" }).click();
+  await page.getByRole("button", { name: "Toggle left sidebar" }).click();
   await page
     .getByRole("textbox", { name: "Find a source by title, author or tag" })
     .fill("Research 0002");
@@ -160,7 +160,7 @@ export async function auditResponsiveWorkspace(page, { screenshot, blockWrites }
   await expect(page.getByRole("complementary", { name: "Library navigator" })).toHaveCount(0);
   await page.setViewportSize({ width: 390, height: 844 });
   await expect(editor).toBeVisible();
-  await page.getByRole("button", { name: "Toggle notes panel" }).click();
+  await page.getByRole("button", { name: "Toggle right sidebar" }).click();
   await page.getByRole("button", { name: "Back to workspace", exact: true }).click();
   await page.setViewportSize({ width: 1440, height: 1000 });
   await expect.poll(async () => (await notePane.boundingBox())?.width ?? 0).toBeGreaterThan(1400);
@@ -212,7 +212,7 @@ export async function auditResponsiveWorkspace(page, { screenshot, blockWrites }
   await expect(picker).toHaveCount(0);
   await expect(page.getByRole("grid", { name: "Sources" })).toBeVisible();
   if (!(await page.getByRole("complementary", { name: "Library navigator" }).isVisible())) {
-    await page.getByRole("button", { name: "Toggle library navigator" }).click();
+    await page.getByRole("button", { name: "Toggle left sidebar" }).click();
   }
   await page
     .getByRole("textbox", { name: "Find a source by title, author or tag" })

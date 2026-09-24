@@ -97,7 +97,7 @@ export async function auditAnnotationFormats(page, { open, screenshot }) {
   const tools = page.getByRole("complementary", { name: "Source workspace" });
   // Desktop tool visibility survives mobile visits; do not accidentally close an already-open edge.
   if (!(await tools.isVisible())) {
-    await page.getByRole("button", { name: "Toggle notes panel" }).click();
+    await page.getByRole("button", { name: "Toggle right sidebar" }).click();
   }
   await expect(tools.locator(".annotation-card")).toHaveCount(1);
   await tools.getByRole("button", { name: "Show in document" }).click();

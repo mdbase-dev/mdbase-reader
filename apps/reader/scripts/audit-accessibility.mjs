@@ -42,7 +42,7 @@ try {
   await desktop.keyboard.press("Escape");
   await desktop.getByRole("button", { name: /^Continue reading Gravity and Grace/u }).click();
   await desktop.locator("iframe.html-viewer").waitFor();
-  await desktop.getByRole("button", { name: "Toggle notes panel" }).click();
+  await desktop.getByRole("button", { name: "Toggle right sidebar" }).click();
   await desktop.getByRole("complementary", { name: "Source workspace" }).waitFor();
   await audit(desktop, "reading with notes");
   await desktop.keyboard.press("Control+k");

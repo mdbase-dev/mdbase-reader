@@ -42,6 +42,40 @@ export class DockviewSidePanels {
     this.focusVisibility = null;
   }
   visible = (id: string): boolean => dockPanelVisible(this.current(), id);
+  regionVisible = (position: "left" | "right"): boolean =>
+    this.current()?.isEdgeGroupVisible(position) ?? false;
+  sidebarVisible = (position: "left" | "right"): boolean =>
+    this.mobile()
+      ? this.visible(position === "left" ? navigatorPanelId : inspectorPanelId)
+      : this.regionVisible(position);
+  toggleSidebar(position: "left" | "right", togglePanel: (id: string) => void): void {
+    if (this.mobile()) {
+      togglePanel(position === "left" ? navigatorPanelId : inspectorPanelId);
+    } else {
+      this.toggleRegion(position);
+    }
+  }
+  toggleRegion(position: "left" | "right"): void {
+    const api = this.current();
+    if (!api || this.mobile()) {
+      return;
+    }
+    const visible = this.regionVisible(position);
+    if (!visible) {
+      api.exitMaximizedGroup();
+      this.syncFocus();
+      // Restore the edge itself, never activate or relocate its conventional tab.
+      if (!api.getEdgeGroup(position)) {
+        edgeGroup(
+          api,
+          position === "left" ? navigatorPanelId : inspectorPanelId,
+          position === "left" ? 260 : 340,
+        );
+      }
+      api.getEdgeGroup(position)?.expand();
+    }
+    api.setEdgeGroupVisible(position, !visible);
+  }
   setSinglePane(value: boolean, focused?: IDockviewPanel): void {
     const wasSinglePane = this.singlePane;
     this.singlePane = value;

@@ -83,10 +83,10 @@ export async function auditDockviewMigration(page) {
 
   await page.setViewportSize({ width: 390, height: 844 });
   await expect(page.locator('.workspace-pane[aria-hidden="false"]')).toHaveCount(1);
-  await page.getByRole("button", { name: "Toggle library navigator" }).click();
+  await page.getByRole("button", { name: "Toggle left sidebar" }).click();
   await expect(page.getByRole("complementary", { name: "Library navigator" })).toBeVisible();
   await expect(page.locator('.workspace-pane[aria-hidden="false"]')).toHaveCount(0);
-  await page.getByRole("button", { name: "Toggle library navigator" }).click();
+  await page.getByRole("button", { name: "Toggle left sidebar" }).click();
   await page.setViewportSize({ width: 1440, height: 1000 });
   await expect(page.locator('.workspace-pane[aria-hidden="false"]')).toHaveCount(2);
 

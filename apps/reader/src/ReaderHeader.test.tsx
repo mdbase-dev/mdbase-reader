@@ -37,6 +37,10 @@ describe("ReaderHeader direct access", () => {
     });
 
     expect(markup.match(/header-pane-toggle/g)).toHaveLength(2);
+    expect(markup).toContain('aria-label="Toggle left sidebar"');
+    expect(markup).toContain('aria-label="Toggle right sidebar"');
+    expect(markup).not.toContain('aria-controls="reader-library-navigator"');
+    expect(markup).not.toContain('aria-controls="reader-source-tools"');
     expect(markup).toContain('class="icon-button header-pane-toggle is-library"');
     expect(markup).toContain('class="icon-button header-pane-toggle is-inspector"');
   });

@@ -23,16 +23,11 @@ import {
 
 import type { WorkspaceStorage } from "./source-workspace-persistence.js";
 import type { SourceId } from "@mdbase-reader/core";
-import type {
-  DockviewApi,
-  DockviewGroupPanel,
-  IDockviewPanel,
-  SerializedDockview,
-} from "dockview-react";
+import type * as Dockview from "dockview-react";
 
 /** Imperative commands go straight to Dockview. React only subscribes to a projection. */
 export class ReaderDockWorkspace {
-  api: DockviewApi | null = null;
+  api: Dockview.DockviewApi | null = null;
   private disposables: { dispose(): void }[] = [];
   private responsive = new ResponsiveDockLayout();
   private sides = new DockviewSidePanels(
@@ -73,7 +68,7 @@ export class ReaderDockWorkspace {
   subscribe = (listener: () => void): (() => void) => this.state.subscribe(listener);
   getSnapshot = (): SourceWorkspaceLayout => this.state.getSnapshot();
   private schedule = (): void => this.state.schedule();
-  attach(api: DockviewApi): () => void {
+  attach(api: Dockview.DockviewApi): () => void {
     this.api = api;
     this.state.ready = false;
     this.changingMode = true;
@@ -104,8 +99,8 @@ export class ReaderDockWorkspace {
       this.responsive = new ResponsiveDockLayout();
     };
   }
-  contentPanels = (): IDockviewPanel[] => this.api?.panels.filter(panelTab) ?? [];
-  group(id?: string): DockviewGroupPanel | undefined {
+  contentPanels = (): Dockview.IDockviewPanel[] => this.api?.panels.filter(panelTab) ?? [];
+  group(id?: string): Dockview.DockviewGroupPanel | undefined {
     return (
       (id ? this.api?.groups.find((group) => group.id === id) : undefined) ??
       this.api?.getPanel(this.state.focusedPanel ?? "")?.group ??
@@ -203,7 +198,7 @@ export class ReaderDockWorkspace {
   }
   layoutViewport = (width: number, height: number): void =>
     this.responsive.layoutViewport(this.api, width, height);
-  seedDesktop = (layout: SerializedDockview): void => this.responsive.seed(layout);
+  seedDesktop = (layout: Dockview.SerializedDockview): void => this.responsive.seed(layout);
   get mobile(): boolean {
     return this.responsive.mobile;
   }
@@ -235,6 +230,11 @@ export class ReaderDockWorkspace {
     (this.api?.getPanel(this.state.focusedPanel ?? "") ?? this.contentPanels()[0])?.api.setActive();
   };
   isSideVisible = (id: string): boolean => this.sides.visible(id);
+  isSidebarVisible = this.sides.sidebarVisible;
+  toggleSidebar(position: "left" | "right"): void {
+    this.sides.toggleSidebar(position, (id) => this.setSideVisible(id, !this.isSideVisible(id)));
+    this.schedule();
+  }
   setSinglePane = (value: boolean): void =>
     this.sides.setSinglePane(value, this.api?.getPanel(this.state.focusedPanel ?? ""));
   setSideVisible(id: string, visible: boolean, activate = true): void {

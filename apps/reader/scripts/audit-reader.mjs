@@ -184,7 +184,7 @@ await context.route(`${origin}/__reader-audit/**`, async (route) => {
 });
 const navigate = async () => {
   await page.goto(`${origin}/test-fixtures/audit-reader.html`);
-  await expect(page.getByRole("button", { name: "Toggle library navigator" })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Toggle left sidebar" })).toBeVisible();
 };
 const screenshot = async (name) =>
   page.screenshot({ path: join(directory, `${name}.png`), animations: "disabled" });
@@ -384,9 +384,9 @@ try {
       ),
     ).toBe(true);
     await screenshot("mobile-library");
-    await page.getByRole("button", { name: "Toggle library navigator" }).click();
+    await page.getByRole("button", { name: "Toggle left sidebar" }).click();
     await expect(page.getByRole("complementary", { name: "Library navigator" })).toBeVisible();
-    await page.getByRole("button", { name: "Toggle library navigator" }).click();
+    await page.getByRole("button", { name: "Toggle left sidebar" }).click();
     await page.keyboard.press("Control+Shift+f");
     await expect(
       page.getByRole("textbox", { name: "Find a source by title, author or tag" }),

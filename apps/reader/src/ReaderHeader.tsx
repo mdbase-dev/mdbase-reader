@@ -65,10 +65,9 @@ export function ReaderHeader({
         <button
           type="button"
           className="icon-button header-pane-toggle is-library"
-          aria-label="Toggle library navigator"
-          aria-controls={controls(libraryOpen, "reader-library-navigator")}
+          aria-label="Toggle left sidebar"
           aria-expanded={libraryOpen}
-          title={`Toggle sidebar · ${shortcutLabel("mod+\\")}`}
+          title={`Toggle left sidebar · ${shortcutLabel("mod+\\")}`}
           onClick={onToggleLibrary}
         >
           <LeftPaneIcon />
@@ -124,15 +123,10 @@ export function ReaderHeader({
         <button
           className="icon-button header-pane-toggle is-inspector"
           type="button"
-          aria-label="Toggle notes panel"
-          aria-controls={controls(inspectorOpen, "reader-source-tools")}
+          aria-label="Toggle right sidebar"
           aria-pressed={inspectorOpen}
           disabled={!inspectorAvailable}
-          title={
-            inspectorAvailable
-              ? `Annotations, note and citation · ${shortcutLabel("mod+shift+\\")}`
-              : "Open a source to see its notes"
-          }
+          title={`Toggle right sidebar · ${shortcutLabel("mod+shift+\\")}`}
           onClick={onToggleInspector}
         >
           <RightPaneIcon />
@@ -140,11 +134,6 @@ export function ReaderHeader({
       </div>
     </header>
   );
-}
-
-/** A toggle names the panel it controls only while that panel exists in the document. */
-function controls(open: boolean, id: string): string | undefined {
-  return open ? id : undefined;
 }
 
 function ConnectionState({

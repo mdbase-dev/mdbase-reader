@@ -115,14 +115,14 @@ function workspaceCommands(input: ReaderCommandInput): readonly ReaderCommand[] 
     },
     {
       id: "toggle-library",
-      label: "Toggle sources sidebar",
+      label: "Toggle left sidebar",
       group: "Workspace",
       shortcut: "mod+\\",
       run: input.toggleLibrary,
     },
     {
       id: "toggle-source-tools",
-      label: "Toggle notes panel",
+      label: "Toggle right sidebar",
       detail: "Annotations, source note and citation",
       group: "Workspace",
       shortcut: "mod+shift+\\",
