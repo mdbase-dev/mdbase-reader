@@ -1,7 +1,6 @@
 import { useCallback, useRef, useState } from "react";
 
 import { readerErrorMessage } from "./errors.js";
-import { fetchWebCapture } from "./web-capture-client.js";
 
 import type { ReaderWorkspaceController } from "./use-reader-workspace.js";
 import type { SourceId } from "@mdbase-reader/core";
@@ -25,6 +24,8 @@ export function useWebCapture(
       setStatus("capturing");
       setError(null);
       try {
+        // Readability and the metadata extractors load only when a page is captured.
+        const { fetchWebCapture } = await import("./web-capture-client.js");
         const captured = await fetchWebCapture(url);
         const imported = await workspace.importSourceFile(
           {

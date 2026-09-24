@@ -29,8 +29,8 @@ const configuration: AnnotationViewConfiguration = {
 };
 
 describe("saved annotation views", () => {
-  it("writes an mdbase view of reader-annotation records that reads back the same", () => {
-    const document = buildAnnotationViewDocument({ name: "Ethics quotes", configuration });
+  it("writes an mdbase view of reader-annotation records that reads back the same", async () => {
+    const document = await buildAnnotationViewDocument({ name: "Ethics quotes", configuration });
     const view = frontmatter(document);
     expect(view["query"]).toEqual({
       types: ["reader-annotation"],
@@ -86,8 +86,8 @@ describe("saved annotation views", () => {
     expect(readerViewKind(undefined)).toBeNull();
   });
 
-  it("writes one view that lists the annotations of the source it runs against", () => {
-    const [named] = frontmatter(buildSourceAnnotationsViewDocument())["views"] as Record<
+  it("writes one view that lists the annotations of the source it runs against", async () => {
+    const [named] = frontmatter(await buildSourceAnnotationsViewDocument())["views"] as Record<
       string,
       unknown
     >[];

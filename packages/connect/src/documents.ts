@@ -133,22 +133,22 @@ export class ConnectDocumentRepository implements DocumentRepository {
     // describe bytes that have since been replaced at the same file ID.
     const path = portableFilePath(target.file);
     const folder = parentFolder(path);
-    let byId: CollectionFileDescriptor | null = null;
     let migratedByPath: CollectionFileDescriptor | null = null;
     for await (const descriptor of this.files.list({
       ...(folder ? { folder } : {}),
       pageSize: 100,
       ...options,
     })) {
+      // A file ID match always wins, so the rest of the folder need not be listed.
       if (descriptor.fileId === target.fileId) {
-        byId = descriptor;
+        return descriptor;
       }
       // A path alone is not enough to assume a new file ID is the same document.
       if (descriptor.path === path && descriptor.contentDigest === target.revision) {
         migratedByPath = descriptor;
       }
     }
-    return byId ?? migratedByPath;
+    return migratedByPath;
   }
 }
 

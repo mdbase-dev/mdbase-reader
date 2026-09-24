@@ -80,6 +80,21 @@ describe("ConnectWorkspaceGateway annotation mutations", () => {
     await expect(gateway.annotations(source.id)).resolves.toEqual([]);
     expect(listForSource).toHaveBeenCalledOnce();
   });
+
+  it("serves sources from the library overview without re-reading their annotations", async () => {
+    const other = { ...annotation, id: annotationId("ann_02"), sourceId: sourceId("src_02") };
+    const cachedFirst = { ...annotation, body: "Saved meanwhile" };
+    const listAll = vi.fn().mockResolvedValue([annotation, other]);
+    const { gateway, listForSource } = annotationGateway({ listAll });
+    listForSource.mockResolvedValueOnce([cachedFirst]);
+    await gateway.annotations(source.id);
+
+    await expect(gateway.allAnnotations()).resolves.toEqual([annotation, other]);
+
+    await expect(gateway.annotations(other.sourceId)).resolves.toEqual([other]);
+    await expect(gateway.annotations(source.id)).resolves.toEqual([cachedFirst]);
+    expect(listForSource).toHaveBeenCalledOnce();
+  });
 });
 
 function annotationGateway(repository: Partial<AnnotationRepository>): {

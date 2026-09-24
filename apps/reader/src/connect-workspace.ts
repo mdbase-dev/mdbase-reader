@@ -162,18 +162,19 @@ export class ConnectWorkspaceGateway implements ReaderWorkspaceGateway {
     view: MdbaseLibraryView,
     options: ReaderRequestOptions = {},
   ): Promise<ExecutedLibraryView> {
-    const library = await this.library(options);
     if (!view.path || !this.libraryViewRepository) {
+      const library = await this.library(options);
       return {
         sources: library.sources,
         valuesByPath: new Map(),
         totalCount: library.sources.length,
       };
     }
-    const execution = await this.libraryViewRepository.execute(
-      { path: view.path, view: view.viewId },
-      options,
-    );
+    // The view query does not depend on the library, so neither waits for the other.
+    const [library, execution] = await Promise.all([
+      this.library(options),
+      this.libraryViewRepository.execute({ path: view.path, view: view.viewId }, options),
+    ]);
     const byPath = new Map(library.sources.map((source) => [source.path, source]));
     const valuesByPath = new Map<string, Readonly<Record<string, unknown>>>();
     const sources = execution.results.flatMap((row) => {
@@ -192,13 +193,13 @@ export class ConnectWorkspaceGateway implements ReaderWorkspaceGateway {
       throw new Error("Saved mdbase views are unavailable for this collection.");
     }
     const saved = await this.libraryViewRepository.save({
-      document: request.annotations
+      document: await (request.annotations
         ? buildAnnotationViewDocument({
             name: request.name,
             configuration: request.annotations,
             ...(request.fieldShapes ? { fieldShapes: request.fieldShapes } : {}),
           })
-        : buildLibraryViewDocument(request),
+        : buildLibraryViewDocument(request)),
       ...(request.existing?.path ? { path: request.existing.path } : { name: request.name }),
       ...(request.existing?.revision ? { revision: request.existing.revision } : {}),
     });
@@ -243,7 +244,7 @@ export class ConnectWorkspaceGateway implements ReaderWorkspaceGateway {
       return { path: existing.source.path, created: false };
     }
     const saved = await this.libraryViewRepository.save({
-      document: buildSourceAnnotationsViewDocument(),
+      document: await buildSourceAnnotationsViewDocument(),
       name: sourceAnnotationsViewName,
     });
     return { path: saved.path, created: true };
@@ -273,11 +274,25 @@ export class ConnectWorkspaceGateway implements ReaderWorkspaceGateway {
     );
   }
 
-  allAnnotations(options: ReaderRequestOptions = {}): Promise<readonly Annotation[]> {
+  async allAnnotations(options: ReaderRequestOptions = {}): Promise<readonly Annotation[]> {
     if (!this.annotationsRepository.listAll) {
-      return Promise.reject(new Error("This collection cannot list all annotations."));
+      throw new Error("This collection cannot list all annotations.");
     }
-    return this.annotationsRepository.listAll(this.collectionId, options);
+    const annotations = await this.annotationsRepository.listAll(this.collectionId, options);
+    // The overview reads whole records, so opening one of these sources needs no further reads.
+    // Sources already cached keep their entries, which may include saves made meanwhile.
+    const bySource = new Map<SourceId, Annotation[]>();
+    for (const annotation of annotations) {
+      const items = bySource.get(annotation.sourceId) ?? [];
+      items.push(annotation);
+      bySource.set(annotation.sourceId, items);
+    }
+    for (const [sourceId, items] of bySource) {
+      if (!this.#annotationsBySource.has(sourceId)) {
+        this.#annotationsBySource.set(sourceId, items);
+      }
+    }
+    return annotations;
   }
 
   annotationCounts(options: ReaderRequestOptions = {}): Promise<ReadonlyMap<SourceId, number>> {
@@ -434,6 +449,7 @@ export class ConnectWorkspaceGateway implements ReaderWorkspaceGateway {
       collectionId: this.collectionId,
       sourceId: source.id,
       expectedRevision: source.recordRevision,
+      expectedFrontmatter: source.frontmatter,
       documentFileId,
       position,
       openedAt: this.runtime.clock.now(),

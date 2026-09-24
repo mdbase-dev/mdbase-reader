@@ -70,22 +70,3 @@ export async function findSourcesByCitekeyPrefix(
 function text(value: unknown): string | undefined {
   return typeof value === "string" && value.trim() ? value : undefined;
 }
-
-/** Client-side library search over the fields a source summary shows. */
-export function matchesSearch(source: SourceSummary, search: string | undefined): boolean {
-  const normalized = search?.trim().toLocaleLowerCase();
-  return normalized
-    ? [
-        source.title,
-        ...source.creators,
-        ...source.tags,
-        source.publication,
-        source.site,
-        source.published === undefined ? undefined : String(source.published),
-      ]
-        .filter((value): value is string => value !== undefined)
-        .join("\n")
-        .toLocaleLowerCase()
-        .includes(normalized)
-    : true;
-}

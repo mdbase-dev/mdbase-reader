@@ -1,3 +1,3 @@
 export * from "./ReaderApp.js";
 export * from "./connect-workspace.js";
-export * from "./workspace-model.js";
+export type * from "./workspace-model.js";

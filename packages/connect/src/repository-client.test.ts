@@ -123,6 +123,34 @@ describe("Reader Connect SDK integration", () => {
   });
 });
 
+describe("Reader record lookup by ID", () => {
+  it("remembers every ID a lookup scan passes", async () => {
+    const results = ["first", "match", "after"].map((id) => ({
+      path: `sources/${id}.md`,
+      effectiveFrontmatter: { id },
+      types: [],
+      file: {},
+    }));
+    const client = {
+      queryPages: vi.fn(async function* () {
+        yield await Promise.resolve(
+          success({ results, page: 0, offset: 0, loaded: 3, complete: true }),
+        );
+      }),
+    } as unknown as Parameters<typeof recordPathById>[0];
+    const known = new Map<string, string>();
+
+    await expect(recordPathById(client, sourceContract, "match", {}, known)).resolves.toBe(
+      "sources/match.md",
+    );
+    expect(Object.fromEntries(known)).toEqual({
+      first: "sources/first.md",
+      match: "sources/match.md",
+      after: "sources/after.md",
+    });
+  });
+});
+
 async function* emptyPages(): AsyncGenerator<ConnectOutcome<QueryPage>> {
   yield await Promise.resolve(
     success({ results: [], page: 0, offset: 0, loaded: 0, complete: true }),

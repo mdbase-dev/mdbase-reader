@@ -93,3 +93,36 @@ export interface SourceFieldChange {
   readonly sourceId: SourceId;
   readonly fields: Readonly<Record<string, unknown>>;
 }
+
+// Summaries are immutable, so each one's search text is built once and reused per keystroke.
+const searchTextBySource = new WeakMap<SourceSummary, string>();
+
+function sourceSearchText(source: SourceSummary): string {
+  let text = searchTextBySource.get(source);
+  if (text === undefined) {
+    text = [
+      source.title,
+      ...source.creators,
+      ...source.tags,
+      source.publication,
+      source.site,
+      source.published === undefined ? undefined : String(source.published),
+    ]
+      .filter((value): value is string => value !== undefined)
+      .join("\n")
+      .toLocaleLowerCase();
+    searchTextBySource.set(source, text);
+  }
+  return text;
+}
+
+/** Library search over the fields a source summary shows. */
+export function filterSources<Summary extends SourceSummary>(
+  sources: readonly Summary[],
+  search: string | undefined,
+): readonly Summary[] {
+  const normalized = search?.trim().toLocaleLowerCase();
+  return normalized
+    ? sources.filter((source) => sourceSearchText(source).includes(normalized))
+    : sources;
+}

@@ -72,7 +72,7 @@ describe("property columns", () => {
 });
 
 describe("saved view layout", () => {
-  it("round-trips property columns, widths and property sorting through the view file", () => {
+  it("round-trips property columns, widths and property sorting through the view file", async () => {
     const configuration = {
       ...defaultLibraryViewConfiguration,
       columns: ["title", "property:course", "status"] as const,
@@ -80,7 +80,7 @@ describe("saved view layout", () => {
       sortField: "property:course" as const,
       sortDirection: "asc" as const,
     };
-    const document = buildLibraryViewDocument({ name: "Courses", configuration });
+    const document = await buildLibraryViewDocument({ name: "Courses", configuration });
     const frontmatter = parseYaml(document.split("---")[1] ?? "") as {
       views: [
         { select: string[]; order_by: [{ field: string }]; presentation: Record<string, unknown> },

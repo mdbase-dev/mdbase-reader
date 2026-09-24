@@ -1,5 +1,4 @@
 /* eslint-disable max-lines */
-import { stringify as stringifyYaml } from "yaml";
 
 import {
   columnLabel,
@@ -142,7 +141,7 @@ export function libraryViewConfiguration(
   };
 }
 
-export function buildLibraryViewDocument(request: LibraryViewSaveRequest): string {
+export function buildLibraryViewDocument(request: LibraryViewSaveRequest): Promise<string> {
   const identifier = viewIdentifier(request.name);
   const configuration = request.configuration;
   const where = durableWhere(configuration.filter, request.fieldShapes ?? {});
@@ -191,7 +190,15 @@ export function buildLibraryViewDocument(request: LibraryViewSaveRequest): strin
       },
     ],
   };
-  return `---\n${stringifyYaml(frontmatter).trimEnd()}\n---\n\n`;
+  return viewDocument(frontmatter);
+}
+
+/** Serializes a view document; YAML is only needed when saving, so it loads on demand. */
+export async function viewDocument(
+  frontmatter: Readonly<Record<string, unknown>>,
+): Promise<string> {
+  const { stringify } = await import("yaml");
+  return `---\n${stringify(frontmatter).trimEnd()}\n---\n\n`;
 }
 
 export function applyLibraryViewConfiguration(

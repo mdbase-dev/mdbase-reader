@@ -98,23 +98,32 @@ export async function mapConcurrent<Input, Output>(
   return results;
 }
 
+/**
+ * Contract views cannot be filtered in the store, so this scans until the ID appears. Every
+ * ID passed on the way is remembered in `known`, sparing later lookups the same scan.
+ */
 export async function recordPathById(
   client: ReaderConnectClient,
   contract: typeof sourceContract | typeof annotationContract,
   id: string,
   options: ReaderRequestOptions = {},
+  known?: Map<string, string>,
 ): Promise<string | null> {
   for await (const outcome of client.queryPages(
     { contract, frontmatterMode: "effective" },
     { ...options, firstPageSize: 200, pageSize: 1_000 },
   )) {
     const page = outcomeValue(outcome, "query records");
-    const match = page.results.find(
-      ({ effectiveFrontmatter, frontmatter }) =>
-        (effectiveFrontmatter ?? frontmatter)?.["id"] === id,
-    );
+    let match: string | null = null;
+    for (const { path, effectiveFrontmatter, frontmatter } of page.results) {
+      const candidate = (effectiveFrontmatter ?? frontmatter)?.["id"];
+      if (typeof candidate === "string") {
+        known?.set(candidate, path);
+      }
+      match ??= candidate === id ? path : null;
+    }
     if (match) {
-      return match.path;
+      return match;
     }
   }
   return null;

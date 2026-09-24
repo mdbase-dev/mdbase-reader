@@ -96,27 +96,3 @@ export interface ReaderWorkspaceGateway {
   /** Sets frontmatter fields by dotted path; null removes a field. */
   saveSourceFields?(sourceId: SourceId, fields: Readonly<Record<string, unknown>>): Promise<Source>;
 }
-
-export function filterSources(
-  sources: readonly SourceSummary[],
-  search: string,
-): readonly SourceSummary[] {
-  const normalized = search.trim().toLocaleLowerCase();
-  if (!normalized) {
-    return sources;
-  }
-  return sources.filter((source) =>
-    [
-      source.title,
-      ...source.creators,
-      ...source.tags,
-      source.publication,
-      source.site,
-      source.published === undefined ? undefined : String(source.published),
-    ]
-      .filter((value): value is string => value !== undefined)
-      .join("\n")
-      .toLocaleLowerCase()
-      .includes(normalized),
-  );
-}

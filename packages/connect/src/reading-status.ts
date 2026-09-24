@@ -7,6 +7,7 @@ import type { ReaderConnectClient } from "./repository-client.js";
 import type {
   CollectionId,
   DateTime,
+  FileId,
   ReadingPosition,
   ReadingStatus,
   Source,
@@ -84,5 +85,29 @@ export function positionFrontmatter(position: ReadingPosition): Readonly<Record<
       href: position.href,
       ...(position.progression === undefined ? {} : { progression: position.progression }),
     },
+  };
+}
+
+/** The `reading` object after opening a document at a position, keeping any other fields. */
+export function readingPatch(
+  frontmatter: Readonly<Record<string, unknown>>,
+  input: {
+    readonly documentFileId: FileId;
+    readonly position: ReadingPosition;
+    readonly openedAt: DateTime;
+  },
+): Record<string, unknown> {
+  const value = frontmatter["reading"];
+  const existing =
+    typeof value === "object" && value !== null && !Array.isArray(value)
+      ? (value as Readonly<Record<string, unknown>>)
+      : {};
+  return {
+    ...existing,
+    status: typeof existing["status"] === "string" ? existing["status"] : "reading",
+    document_file_id: input.documentFileId,
+    position: positionFrontmatter(input.position),
+    started_at: existing["started_at"] ?? input.openedAt,
+    last_opened_at: input.openedAt,
   };
 }

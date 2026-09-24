@@ -1,5 +1,6 @@
 import {
   cslProblemSummary,
+  filterSources,
   recordRevision,
   validateCslItem,
   type AnnotationId,
@@ -7,7 +8,6 @@ import {
   type MutationId,
   type Page,
   type ReaderRequestOptions,
-  type ReadingPosition,
   type Source,
   type SourceFieldChange,
   type SourceId,
@@ -18,11 +18,7 @@ import {
 
 import { sourceContract } from "./contracts.js";
 import { sourceFromDocument, sourceSummaryFromQuery } from "./mapping.js";
-import {
-  positionFrontmatter,
-  writeReadingStatus,
-  type ReadingStatusChange,
-} from "./reading-status.js";
+import { readingPatch, writeReadingStatus, type ReadingStatusChange } from "./reading-status.js";
 import {
   ConnectRepositoryError,
   outcomeValue,
@@ -105,7 +101,8 @@ export class ConnectSourceRepository implements SourceRepository {
     options: ReaderRequestOptions = {},
   ): Promise<Source | null> {
     const path =
-      this.#pathsById.get(id) ?? (await recordPathById(this.client, sourceContract, id, options));
+      this.#pathsById.get(id) ??
+      (await recordPathById(this.client, sourceContract, id, options, this.#pathsById));
     if (!path) {
       return null;
     }
@@ -136,33 +133,33 @@ export class ConnectSourceRepository implements SourceRepository {
     return sourceFromDocument(input.collectionId, updated);
   }
 
-  async updateReading(input: {
-    readonly collectionId: CollectionId;
-    readonly sourceId: SourceId;
-    readonly expectedRevision: ReturnType<typeof recordRevision>;
-    readonly documentFileId: Parameters<SourceRepository["updateReading"]>[0]["documentFileId"];
-    readonly position: ReadingPosition;
-    readonly openedAt: Parameters<SourceRepository["updateReading"]>[0]["openedAt"];
-  }): Promise<Source> {
+  async updateReading(input: Parameters<SourceRepository["updateReading"]>[0]): Promise<Source> {
     const path = await this.#path(input.sourceId, "save reading position");
+    if (input.expectedFrontmatter) {
+      // The caller's revision is usually current, so try it before paying for a fresh read.
+      const outcome = await this.client.update({
+        path,
+        ifRevision: input.expectedRevision,
+        patch: { reading: readingPatch(input.expectedFrontmatter, input) },
+        includeDocument: true,
+      });
+      // A conflict means the record moved on; rebase on a fresh read as below.
+      if (outcome.ok || outcome.problem.category !== "conflict") {
+        return sourceFromDocument(
+          input.collectionId,
+          outcomeValue(outcome, "save reading position"),
+        );
+      }
+    }
     const current = outcomeValue(
       await this.client.read({ path, includeDocument: true }),
       "read source before saving position",
     );
-    const existing = objectValue(current.frontmatter["reading"]);
-    const reading = {
-      ...existing,
-      status: typeof existing["status"] === "string" ? existing["status"] : "reading",
-      document_file_id: input.documentFileId,
-      position: positionFrontmatter(input.position),
-      started_at: existing["started_at"] ?? input.openedAt,
-      last_opened_at: input.openedAt,
-    };
     const updated = outcomeValue(
       await this.client.update({
         path,
         ifRevision: recordRevision(current.revision),
-        patch: { reading },
+        patch: { reading: readingPatch(current.frontmatter, input) },
         includeDocument: true,
       }),
       "save reading position",
@@ -232,7 +229,9 @@ export class ConnectSourceRepository implements SourceRepository {
   }
 
   async #path(id: SourceId, operation: string): Promise<string> {
-    const path = this.#pathsById.get(id) ?? (await recordPathById(this.client, sourceContract, id));
+    const path =
+      this.#pathsById.get(id) ??
+      (await recordPathById(this.client, sourceContract, id, {}, this.#pathsById));
     if (!path) {
       throw new ConnectRepositoryError(operation, "source_not_found");
     }
@@ -252,7 +251,7 @@ export class ConnectSourceRepository implements SourceRepository {
     query: Omit<SourceQuery, "cursor">,
     records: readonly QueryRecord[],
   ): SourceSummary[] {
-    return records
+    const sources = records
       .map((record) => sourceSummaryFromQuery(query.collectionId, record))
       .map((source) => {
         this.#pathsById.set(source.id, source.path);
@@ -261,13 +260,7 @@ export class ConnectSourceRepository implements SourceRepository {
       .filter(
         (source) =>
           query.readingStatus === undefined || source.readingStatus === query.readingStatus,
-      )
-      .filter((source) => lookups.matchesSearch(source, query.search));
+      );
+    return [...filterSources(sources, query.search)];
   }
-}
-
-function objectValue(value: unknown): Readonly<Record<string, unknown>> {
-  return typeof value === "object" && value !== null && !Array.isArray(value)
-    ? (value as Readonly<Record<string, unknown>>)
-    : {};
 }

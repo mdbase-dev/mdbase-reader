@@ -76,7 +76,13 @@ export class ConnectAnnotationRepository implements AnnotationRepository {
         return null;
       }
     });
-    return annotations.filter((annotation) => annotation !== null);
+    const listed = annotations.filter((annotation) => annotation !== null);
+    for (const annotation of listed) {
+      if (annotation.path) {
+        this.#remember(annotation.id, annotation.sourceId, annotation.path);
+      }
+    }
+    return listed;
   }
 
   async listForSource(
@@ -107,14 +113,7 @@ export class ConnectAnnotationRepository implements AnnotationRepository {
       "create annotation",
     );
     const created = annotationFromDocument(annotation.collectionId, result);
-    this.#pathsById.set(created.id, result.path);
-    if (this.#indexPromise) {
-      const paths = this.#pathsBySource.get(created.sourceId) ?? [];
-      if (!paths.includes(result.path)) {
-        paths.push(result.path);
-        this.#pathsBySource.set(created.sourceId, paths);
-      }
-    }
+    this.#remember(created.id, created.sourceId, result.path);
     return created;
   }
 
@@ -195,7 +194,7 @@ export class ConnectAnnotationRepository implements AnnotationRepository {
   ): Promise<Annotation | null> {
     const path =
       this.#pathsById.get(id) ??
-      (await recordPathById(this.client, annotationContract, id, options));
+      (await recordPathById(this.client, annotationContract, id, options, this.#pathsById));
     if (!path) {
       return null;
     }
@@ -220,12 +219,25 @@ export class ConnectAnnotationRepository implements AnnotationRepository {
         const id = stringField(fields?.["id"]);
         const source = linkedRecordId(fields?.["source"]);
         if (id && source) {
-          this.#pathsById.set(id, record.path);
-          const paths = this.#pathsBySource.get(source) ?? [];
-          paths.push(record.path);
-          this.#pathsBySource.set(source, paths);
+          this.#remember(id, source, record.path);
         }
       }
+    }
+  }
+
+  /**
+   * Records where an annotation lives. Per-source paths are only kept once the index exists,
+   * since a partial list would otherwise stand in for the source's full set.
+   */
+  #remember(id: string, source: string, path: string): void {
+    this.#pathsById.set(id, path);
+    if (!this.#indexPromise) {
+      return;
+    }
+    const paths = this.#pathsBySource.get(source) ?? [];
+    if (!paths.includes(path)) {
+      paths.push(path);
+      this.#pathsBySource.set(source, paths);
     }
   }
 

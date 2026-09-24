@@ -1,7 +1,7 @@
+import { filterSources } from "@mdbase-reader/core";
 import { useEffect, useMemo, useState } from "react";
 
 import { readerErrorMessage } from "./errors.js";
-import { filterSources } from "./workspace-model.js";
 
 import type { ReaderWorkspaceGateway } from "./workspace-model.js";
 import type { SourceId, SourceSummary, SourceTextSearchMatch } from "@mdbase-reader/core";

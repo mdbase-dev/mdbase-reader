@@ -11,8 +11,8 @@ import {
 import type { SourceSummary } from "@mdbase-reader/core";
 
 describe("mdbase library views", () => {
-  it("serializes Reader configuration as an ordinary canonical mdbase view", () => {
-    const document = buildLibraryViewDocument({
+  it("serializes Reader configuration as an ordinary canonical mdbase view", async () => {
+    const document = await buildLibraryViewDocument({
       name: "Reading queue",
       configuration: {
         ...defaultLibraryViewConfiguration,

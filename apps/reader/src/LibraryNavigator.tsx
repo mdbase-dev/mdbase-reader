@@ -1,3 +1,4 @@
+import { filterSources } from "@mdbase-reader/core";
 import { useMemo, useState, type CSSProperties, type JSX, type KeyboardEvent } from "react";
 
 import { SearchIcon } from "./icons.js";
@@ -10,7 +11,6 @@ import {
 } from "./NavigatorSections.js";
 import { useVirtualSourceWindow } from "./use-virtual-source-window.js";
 import { keyboardSourceIndex } from "./virtual-source-list.js";
-import { filterSources } from "./workspace-model.js";
 
 import type { MdbaseLibraryView } from "./mdbase-library-views.js";
 import type { SourceId, SourceSummary } from "@mdbase-reader/core";

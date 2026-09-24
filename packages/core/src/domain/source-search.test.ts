@@ -1,7 +1,7 @@
-import { collectionId, sourceId, type SourceSummary } from "@mdbase-reader/core";
 import { describe, expect, it } from "vitest";
 
-import { filterSources } from "./workspace-model.js";
+import { collectionId, sourceId } from "./identity.js";
+import { filterSources, type SourceSummary } from "./source.js";
 
 const sources: readonly SourceSummary[] = [
   {

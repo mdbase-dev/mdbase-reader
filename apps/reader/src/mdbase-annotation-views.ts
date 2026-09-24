@@ -1,5 +1,3 @@
-import { stringify as stringifyYaml } from "yaml";
-
 import {
   annotationColumnLabel,
   isAnnotationColumn,
@@ -11,6 +9,7 @@ import {
 import { emptyAnnotationFilter, type AnnotationFilter } from "./annotation-overview.js";
 import { maximumColumnWidth, minimumColumnWidth } from "./library-columns.js";
 import { conditionToCel, parseConditions, type FieldShape } from "./library-conditions.js";
+import { viewDocument } from "./mdbase-library-views.js";
 
 /** An annotations view as the reader arranged it: columns, sort and filters. */
 export interface AnnotationViewConfiguration {
@@ -114,7 +113,7 @@ export function annotationViewWhere(
   return terms.length > 0 ? terms.join(" && ") : null;
 }
 
-export function buildAnnotationViewDocument(request: AnnotationViewSaveRequest): string {
+export function buildAnnotationViewDocument(request: AnnotationViewSaveRequest): Promise<string> {
   const identifier = viewIdentifier(request.name);
   const { configuration } = request;
   const where = annotationViewWhere(configuration.filter, request.fieldShapes);
@@ -160,7 +159,7 @@ export function buildAnnotationViewDocument(request: AnnotationViewSaveRequest):
       },
     ],
   };
-  return `---\n${stringifyYaml(frontmatter).trimEnd()}\n---\n\n`;
+  return viewDocument(frontmatter);
 }
 
 export const sourceAnnotationsViewName = "Annotations for this source";
@@ -169,7 +168,7 @@ export const sourceAnnotationsViewName = "Annotations for this source";
  * One view listing the annotations of whichever source it runs against: embed it in a source
  * note, or run it with a source as its context from any mdbase tool.
  */
-export function buildSourceAnnotationsViewDocument(): string {
+export function buildSourceAnnotationsViewDocument(): Promise<string> {
   const frontmatter = {
     type: "view",
     id: "reader.annotations.for-source",
@@ -201,7 +200,7 @@ export function buildSourceAnnotationsViewDocument(): string {
       },
     ],
   };
-  return `---\n${stringifyYaml(frontmatter).trimEnd()}\n---\n\n`;
+  return viewDocument(frontmatter);
 }
 
 function columnSelection(column: AnnotationColumn): string | null {

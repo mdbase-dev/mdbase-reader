@@ -113,6 +113,31 @@ describe("ConnectDocumentRepository", () => {
 
     expect(list).toHaveBeenCalledTimes(2);
   });
+
+  it("stops listing the folder once the file ID is found", async () => {
+    const pulled: string[] = [];
+    const client: ReaderFileClient = {
+      async *list() {
+        for (const item of [
+          { ...descriptor, fileId: "file-00", path: "files/other.pdf" },
+          descriptor,
+          { ...descriptor, fileId: "file-02", path: "files/later.pdf" },
+        ]) {
+          await Promise.resolve();
+          pulled.push(item.fileId);
+          yield item;
+        }
+      },
+      download: vi.fn().mockResolvedValue(new Blob(["pdf"], { type: "application/pdf" })),
+    };
+    const handle = await new ConnectDocumentRepository(client).open(
+      collectionId("reading"),
+      target,
+    );
+
+    expect(pulled).toEqual(["file-00", "file-01"]);
+    await handle.close();
+  });
 });
 
 describe("ConnectDocumentRepository recovery and caching", () => {
