@@ -1,8 +1,8 @@
 import type { SourceId } from "@mdbase-reader/core";
 
 /** Which library rows are selected, which one has focus, and where a Shift range starts. */
-export interface RowSelection {
-  readonly ids: ReadonlySet<SourceId>;
+export interface RowSelection<Id extends string = SourceId> {
+  readonly ids: ReadonlySet<Id>;
   /** Index of the row that has keyboard focus, in the current row order. */
   readonly active: number | null;
   /** Index a Shift+click or Shift+arrow range extends from. */
@@ -11,7 +11,11 @@ export interface RowSelection {
   readonly touch?: boolean;
 }
 
-export const emptyRowSelection: RowSelection = { ids: new Set(), active: null, anchor: null };
+export const emptyRowSelection: RowSelection<never> = {
+  ids: new Set(),
+  active: null,
+  anchor: null,
+};
 
 export type SelectionGesture = "replace" | "toggle" | "range";
 
@@ -27,12 +31,12 @@ export function selectionGesture(event: {
   return event.ctrlKey || event.metaKey ? "toggle" : "replace";
 }
 
-export function selectRow(
-  current: RowSelection,
-  rows: readonly SourceId[],
+export function selectRow<Id extends string>(
+  current: RowSelection<Id>,
+  rows: readonly Id[],
   index: number,
   gesture: SelectionGesture,
-): RowSelection {
+): RowSelection<Id> {
   const id = rows[index];
   if (id === undefined) {
     return current;
@@ -55,13 +59,13 @@ export function selectRow(
 }
 
 /** A long press, or a tap while selecting by touch: toggles the row and stays in touch mode. */
-export function toggleTouchRow(
-  current: RowSelection,
-  rows: readonly SourceId[],
+export function toggleTouchRow<Id extends string>(
+  current: RowSelection<Id>,
+  rows: readonly Id[],
   index: number,
-): RowSelection {
+): RowSelection<Id> {
   const next = selectRow(
-    current.touch ? current : { ...current, ids: new Set() },
+    current.touch ? current : { ...current, ids: new Set<Id>() },
     rows,
     index,
     "toggle",
@@ -69,7 +73,10 @@ export function toggleTouchRow(
   return next.ids.size > 0 ? { ...next, touch: true } : { ...next, touch: false };
 }
 
-export function selectAllRows(rows: readonly SourceId[], active: number | null): RowSelection {
+export function selectAllRows<Id extends string>(
+  rows: readonly Id[],
+  active: number | null,
+): RowSelection<Id> {
   return { ids: new Set(rows), active, anchor: active };
 }
 
@@ -106,7 +113,10 @@ export function navigationTarget(
 }
 
 /** Drops ids that are no longer visible, e.g. after filtering, and clamps the focus. */
-export function pruneRowSelection(current: RowSelection, rows: readonly SourceId[]): RowSelection {
+export function pruneRowSelection<Id extends string>(
+  current: RowSelection<Id>,
+  rows: readonly Id[],
+): RowSelection<Id> {
   if (current.ids.size === 0 && current.active === null) {
     return current;
   }

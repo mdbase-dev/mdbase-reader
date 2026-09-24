@@ -52,6 +52,8 @@ export interface ReaderWorkspaceGateway {
   annotations(id: SourceId, options?: ReaderRequestOptions): Promise<readonly Annotation[]>;
   annotationSourceIds?(options?: ReaderRequestOptions): Promise<readonly SourceId[]>;
   annotationCounts?(options?: ReaderRequestOptions): Promise<ReadonlyMap<SourceId, number>>;
+  /** Every annotation in the collection, read-only, for the library's annotations view. */
+  allAnnotations?(options?: ReaderRequestOptions): Promise<readonly Annotation[]>;
   saveSourceBody(source: Source, body: string): Promise<Source>;
   saveSourceCitation(source: Source, citation: unknown): Promise<Source>;
   resolveCitation?(

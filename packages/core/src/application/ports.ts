@@ -88,16 +88,15 @@ export interface CitationMetadataRepository {
   ): Promise<CitationCandidate>;
 }
 
+/** A read across a whole collection. */
+type CollectionRead<T> = (collectionId: CollectionId, options?: ReaderRequestOptions) => Promise<T>;
+
 export interface AnnotationRepository {
-  sourceIdsWithAnnotations?(
-    collectionId: CollectionId,
-    options?: ReaderRequestOptions,
-  ): Promise<readonly SourceId[]>;
+  sourceIdsWithAnnotations?: CollectionRead<readonly SourceId[]>;
   /** How many annotations each source has, where an index makes that cheap. */
-  annotationCountsBySource?(
-    collectionId: CollectionId,
-    options?: ReaderRequestOptions,
-  ): Promise<ReadonlyMap<SourceId, number>>;
+  annotationCountsBySource?: CollectionRead<ReadonlyMap<SourceId, number>>;
+  /** Every annotation in the collection, read-only (without record revisions). */
+  listAll?: CollectionRead<readonly Annotation[]>;
   listForSource(
     collectionId: CollectionId,
     sourceId: SourceId,

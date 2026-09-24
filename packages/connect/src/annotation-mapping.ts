@@ -142,10 +142,10 @@ function annotationTarget(value: unknown): AnnotationTarget | undefined {
 
 export function annotationFromDocument(
   collection: CollectionId,
-  record: Pick<
-    RecordDocument,
-    "path" | "frontmatter" | "effectiveFrontmatter" | "body" | "revision"
-  >,
+  record: Pick<RecordDocument, "path" | "frontmatter" | "effectiveFrontmatter" | "body"> & {
+    /** Absent for query results, which carry no revision; such annotations are read-only. */
+    readonly revision?: string;
+  },
 ): Annotation {
   const fields = record.effectiveFrontmatter;
   const id = text(fields["id"]);
@@ -167,7 +167,7 @@ export function annotationFromDocument(
     id: annotationId(id),
     path: record.path,
     frontmatter: record.frontmatter,
-    recordRevision: recordRevision(record.revision),
+    ...revisionField(record.revision),
     sourceId: sourceId(source),
     source: text(fields["source"]) ?? source,
     annotationType,
@@ -182,6 +182,10 @@ export function annotationFromDocument(
     ...(locator ? { locator: { label: locator } } : {}),
     ...(target ? { target } : {}),
   };
+}
+
+function revisionField(revision: string | undefined): Pick<Annotation, "recordRevision"> {
+  return revision ? { recordRevision: recordRevision(revision) } : {};
 }
 
 function targetFrontmatter(value: AnnotationTarget): JsonObject {

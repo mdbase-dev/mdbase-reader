@@ -2,8 +2,11 @@ export function annotationFixture(sources, blocked) {
   const records = [];
   let serial = 0;
   return (sourceId, request, respond) => {
+    // "*" lists every annotation, as the library's annotations view asks for.
     if (request.method() !== "PUT")
-      return respond(records.filter((record) => record.sourceId === sourceId));
+      return respond(
+        sourceId === "*" ? records : records.filter((record) => record.sourceId === sourceId),
+      );
     const input = request.postDataJSON();
     if (blocked() && input.op !== "plan-delete")
       return respond({ error: "[test] Annotation write unavailable" }, 503);

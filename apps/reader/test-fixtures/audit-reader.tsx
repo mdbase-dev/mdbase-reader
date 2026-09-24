@@ -100,6 +100,9 @@ class AuditGateway extends PreviewGateway {
     const source = await api<Source>(`source/${id}`);
     return api(`source/${id}`, { reading: { ...source.reading, status } });
   }
+  override allAnnotations(): Promise<readonly Annotation[]> {
+    return api("annotations/*");
+  }
   override annotations(id: SourceId): Promise<readonly Annotation[]> {
     return api(`annotations/${id}`);
   }

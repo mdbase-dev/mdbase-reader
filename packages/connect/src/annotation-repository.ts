@@ -47,6 +47,39 @@ export class ConnectAnnotationRepository implements AnnotationRepository {
     );
   }
 
+  async listAll(
+    collection: CollectionId,
+    options: ReaderRequestOptions = {},
+  ): Promise<readonly Annotation[]> {
+    const annotations: Annotation[] = [];
+    for await (const outcome of this.client.queryPages(
+      {
+        contract: annotationContract,
+        // Some authorities apply the contract as a view, not a filter; the type narrows the scan.
+        types: ["reader-annotation"],
+        frontmatterMode: "both",
+        includeBody: true,
+      },
+      { ...options, firstPageSize: 500, pageSize: 1_000 },
+    )) {
+      for (const record of outcomeValue(outcome, "query annotations").results) {
+        try {
+          annotations.push(
+            annotationFromDocument(collection, {
+              path: record.path,
+              frontmatter: record.frontmatter ?? {},
+              effectiveFrontmatter: record.effectiveFrontmatter ?? record.frontmatter ?? {},
+              body: record.body ?? "",
+            }),
+          );
+        } catch {
+          // A record that does not satisfy the annotation contract is left out of the overview.
+        }
+      }
+    }
+    return annotations;
+  }
+
   async listForSource(
     collection: CollectionId,
     source: SourceId,

@@ -157,6 +157,15 @@ action, and one stylesheet section for each redesigned component.
   repository's `updateFields` reads the record, merges dotted paths into its objects, and
   patches with its revision. `id`, `type`, `documents` and the whole `csl` and `reading`
   objects are not editable (`isEditableSourceField`); nested values inside them are.
+- **Annotations view.** The library's _Sources / Annotations_ switch lists every annotation in
+  the collection, with its passage, source, type, tags and place. Search covers quotes, notes,
+  source titles, creators and tags; the filter menu narrows by type, tag, and field conditions
+  on the annotation's source (the same conditions as the Sources view). Enter or double-click
+  opens the annotation in its document, reusing a tab already showing it; Ctrl/⌘+Enter opens it
+  beside. _Copy as Markdown_ copies the selection grouped by source, as blockquotes with a
+  wikilink back to each record. `AnnotationRepository.listAll` is one `queryPages` call limited
+  to `reader-annotation` records (211 KB rather than 7.6 MB on the test collection); the listed
+  annotations are read-only snapshots without revisions, so nothing is written from this view.
 - TanStack Table v9 is used headlessly for column sizing and resizing only (`use-library-columns.ts`).
   Filtering and sorting remain `applyLibraryViewConfiguration`, which matches a saved view's
   `order_by`.

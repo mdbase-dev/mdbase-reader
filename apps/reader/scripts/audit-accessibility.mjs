@@ -37,6 +37,11 @@ try {
   await titles.nth(0).click();
   await titles.nth(2).click({ modifiers: ["Shift"] });
   await audit(desktop, "bulk selection");
+  await desktop.getByRole("button", { name: "Annotations", exact: true }).click();
+  await desktop.getByRole("grid", { name: "Annotations" }).waitFor();
+  await audit(desktop, "annotations view");
+  await desktop.getByRole("button", { name: "Sources", exact: true }).click();
+  await desktop.getByRole("grid", { name: "Sources" }).waitFor();
   await desktop.getByLabel("Add column").click();
   await audit(desktop, "add-column menu");
   await desktop.keyboard.press("Escape");

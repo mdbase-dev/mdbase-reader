@@ -3528,3 +3528,109 @@
   color: var(--faint);
   cursor: default;
 }
+
+/* Library mode switch and the annotations view. */
+
+.library-mode {
+  flex: 0 0 auto;
+}
+
+.library-mode button {
+  min-height: 26px;
+}
+
+.library-annotations-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px 10px 16px;
+  border-bottom: 1px solid var(--reader-hairline);
+}
+
+.library-annotations-toolbar .library-workspace-search input {
+  width: 100%;
+  min-width: 0;
+  padding: 0;
+  border: 0;
+  outline: 0;
+  color: var(--ink);
+  background: transparent;
+}
+
+.library-annotations-toolbar .library-result-count {
+  margin-left: auto;
+}
+
+.library-annotations-sort select {
+  height: var(--ui-control-height);
+  padding: 0 8px;
+  border: 1px solid var(--line);
+  border-radius: var(--ui-radius);
+  color: var(--ink-soft);
+  background: var(--paper);
+  font: inherit;
+  font-size: var(--ui-control);
+}
+
+.library-annotation-row {
+  height: 78px;
+  align-items: start;
+}
+
+.library-annotation-row > span {
+  align-items: flex-start;
+  padding-top: 12px;
+}
+
+.library-annotation-passage {
+  display: grid !important;
+  gap: 3px;
+  white-space: normal !important;
+}
+
+.library-annotation-passage q,
+.library-annotation-passage span {
+  display: -webkit-box;
+  overflow: hidden;
+  -webkit-box-orient: vertical;
+}
+
+.library-annotation-passage q {
+  -webkit-line-clamp: 2;
+  color: var(--ink);
+  font-family: var(--serif);
+  font-size: calc(var(--ui-body) + 1px);
+  line-height: 1.35;
+  quotes: "“" "”";
+}
+
+.library-annotation-passage span {
+  -webkit-line-clamp: 1;
+  color: var(--muted);
+  font-size: var(--ui-control);
+}
+
+.library-annotation-passage q + span {
+  -webkit-line-clamp: 1;
+}
+
+.library-annotation-passage span:only-child {
+  -webkit-line-clamp: 3;
+  color: var(--ink-soft);
+}
+
+@container library (max-width: 620px) {
+  .library-annotation-table .library-table-row {
+    grid-template-columns: minmax(0, 1fr) !important;
+    height: 78px;
+  }
+
+  .library-annotation-table .library-table-row > span:not(.library-annotation-passage) {
+    display: none;
+  }
+}
+
+.library-annotation-table .library-title-copy small {
+  display: block;
+}

@@ -257,6 +257,9 @@ export class PreviewGateway implements ReaderWorkspaceGateway {
   annotations(id: SourceId): Promise<readonly Annotation[]> {
     return Promise.resolve(this.#annotations.filter(({ sourceId: source }) => source === id));
   }
+  allAnnotations(): Promise<readonly Annotation[]> {
+    return Promise.resolve([...this.#annotations]);
+  }
   annotationCounts(): Promise<ReadonlyMap<SourceId, number>> {
     const counts = new Map<SourceId, number>();
     for (const annotation of this.#annotations) {

@@ -219,6 +219,13 @@ export class ConnectWorkspaceGateway implements ReaderWorkspaceGateway {
     );
   }
 
+  allAnnotations(options: ReaderRequestOptions = {}): Promise<readonly Annotation[]> {
+    if (!this.annotationsRepository.listAll) {
+      return Promise.reject(new Error("This collection cannot list all annotations."));
+    }
+    return this.annotationsRepository.listAll(this.collectionId, options);
+  }
+
   annotationCounts(options: ReaderRequestOptions = {}): Promise<ReadonlyMap<SourceId, number>> {
     return (
       this.annotationsRepository.annotationCountsBySource?.(this.collectionId, options) ??

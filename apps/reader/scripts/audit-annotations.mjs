@@ -179,5 +179,23 @@ export async function auditAnnotations(page, { screenshot, blockWrites }) {
   await page.getByText("Reset pane arrangement (keep tabs)", { exact: true }).click();
   completed.push(...(await auditAnnotationFormats(page, { open, screenshot })));
   completed.push(...(await auditAnnotationNavigationFailure(page, { open, screenshot })));
+  completed.push(await auditAnnotationOverview(page, screenshot));
   return completed;
+}
+
+/** The library's annotations view lists annotations across sources and opens one in place. */
+async function auditAnnotationOverview(page, screenshot) {
+  await page.getByRole("tab", { name: "Library" }).click();
+  await page.getByRole("button", { name: "Annotations", exact: true }).click();
+  const grid = page.getByRole("grid", { name: "Annotations" });
+  const rows = grid.locator(".library-table-body .library-table-row");
+  await expect.poll(() => rows.count()).toBeGreaterThan(1);
+  await page.getByRole("textbox", { name: "Search annotations" }).fill("Patient attention and");
+  await expect(rows.filter({ hasText: "Research 0021" }).first()).toBeVisible();
+  await screenshot("annotation-overview");
+  await rows.filter({ hasText: "Research 0021" }).first().dblclick();
+  await expect(page.locator(".document-session.is-active .epub-viewer")).toBeVisible({
+    timeout: 60000,
+  });
+  return "Library annotations view lists annotations across sources and opens one in its document";
 }

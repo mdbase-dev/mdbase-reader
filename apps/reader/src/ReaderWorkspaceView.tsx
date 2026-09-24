@@ -77,7 +77,8 @@ export interface ReaderWorkspaceViewModel {
 
 interface PendingWorkspaceAnnotation {
   readonly annotation: Annotation;
-  readonly paneId: WorkspacePaneId;
+  /** The pane the document opens in, or null for a new pane (opened beside). */
+  readonly paneId: WorkspacePaneId | null;
   readonly sourceId: SourceId;
 }
 
@@ -163,7 +164,8 @@ export function ReaderWorkspaceView({
     }
     const activeTab = sourceWorkspace.activeTab;
     if (
-      sourceWorkspace.layout.focusedPaneId === pendingAnnotation.paneId &&
+      (pendingAnnotation.paneId === null ||
+        sourceWorkspace.layout.focusedPaneId === pendingAnnotation.paneId) &&
       activeTab?.kind === "source" &&
       activeTab.sourceId === pendingAnnotation.sourceId &&
       activeTab.view === "document"
@@ -297,6 +299,26 @@ export function ReaderWorkspaceView({
                 bibliographyExport={model.bibliographyExport}
                 annotationCounts={annotationCounts}
                 onSourceChanged={workspace.reconcileSource}
+                onOpenAnnotation={(annotation, beside) => {
+                  const sourceId = annotation.sourceId;
+                  if (beside) {
+                    pendingAnnotationRef.current = { annotation, paneId: null, sourceId };
+                    sourceWorkspace.openBeside(sourceId, "document");
+                    return;
+                  }
+                  const target = annotationDocumentTarget(
+                    sourceWorkspace.layout,
+                    sourceId,
+                    sourceWorkspace.layout.focusedPaneId,
+                  );
+                  pendingAnnotationRef.current = { annotation, paneId: target.paneId, sourceId };
+                  if (target.tabId) {
+                    sourceWorkspace.activateTab(target.tabId, target.paneId);
+                  } else {
+                    sourceWorkspace.openView(sourceId, "document", target.paneId);
+                  }
+                  sourceWorkspace.focus(target.paneId);
+                }}
               />
             );
           }}
