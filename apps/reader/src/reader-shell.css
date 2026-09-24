@@ -914,7 +914,7 @@
   margin: 4px 0;
   padding-left: 9px;
   border-left: 1px solid var(--line);
-  color: var(--faint);
+  color: var(--muted);
   font-size: var(--ui-control);
 }
 
@@ -1177,7 +1177,7 @@
 }
 
 .continue-reading-state {
-  color: var(--faint);
+  color: var(--muted);
   font-size: var(--ui-meta);
 }
 
@@ -1431,7 +1431,7 @@
 
 .library-property-choice code {
   overflow: hidden;
-  color: var(--faint);
+  color: var(--muted);
   font: 10px/1.2 var(--mono);
   text-overflow: ellipsis;
   white-space: nowrap;

@@ -14,7 +14,8 @@
     "preview": "vite preview --host 127.0.0.1",
     "test": "pnpm manifest && pnpm manifest:verify && node --test scripts/*.test.mjs && vitest run src capture --maxWorkers=2 --testTimeout=15000",
     "test:browser": "node scripts/audit-reader.mjs",
-    "typecheck": "tsc -p tsconfig.json"
+    "typecheck": "tsc -p tsconfig.json",
+    "test:a11y": "node scripts/audit-accessibility.mjs"
   },
   "dependencies": {
     "@citation-js/plugin-csl": "0.8.2",
@@ -43,6 +44,7 @@
     "@types/react": "^19.2.14",
     "@types/react-dom": "^19.2.3",
     "@vitejs/plugin-react": "latest",
+    "axe-core": "^4.13.0",
     "fake-indexeddb": "6.2.4",
     "vite": "latest"
   }

@@ -136,7 +136,7 @@ export async function auditSimpleAnnotations(
   await comments.pressSequentially("MUST NOT APPLY");
   await expect(comments).toHaveValue(before);
   const deletingPane = await panes.nth(0).getAttribute("data-session-id");
-  await tab(deletingPane).getByRole("button", { name: "Close tab", exact: true }).click();
+  await tab(deletingPane).locator(".reader-tab-close").click();
   await expect(panes).toHaveCount(1);
   await panes.getByRole("button", { name: "Edit", exact: true }).click();
   await comments.fill("[test] Local change retained during a conflict");

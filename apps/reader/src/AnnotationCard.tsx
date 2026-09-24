@@ -46,7 +46,7 @@ export function AnnotationCard({
   return (
     // Pointer shortcut; keyboard users have explicit Edit and Open buttons.
     // eslint-disable-next-line jsx-a11y/no-noninteractive-element-interactions, jsx-a11y/click-events-have-key-events
-    <article
+    <div
       ref={cardRef}
       className={`annotation-card${editing ? " is-editing" : ""}${active ? " is-selected" : ""}${hasPassageAnchor(annotation.target) ? " is-linked" : ""}`}
       data-annotation-id={annotation.id}
@@ -106,7 +106,7 @@ export function AnnotationCard({
           {transclusion.problem}
         </p>
       ) : null}
-    </article>
+    </div>
   );
 }
 
@@ -114,8 +114,8 @@ function annotationKindLabel(type: string): string {
   return type === "area" ? "Area" : type.charAt(0).toLocaleUpperCase() + type.slice(1);
 }
 
-function useScrollToEditing(editing: boolean): RefObject<HTMLElement | null> {
-  const ref = useRef<HTMLElement>(null);
+function useScrollToEditing(editing: boolean): RefObject<HTMLDivElement | null> {
+  const ref = useRef<HTMLDivElement>(null);
   useEffect(() => {
     if (editing) {
       ref.current?.scrollIntoView({

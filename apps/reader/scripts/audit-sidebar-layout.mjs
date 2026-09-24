@@ -68,7 +68,7 @@ export async function auditSidebarLayout(page, { screenshot, measurements }) {
     await open(n);
     await menu(n, "Move to new pane right");
     await measure(`split-${n}`);
-    await tab(n).getByRole("button", { name: "Close tab", exact: true }).click();
+    await tab(n).locator(".reader-tab-close").click();
     await measure(`closed-${n}`);
   }
   await tab(0).click();

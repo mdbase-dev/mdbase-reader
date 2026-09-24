@@ -66,7 +66,7 @@ export function ReaderHeader({
           type="button"
           className="icon-button header-pane-toggle is-library"
           aria-label="Toggle library navigator"
-          aria-controls="reader-library-navigator"
+          aria-controls={controls(libraryOpen, "reader-library-navigator")}
           aria-expanded={libraryOpen}
           title={`Toggle sidebar · ${shortcutLabel("mod+\\")}`}
           onClick={onToggleLibrary}
@@ -125,7 +125,7 @@ export function ReaderHeader({
           className="icon-button header-pane-toggle is-inspector"
           type="button"
           aria-label="Toggle notes panel"
-          aria-controls="reader-source-tools"
+          aria-controls={controls(inspectorOpen, "reader-source-tools")}
           aria-pressed={inspectorOpen}
           disabled={!inspectorAvailable}
           title={
@@ -140,6 +140,11 @@ export function ReaderHeader({
       </div>
     </header>
   );
+}
+
+/** A toggle names the panel it controls only while that panel exists in the document. */
+function controls(open: boolean, id: string): string | undefined {
+  return open ? id : undefined;
 }
 
 function ConnectionState({

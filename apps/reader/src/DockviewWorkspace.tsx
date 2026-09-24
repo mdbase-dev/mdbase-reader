@@ -24,7 +24,7 @@ import { dockTabMenu } from "./dockview-menus.js";
 import { inspectorPanelId, navigatorPanelId } from "./dockview-panel-ids.js";
 import { dockPanelVisible } from "./dockview-panel-visibility.js";
 import { DocumentWorkspace, type DocumentWorkspaceProps } from "./DocumentWorkspace.js";
-import { PinIcon } from "./icons.js";
+import { CloseIcon, PinIcon } from "./icons.js";
 import { MobileWorkspaceNavigation } from "./MobileWorkspaceNavigation.js";
 import { useProgressiveWorkspaceTabs } from "./use-progressive-workspace-tabs.js";
 import { workspaceTabAccessibleTitle } from "./workspace-tab-display.js";
@@ -174,12 +174,23 @@ function WorkspacePanel(props: IDockviewPanelProps<{ tab?: WorkspaceTab }>): JSX
 function ReaderDockTab(props: IDockviewPanelHeaderProps<{ tab?: WorkspaceTab }>): JSX.Element {
   const { document } = useDockContext();
   const tab = props.params.tab;
+  const close = (): void => document.sourceWorkspace.dock.close(props.api.id);
+  const side = sidePanelIds.has(props.api.id);
   return (
+    // A tab is one control, so its close affordance is pointer-only; the keyboard uses Delete,
+    // the tab's context menu or the pane menu, all of which go through the dirty-tab guard.
+    // eslint-disable-next-line jsx-a11y/no-static-element-interactions
     <div
-      className={`reader-dock-tab${tab?.preview ? " is-preview" : ""}${tab?.dirty ? " is-dirty" : ""}${sidePanelIds.has(props.api.id) ? " is-side" : ""}`}
+      className={`reader-dock-tab${tab?.preview ? " is-preview" : ""}${tab?.dirty ? " is-dirty" : ""}${side ? " is-side" : ""}`}
       data-panel-id={props.api.id}
-      title="Drag to move or split · Right-click for pane actions · Use the pane menu for keyboard controls"
+      title="Drag to move or split · Right-click for pane actions · Delete closes the tab"
       onDoubleClick={() => document.sourceWorkspace.dock.patch(props.api.id, { preview: false })}
+      onKeyDown={(event) => {
+        if (event.key === "Delete" && !side) {
+          event.preventDefault();
+          close();
+        }
+      }}
     >
       {tab?.pinned ? (
         <span aria-label="Pinned" className="dock-tab-marker is-pinned">
@@ -189,10 +200,21 @@ function ReaderDockTab(props: IDockviewPanelHeaderProps<{ tab?: WorkspaceTab }>)
       {tab?.dirty ? (
         <span aria-label="Unsaved changes" className="dock-tab-marker is-dirty" />
       ) : null}
-      <DockviewDefaultTab
-        {...props}
-        closeActionOverride={() => document.sourceWorkspace.dock.close(props.api.id)}
-      />
+      <DockviewDefaultTab {...props} hideClose />
+      {side ? null : (
+        <span
+          className="dv-default-tab-action reader-tab-close"
+          aria-hidden="true"
+          title="Close tab"
+          onPointerDown={(event) => event.stopPropagation()}
+          onClick={(event) => {
+            event.stopPropagation();
+            close();
+          }}
+        >
+          <CloseIcon />
+        </span>
+      )}
     </div>
   );
 }

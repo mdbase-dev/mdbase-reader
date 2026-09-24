@@ -159,7 +159,7 @@ export async function auditDockview(page, { screenshot, blockWrites }) {
   await expect(page.locator(".draft-recovery.is-error")).toBeVisible();
   page.removeAllListeners("dialog");
   page.once("dialog", (dialog) => void dialog.dismiss());
-  await noteTab.getByRole("button", { name: "Close tab", exact: true }).click();
+  await noteTab.locator(".reader-tab-close").click();
   await expect(page.locator(`[data-panel-id="${noteId}"]`)).toBeVisible();
   await expect(editor).toContainText("Docking never discards");
   page.on("dialog", (dialog) => void dialog.accept());
@@ -288,10 +288,7 @@ export async function auditDockview(page, { screenshot, blockWrites }) {
     .toBeCloseTo(resizedWidth, 0);
   completed.push("Native Dockview sidebar resize persists across reload");
 
-  await page
-    .locator(`[data-panel-id="${noteId}"]`)
-    .getByRole("button", { name: "Close tab", exact: true })
-    .click();
+  await page.locator(`[data-panel-id="${noteId}"]`).locator(".reader-tab-close").click();
   await expect(page.locator(`[data-panel-id="${noteId}"]`)).toHaveCount(0);
   await page.reload();
   await page.getByRole("button", { name: "Search and commands" }).click();

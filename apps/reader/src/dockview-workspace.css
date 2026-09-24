@@ -124,6 +124,40 @@
   text-overflow: ellipsis;
   white-space: nowrap;
 }
+/* Reader's own close affordance (pointer-only; see ReaderDockTab), styled like Dockview's. */
+.reader-tab-close {
+  flex: 0 0 auto;
+  display: inline-grid;
+  place-items: center;
+  width: 19px;
+  height: 19px;
+  border-radius: 3px;
+  color: inherit;
+  cursor: pointer;
+  visibility: hidden;
+}
+.reader-tab-close svg {
+  width: 11px;
+  height: 11px;
+}
+.reader-tab-close:hover {
+  background-color: var(--dv-icon-hover-background-color);
+}
+.dv-tab.dv-active-tab .reader-tab-close,
+.dv-tab:hover .reader-tab-close {
+  visibility: visible;
+}
+@media (hover: none) {
+  .reader-tab-close {
+    visibility: visible;
+  }
+}
+@media (pointer: coarse) {
+  .reader-tab-close {
+    width: 32px;
+    height: 32px;
+  }
+}
 .dock-tab-marker {
   flex-shrink: 0;
   display: inline-grid;
