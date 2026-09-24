@@ -36,6 +36,7 @@ import { countLabel } from "./LibraryCells.js";
 import { LibraryConditionsEditor } from "./LibraryConditionsEditor.js";
 import { LibraryTable } from "./LibraryTable.js";
 import { LibraryTextSearch, type LibrarySearchScope } from "./LibraryTextSearch.js";
+import { LibraryViewSaveDialog } from "./LibraryViewSaveDialog.js";
 import {
   applyLibraryViewConfiguration,
   type LibraryViewConfiguration,
@@ -101,7 +102,10 @@ export function LibraryWorkspace({
     [layout, filter],
   );
   const [searchScope, setSearchScope] = useState<LibrarySearchScope>("sources");
-  const [mode, setMode] = useState<"sources" | "annotations">("sources");
+  // A saved annotations view opens on its annotations; any view can switch between the two.
+  const [mode, setMode] = useState<"sources" | "annotations">(
+    view.annotations ? "annotations" : "sources",
+  );
   const [contentQuery, setContentQuery] = useState("");
   const [selection, setSelection] = useState<RowSelection>(emptyRowSelection);
   // Remounts the table after a reset, since it reads column widths from the layout once.
@@ -124,7 +128,6 @@ export function LibraryWorkspace({
       }
     : undefined;
   const [saving, setSaving] = useState(false);
-  const [saveName, setSaveName] = useState("");
   const executionFamily = `reader-library-view:${useId()}`;
 
   useEffect(() => {
@@ -226,11 +229,8 @@ export function LibraryWorkspace({
     }
   }, [loading, view.key]);
 
-  const save = async (replace: boolean): Promise<void> => {
-    const name = saveName.trim();
-    if (!name) {
-      return;
-    }
+  // Saving over the open view keeps its name; saving as new takes the name from the dialog.
+  const save = async (name: string, replace: boolean): Promise<void> => {
     const saved = await controller.save({
       name,
       configuration,
@@ -321,12 +321,12 @@ export function LibraryWorkspace({
                   {loading ? "Loading…" : countLabel(sources.length, "source")}
                 </span>
               ) : null}
-              {dirty && view.owned && view.writable ? (
+              {dirty && view.owned && view.writable && !view.annotations ? (
                 <button
                   className="library-save-button"
                   type="button"
                   disabled={controller.saving}
-                  onClick={() => void save(true)}
+                  onClick={() => void save(view.name, true)}
                 >
                   Save view
                 </button>
@@ -515,6 +515,10 @@ export function LibraryWorkspace({
         {mode === "annotations" ? (
           <LibraryAnnotations
             gateway={gateway}
+            view={view}
+            controller={controller}
+            collectionKey={collectionKey}
+            onOpenView={onOpenView}
             sources={allSources}
             propertyKeys={propertyKeys}
             focused={focused}
@@ -631,51 +635,13 @@ export function LibraryWorkspace({
         />
       ) : null}
       {saving ? (
-        <div
-          className="library-save-dialog-backdrop"
-          role="button"
-          tabIndex={-1}
-          onMouseDown={(event) => {
-            if (event.target === event.currentTarget) {
-              setSaving(false);
-            }
-          }}
-          onKeyDown={(event) => {
-            if (event.key === "Escape") {
-              setSaving(false);
-            }
-          }}
-        >
-          <form
-            className="library-save-dialog"
-            aria-label="Save library view"
-            onSubmit={(event) => {
-              event.preventDefault();
-              void save(false);
-            }}
-          >
-            <h2>Save as a new view</h2>
-            <p>The filters, sort, columns and layout are saved in your collection.</p>
-            <label>
-              <span>Name</span>
-              <input
-                value={saveName}
-                placeholder="e.g. Reading this month"
-                // eslint-disable-next-line jsx-a11y/no-autofocus -- the dialog exists only to take this name.
-                autoFocus
-                onChange={(event) => setSaveName(event.target.value)}
-              />
-            </label>
-            <div>
-              <button type="button" onClick={() => setSaving(false)}>
-                Cancel
-              </button>
-              <button type="submit" disabled={!saveName.trim() || controller.saving}>
-                {controller.saving ? "Saving…" : "Save view"}
-              </button>
-            </div>
-          </form>
-        </div>
+        <LibraryViewSaveDialog
+          description="The filters, sort, columns and layout are saved in your collection."
+          placeholder="e.g. Reading this month"
+          saving={controller.saving}
+          onCancel={() => setSaving(false)}
+          onSave={(name) => void save(name, false)}
+        />
       ) : null}
     </section>
   );

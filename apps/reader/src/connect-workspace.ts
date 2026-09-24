@@ -10,11 +10,17 @@ import {
 } from "@mdbase-reader/core";
 
 import {
+  annotationViewConfiguration,
+  buildAnnotationViewDocument,
+  buildSourceAnnotationsViewDocument,
+  readerViewKind,
+  sourceAnnotationsViewName,
+} from "./mdbase-annotation-views.js";
+import {
   buildLibraryViewDocument,
   defaultLibraryView,
   libraryViewConfiguration,
   libraryViewKey,
-  isReaderLibraryPresentation,
   type ExecutedLibraryView,
   type LibraryViewSaveRequest,
   type MdbaseLibraryView,
@@ -122,11 +128,15 @@ export class ConnectWorkspaceGateway implements ReaderWorkspaceGateway {
     }
     const listed = await this.libraryViewRepository.list(options);
     // Views are shared across apps; only explicitly Reader-marked presentations belong here.
+    // "Annotations for this source" needs a source to run against, so it is not a library view.
     return [
       defaultLibraryView,
       ...listed.views.flatMap((document) =>
         document.views
-          .filter((view) => isReaderLibraryPresentation(view.presentation))
+          .filter((view) => {
+            const kind = readerViewKind(view.presentation);
+            return kind === "sources" || kind === "annotations";
+          })
           .map((view) => ({
             key: libraryViewKey(document.source.path, view.id),
             path: document.source.path,
@@ -134,12 +144,15 @@ export class ConnectWorkspaceGateway implements ReaderWorkspaceGateway {
             viewId: view.id,
             name: view.name,
             writable: document.source.writable,
-            owned: isReaderLibraryPresentation(view.presentation),
+            owned: true,
             properties: view.properties.map(({ key, label }) => ({
               key,
               ...(label ? { label } : {}),
             })),
             configuration: libraryViewConfiguration(view.presentation),
+            ...(readerViewKind(view.presentation) === "annotations"
+              ? { annotations: annotationViewConfiguration(view.presentation) }
+              : {}),
           })),
       ),
     ];
@@ -179,7 +192,13 @@ export class ConnectWorkspaceGateway implements ReaderWorkspaceGateway {
       throw new Error("Saved mdbase views are unavailable for this collection.");
     }
     const saved = await this.libraryViewRepository.save({
-      document: buildLibraryViewDocument(request),
+      document: request.annotations
+        ? buildAnnotationViewDocument({
+            name: request.name,
+            configuration: request.annotations,
+            ...(request.fieldShapes ? { fieldShapes: request.fieldShapes } : {}),
+          })
+        : buildLibraryViewDocument(request),
       ...(request.existing?.path ? { path: request.existing.path } : { name: request.name }),
       ...(request.existing?.revision ? { revision: request.existing.revision } : {}),
     });
@@ -193,6 +212,41 @@ export class ConnectWorkspaceGateway implements ReaderWorkspaceGateway {
       throw new Error("The view was saved, but Reader could not reopen it.");
     }
     return match;
+  }
+
+  async executeAnnotationView(
+    view: MdbaseLibraryView,
+    options: ReaderRequestOptions = {},
+  ): Promise<ReadonlySet<string>> {
+    if (!view.path || !this.libraryViewRepository) {
+      throw new Error("Saved mdbase views are unavailable for this collection.");
+    }
+    const execution = await this.libraryViewRepository.execute(
+      { path: view.path, view: view.viewId },
+      options,
+    );
+    return new Set(execution.results.map((row) => row.path));
+  }
+
+  async ensureSourceAnnotationsView(): Promise<{
+    readonly path: string;
+    readonly created: boolean;
+  }> {
+    if (!this.libraryViewRepository) {
+      throw new Error("Saved mdbase views are unavailable for this collection.");
+    }
+    const listed = await this.libraryViewRepository.list();
+    const existing = listed.views.find((document) =>
+      document.views.some((view) => readerViewKind(view.presentation) === "source-annotations"),
+    );
+    if (existing) {
+      return { path: existing.source.path, created: false };
+    }
+    const saved = await this.libraryViewRepository.save({
+      document: buildSourceAnnotationsViewDocument(),
+      name: sourceAnnotationsViewName,
+    });
+    return { path: saved.path, created: true };
   }
 
   async annotations(

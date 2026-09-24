@@ -1,6 +1,7 @@
 import { annotationBodyContent } from "./annotation-body-content.js";
 import { matchesCondition, type FieldCondition } from "./library-conditions.js";
 
+import type { AnnotationSortDirection, AnnotationSortField } from "./annotation-columns.js";
 import type { Annotation, SourceSummary } from "@mdbase-reader/core";
 
 /** One annotation with the source it belongs to, as the annotations view lists it. */
@@ -27,8 +28,6 @@ export const emptyAnnotationFilter: AnnotationFilter = {
   tag: "",
   sourceConditions: [],
 };
-
-export type AnnotationSort = "newest" | "oldest" | "source";
 
 export function annotationEntries(
   annotations: readonly Annotation[],
@@ -78,15 +77,21 @@ export function filterAnnotationEntries(
 
 export function sortAnnotationEntries(
   entries: readonly AnnotationEntry[],
-  sort: AnnotationSort,
+  field: AnnotationSortField,
+  direction: AnnotationSortDirection,
 ): readonly AnnotationEntry[] {
+  const sign = direction === "asc" ? 1 : -1;
   return [...entries].sort((left, right) => {
-    if (sort === "source") {
-      const bySource = (left.source?.title ?? "").localeCompare(right.source?.title ?? "");
-      return bySource || left.annotation.createdAt.localeCompare(right.annotation.createdAt);
+    const created = left.annotation.createdAt.localeCompare(right.annotation.createdAt);
+    if (field === "created") {
+      return sign * created;
     }
-    const byDate = left.annotation.createdAt.localeCompare(right.annotation.createdAt);
-    return sort === "oldest" ? byDate : -byDate;
+    const primary =
+      field === "source"
+        ? (left.source?.title ?? "").localeCompare(right.source?.title ?? "")
+        : left.annotation.annotationType.localeCompare(right.annotation.annotationType);
+    // Within one source or type, annotations keep reading order.
+    return sign * primary || created;
   });
 }
 

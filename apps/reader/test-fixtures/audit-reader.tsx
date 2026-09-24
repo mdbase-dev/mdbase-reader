@@ -57,8 +57,16 @@ class AuditGateway extends PreviewGateway {
       sources: this.sources,
     };
   }
+  private savedViews: readonly MdbaseLibraryView[] = [];
   override listLibraryViews(): Promise<readonly MdbaseLibraryView[]> {
-    return Promise.resolve([defaultLibraryView]);
+    return Promise.resolve([defaultLibraryView, ...this.savedViews]);
+  }
+  override async saveLibraryView(
+    request: Parameters<PreviewGateway["saveLibraryView"]>[0],
+  ): Promise<MdbaseLibraryView> {
+    const saved = await super.saveLibraryView(request);
+    this.savedViews = [...this.savedViews.filter(({ key }) => key !== saved.key), saved];
+    return saved;
   }
   override executeLibraryView(
     view: MdbaseLibraryView,

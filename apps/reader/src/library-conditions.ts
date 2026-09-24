@@ -146,13 +146,18 @@ export function fieldShape(sources: readonly SourceSummary[], key: string): Fiel
  * The same condition as a CEL clause for a saved view's `where`. mdbase's CEL has no type
  * introspection, so the caller says whether the field holds lists (any item may match). A
  * wikilink matches by its alias as well as its exact value. Missing values never match a
- * comparison but do satisfy "is not".
+ * comparison but do satisfy "is not". `base` reads the field from another record, such as
+ * `source.asFile()` for an annotation's source; without it the field is the candidate's own.
  */
-export function conditionToCel(condition: FieldCondition, shape: FieldShape): string | null {
+export function conditionToCel(
+  condition: FieldCondition,
+  shape: FieldShape,
+  base?: string,
+): string | null {
   if (!isActiveCondition(condition)) {
     return null;
   }
-  const field = celPath(condition.key);
+  const field = celPath(condition.key, base);
   const wanted = condition.value.trim();
   const number = Number(wanted);
   const numeric = wanted !== "" && Number.isFinite(number);
@@ -200,13 +205,14 @@ export function conditionToCel(condition: FieldCondition, shape: FieldShape): st
 }
 
 /** A dotted frontmatter path in CEL; segments that are not identifiers use index syntax. */
-function celPath(key: string): string {
+function celPath(key: string, base?: string): string {
   const identifier = /^[A-Za-z_][A-Za-z0-9_]*$/u;
   return key.split(".").reduce((path, segment, index) => {
+    const parent = index === 0 ? base : path;
     if (identifier.test(segment)) {
-      return index === 0 ? segment : `${path}.${segment}`;
+      return parent === undefined ? segment : `${parent}.${segment}`;
     }
-    return `${index === 0 ? "record" : path}[${JSON.stringify(segment)}]`;
+    return `${parent ?? "record"}[${JSON.stringify(segment)}]`;
   }, "");
 }
 

@@ -46,6 +46,13 @@ export interface ReaderWorkspaceGateway {
     options?: ReaderRequestOptions,
   ): Promise<ExecutedLibraryView>;
   saveLibraryView(request: LibraryViewSaveRequest): Promise<MdbaseLibraryView>;
+  /** The annotation paths a saved annotations view selects, as mdbase runs it. */
+  executeAnnotationView?(
+    view: MdbaseLibraryView,
+    options?: ReaderRequestOptions,
+  ): Promise<ReadonlySet<string>>;
+  /** Adds the collection's "Annotations for this source" view unless it already has one. */
+  ensureSourceAnnotationsView?(): Promise<{ readonly path: string; readonly created: boolean }>;
   source(id: SourceId, options?: ReaderRequestOptions): Promise<Source | null>;
   /** Bypass session caches when comparing revisions before a draft write. */
   refreshSource?(id: SourceId, options?: ReaderRequestOptions): Promise<Source | null>;

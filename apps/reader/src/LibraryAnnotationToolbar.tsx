@@ -1,35 +1,46 @@
-import {
-  emptyAnnotationFilter,
-  type AnnotationFilter,
-  type AnnotationSort,
-} from "./annotation-overview.js";
+import { emptyAnnotationFilter, type AnnotationFilter } from "./annotation-overview.js";
 import { FilterIcon, SearchIcon } from "./icons.js";
 import { countLabel } from "./LibraryCells.js";
 import { LibraryConditionsEditor } from "./LibraryConditionsEditor.js";
 import { Menu } from "./Menu.js";
 
+import type { AnnotationSortField } from "./annotation-columns.js";
+import type { AnnotationLayout } from "./mdbase-annotation-views.js";
+import type { SourceAnnotationsViewAction } from "./use-annotation-view.js";
 import type { SourceSummary } from "@mdbase-reader/core";
 import type { JSX } from "react";
 
-/** Search, sort and filters for the annotations view. */
+export interface AnnotationViewActions {
+  /** Present when the open view is a saved annotations view with unsaved changes. */
+  readonly onSave?: () => void;
+  readonly saving: boolean;
+  readonly onSaveAs: () => void;
+  /** Present when the layout differs from the view's. */
+  readonly onReset?: () => void;
+  readonly sourceAnnotationsView: SourceAnnotationsViewAction | null;
+}
+
+/** Search, filters, sort and view actions for the annotations view. */
 export function AnnotationToolbar({
   filter,
   onFilterChange,
-  sort,
-  onSortChange,
+  layout,
+  onLayoutChange,
   count,
   tags,
   propertyKeys,
   sources,
+  actions,
 }: {
   readonly filter: AnnotationFilter;
   readonly onFilterChange: (filter: AnnotationFilter) => void;
-  readonly sort: AnnotationSort;
-  readonly onSortChange: (sort: AnnotationSort) => void;
+  readonly layout: AnnotationLayout;
+  readonly onLayoutChange: (layout: AnnotationLayout) => void;
   readonly count: number | null;
   readonly tags: readonly string[];
   readonly propertyKeys: readonly string[];
   readonly sources: readonly SourceSummary[];
+  readonly actions: AnnotationViewActions;
 }): JSX.Element {
   const filterCount =
     Number(filter.type !== "all") + Number(Boolean(filter.tag)) + filter.sourceConditions.length;
@@ -48,21 +59,20 @@ export function AnnotationToolbar({
       <span className="library-result-count" role="status">
         {count === null ? "Loading…" : countLabel(count, "annotation")}
       </span>
-      <label className="library-annotations-sort">
-        <span className="sr-only">Sort annotations</span>
-        <select
-          value={sort}
-          onChange={(event) => onSortChange(event.target.value as AnnotationSort)}
+      {actions.onSave ? (
+        <button
+          className="library-save-button"
+          type="button"
+          disabled={actions.saving}
+          onClick={actions.onSave}
         >
-          <option value="newest">Newest first</option>
-          <option value="oldest">Oldest first</option>
-          <option value="source">By source</option>
-        </select>
-      </label>
+          Save view
+        </button>
+      ) : null}
       <Menu
         className="library-workspace-more"
-        label={`Annotation filters${filterCount ? `, ${String(filterCount)} active` : ""}`}
-        title="Annotation filters"
+        label={`Annotation view options${filterCount ? `, ${String(filterCount)} active filters` : ""}`}
+        title="View options"
         trigger={
           <>
             <FilterIcon />
@@ -71,41 +81,12 @@ export function AnnotationToolbar({
         }
       >
         <div className="library-options" data-menu-keep-open>
-          <span className="menu-label">Annotation</span>
-          <label>
-            <span>Type</span>
-            <select
-              value={filter.type}
-              onChange={(event) =>
-                onFilterChange({ ...filter, type: event.target.value as AnnotationFilter["type"] })
-              }
-            >
-              <option value="all">Any type</option>
-              <option value="highlight">Highlights</option>
-              <option value="note">Notes</option>
-              <option value="area">Areas</option>
-            </select>
-          </label>
-          <label>
-            <span>Tag</span>
-            <select
-              value={filter.tag}
-              onChange={(event) => onFilterChange({ ...filter, tag: event.target.value })}
-            >
-              <option value="">Any tag</option>
-              {tags.map((tag) => (
-                <option key={tag} value={tag}>
-                  {tag}
-                </option>
-              ))}
-            </select>
-          </label>
-          <span className="menu-label">Source</span>
-          <LibraryConditionsEditor
-            conditions={filter.sourceConditions}
+          <AnnotationFilters
+            filter={filter}
+            onFilterChange={onFilterChange}
+            tags={tags}
             propertyKeys={propertyKeys}
             sources={sources}
-            onChange={(sourceConditions) => onFilterChange({ ...filter, sourceConditions })}
           />
           {filterCount > 0 ? (
             <button
@@ -116,8 +97,129 @@ export function AnnotationToolbar({
               Clear filters
             </button>
           ) : null}
+          <AnnotationSortControl layout={layout} onLayoutChange={onLayoutChange} />
         </div>
+        <hr />
+        <button type="button" disabled={!actions.onReset} onClick={actions.onReset}>
+          Reset columns and sort
+        </button>
+        <button type="button" onClick={actions.onSaveAs}>
+          Save as new view…
+        </button>
+        {actions.sourceAnnotationsView ? (
+          <>
+            <button
+              type="button"
+              data-menu-keep-open
+              disabled={actions.sourceAnnotationsView.busy}
+              title="A saved view that lists the annotations of whichever source it runs against"
+              onClick={actions.sourceAnnotationsView.run}
+            >
+              Add “Annotations for this source” view
+            </button>
+            {actions.sourceAnnotationsView.message ? (
+              <p className="menu-note" role="status">
+                {actions.sourceAnnotationsView.message}
+              </p>
+            ) : null}
+          </>
+        ) : null}
       </Menu>
     </div>
+  );
+}
+
+function AnnotationFilters({
+  filter,
+  onFilterChange,
+  tags,
+  propertyKeys,
+  sources,
+}: {
+  readonly filter: AnnotationFilter;
+  readonly onFilterChange: (filter: AnnotationFilter) => void;
+  readonly tags: readonly string[];
+  readonly propertyKeys: readonly string[];
+  readonly sources: readonly SourceSummary[];
+}): JSX.Element {
+  return (
+    <>
+      <span className="menu-label">Annotation</span>
+      <label>
+        <span>Type</span>
+        <select
+          value={filter.type}
+          onChange={(event) =>
+            onFilterChange({ ...filter, type: event.target.value as AnnotationFilter["type"] })
+          }
+        >
+          <option value="all">Any type</option>
+          <option value="highlight">Highlights</option>
+          <option value="note">Notes</option>
+          <option value="area">Areas</option>
+        </select>
+      </label>
+      <label>
+        <span>Tag</span>
+        <select
+          value={filter.tag}
+          onChange={(event) => onFilterChange({ ...filter, tag: event.target.value })}
+        >
+          <option value="">Any tag</option>
+          {tags.map((tag) => (
+            <option key={tag} value={tag}>
+              {tag}
+            </option>
+          ))}
+        </select>
+      </label>
+      <span className="menu-label">Source</span>
+      <LibraryConditionsEditor
+        conditions={filter.sourceConditions}
+        propertyKeys={propertyKeys}
+        sources={sources}
+        onChange={(sourceConditions) => onFilterChange({ ...filter, sourceConditions })}
+      />
+    </>
+  );
+}
+
+function AnnotationSortControl({
+  layout,
+  onLayoutChange,
+}: {
+  readonly layout: AnnotationLayout;
+  readonly onLayoutChange: (layout: AnnotationLayout) => void;
+}): JSX.Element {
+  return (
+    <>
+      <span className="menu-label">Sort</span>
+      <div className="library-sort-control">
+        <select
+          aria-label="Sort field"
+          value={layout.sortField}
+          onChange={(event) =>
+            onLayoutChange({ ...layout, sortField: event.target.value as AnnotationSortField })
+          }
+        >
+          <option value="created">Created</option>
+          <option value="source">Source</option>
+          <option value="type">Type</option>
+        </select>
+        <button
+          type="button"
+          aria-label={`Sort ${layout.sortDirection === "asc" ? "descending" : "ascending"}`}
+          title={layout.sortDirection === "asc" ? "Ascending" : "Descending"}
+          onClick={() =>
+            onLayoutChange({
+              ...layout,
+              sortDirection: layout.sortDirection === "asc" ? "desc" : "asc",
+            })
+          }
+        >
+          {layout.sortDirection === "asc" ? "↑" : "↓"}
+        </button>
+      </div>
+    </>
   );
 }

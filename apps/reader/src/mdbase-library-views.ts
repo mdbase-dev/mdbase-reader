@@ -21,6 +21,7 @@ import {
   type FieldShape,
 } from "./library-conditions.js";
 
+import type { AnnotationViewConfiguration } from "./mdbase-annotation-views.js";
 import type { SourceSummary } from "@mdbase-reader/core";
 
 export { columnLabel };
@@ -60,6 +61,8 @@ export interface MdbaseLibraryView {
   readonly owned: boolean;
   readonly properties: readonly { readonly key: string; readonly label?: string }[];
   readonly configuration: LibraryViewConfiguration;
+  /** Present when the view lists annotations rather than sources. */
+  readonly annotations?: AnnotationViewConfiguration;
 }
 
 export interface ExecutedLibraryView {
@@ -74,6 +77,8 @@ export interface LibraryViewSaveRequest {
   /** Whether each condition's field holds lists, which decides its CEL; default scalar. */
   readonly fieldShapes?: Readonly<Record<string, FieldShape>>;
   readonly existing?: MdbaseLibraryView;
+  /** Saves an annotations view instead; its source conditions take their shapes from `fieldShapes`. */
+  readonly annotations?: AnnotationViewConfiguration;
 }
 
 export const defaultLibraryViewConfiguration: LibraryViewConfiguration = {
@@ -135,12 +140,6 @@ export function libraryViewConfiguration(
       conditions: parseConditions(filter["conditions"]),
     },
   };
-}
-
-export function isReaderLibraryPresentation(
-  presentation: Readonly<Record<string, unknown>> | undefined,
-): boolean {
-  return objectValue(presentation?.["options"])["readerViewVersion"] === 1;
 }
 
 export function buildLibraryViewDocument(request: LibraryViewSaveRequest): string {

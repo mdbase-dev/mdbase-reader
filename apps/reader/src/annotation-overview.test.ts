@@ -84,12 +84,12 @@ describe("annotation overview", () => {
   });
 
   it("sorts newest first by default and by source title", () => {
-    expect(sortAnnotationEntries(entries, "newest").map(({ annotation }) => annotation.id)).toEqual(
-      ["bb", "a"],
-    );
-    expect(sortAnnotationEntries(entries, "source").map(({ annotation }) => annotation.id)).toEqual(
-      ["a", "bb"],
-    );
+    expect(
+      sortAnnotationEntries(entries, "created", "desc").map(({ annotation }) => annotation.id),
+    ).toEqual(["bb", "a"]);
+    expect(
+      sortAnnotationEntries(entries, "source", "asc").map(({ annotation }) => annotation.id),
+    ).toEqual(["a", "bb"]);
   });
 
   it("writes Markdown grouped by source with links back to each annotation", () => {

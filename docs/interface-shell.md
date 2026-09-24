@@ -167,9 +167,28 @@ action, and one stylesheet section for each redesigned component.
   contract query limited to `reader-annotation`, then reads each record with the bulk read
   concurrency: semantic contract views reject `includeBody` and every field but `types`,
   `timezone`, pagination, `frontmatterMode` and `contract`. Nothing is written from this view.
-- TanStack Table v9 is used headlessly for column sizing and resizing only (`use-library-columns.ts`).
-  Filtering and sorting remain `applyLibraryViewConfiguration`, which matches a saved view's
-  `order_by`.
+- **Annotation columns.** The annotations table has the sources table's columns: headers sort
+  (Created, Source, Type), resize by drag or arrow keys, move, hide, and come back from the add
+  menu (`annotation-columns.ts`). Columns, widths and sort are remembered per view on this
+  device until saved (`use-layout-draft.ts`, shared with the sources table).
+- **Saved annotation views.** _Save as new view…_ writes an ordinary mdbase view record with
+  `query.types: [reader-annotation]` and `readerViewKind: annotations` in Reader's presentation
+  options (`mdbase-annotation-views.ts`). Conditions on the source are written through the
+  annotation's `source` link, e.g. `source.asFile() != null && source.asFile().course…`, using
+  the links profile's `asFile()`; sorting by source orders by a `source_title` projection. So
+  Obsidian, the CLI and agents run the same view. Opening a saved view runs it through mdbase
+  (`executeAnnotationView`) until its filter changes, then Reader filters locally; if mdbase
+  cannot run it, Reader filters locally and says so. On the 1,486-source test collection, 13
+  filters (scalar, list, nested, hyphenated and numeric fields, `is-not`, empty, and type with a
+  source condition) selected identical annotations locally and in mdbase.
+- **"Annotations for this source".** The annotations view options can add one view record whose
+  named view binds `this` to a `reader-source` (`on_missing: error`) and selects
+  `source.asFile().file.path == this.file.path`. It is for other tools, where it runs against a
+  source note; Reader does not list it as a library view.
+- TanStack Table v9 is used headlessly for column sizing and resizing only
+  (`use-table-columns.ts`, shared by both tables; `TableHeadRow.tsx` renders either header).
+  Filtering and sorting remain Reader's own (`applyLibraryViewConfiguration`,
+  `sortAnnotationEntries`), matching each saved view's `order_by`.
 
 ## Stylesheets
 

@@ -3562,17 +3562,6 @@
   margin-left: auto;
 }
 
-.library-annotations-sort select {
-  height: var(--ui-control-height);
-  padding: 0 8px;
-  border: 1px solid var(--line);
-  border-radius: var(--ui-radius);
-  color: var(--ink-soft);
-  background: var(--paper);
-  font: inherit;
-  font-size: var(--ui-control);
-}
-
 .library-annotation-row {
   height: 78px;
   align-items: start;

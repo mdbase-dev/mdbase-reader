@@ -95,6 +95,16 @@ describe("field conditions", () => {
     expect(conditionToCel({ key: "course", operator: "is", value: "" }, "scalar")).toBeNull();
   });
 
+  it("reads fields from another record when given a base", () => {
+    const base = "source.asFile()";
+    expect(
+      conditionToCel({ key: "reading.progress", operator: "at-least", value: "1" }, "scalar", base),
+    ).toBe("source.asFile().reading.progress >= 1");
+    expect(conditionToCel({ key: "my-field", operator: "empty", value: "" }, "scalar", base)).toBe(
+      '(source.asFile()["my-field"] == null || source.asFile()["my-field"] == "")',
+    );
+  });
+
   it("detects list-valued fields from the library", () => {
     expect(fieldShape([source({ tags: ["a"] }), source({})], "tags")).toBe("list");
     expect(fieldShape([source({ course: "x" })], "course")).toBe("scalar");

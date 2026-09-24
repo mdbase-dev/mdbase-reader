@@ -190,12 +190,59 @@ async function auditAnnotationOverview(page, screenshot) {
   const grid = page.getByRole("grid", { name: "Annotations" });
   const rows = grid.locator(".library-table-body .library-table-row");
   await expect.poll(() => rows.count()).toBeGreaterThan(1);
+  await auditAnnotationColumns(page, grid);
   await page.getByRole("textbox", { name: "Search annotations" }).fill("Patient attention and");
   await expect(rows.filter({ hasText: "Research 0021" }).first()).toBeVisible();
+  await auditAnnotationViewSaving(page, grid, rows);
   await screenshot("annotation-overview");
   await rows.filter({ hasText: "Research 0021" }).first().dblclick();
   await expect(page.locator(".document-session.is-active .epub-viewer")).toBeVisible({
     timeout: 60000,
   });
-  return "Library annotations view lists annotations across sources and opens one in its document";
+  return "Library annotations view sorts, resizes, hides and saves columns, and opens an annotation";
+}
+
+/** Headers sort, resize from the keyboard, and hide or restore columns, as in the sources table. */
+async function auditAnnotationColumns(page, grid) {
+  const sourceHeader = grid.getByRole("columnheader").filter({ hasText: /^Source/ });
+  await grid.getByRole("button", { name: "Source", exact: true }).click();
+  await expect(sourceHeader).toHaveAttribute("aria-sort", "ascending");
+  const resizer = grid.getByRole("separator", { name: "Resize Source column" });
+  const before = Number(await resizer.getAttribute("aria-valuenow"));
+  await resizer.focus();
+  await page.keyboard.press("ArrowRight");
+  await page.keyboard.press("ArrowRight");
+  await expect(resizer).toHaveAttribute("aria-valuenow", String(before + 32));
+  const headers = grid.getByRole("columnheader");
+  const count = await headers.count();
+  await grid.getByLabel("Type column options").click();
+  await page.getByRole("button", { name: "Hide column" }).click();
+  await expect(headers).toHaveCount(count - 1);
+  await grid.getByLabel("Add column").click();
+  await page.getByRole("button", { name: "Type", exact: true }).click();
+  await expect(headers).toHaveCount(count);
+}
+
+/** A filtered annotations view saves as an mdbase view and reopens in annotations mode. */
+async function auditAnnotationViewSaving(page, grid, rows) {
+  const options = page.getByLabel(/^Annotation view options/);
+  await options.click();
+  await page.getByRole("button", { name: "Add “Annotations for this source” view" }).click();
+  await expect(page.getByRole("status").filter({ hasText: "Added views/" })).toBeVisible();
+  await page.getByRole("button", { name: "Save as new view…" }).click();
+  const dialog = page.getByRole("form", { name: "Save library view" });
+  await dialog.getByRole("textbox", { name: "Name" }).fill("[test] Attention quotes");
+  await dialog.getByRole("button", { name: "Save view" }).click();
+  await expect(
+    page.getByRole("combobox", { name: "Library view" }).locator("option:checked"),
+  ).toHaveText("[test] Attention quotes");
+  await expect(grid).toBeVisible();
+  await expect(page.getByRole("textbox", { name: "Search annotations" })).toHaveValue(
+    "Patient attention and",
+  );
+  await expect(rows.filter({ hasText: "Research 0021" }).first()).toBeVisible();
+  await expect(grid.getByRole("columnheader").filter({ hasText: /^Source/ })).toHaveAttribute(
+    "aria-sort",
+    "ascending",
+  );
 }

@@ -30,10 +30,16 @@ export function firstSortDirection(column: LibraryColumn): LibrarySortDirection 
 }
 
 export interface HeaderCellProps {
-  readonly column: LibraryColumn;
+  /** The column's id, carried by a drag. */
+  readonly column: string;
+  readonly label: string;
+  /** A CSS-safe name, used as `is-<name>`. */
+  readonly className: string;
+  readonly sortable: boolean;
+  readonly firstDirection: LibrarySortDirection;
+  readonly hideable: boolean;
   readonly index: number;
   readonly count: number;
-  readonly properties: ViewProperties;
   readonly sort: LibrarySortDirection | null;
   readonly resizing: boolean;
   readonly width: number;
@@ -51,18 +57,16 @@ export interface HeaderCellProps {
 }
 
 export function HeaderCell(props: HeaderCellProps): JSX.Element {
-  const { column, index, count, properties, sort } = props;
-  const label = columnLabel(column, properties);
-  const sortable = sortFieldFor(column) !== null;
+  const { column, index, count, label, sortable, sort } = props;
   const next: LibrarySortDirection =
-    sort === null ? firstSortDirection(column) : sort === "asc" ? "desc" : "asc";
+    sort === null ? props.firstDirection : sort === "asc" ? "desc" : "asc";
   return (
     <div
       role="columnheader"
       tabIndex={-1}
       aria-colindex={index + 1}
       aria-sort={sort === "asc" ? "ascending" : sort === "desc" ? "descending" : "none"}
-      className={`library-column-header is-${columnClass(column)}${props.resizing ? " is-resizing" : ""}${props.dropSide ? ` is-drop-${props.dropSide}` : ""}`}
+      className={`library-column-header is-${props.className}${props.resizing ? " is-resizing" : ""}${props.dropSide ? ` is-drop-${props.dropSide}` : ""}`}
       onDragOver={(event) => {
         event.preventDefault();
         props.onDragOver(dropSide(event));
@@ -128,7 +132,7 @@ export function HeaderCell(props: HeaderCellProps): JSX.Element {
         <button type="button" onClick={props.onResetWidth}>
           Reset width
         </button>
-        {column !== "title" ? (
+        {props.hideable ? (
           <>
             <hr />
             <button type="button" onClick={props.onHide}>
@@ -166,7 +170,7 @@ export function HeaderCell(props: HeaderCellProps): JSX.Element {
 
 /** Only the label starts a column move, so dragging the resize handle never does. */
 function dragSource(
-  column: LibraryColumn,
+  column: string,
   onDragStart: () => void,
 ): Pick<JSX.IntrinsicElements["span"], "draggable" | "onDragStart"> {
   return {
