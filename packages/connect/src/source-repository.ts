@@ -143,13 +143,11 @@ export class ConnectSourceRepository implements SourceRepository {
         patch: { reading: readingPatch(input.expectedFrontmatter, input) },
         includeDocument: true,
       });
-      // A conflict means the record moved on; rebase on a fresh read as below.
-      if (outcome.ok || outcome.problem.category !== "conflict") {
-        return sourceFromDocument(
-          input.collectionId,
-          outcomeValue(outcome, "save reading position"),
-        );
+      if (outcome.ok) {
+        return sourceFromDocument(input.collectionId, outcome.value);
       }
+      // Authorities report a moved-on record in more than one way, so any refusal rebases on a
+      // fresh read below; a lasting failure surfaces from that read or write instead.
     }
     const current = outcomeValue(
       await this.client.read({ path, includeDocument: true }),

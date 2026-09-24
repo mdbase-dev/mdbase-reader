@@ -128,7 +128,8 @@ describe("Connect source reading state with a current caller revision", () => {
       .fn()
       .mockResolvedValueOnce({
         ok: false,
-        problem: { code: "concurrent_modification", category: "conflict", recovery: "refresh" },
+        // Not every authority reports this as a conflict; any refusal must rebase.
+        problem: { code: "record_written_externally", category: "state", recovery: "refresh" },
       })
       .mockResolvedValueOnce(success(record("rev-3", newer)));
     const read = vi.fn(() => Promise.resolve(success(record("rev-2", newer))));
