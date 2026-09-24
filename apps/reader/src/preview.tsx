@@ -357,6 +357,23 @@ export class PreviewGateway implements ReaderWorkspaceGateway {
   ): Promise<Source> {
     return Promise.resolve(source);
   }
+  saveSourceFields(id: SourceId, fields: Readonly<Record<string, unknown>>): Promise<Source> {
+    const source = this.#sources.find((item) => item.id === id);
+    if (!source) {
+      return Promise.reject(new Error("The preview source no longer exists."));
+    }
+    const properties: Record<string, unknown> = { ...source.properties };
+    for (const [key, value] of Object.entries(fields)) {
+      if (value === null) {
+        Reflect.deleteProperty(properties, key);
+      } else {
+        properties[key] = value;
+      }
+    }
+    const updated: Source = { ...source, properties };
+    this.#sources = this.#sources.map((item) => (item.id === id ? updated : item));
+    return Promise.resolve(updated);
+  }
   saveReadingStatus(id: SourceId, status: ReadingStatus): Promise<Source> {
     const source = this.#sources.find((item) => item.id === id);
     if (!source) {

@@ -9,6 +9,7 @@ import {
   type ReaderRequestOptions,
   type ReadingPosition,
   type Source,
+  type SourceFieldChange,
   type SourceId,
   type SourceQuery,
   type SourceRepository,
@@ -29,6 +30,7 @@ import {
   readWithOptions,
   recordPathById,
 } from "./repository-client.js";
+import { writeSourceFields } from "./source-fields.js";
 
 import type { ReaderConnectClient } from "./repository-client.js";
 import type { QueryRecord } from "@mdbase-dev/connect";
@@ -164,6 +166,11 @@ export class ConnectSourceRepository implements SourceRepository {
   async updateReadingStatus(input: ReadingStatusChange): Promise<Source> {
     const path = await this.#path(input.sourceId, "change reading status");
     return writeReadingStatus(this.client, path, input);
+  }
+
+  async updateFields(input: SourceFieldChange): Promise<Source> {
+    const path = await this.#path(input.sourceId, "edit source fields");
+    return writeSourceFields(this.client, path, input);
   }
 
   async updateCitation(input: Parameters<SourceRepository["updateCitation"]>[0]): Promise<Source> {

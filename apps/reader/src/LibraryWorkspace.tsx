@@ -29,7 +29,7 @@ import {
   pruneRowSelection,
   type RowSelection,
 } from "./library-row-selection.js";
-import { LibraryBulkBar, type BulkStatusProgress } from "./LibraryBulkBar.js";
+import { LibraryBulkBar } from "./LibraryBulkBar.js";
 import { LibraryCards } from "./LibraryCards.js";
 import { countLabel } from "./LibraryCells.js";
 import { LibraryConditionsEditor } from "./LibraryConditionsEditor.js";
@@ -42,6 +42,7 @@ import {
 } from "./mdbase-library-views.js";
 import { Menu } from "./Menu.js";
 import { layoutOf, useLibraryLayoutDraft } from "./use-library-layout-draft.js";
+import { useLibraryWrites } from "./use-library-writes.js";
 
 import type { BibliographyExportController } from "./use-bibliography-export.js";
 import type { MdbaseLibraryViewsController } from "./use-mdbase-library-views.js";
@@ -187,7 +188,23 @@ export function LibraryWorkspace({
   const updateFilter = (value: Partial<LibraryViewConfiguration["filter"]>): void => {
     setFilter((current) => ({ ...current, ...value }));
   };
-  const setStatuses = useBulkStatus(gateway, onSourceChanged);
+  const shapeOf = useCallback((key: string) => fieldShape(allSources, key), [allSources]);
+  const writes = useLibraryWrites(
+    gateway,
+    (source) => {
+      // A saved view's selected values would otherwise mask the edit until it re-runs.
+      setValuesByPath((current) => {
+        if (!current.has(source.path)) {
+          return current;
+        }
+        const next = new Map(current);
+        next.delete(source.path);
+        return next;
+      });
+      onSourceChanged?.(source);
+    },
+    shapeOf,
+  );
   const resultsRef = useRef<HTMLDivElement>(null);
   const restoredScroll = useRef(false);
   useLayoutEffect(() => {
@@ -530,6 +547,15 @@ export function LibraryWorkspace({
             onOpen={onOpenSource}
             onOpenBeside={onOpenBeside}
             {...(changeStatus ? { onChangeStatus: changeStatus } : {})}
+            {...(writes.saveField
+              ? {
+                  onEditField: (source: SourceSummary, key: string, text: string) =>
+                    writes.saveField?.(source, key, text).catch((reason: unknown) => {
+                      setProblem(readerErrorMessage(reason, `Reader could not save ${key}.`));
+                      throw reason;
+                    }) ?? Promise.resolve(),
+                }
+              : {})}
           />
         ) : (
           <LibraryCards
@@ -546,7 +572,9 @@ export function LibraryWorkspace({
         <LibraryBulkBar
           selected={selectedSources}
           onClear={() => setSelection(emptyRowSelection)}
-          {...(setStatuses ? { onSetStatus: setStatuses } : {})}
+          {...(writes.setStatuses ? { onSetStatus: writes.setStatuses } : {})}
+          {...(writes.setFields ? { onSetField: writes.setFields } : {})}
+          propertyKeys={propertyKeys}
           onOpen={(chosen) => {
             for (const source of chosen) {
               onOpenSource(source.id);
@@ -624,42 +652,4 @@ function sameConfiguration(
   right: LibraryViewConfiguration,
 ): boolean {
   return JSON.stringify(left) === JSON.stringify(right);
-}
-
-type BulkStatusSetter = (
-  sources: readonly SourceSummary[],
-  status: ReadingStatus,
-  progress: (value: BulkStatusProgress) => void,
-) => Promise<void>;
-
-/** Writes one reading status to many sources, a few at a time, reporting progress. */
-function useBulkStatus(
-  gateway: ReaderWorkspaceGateway,
-  onSourceChanged: ((source: Source) => void) | undefined,
-): BulkStatusSetter | undefined {
-  const save = gateway.saveReadingStatus?.bind(gateway);
-  const run = useCallback<BulkStatusSetter>(
-    async (sources, status, progress) => {
-      if (!save) {
-        return;
-      }
-      let done = 0;
-      let failed = 0;
-      const queue = [...sources];
-      const worker = async (): Promise<void> => {
-        for (let source = queue.shift(); source; source = queue.shift()) {
-          try {
-            onSourceChanged?.(await save(source.id, status));
-          } catch {
-            failed += 1;
-          }
-          done += 1;
-          progress({ done, total: sources.length, failed });
-        }
-      };
-      await Promise.all(Array.from({ length: Math.min(4, sources.length) }, worker));
-    },
-    [onSourceChanged, save],
-  );
-  return save ? run : undefined;
 }

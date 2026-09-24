@@ -68,3 +68,28 @@ export interface Page<Item> {
   readonly nextCursor?: string;
   readonly totalCount?: number;
 }
+
+// Fields the source contract maintains; editing them by hand would break the record.
+const maintainedSourceFields = new Set(["id", "type", "documents"]);
+
+/**
+ * Whether a frontmatter field (a dotted path) may be edited by hand. Nested citation and reading
+ * values can be; the `csl` and `reading` objects as a whole, and identity fields, cannot.
+ */
+export function isEditableSourceField(key: string): boolean {
+  const [top] = key.split(".");
+  return (
+    top !== undefined &&
+    top !== "" &&
+    !maintainedSourceFields.has(top) &&
+    key !== "reading" &&
+    key !== "csl"
+  );
+}
+
+/** Frontmatter fields to set on a source, by dotted path; null removes a field. */
+export interface SourceFieldChange {
+  readonly collectionId: CollectionId;
+  readonly sourceId: SourceId;
+  readonly fields: Readonly<Record<string, unknown>>;
+}

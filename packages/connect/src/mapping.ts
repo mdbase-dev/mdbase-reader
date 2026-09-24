@@ -196,6 +196,7 @@ export function sourceSummaryFromQuery(
 export function sourceFromDocument(collection: CollectionId, record: RecordDocument): Source {
   return {
     ...sourceFields(collection, record.path, record.effectiveFrontmatter),
+    properties: record.effectiveFrontmatter,
     body: record.body ?? "",
     recordRevision: recordRevision(record.revision),
     frontmatter: record.frontmatter,

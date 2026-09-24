@@ -149,6 +149,14 @@ action, and one stylesheet section for each redesigned component.
   with numbers. The live filter follows the same rules, so a draft and its saved view agree:
   checked against mdbase on the 1,486-source test collection, all 12 sampled conditions
   returned identical counts.
+- **Editing fields.** On the single selected row, clicking a property cell (or F2 on the focused
+  row) edits it in place. Enter or leaving the cell saves, Escape cancels, and an empty value
+  removes the field. With several sources selected, _Set field…_ sets one field on all of them.
+  Edits keep the field's kind: lists split on commas, numbers and booleans stay so, and links
+  are edited as written. Writes use the existing `records.update` capability: the source
+  repository's `updateFields` reads the record, merges dotted paths into its objects, and
+  patches with its revision. `id`, `type`, `documents` and the whole `csl` and `reading`
+  objects are not editable (`isEditableSourceField`); nested values inside them are.
 - TanStack Table v9 is used headlessly for column sizing and resizing only (`use-library-columns.ts`).
   Filtering and sorting remain `applyLibraryViewConfiguration`, which matches a saved view's
   `order_by`.

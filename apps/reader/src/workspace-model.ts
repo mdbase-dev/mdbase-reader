@@ -84,6 +84,8 @@ export interface ReaderWorkspaceGateway {
   ): Promise<Source>;
   /** Moves a source through its reading lifecycle, e.g. from queued to finished. */
   saveReadingStatus?(sourceId: SourceId, status: ReadingStatus): Promise<Source>;
+  /** Sets frontmatter fields by dotted path; null removes a field. */
+  saveSourceFields?(sourceId: SourceId, fields: Readonly<Record<string, unknown>>): Promise<Source>;
 }
 
 export function filterSources(

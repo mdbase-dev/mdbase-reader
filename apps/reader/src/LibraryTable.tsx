@@ -6,7 +6,6 @@ import {
   useRef,
   useState,
   type JSX,
-  type MouseEvent,
   type RefObject,
 } from "react";
 
@@ -18,11 +17,10 @@ import {
   toggleTouchRow,
   type RowSelection,
 } from "./library-row-selection.js";
-import { StatusPicker, TableValue } from "./LibraryCells.js";
 import { LibraryTableHead } from "./LibraryTableHead.js";
-import { columnClass } from "./LibraryTableHeader.js";
+import { LibraryTableRow, isEditableColumn } from "./LibraryTableRow.js";
 import { useLibraryColumns } from "./use-library-columns.js";
-import { hasModifier, useLongPress, type LongPress } from "./use-long-press.js";
+import { hasModifier, useLongPress } from "./use-long-press.js";
 
 import type { LibraryLayout } from "./use-library-layout-draft.js";
 import type { ReadingStatus, SourceId, SourceSummary } from "@mdbase-reader/core";
@@ -46,6 +44,13 @@ export interface LibraryTableProps {
   readonly onOpen: (id: SourceId) => void;
   readonly onOpenBeside: (id: SourceId) => void;
   readonly onChangeStatus?: (id: SourceId, status: ReadingStatus) => void;
+  /** Saves a field edited in its cell; editing is offered only when this is present. */
+  readonly onEditField?: (source: SourceSummary, key: string, text: string) => Promise<void>;
+}
+
+interface EditingCell {
+  readonly id: SourceId;
+  readonly column: LibraryColumn;
 }
 
 export function LibraryTable(props: LibraryTableProps): JSX.Element {
@@ -68,6 +73,7 @@ export function LibraryTable(props: LibraryTableProps): JSX.Element {
   });
   const focusRow = useRowFocus(gridRef);
   const press = useLongPress();
+  const [editing, setEditing] = useState<EditingCell | null>(null);
   const sizes = layout.columns.map(
     (column) => table.getColumn(column)?.getSize() ?? defaultColumnWidth(column),
   );
@@ -91,6 +97,15 @@ export function LibraryTable(props: LibraryTableProps): JSX.Element {
             (event.target as Element).closest("select, input, button, summary, [role=separator]")
           ) {
             return;
+          }
+          if (event.key === "F2" && props.onEditField && selection.active !== null) {
+            const column = layout.columns.find(isEditableColumn);
+            const source = sources[selection.active];
+            if (column && source) {
+              event.preventDefault();
+              setEditing({ id: source.id, column });
+              return;
+            }
           }
           handleGridKey(event, {
             rowIds,
@@ -134,6 +149,12 @@ export function LibraryTable(props: LibraryTableProps): JSX.Element {
                 top={item.start - margin}
                 gridTemplateColumns={gridTemplateColumns}
                 tabbable={props.focused && item.index === (selection.active ?? 0)}
+                editing={editing?.id === source.id ? editing.column : null}
+                onEditCell={(column) => setEditing({ id: source.id, column })}
+                onEditDone={() => {
+                  setEditing(null);
+                  focusRow(item.index);
+                }}
                 press={press}
                 onLongPress={() => onSelectionChange(toggleTouchRow(selection, rowIds, item.index))}
                 onSelect={(event) =>
@@ -148,80 +169,6 @@ export function LibraryTable(props: LibraryTableProps): JSX.Element {
           })}
         </div>
       </div>
-    </div>
-  );
-}
-
-function LibraryTableRow({
-  source,
-  index,
-  top,
-  gridTemplateColumns,
-  tabbable,
-  layout,
-  selection,
-  annotationCounts,
-  valuesByPath,
-  onSelect,
-  press,
-  onLongPress,
-  onOpen,
-  onChangeStatus,
-}: LibraryTableProps & {
-  readonly source: SourceSummary;
-  readonly index: number;
-  readonly top: number;
-  readonly gridTemplateColumns: string;
-  readonly tabbable: boolean;
-  readonly onSelect: (event: MouseEvent<HTMLElement>) => void;
-  readonly press: LongPress;
-  readonly onLongPress: () => void;
-}): JSX.Element {
-  const selected = selection.ids.has(source.id);
-  return (
-    // Rows take keyboard input through the grid's roving focus; see handleGridKey.
-    // eslint-disable-next-line jsx-a11y/click-events-have-key-events
-    <div
-      className={`library-table-row${selected ? " is-selected" : ""}`}
-      role="row"
-      aria-rowindex={index + 2}
-      aria-selected={selected}
-      data-row-index={index}
-      tabIndex={tabbable ? 0 : -1}
-      title="Double-click or press Enter to open"
-      style={{ gridTemplateColumns, transform: `translateY(${String(top)}px)` }}
-      {...press.bind(onLongPress)}
-      onClick={(event) => {
-        if (!press.consumeClick()) {
-          onSelect(event);
-        }
-      }}
-      onDoubleClick={() => {
-        // While selecting by touch, a quick second tap toggles; it must not open the source.
-        if (!selection.touch) {
-          onOpen(source.id);
-        }
-      }}
-    >
-      {layout.columns.map((column: LibraryColumn, columnIndex) => (
-        <span
-          key={column}
-          role="gridcell"
-          aria-colindex={columnIndex + 1}
-          className={`is-${columnClass(column)}`}
-        >
-          {column === "status" && onChangeStatus ? (
-            <StatusPicker source={source} onChange={onChangeStatus} />
-          ) : (
-            <TableValue
-              source={source}
-              column={column}
-              annotations={annotationCounts.get(source.id) ?? 0}
-              selected={valuesByPath.get(source.path)}
-            />
-          )}
-        </span>
-      ))}
     </div>
   );
 }

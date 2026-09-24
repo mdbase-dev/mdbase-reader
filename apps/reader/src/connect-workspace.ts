@@ -280,18 +280,45 @@ export class ConnectWorkspaceGateway implements ReaderWorkspaceGateway {
   }
 
   async createAnnotation(request: AnnotationCreationRequest): Promise<Annotation> {
-    const result = await createAnnotation(
-      {
-        annotations: this.annotationsRepository,
-        assets: this.annotationAssets,
-        sources: this.sources,
-        ...this.runtime,
-      },
-      request,
-    );
-    const current = this.#annotationsBySource.get(request.sourceId) ?? [];
-    this.#annotationsBySource.set(request.sourceId, [result.annotation, ...current]);
-    return result.annotation;
+    // Opt in from DevTools: sessionStorage.setItem("reader.annotationTiming", "1").
+    // No IDs, paths, text, or image bytes are logged.
+    const timingEnabled = (() => {
+      try {
+        return globalThis.sessionStorage.getItem("reader.annotationTiming") === "1";
+      } catch {
+        return false;
+      }
+    })();
+    const timings: { stage: string; ms: number }[] = [];
+    const start = timingEnabled ? performance.now() : 0;
+    try {
+      const result = await createAnnotation(
+        {
+          annotations: this.annotationsRepository,
+          assets: this.annotationAssets,
+          sources: this.sources,
+          ...this.runtime,
+          ...(timingEnabled
+            ? { onTiming: (stage: string, ms: number) => timings.push({ stage, ms }) }
+            : {}),
+        },
+        request,
+      );
+      const current = this.#annotationsBySource.get(request.sourceId) ?? [];
+      this.#annotationsBySource.set(request.sourceId, [result.annotation, ...current]);
+      return result.annotation;
+    } finally {
+      if (timingEnabled) {
+        // Repeated journal marks are listed separately so their cost remains visible.
+        // eslint-disable-next-line no-console
+        console.info("Reader annotation save timing", {
+          kind: request.annotationType,
+          imageBytes: request.attachment?.bytes.byteLength ?? 0,
+          totalMs: Math.round(performance.now() - start),
+          stages: timings.map(({ stage, ms }) => ({ stage, ms: Math.round(ms) })),
+        });
+      }
+    }
   }
 
   async updateAnnotation(annotation: Annotation, body: string): Promise<Annotation> {
@@ -363,6 +390,22 @@ export class ConnectWorkspaceGateway implements ReaderWorkspaceGateway {
       sourceId,
       status,
       changedAt: this.runtime.clock.now(),
+    });
+    this.#replaceSource(updated);
+    return updated;
+  }
+
+  async saveSourceFields(
+    sourceId: SourceId,
+    fields: Readonly<Record<string, unknown>>,
+  ): Promise<Source> {
+    if (!this.sources.updateFields) {
+      throw new Error("This collection cannot edit source fields.");
+    }
+    const updated = await this.sources.updateFields({
+      collectionId: this.collectionId,
+      sourceId,
+      fields,
     });
     this.#replaceSource(updated);
     return updated;

@@ -17,6 +17,7 @@ import type {
   ReadingPosition,
   ReadingStatus,
   Source,
+  SourceFieldChange,
   SourceQuery,
   SourceSummary,
 } from "../domain/source.js";
@@ -54,6 +55,8 @@ export interface SourceRepository {
     readonly status: ReadingStatus;
     readonly changedAt: DateTime;
   }): Promise<Source>;
+  /** Sets frontmatter fields by dotted path; a null value removes the field. */
+  updateFields?(input: SourceFieldChange): Promise<Source>;
   updateCitation(input: {
     readonly collectionId: CollectionId;
     readonly sourceId: SourceId;
