@@ -99,3 +99,39 @@ function highlightColor(color: string | undefined): string {
   }
   return color === "blue" ? "#7bb7e8" : color === "green" ? "#8fcf9e" : "#f2ce63";
 }
+
+/**
+ * A thin filled bar just left of a highlight's text, in page points, so highlights stay findable
+ * in the margin. It carries the highlight's annotation id, so selecting it opens the same card.
+ */
+export function annotationToPdfMarginDecoration(
+  annotation: Annotation,
+): PdfSquareAnnoObject | null {
+  const highlight = annotationToPdfDecoration(annotation);
+  if (highlight?.type !== PdfAnnotationSubtype.HIGHLIGHT) {
+    return null;
+  }
+  const noted = annotation.body
+    .split("\n")
+    .some((line) => line.trim() !== "" && !line.trimStart().startsWith(">"));
+  const { origin, size } = highlight.rect;
+  return {
+    id: `${highlight.id}:margin`,
+    type: PdfAnnotationSubtype.SQUARE,
+    pageIndex: highlight.pageIndex,
+    rect: {
+      origin: { x: Math.max(2, origin.x - 9), y: origin.y },
+      size: { width: 2.5, height: size.height },
+    },
+    contents: "",
+    flags: ["locked", "lockedContents"],
+    color: noted ? "#9d6700" : "#d39f00",
+    strokeColor: "transparent",
+    strokeWidth: 0,
+    strokeStyle: PdfAnnotationBorderStyle.SOLID,
+    opacity: noted ? 0.8 : 0.55,
+    created: new Date(annotation.createdAt),
+    modified: new Date(annotation.modifiedAt ?? annotation.createdAt),
+    custom: { source: "mdbase-reader", annotationId: annotation.id, role: "margin" },
+  };
+}

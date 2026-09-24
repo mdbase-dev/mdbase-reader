@@ -7,6 +7,8 @@ export interface RowSelection {
   readonly active: number | null;
   /** Index a Shift+click or Shift+arrow range extends from. */
   readonly anchor: number | null;
+  /** Entered by a long press: taps toggle rows until nothing is selected. */
+  readonly touch?: boolean;
 }
 
 export const emptyRowSelection: RowSelection = { ids: new Set(), active: null, anchor: null };
@@ -50,6 +52,21 @@ export function selectRow(
     return { ids, active: index, anchor: index };
   }
   return { ids: new Set([id]), active: index, anchor: index };
+}
+
+/** A long press, or a tap while selecting by touch: toggles the row and stays in touch mode. */
+export function toggleTouchRow(
+  current: RowSelection,
+  rows: readonly SourceId[],
+  index: number,
+): RowSelection {
+  const next = selectRow(
+    current.touch ? current : { ...current, ids: new Set() },
+    rows,
+    index,
+    "toggle",
+  );
+  return next.ids.size > 0 ? { ...next, touch: true } : { ...next, touch: false };
 }
 
 export function selectAllRows(rows: readonly SourceId[], active: number | null): RowSelection {
@@ -100,5 +117,10 @@ export function pruneRowSelection(current: RowSelection, rows: readonly SourceId
   if (ids.size === current.ids.size && clamp(current.active) === current.active) {
     return current;
   }
-  return { ids, active: clamp(current.active), anchor: clamp(current.anchor) };
+  return {
+    ids,
+    active: clamp(current.active),
+    anchor: clamp(current.anchor),
+    ...(current.touch && ids.size > 0 ? { touch: true } : {}),
+  };
 }

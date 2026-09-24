@@ -72,16 +72,23 @@ action, and one stylesheet section for each redesigned component.
   tab strip fading alongside the header. `mod+\` toggles the sidebar and `mod+shift+\` the
   notes panel. A side panel alone in its group has no close button, and its pane menu appears
   on hover.
-- **Shortcuts from inside a saved page.** Once the reader clicks into an HTML document, key
-  events stay in its frame. `html-keyboard.ts` forwards modifier shortcuts, Escape, F6, `/`
-  and Alt+arrows to Reader, leaving the page's clipboard and editing keys alone. Readium
-  frames do not forward keys yet.
+- **Shortcuts from inside a document.** Once the reader clicks into a saved page or an EPUB,
+  key events stay in its frame. `forwardApplicationShortcut` (`reading-surface/keyboard.ts`)
+  forwards modifier shortcuts, Escape, F6, `/` and Alt+arrows to Reader, leaving the page's
+  clipboard and editing keys alone. The HTML renderer attaches it to its frame; the EPUB
+  renderer to every Readium frame as it appears (`epub-frames.ts`).
 - **Text settings.** The `typography` surface capability (`ReadingTypography`: scale, measure,
   face) is implemented by the HTML renderer (an injected stylesheet) and the EPUB renderer
   (Readium preferences). PDFs keep their layout. The Display menu sets text size, line length
   and typeface, stored with the other shell preferences.
-- **Highlights and cards.** Saved pages draw a margin marker beside each highlight, darker when
-  it carries a note. Clicking one selects its card. The selected card and the active passage
+- **Highlights and cards.** Saved pages and EPUBs draw a margin marker beside each highlight,
+  darker when it carries a note; clicking one selects its card. Both use `MarginMarkers`
+  (`reading-surface`), which locates the quotation with `locateTextQuote`, places the bar beside
+  the passage's own block (so paginated columns work), and measures its own origin and scale
+  (Readium zooms the book's body). Readium's template decorations were not used: they render in
+  a shadow root that template stylesheets cannot reach, and are offset by the book's zoom. PDFs
+  get a thin filled EmbedPDF annotation left of each text highlight, carrying the highlight's
+  annotation id so selecting it opens the same card. The selected card and the active passage
   share one gold tint. Cards no longer say "Unanchored note" or "No passage anchor". A card
   without a passage selector shows its location label and omits _Show in document_.
 - **Sidebar.** The filter searches the whole library. Without a query the sidebar lists views,
@@ -122,6 +129,10 @@ action, and one stylesheet section for each redesigned component.
   writes them into the view file's presentation options, and a newer save discards the local
   draft. The built-in _All sources_ view keeps its layout on the device. _Reset columns and
   layout_ returns to the view's saved layout. Filters stay session state.
+- **Touch.** A long press on a row or card selects it and enters touch selection: taps then
+  toggle rows (a quick second tap does not open), the toolbar shows from one selected source,
+  and the mode ends when nothing is selected. Moving the finger cancels the press, so scrolling
+  never selects.
 - **Selection.** Click selects; Shift extends; Ctrl/⌘ toggles; double-click or Enter opens
   (Ctrl/⌘+Enter beside). In the grid, arrows, j/k, Page and Home/End move focus (Shift extends
   the range), Space toggles, Ctrl/⌘+A selects all, and Escape keeps only the focused row. The

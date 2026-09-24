@@ -1242,9 +1242,12 @@
   font-weight: 600;
 }
 
-.library-table-row:not(.is-header) {
+.library-table-row:not(.is-header),
+.library-card-hit-target {
   cursor: default;
   user-select: none;
+  /* A long press selects; iOS would otherwise open its link callout. */
+  -webkit-touch-callout: none;
 }
 
 .library-table-row:not(.is-header):hover {

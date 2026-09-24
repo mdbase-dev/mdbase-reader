@@ -196,12 +196,14 @@ describe("EmbedPDF saved-decoration synchronization", () => {
     controller.setAnnotations([savedHighlight]);
     controller.setActiveAnnotation(savedHighlight);
 
-    expect(fixture.importAnnotations).toHaveBeenCalledOnce();
+    // One import each for the highlight and its margin mark, however often annotations are set.
+    expect(fixture.importAnnotations).toHaveBeenCalledTimes(2);
     expect(fixture.selectAnnotation).not.toHaveBeenCalled();
 
     fixture.emitLoaded();
 
     expect(fixture.annotation("mdbase-reader:ann-1")).toBeDefined();
+    expect(fixture.annotation("mdbase-reader:ann-1:margin")).toBeDefined();
     expect(fixture.selectAnnotation).toHaveBeenCalledWith(13, "mdbase-reader:ann-1");
   });
 
@@ -212,8 +214,9 @@ describe("EmbedPDF saved-decoration synchronization", () => {
     controller.setAnnotations([savedHighlight]);
     fixture.emitLoaded({ processQueue: false });
 
-    expect(fixture.importAnnotations).toHaveBeenCalledTimes(2);
+    expect(fixture.importAnnotations).toHaveBeenCalledTimes(4);
     expect(fixture.annotation("mdbase-reader:ann-1")).toBeDefined();
+    expect(fixture.annotation("mdbase-reader:ann-1:margin")).toBeDefined();
   });
 
   it("updates and removes transient decorations without modifying the PDF", () => {

@@ -1,5 +1,5 @@
-import { forwardApplicationShortcut } from "./html-keyboard.js";
-import { HtmlMarginMarkers } from "./html-margin-markers.js";
+import { MarginMarkers, forwardApplicationShortcut } from "@mdbase-reader/reading-surface";
+
 import { htmlLocator, htmlSelectionDraft, locateHtmlTarget } from "./html-range.js";
 import { applyHtmlTypography } from "./html-typography.js";
 
@@ -30,7 +30,7 @@ export class HtmlDocumentRuntime {
   readonly #onScroll = (): void => this.emitLocation();
   readonly #onKeyDown = (event: KeyboardEvent): void =>
     forwardApplicationShortcut(event, this.#frame.ownerDocument);
-  readonly #markers: HtmlMarginMarkers;
+  readonly #markers: MarginMarkers;
   // Images and fonts reflow the page after load; markers follow the text.
   readonly #reflow =
     typeof ResizeObserver === "undefined" ? null : new ResizeObserver(() => this.#markers.layout());
@@ -51,7 +51,7 @@ export class HtmlDocumentRuntime {
     document.addEventListener("keyup", this.#onSelection);
     document.addEventListener("keydown", this.#onKeyDown);
     view.addEventListener("scroll", this.#onScroll, { passive: true });
-    this.#markers = new HtmlMarginMarkers(document, (annotationId) => {
+    this.#markers = new MarginMarkers(document, (annotationId) => {
       for (const listener of this.#activationListeners) {
         listener(annotationId);
       }

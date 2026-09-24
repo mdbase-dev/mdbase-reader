@@ -94,20 +94,14 @@ function readerStyle(document: Document): HTMLStyleElement {
     ::highlight(reader-annotations) { background: rgba(247, 210, 78, .42); text-decoration: underline rgba(211, 159, 0, .38) 1px; }
     ::highlight(reader-active-annotation) { background: rgba(247, 188, 48, .68); text-decoration: underline rgba(157, 103, 0, .86) 2px; }
     mark[data-reader-annotation] { background: rgba(247, 210, 78, .42); color: inherit; }
-    html { position: relative; }
-    [data-mdbase-reader="margin"] { position: absolute; inset: 0 auto auto 0; width: 0; height: 0; }
-    [data-mdbase-reader="margin"] > span { position: absolute; width: 3px; border-radius: 3px; background: rgba(211, 159, 0, .45); cursor: pointer; transition: background .15s, width .15s, transform .15s; }
-    [data-mdbase-reader="margin"] > span::after { content: ""; position: absolute; inset: -2px -8px; }
-    [data-mdbase-reader="margin"] > span.has-note { background: rgba(157, 103, 0, .7); }
-    [data-mdbase-reader="margin"] > span:hover, [data-mdbase-reader="margin"] > span.is-active { width: 4px; transform: translateX(-.5px); background: #b07a00; }
     @media (prefers-color-scheme: dark) {
       :root { background: #211d1e; color: #e7e3dc; }
       blockquote { color: #b8b1a7; }
       pre { background: rgba(255,255,255,.06); }
     }
     @media (max-width: 640px) { body { padding: 3rem 1.5rem 7rem; font-size: 17px; } }
-    @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } [data-mdbase-reader="margin"] > span { transition: none; } }
-    @media (forced-colors: active) { :root { background: Canvas; color: CanvasText; } blockquote { color: CanvasText; } [data-mdbase-reader="margin"] > span { background: Highlight; } }
+    @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
+    @media (forced-colors: active) { :root { background: Canvas; color: CanvasText; } blockquote { color: CanvasText; } }
   `;
   return style;
 }

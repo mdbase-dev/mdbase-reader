@@ -3,7 +3,8 @@ import { EpubNavigator, EpubPreferences, type EpubNavigatorListeners } from "@re
 import { HttpFetcher, Locator, LocatorLocations, Manifest, Publication } from "@readium/shared";
 
 import { createEpubAnnotationActivations } from "./epub-annotation-activation.js";
-import { annotationToEpubDecoration } from "./epub-decoration.js";
+import { annotationToEpubDecoration, applyAnnotationDecorations } from "./epub-decoration.js";
+import { EpubFrameEnhancements, clearFrameSelections } from "./epub-frames.js";
 import { sessionReadiumLocatorForPublication, stableReadiumLocator } from "./epub-locator.js";
 import { safePublicationFetch } from "./epub-safe-fetch.js";
 import { extractPublicationText } from "./epub-text.js";
@@ -125,6 +126,7 @@ export async function createReadiumRuntime(input: {
   );
   await navigator.load();
   const annotationActivations = createEpubAnnotationActivations(navigator);
+  const frames = new EpubFrameEnhancements(input.container);
 
   return {
     currentLocator: () => stableReadiumLocator(navigator.currentLocator, input.publicationBaseUrl),
@@ -150,31 +152,27 @@ export async function createReadiumRuntime(input: {
       selectionListeners.add(listener);
       return () => selectionListeners.delete(listener);
     },
-    onAnnotationActivated: annotationActivations.subscribe,
+    onAnnotationActivated(listener) {
+      const stops = [annotationActivations.subscribe(listener), frames.onActivated(listener)];
+      return () => stops.forEach((stop) => stop());
+    },
     setAnnotations(annotations) {
-      navigator.applyDecorations(
-        annotations.flatMap((annotation) => {
-          const decoration = annotationToEpubDecoration(
-            annotation,
-            publication,
-            input.publicationBaseUrl,
-          );
-          return decoration ? [decoration] : [];
-        }),
-        "mdbase-reader-annotations",
-      );
+      applyAnnotationDecorations(navigator, annotations, publication, input.publicationBaseUrl);
+      frames.setAnnotations(annotations);
     },
     setActiveAnnotation(annotation) {
       const decoration = annotation
         ? annotationToEpubDecoration(annotation, publication, input.publicationBaseUrl, true)
         : null;
       navigator.applyDecorations(decoration ? [decoration] : [], "mdbase-reader-active-annotation");
+      frames.setActive(decoration && annotation ? annotation.id : null);
     },
     setTypography: (typography) => navigator.submitPreferences(epubPreferences(typography)),
     async destroy() {
       locationListeners.clear();
       selectionListeners.clear();
       annotationActivations.destroy();
+      frames.destroy();
       await navigator.destroy();
     },
   };
@@ -194,12 +192,6 @@ function readiumPublication(value: unknown): Publication {
     throw new Error("Readium could not parse the publication manifest.");
   }
   return new Publication({ manifest, fetcher: new HttpFetcher(safePublicationFetch) });
-}
-
-function clearFrameSelections(container: HTMLElement): void {
-  container
-    .querySelectorAll<HTMLIFrameElement>(".readium-navigator-iframe")
-    .forEach((frame) => frame.contentWindow?.getSelection()?.removeAllRanges());
 }
 
 export function publicationPositions(publication: Publication): Locator[] {

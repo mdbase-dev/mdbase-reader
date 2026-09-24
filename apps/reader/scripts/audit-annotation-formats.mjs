@@ -50,6 +50,18 @@ export async function auditAnnotationFormats(page, { open, screenshot }) {
   await area.getByRole("button", { name: "Cancel", exact: true }).click();
   await expect(area).toHaveCount(0);
 
+  // A text highlight on the PDF: EmbedPDF draws it and its margin mark (see pdf-decoration.ts).
+  const pageImage = await pdf.locator("img").first().boundingBox();
+  await page.mouse.move(pageImage.x + 70, pageImage.y + 75);
+  await page.mouse.down();
+  await page.mouse.move(pageImage.x + 300, pageImage.y + 78, { steps: 20 });
+  await page.mouse.up();
+  const pdfHighlight = page.getByRole("region", { name: "New highlight" });
+  await pdfHighlight.getByRole("button", { name: "Save highlight", exact: true }).click();
+  await expect(pdfHighlight).toHaveCount(0);
+  await page.waitForTimeout(1000);
+  await screenshot("annotation-pdf-highlight-margin");
+
   await open(21);
   const epub = page.locator(".document-session.is-active .epub-viewer");
   await expect(epub).toBeVisible({ timeout: 60000 });
@@ -97,8 +109,38 @@ export async function auditAnnotationFormats(page, { open, screenshot }) {
     )
     .toEqual([]);
   await screenshot("annotation-epub-saved");
+  // A margin mark sits beside the new highlight, inside the book's frame, level with its text.
+  const alignment = async () =>
+    paragraph.evaluate((element) => {
+      const doc = element.ownerDocument;
+      const mark = doc.querySelector("[data-mdbase-reader='margin'] > span");
+      if (!mark) {
+        return null;
+      }
+      const range = doc.createRange();
+      range.setStart(element.firstChild, 0);
+      range.setEnd(element.firstChild, 1);
+      return Math.abs(mark.getBoundingClientRect().top - range.getBoundingClientRect().top);
+    });
+  await expect.poll(alignment, { timeout: 15000 }).not.toBeNull();
+  expect(await alignment()).toBeLessThan(4);
+  await screenshot("annotation-epub-margin");
+  // Shortcuts reach Reader with keyboard focus inside the book's frame.
+  await paragraph.click({ position: { x: 4, y: 4 } });
+  await paragraph.press("Control+.");
+  await expect(page.getByRole("button", { name: "Reading mode" })).toHaveAttribute(
+    "aria-pressed",
+    "true",
+  );
+  await paragraph.press("Escape");
+  await expect(page.getByRole("button", { name: "Reading mode" })).toHaveAttribute(
+    "aria-pressed",
+    "false",
+  );
   return [
     "Real PDF area selection retains its crop image and comment in memory across source switches",
+    "Real PDF text selection saves a highlight drawn with its margin mark",
     "Real EPUB mouse selection creates an anchored highlight and opens it from the inspector",
+    "EPUB highlights get margin marks, and shortcuts work from inside the book",
   ];
 }

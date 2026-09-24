@@ -6,16 +6,23 @@ import {
   useRef,
   useState,
   type JSX,
+  type MouseEvent,
   type RefObject,
 } from "react";
 
 import { defaultColumnWidth, type LibraryColumn } from "./library-columns.js";
 import { handleGridKey } from "./library-grid-keys.js";
-import { selectRow, selectionGesture, type RowSelection } from "./library-row-selection.js";
+import {
+  selectRow,
+  selectionGesture,
+  toggleTouchRow,
+  type RowSelection,
+} from "./library-row-selection.js";
 import { StatusPicker, TableValue } from "./LibraryCells.js";
 import { LibraryTableHead } from "./LibraryTableHead.js";
 import { columnClass } from "./LibraryTableHeader.js";
 import { useLibraryColumns } from "./use-library-columns.js";
+import { hasModifier, useLongPress, type LongPress } from "./use-long-press.js";
 
 import type { LibraryLayout } from "./use-library-layout-draft.js";
 import type { ReadingStatus, SourceId, SourceSummary } from "@mdbase-reader/core";
@@ -60,6 +67,7 @@ export function LibraryTable(props: LibraryTableProps): JSX.Element {
     scrollMargin: offset + headerHeight,
   });
   const focusRow = useRowFocus(gridRef);
+  const press = useLongPress();
   const sizes = layout.columns.map(
     (column) => table.getColumn(column)?.getSize() ?? defaultColumnWidth(column),
   );
@@ -126,9 +134,13 @@ export function LibraryTable(props: LibraryTableProps): JSX.Element {
                 top={item.start - margin}
                 gridTemplateColumns={gridTemplateColumns}
                 tabbable={props.focused && item.index === (selection.active ?? 0)}
+                press={press}
+                onLongPress={() => onSelectionChange(toggleTouchRow(selection, rowIds, item.index))}
                 onSelect={(event) =>
                   onSelectionChange(
-                    selectRow(selection, rowIds, item.index, selectionGesture(event)),
+                    selection.touch && !hasModifier(event)
+                      ? toggleTouchRow(selection, rowIds, item.index)
+                      : selectRow(selection, rowIds, item.index, selectionGesture(event)),
                   )
                 }
               />
@@ -151,6 +163,8 @@ function LibraryTableRow({
   annotationCounts,
   valuesByPath,
   onSelect,
+  press,
+  onLongPress,
   onOpen,
   onChangeStatus,
 }: LibraryTableProps & {
@@ -159,7 +173,9 @@ function LibraryTableRow({
   readonly top: number;
   readonly gridTemplateColumns: string;
   readonly tabbable: boolean;
-  readonly onSelect: (event: { shiftKey: boolean; ctrlKey: boolean; metaKey: boolean }) => void;
+  readonly onSelect: (event: MouseEvent<HTMLElement>) => void;
+  readonly press: LongPress;
+  readonly onLongPress: () => void;
 }): JSX.Element {
   const selected = selection.ids.has(source.id);
   return (
@@ -174,8 +190,18 @@ function LibraryTableRow({
       tabIndex={tabbable ? 0 : -1}
       title="Double-click or press Enter to open"
       style={{ gridTemplateColumns, transform: `translateY(${String(top)}px)` }}
-      onClick={onSelect}
-      onDoubleClick={() => onOpen(source.id)}
+      {...press.bind(onLongPress)}
+      onClick={(event) => {
+        if (!press.consumeClick()) {
+          onSelect(event);
+        }
+      }}
+      onDoubleClick={() => {
+        // While selecting by touch, a quick second tap toggles; it must not open the source.
+        if (!selection.touch) {
+          onOpen(source.id);
+        }
+      }}
     >
       {layout.columns.map((column: LibraryColumn, columnIndex) => (
         <span

@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest";
 
 import {
   emptyRowSelection,
+  toggleTouchRow,
   navigationTarget,
   pruneRowSelection,
   selectRow,
@@ -43,5 +44,17 @@ describe("library row selection", () => {
     const pruned = pruneRowSelection(selected, rows.slice(0, 3));
     expect([...pruned.ids]).toEqual([rows[0]]);
     expect(pruned.active).toBe(2);
+  });
+
+  it("enters touch selection on a long press and leaves it when nothing remains", () => {
+    const pointer = selectRow(emptyRowSelection, rows, 0, "replace");
+    const pressed = toggleTouchRow(pointer, rows, 2);
+    expect([...pressed.ids]).toEqual([rows[2]]);
+    expect(pressed.touch).toBe(true);
+    const more = toggleTouchRow(pressed, rows, 4);
+    expect([...more.ids]).toEqual([rows[2], rows[4]]);
+    const fewer = toggleTouchRow(toggleTouchRow(more, rows, 2), rows, 4);
+    expect(fewer.ids.size).toBe(0);
+    expect(fewer.touch).toBe(false);
   });
 });

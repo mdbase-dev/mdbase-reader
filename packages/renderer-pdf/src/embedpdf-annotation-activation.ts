@@ -20,9 +20,7 @@ export function createEmbedPdfAnnotationActivations(
     const selected = capability
       .getSelectedAnnotations()
       .find(({ object }) => object.id.startsWith("mdbase-reader:"));
-    const nextId = selected
-      ? annotationId(selected.object.id.slice("mdbase-reader:".length))
-      : null;
+    const nextId = selected ? annotationId(readerAnnotationId(selected.object)) : null;
     if (nextId && nextId !== selectedId) {
       listeners.forEach((listener) => listener(nextId));
     }
@@ -38,4 +36,12 @@ export function createEmbedPdfAnnotationActivations(
       listeners.clear();
     },
   };
+}
+
+/** The Reader annotation a decoration stands for; margin marks share their highlight's id. */
+function readerAnnotationId(object: { readonly id: string; readonly custom?: unknown }): string {
+  const custom = object.custom;
+  const declared: unknown =
+    custom !== null && typeof custom === "object" ? Reflect.get(custom, "annotationId") : undefined;
+  return typeof declared === "string" ? declared : object.id.slice("mdbase-reader:".length);
 }

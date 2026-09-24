@@ -523,7 +523,7 @@ export function LibraryWorkspace({
         )}
       </div>
 
-      {selectedSources.length > 1 ? (
+      {selectedSources.length > 1 || (visibleSelection.touch && selectedSources.length > 0) ? (
         <LibraryBulkBar
           selected={selectedSources}
           onClear={() => setSelection(emptyRowSelection)}

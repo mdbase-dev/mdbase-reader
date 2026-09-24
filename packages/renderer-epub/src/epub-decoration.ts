@@ -1,4 +1,4 @@
-import { DecorationStyleType, type Decoration } from "@readium/navigator";
+import { DecorationStyleType, type Decoration, type EpubNavigator } from "@readium/navigator";
 
 import { sessionReadiumLocatorForPublication } from "./epub-locator.js";
 
@@ -57,4 +57,20 @@ function highlightTint(color: string | undefined): string {
     default:
       return "#f2cf63";
   }
+}
+
+/** Annotation highlights, as one Readium decoration group. */
+export function applyAnnotationDecorations(
+  navigator: Pick<EpubNavigator, "applyDecorations">,
+  annotations: readonly Annotation[],
+  publication: Publication,
+  publicationBaseUrl: string,
+): void {
+  navigator.applyDecorations(
+    annotations.flatMap((annotation) => {
+      const decoration = annotationToEpubDecoration(annotation, publication, publicationBaseUrl);
+      return decoration ? [decoration] : [];
+    }),
+    "mdbase-reader-annotations",
+  );
 }

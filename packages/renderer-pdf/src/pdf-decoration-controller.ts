@@ -1,4 +1,4 @@
-import { annotationToPdfDecoration } from "./pdf-decoration.js";
+import { annotationToPdfDecoration, annotationToPdfMarginDecoration } from "./pdf-decoration.js";
 
 import type { PdfAnnotationObject } from "@embedpdf/models";
 import type { AnnotationPlugin } from "@embedpdf/plugin-annotation";
@@ -95,9 +95,13 @@ export function createPdfDecorationController(
     setAnnotations(annotations) {
       const next = new Map<string, PdfAnnotationObject>();
       for (const annotation of annotations) {
-        const decoration = annotationToPdfDecoration(annotation);
-        if (decoration) {
-          next.set(decoration.id, decoration);
+        for (const decoration of [
+          annotationToPdfDecoration(annotation),
+          annotationToPdfMarginDecoration(annotation),
+        ]) {
+          if (decoration) {
+            next.set(decoration.id, decoration);
+          }
         }
       }
       desired = next;

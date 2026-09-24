@@ -1,11 +1,25 @@
 import { useVirtualizer } from "@tanstack/react-virtual";
-import { useEffect, useMemo, useRef, useState, type JSX, type RefObject } from "react";
+import {
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type JSX,
+  type MouseEvent,
+  type RefObject,
+} from "react";
 
 import { publicationDateLabel } from "./library-publication-date.js";
-import { selectRow, selectionGesture, type RowSelection } from "./library-row-selection.js";
+import {
+  selectRow,
+  selectionGesture,
+  toggleTouchRow,
+  type RowSelection,
+} from "./library-row-selection.js";
 import { ReadingStatus, formatLabel } from "./LibraryCells.js";
 import { useOffsetTop } from "./LibraryTable.js";
 import { sourceFormat } from "./mdbase-library-views.js";
+import { hasModifier, useLongPress, type LongPress } from "./use-long-press.js";
 
 import type { SourceId, SourceSummary } from "@mdbase-reader/core";
 
@@ -32,6 +46,7 @@ export function LibraryCards({
   const gridRef = useRef<HTMLDivElement>(null);
   const width = useElementWidth(scrollRef);
   const offset = useOffsetTop(gridRef);
+  const press = useLongPress();
   const perRow = Math.max(
     1,
     Math.floor((width - gridPadding * 2 + cardGap) / (minimumCardWidth + cardGap)),
@@ -74,8 +89,15 @@ export function LibraryCards({
                   key={source.id}
                   source={source}
                   selected={selection.ids.has(source.id)}
+                  press={press}
+                  touchSelecting={selection.touch === true}
+                  onLongPress={() => onSelectionChange(toggleTouchRow(selection, rowIds, index))}
                   onSelect={(event) =>
-                    onSelectionChange(selectRow(selection, rowIds, index, selectionGesture(event)))
+                    onSelectionChange(
+                      selection.touch && !hasModifier(event)
+                        ? toggleTouchRow(selection, rowIds, index)
+                        : selectRow(selection, rowIds, index, selectionGesture(event)),
+                    )
                   }
                   onOpen={() => onOpen(source.id)}
                 />
@@ -92,11 +114,17 @@ function LibraryCard({
   source,
   selected,
   onSelect,
+  press,
+  touchSelecting,
+  onLongPress,
   onOpen,
 }: {
   readonly source: SourceSummary;
   readonly selected: boolean;
-  readonly onSelect: (event: { shiftKey: boolean; ctrlKey: boolean; metaKey: boolean }) => void;
+  readonly onSelect: (event: MouseEvent<HTMLElement>) => void;
+  readonly press: LongPress;
+  readonly touchSelecting: boolean;
+  readonly onLongPress: () => void;
   readonly onOpen: () => void;
 }): JSX.Element {
   return (
@@ -106,8 +134,17 @@ function LibraryCard({
         className="library-card-hit-target"
         aria-label={`Select ${source.title}`}
         aria-pressed={selected}
-        onClick={onSelect}
-        onDoubleClick={onOpen}
+        {...press.bind(onLongPress)}
+        onClick={(event) => {
+          if (!press.consumeClick()) {
+            onSelect(event);
+          }
+        }}
+        onDoubleClick={() => {
+          if (!touchSelecting) {
+            onOpen();
+          }
+        }}
         onKeyDown={(event) => {
           if (event.key === "Enter" && (event.ctrlKey || event.metaKey)) {
             event.preventDefault();
