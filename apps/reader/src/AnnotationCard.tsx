@@ -2,6 +2,7 @@ import { useEffect, useRef, useSyncExternalStore, type JSX, type RefObject } fro
 
 import { hasPassageAnchor } from "./annotation-anchor.js";
 import { annotationBodyContent } from "./annotation-body-content.js";
+import { scrollAnnotationCard } from "./annotation-card-scroll.js";
 import { AnnotationBodyEditor } from "./AnnotationEditor.js";
 import { AnnotationImage, type AnnotationFileReader } from "./AnnotationImage.js";
 import { FocusIcon } from "./icons.js";
@@ -117,13 +118,8 @@ function annotationKindLabel(type: string): string {
 function useScrollToEditing(editing: boolean): RefObject<HTMLDivElement | null> {
   const ref = useRef<HTMLDivElement>(null);
   useEffect(() => {
-    if (editing) {
-      ref.current?.scrollIntoView({
-        block: "nearest",
-        behavior: globalThis.matchMedia("(prefers-reduced-motion: reduce)").matches
-          ? "auto"
-          : "smooth",
-      });
+    if (editing && ref.current) {
+      scrollAnnotationCard(ref.current);
     }
   }, [editing]);
   return ref;
