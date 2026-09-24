@@ -1,0 +1,95 @@
+import { useCallback, useEffect, useRef, useState } from "react";
+
+import { intentKey, isExtensionMessage, type CaptureIntent } from "./messages.js";
+import { captureTab, readSelection, watchTabSelection, type PageCapture } from "./page-capture.js";
+
+import type { QuoteSelector } from "@mdbase-reader/core";
+
+export interface PageLink {
+  readonly capture: PageCapture | null;
+  /** The tab left the captured page; activeTab access ended with it. */
+  readonly navigated: boolean;
+  /** Changes each time the reader invokes the extension, so the panel can focus the right field. */
+  readonly invocation: { readonly intent: CaptureIntent; readonly at: number } | null;
+  readonly readPage: () => Promise<PageCapture>;
+  readonly setSelection: (selection: QuoteSelector | null) => void;
+}
+
+/**
+ * Keeps the panel attached to its tab: reads the page once, then follows new selections
+ * without re-reading the document, and notices when the tab navigates away.
+ */
+export function usePageCapture(tabId: number, onProblem: (message: string) => void): PageLink {
+  const [capture, setCapture] = useState<PageCapture | null>(null);
+  const [navigated, setNavigated] = useState(false);
+  const [invocation, setInvocation] = useState<PageLink["invocation"]>(null);
+  const problem = useRef(onProblem);
+  useEffect(() => {
+    problem.current = onProblem;
+  }, [onProblem]);
+
+  const setSelection = useCallback((selection: QuoteSelector | null) => {
+    setCapture((current) => (current?.kind === "html" ? { ...current, selection } : current));
+  }, []);
+  const readPage = useCallback(async (): Promise<PageCapture> => {
+    const value = await captureTab(tabId);
+    setCapture(value);
+    setNavigated(false);
+    if (value.kind === "html") {
+      await watchTabSelection(tabId).catch(() => undefined);
+    }
+    return value;
+  }, [tabId]);
+  const followSelection = useCallback(async () => {
+    const selection = await readSelection(tabId);
+    if (selection) {
+      setSelection(selection);
+    }
+  }, [setSelection, tabId]);
+
+  useEffect(() => {
+    const onMessage = (message: unknown, sender: chrome.runtime.MessageSender): void => {
+      if (!isExtensionMessage(message)) {
+        return;
+      }
+      if (message.type === "mdbase-reader/selection" && sender.tab?.id === tabId) {
+        followSelection().catch(() => undefined);
+      }
+      if (message.type === "mdbase-reader/invoke" && message.tabId === tabId) {
+        setInvocation({ intent: message.intent, at: Date.now() });
+        void chrome.storage.session.remove(intentKey(tabId)).catch(() => undefined);
+        // A new invocation restores activeTab access, so a changed page can be read again.
+        (navigated ? readPage() : followSelection()).catch((reason: unknown) =>
+          problem.current(reason instanceof Error ? reason.message : String(reason)),
+        );
+      }
+    };
+    const onUpdated = (updatedTab: number, change: { readonly status?: string }): void => {
+      if (updatedTab === tabId && change.status === "loading") {
+        setNavigated(true);
+      }
+    };
+    chrome.runtime.onMessage.addListener(onMessage);
+    chrome.tabs.onUpdated.addListener(onUpdated);
+    return () => {
+      chrome.runtime.onMessage.removeListener(onMessage);
+      chrome.tabs.onUpdated.removeListener(onUpdated);
+    };
+  }, [followSelection, navigated, readPage, tabId]);
+
+  useEffect(() => {
+    // The intent that opened this panel (e.g. "Add a note" from the context menu).
+    const key = intentKey(tabId);
+    chrome.storage.session
+      .get(key)
+      .then(async ({ [key]: intent }) => {
+        if (intent === "highlight" || intent === "note") {
+          setInvocation({ intent, at: Date.now() });
+        }
+        await chrome.storage.session.remove(key);
+      })
+      .catch(() => undefined);
+  }, [tabId]);
+
+  return { capture, navigated, invocation, readPage, setSelection };
+}

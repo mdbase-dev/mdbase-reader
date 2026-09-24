@@ -1,35 +1,28 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 
-import {
-  normalizedUrl,
-  problemMessage,
-  readerSourceUrl,
-  sameNormalizedUrl,
-  sourceForUrl,
-  tabIdParameter,
-} from "./capture-model.js";
+import { problemMessage, readerSourceUrl, sourceForUrl, tabIdParameter } from "./capture-model.js";
 
 import type { ReaderConnectedCollection } from "@mdbase-reader/connect";
 import type { SourceSummary } from "@mdbase-reader/core";
 
 describe("extension capture model", () => {
-  it("normalizes tracking parameters without discarding meaningful query state", () => {
-    expect(normalizedUrl("https://example.com/story/?utm_source=mail&page=2#note")).toBe(
-      "https://example.com/story?page=2",
+  it("asks the store for the page and its submitted URL instead of scanning the library", async () => {
+    const matching = { id: "rabbit" } as SourceSummary;
+    const findByUrl = vi.fn((_collection: string, url: string) =>
+      Promise.resolve(url.includes("submitted") ? matching : null),
     );
+    const list = vi.fn();
+    const collection = {
+      collectionId: "library",
+      sources: { findByUrl, list },
+    } as unknown as ReaderConnectedCollection;
+    await expect(
+      sourceForUrl(collection, "https://example.com/canonical", ["https://example.com/submitted"]),
+    ).resolves.toBe(matching);
+    expect(list).not.toHaveBeenCalled();
   });
 
-  it("ignores legacy source identifiers that are not absolute URLs", () => {
-    const expected = normalizedUrl("https://en.wikipedia.org/wiki/European_rabbit");
-
-    expect(sameNormalizedUrl("10.1234/example", expected)).toBe(false);
-    expect(sameNormalizedUrl("sources/rabbit.md", expected)).toBe(false);
-    expect(
-      sameNormalizedUrl("https://en.wikipedia.org/wiki/European_rabbit#History", expected),
-    ).toBe(true);
-  });
-
-  it("continues a duplicate scan past sources with malformed URLs", async () => {
+  it("falls back to a paged scan that skips sources with malformed URLs", async () => {
     const malformed = { url: "10.1234/example" } as SourceSummary;
     const matching = {
       id: "rabbit",
@@ -38,14 +31,15 @@ describe("extension capture model", () => {
     const collection = {
       collectionId: "library",
       sources: {
-        listPages: async function* () {
-          yield await Promise.resolve({ items: [malformed, matching] });
-        },
+        list: vi
+          .fn()
+          .mockResolvedValueOnce({ items: [malformed], nextCursor: "2" })
+          .mockResolvedValueOnce({ items: [matching] }),
       },
     } as unknown as ReaderConnectedCollection;
 
     await expect(
-      sourceForUrl(collection, "https://en.wikipedia.org/wiki/European_rabbit"),
+      sourceForUrl(collection, "https://www.en.wikipedia.org/wiki/European_rabbit?utm_source=x"),
     ).resolves.toBe(matching);
   });
 

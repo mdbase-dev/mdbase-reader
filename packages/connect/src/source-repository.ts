@@ -31,6 +31,7 @@ import {
   recordPathById,
 } from "./repository-client.js";
 import { writeSourceFields } from "./source-fields.js";
+import * as lookups from "./source-lookups.js";
 
 import type { ReaderConnectClient } from "./repository-client.js";
 import type { QueryRecord } from "@mdbase-dev/connect";
@@ -91,6 +92,12 @@ export class ConnectSourceRepository implements SourceRepository {
       };
     }
   }
+
+  readonly findByUrl: NonNullable<SourceRepository["findByUrl"]> = (collectionId, url, options) =>
+    lookups.findSourceByUrl(this.#query(collectionId, options), url);
+
+  readonly findByCitekeyPrefix: NonNullable<SourceRepository["findByCitekeyPrefix"]> = (id, p, o) =>
+    lookups.findSourcesByCitekeyPrefix(this.#query(id, o), p);
 
   async get(
     collection: CollectionId,
@@ -233,6 +240,14 @@ export class ConnectSourceRepository implements SourceRepository {
     return path;
   }
 
+  /** Runs a filtered query over Reader's own records, remembering each result's path. */
+  #query(collectionId: CollectionId, options: ReaderRequestOptions = {}): lookups.SourceWhere {
+    return async (where) => {
+      const records = await lookups.queryReaderSources(this.client, where, options);
+      return this.#sourceItems({ collectionId, limit: records.length }, records);
+    };
+  }
+
   #sourceItems(
     query: Omit<SourceQuery, "cursor">,
     records: readonly QueryRecord[],
@@ -247,7 +262,7 @@ export class ConnectSourceRepository implements SourceRepository {
         (source) =>
           query.readingStatus === undefined || source.readingStatus === query.readingStatus,
       )
-      .filter((source) => matchesSearch(source, query.search));
+      .filter((source) => lookups.matchesSearch(source, query.search));
   }
 }
 
@@ -255,22 +270,4 @@ function objectValue(value: unknown): Readonly<Record<string, unknown>> {
   return typeof value === "object" && value !== null && !Array.isArray(value)
     ? (value as Readonly<Record<string, unknown>>)
     : {};
-}
-
-function matchesSearch(source: SourceSummary, search: string | undefined): boolean {
-  const normalized = search?.trim().toLocaleLowerCase();
-  return normalized
-    ? [
-        source.title,
-        ...source.creators,
-        ...source.tags,
-        source.publication,
-        source.site,
-        source.published === undefined ? undefined : String(source.published),
-      ]
-        .filter((value): value is string => value !== undefined)
-        .join("\n")
-        .toLocaleLowerCase()
-        .includes(normalized)
-    : true;
 }

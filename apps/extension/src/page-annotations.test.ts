@@ -80,3 +80,32 @@ describe("live-page quote anchoring", () => {
     expect(result.quotes[1]?.exact).toBe("📖 patiently");
   });
 });
+
+describe("context scoring against a different copy of the page", () => {
+  it("prefers the repeat whose surroundings mostly agree, even when not exactly", () => {
+    // The saved reading copy dropped a figure caption the live page had before "The model".
+    document.body.innerHTML =
+      "<p>In the first study the model failed.</p><p>After retraining, the model improved sharply.</p>";
+    const result = pageAnnotations({
+      action: "locate",
+      quotes: [
+        {
+          exact: "the model",
+          prefix: "Figure 2: accuracy by epoch. After retraining, ",
+          suffix: " improved sharply in every trial.",
+        },
+      ],
+    });
+    expect(result.report.shown).toBe(1);
+    expect(result.quotes[0]?.suffix).toContain("improved sharply");
+  });
+
+  it("still refuses to choose between repeats whose context agrees equally", () => {
+    document.body.innerHTML = "<p>see the model here. see the model here.</p>";
+    const result = pageAnnotations({
+      action: "locate",
+      quotes: [{ exact: "the model", prefix: "see ", suffix: " here" }],
+    });
+    expect(result.report.ambiguous).toBe(1);
+  });
+});

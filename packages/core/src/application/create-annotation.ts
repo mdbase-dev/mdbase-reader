@@ -18,6 +18,27 @@ export interface CreateAnnotationDependencies {
   readonly ids: ReaderIdGenerator;
   readonly journal: MutationJournal;
   readonly sources: SourceRepository;
+  /** Optional, content-free timing hook for diagnosing slow saves. */
+  readonly onTiming?: (
+    stage: "journal-start" | "asset-upload" | "annotation-create" | "journal-mark",
+    milliseconds: number,
+  ) => void;
+}
+
+async function timed<T>(
+  dependencies: CreateAnnotationDependencies,
+  stage: "journal-start" | "asset-upload" | "annotation-create" | "journal-mark",
+  operation: () => Promise<T>,
+): Promise<T> {
+  if (!dependencies.onTiming) {
+    return operation();
+  }
+  const start = performance.now();
+  try {
+    return await operation();
+  } finally {
+    dependencies.onTiming(stage, performance.now() - start);
+  }
 }
 
 export interface CreateAnnotationResult {
@@ -100,34 +121,45 @@ export async function createAnnotation(
     attachmentPath,
   );
 
-  await dependencies.journal.start({
-    id: mutationId,
-    operation: "create-annotation",
-    collectionId: request.collectionId,
-    sourceId: request.sourceId,
-    annotationId,
-    ...(attachmentPath ? { assetPath: attachmentPath } : {}),
-  });
+  await timed(dependencies, "journal-start", () =>
+    dependencies.journal.start({
+      id: mutationId,
+      operation: "create-annotation",
+      collectionId: request.collectionId,
+      sourceId: request.sourceId,
+      annotationId,
+      ...(attachmentPath ? { assetPath: attachmentPath } : {}),
+    }),
+  );
 
   try {
     if (attachment && attachmentPath) {
-      if (!dependencies.assets) {
+      const assets = dependencies.assets;
+      if (!assets) {
         throw new DomainError(
           "annotation-assets-unavailable",
           "This Reader connection cannot store annotation images.",
         );
       }
-      await dependencies.assets.store({
-        collectionId: request.collectionId,
-        path: attachmentPath,
-        bytes: attachment.bytes,
-        mediaType: attachment.mediaType,
-        idempotencyKey: mutationId,
-      });
-      await dependencies.journal.mark(mutationId, "asset-stored");
+      await timed(dependencies, "asset-upload", () =>
+        assets.store({
+          collectionId: request.collectionId,
+          path: attachmentPath,
+          bytes: attachment.bytes,
+          mediaType: attachment.mediaType,
+          idempotencyKey: mutationId,
+        }),
+      );
+      await timed(dependencies, "journal-mark", () =>
+        dependencies.journal.mark(mutationId, "asset-stored"),
+      );
     }
-    const created = await dependencies.annotations.create(annotation, mutationId);
-    await dependencies.journal.mark(mutationId, "annotation-created");
+    const created = await timed(dependencies, "annotation-create", () =>
+      dependencies.annotations.create(annotation, mutationId),
+    );
+    await timed(dependencies, "journal-mark", () =>
+      dependencies.journal.mark(mutationId, "annotation-created"),
+    );
     if (transclude) {
       await dependencies.sources.appendAnnotationEmbed({
         collectionId: request.collectionId,
@@ -137,9 +169,13 @@ export async function createAnnotation(
         embed: annotationEmbed(transclude.path),
         idempotencyKey: mutationId,
       });
-      await dependencies.journal.mark(mutationId, "source-transcluded");
+      await timed(dependencies, "journal-mark", () =>
+        dependencies.journal.mark(mutationId, "source-transcluded"),
+      );
     }
-    await dependencies.journal.mark(mutationId, "complete");
+    await timed(dependencies, "journal-mark", () =>
+      dependencies.journal.mark(mutationId, "complete"),
+    );
     return {
       annotation: created,
       assetStored: Boolean(attachment),
@@ -147,7 +183,9 @@ export async function createAnnotation(
     };
   } catch (error) {
     const problem = error instanceof Error ? error.message : "Unknown annotation creation failure";
-    await dependencies.journal.mark(mutationId, "failed", problem);
+    await timed(dependencies, "journal-mark", () =>
+      dependencies.journal.mark(mutationId, "failed", problem),
+    );
     throw error;
   }
 }

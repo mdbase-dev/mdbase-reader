@@ -77,10 +77,52 @@ absence verified. No production collection was touched. No Connect or Reader dep
 The receiving Reader app must be built/deployed with the deep-link changes for remote source links
 to open the exact document.
 
+## Side panel, citations and page status (2026-09-24)
+
+- The UI is a per-tab side panel (`chrome.sidePanel`), opened from the toolbar, **Alt+Shift+S**,
+  **Alt+Shift+H** or the selection context menu. A small injected listener reports
+  `selectionchange` to the panel, which then reads only the selection, not the whole document.
+  Navigation of the tab ends `activeTab`; the panel says so and re-reads the page on the next
+  invocation.
+- Drafts (title, tags, notes, highlight comment, colour, tags and the selected passage) are kept in
+  `chrome.storage.session` per tab and normalized page URL, and removed when the tab closes.
+- Connect grants and Reader's mutation journal live in `chrome.storage.local` behind a synchronous
+  `Storage` mirror, so the service worker and panel share them.
+- `SourceRepository.findByUrl` and `findByCitekeyPrefix` query `reader-source` records in the
+  store (`url`/`original_url` contain a host+path key; `csl.id` prefix) instead of paging through
+  the library. `normalizedSourceUrl` in core drops tracking parameters, `www.`, AMP variants, the
+  AMP cache host and trailing slashes, and orders remaining parameters.
+- Anchoring a live-page selection in the saved copy scores repeats by agreeing prefix and suffix
+  characters; the best repeat is used only with at least four agreeing characters and a strict
+  lead over the next. Equal scores remain ambiguous.
+- Citation: DOI from `citation_doi`, PRISM, Dublin Core, JSON-LD, the URL (doi.org, `/doi/…`) or
+  arXiv (`10.48550/arXiv.<id>`), resolved through doi.org content negotiation (CORS-enabled; the
+  request carries only the DOI and omits credentials). Registry bookkeeping (`reference`,
+  `license`, `indexed`…) and invalid fields are dropped so the result validates as Reader CSL;
+  embedded tags fill gaps and are the fallback. Only new sources receive a citation; a failure to
+  store it is reported without undoing the saved source.
+- PDFs in Chrome's viewer (`document.contentType === "application/pdf"`, or a `.pdf` URL that
+  cannot be scripted) are downloaded by a script in the tab, capped at 40 MB, and imported as PDF
+  sources with their URL recorded for later duplicate checks.
+- Open shadow roots are flattened into the captured DOM with slotted light content in place.
+- Page status is opt-in and holds the optional `https://*/*` permission only while enabled.
+
+Validation: unit suites in core (`source-url`), connect (`source-lookup-repository`), web-capture
+(`scholarly-metadata`, including a real Crossref response) and the extension (storage, drafts,
+opt-in, manifest, capture, anchoring, writer, controller and UI). A Playwright Chromium smoke run
+loaded the built extension and exercised the real panel page against fixture publisher and PDF
+pages: service-worker start, DOI citation preview, live selection, draft restore after reload and
+PDF recognition, with no console errors. That run granted host access in a test copy of the
+manifest in place of `activeTab`, and did not sign in to Connect, so saving, citation storage and
+the page-status badge were not exercised end to end.
+
 ## Remaining boundaries
 
-Selection capture currently targets the top-level page, not cross-origin embedded frames. Live
-highlights are a projection, not the canonical annotation. Draft comments are not persisted across
-forced reloads or popup closure. Same-popup retry identity is not cross-window atomic deduplication.
-Missing passages in Readability's saved copy require opening that copy in Reader and selecting the
+Selection capture targets the top-level page, not cross-origin embedded frames or text inside
+shadow roots (capture includes it; the live selection index does not). Chrome's PDF viewer does not
+expose selections, so PDFs are highlighted in Reader. Live highlights are a projection, not the
+canonical annotation. Same-panel retry identity is not cross-window atomic deduplication. Missing
+passages in Readability's saved copy require opening that copy in Reader and selecting the
 intended text there; Reader will not silently substitute the live page or overwrite the archive.
+The service worker opens its own Connect session for page status; concurrent use with the panel
+relies on the SDK's grants tolerating two sessions in one extension origin.

@@ -54,44 +54,53 @@ Staging builds use the separate `staging` Pages branch and
 Conflicting environment selectors are rejected. Switching from the former staging-backed
 site may require authorizing Reader against production; collection data is not migrated.
 
-## Browser extension (LAB)
+## Browser extension
 
-Build the unpacked Manifest V3 extension with:
+Build the unpacked Manifest V3 extension for one mdbase environment:
 
 ```sh
-pnpm --filter @mdbase-reader/extension build
+pnpm --filter @mdbase-reader/extension build                          # lab (default)
+MDBASE_ENV=staging pnpm --filter @mdbase-reader/extension build       # staging
+MDBASE_ENV=production pnpm --filter @mdbase-reader/extension build    # production
 ```
 
 Load `apps/extension/dist` as an unpacked extension in Chrome 123 or newer (reload it after
-rebuilding). The toolbar action captures the active HTTPS tab. Choose the destination collection,
-edit the title, optionally add tags and a source note, then explicitly **Save source**. Reader extracts
-the primary article with Mozilla Readability and saves readable HTML plus a form-value-free DOM
-archive through the mdbase SDK. Opening the popup or changing collections never auto-saves. The extension is
-currently pinned to `https://connect-lab.mdbase.dev` and opens saved sources in
-`https://lab.mdbase-reader.pages.dev`. Start the isolated LAB desktop profile with
-`bin/mdbase-env lab desktop` from the cloud-ops checkout; its connector uses
-`http://127.0.0.1:28487`. Reload the unpacked extension and reauthorize it for LAB after
-switching environments. This build does not save to staging or production.
+rebuilding). The build's Connect service, loopback connector, Reader origin and name suffix come
+from Reader's deployment table; its only permanent host permission is that environment's Connect
+API, which is required for SDK record and binary-file traffic and cannot read browsing pages.
+For LAB, start the isolated desktop profile with `bin/mdbase-env lab desktop` from the cloud-ops
+checkout; its connector uses `http://127.0.0.1:28487`. Reload the unpacked extension and
+reauthorize it after switching environments.
 
-**Connect to LAB** opens the SDK's device-code authorization flow. Reader stores the approved grant
-and non-extractable signing keys inside the extension origin. Extension fetches explicitly omit
+The toolbar button (**Alt+Shift+S**), **Alt+Shift+H**, or right-click **Save highlight to mdbase
+Reader** / **Add a note in mdbase Reader** opens Reader in Chrome's side panel for that tab. The
+panel stays open while you read: each new text selection appears in it, so several passages can be
+highlighted in a row, each with a colour, tags and an optional note. **Ctrl/⌘+Enter** saves. Choose
+the destination collection (remembered), edit the title, optionally add tags and a source note,
+then explicitly **Save source**. Opening the panel or changing collections never auto-saves.
+
+Reader extracts the primary article with Mozilla Readability (including text inside open shadow
+roots) and saves readable HTML plus a form-value-free DOM archive. PDFs open in Chrome's viewer are
+saved as PDF sources, downloaded from the page itself so your own access applies. When a page
+carries a DOI, Highwire `citation_*`, PRISM, Dublin Core or scholarly JSON-LD metadata, the panel
+shows the citation it will store: the DOI registry's CSL record (fetched through doi.org content
+negotiation; only the DOI is sent), otherwise the page's embedded tags, under an unused citekey.
+
+Existing sources are found by a store-side URL query, not a library scan; URLs are compared
+without tracking parameters, `www.`, AMP variants or trailing slashes. Unsaved text is kept in
+`chrome.storage.session` per tab and page, so closing the panel does not lose it. Connect grants
+live in `chrome.storage.local`, shared by the panel and the service worker.
+
+**Connect** opens the SDK's device-code authorization flow. Extension fetches explicitly omit
 portal cookies; the SDK's signed grants remain the authorization mechanism. Capture access uses
-`activeTab`; selection actions use `contextMenus`. The extension does not request permanent access
-to every website. Its sole persistent host permission
-is the LAB mdbase Connect API, which is required for SDK record and binary-file traffic and
-cannot read browsing pages.
+`activeTab`. Selection highlights are anchored to the saved reading copy: when a passage repeats,
+the occurrence whose surrounding text agrees best is used only if it clearly wins; missing or
+ambiguous passages never receive fabricated targets, and the comment stays in the panel for retry.
 
-Select text on a website and use the toolbar or right-click **Save highlight to mdbase Reader** /
-**Add a note in mdbase Reader**. Review the selected passage, optionally add a comment, and explicitly
-save. Reader saves the source if necessary and verifies the saved HTML revision before anchoring the
-highlight. Missing or ambiguous passages never receive fabricated targets; the comment stays in the
-popup for retry. Existing source metadata is not overwritten. Unsaved comments are held in memory,
-not durable drafts: keep the popup open until saving completes.
-
-**Show highlights on this page** uses non-destructive CSS Highlights, supporting inline formatting,
-multiple and overlapping passages. It reports missing/ambiguous matches without guessing. **Open saved
-copy in Reader** links to the exact collection and source; the captured document remains canonical.
-The receiving Reader build must include the source deep-link handler. See
+**Settings → Mark pages I've saved** is an explicit opt-in. It requests the optional
+`https://*/*` host permission; the service worker then looks up each HTTPS page you load in the
+selected collection, shows a badge (highlight count, or ✓) and draws the saved highlights with CSS
+Highlights. Turning it off removes the permission. See
 [extension capture improvements and validation](docs/extension-capture-improvements.md).
 
 ## Zotero migration exporter (experimental)

@@ -1,4 +1,4 @@
-import type { QuoteSelector } from "@mdbase-reader/core";
+import type { Annotation, QuoteSelector } from "@mdbase-reader/core";
 
 export interface PageQuote extends QuoteSelector {
   readonly color?: string;
@@ -13,6 +13,14 @@ export interface PageAnnotationResult {
   readonly report: ProjectionReport;
   readonly quotes: readonly (QuoteSelector | null)[];
   readonly selection: QuoteSelector | null;
+}
+
+export function annotationQuotes(annotations: readonly Annotation[]): readonly PageQuote[] {
+  return annotations.flatMap((annotation) =>
+    annotation.target?.quote
+      ? [{ ...annotation.target.quote, ...(annotation.color ? { color: annotation.color } : {}) }]
+      : [],
+  );
 }
 
 /** Chrome serializes this function alone: all runtime helpers must be nested. */
@@ -140,15 +148,7 @@ export function pageAnnotations(
     for (let i = haystack.indexOf(needle); i !== -1; i = haystack.indexOf(needle, i + 1)) {
       matches.push(i);
     }
-    const contextual =
-      matches.length > 1
-        ? matches.filter(
-            (i) =>
-              (!quote.prefix || haystack.slice(0, i).endsWith(normalize(quote.prefix))) &&
-              (!quote.suffix ||
-                haystack.slice(i + needle.length).startsWith(normalize(quote.suffix))),
-          )
-        : matches;
+    const contextual = matches.length > 1 ? bestContext(matches, needle.length, quote) : matches;
     const index = contextual[0];
     if (contextual.length !== 1 || index === undefined) {
       return matches.length > 1 ? "ambiguous" : "missing";
@@ -160,6 +160,36 @@ export function pageAnnotations(
     }
     const range = rangeAt(start, end);
     return range ? { start, end, range } : "missing";
+  }
+  /**
+   * Context is captured from one copy of the text (the live page) and matched against
+   * another (the saved reading copy), so it rarely agrees character for character.
+   * Score each repeat by how much surrounding text agrees; accept only a clear winner.
+   */
+  function bestContext(matches: readonly number[], length: number, quote: QuoteSelector): number[] {
+    const prefix = normalize(quote.prefix ?? "");
+    const suffix = normalize(quote.suffix ?? "");
+    const scored = matches
+      .map((index) => {
+        let before = 0;
+        while (
+          before < prefix.length &&
+          index - before > 0 &&
+          haystack[index - before - 1] === prefix[prefix.length - before - 1]
+        ) {
+          before++;
+        }
+        let after = 0;
+        const end = index + length;
+        while (after < suffix.length && haystack[end + after] === suffix[after]) {
+          after++;
+        }
+        return { index, score: before + after };
+      })
+      .sort((a, b) => b.score - a.score);
+    const [best, runnerUp] = scored;
+    // A few shared characters (a space, "the ") are coincidence, not evidence.
+    return best && best.score >= 4 && best.score > (runnerUp?.score ?? 0) ? [best.index] : [];
   }
   function render(): void {
     // No text-node splitting: overlapping ranges and links remain intact.

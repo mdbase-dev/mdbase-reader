@@ -5,6 +5,9 @@ import {
 } from "@mdbase-reader/core";
 import { Readability } from "@mozilla/readability";
 
+import { citationAuthors } from "./csl-values.js";
+import { extractScholarlyMetadata, type ScholarlyMetadata } from "./scholarly-metadata.js";
+
 export const WEB_CAPTURE_EXTRACTOR = "mozilla-readability@0.6.0";
 
 export interface CapturedWebDocument {
@@ -21,6 +24,7 @@ export interface WebCaptureImport {
   readonly archive: { readonly name: string; readonly bytes: Uint8Array };
   readonly capture: SourceCaptureProvenance;
   readonly metadata: SourceImportMetadata;
+  readonly scholarly: ScholarlyMetadata;
 }
 
 export interface LiveWebCapture extends CapturedWebDocument {
@@ -49,6 +53,9 @@ export async function webCaptureImport(capture: CapturedWebDocument): Promise<We
   const readable = articleDocument(parsed, article?.content ?? parsed.body.innerHTML, title);
   const { prepareHtmlDocument } = await import("@mdbase-reader/renderer-html");
   const stem = safeStem(canonicalUrl.hostname);
+  const scholarly = extractScholarlyMetadata(parsed, capture.canonicalUrl);
+  const metadata = captureMetadata(parsed, canonicalUrl, article);
+  const scholarlyAuthors = scholarly.citation ? citationAuthors(scholarly.citation) : [];
   return {
     name: `${stem}.readable.html`,
     title,
@@ -62,7 +69,9 @@ export async function webCaptureImport(capture: CapturedWebDocument): Promise<We
       canonicalUrl: capture.canonicalUrl,
       retrievedAt: dateTime(capture.retrievedAt),
     },
-    metadata: captureMetadata(parsed, canonicalUrl, article),
+    // Publisher tags list every author; Readability's byline is often a single display string.
+    metadata: scholarlyAuthors.length ? { ...metadata, authors: scholarlyAuthors } : metadata,
+    scholarly,
   };
 }
 

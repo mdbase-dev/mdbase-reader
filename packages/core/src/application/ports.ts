@@ -1,3 +1,4 @@
+import type { SourceLookups } from "./source-lookups.js";
 import type { Annotation, AnnotationDeletionPlan, AnnotationDraft } from "../domain/annotation.js";
 import type { CitationCandidate, CitationResolutionRequest } from "../domain/citation-metadata.js";
 import type { CslItem } from "../domain/citation.js";
@@ -23,7 +24,7 @@ import type {
 } from "../domain/source.js";
 import type { DateTime } from "../domain/time.js";
 
-export interface SourceRepository {
+export interface SourceRepository extends SourceLookups {
   list(query: SourceQuery, options?: ReaderRequestOptions): Promise<Page<SourceSummary>>;
   /** Stream one stable query when the backing store supports pinned pagination. */
   listPages?(

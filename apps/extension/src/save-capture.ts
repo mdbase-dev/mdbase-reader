@@ -7,20 +7,26 @@ import {
   type MutationId,
   type QuoteSelector,
   type Source,
+  type SourceFileImportRequest,
+  type SourceImportMetadata,
   type SourceImportProgress,
   type SourceSummary,
 } from "@mdbase-reader/core";
-import { createReaderRuntimeServices } from "@mdbase-reader/platform";
-import { webCaptureImport } from "@mdbase-reader/web-capture";
+import { createReaderRuntimeServices, type KeyValueStorage } from "@mdbase-reader/platform";
+import { citationAuthors, citationYear, webCaptureImport } from "@mdbase-reader/web-capture";
 
-import { localStorageAdapter, sourceForUrl } from "./capture-model.js";
+import { saveCaptureCitation, type CitationPreview } from "./capture-citation.js";
+import { sourceForUrl } from "./capture-model.js";
 import { pageAnnotations } from "./page-annotations.js";
 
-import type { SelectedWebCapture } from "./page-capture.js";
+import type { PageCapture, PdfCapture, SelectedWebCapture } from "./page-capture.js";
 import type {
   ReaderConnectedCollection,
   ReaderPortableApplicationSession,
 } from "@mdbase-reader/connect";
+
+export const highlightColors = ["yellow", "green", "blue", "pink", "purple"] as const;
+export type HighlightColor = (typeof highlightColors)[number];
 
 export interface CaptureDraft {
   readonly title: string;
@@ -28,71 +34,106 @@ export interface CaptureDraft {
   readonly note: string;
   readonly comment: string;
   readonly highlight: boolean;
+  readonly color: HighlightColor;
+  readonly highlightTags: string;
 }
 export interface SavedCapture {
   readonly source: SourceSummary;
   readonly existing: boolean;
   readonly annotation: Annotation | null;
+  /** Parts that did not complete although the source itself is saved. */
+  readonly notices: readonly string[];
+}
+export interface SaveCaptureInput {
+  readonly session: ReaderPortableApplicationSession;
+  readonly collection: ReaderConnectedCollection;
+  readonly capture: PageCapture;
+  readonly draft: CaptureDraft;
+  /** A source the panel already found for this page; skips a second lookup. */
+  readonly known?: SourceSummary | null;
+  readonly citation?: CitationPreview | null;
+  readonly pdfBytes?: () => Promise<Uint8Array>;
+  readonly onSource: (source: SourceSummary, existing: boolean) => void;
+  readonly onProgress: (progress: SourceImportProgress) => void;
 }
 
 /** One explicit save at a time; annotation retries retain their identity. */
 export class CaptureWriter {
-  readonly #runtime = createReaderRuntimeServices(localStorageAdapter());
+  readonly #runtime;
   readonly #annotations = new Map<string, { id: AnnotationId; mutation: MutationId }>();
 
-  async save(input: {
-    session: ReaderPortableApplicationSession;
-    collection: ReaderConnectedCollection;
-    capture: SelectedWebCapture;
-    draft: CaptureDraft;
-    onSource: (source: SourceSummary, existing: boolean) => void;
-    onProgress: (progress: SourceImportProgress) => void;
-  }): Promise<SavedCapture> {
-    const { session, collection, capture, draft, onSource, onProgress } = input;
+  constructor(journalStorage: KeyValueStorage) {
+    this.#runtime = createReaderRuntimeServices(journalStorage);
+  }
+
+  async save(input: SaveCaptureInput): Promise<SavedCapture> {
+    const { session, collection, capture, draft, onSource } = input;
     const outcomes = await session.recoverPendingMutations();
     const failure = outcomes.find((outcome) => !outcome.ok);
     if (failure) {
       throw new Error(failure.problem.message);
     }
-    let source = await sourceForUrl(collection, capture.canonicalUrl);
-    const existing = Boolean(source);
-    if (!source) {
-      const prepared = await webCaptureImport(capture);
-      source = await importSourceFile(
-        { ...this.#runtime, imports: collection.sourceImports },
-        {
-          collectionId: collection.collectionId,
-          name: prepared.name,
-          declaredMediaType: "text/html",
-          bytes: prepared.bytes,
-          title: draft.title.trim() || prepared.title,
-          archive: prepared.archive,
-          capture: prepared.capture,
-          metadata: prepared.metadata,
-          tags: draft.tags
-            .split(",")
-            .map((tag) => tag.trim())
-            .filter(Boolean),
-          ...(draft.note.trim()
-            ? { body: `# ${draft.title.trim() || prepared.title}\n\n${draft.note}\n` }
-            : {}),
-        },
-        { recoverExistingFiles: true, onProgress },
-      );
-    }
+    const notices: string[] = [];
+    const found =
+      input.known ?? (await sourceForUrl(collection, capture.canonicalUrl, [capture.submittedUrl]));
+    const existing = Boolean(found);
+    const source = found ?? (await this.#create(input, notices));
     onSource(source, existing);
     const annotation =
-      draft.highlight && capture.selection
-        ? await this.#highlight(collection, source, capture.selection, draft.comment)
+      draft.highlight && capture.kind === "html" && capture.selection
+        ? await this.#highlight(collection, source, capture.selection, draft)
         : null;
-    return { source, existing, annotation };
+    return { source, existing, annotation, notices };
+  }
+
+  async #create(input: SaveCaptureInput, notices: string[]): Promise<Source> {
+    const { collection, capture, draft, citation } = input;
+    const request =
+      capture.kind === "html" ? await htmlRequest(capture) : await pdfRequest(capture, input);
+    const title = draft.title.trim() || request.title;
+    const tags = draft.tags
+      .split(",")
+      .map((tag) => tag.trim())
+      .filter(Boolean);
+    let source = await importSourceFile(
+      { ...this.#runtime, imports: collection.sourceImports },
+      {
+        ...request,
+        collectionId: collection.collectionId,
+        title,
+        tags,
+        ...(citation ? { metadata: withCitation(request.metadata, citation) } : {}),
+        ...(draft.note.trim() ? { body: `# ${title}\n\n${draft.note}\n` } : {}),
+      },
+      { recoverExistingFiles: true, onProgress: input.onProgress },
+    );
+    if (capture.kind === "pdf" && collection.sources.updateFields) {
+      // PDFs carry no web-capture provenance; record where the file came from for deduplication.
+      source = await collection.sources
+        .updateFields({
+          collectionId: collection.collectionId,
+          sourceId: source.id,
+          fields: { url: capture.canonicalUrl },
+        })
+        .catch(() => source);
+    }
+    if (citation) {
+      try {
+        source = await saveCaptureCitation(collection, source, citation.citation);
+      } catch (reason) {
+        notices.push(
+          `The citation was not stored: ${reason instanceof Error ? reason.message : String(reason)}. Add it from the source's citation panel in Reader.`,
+        );
+      }
+    }
+    return source;
   }
 
   async #highlight(
     collection: ReaderConnectedCollection,
     summary: SourceSummary,
     selection: QuoteSelector,
-    comment: string,
+    draft: CaptureDraft,
   ): Promise<Annotation> {
     const source = await collection.sources.get(collection.collectionId, summary.id);
     if (!source) {
@@ -100,6 +141,7 @@ export class CaptureWriter {
         "The saved source is no longer available. Your highlight has not been saved.",
       );
     }
+    const comment = draft.comment;
     const key = JSON.stringify([collection.collectionId, source.id, selection, comment]);
     const identity = this.#annotations.get(key) ?? {
       id: this.#runtime.ids.annotation(),
@@ -132,8 +174,15 @@ export class CaptureWriter {
         document,
         annotationType: "highlight",
         motivation: comment.trim() ? "commenting" : "highlighting",
-        color: "yellow",
-        tags: [],
+        color: draft.color,
+        tags: [
+          ...new Set(
+            draft.highlightTags
+              .split(",")
+              .map((tag) => tag.trim())
+              .filter(Boolean),
+          ),
+        ],
         target: { quote },
         body: `${quote.exact
           .split("\n")
@@ -177,4 +226,56 @@ export class CaptureWriter {
     }
     return { document, quote };
   }
+}
+
+type ImportParts = Omit<SourceFileImportRequest, "collectionId"> & { readonly title: string };
+
+async function htmlRequest(capture: SelectedWebCapture): Promise<ImportParts> {
+  const prepared = await webCaptureImport(capture);
+  return {
+    name: prepared.name,
+    declaredMediaType: "text/html",
+    bytes: prepared.bytes,
+    title: prepared.title,
+    archive: prepared.archive,
+    capture: prepared.capture,
+    metadata: prepared.metadata,
+  };
+}
+
+async function pdfRequest(capture: PdfCapture, input: SaveCaptureInput): Promise<ImportParts> {
+  if (!input.pdfBytes) {
+    throw new Error(
+      "Reader cannot download this PDF from here. Download it and import the file in Reader.",
+    );
+  }
+  const bytes = await input.pdfBytes();
+  const name = decodeURIComponent(new URL(capture.canonicalUrl).pathname.split("/").at(-1) ?? "");
+  const title =
+    typeof input.citation?.citation["title"] === "string"
+      ? input.citation.citation["title"]
+      : capture.pageTitle;
+  return {
+    name: /\.pdf$/iu.test(name) ? name : `${name || "document"}.pdf`,
+    declaredMediaType: "application/pdf",
+    bytes,
+    title,
+    metadata: { site: new URL(capture.canonicalUrl).hostname },
+  };
+}
+
+/** The citation's structured authors win; the page's own date and description are kept. */
+function withCitation(
+  page: SourceFileImportRequest["metadata"],
+  preview: CitationPreview,
+): SourceImportMetadata {
+  const authors = citationAuthors(preview.citation);
+  const year = citationYear(preview.citation);
+  const abstract = preview.citation["abstract"];
+  return {
+    ...(year ? { published: String(year) } : {}),
+    ...(typeof abstract === "string" ? { description: abstract } : {}),
+    ...page,
+    ...(authors.length ? { authors } : {}),
+  };
 }

@@ -1,7 +1,10 @@
 import { useEffect } from "react";
 
 import { readerSourceUrl } from "./capture-model.js";
+import { CaptureForm } from "./CaptureForm.js";
 import { ConnectionPanel, ConnectionProblem } from "./ConnectionPanel.js";
+import { environment } from "./environment.js";
+import { PageStatusSetting } from "./PageStatusSetting.js";
 
 import type { ExtensionCaptureController } from "./capture-controller.js";
 
@@ -10,18 +13,15 @@ export function CaptureApp({ controller }: ControllerProps): React.JSX.Element {
     document.title = `mdbase Reader — ${controller.source ? "source saved" : "capture"}`;
   }, [controller.source]);
   useEffect(() => {
+    // Drafts survive closing the panel; an in-flight save's outcome would not be shown.
     const warn = (event: BeforeUnloadEvent): void => {
-      if (
-        controller.busy ||
-        controller.draft.comment ||
-        (!controller.source && controller.draft.note)
-      ) {
+      if (controller.busy) {
         event.preventDefault();
       }
     };
     window.addEventListener("beforeunload", warn);
     return () => window.removeEventListener("beforeunload", warn);
-  }, [controller.busy, controller.draft, controller.source]);
+  }, [controller.busy]);
   return (
     <main className="capture-shell">
       <header>
@@ -31,10 +31,12 @@ export function CaptureApp({ controller }: ControllerProps): React.JSX.Element {
         <strong>
           mdbase <i>reader</i>
         </strong>
-        <span className="connection">LAB</span>
+        {environment.label ? <span className="connection">{environment.label}</span> : null}
       </header>
       <section className="page-card">
-        <span className="eyebrow">CURRENT PAGE</span>
+        <span className="eyebrow">
+          {controller.capture?.kind === "pdf" ? "CURRENT PDF" : "CURRENT PAGE"}
+        </span>
         <h1>{controller.capture?.pageTitle ?? "Reading the page…"}</h1>
         <p>
           {controller.capture
@@ -42,122 +44,34 @@ export function CaptureApp({ controller }: ControllerProps): React.JSX.Element {
             : "Waiting for the active tab"}
         </p>
       </section>
+      <Navigated controller={controller} />
       <ConnectionPanel controller={controller} />
       <ConnectionProblem controller={controller} />
+      {controller.draftRestored ? (
+        <p className="restored" role="status">
+          Restored your unsaved note from earlier.
+        </p>
+      ) : null}
       <CaptureForm controller={controller} />
       <CaptureStatus controller={controller} />
       <Completion controller={controller} />
+      <PageStatusSetting />
     </main>
   );
 }
 
-function CaptureForm({ controller: c }: ControllerProps): React.JSX.Element | null {
-  if (!c.capture) {
+function Navigated({ controller: c }: ControllerProps): React.JSX.Element | null {
+  if (!c.navigated) {
     return null;
   }
-  const update = (field: "title" | "tags" | "note" | "comment", value: string): void =>
-    c.setDraft((draft) => ({ ...draft, [field]: value }));
   return (
-    <form
-      className="capture-form"
-      onSubmit={(event) => {
-        event.preventDefault();
-        void c.save();
-      }}
-    >
-      <fieldset disabled={c.busy}>
-        {!c.source ? (
-          <>
-            <label htmlFor="title">Title</label>
-            <input
-              id="title"
-              value={c.draft.title}
-              maxLength={300}
-              required
-              onChange={(event) => update("title", event.target.value)}
-            />
-            <label htmlFor="tags">
-              Tags <span>(comma-separated, optional)</span>
-            </label>
-            <input
-              id="tags"
-              value={c.draft.tags}
-              onChange={(event) => update("tags", event.target.value)}
-            />
-            <label htmlFor="note">
-              Source note <span>(optional)</span>
-            </label>
-            <textarea
-              id="note"
-              value={c.draft.note}
-              rows={2}
-              onChange={(event) => update("note", event.target.value)}
-            />
-          </>
-        ) : (
-          <p className="saved-summary">
-            {c.status === "existing" ? "Already in" : "Saved to"} this collection:{" "}
-            <strong>{c.source.title}</strong>. Existing source metadata is kept unchanged.
-          </p>
-        )}
-        {c.capture.selection ? (
-          <section aria-label="Selected passage">
-            <blockquote>{c.capture.selection.exact}</blockquote>
-            <label className="checkbox">
-              <input
-                type="checkbox"
-                checked={c.draft.highlight}
-                onChange={(event) =>
-                  c.setDraft((draft) => ({ ...draft, highlight: event.target.checked }))
-                }
-              />
-              Save this highlight
-            </label>
-            {c.draft.highlight ? (
-              <>
-                <label htmlFor="comment">
-                  Highlight note <span>(optional)</span>
-                </label>
-                <textarea
-                  id="comment"
-                  value={c.draft.comment}
-                  rows={3}
-                  onChange={(event) => update("comment", event.target.value)}
-                />
-                <p className="hint">
-                  Anchored to the saved reading copy. If that passage cannot be matched safely, your
-                  note stays here.
-                </p>
-              </>
-            ) : null}
-          </section>
-        ) : (
-          <p className="hint">
-            To highlight, select text on the page and right-click → Save highlight to mdbase Reader.
-          </p>
-        )}
-        <button type="button" className="text-button" onClick={() => void c.readSelection()}>
-          Capture current selection
-        </button>
-        {!c.source || c.draft.highlight ? (
-          <button
-            className="primary"
-            disabled={c.snapshot.status !== "ready" || c.busy || !c.draft.title.trim()}
-            type="submit"
-          >
-            {c.busy
-              ? c.status === "saving" || c.progress
-                ? "Saving…"
-                : "Please wait…"
-              : c.draft.highlight
-                ? c.source
-                  ? "Save highlight"
-                  : "Save source and highlight"
-                : "Save source"}
-          </button>
-        ) : null}
-      </fieldset>
-    </form>
+    <section className="problem" role="alert">
+      <strong>This tab has moved to another page.</strong>
+      <p>
+        Press the mdbase Reader toolbar button (Alt+Shift+S) to continue on the new page. Your
+        unsaved text for the previous page is kept for this browser session.
+      </p>
+    </section>
   );
 }
 
@@ -193,7 +107,7 @@ function Completion({ controller: c }: ControllerProps): React.JSX.Element | nul
   const count = c.annotations.filter((annotation) => annotation.target?.quote).length;
   return (
     <footer className="completion">
-      {count ? (
+      {count && c.capture?.kind === "html" ? (
         <button
           type="button"
           className="secondary"
@@ -230,9 +144,6 @@ function Completion({ controller: c }: ControllerProps): React.JSX.Element | nul
       >
         Open saved copy in Reader
       </a>
-      <button className="secondary" type="button" disabled={c.busy} onClick={() => window.close()}>
-        Continue reading
-      </button>
     </footer>
   );
 }

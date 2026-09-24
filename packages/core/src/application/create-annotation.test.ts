@@ -188,6 +188,28 @@ describe("createAnnotation", () => {
     expect(fixture.stages).toEqual(["asset-stored", "annotation-created", "complete"]);
   });
 
+  it("reports content-free timings for each stage of an area save", async () => {
+    const fixture = dependencies();
+    const timings: { stage: string; ms: number }[] = [];
+    await createAnnotation(
+      { ...fixture.value, onTiming: (stage, ms) => timings.push({ stage, ms }) },
+      {
+        ...request,
+        annotationType: "area",
+        attachment: { bytes: new Uint8Array([1, 2, 3]), mediaType: "image/png" },
+      },
+    );
+    expect(timings.map(({ stage }) => stage)).toEqual([
+      "journal-start",
+      "asset-upload",
+      "journal-mark",
+      "annotation-create",
+      "journal-mark",
+      "journal-mark",
+    ]);
+    expect(timings.every(({ ms }) => Number.isFinite(ms) && ms >= 0)).toBe(true);
+  });
+
   it("saves an annotation against the opened file even when source metadata is stale", async () => {
     const fixture = dependencies();
 

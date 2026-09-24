@@ -1,191 +1,133 @@
-import {
-  ReaderPortableApplicationSession,
-  connectProblemMessage,
-  type MdbaseAppManifest,
-  type ReaderConnectSnapshot,
-} from "@mdbase-reader/connect";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
+import { prepareCitation, type CitationPreview } from "./capture-citation.js";
 import { problemMessage, sourceForUrl } from "./capture-model.js";
-import manifest from "./generated/mdbase-app.json";
-import { captureTab, renderAnnotations, type SelectedWebCapture } from "./page-capture.js";
-import { CaptureWriter, type CaptureDraft } from "./save-capture.js";
+import { annotationQuotes } from "./page-annotations.js";
+import { fetchPdf, renderAnnotations } from "./page-capture.js";
+import { CaptureWriter } from "./save-capture.js";
+import { useActionLock } from "./use-action-lock.js";
+import { useConnect } from "./use-connect.js";
+import { usePageCapture } from "./use-page-capture.js";
+import { useStoredDraft } from "./use-stored-draft.js";
 
 import type { CaptureStatus, ExtensionCaptureController } from "./capture-controller.js";
-import type { PageQuote, ProjectionReport } from "./page-annotations.js";
+import type { SourceChangedMessage } from "./messages.js";
+import type { ProjectionReport } from "./page-annotations.js";
 import type { Annotation, SourceImportProgress, SourceSummary } from "@mdbase-reader/core";
 
 export type { ExtensionCaptureController } from "./capture-controller.js";
 
-// The controller coordinates one popup's explicit actions; I/O is isolated in CaptureWriter.
+// The controller coordinates one panel's explicit actions; I/O lives in the composed hooks
+// and CaptureWriter.
 // eslint-disable-next-line max-lines-per-function
 export function useExtensionCapture(tabId: number): ExtensionCaptureController {
-  const [session] = useState(
-    () =>
-      new ReaderPortableApplicationSession({
-        serverUrl: "https://connect-lab.mdbase.dev",
-        loopbackUrl: "http://127.0.0.1:28487",
-        manifest: manifest as MdbaseAppManifest,
-        storage: localStorage,
-        timeouts: { watchStartMs: 60_000, uploadMs: 120_000 },
-      }),
-  );
-  const [writer] = useState(() => new CaptureWriter());
-  const [snapshot, setSnapshot] = useState<ReaderConnectSnapshot>(() => session.getSnapshot());
-  const [capture, setCapture] = useState<SelectedWebCapture | null>(null);
-  const [draft, setDraft] = useState<CaptureDraft>({
-    title: "",
-    tags: "",
-    note: "",
-    comment: "",
-    highlight: false,
-  });
+  const [progress, setProgress] = useState<SourceImportProgress | null>(null);
+  const lock = useActionLock(useCallback(() => setProgress(null), []));
+  const page = usePageCapture(tabId, lock.setProblem);
+  const connection = useConnect(lock);
+  const { capture } = page;
+  const stored = useStoredDraft(tabId, capture, page.setSelection);
   const [status, setStatus] = useState<CaptureStatus>("opening");
-  const [problem, setProblem] = useState<string | null>(null);
-  const [notice, setNotice] = useState<string | null>(null);
   const [source, setSource] = useState<SourceSummary | null>(null);
   const [annotations, setAnnotations] = useState<readonly Annotation[]>([]);
-  const [deviceCode, setDeviceCode] = useState<string | null>(null);
   const [projection, setProjection] = useState<ProjectionReport | null>(null);
-  const [progress, setProgress] = useState<SourceImportProgress | null>(null);
-  const [busy, setBusy] = useState(true);
   const [saveAttempted, setSaveAttempted] = useState(false);
-  const lock = useRef(true);
+  // The citation belongs to one page; it is pending until a lookup for this page settles.
+  const [citationFor, setCitationFor] = useState<{
+    readonly page: string;
+    readonly preview: CitationPreview | null;
+  } | null>(null);
   const discovery = useRef(0);
-  const selectedCollection = useRef<string | null>(null);
-  const run = useCallback(async (action: () => Promise<void>): Promise<void> => {
-    if (lock.current) {
-      return;
-    }
-    lock.current = true;
-    setBusy(true);
-    setProblem(null);
-    setNotice(null);
-    try {
-      await action();
-    } catch (reason) {
-      setProblem(problemMessage(reason));
-    } finally {
-      lock.current = false;
-      setBusy(false);
-      setProgress(null);
-      setDeviceCode(null);
-    }
-  }, []);
+  const extension = connection.extension;
+  const writer = useMemo(
+    () => (extension ? new CaptureWriter(extension.journalStorage) : null),
+    [extension],
+  );
+  const { readPage } = page;
+  const { open } = connection;
+  const { release, setProblem, setNotice } = lock;
 
-  const readPage = useCallback(async () => {
-    const value = await captureTab(tabId);
-    discovery.current++;
-    setSource(null);
-    setAnnotations([]);
-    setCapture(value);
-    setDraft((current) => ({
-      ...current,
-      title: current.title || value.pageTitle,
-      highlight: Boolean(value.selection),
-    }));
-    setStatus("ready");
-    setProjection(null);
-  }, [tabId]);
   useEffect(() => {
-    const unsubscribe = session.subscribe(() => {
-      const next = session.getSnapshot();
-      const id = next.status === "ready" ? next.collectionId : null;
-      if (id !== selectedCollection.current) {
-        selectedCollection.current = id;
-        discovery.current++;
-        setSource(null);
-        setAnnotations([]);
-        setProjection(null);
-      }
-      setSnapshot(next);
-    });
-    // captureTab resolves an external Chrome scripting request before publishing state.
-    // eslint-disable-next-line react-hooks/set-state-in-effect
+    // Connect starts even when the page cannot be read, so the panel can still recover.
     void readPage()
-      .then(() => session.start())
-      .then((outcome) => {
-        setProblem(connectProblemMessage(outcome));
-      })
+      .then(
+        () => setStatus("ready"),
+        (reason: unknown) => setProblem(problemMessage(reason)),
+      )
+      .then(open)
       .catch((reason: unknown) => setProblem(problemMessage(reason)))
-      .finally(() => {
-        lock.current = false;
-        setBusy(false);
-      });
-    return () => {
-      unsubscribe();
-      session.destroy();
-    };
-  }, [readPage, session]);
+      .finally(release);
+  }, [open, readPage, release, setProblem]);
 
-  const collectionId = snapshot.status === "ready" ? snapshot.collectionId : null;
+  const collectionId =
+    connection.snapshot.status === "ready" ? connection.snapshot.collectionId : null;
+  const pageUrl = capture?.canonicalUrl;
+  const submittedUrl = capture?.submittedUrl;
   useEffect(() => {
-    const sequence = discovery;
-    const epoch = ++sequence.current;
-    const collection = session.connectedCollection();
-    if (collection && capture) {
-      void sourceForUrl(collection, capture.canonicalUrl)
-        .then(async (existing) => {
-          if (epoch !== discovery.current || !existing) {
-            return;
-          }
-          setSource(existing);
-          setStatus("existing");
-          const values = await collection.annotations.listForSource(
-            collection.collectionId,
-            existing.id,
-          );
-          if (epoch === discovery.current) {
-            setAnnotations(values);
-          }
-        })
-        .catch((reason: unknown) => {
-          if (epoch === discovery.current) {
-            setNotice(`Could not check existing sources: ${problemMessage(reason)}`);
-          }
-        });
-    }
-    return () => {
-      sequence.current++;
-    };
-  }, [capture, collectionId, session]);
-
-  const connect = (choose = false): Promise<void> =>
-    run(async () => {
-      const selected = "collectionId" in session.getSnapshot();
-      const outcome = await session.authorize(choose || !selected ? "choose" : "selected", {
-        timeoutMs: 10 * 60_000,
-        onDeviceCode: ({ userCode }) => setDeviceCode(userCode),
-        openVerification: async ({ verificationUriComplete }) => {
-          await chrome.tabs.create({ url: verificationUriComplete });
-        },
-      });
-      setProblem(connectProblemMessage(outcome));
-      setSnapshot(session.getSnapshot());
-    });
-  const retry = (): Promise<void> =>
-    run(async () => {
-      if (!capture) {
-        await readPage();
-      }
-      setProblem(connectProblemMessage(await session.start()));
-      setSnapshot(session.getSnapshot());
-    });
-  const applySetup = (): Promise<void> =>
-    run(async () => {
-      setProblem(connectProblemMessage(await session.applyCollectionSetup()));
-    });
-  const select = (id: string): void => {
-    if (lock.current) {
+    const epoch = ++discovery.current;
+    const collection = extension?.session.connectedCollection();
+    if (!collection || !pageUrl) {
       return;
     }
-    setProblem(connectProblemMessage(session.select(id)));
-    setStatus("ready");
-  };
+    void (async () => {
+      const existing = await sourceForUrl(collection, pageUrl, submittedUrl ? [submittedUrl] : []);
+      if (epoch !== discovery.current) {
+        return;
+      }
+      setSource(existing);
+      setAnnotations([]);
+      setProjection(null);
+      setStatus(existing ? "existing" : "ready");
+      if (existing) {
+        const values = await collection.annotations.listForSource(
+          collection.collectionId,
+          existing.id,
+        );
+        if (epoch === discovery.current) {
+          setAnnotations(values);
+        }
+      }
+    })().catch((reason: unknown) => {
+      if (epoch === discovery.current) {
+        setNotice(`Could not check existing sources: ${problemMessage(reason)}`);
+      }
+    });
+  }, [collectionId, extension, pageUrl, setNotice, submittedUrl]);
+
+  const { setDraft } = stored;
+  useEffect(() => {
+    if (!capture) {
+      return;
+    }
+    const controller = new AbortController();
+    const page = capture.canonicalUrl;
+    void prepareCitation(capture, controller.signal)
+      .catch(() => null)
+      .then((preview) => {
+        if (controller.signal.aborted) {
+          return;
+        }
+        setCitationFor({ page, preview });
+        const title = preview?.citation["title"];
+        if (typeof title === "string") {
+          // Replace only the untouched page title; never an edited one.
+          setDraft((draft) =>
+            draft.title === capture.pageTitle || !draft.title ? { ...draft, title } : draft,
+          );
+        }
+      });
+    return () => controller.abort();
+    // Only a new page (not a new selection) changes its citation.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pageUrl, capture?.kind]);
+
+  const citation = citationFor && citationFor.page === pageUrl ? citationFor.preview : null;
+  const citationPending = Boolean(pageUrl) && citationFor?.page !== pageUrl;
+
   const save = (): Promise<void> =>
-    run(async () => {
-      const collection = session.connectedCollection();
-      if (!capture || !collection) {
+    lock.run(async () => {
+      const collection = extension?.session.connectedCollection();
+      if (!capture || !collection || !writer || !extension) {
         throw new Error("Connect a collection before saving.");
       }
       discovery.current++;
@@ -193,10 +135,13 @@ export function useExtensionCapture(tabId: number): ExtensionCaptureController {
       setStatus("saving");
       try {
         const result = await writer.save({
-          session,
+          session: extension.session,
           collection,
           capture,
-          draft,
+          draft: stored.draft,
+          known: source,
+          citation,
+          pdfBytes: () => fetchPdf(tabId, capture.canonicalUrl),
           onProgress: setProgress,
           onSource: (saved, existing) => {
             setSource(saved);
@@ -204,66 +149,78 @@ export function useExtensionCapture(tabId: number): ExtensionCaptureController {
           },
         });
         if (result.annotation) {
-          setDraft((value) => ({ ...value, highlight: false, comment: "" }));
-          setNotice("Highlight saved to the saved document.");
+          stored.setDraft((value) => ({ ...value, comment: "" }));
+          page.setSelection(null);
         }
-        try {
-          const values = await collection.annotations.listForSource(
-            collection.collectionId,
-            result.source.id,
-          );
-          setAnnotations(values);
-          if (result.annotation) {
-            setProjection(
-              await renderAnnotations(tabId, annotationQuotes(values), capture.submittedUrl),
-            );
-          }
-        } catch (reason) {
-          setNotice(
-            `Saved safely. Could not refresh highlights on this page: ${problemMessage(reason)}`,
-          );
-        }
+        setNotice(
+          [result.annotation ? "Highlight saved." : null, ...result.notices]
+            .filter(Boolean)
+            .join(" ") || null,
+        );
+        await refreshAnnotations(result.source, Boolean(result.annotation));
       } finally {
         setStatus((current) => (current === "saving" ? "ready" : current));
       }
     });
+
+  async function refreshAnnotations(saved: SourceSummary, render: boolean): Promise<void> {
+    const collection = extension?.session.connectedCollection();
+    if (!collection || !capture) {
+      return;
+    }
+    try {
+      const values = await collection.annotations.listForSource(collection.collectionId, saved.id);
+      setAnnotations(values);
+      void chrome.runtime
+        .sendMessage({ type: "mdbase-reader/source-changed", tabId } satisfies SourceChangedMessage)
+        .catch(() => undefined);
+      if (render && capture.kind === "html") {
+        setProjection(
+          await renderAnnotations(tabId, annotationQuotes(values), capture.submittedUrl),
+        );
+      }
+    } catch (reason) {
+      setNotice(
+        `Saved safely. Could not refresh highlights on this page: ${problemMessage(reason)}`,
+      );
+    }
+  }
+
   const showAnnotations = (): Promise<void> =>
-    run(async () => {
-      if (capture) {
+    lock.run(async () => {
+      if (capture?.kind === "html") {
         setProjection(
           await renderAnnotations(tabId, annotationQuotes(annotations), capture.submittedUrl),
         );
       }
     });
+
   return {
-    snapshot,
+    snapshot: connection.snapshot,
     capture,
-    draft,
-    setDraft,
+    draft: stored.draft,
+    setDraft: stored.setDraft,
+    draftRestored: stored.restored,
     status,
-    problem,
-    notice,
+    problem: lock.problem,
+    notice: lock.notice,
     source,
     annotations,
-    deviceCode,
+    citation,
+    citationPending,
+    deviceCode: connection.deviceCode,
     projection,
     progress,
-    busy,
+    busy: lock.busy,
     saveAttempted,
-    connect,
-    retry,
-    applySetup,
-    select,
+    navigated: page.navigated,
+    invocation: page.invocation,
+    connect: connection.connect,
+    retry: connection.retry,
+    applySetup: connection.applySetup,
+    select: connection.select,
     save,
     showAnnotations,
-    readSelection: () => run(readPage),
+    clearSelection: () => page.setSelection(null),
   };
-}
-
-function annotationQuotes(annotations: readonly Annotation[]): readonly PageQuote[] {
-  return annotations.flatMap((annotation) =>
-    annotation.target?.quote
-      ? [{ ...annotation.target.quote, ...(annotation.color ? { color: annotation.color } : {}) }]
-      : [],
-  );
 }

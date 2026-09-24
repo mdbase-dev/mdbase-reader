@@ -1,4 +1,6 @@
-import type { ExtensionCaptureController } from "./use-extension-capture.js";
+import { environment } from "./environment.js";
+
+import type { ExtensionCaptureController } from "./capture-controller.js";
 
 export function ConnectionPanel({
   controller: c,
@@ -42,7 +44,9 @@ export function ConnectionPanel({
             disabled={busy}
             onClick={() => void c.connect()}
           >
-            {busy ? "Connecting…" : "Connect to LAB"}
+            {busy
+              ? "Connecting…"
+              : `Connect to mdbase${environment.label ? ` ${environment.label}` : ""}`}
           </button>
         </>
       ) : null}
@@ -101,10 +105,11 @@ export function ConnectionProblem({
       {originDenied ? (
         <p>
           Connect rejected this extension’s origin. Reload the current extension build and retry. If
-          it persists, check the LAB configuration; Reader will not bypass the origin check.
+          it persists, check the {environment.label || "mdbase"} Connect configuration; Reader will
+          not bypass the origin check.
         </p>
       ) : null}
-      <p>Your selection and note remain here. Keep this window open while retrying.</p>
+      <p>Your selection and note are kept for this browser session, even if you close the panel.</p>
       <button type="button" disabled={c.busy} onClick={() => void c.retry()}>
         Retry connection
       </button>{" "}
