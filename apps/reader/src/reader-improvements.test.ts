@@ -46,6 +46,16 @@ describe("reading defaults and search excerpts", () => {
     expect(continueReadingSource([finished, note, source])).toBe(source);
     expect(continueReadingSource([finished, note])).toBeNull();
   });
+  it("leaves sources that were only opened, not started, out of continue reading", () => {
+    const glanced = {
+      ...source,
+      readingStatus: "queued" as const,
+      reading: { status: "queued" as const, lastOpenedAt: "2026-09-18T09:02:00+10:00" as never },
+    };
+    expect(continueReadingSource([glanced])).toBeNull();
+    const resumed = { ...glanced, reading: { ...glanced.reading, progress: 0.1 } };
+    expect(continueReadingSource([resumed])).toBe(resumed);
+  });
   it("labels PDF pages and HTML progress without requiring a separate progress field", () => {
     expect(
       readingLocationLabel({

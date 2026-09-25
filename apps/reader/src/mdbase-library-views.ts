@@ -1,5 +1,7 @@
 /* eslint-disable max-lines */
 
+import { readingStatuses, type ReadingStatus, type SourceSummary } from "@mdbase-reader/core";
+
 import {
   columnLabel,
   isLibraryColumn,
@@ -21,7 +23,6 @@ import {
 } from "./library-conditions.js";
 
 import type { AnnotationViewConfiguration } from "./mdbase-annotation-views.js";
-import type { SourceSummary } from "@mdbase-reader/core";
 
 export { columnLabel };
 export type { LibraryColumn };
@@ -33,7 +34,7 @@ export type LibrarySortDirection = "asc" | "desc";
 
 export interface LibraryViewFilter {
   readonly query: string;
-  readonly status: "all" | "inbox" | "queued" | "reading" | "finished" | "archived";
+  readonly status: "all" | ReadingStatus;
   readonly format: "all" | "pdf" | "epub" | "web" | "note";
   readonly tag: string;
   /** Conditions on any frontmatter field, all of which must hold. */
@@ -388,7 +389,7 @@ function parseColumnWidths(value: unknown): Readonly<Record<string, number>> {
 }
 
 function isStatus(value: unknown): value is LibraryViewFilter["status"] {
-  return ["all", "inbox", "queued", "reading", "finished", "archived"].includes(String(value));
+  return value === "all" || (readingStatuses as readonly unknown[]).includes(value);
 }
 
 function isFormat(value: unknown): value is LibraryViewFilter["format"] {

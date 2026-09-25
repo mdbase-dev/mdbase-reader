@@ -23,6 +23,7 @@ export function LibraryTableRow({
   onSelect,
   press,
   onLongPress,
+  onMenu,
   onOpen,
   onChangeStatus,
   onEditField,
@@ -38,11 +39,14 @@ export function LibraryTableRow({
   readonly onSelect: (event: MouseEvent<HTMLElement>) => void;
   readonly press: LongPress;
   readonly onLongPress: () => void;
+  /** Opens this source's actions at a point, as a right-click does. */
+  readonly onMenu: (x: number, y: number) => void;
   readonly editing: LibraryColumn | null;
   readonly onEditCell: (column: LibraryColumn) => void;
   readonly onEditDone: () => void;
 }): JSX.Element {
   const selected = selection.ids.has(source.id);
+  const pressHandlers = press.bind(onLongPress);
   const editable = (column: LibraryColumn): boolean =>
     onEditField !== undefined && isEditableColumn(column);
   return (
@@ -57,7 +61,15 @@ export function LibraryTableRow({
       tabIndex={tabbable ? 0 : -1}
       title="Double-click or press Enter to open"
       style={{ gridTemplateColumns, transform: `translateY(${String(top)}px)` }}
-      {...press.bind(onLongPress)}
+      {...pressHandlers}
+      onContextMenu={(event) => {
+        pressHandlers.onContextMenu(event);
+        // A touch long-press selects instead; everything else gets this source's actions.
+        if (!event.defaultPrevented) {
+          event.preventDefault();
+          onMenu(event.clientX, event.clientY);
+        }
+      }}
       onClick={(event) => {
         if (!press.consumeClick()) {
           onSelect(event);

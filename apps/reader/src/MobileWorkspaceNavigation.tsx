@@ -53,7 +53,11 @@ export function MobileWorkspaceNavigation({
             </option>
           ))}
         </select>
-        {tabs.length > 1 ? <span className="mobile-tab-count">{tabs.length}</span> : null}
+        {tabs.length > 1 ? (
+          <span className="mobile-tab-count" title="Open tabs — choose one to switch">
+            {tabs.length} tabs
+          </span>
+        ) : null}
         <ChevronDownIcon aria-hidden="true" />
       </label>
       {active && activeTab?.kind !== "library" ? (

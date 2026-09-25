@@ -5,7 +5,7 @@ export async function auditResponsiveWorkspace(page, { screenshot, blockWrites }
   const completed = [];
   const tab = (name) =>
     page
-      .locator(".reader-dock-tab")
+      .locator(".reader-dock-tab:not(.is-side)")
       .filter({ has: page.locator(".dv-default-tab-content", { hasText: name }) });
   const open = async (n) => {
     await page

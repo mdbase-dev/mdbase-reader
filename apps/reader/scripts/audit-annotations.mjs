@@ -175,7 +175,7 @@ export async function auditAnnotations(page, { screenshot, blockWrites }) {
   completed.push("Annotation inspector remains usable without horizontal overflow at 390px");
   await page.setViewportSize({ width: 1440, height: 1000 });
   // Start cross-format checks with the standard arrangement, independently of the stress layout.
-  await page.locator(".reader-dock-tab").first().click({ button: "right" });
+  await page.locator(".reader-dock-tab:not(.is-side)").first().click({ button: "right" });
   await page.getByText("Reset pane arrangement (keep tabs)", { exact: true }).click();
   completed.push(...(await auditAnnotationFormats(page, { open, screenshot })));
   completed.push(...(await auditAnnotationNavigationFailure(page, { open, screenshot })));

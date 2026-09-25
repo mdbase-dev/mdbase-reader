@@ -18,10 +18,13 @@ export function ConnectionRetry({
 export function ConnectionLayout({
   status,
   error,
+  detail,
   children,
 }: {
   readonly status: string;
   readonly error?: string | null;
+  /** The technical text behind a plain error, kept for support rather than shown up front. */
+  readonly detail?: string | null;
   readonly children?: ReactNode;
 }): JSX.Element {
   return (
@@ -36,6 +39,12 @@ export function ConnectionLayout({
             <p className="connection-error" role="alert">
               {error}
             </p>
+          ) : null}
+          {detail ? (
+            <details className="connection-error-detail">
+              <summary>Details</summary>
+              <code>{detail}</code>
+            </details>
           ) : null}
         </div>
         {children}

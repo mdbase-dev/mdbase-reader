@@ -96,3 +96,33 @@ function textArray(value: unknown): readonly string[] {
 function textOrNumber(value: unknown): string | number | undefined {
   return typeof value === "string" || typeof value === "number" ? value : undefined;
 }
+
+/** Citation fields the library record can fill in (DATA_MODEL §11.3). */
+export const sourceBackedCitationFields = ["author", "issued", "URL"] as const;
+
+/**
+ * Values the library record has for citation fields the citation leaves empty. Filling gaps
+ * never overwrites what the citation already says.
+ */
+export function citationGapsFromSource(
+  citation: Readonly<Record<string, unknown>>,
+  source: Source,
+): Partial<Record<(typeof sourceBackedCitationFields)[number], unknown>> {
+  const suggested = suggestSourceCitation(source);
+  return Object.fromEntries(
+    sourceBackedCitationFields.flatMap((field) =>
+      isEmptyCitationValue(citation[field]) && !isEmptyCitationValue(suggested[field])
+        ? [[field, suggested[field]]]
+        : [],
+    ),
+  );
+}
+
+function isEmptyCitationValue(value: unknown): boolean {
+  return (
+    value === undefined ||
+    value === null ||
+    value === "" ||
+    (Array.isArray(value) && value.length === 0)
+  );
+}

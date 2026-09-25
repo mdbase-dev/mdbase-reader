@@ -12,7 +12,7 @@ export async function auditAnnotationWorkbench(page, { screenshot, open }) {
     .getAttribute("data-annotation-id");
   await tools.getByRole("button", { name: "Open annotations in workbench", exact: true }).click();
   const tab = page
-    .locator(".reader-dock-tab")
+    .locator(".reader-dock-tab:not(.is-side)")
     .filter({ has: page.locator(".dv-default-tab-content", { hasText: "Annotations —" }) });
   const panelId = await tab.getAttribute("data-panel-id");
   const workbench = page.locator(`[data-session-id="${panelId}"]`);
@@ -28,7 +28,10 @@ export async function auditAnnotationWorkbench(page, { screenshot, open }) {
     await page.getByRole("menuitem", { name: label, exact: true }).click();
   };
   await menu("Move to new pane right");
-  await page.locator(".reader-dock-tab").getByText("[test] Research 0000", { exact: true }).click();
+  await page
+    .locator(".reader-dock-tab:not(.is-side)")
+    .getByText("[test] Research 0000", { exact: true })
+    .click();
   await tab.click();
   if (!(await tools.isVisible()))
     await page.getByRole("button", { name: "Toggle right sidebar" }).click();

@@ -17,7 +17,8 @@ import type { AnnotationEntry } from "./annotation-overview.js";
 import type { AnnotationLayout } from "./mdbase-annotation-views.js";
 import type { Annotation, AnnotationId } from "@mdbase-reader/core";
 
-const rowHeight = 78;
+// An estimate until each row is measured; rows size to their passage.
+const rowHeight = 64;
 const headerHeight = 34;
 
 export function AnnotationTable({
@@ -60,13 +61,7 @@ export function AnnotationTable({
     scrollPaddingStart: headerHeight,
     scrollMargin: offset + headerHeight,
   });
-  const byId = new Map(entries.map((entry) => [entry.annotation.id, entry.annotation]));
-  const open = (id: AnnotationId, beside: boolean): void => {
-    const annotation = byId.get(id);
-    if (annotation) {
-      onOpen(annotation, beside);
-    }
-  };
+  const open = openById(entries, onOpen);
   return (
     <div className="library-table-frame">
       <div
@@ -134,6 +129,7 @@ export function AnnotationTable({
                   )
                 }
                 onOpen={() => onOpen(entry.annotation, false)}
+                measure={virtualizer.measureElement}
               />
             ) : null;
           })}
@@ -157,4 +153,17 @@ function focusRowSoon(grid: HTMLElement | null, index: number): void {
       ?.querySelector<HTMLElement>(`[data-row-index="${String(index)}"]`)
       ?.focus({ preventScroll: true }),
   );
+}
+
+function openById(
+  entries: readonly AnnotationEntry[],
+  onOpen: (annotation: Annotation, beside: boolean) => void,
+): (id: AnnotationId, beside: boolean) => void {
+  const byId = new Map(entries.map((entry) => [entry.annotation.id, entry.annotation]));
+  return (id, beside) => {
+    const annotation = byId.get(id);
+    if (annotation) {
+      onOpen(annotation, beside);
+    }
+  };
 }

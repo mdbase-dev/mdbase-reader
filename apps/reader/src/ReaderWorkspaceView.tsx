@@ -228,6 +228,7 @@ export function ReaderWorkspaceView({
               }}
               onAddSource={sourceAddition.open}
               addingSource={sourceAddition.adding}
+              hideRecent={libraryTabActive(sourceWorkspace)}
             />
           }
           sources={library.sources}
@@ -328,6 +329,7 @@ export function ReaderWorkspaceView({
           }}
           onAddSource={sourceAddition.open}
           onToggleFocus={() => model.setFocusMode((value) => !value)}
+          inspectorSource={inspectorSource}
           inspector={
             <InspectorPane
               open={true}
@@ -528,4 +530,10 @@ function commandsForView(
 function toggleLibrary(model: ReaderWorkspaceViewModel): void {
   const dock = model.sourceWorkspace.dock;
   dock.toggleSidebar("left");
+}
+
+function libraryTabActive(workspace: {
+  readonly activeTab: { readonly kind: string } | null;
+}): boolean {
+  return workspace.activeTab?.kind === "library";
 }

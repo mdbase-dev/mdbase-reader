@@ -3,7 +3,10 @@ import type { JSX } from "react";
 
 const continueLimit = 3;
 
-/** Sources worth resuming, most recently opened first. */
+/**
+ * Sources worth resuming, most recently opened first. A source only glanced at (queued, with
+ * no saved position) has nothing to continue, so it waits in the library instead.
+ */
 export function continueReadingSources(
   sources: readonly SourceSummary[],
   limit = continueLimit,
@@ -15,9 +18,10 @@ export function continueReadingSources(
         !["finished", "archived", "abandoned"].includes(
           source.reading?.status ?? source.readingStatus ?? "",
         ) &&
-        (Boolean(source.reading?.lastOpenedAt) ||
-          source.readingStatus === "reading" ||
-          source.reading?.status === "reading"),
+        (source.readingStatus === "reading" ||
+          source.reading?.status === "reading" ||
+          source.reading?.position !== undefined ||
+          (readingProgressValue(source) ?? 0) > 0),
     )
     .sort((left, right) =>
       (right.reading?.lastOpenedAt ?? "").localeCompare(left.reading?.lastOpenedAt ?? ""),
@@ -98,7 +102,7 @@ function ContinueReadingRow({
           <i style={{ width: `${String(progress)}%` }} />
         </span>
       ) : (
-        <span className="continue-reading-state">{location || "Not started"}</span>
+        <span className="continue-reading-state">{location || "Just started"}</span>
       )}
     </button>
   );

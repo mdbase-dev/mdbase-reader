@@ -57,8 +57,22 @@
 .citation-readiness .is-valid {
   color: var(--connected);
 }
-.citation-readiness .is-warning {
-  color: var(--warning, #8b6414);
+.citation-suggestion-count {
+  min-width: 18px;
+  height: 18px;
+  margin-left: 2px;
+  padding: 0 5px;
+  border: 1px solid var(--line);
+  border-radius: 9px;
+  color: var(--ink-soft);
+  background: var(--paper);
+  font: 600 var(--ui-meta) / 1 var(--sans, inherit);
+  cursor: pointer;
+}
+.citation-suggestion-count:hover,
+.citation-suggestion-count:focus-visible {
+  border-color: var(--line-strong);
+  color: var(--ink);
 }
 .citation-readiness code {
   overflow: hidden;
@@ -66,7 +80,7 @@
   border-radius: 3px;
   color: var(--accent);
   background: var(--canvas);
-  font: 9px/1.1 var(--mono);
+  font: 11px/1.1 var(--mono);
   text-overflow: ellipsis;
   white-space: nowrap;
 }
@@ -907,6 +921,12 @@
   color: var(--ink-soft);
   background: color-mix(in oklch, var(--accent) 6%, var(--paper));
   font-size: var(--ui-control);
+}
+.citation-source-sync > p {
+  flex: 1 1 200px;
+  min-width: 0;
+  margin: 0;
+  overflow-wrap: anywhere;
 }
 .citation-source-sync > details {
   flex: 1 1 220px;

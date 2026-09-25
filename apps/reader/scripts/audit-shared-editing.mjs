@@ -86,7 +86,7 @@ export async function auditSharedEditing(page, { screenshot, blockWrites, measur
     .fill("Research 0000");
   await page.getByRole("option", { name: /Research 0000/u }).dblclick();
   const documentId = await page
-    .locator(".reader-dock-tab")
+    .locator(".reader-dock-tab:not(.is-side)")
     .filter({ hasText: "[test] Research 0000" })
     .getAttribute("data-panel-id");
   await pane(documentId).getByLabel("More document actions", { exact: true }).click();

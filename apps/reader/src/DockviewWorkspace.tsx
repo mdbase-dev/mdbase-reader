@@ -25,11 +25,13 @@ import { inspectorPanelId, navigatorPanelId } from "./dockview-panel-ids.js";
 import { dockPanelVisible } from "./dockview-panel-visibility.js";
 import { DocumentWorkspace, type DocumentWorkspaceProps } from "./DocumentWorkspace.js";
 import { CloseIcon, PinIcon } from "./icons.js";
+import { MobileSourceViews } from "./MobileSourceViews.js";
 import { MobileWorkspaceNavigation } from "./MobileWorkspaceNavigation.js";
 import { useProgressiveWorkspaceTabs } from "./use-progressive-workspace-tabs.js";
 import { workspaceTabAccessibleTitle } from "./workspace-tab-display.js";
 
 import type { WorkspaceTab } from "./source-workspace-layout.js";
+import type { SourceSummary } from "@mdbase-reader/core";
 import "dockview-react/dist/styles/dockview.css";
 import "./dockview-workspace.css";
 
@@ -37,6 +39,8 @@ interface DockContextValue {
   readonly document: DocumentWorkspaceProps;
   readonly navigator: ReactNode;
   readonly inspector: ReactNode;
+  /** The inspected source's title, shown on the inspector's own tab. */
+  readonly inspectorTitle: string | null;
   readonly hydrated: ReadonlySet<string>;
 }
 const DockContext = createContext<DockContextValue | null>(null);
@@ -78,11 +82,14 @@ const sidePanelIds: ReadonlySet<string> = new Set([navigatorPanelId, inspectorPa
 export function DockviewWorkspace({
   navigator,
   inspector,
+  inspectorSource = null,
   ...document
 }: DocumentWorkspaceProps & {
   readonly navigator: ReactNode;
   readonly inspector: ReactNode;
+  readonly inspectorSource?: SourceSummary | null;
 }): JSX.Element {
+  const inspectorTitle = inspectorSource?.title ?? null;
   const dock = document.sourceWorkspace.dock;
   const cleanup = useRef<(() => void) | undefined>(undefined);
   const layout = document.sourceWorkspace.layout;
@@ -110,7 +117,7 @@ export function DockviewWorkspace({
   };
   useEffect(() => () => cleanup.current?.(), []);
   return (
-    <DockContext value={{ document, navigator, inspector, hydrated }}>
+    <DockContext value={{ document, navigator, inspector, inspectorTitle, hydrated }}>
       <div
         className="reader-dock dockview-theme-light"
         data-mobile={dock.mobile || undefined}
@@ -130,6 +137,11 @@ export function DockviewWorkspace({
             getTabContextMenuItems={({ panel }) => dockTabMenu(dock, panel)}
           />
         </div>
+        <MobileSourceViews
+          dock={dock}
+          workspace={document.sourceWorkspace}
+          sources={document.sources}
+        />
       </div>
     </DockContext>
   );
@@ -172,7 +184,7 @@ function WorkspacePanel(props: IDockviewPanelProps<{ tab?: WorkspaceTab }>): JSX
   );
 }
 function ReaderDockTab(props: IDockviewPanelHeaderProps<{ tab?: WorkspaceTab }>): JSX.Element {
-  const { document } = useDockContext();
+  const { document, inspectorTitle } = useDockContext();
   const tab = props.params.tab;
   const close = (): void => document.sourceWorkspace.dock.close(props.api.id);
   const side = sidePanelIds.has(props.api.id);
@@ -200,7 +212,18 @@ function ReaderDockTab(props: IDockviewPanelHeaderProps<{ tab?: WorkspaceTab }>)
       {tab?.dirty ? (
         <span aria-label="Unsaved changes" className="dock-tab-marker is-dirty" />
       ) : null}
-      <DockviewDefaultTab {...props} hideClose />
+      {props.api.id === inspectorPanelId && inspectorTitle ? (
+        // The panel keeps its stable title; its tab names the source it inspects instead of
+        // repeating that name in a row of its own.
+        <div className="dv-default-tab">
+          <span className="dv-default-tab-content" title={inspectorTitle}>
+            <span className="sr-only">{props.api.title}: </span>
+            {inspectorTitle}
+          </span>
+        </div>
+      ) : (
+        <DockviewDefaultTab {...props} hideClose />
+      )}
       {side ? null : (
         <span
           className="dv-default-tab-action reader-tab-close"

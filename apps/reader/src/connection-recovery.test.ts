@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import {
+  connectionProblemDetail,
   connectionStatus,
   describeConnectionProblem,
   requiresAccessReview,
@@ -37,5 +38,14 @@ describe("connection recovery", () => {
       "The collection is offline.",
     );
     expect(describeConnectionProblem(null)).toBeNull();
+  });
+
+  it("describes technical failures plainly and keeps the original as detail", () => {
+    const raw = 'Application declaration is invalid: /homepage must match pattern "^https://"';
+    expect(describeConnectionProblem(raw)).toMatch(/did not accept Reader’s app registration/u);
+    expect(connectionProblemDetail(raw)).toBe(raw);
+    expect(describeConnectionProblem("TypeError: Failed to fetch")).toMatch(/could not reach/u);
+    expect(connectionProblemDetail("The collection is offline.")).toBeNull();
+    expect(connectionProblemDetail(null)).toBeNull();
   });
 });

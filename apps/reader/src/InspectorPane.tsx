@@ -52,11 +52,19 @@ export function InspectorPane({
       aria-hidden={!open}
       inert={!open}
     >
-      <header className="inspector-context">
-        <div>
-          <span className="sr-only">{paneLabel}</span>
-          <strong title={source?.title}>{source?.title ?? "No source in this pane"}</strong>
-        </div>
+      {/* The dock tab above names the source; this row only switches its tools. */}
+      <div className="inspector-context">
+        <span className="sr-only">
+          {paneLabel}: {source?.title ?? "No source in this pane"}
+        </span>
+        <InspectorTabs
+          tab={tab}
+          enabled={source !== null}
+          annotationCount={
+            workspace.annotations.status === "ready" ? workspace.annotations.value.length : null
+          }
+          onChange={onTabChange}
+        />
         <button
           type="button"
           className="icon-button inspector-promote"
@@ -67,15 +75,7 @@ export function InspectorPane({
         >
           <PanelIcon />
         </button>
-      </header>
-      <InspectorTabs
-        tab={tab}
-        enabled={source !== null}
-        annotationCount={
-          workspace.annotations.status === "ready" ? workspace.annotations.value.length : null
-        }
-        onChange={onTabChange}
-      />
+      </div>
       {source && workbenchOwner?.tab === tab ? (
         <div className="inspector-status inspector-workbench-owner">
           <strong>

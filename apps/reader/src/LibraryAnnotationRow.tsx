@@ -18,6 +18,7 @@ export function AnnotationRow({
   onLongPress,
   onSelect,
   onOpen,
+  measure,
 }: {
   readonly entry: AnnotationEntry;
   readonly columns: readonly AnnotationColumn[];
@@ -31,11 +32,15 @@ export function AnnotationRow({
   readonly onLongPress: () => void;
   readonly onSelect: (event: MouseEvent<HTMLElement>) => void;
   readonly onOpen: () => void;
+  /** Reports the row's rendered height, so short passages do not leave tall empty rows. */
+  readonly measure?: (element: HTMLElement | null) => void;
 }): JSX.Element {
   return (
     // Rows take keyboard input through the grid's roving focus; see handleGridKey.
     // eslint-disable-next-line jsx-a11y/click-events-have-key-events
     <div
+      ref={measure}
+      data-index={index}
       className={`library-table-row library-annotation-row${selected ? " is-selected" : ""}`}
       role="row"
       aria-rowindex={index + 2}

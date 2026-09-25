@@ -32,7 +32,7 @@ import {
 import { LibraryAnnotations } from "./LibraryAnnotations.js";
 import { LibraryBulkBar } from "./LibraryBulkBar.js";
 import { LibraryCards } from "./LibraryCards.js";
-import { countLabel } from "./LibraryCells.js";
+import { countLabel, readingStatusChoices, readingStatusLabel } from "./LibraryCells.js";
 import { LibraryConditionsEditor } from "./LibraryConditionsEditor.js";
 import { LibraryTable } from "./LibraryTable.js";
 import { LibraryTextSearch, type LibrarySearchScope } from "./LibraryTextSearch.js";
@@ -310,8 +310,8 @@ export function LibraryWorkspace({
                   setSearchScope(event.target.value as LibrarySearchScope);
                 }}
               >
-                <option value="sources">Sources</option>
-                <option value="notes">Notes</option>
+                <option value="sources">Library</option>
+                <option value="notes">Notes & annotations</option>
                 <option value="documents">Open documents</option>
               </select>
             </div>
@@ -356,11 +356,11 @@ export function LibraryWorkspace({
                       }
                     >
                       <option value="all">Any status</option>
-                      <option value="inbox">Inbox</option>
-                      <option value="queued">Queued</option>
-                      <option value="reading">Reading</option>
-                      <option value="finished">Finished</option>
-                      <option value="archived">Archived</option>
+                      {readingStatusChoices.map((status) => (
+                        <option key={status} value={status}>
+                          {readingStatusLabel(status)}
+                        </option>
+                      ))}
                     </select>
                   </label>
                   <label>
@@ -594,6 +594,7 @@ export function LibraryWorkspace({
                 scrollRef={resultsRef}
                 onOpen={onOpenSource}
                 onOpenBeside={onOpenBeside}
+                onExport={bibliographyExport.runFor}
                 {...(changeStatus ? { onChangeStatus: changeStatus } : {})}
                 {...(writes.saveField
                   ? {

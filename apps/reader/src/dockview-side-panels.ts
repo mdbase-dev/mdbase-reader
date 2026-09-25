@@ -10,7 +10,7 @@ import type {
 
 const positions = ["left", "right"] as const;
 function sidePanelTitle(id: string): string {
-  return id === navigatorPanelId ? "Sources" : "Notes";
+  return id === navigatorPanelId ? "Sources" : "Source";
 }
 function edgeGroup(api: DockviewApi, id: string, width: number): DockviewGroupPanel {
   const position = id === navigatorPanelId ? "left" : "right";

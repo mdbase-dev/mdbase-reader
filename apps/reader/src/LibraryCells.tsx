@@ -1,3 +1,5 @@
+import { readingStatuses } from "@mdbase-reader/core";
+
 import {
   formatPropertyValue,
   propertyKey,
@@ -106,7 +108,8 @@ export function ReadingStatus({ source }: { readonly source: SourceSummary }): J
   const progress = readingProgress(source);
   return (
     <span className={`library-status is-${readingStatusOf(source)}`}>
-      {statusLabel(source)}
+      <i className="library-status-mark" aria-hidden="true" />
+      <span>{statusLabel(source)}</span>
       {progress !== null ? (
         <span className="library-progress" aria-label={`${String(progress)}% read`}>
           <i style={{ width: `${String(progress)}%` }} />
@@ -116,14 +119,11 @@ export function ReadingStatus({ source }: { readonly source: SourceSummary }): J
   );
 }
 
-export const readingStatusChoices: readonly ReadingStatusValue[] = [
-  "inbox",
-  "queued",
-  "reading",
-  "finished",
-  "archived",
-  "abandoned",
-];
+export const readingStatusChoices: readonly ReadingStatusValue[] = readingStatuses;
+
+export function readingStatusLabel(status: string): string {
+  return status.charAt(0).toLocaleUpperCase() + status.slice(1);
+}
 
 export function StatusPicker({
   source,
@@ -136,6 +136,7 @@ export function StatusPicker({
   const status = readingStatusOf(source);
   return (
     <span className={`library-status is-${status} is-editable`}>
+      <i className="library-status-mark" aria-hidden="true" />
       <select
         aria-label={`Reading status of ${source.title}`}
         value={status}
@@ -146,7 +147,7 @@ export function StatusPicker({
       >
         {readingStatusChoices.map((choice) => (
           <option key={choice} value={choice}>
-            {choice.charAt(0).toLocaleUpperCase() + choice.slice(1)}
+            {readingStatusLabel(choice)}
           </option>
         ))}
       </select>
@@ -164,8 +165,7 @@ function readingStatusOf(source: SourceSummary): string {
 }
 
 function statusLabel(source: SourceSummary): string {
-  const status = readingStatusOf(source);
-  return status.charAt(0).toLocaleUpperCase() + status.slice(1);
+  return readingStatusLabel(readingStatusOf(source));
 }
 
 function readingProgress(source: SourceSummary): number | null {

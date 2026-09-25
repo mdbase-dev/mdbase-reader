@@ -26,6 +26,8 @@ interface LibraryNavigatorProps {
   readonly viewsLoading: boolean;
   readonly problem: string | null;
   readonly addingSource: boolean;
+  /** The library tab already shows what to continue, so the rail need not repeat it. */
+  readonly hideRecent?: boolean;
   readonly onOpenView: (view: MdbaseLibraryView) => void;
   readonly onPreviewSource: (id: SourceId) => void;
   readonly onOpenSource: (id: SourceId) => void;
@@ -42,6 +44,7 @@ export function LibraryNavigator({
   viewsLoading,
   problem,
   addingSource,
+  hideRecent = false,
   onOpenView,
   onPreviewSource,
   onOpenSource,
@@ -124,7 +127,7 @@ export function LibraryNavigator({
             {openSources.length > 0 ? (
               <NavigatorShortList label="Open" sources={openSources} {...rowProps} />
             ) : null}
-            {recent.length > 0 ? (
+            {recent.length > 0 && !hideRecent ? (
               <NavigatorShortList label="Recent" sources={recent} {...rowProps} />
             ) : null}
             {sources.length === 0 ? (

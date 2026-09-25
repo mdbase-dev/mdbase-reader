@@ -1,3 +1,5 @@
+import { displayCslValue } from "./citation-form-model.js";
+
 import type { SourceFieldsController } from "./use-source-fields.js";
 import type { SourceFieldDifference } from "@mdbase-reader/core";
 import type { JSX } from "react";
@@ -74,4 +76,50 @@ function displaySourceValue(value: unknown): string {
     return value.join("; ") || "None";
   }
   return typeof value === "string" || typeof value === "number" ? String(value) : "None";
+}
+
+const gapLabels: Record<string, string> = { author: "authors", issued: "date", URL: "URL" };
+
+/**
+ * The citation leaves fields empty that the library record has, e.g. no date while the
+ * library records 1952. Filling them edits the draft; saving stays the person's choice.
+ */
+export function CitationGapFill({
+  gaps,
+  onApply,
+}: {
+  readonly gaps: Readonly<Record<string, unknown>>;
+  readonly onApply: (gaps: Readonly<Record<string, unknown>>) => void;
+}): JSX.Element | null {
+  const fields = Object.keys(gaps);
+  if (!fields.length) {
+    return null;
+  }
+  return (
+    <div className="citation-source-sync is-gap" role="status">
+      <p>
+        This citation is missing{" "}
+        {listPhrase(
+          fields.map((field) => `the ${gapLabels[field] ?? field} (${displayGap(gaps[field])})`),
+        )}
+        , which the library records.
+      </p>
+      <button type="button" onClick={() => onApply(gaps)}>
+        Add to citation
+      </button>
+    </div>
+  );
+}
+
+function listPhrase(items: readonly string[]): string {
+  return items.length < 2
+    ? (items[0] ?? "")
+    : `${items.slice(0, -1).join(", ")} and ${items.at(-1) ?? ""}`;
+}
+
+function displayGap(value: unknown): string {
+  if (Array.isArray(value)) {
+    return value.map((name: unknown) => displayCslValue(name)).join("; ");
+  }
+  return displayCslValue(value);
 }

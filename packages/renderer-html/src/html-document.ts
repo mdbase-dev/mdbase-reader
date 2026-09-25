@@ -98,6 +98,10 @@ function readerStyle(document: Document): HTMLStyleElement {
       :root { background: #211d1e; color: #e7e3dc; }
       blockquote { color: #b8b1a7; }
       pre { background: rgba(255,255,255,.06); }
+      /* The light wash turns olive over a dark page; a thinner, warmer amber stays legible. */
+      ::highlight(reader-annotations) { background: rgba(255, 196, 64, .24); text-decoration: underline rgba(255, 204, 92, .5) 1px; }
+      ::highlight(reader-active-annotation) { background: rgba(255, 190, 48, .4); text-decoration: underline rgba(255, 210, 110, .9) 2px; }
+      mark[data-reader-annotation] { background: rgba(255, 196, 64, .24); }
     }
     @media (max-width: 640px) { body { padding: 3rem 1.5rem 7rem; font-size: 17px; } }
     @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }

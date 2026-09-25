@@ -122,6 +122,26 @@ button {
   font-size: 12px;
 }
 
+.connection-error-detail {
+  margin-top: 8px;
+  color: var(--muted);
+  font-size: 12px;
+}
+.connection-error-detail summary {
+  width: fit-content;
+  cursor: pointer;
+}
+.connection-error-detail code {
+  display: block;
+  margin-top: 6px;
+  padding: 8px 10px;
+  border-radius: 6px;
+  background: var(--hover);
+  font: 11px/1.45 var(--mono);
+  overflow-wrap: anywhere;
+  white-space: pre-wrap;
+}
+
 .connection-actions {
   display: grid;
   gap: 8px;
@@ -1818,7 +1838,7 @@ input:focus-visible {
 /* Contextual source tools */
 
 .inspector-pane {
-  grid-template-rows: 58px 44px minmax(0, 1fr);
+  grid-template-rows: 40px minmax(0, 1fr);
 }
 
 .annotation-list {
@@ -2100,7 +2120,8 @@ input:focus-visible {
 /* Contextual source tools ------------------------------------------------- */
 
 .inspector-pane {
-  grid-template-rows: 42px 38px minmax(0, 1fr);
+  /* The dock tab names the source, so the pane starts with its tool tabs. */
+  grid-template-rows: 40px minmax(0, 1fr);
 }
 
 .workspace-pane.is-library-pane,

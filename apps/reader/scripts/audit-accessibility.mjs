@@ -33,6 +33,13 @@ try {
   await desktop.goto(`${origin}/?preview=1`, { waitUntil: "networkidle" });
   await desktop.getByRole("grid", { name: "Sources" }).waitFor();
   await audit(desktop, "library");
+  await desktop
+    .locator(".library-table-body .library-table-row .is-title")
+    .first()
+    .click({ button: "right" });
+  await desktop.getByRole("menu").waitFor();
+  await audit(desktop, "row menu");
+  await desktop.keyboard.press("Escape");
   const titles = desktop.locator(".library-table-body .library-table-row .is-title");
   await titles.nth(0).click();
   await titles.nth(2).click({ modifiers: ["Shift"] });
@@ -50,6 +57,9 @@ try {
   await desktop.getByRole("button", { name: "Toggle right sidebar" }).click();
   await desktop.getByRole("complementary", { name: "Source workspace" }).waitFor();
   await audit(desktop, "reading with notes");
+  await desktop.getByRole("tab", { name: /Citation/u }).click();
+  await desktop.locator(".citation-editor").waitFor();
+  await audit(desktop, "citation tool");
   await desktop.keyboard.press("Control+k");
   await desktop.getByRole("dialog", { name: "Reader commands" }).waitFor();
   await audit(desktop, "command palette");
@@ -59,6 +69,9 @@ try {
   await phone.goto(`${origin}/?preview=1`, { waitUntil: "networkidle" });
   await phone.getByRole("grid", { name: "Sources" }).waitFor();
   await audit(phone, "phone library");
+  await phone.getByRole("button", { name: /^Continue reading Gravity and Grace/u }).click();
+  await phone.getByRole("navigation", { name: "Source views" }).waitFor();
+  await audit(phone, "phone source views");
 } finally {
   await browser.close();
 }

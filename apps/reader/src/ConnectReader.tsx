@@ -9,8 +9,10 @@ import { ConnectWorkspaceGateway } from "./connect-workspace.js";
 import { readerSession } from "./connect.js";
 import { ConnectedDocument } from "./ConnectedDocument.js";
 import {
+  connectionProblemDetail,
   connectionStatus,
   describeConnectionProblem,
+  requiresAccessReview,
   isLocalhost,
   requiresReconnect,
 } from "./connection-recovery.js";
@@ -196,6 +198,7 @@ function ConnectionScreen({
     <ConnectionLayout
       status={describeConnectionProblem(connectionStatus(session))}
       error={describeConnectionProblem(error)}
+      detail={connectionProblemDetail(problem)}
     >
       {session.status === "setup_review_required" ? (
         <section className="connection-setup" aria-labelledby="reader-setup-title">
@@ -217,7 +220,16 @@ function ConnectionScreen({
         </section>
       ) : null}
       <div className="connection-actions">
-        {requiresReconnect(problem) ? null : <ConnectionRetry error={error} onRetry={onRetry} />}
+        <SelectedAuthorizationAction
+          session={session}
+          error={problem}
+          working={working}
+          hasSelectedCollection={Boolean(selectedCollectionId)}
+          onAuthorize={() => void authorize("selected")}
+        />
+        {requiresReconnect(problem) || requiresAccessReview(problem) ? null : (
+          <ConnectionRetry error={error} onRetry={onRetry} />
+        )}
         {session.connections
           .filter(({ collectionId }) => collectionId !== selectedCollectionId)
           .map((connection) => (
@@ -228,13 +240,6 @@ function ConnectionScreen({
               Open {connection.displayName}
             </ReaderButton>
           ))}
-        <SelectedAuthorizationAction
-          session={session}
-          error={problem}
-          working={working}
-          hasSelectedCollection={Boolean(selectedCollectionId)}
-          onAuthorize={() => void authorize("selected")}
-        />
         <button
           className="connection-secondary"
           disabled={working}

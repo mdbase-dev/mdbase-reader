@@ -6,7 +6,7 @@ export async function auditSidebarLayout(page, { screenshot, measurements }) {
   const navigator = page.getByRole("complementary", { name: "Library navigator" });
   const inspector = page.getByRole("complementary", { name: "Source workspace" });
   const tab = (n) =>
-    page.locator(".reader-dock-tab").filter({
+    page.locator(".reader-dock-tab:not(.is-side)").filter({
       has: page.locator(".dv-default-tab-content", {
         hasText: `[test] Research ${String(n).padStart(4, "0")}`,
       }),

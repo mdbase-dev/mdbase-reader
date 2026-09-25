@@ -13,8 +13,9 @@ export async function auditDockview(page, { screenshot, blockWrites }) {
   };
   const tab = (name) =>
     page
-      .locator(".reader-dock-tab")
+      .locator(".reader-dock-tab:not(.is-side)")
       .filter({ has: page.locator(".dv-default-tab-content", { hasText: name }) });
+  const sideTab = (id) => page.locator(`.reader-dock-tab[data-panel-id="${id}"]`);
   const menu = async (target, label) => {
     await target.click({ button: "right" });
     await page.getByText(label, { exact: true }).click();
@@ -126,7 +127,7 @@ export async function auditDockview(page, { screenshot, blockWrites }) {
   const inspectorGroup = panelGroup(await state(), inspectorId);
   // Dockview 8.3.1 edge-to-header drops are unreliable; the native content-centre target works.
   const docRect = await firstSession.locator("iframe.html-viewer").boundingBox();
-  await drag(tab("Notes"), {
+  await drag(sideTab("reader:inspector"), {
     x: docRect.x + docRect.width / 2,
     y: docRect.y + docRect.height / 2,
   });
@@ -173,7 +174,7 @@ export async function auditDockview(page, { screenshot, blockWrites }) {
 
   const navigationLayout = JSON.stringify((await state()).layout.grid.root);
   const noteBounds = await page.locator(`[data-session-id="${noteId}"]`).boundingBox();
-  await drag(tab(/^Sources$/), {
+  await drag(sideTab("reader:navigator"), {
     x: noteBounds.x + noteBounds.width / 2,
     y: noteBounds.y + noteBounds.height - 20,
   });
@@ -187,7 +188,7 @@ export async function auditDockview(page, { screenshot, blockWrites }) {
   completed.push("Library navigator also docks to document edges");
 
   // Native touch input exercises Dockview's pointer strategy, not DOM-dispatched fake drags.
-  const touchSource = await tab(/^Sources$/).boundingBox();
+  const touchSource = await sideTab("reader:navigator").boundingBox();
   const touchTarget = await page.locator(`[data-panel-id="${noteId}"]`).boundingBox();
   const touchStart = { x: touchSource.x + 55, y: touchSource.y + touchSource.height / 2 };
   const touchEnd = { x: touchTarget.x + 70, y: touchTarget.y + touchTarget.height / 2 };

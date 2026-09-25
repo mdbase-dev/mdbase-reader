@@ -17,6 +17,7 @@ import {
   toggleTouchRow,
   type RowSelection,
 } from "./library-row-selection.js";
+import { useLibraryRowMenu, type LibraryRowMenuActions } from "./LibraryRowMenu.js";
 import { LibraryTableHead } from "./LibraryTableHead.js";
 import { LibraryTableRow, isEditableColumn } from "./LibraryTableRow.js";
 import { useLibraryColumns } from "./use-library-columns.js";
@@ -46,6 +47,7 @@ export interface LibraryTableProps {
   readonly onChangeStatus?: (id: SourceId, status: ReadingStatus) => void;
   /** Saves a field edited in its cell; editing is offered only when this is present. */
   readonly onEditField?: (source: SourceSummary, key: string, text: string) => Promise<void>;
+  readonly onExport?: (sources: readonly SourceSummary[]) => void;
 }
 
 interface EditingCell {
@@ -74,6 +76,15 @@ export function LibraryTable(props: LibraryTableProps): JSX.Element {
   const focusRow = useRowFocus(gridRef);
   const press = useLongPress();
   const [editing, setEditing] = useState<EditingCell | null>(null);
+  const rowMenu = useLibraryRowMenu({
+    sources,
+    selection,
+    rowIds,
+    gridRef,
+    onSelectionChange,
+    onClosed: focusRow,
+    actions: rowMenuActions(props, (source) => setEditing({ id: source.id, column: "title" })),
+  });
   const sizes = layout.columns.map(
     (column) => table.getColumn(column)?.getSize() ?? defaultColumnWidth(column),
   );
@@ -94,18 +105,11 @@ export function LibraryTable(props: LibraryTableProps): JSX.Element {
         style={{ minWidth: `${String(width)}px` }}
         onKeyDown={(event) => {
           if (
-            (event.target as Element).closest("select, input, button, summary, [role=separator]")
+            (event.target as Element).closest("select, input, button, summary, [role=separator]") ||
+            rowMenu.openFromKey(event) ||
+            startCellEdit(event, props, selection.active, setEditing)
           ) {
             return;
-          }
-          if (event.key === "F2" && props.onEditField && selection.active !== null) {
-            const column = layout.columns.find(isEditableColumn);
-            const source = sources[selection.active];
-            if (column && source) {
-              event.preventDefault();
-              setEditing({ id: source.id, column });
-              return;
-            }
           }
           handleGridKey(event, {
             rowIds,
@@ -156,6 +160,7 @@ export function LibraryTable(props: LibraryTableProps): JSX.Element {
                   focusRow(item.index);
                 }}
                 press={press}
+                onMenu={(x, y) => rowMenu.open(item.index, x, y)}
                 onLongPress={() => onSelectionChange(toggleTouchRow(selection, rowIds, item.index))}
                 onSelect={(event) =>
                   onSelectionChange(
@@ -169,8 +174,39 @@ export function LibraryTable(props: LibraryTableProps): JSX.Element {
           })}
         </div>
       </div>
+      {rowMenu.element}
     </div>
   );
+}
+
+/** F2 edits the focused row's first editable field, like renaming in a file manager. */
+function startCellEdit(
+  event: { readonly key: string; preventDefault: () => void },
+  props: LibraryTableProps,
+  active: number | null,
+  setEditing: (cell: EditingCell) => void,
+): boolean {
+  const column = props.layout.columns.find(isEditableColumn);
+  const source = active === null ? undefined : props.sources[active];
+  if (event.key !== "F2" || !props.onEditField || !column || !source) {
+    return false;
+  }
+  event.preventDefault();
+  setEditing({ id: source.id, column });
+  return true;
+}
+
+function rowMenuActions(
+  props: LibraryTableProps,
+  rename: (source: SourceSummary) => void,
+): LibraryRowMenuActions {
+  return {
+    onOpen: props.onOpen,
+    onOpenBeside: props.onOpenBeside,
+    ...(props.onChangeStatus ? { onChangeStatus: props.onChangeStatus } : {}),
+    ...(props.onExport ? { onExport: props.onExport } : {}),
+    ...(props.onEditField && props.layout.columns.includes("title") ? { onRename: rename } : {}),
+  };
 }
 
 /** The element's offset within its scroller, re-read after every render that may move it. */

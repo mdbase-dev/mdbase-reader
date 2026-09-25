@@ -1,11 +1,11 @@
-import { sourceCitationDifferences } from "@mdbase-reader/core";
+import { citationGapsFromSource, sourceCitationDifferences } from "@mdbase-reader/core";
 import { ReaderButton } from "@mdbase-reader/ui";
 import { useState, type JSX } from "react";
 
 import { writeCitationDrag } from "./citation-drag.js";
 import { CitationLookup } from "./CitationLookup.js";
 import { CitationPreview } from "./CitationPreview.js";
-import { CitationSourceSync } from "./CitationSourceSync.js";
+import { CitationGapFill, CitationSourceSync } from "./CitationSourceSync.js";
 import { CitationStructuredEditor } from "./CitationStructuredEditor.js";
 import { MultilineCodeEditor } from "./MultilineCodeEditor.js";
 
@@ -44,6 +44,7 @@ function ReadyCitationEditor({
   readonly sourceFields: SourceFieldsController;
 }): JSX.Element {
   const [mode, setMode] = useState<"fields" | "raw">("fields");
+  const [suggestionsOpen, setSuggestionsOpen] = useState(false);
   const citation = editor.assessment.value ?? {};
   const validCitation = editor.assessment.valid ? editor.assessment.value : null;
   const citekey = textField(citation["id"]);
@@ -60,7 +61,11 @@ function ReadyCitationEditor({
         }
       >
         <div className="citation-readiness">
-          <CitationValidity valid={editor.assessment.valid} warnings={editor.warnings.length} />
+          <CitationValidity
+            valid={editor.assessment.valid}
+            warnings={editor.warnings.length}
+            onShowSuggestions={() => setSuggestionsOpen(true)}
+          />
           <code className={citekey ? undefined : "is-empty"}>
             {citekey ? `@${citekey}` : "Citation key needed"}
           </code>
@@ -78,18 +83,24 @@ function ReadyCitationEditor({
             aria-current={mode === "raw" ? "page" : undefined}
             onClick={() => setMode("raw")}
           >
-            Raw CSL
+            CSL
           </button>
         </nav>
       </header>
 
       {validCitation ? <CitationPreview citation={validCitation} /> : null}
 
-      <main className="citation-editor-body">
+      <div className="citation-editor-body">
         {!editor.dirty && source.citation && sourceFields.available ? (
           <CitationSourceSync
             differences={sourceCitationDifferences(source.frontmatter, source.citation)}
             controller={sourceFields}
+          />
+        ) : null}
+        {editor.assessment.value ? (
+          <CitationGapFill
+            gaps={citationGapsFromSource(editor.assessment.value, source)}
+            onApply={(gaps) => editor.setCitation({ ...citation, ...gaps })}
           />
         ) : null}
         {mode === "fields" ? (
@@ -118,10 +129,14 @@ function ReadyCitationEditor({
             />
           </div>
         )}
-      </main>
+      </div>
 
       <footer className="citation-editor-footer">
-        <CitationFeedback editor={editor} />
+        <CitationFeedback
+          editor={editor}
+          suggestionsOpen={suggestionsOpen}
+          onSuggestionsToggle={setSuggestionsOpen}
+        />
         <ReaderButton
           disabled={!editor.assessment.valid || !editor.dirty || editor.status === "saving"}
           onClick={editor.save}
@@ -147,25 +162,47 @@ function CitationLoadStatus({
   );
 }
 
+/** Readiness stays calm when the citation is valid; suggestions are one click away. */
 function CitationValidity({
   valid,
   warnings,
+  onShowSuggestions,
 }: {
   readonly valid: boolean;
   readonly warnings: number;
+  readonly onShowSuggestions: () => void;
 }): JSX.Element {
+  if (!valid) {
+    return <span className="is-invalid">Incomplete</span>;
+  }
+  const suggestions = `${String(warnings)} quality ${warnings === 1 ? "suggestion" : "suggestions"}`;
   return (
-    <span className={valid ? (warnings ? "is-warning" : "is-valid") : "is-invalid"}>
-      {valid
-        ? warnings
-          ? `Ready · ${String(warnings)} ${warnings === 1 ? "suggestion" : "suggestions"}`
-          : "Ready to cite"
-        : "Citation incomplete"}
+    <span className="is-valid">
+      Ready
+      {warnings ? (
+        <button
+          type="button"
+          className="citation-suggestion-count"
+          aria-label={`Show ${suggestions}`}
+          title={suggestions}
+          onClick={onShowSuggestions}
+        >
+          {warnings}
+        </button>
+      ) : null}
     </span>
   );
 }
 
-function CitationFeedback({ editor }: { readonly editor: CitationEditorController }): JSX.Element {
+function CitationFeedback({
+  editor,
+  suggestionsOpen,
+  onSuggestionsToggle,
+}: {
+  readonly editor: CitationEditorController;
+  readonly suggestionsOpen: boolean;
+  readonly onSuggestionsToggle: (open: boolean) => void;
+}): JSX.Element {
   if (editor.error) {
     return (
       <div className="citation-feedback" aria-live="polite">
@@ -185,7 +222,11 @@ function CitationFeedback({ editor }: { readonly editor: CitationEditorControlle
   }
   if (editor.warnings.length) {
     return (
-      <details className="citation-feedback">
+      <details
+        className="citation-feedback"
+        open={suggestionsOpen}
+        onToggle={(event) => onSuggestionsToggle(event.currentTarget.open)}
+      >
         <summary>
           {editor.warnings.length} quality{" "}
           {editor.warnings.length === 1 ? "suggestion" : "suggestions"}
