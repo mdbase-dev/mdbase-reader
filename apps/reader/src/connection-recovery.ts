@@ -7,6 +7,27 @@ export function requiresAccessReview(message: string | null): boolean {
   );
 }
 
+/**
+ * The grant's private keys are gone from this browser, e.g. retired when another tab
+ * reconnected, or removed with site data. Retrying cannot help; authorizing again can.
+ */
+export function requiresReconnect(message: string | null): boolean {
+  return Boolean(
+    message &&
+    /(?:encrypted grant key|remote authority signing key) is unavailable/iu.test(message),
+  );
+}
+
+const reconnectMessage =
+  "This browser no longer has the key for this collection’s connection. Reconnect to keep reading.";
+
+/** Connection failures as a person should read them. */
+export function describeConnectionProblem(message: string): string;
+export function describeConnectionProblem(message: string | null): string | null;
+export function describeConnectionProblem(message: string | null): string | null {
+  return requiresReconnect(message) ? reconnectMessage : message;
+}
+
 export function connectionStatus(
   session: Exclude<ReaderConnectSnapshot, { status: "ready" }>,
 ): string {

@@ -8,8 +8,17 @@ import { CollectionSwitchingContext } from "./CollectionPicker.js";
 import { ConnectWorkspaceGateway } from "./connect-workspace.js";
 import { readerSession } from "./connect.js";
 import { ConnectedDocument } from "./ConnectedDocument.js";
-import { connectionStatus, isLocalhost, requiresAccessReview } from "./connection-recovery.js";
-import { ConnectionLayout, ConnectionRetry } from "./ConnectionLayout.js";
+import {
+  connectionStatus,
+  describeConnectionProblem,
+  isLocalhost,
+  requiresReconnect,
+} from "./connection-recovery.js";
+import {
+  ConnectionLayout,
+  ConnectionRetry,
+  SelectedAuthorizationAction,
+} from "./ConnectionLayout.js";
 import { readerErrorMessage } from "./errors.js";
 import { ReaderApp } from "./ReaderApp.js";
 import { requestedSourceId } from "./SourceDeepLink.js";
@@ -152,6 +161,8 @@ function ConnectionScreen({
 }): JSX.Element {
   const [working, setWorking] = useState(false);
   const selectedCollectionId = "collectionId" in session ? session.collectionId : null;
+  // Some failures arrive only as the session's status, not as a step's error.
+  const problem = error ?? connectionStatus(session);
 
   const authorize = async (target: "choose" | "selected"): Promise<void> => {
     setWorking(true);
@@ -182,7 +193,10 @@ function ConnectionScreen({
   };
 
   return (
-    <ConnectionLayout status={connectionStatus(session)} error={error}>
+    <ConnectionLayout
+      status={describeConnectionProblem(connectionStatus(session))}
+      error={describeConnectionProblem(error)}
+    >
       {session.status === "setup_review_required" ? (
         <section className="connection-setup" aria-labelledby="reader-setup-title">
           <h2 id="reader-setup-title">Set up this reading collection</h2>
@@ -203,7 +217,7 @@ function ConnectionScreen({
         </section>
       ) : null}
       <div className="connection-actions">
-        <ConnectionRetry error={error} onRetry={onRetry} />
+        {requiresReconnect(problem) ? null : <ConnectionRetry error={error} onRetry={onRetry} />}
         {session.connections
           .filter(({ collectionId }) => collectionId !== selectedCollectionId)
           .map((connection) => (
@@ -216,7 +230,7 @@ function ConnectionScreen({
           ))}
         <SelectedAuthorizationAction
           session={session}
-          error={error}
+          error={problem}
           working={working}
           hasSelectedCollection={Boolean(selectedCollectionId)}
           onAuthorize={() => void authorize("selected")}
@@ -237,29 +251,5 @@ function ConnectionScreen({
         </p>
       ) : null}
     </ConnectionLayout>
-  );
-}
-
-function SelectedAuthorizationAction({
-  session,
-  error,
-  working,
-  hasSelectedCollection,
-  onAuthorize,
-}: {
-  readonly session: Exclude<ReaderConnectSnapshot, { status: "ready" }>;
-  readonly error: string | null;
-  readonly working: boolean;
-  readonly hasSelectedCollection: boolean;
-  readonly onAuthorize: () => void;
-}): JSX.Element | null {
-  const staleGrant = hasSelectedCollection && requiresAccessReview(error);
-  if (session.status !== "authorization_required" && !staleGrant) {
-    return null;
-  }
-  return (
-    <ReaderButton disabled={working} onClick={onAuthorize}>
-      {working ? "Opening mdbase…" : staleGrant ? "Review updated access" : "Authorize collection"}
-    </ReaderButton>
   );
 }
