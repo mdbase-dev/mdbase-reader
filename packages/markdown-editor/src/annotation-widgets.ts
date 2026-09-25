@@ -1,9 +1,4 @@
 import {
-  autocompletion,
-  type CompletionContext,
-  type CompletionResult,
-} from "@codemirror/autocomplete";
-import {
   Decoration,
   type EditorView,
   ViewPlugin,
@@ -13,13 +8,9 @@ import {
 } from "@codemirror/view";
 
 import { citationDecorations } from "./citation-widgets.js";
-import {
-  citationCompletionAt,
-  wikiLinkCompletionAt,
-  type CitationCompletionCandidate,
-  type WikiLinkCandidate,
-} from "./completions.js";
+import { referenceCompletions } from "./reference-completions.js";
 
+import type { CitationCompletionCandidate, WikiLinkCandidate } from "./completions.js";
 import type { Extension, Range } from "@codemirror/state";
 
 export function annotationEditorExtensions(
@@ -35,65 +26,6 @@ export function annotationEditorExtensions(
     annotationEmbeds(candidates, onOpen, onEdit),
     citationDecorations(citations, onOpenCitation, onEditCitation),
   ];
-}
-
-function referenceCompletions(
-  candidates: readonly WikiLinkCandidate[],
-  citations: readonly CitationCompletionCandidate[],
-): Extension {
-  return autocompletion({
-    activateOnTyping: true,
-    maxRenderedOptions: 8,
-    optionClass: (completion) =>
-      completion.type === "annotation" ? "cm-completion-annotation" : "",
-    override: [
-      (context) => annotationCompletionSource(context, candidates),
-      (context) => citationCompletionSource(context, citations),
-    ],
-  });
-}
-
-function citationCompletionSource(
-  context: CompletionContext,
-  candidates: readonly CitationCompletionCandidate[],
-): CompletionResult | null {
-  const completion = citationCompletionAt(context.state.doc.toString(), context.pos, candidates);
-  if (!completion) {
-    return null;
-  }
-  return {
-    from: completion.from,
-    filter: false,
-    options: completion.options.map((candidate) => ({
-      label: candidate.id,
-      detail: candidate.label,
-      ...(candidate.detail ? { info: candidate.detail } : {}),
-      type: "citation",
-      apply: `[@${candidate.id}]`,
-    })),
-  };
-}
-
-function annotationCompletionSource(
-  context: CompletionContext,
-  candidates: readonly WikiLinkCandidate[],
-): CompletionResult | null {
-  const completion = wikiLinkCompletionAt(context.state.doc.toString(), context.pos, candidates);
-  if (!completion) {
-    return null;
-  }
-  return {
-    from: completion.from,
-    filter: false,
-    options: completion.options.map((candidate) => ({
-      label: candidate.label,
-      ...(candidate.detail ? { detail: candidate.detail } : {}),
-      ...((candidate.quote ?? candidate.note) ? { info: candidate.quote ?? candidate.note } : {}),
-      type: "annotation",
-      boost: candidate.embed ? 20 : 0,
-      apply: `${candidate.path}]]`,
-    })),
-  };
 }
 
 function annotationEmbeds(

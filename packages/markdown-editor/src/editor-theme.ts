@@ -1,16 +1,19 @@
 import { EditorView } from "@codemirror/view";
 
+export const uiFont = '"Atkinson Hyperlegible", "Segoe UI", sans-serif';
+export const readingFont = 'Georgia, "Times New Roman", serif';
+
 export const readerEditorTheme = EditorView.theme({
   "&": {
     height: "100%",
     color: "var(--ink)",
     backgroundColor: "var(--paper)",
-    fontFamily: '"Atkinson Hyperlegible", "Segoe UI", sans-serif',
+    fontFamily: uiFont,
     fontSize: "15px",
   },
   ".cm-content": { padding: "16px 20px", caretColor: "var(--accent)" },
   '&[data-editor-profile="prose"] .cm-content, &[data-editor-profile="compact"] .cm-content': {
-    fontFamily: '"Atkinson Hyperlegible", "Segoe UI", sans-serif',
+    fontFamily: uiFont,
   },
   '&[data-editor-profile="code"] .cm-content': { fontFamily: "var(--mono)" },
   ".cm-line": { padding: "0", lineHeight: "1.55" },
@@ -34,39 +37,22 @@ export const readerEditorTheme = EditorView.theme({
     outline: "2px solid color-mix(in oklch, var(--accent) 48%, transparent)",
     outlineOffset: "-2px",
   },
-  ".cm-panels": {
-    borderBottom: "1px solid var(--line-strong)",
-    color: "var(--ink-soft)",
-    backgroundColor: "var(--paper)",
-    fontFamily: '"Atkinson Hyperlegible", "Segoe UI", sans-serif',
-    fontSize: "12px",
+  // A source note fills its pane like a page; the caret, not a frame, shows where typing lands.
+  '&[data-editor-profile="prose"].cm-focused': { outline: "none" },
+  '&[data-editor-profile="prose"] .cm-content': { paddingBottom: "min(35vh, 240px)" },
+  ".cm-placeholder": { color: "var(--faint)" },
+  ".cm-selectionMatch": {
+    backgroundColor: "color-mix(in oklch, var(--accent) 14%, transparent)",
   },
-  ".cm-search label": { color: "var(--muted)", fontSize: "11px" },
-  ".cm-search input": {
-    border: "1px solid var(--line-strong)",
-    borderRadius: "4px",
-    color: "var(--ink)",
-    backgroundColor: "var(--canvas)",
+  ".cm-searchMatch": {
+    borderRadius: "2px",
+    backgroundColor: "color-mix(in oklch, var(--warning) 26%, transparent)",
+    outline: "1px solid color-mix(in oklch, var(--warning) 45%, transparent)",
   },
-  ".cm-tooltip-autocomplete": {
-    overflow: "hidden",
-    border: "1px solid var(--line-strong)",
-    borderRadius: "6px",
-    backgroundColor: "var(--paper)",
-    boxShadow: "0 18px 48px -24px var(--color-scrim)",
+  ".cm-searchMatch.cm-searchMatch-selected": {
+    backgroundColor: "color-mix(in oklch, var(--accent) 32%, transparent)",
+    outline: "1px solid var(--accent)",
   },
-  ".cm-tooltip-autocomplete > ul": {
-    maxHeight: "320px",
-    fontFamily: '"Atkinson Hyperlegible", "Segoe UI", sans-serif',
-  },
-  ".cm-tooltip-autocomplete > ul > li": { minHeight: "48px", padding: "8px 12px" },
-  ".cm-tooltip-autocomplete > ul > li[aria-selected]": {
-    backgroundColor: "var(--selected)",
-    color: "var(--ink)",
-  },
-  ".cm-completionLabel": { color: "var(--ink)", fontSize: "13px", fontWeight: "600" },
-  ".cm-completionDetail": { color: "var(--muted)", fontSize: "11px", fontStyle: "normal" },
-  ".cm-completionIcon": { color: "var(--accent)" },
   ".cm-wikilink.is-resolved": {
     color: "var(--accent)",
     textDecoration: "underline",
@@ -77,15 +63,8 @@ export const readerEditorTheme = EditorView.theme({
     textDecoration: "underline wavy var(--danger)",
     textUnderlineOffset: "3px",
   },
-  ".cm-citation-widget": {
-    position: "relative",
-    display: "inline-flex",
-    alignItems: "baseline",
-    margin: "0 2px",
-    verticalAlign: "baseline",
-    whiteSpace: "nowrap",
-  },
   ".cm-citation-reference": {
+    margin: "0 2px",
     padding: "0 4px",
     border: "0",
     borderBottom: "1px solid color-mix(in oklch, var(--accent) 42%, transparent)",
@@ -95,50 +74,12 @@ export const readerEditorTheme = EditorView.theme({
     font: "inherit",
     fontSize: "13px",
     lineHeight: "1.35",
-    cursor: "text",
+    whiteSpace: "nowrap",
+    cursor: "pointer",
   },
   ".cm-citation-reference:hover, .cm-citation-reference:focus-visible": {
     color: "var(--ink)",
     background: "var(--selected)",
-    outline: "none",
-  },
-  ".cm-citation-actions": {
-    position: "absolute",
-    top: "calc(100% + 5px)",
-    left: "0",
-    zIndex: "20",
-    display: "flex",
-    gap: "2px",
-    padding: "4px",
-    border: "1px solid var(--line-strong)",
-    borderRadius: "5px",
-    background: "var(--paper)",
-    boxShadow: "0 12px 30px -18px var(--color-scrim)",
-    opacity: "0",
-    visibility: "hidden",
-    pointerEvents: "none",
-    transition: "opacity 100ms var(--ease)",
-  },
-  ".cm-citation-widget:hover .cm-citation-actions, .cm-citation-widget:focus-within .cm-citation-actions":
-    {
-      opacity: "1",
-      visibility: "visible",
-      pointerEvents: "auto",
-    },
-  ".cm-citation-actions button": {
-    padding: "4px 7px",
-    border: "0",
-    borderRadius: "3px",
-    color: "var(--ink-soft)",
-    background: "transparent",
-    fontFamily: '"Atkinson Hyperlegible", "Segoe UI", sans-serif',
-    fontSize: "10px",
-    whiteSpace: "nowrap",
-    cursor: "pointer",
-  },
-  ".cm-citation-actions button:hover, .cm-citation-actions button:focus-visible": {
-    color: "var(--ink)",
-    background: "var(--hover)",
     outline: "none",
   },
   ".cm-citation-syntax.is-resolved": {
@@ -151,7 +92,6 @@ export const readerEditorTheme = EditorView.theme({
     textDecoration: "underline wavy var(--danger)",
     textUnderlineOffset: "3px",
   },
-  ".cm-diagnostic-error": { borderLeftColor: "var(--danger)" },
   ".cm-annotation-embed": {
     width: "100%",
     margin: "14px 0",
@@ -160,7 +100,7 @@ export const readerEditorTheme = EditorView.theme({
     borderLeft: "2px solid var(--accent)",
     color: "var(--ink)",
     background: "transparent",
-    fontFamily: '"Atkinson Hyperlegible", "Segoe UI", sans-serif',
+    fontFamily: uiFont,
     whiteSpace: "normal",
   },
   ".cm-annotation-embed header, .cm-annotation-embed footer": {
@@ -179,7 +119,7 @@ export const readerEditorTheme = EditorView.theme({
   ".cm-annotation-embed blockquote": {
     margin: "12px 0 8px",
     color: "var(--ink)",
-    fontFamily: 'Georgia, "Times New Roman", serif',
+    fontFamily: readingFont,
     fontSize: "15px",
     lineHeight: "1.55",
   },

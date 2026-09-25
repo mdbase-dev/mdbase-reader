@@ -1,12 +1,14 @@
 import { history } from "@codemirror/commands";
 import { Compartment, EditorState, Transaction } from "@codemirror/state";
-import { EditorView } from "@codemirror/view";
+import { EditorView, tooltips, type Rect } from "@codemirror/view";
 import { useCallback, useEffect, useRef, type RefObject } from "react";
 
 import { annotationEditorExtensions } from "./annotation-widgets.js";
 import { dispatchPreservingFocus, editorConfiguration } from "./editor-configuration.js";
 import { scheduleInitialEditorFocus } from "./editor-initial-focus.js";
+import { readerSearchTheme } from "./editor-search-theme.js";
 import { readerEditorTheme } from "./editor-theme.js";
+import { readerTooltipTheme } from "./editor-tooltip-theme.js";
 import { minimalTextChange } from "./external-change.js";
 import { markdownCommand } from "./markdown-commands.js";
 import { textInsertionAtCursor } from "./text-insertion.js";
@@ -206,6 +208,21 @@ export function useCodeEditor(props: CodeEditorProps): RefObject<HTMLDivElement 
   return hostRef;
 }
 
+const tooltipGutter = 8;
+
+/** Keeps tooltips a little clear of the window edge instead of flush against it. */
+function viewportInset(view: EditorView): Rect {
+  const window = view.dom.ownerDocument.defaultView;
+  const width = window?.innerWidth ?? view.dom.ownerDocument.documentElement.clientWidth;
+  const height = window?.innerHeight ?? view.dom.ownerDocument.documentElement.clientHeight;
+  return {
+    top: tooltipGutter,
+    left: tooltipGutter,
+    right: width - tooltipGutter,
+    bottom: height - tooltipGutter,
+  };
+}
+
 function useEditorLifecycle(
   hostRef: RefObject<HTMLDivElement | null>,
   viewRef: RefObject<EditorView | null>,
@@ -239,7 +256,12 @@ function useEditorLifecycle(
         }),
         EditorView.domEventHandlers({ blur: () => blurRef.current?.() }),
         annotationCompartmentRef.current.of([]),
+        // Reader panes contain layout and clip overflow, which would crop completion lists and
+        // hover cards. Mounting tooltips on the body positions them against the viewport.
+        tooltips({ parent: host.ownerDocument.body, tooltipSpace: viewportInset }),
         readerEditorTheme,
+        readerSearchTheme,
+        readerTooltipTheme,
       ],
     });
     const view = new EditorView({ state, parent: host });

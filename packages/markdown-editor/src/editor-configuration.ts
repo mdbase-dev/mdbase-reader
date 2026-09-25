@@ -11,7 +11,7 @@ import {
   HighlightStyle,
 } from "@codemirror/language";
 import { linter, lintKeymap } from "@codemirror/lint";
-import { highlightSelectionMatches, searchKeymap } from "@codemirror/search";
+import { highlightSelectionMatches, search, searchKeymap } from "@codemirror/search";
 import { EditorState, type Extension } from "@codemirror/state";
 import {
   drawSelection,
@@ -117,6 +117,10 @@ function editorFoundation(language: EditorLanguage, profile: EditorProfile): rea
     closeBrackets(),
     indentOnInput(),
     highlightSelectionMatches(),
+    search({ top: true }),
+    EditorState.phrases.of(searchPhrases),
+    // Keep the line being typed clear of the pane's bottom edge while a note grows.
+    profile === "prose" ? EditorView.scrollMargins.of(() => ({ bottom: 72 })) : [],
     profile === "code"
       ? [
           lineNumbers(),
@@ -128,6 +132,19 @@ function editorFoundation(language: EditorLanguage, profile: EditorProfile): rea
     language === "json" ? linter(jsonParseLinter()) : [],
   ];
 }
+
+// CodeMirror's search panel labels are lower case; Reader writes controls in sentence case.
+const searchPhrases = {
+  next: "Next",
+  previous: "Previous",
+  all: "All",
+  "match case": "Match case",
+  regexp: "Regex",
+  "by word": "Whole word",
+  replace: "Replace",
+  "replace all": "Replace all",
+  close: "Close search",
+};
 
 export function dispatchPreservingFocus(
   view: EditorView,

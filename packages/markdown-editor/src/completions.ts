@@ -67,6 +67,54 @@ export function citationCompletionAt(
   return { from, query, options };
 }
 
+export interface CompletionReplacement {
+  readonly from: number;
+  readonly to: number;
+  readonly insert: string;
+}
+
+/** Completes a wikilink, absorbing the `]]` that bracket closing may already have inserted. */
+export function wikiLinkReplacement(
+  document: string,
+  from: number,
+  to: number,
+  path: string,
+): CompletionReplacement {
+  const closed = document.startsWith("]]", to);
+  return { from, to: closed ? to + 2 : to, insert: `${path}]]` };
+}
+
+/**
+ * Completes a citekey. Inside an open `[...]` group only the key is written, so `[@smi` and
+ * `[@a; @b` stay a single Pandoc citation; elsewhere the key gains its own brackets.
+ */
+export function citationReplacement(
+  document: string,
+  from: number,
+  to: number,
+  id: string,
+): CompletionReplacement {
+  const lineStart = document.lastIndexOf("\n", from - 1) + 1;
+  const opening = document.lastIndexOf("[", from - 1);
+  const grouped =
+    opening >= lineStart &&
+    document[opening - 1] !== "[" &&
+    !document.slice(opening, from).includes("]");
+  if (!grouped) {
+    return { from, to, insert: `[@${id}]` };
+  }
+  const lineEnd = document.indexOf("\n", to);
+  const rest = document.slice(to, lineEnd < 0 ? undefined : lineEnd);
+  const closing = rest.indexOf("]");
+  const reopened = rest.indexOf("[");
+  const closed = closing >= 0 && (reopened < 0 || closing < reopened);
+  // A `]` right after the key is taken over, so the caret lands after the finished citation.
+  if (closing === 0) {
+    return { from, to: to + 1, insert: `@${id}]` };
+  }
+  return { from, to, insert: closed ? `@${id}` : `@${id}]` };
+}
+
 function rankWikiLinks(
   candidates: readonly WikiLinkCandidate[],
   query: string,

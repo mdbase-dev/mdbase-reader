@@ -1,11 +1,16 @@
 import {
+  closeHoverTooltips,
   Decoration,
   type DecorationSet,
   type EditorView,
+  hoverTooltip,
+  type Tooltip,
   ViewPlugin,
   type ViewUpdate,
   WidgetType,
 } from "@codemirror/view";
+
+import { citationCard, citationLabel } from "./citation-card.js";
 
 import type { CitationCompletionCandidate } from "./completions.js";
 import type { Extension, Range } from "@codemirror/state";
@@ -60,29 +65,63 @@ export function citationDecorations(
   onEditMetadata: ((id: string) => void) | undefined,
 ): Extension {
   const byId = new Map(candidates.map((candidate) => [candidate.id, candidate]));
-  return ViewPlugin.fromClass(
+  const plugin = ViewPlugin.fromClass(
     class {
       decorations: DecorationSet;
 
       constructor(view: EditorView) {
-        this.decorations = decoratedCitations(view, byId, onOpen, onEditMetadata);
+        this.decorations = decoratedCitations(view, byId);
       }
 
       update(update: ViewUpdate): void {
         if (update.docChanged || update.viewportChanged || update.selectionSet) {
-          this.decorations = decoratedCitations(update.view, byId, onOpen, onEditMetadata);
+          this.decorations = decoratedCitations(update.view, byId);
         }
       }
     },
     { decorations: (value) => value.decorations },
   );
+  // Actions live in a tooltip rather than inside the line, so the editor's scroller and the
+  // pane around it cannot clip them.
+  const actions = hoverTooltip(
+    (view, pos) =>
+      citationTooltip(view, view.plugin(plugin)?.decorations, pos, onOpen, onEditMetadata),
+    { hoverTime: 250 },
+  );
+  return [plugin, actions];
+}
+
+function citationTooltip(
+  view: EditorView,
+  decorations: DecorationSet | undefined,
+  pos: number,
+  onOpen: ((id: string) => void) | undefined,
+  onEditMetadata: ((id: string) => void) | undefined,
+): Tooltip | null {
+  let found: { from: number; to: number; widget: CitationWidget } | undefined;
+  decorations?.between(pos, pos, (from, to, value) => {
+    const { widget } = value.spec as { readonly widget?: unknown };
+    if (widget instanceof CitationWidget) {
+      found = { from, to, widget };
+      return false;
+    }
+    return undefined;
+  });
+  if (!found) {
+    return null;
+  }
+  const { from, to, widget } = found;
+  return {
+    pos: from,
+    end: to,
+    above: false,
+    create: () => ({ dom: citationCard(view, widget, onOpen, onEditMetadata) }),
+  };
 }
 
 function decoratedCitations(
   view: EditorView,
   candidates: ReadonlyMap<string, CitationCompletionCandidate>,
-  onOpen: ((id: string) => void) | undefined,
-  onEditMetadata: ((id: string) => void) | undefined,
 ): DecorationSet {
   const ranges: Range<Decoration>[] = [];
   for (const group of citationGroups(view.state.doc.toString())) {
@@ -101,9 +140,10 @@ function decoratedCitations(
       continue;
     }
     ranges.push(
-      Decoration.replace({
-        widget: new CitationWidget(group, resolved, onOpen, onEditMetadata),
-      }).range(group.from, group.to),
+      Decoration.replace({ widget: new CitationWidget(group, resolved) }).range(
+        group.from,
+        group.to,
+      ),
     );
   }
   return Decoration.set(ranges, true);
@@ -134,8 +174,6 @@ class CitationWidget extends WidgetType {
   constructor(
     readonly group: CitationGroup,
     readonly candidates: readonly CitationCompletionCandidate[],
-    readonly onOpen: ((id: string) => void) | undefined,
-    readonly onEditMetadata: ((id: string) => void) | undefined,
   ) {
     super();
   }
@@ -149,63 +187,27 @@ class CitationWidget extends WidgetType {
   }
 
   override toDOM(view: EditorView): HTMLElement {
-    const citation = document.createElement("span");
-    citation.className = "cm-citation-widget";
-    citation.append(this.referenceButton(view));
-    const candidate = this.candidates.length === 1 ? this.candidates[0] : undefined;
-    if (candidate && (this.onOpen || this.onEditMetadata)) {
-      citation.append(this.actions(candidate));
-    }
-    return citation;
+    const button = document.createElement("button");
+    button.type = "button";
+    button.className = "cm-citation-reference";
+    button.textContent = this.candidates.map(citationLabel).join("; ");
+    button.setAttribute("aria-label", `Citation: ${button.textContent}. Edit citation Markdown`);
+    button.addEventListener("mousedown", (event) => event.preventDefault());
+    button.addEventListener("click", () => this.select(view));
+    return button;
   }
 
   override ignoreEvent(): boolean {
     return false;
   }
 
-  private referenceButton(view: EditorView): HTMLButtonElement {
-    const button = document.createElement("button");
-    button.type = "button";
-    button.className = "cm-citation-reference";
-    button.textContent = this.candidates.map(citationLabel).join("; ");
-    button.title = `${this.candidates.map(({ label }) => label).join("; ")} — click to edit`;
-    button.setAttribute("aria-label", `Citation: ${button.textContent}. Edit citation Markdown`);
-    button.addEventListener("mousedown", (event) => event.preventDefault());
-    button.addEventListener("click", () => {
-      view.dispatch({
-        selection: { anchor: this.group.from + 1, head: this.group.to - 1 },
-        scrollIntoView: true,
-      });
-      view.focus();
+  /** Reveals the citation's Markdown with its keys selected, ready to edit. */
+  select(view: EditorView): void {
+    view.dispatch({
+      selection: { anchor: this.group.from + 1, head: this.group.to - 1 },
+      effects: closeHoverTooltips,
+      scrollIntoView: true,
     });
-    return button;
+    view.focus();
   }
-
-  private actions(candidate: CitationCompletionCandidate): HTMLElement {
-    const actions = document.createElement("span");
-    actions.className = "cm-citation-actions";
-    if (this.onOpen) {
-      actions.append(citationAction("Open source", () => this.onOpen?.(candidate.id)));
-    }
-    if (this.onEditMetadata) {
-      actions.append(citationAction("Edit metadata", () => this.onEditMetadata?.(candidate.id)));
-    }
-    return actions;
-  }
-}
-
-function citationLabel(candidate: CitationCompletionCandidate): string {
-  return candidate.display ?? candidate.detail ?? candidate.label;
-}
-
-function citationAction(label: string, action: () => void): HTMLButtonElement {
-  const button = document.createElement("button");
-  button.type = "button";
-  button.textContent = label;
-  button.addEventListener("mousedown", (event) => event.preventDefault());
-  button.addEventListener("click", (event) => {
-    event.stopPropagation();
-    action();
-  });
-  return button;
 }

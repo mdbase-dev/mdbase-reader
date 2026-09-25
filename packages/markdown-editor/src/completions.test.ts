@@ -1,6 +1,11 @@
 import { describe, expect, it } from "vitest";
 
-import { citationCompletionAt, wikiLinkCompletionAt } from "./completions.js";
+import {
+  citationCompletionAt,
+  citationReplacement,
+  wikiLinkCompletionAt,
+  wikiLinkReplacement,
+} from "./completions.js";
 
 const candidates = [
   { label: "Gravity and Grace", path: "sources/gravity-and-grace" },
@@ -58,5 +63,33 @@ describe("citationCompletionAt", () => {
 
   it("does not complete email addresses", () => {
     expect(citationCompletionAt("reader@example", 14, citations)).toBeNull();
+  });
+});
+
+describe("completion replacements", () => {
+  it("absorbs brackets that were closed automatically", () => {
+    expect(wikiLinkReplacement("See [[att]]", 6, 9, "sources/attention")).toEqual({
+      from: 6,
+      to: 11,
+      insert: "sources/attention]]",
+    });
+    expect(wikiLinkReplacement("See [[att", 6, 9, "sources/attention").to).toBe(9);
+  });
+
+  it("writes a bare citekey inside an open citation group", () => {
+    expect(citationReplacement("See [@smi]", 5, 9, "smith2020")).toEqual({
+      from: 5,
+      to: 10,
+      insert: "@smith2020]",
+    });
+    expect(citationReplacement("See [@smi, p. 4]", 5, 9, "smith2020").insert).toBe("@smith2020");
+    expect(citationReplacement("See [@a; @smi", 9, 13, "smith2020").insert).toBe("@smith2020]");
+    expect(citationReplacement("See [@smi and [x]", 5, 9, "smith2020").insert).toBe("@smith2020]");
+  });
+
+  it("brackets a citekey typed in running text", () => {
+    expect(citationReplacement("See @smi", 4, 8, "smith2020").insert).toBe("[@smith2020]");
+    expect(citationReplacement("[x] then @smi", 9, 13, "smith2020").insert).toBe("[@smith2020]");
+    expect(citationReplacement("[[note]] @smi", 9, 13, "smith2020").insert).toBe("[@smith2020]");
   });
 });
