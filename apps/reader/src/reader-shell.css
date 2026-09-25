@@ -2982,11 +2982,10 @@
 }
 
 .annotation-insert-menu {
-  position: relative;
   flex: 0 0 auto;
 }
 
-.annotation-insert-menu > summary {
+.annotation-insert-menu > button {
   height: 28px;
   display: flex;
   align-items: center;
@@ -2995,33 +2994,31 @@
   border: 1px solid var(--line);
   border-radius: var(--ui-radius);
   color: var(--ink-soft);
+  background: transparent;
+  font: inherit;
   font-size: var(--ui-control);
-  list-style: none;
   cursor: pointer;
 }
 
-.annotation-insert-menu > summary::-webkit-details-marker {
-  display: none;
-}
-
-.annotation-insert-menu > summary:hover,
-.annotation-insert-menu[open] > summary {
+.annotation-insert-menu > button:hover,
+.annotation-insert-menu:has(> div:popover-open) > button {
   color: var(--ink);
   background: var(--hover);
 }
 
-.annotation-insert-menu > summary svg {
+.annotation-insert-menu > button svg {
   width: 14px;
   height: 14px;
 }
 
 .annotation-insert-menu > div {
-  position: absolute;
-  top: calc(100% + 6px);
-  right: 0;
-  z-index: 40;
-  width: min(340px, 80vw);
-  max-height: min(440px, 60vh);
+  position: fixed;
+  inset: auto;
+  margin: 0;
+  color: inherit;
+}
+
+.annotation-insert-menu > div:popover-open {
   display: grid;
   gap: 1px;
   padding: 6px;
@@ -3157,7 +3154,7 @@
 
 @media (pointer: coarse) {
   .source-note-formatting > button,
-  .annotation-insert-menu > summary {
+  .annotation-insert-menu > button {
     min-width: 40px;
     height: 40px;
   }

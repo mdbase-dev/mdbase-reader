@@ -1,8 +1,11 @@
+import { useEffect, useId, useRef, useState, type CSSProperties, type JSX } from "react";
+
 import { CitationIcon, PlusIcon } from "./icons.js";
-import { useDismissableDetails } from "./Menu.js";
 
 import type { annotationWikiCandidate } from "./annotation-wiki-candidates.js";
-import type { JSX } from "react";
+
+const menuWidth = 340;
+const viewportMargin = 8;
 
 /** Inserts the source's citation or one of its annotations at the note's cursor. */
 export function SourceNoteInsertMenu({
@@ -18,20 +21,44 @@ export function SourceNoteInsertMenu({
   readonly onInsertCitation: (citekey: string) => void;
   readonly onInsertAnnotation: (path: string) => void;
 }): JSX.Element {
-  const ref = useDismissableDetails();
+  // The menu opens in the top layer so a narrow pane's clipping cannot crop it.
+  const menu = useRef<HTMLDivElement>(null);
+  const id = useId();
+  const [placement, setPlacement] = useState<CSSProperties>({});
+  useEffect(() => {
+    // Clicks inside a document frame never reach this page, so treat the page losing focus to
+    // the frame as a click outside.
+    const close = (): void => {
+      if (menu.current?.matches(":popover-open")) {
+        menu.current.hidePopover();
+      }
+    };
+    globalThis.addEventListener("blur", close);
+    return () => globalThis.removeEventListener("blur", close);
+  }, []);
+  const insert = (action: () => void): void => {
+    menu.current?.hidePopover();
+    action();
+  };
   return (
-    <details ref={ref} className="annotation-insert-menu">
-      <summary aria-label="Insert a citation or annotation" title="Insert at the cursor">
+    <div className="annotation-insert-menu">
+      <button
+        type="button"
+        aria-label="Insert a citation or annotation"
+        title="Insert at the cursor"
+        popoverTarget={id}
+        onClick={(event) => setPlacement(insertMenuPlacement(event.currentTarget))}
+      >
         <PlusIcon /> Insert
-      </summary>
-      <div>
+      </button>
+      <div ref={menu} id={id} popover="auto" style={placement}>
         <button
           className="insert-citation"
           type="button"
           disabled={!citekey}
           title={citekey ? `Insert [@${citekey}] at the cursor` : "Add citation details first"}
           onPointerDown={(event) => event.preventDefault()}
-          onClick={() => citekey && onInsertCitation(citekey)}
+          onClick={() => citekey && insert(() => onInsertCitation(citekey))}
         >
           <CitationIcon />
           <span>
@@ -52,7 +79,7 @@ export function SourceNoteInsertMenu({
               disabled={embedded}
               title={embedded ? "Already embedded in this note" : "Insert at the cursor"}
               onPointerDown={(event) => event.preventDefault()}
-              onClick={() => onInsertAnnotation(candidate.path)}
+              onClick={() => insert(() => onInsertAnnotation(candidate.path))}
             >
               <span>
                 {embedded ? "In note" : candidate.kind} · {candidate.detail}
@@ -63,6 +90,21 @@ export function SourceNoteInsertMenu({
           );
         })}
       </div>
-    </details>
+    </div>
   );
+}
+
+function insertMenuPlacement(trigger: HTMLElement): CSSProperties {
+  const bounds = trigger.getBoundingClientRect();
+  const width = Math.min(menuWidth, globalThis.innerWidth - viewportMargin * 2);
+  const top = bounds.bottom + 6;
+  return {
+    top,
+    left: Math.max(
+      viewportMargin,
+      Math.min(bounds.right - width, globalThis.innerWidth - width - viewportMargin),
+    ),
+    width,
+    maxHeight: Math.min(440, globalThis.innerHeight - top - viewportMargin),
+  };
 }
