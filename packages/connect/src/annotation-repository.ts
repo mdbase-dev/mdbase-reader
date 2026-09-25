@@ -1,3 +1,4 @@
+import * as sources from "./annotation-source.js";
 import { annotationContract } from "./contracts.js";
 import { annotationFromDocument, annotationFrontmatter } from "./mapping.js";
 import {
@@ -9,7 +10,7 @@ import {
 } from "./repository-client.js";
 
 import type { ReaderConnectClient } from "./repository-client.js";
-import type { DeletePreflightResult } from "@mdbase-dev/connect";
+import type { DeletePreflightResult, RecordDocument } from "@mdbase-dev/connect";
 import type {
   Annotation,
   AnnotationDeletionPlan,
@@ -22,12 +23,15 @@ import type {
 } from "@mdbase-reader/core";
 
 export class ConnectAnnotationRepository implements AnnotationRepository {
+  readonly #resolveSource: ReturnType<typeof sources.annotationSourceResolver>;
   readonly #pathsById = new Map<string, string>();
   readonly #pathsBySource = new Map<string, string[]>();
   readonly #deletePreflights = new Map<string, DeletePreflightResult>();
   #indexPromise: Promise<void> | null = null;
 
-  constructor(private readonly client: ReaderConnectClient) {}
+  constructor(private readonly client: ReaderConnectClient) {
+    this.#resolveSource = sources.annotationSourceResolver(client);
+  }
 
   async sourceIdsWithAnnotations(
     _collection: CollectionId,
@@ -70,7 +74,7 @@ export class ConnectAnnotationRepository implements AnnotationRepository {
         "read annotation",
       );
       try {
-        return annotationFromDocument(collection, document);
+        return await this.#map(collection, document);
       } catch {
         // A record that does not satisfy the annotation contract is left out of the overview.
         return null;
@@ -97,7 +101,7 @@ export class ConnectAnnotationRepository implements AnnotationRepository {
         await readWithOptions(this.client, { path, includeDocument: true }, options),
         "read annotation",
       );
-      return annotationFromDocument(collection, document);
+      return this.#map(collection, document);
     });
   }
 
@@ -112,7 +116,7 @@ export class ConnectAnnotationRepository implements AnnotationRepository {
       }),
       "create annotation",
     );
-    const created = annotationFromDocument(annotation.collectionId, result);
+    const created = await this.#map(annotation.collectionId, result);
     this.#remember(created.id, created.sourceId, result.path);
     return created;
   }
@@ -136,7 +140,7 @@ export class ConnectAnnotationRepository implements AnnotationRepository {
       }),
       "update annotation",
     );
-    const updated = annotationFromDocument(annotation.collectionId, result);
+    const updated = await this.#map(annotation.collectionId, result);
     this.#pathsById.set(updated.id, result.path);
     return updated;
   }
@@ -202,7 +206,15 @@ export class ConnectAnnotationRepository implements AnnotationRepository {
       await readWithOptions(this.client, { path, includeDocument: true }, options),
       "read annotation",
     );
-    return annotationFromDocument(collection, result);
+    return this.#map(collection, result);
+  }
+
+  async #map(collection: CollectionId, record: RecordDocument): Promise<Annotation> {
+    return annotationFromDocument(
+      collection,
+      record,
+      await this.#resolveSource(record.effectiveFrontmatter["source"]),
+    );
   }
 
   async #buildIndex(): Promise<void> {
@@ -216,9 +228,9 @@ export class ConnectAnnotationRepository implements AnnotationRepository {
       const page = outcomeValue(outcome, "query annotations");
       for (const record of page.results) {
         const fields = record.effectiveFrontmatter ?? record.frontmatter;
-        const id = stringField(fields?.["id"]);
-        const source = linkedRecordId(fields?.["source"]);
-        if (id && source) {
+        const id = sources.stringField(fields?.["id"]);
+        if (id && sources.annotationSourceReference(fields?.["source"])) {
+          const source = await this.#resolveSource(fields?.["source"]);
           this.#remember(id, source, record.path);
         }
       }
@@ -270,18 +282,4 @@ function uniquePaths(links: readonly { readonly path: string }[] | undefined): r
   return [...new Set(links?.map(({ path }) => path) ?? [])].sort((left, right) =>
     left.localeCompare(right),
   );
-}
-
-function stringField(candidate: unknown): string | undefined {
-  return typeof candidate === "string" && candidate.trim().length > 0
-    ? candidate.trim()
-    : undefined;
-}
-
-function linkedRecordId(candidate: unknown): string | undefined {
-  const value = stringField(candidate);
-  if (!value) {
-    return undefined;
-  }
-  return /^\[\[([^\]|]+)(?:\|[^\]]+)?\]\]$/u.exec(value)?.[1] ?? value;
 }

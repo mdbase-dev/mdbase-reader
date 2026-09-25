@@ -4,7 +4,7 @@ import {
   fileId,
   fileRevision,
   recordRevision,
-  sourceId,
+  type SourceId,
   type Annotation,
   type AnnotationTarget,
   type CollectionId,
@@ -16,6 +16,7 @@ import {
   type TextPositionSelector,
 } from "@mdbase-reader/core";
 
+import { annotationSourceId } from "./annotation-source.js";
 import { positionFrontmatter, readingPositionFromFrontmatter } from "./reading-position.js";
 
 import type { JsonObject, RecordDocument } from "@mdbase-dev/connect";
@@ -34,14 +35,6 @@ function textArray(value: unknown): readonly string[] {
   return Array.isArray(value)
     ? value.filter((item): item is string => typeof item === "string")
     : [];
-}
-
-function stableIdFromLink(value: unknown): string | undefined {
-  const raw = text(value);
-  if (!raw) {
-    return undefined;
-  }
-  return /^\[\[([^\]|]+)(?:\|[^\]]+)?\]\]$/u.exec(raw.trim())?.[1] ?? raw;
 }
 
 function quoteSelector(value: unknown): QuoteSelector | undefined {
@@ -150,10 +143,11 @@ export function annotationFromDocument(
     /** Absent for query results, which carry no revision; such annotations are read-only. */
     readonly revision?: string;
   },
+  resolvedSourceId?: SourceId,
 ): Annotation {
   const fields = record.effectiveFrontmatter;
   const id = text(fields["id"]);
-  const source = stableIdFromLink(fields["source"]);
+  const source = annotationSourceId(fields["source"], resolvedSourceId);
   const annotationType = text(fields["annotation_type"]);
   const createdAt = text(fields["created_at"]);
   if (!id || !source || !annotationType || !createdAt) {
@@ -172,7 +166,7 @@ export function annotationFromDocument(
     path: record.path,
     frontmatter: record.frontmatter,
     ...revisionField(record.revision),
-    sourceId: sourceId(source),
+    sourceId: source,
     source: text(fields["source"]) ?? source,
     annotationType,
     tags: textArray(fields["tags"]),
