@@ -1,3 +1,6 @@
+import { existsSync } from "node:fs";
+import { resolve } from "node:path";
+
 import { describe, expect, it } from "vitest";
 
 import { extensionEnvironment, extensionManifest } from "../scripts/extension-manifest.mjs";
@@ -34,6 +37,18 @@ describe("per-environment extension manifest", () => {
       "_execute_action",
       "save-highlight",
     ]);
+  });
+
+  it("ships the mdbase icon at every size Chrome and the Web Store use", () => {
+    const manifest = extensionManifest(extensionEnvironment({}));
+    const icons = manifest["icons"] as Record<string, string>;
+    expect(Object.keys(icons)).toEqual(["16", "32", "48", "128"]);
+    for (const path of Object.values(icons)) {
+      expect(existsSync(resolve(import.meta.dirname, "../public", path))).toBe(true);
+    }
+    expect(manifest["action"]).toMatchObject({
+      default_icon: { 16: icons["16"], 32: icons["32"] },
+    });
   });
 
   it("rejects unknown environments", () => {

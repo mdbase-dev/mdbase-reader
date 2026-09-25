@@ -12,3 +12,4 @@ playwright-report/
 .playwright-mcp/
 .tmp/
 apps/reader/public/downloads/
+apps/extension/release/

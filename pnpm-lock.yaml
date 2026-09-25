@@ -96,6 +96,9 @@ importers:
       '@mdbase-reader/platform':
         specifier: workspace:*
         version: link:../../packages/platform
+      '@mdbase-reader/ui':
+        specifier: workspace:*
+        version: link:../../packages/ui
       '@mdbase-reader/web-capture':
         specifier: workspace:*
         version: link:../../packages/web-capture

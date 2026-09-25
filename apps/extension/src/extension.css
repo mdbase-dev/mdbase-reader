@@ -68,8 +68,15 @@ header i {
   font-weight: 450;
 }
 .mark {
-  color: var(--accent);
-  font-size: 22px;
+  width: 18px;
+  height: 18px;
+  flex: none;
+}
+.mdbase-mark-ink {
+  fill: currentColor;
+}
+.mdbase-mark-accent {
+  fill: var(--accent);
 }
 .connection {
   margin-left: auto;

@@ -5,6 +5,8 @@
   "type": "module",
   "scripts": {
     "build": "pnpm manifest:mdbase && vite build",
+    "icons": "node scripts/write-icons.mjs",
+    "package": "MDBASE_ENV=${MDBASE_ENV:-production} pnpm build && MDBASE_ENV=${MDBASE_ENV:-production} node scripts/package-extension.mjs",
     "manifest:mdbase": "node scripts/write-mdbase-manifest.mjs",
     "test": "pnpm manifest:mdbase && vitest run --passWithNoTests",
     "typecheck": "tsc -p tsconfig.json"
@@ -13,6 +15,7 @@
     "@mdbase-reader/connect": "workspace:*",
     "@mdbase-reader/core": "workspace:*",
     "@mdbase-reader/platform": "workspace:*",
+    "@mdbase-reader/ui": "workspace:*",
     "@mdbase-reader/web-capture": "workspace:*",
     "react": "^19.2.8",
     "react-dom": "^19.2.8"

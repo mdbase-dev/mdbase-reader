@@ -1,3 +1,4 @@
+import { MdbaseMark } from "@mdbase-reader/ui";
 import { useEffect } from "react";
 
 import { readerSourceUrl } from "./capture-model.js";
@@ -25,9 +26,7 @@ export function CaptureApp({ controller }: ControllerProps): React.JSX.Element {
   return (
     <main className="capture-shell">
       <header>
-        <span className="mark" aria-hidden="true">
-          ▦
-        </span>
+        <MdbaseMark className="mark" />
         <strong>
           mdbase <i>reader</i>
         </strong>
