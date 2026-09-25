@@ -1,7 +1,12 @@
 import { DomainError } from "../domain/errors.js";
 
 import { authoredImportFields, planRepresentation } from "./import-source-file.js";
-import { normalizeOptionalText, normalizeTitle, webUrl } from "./source-import-values.js";
+import {
+  normalizeOptionalText,
+  normalizeTitle,
+  sourceRecordPaths,
+  webUrl,
+} from "./source-import-values.js";
 
 import type { ImportSourceFileDependencies } from "./import-source-file.js";
 import type {
@@ -22,14 +27,15 @@ export async function createSourceRecord(
 ): Promise<Source> {
   options.signal?.throwIfAborted();
   const sourceId = dependencies.ids.source();
+  const title = normalizeTitle(request.title);
   return dependencies.imports.commitFile(
     {
       collectionId: request.collectionId,
       sourceId,
-      title: normalizeTitle(request.title),
+      title,
       kind: normalizeOptionalText(request.kind, 100) ?? "document",
       savedAt: dependencies.clock.now(),
-      recordPath: `sources/${sourceId}.md`,
+      ...sourceRecordPaths(title, sourceId),
       representations: [],
       ...authoredImportFields(request),
     },

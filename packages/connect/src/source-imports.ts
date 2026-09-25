@@ -64,17 +64,8 @@ export class ConnectSourceImportRepository implements SourceImportRepository {
     const orderedUploads = [...plan.representations].sort(
       (left, right) => uploadRank[left.role] - uploadRank[right.role],
     );
-    if (options.recoverExistingFiles) {
-      options.onProgress?.({
-        phase: "recovering",
-        completedBytes: 0,
-        totalBytes: plan.representations.reduce((sum, item) => sum + item.bytes.byteLength, 0),
-        fileIndex: 0,
-        fileCount: orderedUploads.length,
-      });
-    }
     const recoverableFiles = options.recoverExistingFiles
-      ? await this.recoverableFiles(options)
+      ? await this.recoverableFiles(options, plan)
       : new Map<string, CollectionFileDescriptor[]>();
     const totalBytes = plan.representations.reduce((sum, item) => sum + item.bytes.byteLength, 0);
     let completedBytes = 0;
@@ -127,15 +118,7 @@ export class ConnectSourceImportRepository implements SourceImportRepository {
       fileCount: orderedUploads.length,
     });
 
-    const created = await this.records.create({
-      path: plan.recordPath,
-      type: "reader-source",
-      frontmatter: sourceFrontmatter(plan, descriptors),
-      body: plan.body ?? `# ${plan.title}\n`,
-      includeDocument: true,
-    });
-    const document = created.ok ? created.value : await this.recoverCreatedSource(plan, created);
-    return sourceFromDocument(plan.collectionId, document);
+    return sourceFromDocument(plan.collectionId, await this.createRecord(plan, descriptors));
   }
 
   public attachFile(
@@ -147,11 +130,19 @@ export class ConnectSourceImportRepository implements SourceImportRepository {
 
   private async recoverableFiles(
     options: SourceImportOptions,
+    plan: PlannedSourceFileImport,
   ): Promise<Map<string, CollectionFileDescriptor[]>> {
     const byDigest = new Map<string, CollectionFileDescriptor[]>();
     if (!this.files.list) {
       return byDigest;
     }
+    options.onProgress?.({
+      phase: "recovering",
+      completedBytes: 0,
+      totalBytes: plan.representations.reduce((sum, item) => sum + item.bytes.byteLength, 0),
+      fileIndex: 0,
+      fileCount: plan.representations.length,
+    });
     for await (const file of this.files.list({
       folder: "files/reader",
       pageSize: 500,
@@ -164,19 +155,50 @@ export class ConnectSourceImportRepository implements SourceImportRepository {
     return byDigest;
   }
 
+  /** Creates the source note at its readable path, or at the fallback when that path is taken. */
+  private async createRecord(
+    plan: PlannedSourceFileImport,
+    descriptors: ReadonlyMap<PlannedSourceRepresentation["role"], CollectionFileDescriptor>,
+  ): Promise<RecordDocument> {
+    const paths = [plan.recordPath, plan.fallbackRecordPath ?? plan.recordPath];
+    for (const [index, path] of paths.entries()) {
+      const created = await this.records.create({
+        path,
+        type: "reader-source",
+        frontmatter: sourceFrontmatter(plan, descriptors),
+        body: plan.body ?? `# ${plan.title}\n`,
+        includeDocument: true,
+      });
+      const document = created.ok
+        ? created.value
+        : await this.recoverCreatedSource(plan, path, created, index === paths.length - 1);
+      if (document) {
+        return document;
+      }
+    }
+    throw new Error("A source record could not be created.");
+  }
+
+  /**
+   * After a failed create: the record a retried import already wrote, or null when another record
+   * holds the path and the next path should be tried. Any other failure is thrown.
+   */
   private async recoverCreatedSource(
     plan: PlannedSourceFileImport,
+    path: string,
     failure: Exclude<ConnectOutcome<RecordDocument>, { readonly ok: true }>,
-  ): Promise<RecordDocument> {
-    const recovered = await this.records.read({
-      path: plan.recordPath,
+    lastPath: boolean,
+  ): Promise<RecordDocument | null> {
+    const existing = await this.records.read({
+      path,
       contract: sourceContract,
       includeDocument: true,
     });
-    if (recovered.ok && recovered.value.effectiveFrontmatter["id"] === plan.sourceId) {
-      return recovered.value;
+    if (existing.ok && existing.value.effectiveFrontmatter["id"] === plan.sourceId) {
+      return existing.value;
     }
-    return outcomeValue(failure, "create imported source");
+    // Something else holds the path, or the source contract cannot read what does.
+    return lastPath ? outcomeValue(failure, "create imported source") : null;
   }
 }
 

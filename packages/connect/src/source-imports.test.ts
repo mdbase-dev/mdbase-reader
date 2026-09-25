@@ -1,5 +1,5 @@
-import { collectionId } from "@mdbase-reader/core";
 import { MdbaseConnectError } from "@mdbase-dev/connect";
+import { collectionId } from "@mdbase-reader/core";
 import { describe, expect, it, vi } from "vitest";
 
 import {
@@ -247,3 +247,42 @@ async function* duplicatePages(): AsyncGenerator<ConnectOutcome<QueryPage>> {
     }),
   );
 }
+
+describe("ConnectSourceImportRepository record paths", () => {
+  it("creates the source at its fallback path when another record holds the readable one", async () => {
+    const failure = {
+      ok: false,
+      problem: { code: "conflict", message: "Path exists" },
+      diagnostics: [],
+    } as const;
+    const create = vi
+      .fn()
+      .mockResolvedValueOnce(failure)
+      .mockResolvedValueOnce(success(recordDocument()));
+    const other = recordDocument();
+    const read = vi.fn(() =>
+      Promise.resolve(
+        success({
+          ...other,
+          effectiveFrontmatter: { ...other.effectiveFrontmatter, id: "src_other" },
+        }),
+      ),
+    );
+    const repository = new ConnectSourceImportRepository(
+      { create, read } as unknown as ReaderConnectClient,
+      { upload: vi.fn(() => Promise.resolve(fileDescriptor())) },
+    );
+
+    const source = await repository.commitFile({
+      ...plan(),
+      recordPath: "sources/manuscript.md",
+      fallbackRecordPath: "sources/manuscript-import.md",
+    });
+
+    expect(source.id).toBe("src_import");
+    expect(create.mock.calls.map(([input]) => (input as { path: string }).path)).toEqual([
+      "sources/manuscript.md",
+      "sources/manuscript-import.md",
+    ]);
+  });
+});

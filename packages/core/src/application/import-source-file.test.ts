@@ -47,7 +47,8 @@ describe("importSourceFile", () => {
     expect(committed).toMatchObject({
       sourceId: "src_import",
       title: "manuscript final",
-      recordPath: "sources/src_import.md",
+      recordPath: "sources/manuscript-final.md",
+      fallbackRecordPath: "sources/manuscript-final-import.md",
       representations: [
         expect.objectContaining({
           role: "primary",

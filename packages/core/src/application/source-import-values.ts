@@ -1,6 +1,7 @@
 import { DomainError } from "../domain/errors.js";
 
 import type { SourceFileImportRequest, SourceImportMetadata } from "./ports.js";
+import type { SourceId } from "../domain/identity.js";
 
 export function webUrl(value: string): string {
   let url: URL;
@@ -87,6 +88,31 @@ export function safeFileStem(name: string): string {
     .replace(/^[._-]+|[._-]+$/gu, "")
     .slice(0, 96);
   return safe.length > 0 ? safe : "document";
+}
+
+/**
+ * Where a new source note goes: a readable name from its title, and a fallback made unique by the
+ * source ID for when that name is taken. The ID alone is used when the title yields no name.
+ */
+export function sourceRecordPaths(
+  title: string,
+  id: SourceId,
+): { readonly recordPath: string; readonly fallbackRecordPath: string } {
+  const slug = title
+    .normalize("NFKC")
+    .toLocaleLowerCase()
+    .replace(/['\u2019]/gu, "")
+    .replace(/[^\p{Letter}\p{Number}]+/gu, "-")
+    .replace(/^-+|-+$/gu, "");
+  const stem = Array.from(slug).slice(0, 60).join("").replace(/-+$/u, "");
+  if (!stem) {
+    return { recordPath: `sources/${id}.md`, fallbackRecordPath: `sources/${id}.md` };
+  }
+  const suffix = id.replace(/^src_/u, "").replace(/-/gu, "").slice(0, 8);
+  return {
+    recordPath: `sources/${stem}.md`,
+    fallbackRecordPath: `sources/${stem}-${suffix}.md`,
+  };
 }
 
 export function titleFromFileName(name: string): string {

@@ -107,6 +107,8 @@ export interface PlannedSourceFileImport {
   readonly kind: string;
   readonly savedAt: DateTime;
   readonly recordPath: string;
+  /** Used instead of `recordPath` when another record already has that path. */
+  readonly fallbackRecordPath?: string;
   /** Empty for a source created without a document. */
   readonly representations: readonly PlannedSourceRepresentation[];
   readonly body?: string;
