@@ -47,8 +47,7 @@ action, and one stylesheet section for each redesigned component.
   The document toolbar shows a Contents menu when it exists. PDFs keep EmbedPDF's own outline.
 - **Reading status in the library.** The Status column is an inline control when the gateway
   implements `saveReadingStatus`. Connect writes `reading.status`, sets `finished_at` (and a
-  missing `started_at`) on finishing, and clears `finished_at` when a source is reopened, per
-  DATA_MODEL §17. The library table prefers the library's copy of each source, so changes appear
+  missing `started_at`) on finishing, and clears `finished_at` when a source is reopened. The library table prefers the library's copy of each source, so changes appear
   at once.
 - **Keyboard.** `/` focuses the search of a focused library tab, otherwise the Sources filter.
   Arrow keys and j/k move between library rows; Enter opens.

@@ -51,8 +51,6 @@ computer, and connectivity can be intermittent.
   proceeds independently.
 - The web app uses mdbase Connect; Capacitor and Electron provide platform
   adapters rather than business logic.
-- The specification and data model in `SPEC.md` and `DATA_MODEL.md` are
-  normative.
 
 ## Brand Commitments
 
@@ -64,7 +62,6 @@ clean, minimal, beautiful, polished operating interface.
 
 ## Evidence on Hand
 
-- `SPEC.md` and `DATA_MODEL.md` contain the approved product and data contracts.
 - `/home/calluma/testvault/mdbase-reader` is a real connected literature
   collection used for performance and end-to-end testing.
 - The existing Reader preview provides representative source and annotation

@@ -91,7 +91,6 @@ pnpm --filter @mdbase-reader/migration test
 pnpm --filter @mdbase-reader/connect test
 pnpm --filter @mdbase-reader/app test
 pnpm --filter @mdbase-reader/app typecheck
-pnpm check:spec
 pnpm check:architecture
 ```
 

@@ -6,7 +6,7 @@ import type { JSX } from "react";
 
 /**
  * The library shows the source's own fields, not its citation. Saving a citation never
- * rewrites them (DATA_MODEL §11.3), so offer the copy explicitly when they disagree.
+ * rewrites them, so offer the copy explicitly when they disagree.
  */
 export function CitationSourceSync({
   differences,

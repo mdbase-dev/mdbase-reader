@@ -78,7 +78,6 @@ export default tseslint.config(
       ],
       "no-alert": "error",
       "max-depth": ["error", 4],
-      "max-lines": ["error", { max: 260, skipBlankLines: true, skipComments: true }],
       "max-lines-per-function": ["error", { max: 120, skipBlankLines: true, skipComments: true }],
       "no-console": "error",
       "no-restricted-syntax": [

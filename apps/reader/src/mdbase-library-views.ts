@@ -1,5 +1,3 @@
-/* eslint-disable max-lines */
-
 import { readingStatuses, type ReadingStatus, type SourceSummary } from "@mdbase-reader/core";
 
 import {

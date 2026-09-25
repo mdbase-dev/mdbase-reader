@@ -97,7 +97,7 @@ function textOrNumber(value: unknown): string | number | undefined {
   return typeof value === "string" || typeof value === "number" ? value : undefined;
 }
 
-/** Citation fields the library record can fill in (DATA_MODEL §11.3). */
+/** Citation fields the library record can fill in. */
 export const sourceBackedCitationFields = ["author", "issued", "URL"] as const;
 
 /**

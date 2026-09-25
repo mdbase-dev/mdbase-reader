@@ -1,4 +1,3 @@
-/* eslint-disable max-lines */
 import { useCallback, useEffect, useMemo, useRef, type JSX } from "react";
 
 import { confirmCollectionSwitch } from "./collection-switching.js";

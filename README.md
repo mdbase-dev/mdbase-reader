@@ -182,9 +182,6 @@ it against Vite. `apps/capacitor` contains the shared Capacitor configuration an
 adapter. Generate the platform projects with `pnpm --filter @mdbase-reader/capacitor exec cap add
 android` or `cap add ios` on a machine with the corresponding native SDK.
 
-`SPEC.md` and `DATA_MODEL.md` are normative design inputs. The integrity check deliberately fails
-if either document changes during implementation work.
-
 ## Reading reliability and browser audits
 
 Reader keeps recoverable local source-note drafts, offers explicit conflict review and

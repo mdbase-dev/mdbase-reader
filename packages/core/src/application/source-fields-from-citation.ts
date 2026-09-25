@@ -1,6 +1,6 @@
 import type { CslItem } from "../domain/citation.js";
 
-/** Friendly source fields that citation metadata can fill (DATA_MODEL §11.3). */
+/** Friendly source fields that citation metadata can fill. */
 export const citationBackedSourceFields = ["title", "authors", "published", "url"] as const;
 export type CitationBackedSourceField = (typeof citationBackedSourceFields)[number];
 
@@ -134,7 +134,7 @@ const kindsByCslType: Readonly<Record<string, string>> = {
   personal_communication: "email",
 };
 
-/** The Reader `kind` (DATA_MODEL §8.2) a CSL type suggests, if any. */
+/** The Reader `kind` a CSL type suggests, if any. */
 export function sourceKindForCitation(
   citation: Readonly<Record<string, unknown>>,
 ): string | undefined {

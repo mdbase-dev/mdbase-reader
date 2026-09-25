@@ -1,5 +1,3 @@
-/* eslint-disable max-lines */
-
 import { Select, type SelectItems } from "@mdbase-reader/ui";
 import { useState, type JSX } from "react";
 

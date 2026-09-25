@@ -1,4 +1,4 @@
-/* eslint-disable complexity, max-lines, max-lines-per-function */
+/* eslint-disable complexity, max-lines-per-function */
 import { Select, type SelectItems, type SelectOption } from "@mdbase-reader/ui";
 import {
   useCallback,

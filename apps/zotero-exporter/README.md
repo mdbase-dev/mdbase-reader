@@ -58,7 +58,7 @@ The plugin does not upload library data, collect telemetry, or access mdbase cre
 - `scripts/build.mjs`: deterministic ZIP/XPI packaging with an explicit seven-file allowlist and SHA-256 receipt. No ZIP CLI or additional dependencies needed.
 - `../../scripts/zotero-bundle/exporter.js`: shared extraction engine, copied into the XPI at build time rather than forked.
 
-The tests run through the workspace's normal `pnpm test`. No canonical `SPEC.md` or `DATA_MODEL.md` changes were needed. No Reader importer, account authorization or collection mutations are included.
+The tests run through the workspace's normal `pnpm test`. No Reader importer, account authorization or collection mutations are included.
 
 ## Acceptance evidence — 2026-09-16
 

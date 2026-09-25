@@ -20,7 +20,7 @@ const fields: readonly {
 
 /**
  * The source record's friendly frontmatter, shown above its note the way the file stores it.
- * These fields drive the library; the citation keeps its own copy (DATA_MODEL §11.3).
+ * These fields drive the library; the citation keeps its own copy.
  */
 export function SourceDetails({
   source,
