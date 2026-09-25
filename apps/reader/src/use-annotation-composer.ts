@@ -1,7 +1,5 @@
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useState } from "react";
 
-import { bookmarkRequest } from "./annotation-composer-request.js";
-import { readerErrorMessage } from "./errors.js";
 import { useAnnotationActivations } from "./use-annotation-activations.js";
 import {
   useAnnotationCreation,
@@ -9,9 +7,12 @@ import {
   type AnnotationCreationInput,
 } from "./use-annotation-creation.js";
 import { useAnnotationNavigation } from "./use-annotation-navigation.js";
+import { useBookmarkAction } from "./use-bookmark-action.js";
 import { useSelectionAnchor } from "./use-selection-anchor.js";
+import { useSelectionToolbar, type SelectionToolbarState } from "./use-selection-toolbar.js";
 
-import type { Annotation, AnnotationId, SourceId } from "@mdbase-reader/core";
+import type { QuoteCitation } from "./selection-copy.js";
+import type { Annotation, AnnotationDeletionPlan, AnnotationId } from "@mdbase-reader/core";
 import type { ViewportRect } from "@mdbase-reader/reading-surface";
 export { saveSelection, subscribeToSelections } from "./annotation-selection.js";
 export type { ComposerSelection } from "./annotation-composer-request.js";
@@ -24,19 +25,34 @@ export interface AnnotationComposerController extends Omit<AnnotationCreationCon
   readonly returnToReading: (() => void) | null;
   /** Where the current, freshly made selection sits on screen, if known. */
   readonly selectionAnchor: ViewportRect | null;
+  /** Quick actions for the live selection or a clicked highlight. */
+  readonly toolbar: SelectionToolbarState | null;
+  readonly dismissToolbar: () => void;
+  /** The source's title and citekey, for copying a passage with its citation. */
+  readonly quoteCitation: Omit<QuoteCitation, "locator"> | null;
+  /**
+   * Deletes an annotation that nothing embeds. Otherwise leaves it in place and returns the notes
+   * whose embeds would break, so the reader can review it first.
+   */
+  readonly remove: (annotation: Annotation) => Promise<readonly string[]>;
   readonly open: (annotation: Annotation) => void;
   readonly edit: (annotation: Annotation) => void;
   readonly stopEditing: () => void;
-  /** Whether the document has a current position to bookmark. */
   readonly canBookmark: boolean;
   readonly bookmarking: boolean;
-  /** Saves a bookmark at the current reading position and selects it. */
   readonly bookmark: () => void;
 }
 export function useAnnotationComposer(
-  input: AnnotationCreationInput & { readonly annotations: readonly Annotation[] },
+  input: AnnotationCreationInput & {
+    readonly annotations: readonly Annotation[];
+    readonly planDeletion: (annotation: Annotation) => Promise<AnnotationDeletionPlan>;
+    readonly deleteAnnotation: (
+      annotation: Annotation,
+      plan: AnnotationDeletionPlan,
+    ) => Promise<void>;
+  },
 ): AnnotationComposerController {
-  const { sourceId, source, surface, annotations, create } = input;
+  const { sourceId, source, surface, annotations } = input;
   const [activeId, setActiveId] = useState<AnnotationId | null>(null);
   const [revealedId, setRevealedId] = useState<AnnotationId | null>(null);
   const [editingId, setEditingId] = useState<AnnotationId | null>(null);
@@ -48,79 +64,68 @@ export function useAnnotationComposer(
     setEditingId(null);
     clearNavigationError();
   }, [clearNavigationError]);
-  const creation = useAnnotationCreation(input, resetSelection);
-  const bookmarkBusy = useRef(false);
-  const [bookmarking, setBookmarking] = useState(false);
-  const [bookmarkProblem, setBookmarkProblem] = useState<{
-    readonly sourceId: SourceId;
-    readonly message: string;
-  } | null>(null);
-  const bookmark = (): void => {
-    const request = source && surface ? bookmarkRequest(source, surface) : null;
-    if (!source || !request || bookmarkBusy.current) {
-      return;
-    }
-    bookmarkBusy.current = true;
-    setBookmarking(true);
-    setBookmarkProblem(null);
-    void create(request)
-      .then((created) => {
-        setActiveId(created.id);
-        setRevealedId(null);
-        setEditingId(null);
-      })
-      .catch((reason: unknown) =>
-        setBookmarkProblem({
-          sourceId: source.id,
-          message: readerErrorMessage(reason, "Reader could not save this bookmark."),
-        }),
-      )
-      .finally(() => {
-        bookmarkBusy.current = false;
-        setBookmarking(false);
-      });
+  const select = (annotation: Annotation): void => {
+    setActiveId(annotation.id);
+    setRevealedId(null);
+    setEditingId(null);
   };
+  const toolbar = useSelectionToolbar(surface);
+  const creation = useAnnotationCreation(input, resetSelection, toolbar, select);
+  const bookmark = useBookmarkAction({ ...input, onCreated: select });
   const currentId = (id: AnnotationId | null): AnnotationId | null =>
     annotations.some((annotation) => annotation.id === id) ? id : null;
-  const reveal = (annotation: Annotation): void => {
+  const edit = (annotation: Annotation): void => {
+    toolbar.hide();
+    setEditingId(annotation.id);
     setActiveId(annotation.id);
-    setRevealedId(annotation.id);
-    setEditingId(null);
     creation.pause();
     navigation.clearError();
   };
-  useAnnotationActivations(surface, annotations, reveal);
+  // Clicking a highlight offers its actions in place; the side panel opens only to edit it.
+  useAnnotationActivations(surface, annotations, (annotation) => {
+    select(annotation);
+    creation.pause();
+    navigation.clearError();
+    toolbar.showAnnotation(annotation);
+  });
   const anchor = useSelectionAnchor(surface);
   const selectionAnchor = anchor && creation.selection?.value === anchor.draft ? anchor.rect : null;
   return {
     ...creation,
-    error:
-      navigation.error ??
-      creation.error ??
-      (bookmarkProblem?.sourceId === sourceId ? bookmarkProblem.message : null),
+    error: navigation.error ?? creation.error ?? bookmark.problem,
     canOpenAnnotation: surface !== null,
     activeAnnotationId: currentId(activeId),
     revealedAnnotationId: currentId(revealedId),
     editingAnnotationId: currentId(editingId),
     returnToReading: navigation.returnToReading,
     selectionAnchor,
+    toolbar: toolbar.state,
+    dismissToolbar: toolbar.hide,
+    quoteCitation: source
+      ? { title: source.title, ...(source.citation?.id ? { citekey: source.citation.id } : {}) }
+      : null,
+    remove: async (annotation) => {
+      const plan = await input.planDeletion(annotation);
+      if (plan.brokenLinkPaths.length > 0) {
+        return plan.brokenLinkPaths;
+      }
+      await input.deleteAnnotation(annotation, plan);
+      toolbar.hide();
+      setActiveId(null);
+      return [];
+    },
     open: (annotation) => {
       setActiveId(annotation.id);
       navigation.open(annotation);
     },
-    edit: (annotation) => {
-      setEditingId(annotation.id);
-      setActiveId(annotation.id);
-      creation.pause();
-      navigation.clearError();
-    },
+    edit,
     stopEditing: () => {
       setEditingId(null);
       setActiveId(null);
     },
-    canBookmark: source !== null && surface !== null,
-    bookmarking,
-    bookmark,
+    canBookmark: bookmark.canBookmark,
+    bookmarking: bookmark.bookmarking,
+    bookmark: bookmark.bookmark,
     resumeDraft: creation.resumeDraft
       ? () => {
           setEditingId(null);

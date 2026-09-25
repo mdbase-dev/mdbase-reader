@@ -47,7 +47,7 @@ export async function auditAnnotationFormats(page, { open, screenshot }) {
       area.getByRole("img", { name: "Selected PDF area" }).evaluate((image) => image.naturalWidth),
     )
     .toBeGreaterThan(20);
-  await area.getByRole("button", { name: "Cancel", exact: true }).click();
+  await area.getByRole("button", { name: "Discard selection", exact: true }).click();
   await expect(area).toHaveCount(0);
 
   // A text highlight on the PDF: EmbedPDF draws it and its margin mark (see pdf-decoration.ts).
@@ -56,8 +56,8 @@ export async function auditAnnotationFormats(page, { open, screenshot }) {
   await page.mouse.down();
   await page.mouse.move(pageImage.x + 300, pageImage.y + 78, { steps: 20 });
   await page.mouse.up();
-  const pdfHighlight = page.getByRole("region", { name: "New highlight" });
-  await pdfHighlight.getByRole("button", { name: "Save highlight", exact: true }).click();
+  const pdfHighlight = page.getByRole("toolbar", { name: "Selected text" });
+  await pdfHighlight.getByRole("button", { name: "Highlight", exact: true }).click();
   await expect(pdfHighlight).toHaveCount(0);
   await page.waitForTimeout(1000);
   await screenshot("annotation-pdf-highlight-margin");
@@ -89,10 +89,10 @@ export async function auditAnnotationFormats(page, { open, screenshot }) {
   await page.mouse.down();
   await page.mouse.move(frameBox.x + points.x2, frameBox.y + points.y2, { steps: 20 });
   await page.mouse.up();
-  const composer = page.getByRole("region", { name: "New highlight" });
+  const composer = page.getByRole("toolbar", { name: "Selected text" });
   await expect(composer).toBeVisible({ timeout: 15000 });
   await screenshot("annotation-epub-selection");
-  await composer.getByRole("button", { name: "Save highlight", exact: true }).click();
+  await composer.getByRole("button", { name: "Highlight", exact: true }).click();
   await expect(composer).toHaveCount(0);
   const tools = page.getByRole("complementary", { name: "Source workspace" });
   // Desktop tool visibility survives mobile visits; do not accidentally close an already-open edge.

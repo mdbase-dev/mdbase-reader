@@ -29,6 +29,7 @@ export interface ReadiumRuntime {
   extractText(options?: { readonly signal?: AbortSignal }): Promise<string>;
   onLocationChanged(listener: (locator: Readonly<Record<string, unknown>>) => void): Unsubscribe;
   onTextSelected(listener: (selection: TextSelectionDraft) => void): Unsubscribe;
+  onSelectionCleared?(listener: () => void): Unsubscribe;
   onAnnotationActivated(listener: (annotationId: AnnotationId) => void): Unsubscribe;
   setAnnotations(annotations: readonly Annotation[]): void;
   setActiveAnnotation(annotation: Annotation | null): void;
@@ -152,6 +153,7 @@ export async function createReadiumRuntime(input: {
       selectionListeners.add(listener);
       return () => selectionListeners.delete(listener);
     },
+    onSelectionCleared: (listener) => frames.onSelectionCleared(listener),
     onAnnotationActivated(listener) {
       const stops = [annotationActivations.subscribe(listener), frames.onActivated(listener)];
       return () => stops.forEach((stop) => stop());

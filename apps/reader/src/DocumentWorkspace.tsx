@@ -2,6 +2,7 @@ import { useCallback, useRef, type JSX, type ReactNode } from "react";
 
 import { AnnotationComposerLayer } from "./AnnotationComposerLayer.js";
 import { DocumentContextualToolbar } from "./DocumentContextualToolbar.js";
+import { SelectionToolbarLayer } from "./SelectionToolbar.js";
 import { useDocumentAnnotationDirty } from "./use-annotation-draft.js";
 import { useDockPanelFocus } from "./use-dock-panel-focus.js";
 import { workspaceSessionKey } from "./use-progressive-workspace-tabs.js";
@@ -98,7 +99,10 @@ export function DocumentWorkspace({
           </div>
         </div>
         {document && focused && visible ? (
-          <AnnotationComposerLayer composer={props.annotationComposer} />
+          <>
+            <AnnotationComposerLayer composer={props.annotationComposer} />
+            <SelectionToolbarLayer composer={props.annotationComposer} />
+          </>
         ) : null}
       </div>
     </section>

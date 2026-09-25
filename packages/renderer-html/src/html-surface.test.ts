@@ -11,6 +11,7 @@ describe("HtmlReadingSurface", () => {
     const runtime = {
       onLocation: () => vi.fn(),
       onSelection: () => vi.fn(),
+      onSelectionCleared: () => vi.fn(),
       onAnnotationActivated: (listener: typeof activationListener) => {
         activationListener = listener;
         return vi.fn();
@@ -64,6 +65,7 @@ describe("HtmlReadingSurface", () => {
         {
           onLocation: () => vi.fn(),
           onSelection: () => vi.fn(),
+          onSelectionCleared: () => vi.fn(),
           onAnnotationActivated: () => vi.fn(),
           contents: () => contents,
           goToContents: () => true,

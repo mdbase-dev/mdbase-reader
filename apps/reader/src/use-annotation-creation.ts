@@ -1,14 +1,14 @@
-import { useEffect, useRef, useState, useSyncExternalStore } from "react";
+import { useEffect, useState, useSyncExternalStore } from "react";
 
 import { annotationCreationBuffer } from "./annotation-creation-buffer.js";
-import {
-  confirmAnnotationDiscard,
-  saveAnnotationDraftToCollection,
-} from "./annotation-draft-actions.js";
+import { confirmAnnotationDiscard } from "./annotation-draft-actions.js";
 import { annotationDraftKey } from "./annotation-drafts.js";
-import { subscribeToSelections } from "./annotation-selection.js";
+import { useAreaSelectionMode } from "./use-area-selection-mode.js";
+import { useCreationSaving } from "./use-creation-saving.js";
+import { useSelectionRouting } from "./use-selection-routing.js";
 
 import type { ComposerSelection } from "./annotation-composer-request.js";
+import type { SelectionToolbarController, TextComposerSelection } from "./use-selection-toolbar.js";
 import type { Annotation, AnnotationCreationRequest, Source, SourceId } from "@mdbase-reader/core";
 import type { ReadingSurface } from "@mdbase-reader/reading-surface";
 
@@ -26,10 +26,17 @@ export interface AnnotationCreationController {
   readonly canSelectArea: boolean;
   readonly selectingArea: boolean;
   readonly resumeDraft: (() => void) | null;
+  /** A selection made while a comment was being written; the comment keeps its passage. */
+  readonly newSelection: boolean;
+  readonly useNewSelection: () => void;
   readonly pause: () => void;
   readonly setNote: (note: string) => void;
   readonly dismiss: () => void;
   readonly save: () => void;
+  /** Saves a selection as a highlight at once, without a comment. */
+  readonly highlight: (selection: TextComposerSelection) => void;
+  /** Opens the composer to comment on a selection. */
+  readonly comment: (selection: TextComposerSelection) => void;
   readonly toggleAreaSelection: () => void;
 }
 function creationKey(source: Source | null, surface: ReadingSurface | null): string {
@@ -40,6 +47,8 @@ function creationKey(source: Source | null, surface: ReadingSurface | null): str
 export function useAnnotationCreation(
   input: AnnotationCreationInput,
   onSelection: () => void,
+  toolbar: SelectionToolbarController,
+  onCreated: (annotation: Annotation) => void,
 ): AnnotationCreationController {
   const { sourceId, source, surface, create } = input;
   const key = creationKey(source, surface);
@@ -49,34 +58,44 @@ export function useAnnotationCreation(
   );
   const draft = useSyncExternalStore(buffer.subscribe, buffer.getSnapshot, buffer.getSnapshot);
   useEffect(() => buffer.start(), [buffer]);
-  const busy = useRef(false);
-  const [saving, setSaving] = useState(false);
+  const saving = useCreationSaving({
+    source,
+    surface,
+    buffer,
+    create,
+    onCreated,
+    beforeHighlight: toolbar.hide,
+  });
+  const { busy, setProblem } = saving;
   const [pausedKey, setPausedKey] = useState<string | null>(null);
-  const [areaSurface, setAreaSurface] = useState<ReadingSurface | null>(null);
-  const [problem, setProblem] = useState<{ sourceId: string; message: string } | null>(null);
+  const area = useAreaSelectionMode(surface);
+  const [switchTo, setSwitchTo] = useState<{
+    readonly key: string;
+    readonly value: ComposerSelection;
+  } | null>(null);
   const selection = pausedKey === key ? null : (draft.value?.selection ?? null);
-  useEffect(() => {
-    if (!key || !draft.ready) {
-      return undefined;
-    }
-    return subscribeToSelections(sourceId, surface, ({ value }) => {
-      const previous = buffer.get();
-      if (
-        busy.current ||
-        (previous?.body.trim() &&
-          !confirmAnnotationDiscard(
-            "Discard the unfinished annotation comment and use this selection?",
-          ))
-      ) {
-        return;
-      }
-      buffer.replace({ body: "", selection: value });
-      setPausedKey(null);
-      setProblem(null);
-      setAreaSurface(null);
-      onSelection();
-    });
-  }, [key, draft.ready, sourceId, surface, onSelection, buffer]);
+  const open = (value: ComposerSelection, body = ""): void => {
+    buffer.replace({ body, selection: value });
+    toolbar.hide();
+    setSwitchTo(null);
+    setPausedKey(null);
+    setProblem(null);
+    area.endAreaSelection();
+    onSelection();
+  };
+  useSelectionRouting({
+    key,
+    ready: draft.ready,
+    sourceId,
+    surface,
+    buffer,
+    paused: pausedKey === key,
+    busy,
+    offerSwitch: (value) => setSwitchTo({ key, value }),
+    compose: (value) => open(value),
+    highlight: saving.highlight,
+    showToolbar: toolbar.showSelection,
+  });
   const dismiss = (): void => {
     if (
       busy.current ||
@@ -89,37 +108,24 @@ export function useAnnotationCreation(
     surface?.capabilities.textSelection?.clearSelection();
     surface?.capabilities.areaSelection?.cancelAreaSelection();
     setProblem(null);
-    setAreaSurface(null);
+    setSwitchTo(null);
+    area.endAreaSelection();
   };
-  const save = (): void => {
-    const value = buffer.get();
-    if (!value || !source || !surface || busy.current) {
-      return;
-    }
-    busy.current = true;
-    setSaving(true);
-    setProblem(null);
-    void saveAnnotationDraftToCollection(
-      () => buffer.clearIf(value),
-      value,
-      source,
-      surface,
-      create,
-      setProblem,
-      () => {
-        busy.current = false;
-        setSaving(false);
-      },
-    );
-  };
+  const pendingSwitch = switchTo?.key === key && selection ? switchTo : null;
   return {
     selection,
     note: buffer.get()?.body ?? "",
-    status: saving ? "saving" : "idle",
-    error: problem?.sourceId === sourceId ? problem.message : null,
-    canSelectArea: Boolean(surface?.capabilities.areaSelection),
-    selectingArea: areaSurface !== null && areaSurface === surface,
+    status: saving.saving ? "saving" : "idle",
+    error: saving.problem?.sourceId === sourceId ? saving.problem.message : null,
+    canSelectArea: area.canSelectArea,
+    selectingArea: area.selectingArea,
     resumeDraft: draft.value && !selection ? () => setPausedKey(null) : null,
+    newSelection: pendingSwitch !== null,
+    useNewSelection: () => {
+      if (pendingSwitch && !busy.current) {
+        open(pendingSwitch.value, buffer.get()?.body ?? "");
+      }
+    },
     pause: () => setPausedKey(key),
     setNote: (body) => {
       if (!busy.current) {
@@ -127,19 +133,16 @@ export function useAnnotationCreation(
       }
     },
     dismiss,
-    save,
-    toggleAreaSelection: () => {
-      const capability = surface?.capabilities.areaSelection;
-      if (!capability) {
-        return;
-      }
-      if (areaSurface === surface) {
-        capability.cancelAreaSelection();
-        setAreaSurface(null);
-      } else {
-        capability.beginAreaSelection();
-        setAreaSurface(surface);
+    save: saving.save,
+    highlight: saving.highlight,
+    comment: (value) => {
+      if (
+        !buffer.get()?.body.trim() ||
+        confirmAnnotationDiscard("Discard the unfinished annotation comment and comment on this?")
+      ) {
+        open(value);
       }
     },
+    toggleAreaSelection: area.toggleAreaSelection,
   };
 }

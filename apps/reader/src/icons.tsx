@@ -206,3 +206,14 @@ export const CommentIcon = (props: IconProps): JSX.Element => (
     <path d="M4.5 5h15v10.5H11l-4.5 3.5v-3.5h-2z" />
   </Icon>
 );
+export const CopyIcon = (props: IconProps): JSX.Element => (
+  <Icon {...props}>
+    <rect x="8.5" y="8.5" width="11" height="11" rx="1.5" />
+    <path d="M15.5 8.5V6A1.5 1.5 0 0 0 14 4.5H6A1.5 1.5 0 0 0 4.5 6v8A1.5 1.5 0 0 0 6 15.5h2.5" />
+  </Icon>
+);
+export const TrashIcon = (props: IconProps): JSX.Element => (
+  <Icon {...props}>
+    <path d="M4.5 7h15M9.5 7V4.5h5V7M6.5 7l1 12.5h9l1-12.5M10.5 11v5M13.5 11v5" />
+  </Icon>
+);

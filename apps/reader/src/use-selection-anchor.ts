@@ -21,7 +21,7 @@ function trackPointer(): void {
   );
 }
 
-function recentPointerRect(): ViewportRect | null {
+export function recentPointerRect(): ViewportRect | null {
   return lastPointer && performance.now() - lastPointer.at < pointerFreshness
     ? { x: lastPointer.x, y: lastPointer.y, width: 0, height: 0 }
     : null;

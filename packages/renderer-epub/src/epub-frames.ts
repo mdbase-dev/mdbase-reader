@@ -19,6 +19,8 @@ export class EpubFrameEnhancements {
   >();
   readonly #observer: MutationObserver;
   readonly #listeners = new Set<(id: AnnotationId) => void>();
+  readonly #clearedListeners = new Set<() => void>();
+  #hasSelection = false;
   #annotations: readonly Annotation[] = [];
   #activeId: AnnotationId | null = null;
 
@@ -35,6 +37,12 @@ export class EpubFrameEnhancements {
   public onActivated(listener: (id: AnnotationId) => void): () => void {
     this.#listeners.add(listener);
     return () => this.#listeners.delete(listener);
+  }
+
+  /** A selection in any frame collapsed, or a click there left nothing selected. */
+  public onSelectionCleared(listener: () => void): () => void {
+    this.#clearedListeners.add(listener);
+    return () => this.#clearedListeners.delete(listener);
   }
 
   public setAnnotations(annotations: readonly Annotation[]): void {
@@ -60,6 +68,7 @@ export class EpubFrameEnhancements {
     }
     this.#frames.clear();
     this.#listeners.clear();
+    this.#clearedListeners.clear();
   }
 
   readonly #attach = (): void => {
@@ -87,7 +96,11 @@ export class EpubFrameEnhancements {
   #enhance(document: Document): { readonly markers: MarginMarkers; readonly stop: () => void } {
     const host = this.#container.ownerDocument;
     const onKeyDown = (event: KeyboardEvent): void => forwardApplicationShortcut(event, host);
+    const onPointerUp = (): void => this.#noteSelection(document, true);
+    const onKeyUp = (): void => this.#noteSelection(document, false);
     document.addEventListener("keydown", onKeyDown);
+    document.addEventListener("pointerup", onPointerUp);
+    document.addEventListener("keyup", onKeyUp);
     const markers = new MarginMarkers(document, (id) =>
       this.#listeners.forEach((listener) => listener(id)),
     );
@@ -100,8 +113,20 @@ export class EpubFrameEnhancements {
       stop: () => {
         reflow.disconnect();
         document.removeEventListener("keydown", onKeyDown);
+        document.removeEventListener("pointerup", onPointerUp);
+        document.removeEventListener("keyup", onKeyUp);
       },
     };
+  }
+
+  #noteSelection(document: Document, pointer: boolean): void {
+    const selection = document.defaultView?.getSelection();
+    if (selection && !selection.isCollapsed) {
+      this.#hasSelection = true;
+    } else if (this.#hasSelection || pointer) {
+      this.#hasSelection = false;
+      this.#clearedListeners.forEach((listener) => listener());
+    }
   }
 
   #mark(document: Document, markers: MarginMarkers): void {

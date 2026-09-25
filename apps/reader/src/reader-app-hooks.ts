@@ -233,5 +233,7 @@ export function useReaderAnnotationComposer(
     surface,
     create: workspace.createAnnotation,
     annotations: workspace.annotations.status === "ready" ? workspace.annotations.value : [],
+    planDeletion: workspace.planAnnotationDeletion,
+    deleteAnnotation: workspace.deleteAnnotation,
   });
 }

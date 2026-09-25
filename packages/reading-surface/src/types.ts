@@ -44,6 +44,8 @@ export interface TextSelectionDraft {
   readonly locator: ReaderLocator;
   /** Where the selection appeared on screen when it was made, for placing selection UI. */
   readonly anchor?: ViewportRect;
+  /** How the selection was made, when the renderer knows; keyboard selections grow key by key. */
+  readonly via?: "pointer" | "keyboard";
 }
 
 export interface AreaSelectionDraft {
@@ -63,6 +65,8 @@ export interface AreaSelectionDraft {
 
 export interface TextSelectionCapability {
   readonly selections: EventSource<TextSelectionDraft>;
+  /** Fires when the text selection collapses, or a click in the document selects nothing. */
+  readonly cleared?: EventSource<null>;
   clearSelection(): void;
 }
 
@@ -83,6 +87,8 @@ export interface AnnotationNavigationCapability {
 
 export interface AnnotationActivationCapability {
   readonly activations: EventSource<AnnotationId>;
+  /** Where the most recently activated highlight sits on screen, when the renderer knows. */
+  activationRect?(): ViewportRect | null;
 }
 
 export interface ContentsEntry {

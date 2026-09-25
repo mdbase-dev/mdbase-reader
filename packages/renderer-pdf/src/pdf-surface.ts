@@ -20,6 +20,8 @@ export class EmbedPdfSurface implements ReadingSurface {
   readonly #textSelections =
     createEventEmitter<Parameters<Parameters<EmbedPdfRuntime["onTextSelected"]>[0]>[0]>();
   readonly #annotationActivations = createEventEmitter<AnnotationId>();
+  readonly #cleared = createEventEmitter<null>();
+  readonly #unsubscribeCleared: () => void;
   readonly #unsubscribeArea: () => void;
   readonly #unsubscribePage: () => void;
   readonly #unsubscribeText: () => void;
@@ -41,6 +43,8 @@ export class EmbedPdfSurface implements ReadingSurface {
     this.#unsubscribeText = runtime.onTextSelected((selection) =>
       this.#textSelections.emit(selection),
     );
+    this.#unsubscribeCleared =
+      runtime.onSelectionCleared?.(() => this.#cleared.emit(null)) ?? (() => undefined);
     this.#unsubscribeAnnotationActivation = runtime.onAnnotationActivated((annotationId) =>
       this.#annotationActivations.emit(annotationId),
     );
@@ -51,6 +55,7 @@ export class EmbedPdfSurface implements ReadingSurface {
     this.capabilities = {
       textSelection: {
         selections: this.#textSelections,
+        cleared: this.#cleared,
         clearSelection: () => runtime.clearTextSelection(),
       },
       areaSelection: {
@@ -99,9 +104,11 @@ export class EmbedPdfSurface implements ReadingSurface {
       this.#unsubscribeArea();
       this.#unsubscribePage();
       this.#unsubscribeText();
+      this.#unsubscribeCleared();
       this.#unsubscribeAnnotationActivation();
       this.#areaSelections.clear();
       this.#textSelections.clear();
+      this.#cleared.clear();
       this.#annotationActivations.clear();
       this.locations.clear();
       this.#runtime.destroy();

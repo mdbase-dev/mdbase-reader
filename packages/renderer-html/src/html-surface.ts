@@ -14,9 +14,11 @@ export class HtmlReadingSurface implements ReadingSurface {
   public readonly locations = createEventEmitter<ReaderLocator>();
   public readonly capabilities: ReadingSurface["capabilities"];
   readonly #selections = createEventEmitter<TextSelectionDraft>();
+  readonly #cleared = createEventEmitter<null>();
   readonly #annotationActivations = createEventEmitter<AnnotationId>();
   readonly #unsubscribeLocation: () => void;
   readonly #unsubscribeSelection: () => void;
+  readonly #unsubscribeCleared: () => void;
   readonly #unsubscribeAnnotationActivation: () => void;
   #destroyed = false;
 
@@ -28,12 +30,14 @@ export class HtmlReadingSurface implements ReadingSurface {
     this.#unsubscribeSelection = runtime.onSelection((selection) =>
       this.#selections.emit(selection),
     );
+    this.#unsubscribeCleared = runtime.onSelectionCleared(() => this.#cleared.emit(null));
     this.#unsubscribeAnnotationActivation = runtime.onAnnotationActivated((annotationId) =>
       this.#annotationActivations.emit(annotationId),
     );
     this.capabilities = {
       textSelection: {
         selections: this.#selections,
+        cleared: this.#cleared,
         clearSelection: () => runtime.clearSelection(),
       },
       decorations: {
@@ -51,7 +55,10 @@ export class HtmlReadingSurface implements ReadingSurface {
       annotationNavigation: {
         goToAnnotation: (annotation) => Promise.resolve(runtime.goToAnnotation(annotation)),
       },
-      annotationActivation: { activations: this.#annotationActivations },
+      annotationActivation: {
+        activations: this.#annotationActivations,
+        activationRect: () => runtime.activationRect(),
+      },
       textExtraction: {
         extractText: () => Promise.resolve(runtime.extractText()),
       },
@@ -85,9 +92,11 @@ export class HtmlReadingSurface implements ReadingSurface {
     if (!this.#destroyed) {
       this.#unsubscribeLocation();
       this.#unsubscribeSelection();
+      this.#unsubscribeCleared();
       this.#unsubscribeAnnotationActivation();
       this.locations.clear();
       this.#selections.clear();
+      this.#cleared.clear();
       this.#annotationActivations.clear();
       this.runtime.destroy();
       this.#destroyed = true;

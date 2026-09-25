@@ -1,5 +1,6 @@
 import { themePreferences, type ThemePreference } from "@mdbase-reader/ui";
 
+import { setHighlightOnSelect, useHighlightOnSelect } from "./highlight-preference.js";
 import { Menu } from "./Menu.js";
 import { typographyScaleSteps } from "./workspace-shell-preferences.js";
 
@@ -26,6 +27,7 @@ export function DisplayMenu({
   readonly sidebarWhileReading: "hide" | "keep";
   readonly onChangeSidebarWhileReading?: (value: "hide" | "keep") => void;
 }): JSX.Element {
+  const highlightOnSelect = useHighlightOnSelect();
   return (
     <Menu
       className="header-display-menu"
@@ -65,6 +67,15 @@ export function DisplayMenu({
           onChange={onChangeSidebarWhileReading}
         />
       ) : null}
+      <DisplayChoice
+        legend="Selecting text"
+        value={highlightOnSelect}
+        options={[
+          { value: "offer", label: "Show actions" },
+          { value: "instant", label: "Highlight at once" },
+        ]}
+        onChange={setHighlightOnSelect}
+      />
     </Menu>
   );
 }

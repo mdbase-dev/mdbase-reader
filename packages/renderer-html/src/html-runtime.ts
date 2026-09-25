@@ -1,5 +1,6 @@
 import { MarginMarkers, forwardApplicationShortcut } from "@mdbase-reader/reading-surface";
 
+import { clearCssHighlights, setCssHighlight, setCssHighlights } from "./html-css-highlights.js";
 import { htmlLocator, htmlSelectionDraft, locateHtmlTarget } from "./html-range.js";
 import { scrollHtmlElement } from "./html-scroll.js";
 import { applyHtmlTypography } from "./html-typography.js";
@@ -23,9 +24,12 @@ export class HtmlDocumentRuntime {
   readonly #locationListeners = new Set<(locator: ReaderLocator) => void>();
   readonly #selectionListeners = new Set<(selection: TextSelectionDraft) => void>();
   readonly #activationListeners = new Set<(annotationId: AnnotationId) => void>();
-  readonly #onSelection = (): void => this.captureSelection();
+  readonly #clearedListeners = new Set<() => void>();
+  #hasSelection = false;
+  #activationRect: ViewportRect | null = null;
+  readonly #onSelection = (): void => this.captureSelection("keyboard");
   readonly #onPointerUp = (event: PointerEvent): void => {
-    this.captureSelection();
+    this.captureSelection("pointer");
     this.captureAnnotationActivation(event);
   };
   readonly #onScroll = (): void => this.emitLocation();
@@ -53,6 +57,7 @@ export class HtmlDocumentRuntime {
     document.addEventListener("keydown", this.#onKeyDown);
     view.addEventListener("scroll", this.#onScroll, { passive: true });
     this.#markers = new MarginMarkers(document, (annotationId) => {
+      this.#activationRect = null;
       for (const listener of this.#activationListeners) {
         listener(annotationId);
       }
@@ -68,6 +73,17 @@ export class HtmlDocumentRuntime {
   public onSelection(listener: (selection: TextSelectionDraft) => void): Unsubscribe {
     this.#selectionListeners.add(listener);
     return () => this.#selectionListeners.delete(listener);
+  }
+
+  /** Where the highlight activated by the latest click sits, in the host viewport. */
+  public activationRect(): ViewportRect | null {
+    return this.#activationRect;
+  }
+
+  /** Called when a selection collapses, or a click in the page leaves nothing selected. */
+  public onSelectionCleared(listener: () => void): Unsubscribe {
+    this.#clearedListeners.add(listener);
+    return () => this.#clearedListeners.delete(listener);
   }
 
   public onAnnotationActivated(listener: (annotationId: AnnotationId) => void): Unsubscribe {
@@ -148,6 +164,7 @@ export class HtmlDocumentRuntime {
 
   public clearSelection(): void {
     this.#view.getSelection()?.removeAllRanges();
+    this.#hasSelection = false;
   }
 
   public extractText(): string {
@@ -167,16 +184,23 @@ export class HtmlDocumentRuntime {
     clearCssHighlights(this.#view);
     this.#locationListeners.clear();
     this.#selectionListeners.clear();
+    this.#clearedListeners.clear();
     this.#activationListeners.clear();
     this.#annotationRanges = [];
     this.#destroyed = true;
   }
 
-  private captureSelection(): void {
+  private captureSelection(via: "pointer" | "keyboard"): void {
     const selection = this.#view.getSelection();
     if (!selection || selection.rangeCount === 0 || selection.isCollapsed) {
+      // A click that leaves nothing selected also dismisses selection UI, even with none showing.
+      if (this.#hasSelection || via === "pointer") {
+        this.#hasSelection = false;
+        this.#clearedListeners.forEach((listener) => listener());
+      }
       return;
     }
+    this.#hasSelection = true;
     const range = selection.getRangeAt(0);
     const draft = htmlSelectionDraft({
       document: this.#document,
@@ -185,7 +209,7 @@ export class HtmlDocumentRuntime {
       progression: scrollProgression(this.#document),
     });
     if (draft) {
-      const anchored = { ...draft, anchor: frameViewportRect(this.#frame, range) };
+      const anchored = { ...draft, anchor: frameViewportRect(this.#frame, range), via };
       for (const listener of this.#selectionListeners) {
         listener(anchored);
       }
@@ -205,6 +229,7 @@ export class HtmlDocumentRuntime {
       range.isPointInRange(position.node, position.offset),
     );
     if (matched) {
+      this.#activationRect = frameViewportRect(this.#frame, matched.range);
       for (const listener of this.#activationListeners) {
         listener(matched.annotation.id);
       }
@@ -241,39 +266,6 @@ function scrollProgression(document: Document): number {
 
 function parentElement(node: Node): Element | null {
   return node.nodeType === Node.ELEMENT_NODE ? (node as Element) : node.parentElement;
-}
-
-interface HighlightRegistry {
-  set(name: string, value: unknown): void;
-  delete(name: string): void;
-}
-
-type HighlightWindow = Window & {
-  readonly Highlight?: new (...ranges: Range[]) => unknown;
-  readonly CSS?: { readonly highlights?: HighlightRegistry };
-};
-
-function setCssHighlights(view: Window, ranges: readonly Range[]): void {
-  setCssHighlight(view, "reader-annotations", ranges);
-}
-
-function setCssHighlight(view: Window, name: string, ranges: readonly Range[]): void {
-  const target = view as HighlightWindow;
-  const registry = target.CSS?.highlights;
-  const Highlight = target.Highlight;
-  if (!registry || !Highlight) {
-    return;
-  }
-  registry.delete(name);
-  if (ranges.length > 0) {
-    registry.set(name, new Highlight(...ranges));
-  }
-}
-
-function clearCssHighlights(view: Window): void {
-  const highlights = (view as HighlightWindow).CSS?.highlights;
-  highlights?.delete("reader-annotations");
-  highlights?.delete("reader-active-annotation");
 }
 
 function headingElements(document: Document): HTMLElement[] {

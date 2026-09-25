@@ -151,11 +151,12 @@ export async function auditSharedEditing(page, { screenshot, blockWrites, measur
     selection.addRange(range);
     doc.dispatchEvent(new doc.defaultView.PointerEvent("pointerup", { bubbles: true }));
   });
-  const creator = page.getByRole("region", { name: "New highlight" });
-  await expect(creator).toBeVisible();
+  const offer = page.getByRole("toolbar", { name: "Selected text" });
+  await expect(offer).toBeVisible();
   await page.waitForTimeout(1200);
-  await expect(creator).toBeVisible(); // selection alone is never autosaved as a new annotation
-  await creator.getByRole("button", { name: "Add a comment", exact: true }).click();
+  await expect(offer).toBeVisible(); // selection alone is never autosaved as a new annotation
+  await offer.getByRole("button", { name: "Comment", exact: true }).click();
+  const creator = page.getByRole("region", { name: "Comment on highlight" });
   const creatingText = creator.getByRole("textbox", { name: "Comment" });
   await creatingText.fill("[test] Latest");
   await creatingText.pressSequentially(" characters saved immediately");

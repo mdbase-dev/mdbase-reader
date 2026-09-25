@@ -48,6 +48,7 @@ export class AnnotationCreationBuffer {
   edit(body: string): void {
     if (this.value) {
       this.value = { ...this.value, body };
+      this.track();
     }
   }
   replace(value: AnnotationLocalDraft | null): void {
@@ -65,10 +66,19 @@ export class AnnotationCreationBuffer {
   }
   private publish(): void {
     this.snapshot = { ready: true, value: this.value };
-    if (this.scope) {
-      trackAnnotationEdits(this, this.scope, this.value !== null);
-    }
+    this.track();
     this.listeners.forEach((listener) => listener());
+  }
+  /** Only written words or a captured area are worth warning about; a bare selection is not. */
+  private track(): void {
+    if (this.scope) {
+      const value = this.value;
+      trackAnnotationEdits(
+        this,
+        this.scope,
+        value !== null && (value.selection?.kind === "area" || value.body.trim() !== ""),
+      );
+    }
   }
 }
 const buffers = new Map<string, AnnotationCreationBuffer>();

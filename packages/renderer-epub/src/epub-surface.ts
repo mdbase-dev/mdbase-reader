@@ -18,6 +18,8 @@ export class ReadiumEpubSurface implements ReadingSurface {
   readonly #selections =
     createEventEmitter<Parameters<Parameters<ReadiumRuntime["onTextSelected"]>[0]>[0]>();
   readonly #annotationActivations = createEventEmitter<AnnotationId>();
+  readonly #cleared = createEventEmitter<null>();
+  readonly #unsubscribeCleared: () => void;
   readonly #unsubscribeLocation: () => void;
   readonly #unsubscribeSelection: () => void;
   readonly #unsubscribeAnnotationActivation: () => void;
@@ -35,12 +37,15 @@ export class ReadiumEpubSurface implements ReadingSurface {
     this.#unsubscribeSelection = runtime.onTextSelected((selection) =>
       this.#selections.emit(selection),
     );
+    this.#unsubscribeCleared =
+      runtime.onSelectionCleared?.(() => this.#cleared.emit(null)) ?? (() => undefined);
     this.#unsubscribeAnnotationActivation = runtime.onAnnotationActivated((annotationId) =>
       this.#annotationActivations.emit(annotationId),
     );
     this.capabilities = {
       textSelection: {
         selections: this.#selections,
+        cleared: this.#cleared,
         clearSelection: () => runtime.clearSelection(),
       },
       textExtraction: {
@@ -96,8 +101,10 @@ export class ReadiumEpubSurface implements ReadingSurface {
     if (!this.#destroyed) {
       this.#unsubscribeLocation();
       this.#unsubscribeSelection();
+      this.#unsubscribeCleared();
       this.#unsubscribeAnnotationActivation();
       this.#selections.clear();
+      this.#cleared.clear();
       this.#annotationActivations.clear();
       this.locations.clear();
       await this.#runtime.destroy();

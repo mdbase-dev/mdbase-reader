@@ -48,13 +48,13 @@ export async function auditAnnotations(page, { screenshot, blockWrites }) {
     });
   };
   await select();
-  const composer = page.getByRole("region", { name: "New highlight" });
-  await expect(composer).toBeVisible();
-  await expect(composer.getByRole("textbox", { name: "Comment" })).toHaveCount(0);
-  await screenshot("annotation-compact-highlight");
-  await composer.getByRole("button", { name: "Save highlight", exact: true }).focus();
-  await page.keyboard.press("Control+s");
-  await expect(composer).toHaveCount(0);
+  const selectionBar = page.getByRole("toolbar", { name: "Selected text" });
+  await expect(selectionBar).toBeVisible();
+  // A selection alone is not a draft: nothing is unsaved until an action is chosen.
+  await expect(page.locator(".reader-dock-tab.is-dirty")).toHaveCount(0);
+  await screenshot("annotation-selection-toolbar");
+  await frame().locator("#p0").press("h");
+  await expect(selectionBar).toHaveCount(0);
   const navigatorWidth = (
     await page.getByRole("complementary", { name: "Library navigator" }).boundingBox()
   ).width;
@@ -62,6 +62,12 @@ export async function auditAnnotations(page, { screenshot, blockWrites }) {
     .locator("#p0")
     .click({ position: { x: 20, y: 10 } });
   const tools = page.getByRole("complementary", { name: "Source workspace" });
+  // The click offers the highlight's actions in place and selects its card without opening panels.
+  await expect(page.getByRole("toolbar", { name: "Highlight" })).toBeVisible();
+  await screenshot("annotation-highlight-toolbar");
+  if (!(await tools.isVisible())) {
+    await page.getByRole("button", { name: "Toggle right sidebar" }).click();
+  }
   await expect(tools.locator(".annotation-card.is-selected")).toBeVisible();
   await expect(tools.locator(".annotation-card.is-selected")).toHaveCSS("box-shadow", "none");
   await expect(tools.getByRole("textbox", { name: "Comment" })).toHaveCount(0);
@@ -74,7 +80,7 @@ export async function auditAnnotations(page, { screenshot, blockWrites }) {
     .toBeCloseTo(navigatorWidth, 0);
   await screenshot("annotation-selected-not-editing");
   completed.push(
-    "Compact highlight saves by keyboard; clicking the highlight reveals its card without entering edit mode",
+    "Selecting offers actions without a draft; H highlights; clicking the highlight selects its card and offers its actions",
   );
 
   await tools.getByRole("button", { name: "Edit", exact: true }).click();
@@ -104,8 +110,10 @@ export async function auditAnnotations(page, { screenshot, blockWrites }) {
     "Annotation autosave failures retain text in memory; keyboard retry persists it across reload",
   );
 
+  await page.keyboard.press("Escape");
   await select(1);
-  await composer.getByRole("button", { name: "Add a comment" }).click();
+  await selectionBar.getByRole("button", { name: "Comment" }).click();
+  const composer = page.getByRole("region", { name: "Comment on highlight" });
   await composer
     .getByRole("textbox", { name: "Comment" })
     .fill("[test] New selection draft survives switching sources.");
@@ -120,7 +128,8 @@ export async function auditAnnotations(page, { screenshot, blockWrites }) {
   await expect(composer.getByRole("textbox", { name: "Comment" })).toHaveValue(
     /New selection draft survives/u,
   );
-  await composer.getByRole("button", { name: "Cancel", exact: true }).click();
+  await expect(composer.getByRole("button", { name: "Use it for this comment" })).toBeVisible();
+  await composer.getByRole("button", { name: "Discard selection", exact: true }).click();
   await expect(composer).toBeVisible();
   page.removeAllListeners("dialog");
   page.on("dialog", (dialog) => void dialog.accept());
@@ -132,7 +141,7 @@ export async function auditAnnotations(page, { screenshot, blockWrites }) {
   await composer.getByRole("textbox", { name: "Comment" }).press("Control+s");
   await expect(composer).toHaveCount(0);
   completed.push(
-    "New comments remain in memory across source switching; replacing or discarding them requires confirmation",
+    "New comments remain in memory across source switching; a new selection never replaces them, and discarding requires confirmation",
   );
 
   await tools.getByRole("searchbox", { name: "Search annotations" }).fill("recoverable");

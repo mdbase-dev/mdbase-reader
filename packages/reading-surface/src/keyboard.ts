@@ -3,7 +3,7 @@
  * reach the application. Forward the keys an application shortcut can use.
  */
 export function forwardApplicationShortcut(event: KeyboardEvent, host: Document): void {
-  if (!isApplicationShortcut(event) || !host.defaultView) {
+  if (!(isApplicationShortcut(event) || isSelectionShortcut(event)) || !host.defaultView) {
     return;
   }
   const forwarded = new host.defaultView.KeyboardEvent("keydown", {
@@ -35,4 +35,29 @@ export function isApplicationShortcut(event: KeyboardEvent): boolean {
   // Leave the page's own editing and clipboard keys alone.
   const key = event.key.toLocaleLowerCase();
   return (event.ctrlKey || event.metaKey) && !["a", "c", "x", "v", "z", "y"].includes(key);
+}
+
+/** Single-letter selection actions: H highlights and C comments while text is selected. */
+export const selectionShortcutKeys = ["h", "c"] as const;
+
+/**
+ * Whether a key acts on the current text selection. Only unmodified H and C outside form fields,
+ * and only while the event's document has a selection, so typing is never intercepted.
+ */
+export function isSelectionShortcut(event: KeyboardEvent): boolean {
+  if (event.isComposing || event.ctrlKey || event.metaKey || event.altKey || event.shiftKey) {
+    return false;
+  }
+  if (!(selectionShortcutKeys as readonly string[]).includes(event.key.toLocaleLowerCase())) {
+    return false;
+  }
+  // Frames have their own Element constructor, so test the shape rather than instanceof.
+  const target = event.target as { closest?: (selector: string) => unknown } | null;
+  if (
+    target?.closest?.("input, textarea, select, [contenteditable]:not([contenteditable='false'])")
+  ) {
+    return false;
+  }
+  const selection = event.view?.getSelection();
+  return Boolean(selection && !selection.isCollapsed);
 }

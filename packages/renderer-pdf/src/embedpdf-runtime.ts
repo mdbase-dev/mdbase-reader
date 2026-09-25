@@ -27,6 +27,7 @@ export interface EmbedPdfRuntime {
   onPageChanged(listener: (pageIndex: number) => void): Unsubscribe;
   onAreaSelected(listener: (selection: AreaSelectionDraft) => void): Unsubscribe;
   onTextSelected(listener: (selection: TextSelectionDraft) => void): Unsubscribe;
+  onSelectionCleared?(listener: () => void): Unsubscribe;
   onAnnotationActivated(listener: (annotationId: AnnotationId) => void): Unsubscribe;
   clearTextSelection(): void;
   extractText(options?: { readonly signal?: AbortSignal }): Promise<string>;
@@ -146,6 +147,18 @@ export function createEmbedPdfRuntime(registry: PluginRegistry): EmbedPdfRuntime
               listener(draft);
             }
           });
+      });
+      subscriptions.add(unsubscribe);
+      return () => {
+        subscriptions.delete(unsubscribe);
+        unsubscribe();
+      };
+    },
+    onSelectionCleared(listener) {
+      const unsubscribe = selection.onSelectionChange((event) => {
+        if (event.selection === null) {
+          listener();
+        }
       });
       subscriptions.add(unsubscribe);
       return () => {

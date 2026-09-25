@@ -24,6 +24,8 @@ export function AnnotationComposer({
   if (!composer.selection) {
     return <AnnotationComposerNotices composer={composer} />;
   }
+  // Text reaches the composer only when the reader chose to comment; an area may be saved bare.
+  const commenting = composer.selection.kind === "text" || expanded || note !== "";
   return (
     // The region delegates keyboard shortcuts from its interactive children.
     // eslint-disable-next-line jsx-a11y/no-noninteractive-element-interactions
@@ -35,7 +37,7 @@ export function AnnotationComposer({
     >
       <header>
         <strong id="annotation-composer-title">
-          {composer.selection.kind === "area" ? "New area annotation" : "New highlight"}
+          {composer.selection.kind === "area" ? "New area annotation" : "Comment on highlight"}
         </strong>
         <button
           type="button"
@@ -52,11 +54,13 @@ export function AnnotationComposer({
       ) : (
         <AreaPreview image={composer.selection.value.image} />
       )}
-      {expanded || note ? (
+      {commenting ? (
         <AnnotationTextArea
           value={note}
           readOnly={composer.status === "saving"}
           placeholder="Why does this matter?"
+          rows={3}
+          autoSize
           onChange={(body) => {
             setExpanded(true);
             setComment({ selection: composer.selection, body });
@@ -69,9 +73,17 @@ export function AnnotationComposer({
           Not saved yet — keep Reader open until you save this annotation.
         </small>
       ) : null}
+      {composer.newSelection ? (
+        <p className="annotation-new-selection" role="status">
+          You selected other text.{" "}
+          <button type="button" onClick={composer.useNewSelection}>
+            Use it for this comment
+          </button>
+        </p>
+      ) : null}
       {composer.error ? <p role="alert">{composer.error}</p> : null}
       <footer>
-        {expanded || note ? null : (
+        {commenting ? null : (
           <button
             className="annotation-add-comment"
             type="button"
@@ -80,9 +92,6 @@ export function AnnotationComposer({
             Add a comment
           </button>
         )}
-        <button type="button" onClick={composer.dismiss} disabled={composer.status === "saving"}>
-          Cancel
-        </button>
         <ReaderButton disabled={composer.status === "saving"} onClick={composer.save}>
           {composer.status === "saving"
             ? "Saving…"
