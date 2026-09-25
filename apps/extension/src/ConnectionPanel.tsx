@@ -1,5 +1,6 @@
 import { Select } from "@mdbase-reader/ui";
 
+import { connectionUnavailableMessage } from "./connection-status.js";
 import { environment } from "./environment.js";
 
 import type { ExtensionCaptureController } from "./capture-controller.js";
@@ -7,11 +8,16 @@ import type { ExtensionCaptureController } from "./capture-controller.js";
 /** What the connection controls need; the panel, welcome and settings pages all provide it. */
 export type ConnectionControls = Pick<
   ExtensionCaptureController,
-  "snapshot" | "busy" | "deviceCode" | "connect" | "applySetup" | "select"
+  "snapshot" | "busy" | "deviceCode" | "connect" | "retry" | "applySetup" | "select"
 >;
 
 /** Connection states the user resolves by approving access again in mdbase Connect. */
-const needsApproval = new Set(["authorization_required", "unavailable", "blocked", "start_failed"]);
+const needsApproval = new Set(["authorization_required"]);
+const needsRetry = new Set(["unavailable", "blocked", "start_failed"]);
+
+function showAuthorization(connected: boolean, status: string): boolean {
+  return (!connected && !needsRetry.has(status)) || needsApproval.has(status);
+}
 
 export function ConnectionPanel({
   controller: c,
@@ -60,7 +66,7 @@ export function ConnectionPanel({
           <p>{intro}</p>
         </>
       )}
-      {!connected || needsApproval.has(snapshot.status) ? (
+      {showAuthorization(connected, snapshot.status) ? (
         <>
           {connected ? <p>This collection needs you to approve access again.</p> : null}
           <button
@@ -74,6 +80,14 @@ export function ConnectionPanel({
               : connected
                 ? `Reconnect to mdbase${target}`
                 : `Connect to mdbase${target}`}
+          </button>
+        </>
+      ) : null}
+      {needsRetry.has(snapshot.status) ? (
+        <>
+          <p>{connectionUnavailableMessage(snapshot)}</p>
+          <button type="button" disabled={busy} onClick={() => void c.retry()}>
+            Retry connection
           </button>
         </>
       ) : null}
@@ -152,7 +166,12 @@ export function ConnectionProblem({
             Retry connection
           </button>
         ) : null}
-        {kind !== "page" ? (
+        {kind === "save" && needsRetry.has(c.snapshot.status) ? (
+          <button type="button" disabled={c.busy} onClick={() => void c.retry()}>
+            Retry connection
+          </button>
+        ) : null}
+        {kind !== "page" && !needsRetry.has(c.snapshot.status) ? (
           <button type="button" disabled={c.busy} onClick={() => void c.connect()}>
             Review access
           </button>

@@ -1,6 +1,7 @@
 // @vitest-environment happy-dom
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 
+import { CaptureWriter } from "./save-capture.js";
 import { capture, draft, fixture } from "./testing/save-capture-fixture.js";
 
 describe("explicit source and highlight saves", () => {
@@ -23,6 +24,31 @@ describe("explicit source and highlight saves", () => {
       "[[files/reading.html]]",
       result.source.documents[0]?.revision,
     );
+  });
+  it("only scans old uploads after an interrupted import, including after reopening", async () => {
+    const f = fixture();
+    f.commit.mockRejectedValueOnce(new Error("Upload interrupted"));
+    await expect(f.save({ highlight: false })).rejects.toThrow("Upload interrupted");
+    expect(f.commit).toHaveBeenLastCalledWith(
+      expect.anything(),
+      expect.objectContaining({ recoverExistingFiles: false }),
+    );
+    const reopened = new CaptureWriter(f.storage);
+    await reopened.save({
+      session: f.session,
+      collection: f.collection,
+      capture,
+      draft: { ...draft, highlight: false },
+      onSource: f.onSource,
+      onProgress: vi.fn(),
+    });
+    expect(f.commit).toHaveBeenLastCalledWith(
+      expect.anything(),
+      expect.objectContaining({ recoverExistingFiles: true }),
+    );
+    expect(
+      await f.storage.get(`capture-import:${f.collection.collectionId}:${capture.canonicalUrl}`),
+    ).toBeNull();
   });
   it("reuses existing sources without overwriting their notes, title or tags", async () => {
     const f = fixture();

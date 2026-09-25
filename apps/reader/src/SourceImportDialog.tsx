@@ -188,9 +188,11 @@ function ImportProgress({
   const label =
     progress?.phase === "uploading"
       ? `Uploading file ${String(progress.fileIndex)} of ${String(progress.fileCount)}`
-      : progress?.phase === "creating"
-        ? "Creating source record"
-        : "Checking file and library";
+      : progress?.phase === "recovering"
+        ? "Checking files from the previous import"
+        : progress?.phase === "creating"
+          ? "Creating source record"
+          : "Checking file and library";
   return (
     <div className="import-progress" role="status" aria-live="polite">
       <span>

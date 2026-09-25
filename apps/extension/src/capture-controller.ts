@@ -27,6 +27,8 @@ export interface ExtensionCaptureController {
   readonly projection: ProjectionReport | null;
   readonly progress: SourceImportProgress | null;
   readonly busy: boolean;
+  readonly refreshing: boolean;
+  readonly refreshHighlights: () => Promise<void>;
   readonly saveAttempted: boolean;
   readonly navigated: boolean;
   readonly invocation: { readonly intent: CaptureIntent; readonly at: number } | null;

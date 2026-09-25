@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import { prepareCitation, type CitationPreview } from "./capture-citation.js";
 import { problemMessage, sourceForUrl } from "./capture-model.js";
+import { connectionUnavailableMessage } from "./connection-status.js";
 import { annotationQuotes } from "./page-annotations.js";
 import { fetchPdf, renderAnnotations } from "./page-capture.js";
 import { CaptureWriter } from "./save-capture.js";
@@ -36,6 +37,14 @@ export function useExtensionCapture(tabId: number): ExtensionCaptureController {
   const [annotations, setAnnotations] = useState<readonly Annotation[]>([]);
   const [projection, setProjection] = useState<ProjectionReport | null>(null);
   const [saveAttempted, setSaveAttempted] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
+  const refreshEpoch = useRef(0);
+  useEffect(
+    () => () => {
+      refreshEpoch.current++;
+    },
+    [],
+  );
   // The citation belongs to one page; it is pending until a lookup for this page settles.
   const [citationFor, setCitationFor] = useState<{
     readonly page: string;
@@ -69,6 +78,7 @@ export function useExtensionCapture(tabId: number): ExtensionCaptureController {
   const submittedUrl = capture?.submittedUrl;
   useEffect(() => {
     const epoch = ++discovery.current;
+    refreshEpoch.current++;
     const collection = extension?.session.connectedCollection();
     if (!collection || !pageUrl) {
       return;
@@ -96,6 +106,7 @@ export function useExtensionCapture(tabId: number): ExtensionCaptureController {
         setNotice(`Could not check existing sources: ${problemMessage(reason)}`);
       }
     });
+    return () => setRefreshing(false);
   }, [collectionId, extension, pageUrl, setNotice, submittedUrl]);
 
   const { setDraft } = stored;
@@ -131,10 +142,17 @@ export function useExtensionCapture(tabId: number): ExtensionCaptureController {
   const save = (): Promise<void> =>
     lock.run(async () => {
       const collection = extension?.session.connectedCollection();
-      if (!capture || !collection || !writer || !extension) {
-        throw new Error("Connect a collection before saving.");
+      if (!collection || !writer || !extension) {
+        throw new Error(
+          connectionUnavailableMessage(extension?.session.getSnapshot() ?? connection.snapshot),
+        );
+      }
+      if (!capture) {
+        throw new Error("The page is not ready. Reopen Reader on this page before saving.");
       }
       discovery.current++;
+      refreshEpoch.current++;
+      setRefreshing(false);
       setSaveAttempted(true);
       setStatus("saving");
       try {
@@ -148,6 +166,7 @@ export function useExtensionCapture(tabId: number): ExtensionCaptureController {
           pdfBytes: () => fetchPdf(tabId, capture.canonicalUrl),
           onProgress: setProgress,
           onSource: (saved, existing) => {
+            setProgress(null);
             setSource(saved);
             setStatus(existing ? "existing" : "saved");
           },
@@ -161,7 +180,9 @@ export function useExtensionCapture(tabId: number): ExtensionCaptureController {
             .filter(Boolean)
             .join(" ") || null,
         );
-        await refreshAnnotations(result.source, Boolean(result.annotation));
+        // The write is complete. Refreshing the display must not keep Save locked.
+        setProgress(null);
+        void refreshAnnotations(result.source, Boolean(result.annotation));
       } finally {
         setStatus((current) => (current === "saving" ? "ready" : current));
       }
@@ -170,25 +191,49 @@ export function useExtensionCapture(tabId: number): ExtensionCaptureController {
   async function refreshAnnotations(saved: SourceSummary, render: boolean): Promise<void> {
     const collection = extension?.session.connectedCollection();
     if (!collection || !capture) {
+      setNotice(connectionUnavailableMessage(connection.snapshot));
       return;
     }
+    const epoch = ++refreshEpoch.current;
+    setRefreshing(true);
     try {
       const values = await collection.annotations.listForSource(collection.collectionId, saved.id);
+      if (epoch !== refreshEpoch.current) {
+        return;
+      }
       setAnnotations(values);
       void chrome.runtime
         .sendMessage({ type: "mdbase-reader/source-changed", tabId } satisfies SourceChangedMessage)
         .catch(() => undefined);
       if (render && capture.kind === "html") {
-        setProjection(
-          await renderAnnotations(tabId, annotationQuotes(values), capture.submittedUrl),
+        const report = await renderAnnotations(
+          tabId,
+          annotationQuotes(values),
+          capture.submittedUrl,
         );
+        if (epoch === refreshEpoch.current) {
+          setProjection(report);
+        }
       }
     } catch (reason) {
-      setNotice(
-        `Saved safely. Could not refresh highlights on this page: ${problemMessage(reason)}`,
-      );
+      if (epoch === refreshEpoch.current) {
+        setNotice(
+          `Saved safely. Could not refresh highlights on this page: ${problemMessage(reason)}. Retry refreshing highlights; do not save again.`,
+        );
+      }
+    } finally {
+      if (epoch === refreshEpoch.current) {
+        setRefreshing(false);
+      }
     }
   }
+
+  const refreshHighlights = async (): Promise<void> => {
+    if (source && !refreshing && !lock.busy) {
+      setNotice(null);
+      await refreshAnnotations(source, true);
+    }
+  };
 
   const showAnnotations = (): Promise<void> =>
     lock.run(async () => {
@@ -216,6 +261,8 @@ export function useExtensionCapture(tabId: number): ExtensionCaptureController {
     deviceCode: connection.deviceCode,
     projection,
     progress,
+    refreshing,
+    refreshHighlights,
     busy: lock.busy,
     saveAttempted,
     navigated: page.navigated,

@@ -105,6 +105,44 @@ it("explains missing and ambiguous highlights with a source-specific saved-copy 
   expect(html).toContain("remain safe");
   expect(html).toContain("collection=c1&amp;source=s1");
 });
+it.each(["unavailable", "start_failed", "blocked"])(
+  "offers connection retry, not reapproval, for %s",
+  (status) => {
+    const html = markup({
+      snapshot: {
+        status,
+        collectionId: "c1",
+        connections: [{ collectionId: "c1", displayName: "Papers" }],
+        problem: { message: "Temporarily blocked" },
+      } as unknown as ExtensionCaptureController["snapshot"],
+      problem: "Request timed out",
+      problemKind: "save",
+      saveAttempted: true,
+    });
+    expect(html).toContain("Retry connection");
+    expect(html).not.toContain("approve access again");
+    expect(html).not.toContain("Review access");
+  },
+);
+it("does not display stale write progress after a successful save", () => {
+  const html = markup({
+    status: "saved",
+    busy: false,
+    refreshing: true,
+    progress: { phase: "creating", completedBytes: 1, totalBytes: 1, fileIndex: 1, fileCount: 1 },
+  });
+  expect(html).toContain("Source saved in mdbase.");
+  expect(html).toContain("Refreshing highlights");
+  expect(html).not.toContain("Saving source record");
+});
+it("labels recovery scans separately from duplicate checks", () => {
+  const html = markup({
+    busy: true,
+    progress: { phase: "recovering", completedBytes: 0, totalBytes: 1, fileIndex: 0, fileCount: 1 },
+  });
+  expect(html).toContain("Checking files from the previous save attempt");
+  expect(html).not.toContain("Checking for duplicates");
+});
 it("labels a non-production build and links to settings", () => {
   const html = markup();
   expect(html).toContain(">LAB<");

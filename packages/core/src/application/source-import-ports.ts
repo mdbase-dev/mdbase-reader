@@ -71,7 +71,7 @@ export interface SourceImportMetadata {
 }
 
 export interface SourceImportProgress {
-  readonly phase: "checking" | "uploading" | "creating";
+  readonly phase: "checking" | "recovering" | "uploading" | "creating";
   readonly completedBytes: number;
   readonly totalBytes: number;
   readonly fileIndex: number;

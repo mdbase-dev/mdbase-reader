@@ -11,6 +11,7 @@ import type { ExtensionCaptureController } from "./capture-controller.js";
 
 const mocks = vi.hoisted(() => ({
   start: vi.fn(),
+  createSession: vi.fn(),
   save: vi.fn(),
   select: vi.fn(),
   list: vi.fn(),
@@ -39,7 +40,7 @@ vi.mock("@mdbase-reader/connect", () => ({
     outcome.problem?.message ?? null,
 }));
 vi.mock("./connect-session.js", () => ({
-  createExtensionSession: () => Promise.resolve({ session, journalStorage: {} }),
+  createExtensionSession: mocks.createSession,
   restoreCollection: () => Promise.resolve(mocks.snapshot),
   rememberCollection: mocks.rememberCollection,
 }));
@@ -93,6 +94,7 @@ beforeEach(() => {
   vi.stubGlobal("IS_REACT_ACT_ENVIRONMENT", true);
   chromeFake = fakeChrome();
   vi.stubGlobal("chrome", chromeFake.chrome);
+  mocks.createSession.mockImplementation(() => Promise.resolve({ session, journalStorage: {} }));
   mocks.start.mockResolvedValue({ ok: true });
   mocks.select.mockReturnValue({ ok: true });
   mocks.sourceForUrl.mockResolvedValue(null);
@@ -119,6 +121,15 @@ it("does not auto-save on opening or changing the destination, and remembers the
   expect(mocks.select).toHaveBeenCalledWith("other");
   expect(mocks.rememberCollection).toHaveBeenCalledWith("other");
   expect(mocks.save).not.toHaveBeenCalled();
+});
+it("recreates the transport on connection retry instead of restarting a stale session", async () => {
+  await mount();
+  expect(mocks.createSession).toHaveBeenCalledTimes(1);
+  await act(async () => {
+    await controller.retry();
+  });
+  expect(mocks.createSession).toHaveBeenCalledTimes(2);
+  expect(session.destroy).toHaveBeenCalledTimes(1);
 });
 it("retains a failed draft and releases the action lock for an explicit retry", async () => {
   await mount();
@@ -175,6 +186,46 @@ it("reports a source as saved even if refreshing its annotations fails", async (
   expect(controller.status).toBe("saved");
   expect(controller.problem).toBeNull();
   expect(controller.notice).toContain("Saved safely");
+});
+it("releases Save and clears write progress before a slow refresh finishes", async () => {
+  await mount();
+  const source = { id: "source", collectionId: "test", title: "Saved" };
+  let finish!: (value: never[]) => void;
+  mocks.list.mockImplementationOnce(
+    () =>
+      new Promise<never[]>((resolve) => {
+        finish = resolve;
+      }),
+  );
+  mocks.save.mockImplementationOnce(
+    ({
+      onSource,
+      onProgress,
+    }: {
+      onSource: (value: unknown, existing: boolean) => void;
+      onProgress: (value: unknown) => void;
+    }) => {
+      onProgress({ phase: "creating" });
+      onSource(source, false);
+      return Promise.resolve({ source, annotation: null, notices: [] });
+    },
+  );
+  await act(async () => {
+    await controller.save();
+  });
+  expect(controller.busy).toBe(false);
+  expect(controller.status).toBe("saved");
+  expect(controller.progress).toBeNull();
+  expect(controller.refreshing).toBe(true);
+  await act(async () => {
+    finish([]);
+  });
+  expect(controller.refreshing).toBe(false);
+  const writes = mocks.save.mock.calls.length;
+  await act(async () => {
+    await controller.refreshHighlights();
+  });
+  expect(mocks.save).toHaveBeenCalledTimes(writes);
 });
 it("follows new selections from its own tab without re-reading the page", async () => {
   await mount();

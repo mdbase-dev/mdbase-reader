@@ -84,13 +84,10 @@ export function useConnect(lock: ActionLock): ConnectLink {
     });
   const retry = (): Promise<void> =>
     run(async () => {
-      const session = extension?.session;
-      if (!session) {
-        await open();
-        return;
-      }
-      setProblem(connectProblemMessage(await session.start()));
-      setSnapshot(await restoreCollection(session));
+      // SDK start() is idempotent once a base session exists: it returns the
+      // current unavailable snapshot rather than reconnecting. Recreate the
+      // session from persisted grants; the effect disposes the old transport.
+      await open();
     });
   const applySetup = (): Promise<void> =>
     run(async () => {

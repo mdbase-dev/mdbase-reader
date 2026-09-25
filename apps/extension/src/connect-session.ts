@@ -25,7 +25,8 @@ export async function createExtensionSession(): Promise<ExtensionSession> {
     loopbackUrl: environment.loopbackUrl,
     manifest: manifest as MdbaseAppManifest,
     storage,
-    timeouts: { watchStartMs: 60_000, uploadMs: 120_000 },
+    // Interactive capture should not wait the SDK's ten-minute file-index default.
+    timeouts: { watchStartMs: 60_000, fileIndexMs: 30_000, uploadMs: 120_000 },
   });
   return {
     session,

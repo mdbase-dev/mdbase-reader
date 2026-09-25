@@ -62,7 +62,7 @@ export class CaptureWriter {
   readonly #runtime;
   readonly #annotations = new Map<string, { id: AnnotationId; mutation: MutationId }>();
 
-  constructor(journalStorage: KeyValueStorage) {
+  constructor(private readonly journalStorage: KeyValueStorage) {
     this.#runtime = createReaderRuntimeServices(journalStorage);
   }
 
@@ -95,6 +95,11 @@ export class CaptureWriter {
       .split(",")
       .map((tag) => tag.trim())
       .filter(Boolean);
+    // Only interrupted imports need an expensive scan for orphaned uploads.
+    // Persist before writing so closing/reopening the panel retains safe recovery.
+    const recoveryKey = `capture-import:${collection.collectionId}:${capture.canonicalUrl}`;
+    const recoverExistingFiles = (await this.journalStorage.get(recoveryKey)) !== null;
+    await this.journalStorage.set(recoveryKey, "pending");
     let source = await importSourceFile(
       { ...this.#runtime, imports: collection.sourceImports },
       {
@@ -105,8 +110,9 @@ export class CaptureWriter {
         ...(citation ? { metadata: withCitation(request.metadata, citation) } : {}),
         ...(draft.note.trim() ? { body: `# ${title}\n\n${draft.note}\n` } : {}),
       },
-      { recoverExistingFiles: true, onProgress: input.onProgress },
+      { recoverExistingFiles, onProgress: input.onProgress },
     );
+    await this.journalStorage.remove(recoveryKey);
     if (capture.kind === "pdf" && collection.sources.updateFields) {
       // PDFs carry no web-capture provenance; record where the file came from for deduplication.
       source = await collection.sources

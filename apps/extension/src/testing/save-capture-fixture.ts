@@ -121,11 +121,12 @@ export function fixture() {
   } as unknown as ReaderPortableApplicationSession;
   const onSource = vi.fn();
   const journal = new Map<string, string>();
-  const writer = new CaptureWriter({
-    get: (key) => Promise.resolve(journal.get(key) ?? null),
-    set: (key, value) => Promise.resolve(void journal.set(key, value)),
-    remove: (key) => Promise.resolve(void journal.delete(key)),
-  });
+  const storage = {
+    get: (key: string) => Promise.resolve(journal.get(key) ?? null),
+    set: (key: string, value: string) => Promise.resolve(void journal.set(key, value)),
+    remove: (key: string) => Promise.resolve(void journal.delete(key)),
+  };
+  const writer = new CaptureWriter(storage);
   const save = (
     changes: Partial<CaptureDraft> = {},
     page: PageCapture = capture,
@@ -141,6 +142,7 @@ export function fixture() {
       ...extra,
     });
   return {
+    storage,
     save,
     collection,
     session,

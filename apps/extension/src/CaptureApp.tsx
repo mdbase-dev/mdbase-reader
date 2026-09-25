@@ -77,15 +77,7 @@ function Navigated({ controller: c }: ControllerProps): React.JSX.Element | null
 
 /** Reports progress and outcomes; says nothing while the panel is simply waiting. */
 function CaptureStatus({ controller: c }: ControllerProps): React.JSX.Element {
-  const p = c.progress;
-  const progress =
-    p?.phase === "uploading"
-      ? `Uploading file ${String(p.fileIndex)} of ${String(p.fileCount)} · ${String(p.totalBytes ? Math.round((p.completedBytes / p.totalBytes) * 100) : 0)}%`
-      : p?.phase === "creating"
-        ? "Saving source record…"
-        : p
-          ? "Checking for duplicates…"
-          : null;
+  const progress = importProgressMessage(c.busy ? c.progress : null);
   const message =
     progress ??
     (c.status === "saving"
@@ -99,9 +91,34 @@ function CaptureStatus({ controller: c }: ControllerProps): React.JSX.Element {
   return (
     <div className="save-status" role="status" aria-live="polite">
       {message ? <p>{message}</p> : null}
+      {c.refreshing ? <p>Saved. Refreshing highlights…</p> : null}
       {c.notice ? <p>{c.notice}</p> : null}
+      {c.source ? (
+        <button
+          type="button"
+          disabled={c.busy || c.refreshing}
+          onClick={() => void c.refreshHighlights()}
+        >
+          Refresh highlights
+        </button>
+      ) : null}
     </div>
   );
+}
+
+function importProgressMessage(p: ExtensionCaptureController["progress"]): string | null {
+  switch (p?.phase) {
+    case "uploading":
+      return `Uploading file ${String(p.fileIndex)} of ${String(p.fileCount)} · ${String(p.totalBytes ? Math.round((p.completedBytes / p.totalBytes) * 100) : 0)}%`;
+    case "recovering":
+      return "Checking files from the previous save attempt…";
+    case "creating":
+      return "Saving source record…";
+    case "checking":
+      return "Checking for duplicates…";
+    default:
+      return null;
+  }
 }
 
 function Completion({ controller: c }: ControllerProps): React.JSX.Element | null {

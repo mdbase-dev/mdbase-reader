@@ -64,6 +64,15 @@ export class ConnectSourceImportRepository implements SourceImportRepository {
     const orderedUploads = [...plan.representations].sort(
       (left, right) => uploadRank[left.role] - uploadRank[right.role],
     );
+    if (options.recoverExistingFiles) {
+      options.onProgress?.({
+        phase: "recovering",
+        completedBytes: 0,
+        totalBytes: plan.representations.reduce((sum, item) => sum + item.bytes.byteLength, 0),
+        fileIndex: 0,
+        fileCount: orderedUploads.length,
+      });
+    }
     const recoverableFiles = options.recoverExistingFiles
       ? await this.recoverableFiles(options)
       : new Map<string, CollectionFileDescriptor[]>();
