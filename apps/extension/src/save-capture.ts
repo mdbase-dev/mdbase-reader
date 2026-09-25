@@ -1,6 +1,7 @@
 import {
   createAnnotation,
   importSourceFile,
+  sourceLink,
   type Annotation,
   type AnnotationId,
   type DocumentDescriptor,
@@ -175,7 +176,7 @@ export class CaptureWriter {
       {
         collectionId: collection.collectionId,
         sourceId: source.id,
-        source: `[[${source.path.replace(/\.md$/u, "")}]]`,
+        source: sourceLink(source),
         sourceRecord: source,
         document,
         annotationType: "highlight",

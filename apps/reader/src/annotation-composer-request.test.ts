@@ -74,6 +74,8 @@ describe("annotationRequest", () => {
     );
 
     expect(request).toMatchObject({
+      source: "[[sources/example|Example]]",
+      sourceId: "src_01",
       annotationType: "highlight",
       locator: { label: "p. 3" },
       body: "> Attention is a discipline.\n\nCompare Weil.",

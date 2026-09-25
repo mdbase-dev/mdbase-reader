@@ -1,3 +1,5 @@
+import { sourceLink } from "@mdbase-reader/core";
+
 import type {
   AnnotationCreationRequest,
   Locator,
@@ -43,7 +45,7 @@ export function commentRequest(source: Source, comment: string): AnnotationCreat
     sourceRecord: source,
     collectionId: source.collectionId,
     sourceId: source.id,
-    source: `[[${source.id}]]`,
+    source: sourceLink(source),
     annotationType: "note",
     motivation: "commenting",
     tags: [],
@@ -199,7 +201,7 @@ function annotationIdentity(
     sourceRecord: source,
     collectionId: source.collectionId,
     sourceId: source.id,
-    source: `[[${source.id}]]`,
+    source: sourceLink(source),
     document: surface.document.document,
   };
 }

@@ -1,3 +1,5 @@
+import { DomainError } from "./errors.js";
+
 import type { CslItem, CslValidationProblem } from "./citation.js";
 import type { DocumentDescriptor } from "./document.js";
 import type { CollectionId, FileId, RecordRevision, SourceId } from "./identity.js";
@@ -67,6 +69,22 @@ export interface Page<Item> {
   readonly items: readonly Item[];
   readonly nextCursor?: string;
   readonly totalCount?: number;
+}
+
+/**
+ * The wikilink a record writes to point at a source: its path, so Obsidian and plain editors can
+ * follow it, with the title as the alias. mdbase resolves the path back to the stable `id`.
+ */
+export function sourceLink(source: Pick<SourceSummary, "path" | "title">): string {
+  const path = source.path.trim().replace(/\.md$/u, "");
+  if (path.length === 0 || /\[\[|\]\]|\|/u.test(path)) {
+    throw new DomainError("invalid-annotation", "A source path is not safe to link.");
+  }
+  const alias = source.title
+    .replace(/[[\]|]/gu, "")
+    .replace(/\s+/gu, " ")
+    .trim();
+  return alias ? `[[${path}|${alias}]]` : `[[${path}]]`;
 }
 
 // Fields the source contract maintains; editing them by hand would break the record.
