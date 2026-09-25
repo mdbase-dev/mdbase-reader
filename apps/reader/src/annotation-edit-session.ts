@@ -1,3 +1,5 @@
+import { RecordSession, type RecordSessionState } from "@mdbase-reader/connect";
+
 import { clearLegacyEdits, readLegacyEdits } from "./annotation-edit-recovery.js";
 import { readerErrorMessage } from "./errors.js";
 import { trackAnnotationEdits } from "./unsaved-annotation-edits.js";
@@ -6,6 +8,11 @@ import type { AnnotationEditSnapshot, PersistAnnotation } from "./annotation-edi
 import type { Annotation } from "@mdbase-reader/core";
 
 export type { AnnotationEditSnapshot, PersistAnnotation } from "./annotation-edit-types.js";
+
+/**
+ * Reader's single-owner editor lease and deletion lock around the SDK record
+ * session, which owns the writer, acknowledgements and conflict classification.
+ */
 export class AnnotationEditSession {
   readonly key: string;
   private snapshot: AnnotationEditSnapshot = {
@@ -16,25 +23,33 @@ export class AnnotationEditSession {
     editing: false,
     textVersion: 0,
   };
-  private body: string;
+  private readonly record: RecordSession<Annotation>;
+  private text: string;
   private listeners = new Set<() => void>();
-  private inFlight: Promise<void> | undefined;
-  private incoming: Annotation[] = [];
-  private timer: ReturnType<typeof setTimeout> | undefined;
-  private editedAt = 0;
   private started = false;
   private legacy = false;
+  private removed = false;
   private lockOwner: object | undefined;
+  private releaseLock: (() => void) | undefined;
   private editorOwner: object | undefined;
-  private seen = new Set<string | undefined>();
   constructor(
-    private base: Annotation,
-    private readonly persist: PersistAnnotation,
-    private readonly refresh?: (annotation: Annotation) => Promise<Annotation | null>,
+    base: Annotation,
+    persist: PersistAnnotation,
+    refresh?: (annotation: Annotation) => Promise<Annotation | null>,
   ) {
     this.key = JSON.stringify([base.collectionId, base.sourceId, base.id]);
-    this.body = base.body;
-    this.seen.add(base.recordRevision);
+    this.text = base.body;
+    this.record = new RecordSession<Annotation>(
+      base,
+      {
+        revision: (annotation) => annotation.recordRevision ?? "",
+        body: (annotation) => annotation.body,
+        write: (expected, change) => persist(expected, change.body ?? expected.body),
+        ...(refresh ? { read: refresh } : {}),
+      },
+      { autosave: { idleMs: 1000 } },
+    );
+    this.record.subscribe(() => this.sync());
   }
   start(): void {
     if (this.started) {
@@ -43,20 +58,15 @@ export class AnnotationEditSession {
     this.started = true;
     readLegacyEdits(this.key, (value) => {
       this.legacy = value !== null;
-      this.body = value?.body ?? this.base.body;
-      this.update({
-        status: value ? "unsaved" : "saved",
-        textVersion: this.snapshot.textVersion + 1,
-        conflict:
-          value && value.baseBody !== this.base.body && value.body !== this.base.body
-            ? this.base
-            : null,
-      });
+      if (value) {
+        this.record.restore(value);
+      }
+      this.sync(true);
     });
   }
   getSnapshot = (): AnnotationEditSnapshot => this.snapshot;
-  getText = (): string => this.body;
-  getAnnotation = (): Annotation => this.base;
+  getText = (): string => this.text;
+  getAnnotation = (): Annotation => this.record.snapshot.record;
   subscribe = (listener: () => void): (() => void) => {
     this.listeners.add(listener);
     return () => void this.listeners.delete(listener);
@@ -81,98 +91,51 @@ export class AnnotationEditSession {
     this.update({ editing: false });
   }
   receive(annotation: Annotation): void {
-    if (annotation.recordRevision && this.seen.has(annotation.recordRevision)) {
-      return;
-    }
-    // Publication can precede the write result and contain serializer-normalized text.
-    if (this.inFlight || this.snapshot.status === "saving") {
-      this.incoming.push(annotation);
-      return;
-    }
-    this.seen.add(annotation.recordRevision);
-    if (this.snapshot.status === "loading") {
-      this.base = annotation;
-      return;
-    }
-    if (annotation.body === this.body) {
-      this.base = annotation;
-      this.clear();
-      return;
-    }
-    const dirty = this.body !== this.base.body;
-    if (dirty && annotation.body !== this.base.body && annotation.body !== this.body) {
-      clearTimeout(this.timer);
-      this.update({ conflict: annotation, problem: null });
-      return;
-    }
-    this.base = annotation;
-    if (!dirty) {
-      this.clear();
-    }
+    this.record.receive(annotation);
   }
   edit = (body: string): void => {
-    if (this.snapshot.locked || this.snapshot.status === "loading" || body === this.body) {
+    if (this.snapshot.locked || this.snapshot.status === "loading" || body === this.text) {
       return;
     }
-    this.body = body;
-    this.editedAt = Date.now();
-    this.update({ status: this.inFlight ? "saving" : "unsaved", problem: null });
-    this.schedule();
+    this.text = body;
+    this.record.setBody(body);
   };
   save = (): Promise<void> => {
-    clearTimeout(this.timer);
-    if (this.inFlight) {
-      return this.inFlight;
-    }
-    if (this.snapshot.conflict || this.snapshot.locked || this.snapshot.status === "loading") {
+    if (this.snapshot.locked || this.snapshot.status === "loading") {
       return Promise.resolve();
     }
-    if (this.body === this.base.body) {
-      this.clear();
-      return Promise.resolve();
-    }
-    this.update({ status: "saving", problem: null });
-    this.inFlight = this.write(this.base, this.body).finally(() => {
-      this.inFlight = undefined;
-      for (const annotation of this.incoming.splice(0)) {
-        this.receive(annotation);
-      }
-      this.update({});
-      if (this.snapshot.status === "unsaved") {
-        this.schedule();
-      }
-    });
-    return this.inFlight;
+    return this.record.save().catch(() => undefined);
   };
   resolve = (choice: "local" | "remote"): void => {
-    const remote = this.snapshot.conflict;
-    if (!remote || this.inFlight || this.snapshot.locked) {
+    if (!this.snapshot.conflict || this.snapshot.status === "saving" || this.snapshot.locked) {
       return;
     }
-    this.base = remote;
-    this.update({ conflict: null, problem: null });
-    if (choice === "remote") {
-      this.clear();
-    } else {
-      this.update({ status: "unsaved" });
-    }
+    this.record.resolve({ keep: choice === "local" ? "mine" : "theirs" });
   };
   discard = (): void => {
-    if (this.inFlight || this.snapshot.locked) {
+    if (this.snapshot.status === "saving" || this.snapshot.locked) {
       return;
     }
-    this.base = this.snapshot.conflict ?? this.base;
-    this.clear();
+    this.record.discard();
   };
+  /** Holds the record's write queue, so no autosave can start during a deletion check. */
   lock = async (owner: object = this): Promise<boolean> => {
     if (this.lockOwner) {
       return false;
     }
     this.lockOwner = owner;
-    clearTimeout(this.timer);
     this.update({ locked: true });
-    await this.inFlight;
-    if (this.snapshot.status === "error" || this.snapshot.conflict) {
+    const held = new Promise<void>((release) => {
+      this.releaseLock = release;
+    });
+    await new Promise<void>((drained) => {
+      void this.record.run(() => {
+        drained();
+        return held;
+      });
+    });
+    const { state } = this.record.snapshot;
+    if (state === "error" || state === "conflict") {
       this.unlock(owner);
       return false;
     }
@@ -183,73 +146,48 @@ export class AnnotationEditSession {
       return;
     }
     this.lockOwner = undefined;
+    this.releaseLock?.();
+    this.releaseLock = undefined;
     this.update({ locked: false });
-    if (this.snapshot.status === "unsaved" && this.editedAt) {
-      this.schedule();
-    }
   };
   deleted = (): void => {
-    this.clear();
+    this.removed = true;
+    this.record.discard();
+    this.record.markDeleted();
     this.update({ locked: true });
   };
-  private async write(base: Annotation, body: string): Promise<void> {
-    try {
-      const saved = await this.persist(base, body);
-      this.base = saved;
-      this.seen.add(saved.recordRevision);
-      if (this.body === body && !this.snapshot.conflict) {
-        this.clear();
-      } else {
-        this.update({ status: "unsaved" });
-      }
-    } catch (reason) {
-      const latest = await this.refresh?.(this.base).catch(() => null);
-      if (latest) {
-        this.receive(latest);
-        if (latest.body === this.body) {
-          this.base = latest;
-          this.clear();
-          return;
-        }
-      }
-      this.update({
-        status: "error",
-        problem: this.snapshot.conflict
-          ? null
-          : readerErrorMessage(reason, "Could not save. Keep Reader open and retry."),
-      });
+  private sync(loaded = false): void {
+    if (!this.started) {
+      return;
     }
-  }
-  private clear(): void {
-    clearTimeout(this.timer);
-    this.body = this.base.body;
-    if (this.legacy) {
+    const record = this.record.snapshot;
+    const clean = !record.dirty && !record.remote;
+    // A clean session shows the committed text, including serializer normalization.
+    const text = clean ? record.record.body : record.body;
+    if (clean && this.legacy && !loaded && this.snapshot.status !== "saved") {
       clearLegacyEdits(this.key);
       this.legacy = false;
     }
+    const status = this.removed ? "saved" : annotationStatus(record.state);
+    const changed = text !== this.text;
+    this.text = text;
     this.update({
-      status: "saved",
-      problem: null,
-      conflict: null,
-      textVersion: this.snapshot.textVersion + 1,
+      status,
+      conflict: record.remote,
+      problem:
+        status === "error"
+          ? readerErrorMessage(record.error, "Could not save. Keep Reader open and retry.")
+          : null,
+      ...(changed || loaded ? { textVersion: this.snapshot.textVersion + 1 } : {}),
     });
-  }
-  private schedule(): void {
-    clearTimeout(this.timer);
-    if (!this.snapshot.locked && !this.snapshot.conflict) {
-      const delay = Math.max(0, this.editedAt + 1000 - Date.now());
-      this.timer = setTimeout(() => void this.save(), delay);
-    }
   }
   private update(value: Partial<AnnotationEditSnapshot>): void {
     const next = { ...this.snapshot, ...value };
+    const record = this.record.snapshot;
     trackAnnotationEdits(
       this,
-      this.base,
-      this.body !== this.base.body ||
-        Boolean(next.conflict) ||
-        Boolean(this.inFlight) ||
-        next.status === "saving",
+      record.record,
+      !this.removed && (record.dirty || Boolean(record.remote)),
     );
     const keys = Object.keys(value) as (keyof AnnotationEditSnapshot)[];
     if (keys.every((key) => this.snapshot[key] === value[key])) {
@@ -257,5 +195,19 @@ export class AnnotationEditSession {
     }
     this.snapshot = next;
     this.listeners.forEach((listener) => listener());
+  }
+}
+
+function annotationStatus(state: RecordSessionState): AnnotationEditSnapshot["status"] {
+  switch (state) {
+    case "saved":
+      return "saved";
+    case "saving":
+      return "saving";
+    case "unsaved":
+    case "conflict":
+      return "unsaved";
+    default:
+      return "error";
   }
 }

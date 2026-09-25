@@ -1,3 +1,5 @@
+import { RecordSession, type RecordSessionSnapshot } from "@mdbase-reader/connect";
+
 import { readerErrorMessage } from "./errors.js";
 import { LocalDraftCheckpoint } from "./local-draft-checkpoint.js";
 import { clearSourceDraft, readSourceDraft, writeSourceDraft } from "./source-draft-storage.js";
@@ -17,26 +19,53 @@ export interface SourceDraftSnapshot {
   readonly savedSource?: Source;
 }
 
-/** One writer per source per gateway, shared by inspector and workbench editors. */
+const missing = "This source no longer exists. Your local draft has been retained.";
+
+/**
+ * One writer per source per gateway, shared by inspector and workbench editors.
+ * The SDK record session owns writing and classification; Reader owns its
+ * device checkpoint and publication to the shared source resource.
+ */
 export class SourceDraftSession {
   private snapshot: SourceDraftSnapshot;
   private readonly listeners = new Set<() => void>();
-  private timer: ReturnType<typeof setTimeout> | undefined;
-  private saving = false;
-  private inFlight: Promise<void> | null = null;
-  private seen = new Set<Source["recordRevision"]>();
-  private generation = 0;
+  private readonly record: RecordSession<Source>;
   private storedBody: string | undefined;
+  private acknowledged: Source;
+  private resumed = false;
   private readonly checkpoint = new LocalDraftCheckpoint(() => this.store());
 
   constructor(
-    private base: Source,
+    base: Source,
     private readonly storage: DraftStorage,
-    private readonly persist: (source: Source, body: string) => Promise<Source>,
-    private readonly refresh: () => Promise<Source | null>,
+    persist: (source: Source, body: string) => Promise<Source>,
+    refresh: () => Promise<Source | null>,
     private readonly publish: (source: Source) => void,
   ) {
-    this.seen.add(base.recordRevision);
+    this.acknowledged = base;
+    this.record = new RecordSession<Source>(
+      base,
+      {
+        revision: (source) => source.recordRevision,
+        body: (source) => source.body,
+        // Refresh before writing: no silent overwrite of edits made in another application.
+        write: async (expected, change) => {
+          const current = await refresh();
+          if (!current) {
+            throw new Error(missing);
+          }
+          if (current.recordRevision !== expected.recordRevision) {
+            throw new Error("The source note changed before saving.");
+          }
+          const body = change.body ?? current.body;
+          const saved = await persist(current, body);
+          this.saved(saved, body);
+          return saved;
+        },
+        read: refresh,
+      },
+      { autosave: { idleMs: 1000 } },
+    );
     this.snapshot = {
       body: base.body,
       status: "saved",
@@ -50,14 +79,8 @@ export class SourceDraftSession {
       const draft = readSourceDraft(storage, base);
       this.storedBody = draft?.body;
       if (draft && draft.body !== base.body) {
-        this.snapshot = {
-          ...this.snapshot,
-          body: draft.body,
-          status: "unsaved",
-          locallySaved: true,
-          recovered: true,
-          conflict: draft.baseBody !== base.body ? base : null,
-        };
+        this.record.restore(draft);
+        this.snapshot = { ...this.snapshot, locallySaved: true, recovered: true };
         // The first mounted subscriber resumes safe recovery; conflicts still require a decision.
       } else if (draft) {
         clearSourceDraft(storage, base, base.body);
@@ -69,14 +92,17 @@ export class SourceDraftSession {
           "Local draft storage is unavailable or unreadable. Keep this tab open until the note is saved to the collection.",
       };
     }
+    this.snapshot = this.project(this.snapshot);
+    this.record.subscribe(() => this.sync());
   }
 
   getSnapshot = (): SourceDraftSnapshot => this.snapshot;
   getText = (): string => this.snapshot.body;
   subscribe = (listener: () => void): (() => void) => {
     this.listeners.add(listener);
-    if (this.snapshot.recovered && !this.snapshot.conflict && !this.timer) {
-      this.schedule();
+    if (this.snapshot.recovered && !this.snapshot.conflict && !this.resumed) {
+      this.resumed = true;
+      this.record.autosave();
     }
     return () => {
       this.listeners.delete(listener);
@@ -90,130 +116,36 @@ export class SourceDraftSession {
     if (body === this.snapshot.body) {
       return;
     }
-    this.generation += 1;
-    this.update({
-      body,
-      status: this.saving ? "saving" : "unsaved",
-      error: null,
-      recovered: false,
-      locallySaved: false,
-    });
+    this.snapshot = { ...this.snapshot, recovered: false, locallySaved: false };
+    this.record.setBody(body);
     this.checkpoint.schedule();
-    this.schedule();
   };
 
-  /** External metadata-only changes can advance the revision without disturbing a draft. */
+  /** Records published by other views or refreshes; the session classifies them. */
   receive(source: Source): void {
-    if (this.seen.has(source.recordRevision)) {
-      return;
-    }
-    this.seen.add(source.recordRevision);
-    if (
-      this.snapshot.body !== this.base.body &&
-      source.body !== this.base.body &&
-      source.body !== this.snapshot.body
-    ) {
-      clearTimeout(this.timer);
-      this.update({ conflict: source });
-      return;
-    }
-    const clean = this.snapshot.body === this.base.body;
-    this.base = source;
-    if (clean) {
-      this.update({ body: source.body, status: "saved" });
-    }
+    this.record.receive(source);
   }
 
   save = (): Promise<void> => {
     this.checkpoint.flush();
-    clearTimeout(this.timer);
-    if (this.inFlight) {
-      return this.inFlight;
-    }
-    if (this.snapshot.conflict || this.snapshot.status === "saved") {
-      return Promise.resolve();
-    }
-    this.inFlight = this.write().finally(() => {
-      this.inFlight = null;
-    });
-    return this.inFlight;
+    this.snapshot = { ...this.snapshot, recovered: false };
+    return this.record.save().catch(() => undefined);
   };
 
   async flush(): Promise<Source> {
-    do {
-      await this.save();
-    } while (this.snapshot.status === "unsaved" && !this.snapshot.conflict);
-    if (this.snapshot.status !== "saved" || this.snapshot.conflict) {
-      throw new Error(this.snapshot.error ?? "Resolve the source note conflict before continuing.");
-    }
-    return this.base;
-  }
-
-  private async write(): Promise<void> {
-    const body = this.snapshot.body;
-    const generation = this.generation;
-    this.saving = true;
-    this.update({ status: "saving", error: null, recovered: false });
+    this.checkpoint.flush();
     try {
-      // Refresh before writing: no silent overwrite of edits made in another application.
-      const current = await this.refresh();
-      if (!current) {
-        throw new Error("This source no longer exists. Your local draft has been retained.");
-      }
-      this.seen.add(current.recordRevision);
-      if (current.body !== this.base.body && current.body !== body) {
-        this.update({ conflict: current, status: "unsaved" });
-        return;
-      }
-      const saved = current.body === body ? current : await this.persist(current, body);
-      this.base = saved;
-      this.seen.add(saved.recordRevision);
-      this.publish(saved);
-      this.update({ savedSource: saved });
-      try {
-        clearSourceDraft(this.storage, saved, body);
-        if (this.storedBody === body) {
-          this.storedBody = undefined;
-        }
-      } catch {
-        // A stale recovery copy is safer than discarding unsaved work.
-      }
-      if (generation === this.generation) {
-        this.checkpoint.cancel();
-        this.update({ status: "saved", locallySaved: false, conflict: null });
-      } else {
-        this.update({ status: "unsaved" });
-        this.store();
-        this.schedule();
-      }
-    } catch (reason) {
-      this.update({
-        status: "error",
-        error: readerErrorMessage(
-          reason,
-          "Reader could not save this note. Your draft is retained.",
-        ),
-      });
-      try {
-        const current = await this.refresh();
-        if (current && current.body !== this.base.body && current.body !== this.snapshot.body) {
-          this.update({ conflict: current });
-        }
-      } catch {
-        // Disconnection: retain the draft and offer explicit retry.
-      }
-    } finally {
-      this.saving = false;
+      return await this.record.flush();
+    } catch {
+      throw new Error(this.snapshot.error ?? "Resolve the source note conflict before continuing.");
     }
   }
 
   resolve = (choice: "local" | "remote"): void => {
     const remote = this.snapshot.conflict;
-    if (!remote || this.saving) {
+    if (!remote || this.snapshot.status === "saving") {
       return;
     }
-    this.base = remote;
-    this.update({ conflict: null, error: null, recovered: false });
     if (choice === "remote") {
       this.checkpoint.cancel();
       try {
@@ -222,25 +154,84 @@ export class SourceDraftSession {
       } catch {
         /* Retain on failure. */
       }
-      this.update({ body: remote.body, status: "saved", locallySaved: false, savedSource: remote });
+      this.snapshot = {
+        ...this.snapshot,
+        recovered: false,
+        locallySaved: false,
+        savedSource: remote,
+      };
+      this.record.resolve({ keep: "theirs" });
       this.publish(remote);
     } else {
+      this.snapshot = { ...this.snapshot, recovered: false };
+      this.record.resolve({ keep: "mine" });
       this.store();
       void this.save();
     }
   };
 
-  private schedule(): void {
-    clearTimeout(this.timer);
-    if (!this.snapshot.conflict) {
-      this.timer = setTimeout(() => void this.save(), 1000);
+  /** Our own acknowledgement: publish it and retire the device copy it supersedes. */
+  private saved(saved: Source, body: string): void {
+    this.publish(saved);
+    this.snapshot = { ...this.snapshot, savedSource: saved };
+    try {
+      clearSourceDraft(this.storage, saved, body);
+      if (this.storedBody === body) {
+        this.storedBody = undefined;
+      }
+    } catch {
+      // A stale recovery copy is safer than discarding unsaved work.
     }
+  }
+
+  private sync(): void {
+    const previous = this.snapshot;
+    const next = this.project(previous);
+    const acknowledged = this.record.snapshot.record !== this.acknowledged;
+    this.acknowledged = this.record.snapshot.record;
+    if (next.status === "saved" && previous.status !== "saved") {
+      this.checkpoint.cancel();
+      this.update({ ...next, locallySaved: false });
+      return;
+    }
+    this.update(next);
+    // Typing during a write: keep the newer text on the device until it is committed.
+    if (acknowledged && next.status === "unsaved" && !next.conflict) {
+      this.store();
+    }
+  }
+
+  private project(current: SourceDraftSnapshot): SourceDraftSnapshot {
+    const record: RecordSessionSnapshot<Source> = this.record.snapshot;
+    const status: SourceDraftSnapshot["status"] =
+      record.state === "saved"
+        ? "saved"
+        : record.state === "saving"
+          ? "saving"
+          : record.state === "unsaved" || record.state === "conflict"
+            ? "unsaved"
+            : "error";
+    return {
+      ...current,
+      body: record.body,
+      status,
+      conflict: record.remote,
+      error:
+        record.state === "deleted"
+          ? missing
+          : status === "error"
+            ? readerErrorMessage(
+                record.error,
+                "Reader could not save this note. Your draft is retained.",
+              )
+            : null,
+    };
   }
 
   private store(): void {
     this.checkpoint.cancel();
     try {
-      writeSourceDraft(this.storage, this.base, this.snapshot.body);
+      writeSourceDraft(this.storage, this.record.snapshot.record, this.snapshot.body);
       this.storedBody = this.snapshot.body;
       this.update({ locallySaved: true, localProblem: null });
     } catch {

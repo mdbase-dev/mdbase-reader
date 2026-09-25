@@ -8,6 +8,7 @@ export type { ReaderTiming } from "./diagnostics.js";
 export * from "./library-views.js";
 export * from "./mapping.js";
 export * from "./portable-application-session.js";
+export * from "./record-session.js";
 export * from "./repositories.js";
 export * from "./source-imports.js";
 export type { MdbaseAppManifest } from "@mdbase-dev/connect";
