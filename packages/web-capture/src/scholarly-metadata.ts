@@ -1,19 +1,24 @@
 import { cslDate, cslName, sanitizedCitation, type CitationDraft } from "./csl-values.js";
 import { arxivIdentifier, doiFromText, doiFromUrl } from "./doi.js";
+import { jsonLdNames, jsonLdNode, nameOf, stringValue } from "./json-ld.js";
+import { all, defined, first, metaIndex, type MetaIndex } from "./meta-tags.js";
+import { webArticleCitation } from "./web-article-metadata.js";
 
 /**
  * Bibliographic metadata publishers embed for indexers: Highwire Press `citation_*` tags
- * (required by Google Scholar), PRISM, Dublin Core and schema.org JSON-LD. This mirrors
+ * (required by Google Scholar), PRISM, Dublin Core and schema.org JSON-LD, and for news and
+ * blog articles, schema.org `Article` JSON-LD and Open Graph `article:*` tags. This mirrors
  * Zotero's generic "Embedded Metadata" translator; it does not replace site translators.
  */
 export interface ScholarlyMetadata {
   readonly doi?: string;
   readonly pdfUrl?: string;
-  /** Present only when the page carries scholarly evidence, not for ordinary web pages. */
+  /**
+   * Present when the page carries scholarly evidence or declares itself an article; not for
+   * ordinary pages that only have a title.
+   */
   readonly citation?: CitationDraft;
 }
-
-type MetaIndex = ReadonlyMap<string, readonly string[]>;
 
 const scholarlyJsonLdTypes = new Set([
   "ScholarlyArticle",
@@ -28,18 +33,15 @@ const scholarlyJsonLdTypes = new Set([
 export function extractScholarlyMetadata(document: Document, pageUrl: string): ScholarlyMetadata {
   const meta = metaIndex(document);
   const linked = scholarlyJsonLd(document);
-  const doi =
-    doiFromText(first(meta, "citation_doi", "prism.doi", "dc.identifier", "dcterms.identifier")) ??
-    doiFromUrl(pageUrl) ??
-    doiFromText(stringValue(linked?.["identifier"]) ?? stringValue(linked?.["@id"])) ??
-    arxivDoi(first(meta, "citation_arxiv_id") ?? arxivIdentifier(pageUrl));
+  const doi = embeddedDoi(meta, linked, pageUrl);
   const pdfUrl = absoluteHttps(first(meta, "citation_pdf_url"), pageUrl);
   const scholarly =
     [...meta.keys()].some((key) => key.startsWith("citation_") || key.startsWith("prism.")) ||
     Boolean(doi) ||
     Boolean(linked);
   if (!scholarly) {
-    return { ...(pdfUrl ? { pdfUrl } : {}) };
+    const article = webArticleCitation(document, meta, pageUrl);
+    return { ...(pdfUrl ? { pdfUrl } : {}), ...(article ? { citation: article } : {}) };
   }
   const citation = sanitizedCitation({
     ...jsonLdCitation(linked),
@@ -48,6 +50,19 @@ export function extractScholarlyMetadata(document: Document, pageUrl: string): S
     URL: pageUrl,
   });
   return { ...(doi ? { doi } : {}), ...(pdfUrl ? { pdfUrl } : {}), citation };
+}
+
+function embeddedDoi(
+  meta: MetaIndex,
+  linked: Readonly<Record<string, unknown>> | undefined,
+  pageUrl: string,
+): string | undefined {
+  return (
+    doiFromText(first(meta, "citation_doi", "prism.doi", "dc.identifier", "dcterms.identifier")) ??
+    doiFromUrl(pageUrl) ??
+    doiFromText(stringValue(linked?.["identifier"]) ?? stringValue(linked?.["@id"])) ??
+    arxivDoi(first(meta, "citation_arxiv_id") ?? arxivIdentifier(pageUrl))
+  );
 }
 
 function embeddedCitation(meta: MetaIndex): Record<string, unknown> {
@@ -139,9 +154,7 @@ function jsonLdCitation(
     return {};
   }
   const type = stringValue(node["@type"]) ?? "";
-  const authors = arrayValue(node["author"])
-    .map((author) => (typeof author === "string" ? author : nameOf(author)))
-    .flatMap((name) => (name ? [cslName(name)] : []));
+  const authors = jsonLdNames(node["author"]);
   const container = nameOf(node["isPartOf"]);
   return defined({
     type: {
@@ -162,60 +175,7 @@ function jsonLdCitation(
 }
 
 function scholarlyJsonLd(document: Document): Readonly<Record<string, unknown>> | undefined {
-  for (const script of document.querySelectorAll('script[type="application/ld+json"]')) {
-    let parsed: unknown;
-    try {
-      parsed = JSON.parse(script.textContent);
-    } catch {
-      continue;
-    }
-    const found = jsonLdNodes(parsed).find((node) =>
-      arrayValue(node["@type"]).some(
-        (type) => typeof type === "string" && scholarlyJsonLdTypes.has(type),
-      ),
-    );
-    if (found) {
-      return found;
-    }
-  }
-  return undefined;
-}
-
-function jsonLdNodes(value: unknown, depth = 0): Readonly<Record<string, unknown>>[] {
-  if (depth > 4) {
-    return [];
-  }
-  if (Array.isArray(value)) {
-    return value.flatMap((item) => jsonLdNodes(item, depth + 1));
-  }
-  if (!isRecord(value)) {
-    return [];
-  }
-  return [value, ...jsonLdNodes(value["@graph"], depth + 1)];
-}
-
-function metaIndex(document: Document): MetaIndex {
-  const index = new Map<string, string[]>();
-  for (const element of document.querySelectorAll<HTMLMetaElement>("meta[name], meta[property]")) {
-    const key = (
-      element.getAttribute("name") ??
-      element.getAttribute("property") ??
-      ""
-    ).toLowerCase();
-    const content = element.content.replace(/\s+/gu, " ").trim();
-    if (key && content) {
-      index.set(key, [...(index.get(key) ?? []), content]);
-    }
-  }
-  return index;
-}
-
-function first(meta: MetaIndex, ...keys: readonly string[]): string | undefined {
-  return keys.map((key) => meta.get(key)?.[0]).find((value) => value !== undefined);
-}
-
-function all(meta: MetaIndex, ...keys: readonly string[]): string[] {
-  return keys.flatMap((key) => meta.get(key) ?? []);
+  return jsonLdNode(document, (type) => scholarlyJsonLdTypes.has(type));
 }
 
 function arxivDoi(identifier: string | undefined): string | undefined {
@@ -230,37 +190,4 @@ function absoluteHttps(value: string | undefined, base: string): string | undefi
   } catch {
     return undefined;
   }
-}
-
-function nameOf(value: unknown): string | undefined {
-  const node = Array.isArray(value) ? (value as unknown[])[0] : value;
-  if (typeof node === "string") {
-    return node;
-  }
-  if (!isRecord(node)) {
-    return undefined;
-  }
-  const personal = [stringValue(node["givenName"]), stringValue(node["familyName"])].filter(
-    Boolean,
-  );
-  return (
-    stringValue(node["name"]) ?? (personal.length ? personal.join(" ") : nameOf(node["isPartOf"]))
-  );
-}
-
-function stringValue(value: unknown): string | undefined {
-  const candidate = Array.isArray(value) ? (value as unknown[])[0] : value;
-  return typeof candidate === "string" && candidate.trim() ? candidate.trim() : undefined;
-}
-
-function arrayValue(value: unknown): unknown[] {
-  return Array.isArray(value) ? value : value === undefined ? [] : [value];
-}
-
-function isRecord(value: unknown): value is Readonly<Record<string, unknown>> {
-  return typeof value === "object" && value !== null && !Array.isArray(value);
-}
-
-function defined(value: Record<string, unknown>): Record<string, unknown> {
-  return Object.fromEntries(Object.entries(value).filter(([, entry]) => entry !== undefined));
 }

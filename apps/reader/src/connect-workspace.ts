@@ -39,6 +39,8 @@ import type {
   AnnotationAssetRepository,
   AnnotationCreationRequest,
   AnnotationRepository,
+  CitationCandidate,
+  CitationResolutionRequest,
   Clock,
   CollectionFileRepository,
   CollectionId,
@@ -319,6 +321,18 @@ export class ConnectWorkspaceGateway implements ReaderWorkspaceGateway {
     const updated = await saveSourceCitation(this.sources, source, this.#library ?? [], citation);
     this.#replaceSource(updated);
     return updated;
+  }
+
+  async resolveCitation(
+    request: CitationResolutionRequest,
+    options: ReaderRequestOptions = {},
+  ): Promise<CitationCandidate> {
+    // Loaded on first lookup; only the query leaves the browser, never collection data.
+    const { lookUpCitation } = await import("@mdbase-reader/web-capture/citation-lookup");
+    return lookUpCitation(request, {
+      clientName: `mdbase-reader (${globalThis.location.origin})`,
+      ...(options.signal ? { signal: options.signal } : {}),
+    });
   }
 
   searchText(

@@ -109,7 +109,7 @@ describe("DOI handling", () => {
     expect(arxivIdentifier("https://arxiv.org/pdf/2101.00001v2.pdf")).toBe("2101.00001v2");
   });
 
-  it("requests CSL-JSON by content negotiation and strips registry bookkeeping", async () => {
+  it("requests CSL-JSON by content negotiation, maps Crossref types and strips bookkeeping", async () => {
     const fetcher = vi.fn<typeof fetch>().mockResolvedValue(
       Response.json({
         type: "journal-article",
@@ -130,7 +130,7 @@ describe("DOI handling", () => {
       }),
     );
     expect(citation).toEqual({
-      type: "article",
+      type: "article-journal",
       title: "Deep learning",
       author: [{ family: "LeCun", given: "Yann" }],
       "container-title": "Nature",

@@ -71,9 +71,27 @@ export async function resolveDoiCitation(
   if (typeof value !== "object" || value === null || Array.isArray(value)) {
     throw new Error(`The DOI registry returned no citation for ${doi}.`);
   }
-  const citation = sanitizedCitation(value as Record<string, unknown>);
+  const record = value as Record<string, unknown>;
+  const type = typeof record["type"] === "string" ? crossrefTypes[record["type"]] : undefined;
+  const citation = sanitizedCitation(type ? { ...record, type } : record);
   return { ...citation, DOI: doi };
 }
+
+/** doi.org passes some Crossref records through with Crossref's type names, not CSL's. */
+const crossrefTypes: Readonly<Record<string, string>> = {
+  "journal-article": "article-journal",
+  "proceedings-article": "paper-conference",
+  "book-chapter": "chapter",
+  "book-section": "chapter",
+  "book-part": "chapter",
+  monograph: "book",
+  "edited-book": "book",
+  "reference-book": "book",
+  dissertation: "thesis",
+  "posted-content": "article",
+  "reference-entry": "entry",
+  "peer-review": "review",
+};
 
 function safeDecode(value: string): string {
   try {
