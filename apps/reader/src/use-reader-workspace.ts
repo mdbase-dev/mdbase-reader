@@ -70,6 +70,8 @@ export interface ReaderSourceWorkspaceController {
     documentFileId: FileId,
     position: ReadingPosition,
   ) => Promise<void>;
+  /** Takes a source written elsewhere (an attached file, a stored citation) as current. */
+  readonly adoptSource: (source: Source) => void;
 }
 
 export interface ReaderWorkspaceController
@@ -99,6 +101,38 @@ export function useReaderWorkspace(gateway: ReaderWorkspaceGateway): ReaderWorks
   return {
     ...library,
     ...source,
+    ...adoptingWrites(library, source.adoptSource),
+  };
+}
+
+/**
+ * Writes outside the source panel must also replace the open source record: annotations are
+ * checked against its documents, so a stale copy rejects a newly attached file.
+ */
+export function adoptingWrites(
+  library: Pick<LibrarySelection, "attachSourceFile" | "saveNewSourceCitation">,
+  adoptSource: (source: Source) => void,
+): Pick<LibrarySelection, "attachSourceFile" | "saveNewSourceCitation"> {
+  const { attachSourceFile, saveNewSourceCitation } = library;
+  return {
+    ...(attachSourceFile
+      ? {
+          attachSourceFile: async (request, options) => {
+            const updated = await attachSourceFile(request, options);
+            adoptSource(updated);
+            return updated;
+          },
+        }
+      : {}),
+    ...(saveNewSourceCitation
+      ? {
+          saveNewSourceCitation: async (target, citation) => {
+            const updated = await saveNewSourceCitation(target, citation);
+            adoptSource(updated);
+            return updated;
+          },
+        }
+      : {}),
   };
 }
 
@@ -179,6 +213,7 @@ export function useSourceToolsWorkspace(
     saveDraft,
     ...annotationMutations,
     saveReadingPosition,
+    adoptSource: publishDraft,
   };
 }
 
