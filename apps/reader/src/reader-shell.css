@@ -1760,6 +1760,7 @@
 
 .inspector-context {
   min-width: 0;
+  container: inspector-context / inline-size;
   display: flex;
   align-items: center;
   gap: 2px;
@@ -1804,6 +1805,7 @@
   background: transparent;
   font-size: var(--ui-control);
   white-space: nowrap;
+  overflow: hidden;
   cursor: pointer;
 }
 
@@ -1815,7 +1817,7 @@
   content: "";
   position: absolute;
   right: 8px;
-  bottom: -1px;
+  bottom: 0;
   left: 8px;
   height: 2px;
   border-radius: 1px;
@@ -1841,7 +1843,7 @@
   flex: 0 0 auto;
 }
 
-.inspector-tabs span {
+.inspector-tabs .inspector-tab-count {
   min-width: 18px;
   padding: 1px 5px;
   border-radius: 999px;
@@ -1849,6 +1851,34 @@
   background: var(--hover);
   font-size: var(--ui-meta);
   text-align: center;
+}
+
+/* A narrow rail names only the open tab, then only shows icons; hidden labels remain the
+   tabs' accessible names. */
+@container inspector-context (max-width: 376px) {
+  .inspector-tabs button {
+    gap: 4px;
+  }
+
+  .inspector-tabs button:not([aria-selected="true"]) .inspector-tab-label {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+}
+
+@container inspector-context (max-width: 250px) {
+  .inspector-tabs .inspector-tab-label {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
 }
 
 .inspector-status {

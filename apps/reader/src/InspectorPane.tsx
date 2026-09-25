@@ -123,27 +123,31 @@ function InspectorTabs({
         role="tab"
         disabled={!enabled}
         aria-selected={tab === "annotations"}
+        title="Annotations"
         onClick={() => onChange("annotations")}
       >
-        <HighlightIcon /> Annotations <span>{annotationCount ?? "—"}</span>
+        <HighlightIcon /> <span className="inspector-tab-label">Annotations</span>{" "}
+        <span className="inspector-tab-count">{annotationCount ?? "—"}</span>
       </button>
       <button
         type="button"
         role="tab"
         disabled={!enabled}
         aria-selected={tab === "note"}
+        title="Literature note"
         onClick={() => onChange("note")}
       >
-        <NoteIcon /> Literature note
+        <NoteIcon /> <span className="inspector-tab-label">Literature note</span>
       </button>
       <button
         type="button"
         role="tab"
         disabled={!enabled}
         aria-selected={tab === "citation"}
+        title="Citation"
         onClick={() => onChange("citation")}
       >
-        <CitationIcon /> Citation
+        <CitationIcon /> <span className="inspector-tab-label">Citation</span>
       </button>
     </div>
   );

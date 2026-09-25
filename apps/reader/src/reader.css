@@ -1025,6 +1025,7 @@ button {
 .inspector-pane {
   position: relative;
   display: grid;
+  grid-template-columns: minmax(0, 1fr);
   grid-template-rows: var(--reader-toolbar-height) minmax(0, 1fr);
   border-left: 1px solid var(--line);
 }
