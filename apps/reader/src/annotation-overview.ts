@@ -16,7 +16,7 @@ export interface AnnotationEntry {
 
 export interface AnnotationFilter {
   readonly query: string;
-  readonly type: "all" | "highlight" | "note" | "area";
+  readonly type: "all" | "highlight" | "note" | "area" | "bookmark";
   readonly tag: string;
   /** Conditions on the annotation's source, e.g. `course is "…"`. */
   readonly sourceConditions: readonly FieldCondition[];

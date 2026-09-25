@@ -6,7 +6,7 @@ export function workspaceTabLabel(tab: WorkspaceTab, source: SourceSummary | nul
     return "Library";
   }
   if (tab.view === "note") {
-    return "Source note";
+    return "Literature note";
   }
   if (tab.view === "annotations") {
     return "Annotations";
@@ -44,5 +44,5 @@ export function sourceFormat(source: SourceSummary): string {
   if (mediaType.includes("html")) {
     return "WEB";
   }
-  return source.documents[0] ? "FILE" : "NOTE";
+  return source.documents[0] ? "FILE" : "NO FILE";
 }

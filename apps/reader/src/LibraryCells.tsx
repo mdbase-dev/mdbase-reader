@@ -25,7 +25,12 @@ type CellRenderer = (source: SourceSummary, annotations: number) => JSX.Element;
 const builtinCells: Record<BuiltinLibraryColumn, CellRenderer> = {
   title: (source) => (
     <>
-      <span className={`source-format-tag is-${sourceFormat(source)}`}>{formatLabel(source)}</span>
+      <span
+        className={`source-format-tag is-${sourceFormat(source)}`}
+        title={source.documents.length === 0 ? "No file attached" : undefined}
+      >
+        {formatLabel(source)}
+      </span>
       <span className="library-title-copy">
         <strong>{source.title}</strong>
         <small>{source.creators.join(", ") || "Unknown creator"}</small>
@@ -179,7 +184,7 @@ function readingProgress(source: SourceSummary): number | null {
 
 export function formatLabel(source: SourceSummary): string {
   const format = sourceFormat(source);
-  return format === "web" ? "Web" : format === "note" ? "Note" : format.toLocaleUpperCase();
+  return format === "web" ? "Web" : format === "note" ? "—" : format.toLocaleUpperCase();
 }
 
 export function countLabel(count: number, noun: string): string {

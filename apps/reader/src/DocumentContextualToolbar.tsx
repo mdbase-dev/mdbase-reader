@@ -2,6 +2,7 @@ import { useMemo } from "react";
 
 import {
   AreaIcon,
+  BookmarkIcon,
   CitationIcon,
   DownloadIcon,
   HighlightIcon,
@@ -30,9 +31,12 @@ export interface DocumentContextualToolbarProps {
   readonly decorationProblem: string | null;
   readonly canSelectArea: boolean;
   readonly selectingArea: boolean;
+  readonly canBookmark: boolean;
+  readonly bookmarking: boolean;
   readonly sourceExport: SourceExportController;
   readonly onToggleFocus: () => void;
   readonly onToggleAreaSelection: () => void;
+  readonly onBookmark: () => void;
   readonly surfaces: ReadonlyMap<string, ReadingSurface>;
   readonly sessionId: string;
 }
@@ -46,9 +50,12 @@ export function DocumentContextualToolbar({
   decorationProblem,
   canSelectArea,
   selectingArea,
+  canBookmark,
+  bookmarking,
   sourceExport,
   onToggleFocus,
   onToggleAreaSelection,
+  onBookmark,
   surfaces,
   sessionId,
 }: DocumentContextualToolbarProps): JSX.Element {
@@ -67,6 +74,18 @@ export function DocumentContextualToolbar({
           <span>{selectingArea ? "Cancel" : "Select area"}</span>
         </button>
       ) : null}
+      {canBookmark ? (
+        <button
+          type="button"
+          className="icon-button document-bookmark-action"
+          aria-label="Bookmark this position"
+          title="Bookmark this position"
+          disabled={bookmarking}
+          onClick={onBookmark}
+        >
+          <BookmarkIcon />
+        </button>
+      ) : null}
       <DocumentStatus reading={readingResume} decorationProblem={decorationProblem} />
       {contents ? <ContentsMenu contents={contents} /> : null}
       <Menu
@@ -79,14 +98,14 @@ export function DocumentContextualToolbar({
           <HighlightIcon /> Annotations
         </button>
         <button type="button" onClick={() => workspace.openView(source.id, "note", pane.id)}>
-          <NoteIcon /> Source note
+          <NoteIcon /> Literature note
         </button>
         <button type="button" onClick={() => workspace.openView(source.id, "citation", pane.id)}>
           <CitationIcon /> Citation
         </button>
         <hr />
         <button type="button" onClick={() => workspace.openBeside(source.id, "note")}>
-          <NoteIcon /> Open note beside
+          <NoteIcon /> Open literature note beside
         </button>
         <button
           type="button"

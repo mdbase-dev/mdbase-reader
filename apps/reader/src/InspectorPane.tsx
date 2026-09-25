@@ -2,6 +2,7 @@ import { useCallback, type JSX } from "react";
 
 import { AnnotationEditingContext } from "./AnnotationEditingContext.js";
 import { AnnotationList } from "./AnnotationList.js";
+import { AnnotationPanelActions } from "./AnnotationPanelActions.js";
 import { CitationEditor } from "./CitationEditor.js";
 import { CitationIcon, HighlightIcon, NoteIcon, PanelIcon } from "./icons.js";
 import { SourceNoteEditor } from "./SourceNoteEditor.js";
@@ -133,7 +134,7 @@ function InspectorTabs({
         aria-selected={tab === "note"}
         onClick={() => onChange("note")}
       >
-        <NoteIcon /> Source note
+        <NoteIcon /> Literature note
       </button>
       <button
         type="button"
@@ -149,7 +150,7 @@ function InspectorTabs({
 }
 
 function tabLabel(tab: InspectorTab): string {
-  return tab === "note" ? "Source note" : tab === "citation" ? "Citation" : "Annotations";
+  return tab === "note" ? "Literature note" : tab === "citation" ? "Citation" : "Annotations";
 }
 
 export function InspectorContent({
@@ -169,6 +170,7 @@ export function InspectorContent({
   );
   return tab === "annotations" ? (
     <div className="annotation-workspace">
+      <AnnotationPanelActions workspace={workspace} composer={composer} />
       <AnnotationEditingContext value={gateway}>
         <AnnotationList
           key={

@@ -3,6 +3,7 @@ import { useEffect, useRef, useSyncExternalStore, type JSX, type RefObject } fro
 import { hasPassageAnchor } from "./annotation-anchor.js";
 import { annotationBodyContent } from "./annotation-body-content.js";
 import { scrollAnnotationCard } from "./annotation-card-scroll.js";
+import { annotationKindLabel } from "./annotation-kind.js";
 import { AnnotationBodyEditor } from "./AnnotationEditor.js";
 import { AnnotationImage, type AnnotationFileReader } from "./AnnotationImage.js";
 import { FocusIcon } from "./icons.js";
@@ -52,7 +53,7 @@ export function AnnotationCard({
       className={`annotation-card${editing ? " is-editing" : ""}${active ? " is-selected" : ""}${hasPassageAnchor(annotation.target) ? " is-linked" : ""}`}
       data-annotation-id={annotation.id}
       role="group"
-      aria-label={`${annotation.annotationType} annotation`}
+      aria-label={`${annotationKindLabel(annotation.annotationType)} annotation`}
       onClick={() => {
         if (!editing && hasPassageAnchor(annotation.target)) {
           onOpen();
@@ -109,10 +110,6 @@ export function AnnotationCard({
       ) : null}
     </div>
   );
-}
-
-function annotationKindLabel(type: string): string {
-  return type === "area" ? "Area" : type.charAt(0).toLocaleUpperCase() + type.slice(1);
 }
 
 function useScrollToEditing(editing: boolean): RefObject<HTMLDivElement | null> {
@@ -190,8 +187,8 @@ function AnnotationCardFooter({
           disabled={transclusion.busyId !== null || transclusion.isEmbedded(annotation)}
           title={
             transclusion.isEmbedded(annotation)
-              ? "Already included in the source note"
-              : "Insert this annotation in the source note"
+              ? "Already included in the literature note"
+              : "Insert this annotation in the literature note"
           }
           onClick={(event) => {
             event.stopPropagation();
@@ -201,8 +198,8 @@ function AnnotationCardFooter({
           {transclusion.busyId === annotation.id
             ? "Inserting…"
             : transclusion.isEmbedded(annotation)
-              ? "In source note"
-              : "Insert in note"}
+              ? "In literature note"
+              : "Add to literature note"}
         </button>
         {hasPassageAnchor(annotation.target) ? (
           <button

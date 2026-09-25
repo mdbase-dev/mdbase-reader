@@ -1,3 +1,4 @@
+import { annotationKindLabel } from "./annotation-kind.js";
 import { relativeDay } from "./LibraryCells.js";
 
 import type { AnnotationColumn } from "./annotation-columns.js";
@@ -108,7 +109,7 @@ const cells: Record<
   creator: ({ source }) => <TextCell text={source?.creators.join(", ") ?? ""} />,
   type: ({ annotation }) => (
     <span role="gridcell" className={`annotation-kind is-${annotation.annotationType}`}>
-      {annotation.annotationType.charAt(0).toLocaleUpperCase() + annotation.annotationType.slice(1)}
+      {annotationKindLabel(annotation.annotationType)}
     </span>
   ),
   tags: ({ annotation }) => <TextCell text={annotation.tags.join(", ")} />,

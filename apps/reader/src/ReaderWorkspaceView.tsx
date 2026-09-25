@@ -512,6 +512,7 @@ function commandsForView(
     sourceExport: model.sourceExport,
     bibliographyExport: model.bibliographyExport,
     focusMode: model.focusMode,
+    bookmark: model.composer.canBookmark ? model.composer.bookmark : null,
     toggleFocus: () => model.setFocusMode((value) => !value),
     toggleLibrary: () => toggleLibrary(model),
     toggleInspector,

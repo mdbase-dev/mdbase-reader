@@ -65,3 +65,17 @@ export function displayCommands(input: ReaderCommandInput): readonly ReaderComma
     },
   ];
 }
+
+export function annotationCommands(input: ReaderCommandInput): readonly ReaderCommand[] {
+  return input.bookmark
+    ? [
+        {
+          id: "bookmark",
+          label: "Bookmark this position",
+          group: "Current source",
+          keywords: "bookmark page place mark annotation",
+          run: input.bookmark,
+        },
+      ]
+    : [];
+}

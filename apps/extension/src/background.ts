@@ -45,7 +45,7 @@ chrome.runtime.onInstalled.addListener(() => {
     });
     chrome.contextMenus.create({
       id: "note",
-      title: "Add a note in mdbase Reader",
+      title: "Highlight with a comment in mdbase Reader",
       contexts: ["selection"],
       documentUrlPatterns: ["https://*/*"],
     });

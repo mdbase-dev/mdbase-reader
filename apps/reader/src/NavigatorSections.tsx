@@ -95,7 +95,7 @@ export function sourceFormat(source: SourceSummary): string {
   if (media.includes("html")) {
     return "WEB";
   }
-  return "NOTE";
+  return source.documents[0] ? "FILE" : "—";
 }
 
 /** Adding a source; browsing the whole library is the "All sources" view above. */

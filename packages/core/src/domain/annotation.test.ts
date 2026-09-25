@@ -70,6 +70,53 @@ describe("validateAnnotationDraft", () => {
   });
 });
 
+describe("bookmark validation", () => {
+  const document = {
+    fileId: fileId("file-1"),
+    file: "[[files/example.pdf]]",
+    revision: fileRevision("sha256:a8ca22"),
+  };
+
+  it("requires a document position", () => {
+    expect(() =>
+      validateAnnotationDraft({ ...baseDraft, annotationType: "bookmark", body: "" }),
+    ).toThrow(expect.objectContaining<Partial<DomainError>>({ code: "invalid-annotation" }));
+  });
+
+  it("requires exact document identity for a position", () => {
+    expect(() =>
+      validateAnnotationDraft({
+        ...baseDraft,
+        annotationType: "bookmark",
+        target: { position: { kind: "pdf", pageIndex: 4 } },
+      }),
+    ).toThrow(expect.objectContaining<Partial<DomainError>>({ code: "invalid-annotation" }));
+  });
+
+  it("accepts a page position tied to an exact revision", () => {
+    expect(() =>
+      validateAnnotationDraft({
+        ...baseDraft,
+        annotationType: "bookmark",
+        body: "",
+        document,
+        target: { position: { kind: "pdf", pageIndex: 4 } },
+      }),
+    ).not.toThrow();
+  });
+
+  it("rejects an out-of-range HTML progression", () => {
+    expect(() =>
+      validateAnnotationDraft({
+        ...baseDraft,
+        annotationType: "bookmark",
+        document,
+        target: { position: { kind: "html", href: "index.html", progression: 1.5 } },
+      }),
+    ).toThrow(expect.objectContaining<Partial<DomainError>>({ code: "invalid-selector" }));
+  });
+});
+
 describe("annotationEmbed", () => {
   it("normalizes a Markdown path to an Obsidian transclusion", () => {
     expect(annotationEmbed("annotations/ann_01.md")).toBe("![[annotations/ann_01]]");

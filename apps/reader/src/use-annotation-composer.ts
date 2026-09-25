@@ -1,5 +1,7 @@
-import { useCallback, useState } from "react";
+import { useCallback, useRef, useState } from "react";
 
+import { bookmarkRequest } from "./annotation-composer-request.js";
+import { readerErrorMessage } from "./errors.js";
 import { useAnnotationActivations } from "./use-annotation-activations.js";
 import {
   useAnnotationCreation,
@@ -9,7 +11,7 @@ import {
 import { useAnnotationNavigation } from "./use-annotation-navigation.js";
 import { useSelectionAnchor } from "./use-selection-anchor.js";
 
-import type { Annotation, AnnotationId } from "@mdbase-reader/core";
+import type { Annotation, AnnotationId, SourceId } from "@mdbase-reader/core";
 import type { ViewportRect } from "@mdbase-reader/reading-surface";
 export { saveSelection, subscribeToSelections } from "./annotation-selection.js";
 export type { ComposerSelection } from "./annotation-composer-request.js";
@@ -25,11 +27,16 @@ export interface AnnotationComposerController extends Omit<AnnotationCreationCon
   readonly open: (annotation: Annotation) => void;
   readonly edit: (annotation: Annotation) => void;
   readonly stopEditing: () => void;
+  /** Whether the document has a current position to bookmark. */
+  readonly canBookmark: boolean;
+  readonly bookmarking: boolean;
+  /** Saves a bookmark at the current reading position and selects it. */
+  readonly bookmark: () => void;
 }
 export function useAnnotationComposer(
   input: AnnotationCreationInput & { readonly annotations: readonly Annotation[] },
 ): AnnotationComposerController {
-  const { sourceId, surface, annotations } = input;
+  const { sourceId, source, surface, annotations, create } = input;
   const [activeId, setActiveId] = useState<AnnotationId | null>(null);
   const [revealedId, setRevealedId] = useState<AnnotationId | null>(null);
   const [editingId, setEditingId] = useState<AnnotationId | null>(null);
@@ -42,6 +49,37 @@ export function useAnnotationComposer(
     clearNavigationError();
   }, [clearNavigationError]);
   const creation = useAnnotationCreation(input, resetSelection);
+  const bookmarkBusy = useRef(false);
+  const [bookmarking, setBookmarking] = useState(false);
+  const [bookmarkProblem, setBookmarkProblem] = useState<{
+    readonly sourceId: SourceId;
+    readonly message: string;
+  } | null>(null);
+  const bookmark = (): void => {
+    const request = source && surface ? bookmarkRequest(source, surface) : null;
+    if (!source || !request || bookmarkBusy.current) {
+      return;
+    }
+    bookmarkBusy.current = true;
+    setBookmarking(true);
+    setBookmarkProblem(null);
+    void create(request)
+      .then((created) => {
+        setActiveId(created.id);
+        setRevealedId(null);
+        setEditingId(null);
+      })
+      .catch((reason: unknown) =>
+        setBookmarkProblem({
+          sourceId: source.id,
+          message: readerErrorMessage(reason, "Reader could not save this bookmark."),
+        }),
+      )
+      .finally(() => {
+        bookmarkBusy.current = false;
+        setBookmarking(false);
+      });
+  };
   const currentId = (id: AnnotationId | null): AnnotationId | null =>
     annotations.some((annotation) => annotation.id === id) ? id : null;
   const reveal = (annotation: Annotation): void => {
@@ -56,7 +94,10 @@ export function useAnnotationComposer(
   const selectionAnchor = anchor && creation.selection?.value === anchor.draft ? anchor.rect : null;
   return {
     ...creation,
-    error: navigation.error ?? creation.error,
+    error:
+      navigation.error ??
+      creation.error ??
+      (bookmarkProblem?.sourceId === sourceId ? bookmarkProblem.message : null),
     canOpenAnnotation: surface !== null,
     activeAnnotationId: currentId(activeId),
     revealedAnnotationId: currentId(revealedId),
@@ -77,6 +118,9 @@ export function useAnnotationComposer(
       setEditingId(null);
       setActiveId(null);
     },
+    canBookmark: source !== null && surface !== null,
+    bookmarking,
+    bookmark,
     resumeDraft: creation.resumeDraft
       ? () => {
           setEditingId(null);

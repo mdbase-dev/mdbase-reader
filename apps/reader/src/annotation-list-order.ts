@@ -1,7 +1,7 @@
 import { annotationBodyContent } from "./annotation-body-content.js";
 
 import type { Annotation } from "@mdbase-reader/core";
-export type AnnotationFilter = "all" | "comments" | "highlight" | "area";
+export type AnnotationFilter = "all" | "comments" | "highlight" | "area" | "note" | "bookmark";
 export function browseAnnotations(
   annotations: readonly Annotation[],
   query: string,
@@ -52,6 +52,10 @@ function position(annotation: Annotation): Position {
       section: `${String(pdf.pageIndex)}/${pdf.coordinateSpace.profile}/${pdf.coordinateSpace.origin}`,
       offset: pdf.coordinateSpace.origin === "top_left" ? y : -y,
     };
+  }
+  if (target?.position?.kind === "pdf") {
+    // A page bookmark sorts before the page's passages.
+    return { kind: 0, section: String(target.position.pageIndex), offset: 0 };
   }
   if (target?.epub) {
     return { kind: 1, section: target.epub.cfi.replace(/\[[^\]]*\]/gu, ""), offset: 0 };

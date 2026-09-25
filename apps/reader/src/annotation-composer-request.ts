@@ -2,6 +2,7 @@ import type {
   AnnotationCreationRequest,
   Locator,
   PdfQuadPoints,
+  ReadingPosition,
   Source,
 } from "@mdbase-reader/core";
 import type {
@@ -34,6 +35,89 @@ export async function annotationRequest(
     return textAnnotationRequest(source, surface, selection.value, note);
   }
   return areaAnnotationRequest(source, surface, selection.value, note);
+}
+
+/** A comment about the whole source: no document, position or quotation. */
+export function commentRequest(source: Source, comment: string): AnnotationCreationRequest {
+  return {
+    sourceRecord: source,
+    collectionId: source.collectionId,
+    sourceId: source.id,
+    source: `[[${source.id}]]`,
+    annotationType: "note",
+    motivation: "commenting",
+    tags: [],
+    body: comment.trim(),
+  };
+}
+
+/** A bookmark at the surface's current reading position, or null when it has none. */
+export function bookmarkRequest(
+  source: Source,
+  surface: ReadingSurface,
+): AnnotationCreationRequest | null {
+  const location = surface.currentLocation();
+  const position = location ? readingPosition(location) : null;
+  if (!position) {
+    return null;
+  }
+  return {
+    ...annotationIdentity(source, surface),
+    annotationType: "bookmark",
+    motivation: "bookmarking",
+    locator: positionLabel(position),
+    target: { position },
+    tags: [],
+    body: "",
+  };
+}
+
+function readingPosition(locator: ReaderLocator): ReadingPosition | null {
+  if (locator.kind === "pdf") {
+    return { kind: "pdf", pageIndex: locator.pageIndex };
+  }
+  if (locator.kind === "epub") {
+    return { kind: "epub", locator: locator.locator };
+  }
+  return locator.href.trim()
+    ? {
+        kind: "html",
+        href: locator.href,
+        ...(locator.progression === undefined
+          ? {}
+          : { progression: Math.min(1, Math.max(0, locator.progression)) }),
+      }
+    : null;
+}
+
+function positionLabel(position: ReadingPosition): Locator {
+  if (position.kind === "pdf") {
+    return { label: `p. ${String(position.pageIndex + 1)}` };
+  }
+  const progression =
+    position.kind === "html" ? position.progression : epubProgression(position.locator);
+  const title = position.kind === "epub" ? epubTitle(position.locator) : undefined;
+  const place =
+    progression === undefined
+      ? undefined
+      : progression < 0.01
+        ? "Start"
+        : `${String(Math.round(progression * 100))}% through`;
+  return { label: [title, place].filter(Boolean).join(" · ") || "Saved position" };
+}
+
+function epubProgression(locator: Readonly<Record<string, unknown>>): number | undefined {
+  const locations = locator["locations"];
+  const value =
+    typeof locations === "object" && locations !== null
+      ? (locations as Readonly<Record<string, unknown>>)["totalProgression"]
+      : undefined;
+  return typeof value === "number" && value >= 0 && value <= 1 ? value : undefined;
+}
+
+function epubTitle(locator: Readonly<Record<string, unknown>>): string | undefined {
+  const title = locator["title"];
+  return typeof title === "string" && title.trim() ? title.trim() : undefined;
 }
 
 function textAnnotationRequest(

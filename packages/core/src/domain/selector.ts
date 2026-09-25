@@ -1,5 +1,7 @@
 import { DomainError } from "./errors.js";
 
+import type { ReadingPosition } from "./source.js";
+
 export interface QuoteSelector {
   readonly exact: string;
   readonly prefix?: string;
@@ -52,6 +54,11 @@ export interface AnnotationTarget {
   readonly pdf?: PdfSelector;
   readonly epub?: EpubSelector;
   readonly html?: HtmlSelector;
+  /**
+   * A place in the document with no selection, such as a bookmark. It uses the compact native
+   * resume selector stored as `reading.position`.
+   */
+  readonly position?: ReadingPosition;
 }
 
 function validateQuote(quote: QuoteSelector): void {
@@ -89,6 +96,26 @@ function validatePdf(pdf: PdfSelector): void {
   }
 }
 
+function validatePosition(position: ReadingPosition): void {
+  if (
+    position.kind === "pdf" &&
+    (!Number.isInteger(position.pageIndex) || position.pageIndex < 0)
+  ) {
+    throw new DomainError("invalid-selector", "A PDF page index must be a non-negative integer.");
+  }
+  if (position.kind === "html") {
+    if (position.href.trim().length === 0) {
+      throw new DomainError("invalid-selector", "An HTML position requires a document address.");
+    }
+    if (
+      position.progression !== undefined &&
+      !(position.progression >= 0 && position.progression <= 1)
+    ) {
+      throw new DomainError("invalid-selector", "An HTML progression must be between 0 and 1.");
+    }
+  }
+}
+
 export function validateAnnotationTarget(target: AnnotationTarget): void {
   if (target.quote) {
     validateQuote(target.quote);
@@ -108,10 +135,13 @@ export function validateAnnotationTarget(target: AnnotationTarget): void {
       "An HTML target requires CSS, XPath, or quotation evidence.",
     );
   }
+  if (target.position) {
+    validatePosition(target.position);
+  }
 }
 
 export function targetRequiresDocument(target: AnnotationTarget): boolean {
-  return [target.pdf, target.epub, target.html, target.textPosition].some(
+  return [target.pdf, target.epub, target.html, target.textPosition, target.position].some(
     (selector) => selector !== undefined,
   );
 }

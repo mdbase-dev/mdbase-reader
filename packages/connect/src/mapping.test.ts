@@ -192,3 +192,29 @@ describe("Connect EPUB annotation mapping", () => {
     });
   });
 });
+
+describe("Connect bookmark mapping", () => {
+  it("round-trips a position without a quotation", () => {
+    const annotation = annotationFromDocument(collectionId("reading"), {
+      path: "annotations/ann_bookmark.md",
+      revision: "ann-rev-3",
+      frontmatter: {},
+      effectiveFrontmatter: {
+        id: "ann_bookmark",
+        source: "[[src_01]]",
+        annotation_type: "bookmark",
+        created_at: "2026-08-09T14:21:00+10:00",
+        locator: { label: "p. 42" },
+        target: { position: { pdf: { page_index: 41 } } },
+      },
+      body: "",
+    });
+
+    expect(annotation.target).toEqual({ position: { kind: "pdf", pageIndex: 41 } });
+    expect(annotationFrontmatter(annotation)).toMatchObject({
+      annotation_type: "bookmark",
+      target: { position: { pdf: { page_index: 41 } } },
+    });
+    expect(annotationFrontmatter(annotation)["target"]).not.toHaveProperty("quote");
+  });
+});

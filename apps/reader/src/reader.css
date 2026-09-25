@@ -1128,6 +1128,13 @@ button {
   background: transparent;
 }
 
+.annotation-composer.is-comment header strong::before {
+  width: 8px;
+  height: 8px;
+  border-radius: 2px;
+  background: var(--accent);
+}
+
 .annotation-composer header .icon-button {
   width: 30px;
   height: 30px;
@@ -2155,7 +2162,8 @@ input:focus-visible {
   --format-color: oklch(56% 0.1 174);
 }
 
-.library-card-bookplate.is-note {
+.library-card-bookplate.is-note,
+.library-card-bookplate.is-file {
   --format-color: var(--muted);
 }
 

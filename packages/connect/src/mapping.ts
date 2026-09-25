@@ -13,6 +13,8 @@ import {
   type SourceSummary,
 } from "@mdbase-reader/core";
 
+import { readingPositionFromFrontmatter } from "./reading-position.js";
+
 import type { QueryRecord, RecordDocument } from "@mdbase-dev/connect";
 
 export { annotationFromDocument, annotationFrontmatter } from "./annotation-mapping.js";
@@ -84,7 +86,7 @@ function readingState(value: unknown): CurrentReadingState | undefined {
   }
   const progress = candidate["progress"];
   const documentFileId = text(candidate["document_file_id"]);
-  const position = readingPosition(candidate["position"]);
+  const position = readingPositionFromFrontmatter(candidate["position"]);
   const startedAt = optionalDateTime(candidate["started_at"]);
   const lastOpenedAt = optionalDateTime(candidate["last_opened_at"]);
   const finishedAt = optionalDateTime(candidate["finished_at"]);
@@ -97,28 +99,6 @@ function readingState(value: unknown): CurrentReadingState | undefined {
     ...(lastOpenedAt ? { lastOpenedAt } : {}),
     ...(finishedAt ? { finishedAt } : {}),
   };
-}
-
-function readingPosition(value: unknown): CurrentReadingState["position"] {
-  const candidate = object(value);
-  const pdfPage = object(candidate?.["pdf"])?.["page_index"];
-  if (typeof pdfPage === "number" && Number.isInteger(pdfPage) && pdfPage >= 0) {
-    return { kind: "pdf", pageIndex: pdfPage };
-  }
-  const epubLocator = object(object(candidate?.["epub"])?.["locator"]);
-  if (epubLocator) {
-    return { kind: "epub", locator: epubLocator };
-  }
-  const html = object(candidate?.["html"]);
-  const href = text(html?.["href"]);
-  const progression = html?.["progression"];
-  return href
-    ? {
-        kind: "html",
-        href,
-        ...(typeof progression === "number" ? { progression } : {}),
-      }
-    : undefined;
 }
 
 function optionalDateTime(value: unknown): ReturnType<typeof dateTime> | undefined {

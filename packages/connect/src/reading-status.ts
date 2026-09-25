@@ -1,6 +1,7 @@
 import { recordRevision } from "@mdbase-reader/core";
 
 import { sourceFromDocument } from "./mapping.js";
+import { positionFrontmatter } from "./reading-position.js";
 import { outcomeValue } from "./repository-client.js";
 
 import type { ReaderConnectClient } from "./repository-client.js";
@@ -69,22 +70,6 @@ export function readingWithStatus(
     ...rest,
     status,
     ...(status === "reading" && rest["started_at"] === undefined ? { started_at: changedAt } : {}),
-  };
-}
-
-/** The compact resume selector stored as `reading.position`. */
-export function positionFrontmatter(position: ReadingPosition): Readonly<Record<string, unknown>> {
-  if (position.kind === "pdf") {
-    return { pdf: { page_index: position.pageIndex } };
-  }
-  if (position.kind === "epub") {
-    return { epub: { locator: position.locator } };
-  }
-  return {
-    html: {
-      href: position.href,
-      ...(position.progression === undefined ? {} : { progression: position.progression }),
-    },
   };
 }
 

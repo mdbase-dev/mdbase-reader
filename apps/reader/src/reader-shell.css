@@ -1886,6 +1886,44 @@
   color: var(--danger);
 }
 
+/* Annotations that need no selection: whole-source comments and bookmarks. */
+
+.annotation-panel-actions {
+  display: flex;
+  gap: 4px;
+  padding: 8px 12px 0;
+}
+
+.annotation-panel-actions > button {
+  min-height: 28px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0 9px;
+  border: 1px solid var(--line);
+  border-radius: var(--ui-radius);
+  color: var(--ink-soft);
+  background: var(--paper);
+  font: inherit;
+  font-size: var(--ui-meta);
+  cursor: pointer;
+}
+
+.annotation-panel-actions > button:hover:not(:disabled) {
+  color: var(--ink);
+  background: var(--hover);
+}
+
+.annotation-panel-actions > button:disabled {
+  color: var(--faint);
+  cursor: default;
+}
+
+.annotation-panel-actions svg {
+  width: 14px;
+  height: 14px;
+}
+
 /* Annotation browsing: one row, with filter and order tucked into a menu. */
 
 .annotation-browser-controls {
@@ -2013,6 +2051,13 @@
 
 .annotation-kind.is-note::before {
   background: var(--accent);
+}
+
+.annotation-kind.is-bookmark::before {
+  width: 7px;
+  border-radius: 1px 1px 0 0;
+  background: var(--ink-soft);
+  clip-path: polygon(0 0, 100% 0, 100% 100%, 50% 72%, 0 100%);
 }
 
 .annotation-kind.is-area::before {

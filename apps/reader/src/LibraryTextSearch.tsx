@@ -78,7 +78,7 @@ export function LibraryTextSearch({
       <p className="search-coverage" role="status">
         {scope === "documents"
           ? documents.coverage
-          : "Searches source notes and annotation text, not PDF, EPUB or saved-page contents."}
+          : "Searches literature notes and annotation text, not PDF, EPUB or saved-page contents."}
       </p>
       {problem ? <p role="alert">{problem}</p> : null}
       <p role="status">{searchStatus(normalized, scope === "notes" && !current, visible.length)}</p>
@@ -112,7 +112,7 @@ export function LibraryTextSearch({
                   {view === "document"
                     ? "Open document"
                     : view === "note"
-                      ? "Source note"
+                      ? "Literature note"
                       : "Annotation text"}
                 </small>
                 {excerpt ? <Excerpt value={excerpt} /> : null}

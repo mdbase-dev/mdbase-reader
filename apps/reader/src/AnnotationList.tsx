@@ -118,7 +118,7 @@ function AnnotationListStatus({
     return (
       <div className="inspector-status annotation-empty">
         <strong>No annotations yet</strong>
-        <span>Select text or an area in the document to begin.</span>
+        <span>Select text or an area in the document, or add a comment or bookmark above.</span>
       </div>
     );
   }
@@ -209,9 +209,11 @@ function AnnotationBrowserControls({
 
 const annotationFilterOptions: SelectItems<AnnotationFilter> = [
   { value: "all", label: "All" },
-  { value: "comments", label: "With comments" },
+  { value: "comments", label: "With commentary" },
   { value: "highlight", label: "Highlights" },
   { value: "area", label: "Area captures" },
+  { value: "note", label: "Comments on the source" },
+  { value: "bookmark", label: "Bookmarks" },
 ];
 
 const annotationOrderOptions: SelectItems<AnnotationOrder> = [

@@ -67,7 +67,7 @@ export function CaptureForm({
               onChange={(event) => update("tags", event.target.value)}
             />
             <label htmlFor="note">
-              Source note <span>(optional)</span>
+              Literature note <span>(optional)</span>
             </label>
             <textarea
               id="note"

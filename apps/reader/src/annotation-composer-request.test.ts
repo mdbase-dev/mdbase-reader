@@ -8,7 +8,12 @@ import {
 } from "@mdbase-reader/core";
 import { describe, expect, it, vi } from "vitest";
 
-import { annotationRequest, prepareAnnotationSelection } from "./annotation-composer-request.js";
+import {
+  annotationRequest,
+  bookmarkRequest,
+  commentRequest,
+  prepareAnnotationSelection,
+} from "./annotation-composer-request.js";
 
 import type { ReadingSurface } from "@mdbase-reader/reading-surface";
 
@@ -138,5 +143,54 @@ describe("annotationRequest", () => {
 
     expect(arrayBuffer).toHaveBeenCalledOnce();
     expect(request.attachment?.bytes).toEqual(new Uint8Array([4, 5, 6]));
+  });
+});
+
+describe("commentRequest", () => {
+  it("creates a source-level note with no document or selector", () => {
+    const request = commentRequest(source, "  The order of fragments is editorial.  ");
+
+    expect(request).toMatchObject({
+      annotationType: "note",
+      motivation: "commenting",
+      body: "The order of fragments is editorial.",
+    });
+    expect(request).not.toHaveProperty("document");
+    expect(request).not.toHaveProperty("target");
+  });
+});
+
+describe("bookmarkRequest", () => {
+  it("records the current PDF page without a quotation", () => {
+    const request = bookmarkRequest(source, {
+      ...surface,
+      currentLocation: () => ({ kind: "pdf", pageIndex: 41 }),
+    });
+
+    expect(request).toMatchObject({
+      annotationType: "bookmark",
+      document: surface.document.document,
+      locator: { label: "p. 42" },
+      target: { position: { kind: "pdf", pageIndex: 41 } },
+      body: "",
+    });
+    expect(request?.target).not.toHaveProperty("quote");
+  });
+
+  it("labels an EPUB position by chapter and progress", () => {
+    const request = bookmarkRequest(source, {
+      ...surface,
+      kind: "epub",
+      currentLocation: () => ({
+        kind: "epub",
+        locator: { href: "ch3.xhtml", title: "Chapter 3", locations: { totalProgression: 0.354 } },
+      }),
+    });
+
+    expect(request?.locator).toEqual({ label: "Chapter 3 · 35% through" });
+  });
+
+  it("returns null when the surface has no position yet", () => {
+    expect(bookmarkRequest(source, surface)).toBeNull();
   });
 });

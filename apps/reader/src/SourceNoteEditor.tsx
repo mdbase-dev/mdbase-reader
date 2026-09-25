@@ -70,11 +70,11 @@ export function SourceNoteEditor({
         {sourceRecord.message}
       </div>
     ) : (
-      <div className="editor-loading">Opening source note…</div>
+      <div className="editor-loading">Opening literature note…</div>
     );
   }
   if (!workspace.draftReady) {
-    return <div className="editor-loading">Opening source note…</div>;
+    return <div className="editor-loading">Opening literature note…</div>;
   }
   const citekey = sourceRecord.value.citation?.id;
   return (
@@ -102,7 +102,7 @@ export function SourceNoteEditor({
           : {})}
       />
       <DraftRecoveryNotice workspace={workspace} />
-      <Suspense fallback={<div className="editor-loading">Opening source note…</div>}>
+      <Suspense fallback={<div className="editor-loading">Opening literature note…</div>}>
         <MarkdownEditor
           className="source-note-editor-surface"
           value={workspace.draft}

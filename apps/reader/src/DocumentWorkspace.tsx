@@ -9,6 +9,7 @@ import { DocumentEmpty } from "./WorkspacePaneSupport.js";
 
 import type {
   LibraryWorkspaceTab,
+  SourceWorkspacePane,
   SourceWorkspaceTab,
   WorkspacePaneId,
   WorkspaceTab,
@@ -83,20 +84,12 @@ export function DocumentWorkspace({
     >
       <div className={`document-canvas ${surfaceClass}-canvas`}>
         {document && source && pane ? (
-          <DocumentContextualToolbar
+          <DocumentToolbar
+            props={props}
             source={source}
             pane={pane}
-            workspace={props.sourceWorkspace}
-            focusMode={props.focusMode}
-            readingResume={props.readingResume}
-            decorationProblem={props.decorationProblem}
-            canSelectArea={focused && props.annotationComposer.canSelectArea}
-            selectingArea={props.annotationComposer.selectingArea}
-            onToggleAreaSelection={props.annotationComposer.toggleAreaSelection}
-            sourceExport={props.sourceExport}
-            onToggleFocus={props.onToggleFocus}
-            surfaces={props.surfaces}
-            sessionId={tab.id}
+            tabId={tab.id}
+            focused={focused}
           />
         ) : null}
         <div className="document-session-deck">
@@ -109,6 +102,43 @@ export function DocumentWorkspace({
         ) : null}
       </div>
     </section>
+  );
+}
+
+function DocumentToolbar({
+  props,
+  source,
+  pane,
+  tabId,
+  focused,
+}: {
+  readonly props: DocumentWorkspaceProps;
+  readonly source: SourceSummary;
+  readonly pane: SourceWorkspacePane;
+  readonly tabId: string;
+  readonly focused: boolean;
+}): JSX.Element {
+  // Area selection and bookmarks act on the focused surface, so only its toolbar offers them.
+  const composer = props.annotationComposer;
+  return (
+    <DocumentContextualToolbar
+      source={source}
+      pane={pane}
+      workspace={props.sourceWorkspace}
+      focusMode={props.focusMode}
+      readingResume={props.readingResume}
+      decorationProblem={props.decorationProblem}
+      canSelectArea={focused && composer.canSelectArea}
+      selectingArea={composer.selectingArea}
+      onToggleAreaSelection={composer.toggleAreaSelection}
+      canBookmark={focused && composer.canBookmark}
+      bookmarking={composer.bookmarking}
+      onBookmark={composer.bookmark}
+      sourceExport={props.sourceExport}
+      onToggleFocus={props.onToggleFocus}
+      surfaces={props.surfaces}
+      sessionId={tabId}
+    />
   );
 }
 

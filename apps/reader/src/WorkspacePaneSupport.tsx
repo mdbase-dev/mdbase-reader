@@ -40,9 +40,10 @@ export function DocumentEmpty({ onOpenNote }: { readonly onOpenNote: () => void 
         <NoteIcon />
         <h2>No document attached</h2>
         <p>
-          This is a note-only source. Its note, annotations and citation are in the Source panel.
+          This source has no file. Its literature note, annotations and citation are in the Source
+          panel.
         </p>
-        <ReaderButton onClick={onOpenNote}>Open source note</ReaderButton>
+        <ReaderButton onClick={onOpenNote}>Open literature note</ReaderButton>
       </div>
     </div>
   );

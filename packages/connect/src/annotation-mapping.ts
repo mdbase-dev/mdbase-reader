@@ -16,6 +16,8 @@ import {
   type TextPositionSelector,
 } from "@mdbase-reader/core";
 
+import { positionFrontmatter, readingPositionFromFrontmatter } from "./reading-position.js";
+
 import type { JsonObject, RecordDocument } from "@mdbase-dev/connect";
 
 function object(value: unknown): Readonly<Record<string, unknown>> | null {
@@ -130,12 +132,14 @@ function annotationTarget(value: unknown): AnnotationTarget | undefined {
   const pdf = pdfSelector(candidate["pdf"]);
   const cfi = text(object(candidate["epub"])?.["cfi"]);
   const html = htmlSelector(candidate["html"]);
+  const position = readingPositionFromFrontmatter(candidate["position"]);
   const result: AnnotationTarget = {
     ...(quote ? { quote } : {}),
     ...(textPosition ? { textPosition } : {}),
     ...(pdf ? { pdf } : {}),
     ...(cfi ? { epub: { cfi } } : {}),
     ...(html ? { html } : {}),
+    ...(position ? { position } : {}),
   };
   return Object.keys(result).length > 0 ? result : undefined;
 }
@@ -212,6 +216,7 @@ function targetFrontmatter(value: AnnotationTarget): JsonObject {
       : {}),
     ...(value.epub ? { epub: value.epub } : {}),
     ...(value.html ? { html: value.html } : {}),
+    ...(value.position ? { position: positionFrontmatter(value.position) } : {}),
   };
 }
 

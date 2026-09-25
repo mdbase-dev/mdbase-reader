@@ -632,7 +632,7 @@ const formatFilterOptions: SelectItems<LibraryViewConfiguration["filter"]["forma
   { value: "pdf", label: "PDF" },
   { value: "epub", label: "EPUB" },
   { value: "web", label: "Saved web page" },
-  { value: "note", label: "Note only" },
+  { value: "note", label: "No file attached" },
 ];
 
 /** The fixed sort fields, plus a property column when the view is sorted by one. */

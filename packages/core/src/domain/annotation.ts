@@ -62,6 +62,9 @@ export function validateAnnotationDraft(draft: AnnotationDraft): void {
   if (draft.annotationType === "area" && !draft.target?.pdf) {
     throw new DomainError("invalid-annotation", "An area annotation requires PDF geometry in v1.");
   }
+  if (draft.annotationType === "bookmark" && !draft.target) {
+    throw new DomainError("invalid-annotation", "A bookmark requires a document position.");
+  }
   if (draft.target && targetRequiresDocument(draft.target) && !draft.document) {
     throw new DomainError(
       "invalid-annotation",

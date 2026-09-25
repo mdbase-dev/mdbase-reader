@@ -80,7 +80,10 @@ export function annotationViewConfiguration(
     sortDirection: options["sortDirection"] === "asc" ? "asc" : "desc",
     filter: {
       query: typeof filter["query"] === "string" ? filter["query"] : "",
-      type: type === "highlight" || type === "note" || type === "area" ? type : "all",
+      type:
+        type === "highlight" || type === "note" || type === "area" || type === "bookmark"
+          ? type
+          : "all",
       tag: typeof filter["tag"] === "string" ? filter["tag"] : "",
       sourceConditions: parseConditions(filter["sourceConditions"]),
     },

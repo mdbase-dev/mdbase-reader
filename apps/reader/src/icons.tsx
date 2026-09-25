@@ -196,3 +196,13 @@ export const ReadingModeIcon = (props: IconProps): JSX.Element => (
     <path d="M12 6.5v13" />
   </Icon>
 );
+export const BookmarkIcon = (props: IconProps): JSX.Element => (
+  <Icon {...props}>
+    <path d="M7 3.5h10V20.5l-5-3.8-5 3.8z" />
+  </Icon>
+);
+export const CommentIcon = (props: IconProps): JSX.Element => (
+  <Icon {...props}>
+    <path d="M4.5 5h15v10.5H11l-4.5 3.5v-3.5h-2z" />
+  </Icon>
+);

@@ -217,8 +217,9 @@ function AnnotationSortControl({
 const annotationTypeOptions: SelectItems<AnnotationFilter["type"]> = [
   { value: "all", label: "Any type" },
   { value: "highlight", label: "Highlights" },
-  { value: "note", label: "Notes" },
   { value: "area", label: "Areas" },
+  { value: "note", label: "Comments" },
+  { value: "bookmark", label: "Bookmarks" },
 ];
 
 const annotationSortOptions: SelectItems<AnnotationSortField> = [

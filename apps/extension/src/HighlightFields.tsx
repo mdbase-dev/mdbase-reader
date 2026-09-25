@@ -69,7 +69,7 @@ export function HighlightFields({
             ))}
           </fieldset>
           <label htmlFor="comment">
-            Highlight note <span>(optional)</span>
+            Comment <span>(optional)</span>
           </label>
           <textarea
             id="comment"
@@ -87,8 +87,8 @@ export function HighlightFields({
             onChange={(event) => update({ highlightTags: event.target.value })}
           />
           <p className="hint">
-            Anchored to the saved reading copy. If that passage cannot be matched safely, your note
-            stays here.
+            Anchored to the saved reading copy. If that passage cannot be matched safely, your
+            comment stays here.
           </p>
         </>
       ) : null}

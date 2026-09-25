@@ -1,4 +1,4 @@
-import { displayCommands, libraryCommands } from "./reader-app-commands.js";
+import { annotationCommands, displayCommands, libraryCommands } from "./reader-app-commands.js";
 
 import type { ReaderCommand } from "./CommandPalette.js";
 import type { BibliographyExportController } from "./use-bibliography-export.js";
@@ -14,6 +14,8 @@ export interface ReaderCommandInput {
   readonly sourceExport: SourceExportController;
   readonly bibliographyExport: BibliographyExportController;
   readonly focusMode: boolean;
+  /** Bookmarks the focused document's current position; null without one. */
+  readonly bookmark: (() => void) | null;
   readonly toggleFocus: () => void;
   readonly toggleLibrary: () => void;
   readonly toggleInspector: () => void;
@@ -76,7 +78,7 @@ function navigationCommands(input: ReaderCommandInput): readonly ReaderCommand[]
 
 function viewLabel(view: string): string {
   return view === "note"
-    ? "Source note"
+    ? "Literature note"
     : view === "annotations"
       ? "Annotations"
       : view === "citation"
@@ -123,7 +125,7 @@ function workspaceCommands(input: ReaderCommandInput): readonly ReaderCommand[] 
     {
       id: "toggle-source-tools",
       label: "Toggle right sidebar",
-      detail: "Annotations, source note and citation",
+      detail: "Annotations, literature note and citation",
       group: "Workspace",
       shortcut: "mod+shift+\\",
       run: input.toggleInspector,
@@ -179,6 +181,7 @@ function sourceCommands(input: ReaderCommandInput): readonly ReaderCommand[] {
       group: "Current source",
       run: input.sourceExport.run,
     },
+    ...annotationCommands(input),
     {
       id: "annotations",
       label: "Open annotations",
@@ -191,9 +194,9 @@ function sourceCommands(input: ReaderCommandInput): readonly ReaderCommand[] {
     },
     {
       id: "note",
-      label: "Open source note",
+      label: "Open literature note",
       group: "Current source",
-      keywords: "write notes",
+      keywords: "write notes source note",
       run: () => input.workspace.openView(sourceId, "note"),
       alternate: { label: "Open beside", run: () => input.workspace.openBeside(sourceId, "note") },
     },

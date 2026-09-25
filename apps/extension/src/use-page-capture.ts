@@ -78,7 +78,7 @@ export function usePageCapture(tabId: number, onProblem: (message: string) => vo
   }, [followSelection, navigated, readPage, tabId]);
 
   useEffect(() => {
-    // The intent that opened this panel (e.g. "Add a note" from the context menu).
+    // The intent that opened this panel (e.g. "Highlight with a comment" from the context menu).
     const key = intentKey(tabId);
     chrome.storage.session
       .get(key)

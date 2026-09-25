@@ -240,7 +240,10 @@ export function applyLibraryViewConfiguration(
   return [...filtered].sort((left, right) => compareSources(left, right, configuration));
 }
 
-export function sourceFormat(source: SourceSummary): LibraryViewFilter["format"] {
+/** A source's format; `note` means no file is attached, `file` an unrecognised one. */
+export function sourceFormat(
+  source: SourceSummary,
+): Exclude<LibraryViewFilter["format"], "all"> | "file" {
   const media = source.documents[0]?.mediaType ?? "";
   if (media.includes("pdf")) {
     return "pdf";
@@ -251,7 +254,7 @@ export function sourceFormat(source: SourceSummary): LibraryViewFilter["format"]
   if (media.includes("html")) {
     return "web";
   }
-  return "note";
+  return source.documents.length > 0 ? "file" : "note";
 }
 
 function durableWhere(

@@ -20,7 +20,9 @@ export async function navigateToAnnotation(
     );
   }
   let found = false;
-  if (target.pdf) {
+  if (target.position) {
+    found = target.position.kind === surface.kind && (await surface.goTo(target.position));
+  } else if (target.pdf) {
     found = await surface.goTo({ kind: "pdf", pageIndex: target.pdf.pageIndex });
   } else if (target.epub) {
     found = await surface.goTo({
