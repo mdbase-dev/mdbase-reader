@@ -301,7 +301,7 @@ try {
     documentsBlocked = false;
 
     await page.getByLabel("More document actions", { exact: true }).click();
-    await page.getByRole("button", { name: "Source note", exact: true }).click();
+    await page.getByRole("button", { name: "Literature note", exact: true }).click();
     const editor = page.getByRole("textbox", { name: "Source literature note" });
     await expect(editor).toBeVisible();
     writesBlocked = true;
@@ -320,15 +320,15 @@ try {
     records[0].body = "[test] A different application edited the collection version.";
     records[0].recordRevision = "external-revision";
     await page.reload();
-    await expect(page.getByRole("region", { name: "Source note conflict" })).toBeVisible({
+    await expect(page.getByRole("region", { name: "Literature note conflict" })).toBeVisible({
       timeout: 20000,
     });
     await page.getByText("Compare versions", { exact: true }).click();
-    await expect(page.getByRole("region", { name: "Source note conflict" })).toContainText(
+    await expect(page.getByRole("region", { name: "Literature note conflict" })).toContainText(
       "A different application",
     );
     expect(
-      (await page.getByRole("region", { name: "Source note conflict" }).boundingBox()).height,
+      (await page.getByRole("region", { name: "Literature note conflict" }).boundingBox()).height,
     ).toBeGreaterThan(180);
     await screenshot("draft-conflict");
     writesBlocked = false;

@@ -37,8 +37,8 @@ export async function auditResponsiveWorkspace(page, { screenshot, blockWrites }
     .locator(`[data-session-id="${first}"]`)
     .getByLabel("More document actions", { exact: true })
     .click();
-  await page.getByRole("button", { name: "Source note", exact: true }).click();
-  const note = await tab("Source note — [test] Research 0000").getAttribute("data-panel-id");
+  await page.getByRole("button", { name: "Literature note", exact: true }).click();
+  const note = await tab("Literature note — [test] Research 0000").getAttribute("data-panel-id");
   const editor = page.getByRole("textbox", { name: "Source literature note" });
   blockWrites(true);
   await editor.fill("[test] Responsive draft stays in the same editor.");
@@ -46,7 +46,7 @@ export async function auditResponsiveWorkspace(page, { screenshot, blockWrites }
   await editor.evaluate((element) => {
     element.dataset.responsiveSentinel = "original-editor";
   });
-  await tab("[test] Research 0000").filter({ hasNotText: "Source note" }).click();
+  await tab("[test] Research 0000").filter({ hasNotText: "Literature note" }).click();
   await page.waitForTimeout(350);
   const desktop = (await state()).layout;
   const groups = (node) => (node.type === "leaf" ? [node.data] : node.data.flatMap(groups));
@@ -154,7 +154,7 @@ export async function auditResponsiveWorkspace(page, { screenshot, blockWrites }
     "Mobile source opening and reload retain new tabs and recover drafts without replacing the saved desktop arrangement",
   );
   // Whole-workspace maximize is separate from the phone presentation.
-  await tab("Source note — [test] Research 0000").click({ button: "right" });
+  await tab("Literature note — [test] Research 0000").click({ button: "right" });
   await page.getByRole("menuitem", { name: "Maximize / restore pane", exact: true }).click();
   const notePane = page.locator(`[data-session-id="${note}"]`);
   await expect.poll(async () => (await notePane.boundingBox())?.width ?? 0).toBeGreaterThan(1400);
@@ -165,7 +165,7 @@ export async function auditResponsiveWorkspace(page, { screenshot, blockWrites }
   await page.getByRole("button", { name: "Back to workspace", exact: true }).click();
   await page.setViewportSize({ width: 1440, height: 1000 });
   await expect.poll(async () => (await notePane.boundingBox())?.width ?? 0).toBeGreaterThan(1400);
-  await tab("Source note — [test] Research 0000").click({ button: "right" });
+  await tab("Literature note — [test] Research 0000").click({ button: "right" });
   await page.getByRole("menuitem", { name: "Maximize / restore pane", exact: true }).click();
   await expect.poll(sidebarWidths).toEqual(originalWidths);
   completed.push(

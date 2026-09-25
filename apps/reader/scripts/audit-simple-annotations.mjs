@@ -44,7 +44,7 @@ export async function auditSimpleAnnotations(
     .locator('.workspace-pane[aria-hidden="false"]')
     .filter({ has: page.locator(".annotation-card") });
   await duplicate(await panes.first().getAttribute("data-session-id"));
-  const comments = page.getByRole("textbox", { name: "Annotation note", exact: true });
+  const comments = page.getByRole("textbox", { name: "Comment", exact: true });
   await panes.nth(0).getByRole("button", { name: "Edit", exact: true }).click();
   expect(await comments.evaluate((element) => element.tagName)).toBe("TEXTAREA");
   await expect(panes.locator(".cm-editor")).toHaveCount(0);
@@ -118,20 +118,14 @@ export async function auditSimpleAnnotations(
     expect(dialog.message()).toContain("unsaved changes");
     await dialog.dismiss();
   });
-  await panes
-    .nth(0)
-    .getByLabel("Edit annotation", { exact: true })
-    .getByRole("button", { name: "Close", exact: true })
-    .click();
+  await comments.press("Escape");
   await expect(comments).toHaveValue("[test] Unsaved close warning");
   blockWrites(false);
   await panes.nth(0).getByRole("button", { name: "Retry save", exact: true }).click();
   await expect(comments).toHaveCount(0);
   await panes.nth(0).getByRole("button", { name: "Edit", exact: true }).click();
   await panes.nth(0).getByRole("button", { name: "Delete", exact: true }).click();
-  await expect(
-    panes.nth(0).getByRole("button", { name: "Keep annotation", exact: true }),
-  ).toBeVisible();
+  await expect(panes.nth(0).getByRole("button", { name: "Cancel", exact: true })).toBeVisible();
   const before = await comments.inputValue();
   await comments.pressSequentially("MUST NOT APPLY");
   await expect(comments).toHaveValue(before);

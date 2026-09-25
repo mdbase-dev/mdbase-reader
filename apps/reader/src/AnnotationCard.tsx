@@ -83,13 +83,18 @@ export function AnnotationCard({
         ) : null}
       </header>
       {editing ? (
-        <AnnotationBodyEditor
-          annotation={annotation}
-          onCancel={onCancel}
-          onSave={onSave}
-          onPlanDelete={onPlanDelete}
-          onDelete={onDelete}
-        />
+        <>
+          {annotationBodyContent(annotation.body).images.map((image) => (
+            <AnnotationImage key={image.path} image={image} readFile={readFile} />
+          ))}
+          <AnnotationBodyEditor
+            annotation={annotation}
+            onCancel={onCancel}
+            onSave={onSave}
+            onPlanDelete={onPlanDelete}
+            onDelete={onDelete}
+          />
+        </>
       ) : (
         <AnnotationBody annotation={annotation} readFile={readFile} />
       )}

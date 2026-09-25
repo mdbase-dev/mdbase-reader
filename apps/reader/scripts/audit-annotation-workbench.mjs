@@ -5,8 +5,8 @@ export async function auditAnnotationWorkbench(page, { screenshot, open }) {
   await tools.getByRole("button", { name: "Edit", exact: true }).first().focus();
   await page.keyboard.press("Enter");
   await expect(page.getByRole("button", { name: "Back to reading position" })).toHaveCount(0);
-  const editor = tools.getByRole("textbox", { name: "Annotation note" });
-  await editor.fill("> A curated quotation.\n\n[test] Dock-safe annotation draft.");
+  const editor = tools.getByRole("textbox", { name: "Comment" });
+  await editor.fill("[test] Dock-safe annotation draft.");
   const annotationId = await tools
     .locator(".annotation-card.is-editing")
     .getAttribute("data-annotation-id");
@@ -20,7 +20,7 @@ export async function auditAnnotationWorkbench(page, { screenshot, open }) {
     .locator(`[data-annotation-id="${annotationId}"]`)
     .getByRole("button", { name: "Edit here", exact: true })
     .click();
-  const otherEditor = workbench.getByRole("textbox", { name: "Annotation note" });
+  const otherEditor = workbench.getByRole("textbox", { name: "Comment" });
   await expect(otherEditor).toHaveValue(/Dock-safe annotation draft/u);
   await expect(editor).toHaveCount(0);
   const menu = async (label) => {
@@ -59,19 +59,19 @@ export async function auditAnnotationWorkbench(page, { screenshot, open }) {
   await expect(editor).toHaveValue(/Dock-safe annotation draft/u);
   await tools.getByRole("button", { name: "Done", exact: true }).click();
   await expect(editor).toHaveCount(0);
-  await tools.getByRole("button", { name: "Insert in note", exact: true }).first().click();
-  await expect(tools.getByRole("button", { name: "In source note", exact: true })).toBeVisible();
+  await tools.getByRole("button", { name: "Add to literature note", exact: true }).first().click();
+  await expect(
+    tools.getByRole("button", { name: "In literature note", exact: true }),
+  ).toBeVisible();
   await tools.getByRole("button", { name: "Edit", exact: true }).first().click();
   await tools.getByRole("button", { name: "Delete", exact: true }).click();
-  await expect(
-    tools.getByText("The following notes will retain visible, broken embeds:"),
-  ).toBeVisible();
+  await expect(tools.getByText("These notes embed it and will show a broken embed:")).toBeVisible();
   await expect(tools.getByText("sources/test_0000.md", { exact: true })).toBeVisible();
   await screenshot("annotation-linked-delete-warning");
-  await tools.getByRole("button", { name: "Keep annotation", exact: true }).click();
+  await tools.getByRole("button", { name: "Cancel", exact: true }).click();
   await expect(tools.locator(".annotation-card")).toHaveCount(2);
   await tools.getByRole("button", { name: "Delete", exact: true }).click();
-  await tools.getByRole("button", { name: "Delete record", exact: true }).click();
+  await tools.getByRole("button", { name: "Delete", exact: true }).click();
   await expect(tools.locator(".annotation-card")).toHaveCount(1);
   await page.reload();
   await expect(tools.locator(".annotation-card")).toHaveCount(1);

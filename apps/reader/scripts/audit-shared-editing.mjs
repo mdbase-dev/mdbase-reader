@@ -90,7 +90,7 @@ export async function auditSharedEditing(page, { screenshot, blockWrites, measur
     .filter({ hasText: "[test] Research 0000" })
     .getAttribute("data-panel-id");
   await pane(documentId).getByLabel("More document actions", { exact: true }).click();
-  await page.getByRole("button", { name: "Source note", exact: true }).click();
+  await page.getByRole("button", { name: "Literature note", exact: true }).click();
   const notes = page.getByRole("textbox", { name: "Source literature note" });
   await expect(notes).toHaveCount(1);
   const first = await idOf(notes);
@@ -156,7 +156,7 @@ export async function auditSharedEditing(page, { screenshot, blockWrites, measur
   await page.waitForTimeout(1200);
   await expect(creator).toBeVisible(); // selection alone is never autosaved as a new annotation
   await creator.getByRole("button", { name: "Add a comment", exact: true }).click();
-  const creatingText = creator.getByRole("textbox", { name: "Annotation note" });
+  const creatingText = creator.getByRole("textbox", { name: "Comment" });
   await creatingText.fill("[test] Latest");
   await creatingText.pressSequentially(" characters saved immediately");
   await creatingText.press("Control+s");

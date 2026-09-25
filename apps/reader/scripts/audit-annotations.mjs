@@ -50,7 +50,7 @@ export async function auditAnnotations(page, { screenshot, blockWrites }) {
   await select();
   const composer = page.getByRole("region", { name: "New highlight" });
   await expect(composer).toBeVisible();
-  await expect(composer.getByRole("textbox", { name: "Annotation note" })).toHaveCount(0);
+  await expect(composer.getByRole("textbox", { name: "Comment" })).toHaveCount(0);
   await screenshot("annotation-compact-highlight");
   await composer.getByRole("button", { name: "Save highlight", exact: true }).focus();
   await page.keyboard.press("Control+s");
@@ -64,7 +64,7 @@ export async function auditAnnotations(page, { screenshot, blockWrites }) {
   const tools = page.getByRole("complementary", { name: "Source workspace" });
   await expect(tools.locator(".annotation-card.is-selected")).toBeVisible();
   await expect(tools.locator(".annotation-card.is-selected")).toHaveCSS("box-shadow", "none");
-  await expect(tools.getByRole("textbox", { name: "Annotation note" })).toHaveCount(0);
+  await expect(tools.getByRole("textbox", { name: "Comment" })).toHaveCount(0);
   await expect(page.locator("iframe.html-viewer:visible")).toBeVisible();
   await expect
     .poll(
@@ -78,9 +78,8 @@ export async function auditAnnotations(page, { screenshot, blockWrites }) {
   );
 
   await tools.getByRole("button", { name: "Edit", exact: true }).click();
-  const editor = tools.getByRole("textbox", { name: "Annotation note" });
-  const editText =
-    "> A durable reading library makes patient attention possible.\n\n[test] A recoverable annotation comment.";
+  const editor = tools.getByRole("textbox", { name: "Comment" });
+  const editText = "[test] A recoverable annotation comment.";
   blockWrites(true);
   await editor.fill(editText);
   await expect(tools.getByRole("alert")).toContainText("offline");
@@ -88,8 +87,18 @@ export async function auditAnnotations(page, { screenshot, blockWrites }) {
   await screenshot("annotation-failed-save");
   blockWrites(false);
   await editor.press("Control+s");
-  await expect(tools.getByRole("textbox", { name: "Annotation note" })).toHaveCount(0);
+  await expect(tools.getByRole("textbox", { name: "Comment" })).toHaveCount(0);
   await page.reload();
+  await expect(tools).toContainText("recoverable annotation comment");
+  await tools.getByRole("button", { name: "Edit", exact: true }).first().click();
+  const quote = tools.getByRole("textbox", { name: "Quoted passage" });
+  await quote.fill("[test] A corrected quotation.");
+  await expect(tools.getByText("Edited from the document text.")).toBeVisible();
+  await screenshot("annotation-quote-corrected");
+  await quote.press("Control+s");
+  await expect(quote).toHaveCount(0);
+  await page.reload();
+  await expect(tools.locator("blockquote").first()).toHaveText("[test] A corrected quotation.");
   await expect(tools).toContainText("recoverable annotation comment");
   completed.push(
     "Annotation autosave failures retain text in memory; keyboard retry persists it across reload",
@@ -98,7 +107,7 @@ export async function auditAnnotations(page, { screenshot, blockWrites }) {
   await select(1);
   await composer.getByRole("button", { name: "Add a comment" }).click();
   await composer
-    .getByRole("textbox", { name: "Annotation note" })
+    .getByRole("textbox", { name: "Comment" })
     .fill("[test] New selection draft survives switching sources.");
   await expect(
     composer.getByText("Not saved yet — keep Reader open until you save this annotation.", {
@@ -108,7 +117,7 @@ export async function auditAnnotations(page, { screenshot, blockWrites }) {
   page.removeAllListeners("dialog");
   page.on("dialog", (dialog) => void dialog.dismiss());
   await select(2);
-  await expect(composer.getByRole("textbox", { name: "Annotation note" })).toHaveValue(
+  await expect(composer.getByRole("textbox", { name: "Comment" })).toHaveValue(
     /New selection draft survives/u,
   );
   await composer.getByRole("button", { name: "Cancel", exact: true }).click();
@@ -117,10 +126,10 @@ export async function auditAnnotations(page, { screenshot, blockWrites }) {
   page.on("dialog", (dialog) => void dialog.accept());
   await open(1);
   await open(0);
-  await expect(composer.getByRole("textbox", { name: "Annotation note" })).toHaveValue(
+  await expect(composer.getByRole("textbox", { name: "Comment" })).toHaveValue(
     /New selection draft survives/u,
   );
-  await composer.getByRole("textbox", { name: "Annotation note" }).press("Control+s");
+  await composer.getByRole("textbox", { name: "Comment" }).press("Control+s");
   await expect(composer).toHaveCount(0);
   completed.push(
     "New comments remain in memory across source switching; replacing or discarding them requires confirmation",
@@ -165,12 +174,12 @@ export async function auditAnnotations(page, { screenshot, blockWrites }) {
   ).toBe(true);
   await screenshot("annotation-mobile-inspector");
   await tools.getByRole("button", { name: "Edit", exact: true }).click();
-  await expect(tools.getByRole("textbox", { name: "Annotation note" })).toBeVisible();
+  await expect(tools.getByRole("textbox", { name: "Comment" })).toBeVisible();
   const saveRect = await tools.getByRole("button", { name: "Done", exact: true }).boundingBox();
   expect(saveRect.y + saveRect.height).toBeLessThanOrEqual(844);
   await screenshot("annotation-mobile-edit");
-  await tools.getByRole("textbox", { name: "Annotation note" }).press("Escape");
-  await expect(tools.getByRole("textbox", { name: "Annotation note" })).toHaveCount(0);
+  await tools.getByRole("textbox", { name: "Comment" }).press("Escape");
+  await expect(tools.getByRole("textbox", { name: "Comment" })).toHaveCount(0);
   await page.getByRole("button", { name: "Toggle right sidebar" }).click();
   await expect(page.locator("iframe.html-viewer:visible")).toHaveCount(1);
   completed.push("Annotation inspector remains usable without horizontal overflow at 390px");

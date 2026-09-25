@@ -18,7 +18,7 @@ export function DraftRecoveryNotice({
         </p>
       ) : null}
       {state.conflict ? (
-        <section className="draft-recovery" aria-label="Source note conflict">
+        <section className="draft-recovery" aria-label="Literature note conflict">
           <strong>This note changed in the collection</strong>
           <p>
             Your draft is retained. Compare both versions before choosing which to save. You can

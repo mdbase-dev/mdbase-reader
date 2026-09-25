@@ -31,6 +31,28 @@ export function annotationBodyText(body: string): AnnotationBodyText {
   };
 }
 
+/** The body's lines around its first blockquote, with the quoted lines kept as written. */
+export interface AnnotationBodySections {
+  readonly before: readonly string[];
+  readonly quoteLines: readonly string[];
+  readonly quote: string | null;
+  readonly after: readonly string[];
+}
+
+export function annotationBodySections(body: string): AnnotationBodySections {
+  const lines = markdownLines(body);
+  const blockquote = firstBlockquote(lines);
+  if (!blockquote) {
+    return { before: lines, quoteLines: [], quote: null, after: [] };
+  }
+  return {
+    before: lines.slice(0, blockquote.start),
+    quoteLines: lines.slice(blockquote.start, blockquote.end),
+    quote: blockquote.lines.join("\n").trim() || null,
+    after: lines.slice(blockquote.end),
+  };
+}
+
 /** Adds a footer to the first authored blockquote, returning null when none exists. */
 export function appendAnnotationQuoteFooter(body: string, footer: string): string | null {
   const lines = markdownLines(body);

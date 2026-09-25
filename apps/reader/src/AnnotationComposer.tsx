@@ -53,21 +53,16 @@ export function AnnotationComposer({
         <AreaPreview image={composer.selection.value.image} />
       )}
       {expanded || note ? (
-        <>
-          <div className="annotation-composer-label">
-            Note <span>optional</span>
-          </div>
-          <AnnotationTextArea
-            value={note}
-            readOnly={composer.status === "saving"}
-            placeholder="Why does this matter?"
-            onChange={(body) => {
-              setExpanded(true);
-              setComment({ selection: composer.selection, body });
-              composer.setNote(body);
-            }}
-          />
-        </>
+        <AnnotationTextArea
+          value={note}
+          readOnly={composer.status === "saving"}
+          placeholder="Why does this matter?"
+          onChange={(body) => {
+            setExpanded(true);
+            setComment({ selection: composer.selection, body });
+            composer.setNote(body);
+          }}
+        />
       ) : null}
       {note ? (
         <small className="annotation-draft-status" role="status">

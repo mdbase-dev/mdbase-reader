@@ -145,8 +145,8 @@ export async function auditDockview(page, { screenshot, blockWrites }) {
 
   await tab("[test] Research 0001").click();
   await firstSession.getByLabel("More document actions", { exact: true }).click();
-  await page.getByRole("button", { name: "Source note", exact: true }).click();
-  const noteTab = tab("Source note — [test] Research 0001");
+  await page.getByRole("button", { name: "Literature note", exact: true }).click();
+  const noteTab = tab("Literature note — [test] Research 0001");
   const noteId = await noteTab.getAttribute("data-panel-id");
   const editor = page.getByRole("textbox", { name: "Source literature note" });
   blockWrites(true);

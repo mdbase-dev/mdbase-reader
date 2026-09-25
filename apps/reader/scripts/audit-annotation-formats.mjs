@@ -28,7 +28,7 @@ export async function auditAnnotationFormats(page, { open, screenshot }) {
   });
   await area.getByRole("button", { name: "Add a comment" }).click();
   await area
-    .getByRole("textbox", { name: "Annotation note" })
+    .getByRole("textbox", { name: "Comment" })
     .fill("[test] Recover this PDF crop and comment.");
   await expect(
     area.getByText("Not saved yet — keep Reader open until you save this annotation.", {
@@ -38,7 +38,7 @@ export async function auditAnnotationFormats(page, { open, screenshot }) {
   await screenshot("annotation-pdf-area-draft");
   await open(0);
   await open(20);
-  await expect(area.getByRole("textbox", { name: "Annotation note" })).toHaveValue(
+  await expect(area.getByRole("textbox", { name: "Comment" })).toHaveValue(
     /Recover this PDF crop/u,
     { timeout: 60000 },
   );
