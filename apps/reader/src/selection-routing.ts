@@ -14,19 +14,21 @@ export function selectionRoute(input: {
   readonly draft: AnnotationLocalDraft | null;
   /** The draft is set aside (e.g. while an annotation is edited), so its composer is hidden. */
   readonly paused: boolean;
+  /** The composer's draft is being saved. */
   readonly busy: boolean;
   readonly instant: boolean;
 }): SelectionRoute {
   const { value, draft } = input;
-  if (input.busy || sameSelection(draft?.selection, value)) {
+  if (sameSelection(draft?.selection, value)) {
     return "ignore";
   }
-  const written = Boolean(draft?.body.trim());
+  // While the draft saves it is already leaving; a new text selection still gets its toolbar.
+  const written = Boolean(draft?.body.trim()) && !input.busy;
   if (written && !input.paused) {
     return "offer-switch";
   }
   if (value.kind === "area") {
-    return written ? "confirm-compose" : "compose";
+    return input.busy ? "ignore" : written ? "confirm-compose" : "compose";
   }
   return input.instant && value.value.via !== "keyboard" ? "highlight" : "toolbar";
 }

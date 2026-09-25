@@ -85,7 +85,6 @@ export function useAnnotationCreation(
   };
   useSelectionRouting({
     key,
-    ready: draft.ready,
     sourceId,
     surface,
     buffer,

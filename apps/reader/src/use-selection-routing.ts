@@ -14,7 +14,6 @@ import type { ReadingSurface } from "@mdbase-reader/reading-surface";
 /** Sends each selection the surface reports to the toolbar, the composer, or an instant highlight. */
 export function useSelectionRouting(input: {
   readonly key: string;
-  readonly ready: boolean;
   readonly sourceId: SourceId | null;
   readonly surface: ReadingSurface | null;
   readonly buffer: AnnotationCreationBuffer;
@@ -25,7 +24,7 @@ export function useSelectionRouting(input: {
   readonly highlight: (value: TextComposerSelection) => void;
   readonly showToolbar: (value: TextComposerSelection) => void;
 }): void {
-  const { key, ready, sourceId, surface } = input;
+  const { key, sourceId, surface } = input;
   const route = (value: ComposerSelection): void => {
     const previous = input.buffer.get();
     const decision = selectionRoute({
@@ -57,10 +56,12 @@ export function useSelectionRouting(input: {
   useEffect(() => {
     routeRef.current = route;
   });
+  // Listen from the start: only the composer path needs the stored draft, and selections made
+  // while it loads from device storage would otherwise be dropped.
   useEffect(() => {
-    if (!key || !ready) {
+    if (!key) {
       return undefined;
     }
     return subscribeToSelections(sourceId, surface, ({ value }) => routeRef.current(value));
-  }, [key, ready, sourceId, surface]);
+  }, [key, sourceId, surface]);
 }

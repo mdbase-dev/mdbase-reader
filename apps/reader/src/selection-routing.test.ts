@@ -48,6 +48,14 @@ describe("selectionRoute", () => {
     expect(selectionRoute({ ...base, draft, paused: true, value: text("Second") })).toBe("toolbar");
   });
 
+  it("still offers actions while the composer's draft is saving", () => {
+    const draft = { body: "My words", selection: text("First") };
+    expect(selectionRoute({ ...base, draft, busy: true, value: text("Second") })).toBe("toolbar");
+    expect(selectionRoute({ ...base, busy: true, instant: true, value: text("Third") })).toBe(
+      "highlight",
+    );
+  });
+
   it("opens the composer for an area, confirming before replacing written words", () => {
     expect(selectionRoute({ ...base, value: area })).toBe("compose");
     const draft = { body: "My words", selection: text("First") };

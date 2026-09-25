@@ -10,7 +10,10 @@ import type { ReadingSurface } from "@mdbase-reader/reading-surface";
 
 type Problem = { readonly sourceId: string; readonly message: string } | null;
 
-/** Saves either a bare highlight straight from a selection or the composer's draft. */
+/**
+ * Saves either a bare highlight straight from a selection or the composer's draft. Only the draft
+ * is guarded against double saves; `busy` means the draft is on its way to the collection.
+ */
 export function useCreationSaving(input: {
   readonly source: Source | null;
   readonly surface: ReadingSurface | null;
@@ -49,10 +52,14 @@ export function useCreationSaving(input: {
     problem,
     setProblem,
     highlight: (value) => {
-      if (!source || !surface || !begin()) {
+      if (!source || !surface) {
         return;
       }
+      // Highlights save independently of the composer's draft and of each other, so the next
+      // selection gets its toolbar at once instead of waiting for this save's round trip.
       input.beforeHighlight();
+      surface.capabilities.textSelection?.clearSelection();
+      setProblem(null);
       void saveSelection(
         {
           source,
@@ -65,9 +72,9 @@ export function useCreationSaving(input: {
         },
         value,
         "",
-        () => surface.capabilities.textSelection?.clearSelection(),
+        () => undefined,
         setProblem,
-        finish,
+        () => undefined,
       );
     },
     save: () => {
