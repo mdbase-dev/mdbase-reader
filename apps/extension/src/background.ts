@@ -35,7 +35,10 @@ chrome.commands.onCommand.addListener((command, tab) => {
     openPanel(tab, "highlight");
   }
 });
-chrome.runtime.onInstalled.addListener(() => {
+chrome.runtime.onInstalled.addListener(({ reason }) => {
+  if (reason === "install") {
+    void chrome.tabs.create({ url: chrome.runtime.getURL("welcome.html") }).catch(() => undefined);
+  }
   chrome.contextMenus.removeAll(() => {
     chrome.contextMenus.create({
       id: "highlight",

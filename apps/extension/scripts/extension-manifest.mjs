@@ -1,3 +1,5 @@
+import { readFileSync } from "node:fs";
+
 import { readerDeploymentFor } from "../../reader/scripts/deployment-environment.mjs";
 
 /**
@@ -15,6 +17,22 @@ export function extensionEnvironment(environment = process.env) {
   };
 }
 
+const packageVersion = JSON.parse(
+  readFileSync(new URL("../package.json", import.meta.url), "utf8"),
+).version;
+
+/**
+ * Chrome versions are one to four dot-separated integers, so a prerelease such as
+ * `0.3.0-beta.1` ships as version `0.3.0` and shows its full name as `version_name`.
+ */
+export function manifestVersion(version = packageVersion) {
+  const match = /^(\d+\.\d+\.\d+)(?:-(.+))?$/u.exec(version);
+  if (!match) {
+    throw new Error(`Unsupported extension version: ${version}`);
+  }
+  return match[2] ? { version: match[1], version_name: version } : { version: match[1] };
+}
+
 const icons = Object.fromEntries(
   [16, 32, 48, 128].map((size) => [String(size), `icons/icon-${size}.png`]),
 );
@@ -25,7 +43,7 @@ export function extensionManifest(environment) {
     manifest_version: 3,
     name: `mdbase Reader${suffix}`,
     description: "Save the page you are reading and revisit your mdbase annotations.",
-    version: "0.2.0",
+    ...manifestVersion(),
     homepage_url: `${environment.readerOrigin}/`,
     icons,
     minimum_chrome_version: "123",
@@ -38,6 +56,7 @@ export function extensionManifest(environment) {
       default_icon: { 16: icons["16"], 32: icons["32"] },
     },
     background: { service_worker: "background.js", type: "module" },
+    options_ui: { page: "options.html", open_in_tab: true },
     commands: {
       _execute_action: {
         suggested_key: { default: "Alt+Shift+S" },

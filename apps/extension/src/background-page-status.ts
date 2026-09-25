@@ -57,7 +57,7 @@ export async function updatePageStatus(tabId: number, url: string): Promise<void
       source.id,
     );
     const quotes = annotationQuotes(annotations);
-    await chrome.action.setBadgeBackgroundColor({ tabId, color: "#086783" });
+    await chrome.action.setBadgeBackgroundColor({ tabId, color: "#005c88" });
     await chrome.action.setBadgeText({ tabId, text: quotes.length ? String(quotes.length) : "✓" });
     await chrome.action.setTitle({
       tabId,

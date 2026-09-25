@@ -23,7 +23,11 @@ export type { ExtensionCaptureController } from "./capture-controller.js";
 export function useExtensionCapture(tabId: number): ExtensionCaptureController {
   const [progress, setProgress] = useState<SourceImportProgress | null>(null);
   const lock = useActionLock(useCallback(() => setProgress(null), []));
-  const page = usePageCapture(tabId, lock.setProblem);
+  const { setProblem } = lock;
+  const page = usePageCapture(
+    tabId,
+    useCallback((problem: string) => setProblem(problem, "page"), [setProblem]),
+  );
   const connection = useConnect(lock);
   const { capture } = page;
   const stored = useStoredDraft(tabId, capture, page.setSelection);
@@ -45,14 +49,14 @@ export function useExtensionCapture(tabId: number): ExtensionCaptureController {
   );
   const { readPage } = page;
   const { open } = connection;
-  const { release, setProblem, setNotice } = lock;
+  const { release, setNotice } = lock;
 
   useEffect(() => {
     // Connect starts even when the page cannot be read, so the panel can still recover.
     void readPage()
       .then(
         () => setStatus("ready"),
-        (reason: unknown) => setProblem(problemMessage(reason)),
+        (reason: unknown) => setProblem(problemMessage(reason), "page"),
       )
       .then(open)
       .catch((reason: unknown) => setProblem(problemMessage(reason)))
@@ -161,7 +165,7 @@ export function useExtensionCapture(tabId: number): ExtensionCaptureController {
       } finally {
         setStatus((current) => (current === "saving" ? "ready" : current));
       }
-    });
+    }, "save");
 
   async function refreshAnnotations(saved: SourceSummary, render: boolean): Promise<void> {
     const collection = extension?.session.connectedCollection();
@@ -193,7 +197,7 @@ export function useExtensionCapture(tabId: number): ExtensionCaptureController {
           await renderAnnotations(tabId, annotationQuotes(annotations), capture.submittedUrl),
         );
       }
-    });
+    }, "page");
 
   return {
     snapshot: connection.snapshot,
@@ -203,6 +207,7 @@ export function useExtensionCapture(tabId: number): ExtensionCaptureController {
     draftRestored: stored.restored,
     status,
     problem: lock.problem,
+    problemKind: lock.problemKind,
     notice: lock.notice,
     source,
     annotations,

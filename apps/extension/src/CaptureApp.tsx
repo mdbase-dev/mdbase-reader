@@ -1,11 +1,10 @@
-import { MdbaseMark } from "@mdbase-reader/ui";
 import { useEffect } from "react";
 
 import { readerSourceUrl } from "./capture-model.js";
 import { CaptureForm } from "./CaptureForm.js";
 import { ConnectionPanel, ConnectionProblem } from "./ConnectionPanel.js";
-import { environment } from "./environment.js";
-import { PageStatusSetting } from "./PageStatusSetting.js";
+import { ExtensionHeader } from "./ExtensionHeader.js";
+import { openSettings } from "./shortcuts.js";
 
 import type { ExtensionCaptureController } from "./capture-controller.js";
 
@@ -25,13 +24,11 @@ export function CaptureApp({ controller }: ControllerProps): React.JSX.Element {
   }, [controller.busy]);
   return (
     <main className="capture-shell">
-      <header>
-        <MdbaseMark className="mark" />
-        <strong>
-          mdbase <i>reader</i>
-        </strong>
-        {environment.label ? <span className="connection">{environment.label}</span> : null}
-      </header>
+      <ExtensionHeader
+        collectionId={
+          "collectionId" in controller.snapshot ? controller.snapshot.collectionId : null
+        }
+      />
       <section className="page-card">
         <span className="eyebrow">
           {controller.capture?.kind === "pdf" ? "CURRENT PDF" : "CURRENT PAGE"}
@@ -54,7 +51,11 @@ export function CaptureApp({ controller }: ControllerProps): React.JSX.Element {
       <CaptureForm controller={controller} />
       <CaptureStatus controller={controller} />
       <Completion controller={controller} />
-      <PageStatusSetting />
+      <footer className="panel-footer">
+        <button type="button" className="text-button" onClick={openSettings}>
+          Settings and shortcuts
+        </button>
+      </footer>
     </main>
   );
 }
@@ -74,6 +75,7 @@ function Navigated({ controller: c }: ControllerProps): React.JSX.Element | null
   );
 }
 
+/** Reports progress and outcomes; says nothing while the panel is simply waiting. */
 function CaptureStatus({ controller: c }: ControllerProps): React.JSX.Element {
   const p = c.progress;
   const progress =
@@ -84,16 +86,19 @@ function CaptureStatus({ controller: c }: ControllerProps): React.JSX.Element {
         : p
           ? "Checking for duplicates…"
           : null;
+  const message =
+    progress ??
+    (c.status === "saving"
+      ? "Saving…"
+      : c.status === "saved"
+        ? "Source saved in mdbase."
+        : c.saveAttempted && !c.source && !c.busy
+          ? "Save not confirmed. Retry to check its outcome."
+          : null);
+  // The live region stays mounted so screen readers announce what appears in it.
   return (
     <div className="save-status" role="status" aria-live="polite">
-      {progress ??
-        (c.busy
-          ? "Working…"
-          : c.source
-            ? "Source saved in mdbase."
-            : c.saveAttempted
-              ? "Save not confirmed. Retry to check its outcome."
-              : "Not saved yet.")}
+      {message ? <p>{message}</p> : null}
       {c.notice ? <p>{c.notice}</p> : null}
     </div>
   );

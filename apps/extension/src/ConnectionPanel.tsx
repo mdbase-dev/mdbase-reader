@@ -1,43 +1,68 @@
+import { Select } from "@mdbase-reader/ui";
+
 import { environment } from "./environment.js";
 
 import type { ExtensionCaptureController } from "./capture-controller.js";
 
+/** What the connection controls need; the panel, welcome and settings pages all provide it. */
+export type ConnectionControls = Pick<
+  ExtensionCaptureController,
+  "snapshot" | "busy" | "deviceCode" | "connect" | "applySetup" | "select"
+>;
+
+/** Connection states the user resolves by approving access again in mdbase Connect. */
+const needsApproval = new Set(["authorization_required", "unavailable", "blocked", "start_failed"]);
+
 export function ConnectionPanel({
   controller: c,
+  label = "Save to collection",
+  intro = "Choose the mdbase collection to save into. Nothing is saved until you press Save.",
 }: {
-  readonly controller: ExtensionCaptureController;
+  readonly controller: ConnectionControls;
+  readonly label?: string;
+  readonly intro?: string;
 }): React.JSX.Element {
   const { snapshot, busy } = c;
   const selected = "collectionId" in snapshot ? snapshot.collectionId : "";
+  const connected = snapshot.connections.length > 0;
+  const target = environment.label ? ` ${environment.label}` : "";
   return (
-    <section className="action-panel" aria-label="Save destination">
-      <label htmlFor="collection">Save to collection</label>
-      <select
-        id="collection"
-        value={selected}
-        disabled={busy}
-        onChange={(event) => c.select(event.target.value)}
-      >
-        <option value="" disabled>
-          Choose a collection
-        </option>
-        {snapshot.connections.map((connection) => (
-          <option key={connection.collectionId} value={connection.collectionId}>
-            {connection.displayName}
-          </option>
-        ))}
-      </select>
-      <button
-        className="text-button"
-        type="button"
-        disabled={busy}
-        onClick={() => void c.connect(true)}
-      >
-        Connect another collection
-      </button>
-      {snapshot.status !== "ready" && snapshot.status !== "setup_review_required" ? (
+    <section className="action-panel" aria-label="Collection">
+      {connected ? (
         <>
-          <p>Approve a collection in mdbase Connect. Nothing is saved until you press Save.</p>
+          <span className="field-label" id="collection-label">
+            {label}
+          </span>
+          <Select
+            className="collection-select"
+            aria-labelledby="collection-label"
+            value={selected}
+            placeholder="Choose a collection"
+            disabled={busy}
+            options={snapshot.connections.map((connection) => ({
+              value: connection.collectionId,
+              label: connection.displayName,
+            }))}
+            onChange={(id) => c.select(id)}
+          />
+          <button
+            className="text-button"
+            type="button"
+            disabled={busy}
+            onClick={() => void c.connect(true)}
+          >
+            Connect another collection
+          </button>
+        </>
+      ) : (
+        <>
+          <h2>Connect a collection</h2>
+          <p>{intro}</p>
+        </>
+      )}
+      {!connected || needsApproval.has(snapshot.status) ? (
+        <>
+          {connected ? <p>This collection needs you to approve access again.</p> : null}
           <button
             className="primary"
             type="button"
@@ -46,7 +71,9 @@ export function ConnectionPanel({
           >
             {busy
               ? "Connecting…"
-              : `Connect to mdbase${environment.label ? ` ${environment.label}` : ""}`}
+              : connected
+                ? `Reconnect to mdbase${target}`
+                : `Connect to mdbase${target}`}
           </button>
         </>
       ) : null}
@@ -73,7 +100,7 @@ export function ConnectionPanel({
       ) : null}
       {c.deviceCode ? (
         <p className="device-code">
-          Confirm <strong>{c.deviceCode}</strong> in mdbase Connect. Return here after approving.
+          Confirm <kbd>{c.deviceCode}</kbd> in mdbase Connect. Return here after approving.
         </p>
       ) : null}
     </section>
@@ -88,16 +115,11 @@ export function ConnectionProblem({
   if (!c.problem) {
     return null;
   }
+  const kind = c.problemKind ?? "connection";
   const originDenied = /origin.*not allowed|origin_denied/iu.test(c.problem);
   return (
     <section className="problem" role="alert">
-      <strong>
-        {c.source
-          ? "Source saved. This action did not finish."
-          : c.saveAttempted
-            ? "Save not confirmed"
-            : "Not saved"}
-      </strong>
+      <strong>{problemTitle(c, kind)}</strong>
       {c.saveAttempted && !c.source ? (
         <p>Retry Save to check for an existing source before creating anything else.</p>
       ) : null}
@@ -109,13 +131,48 @@ export function ConnectionProblem({
           not bypass the origin check.
         </p>
       ) : null}
-      <p>Your selection and note are kept for this browser session, even if you close the panel.</p>
-      <button type="button" disabled={c.busy} onClick={() => void c.retry()}>
-        Retry connection
-      </button>{" "}
-      <button type="button" disabled={c.busy} onClick={() => void c.connect()}>
-        Review access
-      </button>
+      {kind === "page" ? (
+        <p>
+          Reload the page, then press the mdbase Reader toolbar button again. Some pages, such as
+          the Chrome Web Store and browser settings, cannot be read by extensions.
+        </p>
+      ) : (
+        <p>
+          Your selection and note are kept for this browser session, even if you close the panel.
+        </p>
+      )}
+      <div className="problem-actions">
+        {kind === "save" ? (
+          <button type="button" disabled={c.busy} onClick={() => void c.save()}>
+            Retry save
+          </button>
+        ) : null}
+        {kind === "connection" ? (
+          <button type="button" disabled={c.busy} onClick={() => void c.retry()}>
+            Retry connection
+          </button>
+        ) : null}
+        {kind !== "page" ? (
+          <button type="button" disabled={c.busy} onClick={() => void c.connect()}>
+            Review access
+          </button>
+        ) : null}
+      </div>
     </section>
   );
+}
+
+function problemTitle(
+  c: ExtensionCaptureController,
+  kind: NonNullable<ExtensionCaptureController["problemKind"]>,
+): string {
+  if (c.source) {
+    return kind === "page"
+      ? "Saved. This page could not be updated."
+      : "Source saved. This action did not finish.";
+  }
+  if (c.saveAttempted) {
+    return "Save not confirmed";
+  }
+  return kind === "page" ? "Reader cannot read this page" : "Not connected";
 }

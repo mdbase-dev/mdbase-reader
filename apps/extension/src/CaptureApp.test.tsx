@@ -32,27 +32,63 @@ function markup(changes: Partial<ExtensionCaptureController> = {}): string {
   } as unknown as ExtensionCaptureController;
   return renderToStaticMarkup(<CaptureApp controller={controller} />);
 }
-it("has a destination, editable metadata and honest unsaved status before saving", () => {
+it("asks a new user only to connect, with editable metadata and no status noise", () => {
   const html = markup();
-  expect(html).toContain("Save to collection");
+  expect(html).toContain("Connect a collection");
+  expect(html).toContain("Connect to mdbase LAB");
+  expect(html).not.toContain("Connect another collection");
+  expect(html).not.toContain("Choose a collection");
   expect(html).toContain('id="title"');
   expect(html).toContain('id="tags"');
   expect(html).toContain('id="note"');
-  expect(html).toContain("Not saved yet.");
+  expect(html).not.toContain("Not saved yet.");
   expect(html).not.toContain("Source saved in mdbase.");
+});
+it("picks among connected collections with Reader's select", () => {
+  const html = markup({
+    snapshot: {
+      status: "unselected",
+      connections: [{ collectionId: "c1", displayName: "[test] Papers" }],
+    } as unknown as ExtensionCaptureController["snapshot"],
+  });
+  expect(html).toContain("Save to collection");
+  expect(html).toContain('role="combobox"');
+  expect(html).toContain("Choose a collection");
+  expect(html).toContain("Connect another collection");
+  expect(html).not.toContain("Connect to mdbase");
+});
+it("links the brand to the Reader library on the selected collection", () => {
+  const html = markup({
+    snapshot: {
+      status: "ready",
+      collectionId: "c1",
+      connections: [{ collectionId: "c1", displayName: "[test] Papers" }],
+    } as unknown as ExtensionCaptureController["snapshot"],
+  });
+  expect(html).toMatch(
+    /class="brand" href="https:\/\/lab\.mdbase-reader\.pages\.dev\/\?collection=c1"/u,
+  );
 });
 it("offers recovery even when initial registration fails", () => {
   const html = markup({ problem: "The request origin is not allowed." });
-  expect(html).toContain("Not saved");
+  expect(html).toContain("Not connected");
   expect(html).toContain("Retry connection");
   expect(html).toContain("Review access");
   expect(html).toContain("will not bypass the origin check");
 });
 it("does not claim an unknown write failed to persist", () => {
-  const html = markup({ problem: "Outcome unknown", saveAttempted: true });
+  const html = markup({ problem: "Outcome unknown", problemKind: "save", saveAttempted: true });
   expect(html).toContain("Save not confirmed");
   expect(html).toContain("check for an existing source");
-  expect(html).not.toContain("Not saved yet.");
+  expect(html).toContain("Retry save");
+  expect(html).not.toContain("Retry connection");
+});
+it("does not offer Connect recovery when the page itself cannot be read", () => {
+  const html = markup({ problem: "Cannot access this page", problemKind: "page" });
+  expect(html).toContain("Reader cannot read this page");
+  expect(html).toContain("Reload the page");
+  expect(html).not.toContain("Retry connection");
+  expect(html).not.toContain("Review access");
 });
 it("explains missing and ambiguous highlights with a source-specific saved-copy link", () => {
   const html = markup({
@@ -69,10 +105,10 @@ it("explains missing and ambiguous highlights with a source-specific saved-copy 
   expect(html).toContain("remain safe");
   expect(html).toContain("collection=c1&amp;source=s1");
 });
-it("labels a non-production build and offers the opt-in page status setting", () => {
+it("labels a non-production build and links to settings", () => {
   const html = markup();
   expect(html).toContain(">LAB<");
-  expect(html).toContain("Mark pages I’ve saved");
+  expect(html).toContain("Settings and shortcuts");
   expect(html).toContain("Select text on the page to highlight it.");
 });
 it("offers colour, tags and a note for a live selection, saved with Ctrl+Enter", () => {

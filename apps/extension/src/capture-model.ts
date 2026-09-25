@@ -11,6 +11,15 @@ export function readerSourceUrl(source: Pick<SourceSummary, "collectionId" | "id
   return url.href;
 }
 
+/** Reader's library, opened on `collectionId` when one is selected. */
+export function readerLibraryUrl(collectionId?: string | null): string {
+  const url = new URL(`${environment.readerOrigin}/`);
+  if (collectionId) {
+    url.searchParams.set("collection", collectionId);
+  }
+  return url.href;
+}
+
 /** Uses the store's URL lookup; older repositories fall back to a paged scan. */
 export async function sourceForUrl(
   collection: ReaderConnectedCollection,

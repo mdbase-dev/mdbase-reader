@@ -3,7 +3,11 @@ import { resolve } from "node:path";
 
 import { describe, expect, it } from "vitest";
 
-import { extensionEnvironment, extensionManifest } from "../scripts/extension-manifest.mjs";
+import {
+  extensionEnvironment,
+  extensionManifest,
+  manifestVersion,
+} from "../scripts/extension-manifest.mjs";
 
 describe("per-environment extension manifest", () => {
   it("defaults to LAB and only permanently reaches that Connect service", () => {
@@ -49,6 +53,21 @@ describe("per-environment extension manifest", () => {
     expect(manifest["action"]).toMatchObject({
       default_icon: { 16: icons["16"], 32: icons["32"] },
     });
+  });
+
+  it("takes its version from package.json and has a settings page", () => {
+    const manifest = extensionManifest(extensionEnvironment({}));
+    expect(manifest["version"]).toBe(manifestVersion().version);
+    expect(manifest["options_ui"]).toEqual({ page: "options.html", open_in_tab: true });
+  });
+
+  it("ships prereleases under a numeric version with the full version name", () => {
+    expect(manifestVersion("0.3.0")).toEqual({ version: "0.3.0" });
+    expect(manifestVersion("0.3.0-beta.1")).toEqual({
+      version: "0.3.0",
+      version_name: "0.3.0-beta.1",
+    });
+    expect(() => manifestVersion("next")).toThrow("Unsupported");
   });
 
   it("rejects unknown environments", () => {

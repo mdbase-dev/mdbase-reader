@@ -3,6 +3,7 @@ import type { CaptureIntent } from "./messages.js";
 import type { ProjectionReport } from "./page-annotations.js";
 import type { PageCapture } from "./page-capture.js";
 import type { CaptureDraft } from "./save-capture.js";
+import type { ProblemKind } from "./use-action-lock.js";
 import type { ReaderConnectSnapshot } from "@mdbase-reader/connect";
 import type { Annotation, SourceImportProgress, SourceSummary } from "@mdbase-reader/core";
 import type { Dispatch, SetStateAction } from "react";
@@ -16,6 +17,7 @@ export interface ExtensionCaptureController {
   readonly draftRestored: boolean;
   readonly status: CaptureStatus;
   readonly problem: string | null;
+  readonly problemKind: ProblemKind | null;
   readonly notice: string | null;
   readonly source: SourceSummary | null;
   readonly annotations: readonly Annotation[];

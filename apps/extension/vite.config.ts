@@ -31,6 +31,8 @@ export default defineConfig({
     rolldownOptions: {
       input: {
         capture: resolve(import.meta.dirname, "capture.html"),
+        options: resolve(import.meta.dirname, "options.html"),
+        welcome: resolve(import.meta.dirname, "welcome.html"),
         background: resolve(import.meta.dirname, "src/background.ts"),
       },
       output: {

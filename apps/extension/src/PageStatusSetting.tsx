@@ -10,8 +10,7 @@ export function PageStatusSetting(): React.JSX.Element {
       .catch(() => setEnabled(false));
   }, []);
   return (
-    <details className="settings">
-      <summary>Settings</summary>
+    <>
       <label className="checkbox">
         <input
           type="checkbox"
@@ -30,6 +29,6 @@ export function PageStatusSetting(): React.JSX.Element {
         selected collection; it reads page text only to draw your highlights. Turning this off gives
         the access back.
       </p>
-    </details>
+    </>
   );
 }
