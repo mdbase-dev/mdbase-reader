@@ -346,6 +346,9 @@ importers:
 
   packages/renderer-pdf:
     dependencies:
+      '@embedpdf/engines':
+        specifier: ^2.15.0
+        version: 2.15.0(preact@10.29.8)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(svelte@5.56.8(@typescript-eslint/types@8.66.0))(vue@3.5.41(typescript@5.9.3))
       '@embedpdf/models':
         specifier: ^2.15.0
         version: 2.15.0

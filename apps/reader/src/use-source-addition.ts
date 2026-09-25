@@ -19,6 +19,11 @@ export interface SourceAdditionController {
   readonly addFile: (file: File) => Promise<void>;
   readonly capture: WebCaptureFlow["capture"];
   readonly clearError: () => void;
+  /** Adding by link or identifier: live progress, a citation-only offer, or a notice. */
+  readonly lookup: Pick<
+    WebCaptureFlow,
+    "progress" | "offer" | "notice" | "saveCitationOnly" | "openNoticed"
+  >;
 }
 
 export function useSourceAddition(
@@ -74,6 +79,13 @@ export function useSourceAddition(
     clearError: () => {
       setDropError(null);
       webCapture.clearError();
+    },
+    lookup: {
+      progress: webCapture.progress,
+      offer: webCapture.offer,
+      notice: webCapture.notice,
+      saveCitationOnly: webCapture.saveCitationOnly,
+      openNoticed: webCapture.openNoticed,
     },
   };
 }

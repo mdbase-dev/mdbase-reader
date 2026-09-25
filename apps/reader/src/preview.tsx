@@ -1,6 +1,7 @@
 /* eslint-disable max-lines */
 import {
   annotationId,
+  citekeyForCitation,
   collectionId,
   dateTime,
   fileId,
@@ -19,6 +20,7 @@ import {
   type Source,
   type SourceId,
   type SourceFileImportRequest,
+  type SourceRecordCreationRequest,
   type SourceSummary,
 } from "@mdbase-reader/core";
 import { lazy, Suspense, useMemo, type JSX } from "react";
@@ -322,6 +324,36 @@ export class PreviewGateway implements ReaderWorkspaceGateway {
   }
   importSourceFile(_request: Omit<SourceFileImportRequest, "collectionId">): Promise<Source> {
     return Promise.reject(new Error("File import is unavailable in the interface preview."));
+  }
+  /** Sources without a document need no file storage, so the preview can hold them. */
+  createSource(request: Omit<SourceRecordCreationRequest, "collectionId">): Promise<Source> {
+    const id = sourceId(`preview-added-${String(this.#sources.length + 1)}`);
+    const source = withRecordFrontmatter({
+      collectionId: collection,
+      id,
+      path: `sources/${id}.md`,
+      title: request.title,
+      creators: request.metadata?.authors ?? [],
+      tags: [],
+      ...(request.kind ? { kind: request.kind } : {}),
+      ...(request.metadata?.published ? { published: request.metadata.published } : {}),
+      ...(request.url ? { url: request.url } : {}),
+      documents: [],
+      body: `# ${request.title}\n`,
+      recordRevision: recordRevision(`preview-${id}`),
+      frontmatter: { ...(request.kind ? { kind: request.kind } : {}) },
+    });
+    this.#sources = [source, ...this.#sources];
+    return Promise.resolve(source);
+  }
+  saveNewSourceCitation(
+    source: Source,
+    citation: Readonly<Record<string, unknown>>,
+  ): Promise<Source> {
+    return this.saveSourceCitation(source, {
+      ...citation,
+      id: citekeyForCitation(citation, this.#sources, source.id),
+    });
   }
   createAnnotation(request: AnnotationCreationRequest): Promise<Annotation> {
     const annotation: Annotation = {

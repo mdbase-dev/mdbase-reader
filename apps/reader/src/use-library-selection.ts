@@ -15,9 +15,11 @@ import type { AsyncResource } from "./use-reader-workspace.js";
 import type { ReaderLibrarySnapshot, ReaderWorkspaceGateway } from "./workspace-model.js";
 import type {
   Source,
+  SourceFileAttachmentRequest,
   SourceFileImportRequest,
   SourceId,
   SourceImportOptions,
+  SourceRecordCreationRequest,
   SourceSummary,
 } from "@mdbase-reader/core";
 
@@ -32,6 +34,21 @@ export interface LibrarySelection {
     request: Omit<SourceFileImportRequest, "collectionId">,
     options?: SourceImportOptions,
   ) => Promise<Source | null>;
+  /** Present when the collection can hold sources without a document. */
+  readonly createSource?: (
+    request: Omit<SourceRecordCreationRequest, "collectionId">,
+    options?: SourceImportOptions,
+  ) => Promise<Source | null>;
+  /** Present when files can be attached to existing sources; rejects with the problem. */
+  readonly attachSourceFile?: (
+    request: SourceFileAttachmentRequest,
+    options?: SourceImportOptions,
+  ) => Promise<Source>;
+  /** Stores a found citation on a new source; rejects so the caller can report it. */
+  readonly saveNewSourceCitation?: (
+    source: Source,
+    citation: Readonly<Record<string, unknown>>,
+  ) => Promise<Source>;
 }
 
 export interface LibrarySelectionState extends LibrarySelection {
@@ -100,8 +117,7 @@ export function useLibrarySelection(gateway: ReaderWorkspaceGateway): LibrarySel
     setLibrary({ status: "loading" });
     setAttempt((value) => value + 1);
   }, []);
-  const importSourceFile = useImportSourceFile(
-    gateway,
+  const writeSource = useSourceWrite(
     setLibrary,
     setSelectedSourceId,
     selectedSourceIdRef,
@@ -112,6 +128,10 @@ export function useLibrarySelection(gateway: ReaderWorkspaceGateway): LibrarySel
     (source: Source): void => setLibrary((current) => replaceLibrarySource(current, source)),
     [],
   );
+  const writes = useMemo(
+    () => sourceWrites(gateway, writeSource, reconcileSource),
+    [gateway, reconcileSource, writeSource],
+  );
   return {
     library,
     selectedSource,
@@ -119,46 +139,85 @@ export function useLibrarySelection(gateway: ReaderWorkspaceGateway): LibrarySel
     retryLibrary,
     importStatus,
     importError,
-    importSourceFile,
+    ...writes,
     reconcileSource,
   };
 }
 
-function useImportSourceFile(
+type SourceWrite = (operation: () => Promise<Source>, failure: string) => Promise<Source | null>;
+
+function sourceWrites(
   gateway: ReaderWorkspaceGateway,
+  writeSource: SourceWrite,
+  reconcileSource: (source: Source) => void,
+): Pick<
+  LibrarySelection,
+  "importSourceFile" | "createSource" | "attachSourceFile" | "saveNewSourceCitation"
+> {
+  const createSource = gateway.createSource?.bind(gateway);
+  const attachSourceFile = gateway.attachSourceFile?.bind(gateway);
+  const saveNewSourceCitation = gateway.saveNewSourceCitation?.bind(gateway);
+  return {
+    importSourceFile: (request, options) =>
+      writeSource(
+        () => gateway.importSourceFile(request, options),
+        "Reader could not import this document.",
+      ),
+    ...(createSource
+      ? {
+          createSource: (request, options) =>
+            writeSource(() => createSource(request, options), "Reader could not add this source."),
+        }
+      : {}),
+    ...(attachSourceFile
+      ? {
+          attachSourceFile: async (request, options) => {
+            const updated = await attachSourceFile(request, options);
+            reconcileSource(updated);
+            return updated;
+          },
+        }
+      : {}),
+    ...(saveNewSourceCitation
+      ? {
+          saveNewSourceCitation: async (source, citation) => {
+            const saved = await saveNewSourceCitation(source, citation);
+            reconcileSource(saved);
+            return saved;
+          },
+        }
+      : {}),
+  };
+}
+
+/** Runs one source mutation with shared busy state and errors, then updates the library. */
+function useSourceWrite(
   setLibrary: Dispatch<SetStateAction<AsyncResource<ReaderLibrarySnapshot>>>,
   setSelectedSourceId: Dispatch<SetStateAction<SourceId | null>>,
   selectedSourceIdRef: RefObject<SourceId | null>,
   setImportStatus: Dispatch<SetStateAction<"idle" | "importing">>,
   setImportError: Dispatch<SetStateAction<string | null>>,
-): LibrarySelection["importSourceFile"] {
+): SourceWrite {
   return useCallback(
-    async (request, options) => {
+    async (operation, failure) => {
       setImportStatus("importing");
       setImportError(null);
       try {
-        const imported = await gateway.importSourceFile(request, options);
-        setLibrary((current) => addImportedSource(current, imported));
-        selectedSourceIdRef.current = imported.id;
-        setSelectedSourceId(imported.id);
-        return imported;
+        const written = await operation();
+        setLibrary((current) => addImportedSource(current, written));
+        selectedSourceIdRef.current = written.id;
+        setSelectedSourceId(written.id);
+        return written;
       } catch (reason) {
         if (!isAbortError(reason)) {
-          setImportError(readerErrorMessage(reason, "Reader could not import this document."));
+          setImportError(readerErrorMessage(reason, failure));
         }
         return null;
       } finally {
         setImportStatus("idle");
       }
     },
-    [
-      gateway,
-      selectedSourceIdRef,
-      setImportError,
-      setImportStatus,
-      setLibrary,
-      setSelectedSourceId,
-    ],
+    [selectedSourceIdRef, setImportError, setImportStatus, setLibrary, setSelectedSourceId],
   );
 }
 

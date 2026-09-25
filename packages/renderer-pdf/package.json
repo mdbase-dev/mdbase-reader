@@ -4,13 +4,15 @@
   "private": true,
   "type": "module",
   "exports": {
-    ".": "./src/index.ts"
+    ".": "./src/index.ts",
+    "./details": "./src/pdf-details.ts"
   },
   "scripts": {
     "test": "vitest run --passWithNoTests",
     "typecheck": "tsc -p tsconfig.json"
   },
   "dependencies": {
+    "@embedpdf/engines": "^2.15.0",
     "@embedpdf/models": "^2.15.0",
     "@embedpdf/plugin-annotation": "^2.15.0",
     "@embedpdf/plugin-capture": "^2.15.0",

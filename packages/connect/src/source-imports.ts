@@ -1,20 +1,20 @@
-import {
-  MdbaseConnectError,
-  type CollectionFileDescriptor,
-  type ConnectOutcome,
-  type MdbaseFileListOptions,
-  type MdbaseConnection,
-  type MdbaseFileUploadOptions,
-  type RecordDocument,
-} from "@mdbase-dev/connect";
-
 import { sourceContract } from "./contracts.js";
 import { sourceFromDocument, sourceSummaryFromQuery } from "./mapping.js";
 import { ConnectRepositoryError, outcomeValue } from "./repository-client.js";
+import { attachRepresentation } from "./source-attachments.js";
+import { uploadWithRecovery, type ReaderSourceFileClient } from "./source-files.js";
+import { sourceFrontmatter } from "./source-frontmatter.js";
 
 import type { ReaderConnectClient } from "./repository-client.js";
 import type {
+  CollectionFileDescriptor,
+  ConnectOutcome,
+  MdbaseConnection,
+  RecordDocument,
+} from "@mdbase-dev/connect";
+import type {
   CollectionId,
+  PlannedSourceAttachment,
   PlannedSourceFileImport,
   PlannedSourceRepresentation,
   ReaderRequestOptions,
@@ -23,15 +23,6 @@ import type {
   SourceImportRepository,
   SourceSummary,
 } from "@mdbase-reader/core";
-
-export interface ReaderSourceFileClient {
-  list?(options?: MdbaseFileListOptions): AsyncIterable<CollectionFileDescriptor>;
-  upload(
-    path: string,
-    source: Blob,
-    options?: MdbaseFileUploadOptions,
-  ): Promise<CollectionFileDescriptor>;
-}
 
 export class ConnectSourceImportRepository implements SourceImportRepository {
   public constructor(
@@ -68,6 +59,7 @@ export class ConnectSourceImportRepository implements SourceImportRepository {
     const uploadRank: Readonly<Record<PlannedSourceRepresentation["role"], number>> = {
       archive: 0,
       primary: 1,
+      alternative: 2,
     };
     const orderedUploads = [...plan.representations].sort(
       (left, right) => uploadRank[left.role] - uploadRank[right.role],
@@ -82,7 +74,7 @@ export class ConnectSourceImportRepository implements SourceImportRepository {
       const recovered = takeMatchingFile(recoverableFiles, representation.contentDigest);
       const descriptor =
         recovered ??
-        (await this.uploadWithRecovery(representation, {
+        (await uploadWithRecovery(this.files, representation, {
           ...(options.signal ? { signal: options.signal } : {}),
           ...(options.onProgress
             ? {
@@ -137,31 +129,11 @@ export class ConnectSourceImportRepository implements SourceImportRepository {
     return sourceFromDocument(plan.collectionId, document);
   }
 
-  private async uploadWithRecovery(
-    representation: PlannedSourceRepresentation,
-    options: Omit<MdbaseFileUploadOptions, "mediaType" | "transferId">,
-  ): Promise<CollectionFileDescriptor> {
-    const upload = (): Promise<CollectionFileDescriptor> =>
-      this.files.upload(
-        representation.filePath,
-        new Blob([representation.bytes.slice().buffer], { type: representation.mediaType }),
-        {
-          ...options,
-          mediaType: representation.mediaType,
-          transferId: representation.transferId,
-        },
-      );
-    try {
-      return await upload();
-    } catch (error) {
-      if (!(error instanceof MdbaseConnectError) || !error.outcomeUnknown) {
-        throw error;
-      }
-      // File control has its own durable transfer journal rather than the
-      // connection's generic pending-mutation store. Reopening the exact same
-      // transfer with a fresh SDK deadline resumes it or replays its receipt.
-      return upload();
-    }
+  public attachFile(
+    plan: PlannedSourceAttachment,
+    options: SourceImportOptions = {},
+  ): Promise<Source> {
+    return attachRepresentation(this.records, this.files, plan, options);
   }
 
   private async recoverableFiles(
@@ -206,71 +178,11 @@ function takeMatchingFile(
   return files.get(digest)?.shift();
 }
 
-function sourceFrontmatter(
-  plan: PlannedSourceFileImport,
-  descriptors: ReadonlyMap<PlannedSourceRepresentation["role"], CollectionFileDescriptor>,
-): Readonly<Record<string, unknown>> {
-  const capture = plan.capture;
-  const metadata = plan.metadata;
-  return {
-    id: plan.sourceId,
-    title: plan.title,
-    kind: plan.kind,
-    saved_at: plan.savedAt,
-    ...(plan.tags ? { tags: plan.tags } : {}),
-    ...(metadata?.authors?.length ? { authors: metadata.authors } : {}),
-    ...(metadata?.published ? { published: metadata.published } : {}),
-    ...(metadata?.description ? { description: metadata.description } : {}),
-    ...(metadata?.language ? { language: metadata.language } : {}),
-    ...(metadata?.site ? { site: metadata.site } : {}),
-    ...(capture
-      ? {
-          url: capture.canonicalUrl,
-          ...(capture.submittedUrl !== capture.canonicalUrl
-            ? { original_url: capture.submittedUrl }
-            : {}),
-          capture: {
-            method: "url",
-            application: "dev.mdbase.reader",
-            captured_at: capture.retrievedAt,
-            submitted_url: capture.submittedUrl,
-            canonical_url: capture.canonicalUrl,
-          },
-        }
-      : {}),
-    documents: plan.representations.map((representation) => {
-      const descriptor = descriptors.get(representation.role);
-      if (!descriptor) {
-        throw new ConnectRepositoryError(
-          "create imported source",
-          "missing_file_descriptor",
-          `The ${representation.role} representation was not committed.`,
-        );
-      }
-      const derivedFrom = representation.derivedFromRole
-        ? descriptors.get(representation.derivedFromRole)
-        : undefined;
-      return {
-        file_id: descriptor.fileId,
-        file: `[[${descriptor.path}]]`,
-        role: representation.role,
-        format: representation.format,
-        media_type: representation.mediaType,
-        revision: descriptor.contentDigest,
-        label: representation.originalName,
-        ...(derivedFrom ? { derived_from_file_id: derivedFrom.fileId } : {}),
-        ...(capture && representation.role === "archive"
-          ? { origin_url: capture.canonicalUrl, retrieved_at: capture.retrievedAt }
-          : {}),
-      };
-    }),
-    reading: { status: "inbox" },
-  };
-}
-
 export function connectSourceImportRepository(
   connection: MdbaseConnection,
   records: ReaderConnectClient,
 ): ConnectSourceImportRepository {
   return new ConnectSourceImportRepository(records, connection.files);
 }
+
+export type { ReaderSourceFileClient } from "./source-files.js";

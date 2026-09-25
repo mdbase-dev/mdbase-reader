@@ -2338,6 +2338,44 @@
   line-height: 1.5;
 }
 
+.document-empty.is-dragging > div {
+  outline: 2px dashed color-mix(in oklch, var(--accent) 55%, var(--line));
+  outline-offset: 18px;
+  border-radius: var(--ui-radius);
+}
+
+.document-empty-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px;
+}
+
+.document-empty-actions .connection-secondary {
+  min-height: var(--ui-control-height);
+  padding: 0 14px;
+  border: 1px solid var(--line);
+  border-radius: var(--ui-radius);
+  color: var(--ink);
+  background: var(--paper);
+  font: inherit;
+  font-size: var(--ui-control);
+  cursor: pointer;
+}
+
+.document-empty-actions .connection-secondary:disabled {
+  cursor: default;
+  opacity: 0.6;
+}
+
+.document-empty .document-empty-status {
+  margin: 14px 0 0;
+}
+
+.document-empty .document-empty-status.is-error {
+  color: var(--danger);
+}
+
 .dock-empty button {
   height: var(--ui-control-height);
   padding: 0 14px;
@@ -3178,6 +3216,51 @@
   color: var(--danger);
   font-size: var(--ui-control);
   line-height: 1.45;
+}
+
+.import-found-citation {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  margin: -6px 24px 16px;
+  color: var(--muted);
+  font-size: var(--ui-control);
+  line-height: 1.45;
+}
+
+.import-found-citation input {
+  margin-top: 3px;
+}
+
+.import-found-citation small {
+  display: block;
+  color: var(--muted);
+  font-size: var(--ui-meta);
+}
+
+.capture-progress {
+  margin: -6px 24px 16px;
+  color: var(--muted);
+  font-size: var(--ui-control);
+  line-height: 1.45;
+}
+
+.capture-follow-up {
+  display: grid;
+  justify-items: start;
+  gap: 10px;
+  margin: -4px 24px 16px;
+  padding: 12px 14px;
+  border: 1px solid var(--line);
+  border-radius: var(--ui-radius);
+  background: color-mix(in oklch, var(--accent) 5%, var(--paper));
+  color: var(--ink);
+  font-size: var(--ui-control);
+  line-height: 1.45;
+}
+
+.capture-follow-up p {
+  margin: 0;
 }
 
 .source-add-divider {

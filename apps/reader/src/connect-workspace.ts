@@ -2,6 +2,9 @@
 import {
   createAnnotation,
   deleteAnnotation,
+  attachSourceFile,
+  citekeyForCitation,
+  createSourceRecord,
   importSourceFile,
   planAnnotationDeletion,
   saveSourceCitation,
@@ -54,8 +57,10 @@ import type {
   ReaderIdGenerator,
   Source,
   SourceId,
+  SourceFileAttachmentRequest,
   SourceFileImportRequest,
   SourceImportOptions,
+  SourceRecordCreationRequest,
   SourceImportRepository,
   SourceRepository,
   SourceSummary,
@@ -367,6 +372,43 @@ export class ConnectWorkspaceGateway implements ReaderWorkspaceGateway {
     );
     this.#replaceSource(imported, true);
     return imported;
+  }
+
+  async createSource(
+    request: Omit<SourceRecordCreationRequest, "collectionId">,
+    options: SourceImportOptions = {},
+  ): Promise<Source> {
+    const created = await createSourceRecord(
+      { imports: this.sourceImports, ...this.runtime },
+      { ...request, collectionId: this.collectionId },
+      options,
+    );
+    this.#replaceSource(created, true);
+    return created;
+  }
+
+  async attachSourceFile(
+    request: SourceFileAttachmentRequest,
+    options: SourceImportOptions = {},
+  ): Promise<Source> {
+    const updated = await attachSourceFile(
+      { imports: this.sourceImports, ...this.runtime },
+      request,
+      options,
+    );
+    this.#replaceSource(updated);
+    return updated;
+  }
+
+  async saveNewSourceCitation(
+    source: Source,
+    citation: Readonly<Record<string, unknown>>,
+  ): Promise<Source> {
+    const { sources } = await this.library();
+    return this.saveSourceCitation(source, {
+      ...citation,
+      id: citekeyForCitation(citation, sources, source.id),
+    });
   }
 
   async createAnnotation(request: AnnotationCreationRequest): Promise<Annotation> {

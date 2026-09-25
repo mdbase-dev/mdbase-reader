@@ -35,6 +35,7 @@ import type {
 import type { AnnotationComposerController } from "./use-annotation-composer.js";
 import type { BibliographyExportController } from "./use-bibliography-export.js";
 import type { ReaderDirectAccessState } from "./use-direct-access.js";
+import type { DocumentAttachmentController } from "./use-document-attachment.js";
 import type { MdbaseLibraryViewsController } from "./use-mdbase-library-views.js";
 import type { ReaderWorkspaceController } from "./use-reader-workspace.js";
 import type { ReadingResumeState } from "./use-reading-resume.js";
@@ -59,6 +60,7 @@ export interface ReaderWorkspaceViewModel {
   readonly readingResume: ReadingResumeState;
   readonly decorationProblem: string | null;
   readonly sourceAddition: SourceAdditionController;
+  readonly documentAttachment: DocumentAttachmentController | null;
   readonly bibliographyExport: BibliographyExportController;
   readonly sourceExport: SourceExportController;
   readonly renderDocument: SourceDocumentRenderer | undefined;
@@ -232,6 +234,7 @@ export function ReaderWorkspaceView({
             />
           }
           sources={library.sources}
+          documentAttachment={model.documentAttachment}
           surfaces={model.surfaces}
           sourceWorkspace={sourceWorkspace}
           focusMode={model.focusMode}

@@ -1,6 +1,7 @@
 import { ReaderButton } from "@mdbase-reader/ui";
 import { useEffect, useRef, useState, type JSX } from "react";
 
+import type { FileImportSuggestion } from "./file-import-suggestion.js";
 import type { SourceImportFlow } from "./use-source-import.js";
 import type { PickedFile } from "@mdbase-reader/platform";
 
@@ -11,17 +12,22 @@ export function SourceImportDialog({
   error,
   onCancel,
   onImport,
+  suggestion = null,
 }: {
   readonly file: PickedFile;
   readonly importing: boolean;
   readonly progress: SourceImportFlow["progress"];
   readonly error: string | null;
   readonly onCancel: () => void;
-  readonly onImport: (title: string) => void;
+  readonly onImport: (title: string, useCitation: boolean) => void;
+  readonly suggestion?: FileImportSuggestion | null;
 }): JSX.Element {
-  const [title, setTitle] = useState(() => titleFromName(file.name));
+  const [typedTitle, setTypedTitle] = useState<string | null>(null);
+  const [useCitation, setUseCitation] = useState(true);
+  const title = typedTitle ?? suggestion?.title ?? titleFromName(file.name);
   const titleInput = useRef<HTMLInputElement>(null);
   const isFinalizing = importing && progress?.phase === "creating";
+  const submit = (): void => onImport(title, useCitation && Boolean(suggestion?.citation));
 
   useEffect(() => {
     titleInput.current?.focus();
@@ -59,14 +65,20 @@ export function SourceImportDialog({
             ref={titleInput}
             value={title}
             disabled={importing}
-            onChange={(event) => setTitle(event.target.value)}
+            onChange={(event) => setTypedTitle(event.target.value)}
             onKeyDown={(event) => {
               if (event.key === "Enter" && title.trim()) {
-                onImport(title);
+                submit();
               }
             }}
           />
         </label>
+        <FoundCitation
+          suggestion={suggestion}
+          checked={useCitation}
+          disabled={importing}
+          onChange={setUseCitation}
+        />
         {error ? (
           <p className="import-error" role="alert">
             {error}
@@ -82,7 +94,7 @@ export function SourceImportDialog({
           >
             {isFinalizing ? "Finishing…" : importing ? "Stop import" : "Cancel"}
           </button>
-          <ReaderButton disabled={importing || !title.trim()} onClick={() => onImport(title)}>
+          <ReaderButton disabled={importing || !title.trim()} onClick={submit}>
             {importing ? "Importing…" : "Add source"}
           </ReaderButton>
         </div>
@@ -103,9 +115,65 @@ export function SourceImportOverlay({
       progress={flow.progress}
       error={flow.error}
       onCancel={flow.cancel}
-      onImport={(title) => void flow.importFile(title)}
+      onImport={(title, useCitation) => void flow.importFile(title, useCitation)}
+      suggestion={flow.suggestion}
     />
   ) : null;
+}
+
+/** The citation found from the file's DOI, arXiv ID or ISBN, which can be saved with it. */
+function FoundCitation({
+  suggestion,
+  checked,
+  disabled,
+  onChange,
+}: {
+  readonly suggestion: FileImportSuggestion | null;
+  readonly checked: boolean;
+  readonly disabled: boolean;
+  readonly onChange: (checked: boolean) => void;
+}): JSX.Element | null {
+  if (!suggestion) {
+    return (
+      <p className="import-found-citation" role="status">
+        Reading the file’s details…
+      </p>
+    );
+  }
+  const citation = suggestion.citation;
+  if (!citation) {
+    return null;
+  }
+  return (
+    <label className="import-found-citation">
+      <input
+        type="checkbox"
+        checked={checked}
+        disabled={disabled}
+        onChange={(event) => onChange(event.target.checked)}
+      />
+      <span>
+        Save the citation found for this file: {citationLine(citation.citation)}
+        <small>{citation.provenance.provider}</small>
+      </span>
+    </label>
+  );
+}
+
+function citationLine(citation: Readonly<Record<string, unknown>>): string {
+  const authors = Array.isArray(citation["author"])
+    ? (citation["author"] as readonly { family?: string; literal?: string }[])
+    : [];
+  const first = authors[0]?.family ?? authors[0]?.literal;
+  const issued = citation["issued"] as { "date-parts"?: unknown[][] } | undefined;
+  const year = issued?.["date-parts"]?.[0]?.[0];
+  return [
+    first ? `${first}${authors.length > 1 ? " et al." : ""}` : null,
+    typeof year === "number" || typeof year === "string" ? `(${String(year)})` : null,
+    typeof citation["title"] === "string" ? `“${citation["title"]}”` : null,
+  ]
+    .filter(Boolean)
+    .join(" ");
 }
 
 function ImportProgress({

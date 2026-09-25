@@ -9,6 +9,7 @@ export * from "./application/materialize-source.js";
 export * from "./application/session-document-text-index.js";
 export * from "./application/save-source-citation.js";
 export * from "./application/source-fields-from-citation.js";
+export * from "./application/source-records.js";
 export * from "./application/transclude-annotation.js";
 export * from "./application/update-annotation-body.js";
 export type * from "./application/ports.js";

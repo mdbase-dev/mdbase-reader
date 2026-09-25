@@ -112,3 +112,32 @@ function publishedValue(value: unknown): string | number | undefined {
 function text(value: unknown): string | undefined {
   return typeof value === "string" && value.trim() ? value.trim() : undefined;
 }
+
+const kindsByCslType: Readonly<Record<string, string>> = {
+  "article-journal": "paper",
+  "paper-conference": "paper",
+  article: "paper",
+  thesis: "paper",
+  report: "paper",
+  book: "book",
+  chapter: "chapter",
+  "entry-encyclopedia": "article",
+  "entry-dictionary": "article",
+  "article-magazine": "article",
+  "article-newspaper": "article",
+  webpage: "webpage",
+  "post-weblog": "post",
+  post: "post",
+  motion_picture: "video",
+  broadcast: "video",
+  song: "podcast",
+  personal_communication: "email",
+};
+
+/** The Reader `kind` (DATA_MODEL §8.2) a CSL type suggests, if any. */
+export function sourceKindForCitation(
+  citation: Readonly<Record<string, unknown>>,
+): string | undefined {
+  const type = citation["type"];
+  return typeof type === "string" ? kindsByCslType[type] : undefined;
+}

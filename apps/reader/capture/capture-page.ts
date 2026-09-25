@@ -1,3 +1,4 @@
+import { boundedPdfStream, mayBePdf } from "./capture-pdf.js";
 import { CapturePolicyError, publicCaptureUrl, type AddressResolver } from "./public-url.js";
 
 const MAX_CAPTURE_BYTES = 2 * 1024 * 1024;
@@ -11,6 +12,19 @@ export interface CapturedPage {
   readonly html: string;
 }
 
+/** A PDF found at the address, streamed rather than buffered. */
+export interface CapturedPdf {
+  readonly submittedUrl: string;
+  readonly canonicalUrl: string;
+  readonly retrievedAt: string;
+  readonly pdf: ReadableStream<Uint8Array>;
+}
+
+export interface CaptureOptions {
+  /** Accept a PDF as well as an HTML page. */
+  readonly allowPdf?: boolean;
+}
+
 export interface CapturePageDependencies {
   readonly fetch: typeof fetch;
   readonly resolveAddresses: AddressResolver;
@@ -20,11 +34,22 @@ export interface CapturePageDependencies {
 export async function capturePage(
   submittedUrl: string,
   dependencies: CapturePageDependencies,
-): Promise<CapturedPage> {
+  options?: { readonly allowPdf?: false },
+): Promise<CapturedPage>;
+export async function capturePage(
+  submittedUrl: string,
+  dependencies: CapturePageDependencies,
+  options: CaptureOptions,
+): Promise<CapturedPage | CapturedPdf>;
+export async function capturePage(
+  submittedUrl: string,
+  dependencies: CapturePageDependencies,
+  options: CaptureOptions = {},
+): Promise<CapturedPage | CapturedPdf> {
   const submitted = await publicCaptureUrl(submittedUrl, dependencies.resolveAddresses);
   let current = submitted;
   for (let redirects = 0; redirects <= MAX_REDIRECTS; redirects += 1) {
-    const response = await fetchCapture(current, dependencies.fetch);
+    const response = await fetchCapture(current, dependencies.fetch, options);
     if (redirectResponse(response)) {
       if (redirects === MAX_REDIRECTS) {
         throw new CapturePolicyError("redirect_limit", "That page redirected too many times.", 422);
@@ -50,13 +75,16 @@ export async function capturePage(
         422,
       );
     }
-    assertHtmlResponse(response);
-    return {
+    const provenance = {
       submittedUrl: submitted.href,
       canonicalUrl: current.href,
       retrievedAt: dependencies.now().toISOString(),
-      html: await boundedResponseText(response),
     };
+    if (options.allowPdf && mayBePdf(responseMediaType(response))) {
+      return { ...provenance, pdf: await boundedPdfStream(response) };
+    }
+    assertHtmlResponse(response);
+    return { ...provenance, html: await boundedResponseText(response) };
   }
   throw new CapturePolicyError("redirect_limit", "That page redirected too many times.", 422);
 }
@@ -83,13 +111,15 @@ export async function resolvePublicAddresses(
   return [...new Set(answers.flat())];
 }
 
-function fetchCapture(url: URL, fetcher: typeof fetch): Promise<Response> {
+function fetchCapture(url: URL, fetcher: typeof fetch, options: CaptureOptions): Promise<Response> {
   return fetcher(url, {
     method: "GET",
     redirect: "manual",
     signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
     headers: {
-      accept: "text/html,application/xhtml+xml;q=0.9",
+      accept: options.allowPdf
+        ? "text/html,application/xhtml+xml;q=0.9,application/pdf;q=0.8"
+        : "text/html,application/xhtml+xml;q=0.9",
       "accept-language": "en;q=0.8,*;q=0.5",
     },
   });
@@ -99,12 +129,12 @@ function redirectResponse(response: Response): boolean {
   return response.status >= 300 && response.status < 400;
 }
 
+function responseMediaType(response: Response): string | undefined {
+  return response.headers.get("content-type")?.split(";", 1)[0]?.trim().toLocaleLowerCase();
+}
+
 function assertHtmlResponse(response: Response): void {
-  const mediaType = response.headers
-    .get("content-type")
-    ?.split(";", 1)[0]
-    ?.trim()
-    .toLocaleLowerCase();
+  const mediaType = responseMediaType(response);
   if (mediaType !== "text/html" && mediaType !== "application/xhtml+xml") {
     throw new CapturePolicyError(
       "unsupported_content_type",

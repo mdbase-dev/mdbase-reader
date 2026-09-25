@@ -3,6 +3,8 @@ import { useEffect, useRef, useState, type JSX } from "react";
 
 import { CloseIcon, FileIcon } from "./icons.js";
 
+import type { SourceAdditionController } from "./use-source-addition.js";
+
 export function SourceAddDialog({
   open,
   busy,
@@ -13,6 +15,7 @@ export function SourceAddDialog({
   onCapture,
   onEdit,
   onDropFile,
+  lookup,
 }: {
   readonly open: boolean;
   readonly busy: boolean;
@@ -23,6 +26,7 @@ export function SourceAddDialog({
   readonly onCapture: (url: string) => void;
   readonly onEdit: () => void;
   readonly onDropFile: (file: File) => void;
+  readonly lookup: SourceAdditionController["lookup"];
 }): JSX.Element | null {
   return open ? (
     <OpenSourceAddDialog
@@ -34,6 +38,7 @@ export function SourceAddDialog({
       onCapture={onCapture}
       onEdit={onEdit}
       onDropFile={onDropFile}
+      lookup={lookup}
     />
   ) : null;
 }
@@ -47,6 +52,7 @@ function OpenSourceAddDialog({
   onCapture,
   onEdit,
   onDropFile,
+  lookup,
 }: Omit<Parameters<typeof SourceAddDialog>[0], "open">): JSX.Element {
   const [url, setUrl] = useState("");
   const input = useRef<HTMLInputElement>(null);
@@ -87,7 +93,10 @@ function OpenSourceAddDialog({
         </button>
         <div className="import-dialog-heading">
           <h2 id="reader-add-source-title">Add a source</h2>
-          <p>Save a web page, or add a PDF or EPUB from your device.</p>
+          <p>
+            Save a web page or PDF link, look up a work by DOI, arXiv ID or ISBN, or add a file from
+            your device.
+          </p>
         </div>
         <form
           className="capture-form"
@@ -99,14 +108,15 @@ function OpenSourceAddDialog({
           }}
         >
           <label className="capture-url-field">
-            <span>Web page</span>
+            <span>Link or identifier</span>
             <span className="capture-url-row">
               <input
                 ref={input}
-                type="url"
+                type="text"
                 inputMode="url"
                 autoComplete="url"
-                placeholder="Paste a link: https://…"
+                spellCheck={false}
+                placeholder="https://…, DOI, arXiv ID or ISBN"
                 value={url}
                 disabled={busy}
                 onChange={(event) => {
@@ -114,16 +124,20 @@ function OpenSourceAddDialog({
                   onEdit();
                 }}
               />
-              <ReaderButton disabled={busy || !url.trim()}>
-                {busy ? "Saving…" : "Save"}
-              </ReaderButton>
+              <ReaderButton disabled={busy || !url.trim()}>{busy ? "Adding…" : "Add"}</ReaderButton>
             </span>
           </label>
+          {busy && lookup.progress ? (
+            <p className="capture-progress" role="status">
+              {lookup.progress}
+            </p>
+          ) : null}
           {error ? (
             <p className="import-error capture-error" role="alert">
               {error}
             </p>
           ) : null}
+          <LookupFollowUp busy={busy} lookup={lookup} />
         </form>
         <div className="source-add-divider">
           <span>or</span>
@@ -132,6 +146,43 @@ function OpenSourceAddDialog({
       </section>
     </div>
   );
+}
+
+/** After a lookup: offer to keep just the citation, or say what went wrong before opening. */
+function LookupFollowUp({
+  busy,
+  lookup,
+}: {
+  readonly busy: boolean;
+  readonly lookup: SourceAdditionController["lookup"];
+}): JSX.Element | null {
+  if (lookup.notice) {
+    return (
+      <div className="capture-follow-up" role="status">
+        <p>Added. {lookup.notice.message}</p>
+        <ReaderButton onClick={lookup.openNoticed}>Open source</ReaderButton>
+      </div>
+    );
+  }
+  if (lookup.offer) {
+    return (
+      <div className="capture-follow-up">
+        <p>
+          Reader couldn’t fetch that page ({lookup.offer.reason}), but it found the citation for “
+          {lookup.offer.title}”. You can save the citation now and attach the page or file later.
+        </p>
+        <button
+          className="connection-secondary"
+          type="button"
+          disabled={busy}
+          onClick={() => void lookup.saveCitationOnly()}
+        >
+          Save citation only
+        </button>
+      </div>
+    );
+  }
+  return null;
 }
 
 function FileChoice({

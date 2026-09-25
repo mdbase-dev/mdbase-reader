@@ -16,7 +16,9 @@ import type {
   Source,
   SourceId,
   SourceSummary,
+  SourceFileAttachmentRequest,
   SourceFileImportRequest,
+  SourceRecordCreationRequest,
   SourceImportOptions,
   SourceTextSearchMatch,
   CitationCandidate,
@@ -79,6 +81,20 @@ export interface ReaderWorkspaceGateway {
   importSourceFile(
     request: Omit<SourceFileImportRequest, "collectionId">,
     options?: SourceImportOptions,
+  ): Promise<Source>;
+  /** A source with no document yet, such as a book found by its ISBN. */
+  createSource?(
+    request: Omit<SourceRecordCreationRequest, "collectionId">,
+    options?: SourceImportOptions,
+  ): Promise<Source>;
+  attachSourceFile?(
+    request: SourceFileAttachmentRequest,
+    options?: SourceImportOptions,
+  ): Promise<Source>;
+  /** Stores a found citation on a source, under a citekey no other source uses. */
+  saveNewSourceCitation?(
+    source: Source,
+    citation: Readonly<Record<string, unknown>>,
   ): Promise<Source>;
   createAnnotation(request: AnnotationCreationRequest): Promise<Annotation>;
   updateAnnotation(annotation: Annotation, body: string): Promise<Annotation>;

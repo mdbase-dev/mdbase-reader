@@ -9,6 +9,7 @@ export type DomainProblemCode =
   | "invalid-citation"
   | "duplicate-citekey"
   | "unsupported-source-file"
+  | "unsupported-source-attachment"
   | "annotation-assets-unavailable"
   | "source-not-found"
   | "document-not-found"

@@ -24,6 +24,8 @@ import type {
 } from "../domain/source.js";
 import type { DateTime } from "../domain/time.js";
 
+export type * from "./source-import-ports.js";
+
 export interface SourceRepository extends SourceLookups {
   list(query: SourceQuery, options?: ReaderRequestOptions): Promise<Page<SourceSummary>>;
   /** Stream one stable query when the backing store supports pinned pagination. */
@@ -196,94 +198,6 @@ export interface ReaderIdGenerator {
 
 export interface ContentHasher {
   sha256(bytes: Uint8Array): Promise<`sha256:${string}`>;
-}
-
-export interface SourceImportRepository {
-  findExactDuplicate(
-    collectionId: CollectionId,
-    contentDigests: readonly `sha256:${string}`[],
-    options?: ReaderRequestOptions,
-  ): Promise<SourceSummary | null>;
-  commitFile(plan: PlannedSourceFileImport, options?: SourceImportOptions): Promise<Source>;
-}
-
-export type SourceDocumentFormat = "pdf" | "epub" | "html";
-
-export interface SourceFileImportRequest {
-  readonly collectionId: CollectionId;
-  readonly name: string;
-  readonly declaredMediaType?: string;
-  readonly bytes: Uint8Array;
-  readonly title?: string;
-  readonly capture?: SourceCaptureProvenance;
-  readonly archive?: SourceCaptureArchive;
-  readonly metadata?: SourceImportMetadata;
-  /** Authored note and tags for a newly created source; never applied to duplicates. */
-  readonly body?: string;
-  readonly tags?: readonly string[];
-}
-
-export interface SourceCaptureProvenance {
-  readonly submittedUrl: string;
-  readonly canonicalUrl: string;
-  readonly retrievedAt: DateTime;
-}
-
-export interface SourceCaptureArchive {
-  readonly name: string;
-  readonly bytes: Uint8Array;
-}
-
-export interface SourceImportMetadata {
-  readonly authors?: readonly string[];
-  readonly published?: string;
-  readonly description?: string;
-  readonly language?: string;
-  readonly site?: string;
-}
-
-export interface SourceImportProgress {
-  readonly phase: "checking" | "uploading" | "creating";
-  readonly completedBytes: number;
-  readonly totalBytes: number;
-  readonly fileIndex: number;
-  readonly fileCount: number;
-}
-
-export interface SourceImportOptions extends ReaderRequestOptions {
-  readonly onProgress?: (progress: SourceImportProgress) => void;
-  /**
-   * Search for exact uploaded bytes left by an earlier failed attempt before
-   * starting a new transfer. Ordinary first attempts keep this disabled so a
-   * large collection does not pay an orphan-recovery scan on every import.
-   */
-  readonly recoverExistingFiles?: boolean;
-}
-
-export interface PlannedSourceRepresentation {
-  readonly transferId: MutationId;
-  readonly role: "primary" | "archive";
-  readonly format: SourceDocumentFormat;
-  readonly mediaType: string;
-  readonly contentDigest: `sha256:${string}`;
-  readonly originalName: string;
-  readonly filePath: string;
-  readonly bytes: Uint8Array;
-  readonly derivedFromRole?: "archive";
-}
-
-export interface PlannedSourceFileImport {
-  readonly collectionId: CollectionId;
-  readonly sourceId: SourceId;
-  readonly title: string;
-  readonly kind: "document" | "webpage";
-  readonly savedAt: DateTime;
-  readonly recordPath: string;
-  readonly representations: readonly PlannedSourceRepresentation[];
-  readonly body?: string;
-  readonly tags?: readonly string[];
-  readonly capture?: SourceCaptureProvenance;
-  readonly metadata?: SourceImportMetadata;
 }
 
 export interface AnnotationCreationRequest extends AnnotationDraft {

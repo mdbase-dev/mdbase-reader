@@ -99,7 +99,7 @@ export async function buildEpubManifest(
   };
 }
 
-async function packageDocumentPath(reader: EpubPackageReader): Promise<string> {
+export async function packageDocumentPath(reader: EpubPackageReader): Promise<string> {
   const container = object(parser.parse(await reader.readText("META-INF/container.xml")));
   const roots = object(object(container?.["container"])?.["rootfiles"]);
   const rootfile = asArray(roots?.["rootfile"])

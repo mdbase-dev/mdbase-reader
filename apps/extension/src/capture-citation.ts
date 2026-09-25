@@ -5,32 +5,19 @@ import {
   type SourceSummary,
 } from "@mdbase-reader/core";
 import {
-  arxivIdentifier,
-  doiFromUrl,
+  citationForPage,
   extractScholarlyMetadata,
-  mergedCitation,
-  resolveDoiCitation,
   type CitationDraft,
+  type CitationPreview,
 } from "@mdbase-reader/web-capture";
 
 import type { PageCapture } from "./page-capture.js";
 import type { ReaderConnectedCollection } from "@mdbase-reader/connect";
 
-export interface CitationPreview {
-  readonly citation: CitationDraft;
-  /** `doi`: the registration agency's record; `page`: tags the publisher embedded. */
-  readonly origin: "doi" | "page";
-  readonly doi?: string;
-  readonly pdfUrl?: string;
-  /** Why the DOI record was not used, when resolution failed. */
-  readonly problem?: string;
-}
+export type { CitationPreview } from "@mdbase-reader/web-capture";
 
-/**
- * Prefers the DOI registry's CSL (clean names, containers, ISSNs) and falls back to the
- * page's embedded tags, which also fill fields the registry lacks.
- */
-export async function prepareCitation(
+/** Resolves the citation for the page or PDF in the tab; see {@link citationForPage}. */
+export function prepareCitation(
   capture: PageCapture,
   signal?: AbortSignal,
 ): Promise<CitationPreview | null> {
@@ -41,26 +28,7 @@ export async function prepareCitation(
           capture.canonicalUrl,
         )
       : {};
-  const arxiv = arxivIdentifier(capture.canonicalUrl);
-  const doi =
-    embedded.doi ??
-    doiFromUrl(capture.canonicalUrl) ??
-    (arxiv ? `10.48550/arXiv.${arxiv.replace(/v\d+$/u, "")}` : undefined);
-  const pdfUrl = embedded.pdfUrl;
-  const base = { ...(doi ? { doi } : {}), ...(pdfUrl ? { pdfUrl } : {}) };
-  if (doi) {
-    try {
-      const resolved = await resolveDoiCitation(doi, signal ? { signal } : {});
-      return { ...base, citation: mergedCitation(resolved, embedded.citation), origin: "doi" };
-    } catch (reason) {
-      signal?.throwIfAborted();
-      const problem = reason instanceof Error ? reason.message : String(reason);
-      return embedded.citation
-        ? { ...base, citation: embedded.citation, origin: "page", problem }
-        : null;
-    }
-  }
-  return embedded.citation ? { ...base, citation: embedded.citation, origin: "page" } : null;
+  return citationForPage(embedded, capture.canonicalUrl, signal ? { signal } : {});
 }
 
 /** Stores the citation on a newly created source under an unused citekey. */

@@ -7,7 +7,7 @@ import {
   type AnnotationTransclusionController,
 } from "./use-annotation-transclusion.js";
 import { useCitationEditor, type CitationEditorController } from "./use-citation-editor.js";
-import { useLibrarySelection } from "./use-library-selection.js";
+import { useLibrarySelection, type LibrarySelection } from "./use-library-selection.js";
 import {
   useSelectedSourceResources,
   type AnnotationState,
@@ -72,7 +72,10 @@ export interface ReaderSourceWorkspaceController {
   ) => Promise<void>;
 }
 
-export interface ReaderWorkspaceController extends ReaderSourceWorkspaceController {
+export interface ReaderWorkspaceController
+  extends
+    ReaderSourceWorkspaceController,
+    Pick<LibrarySelection, "createSource" | "attachSourceFile" | "saveNewSourceCitation"> {
   readonly library: AsyncResource<ReaderLibrarySnapshot>;
   readonly selectedSource: SourceSummary | null;
   readonly reconcileSource: (source: Source) => void;

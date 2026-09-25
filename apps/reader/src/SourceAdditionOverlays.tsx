@@ -21,6 +21,7 @@ export function SourceAdditionOverlays({
         onClose={addition.close}
         onChooseFile={addition.chooseFile}
         onCapture={(url) => void addition.capture(url)}
+        lookup={addition.lookup}
         onEdit={addition.clearError}
         onDropFile={(file) => void addition.addFile(file)}
       />

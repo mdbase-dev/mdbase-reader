@@ -2,6 +2,7 @@ import {
   capturePage,
   resolvePublicAddresses,
   type CapturePageDependencies,
+  type CapturedPdf,
 } from "../../capture/capture-page.js";
 import { CapturePolicyError } from "../../capture/public-url.js";
 
@@ -15,14 +16,15 @@ export async function onRequest(context: PagesFunctionContext): Promise<Response
   }
   try {
     assertSameOriginBrowserRequest(context.request);
-    const submittedUrl = await requestUrl(context.request);
+    const { url: submittedUrl, allowPdf } = await captureRequest(context.request);
     const dependencies: CapturePageDependencies = {
       fetch: (input, init) => fetch(input, init),
       resolveAddresses: (hostname) =>
         resolvePublicAddresses(hostname, (input, init) => fetch(input, init)),
       now: () => new Date(),
     };
-    return json(await capturePage(submittedUrl, dependencies), 200);
+    const captured = await capturePage(submittedUrl, dependencies, { allowPdf });
+    return "pdf" in captured ? pdfResponse(captured) : json(captured, 200);
   } catch (reason) {
     if (reason instanceof CapturePolicyError) {
       return json({ code: reason.code, message: reason.message }, reason.status);
@@ -61,7 +63,9 @@ function assertSameOriginBrowserRequest(request: Request): void {
   }
 }
 
-async function requestUrl(request: Request): Promise<string> {
+async function captureRequest(
+  request: Request,
+): Promise<{ readonly url: string; readonly allowPdf: boolean }> {
   if (!request.headers.get("content-type")?.toLocaleLowerCase().startsWith("application/json")) {
     throw new CapturePolicyError("invalid_request", "Reader expected a JSON capture request.");
   }
@@ -73,11 +77,29 @@ async function requestUrl(request: Request): Promise<string> {
   if (!body || typeof body !== "object" || Array.isArray(body)) {
     throw new CapturePolicyError("invalid_request", "The capture request is invalid.");
   }
-  const url = (body as { readonly url?: unknown }).url;
+  const { url, allowPdf } = body as { readonly url?: unknown; readonly allowPdf?: unknown };
   if (typeof url !== "string") {
     throw new CapturePolicyError("invalid_request", "Enter a web address to capture.");
   }
-  return url.trim();
+  // Older Reader builds expect JSON for every capture, so PDFs are opt-in per request.
+  return { url: url.trim(), allowPdf: allowPdf === true };
+}
+
+/** The PDF streams back as-is; its provenance travels in headers. */
+function pdfResponse(captured: CapturedPdf): Response {
+  return new Response(captured.pdf, {
+    status: 200,
+    headers: {
+      "content-type": "application/pdf",
+      "content-disposition": "attachment",
+      "cache-control": "no-store",
+      "content-security-policy": "default-src 'none'; frame-ancestors 'none'",
+      "x-content-type-options": "nosniff",
+      "x-mdbase-submitted-url": encodeURI(captured.submittedUrl),
+      "x-mdbase-canonical-url": encodeURI(captured.canonicalUrl),
+      "x-mdbase-retrieved-at": captured.retrievedAt,
+    },
+  });
 }
 
 function json(value: unknown, status: number): Response {

@@ -17,6 +17,7 @@ import { SourceLibraryContext } from "./SourceLibraryContext.js";
 import { useBibliographyExport } from "./use-bibliography-export.js";
 import { useDeploymentUpdate } from "./use-deployment-update.js";
 import { useDirectAccess } from "./use-direct-access.js";
+import { useDocumentAttachment } from "./use-document-attachment.js";
 import { useDocumentDecorations } from "./use-document-decorations.js";
 import { useMdbaseLibraryViews } from "./use-mdbase-library-views.js";
 import { useReaderWorkspace, type ReaderWorkspaceController } from "./use-reader-workspace.js";
@@ -122,6 +123,7 @@ function OpenedReaderApp({
   const sourceAddition = useSourceAddition(workspace, pickSourceFile, (sourceId) => {
     sourceWorkspace.open(sourceId);
   });
+  const documentAttachment = useDocumentAttachment(workspace, pickSourceFile);
   const bibliographyExport = useBibliographyExport(library.sources, saveFile);
   const sourceExport = useSourceExport({
     gateway,
@@ -164,6 +166,7 @@ function OpenedReaderApp({
     readingResume,
     decorationProblem,
     sourceAddition,
+    documentAttachment,
     bibliographyExport,
     sourceExport,
     renderDocument,

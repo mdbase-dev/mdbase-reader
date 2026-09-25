@@ -16,6 +16,7 @@ import type {
   WorkspaceTab,
 } from "./source-workspace-layout.js";
 import type { AnnotationComposerController } from "./use-annotation-composer.js";
+import type { DocumentAttachmentController } from "./use-document-attachment.js";
 import type { ReadingResumeState } from "./use-reading-resume.js";
 import type { SourceExportController } from "./use-source-export.js";
 import type { SourceWorkspaceController } from "./use-source-workspace.js";
@@ -42,6 +43,8 @@ export interface DocumentWorkspaceProps {
   ) => ReactNode;
   readonly renderLibrary: (tab: LibraryWorkspaceTab, focused: boolean) => ReactNode;
   readonly onAddSource: () => void;
+  /** Attaches a document to a source that has none; absent when the collection cannot. */
+  readonly documentAttachment?: DocumentAttachmentController | null;
   readonly onToggleFocus: () => void;
   readonly surfaces: ReadonlyMap<string, ReadingSurface>;
 }
@@ -172,7 +175,13 @@ function sessionContent(
   }
   const openNote = (): void => props.sourceWorkspace.openView(source.id, "note", paneId);
   if (source.documents.length === 0) {
-    return <DocumentEmpty onOpenNote={openNote} />;
+    return (
+      <DocumentEmpty
+        onOpenNote={openNote}
+        source={source}
+        attachment={props.documentAttachment ?? null}
+      />
+    );
   }
   return props.renderDocument(source, paneId, tab.id) ?? <DocumentEmpty onOpenNote={openNote} />;
 }

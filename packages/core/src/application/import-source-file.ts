@@ -1,6 +1,16 @@
 import { DomainError } from "../domain/errors.js";
 
 import { detectDocumentFormat, mediaTypeFor } from "./source-document-format.js";
+import {
+  normalizeOptionalText,
+  normalizeTitle,
+  safeFileName,
+  safeFileStem,
+  titleFromFileName,
+  validateCapture,
+  validateMetadata,
+  webUrl,
+} from "./source-import-values.js";
 
 import type {
   Clock,
@@ -11,7 +21,6 @@ import type {
   SourceCaptureProvenance,
   SourceDocumentFormat,
   SourceFileImportRequest,
-  SourceImportMetadata,
   SourceImportOptions,
   SourceImportRepository,
 } from "./ports.js";
@@ -99,24 +108,26 @@ async function planSourceFileImport(
     collectionId: request.collectionId,
     sourceId: sourceIdentity,
     title,
-    kind: capture ? "webpage" : "document",
+    kind: normalizeOptionalText(request.kind, 100) ?? (capture ? "webpage" : "document"),
     savedAt: dependencies.clock.now(),
     recordPath: `sources/${sourceIdentity}.md`,
     representations: archive ? [primary, archive] : [primary],
     ...authoredImportFields(request),
     ...(capture ? { capture } : {}),
-    ...(request.metadata ? { metadata: validateMetadata(request.metadata) } : {}),
   };
 }
 
-function authoredImportFields(
-  request: SourceFileImportRequest,
-): Pick<PlannedSourceFileImport, "body" | "tags"> {
+/** Fields a new source takes from the request whether or not it has a document. */
+export function authoredImportFields(
+  request: Pick<SourceFileImportRequest, "body" | "tags" | "metadata" | "url">,
+): Pick<PlannedSourceFileImport, "body" | "tags" | "metadata" | "url"> {
   return {
     ...(request.body !== undefined ? { body: request.body } : {}),
     ...(request.tags
       ? { tags: [...new Set(request.tags.map((tag) => tag.trim()).filter(Boolean))] }
       : {}),
+    ...(request.metadata ? { metadata: validateMetadata(request.metadata) } : {}),
+    ...(request.url ? { url: webUrl(request.url) } : {}),
   };
 }
 
@@ -137,7 +148,7 @@ function validatedCaptureFor(
   return capture;
 }
 
-async function planRepresentation(
+export async function planRepresentation(
   dependencies: Pick<ImportSourceFileDependencies, "hasher" | "ids">,
   sourceIdentity: SourceId,
   input: {
@@ -166,87 +177,4 @@ async function planRepresentation(
     bytes: input.bytes,
     ...(input.derivedFromRole ? { derivedFromRole: input.derivedFromRole } : {}),
   };
-}
-
-function validateCapture(
-  capture: NonNullable<SourceFileImportRequest["capture"]>,
-): NonNullable<SourceFileImportRequest["capture"]> {
-  const submittedUrl = httpsUrl(capture.submittedUrl);
-  const canonicalUrl = httpsUrl(capture.canonicalUrl);
-  return { submittedUrl, canonicalUrl, retrievedAt: capture.retrievedAt };
-}
-
-function validateMetadata(metadata: SourceImportMetadata): SourceImportMetadata {
-  const authors = metadata.authors
-    ?.map((author) => normalizeOptionalText(author, 300))
-    .filter((author): author is string => author !== undefined);
-  const published = normalizeOptionalText(metadata.published, 100);
-  const description = normalizeOptionalText(metadata.description, 2_000);
-  const language = normalizeOptionalText(metadata.language, 100);
-  const site = normalizeOptionalText(metadata.site, 300);
-  return {
-    ...(authors?.length ? { authors } : {}),
-    ...(published ? { published } : {}),
-    ...(description ? { description } : {}),
-    ...(language ? { language } : {}),
-    ...(site ? { site } : {}),
-  };
-}
-
-function normalizeOptionalText(value: string | undefined, maximum: number): string | undefined {
-  const normalized = value?.replace(/\s+/gu, " ").trim().slice(0, maximum);
-  return normalized && normalized.length > 0 ? normalized : undefined;
-}
-
-function httpsUrl(value: string): string {
-  let url: URL;
-  try {
-    url = new URL(value);
-  } catch {
-    throw new DomainError(
-      "invalid-source-import",
-      "Web capture provenance contains an invalid URL.",
-    );
-  }
-  if (url.protocol !== "https:" || url.username || url.password) {
-    throw new DomainError(
-      "invalid-source-import",
-      "Web capture provenance must use public HTTPS URLs.",
-    );
-  }
-  url.hash = "";
-  return url.href;
-}
-
-function safeFileName(value: string): string {
-  const leaf = value.replaceAll("\\", "/").split("/").at(-1)?.trim() ?? "";
-  const clean = Array.from(leaf)
-    .filter((character) => character.charCodeAt(0) > 31 && character !== "\u007f")
-    .join("");
-  if (!clean || clean === "." || clean === "..") {
-    throw new DomainError("invalid-source-import", "The selected file needs a valid filename.");
-  }
-  return clean;
-}
-
-function safeFileStem(name: string): string {
-  const stem = name.replace(/\.[^.]+$/u, "");
-  const safe = stem
-    .normalize("NFKC")
-    .replace(/[^\p{Letter}\p{Number}._-]+/gu, "-")
-    .replace(/^[._-]+|[._-]+$/gu, "")
-    .slice(0, 96);
-  return safe.length > 0 ? safe : "document";
-}
-
-function titleFromFileName(name: string): string {
-  return name.replace(/\.[^.]+$/u, "").replace(/[_-]+/gu, " ");
-}
-
-function normalizeTitle(value: string): string {
-  const title = value.trim().replace(/\s+/gu, " ");
-  if (!title) {
-    throw new DomainError("invalid-source-import", "The source needs a title.");
-  }
-  return title;
 }
