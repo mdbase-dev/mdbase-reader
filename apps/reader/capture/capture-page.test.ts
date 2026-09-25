@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
 
-import { capturePage } from "./capture-page.js";
+import { CAPTURE_USER_AGENT, capturePage } from "./capture-page.js";
 
 const publicAddresses = vi.fn(() => Promise.resolve(["93.184.216.34"]));
 
@@ -31,7 +31,10 @@ describe("web page capture", () => {
     });
     expect(publicAddresses).toHaveBeenCalledTimes(2);
     expect(fetcher).toHaveBeenCalledTimes(2);
-    expect(fetcher.mock.calls[0]?.[1]).toMatchObject({ redirect: "manual" });
+    expect(fetcher.mock.calls[0]?.[1]).toMatchObject({
+      redirect: "manual",
+      headers: { "user-agent": CAPTURE_USER_AGENT },
+    });
   });
 
   it("rejects non-HTML and oversized responses before returning content", async () => {

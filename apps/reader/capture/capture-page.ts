@@ -4,6 +4,11 @@ import { CapturePolicyError, publicCaptureUrl, type AddressResolver } from "./pu
 const MAX_CAPTURE_BYTES = 2 * 1024 * 1024;
 const MAX_REDIRECTS = 5;
 const REQUEST_TIMEOUT_MS = 12_000;
+/**
+ * Sites such as Wikipedia refuse requests without a User-Agent, and robot policies ask
+ * automated clients to say who they are and where to learn more.
+ */
+export const CAPTURE_USER_AGENT = "mdbase-reader-capture/1.0 (+https://mdbase-reader.pages.dev)";
 
 export interface CapturedPage {
   readonly submittedUrl: string;
@@ -121,6 +126,7 @@ function fetchCapture(url: URL, fetcher: typeof fetch, options: CaptureOptions):
         ? "text/html,application/xhtml+xml;q=0.9,application/pdf;q=0.8"
         : "text/html,application/xhtml+xml;q=0.9",
       "accept-language": "en;q=0.8,*;q=0.5",
+      "user-agent": CAPTURE_USER_AGENT,
     },
   });
 }
