@@ -1,67 +1,186 @@
 .collection-picker-trigger {
-  cursor: pointer;
-  background: transparent;
-  color: inherit;
-  font: inherit;
-  border: 1px solid transparent;
-  border-radius: 4px;
   min-width: 0;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  color: inherit;
+  background: transparent;
+  font: inherit;
+  cursor: pointer;
+  transition:
+    background 150ms var(--ease),
+    border-color 150ms var(--ease);
 }
-.collection-picker-trigger:hover {
-  background: var(--paper);
+.collection-picker-trigger:hover,
+.collection-picker-trigger[aria-expanded="true"] {
   border-color: var(--line);
+  background: var(--paper);
 }
 .collection-picker-trigger:focus-visible {
   outline: 2px solid var(--accent);
   outline-offset: 2px;
 }
-.collection-picker-dialog {
-  width: min(440px, calc(100vw - 32px));
-  max-height: calc(100dvh - 48px);
+.collection-context .collection-picker-chevron {
+  width: 13px;
+  height: 13px;
+  margin-left: -1px;
+  color: var(--muted);
+  transition: transform 150ms var(--ease);
+}
+.collection-picker-trigger[aria-expanded="true"] .collection-picker-chevron {
+  transform: rotate(180deg);
+}
+
+/* The switcher menu, dropped from the header (see CollectionMenu.tsx). */
+.collection-menu {
+  position: fixed;
+  inset: auto;
+  z-index: 80;
   box-sizing: border-box;
-  padding: 16px;
-  border: 1px solid var(--line);
-  border-radius: 8px;
-  background: var(--canvas);
-  color: var(--ink);
+  display: flex;
+  flex-direction: column;
+  margin: 0;
   overflow: auto;
+  padding: 6px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  outline: 0;
+  color: var(--ink-soft);
+  background: var(--paper);
+  box-shadow: 0 16px 40px -16px color-mix(in oklch, var(--ink) 34%, transparent);
+  font-size: var(--ui-control, 13px);
+  overscroll-behavior: contain;
 }
-.collection-picker-dialog::backdrop {
-  background: rgb(0 0 0 / 35%);
+.collection-menu-heading {
+  padding: 6px 8px 4px;
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 700;
 }
-.collection-picker-dialog header {
+.collection-menu-filter {
+  height: 30px;
+  margin: 2px 2px 6px;
+  padding: 0 9px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  color: var(--ink);
+  background: var(--canvas);
+}
+.collection-menu-list {
+  display: grid;
+  gap: 1px;
+}
+.collection-menu-item,
+.collection-menu-connect {
+  min-width: 0;
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  margin-bottom: 12px;
-}
-.collection-picker-dialog h2 {
-  margin: 0;
-  font-size: 16px;
-}
-.collection-picker-list {
-  display: grid;
-  gap: 6px;
-}
-.collection-picker-list > button {
-  display: grid;
-  gap: 4px;
+  gap: 10px;
+  padding: 7px 8px;
+  border: 0;
+  border-radius: 7px;
+  color: var(--ink-soft);
+  background: transparent;
+  font: inherit;
   text-align: start;
-  padding: 12px;
-  border: 1px solid var(--line);
-  border-radius: 4px;
-  background: var(--paper);
-  color: var(--ink);
   cursor: pointer;
-  overflow-wrap: anywhere;
 }
-.collection-picker-list > button[aria-current="true"] {
-  border-color: var(--accent);
+.collection-menu-item:hover:not(:disabled),
+.collection-menu-connect:hover:not(:disabled) {
+  color: var(--ink);
+  background: var(--hover);
 }
-.collection-picker-list small {
+/* One focus mark inside the row, instead of the shell's outline around it. */
+.collection-menu .collection-menu-item:focus-visible,
+.collection-menu .collection-menu-connect:focus-visible {
+  color: var(--ink);
+  background: var(--hover);
+  outline: 0;
+  box-shadow: inset 0 0 0 2px color-mix(in oklch, var(--accent) 70%, transparent);
+}
+.collection-menu-item:disabled,
+.collection-menu-connect:disabled {
+  cursor: default;
+  opacity: 0.6;
+}
+.collection-menu-mark {
+  width: 28px;
+  height: 28px;
+  flex: 0 0 auto;
+  display: grid;
+  place-items: center;
+  border-radius: 7px;
+  color: oklch(36% 0.08 var(--hue));
+  background: oklch(92% 0.045 var(--hue));
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+.collection-menu-copy {
+  min-width: 0;
+  flex: 1 1 auto;
+  display: grid;
+  gap: 1px;
+}
+.collection-menu-copy strong,
+.collection-menu-copy small {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.collection-menu-copy strong {
+  color: var(--ink);
+  font-weight: 600;
+}
+.collection-menu-copy small {
+  color: var(--muted);
+  font-size: 11px;
+}
+.collection-menu-check {
+  width: 15px;
+  height: 15px;
+  flex: 0 0 auto;
+  color: var(--action);
+}
+.collection-menu-empty,
+.collection-menu-error {
+  margin: 4px 8px;
+  font-size: 12px;
+}
+.collection-menu-empty {
   color: var(--muted);
 }
-.collection-picker-dialog footer {
-  margin-top: 16px;
+.collection-menu-error {
+  color: var(--danger);
+}
+.collection-menu-separator {
+  height: 1px;
+  flex: 0 0 auto;
+  margin: 6px 2px;
+  background: var(--line);
+}
+.collection-menu-connect {
+  color: var(--action);
+}
+.collection-menu-connect svg {
+  width: 28px;
+  height: 16px;
+  flex: 0 0 auto;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .collection-menu-mark {
+    color: oklch(88% 0.06 var(--hue));
+    background: oklch(34% 0.06 var(--hue));
+  }
+}
+:root[data-theme="dark"] .collection-menu-mark {
+  color: oklch(88% 0.06 var(--hue));
+  background: oklch(34% 0.06 var(--hue));
+}
+
+@media (pointer: coarse) {
+  .collection-menu-item,
+  .collection-menu-connect {
+    min-height: 48px;
+  }
 }

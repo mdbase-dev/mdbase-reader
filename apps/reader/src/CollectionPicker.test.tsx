@@ -63,24 +63,33 @@ it("retains a static collection label without a Connect session", async () => {
   expect(host.textContent).toContain("Current");
   expect(host.querySelector("button")).toBeNull();
 });
-it("marks the current collection and selects another through the existing session", async () => {
+const menu = (): Element | null => host.querySelector('[role="menu"]');
+
+it("lists the current collection first, checked, and switches through the existing session", async () => {
   await render();
   await click("Switch collection: Current");
-  expect(host.querySelector("dialog")?.open).toBe(true);
-  expect(host.querySelector('[aria-current="true"]')?.textContent).toContain("Current collection");
+  expect(menu()).not.toBeNull();
+  const items = [...host.querySelectorAll('[role="menuitemradio"]')];
+  expect(items.map((item) => item.querySelector("strong")?.textContent)).toEqual([
+    "Current",
+    "Second",
+  ]);
+  expect(items[0]?.getAttribute("aria-checked")).toBe("true");
+  expect(document.activeElement).toBe(items[0]);
   await click("Second");
   expect(beforeSwitch).toHaveBeenCalledOnce();
   expect(select).toHaveBeenCalledExactlyOnceWith("b");
-  expect(host.querySelector("dialog")).toBeNull();
+  expect(menu()).toBeNull();
 });
 it("does not switch or prompt when choosing the current collection", async () => {
   await render();
   await click("Switch collection: Current");
-  await click("Current collection");
+  await click("Open now");
   expect(beforeSwitch).not.toHaveBeenCalled();
   expect(select).not.toHaveBeenCalled();
+  expect(menu()).toBeNull();
 });
-it("keeps the picker open when leaving unsaved edits is cancelled", async () => {
+it("keeps the menu open when leaving unsaved edits is cancelled", async () => {
   beforeSwitch.mockReturnValue(false);
   await render();
   await click("Switch collection: Current");
@@ -88,31 +97,64 @@ it("keeps the picker open when leaving unsaved edits is cancelled", async () => 
   await click("Connect another collection");
   expect(select).not.toHaveBeenCalled();
   expect(connect).not.toHaveBeenCalled();
-  expect(host.querySelector("dialog")?.open).toBe(true);
+  expect(menu()).not.toBeNull();
 });
 it("uses the authorization flow for a new collection", async () => {
   await render();
   await click("Switch collection: Current");
   await click("Connect another collection");
   expect(connect).toHaveBeenCalledOnce();
-  expect(host.querySelector("dialog")).toBeNull();
+  expect(menu()).toBeNull();
 });
-it("shows connection errors without losing the picker", async () => {
+it("shows switching and connection errors without losing the menu", async () => {
   connect.mockRejectedValue(new Error("Connection unavailable"));
   await render();
   await click("Switch collection: Current");
   await click("Connect another collection");
   expect(host.querySelector('[role="alert"]')?.textContent).toContain("Connection unavailable");
-  expect(host.querySelector("dialog")?.open).toBe(true);
+  expect(menu()).not.toBeNull();
 });
-it("closes on Escape and restores focus to the trigger", async () => {
+it("opens from the keyboard and closes on Escape, returning focus to the trigger", async () => {
   await render();
   const trigger = host.querySelector("button");
   trigger?.focus();
-  await click("Switch collection: Current");
   await act(async () =>
-    host.querySelector("dialog")?.dispatchEvent(new Event("cancel", { cancelable: true })),
+    trigger?.dispatchEvent(new KeyboardEvent("keydown", { key: "ArrowDown", bubbles: true })),
   );
-  expect(host.querySelector("dialog")).toBeNull();
+  expect(menu()).not.toBeNull();
+  await act(async () =>
+    document.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape", bubbles: true })),
+  );
+  expect(menu()).toBeNull();
   expect(document.activeElement).toBe(trigger);
+});
+it("offers a filter once there are many collections", async () => {
+  await act(async () =>
+    root.render(
+      <CollectionSwitchingContext
+        value={{
+          collectionId: "c0",
+          connections: Array.from({ length: 8 }, (_, index) => ({
+            collectionId: `c${String(index)}`,
+            displayName: index === 5 ? "Thesis research" : `Collection ${String(index)}`,
+          })),
+          select,
+          connect,
+        }}
+      >
+        <CollectionPicker name="Collection 0" />
+      </CollectionSwitchingContext>,
+    ),
+  );
+  await click("Switch collection: Collection 0");
+  const filter = host.querySelector<HTMLInputElement>('input[aria-label="Filter collections"]');
+  expect(filter).not.toBeNull();
+  await act(async () => {
+    const setValue = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, "value")?.set;
+    setValue?.call(filter, "thesis");
+    filter?.dispatchEvent(new Event("input", { bubbles: true }));
+  });
+  expect(
+    [...host.querySelectorAll('[role="menuitemradio"] strong')].map((item) => item.textContent),
+  ).toEqual(["Thesis research"]);
 });

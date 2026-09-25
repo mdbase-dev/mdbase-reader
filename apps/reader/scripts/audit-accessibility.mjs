@@ -40,6 +40,10 @@ try {
   await desktop.getByRole("menu").waitFor();
   await audit(desktop, "row menu");
   await desktop.keyboard.press("Escape");
+  await desktop.getByRole("button", { name: /^Switch collection/u }).click();
+  await desktop.getByRole("menu", { name: "Switch collection" }).waitFor();
+  await audit(desktop, "collection menu");
+  await desktop.keyboard.press("Escape");
   const titles = desktop.locator(".library-table-body .library-table-row .is-title");
   await titles.nth(0).click();
   await titles.nth(2).click({ modifiers: ["Shift"] });

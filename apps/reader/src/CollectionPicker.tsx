@@ -1,12 +1,15 @@
-import { createContext, useContext, useEffect, useId, useRef, useState, type JSX } from "react";
+import { createContext, useContext, useId, useRef, useState, type JSX } from "react";
 
+import { CollectionMenu } from "./CollectionMenu.js";
 import { readerErrorMessage } from "./errors.js";
-import { CollectionIcon } from "./icons.js";
+import { ChevronDownIcon, CollectionIcon } from "./icons.js";
+
+import type { CollectionChoice } from "./collection-menu-model.js";
 import "./collection-picker.css";
 
 export interface CollectionSwitching {
   readonly collectionId: string;
-  readonly connections: readonly { readonly collectionId: string; readonly displayName: string }[];
+  readonly connections: readonly CollectionChoice[];
   readonly select: (collectionId: string) => void;
   readonly connect: () => Promise<void>;
 }
@@ -14,13 +17,17 @@ export const CollectionSwitchingContext = createContext<CollectionSwitching | nu
 
 export function CollectionPicker({
   name,
-  beforeSwitch,
+  beforeSwitch = () => true,
 }: {
   readonly name: string;
   readonly beforeSwitch?: () => boolean;
 }): JSX.Element {
   const switching = useContext(CollectionSwitchingContext);
+  const menuId = useId();
+  const triggerRef = useRef<HTMLButtonElement>(null);
   const [open, setOpen] = useState(false);
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const label = (
     <>
       <CollectionIcon />
@@ -35,71 +42,26 @@ export function CollectionPicker({
       </span>
     );
   }
-  return (
-    <>
-      <button
-        type="button"
-        className="collection-context collection-picker-trigger"
-        aria-label={`Switch collection: ${name}`}
-        aria-haspopup="dialog"
-        aria-expanded={open}
-        title="Switch collection"
-        onClick={() => setOpen(true)}
-      >
-        {label}
-        <span aria-hidden="true">⌄</span>
-      </button>
-      {open ? (
-        <CollectionPickerDialog
-          name={name}
-          switching={switching}
-          beforeSwitch={beforeSwitch ?? (() => true)}
-          onClose={() => setOpen(false)}
-        />
-      ) : null}
-    </>
-  );
-}
-
-function CollectionPickerDialog({
-  name,
-  switching,
-  beforeSwitch,
-  onClose,
-}: {
-  readonly name: string;
-  readonly switching: CollectionSwitching;
-  readonly beforeSwitch: () => boolean;
-  readonly onClose: () => void;
-}): JSX.Element {
-  const dialog = useRef<HTMLDialogElement>(null);
-  const titleId = useId();
-  const [busy, setBusy] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  useEffect(() => {
-    const previous = document.activeElement;
-    const element = dialog.current;
-    element?.showModal();
-    element?.querySelector<HTMLElement>('[aria-current="true"]')?.focus();
-    return () => {
-      element?.close();
-      if (previous instanceof HTMLElement && previous.isConnected) {
-        previous.focus();
-      }
-    };
-  }, []);
+  const close = (refocus: boolean): void => {
+    setOpen(false);
+    setError(null);
+    if (refocus) {
+      triggerRef.current?.focus();
+    }
+  };
   const choose = (id: string): void => {
     if (id === switching.collectionId) {
-      onClose();
+      close(true);
       return;
     }
+    // Unsaved edits can keep Reader here; the menu stays open for another choice.
     if (!beforeSwitch()) {
       return;
     }
     setError(null);
     try {
       switching.select(id);
-      onClose();
+      close(false);
     } catch (reason) {
       setError(readerErrorMessage(reason, "Reader could not switch collections."));
     }
@@ -112,7 +74,7 @@ function CollectionPickerDialog({
     setError(null);
     try {
       await switching.connect();
-      onClose();
+      close(false);
     } catch (reason) {
       setError(readerErrorMessage(reason, "Reader could not connect another collection."));
     } finally {
@@ -120,52 +82,41 @@ function CollectionPickerDialog({
     }
   };
   return (
-    <dialog
-      ref={dialog}
-      className="collection-picker-dialog"
-      aria-labelledby={titleId}
-      onCancel={(event) => {
-        event.preventDefault();
-        if (!busy) {
-          onClose();
-        }
-      }}
-    >
-      <header>
-        <h2 id={titleId}>Choose a collection</h2>
-        <button
-          type="button"
-          className="icon-button"
-          aria-label="Close collection picker"
-          disabled={busy}
-          onClick={onClose}
-        >
-          ×
-        </button>
-      </header>
-      <div className="collection-picker-list">
-        {switching.connections.map((connection) => {
-          const current = connection.collectionId === switching.collectionId;
-          return (
-            <button
-              type="button"
-              key={connection.collectionId}
-              disabled={busy}
-              aria-current={current ? "true" : undefined}
-              onClick={() => choose(connection.collectionId)}
-            >
-              <strong>{current ? name : connection.displayName}</strong>
-              {current ? <small>Current collection</small> : null}
-            </button>
-          );
-        })}
-      </div>
-      {error ? <p role="alert">{error}</p> : null}
-      <footer>
-        <button type="button" disabled={busy} onClick={() => void connect()}>
-          {busy ? "Opening mdbase…" : "Connect another collection…"}
-        </button>
-      </footer>
-    </dialog>
+    <>
+      <button
+        ref={triggerRef}
+        type="button"
+        className="collection-context collection-picker-trigger"
+        aria-label={`Switch collection: ${name}`}
+        aria-haspopup="menu"
+        aria-expanded={open}
+        aria-controls={open ? menuId : undefined}
+        title="Switch collection"
+        onClick={() => (open ? close(false) : setOpen(true))}
+        onKeyDown={(event) => {
+          if (!open && (event.key === "ArrowDown" || event.key === "ArrowUp")) {
+            event.preventDefault();
+            setOpen(true);
+          }
+        }}
+      >
+        {label}
+        <ChevronDownIcon className="collection-picker-chevron" aria-hidden="true" />
+      </button>
+      {open ? (
+        <CollectionMenu
+          id={menuId}
+          triggerRef={triggerRef}
+          currentId={switching.collectionId}
+          currentName={name}
+          choices={switching.connections}
+          busy={busy}
+          error={error}
+          onChoose={choose}
+          onConnect={() => void connect()}
+          onClose={close}
+        />
+      ) : null}
+    </>
   );
 }

@@ -23,6 +23,7 @@ import {
 } from "@mdbase-reader/core";
 import { lazy, Suspense, useMemo, type JSX } from "react";
 
+import { CollectionSwitchingContext, type CollectionSwitching } from "./CollectionPicker.js";
 import {
   applyLibraryViewConfiguration,
   defaultLibraryView,
@@ -473,15 +474,42 @@ function PreviewDocument({
 export function PreviewReader(): JSX.Element {
   const gateway = useMemo(() => new PreviewGateway(), []);
   return (
-    <ReaderApp
-      gateway={gateway}
-      renderDocument={(source, onSurfaceChange) => (
-        <PreviewDocument source={source} onSurfaceChange={onSurfaceChange} />
-      )}
-      saveFile={() => Promise.resolve()}
-    />
+    <CollectionSwitchingContext value={previewCollections}>
+      <ReaderApp
+        gateway={gateway}
+        renderDocument={(source, onSurfaceChange) => (
+          <PreviewDocument source={source} onSurfaceChange={onSurfaceChange} />
+        )}
+        saveFile={() => Promise.resolve()}
+      />
+    </CollectionSwitchingContext>
   );
 }
+
+/** Sample collections show the switcher; the preview has only its own records to open. */
+const previewCollections: CollectionSwitching = {
+  collectionId: collection,
+  connections: [
+    { collectionId: collection, displayName: "Reading", authority: { kind: "hosted" } },
+    {
+      collectionId: "preview-thesis",
+      displayName: "Thesis research",
+      authority: { kind: "connector" },
+    },
+    {
+      collectionId: "preview-course",
+      displayName: "Course reading",
+      authority: { kind: "hosted" },
+    },
+  ],
+  select: () => {
+    throw new Error(
+      "The preview has one sample collection. Connect mdbase to switch between yours.",
+    );
+  },
+  connect: () =>
+    Promise.reject(new Error("Connecting a collection needs mdbase Connect, outside the preview.")),
+};
 
 /** Preview records list friendly fields on the summary; a real record stores them as frontmatter. */
 function withRecordFrontmatter(source: Source): Source {
