@@ -2,6 +2,7 @@ import { expect } from "@playwright/test";
 import { auditAnnotationWorkbench } from "./audit-annotation-workbench.mjs";
 import { auditAnnotationFormats } from "./audit-annotation-formats.mjs";
 import { auditAnnotationNavigationFailure } from "./audit-annotation-navigation.mjs";
+import { chooseOption } from "./audit-select.mjs";
 
 export async function auditAnnotations(page, { screenshot, blockWrites }) {
   const completed = [];
@@ -131,9 +132,9 @@ export async function auditAnnotations(page, { screenshot, blockWrites }) {
   await expect(tools.getByText("No matching annotations", { exact: true })).toBeVisible();
   await tools.getByRole("button", { name: "Clear filters", exact: true }).click();
   await tools.getByLabel("Filter and sort annotations", { exact: true }).click();
-  await tools.getByRole("combobox", { name: "Filter annotations" }).selectOption("comments");
+  await chooseOption(tools.getByRole("combobox", { name: "Filter annotations" }), "comments");
   await expect(tools.locator(".annotation-card")).toHaveCount(2);
-  await tools.getByRole("combobox", { name: "Sort annotations" }).selectOption("newest");
+  await chooseOption(tools.getByRole("combobox", { name: "Sort annotations" }), "newest");
   await screenshot("annotation-browsing-desktop");
   await tools.getByRole("button", { name: "Show in document" }).first().click();
   await expect(page.getByRole("button", { name: "Back to reading position" })).toBeVisible();
@@ -233,9 +234,9 @@ async function auditAnnotationViewSaving(page, grid, rows) {
   const dialog = page.getByRole("form", { name: "Save library view" });
   await dialog.getByRole("textbox", { name: "Name" }).fill("[test] Attention quotes");
   await dialog.getByRole("button", { name: "Save view" }).click();
-  await expect(
-    page.getByRole("combobox", { name: "Library view" }).locator("option:checked"),
-  ).toHaveText("[test] Attention quotes");
+  await expect(page.getByRole("combobox", { name: "Library view" })).toHaveText(
+    "[test] Attention quotes",
+  );
   await expect(grid).toBeVisible();
   await expect(page.getByRole("textbox", { name: "Search annotations" })).toHaveValue(
     "Patient attention and",

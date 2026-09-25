@@ -39,6 +39,8 @@ export default tseslint.config(
     },
     rules: {
       ...jsxA11y.flatConfigs.recommended.rules,
+      // Reader's styled Select renders a labelable combobox button.
+      "jsx-a11y/label-has-associated-control": ["error", { controlComponents: ["Select"] }],
       ...reactHooks.configs.flat.recommended.rules,
       "@typescript-eslint/consistent-type-exports": "error",
       "@typescript-eslint/consistent-type-imports": [

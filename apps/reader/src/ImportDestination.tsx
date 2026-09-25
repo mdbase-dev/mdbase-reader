@@ -1,4 +1,5 @@
 import { connectProblemMessage, type ReaderConnectSnapshot } from "@mdbase-reader/connect";
+import { Select } from "@mdbase-reader/ui";
 
 import { readerSession } from "./connect.js";
 
@@ -32,26 +33,22 @@ export function ImportDestination({
       </p>
       <label>
         Collection
-        <select
+        <Select
+          aria-label="Collection"
           disabled={disabled}
           value={"collectionId" in session ? session.collectionId : ""}
-          onChange={(event) => {
-            const outcome = readerSession.select(event.target.value);
-            const message = connectProblemMessage(outcome);
+          placeholder="Select a collection"
+          options={session.connections.map((c) => ({
+            value: c.collectionId,
+            label: c.displayName,
+          }))}
+          onChange={(collectionId) => {
+            const message = connectProblemMessage(readerSession.select(collectionId));
             if (message) {
               onError(message);
             }
           }}
-        >
-          <option value="" disabled>
-            Select a collection
-          </option>
-          {session.connections.map((c) => (
-            <option key={c.collectionId} value={c.collectionId}>
-              {c.displayName}
-            </option>
-          ))}
-        </select>
+        />
       </label>
       <button type="button" disabled={disabled} onClick={() => void choose()}>
         Create or connect a collection…

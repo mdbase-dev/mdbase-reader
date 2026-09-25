@@ -1,5 +1,7 @@
 /* eslint-disable max-lines */
 
+import { Select, type SelectItems } from "@mdbase-reader/ui";
+
 import {
   citationDateText,
   commonCslTypes,
@@ -54,31 +56,13 @@ export function CitationStructuredEditor({
           </label>
           <label className="citation-field">
             <span>Type</span>
-            <select
+            <Select
+              aria-label="Type"
               aria-invalid={problem("type") ? true : undefined}
               value={fieldText(citation, "type")}
-              onChange={(event) => update("type", event.target.value)}
-            >
-              {![...commonCslTypes, ...specialistCslTypes].some(
-                ([value]) => value === citation["type"],
-              ) ? (
-                <option value={fieldText(citation, "type")}>{fieldText(citation, "type")}</option>
-              ) : null}
-              <optgroup label="Common">
-                {commonCslTypes.map(([value, label]) => (
-                  <option key={value} value={value}>
-                    {label}
-                  </option>
-                ))}
-              </optgroup>
-              <optgroup label="Specialist">
-                {specialistCslTypes.map(([value, label]) => (
-                  <option key={value} value={value}>
-                    {label}
-                  </option>
-                ))}
-              </optgroup>
-            </select>
+              options={cslTypeOptions(fieldText(citation, "type"))}
+              onChange={(type) => update("type", type)}
+            />
             <FieldProblem message={problem("type")} />
           </label>
           <label className="citation-field citation-citekey-field">
@@ -323,4 +307,17 @@ function FieldProblem({ message }: { readonly message?: string | undefined }): J
 function fieldText(citation: Readonly<Record<string, unknown>>, field: string): string {
   const value = citation[field];
   return typeof value === "string" || typeof value === "number" ? String(value) : "";
+}
+
+/** The common and specialist CSL types, keeping an unrecognised current type selectable. */
+function cslTypeOptions(current: string): SelectItems {
+  const known = [...commonCslTypes, ...specialistCslTypes].some(([value]) => value === current);
+  return [
+    ...(known || !current ? [] : [{ value: current, label: current }]),
+    { label: "Common", options: commonCslTypes.map(([value, label]) => ({ value, label })) },
+    {
+      label: "Specialist",
+      options: specialistCslTypes.map(([value, label]) => ({ value, label })),
+    },
+  ];
 }

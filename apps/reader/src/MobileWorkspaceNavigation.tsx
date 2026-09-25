@@ -1,5 +1,7 @@
+import { Select } from "@mdbase-reader/ui";
+
 import { panelTab } from "./dockview-workspace-state.js";
-import { BackIcon, ChevronDownIcon, CloseIcon } from "./icons.js";
+import { BackIcon, CloseIcon } from "./icons.js";
 
 import type { ReaderDockWorkspace } from "./dockview-workspace.js";
 import type { JSX } from "react";
@@ -39,27 +41,24 @@ export function MobileWorkspaceNavigation({
   }
   return (
     <nav className="mobile-workspace-navigation" aria-label="Mobile workspace navigation">
-      <label className="mobile-tab-switcher">
-        <select
+      <div className="mobile-tab-switcher">
+        <Select
           aria-label="Open workspace tab"
+          className="is-quiet"
           disabled={!tabs.length}
           value={active?.id ?? ""}
-          onChange={(event) => dock.activate(event.currentTarget.value)}
-        >
-          {tabs.map((panel) => (
-            <option key={panel.id} value={panel.id}>
-              {panel.title}
-              {panelTab(panel)?.dirty ? " — unsaved changes" : ""}
-            </option>
-          ))}
-        </select>
+          options={tabs.map((panel) => ({
+            value: panel.id,
+            label: `${panel.title ?? ""}${panelTab(panel)?.dirty ? " — unsaved changes" : ""}`,
+          }))}
+          onChange={(id) => dock.activate(id)}
+        />
         {tabs.length > 1 ? (
           <span className="mobile-tab-count" title="Open tabs — choose one to switch">
             {tabs.length} tabs
           </span>
         ) : null}
-        <ChevronDownIcon aria-hidden="true" />
-      </label>
+      </div>
       {active && activeTab?.kind !== "library" ? (
         <button
           className="icon-button"

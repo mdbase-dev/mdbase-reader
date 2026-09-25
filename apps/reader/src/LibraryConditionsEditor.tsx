@@ -1,3 +1,4 @@
+import { Select } from "@mdbase-reader/ui";
 import { useId, useMemo, type JSX } from "react";
 
 import { CloseIcon, PlusIcon } from "./icons.js";
@@ -6,7 +7,6 @@ import {
   fieldValueSuggestions,
   operatorLabels,
   operatorNeedsValue,
-  type ConditionOperator,
   type FieldCondition,
 } from "./library-conditions.js";
 
@@ -104,17 +104,16 @@ function ConditionRow({
         spellCheck={false}
         onChange={(event) => onChange({ key: event.target.value.trim() })}
       />
-      <select
+      <Select
         aria-label="Comparison"
+        className="library-condition-operator"
         value={condition.operator}
-        onChange={(event) => onChange({ operator: event.target.value as ConditionOperator })}
-      >
-        {conditionOperators.map((operator) => (
-          <option key={operator} value={operator}>
-            {operatorLabels[operator]}
-          </option>
-        ))}
-      </select>
+        options={conditionOperators.map((operator) => ({
+          value: operator,
+          label: operatorLabels[operator],
+        }))}
+        onChange={(operator) => onChange({ operator })}
+      />
       {operatorNeedsValue(condition.operator) ? (
         <>
           <input

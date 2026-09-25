@@ -1,3 +1,4 @@
+import { Select, type SelectItems } from "@mdbase-reader/ui";
 import { useEffect, useState, type JSX } from "react";
 
 import { citationStyles, formatCitation } from "./citation-renderer.js";
@@ -25,25 +26,31 @@ export function CitationPreview({ citation }: { readonly citation: CslItem }): J
         <strong>Preview</strong>
         <label>
           <span>Style</span>
-          <select value={style} onChange={(event) => setStyle(event.target.value)}>
-            {citationStyles.map(([value, label]) => (
-              <option key={value} value={value}>
-                {label}
-              </option>
-            ))}
-          </select>
+          <Select
+            aria-label="Citation style"
+            value={style}
+            options={citationStyles.map(([value, label]) => ({ value, label }))}
+            onChange={setStyle}
+          />
         </label>
         <label>
           <span>Locale</span>
-          <select value={locale} onChange={(event) => setLocale(event.target.value)}>
-            <option value="en-US">English (US)</option>
-            <option value="en-GB">English (UK)</option>
-            <option value="de-DE">Deutsch</option>
-            <option value="fr-FR">Français</option>
-          </select>
+          <Select
+            aria-label="Citation locale"
+            value={locale}
+            options={localeOptions}
+            onChange={setLocale}
+          />
         </label>
       </header>
       <blockquote>{preview}</blockquote>
     </section>
   );
 }
+
+const localeOptions: SelectItems = [
+  { value: "en-US", label: "English (US)" },
+  { value: "en-GB", label: "English (UK)" },
+  { value: "de-DE", label: "Deutsch" },
+  { value: "fr-FR", label: "Français" },
+];

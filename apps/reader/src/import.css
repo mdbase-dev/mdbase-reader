@@ -90,19 +90,27 @@
   align-items: center;
 }
 .import-page input,
-.import-page select,
 .import-page button {
   font: inherit;
   color: var(--ink);
 }
-.import-page input:not([type="checkbox"]),
-.import-page select {
+.import-page input:not([type="checkbox"]) {
   width: 100%;
   max-width: 540px;
   border: 1px solid var(--line-strong);
   border-radius: 6px;
   background: var(--paper);
   padding: 10px;
+}
+/* Fields, not buttons: the select matches the inputs beside it. */
+.import-page .mdbase-select {
+  width: 100%;
+  max-width: 540px;
+  min-height: 42px;
+  padding: 0 10px;
+  border-color: var(--line-strong);
+  border-radius: 6px;
+  font-size: inherit;
 }
 .import-page button {
   padding: 10px 15px;

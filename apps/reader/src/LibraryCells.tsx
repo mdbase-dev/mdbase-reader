@@ -1,4 +1,5 @@
 import { readingStatuses } from "@mdbase-reader/core";
+import { Select, type SelectOption } from "@mdbase-reader/ui";
 
 import {
   formatPropertyValue,
@@ -125,6 +126,9 @@ export function readingStatusLabel(status: string): string {
   return status.charAt(0).toLocaleUpperCase() + status.slice(1);
 }
 
+export const readingStatusOptions: readonly SelectOption<ReadingStatusValue>[] =
+  readingStatusChoices.map((status) => ({ value: status, label: readingStatusLabel(status) }));
+
 export function StatusPicker({
   source,
   onChange,
@@ -137,20 +141,17 @@ export function StatusPicker({
   return (
     <span className={`library-status is-${status} is-editable`}>
       <i className="library-status-mark" aria-hidden="true" />
-      <select
+      <Select
         aria-label={`Reading status of ${source.title}`}
+        className="is-quiet"
         value={status}
+        options={readingStatusOptions}
+        // The row owns clicks, double-clicks and grid keys; the picker keeps its own.
         onClick={(event) => event.stopPropagation()}
         onDoubleClick={(event) => event.stopPropagation()}
         onKeyDown={(event) => event.stopPropagation()}
-        onChange={(event) => onChange(source.id, event.target.value as ReadingStatusValue)}
-      >
-        {readingStatusChoices.map((choice) => (
-          <option key={choice} value={choice}>
-            {readingStatusLabel(choice)}
-          </option>
-        ))}
-      </select>
+        onChange={(next) => onChange(source.id, next)}
+      />
       {progress !== null ? (
         <span className="library-progress" aria-label={`${String(progress)}% read`}>
           <i style={{ width: `${String(progress)}%` }} />
@@ -160,7 +161,7 @@ export function StatusPicker({
   );
 }
 
-function readingStatusOf(source: SourceSummary): string {
+function readingStatusOf(source: SourceSummary): ReadingStatusValue {
   return source.reading?.status ?? source.readingStatus ?? "inbox";
 }
 

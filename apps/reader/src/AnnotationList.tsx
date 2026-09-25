@@ -1,3 +1,4 @@
+import { Select, type SelectItems } from "@mdbase-reader/ui";
 import { useState, type JSX } from "react";
 
 import { browseAnnotations, type AnnotationFilter } from "./annotation-list-order.js";
@@ -170,27 +171,21 @@ function AnnotationBrowserControls({
           <div className="library-options" data-menu-keep-open>
             <label>
               <span>Show</span>
-              <select
+              <Select
                 aria-label="Filter annotations"
                 value={filter}
-                onChange={(event) => onFilterChange(event.target.value as AnnotationFilter)}
-              >
-                <option value="all">All</option>
-                <option value="comments">With comments</option>
-                <option value="highlight">Highlights</option>
-                <option value="area">Area captures</option>
-              </select>
+                options={annotationFilterOptions}
+                onChange={onFilterChange}
+              />
             </label>
             <label>
               <span>Order</span>
-              <select
+              <Select
                 aria-label="Sort annotations"
                 value={order}
-                onChange={(event) => onOrderChange(event.target.value as AnnotationOrder)}
-              >
-                <option value="document">Document order</option>
-                <option value="newest">Newest first</option>
-              </select>
+                options={annotationOrderOptions}
+                onChange={onOrderChange}
+              />
             </label>
           </div>
         </Menu>
@@ -211,3 +206,15 @@ function AnnotationBrowserControls({
     </div>
   );
 }
+
+const annotationFilterOptions: SelectItems<AnnotationFilter> = [
+  { value: "all", label: "All" },
+  { value: "comments", label: "With comments" },
+  { value: "highlight", label: "Highlights" },
+  { value: "area", label: "Area captures" },
+];
+
+const annotationOrderOptions: SelectItems<AnnotationOrder> = [
+  { value: "document", label: "Document order" },
+  { value: "newest", label: "Newest first" },
+];

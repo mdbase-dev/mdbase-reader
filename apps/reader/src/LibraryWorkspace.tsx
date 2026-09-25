@@ -1,4 +1,5 @@
 /* eslint-disable complexity, max-lines, max-lines-per-function */
+import { Select, type SelectItems, type SelectOption } from "@mdbase-reader/ui";
 import {
   useCallback,
   useEffect,
@@ -13,7 +14,6 @@ import {
 import { ContinueReading } from "./ContinueReading.js";
 import { readerErrorMessage } from "./errors.js";
 import {
-  ChevronDownIcon,
   DownloadIcon,
   FilterIcon,
   ImportIcon,
@@ -22,7 +22,12 @@ import {
   SearchIcon,
 } from "./icons.js";
 import { importHref } from "./import-navigation.js";
-import { discoverPropertyKeys } from "./library-columns.js";
+import {
+  columnLabel,
+  discoverPropertyKeys,
+  propertyColumn,
+  propertyKey,
+} from "./library-columns.js";
 import { fieldShape, isActiveCondition } from "./library-conditions.js";
 import {
   emptyRowSelection,
@@ -247,23 +252,18 @@ export function LibraryWorkspace({
     <section className="library-workspace" aria-label={`${view.name} library view`}>
       <header className="library-workspace-header">
         <label className="library-view-identity">
-          <span className="sr-only">Library view</span>
-          <select
+          <Select
+            aria-label="Library view"
+            className="is-quiet"
             value={view.key}
-            onChange={(event) => {
-              const next = availableViews.find(({ key }) => key === event.target.value);
+            options={availableViews.map(({ key, name }) => ({ value: key, label: name }))}
+            onChange={(key) => {
+              const next = availableViews.find((candidate) => candidate.key === key);
               if (next) {
                 onOpenView(next);
               }
             }}
-          >
-            {availableViews.map((candidate) => (
-              <option key={candidate.key} value={candidate.key}>
-                {candidate.name}
-              </option>
-            ))}
-          </select>
-          <ChevronDownIcon aria-hidden="true" />
+          />
         </label>
         <div className="segmented-control library-mode" role="group" aria-label="Show">
           {(["sources", "annotations"] as const).map((value) => (
@@ -302,18 +302,13 @@ export function LibraryWorkspace({
               <span className="library-search-scope-label" aria-hidden="true">
                 in
               </span>
-              <select
+              <Select
                 aria-label="Search scope"
-                className="library-search-scope"
+                className="library-search-scope is-quiet"
                 value={searchScope}
-                onChange={(event) => {
-                  setSearchScope(event.target.value as LibrarySearchScope);
-                }}
-              >
-                <option value="sources">Library</option>
-                <option value="notes">Notes & annotations</option>
-                <option value="documents">Open documents</option>
-              </select>
+                options={searchScopeOptions}
+                onChange={setSearchScope}
+              />
             </div>
             <div className="library-header-trailing">
               {searchScope === "sources" ? (
@@ -346,40 +341,21 @@ export function LibraryWorkspace({
                   <span className="menu-label">Filter</span>
                   <label>
                     <span>Status</span>
-                    <select
+                    <Select
+                      aria-label="Status"
                       value={configuration.filter.status}
-                      onChange={(event) =>
-                        updateFilter({
-                          status: event.target
-                            .value as LibraryViewConfiguration["filter"]["status"],
-                        })
-                      }
-                    >
-                      <option value="all">Any status</option>
-                      {readingStatusChoices.map((status) => (
-                        <option key={status} value={status}>
-                          {readingStatusLabel(status)}
-                        </option>
-                      ))}
-                    </select>
+                      options={statusFilterOptions}
+                      onChange={(status) => updateFilter({ status })}
+                    />
                   </label>
                   <label>
                     <span>Format</span>
-                    <select
+                    <Select
+                      aria-label="Format"
                       value={configuration.filter.format}
-                      onChange={(event) =>
-                        updateFilter({
-                          format: event.target
-                            .value as LibraryViewConfiguration["filter"]["format"],
-                        })
-                      }
-                    >
-                      <option value="all">Any format</option>
-                      <option value="pdf">PDF</option>
-                      <option value="epub">EPUB</option>
-                      <option value="web">Saved web page</option>
-                      <option value="note">Note only</option>
-                    </select>
+                      options={formatFilterOptions}
+                      onChange={(format) => updateFilter({ format })}
+                    />
                   </label>
                   <label>
                     <span>Tag</span>
@@ -408,22 +384,12 @@ export function LibraryWorkspace({
                   ) : null}
                   <span className="menu-label">Sort</span>
                   <div className="library-sort-control">
-                    <select
+                    <Select
                       aria-label="Sort field"
                       value={configuration.sortField}
-                      onChange={(event) =>
-                        update({
-                          sortField: event.target.value as LibraryViewConfiguration["sortField"],
-                        })
-                      }
-                    >
-                      <option value="saved">Recently saved</option>
-                      <option value="opened">Recently opened</option>
-                      <option value="title">Title</option>
-                      <option value="creator">Creator</option>
-                      <option value="published">Published</option>
-                      <option value="status">Status</option>
-                    </select>
+                      options={sortOptionsFor(configuration.sortField, view.properties)}
+                      onChange={(sortField) => update({ sortField })}
+                    />
                     <button
                       type="button"
                       aria-label={`Sort ${configuration.sortDirection === "asc" ? "descending" : "ascending"}`}
@@ -649,6 +615,48 @@ export function LibraryWorkspace({
 }
 
 const noCounts: ReadonlyMap<SourceId, number> = new Map();
+
+const searchScopeOptions: SelectItems<LibrarySearchScope> = [
+  { value: "sources", label: "Library" },
+  { value: "notes", label: "Notes & annotations" },
+  { value: "documents", label: "Open documents" },
+];
+
+const statusFilterOptions: SelectItems<LibraryViewConfiguration["filter"]["status"]> = [
+  { value: "all", label: "Any status" },
+  ...readingStatusChoices.map((status) => ({ value: status, label: readingStatusLabel(status) })),
+];
+
+const formatFilterOptions: SelectItems<LibraryViewConfiguration["filter"]["format"]> = [
+  { value: "all", label: "Any format" },
+  { value: "pdf", label: "PDF" },
+  { value: "epub", label: "EPUB" },
+  { value: "web", label: "Saved web page" },
+  { value: "note", label: "Note only" },
+];
+
+/** The fixed sort fields, plus a property column when the view is sorted by one. */
+function sortOptionsFor(
+  current: LibraryViewConfiguration["sortField"],
+  properties: Parameters<typeof columnLabel>[1],
+): SelectItems<LibraryViewConfiguration["sortField"]> {
+  const key = propertyKey(current);
+  return key === null
+    ? sortFieldOptions
+    : [
+        ...sortFieldOptions,
+        { value: current, label: columnLabel(propertyColumn(key), properties) },
+      ];
+}
+
+const sortFieldOptions: readonly SelectOption<LibraryViewConfiguration["sortField"]>[] = [
+  { value: "saved", label: "Recently saved" },
+  { value: "opened", label: "Recently opened" },
+  { value: "title", label: "Title" },
+  { value: "creator", label: "Creator" },
+  { value: "published", label: "Published" },
+  { value: "status", label: "Status" },
+];
 // Scroll positions outlive a tab's renderer, so a view keeps its place across tab switches.
 const scrollPositions = new Map<string, number>();
 

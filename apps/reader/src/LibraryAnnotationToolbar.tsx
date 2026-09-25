@@ -1,3 +1,5 @@
+import { Select, type SelectItems } from "@mdbase-reader/ui";
+
 import { emptyAnnotationFilter, type AnnotationFilter } from "./annotation-overview.js";
 import { FilterIcon, SearchIcon } from "./icons.js";
 import { countLabel } from "./LibraryCells.js";
@@ -147,31 +149,24 @@ function AnnotationFilters({
       <span className="menu-label">Annotation</span>
       <label>
         <span>Type</span>
-        <select
+        <Select
+          aria-label="Type"
           value={filter.type}
-          onChange={(event) =>
-            onFilterChange({ ...filter, type: event.target.value as AnnotationFilter["type"] })
-          }
-        >
-          <option value="all">Any type</option>
-          <option value="highlight">Highlights</option>
-          <option value="note">Notes</option>
-          <option value="area">Areas</option>
-        </select>
+          options={annotationTypeOptions}
+          onChange={(type) => onFilterChange({ ...filter, type })}
+        />
       </label>
       <label>
         <span>Tag</span>
-        <select
+        <Select
+          aria-label="Tag"
           value={filter.tag}
-          onChange={(event) => onFilterChange({ ...filter, tag: event.target.value })}
-        >
-          <option value="">Any tag</option>
-          {tags.map((tag) => (
-            <option key={tag} value={tag}>
-              {tag}
-            </option>
-          ))}
-        </select>
+          options={[
+            { value: "", label: "Any tag" },
+            ...tags.map((tag) => ({ value: tag, label: tag })),
+          ]}
+          onChange={(tag) => onFilterChange({ ...filter, tag })}
+        />
       </label>
       <span className="menu-label">Source</span>
       <LibraryConditionsEditor
@@ -195,17 +190,12 @@ function AnnotationSortControl({
     <>
       <span className="menu-label">Sort</span>
       <div className="library-sort-control">
-        <select
+        <Select
           aria-label="Sort field"
           value={layout.sortField}
-          onChange={(event) =>
-            onLayoutChange({ ...layout, sortField: event.target.value as AnnotationSortField })
-          }
-        >
-          <option value="created">Created</option>
-          <option value="source">Source</option>
-          <option value="type">Type</option>
-        </select>
+          options={annotationSortOptions}
+          onChange={(sortField) => onLayoutChange({ ...layout, sortField })}
+        />
         <button
           type="button"
           aria-label={`Sort ${layout.sortDirection === "asc" ? "descending" : "ascending"}`}
@@ -223,3 +213,16 @@ function AnnotationSortControl({
     </>
   );
 }
+
+const annotationTypeOptions: SelectItems<AnnotationFilter["type"]> = [
+  { value: "all", label: "Any type" },
+  { value: "highlight", label: "Highlights" },
+  { value: "note", label: "Notes" },
+  { value: "area", label: "Areas" },
+];
+
+const annotationSortOptions: SelectItems<AnnotationSortField> = [
+  { value: "created", label: "Created" },
+  { value: "source", label: "Source" },
+  { value: "type", label: "Type" },
+];

@@ -1,5 +1,6 @@
 /* eslint-disable max-lines */
 
+import { Select, type SelectItems } from "@mdbase-reader/ui";
 import { useState, type JSX } from "react";
 
 import {
@@ -79,14 +80,12 @@ function ScalarEditor({
   return (
     <div className="citation-scalar-editor">
       {kind === "number" ? (
-        <select
+        <Select
           aria-label="Value type"
           value={numeric ? "number" : "text"}
-          onChange={(event) => onChange(event.target.value === "number" ? 0 : scalarText(value))}
-        >
-          <option value="text">Text</option>
-          <option value="number">Number</option>
-        </select>
+          options={scalarKindOptions}
+          onChange={(next) => onChange(next === "number" ? 0 : scalarText(value))}
+        />
       ) : null}
       <label className="citation-field">
         <span>{numeric ? "Number" : "Text"}</span>
@@ -121,19 +120,16 @@ function DateEditor({
     <div className="citation-date-editor">
       <label className="citation-field citation-date-mode">
         <span>Date form</span>
-        <select
+        <Select
+          aria-label="Date form"
           value={mode}
-          onChange={(event) => {
-            const nextMode = event.target.value;
+          options={dateModeOptions}
+          onChange={(nextMode) =>
             onChange(
               nextMode === "literal" ? { literal: "" } : nextMode === "raw" ? { raw: "" } : {},
-            );
-          }}
-        >
-          <option value="structured">Calendar date</option>
-          <option value="literal">Literal date</option>
-          <option value="raw">EDTF / raw date</option>
-        </select>
+            )
+          }
+        />
       </label>
       {mode === "structured" ? (
         <div className="citation-date-grid">
@@ -270,19 +266,12 @@ function CustomObjectEditor({
               }
             }}
           />
-          <select
+          <Select
             aria-label={`${key} value type`}
             value={customValueType(entryValue)}
-            onChange={(event) =>
-              onChange({ ...object, [key]: defaultCustomValue(event.target.value) })
-            }
-          >
-            <option value="string">Text</option>
-            <option value="number">Number</option>
-            <option value="boolean">True / false</option>
-            <option value="null">Empty</option>
-            <option value="json">JSON value</option>
-          </select>
+            options={customValueTypeOptions}
+            onChange={(type) => onChange({ ...object, [key]: defaultCustomValue(type) })}
+          />
           <CustomValueInput
             name={key}
             value={entryValue}
@@ -323,14 +312,12 @@ function CustomValueInput({
   }
   if (type === "boolean") {
     return (
-      <select
+      <Select
         aria-label={`${name} value`}
-        value={String(value)}
-        onChange={(event) => onChange(event.target.value === "true")}
-      >
-        <option value="true">True</option>
-        <option value="false">False</option>
-      </select>
+        value={value === true ? "true" : "false"}
+        options={booleanOptions}
+        onChange={(next) => onChange(next === "true")}
+      />
     );
   }
   if (type === "json") {
@@ -395,3 +382,27 @@ function AdvancedJsonEditor({
     </div>
   );
 }
+
+const scalarKindOptions: SelectItems<"text" | "number"> = [
+  { value: "text", label: "Text" },
+  { value: "number", label: "Number" },
+];
+
+const dateModeOptions: SelectItems<"structured" | "literal" | "raw"> = [
+  { value: "structured", label: "Calendar date" },
+  { value: "literal", label: "Literal date" },
+  { value: "raw", label: "EDTF / raw date" },
+];
+
+const customValueTypeOptions: SelectItems = [
+  { value: "string", label: "Text" },
+  { value: "number", label: "Number" },
+  { value: "boolean", label: "True / false" },
+  { value: "null", label: "Empty" },
+  { value: "json", label: "JSON value" },
+];
+
+const booleanOptions: SelectItems<"true" | "false"> = [
+  { value: "true", label: "True" },
+  { value: "false", label: "False" },
+];

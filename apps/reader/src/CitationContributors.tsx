@@ -1,3 +1,5 @@
+import { Select, type SelectItems } from "@mdbase-reader/ui";
+
 import { citationNames, type CslName } from "./citation-form-model.js";
 
 import type { JSX } from "react";
@@ -32,19 +34,14 @@ export function CitationContributors({
             <span>
               {itemLabel} {String(index + 1)}
             </span>
-            <select
+            <Select
               aria-label={`${itemLabel} ${String(index + 1)} kind`}
               value={name.literal === undefined ? "person" : "organisation"}
-              onChange={(event) =>
-                update(
-                  index,
-                  event.target.value === "person" ? { given: "", family: "" } : { literal: "" },
-                )
+              options={contributorKindOptions}
+              onChange={(kind) =>
+                update(index, kind === "person" ? { given: "", family: "" } : { literal: "" })
               }
-            >
-              <option value="person">Person</option>
-              <option value="organisation">Organisation</option>
-            </select>
+            />
             <button
               type="button"
               aria-label={`Remove ${itemLabel.toLocaleLowerCase()} ${String(index + 1)}`}
@@ -158,3 +155,8 @@ export function CitationContributors({
 function singular(label: string): string {
   return label.endsWith("s") ? label.slice(0, -1) : label;
 }
+
+const contributorKindOptions: SelectItems<"person" | "organisation"> = [
+  { value: "person", label: "Person" },
+  { value: "organisation", label: "Organisation" },
+];

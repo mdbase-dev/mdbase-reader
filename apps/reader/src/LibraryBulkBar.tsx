@@ -1,9 +1,10 @@
 import { isEditableSourceField } from "@mdbase-reader/core";
+import { Select } from "@mdbase-reader/ui";
 import { useId, useState, type JSX, type KeyboardEvent } from "react";
 
 import { CloseIcon } from "./icons.js";
 import { isPropertyKey } from "./library-columns.js";
-import { countLabel, readingStatusChoices } from "./LibraryCells.js";
+import { countLabel, readingStatusOptions } from "./LibraryCells.js";
 
 import type { ReadingStatus, SourceSummary } from "@mdbase-reader/core";
 
@@ -51,25 +52,17 @@ export function LibraryBulkBar({
       <strong aria-live="polite">{countLabel(selected.length, "source")} selected</strong>
       {onSetStatus ? (
         <label className="library-bulk-status">
-          <span className="sr-only">Set reading status of the selected sources</span>
-          <select
+          <Select
+            aria-label="Set reading status of the selected sources"
             value=""
+            placeholder="Set status…"
             disabled={busy}
-            onChange={(event) => {
-              const status = event.target.value as ReadingStatus;
+            options={readingStatusOptions}
+            onChange={(status) => {
               setProgress({ done: 0, total: selected.length, failed: 0 });
               void onSetStatus(selected, status, setProgress);
             }}
-          >
-            <option value="" disabled>
-              Set status…
-            </option>
-            {readingStatusChoices.map((status) => (
-              <option key={status} value={status}>
-                {status.charAt(0).toLocaleUpperCase() + status.slice(1)}
-              </option>
-            ))}
-          </select>
+          />
         </label>
       ) : null}
       <button

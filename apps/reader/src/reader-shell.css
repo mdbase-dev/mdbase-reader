@@ -858,32 +858,17 @@
   align-items: center;
 }
 
-.library-view-identity select {
-  max-width: 240px;
-  padding: 3px 22px 3px 6px;
-  margin-left: -6px;
-  border: 0;
-  border-radius: 5px;
-  outline: 0;
-  color: var(--ink);
-  background: transparent;
+.library-view-identity .mdbase-select {
+  max-width: 260px;
+  min-height: 32px;
+  margin-left: -8px;
+  padding: 0 6px 0 8px;
   font-size: var(--ui-heading);
   font-weight: 650;
-  appearance: none;
-  cursor: pointer;
 }
 
-.library-view-identity select:hover {
-  background: var(--hover);
-}
-
-.library-view-identity svg {
-  position: absolute;
-  right: 4px;
-  width: 14px;
-  height: 14px;
-  color: var(--muted);
-  pointer-events: none;
+.library-view-identity .mdbase-select-chevron {
+  opacity: 1 !important;
 }
 
 .library-workspace-search {
@@ -944,24 +929,14 @@
   font-size: var(--ui-control);
 }
 
-.library-search-scope {
-  width: auto;
-  min-width: 0;
-  max-width: 150px;
+.library-search-scope.mdbase-select {
+  max-width: 170px;
   flex: 0 0 auto;
-  height: calc(var(--ui-control-height) - 8px);
-  padding: 0 4px;
-  border: 0;
+  min-height: calc(var(--ui-control-height) - 8px);
+  padding: 0 4px 0 6px;
   border-radius: 4px;
   color: var(--ink-soft);
-  background: transparent;
   font-weight: 550;
-  cursor: pointer;
-}
-
-.library-search-scope:hover {
-  color: var(--ink);
-  background: var(--hover);
 }
 
 .library-header-trailing {
@@ -1058,9 +1033,10 @@
   color: var(--ink-soft);
 }
 
-.library-options select,
+.library-options .mdbase-select,
 .library-options input:not([type="checkbox"]) {
   height: 28px;
+  min-height: 28px;
   min-width: 0;
   padding: 0 7px;
   border: 1px solid var(--line);
@@ -1090,7 +1066,7 @@
   padding: 0 6px;
 }
 
-.library-sort-control select {
+.library-sort-control .mdbase-select {
   flex: 1 1 auto;
 }
 
@@ -1678,8 +1654,8 @@
     display: none;
   }
 
-  .library-search-scope {
-    max-width: 104px;
+  .library-search-scope.mdbase-select {
+    max-width: 112px;
   }
 
   /* The count stays announced; the empty state and view name already say what is shown. */
@@ -2617,34 +2593,20 @@
   gap: 6px;
 }
 
-.mobile-tab-switcher select {
-  min-width: 0;
-  max-width: 100%;
-  height: 40px;
-  padding: 0 24px 0 0;
-  border: 0;
-  outline-offset: 2px;
-  color: var(--ink);
-  background: transparent;
+.mobile-tab-switcher .mdbase-select {
+  min-height: 40px;
+  margin-left: -4px;
+  padding: 0 6px 0 8px;
   font-size: 16px;
   font-weight: 600;
-  text-overflow: ellipsis;
-  appearance: none;
 }
 
-.mobile-tab-switcher > svg {
-  position: relative;
-  left: -26px;
-  width: 16px;
-  height: 16px;
-  flex: 0 0 auto;
-  color: var(--muted);
-  pointer-events: none;
+.mobile-tab-switcher .mdbase-select-chevron {
+  opacity: 1 !important;
 }
 
 .mobile-tab-count {
-  order: 3;
-  margin-left: -22px;
+  flex: 0 0 auto;
   white-space: nowrap;
   min-width: 20px;
   padding: 1px 6px;
@@ -3343,31 +3305,14 @@
 
 /* Inline reading status: reads as text, becomes a control on hover or focus. */
 
-.library-status.is-editable select {
+.library-status.is-editable .mdbase-select {
   width: fit-content;
-  max-width: 100%;
-  height: 26px;
+  min-height: 26px;
   margin-left: -7px;
-  padding: 0 20px 0 6px;
-  border: 1px solid transparent;
+  padding: 0 4px 0 6px;
   border-radius: 5px;
   color: inherit;
-  background: transparent
-    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23888' stroke-width='2'%3E%3Cpath d='m7 10 5 5 5-5'/%3E%3C/svg%3E")
-    no-repeat right 4px center / 12px;
   font: inherit;
-  appearance: none;
-  cursor: pointer;
-}
-
-.library-status.is-editable select:not(:hover, :focus-visible) {
-  background-image: none;
-}
-
-.library-status.is-editable select:hover,
-.library-status.is-editable select:focus-visible {
-  border-color: var(--line);
-  background-color: var(--paper);
 }
 
 .library-status.is-editable .library-progress {
@@ -3417,8 +3362,9 @@
 }
 
 .library-bulk-bar > button:not(.icon-button),
-.library-bulk-status select {
+.library-bulk-status .mdbase-select {
   height: 28px;
+  min-height: 28px;
   padding: 0 10px;
   border: 1px solid var(--line);
   border-radius: 6px;
@@ -3429,7 +3375,7 @@
 }
 
 .library-bulk-bar > button:not(.icon-button):hover:not(:disabled),
-.library-bulk-status select:hover:not(:disabled) {
+.library-bulk-status .mdbase-select:hover:not(:disabled) {
   border-color: var(--line-strong);
   color: var(--ink);
 }
@@ -3511,7 +3457,7 @@
   grid-area: field;
 }
 
-.library-condition select {
+.library-condition .mdbase-select {
   grid-area: comparison;
 }
 
@@ -3525,9 +3471,10 @@
 }
 
 .library-condition input,
-.library-condition select {
+.library-condition .mdbase-select {
   min-width: 0;
   height: 28px;
+  min-height: 28px;
   padding: 0 7px;
   border: 1px solid var(--line);
   border-radius: 5px;

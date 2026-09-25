@@ -1,5 +1,6 @@
 import { expect } from "@playwright/test";
 import { blockSourceDraftStorage } from "./audit-source-storage.mjs";
+import { chooseOption } from "./audit-select.mjs";
 
 export async function auditResponsiveWorkspace(page, { screenshot, blockWrites }) {
   const completed = [];
@@ -84,10 +85,10 @@ export async function auditResponsiveWorkspace(page, { screenshot, blockWrites }
     expect(
       await html.evaluate((element) => element.ownerDocument.defaultView.scrollY),
     ).toBeGreaterThan(700);
-    await page.getByRole("combobox", { name: "Open workspace tab" }).selectOption(note);
+    await chooseOption(page.getByRole("combobox", { name: "Open workspace tab" }), note);
     await expect(editor).toContainText("Responsive draft");
     await expect(editor).toHaveAttribute("data-responsive-sentinel", "original-editor");
-    await page.getByRole("combobox", { name: "Open workspace tab" }).selectOption(first);
+    await chooseOption(page.getByRole("combobox", { name: "Open workspace tab" }), first);
     for (const name of ["Toggle left sidebar", "Toggle right sidebar"]) {
       await page.getByRole("button", { name }).click();
       await expect(reading).not.toBeVisible();
@@ -130,13 +131,13 @@ export async function auditResponsiveWorkspace(page, { screenshot, blockWrites }
   await expect
     .poll(async () => JSON.stringify((await state()).layout))
     .not.toContain("reader:mobile-workspace");
-  await page.getByRole("combobox", { name: "Open workspace tab" }).selectOption(note);
+  await chooseOption(page.getByRole("combobox", { name: "Open workspace tab" }), note);
   await expect(editor).toContainText("Responsive draft");
   await screenshot("responsive-mobile-draft");
   await expect.poll(async () => (await state()).focusedPanel).toBe(note);
   await page.reload();
   await expect(page.getByRole("combobox", { name: "Open workspace tab" })).toBeVisible();
-  await page.getByRole("combobox", { name: "Open workspace tab" }).selectOption(note);
+  await chooseOption(page.getByRole("combobox", { name: "Open workspace tab" }), note);
   await expect(editor).toContainText("Responsive draft");
   await page.setViewportSize({ width: 1440, height: 1000 });
   await expect
@@ -184,7 +185,7 @@ export async function auditResponsiveWorkspace(page, { screenshot, blockWrites }
   await editor.fill("[test] Responsive draft with storage recovered.");
   await expect(page.getByText("Saved locally", { exact: true })).toBeVisible();
   page.on("dialog", (dialog) => void dialog.accept());
-  await page.getByRole("combobox", { name: "Open workspace tab" }).selectOption(first);
+  await chooseOption(page.getByRole("combobox", { name: "Open workspace tab" }), first);
   await page.getByRole("button", { name: "Close current tab", exact: true }).click();
   await page.setViewportSize({ width: 1440, height: 1000 });
   await expect.poll(async () => Object.hasOwn((await state()).layout.panels, first)).toBe(false);
@@ -197,16 +198,19 @@ export async function auditResponsiveWorkspace(page, { screenshot, blockWrites }
   // evaluateAll does not auto-wait for a newly mounted mobile selector.
   await expect(picker).toBeVisible();
   // The library is home on a phone: every source tab closes, the library tab stays.
-  const remaining = await picker
-    .locator("option")
+  const pickerList = page.locator(`[id="${await picker.getAttribute("aria-controls")}"]`);
+  const remaining = await pickerList
+    .locator('[role="option"]')
     .evaluateAll((options) =>
-      options.filter((option) => option.textContent.includes("[test]")).map(({ value }) => value),
+      options
+        .filter((option) => option.textContent.includes("[test]"))
+        .map((option) => option.dataset.value),
     );
   expect(remaining.length).toBeGreaterThan(0);
   for (const id of remaining) {
-    await picker.selectOption(id);
+    await chooseOption(picker, id);
     await page.getByRole("button", { name: "Close current tab", exact: true }).click();
-    await expect(page.locator(`.mobile-tab-switcher option[value="${id}"]`)).toHaveCount(0);
+    await expect(pickerList.locator(`[role="option"][data-value="${id}"]`)).toHaveCount(0);
   }
   // With only the library left, its own view title is the heading and the switcher goes away.
   await expect(picker).toHaveCount(0);

@@ -111,9 +111,11 @@
   color: var(--muted);
   font-size: var(--ui-meta);
 }
-.citation-proof-controls select {
-  max-width: 118px;
+.citation-proof-controls .mdbase-select {
+  max-width: 140px;
   height: 26px;
+  min-height: 26px;
+  padding: 0 5px 0 8px;
   border: 1px solid var(--line);
   border-radius: 3px;
   color: var(--ink-soft);
@@ -274,10 +276,10 @@
   font-size: var(--ui-meta);
 }
 .citation-field input,
-.citation-field select,
+.citation-field .mdbase-select,
 .citation-field textarea,
 .citation-contributor input,
-.citation-contributor select,
+.citation-contributor .mdbase-select,
 .citation-lookup input {
   min-width: 0;
   width: 100%;
@@ -289,11 +291,12 @@
   line-height: 1.35;
 }
 .citation-field input,
-.citation-field select,
+.citation-field .mdbase-select,
 .citation-contributor input,
-.citation-contributor select,
+.citation-contributor .mdbase-select,
 .citation-lookup input {
   height: 36px;
+  min-height: 36px;
   padding: 0 10px;
 }
 .citation-field textarea {
@@ -301,10 +304,10 @@
   padding: 9px;
 }
 .citation-field input:focus,
-.citation-field select:focus,
+.citation-field .mdbase-select[aria-expanded="true"],
 .citation-field textarea:focus,
 .citation-contributor input:focus,
-.citation-contributor select:focus,
+.citation-contributor .mdbase-select[aria-expanded="true"],
 .citation-lookup input:focus {
   outline: 2px solid color-mix(in oklch, var(--accent) 28%, transparent);
   border-color: var(--accent);
@@ -390,10 +393,11 @@
   color: var(--muted);
   font-size: var(--ui-meta);
 }
-.citation-contributor > header select {
+.citation-contributor > header .mdbase-select {
   width: auto;
   height: 28px;
-  padding-inline: 7px 24px;
+  min-height: 28px;
+  padding-inline: 7px 5px;
   color: var(--muted);
   background-color: var(--paper);
   font-size: var(--ui-meta);
@@ -552,11 +556,11 @@
   align-items: end;
   gap: 7px;
 }
-.citation-scalar-editor > select,
-.citation-date-editor select,
+.citation-scalar-editor > .mdbase-select,
+.citation-date-editor .mdbase-select,
 .citation-list-row input,
 .citation-custom-row > input,
-.citation-custom-row > select,
+.citation-custom-row > .mdbase-select,
 .citation-json-value textarea {
   min-width: 0;
   border: 1px solid var(--line);
@@ -566,12 +570,13 @@
   font-size: var(--ui-meta);
   line-height: 1.35;
 }
-.citation-scalar-editor > select,
-.citation-date-editor select,
+.citation-scalar-editor > .mdbase-select,
+.citation-date-editor .mdbase-select,
 .citation-list-row input,
 .citation-custom-row > input,
-.citation-custom-row > select {
+.citation-custom-row > .mdbase-select {
   height: 34px;
+  min-height: 34px;
   padding: 0 8px;
 }
 .citation-date-editor,

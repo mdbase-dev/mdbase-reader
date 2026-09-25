@@ -15,6 +15,7 @@ import { auditSidebarLayout } from "./audit-sidebar-layout.mjs";
 import { auditEdgeGroupApi } from "./audit-edge-group-api.mjs";
 import { auditReadingWorkspace } from "./audit-reading-workspace.mjs";
 import { auditResponsiveWorkspace } from "./audit-responsive-workspace.mjs";
+import { chooseOption } from "./audit-select.mjs";
 
 const origin = process.env.READER_AUDIT_ORIGIN ?? "http://127.0.0.1:5193";
 const sharedEditingAudit = process.env.READER_AUDIT_SHARED_EDITING_ONLY === "1";
@@ -349,13 +350,13 @@ try {
       .getByRole("navigation", { name: "Library views and sources" })
       .getByRole("button", { name: "All sources", exact: true })
       .click();
-    await page.getByRole("combobox", { name: "Search scope" }).selectOption("notes");
+    await chooseOption(page.getByRole("combobox", { name: "Search scope" }), "notes");
     await page.getByRole("textbox", { name: "Search this view" }).fill("Unsaved draft survives");
     await expect(
       page.getByRole("region", { name: "Text search results" }).locator("mark"),
     ).toHaveText("Unsaved draft survives");
     await screenshot("passage-search");
-    await page.getByRole("combobox", { name: "Search scope" }).selectOption("documents");
+    await chooseOption(page.getByRole("combobox", { name: "Search scope" }), "documents");
     await page.getByRole("textbox", { name: "Search this view" }).fill("patient attention");
     await expect(page.getByRole("region", { name: "Text search results" })).toContainText(
       "Only loaded, supported documents",
