@@ -13,6 +13,7 @@ import {
   type AnnotationState,
 } from "./use-selected-source-resources.js";
 import { useSourceDraft } from "./use-source-draft.js";
+import { useSourceFields, type SourceFieldsController } from "./use-source-fields.js";
 import {
   useAnnotationCreation,
   useAnnotationDeletion,
@@ -52,6 +53,8 @@ export interface ReaderSourceWorkspaceController {
   readonly draftRecovery?: SourceDraftSnapshot;
   readonly resolveDraftConflict?: (choice: "local" | "remote") => void;
   readonly citation: CitationEditorController;
+  /** The source's friendly fields (title, authors, …), edited outside its citation. */
+  readonly sourceFields: SourceFieldsController;
   readonly transclusion: AnnotationTransclusionController;
   readonly setDraft: (value: string) => void;
   readonly saveDraft: () => void;
@@ -142,6 +145,11 @@ export function useSourceToolsWorkspace(
   const annotationMutations = useSelectedAnnotationMutations(gateway, setAnnotations);
   const saveReadingPosition = useReadingPositionSave(gateway, sourceRecord, publishSource);
   const citation = useSelectedCitationEditor(gateway, sourceRecord, publishSource);
+  const sourceFields = useSourceFields({
+    gateway,
+    sourceId: selectedSourceId,
+    onSaved: publishDraft,
+  });
   const transclusion = useSelectedTransclusion(
     gateway,
     sourceRecord,
@@ -162,6 +170,7 @@ export function useSourceToolsWorkspace(
     draftRecovery: snapshot,
     resolveDraftConflict: (choice) => session?.resolve(choice),
     citation,
+    sourceFields,
     transclusion,
     setDraft,
     saveDraft,

@@ -87,6 +87,13 @@ export function isEditableSourceField(key: string): boolean {
   );
 }
 
+// Fields the source contract requires; an edit may change them but not remove them.
+const requiredSourceFields = new Set(["title", "kind", "saved_at"]);
+
+export function isRequiredSourceField(key: string): boolean {
+  return requiredSourceFields.has(key);
+}
+
 /** Frontmatter fields to set on a source, by dotted path; null removes a field. */
 export interface SourceFieldChange {
   readonly collectionId: CollectionId;

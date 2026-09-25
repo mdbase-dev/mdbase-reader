@@ -43,13 +43,11 @@ describe("Connect source citation metadata", () => {
     const updated = await repository.updateCitation({
       collectionId: collectionId("reading"),
       sourceId: sourceId("src_01"),
-      expectedRevision: "rev-1" as never,
       citation,
     });
 
     expect(update).toHaveBeenCalledWith({
       path,
-      ifRevision: "rev-1",
       patch: { csl: citation },
       includeDocument: true,
     });

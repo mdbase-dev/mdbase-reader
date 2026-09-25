@@ -26,4 +26,9 @@ describe("source field patches", () => {
       reading: { status: "reading" },
     });
   });
+
+  it("changes required fields but refuses to remove them", () => {
+    expect(fieldPatch({ title: "Old" }, { title: "New" })).toEqual({ title: "New" });
+    expect(() => fieldPatch({ title: "Old" }, { title: null })).toThrow(/needs a title/u);
+  });
 });

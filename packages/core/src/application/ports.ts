@@ -60,10 +60,10 @@ export interface SourceRepository extends SourceLookups {
   }): Promise<Source>;
   /** Sets frontmatter fields by dotted path; a null value removes the field. */
   updateFields?(input: SourceFieldChange): Promise<Source>;
+  /** Replaces only `csl`, so it needs no revision: no other field is at risk. */
   updateCitation(input: {
     readonly collectionId: CollectionId;
     readonly sourceId: SourceId;
-    readonly expectedRevision: RecordRevision;
     readonly citation: CslItem;
   }): Promise<Source>;
   appendAnnotationEmbed(input: {

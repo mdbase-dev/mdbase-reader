@@ -183,7 +183,7 @@ const annotations: readonly Annotation[] = [
 ];
 
 export class PreviewGateway implements ReaderWorkspaceGateway {
-  #sources = [...sources];
+  #sources = sources.map(withRecordFrontmatter);
   #annotations = [...annotations];
   #views: MdbaseLibraryView[] = [
     defaultLibraryView,
@@ -372,15 +372,32 @@ export class PreviewGateway implements ReaderWorkspaceGateway {
     if (!source) {
       return Promise.reject(new Error("The preview source no longer exists."));
     }
-    const properties: Record<string, unknown> = { ...source.properties };
+    const frontmatter: Record<string, unknown> = { ...source.frontmatter };
     for (const [key, value] of Object.entries(fields)) {
       if (value === null) {
-        Reflect.deleteProperty(properties, key);
+        Reflect.deleteProperty(frontmatter, key);
       } else {
-        properties[key] = value;
+        frontmatter[key] = value;
       }
     }
-    const updated: Source = { ...source, properties };
+    const updated: { -readonly [Key in keyof Source]: Source[Key] } = {
+      ...source,
+      title: typeof frontmatter["title"] === "string" ? frontmatter["title"] : source.title,
+      creators: Array.isArray(frontmatter["authors"])
+        ? frontmatter["authors"].filter((author) => typeof author === "string")
+        : [],
+      frontmatter,
+      properties: frontmatter,
+    };
+    Reflect.deleteProperty(updated, "published");
+    Reflect.deleteProperty(updated, "url");
+    const published = frontmatter["published"];
+    if (typeof published === "string" || typeof published === "number") {
+      updated.published = published;
+    }
+    if (typeof frontmatter["url"] === "string") {
+      updated.url = frontmatter["url"];
+    }
     this.#sources = this.#sources.map((item) => (item.id === id ? updated : item));
     return Promise.resolve(updated);
   }
@@ -464,4 +481,18 @@ export function PreviewReader(): JSX.Element {
       saveFile={() => Promise.resolve()}
     />
   );
+}
+
+/** Preview records list friendly fields on the summary; a real record stores them as frontmatter. */
+function withRecordFrontmatter(source: Source): Source {
+  const frontmatter = {
+    id: source.id,
+    title: source.title,
+    ...(source.creators.length ? { authors: source.creators } : {}),
+    ...(source.published !== undefined ? { published: source.published } : {}),
+    ...(source.url ? { url: source.url } : {}),
+    ...source.properties,
+    ...source.frontmatter,
+  };
+  return { ...source, frontmatter, properties: frontmatter };
 }

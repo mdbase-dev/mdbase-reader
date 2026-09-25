@@ -116,7 +116,6 @@ describe("ConnectWorkspaceGateway", () => {
     expect(updateCitation).toHaveBeenCalledWith({
       collectionId: source.collectionId,
       sourceId: source.id,
-      expectedRevision: source.recordRevision,
       citation,
     });
     expect(updated.citation).toEqual(citation);

@@ -895,3 +895,156 @@
     min-width: 144px;
   }
 }
+
+/* The library's own fields differ from the saved citation. */
+.citation-source-sync {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: 8px 12px;
+  padding: 12px 18px;
+  border-bottom: 1px solid color-mix(in oklch, var(--line) 72%, transparent);
+  color: var(--ink-soft);
+  background: color-mix(in oklch, var(--accent) 6%, var(--paper));
+  font-size: var(--ui-control);
+}
+.citation-source-sync > details {
+  flex: 1 1 220px;
+  min-width: 0;
+}
+.citation-source-sync summary {
+  cursor: pointer;
+}
+.citation-source-sync dl {
+  display: grid;
+  gap: 6px;
+  margin: 8px 0 0;
+}
+.citation-source-sync dl > div {
+  display: grid;
+  grid-template-columns: 64px minmax(0, 1fr);
+  gap: 8px;
+}
+.citation-source-sync dt {
+  color: var(--muted);
+}
+.citation-source-sync dd {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 6px;
+  min-width: 0;
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+.citation-source-sync dd > span:first-child {
+  color: var(--muted);
+  text-decoration: line-through;
+}
+.citation-source-sync button {
+  min-height: 28px;
+  padding: 0 10px;
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  color: var(--ink);
+  background: var(--paper);
+  font: inherit;
+  cursor: pointer;
+}
+.citation-source-sync .is-error {
+  flex-basis: 100%;
+  color: var(--danger);
+}
+
+/* A source record's friendly frontmatter, above its note. */
+.source-details {
+  flex: 0 0 auto;
+  max-height: min(420px, 50vh);
+  overflow: auto;
+  border-bottom: 1px solid var(--reader-hairline, var(--line));
+  color: var(--ink-soft);
+  font-size: var(--ui-control);
+}
+.source-details > summary {
+  display: flex;
+  min-width: 0;
+  align-items: baseline;
+  gap: 10px;
+  padding: 8px 12px;
+  cursor: pointer;
+}
+.source-details > summary strong {
+  flex: 0 0 auto;
+  color: var(--ink);
+  font-weight: 650;
+}
+.source-details > summary span {
+  min-width: 0;
+  overflow: hidden;
+  color: var(--muted);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.source-details-fields {
+  display: grid;
+  gap: 8px;
+  padding: 2px 12px 12px;
+}
+.source-details-field {
+  display: grid;
+  grid-template-columns: 88px minmax(0, 1fr);
+  align-items: start;
+  gap: 8px;
+}
+.source-details-field label {
+  padding-top: 7px;
+  color: var(--muted);
+}
+.source-details-field input,
+.source-details-field textarea {
+  min-width: 0;
+  width: 100%;
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  color: var(--ink);
+  background: var(--paper);
+  font: inherit;
+  line-height: 1.35;
+}
+.source-details-field input {
+  height: 32px;
+  padding: 0 8px;
+}
+.source-details-field textarea {
+  padding: 6px 8px;
+  resize: vertical;
+}
+.source-details-field input:focus,
+.source-details-field textarea:focus {
+  outline: 2px solid color-mix(in oklch, var(--accent) 28%, transparent);
+  border-color: var(--accent);
+}
+.source-details-note {
+  margin: 0;
+  color: var(--muted);
+}
+.source-details-note.is-error {
+  color: var(--danger);
+}
+.source-details-note button {
+  padding: 0;
+  border: 0;
+  color: var(--accent);
+  background: none;
+  font: inherit;
+  text-decoration: underline;
+  cursor: pointer;
+}
+@container (max-width: 360px) {
+  .source-details-field {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 3px;
+  }
+  .source-details-field label {
+    padding-top: 0;
+  }
+}

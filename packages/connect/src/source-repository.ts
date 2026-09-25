@@ -187,7 +187,8 @@ export class ConnectSourceRepository implements SourceRepository {
     const updated = outcomeValue(
       await this.client.update({
         path,
-        ifRevision: input.expectedRevision,
+        // A citation save only replaces `csl`. Checking the revision the editor loaded would
+        // refuse it after any unrelated write, such as a reading position.
         patch: { csl: validation.item },
         includeDocument: true,
       }),

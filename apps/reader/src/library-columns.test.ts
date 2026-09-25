@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest";
 import { parse as parseYaml } from "yaml";
 
 import {
+  columnFieldKey,
   columnLabel,
   discoverPropertyKeys,
   formatPropertyValue,
@@ -30,6 +31,15 @@ function source(id: string, properties: Record<string, unknown>): SourceSummary 
 }
 
 describe("property columns", () => {
+  it("maps single-field built-in columns to the frontmatter they show", () => {
+    expect(columnFieldKey("title")).toBe("title");
+    expect(columnFieldKey("creator")).toBe("authors");
+    expect(columnFieldKey("published")).toBe("published");
+    expect(columnFieldKey("property:csl.volume")).toBe("csl.volume");
+    expect(columnFieldKey("status")).toBeNull();
+    expect(columnFieldKey("annotations")).toBeNull();
+  });
+
   it("reads dotted paths, preferring values a saved view selected", () => {
     const item = source("a", { course: "PHIL 201", csl: { volume: 4 } });
     expect(propertyValue(item, "course")).toBe("PHIL 201");

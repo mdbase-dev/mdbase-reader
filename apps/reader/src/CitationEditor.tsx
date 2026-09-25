@@ -1,14 +1,17 @@
+import { sourceCitationDifferences } from "@mdbase-reader/core";
 import { ReaderButton } from "@mdbase-reader/ui";
 import { useState, type JSX } from "react";
 
 import { writeCitationDrag } from "./citation-drag.js";
 import { CitationLookup } from "./CitationLookup.js";
 import { CitationPreview } from "./CitationPreview.js";
+import { CitationSourceSync } from "./CitationSourceSync.js";
 import { CitationStructuredEditor } from "./CitationStructuredEditor.js";
 import { MultilineCodeEditor } from "./MultilineCodeEditor.js";
 
 import type { CitationEditorController } from "./use-citation-editor.js";
 import type { ReaderSourceWorkspaceController } from "./use-reader-workspace.js";
+import type { SourceFieldsController } from "./use-source-fields.js";
 import type { Source } from "@mdbase-reader/core";
 
 export function CitationEditor({
@@ -20,7 +23,13 @@ export function CitationEditor({
   if (sourceRecord.status !== "ready") {
     return <CitationLoadStatus resource={sourceRecord} />;
   }
-  return <ReadyCitationEditor source={sourceRecord.value} editor={workspace.citation} />;
+  return (
+    <ReadyCitationEditor
+      source={sourceRecord.value}
+      editor={workspace.citation}
+      sourceFields={workspace.sourceFields}
+    />
+  );
 }
 
 // The editor deliberately renders validity, quality, and mode states in one transaction.
@@ -28,9 +37,11 @@ export function CitationEditor({
 function ReadyCitationEditor({
   source,
   editor,
+  sourceFields,
 }: {
   readonly source: Source;
   readonly editor: CitationEditorController;
+  readonly sourceFields: SourceFieldsController;
 }): JSX.Element {
   const [mode, setMode] = useState<"fields" | "raw">("fields");
   const citation = editor.assessment.value ?? {};
@@ -75,6 +86,12 @@ function ReadyCitationEditor({
       {validCitation ? <CitationPreview citation={validCitation} /> : null}
 
       <main className="citation-editor-body">
+        {!editor.dirty && source.citation && sourceFields.available ? (
+          <CitationSourceSync
+            differences={sourceCitationDifferences(source.frontmatter, source.citation)}
+            controller={sourceFields}
+          />
+        ) : null}
         {mode === "fields" ? (
           <>
             <CitationLookup citation={citation} editor={editor} />

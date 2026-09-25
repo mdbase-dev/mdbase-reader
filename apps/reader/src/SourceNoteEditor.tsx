@@ -8,6 +8,7 @@ import {
   sourceNoteCitationCandidates,
   sourceNoteWikiCandidates,
 } from "./source-note-references.js";
+import { SourceDetails } from "./SourceDetails.js";
 import { SourceLibraryContext } from "./SourceLibraryContext.js";
 import { SourceNoteInsertMenu } from "./SourceNoteInsertMenu.js";
 
@@ -93,6 +94,13 @@ export function SourceNoteEditor({
           onInsertAnnotation={(path) => insert(`![[${path}]]`)}
         />
       </div>
+      <SourceDetails
+        source={sourceRecord.value}
+        controller={workspace.sourceFields}
+        {...(onOpenSourceView
+          ? { onOpenCitation: () => onOpenSourceView(sourceRecord.value.id, "citation") }
+          : {})}
+      />
       <DraftRecoveryNotice workspace={workspace} />
       <Suspense fallback={<div className="editor-loading">Opening source note…</div>}>
         <MarkdownEditor

@@ -28,6 +28,18 @@ export function propertyKey(column: string): string | null {
   return column.startsWith(propertyPrefix) ? column.slice(propertyPrefix.length) : null;
 }
 
+// Built-in columns that each show one frontmatter field, so they edit like property columns.
+const builtinFieldKeys: Partial<Record<BuiltinLibraryColumn, string>> = {
+  title: "title",
+  creator: "authors",
+  published: "published",
+};
+
+/** The frontmatter field a column shows, when it shows exactly one. */
+export function columnFieldKey(column: LibraryColumn): string | null {
+  return propertyKey(column) ?? builtinFieldKeys[column as BuiltinLibraryColumn] ?? null;
+}
+
 export function isPropertyKey(key: string): boolean {
   return propertyKeyPattern.test(key);
 }

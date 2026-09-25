@@ -19,7 +19,6 @@ export async function saveSourceCitation(
   return sources.updateCitation({
     collectionId: source.collectionId,
     sourceId: source.id,
-    expectedRevision: source.recordRevision,
     citation: validation.item,
   });
 }

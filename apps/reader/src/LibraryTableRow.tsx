@@ -1,6 +1,6 @@
 import { isEditableSourceField } from "@mdbase-reader/core";
 
-import { propertyKey, type LibraryColumn } from "./library-columns.js";
+import { columnFieldKey, type LibraryColumn } from "./library-columns.js";
 import { StatusPicker, TableValue } from "./LibraryCells.js";
 import { LibraryFieldCellEditor } from "./LibraryFieldCell.js";
 import { columnClass } from "./LibraryTableHeader.js";
@@ -91,8 +91,8 @@ export function LibraryTableRow({
           {editing === column && onEditField ? (
             <LibraryFieldCellEditor
               source={source}
-              fieldKey={propertyKey(column) ?? column}
-              onSave={(text) => onEditField(source, propertyKey(column) ?? column, text)}
+              fieldKey={columnFieldKey(column) ?? column}
+              onSave={(text) => onEditField(source, columnFieldKey(column) ?? column, text)}
               onDone={onEditDone}
             />
           ) : column === "status" && onChangeStatus ? (
@@ -113,6 +113,6 @@ export function LibraryTableRow({
 
 /** Frontmatter fields can be edited in place; Reader's own columns have their own controls. */
 export function isEditableColumn(column: LibraryColumn): boolean {
-  const key = propertyKey(column);
+  const key = columnFieldKey(column);
   return key !== null && isEditableSourceField(key);
 }

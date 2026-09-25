@@ -21,7 +21,7 @@ const source: Source = {
 };
 
 describe("saveSourceCitation", () => {
-  it("validates and saves a unique CSL item with revision protection", async () => {
+  it("validates and saves a unique CSL item", async () => {
     const updateCitation = vi.fn(() => Promise.resolve(source));
     const repository = { updateCitation } as unknown as SourceRepository;
     const citation = { id: "weil2002", type: "book", title: "Gravity and Grace" };
@@ -31,7 +31,6 @@ describe("saveSourceCitation", () => {
     expect(updateCitation).toHaveBeenCalledWith({
       collectionId: "reading",
       sourceId: "src_one",
-      expectedRevision: "rev-one",
       citation,
     });
   });

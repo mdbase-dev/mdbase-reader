@@ -1,5 +1,6 @@
 import {
   isEditableSourceField,
+  isRequiredSourceField,
   recordRevision,
   type Source,
   type SourceFieldChange,
@@ -22,6 +23,9 @@ export function fieldPatch(
   for (const [key, value] of Object.entries(fields)) {
     if (!isEditableSourceField(key)) {
       throw new Error(`The field ${key} is maintained by Reader and cannot be edited here.`);
+    }
+    if (value === null && isRequiredSourceField(key)) {
+      throw new Error(`A source needs a ${key}; it cannot be removed.`);
     }
     const [top, ...rest] = key.split(".");
     if (top === undefined) {
