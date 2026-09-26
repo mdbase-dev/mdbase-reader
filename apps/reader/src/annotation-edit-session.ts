@@ -1,4 +1,10 @@
-import { RecordSession, type RecordSessionState } from "@mdbase-reader/connect";
+import {
+  MdbaseRecordSession,
+  recordFailure,
+  recordOutcome,
+  recordSuccess,
+  type MdbaseRecordSessionState,
+} from "@mdbase-reader/connect";
 
 import { clearLegacyEdits, readLegacyEdits } from "./annotation-edit-recovery.js";
 import { readerErrorMessage } from "./errors.js";
@@ -8,6 +14,12 @@ import type { AnnotationEditSnapshot, PersistAnnotation } from "./annotation-edi
 import type { Annotation } from "@mdbase-reader/core";
 
 export type { AnnotationEditSnapshot, PersistAnnotation } from "./annotation-edit-types.js";
+
+/** Exact recovery of an interrupted write, where the gateway offers it. */
+export interface AnnotationRecovery {
+  recover(requestId: string): Promise<Annotation>;
+  isPending(requestId: string): boolean;
+}
 
 /**
  * Reader's single-owner editor lease and deletion lock around the SDK record
@@ -23,7 +35,7 @@ export class AnnotationEditSession {
     editing: false,
     textVersion: 0,
   };
-  private readonly record: RecordSession<Annotation>;
+  private readonly record: MdbaseRecordSession<Annotation>;
   private text: string;
   private listeners = new Set<() => void>();
   private started = false;
@@ -36,16 +48,31 @@ export class AnnotationEditSession {
     base: Annotation,
     persist: PersistAnnotation,
     refresh?: (annotation: Annotation) => Promise<Annotation | null>,
+    recovery?: AnnotationRecovery,
   ) {
     this.key = JSON.stringify([base.collectionId, base.sourceId, base.id]);
     this.text = base.body;
-    this.record = new RecordSession<Annotation>(
+    this.record = new MdbaseRecordSession<Annotation>(
       base,
       {
         revision: (annotation) => annotation.recordRevision ?? "",
         body: (annotation) => annotation.body,
-        write: (expected, change) => persist(expected, change.body ?? expected.body),
-        ...(refresh ? { read: refresh } : {}),
+        write: async (expected, change) => {
+          try {
+            return recordSuccess(await persist(expected, change.body ?? expected.body));
+          } catch (error) {
+            return recordFailure(error);
+          }
+        },
+        ...(refresh
+          ? { read: (annotation: Annotation) => recordOutcome(() => refresh(annotation)) }
+          : {}),
+        ...(recovery
+          ? {
+              recover: (requestId: string) => recordOutcome(() => recovery.recover(requestId)),
+              isPending: (requestId: string) => recovery.isPending(requestId),
+            }
+          : {}),
       },
       { autosave: { idleMs: 1000 } },
     );
@@ -104,7 +131,7 @@ export class AnnotationEditSession {
     if (this.snapshot.locked || this.snapshot.status === "loading") {
       return Promise.resolve();
     }
-    return this.record.save().catch(() => undefined);
+    return this.record.save().then(() => undefined);
   };
   resolve = (choice: "local" | "remote"): void => {
     if (!this.snapshot.conflict || this.snapshot.status === "saving" || this.snapshot.locked) {
@@ -176,7 +203,10 @@ export class AnnotationEditSession {
       conflict: record.remote,
       problem:
         status === "error"
-          ? readerErrorMessage(record.error, "Could not save. Keep Reader open and retry.")
+          ? readerErrorMessage(
+              record.problem?.message,
+              "Could not save. Keep Reader open and retry.",
+            )
           : null,
       ...(changed || loaded ? { textVersion: this.snapshot.textVersion + 1 } : {}),
     });
@@ -198,7 +228,7 @@ export class AnnotationEditSession {
   }
 }
 
-function annotationStatus(state: RecordSessionState): AnnotationEditSnapshot["status"] {
+function annotationStatus(state: MdbaseRecordSessionState): AnnotationEditSnapshot["status"] {
   switch (state) {
     case "saved":
       return "saved";

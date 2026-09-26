@@ -15,6 +15,7 @@ import {
 import {
   collectionId,
   type AnnotationRepository,
+  type BodyUpdateRecovery,
   type AnnotationAssetRepository,
   type CollectionId,
   type CollectionFileRepository,
@@ -25,6 +26,7 @@ import {
 } from "@mdbase-reader/core";
 
 import { connectAnnotationAssetRepository } from "./annotation-assets.js";
+import { ConnectBodyUpdateRecovery } from "./body-update-recovery.js";
 import { connectCollectionFileRepository } from "./collection-files.js";
 import { connectDocumentRepository } from "./documents.js";
 import { connectLibraryViewRepository, type LibraryViewRepository } from "./library-views.js";
@@ -66,6 +68,7 @@ export interface ReaderConnectedCollection {
   readonly files: CollectionFileRepository;
   readonly libraryViews: LibraryViewRepository;
   readonly directAccess: ReaderDirectAccessController;
+  readonly bodyRecovery: BodyUpdateRecovery;
 }
 
 export interface ReaderApplicationSessionOptions {
@@ -169,6 +172,7 @@ export function connectedReaderCollection(
     files: connectCollectionFileRepository(connection),
     libraryViews: connectLibraryViewRepository(connection),
     directAccess: readerDirectAccessController(connection),
+    bodyRecovery: new ConnectBodyUpdateRecovery(connection),
   };
   connectedCollections.set(connection, collection);
   return collection;

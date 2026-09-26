@@ -64,6 +64,12 @@ export interface ReaderWorkspaceGateway {
   /** Every annotation in the collection, read-only, for the library's annotations view. */
   allAnnotations?(options?: ReaderRequestOptions): Promise<readonly Annotation[]>;
   saveSourceBody(source: Source, body: string): Promise<Source>;
+  /** Exact recovery of an interrupted source note write. Only a live connection offers it. */
+  recoverSourceBody?(requestId: string): Promise<Source>;
+  /** Exact recovery of an interrupted annotation write. */
+  recoverAnnotationBody?(requestId: string): Promise<Annotation>;
+  /** Whether an interrupted write is still durably pending. */
+  mutationPending?(requestId: string): boolean;
   saveSourceCitation(source: Source, citation: unknown): Promise<Source>;
   resolveCitation?(
     request: CitationResolutionRequest,

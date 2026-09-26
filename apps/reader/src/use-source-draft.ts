@@ -52,6 +52,12 @@ export function useSourceDraft(
         () =>
           gateway.refreshSource ? gateway.refreshSource(source.id) : gateway.source(source.id),
         publish,
+        gateway.recoverSourceBody && gateway.mutationPending
+          ? {
+              recover: gateway.recoverSourceBody.bind(gateway),
+              isPending: gateway.mutationPending.bind(gateway),
+            }
+          : undefined,
       );
       cache.set(key, value);
     }
