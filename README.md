@@ -43,9 +43,26 @@ explicit release-rehearsal target and production remains on its protected deploy
 ## Production deployment
 
 The existing production site is <https://mdbase-reader.pages.dev>, connected to
-<https://connect.mdbase.dev>. Deploy with:
+<https://connect.mdbase.dev>. Deploy staging, then production, with the
+**Deploy Reader** workflow from `main`:
 
 ```sh
+gh workflow run deploy-reader.yml --ref main -f target=staging
+gh workflow run deploy-reader.yml --ref main -f target=production
+```
+
+It builds a clean checkout of `main`, requires CI to pass, deploys, and checks
+that the served manifest declares the target origin. The `reader-staging`,
+`reader-production` and `reader-lab` environments each need
+`CLOUDFLARE_API_TOKEN` (Cloudflare Pages: Edit) and `CLOUDFLARE_ACCOUNT_ID`.
+Without them, staging and production dispatches fail immediately and the
+automatic lab deploy on `main` is skipped with a warning.
+
+When the workflow is unavailable, deploy from a clean checkout of `main` with
+local Wrangler credentials:
+
+```sh
+MDBASE_ENV=staging pnpm deploy:dev
 MDBASE_ENV=production pnpm deploy:prod
 ```
 
