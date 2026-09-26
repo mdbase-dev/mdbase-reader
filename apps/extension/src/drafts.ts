@@ -80,3 +80,48 @@ export async function preferredColor(): Promise<HighlightColor> {
 export function rememberColor(color: HighlightColor): void {
   void chrome.storage.local.set({ [colorKey]: color }).catch(() => undefined);
 }
+
+/**
+ * A saved source's literature note typed in the panel and not yet acknowledged by the
+ * collection, with the text it was based on so a later restore can tell whether the
+ * collection's copy moved on meanwhile. `requestId` names a write whose outcome is unknown.
+ */
+export interface NoteDraft {
+  readonly body: string;
+  readonly baseBody: string;
+  readonly requestId?: string;
+}
+
+function noteDraftKey(collectionId: string, sourceId: string): string {
+  return `note:${collectionId}:${sourceId}`;
+}
+
+export async function loadNoteDraft(
+  collectionId: string,
+  sourceId: string,
+): Promise<NoteDraft | null> {
+  const key = noteDraftKey(collectionId, sourceId);
+  const { [key]: value } = await chrome.storage.session.get(key);
+  return isNoteDraft(value) ? value : null;
+}
+
+/** Rejects when the copy could not be kept, so the panel can say so. */
+export function saveNoteDraft(
+  collectionId: string,
+  sourceId: string,
+  draft: NoteDraft | null,
+): Promise<void> {
+  const key = noteDraftKey(collectionId, sourceId);
+  return draft ? chrome.storage.session.set({ [key]: draft }) : chrome.storage.session.remove(key);
+}
+
+function isNoteDraft(value: unknown): value is NoteDraft {
+  return (
+    typeof value === "object" &&
+    value !== null &&
+    "body" in value &&
+    typeof value.body === "string" &&
+    "baseBody" in value &&
+    typeof value.baseBody === "string"
+  );
+}

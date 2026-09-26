@@ -4,8 +4,9 @@ import { expect, it, vi } from "vitest";
 import { CaptureApp } from "./CaptureApp.js";
 
 import type { ExtensionCaptureController } from "./capture-controller.js";
+import type { PanelTab } from "./PanelTabs.js";
 
-function markup(changes: Partial<ExtensionCaptureController> = {}): string {
+function markup(changes: Partial<ExtensionCaptureController> = {}, tab?: PanelTab): string {
   const controller = {
     snapshot: { status: "unselected", connections: [] },
     capture: {
@@ -28,12 +29,16 @@ function markup(changes: Partial<ExtensionCaptureController> = {}): string {
     busy: false,
     annotations: [],
     setDraft: vi.fn(),
+    knownTags: [],
+    note: { status: "idle", session: null, problem: null, load: vi.fn(), saveDetails: vi.fn() },
     ...changes,
   } as unknown as ExtensionCaptureController;
-  return renderToStaticMarkup(<CaptureApp controller={controller} />);
+  return renderToStaticMarkup(
+    <CaptureApp controller={controller} {...(tab ? { initialTab: tab } : {})} />,
+  );
 }
 it("asks a new user only to connect, with editable metadata and no status noise", () => {
-  const html = markup();
+  const html = markup({}, "note");
   expect(html).toContain("Connect a collection");
   expect(html).toContain("Connect to mdbase LAB");
   expect(html).not.toContain("Connect another collection");
@@ -94,7 +99,8 @@ const savedSource = {
   id: "s1",
   collectionId: "c1",
   title: "[test] Saved",
-} as ExtensionCaptureController["source"];
+  tags: [],
+} as unknown as ExtensionCaptureController["source"];
 function highlight(id: string, exact: string, body = `> ${exact}`): unknown {
   return { id, body, tags: [], color: "green", target: { quote: { exact } } };
 }
@@ -116,7 +122,8 @@ it("lists saved highlights and says which ones the page could not show", () => {
       ]),
     } as unknown as ExtensionCaptureController["projection"],
   });
-  expect(html).toMatch(/Highlights <span>3<\/span>/u);
+  expect(html).toMatch(/Saved highlights <span>3<\/span>/u);
+  expect(html).toMatch(/Highlights<\/span><span class="panel-tab-count">3<\/span>/u);
   expect(html).toContain("shown passage");
   expect(html).toContain("My comment");
   expect(html).toContain("Edit comment");
@@ -227,19 +234,22 @@ it("saves a live selection by choosing a colour, or with Ctrl+Enter after a comm
   expect(html).toContain("Save source and highlight");
 });
 it("shows where a new source's citation comes from", () => {
-  const html = markup({
-    citation: {
+  const html = markup(
+    {
       citation: {
-        type: "article-journal",
-        title: "Deep learning",
-        author: [{ family: "LeCun" }, { family: "Bengio" }],
-        issued: { "date-parts": [[2015]] },
-        "container-title": "Nature",
+        citation: {
+          type: "article-journal",
+          title: "Deep learning",
+          author: [{ family: "LeCun" }, { family: "Bengio" }],
+          issued: { "date-parts": [[2015]] },
+          "container-title": "Nature",
+        },
+        origin: "doi",
+        doi: "10.1038/nature14539",
       },
-      origin: "doi",
-      doi: "10.1038/nature14539",
     },
-  });
+    "citation",
+  );
   expect(html).toContain("LeCun et al. · (2015) · Nature");
   expect(html).toContain("10.1038/nature14539");
   expect(html).toContain("From the DOI registry");
@@ -279,6 +289,107 @@ it("says quietly that it is opening the new page while following the tab", () =>
   const html = markup({ navigated: true, following: true });
   expect(html).not.toContain("moved to another page");
   expect(html).toContain("Opening the new page…");
-  expect(html).toContain('<fieldset disabled=""');
-  expect(html).toContain('<fieldset disabled=""');
+  expect(html).toMatch(/<fieldset[^>]*disabled=""/u);
+});
+it("shows Reader's three source tabs, opening on Highlights", () => {
+  const html = markup();
+  expect(html).toContain('role="tablist"');
+  expect(html).toMatch(/aria-selected="true"[^>]*>.*Highlights/u);
+  expect(html).toMatch(/aria-selected="false"[^>]*>.*Literature note/u);
+  expect(html).toMatch(/aria-selected="false"[^>]*>.*Citation/u);
+  // No count before the page is saved: there is nothing to count yet.
+  expect(html).not.toContain("panel-tab-count");
+  expect(html).not.toContain('id="title"');
+});
+it("asks for a title from the save action when the draft has none", () => {
+  const html = markup({
+    snapshot: {
+      status: "ready",
+      collectionId: "c1",
+      connections: [{ collectionId: "c1", displayName: "[test] Papers" }],
+    } as unknown as ExtensionCaptureController["snapshot"],
+    draft: {
+      title: " ",
+      tags: "",
+      note: "",
+      comment: "",
+      highlight: false,
+      color: "yellow",
+      highlightTags: "",
+    },
+  });
+  expect(html).toMatch(/<button class="primary" type="button" disabled=""/u);
+  expect(html).toContain("Give the source a title under Literature note");
+});
+it("edits a saved source's title and tags and opens its note", () => {
+  const html = markup(
+    {
+      source: { ...savedSource, tags: ["ml", "vision"] } as ExtensionCaptureController["source"],
+      note: {
+        status: "loading",
+        session: null,
+        problem: null,
+        load: vi.fn(),
+        saveDetails: vi.fn(),
+      },
+    },
+    "note",
+  );
+  expect(html).toMatch(/id="saved-title"[^>]*value="\[test\] Saved"/u);
+  expect(html).toMatch(/id="saved-tags"[^>]*value="ml, vision"/u);
+  // Nothing changed yet, so there is nothing to save.
+  expect(html).not.toContain("Save title and tags");
+  expect(html).toContain("Opening the literature note…");
+  expect(html).toContain("Edit in Reader");
+});
+it("offers to retry when the saved note cannot be opened", () => {
+  const html = markup(
+    {
+      source: savedSource,
+      note: {
+        status: "failed",
+        session: null,
+        problem: "Request timed out",
+        load: vi.fn(),
+        saveDetails: vi.fn(),
+      },
+    },
+    "note",
+  );
+  expect(html).toContain("Could not open the literature note.");
+  expect(html).toContain("Request timed out");
+  expect(html).toContain("Try again");
+});
+it("shows a saved source's citation ready to copy", () => {
+  const html = markup(
+    {
+      source: {
+        ...savedSource,
+        citation: {
+          id: "lecun2015",
+          type: "article-journal",
+          title: "Deep learning",
+          author: [{ family: "LeCun" }],
+          issued: { "date-parts": [[2015]] },
+          DOI: "10.1038/nature14539",
+        },
+      } as ExtensionCaptureController["source"],
+    },
+    "citation",
+  );
+  expect(html).toContain("Deep learning");
+  expect(html).toContain("LeCun · (2015)");
+  expect(html).toContain("<code>lecun2015</code>");
+  expect(html).toContain("10.1038/nature14539");
+  expect(html).toContain("Copy citekey");
+  expect(html).toContain("Copy CSL-JSON");
+});
+it("points to Reader for a saved source without a citation", () => {
+  const html = markup({ source: savedSource }, "citation");
+  expect(html).toContain("This source has no citation yet.");
+  expect(html).toContain("Add a citation in Reader");
+});
+it("says when a page has no citation details before saving", () => {
+  const html = markup({ citation: null, citationPending: false }, "citation");
+  expect(html).toContain("No citation details were found on this page.");
 });

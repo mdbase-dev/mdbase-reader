@@ -14,6 +14,7 @@ import { useConnect } from "./use-connect.js";
 import { useKnownTags } from "./use-known-tags.js";
 import { usePageCapture } from "./use-page-capture.js";
 import { useQuickSave } from "./use-quick-save.js";
+import { useSourceNote } from "./use-source-note.js";
 import { useStoredDraft } from "./use-stored-draft.js";
 
 import type {
@@ -326,6 +327,11 @@ export function useExtensionCapture(tabId: number): ExtensionCaptureController {
   };
 
   const tags = useKnownTags(extension, annotations);
+  const connectedCollection = useCallback(
+    () => extension?.session.connectedCollection() ?? null,
+    [extension],
+  );
+  const note = useSourceNote(connectedCollection, source, setSource);
 
   useQuickSave({
     invocation: page.invocation,
@@ -374,6 +380,7 @@ export function useExtensionCapture(tabId: number): ExtensionCaptureController {
     deleteHighlight,
     knownTags: tags.knownTags,
     loadTags: tags.loadTags,
+    note,
   };
 }
 

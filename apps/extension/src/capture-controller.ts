@@ -4,6 +4,7 @@ import type { ProjectionReport, QuoteOutcome } from "./page-annotations.js";
 import type { PageCapture } from "./page-capture.js";
 import type { CaptureDraft } from "./save-capture.js";
 import type { ProblemKind } from "./use-action-lock.js";
+import type { SourceNoteController } from "./use-source-note.js";
 import type { ReaderConnectSnapshot, ReaderDirectAccessController } from "@mdbase-reader/connect";
 import type {
   Annotation,
@@ -62,4 +63,6 @@ export interface ExtensionCaptureController {
   /** Known tags to suggest; loaded on first use by `loadTags`. */
   readonly knownTags: readonly string[];
   readonly loadTags: () => void;
+  /** The saved source's title, tags and literature note, once there is a saved source. */
+  readonly note: SourceNoteController;
 }

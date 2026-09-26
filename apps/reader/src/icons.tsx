@@ -1,21 +1,10 @@
+import { Icon } from "@mdbase-reader/ui";
+
 import type { JSX, SVGProps } from "react";
 
-type IconProps = SVGProps<SVGSVGElement>;
+export { CitationIcon, HighlightIcon, NoteIcon } from "@mdbase-reader/ui";
 
-function Icon({ children, ...props }: IconProps): JSX.Element {
-  return (
-    <svg
-      viewBox="0 0 24 24"
-      aria-hidden="true"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="1.6"
-      {...props}
-    >
-      {children}
-    </svg>
-  );
-}
+type IconProps = SVGProps<SVGSVGElement>;
 
 export const SearchIcon = (props: IconProps): JSX.Element => (
   <Icon {...props}>
@@ -27,24 +16,6 @@ export const LibraryIcon = (props: IconProps): JSX.Element => (
   <Icon {...props}>
     <path d="M4 5.5h16M4 12h16M4 18.5h16" />
     <path d="M7 3v5M12 9.5v5M17 16v5" />
-  </Icon>
-);
-export const NoteIcon = (props: IconProps): JSX.Element => (
-  <Icon {...props}>
-    <path d="M6 3.5h9l3 3V21H6z" />
-    <path d="M15 3.5V7h3M9 11h6M9 15h6" />
-  </Icon>
-);
-export const CitationIcon = (props: IconProps): JSX.Element => (
-  <Icon {...props}>
-    <path d="M6 5.5h11.5v13H6z" />
-    <path d="M9 9h5.5M9 12h5.5M9 15h3.5" />
-    <path d="M4 8v12.5h11" />
-  </Icon>
-);
-export const HighlightIcon = (props: IconProps): JSX.Element => (
-  <Icon {...props}>
-    <path d="m7 16 8.8-8.8 2 2L9 18H7zM5 21h14" />
   </Icon>
 );
 export const MoreIcon = (props: IconProps): JSX.Element => (
