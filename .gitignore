@@ -13,3 +13,6 @@ playwright-report/
 .tmp/
 apps/reader/public/downloads/
 apps/extension/release/
+artifacts/
+# Ad-hoc screenshots belong in .tmp/ or docs/, not the repository root.
+/*.png

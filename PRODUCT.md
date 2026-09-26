@@ -62,8 +62,8 @@ clean, minimal, beautiful, polished operating interface.
 
 ## Evidence on Hand
 
-- `/home/calluma/testvault/mdbase-reader` is a real connected literature
-  collection used for performance and end-to-end testing.
+- A real connected literature collection (`~/testvault/mdbase-reader` locally) is
+  used for performance and end-to-end testing.
 - The existing Reader preview provides representative source and annotation
   content but is not evidence of finished behavior.
 - No testimonials, commercial claims, or public performance benchmarks are

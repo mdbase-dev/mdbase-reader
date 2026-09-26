@@ -1,0 +1,99 @@
+name: Release
+
+# Push `extension-v<version>` or `zotero-exporter-v<version>`, matching that app's package.json.
+on:
+  push:
+    tags:
+      - extension-v*
+      - zotero-exporter-v*
+
+permissions:
+  contents: read
+
+jobs:
+  ci:
+    uses: ./.github/workflows/ci.yml
+
+  release:
+    name: Package and publish ${{ github.ref_name }}
+    needs: ci
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    permissions:
+      contents: write
+    env:
+      MDBASE_ENV: production
+      TAG: ${{ github.ref_name }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: pnpm/action-setup@0ebf47130e4866e96fce0953f49152a61190b271 # v6.0.9
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+
+      - name: Resolve app and version
+        id: app
+        run: |
+          case "$TAG" in
+            extension-v*) app=extension; title="Browser extension" ;;
+            zotero-exporter-v*) app=zotero-exporter; title="Zotero exporter" ;;
+            *) echo "::error::Unrecognised release tag $TAG"; exit 1 ;;
+          esac
+          version="${TAG#"$app-v"}"
+          declared=$(jq -r .version "apps/$app/package.json")
+          if [ "$version" != "$declared" ]; then
+            echo "::error::Tag $TAG does not match apps/$app/package.json version $declared."
+            exit 1
+          fi
+          prerelease=false
+          case "$version" in *-*) prerelease=true ;; esac
+          {
+            echo "app=$app"
+            echo "title=$title"
+            echo "version=$version"
+            echo "prerelease=$prerelease"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Package browser extension
+        if: steps.app.outputs.app == 'extension'
+        run: |
+          pnpm --filter @mdbase-reader/extension package
+          mkdir -p "$RUNNER_TEMP/release"
+          cp apps/extension/release/*.zip "$RUNNER_TEMP/release/"
+
+      - name: Package Zotero exporter
+        if: steps.app.outputs.app == 'zotero-exporter'
+        run: |
+          pnpm --filter @mdbase-reader/zotero-exporter build
+          mkdir -p "$RUNNER_TEMP/release"
+          cp apps/zotero-exporter/dist/*.xpi "$RUNNER_TEMP/release/"
+
+      - name: Verify tree is clean
+        run: |
+          if [ -n "$(git status --porcelain)" ]; then
+            git status --short
+            echo "::error::Packaging changed tracked or unignored files."
+            exit 1
+          fi
+
+      - name: Publish GitHub release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TITLE: ${{ steps.app.outputs.title }} ${{ steps.app.outputs.version }}
+          PRERELEASE: ${{ steps.app.outputs.prerelease }}
+        run: |
+          cd "$RUNNER_TEMP/release"
+          sha256sum -- * > SHA256SUMS
+          {
+            echo "Built from \`$GITHUB_SHA\` by [run $GITHUB_RUN_ID]($GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID) for \`$MDBASE_ENV\`."
+            echo
+            echo '```text'
+            cat SHA256SUMS
+            echo '```'
+          } > notes.md
+          flags=()
+          if [ "$PRERELEASE" = true ]; then flags+=(--prerelease); fi
+          gh release create "$TAG" --verify-tag --title "$TITLE" --notes-file notes.md "${flags[@]}" -- \
+            $(ls | grep -v '^notes.md$')

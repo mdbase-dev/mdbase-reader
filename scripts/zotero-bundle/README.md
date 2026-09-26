@@ -9,12 +9,12 @@ Tested on Zotero **10.0.2 / Linux x86-64**. Wait for sync to finish. Use **Tools
 ```js
 const scope = {};
 Services.scriptloader.loadSubScript(
-  "file:///home/calluma/projects/mdbase-reader/scripts/zotero-bundle/exporter.js",
+  "file:///path/to/mdbase-reader/scripts/zotero-bundle/exporter.js",
   scope,
 );
 const api = scope.ReaderZoteroBundle;
 return await api.exportLibrary(api.createZoteroAdapter({ Zotero, IOUtils, PathUtils }), {
-  destination: "/home/calluma/Exports/my-new-zotero-bundle",
+  destination: "/path/to/Exports/my-new-zotero-bundle",
 });
 ```
 
