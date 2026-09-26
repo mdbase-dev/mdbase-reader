@@ -7,9 +7,7 @@ const blockedElements = [
   "object",
   "embed",
   "portal",
-  "form",
   "input",
-  "button",
   "textarea",
   "select",
   "option",
@@ -18,12 +16,20 @@ const blockedElements = [
   "meta[http-equiv]",
 ] as const;
 
+/** Controls whose content is still part of the text: kept as plain containers. */
+const unwrappedElements = ["form", "button"] as const;
+
 const urlAttributes = ["href", "src", "poster", "action", "formaction", "xlink:href"] as const;
 
 export function prepareHtmlDocument(source: string): string {
-  const parsed = new DOMParser().parseFromString(neutralizeFetchAttributes(source), "text/html");
+  // A parsed document is inert: nothing loads before its attributes are sanitized below.
+  const parsed = new DOMParser().parseFromString(source, "text/html");
   for (const element of parsed.querySelectorAll(blockedElements.join(","))) {
     element.remove();
+  }
+  // Removing these would drop text the original page shows, such as a page wrapped in a form.
+  for (const element of parsed.querySelectorAll(unwrappedElements.join(","))) {
+    element.replaceWith(...element.childNodes);
   }
   for (const element of parsed.querySelectorAll("*")) {
     sanitizeAttributes(element);
@@ -31,16 +37,6 @@ export function prepareHtmlDocument(source: string): string {
   parsed.head.prepend(cspMeta(parsed));
   parsed.head.append(readerStyle(parsed));
   return `<!doctype html>\n${parsed.documentElement.outerHTML}`;
-}
-
-function neutralizeFetchAttributes(source: string): string {
-  const names = "src|poster|href|action|formaction|xlink:href";
-  const attribute = new RegExp(`\\s(${names})\\s*=\\s*(?:(["'])(.*?)\\2|([^\\s>]+))`, "gisu");
-  return source.replace(
-    attribute,
-    (match, name: string, _quote: string | undefined, quoted: string | undefined, bare: string) =>
-      safeResource(name.toLocaleLowerCase(), (quoted ?? bare).trim()) ? match : "",
-  );
 }
 
 function sanitizeAttributes(element: Element): void {

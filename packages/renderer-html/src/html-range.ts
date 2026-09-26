@@ -1,9 +1,8 @@
+import { textQuoteAt } from "@mdbase-reader/core";
 import { locateTextQuote } from "@mdbase-reader/reading-surface";
 
 import type { AnnotationTarget } from "@mdbase-reader/core";
 import type { ReaderLocator, TextSelectionDraft } from "@mdbase-reader/reading-surface";
-
-const contextLength = 64;
 
 export function htmlSelectionDraft(input: {
   readonly document: Document;
@@ -15,14 +14,14 @@ export function htmlSelectionDraft(input: {
   if (!exact || !input.document.body.contains(input.range.commonAncestorContainer)) {
     return null;
   }
-  const container = commonElement(input.range, input.document.body);
-  const containerText = container.textContent;
+  const body = input.document.body;
+  const container = commonElement(input.range, body);
   const selectedText = input.range.toString();
   const leading = selectedText.length - selectedText.trimStart().length;
-  const start = rangeStartOffset(container, input.range) + leading;
-  const end = start + exact.length;
-  const prefix = containerText.slice(Math.max(0, start - contextLength), start);
-  const suffix = containerText.slice(end, end + contextLength);
+  const start = rangeStartOffset(body, input.range) + leading;
+  // Context spans the whole document, as on the live page: a passage opening its block
+  // still carries the text before it, which tells repeats apart there.
+  const { prefix, suffix } = textQuoteAt(body.textContent, start, start + exact.length);
   return {
     target: {
       quote: {
@@ -30,7 +29,7 @@ export function htmlSelectionDraft(input: {
         ...(prefix ? { prefix } : {}),
         ...(suffix ? { suffix } : {}),
       },
-      html: { css: cssSelector(container, input.document.body) },
+      html: { css: cssSelector(container, body) },
     },
     locator: htmlLocator(input.href, input.progression),
   };

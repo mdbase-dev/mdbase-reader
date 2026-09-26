@@ -4,7 +4,7 @@ import {
   rememberedCollection,
   restoreCollection,
 } from "./connect-session.js";
-import { annotationQuotes, pageAnnotations } from "./page-annotations.js";
+import { annotationQuotes, drawPageQuotes } from "./page-annotations.js";
 import { clearPageMark, markSavedPage } from "./page-badge.js";
 import { pageStatusEnabled } from "./page-status.js";
 
@@ -60,11 +60,7 @@ export async function updatePageStatus(tabId: number, url: string): Promise<void
     const quotes = annotationQuotes(annotations);
     await markSavedPage(tabId, quotes.length);
     if (quotes.length) {
-      await chrome.scripting.executeScript({
-        target: { tabId },
-        func: pageAnnotations,
-        args: [{ action: "render", quotes, expectedUrl: url }],
-      });
+      await drawPageQuotes(tabId, quotes, url);
     }
   } catch {
     // Page status is a convenience; a failed lookup must never disturb browsing.

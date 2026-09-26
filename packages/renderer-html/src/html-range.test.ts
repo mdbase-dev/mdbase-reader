@@ -41,7 +41,7 @@ describe("HTML ranges", () => {
     expect(range?.startContainer.parentElement?.textContent).toContain("Second");
   });
 
-  it("keeps quote context inside the selected block", () => {
+  it("records context across neighbouring blocks", () => {
     document.body.innerHTML = `<main><p>Previous block</p><p>Selected block</p><p>Following block</p></main>`;
     const text = document.querySelectorAll("p").item(1).firstChild;
     if (!text) {
@@ -58,7 +58,7 @@ describe("HTML ranges", () => {
     });
 
     expect(draft?.target).toEqual({
-      quote: { exact: "Selected block" },
+      quote: { exact: "Selected block", prefix: "Previous block", suffix: "Following block" },
       html: { css: "body > main:nth-of-type(1) > p:nth-of-type(2)" },
     });
   });

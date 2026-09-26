@@ -6,7 +6,9 @@ import {
   annotationId,
   mutationId,
   importSourceFile,
+  matchTextQuote,
   sourceLink,
+  textQuoteAt,
   type Annotation,
   type AnnotationDeletionPlan,
   type AnnotationId,
@@ -25,7 +27,7 @@ import { citationAuthors, citationYear, webCaptureImport } from "@mdbase-reader/
 import { saveCaptureCitation, type CitationPreview } from "./capture-citation.js";
 import { sourceForUrl } from "./capture-model.js";
 import { highlightBody, withHighlightComment } from "./highlight-body.js";
-import { pageAnnotations } from "./page-annotations.js";
+import { pageText } from "./page-annotations.js";
 
 import type { PageCapture, PdfCapture, SelectedWebCapture } from "./page-capture.js";
 import type {
@@ -285,13 +287,15 @@ export class CaptureWriter {
       new TextDecoder().decode(saved.bytes),
       "text/html",
     );
-    const quote = pageAnnotations({ action: "locate", quotes: [selection] }, parsed).quotes[0];
-    if (!quote) {
+    const text = pageText({ action: "text" }, parsed).text ?? "";
+    const match = matchTextQuote(text, selection);
+    if (!match || match.ambiguous) {
       throw new Error(
         "This passage is missing or ambiguous in the saved copy. The source is saved, but the highlight is not. Open the saved copy in Reader to select it there.",
       );
     }
-    return { document, quote };
+    // Stored as the saved copy reads, which is where Reader anchors it.
+    return { document, quote: textQuoteAt(text, match.start, match.end) };
   }
 }
 

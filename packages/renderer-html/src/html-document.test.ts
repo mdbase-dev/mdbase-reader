@@ -23,4 +23,17 @@ describe("prepareHtmlDocument", () => {
     expect(prepared).not.toContain("onclick");
     expect(prepared).not.toContain("https://bad.example");
   });
+
+  it("keeps prose that resembles attributes and the text inside forms and buttons", () => {
+    const prepared = prepareHtmlDocument(`<body><form action="https://bad.example/post">
+      <p>Set the form action = submit and the href=home value, then src=x.</p>
+      <p>An inline <button onclick="bad()">definition</button> toggle.</p></form></body>`);
+    const text = new DOMParser().parseFromString(prepared, "text/html").body.textContent;
+
+    expect(text).toContain("Set the form action = submit and the href=home value, then src=x.");
+    expect(text).toContain("An inline definition toggle.");
+    expect(prepared).not.toContain("<form");
+    expect(prepared).not.toContain("<button");
+    expect(prepared).not.toContain("https://bad.example");
+  });
 });

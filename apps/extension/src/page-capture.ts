@@ -1,8 +1,8 @@
 import {
-  pageAnnotations,
+  drawPageQuotes,
+  injectPageText,
+  type PageProjection,
   type PageQuote,
-  type ProjectionReport,
-  type QuoteOutcome,
 } from "./page-annotations.js";
 
 import type { QuoteSelector } from "@mdbase-reader/core";
@@ -56,12 +56,7 @@ export async function captureTab(tabId: number): Promise<PageCapture> {
 }
 
 export async function readSelection(tabId: number): Promise<QuoteSelector | null> {
-  const [execution] = await chrome.scripting.executeScript({
-    target: { tabId },
-    func: pageAnnotations,
-    args: [{ action: "selection" }],
-  });
-  return execution?.result?.selection ?? null;
+  return (await injectPageText(tabId, { action: "selection" })).selection ?? null;
 }
 
 /** Tells the panel when the reader selects text, so no extra clicks are needed per highlight. */
@@ -240,12 +235,6 @@ export async function pagePdfBytes(
   return { base64: btoa(binary) };
 }
 
-export interface PageProjection {
-  readonly report: ProjectionReport;
-  /** One per quote passed in, in the same order. */
-  readonly outcomes: readonly QuoteOutcome[];
-}
-
 /** Draws the quotes on the tab, optionally scrolling to the one at `focus`. */
 export async function renderAnnotations(
   tabId: number,
@@ -259,21 +248,5 @@ export async function renderAnnotations(
       "The tab has navigated to another page. Reopen Reader’s extension on that page.",
     );
   }
-  const [execution] = await chrome.scripting.executeScript({
-    target: { tabId },
-    func: pageAnnotations,
-    args: [
-      {
-        action: "render",
-        quotes: annotations,
-        expectedUrl,
-        ...(focus === undefined ? {} : { focus }),
-      },
-    ],
-  });
-  if (!execution?.result) {
-    throw new Error("Could not display highlights. Reopen the extension on this page.");
-  }
-  const { report, outcomes } = execution.result;
-  return { report, outcomes };
+  return drawPageQuotes(tabId, annotations, expectedUrl, focus);
 }

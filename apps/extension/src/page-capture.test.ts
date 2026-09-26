@@ -1,7 +1,7 @@
 // @vitest-environment happy-dom
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-import { pageAnnotations } from "./page-annotations.js";
+import { locateQuotes, pageText } from "./page-annotations.js";
 import { capturePage, watchSelection } from "./page-capture.js";
 
 import type { LiveWebCapture } from "@mdbase-reader/web-capture";
@@ -71,10 +71,10 @@ describe("extension page capture", () => {
     document.body.innerHTML =
       "<p>The exact durable quotation appears here.</p><p>Repeated quote.</p><p>Repeated quote.</p>";
     expect(
-      pageAnnotations({
-        action: "locate",
-        quotes: [{ exact: "exact durable quotation" }, { exact: "Repeated quote" }],
-      }).report,
+      locateQuotes(pageText({ action: "text" }).text ?? "", [
+        { exact: "exact durable quotation" },
+        { exact: "Repeated quote" },
+      ]).report,
     ).toEqual({ total: 2, shown: 1, missing: 0, ambiguous: 1 });
   });
 

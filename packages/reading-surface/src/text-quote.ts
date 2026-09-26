@@ -1,9 +1,6 @@
-/** The passage a text-quote selector names, e.g. from an annotation's `quote`. */
-export interface TextQuote {
-  readonly exact: string;
-  readonly prefix?: string | undefined;
-  readonly suffix?: string | undefined;
-}
+import { matchTextQuote, type TextQuote } from "@mdbase-reader/core";
+
+export type { TextQuote } from "@mdbase-reader/core";
 
 /**
  * Finds a quotation in an element's text, preferring the occurrence whose surrounding text best
@@ -11,8 +8,8 @@ export interface TextQuote {
  */
 export function locateTextQuote(root: Element, quote: TextQuote): Range | null {
   const index = textIndex(root);
-  const offsets = quoteOffsets(index.text, quote.exact, quote.prefix, quote.suffix);
-  return offsets ? rangeAt(root.ownerDocument, index.nodes, offsets.start, offsets.end) : null;
+  const match = matchTextQuote(index.text, quote);
+  return match ? rangeAt(root.ownerDocument, index.nodes, match.start, match.end) : null;
 }
 
 interface IndexedText {
@@ -35,27 +32,6 @@ function textIndex(root: Element): IndexedText {
   return { text, nodes };
 }
 
-function quoteOffsets(
-  text: string,
-  exact: string,
-  prefix: string | undefined,
-  suffix: string | undefined,
-): { readonly start: number; readonly end: number } | null {
-  let best: { start: number; score: number } | null = null;
-  let start = text.indexOf(exact);
-  while (start >= 0) {
-    const before = text.slice(Math.max(0, start - (prefix?.length ?? 0)), start);
-    const end = start + exact.length;
-    const after = text.slice(end, end + (suffix?.length ?? 0));
-    const score = commonSuffix(before, prefix ?? "") + commonPrefix(after, suffix ?? "");
-    if (!best || score > best.score) {
-      best = { start, score };
-    }
-    start = text.indexOf(exact, start + 1);
-  }
-  return best ? { start: best.start, end: best.start + exact.length } : null;
-}
-
 function rangeAt(
   document: Document,
   nodes: IndexedText["nodes"],
@@ -75,24 +51,4 @@ function rangeAt(
   range.setStart(startNode.node, start - startNode.start);
   range.setEnd(endNode.node, end - endNode.start);
   return range;
-}
-
-function commonPrefix(left: string, right: string): number {
-  let length = 0;
-  while (length < left.length && length < right.length && left[length] === right[length]) {
-    length += 1;
-  }
-  return length;
-}
-
-function commonSuffix(left: string, right: string): number {
-  let length = 0;
-  while (
-    length < left.length &&
-    length < right.length &&
-    left[left.length - length - 1] === right[right.length - length - 1]
-  ) {
-    length += 1;
-  }
-  return length;
 }
