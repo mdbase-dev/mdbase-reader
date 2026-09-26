@@ -39,7 +39,11 @@ describe("Reader web capture client", () => {
         site: "Example Review",
       },
     });
-    expect(archive).toBe(capture.html);
+    expect(archive).toContain("Readable");
+    expect(archive).toContain("Content-Security-Policy");
+    expect(archive).not.toContain("bad()");
+    expect(archive).not.toContain("tracker.example");
+    expect(archive).not.toContain("onload");
     expect(html).toContain("Readable");
     expect(html).toContain("Content-Security-Policy");
     expect(html).not.toContain("<script");

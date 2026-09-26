@@ -1,5 +1,6 @@
 import { updatePageStatus } from "./background-page-status.js";
 import { credentiallessFetch } from "./credentialless-fetch.js";
+import { finishLocalReset } from "./local-reset.js";
 import {
   capturePanelPath,
   intentKey,
@@ -10,6 +11,18 @@ import {
 
 // The extension uses signed grants, never ambient portal cookies.
 globalThis.fetch = credentiallessFetch(globalThis.fetch.bind(globalThis));
+
+// Register normal listeners synchronously below. Session creation stays blocked
+// by the durable marker until cleanup completes. Failures keep that marker.
+void finishLocalReset()
+  .then((cleared) => {
+    if (cleared) {
+      chrome.runtime.reload();
+    }
+  })
+  .catch(() => {
+    // Settings shows a retry action without exposing stored values or SDK errors.
+  });
 
 /**
  * Opens Reader's side panel for one tab. Everything here starts synchronously inside the

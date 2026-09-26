@@ -37,6 +37,10 @@ export function fakeChrome(): {
         );
         return Promise.resolve();
       }),
+      clear: vi.fn(() => {
+        values.clear();
+        return Promise.resolve();
+      }),
       remove: vi.fn((keys: string | string[]) => {
         for (const key of Array.isArray(keys) ? keys : [keys]) {
           values.delete(key);
@@ -55,7 +59,11 @@ export function fakeChrome(): {
   };
   const fake = {
     storage,
-    runtime: { onMessage: event(listeners.message), sendMessage: vi.fn(() => Promise.resolve()) },
+    runtime: {
+      onMessage: event(listeners.message),
+      sendMessage: vi.fn(() => Promise.resolve()),
+      reload: vi.fn(),
+    },
     tabs: { onUpdated: event(listeners.updated), get: vi.fn(), create: vi.fn() },
     scripting: { executeScript: vi.fn() },
     permissions: {

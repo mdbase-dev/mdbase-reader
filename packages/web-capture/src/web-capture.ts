@@ -5,6 +5,7 @@ import {
 } from "@mdbase-reader/core";
 import { Readability } from "@mozilla/readability";
 
+import { archiveDocument } from "./archive-document.js";
 import { citationAuthors } from "./csl-values.js";
 import { extractScholarlyMetadata, type ScholarlyMetadata } from "./scholarly-metadata.js";
 
@@ -46,11 +47,13 @@ export function captureLiveDocument(document: Document, retrievedAt = new Date()
 export async function webCaptureImport(capture: CapturedWebDocument): Promise<WebCaptureImport> {
   const parsed = parseHtml(capture.html);
   const canonicalUrl = new URL(capture.canonicalUrl);
-  const article = new Readability(parsed.cloneNode(true) as Document, {
+  const archive = archiveDocument(parsed);
+  const minimized = parseHtml(archive);
+  const article = new Readability(minimized.cloneNode(true) as Document, {
     keepClasses: false,
   }).parse();
   const title = normalizedText(article?.title, 300) ?? captureTitle(parsed, canonicalUrl.hostname);
-  const readable = articleDocument(parsed, article?.content ?? parsed.body.innerHTML, title);
+  const readable = articleDocument(parsed, article?.content ?? minimized.body.innerHTML, title);
   const { prepareHtmlDocument } = await import("@mdbase-reader/renderer-html");
   const stem = safeStem(canonicalUrl.hostname);
   const scholarly = extractScholarlyMetadata(parsed, capture.canonicalUrl);
@@ -62,7 +65,7 @@ export async function webCaptureImport(capture: CapturedWebDocument): Promise<We
     bytes: new TextEncoder().encode(prepareHtmlDocument(readable)),
     archive: {
       name: `${stem}.archive.html`,
-      bytes: new TextEncoder().encode(capture.html),
+      bytes: new TextEncoder().encode(archive),
     },
     capture: {
       submittedUrl: capture.submittedUrl,
@@ -158,9 +161,9 @@ function captureDescription(
 ): string | undefined {
   return firstText(
     [
-      article?.excerpt,
       document.querySelector<HTMLMetaElement>('meta[name="description"]')?.content,
       document.querySelector<HTMLMetaElement>('meta[property="og:description"]')?.content,
+      article?.excerpt,
     ],
     2_000,
   );

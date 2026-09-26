@@ -88,7 +88,11 @@ export async function fetchPdf(tabId: number, url: string): Promise<Uint8Array> 
   if (!response.ok) {
     throw new Error(`Could not download this PDF (HTTP ${String(response.status)}).`);
   }
-  return new Uint8Array(await response.arrayBuffer());
+  const bytes = new Uint8Array(await response.arrayBuffer());
+  if (bytes.byteLength > maximumPdfBytes) {
+    throw new Error("This PDF is larger than 40 MB. Download it and import the file in Reader.");
+  }
+  return bytes;
 }
 
 function pdfCapture(url: string, title: string): PdfCapture {

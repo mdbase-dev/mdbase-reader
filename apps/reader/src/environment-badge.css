@@ -8,7 +8,10 @@
   background: #f4f7f7;
   box-shadow: 2px 2px 0 rgb(20 34 35 / 14%);
   color: #34585d;
-  font: 500 9px/1.2 "Azeret Mono", ui-monospace, monospace;
+  font:
+    500 9px/1.2 "Azeret Mono",
+    ui-monospace,
+    monospace;
   letter-spacing: 0.14em;
   pointer-events: none;
   text-transform: uppercase;
@@ -37,4 +40,3 @@
     font-size: 8px;
   }
 }
-

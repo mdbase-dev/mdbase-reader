@@ -4,6 +4,7 @@ import { readerLibraryUrl } from "./capture-model.js";
 import { CollectionSection } from "./CollectionSection.js";
 import { environment } from "./environment.js";
 import { ExtensionHeader } from "./ExtensionHeader.js";
+import { LocalDataSettings } from "./LocalDataSettings.js";
 import { PageStatusSetting } from "./PageStatusSetting.js";
 import { ShortcutList } from "./ShortcutList.js";
 import { useCollectionConnection } from "./use-collection-connection.js";
@@ -32,6 +33,7 @@ export function OptionsApp(): React.JSX.Element {
           <h2 id="shortcuts-heading">Keyboard shortcuts</h2>
           <ShortcutList />
         </section>
+        <LocalDataSettings />
         <section aria-labelledby="about-heading">
           <h2 id="about-heading">About</h2>
           <About collectionId={collectionId} />

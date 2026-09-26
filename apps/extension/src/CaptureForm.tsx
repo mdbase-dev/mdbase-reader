@@ -76,6 +76,11 @@ export function CaptureForm({
               onChange={(event) => update("note", event.target.value)}
             />
             <CitationCard controller={c} />
+            <p className="hint">
+              Saving sends this page’s content and address to your selected collection. Article
+              copies omit scripts, form fields and embedded application attributes, but page text
+              and source addresses can still contain private information.
+            </p>
           </>
         ) : (
           <p className="saved-summary">

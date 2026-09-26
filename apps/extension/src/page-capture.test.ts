@@ -2,7 +2,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { pageAnnotations } from "./page-annotations.js";
-import { capturePage, watchSelection } from "./page-capture.js";
+import { capturePage, fetchPdf, watchSelection } from "./page-capture.js";
 
 import type { LiveWebCapture } from "@mdbase-reader/web-capture";
 
@@ -49,6 +49,24 @@ describe("extension page capture", () => {
     );
     expect(html).not.toContain("<slot");
     expect(html).not.toContain("p{}");
+  });
+
+  it("enforces the PDF size limit even when injected download is unavailable", async () => {
+    vi.stubGlobal("chrome", {
+      scripting: { executeScript: vi.fn(() => Promise.reject(new Error("restricted viewer"))) },
+    });
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(() =>
+        Promise.resolve({
+          ok: true,
+          arrayBuffer: () => Promise.resolve(new ArrayBuffer(40 * 1024 * 1024 + 1)),
+        }),
+      ),
+    );
+    await expect(fetchPdf(1, "https://example.com/article.pdf")).rejects.toThrow(
+      "larger than 40 MB",
+    );
   });
 
   it("recognises a PDF open in Chrome's viewer instead of serializing its wrapper", () => {

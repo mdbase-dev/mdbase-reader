@@ -7,6 +7,7 @@ import {
 import { chromeStorageMirror } from "./chrome-storage.js";
 import { environment } from "./environment.js";
 import manifest from "./generated/mdbase-app.json";
+import { localResetPending } from "./local-reset.js";
 
 import type { KeyValueStorage } from "@mdbase-reader/platform";
 
@@ -19,6 +20,9 @@ export interface ExtensionSession {
 }
 
 export async function createExtensionSession(): Promise<ExtensionSession> {
+  if (await localResetPending()) {
+    throw new Error("Local cleanup is pending. Restart Reader to finish disconnecting.");
+  }
   const storage = await chromeStorageMirror();
   const session = new ReaderPortableApplicationSession({
     serverUrl: environment.connectUrl,

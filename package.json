@@ -20,6 +20,7 @@
     "lint:code": "eslint . --max-warnings 0",
     "test": "pnpm test:architecture && pnpm -r --if-present test",
     "test:architecture": "node --test scripts/lib/architecture-check.test.mjs",
+    "test:extension-store": "node scripts/extension-store-smoke.mjs",
     "test:coverage": "pnpm -r --if-present test:coverage",
     "typecheck": "pnpm -r --if-present typecheck"
   },
@@ -27,6 +28,7 @@
     "@callumalpass/mdbase": "0.3.0-rc.5",
     "@eslint/js": "^9.39.2",
     "@mdbase-dev/connect-dev": "0.1.0-beta.91",
+    "@playwright/test": "1.61.1",
     "@types/node": "^22.19.11",
     "eslint": "^9.39.2",
     "eslint-import-resolver-typescript": "^4.4.5",

@@ -11,7 +11,9 @@ export function visibleEnvironment(value: string | undefined): VisibleEnvironmen
 
 export function EnvironmentBadge(): JSX.Element | null {
   const environment = visibleEnvironment(import.meta.env.VITE_MDBASE_ENV);
-  if (!environment) return null;
+  if (!environment) {
+    return null;
+  }
   return (
     <div
       className={`environment-badge is-${environment}`}

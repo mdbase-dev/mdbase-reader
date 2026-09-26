@@ -80,7 +80,9 @@ the destination collection (remembered), edit the title, optionally add tags and
 then explicitly **Save source**. Opening the panel or changing collections never auto-saves.
 
 Reader extracts the primary article with Mozilla Readability (including text inside open shadow
-roots) and saves readable HTML plus a form-value-free DOM archive. PDFs open in Chrome's viewer are
+roots) and saves readable HTML plus a minimized text-and-structure archive. Both stored HTML copies
+omit scripts, forms, arbitrary application attributes and resource/link URLs; they are not full-fidelity
+page snapshots. Page text, citation metadata and separately saved source addresses can still be private. PDFs open in Chrome's viewer are
 saved as PDF sources, downloaded from the page itself so your own access applies. When a page
 carries a DOI, Highwire `citation_*`, PRISM, Dublin Core or scholarly JSON-LD metadata, the panel
 shows the citation it will store: the DOI registry's CSL record (fetched through doi.org content
@@ -102,6 +104,14 @@ ambiguous passages never receive fabricated targets, and the comment stays in th
 selected collection, shows a badge (highlight count, or ✓) and draws the saved highlights with CSS
 Highlights. Turning it off removes the permission. See
 [extension capture improvements and validation](docs/extension-capture-improvements.md).
+
+**Settings → Disconnect this browser** clears local authorization, IndexedDB signing keys,
+preferences, drafts and pending-write recovery state after explicit confirmation. It restarts the
+extension before cleanup and removes optional website/local-connector permissions. Finish saves first:
+a write already sent may still complete. This does not revoke server-side access or delete collection
+data. Failed cleanup blocks connections and offers a retry; existing marks on pages disappear on reload.
+
+Store preparation and remaining acceptance gates: [hardening progress](docs/chrome-web-store/hardening-progress.md).
 
 ## Zotero migration exporter (experimental)
 
