@@ -26,6 +26,20 @@ import type { DateTime } from "../domain/time.js";
 
 export type * from "./source-import-ports.js";
 
+export interface RecoverBodyInput {
+  readonly collectionId: CollectionId;
+  /** The request ID of the interrupted write, from its Connect problem. */
+  readonly requestId: string;
+}
+
+/** Exact continuation of body updates whose outcome is unknown. Never a new write. */
+export interface BodyUpdateRecovery {
+  recoverSource(input: RecoverBodyInput): Promise<Source>;
+  recoverAnnotation(input: RecoverBodyInput): Promise<Annotation>;
+  /** Whether the interrupted write is still durably pending. */
+  pending(requestId: string): boolean;
+}
+
 export interface SourceRepository extends SourceLookups {
   list(query: SourceQuery, options?: ReaderRequestOptions): Promise<Page<SourceSummary>>;
   /** Stream one stable query when the backing store supports pinned pagination. */

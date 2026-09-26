@@ -20,6 +20,12 @@ export function useAnnotationSession(
     annotation,
     persist,
     scope?.refreshAnnotation ? (base) => refreshSharedAnnotation(scope, base) : undefined,
+    scope?.recoverAnnotationBody && scope.mutationPending
+      ? {
+          recover: scope.recoverAnnotationBody.bind(scope),
+          isPending: scope.mutationPending.bind(scope),
+        }
+      : undefined,
   );
   useEffect(() => {
     session.start();

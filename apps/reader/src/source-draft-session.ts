@@ -1,4 +1,12 @@
-import { RecordSession, type RecordSessionSnapshot } from "@mdbase-reader/connect";
+import {
+  MdbaseRecordSession,
+  recordChanged,
+  recordFailure,
+  recordMissing,
+  recordOutcome,
+  recordSuccess,
+  type MdbaseRecordSessionSnapshot,
+} from "@mdbase-reader/connect";
 
 import { readerErrorMessage } from "./errors.js";
 import { LocalDraftCheckpoint } from "./local-draft-checkpoint.js";
@@ -21,6 +29,12 @@ export interface SourceDraftSnapshot {
 
 const missing = "This source no longer exists. Your local draft has been retained.";
 
+/** Exact recovery of an interrupted write, where the gateway offers it. */
+export interface SourceDraftRecovery {
+  recover(requestId: string): Promise<Source>;
+  isPending(requestId: string): boolean;
+}
+
 /**
  * One writer per source per gateway, shared by inspector and workbench editors.
  * The SDK record session owns writing and classification; Reader owns its
@@ -29,7 +43,7 @@ const missing = "This source no longer exists. Your local draft has been retaine
 export class SourceDraftSession {
   private snapshot: SourceDraftSnapshot;
   private readonly listeners = new Set<() => void>();
-  private readonly record: RecordSession<Source>;
+  private readonly record: MdbaseRecordSession<Source>;
   private storedBody: string | undefined;
   private acknowledged: Source;
   private resumed = false;
@@ -41,28 +55,50 @@ export class SourceDraftSession {
     persist: (source: Source, body: string) => Promise<Source>,
     refresh: () => Promise<Source | null>,
     private readonly publish: (source: Source) => void,
+    recovery?: SourceDraftRecovery,
   ) {
     this.acknowledged = base;
-    this.record = new RecordSession<Source>(
+    this.record = new MdbaseRecordSession<Source>(
       base,
       {
         revision: (source) => source.recordRevision,
         body: (source) => source.body,
         // Refresh before writing: no silent overwrite of edits made in another application.
         write: async (expected, change) => {
-          const current = await refresh();
+          let current: Source | null;
+          try {
+            current = await refresh();
+          } catch (error) {
+            return recordFailure(error);
+          }
           if (!current) {
-            throw new Error(missing);
+            return recordMissing();
           }
           if (current.recordRevision !== expected.recordRevision) {
-            throw new Error("The source note changed before saving.");
+            return recordChanged("The source note changed before saving.");
           }
           const body = change.body ?? current.body;
-          const saved = await persist(current, body);
-          this.saved(saved, body);
-          return saved;
+          try {
+            const saved = await persist(current, body);
+            this.saved(saved, body);
+            return recordSuccess(saved);
+          } catch (error) {
+            return recordFailure(error);
+          }
         },
-        read: refresh,
+        read: () => recordOutcome(refresh),
+        ...(recovery
+          ? {
+              recover: async (requestId: string) => {
+                const recovered = await recordOutcome(() => recovery.recover(requestId));
+                if (recovered.ok) {
+                  this.saved(recovered.value, recovered.value.body);
+                }
+                return recovered;
+              },
+              isPending: (requestId: string) => recovery.isPending(requestId),
+            }
+          : {}),
       },
       { autosave: { idleMs: 1000 } },
     );
@@ -129,16 +165,16 @@ export class SourceDraftSession {
   save = (): Promise<void> => {
     this.checkpoint.flush();
     this.snapshot = { ...this.snapshot, recovered: false };
-    return this.record.save().catch(() => undefined);
+    return this.record.save().then(() => undefined);
   };
 
   async flush(): Promise<Source> {
     this.checkpoint.flush();
-    try {
-      return await this.record.flush();
-    } catch {
+    const flushed = await this.record.flush();
+    if (!flushed.ok) {
       throw new Error(this.snapshot.error ?? "Resolve the source note conflict before continuing.");
     }
+    return flushed.value;
   }
 
   resolve = (choice: "local" | "remote"): void => {
@@ -202,7 +238,7 @@ export class SourceDraftSession {
   }
 
   private project(current: SourceDraftSnapshot): SourceDraftSnapshot {
-    const record: RecordSessionSnapshot<Source> = this.record.snapshot;
+    const record: MdbaseRecordSessionSnapshot<Source> = this.record.snapshot;
     const status: SourceDraftSnapshot["status"] =
       record.state === "saved"
         ? "saved"
@@ -221,7 +257,7 @@ export class SourceDraftSession {
           ? missing
           : status === "error"
             ? readerErrorMessage(
-                record.error,
+                record.problem?.message,
                 "Reader could not save this note. Your draft is retained.",
               )
             : null,

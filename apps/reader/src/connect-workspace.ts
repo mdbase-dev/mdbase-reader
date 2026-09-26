@@ -41,6 +41,7 @@ import type {
   AnnotationAssetRepository,
   AnnotationCreationRequest,
   AnnotationRepository,
+  BodyUpdateRecovery,
   CitationCandidate,
   CitationResolutionRequest,
   Clock,
@@ -86,6 +87,7 @@ export class ConnectWorkspaceGateway implements ReaderWorkspaceGateway {
     private readonly contentSearch?: ContentSearchRepository,
     private readonly files?: CollectionFileRepository,
     private readonly libraryViewRepository?: LibraryViewRepository,
+    private readonly bodyRecovery?: BodyUpdateRecovery,
   ) {}
 
   async library(options: ReaderLibraryRequestOptions = {}): Promise<ReaderLibrarySnapshot> {
@@ -319,6 +321,39 @@ export class ConnectWorkspaceGateway implements ReaderWorkspaceGateway {
     });
     this.#replaceSource(updated);
     return updated;
+  }
+
+  async recoverSourceBody(requestId: string): Promise<Source> {
+    const recovered = await this.#bodyRecovery().recoverSource({
+      collectionId: this.collectionId,
+      requestId,
+    });
+    this.#replaceSource(recovered);
+    return recovered;
+  }
+
+  async recoverAnnotationBody(requestId: string): Promise<Annotation> {
+    const recovered = await this.#bodyRecovery().recoverAnnotation({
+      collectionId: this.collectionId,
+      requestId,
+    });
+    const current = this.#annotationsBySource.get(recovered.sourceId) ?? [];
+    this.#annotationsBySource.set(
+      recovered.sourceId,
+      current.map((candidate) => (candidate.id === recovered.id ? recovered : candidate)),
+    );
+    return recovered;
+  }
+
+  mutationPending(requestId: string): boolean {
+    return this.bodyRecovery?.pending(requestId) ?? false;
+  }
+
+  #bodyRecovery(): BodyUpdateRecovery {
+    if (!this.bodyRecovery) {
+      throw new Error("Exact recovery is unavailable here. No new write was attempted.");
+    }
+    return this.bodyRecovery;
   }
 
   async saveSourceCitation(source: Source, citation: unknown): Promise<Source> {

@@ -8,6 +8,7 @@ import type {
   DeletePreflightResult,
   DeleteProgressOptions,
   DeleteResult,
+  ConnectProblem,
   MdbaseConnection,
   QueryInput,
   QueryPage,
@@ -42,7 +43,13 @@ export interface ReaderConnectClient {
 }
 
 export class ConnectRepositoryError extends Error {
-  constructor(operation: string, code: string, detail?: string) {
+  constructor(
+    operation: string,
+    code: string,
+    detail?: string,
+    /** The SDK problem, when the failure came from a Connect outcome. */
+    readonly problem?: ConnectProblem,
+  ) {
     super(`mdbase Connect could not ${operation}: ${detail ?? code}`);
     this.name = "ConnectRepositoryError";
   }
@@ -52,7 +59,12 @@ export function outcomeValue<Value>(outcome: ConnectOutcome<Value>, operation: s
   if (outcome.ok) {
     return outcome.value;
   }
-  throw new ConnectRepositoryError(operation, outcome.problem.code, outcome.problem.message);
+  throw new ConnectRepositoryError(
+    operation,
+    outcome.problem.code,
+    outcome.problem.message,
+    outcome.problem,
+  );
 }
 
 export function queryWithOptions(
