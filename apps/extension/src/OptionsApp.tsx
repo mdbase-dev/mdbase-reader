@@ -1,9 +1,11 @@
+import { themePreferences, type ThemePreference } from "@mdbase-reader/ui";
 import { useEffect } from "react";
 
 import { readerLibraryUrl } from "./capture-model.js";
 import { CollectionSection } from "./CollectionSection.js";
 import { useDiagnosticsShown } from "./diagnostics-setting.js";
 import { environment } from "./environment.js";
+import { useThemePreference } from "./extension-theme.js";
 import { ExtensionHeader } from "./ExtensionHeader.js";
 import { PageStatusSetting } from "./PageStatusSetting.js";
 import { ShortcutList } from "./ShortcutList.js";
@@ -24,6 +26,10 @@ export function OptionsApp(): React.JSX.Element {
         <section aria-labelledby="collection-heading">
           <h2 id="collection-heading">Collection</h2>
           <CollectionSection connection={connection} label="Save new sources to" />
+        </section>
+        <section aria-labelledby="appearance-heading">
+          <h2 id="appearance-heading">Appearance</h2>
+          <ThemeSetting />
         </section>
         <section aria-labelledby="page-status-heading">
           <h2 id="page-status-heading">Saved pages</h2>
@@ -65,6 +71,38 @@ function DiagnosticsSetting(): React.JSX.Element {
     </>
   );
 }
+
+function ThemeSetting(): React.JSX.Element {
+  const [theme, setTheme] = useThemePreference();
+  return (
+    <>
+      <fieldset className="choice-group">
+        <legend className="visually-hidden">Theme</legend>
+        {themePreferences.map((value) => (
+          <label key={value} className="choice">
+            <input
+              type="radio"
+              name="theme"
+              value={value}
+              checked={theme === value}
+              onChange={() => setTheme(value)}
+            />
+            {themeLabels[value]}
+          </label>
+        ))}
+      </fieldset>
+      <p className="hint">
+        For the side panel, this page and the welcome page. Reader keeps its own theme setting.
+      </p>
+    </>
+  );
+}
+
+const themeLabels: Record<ThemePreference, string> = {
+  system: "Match system",
+  light: "Light",
+  dark: "Dark",
+};
 
 function About({ collectionId }: { readonly collectionId: string | null }): React.JSX.Element {
   const { version_name: name, version } = chrome.runtime.getManifest();

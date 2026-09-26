@@ -152,6 +152,10 @@ the page-status badge were not exercised end to end.
   focused.
 - **Diagnostics** appear in the panel only when enabled in Settings → Troubleshooting. Recording
   still happens in the panel, because timings are kept in its memory.
+- **Theme.** Settings → Appearance chooses Match system, Light or Dark for the side panel,
+  Settings and welcome pages. The choice is kept in the extension origin's `localStorage` so it
+  applies before the first render, and open pages switch at once through the `storage` event.
+  Reader's own theme setting is separate, since it lives on another origin.
 - **PDFs.** After saving a PDF, _Open in Reader to highlight_ is the panel's main action.
 
 ## Remaining boundaries

@@ -25,6 +25,16 @@ it("gathers collection, saved-page marks, shortcuts and version on the settings 
   expect(html).toContain("0.2.0-beta.1");
 });
 
+it("offers a theme choice on the settings page, following the system by default", () => {
+  stubManifest();
+  const html = renderToStaticMarkup(<OptionsApp />);
+  expect(html).toContain("Appearance");
+  for (const label of ["Match system", "Light", "Dark"]) {
+    expect(html).toContain(label);
+  }
+  expect(html).toMatch(/<input type="radio" name="theme" checked="" value="system"\/>/u);
+});
+
 it("walks a new user through connecting, pinning, saving and highlighting", () => {
   stubManifest();
   const html = renderToStaticMarkup(<WelcomeApp />);
