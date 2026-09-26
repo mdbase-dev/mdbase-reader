@@ -16,7 +16,7 @@ import type { ReaderConnectClient } from "./repository-client.js";
 import type { ConnectOutcome, QueryPage } from "@mdbase-dev/connect";
 
 describe("ConnectSourceImportRepository", () => {
-  it("finds an exact duplicate from paged contract metadata without reading bodies", async () => {
+  it("filters duplicates at the authority and verifies exact digests without reading bodies", async () => {
     const queryPages = vi.fn(() => duplicatePages());
     const repository = new ConnectSourceImportRepository(
       { queryPages } as unknown as ReaderConnectClient,
@@ -28,10 +28,11 @@ describe("ConnectSourceImportRepository", () => {
     expect(duplicate?.id).toBe("src_import");
     expect(queryPages).toHaveBeenCalledWith(
       {
-        contract: { id: "dev.mdbase.reader.source", version: "1.0.0-beta.1" },
+        types: ["reader-source"],
+        where: `documents != null && documents.filter(value.revision == ${JSON.stringify(digest)}).length > 0`,
         frontmatterMode: "effective",
       },
-      { firstPageSize: 500, pageSize: 1_000 },
+      { firstPageSize: 50, pageSize: 50 },
     );
   });
 
@@ -89,7 +90,9 @@ describe("ConnectSourceImportRepository", () => {
       mediaType: "application/pdf",
     });
   });
+});
 
+describe("ConnectSourceImportRepository capture and recovery", () => {
   it("stores an authored capture note and tags in the source creation, not a later overwrite", async () => {
     const create = vi.fn(() => Promise.resolve(success(recordDocument())));
     const repository = new ConnectSourceImportRepository(

@@ -48,6 +48,7 @@ export interface ReaderDirectAccessSnapshot {
 export interface ReaderDirectAccessController {
   readonly getSnapshot: () => ReaderDirectAccessSnapshot | null;
   readonly subscribe: (listener: () => void) => () => void;
+  readonly disable: () => void;
   readonly check: () => Promise<ConnectOutcome<DirectAccessStatus, DirectAccessProblemCode>>;
   readonly request: () => Promise<ConnectOutcome<DirectAccessStatus, DirectAccessProblemCode>>;
 }
@@ -133,6 +134,9 @@ export class ReaderApplicationSession {
   }
 }
 
+// Connection identity changes on reconnect/reauthorization. Weak ownership avoids retaining sessions.
+const connectedCollections = new WeakMap<MdbaseConnection, ReaderConnectedCollection>();
+
 export function connectedReaderCollection(
   snapshot: ReaderConnectSnapshot,
   connection: MdbaseConnection | null,
@@ -145,10 +149,16 @@ export function connectedReaderCollection(
   ) {
     return null;
   }
+  const cached = connectedCollections.get(connection);
+  if (cached) {
+    return cached;
+  }
   const client = connectClient(connection);
-  return {
+  const collection: ReaderConnectedCollection = {
     collectionId: collectionId(connection.collectionId),
-    collectionName: snapshot.info.displayName,
+    get collectionName() {
+      return connection.info()?.displayName ?? snapshot.info.displayName;
+    },
     sources: new ConnectSourceRepository(client),
     sourceImports: connectSourceImportRepository(connection, client),
     migration: new ConnectMigrationTarget(connection),
@@ -160,6 +170,8 @@ export function connectedReaderCollection(
     libraryViews: connectLibraryViewRepository(connection),
     directAccess: readerDirectAccessController(connection),
   };
+  connectedCollections.set(connection, collection);
+  return collection;
 }
 
 function readerDirectAccessController(connection: MdbaseConnection): ReaderDirectAccessController {
@@ -167,17 +179,28 @@ function readerDirectAccessController(connection: MdbaseConnection): ReaderDirec
   // longer watch-start budget used while opening very large collections.
   const probeTimeoutMs = 10_000;
   let snapshot = directAccessSnapshot(connection.info());
+  const getSnapshot = (): ReaderDirectAccessSnapshot | null => {
+    const next = directAccessSnapshot(connection.info());
+    if (!sameDirectAccessSnapshot(snapshot, next)) {
+      snapshot = next;
+    }
+    return snapshot;
+  };
   return {
-    getSnapshot: () => snapshot,
-    subscribe: (listener) =>
-      connection.onConnectionChange((info) => {
+    getSnapshot,
+    subscribe: (listener) => {
+      let previous = getSnapshot();
+      return connection.onConnectionChange((info) => {
         const next = directAccessSnapshot(info);
-        if (sameDirectAccessSnapshot(snapshot, next)) {
+        if (sameDirectAccessSnapshot(previous, next)) {
           return;
         }
-        snapshot = next;
+        previous = next;
+        getSnapshot();
         listener();
-      }),
+      });
+    },
+    disable: () => connection.disableDirectAccess(),
     check: () => connection.checkDirectAccess({ timeoutMs: probeTimeoutMs }),
     request: () => connection.requestDirectAccess({ timeoutMs: probeTimeoutMs }),
   };

@@ -4,7 +4,7 @@ import type { ProjectionReport } from "./page-annotations.js";
 import type { PageCapture } from "./page-capture.js";
 import type { CaptureDraft } from "./save-capture.js";
 import type { ProblemKind } from "./use-action-lock.js";
-import type { ReaderConnectSnapshot } from "@mdbase-reader/connect";
+import type { ReaderConnectSnapshot, ReaderDirectAccessController } from "@mdbase-reader/connect";
 import type { Annotation, SourceImportProgress, SourceSummary } from "@mdbase-reader/core";
 import type { Dispatch, SetStateAction } from "react";
 
@@ -24,6 +24,7 @@ export interface ExtensionCaptureController {
   readonly citation: CitationPreview | null;
   readonly citationPending: boolean;
   readonly deviceCode: string | null;
+  readonly directAccess: ReaderDirectAccessController | null;
   readonly projection: ProjectionReport | null;
   readonly progress: SourceImportProgress | null;
   readonly busy: boolean;

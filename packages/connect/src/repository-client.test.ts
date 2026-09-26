@@ -114,17 +114,17 @@ describe("Reader Connect SDK integration", () => {
       }
     }
 
-    await expect(recordPathById(client, sourceContract, "match")).resolves.toBe("sources/match.md");
+    await expect(recordPathById(client, "match")).resolves.toBe("sources/match.md");
     expect(iteratorClosed).toBe(true);
     expect(queryPages).toHaveBeenCalledWith(
-      { contract: sourceContract, frontmatterMode: "effective" },
-      { firstPageSize: 200, pageSize: 1_000 },
+      { where: 'id == "match"', frontmatterMode: "effective" },
+      { firstPageSize: 50, pageSize: 50 },
     );
   });
 });
 
 describe("Reader record lookup by ID", () => {
-  it("remembers every ID a lookup scan passes", async () => {
+  it("verifies the exact ID even if the authority returns additional candidates", async () => {
     const results = ["first", "match", "after"].map((id) => ({
       path: `sources/${id}.md`,
       effectiveFrontmatter: { id },
@@ -138,16 +138,7 @@ describe("Reader record lookup by ID", () => {
         );
       }),
     } as unknown as Parameters<typeof recordPathById>[0];
-    const known = new Map<string, string>();
-
-    await expect(recordPathById(client, sourceContract, "match", {}, known)).resolves.toBe(
-      "sources/match.md",
-    );
-    expect(Object.fromEntries(known)).toEqual({
-      first: "sources/first.md",
-      match: "sources/match.md",
-      after: "sources/after.md",
-    });
+    await expect(recordPathById(client, "match")).resolves.toBe("sources/match.md");
   });
 });
 

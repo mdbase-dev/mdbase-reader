@@ -1,3 +1,4 @@
+import { annotationPathsForSource } from "./annotation-query.js";
 import * as sources from "./annotation-source.js";
 import { annotationContract } from "./contracts.js";
 import { annotationFromDocument, annotationFrontmatter } from "./mapping.js";
@@ -24,10 +25,8 @@ import type {
 
 export class ConnectAnnotationRepository implements AnnotationRepository {
   readonly #resolveSource: ReturnType<typeof sources.annotationSourceResolver>;
-  readonly #pathsById = new Map<string, string>();
-  readonly #pathsBySource = new Map<string, string[]>();
+
   readonly #deletePreflights = new Map<string, DeletePreflightResult>();
-  #indexPromise: Promise<void> | null = null;
 
   constructor(private readonly client: ReaderConnectClient) {
     this.#resolveSource = sources.annotationSourceResolver(client);
@@ -35,19 +34,20 @@ export class ConnectAnnotationRepository implements AnnotationRepository {
 
   async sourceIdsWithAnnotations(
     _collection: CollectionId,
-    _options: ReaderRequestOptions = {},
+    options: ReaderRequestOptions = {},
   ): Promise<readonly SourceId[]> {
-    await this.#ensureIndex();
-    return [...this.#pathsBySource.keys()] as SourceId[];
+    return [...(await this.#buildIndex(options)).keys()] as SourceId[];
   }
 
   async annotationCountsBySource(
     _collection: CollectionId,
-    _options: ReaderRequestOptions = {},
+    options: ReaderRequestOptions = {},
   ): Promise<ReadonlyMap<SourceId, number>> {
-    await this.#ensureIndex();
     return new Map(
-      [...this.#pathsBySource].map(([source, paths]) => [source as SourceId, paths.length]),
+      [...(await this.#buildIndex(options))].map(([source, paths]) => [
+        source as SourceId,
+        paths.length,
+      ]),
     );
   }
 
@@ -80,13 +80,7 @@ export class ConnectAnnotationRepository implements AnnotationRepository {
         return null;
       }
     });
-    const listed = annotations.filter((annotation) => annotation !== null);
-    for (const annotation of listed) {
-      if (annotation.path) {
-        this.#remember(annotation.id, annotation.sourceId, annotation.path);
-      }
-    }
-    return listed;
+    return annotations.filter((annotation) => annotation !== null);
   }
 
   async listForSource(
@@ -94,15 +88,19 @@ export class ConnectAnnotationRepository implements AnnotationRepository {
     source: SourceId,
     options: ReaderRequestOptions = {},
   ): Promise<readonly Annotation[]> {
-    await this.#ensureIndex();
-    const matchingPaths = this.#pathsBySource.get(source) ?? [];
-    return mapConcurrent(matchingPaths, readerConnectBulkConcurrency, async (path) => {
-      const document = outcomeValue(
-        await readWithOptions(this.client, { path, includeDocument: true }, options),
-        "read annotation",
-      );
-      return this.#map(collection, document);
-    });
+    const matchingPaths = await annotationPathsForSource(this.client, source, options);
+    const annotations = await mapConcurrent(
+      matchingPaths,
+      readerConnectBulkConcurrency,
+      async (path) => {
+        const document = outcomeValue(
+          await readWithOptions(this.client, { path, includeDocument: true }, options),
+          "read annotation",
+        );
+        return this.#map(collection, document);
+      },
+    );
+    return annotations.filter((annotation) => annotation.sourceId === source);
   }
 
   async create(annotation: Annotation, _idempotencyKey: MutationId): Promise<Annotation> {
@@ -116,9 +114,7 @@ export class ConnectAnnotationRepository implements AnnotationRepository {
       }),
       "create annotation",
     );
-    const created = await this.#map(annotation.collectionId, result);
-    this.#remember(created.id, created.sourceId, result.path);
-    return created;
+    return this.#map(annotation.collectionId, result);
   }
 
   async updateBody(input: {
@@ -140,9 +136,7 @@ export class ConnectAnnotationRepository implements AnnotationRepository {
       }),
       "update annotation",
     );
-    const updated = await this.#map(annotation.collectionId, result);
-    this.#pathsById.set(updated.id, result.path);
-    return updated;
+    return this.#map(annotation.collectionId, result);
   }
 
   async preflightDelete(annotation: Annotation): Promise<AnnotationDeletionPlan> {
@@ -178,14 +172,6 @@ export class ConnectAnnotationRepository implements AnnotationRepository {
       if (!result.deleted) {
         throw new Error(`mdbase Connect did not delete annotation ${annotation.id}.`);
       }
-      this.#pathsById.delete(annotation.id);
-      const paths = this.#pathsBySource.get(annotation.sourceId);
-      if (paths) {
-        this.#pathsBySource.set(
-          annotation.sourceId,
-          paths.filter((candidate) => candidate !== path),
-        );
-      }
     } finally {
       this.#deletePreflights.delete(key);
     }
@@ -196,9 +182,7 @@ export class ConnectAnnotationRepository implements AnnotationRepository {
     id: AnnotationId,
     options: ReaderRequestOptions = {},
   ): Promise<Annotation | null> {
-    const path =
-      this.#pathsById.get(id) ??
-      (await recordPathById(this.client, annotationContract, id, options, this.#pathsById));
+    const path = await recordPathById(this.client, id, options);
     if (!path) {
       return null;
     }
@@ -217,50 +201,35 @@ export class ConnectAnnotationRepository implements AnnotationRepository {
     );
   }
 
-  async #buildIndex(): Promise<void> {
+  async #buildIndex(options: ReaderRequestOptions): Promise<Map<string, string[]>> {
+    const index = new Map<string, string[]>();
+    const resolved = new Map<string, Promise<SourceId>>();
     for await (const outcome of this.client.queryPages(
       {
         contract: annotationContract,
         frontmatterMode: "effective",
       },
-      { firstPageSize: 500, pageSize: 1_000 },
+      { ...options, firstPageSize: 500, pageSize: 1_000 },
     )) {
       const page = outcomeValue(outcome, "query annotations");
-      for (const record of page.results) {
+      await mapConcurrent(page.results, readerConnectBulkConcurrency, async (record) => {
         const fields = record.effectiveFrontmatter ?? record.frontmatter;
-        const id = sources.stringField(fields?.["id"]);
-        if (id && sources.annotationSourceReference(fields?.["source"])) {
-          const source = await this.#resolveSource(fields?.["source"]);
-          this.#remember(id, source, record.path);
+        const reference = sources.annotationSourceReference(fields?.["source"]);
+        if (sources.stringField(fields?.["id"]) && reference) {
+          const key = sources.annotationSourcePath(reference) ?? reference;
+          let pending = resolved.get(key);
+          if (!pending) {
+            pending = this.#resolveSource(fields?.["source"]);
+            resolved.set(key, pending);
+          }
+          const source = await pending;
+          const paths = index.get(source) ?? [];
+          paths.push(record.path);
+          index.set(source, paths);
         }
-      }
+      });
     }
-  }
-
-  /**
-   * Records where an annotation lives. Per-source paths are only kept once the index exists,
-   * since a partial list would otherwise stand in for the source's full set.
-   */
-  #remember(id: string, source: string, path: string): void {
-    this.#pathsById.set(id, path);
-    if (!this.#indexPromise) {
-      return;
-    }
-    const paths = this.#pathsBySource.get(source) ?? [];
-    if (!paths.includes(path)) {
-      paths.push(path);
-      this.#pathsBySource.set(source, paths);
-    }
-  }
-
-  async #ensureIndex(): Promise<void> {
-    this.#indexPromise ??= this.#buildIndex().catch((reason: unknown) => {
-      this.#indexPromise = null;
-      this.#pathsById.clear();
-      this.#pathsBySource.clear();
-      throw reason;
-    });
-    return this.#indexPromise;
+    return index;
   }
 }
 

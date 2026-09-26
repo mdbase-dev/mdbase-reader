@@ -43,8 +43,13 @@ describe("annotation source references", () => {
       });
       const client = {
         read,
-        queryPages: async function* () {
-          yield await Promise.resolve(ok({ results: [annotation], complete: true }));
+        queryPages: async function* (input: { where?: string }) {
+          yield await Promise.resolve(
+            ok({
+              results: input.where === 'id == "src_stable"' ? [source] : [annotation],
+              complete: true,
+            }),
+          );
         },
         create: vi.fn(() => Promise.resolve(ok(annotation))),
         update: vi.fn(() => Promise.resolve(ok(annotation))),
@@ -67,7 +72,10 @@ describe("annotation source references", () => {
           })
         ).sourceId,
       ).toBe("src_stable");
-      expect(read.mock.calls.filter(([input]) => input.path === source.path)).toHaveLength(1);
+      // Later reads revalidate path identity rather than keeping a stale ID indefinitely.
+      expect(
+        read.mock.calls.filter(([input]) => input.path === source.path).length,
+      ).toBeGreaterThan(1);
       expect(() => annotationFromDocument(collection, annotation)).toThrow("must be resolved");
       expect(annotationFromDocument(collection, annotation, sourceId("src_stable")).sourceId).toBe(
         "src_stable",

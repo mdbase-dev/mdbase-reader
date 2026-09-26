@@ -36,9 +36,19 @@ export class ConnectSourceImportRepository implements SourceImportRepository {
     options: ReaderRequestOptions = {},
   ): Promise<SourceSummary | null> {
     const expected = new Set<string>(contentDigests);
+    if (!expected.size) {
+      return null;
+    }
+    const matches = [...expected]
+      .map((digest) => `value.revision == ${JSON.stringify(digest)}`)
+      .join(" || ");
     for await (const outcome of this.records.queryPages(
-      { contract: sourceContract, frontmatterMode: "effective" },
-      { ...options, firstPageSize: 500, pageSize: 1_000 },
+      {
+        types: ["reader-source"],
+        where: `documents != null && documents.filter(${matches}).length > 0`,
+        frontmatterMode: "effective",
+      },
+      { ...options, firstPageSize: 50, pageSize: 50 },
     )) {
       const page = outcomeValue(outcome, "check imported file duplicates");
       for (const record of page.results) {

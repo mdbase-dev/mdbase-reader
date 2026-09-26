@@ -39,6 +39,7 @@ const icons = Object.fromEntries(
 
 export function extensionManifest(environment) {
   const suffix = environment.label ? ` (${environment.label})` : "";
+  const loopback = new URL(environment.loopbackUrl);
   return {
     manifest_version: 3,
     name: `mdbase Reader${suffix}`,
@@ -50,7 +51,7 @@ export function extensionManifest(environment) {
     permissions: ["activeTab", "scripting", "storage", "contextMenus", "sidePanel"],
     // Only the Connect API is permanent. Page status on every site is an explicit opt-in.
     host_permissions: [`${environment.connectUrl}/*`],
-    optional_host_permissions: ["https://*/*"],
+    optional_host_permissions: ["https://*/*", `${loopback.protocol}//${loopback.hostname}/*`],
     action: {
       default_title: `Save to mdbase Reader${suffix}`,
       default_icon: { 16: icons["16"], 32: icons["32"] },

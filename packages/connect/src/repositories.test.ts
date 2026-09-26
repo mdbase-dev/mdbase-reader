@@ -44,13 +44,19 @@ describe("ConnectSourceRepository", () => {
         }),
       ),
     );
-    const client = { query, read } as unknown as ReaderConnectClient;
+    const queryPages = async function* (): AsyncGenerator<ConnectOutcome<QueryPage>> {
+      const result = await query();
+      if (result.ok) {
+        yield* queryStream(result.value.results);
+      }
+    };
+    const client = { query, queryPages, read } as unknown as ReaderConnectClient;
     const repository = new ConnectSourceRepository(client);
     const page = await repository.list({ collectionId: collectionId("reading"), limit: 20 });
     const selected = await repository.get(collectionId("reading"), sourceId("src_01"));
 
     expect(query).toHaveBeenCalledWith(expect.objectContaining({ contract: sourceContract }));
-    expect(query).toHaveBeenCalledOnce();
+    expect(query).toHaveBeenCalledTimes(2);
     expect(read).toHaveBeenCalledWith({
       path: "sources/gravity.md",
       includeDocument: true,
@@ -153,7 +159,7 @@ describe("ConnectAnnotationRepository", () => {
 });
 
 describe("Connect annotation reads", () => {
-  it("discovers annotations by contract and reads matching bodies as whole records", async () => {
+  it("filters annotation references and reads only matching bodies as whole records", async () => {
     const queryPages = vi.fn(() =>
       queryStream([
         {
@@ -201,8 +207,12 @@ describe("Connect annotation reads", () => {
     const annotations = await repository.listForSource(collectionId("reading"), sourceId("src_01"));
 
     expect(queryPages).toHaveBeenCalledWith(
-      { contract: annotationContract, frontmatterMode: "effective" },
-      { firstPageSize: 500, pageSize: 1_000 },
+      {
+        types: ["reader-annotation"],
+        where: 'source != null && (source.contains("src_01"))',
+        frontmatterMode: "effective",
+      },
+      { firstPageSize: 100, pageSize: 100 },
     );
     expect(read).toHaveBeenCalledOnce();
     expect(read).toHaveBeenCalledWith({
@@ -217,7 +227,7 @@ describe("Connect annotation reads", () => {
     ]);
 
     await repository.listForSource(collectionId("reading"), sourceId("src_02"));
-    expect(queryPages).toHaveBeenCalledOnce();
+    expect(queryPages).toHaveBeenCalledTimes(5);
   });
 });
 

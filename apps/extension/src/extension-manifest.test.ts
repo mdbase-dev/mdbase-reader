@@ -20,7 +20,7 @@ describe("per-environment extension manifest", () => {
       readerOrigin: "https://lab.mdbase-reader.pages.dev",
     });
     expect(manifest["host_permissions"]).toEqual(["https://connect-lab.mdbase.dev/*"]);
-    expect(manifest["optional_host_permissions"]).toEqual(["https://*/*"]);
+    expect(manifest["optional_host_permissions"]).toEqual(["https://*/*", "http://127.0.0.1/*"]);
     expect(manifest["name"]).toBe("mdbase Reader (LAB)");
   });
 

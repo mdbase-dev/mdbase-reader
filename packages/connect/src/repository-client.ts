@@ -1,4 +1,3 @@
-import type { annotationContract, sourceContract } from "./contracts.js";
 import type {
   ConnectOutcome,
   ConnectRequestOptions,
@@ -98,28 +97,23 @@ export async function mapConcurrent<Input, Output>(
   return results;
 }
 
-/**
- * Contract views cannot be filtered in the store, so this scans until the ID appears. Every
- * ID passed on the way is remembered in `known`, sparing later lookups the same scan.
- */
+/** Reader records persist their stable ID as a raw field, so resolve paths at the authority. */
 export async function recordPathById(
   client: ReaderConnectClient,
-  contract: typeof sourceContract | typeof annotationContract,
   id: string,
   options: ReaderRequestOptions = {},
-  known?: Map<string, string>,
 ): Promise<string | null> {
   for await (const outcome of client.queryPages(
-    { contract, frontmatterMode: "effective" },
-    { ...options, firstPageSize: 200, pageSize: 1_000 },
+    {
+      where: `id == ${JSON.stringify(id)}`,
+      frontmatterMode: "effective",
+    },
+    { ...options, firstPageSize: 50, pageSize: 50 },
   )) {
     const page = outcomeValue(outcome, "query records");
     let match: string | null = null;
     for (const { path, effectiveFrontmatter, frontmatter } of page.results) {
       const candidate = (effectiveFrontmatter ?? frontmatter)?.["id"];
-      if (typeof candidate === "string") {
-        known?.set(candidate, path);
-      }
       match ??= candidate === id ? path : null;
     }
     if (match) {

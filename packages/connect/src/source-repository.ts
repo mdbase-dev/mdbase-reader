@@ -33,8 +33,6 @@ import type { ReaderConnectClient } from "./repository-client.js";
 import type { QueryRecord } from "@mdbase-dev/connect";
 
 export class ConnectSourceRepository implements SourceRepository {
-  readonly #pathsById = new Map<string, string>();
-
   constructor(private readonly client: ReaderConnectClient) {}
 
   async list(query: SourceQuery, options: ReaderRequestOptions = {}): Promise<Page<SourceSummary>> {
@@ -100,13 +98,10 @@ export class ConnectSourceRepository implements SourceRepository {
     id: SourceId,
     options: ReaderRequestOptions = {},
   ): Promise<Source | null> {
-    const path =
-      this.#pathsById.get(id) ??
-      (await recordPathById(this.client, sourceContract, id, options, this.#pathsById));
+    const path = await recordPathById(this.client, id, options);
     if (!path) {
       return null;
     }
-    this.#pathsById.set(id, path);
     const result = outcomeValue(
       await readWithOptions(this.client, { path, includeDocument: true }, options),
       "read source",
@@ -228,17 +223,14 @@ export class ConnectSourceRepository implements SourceRepository {
   }
 
   async #path(id: SourceId, operation: string): Promise<string> {
-    const path =
-      this.#pathsById.get(id) ??
-      (await recordPathById(this.client, sourceContract, id, {}, this.#pathsById));
+    const path = await recordPathById(this.client, id);
     if (!path) {
       throw new ConnectRepositoryError(operation, "source_not_found");
     }
-    this.#pathsById.set(id, path);
     return path;
   }
 
-  /** Runs a filtered query over Reader's own records, remembering each result's path. */
+  /** Runs a filtered query over Reader's own records. */
   #query(collectionId: CollectionId, options: ReaderRequestOptions = {}): lookups.SourceWhere {
     return async (where) => {
       const records = await lookups.queryReaderSources(this.client, where, options);
@@ -252,10 +244,6 @@ export class ConnectSourceRepository implements SourceRepository {
   ): SourceSummary[] {
     const sources = records
       .map((record) => sourceSummaryFromQuery(query.collectionId, record))
-      .map((source) => {
-        this.#pathsById.set(source.id, source.path);
-        return source;
-      })
       .filter(
         (source) =>
           query.readingStatus === undefined || source.readingStatus === query.readingStatus,

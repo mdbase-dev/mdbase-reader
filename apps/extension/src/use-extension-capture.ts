@@ -259,6 +259,7 @@ export function useExtensionCapture(tabId: number): ExtensionCaptureController {
     citation,
     citationPending,
     deviceCode: connection.deviceCode,
+    directAccess: connection.directAccess,
     projection,
     progress,
     refreshing,

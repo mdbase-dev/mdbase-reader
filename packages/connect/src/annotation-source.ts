@@ -26,9 +26,9 @@ export function annotationSourceResolver(
           throw new Error(`Source ${path} has no stable ID.`);
         }
         return sourceId(id);
-      })().catch((error: unknown) => {
+      })().finally(() => {
+        // Coalesce simultaneous reads only. A later call must see renamed/replaced records.
         idsByPath.delete(path);
-        throw error;
       });
       idsByPath.set(path, pending);
     }

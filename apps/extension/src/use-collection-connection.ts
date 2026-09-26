@@ -28,6 +28,7 @@ export function useCollectionConnection(): CollectionConnection {
   return {
     snapshot: connection.snapshot,
     deviceCode: connection.deviceCode,
+    directAccess: connection.directAccess,
     busy: lock.busy,
     problem: lock.problem,
     connect: connection.connect,

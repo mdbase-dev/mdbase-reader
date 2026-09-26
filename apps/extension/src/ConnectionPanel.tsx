@@ -1,6 +1,7 @@
 import { Select } from "@mdbase-reader/ui";
 
 import { connectionUnavailableMessage } from "./connection-status.js";
+import { DirectAccessPanel } from "./DirectAccessPanel.js";
 import { environment } from "./environment.js";
 
 import type { ExtensionCaptureController } from "./capture-controller.js";
@@ -8,7 +9,14 @@ import type { ExtensionCaptureController } from "./capture-controller.js";
 /** What the connection controls need; the panel, welcome and settings pages all provide it. */
 export type ConnectionControls = Pick<
   ExtensionCaptureController,
-  "snapshot" | "busy" | "deviceCode" | "connect" | "retry" | "applySetup" | "select"
+  | "snapshot"
+  | "busy"
+  | "deviceCode"
+  | "directAccess"
+  | "connect"
+  | "retry"
+  | "applySetup"
+  | "select"
 >;
 
 /** Connection states the user resolves by approving access again in mdbase Connect. */
@@ -111,6 +119,14 @@ export function ConnectionPanel({
             Apply reviewed setup
           </button>
         </>
+      ) : null}
+      {c.directAccess ? (
+        <DirectAccessPanel
+          key={selected}
+          controller={c.directAccess}
+          busy={busy}
+          onUnavailable={c.retry}
+        />
       ) : null}
       {c.deviceCode ? (
         <p className="device-code">
