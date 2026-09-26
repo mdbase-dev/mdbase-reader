@@ -215,8 +215,8 @@ importers:
   packages/connect:
     dependencies:
       '@mdbase-dev/connect':
-        specifier: 0.1.0-beta.108
-        version: 0.1.0-beta.108
+        specifier: 0.1.0-beta.112
+        version: 0.1.0-beta.112
       '@mdbase-reader/core':
         specifier: workspace:*
         version: link:../core
@@ -1119,14 +1119,14 @@ packages:
     resolution: {integrity: sha512-uQMcCzKsYxNRNk7jBxEhRUdxuWzDeGG/tNJF3qKWQqIFtxCOrf/EPRTdabr5wYjtlrfw/kbzc/FVYVyOAcZNvA==}
     hasBin: true
 
-  '@mdbase-dev/connect-protocol@0.1.0-beta.108':
-    resolution: {integrity: sha512-kR8ff5uWyqadjIG+0TIJiwhUN5vImGCNHdYYM21/dphvEAq0qTR56vpqNFPmVP3+OdMjHPYvQKmp9mCG8IOCAQ==}
+  '@mdbase-dev/connect-protocol@0.1.0-beta.112':
+    resolution: {integrity: sha512-682F23pQQW8qsKscr7pYEhEj/ia7YDtJyoMU9+9AWmpXZXAD2UNO7gpzuCOTe6rn3tUZ6d+z+NRFlP56rFmUtQ==}
 
   '@mdbase-dev/connect-protocol@0.1.0-beta.91':
     resolution: {integrity: sha512-7CUgW1unwNLcQqhot+UzBTbwmqSpF9uTYxtZkwOYKVDyTg2mxDF4htW5G0sIhkrDu/JRr4UK4HlnQhEQXPmljA==}
 
-  '@mdbase-dev/connect@0.1.0-beta.108':
-    resolution: {integrity: sha512-58GFjrojuoA/JG64CEIyogdaR5e4ys/naW8LDwvF56OwVo+LpN7X5KW/5kvZZpgXOr4qSpfojBdDSFtTNgPYIA==}
+  '@mdbase-dev/connect@0.1.0-beta.112':
+    resolution: {integrity: sha512-oLk/VEz/GCZIX9eTDpIf9mcI0dKXokKvWgf9xRzyComgNqXDrKX2ADFL1pYvAPOC2+O6pKveGIpJiEPWEVV3Lw==}
 
   '@mdbase-dev/connect@0.1.0-beta.91':
     resolution: {integrity: sha512-XfvkxLaPpZf6e6IBVDt86J/bAlzI3alDhOvkJ5BJBfd5kVQOObKppVQE3fu8tH/fbRS/EliWRftJ9wEOaa/cXg==}
@@ -4277,7 +4277,7 @@ snapshots:
       ajv: 8.20.0
       yaml: 2.9.0
 
-  '@mdbase-dev/connect-protocol@0.1.0-beta.108':
+  '@mdbase-dev/connect-protocol@0.1.0-beta.112':
     dependencies:
       ajv: 8.20.0
       ajv-formats: 3.0.1(ajv@8.20.0)
@@ -4287,9 +4287,9 @@ snapshots:
       ajv: 8.20.0
       ajv-formats: 3.0.1(ajv@8.20.0)
 
-  '@mdbase-dev/connect@0.1.0-beta.108':
+  '@mdbase-dev/connect@0.1.0-beta.112':
     dependencies:
-      '@mdbase-dev/connect-protocol': 0.1.0-beta.108
+      '@mdbase-dev/connect-protocol': 0.1.0-beta.112
 
   '@mdbase-dev/connect@0.1.0-beta.91':
     dependencies:
