@@ -9,7 +9,7 @@ export async function annotationPathsForSource(
   client: ReaderConnectClient,
   source: SourceId,
   options: ReaderRequestOptions,
-): Promise<string[]> {
+): Promise<{ paths: string[]; sourcePath: string | null }> {
   // Never infer identity from a filename: sources can be renamed independently of their IDs.
   const path = await recordPathById(client, source, options);
   const references = [source, ...(path ? [path.replace(/\.md$/u, "")] : [])];
@@ -29,5 +29,5 @@ export async function annotationPathsForSource(
       }
     }
   }
-  return paths;
+  return { paths, sourcePath: path };
 }

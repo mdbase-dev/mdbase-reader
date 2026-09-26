@@ -9,6 +9,7 @@ import {
   readerConnectBulkConcurrency,
   recordPathById,
 } from "./repository-client.js";
+import { RevisionCache } from "./revision-cache.js";
 
 import type { ReaderConnectClient } from "./repository-client.js";
 import type { DeletePreflightResult, RecordDocument } from "@mdbase-dev/connect";
@@ -26,10 +27,15 @@ import type {
 export class ConnectAnnotationRepository implements AnnotationRepository {
   readonly #resolveSource: ReturnType<typeof sources.annotationSourceResolver>;
 
+  readonly #lists: RevisionCache<readonly Annotation[]>;
+  readonly #indexes: RevisionCache<Map<string, string[]>>;
+
   readonly #deletePreflights = new Map<string, DeletePreflightResult>();
 
   constructor(private readonly client: ReaderConnectClient) {
     this.#resolveSource = sources.annotationSourceResolver(client);
+    this.#lists = new RevisionCache(client);
+    this.#indexes = new RevisionCache(client, 1);
   }
 
   async sourceIdsWithAnnotations(
@@ -88,7 +94,21 @@ export class ConnectAnnotationRepository implements AnnotationRepository {
     source: SourceId,
     options: ReaderRequestOptions = {},
   ): Promise<readonly Annotation[]> {
-    const matchingPaths = await annotationPathsForSource(this.client, source, options);
+    return this.#lists.get(JSON.stringify([collection, source]), options, () =>
+      this.#listForSource(collection, source, options),
+    );
+  }
+
+  async #listForSource(
+    collection: CollectionId,
+    source: SourceId,
+    options: ReaderRequestOptions,
+  ): Promise<readonly Annotation[]> {
+    const { paths: matchingPaths, sourcePath } = await annotationPathsForSource(
+      this.client,
+      source,
+      options,
+    );
     const annotations = await mapConcurrent(
       matchingPaths,
       readerConnectBulkConcurrency,
@@ -97,13 +117,25 @@ export class ConnectAnnotationRepository implements AnnotationRepository {
           await readWithOptions(this.client, { path, includeDocument: true }, options),
           "read annotation",
         );
-        return this.#map(collection, document);
+        const reference = sources.annotationSourceReference(
+          document.effectiveFrontmatter["source"],
+        );
+        // Recheck the body read: the annotation may have moved since the candidate query.
+        if (
+          reference !== source &&
+          (!reference || !sourcePath || sources.annotationSourcePath(reference) !== sourcePath)
+        ) {
+          return null;
+        }
+        // The source ID query already established this path's identity. Do not read it again.
+        return annotationFromDocument(collection, document, source);
       },
     );
-    return annotations.filter((annotation) => annotation.sourceId === source);
+    return annotations.filter((annotation) => annotation !== null);
   }
 
   async create(annotation: Annotation, _idempotencyKey: MutationId): Promise<Annotation> {
+    this.#invalidate();
     const result = outcomeValue(
       await this.client.create({
         path: `annotations/${annotation.id}.md`,
@@ -114,6 +146,7 @@ export class ConnectAnnotationRepository implements AnnotationRepository {
       }),
       "create annotation",
     );
+    this.#invalidate();
     return this.#map(annotation.collectionId, result);
   }
 
@@ -122,6 +155,7 @@ export class ConnectAnnotationRepository implements AnnotationRepository {
     readonly body: string;
     readonly modifiedAt: Annotation["createdAt"];
   }): Promise<Annotation> {
+    this.#invalidate();
     const { annotation } = input;
     if (!annotation.path || !annotation.recordRevision) {
       throw new Error("An annotation path and revision are required for editing.");
@@ -136,6 +170,7 @@ export class ConnectAnnotationRepository implements AnnotationRepository {
       }),
       "update annotation",
     );
+    this.#invalidate();
     return this.#map(annotation.collectionId, result);
   }
 
@@ -161,6 +196,7 @@ export class ConnectAnnotationRepository implements AnnotationRepository {
     if (!preflight || plan.path !== path || plan.expectedRevision !== recordRevision) {
       throw new Error("Annotation deletion requires a current preflight confirmation.");
     }
+    this.#invalidate();
     try {
       const result = outcomeValue(
         await this.client.deleteWithProgress(
@@ -173,6 +209,7 @@ export class ConnectAnnotationRepository implements AnnotationRepository {
         throw new Error(`mdbase Connect did not delete annotation ${annotation.id}.`);
       }
     } finally {
+      this.#invalidate();
       this.#deletePreflights.delete(key);
     }
   }
@@ -193,6 +230,11 @@ export class ConnectAnnotationRepository implements AnnotationRepository {
     return this.#map(collection, result);
   }
 
+  #invalidate(): void {
+    this.#lists.clear();
+    this.#indexes.clear();
+  }
+
   async #map(collection: CollectionId, record: RecordDocument): Promise<Annotation> {
     return annotationFromDocument(
       collection,
@@ -202,6 +244,10 @@ export class ConnectAnnotationRepository implements AnnotationRepository {
   }
 
   async #buildIndex(options: ReaderRequestOptions): Promise<Map<string, string[]>> {
+    return this.#indexes.get("index", options, () => this.#loadIndex(options));
+  }
+
+  async #loadIndex(options: ReaderRequestOptions): Promise<Map<string, string[]>> {
     const index = new Map<string, string[]>();
     const resolved = new Map<string, Promise<SourceId>>();
     for await (const outcome of this.client.queryPages(

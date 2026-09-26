@@ -1,3 +1,5 @@
+import { readerDiagnostics } from "./diagnostics.js";
+
 import type {
   ConnectOutcome,
   ConnectRequestOptions,
@@ -24,6 +26,8 @@ export interface ReaderQueryPagesOptions extends ReaderRequestOptions {
 }
 
 export interface ReaderConnectClient {
+  /** Current authority change head; absent/unsupported means no cross-request cache. */
+  changeRevision?(options?: ReaderRequestOptions): Promise<number | null>;
   read(input: ReadInput, options?: ReaderRequestOptions): Promise<ConnectOutcome<RecordDocument>>;
   query(input: QueryInput, options?: ReaderRequestOptions): Promise<ConnectOutcome<QueryResult>>;
   queryPages(
@@ -128,19 +132,54 @@ export async function recordPathById(
  * admission, retry, mutation ordering, and request budgets with the SDK.
  */
 export function connectClient(connection: MdbaseConnection): ReaderConnectClient {
+  const route = (): string => connection.route;
   return {
-    read: (input, options) => connection.read(input, connectOptions(options)),
-    query: (input, options) => connection.query(input, connectOptions(options)),
+    changeRevision: async (options) => {
+      // Existing Reader grants include inspect, not necessarily records.watch. Do not
+      // broaden authorization merely to enable caching.
+      if (!connection.operations.includes("changes")) {
+        const description = await readerDiagnostics.measure("describe", route, () =>
+          connection.describe(connectOptions(options)),
+        );
+        if (!description.ok && description.problem.code === "unsupported_operation") {
+          return null;
+        }
+        return outcomeValue(description, "check collection revision").changeCursor;
+      }
+      const result = await readerDiagnostics.measure("changes", route, () =>
+        connection.changes({}, connectOptions(options)),
+      );
+      if (!result.ok && result.problem.code === "unsupported_operation") {
+        return null;
+      }
+      const page = outcomeValue(result, "check collection revision");
+      return !page.reset && !page.hasMore ? page.cursor : null;
+    },
+    read: (input, options) =>
+      readerDiagnostics.measure("read", route, () =>
+        connection.read(input, connectOptions(options)),
+      ),
+    query: (input, options) =>
+      readerDiagnostics.measure("query", route, () =>
+        connection.query(input, connectOptions(options)),
+      ),
     queryPages: (input, options) =>
-      connection.queryPages(input, {
-        ...(options?.firstPageSize === undefined ? {} : { firstPageSize: options.firstPageSize }),
-        ...(options?.pageSize === undefined ? {} : { pageSize: options.pageSize }),
-        ...connectOptions(options),
-      }),
-    create: (input) => connection.create(input),
-    update: (input) => connection.update(input),
-    preflightDelete: (input) => connection.preflightDelete(input),
-    deleteWithProgress: (input, options) => connection.deleteWithProgress(input, options),
+      readerDiagnostics.pages(
+        route,
+        connection.queryPages(input, {
+          ...(options?.firstPageSize === undefined ? {} : { firstPageSize: options.firstPageSize }),
+          ...(options?.pageSize === undefined ? {} : { pageSize: options.pageSize }),
+          ...connectOptions(options),
+        }),
+      ),
+    create: (input) => readerDiagnostics.measure("create", route, () => connection.create(input)),
+    update: (input) => readerDiagnostics.measure("update", route, () => connection.update(input)),
+    preflightDelete: (input) =>
+      readerDiagnostics.measure("delete-preflight", route, () => connection.preflightDelete(input)),
+    deleteWithProgress: (input, options) =>
+      readerDiagnostics.measure("delete", route, () =>
+        connection.deleteWithProgress(input, options),
+      ),
   };
 }
 

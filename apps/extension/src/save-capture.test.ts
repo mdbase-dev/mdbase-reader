@@ -1,4 +1,5 @@
 // @vitest-environment happy-dom
+import { sourceId } from "@mdbase-reader/core";
 import { describe, expect, it, vi } from "vitest";
 
 import { CaptureWriter } from "./save-capture.js";
@@ -50,6 +51,70 @@ describe("explicit source and highlight saves", () => {
       await f.storage.get(`capture-import:${f.collection.collectionId}:${capture.canonicalUrl}`),
     ).toBeNull();
   });
+  it("recovers a committed source after the response is lost and the panel is reopened", async () => {
+    const f = fixture();
+    const commit = f.commit.getMockImplementation();
+    if (!commit) {
+      throw new Error("Missing fixture commit");
+    }
+    f.commit.mockImplementationOnce(async (plan) => {
+      await commit(plan);
+      throw new Error("Response lost after commit");
+    });
+    await expect(f.save({ highlight: false })).rejects.toThrow("Response lost");
+    const reopened = new CaptureWriter(f.storage);
+    const recovered = await reopened.save({
+      session: f.session,
+      collection: f.collection,
+      capture,
+      draft: { ...draft, highlight: false },
+      onSource: f.onSource,
+      onProgress: vi.fn(),
+    });
+    expect(recovered.existing).toBe(true);
+    expect(recovered.source.title).toBe(draft.title);
+    expect(
+      (await f.collection.sources.get(f.collection.collectionId, recovered.source.id))?.body,
+    ).toContain(draft.note);
+    expect(
+      await f.storage.get(`capture-import:${f.collection.collectionId}:${capture.canonicalUrl}`),
+    ).toBeNull();
+    expect(f.commit).toHaveBeenCalledOnce();
+    expect(f.create).not.toHaveBeenCalled();
+  });
+});
+
+describe("saved source and annotation retries", () => {
+  it("fails closed on corrupted persistent highlight identities", async () => {
+    const f = fixture();
+    await f.save({ highlight: false });
+    const get = f.storage.get;
+    vi.spyOn(f.storage, "get").mockImplementation((key) =>
+      key.startsWith("capture-annotation:") ? Promise.resolve('{"id":"","mutation":""}') : get(key),
+    );
+    await expect(f.save()).rejects.toThrow("recovery identity is invalid");
+    expect(f.create).not.toHaveBeenCalled();
+  });
+  it("does not adopt an uncertain highlight that was subsequently moved to another source", async () => {
+    const f = fixture();
+    f.create.mockImplementationOnce((annotation) => {
+      f.annotations.set(annotation.id, { ...annotation, sourceId: sourceId("another-source") });
+      return Promise.reject(new Error("Response lost"));
+    });
+    await expect(f.save()).rejects.toThrow("Response lost");
+    const reopened = new CaptureWriter(f.storage);
+    await expect(
+      reopened.save({
+        session: f.session,
+        collection: f.collection,
+        capture,
+        draft,
+        onSource: f.onSource,
+        onProgress: vi.fn(),
+      }),
+    ).rejects.toThrow("different source");
+    expect(f.create).toHaveBeenCalledOnce();
+  });
   it("reuses existing sources without overwriting their notes, title or tags", async () => {
     const f = fixture();
     await f.save({ highlight: false });
@@ -89,7 +154,15 @@ describe("explicit source and highlight saves", () => {
       return Promise.reject(new Error("Outcome unknown"));
     });
     await expect(f.save()).rejects.toThrow("Outcome unknown");
-    const result = await f.save();
+    const reopened = new CaptureWriter(f.storage);
+    const result = await reopened.save({
+      session: f.session,
+      collection: f.collection,
+      capture,
+      draft,
+      onSource: f.onSource,
+      onProgress: vi.fn(),
+    });
     expect(result.annotation).not.toBeNull();
     expect(f.create).toHaveBeenCalledTimes(1);
     expect(f.commit).toHaveBeenCalledTimes(1);

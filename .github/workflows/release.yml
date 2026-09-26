@@ -95,5 +95,5 @@ jobs:
           } > notes.md
           flags=()
           if [ "$PRERELEASE" = true ]; then flags+=(--prerelease); fi
-          gh release create "$TAG" --verify-tag --title "$TITLE" --notes-file notes.md "${flags[@]}" -- \
+          gh release create "$TAG" --repo "$GITHUB_REPOSITORY" --verify-tag --title "$TITLE" --notes-file notes.md "${flags[@]}" -- \
             $(ls | grep -v '^notes.md$')
