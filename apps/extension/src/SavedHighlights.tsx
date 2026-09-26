@@ -22,7 +22,7 @@ export function SavedHighlights({
     <section className="saved-highlights" aria-labelledby="saved-highlights-heading">
       <div className="list-header">
         <h2 id="saved-highlights-heading">
-          Highlights {highlights.length ? <span>{highlights.length}</span> : null}
+          Saved highlights {highlights.length ? <span>{highlights.length}</span> : null}
         </h2>
         <button
           type="button"
@@ -35,9 +35,7 @@ export function SavedHighlights({
       </div>
       {highlights.length ? null : (
         <p className="hint">
-          {c.capture?.kind === "pdf"
-            ? "Highlights made in Reader appear here."
-            : "None yet. Select text on the page to add one."}
+          {c.capture?.kind === "pdf" ? "Highlights made in Reader appear here." : "None yet."}
         </p>
       )}
       {hidden ? (

@@ -132,8 +132,7 @@ kbd {
   font-size: 12px;
 }
 .action-panel,
-.capture-form,
-.completion {
+.tab-section {
   padding: 16px var(--gutter);
 }
 .action-panel {
@@ -145,8 +144,7 @@ kbd {
 }
 .action-panel p,
 .action-panel li,
-.hint,
-.saved-summary {
+.hint {
   color: var(--muted);
   font-size: 12px;
 }
@@ -203,13 +201,179 @@ details.technical summary {
 .save-status p {
   margin: 0 0 4px;
 }
-.completion {
+/* Save action ---------------------------------------------------------------------- */
+.save-bar {
+  margin-top: 14px;
+}
+.save-bar .shortcut-hint {
+  margin-bottom: 0;
+}
+.saved-line {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 4px 12px;
+  margin: 10px 0 0;
+  color: var(--muted);
+  font-size: 12px;
+}
+.save-bar > .saved-line:first-child {
+  margin-top: 0;
+}
+.saved-line .primary {
+  flex: 1 0 100%;
+  margin-top: 4px;
+}
+
+/* Tabs: Reader's inspector strip. A narrow panel names only the open tab, then shows only
+   icons; hidden labels remain the tabs' accessible names. ------------------------------ */
+.panel-tabs {
+  position: sticky;
+  z-index: 1;
+  top: 0;
+  container: panel-tabs / inline-size;
+  display: flex;
+  gap: 2px;
+  padding: 0 calc(var(--gutter) - 8px);
+  border-bottom: 1px solid var(--line);
+  background: var(--canvas);
+}
+.panel-tabs button {
+  position: relative;
+  min-width: 0;
+  height: 38px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0 8px;
+  border: 0;
+  color: var(--muted);
+  background: transparent;
+  font-size: 13px;
+  white-space: nowrap;
+}
+.panel-tabs button:hover {
+  color: var(--ink);
+}
+.panel-tabs button::after {
+  position: absolute;
+  right: 8px;
+  bottom: 0;
+  left: 8px;
+  height: 2px;
+  border-radius: 1px;
+  background: transparent;
+  content: "";
+}
+.panel-tabs button[aria-selected="true"] {
+  color: var(--ink);
+}
+.panel-tabs button[aria-selected="true"]::after {
+  background: var(--accent);
+}
+.panel-tabs button:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: -2px;
+}
+.panel-tabs svg {
+  width: 14px;
+  height: 14px;
+  flex: none;
+}
+.panel-tab-count {
+  min-width: 18px;
+  padding: 1px 5px;
+  border-radius: 999px;
+  color: var(--muted);
+  background: var(--hover);
+  font-size: 11px;
+  text-align: center;
+}
+@container panel-tabs (max-width: 340px) {
+  .panel-tabs button:not([aria-selected="true"]) .panel-tab-label {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+}
+.panel-tab-content .saved-highlights {
   border-top: 1px solid var(--line);
 }
+
+/* Literature note ------------------------------------------------------------------- */
+.note-text {
+  font:
+    14px/1.55 var(--serif),
+    serif;
+}
+.details-form {
+  margin-bottom: 18px;
+  padding-bottom: 4px;
+  border-bottom: 1px solid var(--line);
+}
+.details-form .item-actions {
+  margin: -4px 0 14px;
+}
+.note-heading {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+}
+.note-state {
+  color: var(--muted);
+  font-size: 11px;
+}
+.note-state.is-conflict,
+.note-state.is-error,
+.note-state.is-deleted {
+  color: var(--danger);
+}
+.saved-note .problem {
+  margin: 0 0 12px;
+}
+.saved-note textarea[readonly] {
+  opacity: 0.7;
+}
+
+/* Citation ------------------------------------------------------------------------- */
+.citation-title {
+  margin: 0;
+  font:
+    15px/1.4 var(--serif),
+    serif;
+  overflow-wrap: anywhere;
+}
+.citation-fields {
+  margin: 8px 0 0;
+}
+.citation-fields > div {
+  display: flex;
+  gap: 8px;
+  padding-top: 4px;
+}
+.citation-fields dt {
+  min-width: 56px;
+  color: var(--muted);
+}
+.citation-fields dd {
+  min-width: 0;
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+.secondary.compact {
+  width: auto;
+  min-height: 30px;
+  margin: 0;
+}
+
 /* Saved highlights ------------------------------------------------------------ */
 .saved-highlights {
   padding: 16px var(--gutter);
-  border-top: 1px solid var(--line);
 }
 .list-header {
   display: flex;

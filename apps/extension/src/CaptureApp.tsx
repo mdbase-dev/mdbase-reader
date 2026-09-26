@@ -1,18 +1,25 @@
 import { useEffect } from "react";
 
-import { readerSourceUrl } from "./capture-model.js";
-import { CaptureForm } from "./CaptureForm.js";
+import { CitationPanel } from "./CitationPanel.js";
 import { ConnectionPanel, ConnectionProblem } from "./ConnectionPanel.js";
 import { useDiagnosticsShown } from "./diagnostics-setting.js";
 import { DiagnosticsPanel } from "./DiagnosticsPanel.js";
 import { ExtensionHeader } from "./ExtensionHeader.js";
+import { HighlightFields } from "./HighlightFields.js";
+import { NotePanel } from "./NotePanel.js";
+import { PanelTabContent, PanelTabs, usePanelTab, type PanelTab } from "./PanelTabs.js";
+import { SaveBar, saveReady } from "./SaveBar.js";
 import { SavedHighlights } from "./SavedHighlights.js";
 import { openSettings } from "./shortcuts.js";
 
 import type { ExtensionCaptureController } from "./capture-controller.js";
 
-export function CaptureApp({ controller }: ControllerProps): React.JSX.Element {
+export function CaptureApp({
+  controller,
+  initialTab,
+}: ControllerProps & { readonly initialTab?: PanelTab }): React.JSX.Element {
   const [diagnostics] = useDiagnosticsShown();
+  const [tab, setTab] = usePanelTab(controller, initialTab);
   useEffect(() => {
     document.title = `mdbase Reader — ${controller.source ? "source saved" : "capture"}`;
   }, [controller.source]);
@@ -26,6 +33,9 @@ export function CaptureApp({ controller }: ControllerProps): React.JSX.Element {
     window.addEventListener("beforeunload", warn);
     return () => window.removeEventListener("beforeunload", warn);
   }, [controller.busy]);
+  const highlightCount = controller.source
+    ? controller.annotations.filter((annotation) => annotation.target?.quote).length
+    : null;
   return (
     <main className="capture-shell">
       <ExtensionHeader
@@ -37,19 +47,31 @@ export function CaptureApp({ controller }: ControllerProps): React.JSX.Element {
         <span className="eyebrow">
           {controller.capture?.kind === "pdf" ? "CURRENT PDF" : "CURRENT PAGE"}
         </span>
-        <h1>{controller.capture?.pageTitle ?? "Reading the page…"}</h1>
+        <h1>{controller.source?.title ?? controller.capture?.pageTitle ?? "Reading the page…"}</h1>
         <p>
           {controller.capture
             ? new URL(controller.capture.canonicalUrl).hostname
             : "Waiting for the active tab"}
         </p>
+        <SaveBar controller={controller} />
       </section>
       <Navigated controller={controller} />
       <ConnectionPanel controller={controller} compact />
-      <CaptureForm controller={controller} />
       <PanelStatus controller={controller} />
-      <SavedHighlights controller={controller} />
-      <Completion controller={controller} />
+      {controller.capture ? (
+        <>
+          <PanelTabs tab={tab} highlightCount={highlightCount} onChange={setTab} />
+          <PanelTabContent tab={tab}>
+            {tab === "highlights" ? (
+              <HighlightsPanel controller={controller} />
+            ) : tab === "note" ? (
+              <NotePanel controller={controller} />
+            ) : (
+              <CitationPanel controller={controller} />
+            )}
+          </PanelTabContent>
+        </>
+      ) : null}
       <footer className="panel-footer">
         <button type="button" className="text-button" onClick={openSettings}>
           Settings and shortcuts
@@ -57,6 +79,22 @@ export function CaptureApp({ controller }: ControllerProps): React.JSX.Element {
         {diagnostics ? <DiagnosticsPanel /> : null}
       </footer>
     </main>
+  );
+}
+
+/** The passage selected on the page, then the page's saved highlights. */
+function HighlightsPanel({ controller: c }: ControllerProps): React.JSX.Element {
+  return (
+    <>
+      <fieldset
+        className="tab-section"
+        data-capture-draft
+        disabled={c.status === "saving" || c.navigated}
+      >
+        <HighlightFields controller={c} ready={saveReady(c)} />
+      </fieldset>
+      <SavedHighlights controller={c} />
+    </>
   );
 }
 
@@ -136,26 +174,6 @@ function importProgressMessage(p: ExtensionCaptureController["progress"]): strin
     default:
       return null;
   }
-}
-
-function Completion({ controller: c }: ControllerProps): React.JSX.Element | null {
-  if (!c.source) {
-    return null;
-  }
-  // A PDF's highlighting happens in Reader, so that is the next step, not an aside.
-  const pdf = c.capture?.kind === "pdf";
-  return (
-    <footer className="completion">
-      <a
-        className={pdf ? "primary reader-link" : "secondary reader-link"}
-        href={readerSourceUrl(c.source)}
-        target="_blank"
-        rel="noreferrer"
-      >
-        {pdf ? "Open in Reader to highlight" : "Open saved copy in Reader"}
-      </a>
-    </footer>
-  );
 }
 
 interface ControllerProps {
