@@ -4,7 +4,7 @@ Branch: `fix/extension-store-hardening`
 
 Worktree: `/home/calluma/worktrees/mdbase-reader/extension-store-hardening`
 
-No store upload, publication, production account creation, deployment, or personal collection mutation has been performed. These are candidate changes, not a claim that all four preparation items are finished.
+Updated 2026-09-27: with publisher approval, a dedicated production reviewer account/hosted demo and a separate Chrome Web Store draft have been created. The candidate ZIP, listing assets and private access instructions are uploaded. **Nothing has been submitted or published**, no production application deployment was performed, and no personal collection or TaskNotes listing was changed. Detailed live results and remaining blockers: `live-rehearsal-2026-09-27.md`.
 
 ## 1. Archive minimization — implemented
 
@@ -56,22 +56,23 @@ A headless keyboard attempt did not yield a capture panel/usable active-tab capt
 
 ### Still required before submission
 
-- Real toolbar invocation, article/PDF save and repeated highlights against disposable connected data.
+- Actual toolbar/context-menu coverage and repeated highlights. Normal keyboard invocation, article/PDF saves and one highlight/comment passed against the production demo on September 27.
 - Optional HTTPS permission grant/deny/revoke and actual background URL-traffic checks.
 - Direct localhost approval and relay fallback; interrupted writes and revocation.
 - The declared Chrome 123 minimum, or an evidence-based minimum-version update.
-- Production account/device-code/capture rehearsal with the dedicated reviewer identity.
+- Fresh-browser integrated reviewer login/device-code/capture rehearsal. Independent password login and fresh-extension device-code/capture checks have passed separately.
+- Fix/retest the deployed Reader's saved-source deep links, which restored Library/previous document during the production rehearsal.
 - Store-installed identity verification after the appropriate reviewed distribution path.
 
 Do not describe these remaining checks as passed or the candidate as ready to submit.
 
-## 4. Reviewer environment — route prepared; provisioning awaits publisher
+## 4. Reviewer environment — provisioned; core live capture passed
 
-A read-only check of production's public `/v1/auth/config` confirmed open registration, password login and public email/password signup. Connect's account-authentication documentation describes verified email/password signup and hosted starter-collection provisioning. This offers reviewers independent login without a personal Google passkey and without weakening the publisher account.
+With publisher approval on September 26, a dedicated email alias and independent production email/password account were created through the public signup, verification and terms flow. A unique generated password is held in the system keyring and the store's private reviewer fields, never Git. Independent login succeeded with a fresh cookie jar, without Google/MFA dependence. The existing external-testing account was left untouched.
 
-The publisher must choose a dedicated email address and complete verification and any required legal acceptance. Then provision/confirm a dedicated hosted review collection through normal UI, store a unique account password securely, and supply it only in the dashboard's private reviewer fields. No review email was invented, no signup email sent, no terms accepted on the publisher's behalf, and no production collection created.
+The dedicated hosted `Reader Review Demo` collection has no desktop dependency. On September 27 the fresh unpacked candidate completed normal device-code approval/setup; public article/PDF captures and a yellow highlight/comment were saved and opened in Reader. No personal collection was authorized. The full fresh-browser/optional-permission/revocation matrix remains open.
 
-`reviewer-instructions.md` now records this concrete route and the local-disconnect procedure. Account/collection provisioning and an independent end-to-end rehearsal remain open.
+The separate store draft has the candidate ZIP, description, icon, category/language, homepage, two real screenshots and a promotional tile. Saved privacy explanations and reviewer instructions have been inspected. Privacy-policy URL and all three data-use certifications remain unset pending policy/service confirmation; no submission action was taken. See the dated rehearsal record and `reviewer-instructions.md`.
 
 ## Reproduce the candidate checks
 

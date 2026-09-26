@@ -1,16 +1,16 @@
 # Reviewer instructions draft
 
-**Not submission-ready.** Replace all TODOs and rehearse these steps in a fresh isolated browser before copying to the store's private Test instructions fields. No test account or collection has been provisioned by this preparation.
+**Not submission-ready.** The dedicated production account, hosted collection and Reader setup are provisioned. Article capture, one highlight/comment, PDF capture and Reader retrieval passed on September 27. Private credentials and concise instructions are saved in the separate store draft. Fresh-browser/full acceptance and the remaining TODOs are still required; see `live-rehearsal-2026-09-27.md`.
 
-## Account provisioning route — confirmed, awaiting owner address
+## Account provisioning — completed 2026-09-26
 
 The unauthenticated production `/v1/auth/config` currently advertises `registration: open`, `password_login: true`, `password_public_registration: true`, and `password_registration: true`. This was a read-only public check, not an account creation or permission change. Connect's `docs/account-authentication.md` documents verified email/password signup and hosted starter-collection onboarding.
 
-Use a dedicated publisher-controlled review email, not Callum's personal account. The publisher must choose that address and complete email verification and any terms acceptance. Store its unique password securely and share it only in private reviewer fields. The supported password login avoids dependence on a personal Google passkey. No server authentication switch needs changing.
+With publisher authorization, a dedicated email alias was added, email verification completed, and a separate production account created through public signup. Its unique generated password is stored in the publisher's system keyring, not this repository. A fresh cookie-jar password login succeeded without Google credentials or MFA, and the temporary verification session was signed out. Account and keyring metadata are recorded privately under `~/.local/state/mdbase-reader/chrome-web-store/reviewer-account.json`. No server authentication switch was changed.
 
-After signup, verify the starter hosted collection is ready; use it exclusively for review/demo material, or create a clearly named dedicated hosted collection through the normal UI. Verify actual quotas and availability rather than promising unlimited storage. Rehearse the entire device-code flow from a fresh browser using only that account. Do not point reviewers to the LAB acceptance account or a local desktop connector.
+The account has one active hosted starter collection, renamed `Reader Review Demo` through the normal account API, under the `open_beta_v1` profile. At verification it had no local collections, computers, or application grants; the collection overview showed only its owner. No personal collection was connected, and the previous external-testing account was not changed.
 
-No review account or collection has yet been created: the dedicated email and verification are outstanding. A hosted account's provisioning and live approval/capture must still be tested before submission.
+On September 27, normal device-code approval/setup succeeded for the fresh unpacked candidate. The demo now has the public article and PDF below, plus one yellow article highlight with a comment. Keep this collection exclusively for demo material. Do not point reviewers to LAB or a desktop connector, and do not promise unlimited storage.
 
 ## Publisher preparation — not reviewer-facing
 
@@ -18,7 +18,7 @@ No review account or collection has yet been created: the dedicated email and ve
 - Confirm an independent reviewer can sign in and approve the extension without Callum's passkey, email inbox or interactive MFA assistance. Use a supported review account method; do not weaken the personal account's security.
 - Confirm service availability throughout review and any payment/access requirements. A cloud relay still depends on a running connector for connector-backed collections.
 - Supply credentials only in the dashboard's private test-access fields, never in this repository, screenshots, public listing or ordinary logs.
-- Verify the exact authorization/setup UI labels, collection creation requirements and Reader navigation against the candidate. The steps below are derived from source, not a completed live rehearsal.
+- The core connection/capture/retrieval steps were rehearsed against the unpacked candidate. Steps for optional permissions, repeated highlights, reset/revocation and store installation remain acceptance checks, not completed evidence.
 - Prepare one stable public article and one small public PDF whose capture succeeds. Avoid copyrighted/private demonstration content that cannot be shared.
 - Record candidate commit, ZIP SHA-256, Chrome version and test date outside credential fields. Draft upload alone does not make a store-installed build available; plan an appropriate reviewed distribution/testing path.
 
@@ -32,15 +32,15 @@ Reader web app: `https://mdbase-reader.pages.dev/`
 
 Authorization service: `https://connect.mdbase.dev/`
 
-Test account: TODO (supply securely in private fields)
+Test account: dedicated email/password credentials supplied only in the private dashboard fields.
 
-Test collection name: TODO
+Test collection name: `Reader Review Demo` (hosted; Reader setup completed).
 
-Login/approval instructions: TODO (include actual independent-access method)
+Login/approval instructions: use the supplied email/password at Connect, not Google. Compare the device code with the extension and approve only Reader Review Demo. No personal credentials, email-inbox assistance or desktop connector is needed.
 
-Test article URL: TODO
+Test article URL: <https://en.wikipedia.org/wiki/Commonplace_book>
 
-Test PDF URL: TODO
+Test PDF URL: <https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf>
 
 Support contact during review: TODO
 
@@ -49,13 +49,13 @@ Supported browser: current stable Chrome; package declares Chrome 123 minimum (p
 ## Test sequence
 
 1. Install the submitted extension. Its welcome page should open. If needed, open the extension's Settings from Chrome's extension controls.
-2. Use the collection connection control. Reader opens the mdbase Connect device-code approval page in a browser tab. Sign in with the supplied test account, check the displayed request and approve access to the dedicated test collection. Return to the extension. If initial collection setup is requested, follow TODO: verified test-collection setup instructions.
+2. Use the collection connection control. Reader opens the mdbase Connect device-code approval page in a browser tab. Sign in with the supplied test account, check the displayed request and approve access to the dedicated test collection. Return to the extension. If prompted for Reader setup on the dedicated collection, review the request and select “Set up and allow access”; this label and path were exercised in the rehearsal.
 3. Open the supplied HTTPS article. Click the Reader toolbar button. Confirm that a side panel opens with the page title and the intended test collection. Opening the panel prepares a capture but does not automatically create a new source; DOI preparation and source lookups may make network requests.
-4. Add a tag and source note, then explicitly save the source. Confirm success and open the saved source in Reader. Verify the reading copy and note. Invoke Reader again on the same article to check recognition of the existing source.
+4. Add a tag and source note, then explicitly save the source. Confirm success and open the saved source in Reader. Known deployed Reader issue: a saved-copy link may restore Library or the previous source instead of the requested document. Choose Library, select the intended row and press Enter. Verify the reading copy and note. Invoke Reader again on the same article to check recognition of the existing source.
 5. With the article and side panel open, select a passage. Choose a colour, optionally add a comment, and save the highlight. Select and save a second passage. Confirm both annotations in Reader. Article highlighting is supported; extension-side PDF text selection is not advertised.
 6. Open the supplied PDF and invoke Reader. Save it to the test collection, then confirm it opens in Reader. Some website/PDF viewers restrict capture; the supplied test fixture must be one verified to work.
 7. In Settings, enable “Mark pages I’ve saved and show my highlights on them” and approve HTTPS access. Reload the saved article: expect the badge and matching highlights. Open an unsaved article: it must not be automatically saved. Disable the option; reload and confirm background recognition is disabled. Basic explicit capture does not require this optional permission.
-8. If using the proposed hosted demo collection, localhost access is not required. For a connector-backed demonstration, TODO: verified installation/startup and availability steps. Optional direct access uses “Allow local connector access”, then “Connect directly” if another approval is needed. Denial should leave an available relay usable.
+8. This demo uses a hosted collection; localhost permission and desktop installation are not required. Optional direct localhost/relay acceptance is a separate publisher test, not a reviewer setup requirement.
 9. Optionally test toolbar/context-menu invocation and shortcuts. Defaults are Alt+Shift+S and Alt+Shift+H, but Chrome/user conflicts may leave them unassigned. Chrome's extension shortcuts page can configure them.
 
 ## Restrictions and data handling
@@ -70,10 +70,10 @@ Revocation / collection cleanup instructions: TODO: verified service-side revoca
 
 ## Rehearsal evidence checklist
 
-- [ ] Stable commit, final ZIP hash and version recorded.
-- [ ] Fresh browser: login, approval and collection selection without personal credentials.
-- [ ] Article and PDF fixture URLs independently accessible.
-- [ ] Source save, annotations and Reader retrieval verified.
+- [x] Candidate commit, ZIP hash and version recorded in the dated rehearsal evidence.
+- [ ] Fresh browser: login, approval and collection selection without personal credentials (fresh cookie-jar password login and fresh-extension approval passed separately).
+- [x] Article and PDF fixture URLs independently accessible.
+- [x] Article/PDF save, one article annotation/comment and Reader retrieval verified; deep-link issue recorded.
 - [ ] Optional permissions denied/granted/revoked; background traffic behaviour checked.
-- [ ] Connector/relay requirements accurately documented if applicable.
+- [x] Hosted demo requires no desktop connector or localhost permission.
 - [ ] All TODOs removed; no secrets in committed files or public assets.
