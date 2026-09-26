@@ -12,17 +12,17 @@
     "typecheck": "tsc -p tsconfig.json"
   },
   "dependencies": {
-    "@embedpdf/engines": "^2.15.0",
-    "@embedpdf/models": "^2.15.0",
-    "@embedpdf/plugin-annotation": "^2.15.0",
-    "@embedpdf/plugin-capture": "^2.15.0",
-    "@embedpdf/plugin-selection": "^2.15.0",
-    "@embedpdf/react-pdf-viewer": "^2.15.0",
+    "@embedpdf/engines": "^2.15.1",
+    "@embedpdf/models": "^2.15.1",
+    "@embedpdf/plugin-annotation": "^2.15.1",
+    "@embedpdf/plugin-capture": "^2.15.1",
+    "@embedpdf/plugin-selection": "^2.15.1",
+    "@embedpdf/react-pdf-viewer": "^2.15.1",
     "@mdbase-reader/core": "workspace:*",
     "@mdbase-reader/reading-surface": "workspace:*",
-    "react": "^19.2.8"
+    "react": "^19.3.0"
   },
   "devDependencies": {
-    "@types/react": "^19.2.14"
+    "@types/react": "^19.3.0"
   }
 }
