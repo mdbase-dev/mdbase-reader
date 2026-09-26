@@ -2,6 +2,11 @@ import { object, text, type Fields } from "./model.js";
 export function archiveReadwise(value: Fields): Fields {
   const result = { ...value };
   delete result["raw_source_url"];
+  // A document's saved HTML is imported as its own file; copying it into frontmatter and the
+  // native archive would duplicate whole articles. Highlight and note HTML is the annotation.
+  if (!["highlight", "note"].includes(text(result["category"]))) {
+    delete result["html_content"];
+  }
   return result;
 }
 export function tagNames(value: unknown): string[] {
@@ -23,4 +28,16 @@ export function plain(html: string): string {
 }
 export function scalar(value: unknown): string {
   return typeof value === "string" || typeof value === "number" ? String(value) : "";
+}
+/** Counts items left out of an import so each reason becomes one counted warning. */
+export class SkipTally {
+  private counts = new Map<string, number>();
+  add(reason: string, count = 1): void {
+    if (count > 0) {
+      this.counts.set(reason, (this.counts.get(reason) ?? 0) + count);
+    }
+  }
+  warnings(): string[] {
+    return [...this.counts].map(([reason, count]) => `${reason}: ${count.toLocaleString("en")}`);
+  }
 }

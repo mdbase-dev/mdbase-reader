@@ -1,4 +1,5 @@
-import { array, object, text, type Fields, type Progress } from "./model.js";
+import { array, object, type Fields, type Progress } from "./model.js";
+import { scalar } from "./readwise-values.js";
 export interface ReadwisePage {
   count: number;
   next: string | null;
@@ -49,7 +50,8 @@ export class ReadwiseClient {
             "Readwise request failed. Check your connection or browser access; your token was not saved.",
           );
         }
-        if (response.status === 429 || response.status === 503) {
+        // GETs are safe to repeat; gateways time out on large export pages.
+        if ([429, 502, 503, 504].includes(response.status)) {
           const wait = retryDelay(response.headers.get("Retry-After"), attempt);
           this.nextRequestAt = Math.max(this.nextRequestAt, Date.now() + wait);
           continue;
@@ -62,7 +64,12 @@ export class ReadwiseClient {
             `Readwise returned HTTP ${String(response.status)}. No changes were made to Readwise.`,
           );
         }
-        return object(await response.json());
+        try {
+          return object(await response.json());
+        } catch {
+          signal.throwIfAborted();
+          throw new Error("Readwise returned an unreadable response. Scan again later.");
+        }
       }
       throw new Error("Readwise is rate-limiting requests. Stop and try again later.");
     };
@@ -74,7 +81,7 @@ export class ReadwiseClient {
     const data = await this.request("/api/v3/list/", { limit: "100", ...params }, signal);
     return {
       count: typeof data["count"] === "number" ? data["count"] : 0,
-      next: text(data["nextPageCursor"]) || null,
+      next: scalar(data["nextPageCursor"]) || null,
       results: array(data["results"]).map((r) => object(r)),
     };
   }
@@ -99,7 +106,8 @@ export class ReadwiseClient {
       );
       result.push(...array(data["results"]).map((r) => object(r)));
       progress(`Scanned ${result.length.toLocaleString()} Readwise records…`);
-      cursor = text(data["nextPageCursor"]);
+      // Documented as a string, null on the last page; accept a numeric cursor too.
+      cursor = scalar(data["nextPageCursor"]);
     } while (cursor);
     return result;
   }

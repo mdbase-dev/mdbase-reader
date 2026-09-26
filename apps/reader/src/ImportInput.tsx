@@ -99,8 +99,10 @@ function ReadwiseInput({
         Include unsaved Feed items (archived library items are included either way)
       </label>
       <p>
-        Scanning reads metadata, highlights and saved article HTML. Original PDFs and EPUBs download
-        only after confirmation. Large libraries take several minutes.
+        Scanning reads Reader metadata, saved article HTML and every Readwise highlight, including
+        Kindle, Apple Books, Instapaper and other classic sources (those import as metadata and
+        highlights, without the book text). Original PDFs and EPUBs download only after
+        confirmation. Readwise limits request rates, so large libraries take several minutes.
       </p>
       <button
         type="button"
