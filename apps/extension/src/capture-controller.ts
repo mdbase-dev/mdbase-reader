@@ -1,14 +1,25 @@
 import type { CitationPreview } from "./capture-citation.js";
 import type { CaptureIntent } from "./messages.js";
-import type { ProjectionReport } from "./page-annotations.js";
+import type { ProjectionReport, QuoteOutcome } from "./page-annotations.js";
 import type { PageCapture } from "./page-capture.js";
 import type { CaptureDraft } from "./save-capture.js";
 import type { ProblemKind } from "./use-action-lock.js";
 import type { ReaderConnectSnapshot, ReaderDirectAccessController } from "@mdbase-reader/connect";
-import type { Annotation, SourceImportProgress, SourceSummary } from "@mdbase-reader/core";
+import type {
+  Annotation,
+  AnnotationDeletionPlan,
+  AnnotationId,
+  SourceImportProgress,
+  SourceSummary,
+} from "@mdbase-reader/core";
 import type { Dispatch, SetStateAction } from "react";
 
 export type CaptureStatus = "opening" | "ready" | "saving" | "saved" | "existing";
+/** How the saved highlights last drew on the live page. */
+export interface PageHighlights {
+  readonly report: ProjectionReport;
+  readonly outcomes: ReadonlyMap<AnnotationId, QuoteOutcome>;
+}
 export interface ExtensionCaptureController {
   readonly snapshot: ReaderConnectSnapshot;
   readonly capture: PageCapture | null;
@@ -25,7 +36,7 @@ export interface ExtensionCaptureController {
   readonly citationPending: boolean;
   readonly deviceCode: string | null;
   readonly directAccess: ReaderDirectAccessController | null;
-  readonly projection: ProjectionReport | null;
+  readonly projection: PageHighlights | null;
   readonly progress: SourceImportProgress | null;
   readonly busy: boolean;
   readonly refreshing: boolean;
@@ -37,7 +48,16 @@ export interface ExtensionCaptureController {
   readonly retry: () => Promise<void>;
   readonly applySetup: () => Promise<void>;
   readonly select: (id: string) => void;
-  readonly save: () => Promise<void>;
-  readonly showAnnotations: () => Promise<void>;
+  /** Saves the draft; `changes` (such as a clicked colour) apply to it first. */
+  readonly save: (changes?: Partial<CaptureDraft>) => Promise<void>;
   readonly clearSelection: () => void;
+  /** Scrolls the page to a saved highlight and marks it briefly. */
+  readonly revealHighlight: (id: AnnotationId) => Promise<void>;
+  /** These throw on failure, for the highlight list to report beside the highlight. */
+  readonly updateHighlightComment: (annotation: Annotation, comment: string) => Promise<void>;
+  readonly planHighlightDeletion: (annotation: Annotation) => Promise<AnnotationDeletionPlan>;
+  readonly deleteHighlight: (annotation: Annotation, plan: AnnotationDeletionPlan) => Promise<void>;
+  /** Known tags to suggest; loaded on first use by `loadTags`. */
+  readonly knownTags: readonly string[];
+  readonly loadTags: () => void;
 }

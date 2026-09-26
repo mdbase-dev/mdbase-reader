@@ -1,6 +1,6 @@
 import { normalizedSourceUrl, type QuoteSelector } from "@mdbase-reader/core";
 
-import type { CaptureDraft } from "./save-capture.js";
+import { highlightColors, type CaptureDraft, type HighlightColor } from "./save-capture.js";
 
 /**
  * Unsaved text survives closing the panel, reloading the extension page or switching
@@ -63,4 +63,20 @@ function isStoredDraft(value: unknown): value is StoredDraft {
     typeof value.draft === "object" &&
     value.draft !== null
   );
+}
+
+const colorKey = "highlight-color";
+
+/** The colour of the reader's last highlight, used for the next one on any page. */
+export async function preferredColor(): Promise<HighlightColor> {
+  try {
+    const { [colorKey]: value } = await chrome.storage.local.get(colorKey);
+    return highlightColors.find((color) => color === value) ?? emptyDraft.color;
+  } catch {
+    return emptyDraft.color;
+  }
+}
+
+export function rememberColor(color: HighlightColor): void {
+  void chrome.storage.local.set({ [colorKey]: color }).catch(() => undefined);
 }

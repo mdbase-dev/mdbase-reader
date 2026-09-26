@@ -157,10 +157,43 @@ kbd {
   color: var(--ink);
   font-size: 12px;
 }
-.restored {
-  margin: 12px var(--gutter) 0;
+/* One line naming the collection once connected; the full controls are behind Change. */
+.collection-line {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px var(--gutter);
+  border-bottom: 1px solid var(--line);
   color: var(--muted);
   font-size: 12px;
+}
+.collection-line strong {
+  color: var(--ink-soft);
+  overflow-wrap: anywhere;
+}
+.collection-line .text-button,
+.collapse-button {
+  flex: none;
+  margin: 0;
+}
+.collapse-button {
+  float: right;
+}
+details.technical {
+  margin-top: 6px;
+}
+details.technical summary {
+  color: var(--muted);
+  cursor: pointer;
+}
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
 }
 .save-status:not(:empty) {
   padding: 0 var(--gutter) 16px;
@@ -173,7 +206,129 @@ kbd {
 .completion {
   border-top: 1px solid var(--line);
 }
-.render-result {
+/* Saved highlights ------------------------------------------------------------ */
+.saved-highlights {
+  padding: 16px var(--gutter);
+  border-top: 1px solid var(--line);
+}
+.list-header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+.list-header h2 {
+  margin: 0;
+  font-size: 15px;
+}
+.list-header h2 span {
+  margin-left: 4px;
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 400;
+}
+.list-header .text-button {
+  margin: 0;
+}
+.saved-highlights ul {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.saved-highlights .hint {
+  margin: 0 0 8px;
+}
+.saved-highlight {
+  margin-bottom: 10px;
+  padding: 8px 10px;
+  border: 1px solid var(--line);
+  border-left: 3px solid var(--swatch, var(--accent));
+  border-radius: var(--ui-radius);
+  background: var(--paper);
+}
+.highlight-quote {
+  display: -webkit-box;
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+  border: 0;
+  color: var(--ink);
+  background: none;
+  font:
+    14px/1.45 var(--serif),
+    serif;
+  text-align: left;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 4;
+}
+.highlight-quote:hover:not(:disabled) {
+  text-decoration: underline;
+  text-decoration-color: color-mix(in oklch, currentColor 35%, transparent);
+  text-underline-offset: 3px;
+}
+.highlight-quote:disabled {
+  opacity: 0.8;
+}
+.saved-highlight .hint {
+  margin: 4px 0 0;
+}
+.highlight-comment {
+  margin: 6px 0 0;
+  color: var(--ink-soft);
+  font-size: 12px;
+  white-space: pre-wrap;
+}
+.highlight-tags {
+  margin: 4px 0 0;
+  color: var(--muted);
+  font-size: 11px;
+}
+.comment-editor {
+  margin-top: 8px;
+}
+.comment-editor textarea {
+  margin-bottom: 6px;
+}
+.item-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 14px;
+  margin-top: 6px;
+}
+.item-actions .text-button {
+  margin: 0;
+}
+.item-actions .secondary,
+.item-actions .danger {
+  width: auto;
+  min-height: 30px;
+  margin: 0;
+}
+.delete-confirm {
+  margin-top: 8px;
+  padding: 8px 10px;
+  border: 1px solid color-mix(in oklch, var(--danger) 35%, var(--line));
+  border-radius: var(--ui-radius);
+  background: color-mix(in oklch, var(--danger) 6%, var(--paper));
+  font-size: 12px;
+}
+.delete-confirm p {
+  margin: 0;
+}
+.danger {
+  padding: 0 12px;
+  border: 1px solid var(--danger);
+  border-radius: var(--ui-radius);
+  color: var(--paper);
+  background: var(--danger);
+  font-size: 13px;
+  font-weight: 700;
+}
+.item-problem {
+  margin: 6px 0 0;
+  color: var(--danger);
   font-size: 12px;
 }
 .panel-footer {
@@ -302,8 +457,14 @@ blockquote {
   display: flex;
   align-items: center;
   justify-content: center;
-  margin-top: 14px;
+  margin-top: 0;
   text-decoration: none;
+}
+.shortcut-hint {
+  margin: 6px 0 0;
+  color: var(--muted);
+  font-size: 11px;
+  text-align: center;
 }
 .secondary {
   width: 100%;
@@ -361,9 +522,10 @@ blockquote {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 12px;
+  margin-bottom: 8px;
 }
-.passage-actions .text-button {
+.passage-actions .text-button,
+.passage-actions .field-label {
   margin: 0;
 }
 .colors {
@@ -372,25 +534,30 @@ blockquote {
   gap: 6px;
   margin-bottom: 14px;
 }
-.colors legend {
-  margin-bottom: 6px;
-  color: var(--ink-soft);
-  font-size: 12px;
-  font-weight: 700;
-}
 .swatch {
   display: inline-flex;
   align-items: center;
   gap: 6px;
+  min-height: 30px;
   margin: 0;
-  padding: 3px 9px 3px 6px;
+  padding: 3px 7px 3px 8px;
   border: 1px solid var(--line-strong);
   border-radius: 999px;
   background: var(--paper);
   color: var(--ink-soft);
+  font-size: 12px;
   font-weight: 400;
   text-transform: capitalize;
   cursor: pointer;
+}
+.swatch:hover:not(:disabled) {
+  border-color: var(--muted);
+  color: var(--ink);
+  background: var(--hover);
+}
+.swatch kbd {
+  padding: 0 4px;
+  font-size: 10px;
 }
 .swatch::before {
   width: 12px;
@@ -399,19 +566,48 @@ blockquote {
   background: var(--swatch);
   content: "";
 }
-.swatch input {
-  position: absolute;
-  opacity: 0;
-  pointer-events: none;
-}
-.swatch:has(input:checked) {
+.swatch[aria-pressed="true"] {
   border-color: var(--accent);
   color: var(--ink);
   box-shadow: inset 0 0 0 1px var(--accent);
 }
-.swatch:has(input:focus-visible) {
+.swatch:focus-visible {
   outline: 2px solid var(--accent);
   outline-offset: 2px;
+}
+
+/* Tag suggestions --------------------------------------------------------------- */
+.tag-input {
+  margin-bottom: 14px;
+}
+.tag-input input:not([type="checkbox"], [type="radio"]) {
+  margin-bottom: 0;
+}
+.tag-suggestions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 6px;
+}
+.tag-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 2px 8px;
+  border: 1px solid var(--line-strong);
+  border-radius: 999px;
+  color: var(--ink-soft);
+  background: var(--paper);
+  font-size: 12px;
+}
+.tag-chip:hover {
+  border-color: var(--muted);
+  color: var(--ink);
+  background: var(--hover);
+}
+.tag-chip kbd {
+  padding: 0 4px;
+  font-size: 10px;
 }
 .swatch-yellow {
   --swatch: #f7d24e;
@@ -537,7 +733,11 @@ blockquote {
     background: ButtonFace;
   }
   .problem,
-  blockquote {
+  blockquote,
+  .saved-highlight {
     border-color: Highlight;
+  }
+  .swatch[aria-pressed="true"] {
+    outline: 2px solid Highlight;
   }
 }

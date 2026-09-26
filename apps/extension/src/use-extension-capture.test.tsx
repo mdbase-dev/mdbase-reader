@@ -2,7 +2,7 @@
 /* eslint-disable @typescript-eslint/require-await -- async act flushes React's queued work */
 import { act, useEffect } from "react";
 import { createRoot, type Root } from "react-dom/client";
-import { afterEach, beforeEach, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, expect, it, vi, type Mock } from "vitest";
 
 import { fakeChrome } from "./testing/fake-chrome.js";
 import { useExtensionCapture } from "./use-extension-capture.js";
@@ -13,6 +13,10 @@ const mocks = vi.hoisted(() => ({
   start: vi.fn(),
   createSession: vi.fn(),
   save: vi.fn(),
+  updateComment: vi.fn(),
+  planDeletion: vi.fn(),
+  deleteAnnotation: vi.fn(),
+  render: vi.fn(),
   select: vi.fn(),
   list: vi.fn(),
   sourceForUrl: vi.fn(),
@@ -52,6 +56,9 @@ vi.mock("./capture-citation.js", () => ({ prepareCitation: mocks.prepareCitation
 vi.mock("./save-capture.js", () => ({
   CaptureWriter: class {
     save = mocks.save;
+    updateComment = mocks.updateComment;
+    planDeletion = mocks.planDeletion;
+    delete = mocks.deleteAnnotation;
   },
 }));
 vi.mock("./page-capture.js", () => ({
@@ -59,7 +66,7 @@ vi.mock("./page-capture.js", () => ({
   readSelection: mocks.readSelection,
   watchTabSelection: () => Promise.resolve(),
   fetchPdf: vi.fn(),
-  renderAnnotations: () => Promise.resolve({ total: 0, shown: 0, missing: 0, ambiguous: 0 }),
+  renderAnnotations: mocks.render,
 }));
 
 const page = {
@@ -102,6 +109,12 @@ beforeEach(() => {
   mocks.captureTab.mockResolvedValue(page);
   mocks.readSelection.mockResolvedValue(null);
   mocks.prepareCitation.mockResolvedValue(null);
+  mocks.render.mockImplementation((_tab: number, quotes: readonly unknown[]) =>
+    Promise.resolve({
+      report: { total: quotes.length, shown: quotes.length, missing: 0, ambiguous: 0 },
+      outcomes: quotes.map(() => "shown"),
+    }),
+  );
 });
 afterEach(async () => {
   await act(async () => root.unmount());
@@ -268,4 +281,152 @@ it("asks to be invoked again after the tab navigates, then reads the new page", 
   });
   expect(controller.navigated).toBe(false);
   expect(controller.capture?.canonicalUrl).toBe("https://example.com/next");
+});
+
+const existing = { id: "source", collectionId: "test", title: "[test] Saved" };
+function saved(id: string, exact: string): unknown {
+  return {
+    id,
+    sourceId: "source",
+    body: `> ${exact}`,
+    tags: [],
+    color: "blue",
+    target: { quote: { exact } },
+  };
+}
+it("shows a saved page's highlights and marks the toolbar button as soon as it opens", async () => {
+  mocks.sourceForUrl.mockResolvedValue(existing);
+  mocks.list.mockResolvedValue([saved("a1", "one"), saved("a2", "two")]);
+  await mount();
+  expect(mocks.render).toHaveBeenCalledWith(
+    1,
+    [
+      { exact: "one", color: "blue" },
+      { exact: "two", color: "blue" },
+    ],
+    "https://example.com/",
+    undefined,
+  );
+  expect(controller.projection?.outcomes.get("a2" as never)).toBe("shown");
+  expect(chromeFake.chrome.action.setBadgeText).toHaveBeenCalledWith({ tabId: 1, text: "2" });
+  expect(mocks.save).not.toHaveBeenCalled();
+});
+it("scrolls to one highlight on request", async () => {
+  mocks.sourceForUrl.mockResolvedValue(existing);
+  mocks.list.mockResolvedValue([saved("a1", "one"), saved("a2", "two")]);
+  await mount();
+  await act(async () => {
+    await controller.revealHighlight("a2" as never);
+  });
+  expect(mocks.render).toHaveBeenLastCalledWith(1, expect.any(Array), "https://example.com/", 1);
+});
+it("saves in a chosen colour in one step and remembers it for the next highlight", async () => {
+  mocks.save.mockResolvedValueOnce({
+    source: existing,
+    annotation: {},
+    existing: true,
+    notices: [],
+  });
+  await mount();
+  await act(async () => {
+    await controller.save({ highlight: true, color: "green" });
+  });
+  expect(mocks.save).toHaveBeenCalledWith(
+    expect.objectContaining({
+      draft: expect.objectContaining({ color: "green", highlight: true }),
+    }),
+  );
+  expect(controller.draft.color).toBe("green");
+  expect(chromeFake.local.get("highlight-color")).toBe("green");
+  expect(controller.notice).toBe("Highlight saved.");
+});
+it("saves the highlight at once when invoked with Save highlight", async () => {
+  mocks.sourceForUrl.mockResolvedValue(existing);
+  mocks.save.mockResolvedValue({ source: existing, annotation: {}, existing: true, notices: [] });
+  await mount();
+  expect(mocks.save).not.toHaveBeenCalled();
+  await act(async () => {
+    chromeFake.emit("message", { type: "mdbase-reader/invoke", tabId: 1, intent: "highlight" }, {});
+  });
+  await act(async () => {
+    await new Promise((resolve) => setTimeout(resolve, 0));
+  });
+  expect(mocks.save).toHaveBeenCalledTimes(1);
+  expect(mocks.save).toHaveBeenCalledWith(
+    expect.objectContaining({ draft: expect.objectContaining({ highlight: true }) }),
+  );
+  // Other invocations only open the panel.
+  await act(async () => {
+    chromeFake.emit("message", { type: "mdbase-reader/invoke", tabId: 1, intent: "note" }, {});
+  });
+  expect(mocks.save).toHaveBeenCalledTimes(1);
+});
+it("edits a highlight's comment and deletes a highlight from the list", async () => {
+  mocks.sourceForUrl.mockResolvedValue(existing);
+  const first = saved("a1", "one") as { id: string };
+  mocks.list.mockResolvedValue([first, saved("a2", "two")]);
+  await mount();
+  const updated = { ...first, body: "> one\n\nNew thought" };
+  mocks.updateComment.mockResolvedValueOnce(updated);
+  await act(async () => {
+    await controller.updateHighlightComment(controller.annotations[0]!, "New thought");
+  });
+  expect(mocks.updateComment).toHaveBeenCalledWith(
+    expect.anything(),
+    expect.objectContaining({ id: "a1" }),
+    "New thought",
+  );
+  expect(controller.annotations[0]?.body).toContain("New thought");
+  const plan = { annotationId: "a2", brokenLinkPaths: [] };
+  mocks.planDeletion.mockResolvedValueOnce(plan);
+  const second = controller.annotations[1]!;
+  let planned: unknown;
+  await act(async () => {
+    planned = await controller.planHighlightDeletion(second);
+  });
+  await act(async () => {
+    await controller.deleteHighlight(second, planned as never);
+  });
+  expect(mocks.deleteAnnotation).toHaveBeenCalledWith(expect.anything(), second, plan);
+  expect(controller.annotations.map((annotation) => annotation.id)).toEqual(["a1"]);
+  expect(chromeFake.chrome.action.setBadgeText).toHaveBeenLastCalledWith({ tabId: 1, text: "1" });
+});
+it("follows the tab to a new page by itself when page access is on", async () => {
+  chromeFake.local.set("page-status", true);
+  (chromeFake.chrome.permissions.contains as unknown as Mock).mockResolvedValue(true);
+  await mount();
+  await act(async () => {
+    controller.setDraft((draft) => ({ ...draft, tags: "from the first page" }));
+  });
+  mocks.captureTab.mockResolvedValue({
+    ...page,
+    pageTitle: "[test] Next",
+    canonicalUrl: "https://example.com/next",
+    submittedUrl: "https://example.com/next",
+  });
+  await act(async () => {
+    chromeFake.emit("updated", 1, { status: "loading" });
+  });
+  expect(controller.navigated).toBe(true);
+  await act(async () => {
+    chromeFake.emit("updated", 1, { status: "complete" });
+  });
+  await act(async () => {
+    await new Promise((resolve) => setTimeout(resolve, 0));
+  });
+  expect(controller.navigated).toBe(false);
+  expect(controller.capture?.canonicalUrl).toBe("https://example.com/next");
+  expect(controller.draft.title).toBe("[test] Next");
+  expect(controller.draft.tags).toBe("");
+});
+it("waits to be invoked again after navigating when page access is off", async () => {
+  await mount();
+  await act(async () => {
+    chromeFake.emit("updated", 1, { status: "loading" });
+  });
+  await act(async () => {
+    chromeFake.emit("updated", 1, { status: "complete" });
+  });
+  expect(controller.navigated).toBe(true);
+  expect(mocks.captureTab).toHaveBeenCalledTimes(1);
 });

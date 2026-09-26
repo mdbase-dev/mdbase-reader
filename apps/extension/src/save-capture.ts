@@ -1,8 +1,12 @@
 import {
   createAnnotation,
+  deleteAnnotation,
+  planAnnotationDeletion,
+  updateAnnotationBody,
   importSourceFile,
   sourceLink,
   type Annotation,
+  type AnnotationDeletionPlan,
   type AnnotationId,
   type DocumentDescriptor,
   type MutationId,
@@ -18,6 +22,7 @@ import { citationAuthors, citationYear, webCaptureImport } from "@mdbase-reader/
 
 import { saveCaptureCitation, type CitationPreview } from "./capture-citation.js";
 import { sourceForUrl } from "./capture-model.js";
+import { highlightBody, withHighlightComment } from "./highlight-body.js";
 import { pageAnnotations } from "./page-annotations.js";
 
 import type { PageCapture, PdfCapture, SelectedWebCapture } from "./page-capture.js";
@@ -191,13 +196,40 @@ export class CaptureWriter {
           ),
         ],
         target: { quote },
-        body: `${quote.exact
-          .split("\n")
-          .map((line) => `> ${line}`)
-          .join("\n")}${comment.trim() ? `\n\n${comment}` : ""}`,
+        body: highlightBody(quote.exact, comment),
       },
     );
     return result.annotation;
+  }
+
+  /** Changes a saved highlight's comment; its quote stays as saved. */
+  updateComment(
+    collection: ReaderConnectedCollection,
+    annotation: Annotation,
+    comment: string,
+  ): Promise<Annotation> {
+    return updateAnnotationBody(
+      collection.annotations,
+      annotation,
+      withHighlightComment(annotation.body, comment),
+      this.#runtime.clock.now(),
+    );
+  }
+
+  /** What deleting would affect, such as notes that link to the highlight. */
+  planDeletion(
+    collection: ReaderConnectedCollection,
+    annotation: Annotation,
+  ): Promise<AnnotationDeletionPlan> {
+    return planAnnotationDeletion(collection.annotations, annotation);
+  }
+
+  delete(
+    collection: ReaderConnectedCollection,
+    annotation: Annotation,
+    plan: AnnotationDeletionPlan,
+  ): Promise<void> {
+    return deleteAnnotation(collection.annotations, annotation, plan);
   }
 
   async #savedTarget(

@@ -55,15 +55,15 @@ export function WelcomeApp(): React.JSX.Element {
           <li>
             <h2>Highlight passages</h2>
             <p>
-              With the panel open, select text on the page and it appears there, ready to save with
-              a colour and a comment. You can also right-click a selection
+              With the panel open, select text on the page and it appears there. Choose a colour to
+              save it, adding a comment first if you like. To save a selection straight away,
+              right-click it and choose Save highlight
               {highlight ? (
                 <>
-                  {" "}
-                  or press <kbd>{highlight}</kbd>
+                  , or press <kbd>{highlight}</kbd>
                 </>
               ) : null}
-              .
+              . Your highlights show on the page whenever you open the panel there.
             </p>
           </li>
         </ol>

@@ -1,12 +1,7 @@
 import { updatePageStatus } from "./background-page-status.js";
 import { credentiallessFetch } from "./credentialless-fetch.js";
-import {
-  capturePanelPath,
-  intentKey,
-  isExtensionMessage,
-  type CaptureIntent,
-  type InvokeMessage,
-} from "./messages.js";
+import { capturePanelPath, intentKey, type CaptureIntent, type InvokeMessage } from "./messages.js";
+import { clearPageMark } from "./page-badge.js";
 
 // The extension uses signed grants, never ambient portal cookies.
 globalThis.fetch = credentiallessFetch(globalThis.fetch.bind(globalThis));
@@ -61,16 +56,14 @@ chrome.contextMenus.onClicked.addListener((info, tab) => {
 });
 
 chrome.tabs.onUpdated.addListener((tabId, change, tab) => {
-  if (change.status === "complete" && tab.url?.startsWith("https://")) {
-    void updatePageStatus(tabId, tab.url);
+  if (change.status !== "complete") {
+    return;
   }
-});
-chrome.runtime.onMessage.addListener((message: unknown) => {
-  if (isExtensionMessage(message) && message.type === "mdbase-reader/source-changed") {
-    void chrome.tabs
-      .get(message.tabId)
-      .then((tab) => (tab.url ? updatePageStatus(message.tabId, tab.url) : undefined))
-      .catch(() => undefined);
+  // Pages the extension cannot read still lose the previous page's mark.
+  if (tab.url?.startsWith("https://")) {
+    void updatePageStatus(tabId, tab.url);
+  } else {
+    void clearPageMark(tabId).catch(() => undefined);
   }
 });
 chrome.tabs.onRemoved.addListener((tabId) => {

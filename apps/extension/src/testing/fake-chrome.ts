@@ -58,6 +58,11 @@ export function fakeChrome(): {
     runtime: { onMessage: event(listeners.message), sendMessage: vi.fn(() => Promise.resolve()) },
     tabs: { onUpdated: event(listeners.updated), get: vi.fn(), create: vi.fn() },
     scripting: { executeScript: vi.fn() },
+    action: {
+      setBadgeText: vi.fn(() => Promise.resolve()),
+      setBadgeBackgroundColor: vi.fn(() => Promise.resolve()),
+      setTitle: vi.fn(() => Promise.resolve()),
+    },
     permissions: {
       contains: vi.fn(() => Promise.resolve(false)),
       request: vi.fn(() => Promise.resolve(true)),

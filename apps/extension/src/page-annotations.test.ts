@@ -35,6 +35,7 @@ describe("live-page quote anchoring", () => {
     });
     expect(result.report).toEqual({ total: 3, shown: 1, missing: 1, ambiguous: 1 });
     expect(result.quotes[1]?.prefix).toContain("second ");
+    expect(result.outcomes).toEqual(["ambiguous", "shown", "missing"]);
   });
   it("ignores hidden and editable text", () => {
     document.body.innerHTML =

@@ -116,6 +116,42 @@ PDF recognition, with no console errors. That run granted host access in a test 
 manifest in place of `activeTab`, and did not sign in to Connect, so saving, citation storage and
 the page-status badge were not exercised end to end.
 
+## Highlighting and saved-page UX (2026-09-26)
+
+- **One-step highlights.** A live selection shows five colour buttons; choosing one saves the
+  highlight (creating the source first on a new page) with any comment and tags typed beforehand.
+  Keys `1`–`5` do the same and `Esc` clears the selection, except while typing in a field.
+  Ctrl/⌘+Enter still saves in the current colour. The "Save this highlight" checkbox is gone;
+  **Clear** saves the page without the passage. The last colour used is remembered in
+  `chrome.storage.local` for the next highlight on any page.
+- **Quick save.** The context menu's _Save highlight_ and Alt+Shift+H save without further input
+  once the panel is ready: connected, the page's existing source looked up, its citation settled.
+  The request is used up then, saved or not, and lapses after a minute. _Highlight with a comment_
+  only focuses the comment field.
+- **Saved highlights on opening.** When the panel opens on a saved page it draws that page's
+  highlights and marks the toolbar button (count, or ✓) for the tab. This uses the `activeTab`
+  grant from opening the panel, not the opt-in page-status permission. The background worker
+  clears the mark on every page load, including pages the extension cannot read.
+- **Highlight list.** A saved page lists its quoted highlights, each with its colour, comment and
+  tags, and whether the live page could show it (_Not found_ / _Matches several places_). Pressing
+  a shown quote scrolls the page to it and underlines it for 2.5 s. **Edit comment** rewrites
+  only the comment after the saved blockquote (`updateAnnotationBody`); **Delete** first plans the
+  deletion and confirms inline, naming how many notes link to the highlight. Connect exposes no
+  colour update, so colour is changed in Reader.
+- **Compact collection.** Once connected, the panel shows _Saving to <collection> · Change_; the
+  selector, _Connect another collection_ and direct-access controls are behind **Change**.
+- **Following the tab.** With the opt-in page access on, an open panel reads the new page after
+  the tab navigates, starting a fresh draft for it; without it, the panel asks to be invoked again
+  and says how to turn following on.
+- **One status line.** Problems keep their recovery actions and take precedence; otherwise the
+  panel shows only the most relevant of progress, notice, saved state or a restored draft. The
+  origin-check explanation sits under _Technical details_.
+- **Tag suggestions.** Tag fields suggest existing spellings for the tag being typed (Tab or click
+  accepts). Connect has no tag index, so the suggestions come from tags saved from this browser, the
+  page's highlights and the first 200 sources of the collection, loaded when a tag field is first
+  focused.
+- **PDFs.** After saving a PDF, _Open in Reader to highlight_ is the panel's main action.
+
 ## Remaining boundaries
 
 Selection capture targets the top-level page, not cross-origin embedded frames or text inside

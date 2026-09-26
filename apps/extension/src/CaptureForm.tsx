@@ -2,6 +2,7 @@ import { useEffect, useRef } from "react";
 
 import { CitationCard } from "./CitationCard.js";
 import { HighlightFields } from "./HighlightFields.js";
+import { TagInput } from "./TagInput.js";
 
 import type { ExtensionCaptureController } from "./capture-controller.js";
 
@@ -12,7 +13,8 @@ export function CaptureForm({
 }): React.JSX.Element | null {
   const form = useRef<HTMLFormElement>(null);
   const canSubmit = !c.source || c.draft.highlight;
-  const ready = c.snapshot.status === "ready" && !c.busy && Boolean(c.draft.title.trim());
+  const ready =
+    c.snapshot.status === "ready" && !c.busy && !c.navigated && Boolean(c.draft.title.trim());
   const { save } = c;
   useEffect(() => {
     // Ctrl/⌘+Enter saves from any field, so a highlight never needs the mouse.
@@ -61,10 +63,12 @@ export function CaptureForm({
             <label htmlFor="tags">
               Tags <span>(comma-separated, optional)</span>
             </label>
-            <input
+            <TagInput
               id="tags"
               value={c.draft.tags}
-              onChange={(event) => update("tags", event.target.value)}
+              known={c.knownTags}
+              onFocus={c.loadTags}
+              onChange={(value) => update("tags", value)}
             />
             <label htmlFor="note">
               Literature note <span>(optional)</span>
@@ -83,20 +87,32 @@ export function CaptureForm({
             <strong>{c.source.title}</strong>. Existing source metadata is kept unchanged.
           </p>
         )}
-        <HighlightFields controller={c} />
+        <HighlightFields controller={c} ready={ready} />
         {canSubmit ? (
-          <button
-            className="primary"
-            disabled={!ready}
-            type="submit"
-            aria-keyshortcuts="Control+Enter Meta+Enter"
-          >
-            {submitLabel(c)}
-          </button>
+          <>
+            <button
+              className="primary"
+              disabled={!ready}
+              type="submit"
+              aria-keyshortcuts="Control+Enter Meta+Enter"
+            >
+              {submitLabel(c)}
+            </button>
+            <p className="shortcut-hint">
+              or press <kbd>{modifierKey()}</kbd>+<kbd>Enter</kbd>
+            </p>
+          </>
         ) : null}
       </fieldset>
     </form>
   );
+}
+
+/** ⌘ on Apple keyboards; the shortcut accepts either key everywhere. */
+function modifierKey(): string {
+  return typeof navigator !== "undefined" && /Mac|iPhone|iPad/u.test(navigator.userAgent)
+    ? "⌘"
+    : "Ctrl";
 }
 
 function submitLabel(c: ExtensionCaptureController): string {

@@ -9,9 +9,12 @@ export interface ProjectionReport {
   readonly missing: number;
   readonly ambiguous: number;
 }
+/** Whether each requested quote was drawn on the page, in request order. */
+export type QuoteOutcome = "shown" | "missing" | "ambiguous";
 export interface PageAnnotationResult {
   readonly report: ProjectionReport;
   readonly quotes: readonly (QuoteSelector | null)[];
+  readonly outcomes: readonly QuoteOutcome[];
   readonly selection: QuoteSelector | null;
 }
 
@@ -30,6 +33,8 @@ export function pageAnnotations(
     readonly action: "render" | "locate" | "selection";
     readonly quotes?: readonly PageQuote[];
     readonly expectedUrl?: string;
+    /** With `render`: scroll to this quote (by index) and mark it briefly. */
+    readonly focus?: number;
   },
   doc: Document = document,
 ): PageAnnotationResult {
@@ -49,22 +54,30 @@ export function pageAnnotations(
   const { haystack, starts, ends } = normalizeIndex();
   const report = { total: request.quotes?.length ?? 0, shown: 0, missing: 0, ambiguous: 0 };
   const quotes: (QuoteSelector | null)[] = [];
-  const decorations: { range: Range; color: string }[] = [];
-  for (const quote of request.quotes ?? []) {
+  const outcomes: QuoteOutcome[] = [];
+  const decorations: { range: Range; color: string; index: number }[] = [];
+  for (const [index, quote] of (request.quotes ?? []).entries()) {
     const match = locate(quote);
     if (match === "missing" || match === "ambiguous") {
       report[match]++;
       quotes.push(null);
+      outcomes.push(match);
     } else {
       quotes.push(quoteAt(match.start, match.end));
+      outcomes.push("shown");
       report.shown++;
-      decorations.push({ range: match.range, color: quote.color ?? "yellow" });
+      decorations.push({ range: match.range, color: quote.color ?? "yellow", index });
     }
   }
   if (request.action === "render") {
     render();
   }
-  return { report, quotes, selection: request.action === "selection" ? selection() : null };
+  return {
+    report,
+    quotes,
+    outcomes,
+    selection: request.action === "selection" ? selection() : null,
+  };
 
   function indexDocument(): { text: string; nodes: Entry[] } {
     const excluded =
@@ -222,5 +235,19 @@ export function pageAnnotations(
       })
       .join("\n");
     doc.head.append(style);
+    const focused = decorations.find(({ index }) => index === request.focus);
+    if (focused) {
+      highlights.set("mdbase-reader-focus", new HighlightClass(focused.range));
+      style.textContent += `\n::highlight(mdbase-reader-focus) { text-decoration: underline 3px ${(palette[focused.color] ?? "#f7d24e").slice(0, 7)}; text-underline-offset: 3px; }`;
+      const element = focused.range.startContainer.parentElement;
+      element?.scrollIntoView({ block: "center", behavior: "smooth" });
+      // Only this marker goes; a later render may already have replaced it.
+      const marker = highlights.get("mdbase-reader-focus");
+      setTimeout(() => {
+        if (highlights.get("mdbase-reader-focus") === marker) {
+          highlights.delete("mdbase-reader-focus");
+        }
+      }, 2500);
+    }
   }
 }

@@ -26,8 +26,8 @@ export function PageStatusSetting(): React.JSX.Element {
       </label>
       <p className="hint">
         Asks Chrome for access to HTTPS pages. Reader then looks up each page’s address in your
-        selected collection; it reads page text only to draw your highlights. Turning this off gives
-        the access back.
+        selected collection; it reads page text only to draw your highlights. An open side panel
+        also follows the tab to each new page. Turning this off gives the access back.
       </p>
     </>
   );

@@ -1,4 +1,9 @@
-import { pageAnnotations, type PageQuote, type ProjectionReport } from "./page-annotations.js";
+import {
+  pageAnnotations,
+  type PageQuote,
+  type ProjectionReport,
+  type QuoteOutcome,
+} from "./page-annotations.js";
 
 import type { QuoteSelector } from "@mdbase-reader/core";
 import type { LiveWebCapture } from "@mdbase-reader/web-capture";
@@ -235,11 +240,19 @@ export async function pagePdfBytes(
   return { base64: btoa(binary) };
 }
 
+export interface PageProjection {
+  readonly report: ProjectionReport;
+  /** One per quote passed in, in the same order. */
+  readonly outcomes: readonly QuoteOutcome[];
+}
+
+/** Draws the quotes on the tab, optionally scrolling to the one at `focus`. */
 export async function renderAnnotations(
   tabId: number,
   annotations: readonly PageQuote[],
   expectedUrl: string,
-): Promise<ProjectionReport> {
+  focus?: number,
+): Promise<PageProjection> {
   const tab = await chrome.tabs.get(tabId);
   if (!tab.url || new URL(tab.url).href.split("#")[0] !== expectedUrl.split("#")[0]) {
     throw new Error(
@@ -249,10 +262,18 @@ export async function renderAnnotations(
   const [execution] = await chrome.scripting.executeScript({
     target: { tabId },
     func: pageAnnotations,
-    args: [{ action: "render", quotes: annotations, expectedUrl }],
+    args: [
+      {
+        action: "render",
+        quotes: annotations,
+        expectedUrl,
+        ...(focus === undefined ? {} : { focus }),
+      },
+    ],
   });
   if (!execution?.result) {
     throw new Error("Could not display highlights. Reopen the extension on this page.");
   }
-  return execution.result.report;
+  const { report, outcomes } = execution.result;
+  return { report, outcomes };
 }

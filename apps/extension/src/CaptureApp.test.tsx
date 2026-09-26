@@ -90,20 +90,65 @@ it("does not offer Connect recovery when the page itself cannot be read", () => 
   expect(html).not.toContain("Retry connection");
   expect(html).not.toContain("Review access");
 });
-it("explains missing and ambiguous highlights with a source-specific saved-copy link", () => {
+const savedSource = {
+  id: "s1",
+  collectionId: "c1",
+  title: "[test] Saved",
+} as ExtensionCaptureController["source"];
+function highlight(id: string, exact: string, body = `> ${exact}`): unknown {
+  return { id, body, tags: [], color: "green", target: { quote: { exact } } };
+}
+it("lists saved highlights and says which ones the page could not show", () => {
   const html = markup({
-    source: {
-      id: "s1",
-      collectionId: "c1",
-      title: "[test] Saved",
-    } as ExtensionCaptureController["source"],
-    projection: { total: 3, shown: 1, missing: 1, ambiguous: 1 },
+    source: savedSource,
+    annotations: [
+      highlight("a1", "shown passage", "> shown passage\n\nMy comment"),
+      highlight("a2", "missing passage"),
+      highlight("a3", "repeated passage"),
+      { id: "n1", body: "A note without a quote", tags: [] },
+    ] as unknown as ExtensionCaptureController["annotations"],
+    projection: {
+      report: { total: 3, shown: 1, missing: 1, ambiguous: 1 },
+      outcomes: new Map([
+        ["a1", "shown"],
+        ["a2", "missing"],
+        ["a3", "ambiguous"],
+      ]),
+    } as unknown as ExtensionCaptureController["projection"],
   });
-  expect(html).toContain("1 of 3 highlights shown.");
-  expect(html).toContain("page may have changed");
-  expect(html).toContain("has not guessed");
-  expect(html).toContain("remain safe");
+  expect(html).toMatch(/Highlights <span>3<\/span>/u);
+  expect(html).toContain("shown passage");
+  expect(html).toContain("My comment");
+  expect(html).toContain("Edit comment");
+  expect(html).toContain("Add comment");
+  expect(html).toContain("Not found on this page");
+  expect(html).toContain("Matches several places on this page");
+  expect(html).toContain("2 not shown on this page");
+  expect(html).toContain("still in the saved copy");
+  expect(html).not.toContain("A note without a quote");
   expect(html).toContain("collection=c1&amp;source=s1");
+  expect(html).toContain("Open saved copy in Reader");
+});
+it("names the connected collection in one line, with its controls behind Change", () => {
+  const html = markup({
+    snapshot: {
+      status: "ready",
+      collectionId: "c1",
+      connections: [{ collectionId: "c1", displayName: "[test] Papers" }],
+    } as unknown as ExtensionCaptureController["snapshot"],
+  });
+  expect(html).toContain("Saving to <strong>[test] Papers</strong>");
+  expect(html).toContain(">Change<");
+  expect(html).not.toContain('role="combobox"');
+  expect(html).not.toContain("Connect another collection");
+});
+it("shows one status line at a time, with problems taking precedence", () => {
+  const restored = markup({ draftRestored: true, notice: "Highlight saved." });
+  expect(restored).toContain("Highlight saved.");
+  expect(restored).not.toContain("Restored your unsaved note");
+  const failing = markup({ notice: "Highlight saved.", problem: "offline", problemKind: "save" });
+  expect(failing).toContain("offline");
+  expect(failing).not.toContain("Highlight saved.");
 });
 it.each(["unavailable", "start_failed", "blocked"])(
   "offers connection retry, not reapproval, for %s",
@@ -127,12 +172,13 @@ it.each(["unavailable", "start_failed", "blocked"])(
 it("does not display stale write progress after a successful save", () => {
   const html = markup({
     status: "saved",
+    source: savedSource,
     busy: false,
     refreshing: true,
     progress: { phase: "creating", completedBytes: 1, totalBytes: 1, fileIndex: 1, fileCount: 1 },
   });
   expect(html).toContain("Source saved in mdbase.");
-  expect(html).toContain("Refreshing highlights");
+  expect(html).toContain("Updating…");
   expect(html).not.toContain("Saving source record");
 });
 it("labels recovery scans separately from duplicate checks", () => {
@@ -149,7 +195,7 @@ it("labels a non-production build and links to settings", () => {
   expect(html).toContain("Settings and shortcuts");
   expect(html).toContain("Select text on the page to highlight it.");
 });
-it("offers colour, tags and a note for a live selection, saved with Ctrl+Enter", () => {
+it("saves a live selection by choosing a colour, or with Ctrl+Enter after a comment", () => {
   const html = markup({
     capture: {
       kind: "html",
@@ -168,9 +214,11 @@ it("offers colour, tags and a note for a live selection, saved with Ctrl+Enter",
     },
   });
   expect(html).toContain("a chosen passage");
-  expect(html).toMatch(
-    /<input type="radio" name="color" value="blue" checked=""|<input[^>]*checked=""[^>]*value="blue"/u,
-  );
+  expect(html).toContain("Save page and highlight");
+  expect(html).toMatch(/aria-pressed="true" aria-keyshortcuts="3"[^>]*>blue/u);
+  expect(html).toMatch(/aria-pressed="false" aria-keyshortcuts="1"[^>]*>yellow/u);
+  expect(html).toContain('aria-keyshortcuts="Escape"');
+  expect(html).not.toContain("Save this highlight");
   expect(html).toContain('id="highlight-tags"');
   expect(html).toContain('aria-keyshortcuts="Control+Enter Meta+Enter"');
   expect(html).toContain("Save source and highlight");
@@ -204,10 +252,24 @@ it("saves PDFs without offering in-page highlighting", () => {
   });
   expect(html).toContain("CURRENT PDF");
   expect(html).toContain("Save PDF");
-  expect(html).toContain("highlight it in Reader");
+  expect(html).toContain("highlighted in Reader");
+  expect(html).not.toContain("swatch");
+});
+it("makes opening Reader the next step after saving a PDF", () => {
+  const html = markup({
+    capture: {
+      kind: "pdf",
+      pageTitle: "paper",
+      canonicalUrl: "https://example.com/paper.pdf",
+      selection: null,
+    } as ExtensionCaptureController["capture"],
+    source: savedSource,
+  });
+  expect(html).toMatch(/class="primary reader-link"[^>]*>Open in Reader to highlight/u);
 });
 it("explains how to continue after the tab navigates away", () => {
   const html = markup({ navigated: true });
   expect(html).toContain("moved to another page");
+  expect(html).toContain("follow the tab by itself");
   expect(html).toContain('<fieldset disabled=""');
 });

@@ -4,6 +4,7 @@ import { readerSourceUrl } from "./capture-model.js";
 import { CaptureForm } from "./CaptureForm.js";
 import { ConnectionPanel, ConnectionProblem } from "./ConnectionPanel.js";
 import { ExtensionHeader } from "./ExtensionHeader.js";
+import { SavedHighlights } from "./SavedHighlights.js";
 import { openSettings } from "./shortcuts.js";
 
 import type { ExtensionCaptureController } from "./capture-controller.js";
@@ -41,15 +42,10 @@ export function CaptureApp({ controller }: ControllerProps): React.JSX.Element {
         </p>
       </section>
       <Navigated controller={controller} />
-      <ConnectionPanel controller={controller} />
-      <ConnectionProblem controller={controller} />
-      {controller.draftRestored ? (
-        <p className="restored" role="status">
-          Restored your unsaved note from earlier.
-        </p>
-      ) : null}
+      <ConnectionPanel controller={controller} compact />
       <CaptureForm controller={controller} />
-      <CaptureStatus controller={controller} />
+      <PanelStatus controller={controller} />
+      <SavedHighlights controller={controller} />
       <Completion controller={controller} />
       <footer className="panel-footer">
         <button type="button" className="text-button" onClick={openSettings}>
@@ -71,39 +67,52 @@ function Navigated({ controller: c }: ControllerProps): React.JSX.Element | null
         Press the mdbase Reader toolbar button (Alt+Shift+S) to continue on the new page. Your
         unsaved text for the previous page is kept for this browser session.
       </p>
+      <p>
+        To have the panel follow the tab by itself, turn on Saved pages in{" "}
+        <button type="button" className="inline-link" onClick={openSettings}>
+          Settings
+        </button>
+        .
+      </p>
     </section>
   );
 }
 
-/** Reports progress and outcomes; says nothing while the panel is simply waiting. */
-function CaptureStatus({ controller: c }: ControllerProps): React.JSX.Element {
-  const progress = importProgressMessage(c.busy ? c.progress : null);
-  const message =
-    progress ??
-    (c.status === "saving"
-      ? "Saving…"
-      : c.status === "saved"
-        ? "Source saved in mdbase."
-        : c.saveAttempted && !c.source && !c.busy
-          ? "Save not confirmed. Retry to check its outcome."
-          : null);
-  // The live region stays mounted so screen readers announce what appears in it.
+/**
+ * One place for what is happening: a problem with its recovery, or else the single most
+ * relevant status line. Says nothing while the panel is simply waiting.
+ */
+function PanelStatus({ controller: c }: ControllerProps): React.JSX.Element {
+  const message = c.problem ? null : statusMessage(c);
   return (
-    <div className="save-status" role="status" aria-live="polite">
-      {message ? <p>{message}</p> : null}
-      {c.refreshing ? <p>Saved. Refreshing highlights…</p> : null}
-      {c.notice ? <p>{c.notice}</p> : null}
-      {c.source ? (
-        <button
-          type="button"
-          disabled={c.busy || c.refreshing}
-          onClick={() => void c.refreshHighlights()}
-        >
-          Refresh highlights
-        </button>
-      ) : null}
-    </div>
+    <>
+      <ConnectionProblem controller={c} />
+      {/* The live region stays mounted so screen readers announce what appears in it. */}
+      <div className="save-status" role="status" aria-live="polite">
+        {message ? <p>{message}</p> : null}
+      </div>
+    </>
   );
+}
+
+function statusMessage(c: ExtensionCaptureController): string | null {
+  const progress = importProgressMessage(c.busy ? c.progress : null);
+  if (progress) {
+    return progress;
+  }
+  if (c.status === "saving") {
+    return "Saving…";
+  }
+  if (c.notice) {
+    return c.notice;
+  }
+  if (c.status === "saved") {
+    return "Source saved in mdbase.";
+  }
+  if (c.saveAttempted && !c.source && !c.busy) {
+    return "Save not confirmed. Retry to check its outcome.";
+  }
+  return c.draftRestored ? "Restored your unsaved note from earlier." : null;
 }
 
 function importProgressMessage(p: ExtensionCaptureController["progress"]): string | null {
@@ -125,45 +134,17 @@ function Completion({ controller: c }: ControllerProps): React.JSX.Element | nul
   if (!c.source) {
     return null;
   }
-  const count = c.annotations.filter((annotation) => annotation.target?.quote).length;
+  // A PDF's highlighting happens in Reader, so that is the next step, not an aside.
+  const pdf = c.capture?.kind === "pdf";
   return (
     <footer className="completion">
-      {count && c.capture?.kind === "html" ? (
-        <button
-          type="button"
-          className="secondary"
-          disabled={c.busy}
-          onClick={() => void c.showAnnotations()}
-        >
-          Show {count} highlight{count === 1 ? "" : "s"} on this page
-        </button>
-      ) : null}
-      {c.projection ? (
-        <div role="status" className="render-result">
-          <p>
-            {c.projection.shown} of {c.projection.total} highlights shown.
-          </p>
-          {c.projection.missing ? (
-            <p>{c.projection.missing} passage(s) could not be found; the page may have changed.</p>
-          ) : null}
-          {c.projection.ambiguous ? (
-            <p>
-              {c.projection.ambiguous} passage(s) match more than once. Reader has not guessed a
-              location.
-            </p>
-          ) : null}
-          {c.projection.missing + c.projection.ambiguous > 0 ? (
-            <p>Your annotations remain safe in the saved copy.</p>
-          ) : null}
-        </div>
-      ) : null}
       <a
-        className="primary reader-link"
+        className={pdf ? "primary reader-link" : "secondary reader-link"}
         href={readerSourceUrl(c.source)}
         target="_blank"
         rel="noreferrer"
       >
-        Open saved copy in Reader
+        {pdf ? "Open in Reader to highlight" : "Open saved copy in Reader"}
       </a>
     </footer>
   );

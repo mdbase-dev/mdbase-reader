@@ -10,12 +10,7 @@ export interface InvokeMessage {
   readonly tabId: number;
   readonly intent: CaptureIntent;
 }
-/** A panel saved or changed highlights; the background refreshes the tab's badge. */
-export interface SourceChangedMessage {
-  readonly type: "mdbase-reader/source-changed";
-  readonly tabId: number;
-}
-export type ExtensionMessage = SelectionMessage | InvokeMessage | SourceChangedMessage;
+export type ExtensionMessage = SelectionMessage | InvokeMessage;
 
 /** The intent a newly opened panel should act on; consumed once. */
 export function intentKey(tabId: number): string {

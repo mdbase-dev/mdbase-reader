@@ -1,4 +1,5 @@
 import { Select } from "@mdbase-reader/ui";
+import { useState } from "react";
 
 import { connectionUnavailableMessage } from "./connection-status.js";
 import { DirectAccessPanel } from "./DirectAccessPanel.js";
@@ -28,20 +29,79 @@ function showAuthorization(connected: boolean, status: string): boolean {
 }
 
 export function ConnectionPanel({
-  controller: c,
-  label = "Save to collection",
-  intro = "Choose the mdbase collection to save into. Nothing is saved until you press Save.",
-}: {
+  compact = false,
+  ...props
+}: ConnectionPanelProps & {
+  /** Once connected, show one line naming the collection, with the controls behind Change. */
+  readonly compact?: boolean;
+}): React.JSX.Element {
+  const [expanded, setExpanded] = useState(false);
+  const { snapshot, deviceCode } = props.controller;
+  const collapsible = compact && snapshot.status === "ready" && !deviceCode;
+  if (collapsible && !expanded) {
+    return <CollectionLine snapshot={snapshot} onChange={() => setExpanded(true)} />;
+  }
+  return (
+    <ConnectionControlsPanel
+      {...props}
+      done={
+        collapsible ? (
+          <button
+            type="button"
+            className="text-button collapse-button"
+            aria-expanded="true"
+            onClick={() => setExpanded(false)}
+          >
+            Done
+          </button>
+        ) : null
+      }
+    />
+  );
+}
+
+interface ConnectionPanelProps {
   readonly controller: ConnectionControls;
   readonly label?: string;
   readonly intro?: string;
+}
+
+function CollectionLine({
+  snapshot,
+  onChange,
+}: {
+  readonly snapshot: ConnectionControls["snapshot"];
+  readonly onChange: () => void;
 }): React.JSX.Element {
+  const selected = "collectionId" in snapshot ? snapshot.collectionId : "";
+  const name =
+    snapshot.connections.find((connection) => connection.collectionId === selected)?.displayName ??
+    "your collection";
+  return (
+    <section className="collection-line" aria-label="Collection">
+      <span>
+        Saving to <strong>{name}</strong>
+      </span>
+      <button type="button" className="text-button" aria-expanded="false" onClick={onChange}>
+        Change
+      </button>
+    </section>
+  );
+}
+
+function ConnectionControlsPanel({
+  controller: c,
+  label = "Save to collection",
+  intro = "Choose the mdbase collection to save into. Nothing is saved until you press Save.",
+  done,
+}: ConnectionPanelProps & { readonly done?: React.ReactNode }): React.JSX.Element {
   const { snapshot, busy } = c;
   const selected = "collectionId" in snapshot ? snapshot.collectionId : "";
   const connected = snapshot.connections.length > 0;
   const target = environment.label ? ` ${environment.label}` : "";
   return (
     <section className="action-panel" aria-label="Collection">
+      {done}
       {connected ? (
         <>
           <span className="field-label" id="collection-label">
@@ -155,11 +215,14 @@ export function ConnectionProblem({
       ) : null}
       <p>{c.problem}</p>
       {originDenied ? (
-        <p>
-          Connect rejected this extension’s origin. Reload the current extension build and retry. If
-          it persists, check the {environment.label || "mdbase"} Connect configuration; Reader will
-          not bypass the origin check.
-        </p>
+        <details className="technical">
+          <summary>Technical details</summary>
+          <p>
+            Connect rejected this extension’s origin. Reload the current extension build and retry.
+            If it persists, check the {environment.label || "mdbase"} Connect configuration; Reader
+            will not bypass the origin check.
+          </p>
+        </details>
       ) : null}
       {kind === "page" ? (
         <p>

@@ -5,6 +5,7 @@ import {
   restoreCollection,
 } from "./connect-session.js";
 import { annotationQuotes, pageAnnotations } from "./page-annotations.js";
+import { clearPageMark, markSavedPage } from "./page-badge.js";
 import { pageStatusEnabled } from "./page-status.js";
 
 import type {
@@ -46,7 +47,7 @@ async function selectedCollection(): Promise<ReaderConnectedCollection | null> {
 export async function updatePageStatus(tabId: number, url: string): Promise<void> {
   try {
     // Tab badges outlive navigation, so every page load clears the previous page's mark.
-    await chrome.action.setBadgeText({ tabId, text: "" });
+    await clearPageMark(tabId);
     const collection = (await pageStatusEnabled()) ? await selectedCollection() : null;
     const source = collection ? await sourceForUrl(collection, url) : null;
     if (!collection || !source) {
@@ -57,12 +58,7 @@ export async function updatePageStatus(tabId: number, url: string): Promise<void
       source.id,
     );
     const quotes = annotationQuotes(annotations);
-    await chrome.action.setBadgeBackgroundColor({ tabId, color: "#005c88" });
-    await chrome.action.setBadgeText({ tabId, text: quotes.length ? String(quotes.length) : "✓" });
-    await chrome.action.setTitle({
-      tabId,
-      title: `Saved in mdbase Reader${quotes.length ? ` · ${String(quotes.length)} highlight${quotes.length === 1 ? "" : "s"}` : ""}`,
-    });
+    await markSavedPage(tabId, quotes.length);
     if (quotes.length) {
       await chrome.scripting.executeScript({
         target: { tabId },

@@ -1,6 +1,6 @@
 import { useEffect, useState, type Dispatch, type SetStateAction } from "react";
 
-import { emptyDraft, loadDraft, saveDraft } from "./drafts.js";
+import { emptyDraft, loadDraft, preferredColor, saveDraft } from "./drafts.js";
 
 import type { PageCapture } from "./page-capture.js";
 import type { CaptureDraft } from "./save-capture.js";
@@ -37,7 +37,9 @@ export function useStoredDraft(
       return;
     }
     let cancelled = false;
-    void loadDraft(tabId, page).then((stored) => {
+    // Text typed while the first page loads is kept; another page starts a fresh draft.
+    const followed = loadedFor !== null;
+    void Promise.all([loadDraft(tabId, page), preferredColor()]).then(([stored, color]) => {
       if (cancelled) {
         return;
       }
@@ -49,10 +51,12 @@ export function useStoredDraft(
         setRestored(Boolean(stored.draft.note.trim() || stored.draft.comment.trim()));
       } else {
         setDraft((current) => ({
-          ...current,
-          title: current.title || capture.pageTitle,
+          ...(followed ? emptyDraft : current),
+          title: (followed ? "" : current.title) || capture.pageTitle,
           highlight: Boolean(selection),
+          color,
         }));
+        setRestored(false);
       }
       setLoadedFor(page);
     });

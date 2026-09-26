@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 
 import { intentKey, isExtensionMessage, type CaptureIntent } from "./messages.js";
 import { captureTab, readSelection, watchTabSelection, type PageCapture } from "./page-capture.js";
+import { pageStatusEnabled } from "./page-status.js";
 
 import type { QuoteSelector } from "@mdbase-reader/core";
 
@@ -17,7 +18,9 @@ export interface PageLink {
 
 /**
  * Keeps the panel attached to its tab: reads the page once, then follows new selections
- * without re-reading the document, and notices when the tab navigates away.
+ * without re-reading the document, and notices when the tab navigates away. With the
+ * opt-in page access (Settings → Saved pages) it reads the new page by itself; otherwise
+ * `activeTab` ended with the navigation and the reader must invoke the extension again.
  */
 export function usePageCapture(tabId: number, onProblem: (message: string) => void): PageLink {
   const [capture, setCapture] = useState<PageCapture | null>(null);
@@ -56,17 +59,29 @@ export function usePageCapture(tabId: number, onProblem: (message: string) => vo
         followSelection().catch(() => undefined);
       }
       if (message.type === "mdbase-reader/invoke" && message.tabId === tabId) {
-        setInvocation({ intent: message.intent, at: Date.now() });
+        const { intent } = message;
         void chrome.storage.session.remove(intentKey(tabId)).catch(() => undefined);
         // A new invocation restores activeTab access, so a changed page can be read again.
-        (navigated ? readPage() : followSelection()).catch((reason: unknown) =>
-          problem.current(reason instanceof Error ? reason.message : String(reason)),
-        );
+        // The intent counts once the selection it refers to has been read.
+        (navigated ? readPage() : followSelection())
+          .then(() => setInvocation({ intent, at: Date.now() }))
+          .catch((reason: unknown) =>
+            problem.current(reason instanceof Error ? reason.message : String(reason)),
+          );
       }
     };
     const onUpdated = (updatedTab: number, change: { readonly status?: string }): void => {
-      if (updatedTab === tabId && change.status === "loading") {
+      if (updatedTab !== tabId) {
+        return;
+      }
+      if (change.status === "loading") {
         setNavigated(true);
+      }
+      if (change.status === "complete" && navigated) {
+        void pageStatusEnabled()
+          .then((allowed) => (allowed ? readPage() : undefined))
+          // A page Reader cannot read leaves the panel waiting, as without page access.
+          .catch(() => undefined);
       }
     };
     chrome.runtime.onMessage.addListener(onMessage);
