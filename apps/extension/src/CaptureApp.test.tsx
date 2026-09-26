@@ -274,5 +274,11 @@ it("explains how to continue after the tab navigates away", () => {
   const html = markup({ navigated: true });
   expect(html).toContain("moved to another page");
   expect(html).toContain("follow the tab by itself");
+});
+it("says quietly that it is opening the new page while following the tab", () => {
+  const html = markup({ navigated: true, following: true });
+  expect(html).not.toContain("moved to another page");
+  expect(html).toContain("Opening the new page…");
+  expect(html).toContain('<fieldset disabled=""');
   expect(html).toContain('<fieldset disabled=""');
 });

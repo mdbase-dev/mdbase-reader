@@ -60,8 +60,9 @@ export function CaptureApp({ controller }: ControllerProps): React.JSX.Element {
   );
 }
 
+/** Only when the panel cannot follow by itself; while following, the status line says so. */
 function Navigated({ controller: c }: ControllerProps): React.JSX.Element | null {
-  if (!c.navigated) {
+  if (!c.navigated || c.following) {
     return null;
   }
   return (
@@ -100,6 +101,9 @@ function PanelStatus({ controller: c }: ControllerProps): React.JSX.Element {
 }
 
 function statusMessage(c: ExtensionCaptureController): string | null {
+  if (c.navigated && c.following) {
+    return "Opening the new page…";
+  }
   const progress = importProgressMessage(c.busy ? c.progress : null);
   if (progress) {
     return progress;

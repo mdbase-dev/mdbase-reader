@@ -360,6 +360,7 @@ export function useExtensionCapture(tabId: number): ExtensionCaptureController {
     busy: lock.busy,
     saveAttempted: attemptedFor === attemptKey,
     navigated: page.navigated,
+    following: page.following,
     invocation: page.invocation,
     connect: connection.connect,
     retry: connection.retry,

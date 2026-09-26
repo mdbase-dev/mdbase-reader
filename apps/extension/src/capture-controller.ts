@@ -43,6 +43,8 @@ export interface ExtensionCaptureController {
   readonly refreshHighlights: () => Promise<void>;
   readonly saveAttempted: boolean;
   readonly navigated: boolean;
+  /** The tab navigated and the panel is reading the new page by itself. */
+  readonly following: boolean;
   readonly invocation: { readonly intent: CaptureIntent; readonly at: number } | null;
   readonly connect: (choose?: boolean) => Promise<void>;
   readonly retry: () => Promise<void>;

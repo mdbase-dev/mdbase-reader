@@ -2,7 +2,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 
 import { intentKey, isExtensionMessage, type CaptureIntent } from "./messages.js";
 import { captureTab, readSelection, watchTabSelection, type PageCapture } from "./page-capture.js";
-import { pageStatusEnabled } from "./page-status.js";
+import { watchPageStatus } from "./page-status.js";
 
 import type { QuoteSelector } from "@mdbase-reader/core";
 
@@ -10,6 +10,8 @@ export interface PageLink {
   readonly capture: PageCapture | null;
   /** The tab left the captured page; activeTab access ended with it. */
   readonly navigated: boolean;
+  /** The panel is reading the tab's new page by itself (page access is on); nothing to ask. */
+  readonly following: boolean;
   /** Changes each time the reader invokes the extension, so the panel can focus the right field. */
   readonly invocation: { readonly intent: CaptureIntent; readonly at: number } | null;
   readonly readPage: () => Promise<PageCapture>;
@@ -25,6 +27,16 @@ export interface PageLink {
 export function usePageCapture(tabId: number, onProblem: (message: string) => void): PageLink {
   const [capture, setCapture] = useState<PageCapture | null>(null);
   const [navigated, setNavigated] = useState(false);
+  const [following, setFollowing] = useState(false);
+  // Known before any navigation, so a new page load never waits on a permission check.
+  const followEnabled = useRef(false);
+  useEffect(
+    () =>
+      watchPageStatus((enabled) => {
+        followEnabled.current = enabled;
+      }),
+    [],
+  );
   const [invocation, setInvocation] = useState<PageLink["invocation"]>(null);
   const problem = useRef(onProblem);
   useEffect(() => {
@@ -38,6 +50,7 @@ export function usePageCapture(tabId: number, onProblem: (message: string) => vo
     const value = await captureTab(tabId);
     setCapture(value);
     setNavigated(false);
+    setFollowing(false);
     if (value.kind === "html") {
       await watchTabSelection(tabId).catch(() => undefined);
     }
@@ -76,12 +89,11 @@ export function usePageCapture(tabId: number, onProblem: (message: string) => vo
       }
       if (change.status === "loading") {
         setNavigated(true);
+        setFollowing(followEnabled.current);
       }
-      if (change.status === "complete" && navigated) {
-        void pageStatusEnabled()
-          .then((allowed) => (allowed ? readPage() : undefined))
-          // A page Reader cannot read leaves the panel waiting, as without page access.
-          .catch(() => undefined);
+      if (change.status === "complete" && navigated && following) {
+        // A page Reader cannot read leaves the panel waiting, as without page access.
+        readPage().catch(() => setFollowing(false));
       }
     };
     chrome.runtime.onMessage.addListener(onMessage);
@@ -90,7 +102,7 @@ export function usePageCapture(tabId: number, onProblem: (message: string) => vo
       chrome.runtime.onMessage.removeListener(onMessage);
       chrome.tabs.onUpdated.removeListener(onUpdated);
     };
-  }, [followSelection, navigated, readPage, tabId]);
+  }, [followSelection, following, navigated, readPage, tabId]);
 
   useEffect(() => {
     // The intent that opened this panel (e.g. "Highlight with a comment" from the context menu).
@@ -106,5 +118,5 @@ export function usePageCapture(tabId: number, onProblem: (message: string) => vo
       .catch(() => undefined);
   }, [tabId]);
 
-  return { capture, navigated, invocation, readPage, setSelection };
+  return { capture, navigated, following, invocation, readPage, setSelection };
 }

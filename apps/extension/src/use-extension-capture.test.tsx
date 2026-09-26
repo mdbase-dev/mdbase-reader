@@ -407,7 +407,9 @@ it("follows the tab to a new page by itself when page access is on", async () =>
   await act(async () => {
     chromeFake.emit("updated", 1, { status: "loading" });
   });
+  // Following from the first moment: no request to reopen the extension.
   expect(controller.navigated).toBe(true);
+  expect(controller.following).toBe(true);
   await act(async () => {
     chromeFake.emit("updated", 1, { status: "complete" });
   });
@@ -415,6 +417,7 @@ it("follows the tab to a new page by itself when page access is on", async () =>
     await new Promise((resolve) => setTimeout(resolve, 0));
   });
   expect(controller.navigated).toBe(false);
+  expect(controller.following).toBe(false);
   expect(controller.capture?.canonicalUrl).toBe("https://example.com/next");
   expect(controller.draft.title).toBe("[test] Next");
   expect(controller.draft.tags).toBe("");
@@ -428,5 +431,25 @@ it("waits to be invoked again after navigating when page access is off", async (
     chromeFake.emit("updated", 1, { status: "complete" });
   });
   expect(controller.navigated).toBe(true);
+  expect(controller.following).toBe(false);
   expect(mocks.captureTab).toHaveBeenCalledTimes(1);
+});
+it("asks to be invoked again when following reaches a page it cannot read", async () => {
+  chromeFake.local.set("page-status", true);
+  (chromeFake.chrome.permissions.contains as unknown as Mock).mockResolvedValue(true);
+  await mount();
+  mocks.captureTab.mockRejectedValue(new Error("Cannot access a chrome:// URL"));
+  await act(async () => {
+    chromeFake.emit("updated", 1, { status: "loading" });
+  });
+  expect(controller.following).toBe(true);
+  await act(async () => {
+    chromeFake.emit("updated", 1, { status: "complete" });
+  });
+  await act(async () => {
+    await new Promise((resolve) => setTimeout(resolve, 0));
+  });
+  expect(controller.navigated).toBe(true);
+  expect(controller.following).toBe(false);
+  expect(controller.problem).toBeNull();
 });

@@ -27,3 +27,28 @@ export async function setPageStatusEnabled(enabled: boolean): Promise<boolean> {
   await chrome.storage.local.set({ [settingKey]: enabled });
   return enabled;
 }
+
+/** Calls `listener` with the current setting now and whenever it is turned on or off. */
+export function watchPageStatus(listener: (enabled: boolean) => void): () => void {
+  let active = true;
+  const check = (): void => {
+    pageStatusEnabled()
+      .then((enabled) => {
+        if (active) {
+          listener(enabled);
+        }
+      })
+      .catch(() => undefined);
+  };
+  const onChanged = (changes: Record<string, unknown>, area: string): void => {
+    if (area === "local" && settingKey in changes) {
+      check();
+    }
+  };
+  check();
+  chrome.storage.onChanged.addListener(onChanged);
+  return () => {
+    active = false;
+    chrome.storage.onChanged.removeListener(onChanged);
+  };
+}
