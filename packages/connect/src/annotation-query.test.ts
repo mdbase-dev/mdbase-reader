@@ -32,7 +32,7 @@ it("narrows queries, but rejects prefix/alias collisions and follows source rena
   const client = { queryPages } as unknown as ReaderConnectClient;
   const controller = new AbortController();
   const options = { signal: controller.signal };
-  expect((await annotationPathsForSource(client, sourceId("src_1"), options)).paths).toEqual([
+  expect(await annotationPathsForSource(client, sourceId("src_1"), options)).toEqual([
     "annotations/0.md",
     "annotations/1.md",
     "annotations/2.md",
@@ -43,10 +43,9 @@ it("narrows queries, but rejects prefix/alias collisions and follows source rena
   expect(queryPages).toHaveBeenLastCalledWith(expect.anything(), expect.objectContaining(options));
   sourcePath = "sources/Renamed.md";
   references = ["[[sources/Renamed|New title]]"];
-  expect(await annotationPathsForSource(client, sourceId("src_1"), {})).toEqual({
-    paths: ["annotations/0.md"],
-    sourcePath,
-  });
+  expect(await annotationPathsForSource(client, sourceId("src_1"), {})).toEqual([
+    "annotations/0.md",
+  ]);
   references = [];
-  expect((await annotationPathsForSource(client, sourceId("src_1"), {})).paths).toEqual([]);
+  expect(await annotationPathsForSource(client, sourceId("src_1"), {})).toEqual([]);
 });

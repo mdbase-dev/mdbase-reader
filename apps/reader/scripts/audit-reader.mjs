@@ -10,7 +10,6 @@ import { auditDockview } from "./audit-dockview.mjs";
 import { auditDockviewMigration } from "./audit-dockview-migration.mjs";
 import { annotationFixture } from "./audit-annotation-fixture.mjs";
 import { auditAnnotations } from "./audit-annotations.mjs";
-import { auditAnnotationFormats } from "./audit-annotation-formats.mjs";
 import { auditSharedEditing } from "./audit-shared-editing.mjs";
 import { auditSidebarLayout } from "./audit-sidebar-layout.mjs";
 import { auditEdgeGroupApi } from "./audit-edge-group-api.mjs";
@@ -21,7 +20,6 @@ import { chooseOption } from "./audit-select.mjs";
 const origin = process.env.READER_AUDIT_ORIGIN ?? "http://127.0.0.1:5193";
 const sharedEditingAudit = process.env.READER_AUDIT_SHARED_EDITING_ONLY === "1";
 const readingAudit = process.env.READER_AUDIT_READING_ONLY === "1";
-const formatsAudit = process.env.READER_AUDIT_FORMATS_ONLY === "1";
 const responsiveAudit = process.env.READER_AUDIT_RESPONSIVE_ONLY === "1";
 const sidebarComparison = responsiveAudit || process.env.READER_AUDIT_SIDEBARS_ONLY === "1";
 if (!/^http:\/\/(127\.0\.0\.1|localhost):\d+$/u.test(origin)) {
@@ -194,16 +192,6 @@ const screenshot = async (name) =>
 try {
   const started = performance.now();
   await navigate();
-  if (formatsAudit) {
-    const open = async (number) => {
-      const title = `Research ${String(number).padStart(4, "0")}`;
-      await page
-        .getByRole("textbox", { name: "Find a source by title, author or tag" })
-        .fill(title);
-      await page.getByRole("option", { name: new RegExp(title) }).dblclick();
-    };
-    completed.push(...(await auditAnnotationFormats(page, { open, screenshot })));
-  }
   if (readingAudit) {
     await page.evaluate(() => sessionStorage.setItem("reader-audit-reading", "1"));
     completed.push(...(await auditReadingWorkspace(page, { screenshot })));
@@ -235,7 +223,6 @@ try {
     }
   }
   if (
-    !formatsAudit &&
     !readingAudit &&
     !sharedEditingAudit &&
     !sidebarComparison &&
@@ -506,7 +493,7 @@ try {
     );
     completed.push(...(await auditDockviewMigration(page)));
   }
-  if (!formatsAudit && !readingAudit && !sharedEditingAudit && !sidebarComparison) {
+  if (!readingAudit && !sharedEditingAudit && !sidebarComparison) {
     completed.push(
       ...(await auditAnnotations(page, {
         screenshot,

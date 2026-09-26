@@ -1,7 +1,5 @@
 import {
   createAnnotation,
-  annotationId,
-  mutationId,
   importSourceFile,
   sourceLink,
   type Annotation,
@@ -81,11 +79,6 @@ export class CaptureWriter {
       input.known ?? (await sourceForUrl(collection, capture.canonicalUrl, [capture.submittedUrl]));
     const existing = Boolean(found);
     const source = found ?? (await this.#create(input, notices));
-    if (found) {
-      await this.journalStorage.remove(
-        `capture-import:${collection.collectionId}:${capture.canonicalUrl}`,
-      );
-    }
     onSource(source, existing);
     const annotation =
       draft.highlight && capture.kind === "html" && capture.selection
@@ -156,39 +149,19 @@ export class CaptureWriter {
       );
     }
     const comment = draft.comment;
-    const key = JSON.stringify([
-      collection.collectionId,
-      source.id,
-      selection,
-      comment,
-      draft.color,
-      draft.highlightTags,
-    ]);
-    const recoveryKey = `capture-annotation:${await this.#runtime.hasher.sha256(new TextEncoder().encode(key))}`;
-    const previous =
-      this.#annotations.get(key) ?? (await readHighlightIdentity(this.journalStorage, recoveryKey));
-    const identity = previous ?? {
+    const key = JSON.stringify([collection.collectionId, source.id, selection, comment]);
+    const identity = this.#annotations.get(key) ?? {
       id: this.#runtime.ids.annotation(),
       mutation: this.#runtime.ids.mutation(),
     };
-    if (previous) {
+    if (this.#annotations.has(key)) {
       const recovered = await collection.annotations.get(collection.collectionId, identity.id);
       if (recovered) {
-        if (
-          recovered.sourceId !== source.id ||
-          recovered.collectionId !== collection.collectionId
-        ) {
-          throw new Error(
-            "The recovered highlight belongs to a different source. Review it before retrying; no duplicate was created.",
-          );
-        }
-        await this.journalStorage.remove(recoveryKey);
         return recovered;
       }
     }
     this.#annotations.set(key, identity);
     const { document, quote } = await this.#savedTarget(collection, source, selection);
-    await this.journalStorage.set(recoveryKey, JSON.stringify(identity));
     const result = await createAnnotation(
       {
         ...this.#runtime,
@@ -224,7 +197,6 @@ export class CaptureWriter {
           .join("\n")}${comment.trim() ? `\n\n${comment}` : ""}`,
       },
     );
-    await this.journalStorage.remove(recoveryKey);
     return result.annotation;
   }
 
@@ -261,32 +233,6 @@ export class CaptureWriter {
     }
     return { document, quote };
   }
-}
-
-async function readHighlightIdentity(
-  storage: KeyValueStorage,
-  key: string,
-): Promise<{ id: AnnotationId; mutation: MutationId } | null> {
-  const saved = await storage.get(key);
-  if (saved === null) {
-    return null;
-  }
-  const value: unknown = JSON.parse(saved);
-  if (
-    !value ||
-    typeof value !== "object" ||
-    !("id" in value) ||
-    !("mutation" in value) ||
-    typeof value.id !== "string" ||
-    !value.id ||
-    typeof value.mutation !== "string" ||
-    !value.mutation
-  ) {
-    throw new Error(
-      "The saved highlight recovery identity is invalid. No duplicate highlight was created.",
-    );
-  }
-  return { id: annotationId(value.id), mutation: mutationId(value.mutation) };
 }
 
 type ImportParts = Omit<SourceFileImportRequest, "collectionId"> & { readonly title: string };

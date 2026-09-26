@@ -3,8 +3,6 @@ export * from "./annotation-assets.js";
 export * from "./collection-files.js";
 export * from "./contracts.js";
 export * from "./documents.js";
-export { readerDiagnostics, ReaderDiagnostics } from "./diagnostics.js";
-export type { ReaderTiming } from "./diagnostics.js";
 export * from "./library-views.js";
 export * from "./mapping.js";
 export * from "./portable-application-session.js";

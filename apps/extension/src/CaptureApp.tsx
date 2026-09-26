@@ -3,7 +3,6 @@ import { useEffect } from "react";
 import { readerSourceUrl } from "./capture-model.js";
 import { CaptureForm } from "./CaptureForm.js";
 import { ConnectionPanel, ConnectionProblem } from "./ConnectionPanel.js";
-import { DiagnosticsPanel } from "./DiagnosticsPanel.js";
 import { ExtensionHeader } from "./ExtensionHeader.js";
 import { openSettings } from "./shortcuts.js";
 
@@ -56,7 +55,6 @@ export function CaptureApp({ controller }: ControllerProps): React.JSX.Element {
         <button type="button" className="text-button" onClick={openSettings}>
           Settings and shortcuts
         </button>
-        <DiagnosticsPanel />
       </footer>
     </main>
   );
