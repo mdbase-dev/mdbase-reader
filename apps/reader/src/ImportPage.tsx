@@ -105,7 +105,10 @@ function ImportTiles(): JSX.Element {
           R
         </span>
         <h2>Readwise Reader</h2>
-        <p>Saved reading, highlights, notes, tags and available source files.</p>
+        <p>
+          Reader documents and files, plus highlights from Kindle, Apple Books and other Readwise
+          sources.
+        </p>
         <strong>Connect and scan your library →</strong>
       </a>
     </div>

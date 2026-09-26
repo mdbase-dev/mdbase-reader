@@ -36,6 +36,8 @@ export interface MigrationPlan {
     annotations: number;
     files: number;
     bytes: number | null;
+    /** Per-category breakdown of what will be imported, when the service distinguishes one. */
+    categories?: { label: string; sources: number; annotations: number }[];
   };
 }
 export type Progress = (message: string) => void;

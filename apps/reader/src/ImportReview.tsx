@@ -28,6 +28,27 @@ export function ImportPreview({ plan }: { plan: MigrationPlan }): JSX.Element {
           </dd>
         </div>
       </dl>
+      {plan.summary.categories?.length ? (
+        <table className="import-categories">
+          <caption>By category</caption>
+          <thead>
+            <tr>
+              <th scope="col">Category</th>
+              <th scope="col">Sources</th>
+              <th scope="col">Annotations and notes</th>
+            </tr>
+          </thead>
+          <tbody>
+            {plan.summary.categories.map((c) => (
+              <tr key={c.label}>
+                <th scope="row">{c.label}</th>
+                <td>{c.sources.toLocaleString()}</td>
+                <td>{c.annotations.toLocaleString()}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      ) : null}
       <p>
         Native metadata is also archived as JSON. Existing records matched by import identity are
         kept unchanged; ambiguous title or URL matches are never silently merged.

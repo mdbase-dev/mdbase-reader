@@ -151,6 +151,27 @@
   font-size: 24px;
   font-variant-numeric: tabular-nums;
 }
+.import-categories {
+  width: 100%;
+  margin: 16px 0;
+  border-collapse: collapse;
+  font-size: 14px;
+}
+.import-categories caption {
+  text-align: left;
+  font-size: 13px;
+  color: var(--muted);
+  padding-bottom: 6px;
+}
+.import-categories th,
+.import-categories td {
+  padding: 4px 8px 4px 0;
+  text-align: left;
+  font-weight: normal;
+}
+.import-categories td {
+  font-variant-numeric: tabular-nums;
+}
 .import-page details {
   background: var(--hover);
   border-radius: 8px;
