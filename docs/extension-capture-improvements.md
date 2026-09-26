@@ -150,6 +150,8 @@ the page-status badge were not exercised end to end.
   accepts). Connect has no tag index, so the suggestions come from tags saved from this browser, the
   page's highlights and the first 200 sources of the collection, loaded when a tag field is first
   focused.
+- **Diagnostics** appear in the panel only when enabled in Settings → Troubleshooting. Recording
+  still happens in the panel, because timings are kept in its memory.
 - **PDFs.** After saving a PDF, _Open in Reader to highlight_ is the panel's main action.
 
 ## Remaining boundaries

@@ -3,6 +3,8 @@ import { useEffect } from "react";
 import { readerSourceUrl } from "./capture-model.js";
 import { CaptureForm } from "./CaptureForm.js";
 import { ConnectionPanel, ConnectionProblem } from "./ConnectionPanel.js";
+import { useDiagnosticsShown } from "./diagnostics-setting.js";
+import { DiagnosticsPanel } from "./DiagnosticsPanel.js";
 import { ExtensionHeader } from "./ExtensionHeader.js";
 import { SavedHighlights } from "./SavedHighlights.js";
 import { openSettings } from "./shortcuts.js";
@@ -10,6 +12,7 @@ import { openSettings } from "./shortcuts.js";
 import type { ExtensionCaptureController } from "./capture-controller.js";
 
 export function CaptureApp({ controller }: ControllerProps): React.JSX.Element {
+  const [diagnostics] = useDiagnosticsShown();
   useEffect(() => {
     document.title = `mdbase Reader — ${controller.source ? "source saved" : "capture"}`;
   }, [controller.source]);
@@ -51,6 +54,7 @@ export function CaptureApp({ controller }: ControllerProps): React.JSX.Element {
         <button type="button" className="text-button" onClick={openSettings}>
           Settings and shortcuts
         </button>
+        {diagnostics ? <DiagnosticsPanel /> : null}
       </footer>
     </main>
   );

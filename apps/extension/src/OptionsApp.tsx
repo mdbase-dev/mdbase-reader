@@ -2,6 +2,7 @@ import { useEffect } from "react";
 
 import { readerLibraryUrl } from "./capture-model.js";
 import { CollectionSection } from "./CollectionSection.js";
+import { useDiagnosticsShown } from "./diagnostics-setting.js";
 import { environment } from "./environment.js";
 import { ExtensionHeader } from "./ExtensionHeader.js";
 import { PageStatusSetting } from "./PageStatusSetting.js";
@@ -32,12 +33,36 @@ export function OptionsApp(): React.JSX.Element {
           <h2 id="shortcuts-heading">Keyboard shortcuts</h2>
           <ShortcutList />
         </section>
+        <section aria-labelledby="troubleshooting-heading">
+          <h2 id="troubleshooting-heading">Troubleshooting</h2>
+          <DiagnosticsSetting />
+        </section>
         <section aria-labelledby="about-heading">
           <h2 id="about-heading">About</h2>
           <About collectionId={collectionId} />
         </section>
       </main>
     </div>
+  );
+}
+
+function DiagnosticsSetting(): React.JSX.Element {
+  const [shown, setShown] = useDiagnosticsShown();
+  return (
+    <>
+      <label className="checkbox">
+        <input
+          type="checkbox"
+          checked={shown}
+          onChange={(event) => setShown(event.target.checked)}
+        />
+        Show connection diagnostics in the side panel
+      </label>
+      <p className="hint">
+        For reporting slow or failed saves. The panel can then record connection timings and
+        download them; nothing is recorded until you start it there.
+      </p>
+    </>
   );
 }
 

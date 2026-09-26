@@ -1,3 +1,5 @@
+import { readerDiagnostics } from "./diagnostics.js";
+
 import type {
   ConnectOutcome,
   ConnectRequestOptions,
@@ -128,19 +130,33 @@ export async function recordPathById(
  * admission, retry, mutation ordering, and request budgets with the SDK.
  */
 export function connectClient(connection: MdbaseConnection): ReaderConnectClient {
+  const route = (): string => connection.route;
   return {
-    read: (input, options) => connection.read(input, connectOptions(options)),
-    query: (input, options) => connection.query(input, connectOptions(options)),
+    read: (input, options) =>
+      readerDiagnostics.measure("read", route, () =>
+        connection.read(input, connectOptions(options)),
+      ),
+    query: (input, options) =>
+      readerDiagnostics.measure("query", route, () =>
+        connection.query(input, connectOptions(options)),
+      ),
     queryPages: (input, options) =>
-      connection.queryPages(input, {
-        ...(options?.firstPageSize === undefined ? {} : { firstPageSize: options.firstPageSize }),
-        ...(options?.pageSize === undefined ? {} : { pageSize: options.pageSize }),
-        ...connectOptions(options),
-      }),
-    create: (input) => connection.create(input),
-    update: (input) => connection.update(input),
-    preflightDelete: (input) => connection.preflightDelete(input),
-    deleteWithProgress: (input, options) => connection.deleteWithProgress(input, options),
+      readerDiagnostics.pages(
+        route,
+        connection.queryPages(input, {
+          ...(options?.firstPageSize === undefined ? {} : { firstPageSize: options.firstPageSize }),
+          ...(options?.pageSize === undefined ? {} : { pageSize: options.pageSize }),
+          ...connectOptions(options),
+        }),
+      ),
+    create: (input) => readerDiagnostics.measure("create", route, () => connection.create(input)),
+    update: (input) => readerDiagnostics.measure("update", route, () => connection.update(input)),
+    preflightDelete: (input) =>
+      readerDiagnostics.measure("delete-preflight", route, () => connection.preflightDelete(input)),
+    deleteWithProgress: (input, options) =>
+      readerDiagnostics.measure("delete", route, () =>
+        connection.deleteWithProgress(input, options),
+      ),
   };
 }
 

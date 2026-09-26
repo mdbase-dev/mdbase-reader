@@ -142,6 +142,9 @@ it("names the connected collection in one line, with its controls behind Change"
   expect(html).not.toContain('role="combobox"');
   expect(html).not.toContain("Connect another collection");
 });
+it("keeps connection diagnostics out of the panel unless enabled in Settings", () => {
+  expect(markup()).not.toContain("Connection diagnostics");
+});
 it("shows one status line at a time, with problems taking precedence", () => {
   const restored = markup({ draftRestored: true, notice: "Highlight saved." });
   expect(restored).toContain("Highlight saved.");
