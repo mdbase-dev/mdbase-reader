@@ -27,7 +27,7 @@ test("Reader keeps staging and production explicit", () => {
   );
 });
 
-test("Reader production uses the existing Pages origin and staging cannot overwrite it", () => {
+test("Reader production uses the custom domain and staging cannot overwrite it", () => {
   const { deployment } = readerDeploymentFor({ MDBASE_READER_DEPLOY_TARGET: "production" });
   assert.equal(deployment.origin, "https://reader.mdbase.dev");
   assert.equal(deployment.connectUrl, "https://connect.mdbase.dev");
