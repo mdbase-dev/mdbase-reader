@@ -11,11 +11,14 @@ const tabs: readonly {
   readonly Icon: typeof NoteIcon;
 }[] = [
   { id: "highlights", label: "Highlights", Icon: HighlightIcon },
-  { id: "note", label: "Literature note", Icon: NoteIcon },
+  { id: "note", label: "Note", Icon: NoteIcon },
   { id: "citation", label: "Citation", Icon: CitationIcon },
 ];
 
-/** The same three views of a source as Reader's inspector, named and drawn the same way. */
+/**
+ * The same three views of a source as Reader's inspector, drawn the same way. "Note" is
+ * Reader's "Literature note", shortened so all three names fit a side panel.
+ */
 export function PanelTabs({
   tab,
   highlightCount,

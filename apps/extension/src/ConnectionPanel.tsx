@@ -1,5 +1,4 @@
 import { Select } from "@mdbase-reader/ui";
-import { useState } from "react";
 
 import { connectionUnavailableMessage } from "./connection-status.js";
 import { DirectAccessPanel } from "./DirectAccessPanel.js";
@@ -30,27 +29,33 @@ function showAuthorization(connected: boolean, status: string): boolean {
 
 export function ConnectionPanel({
   compact = false,
+  expanded = false,
+  onDone,
   ...props
 }: ConnectionPanelProps & {
-  /** Once connected, show one line naming the collection, with the controls behind Change. */
+  /**
+   * Once connected, show nothing: the header names the collection, and its Change button
+   * sets `expanded` to show these controls until `onDone`.
+   */
   readonly compact?: boolean;
-}): React.JSX.Element {
-  const [expanded, setExpanded] = useState(false);
+  readonly expanded?: boolean;
+  readonly onDone?: () => void;
+}): React.JSX.Element | null {
   const { snapshot, deviceCode } = props.controller;
   const collapsible = compact && snapshot.status === "ready" && !deviceCode;
   if (collapsible && !expanded) {
-    return <CollectionLine snapshot={snapshot} onChange={() => setExpanded(true)} />;
+    return null;
   }
   return (
     <ConnectionControlsPanel
       {...props}
       done={
-        collapsible ? (
+        collapsible && onDone ? (
           <button
             type="button"
             className="text-button collapse-button"
             aria-expanded="true"
-            onClick={() => setExpanded(false)}
+            onClick={onDone}
           >
             Done
           </button>
@@ -66,26 +71,15 @@ interface ConnectionPanelProps {
   readonly intro?: string;
 }
 
-function CollectionLine({
-  snapshot,
-  onChange,
-}: {
-  readonly snapshot: ConnectionControls["snapshot"];
-  readonly onChange: () => void;
-}): React.JSX.Element {
-  const selected = "collectionId" in snapshot ? snapshot.collectionId : "";
-  const name =
-    snapshot.connections.find((connection) => connection.collectionId === selected)?.displayName ??
-    "your collection";
+/** The selected collection's name, once one is connected and chosen. */
+export function collectionName(controller: ConnectionControls): string | null {
+  const { snapshot, deviceCode } = controller;
+  if (snapshot.status !== "ready" || deviceCode) {
+    return null;
+  }
   return (
-    <section className="collection-line" aria-label="Collection">
-      <span>
-        Saving to <strong>{name}</strong>
-      </span>
-      <button type="button" className="text-button" aria-expanded="false" onClick={onChange}>
-        Change
-      </button>
-    </section>
+    snapshot.connections.find((connection) => connection.collectionId === snapshot.collectionId)
+      ?.displayName ?? "your collection"
   );
 }
 

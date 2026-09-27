@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import { highlightColors, type CaptureDraft } from "./save-capture.js";
 import { TagInput } from "./TagInput.js";
@@ -6,8 +6,8 @@ import { TagInput } from "./TagInput.js";
 import type { ExtensionCaptureController } from "./capture-controller.js";
 
 /**
- * The selected passage and how to save it; follows the page selection live. Choosing a
- * colour saves at once, with any comment and tags typed first.
+ * The selected passage and how to save it; follows the page selection live. Top to bottom
+ * in the order they are used: an optional comment and tags, then a colour, which saves.
  */
 export function HighlightFields({
   controller: c,
@@ -16,16 +16,17 @@ export function HighlightFields({
   readonly controller: ExtensionCaptureController;
   /** Whether a save may start now (connected, titled, not busy). */
   readonly ready: boolean;
-}): React.JSX.Element {
+}): React.JSX.Element | null {
   const comment = useRef<HTMLTextAreaElement>(null);
+  const [openDetails, setOpenDetails] = useState(false);
   const selection = c.capture?.kind === "html" ? c.capture.selection : null;
   const intent = c.invocation;
   const { save, clearSelection } = c;
   useEffect(() => {
-    if (intent?.intent === "note") {
+    if (intent?.intent === "note" || openDetails) {
       comment.current?.focus();
     }
-  }, [intent]);
+  }, [intent, openDetails]);
   useEffect(() => {
     if (!selection) {
       return;
@@ -53,27 +54,45 @@ export function HighlightFields({
     document.addEventListener("keydown", onKeyDown);
     return () => document.removeEventListener("keydown", onKeyDown);
   }, [clearSelection, ready, save, selection]);
-  if (c.capture?.kind === "pdf") {
-    return (
-      <p className="hint">
-        Chrome’s PDF viewer does not share selections, so PDFs are highlighted in Reader. Save the
-        PDF, then open it there.
-      </p>
-    );
-  }
   if (!selection) {
-    return (
-      <p className="hint">
-        Select text on the page to highlight it. Each new selection appears here; this panel stays
-        open while you read.
-      </p>
-    );
+    return null;
   }
   const update = (changes: Partial<CaptureDraft>): void =>
     c.setDraft((draft) => ({ ...draft, ...changes }));
+  // Most highlights need neither; the fields stay open once they hold anything.
+  const detailsOpen =
+    openDetails || intent?.intent === "note" || Boolean(c.draft.comment || c.draft.highlightTags);
   return (
     <section aria-label="Selected passage" className="highlight-fields">
       <blockquote>{selection.exact}</blockquote>
+      {detailsOpen ? (
+        <>
+          <label htmlFor="comment">
+            Comment <span>(optional)</span>
+          </label>
+          <textarea
+            id="comment"
+            ref={comment}
+            value={c.draft.comment}
+            rows={2}
+            onChange={(event) => update({ comment: event.target.value })}
+          />
+          <label htmlFor="highlight-tags">
+            Tags <span>(comma-separated, optional)</span>
+          </label>
+          <TagInput
+            id="highlight-tags"
+            value={c.draft.highlightTags}
+            known={c.knownTags}
+            onFocus={c.loadTags}
+            onChange={(highlightTags) => update({ highlightTags })}
+          />
+        </>
+      ) : (
+        <button type="button" className="text-button" onClick={() => setOpenDetails(true)}>
+          Add a comment or tags
+        </button>
+      )}
       <div className="passage-actions">
         <span className="field-label" id="highlight-colors">
           {c.source ? "Save highlight" : "Save page and highlight"}
@@ -82,6 +101,7 @@ export function HighlightFields({
           type="button"
           className="text-button"
           aria-keyshortcuts="Escape"
+          title="Clear the selection (Esc)"
           onClick={c.clearSelection}
         >
           Clear
@@ -100,30 +120,9 @@ export function HighlightFields({
             onClick={() => void c.save({ highlight: true, color })}
           >
             {color}
-            <kbd>{index + 1}</kbd>
           </button>
         ))}
       </div>
-      <label htmlFor="comment">
-        Comment <span>(optional, before choosing a colour)</span>
-      </label>
-      <textarea
-        id="comment"
-        ref={comment}
-        value={c.draft.comment}
-        rows={2}
-        onChange={(event) => update({ comment: event.target.value })}
-      />
-      <label htmlFor="highlight-tags">
-        Highlight tags <span>(comma-separated, optional)</span>
-      </label>
-      <TagInput
-        id="highlight-tags"
-        value={c.draft.highlightTags}
-        known={c.knownTags}
-        onFocus={c.loadTags}
-        onChange={(highlightTags) => update({ highlightTags })}
-      />
     </section>
   );
 }
