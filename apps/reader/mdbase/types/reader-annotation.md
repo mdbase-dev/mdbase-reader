@@ -37,9 +37,6 @@ schema:
       created_at: { type: string, format: date-time }
       modified_at: { type: string, format: date-time }
       created_by: { type: string }
-match:
-  path_glob: annotations/**/*.md
-  fields_present: [id, source, annotation_type]
 collection:
   unique:
     - field: id
