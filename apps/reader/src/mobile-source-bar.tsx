@@ -43,9 +43,6 @@ export function mobileSourceBar(
             decorationProblem={model.decorationProblem}
             canSelectArea={composer.canSelectArea}
             selectingArea={composer.selectingArea}
-            canSelectText={composer.canSelectText}
-            selectingText={composer.selectingText}
-            onToggleTextSelection={composer.toggleTextSelection}
             onToggleAreaSelection={composer.toggleAreaSelection}
             canBookmark={composer.canBookmark}
             bookmarking={composer.bookmarking}

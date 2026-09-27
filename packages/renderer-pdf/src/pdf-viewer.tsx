@@ -1,5 +1,7 @@
+import { SelectionPlugin } from "@embedpdf/plugin-selection";
 import {
   DocumentManagerPlugin,
+  InteractionManagerPlugin,
   PDFViewer,
   type EmbedPdfContainer,
   type PluginRegistry,
@@ -9,6 +11,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { suppressNativeCapturePreview } from "./embedpdf-native-capture-preview.js";
 import { installReaderPdfChrome } from "./embedpdf-reader-chrome.js";
 import { createEmbedPdfRuntime } from "./embedpdf-runtime.js";
+import { installLongPressSelection } from "./pdf-long-press-selection.js";
 import { EmbedPdfSurface } from "./pdf-surface.js";
 import { createReaderPdfViewerConfig, pdfPansByDefault } from "./pdf-viewer-policy.js";
 
@@ -38,6 +41,7 @@ export function PdfViewerSurface({
   const surfaceRef = useRef<EmbedPdfSurface | null>(null);
   const subscriptionsRef = useRef<(() => void)[]>([]);
   const nativeUiCleanupRef = useRef<(() => void) | null>(null);
+  const containerRef = useRef<EmbedPdfContainer | null>(null);
   const clearRuntime = useCallback(() => {
     for (const unsubscribe of subscriptionsRef.current) {
       unsubscribe();
@@ -55,10 +59,7 @@ export function PdfViewerSurface({
     (registry: PluginRegistry) => {
       clearRuntime();
       try {
-        const surface = new EmbedPdfSurface(
-          document,
-          createEmbedPdfRuntime(registry, { pansByDefault }),
-        );
+        const surface = new EmbedPdfSurface(document, createEmbedPdfRuntime(registry));
         surfaceRef.current = surface;
         onSurfaceReady(surface);
 
@@ -70,6 +71,7 @@ export function PdfViewerSurface({
         subscriptionsRef.current = [
           documents.onDocumentOpened(() => onDocumentReady?.()),
           documents.onDocumentError(({ message }) => onDocumentError?.(message)),
+          ...(pansByDefault ? [longPressSelection(registry, containerRef.current)] : []),
         ];
         const current = documents.getOpenDocuments()[0];
         if (current?.status === "loaded") {
@@ -87,6 +89,7 @@ export function PdfViewerSurface({
   useEffect(() => () => clearViewer(), [clearViewer]);
 
   const handleInit = useCallback((container: EmbedPdfContainer): void => {
+    containerRef.current = container;
     nativeUiCleanupRef.current?.();
     const cleanups = [suppressNativeCapturePreview(container), installReaderPdfChrome(container)];
     nativeUiCleanupRef.current = () => {
@@ -105,4 +108,25 @@ export function PdfViewerSurface({
       style={{ height: "100%", width: "100%" }}
     />
   );
+}
+
+/** Where a finger pans the PDF, holding it on the text selects instead; see the gesture. */
+function longPressSelection(
+  registry: PluginRegistry,
+  container: EmbedPdfContainer | null,
+): () => void {
+  const interaction = registry.getPlugin<InteractionManagerPlugin>(InteractionManagerPlugin.id);
+  const selection = registry.getPlugin<SelectionPlugin>(SelectionPlugin.id);
+  if (!container || !interaction || !selection) {
+    return () => undefined;
+  }
+  const modes = interaction.provides();
+  return installLongPressSelection({
+    host: container,
+    modes: {
+      select: () => modes.activate("pointerMode"),
+      pan: () => modes.activateDefaultMode(),
+    },
+    selection: selection.provides(),
+  });
 }

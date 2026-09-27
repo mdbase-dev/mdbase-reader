@@ -116,13 +116,6 @@ export const AreaIcon = (props: IconProps): JSX.Element => (
     <rect x="8" y="8" width="8" height="8" rx="0.5" strokeDasharray="2 2" />
   </Icon>
 );
-/** Selecting text: a text cursor beside a line of text. */
-export const TextSelectIcon = (props: IconProps): JSX.Element => (
-  <Icon {...props}>
-    <path d="M7 5h2M7 19h2M8 5v14" />
-    <path d="M12 9h8M12 13h8M12 17h5" />
-  </Icon>
-);
 export const OpenExternalIcon = (props: IconProps): JSX.Element => (
   <Icon {...props}>
     <path d="M10 5.5H5.5v13h13V14M13.5 5.5h5v5M18.5 5.5 11 13" />
