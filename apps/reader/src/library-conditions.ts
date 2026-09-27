@@ -162,12 +162,15 @@ export function conditionToCel(
   const number = Number(wanted);
   const numeric = wanted !== "" && Number.isFinite(number);
   const test = (predicate: (value: string) => string): string =>
-    shape === "list" ? `${field}.exists(entry, ${predicate("entry")})` : predicate(field);
-  // mdbase's CEL has no case folding or string conversion, so text is compared with
-  // case-insensitive RE2 patterns, and numbers as numbers or numeric text.
-  const escaped = escapeRegex(wanted);
+    shape === "list"
+      ? `(${field} != null && ${field}.exists(entry, ${predicate("entry")}))`
+      : predicate(field);
+  // Text is compared case-insensitively by lowering both sides with the CEL
+  // profile's lower(), and numbers as numbers or numeric text.
+  const escaped = escapeRegex(wanted.toLowerCase());
+  // A missing or non-text value never matches text, rather than raising an error.
   const matches = (value: string, pattern: string): string =>
-    `${value}.matches(${JSON.stringify(`(?i)${pattern}`)})`;
+    `(type(${value}) == string && ${value}.lower().matches(${JSON.stringify(pattern)}))`;
   const equals = (value: string): string =>
     numeric
       ? `(${value} == ${String(number)} || ${value} == ${JSON.stringify(wanted)})`
@@ -177,7 +180,10 @@ export function conditionToCel(
           `^(${escaped}|\\[\\[[^\\]|]*\\|${escaped}\\]\\]|\\[\\[([^\\]|]*/)?${escaped}\\]\\])$`,
         );
   const compare = (operator: string): string =>
-    test((value) => `${value} ${operator} ${numeric ? String(number) : JSON.stringify(wanted)}`);
+    test(
+      (value) =>
+        `(${value} != null && ${value} ${operator} ${numeric ? String(number) : JSON.stringify(wanted)})`,
+    );
   switch (condition.operator) {
     case "empty":
       return shape === "list"
@@ -204,16 +210,26 @@ export function conditionToCel(
   }
 }
 
-/** A dotted frontmatter path in CEL; segments that are not identifiers use index syntax. */
+/**
+ * A dotted frontmatter path in CEL; segments that are not identifiers use index syntax.
+ * Nested segments use optional selection, so a missing value is null rather than an
+ * evaluation error that would drop the record from the results.
+ */
 function celPath(key: string, base?: string): string {
   const identifier = /^[A-Za-z_][A-Za-z0-9_]*$/u;
-  return key.split(".").reduce((path, segment, index) => {
-    const parent = index === 0 ? base : path;
-    if (identifier.test(segment)) {
-      return parent === undefined ? segment : `${parent}.${segment}`;
-    }
-    return `${parent ?? "record"}[${JSON.stringify(segment)}]`;
-  }, "");
+  const [first = "", ...rest] = key.split(".");
+  // A missing top-level candidate field is already null.
+  if (base === undefined && rest.length === 0 && identifier.test(first)) {
+    return first;
+  }
+  let path = base ?? (identifier.test(first) ? first : "record");
+  const selected = base === undefined && identifier.test(first) ? rest : [first, ...rest];
+  for (const segment of selected) {
+    path = identifier.test(segment)
+      ? `${path}.?${segment}`
+      : `${path}[?${JSON.stringify(segment)}]`;
+  }
+  return `${path}.orValue(null)`;
 }
 
 function escapeRegex(value: string): string {

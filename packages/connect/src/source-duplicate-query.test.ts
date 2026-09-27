@@ -24,7 +24,7 @@ it("uses all representation digests, forwards cancellation and rejects nonmatchi
     {
       types: ["reader-source"],
       frontmatterMode: "effective",
-      where: `documents != null && documents.filter(value.revision == ${JSON.stringify(digest)} || value.revision == ${JSON.stringify(other)}).length > 0`,
+      where: `documents != null && documents.exists(document, document.revision == ${JSON.stringify(digest)} || document.revision == ${JSON.stringify(other)})`,
     },
     { firstPageSize: 50, pageSize: 50, signal },
   );

@@ -29,7 +29,7 @@ describe("ConnectSourceImportRepository", () => {
     expect(queryPages).toHaveBeenCalledWith(
       {
         types: ["reader-source"],
-        where: `documents != null && documents.filter(value.revision == ${JSON.stringify(digest)}).length > 0`,
+        where: `documents != null && documents.exists(document, document.revision == ${JSON.stringify(digest)})`,
         frontmatterMode: "effective",
       },
       { firstPageSize: 50, pageSize: 50 },

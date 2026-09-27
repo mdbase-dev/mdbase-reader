@@ -35,8 +35,8 @@ describe("saved annotation views", () => {
     expect(view["query"]).toEqual({
       types: ["reader-annotation"],
       projections: {
-        source_title: { expr: "source.asFile().title" },
-        source_authors: { expr: "source.asFile().authors" },
+        source_title: { expr: "source.asFile().?title.orValue(null)" },
+        source_authors: { expr: "source.asFile().?authors.orValue(null)" },
       },
     });
     const [named] = view["views"] as Record<string, unknown>[];
@@ -57,18 +57,19 @@ describe("saved annotation views", () => {
   it("filters on the annotation's own fields and on its source through the link", () => {
     expect(annotationViewWhere(configuration.filter)).toBe(
       'annotation_type == "highlight" && source.asFile() != null && ' +
-        "source.asFile().course.matches(" +
-        JSON.stringify(
-          "(?i)^(Ethics|\\[\\[[^\\]|]*\\|Ethics\\]\\]|\\[\\[([^\\]|]*/)?Ethics\\]\\])$",
-        ) +
-        ")",
+        "(type(source.asFile().?course.orValue(null)) == string && " +
+        "source.asFile().?course.orValue(null).lower().matches(" +
+        JSON.stringify("^(ethics|\\[\\[[^\\]|]*\\|ethics\\]\\]|\\[\\[([^\\]|]*/)?ethics\\]\\])$") +
+        "))",
     );
     expect(
       annotationViewWhere({ ...configuration.filter, type: "all", sourceConditions: [] }),
     ).toBe(null);
     expect(
       annotationViewWhere({ ...defaultAnnotationViewConfiguration.filter, tag: "draft" }),
-    ).toMatch(/^tags\.exists\(entry, entry\.matches\(/u);
+    ).toMatch(
+      /^\(tags != null && tags\.exists\(entry, \(type\(entry\) == string && entry\.lower\(\)\.matches\(/u,
+    );
   });
 
   it("falls back to defaults for missing or invalid options", () => {
@@ -94,7 +95,7 @@ describe("saved annotation views", () => {
     expect(named?.["context"]).toEqual({
       this: { on_missing: "error", types: ["reader-source"] },
     });
-    expect(named?.["where"]).toBe("source.asFile().file.path == this.file.path");
+    expect(named?.["where"]).toBe("source.asFile().?file.?path.orValue(null) == this.file.path");
     expect(readerViewKind(named?.["presentation"] as Record<string, unknown>)).toBe(
       "source-annotations",
     );
