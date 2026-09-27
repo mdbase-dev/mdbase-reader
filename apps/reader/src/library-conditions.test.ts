@@ -73,21 +73,26 @@ describe("field conditions", () => {
 
   it("writes CEL for scalar and list fields, text, numbers and hyphenated keys", () => {
     expect(conditionToCel({ key: "priority", operator: "at-least", value: "3" }, "scalar")).toBe(
-      "priority >= 3",
+      "(priority != null && priority >= 3)",
     );
     expect(conditionToCel({ key: "issue", operator: "is", value: "2" }, "scalar")).toBe(
       '(issue == 2 || issue == "2")',
     );
-    const tag = conditionToCel({ key: "tags", operator: "is", value: "a.b" }, "list") ?? "";
-    expect(tag).toMatch(/^tags\.exists\(entry, entry\.matches\("\(\?i\)\^\(a\\\\\.b\|/u);
+    const tag = conditionToCel({ key: "tags", operator: "is", value: "A.b" }, "list") ?? "";
+    expect(tag).toMatch(
+      /^\(tags != null && tags\.exists\(entry, \(type\(entry\) == string && entry\.lower\(\)\.matches\("\^\(a\\\\\.b\|/u,
+    );
     expect(
-      conditionToCel({ key: "csl.container-title", operator: "contains", value: "x" }, "scalar"),
-    ).toBe('csl["container-title"].matches("(?i)x")');
+      conditionToCel({ key: "csl.container-title", operator: "contains", value: "X" }, "scalar"),
+    ).toBe(
+      '(type(csl[?"container-title"].orValue(null)) == string && ' +
+        'csl[?"container-title"].orValue(null).lower().matches("x"))',
+    );
     expect(conditionToCel({ key: "my-field", operator: "empty", value: "" }, "scalar")).toBe(
-      '(record["my-field"] == null || record["my-field"] == "")',
+      '(record[?"my-field"].orValue(null) == null || record[?"my-field"].orValue(null) == "")',
     );
     expect(conditionToCel({ key: "course", operator: "is-not", value: "x" }, "scalar")).toMatch(
-      /^\(course == null \|\| !course\.matches\(/u,
+      /^\(course == null \|\| !\(type\(course\) == string && course\.lower\(\)\.matches\(/u,
     );
     expect(conditionToCel({ key: "tags", operator: "empty", value: "" }, "list")).toBe(
       "(tags == null || tags.size() == 0)",
@@ -99,9 +104,13 @@ describe("field conditions", () => {
     const base = "source.asFile()";
     expect(
       conditionToCel({ key: "reading.progress", operator: "at-least", value: "1" }, "scalar", base),
-    ).toBe("source.asFile().reading.progress >= 1");
+    ).toBe(
+      "(source.asFile().?reading.?progress.orValue(null) != null && " +
+        "source.asFile().?reading.?progress.orValue(null) >= 1)",
+    );
     expect(conditionToCel({ key: "my-field", operator: "empty", value: "" }, "scalar", base)).toBe(
-      '(source.asFile()["my-field"] == null || source.asFile()["my-field"] == "")',
+      '(source.asFile()[?"my-field"].orValue(null) == null || ' +
+        'source.asFile()[?"my-field"].orValue(null) == "")',
     );
   });
 

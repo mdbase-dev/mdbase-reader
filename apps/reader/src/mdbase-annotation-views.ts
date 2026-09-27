@@ -44,9 +44,11 @@ export type ReaderViewKind = "sources" | "annotations" | "source-annotations";
 
 // Annotations reach their source's fields through the `source` link (mdbase links profile).
 const sourceRecord = "source.asFile()";
+// Optional selection keeps a broken link or a missing field null instead of an
+// evaluation error.
 const projections = {
-  source_title: `${sourceRecord}.title`,
-  source_authors: `${sourceRecord}.authors`,
+  source_title: `${sourceRecord}.?title.orValue(null)`,
+  source_authors: `${sourceRecord}.?authors.orValue(null)`,
 } as const;
 
 /** The kind of a Reader-owned view, or null for views other apps own. */
@@ -192,7 +194,7 @@ export function buildSourceAnnotationsViewDocument(): Promise<string> {
         id: "for-source",
         name: sourceAnnotationsViewName,
         context: { this: { on_missing: "error", types: ["reader-source"] } },
-        where: `${sourceRecord}.file.path == this.file.path`,
+        where: `${sourceRecord}.?file.?path.orValue(null) == this.file.path`,
         select: ["target.quote.exact", "annotation_type", "tags", "locator.label", "created_at"],
         order_by: [{ field: "created_at", direction: "asc" }],
         presentation: {

@@ -40,12 +40,12 @@ export class ConnectSourceImportRepository implements SourceImportRepository {
       return null;
     }
     const matches = [...expected]
-      .map((digest) => `value.revision == ${JSON.stringify(digest)}`)
+      .map((digest) => `document.revision == ${JSON.stringify(digest)}`)
       .join(" || ");
     for await (const outcome of this.records.queryPages(
       {
         types: ["reader-source"],
-        where: `documents != null && documents.filter(${matches}).length > 0`,
+        where: `documents != null && documents.exists(document, ${matches})`,
         frontmatterMode: "effective",
       },
       { ...options, firstPageSize: 50, pageSize: 50 },

@@ -22,7 +22,8 @@ export class ConnectContentSearchRepository implements ContentSearchRepository {
     query: string,
     options: ReaderRequestOptions = {},
   ): Promise<readonly SourceTextSearchMatch[]> {
-    const normalized = query.trim().toLocaleLowerCase();
+    // Match the locale-independent lower() the query applies to record text.
+    const normalized = query.trim().toLowerCase();
     if (!normalized) {
       return [];
     }
