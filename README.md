@@ -42,7 +42,7 @@ explicit release-rehearsal target and production remains on its protected deploy
 
 ## Production deployment
 
-The existing production site is <https://mdbase-reader.pages.dev>, connected to
+The production site is <https://reader.mdbase.dev>, connected to
 <https://connect.mdbase.dev>. Deploy staging, then production, with the
 **Deploy Reader** workflow from `main`:
 
