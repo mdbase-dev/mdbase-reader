@@ -14,7 +14,7 @@ const manifest = {
   requirements: {
     access: "full_collection",
     contracts: [],
-    capabilities: { contract_version: 1, required: ["collection.inspect"] },
+    capabilities: { contract_version: 2, required: ["collection.read"] },
   },
 } satisfies MdbaseAppManifest;
 

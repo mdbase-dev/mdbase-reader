@@ -152,7 +152,7 @@ action, and one stylesheet section for each redesigned component.
   row) edits it in place. Enter or leaving the cell saves, Escape cancels, and an empty value
   removes the field. With several sources selected, _Set field…_ sets one field on all of them.
   Edits keep the field's kind: lists split on commas, numbers and booleans stay so, and links
-  are edited as written. Writes use the existing `records.update` capability: the source
+  are edited as written. Writes use the existing `records.edit` capability: the source
   repository's `updateFields` reads the record, merges dotted paths into its objects, and
   patches with its revision. `id`, `type`, `documents` and the whole `csl` and `reading`
   objects are not editable (`isEditableSourceField`); nested values inside them are.
