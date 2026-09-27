@@ -4,3 +4,5 @@ export * from "./typography.js";
 export * from "./keyboard.js";
 export * from "./text-quote.js";
 export * from "./margin-markers.js";
+export * from "./selection-settling.js";
+export * from "./reading-motion.js";

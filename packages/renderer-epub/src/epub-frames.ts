@@ -2,6 +2,8 @@ import {
   MarginMarkers,
   forwardApplicationShortcut,
   locateTextQuote,
+  selectionRangeKey,
+  watchSettledSelection,
 } from "@mdbase-reader/reading-surface";
 
 import type { Annotation, AnnotationId } from "@mdbase-reader/core";
@@ -20,12 +22,24 @@ export class EpubFrameEnhancements {
   readonly #observer: MutationObserver;
   readonly #listeners = new Set<(id: AnnotationId) => void>();
   readonly #clearedListeners = new Set<() => void>();
+  readonly #onSettledSelection: (document: Document, via: "keyboard" | "touch") => void;
   #hasSelection = false;
+  /** The range Readium last reported on release, so it is not reported again as it settles. */
+  #reportedRange: string | null = null;
+  #keyboard = false;
   #annotations: readonly Annotation[] = [];
   #activeId: AnnotationId | null = null;
 
-  public constructor(container: HTMLElement) {
+  /**
+   * `onSettledSelection` hears of selections made without a pointer release, from the keyboard
+   * or on phones, which Readium only reports on release.
+   */
+  public constructor(
+    container: HTMLElement,
+    onSettledSelection: (document: Document, via: "keyboard" | "touch") => void = () => undefined,
+  ) {
     this.#container = container;
+    this.#onSettledSelection = onSettledSelection;
     this.#observer = new MutationObserver(this.#attach);
     this.#observer.observe(container, { childList: true, subtree: true });
     // Frames load their content after insertion; `load` does not bubble, so capture it.
@@ -98,9 +112,14 @@ export class EpubFrameEnhancements {
     const onKeyDown = (event: KeyboardEvent): void => forwardApplicationShortcut(event, host);
     const onPointerUp = (): void => this.#noteSelection(document, true);
     const onKeyUp = (): void => this.#noteSelection(document, false);
+    const onPointerDown = (): void => {
+      this.#keyboard = false;
+    };
     document.addEventListener("keydown", onKeyDown);
     document.addEventListener("pointerup", onPointerUp);
     document.addEventListener("keyup", onKeyUp);
+    document.addEventListener("pointerdown", onPointerDown);
+    const stopSettling = watchSettledSelection(document, () => this.#settleSelection(document));
     const markers = new MarginMarkers(document, (id) =>
       this.#listeners.forEach((listener) => listener(id)),
     );
@@ -112,20 +131,41 @@ export class EpubFrameEnhancements {
       markers,
       stop: () => {
         reflow.disconnect();
+        stopSettling();
         document.removeEventListener("keydown", onKeyDown);
         document.removeEventListener("pointerup", onPointerUp);
         document.removeEventListener("keyup", onKeyUp);
+        document.removeEventListener("pointerdown", onPointerDown);
       },
     };
   }
 
   #noteSelection(document: Document, pointer: boolean): void {
-    const selection = document.defaultView?.getSelection();
+    const selection = document.defaultView?.getSelection() ?? null;
+    this.#keyboard = !pointer;
+    if (pointer) {
+      this.#reportedRange = selectionRangeKey(selection);
+    }
     if (selection && !selection.isCollapsed) {
       this.#hasSelection = true;
     } else if (this.#hasSelection || pointer) {
       this.#hasSelection = false;
       this.#clearedListeners.forEach((listener) => listener());
+    }
+  }
+
+  #settleSelection(document: Document): void {
+    const key = selectionRangeKey(document.defaultView?.getSelection() ?? null);
+    if (key === null) {
+      this.#reportedRange = null;
+      if (this.#hasSelection) {
+        this.#hasSelection = false;
+        this.#clearedListeners.forEach((listener) => listener());
+      }
+    } else if (key !== this.#reportedRange) {
+      this.#reportedRange = key;
+      this.#hasSelection = true;
+      this.#onSettledSelection(document, this.#keyboard ? "keyboard" : "touch");
     }
   }
 

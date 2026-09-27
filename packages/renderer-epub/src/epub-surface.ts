@@ -3,6 +3,7 @@ import { createEventEmitter } from "@mdbase-reader/reading-surface";
 import type { ReadiumRuntime } from "./readium-runtime.js";
 import type { AnnotationId } from "@mdbase-reader/core";
 import type {
+  ReadingMotion,
   ReadingSurface,
   ReaderLocator,
   SurfaceDocument,
@@ -19,6 +20,8 @@ export class ReadiumEpubSurface implements ReadingSurface {
     createEventEmitter<Parameters<Parameters<ReadiumRuntime["onTextSelected"]>[0]>[0]>();
   readonly #annotationActivations = createEventEmitter<AnnotationId>();
   readonly #cleared = createEventEmitter<null>();
+  readonly #motions = createEventEmitter<ReadingMotion>();
+  readonly #unsubscribeMotion: () => void;
   readonly #unsubscribeCleared: () => void;
   readonly #unsubscribeLocation: () => void;
   readonly #unsubscribeSelection: () => void;
@@ -39,6 +42,8 @@ export class ReadiumEpubSurface implements ReadingSurface {
     );
     this.#unsubscribeCleared =
       runtime.onSelectionCleared?.(() => this.#cleared.emit(null)) ?? (() => undefined);
+    this.#unsubscribeMotion =
+      runtime.onMotion?.((motion) => this.#motions.emit(motion)) ?? (() => undefined);
     this.#unsubscribeAnnotationActivation = runtime.onAnnotationActivated((annotationId) =>
       this.#annotationActivations.emit(annotationId),
     );
@@ -48,6 +53,7 @@ export class ReadiumEpubSurface implements ReadingSurface {
         cleared: this.#cleared,
         clearSelection: () => runtime.clearSelection(),
       },
+      ...(runtime.onMotion ? { motion: { motions: this.#motions } } : {}),
       textExtraction: {
         extractText: (options) => runtime.extractText(options),
       },
@@ -102,9 +108,11 @@ export class ReadiumEpubSurface implements ReadingSurface {
       this.#unsubscribeLocation();
       this.#unsubscribeSelection();
       this.#unsubscribeCleared();
+      this.#unsubscribeMotion();
       this.#unsubscribeAnnotationActivation();
       this.#selections.clear();
       this.#cleared.clear();
+      this.#motions.clear();
       this.#annotationActivations.clear();
       this.locations.clear();
       await this.#runtime.destroy();

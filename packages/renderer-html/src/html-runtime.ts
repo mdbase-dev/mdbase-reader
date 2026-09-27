@@ -1,4 +1,10 @@
-import { MarginMarkers, forwardApplicationShortcut } from "@mdbase-reader/reading-surface";
+import {
+  MarginMarkers,
+  forwardApplicationShortcut,
+  scrollMotionTracker,
+  selectionRangeKey,
+  watchSettledSelection,
+} from "@mdbase-reader/reading-surface";
 
 import { clearCssHighlights, setCssHighlight, setCssHighlights } from "./html-css-highlights.js";
 import { htmlLocator, htmlSelectionDraft, locateHtmlTarget } from "./html-range.js";
@@ -9,6 +15,7 @@ import type { Annotation, AnnotationId } from "@mdbase-reader/core";
 import type {
   ContentsEntry,
   ReaderLocator,
+  ReadingMotion,
   ReadingTypography,
   TextSelectionDraft,
   ViewportRect,
@@ -25,20 +32,31 @@ export class HtmlDocumentRuntime {
   readonly #selectionListeners = new Set<(selection: TextSelectionDraft) => void>();
   readonly #activationListeners = new Set<(annotationId: AnnotationId) => void>();
   readonly #clearedListeners = new Set<() => void>();
+  readonly #motionListeners = new Set<(motion: ReadingMotion) => void>();
+  readonly #motion = scrollMotionTracker((motion) =>
+    this.#motionListeners.forEach((listener) => listener(motion)),
+  );
   #hasSelection = false;
+  /** The range last reported, so a touch selection that settles after a release is not new. */
+  #reportedRange: string | null = null;
   #activationRect: ViewportRect | null = null;
   readonly #onSelection = (): void => this.captureSelection("keyboard");
   readonly #onPointerUp = (event: PointerEvent): void => {
     this.captureSelection("pointer");
     this.captureAnnotationActivation(event);
   };
-  readonly #onScroll = (): void => this.emitLocation();
+  readonly #onScroll = (): void => {
+    this.emitLocation();
+    this.#motion.track(scrollingRoot(this.#document).scrollTop);
+  };
+  readonly #onResize = (): void => this.#motion.resized();
   readonly #onKeyDown = (event: KeyboardEvent): void =>
     forwardApplicationShortcut(event, this.#frame.ownerDocument);
   readonly #markers: MarginMarkers;
   // Images and fonts reflow the page after load; markers follow the text.
   readonly #reflow =
     typeof ResizeObserver === "undefined" ? null : new ResizeObserver(() => this.#markers.layout());
+  readonly #stopSettledSelection: Unsubscribe;
   #destroyed = false;
   #annotationRanges: readonly { readonly annotation: Annotation; readonly range: Range }[] = [];
 
@@ -56,6 +74,10 @@ export class HtmlDocumentRuntime {
     document.addEventListener("keyup", this.#onSelection);
     document.addEventListener("keydown", this.#onKeyDown);
     view.addEventListener("scroll", this.#onScroll, { passive: true });
+    view.addEventListener("resize", this.#onResize);
+    this.#stopSettledSelection = watchSettledSelection(document, () =>
+      this.captureSelection("touch"),
+    );
     this.#markers = new MarginMarkers(document, (annotationId) => {
       this.#activationRect = null;
       for (const listener of this.#activationListeners) {
@@ -68,6 +90,11 @@ export class HtmlDocumentRuntime {
   public onLocation(listener: (locator: ReaderLocator) => void): Unsubscribe {
     this.#locationListeners.add(listener);
     return () => this.#locationListeners.delete(listener);
+  }
+
+  public onMotion(listener: (motion: ReadingMotion) => void): Unsubscribe {
+    this.#motionListeners.add(listener);
+    return () => this.#motionListeners.delete(listener);
   }
 
   public onSelection(listener: (selection: TextSelectionDraft) => void): Unsubscribe {
@@ -165,6 +192,7 @@ export class HtmlDocumentRuntime {
   public clearSelection(): void {
     this.#view.getSelection()?.removeAllRanges();
     this.#hasSelection = false;
+    this.#reportedRange = null;
   }
 
   public extractText(): string {
@@ -179,20 +207,25 @@ export class HtmlDocumentRuntime {
     this.#document.removeEventListener("keyup", this.#onSelection);
     this.#document.removeEventListener("keydown", this.#onKeyDown);
     this.#view.removeEventListener("scroll", this.#onScroll);
+    this.#view.removeEventListener("resize", this.#onResize);
+    this.#stopSettledSelection();
     this.#reflow?.disconnect();
     this.#markers.destroy();
     clearCssHighlights(this.#view);
     this.#locationListeners.clear();
     this.#selectionListeners.clear();
     this.#clearedListeners.clear();
+    this.#motionListeners.clear();
     this.#activationListeners.clear();
     this.#annotationRanges = [];
     this.#destroyed = true;
   }
 
-  private captureSelection(via: "pointer" | "keyboard"): void {
+  private captureSelection(via: "pointer" | "keyboard" | "touch"): void {
     const selection = this.#view.getSelection();
-    if (!selection || selection.rangeCount === 0 || selection.isCollapsed) {
+    const key = selectionRangeKey(selection);
+    if (!selection || key === null) {
+      this.#reportedRange = null;
       // A click that leaves nothing selected also dismisses selection UI, even with none showing.
       if (this.#hasSelection || via === "pointer") {
         this.#hasSelection = false;
@@ -200,6 +233,11 @@ export class HtmlDocumentRuntime {
       }
       return;
     }
+    // Selections also settle after a release has reported them; only a changed range is new.
+    if (via === "touch" && key === this.#reportedRange) {
+      return;
+    }
+    this.#reportedRange = key;
     this.#hasSelection = true;
     const range = selection.getRangeAt(0);
     const draft = htmlSelectionDraft({
@@ -258,8 +296,12 @@ function caretPositionAtPoint(
   return position ? { node: position.offsetNode, offset: position.offset } : null;
 }
 
+function scrollingRoot(document: Document): Element {
+  return document.scrollingElement ?? document.documentElement;
+}
+
 function scrollProgression(document: Document): number {
-  const root = document.scrollingElement ?? document.documentElement;
+  const root = scrollingRoot(document);
   const extent = root.scrollHeight - root.clientHeight;
   return extent > 0 ? Math.max(0, Math.min(1, root.scrollTop / extent)) : 0;
 }

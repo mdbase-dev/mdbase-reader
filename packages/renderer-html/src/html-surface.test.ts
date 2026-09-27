@@ -12,6 +12,7 @@ describe("HtmlReadingSurface", () => {
       onLocation: () => vi.fn(),
       onSelection: () => vi.fn(),
       onSelectionCleared: () => vi.fn(),
+      onMotion: () => vi.fn(),
       onAnnotationActivated: (listener: typeof activationListener) => {
         activationListener = listener;
         return vi.fn();
@@ -66,6 +67,7 @@ describe("HtmlReadingSurface", () => {
           onLocation: () => vi.fn(),
           onSelection: () => vi.fn(),
           onSelectionCleared: () => vi.fn(),
+          onMotion: () => vi.fn(),
           onAnnotationActivated: () => vi.fn(),
           contents: () => contents,
           goToContents: () => true,
