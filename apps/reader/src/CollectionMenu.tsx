@@ -156,7 +156,7 @@ function CollectionItem({
   );
 }
 
-function useMenuPlacement(
+export function useMenuPlacement(
   menuRef: RefObject<HTMLDivElement | null>,
   triggerRef: RefObject<HTMLButtonElement | null>,
   onClose: (refocus: boolean) => void,
@@ -220,7 +220,7 @@ function useMenuPlacement(
   }, [menuRef, triggerRef]);
 }
 
-function moveFocus(event: KeyboardEvent, menu: HTMLElement | null): void {
+export function moveFocus(event: KeyboardEvent, menu: HTMLElement | null): void {
   if (!menu || !["ArrowDown", "ArrowUp", "Home", "End"].includes(event.key)) {
     return;
   }
