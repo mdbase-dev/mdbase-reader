@@ -10,80 +10,84 @@ export function saveReady(c: ExtensionCaptureController): boolean {
 }
 
 /**
- * The page's one save action, above the tabs so it is there whichever tab is open. Once
- * the page is saved it becomes the way into Reader, unless a passage is waiting to be saved.
+ * Saving the page itself, above the tabs so it is there whichever tab is open; a selected
+ * passage is saved by choosing its colour instead. Once saved, the way into Reader.
  */
 export function SaveBar({
   controller: c,
 }: {
   readonly controller: ExtensionCaptureController;
 }): React.JSX.Element | null {
-  const canSubmit = !c.source || c.draft.highlight;
   const ready = saveReady(c);
-  const { save } = c;
+  const selection = c.capture?.kind === "html" ? c.capture.selection : null;
+  const { save, source } = c;
   useEffect(() => {
-    // Ctrl/⌘+Enter saves from any field of the capture draft, so a highlight never needs
-    // the mouse. Fields that save something else (a saved note, a comment) handle it first.
+    // Ctrl/⌘+Enter from any field of the capture draft saves what that draft is for: the
+    // selected passage in its chosen colour, or else the unsaved page. Fields that save
+    // something else (a saved note, a comment being edited) handle it first.
     const onKeyDown = (event: KeyboardEvent): void => {
       const inside =
         event.target instanceof Element && event.target.closest("[data-capture-draft]");
       if (
-        inside &&
-        !event.defaultPrevented &&
-        event.key === "Enter" &&
-        (event.metaKey || event.ctrlKey) &&
-        canSubmit &&
-        ready
+        !inside ||
+        event.defaultPrevented ||
+        event.key !== "Enter" ||
+        !(event.metaKey || event.ctrlKey) ||
+        !ready
       ) {
+        return;
+      }
+      if (selection) {
         event.preventDefault();
-        void save();
+        void save({ highlight: true });
+      } else if (!source) {
+        event.preventDefault();
+        void save({ highlight: false });
       }
     };
     document.addEventListener("keydown", onKeyDown);
     return () => document.removeEventListener("keydown", onKeyDown);
-  }, [canSubmit, ready, save]);
+  }, [ready, save, selection, source]);
   if (!c.capture) {
     return null;
   }
   const pdf = c.capture.kind === "pdf";
+  if (source) {
+    // A PDF's highlighting happens in Reader, so that is the next step, not an aside.
+    return pdf ? (
+      <a
+        className="primary reader-link save-bar"
+        href={readerSourceUrl(source)}
+        target="_blank"
+        rel="noreferrer"
+      >
+        Open in Reader to highlight
+      </a>
+    ) : (
+      <p className="saved-line">
+        {c.status === "existing" ? "In this collection" : "Saved"} ·{" "}
+        <a href={readerSourceUrl(source)} target="_blank" rel="noreferrer">
+          Open in Reader
+        </a>
+      </p>
+    );
+  }
   return (
     <div className="save-bar">
-      {canSubmit ? (
-        <>
-          <button
-            className="primary"
-            type="button"
-            disabled={!ready}
-            aria-keyshortcuts="Control+Enter Meta+Enter"
-            onClick={() => void save()}
-          >
-            {submitLabel(c)}
-          </button>
-          <p className="shortcut-hint">
-            {c.source || c.draft.title.trim() ? (
-              <>
-                or press <kbd>{modifierKey()}</kbd>+<kbd>Enter</kbd>
-              </>
-            ) : (
-              "Give the source a title under Literature note to save it."
-            )}
-          </p>
-        </>
-      ) : null}
-      {c.source ? (
-        <p className="saved-line">
-          <span>{c.status === "existing" ? "Already in this collection." : "Saved."}</span>
-          {/* A PDF's highlighting happens in Reader, so that is the next step, not an aside. */}
-          <a
-            className={pdf && !canSubmit ? "primary reader-link" : "reader-link"}
-            href={readerSourceUrl(c.source)}
-            target="_blank"
-            rel="noreferrer"
-          >
-            {pdf ? "Open in Reader to highlight" : "Open saved copy in Reader"}
-          </a>
-        </p>
-      ) : null}
+      <button
+        // While a passage is selected its colours are the main action; this saves only the page.
+        className={selection ? "secondary" : "primary"}
+        type="button"
+        disabled={!ready}
+        aria-keyshortcuts={selection ? undefined : "Control+Enter Meta+Enter"}
+        title={selection ? undefined : `Save (${modifierKey()}+Enter)`}
+        onClick={() => void save({ highlight: false })}
+      >
+        {submitLabel(c)}
+      </button>
+      {c.draft.title.trim() ? null : (
+        <p className="hint">Give the source a title under Note to save it.</p>
+      )}
     </div>
   );
 }
@@ -99,9 +103,5 @@ function submitLabel(c: ExtensionCaptureController): string {
   if (c.busy) {
     return c.status === "saving" || c.progress ? "Saving…" : "Please wait…";
   }
-  const document = c.capture?.kind === "pdf" ? "PDF" : "source";
-  if (!c.draft.highlight) {
-    return `Save ${document}`;
-  }
-  return c.source ? "Save highlight" : `Save ${document} and highlight`;
+  return c.capture?.kind === "pdf" ? "Save PDF" : "Save page";
 }

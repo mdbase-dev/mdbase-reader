@@ -18,6 +18,10 @@ export function SavedHighlights({
   }
   const highlights = c.annotations.filter((annotation) => annotation.target?.quote);
   const hidden = c.projection ? c.projection.report.total - c.projection.report.shown : 0;
+  // A PDF keeps the list, and its Refresh, for highlights made in Reader meanwhile.
+  if (!highlights.length && !hidden && c.capture?.kind !== "pdf") {
+    return null;
+  }
   return (
     <section className="saved-highlights" aria-labelledby="saved-highlights-heading">
       <div className="list-header">
@@ -33,11 +37,6 @@ export function SavedHighlights({
           {c.refreshing ? "Updating…" : "Refresh"}
         </button>
       </div>
-      {highlights.length ? null : (
-        <p className="hint">
-          {c.capture?.kind === "pdf" ? "Highlights made in Reader appear here." : "None yet."}
-        </p>
-      )}
       {hidden ? (
         <p className="hint">
           {hidden} not shown on this page, which may have changed since it was saved. They are still
@@ -182,7 +181,7 @@ function QuoteButton({
         title={shown ? "Show on the page" : undefined}
         onClick={onReveal}
       >
-        {annotation.target?.quote?.exact}
+        <span className="highlight-mark">{annotation.target?.quote?.exact}</span>
       </button>
       {outcome && !shown ? <p className="hint">{outcomeLabels[outcome]}</p> : null}
     </>

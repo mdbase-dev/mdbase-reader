@@ -90,8 +90,64 @@ kbd {
 .mdbase-mark-accent {
   fill: var(--accent);
 }
-.environment {
+.header-end {
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 6px;
   margin-left: auto;
+}
+/* The collection being saved to; opens its controls below the header. */
+.header-collection {
+  min-width: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  padding: 4px 4px 4px 8px;
+  border: 0;
+  border-radius: var(--ui-radius);
+  color: var(--ink-soft);
+  background: none;
+  font-size: 12px;
+}
+.header-collection-name {
+  max-width: 130px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.header-collection svg,
+.header-icon svg {
+  width: 14px;
+  height: 14px;
+  flex: none;
+}
+.header-collection[aria-expanded="true"] svg {
+  transform: rotate(180deg);
+}
+.header-icon {
+  width: 28px;
+  height: 28px;
+  display: grid;
+  place-items: center;
+  margin-right: -6px;
+  padding: 0;
+  border: 0;
+  border-radius: var(--ui-radius);
+  color: var(--muted);
+  background: none;
+}
+.header-collection:hover,
+.header-icon:hover {
+  color: var(--ink);
+  background: var(--hover);
+}
+.header-collection:focus-visible,
+.header-icon:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: -2px;
+}
+.environment {
   padding: 2px 6px;
   border: 1px solid var(--line-strong);
   border-radius: 4px;
@@ -108,7 +164,7 @@ kbd {
   flex-direction: column;
 }
 .page-card {
-  padding: 18px var(--gutter);
+  padding: 14px var(--gutter);
   border-bottom: 1px solid var(--line);
   background: var(--paper);
 }
@@ -120,9 +176,9 @@ kbd {
   text-transform: uppercase;
 }
 .page-card h1 {
-  margin: 6px 0 4px;
+  margin: 0 0 2px;
   font:
-    500 21px/1.25 var(--serif),
+    500 18px/1.3 var(--serif),
     serif;
   overflow-wrap: anywhere;
 }
@@ -203,27 +259,23 @@ details.technical summary {
 }
 /* Save action ---------------------------------------------------------------------- */
 .save-bar {
-  margin-top: 14px;
+  margin-top: 12px;
 }
-.save-bar .shortcut-hint {
-  margin-bottom: 0;
-}
-.saved-line {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: baseline;
-  justify-content: space-between;
-  gap: 4px 12px;
-  margin: 10px 0 0;
-  color: var(--muted);
-  font-size: 12px;
-}
-.save-bar > .saved-line:first-child {
+.save-bar .secondary {
   margin-top: 0;
 }
-.saved-line .primary {
-  flex: 1 0 100%;
-  margin-top: 4px;
+.save-bar .hint {
+  margin: 6px 0 0;
+}
+.page-card .saved-line {
+  margin-top: 6px;
+}
+/* One quiet line where a tab has nothing to show yet. */
+.tab-hint {
+  margin: 0;
+  padding: 14px var(--gutter);
+  color: var(--muted);
+  font-size: 12px;
 }
 
 /* Tabs: Reader's inspector strip. A narrow panel names only the open tab, then shows only
@@ -290,7 +342,7 @@ details.technical summary {
   font-size: 11px;
   text-align: center;
 }
-@container panel-tabs (max-width: 340px) {
+@container panel-tabs (max-width: 260px) {
   .panel-tabs button:not([aria-selected="true"]) .panel-tab-label {
     position: absolute;
     width: 1px;
@@ -300,7 +352,7 @@ details.technical summary {
     white-space: nowrap;
   }
 }
-.panel-tab-content .saved-highlights {
+.tab-section + .saved-highlights {
   border-top: 1px solid var(--line);
 }
 
@@ -406,9 +458,27 @@ details.technical summary {
   margin-bottom: 10px;
   padding: 8px 10px;
   border: 1px solid var(--line);
-  border-left: 3px solid var(--swatch, var(--accent));
   border-radius: var(--ui-radius);
   background: var(--paper);
+}
+/* The passage is tinted in its colour, as it is on the page, rather than edged with it. */
+.highlight-mark {
+  padding: 0 2px;
+  border-radius: 2px;
+  background: color-mix(in oklch, var(--swatch, var(--accent)) 40%, transparent);
+  -webkit-box-decoration-break: clone;
+  box-decoration-break: clone;
+}
+/* Each card's actions stay quiet until it is pointed at or focused, so a list of cards
+   does not read as a column of links. They keep their place, so nothing shifts. */
+.saved-highlight > .item-actions .text-button:not(:disabled) {
+  color: var(--muted);
+  text-decoration-color: transparent;
+}
+.saved-highlight:hover > .item-actions .text-button:not(:disabled),
+.saved-highlight:focus-within > .item-actions .text-button:not(:disabled) {
+  color: var(--action);
+  text-decoration-color: color-mix(in oklch, currentColor 35%, transparent);
 }
 .highlight-quote {
   display: -webkit-box;
@@ -560,10 +630,11 @@ fieldset {
 }
 blockquote {
   max-height: 180px;
-  margin: 0 0 14px;
+  margin: 0 0 10px;
   padding: 8px 12px;
   overflow: auto;
-  border-left: 3px solid var(--accent);
+  border: 1px solid var(--line);
+  border-radius: var(--ui-radius);
   background: var(--paper);
   font:
     15px/1.5 var(--serif),
@@ -624,12 +695,6 @@ blockquote {
   margin-top: 0;
   text-decoration: none;
 }
-.shortcut-hint {
-  margin: 6px 0 0;
-  color: var(--muted);
-  font-size: 11px;
-  text-align: center;
-}
 .secondary {
   width: 100%;
   margin-top: 12px;
@@ -686,7 +751,10 @@ blockquote {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 8px;
+  margin: 4px 0 8px;
+}
+.highlight-fields > .text-button {
+  margin: 0 0 12px;
 }
 .passage-actions .text-button,
 .passage-actions .field-label {
@@ -718,10 +786,6 @@ blockquote {
   border-color: var(--muted);
   color: var(--ink);
   background: var(--hover);
-}
-.swatch kbd {
-  padding: 0 4px;
-  font-size: 10px;
 }
 .swatch::before {
   width: 12px;

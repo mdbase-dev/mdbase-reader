@@ -36,3 +36,15 @@ export const HighlightIcon = (props: IconProps): JSX.Element => (
     <path d="m7 16 8.8-8.8 2 2L9 18H7zM5 21h14" />
   </Icon>
 );
+export const ChevronDownIcon = (props: IconProps): JSX.Element => (
+  <Icon {...props}>
+    <path d="m7 10 5 5 5-5" />
+  </Icon>
+);
+export const SettingsIcon = (props: IconProps): JSX.Element => (
+  <Icon {...props}>
+    <path d="M4 7h10M18 7h2M4 17h4M12 17h8" />
+    <circle cx="16" cy="7" r="2" />
+    <circle cx="10" cy="17" r="2" />
+  </Icon>
+);

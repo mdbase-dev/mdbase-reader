@@ -1,7 +1,7 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 
 import { CitationPanel } from "./CitationPanel.js";
-import { ConnectionPanel, ConnectionProblem } from "./ConnectionPanel.js";
+import { collectionName, ConnectionPanel, ConnectionProblem } from "./ConnectionPanel.js";
 import { useDiagnosticsShown } from "./diagnostics-setting.js";
 import { DiagnosticsPanel } from "./DiagnosticsPanel.js";
 import { ExtensionHeader } from "./ExtensionHeader.js";
@@ -20,6 +20,8 @@ export function CaptureApp({
 }: ControllerProps & { readonly initialTab?: PanelTab }): React.JSX.Element {
   const [diagnostics] = useDiagnosticsShown();
   const [tab, setTab] = usePanelTab(controller, initialTab);
+  const [collectionOpen, setCollectionOpen] = useState(false);
+  const collection = collectionName(controller);
   useEffect(() => {
     document.title = `mdbase Reader — ${controller.source ? "source saved" : "capture"}`;
   }, [controller.source]);
@@ -42,21 +44,33 @@ export function CaptureApp({
         collectionId={
           "collectionId" in controller.snapshot ? controller.snapshot.collectionId : null
         }
+        collection={
+          collection
+            ? {
+                name: collection,
+                expanded: collectionOpen,
+                onToggle: () => setCollectionOpen((open) => !open),
+              }
+            : null
+        }
+        onSettings={openSettings}
+      />
+      <ConnectionPanel
+        controller={controller}
+        compact
+        expanded={collectionOpen}
+        onDone={() => setCollectionOpen(false)}
       />
       <section className="page-card">
-        <span className="eyebrow">
-          {controller.capture?.kind === "pdf" ? "CURRENT PDF" : "CURRENT PAGE"}
-        </span>
         <h1>{controller.source?.title ?? controller.capture?.pageTitle ?? "Reading the page…"}</h1>
         <p>
           {controller.capture
-            ? new URL(controller.capture.canonicalUrl).hostname
+            ? `${new URL(controller.capture.canonicalUrl).hostname}${controller.capture.kind === "pdf" ? " · PDF" : ""}`
             : "Waiting for the active tab"}
         </p>
         <SaveBar controller={controller} />
       </section>
       <Navigated controller={controller} />
-      <ConnectionPanel controller={controller} compact />
       <PanelStatus controller={controller} />
       {controller.capture ? (
         <>
@@ -72,27 +86,40 @@ export function CaptureApp({
           </PanelTabContent>
         </>
       ) : null}
-      <footer className="panel-footer">
-        <button type="button" className="text-button" onClick={openSettings}>
-          Settings and shortcuts
-        </button>
-        {diagnostics ? <DiagnosticsPanel /> : null}
-      </footer>
+      {diagnostics ? (
+        <footer className="panel-footer">
+          <DiagnosticsPanel />
+        </footer>
+      ) : null}
     </main>
   );
 }
 
-/** The passage selected on the page, then the page's saved highlights. */
+/**
+ * The passage selected on the page, then the page's saved highlights. Without a selection
+ * one quiet line says how to make one, and only while there is nothing saved to show.
+ */
 function HighlightsPanel({ controller: c }: ControllerProps): React.JSX.Element {
+  const selection = c.capture?.kind === "html" ? c.capture.selection : null;
+  const saved = c.annotations.some((annotation) => annotation.target?.quote);
   return (
     <>
-      <fieldset
-        className="tab-section"
-        data-capture-draft
-        disabled={c.status === "saving" || c.navigated}
-      >
-        <HighlightFields controller={c} ready={saveReady(c)} />
-      </fieldset>
+      {c.capture?.kind === "pdf" ? (
+        <p className="tab-hint">
+          Chrome’s PDF viewer does not share selections, so PDFs are highlighted in Reader.
+          {c.source ? " Highlights made there appear here." : " Save the PDF, then open it there."}
+        </p>
+      ) : selection ? (
+        <fieldset
+          className="tab-section"
+          data-capture-draft
+          disabled={c.status === "saving" || c.navigated}
+        >
+          <HighlightFields controller={c} ready={saveReady(c)} />
+        </fieldset>
+      ) : saved ? null : (
+        <p className="tab-hint">Select text on the page to highlight it.</p>
+      )}
       <SavedHighlights controller={c} />
     </>
   );
