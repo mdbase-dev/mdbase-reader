@@ -71,7 +71,7 @@ export function LibraryTableRow({
         }
       }}
       onClick={(event) => {
-        const action = itemClick(press, event, selection.touch);
+        const action = itemClick(press, event, selection.touch === true);
         if (action === "open") {
           onOpen(source.id);
         } else if (action === "select") {
