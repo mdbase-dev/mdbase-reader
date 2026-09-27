@@ -4,9 +4,9 @@ import { columnFieldKey, type LibraryColumn } from "./library-columns.js";
 import { StatusPicker, TableValue } from "./LibraryCells.js";
 import { LibraryFieldCellEditor } from "./LibraryFieldCell.js";
 import { columnClass } from "./LibraryTableHeader.js";
+import { itemClick, type LongPress } from "./use-long-press.js";
 
 import type { LibraryTableProps } from "./LibraryTable.js";
-import type { LongPress } from "./use-long-press.js";
 import type { SourceSummary } from "@mdbase-reader/core";
 import type { JSX, MouseEvent } from "react";
 
@@ -71,13 +71,16 @@ export function LibraryTableRow({
         }
       }}
       onClick={(event) => {
-        if (!press.consumeClick()) {
+        const action = itemClick(press, event, selection.touch === true);
+        if (action === "open") {
+          onOpen(source.id);
+        } else if (action === "select") {
           onSelect(event);
         }
       }}
       onDoubleClick={() => {
-        // While selecting by touch, a quick second tap toggles; it must not open the source.
-        if (!selection.touch) {
+        // A tap has already opened the source; while selecting by touch, a second tap toggles.
+        if (!selection.touch && !press.touched()) {
           onOpen(source.id);
         }
       }}
@@ -94,7 +97,14 @@ export function LibraryTableRow({
           title={editable(column) ? "Click to edit · F2" : undefined}
           onClick={(event) => {
             // Like a spreadsheet: the first click selects the row, a click on its field edits it.
-            if (editable(column) && selected && selection.ids.size === 1 && !event.shiftKey) {
+            // A finger's tap opens the source instead; renaming is in the row's menu.
+            if (
+              editable(column) &&
+              selected &&
+              selection.ids.size === 1 &&
+              !event.shiftKey &&
+              !press.touched()
+            ) {
               event.stopPropagation();
               onEditCell(column);
             }
