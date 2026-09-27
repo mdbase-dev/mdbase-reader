@@ -201,14 +201,14 @@ android` or `cap add ios` on a machine with the corresponding native SDK.
 
 ## Reading reliability and browser audits
 
-Reader keeps recoverable local source-note drafts, offers explicit conflict review and
-revision-verified offline document copies, and limits resident document renderers to four.
+Reader keeps recoverable local source-note drafts, offers explicit conflict review, and limits
+resident document renderers to four.
 Use the library's search scope selector to distinguish metadata, note text and loaded-document
 text; suspended and unopened documents are not included in document search. Sidebar search uses
 Ctrl/Cmd+Shift+F, leaving Ctrl/Cmd+F available to the reading surface.
 
-See [the implementation and audit report](docs/reader-improvement-audit.md) for offline limits,
-SDK compatibility, remaining work and the repeatable `test:browser` scenario. Browser testing
+See [the implementation and audit report](docs/reader-improvement-audit.md) for SDK compatibility,
+remaining work and the repeatable `test:browser` scenario. Browser testing
 uses disposable fixtures; it does not authorize or mutate real Connect collections.
 
 Annotations support compact highlighting, native comment textareas with one-second autosave,

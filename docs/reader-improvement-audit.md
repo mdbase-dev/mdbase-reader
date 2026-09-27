@@ -31,7 +31,9 @@
 - **Explicit offline copies.** Keep offline stores the exact document revision in
   IndexedDB; SHA-256 is checked before storing and opening. Limits are 64 MiB per
   file and 128 MiB total. Copies are opt-in and individually removable; caching
-  never silently substitutes a different revision.
+  never silently substitutes a different revision. _Since removed:_ a copy could only be
+  reached while Reader was already open with its library loaded, so it rarely helped. Reader
+  now deletes the stored copies (`mdbase-reader-offline-v1`) on start.
 - **Keyboard and mobile fixes.** Ctrl/Cmd+F is no longer stolen by sidebar search;
   use Ctrl/Cmd+Shift+F for the sidebar. Hidden panels and inactive sessions are
   inert. Keyboard focus selects the correct reading pane. Ordinary right-click

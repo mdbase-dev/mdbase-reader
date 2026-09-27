@@ -9,6 +9,7 @@ import "./reader-shell.css";
 
 import { ConnectReader } from "./ConnectReader.js";
 import { EnvironmentBadge } from "./EnvironmentBadge.js";
+import { forgetOfflineCopies } from "./forget-offline-copies.js";
 import { importService } from "./import-navigation.js";
 import { PreviewReader } from "./preview.js";
 import "./environment-badge.css";
@@ -23,6 +24,7 @@ const root = document.querySelector<HTMLElement>("#root");
 if (!root) {
   throw new Error("Reader root element is missing.");
 }
+forgetOfflineCopies(globalThis.indexedDB);
 const migrationService = importService(location.pathname);
 createRoot(root).render(
   <StrictMode>

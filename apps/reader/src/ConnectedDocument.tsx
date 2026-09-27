@@ -2,8 +2,6 @@ import { lazy, Suspense, useCallback, useEffect, useMemo, useState, type JSX } f
 
 import { isEpub, isHtml, isPdf } from "./document-media.js";
 import { DocumentMessage, RendererStage, type RendererState } from "./DocumentRendererStage.js";
-import { openDocumentWithOfflineCopy } from "./offline-documents.js";
-import { OfflineDocumentControl } from "./OfflineDocumentControl.js";
 
 import type {
   DocumentDescriptor,
@@ -36,7 +34,7 @@ export interface ConnectedDocumentProps {
 
 type OpenDocumentState =
   | { readonly status: "opening" }
-  | { readonly status: "open"; readonly handle: DocumentHandle; readonly cached: boolean }
+  | { readonly status: "open"; readonly handle: DocumentHandle }
   | { readonly status: "error"; readonly message: string };
 
 export function ConnectedDocument({
@@ -90,13 +88,12 @@ function OpenConnectedDocument({
     let active = true;
     let opened: DocumentHandle | null = null;
     const controller = new AbortController();
-    void openDocumentWithOfflineCopy(source.collectionId, stableDescriptor, repository, {
-      signal: controller.signal,
-    })
-      .then(({ handle, cached }) => {
+    void repository
+      .open(source.collectionId, stableDescriptor, { signal: controller.signal })
+      .then((handle) => {
         opened = handle;
         if (active) {
-          setState({ status: "open", handle, cached });
+          setState({ status: "open", handle });
         } else {
           void handle.close();
         }
@@ -146,12 +143,6 @@ function OpenConnectedDocument({
   }
   return (
     <div className="connected-document-frame">
-      <OfflineDocumentControl
-        collection={source.collectionId}
-        target={currentDescriptor}
-        handle={state.handle}
-        initiallyCached={state.cached}
-      />
       {state.handle.revision !== stableDescriptor.revision ? (
         <p className="document-change-notice" role="status">
           This file has changed. Some saved annotation positions may need checking.
