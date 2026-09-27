@@ -260,7 +260,7 @@
   transition: opacity 140ms var(--ease);
 }
 
-.reader-shell.is-focus-chrome-hidden .reader-header {
+.reader-shell[data-chrome-hidden] .reader-header {
   overflow: hidden;
   pointer-events: none;
   opacity: 0;
@@ -272,7 +272,7 @@
   transition: opacity 140ms var(--ease);
 }
 
-.reader-shell.is-focus-chrome-hidden .reader-dock .dv-tabs-and-actions-container {
+.reader-shell[data-chrome-hidden] .reader-dock .dv-tabs-and-actions-container {
   height: 0;
   overflow: hidden;
   border-bottom: 0;
@@ -280,14 +280,20 @@
   opacity: 0;
 }
 
-/* See ReadingChromeReveal. */
+/* Pointer moves over a document's frame never reach Reader, so while reading mode hides the
+   chrome a thin band over the top edge hears the pointer that asks for it back. */
 .reading-chrome-reveal {
+  display: none;
   position: fixed;
   z-index: 30;
   top: 0;
   right: 0;
   left: 0;
   height: 10px;
+}
+
+.reader-shell[data-chrome-hidden] .reading-chrome-reveal {
+  display: block;
 }
 
 .reader-header-brand {
@@ -2312,7 +2318,7 @@
   cursor: help;
 }
 
-.reader-shell.is-focus-chrome-hidden .document-toolbar {
+.reader-shell[data-chrome-hidden] .document-toolbar {
   opacity: 0;
   pointer-events: none;
 }
@@ -2654,7 +2660,7 @@
 }
 
 /* Reading on hides the bar with the header; a selection's actions stay within reach. */
-.reader-shell.is-focus-chrome-hidden .mobile-source-views:not(.is-selection) {
+.reader-shell[data-chrome-hidden] .mobile-source-views:not(.is-selection) {
   display: none;
 }
 

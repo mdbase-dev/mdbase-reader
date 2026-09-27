@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, type JSX } from "react";
+import { useCallback, useEffect, useMemo, useRef, type JSX, type RefObject } from "react";
 
 import { confirmCollectionSwitch } from "./collection-switching.js";
 import { CommandPalette } from "./CommandPalette.js";
@@ -128,7 +128,8 @@ export function ReaderWorkspaceView({
     dock.setSinglePane(model.focusMode);
   }, [dock, mobile, model.focusMode]);
   const reading = useReadingPreferences(model, shell, mobile);
-  const chromeVisible = useShellChrome(model, mobile);
+  const shellRef = useRef<HTMLDivElement>(null);
+  useShellChrome(shellRef, model, mobile);
   const annotationCounts = useLibraryAnnotationCounts(model);
   const workbenchOwner = findWorkbenchOwner(
     sourceWorkspace.layout,
@@ -181,7 +182,8 @@ export function ReaderWorkspaceView({
   return (
     <div
       data-density={shell.value.density}
-      className={`reader-shell${model.deploymentUpdateAvailable ? " has-update" : ""}${chromeVisible ? "" : " is-focus-chrome-hidden"}`}
+      ref={shellRef}
+      className={`reader-shell${model.deploymentUpdateAvailable ? " has-update" : ""}`}
       {...fileDrop.handlers}
     >
       {fileDrop.active ? (
@@ -193,7 +195,7 @@ export function ReaderWorkspaceView({
         </div>
       ) : null}
       {model.deploymentUpdateAvailable ? <DeploymentUpdateNotice /> : null}
-      <ReadingChromeReveal focusMode={model.focusMode} chromeVisible={chromeVisible} />
+      {model.focusMode ? <div className="reading-chrome-reveal" aria-hidden="true" /> : null}
       <ReaderHeader
         {...reading}
         density={shell.value.density}
@@ -418,27 +420,16 @@ function useReadingPreferences(
   };
 }
 
-/**
- * Pointer moves over a document's frame never reach Reader, so while reading mode hides the
- * chrome a thin band over the top edge hears the pointer that asks for it back.
- */
-function ReadingChromeReveal({
-  focusMode,
-  chromeVisible,
-}: {
-  readonly focusMode: boolean;
-  readonly chromeVisible: boolean;
-}): JSX.Element | null {
-  return focusMode && !chromeVisible ? (
-    <div className="reading-chrome-reveal" aria-hidden="true" />
-  ) : null;
-}
-
 /** Whether the header and bars show; a phone makes way for the document it is reading. */
-function useShellChrome(model: ReaderWorkspaceViewModel, mobile: boolean): boolean {
+function useShellChrome(
+  shell: RefObject<HTMLElement | null>,
+  model: ReaderWorkspaceViewModel,
+  mobile: boolean,
+): void {
   const activeTab = model.sourceWorkspace.activeTab;
   const readingDocument = activeTab?.kind === "source" && activeTab.view === "document";
-  return useReadingChrome({
+  useReadingChrome({
+    shell,
     focusMode: model.focusMode,
     autoHide: mobile && readingDocument,
     surface: readingDocument ? (model.surfaces.get(activeTab.id) ?? null) : null,

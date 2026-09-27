@@ -38,7 +38,7 @@ export async function auditReadingWorkspace(page, { screenshot }) {
 
   await frame.locator("#p2").click();
   await page.keyboard.press("Control+.");
-  await expect(page.locator(".reader-shell")).toHaveClass(/is-focus-chrome-hidden/u, {
+  await expect(page.locator(".reader-shell")).toHaveAttribute("data-chrome-hidden", "", {
     timeout: 5000,
   });
   await screenshot("reading-mode");

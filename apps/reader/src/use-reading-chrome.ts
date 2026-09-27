@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, type RefObject } from "react";
 
 import type { ReadingSurface } from "@mdbase-reader/reading-surface";
 
@@ -6,52 +6,59 @@ const settleMs = 1400;
 /** The band at the top of the window where a pointer brings reading mode's chrome back. */
 const revealBandPx = 64;
 const chromeSelector = ".reader-header, .dv-tabs-and-actions-container";
+/** Set on the shell while its chrome is hidden; styles key off it. */
+export const chromeHiddenAttribute = "data-chrome-hidden";
 
 /**
- * Whether Reader's header, tabs and phone bars are showing. They make way for the text:
+ * Hides and shows Reader's header, tabs and phone bars so they make way for the text:
  *
  * - In reading mode they hide once the reader settles, and return while the pointer is at the
  *   top edge or focus moves into them.
  * - While a phone shows a document they hide as the reader reads on.
  *
- * Either way, scrolling back, reaching the start, or tapping the page brings them back.
+ * Either way, scrolling back, reaching the start, or tapping the page brings them back. This
+ * happens mid-scroll, so it sets an attribute on the shell rather than React state: re-rendering
+ * the whole workspace for it cost more than the change itself.
  */
 export function useReadingChrome(input: {
+  readonly shell: RefObject<HTMLElement | null>;
   readonly focusMode: boolean;
   readonly autoHide: boolean;
   readonly surface: ReadingSurface | null;
-}): boolean {
-  const { focusMode, autoHide, surface } = input;
-  const mode = focusMode ? "focus" : autoHide ? "auto" : null;
-  // Hiding belongs to the document and mode it happened in; a new one starts with chrome showing.
-  const [hiddenFor, setHiddenFor] = useState<{
-    readonly surface: ReadingSurface | null;
-    readonly mode: "focus" | "auto";
-  } | null>(null);
+}): void {
+  const { shell, focusMode, autoHide, surface } = input;
   useEffect(() => {
-    if (!mode || !surface) {
+    const setHidden = (hidden: boolean): void => {
+      shell.current?.toggleAttribute(chromeHiddenAttribute, hidden);
+    };
+    // A new document or mode starts with its chrome showing.
+    setHidden(false);
+    if (!(focusMode || autoHide) || !surface) {
       return undefined;
     }
-    const show = (): void => setHiddenFor(null);
     const motion = surface.capabilities.motion?.motions.subscribe((value) =>
-      setHiddenFor(value === "forward" ? { surface, mode } : null),
+      setHidden(value === "forward"),
     );
-    const tapped = surface.capabilities.textSelection?.cleared?.subscribe(show);
+    const tapped = surface.capabilities.textSelection?.cleared?.subscribe(() => setHidden(false));
     return () => {
       motion?.();
       tapped?.();
+      setHidden(false);
     };
-  }, [mode, surface]);
+  }, [autoHide, focusMode, shell, surface]);
   useEffect(() => {
     if (!focusMode) {
       return undefined;
     }
+    const setHidden = (hidden: boolean): void => {
+      shell.current?.toggleAttribute(chromeHiddenAttribute, hidden);
+    };
     let timer: ReturnType<typeof setTimeout> | null = null;
     const hideSoon = (): void => {
       timer ??= setTimeout(() => {
         timer = null;
         if (!chromeHasFocus()) {
-          setHiddenFor({ surface, mode: "focus" });
+          setHidden(true);
         }
       }, settleMs);
     };
@@ -62,7 +69,7 @@ export function useReadingChrome(input: {
         clearTimeout(timer);
         timer = null;
       }
-      setHiddenFor(null);
+      setHidden(false);
       hideSoon();
     };
     const onPointerMove = (event: PointerEvent): void => {
@@ -88,9 +95,9 @@ export function useReadingChrome(input: {
       }
       globalThis.removeEventListener("pointermove", onPointerMove);
       globalThis.removeEventListener("focusin", onFocusIn);
+      setHidden(false);
     };
-  }, [focusMode, surface]);
-  return !mode || hiddenFor?.surface !== surface || hiddenFor.mode !== mode;
+  }, [focusMode, shell]);
 }
 
 function chromeHasFocus(): boolean {
