@@ -77,6 +77,11 @@ describe("Reader EmbedPDF policy", () => {
     );
   });
 
+  it("starts in text selection on touch-capable devices", () => {
+    // With no mode control, EmbedPDF's touch-detected pan default would strand selection.
+    expect(createReaderPdfViewerConfig("blob:reader-pdf").pan).toEqual({ defaultMode: "never" });
+  });
+
   it("disables unsupported command families as well as hiding their UI", () => {
     expect(readerPdfDisabledCategories).toEqual(
       expect.arrayContaining([

@@ -33,6 +33,10 @@ export function createReaderPdfViewerConfig(src: string): PDFViewerConfig {
       // prevent structural or content changes.
       locked: { type: LockModeType.None },
     },
+    // EmbedPDF defaults to pan mode on any browser reporting touch support, including
+    // touchscreen laptops. Reader offers no mode control, so pan would block text selection
+    // with no way out.
+    pan: { defaultMode: "never" },
     render: {
       withAnnotations: false,
       withForms: false,
