@@ -2,12 +2,22 @@ import { ProductBrand, type ThemePreference } from "@mdbase-reader/ui";
 
 import { CollectionPicker } from "./CollectionPicker.js";
 import { DisplayMenu } from "./DisplayMenu.js";
-import { LeftPaneIcon, ReadingModeIcon, RightPaneIcon, SearchIcon } from "./icons.js";
+import { BackIcon, LeftPaneIcon, ReadingModeIcon, RightPaneIcon, SearchIcon } from "./icons.js";
 import { shortcutLabel } from "./Menu.js";
 
 import type { ReaderDirectAccessState } from "./use-direct-access.js";
 import type { ReadingTypography } from "@mdbase-reader/reading-surface";
-import type { JSX } from "react";
+import type { JSX, ReactNode } from "react";
+
+/**
+ * A phone showing a source has room for one bar: back to the library, the open tabs, and the
+ * source's own actions. The collection and sidebars belong to the library screen.
+ */
+export interface ReaderHeaderSourceBar {
+  readonly onBack: () => void;
+  readonly switcher: ReactNode;
+  readonly actions: ReactNode;
+}
 
 interface ReaderHeaderProps {
   readonly typography?: ReadingTypography;
@@ -31,31 +41,58 @@ interface ReaderHeaderProps {
   readonly inspectorOpen: boolean;
   readonly inspectorAvailable: boolean;
   readonly onToggleInspector: () => void;
+  readonly sourceBar?: ReaderHeaderSourceBar | undefined;
 }
 
-export function ReaderHeader({
+export function ReaderHeader(props: ReaderHeaderProps): JSX.Element {
+  const display = <HeaderDisplayMenu {...props} />;
+  return props.sourceBar ? (
+    <SourceBarHeader bar={props.sourceBar} display={display} />
+  ) : (
+    <LibraryHeader {...props} display={display} />
+  );
+}
+
+function HeaderDisplayMenu({
   typography,
   onChangeTypography,
   sidebarWhileReading = "hide",
   onChangeSidebarWhileReading,
+  density = "comfortable",
+  onChangeDensity,
+  theme,
+  onChangeTheme,
+}: ReaderHeaderProps): JSX.Element {
+  return (
+    <DisplayMenu
+      theme={theme}
+      onChangeTheme={onChangeTheme}
+      density={density}
+      sidebarWhileReading={sidebarWhileReading}
+      {...(typography && onChangeTypography ? { typography, onChangeTypography } : {})}
+      {...(onChangeDensity ? { onChangeDensity } : {})}
+      {...(onChangeSidebarWhileReading ? { onChangeSidebarWhileReading } : {})}
+    />
+  );
+}
+
+/** The full header, for the library and for every pane arrangement wider than a phone. */
+function LibraryHeader({
   readingMode = false,
   readingModeAvailable = false,
   onToggleReadingMode,
-  density = "comfortable",
-  onChangeDensity,
   collectionName,
   beforeCollectionSwitch,
   connectionState,
   directAccess,
-  theme,
-  onChangeTheme,
   onOpenCommands,
   onToggleLibrary,
   libraryOpen,
   inspectorOpen,
   inspectorAvailable,
   onToggleInspector,
-}: ReaderHeaderProps): JSX.Element {
+  display,
+}: ReaderHeaderProps & { readonly display: ReactNode }): JSX.Element {
   return (
     <header className="reader-header">
       <div className="reader-header-brand">
@@ -107,15 +144,7 @@ export function ReaderHeader({
             <ReadingModeIcon />
           </button>
         ) : null}
-        <DisplayMenu
-          theme={theme}
-          onChangeTheme={onChangeTheme}
-          density={density}
-          sidebarWhileReading={sidebarWhileReading}
-          {...(typography && onChangeTypography ? { typography, onChangeTypography } : {})}
-          {...(onChangeDensity ? { onChangeDensity } : {})}
-          {...(onChangeSidebarWhileReading ? { onChangeSidebarWhileReading } : {})}
-        />
+        {display}
         <button
           className="icon-button header-pane-toggle is-inspector"
           type="button"
@@ -127,6 +156,33 @@ export function ReaderHeader({
         >
           <RightPaneIcon />
         </button>
+      </div>
+    </header>
+  );
+}
+
+function SourceBarHeader({
+  bar,
+  display,
+}: {
+  readonly bar: ReaderHeaderSourceBar;
+  readonly display: ReactNode;
+}): JSX.Element {
+  return (
+    <header className="reader-header is-source-bar">
+      <button
+        type="button"
+        className="icon-button header-back"
+        aria-label="Back to library"
+        title="Back to library"
+        onClick={bar.onBack}
+      >
+        <BackIcon />
+      </button>
+      <div className="reader-header-context">{bar.switcher}</div>
+      <div className="reader-header-actions">
+        {display}
+        {bar.actions}
       </div>
     </header>
   );

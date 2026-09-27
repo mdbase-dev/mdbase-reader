@@ -1,5 +1,7 @@
 import { useRef, useState, type JSX } from "react";
 
+import { LayoutIcon } from "./icons.js";
+
 import type { ReaderDockWorkspace } from "./dockview-workspace.js";
 import type { DockviewGroupPanel } from "dockview-react";
 
@@ -32,7 +34,7 @@ export function DockPaneActions({
           });
         }}
       >
-        ⋯
+        <LayoutIcon />
       </button>
       <div
         ref={menu}

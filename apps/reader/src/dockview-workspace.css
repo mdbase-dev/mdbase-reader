@@ -218,17 +218,54 @@
     opacity: 1 !important;
   }
 }
+/* A document's actions share its pane's tab strip, ahead of the pane menu, so nothing floats
+   over the page. */
+.dock-pane-actions {
+  height: 100%;
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  padding-right: 4px;
+}
+.reader-dock .dock-pane-actions .document-toolbar {
+  position: static;
+  height: 100%;
+  gap: 2px;
+  padding: 0;
+  pointer-events: auto;
+}
+.reader-dock .dock-pane-actions .document-toolbar .icon-button {
+  width: 30px;
+  height: 30px;
+}
+.reader-dock .dock-pane-actions .document-area-action {
+  height: 30px;
+}
 .dock-pane-menu {
   position: relative;
   color: var(--muted);
   font-size: 12px;
 }
 .dock-pane-menu > button {
+  width: 30px;
+  height: 30px;
+  display: grid;
+  place-items: center;
+  padding: 0;
+  border: 0;
+  border-radius: 7px;
   cursor: pointer;
-  padding: 6px 10px;
-  font-size: 17px;
   background: transparent;
   color: var(--muted);
+}
+.dock-pane-menu > button:hover,
+.dock-pane-menu > button:focus-visible {
+  color: var(--ink);
+  background: var(--hover);
+}
+.dock-pane-menu > button svg {
+  width: 16px;
+  height: 16px;
 }
 .dock-pane-popover {
   position: fixed;

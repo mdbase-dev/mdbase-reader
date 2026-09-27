@@ -23,7 +23,12 @@ import { DockPaneActions } from "./DockPaneActions.js";
 import { dockTabMenu } from "./dockview-menus.js";
 import { inspectorPanelId, navigatorPanelId } from "./dockview-panel-ids.js";
 import { dockPanelVisible } from "./dockview-panel-visibility.js";
-import { DocumentWorkspace, type DocumentWorkspaceProps } from "./DocumentWorkspace.js";
+import { panelTab } from "./dockview-workspace-state.js";
+import {
+  DocumentToolbar,
+  DocumentWorkspace,
+  type DocumentWorkspaceProps,
+} from "./DocumentWorkspace.js";
 import { CloseIcon, PinIcon } from "./icons.js";
 import { MobileSourceViews } from "./MobileSourceViews.js";
 import { MobileWorkspaceNavigation } from "./MobileWorkspaceNavigation.js";
@@ -141,6 +146,7 @@ export function DockviewWorkspace({
           dock={dock}
           workspace={document.sourceWorkspace}
           sources={document.sources}
+          composer={document.annotationComposer}
         />
       </div>
     </DockContext>
@@ -241,9 +247,30 @@ function ReaderDockTab(props: IDockviewPanelHeaderProps<{ tab?: WorkspaceTab }>)
     </div>
   );
 }
-function PaneActions({ group }: IDockviewHeaderActionsProps): JSX.Element {
+/** The end of a pane's tab strip: its active document's actions, then the pane's own. */
+function PaneActions({ group, activePanel }: IDockviewHeaderActionsProps): JSX.Element {
   const { document } = useDockContext();
-  return <DockPaneActions group={group} dock={document.sourceWorkspace.dock} />;
+  const tab = activePanel ? panelTab(activePanel) : null;
+  const source =
+    tab?.kind === "source" && tab.view === "document"
+      ? document.sources.find(({ id }) => id === tab.sourceId)
+      : undefined;
+  const pane = document.sourceWorkspace.layout.panes.find(({ id }) => id === group.id);
+  return (
+    <div className="dock-pane-actions">
+      {/* A phone has no tab strip; its header carries the document's actions. */}
+      {tab && source?.documents.length && pane && !document.sourceWorkspace.dock.mobile ? (
+        <DocumentToolbar
+          props={document}
+          source={source}
+          pane={pane}
+          tabId={tab.id}
+          focused={document.sourceWorkspace.activePane.activeTabId === tab.id}
+        />
+      ) : null}
+      <DockPaneActions group={group} dock={document.sourceWorkspace.dock} />
+    </div>
+  );
 }
 function EmptyDock(): JSX.Element {
   const { document } = useDockContext();

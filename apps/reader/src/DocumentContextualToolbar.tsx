@@ -39,6 +39,8 @@ export interface DocumentContextualToolbarProps {
   readonly onBookmark: () => void;
   readonly surfaces: ReadonlyMap<string, ReadingSurface>;
   readonly sessionId: string;
+  /** In a phone's header, where room is short, bookmarking moves into the overflow menu. */
+  readonly compact?: boolean;
 }
 
 export function DocumentContextualToolbar({
@@ -58,6 +60,7 @@ export function DocumentContextualToolbar({
   onBookmark,
   surfaces,
   sessionId,
+  compact = false,
 }: DocumentContextualToolbarProps): JSX.Element {
   const contents = surfaces.get(sessionId)?.capabilities.contents;
   return (
@@ -74,7 +77,7 @@ export function DocumentContextualToolbar({
           <span>{selectingArea ? "Cancel" : "Select area"}</span>
         </button>
       ) : null}
-      {canBookmark ? (
+      {canBookmark && !compact ? (
         <button
           type="button"
           className="icon-button document-bookmark-action"
@@ -94,6 +97,9 @@ export function DocumentContextualToolbar({
         title="More actions"
         trigger={<MoreIcon />}
       >
+        {canBookmark && compact ? (
+          <BookmarkItem bookmarking={bookmarking} onBookmark={onBookmark} />
+        ) : null}
         <button type="button" onClick={() => workspace.openView(source.id, "annotations", pane.id)}>
           <HighlightIcon /> Annotations
         </button>
@@ -114,21 +120,50 @@ export function DocumentContextualToolbar({
         >
           <ReadingModeIcon /> {focusMode ? "Leave reading mode" : "Reading mode"}
         </button>
-        <button
-          type="button"
-          disabled={!sourceExport.available || sourceExport.status === "exporting"}
-          onClick={sourceExport.run}
-        >
-          <DownloadIcon />
-          {sourceExport.status === "exporting" ? "Preparing export…" : "Export source"}
-        </button>
-        {sourceExport.message ? (
-          <p className={`menu-note${sourceExport.status === "error" ? " is-error" : ""}`}>
-            {sourceExport.message}
-          </p>
-        ) : null}
+        <ExportItem sourceExport={sourceExport} />
       </Menu>
     </div>
+  );
+}
+
+function ExportItem({
+  sourceExport,
+}: {
+  readonly sourceExport: SourceExportController;
+}): JSX.Element {
+  return (
+    <>
+      <button
+        type="button"
+        disabled={!sourceExport.available || sourceExport.status === "exporting"}
+        onClick={sourceExport.run}
+      >
+        <DownloadIcon />
+        {sourceExport.status === "exporting" ? "Preparing export…" : "Export source"}
+      </button>
+      {sourceExport.message ? (
+        <p className={`menu-note${sourceExport.status === "error" ? " is-error" : ""}`}>
+          {sourceExport.message}
+        </p>
+      ) : null}
+    </>
+  );
+}
+
+function BookmarkItem({
+  bookmarking,
+  onBookmark,
+}: {
+  readonly bookmarking: boolean;
+  readonly onBookmark: () => void;
+}): JSX.Element {
+  return (
+    <>
+      <button type="button" disabled={bookmarking} onClick={onBookmark}>
+        <BookmarkIcon /> Bookmark this position
+      </button>
+      <hr />
+    </>
   );
 }
 

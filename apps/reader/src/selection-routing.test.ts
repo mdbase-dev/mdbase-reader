@@ -4,7 +4,7 @@ import { selectionRoute } from "./selection-routing.js";
 
 import type { ComposerSelection } from "./annotation-composer-request.js";
 
-function text(exact: string, via?: "pointer" | "keyboard"): ComposerSelection {
+function text(exact: string, via?: "pointer" | "keyboard" | "touch"): ComposerSelection {
   return {
     kind: "text",
     value: {
@@ -22,13 +22,14 @@ describe("selectionRoute", () => {
     expect(selectionRoute({ ...base, value: text("A passage") })).toBe("toolbar");
   });
 
-  it("highlights at once when the reader chose that, but not while extending by keyboard", () => {
+  it("highlights at once when the reader chose that, but not while a selection can still grow", () => {
     expect(selectionRoute({ ...base, instant: true, value: text("A", "pointer") })).toBe(
       "highlight",
     );
     expect(selectionRoute({ ...base, instant: true, value: text("A", "keyboard") })).toBe(
       "toolbar",
     );
+    expect(selectionRoute({ ...base, instant: true, value: text("A", "touch") })).toBe("toolbar");
   });
 
   it("ignores the same passage reported again", () => {

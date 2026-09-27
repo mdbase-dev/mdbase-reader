@@ -173,8 +173,8 @@ export async function auditAnnotations(page, { screenshot, blockWrites }) {
         globalThis.requestAnimationFrame(() => globalThis.requestAnimationFrame(resolve)),
       ),
   );
-  if (!(await tools.isVisible()))
-    await page.getByRole("button", { name: "Toggle right sidebar" }).click();
+  // On a phone the sidebars have no header buttons while a source shows; shortcuts open them.
+  if (!(await tools.isVisible())) await page.keyboard.press("Control+Shift+Backslash");
   await expect(tools.getByRole("searchbox", { name: "Search annotations" })).toBeVisible();
   expect(
     await page.evaluate(
@@ -189,7 +189,7 @@ export async function auditAnnotations(page, { screenshot, blockWrites }) {
   await screenshot("annotation-mobile-edit");
   await tools.getByRole("textbox", { name: "Comment" }).press("Escape");
   await expect(tools.getByRole("textbox", { name: "Comment" })).toHaveCount(0);
-  await page.getByRole("button", { name: "Toggle right sidebar" }).click();
+  await page.keyboard.press("Control+Shift+Backslash");
   await expect(page.locator("iframe.html-viewer:visible")).toHaveCount(1);
   completed.push("Annotation inspector remains usable without horizontal overflow at 390px");
   await page.setViewportSize({ width: 1440, height: 1000 });

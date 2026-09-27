@@ -33,8 +33,9 @@ export async function auditResponsiveWorkspace(page, { screenshot, blockWrites }
     element.ownerDocument.defaultView.__responsiveSentinel = "original";
     element.ownerDocument.defaultView.scrollTo(0, 900);
   });
+  // A document's actions sit in the tab strip of the pane that shows it.
   await page
-    .locator(`[data-session-id="${first}"]`)
+    .locator(`.dv-groupview:has(.reader-dock-tab[data-panel-id="${first}"]) .dock-pane-actions`)
     .getByLabel("More document actions", { exact: true })
     .click();
   await page.getByRole("button", { name: "Literature note", exact: true }).click();
@@ -75,9 +76,8 @@ export async function auditResponsiveWorkspace(page, { screenshot, blockWrites }
     );
   for (let cycle = 0; cycle < 2; cycle += 1) {
     await page.setViewportSize({ width: 390, height: 844 });
-    await expect(
-      page.getByRole("navigation", { name: "Mobile workspace navigation" }),
-    ).toBeVisible();
+    // A phone showing a source carries its navigation in the header.
+    await expect(page.getByRole("button", { name: "Back to library", exact: true })).toBeVisible();
     await expect(reading).toBeVisible();
     expect(
       await html.evaluate((element) => element.ownerDocument.defaultView.__responsiveSentinel),
@@ -89,8 +89,9 @@ export async function auditResponsiveWorkspace(page, { screenshot, blockWrites }
     await expect(editor).toContainText("Responsive draft");
     await expect(editor).toHaveAttribute("data-responsive-sentinel", "original-editor");
     await chooseOption(page.getByRole("combobox", { name: "Open workspace tab" }), first);
-    for (const name of ["Toggle left sidebar", "Toggle right sidebar"]) {
-      await page.getByRole("button", { name }).click();
+    // The phone header leaves sidebars to the library; their shortcuts still open them.
+    for (const shortcut of ["Control+Backslash", "Control+Shift+Backslash"]) {
+      await page.keyboard.press(shortcut);
       await expect(reading).not.toBeVisible();
       await page.getByRole("button", { name: "Back to workspace", exact: true }).click();
       await expect(reading).toBeVisible();
@@ -120,7 +121,7 @@ export async function auditResponsiveWorkspace(page, { screenshot, blockWrites }
     "Two desktop/mobile cycles preserve document Window, scroll, editor DOM, draft, split groups, and sidebar widths",
   );
   await page.setViewportSize({ width: 390, height: 844 });
-  await page.getByRole("button", { name: "Toggle left sidebar" }).click();
+  await page.keyboard.press("Control+Backslash");
   await page
     .getByRole("textbox", { name: "Find a source by title, author or tag" })
     .fill("Research 0002");
@@ -161,7 +162,7 @@ export async function auditResponsiveWorkspace(page, { screenshot, blockWrites }
   await expect(page.getByRole("complementary", { name: "Library navigator" })).toHaveCount(0);
   await page.setViewportSize({ width: 390, height: 844 });
   await expect(editor).toBeVisible();
-  await page.getByRole("button", { name: "Toggle right sidebar" }).click();
+  await page.keyboard.press("Control+Shift+Backslash");
   await page.getByRole("button", { name: "Back to workspace", exact: true }).click();
   await page.setViewportSize({ width: 1440, height: 1000 });
   await expect.poll(async () => (await notePane.boundingBox())?.width ?? 0).toBeGreaterThan(1400);

@@ -104,12 +104,13 @@ export async function auditSidebarLayout(page, { screenshot, measurements }) {
   await measure("restored");
   await page.setViewportSize({ width: 390, height: 844 });
   await measure("mobile-reading");
-  await page.getByRole("button", { name: "Toggle left sidebar" }).click();
+  // On a phone the sidebars have no header buttons while a source shows; shortcuts open them.
+  await page.keyboard.press("Control+Backslash");
   await measure("mobile-navigator");
-  await page.getByRole("button", { name: "Toggle left sidebar" }).click();
-  await page.getByRole("button", { name: "Toggle right sidebar" }).click();
+  await page.keyboard.press("Control+Backslash");
+  await page.keyboard.press("Control+Shift+Backslash");
   await measure("mobile-inspector");
-  await page.getByRole("button", { name: "Toggle right sidebar" }).click();
+  await page.keyboard.press("Control+Shift+Backslash");
   await page.setViewportSize({ width: 1440, height: 1000 });
   await measure("desktop-again");
   results.acceptance = sidebarAcceptance(results);

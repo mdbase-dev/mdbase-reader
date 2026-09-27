@@ -26,10 +26,18 @@ export interface SelectionToolbarController {
   readonly hide: () => void;
 }
 
+// Matches the workspace's phone layout, where selection actions sit in the bottom bar.
+function phoneLayout(): boolean {
+  return globalThis.matchMedia("(max-width: 680px)").matches;
+}
+
 /**
  * The toolbar follows the live selection: it goes when the selection is cleared, when a click in
  * the document selects nothing, and when the document moves, since its position would be stale.
+ * A phone is the exception: it scrolls while selection handles are dragged, and shows a
+ * selection's actions in its bottom bar, where they have no position to go stale.
  */
+
 export function useSelectionToolbar(surface: ReadingSurface | null): SelectionToolbarController {
   const [current, setCurrent] = useState<{
     readonly surface: ReadingSurface;
@@ -41,7 +49,11 @@ export function useSelectionToolbar(surface: ReadingSurface | null): SelectionTo
       return undefined;
     }
     const cleared = surface.capabilities.textSelection?.cleared?.subscribe(hide);
-    const moved = surface.locations.subscribe(hide);
+    const moved = surface.locations.subscribe(() =>
+      setCurrent((value) =>
+        value?.state.target.kind === "selection" && phoneLayout() ? value : null,
+      ),
+    );
     return () => {
       cleared?.();
       moved();

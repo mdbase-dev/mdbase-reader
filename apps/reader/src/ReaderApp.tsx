@@ -3,7 +3,6 @@ import { useCallback, useEffect, useState, type JSX } from "react";
 import { navigatorPanelId } from "./dockview-workspace-state.js";
 import {
   useReaderAnnotationComposer,
-  useFocusChrome,
   useReaderReadingResume,
   useReaderShortcuts,
   useThemePreference,
@@ -87,7 +86,6 @@ function OpenedReaderApp({
   const collectionKey = library.sources[0]?.collectionId ?? library.collectionName;
   const libraryViews = useMdbaseLibraryViews(gateway);
   const [focusMode, setFocusMode] = useState(false);
-  const focusChromeVisible = useFocusChrome(focusMode);
   const [commandsOpen, setCommandsOpen] = useState(false);
   const [theme, changeTheme] = useThemePreference();
   const [surfaces, setSurfaces] = useState<ReadonlyMap<string, ReadingSurface>>(new Map());
@@ -177,7 +175,6 @@ function OpenedReaderApp({
     theme,
     changeTheme,
     focusMode,
-    focusChromeVisible,
     setFocusMode,
     commandsOpen,
     setCommandsOpen,
