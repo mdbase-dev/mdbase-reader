@@ -4,13 +4,13 @@ import {
   type EmbedPdfContainer,
   type PluginRegistry,
 } from "@embedpdf/react-pdf-viewer";
-import { useCallback, useEffect, useMemo, useRef } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import { suppressNativeCapturePreview } from "./embedpdf-native-capture-preview.js";
 import { installReaderPdfChrome } from "./embedpdf-reader-chrome.js";
 import { createEmbedPdfRuntime } from "./embedpdf-runtime.js";
 import { EmbedPdfSurface } from "./pdf-surface.js";
-import { createReaderPdfViewerConfig } from "./pdf-viewer-policy.js";
+import { createReaderPdfViewerConfig, pdfPansByDefault } from "./pdf-viewer-policy.js";
 
 import type { SurfaceDocument } from "@mdbase-reader/reading-surface";
 
@@ -29,7 +29,12 @@ export function PdfViewerSurface({
   onDocumentReady,
   onDocumentError,
 }: PdfViewerSurfaceProps): React.JSX.Element {
-  const viewerConfig = useMemo(() => createReaderPdfViewerConfig(document.url), [document.url]);
+  // Decided once per viewer: the config and the runtime must agree on the starting mode.
+  const [pansByDefault] = useState(pdfPansByDefault);
+  const viewerConfig = useMemo(
+    () => createReaderPdfViewerConfig(document.url, pansByDefault),
+    [document.url, pansByDefault],
+  );
   const surfaceRef = useRef<EmbedPdfSurface | null>(null);
   const subscriptionsRef = useRef<(() => void)[]>([]);
   const nativeUiCleanupRef = useRef<(() => void) | null>(null);
@@ -50,7 +55,10 @@ export function PdfViewerSurface({
     (registry: PluginRegistry) => {
       clearRuntime();
       try {
-        const surface = new EmbedPdfSurface(document, createEmbedPdfRuntime(registry));
+        const surface = new EmbedPdfSurface(
+          document,
+          createEmbedPdfRuntime(registry, { pansByDefault }),
+        );
         surfaceRef.current = surface;
         onSurfaceReady(surface);
 
@@ -73,7 +81,7 @@ export function PdfViewerSurface({
         onDocumentError?.(reason instanceof Error ? reason.message : String(reason));
       }
     },
-    [clearRuntime, document, onDocumentError, onDocumentReady, onSurfaceReady],
+    [clearRuntime, document, onDocumentError, onDocumentReady, onSurfaceReady, pansByDefault],
   );
 
   useEffect(() => () => clearViewer(), [clearViewer]);

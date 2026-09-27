@@ -77,9 +77,17 @@ describe("Reader EmbedPDF policy", () => {
     );
   });
 
-  it("starts in text selection on touch-capable devices", () => {
-    // With no mode control, EmbedPDF's touch-detected pan default would strand selection.
-    expect(createReaderPdfViewerConfig("blob:reader-pdf").pan).toEqual({ defaultMode: "never" });
+  it("selects text where a mouse leads, including touchscreen laptops", () => {
+    expect(createReaderPdfViewerConfig("blob:reader-pdf", false).pan).toEqual({
+      defaultMode: "never",
+    });
+  });
+
+  it("pans where a finger leads, so a drag scrolls", () => {
+    // Text selection takes every drag on a phone; Reader offers a tool to select instead.
+    expect(createReaderPdfViewerConfig("blob:reader-pdf", true).pan).toEqual({
+      defaultMode: "always",
+    });
   });
 
   it("disables unsupported command families as well as hiding their UI", () => {
