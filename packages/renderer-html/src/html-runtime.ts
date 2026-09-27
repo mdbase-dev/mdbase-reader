@@ -49,7 +49,7 @@ export class HtmlDocumentRuntime {
     this.emitLocation();
     this.#motion.track(scrollingRoot(this.#document).scrollTop);
   };
-  readonly #onResize = (): void => this.#motion.settle();
+  readonly #onResize = (): void => this.#motion.settle("resize");
   readonly #onKeyDown = (event: KeyboardEvent): void =>
     forwardApplicationShortcut(event, this.#frame.ownerDocument);
   readonly #markers: MarginMarkers;
@@ -132,7 +132,7 @@ export class HtmlDocumentRuntime {
     if (!heading) {
       return false;
     }
-    this.#motion.settle();
+    this.#motion.settle("jump");
     scrollHtmlElement(this.#view, heading, "start");
     return true;
   }
@@ -147,7 +147,7 @@ export class HtmlDocumentRuntime {
     }
     const progression = locator.progression ?? 0;
     const root = this.#document.scrollingElement ?? this.#document.documentElement;
-    this.#motion.settle();
+    this.#motion.settle("jump");
     this.#view.scrollTo({ top: progression * Math.max(0, root.scrollHeight - root.clientHeight) });
     return true;
   }
@@ -158,7 +158,7 @@ export class HtmlDocumentRuntime {
     if (!range || !element) {
       return false;
     }
-    this.#motion.settle();
+    this.#motion.settle("jump");
     scrollHtmlElement(this.#view, element, "center");
     return true;
   }
