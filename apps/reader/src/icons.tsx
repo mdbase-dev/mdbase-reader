@@ -123,6 +123,11 @@ export const TextSelectIcon = (props: IconProps): JSX.Element => (
     <path d="M12 9h8M12 13h8M12 17h5" />
   </Icon>
 );
+export const OpenExternalIcon = (props: IconProps): JSX.Element => (
+  <Icon {...props}>
+    <path d="M10 5.5H5.5v13h13V14M13.5 5.5h5v5M18.5 5.5 11 13" />
+  </Icon>
+);
 export const CheckIcon = (props: IconProps): JSX.Element => (
   <Icon {...props}>
     <path d="m5 12.5 4.5 4.5L19 7.5" />

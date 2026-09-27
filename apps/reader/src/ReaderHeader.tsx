@@ -1,5 +1,4 @@
-import { ProductBrand, type ThemePreference } from "@mdbase-reader/ui";
-
+import { AppSwitcher } from "./AppSwitcher.js";
 import { CollectionPicker } from "./CollectionPicker.js";
 import { DisplayMenu } from "./DisplayMenu.js";
 import { BackIcon, LeftPaneIcon, ReadingModeIcon, RightPaneIcon, SearchIcon } from "./icons.js";
@@ -7,6 +6,7 @@ import { shortcutLabel } from "./Menu.js";
 
 import type { ReaderDirectAccessState } from "./use-direct-access.js";
 import type { ReadingTypography } from "@mdbase-reader/reading-surface";
+import type { ThemePreference } from "@mdbase-reader/ui";
 import type { JSX, ReactNode } from "react";
 
 /**
@@ -106,7 +106,7 @@ function LibraryHeader({
         >
           <LeftPaneIcon />
         </button>
-        <ProductBrand />
+        <AppSwitcher />
       </div>
       <div className="reader-header-context">
         <CollectionPicker

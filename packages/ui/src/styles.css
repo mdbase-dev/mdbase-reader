@@ -25,6 +25,10 @@
   --color-warning: oklch(60% 0.09 75);
   --color-danger: oklch(50% 0.11 28);
   --color-scrim: oklch(20% 0.006 250 / 0.22);
+  /* App colours: the bars of each app's mark. */
+  --app-editor: #005c88;
+  --app-reader: #a4467f;
+  --app-writer: #d55e00;
   --paper: var(--color-surface);
   --canvas: var(--color-canvas);
   --hover: var(--color-surface-subtle);
@@ -62,6 +66,9 @@
   --color-warning: oklch(78% 0.09 75);
   --color-danger: oklch(72% 0.115 28);
   --color-scrim: oklch(5% 0.006 250 / 0.62);
+  --app-editor: #63b1e2;
+  --app-reader: #e08cc0;
+  --app-writer: #f58d4a;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -83,6 +90,9 @@
     --color-warning: oklch(78% 0.09 75);
     --color-danger: oklch(72% 0.115 28);
     --color-scrim: oklch(5% 0.006 250 / 0.62);
+    --app-editor: #63b1e2;
+    --app-reader: #e08cc0;
+    --app-writer: #f58d4a;
   }
 }
 
@@ -148,6 +158,21 @@ a:focus-visible {
 }
 .mdbase-mark-accent {
   fill: var(--accent);
+}
+.mdbase-app-mark.is-editor {
+  --app: var(--app-editor);
+}
+.mdbase-app-mark.is-reader {
+  --app: var(--app-reader);
+}
+.mdbase-app-mark.is-writer {
+  --app: var(--app-writer);
+}
+.mdbase-app-mark-bars {
+  fill: var(--app);
+}
+.mdbase-app-mark-line {
+  fill: currentColor;
 }
 .mdbase-button {
   min-height: 34px;

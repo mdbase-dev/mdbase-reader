@@ -1,3 +1,4 @@
+import type { MdbaseAppId } from "./apps.js";
 import type { ButtonHTMLAttributes, JSX, SVGProps } from "react";
 
 export const mdbaseMarkViewBox = "18 18 84 84";
@@ -26,10 +27,36 @@ export function MdbaseMark(props: SVGProps<SVGSVGElement>): JSX.Element {
   );
 }
 
+/**
+ * An app's mark: the mdbase mark inverted, so the bars take the app's colour and the
+ * highlighted line stays ink. The plain mark stays the platform's own.
+ */
+export function MdbaseAppMark({
+  app,
+  className,
+  ...props
+}: SVGProps<SVGSVGElement> & { readonly app: MdbaseAppId }): JSX.Element {
+  return (
+    <svg
+      viewBox={mdbaseMarkViewBox}
+      aria-hidden="true"
+      className={["mdbase-app-mark", `is-${app}`, className].filter(Boolean).join(" ")}
+      {...props}
+    >
+      <g className="mdbase-app-mark-bars">
+        {inkRects.map((rect) => (
+          <rect key={`${String(rect.x)}-${String(rect.y)}`} {...rect} rx="2" />
+        ))}
+      </g>
+      <rect className="mdbase-app-mark-line" x="42" y="44" width="56" height="10" rx="2" />
+    </svg>
+  );
+}
+
 export function ProductBrand(): JSX.Element {
   return (
     <span className="mdbase-product-brand">
-      <MdbaseMark className="mdbase-product-mark" />
+      <MdbaseAppMark app="reader" className="mdbase-product-mark" />
       <strong>mdbase</strong>
       <span>reader</span>
     </span>
