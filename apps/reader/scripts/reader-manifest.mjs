@@ -75,28 +75,20 @@ export async function buildReaderManifest({
     requirements: {
       access: "full_collection",
       contracts,
+      // Contract readiness and collection setup are derived from `contracts` and
+      // `provisions`; version 2 has no capability identifiers for them.
       capabilities: {
-        contract_version: 1,
+        contract_version: 2,
         required: [
-          "collection.inspect",
-          "records.read",
-          "records.query",
+          "collection.read",
           "records.create",
-          "records.update",
+          "records.edit",
           "records.delete",
-          "views.list",
-          "views.execute",
-          "views.source.create",
-          "views.source.update",
-          "files.list",
-          "files.read",
-          "files.add",
-          "definitions.contracts.current",
-          "collection.setup.apply",
+          "views.manage",
         ],
       },
       files: {
-        actions: ["list", "read", "add"],
+        required: ["list", "read", "add"],
         scope: { kind: "collection" },
       },
     },

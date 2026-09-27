@@ -31,7 +31,7 @@ it("gives popup approval a human-scale budget without extending ordinary redirec
       requirements: {
         access: "full_collection",
         contracts: [],
-        capabilities: { contract_version: 1, required: ["collection.inspect"] },
+        capabilities: { contract_version: 2, required: ["collection.read"] },
       },
     },
   });
