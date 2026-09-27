@@ -25,12 +25,12 @@ export function useReadingChrome(input: {
   readonly focusMode: boolean;
   readonly autoHide: boolean;
   readonly surface: ReadingSurface | null;
+  /** Lays the workspace out at once when the chrome changes; see `setChromeHidden`. */
+  readonly onChange: () => void;
 }): void {
-  const { shell, focusMode, autoHide, surface } = input;
+  const { shell, focusMode, autoHide, surface, onChange } = input;
   useEffect(() => {
-    const setHidden = (hidden: boolean): void => {
-      shell.current?.toggleAttribute(chromeHiddenAttribute, hidden);
-    };
+    const setHidden = (hidden: boolean): void => setChromeHidden(shell, hidden, onChange);
     // A new document or mode starts with its chrome showing.
     setHidden(false);
     if (!(focusMode || autoHide) || !surface) {
@@ -45,14 +45,12 @@ export function useReadingChrome(input: {
       tapped?.();
       setHidden(false);
     };
-  }, [autoHide, focusMode, shell, surface]);
+  }, [autoHide, focusMode, onChange, shell, surface]);
   useEffect(() => {
     if (!focusMode) {
       return undefined;
     }
-    const setHidden = (hidden: boolean): void => {
-      shell.current?.toggleAttribute(chromeHiddenAttribute, hidden);
-    };
+    const setHidden = (hidden: boolean): void => setChromeHidden(shell, hidden, onChange);
     let timer: ReturnType<typeof setTimeout> | null = null;
     const hideSoon = (): void => {
       timer ??= setTimeout(() => {
@@ -97,7 +95,26 @@ export function useReadingChrome(input: {
       globalThis.removeEventListener("focusin", onFocusIn);
       setHidden(false);
     };
-  }, [focusMode, shell]);
+  }, [focusMode, onChange, shell]);
+}
+
+/**
+ * Motion is reported with every scroll, so only a real change touches the page. A change resizes
+ * the workspace, which the dock otherwise notices a frame or more later: meanwhile the document
+ * has moved but not grown, leaving a band of background, then jumps again. `onChange` lays it out
+ * in the same frame instead.
+ */
+function setChromeHidden(
+  shell: RefObject<HTMLElement | null>,
+  hidden: boolean,
+  onChange: () => void,
+): void {
+  const element = shell.current;
+  if (!element || element.hasAttribute(chromeHiddenAttribute) === hidden) {
+    return;
+  }
+  element.toggleAttribute(chromeHiddenAttribute, hidden);
+  onChange();
 }
 
 function chromeHasFocus(): boolean {
