@@ -266,15 +266,28 @@
   opacity: 0;
 }
 
-/* In reading mode the tab strip fades with the header; it keeps its height so the page
-   does not jump when the chrome returns. */
+/* In reading mode the tab strip goes with the header, leaving the page the whole window rather
+   than a blank band where the tabs were. */
 .reader-dock .dv-tabs-and-actions-container {
   transition: opacity 140ms var(--ease);
 }
 
 .reader-shell.is-focus-chrome-hidden .reader-dock .dv-tabs-and-actions-container {
+  height: 0;
+  overflow: hidden;
+  border-bottom: 0;
   pointer-events: none;
   opacity: 0;
+}
+
+/* See ReadingChromeReveal. */
+.reading-chrome-reveal {
+  position: fixed;
+  z-index: 30;
+  top: 0;
+  right: 0;
+  left: 0;
+  height: 10px;
 }
 
 .reader-header-brand {
