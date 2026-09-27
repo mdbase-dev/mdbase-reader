@@ -1,9 +1,9 @@
 import { annotationKindLabel } from "./annotation-kind.js";
 import { relativeDay } from "./LibraryCells.js";
+import { itemClick, type LongPress } from "./use-long-press.js";
 
 import type { AnnotationColumn } from "./annotation-columns.js";
 import type { AnnotationEntry } from "./annotation-overview.js";
-import type { LongPress } from "./use-long-press.js";
 import type { JSX, MouseEvent } from "react";
 
 export function AnnotationRow({
@@ -52,13 +52,16 @@ export function AnnotationRow({
       style={{ gridTemplateColumns, transform: `translateY(${String(top)}px)` }}
       {...press.bind(onLongPress)}
       onClick={(event) => {
-        if (!press.consumeClick()) {
+        const action = itemClick(press, event, touchSelecting);
+        if (action === "open") {
+          onOpen();
+        } else if (action === "select") {
           onSelect(event);
         }
       }}
       onDoubleClick={() => {
-        // While selecting by touch, a quick second tap toggles; it must not open the annotation.
-        if (!touchSelecting) {
+        // A tap has already opened it; while selecting by touch, a second tap toggles.
+        if (!touchSelecting && !press.touched()) {
           onOpen();
         }
       }}

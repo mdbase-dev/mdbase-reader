@@ -19,7 +19,7 @@ import {
 import { ReadingStatus, formatLabel } from "./LibraryCells.js";
 import { useOffsetTop } from "./LibraryTable.js";
 import { sourceFormat } from "./mdbase-library-views.js";
-import { hasModifier, useLongPress, type LongPress } from "./use-long-press.js";
+import { hasModifier, itemClick, useLongPress, type LongPress } from "./use-long-press.js";
 
 import type { SourceId, SourceSummary } from "@mdbase-reader/core";
 
@@ -136,12 +136,16 @@ function LibraryCard({
         aria-pressed={selected}
         {...press.bind(onLongPress)}
         onClick={(event) => {
-          if (!press.consumeClick()) {
+          const action = itemClick(press, event, touchSelecting);
+          if (action === "open") {
+            onOpen();
+          } else if (action === "select") {
             onSelect(event);
           }
         }}
         onDoubleClick={() => {
-          if (!touchSelecting) {
+          // A tap has already opened the source; while selecting by touch, a second tap toggles.
+          if (!touchSelecting && !press.touched()) {
             onOpen();
           }
         }}
