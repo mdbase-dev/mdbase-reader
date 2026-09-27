@@ -29,7 +29,7 @@ test("Reader keeps staging and production explicit", () => {
 
 test("Reader production uses the existing Pages origin and staging cannot overwrite it", () => {
   const { deployment } = readerDeploymentFor({ MDBASE_READER_DEPLOY_TARGET: "production" });
-  assert.equal(deployment.origin, "https://mdbase-reader.pages.dev");
+  assert.equal(deployment.origin, "https://reader.mdbase.dev");
   assert.equal(deployment.connectUrl, "https://connect.mdbase.dev");
   assert.equal(deployment.loopbackUrl, "http://127.0.0.1:28485");
   assert.equal(deployment.branch, "main");

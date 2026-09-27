@@ -12,7 +12,7 @@ export const readerDeployments = Object.freeze({
     branch: "staging",
   }),
   production: Object.freeze({
-    origin: "https://mdbase-reader.pages.dev",
+    origin: "https://reader.mdbase.dev",
     connectUrl: "https://connect.mdbase.dev",
     loopbackUrl: "http://127.0.0.1:28485",
     branch: "main",

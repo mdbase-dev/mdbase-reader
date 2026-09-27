@@ -29,7 +29,7 @@ jobs:
       cancel-in-progress: false
     environment:
       name: reader-${{ inputs.target }}
-      url: ${{ inputs.target == 'production' && 'https://mdbase-reader.pages.dev/' || 'https://staging.mdbase-reader.pages.dev/' }}
+      url: ${{ inputs.target == 'production' && 'https://reader.mdbase.dev/' || 'https://staging.mdbase-reader.pages.dev/' }}
     env:
       MDBASE_ENV: ${{ inputs.target }}
     steps:
@@ -61,7 +61,7 @@ jobs:
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
       - name: Verify deployed manifest
         env:
-          ORIGIN: ${{ inputs.target == 'production' && 'https://mdbase-reader.pages.dev' || 'https://staging.mdbase-reader.pages.dev' }}
+          ORIGIN: ${{ inputs.target == 'production' && 'https://reader.mdbase.dev' || 'https://staging.mdbase-reader.pages.dev' }}
         run: |
           for attempt in 1 2 3 4 5 6 7 8 9 10 11 12; do
             homepage=$(curl -fsS "$ORIGIN/.well-known/mdbase-app.json" | jq -r .homepage || true)
