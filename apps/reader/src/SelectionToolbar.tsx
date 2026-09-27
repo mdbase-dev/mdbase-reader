@@ -84,6 +84,32 @@ export function SelectionToolbarLayer({
   );
 }
 
+/**
+ * On a phone the actions take the place of the source views at the bottom edge, clear of the
+ * system's own selection menu and in easy reach of a thumb, while the text stays selected.
+ */
+export function SelectionActionBar({
+  composer,
+}: {
+  readonly composer: AnnotationComposerController;
+}): JSX.Element | null {
+  const bar = useRef<HTMLDivElement>(null);
+  const state = composer.toolbar;
+  if (!state) {
+    return null;
+  }
+  return (
+    <div className="mobile-source-views is-selection">
+      <SelectionToolbar
+        key={state.target.kind === "annotation" ? state.target.annotation.id : "selection"}
+        barRef={bar}
+        target={state.target}
+        composer={composer}
+      />
+    </div>
+  );
+}
+
 function SelectionToolbar({
   barRef,
   target,
@@ -148,6 +174,7 @@ function SelectionToolbar({
         onClick={() => copy("text")}
       >
         <CopyIcon />
+        <span className="selection-toolbar-label">Copy</span>
       </button>
       <button
         type="button"
@@ -162,6 +189,7 @@ function SelectionToolbar({
         onClick={() => copy("citation")}
       >
         <QuoteIcon />
+        <span className="selection-toolbar-label">Cite</span>
       </button>
       {target.kind === "annotation" ? (
         <DeleteHighlightButton
@@ -212,6 +240,7 @@ function DeleteHighlightButton({
         onClick={() => onChange("confirming")}
       >
         <TrashIcon />
+        <span className="selection-toolbar-label">Delete</span>
       </button>
     );
   }

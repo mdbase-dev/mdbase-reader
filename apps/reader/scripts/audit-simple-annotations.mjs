@@ -36,9 +36,9 @@ async function measureTyping(page, comments) {
 
 export async function auditSimpleAnnotations(
   page,
-  { pane, tab, duplicate, documentId, screenshot, blockWrites, measurements },
+  { documentActions, tab, duplicate, documentId, screenshot, blockWrites, measurements },
 ) {
-  await pane(documentId).getByLabel("More document actions", { exact: true }).click();
+  await documentActions(documentId).getByLabel("More document actions", { exact: true }).click();
   await page.getByRole("button", { name: "Annotations", exact: true }).click();
   const panes = page
     .locator('.workspace-pane[aria-hidden="false"]')

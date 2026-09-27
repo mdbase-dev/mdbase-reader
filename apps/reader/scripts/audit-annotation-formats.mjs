@@ -148,8 +148,12 @@ export async function auditAnnotationFormats(page, { open, screenshot }) {
   await expect.poll(alignment, { timeout: 15000 }).not.toBeNull();
   expect(await alignment()).toBeLessThan(4);
   await screenshot("annotation-epub-margin");
-  // Shortcuts reach Reader with keyboard focus inside the book's frame.
-  await paragraph.click({ position: { x: 4, y: 4 } });
+  // Shortcuts reach Reader with keyboard focus inside the book's frame. The click lands clear of
+  // the new highlight: activating it opens its toolbar, which Escape would rightly close first.
+  const paragraphBox = await paragraph.boundingBox();
+  await paragraph.click({
+    position: { x: paragraphBox.width - 4, y: paragraphBox.height - 4 },
+  });
   await paragraph.press("Control+.");
   await expect(page.getByRole("button", { name: "Reading mode" })).toHaveAttribute(
     "aria-pressed",

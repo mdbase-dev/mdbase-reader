@@ -1,6 +1,17 @@
-import { readingMeasureCharacters } from "@mdbase-reader/reading-surface";
+import {
+  createEventEmitter,
+  pageMotionTracker,
+  readingMeasureCharacters,
+} from "@mdbase-reader/reading-surface";
 import { EpubNavigator, EpubPreferences, type EpubNavigatorListeners } from "@readium/navigator";
-import { HttpFetcher, Locator, LocatorLocations, Manifest, Publication } from "@readium/shared";
+import {
+  HttpFetcher,
+  Locator,
+  LocatorLocations,
+  LocatorText,
+  Manifest,
+  Publication,
+} from "@readium/shared";
 
 import { createEpubAnnotationActivations } from "./epub-annotation-activation.js";
 import { annotationToEpubDecoration, applyAnnotationDecorations } from "./epub-decoration.js";
@@ -13,6 +24,7 @@ import { selectedTextDraft } from "./readium-selection.js";
 import type { Annotation, AnnotationId } from "@mdbase-reader/core";
 import type {
   ContentsEntry,
+  ReadingMotion,
   ReadingTypography,
   TextSelectionDraft,
   Unsubscribe,
@@ -30,6 +42,7 @@ export interface ReadiumRuntime {
   onLocationChanged(listener: (locator: Readonly<Record<string, unknown>>) => void): Unsubscribe;
   onTextSelected(listener: (selection: TextSelectionDraft) => void): Unsubscribe;
   onSelectionCleared?(listener: () => void): Unsubscribe;
+  onMotion?(listener: (motion: ReadingMotion) => void): Unsubscribe;
   onAnnotationActivated(listener: (annotationId: AnnotationId) => void): Unsubscribe;
   setAnnotations(annotations: readonly Annotation[]): void;
   setActiveAnnotation(annotation: Annotation | null): void;
@@ -69,7 +82,12 @@ export async function createReadiumRuntime(input: {
 }): Promise<ReadiumRuntime> {
   const publication = readiumPublication(input.manifest);
   const locationListeners = new Set<(locator: Readonly<Record<string, unknown>>) => void>();
-  const selectionListeners = new Set<(selection: TextSelectionDraft) => void>();
+  const { listeners: selectionListeners, emit: emitSelection } = selectionReporter(
+    input,
+    publication,
+  );
+  const motions = createEventEmitter<ReadingMotion>();
+  const trackMotion = pageMotionTracker((motion) => motions.emit(motion));
   const positions = publicationPositions(publication);
   if (positions.length === 0) {
     throw new Error("Readium cannot open an EPUB with an empty reading order.");
@@ -90,6 +108,8 @@ export async function createReadiumRuntime(input: {
     frameLoaded: () => undefined,
     positionChanged: (locator) => {
       const serialized = stableReadiumLocator(locator, input.publicationBaseUrl);
+      // Readium counts positions from 1; the first page is the start.
+      trackMotion((locator.locations.position ?? 1) - 1);
       for (const listener of locationListeners) {
         listener(serialized);
       }
@@ -102,17 +122,7 @@ export async function createReadiumRuntime(input: {
     scroll: () => undefined,
     customEvent: () => undefined,
     handleLocator: () => false,
-    textSelected: (selection) => {
-      const draft = selectedTextDraft({
-        selection,
-        publication,
-        container: input.container,
-        publicationBaseUrl: input.publicationBaseUrl,
-      });
-      for (const listener of selectionListeners) {
-        listener(draft);
-      }
-    },
+    textSelected: (selection) => emitSelection(selection),
     contentProtection: () => undefined,
     contextMenu: () => undefined,
     peripheral: () => undefined,
@@ -127,7 +137,13 @@ export async function createReadiumRuntime(input: {
   );
   await navigator.load();
   const annotationActivations = createEpubAnnotationActivations(navigator);
-  const frames = new EpubFrameEnhancements(input.container);
+  // Readium reports selections only on pointer release; the frames report the rest as they settle.
+  const frames = new EpubFrameEnhancements(input.container, (document, via) => {
+    const selection = settledFrameSelection(navigator, publication, document);
+    if (selection) {
+      emitSelection(selection, via);
+    }
+  });
 
   return {
     currentLocator: () => stableReadiumLocator(navigator.currentLocator, input.publicationBaseUrl),
@@ -154,6 +170,7 @@ export async function createReadiumRuntime(input: {
       return () => selectionListeners.delete(listener);
     },
     onSelectionCleared: (listener) => frames.onSelectionCleared(listener),
+    onMotion: (listener) => motions.subscribe(listener),
     onAnnotationActivated(listener) {
       const stops = [annotationActivations.subscribe(listener), frames.onActivated(listener)];
       return () => stops.forEach((stop) => stop());
@@ -173,11 +190,85 @@ export async function createReadiumRuntime(input: {
     async destroy() {
       locationListeners.clear();
       selectionListeners.clear();
+      motions.clear();
       annotationActivations.destroy();
       frames.destroy();
       await navigator.destroy();
     },
   };
+}
+
+type ReadiumTextSelection = Parameters<EpubNavigatorListeners["textSelected"]>[0];
+
+/** Turns Readium's selections into drafts for each listener, noting how they were made. */
+function selectionReporter(
+  input: { readonly container: HTMLElement; readonly publicationBaseUrl: string },
+  publication: Publication,
+): {
+  readonly listeners: Set<(selection: TextSelectionDraft) => void>;
+  readonly emit: (selection: ReadiumTextSelection, via?: "keyboard" | "touch") => void;
+} {
+  const listeners = new Set<(selection: TextSelectionDraft) => void>();
+  return {
+    listeners,
+    emit: (selection, via) => {
+      const draft = selectedTextDraft({
+        selection,
+        publication,
+        container: input.container,
+        publicationBaseUrl: input.publicationBaseUrl,
+      });
+      for (const listener of listeners) {
+        listener(via ? { ...draft, via } : draft);
+      }
+    },
+  };
+}
+
+/** The selection in one of Readium's frames, shaped as Readium reports it on release. */
+function settledFrameSelection(
+  navigator: EpubNavigator,
+  publication: Publication,
+  document: Document,
+): ReadiumTextSelection | null {
+  const view = document.defaultView;
+  const selection = view?.getSelection();
+  const text = selection?.toString() ?? "";
+  if (!view || !selection || selection.rangeCount === 0 || !text) {
+    return null;
+  }
+  const rect = selection.getRangeAt(0).getClientRects()[0] ?? new DOMRect();
+  const locator = frameLocator(navigator, publication, document, text);
+  return {
+    text,
+    x: rect.x,
+    y: rect.y,
+    width: rect.width,
+    height: rect.height,
+    targetFrameSrc: view.location.href,
+    ...(locator ? { locator } : {}),
+  };
+}
+
+/** Locates text in a frame by the reading-order item the frame shows, as Readium does. */
+function frameLocator(
+  navigator: EpubNavigator,
+  publication: Publication,
+  document: Document,
+  text: string,
+): Locator | null {
+  const index = navigator.pool.currentFrames.findIndex(
+    (frame) => frame?.iframe.contentDocument === document,
+  );
+  const href = index >= 0 ? navigator.viewport.readingOrder[index] : undefined;
+  if (!href) {
+    return null;
+  }
+  return new Locator({
+    href,
+    type: publication.readingOrder.findWithHref(href)?.type ?? "application/xhtml+xml",
+    text: new LocatorText({ highlight: text }),
+  });
 }
 
 function epubPreferences(typography: ReadingTypography): EpubPreferences {

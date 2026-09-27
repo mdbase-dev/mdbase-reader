@@ -44,8 +44,11 @@ export interface TextSelectionDraft {
   readonly locator: ReaderLocator;
   /** Where the selection appeared on screen when it was made, for placing selection UI. */
   readonly anchor?: ViewportRect;
-  /** How the selection was made, when the renderer knows; keyboard selections grow key by key. */
-  readonly via?: "pointer" | "keyboard";
+  /**
+   * How the selection was made, when the renderer knows. Keyboard selections grow key by key;
+   * touch selections settle without a pointer release, and their handles may still move.
+   */
+  readonly via?: "pointer" | "keyboard" | "touch";
 }
 
 export interface AreaSelectionDraft {
@@ -120,8 +123,19 @@ export interface TextExtractionCapability {
   extractText(options?: { readonly signal?: AbortSignal }): Promise<string>;
 }
 
+/**
+ * Which way the reader is moving through the document, so surrounding chrome can make way:
+ * "forward" as they read on, "backward" as they return, and "start" at the top.
+ */
+export type ReadingMotion = "forward" | "backward" | "start";
+
+export interface ReadingMotionCapability {
+  readonly motions: EventSource<ReadingMotion>;
+}
+
 export interface ReadingSurfaceCapabilities {
   readonly textSelection?: TextSelectionCapability;
+  readonly motion?: ReadingMotionCapability;
   readonly areaSelection?: AreaSelectionCapability;
   readonly decorations?: DecorationCapability;
   readonly annotationNavigation?: AnnotationNavigationCapability;

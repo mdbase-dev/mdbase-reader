@@ -47,6 +47,13 @@ export const PanelIcon = (props: IconProps): JSX.Element => (
     <path d="M14.5 4v16" />
   </Icon>
 );
+/** A pane's arrangement: split, merge, maximize. */
+export const LayoutIcon = (props: IconProps): JSX.Element => (
+  <Icon {...props}>
+    <rect x="3.5" y="4" width="17" height="16" rx="1" />
+    <path d="M12 4v16M12 12h8.5" />
+  </Icon>
+);
 export const LeftPaneIcon = (props: IconProps): JSX.Element => (
   <Icon {...props}>
     <rect x="3.5" y="4" width="17" height="16" rx="1" />

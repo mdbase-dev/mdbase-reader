@@ -33,29 +33,6 @@ export function useResponsiveInspector(setInspectorOpen: (open: boolean) => void
   }, [setInspectorOpen]);
 }
 
-export function useFocusChrome(focusMode: boolean): boolean {
-  const [visible, setVisible] = useState(true);
-  useEffect(() => {
-    if (!focusMode) {
-      return undefined;
-    }
-    let timer = globalThis.setTimeout(() => setVisible(false), 1400);
-    const reveal = (): void => {
-      setVisible(true);
-      globalThis.clearTimeout(timer);
-      timer = globalThis.setTimeout(() => setVisible(false), 1400);
-    };
-    globalThis.addEventListener("pointermove", reveal);
-    globalThis.addEventListener("keydown", reveal);
-    return () => {
-      globalThis.clearTimeout(timer);
-      globalThis.removeEventListener("pointermove", reveal);
-      globalThis.removeEventListener("keydown", reveal);
-    };
-  }, [focusMode]);
-  return !focusMode || visible;
-}
-
 export interface ReaderShortcutActions {
   readonly focusMode: boolean;
   readonly setFocusMode: (value: boolean) => void;

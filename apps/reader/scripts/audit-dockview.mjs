@@ -144,7 +144,11 @@ export async function auditDockview(page, { screenshot, blockWrites }) {
   );
 
   await tab("[test] Research 0001").click();
-  await firstSession.getByLabel("More document actions", { exact: true }).click();
+  // A document's actions sit in the tab strip of the pane that shows it.
+  await page
+    .locator(`.dv-groupview:has(.reader-dock-tab[data-panel-id="${firstId}"]) .dock-pane-actions`)
+    .getByLabel("More document actions", { exact: true })
+    .click();
   await page.getByRole("button", { name: "Literature note", exact: true }).click();
   const noteTab = tab("Literature note — [test] Research 0001");
   const noteId = await noteTab.getAttribute("data-panel-id");

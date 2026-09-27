@@ -73,6 +73,9 @@ async function auditComposition(page, a, b) {
 export async function auditSharedEditing(page, { screenshot, blockWrites, measurements }) {
   const tab = (id) => page.locator(`.reader-dock-tab[data-panel-id="${id}"]`);
   const pane = (id) => page.locator(`[data-session-id="${id}"]`);
+  // A document's actions sit in the tab strip of the pane that shows it.
+  const documentActions = (id) =>
+    page.locator(`.dv-groupview:has(.reader-dock-tab[data-panel-id="${id}"]) .dock-pane-actions`);
   const idOf = (editor) =>
     editor.evaluate((element) => element.closest("[data-session-id]").dataset.sessionId);
   const duplicate = async (id) => {
@@ -89,7 +92,7 @@ export async function auditSharedEditing(page, { screenshot, blockWrites, measur
     .locator(".reader-dock-tab:not(.is-side)")
     .filter({ hasText: "[test] Research 0000" })
     .getAttribute("data-panel-id");
-  await pane(documentId).getByLabel("More document actions", { exact: true }).click();
+  await documentActions(documentId).getByLabel("More document actions", { exact: true }).click();
   await page.getByRole("button", { name: "Literature note", exact: true }).click();
   const notes = page.getByRole("textbox", { name: "Source literature note" });
   await expect(notes).toHaveCount(1);
@@ -169,7 +172,7 @@ export async function auditSharedEditing(page, { screenshot, blockWrites, measur
   );
   expect(created[0].body).toContain("Latest characters saved immediately");
   const annotations = await auditSimpleAnnotations(page, {
-    pane,
+    documentActions,
     tab,
     duplicate,
     documentId,

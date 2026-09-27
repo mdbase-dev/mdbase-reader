@@ -10,6 +10,7 @@ import { inspectorSourceForTab } from "./inspector-source.js";
 import { InspectorPane, type InspectorTab } from "./InspectorPane.js";
 import { LibraryNavigator } from "./LibraryNavigator.js";
 import { LibraryWorkspace } from "./LibraryWorkspace.js";
+import { mobileSourceBar } from "./mobile-source-bar.js";
 import { readerCommands } from "./reader-command-list.js";
 import { ReaderHeader } from "./ReaderHeader.js";
 import { RenderedSourceDocument } from "./RenderedSourceDocument.js";
@@ -17,6 +18,7 @@ import { SourceAdditionOverlays } from "./SourceAdditionOverlays.js";
 import { useAnnotationCounts } from "./use-annotation-counts.js";
 import { useFileDrop } from "./use-file-drop.js";
 import { useMediaQuery } from "./use-media-query.js";
+import { useReadingChrome } from "./use-reading-chrome.js";
 import {
   useWorkspaceShellPreferences,
   type WorkspaceShellPreferencesController,
@@ -70,7 +72,6 @@ export interface ReaderWorkspaceViewModel {
   readonly theme: ThemePreference;
   readonly changeTheme: (theme: ThemePreference) => void;
   readonly focusMode: boolean;
-  readonly focusChromeVisible: boolean;
   readonly setFocusMode: (value: boolean | ((current: boolean) => boolean)) => void;
   readonly commandsOpen: boolean;
   readonly setCommandsOpen: (value: boolean) => void;
@@ -127,6 +128,7 @@ export function ReaderWorkspaceView({
     dock.setSinglePane(model.focusMode);
   }, [dock, mobile, model.focusMode]);
   const reading = useReadingPreferences(model, shell, mobile);
+  const chromeVisible = useShellChrome(model, mobile);
   const annotationCounts = useLibraryAnnotationCounts(model);
   const workbenchOwner = findWorkbenchOwner(
     sourceWorkspace.layout,
@@ -179,7 +181,7 @@ export function ReaderWorkspaceView({
   return (
     <div
       data-density={shell.value.density}
-      className={`reader-shell${model.deploymentUpdateAvailable ? " has-update" : ""}${model.focusChromeVisible ? "" : " is-focus-chrome-hidden"}`}
+      className={`reader-shell${model.deploymentUpdateAvailable ? " has-update" : ""}${chromeVisible ? "" : " is-focus-chrome-hidden"}`}
       {...fileDrop.handlers}
     >
       {fileDrop.active ? (
@@ -209,6 +211,7 @@ export function ReaderWorkspaceView({
         inspectorOpen={sourceToolsOpen}
         inspectorAvailable={true}
         onToggleInspector={() => dock.toggleSidebar("right")}
+        sourceBar={mobileSourceBar(model)}
       />
       <main className="reader-main reader-dock-main">
         <DockviewWorkspace
@@ -412,6 +415,17 @@ function useReadingPreferences(
     readingModeAvailable: activeTab?.kind === "source" && activeTab.view === "document",
     onToggleReadingMode: () => model.setFocusMode((value) => !value),
   };
+}
+
+/** Whether the header and bars show; a phone makes way for the document it is reading. */
+function useShellChrome(model: ReaderWorkspaceViewModel, mobile: boolean): boolean {
+  const activeTab = model.sourceWorkspace.activeTab;
+  const readingDocument = activeTab?.kind === "source" && activeTab.view === "document";
+  return useReadingChrome({
+    focusMode: model.focusMode,
+    autoHide: mobile && readingDocument,
+    surface: readingDocument ? (model.surfaces.get(activeTab.id) ?? null) : null,
+  });
 }
 
 /** The index's counts, corrected by the annotations already loaded for the selected source. */

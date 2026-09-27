@@ -70,7 +70,6 @@ export function DocumentWorkspace({
     dock.patch(tab.id, { preview: false });
   }, [dock, tab.id]);
   useDockPanelFocus(host, activate);
-  const pane = props.sourceWorkspace.layout.panes.find(({ id }) => id === paneId);
   const focused = props.sourceWorkspace.activePane.activeTabId === tab.id;
   const source = tab.kind === "source" ? props.sources.find(({ id }) => id === tab.sourceId) : null;
   const resident = visible || hydrated.has(workspaceSessionKey(paneId, tab.id));
@@ -87,15 +86,6 @@ export function DocumentWorkspace({
       inert={!visible}
     >
       <div className={`document-canvas ${surfaceClass}-canvas`}>
-        {document && source && pane ? (
-          <DocumentToolbar
-            props={props}
-            source={source}
-            pane={pane}
-            tabId={tab.id}
-            focused={focused}
-          />
-        ) : null}
         <div className="document-session-deck">
           <div className={visible ? "document-session is-active" : "document-session"}>
             {resident ? sessionContent(props, tab, paneId, focused, visible) : null}
@@ -104,7 +94,8 @@ export function DocumentWorkspace({
         {document && focused && visible ? (
           <>
             <AnnotationComposerLayer composer={props.annotationComposer} />
-            <SelectionToolbarLayer composer={props.annotationComposer} />
+            {/* A phone shows selection actions in its bottom bar instead. */}
+            {dock.mobile ? null : <SelectionToolbarLayer composer={props.annotationComposer} />}
           </>
         ) : null}
       </div>
@@ -112,7 +103,11 @@ export function DocumentWorkspace({
   );
 }
 
-function DocumentToolbar({
+/**
+ * A document's actions. They sit with its tabs (or in a phone's header) rather than over the
+ * page, so they never cover the text.
+ */
+export function DocumentToolbar({
   props,
   source,
   pane,

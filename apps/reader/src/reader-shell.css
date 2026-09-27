@@ -481,6 +481,46 @@
   }
 }
 
+/* On a phone the right sidebar has no place (a source's tools are in its bottom bar), and reading
+   mode lives in a document's menu. */
+@media (max-width: 680px) {
+  .reader-header .header-pane-toggle.is-inspector,
+  .reader-header .header-reading-mode {
+    display: none;
+  }
+}
+
+/* A phone showing a source: back, the open tabs, then the source's actions. */
+.reader-header.is-source-bar {
+  gap: 2px;
+  padding-inline: 4px;
+}
+
+.reader-header.is-source-bar .reader-header-actions {
+  gap: 0;
+}
+
+.reader-header.is-source-bar .header-back {
+  color: var(--action);
+}
+
+.reader-header.is-source-bar .document-toolbar {
+  position: static;
+  height: auto;
+  gap: 0;
+  padding: 0;
+}
+
+.reader-header.is-source-bar .document-area-action {
+  width: 40px;
+  justify-content: center;
+  padding: 0;
+}
+
+.reader-header.is-source-bar .document-area-action span {
+  display: none;
+}
+
 @media (pointer: coarse) {
   .reader-header .icon-button,
   .reader-header .header-command-button {
@@ -1654,8 +1694,29 @@
     display: none;
   }
 
+  /* Without "in", a divider and a visible chevron keep the scope from reading as the query. */
   .library-search-scope.mdbase-select {
     max-width: 112px;
+    margin-block: 4px;
+    border-left: 1px solid var(--line);
+    border-radius: 0;
+    color: var(--muted);
+    font-weight: 400;
+  }
+
+  .library-search-scope .mdbase-select-chevron {
+    opacity: 1 !important;
+  }
+
+  /* A status is one short word; it keeps it whole rather than the title's room. */
+  .library-table-row .library-status {
+    width: max-content;
+    grid-template-columns: auto auto;
+  }
+
+  /* A percentage cap against a content-sized status would cut the word short. */
+  .library-table-row .library-status .mdbase-select {
+    max-width: none;
   }
 
   /* The count stays announced; the empty state and view name already say what is shown. */
@@ -2658,6 +2719,65 @@
   color: var(--action);
   background: color-mix(in oklch, var(--action) 8%, transparent);
   font-weight: 600;
+}
+
+/* Reading on hides the bar with the header; a selection's actions stay within reach. */
+.reader-shell.is-focus-chrome-hidden .mobile-source-views:not(.is-selection) {
+  display: none;
+}
+
+/* While text is selected the same bar holds the selection's actions, at the same height so the
+   page does not move under the selection. */
+.mobile-source-views.is-selection {
+  position: relative;
+  display: block;
+}
+.mobile-source-views.is-selection .selection-toolbar {
+  display: grid;
+  grid-auto-columns: minmax(0, 1fr);
+  grid-auto-flow: column;
+  gap: 0;
+  padding: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+  animation: none;
+}
+.mobile-source-views.is-selection .selection-toolbar > button,
+.mobile-source-views.is-selection .selection-toolbar > button.icon-button {
+  width: auto;
+  height: auto;
+  min-height: 48px;
+  display: grid;
+  gap: 3px;
+  padding: 0 4px;
+  border-radius: 8px;
+  color: var(--ink-soft);
+  font-size: 11px;
+}
+.mobile-source-views.is-selection .selection-toolbar > button:first-child {
+  color: var(--action);
+  font-weight: 600;
+}
+.mobile-source-views.is-selection .selection-toolbar > button.is-danger {
+  color: var(--danger);
+}
+.mobile-source-views.is-selection .selection-toolbar svg {
+  width: 18px;
+  height: 18px;
+}
+.mobile-source-views.is-selection .selection-toolbar-divider {
+  display: none;
+}
+.mobile-source-views.is-selection .selection-toolbar-status {
+  position: absolute;
+  bottom: calc(100% + 8px);
+  left: 50%;
+  padding: 6px 12px;
+  border-radius: 999px;
+  color: var(--paper);
+  background: var(--ink);
+  transform: translateX(-50%);
 }
 
 .mobile-workspace-navigation {
@@ -3912,6 +4032,14 @@
   width: 15px;
   height: 15px;
   flex: 0 0 auto;
+}
+
+/* Icon buttons carry visible labels only in the phone's action bar. */
+.selection-toolbar-label {
+  display: none;
+}
+.mobile-source-views.is-selection .selection-toolbar-label {
+  display: inline;
 }
 
 .selection-toolbar-divider {

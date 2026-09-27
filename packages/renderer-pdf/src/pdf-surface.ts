@@ -1,8 +1,9 @@
-import { createEventEmitter } from "@mdbase-reader/reading-surface";
+import { createEventEmitter, scrollMotionTracker } from "@mdbase-reader/reading-surface";
 
 import type { EmbedPdfRuntime } from "./embedpdf-runtime.js";
 import type { AnnotationId } from "@mdbase-reader/core";
 import type {
+  ReadingMotion,
   ReadingSurface,
   ReaderLocator,
   SurfaceDocument,
@@ -21,6 +22,8 @@ export class EmbedPdfSurface implements ReadingSurface {
     createEventEmitter<Parameters<Parameters<EmbedPdfRuntime["onTextSelected"]>[0]>[0]>();
   readonly #annotationActivations = createEventEmitter<AnnotationId>();
   readonly #cleared = createEventEmitter<null>();
+  readonly #motions = createEventEmitter<ReadingMotion>();
+  readonly #unsubscribeMotion: () => void;
   readonly #unsubscribeCleared: () => void;
   readonly #unsubscribeArea: () => void;
   readonly #unsubscribePage: () => void;
@@ -48,6 +51,9 @@ export class EmbedPdfSurface implements ReadingSurface {
     this.#unsubscribeAnnotationActivation = runtime.onAnnotationActivated((annotationId) =>
       this.#annotationActivations.emit(annotationId),
     );
+    const motion = scrollMotionTracker((value) => this.#motions.emit(value));
+    const stops = [runtime.onScrolled?.(motion.track), runtime.onViewportResized?.(motion.resized)];
+    this.#unsubscribeMotion = () => stops.forEach((stop) => stop?.());
     this.#unsubscribePage = runtime.onPageChanged((pageIndex) => {
       this.#pageIndex = pageIndex;
       this.locations.emit({ kind: "pdf", pageIndex });
@@ -58,6 +64,7 @@ export class EmbedPdfSurface implements ReadingSurface {
         cleared: this.#cleared,
         clearSelection: () => runtime.clearTextSelection(),
       },
+      ...(runtime.onScrolled ? { motion: { motions: this.#motions } } : {}),
       areaSelection: {
         selections: this.#areaSelections,
         beginAreaSelection: () => runtime.beginAreaSelection(),
@@ -105,10 +112,12 @@ export class EmbedPdfSurface implements ReadingSurface {
       this.#unsubscribePage();
       this.#unsubscribeText();
       this.#unsubscribeCleared();
+      this.#unsubscribeMotion();
       this.#unsubscribeAnnotationActivation();
       this.#areaSelections.clear();
       this.#textSelections.clear();
       this.#cleared.clear();
+      this.#motions.clear();
       this.#annotationActivations.clear();
       this.locations.clear();
       this.#runtime.destroy();

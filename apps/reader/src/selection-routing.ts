@@ -30,7 +30,10 @@ export function selectionRoute(input: {
   if (value.kind === "area") {
     return input.busy ? "ignore" : written ? "confirm-compose" : "compose";
   }
-  return input.instant && value.value.via !== "keyboard" ? "highlight" : "toolbar";
+  // Keyboard selections grow key by key and touch selections by their handles, so neither is
+  // final when it is reported.
+  const growing = value.value.via === "keyboard" || value.value.via === "touch";
+  return input.instant && !growing ? "highlight" : "toolbar";
 }
 
 /** Renderers report a selection again on key and pointer release; the same passage is not new. */

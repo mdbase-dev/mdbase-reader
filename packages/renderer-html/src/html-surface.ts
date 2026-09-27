@@ -4,6 +4,7 @@ import type { HtmlDocumentRuntime } from "./html-runtime.js";
 import type { Annotation, AnnotationId } from "@mdbase-reader/core";
 import type {
   ReaderLocator,
+  ReadingMotion,
   ReadingSurface,
   SurfaceDocument,
   TextSelectionDraft,
@@ -16,6 +17,8 @@ export class HtmlReadingSurface implements ReadingSurface {
   readonly #selections = createEventEmitter<TextSelectionDraft>();
   readonly #cleared = createEventEmitter<null>();
   readonly #annotationActivations = createEventEmitter<AnnotationId>();
+  readonly #motions = createEventEmitter<ReadingMotion>();
+  readonly #unsubscribeMotion: () => void;
   readonly #unsubscribeLocation: () => void;
   readonly #unsubscribeSelection: () => void;
   readonly #unsubscribeCleared: () => void;
@@ -31,6 +34,7 @@ export class HtmlReadingSurface implements ReadingSurface {
       this.#selections.emit(selection),
     );
     this.#unsubscribeCleared = runtime.onSelectionCleared(() => this.#cleared.emit(null));
+    this.#unsubscribeMotion = runtime.onMotion((motion) => this.#motions.emit(motion));
     this.#unsubscribeAnnotationActivation = runtime.onAnnotationActivated((annotationId) =>
       this.#annotationActivations.emit(annotationId),
     );
@@ -40,6 +44,7 @@ export class HtmlReadingSurface implements ReadingSurface {
         cleared: this.#cleared,
         clearSelection: () => runtime.clearSelection(),
       },
+      motion: { motions: this.#motions },
       decorations: {
         setAnnotations: (annotations) => {
           runtime.setAnnotations(this.forThisDocument(annotations));
@@ -93,10 +98,12 @@ export class HtmlReadingSurface implements ReadingSurface {
       this.#unsubscribeLocation();
       this.#unsubscribeSelection();
       this.#unsubscribeCleared();
+      this.#unsubscribeMotion();
       this.#unsubscribeAnnotationActivation();
       this.locations.clear();
       this.#selections.clear();
       this.#cleared.clear();
+      this.#motions.clear();
       this.#annotationActivations.clear();
       this.runtime.destroy();
       this.#destroyed = true;

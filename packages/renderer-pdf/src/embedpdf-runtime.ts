@@ -4,6 +4,7 @@ import {
   CapturePlugin,
   DocumentManagerPlugin,
   ScrollPlugin,
+  ViewportPlugin,
   type PluginRegistry,
 } from "@embedpdf/react-pdf-viewer";
 
@@ -25,6 +26,9 @@ export interface EmbedPdfRuntime {
   beginAreaSelection(): void;
   cancelAreaSelection(): void;
   onPageChanged(listener: (pageIndex: number) => void): Unsubscribe;
+  /** The viewport's scroll offset as the reader scrolls, when EmbedPDF reports it. */
+  onScrolled?(listener: (scrollTop: number) => void): Unsubscribe;
+  onViewportResized?(listener: () => void): Unsubscribe;
   onAreaSelected(listener: (selection: AreaSelectionDraft) => void): Unsubscribe;
   onTextSelected(listener: (selection: TextSelectionDraft) => void): Unsubscribe;
   onSelectionCleared?(listener: () => void): Unsubscribe;
@@ -104,6 +108,7 @@ export function createEmbedPdfRuntime(registry: PluginRegistry): EmbedPdfRuntime
 
   const capture = capturePlugin.provides();
   const scroll = scrollPlugin.provides();
+  const viewport = registry.getPlugin<ViewportPlugin>(ViewportPlugin.id)?.provides() ?? null;
   const selection = selectionPlugin.provides();
   const annotationCapability = annotationPlugin.provides();
   const decorations = createPdfDecorationController(annotationCapability);
@@ -125,6 +130,28 @@ export function createEmbedPdfRuntime(registry: PluginRegistry): EmbedPdfRuntime
         unsubscribe();
       };
     },
+    ...(viewport
+      ? {
+          onScrolled(listener: (scrollTop: number) => void) {
+            const unsubscribe = viewport.onScrollChange((event) =>
+              listener(event.scrollMetrics.scrollTop),
+            );
+            subscriptions.add(unsubscribe);
+            return () => {
+              subscriptions.delete(unsubscribe);
+              unsubscribe();
+            };
+          },
+          onViewportResized(listener: () => void) {
+            const unsubscribe = viewport.onViewportResize(() => listener());
+            subscriptions.add(unsubscribe);
+            return () => {
+              subscriptions.delete(unsubscribe);
+              unsubscribe();
+            };
+          },
+        }
+      : {}),
     onAreaSelected(listener) {
       const unsubscribe = capture.onCaptureArea((event) =>
         listener(captureEventToAreaSelection(event)),
