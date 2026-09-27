@@ -24,18 +24,32 @@ describe("scrollMotionTracker", () => {
     expect(track([100, 300, 500, 480, 440, 400])).toEqual(["forward", "backward"]);
   });
 
-  it("treats scrolling just after a resize as layout, not reading", () => {
+  it("treats scrolling just after settling as layout or a jump, not reading", () => {
     vi.useFakeTimers();
     const motions: ReadingMotion[] = [];
     const tracker = scrollMotionTracker((motion) => motions.push(motion));
     tracker.track(300);
-    tracker.resized();
+    tracker.settle();
     [360, 420].forEach(tracker.track);
     vi.advanceTimersByTime(400);
     [430, 440].forEach(tracker.track);
     expect(motions).toEqual([]);
     [480].forEach(tracker.track);
     expect(motions).toEqual(["forward"]);
+    vi.useRealTimers();
+  });
+
+  it("keeps settling while a smooth jump is still scrolling", () => {
+    vi.useFakeTimers();
+    const motions: ReadingMotion[] = [];
+    const tracker = scrollMotionTracker((motion) => motions.push(motion));
+    tracker.track(100);
+    tracker.settle();
+    for (let step = 1; step <= 10; step += 1) {
+      vi.advanceTimersByTime(100);
+      tracker.track(100 + step * 200);
+    }
+    expect(motions).toEqual([]);
     vi.useRealTimers();
   });
 
@@ -47,8 +61,22 @@ describe("scrollMotionTracker", () => {
 describe("pageMotionTracker", () => {
   it("follows page turns", () => {
     const motions: ReadingMotion[] = [];
-    const update = pageMotionTracker((motion) => motions.push(motion));
-    [3, 4, 4, 3, 0].forEach(update);
+    const tracker = pageMotionTracker((motion) => motions.push(motion));
+    [3, 4, 4, 3, 0].forEach(tracker.track);
     expect(motions).toEqual(["forward", "backward", "start"]);
+  });
+
+  it("treats a position change just after settling as reflow or a jump, not a page turn", () => {
+    vi.useFakeTimers();
+    const motions: ReadingMotion[] = [];
+    const tracker = pageMotionTracker((motion) => motions.push(motion));
+    tracker.track(5);
+    tracker.settle();
+    tracker.track(4);
+    expect(motions).toEqual([]);
+    vi.advanceTimersByTime(400);
+    tracker.track(5);
+    expect(motions).toEqual(["forward"]);
+    vi.useRealTimers();
   });
 });

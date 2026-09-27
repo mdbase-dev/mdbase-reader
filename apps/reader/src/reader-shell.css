@@ -260,7 +260,7 @@
   transition: opacity 140ms var(--ease);
 }
 
-.reader-shell.is-focus-chrome-hidden .reader-header {
+.reader-shell[data-chrome-hidden] .reader-header {
   overflow: hidden;
   pointer-events: none;
   opacity: 0;
@@ -272,7 +272,7 @@
   transition: opacity 140ms var(--ease);
 }
 
-.reader-shell.is-focus-chrome-hidden .reader-dock .dv-tabs-and-actions-container {
+.reader-shell[data-chrome-hidden] .reader-dock .dv-tabs-and-actions-container {
   height: 0;
   overflow: hidden;
   border-bottom: 0;
@@ -280,14 +280,20 @@
   opacity: 0;
 }
 
-/* See ReadingChromeReveal. */
+/* Pointer moves over a document's frame never reach Reader, so while reading mode hides the
+   chrome a thin band over the top edge hears the pointer that asks for it back. */
 .reading-chrome-reveal {
+  display: none;
   position: fixed;
   z-index: 30;
   top: 0;
   right: 0;
   left: 0;
   height: 10px;
+}
+
+.reader-shell[data-chrome-hidden] .reading-chrome-reveal {
+  display: block;
 }
 
 .reader-header-brand {
@@ -2312,90 +2318,9 @@
   cursor: help;
 }
 
-.reader-shell.is-focus-chrome-hidden .document-toolbar {
+.reader-shell[data-chrome-hidden] .document-toolbar {
   opacity: 0;
   pointer-events: none;
-}
-
-/* Offline: a quiet corner control instead of a status bar. */
-
-.offline-document-control {
-  position: absolute;
-  z-index: 15;
-  right: 12px;
-  bottom: 12px;
-  display: grid;
-  justify-items: end;
-  gap: 6px;
-  pointer-events: none;
-}
-
-.offline-document-control > * {
-  pointer-events: auto;
-}
-
-.offline-document-control button {
-  height: 28px;
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  padding: 0 10px 0 8px;
-  border: 1px solid var(--line);
-  border-radius: 999px;
-  color: var(--muted);
-  background: color-mix(in oklch, var(--paper) 92%, transparent);
-  font: inherit;
-  font-size: var(--ui-meta);
-  cursor: pointer;
-  opacity: 0.8;
-  transition: opacity 120ms var(--ease);
-}
-
-.offline-document-control button:hover,
-.offline-document-control button:focus-visible {
-  color: var(--ink);
-  opacity: 1;
-}
-
-.offline-document-control.is-cached button {
-  color: var(--connected);
-}
-
-.offline-document-control svg {
-  width: 14px;
-  height: 14px;
-}
-
-.offline-document-control p {
-  max-width: 280px;
-  margin: 0;
-  padding: 8px 10px;
-  border: 1px solid color-mix(in oklch, var(--danger) 35%, var(--line));
-  border-radius: 6px;
-  color: var(--danger);
-  background: var(--paper);
-  font-size: var(--ui-meta);
-}
-
-.reader-shell.is-focus-chrome-hidden .offline-document-control {
-  display: none;
-}
-
-@media (max-width: 680px) {
-  .offline-document-control button span {
-    position: absolute;
-    width: 1px;
-    height: 1px;
-    overflow: hidden;
-    clip: rect(0, 0, 0, 0);
-  }
-
-  .offline-document-control button {
-    width: 32px;
-    height: 32px;
-    justify-content: center;
-    padding: 0;
-  }
 }
 
 /* Empty states. */
@@ -2735,7 +2660,7 @@
 }
 
 /* Reading on hides the bar with the header; a selection's actions stay within reach. */
-.reader-shell.is-focus-chrome-hidden .mobile-source-views:not(.is-selection) {
+.reader-shell[data-chrome-hidden] .mobile-source-views:not(.is-selection) {
   display: none;
 }
 

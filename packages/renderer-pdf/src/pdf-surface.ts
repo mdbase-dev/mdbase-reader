@@ -23,6 +23,8 @@ export class EmbedPdfSurface implements ReadingSurface {
   readonly #annotationActivations = createEventEmitter<AnnotationId>();
   readonly #cleared = createEventEmitter<null>();
   readonly #motions = createEventEmitter<ReadingMotion>();
+  /** Reader's own jumps move the page too; what follows is not the reader scrolling. */
+  readonly #settleMotion: () => void;
   readonly #unsubscribeMotion: () => void;
   readonly #unsubscribeCleared: () => void;
   readonly #unsubscribeArea: () => void;
@@ -52,7 +54,8 @@ export class EmbedPdfSurface implements ReadingSurface {
       this.#annotationActivations.emit(annotationId),
     );
     const motion = scrollMotionTracker((value) => this.#motions.emit(value));
-    const stops = [runtime.onScrolled?.(motion.track), runtime.onViewportResized?.(motion.resized)];
+    this.#settleMotion = motion.settle;
+    const stops = [runtime.onScrolled?.(motion.track), runtime.onViewportResized?.(motion.settle)];
     this.#unsubscribeMotion = () => stops.forEach((stop) => stop?.());
     this.#unsubscribePage = runtime.onPageChanged((pageIndex) => {
       this.#pageIndex = pageIndex;
@@ -101,6 +104,7 @@ export class EmbedPdfSurface implements ReadingSurface {
     if (locator.kind !== "pdf" || locator.pageIndex < 0 || !Number.isInteger(locator.pageIndex)) {
       return Promise.resolve(false);
     }
+    this.#settleMotion();
     this.#runtime.goToPage(locator.pageIndex);
     this.#pageIndex = locator.pageIndex;
     return Promise.resolve(true);

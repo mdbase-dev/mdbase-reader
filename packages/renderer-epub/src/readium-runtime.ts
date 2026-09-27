@@ -24,6 +24,7 @@ import { selectedTextDraft } from "./readium-selection.js";
 import type { Annotation, AnnotationId } from "@mdbase-reader/core";
 import type {
   ContentsEntry,
+  EventSource,
   ReadingMotion,
   ReadingTypography,
   TextSelectionDraft,
@@ -86,8 +87,7 @@ export async function createReadiumRuntime(input: {
     input,
     publication,
   );
-  const motions = createEventEmitter<ReadingMotion>();
-  const trackMotion = pageMotionTracker((motion) => motions.emit(motion));
+  const motion = pageMotionReporter(input.container);
   const positions = publicationPositions(publication);
   if (positions.length === 0) {
     throw new Error("Readium cannot open an EPUB with an empty reading order.");
@@ -109,7 +109,7 @@ export async function createReadiumRuntime(input: {
     positionChanged: (locator) => {
       const serialized = stableReadiumLocator(locator, input.publicationBaseUrl);
       // Readium counts positions from 1; the first page is the start.
-      trackMotion((locator.locations.position ?? 1) - 1);
+      motion.track((locator.locations.position ?? 1) - 1);
       for (const listener of locationListeners) {
         listener(serialized);
       }
@@ -156,9 +156,10 @@ export async function createReadiumRuntime(input: {
       if (!destination) {
         return Promise.resolve(false);
       }
+      motion.settle();
       return new Promise((resolve) => navigator.go(destination, false, resolve));
     },
-    ...sectionNavigation(publication, navigator),
+    ...sectionNavigation(publication, navigator, motion.settle),
     clearSelection: () => clearFrameSelections(input.container),
     extractText: (options) => extractPublicationText(publication, options?.signal),
     onLocationChanged(listener) {
@@ -170,7 +171,7 @@ export async function createReadiumRuntime(input: {
       return () => selectionListeners.delete(listener);
     },
     onSelectionCleared: (listener) => frames.onSelectionCleared(listener),
-    onMotion: (listener) => motions.subscribe(listener),
+    onMotion: (listener) => motion.motions.subscribe(listener),
     onAnnotationActivated(listener) {
       const stops = [annotationActivations.subscribe(listener), frames.onActivated(listener)];
       return () => stops.forEach((stop) => stop());
@@ -190,10 +191,36 @@ export async function createReadiumRuntime(input: {
     async destroy() {
       locationListeners.clear();
       selectionListeners.clear();
-      motions.clear();
+      motion.stop();
       annotationActivations.destroy();
       frames.destroy();
       await navigator.destroy();
+    },
+  };
+}
+
+/**
+ * Page turns as reading motion. Resizing reflows the pages, and Reader's own jumps (to a saved
+ * place, an annotation, a contents entry) move them too; the position that follows is not a turn.
+ */
+function pageMotionReporter(container: HTMLElement): {
+  readonly motions: EventSource<ReadingMotion>;
+  readonly track: (position: number) => void;
+  readonly settle: () => void;
+  readonly stop: () => void;
+} {
+  const motions = createEventEmitter<ReadingMotion>();
+  const tracker = pageMotionTracker((value) => motions.emit(value));
+  const reflow =
+    typeof ResizeObserver === "undefined" ? null : new ResizeObserver(() => tracker.settle());
+  reflow?.observe(container);
+  return {
+    motions,
+    track: tracker.track,
+    settle: tracker.settle,
+    stop: () => {
+      reflow?.disconnect();
+      motions.clear();
     },
   };
 }
@@ -308,6 +335,7 @@ export function publicationPositions(publication: Publication): Locator[] {
 function sectionNavigation(
   publication: Publication,
   navigator: EpubNavigator,
+  settle: () => void,
 ): Pick<ReadiumRuntime, "goPage" | "contents" | "goToContents"> {
   const contents = flattenContents(publication.toc?.items ?? []);
   return {
@@ -318,9 +346,11 @@ function sectionNavigation(
     contents: () => contents.map(({ entry }) => entry),
     goToContents(id) {
       const link = contents.find(({ entry }) => entry.id === id)?.link;
-      return link
-        ? new Promise((resolve) => navigator.goLink(link, false, resolve))
-        : Promise.resolve(false);
+      if (!link) {
+        return Promise.resolve(false);
+      }
+      settle();
+      return new Promise((resolve) => navigator.goLink(link, false, resolve));
     },
   };
 }

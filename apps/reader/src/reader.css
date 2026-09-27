@@ -210,19 +210,19 @@ button {
   grid-template-rows: auto var(--reader-header-height) minmax(0, 1fr);
 }
 
-.reader-shell.is-focus-chrome-hidden {
+.reader-shell[data-chrome-hidden] {
   grid-template-rows: 0 minmax(0, 1fr);
 }
 
-.reader-shell.has-update.is-focus-chrome-hidden {
+.reader-shell.has-update[data-chrome-hidden] {
   grid-template-rows: 0 0 minmax(0, 1fr);
 }
 
-.reader-shell.is-focus-chrome-hidden .workspace-pane {
+.reader-shell[data-chrome-hidden] .workspace-pane {
   grid-template-rows: 0 minmax(0, 1fr);
 }
 
-.reader-shell.is-focus-chrome-hidden .document-toolbar {
+.reader-shell[data-chrome-hidden] .document-toolbar {
   overflow: hidden;
   pointer-events: none;
   opacity: 0;
