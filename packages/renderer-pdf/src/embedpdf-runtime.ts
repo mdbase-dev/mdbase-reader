@@ -3,14 +3,12 @@ import { SelectionPlugin, type FormattedSelection } from "@embedpdf/plugin-selec
 import {
   CapturePlugin,
   DocumentManagerPlugin,
-  InteractionManagerPlugin,
   ScrollPlugin,
   ViewportPlugin,
   type PluginRegistry,
 } from "@embedpdf/react-pdf-viewer";
 
 import { createEmbedPdfAnnotationActivations } from "./embedpdf-annotation-activation.js";
-import { createTextSelectionTool } from "./embedpdf-text-selection-tool.js";
 import { createPdfDecorationController } from "./pdf-decoration-controller.js";
 
 import type { PdfDocumentObject, PdfEngine } from "@embedpdf/models";
@@ -19,7 +17,6 @@ import type { Annotation, AnnotationId } from "@mdbase-reader/core";
 import type {
   AreaSelectionDraft,
   TextSelectionDraft,
-  TextSelectionTool,
   Unsubscribe,
 } from "@mdbase-reader/reading-surface";
 
@@ -37,8 +34,6 @@ export interface EmbedPdfRuntime {
   onSelectionCleared?(listener: () => void): Unsubscribe;
   onAnnotationActivated(listener: (annotationId: AnnotationId) => void): Unsubscribe;
   clearTextSelection(): void;
-  /** Where the PDF pans by default (touch devices), the way to select text. */
-  readonly textSelectionTool?: TextSelectionTool;
   extractText(options?: { readonly signal?: AbortSignal }): Promise<string>;
   setAnnotations(annotations: readonly Annotation[]): void;
   setActiveAnnotation(annotation: Annotation | null): void;
@@ -102,10 +97,7 @@ export function captureEventToAreaSelection(event: CaptureAreaEvent): AreaSelect
   };
 }
 
-export function createEmbedPdfRuntime(
-  registry: PluginRegistry,
-  options: { readonly pansByDefault: boolean } = { pansByDefault: false },
-): EmbedPdfRuntime {
+export function createEmbedPdfRuntime(registry: PluginRegistry): EmbedPdfRuntime {
   const capturePlugin = registry.getPlugin<CapturePlugin>(CapturePlugin.id);
   const scrollPlugin = registry.getPlugin<ScrollPlugin>(ScrollPlugin.id);
   const selectionPlugin = registry.getPlugin<SelectionPlugin>(SelectionPlugin.id);
@@ -116,15 +108,12 @@ export function createEmbedPdfRuntime(
 
   const capture = capturePlugin.provides();
   const scroll = scrollPlugin.provides();
+  const viewport = registry.getPlugin<ViewportPlugin>(ViewportPlugin.id)?.provides() ?? null;
   const selection = selectionPlugin.provides();
   const annotationCapability = annotationPlugin.provides();
   const decorations = createPdfDecorationController(annotationCapability);
   const annotationActivations = createEmbedPdfAnnotationActivations(annotationCapability);
   const subscriptions = new Set<Unsubscribe>();
-  const textTool = options.pansByDefault ? textSelectionToolFor(registry, selection) : null;
-  if (textTool) {
-    subscriptions.add(textTool.stop);
-  }
 
   return {
     currentPageIndex: () => Math.max(0, scroll.getCurrentPage() - 1),
@@ -141,7 +130,28 @@ export function createEmbedPdfRuntime(
         unsubscribe();
       };
     },
-    ...viewportMotion(registry, subscriptions),
+    ...(viewport
+      ? {
+          onScrolled(listener: (scrollTop: number) => void) {
+            const unsubscribe = viewport.onScrollChange((event) =>
+              listener(event.scrollMetrics.scrollTop),
+            );
+            subscriptions.add(unsubscribe);
+            return () => {
+              subscriptions.delete(unsubscribe);
+              unsubscribe();
+            };
+          },
+          onViewportResized(listener: () => void) {
+            const unsubscribe = viewport.onViewportResize(() => listener());
+            subscriptions.add(unsubscribe);
+            return () => {
+              subscriptions.delete(unsubscribe);
+              unsubscribe();
+            };
+          },
+        }
+      : {}),
     onAreaSelected(listener) {
       const unsubscribe = capture.onCaptureArea((event) =>
         listener(captureEventToAreaSelection(event)),
@@ -187,7 +197,6 @@ export function createEmbedPdfRuntime(
       return annotationActivations.subscribe(listener);
     },
     clearTextSelection: () => selection.clear(),
-    ...(textTool ? { textSelectionTool: textTool.tool } : {}),
     async extractText(options) {
       const manager = registry.getPlugin<DocumentManagerPlugin>(DocumentManagerPlugin.id);
       if (!manager) {
@@ -207,37 +216,6 @@ export function createEmbedPdfRuntime(
       subscriptions.clear();
     },
   };
-}
-
-/** The viewport's scrolling and resizing, for reading motion, when EmbedPDF reports them. */
-function viewportMotion(
-  registry: PluginRegistry,
-  subscriptions: Set<Unsubscribe>,
-): Pick<EmbedPdfRuntime, "onScrolled" | "onViewportResized"> {
-  const viewport = registry.getPlugin<ViewportPlugin>(ViewportPlugin.id)?.provides();
-  if (!viewport) {
-    return {};
-  }
-  const track = (unsubscribe: Unsubscribe): Unsubscribe => {
-    subscriptions.add(unsubscribe);
-    return () => {
-      subscriptions.delete(unsubscribe);
-      unsubscribe();
-    };
-  };
-  return {
-    onScrolled: (listener) =>
-      track(viewport.onScrollChange((event) => listener(event.scrollMetrics.scrollTop))),
-    onViewportResized: (listener) => track(viewport.onViewportResize(() => listener())),
-  };
-}
-
-function textSelectionToolFor(
-  registry: PluginRegistry,
-  selection: Parameters<typeof createTextSelectionTool>[1],
-): ReturnType<typeof createTextSelectionTool> | null {
-  const interaction = registry.getPlugin<InteractionManagerPlugin>(InteractionManagerPlugin.id);
-  return interaction ? createTextSelectionTool(interaction.provides(), selection) : null;
 }
 
 type DocumentManagerCapability = ReturnType<DocumentManagerPlugin["provides"]>;

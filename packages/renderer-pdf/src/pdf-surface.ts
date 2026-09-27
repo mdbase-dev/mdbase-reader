@@ -69,7 +69,6 @@ export class EmbedPdfSurface implements ReadingSurface {
         selections: this.#textSelections,
         cleared: this.#cleared,
         clearSelection: () => runtime.clearTextSelection(),
-        ...(runtime.textSelectionTool ? { tool: runtime.textSelectionTool } : {}),
       },
       ...(runtime.onScrolled ? { motion: { motions: this.#motions } } : {}),
       areaSelection: {

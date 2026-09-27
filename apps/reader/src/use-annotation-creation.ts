@@ -6,7 +6,6 @@ import { annotationDraftKey } from "./annotation-drafts.js";
 import { useAreaSelectionMode } from "./use-area-selection-mode.js";
 import { useCreationSaving } from "./use-creation-saving.js";
 import { useSelectionRouting } from "./use-selection-routing.js";
-import { useTextSelectionTool } from "./use-text-selection-tool.js";
 
 import type { ComposerSelection } from "./annotation-composer-request.js";
 import type { SelectionToolbarController, TextComposerSelection } from "./use-selection-toolbar.js";
@@ -26,9 +25,6 @@ export interface AnnotationCreationController {
   readonly error: string | null;
   readonly canSelectArea: boolean;
   readonly selectingArea: boolean;
-  /** Selecting text is a tool to turn on where a finger drag scrolls (a PDF on a phone). */
-  readonly canSelectText: boolean;
-  readonly selectingText: boolean;
   readonly resumeDraft: (() => void) | null;
   /** A selection made while a comment was being written; the comment keeps its passage. */
   readonly newSelection: boolean;
@@ -42,7 +38,6 @@ export interface AnnotationCreationController {
   /** Opens the composer to comment on a selection. */
   readonly comment: (selection: TextComposerSelection) => void;
   readonly toggleAreaSelection: () => void;
-  readonly toggleTextSelection: () => void;
 }
 function creationKey(source: Source | null, surface: ReadingSurface | null): string {
   return source && surface
@@ -74,7 +69,6 @@ export function useAnnotationCreation(
   const { busy, setProblem } = saving;
   const [pausedKey, setPausedKey] = useState<string | null>(null);
   const area = useAreaSelectionMode(surface);
-  const text = useTextSelectionTool(surface);
   const [switchTo, setSwitchTo] = useState<{
     readonly key: string;
     readonly value: ComposerSelection;
@@ -124,8 +118,6 @@ export function useAnnotationCreation(
     error: saving.problem?.sourceId === sourceId ? saving.problem.message : null,
     canSelectArea: area.canSelectArea,
     selectingArea: area.selectingArea,
-    canSelectText: text.canSelectText,
-    selectingText: text.selectingText,
     resumeDraft: draft.value && !selection ? () => setPausedKey(null) : null,
     newSelection: pendingSwitch !== null,
     useNewSelection: () => {
@@ -151,12 +143,5 @@ export function useAnnotationCreation(
       }
     },
     toggleAreaSelection: area.toggleAreaSelection,
-    toggleTextSelection: () => {
-      // One tool at a time: area capture would otherwise stay armed under text selection.
-      if (area.selectingArea) {
-        area.toggleAreaSelection();
-      }
-      text.toggleTextSelection();
-    },
   };
 }
