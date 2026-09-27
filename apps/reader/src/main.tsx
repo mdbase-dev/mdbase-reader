@@ -11,6 +11,7 @@ import { ConnectReader } from "./ConnectReader.js";
 import { EnvironmentBadge } from "./EnvironmentBadge.js";
 import { forgetOfflineCopies } from "./forget-offline-copies.js";
 import { importService } from "./import-navigation.js";
+import { keepFocusedFieldInView } from "./keep-focused-field-in-view.js";
 import { PreviewReader } from "./preview.js";
 import "./environment-badge.css";
 
@@ -25,6 +26,7 @@ if (!root) {
   throw new Error("Reader root element is missing.");
 }
 forgetOfflineCopies(globalThis.indexedDB);
+keepFocusedFieldInView(window);
 const migrationService = importService(location.pathname);
 createRoot(root).render(
   <StrictMode>

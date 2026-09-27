@@ -2659,6 +2659,11 @@
   font-weight: 600;
 }
 
+/* While a new comment is typed, the keyboard leaves little room: the bar gives its height to it. */
+.reader-dock:has(.document-annotation-composer :focus) .mobile-source-views {
+  display: none;
+}
+
 /* Reading on hides the bar with the header; a selection's actions stay within reach. */
 .reader-shell[data-chrome-hidden] .mobile-source-views:not(.is-selection) {
   display: none;
