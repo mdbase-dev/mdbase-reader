@@ -54,8 +54,11 @@ export class EmbedPdfSurface implements ReadingSurface {
       this.#annotationActivations.emit(annotationId),
     );
     const motion = scrollMotionTracker((value) => this.#motions.emit(value));
-    this.#settleMotion = motion.settle;
-    const stops = [runtime.onScrolled?.(motion.track), runtime.onViewportResized?.(motion.settle)];
+    this.#settleMotion = () => motion.settle("jump");
+    const stops = [
+      runtime.onScrolled?.(motion.track),
+      runtime.onViewportResized?.(() => motion.settle("resize")),
+    ];
     this.#unsubscribeMotion = () => stops.forEach((stop) => stop?.());
     this.#unsubscribePage = runtime.onPageChanged((pageIndex) => {
       this.#pageIndex = pageIndex;
