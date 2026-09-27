@@ -428,8 +428,16 @@ function useShellChrome(
 ): void {
   const activeTab = model.sourceWorkspace.activeTab;
   const readingDocument = activeTab?.kind === "source" && activeTab.view === "document";
+  const dock = model.sourceWorkspace.dock;
+  const relayout = useCallback(() => {
+    const engine = shell.current?.querySelector<HTMLElement>(".reader-dock-engine");
+    if (engine) {
+      dock.layoutViewport(engine.clientWidth, engine.clientHeight);
+    }
+  }, [dock, shell]);
   useReadingChrome({
     shell,
+    onChange: relayout,
     focusMode: model.focusMode,
     autoHide: mobile && readingDocument,
     surface: readingDocument ? (model.surfaces.get(activeTab.id) ?? null) : null,
