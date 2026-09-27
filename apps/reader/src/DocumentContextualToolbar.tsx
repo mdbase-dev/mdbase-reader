@@ -10,6 +10,7 @@ import {
   MoreIcon,
   NoteIcon,
   ReadingModeIcon,
+  TextSelectIcon,
 } from "./icons.js";
 import { Menu } from "./Menu.js";
 import { DocumentStatus } from "./WorkspacePaneSupport.js";
@@ -31,6 +32,9 @@ export interface DocumentContextualToolbarProps {
   readonly decorationProblem: string | null;
   readonly canSelectArea: boolean;
   readonly selectingArea: boolean;
+  readonly canSelectText?: boolean;
+  readonly selectingText?: boolean;
+  readonly onToggleTextSelection?: () => void;
   readonly canBookmark: boolean;
   readonly bookmarking: boolean;
   readonly sourceExport: SourceExportController;
@@ -52,6 +56,9 @@ export function DocumentContextualToolbar({
   decorationProblem,
   canSelectArea,
   selectingArea,
+  canSelectText = false,
+  selectingText = false,
+  onToggleTextSelection,
   canBookmark,
   bookmarking,
   sourceExport,
@@ -65,17 +72,11 @@ export function DocumentContextualToolbar({
   const contents = surfaces.get(sessionId)?.capabilities.contents;
   return (
     <div className="document-toolbar" aria-label="Document actions">
+      {canSelectText && onToggleTextSelection ? (
+        <TextSelectionButton selecting={selectingText} onToggle={onToggleTextSelection} />
+      ) : null}
       {canSelectArea ? (
-        <button
-          type="button"
-          className={selectingArea ? "document-area-action is-active" : "document-area-action"}
-          aria-pressed={selectingArea}
-          title={selectingArea ? "Cancel area selection" : "Select an area to annotate"}
-          onClick={onToggleAreaSelection}
-        >
-          <AreaIcon />
-          <span>{selectingArea ? "Cancel" : "Select area"}</span>
-        </button>
+        <AreaSelectionButton selecting={selectingArea} onToggle={onToggleAreaSelection} />
       ) : null}
       {canBookmark && !compact ? (
         <button
@@ -123,6 +124,52 @@ export function DocumentContextualToolbar({
         <ExportItem sourceExport={sourceExport} />
       </Menu>
     </div>
+  );
+}
+
+/**
+ * On a phone a PDF scrolls under a finger; this turns on selecting its text until the selection
+ * is dismissed.
+ */
+function TextSelectionButton({
+  selecting,
+  onToggle,
+}: {
+  readonly selecting: boolean;
+  readonly onToggle: () => void;
+}): JSX.Element {
+  return (
+    <button
+      type="button"
+      className={selecting ? "document-area-action is-active" : "document-area-action"}
+      aria-pressed={selecting}
+      title={selecting ? "Stop selecting text and scroll again" : "Select text to annotate"}
+      onClick={onToggle}
+    >
+      <TextSelectIcon />
+      <span>{selecting ? "Done" : "Select text"}</span>
+    </button>
+  );
+}
+
+function AreaSelectionButton({
+  selecting,
+  onToggle,
+}: {
+  readonly selecting: boolean;
+  readonly onToggle: () => void;
+}): JSX.Element {
+  return (
+    <button
+      type="button"
+      className={selecting ? "document-area-action is-active" : "document-area-action"}
+      aria-pressed={selecting}
+      title={selecting ? "Cancel area selection" : "Select an area to annotate"}
+      onClick={onToggle}
+    >
+      <AreaIcon />
+      <span>{selecting ? "Cancel" : "Select area"}</span>
+    </button>
   );
 }
 

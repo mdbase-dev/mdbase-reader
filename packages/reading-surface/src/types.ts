@@ -66,10 +66,24 @@ export interface AreaSelectionDraft {
   readonly withAnnotations: boolean;
 }
 
+/**
+ * Where a finger drag scrolls the document instead of selecting (a PDF on a touch device), the
+ * reader turns selecting on with this tool. It stays on until the selection it made is dismissed.
+ */
+export interface TextSelectionTool {
+  /** Whether dragging selects text; fires as the tool turns on or off. */
+  readonly changes: EventSource<boolean>;
+  isActive(): boolean;
+  begin(): void;
+  cancel(): void;
+}
+
 export interface TextSelectionCapability {
   readonly selections: EventSource<TextSelectionDraft>;
   /** Fires when the text selection collapses, or a click in the document selects nothing. */
   readonly cleared?: EventSource<null>;
+  /** Present where selecting needs turning on; see `TextSelectionTool`. */
+  readonly tool?: TextSelectionTool;
   clearSelection(): void;
 }
 

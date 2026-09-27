@@ -132,6 +132,9 @@ export function DocumentToolbar({
       decorationProblem={props.decorationProblem}
       canSelectArea={focused && composer.canSelectArea}
       selectingArea={composer.selectingArea}
+      canSelectText={focused && composer.canSelectText}
+      selectingText={composer.selectingText}
+      onToggleTextSelection={composer.toggleTextSelection}
       onToggleAreaSelection={composer.toggleAreaSelection}
       canBookmark={focused && composer.canBookmark}
       bookmarking={composer.bookmarking}
