@@ -203,7 +203,7 @@
   .dock-pane-menu
   > button {
   opacity: 0;
-  transition: opacity 120ms var(--ease);
+  transition: opacity var(--motion-quick) var(--ease-out);
 }
 .reader-dock
   .dv-groupview:has(.reader-dock-tab.is-side):not(:has(.dv-tab + .dv-tab))

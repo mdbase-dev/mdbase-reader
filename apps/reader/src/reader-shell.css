@@ -255,7 +255,7 @@
   padding: 0 12px 0 10px;
   border-bottom: 1px solid var(--reader-hairline);
   background: color-mix(in oklch, var(--paper) 98%, var(--canvas));
-  transition: opacity 140ms var(--ease);
+  transition: opacity var(--motion-quick) var(--ease-out);
 }
 
 .reader-shell[data-chrome-hidden] .reader-header {
@@ -267,7 +267,7 @@
 /* In reading mode the tab strip goes with the header, leaving the page the whole window rather
    than a blank band where the tabs were. */
 .reader-dock .dv-tabs-and-actions-container {
-  transition: opacity 140ms var(--ease);
+  transition: opacity var(--motion-quick) var(--ease-out);
 }
 
 .reader-shell[data-chrome-hidden] .reader-dock .dv-tabs-and-actions-container {
@@ -594,7 +594,7 @@
   color: var(--faint);
   font: 10px/1 var(--mono);
   opacity: 0;
-  transition: opacity 120ms var(--ease);
+  transition: opacity var(--motion-quick) var(--ease-out);
 }
 
 .navigator-search:focus-within kbd {
@@ -1376,13 +1376,18 @@
 .library-column-menu {
   flex: 0 0 auto;
   opacity: 0;
-  transition: opacity 120ms var(--ease);
+  transition: opacity var(--motion-quick) var(--ease-out);
 }
 
 .library-column-header:hover .library-column-menu,
 .library-column-menu[open],
 .library-column-menu:focus-within {
   opacity: 1;
+}
+@media (hover: none) {
+  .library-column-menu {
+    opacity: 1;
+  }
 }
 
 .library-column-menu > summary {
@@ -1423,7 +1428,7 @@
   border-radius: 1px;
   background: var(--line);
   opacity: 0;
-  transition: opacity 120ms var(--ease);
+  transition: opacity var(--motion-quick) var(--ease-out);
 }
 
 .library-table-row.is-header:hover .library-column-resizer::after {
@@ -2166,7 +2171,7 @@
   align-items: center;
   gap: 2px;
   opacity: 0;
-  transition: opacity 120ms var(--ease);
+  transition: opacity var(--motion-quick) var(--ease-out);
 }
 
 .annotation-card:hover .annotation-card-actions,
