@@ -14,7 +14,7 @@
   "dependencies": {
     "@fontsource/atkinson-hyperlegible": "^5.3.0",
     "@fontsource/azeret-mono": "^5.3.0",
-    "@mdbase-dev/ui": "file:../../vendor/mdbase-dev-ui-0.1.0-beta.115-6897e7931063.tgz",
+    "@mdbase-dev/ui": "file:../../vendor/mdbase-dev-ui-0.1.0-beta.115-c1d1dddb3121.tgz",
     "react": "^19.2.8"
   },
   "devDependencies": {

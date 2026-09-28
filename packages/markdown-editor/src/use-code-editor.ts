@@ -1,6 +1,7 @@
 import { history } from "@codemirror/commands";
 import { Compartment, EditorState, Transaction } from "@codemirror/state";
 import { EditorView, tooltips, type Rect } from "@codemirror/view";
+import { mdbasePopupTheme } from "@mdbase-dev/ui/codemirror";
 import { useCallback, useEffect, useRef, type RefObject } from "react";
 
 import { annotationEditorExtensions } from "./annotation-widgets.js";
@@ -261,6 +262,7 @@ function useEditorLifecycle(
         tooltips({ parent: host.ownerDocument.body, tooltipSpace: viewportInset }),
         readerEditorTheme,
         readerSearchTheme,
+        mdbasePopupTheme,
         readerTooltipTheme,
       ],
     });
