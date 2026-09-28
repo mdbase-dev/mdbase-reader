@@ -675,9 +675,6 @@
   height: 14px;
   flex: 0 0 auto;
   color: var(--muted);
-  fill: none;
-  stroke: currentColor;
-  stroke-width: 1.2;
 }
 
 .navigator-view-section button span {

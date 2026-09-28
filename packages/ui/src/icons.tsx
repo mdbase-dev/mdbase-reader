@@ -1,50 +1,22 @@
+// Phosphor icons, as Editor and Writer use them, under Reader's names.
+import { AtIcon as PhAt } from "@phosphor-icons/react/At";
+import { CaretDownIcon as PhCaretDown } from "@phosphor-icons/react/CaretDown";
+import { GearSixIcon as PhGearSix } from "@phosphor-icons/react/GearSix";
+import { HighlighterCircleIcon as PhHighlighterCircle } from "@phosphor-icons/react/HighlighterCircle";
+import { NoteIcon as PhNote } from "@phosphor-icons/react/Note";
+
+import type { Icon as PhosphorIcon } from "@phosphor-icons/react";
 import type { JSX, SVGProps } from "react";
 
 type IconProps = SVGProps<SVGSVGElement>;
 
-/** Line icons shared by Reader and the extension; decorative, so hidden from assistive tech. */
-export function Icon({ children, ...props }: IconProps): JSX.Element {
-  return (
-    <svg
-      viewBox="0 0 24 24"
-      aria-hidden="true"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="1.6"
-      {...props}
-    >
-      {children}
-    </svg>
-  );
+/** Decorative by default, as a control's label names what it does. */
+function icon(Glyph: PhosphorIcon): (props: IconProps) => JSX.Element {
+  return (props) => <Glyph aria-hidden="true" {...(props as object)} />;
 }
 
-export const NoteIcon = (props: IconProps): JSX.Element => (
-  <Icon {...props}>
-    <path d="M6 3.5h9l3 3V21H6z" />
-    <path d="M15 3.5V7h3M9 11h6M9 15h6" />
-  </Icon>
-);
-export const CitationIcon = (props: IconProps): JSX.Element => (
-  <Icon {...props}>
-    <path d="M6 5.5h11.5v13H6z" />
-    <path d="M9 9h5.5M9 12h5.5M9 15h3.5" />
-    <path d="M4 8v12.5h11" />
-  </Icon>
-);
-export const HighlightIcon = (props: IconProps): JSX.Element => (
-  <Icon {...props}>
-    <path d="m7 16 8.8-8.8 2 2L9 18H7zM5 21h14" />
-  </Icon>
-);
-export const ChevronDownIcon = (props: IconProps): JSX.Element => (
-  <Icon {...props}>
-    <path d="m7 10 5 5 5-5" />
-  </Icon>
-);
-export const SettingsIcon = (props: IconProps): JSX.Element => (
-  <Icon {...props}>
-    <path d="M4 7h10M18 7h2M4 17h4M12 17h8" />
-    <circle cx="16" cy="7" r="2" />
-    <circle cx="10" cy="17" r="2" />
-  </Icon>
-);
+export const NoteIcon = icon(PhNote);
+export const CitationIcon = icon(PhAt);
+export const HighlightIcon = icon(PhHighlighterCircle);
+export const ChevronDownIcon = icon(PhCaretDown);
+export const SettingsIcon = icon(PhGearSix);

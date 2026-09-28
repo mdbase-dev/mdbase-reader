@@ -88,8 +88,8 @@ importers:
   apps/extension:
     dependencies:
       '@mdbase-dev/ui':
-        specifier: file:../../vendor/mdbase-dev-ui-0.1.0-beta.115-0297655b987f.tgz
-        version: file:vendor/mdbase-dev-ui-0.1.0-beta.115-0297655b987f.tgz(@codemirror/view@6.43.8)(react@19.2.8)
+        specifier: file:../../vendor/mdbase-dev-ui-0.1.0-beta.115-c848b1734317.tgz
+        version: file:vendor/mdbase-dev-ui-0.1.0-beta.115-c848b1734317.tgz(@codemirror/view@6.43.8)(react@19.2.8)
       '@mdbase-reader/connect':
         specifier: workspace:*
         version: link:../../packages/connect
@@ -134,8 +134,8 @@ importers:
         specifier: 0.8.2
         version: 0.8.2(@citation-js/core@0.8.2)
       '@mdbase-dev/ui':
-        specifier: file:../../vendor/mdbase-dev-ui-0.1.0-beta.115-0297655b987f.tgz
-        version: file:vendor/mdbase-dev-ui-0.1.0-beta.115-0297655b987f.tgz(@codemirror/view@6.43.8)(react@19.2.8)
+        specifier: file:../../vendor/mdbase-dev-ui-0.1.0-beta.115-c848b1734317.tgz
+        version: file:vendor/mdbase-dev-ui-0.1.0-beta.115-c848b1734317.tgz(@codemirror/view@6.43.8)(react@19.2.8)
       '@mdbase-reader/connect':
         specifier: workspace:*
         version: link:../../packages/connect
@@ -169,6 +169,9 @@ importers:
       '@mdbase-reader/web-capture':
         specifier: workspace:*
         version: link:../../packages/web-capture
+      '@phosphor-icons/react':
+        specifier: ^2.1.10
+        version: 2.1.10(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
       '@tanstack/react-table':
         specifier: ^9.2.4
         version: 9.2.4(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
@@ -268,8 +271,8 @@ importers:
         specifier: ^1.2.3
         version: 1.2.3
       '@mdbase-dev/ui':
-        specifier: file:../../vendor/mdbase-dev-ui-0.1.0-beta.115-0297655b987f.tgz
-        version: file:vendor/mdbase-dev-ui-0.1.0-beta.115-0297655b987f.tgz(@codemirror/view@6.43.8)(react@19.2.8)
+        specifier: file:../../vendor/mdbase-dev-ui-0.1.0-beta.115-c848b1734317.tgz
+        version: file:vendor/mdbase-dev-ui-0.1.0-beta.115-c848b1734317.tgz(@codemirror/view@6.43.8)(react@19.2.8)
       '@mdbase-reader/core':
         specifier: workspace:*
         version: link:../core
@@ -408,8 +411,11 @@ importers:
         specifier: ^5.3.0
         version: 5.3.0
       '@mdbase-dev/ui':
-        specifier: file:../../vendor/mdbase-dev-ui-0.1.0-beta.115-0297655b987f.tgz
-        version: file:vendor/mdbase-dev-ui-0.1.0-beta.115-0297655b987f.tgz(@codemirror/view@6.43.8)(react@19.2.8)
+        specifier: file:../../vendor/mdbase-dev-ui-0.1.0-beta.115-c848b1734317.tgz
+        version: file:vendor/mdbase-dev-ui-0.1.0-beta.115-c848b1734317.tgz(@codemirror/view@6.43.8)(react@19.2.8)
+      '@phosphor-icons/react':
+        specifier: ^2.1.10
+        version: 2.1.10(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
       react:
         specifier: ^19.2.8
         version: 19.2.8
@@ -1140,8 +1146,8 @@ packages:
   '@mdbase-dev/connect@0.1.0-beta.112':
     resolution: {integrity: sha512-oLk/VEz/GCZIX9eTDpIf9mcI0dKXokKvWgf9xRzyComgNqXDrKX2ADFL1pYvAPOC2+O6pKveGIpJiEPWEVV3Lw==}
 
-  '@mdbase-dev/ui@file:vendor/mdbase-dev-ui-0.1.0-beta.115-0297655b987f.tgz':
-    resolution: {integrity: sha512-SHFo0gjrvUJs3ogu1Lk43A4/dWHIyW5Q16YIFFvBtxE0MdFWbGoEBbOXBMoTTqhweYjQPiBfzYj84spWMUUmPw==, tarball: file:vendor/mdbase-dev-ui-0.1.0-beta.115-0297655b987f.tgz}
+  '@mdbase-dev/ui@file:vendor/mdbase-dev-ui-0.1.0-beta.115-c848b1734317.tgz':
+    resolution: {integrity: sha512-46A71aU25UHGNJU7DAXLm2mN1CnJCZ3QcRTltffPfTmFL+ni3kl2/PHMVxDCKpVTjuv+KGIOPX7TACxtvNYH2Q==, tarball: file:vendor/mdbase-dev-ui-0.1.0-beta.115-c848b1734317.tgz}
     version: 0.1.0-beta.115
     peerDependencies:
       '@codemirror/view': ^6.0.0
@@ -1172,6 +1178,13 @@ packages:
 
   '@pdf-lib/upng@1.0.1':
     resolution: {integrity: sha512-dQK2FUMQtowVP00mtIksrlZhdFXQZPC+taih1q4CvPZ5vqdxR/LKBaFg0oAfzd1GlHZXXSPdQfzQnt+ViGvEIQ==}
+
+  '@phosphor-icons/react@2.1.10':
+    resolution: {integrity: sha512-vt8Tvq8GLjheAZZYa+YG/pW7HDbov8El/MANW8pOAz4eGxrwhnbfrQZq0Cp4q8zBEu8NIhHdnr+r8thnfRSNYA==}
+    engines: {node: '>=10'}
+    peerDependencies:
+      react: '>= 16.8'
+      react-dom: '>= 16.8'
 
   '@playwright/test@1.61.1':
     resolution: {integrity: sha512-8nKv6+0RJSL9FE4jYOEGXnPeM/Hg12qZpmqzZjRh3qM0Y7c3z1mrOTfFLids72RDQYVh9WpLEfR5WdpNX4fkig==}
@@ -4310,7 +4323,7 @@ snapshots:
     dependencies:
       '@mdbase-dev/connect-protocol': 0.1.0-beta.112
 
-  '@mdbase-dev/ui@file:vendor/mdbase-dev-ui-0.1.0-beta.115-0297655b987f.tgz(@codemirror/view@6.43.8)(react@19.2.8)':
+  '@mdbase-dev/ui@file:vendor/mdbase-dev-ui-0.1.0-beta.115-c848b1734317.tgz(@codemirror/view@6.43.8)(react@19.2.8)':
     dependencies:
       '@fontsource/atkinson-hyperlegible': 5.3.0
       '@fontsource/azeret-mono': 5.3.0
@@ -4338,6 +4351,11 @@ snapshots:
   '@pdf-lib/upng@1.0.1':
     dependencies:
       pako: 1.0.11
+
+  '@phosphor-icons/react@2.1.10(react-dom@19.2.8(react@19.2.8))(react@19.2.8)':
+    dependencies:
+      react: 19.2.8
+      react-dom: 19.2.8(react@19.2.8)
 
   '@playwright/test@1.61.1':
     dependencies:

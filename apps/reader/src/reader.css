@@ -59,17 +59,17 @@ button {
 }
 
 .connection-actions {
-  display: grid;
-  gap: 8px;
-}
-
-.connection-actions .mdbase-button {
-  width: 100%;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px 14px;
+  margin-top: 24px;
 }
 
 .connection-secondary {
   min-height: 36px;
   padding: 0 10px;
+  border-radius: var(--control-radius);
   color: var(--muted);
   background: transparent;
   cursor: pointer;
@@ -107,7 +107,6 @@ button {
   color: var(--faint);
   font-size: 10px;
   line-height: 1.45;
-  text-align: center;
 }
 
 .connection-local-note code {
@@ -249,7 +248,7 @@ button {
   display: grid;
   place-items: center;
   padding: 0;
-  border-radius: 3px;
+  border-radius: var(--control-radius);
   color: var(--muted);
   background: transparent;
   cursor: pointer;
@@ -635,18 +634,18 @@ button {
   display: grid;
   place-items: center;
   padding: 24px;
-  background: color-mix(in srgb, var(--reader-canvas) 76%, transparent);
-  backdrop-filter: blur(7px);
+  background: var(--color-scrim);
 }
 
 .import-dialog {
   position: relative;
   width: min(440px, 100%);
   overflow: hidden;
-  border: 1px solid var(--reader-hairline);
-  border-radius: 8px;
   background: var(--paper);
-  box-shadow: 0 24px 70px color-mix(in srgb, #000 32%, transparent);
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--control-radius);
+  box-shadow: none;
+  animation: mdbase-popover-in var(--motion-base) var(--ease-out);
 }
 
 .source-add-close {
@@ -1685,7 +1684,7 @@ input:focus-visible {
 .icon-button {
   width: 34px;
   height: 34px;
-  border-radius: 7px;
+  border-radius: var(--control-radius);
 }
 
 .library-pane,
@@ -1859,21 +1858,11 @@ input:focus-visible {
 
 .import-backdrop,
 .library-save-dialog-backdrop {
-  backdrop-filter: blur(6px);
-}
-
-.connection-actions {
-  gap: 10px;
-}
-
-.connection-actions .mdbase-button {
-  min-height: 42px;
-  border-radius: 7px;
+  background: var(--color-scrim);
 }
 
 .connection-secondary {
   min-height: 40px;
-  border-radius: 7px;
 }
 
 @media (max-width: 1120px) {
@@ -2141,10 +2130,11 @@ input:focus-visible {
   display: grid;
   gap: 14px;
   padding: 24px;
-  border: 1px solid var(--line-strong);
-  border-radius: 8px;
   background: var(--paper);
-  box-shadow: 0 32px 90px -46px var(--color-scrim);
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--control-radius);
+  box-shadow: none;
+  animation: mdbase-popover-in var(--motion-base) var(--ease-out);
 }
 
 .library-save-dialog h2,
@@ -2295,4 +2285,12 @@ input:focus-visible {
 .annotation-card:first-of-type {
   border-top: 0;
   border-bottom: 0;
+}
+
+/* Dialogs arrive like the shared ones; without motion they simply appear. */
+@media (prefers-reduced-motion: reduce) {
+  .import-dialog,
+  .library-save-dialog {
+    animation: none;
+  }
 }

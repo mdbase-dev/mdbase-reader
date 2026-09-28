@@ -14,7 +14,8 @@
   "dependencies": {
     "@fontsource/atkinson-hyperlegible": "^5.3.0",
     "@fontsource/azeret-mono": "^5.3.0",
-    "@mdbase-dev/ui": "file:../../vendor/mdbase-dev-ui-0.1.0-beta.115-0297655b987f.tgz",
+    "@mdbase-dev/ui": "file:../../vendor/mdbase-dev-ui-0.1.0-beta.115-c848b1734317.tgz",
+    "@phosphor-icons/react": "^2.1.10",
     "react": "^19.2.8"
   },
   "devDependencies": {

@@ -12,7 +12,7 @@
     "typecheck": "tsc -p tsconfig.json"
   },
   "dependencies": {
-    "@mdbase-dev/ui": "file:../../vendor/mdbase-dev-ui-0.1.0-beta.115-0297655b987f.tgz",
+    "@mdbase-dev/ui": "file:../../vendor/mdbase-dev-ui-0.1.0-beta.115-c848b1734317.tgz",
     "@mdbase-reader/connect": "workspace:*",
     "@mdbase-reader/core": "workspace:*",
     "@mdbase-reader/platform": "workspace:*",
