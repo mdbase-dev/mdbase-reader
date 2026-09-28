@@ -1,10 +1,5 @@
-import {
-  MdbaseAppMark,
-  mdbaseAppHref,
-  mdbaseApps,
-  type MdbaseApp,
-  type MdbaseAppId,
-} from "@mdbase-reader/ui";
+import { mdbaseAppHref, withAppUrls, type MdbaseApp } from "@mdbase-dev/ui/apps";
+import { MdbaseAppMark, Wordmark } from "@mdbase-dev/ui/brand";
 import { useId, useRef, useState, type JSX, type RefObject } from "react";
 
 import { moveFocus, useMenuPlacement } from "./CollectionMenu.js";
@@ -14,11 +9,11 @@ import "./collection-picker.css";
 import "./app-switcher.css";
 
 /** Local builds point the menu at local copies of the other apps. */
-const appUrlOverrides: Partial<Record<MdbaseAppId, string | undefined>> = {
+const apps = withAppUrls({
   editor: import.meta.env.VITE_MDBASE_EDITOR_URL,
   reader: import.meta.env.VITE_MDBASE_READER_URL,
   writer: import.meta.env.VITE_MDBASE_WRITER_URL,
-};
+});
 
 /**
  * The header's product brand, which opens a menu for opening this collection in the other
@@ -39,7 +34,7 @@ export function AppSwitcher(): JSX.Element {
       <button
         ref={triggerRef}
         type="button"
-        className="mdbase-product-brand app-switcher-trigger"
+        className="app-switcher-trigger"
         aria-label="mdbase reader: open this collection in another app"
         aria-haspopup="menu"
         aria-expanded={open}
@@ -53,9 +48,7 @@ export function AppSwitcher(): JSX.Element {
           }
         }}
       >
-        <MdbaseAppMark app="reader" className="mdbase-product-mark" />
-        <strong>mdbase</strong>
-        <span>reader</span>
+        <Wordmark app="reader" />
         <ChevronDownIcon className="app-switcher-chevron" aria-hidden="true" />
       </button>
       {open ? <AppMenu id={menuId} triggerRef={triggerRef} onClose={close} /> : null}
@@ -90,7 +83,7 @@ function AppMenu({
         {hasCollection ? "Open this collection in" : "mdbase apps"}
       </div>
       <div className="collection-menu-list">
-        {mdbaseApps.map((app) => (
+        {apps.map((app) => (
           <AppItem key={app.id} app={app} onOpen={() => onClose(false)} />
         ))}
       </div>
@@ -133,7 +126,7 @@ function AppItem({
     <a
       className="collection-menu-item app-menu-item"
       role="menuitem"
-      href={mdbaseAppHref(appUrlOverrides[app.id] ?? app.url, location.href)}
+      href={mdbaseAppHref(app.url, location.href)}
       target="_blank"
       rel="noopener"
       onClick={onOpen}

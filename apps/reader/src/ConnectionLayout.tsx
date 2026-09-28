@@ -1,4 +1,5 @@
-import { ProductBrand, ReaderButton } from "@mdbase-reader/ui";
+import { Wordmark } from "@mdbase-dev/ui/brand";
+import { ReaderButton } from "@mdbase-reader/ui";
 
 import { requiresAccessReview, requiresReconnect } from "./connection-recovery.js";
 
@@ -30,7 +31,7 @@ export function ConnectionLayout({
   return (
     <main className="connection-screen">
       <section className="connection-card">
-        <ProductBrand />
+        <Wordmark app="reader" />
         <div className="connection-copy">
           <h1>Open mdbase Reader</h1>
           {/* A failed step often reports the same message as its status; say it once. */}

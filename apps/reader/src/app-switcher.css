@@ -1,6 +1,9 @@
 /* The product brand doubles as the app switcher (see AppSwitcher.tsx). */
 .app-switcher-trigger {
   min-width: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
   padding: 4px 6px;
   border: 1px solid transparent;
   border-radius: 6px;

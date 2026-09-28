@@ -1,34 +1,12 @@
-@import "@fontsource/atkinson-hyperlegible/400.css";
-@import "@fontsource/atkinson-hyperlegible/700.css";
-@import "@fontsource/azeret-mono/500.css";
-@import "@fontsource/azeret-mono/600.css";
+@import "@mdbase-dev/ui/fonts.css";
+@import "@mdbase-dev/ui/tokens.css";
+@import "@mdbase-dev/ui/brand.css";
 
 :root {
-  color-scheme: light;
   color: var(--ink);
   background: var(--paper);
-  font-family: "Atkinson Hyperlegible", "Segoe UI", sans-serif;
+  font-family: var(--sans);
   font-synthesis: none;
-  --color-canvas: oklch(99.5% 0.002 255);
-  --color-surface: oklch(99.5% 0.002 255);
-  --color-surface-subtle: oklch(97.5% 0.004 255);
-  --color-selected: oklch(96.4% 0.016 238);
-  --color-text: oklch(21% 0.018 255);
-  --color-text-soft: oklch(39% 0.016 255);
-  --color-text-muted: oklch(54% 0.014 255);
-  --color-text-faint: oklch(70% 0.009 255);
-  --color-border: oklch(92% 0.006 255);
-  --color-border-strong: oklch(82% 0.008 255);
-  --color-accent: oklch(45% 0.105 238);
-  --color-accent-strong: oklch(35% 0.09 238);
-  --color-success: oklch(43% 0.09 153);
-  --color-warning: oklch(60% 0.09 75);
-  --color-danger: oklch(50% 0.11 28);
-  --color-scrim: oklch(20% 0.006 250 / 0.22);
-  /* App colours: the bars of each app's mark. */
-  --app-editor: #005c88;
-  --app-reader: #a4467f;
-  --app-writer: #d55e00;
   --paper: var(--color-surface);
   --canvas: var(--color-canvas);
   --hover: var(--color-surface-subtle);
@@ -44,56 +22,7 @@
   --connected: var(--color-success);
   --warning: var(--color-warning);
   --danger: var(--color-danger);
-  --mono: "Azeret Mono", "SFMono-Regular", "Cascadia Code", monospace;
   --ease: cubic-bezier(0.16, 1, 0.3, 1);
-}
-
-:root[data-theme="dark"] {
-  color-scheme: dark;
-  --color-canvas: oklch(17.5% 0.012 255);
-  --color-surface: oklch(19.5% 0.012 255);
-  --color-surface-subtle: oklch(23.5% 0.014 255);
-  --color-selected: oklch(27% 0.035 238);
-  --color-text: oklch(92% 0.008 255);
-  --color-text-soft: oklch(80% 0.01 255);
-  --color-text-muted: oklch(68% 0.012 255);
-  --color-text-faint: oklch(56% 0.011 255);
-  --color-border: oklch(29% 0.012 255);
-  --color-border-strong: oklch(40% 0.014 255);
-  --color-accent: oklch(73% 0.105 238);
-  --color-accent-strong: oklch(79% 0.085 238);
-  --color-success: oklch(72% 0.09 153);
-  --color-warning: oklch(78% 0.09 75);
-  --color-danger: oklch(72% 0.115 28);
-  --color-scrim: oklch(5% 0.006 250 / 0.62);
-  --app-editor: #63b1e2;
-  --app-reader: #e08cc0;
-  --app-writer: #f58d4a;
-}
-
-@media (prefers-color-scheme: dark) {
-  :root:not([data-theme]) {
-    color-scheme: dark;
-    --color-canvas: oklch(17.5% 0.012 255);
-    --color-surface: oklch(19.5% 0.012 255);
-    --color-surface-subtle: oklch(23.5% 0.014 255);
-    --color-selected: oklch(27% 0.035 238);
-    --color-text: oklch(92% 0.008 255);
-    --color-text-soft: oklch(80% 0.01 255);
-    --color-text-muted: oklch(68% 0.012 255);
-    --color-text-faint: oklch(56% 0.011 255);
-    --color-border: oklch(29% 0.012 255);
-    --color-border-strong: oklch(40% 0.014 255);
-    --color-accent: oklch(73% 0.105 238);
-    --color-accent-strong: oklch(79% 0.085 238);
-    --color-success: oklch(72% 0.09 153);
-    --color-warning: oklch(78% 0.09 75);
-    --color-danger: oklch(72% 0.115 28);
-    --color-scrim: oklch(5% 0.006 250 / 0.62);
-    --app-editor: #63b1e2;
-    --app-reader: #e08cc0;
-    --app-writer: #f58d4a;
-  }
 }
 
 *,
@@ -132,48 +61,6 @@ a:focus-visible {
   font-family: var(--mono);
 }
 
-.mdbase-product-brand {
-  display: inline-flex;
-  align-items: center;
-  gap: 7px;
-  color: var(--ink);
-  font-family: var(--mono);
-}
-.mdbase-product-brand strong {
-  font-size: 13px;
-  font-weight: 600;
-  letter-spacing: -0.01em;
-}
-.mdbase-product-brand > span {
-  color: var(--muted);
-  font-size: 11px;
-}
-.mdbase-product-mark {
-  width: 20px;
-  height: 20px;
-  overflow: visible;
-}
-.mdbase-mark-ink {
-  fill: currentColor;
-}
-.mdbase-mark-accent {
-  fill: var(--accent);
-}
-.mdbase-app-mark.is-editor {
-  --app: var(--app-editor);
-}
-.mdbase-app-mark.is-reader {
-  --app: var(--app-reader);
-}
-.mdbase-app-mark.is-writer {
-  --app: var(--app-writer);
-}
-.mdbase-app-mark-bars {
-  fill: var(--app);
-}
-.mdbase-app-mark-line {
-  fill: currentColor;
-}
 .mdbase-button {
   min-height: 34px;
   padding: 0 12px;

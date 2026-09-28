@@ -44,10 +44,10 @@ import type { SourceAdditionController } from "./use-source-addition.js";
 import type { SourceExportController } from "./use-source-export.js";
 import type { SourceWorkspaceController } from "./use-source-workspace.js";
 import type { ReaderLibrarySnapshot, ReaderWorkspaceGateway } from "./workspace-model.js";
+import type { ThemePreference } from "@mdbase-dev/ui/theme";
 import type { Annotation, SourceId, SourceSummary } from "@mdbase-reader/core";
 import type { PickedFile } from "@mdbase-reader/platform";
 import type { ReadingSurface, ReadingTypography } from "@mdbase-reader/reading-surface";
-import type { ThemePreference } from "@mdbase-reader/ui";
 
 export interface ReaderWorkspaceViewModel {
   readonly library: ReaderLibrarySnapshot;

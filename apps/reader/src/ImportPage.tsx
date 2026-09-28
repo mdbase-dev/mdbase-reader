@@ -1,5 +1,5 @@
+import { Wordmark } from "@mdbase-dev/ui/brand";
 import { connectProblemMessage, type ReaderConnectSnapshot } from "@mdbase-reader/connect";
-import { ProductBrand } from "@mdbase-reader/ui";
 import { useEffect, useMemo, useState, useSyncExternalStore, type JSX } from "react";
 
 import { readerSession } from "./connect.js";
@@ -48,7 +48,7 @@ export function ImportPage({ service }: { service: "home" | "zotero" | "readwise
   return (
     <main className="import-page">
       <header>
-        <ProductBrand />
+        <Wordmark app="reader" />
         <a href={`${import.meta.env.BASE_URL}${location.search}`}>Back to library</a>
       </header>
       {service !== "home" ? (

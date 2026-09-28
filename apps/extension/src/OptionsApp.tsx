@@ -1,4 +1,4 @@
-import { themePreferences, type ThemePreference } from "@mdbase-reader/ui";
+import { themePreferences, type ThemePreference } from "@mdbase-dev/ui/theme";
 import { useEffect } from "react";
 
 import { readerLibraryUrl } from "./capture-model.js";

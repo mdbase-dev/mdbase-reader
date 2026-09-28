@@ -4,8 +4,8 @@ import type { ReaderCommand } from "./CommandPalette.js";
 import type { BibliographyExportController } from "./use-bibliography-export.js";
 import type { SourceExportController } from "./use-source-export.js";
 import type { SourceWorkspaceController } from "./use-source-workspace.js";
+import type { ThemePreference } from "@mdbase-dev/ui/theme";
 import type { SourceSummary } from "@mdbase-reader/core";
-import type { ThemePreference } from "@mdbase-reader/ui";
 
 export interface ReaderCommandInput {
   readonly sources: readonly SourceSummary[];

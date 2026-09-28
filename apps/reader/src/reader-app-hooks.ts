@@ -3,7 +3,7 @@ import {
   loadThemePreference,
   saveThemePreference,
   type ThemePreference,
-} from "@mdbase-reader/ui";
+} from "@mdbase-dev/ui/theme";
 import { useEffect, useMemo, useState } from "react";
 
 import { applyLibraryLens } from "./library-lenses.js";

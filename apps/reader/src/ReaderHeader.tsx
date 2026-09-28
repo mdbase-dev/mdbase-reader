@@ -5,8 +5,8 @@ import { BackIcon, LeftPaneIcon, ReadingModeIcon, RightPaneIcon, SearchIcon } fr
 import { shortcutLabel } from "./Menu.js";
 
 import type { ReaderDirectAccessState } from "./use-direct-access.js";
+import type { ThemePreference } from "@mdbase-dev/ui/theme";
 import type { ReadingTypography } from "@mdbase-reader/reading-surface";
-import type { ThemePreference } from "@mdbase-reader/ui";
 import type { JSX, ReactNode } from "react";
 
 /**

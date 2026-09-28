@@ -473,8 +473,7 @@
     padding-inline: 6px;
   }
 
-  .reader-header .mdbase-product-brand > span,
-  .reader-header .mdbase-product-brand > strong {
+  .reader-header .wordmark-label {
     display: none;
   }
 
