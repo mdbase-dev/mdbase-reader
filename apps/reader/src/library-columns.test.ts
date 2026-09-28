@@ -1,6 +1,5 @@
 import { collectionId, sourceId, type SourceSummary } from "@mdbase-reader/core";
 import { describe, expect, it } from "vitest";
-import { parse as parseYaml } from "yaml";
 
 import {
   columnFieldKey,
@@ -12,7 +11,7 @@ import {
 } from "./library-columns.js";
 import {
   applyLibraryViewConfiguration,
-  buildLibraryViewDocument,
+  buildLibraryView,
   defaultLibraryViewConfiguration,
   libraryViewConfiguration,
 } from "./mdbase-library-views.js";
@@ -82,7 +81,7 @@ describe("property columns", () => {
 });
 
 describe("saved view layout", () => {
-  it("round-trips property columns, widths and property sorting through the view file", async () => {
+  it("round-trips property columns, widths and property sorting through the view file", () => {
     const configuration = {
       ...defaultLibraryViewConfiguration,
       columns: ["title", "property:course", "status"] as const,
@@ -90,8 +89,7 @@ describe("saved view layout", () => {
       sortField: "property:course" as const,
       sortDirection: "asc" as const,
     };
-    const document = await buildLibraryViewDocument({ name: "Courses", configuration });
-    const frontmatter = parseYaml(document.split("---")[1] ?? "") as {
+    const frontmatter = buildLibraryView({ name: "Courses", configuration }) as unknown as {
       views: [
         { select: string[]; order_by: [{ field: string }]; presentation: Record<string, unknown> },
       ];

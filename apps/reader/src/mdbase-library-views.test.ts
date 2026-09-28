@@ -1,9 +1,8 @@
 import { describe, expect, it } from "vitest";
-import { parse as parseYaml } from "yaml";
 
 import {
   applyLibraryViewConfiguration,
-  buildLibraryViewDocument,
+  buildLibraryView,
   defaultLibraryViewConfiguration,
   libraryViewConfiguration,
 } from "./mdbase-library-views.js";
@@ -11,8 +10,8 @@ import {
 import type { SourceSummary } from "@mdbase-reader/core";
 
 describe("mdbase library views", () => {
-  it("serializes Reader configuration as an ordinary canonical mdbase view", async () => {
-    const document = await buildLibraryViewDocument({
+  it("describes Reader configuration as an ordinary canonical mdbase view", () => {
+    const frontmatter = buildLibraryView({
       name: "Reading queue",
       configuration: {
         ...defaultLibraryViewConfiguration,
@@ -28,10 +27,6 @@ describe("mdbase library views", () => {
         },
       },
     });
-    const frontmatter = parseYaml(/^---\n([\s\S]*?)\n---/u.exec(document)?.[1] ?? "") as Record<
-      string,
-      unknown
-    >;
     expect(frontmatter).toMatchObject({
       type: "view",
       id: "reader.library.reading-queue",

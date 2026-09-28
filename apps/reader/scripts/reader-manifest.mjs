@@ -8,6 +8,9 @@ import { parse as parseYaml } from "yaml";
 export const READER_TYPE_PACK_VERSION = "1.0.0-beta.1";
 
 const projectRoot = resolve(import.meta.dirname, "..");
+// Reader saves library views as mdbase.view records; this is the published
+// mdbase-contracts provision, embedded byte-for-byte.
+const viewPackPath = resolve(projectRoot, "mdbase", "packs", "mdbase.view-1.0.0.json");
 const resources = [
   {
     kind: "contract",
@@ -65,6 +68,8 @@ export async function buildReaderManifest({
       };
     });
 
+  const viewPack = JSON.parse(await readFile(viewPackPath, "utf8"));
+
   return {
     manifest_version: 1,
     id: "dev.mdbase.reader",
@@ -74,18 +79,12 @@ export async function buildReaderManifest({
     redirect_uris: [appUrl],
     requirements: {
       access: "full_collection",
-      contracts,
+      contracts: [...contracts, ...viewPack.provides],
       // Contract readiness and collection setup are derived from `contracts` and
       // `provisions`; version 2 has no capability identifiers for them.
       capabilities: {
         contract_version: 2,
-        required: [
-          "collection.read",
-          "records.create",
-          "records.edit",
-          "records.delete",
-          "views.manage",
-        ],
+        required: ["collection.read", "records.create", "records.edit", "records.delete"],
       },
       files: {
         required: ["list", "read", "add"],
@@ -106,6 +105,7 @@ export async function buildReaderManifest({
           },
           resources: packResources.map(({ source, document }) => ({ source, document })),
         },
+        viewPack,
       ],
     },
   };

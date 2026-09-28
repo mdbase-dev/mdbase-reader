@@ -2,24 +2,30 @@ import { connectOptions, outcomeValue } from "./repository-client.js";
 
 import type {
   ExecuteViewInput,
+  JsonObject,
   MdbaseConnection,
   SavedViewExecution,
   SavedViewList,
-  SavedViewSourceDocument,
 } from "@mdbase-dev/connect";
 import type { ReaderRequestOptions } from "@mdbase-reader/core";
 
+/** A saved view is an ordinary record whose type implements `mdbase.view`. */
 export interface LibraryViewSaveInput {
-  readonly document: string;
-  readonly path?: string;
-  readonly revision?: string;
-  readonly name?: string;
+  readonly path: string;
+  readonly frontmatter: JsonObject;
+  /** Present when replacing the view at `path`; its absence creates one there. */
+  readonly replace?: { readonly revision?: string };
+}
+
+export interface SavedLibraryView {
+  readonly path: string;
+  readonly revision: string;
 }
 
 export interface LibraryViewRepository {
   list(options?: ReaderRequestOptions): Promise<SavedViewList>;
   execute(input: ExecuteViewInput, options?: ReaderRequestOptions): Promise<SavedViewExecution>;
-  save(input: LibraryViewSaveInput): Promise<SavedViewSourceDocument>;
+  save(input: LibraryViewSaveInput): Promise<SavedLibraryView>;
 }
 
 export function connectLibraryViewRepository(connection: MdbaseConnection): LibraryViewRepository {
@@ -36,25 +42,25 @@ export function connectLibraryViewRepository(connection: MdbaseConnection): Libr
         "execute library view",
       );
     },
-    async save(input) {
-      if (input.path) {
-        return outcomeValue(
-          await connection.updateViewSource({
-            path: input.path,
-            document: input.document,
-            ...(input.revision ? { ifRevision: input.revision } : {}),
-          }),
-          "save library view",
-        );
-      }
-      return outcomeValue(
-        await connection.createViewSource({
-          document: input.document,
-          ...(input.name ? { name: input.name } : {}),
-          format: "mdbase.view",
-        }),
-        "create library view",
-      );
+    async save({ path, frontmatter, replace }) {
+      const saved = replace
+        ? outcomeValue(
+            await connection.update({
+              path,
+              // A view is replaced whole, so fields the new definition drops are removed.
+              document: await viewDocument(frontmatter),
+              ...(replace.revision ? { ifRevision: replace.revision } : {}),
+            }),
+            "save library view",
+          )
+        : outcomeValue(await connection.create({ path, frontmatter }), "create library view");
+      return { path: saved.path, revision: saved.revision };
     },
   };
+}
+
+/** YAML is only needed when replacing a view, so it loads on demand. */
+async function viewDocument(frontmatter: JsonObject): Promise<string> {
+  const { stringify } = await import("yaml");
+  return `---\n${stringify(frontmatter).trimEnd()}\n---\n\n`;
 }

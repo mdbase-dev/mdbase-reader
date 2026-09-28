@@ -1,19 +1,14 @@
 import { describe, expect, it } from "vitest";
-import { parse as parseYaml } from "yaml";
 
 import {
   annotationViewConfiguration,
   annotationViewWhere,
-  buildAnnotationViewDocument,
-  buildSourceAnnotationsViewDocument,
+  buildAnnotationView,
+  buildSourceAnnotationsView,
   defaultAnnotationViewConfiguration,
   readerViewKind,
   type AnnotationViewConfiguration,
 } from "./mdbase-annotation-views.js";
-
-function frontmatter(document: string): Record<string, unknown> {
-  return parseYaml(document.split("---")[1] ?? "") as Record<string, unknown>;
-}
 
 const configuration: AnnotationViewConfiguration = {
   columns: ["passage", "source", "created"],
@@ -29,9 +24,8 @@ const configuration: AnnotationViewConfiguration = {
 };
 
 describe("saved annotation views", () => {
-  it("writes an mdbase view of reader-annotation records that reads back the same", async () => {
-    const document = await buildAnnotationViewDocument({ name: "Ethics quotes", configuration });
-    const view = frontmatter(document);
+  it("writes an mdbase view of reader-annotation records that reads back the same", () => {
+    const view = buildAnnotationView({ name: "Ethics quotes", configuration });
     expect(view["query"]).toEqual({
       types: ["reader-annotation"],
       projections: {
@@ -87,11 +81,8 @@ describe("saved annotation views", () => {
     expect(readerViewKind(undefined)).toBeNull();
   });
 
-  it("writes one view that lists the annotations of the source it runs against", async () => {
-    const [named] = frontmatter(await buildSourceAnnotationsViewDocument())["views"] as Record<
-      string,
-      unknown
-    >[];
+  it("writes one view that lists the annotations of the source it runs against", () => {
+    const [named] = buildSourceAnnotationsView()["views"] as Record<string, unknown>[];
     expect(named?.["context"]).toEqual({
       this: { on_missing: "error", types: ["reader-source"] },
     });

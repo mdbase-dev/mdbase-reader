@@ -12,4 +12,4 @@ export * from "./portable-application-session.js";
 export * from "./record-session.js";
 export * from "./repositories.js";
 export * from "./source-imports.js";
-export type { MdbaseAppManifest } from "@mdbase-dev/connect";
+export type { JsonObject, MdbaseAppManifest } from "@mdbase-dev/connect";

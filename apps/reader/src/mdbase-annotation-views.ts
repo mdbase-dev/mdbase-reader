@@ -9,7 +9,8 @@ import {
 import { emptyAnnotationFilter, type AnnotationFilter } from "./annotation-overview.js";
 import { maximumColumnWidth, minimumColumnWidth } from "./library-columns.js";
 import { conditionToCel, parseConditions, type FieldShape } from "./library-conditions.js";
-import { viewDocument } from "./mdbase-library-views.js";
+
+import type { JsonObject } from "@mdbase-reader/connect";
 
 /** An annotations view as the reader arranged it: columns, sort and filters. */
 export interface AnnotationViewConfiguration {
@@ -118,7 +119,7 @@ export function annotationViewWhere(
   return terms.length > 0 ? terms.join(" && ") : null;
 }
 
-export function buildAnnotationViewDocument(request: AnnotationViewSaveRequest): Promise<string> {
+export function buildAnnotationView(request: AnnotationViewSaveRequest): JsonObject {
   const identifier = viewIdentifier(request.name);
   const { configuration } = request;
   const where = annotationViewWhere(configuration.filter, request.fieldShapes);
@@ -126,7 +127,7 @@ export function buildAnnotationViewDocument(request: AnnotationViewSaveRequest):
     const field = columnSelection(column);
     return field ? [{ column, field }] : [];
   });
-  const frontmatter = {
+  return {
     type: "view",
     id: `reader.annotations.${identifier}`,
     version: 1,
@@ -164,7 +165,6 @@ export function buildAnnotationViewDocument(request: AnnotationViewSaveRequest):
       },
     ],
   };
-  return viewDocument(frontmatter);
 }
 
 export const sourceAnnotationsViewName = "Annotations for this source";
@@ -173,8 +173,8 @@ export const sourceAnnotationsViewName = "Annotations for this source";
  * One view listing the annotations of whichever source it runs against: embed it in a source
  * note, or run it with a source as its context from any mdbase tool.
  */
-export function buildSourceAnnotationsViewDocument(): Promise<string> {
-  const frontmatter = {
+export function buildSourceAnnotationsView(): JsonObject {
+  return {
     type: "view",
     id: "reader.annotations.for-source",
     version: 1,
@@ -205,7 +205,6 @@ export function buildSourceAnnotationsViewDocument(): Promise<string> {
       },
     ],
   };
-  return viewDocument(frontmatter);
 }
 
 function columnSelection(column: AnnotationColumn): string | null {

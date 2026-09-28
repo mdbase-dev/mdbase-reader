@@ -20,8 +20,12 @@ interpreted through their exact Reader contracts. Executed view rows are
 resolved back to known Reader source paths; arbitrary collection rows never
 become source records merely because a view returned them.
 
-Reader-created views are ordinary `type: view` Markdown records. Their query
-targets the seeded `reader-source` type, while presentation metadata records:
+Reader-created views are ordinary Markdown records of a type implementing the
+`mdbase.view` contract. Reader provisions the published `mdbase.view` pack
+(contract plus a seed `view` type) during collection setup and saves views with
+ordinary record operations under its record grants; it requests no
+view-specific capability. Their query targets the seeded `reader-source` type,
+while presentation metadata records:
 
 - table or card presentation;
 - visible bibliographic columns;
@@ -35,11 +39,12 @@ can always be adapted with **Save as view**, preserving its original source.
 
 ## Runtime model
 
-Connect owns saved-view discovery, execution, and source mutation:
+Connect owns saved-view discovery and execution; views are persisted as records:
 
 - `listViews()` discovers view records and named views;
 - `executeView()` returns ordered rows and selected values;
-- `createViewSource()` and `updateViewSource()` persist explicit user saves.
+- `create()` writes a new view at `views/<view id>.md`, and `update()` replaces
+  an existing Reader view's document on explicit user saves.
 
 The default **All sources** working view is not written to the collection. It
 uses the already-loaded contract projection so the first library surface is

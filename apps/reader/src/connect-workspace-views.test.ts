@@ -23,7 +23,7 @@ function document(id: string, views: NamedView[]): ViewDocument {
     id,
     name: id,
     source: {
-      path: `views/${id}.mdbase.view`,
+      path: `views/${id}.md`,
       format: "mdbase.view",
       revision: "rev-1",
       writable: true,
@@ -81,8 +81,8 @@ describe("Reader saved-view discovery", () => {
     expect(result.map(({ name }) => name)).toEqual(["All sources", "Reading queue", "Finished"]);
     expect(result[0]).toEqual(defaultLibraryView);
     expect(result[1]).toMatchObject({
-      key: "views/shared.mdbase.view::Reading queue",
-      path: "views/shared.mdbase.view",
+      key: "views/shared.md::Reading queue",
+      path: "views/shared.md",
       revision: "rev-1",
       writable: true,
       owned: true,
@@ -116,29 +116,24 @@ describe("Reader saved-view discovery", () => {
   });
 
   it("can still reopen a newly saved Reader-marked view", async () => {
-    const path = "views/saved.mdbase.view";
+    const path = "views/reader.library.reading-queue.md";
     const views = repository([
-      document("saved", [
+      document("reader.library.reading-queue", [
         namedView("Reading queue", {
           type: "table",
           options: { readerViewVersion: 1 },
         }),
       ]),
     ]);
-    vi.mocked(views.save).mockResolvedValue({
-      path,
-      format: "mdbase.view",
-      revision: "rev-1",
-      document: "",
-    });
+    vi.mocked(views.save).mockResolvedValue({ path, revision: "rev-1" });
     const result = await gateway(views).saveLibraryView({
       name: "Reading queue",
       configuration: defaultLibraryViewConfiguration,
     });
     expect(result).toMatchObject({ path, name: "Reading queue", owned: true });
     expect(views.save).toHaveBeenCalledWith({
-      name: "Reading queue",
-      document: expect.stringContaining("readerViewVersion: 1"),
+      path,
+      frontmatter: expect.objectContaining({ type: "view", name: "Reading queue" }),
     });
   });
 });
