@@ -1,5 +1,5 @@
 import { AnnotationPlugin } from "@embedpdf/plugin-annotation";
-import { SelectionPlugin, type FormattedSelection } from "@embedpdf/plugin-selection";
+import { SelectionPlugin } from "@embedpdf/plugin-selection";
 import {
   CapturePlugin,
   DocumentManagerPlugin,
@@ -10,15 +10,19 @@ import {
 
 import { createEmbedPdfAnnotationActivations } from "./embedpdf-annotation-activation.js";
 import { createPdfDecorationController } from "./pdf-decoration-controller.js";
+import { observePdfSelection, type PdfSelectionAdjustment } from "./pdf-selection-publication.js";
 
 import type { PdfDocumentObject, PdfEngine } from "@embedpdf/models";
 import type { CaptureAreaEvent } from "@embedpdf/plugin-capture";
 import type { Annotation, AnnotationId } from "@mdbase-reader/core";
 import type {
   AreaSelectionDraft,
+  EventSource,
   TextSelectionDraft,
   Unsubscribe,
 } from "@mdbase-reader/reading-surface";
+
+export { textSelectionToDraft } from "./pdf-selection-publication.js";
 
 export interface EmbedPdfRuntime {
   currentPageIndex(): number;
@@ -40,46 +44,6 @@ export interface EmbedPdfRuntime {
   destroy(): void;
 }
 
-export function textSelectionToDraft(
-  textParts: readonly string[],
-  formatted: readonly FormattedSelection[],
-): TextSelectionDraft | null {
-  const exact = textParts.join("\n");
-  if (!exact.trim() || formatted.length === 0) {
-    return null;
-  }
-  const first = formatted[0];
-  const firstPage = first?.pageIndex ?? 0;
-  const pdf =
-    formatted.length === 1 && first
-      ? {
-          pdf: {
-            pageIndex: firstPage,
-            coordinateSpace: {
-              profile: "embedpdf-selection-page-points-v1",
-              box: "crop" as const,
-              origin: "top_left" as const,
-            },
-            quadPoints: first.segmentRects.map(rectToQuadPoints),
-          },
-        }
-      : {};
-  return {
-    target: { quote: { exact }, ...pdf },
-    locator: { kind: "pdf", pageIndex: firstPage },
-  };
-}
-
-function rectToQuadPoints(
-  rect: FormattedSelection["rect"],
-): readonly [number, number, number, number, number, number, number, number] {
-  const left = rect.origin.x;
-  const top = rect.origin.y;
-  const right = left + rect.size.width;
-  const bottom = top + rect.size.height;
-  return [left, top, right, top, left, bottom, right, bottom];
-}
-
 export function captureEventToAreaSelection(event: CaptureAreaEvent): AreaSelectionDraft {
   return {
     pageIndex: event.pageIndex,
@@ -97,7 +61,10 @@ export function captureEventToAreaSelection(event: CaptureAreaEvent): AreaSelect
   };
 }
 
-export function createEmbedPdfRuntime(registry: PluginRegistry): EmbedPdfRuntime {
+export function createEmbedPdfRuntime(
+  registry: PluginRegistry,
+  adjustments?: EventSource<PdfSelectionAdjustment>,
+): EmbedPdfRuntime {
   const capturePlugin = registry.getPlugin<CapturePlugin>(CapturePlugin.id);
   const scrollPlugin = registry.getPlugin<ScrollPlugin>(ScrollPlugin.id);
   const selectionPlugin = registry.getPlugin<SelectionPlugin>(SelectionPlugin.id);
@@ -163,18 +130,7 @@ export function createEmbedPdfRuntime(registry: PluginRegistry): EmbedPdfRuntime
       };
     },
     onTextSelected(listener) {
-      const unsubscribe = selection.onEndSelection(() => {
-        const formatted = selection.getFormattedSelection();
-        void selection
-          .getSelectedText()
-          .toPromise()
-          .then((parts) => {
-            const draft = textSelectionToDraft(parts, formatted);
-            if (draft) {
-              listener(draft);
-            }
-          });
-      });
+      const unsubscribe = observePdfSelection(selection, listener, adjustments);
       subscriptions.add(unsubscribe);
       return () => {
         subscriptions.delete(unsubscribe);
@@ -182,11 +138,21 @@ export function createEmbedPdfRuntime(registry: PluginRegistry): EmbedPdfRuntime
       };
     },
     onSelectionCleared(listener) {
-      const unsubscribe = selection.onSelectionChange((event) => {
+      const stopSelection = selection.onSelectionChange((event) => {
         if (event.selection === null) {
           listener();
         }
       });
+      // Hide the old toolbar/draft while a handle is moving, without clearing the PDF range.
+      const stopAdjustments = adjustments?.subscribe((phase) => {
+        if (phase === "start") {
+          listener();
+        }
+      });
+      const unsubscribe = (): void => {
+        stopSelection();
+        stopAdjustments?.();
+      };
       subscriptions.add(unsubscribe);
       return () => {
         subscriptions.delete(unsubscribe);

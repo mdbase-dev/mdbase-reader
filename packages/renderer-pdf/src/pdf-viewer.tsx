@@ -6,6 +6,7 @@ import {
   type EmbedPdfContainer,
   type PluginRegistry,
 } from "@embedpdf/react-pdf-viewer";
+import { createEventEmitter } from "@mdbase-reader/reading-surface";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import { suppressNativeCapturePreview } from "./embedpdf-native-capture-preview.js";
@@ -13,8 +14,10 @@ import { installReaderPdfChrome } from "./embedpdf-reader-chrome.js";
 import { createEmbedPdfRuntime } from "./embedpdf-runtime.js";
 import { installLongPressSelection } from "./pdf-long-press-selection.js";
 import { EmbedPdfSurface } from "./pdf-surface.js";
+import { installTouchSelectionHandles } from "./pdf-touch-selection-handles.js";
 import { createReaderPdfViewerConfig, pdfPansByDefault } from "./pdf-viewer-policy.js";
 
+import type { PdfSelectionAdjustment } from "./pdf-selection-publication.js";
 import type { SurfaceDocument } from "@mdbase-reader/reading-surface";
 
 export interface PdfViewerSurfaceProps {
@@ -59,7 +62,8 @@ export function PdfViewerSurface({
     (registry: PluginRegistry) => {
       clearRuntime();
       try {
-        const surface = new EmbedPdfSurface(document, createEmbedPdfRuntime(registry));
+        const adjustments = createEventEmitter<PdfSelectionAdjustment>();
+        const surface = new EmbedPdfSurface(document, createEmbedPdfRuntime(registry, adjustments));
         surfaceRef.current = surface;
         onSurfaceReady(surface);
 
@@ -71,7 +75,17 @@ export function PdfViewerSurface({
         subscriptionsRef.current = [
           documents.onDocumentOpened(() => onDocumentReady?.()),
           documents.onDocumentError(({ message }) => onDocumentError?.(message)),
-          ...(pansByDefault ? [longPressSelection(registry, containerRef.current)] : []),
+          ...(pansByDefault && containerRef.current
+            ? [
+                // Handle capture listeners must run before the long-press recognizer.
+                installTouchSelectionHandles({
+                  host: containerRef.current,
+                  registry,
+                  adjustment: (phase) => adjustments.emit(phase),
+                }),
+                longPressSelection(registry, containerRef.current),
+              ]
+            : []),
         ];
         const current = documents.getOpenDocuments()[0];
         if (current?.status === "loaded") {

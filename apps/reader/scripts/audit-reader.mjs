@@ -11,6 +11,8 @@ import { auditDockviewMigration } from "./audit-dockview-migration.mjs";
 import { annotationFixture } from "./audit-annotation-fixture.mjs";
 import { auditAnnotations } from "./audit-annotations.mjs";
 import { auditAnnotationFormats } from "./audit-annotation-formats.mjs";
+import { auditPdfTouchWorkspace } from "./audit-pdf-touch-workspace.mjs";
+import { installLocalPdfium } from "./audit-local-pdfium.mjs";
 import { auditSharedEditing } from "./audit-shared-editing.mjs";
 import { auditSidebarLayout } from "./audit-sidebar-layout.mjs";
 import { auditEdgeGroupApi } from "./audit-edge-group-api.mjs";
@@ -22,6 +24,7 @@ const origin = process.env.READER_AUDIT_ORIGIN ?? "http://127.0.0.1:5193";
 const sharedEditingAudit = process.env.READER_AUDIT_SHARED_EDITING_ONLY === "1";
 const readingAudit = process.env.READER_AUDIT_READING_ONLY === "1";
 const formatsAudit = process.env.READER_AUDIT_FORMATS_ONLY === "1";
+const pdfTouchAudit = process.env.READER_AUDIT_PDF_TOUCH_ONLY === "1";
 const responsiveAudit = process.env.READER_AUDIT_RESPONSIVE_ONLY === "1";
 const sidebarComparison = responsiveAudit || process.env.READER_AUDIT_SIDEBARS_ONLY === "1";
 if (!/^http:\/\/(127\.0\.0\.1|localhost):\d+$/u.test(origin)) {
@@ -33,7 +36,12 @@ const specialDocuments = new Map([
 ]);
 const directory = await mkdtemp(join(tmpdir(), "reader-audit-"));
 const browser = await chromium.launch({ headless: true });
-const context = await browser.newContext({ viewport: { width: 1440, height: 1000 } });
+const context = await browser.newContext(
+  pdfTouchAudit
+    ? { viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true }
+    : { viewport: { width: 1440, height: 1000 } },
+);
+await installLocalPdfium(context);
 // These audits exercise docking with the sidebar open throughout; the reading audit covers the
 // default, which hides it while a document has focus.
 await context.addInitScript(() => {
@@ -190,6 +198,9 @@ const screenshot = async (name) =>
 try {
   const started = performance.now();
   await navigate();
+  if (pdfTouchAudit) {
+    completed.push(...(await auditPdfTouchWorkspace(page, { screenshot })));
+  }
   if (formatsAudit) {
     const open = async (number) => {
       const title = `Research ${String(number).padStart(4, "0")}`;
@@ -232,6 +243,7 @@ try {
   }
   if (
     !formatsAudit &&
+    !pdfTouchAudit &&
     !readingAudit &&
     !sharedEditingAudit &&
     !sidebarComparison &&
@@ -486,7 +498,13 @@ try {
     );
     completed.push(...(await auditDockviewMigration(page)));
   }
-  if (!formatsAudit && !readingAudit && !sharedEditingAudit && !sidebarComparison) {
+  if (
+    !formatsAudit &&
+    !pdfTouchAudit &&
+    !readingAudit &&
+    !sharedEditingAudit &&
+    !sidebarComparison
+  ) {
     completed.push(
       ...(await auditAnnotations(page, {
         screenshot,
