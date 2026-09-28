@@ -2,6 +2,8 @@
 @import "@mdbase-dev/ui/tokens.css";
 @import "@mdbase-dev/ui/brand.css";
 @import "@mdbase-dev/ui/controls.css";
+@import "@mdbase-dev/ui/screens.css";
+@import "@mdbase-dev/ui/palette.css";
 
 :root {
   color: var(--ink);
@@ -60,27 +62,4 @@ a:focus-visible {
 }
 .mono {
   font-family: var(--mono);
-}
-
-.mdbase-button {
-  min-height: 34px;
-  padding: 0 12px;
-  border: 1px solid var(--line-strong);
-  border-radius: 4px;
-  color: var(--ink-soft);
-  background: transparent;
-  cursor: pointer;
-  transition:
-    color 150ms var(--ease),
-    border-color 150ms var(--ease),
-    background 150ms var(--ease);
-}
-.mdbase-button:hover {
-  color: var(--ink);
-  border-color: var(--muted);
-  background: var(--hover);
-}
-.mdbase-button:disabled {
-  color: var(--faint);
-  cursor: default;
 }

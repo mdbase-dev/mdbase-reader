@@ -1,5 +1,4 @@
-import type { ReaderCommand } from "./CommandPalette.js";
-import type { ReaderCommandInput } from "./reader-command-list.js";
+import type { ReaderCommand, ReaderCommandInput } from "./reader-command-list.js";
 
 export function libraryCommands(input: ReaderCommandInput): readonly ReaderCommand[] {
   return [

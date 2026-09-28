@@ -72,27 +72,3 @@ export function useDismissableDetails(): RefObject<HTMLDetailsElement | null> {
   }, []);
   return ref;
 }
-
-export function isApplePlatform(): boolean {
-  return /mac|iphone|ipad/iu.test(globalThis.navigator.userAgent);
-}
-
-/** Formats a shortcut such as "mod+shift+f" for the current platform. */
-export function shortcutLabel(shortcut: string): string {
-  const apple = isApplePlatform();
-  return shortcut
-    .split("+")
-    .map((part) => {
-      switch (part.toLowerCase()) {
-        case "mod":
-          return apple ? "⌘" : "Ctrl";
-        case "shift":
-          return apple ? "⇧" : "Shift";
-        case "alt":
-          return apple ? "⌥" : "Alt";
-        default:
-          return part.length === 1 ? part.toUpperCase() : part;
-      }
-    })
-    .join(apple ? "" : "+");
-}

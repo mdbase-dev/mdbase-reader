@@ -1,11 +1,18 @@
 import { annotationCommands, displayCommands, libraryCommands } from "./reader-app-commands.js";
 
-import type { ReaderCommand } from "./CommandPalette.js";
 import type { BibliographyExportController } from "./use-bibliography-export.js";
 import type { SourceExportController } from "./use-source-export.js";
 import type { SourceWorkspaceController } from "./use-source-workspace.js";
+import type { Command } from "@mdbase-dev/ui/command-palette";
 import type { ThemePreference } from "@mdbase-dev/ui/theme";
 import type { SourceSummary } from "@mdbase-reader/core";
+
+/** The palette's groups, in the order Reader shows them. */
+export type ReaderCommandGroup =
+  "Open tabs" | "Current source" | "Sources" | "Library" | "Workspace" | "Display";
+export interface ReaderCommand extends Command {
+  readonly group: ReaderCommandGroup;
+}
 
 export interface ReaderCommandInput {
   readonly sources: readonly SourceSummary[];

@@ -1,3 +1,4 @@
+import { ConnectLayout } from "@mdbase-dev/ui/screens";
 import { connectProblemMessage, type ReaderConnectSnapshot } from "@mdbase-reader/connect";
 import { createReaderRuntimeServices, createWebPlatform } from "@mdbase-reader/platform";
 import { ReaderButton } from "@mdbase-reader/ui";
@@ -16,11 +17,7 @@ import {
   isLocalhost,
   requiresReconnect,
 } from "./connection-recovery.js";
-import {
-  ConnectionLayout,
-  ConnectionRetry,
-  SelectedAuthorizationAction,
-} from "./ConnectionLayout.js";
+import { ConnectionRetry, SelectedAuthorizationAction } from "./ConnectionLayout.js";
 import { readerErrorMessage } from "./errors.js";
 import { ReaderApp } from "./ReaderApp.js";
 import { requestedSourceId } from "./SourceDeepLink.js";
@@ -120,7 +117,13 @@ function OpenedReader({ collectionId }: { readonly collectionId: string }): JSX.
     [opened],
   );
   if (!opened || !gateway) {
-    return <ConnectionLayout status="The selected collection is no longer available." />;
+    return (
+      <ConnectLayout
+        app="reader"
+        title="Open mdbase Reader"
+        status="The selected collection is no longer available."
+      />
+    );
   }
   return (
     <ReaderApp
@@ -196,7 +199,9 @@ function ConnectionScreen({
   };
 
   return (
-    <ConnectionLayout
+    <ConnectLayout
+      app="reader"
+      title="Open mdbase Reader"
       status={describeConnectionProblem(connectionStatus(session))}
       error={describeConnectionProblem(error)}
       detail={connectionProblemDetail(problem)}
@@ -256,6 +261,6 @@ function ConnectionScreen({
           The managed service requires an HTTPS Reader origin.
         </p>
       ) : null}
-    </ConnectionLayout>
+    </ConnectLayout>
   );
 }

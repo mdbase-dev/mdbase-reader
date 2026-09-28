@@ -79,7 +79,7 @@ function handleCommandShortcut(event: KeyboardEvent, actions: ReaderShortcutActi
   const editing =
     event.target instanceof Element &&
     Boolean(event.target.closest("input, textarea, [contenteditable='true']"));
-  if (modifier && !editing && event.key.toLocaleLowerCase() === "k") {
+  if (asksForCommands(event, modifier, editing)) {
     event.preventDefault();
     actions.openCommands();
     return true;
@@ -121,6 +121,14 @@ function handleLayoutShortcut(event: KeyboardEvent, actions: ReaderShortcutActio
     actions.toggleSidebar();
   }
   return true;
+}
+
+/** Mod+K in every mdbase app; "?" too, since the palette lists each command's shortcut. */
+function asksForCommands(event: KeyboardEvent, modifier: boolean, editing: boolean): boolean {
+  if (editing) {
+    return false;
+  }
+  return modifier ? event.key.toLocaleLowerCase() === "k" : event.key === "?";
 }
 
 function isSlashSearch(event: KeyboardEvent, editing: boolean): boolean {

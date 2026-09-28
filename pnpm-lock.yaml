@@ -88,8 +88,8 @@ importers:
   apps/extension:
     dependencies:
       '@mdbase-dev/ui':
-        specifier: file:../../vendor/mdbase-dev-ui-0.1.0-beta.115-c1d1dddb3121.tgz
-        version: file:vendor/mdbase-dev-ui-0.1.0-beta.115-c1d1dddb3121.tgz(@codemirror/view@6.43.8)(react@19.2.8)
+        specifier: file:../../vendor/mdbase-dev-ui-0.1.0-beta.115-0297655b987f.tgz
+        version: file:vendor/mdbase-dev-ui-0.1.0-beta.115-0297655b987f.tgz(@codemirror/view@6.43.8)(react@19.2.8)
       '@mdbase-reader/connect':
         specifier: workspace:*
         version: link:../../packages/connect
@@ -134,8 +134,8 @@ importers:
         specifier: 0.8.2
         version: 0.8.2(@citation-js/core@0.8.2)
       '@mdbase-dev/ui':
-        specifier: file:../../vendor/mdbase-dev-ui-0.1.0-beta.115-c1d1dddb3121.tgz
-        version: file:vendor/mdbase-dev-ui-0.1.0-beta.115-c1d1dddb3121.tgz(@codemirror/view@6.43.8)(react@19.2.8)
+        specifier: file:../../vendor/mdbase-dev-ui-0.1.0-beta.115-0297655b987f.tgz
+        version: file:vendor/mdbase-dev-ui-0.1.0-beta.115-0297655b987f.tgz(@codemirror/view@6.43.8)(react@19.2.8)
       '@mdbase-reader/connect':
         specifier: workspace:*
         version: link:../../packages/connect
@@ -268,8 +268,8 @@ importers:
         specifier: ^1.2.3
         version: 1.2.3
       '@mdbase-dev/ui':
-        specifier: file:../../vendor/mdbase-dev-ui-0.1.0-beta.115-c1d1dddb3121.tgz
-        version: file:vendor/mdbase-dev-ui-0.1.0-beta.115-c1d1dddb3121.tgz(@codemirror/view@6.43.8)(react@19.2.8)
+        specifier: file:../../vendor/mdbase-dev-ui-0.1.0-beta.115-0297655b987f.tgz
+        version: file:vendor/mdbase-dev-ui-0.1.0-beta.115-0297655b987f.tgz(@codemirror/view@6.43.8)(react@19.2.8)
       '@mdbase-reader/core':
         specifier: workspace:*
         version: link:../core
@@ -408,8 +408,8 @@ importers:
         specifier: ^5.3.0
         version: 5.3.0
       '@mdbase-dev/ui':
-        specifier: file:../../vendor/mdbase-dev-ui-0.1.0-beta.115-c1d1dddb3121.tgz
-        version: file:vendor/mdbase-dev-ui-0.1.0-beta.115-c1d1dddb3121.tgz(@codemirror/view@6.43.8)(react@19.2.8)
+        specifier: file:../../vendor/mdbase-dev-ui-0.1.0-beta.115-0297655b987f.tgz
+        version: file:vendor/mdbase-dev-ui-0.1.0-beta.115-0297655b987f.tgz(@codemirror/view@6.43.8)(react@19.2.8)
       react:
         specifier: ^19.2.8
         version: 19.2.8
@@ -1140,8 +1140,8 @@ packages:
   '@mdbase-dev/connect@0.1.0-beta.112':
     resolution: {integrity: sha512-oLk/VEz/GCZIX9eTDpIf9mcI0dKXokKvWgf9xRzyComgNqXDrKX2ADFL1pYvAPOC2+O6pKveGIpJiEPWEVV3Lw==}
 
-  '@mdbase-dev/ui@file:vendor/mdbase-dev-ui-0.1.0-beta.115-c1d1dddb3121.tgz':
-    resolution: {integrity: sha512-GGjDs3ePcOrGuHqjoI71lA8alaIG4WkffRnc6Makufs2N+azrHuD7nKvZYGUF0jOZj2tsELKAOodagbbYl2igw==, tarball: file:vendor/mdbase-dev-ui-0.1.0-beta.115-c1d1dddb3121.tgz}
+  '@mdbase-dev/ui@file:vendor/mdbase-dev-ui-0.1.0-beta.115-0297655b987f.tgz':
+    resolution: {integrity: sha512-SHFo0gjrvUJs3ogu1Lk43A4/dWHIyW5Q16YIFFvBtxE0MdFWbGoEBbOXBMoTTqhweYjQPiBfzYj84spWMUUmPw==, tarball: file:vendor/mdbase-dev-ui-0.1.0-beta.115-0297655b987f.tgz}
     version: 0.1.0-beta.115
     peerDependencies:
       '@codemirror/view': ^6.0.0
@@ -4310,7 +4310,7 @@ snapshots:
     dependencies:
       '@mdbase-dev/connect-protocol': 0.1.0-beta.112
 
-  '@mdbase-dev/ui@file:vendor/mdbase-dev-ui-0.1.0-beta.115-c1d1dddb3121.tgz(@codemirror/view@6.43.8)(react@19.2.8)':
+  '@mdbase-dev/ui@file:vendor/mdbase-dev-ui-0.1.0-beta.115-0297655b987f.tgz(@codemirror/view@6.43.8)(react@19.2.8)':
     dependencies:
       '@fontsource/atkinson-hyperlegible': 5.3.0
       '@fontsource/azeret-mono': 5.3.0

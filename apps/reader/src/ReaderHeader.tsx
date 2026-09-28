@@ -1,9 +1,9 @@
 import { AppSwitcher } from "@mdbase-dev/ui/app-switcher";
+import { shortcutLabel } from "@mdbase-dev/ui/command-palette";
 
 import { CollectionPicker } from "./CollectionPicker.js";
 import { DisplayMenu } from "./DisplayMenu.js";
 import { BackIcon, LeftPaneIcon, ReadingModeIcon, RightPaneIcon, SearchIcon } from "./icons.js";
-import { shortcutLabel } from "./Menu.js";
 
 import type { ReaderDirectAccessState } from "./use-direct-access.js";
 import type { ThemePreference } from "@mdbase-dev/ui/theme";

@@ -1,7 +1,7 @@
+import { CommandPalette } from "@mdbase-dev/ui/command-palette";
 import { useCallback, useEffect, useMemo, useRef, type JSX, type RefObject } from "react";
 
 import { confirmCollectionSwitch } from "./collection-switching.js";
-import { CommandPalette } from "./CommandPalette.js";
 import { DeploymentUpdateNotice } from "./DeploymentUpdateNotice.js";
 import { inspectorPanelId, navigatorPanelId } from "./dockview-workspace-state.js";
 import { DockviewWorkspace } from "./DockviewWorkspace.js";
@@ -84,6 +84,9 @@ interface PendingWorkspaceAnnotation {
   readonly paneId: WorkspacePaneId | null;
   readonly sourceId: SourceId;
 }
+
+/** Every open tab is listed; other groups show a few until the reader types. */
+const paletteShowsAll = ["Open tabs"];
 
 // eslint-disable-next-line max-lines-per-function
 export function ReaderWorkspaceView({
@@ -376,6 +379,9 @@ export function ReaderWorkspaceView({
         canChooseFile={Boolean(model.pickSourceFile)}
       />
       <CommandPalette
+        label="Reader commands"
+        placeholder="Search sources and commands"
+        showAll={paletteShowsAll}
         open={model.commandsOpen}
         commands={commands}
         onClose={() => model.setCommandsOpen(false)}
