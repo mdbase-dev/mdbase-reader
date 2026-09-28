@@ -1104,10 +1104,6 @@
   min-height: 28px;
   min-width: 0;
   padding: 0 7px;
-  border: 1px solid var(--line);
-  border-radius: 5px;
-  color: var(--ink);
-  background: var(--paper);
 }
 
 .library-options .segmented-control {
@@ -1522,10 +1518,6 @@
   min-width: 0;
   height: 28px;
   padding: 0 8px;
-  border: 1px solid var(--line);
-  border-radius: 5px;
-  color: var(--ink);
-  background: var(--paper);
   font: 12px/1 var(--mono);
 }
 
@@ -2905,8 +2897,6 @@
 
 .library-save-dialog input {
   height: 34px;
-  border-radius: var(--ui-radius);
-  background: var(--paper);
   font-size: var(--ui-body);
 }
 
@@ -3282,18 +3272,7 @@
   width: 100%;
   height: 36px;
   padding: 0 11px;
-  border: 1px solid var(--line);
-  border-radius: var(--ui-radius);
-  outline: none;
-  color: var(--ink);
-  background: var(--paper);
   font-size: var(--ui-body);
-}
-
-.capture-url-field input:focus,
-.import-title-field input:focus {
-  border-color: color-mix(in oklch, var(--accent) 60%, var(--line));
-  box-shadow: 0 0 0 3px color-mix(in oklch, var(--accent) 16%, transparent);
 }
 
 .capture-url-row .mdbase-button {
@@ -3701,10 +3680,6 @@
   height: 28px;
   min-height: 28px;
   padding: 0 7px;
-  border: 1px solid var(--line);
-  border-radius: 5px;
-  color: var(--ink);
-  background: var(--paper);
   font: inherit;
   font-size: var(--ui-control);
 }
@@ -3777,10 +3752,6 @@
   width: 140px;
   height: 28px;
   padding: 0 8px;
-  border: 1px solid var(--line);
-  border-radius: 6px;
-  color: var(--ink);
-  background: var(--paper);
   font: inherit;
 }
 

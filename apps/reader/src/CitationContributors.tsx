@@ -59,12 +59,14 @@ export function CitationContributors({
             {name.literal === undefined ? (
               <>
                 <input
+                  className="mdbase-field"
                   aria-label={`${itemLabel} ${String(index + 1)} given name`}
                   placeholder="Given names"
                   value={name.given ?? ""}
                   onChange={(event) => update(index, { ...name, given: event.target.value })}
                 />
                 <input
+                  className="mdbase-field"
                   aria-label={`${itemLabel} ${String(index + 1)} family name`}
                   placeholder="Family name"
                   value={name.family ?? ""}
@@ -73,6 +75,7 @@ export function CitationContributors({
               </>
             ) : (
               <input
+                className="mdbase-field"
                 aria-label={`${itemLabel} ${String(index + 1)} organisation`}
                 placeholder="Organisation name"
                 value={name.literal}
@@ -85,12 +88,14 @@ export function CitationContributors({
               <summary>More name details</summary>
               <div>
                 <input
+                  className="mdbase-field"
                   aria-label={`${itemLabel} ${String(index + 1)} suffix`}
                   placeholder="Suffix"
                   value={name.suffix ?? ""}
                   onChange={(event) => update(index, { ...name, suffix: event.target.value })}
                 />
                 <input
+                  className="mdbase-field"
                   aria-label={`${itemLabel} ${String(index + 1)} dropping particle`}
                   placeholder="Dropping particle"
                   value={name["dropping-particle"] ?? ""}
@@ -99,6 +104,7 @@ export function CitationContributors({
                   }
                 />
                 <input
+                  className="mdbase-field"
                   aria-label={`${itemLabel} ${String(index + 1)} non-dropping particle`}
                   placeholder="Non-dropping particle"
                   value={name["non-dropping-particle"] ?? ""}

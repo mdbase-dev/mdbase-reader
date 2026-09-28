@@ -71,6 +71,7 @@ export function HighlightFields({
             Comment <span>(optional)</span>
           </label>
           <textarea
+            className="mdbase-field"
             id="comment"
             ref={comment}
             value={c.draft.comment}

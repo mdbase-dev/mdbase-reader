@@ -28,6 +28,7 @@ export function CitationLookup({
       </summary>
       <form onSubmit={submit}>
         <input
+          className="mdbase-field"
           aria-label="Citation identifier, URL, or title"
           value={query}
           onChange={(event) => setQuery(event.target.value)}

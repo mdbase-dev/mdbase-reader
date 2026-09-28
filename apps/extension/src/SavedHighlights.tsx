@@ -217,6 +217,7 @@ function CommentEditor({
         Comment
       </label>
       <textarea
+        className="mdbase-field"
         id={id}
         // eslint-disable-next-line jsx-a11y/no-autofocus -- opened by the reader's own click
         autoFocus

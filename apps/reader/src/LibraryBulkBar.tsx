@@ -150,6 +150,7 @@ function BulkFieldForm({
       }}
     >
       <input
+        className="mdbase-field"
         aria-label="Field"
         list={fieldListId}
         value={key}
@@ -166,6 +167,7 @@ function BulkFieldForm({
         ))}
       </datalist>
       <input
+        className="mdbase-field"
         aria-label="Value (empty removes the field)"
         value={value}
         placeholder="value, or empty to remove"

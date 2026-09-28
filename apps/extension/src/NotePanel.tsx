@@ -42,6 +42,7 @@ function NewSourceFields({
     >
       <label htmlFor="title">Title</label>
       <input
+        className="mdbase-field"
         id="title"
         value={c.draft.title}
         maxLength={300}
@@ -63,7 +64,7 @@ function NewSourceFields({
       </label>
       <textarea
         id="note"
-        className="note-text"
+        className="mdbase-field note-text"
         value={c.draft.note}
         rows={8}
         onChange={(event) => update("note", event.target.value)}
@@ -151,6 +152,7 @@ function SourceDetailsForm({
     >
       <label htmlFor="saved-title">Title</label>
       <input
+        className="mdbase-field"
         id="saved-title"
         value={title}
         maxLength={300}
@@ -209,7 +211,7 @@ function SourceNoteEditor({ session }: { readonly session: SourceNoteSession }):
       </div>
       <textarea
         id="saved-note"
-        className="note-text"
+        className="mdbase-field note-text"
         value={note.body}
         rows={10}
         readOnly={conflict}

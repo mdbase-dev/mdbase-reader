@@ -360,6 +360,7 @@ export function LibraryWorkspace({
                   <label>
                     <span>Tag</span>
                     <input
+                      className="mdbase-field"
                       value={configuration.filter.tag}
                       placeholder="Any tag"
                       onChange={(event) => updateFilter({ tag: event.target.value })}

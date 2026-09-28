@@ -260,6 +260,7 @@ export function AddColumnCell({
           <label>
             <span className="menu-label">Any field</span>
             <input
+              className="mdbase-field"
               value={custom}
               placeholder="e.g. course or csl.volume"
               spellCheck={false}

@@ -97,7 +97,7 @@ function ConditionRow({
     <div className="library-condition" role="group" aria-label="Field condition">
       <input
         aria-label="Field"
-        className="library-condition-field"
+        className="mdbase-field library-condition-field"
         list={fieldListId}
         value={condition.key}
         placeholder="field"
@@ -118,7 +118,7 @@ function ConditionRow({
         <>
           <input
             aria-label="Value"
-            className="library-condition-value"
+            className="mdbase-field library-condition-value"
             list={valueListId}
             value={condition.value}
             placeholder="value"

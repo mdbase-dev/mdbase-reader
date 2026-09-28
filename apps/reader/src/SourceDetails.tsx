@@ -116,6 +116,7 @@ function DetailInput({
       <label htmlFor={id}>{field.label}</label>
       {field.multiline ? (
         <textarea
+          className="mdbase-field"
           {...common}
           rows={field.key === "authors" ? Math.max(1, text.split("\n").length) : 3}
           onKeyDown={(event) => {
@@ -126,6 +127,7 @@ function DetailInput({
         />
       ) : (
         <input
+          className="mdbase-field"
           {...common}
           type={field.key === "url" ? "url" : "text"}
           required={required}

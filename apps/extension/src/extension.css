@@ -590,15 +590,7 @@ textarea {
   min-height: var(--ui-control-height);
   margin-bottom: 14px;
   padding: 7px 10px;
-  border: 1px solid var(--line-strong);
-  border-radius: var(--ui-radius);
-  color: var(--ink);
-  background: var(--paper);
   font-size: 13px;
-}
-input:not([type="checkbox"], [type="radio"]):hover,
-textarea:hover {
-  border-color: var(--muted);
 }
 textarea {
   resize: vertical;

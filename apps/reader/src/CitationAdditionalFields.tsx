@@ -48,6 +48,7 @@ export function CitationAdditionalFields({
         <label>
           <span>Find a field</span>
           <input
+            className="mdbase-field"
             list={fieldListId}
             placeholder={definitions.length ? "e.g. accessed, genre, PMID" : "All fields added"}
             value={selected}
