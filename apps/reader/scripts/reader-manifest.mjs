@@ -5,7 +5,9 @@ import { resolve } from "node:path";
 import { dataContractDigest } from "@callumalpass/mdbase";
 import { parse as parseYaml } from "yaml";
 
-export const READER_TYPE_PACK_VERSION = "1.0.0-beta.1";
+// Pack releases are immutable independently of the data contracts they provide.
+// beta.2 was used historically; do not reuse it even though the contracts remain beta.1.
+export const READER_TYPE_PACK_VERSION = "1.0.0-beta.3";
 
 const projectRoot = resolve(import.meta.dirname, "..");
 // Reader saves library views as mdbase.view records; this is the published
