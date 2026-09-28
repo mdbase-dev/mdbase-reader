@@ -1,4 +1,4 @@
-import { Select } from "@mdbase-reader/ui";
+import { Select } from "@mdbase-dev/ui/select";
 
 import { panelTab } from "./dockview-workspace-state.js";
 import { BackIcon } from "./icons.js";

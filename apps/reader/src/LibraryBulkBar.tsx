@@ -1,5 +1,5 @@
+import { Select } from "@mdbase-dev/ui/select";
 import { isEditableSourceField } from "@mdbase-reader/core";
-import { Select } from "@mdbase-reader/ui";
 import { useId, useState, type JSX, type KeyboardEvent } from "react";
 
 import { CloseIcon } from "./icons.js";

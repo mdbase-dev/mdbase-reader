@@ -1,4 +1,4 @@
-import { Select, type SelectItems } from "@mdbase-reader/ui";
+import { Select, type SelectItems } from "@mdbase-dev/ui/select";
 
 import {
   citationDateText,

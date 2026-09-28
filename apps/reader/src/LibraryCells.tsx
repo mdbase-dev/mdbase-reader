@@ -1,5 +1,5 @@
+import { Select, type SelectOption } from "@mdbase-dev/ui/select";
 import { readingStatuses } from "@mdbase-reader/core";
-import { Select, type SelectOption } from "@mdbase-reader/ui";
 
 import {
   formatPropertyValue,

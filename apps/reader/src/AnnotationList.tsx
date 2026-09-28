@@ -1,4 +1,4 @@
-import { Select, type SelectItems } from "@mdbase-reader/ui";
+import { Select, type SelectItems } from "@mdbase-dev/ui/select";
 import { useState, type JSX } from "react";
 
 import { browseAnnotations, type AnnotationFilter } from "./annotation-list-order.js";

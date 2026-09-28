@@ -1,5 +1,5 @@
+import { Select } from "@mdbase-dev/ui/select";
 import { connectProblemMessage, type ReaderConnectSnapshot } from "@mdbase-reader/connect";
-import { Select } from "@mdbase-reader/ui";
 
 import { readerSession } from "./connect.js";
 

@@ -1,4 +1,4 @@
-import { Select, type SelectItems } from "@mdbase-reader/ui";
+import { Select, type SelectItems } from "@mdbase-dev/ui/select";
 
 import { emptyAnnotationFilter, type AnnotationFilter } from "./annotation-overview.js";
 import { FilterIcon, SearchIcon } from "./icons.js";

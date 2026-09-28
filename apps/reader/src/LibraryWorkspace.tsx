@@ -1,5 +1,5 @@
 /* eslint-disable complexity, max-lines-per-function */
-import { Select, type SelectItems, type SelectOption } from "@mdbase-reader/ui";
+import { Select, type SelectItems, type SelectOption } from "@mdbase-dev/ui/select";
 import {
   useCallback,
   useEffect,

@@ -1,4 +1,4 @@
-import { Select } from "@mdbase-reader/ui";
+import { Select } from "@mdbase-dev/ui/select";
 
 import { connectionUnavailableMessage } from "./connection-status.js";
 import { DirectAccessPanel } from "./DirectAccessPanel.js";

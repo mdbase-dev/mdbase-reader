@@ -8,6 +8,8 @@
   --ui-control: 13px;
   --ui-control-height: 34px;
   --ui-radius: 6px;
+  --control-height: var(--ui-control-height);
+  --control-font-size: var(--ui-control);
   --gutter: 20px;
   background: var(--canvas);
 }

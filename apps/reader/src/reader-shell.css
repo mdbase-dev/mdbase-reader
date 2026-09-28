@@ -20,6 +20,13 @@
   --ui-radius: 6px;
 }
 
+/* Shared controls (@mdbase-dev/ui) follow the shell's density. */
+:root,
+.reader-shell {
+  --control-height: var(--ui-control-height);
+  --control-font-size: var(--ui-control);
+}
+
 .reader-shell[data-density="comfortable"] {
   --ui-meta: 12px;
   --ui-control: 13px;

@@ -1,3 +1,4 @@
+import { moveMenuFocus } from "@mdbase-dev/ui/popover";
 import {
   useCallback,
   useEffect,
@@ -66,7 +67,7 @@ export function LibraryRowMenu({
       tabIndex={-1}
       aria-label={`Actions for ${source.title}`}
       style={{ left: `${String(position.x)}px`, top: `${String(position.y)}px` }}
-      onKeyDown={(event) => moveFocus(event, ref.current)}
+      onKeyDown={(event) => moveMenuFocus(event, ref.current)}
     >
       <button type="button" role="menuitem" onClick={run(() => actions.onOpen(source.id), true)}>
         Open
@@ -235,20 +236,4 @@ function useDismiss(
       window.removeEventListener("resize", dismiss);
     };
   }, [ref, onClose]);
-}
-
-function moveFocus(event: ReactKeyboardEvent, menu: HTMLElement | null): void {
-  if (!menu || !["ArrowDown", "ArrowUp", "Home", "End"].includes(event.key)) {
-    return;
-  }
-  event.preventDefault();
-  const items = [...menu.querySelectorAll<HTMLElement>("[role^=menuitem]")];
-  const current = items.indexOf(document.activeElement as HTMLElement);
-  const next =
-    event.key === "Home"
-      ? 0
-      : event.key === "End"
-        ? items.length - 1
-        : (current + (event.key === "ArrowDown" ? 1 : -1) + items.length) % items.length;
-  items[next]?.focus({ preventScroll: true });
 }
