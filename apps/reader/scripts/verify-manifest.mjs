@@ -13,36 +13,49 @@ const validation = validateAppManifest(manifest);
 if (!validation.valid) {
   fail(`Reader manifest is invalid: ${formatValidationIssues(validation.issues)}`);
 }
-const [pack] = manifest.provisions?.type_packs ?? [];
-if (!pack || manifest.requirements.contracts.length !== 2) {
-  fail("Reader must provide one type pack containing its two required contracts.");
+const packs = manifest.provisions?.type_packs ?? [];
+const provided = packs.flatMap((pack) =>
+  pack.provides.map(({ id, version }) => `${id}@${version}`),
+);
+const required = manifest.requirements.contracts.map(({ id, version }) => `${id}@${version}`);
+if (provided.sort().join() !== required.sort().join()) {
+  fail("Reader's type packs must provide exactly its required contracts.");
 }
 
-const documents = new Map(pack.resources.map((resource) => [resource.source, resource.document]));
-for (const resource of pack.manifest.resources) {
-  const document = documents.get(resource.source);
-  if (!document) {
-    fail(`Type-pack source '${resource.source}' is missing.`);
-  }
-  if (digest(document) !== resource.digest) {
-    fail(`Type-pack source '${resource.source}' does not match its digest.`);
+for (const pack of packs) {
+  const documents = new Map(pack.resources.map((resource) => [resource.source, resource.document]));
+  for (const resource of pack.manifest.resources) {
+    const document = documents.get(resource.source);
+    if (!document) {
+      fail(`Type-pack source '${resource.source}' is missing.`);
+    }
+    if (digest(document) !== resource.digest) {
+      fail(`Type-pack source '${resource.source}' does not match its digest.`);
+    }
   }
 }
 
 const collectionRoot = await mkdtemp(join(tmpdir(), "mdbase-reader-pack-"));
 try {
   await writeFile(join(collectionRoot, "mdbase.yaml"), "spec_version: 0.3.0\n");
-  const provision = { manifest: pack.manifest, resources: pack.resources };
-  const assessment = await assessTypePack(collectionRoot, provision, {
-    installedBy: manifest.id,
-  });
-  assertValid(assessment, "assessment");
-  const installed = await applyTypePack(collectionRoot, provision, {
-    installedBy: manifest.id,
-    expectedAssessmentDigest: assessment.result.assessment_digest,
-  });
-  assertValid(installed, "installation");
+  for (const pack of packs) {
+    const provision = { manifest: pack.manifest, resources: pack.resources };
+    const assessment = await assessTypePack(collectionRoot, provision, {
+      installedBy: manifest.id,
+    });
+    assertValid(assessment, "assessment");
+    const installed = await applyTypePack(collectionRoot, provision, {
+      installedBy: manifest.id,
+      expectedAssessmentDigest: assessment.result.assessment_digest,
+    });
+    assertValid(installed, "installation");
+  }
 
+  await mkdir(join(collectionRoot, "views"));
+  await writeFile(
+    join(collectionRoot, "views", "example.md"),
+    "---\ntype: view\nid: reader.library.example\nversion: 1\nname: Example\nviews:\n  - id: all\n    name: All\n---\n",
+  );
   await mkdir(join(collectionRoot, "sources"));
   await writeFile(
     join(collectionRoot, "sources", "example.md"),
@@ -80,6 +93,14 @@ try {
     );
     if (!source.valid || source.view.title !== "Example source") {
       fail("Reader source contract did not project a valid source view.");
+    }
+    const view = await opened.collection.getContractView(
+      "views/example.md",
+      "mdbase.view",
+      "1.0.0",
+    );
+    if (!view.valid || view.view.name !== "Example") {
+      fail("A Reader view record did not project a valid mdbase.view contract view.");
     }
   } finally {
     await opened.collection.close();

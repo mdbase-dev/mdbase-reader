@@ -1,7 +1,7 @@
 import { mkdir, writeFile } from "node:fs/promises";
 import { resolve } from "node:path";
 
-import { format } from "prettier";
+import { format, resolveConfig } from "prettier";
 
 import { extensionEnvironment } from "./extension-manifest.mjs";
 import { buildReaderManifest } from "../../reader/scripts/reader-manifest.mjs";
@@ -21,4 +21,7 @@ const manifest = {
 };
 const target = resolve(root, "src/generated/mdbase-app.json");
 await mkdir(resolve(target, ".."), { recursive: true });
-await writeFile(target, await format(JSON.stringify(manifest), { parser: "json" }));
+await writeFile(
+  target,
+  await format(JSON.stringify(manifest), { ...(await resolveConfig(target)), parser: "json" }),
+);

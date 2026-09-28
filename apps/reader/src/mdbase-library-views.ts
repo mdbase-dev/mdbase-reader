@@ -21,6 +21,7 @@ import {
 } from "./library-conditions.js";
 
 import type { AnnotationViewConfiguration } from "./mdbase-annotation-views.js";
+import type { JsonObject } from "@mdbase-reader/connect";
 
 export { columnLabel };
 export type { LibraryColumn };
@@ -140,11 +141,11 @@ export function libraryViewConfiguration(
   };
 }
 
-export function buildLibraryViewDocument(request: LibraryViewSaveRequest): Promise<string> {
+export function buildLibraryView(request: LibraryViewSaveRequest): JsonObject {
   const identifier = viewIdentifier(request.name);
   const configuration = request.configuration;
   const where = durableWhere(configuration.filter, request.fieldShapes ?? {});
-  const frontmatter = {
+  return {
     type: "view",
     id: `reader.library.${identifier}`,
     version: 1,
@@ -189,15 +190,6 @@ export function buildLibraryViewDocument(request: LibraryViewSaveRequest): Promi
       },
     ],
   };
-  return viewDocument(frontmatter);
-}
-
-/** Serializes a view document; YAML is only needed when saving, so it loads on demand. */
-export async function viewDocument(
-  frontmatter: Readonly<Record<string, unknown>>,
-): Promise<string> {
-  const { stringify } = await import("yaml");
-  return `---\n${stringify(frontmatter).trimEnd()}\n---\n\n`;
 }
 
 export function applyLibraryViewConfiguration(

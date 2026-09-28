@@ -13,13 +13,12 @@ import {
 
 import {
   annotationViewConfiguration,
-  buildAnnotationViewDocument,
-  buildSourceAnnotationsViewDocument,
+  buildAnnotationView,
+  buildSourceAnnotationsView,
   readerViewKind,
-  sourceAnnotationsViewName,
 } from "./mdbase-annotation-views.js";
 import {
-  buildLibraryViewDocument,
+  buildLibraryView,
   defaultLibraryView,
   libraryViewConfiguration,
   libraryViewKey,
@@ -34,7 +33,7 @@ import type {
   ReaderLibrarySnapshot,
   ReaderWorkspaceGateway,
 } from "./workspace-model.js";
-import type { LibraryViewRepository } from "@mdbase-reader/connect";
+import type { JsonObject, LibraryViewRepository } from "@mdbase-reader/connect";
 import type {
   Annotation,
   AnnotationDeletionPlan,
@@ -200,17 +199,22 @@ export class ConnectWorkspaceGateway implements ReaderWorkspaceGateway {
     if (!this.libraryViewRepository) {
       throw new Error("Saved mdbase views are unavailable for this collection.");
     }
-    const saved = await this.libraryViewRepository.save({
-      document: await (request.annotations
-        ? buildAnnotationViewDocument({
-            name: request.name,
-            configuration: request.annotations,
-            ...(request.fieldShapes ? { fieldShapes: request.fieldShapes } : {}),
-          })
-        : buildLibraryViewDocument(request)),
-      ...(request.existing?.path ? { path: request.existing.path } : { name: request.name }),
-      ...(request.existing?.revision ? { revision: request.existing.revision } : {}),
-    });
+    const frontmatter = request.annotations
+      ? buildAnnotationView({
+          name: request.name,
+          configuration: request.annotations,
+          ...(request.fieldShapes ? { fieldShapes: request.fieldShapes } : {}),
+        })
+      : buildLibraryView(request);
+    const saved = await this.libraryViewRepository.save(
+      request.existing?.path
+        ? {
+            path: request.existing.path,
+            frontmatter,
+            replace: request.existing.revision ? { revision: request.existing.revision } : {},
+          }
+        : { path: viewPath(frontmatter), frontmatter },
+    );
     const views = await this.listLibraryViews();
     const match = views.find(
       (view) =>
@@ -251,9 +255,10 @@ export class ConnectWorkspaceGateway implements ReaderWorkspaceGateway {
     if (existing) {
       return { path: existing.source.path, created: false };
     }
+    const frontmatter = buildSourceAnnotationsView();
     const saved = await this.libraryViewRepository.save({
-      document: await buildSourceAnnotationsViewDocument(),
-      name: sourceAnnotationsViewName,
+      path: viewPath(frontmatter),
+      frontmatter,
     });
     return { path: saved.path, created: true };
   }
@@ -595,4 +600,9 @@ function replaceInOrder(
   replacement: SourceSummary,
 ): readonly SourceSummary[] {
   return sources.map((source) => (source.id === replacement.id ? replacement : source));
+}
+
+/** New views live beside each other under `views/`, named by their stable view ID. */
+function viewPath(frontmatter: JsonObject): string {
+  return `views/${String(frontmatter["id"])}.md`;
 }
