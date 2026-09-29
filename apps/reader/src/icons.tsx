@@ -5,6 +5,7 @@ import { ArrowSquareOutIcon as PhArrowSquareOut } from "@phosphor-icons/react/Ar
 import { BookmarkSimpleIcon as PhBookmarkSimple } from "@phosphor-icons/react/BookmarkSimple";
 import { BookOpenIcon as PhBookOpen } from "@phosphor-icons/react/BookOpen";
 import { BooksIcon as PhBooks } from "@phosphor-icons/react/Books";
+import { CaretRightIcon as PhCaretRight } from "@phosphor-icons/react/CaretRight";
 import { ChatCircleIcon as PhChatCircle } from "@phosphor-icons/react/ChatCircle";
 import { CheckIcon as PhCheck } from "@phosphor-icons/react/Check";
 import { CircleHalfIcon as PhCircleHalf } from "@phosphor-icons/react/CircleHalf";
@@ -62,6 +63,7 @@ export const FileIcon = icon(PhFile);
 export const AreaIcon = icon(PhSelection);
 export const OpenExternalIcon = icon(PhArrowSquareOut);
 export const CheckIcon = icon(PhCheck);
+export const ChevronRightIcon = icon(PhCaretRight);
 export const FilterIcon = icon(PhFunnel);
 export const ImportIcon = icon(PhTrayArrowDown);
 export const QuoteIcon = icon(PhQuotes);

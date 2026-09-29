@@ -19,6 +19,7 @@ import {
 } from "./connection-recovery.js";
 import { ConnectionRetry, SelectedAuthorizationAction } from "./ConnectionLayout.js";
 import { readerErrorMessage } from "./errors.js";
+import { ChevronRightIcon, CollectionIcon, PlusIcon } from "./icons.js";
 import { ReaderApp } from "./ReaderApp.js";
 import { requestedSourceId } from "./SourceDeepLink.js";
 
@@ -194,6 +195,9 @@ function ConnectionScreen({
       setWorking(false);
     }
   };
+  const otherConnections = session.connections.filter(
+    ({ collectionId }) => collectionId !== selectedCollectionId,
+  );
   const select = (collectionId: string): void => {
     onError(connectProblemMessage(readerSession.select(collectionId)));
   };
@@ -236,25 +240,22 @@ function ConnectionScreen({
         {requiresReconnect(problem) || requiresAccessReview(problem) ? null : (
           <ConnectionRetry error={error} onRetry={onRetry} />
         )}
-        {session.connections
-          .filter(({ collectionId }) => collectionId !== selectedCollectionId)
-          .map((connection) => (
-            <ReaderButton
-              key={connection.collectionId}
-              onClick={() => select(connection.collectionId)}
-            >
-              Open {connection.displayName}
-            </ReaderButton>
-          ))}
-        <button
-          className="connection-secondary"
-          disabled={working}
-          type="button"
-          onClick={() => void authorize("choose")}
-        >
-          {working ? "Opening mdbase…" : "Connect another collection"}
-        </button>
       </div>
+      <OtherCollections
+        connections={otherConnections}
+        heading={selectedCollectionId ? "Or open another collection" : "Your collections"}
+        disabled={working}
+        onSelect={select}
+      />
+      <button
+        className="connection-connect"
+        disabled={working}
+        type="button"
+        onClick={() => void authorize("choose")}
+      >
+        <PlusIcon />
+        {working ? "Opening mdbase…" : "Connect another collection"}
+      </button>
       {isLocalhost(location) ? (
         <p className="connection-local-note">
           Local HTTP development uses the local Connect stack at <code>http://127.0.0.1:8787</code>.
@@ -262,5 +263,44 @@ function ConnectionScreen({
         </p>
       ) : null}
     </ConnectLayout>
+  );
+}
+
+function OtherCollections({
+  connections,
+  heading,
+  disabled,
+  onSelect,
+}: {
+  readonly connections: readonly { readonly collectionId: string; readonly displayName: string }[];
+  readonly heading: string;
+  readonly disabled: boolean;
+  readonly onSelect: (collectionId: string) => void;
+}): JSX.Element | null {
+  if (connections.length === 0) {
+    return null;
+  }
+  return (
+    <div className="connection-others" role="group" aria-labelledby="reader-other-collections">
+      <h2 id="reader-other-collections">{heading}</h2>
+      <ul>
+        {connections.map((connection) => (
+          <li key={connection.collectionId}>
+            <button
+              type="button"
+              className="connection-other"
+              disabled={disabled}
+              title={connection.displayName}
+              aria-label={`Open ${connection.displayName}`}
+              onClick={() => onSelect(connection.collectionId)}
+            >
+              <CollectionIcon />
+              <span>{connection.displayName}</span>
+              <ChevronRightIcon className="connection-other-go" />
+            </button>
+          </li>
+        ))}
+      </ul>
+    </div>
   );
 }
