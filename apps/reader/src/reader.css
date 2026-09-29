@@ -58,12 +58,149 @@ button {
   border: 0;
 }
 
+/* Long collection names must not widen the shared connect screen past the viewport. */
+.mdbase-connect-screen {
+  grid-template-columns: minmax(0, 1fr);
+}
+
 .connection-actions {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 10px 14px;
-  margin-top: 24px;
+  gap: 10px;
+  margin-top: 26px;
+}
+
+.connection-actions:empty {
+  display: none;
+}
+
+.connection-actions .mdbase-connect-action {
+  margin-top: 0;
+  border-color: var(--accent);
+  color: var(--color-on-accent);
+  background: var(--accent);
+}
+
+.connection-actions .mdbase-connect-action:hover:not(:disabled) {
+  border-color: var(--color-accent-strong);
+  background: var(--color-accent-strong);
+}
+
+.connection-actions .mdbase-button {
+  min-height: 42px;
+}
+
+.connection-others {
+  margin-top: 34px;
+}
+
+.connection-others h2 {
+  margin: 0 0 8px;
+  color: var(--faint);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.connection-others ul {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  border: 1px solid var(--line);
+  border-radius: var(--control-radius);
+  overflow: hidden;
+}
+
+.connection-others li + li {
+  border-top: 1px solid var(--line);
+}
+
+.connection-other {
+  width: 100%;
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 0 12px;
+  color: var(--ink);
+  background: var(--paper);
+  font: inherit;
+  font-size: 14px;
+  text-align: left;
+  cursor: pointer;
+}
+
+.connection-other span {
+  min-width: 0;
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.connection-other svg {
+  width: 16px;
+  height: 16px;
+  flex: none;
+  color: var(--muted);
+}
+
+.connection-other .connection-other-go {
+  width: 13px;
+  height: 13px;
+  color: var(--faint);
+  transition: transform var(--motion-quick, 120ms) ease;
+}
+
+.connection-other:hover:not(:disabled) {
+  background: var(--hover);
+}
+
+.connection-other:hover:not(:disabled) .connection-other-go {
+  color: var(--ink);
+  transform: translateX(2px);
+}
+
+.connection-other:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: -2px;
+}
+
+.connection-other:disabled {
+  cursor: default;
+  opacity: 0.55;
+}
+
+.connection-connect {
+  min-height: 36px;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin: 18px 0 0 -10px;
+  padding: 0 10px;
+  border-radius: var(--control-radius);
+  color: var(--muted);
+  background: transparent;
+  font: inherit;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.connection-connect svg {
+  width: 14px;
+  height: 14px;
+}
+
+.connection-connect:hover:not(:disabled) {
+  color: var(--ink);
+  background: var(--hover);
+}
+
+.connection-connect:disabled {
+  cursor: default;
+  opacity: 0.55;
 }
 
 .connection-secondary {

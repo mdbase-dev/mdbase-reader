@@ -63,7 +63,7 @@ export function connectionStatus(
     case "start_failed":
       return session.problem.message;
     case "authorization_required":
-      return "Reader needs your approval to open this collection.";
+      return `Reader needs your approval to open ${session.info.displayName}.`;
     case "checking_setup":
       return "Checking the collection’s Reader contracts…";
     case "unavailable":
