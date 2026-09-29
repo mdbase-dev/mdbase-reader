@@ -12,6 +12,7 @@ import {
 import { SourceDetails } from "./SourceDetails.js";
 import { SourceLibraryContext } from "./SourceLibraryContext.js";
 import { SourceNoteInsertMenu } from "./SourceNoteInsertMenu.js";
+import { SLOW_SAVE_MS, useSustained } from "./use-sustained.js";
 
 import type { AnnotationComposerController } from "./use-annotation-composer.js";
 import type { ReaderSourceWorkspaceController } from "./use-reader-workspace.js";
@@ -176,13 +177,15 @@ function SaveStatus({
   readonly locallySaved: boolean;
   readonly conflict: boolean;
 }): JSX.Element {
+  // Autosaves usually finish at once; until one runs long, keep showing the unsaved state.
+  const slowSave = useSustained(status === "saving", SLOW_SAVE_MS);
   const [tone, label, detail]: readonly [SaveTone, string, string | undefined] = conflict
     ? [
         "attention",
         "Conflict",
         "The collection changed while you were editing. Review the conflict to continue.",
       ]
-    : status === "saving"
+    : slowSave
       ? ["saving", "Saving…", undefined]
       : status === "saved"
         ? ["saved", "Saved", "Saved to your collection"]
