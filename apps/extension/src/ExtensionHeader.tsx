@@ -1,4 +1,5 @@
-import { ChevronDownIcon, MdbaseMark, SettingsIcon } from "@mdbase-reader/ui";
+import { MdbaseMark } from "@mdbase-dev/ui/brand";
+import { ChevronDownIcon, SettingsIcon } from "@mdbase-reader/ui";
 
 import { readerLibraryUrl } from "./capture-model.js";
 import { environment } from "./environment.js";

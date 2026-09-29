@@ -1,4 +1,4 @@
-import { Select, type SelectItems } from "@mdbase-reader/ui";
+import { Select, type SelectItems } from "@mdbase-dev/ui/select";
 
 import {
   citationDateText,
@@ -46,6 +46,7 @@ export function CitationStructuredEditor({
           <label className="citation-field is-wide">
             <span>Title</span>
             <input
+              className="mdbase-field"
               aria-invalid={problem("title") ? true : undefined}
               value={fieldText(citation, "title")}
               onChange={(event) => update("title", event.target.value)}
@@ -68,6 +69,7 @@ export function CitationStructuredEditor({
             <div>
               <b>@</b>
               <input
+                className="mdbase-field"
                 aria-invalid={problem("id") ? true : undefined}
                 value={fieldText(citation, "id")}
                 onChange={(event) => update("id", event.target.value)}
@@ -232,6 +234,7 @@ export function CitationStructuredEditor({
         <label className="citation-field">
           <span>Abstract</span>
           <textarea
+            className="mdbase-field"
             aria-invalid={problem("abstract") ? true : undefined}
             rows={5}
             value={fieldText(citation, "abstract")}
@@ -264,6 +267,7 @@ function TextField({
     <label className={`citation-field${wide ? " is-wide" : ""}`}>
       <span>{label}</span>
       <input
+        className="mdbase-field"
         aria-invalid={problem ? true : undefined}
         value={fieldText(citation, field)}
         onChange={(event) => onChange(field, event.target.value)}
@@ -288,6 +292,7 @@ function DateField({
     <label className="citation-field">
       <span>{label}</span>
       <input
+        className="mdbase-field"
         aria-invalid={problem ? true : undefined}
         placeholder="YYYY, YYYY-MM-DD, or a season"
         value={value}

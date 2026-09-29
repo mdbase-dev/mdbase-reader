@@ -62,6 +62,7 @@ export function SourceImportDialog({
         <label className="import-title-field">
           <span>Title</span>
           <input
+            className="mdbase-field"
             ref={titleInput}
             value={title}
             disabled={importing}

@@ -46,6 +46,7 @@ export function LibraryViewSaveDialog({
         <label>
           <span>Name</span>
           <input
+            className="mdbase-field"
             value={name}
             placeholder={placeholder}
             // eslint-disable-next-line jsx-a11y/no-autofocus -- the dialog exists only to take this name.

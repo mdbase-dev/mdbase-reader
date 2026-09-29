@@ -111,6 +111,7 @@ function OpenSourceAddDialog({
             <span>Link or identifier</span>
             <span className="capture-url-row">
               <input
+                className="mdbase-field"
                 ref={input}
                 type="text"
                 inputMode="url"

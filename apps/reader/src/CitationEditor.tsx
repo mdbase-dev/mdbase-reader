@@ -1,3 +1,4 @@
+import { SaveNotice } from "@mdbase-dev/ui/save-notice";
 import { citationGapsFromSource, sourceCitationDifferences } from "@mdbase-reader/core";
 import { ReaderButton } from "@mdbase-reader/ui";
 import { useState, type JSX } from "react";
@@ -237,17 +238,15 @@ function CitationFeedback({
       </details>
     );
   }
-  const message =
-    editor.status === "saved"
-      ? "Saved"
-      : editor.suggested
-        ? "Review the suggested details before saving."
-        : !editor.dirty
-          ? "Saved"
-          : "Unsaved changes";
   return (
-    <div className="citation-feedback" aria-live="polite">
-      <span>{message}</span>
+    <div className="citation-feedback mdbase-settle-host" aria-live="polite">
+      {editor.suggested && editor.status !== "saved" ? (
+        <span>Review the suggested details before saving.</span>
+      ) : editor.status === "saved" || !editor.dirty ? (
+        <SaveNotice tone="saved" />
+      ) : (
+        <SaveNotice tone="pending" label="Unsaved changes" />
+      )}
     </div>
   );
 }

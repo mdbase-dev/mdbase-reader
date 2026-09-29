@@ -116,10 +116,6 @@
   height: 26px;
   min-height: 26px;
   padding: 0 5px 0 8px;
-  border: 1px solid var(--line);
-  border-radius: 3px;
-  color: var(--ink-soft);
-  background: var(--paper);
   font-size: var(--ui-meta);
 }
 .citation-proof blockquote {
@@ -283,10 +279,6 @@
 .citation-lookup input {
   min-width: 0;
   width: 100%;
-  border: 1px solid var(--line);
-  border-radius: 4px;
-  color: var(--ink);
-  background: var(--paper);
   font-size: var(--ui-body);
   line-height: 1.35;
 }
@@ -302,15 +294,6 @@
 .citation-field textarea {
   resize: vertical;
   padding: 9px;
-}
-.citation-field input:focus,
-.citation-field .mdbase-select[aria-expanded="true"],
-.citation-field textarea:focus,
-.citation-contributor input:focus,
-.citation-contributor .mdbase-select[aria-expanded="true"],
-.citation-lookup input:focus {
-  outline: 2px solid color-mix(in oklch, var(--accent) 28%, transparent);
-  border-color: var(--accent);
 }
 
 .citation-field [aria-invalid="true"] {
@@ -468,16 +451,8 @@
   width: 100%;
   height: 34px;
   padding: 0 9px;
-  border: 1px solid var(--line);
-  border-radius: 4px;
-  color: var(--ink);
-  background: var(--canvas);
   font-size: var(--ui-control);
   line-height: 1.35;
-}
-.citation-field-picker input:focus {
-  outline: 2px solid color-mix(in oklch, var(--accent) 28%, transparent);
-  border-color: var(--accent);
 }
 .citation-field-picker > button {
   height: 34px;
@@ -563,10 +538,6 @@
 .citation-custom-row > .mdbase-select,
 .citation-json-value textarea {
   min-width: 0;
-  border: 1px solid var(--line);
-  border-radius: 4px;
-  color: var(--ink);
-  background: var(--canvas);
   font-size: var(--ui-meta);
   line-height: 1.35;
 }
@@ -681,7 +652,7 @@
   grid-template-columns: minmax(0, 1fr) auto;
 }
 .citation-lookup form input {
-  border-radius: 4px 0 0 4px;
+  border-radius: var(--control-radius) 0 0 var(--control-radius);
 }
 .citation-lookup form button,
 .citation-apply-metadata {
@@ -1028,10 +999,6 @@
 .source-details-field textarea {
   min-width: 0;
   width: 100%;
-  border: 1px solid var(--line);
-  border-radius: 4px;
-  color: var(--ink);
-  background: var(--paper);
   font: inherit;
   line-height: 1.35;
 }
@@ -1042,11 +1009,6 @@
 .source-details-field textarea {
   padding: 6px 8px;
   resize: vertical;
-}
-.source-details-field input:focus,
-.source-details-field textarea:focus {
-  outline: 2px solid color-mix(in oklch, var(--accent) 28%, transparent);
-  border-color: var(--accent);
 }
 .source-details-note {
   margin: 0;

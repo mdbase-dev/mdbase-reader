@@ -8,6 +8,8 @@
   --ui-control: 13px;
   --ui-control-height: 34px;
   --ui-radius: 6px;
+  --control-height: var(--ui-control-height);
+  --control-font-size: var(--ui-control);
   --gutter: 20px;
   background: var(--canvas);
 }
@@ -83,12 +85,6 @@ kbd {
   width: 18px;
   height: 18px;
   flex: none;
-}
-.mdbase-mark-ink {
-  fill: currentColor;
-}
-.mdbase-mark-accent {
-  fill: var(--accent);
 }
 .header-end {
   min-width: 0;
@@ -594,15 +590,7 @@ textarea {
   min-height: var(--ui-control-height);
   margin-bottom: 14px;
   padding: 7px 10px;
-  border: 1px solid var(--line-strong);
-  border-radius: var(--ui-radius);
-  color: var(--ink);
-  background: var(--paper);
   font-size: 13px;
-}
-input:not([type="checkbox"], [type="radio"]):hover,
-textarea:hover {
-  border-color: var(--muted);
 }
 textarea {
   resize: vertical;

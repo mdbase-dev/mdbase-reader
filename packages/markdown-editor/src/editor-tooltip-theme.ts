@@ -1,89 +1,11 @@
 import { EditorView } from "@codemirror/view";
 
-import { readingFont, uiFont } from "./editor-theme.js";
+import { readingFont } from "./editor-theme.js";
 
-// Tooltips are mounted on the document body (see use-code-editor), so each one carries its
-// own surface instead of inheriting the editor's.
+// Reader's own popups on top of @mdbase-dev/ui's mdbasePopupTheme: the quotation preview
+// beside an annotation completion, and the citation card. Tooltips are mounted on the
+// document body (see use-code-editor), so they carry the editor's theme with them.
 export const readerTooltipTheme = EditorView.theme({
-  ".cm-tooltip": {
-    border: "1px solid var(--line-strong)",
-    borderRadius: "6px",
-    color: "var(--ink)",
-    backgroundColor: "var(--paper)",
-    boxShadow: "0 18px 48px -24px var(--color-scrim)",
-    fontFamily: uiFont,
-  },
-  ".cm-tooltip.cm-tooltip-autocomplete": { padding: "4px" },
-  ".cm-tooltip.cm-tooltip-autocomplete > ul": {
-    width: "min(440px, calc(100vw - 24px))",
-    minWidth: "0",
-    maxWidth: "none",
-    maxHeight: "min(320px, 45vh)",
-    fontFamily: uiFont,
-    whiteSpace: "normal",
-  },
-  ".cm-tooltip.cm-tooltip-autocomplete > ul > li": {
-    display: "grid",
-    gridTemplateColumns: "20px minmax(0, 1fr)",
-    columnGap: "8px",
-    alignItems: "center",
-    padding: "6px 8px",
-    borderRadius: "4px",
-    lineHeight: "1.35",
-  },
-  ".cm-tooltip.cm-tooltip-autocomplete > ul > li[aria-selected]": {
-    color: "var(--ink)",
-    background: "var(--selected)",
-  },
-  ".cm-tooltip.cm-tooltip-autocomplete > ul > li > *": {
-    minWidth: "0",
-    overflow: "hidden",
-    textOverflow: "ellipsis",
-    whiteSpace: "nowrap",
-  },
-  ".cm-completionIcon": {
-    gridRow: "1 / span 2",
-    width: "20px",
-    padding: "0",
-    color: "var(--muted)",
-    fontSize: "13px",
-    lineHeight: "20px",
-    textAlign: "center",
-    opacity: "1",
-  },
-  ".cm-completionIcon-annotation::after": { content: '"❝"', color: "var(--accent)" },
-  ".cm-completionIcon-source::after": { content: '"§"' },
-  ".cm-completionIcon-citation::after": { content: '"@"', color: "var(--accent)" },
-  ".cm-completionLabel": {
-    gridColumn: "2",
-    color: "var(--ink)",
-    fontSize: "13px",
-    fontWeight: "600",
-  },
-  ".cm-completionMatchedText": {
-    textDecoration: "none",
-    color: "var(--accent)",
-  },
-  ".cm-completionDetail": {
-    gridColumn: "2",
-    marginLeft: "0",
-    color: "var(--muted)",
-    fontSize: "11px",
-    fontStyle: "normal",
-  },
-  ".cm-completionListIncompleteTop:before, .cm-completionListIncompleteBottom:after": {
-    color: "var(--faint)",
-    fontSize: "11px",
-  },
-  ".cm-tooltip.cm-completionInfo": {
-    maxWidth: "min(320px, calc(100vw - 24px))",
-    margin: "0 4px",
-    padding: "10px 12px",
-    color: "var(--ink-soft)",
-    fontSize: "12px",
-    lineHeight: "1.5",
-    whiteSpace: "pre-line",
-  },
   ".cm-completion-preview blockquote": {
     margin: "0",
     color: "var(--ink)",
@@ -96,11 +18,6 @@ export const readerTooltipTheme = EditorView.theme({
     paddingTop: "8px",
     borderTop: "1px solid var(--line)",
   },
-  ".cm-tooltip.cm-tooltip-lint": { padding: "4px", fontSize: "12px" },
-  ".cm-diagnostic": { padding: "4px 8px", borderRadius: "3px" },
-  ".cm-diagnostic-error": { borderLeft: "3px solid var(--danger)" },
-  ".cm-diagnostic-warning": { borderLeft: "3px solid var(--warning)" },
-  ".cm-diagnostic-info, .cm-diagnostic-hint": { borderLeft: "3px solid var(--accent)" },
   ".cm-citation-card": {
     width: "max-content",
     maxWidth: "min(340px, calc(100vw - 24px))",

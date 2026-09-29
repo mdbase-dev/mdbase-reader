@@ -1,3 +1,4 @@
+import { matchingCommands, shortcutLabel } from "@mdbase-dev/ui/command-palette";
 import {
   collectionId,
   fileId,
@@ -8,9 +9,11 @@ import {
 import { renderToStaticMarkup } from "react-dom/server";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
-import { matchingCommands, type ReaderCommand } from "./CommandPalette.js";
-import { shortcutLabel } from "./Menu.js";
-import { readerCommands, type ReaderCommandInput } from "./reader-command-list.js";
+import {
+  readerCommands,
+  type ReaderCommand,
+  type ReaderCommandInput,
+} from "./reader-command-list.js";
 import { ReaderHeader } from "./ReaderHeader.js";
 
 const source = (id: string, overrides: Partial<SourceSummary> = {}): SourceSummary => ({

@@ -3,11 +3,11 @@ import {
   loadThemePreference,
   normalizeThemePreference,
   saveThemePreference,
-  themeStorageKey,
+  THEME_STORAGE_KEY,
   type ThemePreference,
   type ThemeRoot,
   type ThemeStorage,
-} from "@mdbase-reader/ui";
+} from "@mdbase-dev/ui/theme";
 import { useEffect, useState } from "react";
 
 /**
@@ -24,7 +24,7 @@ export function startTheme(
 ): () => void {
   applyThemePreference(loadThemePreference(storage), root);
   const onStorage = (event: StorageEvent): void => {
-    if (event.key === themeStorageKey) {
+    if (event.key === THEME_STORAGE_KEY) {
       applyThemePreference(normalizeThemePreference(event.newValue), root);
     }
   };
@@ -40,7 +40,7 @@ export function useThemePreference(): readonly [ThemePreference, (next: ThemePre
   useEffect(() => {
     // Another Settings tab may change it too.
     const onStorage = (event: StorageEvent): void => {
-      if (event.key === themeStorageKey) {
+      if (event.key === THEME_STORAGE_KEY) {
         setTheme(normalizeThemePreference(event.newValue));
       }
     };

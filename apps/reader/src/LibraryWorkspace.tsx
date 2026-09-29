@@ -1,5 +1,5 @@
 /* eslint-disable complexity, max-lines-per-function */
-import { Select, type SelectItems, type SelectOption } from "@mdbase-reader/ui";
+import { Select, type SelectItems, type SelectOption } from "@mdbase-dev/ui/select";
 import {
   useCallback,
   useEffect,
@@ -360,6 +360,7 @@ export function LibraryWorkspace({
                   <label>
                     <span>Tag</span>
                     <input
+                      className="mdbase-field"
                       value={configuration.filter.tag}
                       placeholder="Any tag"
                       onChange={(event) => updateFilter({ tag: event.target.value })}

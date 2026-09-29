@@ -1,14 +1,5 @@
-import {
-  useEffect,
-  useEffectEvent,
-  useLayoutEffect,
-  useRef,
-  useState,
-  type CSSProperties,
-  type JSX,
-  type KeyboardEvent,
-  type RefObject,
-} from "react";
+import { moveMenuFocus, useMenuPopover } from "@mdbase-dev/ui/popover";
+import { useRef, useState, type CSSProperties, type JSX, type RefObject } from "react";
 
 import {
   hueOf,
@@ -52,7 +43,7 @@ export function CollectionMenu({
 }): JSX.Element {
   const menuRef = useRef<HTMLDivElement>(null);
   const [query, setQuery] = useState("");
-  useMenuPlacement(menuRef, triggerRef, onClose, busy);
+  useMenuPopover(menuRef, triggerRef, onClose, { width: 320, busy });
   const ordered = orderedChoices(choices, currentId, currentName);
   const visible = query.trim()
     ? ordered.filter(({ displayName }) =>
@@ -68,7 +59,7 @@ export function CollectionMenu({
       role="menu"
       aria-label="Switch collection"
       tabIndex={-1}
-      onKeyDown={(event) => moveFocus(event, menuRef.current)}
+      onKeyDown={(event) => moveMenuFocus(event, menuRef.current)}
     >
       <div className="collection-menu-heading" role="presentation">
         Collections
@@ -154,90 +145,4 @@ function CollectionItem({
       {current ? <CheckIcon className="collection-menu-check" aria-hidden="true" /> : null}
     </button>
   );
-}
-
-export function useMenuPlacement(
-  menuRef: RefObject<HTMLDivElement | null>,
-  triggerRef: RefObject<HTMLButtonElement | null>,
-  onClose: (refocus: boolean) => void,
-  busy: boolean,
-): void {
-  const close = useEffectEvent(onClose);
-  const locked = useEffectEvent(() => busy);
-  useLayoutEffect(() => {
-    const menu = menuRef.current;
-    const trigger = triggerRef.current;
-    if (!menu || !trigger) {
-      return undefined;
-    }
-    // Top layer where supported, so header overflow and stacking never hide the menu.
-    if (typeof menu.showPopover === "function") {
-      menu.showPopover();
-    }
-    const box = trigger.getBoundingClientRect();
-    const width = Math.min(320, window.innerWidth - 16);
-    menu.style.width = `${String(width)}px`;
-    menu.style.top = `${String(box.bottom + 6)}px`;
-    menu.style.left = `${String(Math.max(8, Math.min(box.left, window.innerWidth - width - 8)))}px`;
-    menu.style.maxHeight = `${String(window.innerHeight - box.bottom - 20)}px`;
-    menu.querySelector<HTMLElement>('[aria-checked="true"], [role^="menuitem"]')?.focus();
-    return () => {
-      if (typeof menu.hidePopover === "function" && menu.matches(":popover-open")) {
-        menu.hidePopover();
-      }
-    };
-  }, [menuRef, triggerRef]);
-  useEffect(() => {
-    const onPointerDown = (event: PointerEvent): void => {
-      const target = event.target as Node | null;
-      if (
-        target &&
-        !locked() &&
-        !menuRef.current?.contains(target) &&
-        !triggerRef.current?.contains(target)
-      ) {
-        close(false);
-      }
-    };
-    const onKeyDown = (event: globalThis.KeyboardEvent): void => {
-      if ((event.key === "Escape" || event.key === "Tab") && !locked()) {
-        if (event.key === "Escape") {
-          event.preventDefault();
-          event.stopPropagation();
-        }
-        close(event.key === "Escape");
-      }
-    };
-    const onResize = (): void => close(false);
-    document.addEventListener("pointerdown", onPointerDown, true);
-    document.addEventListener("keydown", onKeyDown, true);
-    window.addEventListener("resize", onResize);
-    return () => {
-      document.removeEventListener("pointerdown", onPointerDown, true);
-      document.removeEventListener("keydown", onKeyDown, true);
-      window.removeEventListener("resize", onResize);
-    };
-  }, [menuRef, triggerRef]);
-}
-
-export function moveFocus(event: KeyboardEvent, menu: HTMLElement | null): void {
-  if (!menu || !["ArrowDown", "ArrowUp", "Home", "End"].includes(event.key)) {
-    return;
-  }
-  const items = [...menu.querySelectorAll<HTMLElement>('[role^="menuitem"]:not(:disabled)')];
-  const inFilter = document.activeElement?.matches(".collection-menu-filter") ?? false;
-  if (inFilter && (event.key === "Home" || event.key === "End")) {
-    return;
-  }
-  event.preventDefault();
-  const current = items.indexOf(document.activeElement as HTMLElement);
-  const next =
-    event.key === "Home"
-      ? 0
-      : event.key === "End"
-        ? items.length - 1
-        : inFilter
-          ? 0
-          : (current + (event.key === "ArrowDown" ? 1 : -1) + items.length) % items.length;
-  items[next]?.focus();
 }

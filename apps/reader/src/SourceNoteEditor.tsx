@@ -1,9 +1,10 @@
+import { shortcutLabel } from "@mdbase-dev/ui/command-palette";
+import { SaveNotice, type SaveTone } from "@mdbase-dev/ui/save-notice";
 import { lazy, Suspense, useContext, useMemo, useState, type JSX, type ReactNode } from "react";
 
 import { annotationWikiCandidate, annotationWikiPath } from "./annotation-wiki-candidates.js";
 import { DraftRecoveryNotice } from "./DraftRecoveryNotice.js";
 import { CodeIcon, LinkIcon, ListIcon, QuoteIcon } from "./icons.js";
-import { shortcutLabel } from "./Menu.js";
 import {
   sourceNoteCitationCandidates,
   sourceNoteWikiCandidates,
@@ -79,7 +80,7 @@ export function SourceNoteEditor({
   const citekey = sourceRecord.value.citation?.id;
   return (
     <>
-      <div className="source-note-toolbar">
+      <div className="source-note-toolbar mdbase-settle-host">
         <MarkdownFormatToolbar onFormat={format} />
         <SaveStatus
           status={workspace.saveStatus}
@@ -175,30 +176,22 @@ function SaveStatus({
   readonly locallySaved: boolean;
   readonly conflict: boolean;
 }): JSX.Element {
-  const label = conflict
-    ? "Conflict"
+  const [tone, label, detail]: readonly [SaveTone, string, string | undefined] = conflict
+    ? [
+        "attention",
+        "Conflict",
+        "The collection changed while you were editing. Review the conflict to continue.",
+      ]
     : status === "saving"
-      ? "Saving…"
+      ? ["saving", "Saving…", undefined]
       : status === "saved"
-        ? "Saved"
+        ? ["saved", "Saved", "Saved to your collection"]
         : locallySaved
-          ? "Saved locally"
-          : "Not saved";
-  const detail = conflict
-    ? "The collection changed while you were editing. Review the conflict to continue."
-    : status === "saved"
-      ? "Saved to your collection"
-      : locallySaved
-        ? "Kept on this device until the collection can be reached"
-        : undefined;
+          ? ["pending", "Saved locally", "Kept on this device until the collection can be reached"]
+          : ["attention", "Not saved", undefined];
   return (
-    <span
-      className={`source-note-save-state is-${conflict ? "error" : status}`}
-      role="status"
-      aria-live="polite"
-      title={detail}
-    >
-      {label}
+    <span className="source-note-save-state" title={detail}>
+      <SaveNotice tone={tone} label={label} />
     </span>
   );
 }

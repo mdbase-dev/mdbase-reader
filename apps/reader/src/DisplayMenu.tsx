@@ -1,4 +1,4 @@
-import { themePreferences, type ThemePreference } from "@mdbase-reader/ui";
+import { themePreferences, type ThemePreference } from "@mdbase-dev/ui/theme";
 
 import { setHighlightOnSelect, useHighlightOnSelect } from "./highlight-preference.js";
 import { Menu } from "./Menu.js";

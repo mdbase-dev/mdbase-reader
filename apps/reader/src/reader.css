@@ -58,102 +58,18 @@ button {
   border: 0;
 }
 
-.reader-loading {
-  height: 100%;
-  display: grid;
-  place-items: center;
-  color: var(--muted);
-  background: var(--canvas);
-  font-family: var(--mono);
-  font-size: 11px;
-}
-
-.reader-loading.is-error {
-  gap: 16px;
-  align-content: center;
-  color: var(--danger);
-  text-align: center;
-}
-
-.reader-loading.is-error p {
-  max-width: 52ch;
-  margin: 0;
-  line-height: 1.55;
-}
-
-.connection-screen {
-  min-height: 100%;
-  display: grid;
-  place-items: center;
-  padding: 40px 22px;
-  background: var(--canvas);
-}
-
-.connection-card {
-  width: min(500px, 100%);
-  padding: 34px;
-  border: 1px solid var(--line);
-  border-radius: 8px;
-  background: var(--paper);
-}
-
-.connection-copy {
-  margin: 48px 0 28px;
-}
-
-.connection-copy h1 {
-  max-width: 14ch;
-  margin: 0 0 12px;
-  font-size: clamp(28px, 6vw, 38px);
-  line-height: 0.98;
-  letter-spacing: -0.028em;
-}
-
-.connection-copy p,
-.connection-setup p {
-  margin: 0;
-  color: var(--muted);
-  line-height: 1.55;
-}
-
-.connection-error {
-  margin-top: 14px !important;
-  color: var(--danger) !important;
-  font-size: 12px;
-}
-
-.connection-error-detail {
-  margin-top: 8px;
-  color: var(--muted);
-  font-size: 12px;
-}
-.connection-error-detail summary {
-  width: fit-content;
-  cursor: pointer;
-}
-.connection-error-detail code {
-  display: block;
-  margin-top: 6px;
-  padding: 8px 10px;
-  border-radius: 6px;
-  background: var(--hover);
-  font: 11px/1.45 var(--mono);
-  overflow-wrap: anywhere;
-  white-space: pre-wrap;
-}
-
 .connection-actions {
-  display: grid;
-  gap: 8px;
-}
-
-.connection-actions .mdbase-button {
-  width: 100%;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px 14px;
+  margin-top: 24px;
 }
 
 .connection-secondary {
   min-height: 36px;
   padding: 0 10px;
+  border-radius: var(--control-radius);
   color: var(--muted);
   background: transparent;
   cursor: pointer;
@@ -191,7 +107,6 @@ button {
   color: var(--faint);
   font-size: 10px;
   line-height: 1.45;
-  text-align: center;
 }
 
 .connection-local-note code {
@@ -333,7 +248,7 @@ button {
   display: grid;
   place-items: center;
   padding: 0;
-  border-radius: 3px;
+  border-radius: var(--control-radius);
   color: var(--muted);
   background: transparent;
   cursor: pointer;
@@ -719,18 +634,18 @@ button {
   display: grid;
   place-items: center;
   padding: 24px;
-  background: color-mix(in srgb, var(--reader-canvas) 76%, transparent);
-  backdrop-filter: blur(7px);
+  background: var(--color-scrim);
 }
 
 .import-dialog {
   position: relative;
   width: min(440px, 100%);
   overflow: hidden;
-  border: 1px solid var(--reader-hairline);
-  border-radius: 8px;
   background: var(--paper);
-  box-shadow: 0 24px 70px color-mix(in srgb, #000 32%, transparent);
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--control-radius);
+  box-shadow: none;
+  animation: mdbase-popover-in var(--motion-base) var(--ease-out);
 }
 
 .source-add-close {
@@ -1769,7 +1684,7 @@ input:focus-visible {
 .icon-button {
   width: 34px;
   height: 34px;
-  border-radius: 7px;
+  border-radius: var(--control-radius);
 }
 
 .library-pane,
@@ -1943,56 +1858,11 @@ input:focus-visible {
 
 .import-backdrop,
 .library-save-dialog-backdrop {
-  backdrop-filter: blur(6px);
-}
-
-.connection-screen {
-  padding: 32px 24px;
-  background:
-    radial-gradient(
-      circle at 50% 38%,
-      color-mix(in oklch, var(--accent) 5%, transparent),
-      transparent 34%
-    ),
-    var(--canvas);
-}
-
-.connection-card {
-  width: min(460px, 100%);
-  padding: 20px;
-  border: 0;
-  background: transparent;
-}
-
-.connection-copy {
-  margin: 56px 0 32px;
-}
-
-.connection-copy h1 {
-  max-width: 12ch;
-  margin-bottom: 16px;
-  font-size: clamp(36px, 6vw, 46px);
-  line-height: 0.98;
-}
-
-.connection-copy p,
-.connection-setup p {
-  font-size: 14px;
-  line-height: 1.6;
-}
-
-.connection-actions {
-  gap: 10px;
-}
-
-.connection-actions .mdbase-button {
-  min-height: 42px;
-  border-radius: 7px;
+  background: var(--color-scrim);
 }
 
 .connection-secondary {
   min-height: 40px;
-  border-radius: 7px;
 }
 
 @media (max-width: 1120px) {
@@ -2260,10 +2130,11 @@ input:focus-visible {
   display: grid;
   gap: 14px;
   padding: 24px;
-  border: 1px solid var(--line-strong);
-  border-radius: 8px;
   background: var(--paper);
-  box-shadow: 0 32px 90px -46px var(--color-scrim);
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--control-radius);
+  box-shadow: none;
+  animation: mdbase-popover-in var(--motion-base) var(--ease-out);
 }
 
 .library-save-dialog h2,
@@ -2295,9 +2166,6 @@ input:focus-visible {
 .library-save-dialog input {
   height: 38px;
   padding: 0 10px;
-  border: 1px solid var(--line-strong);
-  border-radius: 4px;
-  background: var(--canvas);
 }
 
 .library-save-dialog > div {
@@ -2417,4 +2285,12 @@ input:focus-visible {
 .annotation-card:first-of-type {
   border-top: 0;
   border-bottom: 0;
+}
+
+/* Dialogs arrive like the shared ones; without motion they simply appear. */
+@media (prefers-reduced-motion: reduce) {
+  .import-dialog,
+  .library-save-dialog {
+    animation: none;
+  }
 }

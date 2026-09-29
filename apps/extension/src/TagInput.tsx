@@ -22,6 +22,7 @@ export function TagInput({
   return (
     <div className="tag-input">
       <input
+        className="mdbase-field"
         id={id}
         value={value}
         autoComplete="off"

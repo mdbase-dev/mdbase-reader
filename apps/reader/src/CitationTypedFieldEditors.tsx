@@ -1,4 +1,4 @@
-import { Select, type SelectItems } from "@mdbase-reader/ui";
+import { Select, type SelectItems } from "@mdbase-dev/ui/select";
 import { useState, type JSX } from "react";
 
 import {
@@ -88,6 +88,7 @@ function ScalarEditor({
       <label className="citation-field">
         <span>{numeric ? "Number" : "Text"}</span>
         <input
+          className="mdbase-field"
           aria-invalid={problem ? true : undefined}
           inputMode={numeric ? "decimal" : undefined}
           value={scalarText(value)}
@@ -145,6 +146,7 @@ function DateEditor({
           <label className="citation-field">
             <span>Season</span>
             <input
+              className="mdbase-field"
               placeholder="e.g. Spring or 1"
               value={scalarText(date["season"])}
               onChange={(event) => onChange(updateObject(date, "season", event.target.value))}
@@ -165,6 +167,7 @@ function DateEditor({
         <label className="citation-field">
           <span>{mode === "literal" ? "Date as printed" : "EDTF or source date"}</span>
           <input
+            className="mdbase-field"
             value={scalarText(date[mode])}
             onChange={(event) => onChange({ [mode]: event.target.value })}
           />
@@ -189,6 +192,7 @@ function DatePartInput({
     <label className="citation-field">
       <span>{label}</span>
       <input
+        className="mdbase-field"
         disabled={disabled}
         placeholder="YYYY, YYYY-MM, or YYYY-MM-DD"
         value={value}
@@ -214,6 +218,7 @@ function StringListEditor({
       {values.map((item, index) => (
         <div className="citation-list-row" key={String(index)}>
           <input
+            className="mdbase-field"
             aria-label={`Value ${String(index + 1)}`}
             value={item}
             onChange={(event) =>
@@ -255,6 +260,7 @@ function CustomObjectEditor({
       {entries.map(([key, entryValue]) => (
         <div className="citation-custom-row" key={key}>
           <input
+            className="mdbase-field"
             aria-label={`${key} property name`}
             defaultValue={key}
             onBlur={(event) => {
@@ -331,6 +337,7 @@ function CustomValueInput({
   }
   return (
     <input
+      className="mdbase-field"
       aria-label={`${name} value`}
       inputMode={type === "number" ? "decimal" : undefined}
       value={scalarText(value)}
@@ -357,6 +364,7 @@ function AdvancedJsonEditor({
   return (
     <div className={compact ? "citation-json-value is-compact" : "citation-json-value"}>
       <textarea
+        className="mdbase-field"
         aria-label={`${label} JSON value`}
         aria-invalid={!parsed.valid ? true : undefined}
         rows={compact ? 2 : Math.min(8, Math.max(3, draft.split("\n").length))}

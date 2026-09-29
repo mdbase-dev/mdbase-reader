@@ -1,4 +1,4 @@
-import { Select, type SelectItems } from "@mdbase-reader/ui";
+import { Select, type SelectItems } from "@mdbase-dev/ui/select";
 import { useEffect, useState, type JSX } from "react";
 
 import { citationStyles, formatCitation } from "./citation-renderer.js";

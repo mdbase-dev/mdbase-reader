@@ -81,6 +81,7 @@ function ReadwiseInput({
       <label>
         API token
         <input
+          className="mdbase-field"
           type="password"
           autoComplete="off"
           spellCheck={false}

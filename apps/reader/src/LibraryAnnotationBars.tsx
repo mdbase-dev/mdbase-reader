@@ -27,7 +27,14 @@ export function AnnotationSelectionBar({
         Copy as Markdown
       </button>
       {copied ? (
-        <span className="library-bulk-progress" role="status">
+        <span
+          className={
+            copied.startsWith("Copied")
+              ? "library-bulk-progress mdbase-settle"
+              : "library-bulk-progress"
+          }
+          role="status"
+        >
           {copied}
         </span>
       ) : null}

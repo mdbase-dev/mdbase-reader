@@ -1,8 +1,8 @@
+import { shortcutLabel } from "@mdbase-dev/ui/command-palette";
 import { filterSources } from "@mdbase-reader/core";
 import { useMemo, useState, type CSSProperties, type JSX, type KeyboardEvent } from "react";
 
 import { SearchIcon } from "./icons.js";
-import { shortcutLabel } from "./Menu.js";
 import {
   NavigatorFooter,
   NavigatorShortList,

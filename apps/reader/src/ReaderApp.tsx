@@ -1,3 +1,4 @@
+import { OpeningScreen } from "@mdbase-dev/ui/screens";
 import { useCallback, useEffect, useState, type JSX } from "react";
 
 import { navigatorPanelId } from "./dockview-workspace-state.js";
@@ -7,7 +8,6 @@ import {
   useReaderShortcuts,
   useThemePreference,
 } from "./reader-app-hooks.js";
-import { ReaderLoading } from "./ReaderLoading.js";
 import { ReaderWorkspaceView, type ReaderWorkspaceViewModel } from "./ReaderWorkspaceView.js";
 import { updateSurface } from "./RenderedSourceDocument.js";
 import { SessionReadingLocations } from "./session-reading-locations.js";
@@ -50,7 +50,10 @@ export function ReaderApp({
   const workspace = useReaderWorkspace(gateway);
   if (workspace.library.status !== "ready") {
     return (
-      <ReaderLoading
+      <OpeningScreen
+        app="reader"
+        title="Opening your reading collection"
+        detail="Reading its sources and annotations"
         error={workspace.library.status === "error" ? workspace.library.message : null}
         onRetry={workspace.retryLibrary}
       />

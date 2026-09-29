@@ -1,12 +1,13 @@
-import { AppSwitcher } from "./AppSwitcher.js";
+import { AppSwitcher } from "@mdbase-dev/ui/app-switcher";
+import { shortcutLabel } from "@mdbase-dev/ui/command-palette";
+
 import { CollectionPicker } from "./CollectionPicker.js";
 import { DisplayMenu } from "./DisplayMenu.js";
 import { BackIcon, LeftPaneIcon, ReadingModeIcon, RightPaneIcon, SearchIcon } from "./icons.js";
-import { shortcutLabel } from "./Menu.js";
 
 import type { ReaderDirectAccessState } from "./use-direct-access.js";
+import type { ThemePreference } from "@mdbase-dev/ui/theme";
 import type { ReadingTypography } from "@mdbase-reader/reading-surface";
-import type { ThemePreference } from "@mdbase-reader/ui";
 import type { JSX, ReactNode } from "react";
 
 /**
@@ -43,6 +44,13 @@ interface ReaderHeaderProps {
   readonly onToggleInspector: () => void;
   readonly sourceBar?: ReaderHeaderSourceBar | undefined;
 }
+
+/** Local builds point the app menu at local copies of the other apps. */
+const appUrls = {
+  editor: import.meta.env.VITE_MDBASE_EDITOR_URL,
+  reader: import.meta.env.VITE_MDBASE_READER_URL,
+  writer: import.meta.env.VITE_MDBASE_WRITER_URL,
+};
 
 export function ReaderHeader(props: ReaderHeaderProps): JSX.Element {
   const display = <HeaderDisplayMenu {...props} />;
@@ -106,7 +114,7 @@ function LibraryHeader({
         >
           <LeftPaneIcon />
         </button>
-        <AppSwitcher />
+        <AppSwitcher current="reader" urls={appUrls} />
       </div>
       <div className="reader-header-context">
         <CollectionPicker
