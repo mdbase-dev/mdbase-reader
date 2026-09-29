@@ -1,14 +1,18 @@
 import { isEditableSourceField } from "@mdbase-reader/core";
+import { useEffect, useRef } from "react";
 
 import { columnFieldKey, type LibraryColumn } from "./library-columns.js";
 import { StatusPicker, TableValue } from "./LibraryCells.js";
 import { LibraryFieldCellEditor } from "./LibraryFieldCell.js";
 import { columnClass } from "./LibraryTableHeader.js";
-import { itemClick, type LongPress } from "./use-long-press.js";
+import { hasModifier, itemClick, type LongPress } from "./use-long-press.js";
 
 import type { LibraryTableProps } from "./LibraryTable.js";
 import type { SourceSummary } from "@mdbase-reader/core";
 import type { JSX, MouseEvent } from "react";
+
+/** Longer than a double-click, so a click meant to open never starts an edit. */
+const EDIT_CLICK_DELAY_MS = 500;
 
 export function LibraryTableRow({
   source,
@@ -49,6 +53,8 @@ export function LibraryTableRow({
   const pressHandlers = press.bind(onLongPress);
   const editable = (column: LibraryColumn): boolean =>
     onEditField !== undefined && isEditableColumn(column);
+  const onlySelected = selected && selection.ids.size === 1;
+  const pendingEdit = usePendingEdit(onlySelected);
   return (
     // Rows take keyboard input through the grid's roving focus; see handleGridKey.
     // eslint-disable-next-line jsx-a11y/click-events-have-key-events
@@ -71,6 +77,7 @@ export function LibraryTableRow({
         }
       }}
       onClick={(event) => {
+        pendingEdit.cancel();
         const action = itemClick(press, event, selection.touch === true);
         if (action === "open") {
           onOpen(source.id);
@@ -79,6 +86,7 @@ export function LibraryTableRow({
         }
       }}
       onDoubleClick={() => {
+        pendingEdit.cancel();
         // A tap has already opened the source; while selecting by touch, a second tap toggles.
         if (!selection.touch && !press.touched()) {
           onOpen(source.id);
@@ -98,15 +106,19 @@ export function LibraryTableRow({
           onClick={(event) => {
             // Like a spreadsheet: the first click selects the row, a click on its field edits it.
             // A finger's tap opens the source instead; renaming is in the row's menu.
+            // The edit waits out the double-click window, so a double-click still opens.
             if (
               editable(column) &&
-              selected &&
-              selection.ids.size === 1 &&
+              onlySelected &&
+              event.detail === 1 &&
               !event.shiftKey &&
+              !hasModifier(event) &&
               !press.touched()
             ) {
               event.stopPropagation();
-              onEditCell(column);
+              pendingEdit.start(() => onEditCell(column));
+            } else if (event.detail > 1) {
+              pendingEdit.cancel();
             }
           }}
         >
@@ -131,6 +143,37 @@ export function LibraryTableRow({
       ))}
     </div>
   );
+}
+
+/**
+ * Starts a click's edit once the double-click window has passed, and drops it when the click
+ * turns out to be part of a double-click or the row stops being the only one selected.
+ */
+function usePendingEdit(onlySelected: boolean): {
+  readonly start: (edit: () => void) => void;
+  readonly cancel: () => void;
+} {
+  const timer = useRef<number | undefined>(undefined);
+  const cancel = (): void => {
+    window.clearTimeout(timer.current);
+    timer.current = undefined;
+  };
+  useEffect(() => cancel, []);
+  useEffect(() => {
+    if (!onlySelected) {
+      cancel();
+    }
+  }, [onlySelected]);
+  return {
+    cancel,
+    start: (edit) => {
+      cancel();
+      timer.current = window.setTimeout(() => {
+        timer.current = undefined;
+        edit();
+      }, EDIT_CLICK_DELAY_MS);
+    },
+  };
 }
 
 /** Frontmatter fields can be edited in place; Reader's own columns have their own controls. */
