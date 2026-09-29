@@ -20,7 +20,7 @@
   },
   "dependencies": {
     "@citation-js/plugin-csl": "0.8.2",
-    "@mdbase-dev/ui": "file:../../vendor/mdbase-dev-ui-0.1.0-beta.115-48ade2f8e335.tgz",
+    "@mdbase-dev/ui": "0.1.0-beta.117",
     "@mdbase-reader/connect": "workspace:*",
     "@mdbase-reader/core": "workspace:*",
     "@mdbase-reader/markdown-editor": "workspace:*",
