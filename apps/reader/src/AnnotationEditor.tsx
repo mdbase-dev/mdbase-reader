@@ -9,6 +9,7 @@ import {
 import { annotationEditorKeys } from "./annotation-draft-actions.js";
 import { AnnotationTextArea } from "./AnnotationTextArea.js";
 import { useAnnotationEdit, type AnnotationEditProps } from "./use-annotation-edit.js";
+import { SLOW_SAVE_MS, useSustained } from "./use-sustained.js";
 
 import type { AnnotationDeletionPlan } from "@mdbase-reader/core";
 import type { JSX } from "react";
@@ -92,6 +93,9 @@ function AnnotationEditorActions({
 }): JSX.Element {
   const { locked, status, deleteStatus } = edit;
   const busy = locked || status === "saving";
+  // Autosaves usually finish at once; until one runs long, it still reads as unsaved.
+  const slowSave = useSustained(status === "saving", SLOW_SAVE_MS);
+  const shown = status === "saving" && !slowSave ? "unsaved" : status;
   return (
     <div className="annotation-editor-actions">
       <button
@@ -102,14 +106,14 @@ function AnnotationEditorActions({
       >
         {deleteStatus === "checking" ? "Checking…" : "Delete"}
       </button>
-      <AnnotationSaveState status={failed ? "failed" : status} />
+      <AnnotationSaveState status={failed ? "failed" : shown} />
       {status === "unsaved" || status === "error" ? (
         <button type="button" className="annotation-discard" disabled={busy} onClick={edit.discard}>
           Discard changes
         </button>
       ) : null}
       <ReaderButton disabled={!edit.canSave} onClick={edit.save}>
-        {status === "saving" ? "Saving…" : failed ? "Retry save" : "Done"}
+        {slowSave ? "Saving…" : failed ? "Retry save" : "Done"}
       </ReaderButton>
     </div>
   );
