@@ -6,9 +6,12 @@ collection for local filtering; typing a search does not broaden the saved view'
 If view execution fails, Reader explains the fallback and applies its filters locally.
 
 The Connect annotation repository queries in bounded scopes of 100 paths. Whole-record reads
-remain limited to four concurrent workers. It publishes a small initial batch of 16, then
-cumulative batches of up to 64 to limit rerenders, hydrating each query page before requesting the next. The virtualized annotation table displays
-those snapshots with a loading indicator until the read finishes.
+remain limited to four concurrent workers. It hydrates a small initial batch of 16, then
+batches of up to 64, hydrating each query page before requesting the next. Early cumulative
+snapshots are published through 128 annotations; afterward, publication waits for roughly 25%
+growth, with an immediate final snapshot. This bounds cumulative copying without delaying the
+first rows. The virtualized annotation table displays those snapshots with a loading indicator
+until the read finishes.
 
 ## Reuse and freshness
 

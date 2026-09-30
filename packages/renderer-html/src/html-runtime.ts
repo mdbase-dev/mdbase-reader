@@ -8,7 +8,7 @@ import {
 
 import { clearCssHighlights, setCssHighlight, setCssHighlights } from "./html-css-highlights.js";
 import { followEmbedderPalette } from "./html-palette.js";
-import { htmlLocator, htmlSelectionDraft, locateHtmlTarget } from "./html-range.js";
+import { HtmlTargetLocator, htmlLocator, htmlSelectionDraft } from "./html-range.js";
 import { scrollHtmlElement } from "./html-scroll.js";
 import { applyHtmlTypography } from "./html-typography.js";
 
@@ -54,6 +54,7 @@ export class HtmlDocumentRuntime {
   readonly #onKeyDown = (event: KeyboardEvent): void =>
     forwardApplicationShortcut(event, this.#frame.ownerDocument);
   readonly #markers: MarginMarkers;
+  readonly #targets: HtmlTargetLocator;
   // Images and fonts reflow the page after load; markers follow the text.
   readonly #reflow =
     typeof ResizeObserver === "undefined" ? null : new ResizeObserver(() => this.#markers.layout());
@@ -72,6 +73,7 @@ export class HtmlDocumentRuntime {
     this.#document = document;
     this.#view = view;
     this.#href = href;
+    this.#targets = new HtmlTargetLocator(document);
     document.addEventListener("pointerup", this.#onPointerUp);
     document.addEventListener("keyup", this.#onSelection);
     document.addEventListener("keydown", this.#onKeyDown);
@@ -156,7 +158,7 @@ export class HtmlDocumentRuntime {
   }
 
   public goToAnnotation(annotation: Annotation): boolean {
-    const range = annotation.target ? locateHtmlTarget(this.#document, annotation.target) : null;
+    const range = annotation.target ? this.#targets.locate(annotation.target) : null;
     const element = range ? parentElement(range.startContainer) : null;
     if (!range || !element) {
       return false;
@@ -168,7 +170,7 @@ export class HtmlDocumentRuntime {
 
   public setAnnotations(annotations: readonly Annotation[]): void {
     this.#annotationRanges = annotations.flatMap((annotation) => {
-      const range = annotation.target ? locateHtmlTarget(this.#document, annotation.target) : null;
+      const range = annotation.target ? this.#targets.locate(annotation.target) : null;
       return range ? [{ annotation, range }] : [];
     });
     setCssHighlights(
@@ -185,7 +187,7 @@ export class HtmlDocumentRuntime {
   }
 
   public setActiveAnnotation(annotation: Annotation | null): void {
-    const range = annotation?.target ? locateHtmlTarget(this.#document, annotation.target) : null;
+    const range = annotation?.target ? this.#targets.locate(annotation.target) : null;
     setCssHighlight(this.#view, "reader-active-annotation", range ? [range] : []);
     this.#markers.setActive(range && annotation ? annotation.id : null);
   }
@@ -218,6 +220,7 @@ export class HtmlDocumentRuntime {
     this.#stopPalette();
     this.#reflow?.disconnect();
     this.#markers.destroy();
+    this.#targets.destroy();
     clearCssHighlights(this.#view);
     this.#locationListeners.clear();
     this.#selectionListeners.clear();

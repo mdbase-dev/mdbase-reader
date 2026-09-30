@@ -1,10 +1,11 @@
 import { Select, type SelectItems } from "@mdbase-dev/ui/select";
-import { useState, type JSX } from "react";
+import { useMemo, useState, type JSX } from "react";
 
 import { browseAnnotations, type AnnotationFilter } from "./annotation-list-order.js";
 import { AnnotationCard } from "./AnnotationCard.js";
 import { FilterIcon, SearchIcon } from "./icons.js";
 import { Menu } from "./Menu.js";
+import { VirtualAnnotationList } from "./VirtualAnnotationList.js";
 
 import type { AnnotationFileReader } from "./AnnotationImage.js";
 import type { AnnotationTransclusionController } from "./use-annotation-transclusion.js";
@@ -45,10 +46,16 @@ export function AnnotationList({
   const [query, setQuery] = useState("");
   const [filter, setFilter] = useState<AnnotationFilter>("all");
   const [order, setOrder] = useState<"document" | "newest">("document");
+  const results = useMemo(
+    () =>
+      annotations.status === "ready"
+        ? browseAnnotations(annotations.value, query, filter, order)
+        : [],
+    [annotations, query, filter, order],
+  );
   if (annotations.status !== "ready" || !annotations.value.length) {
     return <AnnotationListStatus annotations={annotations} />;
   }
-  const results = browseAnnotations(annotations.value, query, filter, order);
   const clear = (): void => {
     setQuery("");
     setFilter("all");
@@ -70,18 +77,12 @@ export function AnnotationList({
         onOrderChange={setOrder}
         onClear={clear}
       />
-      <div className="annotation-list">
-        {!results.length ? (
-          <div className="inspector-status">
-            <strong>No matching annotations</strong>
-            <button type="button" onClick={clear}>
-              Clear filters
-            </button>
-          </div>
-        ) : null}
-        {results.map((annotation) => (
+      <VirtualAnnotationList
+        results={results}
+        editingId={currentEditing}
+        activeId={activeId}
+        renderCard={(annotation) => (
           <AnnotationCard
-            key={annotation.id}
             annotation={annotation}
             editing={currentEditing === annotation.id}
             active={activeId === annotation.id}
@@ -94,8 +95,17 @@ export function AnnotationList({
             onOpen={() => onOpen(annotation)}
             readFile={readFile}
           />
-        ))}
-      </div>
+        )}
+      >
+        {!results.length ? (
+          <div className="inspector-status">
+            <strong>No matching annotations</strong>
+            <button type="button" onClick={clear}>
+              Clear filters
+            </button>
+          </div>
+        ) : null}
+      </VirtualAnnotationList>
     </>
   );
 }

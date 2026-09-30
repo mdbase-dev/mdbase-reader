@@ -26,6 +26,7 @@ import {
   type LibraryViewSaveRequest,
   type MdbaseLibraryView,
 } from "./mdbase-library-views.js";
+import { SharedRequests } from "./shared-request.js";
 import { completeLibrarySnapshot, loadSourceLibrary } from "./source-library-loader.js";
 
 import type {
@@ -68,6 +69,12 @@ import type {
 
 export class ConnectWorkspaceGateway implements ReaderWorkspaceGateway {
   #library: ReaderLibrarySnapshot["sources"] | null = null;
+  readonly #libraryLoads = new SharedRequests<
+    string,
+    ReaderLibrarySnapshot,
+    ReaderLibrarySnapshot
+  >();
+  readonly #sourceLoads = new SharedRequests<SourceId, Source | null>();
   readonly #sourcesById = new Map<SourceId, Source>();
   readonly #annotationsBySource = new Map<SourceId, readonly Annotation[]>();
   readonly #countListeners = new Set<() => void>();
@@ -110,31 +117,45 @@ export class ConnectWorkspaceGateway implements ReaderWorkspaceGateway {
   ) {}
 
   async library(options: ReaderLibraryRequestOptions = {}): Promise<ReaderLibrarySnapshot> {
-    const { onProgress, ...requestOptions } = options;
+    options.signal?.throwIfAborted();
     if (this.#library) {
       return completeLibrarySnapshot(this.collectionName, this.#library);
     }
-    const snapshot = await loadSourceLibrary({
-      repository: this.sources,
-      collectionId: this.collectionId,
-      collectionName: this.collectionName,
-      options: requestOptions,
-      ...(onProgress ? { onProgress } : {}),
-    });
-    this.#library = snapshot.sources;
-    return snapshot;
+    return this.#libraryLoads.get(
+      "library",
+      options,
+      async (signal, onProgress) => {
+        const snapshot = await loadSourceLibrary({
+          repository: this.sources,
+          collectionId: this.collectionId,
+          collectionName: this.collectionName,
+          options: { signal },
+          onProgress,
+        });
+        signal.throwIfAborted();
+        this.#library = snapshot.sources;
+        return snapshot;
+      },
+      options.onProgress,
+    );
   }
 
   async source(id: SourceId, options: ReaderRequestOptions = {}): Promise<Source | null> {
+    options.signal?.throwIfAborted();
     const cached = this.#sourcesById.get(id);
     if (cached) {
       return cached;
     }
-    const source = await this.sources.get(this.collectionId, id, options);
-    if (source) {
-      this.#sourcesById.set(id, source);
-    }
-    return source;
+    return this.#sourceLoads.get(id, options, async (signal) => {
+      const source = await this.sources.get(this.collectionId, id, { signal });
+      signal.throwIfAborted();
+      // A local write or explicit refresh may have overtaken the pending read.
+      const latest = this.#sourcesById.get(id) ?? source;
+      if (latest) {
+        this.#sourcesById.set(id, latest);
+      }
+      return latest;
+    });
   }
 
   async refreshSource(id: SourceId, options: ReaderRequestOptions = {}): Promise<Source | null> {

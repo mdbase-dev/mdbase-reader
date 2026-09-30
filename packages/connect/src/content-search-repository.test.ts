@@ -65,6 +65,7 @@ describe("ConnectContentSearchRepository", () => {
     ]);
     expect(queryPages).toHaveBeenCalledWith(
       {
+        types: ["reader-source", "reader-annotation"],
         where: 'file.body.lower().contains("measured")',
         frontmatterMode: "effective",
         includeBody: true,

@@ -7,9 +7,16 @@ export type { TextQuote } from "@mdbase-reader/core";
  * matches the recorded prefix and suffix. Returns null when the passage is not present.
  */
 export function locateTextQuote(root: Element, quote: TextQuote): Range | null {
+  return createTextQuoteLocator(root)(quote);
+}
+
+/** Reuse an index while a caller guarantees that the root's text has not changed. */
+export function createTextQuoteLocator(root: Element): (quote: TextQuote) => Range | null {
   const index = textIndex(root);
-  const match = matchTextQuote(index.text, quote);
-  return match ? rangeAt(root.ownerDocument, index.nodes, match.start, match.end) : null;
+  return (quote) => {
+    const match = matchTextQuote(index.text, quote);
+    return match ? rangeAt(root.ownerDocument, index.nodes, match.start, match.end) : null;
+  };
 }
 
 interface IndexedText {
@@ -43,7 +50,14 @@ function rangeAt(
   const startNode =
     nodes.find((entry) => start >= entry.start && start < entry.end) ??
     nodes.find((entry) => start >= entry.start && start <= entry.end);
-  const endNode = [...nodes].reverse().find((entry) => end >= entry.start && end <= entry.end);
+  let endNode: IndexedText["nodes"][number] | undefined;
+  for (let index = nodes.length - 1; index >= 0; index -= 1) {
+    const entry = nodes[index];
+    if (entry && end >= entry.start && end <= entry.end) {
+      endNode = entry;
+      break;
+    }
+  }
   if (!startNode || !endNode) {
     return null;
   }
