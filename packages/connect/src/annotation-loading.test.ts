@@ -115,6 +115,20 @@ describe("progressive scoped annotation loading", () => {
     expect(read).toHaveBeenCalledTimes(16);
   });
 
+  it("bounds cumulative snapshot copying as large overviews grow and publishes the final batch", async () => {
+    const documents = Array.from({ length: 1_000 }, (_, index) => document(index));
+    const { repo } = repository(documents);
+    const snapshots: (readonly Annotation[])[] = [];
+    const result = await repo.listAll(collection, {
+      onProgress: (snapshot) => snapshots.push(snapshot),
+    });
+    expect(snapshots[0]).toHaveLength(16);
+    expect(snapshots.at(-1)).toEqual(result);
+    expect(snapshots.length).toBeLessThan(25);
+    expect(snapshots.reduce((total, snapshot) => total + snapshot.length, 0)).toBeLessThan(6_000);
+    expect(snapshots[0]).toHaveLength(16);
+  });
+
   it("bounds scoped query size", async () => {
     const documents = Array.from({ length: 205 }, (_, index) => document(index));
     const { repo, queryPages } = repository(documents);

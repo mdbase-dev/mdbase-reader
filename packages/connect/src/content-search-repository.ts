@@ -61,6 +61,7 @@ export class ConnectContentSearchRepository implements ContentSearchRepository {
 
 function searchInput(query: string): QueryInput {
   return {
+    types: ["reader-source", "reader-annotation"],
     where: `file.body.lower().contains(${JSON.stringify(query)})`,
     frontmatterMode: "effective" as const,
     includeBody: true,

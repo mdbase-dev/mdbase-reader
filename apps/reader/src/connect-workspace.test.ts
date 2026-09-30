@@ -76,12 +76,14 @@ describe("ConnectWorkspaceGateway", () => {
     expect(list).toHaveBeenCalledOnce();
     expect(list).toHaveBeenCalledWith(
       { collectionId: source.collectionId, limit: 100 },
-      { signal: controller.signal },
+      { signal: expect.any(AbortSignal) as AbortSignal },
     );
+    expect(list.mock.calls[0]?.[1].signal).not.toBe(controller.signal);
     expect(get).toHaveBeenCalledOnce();
     expect(get).toHaveBeenCalledWith(source.collectionId, source.id, {
-      signal: controller.signal,
+      signal: expect.any(AbortSignal) as AbortSignal,
     });
+    expect(get.mock.calls[0]?.[2].signal).not.toBe(controller.signal);
     expect(listForSource).toHaveBeenCalledOnce();
     expect(listForSource).toHaveBeenCalledWith(source.collectionId, source.id, {
       signal: controller.signal,
@@ -93,7 +95,58 @@ describe("ConnectWorkspaceGateway", () => {
       body: "Updated",
     });
   });
+});
 
+describe("ConnectWorkspaceGateway request sharing", () => {
+  it("shares cold library and source loads across panes without sharing cancellation", async () => {
+    let completeLibrary!: (value: { items: Source[] }) => void;
+    let completeSource!: (value: Source) => void;
+    const list = vi.fn(
+      () =>
+        new Promise<{ items: Source[] }>((resolve) => {
+          completeLibrary = resolve;
+        }),
+    );
+    const get = vi.fn(
+      () =>
+        new Promise<Source>((resolve) => {
+          completeSource = resolve;
+        }),
+    );
+    const gateway = new ConnectWorkspaceGateway(
+      { list, get } as unknown as SourceRepository,
+      { listForSource: vi.fn() } as unknown as AnnotationRepository,
+      { store: vi.fn() },
+      emptyImports(),
+      source.collectionId,
+      "Reading",
+      createReaderRuntimeServices(new MemoryStorage()),
+    );
+    const controller = new AbortController();
+    const firstLibrary = gateway.library({ signal: controller.signal });
+    const firstSource = gateway.source(source.id, { signal: controller.signal });
+    const rejectedLibrary = expect(firstLibrary).rejects.toMatchObject({ name: "AbortError" });
+    const rejectedSource = expect(firstSource).rejects.toMatchObject({ name: "AbortError" });
+    const progress = vi.fn();
+    const secondLibrary = gateway.library({ onProgress: progress });
+    const secondSource = gateway.source(source.id);
+    await Promise.resolve();
+    controller.abort();
+    completeLibrary({ items: [source] });
+    completeSource(source);
+    await rejectedLibrary;
+    await rejectedSource;
+    expect((await secondLibrary).sources).toEqual([source]);
+    expect(await secondSource).toBe(source);
+    expect(progress).toHaveBeenCalledOnce();
+    await gateway.library();
+    await gateway.source(source.id);
+    expect(list).toHaveBeenCalledOnce();
+    expect(get).toHaveBeenCalledOnce();
+  });
+});
+
+describe("ConnectWorkspaceGateway writes and search", () => {
   it("saves valid citation metadata and refreshes the warm library", async () => {
     const citation = { id: "example2026", type: "article", title: "Example" };
     const updateCitation = vi.fn().mockResolvedValue({ ...source, citation });
@@ -202,12 +255,12 @@ describe("ConnectWorkspaceGateway pagination", () => {
     expect(list).toHaveBeenNthCalledWith(
       2,
       { collectionId: source.collectionId, limit: 100, cursor: "100" },
-      {},
+      { signal: expect.any(AbortSignal) as AbortSignal },
     );
     expect(list).toHaveBeenNthCalledWith(
       3,
       { collectionId: source.collectionId, limit: 100, cursor: "200" },
-      {},
+      { signal: expect.any(AbortSignal) as AbortSignal },
     );
   });
 });
