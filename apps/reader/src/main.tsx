@@ -14,12 +14,19 @@ import { importService } from "./import-navigation.js";
 import { keepFocusedFieldInView } from "./keep-focused-field-in-view.js";
 import { PreviewReader } from "./preview.js";
 import "./environment-badge.css";
+import { setupPwaInstall } from "./pwa-install.js";
+import "./pwa-install.css";
 
 // Library imports bring PDF parsing and compression code that ordinary reading never needs.
 const ImportPage = lazy(async () => {
   const module = await import("./ImportPage.js");
   return { default: module.ImportPage };
 });
+
+const stopPwaInstall = setupPwaInstall("mdbase reader");
+if (import.meta.hot) {
+  import.meta.hot.dispose(stopPwaInstall);
+}
 
 const root = document.querySelector<HTMLElement>("#root");
 if (!root) {
