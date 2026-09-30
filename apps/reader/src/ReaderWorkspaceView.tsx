@@ -311,6 +311,7 @@ export function ReaderWorkspaceView({
                 onOpenView={(next) => sourceWorkspace.openLibrary(next.key, next.name)}
                 onOpenSource={(id) => sourceWorkspace.open(id)}
                 onOpenBeside={(id) => sourceWorkspace.openBeside(id)}
+                onInspectSource={workspace.selectSource}
                 onAddSource={sourceAddition.open}
                 bibliographyExport={model.bibliographyExport}
                 annotationCounts={annotationCounts}
