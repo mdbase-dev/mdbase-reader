@@ -95,6 +95,75 @@ describe("ConnectWorkspaceGateway annotation mutations", () => {
     await expect(gateway.annotations(source.id)).resolves.toEqual([cachedFirst]);
     expect(listForSource).toHaveBeenCalledOnce();
   });
+
+  it("does not treat a filtered overview as a complete source annotation list", async () => {
+    const listAll = vi.fn().mockResolvedValue([annotation]);
+    const { gateway, listForSource } = annotationGateway({ listAll });
+    const paths = new Set([annotation.path!]);
+    const onProgress = vi.fn();
+    await gateway.allAnnotations({ paths, onProgress });
+    expect(listAll).toHaveBeenCalledWith(source.collectionId, { paths, onProgress });
+    await gateway.annotations(source.id);
+    expect(listForSource).toHaveBeenCalledOnce();
+  });
+
+  it("explicit refresh replaces source caches, including externally deleted annotations", async () => {
+    const listAll = vi.fn().mockResolvedValue([]);
+    const { gateway, listForSource } = annotationGateway({ listAll });
+    await gateway.annotations(source.id);
+    await gateway.allAnnotations({ refresh: true });
+    listForSource.mockResolvedValueOnce([]);
+    await expect(gateway.annotations(source.id)).resolves.toEqual([]);
+    expect(listForSource).toHaveBeenCalledTimes(2);
+  });
+
+  it("does not overwrite a save that finishes during a full refresh", async () => {
+    let finish!: (annotations: readonly Annotation[]) => void;
+    const pending = new Promise<readonly Annotation[]>((resolve) => {
+      finish = resolve;
+    });
+    const updated = {
+      ...annotation,
+      body: "Saved during refresh",
+      recordRevision: recordRevision("rev-2"),
+    };
+    const { gateway } = annotationGateway({
+      listAll: vi.fn(() => pending),
+      updateBody: vi.fn().mockResolvedValue(updated),
+    });
+    await gateway.annotations(source.id);
+    const refreshing = gateway.allAnnotations({ refresh: true });
+    await gateway.updateAnnotation(annotation, updated.body);
+    finish([annotation]);
+    await refreshing;
+    await expect(gateway.annotations(source.id)).resolves.toEqual([updated]);
+  });
+
+  it("notifies count subscribers on deletion but not loading or body edits", async () => {
+    const updated = { ...annotation, body: "Edited", recordRevision: recordRevision("rev-2") };
+    const plan = {
+      annotationId: annotation.id,
+      path: annotation.path!,
+      expectedRevision: annotation.recordRevision!,
+      brokenLinkPaths: [],
+    };
+    const { gateway } = annotationGateway({
+      updateBody: vi.fn().mockResolvedValue(updated),
+      delete: vi.fn(),
+    });
+    const listener = vi.fn();
+    const unsubscribe = gateway.subscribeAnnotationCounts(listener);
+    await gateway.annotations(source.id);
+    await gateway.updateAnnotation(annotation, updated.body);
+    expect(listener).not.toHaveBeenCalled();
+    expect(gateway.annotationCountsRevision()).toBe(0);
+    await gateway.deleteAnnotation(annotation, plan);
+    expect(listener).toHaveBeenCalledOnce();
+    expect(gateway.annotationCountsRevision()).toBe(1);
+    unsubscribe();
+    await gateway.deleteAnnotation(annotation, plan);
+    expect(listener).toHaveBeenCalledOnce();
+  });
 });
 
 function annotationGateway(repository: Partial<AnnotationRepository>): {

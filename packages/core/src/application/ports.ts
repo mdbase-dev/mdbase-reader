@@ -111,11 +111,16 @@ export interface CitationMetadataRepository {
 type CollectionRead<T> = (collectionId: CollectionId, options?: ReaderRequestOptions) => Promise<T>;
 
 export interface AnnotationRepository {
+  /** Evict a record after a write recovered outside this repository. */
+  invalidateRecord?(path: string): void;
   sourceIdsWithAnnotations?: CollectionRead<readonly SourceId[]>;
   /** How many annotations each source has, where an index makes that cheap. */
   annotationCountsBySource?: CollectionRead<ReadonlyMap<SourceId, number>>;
   /** Every annotation in the collection. */
-  listAll?: CollectionRead<readonly Annotation[]>;
+  listAll?: (
+    collectionId: CollectionId,
+    options?: AnnotationListOptions,
+  ) => Promise<readonly Annotation[]>;
   listForSource(
     collectionId: CollectionId,
     sourceId: SourceId,
@@ -134,6 +139,14 @@ export interface AnnotationRepository {
     id: AnnotationId,
     options?: ReaderRequestOptions,
   ): Promise<Annotation | null>;
+}
+
+/** A scoped annotation read. Progress snapshots are cumulative and may be incomplete. */
+export interface AnnotationListOptions extends ReaderRequestOptions {
+  readonly paths?: ReadonlySet<string>;
+  readonly onProgress?: (annotations: readonly Annotation[]) => void;
+  /** Bypass short-lived record caches, e.g. for an explicit retry. */
+  readonly refresh?: boolean;
 }
 
 export interface DocumentHandle {

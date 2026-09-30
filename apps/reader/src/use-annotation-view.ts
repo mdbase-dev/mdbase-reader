@@ -40,6 +40,7 @@ export interface AnnotationViewExecution {
   /** The annotation paths mdbase selected, or null when Reader filters by itself. */
   readonly paths: ReadonlySet<string> | null;
   readonly problem: string | null;
+  readonly ready: boolean;
 }
 
 /**
@@ -49,8 +50,14 @@ export interface AnnotationViewExecution {
 export function useAnnotationViewExecution(
   gateway: ReaderWorkspaceGateway,
   view: MdbaseLibraryView,
+  revision = 0,
 ): AnnotationViewExecution {
-  const [result, setResult] = useState<AnnotationViewExecution>({ paths: null, problem: null });
+  const [result, setResult] = useState<{
+    readonly view: MdbaseLibraryView;
+    readonly gateway: ReaderWorkspaceGateway;
+    readonly revision: number;
+    readonly execution: AnnotationViewExecution;
+  } | null>(null);
   const runnable = Boolean(
     view.path && view.annotations && typeof gateway.executeAnnotationView === "function",
   );
@@ -61,18 +68,33 @@ export function useAnnotationViewExecution(
     const controller = new AbortController();
     void gateway
       .executeAnnotationView(view, { signal: controller.signal })
-      .then((paths) => setResult({ paths, problem: null }))
+      .then((paths) => {
+        if (!controller.signal.aborted) {
+          setResult({ view, gateway, revision, execution: { paths, problem: null, ready: true } });
+        }
+      })
       .catch((reason: unknown) => {
         if (!controller.signal.aborted) {
           setResult({
-            paths: null,
-            problem: `${readerErrorMessage(reason, "mdbase could not run this view.")} Reader is applying its filters itself.`,
+            view,
+            gateway,
+            revision,
+            execution: {
+              paths: null,
+              ready: true,
+              problem: `${readerErrorMessage(reason, "mdbase could not run this view.")} Reader is applying its filters itself.`,
+            },
           });
         }
       });
     return () => controller.abort();
-  }, [gateway, runnable, view]);
-  return runnable ? result : { paths: null, problem: null };
+  }, [gateway, revision, runnable, view]);
+  if (!runnable) {
+    return { paths: null, problem: null, ready: true };
+  }
+  return result?.view === view && result.gateway === gateway && result.revision === revision
+    ? result.execution
+    : { paths: null, problem: null, ready: false };
 }
 
 export interface SourceAnnotationsViewAction {

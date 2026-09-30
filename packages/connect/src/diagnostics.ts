@@ -4,6 +4,8 @@ import type { ConnectOutcome } from "@mdbase-dev/connect";
 
 type Operation =
   | "read"
+  | "list-views"
+  | "execute-view"
   | "query"
   | "query-page"
   | "changes"

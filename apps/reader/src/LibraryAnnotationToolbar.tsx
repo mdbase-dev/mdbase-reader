@@ -17,6 +17,7 @@ export interface AnnotationViewActions {
   readonly onSave?: () => void;
   readonly saving: boolean;
   readonly onSaveAs: () => void;
+  readonly onRefresh?: () => void;
   /** Present when the layout differs from the view's. */
   readonly onReset?: () => void;
   readonly sourceAnnotationsView: SourceAnnotationsViewAction | null;
@@ -102,6 +103,9 @@ export function AnnotationToolbar({
           <AnnotationSortControl layout={layout} onLayoutChange={onLayoutChange} />
         </div>
         <hr />
+        <button type="button" onClick={actions.onRefresh} disabled={!actions.onRefresh}>
+          Refresh annotations
+        </button>
         <button type="button" disabled={!actions.onReset} onClick={actions.onReset}>
           Reset columns and sort
         </button>

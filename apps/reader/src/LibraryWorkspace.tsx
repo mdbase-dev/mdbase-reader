@@ -123,7 +123,7 @@ export function LibraryWorkspace({
   const [valuesByPath, setValuesByPath] = useState<
     ReadonlyMap<string, Readonly<Record<string, unknown>>>
   >(() => new Map());
-  const [loading, setLoading] = useState(Boolean(view.path));
+  const [loading, setLoading] = useState(Boolean(view.path && !view.annotations));
   const [problem, setProblem] = useState<string | null>(null);
   const saveStatus = gateway.saveReadingStatus?.bind(gateway);
   const changeStatus = saveStatus
@@ -140,6 +140,10 @@ export function LibraryWorkspace({
   const executionFamily = `reader-library-view:${useId()}`;
 
   useEffect(() => {
+    // Annotation mode owns its execution and hydration in LibraryAnnotations.
+    if (mode !== "sources" || view.annotations) {
+      return undefined;
+    }
     const controller = new AbortController();
     void gateway
       .executeLibraryView(view, {
@@ -166,7 +170,7 @@ export function LibraryWorkspace({
     return () => {
       controller.abort();
     };
-  }, [allSources, executionFamily, gateway, view]);
+  }, [allSources, executionFamily, gateway, mode, view]);
 
   const dirty = !sameConfiguration(configuration, view.configuration);
   const filterCount = activeFilterCount(configuration);
@@ -177,7 +181,7 @@ export function LibraryWorkspace({
   }, [allSources, executedSources]);
   // A changed filter searches the whole library; layout changes keep the view's own results.
   const filterChanged = JSON.stringify(filter) !== JSON.stringify(view.configuration.filter);
-  const baseSources = filterChanged ? allSources : freshSources;
+  const baseSources = filterChanged || view.annotations ? allSources : freshSources;
   const { sortField, sortDirection } = layout;
   const sources = useMemo(
     () =>
