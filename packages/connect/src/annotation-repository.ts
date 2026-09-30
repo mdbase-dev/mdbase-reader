@@ -1,6 +1,5 @@
 import { annotationPathsForSource } from "./annotation-query.js";
 import * as sources from "./annotation-source.js";
-import { annotationContract } from "./contracts.js";
 import { annotationFromDocument, annotationFrontmatter } from "./mapping.js";
 import {
   mapConcurrent,
@@ -24,13 +23,9 @@ import type {
 } from "@mdbase-reader/core";
 
 export class ConnectAnnotationRepository implements AnnotationRepository {
-  readonly #resolveSource: ReturnType<typeof sources.annotationSourceResolver>;
-
   readonly #deletePreflights = new Map<string, DeletePreflightResult>();
 
-  constructor(private readonly client: ReaderConnectClient) {
-    this.#resolveSource = sources.annotationSourceResolver(client);
-  }
+  constructor(private readonly client: ReaderConnectClient) {}
 
   async sourceIdsWithAnnotations(
     _collection: CollectionId,
@@ -55,26 +50,15 @@ export class ConnectAnnotationRepository implements AnnotationRepository {
     collection: CollectionId,
     options: ReaderRequestOptions = {},
   ): Promise<readonly Annotation[]> {
-    // Contract queries cannot include bodies, so list the paths and read each record.
-    const paths: string[] = [];
-    for await (const outcome of this.client.queryPages(
-      {
-        contract: annotationContract,
-        // Some authorities apply the contract as a view, not a filter; the type narrows the scan.
-        types: ["reader-annotation"],
-        frontmatterMode: "effective",
-      },
-      { ...options, firstPageSize: 500, pageSize: 1_000 },
-    )) {
-      paths.push(...outcomeValue(outcome, "query annotations").results.map(({ path }) => path));
-    }
-    const annotations = await mapConcurrent(paths, readerConnectBulkConcurrency, async (path) => {
+    // Queries cannot include bodies, so list the paths and read each record.
+    const listed = await this.#annotationSources(options);
+    const annotations = await mapConcurrent(listed, readerConnectBulkConcurrency, async (entry) => {
       const document = outcomeValue(
-        await readWithOptions(this.client, { path, includeDocument: true }, options),
+        await readWithOptions(this.client, { path: entry.path, includeDocument: true }, options),
         "read annotation",
       );
       try {
-        return await this.#map(collection, document);
+        return await this.#map(collection, document, entry.source);
       } catch {
         // A record that does not satisfy the annotation contract is left out of the overview.
         return null;
@@ -97,7 +81,8 @@ export class ConnectAnnotationRepository implements AnnotationRepository {
           await readWithOptions(this.client, { path, includeDocument: true }, options),
           "read annotation",
         );
-        return this.#map(collection, document);
+        // The query matched these by the target of their link, so the source is known.
+        return this.#map(collection, document, source);
       },
     );
     return annotations.filter((annotation) => annotation.sourceId === source);
@@ -114,7 +99,8 @@ export class ConnectAnnotationRepository implements AnnotationRepository {
       }),
       "create annotation",
     );
-    return this.#map(annotation.collectionId, result);
+    // Reader wrote this link to the source it already knows.
+    return this.#map(annotation.collectionId, result, annotation.sourceId);
   }
 
   async updateBody(input: {
@@ -136,7 +122,8 @@ export class ConnectAnnotationRepository implements AnnotationRepository {
       }),
       "update annotation",
     );
-    return this.#map(annotation.collectionId, result);
+    // The revision check guarantees the source link is the one already resolved.
+    return this.#map(annotation.collectionId, result, annotation.sourceId);
   }
 
   async preflightDelete(annotation: Annotation): Promise<AnnotationDeletionPlan> {
@@ -193,43 +180,52 @@ export class ConnectAnnotationRepository implements AnnotationRepository {
     return this.#map(collection, result);
   }
 
-  async #map(collection: CollectionId, record: RecordDocument): Promise<Annotation> {
+  /** Maps a record; `source` is its resolved source when the caller already knows it. */
+  async #map(
+    collection: CollectionId,
+    record: RecordDocument,
+    source?: SourceId,
+  ): Promise<Annotation> {
     return annotationFromDocument(
       collection,
       record,
-      await this.#resolveSource(record.effectiveFrontmatter["source"]),
+      source ?? (await sources.resolveAnnotationSource(this.client, record.path)),
     );
   }
 
   async #buildIndex(options: ReaderRequestOptions): Promise<Map<string, string[]>> {
     const index = new Map<string, string[]>();
-    const resolved = new Map<string, Promise<SourceId>>();
-    for await (const outcome of this.client.queryPages(
-      {
-        contract: annotationContract,
-        frontmatterMode: "effective",
-      },
-      { ...options, firstPageSize: 500, pageSize: 1_000 },
-    )) {
-      const page = outcomeValue(outcome, "query annotations");
-      await mapConcurrent(page.results, readerConnectBulkConcurrency, async (record) => {
-        const fields = record.effectiveFrontmatter ?? record.frontmatter;
-        const reference = sources.annotationSourceReference(fields?.["source"]);
-        if (sources.stringField(fields?.["id"]) && reference) {
-          const key = sources.annotationSourcePath(reference) ?? reference;
-          let pending = resolved.get(key);
-          if (!pending) {
-            pending = this.#resolveSource(fields?.["source"]);
-            resolved.set(key, pending);
-          }
-          const source = await pending;
-          const paths = index.get(source) ?? [];
-          paths.push(record.path);
-          index.set(source, paths);
-        }
-      });
+    for (const { path, source } of await this.#annotationSources(options)) {
+      const paths = index.get(source) ?? [];
+      paths.push(path);
+      index.set(source, paths);
     }
     return index;
+  }
+
+  /** Every annotation with the source mdbase resolves its link to, in one query. */
+  async #annotationSources(
+    options: ReaderRequestOptions,
+  ): Promise<{ readonly path: string; readonly source: SourceId }[]> {
+    const listed: { path: string; source: SourceId }[] = [];
+    for await (const outcome of this.client.queryPages(
+      sources.withResolvedSource({
+        types: ["reader-annotation"],
+        select: ["id", "source"],
+        frontmatterMode: "effective",
+      }),
+      { ...options, firstPageSize: 500, pageSize: 1_000 },
+    )) {
+      for (const record of outcomeValue(outcome, "query annotations").results) {
+        const fields = record.effectiveFrontmatter ?? record.frontmatter;
+        // A broken source link belongs to no source.
+        const source = sources.annotationSourceFromResult(record);
+        if (sources.stringField(fields?.["id"]) && source) {
+          listed.push({ path: record.path, source });
+        }
+      }
+    }
+    return listed;
   }
 }
 

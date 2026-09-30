@@ -6,27 +6,41 @@ import { annotationPathsForSource } from "./annotation-query.js";
 import type { ReaderConnectClient } from "./repository-client.js";
 import type { QueryInput } from "@mdbase-dev/connect";
 
-it("narrows queries, but rejects prefix/alias collisions and follows source renames", async () => {
+it("asks mdbase which links reach the source, keeps legacy IDs, and follows renames", async () => {
   let sourcePath = 'sources/A "quoted" title.md';
-  let references = [
-    '[[sources/A "quoted" title.md|Title]]',
-    '[[sources/A "quoted" title|Title]]',
-    "[[src_1|Title]]",
-    "src_1",
-    "[[src_10]]",
-    "[[sources/unrelated|src_1]]",
-    '[[sources/A "quoted" title extended]]',
-  ];
+  // How mdbase resolves each link: a record path, or null when it reaches no record.
+  let links: Record<string, string | null> = {
+    '[[sources/A "quoted" title.md|Title]]': sourcePath,
+    '[[A "quoted" title]]': sourcePath,
+    src_1: null,
+    "[[src_1|Title]]": null,
+    "[[src_10]]": null,
+    "[[sources/unrelated|src_1]]": "sources/unrelated.md",
+  };
   const queryPages = vi.fn(async function* (input: QueryInput) {
     expect(input.contract).toBeUndefined();
-    expect(input.where).toBeTruthy();
+    const where = input.where ?? "";
+    const quoted = (pattern: RegExp): string | undefined => {
+      const value = pattern.exec(where)?.[1];
+      return value === undefined ? undefined : (JSON.parse(value) as string);
+    };
+    const id = quoted(/^id == ("[^"]*")$/u);
+    const target = quoted(/source\.asFile\(\)\.file\.path == ("(?:[^"\\]|\\.)*")$/u);
+    const unresolved = quoted(/source\.asFile\(\) == null && source\.contains\(("[^"]*")\)$/u);
+    const references = Object.keys(links);
     const results =
-      input.where === 'id == "src_1"'
+      id !== undefined
         ? [{ path: sourcePath, effectiveFrontmatter: { id: "src_1" } }]
-        : references.map((source, i) => ({
-            path: `annotations/${String(i)}.md`,
-            effectiveFrontmatter: { source },
-          }));
+        : references
+            .map((source, i) => ({
+              path: `annotations/${String(i)}.md`,
+              effectiveFrontmatter: { source },
+            }))
+            .filter(({ effectiveFrontmatter: { source } }) =>
+              target !== undefined
+                ? links[source] === target
+                : links[source] === null && source.includes(unresolved!),
+            );
     yield await Promise.resolve({ ok: true, value: { results }, diagnostics: [] });
   });
   const client = { queryPages } as unknown as ReaderConnectClient;
@@ -38,14 +52,17 @@ it("narrows queries, but rejects prefix/alias collisions and follows source rena
     "annotations/2.md",
     "annotations/3.md",
   ]);
-  expect(queryPages).toHaveBeenCalledTimes(2);
-  expect(queryPages.mock.calls[1]?.[0].where).toContain(JSON.stringify('sources/A "quoted" title'));
+  expect(queryPages).toHaveBeenCalledTimes(3);
+  expect(queryPages.mock.calls.map(([input]) => input.where)).toContain(
+    `source != null && source.asFile() != null && source.asFile().file.path == ${JSON.stringify(sourcePath)}`,
+  );
   expect(queryPages).toHaveBeenLastCalledWith(expect.anything(), expect.objectContaining(options));
+
   sourcePath = "sources/Renamed.md";
-  references = ["[[sources/Renamed|New title]]"];
+  links = { "[[sources/Renamed|New title]]": sourcePath };
   expect(await annotationPathsForSource(client, sourceId("src_1"), {})).toEqual([
     "annotations/0.md",
   ]);
-  references = [];
+  links = {};
   expect(await annotationPathsForSource(client, sourceId("src_1"), {})).toEqual([]);
 });
