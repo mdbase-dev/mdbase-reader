@@ -7,6 +7,7 @@ import {
 } from "@mdbase-reader/reading-surface";
 
 import { clearCssHighlights, setCssHighlight, setCssHighlights } from "./html-css-highlights.js";
+import { followEmbedderPalette } from "./html-palette.js";
 import { htmlLocator, htmlSelectionDraft, locateHtmlTarget } from "./html-range.js";
 import { scrollHtmlElement } from "./html-scroll.js";
 import { applyHtmlTypography } from "./html-typography.js";
@@ -57,6 +58,7 @@ export class HtmlDocumentRuntime {
   readonly #reflow =
     typeof ResizeObserver === "undefined" ? null : new ResizeObserver(() => this.#markers.layout());
   readonly #stopSettledSelection: Unsubscribe;
+  readonly #stopPalette: Unsubscribe;
   #destroyed = false;
   #annotationRanges: readonly { readonly annotation: Annotation; readonly range: Range }[] = [];
 
@@ -78,6 +80,7 @@ export class HtmlDocumentRuntime {
     this.#stopSettledSelection = watchSettledSelection(document, () =>
       this.captureSelection("touch"),
     );
+    this.#stopPalette = followEmbedderPalette(frame);
     this.#markers = new MarginMarkers(document, (annotationId) => {
       this.#activationRect = null;
       for (const listener of this.#activationListeners) {
@@ -212,6 +215,7 @@ export class HtmlDocumentRuntime {
     this.#view.removeEventListener("scroll", this.#onScroll);
     this.#view.removeEventListener("resize", this.#onResize);
     this.#stopSettledSelection();
+    this.#stopPalette();
     this.#reflow?.disconnect();
     this.#markers.destroy();
     clearCssHighlights(this.#view);

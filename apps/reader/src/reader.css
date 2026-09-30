@@ -908,7 +908,8 @@ button {
   height: 100%;
   display: block;
   border: 0;
-  background: #f4f1eb;
+  color: var(--ink);
+  background: var(--paper);
 }
 
 .document-toolbar {

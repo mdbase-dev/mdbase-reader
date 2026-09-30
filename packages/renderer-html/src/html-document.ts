@@ -73,7 +73,8 @@ function readerStyle(document: Document): HTMLStyleElement {
   const style = document.createElement("style");
   style.dataset["mdbaseReader"] = "document";
   style.textContent = `
-    :root { color-scheme: light dark; background: #f4f1eb; color: #292722; }
+    /* Colours follow the app (html-palette.ts); these system colours only cover the first paint. */
+    :root { color-scheme: light; background: Canvas; color: CanvasText; }
     * { box-sizing: border-box; }
     html { scroll-behavior: smooth; }
     body { max-width: 46rem; margin: 0 auto; padding: 5rem 3rem 9rem; font: 18px/1.72 Georgia, 'Times New Roman', serif; }
@@ -84,24 +85,20 @@ function readerStyle(document: Document): HTMLStyleElement {
     p, li, blockquote { text-wrap: pretty; }
     img, svg, video { max-width: 100%; height: auto; }
     a { color: inherit; text-decoration-color: #3ba5d8; text-underline-offset: .16em; }
-    blockquote { margin-inline: 0; padding-left: 1.4rem; border-left: 2px solid #3ba5d8; color: #625e55; }
+    blockquote { margin-inline: 0; padding-left: 1.4rem; border-left: 2px solid #3ba5d8; color: color-mix(in srgb, currentColor 72%, transparent); }
     pre { overflow: auto; padding: 1rem; background: rgba(0,0,0,.06); }
     ::selection { background: rgba(64, 174, 224, .28); }
     ::highlight(reader-annotations) { background: rgba(247, 210, 78, .42); text-decoration: underline rgba(211, 159, 0, .38) 1px; }
     ::highlight(reader-active-annotation) { background: rgba(247, 188, 48, .68); text-decoration: underline rgba(157, 103, 0, .86) 2px; }
     mark[data-reader-annotation] { background: rgba(247, 210, 78, .42); color: inherit; }
-    @media (prefers-color-scheme: dark) {
-      :root { background: #211d1e; color: #e7e3dc; }
-      blockquote { color: #b8b1a7; }
-      pre { background: rgba(255,255,255,.06); }
-      /* The light wash turns olive over a dark page; a thinner, warmer amber stays legible. */
-      ::highlight(reader-annotations) { background: rgba(255, 196, 64, .24); text-decoration: underline rgba(255, 204, 92, .5) 1px; }
-      ::highlight(reader-active-annotation) { background: rgba(255, 190, 48, .4); text-decoration: underline rgba(255, 210, 110, .9) 2px; }
-      mark[data-reader-annotation] { background: rgba(255, 196, 64, .24); }
-    }
+    /* The light wash turns olive over a dark page; a thinner, warmer amber stays legible. */
+    :root[data-reader-scheme="dark"] pre { background: rgba(255,255,255,.06); }
+    :root[data-reader-scheme="dark"] ::highlight(reader-annotations) { background: rgba(255, 196, 64, .24); text-decoration: underline rgba(255, 204, 92, .5) 1px; }
+    :root[data-reader-scheme="dark"] ::highlight(reader-active-annotation) { background: rgba(255, 190, 48, .4); text-decoration: underline rgba(255, 210, 110, .9) 2px; }
+    :root[data-reader-scheme="dark"] mark[data-reader-annotation] { background: rgba(255, 196, 64, .24); }
     @media (max-width: 640px) { body { padding: 3rem 1.5rem 7rem; font-size: 17px; } }
     @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
-    @media (forced-colors: active) { :root { background: Canvas; color: CanvasText; } blockquote { color: CanvasText; } }
+    @media (forced-colors: active) { blockquote { color: CanvasText; } }
   `;
   return style;
 }
