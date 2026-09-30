@@ -14,7 +14,7 @@ test("PWA identity is stable and starts without auth or document parameters", as
   assert.match(html, /rel="manifest" href="\/manifest.webmanifest"/);
   assert.match(html, /rel="apple-touch-icon" href="\/apple-touch-icon.png"/);
   for (const size of [192, 512]) {
-    const icon = manifest.icons.find(icon => icon.sizes === `${size}x${size}`);
+    const icon = manifest.icons.find((icon) => icon.sizes === `${size}x${size}`);
     assert.ok(icon, `Missing ${size}px icon`);
     assert.equal(icon.type, "image/png");
     const png = await readFile(new URL(`public${icon.src}`, root));
