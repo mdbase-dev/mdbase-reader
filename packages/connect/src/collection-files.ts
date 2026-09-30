@@ -9,9 +9,15 @@ import type {
   ReaderRequestOptions,
 } from "@mdbase-reader/core";
 
+// A grid of screenshots must not fan out enough list/open/read requests to
+// exhaust the hosted provider's admission slots. Leave room for other work.
+const MAX_ACTIVE_READS = 2;
+
 export class ConnectCollectionFileRepository implements CollectionFileRepository {
   readonly #descriptorsByPath = new Map<string, CollectionFileDescriptor>();
   readonly #loadedFolders = new Set<string>();
+  readonly #readWaiters: (() => void)[] = [];
+  #activeReads = 0;
 
   constructor(private readonly files: ReaderFileClient) {}
 
@@ -20,6 +26,57 @@ export class ConnectCollectionFileRepository implements CollectionFileRepository
     file: string,
     expectedRevision?: FileRevision,
     options: ReaderRequestOptions = {},
+  ): Promise<ExportedCollectionFile> {
+    options.signal?.throwIfAborted();
+    const pending = this.#acquireRead(options.signal).then(async () => {
+      try {
+        options.signal?.throwIfAborted();
+        return await this.#read(file, expectedRevision, options);
+      } finally {
+        this.#releaseRead();
+      }
+    });
+    return abortableRead(pending, options.signal);
+  }
+
+  // Reads take whichever slot frees first, so one slow download never holds
+  // up reads queued behind it while the other slot is idle.
+  #acquireRead(signal?: AbortSignal): Promise<void> {
+    if (this.#activeReads < MAX_ACTIVE_READS) {
+      this.#activeReads++;
+      return Promise.resolve();
+    }
+    return new Promise<void>((resolve, reject) => {
+      const abort = (): void => {
+        const index = this.#readWaiters.indexOf(waiter);
+        if (index !== -1) {
+          this.#readWaiters.splice(index, 1);
+        }
+        reject(abortError(signal));
+      };
+      const waiter = (): void => {
+        signal?.removeEventListener("abort", abort);
+        resolve();
+      };
+      this.#readWaiters.push(waiter);
+      signal?.addEventListener("abort", abort, { once: true });
+    });
+  }
+
+  // A released slot passes directly to the next waiter.
+  #releaseRead(): void {
+    const next = this.#readWaiters.shift();
+    if (next) {
+      next();
+    } else {
+      this.#activeReads--;
+    }
+  }
+
+  async #read(
+    file: string,
+    expectedRevision: FileRevision | undefined,
+    options: ReaderRequestOptions,
   ): Promise<ExportedCollectionFile> {
     const path = portableFilePath(file);
     const descriptor = await this.#find(path, options);
@@ -56,6 +113,27 @@ export class ConnectCollectionFileRepository implements CollectionFileRepository
     }
     return this.#descriptorsByPath.get(path) ?? null;
   }
+}
+
+function abortableRead<T>(pending: Promise<T>, signal?: AbortSignal): Promise<T> {
+  if (!signal) {
+    return pending;
+  }
+  return new Promise<T>((resolve, reject) => {
+    const abort = (): void => {
+      reject(abortError(signal));
+    };
+    signal.addEventListener("abort", abort, { once: true });
+    if (signal.aborted) {
+      abort();
+    }
+    void pending.then(resolve, reject).finally(() => signal.removeEventListener("abort", abort));
+  });
+}
+
+function abortError(signal?: AbortSignal): Error {
+  const reason: unknown = signal?.reason;
+  return reason instanceof Error ? reason : new DOMException("File read cancelled.", "AbortError");
 }
 
 function portableFilePath(link: string): string {
