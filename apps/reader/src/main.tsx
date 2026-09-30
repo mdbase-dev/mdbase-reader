@@ -21,6 +21,12 @@ const ImportPage = lazy(async () => {
   return { default: module.ImportPage };
 });
 
+import { setupPwaInstall } from "./pwa-install.js";
+import "./pwa-install.css";
+
+const stopPwaInstall = setupPwaInstall("mdbase reader");
+if (import.meta.hot) import.meta.hot.dispose(stopPwaInstall);
+
 const root = document.querySelector<HTMLElement>("#root");
 if (!root) {
   throw new Error("Reader root element is missing.");
