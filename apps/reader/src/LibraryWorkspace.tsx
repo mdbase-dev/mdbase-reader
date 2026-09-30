@@ -48,6 +48,7 @@ import {
   type MdbaseLibraryView,
 } from "./mdbase-library-views.js";
 import { Menu } from "./Menu.js";
+import { useInspectedLibraryRow } from "./use-inspected-library-row.js";
 import { layoutOf, useLibraryLayoutDraft } from "./use-library-layout-draft.js";
 import { useLibraryWrites } from "./use-library-writes.js";
 
@@ -73,6 +74,7 @@ export function LibraryWorkspace({
   onOpenView,
   onOpenSource,
   onOpenBeside,
+  onInspectSource,
   onAddSource,
   onOpenSourceView,
   surfaces,
@@ -97,6 +99,8 @@ export function LibraryWorkspace({
   readonly onOpenView: (view: MdbaseLibraryView) => void;
   readonly onOpenSource: (sourceId: SourceId) => void;
   readonly onOpenBeside: (sourceId: SourceId) => void;
+  /** Shows a source in the Notes pane when its row is selected. */
+  readonly onInspectSource?: (sourceId: SourceId) => void;
   readonly onAddSource: () => void;
 }): JSX.Element {
   const collectionKey = allSources[0]?.collectionId ?? "library";
@@ -196,6 +200,12 @@ export function LibraryWorkspace({
   const selectedSources = useMemo(
     () => sources.filter(({ id }) => visibleSelection.ids.has(id)),
     [sources, visibleSelection],
+  );
+  useInspectedLibraryRow(
+    useMemo(() => sources.map(({ id }) => id), [sources]),
+    visibleSelection,
+    focused && mode === "sources",
+    onInspectSource,
   );
   const propertyKeys = useMemo(
     () => discoverPropertyKeys(allSources, view.properties),
