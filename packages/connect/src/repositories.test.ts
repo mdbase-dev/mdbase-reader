@@ -215,10 +215,10 @@ describe("Connect annotation reads", () => {
       { firstPageSize: 100, pageSize: 100 },
     );
     expect(read).toHaveBeenCalledOnce();
-    expect(read).toHaveBeenCalledWith({
-      path: "annotations/matching.md",
-      includeDocument: true,
-    });
+    expect(read).toHaveBeenCalledWith(
+      { path: "annotations/matching.md", includeDocument: true },
+      { signal: expect.any(AbortSignal) },
+    );
     expect(annotations).toHaveLength(1);
     expect(annotations[0]?.body).toBe("A useful note.");
     await expect(repository.sourceIdsWithAnnotations(collectionId("reading"))).resolves.toEqual([

@@ -1,3 +1,4 @@
+import { readerDiagnostics } from "./diagnostics.js";
 import { connectOptions, outcomeValue } from "./repository-client.js";
 
 import type {
@@ -32,13 +33,21 @@ export function connectLibraryViewRepository(connection: MdbaseConnection): Libr
   return {
     async list(options = {}) {
       return outcomeValue(
-        await connection.listViews(connectOptions(options)),
+        await readerDiagnostics.measure(
+          "list-views",
+          () => connection.route,
+          () => connection.listViews(connectOptions(options)),
+        ),
         "list library views",
       );
     },
     async execute(input, options = {}) {
       return outcomeValue(
-        await connection.executeView(input, connectOptions(options)),
+        await readerDiagnostics.measure(
+          "execute-view",
+          () => connection.route,
+          () => connection.executeView(input, connectOptions(options)),
+        ),
         "execute library view",
       );
     },

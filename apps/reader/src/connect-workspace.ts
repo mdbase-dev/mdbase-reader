@@ -36,6 +36,7 @@ import type {
 import type { JsonObject, LibraryViewRepository } from "@mdbase-reader/connect";
 import type {
   Annotation,
+  AnnotationListOptions,
   AnnotationDeletionPlan,
   AnnotationAssetRepository,
   AnnotationCreationRequest,
@@ -69,6 +70,25 @@ export class ConnectWorkspaceGateway implements ReaderWorkspaceGateway {
   #library: ReaderLibrarySnapshot["sources"] | null = null;
   readonly #sourcesById = new Map<SourceId, Source>();
   readonly #annotationsBySource = new Map<SourceId, readonly Annotation[]>();
+  readonly #countListeners = new Set<() => void>();
+  #countsRevision = 0;
+  #annotationCacheEpoch = 0;
+
+  readonly subscribeAnnotationCounts = (listener: () => void): (() => void) => {
+    this.#countListeners.add(listener);
+    return () => {
+      this.#countListeners.delete(listener);
+    };
+  };
+
+  readonly annotationCountsRevision = (): number => this.#countsRevision;
+
+  #countsChanged(): void {
+    this.#countsRevision += 1;
+    for (const listener of this.#countListeners) {
+      listener();
+    }
+  }
 
   constructor(
     private readonly sources: SourceRepository,
@@ -287,11 +307,19 @@ export class ConnectWorkspaceGateway implements ReaderWorkspaceGateway {
     );
   }
 
-  async allAnnotations(options: ReaderRequestOptions = {}): Promise<readonly Annotation[]> {
+  async allAnnotations(options: AnnotationListOptions = {}): Promise<readonly Annotation[]> {
     if (!this.annotationsRepository.listAll) {
       throw new Error("This collection cannot list all annotations.");
     }
+    const epoch = this.#annotationCacheEpoch;
     const annotations = await this.annotationsRepository.listAll(this.collectionId, options);
+    if (options.refresh) {
+      this.#countsChanged();
+    }
+    // A scoped view is not a complete source list; never seed the per-source cache from it.
+    if (options.paths) {
+      return annotations;
+    }
     // The overview reads whole records, so opening one of these sources needs no further reads.
     // Sources already cached keep their entries, which may include saves made meanwhile.
     const bySource = new Map<SourceId, Annotation[]>();
@@ -299,6 +327,9 @@ export class ConnectWorkspaceGateway implements ReaderWorkspaceGateway {
       const items = bySource.get(annotation.sourceId) ?? [];
       items.push(annotation);
       bySource.set(annotation.sourceId, items);
+    }
+    if (options.refresh && epoch === this.#annotationCacheEpoch) {
+      this.#annotationsBySource.clear();
     }
     for (const [sourceId, items] of bySource) {
       if (!this.#annotationsBySource.has(sourceId)) {
@@ -342,6 +373,10 @@ export class ConnectWorkspaceGateway implements ReaderWorkspaceGateway {
       collectionId: this.collectionId,
       requestId,
     });
+    this.#annotationCacheEpoch += 1;
+    if (recovered.path) {
+      this.annotationsRepository.invalidateRecord?.(recovered.path);
+    }
     const current = this.#annotationsBySource.get(recovered.sourceId) ?? [];
     this.#annotationsBySource.set(
       recovered.sourceId,
@@ -475,8 +510,10 @@ export class ConnectWorkspaceGateway implements ReaderWorkspaceGateway {
         },
         request,
       );
+      this.#annotationCacheEpoch += 1;
       const current = this.#annotationsBySource.get(request.sourceId) ?? [];
       this.#annotationsBySource.set(request.sourceId, [result.annotation, ...current]);
+      this.#countsChanged();
       return result.annotation;
     } finally {
       if (timingEnabled) {
@@ -499,6 +536,7 @@ export class ConnectWorkspaceGateway implements ReaderWorkspaceGateway {
       body,
       this.runtime.clock.now(),
     );
+    this.#annotationCacheEpoch += 1;
     const current = this.#annotationsBySource.get(annotation.sourceId) ?? [];
     this.#annotationsBySource.set(
       annotation.sourceId,
@@ -517,11 +555,13 @@ export class ConnectWorkspaceGateway implements ReaderWorkspaceGateway {
 
   async deleteAnnotation(annotation: Annotation, plan: AnnotationDeletionPlan): Promise<void> {
     await deleteAnnotation(this.annotationsRepository, annotation, plan);
+    this.#annotationCacheEpoch += 1;
     const current = this.#annotationsBySource.get(annotation.sourceId) ?? [];
     this.#annotationsBySource.set(
       annotation.sourceId,
       current.filter((candidate) => candidate.id !== annotation.id),
     );
+    this.#countsChanged();
   }
 
   async transcludeAnnotation(source: Source, annotation: Annotation): Promise<Source> {

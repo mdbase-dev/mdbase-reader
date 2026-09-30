@@ -5,6 +5,7 @@ import type {
 } from "./mdbase-library-views.js";
 import type {
   Annotation,
+  AnnotationListOptions,
   AnnotationDeletionPlan,
   AnnotationCreationRequest,
   ExportedCollectionFile,
@@ -62,7 +63,10 @@ export interface ReaderWorkspaceGateway {
   annotationSourceIds?(options?: ReaderRequestOptions): Promise<readonly SourceId[]>;
   annotationCounts?(options?: ReaderRequestOptions): Promise<ReadonlyMap<SourceId, number>>;
   /** Every annotation in the collection, read-only, for the library's annotations view. */
-  allAnnotations?(options?: ReaderRequestOptions): Promise<readonly Annotation[]>;
+  allAnnotations?(options?: AnnotationListOptions): Promise<readonly Annotation[]>;
+  /** Counts change on membership mutations, not on source selection or body edits. */
+  subscribeAnnotationCounts?: (listener: () => void) => () => void;
+  annotationCountsRevision?: () => number;
   saveSourceBody(source: Source, body: string): Promise<Source>;
   /** Exact recovery of an interrupted source note write. Only a live connection offers it. */
   recoverSourceBody?(requestId: string): Promise<Source>;

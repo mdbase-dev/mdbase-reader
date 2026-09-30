@@ -14,11 +14,10 @@ import {
   annotationLayoutOf,
   savedAnnotationConfiguration,
   useAnnotationLayoutDraft,
-  useAnnotationViewExecution,
   useSourceAnnotationsView,
 } from "./use-annotation-view.js";
 import {
-  useAllAnnotations,
+  useLibraryAnnotations,
   useAnnotationViewSaving,
   useVisibleEntries,
 } from "./use-library-annotations.js";
@@ -52,13 +51,12 @@ export function LibraryAnnotations({
   readonly onOpenAnnotation: (annotation: Annotation, beside: boolean) => void;
   readonly onOpenView: (view: MdbaseLibraryView) => void;
 }): JSX.Element {
-  const { load, retry } = useAllAnnotations(gateway);
   const saved = savedAnnotationConfiguration(view);
   const [filter, setFilter] = useState<AnnotationFilter>(saved.filter);
   const [layout, setLayout] = useAnnotationLayoutDraft(collectionKey, view);
   // Remounts the table after a reset, since it reads column widths from the layout once.
   const [layoutResets, setLayoutResets] = useState(0);
-  const execution = useAnnotationViewExecution(gateway, view);
+  const { load, retry, execution } = useLibraryAnnotations(gateway, view, filter);
   const [selection, setSelection] = useState<RowSelection<AnnotationId>>(emptyRowSelection);
   const sourceAnnotationsView = useSourceAnnotationsView(gateway);
   const all = useMemo(
@@ -92,6 +90,7 @@ export function LibraryAnnotations({
         actions={{
           ...(saving.saveOver ? { onSave: saving.saveOver } : {}),
           saving: controller.saving,
+          onRefresh: retry,
           onSaveAs: saving.startNaming,
           ...(JSON.stringify(layout) !== JSON.stringify(savedLayout)
             ? {
@@ -105,7 +104,7 @@ export function LibraryAnnotations({
         }}
       />
       <AnnotationProblem load={load} executionProblem={execution.problem} onRetry={retry} />
-      {load.status === "ready" && entries.length === 0 ? (
+      {load.status === "ready" && !load.loading && entries.length === 0 ? (
         <div className="library-workspace-empty">
           <strong>{all.length === 0 ? "No annotations yet" : "No annotations match"}</strong>
           <span>

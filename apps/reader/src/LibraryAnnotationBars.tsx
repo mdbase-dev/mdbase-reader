@@ -65,9 +65,18 @@ export function AnnotationProblem({
       </div>
     );
   }
-  return executionProblem ? (
-    <div className="library-view-problem" role="status">
-      {executionProblem}
-    </div>
-  ) : null;
+  return (
+    <>
+      {executionProblem ? (
+        <div className="library-view-problem" role="status">
+          {executionProblem}
+        </div>
+      ) : null}
+      {load.status === "loading" || load.loading ? (
+        <div className="inspector-status" role="status">
+          Loading annotations…
+        </div>
+      ) : null}
+    </>
+  );
 }

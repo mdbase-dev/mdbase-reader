@@ -456,7 +456,7 @@ function useLibraryAnnotationCounts(
   model: ReaderWorkspaceViewModel,
 ): ReadonlyMap<SourceId, number> {
   const loaded = model.workspace.annotations;
-  const counts = useAnnotationCounts(model.gateway, loaded);
+  const counts = useAnnotationCounts(model.gateway);
   const sourceId =
     model.workspace.sourceRecord.status === "ready" ? model.workspace.sourceRecord.value.id : null;
   return useMemo(() => {

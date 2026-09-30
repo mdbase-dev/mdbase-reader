@@ -1,4 +1,5 @@
 import { annotationPathsForSource } from "./annotation-query.js";
+import { AnnotationRecordCache } from "./annotation-record-cache.js";
 import * as sources from "./annotation-source.js";
 import { annotationFromDocument, annotationFrontmatter } from "./mapping.js";
 import {
@@ -10,9 +11,10 @@ import {
 } from "./repository-client.js";
 
 import type { ReaderConnectClient } from "./repository-client.js";
-import type { DeletePreflightResult, RecordDocument } from "@mdbase-dev/connect";
+import type { DeletePreflightResult, RecordDocument, QueryRecord } from "@mdbase-dev/connect";
 import type {
   Annotation,
+  AnnotationListOptions,
   AnnotationDeletionPlan,
   AnnotationId,
   AnnotationRepository,
@@ -25,7 +27,15 @@ import type {
 export class ConnectAnnotationRepository implements AnnotationRepository {
   readonly #deletePreflights = new Map<string, DeletePreflightResult>();
 
-  constructor(private readonly client: ReaderConnectClient) {}
+  readonly #records: AnnotationRecordCache;
+
+  constructor(private readonly client: ReaderConnectClient) {
+    this.#records = new AnnotationRecordCache(client);
+  }
+
+  invalidateRecord(path: string): void {
+    this.#records.delete(path);
+  }
 
   async sourceIdsWithAnnotations(
     _collection: CollectionId,
@@ -48,23 +58,51 @@ export class ConnectAnnotationRepository implements AnnotationRepository {
 
   async listAll(
     collection: CollectionId,
-    options: ReaderRequestOptions = {},
+    options: AnnotationListOptions = {},
   ): Promise<readonly Annotation[]> {
-    // Queries cannot include bodies, so list the paths and read each record.
-    const listed = await this.#annotationSources(options);
-    const annotations = await mapConcurrent(listed, readerConnectBulkConcurrency, async (entry) => {
-      const document = outcomeValue(
-        await readWithOptions(this.client, { path: entry.path, includeDocument: true }, options),
-        "read annotation",
-      );
-      try {
-        return await this.#map(collection, document, entry.source);
-      } catch {
-        // A record that does not satisfy the annotation contract is left out of the overview.
-        return null;
+    // Keep the first batches responsive; grow publication intervals as the list grows.
+    // Hydration stays bounded even when cumulative UI snapshots become less frequent.
+    const annotations: Annotation[] = [];
+    let published = 0;
+    const publish = (): void => {
+      if (options.onProgress) {
+        options.onProgress([...annotations]);
       }
-    });
-    return annotations.filter((annotation) => annotation !== null);
+      published = annotations.length;
+    };
+    for await (const page of this.#annotationSourcePages(options)) {
+      for (let offset = 0; offset < page.length;) {
+        options.signal?.throwIfAborted();
+        // A small first batch minimizes time to content; larger later batches limit rerenders.
+        const batchSize = annotations.length === 0 ? 16 : 64;
+        const batch = await mapConcurrent(
+          page.slice(offset, offset + batchSize),
+          readerConnectBulkConcurrency,
+          async (entry) => {
+            const document = await this.#records.read(entry.path, options, options.refresh);
+            try {
+              return await this.#map(collection, document, entry.source);
+            } catch {
+              // Invalid records do not belong in the overview.
+              return null;
+            }
+          },
+        );
+        options.signal?.throwIfAborted();
+        annotations.push(...batch.filter((annotation) => annotation !== null));
+        offset += batchSize;
+        if (
+          annotations.length <= 128 ||
+          annotations.length - published >= Math.max(16, Math.ceil(published / 4))
+        ) {
+          publish();
+        }
+      }
+    }
+    if (annotations.length > published) {
+      publish();
+    }
+    return annotations;
   }
 
   async listForSource(
@@ -77,10 +115,7 @@ export class ConnectAnnotationRepository implements AnnotationRepository {
       matchingPaths,
       readerConnectBulkConcurrency,
       async (path) => {
-        const document = outcomeValue(
-          await readWithOptions(this.client, { path, includeDocument: true }, options),
-          "read annotation",
-        );
+        const document = await this.#records.read(path, options);
         // The query matched these by the target of their link, so the source is known.
         return this.#map(collection, document, source);
       },
@@ -99,6 +134,7 @@ export class ConnectAnnotationRepository implements AnnotationRepository {
       }),
       "create annotation",
     );
+    this.#records.put(result);
     // Reader wrote this link to the source it already knows.
     return this.#map(annotation.collectionId, result, annotation.sourceId);
   }
@@ -122,6 +158,7 @@ export class ConnectAnnotationRepository implements AnnotationRepository {
       }),
       "update annotation",
     );
+    this.#records.put(result);
     // The revision check guarantees the source link is the one already resolved.
     return this.#map(annotation.collectionId, result, annotation.sourceId);
   }
@@ -159,6 +196,7 @@ export class ConnectAnnotationRepository implements AnnotationRepository {
       if (!result.deleted) {
         throw new Error(`mdbase Connect did not delete annotation ${annotation.id}.`);
       }
+      this.#records.delete(path);
     } finally {
       this.#deletePreflights.delete(key);
     }
@@ -177,6 +215,7 @@ export class ConnectAnnotationRepository implements AnnotationRepository {
       await readWithOptions(this.client, { path, includeDocument: true }, options),
       "read annotation",
     );
+    this.#records.put(result);
     return this.#map(collection, result);
   }
 
@@ -208,25 +247,64 @@ export class ConnectAnnotationRepository implements AnnotationRepository {
     options: ReaderRequestOptions,
   ): Promise<{ readonly path: string; readonly source: SourceId }[]> {
     const listed: { path: string; source: SourceId }[] = [];
-    for await (const outcome of this.client.queryPages(
-      sources.withResolvedSource({
-        types: ["reader-annotation"],
-        select: ["id", "source"],
-        frontmatterMode: "effective",
-      }),
-      { ...options, firstPageSize: 500, pageSize: 1_000 },
-    )) {
-      for (const record of outcomeValue(outcome, "query annotations").results) {
-        const fields = record.effectiveFrontmatter ?? record.frontmatter;
-        // A broken source link belongs to no source.
-        const source = sources.annotationSourceFromResult(record);
-        if (sources.stringField(fields?.["id"]) && source) {
-          listed.push({ path: record.path, source });
-        }
-      }
+    for await (const page of this.#annotationSourcePages(options)) {
+      listed.push(...page);
     }
     return listed;
   }
+
+  async *#annotationSourcePages(
+    options: AnnotationListOptions,
+  ): AsyncGenerator<{ readonly path: string; readonly source: SourceId }[]> {
+    for (const scope of annotationQueryScopes(options.paths)) {
+      const selected = scope ? new Set(scope) : null;
+      options.signal?.throwIfAborted();
+      for await (const outcome of this.client.queryPages(
+        sources.withResolvedSource({
+          types: ["reader-annotation"],
+          select: ["id", "source"],
+          frontmatterMode: "effective",
+          ...(scope
+            ? { where: scope.map((path) => `file.path == ${JSON.stringify(path)}`).join(" || ") }
+            : {}),
+        }),
+        {
+          ...(options.signal ? { signal: options.signal } : {}),
+          ...(options.replaceableFamily ? { replaceableFamily: options.replaceableFamily } : {}),
+          firstPageSize: 100,
+          pageSize: 500,
+        },
+      )) {
+        yield outcomeValue(outcome, "query annotations").results.flatMap((record) =>
+          annotationSourceEntry(record, selected),
+        );
+      }
+    }
+  }
+}
+
+function annotationQueryScopes(paths?: ReadonlySet<string>): (string[] | null)[] {
+  if (!paths) {
+    return [null];
+  }
+  const listed = [...paths];
+  const scopes: string[][] = [];
+  // Keep scoped query expressions bounded, including for very large saved views.
+  for (let offset = 0; offset < listed.length; offset += 100) {
+    scopes.push(listed.slice(offset, offset + 100));
+  }
+  return scopes;
+}
+
+function annotationSourceEntry(
+  record: QueryRecord,
+  selected: ReadonlySet<string> | null,
+): { path: string; source: SourceId }[] {
+  const fields = record.effectiveFrontmatter ?? record.frontmatter;
+  const source = sources.annotationSourceFromResult(record);
+  return sources.stringField(fields?.["id"]) && source && (!selected || selected.has(record.path))
+    ? [{ path: record.path, source }]
+    : [];
 }
 
 function canonicalIdentity(annotation: Annotation): {

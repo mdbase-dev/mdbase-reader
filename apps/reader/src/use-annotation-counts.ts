@@ -1,15 +1,22 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useSyncExternalStore } from "react";
 
 import type { ReaderWorkspaceGateway } from "./workspace-model.js";
 import type { SourceId } from "@mdbase-reader/core";
 
 const empty: ReadonlyMap<SourceId, number> = new Map();
 
-/** Annotation counts for the library; `revision` refetches after annotations change. */
+const noSubscription = (): (() => void) => () => undefined;
+const zeroRevision = (): number => 0;
+
+/** Refresh only after membership changes, not source navigation or annotation loading. */
 export function useAnnotationCounts(
   gateway: ReaderWorkspaceGateway,
-  revision: unknown,
 ): ReadonlyMap<SourceId, number> {
+  const revision = useSyncExternalStore(
+    gateway.subscribeAnnotationCounts ?? noSubscription,
+    gateway.annotationCountsRevision ?? zeroRevision,
+    zeroRevision,
+  );
   const [counts, setCounts] = useState(empty);
   useEffect(() => {
     if (!gateway.annotationCounts) {
