@@ -21,7 +21,7 @@ import { ConnectionRetry, SelectedAuthorizationAction } from "./ConnectionLayout
 import { readerErrorMessage } from "./errors.js";
 import { ChevronRightIcon, CollectionIcon, PlusIcon } from "./icons.js";
 import { ReaderApp } from "./ReaderApp.js";
-import { requestedSourceId } from "./SourceDeepLink.js";
+import { requestedAnnotation, requestedSourceId } from "./SourceDeepLink.js";
 
 const subscribe = (listener: () => void): (() => void) => readerSession.subscribe(listener);
 const snapshot = (): ReaderConnectSnapshot => readerSession.getSnapshot();
@@ -131,6 +131,7 @@ function OpenedReader({ collectionId }: { readonly collectionId: string }): JSX.
       key={collectionId}
       gateway={gateway}
       initialSourceId={requestedSourceId(location.href, collectionId)}
+      initialAnnotation={requestedAnnotation(location.href, collectionId)}
       directAccess={opened.directAccess}
       saveFile={(name, blob) => readerPlatform.saveFile(name, blob)}
       pickSourceFile={() =>
