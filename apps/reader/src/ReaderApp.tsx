@@ -27,12 +27,15 @@ import { useSourceWorkspace } from "./use-source-workspace.js";
 import type { SourceDocumentRenderer } from "./RenderedSourceDocument.js";
 import type { ReaderWorkspaceGateway } from "./workspace-model.js";
 import type { ReaderDirectAccessController } from "@mdbase-reader/connect";
+import type { SourceId, SourceSummary } from "@mdbase-reader/core";
 import type { PickedFile } from "@mdbase-reader/platform";
 import type { ReadingSurface } from "@mdbase-reader/reading-surface";
 
 export interface ReaderAppProps {
   readonly gateway: ReaderWorkspaceGateway;
   readonly initialSourceId?: string | null;
+  /** An annotation of the initial source to reveal (its record path or id). */
+  readonly initialAnnotation?: string | null;
   readonly directAccess?: ReaderDirectAccessController;
   readonly renderDocument?: SourceDocumentRenderer;
   readonly pickSourceFile?: () => Promise<PickedFile | null>;
@@ -42,6 +45,7 @@ export interface ReaderAppProps {
 export function ReaderApp({
   gateway,
   initialSourceId = null,
+  initialAnnotation = null,
   directAccess,
   renderDocument,
   pickSourceFile,
@@ -63,6 +67,7 @@ export function ReaderApp({
     <OpenedReaderApp
       gateway={gateway}
       initialSourceId={initialSourceId}
+      initialAnnotation={initialAnnotation}
       {...(directAccess ? { directAccess } : {})}
       workspace={workspace}
       library={workspace.library.value}
@@ -76,6 +81,7 @@ export function ReaderApp({
 function OpenedReaderApp({
   gateway,
   initialSourceId = null,
+  initialAnnotation = null,
   directAccess,
   workspace,
   library,
@@ -150,17 +156,12 @@ function OpenedReaderApp({
     toggleNotes: () => sourceWorkspace.dock.toggleSidebar("right"),
   });
 
-  const source = workspace.selectedSource;
-  const openSources = sourceWorkspace.openSourceIds.flatMap((sourceId) => {
-    const openSource = library.sources.find(({ id }) => id === sourceId);
-    return openSource ? [openSource] : [];
-  });
   const model = {
     library,
     gateway,
     libraryViews,
-    source,
-    openSources,
+    source: workspace.selectedSource,
+    openSources: openSourcesOf(library.sources, sourceWorkspace.openSourceIds),
     workspace,
     sourceWorkspace,
     composer,
@@ -185,10 +186,26 @@ function OpenedReaderApp({
   } satisfies ReaderWorkspaceViewModel;
   return (
     <SourceLibraryContext value={library.sources}>
-      <SourceDeepLink id={initialSourceId} library={library} open={sourceWorkspace.open} />
+      <SourceDeepLink
+        id={initialSourceId}
+        annotation={initialAnnotation}
+        library={library}
+        open={sourceWorkspace.open}
+        activeSourceId={sourceWorkspace.activeSourceId}
+        annotations={workspace.annotations}
+        openAnnotation={composer.open}
+      />
       <ReaderWorkspaceView model={model} />
     </SourceLibraryContext>
   );
+}
+
+/** The open tabs' sources, in tab order, leaving out any no longer in the library. */
+function openSourcesOf(
+  sources: readonly SourceSummary[],
+  openIds: readonly SourceId[],
+): SourceSummary[] {
+  return openIds.flatMap((sourceId) => sources.filter(({ id }) => id === sourceId));
 }
 
 function confirmCloseDirtyTab(): boolean {
