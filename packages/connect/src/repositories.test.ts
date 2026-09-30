@@ -209,7 +209,7 @@ describe("Connect annotation reads", () => {
     expect(queryPages).toHaveBeenCalledWith(
       {
         types: ["reader-annotation"],
-        where: 'source != null && (source.contains("src_01"))',
+        where: 'source != null && source.asFile() == null && source.contains("src_01")',
         frontmatterMode: "effective",
       },
       { firstPageSize: 100, pageSize: 100 },

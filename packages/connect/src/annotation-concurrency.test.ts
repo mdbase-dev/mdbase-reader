@@ -73,12 +73,20 @@ describe("Connect annotation concurrency", () => {
 });
 
 describe("Connect annotation listing", () => {
-  it("lists every annotation with a contract query Connect accepts, then reads each record", async () => {
+  it("lists every annotation with a query Connect accepts, then reads each record", async () => {
     const paths = ["annotations/ann_1.md", "annotations/broken.md", "annotations/ann_2.md"];
     const queryPages = vi.fn(async function* (): AsyncGenerator<ConnectOutcome<QueryPage>> {
       yield await Promise.resolve(
         success({
-          results: paths.map((path) => ({ path, types: ["reader-annotation"], file: {} })),
+          results: paths.map((path) => ({
+            path,
+            effectiveFrontmatter: {
+              id: annotationDocument(path).frontmatter["id"],
+              source: "src_01",
+            },
+            types: ["reader-annotation"],
+            file: {},
+          })),
           meta: { totalCount: paths.length, hasMore: false },
           page: 0,
           offset: 0,
@@ -103,12 +111,20 @@ describe("Connect annotation listing", () => {
     const annotations = await repository.listAll(collectionId("reading"));
 
     // Semantic contract views accept only types, timezone, pagination, frontmatterMode and contract.
-    const [[input]] = queryPages.mock.calls as unknown as [[Record<string, unknown>]];
-    expect(
-      Object.keys(input).filter(
-        (key) => !["types", "timezone", "frontmatterMode", "contract"].includes(key),
-      ),
-    ).toEqual([]);
+    const inputs = (queryPages.mock.calls as unknown as [Record<string, unknown>][]).map(
+      ([input]) => input,
+    );
+    for (const input of inputs) {
+      if (input["contract"]) {
+        expect(
+          Object.keys(input).filter(
+            (key) => !["types", "timezone", "frontmatterMode", "contract"].includes(key),
+          ),
+        ).toEqual([]);
+      }
+    }
+    // Bodies come from whole-record reads; the listing query never asks for them.
+    expect(inputs.some((input) => "includeBody" in input)).toBe(false);
     expect(annotations.map(({ id, recordRevision }) => [id, recordRevision])).toEqual([
       ["ann_1", "rev-ann_1"],
       ["ann_2", "rev-ann_2"],
