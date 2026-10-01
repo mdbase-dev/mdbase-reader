@@ -33,7 +33,7 @@ function annotationEmbeds(
   onOpen: ((path: string) => void) | undefined,
   onEdit: ((path: string) => void) | undefined,
 ): Extension {
-  const byPath = new Map(candidates.map((candidate) => [candidate.path, candidate]));
+  const byPath = candidateLookup(candidates);
   return ViewPlugin.fromClass(
     class {
       decorations: DecorationSet;
@@ -52,9 +52,29 @@ function annotationEmbeds(
   );
 }
 
+type CandidateLookup = (target: string) => WikiLinkCandidate | undefined;
+
+/**
+ * Resolves a link target to a candidate as mdbase and Obsidian resolve a wikilink: by path, with
+ * or without the extension, or for a simple link by filename when exactly one candidate has it.
+ */
+export function candidateLookup(candidates: readonly WikiLinkCandidate[]): CandidateLookup {
+  const byPath = new Map(candidates.map((candidate) => [candidate.path, candidate]));
+  const byName = new Map<string, WikiLinkCandidate | null>();
+  for (const candidate of candidates) {
+    const name = candidate.path.split("/").at(-1) ?? candidate.path;
+    // A filename two candidates share names neither.
+    byName.set(name, byName.has(name) ? null : candidate);
+  }
+  return (target) => {
+    const path = target.trim().replace(/\.md$/u, "");
+    return byPath.get(path) ?? (path.includes("/") ? undefined : (byName.get(path) ?? undefined));
+  };
+}
+
 function embeddedDecorations(
   view: EditorView,
-  candidates: ReadonlyMap<string, WikiLinkCandidate>,
+  candidates: CandidateLookup,
   onOpen: ((path: string) => void) | undefined,
   onEdit: ((path: string) => void) | undefined,
 ): DecorationSet {
@@ -68,7 +88,7 @@ function embeddedDecorations(
         continue;
       }
       const path = rawPath.split(/[|#]/u, 1)[0] ?? rawPath;
-      const candidate = candidates.get(path);
+      const candidate = candidates(path);
       const start = from + match.index;
       const end = start + match[0].length;
       const cursor = view.state.selection.main.head;

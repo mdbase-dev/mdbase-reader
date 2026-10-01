@@ -1,4 +1,5 @@
 import {
+  bodyEmbedsAnnotation,
   cslProblemSummary,
   filterSources,
   recordRevision,
@@ -206,7 +207,9 @@ export class ConnectSourceRepository implements SourceRepository {
       "read source before annotation",
     );
     const body = current.body ?? "";
-    if (body.includes(input.embed)) {
+    // The embed may already be written another way, such as by filename alone.
+    const target = /^!\[\[([^\]]+)\]\]$/u.exec(input.embed)?.[1];
+    if (target ? bodyEmbedsAnnotation(body, target) : body.includes(input.embed)) {
       return recordRevision(current.revision);
     }
     const separator = body.length === 0 || body.endsWith("\n") ? "" : "\n";

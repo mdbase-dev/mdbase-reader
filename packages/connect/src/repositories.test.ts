@@ -100,6 +100,36 @@ describe("ConnectSourceRepository", () => {
     });
     expect(client.update).not.toHaveBeenCalled();
   });
+
+  it("recognizes an annotation already embedded by its filename alone", async () => {
+    const document = {
+      path: "sources/gravity.md",
+      revision: "rev-3",
+      types: ["reader-source"],
+      frontmatter: { id: "src_01", title: "Gravity and Grace" },
+      effectiveFrontmatter: { id: "src_01", title: "Gravity and Grace" },
+      body: "Notes\n\n![[ann_01]]\n",
+      file: {},
+    } satisfies RecordDocument;
+    const client = {
+      queryPages: vi.fn(() =>
+        queryStream([
+          { path: document.path, effectiveFrontmatter: document.frontmatter, types: [], file: {} },
+        ]),
+      ),
+      read: vi.fn(() => Promise.resolve(success(document))),
+      update: vi.fn(),
+    } as unknown as ReaderConnectClient;
+    await new ConnectSourceRepository(client).appendAnnotationEmbed({
+      collectionId: collectionId("reading"),
+      sourceId: "src_01" as never,
+      expectedRevision: "rev-3" as never,
+      annotationId: "ann_01" as never,
+      embed: "![[annotations/ann_01]]",
+      idempotencyKey: "mutation-1" as never,
+    });
+    expect(client.update).not.toHaveBeenCalled();
+  });
 });
 
 describe("ConnectAnnotationRepository", () => {
