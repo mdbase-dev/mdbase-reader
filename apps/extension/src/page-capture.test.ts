@@ -65,19 +65,27 @@ describe("extension page capture", () => {
       Object.defineProperty(document, "contentType", { value: "text/html", configurable: true });
     }
   });
+});
+
+describe("selection watcher", () => {
+  beforeEach(() => {
+    document.body.innerHTML = "<p>The exact durable quotation appears here.</p>";
+  });
+  afterEach(() => vi.unstubAllGlobals());
 
   it("notifies the panel of new selections once, even when injected twice", async () => {
     vi.useFakeTimers();
     const sendMessage = vi.fn(() => Promise.resolve());
-    const ports = [fakePort(), fakePort()];
-    const connect = vi.fn(() => ports[connect.mock.calls.length - 1]);
-    vi.stubGlobal("chrome", { runtime: { sendMessage, connect } });
-    watchSelection("watch");
-    watchSelection("watch");
-    expect(connect).toHaveBeenCalledWith({ name: "watch" });
-    // The replaced watcher lets go of its port.
-    expect(ports[0]?.disconnect).toHaveBeenCalled();
-    expect(ports[1]?.disconnect).not.toHaveBeenCalled();
+    const page = pageEvents();
+    vi.stubGlobal("chrome", { runtime: { sendMessage, onConnect: page.onConnect } });
+    watchSelection("watch", 10_000);
+    const replaced = fakePort("watch");
+    page.connect(replaced);
+    watchSelection("watch", 10_000);
+    // The replaced watcher lets go of its port and its connect listener.
+    expect(replaced.disconnect).toHaveBeenCalled();
+    expect(page.listeners).toHaveLength(1);
+    page.connect(fakePort("watch"));
     selectSomething();
     await vi.advanceTimersByTimeAsync(400);
     expect(sendMessage).toHaveBeenCalledTimes(1);
@@ -88,56 +96,105 @@ describe("extension page capture", () => {
   it("stops watching once the panel holding its port goes away", async () => {
     vi.useFakeTimers();
     const sendMessage = vi.fn(() => Promise.resolve());
-    const port = fakePort();
-    vi.stubGlobal("chrome", { runtime: { sendMessage, connect: () => port } });
-    watchSelection("watch");
+    const page = pageEvents();
+    vi.stubGlobal("chrome", { runtime: { sendMessage, onConnect: page.onConnect } });
+    watchSelection("watch", 10_000);
+    const port = fakePort("watch");
+    page.connect(port);
     selectSomething();
     port.closeFromPanel();
     await vi.advanceTimersByTimeAsync(400);
     selectSomething();
     await vi.advanceTimersByTimeAsync(400);
     expect(sendMessage).not.toHaveBeenCalled();
+    expect(page.listeners).toHaveLength(0);
     vi.useRealTimers();
   });
 
-  it("does not install a watcher without a panel to report to", async () => {
+  it("removes itself when no panel connects, and ignores other ports", async () => {
+    vi.useFakeTimers();
+    const sendMessage = vi.fn(() => Promise.resolve());
+    const page = pageEvents();
+    vi.stubGlobal("chrome", { runtime: { sendMessage, onConnect: page.onConnect } });
+    watchSelection("watch", 1000);
+    page.connect(fakePort("something-else"));
+    await vi.advanceTimersByTimeAsync(1000);
+    selectSomething();
+    await vi.advanceTimersByTimeAsync(400);
+    expect(sendMessage).not.toHaveBeenCalled();
+    expect(page.listeners).toHaveLength(0);
+    vi.useRealTimers();
+  });
+
+  it("does not install a watcher once the extension has reloaded", async () => {
     vi.useFakeTimers();
     const sendMessage = vi.fn(() => Promise.resolve());
     vi.stubGlobal("chrome", {
       runtime: {
         sendMessage,
-        connect: () => {
-          throw new Error("Extension context invalidated.");
+        onConnect: {
+          addListener: () => {
+            throw new Error("Extension context invalidated.");
+          },
+          removeListener: () => undefined,
         },
       },
     });
-    watchSelection("watch");
+    watchSelection("watch", 10_000);
     selectSomething();
     await vi.advanceTimersByTimeAsync(400);
     expect(sendMessage).not.toHaveBeenCalled();
     vi.useRealTimers();
   });
 
-  it("keeps the watcher of its own tab and lets go of other tabs' watchers", async () => {
-    const listeners: ((port: chrome.runtime.Port) => void)[] = [];
+  it("connects only to its own tab, replacing its earlier port", async () => {
+    const ports: ReturnType<typeof fakePort>[] = [];
+    const connect = vi.fn((_tab: number, { name }: { name: string }) => {
+      const port = fakePort(name);
+      ports.push(port);
+      return port;
+    });
     vi.stubGlobal("chrome", {
-      runtime: { onConnect: { addListener: (listener: never) => listeners.push(listener) } },
+      tabs: { connect },
       scripting: { executeScript: vi.fn(() => Promise.resolve([])) },
     });
     await watchTabSelection(7);
     await watchTabSelection(7);
-    expect(listeners).toHaveLength(1);
-    const own = { ...fakePort(), sender: { tab: { id: 7 } } };
-    const other = { ...fakePort(), sender: { tab: { id: 8 } } };
-    const unrelated = { ...fakePort(), name: "something-else", sender: { tab: { id: 8 } } };
-    for (const port of [own, other, unrelated]) {
-      listeners[0]?.(port as unknown as chrome.runtime.Port);
-    }
-    expect(own.disconnect).not.toHaveBeenCalled();
-    expect(other.disconnect).toHaveBeenCalled();
-    expect(unrelated.disconnect).not.toHaveBeenCalled();
+    // Other panels never receive this port, so none of them can close another tab's watcher.
+    expect(connect.mock.calls.map(([tab]) => tab)).toEqual([7, 7]);
+    expect(ports[0]?.disconnect).toHaveBeenCalled();
+    expect(ports[1]?.disconnect).not.toHaveBeenCalled();
   });
 });
+
+/** The page side of `chrome.runtime.onConnect`, with a way to connect a panel's port. */
+function pageEvents(): {
+  onConnect: {
+    addListener: (listener: (port: chrome.runtime.Port) => void) => void;
+    removeListener: (listener: (port: chrome.runtime.Port) => void) => void;
+  };
+  listeners: ((port: chrome.runtime.Port) => void)[];
+  connect: (port: ReturnType<typeof fakePort>) => void;
+} {
+  const listeners: ((port: chrome.runtime.Port) => void)[] = [];
+  return {
+    listeners,
+    onConnect: {
+      addListener: (listener) => listeners.push(listener),
+      removeListener: (listener) => {
+        const index = listeners.indexOf(listener);
+        if (index !== -1) {
+          listeners.splice(index, 1);
+        }
+      },
+    },
+    connect: (port) => {
+      for (const listener of [...listeners]) {
+        listener(port as unknown as chrome.runtime.Port);
+      }
+    },
+  };
+}
 
 function selectSomething(): void {
   const text = document.querySelector("p")!.firstChild!;
@@ -149,7 +206,7 @@ function selectSomething(): void {
   document.dispatchEvent(new Event("selectionchange"));
 }
 
-function fakePort(): {
+function fakePort(name = "mdbase-reader/selection-watch"): {
   name: string;
   disconnect: ReturnType<typeof vi.fn>;
   onDisconnect: { addListener: (listener: () => void) => void };
@@ -157,7 +214,7 @@ function fakePort(): {
 } {
   const listeners: (() => void)[] = [];
   return {
-    name: "mdbase-reader/selection-watch",
+    name,
     disconnect: vi.fn(),
     onDisconnect: { addListener: (listener) => listeners.push(listener) },
     closeFromPanel: () => listeners.forEach((listener) => listener()),

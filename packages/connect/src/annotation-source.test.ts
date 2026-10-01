@@ -124,9 +124,10 @@ describe("annotation source links", () => {
     ).toBe("src_stable");
     // Each read asks mdbase again rather than keeping a resolution that a rename could make stale.
     await repo.get(collection, annotationId("ann_1"));
+    // The listing fetched the body by path once; the reads above each asked again.
     expect(
       queries.filter((query) => query.where === 'file.path == "annotations/ann_1.md"'),
-    ).toHaveLength(2);
+    ).toHaveLength(3);
     expect(() => annotationFromDocument(collection, source)).toThrow();
   });
 

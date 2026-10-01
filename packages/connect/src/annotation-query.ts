@@ -18,19 +18,34 @@ export async function annotationPathsForSource(
 }
 
 /**
- * The same matches as {@link annotationPathsForSource}, with persisted and effective
- * frontmatter and the body, so callers can map them without reading each record.
+ * The full query records (body and both frontmatter forms) at `paths`, keyed by path.
+ * Hosted collections evaluate link-following filters from projections and refuse exact
+ * output for them, so bodies are fetched here by path, with a filter that follows no links.
  */
-export function annotationRecordsForSource(
+export async function annotationRecordsAt(
   client: ReaderConnectClient,
-  source: SourceId,
+  paths: readonly string[],
   options: ReaderRequestOptions,
-): Promise<QueryRecord[]> {
-  return sourceAnnotations(client, source, options, {
-    frontmatterMode: "both",
-    includeBody: true,
-  });
+): Promise<Map<string, QueryRecord>> {
+  const records = new Map<string, QueryRecord>();
+  for (let start = 0; start < paths.length; start += pathsPerQuery) {
+    const where = paths
+      .slice(start, start + pathsPerQuery)
+      .map((path) => `file.path == ${JSON.stringify(path)}`)
+      .join(" || ");
+    for (const record of await annotationRecords(
+      client,
+      where,
+      { frontmatterMode: "both", includeBody: true },
+      options,
+    )) {
+      records.set(record.path, record);
+    }
+  }
+  return records;
 }
+
+const pathsPerQuery = 50;
 
 async function sourceAnnotations(
   client: ReaderConnectClient,

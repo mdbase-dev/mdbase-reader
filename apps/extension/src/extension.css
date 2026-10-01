@@ -664,7 +664,7 @@ blockquote {
 /* Buttons ---------------------------------------------------------------------- */
 .primary,
 .secondary,
-.problem button {
+.problem button:not(.inline-link, .text-button) {
   min-height: var(--ui-control-height);
   padding: 0 12px;
   border: 1px solid var(--line-strong);
@@ -674,7 +674,7 @@ blockquote {
   font-size: 13px;
 }
 .secondary:hover:not(:disabled),
-.problem button:hover:not(:disabled) {
+.problem button:not(.inline-link, .text-button):hover:not(:disabled) {
   border-color: var(--muted);
   color: var(--ink);
   background: var(--hover);
