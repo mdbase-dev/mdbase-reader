@@ -69,8 +69,8 @@ describe("capture metadata and formats", () => {
     const plan = f.commit.mock.calls[0]?.[0];
     expect(plan?.title).toBe("Attention Is All You Need");
     expect(plan?.representations[0]?.format).toBe("pdf");
-    expect(f.updateFields.mock.calls[0]?.[0].fields).toEqual({
-      url: "https://arxiv.org/pdf/1706.03762",
-    });
+    // Written with the import itself rather than as a second update.
+    expect(plan?.url).toBe("https://arxiv.org/pdf/1706.03762");
+    expect(f.updateFields).not.toHaveBeenCalled();
   });
 });

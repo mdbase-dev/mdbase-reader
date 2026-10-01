@@ -29,8 +29,16 @@ export async function sourceForUrl(
   const urls = [...new Set([value, ...alternates])];
   const { sources } = collection;
   if (sources.findByUrl) {
-    for (const url of urls) {
-      const found = await sources.findByUrl(collection.collectionId, url);
+    // Asked together, answered in order: the canonical URL wins, as it would asked alone.
+    const lookups = urls.map(
+      (url) => sources.findByUrl?.(collection.collectionId, url) ?? Promise.resolve(null),
+    );
+    for (const lookup of lookups) {
+      // Later lookups are not awaited once an earlier one answers.
+      lookup.catch(() => undefined);
+    }
+    for (const lookup of lookups) {
+      const found = await lookup;
       if (found) {
         return found;
       }

@@ -99,6 +99,7 @@ export function fixture() {
     return Promise.resolve(source);
   });
   const findByCitekeyPrefix = vi.fn(() => Promise.resolve<SourceSummary[]>([]));
+  const findExactDuplicate = vi.fn(() => Promise.resolve<SourceSummary | null>(null));
   const collection = {
     collectionId: collectionId("[test] library"),
     sources: {
@@ -108,7 +109,7 @@ export function fixture() {
       updateFields,
       findByCitekeyPrefix,
     },
-    sourceImports: { findExactDuplicate: vi.fn(() => Promise.resolve(null)), commitFile: commit },
+    sourceImports: { findExactDuplicate, commitFile: commit },
     files: { read },
     annotations: {
       create,
@@ -154,5 +155,6 @@ export function fixture() {
     updateCitation,
     updateFields,
     findByCitekeyPrefix,
+    findExactDuplicate,
   };
 }
