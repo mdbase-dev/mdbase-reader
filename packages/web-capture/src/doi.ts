@@ -40,7 +40,12 @@ export function arxivIdentifier(value: string): string | undefined {
 export interface DoiResolutionOptions {
   readonly fetch?: typeof fetch;
   readonly signal?: AbortSignal;
+  /** Gives up on doi.org after this long; defaults to {@link DOI_RESOLUTION_TIMEOUT_MS}. */
+  readonly timeoutMs?: number;
 }
+
+/** Long enough for a busy registry; an explicit lookup the reader is waiting on. */
+export const DOI_RESOLUTION_TIMEOUT_MS = 10_000;
 
 /**
  * Asks the DOI registration agency (Crossref, DataCite, mEDRA…) for CSL-JSON through doi.org
@@ -51,14 +56,37 @@ export async function resolveDoiCitation(
   doi: string,
   options: DoiResolutionOptions = {},
 ): Promise<CitationDraft> {
-  const fetcher = options.fetch ?? globalThis.fetch.bind(globalThis);
-  const response = await fetcher(
-    `https://doi.org/${doi.split("/").map(encodeURIComponent).join("/")}`,
-    {
+  const timeoutMs = options.timeoutMs ?? DOI_RESOLUTION_TIMEOUT_MS;
+  const timeout = AbortSignal.timeout(timeoutMs);
+  const signal = options.signal ? AbortSignal.any([options.signal, timeout]) : timeout;
+  try {
+    return await requestDoiCitation(doi, options.fetch, signal);
+  } catch (reason) {
+    options.signal?.throwIfAborted();
+    if (timeout.aborted) {
+      throw new Error(
+        `The DOI registry did not answer for ${doi} within ${String(timeoutMs / 1_000)} seconds.`,
+        { cause: reason },
+      );
+    }
+    throw reason;
+  }
+}
+
+async function requestDoiCitation(
+  doi: string,
+  fetchOverride: typeof fetch | undefined,
+  signal: AbortSignal,
+): Promise<CitationDraft> {
+  const fetcher = fetchOverride ?? globalThis.fetch.bind(globalThis);
+  // A fetch that ignores its signal still cannot hold the caller past the deadline.
+  const response = await untilAborted(
+    fetcher(`https://doi.org/${doi.split("/").map(encodeURIComponent).join("/")}`, {
       headers: { Accept: "application/vnd.citationstyles.csl+json" },
       credentials: "omit",
-      ...(options.signal ? { signal: options.signal } : {}),
-    },
+      signal,
+    }),
+    signal,
   );
   if (!response.ok) {
     throw new Error(
@@ -67,7 +95,7 @@ export async function resolveDoiCitation(
         : `The DOI registry returned HTTP ${String(response.status)} for ${doi}.`,
     );
   }
-  const value: unknown = await response.json();
+  const value: unknown = await untilAborted(response.json(), signal);
   if (typeof value !== "object" || value === null || Array.isArray(value)) {
     throw new Error(`The DOI registry returned no citation for ${doi}.`);
   }
@@ -92,6 +120,15 @@ const crossrefTypes: Readonly<Record<string, string>> = {
   "reference-entry": "entry",
   "peer-review": "review",
 };
+
+function untilAborted<T>(work: Promise<T>, signal: AbortSignal): Promise<T> {
+  signal.throwIfAborted();
+  return new Promise<T>((resolve, reject) => {
+    const abort = (): void => reject(signal.reason as Error);
+    signal.addEventListener("abort", abort, { once: true });
+    void work.then(resolve, reject).finally(() => signal.removeEventListener("abort", abort));
+  });
+}
 
 function safeDecode(value: string): string {
   try {
