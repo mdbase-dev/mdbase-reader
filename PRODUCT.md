@@ -62,7 +62,7 @@ clean, minimal, beautiful, polished operating interface.
 
 ## Evidence on Hand
 
-- A real connected literature collection (`~/testvault/mdbase-reader` locally) is
+- A real connected literature collection, kept privately by the maintainer, is
   used for performance and end-to-end testing.
 - The existing Reader preview provides representative source and annotation
   content but is not evidence of finished behavior.
