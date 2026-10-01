@@ -73,6 +73,11 @@ site may require authorizing Reader against production; collection data is not m
 
 ## Browser extension
 
+[Install from the Chrome Web Store](https://chromewebstore.google.com/detail/mdbase-reader/kimdfjefhbfgfecconmaiaaindjccidp)
+for automatic updates. Stable `extension-v<version>` GitHub releases submit the production ZIP
+for store review; prereleases stay GitHub-only. See [release setup and recovery](docs/extension-releases.md).
+Unpacked development copies require manual rebuilding/reloading and do not receive store updates.
+
 Build the unpacked Manifest V3 extension for one mdbase environment:
 
 ```sh
