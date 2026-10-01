@@ -56,7 +56,9 @@ try {
   await desktop.getByLabel("Add column").click();
   await audit(desktop, "add-column menu");
   await desktop.keyboard.press("Escape");
-  await desktop.getByRole("button", { name: /^Continue reading Gravity and Grace/u }).click();
+  await desktop
+    .getByRole("button", { name: /^Continue reading The Principles of Psychology/u })
+    .click();
   await desktop.locator("iframe.html-viewer").waitFor();
   await desktop.getByRole("button", { name: "Toggle right sidebar" }).click();
   await desktop.getByRole("complementary", { name: "Source workspace" }).waitFor();
@@ -73,7 +75,9 @@ try {
   await phone.goto(`${origin}/?preview=1`, { waitUntil: "networkidle" });
   await phone.getByRole("grid", { name: "Sources" }).waitFor();
   await audit(phone, "phone library");
-  await phone.getByRole("button", { name: /^Continue reading Gravity and Grace/u }).click();
+  await phone
+    .getByRole("button", { name: /^Continue reading The Principles of Psychology/u })
+    .click();
   await phone.getByRole("navigation", { name: "Source views" }).waitFor();
   await audit(phone, "phone source views");
 } finally {

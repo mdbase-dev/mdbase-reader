@@ -7,11 +7,11 @@ import { ConnectRepositoryError } from "./repository-client.js";
 import type { ConnectOutcome, RecordDocument } from "@mdbase-dev/connect";
 
 const recovered = {
-  path: "sources/gravity.md",
+  path: "sources/crime.md",
   revision: "rev-2",
   types: ["reader-source"],
-  frontmatter: { id: "src_01", title: "Gravity and Grace" },
-  effectiveFrontmatter: { id: "src_01", title: "Gravity and Grace" },
+  frontmatter: { id: "src_01", title: "Crime and Punishment" },
+  effectiveFrontmatter: { id: "src_01", title: "Crime and Punishment" },
   body: "Recovered notes",
   file: {},
 } satisfies RecordDocument;

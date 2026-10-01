@@ -8,15 +8,15 @@ import {
 } from "./completions.js";
 
 const candidates = [
-  { label: "Gravity and Grace", path: "sources/gravity-and-grace" },
+  { label: "Crime and Punishment", path: "sources/crime-and-punishment" },
   { label: "Attention", path: "sources/attention" },
 ] as const;
 
 describe("wikiLinkCompletionAt", () => {
   it("finds an unfinished wikilink and filters candidates", () => {
-    expect(wikiLinkCompletionAt("See [[grav", 10, candidates)).toEqual({
+    expect(wikiLinkCompletionAt("See [[crim", 10, candidates)).toEqual({
       from: 6,
-      query: "grav",
+      query: "crim",
       options: [candidates[0]],
     });
   });
@@ -37,20 +37,20 @@ describe("wikiLinkCompletionAt", () => {
 
 describe("citationCompletionAt", () => {
   const citations = [
-    { id: "weil1952gravity", label: "Gravity and Grace", detail: "Simone Weil" },
+    { id: "dostoevsky1914crime", label: "Crime and Punishment", detail: "Fyodor Dostoevsky" },
     { id: "tufte2001visual", label: "The Visual Display", detail: "Edward Tufte" },
   ] as const;
 
   it("completes citekeys from a standalone at-sign", () => {
-    expect(citationCompletionAt("See @simone", 11, citations)).toMatchObject({
+    expect(citationCompletionAt("See @fyodor", 11, citations)).toMatchObject({
       from: 4,
-      query: "simone",
+      query: "fyodor",
       options: [citations[0]],
     });
   });
 
   it("does not offer a second bracket-oriented trigger", () => {
-    expect(citationCompletionAt("See [@simone", 12, citations)).toBeNull();
+    expect(citationCompletionAt("See [@fyodor", 12, citations)).toBeNull();
   });
 
   it("offers all citations immediately after typing at-sign", () => {

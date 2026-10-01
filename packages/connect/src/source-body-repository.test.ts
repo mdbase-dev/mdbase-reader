@@ -11,11 +11,11 @@ function success<Value>(value: Value): ConnectOutcome<Value> {
 }
 
 const document = {
-  path: "sources/gravity.md",
+  path: "sources/crime.md",
   revision: "rev-1",
   types: ["reader-source"],
-  frontmatter: { id: "src_01", title: "Gravity and Grace" },
-  effectiveFrontmatter: { id: "src_01", title: "Gravity and Grace" },
+  frontmatter: { id: "src_01", title: "Crime and Punishment" },
+  effectiveFrontmatter: { id: "src_01", title: "Crime and Punishment" },
   body: "Notes",
   file: {},
 } satisfies RecordDocument;

@@ -5,8 +5,8 @@ import { sourceLink } from "./source.js";
 
 describe("sourceLink", () => {
   it("links by path with the title as alias", () => {
-    expect(sourceLink({ path: "sources/weil.md", title: "Gravity and Grace" })).toBe(
-      "[[sources/weil|Gravity and Grace]]",
+    expect(sourceLink({ path: "sources/dostoevsky.md", title: "Crime and Punishment" })).toBe(
+      "[[sources/dostoevsky|Crime and Punishment]]",
     );
   });
 

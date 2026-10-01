@@ -70,7 +70,7 @@ describe("annotationRequest", () => {
           },
         },
       },
-      "Compare Weil.",
+      "Compare Dostoevsky.",
     );
 
     expect(request).toMatchObject({
@@ -78,7 +78,7 @@ describe("annotationRequest", () => {
       sourceId: "src_01",
       annotationType: "highlight",
       locator: { label: "p. 3" },
-      body: "> Attention is a discipline.\n\nCompare Weil.",
+      body: "> Attention is a discipline.\n\nCompare Dostoevsky.",
       document: surface.document.document,
     });
   });

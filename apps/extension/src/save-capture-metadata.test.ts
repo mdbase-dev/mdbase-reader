@@ -20,23 +20,23 @@ describe("capture metadata and formats", () => {
     f.findByCitekeyPrefix.mockResolvedValue([
       {
         id: "other",
-        citation: { id: "lecundeep2015", type: "article" },
+        citation: { id: "watsonmolecular1953", type: "article" },
       } as unknown as SourceSummary,
     ]);
     const citation = {
       type: "article-journal",
-      title: "Deep learning",
-      author: [{ family: "LeCun", given: "Yann" }],
-      issued: { "date-parts": [[2015]] },
+      title: "Molecular structure of nucleic acids",
+      author: [{ family: "Watson", given: "James D." }],
+      issued: { "date-parts": [[1953]] },
     };
     const result = await f.save({ highlight: false }, capture, {
-      citation: { citation, origin: "doi", doi: "10.1038/nature14539" },
+      citation: { citation, origin: "doi", doi: "10.1038/171737a0" },
     });
     expect(f.updateCitation.mock.calls[0]?.[0].citation).toMatchObject({
-      id: "lecundeep2015a",
-      title: "Deep learning",
+      id: "watsonmolecular1953a",
+      title: "Molecular structure of nucleic acids",
     });
-    expect(f.commit.mock.calls[0]?.[0].metadata?.authors).toEqual(["Yann LeCun"]);
+    expect(f.commit.mock.calls[0]?.[0].metadata?.authors).toEqual(["James D. Watson"]);
     expect(result.notices).toEqual([]);
   });
   it("keeps the source when its citation cannot be stored, and says so", async () => {
@@ -52,25 +52,31 @@ describe("capture metadata and formats", () => {
     const f = fixture();
     const pdf: PageCapture = {
       kind: "pdf",
-      submittedUrl: "https://arxiv.org/pdf/1706.03762",
-      canonicalUrl: "https://arxiv.org/pdf/1706.03762",
+      submittedUrl: "https://arxiv.org/pdf/0704.0001",
+      canonicalUrl: "https://arxiv.org/pdf/0704.0001",
       retrievedAt: "2026-09-23T12:00:00.000Z",
-      pageTitle: "1706.03762",
+      pageTitle: "0704.0001",
       selection: null,
     };
     const bytes = new TextEncoder().encode("%PDF-1.7\n%test\n");
     await f.save({ highlight: false, title: "" }, pdf, {
       pdfBytes: () => Promise.resolve(bytes),
       citation: {
-        citation: { type: "article", title: "Attention Is All You Need" },
+        citation: {
+          type: "article",
+          title:
+            "Calculation of Prompt Diphoton Production Cross Sections at Tevatron and LHC Energies",
+        },
         origin: "doi",
       },
     });
     const plan = f.commit.mock.calls[0]?.[0];
-    expect(plan?.title).toBe("Attention Is All You Need");
+    expect(plan?.title).toBe(
+      "Calculation of Prompt Diphoton Production Cross Sections at Tevatron and LHC Energies",
+    );
     expect(plan?.representations[0]?.format).toBe("pdf");
     // Written with the import itself rather than as a second update.
-    expect(plan?.url).toBe("https://arxiv.org/pdf/1706.03762");
+    expect(plan?.url).toBe("https://arxiv.org/pdf/0704.0001");
     expect(f.updateFields).not.toHaveBeenCalled();
   });
 });

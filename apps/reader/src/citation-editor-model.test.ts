@@ -11,8 +11,8 @@ const source: Source = {
   collectionId: collectionId("reading"),
   id: sourceId("src_one"),
   path: "sources/one.md",
-  title: "Gravity and Grace",
-  creators: ["Simone Weil"],
+  title: "Crime and Punishment",
+  creators: ["Fyodor Dostoevsky"],
   tags: [],
   documents: [],
   body: "",
@@ -26,10 +26,10 @@ describe("citation editor model", () => {
   it("starts an uncited source with a repairable CSL template", () => {
     expect(storedCitationDraftForSource(source)).toBeNull();
     expect(JSON.parse(citationDraftForSource(source))).toEqual({
-      id: "weilgravity2002",
+      id: "dostoevskycrime2002",
       type: "book",
-      title: "Gravity and Grace",
-      author: [{ literal: "Simone Weil" }],
+      title: "Crime and Punishment",
+      author: [{ literal: "Fyodor Dostoevsky" }],
       issued: { "date-parts": [[2002]] },
     });
   });
@@ -43,11 +43,11 @@ describe("citation editor model", () => {
 
   it("reports JSON and CSL validation problems before save", () => {
     expect(assessCitationDraft("{")).toMatchObject({ valid: false });
-    expect(assessCitationDraft('{"id":"weil"}')).toMatchObject({
+    expect(assessCitationDraft('{"id":"dostoevsky"}')).toMatchObject({
       valid: false,
       message: expect.stringContaining("type"),
-      value: { id: "weil" },
+      value: { id: "dostoevsky" },
     });
-    expect(assessCitationDraft('{"id":"weil","type":"book"}')).toMatchObject({ valid: true });
+    expect(assessCitationDraft('{"id":"dostoevsky","type":"book"}')).toMatchObject({ valid: true });
   });
 });

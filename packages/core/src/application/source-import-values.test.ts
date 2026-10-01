@@ -8,15 +8,15 @@ const id = sourceId("src_3f2a9c1e-5b7d-4e8f-9a0b-1c2d3e4f5a6b");
 
 describe("sourceRecordPaths", () => {
   it("names the note from its title, with an ID-suffixed fallback", () => {
-    expect(sourceRecordPaths("Gravity and Grace", id)).toEqual({
-      recordPath: "sources/gravity-and-grace.md",
-      fallbackRecordPath: "sources/gravity-and-grace-3f2a9c1e.md",
+    expect(sourceRecordPaths("Crime and Punishment", id)).toEqual({
+      recordPath: "sources/crime-and-punishment.md",
+      fallbackRecordPath: "sources/crime-and-punishment-3f2a9c1e.md",
     });
   });
 
   it("drops apostrophes and punctuation but keeps non-Latin letters", () => {
-    expect(sourceRecordPaths("Weil’s “Attention” — notes", id).recordPath).toBe(
-      "sources/weils-attention-notes.md",
+    expect(sourceRecordPaths("Dostoevsky’s “Attention” — notes", id).recordPath).toBe(
+      "sources/dostoevskys-attention-notes.md",
     );
     expect(sourceRecordPaths("重力と恩寵", id).recordPath).toBe("sources/重力と恩寵.md");
   });

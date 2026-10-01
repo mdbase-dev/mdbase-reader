@@ -14,13 +14,13 @@ import {
 const source: Source = {
   collectionId: collectionId("reading"),
   id: sourceId("src_01"),
-  path: "sources/gravity.md",
-  title: "Gravity and Grace",
-  creators: ["Simone Weil"],
+  path: "sources/crime.md",
+  title: "Crime and Punishment",
+  creators: ["Fyodor Dostoevsky"],
   tags: [],
   documents: [],
-  citation: { id: "weil2002", type: "book", title: "Gravity and Grace" },
-  body: "A passage:\n\n![[annotations/ann_01]]\n\nCompare [@murdoch1970].",
+  citation: { id: "dostoevsky2002", type: "book", title: "Crime and Punishment" },
+  body: "A passage:\n\n![[annotations/ann_01]]\n\nCompare [@eliot1871].",
   recordRevision: recordRevision("rev-1"),
   frontmatter: {},
 };
@@ -33,9 +33,9 @@ const annotation: Annotation = {
   source: "[[src_01]]",
   annotationType: "highlight",
   locator: { label: "p. 16" },
-  target: { quote: { exact: "The imagination is continually at work." } },
+  target: { quote: { exact: "Man grows used to everything, the scoundrel!" } },
   tags: [],
-  body: "> The imagination is continually at work.\n\nA useful connection.",
+  body: "> Man grows used to everything, the scoundrel!\n\nA useful connection.",
   createdAt: dateTime("2026-08-09T00:00:00Z"),
 };
 
@@ -49,15 +49,15 @@ describe("materializeSource", () => {
         {
           ...source,
           id: sourceId("src_02"),
-          citation: { id: "murdoch1970", type: "book", title: "The Sovereignty of Good" },
+          citation: { id: "eliot1871", type: "book", title: "Middlemarch" },
         },
       ],
     );
 
     expect(result.markdown).toBe(
-      "A passage:\n\n> The imagination is continually at work.\n>\n> — [@weil2002, p. 16]\n\nA useful connection.\n\nCompare [@murdoch1970].\n",
+      "A passage:\n\n> Man grows used to everything, the scoundrel!\n>\n> — [@dostoevsky2002, p. 16]\n\nA useful connection.\n\nCompare [@eliot1871].\n",
     );
-    expect(result.bibliography.map(({ id }) => id)).toEqual(["weil2002", "murdoch1970"]);
+    expect(result.bibliography.map(({ id }) => id)).toEqual(["dostoevsky2002", "eliot1871"]);
     expect(result.renderedAnnotations).toEqual([annotation.id]);
     expect(result.problems).toEqual([]);
     expect(source.body).toContain("![[annotations/ann_01]]");
@@ -84,7 +84,7 @@ describe("materializeSource", () => {
     void citation;
     const result = materializeSource({ ...uncitedSource, body: "![[ann_01]]" }, [annotation], []);
 
-    expect(result.markdown).toContain("> — Gravity and Grace, p. 16");
+    expect(result.markdown).toContain("> — Crime and Punishment, p. 16");
     expect(result.bibliography).toEqual([]);
   });
 
@@ -108,7 +108,7 @@ describe("materializeSource", () => {
     };
     const result = materializeSource(source, [edited], [source]);
 
-    expect(result.markdown).toContain("Editorial commentary only.\n\n— [@weil2002, p. 16]");
+    expect(result.markdown).toContain("Editorial commentary only.\n\n— [@dostoevsky2002, p. 16]");
     expect(result.markdown).not.toContain("Anchor evidence that should remain hidden.");
   });
 });

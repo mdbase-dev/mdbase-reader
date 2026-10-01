@@ -24,7 +24,7 @@ describe("saveSourceCitation", () => {
   it("validates and saves a unique CSL item", async () => {
     const updateCitation = vi.fn(() => Promise.resolve(source));
     const repository = { updateCitation } as unknown as SourceRepository;
-    const citation = { id: "weil2002", type: "book", title: "Gravity and Grace" };
+    const citation = { id: "dostoevsky2002", type: "book", title: "Crime and Punishment" };
 
     await saveSourceCitation(repository, source, [source], citation);
 
@@ -41,12 +41,12 @@ describe("saveSourceCitation", () => {
       ...source,
       id: sourceId("src_two"),
       title: "Two",
-      citation: { id: "weil2002", type: "book" },
+      citation: { id: "dostoevsky2002", type: "book" },
     };
 
     await expect(
       saveSourceCitation(repository, source, [source, other], {
-        id: "weil2002",
+        id: "dostoevsky2002",
         type: "book",
       }),
     ).rejects.toMatchObject({ code: "duplicate-citekey" });

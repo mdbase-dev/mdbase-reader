@@ -105,7 +105,7 @@ action, and one stylesheet section for each redesigned component.
   lists its keys in a footer.
 - **Mobile.** A lone library tab has no tab switcher above it, and library tabs have no close
   button.
-- **Preview.** `?preview=1` renders Gravity and Grace through the real HTML renderer, so
+- **Preview.** `?preview=1` renders The Principles of Psychology through the real HTML renderer, so
   selection, highlights, margin markers and typography can be tried there.
 
 ## Library views (fourth pass)

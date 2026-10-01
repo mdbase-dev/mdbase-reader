@@ -16,38 +16,35 @@ function page(head: string): Document {
 describe("embedded scholarly metadata", () => {
   it("reads Highwire citation tags into a structured CSL journal article", () => {
     const document = page(`
-      <meta name="citation_title" content="Deep learning">
-      <meta name="citation_author" content="LeCun, Yann">
-      <meta name="citation_author" content="Yoshua Bengio">
-      <meta name="citation_publication_date" content="2015/05/27">
+      <meta name="citation_title" content="Molecular structure of nucleic acids">
+      <meta name="citation_author" content="Watson, James D.">
+      <meta name="citation_author" content="Francis Crick">
+      <meta name="citation_publication_date" content="1953/04/25">
       <meta name="citation_journal_title" content="Nature">
-      <meta name="citation_volume" content="521">
-      <meta name="citation_issue" content="7553">
-      <meta name="citation_firstpage" content="436">
-      <meta name="citation_lastpage" content="444">
-      <meta name="citation_doi" content="doi:10.1038/nature14539">
-      <meta name="citation_pdf_url" content="/articles/nature14539.pdf">`);
-    const result = extractScholarlyMetadata(
-      document,
-      "https://www.nature.com/articles/nature14539",
-    );
-    expect(result.doi).toBe("10.1038/nature14539");
-    expect(result.pdfUrl).toBe("https://www.nature.com/articles/nature14539.pdf");
+      <meta name="citation_volume" content="171">
+      <meta name="citation_issue" content="4356">
+      <meta name="citation_firstpage" content="737">
+      <meta name="citation_lastpage" content="738">
+      <meta name="citation_doi" content="doi:10.1038/171737a0">
+      <meta name="citation_pdf_url" content="/articles/171737a0.pdf">`);
+    const result = extractScholarlyMetadata(document, "https://www.nature.com/articles/171737a0");
+    expect(result.doi).toBe("10.1038/171737a0");
+    expect(result.pdfUrl).toBe("https://www.nature.com/articles/171737a0.pdf");
     expect(result.citation).toMatchObject({
       type: "article-journal",
-      title: "Deep learning",
+      title: "Molecular structure of nucleic acids",
       author: [
-        { family: "LeCun", given: "Yann" },
-        { family: "Bengio", given: "Yoshua" },
+        { family: "Watson", given: "James D." },
+        { family: "Crick", given: "Francis" },
       ],
-      issued: { "date-parts": [[2015, 5, 27]] },
+      issued: { "date-parts": [[1953, 4, 25]] },
       "container-title": "Nature",
-      volume: "521",
-      issue: "7553",
-      page: "436-444",
-      DOI: "10.1038/nature14539",
+      volume: "171",
+      issue: "4356",
+      page: "737-738",
+      DOI: "10.1038/171737a0",
     });
-    expect(validateCslItem({ id: "lecundeep2015", ...result.citation }).valid).toBe(true);
+    expect(validateCslItem({ id: "watsonmolecular1953", ...result.citation }).valid).toBe(true);
   });
 
   it("uses Dublin Core only when it carries scholarly evidence", () => {
@@ -86,8 +83,8 @@ describe("embedded scholarly metadata", () => {
   });
 
   it("derives arXiv DOIs from arXiv pages", () => {
-    const result = extractScholarlyMetadata(page(""), "https://arxiv.org/abs/1706.03762v7");
-    expect(result.doi).toBe("10.48550/arXiv.1706.03762");
+    const result = extractScholarlyMetadata(page(""), "https://arxiv.org/abs/0704.0001v2");
+    expect(result.doi).toBe("10.48550/arXiv.0704.0001");
   });
 
   it("leaves ordinary web pages alone", () => {
@@ -113,17 +110,17 @@ describe("DOI handling", () => {
     const fetcher = vi.fn<typeof fetch>().mockResolvedValue(
       Response.json({
         type: "journal-article",
-        title: "Deep learning",
-        author: [{ family: "LeCun", given: "Yann" }],
+        title: "Molecular structure of nucleic acids",
+        author: [{ family: "Watson", given: "James D." }],
         reference: [{ key: "ref1" }],
         license: [{ URL: "https://example.com" }],
         indexed: { "date-parts": [[2026, 9, 24]] },
         "container-title": "Nature",
       }),
     );
-    const citation = await resolveDoiCitation("10.1038/nature14539", { fetch: fetcher });
+    const citation = await resolveDoiCitation("10.1038/171737a0", { fetch: fetcher });
     expect(fetcher).toHaveBeenCalledWith(
-      "https://doi.org/10.1038/nature14539",
+      "https://doi.org/10.1038/171737a0",
       expect.objectContaining({
         headers: { Accept: "application/vnd.citationstyles.csl+json" },
         credentials: "omit",
@@ -131,10 +128,10 @@ describe("DOI handling", () => {
     );
     expect(citation).toEqual({
       type: "article-journal",
-      title: "Deep learning",
-      author: [{ family: "LeCun", given: "Yann" }],
+      title: "Molecular structure of nucleic acids",
+      author: [{ family: "Watson", given: "James D." }],
       "container-title": "Nature",
-      DOI: "10.1038/nature14539",
+      DOI: "10.1038/171737a0",
     });
   });
 

@@ -15,7 +15,7 @@ const before: Source = {
   id: sourceId("source-1"),
   path: "sources/source-1.md",
   recordRevision: recordRevision("record-1"),
-  title: "Gravity and grace",
+  title: "Crime and punishment",
   creators: [],
   tags: [],
   documents: [],
@@ -29,7 +29,7 @@ const after: Source = {
   documents: [
     {
       fileId: fileId("file-1"),
-      file: "[[files/reader/source-1/weil.pdf]]",
+      file: "[[files/reader/source-1/dostoevsky.pdf]]",
       revision: fileRevision(`sha256:${"a".repeat(64)}`),
       mediaType: "application/pdf",
       role: "primary",
@@ -48,7 +48,11 @@ describe("writes made outside the source panel", () => {
       adoptSource,
     );
 
-    await writes.attachSourceFile?.({ source: before, name: "weil.pdf", bytes: new Uint8Array() });
+    await writes.attachSourceFile?.({
+      source: before,
+      name: "dostoevsky.pdf",
+      bytes: new Uint8Array(),
+    });
     await writes.saveNewSourceCitation?.(before, { type: "book" });
 
     expect(adoptSource).toHaveBeenNthCalledWith(1, after);

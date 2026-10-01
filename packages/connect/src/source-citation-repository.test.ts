@@ -12,12 +12,12 @@ function success<Value>(value: Value): ConnectOutcome<Value> {
 
 describe("Connect source citation metadata", () => {
   it("persists validated CSL metadata with the source revision", async () => {
-    const path = "sources/gravity.md";
-    const citation = { id: "weil2002", type: "book", title: "Gravity and Grace" };
+    const path = "sources/crime.md";
+    const citation = { id: "dostoevsky2002", type: "book", title: "Crime and Punishment" };
     const queryPages = vi.fn(() =>
       singleQueryPage({
         path,
-        effectiveFrontmatter: { id: "src_01", title: "Gravity and Grace" },
+        effectiveFrontmatter: { id: "src_01", title: "Crime and Punishment" },
         types: ["reader-source"],
         file: {},
       }),
@@ -28,8 +28,8 @@ describe("Connect source citation metadata", () => {
           path,
           revision: "rev-2",
           types: ["reader-source"],
-          frontmatter: { id: "src_01", title: "Gravity and Grace", csl: citation },
-          effectiveFrontmatter: { id: "src_01", title: "Gravity and Grace", csl: citation },
+          frontmatter: { id: "src_01", title: "Crime and Punishment", csl: citation },
+          effectiveFrontmatter: { id: "src_01", title: "Crime and Punishment", csl: citation },
           body: "Notes",
           file: {},
         }),

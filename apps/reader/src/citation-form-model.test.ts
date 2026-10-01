@@ -59,7 +59,7 @@ describe("citation form model", () => {
   });
 
   it("presents structured metadata as human-readable review text", () => {
-    expect(displayCslValue([{ given: "Simone", family: "Weil" }])).toBe("Simone Weil");
+    expect(displayCslValue([{ given: "Fyodor", family: "Dostoevsky" }])).toBe("Fyodor Dostoevsky");
     expect(displayCslValue({ "date-parts": [[1952, 4]] })).toBe("1952-4");
     expect(displayCslValue(undefined)).toBe("Not recorded");
   });

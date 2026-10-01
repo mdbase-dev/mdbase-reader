@@ -17,18 +17,18 @@ import {
 } from "./annotation-overview.js";
 
 const collection = collectionId("c");
-const weil: SourceSummary = {
+const dostoevsky: SourceSummary = {
   collectionId: collection,
-  id: sourceId("weil"),
-  path: "sources/weil.md",
-  title: "Gravity and Grace",
-  creators: ["Simone Weil"],
+  id: sourceId("dostoevsky"),
+  path: "sources/dostoevsky.md",
+  title: "Crime and Punishment",
+  creators: ["Fyodor Dostoevsky"],
   tags: [],
   documents: [],
   properties: { course: "[[c/att|Attention]]" },
 };
 const tufte: SourceSummary = {
-  ...weil,
+  ...dostoevsky,
   id: sourceId("tufte"),
   title: "Visual Display",
   creators: ["Edward Tufte"],
@@ -55,13 +55,13 @@ function annotation(
 }
 const entries = annotationEntries(
   [
-    annotation("a", weil, "> Attention is rare.\n\nKey claim.", {
+    annotation("a", dostoevsky, "> Attention is rare.\n\nKey claim.", {
       tags: ["attention"],
       locator: { label: "p. 3" },
     }),
     annotation("bb", tufte, "Chartjunk note.", { annotationType: "note" }),
   ],
-  [weil, tufte],
+  [dostoevsky, tufte],
 );
 
 describe("annotation overview", () => {
@@ -95,7 +95,7 @@ describe("annotation overview", () => {
   it("writes Markdown grouped by source with links back to each annotation", () => {
     const markdown = annotationsToMarkdown(entries);
     expect(markdown).toContain(
-      "## Gravity and Grace — Simone Weil\n\n> Attention is rare.\n\nKey claim.\n\n[[annotations/a|↗]] (p. 3)",
+      "## Crime and Punishment — Fyodor Dostoevsky\n\n> Attention is rare.\n\nKey claim.\n\n[[annotations/a|↗]] (p. 3)",
     );
     expect(markdown).toContain(
       "## Visual Display — Edward Tufte\n\nChartjunk note.\n\n[[annotations/bb|↗]]",

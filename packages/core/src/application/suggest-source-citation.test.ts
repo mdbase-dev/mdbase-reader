@@ -12,10 +12,10 @@ import type { Source } from "../domain/source.js";
 
 const source: Source = {
   collectionId: collectionId("reading"),
-  id: sourceId("src_gravity"),
-  path: "sources/gravity.md",
-  title: "Gravity and Grace",
-  creators: ["Simone Weil"],
+  id: sourceId("src_crime"),
+  path: "sources/crime.md",
+  title: "Crime and Punishment",
+  creators: ["Fyodor Dostoevsky"],
   tags: [],
   kind: "book",
   published: "2002-03-01",
@@ -23,7 +23,7 @@ const source: Source = {
   body: "",
   recordRevision: recordRevision("rev-one"),
   frontmatter: {
-    site: "Routledge",
+    site: "Heinemann",
     description: "A collection of philosophical reflections.",
     language: "en",
   },
@@ -32,12 +32,12 @@ const source: Source = {
 describe("source citation suggestions", () => {
   it("turns friendly metadata into reviewable CSL without persisting it", () => {
     expect(suggestSourceCitation(source)).toEqual({
-      id: "weilgravity2002",
+      id: "dostoevskycrime2002",
       type: "book",
-      title: "Gravity and Grace",
-      author: [{ literal: "Simone Weil" }],
+      title: "Crime and Punishment",
+      author: [{ literal: "Fyodor Dostoevsky" }],
       issued: { "date-parts": [[2002, 3, 1]] },
-      "container-title": "Routledge",
+      "container-title": "Heinemann",
       abstract: "A collection of philosophical reflections.",
       language: "en",
     });
@@ -51,42 +51,47 @@ describe("source citation suggestions", () => {
 describe("citationGapsFromSource", () => {
   const bare: Source = {
     collectionId: collectionId("reading"),
-    id: sourceId("src_weil"),
-    path: "sources/weil.md",
-    title: "Gravity and Grace",
-    creators: ["Simone Weil"],
+    id: sourceId("src_dostoevsky"),
+    path: "sources/dostoevsky.md",
+    title: "Crime and Punishment",
+    creators: ["Fyodor Dostoevsky"],
     tags: [],
     documents: [],
     body: "",
     recordRevision: recordRevision("rev"),
     frontmatter: {},
   };
-  const library: Source = { ...bare, published: 1952, url: "https://example.com/weil" };
+  const library: Source = { ...bare, published: 1914, url: "https://example.com/dostoevsky" };
 
   it("fills only the fields the citation leaves empty", () => {
     expect(
       citationGapsFromSource(
-        { id: "weil", type: "book", title: "Gravity and Grace", author: [{ family: "Weil" }] },
+        {
+          id: "dostoevsky",
+          type: "book",
+          title: "Crime and Punishment",
+          author: [{ family: "Dostoevsky" }],
+        },
         library,
       ),
-    ).toEqual({ issued: { "date-parts": [[1952]] }, URL: "https://example.com/weil" });
+    ).toEqual({ issued: { "date-parts": [[1914]] }, URL: "https://example.com/dostoevsky" });
   });
 
   it("offers nothing when the citation is complete or the source has nothing to add", () => {
     expect(
       citationGapsFromSource(
         {
-          id: "weil",
+          id: "dostoevsky",
           type: "book",
-          author: [{ family: "Weil" }],
-          issued: { "date-parts": [[1947]] },
+          author: [{ family: "Dostoevsky" }],
+          issued: { "date-parts": [[1866]] },
           URL: "https://other.example",
         },
         library,
       ),
     ).toEqual({});
-    expect(citationGapsFromSource({ id: "weil", type: "book" }, { ...bare, creators: [] })).toEqual(
-      {},
-    );
+    expect(
+      citationGapsFromSource({ id: "dostoevsky", type: "book" }, { ...bare, creators: [] }),
+    ).toEqual({});
   });
 });
