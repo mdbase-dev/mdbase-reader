@@ -1,4 +1,4 @@
-import { annotationEmbed } from "@mdbase-reader/core";
+import { bodyEmbedsAnnotation } from "@mdbase-reader/core";
 import { useCallback, useState } from "react";
 
 import { readerErrorMessage } from "./errors.js";
@@ -56,7 +56,8 @@ export function useAnnotationTransclusion(input: {
   );
   const isEmbedded = useCallback(
     (annotation: Annotation): boolean =>
-      source.status === "ready" && draft.includes(embedFor(annotation)),
+      source.status === "ready" &&
+      bodyEmbedsAnnotation(draft, annotation.path ?? `annotations/${annotation.id}.md`),
     [draft, source],
   );
   return { ...state, insert, isEmbedded };
@@ -70,8 +71,4 @@ export async function persistAnnotationTransclusion(
 ): Promise<Source> {
   const current = source.body === draft ? source : await gateway.saveSourceBody(source, draft);
   return gateway.transcludeAnnotation(current, annotation);
-}
-
-function embedFor(annotation: Annotation): string {
-  return annotationEmbed(annotation.path ?? `annotations/${annotation.id}.md`);
 }

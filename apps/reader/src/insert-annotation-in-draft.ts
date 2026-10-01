@@ -1,4 +1,4 @@
-import { annotationEmbed } from "@mdbase-reader/core";
+import { annotationEmbed, bodyEmbedsAnnotation } from "@mdbase-reader/core";
 
 import type { SourceDraftSession } from "./source-draft-session.js";
 import type { Annotation, Source } from "@mdbase-reader/core";
@@ -13,10 +13,10 @@ export function insertAnnotationInDraft(
       new Error("An annotation can only be inserted into its originating source note."),
     );
   }
-  const embed = annotationEmbed(annotation.path ?? `annotations/${annotation.id}.md`);
+  const path = annotation.path ?? `annotations/${annotation.id}.md`;
   const body = session.getText();
-  if (!body.includes(embed)) {
-    session.edit(`${body}\n\n${embed}\n`);
+  if (!bodyEmbedsAnnotation(body, path)) {
+    session.edit(`${body}\n\n${annotationEmbed(path)}\n`);
   }
   return session.flush();
 }

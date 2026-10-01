@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { annotationEmbed, validateAnnotationDraft } from "./annotation.js";
+import { annotationEmbed, bodyEmbedsAnnotation, validateAnnotationDraft } from "./annotation.js";
 import { DomainError } from "./errors.js";
 import { collectionId, fileId, sourceId } from "./identity.js";
 import { fileRevision } from "./revision.js";
@@ -125,4 +125,27 @@ describe("annotationEmbed", () => {
   it("rejects a path that can terminate the wikilink", () => {
     expect(() => annotationEmbed("annotations/unsafe]]suffix")).toThrow(DomainError);
   });
+});
+
+describe("bodyEmbedsAnnotation", () => {
+  const path = "annotations/ann_01.md";
+
+  it.each([
+    "![[annotations/ann_01]]",
+    "![[annotations/ann_01.md]]",
+    "Before ![[annotations/ann_01|A quote]] after",
+    "![[annotations/ann_01#Note]]",
+    // Obsidian and mdbase write a link to a uniquely named note by its filename alone.
+    "![[ann_01]]",
+    "- ![[ann_01|Aliased]]",
+  ])("finds %s", (body) => {
+    expect(bodyEmbedsAnnotation(body, path)).toBe(true);
+  });
+
+  it.each(["", "[[ann_01]]", "![[ann_010]]", "![[elsewhere/ann_01]]", "![[annotations/ann_02]]"])(
+    "does not take %j for the annotation",
+    (body) => {
+      expect(bodyEmbedsAnnotation(body, path)).toBe(false);
+    },
+  );
 });

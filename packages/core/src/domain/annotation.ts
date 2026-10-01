@@ -73,6 +73,23 @@ export function validateAnnotationDraft(draft: AnnotationDraft): void {
   }
 }
 
+/**
+ * Whether a note body already embeds the annotation at `path`. An embed names it by its path,
+ * with or without the extension, or as a simple wikilink by its filename alone, which is how
+ * Obsidian and mdbase write a link to a uniquely named note. An alias or heading is ignored.
+ */
+export function bodyEmbedsAnnotation(body: string, path: string): boolean {
+  const full = path.trim().replace(/\.md$/u, "");
+  const name = full.split("/").at(-1);
+  for (const [, raw = ""] of body.matchAll(/!\[\[([^\]|#]+)(?:[|#][^\]]*)?\]\]/gu)) {
+    const target = raw.trim().replace(/\.md$/u, "");
+    if (target === full || (!target.includes("/") && target === name)) {
+      return true;
+    }
+  }
+  return false;
+}
+
 export function annotationEmbed(path: string): string {
   const normalized = path.trim().replace(/\.md$/u, "");
   if (normalized.length === 0 || normalized.includes("]]")) {
