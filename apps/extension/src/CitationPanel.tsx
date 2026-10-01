@@ -1,8 +1,7 @@
 import { useState } from "react";
 
-import { citationSummary } from "./capture-citation.js";
 import { readerSourceUrl } from "./capture-model.js";
-import { CitationCard } from "./CitationCard.js";
+import { CitationCard, CitationDetails } from "./CitationCard.js";
 
 import type { ExtensionCaptureController } from "./capture-controller.js";
 import type { CslItem, SourceSummary } from "@mdbase-reader/core";
@@ -52,28 +51,11 @@ function SavedCitation({ source }: { readonly source: SourceSummary }): React.JS
   return (
     <div className="tab-section">
       <section className="citation" aria-label="Stored citation">
-        <p className="citation-title">{text(citation["title"]) ?? source.title}</p>
-        <p>{citationSummary(citation) || "No authors or date recorded."}</p>
-        <dl className="citation-fields">
-          <div>
-            <dt>Citekey</dt>
-            <dd>
-              <code>{citation.id}</code>
-            </dd>
-          </div>
-          {text(citation["DOI"]) ? (
-            <div>
-              <dt>DOI</dt>
-              <dd>
-                <code>{text(citation["DOI"])}</code>
-              </dd>
-            </div>
-          ) : null}
-          <div>
-            <dt>Type</dt>
-            <dd>{citation.type}</dd>
-          </div>
-        </dl>
+        <CitationDetails
+          citation={{ ...citation, title: text(citation["title"]) ?? source.title }}
+          doi={text(citation["DOI"])}
+          citekey={citation.id}
+        />
       </section>
       <div className="item-actions">
         <CopyButton label="Copy citekey" value={`@${citation.id}`} />

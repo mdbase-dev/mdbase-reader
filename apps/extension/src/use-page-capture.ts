@@ -15,6 +15,11 @@ export interface PageLink {
   /** Changes each time the reader invokes the extension, so the panel can focus the right field. */
   readonly invocation: { readonly intent: CaptureIntent; readonly at: number } | null;
   readonly readPage: () => Promise<PageCapture>;
+  /**
+   * Lets the panel follow this tab on one site without the all-sites setting. Call it
+   * straight from a click: Chrome asks for the permission only during a user gesture.
+   */
+  readonly followSite: (host: string) => Promise<boolean>;
   readonly setSelection: (selection: QuoteSelector | null) => void;
 }
 
@@ -94,6 +99,16 @@ export function usePageCapture(tabId: number, onProblem: (message: string) => vo
       if (change.status === "complete" && navigated && following) {
         // A page Reader cannot read leaves the panel waiting, as without page access.
         readPage().catch(() => setFollowing(false));
+      } else if (change.status === "complete" && navigated) {
+        // A site the reader let the panel follow on is read without asking again.
+        void siteAccess(tabId)
+          .then(async (granted) => {
+            if (granted) {
+              setFollowing(true);
+              await readPage();
+            }
+          })
+          .catch(() => setFollowing(false));
       }
     };
     chrome.runtime.onMessage.addListener(onMessage);
@@ -118,5 +133,27 @@ export function usePageCapture(tabId: number, onProblem: (message: string) => vo
       .catch(() => undefined);
   }, [tabId]);
 
-  return { capture, navigated, following, invocation, readPage, setSelection };
+  const followSite = useCallback(
+    async (host: string): Promise<boolean> => {
+      // The request comes first, while the click still counts as a user gesture.
+      const granted = await chrome.permissions.request({ origins: [`https://${host}/*`] });
+      if (granted) {
+        await readPage();
+      }
+      return granted;
+    },
+    [readPage],
+  );
+
+  return { capture, navigated, following, invocation, readPage, followSite, setSelection };
+}
+
+/** Whether the tab's page is on an HTTPS site the extension may read without activeTab. */
+async function siteAccess(tabId: number): Promise<boolean> {
+  // Chrome reveals the URL only for pages the extension has access to.
+  const url = (await chrome.tabs.get(tabId)).url;
+  if (!url?.startsWith("https://")) {
+    return false;
+  }
+  return chrome.permissions.contains({ origins: [`${new URL(url).origin}/*`] });
 }

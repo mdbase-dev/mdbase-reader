@@ -1,6 +1,11 @@
-import { expect, it } from "vitest";
+import { describe, expect, it } from "vitest";
 
-import { highlightBody, highlightComment, withHighlightComment } from "./highlight-body.js";
+import {
+  displayQuote,
+  highlightBody,
+  highlightComment,
+  withHighlightComment,
+} from "./highlight-body.js";
 
 it("writes the passage as a blockquote followed by the comment", () => {
   expect(highlightBody("one\ntwo", "")).toBe("> one\n> two");
@@ -16,4 +21,14 @@ it("replaces only the comment and keeps the saved quote", () => {
   expect(withHighlightComment("> one\n\nOld", "  ")).toBe("> one");
   expect(withHighlightComment("> one", "Added")).toBe("> one\n\nAdded");
   expect(withHighlightComment("Written in Reader", "Changed")).toBe("Changed");
+});
+
+describe("displayQuote", () => {
+  it("drops the page's indentation and wrapping but keeps paragraphs", () => {
+    expect(
+      displayQuote(
+        "\n\n            Abstract:The dominant\n   models are based\n\n  Second  paragraph.\n    ",
+      ),
+    ).toBe("Abstract:The dominant models are based\n\nSecond paragraph.");
+  });
 });

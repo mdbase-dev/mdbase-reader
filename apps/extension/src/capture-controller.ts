@@ -46,6 +46,10 @@ export interface ExtensionCaptureController {
   readonly navigated: boolean;
   /** The tab navigated and the panel is reading the new page by itself. */
   readonly following: boolean;
+  /** The HTTPS site the panel last read, which it can be allowed to keep following. */
+  readonly followHost: string | null;
+  /** Asks to follow the tab on `followHost` from now on; call straight from a click. */
+  readonly followSite: () => Promise<void>;
   readonly invocation: { readonly intent: CaptureIntent; readonly at: number } | null;
   readonly connect: (choose?: boolean) => Promise<void>;
   readonly retry: () => Promise<void>;
@@ -60,6 +64,10 @@ export interface ExtensionCaptureController {
   readonly updateHighlightComment: (annotation: Annotation, comment: string) => Promise<void>;
   readonly planHighlightDeletion: (annotation: Annotation) => Promise<AnnotationDeletionPlan>;
   readonly deleteHighlight: (annotation: Annotation, plan: AnnotationDeletionPlan) => Promise<void>;
+  /** A highlight was just saved and can still be taken back. */
+  readonly undoable: boolean;
+  /** Deletes the highlight just saved; the page stays saved. */
+  readonly undoHighlight: () => Promise<void>;
   /** Known tags to suggest; loaded on first use by `loadTags`. */
   readonly knownTags: readonly string[];
   readonly loadTags: () => void;

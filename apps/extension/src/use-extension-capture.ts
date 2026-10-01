@@ -6,7 +6,7 @@ import { connectionUnavailableMessage } from "./connection-status.js";
 import { rememberColor } from "./drafts.js";
 import { annotationQuotes } from "./page-annotations.js";
 import { markSavedPage } from "./page-badge.js";
-import { fetchPdf, renderAnnotations, type PageCapture } from "./page-capture.js";
+import { fetchPdf, renderAnnotations, revealAnnotation, type PageCapture } from "./page-capture.js";
 import { CaptureWriter, type CaptureDraft } from "./save-capture.js";
 import { rememberTags, splitTags } from "./tag-suggestions.js";
 import { useActionLock } from "./use-action-lock.js";
@@ -15,6 +15,7 @@ import { useKnownTags } from "./use-known-tags.js";
 import { usePageCapture } from "./use-page-capture.js";
 import { useQuickSave } from "./use-quick-save.js";
 import { useSourceNote } from "./use-source-note.js";
+import { useStableActions } from "./use-stable-actions.js";
 import { useStoredDraft } from "./use-stored-draft.js";
 
 import type {
@@ -54,6 +55,8 @@ export function useExtensionCapture(tabId: number): ExtensionCaptureController {
   // The page and collection a save was last attempted for; another page starts afresh.
   const [attemptedFor, setAttemptedFor] = useState<string | null>(null);
   const [refreshing, setRefreshing] = useState(false);
+  // The highlight just saved, while it can still be taken back from the status line.
+  const [undoable, setUndoable] = useState<Annotation | null>(null);
   // The page and collection whose existing source has been looked up.
   const [discovered, setDiscovered] = useState<string | null>(null);
   const refreshEpoch = useRef(0);
@@ -79,15 +82,14 @@ export function useExtensionCapture(tabId: number): ExtensionCaptureController {
   const { release, setNotice } = lock;
 
   useEffect(() => {
-    // Connect starts even when the page cannot be read, so the panel can still recover.
-    void readPage()
-      .then(
-        () => setStatus("ready"),
-        (reason: unknown) => setProblem(problemMessage(reason), "page"),
-      )
-      .then(open)
-      .catch((reason: unknown) => setProblem(problemMessage(reason)))
-      .finally(release);
+    // Reading the page and starting Connect are independent: neither waits for the other,
+    // and Connect still starts when the page cannot be read, so the panel can recover.
+    const reading = readPage().then(
+      () => setStatus("ready"),
+      (reason: unknown) => setProblem(problemMessage(reason), "page"),
+    );
+    const opening = open().catch((reason: unknown) => setProblem(problemMessage(reason)));
+    void Promise.all([reading, opening]).finally(release);
   }, [open, readPage, release, setProblem]);
 
   const { collectionId, pageUrl, submittedUrl, pageKind, discoveryKey, attemptKey } = pageKeys(
@@ -114,6 +116,7 @@ export function useExtensionCapture(tabId: number): ExtensionCaptureController {
         return;
       }
       setSource(existing);
+      setUndoable(null);
       setAnnotations([]);
       setProjection(null);
       setStatus(existing ? "existing" : "ready");
@@ -199,6 +202,7 @@ export function useExtensionCapture(tabId: number): ExtensionCaptureController {
       discovery.current++;
       refreshEpoch.current++;
       setRefreshing(false);
+      setUndoable(null);
       setAttemptedFor(attemptKey);
       setStatus("saving");
       try {
@@ -208,6 +212,8 @@ export function useExtensionCapture(tabId: number): ExtensionCaptureController {
           capture,
           draft,
           known: source,
+          // A lookup that finished for this page and collection need not run again.
+          lookedUp: discovered === `${collection.collectionId} ${pageUrl ?? ""}`,
           citation,
           pdfBytes: () => fetchPdf(tabId, capture.canonicalUrl),
           onProgress: setProgress,
@@ -234,11 +240,30 @@ export function useExtensionCapture(tabId: number): ExtensionCaptureController {
         );
         // The write is complete. Refreshing the display must not keep Save locked.
         setProgress(null);
-        void refreshAnnotations(result.source, Boolean(result.annotation));
+        setUndoable(result.annotation);
+        afterSave(result.source, result.existing, result.annotation);
       } finally {
         setStatus((current) => (current === "saving" ? "ready" : current));
       }
     }, "save");
+
+  /**
+   * The list is known when it was loaded for this source, or the source is new; then a new
+   * highlight joins it here instead of the whole list being read again.
+   */
+  function afterSave(saved: SourceSummary, existing: boolean, added: Annotation | null): void {
+    const known = source?.id === saved.id ? annotations : existing ? null : [];
+    if (!known) {
+      void refreshAnnotations(saved, Boolean(added));
+    } else if (added) {
+      afterEdit([...known.filter((value) => value.id !== added.id), added]);
+    } else {
+      setAnnotations(known);
+      void markSavedPage(tabId, known.filter((value) => value.target?.quote).length).catch(
+        () => undefined,
+      );
+    }
+  }
 
   async function refreshAnnotations(saved: SourceSummary, render: boolean): Promise<void> {
     const collection = extension?.session.connectedCollection();
@@ -284,10 +309,30 @@ export function useExtensionCapture(tabId: number): ExtensionCaptureController {
     }
   };
 
+  /** Scrolls to a drawn highlight; only one the page lost is drawn again, with the rest. */
   const revealHighlight = (id: AnnotationId): Promise<void> =>
     lock.run(async () => {
-      if (capture?.kind === "html") {
-        setProjection(await display(annotations, capture.submittedUrl, id));
+      if (capture?.kind !== "html") {
+        return;
+      }
+      const quoted = annotations.filter((annotation) => annotation.target?.quote);
+      const index = quoted.findIndex((annotation) => annotation.id === id);
+      if (index === -1) {
+        return;
+      }
+      const redrawn = await revealAnnotation(
+        tabId,
+        annotationQuotes(quoted),
+        index,
+        capture.submittedUrl,
+      );
+      if (redrawn) {
+        setProjection({
+          report: redrawn.report,
+          outcomes: new Map(
+            quoted.map((annotation, i) => [annotation.id, redrawn.outcomes[i] ?? "missing"]),
+          ),
+        });
       }
     }, "page");
 
@@ -326,6 +371,46 @@ export function useExtensionCapture(tabId: number): ExtensionCaptureController {
     afterEdit(annotations.filter((value) => value.id !== annotation.id));
   };
 
+  /** Takes back the highlight just saved; the page itself stays saved. */
+  const undoHighlight = (): Promise<void> =>
+    lock.run(async () => {
+      const annotation = undoable;
+      if (!annotation) {
+        return;
+      }
+      const { collection, writer } = editing();
+      const plan = await writer.planDeletion(collection, annotation);
+      if (plan.brokenLinkPaths.length) {
+        setUndoable(null);
+        throw new Error(
+          "Other notes already link to this highlight. Delete it from Saved highlights to review them first.",
+        );
+      }
+      await writer.delete(collection, annotation, plan);
+      setUndoable(null);
+      afterEdit(annotations.filter((value) => value.id !== annotation.id));
+      setNotice("Highlight removed. The page stays saved.");
+    }, "save");
+
+  const followHost =
+    capture && new URL(capture.canonicalUrl).protocol === "https:"
+      ? new URL(capture.canonicalUrl).host
+      : null;
+  const followSite = (): Promise<void> => {
+    if (!followHost) {
+      return Promise.resolve();
+    }
+    // Not through the lock: its first await would end the click's user gesture.
+    return page
+      .followSite(followHost)
+      .then((granted) => {
+        if (!granted) {
+          setNotice(`Reader was not given access to ${followHost}.`);
+        }
+      })
+      .catch((reason: unknown) => setProblem(problemMessage(reason), "page"));
+  };
+
   const tags = useKnownTags(extension, annotations);
   const connectedCollection = useCallback(
     () => extension?.session.connectedCollection() ?? null,
@@ -343,7 +428,24 @@ export function useExtensionCapture(tabId: number): ExtensionCaptureController {
     save,
   });
 
+  const actions = useStableActions({
+    refreshHighlights,
+    connect: connection.connect,
+    retry: connection.retry,
+    applySetup: connection.applySetup,
+    select: connection.select,
+    save,
+    clearSelection: () => page.setSelection(null),
+    revealHighlight,
+    updateHighlightComment,
+    planHighlightDeletion,
+    deleteHighlight,
+    undoHighlight,
+    followSite,
+  });
+
   return {
+    ...actions,
     snapshot: connection.snapshot,
     capture,
     draft: stored.draft,
@@ -362,22 +464,13 @@ export function useExtensionCapture(tabId: number): ExtensionCaptureController {
     projection,
     progress,
     refreshing,
-    refreshHighlights,
     busy: lock.busy,
     saveAttempted: attemptedFor === attemptKey,
     navigated: page.navigated,
     following: page.following,
+    followHost,
     invocation: page.invocation,
-    connect: connection.connect,
-    retry: connection.retry,
-    applySetup: connection.applySetup,
-    select: connection.select,
-    save,
-    clearSelection: () => page.setSelection(null),
-    revealHighlight,
-    updateHighlightComment,
-    planHighlightDeletion,
-    deleteHighlight,
+    undoable: undoable !== null,
     knownTags: tags.knownTags,
     loadTags: tags.loadTags,
     note,

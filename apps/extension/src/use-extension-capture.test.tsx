@@ -15,6 +15,7 @@ const mocks = vi.hoisted(() => ({
   save: vi.fn(),
   updateComment: vi.fn(),
   planDeletion: vi.fn(),
+  reveal: vi.fn(),
   deleteAnnotation: vi.fn(),
   render: vi.fn(),
   select: vi.fn(),
@@ -67,6 +68,7 @@ vi.mock("./page-capture.js", () => ({
   watchTabSelection: () => Promise.resolve(),
   fetchPdf: vi.fn(),
   renderAnnotations: mocks.render,
+  revealAnnotation: mocks.reveal,
 }));
 
 const page = {
@@ -184,11 +186,12 @@ it("blocks double submits while a save is in flight", async () => {
 });
 it("reports a source as saved even if refreshing its annotations fails", async () => {
   await mount();
+  // A source found only while saving has highlights the panel has not loaded yet.
   const source = { id: "source", collectionId: "test", title: "[test] Saved" };
   mocks.save.mockImplementationOnce(
     ({ onSource }: { onSource: (value: unknown, existing: boolean) => void }) => {
-      onSource(source, false);
-      return Promise.resolve({ source, annotation: null, existing: false, notices: [] });
+      onSource(source, true);
+      return Promise.resolve({ source, annotation: null, existing: true, notices: [] });
     },
   );
   mocks.list.mockRejectedValueOnce(new Error("refresh unavailable"));
@@ -196,7 +199,7 @@ it("reports a source as saved even if refreshing its annotations fails", async (
     await controller.save();
   });
   expect(controller.source?.title).toBe("[test] Saved");
-  expect(controller.status).toBe("saved");
+  expect(controller.status).toBe("existing");
   expect(controller.problem).toBeNull();
   expect(controller.notice).toContain("Saved safely");
 });
@@ -219,15 +222,15 @@ it("releases Save and clears write progress before a slow refresh finishes", asy
       onProgress: (value: unknown) => void;
     }) => {
       onProgress({ phase: "creating" });
-      onSource(source, false);
-      return Promise.resolve({ source, annotation: null, notices: [] });
+      onSource(source, true);
+      return Promise.resolve({ source, annotation: null, existing: true, notices: [] });
     },
   );
   await act(async () => {
     await controller.save();
   });
   expect(controller.busy).toBe(false);
-  expect(controller.status).toBe("saved");
+  expect(controller.status).toBe("existing");
   expect(controller.progress).toBeNull();
   expect(controller.refreshing).toBe(true);
   await act(async () => {
@@ -318,7 +321,10 @@ it("scrolls to one highlight on request", async () => {
   await act(async () => {
     await controller.revealHighlight("a2" as never);
   });
-  expect(mocks.render).toHaveBeenLastCalledWith(1, expect.any(Array), "https://example.com/", 1);
+  // Scrolls to the drawn highlight without drawing the others again.
+  const draws = mocks.render.mock.calls.length;
+  expect(mocks.reveal).toHaveBeenLastCalledWith(1, expect.any(Array), 1, "https://example.com/");
+  expect(mocks.render).toHaveBeenCalledTimes(draws);
 });
 it("saves in a chosen colour in one step and remembers it for the next highlight", async () => {
   mocks.save.mockResolvedValueOnce({
@@ -452,4 +458,68 @@ it("asks to be invoked again when following reaches a page it cannot read", asyn
   expect(controller.navigated).toBe(true);
   expect(controller.following).toBe(false);
   expect(controller.problem).toBeNull();
+});
+it("adds a highlight saved with a new source without reading the list again, and can undo it", async () => {
+  await mount();
+  const source = { id: "source", collectionId: "test", title: "[test] New" };
+  const annotation = {
+    id: "a1",
+    sourceId: "source",
+    color: "yellow",
+    tags: [],
+    body: "> passage",
+    target: { quote: { exact: "passage" } },
+  };
+  mocks.save.mockImplementationOnce(
+    ({ onSource }: { onSource: (value: unknown, existing: boolean) => void }) => {
+      onSource(source, false);
+      return Promise.resolve({ source, annotation, existing: false, notices: [] });
+    },
+  );
+  const listed = mocks.list.mock.calls.length;
+  await act(async () => {
+    await controller.save({ highlight: true, color: "yellow" });
+  });
+  expect(mocks.list).toHaveBeenCalledTimes(listed);
+  expect(controller.annotations.map((value) => value.id)).toEqual(["a1"]);
+  expect(controller.undoable).toBe(true);
+
+  const plan = { annotationId: "a1", path: "annotations/a1.md", brokenLinkPaths: [] };
+  mocks.planDeletion.mockResolvedValueOnce(plan);
+  mocks.deleteAnnotation.mockResolvedValueOnce(undefined);
+  await act(async () => {
+    await controller.undoHighlight();
+  });
+  expect(mocks.deleteAnnotation).toHaveBeenCalledWith(expect.anything(), annotation, plan);
+  expect(controller.annotations).toEqual([]);
+  expect(controller.undoable).toBe(false);
+  expect(controller.notice).toBe("Highlight removed. The page stays saved.");
+});
+it("keeps a highlight that other notes link to when undo is pressed", async () => {
+  await mount();
+  const source = { id: "source", collectionId: "test", title: "[test] New" };
+  const annotation = {
+    id: "a1",
+    sourceId: "source",
+    tags: [],
+    body: "",
+    target: { quote: { exact: "x" } },
+  };
+  mocks.save.mockImplementationOnce(
+    ({ onSource }: { onSource: (value: unknown, existing: boolean) => void }) => {
+      onSource(source, false);
+      return Promise.resolve({ source, annotation, existing: false, notices: [] });
+    },
+  );
+  await act(async () => {
+    await controller.save({ highlight: true });
+  });
+  mocks.planDeletion.mockResolvedValueOnce({ brokenLinkPaths: ["notes/n.md"] });
+  mocks.deleteAnnotation.mockClear();
+  await act(async () => {
+    await controller.undoHighlight();
+  });
+  expect(mocks.deleteAnnotation).not.toHaveBeenCalled();
+  expect(controller.problem).toContain("Other notes already link to this highlight");
+  expect(controller.undoable).toBe(false);
 });

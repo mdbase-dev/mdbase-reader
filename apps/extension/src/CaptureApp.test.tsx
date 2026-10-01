@@ -234,10 +234,12 @@ it("saves a live selection by choosing its colour, with the page's own save set 
   });
   expect(html).toContain("a chosen passage");
   expect(html).toContain("Save page and highlight");
+  // Each colour is a save action, not a toggle; the last-used one is only marked.
+  expect(html).not.toContain("aria-pressed");
   expect(html).toMatch(
-    /aria-pressed="true" aria-keyshortcuts="3" title="Save in blue \(3\)"[^>]*>blue</u,
+    /class="swatch swatch-blue is-last" aria-keyshortcuts="3" title="Save in blue \(3, or Ctrl\+Enter\)"[^>]*>blue</u,
   );
-  expect(html).toMatch(/aria-pressed="false" aria-keyshortcuts="1"[^>]*>yellow</u);
+  expect(html).toMatch(/class="swatch swatch-yellow" aria-keyshortcuts="1"[^>]*>yellow</u);
   expect(html).toContain('aria-keyshortcuts="Escape"');
   // Comment and tags wait behind one link, above the colours that save.
   expect(html).not.toContain('id="highlight-tags"');
@@ -263,7 +265,8 @@ it("shows where a new source's citation comes from", () => {
     },
     "citation",
   );
-  expect(html).toContain("LeCun et al. · (2015) · Nature");
+  expect(html).toContain("LeCun, Bengio");
+  expect(html).toContain("Nature, 2015");
   expect(html).toContain("10.1038/nature14539");
   expect(html).toContain("From the DOI registry");
 });
@@ -296,7 +299,11 @@ it("makes opening Reader the next step after saving a PDF", () => {
 it("explains how to continue after the tab navigates away", () => {
   const html = markup({ navigated: true });
   expect(html).toContain("moved to another page");
-  expect(html).toContain("follow the tab by itself");
+  expect(html).toContain("To follow it on every site");
+  // The site just read can be followed alone, without access to every site.
+  expect(markup({ navigated: true, followHost: "example.com" })).toContain(
+    "Follow this tab on example.com",
+  );
 });
 it("says quietly that it is opening the new page while following the tab", () => {
   const html = markup({
@@ -322,7 +329,8 @@ it("shows Reader's three source tabs, opening on Highlights", () => {
   // No count before the page is saved: there is nothing to count yet.
   expect(html).not.toContain("panel-tab-count");
   expect(html).not.toContain('id="title"');
-  expect(html).toContain('<p class="tab-hint">Select text on the page to highlight it.</p>');
+  expect(html).toContain('<div class="tab-hint"><p>Select text on the page to highlight it.</p>');
+  expect(html).toContain("<kbd>Esc</kbd> clears it");
 });
 it("asks for a title from the save action when the draft has none", () => {
   const html = markup({
@@ -401,7 +409,7 @@ it("shows a saved source's citation ready to copy", () => {
     "citation",
   );
   expect(html).toContain("Deep learning");
-  expect(html).toContain("LeCun · (2015)");
+  expect(html).toContain("<p>LeCun</p><p>2015</p>");
   expect(html).toContain("<code>lecun2015</code>");
   expect(html).toContain("10.1038/nature14539");
   expect(html).toContain("Copy citekey");
@@ -415,4 +423,37 @@ it("points to Reader for a saved source without a citation", () => {
 it("says when a page has no citation details before saving", () => {
   const html = markup({ citation: null, citationPending: false }, "citation");
   expect(html).toContain("No citation details were found on this page.");
+});
+it("titles the page as it will be saved, not as the tab names it", () => {
+  const html = markup({
+    capture: {
+      kind: "html",
+      pageTitle: "[1706.03762] [test] Attention",
+      canonicalUrl: "https://example.com/",
+      selection: null,
+    } as ExtensionCaptureController["capture"],
+    draft: {
+      title: "[test] Attention",
+      tags: "",
+      note: "",
+      comment: "",
+      highlight: false,
+      color: "yellow",
+      highlightTags: "",
+    },
+  });
+  expect(html).toContain("<h1>[test] Attention</h1>");
+});
+it("says why a selected passage cannot be saved yet", () => {
+  const html = markup({
+    snapshot: { status: "unselected", connections: [] },
+    capture: {
+      kind: "html",
+      pageTitle: "[test] Article",
+      canonicalUrl: "https://example.com/",
+      selection: { exact: "a passage" },
+    } as ExtensionCaptureController["capture"],
+  });
+  expect(html).toContain("Connect a collection before saving.");
+  expect(html).toMatch(/class="swatch swatch-yellow[^"]*"[^>]*disabled=""/u);
 });
