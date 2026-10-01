@@ -296,14 +296,27 @@ it("makes opening Reader the next step after saving a PDF", () => {
   });
   expect(html).toMatch(/class="primary reader-link[^"]*"[^>]*>Open in Reader to highlight/u);
 });
-it("explains how to continue after the tab navigates away", () => {
+it("says quietly how to continue when the tab shows a page Reader cannot read", () => {
   const html = markup({ navigated: true });
-  expect(html).toContain("moved to another page");
-  expect(html).toContain("To follow it on every site");
-  // The site just read can be followed alone, without access to every site.
-  expect(markup({ navigated: true, followHost: "example.com" })).toContain(
-    "Follow this tab on example.com",
-  );
+  expect(html).toContain('<section class="page-note" role="status">');
+  expect(html).not.toContain('role="alert"');
+  expect(html).toContain("Press the mdbase Reader toolbar button (Alt+Shift+S)");
+  expect(html).toContain("kept for this browser session");
+  expect(html).not.toContain("Allow on all sites");
+  // Only limited site access stops the panel following tabs; then it offers to restore it.
+  expect(markup({ navigated: true, siteAccess: false })).toContain("Allow on all sites");
+});
+it("treats a tab it could never read as a page to skip, not a failure", () => {
+  const html = markup({
+    capture: null,
+    problem: "Cannot access a chrome:// URL",
+    problemKind: "page",
+  });
+  expect(html).toContain("<h1>Reader cannot read this page</h1>");
+  expect(html).toContain("Nothing to save here");
+  expect(html).not.toContain('role="alert"');
+  // A fresh tab had no earlier page, so there is no unsaved text to mention.
+  expect(markup({ capture: null, navigated: true })).not.toContain("kept for this browser session");
 });
 it("says quietly that it is opening the new page while following the tab", () => {
   const html = markup({
@@ -316,7 +329,7 @@ it("says quietly that it is opening the new page while following the tab", () =>
       selection: { exact: "a chosen passage" },
     } as ExtensionCaptureController["capture"],
   });
-  expect(html).not.toContain("moved to another page");
+  expect(html).not.toContain("page-note");
   expect(html).toContain("Opening the new page…");
   expect(html).toMatch(/<fieldset[^>]*disabled=""/u);
 });

@@ -26,7 +26,3 @@ export function isExtensionMessage(value: unknown): value is ExtensionMessage {
     value.type.startsWith("mdbase-reader/")
   );
 }
-
-export function capturePanelPath(tabId: number): string {
-  return `capture.html?tab=${String(tabId)}`;
-}

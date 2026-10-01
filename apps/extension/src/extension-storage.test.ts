@@ -2,7 +2,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { chromeStorageMirror } from "./chrome-storage.js";
 import { emptyDraft, loadDraft, saveDraft } from "./drafts.js";
-import { pageStatusEnabled, setPageStatusEnabled } from "./page-status.js";
+import { pageStatusEnabled } from "./page-status.js";
 import { fakeChrome } from "./testing/fake-chrome.js";
 
 afterEach(() => vi.unstubAllGlobals());
@@ -56,24 +56,15 @@ describe("session drafts", () => {
   });
 });
 
-describe("page status opt-in", () => {
-  it("is off unless both the setting and the host permission are present", async () => {
+describe("site access", () => {
+  it("follows Chrome's site access for HTTPS pages, which the reader can limit", async () => {
     const fake = fakeChrome();
     vi.stubGlobal("chrome", fake.chrome);
-    await expect(pageStatusEnabled()).resolves.toBe(false);
-    await expect(setPageStatusEnabled(true)).resolves.toBe(true);
-    expect(fake.chrome.permissions.request).toHaveBeenCalledWith({ origins: ["https://*/*"] });
-    vi.mocked(fake.chrome.permissions.contains as () => Promise<boolean>).mockResolvedValue(true);
+    const contains = vi.mocked(fake.chrome.permissions.contains as () => Promise<boolean>);
+    contains.mockResolvedValue(true);
     await expect(pageStatusEnabled()).resolves.toBe(true);
-  });
-
-  it("stays off when the reader declines the permission, and gives it back when turned off", async () => {
-    const fake = fakeChrome();
-    vi.stubGlobal("chrome", fake.chrome);
-    vi.mocked(fake.chrome.permissions.request as () => Promise<boolean>).mockResolvedValue(false);
-    await expect(setPageStatusEnabled(true)).resolves.toBe(false);
-    expect(fake.local.get("page-status")).toBeUndefined();
-    await setPageStatusEnabled(false);
-    expect(fake.chrome.permissions.remove).toHaveBeenCalled();
+    expect(contains).toHaveBeenCalledWith({ origins: ["https://*/*"] });
+    contains.mockResolvedValue(false);
+    await expect(pageStatusEnabled()).resolves.toBe(false);
   });
 });

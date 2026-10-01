@@ -270,6 +270,20 @@ details.technical summary {
 .page-card .saved-line {
   margin-top: 6px;
 }
+/* A page Reader cannot read: an ordinary state, said without alarm. */
+.page-note {
+  padding: 14px var(--gutter);
+  border-bottom: 1px solid var(--line);
+  color: var(--muted);
+  font-size: 12px;
+}
+.page-note p {
+  margin: 0 0 8px;
+}
+.page-note .secondary {
+  width: auto;
+  margin-top: 0;
+}
 /* One quiet line where a tab has nothing to show yet. */
 .tab-hint {
   margin: 0;

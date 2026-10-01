@@ -19,8 +19,11 @@ describe("per-environment extension manifest", () => {
       connectUrl: "https://connect-lab.mdbase.dev",
       readerOrigin: "https://lab.mdbase-reader.pages.dev",
     });
-    expect(manifest["host_permissions"]).toEqual(["https://connect-lab.mdbase.dev/*"]);
-    expect(manifest["optional_host_permissions"]).toEqual(["https://*/*", "http://127.0.0.1/*"]);
+    expect(manifest["host_permissions"]).toEqual([
+      "https://connect-lab.mdbase.dev/*",
+      "https://*/*",
+    ]);
+    expect(manifest["optional_host_permissions"]).toEqual(["http://127.0.0.1/*"]);
     expect(manifest["name"]).toBe("mdbase Reader (LAB)");
   });
 
@@ -29,13 +32,14 @@ describe("per-environment extension manifest", () => {
     expect(environment.label).toBe("");
     expect(extensionManifest(environment)).toMatchObject({
       name: "mdbase Reader",
-      host_permissions: ["https://connect.mdbase.dev/*"],
+      host_permissions: ["https://connect.mdbase.dev/*", "https://*/*"],
     });
   });
 
-  it("declares the side panel, shortcuts and no broad permanent access", () => {
+  it("declares one window-wide side panel, shortcuts and no tab list access", () => {
     const manifest = extensionManifest(extensionEnvironment({ MDBASE_ENV: "staging" }));
     expect(manifest["permissions"]).toContain("sidePanel");
+    expect(manifest["side_panel"]).toEqual({ default_path: "capture.html" });
     expect(manifest["permissions"]).not.toContain("tabs");
     expect(Object.keys(manifest["commands"] as object)).toEqual([
       "_execute_action",

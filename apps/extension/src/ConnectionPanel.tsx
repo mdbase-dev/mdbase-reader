@@ -5,6 +5,7 @@ import { DirectAccessPanel } from "./DirectAccessPanel.js";
 import { environment } from "./environment.js";
 
 import type { ExtensionCaptureController } from "./capture-controller.js";
+import type { ProblemKind } from "./use-action-lock.js";
 
 /** What the connection controls need; the panel, welcome and settings pages all provide it. */
 export type ConnectionControls = Pick<
@@ -191,15 +192,24 @@ function ConnectionControlsPanel({
   );
 }
 
+/**
+ * The kind of problem to report, if any. A page the tab shows but Reader cannot read is not
+ * a failure: the panel says so quietly instead (see CaptureApp's UnreadablePage).
+ */
+function shownProblemKind(c: ExtensionCaptureController): ProblemKind | null {
+  const kind = c.problemKind ?? "connection";
+  return !c.problem || (kind === "page" && !c.capture) ? null : kind;
+}
+
 export function ConnectionProblem({
   controller: c,
 }: {
   readonly controller: ExtensionCaptureController;
 }): React.JSX.Element | null {
-  if (!c.problem) {
+  const kind = shownProblemKind(c);
+  if (!kind || !c.problem) {
     return null;
   }
-  const kind = c.problemKind ?? "connection";
   const originDenied = /origin.*not allowed|origin_denied/iu.test(c.problem);
   return (
     <section className="problem" role="alert">

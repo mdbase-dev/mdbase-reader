@@ -1,47 +1,63 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 
 import { intentKey, isExtensionMessage, type CaptureIntent } from "./messages.js";
-import { captureTab, readSelection, watchTabSelection, type PageCapture } from "./page-capture.js";
-import { watchPageStatus } from "./page-status.js";
+import {
+  captureTab,
+  readSelection,
+  unwatchTabSelection,
+  watchTabSelection,
+  type PageCapture,
+} from "./page-capture.js";
+import { pageStatusEnabled, pageStatusOrigins } from "./page-status.js";
 
 import type { QuoteSelector } from "@mdbase-reader/core";
 
 export interface PageLink {
   readonly capture: PageCapture | null;
-  /** The tab left the captured page; activeTab access ended with it. */
+  /** The tab left the captured page. */
   readonly navigated: boolean;
-  /** The panel is reading the tab's new page by itself (page access is on); nothing to ask. */
+  /** The panel is reading the tab's new page by itself; nothing to ask. */
   readonly following: boolean;
   /** Changes each time the reader invokes the extension, so the panel can focus the right field. */
   readonly invocation: { readonly intent: CaptureIntent; readonly at: number } | null;
   readonly readPage: () => Promise<PageCapture>;
+  /** False when the reader has limited Reader's site access in Chrome; null until known. */
+  readonly siteAccess: boolean | null;
   /**
-   * Lets the panel follow this tab on one site without the all-sites setting. Call it
-   * straight from a click: Chrome asks for the permission only during a user gesture.
+   * Asks Chrome for access to every HTTPS site again, then reads the page. Call it straight
+   * from a click: Chrome asks only during a user gesture.
    */
-  readonly followSite: (host: string) => Promise<boolean>;
+  readonly allowAllSites: () => Promise<boolean>;
   readonly setSelection: (selection: QuoteSelector | null) => void;
 }
 
 /**
- * Keeps the panel attached to its tab: reads the page once, then follows new selections
- * without re-reading the document, and notices when the tab navigates away. With the
- * opt-in page access (Settings → Saved pages) it reads the new page by itself; otherwise
- * `activeTab` ended with the navigation and the reader must invoke the extension again.
+ * Keeps the panel attached to the tab it shows: reads the page, then follows new selections
+ * without re-reading the document, and reads each new page the tab loads. Reading rests on
+ * Reader's site access; where the reader has limited it (or on plain HTTP), the toolbar
+ * button grants `activeTab` for the page instead.
  */
 export function usePageCapture(tabId: number, onProblem: (message: string) => void): PageLink {
   const [capture, setCapture] = useState<PageCapture | null>(null);
   const [navigated, setNavigated] = useState(false);
   const [following, setFollowing] = useState(false);
-  // Known before any navigation, so a new page load never waits on a permission check.
-  const followEnabled = useRef(false);
-  useEffect(
-    () =>
-      watchPageStatus((enabled) => {
-        followEnabled.current = enabled;
-      }),
-    [],
-  );
+  // The page reports selections only while a panel shows its tab.
+  useEffect(() => () => unwatchTabSelection(tabId), [tabId]);
+  const [siteAccess, setSiteAccess] = useState<boolean | null>(null);
+  useEffect(() => {
+    const check = (): void => {
+      pageStatusEnabled()
+        .then(setSiteAccess)
+        .catch(() => setSiteAccess(false));
+    };
+    check();
+    chrome.permissions.onAdded.addListener(check);
+    chrome.permissions.onRemoved.addListener(check);
+    return () => {
+      chrome.permissions.onAdded.removeListener(check);
+      chrome.permissions.onRemoved.removeListener(check);
+    };
+  }, []);
   const [invocation, setInvocation] = useState<PageLink["invocation"]>(null);
   const problem = useRef(onProblem);
   useEffect(() => {
@@ -79,9 +95,9 @@ export function usePageCapture(tabId: number, onProblem: (message: string) => vo
       if (message.type === "mdbase-reader/invoke" && message.tabId === tabId) {
         const { intent } = message;
         void chrome.storage.session.remove(intentKey(tabId)).catch(() => undefined);
-        // A new invocation restores activeTab access, so a changed page can be read again.
+        // A new invocation grants activeTab, so a page not read yet can be read now.
         // The intent counts once the selection it refers to has been read.
-        (navigated ? readPage() : followSelection())
+        (navigated || !capture ? readPage() : followSelection())
           .then(() => setInvocation({ intent, at: Date.now() }))
           .catch((reason: unknown) =>
             problem.current(reason instanceof Error ? reason.message : String(reason)),
@@ -94,21 +110,11 @@ export function usePageCapture(tabId: number, onProblem: (message: string) => vo
       }
       if (change.status === "loading") {
         setNavigated(true);
-        setFollowing(followEnabled.current);
+        setFollowing(true);
       }
       if (change.status === "complete" && navigated && following) {
-        // A page Reader cannot read leaves the panel waiting, as without page access.
+        // A page Reader cannot read leaves the panel waiting for the toolbar button.
         readPage().catch(() => setFollowing(false));
-      } else if (change.status === "complete" && navigated) {
-        // A site the reader let the panel follow on is read without asking again.
-        void siteAccess(tabId)
-          .then(async (granted) => {
-            if (granted) {
-              setFollowing(true);
-              await readPage();
-            }
-          })
-          .catch(() => setFollowing(false));
       }
     };
     chrome.runtime.onMessage.addListener(onMessage);
@@ -117,7 +123,7 @@ export function usePageCapture(tabId: number, onProblem: (message: string) => vo
       chrome.runtime.onMessage.removeListener(onMessage);
       chrome.tabs.onUpdated.removeListener(onUpdated);
     };
-  }, [followSelection, following, navigated, readPage, tabId]);
+  }, [capture, followSelection, following, navigated, readPage, tabId]);
 
   useEffect(() => {
     // The intent that opened this panel (e.g. "Highlight with a comment" from the context menu).
@@ -133,27 +139,23 @@ export function usePageCapture(tabId: number, onProblem: (message: string) => vo
       .catch(() => undefined);
   }, [tabId]);
 
-  const followSite = useCallback(
-    async (host: string): Promise<boolean> => {
-      // The request comes first, while the click still counts as a user gesture.
-      const granted = await chrome.permissions.request({ origins: [`https://${host}/*`] });
-      if (granted) {
-        await readPage();
-      }
-      return granted;
-    },
-    [readPage],
-  );
+  const allowAllSites = useCallback(async (): Promise<boolean> => {
+    // The request comes first, while the click still counts as a user gesture.
+    const granted = await chrome.permissions.request({ origins: pageStatusOrigins });
+    if (granted) {
+      await readPage();
+    }
+    return granted;
+  }, [readPage]);
 
-  return { capture, navigated, following, invocation, readPage, followSite, setSelection };
-}
-
-/** Whether the tab's page is on an HTTPS site the extension may read without activeTab. */
-async function siteAccess(tabId: number): Promise<boolean> {
-  // Chrome reveals the URL only for pages the extension has access to.
-  const url = (await chrome.tabs.get(tabId)).url;
-  if (!url?.startsWith("https://")) {
-    return false;
-  }
-  return chrome.permissions.contains({ origins: [`${new URL(url).origin}/*`] });
+  return {
+    capture,
+    navigated,
+    following,
+    invocation,
+    readPage,
+    siteAccess,
+    allowAllSites,
+    setSelection,
+  };
 }

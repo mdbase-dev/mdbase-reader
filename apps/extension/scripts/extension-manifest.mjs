@@ -49,13 +49,16 @@ export function extensionManifest(environment) {
     icons,
     minimum_chrome_version: "123",
     permissions: ["activeTab", "scripting", "storage", "contextMenus", "sidePanel"],
-    // Only the Connect API is permanent. Page status on every site is an explicit opt-in.
-    host_permissions: [`${environment.connectUrl}/*`],
-    optional_host_permissions: ["https://*/*", `${loopback.protocol}//${loopback.hostname}/*`],
+    // The Connect API, and HTTPS pages: the side panel follows the active tab and saved
+    // pages are marked, which needs to read each page without a click on the toolbar.
+    host_permissions: [`${environment.connectUrl}/*`, "https://*/*"],
+    optional_host_permissions: [`${loopback.protocol}//${loopback.hostname}/*`],
     action: {
       default_title: `Save to mdbase Reader${suffix}`,
       default_icon: { 16: icons["16"], 32: icons["32"] },
     },
+    // One panel per window; it follows the window's active tab.
+    side_panel: { default_path: "capture.html" },
     // Classic, not a module: it loads page-status.js with importScripts() on demand.
     background: { service_worker: "background.js" },
     options_ui: { page: "options.html", open_in_tab: true },

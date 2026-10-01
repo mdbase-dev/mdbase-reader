@@ -7,8 +7,8 @@ import { useDiagnosticsShown } from "./diagnostics-setting.js";
 import { environment } from "./environment.js";
 import { useThemePreference } from "./extension-theme.js";
 import { ExtensionHeader } from "./ExtensionHeader.js";
-import { PageStatusSetting } from "./PageStatusSetting.js";
 import { ShortcutList } from "./ShortcutList.js";
+import { SiteAccessStatus } from "./SiteAccessStatus.js";
 import { useCollectionConnection } from "./use-collection-connection.js";
 
 export function OptionsApp(): React.JSX.Element {
@@ -32,8 +32,8 @@ export function OptionsApp(): React.JSX.Element {
           <ThemeSetting />
         </section>
         <section aria-labelledby="page-status-heading">
-          <h2 id="page-status-heading">Saved pages</h2>
-          <PageStatusSetting />
+          <h2 id="page-status-heading">Pages you visit</h2>
+          <SiteAccessStatus />
         </section>
         <section aria-labelledby="shortcuts-heading">
           <h2 id="shortcuts-heading">Keyboard shortcuts</h2>

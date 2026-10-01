@@ -10,7 +10,6 @@ import { fetchPdf, renderAnnotations, revealAnnotation, type PageCapture } from 
 import { CaptureWriter, type CaptureDraft } from "./save-capture.js";
 import { rememberTags, splitTags } from "./tag-suggestions.js";
 import { useActionLock } from "./use-action-lock.js";
-import { useConnect } from "./use-connect.js";
 import { useKnownTags } from "./use-known-tags.js";
 import { usePageCapture } from "./use-page-capture.js";
 import { useQuickSave } from "./use-quick-save.js";
@@ -23,6 +22,7 @@ import type {
   ExtensionCaptureController,
   PageHighlights,
 } from "./capture-controller.js";
+import type { PanelConnection } from "./panel-connection.js";
 import type { ReaderConnectedCollection } from "@mdbase-reader/connect";
 import type {
   Annotation,
@@ -37,7 +37,10 @@ export type { ExtensionCaptureController } from "./capture-controller.js";
 // The controller coordinates one panel's explicit actions; I/O lives in the composed hooks
 // and CaptureWriter.
 // eslint-disable-next-line max-lines-per-function
-export function useExtensionCapture(tabId: number): ExtensionCaptureController {
+export function useExtensionCapture(
+  tabId: number,
+  link: PanelConnection,
+): ExtensionCaptureController {
   const [progress, setProgress] = useState<SourceImportProgress | null>(null);
   const lock = useActionLock(useCallback(() => setProgress(null), []));
   const { setProblem } = lock;
@@ -45,7 +48,9 @@ export function useExtensionCapture(tabId: number): ExtensionCaptureController {
     tabId,
     useCallback((problem: string) => setProblem(problem, "page"), [setProblem]),
   );
-  const connection = useConnect(lock);
+  // Connect belongs to the panel, which outlives this tab's capture.
+  const { connection, lock: connectionLock } = link;
+  const busy = lock.busy || connectionLock.busy;
   const { capture } = page;
   const stored = useStoredDraft(tabId, capture, page.setSelection);
   const [status, setStatus] = useState<CaptureStatus>("opening");
@@ -78,19 +83,24 @@ export function useExtensionCapture(tabId: number): ExtensionCaptureController {
     [extension],
   );
   const { readPage } = page;
-  const { open } = connection;
   const { release, setNotice } = lock;
 
   useEffect(() => {
-    // Reading the page and starting Connect are independent: neither waits for the other,
-    // and Connect still starts when the page cannot be read, so the panel can recover.
-    const reading = readPage().then(
-      () => setStatus("ready"),
-      (reason: unknown) => setProblem(problemMessage(reason), "page"),
-    );
-    const opening = open().catch((reason: unknown) => setProblem(problemMessage(reason)));
-    void Promise.all([reading, opening]).finally(release);
-  }, [open, readPage, release, setProblem]);
+    // Connect starts with the panel; this tab only has its page to read.
+    void readPage()
+      .then(
+        () => setStatus("ready"),
+        (reason: unknown) => setProblem(problemMessage(reason), "page"),
+      )
+      .finally(release);
+  }, [readPage, release, setProblem]);
+  const { problemKind } = lock;
+  useEffect(() => {
+    // The toolbar button read a page that could not be read before.
+    if (capture && problemKind === "page") {
+      setProblem(null);
+    }
+  }, [capture, problemKind, setProblem]);
 
   const { collectionId, pageUrl, submittedUrl, pageKind, discoveryKey, attemptKey } = pageKeys(
     connection.snapshot,
@@ -151,7 +161,11 @@ export function useExtensionCapture(tabId: number): ExtensionCaptureController {
         setNotice(`Could not check existing sources: ${problemMessage(reason)}`);
       }
     });
-    return () => setRefreshing(false);
+    return () => {
+      setRefreshing(false);
+      // What the lookup said was about the page or collection being left.
+      setNotice(null);
+    };
   }, [collectionId, display, extension, pageKind, pageUrl, setNotice, submittedUrl, tabId]);
 
   const { setDraft } = stored;
@@ -303,7 +317,7 @@ export function useExtensionCapture(tabId: number): ExtensionCaptureController {
   }
 
   const refreshHighlights = async (): Promise<void> => {
-    if (source && !refreshing && !lock.busy) {
+    if (source && !refreshing && !busy) {
       setNotice(null);
       await refreshAnnotations(source, true);
     }
@@ -392,24 +406,16 @@ export function useExtensionCapture(tabId: number): ExtensionCaptureController {
       setNotice("Highlight removed. The page stays saved.");
     }, "save");
 
-  const followHost =
-    capture && new URL(capture.canonicalUrl).protocol === "https:"
-      ? new URL(capture.canonicalUrl).host
-      : null;
-  const followSite = (): Promise<void> => {
-    if (!followHost) {
-      return Promise.resolve();
-    }
+  const allowAllSites = (): Promise<void> =>
     // Not through the lock: its first await would end the click's user gesture.
-    return page
-      .followSite(followHost)
+    page
+      .allowAllSites()
       .then((granted) => {
         if (!granted) {
-          setNotice(`Reader was not given access to ${followHost}.`);
+          setNotice("Reader was not given site access.");
         }
       })
       .catch((reason: unknown) => setProblem(problemMessage(reason), "page"));
-  };
 
   const tags = useKnownTags(extension, annotations);
   const connectedCollection = useCallback(
@@ -422,7 +428,7 @@ export function useExtensionCapture(tabId: number): ExtensionCaptureController {
     invocation: page.invocation,
     // Connected, with this page's existing source looked up and its citation settled.
     ready: discoveryKey !== null && discovered === discoveryKey && !citationPending,
-    busy: lock.busy || page.navigated,
+    busy: busy || page.navigated,
     capture,
     title: stored.draft.title,
     save,
@@ -433,7 +439,12 @@ export function useExtensionCapture(tabId: number): ExtensionCaptureController {
     connect: connection.connect,
     retry: connection.retry,
     applySetup: connection.applySetup,
-    select: connection.select,
+    // A collection change waits for this tab's save to finish.
+    select: (id: string) => {
+      if (!lock.locked()) {
+        connection.select(id);
+      }
+    },
     save,
     clearSelection: () => page.setSelection(null),
     revealHighlight,
@@ -441,7 +452,7 @@ export function useExtensionCapture(tabId: number): ExtensionCaptureController {
     planHighlightDeletion,
     deleteHighlight,
     undoHighlight,
-    followSite,
+    allowAllSites,
   });
 
   return {
@@ -452,9 +463,9 @@ export function useExtensionCapture(tabId: number): ExtensionCaptureController {
     setDraft: stored.setDraft,
     draftRestored: stored.restored,
     status,
-    problem: lock.problem,
-    problemKind: lock.problemKind,
-    notice: lock.notice,
+    problem: lock.problem ?? connectionLock.problem,
+    problemKind: lock.problem ? lock.problemKind : connectionLock.problemKind,
+    notice: lock.notice ?? connectionLock.notice,
     source,
     annotations,
     citation,
@@ -464,11 +475,11 @@ export function useExtensionCapture(tabId: number): ExtensionCaptureController {
     projection,
     progress,
     refreshing,
-    busy: lock.busy,
+    busy,
     saveAttempted: attemptedFor === attemptKey,
     navigated: page.navigated,
     following: page.following,
-    followHost,
+    siteAccess: page.siteAccess,
     invocation: page.invocation,
     undoable: undoable !== null,
     knownTags: tags.knownTags,

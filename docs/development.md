@@ -133,9 +133,10 @@ Package a production extension ZIP with:
 MDBASE_ENV=production pnpm --filter @mdbase-reader/extension package
 ```
 
-Its only permanent host permission is that environment's Connect API, required for SDK record
-and binary-file traffic, not browsing-page access. Capture uses `activeTab`; saved-page marking
-requests optional HTTPS host access. Extension fetches explicitly omit portal cookies; the
+Its host permissions are that environment's Connect API (SDK record and binary-file traffic)
+and `https://*/*`: the window's side panel follows the active tab and reads each page, and the
+service worker marks saved pages. Where site access is limited, or on plain HTTP, the toolbar
+button grants `activeTab` for that page. One Connect session serves the panel across tabs. Extension fetches explicitly omit portal cookies; the
 SDK's signed grants remain the authorization mechanism. Connect grants live in
 `chrome.storage.local`, shared by the panel and service worker. Unsaved capture drafts use
 `chrome.storage.session` per tab and page.

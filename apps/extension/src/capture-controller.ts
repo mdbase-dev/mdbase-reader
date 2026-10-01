@@ -46,10 +46,10 @@ export interface ExtensionCaptureController {
   readonly navigated: boolean;
   /** The tab navigated and the panel is reading the new page by itself. */
   readonly following: boolean;
-  /** The HTTPS site the panel last read, which it can be allowed to keep following. */
-  readonly followHost: string | null;
-  /** Asks to follow the tab on `followHost` from now on; call straight from a click. */
-  readonly followSite: () => Promise<void>;
+  /** False when the reader has limited Reader's site access in Chrome; null until known. */
+  readonly siteAccess: boolean | null;
+  /** Asks Chrome for access to every HTTPS site again; call straight from a click. */
+  readonly allowAllSites: () => Promise<void>;
   readonly invocation: { readonly intent: CaptureIntent; readonly at: number } | null;
   readonly connect: (choose?: boolean) => Promise<void>;
   readonly retry: () => Promise<void>;

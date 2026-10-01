@@ -73,7 +73,8 @@ folder containing `manifest.json`. Unpacked copies do not receive automatic upda
 
 ### Capture and highlight
 
-- Click the toolbar button or press **Alt+Shift+S** to open Reader's side panel.
+- Click the toolbar button or press **Alt+Shift+S** to open Reader's side panel. It stays open
+  as you switch tabs and follow links, showing whichever page you are on.
 - Review the destination collection, title, citation, tags, and note, then choose **Save page**
   or **Save PDF**. Opening the panel does not automatically save the page.
 - On a web page, select a passage and choose a highlight colour in the panel to save it. Add
@@ -85,9 +86,10 @@ Articles are saved as readable copies with a DOM archive; PDFs are saved as PDF 
 citation information is available, the panel shows what it will store. DOI lookup sends the
 DOI to doi.org to retrieve citation metadata.
 
-**Settings → Mark pages I've saved** is optional. Enabling it requests access to HTTPS pages
-so the extension can check them against your selected collection, show a saved-page badge,
-and display saved highlights. Turning it off removes that permission.
+The extension reads the HTTPS pages you visit so the panel can follow your tabs, and checks
+each page's address against your selected collection: saved pages show a badge on the toolbar
+button and your highlights. If you limit its site access in Chrome, press the toolbar button
+on a page to use Reader there; **Settings** offers to restore access.
 
 ## Bring an existing library
 

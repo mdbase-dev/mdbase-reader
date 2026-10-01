@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
 
-import { problemMessage, readerSourceUrl, sourceForUrl, tabIdParameter } from "./capture-model.js";
+import { problemMessage, readerSourceUrl, sourceForUrl } from "./capture-model.js";
 
 import type { ReaderConnectedCollection } from "@mdbase-reader/connect";
 import type { SourceSummary } from "@mdbase-reader/core";
@@ -90,13 +90,6 @@ describe("extension capture model", () => {
     expect(url.origin).toBe("https://lab.mdbase-reader.pages.dev");
     expect(url.searchParams.get("collection")).toBe("test collection");
     expect(url.searchParams.get("source")).toBe("source & id");
-  });
-
-  it("requires a valid source tab", () => {
-    expect(tabIdParameter("chrome-extension://reader/capture.html?tab=42")).toBe(42);
-    expect(() => tabIdParameter("chrome-extension://reader/capture.html")).toThrow(
-      "active browser tab",
-    );
   });
 
   it("retains nested SDK causes in user-facing diagnostics", () => {
