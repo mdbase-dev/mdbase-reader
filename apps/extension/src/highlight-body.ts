@@ -36,3 +36,15 @@ function quoteLength(body: string): number {
   }
   return Math.min(length, body.length);
 }
+
+/**
+ * A passage as the panel shows it: the page's indentation and line wrapping dropped, with
+ * paragraph breaks kept. Display only; the saved selector keeps the page's own text.
+ */
+export function displayQuote(exact: string): string {
+  return exact
+    .split(/\n\s*\n/u)
+    .map((paragraph) => paragraph.replace(/\s+/gu, " ").trim())
+    .filter(Boolean)
+    .join("\n\n");
+}

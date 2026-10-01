@@ -56,7 +56,8 @@ export function extensionManifest(environment) {
       default_title: `Save to mdbase Reader${suffix}`,
       default_icon: { 16: icons["16"], 32: icons["32"] },
     },
-    background: { service_worker: "background.js", type: "module" },
+    // Classic, not a module: it loads page-status.js with importScripts() on demand.
+    background: { service_worker: "background.js" },
     options_ui: { page: "options.html", open_in_tab: true },
     commands: {
       _execute_action: {

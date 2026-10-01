@@ -10,7 +10,7 @@ import { NotePanel } from "./NotePanel.js";
 import { PanelTabContent, PanelTabs, usePanelTab, type PanelTab } from "./PanelTabs.js";
 import { SaveBar, saveReady } from "./SaveBar.js";
 import { SavedHighlights } from "./SavedHighlights.js";
-import { openSettings } from "./shortcuts.js";
+import { openSettings, useShortcuts } from "./shortcuts.js";
 
 import type { ExtensionCaptureController } from "./capture-controller.js";
 
@@ -62,7 +62,7 @@ export function CaptureApp({
         onDone={() => setCollectionOpen(false)}
       />
       <section className="page-card">
-        <h1>{controller.source?.title ?? controller.capture?.pageTitle ?? "Reading the page…"}</h1>
+        <h1>{pageTitle(controller)}</h1>
         <p>
           {controller.capture
             ? `${new URL(controller.capture.canonicalUrl).hostname}${controller.capture.kind === "pdf" ? " · PDF" : ""}`
@@ -118,10 +118,39 @@ function HighlightsPanel({ controller: c }: ControllerProps): React.JSX.Element 
           <HighlightFields controller={c} ready={saveReady(c)} />
         </fieldset>
       ) : saved ? null : (
-        <p className="tab-hint">Select text on the page to highlight it.</p>
+        <HighlightHint />
       )}
       <SavedHighlights controller={c} />
     </>
+  );
+}
+
+/** The title the source has, or will be saved with: the Note tab's title, not the tab's. */
+function pageTitle(c: ExtensionCaptureController): string {
+  if (c.source) {
+    return c.source.title;
+  }
+  return c.capture ? c.draft.title.trim() || c.capture.pageTitle : "Reading the page…";
+}
+
+/** Before the first highlight: how to make one, and the keys that make it quick. */
+function HighlightHint(): React.JSX.Element {
+  const shortcut = useShortcuts()?.find((value) => value.name === "save-highlight")?.keys;
+  return (
+    <div className="tab-hint">
+      <p>Select text on the page to highlight it.</p>
+      <ul className="hint-keys">
+        <li>
+          <kbd>1</kbd>–<kbd>5</kbd> save the selection in a colour; <kbd>Esc</kbd> clears it
+        </li>
+        {shortcut ? (
+          <li>
+            <kbd>{shortcut}</kbd> highlights the selection from the page
+          </li>
+        ) : null}
+        <li>Right-click a selection to highlight it with a comment</li>
+      </ul>
+    </div>
   );
 }
 
@@ -137,8 +166,15 @@ function Navigated({ controller: c }: ControllerProps): React.JSX.Element | null
         Press the mdbase Reader toolbar button (Alt+Shift+S) to continue on the new page. Your
         unsaved text for the previous page is kept for this browser session.
       </p>
+      {c.followHost ? (
+        <div className="problem-actions">
+          <button type="button" onClick={() => void c.followSite()}>
+            Follow this tab on {c.followHost}
+          </button>
+        </div>
+      ) : null}
       <p>
-        To have the panel follow the tab by itself, turn on Saved pages in{" "}
+        To follow it on every site, turn on Saved pages in{" "}
         <button type="button" className="inline-link" onClick={openSettings}>
           Settings
         </button>
@@ -159,7 +195,23 @@ function PanelStatus({ controller: c }: ControllerProps): React.JSX.Element {
       <ConnectionProblem controller={c} />
       {/* The live region stays mounted so screen readers announce what appears in it. */}
       <div className="save-status" role="status" aria-live="polite">
-        {message ? <p>{message}</p> : null}
+        {message ? (
+          <p>
+            {message}
+            {c.undoable && !c.busy ? (
+              <>
+                {" "}
+                <button
+                  type="button"
+                  className="inline-link"
+                  onClick={() => void c.undoHighlight()}
+                >
+                  Undo
+                </button>
+              </>
+            ) : null}
+          </p>
+        ) : null}
       </div>
     </>
   );

@@ -8,6 +8,9 @@ import {
 
 import type { ScholarlyMetadata } from "./scholarly-metadata.js";
 
+/** A save may be waiting on this lookup; past it, the page's embedded tags are used instead. */
+export const PAGE_DOI_TIMEOUT_MS = 3_000;
+
 export interface CitationPreview {
   readonly citation: CitationDraft;
   /** `doi`: the registration agency's record; `page`: tags the publisher embedded. */
@@ -36,7 +39,10 @@ export async function citationForPage(
   const base = { ...(doi ? { doi } : {}), ...(pdfUrl ? { pdfUrl } : {}) };
   if (doi) {
     try {
-      const resolved = await resolveDoiCitation(doi, options);
+      const resolved = await resolveDoiCitation(doi, {
+        timeoutMs: PAGE_DOI_TIMEOUT_MS,
+        ...options,
+      });
       return { ...base, citation: mergedCitation(resolved, embedded.citation), origin: "doi" };
     } catch (reason) {
       options.signal?.throwIfAborted();

@@ -2,7 +2,7 @@ import { annotationSourceReference } from "./annotation-source.js";
 import { outcomeValue, recordPathById } from "./repository-client.js";
 
 import type { ReaderConnectClient } from "./repository-client.js";
-import type { QueryRecord } from "@mdbase-dev/connect";
+import type { QueryInput, QueryRecord } from "@mdbase-dev/connect";
 import type { ReaderRequestOptions, SourceId } from "@mdbase-reader/core";
 
 /** Filter Reader's persisted source references before transferring annotation metadata. */
@@ -11,21 +11,50 @@ export async function annotationPathsForSource(
   source: SourceId,
   options: ReaderRequestOptions,
 ): Promise<string[]> {
+  const records = await sourceAnnotations(client, source, options, {
+    frontmatterMode: "effective",
+  });
+  return records.map(({ path }) => path);
+}
+
+/**
+ * The same matches as {@link annotationPathsForSource}, with persisted and effective
+ * frontmatter and the body, so callers can map them without reading each record.
+ */
+export function annotationRecordsForSource(
+  client: ReaderConnectClient,
+  source: SourceId,
+  options: ReaderRequestOptions,
+): Promise<QueryRecord[]> {
+  return sourceAnnotations(client, source, options, {
+    frontmatterMode: "both",
+    includeBody: true,
+  });
+}
+
+async function sourceAnnotations(
+  client: ReaderConnectClient,
+  source: SourceId,
+  options: ReaderRequestOptions,
+  detail: Pick<QueryInput, "frontmatterMode" | "includeBody">,
+): Promise<QueryRecord[]> {
   // Never infer identity from a filename: sources can be renamed independently of their IDs.
   const path = await recordPathById(client, source, options);
   const [linked, legacy] = await Promise.all([
     // mdbase resolves each link however it is written, so only the target is compared.
     path
-      ? annotationPaths(
+      ? annotationRecords(
           client,
           `source != null && source.asFile() != null && source.asFile().file.path == ${JSON.stringify(path)}`,
+          detail,
           options,
         )
       : Promise.resolve([]),
     // A legacy bare ID resolves to no record where the collection configures no ID field.
-    annotationPaths(
+    annotationRecords(
       client,
       `source != null && source.asFile() == null && source.contains(${JSON.stringify(source)})`,
+      detail,
       options,
       // contains() is only a candidate filter; aliases and prefix collisions must not match.
       (record) =>
@@ -37,22 +66,23 @@ export async function annotationPathsForSource(
   return [...linked, ...legacy];
 }
 
-async function annotationPaths(
+async function annotationRecords(
   client: ReaderConnectClient,
   where: string,
+  detail: Pick<QueryInput, "frontmatterMode" | "includeBody">,
   options: ReaderRequestOptions,
   accept: (record: QueryRecord) => boolean = () => true,
-): Promise<string[]> {
-  const paths: string[] = [];
+): Promise<QueryRecord[]> {
+  const records: QueryRecord[] = [];
   for await (const outcome of client.queryPages(
-    { types: ["reader-annotation"], where, frontmatterMode: "effective" },
+    { types: ["reader-annotation"], where, ...detail },
     { ...options, firstPageSize: 100, pageSize: 100 },
   )) {
     for (const record of outcomeValue(outcome, "find source annotations").results) {
       if (accept(record)) {
-        paths.push(record.path);
+        records.push(record);
       }
     }
   }
-  return paths;
+  return records;
 }

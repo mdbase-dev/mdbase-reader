@@ -1,7 +1,7 @@
 import { outcomeValue, readWithOptions } from "./repository-client.js";
 
 import type { ReaderConnectClient } from "./repository-client.js";
-import type { RecordDocument } from "@mdbase-dev/connect";
+import type { QueryRecord, RecordDocument } from "@mdbase-dev/connect";
 import type { ReaderRequestOptions } from "@mdbase-reader/core";
 
 interface PendingRead {
@@ -30,6 +30,23 @@ export class AnnotationRecordCache {
         this.#records.delete(oldest);
       }
     }
+  }
+
+  /**
+   * The cached document when a fresh query result shows the file unchanged, whatever its age.
+   * Query results carry no revision, so this is how a listing keeps one without a read.
+   */
+  current(record: QueryRecord): RecordDocument | null {
+    const cached = this.#records.get(record.path);
+    if (!cached || !unchanged(cached.document, record)) {
+      return null;
+    }
+    this.#records.delete(record.path);
+    this.#records.set(record.path, {
+      document: cached.document,
+      expires: Math.max(cached.expires, this.now() + 15_000),
+    });
+    return cached.document;
   }
 
   delete(path: string): void {
@@ -123,4 +140,22 @@ export class AnnotationRecordCache {
     };
     return read;
   }
+}
+
+/** Revisions hash the exact bytes, so require every observable fact a query reports to match. */
+function unchanged(document: RecordDocument, record: QueryRecord): boolean {
+  const same = (left: unknown, right: unknown): boolean =>
+    JSON.stringify(left) === JSON.stringify(right);
+  const sameFact = (left: unknown, right: unknown): boolean =>
+    left === undefined || right === undefined || left === right;
+  return (
+    record.body !== undefined &&
+    record.body === (document.body ?? "") &&
+    record.frontmatter !== undefined &&
+    record.effectiveFrontmatter !== undefined &&
+    same(record.frontmatter, document.frontmatter) &&
+    same(record.effectiveFrontmatter, document.effectiveFrontmatter) &&
+    sameFact(record.file.size, document.file.size) &&
+    sameFact(record.file.mtime, document.file.mtime)
+  );
 }

@@ -20,11 +20,9 @@ describe("explicit source and highlight saves", () => {
       body: "> beta gamma\n\nA useful passage.",
     });
     expect(result.annotation?.document).toEqual(result.source.documents[0]);
-    expect(f.read).toHaveBeenCalledWith(
-      f.collection.collectionId,
-      "[[files/reading.html]]",
-      result.source.documents[0]?.revision,
-    );
+    // The reading copy it just uploaded hashes to the stored revision, so it is not downloaded.
+    expect(f.read).not.toHaveBeenCalled();
+    expect(f.collection.sources.get).not.toHaveBeenCalled();
   });
   it("only scans old uploads after an interrupted import, including after reopening", async () => {
     const f = fixture();

@@ -54,17 +54,19 @@ try {
         const exports = {};
         new Function("exports", js)(exports);
         // Re-serialize the actual injection entry point, as Chrome scripting does.
-        const project = new Function(`return (${exports.pageAnnotations.toString()})`)();
+        const project = new Function(`return (${exports.pageText.toString()})`)();
         const before = document.body.innerHTML;
         CSS.highlights.set("other-app", new Highlight());
-        project({ action: "render", quotes });
-        const report = project({ action: "render", quotes }).report;
+        project({ action: "draw", quotes });
+        const report = project({ action: "draw", quotes }).projection.report;
+        // Revealing a drawn quote must not draw anything again.
+        if (report.shown) project({ action: "reveal", quotes, focus: 0 });
         return {
           report,
           unchanged: document.body.innerHTML === before,
           externalPreserved: CSS.highlights.has("other-app"),
           highlights: [...CSS.highlights]
-            .filter(([key]) => key.startsWith("mdbase-reader-"))
+            .filter(([key]) => key.startsWith("mdbase-reader-") && key !== "mdbase-reader-focus")
             .map(([, highlight]) => [...highlight].map((range) => range.toString())),
         };
       },

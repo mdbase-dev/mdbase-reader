@@ -24,10 +24,16 @@ import {
 import { createReaderRuntimeServices, type KeyValueStorage } from "@mdbase-reader/platform";
 import { citationAuthors, citationYear, webCaptureImport } from "@mdbase-reader/web-capture";
 
-import { saveCaptureCitation, type CitationPreview } from "./capture-citation.js";
+import {
+  citekeyNeighbours,
+  parsedCaptureHtml,
+  saveCaptureCitation,
+  type CitationPreview,
+} from "./capture-citation.js";
 import { sourceForUrl } from "./capture-model.js";
 import { highlightBody, withHighlightComment } from "./highlight-body.js";
 import { pageText } from "./page-annotations.js";
+import { rememberSavedUrls } from "./saved-url-index.js";
 
 import type { PageCapture, PdfCapture, SelectedWebCapture } from "./page-capture.js";
 import type {
@@ -61,16 +67,33 @@ export interface SaveCaptureInput {
   readonly draft: CaptureDraft;
   /** A source the panel already found for this page; skips a second lookup. */
   readonly known?: SourceSummary | null;
+  /**
+   * `known` is the settled result of the panel's URL lookup for this page and collection, so
+   * `null` means no source was found and the lookup is not repeated. Without it, `null` means
+   * "not looked up yet". An interrupted import is always looked up again.
+   */
+  readonly lookedUp?: boolean;
   readonly citation?: CitationPreview | null;
   readonly pdfBytes?: () => Promise<Uint8Array>;
   readonly onSource: (source: SourceSummary, existing: boolean) => void;
   readonly onProgress: (progress: SourceImportProgress) => void;
 }
 
+/** Saved reading copies' text, so repeated highlights on one page do not download it again. */
+const savedTextLimit = 4;
+
+/** A saved source with the reading copy this save just uploaded, when it created the source. */
+interface CreatedSource {
+  readonly source: Source;
+  readonly readable: Uint8Array | null;
+}
+
 /** One explicit save at a time; annotation retries retain their identity. */
 export class CaptureWriter {
   readonly #runtime;
   readonly #annotations = new Map<string, { id: AnnotationId; mutation: MutationId }>();
+  /** Keyed by the exact stored revision, so a changed copy is never matched from here. */
+  readonly #savedTexts = new Map<string, string>();
 
   constructor(private readonly journalStorage: KeyValueStorage) {
     this.#runtime = createReaderRuntimeServices(journalStorage);
@@ -84,25 +107,47 @@ export class CaptureWriter {
       throw new Error(failure.problem.message);
     }
     const notices: string[] = [];
+    const recoveryKey = importRecoveryKey(input);
+    // An import that was interrupted may have committed after the panel looked.
+    const interrupted = (await this.journalStorage.get(recoveryKey)) !== null;
+    const lookUp =
+      input.known === undefined || (input.known === null && (!input.lookedUp || interrupted));
     const found =
-      input.known ?? (await sourceForUrl(collection, capture.canonicalUrl, [capture.submittedUrl]));
+      input.known ??
+      (lookUp
+        ? await sourceForUrl(collection, capture.canonicalUrl, [capture.submittedUrl])
+        : null);
     const existing = Boolean(found);
-    const source = found ?? (await this.#create(input, notices));
+    let source: SourceSummary;
+    let created: CreatedSource | null = null;
     if (found) {
-      await this.journalStorage.remove(
-        `capture-import:${collection.collectionId}:${capture.canonicalUrl}`,
-      );
+      source = found;
+    } else {
+      created = await this.#create(input, notices, interrupted);
+      source = created.source;
+    }
+    if (found && interrupted) {
+      await this.journalStorage.remove(recoveryKey);
     }
     onSource(source, existing);
+    // The toolbar mark for saved pages need not wait for its next index rebuild.
+    void rememberSavedUrls(collection.collectionId, [capture.canonicalUrl, capture.submittedUrl]);
     const annotation =
       draft.highlight && capture.kind === "html" && capture.selection
-        ? await this.#highlight(collection, source, capture.selection, draft)
+        ? await this.#highlight(collection, created ?? source, capture.selection, draft)
         : null;
     return { source, existing, annotation, notices };
   }
 
-  async #create(input: SaveCaptureInput, notices: string[]): Promise<Source> {
+  async #create(
+    input: SaveCaptureInput,
+    notices: string[],
+    recoverExistingFiles: boolean,
+  ): Promise<CreatedSource> {
     const { collection, capture, draft, citation } = input;
+    // The citekey lookup does not depend on the new source; fetch it while the page imports.
+    const neighbours = citation ? citekeyNeighbours(collection, citation.citation) : null;
+    neighbours?.catch(() => undefined);
     const request =
       capture.kind === "html" ? await htmlRequest(capture) : await pdfRequest(capture, input);
     const title = draft.title.trim() || request.title;
@@ -112,8 +157,7 @@ export class CaptureWriter {
       .filter(Boolean);
     // Only interrupted imports need an expensive scan for orphaned uploads.
     // Persist before writing so closing/reopening the panel retains safe recovery.
-    const recoveryKey = `capture-import:${collection.collectionId}:${capture.canonicalUrl}`;
-    const recoverExistingFiles = (await this.journalStorage.get(recoveryKey)) !== null;
+    const recoveryKey = importRecoveryKey(input);
     await this.journalStorage.set(recoveryKey, "pending");
     let source = await importSourceFile(
       { ...this.#runtime, imports: collection.sourceImports },
@@ -128,35 +172,30 @@ export class CaptureWriter {
       { recoverExistingFiles, onProgress: input.onProgress },
     );
     await this.journalStorage.remove(recoveryKey);
-    if (capture.kind === "pdf" && collection.sources.updateFields) {
-      // PDFs carry no web-capture provenance; record where the file came from for deduplication.
-      source = await collection.sources
-        .updateFields({
-          collectionId: collection.collectionId,
-          sourceId: source.id,
-          fields: { url: capture.canonicalUrl },
-        })
-        .catch(() => source);
-    }
-    if (citation) {
+    if (citation && neighbours) {
       try {
-        source = await saveCaptureCitation(collection, source, citation.citation);
+        source = await saveCaptureCitation(collection, source, citation.citation, neighbours);
       } catch (reason) {
         notices.push(
           `The citation was not stored: ${reason instanceof Error ? reason.message : String(reason)}. Add it from the source's citation panel in Reader.`,
         );
       }
     }
-    return source;
+    return { source, readable: request.bytes };
   }
 
   async #highlight(
     collection: ReaderConnectedCollection,
-    summary: SourceSummary,
+    saved: SourceSummary | CreatedSource,
     selection: QuoteSelector,
     draft: CaptureDraft,
   ): Promise<Annotation> {
-    const source = await collection.sources.get(collection.collectionId, summary.id);
+    // A source this save created is current as returned; others are read for their revision.
+    const created = "readable" in saved ? saved : null;
+    const source =
+      "readable" in saved
+        ? saved.source
+        : await collection.sources.get(collection.collectionId, saved.id);
     if (!source) {
       throw new Error(
         "The saved source is no longer available. Your highlight has not been saved.",
@@ -194,7 +233,12 @@ export class CaptureWriter {
       }
     }
     this.#annotations.set(key, identity);
-    const { document, quote } = await this.#savedTarget(collection, source, selection);
+    const { document, quote } = await this.#savedTarget(
+      collection,
+      source,
+      selection,
+      created?.readable ?? null,
+    );
     await this.journalStorage.set(recoveryKey, JSON.stringify(identity));
     const result = await createAnnotation(
       {
@@ -266,6 +310,7 @@ export class CaptureWriter {
     collection: ReaderConnectedCollection,
     source: Source,
     selection: QuoteSelector,
+    uploaded: Uint8Array | null,
   ): Promise<{ document: DocumentDescriptor; quote: QuoteSelector }> {
     const document = source.documents.find(
       (item) => ["primary", "readable"].includes(item.role) && item.mediaType === "text/html",
@@ -273,6 +318,57 @@ export class CaptureWriter {
     if (!document) {
       throw new Error("This source has no saved HTML reading copy. Open it in Reader to annotate.");
     }
+    const text = await this.#savedText(collection, source, document, uploaded);
+    const match = matchTextQuote(text, selection);
+    if (!match || match.ambiguous) {
+      throw new Error(
+        "This passage is missing or ambiguous in the saved copy. The source is saved, but the highlight is not. Open the saved copy in Reader to select it there.",
+      );
+    }
+    // Stored as the saved copy reads, which is where Reader anchors it.
+    return { document, quote: textQuoteAt(text, match.start, match.end) };
+  }
+
+  /** The reading copy's text at exactly `document.revision`, verified against its digest. */
+  async #savedText(
+    collection: ReaderConnectedCollection,
+    source: Source,
+    document: DocumentDescriptor,
+    uploaded: Uint8Array | null,
+  ): Promise<string> {
+    const key = JSON.stringify([
+      collection.collectionId,
+      source.id,
+      document.file,
+      document.revision,
+    ]);
+    const cached = this.#savedTexts.get(key);
+    if (cached !== undefined) {
+      this.#savedTexts.delete(key);
+      this.#savedTexts.set(key, cached);
+      return cached;
+    }
+    // The bytes this save uploaded are the stored copy only if they hash to its revision.
+    const bytes =
+      uploaded && (await this.#runtime.hasher.sha256(uploaded)) === document.revision
+        ? uploaded
+        : await this.#downloadVerified(collection, document);
+    const parsed = new DOMParser().parseFromString(new TextDecoder().decode(bytes), "text/html");
+    const text = pageText({ action: "text" }, parsed).text ?? "";
+    this.#savedTexts.set(key, text);
+    for (const oldest of this.#savedTexts.keys()) {
+      if (this.#savedTexts.size <= savedTextLimit) {
+        break;
+      }
+      this.#savedTexts.delete(oldest);
+    }
+    return text;
+  }
+
+  async #downloadVerified(
+    collection: ReaderConnectedCollection,
+    document: DocumentDescriptor,
+  ): Promise<Uint8Array> {
     const saved = await collection.files.read(
       collection.collectionId,
       document.file,
@@ -283,20 +379,12 @@ export class CaptureWriter {
         "The saved document changed. Open the saved copy in Reader; no highlight was created.",
       );
     }
-    const parsed = new DOMParser().parseFromString(
-      new TextDecoder().decode(saved.bytes),
-      "text/html",
-    );
-    const text = pageText({ action: "text" }, parsed).text ?? "";
-    const match = matchTextQuote(text, selection);
-    if (!match || match.ambiguous) {
-      throw new Error(
-        "This passage is missing or ambiguous in the saved copy. The source is saved, but the highlight is not. Open the saved copy in Reader to select it there.",
-      );
-    }
-    // Stored as the saved copy reads, which is where Reader anchors it.
-    return { document, quote: textQuoteAt(text, match.start, match.end) };
+    return saved.bytes;
   }
+}
+
+function importRecoveryKey({ collection, capture }: SaveCaptureInput): string {
+  return `capture-import:${collection.collectionId}:${capture.canonicalUrl}`;
 }
 
 async function readHighlightIdentity(
@@ -328,7 +416,8 @@ async function readHighlightIdentity(
 type ImportParts = Omit<SourceFileImportRequest, "collectionId"> & { readonly title: string };
 
 async function htmlRequest(capture: SelectedWebCapture): Promise<ImportParts> {
-  const prepared = await webCaptureImport(capture);
+  // Reuses the parse made for the citation when the panel opened.
+  const prepared = await webCaptureImport(capture, { document: parsedCaptureHtml(capture.html) });
   return {
     name: prepared.name,
     declaredMediaType: "text/html",
@@ -358,6 +447,8 @@ async function pdfRequest(capture: PdfCapture, input: SaveCaptureInput): Promise
     bytes,
     title,
     metadata: { site: new URL(capture.canonicalUrl).hostname },
+    // PDFs carry no web-capture provenance; where the file came from serves later URL lookups.
+    url: capture.canonicalUrl,
   };
 }
 

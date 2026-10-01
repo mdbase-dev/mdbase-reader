@@ -1,6 +1,8 @@
 import { useEffect, useRef, useState } from "react";
 
+import { displayQuote } from "./highlight-body.js";
 import { highlightColors, type CaptureDraft } from "./save-capture.js";
+import { modifierKey, saveBlocker } from "./SaveBar.js";
 import { TagInput } from "./TagInput.js";
 
 import type { ExtensionCaptureController } from "./capture-controller.js";
@@ -21,6 +23,7 @@ export function HighlightFields({
   const [openDetails, setOpenDetails] = useState(false);
   const selection = c.capture?.kind === "html" ? c.capture.selection : null;
   const intent = c.invocation;
+  const blocker = saveBlocker(c);
   const { save, clearSelection } = c;
   useEffect(() => {
     if (intent?.intent === "note" || openDetails) {
@@ -64,7 +67,7 @@ export function HighlightFields({
     openDetails || intent?.intent === "note" || Boolean(c.draft.comment || c.draft.highlightTags);
   return (
     <section aria-label="Selected passage" className="highlight-fields">
-      <blockquote>{selection.exact}</blockquote>
+      <blockquote>{displayQuote(selection.exact)}</blockquote>
       {detailsOpen ? (
         <>
           <label htmlFor="comment">
@@ -113,10 +116,9 @@ export function HighlightFields({
           <button
             key={color}
             type="button"
-            className={`swatch swatch-${color}`}
-            aria-pressed={c.draft.color === color}
+            className={`swatch swatch-${color}${c.draft.color === color ? " is-last" : ""}`}
             aria-keyshortcuts={String(index + 1)}
-            title={`Save in ${color} (${String(index + 1)})`}
+            title={`Save in ${color} (${String(index + 1)}${c.draft.color === color ? `, or ${modifierKey()}+Enter` : ""})`}
             disabled={!ready}
             onClick={() => void c.save({ highlight: true, color })}
           >
@@ -124,6 +126,7 @@ export function HighlightFields({
           </button>
         ))}
       </div>
+      {blocker ? <p className="hint">{blocker}</p> : null}
     </section>
   );
 }

@@ -1,10 +1,14 @@
 import { updatePageStatus } from "./background-page-status.js";
-import { credentiallessFetch } from "./credentialless-fetch.js";
 import { capturePanelPath, intentKey, type CaptureIntent, type InvokeMessage } from "./messages.js";
-import { clearPageMark } from "./page-badge.js";
+import { loadPageStatusConnect, preloadPageStatusConnect } from "./page-status-loader.js";
+import { forgetTab } from "./tab-cleanup.js";
 
-// The extension uses signed grants, never ambient portal cookies.
-globalThis.fetch = credentiallessFetch(globalThis.fetch.bind(globalThis));
+/*
+ * The service worker wakes for every page load and toolbar click, so this bundle stays
+ * small: the Connect SDK lives in page-status.js, loaded only when a page may be saved
+ * (see page-status-loader.ts). Connect's credentialless fetch is installed there.
+ */
+self.addEventListener("install", preloadPageStatusConnect);
 
 /**
  * Opens Reader's side panel for one tab. Everything here starts synchronously inside the
@@ -56,26 +60,11 @@ chrome.contextMenus.onClicked.addListener((info, tab) => {
 });
 
 chrome.tabs.onUpdated.addListener((tabId, change, tab) => {
-  if (change.status !== "complete") {
-    return;
-  }
-  // Pages the extension cannot read still lose the previous page's mark.
-  if (tab.url?.startsWith("https://")) {
-    void updatePageStatus(tabId, tab.url);
-  } else {
-    void clearPageMark(tabId).catch(() => undefined);
+  if (change.status === "complete") {
+    void updatePageStatus(tabId, tab.url, loadPageStatusConnect);
   }
 });
 chrome.tabs.onRemoved.addListener((tabId) => {
   // Drafts belong to a tab; free them when it closes.
-  void chrome.storage.session
-    .get(null)
-    .then((values) =>
-      chrome.storage.session.remove(
-        Object.keys(values).filter(
-          (key) => key.startsWith(`draft:${String(tabId)}:`) || key === intentKey(tabId),
-        ),
-      ),
-    )
-    .catch(() => undefined);
+  void forgetTab(tabId).catch(() => undefined);
 });

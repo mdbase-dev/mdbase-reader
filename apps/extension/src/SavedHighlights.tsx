@@ -1,7 +1,7 @@
-import { useState } from "react";
+import { memo, useMemo, useState } from "react";
 
 import { problemMessage } from "./capture-model.js";
-import { highlightComment } from "./highlight-body.js";
+import { displayQuote, highlightComment } from "./highlight-body.js";
 
 import type { ExtensionCaptureController } from "./capture-controller.js";
 import type { QuoteOutcome } from "./page-annotations.js";
@@ -13,6 +13,11 @@ export function SavedHighlights({
 }: {
   readonly controller: ExtensionCaptureController;
 }): React.JSX.Element | null {
+  const { revealHighlight, updateHighlightComment, planHighlightDeletion, deleteHighlight } = c;
+  const actions = useMemo(
+    () => ({ revealHighlight, updateHighlightComment, planHighlightDeletion, deleteHighlight }),
+    [revealHighlight, updateHighlightComment, planHighlightDeletion, deleteHighlight],
+  );
   if (!c.source) {
     return null;
   }
@@ -49,7 +54,9 @@ export function SavedHighlights({
             key={annotation.id}
             annotation={annotation}
             outcome={c.projection?.outcomes.get(annotation.id) ?? null}
-            controller={c}
+            busy={c.busy}
+            navigated={c.navigated}
+            actions={actions}
           />
         ))}
       </ul>
@@ -67,20 +74,31 @@ const outcomeLabels: Record<Exclude<QuoteOutcome, "shown">, string> = {
   ambiguous: "Matches several places on this page",
 };
 
-function HighlightItem({
+/** The controller's actions an item uses; they keep their identity across renders. */
+type HighlightActions = Pick<
+  ExtensionCaptureController,
+  "revealHighlight" | "updateHighlightComment" | "planHighlightDeletion" | "deleteHighlight"
+>;
+
+// Memoised: typing in the panel's drafts must not redraw every saved highlight.
+const HighlightItem = memo(function HighlightItem({
   annotation,
   outcome,
-  controller: c,
+  busy,
+  navigated,
+  actions: c,
 }: {
   readonly annotation: Annotation;
   readonly outcome: QuoteOutcome | null;
-  readonly controller: ExtensionCaptureController;
+  readonly busy: boolean;
+  readonly navigated: boolean;
+  readonly actions: HighlightActions;
 }): React.JSX.Element {
   const [mode, setMode] = useState<Mode>({ kind: "view" });
   const [working, setWorking] = useState(false);
   const [problem, setProblem] = useState<string | null>(null);
   const comment = highlightComment(annotation.body);
-  const locked = working || c.busy;
+  const locked = working || busy;
   const act = (action: () => Promise<void>): void => {
     setWorking(true);
     setProblem(null);
@@ -96,7 +114,7 @@ function HighlightItem({
       <QuoteButton
         annotation={annotation}
         outcome={outcome}
-        disabled={locked || c.navigated}
+        disabled={locked || navigated}
         onReveal={() => void c.revealHighlight(annotation.id)}
       />
       {mode.kind === "edit" ? (
@@ -157,7 +175,7 @@ function HighlightItem({
       ) : null}
     </li>
   );
-}
+});
 
 /** The passage; pressing it scrolls the page there, when the page could show it. */
 function QuoteButton({
@@ -181,7 +199,9 @@ function QuoteButton({
         title={shown ? "Show on the page" : undefined}
         onClick={onReveal}
       >
-        <span className="highlight-mark">{annotation.target?.quote?.exact}</span>
+        <span className="highlight-mark">
+          {displayQuote(annotation.target?.quote?.exact ?? "")}
+        </span>
       </button>
       {outcome && !shown ? <p className="hint">{outcomeLabels[outcome]}</p> : null}
     </>

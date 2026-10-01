@@ -1,12 +1,30 @@
 import { useEffect } from "react";
 
 import { readerSourceUrl } from "./capture-model.js";
+import { connectionUnavailableMessage } from "./connection-status.js";
 
 import type { ExtensionCaptureController } from "./capture-controller.js";
 
 /** Whether a save may start now: connected, titled, not busy and still on the page. */
 export function saveReady(c: ExtensionCaptureController): boolean {
   return c.snapshot.status === "ready" && !c.busy && !c.navigated && Boolean(c.draft.title.trim());
+}
+
+/**
+ * Why saving is unavailable, when the reader can do something about it. Busy and navigated
+ * states say so elsewhere (the status line and the moved-page notice).
+ */
+export function saveBlocker(c: ExtensionCaptureController): string | null {
+  if (c.busy || c.navigated) {
+    return null;
+  }
+  if (c.snapshot.status !== "ready") {
+    // While Connect starts or checks setup there is nothing for the reader to do yet.
+    return ["not_started", "starting", "checking_setup", "destroyed"].includes(c.snapshot.status)
+      ? null
+      : connectionUnavailableMessage(c.snapshot);
+  }
+  return c.draft.title.trim() ? null : "Give the source a title under Note to save it.";
 }
 
 /**
@@ -19,6 +37,7 @@ export function SaveBar({
   readonly controller: ExtensionCaptureController;
 }): React.JSX.Element | null {
   const ready = saveReady(c);
+  const blocker = saveBlocker(c);
   const selection = c.capture?.kind === "html" ? c.capture.selection : null;
   const { save, source } = c;
   useEffect(() => {
@@ -85,15 +104,13 @@ export function SaveBar({
       >
         {submitLabel(c)}
       </button>
-      {c.draft.title.trim() ? null : (
-        <p className="hint">Give the source a title under Note to save it.</p>
-      )}
+      {blocker && !selection ? <p className="hint">{blocker}</p> : null}
     </div>
   );
 }
 
 /** ⌘ on Apple keyboards; the shortcut accepts either key everywhere. */
-function modifierKey(): string {
+export function modifierKey(): string {
   return typeof navigator !== "undefined" && /Mac|iPhone|iPad/u.test(navigator.userAgent)
     ? "⌘"
     : "Ctrl";

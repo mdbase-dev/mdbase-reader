@@ -4,7 +4,9 @@
    reserved for keyboard shortcuts and codes. */
 
 :root {
-  --serif: Georgia, "Times New Roman", serif;
+  /* Times is the last resort: Linux has Noto or DejaVu Serif, which sit better beside Atkinson. */
+  --serif:
+    Georgia, Charter, "Iowan Old Style", "Noto Serif", "DejaVu Serif", "Times New Roman", serif;
   --ui-control: 13px;
   --ui-control-height: 34px;
   --ui-radius: 6px;
@@ -16,6 +18,8 @@
 body {
   min-width: 320px;
   background: var(--canvas);
+  /* Chrome's own stylesheet for extension pages sets a system font on body; restate ours. */
+  font-family: var(--sans);
   font-size: 13px;
   line-height: 1.5;
 }
@@ -272,6 +276,19 @@ details.technical summary {
   padding: 14px var(--gutter);
   color: var(--muted);
   font-size: 12px;
+}
+.tab-hint p {
+  margin: 0;
+}
+.hint-keys {
+  display: grid;
+  gap: 6px;
+  margin: 12px 0 0;
+  padding: 0;
+  list-style: none;
+}
+.hint-keys kbd {
+  font-size: 10px;
 }
 
 /* Tabs: Reader's inspector strip. A narrow panel names only the open tab, then shows only
@@ -672,6 +689,13 @@ blockquote {
   font-weight: 700;
   text-align: center;
 }
+/* A disabled primary reads as unavailable, not as a faded call to action. */
+.primary:disabled {
+  border-color: var(--line-strong);
+  color: var(--muted);
+  background: var(--hover);
+  opacity: 1;
+}
 .primary:hover:not(:disabled) {
   border-color: var(--action);
   background: var(--action);
@@ -782,10 +806,10 @@ blockquote {
   background: var(--swatch);
   content: "";
 }
-.swatch[aria-pressed="true"] {
-  border-color: var(--accent);
+/* The colour used last, which Ctrl/⌘+Enter saves in; every swatch is still a save button. */
+.swatch.is-last {
+  border-color: var(--muted);
   color: var(--ink);
-  box-shadow: inset 0 0 0 1px var(--accent);
 }
 .swatch:focus-visible {
   outline: 2px solid var(--accent);

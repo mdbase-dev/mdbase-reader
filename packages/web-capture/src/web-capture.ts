@@ -3,10 +3,11 @@ import {
   type SourceCaptureProvenance,
   type SourceImportMetadata,
 } from "@mdbase-reader/core";
-import { Readability } from "@mozilla/readability";
 
 import { citationAuthors } from "./csl-values.js";
 import { extractScholarlyMetadata, type ScholarlyMetadata } from "./scholarly-metadata.js";
+
+import type { Readability } from "@mozilla/readability";
 
 export const WEB_CAPTURE_EXTRACTOR = "mozilla-readability@0.6.0";
 
@@ -43,15 +44,27 @@ export function captureLiveDocument(document: Document, retrievedAt = new Date()
   };
 }
 
-export async function webCaptureImport(capture: CapturedWebDocument): Promise<WebCaptureImport> {
-  const parsed = parseHtml(capture.html);
+export interface WebCaptureImportOptions {
+  /** `capture.html` already parsed, such as for an earlier citation lookup. It is not modified. */
+  readonly document?: Document;
+}
+
+export async function webCaptureImport(
+  capture: CapturedWebDocument,
+  options: WebCaptureImportOptions = {},
+): Promise<WebCaptureImport> {
+  // Loaded on save only: opening the capture panel should not pay for Readability.
+  const [{ Readability }, { prepareHtmlDocument }] = await Promise.all([
+    import("@mozilla/readability"),
+    import("@mdbase-reader/renderer-html"),
+  ]);
+  const parsed = options.document ?? parseHtml(capture.html);
   const canonicalUrl = new URL(capture.canonicalUrl);
   const article = new Readability(parsed.cloneNode(true) as Document, {
     keepClasses: false,
   }).parse();
   const title = normalizedText(article?.title, 300) ?? captureTitle(parsed, canonicalUrl.hostname);
   const readable = articleDocument(parsed, article?.content ?? parsed.body.innerHTML, title);
-  const { prepareHtmlDocument } = await import("@mdbase-reader/renderer-html");
   const stem = safeStem(canonicalUrl.hostname);
   const scholarly = extractScholarlyMetadata(parsed, capture.canonicalUrl);
   const metadata = captureMetadata(parsed, canonicalUrl, article);
