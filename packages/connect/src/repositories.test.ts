@@ -210,7 +210,8 @@ describe("Connect annotation reads", () => {
       {
         types: ["reader-annotation"],
         where: 'source != null && source.asFile() == null && source.contains("src_01")',
-        frontmatterMode: "effective",
+        frontmatterMode: "both",
+        includeBody: true,
       },
       { firstPageSize: 100, pageSize: 100 },
     );

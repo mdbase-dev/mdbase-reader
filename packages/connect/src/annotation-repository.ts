@@ -1,4 +1,4 @@
-import { annotationPathsForSource } from "./annotation-query.js";
+import { annotationRecordsForSource } from "./annotation-query.js";
 import { AnnotationRecordCache } from "./annotation-record-cache.js";
 import * as sources from "./annotation-source.js";
 import { annotationFromDocument, annotationFrontmatter } from "./mapping.js";
@@ -110,16 +110,20 @@ export class ConnectAnnotationRepository implements AnnotationRepository {
     source: SourceId,
     options: ReaderRequestOptions = {},
   ): Promise<readonly Annotation[]> {
-    const matchingPaths = await annotationPathsForSource(this.client, source, options);
+    const matches = await annotationRecordsForSource(this.client, source, options);
+    options.signal?.throwIfAborted();
     const annotations = await mapConcurrent(
-      matchingPaths,
+      matches,
       readerConnectBulkConcurrency,
-      async (path) => {
-        const document = await this.#records.read(path, options);
+      async (record) => {
+        // Query results carry no revision; read only records the cache cannot vouch for.
+        const document =
+          this.#records.current(record) ?? (await this.#records.read(record.path, options, true));
         // The query matched these by the target of their link, so the source is known.
         return this.#map(collection, document, source);
       },
     );
+    options.signal?.throwIfAborted();
     return annotations.filter((annotation) => annotation.sourceId === source);
   }
 
