@@ -43,11 +43,13 @@ export class ReaderDockWorkspace {
     collection: string,
     storage: WorkspaceStorage | null,
     knownSources: ReadonlySet<SourceId>,
+    sourceIndexComplete = true,
   ) {
     this.state = new DockviewWorkspaceSnapshot({
       collection,
       storage,
       knownSources,
+      sourceIndexComplete,
       api: () => this.api,
       serialize: (api, focused) => this.sides.serialize(this.responsive.serialize(api, focused)),
       prepare: (api) => {

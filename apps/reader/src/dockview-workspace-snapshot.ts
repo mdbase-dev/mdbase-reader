@@ -17,6 +17,7 @@ interface SnapshotOptions {
   readonly collection: string;
   readonly storage: WorkspaceStorage | null;
   readonly knownSources: ReadonlySet<SourceId>;
+  readonly sourceIndexComplete?: boolean;
   readonly api: () => DockviewApi | null;
   readonly prepare: (api: DockviewApi) => void;
   readonly serialize: (api: DockviewApi, focused: string | null) => SerializedDockview;
@@ -51,6 +52,7 @@ export class DockviewWorkspaceSnapshot {
       this.options.storage,
       this.options.collection,
       this.options.knownSources,
+      this.options.sourceIndexComplete ?? true,
     );
     if (restored) {
       this.layout = { ...this.layout, recentSourceIds: restored.recentSourceIds };

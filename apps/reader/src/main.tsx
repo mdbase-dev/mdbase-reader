@@ -12,10 +12,10 @@ import { EnvironmentBadge } from "./EnvironmentBadge.js";
 import { forgetOfflineCopies } from "./forget-offline-copies.js";
 import { importService } from "./import-navigation.js";
 import { keepFocusedFieldInView } from "./keep-focused-field-in-view.js";
-import { PreviewReader } from "./preview.js";
 import "./environment-badge.css";
 import { setupPwaInstall } from "./pwa-install.js";
 import "./pwa-install.css";
+const PreviewReader = lazy(async () => ({ default: (await import("./preview.js")).PreviewReader }));
 
 // Library imports bring PDF parsing and compression code that ordinary reading never needs.
 const ImportPage = lazy(async () => {
@@ -43,7 +43,9 @@ createRoot(root).render(
         <ImportPage service={migrationService} />
       </Suspense>
     ) : new URL(location.href).searchParams.has("preview") ? (
-      <PreviewReader />
+      <Suspense fallback={null}>
+        <PreviewReader />
+      </Suspense>
     ) : (
       <ConnectReader />
     )}

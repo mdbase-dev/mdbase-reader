@@ -9,7 +9,12 @@ import {
   createLibraryWorkspaceTab,
   type SourceWorkspaceLayout,
 } from "./source-workspace-layout.js";
-import { restoreSourceWorkspace, type WorkspaceStorage } from "./source-workspace-persistence.js";
+import {
+  restoreSourceWorkspace,
+  workspaceStorageKey,
+  type WorkspaceStorage,
+} from "./source-workspace-persistence.js";
+import { sourcesForWorkspaceRestore } from "./workspace-restore-sources.js";
 
 import type { DockviewNavigation } from "./dockview-navigation.js";
 import type { ReaderDockWorkspace } from "./dockview-workspace.js";
@@ -22,6 +27,7 @@ export function restoreDockWorkspace(
   storage: WorkspaceStorage | null,
   collection: string,
   knownSources: ReadonlySet<SourceId>,
+  sourceIndexComplete = true,
 ): { readonly recentSourceIds: readonly SourceId[]; readonly focusedPanel: string | null } | null {
   const api = dock.api;
   if (!api) {
@@ -31,6 +37,7 @@ export function restoreDockWorkspace(
   try {
     saved = storage?.getItem(dockStorageKey(collection)) ?? null;
     if (saved) {
+      knownSources = sourcesForWorkspaceRestore(knownSources, saved, sourceIndexComplete);
       const parsed = parseDockState(saved, knownSources);
       preservePreEdgeLayout(storage, collection, saved);
       dock.seedDesktop(parsed);
@@ -58,13 +65,36 @@ export function restoreDockWorkspace(
     }
     api.clear();
   }
-  const legacy = restoreSourceWorkspace(storage, collection, knownSources, null);
+  const legacySources = sourcesForLegacyRestore(
+    storage,
+    collection,
+    knownSources,
+    sourceIndexComplete,
+  );
+  const legacy = restoreSourceWorkspace(storage, collection, legacySources, null);
   migrateDockWorkspace(dock, legacy);
   navigation.restoreLegacy(legacy);
   return {
     recentSourceIds: navigation.recentSourceIds,
     focusedPanel: panelTab(api.activePanel)?.id ?? null,
   };
+}
+
+function sourcesForLegacyRestore(
+  storage: WorkspaceStorage | null,
+  collection: string,
+  knownSources: ReadonlySet<SourceId>,
+  complete: boolean,
+): ReadonlySet<SourceId> {
+  try {
+    const serialized = storage?.getItem(workspaceStorageKey(collection));
+    return serialized
+      ? sourcesForWorkspaceRestore(knownSources, serialized, complete)
+      : knownSources;
+  } catch {
+    // Malformed legacy data is handled by its normal restoration path.
+    return knownSources;
+  }
 }
 
 function preservePreEdgeLayout(

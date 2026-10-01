@@ -8,6 +8,7 @@ import { useEffect, useMemo, useState } from "react";
 
 import { applyLibraryLens } from "./library-lenses.js";
 import { sortLibrarySources } from "./library-view-state.js";
+import { startReaderStartupTiming } from "./startup-timing.js";
 import {
   useAnnotationComposer,
   type AnnotationComposerController,
@@ -19,6 +20,21 @@ import type { LibrarySort } from "./library-view-state.js";
 import type { ReaderWorkspaceController } from "./use-reader-workspace.js";
 import type { SourceId, SourceSummary } from "@mdbase-reader/core";
 import type { ReadingSurface } from "@mdbase-reader/reading-surface";
+
+export function useDocumentSurfaceTiming(
+  sessionId: string | null,
+  surface: ReadingSurface | null,
+): void {
+  const finish = useMemo(
+    () => (sessionId ? startReaderStartupTiming("document-surface") : null),
+    [sessionId],
+  );
+  useEffect(() => {
+    if (surface) {
+      finish?.();
+    }
+  }, [finish, surface]);
+}
 
 export function useResponsiveInspector(setInspectorOpen: (open: boolean) => void): void {
   useEffect(() => {

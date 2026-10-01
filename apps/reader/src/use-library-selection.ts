@@ -52,18 +52,32 @@ export interface LibrarySelection {
 }
 
 export interface LibrarySelectionState extends LibrarySelection {
+  readonly selectedSourceId: SourceId | null;
   readonly reconcileSource: (source: Source) => void;
 }
 
-export function useLibrarySelection(gateway: ReaderWorkspaceGateway): LibrarySelectionState {
+export function retainedSourceSelection(
+  current: SourceId | null,
+  snapshot: ReaderLibrarySnapshot,
+): SourceId | null {
+  return current &&
+    (snapshot.sourceIndex?.complete === false || snapshot.sources.some(({ id }) => id === current))
+    ? current
+    : null;
+}
+
+export function useLibrarySelection(
+  gateway: ReaderWorkspaceGateway,
+  initialSourceId: SourceId | null = null,
+): LibrarySelectionState {
   const [library, setLibrary] = useState<AsyncResource<ReaderLibrarySnapshot>>({
     status: "loading",
   });
   const [attempt, setAttempt] = useState(0);
-  const [selectedSourceId, setSelectedSourceId] = useState<SourceId | null>(null);
+  const [selectedSourceId, setSelectedSourceId] = useState<SourceId | null>(initialSourceId);
   const [importStatus, setImportStatus] = useState<"idle" | "importing">("idle");
   const [importError, setImportError] = useState<string | null>(null);
-  const selectedSourceIdRef = useRef<SourceId | null>(null);
+  const selectedSourceIdRef = useRef<SourceId | null>(initialSourceId);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -73,10 +87,9 @@ export function useLibrarySelection(gateway: ReaderWorkspaceGateway): LibrarySel
       }
       setLibrary({ status: "ready", value: snapshot });
       const current = selectedSourceIdRef.current;
-      const next =
-        current && snapshot.sources.some(({ id }) => id === current)
-          ? current
-          : (snapshot.sources[0]?.id ?? null);
+      // An incomplete index cannot prove a requested/restored source is absent.
+      // Browsing a collection alone must not hydrate an arbitrary first source.
+      const next = retainedSourceSelection(current, snapshot);
       selectedSourceIdRef.current = next;
       setSelectedSourceId(next);
     };
@@ -140,6 +153,7 @@ export function useLibrarySelection(gateway: ReaderWorkspaceGateway): LibrarySel
     importStatus,
     importError,
     ...writes,
+    selectedSourceId,
     reconcileSource,
   };
 }

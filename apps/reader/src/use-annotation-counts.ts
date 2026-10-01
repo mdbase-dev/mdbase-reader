@@ -11,6 +11,7 @@ const zeroRevision = (): number => 0;
 /** Refresh only after membership changes, not source navigation or annotation loading. */
 export function useAnnotationCounts(
   gateway: ReaderWorkspaceGateway,
+  enabled = true,
 ): ReadonlyMap<SourceId, number> {
   const revision = useSyncExternalStore(
     gateway.subscribeAnnotationCounts ?? noSubscription,
@@ -19,7 +20,7 @@ export function useAnnotationCounts(
   );
   const [counts, setCounts] = useState(empty);
   useEffect(() => {
-    if (!gateway.annotationCounts) {
+    if (!enabled || !gateway.annotationCounts) {
       return undefined;
     }
     const controller = new AbortController();
@@ -32,6 +33,6 @@ export function useAnnotationCounts(
       })
       .catch(() => undefined);
     return () => controller.abort();
-  }, [gateway, revision]);
+  }, [enabled, gateway, revision]);
   return counts;
 }

@@ -1,8 +1,10 @@
 import { OpeningScreen } from "@mdbase-dev/ui/screens";
+import { sourceId } from "@mdbase-reader/core";
 import { useCallback, useEffect, useState, type JSX } from "react";
 
 import { navigatorPanelId } from "./dockview-workspace-state.js";
 import {
+  useDocumentSurfaceTiming,
   useReaderAnnotationComposer,
   useReaderReadingResume,
   useReaderShortcuts,
@@ -25,7 +27,7 @@ import { useSourceExport } from "./use-source-export.js";
 import { useSourceWorkspace } from "./use-source-workspace.js";
 
 import type { SourceDocumentRenderer } from "./RenderedSourceDocument.js";
-import type { ReaderWorkspaceGateway } from "./workspace-model.js";
+import type { ReaderLibrarySnapshot, ReaderWorkspaceGateway } from "./workspace-model.js";
 import type { ReaderDirectAccessController } from "@mdbase-reader/connect";
 import type { SourceId, SourceSummary } from "@mdbase-reader/core";
 import type { PickedFile } from "@mdbase-reader/platform";
@@ -51,13 +53,13 @@ export function ReaderApp({
   pickSourceFile,
   saveFile,
 }: ReaderAppProps): JSX.Element {
-  const workspace = useReaderWorkspace(gateway);
+  const workspace = useReaderWorkspace(gateway, initialSourceId ? sourceId(initialSourceId) : null);
   if (workspace.library.status !== "ready") {
     return (
       <OpeningScreen
         app="reader"
         title="Opening your reading collection"
-        detail="Reading its sources and annotations"
+        detail="Loading the first sources; the rest of the library will load in the background"
         error={workspace.library.status === "error" ? workspace.library.message : null}
         onRetry={workspace.retryLibrary}
       />
@@ -92,8 +94,6 @@ function OpenedReaderApp({
   readonly workspace: ReaderWorkspaceController;
   readonly library: ReaderWorkspaceViewModel["library"];
 }): JSX.Element {
-  const collectionKey = library.sources[0]?.collectionId ?? library.collectionName;
-  const libraryViews = useMdbaseLibraryViews(gateway);
   const [focusMode, setFocusMode] = useState(false);
   const [commandsOpen, setCommandsOpen] = useState(false);
   const [theme, changeTheme] = useThemePreference();
@@ -102,17 +102,18 @@ function OpenedReaderApp({
   useEffect(() => () => sessionLocations.clear(), [sessionLocations]);
   const deploymentUpdateAvailable = useDeploymentUpdate();
   const directAccessState = useDirectAccess(directAccess);
-  const sourceWorkspace = useSourceWorkspace({
-    selectedSourceId: workspace.selectedSource?.id ?? null,
-    sourceIds: library.sources.map(({ id }) => id),
-    collectionKey,
-    selectSource: workspace.selectSource,
-    confirmDiscard: confirmCloseDirtyTab,
-  });
+  const sourceWorkspace = useRestoredSourceWorkspace(workspace, library);
+  const libraryViews = useMdbaseLibraryViews(
+    gateway,
+    library.sourceIndex?.complete !== false ||
+      (!initialSourceId && !sourceWorkspace.activeSourceId) ||
+      workspace.sourceRecord.status === "ready",
+  );
   const surface =
     sourceWorkspace.activeTab?.kind === "source" && sourceWorkspace.activeTab.view === "document"
       ? (surfaces.get(sourceWorkspace.activeTab.id) ?? null)
       : null;
+  useDocumentSurfaceTiming(sourceWorkspace.activeTab?.id ?? null, surface);
   const onSurfaceChange = useCallback(
     (sessionId: string, next: ReadingSurface | null): void => {
       sessionLocations.attach(sessionId, next);
@@ -206,6 +207,20 @@ function openSourcesOf(
   openIds: readonly SourceId[],
 ): SourceSummary[] {
   return openIds.flatMap((sourceId) => sources.filter(({ id }) => id === sourceId));
+}
+
+function useRestoredSourceWorkspace(
+  workspace: ReaderWorkspaceController,
+  library: ReaderLibrarySnapshot,
+): ReturnType<typeof useSourceWorkspace> {
+  return useSourceWorkspace({
+    selectedSourceId: workspace.selectedSource?.id ?? null,
+    sourceIds: library.sources.map(({ id }) => id),
+    collectionKey: library.sources[0]?.collectionId ?? library.collectionName,
+    sourceIndexComplete: library.sourceIndex?.complete !== false,
+    selectSource: workspace.selectSource,
+    confirmDiscard: confirmCloseDirtyTab,
+  });
 }
 
 function confirmCloseDirtyTab(): boolean {

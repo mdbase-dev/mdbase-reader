@@ -18,6 +18,7 @@ export interface MdbaseLibraryViewsController {
 
 export function useMdbaseLibraryViews(
   gateway: ReaderWorkspaceGateway,
+  enabled = true,
 ): MdbaseLibraryViewsController {
   const [views, setViews] = useState<readonly MdbaseLibraryView[]>([defaultLibraryView]);
   const [loading, setLoading] = useState(true);
@@ -38,9 +39,12 @@ export function useMdbaseLibraryViews(
   }, [gateway]);
 
   useEffect(() => {
+    if (!enabled) {
+      return undefined;
+    }
     const timer = window.setTimeout(() => void refresh(), 0);
     return () => window.clearTimeout(timer);
-  }, [refresh]);
+  }, [enabled, refresh]);
 
   const save = useCallback(
     async (request: LibraryViewSaveRequest): Promise<MdbaseLibraryView> => {
