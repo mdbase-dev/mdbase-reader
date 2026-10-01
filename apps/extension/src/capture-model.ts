@@ -64,14 +64,6 @@ export async function sourceForUrl(
   return null;
 }
 
-export function tabIdParameter(locationUrl = location.href): number {
-  const value = Number.parseInt(new URL(locationUrl).searchParams.get("tab") ?? "", 10);
-  if (!Number.isInteger(value) || value < 0) {
-    throw new Error("Reader did not receive an active browser tab.");
-  }
-  return value;
-}
-
 export function problemMessage(reason: unknown): string {
   if (!(reason instanceof Error)) {
     return String(reason);

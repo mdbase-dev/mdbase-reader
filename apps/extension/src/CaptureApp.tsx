@@ -61,18 +61,27 @@ export function CaptureApp({
         expanded={collectionOpen}
         onDone={() => setCollectionOpen(false)}
       />
-      <section className="page-card">
-        <h1>{pageTitle(controller)}</h1>
-        <p>
-          {controller.capture
-            ? `${new URL(controller.capture.canonicalUrl).hostname}${controller.capture.kind === "pdf" ? " · PDF" : ""}`
-            : "Waiting for the active tab"}
-        </p>
-        <SaveBar controller={controller} />
-      </section>
-      <Navigated controller={controller} />
+      {unreadable(controller) ? (
+        <>
+          <section className="page-card">
+            <h1>Reader cannot read this page</h1>
+            <p>Nothing to save here</p>
+          </section>
+          <UnreadablePage controller={controller} />
+        </>
+      ) : (
+        <section className="page-card">
+          <h1>{pageTitle(controller)}</h1>
+          <p>
+            {controller.capture
+              ? `${new URL(controller.capture.canonicalUrl).hostname}${controller.capture.kind === "pdf" ? " · PDF" : ""}`
+              : "Waiting for the active tab"}
+          </p>
+          <SaveBar controller={controller} />
+        </section>
+      )}
       <PanelStatus controller={controller} />
-      {controller.capture ? (
+      {controller.capture && !unreadable(controller) ? (
         <>
           <PanelTabs tab={tab} highlightCount={highlightCount} onChange={setTab} />
           <PanelTabContent tab={tab}>
@@ -133,6 +142,14 @@ function pageTitle(c: ExtensionCaptureController): string {
   return c.capture ? c.draft.title.trim() || c.capture.pageTitle : "Reading the page…";
 }
 
+/**
+ * The tab shows a page Reader cannot read: one it never could, or one the tab moved to
+ * that following could not read.
+ */
+function unreadable(c: ExtensionCaptureController): boolean {
+  return (c.navigated && !c.following) || (!c.capture && c.problemKind === "page");
+}
+
 /** Before the first highlight: how to make one, and the keys that make it quick. */
 function HighlightHint(): React.JSX.Element {
   const shortcut = useShortcuts()?.find((value) => value.name === "save-highlight")?.keys;
@@ -154,32 +171,35 @@ function HighlightHint(): React.JSX.Element {
   );
 }
 
-/** Only when the panel cannot follow by itself; while following, the status line says so. */
-function Navigated({ controller: c }: ControllerProps): React.JSX.Element | null {
-  if (!c.navigated || c.following) {
-    return null;
-  }
+/**
+ * The tab shows a page Reader cannot read: a browser page, the Chrome Web Store, plain
+ * HTTP, or any page while site access is limited. An ordinary state, so it is said quietly,
+ * with the one thing that helps.
+ */
+function UnreadablePage({ controller: c }: ControllerProps): React.JSX.Element {
+  // Text typed for a page read earlier in this tab is still there when it comes back.
+  const moved = c.navigated && !c.following && c.capture !== null;
   return (
-    <section className="problem" role="alert">
-      <strong>This tab has moved to another page.</strong>
+    <section className="page-note" role="status">
       <p>
-        Press the mdbase Reader toolbar button (Alt+Shift+S) to continue on the new page. Your
-        unsaved text for the previous page is kept for this browser session.
+        Press the mdbase Reader toolbar button (Alt+Shift+S) to use Reader on this page. Browser
+        pages and the Chrome Web Store cannot be read by extensions.
       </p>
-      {c.followHost ? (
-        <div className="problem-actions">
-          <button type="button" onClick={() => void c.followSite()}>
-            Follow this tab on {c.followHost}
-          </button>
-        </div>
+      {moved ? (
+        <p>Your unsaved text for the previous page is kept for this browser session.</p>
       ) : null}
-      <p>
-        To follow it on every site, turn on Saved pages in{" "}
-        <button type="button" className="inline-link" onClick={openSettings}>
-          Settings
-        </button>
-        .
-      </p>
+      {c.siteAccess === false ? (
+        <>
+          <p>Site access is limited in Chrome, so Reader cannot follow your tabs.</p>
+          <button
+            type="button"
+            className="secondary compact"
+            onClick={() => void c.allowAllSites()}
+          >
+            Allow on all sites
+          </button>
+        </>
+      ) : null}
     </section>
   );
 }

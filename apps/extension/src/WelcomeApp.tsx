@@ -49,7 +49,8 @@ export function WelcomeApp(): React.JSX.Element {
                 </>
               ) : null}
               . A side panel opens where you can check the title and citation, add tags and a note,
-              and save.
+              and save. It stays open as you move between tabs and pages, showing whatever you are
+              reading.
             </p>
           </li>
           <li>
@@ -63,12 +64,12 @@ export function WelcomeApp(): React.JSX.Element {
                   , or press <kbd>{highlight}</kbd>
                 </>
               ) : null}
-              . Your highlights show on the page whenever you open the panel there.
+              . Pages you have saved are marked on the toolbar button and show your highlights.
             </p>
           </li>
         </ol>
         <p className="hint">
-          You can change the collection, shortcuts and saved-page marks at any time in{" "}
+          You can change the collection and shortcuts at any time in{" "}
           <button type="button" className="inline-link" onClick={openSettings}>
             Settings
           </button>

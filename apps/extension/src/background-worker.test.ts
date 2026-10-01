@@ -3,7 +3,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { updatePageStatus } from "./background-page-status.js";
 import { chromeStorageMirror } from "./chrome-storage.js";
 import { markSavedPage, resetPageMarkCache } from "./page-badge.js";
-import { resetPageStatusCache, setPageStatusEnabled } from "./page-status.js";
+import { resetPageStatusCache } from "./page-status.js";
 import {
   rememberSavedUrls,
   resetSavedUrlIndexCache,
@@ -21,6 +21,10 @@ import type { ReaderConnectedCollection } from "@mdbase-reader/connect";
 type Fake = ReturnType<typeof fakeChrome>;
 
 /** fakeChrome plus the worker-only APIs these modules use. */
+/**
+ * `panels` lists the windows with Reader's side panel open; tab 5 is the active tab of
+ * window 1 and every other tab is in the background there.
+ */
 function workerChrome(options: { granted?: boolean; panels?: number[] } = {}): Fake {
   const fake = fakeChrome();
   const event = (): unknown => ({ addListener: vi.fn(), removeListener: vi.fn() });
@@ -34,13 +38,18 @@ function workerChrome(options: { granted?: boolean; panels?: number[] } = {}): F
     getManifest: () => ({ action: { default_title: "Save to mdbase Reader" } }),
     getContexts: vi.fn(() =>
       Promise.resolve(
-        (options.panels ?? []).map((tab) => ({
+        (options.panels ?? []).map((windowId) => ({
           contextType: "SIDE_PANEL",
-          documentUrl: `chrome-extension://id/capture.html?tab=${String(tab)}`,
+          documentUrl: "chrome-extension://id/capture.html",
+          windowId,
         })),
       ),
     ),
   });
+  api["tabs"] = {
+    ...api["tabs"],
+    get: vi.fn((tabId: number) => Promise.resolve({ id: tabId, windowId: 1, active: tabId === 5 })),
+  };
   vi.stubGlobal("chrome", fake.chrome);
   return fake;
 }
@@ -90,15 +99,15 @@ beforeEach(() => {
 });
 afterEach(() => vi.unstubAllGlobals());
 
-describe("page status with the setting off", () => {
-  it("reads storage once per worker lifetime and never loads Connect", async () => {
-    const fake = workerChrome();
+describe("page status with site access withheld", () => {
+  it("asks Chrome once per worker lifetime and never loads Connect", async () => {
+    const fake = workerChrome({ granted: false });
     const connect = vi.fn();
     await updatePageStatus(1, "https://example.com/a", connect);
     const first = apiCalls(fake);
-    // The setting and the marked tabs: one read each, and no permission check.
+    // The marked tabs and the permission: one call each.
     expect(first).toBe(2);
-    expect(fake.chrome.permissions.contains).not.toHaveBeenCalled();
+    expect(fake.chrome.permissions.contains).toHaveBeenCalledTimes(1);
     for (let tab = 2; tab < 20; tab++) {
       await updatePageStatus(tab, `https://example.com/${String(tab)}`, connect);
     }
@@ -109,7 +118,7 @@ describe("page status with the setting off", () => {
   });
 
   it("still clears a tab it marked earlier, and only that tab", async () => {
-    const fake = workerChrome();
+    const fake = workerChrome({ granted: false });
     await markSavedPage(7, 2);
     vi.mocked(fake.chrome.action.setBadgeText).mockClear();
     resetPageMarkCache(); // a new worker: marks come back from storage.session
@@ -119,23 +128,11 @@ describe("page status with the setting off", () => {
     expect(fake.chrome.action.setBadgeText).toHaveBeenCalledWith({ tabId: 7, text: "" });
     expect(fake.session.get("page-marks")).toEqual([]);
   });
-
-  it("turning the setting off clears every mark", async () => {
-    const fake = workerChrome();
-    await markSavedPage(3, 0);
-    await markSavedPage(4, 1);
-    vi.mocked(fake.chrome.action.setBadgeText).mockClear();
-    await setPageStatusEnabled(false);
-    expect(fake.chrome.action.setBadgeText).toHaveBeenCalledWith({ tabId: 3, text: "" });
-    expect(fake.chrome.action.setBadgeText).toHaveBeenCalledWith({ tabId: 4, text: "" });
-    expect(fake.session.has("page-marks")).toBe(false);
-  });
 });
 
-describe("page status with the setting on", () => {
+describe("page status with site access", () => {
   function enabled(options: { panels?: number[] } = {}): Fake {
     const fake = workerChrome(options);
-    fake.local.set("page-status", true);
     fake.local.set("last-collection", "c1");
     return fake;
   }
@@ -164,8 +161,9 @@ describe("page status with the setting on", () => {
     );
   });
 
-  it("leaves drawing to the tab's open side panel but still sets the badge", async () => {
-    const fake = enabled({ panels: [5] });
+  it("leaves drawing to the side panel showing the tab but still sets the badge", async () => {
+    // Window 1's panel shows tab 5; tab 6 is in the background there.
+    const fake = enabled({ panels: [1] });
     const api = connectApi({ "https://example.com/saved": 3 });
     await updatePageStatus(5, "https://example.com/saved", () => api);
     expect(fake.chrome.action.setBadgeText).toHaveBeenCalledWith({ tabId: 5, text: "3" });

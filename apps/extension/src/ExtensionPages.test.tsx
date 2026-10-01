@@ -14,12 +14,13 @@ function stubManifest(): void {
   });
 }
 
-it("gathers collection, saved-page marks, shortcuts and version on the settings page", () => {
+it("gathers collection, site access, shortcuts and version on the settings page", () => {
   stubManifest();
   const html = renderToStaticMarkup(<OptionsApp />);
   expect(html).toContain("Collection");
   expect(html).toContain("Connect a collection");
-  expect(html).toContain("Mark pages I’ve saved");
+  expect(html).toContain("Pages you visit");
+  expect(html).not.toContain("Mark pages I’ve saved");
   expect(html).toContain("Keyboard shortcuts");
   expect(html).toContain("Change keyboard shortcuts");
   expect(html).toContain("0.2.0-beta.1");

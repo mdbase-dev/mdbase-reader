@@ -1,5 +1,5 @@
 import { updatePageStatus } from "./background-page-status.js";
-import { capturePanelPath, intentKey, type CaptureIntent, type InvokeMessage } from "./messages.js";
+import { intentKey, type CaptureIntent, type InvokeMessage } from "./messages.js";
 import { loadPageStatusConnect, preloadPageStatusConnect } from "./page-status-loader.js";
 import { forgetTab } from "./tab-cleanup.js";
 
@@ -11,17 +11,17 @@ import { forgetTab } from "./tab-cleanup.js";
 self.addEventListener("install", preloadPageStatusConnect);
 
 /**
- * Opens Reader's side panel for one tab. Everything here starts synchronously inside the
- * user gesture: Chrome only allows `sidePanel.open` from one, and the gesture also grants
- * `activeTab` for this tab.
+ * Opens Reader's side panel in the tab's window; the panel follows the window's active
+ * tab. Everything here starts synchronously inside the user gesture: Chrome only allows
+ * `sidePanel.open` from one, and the gesture also grants `activeTab` for this tab, which
+ * covers pages the host permission does not (or site access the reader has limited).
  */
 function openPanel(tab: chrome.tabs.Tab | undefined, intent: CaptureIntent): void {
   const tabId = tab?.id;
-  if (tabId === undefined) {
+  if (tabId === undefined || tab?.windowId === undefined) {
     return;
   }
-  void chrome.sidePanel.setOptions({ tabId, path: capturePanelPath(tabId), enabled: true });
-  void chrome.sidePanel.open({ tabId }).catch(() => undefined);
+  void chrome.sidePanel.open({ windowId: tab.windowId }).catch(() => undefined);
   void chrome.storage.session.set({ [intentKey(tabId)]: intent }).catch(() => undefined);
   // An already open panel acts on this at once; a new one reads the stored intent.
   const message: InvokeMessage = { type: "mdbase-reader/invoke", tabId, intent };

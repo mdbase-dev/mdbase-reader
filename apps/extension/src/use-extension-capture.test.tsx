@@ -2,8 +2,9 @@
 /* eslint-disable @typescript-eslint/require-await -- async act flushes React's queued work */
 import { act, useEffect } from "react";
 import { createRoot, type Root } from "react-dom/client";
-import { afterEach, beforeEach, expect, it, vi, type Mock } from "vitest";
+import { afterEach, beforeEach, expect, it, vi } from "vitest";
 
+import { usePanelConnection } from "./panel-connection.js";
 import { fakeChrome } from "./testing/fake-chrome.js";
 import { useExtensionCapture } from "./use-extension-capture.js";
 
@@ -66,6 +67,7 @@ vi.mock("./page-capture.js", () => ({
   captureTab: mocks.captureTab,
   readSelection: mocks.readSelection,
   watchTabSelection: () => Promise.resolve(),
+  unwatchTabSelection: () => undefined,
   fetchPdf: vi.fn(),
   renderAnnotations: mocks.render,
   revealAnnotation: mocks.reveal,
@@ -82,7 +84,8 @@ let root: Root;
 let controller: ExtensionCaptureController;
 let chromeFake: ReturnType<typeof fakeChrome>;
 function Harness(): null {
-  const current = useExtensionCapture(1);
+  // As in the side panel: one Connect session, with the capture for the shown tab.
+  const current = useExtensionCapture(1, usePanelConnection());
   useEffect(() => {
     controller = current;
   }, [current]);
@@ -397,9 +400,7 @@ it("edits a highlight's comment and deletes a highlight from the list", async ()
   expect(controller.annotations.map((annotation) => annotation.id)).toEqual(["a1"]);
   expect(chromeFake.chrome.action.setBadgeText).toHaveBeenLastCalledWith({ tabId: 1, text: "1" });
 });
-it("follows the tab to a new page by itself when page access is on", async () => {
-  chromeFake.local.set("page-status", true);
-  (chromeFake.chrome.permissions.contains as unknown as Mock).mockResolvedValue(true);
+it("follows the tab to a new page by itself", async () => {
   await mount();
   await act(async () => {
     controller.setDraft((draft) => ({ ...draft, tags: "from the first page" }));
@@ -428,21 +429,18 @@ it("follows the tab to a new page by itself when page access is on", async () =>
   expect(controller.draft.title).toBe("[test] Next");
   expect(controller.draft.tags).toBe("");
 });
-it("waits to be invoked again after navigating when page access is off", async () => {
+it("reads a page it could not read once the toolbar button grants access", async () => {
+  mocks.captureTab.mockRejectedValueOnce(new Error("Cannot access contents of the page."));
   await mount();
+  expect(controller.capture).toBeNull();
+  expect(controller.problemKind).toBe("page");
   await act(async () => {
-    chromeFake.emit("updated", 1, { status: "loading" });
+    chromeFake.emit("message", { type: "mdbase-reader/invoke", tabId: 1, intent: "capture" }, {});
   });
-  await act(async () => {
-    chromeFake.emit("updated", 1, { status: "complete" });
-  });
-  expect(controller.navigated).toBe(true);
-  expect(controller.following).toBe(false);
-  expect(mocks.captureTab).toHaveBeenCalledTimes(1);
+  expect(controller.capture?.canonicalUrl).toBe(page.canonicalUrl);
+  expect(controller.problem).toBeNull();
 });
 it("asks to be invoked again when following reaches a page it cannot read", async () => {
-  chromeFake.local.set("page-status", true);
-  (chromeFake.chrome.permissions.contains as unknown as Mock).mockResolvedValue(true);
   await mount();
   mocks.captureTab.mockRejectedValue(new Error("Cannot access a chrome:// URL"));
   await act(async () => {
@@ -522,4 +520,25 @@ it("keeps a highlight that other notes link to when undo is pressed", async () =
   expect(mocks.deleteAnnotation).not.toHaveBeenCalled();
   expect(controller.problem).toContain("Other notes already link to this highlight");
   expect(controller.undoable).toBe(false);
+});
+it("drops the previous page's lookup notice when the tab moves to another page", async () => {
+  mocks.sourceForUrl.mockRejectedValueOnce(new Error("lookup unavailable"));
+  await mount();
+  expect(controller.notice).toContain("Could not check existing sources");
+  mocks.captureTab.mockResolvedValue({
+    ...page,
+    canonicalUrl: "https://example.com/next",
+    submittedUrl: "https://example.com/next",
+  });
+  await act(async () => {
+    chromeFake.emit("updated", 1, { status: "loading" });
+  });
+  await act(async () => {
+    chromeFake.emit("updated", 1, { status: "complete" });
+  });
+  await act(async () => {
+    await new Promise((resolve) => setTimeout(resolve, 0));
+  });
+  expect(controller.capture?.canonicalUrl).toBe("https://example.com/next");
+  expect(controller.notice).toBeNull();
 });

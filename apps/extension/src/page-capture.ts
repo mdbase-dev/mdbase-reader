@@ -73,6 +73,12 @@ export async function watchTabSelection(tabId: number): Promise<void> {
   watchPorts.set(tabId, chrome.tabs.connect(tabId, { name: selectionWatchPort }));
 }
 
+/** Closes this panel's port to a tab, so the page stops reporting selections. */
+export function unwatchTabSelection(tabId: number): void {
+  watchPorts.get(tabId)?.disconnect();
+  watchPorts.delete(tabId);
+}
+
 const selectionWatchPort = "mdbase-reader/selection-watch";
 /** How long an installed watcher waits for its panel to connect before removing itself. */
 const selectionWatchGraceMs = 10_000;

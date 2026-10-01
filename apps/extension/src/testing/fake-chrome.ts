@@ -67,6 +67,8 @@ export function fakeChrome(): {
       contains: vi.fn(() => Promise.resolve(false)),
       request: vi.fn(() => Promise.resolve(true)),
       remove: vi.fn(() => Promise.resolve(true)),
+      onAdded: { addListener: vi.fn(), removeListener: vi.fn() },
+      onRemoved: { addListener: vi.fn(), removeListener: vi.fn() },
     },
   } as unknown as typeof chrome;
   return {
