@@ -5,12 +5,13 @@ import {
 } from "@mdbase-reader/connect";
 
 import { chromeStorageMirror } from "./chrome-storage.js";
+import { lastCollectionKey } from "./collection-memory.js";
 import { environment } from "./environment.js";
 import manifest from "./generated/mdbase-app.json";
 
 import type { KeyValueStorage } from "@mdbase-reader/platform";
 
-const lastCollectionKey = "last-collection";
+export { rememberCollection, rememberedCollection } from "./collection-memory.js";
 
 export interface ExtensionSession {
   readonly session: ReaderPortableApplicationSession;
@@ -54,13 +55,4 @@ export async function restoreCollection(
     session.select(remembered);
   }
   return session.getSnapshot();
-}
-
-export function rememberCollection(collectionId: string): void {
-  void chrome.storage.local.set({ [lastCollectionKey]: collectionId }).catch(() => undefined);
-}
-
-export async function rememberedCollection(): Promise<string | null> {
-  const { [lastCollectionKey]: value } = await chrome.storage.local.get(lastCollectionKey);
-  return typeof value === "string" ? value : null;
 }
