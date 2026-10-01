@@ -1,4 +1,4 @@
-import { annotationRecordsForSource } from "./annotation-query.js";
+import { annotationPathsForSource, annotationRecordsAt } from "./annotation-query.js";
 import { AnnotationRecordCache } from "./annotation-record-cache.js";
 import * as sources from "./annotation-source.js";
 import { annotationFromDocument, annotationFrontmatter } from "./mapping.js";
@@ -110,19 +110,21 @@ export class ConnectAnnotationRepository implements AnnotationRepository {
     source: SourceId,
     options: ReaderRequestOptions = {},
   ): Promise<readonly Annotation[]> {
-    const matches = await annotationRecordsForSource(this.client, source, options);
+    const paths = await annotationPathsForSource(this.client, source, options);
     options.signal?.throwIfAborted();
-    const annotations = await mapConcurrent(
-      matches,
-      readerConnectBulkConcurrency,
-      async (record) => {
-        // Query results carry no revision; read only records the cache cannot vouch for.
-        const document =
-          this.#records.current(record) ?? (await this.#records.read(record.path, options, true));
-        // The query matched these by the target of their link, so the source is known.
-        return this.#map(collection, document, source);
-      },
-    );
+    // Without the records' current content every annotation is read, as before.
+    const matches = await annotationRecordsAt(this.client, paths, options).catch(() => {
+      options.signal?.throwIfAborted();
+      return new Map<string, QueryRecord>();
+    });
+    const annotations = await mapConcurrent(paths, readerConnectBulkConcurrency, async (path) => {
+      // Query results carry no revision; read only records the cache cannot vouch for.
+      const match = matches.get(path);
+      const document =
+        (match && this.#records.current(match)) ?? (await this.#records.read(path, options, true));
+      // The query matched these by the target of their link, so the source is known.
+      return this.#map(collection, document, source);
+    });
     options.signal?.throwIfAborted();
     return annotations.filter((annotation) => annotation.sourceId === source);
   }

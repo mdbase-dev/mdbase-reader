@@ -63,11 +63,20 @@ function authority(
     const id = quoted(/^id == ("[^"]*")$/u);
     const target = quoted(/source\.asFile\(\)\.file\.path == ("(?:[^"\\]|\\.)*")$/u);
     const contained = quoted(/source\.contains\(("[^"]*")\)$/u);
+    // The listing's second query names the matched paths, following no links.
+    const named = where.startsWith("file.path == ")
+      ? [...where.matchAll(/file\.path == ("(?:[^"\\]|\\.)*")/gu)].map(
+          ([, path]) => JSON.parse(path!) as string,
+        )
+      : null;
     const results: QueryRecord[] =
       id !== undefined
         ? [{ path: "sources/one.md", effectiveFrontmatter: { id }, types: [], file: {} }]
         : [...annotations]
-            .filter(([, record]) => {
+            .filter(([path, record]) => {
+              if (named) {
+                return named.includes(path);
+              }
               const reference = String(record.frontmatter["source"]);
               const link = links[reference] ?? null;
               return target !== undefined
@@ -147,7 +156,8 @@ describe("Connect annotations for one source", () => {
     queryPages.mockClear();
     const second = await repository.listForSource(collection, sourceId("src_1"));
     expect(read).not.toHaveBeenCalled();
-    expect(queryPages).toHaveBeenCalledTimes(3);
+    // The source lookup, its two link queries, then one query naming the matched paths.
+    expect(queryPages).toHaveBeenCalledTimes(4);
     expect(second).toEqual(first);
     expect(second[0]?.recordRevision).toBe("rev-annotations/ann_0.md-1");
   });

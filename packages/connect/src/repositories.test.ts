@@ -210,6 +210,15 @@ describe("Connect annotation reads", () => {
       {
         types: ["reader-annotation"],
         where: 'source != null && source.asFile() == null && source.contains("src_01")',
+        frontmatterMode: "effective",
+      },
+      { firstPageSize: 100, pageSize: 100 },
+    );
+    // Bodies come from a second query naming the matched paths, which follows no links.
+    expect(queryPages).toHaveBeenCalledWith(
+      {
+        types: ["reader-annotation"],
+        where: 'file.path == "annotations/matching.md"',
         frontmatterMode: "both",
         includeBody: true,
       },
@@ -228,7 +237,62 @@ describe("Connect annotation reads", () => {
     ]);
 
     await repository.listForSource(collectionId("reading"), sourceId("src_02"));
-    expect(queryPages).toHaveBeenCalledTimes(5);
+    // Each listing: a legacy-reference query, then one query for the matched paths' bodies.
+    expect(queryPages).toHaveBeenCalledTimes(7);
+  });
+});
+
+describe("Connect annotation listing fallback", () => {
+  it("reads each matched annotation when the body query is refused", async () => {
+    const queryPages = vi.fn((input: { where?: string }) => {
+      if (input.where?.startsWith("file.path == ")) {
+        throw new Error("This query is not available here.");
+      }
+      return queryStream(
+        input.where?.includes("contains")
+          ? [
+              {
+                path: "annotations/matching.md",
+                effectiveFrontmatter: { id: "ann_01", source: "src_01" },
+                types: ["reader-annotation"],
+                file: {},
+              },
+            ]
+          : [],
+      );
+    });
+    const read = vi.fn(() =>
+      Promise.resolve(
+        success<RecordDocument>({
+          path: "annotations/matching.md",
+          revision: "rev-1",
+          types: ["reader-annotation"],
+          frontmatter: {
+            id: "ann_01",
+            source: "src_01",
+            annotation_type: "note",
+            created_at: "2026-08-09T00:00:00.000Z",
+          },
+          effectiveFrontmatter: {
+            id: "ann_01",
+            source: "src_01",
+            annotation_type: "note",
+            created_at: "2026-08-09T00:00:00.000Z",
+          },
+          body: "A useful note.",
+          file: {},
+        }),
+      ),
+    );
+    const repository = new ConnectAnnotationRepository({
+      queryPages,
+      read,
+    } as unknown as ReaderConnectClient);
+
+    const annotations = await repository.listForSource(collectionId("reading"), sourceId("src_01"));
+
+    expect(read).toHaveBeenCalledOnce();
+    expect(annotations.map((annotation) => annotation.body)).toEqual(["A useful note."]);
   });
 });
 
