@@ -76,8 +76,8 @@ MDBASE_ENV=staging pnpm deploy:dev      # staging release rehearsal
 This builds Reader with an HTTPS manifest for <https://lab.mdbase-reader.pages.dev>, validates the
 manifest, restores the repository's generated manifest files, and uploads `apps/reader/dist` to the
 `lab` branch of the `mdbase-reader` Pages project. The deployed app uses the lab Connect service and
-the isolated lab connector at `http://127.0.0.1:28487`. Start that profile from the cloud-ops
-checkout with `bin/mdbase-env lab desktop`, then sign in with a lab account. Staging remains an
+the isolated lab connector at `http://127.0.0.1:28487`. Maintainers start that profile from the
+private mdbase-cloud-ops checkout with `bin/mdbase-env lab desktop`, then sign in with a lab account. Staging remains an
 explicit release-rehearsal target and production remains on its protected deployment command.
 
 ## Production deployment
@@ -123,8 +123,8 @@ MDBASE_ENV=production pnpm --filter @mdbase-reader/extension build    # producti
 
 Load `apps/extension/dist` as an unpacked extension in Chrome 123 or newer; reload it after
 rebuilding. The build's Connect service, loopback connector, Reader origin and name suffix come
-from Reader's deployment table. For LAB, start the isolated desktop profile with
-`bin/mdbase-env lab desktop` from the cloud-ops checkout. Reload the unpacked extension and
+from Reader's deployment table. For LAB, maintainers start the isolated desktop profile
+with `bin/mdbase-env lab desktop` from the private mdbase-cloud-ops checkout. Reload the unpacked extension and
 reauthorize it after switching environments.
 
 Package a production extension ZIP with:

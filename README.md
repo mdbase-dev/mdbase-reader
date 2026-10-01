@@ -153,3 +153,7 @@ the [security policy](SECURITY.md).
 
 Want to build Reader or contribute? See the [development guide](docs/development.md) for local
 setup, checks, extension builds, deployment, and architecture notes.
+
+## License
+
+mdbase Reader is available under the [MIT License](LICENSE).
