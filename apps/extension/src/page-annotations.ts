@@ -1,4 +1,4 @@
-import { textQuoteMatcher, type Annotation, type QuoteSelector } from "@mdbase-reader/core";
+import type { Annotation, QuoteSelector } from "@mdbase-reader/core";
 
 export interface PageQuote extends QuoteSelector {
   readonly color?: string;
@@ -16,32 +16,34 @@ export interface PageProjection {
   /** One per quote passed in, in the same order. */
   readonly outcomes: readonly QuoteOutcome[];
 }
-/** A located quote: offsets into the page text that {@link pageText} indexed. */
-export interface PageHighlight {
-  readonly start: number;
-  readonly end: number;
-  readonly color: string;
-  /** The quote's position in the request, for `focus`. */
-  readonly index: number;
-}
 export type PageTextRequest =
   | { readonly action: "text"; readonly expectedUrl?: string }
   | { readonly action: "selection" }
   | {
-      readonly action: "render";
-      readonly highlights: readonly PageHighlight[];
-      /** The indexed text's version; a page that changed since then is not drawn on. */
-      readonly version: string;
+      readonly action: "draw";
+      readonly quotes: readonly PageQuote[];
       readonly expectedUrl?: string;
-      /** Scroll to the highlight with this index and mark it briefly. */
+      /** Scroll to the quote with this index and mark it briefly. */
       readonly focus?: number;
+    }
+  | {
+      /** Scrolls to an already drawn quote; draws them all only when it is not on the page. */
+      readonly action: "reveal";
+      readonly quotes: readonly PageQuote[];
+      readonly focus: number;
+      readonly expectedUrl?: string;
     };
 export interface PageTextResult {
   readonly text?: string;
-  readonly version?: string;
   readonly selection?: QuoteSelector | null;
-  readonly rendered?: boolean;
+  /** Present when the quotes were (re)drawn. */
+  readonly projection?: PageProjection;
+  /** The tab is no longer on the page the request was made for. */
+  readonly navigated?: boolean;
 }
+
+const navigatedMessage =
+  "The tab has navigated to another page. Reopen Reader’s extension on that page.";
 
 export function annotationQuotes(annotations: readonly Annotation[]): readonly PageQuote[] {
   return annotations.flatMap((annotation) =>
@@ -51,35 +53,9 @@ export function annotationQuotes(annotations: readonly Annotation[]): readonly P
   );
 }
 
-/** Where each quote falls in the page's text, anchored exactly as Reader anchors it. */
-export function locateQuotes(
-  text: string,
-  quotes: readonly PageQuote[],
-): PageProjection & { readonly highlights: readonly PageHighlight[] } {
-  const match = textQuoteMatcher(text);
-  const report = { total: quotes.length, shown: 0, missing: 0, ambiguous: 0 };
-  const outcomes: QuoteOutcome[] = [];
-  const highlights: PageHighlight[] = [];
-  for (const [index, quote] of quotes.entries()) {
-    const found = match(quote);
-    const outcome = !found ? "missing" : found.ambiguous ? "ambiguous" : "shown";
-    report[outcome]++;
-    outcomes.push(outcome);
-    if (found && outcome === "shown") {
-      highlights.push({
-        start: found.start,
-        end: found.end,
-        color: quote.color ?? "yellow",
-        index,
-      });
-    }
-  }
-  return { report, outcomes, highlights };
-}
-
 /**
- * Draws the quotes on the tab, optionally scrolling to the one at `focus`. The page is
- * indexed, matched here, then drawn; if it changes in between, the round trip repeats.
+ * Draws the quotes on the tab, optionally scrolling to the one at `focus`. The page indexes
+ * its text, anchors the quotes and draws them in one injection, so nothing changes between.
  */
 export async function drawPageQuotes(
   tabId: number,
@@ -87,42 +63,72 @@ export async function drawPageQuotes(
   expectedUrl: string,
   focus?: number,
 ): Promise<PageProjection> {
-  for (let attempt = 0; attempt < 3; attempt++) {
-    const indexed = await injectPageText(tabId, { action: "text", expectedUrl });
-    const { report, outcomes, highlights } = locateQuotes(indexed.text ?? "", quotes);
-    const drawn = await injectPageText(tabId, {
-      action: "render",
-      highlights,
-      version: indexed.version ?? "",
-      expectedUrl,
-      ...(focus === undefined ? {} : { focus }),
-    });
-    if (drawn.rendered) {
-      return { report, outcomes };
-    }
+  const { projection } = await injectPageText(tabId, {
+    action: "draw",
+    quotes,
+    expectedUrl,
+    ...(focus === undefined ? {} : { focus }),
+  });
+  if (!projection) {
+    throw new Error("Could not read this page. Reopen the extension on it.");
   }
-  throw new Error("The page kept changing while Reader drew its highlights. Try again.");
+  return projection;
+}
+
+/**
+ * Scrolls to the quote at `focus` and marks it briefly. When it is already drawn nothing
+ * else is touched and this returns null; otherwise every quote is drawn, as by
+ * {@link drawPageQuotes}, and the new projection is returned.
+ */
+export async function revealPageQuote(
+  tabId: number,
+  quotes: readonly PageQuote[],
+  focus: number,
+  expectedUrl: string,
+): Promise<PageProjection | null> {
+  const { projection } = await injectPageText(tabId, {
+    action: "reveal",
+    quotes,
+    focus,
+    expectedUrl,
+  });
+  return projection ?? null;
 }
 
 export async function injectPageText(
   tabId: number,
   request: PageTextRequest,
 ): Promise<PageTextResult> {
-  const [execution] = await chrome.scripting.executeScript({
-    target: { tabId },
-    func: pageText,
-    args: [request],
-  });
+  let execution: chrome.scripting.InjectionResult<PageTextResult> | undefined;
+  try {
+    [execution] = await chrome.scripting.executeScript({
+      target: { tabId },
+      func: pageText,
+      args: [request],
+    });
+  } catch (reason) {
+    // Navigating away usually also ends `activeTab` access; say why, not that access failed.
+    const url = "expectedUrl" in request ? request.expectedUrl : undefined;
+    const tab = url ? await chrome.tabs.get(tabId).catch(() => null) : null;
+    if (url && tab?.url && tab.url.split("#")[0] !== url.split("#")[0]) {
+      throw new Error(navigatedMessage, { cause: reason });
+    }
+    throw reason;
+  }
   if (!execution?.result) {
     throw new Error("Could not read this page. Reopen the extension on it.");
+  }
+  if (execution.result.navigated) {
+    throw new Error(navigatedMessage);
   }
   return execution.result;
 }
 
 /**
- * Injected. Indexes the page's visible text, reads the selection, or draws highlights at
- * offsets into that same text. Matching happens in the extension, not here.
- * Chrome serializes this function alone: all runtime helpers must be nested.
+ * Injected. Indexes the page's visible text, reads the selection, or anchors quotes in that
+ * text and draws them. Anchoring mirrors `textQuoteMatcher` in core, which Reader uses; it
+ * is repeated here because Chrome serializes this function alone, so all runtime helpers
+ * must be nested. page-annotations.test.ts checks that the two agree.
  */
 // eslint-disable-next-line max-lines-per-function
 export function pageText(request: PageTextRequest, doc: Document = document): PageTextResult {
@@ -131,58 +137,77 @@ export function pageText(request: PageTextRequest, doc: Document = document): Pa
     request.expectedUrl &&
     doc.location.href.split("#")[0] !== request.expectedUrl.split("#")[0]
   ) {
-    throw new Error("The tab has navigated to another page. Reopen the extension there.");
+    return { navigated: true };
   }
   interface Entry {
     node: Text;
     start: number;
     end: number;
   }
-  const { text, nodes } = indexDocument();
-  const version = versionOf(text);
+  interface Candidate {
+    readonly start: number;
+    readonly end: number;
+    readonly errors: number;
+  }
+  const excluded =
+    "script,style,noscript,textarea,input,select,[contenteditable],[hidden],[aria-hidden='true'],[data-mdbase-reader-ui]";
+  // As `textQuoteContextLength` in core.
+  const contextLength = 64;
   switch (request.action) {
     case "text":
-      return { text, version };
+      return { text: indexDocument().text };
     case "selection":
       return { selection: selection() };
-    case "render":
-      if (request.version !== version) {
-        return { rendered: false };
-      }
-      render(request.highlights, request.focus);
-      return { rendered: true };
+    case "draw":
+      return { projection: draw(request.quotes, request.focus) };
+    case "reveal":
+      return reveal(request.quotes, request.focus);
   }
 
   function indexDocument(): { text: string; nodes: Entry[] } {
-    const excluded =
-      "script,style,noscript,textarea,input,select,[contenteditable],[hidden],[aria-hidden='true'],[data-mdbase-reader-ui]";
     const nodes: Entry[] = [];
     let text = "";
-    const walker = doc.createTreeWalker(doc.body, NodeFilter.SHOW_TEXT, {
+    if (doc.body.closest(excluded)) {
+      return { text, nodes };
+    }
+    // Rejecting an excluded element skips its whole subtree, so no text node needs a lookup.
+    const walker = doc.createTreeWalker(doc.body, NodeFilter.SHOW_ELEMENT | NodeFilter.SHOW_TEXT, {
       acceptNode(node) {
-        return node.parentElement?.closest(excluded)
+        if (node.nodeType === Node.TEXT_NODE) {
+          return NodeFilter.FILTER_ACCEPT;
+        }
+        return (node as Element).matches(excluded)
           ? NodeFilter.FILTER_REJECT
-          : NodeFilter.FILTER_ACCEPT;
+          : NodeFilter.FILTER_SKIP;
       },
     });
     for (let node = walker.nextNode(); node; node = walker.nextNode()) {
       const start = text.length;
-      text += node.textContent ?? "";
+      text += (node as Text).data;
       nodes.push({ node: node as Text, start, end: text.length });
     }
     return { text, nodes };
   }
-  function versionOf(value: string): string {
-    let hash = 0x811c9dc5;
-    for (let i = 0; i < value.length; i++) {
-      hash = Math.imul(hash ^ value.charCodeAt(i), 0x01000193);
+
+  /** The first entry whose end passes `offset` (or reaches it, with `inclusive`). */
+  function entryAt(nodes: readonly Entry[], offset: number, inclusive: boolean): Entry | null {
+    let low = 0;
+    let high = nodes.length;
+    while (low < high) {
+      const middle = (low + high) >>> 1;
+      const end = nodes[middle]?.end ?? 0;
+      if (inclusive ? end >= offset : end > offset) {
+        high = middle;
+      } else {
+        low = middle + 1;
+      }
     }
-    return `${String(value.length)}:${(hash >>> 0).toString(16)}`;
+    return nodes[low] ?? null;
   }
-  function rangeAt(start: number, end: number): Range | null {
-    const first = nodes.find((entry) => entry.start <= start && entry.end > start);
-    const last = nodes.find((entry) => entry.start < end && entry.end >= end);
-    if (!first || !last) {
+  function rangeAt(nodes: readonly Entry[], start: number, end: number): Range | null {
+    const first = entryAt(nodes, start, false);
+    const last = entryAt(nodes, end, true);
+    if (!first || !last || first.start > start || last.start >= end) {
       return null;
     }
     const range = doc.createRange();
@@ -190,48 +215,129 @@ export function pageText(request: PageTextRequest, doc: Document = document): Pa
     range.setEnd(last.node, end - last.start);
     return range;
   }
+
+  /**
+   * Reads the selection from its own text and the context around it, without indexing the
+   * page. Text the index leaves out is left out here too.
+   */
   function selection(): QuoteSelector | null {
     const selected = doc.defaultView?.getSelection();
     if (!selected?.rangeCount || selected.isCollapsed) {
       return null;
     }
     const range = selected.getRangeAt(0);
-    const offsets = nodes.flatMap(({ node, start }) => {
-      if (!range.intersectsNode(node)) {
-        return [];
+    const { indexed, step } = textWalker();
+    const deepestLast = (node: Node): Node => (node.lastChild ? deepestLast(node.lastChild) : node);
+    /** The indexed text at a range boundary, moving inward when the boundary is between nodes. */
+    const boundary = (
+      container: Node,
+      offset: number,
+      forward: boolean,
+    ): { node: Text; offset: number } | null => {
+      let node: Text | null;
+      if (container.nodeType === Node.TEXT_NODE) {
+        if (indexed(container)) {
+          return { node: container, offset };
+        }
+        node = step(container, forward);
+      } else {
+        const child = container.childNodes[forward ? offset : offset - 1];
+        const edge = child ? (forward ? child : deepestLast(child)) : null;
+        if (edge && indexed(edge)) {
+          node = edge;
+        } else if (edge) {
+          node = step(edge, forward);
+        } else {
+          node = step(forward ? deepestLast(container) : container, forward);
+        }
       }
-      const from = range.startContainer === node ? range.startOffset : 0;
-      const to = range.endContainer === node ? range.endOffset : node.length;
-      return to > from ? [{ start: start + from, end: start + to }] : [];
-    });
-    const first = offsets[0];
-    const last = offsets.at(-1);
-    if (!first || !last) {
+      return node ? { node, offset: forward ? 0 : node.length } : null;
+    };
+    const first = boundary(range.startContainer, range.startOffset, true);
+    const last = boundary(range.endContainer, range.endOffset, false);
+    const inOrder = (from: Text, to: Text): boolean =>
+      from === to || Boolean(from.compareDocumentPosition(to) & Node.DOCUMENT_POSITION_FOLLOWING);
+    if (!first || !last || !inOrder(first.node, last.node)) {
+      return null;
+    }
+    let exact = first.node.data.slice(
+      first.offset,
+      first.node === last.node ? last.offset : undefined,
+    );
+    for (let node = first.node; node !== last.node;) {
+      const next = step(node, true);
+      if (!next) {
+        break;
+      }
+      exact += next === last.node ? next.data.slice(0, last.offset) : next.data;
+      node = next;
+    }
+    // Anchoring ignores whitespace, so the page's layout whitespace is collapsed for display.
+    exact = exact.replace(/\s+/gu, " ").trim();
+    if (!exact) {
       return null;
     }
     // As `textQuoteAt` records it in Reader.
-    const prefix = text.slice(Math.max(0, first.start - 64), first.start);
-    const suffix = text.slice(last.end, last.end + 64);
-    return {
-      exact: text.slice(first.start, last.end),
-      ...(prefix ? { prefix } : {}),
-      ...(suffix ? { suffix } : {}),
+    const context = (from: Text, edge: string, forward: boolean): string => {
+      let value = edge;
+      for (let node = step(from, forward); node && value.length < contextLength;) {
+        value = forward ? value + node.data : node.data + value;
+        node = step(node, forward);
+      }
+      return forward ? value.slice(0, contextLength) : value.slice(-contextLength);
     };
+    const prefix = context(first.node, first.node.data.slice(0, first.offset), false);
+    const suffix = context(last.node, last.node.data.slice(last.offset), true);
+    return { exact, ...(prefix ? { prefix } : {}), ...(suffix ? { suffix } : {}) };
   }
-  function render(highlights: readonly PageHighlight[], focus: number | undefined): void {
-    // No text-node splitting: overlapping ranges and links remain intact.
+
+  /**
+   * Steps through the text the index would include, from any node. Exclusion is decided per
+   * element once, so starting inside an excluded subtree still skips its text.
+   */
+  function textWalker(): {
+    indexed: (node: Node) => node is Text;
+    step: (from: Node, forward: boolean) => Text | null;
+  } {
+    const verdicts = new Map<Element, boolean>();
+    const isExcluded = (element: Element | null): boolean => {
+      if (!element) {
+        return false;
+      }
+      let verdict = verdicts.get(element);
+      if (verdict === undefined) {
+        verdict = element.matches(excluded) || isExcluded(element.parentElement);
+        verdicts.set(element, verdict);
+      }
+      return verdict;
+    };
+    const indexed = (node: Node): node is Text =>
+      node.nodeType === Node.TEXT_NODE && !isExcluded(node.parentElement);
+    const walker = doc.createTreeWalker(doc.body, NodeFilter.SHOW_ELEMENT | NodeFilter.SHOW_TEXT, {
+      acceptNode(node) {
+        if (node.nodeType === Node.TEXT_NODE) {
+          return indexed(node) ? NodeFilter.FILTER_ACCEPT : NodeFilter.FILTER_REJECT;
+        }
+        return isExcluded(node as Element) ? NodeFilter.FILTER_REJECT : NodeFilter.FILTER_SKIP;
+      },
+    });
+    const step = (from: Node, forward: boolean): Text | null => {
+      walker.currentNode = from;
+      return (forward ? walker.nextNode() : walker.previousNode()) as Text | null;
+    };
+    return { indexed, step };
+  }
+
+  function highlights(): { registry: HighlightRegistry; HighlightClass: typeof Highlight } {
     const css = doc.defaultView?.CSS as { highlights?: HighlightRegistry } | undefined;
     const HighlightClass = doc.defaultView?.Highlight;
     const registry = css?.highlights;
     if (!registry || !HighlightClass) {
       throw new Error("This browser cannot display highlights. Open the saved copy in Reader.");
     }
-    for (const name of registry.keys()) {
-      if (name.startsWith("mdbase-reader-")) {
-        registry.delete(name);
-      }
-    }
-    doc.querySelector("style[data-mdbase-reader-highlights]")?.remove();
+    return { registry, HighlightClass };
+  }
+  function colorOf(quote: PageQuote): string {
     const palette: Record<string, string> = {
       yellow: "#f7d24e88",
       green: "#83cf9988",
@@ -239,33 +345,274 @@ export function pageText(request: PageTextRequest, doc: Document = document): Pa
       pink: "#f49fc688",
       purple: "#bb9bec88",
     };
-    const decorations = highlights.flatMap((highlight) => {
-      const range = rangeAt(highlight.start, highlight.end);
-      return range ? [{ ...highlight, range }] : [];
-    });
+    return palette[quote.color ?? "yellow"] ?? "#f7d24e88";
+  }
+  /** Named after the quote itself, so a later reveal can find it without redrawing. */
+  function highlightName(quote: PageQuote): string {
+    const key = [quote.color ?? "", quote.prefix ?? "", quote.exact, quote.suffix ?? ""].join("\0");
+    let hash = 0x811c9dc5;
+    for (let i = 0; i < key.length; i++) {
+      hash = Math.imul(hash ^ key.charCodeAt(i), 0x01000193);
+    }
+    return `mdbase-reader-${(hash >>> 0).toString(16)}`;
+  }
+  function focusOn(range: AbstractRange, color: string): void {
+    const { registry, HighlightClass } = highlights();
+    registry.set("mdbase-reader-focus", new HighlightClass(range));
+    const style = doc.querySelector("style[data-mdbase-reader-highlights]");
+    const rule = `::highlight(mdbase-reader-focus) { text-decoration: underline 3px ${color.slice(0, 7)}; text-underline-offset: 3px; }`;
+    if (style) {
+      // One focus rule at a time, in the stylesheet a capture leaves out.
+      style.textContent = `${style.textContent.replace(/\n::highlight\(mdbase-reader-focus\).*$/u, "")}\n${rule}`;
+    }
+    range.startContainer.parentElement?.scrollIntoView({ block: "center", behavior: "smooth" });
+    // Only this marker goes; a later draw or reveal may already have replaced it.
+    const marker = registry.get("mdbase-reader-focus");
+    setTimeout(() => {
+      if (registry.get("mdbase-reader-focus") === marker) {
+        registry.delete("mdbase-reader-focus");
+      }
+    }, 2500);
+  }
+
+  function reveal(quotes: readonly PageQuote[], focus: number): PageTextResult {
+    const quote = quotes[focus];
+    const drawn = quote ? highlights().registry.get(highlightName(quote)) : undefined;
+    const [range] = drawn ? [...drawn] : [];
+    // A page that replaced the highlighted text leaves the old range detached or empty.
+    if (quote && range && !range.collapsed && range.startContainer.isConnected) {
+      focusOn(range, colorOf(quote));
+      return {};
+    }
+    return { projection: draw(quotes, focus) };
+  }
+
+  function draw(quotes: readonly PageQuote[], focus: number | undefined): PageProjection {
+    // No text-node splitting: overlapping ranges and links remain intact.
+    const { registry, HighlightClass } = highlights();
+    const { text, nodes } = indexDocument();
+    const match = quoteMatcher(text);
+    const report = { total: quotes.length, shown: 0, missing: 0, ambiguous: 0 };
+    const outcomes: QuoteOutcome[] = [];
+    const decorations = new Map<string, { range: Range; quote: PageQuote }>();
+    let focused: { range: Range; quote: PageQuote } | undefined;
+    for (const [index, quote] of quotes.entries()) {
+      const found = match(quote);
+      const outcome = !found ? "missing" : found.ambiguous ? "ambiguous" : "shown";
+      report[outcome]++;
+      outcomes.push(outcome);
+      const range = found && outcome === "shown" ? rangeAt(nodes, found.start, found.end) : null;
+      if (range) {
+        // Identical quotes anchor identically, so one highlight serves them all.
+        decorations.set(highlightName(quote), { range, quote });
+        focused = index === focus ? { range, quote } : focused;
+      }
+    }
+    for (const name of registry.keys()) {
+      if (name.startsWith("mdbase-reader-")) {
+        registry.delete(name);
+      }
+    }
+    doc.querySelector("style[data-mdbase-reader-highlights]")?.remove();
     const style = doc.createElement("style");
     style.dataset["mdbaseReaderHighlights"] = "true";
-    style.textContent = decorations
-      .map(({ range, color }, index) => {
-        const name = `mdbase-reader-${String(index)}`;
+    style.textContent = [...decorations]
+      .map(([name, { range, quote }]) => {
         registry.set(name, new HighlightClass(range));
-        return `::highlight(${name}) { background-color: ${palette[color] ?? "#f7d24e88"}; color: inherit; }`;
+        return `::highlight(${name}) { background-color: ${colorOf(quote)}; color: inherit; }`;
       })
       .join("\n");
     doc.head.append(style);
-    const focused = decorations.find(({ index }) => index === focus);
     if (focused) {
-      registry.set("mdbase-reader-focus", new HighlightClass(focused.range));
-      style.textContent += `\n::highlight(mdbase-reader-focus) { text-decoration: underline 3px ${(palette[focused.color] ?? "#f7d24e").slice(0, 7)}; text-underline-offset: 3px; }`;
-      const element = focused.range.startContainer.parentElement;
-      element?.scrollIntoView({ block: "center", behavior: "smooth" });
-      // Only this marker goes; a later render may already have replaced it.
-      const marker = registry.get("mdbase-reader-focus");
-      setTimeout(() => {
-        if (registry.get("mdbase-reader-focus") === marker) {
-          registry.delete("mdbase-reader-focus");
+      focusOn(focused.range, colorOf(focused.quote));
+    }
+    return { report, outcomes };
+  }
+
+  /** `textQuoteMatcher` from core; see that module for the reasoning behind each step. */
+  // eslint-disable-next-line max-lines-per-function
+  function quoteMatcher(
+    text: string,
+  ): (quote: QuoteSelector) => { start: number; end: number; ambiguous: boolean } | null {
+    const minimumContext = 4;
+    const minimumApproximateLength = 12;
+    const minimumAnchorLength = 6;
+    const maximumAnchorOccurrences = 50;
+    const maximumComparisonCells = 4_000_000;
+    const ignorable = /[\s\u00ad\u200b-\u200d\u2060\ufeff]/u;
+    const haystack = normalize(text);
+    return (quote) => {
+      const needle = normalize(quote.exact).text;
+      if (!needle) {
+        return null;
+      }
+      const exact = occurrences(haystack.text, needle, Number.POSITIVE_INFINITY).map((start) => ({
+        start,
+        end: start + needle.length,
+        errors: 0,
+      }));
+      const candidates = exact.length ? exact : approximate(haystack.text, needle);
+      const best = choose(haystack.text, candidates, quote);
+      if (!best) {
+        return null;
+      }
+      const start = haystack.offsets[best.start];
+      const last = haystack.offsets[best.end - 1];
+      if (start === undefined || last === undefined) {
+        return null;
+      }
+      return { start, end: last + 1, ambiguous: best.ambiguous };
+    };
+
+    function normalize(value: string): { text: string; offsets: number[] } {
+      let normalized = "";
+      const offsets: number[] = [];
+      for (let index = 0; index < value.length; index++) {
+        const character = value.charAt(index);
+        if (!ignorable.test(character)) {
+          normalized += character;
+          offsets.push(index);
         }
-      }, 2500);
+      }
+      return { text: normalized, offsets };
+    }
+    function occurrences(value: string, needle: string, limit: number): number[] {
+      const found: number[] = [];
+      for (
+        let index = value.indexOf(needle);
+        index !== -1 && found.length < limit;
+        index = value.indexOf(needle, index + 1)
+      ) {
+        found.push(index);
+      }
+      return found;
+    }
+    function longestPresent(
+      value: string,
+      needle: string,
+      part: (length: number) => string,
+    ): string | null {
+      let found = 0;
+      let low = minimumAnchorLength;
+      let high = needle.length - 1;
+      while (low <= high) {
+        const length = Math.floor((low + high) / 2);
+        if (value.includes(part(length))) {
+          found = length;
+          low = length + 1;
+        } else {
+          high = length - 1;
+        }
+      }
+      return found ? part(found) : null;
+    }
+    function approximate(value: string, needle: string): Candidate[] {
+      if (needle.length < minimumApproximateLength) {
+        return [];
+      }
+      const head = longestPresent(value, needle, (length) => needle.slice(0, length));
+      const tail = longestPresent(value, needle, (length) => needle.slice(needle.length - length));
+      const heads = head ? occurrences(value, head, maximumAnchorOccurrences) : [];
+      const tails = tail
+        ? occurrences(value, tail, maximumAnchorOccurrences).map((index) => index + tail.length)
+        : [];
+      const bothAnchored = Math.floor(needle.length / 2);
+      const oneAnchored = Math.floor(needle.length / 8);
+      const spans = new Map<string, { start: number; end: number; allowed: number }>();
+      const add = (start: number, end: number, allowed: number): void => {
+        const key = `${String(start)}:${String(end)}`;
+        if (start >= 0 && end <= value.length && end > start && !spans.has(key)) {
+          spans.set(key, { start, end, allowed });
+        }
+      };
+      for (const start of heads) {
+        const ends = tails.filter((end) => Math.abs(end - start - needle.length) <= bothAnchored);
+        for (const end of ends) {
+          add(start, end, bothAnchored);
+        }
+        if (!ends.length) {
+          add(start, start + needle.length, oneAnchored);
+        }
+      }
+      for (const end of tails) {
+        if (!heads.some((start) => Math.abs(end - start - needle.length) <= bothAnchored)) {
+          add(end - needle.length, end, oneAnchored);
+        }
+      }
+      return [...spans.values()].flatMap(({ start, end, allowed }) => {
+        const errors = editDistance(needle, value.slice(start, end), allowed);
+        return errors <= allowed ? [{ start, end, errors }] : [];
+      });
+    }
+    function choose(
+      value: string,
+      candidates: readonly Candidate[],
+      quote: QuoteSelector,
+    ): (Candidate & { readonly ambiguous: boolean }) | null {
+      const prefix = normalize(quote.prefix ?? "").text;
+      const suffix = normalize(quote.suffix ?? "").text;
+      const scored = candidates
+        .map((candidate) => ({
+          ...candidate,
+          context:
+            commonSuffix(
+              value.slice(Math.max(0, candidate.start - prefix.length), candidate.start),
+              prefix,
+            ) + commonPrefix(value.slice(candidate.end, candidate.end + suffix.length), suffix),
+        }))
+        .sort((a, b) => a.errors - b.errors || b.context - a.context);
+      const [best, runnerUp] = scored;
+      if (!best) {
+        return null;
+      }
+      const ambiguous =
+        runnerUp?.errors === best.errors &&
+        (best.context < minimumContext || runnerUp.context === best.context);
+      return { ...best, ambiguous };
+    }
+    function editDistance(left: string, right: string, limit: number): number {
+      if (left.length * right.length > maximumComparisonCells) {
+        return Math.abs(left.length - right.length);
+      }
+      let previous = Array.from({ length: right.length + 1 }, (_, index) => index);
+      for (let row = 1; row <= left.length; row++) {
+        const current = [row];
+        let smallest = row;
+        for (let column = 1; column <= right.length; column++) {
+          const substitution =
+            (previous[column - 1] ?? 0) + (left[row - 1] === right[column - 1] ? 0 : 1);
+          const cell = Math.min(
+            (previous[column] ?? 0) + 1,
+            (current[column - 1] ?? 0) + 1,
+            substitution,
+          );
+          current.push(cell);
+          smallest = Math.min(smallest, cell);
+        }
+        if (smallest > limit) {
+          return smallest;
+        }
+        previous = current;
+      }
+      return previous[right.length] ?? 0;
+    }
+    function commonPrefix(left: string, right: string): number {
+      let length = 0;
+      while (length < left.length && length < right.length && left[length] === right[length]) {
+        length++;
+      }
+      return length;
+    }
+    function commonSuffix(left: string, right: string): number {
+      let length = 0;
+      while (
+        length < left.length &&
+        length < right.length &&
+        left[left.length - length - 1] === right[right.length - length - 1]
+      ) {
+        length++;
+      }
+      return length;
     }
   }
 }

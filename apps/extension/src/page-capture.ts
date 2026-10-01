@@ -1,6 +1,7 @@
 import {
   drawPageQuotes,
   injectPageText,
+  revealPageQuote,
   type PageProjection,
   type PageQuote,
 } from "./page-annotations.js";
@@ -61,7 +62,36 @@ export async function readSelection(tabId: number): Promise<QuoteSelector | null
 
 /** Tells the panel when the reader selects text, so no extra clicks are needed per highlight. */
 export async function watchTabSelection(tabId: number): Promise<void> {
-  await chrome.scripting.executeScript({ target: { tabId }, func: watchSelection });
+  holdSelectionWatchers();
+  watchedTabs.add(tabId);
+  await chrome.scripting.executeScript({
+    target: { tabId },
+    func: watchSelection,
+    args: [selectionWatchPort],
+  });
+}
+
+const selectionWatchPort = "mdbase-reader/selection-watch";
+/** Tabs whose watcher this panel keeps alive. */
+const watchedTabs = new Set<number>();
+let holdingWatchers = false;
+
+/**
+ * Each watcher connects a port back to the panel and uninstalls itself once the port
+ * disconnects. Chrome disconnects it when the panel closes, so the page stops reporting
+ * selections nobody reads. Other panels let go of watchers for tabs they do not show.
+ */
+function holdSelectionWatchers(): void {
+  if (holdingWatchers) {
+    return;
+  }
+  holdingWatchers = true;
+  chrome.runtime.onConnect.addListener((port) => {
+    const tab = port.sender?.tab?.id;
+    if (port.name === selectionWatchPort && (tab === undefined || !watchedTabs.has(tab))) {
+      port.disconnect();
+    }
+  });
 }
 
 export async function fetchPdf(tabId: number, url: string): Promise<Uint8Array> {
@@ -185,13 +215,29 @@ export function capturePage(): PageSnapshot {
   }
 }
 
-/** Injected; reinstalling replaces an earlier listener (e.g. after the extension reloads). */
-export function watchSelection(): void {
+/**
+ * Injected; reinstalling replaces an earlier watcher (e.g. after the extension reloads). It
+ * stays installed only while the panel holds the other end of its port.
+ */
+export function watchSelection(portName: string): void {
   const scope = globalThis as unknown as { mdbaseReaderSelectionWatch?: AbortController };
   scope.mdbaseReaderSelectionWatch?.abort();
   const controller = new AbortController();
   scope.mdbaseReaderSelectionWatch = controller;
   let timer: ReturnType<typeof setTimeout> | undefined;
+  let port: chrome.runtime.Port;
+  try {
+    port = chrome.runtime.connect({ name: portName });
+  } catch {
+    // The extension was reloaded; its new panel reinstalls this watcher.
+    controller.abort();
+    return;
+  }
+  port.onDisconnect.addListener(() => controller.abort());
+  controller.signal.addEventListener("abort", () => {
+    clearTimeout(timer);
+    port.disconnect();
+  });
   document.addEventListener(
     "selectionchange",
     () => {
@@ -205,7 +251,6 @@ export function watchSelection(): void {
             .sendMessage({ type: "mdbase-reader/selection" })
             .catch(() => undefined);
         } catch {
-          // The extension was reloaded; its new panel reinstalls this watcher.
           controller.abort();
         }
       }, 350);
@@ -242,11 +287,19 @@ export async function renderAnnotations(
   expectedUrl: string,
   focus?: number,
 ): Promise<PageProjection> {
-  const tab = await chrome.tabs.get(tabId);
-  if (!tab.url || new URL(tab.url).href.split("#")[0] !== expectedUrl.split("#")[0]) {
-    throw new Error(
-      "The tab has navigated to another page. Reopen Reader’s extension on that page.",
-    );
-  }
   return drawPageQuotes(tabId, annotations, expectedUrl, focus);
+}
+
+/**
+ * Scrolls to the quote at `focus` and marks it, leaving the other highlights as drawn.
+ * Returns null then; only when that quote was not drawn yet are all of them drawn again,
+ * and the new projection is returned.
+ */
+export async function revealAnnotation(
+  tabId: number,
+  annotations: readonly PageQuote[],
+  focus: number,
+  expectedUrl: string,
+): Promise<PageProjection | null> {
+  return revealPageQuote(tabId, annotations, focus, expectedUrl);
 }
