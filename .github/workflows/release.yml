@@ -17,6 +17,9 @@ jobs:
   release:
     name: Package and publish ${{ github.ref_name }}
     needs: ci
+    outputs:
+      app: ${{ steps.app.outputs.app }}
+      prerelease: ${{ steps.app.outputs.prerelease }}
     runs-on: ubuntu-24.04
     timeout-minutes: 15
     permissions:
@@ -97,3 +100,52 @@ jobs:
           if [ "$PRERELEASE" = true ]; then flags+=(--prerelease); fi
           gh release create "$TAG" --repo "$GITHUB_REPOSITORY" --verify-tag --title "$TITLE" --notes-file notes.md "${flags[@]}" -- \
             $(ls | grep -v '^notes.md$')
+
+  webstore:
+    name: Submit extension to Chrome Web Store
+    needs: release
+    if: needs.release.outputs.app == 'extension' && needs.release.outputs.prerelease == 'false'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    environment: reader-extension-production
+    concurrency:
+      group: reader-chrome-web-store
+      cancel-in-progress: false
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: 22
+      - name: Download and verify the exact GitHub release package
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ github.ref_name }}
+        run: |
+          version="${TAG#extension-v}"
+          archive="mdbase-reader-$version.zip"
+          mkdir -p "$RUNNER_TEMP/webstore"
+          gh release download "$TAG" --repo "$GITHUB_REPOSITORY" \
+            --pattern "$archive" --pattern SHA256SUMS --dir "$RUNNER_TEMP/webstore"
+          cd "$RUNNER_TEMP/webstore"
+          awk -v file="$archive" '$2 == file { print; found=1 } END { if (!found) exit 1 }' SHA256SUMS > package.sha256
+          sha256sum --check package.sha256
+      - name: Authenticate to Google with short-lived GitHub identity
+        id: google
+        uses: google-github-actions/auth@7c6bc770dae815cd3e89ee6cdf493a5fab2cc093 # v3
+        with:
+          workload_identity_provider: ${{ vars.CWS_WORKLOAD_IDENTITY_PROVIDER }}
+          service_account: ${{ vars.CWS_SERVICE_ACCOUNT }}
+          token_format: access_token
+          access_token_scopes: https://www.googleapis.com/auth/chromewebstore
+          create_credentials_file: false
+      - name: Upload and submit for review
+        env:
+          CWS_ACCESS_TOKEN: ${{ steps.google.outputs.access_token }}
+          CWS_PUBLISHER_ID: ${{ vars.CWS_PUBLISHER_ID }}
+          CWS_ITEM_ID: ${{ vars.CWS_ITEM_ID }}
+        run: |
+          version="${GITHUB_REF_NAME#extension-v}"
+          node apps/extension/scripts/publish-webstore.mjs "$RUNNER_TEMP/webstore/mdbase-reader-$version.zip"
