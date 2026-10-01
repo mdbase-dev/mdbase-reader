@@ -1,7 +1,7 @@
 import { collectionId, recordRevision, sourceId, type Source } from "@mdbase-reader/core";
 import { describe, expect, it } from "vitest";
 
-import { replaceLibrarySource } from "./use-library-selection.js";
+import { replaceLibrarySource, retainedSourceSelection } from "./use-library-selection.js";
 
 const original: Source = {
   collectionId: collectionId("reading"),
@@ -16,6 +16,29 @@ const original: Source = {
   body: "# A source\n",
   frontmatter: {},
 };
+
+describe("startup source selection", () => {
+  const partial = {
+    collectionName: "Reading",
+    connectionState: "connected" as const,
+    sources: [],
+    sourceIndex: { loaded: 0, complete: false },
+  };
+  it("does not auto-hydrate the first library row", () => {
+    expect(retainedSourceSelection(null, { ...partial, sources: [original] })).toBeNull();
+  });
+  it("retains a requested source missing from a partial page", () => {
+    expect(retainedSourceSelection(original.id, partial)).toBe(original.id);
+  });
+  it("clears a source only when the completed index proves it absent", () => {
+    expect(
+      retainedSourceSelection(original.id, {
+        ...partial,
+        sourceIndex: { loaded: 0, complete: true },
+      }),
+    ).toBeNull();
+  });
+});
 
 describe("library source reconciliation", () => {
   it("replaces a mutated source without changing its library position or index state", () => {

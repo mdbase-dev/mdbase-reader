@@ -24,6 +24,7 @@ interface LibraryNavigatorProps {
   readonly selectedSourceId: SourceId | null;
   readonly views: readonly MdbaseLibraryView[];
   readonly viewsLoading: boolean;
+  readonly indexLoading?: boolean;
   readonly problem: string | null;
   readonly addingSource: boolean;
   /** The library tab already shows what to continue, so the rail need not repeat it. */
@@ -42,6 +43,7 @@ export function LibraryNavigator({
   selectedSourceId,
   views,
   viewsLoading,
+  indexLoading = false,
   problem,
   addingSource,
   hideRecent = false,
@@ -110,7 +112,11 @@ export function LibraryNavigator({
               <small>{String(visibleSources.length)}</small>
             </header>
             {visibleSources.length === 0 ? (
-              <p className="navigator-empty">No sources match.</p>
+              <p className="navigator-empty">
+                {indexLoading
+                  ? "No matches in the sources loaded so far. Loading more…"
+                  : "No sources match."}
+              </p>
             ) : (
               <NavigatorSourceList
                 sources={visibleSources}
@@ -130,19 +136,43 @@ export function LibraryNavigator({
             {recent.length > 0 && !hideRecent ? (
               <NavigatorShortList label="Recent" sources={recent} {...rowProps} />
             ) : null}
-            {sources.length === 0 ? (
-              <p className="navigator-empty">
-                No sources yet.{" "}
-                <button type="button" className="navigator-inline-action" onClick={onAddSource}>
-                  Add one
-                </button>
-              </p>
-            ) : null}
+            <NavigatorEmptySources
+              sources={sources}
+              loading={indexLoading}
+              onAddSource={onAddSource}
+            />
           </>
         )}
       </nav>
       <NavigatorFooter addingSource={addingSource} onAddSource={onAddSource} />
     </aside>
+  );
+}
+
+function NavigatorEmptySources({
+  sources,
+  loading,
+  onAddSource,
+}: Pick<LibraryNavigatorProps, "sources" | "onAddSource"> & {
+  readonly loading: boolean;
+}): JSX.Element | null {
+  if (sources.length !== 0) {
+    return null;
+  }
+  if (loading) {
+    return (
+      <p className="navigator-empty" role="status">
+        Loading sources…
+      </p>
+    );
+  }
+  return (
+    <p className="navigator-empty">
+      No sources yet.{" "}
+      <button type="button" className="navigator-inline-action" onClick={onAddSource}>
+        Add one
+      </button>
+    </p>
   );
 }
 

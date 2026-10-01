@@ -229,6 +229,7 @@ export function ReaderWorkspaceView({
               selectedSourceId={source?.id ?? null}
               views={model.libraryViews.views}
               viewsLoading={model.libraryViews.loading}
+              indexLoading={library.sourceIndex?.complete === false}
               problem={model.libraryViews.problem}
               onPreviewSource={sourceWorkspace.preview}
               onOpenSource={sourceWorkspace.open}
@@ -303,6 +304,7 @@ export function ReaderWorkspaceView({
                 view={libraryView}
                 availableViews={model.libraryViews.views}
                 allSources={library.sources}
+                indexLoading={library.sourceIndex?.complete === false}
                 gateway={model.gateway}
                 surfaces={model.surfaces}
                 onOpenSourceView={(id, view) => sourceWorkspace.openView(id, view)}
@@ -456,7 +458,7 @@ function useLibraryAnnotationCounts(
   model: ReaderWorkspaceViewModel,
 ): ReadonlyMap<SourceId, number> {
   const loaded = model.workspace.annotations;
-  const counts = useAnnotationCounts(model.gateway);
+  const counts = useAnnotationCounts(model.gateway, model.library.sourceIndex?.complete !== false);
   const sourceId =
     model.workspace.sourceRecord.status === "ready" ? model.workspace.sourceRecord.value.id : null;
   return useMemo(() => {

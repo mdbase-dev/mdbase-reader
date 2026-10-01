@@ -1,4 +1,4 @@
-import { useCallback, type Dispatch, type SetStateAction } from "react";
+import { useCallback, useMemo, type Dispatch, type SetStateAction } from "react";
 
 import { insertAnnotationInDraft } from "./insert-annotation-in-draft.js";
 import { selectedResource, type SelectedValue } from "./selected-resource.js";
@@ -91,17 +91,41 @@ export interface ReaderWorkspaceController
   readonly retryLibrary: () => void;
 }
 
-export function useReaderWorkspace(gateway: ReaderWorkspaceGateway): ReaderWorkspaceController {
-  const library = useLibrarySelection(gateway);
+export function useReaderWorkspace(
+  gateway: ReaderWorkspaceGateway,
+  initialSourceId: SourceId | null = null,
+): ReaderWorkspaceController {
+  const selection = useLibrarySelection(gateway, initialSourceId);
   const source = useSourceToolsWorkspace(
     gateway,
-    library.selectedSource?.id ?? null,
-    library.reconcileSource,
+    selection.selectedSourceId,
+    selection.reconcileSource,
   );
+  const resolved = source.sourceRecord.status === "ready" ? source.sourceRecord.value : null;
+  const library = useMemo(() => {
+    const indexed = selection.library;
+    if (
+      !resolved ||
+      indexed.status !== "ready" ||
+      indexed.value.sources.some(({ id }) => id === resolved.id)
+    ) {
+      return indexed;
+    }
+    // A targeted read can complete before its page in the background index.
+    return {
+      status: "ready" as const,
+      value: {
+        ...indexed.value,
+        sources: [...indexed.value.sources, resolved],
+      },
+    };
+  }, [resolved, selection.library]);
   return {
-    ...library,
+    ...selection,
     ...source,
-    ...adoptingWrites(library, source.adoptSource),
+    library,
+    selectedSource: selection.selectedSource ?? resolved,
+    ...adoptingWrites(selection, source.adoptSource),
   };
 }
 

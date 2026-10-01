@@ -68,6 +68,7 @@ export function LibraryWorkspace({
   view,
   availableViews,
   allSources,
+  indexLoading = false,
   gateway,
   controller,
   focused,
@@ -93,6 +94,7 @@ export function LibraryWorkspace({
   readonly view: MdbaseLibraryView;
   readonly availableViews: readonly MdbaseLibraryView[];
   readonly allSources: readonly SourceSummary[];
+  readonly indexLoading?: boolean;
   readonly gateway: ReaderWorkspaceGateway;
   readonly controller: MdbaseLibraryViewsController;
   readonly focused: boolean;
@@ -327,7 +329,9 @@ export function LibraryWorkspace({
             <div className="library-header-trailing">
               {searchScope === "sources" ? (
                 <span className="library-result-count" role="status">
-                  {loading ? "Loading…" : countLabel(sources.length, "source")}
+                  {loading
+                    ? "Loading…"
+                    : `${countLabel(sources.length, "source")}${indexLoading && !view.path ? " · Loading more…" : ""}`}
                 </span>
               ) : null}
               {dirty && view.owned && view.writable && !view.annotations ? (
@@ -525,7 +529,7 @@ export function LibraryWorkspace({
                   onOpenSourceView ? onOpenSourceView(id, view) : onOpenSource(id)
                 }
               />
-            ) : sources.length === 0 && !loading ? (
+            ) : sources.length === 0 && !loading && !(indexLoading && !view.path) ? (
               <div className="library-workspace-empty">
                 <LibraryIcon />
                 {allSources.length === 0 ? (

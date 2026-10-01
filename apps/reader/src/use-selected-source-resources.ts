@@ -8,6 +8,7 @@ import {
 
 import { readerErrorMessage } from "./errors.js";
 import { sharedAnnotationResource } from "./shared-annotation-resource.js";
+import { startReaderStartupTiming } from "./startup-timing.js";
 
 import type { SelectedValue } from "./selected-resource.js";
 import type { AsyncResource } from "./use-reader-workspace.js";
@@ -40,16 +41,21 @@ export function useSelectedSourceResources(
   );
   const setAnnotations = resource?.set ?? ignoreAnnotations;
   useEffect(() => {
-    resource?.load();
-  }, [resource]);
+    // Put source metadata ahead of annotation hydration on the critical path.
+    if (source?.sourceId === sourceId) {
+      resource?.load();
+    }
+  }, [resource, source, sourceId]);
   useEffect(() => {
     if (!sourceId) {
       return;
     }
     const controller = new AbortController();
+    const finish = startReaderStartupTiming("source");
     void gateway
       .source(sourceId, { signal: controller.signal })
       .then((value) => {
+        finish(controller.signal.aborted ? "cancelled" : value ? "ready" : "failed");
         if (!controller.signal.aborted) {
           setSource({
             sourceId,
@@ -60,6 +66,7 @@ export function useSelectedSourceResources(
         }
       })
       .catch((reason: unknown) => {
+        finish(controller.signal.aborted ? "cancelled" : "failed");
         if (!controller.signal.aborted) {
           setSource({
             sourceId,
@@ -70,7 +77,10 @@ export function useSelectedSourceResources(
           });
         }
       });
-    return () => controller.abort();
+    return () => {
+      controller.abort();
+      finish("cancelled");
+    };
   }, [gateway, sourceId]);
   return { source, setSource, annotations, setAnnotations };
 }

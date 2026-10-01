@@ -1,3 +1,5 @@
+import { startReaderStartupTiming } from "./startup-timing.js";
+
 import type { ReaderLibrarySnapshot } from "./workspace-model.js";
 import type {
   CollectionId,
@@ -13,6 +15,30 @@ export async function loadSourceLibrary(input: {
   readonly options: ReaderRequestOptions;
   readonly onProgress?: (snapshot: ReaderLibrarySnapshot) => void;
 }): Promise<ReaderLibrarySnapshot> {
+  const first = startReaderStartupTiming("first-page");
+  const full = startReaderStartupTiming("library-index");
+  try {
+    const snapshot = await loadSourceLibraryIndex({
+      ...input,
+      onProgress: (snapshot) => {
+        first();
+        input.onProgress?.(snapshot);
+      },
+    });
+    first();
+    full();
+    return snapshot;
+  } catch (reason) {
+    const outcome = input.options.signal?.aborted ? "cancelled" : "failed";
+    first(outcome);
+    full(outcome);
+    throw reason;
+  }
+}
+
+async function loadSourceLibraryIndex(
+  input: Parameters<typeof loadSourceLibrary>[0],
+): Promise<ReaderLibrarySnapshot> {
   if (input.repository.listPages) {
     return loadStablePages(input, input.repository.listPages.bind(input.repository));
   }
@@ -53,13 +79,19 @@ async function loadStablePages(
 ): Promise<ReaderLibrarySnapshot> {
   const sources: SourceSummary[] = [];
   let total: number | undefined;
+  let published = 0;
   for await (const page of listPages(
     { collectionId: input.collectionId, limit: 100 },
     input.options,
   )) {
     sources.push(...page.items);
     total = page.totalCount ?? total;
-    publish(input, sources, false, total);
+    // Old authorities may still pin tiny pages. Avoid repeatedly copying and
+    // rerendering the entire growing index; first rows stay immediate.
+    if (sources.length <= 1000 || sources.length - published >= Math.ceil(published / 4)) {
+      publish(input, sources, false, total);
+      published = sources.length;
+    }
   }
   return snapshot(input.collectionName, sources, true, sources.length);
 }

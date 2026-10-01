@@ -1,8 +1,16 @@
-import { ConnectLayout } from "@mdbase-dev/ui/screens";
+import { ConnectLayout, OpeningScreen } from "@mdbase-dev/ui/screens";
 import { connectProblemMessage, type ReaderConnectSnapshot } from "@mdbase-reader/connect";
 import { createReaderRuntimeServices, createWebPlatform } from "@mdbase-reader/platform";
 import { ReaderButton } from "@mdbase-reader/ui";
-import { useEffect, useMemo, useState, useSyncExternalStore, type JSX } from "react";
+import {
+  lazy,
+  Suspense,
+  useEffect,
+  useMemo,
+  useState,
+  useSyncExternalStore,
+  type JSX,
+} from "react";
 
 import { collectionSwitchUrl } from "./collection-switching.js";
 import { CollectionSwitchingContext } from "./CollectionPicker.js";
@@ -20,13 +28,30 @@ import {
 import { ConnectionRetry, SelectedAuthorizationAction } from "./ConnectionLayout.js";
 import { readerErrorMessage } from "./errors.js";
 import { ChevronRightIcon, CollectionIcon, PlusIcon } from "./icons.js";
-import { ReaderApp } from "./ReaderApp.js";
 import { requestedAnnotation, requestedSourceId } from "./SourceDeepLink.js";
+import { startReaderStartupTiming } from "./startup-timing.js";
+
+import type { ReaderApp as ReaderAppComponent } from "./ReaderApp.js";
+const loadReaderApp = (): Promise<{ readonly ReaderApp: typeof ReaderAppComponent }> =>
+  import("./ReaderApp.js");
+const ReaderApp = lazy(async () => ({ default: (await loadReaderApp()).ReaderApp }));
 
 const subscribe = (listener: () => void): (() => void) => readerSession.subscribe(listener);
 const snapshot = (): ReaderConnectSnapshot => readerSession.getSnapshot();
 const readerPlatform = createWebPlatform();
 const runtimeServices = createReaderRuntimeServices(readerPlatform.storage);
+
+async function startSession(): Promise<Awaited<ReturnType<typeof readerSession.start>>> {
+  const finish = startReaderStartupTiming("connection");
+  try {
+    const outcome = await readerSession.start();
+    finish(outcome.ok && outcome.value.status === "ready" ? "ready" : "failed");
+    return outcome;
+  } catch (reason) {
+    finish("failed");
+    throw reason;
+  }
+}
 
 export function ConnectReader(): JSX.Element {
   const session = useSyncExternalStore(subscribe, snapshot, snapshot);
@@ -35,7 +60,7 @@ export function ConnectReader(): JSX.Element {
   const start = async (): Promise<void> => {
     setError(null);
     try {
-      setError(connectProblemMessage(await readerSession.start()));
+      setError(connectProblemMessage(await startSession()));
     } catch (reason) {
       setError(readerErrorMessage(reason, "Reader could not open this collection."));
     }
@@ -43,8 +68,7 @@ export function ConnectReader(): JSX.Element {
 
   useEffect(() => {
     let active = true;
-    void readerSession
-      .start()
+    void startSession()
       .then((outcome) => {
         if (active) {
           setError(connectProblemMessage(outcome));
@@ -59,6 +83,13 @@ export function ConnectReader(): JSX.Element {
       active = false;
     };
   }, []);
+
+  useEffect(() => {
+    // Overlap workspace download with live collection checks, not the first query.
+    if (session.status === "checking_setup") {
+      void loadReaderApp().catch(() => undefined);
+    }
+  }, [session.status]);
 
   if (session.status === "ready") {
     const checkOutcome = (message: string | null): void => {
@@ -127,32 +158,42 @@ function OpenedReader({ collectionId }: { readonly collectionId: string }): JSX.
     );
   }
   return (
-    <ReaderApp
-      key={collectionId}
-      gateway={gateway}
-      initialSourceId={requestedSourceId(location.href, collectionId)}
-      initialAnnotation={requestedAnnotation(location.href, collectionId)}
-      directAccess={opened.directAccess}
-      saveFile={(name, blob) => readerPlatform.saveFile(name, blob)}
-      pickSourceFile={() =>
-        readerPlatform.pickFile([
-          ".pdf",
-          ".epub",
-          ".html",
-          ".htm",
-          "application/pdf",
-          "application/epub+zip",
-          "text/html",
-        ])
-      }
-      renderDocument={(source, onSurfaceChange) => (
-        <ConnectedDocument
-          repository={opened.documents}
-          source={source}
-          onSurfaceChange={onSurfaceChange}
+    <Suspense
+      fallback={
+        <OpeningScreen
+          app="reader"
+          title="Opening your reading collection"
+          detail="Preparing the reading workspace"
         />
-      )}
-    />
+      }
+    >
+      <ReaderApp
+        key={collectionId}
+        gateway={gateway}
+        initialSourceId={requestedSourceId(location.href, collectionId)}
+        initialAnnotation={requestedAnnotation(location.href, collectionId)}
+        directAccess={opened.directAccess}
+        saveFile={(name, blob) => readerPlatform.saveFile(name, blob)}
+        pickSourceFile={() =>
+          readerPlatform.pickFile([
+            ".pdf",
+            ".epub",
+            ".html",
+            ".htm",
+            "application/pdf",
+            "application/epub+zip",
+            "text/html",
+          ])
+        }
+        renderDocument={(source, onSurfaceChange) => (
+          <ConnectedDocument
+            repository={opened.documents}
+            source={source}
+            onSurfaceChange={onSurfaceChange}
+          />
+        )}
+      />
+    </Suspense>
   );
 }
 

@@ -21,6 +21,7 @@ export interface SourceWorkspaceOptions {
   readonly selectedSourceId: SourceId | null;
   readonly sourceIds: readonly SourceId[];
   readonly collectionKey: string;
+  readonly sourceIndexComplete?: boolean;
   readonly selectSource: (sourceId: SourceId | null) => void;
   readonly confirmDiscard?: (tab: WorkspaceTab) => boolean;
 }
@@ -35,7 +36,12 @@ export interface SourceWorkspaceController extends SourceWorkspaceActions {
 export function useSourceWorkspace(options: SourceWorkspaceOptions): SourceWorkspaceController {
   const [dock] = useState(
     () =>
-      new ReaderDockWorkspace(options.collectionKey, browserStorage(), new Set(options.sourceIds)),
+      new ReaderDockWorkspace(
+        options.collectionKey,
+        browserStorage(),
+        new Set(options.sourceIds),
+        options.sourceIndexComplete ?? true,
+      ),
   );
   const { confirmDiscard, selectSource } = options;
   useEffect(() => {
