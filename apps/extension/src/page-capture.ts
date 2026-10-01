@@ -62,37 +62,22 @@ export async function readSelection(tabId: number): Promise<QuoteSelector | null
 
 /** Tells the panel when the reader selects text, so no extra clicks are needed per highlight. */
 export async function watchTabSelection(tabId: number): Promise<void> {
-  holdSelectionWatchers();
-  watchedTabs.add(tabId);
   await chrome.scripting.executeScript({
     target: { tabId },
     func: watchSelection,
-    args: [selectionWatchPort],
+    args: [selectionWatchPort, selectionWatchGraceMs],
   });
+  // The panel connects to its own tab only, so other panels never see this port. Closing the
+  // panel disconnects it, and the page then stops reporting selections nobody reads.
+  watchPorts.get(tabId)?.disconnect();
+  watchPorts.set(tabId, chrome.tabs.connect(tabId, { name: selectionWatchPort }));
 }
 
 const selectionWatchPort = "mdbase-reader/selection-watch";
-/** Tabs whose watcher this panel keeps alive. */
-const watchedTabs = new Set<number>();
-let holdingWatchers = false;
-
-/**
- * Each watcher connects a port back to the panel and uninstalls itself once the port
- * disconnects. Chrome disconnects it when the panel closes, so the page stops reporting
- * selections nobody reads. Other panels let go of watchers for tabs they do not show.
- */
-function holdSelectionWatchers(): void {
-  if (holdingWatchers) {
-    return;
-  }
-  holdingWatchers = true;
-  chrome.runtime.onConnect.addListener((port) => {
-    const tab = port.sender?.tab?.id;
-    if (port.name === selectionWatchPort && (tab === undefined || !watchedTabs.has(tab))) {
-      port.disconnect();
-    }
-  });
-}
+/** How long an installed watcher waits for its panel to connect before removing itself. */
+const selectionWatchGraceMs = 10_000;
+/** This panel's open port to each tab it watches. */
+const watchPorts = new Map<number, chrome.runtime.Port>();
 
 export async function fetchPdf(tabId: number, url: string): Promise<Uint8Array> {
   // Fetch from the page itself so the reader's own access (institutional login) applies.
@@ -217,26 +202,37 @@ export function capturePage(): PageSnapshot {
 
 /**
  * Injected; reinstalling replaces an earlier watcher (e.g. after the extension reloads). It
- * stays installed only while the panel holds the other end of its port.
+ * stays installed only while its panel holds the port the panel connects to this tab.
  */
-export function watchSelection(portName: string): void {
+export function watchSelection(portName: string, graceMs: number): void {
   const scope = globalThis as unknown as { mdbaseReaderSelectionWatch?: AbortController };
   scope.mdbaseReaderSelectionWatch?.abort();
   const controller = new AbortController();
   scope.mdbaseReaderSelectionWatch = controller;
   let timer: ReturnType<typeof setTimeout> | undefined;
-  let port: chrome.runtime.Port;
+  let port: chrome.runtime.Port | null = null;
+  // A panel that never connects (it closed while installing) leaves no watcher behind.
+  const unclaimed = setTimeout(() => controller.abort(), graceMs);
+  const onConnect = (incoming: chrome.runtime.Port): void => {
+    if (incoming.name !== portName || port) {
+      return;
+    }
+    port = incoming;
+    clearTimeout(unclaimed);
+    incoming.onDisconnect.addListener(() => controller.abort());
+  };
   try {
-    port = chrome.runtime.connect({ name: portName });
+    chrome.runtime.onConnect.addListener(onConnect);
   } catch {
     // The extension was reloaded; its new panel reinstalls this watcher.
     controller.abort();
     return;
   }
-  port.onDisconnect.addListener(() => controller.abort());
   controller.signal.addEventListener("abort", () => {
     clearTimeout(timer);
-    port.disconnect();
+    clearTimeout(unclaimed);
+    chrome.runtime.onConnect.removeListener(onConnect);
+    port?.disconnect();
   });
   document.addEventListener(
     "selectionchange",
