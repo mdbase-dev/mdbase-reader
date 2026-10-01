@@ -12,9 +12,9 @@ import type { JsonObject, QueryRecord, RecordDocument } from "@mdbase-dev/connec
 
 const sourceFrontmatter: JsonObject = {
   id: "src_01",
-  title: "Gravity and Grace",
+  title: "Crime and Punishment",
   kind: "book",
-  authors: ["Simone Weil"],
+  authors: ["Fyodor Dostoevsky"],
   published: 2002,
   tags: ["attention"],
   reading: {
@@ -26,32 +26,32 @@ const sourceFrontmatter: JsonObject = {
   documents: [
     {
       file_id: "file-01",
-      file: "[[files/gravity.pdf]]",
+      file: "[[files/crime.pdf]]",
       role: "primary",
       media_type: "application/pdf",
       revision: "sha256:19e81c",
     },
   ],
   csl: {
-    id: "weil2002gravity",
+    id: "dostoevsky2002crime",
     type: "book",
-    title: "Gravity and Grace",
-    author: [{ family: "Weil", given: "Simone" }],
+    title: "Crime and Punishment",
+    author: [{ family: "Dostoevsky", given: "Fyodor" }],
   },
 };
 
 describe("Connect contract mapping", () => {
   it("normalizes source query projections", () => {
     const record = {
-      path: "sources/gravity.md",
+      path: "sources/crime.md",
       effectiveFrontmatter: sourceFrontmatter,
       types: ["reader-source"],
       file: {},
     } satisfies QueryRecord;
     expect(sourceSummaryFromQuery(collectionId("reading"), record)).toMatchObject({
       id: "src_01",
-      title: "Gravity and Grace",
-      creators: ["Simone Weil"],
+      title: "Crime and Punishment",
+      creators: ["Fyodor Dostoevsky"],
       published: 2002,
       readingStatus: "reading",
       reading: {
@@ -59,9 +59,9 @@ describe("Connect contract mapping", () => {
         position: { kind: "pdf", pageIndex: 15 },
       },
       citation: {
-        id: "weil2002gravity",
+        id: "dostoevsky2002crime",
         type: "book",
-        author: [{ family: "Weil", given: "Simone" }],
+        author: [{ family: "Dostoevsky", given: "Fyodor" }],
       },
       documents: [{ fileId: "file-01", mediaType: "application/pdf" }],
     });
@@ -69,7 +69,7 @@ describe("Connect contract mapping", () => {
 
   it("keeps invalid citation metadata visible without dropping the source", () => {
     const record = {
-      path: "sources/gravity.md",
+      path: "sources/crime.md",
       effectiveFrontmatter: {
         ...sourceFrontmatter,
         csl: { id: "bad key", type: "novel" },
@@ -89,7 +89,7 @@ describe("Connect contract mapping", () => {
 
   it("keeps the persisted source frontmatter and exact revision", () => {
     const record = {
-      path: "sources/gravity.md",
+      path: "sources/crime.md",
       revision: "record-rev-2",
       types: ["reader-source"],
       frontmatter: sourceFrontmatter,
@@ -111,17 +111,17 @@ describe("Connect contract mapping", () => {
       frontmatter: {},
       effectiveFrontmatter: {
         id: "ann_01",
-        source: "[[src_01|Gravity and Grace]]",
+        source: "[[src_01|Crime and Punishment]]",
         annotation_type: "highlight",
         created_at: "2026-08-09T14:21:00+10:00",
         document: {
           file_id: "file-01",
-          file: "[[files/gravity.pdf]]",
+          file: "[[files/crime.pdf]]",
           revision: "sha256:19e81c",
         },
         locator: { label: "p. 16" },
         target: {
-          quote: { exact: "Attention consists of suspending thought" },
+          quote: { exact: "Pain and suffering are always inevitable" },
           pdf: {
             page_index: 15,
             coordinate_space: {
@@ -133,7 +133,7 @@ describe("Connect contract mapping", () => {
           },
         },
       },
-      body: "> Attention consists of suspending thought",
+      body: "> Pain and suffering are always inevitable",
     });
     expect(annotation).toMatchObject({
       id: "ann_01",
@@ -142,7 +142,7 @@ describe("Connect contract mapping", () => {
       document: { fileId: "file-01", revision: "sha256:19e81c" },
       locator: { label: "p. 16" },
       target: {
-        quote: { exact: "Attention consists of suspending thought" },
+        quote: { exact: "Pain and suffering are always inevitable" },
         pdf: { pageIndex: 15, coordinateSpace: { origin: "top_left" } },
       },
     });

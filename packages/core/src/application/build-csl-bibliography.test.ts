@@ -20,12 +20,12 @@ const source = (
 describe("buildCslBibliography", () => {
   it("exports complete CSL objects in library order", () => {
     const first = {
-      id: "weil2002",
+      id: "dostoevsky2002",
       type: "book",
-      title: "Gravity and Grace",
+      title: "Crime and Punishment",
       custom: { shelf: "A" },
     };
-    const second = { id: "murdoch1970", type: "book", title: "The Sovereignty of Good" };
+    const second = { id: "eliot1871", type: "book", title: "Middlemarch" };
 
     const result = buildCslBibliography([
       source({ id: sourceId("src_one"), title: "One", citation: first }),

@@ -51,7 +51,7 @@ describe("attaching a file to an existing source", () => {
   it("uploads, then appends the document at the revision it read", async () => {
     const upload = vi.fn(() =>
       Promise.resolve(
-        fileDescriptor({ fileId: "file-new", path: "files/reader/src_import/weil.pdf" }),
+        fileDescriptor({ fileId: "file-new", path: "files/reader/src_import/dostoevsky.pdf" }),
       ),
     );
     const existing = recordDocument();
@@ -64,10 +64,14 @@ describe("attaching a file to an existing source", () => {
 
     await repository.attachFile(attachment());
 
-    expect(upload).toHaveBeenCalledWith("files/reader/src_import/weil.pdf", expect.any(Blob), {
-      mediaType: "application/pdf",
-      transferId: "83dd2f80-c7da-44d7-9844-6ea755a05f40",
-    });
+    expect(upload).toHaveBeenCalledWith(
+      "files/reader/src_import/dostoevsky.pdf",
+      expect.any(Blob),
+      {
+        mediaType: "application/pdf",
+        transferId: "83dd2f80-c7da-44d7-9844-6ea755a05f40",
+      },
+    );
     expect(update).toHaveBeenCalledWith({
       path: "sources/src_import.md",
       ifRevision: "record-r1",
@@ -76,13 +80,13 @@ describe("attaching a file to an existing source", () => {
           ...(existing.frontmatter["documents"] as unknown[]),
           {
             file_id: "file-new",
-            file: "[[files/reader/src_import/weil.pdf]]",
+            file: "[[files/reader/src_import/dostoevsky.pdf]]",
             role: "alternative",
             format: "pdf",
             media_type: "application/pdf",
             revision: digest,
-            label: "weil.pdf",
-            origin_url: "https://example.org/weil.pdf",
+            label: "dostoevsky.pdf",
+            origin_url: "https://example.org/dostoevsky.pdf",
             retrieved_at: "2026-09-25T00:00:00.000Z",
           },
         ],
@@ -117,7 +121,7 @@ function attachment(): PlannedSourceAttachment {
     collectionId: collectionId("reading"),
     sourceId: sourceId("src_import"),
     recordPath: "sources/src_import.md",
-    originUrl: "https://example.org/weil.pdf",
+    originUrl: "https://example.org/dostoevsky.pdf",
     retrievedAt: dateTime("2026-09-25T00:00:00.000Z"),
     representation: {
       transferId: mutationId("83dd2f80-c7da-44d7-9844-6ea755a05f40"),
@@ -125,8 +129,8 @@ function attachment(): PlannedSourceAttachment {
       format: "pdf",
       mediaType: "application/pdf",
       contentDigest: digest,
-      originalName: "weil.pdf",
-      filePath: "files/reader/src_import/weil.pdf",
+      originalName: "dostoevsky.pdf",
+      filePath: "files/reader/src_import/dostoevsky.pdf",
       bytes: new Uint8Array([1, 2, 3]),
     },
   };

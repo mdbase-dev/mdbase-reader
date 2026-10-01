@@ -12,8 +12,8 @@ import type { SourceId, SourceSummary } from "@mdbase-reader/core";
 const source = {
   id: "source-1" as SourceId,
   collectionId: "collection-1",
-  path: "sources/gravity-and-grace.md",
-  title: "Gravity and Grace",
+  path: "sources/crime-and-punishment.md",
+  title: "Crime and Punishment",
   creators: [],
   tags: [],
   documents: [{ mediaType: "application/pdf" }],
@@ -26,15 +26,15 @@ describe("workspace tab display", () => {
 
     expect(workspaceTabLabel(citation, source)).toBe("Citation");
     expect(workspaceTabLabel(annotations, source)).toBe("Annotations");
-    expect(workspaceTabAccessibleTitle(citation, source)).toBe("Citation — Gravity and Grace");
+    expect(workspaceTabAccessibleTitle(citation, source)).toBe("Citation — Crime and Punishment");
   });
 
   it("keeps documents and library views titled by their content", () => {
     const document = createWorkspaceTab(source.id, "document");
     const library = createLibraryWorkspaceTab("all-sources", "All sources");
 
-    expect(workspaceTabTitle(document, source)).toBe("Gravity and Grace");
-    expect(workspaceTabAccessibleTitle(document, source)).toBe("Gravity and Grace");
+    expect(workspaceTabTitle(document, source)).toBe("Crime and Punishment");
+    expect(workspaceTabAccessibleTitle(document, source)).toBe("Crime and Punishment");
     expect(workspaceTabAccessibleTitle(library, null)).toBe("All sources");
   });
 });

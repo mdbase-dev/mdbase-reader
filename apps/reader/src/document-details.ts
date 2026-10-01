@@ -64,7 +64,7 @@ function isPdf(bytes: Uint8Array): boolean {
   return [0x25, 0x50, 0x44, 0x46, 0x2d].every((byte, index) => bytes[index] === byte);
 }
 
-/** arXiv downloads are named by their identifier, such as `1706.03762v7.pdf`. */
+/** arXiv downloads are named by their identifier, such as `0704.0001v2.pdf`. */
 function arxivFromFileName(name: string): IdentifiersInText {
   const arxiv = /^(\d{4}\.\d{4,5})(?:v\d+)?\.pdf$/iu.exec(name)?.[1];
   return arxiv ? { arxiv } : {};

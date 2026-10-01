@@ -14,7 +14,7 @@ describe("Connect source reading state", () => {
   it("rebases a reading update on the latest whole record and preserves extension fields", async () => {
     const frontmatter = {
       id: "src_01",
-      title: "Gravity and Grace",
+      title: "Crime and Punishment",
       reading: { status: "reading", custom_session: "keep-me" },
     };
     const current = record("rev-1", frontmatter);
@@ -53,7 +53,7 @@ describe("Connect source reading state", () => {
     });
 
     expect(update).toHaveBeenCalledWith({
-      path: "sources/gravity.md",
+      path: "sources/crime.md",
       ifRevision: "rev-1",
       patch: {
         reading: expect.objectContaining({
@@ -69,7 +69,7 @@ describe("Connect source reading state", () => {
 describe("Connect source reading state with a current caller revision", () => {
   const frontmatter = {
     id: "src_01",
-    title: "Gravity and Grace",
+    title: "Crime and Punishment",
     reading: { status: "queued", custom_session: "keep-me" },
   };
   const input = {
@@ -89,7 +89,7 @@ describe("Connect source reading state with a current caller revision", () => {
     return new ConnectSourceRepository({
       queryPages: vi.fn(() =>
         singleQueryPage({
-          path: "sources/gravity.md",
+          path: "sources/crime.md",
           effectiveFrontmatter: frontmatter,
           types: ["reader-source"],
           file: {},
@@ -109,7 +109,7 @@ describe("Connect source reading state with a current caller revision", () => {
 
     expect(read).not.toHaveBeenCalled();
     expect(update).toHaveBeenCalledWith({
-      path: "sources/gravity.md",
+      path: "sources/crime.md",
       ifRevision: "rev-1",
       patch: {
         reading: expect.objectContaining({
@@ -149,7 +149,7 @@ describe("Connect source reading state with a current caller revision", () => {
 
 function record(revision: string, frontmatter: Record<string, unknown>): RecordDocument {
   return {
-    path: "sources/gravity.md",
+    path: "sources/crime.md",
     revision,
     types: ["reader-source"],
     frontmatter,

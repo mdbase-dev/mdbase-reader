@@ -11,12 +11,17 @@ function task<Value>(value: Value): { toPromise: () => Promise<Value> } {
 describe("readPdfDetails", () => {
   it("reads document information and the opening pages, then closes the document", async () => {
     const document = { id: "doc", pageCount: 12 };
-    const extractText = vi.fn(() => task("doi:10.1038/nature14539"));
+    const extractText = vi.fn(() => task("doi:10.1038/171737a0"));
     const closeDocument = vi.fn(() => task(true));
     const engine = {
       openDocumentBuffer: vi.fn(() => task(document)),
       getMetadata: vi.fn(() =>
-        task({ title: "  Deep\nlearning ", author: "", subject: null, keywords: "AI" }),
+        task({
+          title: "  Molecular structure\nof nucleic acids ",
+          author: "",
+          subject: null,
+          keywords: "DNA",
+        }),
       ),
       extractText,
       closeDocument,
@@ -27,9 +32,9 @@ describe("readPdfDetails", () => {
     });
 
     expect(details).toEqual({
-      title: "Deep learning",
-      keywords: "AI",
-      openingText: "doi:10.1038/nature14539",
+      title: "Molecular structure of nucleic acids",
+      keywords: "DNA",
+      openingText: "doi:10.1038/171737a0",
     });
     expect(extractText).toHaveBeenCalledWith(document, [0, 1]);
     expect(closeDocument).toHaveBeenCalledWith(document);

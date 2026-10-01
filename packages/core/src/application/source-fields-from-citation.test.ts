@@ -9,22 +9,22 @@ describe("sourceFieldsFromCitation", () => {
   it("renders names, dates and links as friendly source fields", () => {
     expect(
       sourceFieldsFromCitation({
-        id: "weil2002",
+        id: "dostoevsky2002",
         type: "book",
-        title: " Gravity and Grace ",
+        title: " Crime and Punishment ",
         author: [
-          { given: "Simone", family: "Weil" },
+          { given: "Fyodor", family: "Dostoevsky" },
           { given: "Ludwig", "non-dropping-particle": "van", family: "Beethoven" },
-          { literal: "Routledge Editors" },
+          { literal: "Heinemann Editors" },
         ],
         issued: { "date-parts": [[2002, 3, 1]] },
-        URL: "https://example.com/weil",
+        URL: "https://example.com/dostoevsky",
       }),
     ).toEqual({
-      title: "Gravity and Grace",
-      authors: ["Simone Weil", "Ludwig van Beethoven", "Routledge Editors"],
+      title: "Crime and Punishment",
+      authors: ["Fyodor Dostoevsky", "Ludwig van Beethoven", "Heinemann Editors"],
       published: "2002-03-01",
-      url: "https://example.com/weil",
+      url: "https://example.com/dostoevsky",
     });
   });
 
@@ -40,36 +40,36 @@ describe("sourceFieldsFromCitation", () => {
 
 describe("sourceCitationDifferences", () => {
   const citation = {
-    id: "weil2002",
+    id: "dostoevsky2002",
     type: "book",
-    title: "Gravity and Grace",
-    author: [{ given: "Simone", family: "Weil" }],
+    title: "Crime and Punishment",
+    author: [{ given: "Fyodor", family: "Dostoevsky" }],
     issued: { "date-parts": [[2002]] },
   };
 
   it("reports only fields that disagree", () => {
     expect(
       sourceCitationDifferences(
-        { title: "gravity-and-grace.pdf", authors: ["Simone Weil"], published: 2002 },
+        { title: "crime-and-punishment.pdf", authors: ["Fyodor Dostoevsky"], published: 2002 },
         citation,
       ),
     ).toEqual([
-      { field: "title", current: "gravity-and-grace.pdf", citation: "Gravity and Grace" },
+      { field: "title", current: "crime-and-punishment.pdf", citation: "Crime and Punishment" },
     ]);
   });
 
   it("treats a more precise source date as agreeing", () => {
     expect(
       sourceCitationDifferences(
-        { title: "Gravity and Grace", authors: ["Simone Weil"], published: "2002-03-01" },
+        { title: "Crime and Punishment", authors: ["Fyodor Dostoevsky"], published: "2002-03-01" },
         citation,
       ),
     ).toEqual([]);
   });
 
   it("reports fields the source is missing", () => {
-    expect(sourceCitationDifferences({ title: "Gravity and Grace" }, citation)).toEqual([
-      { field: "authors", current: undefined, citation: ["Simone Weil"] },
+    expect(sourceCitationDifferences({ title: "Crime and Punishment" }, citation)).toEqual([
+      { field: "authors", current: undefined, citation: ["Fyodor Dostoevsky"] },
       { field: "published", current: undefined, citation: 2002 },
     ]);
   });

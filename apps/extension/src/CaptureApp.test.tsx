@@ -254,20 +254,20 @@ it("shows where a new source's citation comes from", () => {
       citation: {
         citation: {
           type: "article-journal",
-          title: "Deep learning",
-          author: [{ family: "LeCun" }, { family: "Bengio" }],
-          issued: { "date-parts": [[2015]] },
+          title: "Molecular structure of nucleic acids",
+          author: [{ family: "Watson" }, { family: "Crick" }],
+          issued: { "date-parts": [[1953]] },
           "container-title": "Nature",
         },
         origin: "doi",
-        doi: "10.1038/nature14539",
+        doi: "10.1038/171737a0",
       },
     },
     "citation",
   );
-  expect(html).toContain("LeCun, Bengio");
-  expect(html).toContain("Nature, 2015");
-  expect(html).toContain("10.1038/nature14539");
+  expect(html).toContain("Watson, Crick");
+  expect(html).toContain("Nature, 1953");
+  expect(html).toContain("10.1038/171737a0");
   expect(html).toContain("From the DOI registry");
 });
 it("saves PDFs without offering in-page highlighting", () => {
@@ -410,21 +410,21 @@ it("shows a saved source's citation ready to copy", () => {
       source: {
         ...savedSource,
         citation: {
-          id: "lecun2015",
+          id: "watson1953",
           type: "article-journal",
-          title: "Deep learning",
-          author: [{ family: "LeCun" }],
-          issued: { "date-parts": [[2015]] },
-          DOI: "10.1038/nature14539",
+          title: "Molecular structure of nucleic acids",
+          author: [{ family: "Watson" }],
+          issued: { "date-parts": [[1953]] },
+          DOI: "10.1038/171737a0",
         },
       } as ExtensionCaptureController["source"],
     },
     "citation",
   );
-  expect(html).toContain("Deep learning");
-  expect(html).toContain("<p>LeCun</p><p>2015</p>");
-  expect(html).toContain("<code>lecun2015</code>");
-  expect(html).toContain("10.1038/nature14539");
+  expect(html).toContain("Molecular structure of nucleic acids");
+  expect(html).toContain("<p>Watson</p><p>1953</p>");
+  expect(html).toContain("<code>watson1953</code>");
+  expect(html).toContain("10.1038/171737a0");
   expect(html).toContain("Copy citekey");
   expect(html).toContain("Copy CSL-JSON");
 });
@@ -441,12 +441,12 @@ it("titles the page as it will be saved, not as the tab names it", () => {
   const html = markup({
     capture: {
       kind: "html",
-      pageTitle: "[1706.03762] [test] Attention",
+      pageTitle: "[0704.0001] [test] Diphoton production",
       canonicalUrl: "https://example.com/",
       selection: null,
     } as ExtensionCaptureController["capture"],
     draft: {
-      title: "[test] Attention",
+      title: "[test] Diphoton production",
       tags: "",
       note: "",
       comment: "",
@@ -455,7 +455,7 @@ it("titles the page as it will be saved, not as the tab names it", () => {
       highlightTags: "",
     },
   });
-  expect(html).toContain("<h1>[test] Attention</h1>");
+  expect(html).toContain("<h1>[test] Diphoton production</h1>");
 });
 it("says why a selected passage cannot be saved yet", () => {
   const html = markup({

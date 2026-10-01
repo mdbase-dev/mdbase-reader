@@ -21,8 +21,8 @@ describe("ConnectSourceRepository", () => {
         success<QueryResult>({
           results: [
             {
-              path: "sources/gravity.md",
-              effectiveFrontmatter: { id: "src_01", title: "Gravity and Grace" },
+              path: "sources/crime.md",
+              effectiveFrontmatter: { id: "src_01", title: "Crime and Punishment" },
               types: ["custom-source"],
               file: {},
             },
@@ -34,11 +34,11 @@ describe("ConnectSourceRepository", () => {
     const read = vi.fn(() =>
       Promise.resolve(
         success<RecordDocument>({
-          path: "sources/gravity.md",
+          path: "sources/crime.md",
           revision: "rev-1",
           types: ["custom-source"],
-          frontmatter: { id: "src_01", title: "Gravity and Grace" },
-          effectiveFrontmatter: { id: "src_01", title: "Gravity and Grace" },
+          frontmatter: { id: "src_01", title: "Crime and Punishment" },
+          effectiveFrontmatter: { id: "src_01", title: "Crime and Punishment" },
           body: "Notes",
           file: {},
         }),
@@ -58,20 +58,20 @@ describe("ConnectSourceRepository", () => {
     expect(query).toHaveBeenCalledWith(expect.objectContaining({ contract: sourceContract }));
     expect(query).toHaveBeenCalledTimes(2);
     expect(read).toHaveBeenCalledWith({
-      path: "sources/gravity.md",
+      path: "sources/crime.md",
       includeDocument: true,
     });
-    expect(page.items[0]?.title).toBe("Gravity and Grace");
+    expect(page.items[0]?.title).toBe("Crime and Punishment");
     expect(selected?.body).toBe("Notes");
   });
 
   it("makes source transclusion idempotent", async () => {
     const document = {
-      path: "sources/gravity.md",
+      path: "sources/crime.md",
       revision: "rev-3",
       types: ["reader-source"],
-      frontmatter: { id: "src_01", title: "Gravity and Grace" },
-      effectiveFrontmatter: { id: "src_01", title: "Gravity and Grace" },
+      frontmatter: { id: "src_01", title: "Crime and Punishment" },
+      effectiveFrontmatter: { id: "src_01", title: "Crime and Punishment" },
       body: "Notes\n\n![[annotations/ann_01]]\n",
       file: {},
     } satisfies RecordDocument;
@@ -103,11 +103,11 @@ describe("ConnectSourceRepository", () => {
 
   it("recognizes an annotation already embedded by its filename alone", async () => {
     const document = {
-      path: "sources/gravity.md",
+      path: "sources/crime.md",
       revision: "rev-3",
       types: ["reader-source"],
-      frontmatter: { id: "src_01", title: "Gravity and Grace" },
-      effectiveFrontmatter: { id: "src_01", title: "Gravity and Grace" },
+      frontmatter: { id: "src_01", title: "Crime and Punishment" },
+      effectiveFrontmatter: { id: "src_01", title: "Crime and Punishment" },
       body: "Notes\n\n![[ann_01]]\n",
       file: {},
     } satisfies RecordDocument;

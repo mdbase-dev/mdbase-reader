@@ -5,17 +5,22 @@ import { citableLocator, citedQuote } from "./selection-copy.js";
 describe("citedQuote", () => {
   it("cites with Pandoc when the source has a citekey", () => {
     expect(
-      citedQuote("Attention is the rarest\nform of generosity.", {
-        citekey: "weil2002",
-        title: "Gravity and Grace",
-        locator: "p. 16",
-      }),
-    ).toBe("> Attention is the rarest\n> form of generosity.\n>\n> [@weil2002, p. 16]");
+      citedQuote(
+        "Pain and suffering are always inevitable\nfor a large intelligence and a deep heart.",
+        {
+          citekey: "dostoevsky2002",
+          title: "Crime and Punishment",
+          locator: "p. 16",
+        },
+      ),
+    ).toBe(
+      "> Pain and suffering are always inevitable\n> for a large intelligence and a deep heart.\n>\n> [@dostoevsky2002, p. 16]",
+    );
   });
 
   it("falls back to the title without a citekey", () => {
-    expect(citedQuote("A passage.", { title: "Gravity and Grace" })).toBe(
-      "> A passage.\n>\n> — Gravity and Grace",
+    expect(citedQuote("A passage.", { title: "Crime and Punishment" })).toBe(
+      "> A passage.\n>\n> — Crime and Punishment",
     );
   });
 });

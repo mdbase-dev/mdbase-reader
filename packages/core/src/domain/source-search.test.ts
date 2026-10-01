@@ -6,10 +6,10 @@ import { filterSources, type SourceSummary } from "./source.js";
 const sources: readonly SourceSummary[] = [
   {
     collectionId: collectionId("reading"),
-    id: sourceId("src_weil"),
-    path: "sources/gravity.md",
-    title: "Gravity and Grace",
-    creators: ["Simone Weil"],
+    id: sourceId("src_dostoevsky"),
+    path: "sources/crime.md",
+    title: "Crime and Punishment",
+    creators: ["Fyodor Dostoevsky"],
     tags: ["attention"],
     documents: [],
   },

@@ -40,24 +40,24 @@ import type { ReadingSurface, SurfaceDocument } from "@mdbase-reader/reading-sur
 
 const collection = collectionId("reader-preview");
 const previewDocument = {
-  fileId: fileId("file_weil_html"),
-  file: "[[files/gravity-and-grace.html]]",
+  fileId: fileId("file_james_html"),
+  file: "[[files/principles-of-psychology.html]]",
   revision: fileRevision("sha256:19e81c"),
 };
 const previewCitation = {
-  id: "weil1952gravity",
+  id: "james1890principles",
   type: "book",
-  title: "Gravity and Grace",
-  author: [{ family: "Weil", given: "Simone" }],
+  title: "The Principles of Psychology",
+  author: [{ family: "James", given: "William" }],
 };
 const sources: readonly Source[] = [
   {
     collectionId: collection,
-    id: sourceId("src_weil"),
-    path: "sources/gravity-and-grace.md",
-    title: "Gravity and Grace",
-    creators: ["Simone Weil"],
-    tags: ["philosophy", "attention"],
+    id: sourceId("src_james"),
+    path: "sources/principles-of-psychology.md",
+    title: "The Principles of Psychology",
+    creators: ["William James"],
+    tags: ["psychology", "attention"],
     citation: previewCitation,
     readingStatus: "reading",
     reading: {
@@ -65,7 +65,7 @@ const sources: readonly Source[] = [
       progress: 0.42,
       lastOpenedAt: dateTime("2026-09-23T20:15:00+10:00"),
     },
-    published: 1952,
+    published: 1890,
     documents: [
       {
         fileId: previewDocument.fileId,
@@ -77,12 +77,12 @@ const sources: readonly Source[] = [
       },
     ],
     properties: {
-      id: "src_weil",
-      title: "Gravity and Grace",
-      course: "[[courses/phil-attention|Philosophy of attention]]",
+      id: "src_james",
+      title: "The Principles of Psychology",
+      course: "[[courses/psych-attention|Psychology of attention]]",
       priority: 1,
     },
-    body: "## Notes\n\nAttention is not effort but a patient availability to truth.\n\n![[annotations/ann_attention]]\n",
+    body: "## Notes\n\nJames treats attention as selection: experience is what we agree to attend to.\n\n![[annotations/ann_attention]]\n",
     recordRevision: recordRevision("preview-revision-1"),
     frontmatter: { csl: previewCitation },
   },
@@ -116,20 +116,20 @@ const sources: readonly Source[] = [
   },
   {
     collectionId: collection,
-    id: sourceId("src_crawford"),
-    path: "sources/attention-as-cultural-problem.md",
-    title: "Attention as a Cultural Problem",
-    creators: ["Matthew B. Crawford"],
+    id: sourceId("src_thoreau"),
+    path: "sources/walden.md",
+    title: "Walden; or, Life in the Woods",
+    creators: ["Henry David Thoreau"],
     tags: ["attention"],
     readingStatus: "finished",
     documents: [],
     properties: {
-      id: "src_crawford",
-      title: "Attention as a Cultural Problem",
-      course: "[[courses/phil-attention|Philosophy of attention]]",
+      id: "src_thoreau",
+      title: "Walden; or, Life in the Woods",
+      course: "[[courses/psych-attention|Psychology of attention]]",
       priority: 2,
     },
-    body: "Read alongside Weil.",
+    body: "Read alongside James.",
     recordRevision: recordRevision("preview-revision-3"),
     frontmatter: {},
   },
@@ -139,43 +139,43 @@ const annotations: readonly Annotation[] = [
   {
     collectionId: collection,
     id: annotationId("ann_attention"),
-    sourceId: sourceId("src_weil"),
-    source: "[[src_weil|Gravity and Grace]]",
+    sourceId: sourceId("src_james"),
+    source: "[[src_james|The Principles of Psychology]]",
     document: previewDocument,
     annotationType: "highlight",
-    locator: { label: "Attention and Will" },
+    locator: { label: "Chapter XI" },
     target: {
       quote: {
         exact:
-          "Attention consists of suspending our thought, leaving it detached, empty and ready to be penetrated by the object.",
+          "It is the taking possession by the mind, in clear and vivid form, of one out of what seem several simultaneously possible objects or trains of thought.",
       },
       html: { css: "body" },
     },
     tags: ["attention"],
-    body: "This is the practical core of Weil's account of study.",
+    body: "James's definition, and the ground of his account of study.",
     createdAt: dateTime("2026-08-09T14:21:00+10:00"),
   },
   {
     collectionId: collection,
-    id: annotationId("ann_contradiction"),
-    sourceId: sourceId("src_weil"),
-    source: "[[src_weil|Gravity and Grace]]",
+    id: annotationId("ann_selection"),
+    sourceId: sourceId("src_james"),
+    source: "[[src_james|The Principles of Psychology]]",
     annotationType: "note",
-    locator: { label: "Introduction" },
+    locator: { label: "Chapter XI" },
     tags: [],
-    body: "Compare this with the note on contradiction in the introduction.",
+    body: "Compare Thoreau on living deliberately.",
     createdAt: dateTime("2026-08-08T11:03:00+10:00"),
   },
   {
     collectionId: collection,
-    id: annotationId("ann_hastily"),
-    sourceId: sourceId("src_weil"),
-    source: "[[src_weil|Gravity and Grace]]",
+    id: annotationId("ann_chaos"),
+    sourceId: sourceId("src_james"),
+    source: "[[src_james|The Principles of Psychology]]",
     document: previewDocument,
     annotationType: "highlight",
-    locator: { label: "Attention and Will" },
+    locator: { label: "Chapter XI" },
     target: {
-      quote: { exact: "thought has seized upon some idea too hastily" },
+      quote: { exact: "without selective interest, experience is an utter chaos" },
       html: { css: "body" },
     },
     tags: [],
@@ -296,16 +296,14 @@ export class PreviewGateway implements ReaderWorkspaceGateway {
   resolveCitation(request: CitationResolutionRequest): Promise<CitationCandidate> {
     return Promise.resolve({
       citation: {
-        id: "weil1952gravity",
+        id: "james1890principles",
         type: "book",
-        title: "Gravity and Grace",
-        author: [{ family: "Weil", given: "Simone" }],
-        translator: [{ family: "Crawford", given: "Emma" }],
-        issued: { "date-parts": [[1952]] },
-        publisher: "Routledge and Kegan Paul",
-        "publisher-place": "London",
+        title: "The Principles of Psychology",
+        author: [{ family: "James", given: "William" }],
+        issued: { "date-parts": [[1890]] },
+        publisher: "Henry Holt and Company",
+        "publisher-place": "New York",
         language: "en",
-        ISBN: "9780415290012",
       },
       provenance: {
         provider: "Zotero Translation Server (preview)",
@@ -453,13 +451,13 @@ const HtmlViewerSurface = lazy(async () => {
   return { default: module.HtmlViewerSurface };
 });
 
-const previewHtml = `<!doctype html><html lang="en"><head><title>Gravity and Grace</title></head><body>
+const previewHtml = `<!doctype html><html lang="en"><head><title>The Principles of Psychology</title></head><body>
 <article>
-<h1>Attention and Will</h1>
-<p>We do not have to acquire humility. There is humility in us—only we humiliate ourselves before false gods.</p>
-<p>Attention consists of suspending our thought, leaving it detached, empty and ready to be penetrated by the object.</p>
-<p>Thought must be empty, waiting, not seeking anything, but ready to receive in its naked truth the object that is to penetrate it.</p>
-<p>All wrong translations, all absurdities in geometry problems, all clumsiness of style and all faulty connection of ideas in compositions and essays, all such things are due to the fact that thought has seized upon some idea too hastily.</p>
+<h1>Chapter XI. Attention</h1>
+<p>Millions of items of the outward order are present to my senses which never properly enter into my experience. Why? Because they have no interest for me. My experience is what I agree to attend to. Only those items which I notice shape my mind—without selective interest, experience is an utter chaos.</p>
+<p>Everyone knows what attention is. It is the taking possession by the mind, in clear and vivid form, of one out of what seem several simultaneously possible objects or trains of thought.</p>
+<p>Focalization, concentration, of consciousness are of its essence. It implies withdrawal from some things in order to deal effectively with others.</p>
+<p>And the faculty of voluntarily bringing back a wandering attention, over and over again, is the very root of judgment, character, and will.</p>
 </article>
 </body></html>`;
 // A data URL has no lifetime to manage across StrictMode's remounts.
@@ -476,12 +474,14 @@ function PreviewDocument({
     () => ({ document: previewDocument, mediaType: "text/html", url: previewUrl }),
     [],
   );
-  if (source.id !== sourceId("src_weil")) {
+  if (source.id !== sourceId("src_james")) {
     return (
       <div className="preview-document">
         <div className="document-message">
           <strong>{source.title}</strong>
-          <span>The interface preview includes one sample document: Gravity and Grace.</span>
+          <span>
+            The interface preview includes one sample document: The Principles of Psychology.
+          </span>
         </div>
       </div>
     );

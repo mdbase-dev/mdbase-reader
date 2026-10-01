@@ -7,13 +7,13 @@ import type { CaptureResult } from "./web-capture-client.js";
 
 const pdfBytes = new TextEncoder().encode("%PDF-1.7 fixture");
 
-const weil = {
+const dostoevsky = {
   id: "candidate",
   type: "book",
-  title: "Gravity and grace",
-  author: [{ family: "Weil", given: "Simone" }],
+  title: "Crime and punishment",
+  author: [{ family: "Dostoevsky", given: "Fyodor" }],
   issued: { "date-parts": [[2002]] },
-  ISBN: "9780415290012",
+  ISBN: "9780140449136",
 };
 
 function services(overrides: Partial<SourceAdditionServices> = {}): SourceAdditionServices {
@@ -22,7 +22,7 @@ function services(overrides: Partial<SourceAdditionServices> = {}): SourceAdditi
     candidates: vi.fn(() => Promise.resolve({ pdfUrls: [], landingPages: [] })),
     lookUp: vi.fn((request) =>
       Promise.resolve({
-        citation: weil,
+        citation: dostoevsky,
         provenance: { provider: "test", query: request.value, retrievedAt: "2026-09-25T00:00:00Z" },
         warnings: [],
       }),
@@ -41,14 +41,14 @@ function services(overrides: Partial<SourceAdditionServices> = {}): SourceAdditi
 describe("adding a source from pasted text", () => {
   it("saves a book found by ISBN without a document when no free PDF exists", async () => {
     const deps = services();
-    const outcome = await addSourceFromInput("978-0-415-29001-2", deps);
+    const outcome = await addSourceFromInput("978-0-14-044913-6", deps);
 
-    expect(deps.lookUp).toHaveBeenCalledWith({ kind: "identifier", value: "isbn:9780415290012" });
+    expect(deps.lookUp).toHaveBeenCalledWith({ kind: "identifier", value: "isbn:9780140449136" });
     expect(deps.workspace.createSource).toHaveBeenCalledWith(
       {
-        title: "Gravity and grace",
+        title: "Crime and punishment",
         kind: "book",
-        metadata: { authors: ["Simone Weil"], published: "2002" },
+        metadata: { authors: ["Fyodor Dostoevsky"], published: "2002" },
       },
       undefined,
     );
@@ -86,8 +86,8 @@ describe("adding a source from pasted text", () => {
           citation: {
             id: "candidate",
             type: "article-journal",
-            title: "Deep learning",
-            DOI: "10.1038/nature14539",
+            title: "Molecular structure of nucleic acids",
+            DOI: "10.1038/171737a0",
           },
           provenance: { provider: "doi.org", query: "", retrievedAt: "" },
           warnings: [],
@@ -95,16 +95,16 @@ describe("adding a source from pasted text", () => {
       ),
     });
 
-    const outcome = await addSourceFromInput("https://doi.org/10.1038/nature14539", deps);
+    const outcome = await addSourceFromInput("https://doi.org/10.1038/171737a0", deps);
 
     expect(deps.workspace.importSourceFile).toHaveBeenCalledWith(
       expect.objectContaining({
         name: "document.pdf",
         declaredMediaType: "application/pdf",
         bytes: pdfBytes,
-        title: "Deep learning",
+        title: "Molecular structure of nucleic acids",
         kind: "paper",
-        url: "https://doi.org/10.1038/nature14539",
+        url: "https://doi.org/10.1038/171737a0",
       }),
       undefined,
     );
@@ -121,7 +121,7 @@ describe("adding a source from pasted text", () => {
   });
 
   it("cites a PDF saved by its address from the identifiers printed in it", async () => {
-    const url = "https://arxiv.example/files/attention.pdf";
+    const url = "https://arxiv.example/files/diphoton.pdf";
     const deps = services({
       capture: vi.fn(() =>
         Promise.resolve({
@@ -132,12 +132,12 @@ describe("adding a source from pasted text", () => {
           retrievedAt: "2026-09-25T00:00:00Z",
         }),
       ),
-      pdfIdentifiers: vi.fn(() => Promise.resolve({ arxiv: "1706.03762" })),
+      pdfIdentifiers: vi.fn(() => Promise.resolve({ arxiv: "0704.0001" })),
     });
     await addSourceFromInput(url, deps);
-    expect(deps.lookUp).toHaveBeenCalledWith({ kind: "identifier", value: "arxiv:1706.03762" });
+    expect(deps.lookUp).toHaveBeenCalledWith({ kind: "identifier", value: "arxiv:0704.0001" });
     expect(deps.workspace.importSourceFile).toHaveBeenCalledWith(
-      expect.objectContaining({ name: "attention.pdf", url, title: "Gravity and grace" }),
+      expect.objectContaining({ name: "diphoton.pdf", url, title: "Crime and punishment" }),
       undefined,
     );
   });
@@ -150,11 +150,11 @@ describe("adding a source from pasted text", () => {
         saveNewSourceCitation: vi.fn(() => Promise.reject(new Error("Citekey taken."))),
       },
     });
-    expect(await addSourceFromInput("isbn 9780415290012", deps)).toMatchObject({
+    expect(await addSourceFromInput("isbn 9780140449136", deps)).toMatchObject({
       kind: "added",
       notices: [expect.stringContaining("Citekey taken.")],
     });
-    await expect(addSourceFromInput("Gravity and Grace", deps)).rejects.toThrow(
+    await expect(addSourceFromInput("Crime and Punishment", deps)).rejects.toThrow(
       "Paste a web address",
     );
   });
@@ -165,7 +165,7 @@ function source(): Source {
     collectionId: collectionId("reading"),
     id: sourceId("src_new"),
     path: "sources/src_new.md",
-    title: "Gravity and grace",
+    title: "Crime and punishment",
     creators: [],
     tags: [],
     documents: [],

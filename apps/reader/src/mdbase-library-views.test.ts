@@ -56,7 +56,7 @@ describe("mdbase library views", () => {
         sortField: "creator",
         sortDirection: "asc",
         filter: {
-          query: "weil",
+          query: "dostoevsky",
           status: "reading",
           format: "pdf",
           tag: "attention",
@@ -70,7 +70,13 @@ describe("mdbase library views", () => {
       columnWidths: {},
       sortField: "creator",
       sortDirection: "asc",
-      filter: { query: "weil", status: "reading", format: "pdf", tag: "attention", conditions: [] },
+      filter: {
+        query: "dostoevsky",
+        status: "reading",
+        format: "pdf",
+        tag: "attention",
+        conditions: [],
+      },
     });
   });
 

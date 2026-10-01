@@ -14,27 +14,27 @@ describe("source input", () => {
       kind: "url",
       value: "https://example.com/essay",
     });
-    expect(parseSourceInput("https://doi.org/10.1038/nature14539")).toEqual({
+    expect(parseSourceInput("https://doi.org/10.1038/171737a0")).toEqual({
       kind: "doi",
-      value: "10.1038/nature14539",
+      value: "10.1038/171737a0",
     });
-    expect(parseSourceInput("https://arxiv.org/abs/1706.03762v7")).toEqual({
+    expect(parseSourceInput("https://arxiv.org/abs/0704.0001v2")).toEqual({
       kind: "arxiv",
-      value: "1706.03762v7",
+      value: "0704.0001v2",
     });
-    expect(parseSourceInput(" doi:10.1038/nature14539 ")).toEqual({
+    expect(parseSourceInput(" doi:10.1038/171737a0 ")).toEqual({
       kind: "doi",
-      value: "10.1038/nature14539",
+      value: "10.1038/171737a0",
     });
-    expect(parseSourceInput("10.1038/nature14539")?.kind).toBe("doi");
+    expect(parseSourceInput("10.1038/171737a0")?.kind).toBe("doi");
     expect(parseSourceInput("2101.00001")).toEqual({ kind: "arxiv", value: "2101.00001" });
     expect(parseSourceInput("arXiv:hep-th/9901001")).toEqual({
       kind: "arxiv",
       value: "hep-th/9901001",
     });
-    expect(parseSourceInput("978-0-415-29001-2")).toEqual({
+    expect(parseSourceInput("978-0-14-044913-6")).toEqual({
       kind: "isbn",
-      value: "9780415290012",
+      value: "9780140449136",
     });
     expect(parseSourceInput("ISBN 0-306-40615-2")).toEqual({ kind: "isbn", value: "0306406152" });
     expect(parseSourceInput("PMID: 26017442")).toEqual({ kind: "pmid", value: "26017442" });
@@ -42,7 +42,7 @@ describe("source input", () => {
   });
 
   it("rejects titles, bad checksums and unprefixed PubMed numbers", () => {
-    expect(parseSourceInput("Gravity and Grace")).toBeNull();
+    expect(parseSourceInput("Crime and Punishment")).toBeNull();
     expect(parseSourceInput("978-0-415-29001-3")).toBeNull();
     expect(parseSourceInput("26017442")).toBeNull();
     expect(normalizedIsbn("0-306-40615-2")).toBe("0306406152");
@@ -53,9 +53,9 @@ describe("source input", () => {
       kind: "identifier",
       value: "10.1/x",
     });
-    expect(identifierLookup({ kind: "isbn", value: "9780415290012" })).toEqual({
+    expect(identifierLookup({ kind: "isbn", value: "9780140449136" })).toEqual({
       kind: "identifier",
-      value: "isbn:9780415290012",
+      value: "isbn:9780140449136",
     });
     expect(identifierLookup({ kind: "url", value: "https://a.example/" }).kind).toBe("url");
   });
@@ -63,9 +63,9 @@ describe("source input", () => {
   it("finds identifiers printed in a document", () => {
     expect(
       identifiersInText(
-        "Nature 521, 436–444 (2015) doi:10.1038/ nature14539\narXiv:1706.03762v7 [cs.CL] ISBN: 978-0-415-29001-2",
+        "Nature 171, 737–738 (1953) doi:10.1038/ 171737a0\narXiv:0704.0001v2 [hep-ph] ISBN: 978-0-14-044913-6",
       ),
-    ).toEqual({ doi: "10.1038/nature14539", arxiv: "1706.03762", isbn: "9780415290012" });
+    ).toEqual({ doi: "10.1038/171737a0", arxiv: "0704.0001", isbn: "9780140449136" });
     expect(identifiersInText("No identifiers here.")).toEqual({});
   });
 });
@@ -74,8 +74,8 @@ describe("open-access discovery", () => {
   it("goes straight to arXiv's PDF for arXiv works", async () => {
     const fetcher = vi.fn<typeof fetch>();
     expect(
-      await openAccessCandidates({ doi: "10.48550/arXiv.1706.03762" }, { fetch: fetcher }),
-    ).toEqual({ pdfUrls: ["https://arxiv.org/pdf/1706.03762"], landingPages: [] });
+      await openAccessCandidates({ doi: "10.48550/arXiv.0704.0001" }, { fetch: fetcher }),
+    ).toEqual({ pdfUrls: ["https://arxiv.org/pdf/0704.0001"], landingPages: [] });
     expect(fetcher).not.toHaveBeenCalled();
   });
 
@@ -88,7 +88,7 @@ describe("open-access discovery", () => {
           landing_page_url: "https://hal.science/hal-1",
         },
         locations: [
-          { is_oa: false, landing_page_url: "https://doi.org/10.1038/nature14539" },
+          { is_oa: false, landing_page_url: "https://doi.org/10.1038/171737a0" },
           { is_oa: true, landing_page_url: "https://pubmed.ncbi.nlm.nih.gov/26017442" },
           {
             is_oa: true,
@@ -98,9 +98,9 @@ describe("open-access discovery", () => {
         ],
       }),
     );
-    expect(await openAccessCandidates({ doi: "10.1038/nature14539" }, { fetch: fetcher })).toEqual({
+    expect(await openAccessCandidates({ doi: "10.1038/171737a0" }, { fetch: fetcher })).toEqual({
       pdfUrls: ["https://repo.example/paper.pdf"],
-      landingPages: ["https://hal.science/hal-1", "https://doi.org/10.1038/nature14539"],
+      landingPages: ["https://hal.science/hal-1", "https://doi.org/10.1038/171737a0"],
     });
     expect(fetcher).toHaveBeenCalledTimes(1);
   });

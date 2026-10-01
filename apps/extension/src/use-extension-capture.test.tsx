@@ -268,11 +268,11 @@ it("restores an unsaved comment kept for this tab and page", async () => {
 });
 it("replaces the untouched page title with the citation title", async () => {
   mocks.prepareCitation.mockResolvedValue({
-    citation: { type: "article-journal", title: "Deep learning" },
+    citation: { type: "article-journal", title: "Molecular structure of nucleic acids" },
     origin: "doi",
   });
   await mount();
-  expect(controller.draft.title).toBe("Deep learning");
+  expect(controller.draft.title).toBe("Molecular structure of nucleic acids");
   expect(controller.citation?.origin).toBe("doi");
 });
 it("asks to be invoked again after the tab navigates, then reads the new page", async () => {

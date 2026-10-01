@@ -5,10 +5,10 @@ import { validateCslItem } from "./citation.js";
 describe("CSL item validation", () => {
   it("accepts and preserves a complete nested CSL item", () => {
     const item = {
-      id: "weil2002gravity",
+      id: "dostoevsky2002crime",
       type: "book",
-      title: "Gravity and Grace",
-      author: [{ family: "Weil", given: "Simone" }],
+      title: "Crime and Punishment",
+      author: [{ family: "Dostoevsky", given: "Fyodor" }],
       issued: { "date-parts": [[2002]] },
       custom: { metadataSource: "reviewed" },
     };

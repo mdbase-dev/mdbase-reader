@@ -9,11 +9,11 @@ describe("citation drag payload", () => {
       effectAllowed: "none",
       setData: (type: string, value: string) => values.set(type, value),
     } as unknown as DataTransfer;
-    writeCitationDrag(data, { id: "weil1952", type: "book", title: "Gravity and Grace" });
+    writeCitationDrag(data, { id: "dostoevsky1914", type: "book", title: "Crime and Punishment" });
     expect(data.effectAllowed).toBe("copy");
-    expect(values.get("text/plain")).toBe("[@weil1952]");
+    expect(values.get("text/plain")).toBe("[@dostoevsky1914]");
     expect(JSON.parse(values.get("application/vnd.citationstyles.csl+json") ?? "")).toMatchObject({
-      id: "weil1952",
+      id: "dostoevsky1914",
     });
   });
 });

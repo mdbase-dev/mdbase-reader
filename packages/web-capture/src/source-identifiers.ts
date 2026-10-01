@@ -90,7 +90,7 @@ export interface IdentifiersInText {
 
 /**
  * Identifiers printed in a document's opening pages or metadata. The first DOI wins; arXiv's
- * margin stamp ("arXiv:1706.03762v7 [cs.CL]") identifies preprints that have no DOI printed.
+ * margin stamp ("arXiv:0704.0001v2 [hep-ph]") identifies preprints that have no DOI printed.
  */
 export function identifiersInText(text: string): IdentifiersInText {
   const doi = doiFromText(text.replace(/\s+(?=\/)|(?<=\/)\s+/gu, ""));

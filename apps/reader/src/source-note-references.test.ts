@@ -9,18 +9,18 @@ import {
 const collection = collectionId("reading");
 const source = {
   collectionId: collection,
-  id: sourceId("weil"),
-  path: "sources/gravity.md",
-  title: "Gravity and Grace",
-  creators: ["Simone Weil"],
+  id: sourceId("dostoevsky"),
+  path: "sources/crime.md",
+  title: "Crime and Punishment",
+  creators: ["Fyodor Dostoevsky"],
   tags: [],
   documents: [],
   citation: {
-    id: "weil1952",
+    id: "dostoevsky1914",
     type: "book",
-    title: "Gravity and Grace",
-    author: [{ family: "Weil", given: "Simone" }],
-    issued: { "date-parts": [[1952]] },
+    title: "Crime and Punishment",
+    author: [{ family: "Dostoevsky", given: "Fyodor" }],
+    issued: { "date-parts": [[1914]] },
   },
 } as const;
 
@@ -31,7 +31,7 @@ describe("source note references", () => {
         collectionId: collection,
         id: annotationId("attention"),
         sourceId: source.id,
-        source: "[[weil]]",
+        source: "[[dostoevsky]]",
         annotationType: "note",
         tags: [],
         body: "Attention",
@@ -41,14 +41,14 @@ describe("source note references", () => {
 
     expect(sourceNoteWikiCandidates([source], annotations).map(({ path }) => path)).toEqual([
       "annotations/attention",
-      "sources/gravity",
+      "sources/crime",
     ]);
     expect(sourceNoteCitationCandidates([source])).toEqual([
       {
-        id: "weil1952",
-        label: "Gravity and Grace",
-        detail: "Simone Weil",
-        display: "Weil 1952",
+        id: "dostoevsky1914",
+        label: "Crime and Punishment",
+        detail: "Fyodor Dostoevsky",
+        display: "Dostoevsky 1914",
       },
     ]);
   });

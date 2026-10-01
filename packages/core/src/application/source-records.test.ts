@@ -42,21 +42,21 @@ describe("createSourceRecord", () => {
     });
     await createSourceRecord(dependencies({ findExactDuplicate: vi.fn(), commitFile }), {
       collectionId: collectionId("reading"),
-      title: "  Gravity   and grace ",
+      title: "  Crime   and punishment ",
       kind: "book",
       url: "https://doi.org/10.4324/9780203168455",
-      metadata: { authors: ["Simone Weil"], published: "2002" },
+      metadata: { authors: ["Fyodor Dostoevsky"], published: "2002" },
     });
     expect(committed).toEqual({
       collectionId: "reading",
       sourceId: "src_new",
-      title: "Gravity and grace",
+      title: "Crime and punishment",
       kind: "book",
       savedAt: "2026-09-25T00:00:00.000Z",
-      recordPath: "sources/gravity-and-grace.md",
-      fallbackRecordPath: "sources/gravity-and-grace-new.md",
+      recordPath: "sources/crime-and-punishment.md",
+      fallbackRecordPath: "sources/crime-and-punishment-new.md",
       representations: [],
-      metadata: { authors: ["Simone Weil"], published: "2002" },
+      metadata: { authors: ["Fyodor Dostoevsky"], published: "2002" },
       url: "https://doi.org/10.4324/9780203168455",
     });
   });
@@ -87,20 +87,20 @@ describe("attachSourceFile", () => {
       }),
       {
         source: source(),
-        name: "weil.pdf",
+        name: "dostoevsky.pdf",
         bytes: pdf,
-        originUrl: "https://example.org/weil.pdf",
+        originUrl: "https://example.org/dostoevsky.pdf",
       },
     );
     expect(attached).toMatchObject({
       sourceId: "src_existing",
       recordPath: "sources/src_existing.md",
-      originUrl: "https://example.org/weil.pdf",
+      originUrl: "https://example.org/dostoevsky.pdf",
       retrievedAt: "2026-09-25T00:00:00.000Z",
       representation: {
         role: "primary",
         format: "pdf",
-        filePath: "files/reader/src_existing/weil.pdf",
+        filePath: "files/reader/src_existing/dostoevsky.pdf",
         contentDigest: digest,
       },
     });
@@ -110,7 +110,7 @@ describe("attachSourceFile", () => {
     const withDocument = source([
       {
         fileId: fileId("file-1"),
-        file: "[[files/reader/src_existing/weil.epub]]",
+        file: "[[files/reader/src_existing/dostoevsky.epub]]",
         role: "primary",
         mediaType: "application/epub+zip",
         revision: fileRevision(`sha256:${"c".repeat(64)}`),
@@ -123,7 +123,7 @@ describe("attachSourceFile", () => {
         commitFile: vi.fn(),
         attachFile,
       }),
-      { source: withDocument, name: "weil.pdf", bytes: pdf },
+      { source: withDocument, name: "dostoevsky.pdf", bytes: pdf },
     );
     expect(attachFile.mock.calls[0]?.[0]).toMatchObject({
       representation: { role: "alternative" },
@@ -136,7 +136,7 @@ describe("attachSourceFile", () => {
           commitFile: vi.fn(),
           attachFile,
         }),
-        { source: withDocument, name: "weil.pdf", bytes: pdf },
+        { source: withDocument, name: "dostoevsky.pdf", bytes: pdf },
       ),
     ).rejects.toThrow("already stored");
     expect(attachFile).toHaveBeenCalledTimes(1);
@@ -146,7 +146,7 @@ describe("attachSourceFile", () => {
     await expect(
       attachSourceFile(dependencies({ findExactDuplicate: vi.fn(), commitFile: vi.fn() }), {
         source: source(),
-        name: "weil.pdf",
+        name: "dostoevsky.pdf",
         bytes: pdf,
       }),
     ).rejects.toThrow("cannot attach files");
@@ -166,7 +166,7 @@ function source(documents: Source["documents"] = []): Source {
     collectionId: collectionId("reading"),
     id: sourceId("src_existing"),
     path: "sources/src_existing.md",
-    title: "Gravity and grace",
+    title: "Crime and punishment",
     creators: [],
     tags: [],
     documents,
