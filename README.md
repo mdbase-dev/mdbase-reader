@@ -11,6 +11,25 @@ library in a separate, application-only database.
 Reader is prerelease software. Keep backups of important collections and check that changes
 have saved before closing or reloading.
 
+## See it in action
+
+**Highlight a passage, get a Markdown file.** Each highlight is saved as its own annotation
+record, and embedding it in a source note adds an ordinary `![[…]]` link.
+
+https://github.com/user-attachments/assets/63fc8fa6-ea46-47d8-b1a4-30b935813e62
+
+**Save from the web.** The browser extension picks up the page's citation, saves highlights and
+comments from the side panel, and opens the saved copy in Reader.
+
+https://github.com/user-attachments/assets/5a409367-e210-4e01-8f79-68ce13161f87
+
+**Views, annotations and panes.** Table and shelf views, every annotation in one table, the
+command palette, and two sources open side by side.
+
+https://github.com/user-attachments/assets/dda8451e-4d98-4832-a592-7b4fef1851a9
+
+These recordings use sample data, not a real collection.
+
 ## What you can do
 
 - Read PDFs, EPUBs, and saved web pages in one library.
