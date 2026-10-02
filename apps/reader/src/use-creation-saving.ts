@@ -1,3 +1,4 @@
+import { signalMdbaseMark } from "@mdbase-dev/ui/mark-activity";
 import { useRef, useState, type RefObject } from "react";
 
 import { saveAnnotationDraftToCollection } from "./annotation-draft-actions.js";
@@ -46,6 +47,12 @@ export function useCreationSaving(input: {
     busy.current = false;
     setSaving(false);
   };
+  // The app mark confirms each annotation the person saves and shakes when one could not be.
+  const saved = (): void => signalMdbaseMark("saved");
+  const failed = (value: NonNullable<Problem>): void => {
+    signalMdbaseMark("error");
+    setProblem(value);
+  };
   return {
     busy,
     saving,
@@ -72,8 +79,8 @@ export function useCreationSaving(input: {
         },
         value,
         "",
-        () => undefined,
-        setProblem,
+        saved,
+        failed,
         () => undefined,
       );
     },
@@ -83,12 +90,15 @@ export function useCreationSaving(input: {
         return;
       }
       void saveAnnotationDraftToCollection(
-        () => buffer.clearIf(value),
+        () => {
+          buffer.clearIf(value);
+          saved();
+        },
         value,
         source,
         surface,
         create,
-        setProblem,
+        failed,
         finish,
       );
     },

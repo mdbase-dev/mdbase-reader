@@ -1,3 +1,4 @@
+import { signalMdbaseMark } from "@mdbase-dev/ui/mark-activity";
 import {
   citationCompletenessWarnings,
   citekeyForCitation,
@@ -97,8 +98,12 @@ export function useCitationEditor(input: {
       .then((updated) => {
         input.onSaved(updated);
         setStatusState({ sourceId: updated.id, value: "saved" });
+        // The editor's SaveNotice usually plays this too; the mark plays it once.
+        signalMdbaseMark("saved");
       })
       .catch((reason: unknown) => {
+        // The editor's SaveNotice never shows attention; the error is reported below the form.
+        signalMdbaseMark("error");
         setStatusState({ sourceId: source.id, value: "idle" });
         setErrorState({
           sourceId: source.id,
