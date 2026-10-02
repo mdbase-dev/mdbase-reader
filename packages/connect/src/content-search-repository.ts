@@ -12,8 +12,6 @@ import { outcomeValue } from "./repository-client.js";
 import type { ReaderConnectClient } from "./repository-client.js";
 import type { QueryInput, QueryRecord } from "@mdbase-dev/connect";
 
-const pageSize = 100;
-
 export class ConnectContentSearchRepository implements ContentSearchRepository {
   constructor(private readonly client: ReaderConnectClient) {}
 
@@ -30,7 +28,6 @@ export class ConnectContentSearchRepository implements ContentSearchRepository {
     const matches = new Map<string, SourceTextSearchMatch>();
     for await (const outcome of this.client.queryPages(searchInput(normalized), {
       ...options,
-      firstPageSize: pageSize,
       pageSize: 250,
     })) {
       const records = outcomeValue(outcome, "search source and annotation text").results;

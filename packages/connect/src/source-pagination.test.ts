@@ -31,7 +31,6 @@ describe("Connect source pagination", () => {
       { contract: sourceContract, frontmatterMode: "effective" },
       {
         replaceableFamily: "reader-library-load",
-        firstPageSize: 100,
         pageSize: 1_000,
       },
     );

@@ -1,3 +1,4 @@
+import { connectFailure, connectProblem } from "@mdbase-dev/connect/advanced";
 import { annotationId, collectionId, dateTime, sourceId } from "@mdbase-reader/core";
 import { describe, expect, it, vi } from "vitest";
 
@@ -229,8 +230,17 @@ describe("Connect annotation reads", () => {
         }),
       ),
     );
+    const readMany = vi.fn<ReaderConnectClient["readMany"]>(() =>
+      Promise.resolve(
+        success({
+          results: [{ status: "missing", path: "annotations/matching.md" }],
+          errors: [],
+        }),
+      ),
+    );
     const repository = new ConnectAnnotationRepository({
       queryPages,
+      readMany,
       read,
     } as unknown as ReaderConnectClient);
 
@@ -239,21 +249,18 @@ describe("Connect annotation reads", () => {
     expect(queryPages).toHaveBeenCalledWith(
       {
         types: ["reader-annotation"],
-        where: 'source != null && source.asFile() == null && source.contains("src_01")',
+        where:
+          'has(record.source) && source != null && source.asFile() == null && source.contains("src_01")',
         frontmatterMode: "effective",
       },
       { firstPageSize: 100, pageSize: 100 },
     );
-    // Bodies come from a second query naming the matched paths, which follows no links.
-    expect(queryPages).toHaveBeenCalledWith(
-      {
-        types: ["reader-annotation"],
-        where: 'file.path == "annotations/matching.md"',
-        frontmatterMode: "both",
-        includeBody: true,
-      },
-      { firstPageSize: 100, pageSize: 100 },
-    );
+    // Revisionless bodies are batched by the SDK; missing query rows still require a read.
+    expect(readMany).toHaveBeenCalledWith(["annotations/matching.md"], {
+      types: ["reader-annotation"],
+      frontmatterMode: "both",
+      includeBody: true,
+    });
     expect(read).toHaveBeenCalledOnce();
     expect(read).toHaveBeenCalledWith(
       { path: "annotations/matching.md", includeDocument: true },
@@ -267,17 +274,15 @@ describe("Connect annotation reads", () => {
     ]);
 
     await repository.listForSource(collectionId("reading"), sourceId("src_02"));
-    // Each listing: a legacy-reference query, then one query for the matched paths' bodies.
-    expect(queryPages).toHaveBeenCalledTimes(7);
+    // Each listing: an ID lookup and legacy-reference query; one unscoped index query.
+    expect(queryPages).toHaveBeenCalledTimes(5);
+    expect(readMany).toHaveBeenCalledTimes(2);
   });
 });
 
 describe("Connect annotation listing fallback", () => {
   it("reads each matched annotation when the body query is refused", async () => {
     const queryPages = vi.fn((input: { where?: string }) => {
-      if (input.where?.startsWith("file.path == ")) {
-        throw new Error("This query is not available here.");
-      }
       return queryStream(
         input.where?.includes("contains")
           ? [
@@ -314,13 +319,22 @@ describe("Connect annotation listing fallback", () => {
         }),
       ),
     );
+    const readMany = vi.fn<ReaderConnectClient["readMany"]>(() =>
+      Promise.resolve(
+        connectFailure(
+          connectProblem("unsupported_operation", "This query is not available here."),
+        ),
+      ),
+    );
     const repository = new ConnectAnnotationRepository({
       queryPages,
+      readMany,
       read,
     } as unknown as ReaderConnectClient);
 
     const annotations = await repository.listForSource(collectionId("reading"), sourceId("src_01"));
 
+    expect(readMany).toHaveBeenCalledOnce();
     expect(read).toHaveBeenCalledOnce();
     expect(annotations.map((annotation) => annotation.body)).toEqual(["A useful note."]);
   });

@@ -69,6 +69,27 @@ describe("Reader Connect SDK integration", () => {
     );
   });
 
+  it("delegates batched reads and preserves the SDK outcome and options", async () => {
+    const outcome = success({
+      results: [{ status: "missing" as const, path: "missing.md" }],
+      errors: [],
+    });
+    const readMany = vi.fn(() => Promise.resolve(outcome));
+    const client = connectClient({ readMany } as unknown as MdbaseConnection);
+    const paths = ["missing.md"];
+    const options = {
+      includeBody: true,
+      frontmatterMode: "both" as const,
+      types: ["reader-annotation"],
+      batchSize: 100,
+      concurrency: 4,
+      signal: new AbortController().signal,
+    };
+
+    await expect(client.readMany(paths, options)).resolves.toBe(outcome);
+    expect(readMany).toHaveBeenCalledExactlyOnceWith(paths, options);
+  });
+
   it("does not put mutations behind a Reader-owned read queue", async () => {
     const query = vi.fn(() => new Promise<ConnectOutcome<QueryResult>>(() => undefined));
     const create = vi.fn(() => Promise.resolve(success({ path: "new.md" })));

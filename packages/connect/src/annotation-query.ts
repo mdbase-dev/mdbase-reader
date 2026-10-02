@@ -1,3 +1,5 @@
+import { linksTo } from "@mdbase-dev/connect";
+
 import { annotationSourceReference } from "./annotation-source.js";
 import { outcomeValue, recordPathById } from "./repository-client.js";
 
@@ -27,25 +29,26 @@ export async function annotationRecordsAt(
   paths: readonly string[],
   options: ReaderRequestOptions,
 ): Promise<Map<string, QueryRecord>> {
-  const records = new Map<string, QueryRecord>();
-  for (let start = 0; start < paths.length; start += pathsPerQuery) {
-    const where = paths
-      .slice(start, start + pathsPerQuery)
-      .map((path) => `file.path == ${JSON.stringify(path)}`)
-      .join(" || ");
-    for (const record of await annotationRecords(
-      client,
-      where,
-      { frontmatterMode: "both", includeBody: true },
-      options,
-    )) {
-      records.set(record.path, record);
-    }
+  const result = outcomeValue(
+    await client.readMany(paths, {
+      types: ["reader-annotation"],
+      frontmatterMode: "both",
+      includeBody: true,
+      // Sibling batches must not supersede one another; cancellation owns this load's lifetime.
+      ...(options.signal ? { signal: options.signal } : {}),
+    }),
+    "read annotation bodies",
+  );
+  // Preserve the all-or-nothing cache check: a failed batch falls back to revisioned reads.
+  for (const error of result.errors) {
+    outcomeValue(error.failure, "read annotation bodies");
   }
-  return records;
+  return new Map(
+    result.results.flatMap((entry) =>
+      entry.status === "found" ? [[entry.path, entry.record] as const] : [],
+    ),
+  );
 }
-
-const pathsPerQuery = 50;
 
 async function sourceAnnotations(
   client: ReaderConnectClient,
@@ -58,17 +61,12 @@ async function sourceAnnotations(
   const [linked, legacy] = await Promise.all([
     // mdbase resolves each link however it is written, so only the target is compared.
     path
-      ? annotationRecords(
-          client,
-          `source != null && source.asFile() != null && source.asFile().file.path == ${JSON.stringify(path)}`,
-          detail,
-          options,
-        )
+      ? annotationRecords(client, linksTo("source", path), detail, options)
       : Promise.resolve([]),
     // A legacy bare ID resolves to no record where the collection configures no ID field.
     annotationRecords(
       client,
-      `source != null && source.asFile() == null && source.contains(${JSON.stringify(source)})`,
+      `has(record.source) && source != null && source.asFile() == null && source.contains(${JSON.stringify(source)})`,
       detail,
       options,
       // contains() is only a candidate filter; aliases and prefix collisions must not match.

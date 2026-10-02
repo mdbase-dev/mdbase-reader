@@ -70,7 +70,7 @@ describe("ConnectContentSearchRepository", () => {
         frontmatterMode: "effective",
         includeBody: true,
       },
-      { firstPageSize: 100, pageSize: 250 },
+      { pageSize: 250 },
     );
   });
 
@@ -131,7 +131,6 @@ describe("ConnectContentSearchRepository", () => {
     expect(queryPages).toHaveBeenCalledOnce();
     expect(queryPages).toHaveBeenCalledWith(expect.anything(), {
       replaceableFamily: "reader-library-content-search",
-      firstPageSize: 100,
       pageSize: 250,
     });
   });

@@ -14,6 +14,8 @@ import type {
   QueryPage,
   QueryResult,
   ReadInput,
+  ReadManyOptions,
+  ReadManyResult,
   RecordDocument,
   UpdateInput,
 } from "@mdbase-dev/connect";
@@ -28,6 +30,10 @@ export interface ReaderQueryPagesOptions extends ReaderRequestOptions {
 
 export interface ReaderConnectClient {
   read(input: ReadInput, options?: ReaderRequestOptions): Promise<ConnectOutcome<RecordDocument>>;
+  readMany(
+    paths: readonly string[],
+    options?: ReadManyOptions,
+  ): Promise<ConnectOutcome<ReadManyResult>>;
   query(input: QueryInput, options?: ReaderRequestOptions): Promise<ConnectOutcome<QueryResult>>;
   queryPages(
     input: QueryInput,
@@ -148,6 +154,8 @@ export function connectClient(connection: MdbaseConnection): ReaderConnectClient
       readerDiagnostics.measure("read", route, () =>
         connection.read(input, connectOptions(options)),
       ),
+    readMany: (paths, options) =>
+      readerDiagnostics.measure("read-many", route, () => connection.readMany(paths, options)),
     query: (input, options) =>
       readerDiagnostics.measure("query", route, () =>
         connection.query(input, connectOptions(options)),

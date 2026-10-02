@@ -74,7 +74,6 @@ export class ConnectSourceRepository implements SourceRepository {
       },
       {
         ...options,
-        firstPageSize: query.limit,
         pageSize: 1_000,
       },
     )) {

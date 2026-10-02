@@ -243,7 +243,7 @@ export async function auditDockview(page, { screenshot, blockWrites }) {
   await page.getByRole("button", { name: "Search and commands" }).focus();
   await page.keyboard.press("Enter");
   await page
-    .getByRole("textbox", { name: "Search commands and sources" })
+    .getByRole("textbox", { name: "Search sources and commands" })
     .fill("Reset pane arrangement");
   await page.keyboard.press("Enter");
   await expect(page.locator(`[data-panel-id="${noteId}"]`)).toBeVisible();
@@ -298,7 +298,7 @@ export async function auditDockview(page, { screenshot, blockWrites }) {
   await page.reload();
   await page.getByRole("button", { name: "Search and commands" }).click();
   await page
-    .getByRole("textbox", { name: "Search commands and sources" })
+    .getByRole("textbox", { name: "Search sources and commands" })
     .fill("Reopen closed tab");
   await page.keyboard.press("Enter");
   await expect(page.locator(`[data-panel-id="${noteId}"]`)).toBeVisible();

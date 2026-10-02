@@ -1,3 +1,4 @@
+import { linksTo } from "@mdbase-dev/connect";
 import { sourceId } from "@mdbase-reader/core";
 import { expect, it, vi } from "vitest";
 
@@ -25,7 +26,7 @@ it("asks mdbase which links reach the source, keeps legacy IDs, and follows rena
       return value === undefined ? undefined : (JSON.parse(value) as string);
     };
     const id = quoted(/^id == ("[^"]*")$/u);
-    const target = quoted(/source\.asFile\(\)\.file\.path == ("(?:[^"\\]|\\.)*")$/u);
+    const target = quoted(/record\["source"\]\.asFile\(\)\.file\.path == ("(?:[^"\\]|\\.)*")$/u);
     const unresolved = quoted(/source\.asFile\(\) == null && source\.contains\(("[^"]*")\)$/u);
     const references = Object.keys(links);
     const results =
@@ -54,7 +55,7 @@ it("asks mdbase which links reach the source, keeps legacy IDs, and follows rena
   ]);
   expect(queryPages).toHaveBeenCalledTimes(3);
   expect(queryPages.mock.calls.map(([input]) => input.where)).toContain(
-    `source != null && source.asFile() != null && source.asFile().file.path == ${JSON.stringify(sourcePath)}`,
+    linksTo("source", sourcePath),
   );
   expect(queryPages).toHaveBeenLastCalledWith(expect.anything(), expect.objectContaining(options));
 

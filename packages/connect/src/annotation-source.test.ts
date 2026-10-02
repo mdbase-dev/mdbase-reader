@@ -48,6 +48,13 @@ function collectionOf(
   const queries: QueryInput[] = [];
   const client = {
     read: ({ path }: { path: string }) => Promise.resolve(ok(byPath.get(path)!)),
+    readMany: (paths: readonly string[]) =>
+      Promise.resolve(
+        ok({
+          results: paths.map((path) => ({ status: "found", path, record: byPath.get(path)! })),
+          errors: [],
+        }),
+      ),
     create: vi.fn(({ path }: { path: string }) => Promise.resolve(ok(byPath.get(path)!))),
     update: vi.fn(({ path }: { path: string }) => Promise.resolve(ok(byPath.get(path)!))),
     queryPages: async function* (input: QueryInput) {
@@ -58,7 +65,7 @@ function collectionOf(
         return match === undefined ? undefined : (JSON.parse(match) as string);
       };
       const id = quoted(/^id == ("[^"]*")$/u);
-      const linkedTo = quoted(/source\.asFile\(\)\.file\.path == ("[^"]*")$/u);
+      const linkedTo = quoted(/record\["source"\]\.asFile\(\)\.file\.path == ("[^"]*")$/u);
       const unresolved = quoted(/source\.asFile\(\) == null && source\.contains\(("[^"]*")\)$/u);
       const onePath = quoted(/^file\.path == ("[^"]*")$/u);
       let results: RecordDocument[];
@@ -124,10 +131,10 @@ describe("annotation source links", () => {
     ).toBe("src_stable");
     // Each read asks mdbase again rather than keeping a resolution that a rename could make stale.
     await repo.get(collection, annotationId("ann_1"));
-    // The listing fetched the body by path once; the reads above each asked again.
+    // readMany fetched the bodies; the individual reads above each resolved the source again.
     expect(
       queries.filter((query) => query.where === 'file.path == "annotations/ann_1.md"'),
-    ).toHaveLength(3);
+    ).toHaveLength(2);
     expect(() => annotationFromDocument(collection, source)).toThrow();
   });
 

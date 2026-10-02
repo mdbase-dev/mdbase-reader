@@ -19,7 +19,8 @@ export function withResolvedSource(input: QueryInput): QueryInput {
     projections: {
       ...input.projections,
       [resolvedSource]: {
-        expression: "source != null && source.asFile() != null ? source.asFile().id : null",
+        expression:
+          "has(record.source) && source != null && source.asFile() != null ? source.asFile().?id.orValue(null) : null",
       },
     },
     select: [...(input.select ?? []), `projection.${resolvedSource}`],
@@ -31,9 +32,7 @@ export function withResolvedSource(input: QueryInput): QueryInput {
  * reference that resolves to no record, the ID it was written as. Undefined for a broken link.
  */
 export function annotationSourceFromResult(
-  record: Pick<QueryRecord, "effectiveFrontmatter" | "frontmatter"> & {
-    readonly values?: Readonly<Record<string, unknown>>;
-  },
+  record: Pick<QueryRecord, "effectiveFrontmatter" | "frontmatter" | "values">,
 ): SourceId | undefined {
   const resolved = stringField(record.values?.[resolvedSource]);
   if (resolved) {
