@@ -14,6 +14,6 @@
     "@mdbase-dev/connect": "0.1.0-beta.123",
     "@mdbase-reader/core": "workspace:*",
     "@mdbase-reader/migration": "workspace:*",
-    "yaml": "^2.9.0"
+    "yaml": "^2.9.1"
   }
 }
