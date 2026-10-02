@@ -1,5 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 
+import { markFraction, withMarkProgress } from "./mark-activity.js";
+
 import type { FileImportSuggestion } from "./file-import-suggestion.js";
 import type { ReaderWorkspaceController } from "./use-reader-workspace.js";
 import type { Source, SourceId, SourceImportProgress } from "@mdbase-reader/core";
@@ -73,11 +75,20 @@ export function useSourceImport(
       importController.current = controller;
       setProgress(null);
       try {
-        const imported = await workspace.importSourceFile(importRequest(file, title, found), {
-          signal: controller.signal,
-          onProgress: setProgress,
-          ...(recoveryFile.current === file ? { recoverExistingFiles: true } : {}),
-        });
+        // The workspace reports failures and returns null; a stopped import ends quietly.
+        const imported = await withMarkProgress(
+          (mark) =>
+            workspace.importSourceFile(importRequest(file, title, found), {
+              signal: controller.signal,
+              onProgress: (value) => {
+                mark(markFraction(value.completedBytes, value.totalBytes));
+                setProgress(value);
+              },
+              ...(recoveryFile.current === file ? { recoverExistingFiles: true } : {}),
+            }),
+          (result) => (result ? "finish" : controller.signal.aborted ? "cancel" : "fail"),
+          controller.signal,
+        );
         if (imported) {
           recoveryFile.current = null;
           if (useCitation) {
