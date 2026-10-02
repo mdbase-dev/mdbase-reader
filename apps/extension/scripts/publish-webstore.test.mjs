@@ -114,6 +114,34 @@ test("failed upload never publishes", async () => {
   assert.equal(m.calls.length, 2);
 });
 
+test("a refused submission names the step and Google's reason, without credentials", async () => {
+  const m = mock([status, { itemId, uploadState: "SUCCEEDED", crxVersion: "0.3.0" }]);
+  const fetchImpl = async (url, opts) => {
+    if (url.endsWith(":publish")) {
+      return {
+        ok: false,
+        status: 400,
+        json: async () => ({
+          error: {
+            status: "FAILED_PRECONDITION",
+            message: `Permission justification missing.\nToken ${options.token} Bearer ya29.abc-def`,
+            details: [{ echoed: options.token }],
+          },
+        }),
+      };
+    }
+    return m.fetchImpl(url, opts);
+  };
+  await assert.rejects(publishWebstore({ ...options, fetchImpl }), (error) => {
+    assert.match(
+      error.message,
+      /^Web Store submission failed \(HTTP 400: FAILED_PRECONDITION: Permission justification missing\. Token \[redacted\] \[redacted\]\)/u,
+    );
+    assert.ok(!error.message.includes(options.token) && !error.message.includes("ya29"));
+    return true;
+  });
+});
+
 test("HTTP failures are redacted and never retried", async () => {
   let count = 0;
   await assert.rejects(
