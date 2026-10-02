@@ -146,6 +146,27 @@ arrangement recovery. The active annotation stripe is also removed.
 This follow-up is deployed as `ca73f7765cee-production-mu3t04ql`; live metadata,
 manifest, HTML, entry assets and production backend configuration were verified.
 
+## SDK beta.124 / consumer canary
+
+The pre-existing annotation-workbench `Edit here` timeout was a **stale audit expectation**,
+not a Connect regression. Promoting a tool deliberately closes the native sidebar
+(`ReaderWorkspaceView.onPromote`), unmounting its editor and releasing the lease. The retained
+memory-only buffer therefore offers **Resume edits**, not **Edit here**. Reopening the sidebar
+remounts its selected editor and claims the lease again.
+
+The audit now blocks saves to prove that promotion retains an uncommitted buffer, explicitly
+resumes/retries it, and establishes ownership after reopening the sidebar before asserting
+**Edit here** transfers in both directions. The single-textbox and exact-buffer assertions remain;
+no app behavior, timing allowance, or SDK failure is bypassed.
+
+Validation: full fixture audit **40 scenarios passed** (`/tmp/reader-audit-10fLSX`);
+annotation-only **13 passed** (`/tmp/reader-audit-KHOR5i`); both PDF-touch scripts passed
+(`/tmp/pdf-touch-handles-f7AizA`, `/tmp/reader-audit-Qlo2WE`). An earlier full run hit the native
+touch-docking assertion and an earlier PDF-touch run missed the selection toolbar; reruns passed
+without changes to those checks. Accessibility still reports one command-palette contrast finding
+(`button[role="option"][type="button"]:nth-child(2) > span > small`), outside this change.
+These are isolated fixture audits, not authenticated LAB acceptance. Owned browsers are closed.
+
 ## Validation and limits
 
 Workspace tests, typechecking, production builds, architecture checks and spec

@@ -1,12 +1,14 @@
 import { expect } from "@playwright/test";
 
-export async function auditAnnotationWorkbench(page, { screenshot, open }) {
+export async function auditAnnotationWorkbench(page, { screenshot, open, blockWrites }) {
   const tools = page.getByRole("complementary", { name: "Source workspace" });
   await tools.getByRole("button", { name: "Edit", exact: true }).first().focus();
   await page.keyboard.press("Enter");
   await expect(page.getByRole("button", { name: "Back to reading position" })).toHaveCount(0);
   const editor = tools.getByRole("textbox", { name: "Comment" });
+  blockWrites(true);
   await editor.fill("[test] Dock-safe annotation draft.");
+  await expect(tools.getByRole("alert")).toContainText("offline");
   const annotationId = await tools
     .locator(".annotation-card.is-editing")
     .getAttribute("data-annotation-id");
@@ -16,13 +18,24 @@ export async function auditAnnotationWorkbench(page, { screenshot, open }) {
     .filter({ has: page.locator(".dv-default-tab-content", { hasText: "Annotations —" }) });
   const panelId = await tab.getAttribute("data-panel-id");
   const workbench = page.locator(`[data-session-id="${panelId}"]`);
+  // Promotion deliberately closes the native sidebar and releases its editor lease.
+  // The memory-only buffer survives; there is no mounted writer to transfer from yet.
+  await expect(tools).toHaveCount(0);
   await workbench
     .locator(`[data-annotation-id="${annotationId}"]`)
-    .getByRole("button", { name: "Edit here", exact: true })
+    .getByRole("button", { name: "Resume edits", exact: true })
     .click();
   const otherEditor = workbench.getByRole("textbox", { name: "Comment" });
   await expect(otherEditor).toHaveValue(/Dock-safe annotation draft/u);
   await expect(editor).toHaveCount(0);
+  blockWrites(false);
+  await workbench.getByRole("button", { name: "Retry save", exact: true }).click();
+  await expect(otherEditor).toHaveCount(0);
+  await workbench
+    .locator(`[data-annotation-id="${annotationId}"]`)
+    .getByRole("button", { name: "Edit", exact: true })
+    .click();
+  await expect(otherEditor).toHaveValue(/Dock-safe annotation draft/u);
   const menu = async (label) => {
     await tab.click({ button: "right" });
     await page.getByRole("menuitem", { name: label, exact: true }).click();
@@ -35,6 +48,16 @@ export async function auditAnnotationWorkbench(page, { screenshot, open }) {
   await tab.click();
   if (!(await tools.isVisible()))
     await page.getByRole("button", { name: "Toggle right sidebar" }).click();
+  // Reopening the sidebar remounts its locally selected editor. Establish the workbench's
+  // ownership explicitly before testing transfer back, rather than assuming a hidden lease.
+  await expect(editor).toHaveValue(/Dock-safe annotation draft/u);
+  await expect(otherEditor).toHaveCount(0);
+  await workbench
+    .locator(`[data-annotation-id="${annotationId}"]`)
+    .getByRole("button", { name: "Edit here", exact: true })
+    .click();
+  await expect(otherEditor).toHaveValue(/Dock-safe annotation draft/u);
+  await expect(editor).toHaveCount(0);
   await tools
     .locator(`[data-annotation-id="${annotationId}"]`)
     .getByRole("button", { name: "Edit here", exact: true })
@@ -76,7 +99,7 @@ export async function auditAnnotationWorkbench(page, { screenshot, open }) {
   await page.reload();
   await expect(tools.locator(".annotation-card")).toHaveCount(1);
   return [
-    "Annotation editing transfers explicitly between inspector and workbench; docking preserves the draft without simultaneous writers",
+    "Annotation promotion resumes an uncommitted buffer after the sidebar closes; Edit here transfers the single editor back after docking",
     "Linked note insertion, deletion warning, cancellation, and deletion persistence work",
   ];
 }
