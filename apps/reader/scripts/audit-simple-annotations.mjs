@@ -151,7 +151,7 @@ export async function auditSimpleAnnotations(
   await expect(comments).toHaveValue("[test] Local change retained during a conflict");
   await page.getByText("Compare collection version", { exact: true }).click();
   await screenshot("annotation-autosave-conflict");
-  await page.getByRole("button", { name: "Keep my changes", exact: true }).click();
+  await page.getByRole("button", { name: "Keep mine", exact: true }).click();
   await expect(comments).toHaveCount(0);
   await panes.getByRole("button", { name: "Edit", exact: true }).click();
   await comments.evaluate((element) => {
