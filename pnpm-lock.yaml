@@ -4,6 +4,11 @@ settings:
   autoInstallPeers: true
   excludeLinksFromLockfile: false
 
+patchedDependencies:
+  '@mdbase-dev/connect@0.1.0-beta.123':
+    hash: 17ef7459d87276a5b4ddef4e2a993c4dcf06a05ffd885a6401de3a54abb23238
+    path: patches/@mdbase-dev__connect@0.1.0-beta.123.patch
+
 importers:
 
   .:
@@ -225,7 +230,7 @@ importers:
     dependencies:
       '@mdbase-dev/connect':
         specifier: 0.1.0-beta.123
-        version: 0.1.0-beta.123
+        version: 0.1.0-beta.123(patch_hash=17ef7459d87276a5b4ddef4e2a993c4dcf06a05ffd885a6401de3a54abb23238)
       '@mdbase-reader/core':
         specifier: workspace:*
         version: link:../core
@@ -4308,7 +4313,7 @@ snapshots:
 
   '@mdbase-dev/connect-dev@0.1.0-beta.123':
     dependencies:
-      '@mdbase-dev/connect': 0.1.0-beta.123
+      '@mdbase-dev/connect': 0.1.0-beta.123(patch_hash=17ef7459d87276a5b4ddef4e2a993c4dcf06a05ffd885a6401de3a54abb23238)
       '@mdbase-dev/connect-protocol': 0.1.0-beta.123
       ajv: 8.20.0
       yaml: 2.9.1
@@ -4318,7 +4323,7 @@ snapshots:
       ajv: 8.20.0
       ajv-formats: 3.0.1(ajv@8.20.0)
 
-  '@mdbase-dev/connect@0.1.0-beta.123':
+  '@mdbase-dev/connect@0.1.0-beta.123(patch_hash=17ef7459d87276a5b4ddef4e2a993c4dcf06a05ffd885a6401de3a54abb23238)':
     dependencies:
       '@mdbase-dev/connect-protocol': 0.1.0-beta.123
 
