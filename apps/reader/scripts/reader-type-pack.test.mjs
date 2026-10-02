@@ -8,7 +8,7 @@ import test from "node:test";
 import { Collection, V03Operations, applyTypePack, assessTypePack } from "@callumalpass/mdbase";
 import { parse as parseYaml } from "yaml";
 
-import { buildReaderManifest, referenceInstallerProvision } from "./reader-manifest.mjs";
+import { buildReaderManifest } from "./reader-manifest.mjs";
 
 // Exact released pack from a4ebc04e8eab366e4ff265cbcd08f8dcd51830c3, before PR #20
 // changed the starter type match rules without changing the immutable pack version.
@@ -23,12 +23,11 @@ const viewPack = application.provisions.type_packs.find(
   (pack) => pack.manifest.id === "mdbase.view",
 );
 const options = { installedBy: application.id };
-// The JavaScript installer predates `upgrade_from`; see referenceInstallerProvision.
-const provision = referenceInstallerProvision;
+const provision = (pack) => ({ manifest: pack.manifest, resources: pack.resources });
 
 // Published identities must not change. Add a new version/digest instead of updating this pin.
-// Pack digests are SHA-256 over the canonical (sorted-key) JSON of the whole pack manifest,
-// `upgrade_from` included; beta.4's pin was confirmed with the mdbase CLI's `packs assess`.
+// Pins are the installer's desired pack digest, which covers `upgrade_from`; beta.4's pin
+// matches the mdbase CLI's `packs assess`.
 const releasedDigests = {
   "1.0.0-beta.3": "sha256:712aa3d2ad5ca8719505b27c8c72f39fb9643660edbbeee3321e01ab53ef6938",
   "1.0.0-beta.4": "sha256:f66f0b5e96df834c2aeab9aaddb4dc6eb6533111892a121ccb2b89ec15660dac",
@@ -51,19 +50,22 @@ function sha256(value) {
   return `sha256:${createHash("sha256").update(value).digest("hex")}`;
 }
 
-function canonicalJson(value) {
-  if (Array.isArray(value)) return `[${value.map(canonicalJson).join(",")}]`;
-  if (value && typeof value === "object") {
-    return `{${Object.keys(value)
-      .sort()
-      .map((key) => `${JSON.stringify(key)}:${canonicalJson(value[key])}`)
-      .join(",")}}`;
-  }
-  return JSON.stringify(value);
-}
-
 function frontmatter(document) {
   return parseYaml(/^---\n([\s\S]*?)\n---\n/u.exec(document)[1]);
+}
+
+// beta.3 as released: beta.4's manifest with each seed's `upgrade_from` as its document.
+function beta3() {
+  const pack = structuredClone(current);
+  pack.manifest.version = "1.0.0-beta.3";
+  for (const resource of pack.manifest.resources) {
+    if (!resource.upgrade_from) continue;
+    resource.digest = resource.upgrade_from.digest;
+    pack.resources.find(({ source }) => source === resource.source).document =
+      resource.upgrade_from.document;
+    delete resource.upgrade_from;
+  }
+  return pack;
 }
 
 async function collection(t) {
@@ -113,7 +115,7 @@ async function assertPreserved(contents) {
   for (const [path, document] of contents) assert.equal(await readFile(path, "utf8"), document);
 }
 
-test("Reader's new pack release preserves contract identities and capability protocol", () => {
+test("Reader's new pack release preserves contract identities and capability protocol", async (t) => {
   assert.equal(current.manifest.version, "1.0.0-beta.4");
   assert.deepEqual(current.provides, legacy.provides);
   assert.equal(application.requirements.capabilities.contract_version, 2);
@@ -122,25 +124,25 @@ test("Reader's new pack release preserves contract identities and capability pro
     viewPack.provides.map(({ id, version }) => `${id}@${version}`),
     ["mdbase.view@1.0.0"],
   );
-  assert.equal(
-    sha256(canonicalJson(viewPack.manifest)),
-    releasedViewPackDigests[viewPack.manifest.version],
-  );
+  const assessment = await assess(await collection(t), viewPack);
+  assert.equal(assessment.status, "install");
+  assert.equal(assessment.desired.digest, releasedViewPackDigests[viewPack.manifest.version]);
 });
 
 test("the released pack digest stays immutable and is independent of deployment origin", async (t) => {
+  const root = await collection(t);
+  const assessment = await assess(root, current);
+  assert.equal(assessment.status, "install");
   assert.equal(
-    sha256(canonicalJson(current.manifest)),
+    assessment.desired.digest,
     releasedDigests[current.manifest.version],
     "Type-pack contents changed: publish a new pack version and add its digest; do not alter an existing release pin.",
   );
-  const root = await collection(t);
-  assert.equal((await assess(root, current)).status, "install");
   const staging = await buildReaderManifest({ origin: "https://staging.mdbase-reader.pages.dev" });
   assert.deepEqual(staging.provisions.type_packs[0], current);
 });
 
-test("seed upgrades start from the exact beta.3 starter types", () => {
+test("seed upgrades start from the exact beta.3 starter types", async (t) => {
   const seeds = current.manifest.resources.filter((resource) => resource.mode === "seed");
   assert.deepEqual(seeds.map((seed) => seed.source).sort(), Object.keys(beta3SeedDigests).sort());
   for (const seed of seeds) {
@@ -153,14 +155,48 @@ test("seed upgrades start from the exact beta.3 starter types", () => {
     assert.equal(resource.upgrade_from, undefined);
   }
   // Rebuilding beta.3 from the baselines reproduces its released pack identity exactly.
-  const beta3 = structuredClone(current.manifest);
-  beta3.version = "1.0.0-beta.3";
-  for (const resource of beta3.resources) {
-    if (resource.upgrade_from) resource.digest = resource.upgrade_from.digest;
-    delete resource.upgrade_from;
-  }
-  assert.equal(sha256(canonicalJson(beta3)), releasedDigests["1.0.0-beta.3"]);
+  const assessment = await assess(await collection(t), beta3());
+  assert.equal(assessment.desired.digest, releasedDigests["1.0.0-beta.3"]);
 });
+
+for (const edited of [false, true]) {
+  test(`upgrades ${edited ? "an edited" : "an unedited"} beta.3 starter to the version-2 seed`, async (t) => {
+    const root = await collection(t);
+    const installed = beta3();
+    await apply(root, installed, await assess(root, installed));
+    const sourceType = join(root, "_types", "reader-source.md");
+    if (edited) {
+      const document = await readFile(sourceType, "utf8");
+      await writeFile(
+        sourceType,
+        document.replace("\ndescription: ", "\ndescription: Collection edit. "),
+      );
+    }
+    const upgrade = await assess(root, current);
+    assert.equal(upgrade.status, "upgrade");
+    assert.equal(upgrade.applicable, true);
+    for (const resource of upgrade.resources) {
+      assert.equal(resource.action, resource.mode === "seed" ? "update" : "unchanged");
+    }
+    const applied = await apply(root, current, upgrade);
+    assert.equal(applied.receipt.version, "1.0.0-beta.4");
+    const desired = new Map(current.resources.map(({ source, document }) => [source, document]));
+    for (const resource of current.manifest.resources.filter(({ mode }) => mode === "seed")) {
+      const document = await readFile(join(root, resource.target), "utf8");
+      if (edited && resource.source === "types/reader-source.md") {
+        // Three-way merge: the collection's edit survives alongside version 2's changes.
+        const type = frontmatter(document);
+        assert.equal(type.version, 2);
+        assert.match(type.description, /^Collection edit\. /u);
+        assert.equal(Object.hasOwn(type.schema.value.properties, "type"), false);
+        assert.equal(type.schema.value.required.includes("type"), false);
+      } else {
+        assert.equal(document, desired.get(resource.source), resource.source);
+      }
+    }
+    assert.equal((await assess(root, current)).status, "current");
+  });
+}
 
 test("starter types neither declare nor require the type key", () => {
   // A collection records a record's type under its own settings.explicit_type_keys, which
@@ -215,7 +251,8 @@ for (const typeKeys of ["[type]", "[mdbase_type]"]) {
           type: "reader-annotation",
           frontmatter: {
             id: "ann_example",
-            source: "[[src_example]]",
+            // Reader links sources by path (see sourceLink); IDs resolve only with id_field.
+            source: "[[sources/example|Example source]]",
             annotation_type: "highlight",
             created_at: "2026-08-09T14:22:00+10:00",
           },
@@ -228,39 +265,34 @@ for (const typeKeys of ["[type]", "[mdbase_type]"]) {
       assert.equal(result.valid, true, JSON.stringify(result.diagnostics));
   });
 
-  test(`view records named by type are valid where explicit_type_keys is ${typeKeys}`, async (t) => {
+  test(`view records created by type name are valid where explicit_type_keys is ${typeKeys}`, async (t) => {
     // mdbase.view 1.0.1's version-2 starter keeps `match: { where: { type: view } }` for
-    // hand-written records. Connect's engine accepts `create({ type: "view" })` in a
-    // [mdbase_type] collection (checked with the mdbase CLI), but this JavaScript SDK's
-    // create still requires the match rule to hold, so write the record as the engine does.
+    // hand-written records; a create that names the type is explicit membership regardless.
     const root = await collection(t);
     await apply(root, viewPack, await assess(root, viewPack));
     await writeFile(
       join(root, "mdbase.yaml"),
       `spec_version: 0.3.0\nsettings:\n  explicit_type_keys: ${typeKeys}\n`,
     );
-    const typeKey = typeKeys.slice(1, -1);
-    await mkdir(join(root, "views"));
-    await writeFile(
-      join(root, "views", "example.md"),
-      [
-        "---",
-        `${typeKey}: view`,
-        "id: reader.library.example",
-        "version: 1",
-        "name: Example",
-        // In a [mdbase_type] collection `type` is ordinary data the open top level accepts.
-        ...(typeKey === "mdbase_type" ? ["type: article-journal"] : []),
-        "views:",
-        "  - id: all",
-        "    name: All",
-        "---",
-        "",
-      ].join("\n"),
-    );
     const opened = await Collection.open(root);
     assert.ok(opened.collection, opened.error?.message);
     try {
+      const created = await new V03Operations(opened.collection).create({
+        path: "views/example.md",
+        type: "view",
+        frontmatter: {
+          id: "reader.library.example",
+          version: 1,
+          name: "Example",
+          // In a [mdbase_type] collection `type` is ordinary data the open top level accepts.
+          ...(typeKeys === "[mdbase_type]" ? { type: "article-journal" } : {}),
+          views: [{ id: "all", name: "All" }],
+        },
+      });
+      assert.equal(created.valid, true, JSON.stringify(created.diagnostics));
+      const written = frontmatter(await readFile(join(root, "views", "example.md"), "utf8"));
+      assert.equal(written[typeKeys.slice(1, -1)], "view");
+      if (typeKeys === "[mdbase_type]") assert.equal(written.type, "article-journal");
       const validation = await opened.collection.validate("views/example.md");
       assert.equal(validation.valid, true, JSON.stringify(validation.issues));
       const view = await opened.collection.getContractView(
@@ -293,22 +325,42 @@ test("reproduces the immutable beta.1 digest conflict without touching installed
   await assertPreserved(contents);
 });
 
+// original-beta.1's seeds are version-1 starters the collection edited, so beta.4 merges its
+// version-2 changes into them (three-way, from the beta.3 baseline) and keeps the edits.
+// changed-beta.1 already shipped the version-2 starters, so the edited seeds are kept as is.
 for (const variant of ["original-beta.1", "changed-beta.1"]) {
   test(`upgrades ${variant} to beta.4 preserving contracts, customized seed types and notes`, async (t) => {
     const root = await collection(t);
-    const installed = structuredClone(variant === "original-beta.1" ? legacy : current);
+    const original = variant === "original-beta.1";
+    const installed = structuredClone(original ? legacy : current);
     installed.manifest.version = "1.0.0-beta.1";
     await apply(root, installed, await assess(root, installed));
     const contents = await preserveExamples(root, installed);
+    const seeds = installed.manifest.resources
+      .filter(({ mode }) => mode === "seed")
+      .map(({ target }) => join(root, target));
+    if (original) for (const seed of seeds) contents.delete(seed);
     const upgrade = await assess(root, current);
     assert.equal(upgrade.status, "upgrade");
     assert.equal(upgrade.applicable, true);
     for (const resource of upgrade.resources) {
-      assert.equal(resource.action, resource.mode === "seed" ? "preserve" : "unchanged");
+      const seedAction = original ? "update" : "preserve";
+      assert.equal(resource.action, resource.mode === "seed" ? seedAction : "unchanged");
     }
     const applied = await apply(root, current, upgrade);
     assert.equal(applied.receipt.version, "1.0.0-beta.4");
     await assertPreserved(contents);
+    if (original) {
+      for (const seed of seeds) {
+        const document = await readFile(seed, "utf8");
+        assert.equal(frontmatter(document).version, 2, seed);
+        assert.match(
+          document,
+          /\nCollection-owned customisation: keep this exact type document\.\n$/u,
+        );
+        contents.set(seed, document);
+      }
+    }
     const again = await assess(root, current);
     assert.equal(again.status, "current");
     assert.equal(again.applicable, true);
