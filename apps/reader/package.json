@@ -4,6 +4,7 @@
   "private": true,
   "type": "module",
   "scripts": {
+    "icons": "node scripts/write-pwa-icons.mjs",
     "build": "node scripts/package-zotero.mjs && pnpm manifest && pnpm manifest:validate && vite build",
     "deploy:dev": "node scripts/deploy-pages.mjs",
     "deploy:prod": "MDBASE_READER_DEPLOY_TARGET=production node scripts/deploy-pages.mjs",
