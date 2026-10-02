@@ -1,3 +1,4 @@
+import { connectFailure, connectProblem } from "@mdbase-dev/connect/advanced";
 import { collectionId, sourceId } from "@mdbase-reader/core";
 import { afterEach, describe, expect, it, vi, type Mock } from "vitest";
 
@@ -42,6 +43,7 @@ function authority(
   onQuery: (input: QueryInput) => void = () => undefined,
 ): {
   queryPages: Mock<ReaderConnectClient["queryPages"]>;
+  readMany: Mock<ReaderConnectClient["readMany"]>;
   read: Mock<(input: ReadInput) => Promise<ConnectOutcome<RecordDocument>>>;
   client: ReaderConnectClient;
 } {
@@ -61,22 +63,13 @@ function authority(
       return value === undefined ? undefined : (JSON.parse(value) as string);
     };
     const id = quoted(/^id == ("[^"]*")$/u);
-    const target = quoted(/source\.asFile\(\)\.file\.path == ("(?:[^"\\]|\\.)*")$/u);
+    const target = quoted(/record\["source"\]\.asFile\(\)\.file\.path == ("(?:[^"\\]|\\.)*")$/u);
     const contained = quoted(/source\.contains\(("[^"]*")\)$/u);
-    // The listing's second query names the matched paths, following no links.
-    const named = where.startsWith("file.path == ")
-      ? [...where.matchAll(/file\.path == ("(?:[^"\\]|\\.)*")/gu)].map(
-          ([, path]) => JSON.parse(path!) as string,
-        )
-      : null;
     const results: QueryRecord[] =
       id !== undefined
         ? [{ path: "sources/one.md", effectiveFrontmatter: { id }, types: [], file: {} }]
         : [...annotations]
-            .filter(([path, record]) => {
-              if (named) {
-                return named.includes(path);
-              }
+            .filter(([, record]) => {
               const reference = String(record.frontmatter["source"]);
               const link = links[reference] ?? null;
               return target !== undefined
@@ -121,7 +114,36 @@ function authority(
       }),
     );
   });
-  return { queryPages, read, client: { queryPages, read } as unknown as ReaderConnectClient };
+  const readMany = vi.fn<ReaderConnectClient["readMany"]>((paths) =>
+    Promise.resolve(
+      success({
+        results: paths.map((path) => {
+          const record = annotations.get(path);
+          return record
+            ? {
+                status: "found" as const,
+                path,
+                record: {
+                  path,
+                  types: ["reader-annotation"],
+                  file: file(path, record),
+                  frontmatter: structuredClone(record.frontmatter),
+                  effectiveFrontmatter: structuredClone(record.frontmatter),
+                  body: record.body,
+                },
+              }
+            : { status: "missing" as const, path };
+        }),
+        errors: [],
+      }),
+    ),
+  );
+  return {
+    queryPages,
+    readMany,
+    read,
+    client: { queryPages, readMany, read } as unknown as ReaderConnectClient,
+  };
 }
 
 describe("Connect annotations for one source", () => {
@@ -137,7 +159,7 @@ describe("Connect annotations for one source", () => {
         stored(`ann_${String(index)}`, "[[sources/one]]"),
       ]),
     );
-    const { client, read, queryPages } = authority(annotations, {
+    const { client, read, readMany, queryPages } = authority(annotations, {
       "[[sources/one]]": "sources/one.md",
     });
     const repository = new ConnectAnnotationRepository(client);
@@ -145,9 +167,9 @@ describe("Connect annotations for one source", () => {
     const first = await repository.listForSource(collection, sourceId("src_1"));
     expect(first).toHaveLength(20);
     expect(read).toHaveBeenCalledTimes(20);
-    expect(queryPages).toHaveBeenCalledWith(
+    expect(readMany).toHaveBeenCalledWith(
+      [...annotations.keys()],
       expect.objectContaining({ frontmatterMode: "both", includeBody: true }),
-      expect.anything(),
     );
 
     // Long past the blind reuse window, the query alone confirms each record is current.
@@ -156,8 +178,9 @@ describe("Connect annotations for one source", () => {
     queryPages.mockClear();
     const second = await repository.listForSource(collection, sourceId("src_1"));
     expect(read).not.toHaveBeenCalled();
-    // The source lookup, its two link queries, then one query naming the matched paths.
-    expect(queryPages).toHaveBeenCalledTimes(4);
+    // The source lookup and its two link queries; body batching belongs to readMany.
+    expect(queryPages).toHaveBeenCalledTimes(3);
+    expect(readMany).toHaveBeenCalledTimes(2);
     expect(second).toEqual(first);
     expect(second[0]?.recordRevision).toBe("rev-annotations/ann_0.md-1");
   });
@@ -188,6 +211,38 @@ describe("Connect annotations for one source", () => {
       ["Note ann_a", "rev-annotations/a.md-1"],
       ["Edited", "rev-annotations/b.md-2"],
     ]);
+  });
+});
+
+describe("Connect annotation batch failure and legacy references", () => {
+  it("revalidates all revisions when a body batch fails, even with warm cached records", async () => {
+    const annotations = new Map([
+      ["annotations/a.md", stored("ann_a", "[[sources/one]]")],
+      ["annotations/b.md", stored("ann_b", "[[sources/one]]")],
+    ]);
+    const { client, read, readMany } = authority(annotations, {
+      "[[sources/one]]": "sources/one.md",
+    });
+    const repository = new ConnectAnnotationRepository(client);
+    const first = await repository.listForSource(collection, sourceId("src_1"));
+    read.mockClear();
+    const failure = connectFailure<"timeout">(connectProblem("timeout", "Batch timed out"));
+    readMany.mockImplementationOnce(async () => {
+      const result = await client.readMany([...annotations.keys()]);
+      if (!result.ok) {
+        throw new Error("Expected successful fixture read");
+      }
+      return success({
+        results: [
+          result.value.results[0]!,
+          { status: "error", path: "annotations/b.md", batch: 1 },
+        ],
+        errors: [{ batch: 1, paths: ["annotations/b.md"], failure }],
+      });
+    });
+
+    expect(await repository.listForSource(collection, sourceId("src_1"))).toEqual(first);
+    expect(read).toHaveBeenCalledTimes(2);
   });
 
   it("keeps legacy bare-ID references only when they name exactly this source", async () => {
