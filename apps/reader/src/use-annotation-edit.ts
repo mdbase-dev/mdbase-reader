@@ -1,3 +1,4 @@
+import { signalMdbaseMark } from "@mdbase-dev/ui/mark-activity";
 import { useEffect, useMemo, useState, useSyncExternalStore } from "react";
 
 import { confirmAnnotationDiscard } from "./annotation-draft-actions.js";
@@ -79,8 +80,16 @@ export function useAnnotationEdit(props: AnnotationEditProps): AnnotationEditCon
     if (locked || !session.ownsEditor(editorOwner) || !ready) {
       return;
     }
+    // Saving an already-saved annotation writes nothing, so the mark stays still.
+    const wrote = session.getSnapshot().status !== "saved";
     void session.save().then(() => {
-      if (session.getSnapshot().status === "saved" && deletion.isMounted()) {
+      const after = session.getSnapshot();
+      if (wrote && after.status === "saved") {
+        signalMdbaseMark("saved");
+      } else if (wrote && (after.status === "error" || after.conflict)) {
+        signalMdbaseMark("error");
+      }
+      if (after.status === "saved" && deletion.isMounted()) {
         onCancel();
       }
     });

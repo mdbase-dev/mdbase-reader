@@ -1,3 +1,4 @@
+import { signalMdbaseMark } from "@mdbase-dev/ui/mark-activity";
 import { useCallback, useState } from "react";
 
 import { readerErrorMessage } from "./errors.js";
@@ -37,7 +38,9 @@ export function useSourceFields(input: {
       setErrorState({ sourceId, value: null });
       try {
         onSaved(await saveFields(sourceId, fields));
+        signalMdbaseMark("saved");
       } catch (reason) {
+        signalMdbaseMark("error");
         setErrorState({
           sourceId,
           value: readerErrorMessage(reason, "Reader could not save these details."),

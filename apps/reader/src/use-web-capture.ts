@@ -1,3 +1,4 @@
+import { signalMdbaseMark, useMdbaseMarkBusy } from "@mdbase-dev/ui/mark-activity";
 import { useCallback, useRef, useState } from "react";
 
 import { readerErrorMessage } from "./errors.js";
@@ -37,6 +38,8 @@ export function useWebCapture(
   } | null>(null);
   const [notice, setNotice] = useState<WebCaptureFlow["notice"]>(null);
   const recoveryInput = useRef<string | null>(null);
+  // Fetching, reading and looking up a page has no measurable progress.
+  useMdbaseMarkBusy(status === "capturing" && "scan");
 
   const run = useCallback(
     async (
@@ -69,8 +72,11 @@ export function useWebCapture(
         if (outcome.kind === "citation-only") {
           setOffer({ candidate: outcome.candidate, url: input, reason: outcome.reason });
         } else if (outcome.kind === "not-added") {
+          // The workspace reports why; the input is kept to recover the upload on retry.
+          signalMdbaseMark("error");
           recoveryInput.current = input;
         } else {
+          signalMdbaseMark("saved");
           recoveryInput.current = null;
           if (outcome.notices.length) {
             setNotice({ message: outcome.notices.join(" "), sourceId: outcome.source.id });
@@ -79,6 +85,7 @@ export function useWebCapture(
           }
         }
       } catch (reason) {
+        signalMdbaseMark("error");
         setError(readerErrorMessage(reason, "Reader could not add that source."));
       } finally {
         setStatus("idle");

@@ -1,7 +1,9 @@
+import { signalMdbaseMark } from "@mdbase-dev/ui/mark-activity";
 import { useCallback, useMemo } from "react";
 
 import { propertyValue } from "./library-columns.js";
 import { parseFieldInput } from "./library-field-edit.js";
+import { markFraction, withMarkProgress } from "./mark-activity.js";
 
 import type { FieldShape } from "./library-conditions.js";
 import type { BulkStatusProgress } from "./LibraryBulkBar.js";
@@ -61,9 +63,16 @@ export function useLibraryWrites(
   );
   const saveField = useCallback(
     async (source: SourceSummary, key: string, text: string): Promise<void> => {
-      if (saveFields) {
-        onSourceChanged?.(await saveFields(source.id, { [key]: fieldValue(source, key, text) }));
+      if (!saveFields) {
+        return;
       }
+      try {
+        onSourceChanged?.(await saveFields(source.id, { [key]: fieldValue(source, key, text) }));
+      } catch (reason) {
+        signalMdbaseMark("error");
+        throw reason;
+      }
+      signalMdbaseMark("saved");
     },
     [fieldValue, onSourceChanged, saveFields],
   );
@@ -76,24 +85,34 @@ export function useLibraryWrites(
   );
 }
 
-async function eachSource(
+/** Exported for tests. Shows the run on the app mark, which shakes if any source failed. */
+export async function eachSource(
   sources: readonly SourceSummary[],
   progress: Progress,
   write: (source: SourceSummary) => Promise<void>,
 ): Promise<void> {
+  if (sources.length === 0) {
+    return;
+  }
   let done = 0;
   let failed = 0;
   const queue = [...sources];
-  const worker = async (): Promise<void> => {
-    for (let source = queue.shift(); source; source = queue.shift()) {
-      try {
-        await write(source);
-      } catch {
-        failed += 1;
-      }
-      done += 1;
-      progress({ done, total: sources.length, failed });
-    }
-  };
-  await Promise.all(Array.from({ length: Math.min(4, sources.length) }, worker));
+  await withMarkProgress(
+    async (mark) => {
+      const worker = async (): Promise<void> => {
+        for (let source = queue.shift(); source; source = queue.shift()) {
+          try {
+            await write(source);
+          } catch {
+            failed += 1;
+          }
+          done += 1;
+          mark(markFraction(done, sources.length));
+          progress({ done, total: sources.length, failed });
+        }
+      };
+      await Promise.all(Array.from({ length: Math.min(4, sources.length) }, worker));
+    },
+    () => (failed > 0 ? "fail" : "finish"),
+  );
 }
