@@ -29,7 +29,6 @@ export async function queryReaderSources(
   const records: QueryRecord[] = [];
   for await (const outcome of client.queryPages(input, {
     ...options,
-    firstPageSize: 50,
     pageSize: 250,
   })) {
     records.push(...outcomeValue(outcome, "find sources").results);

@@ -37,7 +37,7 @@ describe("mdbase library views", () => {
           id: "reading-queue",
           name: "Reading queue",
           where:
-            'reading.status == "reading" && documents.exists(document, document.media_type.contains("pdf")) && tags.contains("study")',
+            'record.?reading.?status.orValue("inbox") == "reading" && record.?documents.orValue([]).exists(document, document.?media_type.orValue("").contains("pdf")) && record.?tags.orValue([]).contains("study")',
           presentation: {
             type: "cards",
             fallback: "table",
@@ -46,6 +46,37 @@ describe("mdbase library views", () => {
         },
       ],
     });
+  });
+
+  it("keeps metadata-only sources in inbox/note views when optional fields are absent", () => {
+    const configuration = {
+      ...defaultLibraryViewConfiguration,
+      filter: {
+        ...defaultLibraryViewConfiguration.filter,
+        status: "inbox" as const,
+        format: "note" as const,
+      },
+    };
+    expect(buildLibraryView({ name: "Inbox notes", configuration })).toMatchObject({
+      views: [
+        {
+          where:
+            'record.?reading.?status.orValue("inbox") == "inbox" && record.?documents.orValue([]).size() == 0',
+        },
+      ],
+    });
+    const withoutReading: SourceSummary = {
+      collectionId: "collection" as SourceSummary["collectionId"],
+      id: "note" as SourceSummary["id"],
+      path: "sources/note.md",
+      title: "Note",
+      creators: [],
+      tags: [],
+      documents: [],
+    };
+    expect(applyLibraryViewConfiguration([withoutReading], configuration)).toEqual([
+      withoutReading,
+    ]);
   });
 
   it("round-trips Reader presentation options", () => {

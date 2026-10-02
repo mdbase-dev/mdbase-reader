@@ -277,7 +277,6 @@ export class ConnectAnnotationRepository implements AnnotationRepository {
         {
           ...(options.signal ? { signal: options.signal } : {}),
           ...(options.replaceableFamily ? { replaceableFamily: options.replaceableFamily } : {}),
-          firstPageSize: 100,
           pageSize: 500,
         },
       )) {
@@ -295,7 +294,7 @@ function annotationQueryScopes(paths?: ReadonlySet<string>): (string[] | null)[]
   }
   const listed = [...paths];
   const scopes: string[][] = [];
-  // Keep scoped query expressions bounded, including for very large saved views.
+  // readMany cannot carry the resolved-source projection; keep these queries bounded.
   for (let offset = 0; offset < listed.length; offset += 100) {
     scopes.push(listed.slice(offset, offset + 100));
   }

@@ -253,18 +253,18 @@ function durableWhere(
 ): string | null {
   const terms: string[] = [];
   if (filter.status !== "all") {
-    terms.push(`reading.status == ${JSON.stringify(filter.status)}`);
+    terms.push(`record.?reading.?status.orValue("inbox") == ${JSON.stringify(filter.status)}`);
   }
   if (filter.format !== "all") {
     const mediaToken = filter.format === "web" ? "html" : filter.format;
     terms.push(
       filter.format === "note"
-        ? "documents.size() == 0"
-        : `documents.exists(document, document.media_type.contains(${JSON.stringify(mediaToken)}))`,
+        ? "record.?documents.orValue([]).size() == 0"
+        : `record.?documents.orValue([]).exists(document, document.?media_type.orValue("").contains(${JSON.stringify(mediaToken)}))`,
     );
   }
   if (filter.tag.trim()) {
-    terms.push(`tags.contains(${JSON.stringify(filter.tag.trim())})`);
+    terms.push(`record.?tags.orValue([]).contains(${JSON.stringify(filter.tag.trim())})`);
   }
   for (const condition of filter.conditions) {
     const clause = conditionToCel(condition, shapes[condition.key] ?? "scalar");

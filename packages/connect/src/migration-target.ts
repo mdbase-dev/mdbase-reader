@@ -26,7 +26,7 @@ export class ConnectMigrationTarget implements MigrationTarget {
     for (const contract of [sourceContract, annotationContract]) {
       for await (const page of this.connection.queryPages(
         { contract, frontmatterMode: "effective" },
-        { signal, firstPageSize: 500, pageSize: 1000 },
+        { signal, pageSize: 1000 },
       )) {
         for (const row of outcomeValue(page, "inspect import identities").results) {
           const fields = row.effectiveFrontmatter ?? row.frontmatter;
@@ -46,7 +46,7 @@ export class ConnectMigrationTarget implements MigrationTarget {
     // full-collection grant, retrieve native provenance and join by contract-discovered path.
     for await (const page of this.connection.queryPages(
       { frontmatterMode: "persisted" },
-      { signal, firstPageSize: 500, pageSize: 1000 },
+      { signal, pageSize: 1000 },
     )) {
       for (const row of outcomeValue(page, "inspect native import provenance").results) {
         const id = identitiesByPath.get(row.path);
