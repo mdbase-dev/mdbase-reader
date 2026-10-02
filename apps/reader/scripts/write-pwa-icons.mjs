@@ -27,10 +27,15 @@ const background = "#fcfcfd";
 
 /** `[x, y, width]` on the 16-unit grid; every bar is 2 units tall, the mark spans 1–15. */
 const barRects = [
-  [1, 1, 4], [6, 1, 4], [11, 1, 4],
+  [1, 1, 4],
+  [6, 1, 4],
+  [11, 1, 4],
   [1, 5, 2],
-  [1, 9, 5], [7, 9, 8],
-  [1, 13, 4], [6, 13, 4], [11, 13, 4],
+  [1, 9, 5],
+  [7, 9, 8],
+  [1, 13, 4],
+  [6, 13, 4],
+  [11, 13, 4],
 ];
 const lineRect = [4, 5, 11];
 
@@ -89,7 +94,15 @@ try {
   for (const [name, [size, source]] of Object.entries(icons)) {
     const path = join(work, `${name}.svg`);
     await writeFile(path, source);
-    execFileSync("rsvg-convert", ["--width", `${size}`, "--height", `${size}`, "--output", resolve(output, name), path]);
+    execFileSync("rsvg-convert", [
+      "--width",
+      `${size}`,
+      "--height",
+      `${size}`,
+      "--output",
+      resolve(output, name),
+      path,
+    ]);
   }
 } finally {
   await rm(work, { recursive: true, force: true });
