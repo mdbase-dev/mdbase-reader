@@ -6,8 +6,6 @@ import { join, resolve } from "node:path";
 import { Collection, applyTypePack, assessTypePack } from "@callumalpass/mdbase";
 import { formatValidationIssues, validateAppManifest } from "@mdbase-dev/connect-dev";
 
-import { referenceInstallerProvision } from "./reader-manifest.mjs";
-
 const projectRoot = resolve(import.meta.dirname, "..");
 const manifestPath = resolve(projectRoot, "public", ".well-known", "mdbase-app.json");
 const manifest = JSON.parse(await readFile(manifestPath, "utf8"));
@@ -41,11 +39,16 @@ const collectionRoot = await mkdtemp(join(tmpdir(), "mdbase-reader-pack-"));
 try {
   await writeFile(join(collectionRoot, "mdbase.yaml"), "spec_version: 0.3.0\n");
   for (const pack of packs) {
-    const provision = referenceInstallerProvision(pack);
+    const provision = { manifest: pack.manifest, resources: pack.resources };
     const assessment = await assessTypePack(collectionRoot, provision, {
       installedBy: manifest.id,
     });
     assertValid(assessment, "assessment");
+    if (assessment.result.status !== "install") {
+      fail(
+        `${pack.manifest.id} should install into an empty collection, not '${assessment.result.status}'.`,
+      );
+    }
     const installed = await applyTypePack(collectionRoot, provision, {
       installedBy: manifest.id,
       expectedAssessmentDigest: assessment.result.assessment_digest,

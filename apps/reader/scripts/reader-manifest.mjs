@@ -154,23 +154,3 @@ function manifestResource(resource) {
     ...(resource.upgrade_from ? { upgrade_from: resource.upgrade_from } : {}),
   };
 }
-
-/**
- * A type-pack provision in the form @callumalpass/mdbase's JavaScript installer accepts.
- * That installer predates `upgrade_from` and rejects it, so Reader's local installation
- * checks drop the seed baselines; it then preserves installed seeds as before. Connect's
- * engine is what applies the reviewed seed upgrades.
- */
-export function referenceInstallerProvision(pack) {
-  return {
-    manifest: {
-      ...pack.manifest,
-      resources: pack.manifest.resources.map((resource) => {
-        const accepted = { ...resource };
-        delete accepted.upgrade_from;
-        return accepted;
-      }),
-    },
-    resources: pack.resources,
-  };
-}
