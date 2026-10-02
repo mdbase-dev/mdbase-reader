@@ -15,6 +15,7 @@
     "preview": "vite preview --host 127.0.0.1",
     "test": "pnpm manifest && pnpm manifest:verify && node --test scripts/*.test.mjs && vitest run src capture --maxWorkers=2 --testTimeout=15000",
     "test:browser": "node scripts/audit-reader.mjs",
+    "test:feedback": "node scripts/feedback-browser-test.mjs",
     "test:pdf-touch": "node scripts/run-pdf-touch-audits.mjs",
     "typecheck": "tsc -p tsconfig.json",
     "test:a11y": "node scripts/audit-accessibility.mjs"

@@ -1,5 +1,6 @@
 import { AppSwitcher } from "@mdbase-dev/ui/app-switcher";
 import { shortcutLabel } from "@mdbase-dev/ui/command-palette";
+import { FeedbackButton } from "@mdbase-dev/ui/feedback";
 
 import { CollectionPicker } from "./CollectionPicker.js";
 import { DisplayMenu } from "./DisplayMenu.js";
@@ -153,6 +154,7 @@ function LibraryHeader({
           </button>
         ) : null}
         {display}
+        <FeedbackButton />
         <button
           className="icon-button header-pane-toggle is-inspector"
           type="button"
@@ -190,6 +192,7 @@ function SourceBarHeader({
       <div className="reader-header-context">{bar.switcher}</div>
       <div className="reader-header-actions">
         {display}
+        <FeedbackButton />
         {bar.actions}
       </div>
     </header>

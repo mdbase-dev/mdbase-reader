@@ -1,0 +1,15 @@
+@media (max-width: 900px) {
+  .reader-header .mdbase-feedback-trigger {
+    min-width: 44px;
+    min-height: 44px;
+    padding: 8px;
+  }
+
+  .reader-header .mdbase-feedback-trigger > span {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+  }
+}

@@ -6,9 +6,12 @@ import "./reader.css";
 import "./reader-improvements.css";
 import "./annotation-polish.css";
 import "./reader-shell.css";
+import "@mdbase-dev/ui/feedback.css";
+import "./feedback-shell.css";
 
 import { ConnectReader } from "./ConnectReader.js";
 import { EnvironmentBadge } from "./EnvironmentBadge.js";
+import { FeedbackRoot } from "./FeedbackRoot.js";
 import { forgetOfflineCopies } from "./forget-offline-copies.js";
 import { importService } from "./import-navigation.js";
 import { keepFocusedFieldInView } from "./keep-focused-field-in-view.js";
@@ -37,17 +40,19 @@ keepFocusedFieldInView(window);
 const migrationService = importService(location.pathname);
 createRoot(root).render(
   <StrictMode>
-    <EnvironmentBadge />
-    {migrationService ? (
-      <Suspense fallback={null}>
-        <ImportPage service={migrationService} />
-      </Suspense>
-    ) : new URL(location.href).searchParams.has("preview") ? (
-      <Suspense fallback={null}>
-        <PreviewReader />
-      </Suspense>
-    ) : (
-      <ConnectReader />
-    )}
+    <FeedbackRoot>
+      <EnvironmentBadge />
+      {migrationService ? (
+        <Suspense fallback={null}>
+          <ImportPage service={migrationService} />
+        </Suspense>
+      ) : new URL(location.href).searchParams.has("preview") ? (
+        <Suspense fallback={null}>
+          <PreviewReader />
+        </Suspense>
+      ) : (
+        <ConnectReader />
+      )}
+    </FeedbackRoot>
   </StrictMode>,
 );

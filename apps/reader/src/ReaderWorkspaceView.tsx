@@ -5,6 +5,7 @@ import { confirmCollectionSwitch } from "./collection-switching.js";
 import { DeploymentUpdateNotice } from "./DeploymentUpdateNotice.js";
 import { inspectorPanelId, navigatorPanelId } from "./dockview-workspace-state.js";
 import { DockviewWorkspace } from "./DockviewWorkspace.js";
+import { useReaderFeedbackContext } from "./FeedbackRoot.js";
 import { importHref } from "./import-navigation.js";
 import { inspectorSourceForTab } from "./inspector-source.js";
 import { InspectorPane, type InspectorTab } from "./InspectorPane.js";
@@ -95,6 +96,7 @@ export function ReaderWorkspaceView({
   readonly model: ReaderWorkspaceViewModel;
 }): JSX.Element {
   const { library, source, workspace, sourceWorkspace, composer, sourceAddition } = model;
+  useReaderFeedbackContext(Boolean(sourceWorkspace.activeSourceId), library.collectionName);
   const shell = useWorkspaceShellPreferences(
     library.sources[0]?.collectionId ?? library.collectionName,
   );

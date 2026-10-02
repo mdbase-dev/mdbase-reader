@@ -1,3 +1,4 @@
+import { FeedbackButton, useFeedback } from "@mdbase-dev/ui/feedback";
 import { ConnectLayout, OpeningScreen } from "@mdbase-dev/ui/screens";
 import { connectProblemMessage, type ReaderConnectSnapshot } from "@mdbase-reader/connect";
 import { createReaderRuntimeServices, createWebPlatform } from "@mdbase-reader/platform";
@@ -54,14 +55,23 @@ async function startSession(): Promise<Awaited<ReturnType<typeof readerSession.s
 }
 
 export function ConnectReader(): JSX.Element {
+  const { reportError } = useFeedback();
   const session = useSyncExternalStore(subscribe, snapshot, snapshot);
   const [error, setError] = useState<string | null>(null);
 
   const start = async (): Promise<void> => {
     setError(null);
     try {
-      setError(connectProblemMessage(await startSession()));
+      const outcome = await startSession();
+      setError(connectProblemMessage(outcome));
+      if (!outcome.ok && !/cancel|abort|supersed/u.test(outcome.problem.code)) {
+        reportError({ code: "unknown_error" });
+      }
     } catch (reason) {
+      if (reason instanceof DOMException && reason.name === "AbortError") {
+        return;
+      }
+      reportError({ code: "source_open_failed" });
       setError(readerErrorMessage(reason, "Reader could not open this collection."));
     }
   };
@@ -72,17 +82,21 @@ export function ConnectReader(): JSX.Element {
       .then((outcome) => {
         if (active) {
           setError(connectProblemMessage(outcome));
+          if (!outcome.ok && !/cancel|abort|supersed/u.test(outcome.problem.code)) {
+            reportError({ code: "unknown_error" });
+          }
         }
       })
       .catch((reason: unknown) => {
-        if (active) {
+        if (active && !(reason instanceof DOMException && reason.name === "AbortError")) {
+          reportError({ code: "source_open_failed" });
           setError(readerErrorMessage(reason, "Reader could not open this collection."));
         }
       });
     return () => {
       active = false;
     };
-  }, []);
+  }, [reportError]);
 
   useEffect(() => {
     // Overlap workspace download with live collection checks, not the first query.
@@ -197,17 +211,20 @@ function OpenedReader({ collectionId }: { readonly collectionId: string }): JSX.
   );
 }
 
+interface ConnectionScreenProps {
+  readonly session: Exclude<ReaderConnectSnapshot, { status: "ready" }>;
+  readonly error: string | null;
+  readonly onError: (message: string | null) => void;
+  readonly onRetry: () => void;
+}
+
 function ConnectionScreen({
   session,
   error,
   onError,
   onRetry,
-}: {
-  readonly session: Exclude<ReaderConnectSnapshot, { status: "ready" }>;
-  readonly error: string | null;
-  readonly onError: (message: string | null) => void;
-  readonly onRetry: () => void;
-}): JSX.Element {
+}: ConnectionScreenProps): JSX.Element {
+  const { reportError } = useFeedback();
   const [working, setWorking] = useState(false);
   const selectedCollectionId = "collectionId" in session ? session.collectionId : null;
   // Some failures arrive only as the session's status, not as a step's error.
@@ -219,7 +236,14 @@ function ConnectionScreen({
     try {
       const outcome = await readerSession.authorize(target);
       onError(connectProblemMessage(outcome));
+      if (!outcome.ok && !/cancel|abort|supersed/u.test(outcome.problem.code)) {
+        reportError({ code: "unknown_error" });
+      }
     } catch (reason) {
+      if (reason instanceof DOMException && reason.name === "AbortError") {
+        return;
+      }
+      reportError({ code: "unknown_error" });
       onError(readerErrorMessage(reason, "Reader could not review application access."));
     } finally {
       setWorking(false);
@@ -231,7 +255,14 @@ function ConnectionScreen({
     try {
       const outcome = await readerSession.applyCollectionSetup();
       onError(connectProblemMessage(outcome));
+      if (!outcome.ok && !/cancel|abort|supersed/u.test(outcome.problem.code)) {
+        reportError({ code: "unknown_error" });
+      }
     } catch (reason) {
+      if (reason instanceof DOMException && reason.name === "AbortError") {
+        return;
+      }
+      reportError({ code: "unknown_error" });
       onError(readerErrorMessage(reason, "Reader could not apply the reviewed setup."));
     } finally {
       setWorking(false);
@@ -304,6 +335,7 @@ function ConnectionScreen({
           The managed service requires an HTTPS Reader origin.
         </p>
       ) : null}
+      <FeedbackButton />
     </ConnectLayout>
   );
 }
