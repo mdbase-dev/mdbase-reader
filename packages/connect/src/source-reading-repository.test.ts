@@ -6,6 +6,12 @@ import { ConnectSourceRepository } from "./source-repository.js";
 import type { ReaderConnectClient } from "./repository-client.js";
 import type { ConnectOutcome, QueryPage, RecordDocument } from "@mdbase-dev/connect";
 
+const legacyAuthorityFeatures = {
+  supportsAuthorityFeature: vi.fn(() =>
+    Promise.resolve({ ok: true as const, value: false, diagnostics: [] }),
+  ),
+};
+
 function success<Value>(value: Value): ConnectOutcome<Value> {
   return { ok: true, value, diagnostics: [] };
 }
@@ -37,6 +43,7 @@ describe("Connect source reading state", () => {
     const read = vi.fn(() => Promise.resolve(success(current)));
     const update = vi.fn(() => Promise.resolve(success(updated)));
     const repository = new ConnectSourceRepository({
+      ...legacyAuthorityFeatures,
       queryPages,
       read,
       update,
@@ -87,6 +94,7 @@ describe("Connect source reading state with a current caller revision", () => {
     read = vi.fn(),
   ): ConnectSourceRepository {
     return new ConnectSourceRepository({
+      ...legacyAuthorityFeatures,
       queryPages: vi.fn(() =>
         singleQueryPage({
           path: "sources/crime.md",

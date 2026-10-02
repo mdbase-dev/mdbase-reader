@@ -13,12 +13,21 @@ import { ConnectSourceImportRepository } from "./source-imports.js";
 import type { ReaderConnectClient } from "./repository-client.js";
 import type { PlannedSourceAttachment } from "@mdbase-reader/core";
 
+const legacyAuthorityFeatures = {
+  supportsAuthorityFeature: vi.fn(() =>
+    Promise.resolve({ ok: true as const, value: false, diagnostics: [] }),
+  ),
+};
+
 describe("sources without documents", () => {
   it("creates the record with its kind and web address and no documents", async () => {
     const upload = vi.fn();
     const create = vi.fn(() => Promise.resolve(success(recordDocument())));
     const repository = new ConnectSourceImportRepository(
-      { create } as unknown as ReaderConnectClient,
+      {
+        ...legacyAuthorityFeatures,
+        create,
+      } as unknown as ReaderConnectClient,
       { upload },
     );
 
@@ -58,7 +67,11 @@ describe("attaching a file to an existing source", () => {
     const read = vi.fn(() => Promise.resolve(success(existing)));
     const update = vi.fn(() => Promise.resolve(success(existing)));
     const repository = new ConnectSourceImportRepository(
-      { read, update } as unknown as ReaderConnectClient,
+      {
+        ...legacyAuthorityFeatures,
+        read,
+        update,
+      } as unknown as ReaderConnectClient,
       { upload },
     );
 
@@ -97,7 +110,11 @@ describe("attaching a file to an existing source", () => {
 
   it("refuses when the stored bytes differ or the record path now holds another source", async () => {
     const mismatched = new ConnectSourceImportRepository(
-      { read: vi.fn(), update: vi.fn() } as unknown as ReaderConnectClient,
+      {
+        ...legacyAuthorityFeatures,
+        read: vi.fn(),
+        update: vi.fn(),
+      } as unknown as ReaderConnectClient,
       { upload: vi.fn(() => Promise.resolve(fileDescriptor({ contentDigest: "sha256:other" }))) },
     );
     await expect(mismatched.attachFile(attachment())).rejects.toThrow("did not match");
@@ -106,6 +123,7 @@ describe("attaching a file to an existing source", () => {
     const update = vi.fn();
     const elsewhere = new ConnectSourceImportRepository(
       {
+        ...legacyAuthorityFeatures,
         read: vi.fn(() => Promise.resolve(success(moved))),
         update,
       } as unknown as ReaderConnectClient,

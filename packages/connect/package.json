@@ -11,7 +11,7 @@
     "typecheck": "tsc -p tsconfig.json"
   },
   "dependencies": {
-    "@mdbase-dev/connect": "0.1.0-beta.123",
+    "@mdbase-dev/connect": "0.1.0-beta.124",
     "@mdbase-reader/core": "workspace:*",
     "@mdbase-reader/migration": "workspace:*",
     "yaml": "^2.9.0"

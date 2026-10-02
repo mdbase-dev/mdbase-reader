@@ -7,6 +7,12 @@ import { annotationPathsForSource } from "./annotation-query.js";
 import type { ReaderConnectClient } from "./repository-client.js";
 import type { QueryInput } from "@mdbase-dev/connect";
 
+const legacyAuthorityFeatures = {
+  supportsAuthorityFeature: vi.fn(() =>
+    Promise.resolve({ ok: true as const, value: false, diagnostics: [] }),
+  ),
+};
+
 it("asks mdbase which links reach the source, keeps legacy IDs, and follows renames", async () => {
   let sourcePath = 'sources/A "quoted" title.md';
   // How mdbase resolves each link: a record path, or null when it reaches no record.
@@ -31,11 +37,13 @@ it("asks mdbase which links reach the source, keeps legacy IDs, and follows rena
     const references = Object.keys(links);
     const results =
       id !== undefined
-        ? [{ path: sourcePath, effectiveFrontmatter: { id: "src_1" } }]
+        ? [{ path: sourcePath, effectiveFrontmatter: { id: "src_1" }, file: {}, types: [] }]
         : references
             .map((source, i) => ({
               path: `annotations/${String(i)}.md`,
               effectiveFrontmatter: { source },
+              file: {},
+              types: ["reader-annotation"],
             }))
             .filter(({ effectiveFrontmatter: { source } }) =>
               target !== undefined
@@ -44,7 +52,10 @@ it("asks mdbase which links reach the source, keeps legacy IDs, and follows rena
             );
     yield await Promise.resolve({ ok: true, value: { results }, diagnostics: [] });
   });
-  const client = { queryPages } as unknown as ReaderConnectClient;
+  const client = {
+    ...legacyAuthorityFeatures,
+    queryPages,
+  } as unknown as ReaderConnectClient;
   const controller = new AbortController();
   const options = { signal: controller.signal };
   expect(await annotationPathsForSource(client, sourceId("src_1"), options)).toEqual([

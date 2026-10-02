@@ -1,9 +1,10 @@
+import { connectFailure, connectProblem } from "@mdbase-dev/connect/advanced";
 import { collectionId, fileId, fileRevision, type DocumentTarget } from "@mdbase-reader/core";
-import { describe, expect, it, vi } from "vitest";
+import { describe, expect, it, vi, type Mock } from "vitest";
 
 import { ConnectDocumentRepository } from "./documents.js";
 
-import type { ConnectDocumentError, ReaderFileClient } from "./documents.js";
+import type { ReaderFileClient } from "./documents.js";
 import type { CollectionFileDescriptor } from "@mdbase-dev/connect";
 
 const descriptor: CollectionFileDescriptor = {
@@ -16,217 +17,145 @@ const descriptor: CollectionFileDescriptor = {
   mediaClass: "pdf",
   modifiedAt: "2026-08-09T12:00:00Z",
 };
-
-function files(items: readonly CollectionFileDescriptor[]): ReaderFileClient {
-  return {
-    async *list(): AsyncIterable<CollectionFileDescriptor> {
-      await Promise.resolve();
-      yield* items;
-    },
-    download: vi.fn().mockResolvedValue(new Blob(["pdf"], { type: "application/pdf" })),
-  };
-}
-
 const target: DocumentTarget = {
   fileId: fileId("file-01"),
   file: "[[files/example.pdf]]",
   revision: fileRevision(descriptor.contentDigest),
 };
+const collection = collectionId("reading");
+function files(items: readonly CollectionFileDescriptor[]): {
+  stat: Mock<ReaderFileClient["stat"]>;
+  download: Mock<ReaderFileClient["download"]>;
+} {
+  return {
+    stat: vi.fn<ReaderFileClient["stat"]>((target) =>
+      Promise.resolve({
+        ok: true,
+        diagnostics: [],
+        value:
+          items.find((item) =>
+            "fileId" in target ? item.fileId === target.fileId : item.path === target.path,
+          ) ?? null,
+      }),
+    ),
+    download: vi.fn().mockResolvedValue(new Blob(["pdf"], { type: "application/pdf" })),
+  };
+}
+function urls(): { create: Mock<() => string>; revoke: Mock<(url: string) => void> } {
+  let sequence = 0;
+  return { create: vi.fn(() => `blob:reader-${String(++sequence)}`), revoke: vi.fn() };
+}
 
 describe("ConnectDocumentRepository", () => {
-  it("downloads the exact requested revision and retains its object URL for reuse", async () => {
+  it("refreshes metadata on each open while reusing leased object URLs for unchanged bytes", async () => {
     const client = files([descriptor]);
-    const urls = { create: vi.fn(() => "blob:reader-file"), revoke: vi.fn() };
-    const repository = new ConnectDocumentRepository(client, urls);
-    const handle = await repository.open(collectionId("reading"), target);
-
-    expect(handle).toMatchObject({
+    const objectUrls = urls();
+    const repository = new ConnectDocumentRepository(client, objectUrls);
+    const first = await repository.open(collection, target);
+    expect(first).toMatchObject({
       fileId: "file-01",
       revision: descriptor.contentDigest,
       mediaType: "application/pdf",
-      url: "blob:reader-file",
     });
-    expect(client.download).toHaveBeenCalledWith(descriptor);
-    await handle.close();
-    await handle.close();
-    expect(urls.revoke).not.toHaveBeenCalled();
-
-    const reopened = await repository.open(collectionId("reading"), target);
-    expect(reopened.url).toBe("blob:reader-file");
-    expect(client.download).toHaveBeenCalledOnce();
-    await reopened.close();
-    repository.dispose();
-    expect(urls.revoke).toHaveBeenCalledTimes(1);
-  });
-
-  it("opens the current bytes and reports their revision when source metadata is stale", async () => {
-    const changed = { ...descriptor, contentDigest: `sha256:${"b".repeat(64)}` as const };
-    const client = files([changed]);
-    const repository = new ConnectDocumentRepository(client);
-    const handle = await repository.open(collectionId("reading"), target);
-    expect(handle.revision).toBe(changed.contentDigest);
-    expect(client.download).toHaveBeenCalledWith(changed);
-    await handle.close();
-  });
-
-  it("does not reuse stale file metadata after the same file ID changes", async () => {
-    let current = descriptor;
-    const client: ReaderFileClient = {
-      async *list() {
-        await Promise.resolve();
-        yield current;
-      },
-      download: vi.fn().mockResolvedValue(new Blob(["pdf"], { type: "application/pdf" })),
-    };
-    const repository = new ConnectDocumentRepository(client);
-    const first = await repository.open(collectionId("reading"), target);
     await first.close();
-    current = { ...descriptor, contentDigest: `sha256:${"b".repeat(64)}` };
-    const next = await repository.open(collectionId("reading"), target);
-    expect(next.revision).toBe(current.contentDigest);
+    await first.close();
+    const next = await repository.open(collection, target);
+    expect(next.url).toBe(first.url);
+    expect(client.stat).toHaveBeenCalledTimes(2);
+    expect(client.stat).toHaveBeenCalledWith({ fileId: target.fileId }, {});
+    expect(client.download).toHaveBeenCalledExactlyOnceWith(descriptor);
+    expect(objectUrls.revoke).not.toHaveBeenCalled();
+    await next.close();
+    repository.dispose();
+    expect(objectUrls.revoke).toHaveBeenCalledExactlyOnceWith(first.url);
+  });
+
+  it("opens current bytes after the same ID moves or changes, even with stale source metadata", async () => {
+    const client = files([descriptor]);
+    const repository = new ConnectDocumentRepository(client, urls());
+    const first = await repository.open(collection, target);
+    await first.close();
+    const changed = {
+      ...descriptor,
+      path: "elsewhere/moved.pdf",
+      contentDigest: `sha256:${"b".repeat(64)}` as const,
+    };
+    client.stat.mockImplementation(files([changed]).stat);
+    const next = await repository.open(collection, target);
+    expect(next.revision).toBe(changed.contentDigest);
+    expect(client.download).toHaveBeenLastCalledWith(changed);
     expect(client.download).toHaveBeenCalledTimes(2);
     await next.close();
   });
 
-  it("scopes file discovery to the selected folder and refreshes descriptors on each open", async () => {
-    const list = vi.fn(async function* (options?: {
-      readonly folder?: string;
-    }): AsyncIterable<CollectionFileDescriptor> {
-      await Promise.resolve();
-      expect(options).toEqual({ folder: "files/example", pageSize: 100 });
-      yield { ...descriptor, path: "files/example/article.pdf" };
-    });
-    const client = {
-      list,
-      download: vi.fn().mockResolvedValue(new Blob(["pdf"], { type: "application/pdf" })),
-    } satisfies ReaderFileClient;
-    const repository = new ConnectDocumentRepository(client, {
-      create: vi.fn(() => "blob:reader-file"),
-      revoke: vi.fn(),
-    });
-    const nestedTarget = { ...target, file: "[[files/example/article.pdf]]" };
-
-    const first = await repository.open(collectionId("reading"), nestedTarget);
-    await first.close();
-    const second = await repository.open(collectionId("reading"), nestedTarget);
-    await second.close();
-
-    expect(list).toHaveBeenCalledTimes(2);
-  });
-
-  it("stops listing the folder once the file ID is found", async () => {
-    const pulled: string[] = [];
-    const client: ReaderFileClient = {
-      async *list() {
-        for (const item of [
-          { ...descriptor, fileId: "file-00", path: "files/other.pdf" },
-          descriptor,
-          { ...descriptor, fileId: "file-02", path: "files/later.pdf" },
-        ]) {
-          await Promise.resolve();
-          pulled.push(item.fileId);
-          yield item;
-        }
-      },
-      download: vi.fn().mockResolvedValue(new Blob(["pdf"], { type: "application/pdf" })),
-    };
-    const handle = await new ConnectDocumentRepository(client).open(
-      collectionId("reading"),
-      target,
-    );
-
-    expect(pulled).toEqual(["file-00", "file-01"]);
-    await handle.close();
-  });
-});
-
-describe("ConnectDocumentRepository recovery and caching", () => {
-  it("recovers a migrated file reference only when its path and digest are exact", async () => {
-    const migrated = {
-      ...descriptor,
-      fileId: "file-02",
-      path: "files/example.pdf",
-    } satisfies CollectionFileDescriptor;
+  it("recovers a migrated ID by exact path and digest only", async () => {
+    const migrated = { ...descriptor, fileId: "file-02" };
     const client = files([migrated]);
-    const repository = new ConnectDocumentRepository(client, {
-      create: vi.fn(() => "blob:reader-file"),
-      revoke: vi.fn(),
-    });
-
-    const handle = await repository.open(collectionId("reading"), target);
-
+    const handle = await new ConnectDocumentRepository(client, urls()).open(collection, target);
     expect(handle.fileId).toBe("file-02");
+    expect(client.stat.mock.calls.map(([target]) => target)).toEqual([
+      { fileId: "file-01" },
+      { path: descriptor.path },
+    ]);
     expect(client.download).toHaveBeenCalledWith(migrated);
     await handle.close();
   });
 
-  it("rejects a path match when the referenced digest is stale", async () => {
-    const migrated = {
-      ...descriptor,
-      fileId: "file-02",
-      path: "files/example.pdf",
-      contentDigest: `sha256:${"b".repeat(64)}` as const,
-    } satisfies CollectionFileDescriptor;
-    const repository = new ConnectDocumentRepository(files([migrated]));
+  it("rejects a migrated path when the referenced digest is stale", async () => {
+    const client = files([
+      { ...descriptor, fileId: "file-02", contentDigest: `sha256:${"b".repeat(64)}` },
+    ]);
+    await expect(new ConnectDocumentRepository(client).open(collection, target)).rejects.toThrow(
+      "file_not_found",
+    );
+    expect(client.download).not.toHaveBeenCalled();
+  });
 
-    await expect(repository.open(collectionId("reading"), target)).rejects.toEqual(
-      expect.objectContaining<Partial<ConnectDocumentError>>({
-        message: "mdbase Connect could not open document: file_not_found",
-      }),
+  it("reports a missing descriptor", async () => {
+    await expect(new ConnectDocumentRepository(files([])).open(collection, target)).rejects.toThrow(
+      "file_not_found",
     );
   });
 
-  it("forwards cancellation through descriptor lookup and download", async () => {
-    const controller = new AbortController();
-    const list = vi.fn(async function* (options?: {
-      readonly signal?: AbortSignal;
-    }): AsyncIterable<CollectionFileDescriptor> {
-      await Promise.resolve();
-      expect(options?.signal).toBe(controller.signal);
-      yield descriptor;
-    });
-    const download = vi.fn().mockResolvedValue(new Blob(["pdf"], { type: "application/pdf" }));
-    const repository = new ConnectDocumentRepository(
-      { list, download },
-      {
-        create: vi.fn(() => "blob:reader-file"),
-        revoke: vi.fn(),
-      },
+  it("does not downgrade stat failures to path lookup or download", async () => {
+    const client = files([descriptor]);
+    client.stat.mockResolvedValue(connectFailure(connectProblem("access_denied", "Denied")));
+    await expect(new ConnectDocumentRepository(client).open(collection, target)).rejects.toThrow(
+      "Denied",
     );
+    expect(client.stat).toHaveBeenCalledOnce();
+    expect(client.download).not.toHaveBeenCalled();
+  });
 
-    const handle = await repository.open(collectionId("reading"), target, {
-      signal: controller.signal,
+  it("forwards cancellation through stat and download", async () => {
+    const signal = new AbortController().signal;
+    const client = files([descriptor]);
+    const handle = await new ConnectDocumentRepository(client, urls()).open(collection, target, {
+      signal,
     });
-
-    expect(download).toHaveBeenCalledWith(descriptor, { signal: controller.signal });
+    expect(client.stat).toHaveBeenCalledWith({ fileId: target.fileId }, { signal });
+    expect(client.download).toHaveBeenCalledWith(descriptor, { signal });
     await handle.close();
   });
 
-  it("evicts the least recently used closed document but never an open handle", async () => {
-    const secondDescriptor = {
+  it("evicts closed URLs but never an open handle", async () => {
+    const second = {
       ...descriptor,
       fileId: "file-02",
       path: "files/second.pdf",
       contentDigest: `sha256:${"b".repeat(64)}` as const,
-    } satisfies CollectionFileDescriptor;
-    const client = files([descriptor, secondDescriptor]);
-    let urlSequence = 0;
-    const urls = {
-      create: vi.fn(() => `blob:reader-${String(++urlSequence)}`),
-      revoke: vi.fn(),
     };
-    const repository = new ConnectDocumentRepository(client, urls, 1);
-    const first = await repository.open(collectionId("reading"), target);
-    const second = await repository.open(collectionId("reading"), {
-      fileId: fileId(secondDescriptor.fileId),
-      file: secondDescriptor.path,
-      revision: fileRevision(secondDescriptor.contentDigest),
+    const objectUrls = urls();
+    const repository = new ConnectDocumentRepository(files([descriptor, second]), objectUrls, 1);
+    const first = await repository.open(collection, target);
+    const next = await repository.open(collection, {
+      fileId: fileId(second.fileId),
+      file: second.path,
+      revision: fileRevision(second.contentDigest),
     });
-
-    expect(urls.revoke).not.toHaveBeenCalled();
-    await second.close();
-    expect(urls.revoke).toHaveBeenCalledTimes(1);
-    expect(urls.revoke).toHaveBeenCalledWith(second.url);
+    expect(objectUrls.revoke).not.toHaveBeenCalled();
+    await next.close();
+    expect(objectUrls.revoke).toHaveBeenCalledExactlyOnceWith(next.url);
     await first.close();
     repository.dispose();
   });

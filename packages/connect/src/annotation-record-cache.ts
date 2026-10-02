@@ -34,7 +34,7 @@ export class AnnotationRecordCache {
 
   /**
    * The cached document when a fresh query result shows the file unchanged, whatever its age.
-   * Query results carry no revision, so this is how a listing keeps one without a read.
+   * Legacy query results may omit revisions, so they must match every observable fact.
    */
   current(record: QueryRecord): RecordDocument | null {
     const cached = this.#records.get(record.path);
@@ -149,6 +149,7 @@ function unchanged(document: RecordDocument, record: QueryRecord): boolean {
   const sameFact = (left: unknown, right: unknown): boolean =>
     left === undefined || right === undefined || left === right;
   return (
+    (record.revision === undefined || record.revision === document.revision) &&
     record.body !== undefined &&
     record.body === (document.body ?? "") &&
     record.frontmatter !== undefined &&

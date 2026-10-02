@@ -6,6 +6,12 @@ import { ConnectSourceRepository } from "./source-repository.js";
 import type { ReaderConnectClient } from "./repository-client.js";
 import type { ConnectOutcome, QueryPage, RecordDocument } from "@mdbase-dev/connect";
 
+const legacyAuthorityFeatures = {
+  supportsAuthorityFeature: vi.fn(() =>
+    Promise.resolve({ ok: true as const, value: false, diagnostics: [] }),
+  ),
+};
+
 function success<Value>(value: Value): ConnectOutcome<Value> {
   return { ok: true, value, diagnostics: [] };
 }
@@ -39,6 +45,7 @@ function repositoryFixture(): {
   );
   return {
     repository: new ConnectSourceRepository({
+      ...legacyAuthorityFeatures,
       queryPages,
       read,
       update,

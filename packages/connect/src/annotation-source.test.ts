@@ -7,6 +7,12 @@ import { ConnectAnnotationRepository } from "./annotation-repository.js";
 import type { ReaderConnectClient } from "./repository-client.js";
 import type { ConnectOutcome, QueryInput, RecordDocument } from "@mdbase-dev/connect";
 
+const legacyAuthorityFeatures = {
+  supportsAuthorityFeature: vi.fn(() =>
+    Promise.resolve({ ok: true as const, value: false, diagnostics: [] }),
+  ),
+};
+
 const collection = collectionId("reading");
 const ok = <T>(value: T): ConnectOutcome<T> => ({ ok: true, value, diagnostics: [] });
 
@@ -47,6 +53,7 @@ function collectionOf(
   };
   const queries: QueryInput[] = [];
   const client = {
+    ...legacyAuthorityFeatures,
     read: ({ path }: { path: string }) => Promise.resolve(ok(byPath.get(path)!)),
     readMany: (paths: readonly string[]) =>
       Promise.resolve(
