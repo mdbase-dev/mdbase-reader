@@ -11,6 +11,12 @@ import {
 
 import type { ConnectOutcome, QueryPage, QueryResult, RecordDocument } from "@mdbase-dev/connect";
 
+const legacyAuthorityFeatures = {
+  supportsAuthorityFeature: vi.fn(() =>
+    Promise.resolve({ ok: true as const, value: false, diagnostics: [] }),
+  ),
+};
+
 function success<Value>(value: Value): ConnectOutcome<Value> {
   return { ok: true, value, diagnostics: [] };
 }
@@ -51,7 +57,12 @@ describe("ConnectSourceRepository", () => {
         yield* queryStream(result.value.results);
       }
     };
-    const client = { query, queryPages, read } as unknown as ReaderConnectClient;
+    const client = {
+      ...legacyAuthorityFeatures,
+      query,
+      queryPages,
+      read,
+    } as unknown as ReaderConnectClient;
     const repository = new ConnectSourceRepository(client);
     const page = await repository.list({ collectionId: collectionId("reading"), limit: 20 });
     const selected = await repository.get(collectionId("reading"), sourceId("src_01"));
@@ -65,7 +76,9 @@ describe("ConnectSourceRepository", () => {
     expect(page.items[0]?.title).toBe("Crime and Punishment");
     expect(selected?.body).toBe("Notes");
   });
+});
 
+describe("Connect source transclusion", () => {
   it("makes source transclusion idempotent", async () => {
     const document = {
       path: "sources/crime.md",
@@ -77,6 +90,7 @@ describe("ConnectSourceRepository", () => {
       file: {},
     } satisfies RecordDocument;
     const client = {
+      ...legacyAuthorityFeatures,
       queryPages: vi.fn(() =>
         queryStream([
           {
@@ -113,6 +127,7 @@ describe("ConnectSourceRepository", () => {
       file: {},
     } satisfies RecordDocument;
     const client = {
+      ...legacyAuthorityFeatures,
       queryPages: vi.fn(() =>
         queryStream([
           { path: document.path, effectiveFrontmatter: document.frontmatter, types: [], file: {} },
@@ -159,6 +174,7 @@ describe("ConnectAnnotationRepository", () => {
     } satisfies RecordDocument;
     const create = vi.fn(() => Promise.resolve(success(document)));
     const repository = new ConnectAnnotationRepository({
+      ...legacyAuthorityFeatures,
       create,
     } as unknown as ReaderConnectClient);
 
@@ -239,6 +255,7 @@ describe("Connect annotation reads", () => {
       ),
     );
     const repository = new ConnectAnnotationRepository({
+      ...legacyAuthorityFeatures,
       queryPages,
       readMany,
       read,
@@ -274,8 +291,8 @@ describe("Connect annotation reads", () => {
     ]);
 
     await repository.listForSource(collectionId("reading"), sourceId("src_02"));
-    // Each listing: an ID lookup and legacy-reference query; one unscoped index query.
-    expect(queryPages).toHaveBeenCalledTimes(5);
+    // Two discovery queries per listing, one index query, and a changed-reference revalidation.
+    expect(queryPages).toHaveBeenCalledTimes(6);
     expect(readMany).toHaveBeenCalledTimes(2);
   });
 });
@@ -327,6 +344,7 @@ describe("Connect annotation listing fallback", () => {
       ),
     );
     const repository = new ConnectAnnotationRepository({
+      ...legacyAuthorityFeatures,
       queryPages,
       readMany,
       read,

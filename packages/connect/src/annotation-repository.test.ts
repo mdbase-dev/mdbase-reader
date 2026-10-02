@@ -7,6 +7,12 @@ import type { ReaderConnectClient } from "./repository-client.js";
 import type { ConnectOutcome, RecordDocument } from "@mdbase-dev/connect";
 import type { Annotation } from "@mdbase-reader/core";
 
+const legacyAuthorityFeatures = {
+  supportsAuthorityFeature: vi.fn(() =>
+    Promise.resolve({ ok: true as const, value: false, diagnostics: [] }),
+  ),
+};
+
 function success<Value>(value: Value): ConnectOutcome<Value> {
   return { ok: true, value, diagnostics: [] };
 }
@@ -16,6 +22,7 @@ describe("ConnectAnnotationRepository updates", () => {
     const document = annotationDocument();
     const update = vi.fn(() => Promise.resolve(success(document)));
     const repository = new ConnectAnnotationRepository({
+      ...legacyAuthorityFeatures,
       update,
     } as unknown as ReaderConnectClient);
     const original = annotationFixture();
@@ -53,6 +60,7 @@ describe("ConnectAnnotationRepository deletion", () => {
       Promise.resolve(success({ path: original.path ?? "", deleted: true })),
     );
     const repository = new ConnectAnnotationRepository({
+      ...legacyAuthorityFeatures,
       preflightDelete,
       deleteWithProgress,
     } as unknown as ReaderConnectClient);
@@ -79,6 +87,7 @@ describe("ConnectAnnotationRepository deletion", () => {
     const original = annotationFixture();
     const deleteWithProgress = vi.fn();
     const repository = new ConnectAnnotationRepository({
+      ...legacyAuthorityFeatures,
       deleteWithProgress,
     } as unknown as ReaderConnectClient);
 

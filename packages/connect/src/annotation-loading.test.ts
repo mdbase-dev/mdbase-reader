@@ -4,7 +4,13 @@ import { describe, expect, it, vi, type Mock } from "vitest";
 import { ConnectAnnotationRepository } from "./annotation-repository.js";
 
 import type { ReaderConnectClient } from "./repository-client.js";
-import type { ConnectOutcome, QueryPage, RecordDocument } from "@mdbase-dev/connect";
+import type { ConnectOutcome, QueryInput, QueryPage, RecordDocument } from "@mdbase-dev/connect";
+
+const legacyAuthorityFeatures = {
+  supportsAuthorityFeature: vi.fn(() =>
+    Promise.resolve({ ok: true as const, value: false, diagnostics: [] }),
+  ),
+};
 
 const collection = collectionId("reading");
 function document(index: number): RecordDocument {
@@ -33,19 +39,25 @@ function page(documents: RecordDocument[]): ConnectOutcome<QueryPage> {
 
 function repository(documents: RecordDocument[]): {
   read: Mock<ReaderConnectClient["read"]>;
-  queryPages: Mock<ReaderConnectClient["queryPages"]>;
+  queryPages: Mock<(input: QueryInput) => AsyncGenerator<ConnectOutcome<QueryPage>>>;
   repo: ConnectAnnotationRepository;
 } {
   const read = vi.fn<ReaderConnectClient["read"]>(({ path }) =>
     Promise.resolve(ok(documents.find((entry) => entry.path === path)!)),
   );
-  const queryPages = vi.fn<ReaderConnectClient["queryPages"]>(async function* () {
-    yield await Promise.resolve(page(documents));
-  });
+  const queryPages = vi.fn<(input: QueryInput) => AsyncGenerator<ConnectOutcome<QueryPage>>>(
+    async function* () {
+      yield await Promise.resolve(page(documents));
+    },
+  );
   return {
     read,
     queryPages,
-    repo: new ConnectAnnotationRepository({ read, queryPages } as unknown as ReaderConnectClient),
+    repo: new ConnectAnnotationRepository({
+      ...legacyAuthorityFeatures,
+      read,
+      queryPages,
+    } as unknown as ReaderConnectClient),
   };
 }
 

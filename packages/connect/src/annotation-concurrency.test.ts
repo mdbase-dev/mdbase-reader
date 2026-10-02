@@ -6,6 +6,12 @@ import { ConnectAnnotationRepository } from "./annotation-repository.js";
 import type { ReaderConnectClient } from "./repository-client.js";
 import type { ConnectOutcome, QueryPage, RecordDocument } from "@mdbase-dev/connect";
 
+const legacyAuthorityFeatures = {
+  supportsAuthorityFeature: vi.fn(() =>
+    Promise.resolve({ ok: true as const, value: false, diagnostics: [] }),
+  ),
+};
+
 function success<Value>(value: Value): ConnectOutcome<Value> {
   return { ok: true, value, diagnostics: [] };
 }
@@ -61,6 +67,7 @@ describe("Connect annotation concurrency", () => {
       return success(annotationDocument(input.path));
     });
     const repository = new ConnectAnnotationRepository({
+      ...legacyAuthorityFeatures,
       queryPages,
       read,
     } as unknown as ReaderConnectClient);
@@ -104,6 +111,7 @@ describe("Connect annotation listing", () => {
       );
     });
     const repository = new ConnectAnnotationRepository({
+      ...legacyAuthorityFeatures,
       queryPages,
       read,
     } as unknown as ReaderConnectClient);

@@ -3,7 +3,13 @@ import { sourceId, type ReaderRequestOptions, type SourceId } from "@mdbase-read
 import { outcomeValue } from "./repository-client.js";
 
 import type { ReaderConnectClient } from "./repository-client.js";
-import type { QueryInput, QueryRecord } from "@mdbase-dev/connect";
+import type {
+  QueryInput,
+  QueryRecord,
+  QueryMetadataRecord,
+  QueryPage,
+  QueryMetadataPage,
+} from "@mdbase-dev/connect";
 
 /**
  * mdbase resolves an annotation's `source` link, so Reader never guesses a link's target from its
@@ -32,13 +38,18 @@ export function withResolvedSource(input: QueryInput): QueryInput {
  * reference that resolves to no record, the ID it was written as. Undefined for a broken link.
  */
 export function annotationSourceFromResult(
-  record: Pick<QueryRecord, "effectiveFrontmatter" | "frontmatter" | "values">,
+  record:
+    Pick<QueryRecord, "effectiveFrontmatter" | "frontmatter" | "values"> | QueryMetadataRecord,
 ): SourceId | undefined {
   const resolved = stringField(record.values?.[resolvedSource]);
   if (resolved) {
     return sourceId(resolved);
   }
-  return legacySourceId((record.effectiveFrontmatter ?? record.frontmatter)?.["source"]);
+  return legacySourceId(
+    "frontmatter" in record || "effectiveFrontmatter" in record
+      ? (record.effectiveFrontmatter ?? record.frontmatter)?.["source"]
+      : record.values?.["source"],
+  );
 }
 
 /** Resolves one annotation's source through mdbase. */
@@ -47,16 +58,25 @@ export async function resolveAnnotationSource(
   path: string,
   options: ReaderRequestOptions = {},
 ): Promise<SourceId> {
-  for await (const outcome of client.queryPages(
-    withResolvedSource({
-      types: ["reader-annotation"],
-      where: `file.path == ${JSON.stringify(path)}`,
-      select: ["source"],
-      frontmatterMode: "effective",
-    }),
-    { ...options, firstPageSize: 1, pageSize: 1 },
-  )) {
-    const [record] = outcomeValue(outcome, "resolve annotation source").results;
+  const input = withResolvedSource({
+    types: ["reader-annotation"],
+    where: `file.path == ${JSON.stringify(path)}`,
+    select: ["source"],
+    frontmatterMode: "effective",
+  });
+  const metadata = outcomeValue(
+    await client.supportsAuthorityFeature("query-metadata-v1", options),
+    "discover metadata queries",
+  );
+  const paging = { ...options, firstPageSize: 1, pageSize: 1 };
+  const pages = metadata
+    ? client.queryPages({ ...input, output: "metadata", includeBody: false }, paging)
+    : client.queryPages(input, paging);
+  for await (const outcome of pages) {
+    const [record] = outcomeValue<QueryPage | QueryMetadataPage>(
+      outcome,
+      "resolve annotation source",
+    ).results;
     const source = record ? annotationSourceFromResult(record) : undefined;
     if (source) {
       return source;

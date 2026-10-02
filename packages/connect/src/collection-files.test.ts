@@ -3,6 +3,7 @@ import { describe, expect, it, vi } from "vitest";
 
 import { ConnectCollectionFileRepository } from "./collection-files.js";
 
+import type { ReaderFileClient } from "./documents.js";
 import type { CollectionFileDescriptor } from "@mdbase-dev/connect";
 import type { Mock } from "vitest";
 
@@ -17,7 +18,7 @@ describe("bounded collection file reads", () => {
       active--;
       return new Blob(["PNG"]);
     });
-    const { repository, list } = readFixture(download);
+    const { repository, stat } = readFixture(download);
     const files = await Promise.all(
       Array.from({ length: 11 }, (_, index) =>
         repository.read(collectionId("reading"), `files/${String(index)}.png`),
@@ -25,7 +26,7 @@ describe("bounded collection file reads", () => {
     );
     expect(files).toHaveLength(11);
     expect(maximum).toBe(2);
-    expect(list.mock.calls.length).toBeLessThanOrEqual(2);
+    expect(stat).toHaveBeenCalledTimes(11);
     expect(download).toHaveBeenCalledTimes(11);
   });
 
@@ -94,12 +95,14 @@ describe("bounded collection file reads", () => {
 
 function readFixture(download: (file: CollectionFileDescriptor) => Promise<Blob>): {
   repository: ConnectCollectionFileRepository;
-  list: Mock<() => AsyncGenerator<CollectionFileDescriptor>>;
+  stat: Mock<ReaderFileClient["stat"]>;
 } {
-  const list = vi.fn(async function* (): AsyncGenerator<CollectionFileDescriptor> {
-    await Promise.resolve();
-    for (let index = 0; index < 11; index++) {
-      yield {
+  const stat = vi.fn<ReaderFileClient["stat"]>((target) => {
+    const index = Number(target.path?.split("/").at(-1)?.split(".")[0]);
+    return Promise.resolve({
+      ok: true,
+      diagnostics: [],
+      value: {
         fileId: `file-${String(index)}`,
         path: `files/${String(index)}.png`,
         revision: "file-revision",
@@ -108,14 +111,14 @@ function readFixture(download: (file: CollectionFileDescriptor) => Promise<Blob>
         mediaType: "image/png",
         mediaClass: "image",
         modifiedAt: "2026-09-24T00:00:00Z",
-      };
-    }
+      },
+    });
   });
-  return { repository: new ConnectCollectionFileRepository({ list, download }), list };
+  return { repository: new ConnectCollectionFileRepository({ stat, download }), stat };
 }
 
 describe("ConnectCollectionFileRepository", () => {
-  it("exports an exact original revision and reuses its folder index", async () => {
+  it("exports exact revisions using fresh point metadata rather than a folder index", async () => {
     const revision: `sha256:${string}` = `sha256:${"a".repeat(64)}`;
     const cropRevision: `sha256:${string}` = `sha256:${"b".repeat(64)}`;
     const list = vi.fn(async function* (): AsyncGenerator<CollectionFileDescriptor> {
@@ -144,7 +147,15 @@ describe("ConnectCollectionFileRepository", () => {
     const download = vi.fn((descriptor: { readonly path: string }) =>
       Promise.resolve(new Blob([descriptor.path.endsWith("pdf") ? "PDF!" : "PNG"])),
     );
-    const repository = new ConnectCollectionFileRepository({ list, download });
+    const stat = vi.fn<ReaderFileClient["stat"]>(async (target) => {
+      for await (const file of list()) {
+        if (file.path === target.path) {
+          return { ok: true, value: file, diagnostics: [] };
+        }
+      }
+      return { ok: true, value: null, diagnostics: [] };
+    });
+    const repository = new ConnectCollectionFileRepository({ stat, download });
 
     await expect(
       repository.read(
@@ -158,7 +169,10 @@ describe("ConnectCollectionFileRepository", () => {
       bytes: new Uint8Array([80, 68, 70, 33]),
     });
     await repository.read(collectionId("reading"), "files/reading/crop.png");
-    expect(list).toHaveBeenCalledOnce();
+    expect(stat.mock.calls.map(([target]) => target)).toEqual([
+      { path: "files/reading/paper.pdf" },
+      { path: "files/reading/crop.png" },
+    ]);
     expect(download).toHaveBeenCalledTimes(2);
   });
 
@@ -178,7 +192,10 @@ describe("ConnectCollectionFileRepository", () => {
       };
     };
     const repository = new ConnectCollectionFileRepository({
-      list,
+      stat: async () => {
+        const result = await list().next();
+        return { ok: true, value: result.value ?? null, diagnostics: [] };
+      },
       download: vi.fn(),
     });
 

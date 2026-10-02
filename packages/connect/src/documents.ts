@@ -8,14 +8,13 @@ import {
   type DocumentTarget,
 } from "@mdbase-reader/core";
 
+import { outcomeValue } from "./repository-client.js";
+
 import type { CollectionFileDescriptor, MdbaseConnection } from "@mdbase-dev/connect";
 
 export interface ReaderFileClient {
-  list(options?: {
-    readonly folder?: string;
-    readonly pageSize?: number;
-    readonly signal?: AbortSignal;
-  }): AsyncIterable<CollectionFileDescriptor>;
+  // The SDK owns files-stat-v1 discovery and the legacy paginated-list fallback.
+  stat: MdbaseConnection["files"]["stat"];
   download(file: CollectionFileDescriptor, options?: DocumentOpenOptions): Promise<Blob>;
 }
 
@@ -131,24 +130,19 @@ export class ConnectDocumentRepository implements DocumentRepository {
   ): Promise<CollectionFileDescriptor | null> {
     // Look up current metadata on every open: a previously discovered descriptor may
     // describe bytes that have since been replaced at the same file ID.
-    const path = portableFilePath(target.file);
-    const folder = parentFolder(path);
-    let migratedByPath: CollectionFileDescriptor | null = null;
-    for await (const descriptor of this.files.list({
-      ...(folder ? { folder } : {}),
-      pageSize: 100,
-      ...options,
-    })) {
-      // A file ID match always wins, so the rest of the folder need not be listed.
-      if (descriptor.fileId === target.fileId) {
-        return descriptor;
-      }
-      // A path alone is not enough to assume a new file ID is the same document.
-      if (descriptor.path === path && descriptor.contentDigest === target.revision) {
-        migratedByPath = descriptor;
-      }
+    const current = outcomeValue(
+      await this.files.stat({ fileId: target.fileId }, options),
+      "find document",
+    );
+    if (current) {
+      return current;
     }
-    return migratedByPath;
+    const migrated = outcomeValue(
+      await this.files.stat({ path: portableFilePath(target.file) }, options),
+      "find migrated document",
+    );
+    // A path alone is not enough to assume a new file ID is the same document.
+    return migrated?.contentDigest === target.revision ? migrated : null;
   }
 }
 
@@ -166,11 +160,6 @@ function documentCacheKey(descriptor: CollectionFileDescriptor): string {
 function portableFilePath(link: string): string {
   const wikilink = /^\[\[([^\]|]+)(?:\|[^\]]+)?\]\]$/u.exec(link.trim());
   return wikilink?.[1] ?? link.trim();
-}
-
-function parentFolder(path: string): string | undefined {
-  const separator = path.lastIndexOf("/");
-  return separator > 0 ? path.slice(0, separator) : undefined;
 }
 
 function mediaTypeFromPath(path: string): string {
