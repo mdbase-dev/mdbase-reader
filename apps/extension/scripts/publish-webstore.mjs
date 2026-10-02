@@ -50,23 +50,22 @@ export async function publishWebstore({
     throw new Error("Web Store publisher ID, item ID and access token are required.");
   }
   const name = `publishers/${publisherId}/items/${itemId}`;
-  async function request(path, options = {}) {
+  async function request(step, path, options = {}) {
     const response = await fetchImpl(`${api}/${path}`, {
       ...options,
       headers: { Authorization: `Bearer ${token}`, ...options.headers },
       signal: AbortSignal.timeout(120_000),
       redirect: "error",
     });
-    // Never log tokens or arbitrary server payloads (which could echo credentials).
     if (!response.ok)
       throw new Error(
-        `Web Store request failed (HTTP ${response.status}); inspect the dashboard. No automatic mutation retry.`,
+        `Web Store ${step} failed (HTTP ${response.status}${await googleError(response, token)}); inspect the dashboard. No automatic mutation retry.`,
       );
     return response.json();
   }
   const statusPath = `v2/${name}:fetchStatus`;
-  validateStatus(await request(statusPath), itemId, version);
-  const uploaded = await request(`upload/v2/${name}:upload`, {
+  validateStatus(await request("status check", statusPath), itemId, version);
+  const uploaded = await request("upload", `upload/v2/${name}:upload`, {
     method: "POST",
     headers: { "Content-Type": "application/zip" },
     body: archive,
@@ -75,7 +74,7 @@ export async function publishWebstore({
   let state = uploaded.uploadState;
   for (let attempt = 0; state === "IN_PROGRESS" && attempt < 30; attempt++) {
     await sleep(10_000);
-    state = (await request(statusPath)).lastAsyncUploadState;
+    state = (await request("upload status check", statusPath)).lastAsyncUploadState;
   }
   if (state !== "SUCCEEDED")
     throw new Error(
@@ -83,7 +82,7 @@ export async function publishWebstore({
     );
   if (uploaded.crxVersion && uploaded.crxVersion !== version)
     throw new Error("Uploaded version does not match release.");
-  const result = await request(`v2/${name}:publish`, {
+  const result = await request("submission", `v2/${name}:publish`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ publishType: "DEFAULT_PUBLISH", blockOnWarnings: true }),
@@ -95,6 +94,31 @@ export async function publishWebstore({
     throw new Error("Unexpected publish result. Inspect the dashboard before retrying.");
   }
   return result.state;
+}
+
+/**
+ * Google's own status and message for a failed request, which say what to fix (a missing
+ * permission justification, an invalid package). Only those two fields are kept, on one
+ * line and bounded, with anything resembling a credential removed: never the raw payload.
+ */
+export async function googleError(response, token) {
+  let error;
+  try {
+    error = (await response.json())?.error;
+  } catch {
+    return "";
+  }
+  const parts = [error?.status, error?.message]
+    .filter((part) => typeof part === "string" && part.trim())
+    .map((part) =>
+      part
+        .split(token)
+        .join("[redacted]")
+        .replace(/\b(?:ya29\.|Bearer\s+)[\w.~+/=-]+/gu, "[redacted]")
+        .replace(/\s+/gu, " ")
+        .trim(),
+    );
+  return parts.length ? `: ${parts.join(": ").slice(0, 400)}` : "";
 }
 
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
