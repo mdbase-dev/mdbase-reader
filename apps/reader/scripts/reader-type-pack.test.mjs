@@ -19,6 +19,9 @@ const application = await buildReaderManifest();
 const current = application.provisions.type_packs.find(
   (pack) => pack.manifest.id === "dev.mdbase.reader",
 );
+const viewPack = application.provisions.type_packs.find(
+  (pack) => pack.manifest.id === "mdbase.view",
+);
 const options = { installedBy: application.id };
 // The JavaScript installer predates `upgrade_from`; see referenceInstallerProvision.
 const provision = referenceInstallerProvision;
@@ -29,6 +32,12 @@ const provision = referenceInstallerProvision;
 const releasedDigests = {
   "1.0.0-beta.3": "sha256:712aa3d2ad5ca8719505b27c8c72f39fb9643660edbbeee3321e01ab53ef6938",
   "1.0.0-beta.4": "sha256:f66f0b5e96df834c2aeab9aaddb4dc6eb6533111892a121ccb2b89ec15660dac",
+};
+// The vendored mdbase-contracts view pack, pinned the same way. 1.0.1 ships the version-2
+// view starter (no pinned `type`, open top level) with `upgrade_from` the 1.0.0 starter;
+// confirmed with the mdbase CLI's `packs assess`.
+const releasedViewPackDigests = {
+  "1.0.1": "sha256:b32222bce5f16b01b87c34736b0e70bfad3583b5678557fa6c42ee706f7ef1d4",
 };
 // Exact bytes of the version-1 starter types released in beta.3, which beta.4 upgrades from.
 const beta3SeedDigests = {
@@ -108,8 +117,15 @@ test("Reader's new pack release preserves contract identities and capability pro
   assert.equal(current.manifest.version, "1.0.0-beta.4");
   assert.deepEqual(current.provides, legacy.provides);
   assert.equal(application.requirements.capabilities.contract_version, 2);
-  const view = application.provisions.type_packs.find((pack) => pack.manifest.id === "mdbase.view");
-  assert.equal(view.manifest.version, "1.0.0");
+  assert.equal(viewPack.manifest.version, "1.0.1");
+  assert.deepEqual(
+    viewPack.provides.map(({ id, version }) => `${id}@${version}`),
+    ["mdbase.view@1.0.0"],
+  );
+  assert.equal(
+    sha256(canonicalJson(viewPack.manifest)),
+    releasedViewPackDigests[viewPack.manifest.version],
+  );
 });
 
 test("the released pack digest stays immutable and is independent of deployment origin", async (t) => {
@@ -210,6 +226,53 @@ for (const typeKeys of ["[type]", "[mdbase_type]"]) {
     }
     for (const result of created)
       assert.equal(result.valid, true, JSON.stringify(result.diagnostics));
+  });
+
+  test(`view records named by type are valid where explicit_type_keys is ${typeKeys}`, async (t) => {
+    // mdbase.view 1.0.1's version-2 starter keeps `match: { where: { type: view } }` for
+    // hand-written records. Connect's engine accepts `create({ type: "view" })` in a
+    // [mdbase_type] collection (checked with the mdbase CLI), but this JavaScript SDK's
+    // create still requires the match rule to hold, so write the record as the engine does.
+    const root = await collection(t);
+    await apply(root, viewPack, await assess(root, viewPack));
+    await writeFile(
+      join(root, "mdbase.yaml"),
+      `spec_version: 0.3.0\nsettings:\n  explicit_type_keys: ${typeKeys}\n`,
+    );
+    const typeKey = typeKeys.slice(1, -1);
+    await mkdir(join(root, "views"));
+    await writeFile(
+      join(root, "views", "example.md"),
+      [
+        "---",
+        `${typeKey}: view`,
+        "id: reader.library.example",
+        "version: 1",
+        "name: Example",
+        // In a [mdbase_type] collection `type` is ordinary data the open top level accepts.
+        ...(typeKey === "mdbase_type" ? ["type: article-journal"] : []),
+        "views:",
+        "  - id: all",
+        "    name: All",
+        "---",
+        "",
+      ].join("\n"),
+    );
+    const opened = await Collection.open(root);
+    assert.ok(opened.collection, opened.error?.message);
+    try {
+      const validation = await opened.collection.validate("views/example.md");
+      assert.equal(validation.valid, true, JSON.stringify(validation.issues));
+      const view = await opened.collection.getContractView(
+        "views/example.md",
+        "mdbase.view",
+        "1.0.0",
+      );
+      assert.equal(view.valid, true);
+      assert.equal(view.view.name, "Example");
+    } finally {
+      await opened.collection.close();
+    }
   });
 }
 

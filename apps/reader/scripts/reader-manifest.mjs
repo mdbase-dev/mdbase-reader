@@ -13,7 +13,7 @@ export const READER_TYPE_PACK_VERSION = "1.0.0-beta.4";
 const projectRoot = resolve(import.meta.dirname, "..");
 // Reader saves library views as mdbase.view records; this is the published
 // mdbase-contracts provision, embedded byte-for-byte.
-const viewPackPath = resolve(projectRoot, "mdbase", "packs", "mdbase.view-1.0.0.json");
+const viewPackPath = resolve(projectRoot, "mdbase", "packs", "mdbase.view-1.0.1.json");
 // Seed types belong to the collection once installed. Version 1 (pack beta.3) declared
 // `type: { const: <name> }` and required `type`, which fails in collections whose
 // settings.explicit_type_keys record the type elsewhere (such as `[mdbase_type]`, where
