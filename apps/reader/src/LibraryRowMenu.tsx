@@ -220,6 +220,9 @@ function useDismiss(
       }
     };
     const onKeyDown = (event: KeyboardEvent): void => {
+      if (event.target instanceof Element && event.target.closest("dialog[open]")) {
+        return;
+      }
       if (event.key === "Escape") {
         event.stopPropagation();
         dismiss();

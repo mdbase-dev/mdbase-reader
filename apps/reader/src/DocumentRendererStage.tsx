@@ -1,4 +1,5 @@
-import type { JSX, ReactNode } from "react";
+import { FeedbackButton, useFeedback } from "@mdbase-dev/ui/feedback";
+import { useEffect, type JSX, type ReactNode } from "react";
 
 export type RendererState =
   { readonly status: "opening" | "ready" } | { readonly status: "error"; readonly message: string };
@@ -14,6 +15,12 @@ export function RendererStage({
   readonly errorName: string;
   readonly children: ReactNode;
 }): JSX.Element {
+  const { reportError } = useFeedback();
+  useEffect(() => {
+    if (state.status === "error") {
+      reportError({ code: "preview_failed" });
+    }
+  }, [state.status, reportError]);
   return (
     <div className="document-renderer-stage">
       {children}
@@ -49,6 +56,7 @@ export function DocumentMessage({
       role={tone === "error" ? "alert" : "status"}
     >
       <span>{label}</span>
+      {tone === "error" ? <FeedbackButton topic="problem" /> : null}
       {action ? (
         <button type="button" onClick={action.run}>
           {action.label}

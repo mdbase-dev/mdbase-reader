@@ -12,6 +12,8 @@ export default defineConfig({
   plugins: [react(), deploymentRevision(buildId)],
   resolve: {
     dedupe: [
+      "react",
+      "react-dom",
       "@codemirror/autocomplete",
       "@codemirror/commands",
       "@codemirror/language",

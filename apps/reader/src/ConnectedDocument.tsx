@@ -1,3 +1,4 @@
+import { useFeedback } from "@mdbase-dev/ui/feedback";
 import { lazy, Suspense, useCallback, useEffect, useMemo, useState, type JSX } from "react";
 
 import { isEpub, isHtml, isPdf } from "./document-media.js";
@@ -63,6 +64,7 @@ function OpenConnectedDocument({
   source,
   onSurfaceChange,
 }: ConnectedDocumentProps & { readonly descriptor: DocumentDescriptor }): JSX.Element {
+  const { reportError } = useFeedback();
   const [state, setState] = useState<OpenDocumentState>({ status: "opening" });
   const [attempt, setAttempt] = useState(0);
   const stableDescriptor = useMemo(
@@ -99,7 +101,8 @@ function OpenConnectedDocument({
         }
       })
       .catch((reason: unknown) => {
-        if (active) {
+        if (active && !controller.signal.aborted) {
+          reportError({ code: "source_open_failed" });
           setState({ status: "error", message: message(reason) });
         }
       });
@@ -110,7 +113,7 @@ function OpenConnectedDocument({
         void opened.close();
       }
     };
-  }, [attempt, repository, source.collectionId, stableDescriptor]);
+  }, [attempt, repository, source.collectionId, stableDescriptor, reportError]);
 
   useEffect(() => () => onSurfaceChange(null), [onSurfaceChange]);
   const handle = state.status === "open" ? state.handle : null;
