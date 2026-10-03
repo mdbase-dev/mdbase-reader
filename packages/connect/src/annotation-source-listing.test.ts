@@ -16,6 +16,12 @@ import type {
   RecordDocument,
 } from "@mdbase-dev/connect";
 
+const legacyAuthorityFeatures = {
+  supportsAuthorityFeature: vi.fn(() =>
+    Promise.resolve({ ok: true as const, value: false, diagnostics: [] }),
+  ),
+};
+
 interface StoredAnnotation {
   frontmatter: JsonObject;
   body: string;
@@ -42,7 +48,9 @@ function authority(
   links: Readonly<Record<string, string | null>>,
   onQuery: (input: QueryInput) => void = () => undefined,
 ): {
-  queryPages: Mock<ReaderConnectClient["queryPages"]>;
+  queryPages: Mock<
+    (input: QueryInput, options?: QueryPagesOptions) => AsyncGenerator<ConnectOutcome<QueryPage>>
+  >;
   readMany: Mock<ReaderConnectClient["readMany"]>;
   read: Mock<(input: ReadInput) => Promise<ConnectOutcome<RecordDocument>>>;
   client: ReaderConnectClient;
@@ -142,7 +150,12 @@ function authority(
     queryPages,
     readMany,
     read,
-    client: { queryPages, readMany, read } as unknown as ReaderConnectClient,
+    client: {
+      ...legacyAuthorityFeatures,
+      queryPages,
+      readMany,
+      read,
+    } as unknown as ReaderConnectClient,
   };
 }
 

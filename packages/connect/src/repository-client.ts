@@ -11,6 +11,8 @@ import type {
   ConnectProblem,
   MdbaseConnection,
   QueryInput,
+  QueryMetadataInput,
+  QueryMetadataPage,
   QueryPage,
   QueryResult,
   ReadInput,
@@ -29,12 +31,20 @@ export interface ReaderQueryPagesOptions extends ReaderRequestOptions {
 }
 
 export interface ReaderConnectClient {
+  supportsAuthorityFeature(
+    id: string,
+    options?: ReaderRequestOptions,
+  ): Promise<ConnectOutcome<boolean>>;
   read(input: ReadInput, options?: ReaderRequestOptions): Promise<ConnectOutcome<RecordDocument>>;
   readMany(
     paths: readonly string[],
     options?: ReadManyOptions,
   ): Promise<ConnectOutcome<ReadManyResult>>;
   query(input: QueryInput, options?: ReaderRequestOptions): Promise<ConnectOutcome<QueryResult>>;
+  queryPages(
+    input: QueryMetadataInput,
+    options?: ReaderQueryPagesOptions,
+  ): AsyncIterable<ConnectOutcome<QueryMetadataPage>>;
   queryPages(
     input: QueryInput,
     options?: ReaderQueryPagesOptions,
@@ -123,18 +133,29 @@ export async function recordPathById(
   id: string,
   options: ReaderRequestOptions = {},
 ): Promise<string | null> {
-  for await (const outcome of client.queryPages(
-    {
-      where: `id == ${JSON.stringify(id)}`,
-      frontmatterMode: "effective",
-    },
-    { ...options, firstPageSize: 50, pageSize: 50 },
-  )) {
-    const page = outcomeValue(outcome, "query records");
+  const input: QueryInput = {
+    where: `id == ${JSON.stringify(id)}`,
+    frontmatterMode: "effective",
+  };
+  const metadata = outcomeValue(
+    await client.supportsAuthorityFeature("query-metadata-v1", options),
+    "discover metadata queries",
+  );
+  const pages = metadata
+    ? client.queryPages(
+        { ...input, output: "metadata", includeBody: false, select: ["id"] },
+        options,
+      )
+    : client.queryPages(input, { ...options, firstPageSize: 50, pageSize: 50 });
+  for await (const outcome of pages) {
+    const page = outcomeValue<QueryPage | QueryMetadataPage>(outcome, "query records");
     let match: string | null = null;
-    for (const { path, effectiveFrontmatter, frontmatter } of page.results) {
-      const candidate = (effectiveFrontmatter ?? frontmatter)?.["id"];
-      match ??= candidate === id ? path : null;
+    for (const record of page.results) {
+      const candidate =
+        "file" in record
+          ? (record.effectiveFrontmatter ?? record.frontmatter)?.["id"]
+          : record.values["id"];
+      match ??= candidate === id ? record.path : null;
     }
     if (match) {
       return match;
@@ -149,7 +170,33 @@ export async function recordPathById(
  */
 export function connectClient(connection: MdbaseConnection): ReaderConnectClient {
   const route = (): string => connection.route;
+  function queryPages(
+    input: QueryMetadataInput,
+    options?: ReaderQueryPagesOptions,
+  ): AsyncIterable<ConnectOutcome<QueryMetadataPage>>;
+  function queryPages(
+    input: QueryInput,
+    options?: ReaderQueryPagesOptions,
+  ): AsyncIterable<ConnectOutcome<QueryPage>>;
+  function queryPages(
+    input: QueryInput | QueryMetadataInput,
+    options?: ReaderQueryPagesOptions,
+  ): AsyncIterable<ConnectOutcome<QueryPage | QueryMetadataPage>> {
+    const paging = {
+      ...(options?.firstPageSize === undefined ? {} : { firstPageSize: options.firstPageSize }),
+      ...(options?.pageSize === undefined ? {} : { pageSize: options.pageSize }),
+      ...connectOptions(options),
+    };
+    return readerDiagnostics.pages<QueryPage | QueryMetadataPage>(
+      route,
+      input.output === "metadata"
+        ? connection.queryPages(input, paging)
+        : connection.queryPages(input, paging),
+    );
+  }
   return {
+    supportsAuthorityFeature: (id, options) =>
+      connection.supportsAuthorityFeature(id, connectOptions(options)),
     read: (input, options) =>
       readerDiagnostics.measure("read", route, () =>
         connection.read(input, connectOptions(options)),
@@ -160,15 +207,7 @@ export function connectClient(connection: MdbaseConnection): ReaderConnectClient
       readerDiagnostics.measure("query", route, () =>
         connection.query(input, connectOptions(options)),
       ),
-    queryPages: (input, options) =>
-      readerDiagnostics.pages(
-        route,
-        connection.queryPages(input, {
-          ...(options?.firstPageSize === undefined ? {} : { firstPageSize: options.firstPageSize }),
-          ...(options?.pageSize === undefined ? {} : { pageSize: options.pageSize }),
-          ...connectOptions(options),
-        }),
-      ),
+    queryPages,
     create: (input) => readerDiagnostics.measure("create", route, () => connection.create(input)),
     update: (input) => readerDiagnostics.measure("update", route, () => connection.update(input)),
     preflightDelete: (input) =>

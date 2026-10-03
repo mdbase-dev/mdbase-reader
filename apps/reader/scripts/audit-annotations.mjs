@@ -161,7 +161,7 @@ export async function auditAnnotations(page, { screenshot, blockWrites }) {
   completed.push(
     "Local annotation search, comment filtering, sort controls, and return-to-reading work",
   );
-  completed.push(...(await auditAnnotationWorkbench(page, { screenshot, open })));
+  completed.push(...(await auditAnnotationWorkbench(page, { screenshot, open, blockWrites })));
   await expect(page.frameLocator("iframe.html-viewer:visible").locator("h1")).toBeVisible();
   await page.emulateMedia({ colorScheme: "dark", reducedMotion: "reduce" });
   await screenshot("annotation-dark-inspector");

@@ -1,3 +1,4 @@
+import { signalMdbaseMark } from "@mdbase-dev/ui/mark-activity";
 import { buildCslBibliography, serializeCslBibliography } from "@mdbase-reader/core";
 import { useCallback, useMemo, useState } from "react";
 
@@ -27,33 +28,35 @@ export function useBibliographyExport(
     readonly status: BibliographyExportStatus;
     readonly message: string | null;
   }>({ status: "idle", message: null });
+  const fail = useCallback((message: string): void => {
+    signalMdbaseMark("error");
+    setState({ status: "error", message });
+  }, []);
   const save = useCallback(
     (items: ReturnType<typeof buildCslBibliography>["items"]): void => {
       if (!saveFile) {
-        setState({ status: "error", message: "File export is unavailable in this build." });
+        fail("File export is unavailable in this build.");
         return;
       }
       if (items.length === 0) {
-        setState({ status: "error", message: "No valid citations are ready to export." });
+        fail("No valid citations are ready to export.");
         return;
       }
       setState({ status: "exporting", message: null });
       const contents = serializeCslBibliography(items);
       void saveFile("references.json", new Blob([contents], { type: "application/json" }))
-        .then(() =>
+        .then(() => {
+          signalMdbaseMark("saved");
           setState({
             status: "success",
             message: `Exported ${countLabel(items.length, "citation")}.`,
-          }),
-        )
+          });
+        })
         .catch((reason: unknown) =>
-          setState({
-            status: "error",
-            message: readerErrorMessage(reason, "Reader could not export the bibliography."),
-          }),
+          fail(readerErrorMessage(reason, "Reader could not export the bibliography.")),
         );
     },
-    [saveFile],
+    [fail, saveFile],
   );
   const run = useCallback((): void => save(bibliography.items), [bibliography, save]);
   const runFor = useCallback(

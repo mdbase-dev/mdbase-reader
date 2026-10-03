@@ -1,4 +1,4 @@
-# Private feedback integration (release-blocked)
+# Private feedback integration
 
 This branch uses the shared `@mdbase-dev/ui/feedback` provider, form, screenshot
 capture/markup and verification. It adds no email adapter, telemetry or storage.
@@ -15,12 +15,11 @@ and background refreshes do not. Global capture-phase shortcuts ignore dialogs.
 
 ## Release dependency
 
-Do not merge or deploy this branch until the UI package containing these exports
-has been published through mdbase-connect's coordinated release process. The
-currently pinned beta.123 does **not** contain them. Update all existing UI pins
-and regenerate the lockfile from that actual published version, then run clean
-install, full CI and the browser acceptance again. Local worktree links are used
-only for isolated verification and are not committed as dependencies.
+The integration now uses the published `@mdbase-dev/ui@0.1.0-beta.124`, which
+contains the feedback exports and was published through the coordinated Connect
+release. All workspace UI pins and the lockfile use that actual version. Verify
+with a fresh frozen-lockfile install, full CI and the intercepted browser
+acceptance; local worktree links are not release evidence.
 
 Deploy the v1/v2-compatible feedback Worker first via guarded cloud-ops. Approve
 exact Reader origins in CORS and the separate Turnstile widgets before enabling
@@ -29,9 +28,18 @@ these build variables:
 - `VITE_MDBASE_FEEDBACK_URL`: approved environment's `/v1/feedback` endpoint.
 - `VITE_MDBASE_FEEDBACK_TURNSTILE_SITE_KEY`: that environment's public widget key.
 
-Unset/invalid endpoints hide feedback. Existing deployment tooling supplies
-`VITE_MDBASE_ENV` and `VITE_MDBASE_READER_BUILD_ID`; no implicit production endpoint
-is selected. No production widget, secrets or deployment is changed here.
+Unset/invalid endpoints hide feedback. Deployment workflows map the
+environment-scoped public variables `MDBASE_FEEDBACK_URL` and
+`MDBASE_FEEDBACK_TURNSTILE_SITE_KEY` to those build variables. Keep them unset
+until the corresponding Worker CORS policy, widget hosts and live acceptance
+are ready. Existing tooling supplies `VITE_MDBASE_ENV` and
+`VITE_MDBASE_READER_BUILD_ID`; no implicit production endpoint is selected.
+
+The existing deployment contract identifies the exact candidate origins:
+`https://staging.mdbase-reader.pages.dev` (staging) and
+`https://reader.mdbase.dev` (production). These are a configuration proposal, not
+an assertion that CORS/widget-host approval or configuration has happened.
+No production widget, secret or deployment is changed by this source PR.
 
 ## Sample-data acceptance
 

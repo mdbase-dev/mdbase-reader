@@ -1,7 +1,7 @@
 ---
 kind: mdbase.type
 name: reader-annotation
-version: 2
+version: 1
 description: An independently addressable mdbase Reader annotation.
 schema:
   dialect: json-schema-2020-12
@@ -9,8 +9,9 @@ schema:
     $schema: https://json-schema.org/draft/2020-12/schema
     type: object
     additionalProperties: true
-    required: [id, source, annotation_type, created_at]
+    required: [type, id, source, annotation_type, created_at]
     properties:
+      type: { const: reader-annotation }
       id: { type: string, minLength: 1 }
       source: { type: string, minLength: 1 }
       document:

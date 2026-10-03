@@ -10,6 +10,8 @@ import {
   type MigrationResult,
 } from "@mdbase-reader/migration";
 
+import { markFraction, withMarkProgress } from "./mark-activity.js";
+
 import type { ReaderApplicationSession } from "@mdbase-reader/connect";
 export interface ImportState {
   plan: MigrationPlan | null;
@@ -150,10 +152,17 @@ export class ImportController {
     this.update({ boundTarget: target.collectionId });
     void this.task(async (signal) => {
       this.update({ result: null });
-      const result = await runMigration(plan, target, signal, (progress) => {
-        this.update({ progress, message: `${progress.phase} — ${name}` });
-        saveProgress(plan.service, progress);
-      });
+      // The mark fills with the import and plays saved or error when it ends; a stop is quiet.
+      const result = await withMarkProgress(
+        (mark) =>
+          runMigration(plan, target, signal, (progress) => {
+            mark(markFraction(progress.completed, progress.total));
+            this.update({ progress, message: `${progress.phase} — ${name}` });
+            saveProgress(plan.service, progress);
+          }),
+        undefined,
+        signal,
+      );
       this.client?.forget();
       this.update({
         result,

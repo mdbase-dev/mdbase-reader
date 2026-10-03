@@ -34,6 +34,26 @@ jobs:
         run: pnpm --filter @mdbase-reader/app exec playwright install --with-deps chromium
       - name: Verify PDF gestures and mobile highlight persistence
         run: pnpm --filter @mdbase-reader/app test:pdf-touch
+      - name: Verify private feedback with sample data and intercepted delivery
+        env:
+          VITE_MDBASE_FEEDBACK_URL: http://127.0.0.1:8891/v1/feedback
+          VITE_MDBASE_ENV: lab
+        run: |
+          pnpm --filter @mdbase-reader/app build
+          pnpm --filter @mdbase-reader/app exec vite preview --host 127.0.0.1 --port 8891 --strictPort > "$RUNNER_TEMP/reader-feedback-preview.log" 2>&1 &
+          preview_pid=$!
+          trap 'kill "$preview_pid" 2>/dev/null || true' EXIT
+          ready=0
+          for attempt in {1..30}; do
+            kill -0 "$preview_pid" 2>/dev/null || exit 1
+            if curl --max-time 2 --fail --silent http://127.0.0.1:8891/ >/dev/null; then
+              ready=1
+              break
+            fi
+            sleep 1
+          done
+          test "$ready" -eq 1
+          pnpm --filter @mdbase-reader/app test:feedback
       # Generated manifests are committed for production; building for it must leave the tree clean.
       - run: pnpm build
         env:

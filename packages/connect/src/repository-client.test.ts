@@ -102,11 +102,16 @@ describe("Reader Connect SDK integration", () => {
     expect(query).toHaveBeenCalledTimes(2);
     expect(create).toHaveBeenCalledOnce();
   });
+});
 
+describe("Reader cursor lifetimes", () => {
   it("uses SDK cursor iteration and releases it on an early record match", async () => {
     let iteratorClosed = false;
     const queryPages = vi.fn(() => pages());
-    const client = { queryPages } as unknown as ReturnType<typeof connectClient>;
+    const client = {
+      supportsAuthorityFeature: vi.fn(() => Promise.resolve(success(false))),
+      queryPages,
+    } as unknown as ReturnType<typeof connectClient>;
 
     async function* pages(): AsyncGenerator<ConnectOutcome<QueryPage>> {
       try {
@@ -153,6 +158,7 @@ describe("Reader record lookup by ID", () => {
       file: {},
     }));
     const client = {
+      supportsAuthorityFeature: vi.fn(() => Promise.resolve(success(false))),
       queryPages: vi.fn(async function* () {
         yield await Promise.resolve(
           success({ results, page: 0, offset: 0, loaded: 3, complete: true }),

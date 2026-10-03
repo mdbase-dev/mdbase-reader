@@ -1,6 +1,7 @@
 import { ConnectDocumentError, type ReaderFileClient } from "./documents.js";
+import { outcomeValue } from "./repository-client.js";
 
-import type { CollectionFileDescriptor, MdbaseConnection } from "@mdbase-dev/connect";
+import type { MdbaseConnection } from "@mdbase-dev/connect";
 import type {
   CollectionFileRepository,
   CollectionId,
@@ -14,8 +15,6 @@ import type {
 const MAX_ACTIVE_READS = 2;
 
 export class ConnectCollectionFileRepository implements CollectionFileRepository {
-  readonly #descriptorsByPath = new Map<string, CollectionFileDescriptor>();
-  readonly #loadedFolders = new Set<string>();
   readonly #readWaiters: (() => void)[] = [];
   #activeReads = 0;
 
@@ -79,7 +78,7 @@ export class ConnectCollectionFileRepository implements CollectionFileRepository
     options: ReaderRequestOptions,
   ): Promise<ExportedCollectionFile> {
     const path = portableFilePath(file);
-    const descriptor = await this.#find(path, options);
+    const descriptor = outcomeValue(await this.files.stat({ path }, options), "find export file");
     if (!descriptor) {
       throw new ConnectDocumentError("export file", "file_not_found");
     }
@@ -94,24 +93,6 @@ export class ConnectCollectionFileRepository implements CollectionFileRepository
       mediaType: descriptor.mediaType ?? (blob.type || mediaTypeFromPath(descriptor.path)),
       bytes: new Uint8Array(await blob.arrayBuffer()),
     };
-  }
-
-  async #find(
-    path: string,
-    options: ReaderRequestOptions,
-  ): Promise<CollectionFileDescriptor | null> {
-    const cached = this.#descriptorsByPath.get(path);
-    if (cached) {
-      return cached;
-    }
-    const folder = parentFolder(path);
-    if (!this.#loadedFolders.has(folder)) {
-      for await (const descriptor of this.files.list({ folder, pageSize: 100, ...options })) {
-        this.#descriptorsByPath.set(descriptor.path, descriptor);
-      }
-      this.#loadedFolders.add(folder);
-    }
-    return this.#descriptorsByPath.get(path) ?? null;
   }
 }
 
@@ -139,11 +120,6 @@ function abortError(signal?: AbortSignal): Error {
 function portableFilePath(link: string): string {
   const wikilink = /^\[\[([^\]|]+)(?:\|[^\]]+)?\]\]$/u.exec(link.trim());
   return wikilink?.[1] ?? link.trim();
-}
-
-function parentFolder(path: string): string {
-  const separator = path.lastIndexOf("/");
-  return separator > 0 ? path.slice(0, separator) : "";
 }
 
 function mediaTypeFromPath(path: string): string {

@@ -1,6 +1,7 @@
 import { AppSwitcher } from "@mdbase-dev/ui/app-switcher";
 import { shortcutLabel } from "@mdbase-dev/ui/command-palette";
 import { FeedbackButton } from "@mdbase-dev/ui/feedback";
+import { useMdbaseMarkBusy } from "@mdbase-dev/ui/mark-activity";
 
 import { CollectionPicker } from "./CollectionPicker.js";
 import { DisplayMenu } from "./DisplayMenu.js";
@@ -207,6 +208,7 @@ function ConnectionState({
   readonly directAccess: ReaderDirectAccessState;
 }): JSX.Element {
   const { snapshot, working, problem, request } = directAccess;
+  useMdbaseMarkBusy(state === "syncing" && "stream");
   if (snapshot?.authority !== "connector" || state !== "connected") {
     return <PlainConnectionState state={state} />;
   }

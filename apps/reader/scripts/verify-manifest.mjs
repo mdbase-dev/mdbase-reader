@@ -44,6 +44,11 @@ try {
       installedBy: manifest.id,
     });
     assertValid(assessment, "assessment");
+    if (assessment.result.status !== "install") {
+      fail(
+        `${pack.manifest.id} should install into an empty collection, not '${assessment.result.status}'.`,
+      );
+    }
     const installed = await applyTypePack(collectionRoot, provision, {
       installedBy: manifest.id,
       expectedAssessmentDigest: assessment.result.assessment_digest,
