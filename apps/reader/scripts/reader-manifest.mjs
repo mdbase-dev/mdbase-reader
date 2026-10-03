@@ -8,18 +8,23 @@ import { parse as parseYaml } from "yaml";
 // Pack releases are immutable independently of the data contracts they provide.
 // beta.2 was used historically; do not reuse it even though the contracts remain beta.1.
 // beta.4 ships version 2 of the starter types, which no longer pin or require `type`.
-export const READER_TYPE_PACK_VERSION = "1.0.0-beta.4";
+// beta.5 ships the same starters and lists every earlier starter as an upgrade baseline.
+export const READER_TYPE_PACK_VERSION = "1.0.0-beta.5";
 
 const projectRoot = resolve(import.meta.dirname, "..");
 // Reader saves library views as mdbase.view records; this is the published
 // mdbase-contracts provision, embedded byte-for-byte.
 const viewPackPath = resolve(projectRoot, "mdbase", "packs", "mdbase.view-1.0.1.json");
-// Seed types belong to the collection once installed. Version 1 (pack beta.3) declared
-// `type: { const: <name> }` and required `type`, which fails in collections whose
+// Seed types belong to the collection once installed. Version 1 (packs beta.1 to beta.3)
+// declared `type: { const: <name> }` and required `type`, which fails in collections whose
 // settings.explicit_type_keys record the type elsewhere (such as `[mdbase_type]`, where
-// `type` holds CSL data). Each seed therefore names the exact previous bytes it replaces,
-// so Connect can offer a reviewed three-way upgrade that keeps collection edits.
-// Baselines under mdbase/baselines/ are released bytes: never edit them.
+// `type` holds CSL data). Each seed therefore lists the exact bytes of every starter Reader
+// has shipped for it, newest first, so Connect can offer a reviewed upgrade from any of
+// them: an unedited starter is replaced, and an edited one is merged three-way against the
+// starter it was installed from, keeping collection edits.
+// Baselines under mdbase/baselines/<pack version>/ are released bytes: never edit them.
+// A pack version that shipped a starter identical to an earlier one has no copy of it:
+// beta.2 changed only reader-source, and the beta.3 starters also shipped late in beta.1.
 const resources = [
   {
     kind: "contract",
@@ -38,14 +43,21 @@ const resources = [
     mode: "seed",
     source: "types/reader-source.md",
     target: "_types/reader-source.md",
-    upgradeFrom: "baselines/1.0.0-beta.3/types/reader-source.md",
+    upgradeFrom: [
+      "baselines/1.0.0-beta.3/types/reader-source.md",
+      "baselines/1.0.0-beta.2/types/reader-source.md",
+      "baselines/1.0.0-beta.1/types/reader-source.md",
+    ],
   },
   {
     kind: "type",
     mode: "seed",
     source: "types/reader-annotation.md",
     target: "_types/reader-annotation.md",
-    upgradeFrom: "baselines/1.0.0-beta.3/types/reader-annotation.md",
+    upgradeFrom: [
+      "baselines/1.0.0-beta.3/types/reader-annotation.md",
+      "baselines/1.0.0-beta.1/types/reader-annotation.md",
+    ],
   },
 ];
 
@@ -58,16 +70,21 @@ export async function buildReaderManifest({
   const packResources = await Promise.all(
     resources.map(async (resource) => {
       const document = await readFile(resolve(projectRoot, "mdbase", resource.source), "utf8");
-      const baseline = resource.upgradeFrom
-        ? await readFile(resolve(projectRoot, "mdbase", resource.upgradeFrom), "utf8")
-        : undefined;
+      const baselines = await Promise.all(
+        (resource.upgradeFrom ?? []).map(async (path) => {
+          const baseline = await readFile(resolve(projectRoot, "mdbase", path), "utf8");
+          return {
+            digest: digest(baseline),
+            version: parseFrontmatter(baseline).version,
+            document: baseline,
+          };
+        }),
+      );
       return {
         ...resource,
         digest: digest(document),
         document,
-        ...(baseline === undefined
-          ? {}
-          : { upgrade_from: { digest: digest(baseline), document: baseline } }),
+        ...(baselines.length === 0 ? {} : { upgrade_from: baselines }),
         ...(resource.kind === "contract"
           ? { contractDigest: dataContractDigest(parseFrontmatter(document)) }
           : {}),
@@ -135,7 +152,7 @@ function digest(document) {
 function parseFrontmatter(document) {
   const match = /^---\r?\n([\s\S]*?)\r?\n---(?:\r?\n|$)/u.exec(document);
   if (!match?.[1]) {
-    throw new Error("Reader contract resource has no YAML frontmatter.");
+    throw new Error("Reader pack resource has no YAML frontmatter.");
   }
   return parseYaml(match[1]);
 }
