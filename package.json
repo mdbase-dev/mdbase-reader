@@ -26,19 +26,19 @@
   },
   "devDependencies": {
     "@callumalpass/mdbase": "0.3.0-rc.9",
-    "@eslint/js": "^9.39.2",
+    "@eslint/js": "^10.0.1",
     "@mdbase-dev/connect-dev": "0.1.0-beta.125",
-    "@types/node": "^22.19.11",
-    "eslint": "^9.39.2",
+    "@types/node": "^26.6.3",
+    "eslint": "^10.11.0",
     "eslint-import-resolver-typescript": "^4.4.5",
     "eslint-plugin-import-x": "^4.17.1",
     "eslint-plugin-jsx-a11y": "^6.10.2",
     "eslint-plugin-react-hooks": "^7.1.1",
-    "globals": "^16.5.0",
-    "prettier": "^3.9.0",
-    "typescript": "^5.9.3",
-    "typescript-eslint": "^8.66.0",
-    "vitest": "^4.1.10",
+    "globals": "^17.12.0",
+    "prettier": "^3.9.9",
+    "typescript": "^7.0.2",
+    "typescript-eslint": "^8.71.0",
+    "vitest": "^5.0.2",
     "yaml": "^2.9.0"
   }
 }
