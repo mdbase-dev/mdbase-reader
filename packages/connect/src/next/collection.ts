@@ -18,6 +18,7 @@ import { ConnectSourceImportRepository } from "../source-imports.js";
 import { nextReaderClient, type NextReaderClientOptions } from "./client.js";
 import { nextRepositoryError } from "./errors.js";
 import { nextReaderFiles } from "./files.js";
+import { NextMigrationTarget } from "./migration-target.js";
 
 import type {
   ReaderConnectedCollection,
@@ -35,7 +36,6 @@ import type {
   SavedViewList,
 } from "@mdbase-dev/connect";
 import type { BodyUpdateRecovery } from "@mdbase-reader/core";
-import type { MigrationTarget } from "@mdbase-reader/migration";
 
 /**
  * Reader's repositories over an mdbase-next client. Source, annotation, search,
@@ -54,7 +54,7 @@ export function nextReaderCollection(
     collectionName: grant.displayName,
     sources: new ConnectSourceRepository(client),
     sourceImports: new ConnectSourceImportRepository(client, files),
-    migration: unsupportedMigration(grant.collectionId),
+    migration: new NextMigrationTarget(db),
     annotations: new ConnectAnnotationRepository(client),
     annotationAssets: new ConnectAnnotationAssetRepository(files),
     documents: new ConnectDocumentRepository(files),
@@ -72,15 +72,6 @@ function unsupported(feature: string): Error {
     "unsupported_operation",
     `${feature} is not available on the mdbase-next backend yet`,
   );
-}
-
-/**
- * STUB: the importer relies on the old SDK's durable pending-mutation journal.
- * mdbase-next writes are idempotent by mutation ID, so this needs a redesign, not a port.
- */
-function unsupportedMigration(id: string): MigrationTarget {
-  const refuse = (): Promise<never> => Promise.reject(unsupported("Importing a Reader library"));
-  return { collectionId: id, existing: refuse, files: refuse, upload: refuse, create: refuse };
 }
 
 /**
