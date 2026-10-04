@@ -12,7 +12,7 @@ import {
 
 import { markFraction, withMarkProgress } from "./mark-activity.js";
 
-import type { ReaderApplicationSession } from "@mdbase-reader/connect";
+import type { ReaderSession } from "@mdbase-reader/connect";
 export interface ImportState {
   plan: MigrationPlan | null;
   message: string;
@@ -37,7 +37,7 @@ export class ImportController {
   private listeners = new Set<() => void>();
   private active: AbortController | null = null;
   private client: ReadwiseClient | null = null;
-  constructor(private session: ReaderApplicationSession) {}
+  constructor(private session: ReaderSession) {}
   getSnapshot = (): ImportState => this.state;
   subscribe = (fn: () => void): (() => void) => {
     this.listeners.add(fn);

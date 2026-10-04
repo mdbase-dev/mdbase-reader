@@ -6,10 +6,7 @@ import {
 } from "./connect-session.js";
 import { annotationQuotes, drawPageQuotes, type PageQuote } from "./page-annotations.js";
 
-import type {
-  ReaderConnectedCollection,
-  ReaderPortableApplicationSession,
-} from "@mdbase-reader/connect";
+import type { ReaderConnectedCollection, ReaderPortableSession } from "@mdbase-reader/connect";
 
 /**
  * The part of page status that needs Connect. The service worker loads it (with the
@@ -29,7 +26,7 @@ export interface PageStatusConnect {
   drawPageQuotes(tabId: number, quotes: readonly PageQuote[], url: string): Promise<unknown>;
 }
 
-let session: Promise<ReaderPortableApplicationSession | null> | null = null;
+let session: Promise<ReaderPortableSession | null> | null = null;
 
 /** One Connect session per service-worker lifetime, sharing the panel's stored grants. */
 async function selectedCollection(): Promise<ReaderConnectedCollection | null> {

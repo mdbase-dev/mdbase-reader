@@ -2,7 +2,7 @@ import {
   connectProblemMessage,
   type ReaderConnectSnapshot,
   type ReaderDirectAccessController,
-  type ReaderPortableApplicationSession,
+  type ReaderPortableSession,
 } from "@mdbase-reader/connect";
 import { useCallback, useEffect, useState } from "react";
 
@@ -23,7 +23,7 @@ export interface ConnectLink {
   readonly deviceCode: string | null;
   readonly directAccess: ReaderDirectAccessController | null;
   /** Creates the session (grants load from extension storage) and restores the last collection. */
-  readonly open: () => Promise<ReaderPortableApplicationSession>;
+  readonly open: () => Promise<ReaderPortableSession>;
   readonly connect: (choose?: boolean) => Promise<void>;
   readonly retry: () => Promise<void>;
   readonly applySetup: () => Promise<void>;
@@ -48,7 +48,7 @@ export function useConnect(lock: ActionLock): ConnectLink {
     };
   }, [extension]);
 
-  const open = useCallback(async (): Promise<ReaderPortableApplicationSession> => {
+  const open = useCallback(async (): Promise<ReaderPortableSession> => {
     const created = await createExtensionSession();
     setExtension(created);
     const problem = connectProblemMessage(await created.session.start());
