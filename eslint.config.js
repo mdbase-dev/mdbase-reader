@@ -110,6 +110,8 @@ export default tseslint.config(
                 "electron",
                 "@capacitor/*",
                 "@mdbase-dev/connect",
+                "@mdbase-dev/sdk",
+                "@mdbase-dev/sdk/*",
                 "@embedpdf/*",
                 "@readium/*",
                 "@codemirror/*",

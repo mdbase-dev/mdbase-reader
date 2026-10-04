@@ -4,7 +4,8 @@
   "private": true,
   "type": "module",
   "exports": {
-    ".": "./src/index.ts"
+    ".": "./src/index.ts",
+    "./next": "./src/next/index.ts"
   },
   "scripts": {
     "test": "vitest run --passWithNoTests",
@@ -12,6 +13,7 @@
   },
   "dependencies": {
     "@mdbase-dev/connect": "0.1.0-beta.125",
+    "@mdbase-dev/sdk": "file:vendor/mdbase-dev-sdk-c573c96.tgz",
     "@mdbase-reader/core": "workspace:*",
     "@mdbase-reader/migration": "workspace:*",
     "yaml": "^2.9.0"

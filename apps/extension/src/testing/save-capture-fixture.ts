@@ -18,10 +18,7 @@ import {
 } from "../save-capture.js";
 
 import type { PageCapture, SelectedWebCapture } from "../page-capture.js";
-import type {
-  ReaderConnectedCollection,
-  ReaderPortableApplicationSession,
-} from "@mdbase-reader/connect";
+import type { ReaderConnectedCollection, ReaderPortableSession } from "@mdbase-reader/connect";
 
 export const capture: SelectedWebCapture = {
   kind: "html",
@@ -119,7 +116,7 @@ export function fixture() {
   } as unknown as ReaderConnectedCollection;
   const session = {
     recoverPendingMutations: vi.fn(() => Promise.resolve([])),
-  } as unknown as ReaderPortableApplicationSession;
+  } as unknown as ReaderPortableSession;
   const onSource = vi.fn();
   const journal = new Map<string, string>();
   const storage = {

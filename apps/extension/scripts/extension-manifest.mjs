@@ -14,6 +14,8 @@ export function extensionEnvironment(environment = process.env) {
     connectUrl: deployment.connectUrl,
     loopbackUrl: deployment.loopbackUrl,
     readerOrigin: deployment.origin,
+    // Opt-in mdbase-next SDK backend (MDBASE_SDK=next); Connect stays the default.
+    sdk: environment.MDBASE_SDK === "next" ? "next" : "connect",
   };
 }
 
