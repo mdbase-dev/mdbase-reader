@@ -33,9 +33,10 @@ It returns actual SDK `RecordView` objects and native mapped/tagged values:
 - Caller abort signals fence publication. The shared factory/session owns the
   client lifetime; this module has no SDK/session/lease/auth engine and no writes.
 
-The release-qualified SDK successor `8cbc82fb` archive/source/hash and SHA512
+The release-qualified SDK successor `9ab0f31d` archive/source/hash and SHA512
 are pinned in `vendor/mdbase-next-sdk.json`, including SDK808's session fix,
-SDK809 leases, SDK811's fixture fix and SDK814's shared read helpers. Reader's
+SDK809 leases, SDK811's fixture fix, SDK814's shared read helpers and SDK816's
+explicit environment selection. Reader's
 working pages/get implementation is unchanged; helper batching is not a native
 atomic snapshot, and People producer compatibility is not qualified here. This is source/package qualification,
 not per-app trust/origin/runtime/session/operation acceptance; no native Files
