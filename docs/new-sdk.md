@@ -74,3 +74,25 @@ The earlier SDK807 `5ba1314b` archive remains held and must not be reused. The
 corrected successor source/package pin was authorized after SDK808's actual merge
 and release qualification; it does not enable Reader's browser/session path.
 Journal integration remains last and local-only.
+
+## Public SDK sign-in UI
+
+The web app exposes an opt-in `ConnectReader.nativeSignIn` binding to the pinned
+SDK's actual `AppWebSignInSession`. `createNativeSignIn(options)` requires explicit
+owner-provided release, app identity, origins, runtime, locks and original signal;
+it does not guess them or replace the default Connect/extension runtimes.
+
+Sign in reserves the tab in the user gesture before asynchronous SDK start or
+expiry renewal. The SDK owns approval detection and protected state. The UI uses
+canonical status/email, reopen-tab, popup-blocked and interrupted wording. It
+shows only states the SDK can distinguish, not a fabricated decline or setup
+result. Sign out waits for SDK close; it is local shutdown, not membership
+revocation or protected-store deletion. Forget uses the actual selected SDK ID.
+The owner closes its session on teardown and replaces it only after confirmed
+close or explicit sign-in; retired views cannot publish into a replacement.
+
+The collection callback always refuses with **Opening collections isn't
+available in this build yet.** It creates no collection client or setup engine.
+Exact Reader native semantic pins await the shared native-digest producer; no
+Markdown/hash/fixture substitute is used. UI/presentation tests are stand-ins,
+not native authentication, Files, setup or LAB acceptance.
