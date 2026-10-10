@@ -82,8 +82,15 @@ SDK's actual `AppWebSignInSession`. `createNativeSignIn(options)` requires expli
 owner-provided release, app identity, origins, runtime, locks and original signal;
 it does not guess them or replace the default Connect/extension runtimes.
 
-Sign in reserves the tab in the user gesture before asynchronous SDK start or
-expiry renewal. The SDK owns approval detection and protected state. The UI uses
+Sign in synchronously reserves a named 620×760 Connect popup before SDK start
+or expiry renewal. The trusted popup keeps its production opener; the tab
+fallback detaches its opener before SDK-validated navigation. No secrets,
+postMessage approval or storage callback use the opener. The UI retains its
+original handle after handoff and closes on completed/terminal public statuses,
+never authorizing additional consent even when already paired. View teardown
+closes only its owned popup. A detached fallback tab is not claimed parent-closeable
+across origins. This follows TaskNotes' app-owned pattern without an SDK repin.
+The SDK owns approval detection and protected state. The UI uses
 canonical status/email, reopen-tab, popup-blocked and interrupted wording. Sign-in
 and secondary actions reuse Reader's existing shared control styles, including
 usable touch targets at 390px. It
