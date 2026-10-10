@@ -418,4 +418,31 @@ describe("NextReaderRecords pagination/lifetime (SDK stand-in)", () => {
       "Reader closed",
     );
   });
+
+  // Clients' regression: cancellation at the public describe recheck's nested
+  // promise boundary, not native parser/runtime or security qualification.
+  it.each(["full-source", "metadata"] as const)(
+    "does not publish %s after cancellation between recheck and delivery",
+    async (mode) => {
+      const f = await fixture();
+      const controller = new AbortController();
+      let calls = 0;
+      f.describe.mockImplementation(() => {
+        if (++calls === 2) {
+          queueMicrotask(() =>
+            queueMicrotask(() =>
+              queueMicrotask(() => controller.abort(new Error("Reader closed after recheck"))),
+            ),
+          );
+        }
+        return Promise.resolve(f.catalog);
+      });
+      const result =
+        mode === "full-source"
+          ? f.records.getSource(f.source.id, controller.signal)
+          : collect(f.records.sources(controller.signal));
+      await expect(result).rejects.toThrow("Reader closed after recheck");
+      expect(controller.signal.aborted).toBe(true);
+    },
+  );
 });

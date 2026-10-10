@@ -121,6 +121,7 @@ export class NextReaderRecords {
       }
       asOf = page.asOf;
       await this.assertProviders(domain, providers, signal);
+      signal.throwIfAborted();
       const records = page.records.map((record) => {
         if (identities.has(record.id)) {
           throw new Error("Reader metadata repeated a native record identity.");
@@ -161,6 +162,7 @@ export class NextReaderRecords {
       );
     }
     await this.assertProviders(domain, providers, signal);
+    signal.throwIfAborted();
     return project(domain, record, providers);
   }
 
