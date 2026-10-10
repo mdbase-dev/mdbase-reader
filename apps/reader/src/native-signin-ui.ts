@@ -1,10 +1,13 @@
 import { AppWebSignInSession } from "@mdbase-dev/sdk/app-host";
 
+import { openConnectPopup, type ConnectPopup } from "./connect-popup.js";
+
 import type {
   AppWebSignInSessionOptions,
   AppWebSignInSnapshot,
   AppWebSignInPortal,
 } from "@mdbase-dev/sdk/app-host";
+export { ConnectPopupBlocked as SignInTabBlocked } from "./connect-popup.js";
 
 export type NativeSignInSession = Pick<
   AppWebSignInSession<never>,
@@ -27,47 +30,35 @@ export const signInCopy = Object.freeze({
   signOut: "Sign out",
   unavailable: "Opening collections isn't available in this build yet.",
 });
-export class SignInTabBlocked extends Error {
-  constructor() {
-    super(signInCopy.tabBlocked);
-  }
-}
-
 /** UI portal only. Navigation URI comes from the SDK. */
-export function openSignInPortal(): AppWebSignInPortal {
-  const tab = window.open("about:blank", "_blank");
-  if (!tab) {
-    throw new SignInTabBlocked();
-  }
-  tab.opener = null;
-  return {
-    navigate(uri): void {
-      tab.location.replace(uri);
-    },
-    close(): void {
-      tab.close();
-    },
-  };
-}
+export const openSignInPortal = openConnectPopup;
+
+// Popup names are UI ownership identities, never native IDs or namespaces.
+let nextPortalKey = 0;
 export interface SignInPortalUi {
   reserve: () => void;
   open: () => AppWebSignInPortal;
   cancel: () => void;
 }
 export function createSignInPortalUi(): SignInPortalUi {
-  let reserved: AppWebSignInPortal | null = null;
+  const name = `mdbase-reader-connect-${String(++nextPortalKey)}`;
+  let active: ConnectPopup | null = null;
   return {
     reserve(): void {
-      reserved ??= openSignInPortal();
+      if (!active || active.closed) {
+        active = openSignInPortal(name);
+      }
     },
     open(): AppWebSignInPortal {
-      const portal = reserved ?? openSignInPortal();
-      reserved = null;
-      return portal;
+      if (!active || active.closed) {
+        active = openSignInPortal(name);
+      }
+      return active;
     },
     cancel(): void {
-      reserved?.close();
-      reserved = null;
+      const original = active;
+      active = null;
+      original?.close();
     },
   };
 }

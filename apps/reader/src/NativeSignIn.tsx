@@ -48,6 +48,15 @@ function observeForeground(
   };
 }
 
+const portalCloseStatuses = new Set([
+  "unselected",
+  "opening",
+  "setup_required",
+  "ready",
+  "blocked",
+  "closed",
+]);
+
 function NativeSignInView({ binding, onSignedOut }: NativeSignInProps): JSX.Element {
   const { session, portal } = binding;
   const snapshot = useSyncExternalStore(
@@ -70,9 +79,17 @@ function NativeSignInView({ binding, onSignedOut }: NativeSignInProps): JSX.Elem
     return () => {
       mounted.current = false;
       stop();
+      portal.cancel();
       // Borrowed SDK session: its actual owner handles unmount/HMR shutdown.
     };
-  }, [session]);
+  }, [session, portal]);
+
+  useEffect(() => {
+    // An already paired account may still be authorizing additional consent.
+    if (portalCloseStatuses.has(snapshot.status)) {
+      portal.cancel();
+    }
+  }, [portal, snapshot.status]);
 
   const act = async (action: () => Promise<unknown>): Promise<void> => {
     if (busy.current) {
