@@ -84,7 +84,9 @@ it does not guess them or replace the default Connect/extension runtimes.
 
 Sign in reserves the tab in the user gesture before asynchronous SDK start or
 expiry renewal. The SDK owns approval detection and protected state. The UI uses
-canonical status/email, reopen-tab, popup-blocked and interrupted wording. It
+canonical status/email, reopen-tab, popup-blocked and interrupted wording. Sign-in
+and secondary actions reuse Reader's existing shared control styles, including
+usable touch targets at 390px. It
 shows only states the SDK can distinguish, not a fabricated decline or setup
 result. Sign out waits for SDK close; it is local shutdown, not membership
 revocation or protected-store deletion. Forget uses the actual selected SDK ID.

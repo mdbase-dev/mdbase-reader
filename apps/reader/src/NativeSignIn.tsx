@@ -116,7 +116,7 @@ function NativeSignInView({ binding, onSignedOut }: NativeSignInProps): JSX.Elem
         <div className="connection-actions">
           {view.waiting ? (
             <button
-              className="text-action"
+              className="mdbase-button"
               type="button"
               disabled={working}
               onClick={() => void act(authorize)}
@@ -125,7 +125,7 @@ function NativeSignInView({ binding, onSignedOut }: NativeSignInProps): JSX.Elem
             </button>
           ) : !view.paired || view.error ? (
             <button
-              className="connection-connect"
+              className="mdbase-connect-action"
               type="button"
               disabled={working || view.disabled}
               onClick={() => void act(authorize)}
@@ -135,7 +135,7 @@ function NativeSignInView({ binding, onSignedOut }: NativeSignInProps): JSX.Elem
           ) : null}
           {view.paired ? (
             <button
-              className="text-action"
+              className="mdbase-button"
               type="button"
               disabled={working}
               onClick={() => void act(signOut)}
@@ -145,7 +145,7 @@ function NativeSignInView({ binding, onSignedOut }: NativeSignInProps): JSX.Elem
           ) : null}
           {snapshot.selectedCollectionId ? (
             <button
-              className="text-action"
+              className="mdbase-button"
               type="button"
               disabled={working}
               onClick={() => {
