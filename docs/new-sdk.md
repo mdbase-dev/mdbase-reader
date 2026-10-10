@@ -33,10 +33,11 @@ It returns actual SDK `RecordView` objects and native mapped/tagged values:
 - Caller abort signals fence publication. The shared factory/session owns the
   client lifetime; this module has no SDK/session/lease/auth engine and no writes.
 
-The release-qualified data-only SDK804 archive/source/hash are pinned in
-`vendor/mdbase-next-sdk.json`. It contains no held SDK807 sign-in/browser asset,
-no native Files producer and no Writer lease/session API. The archive comes from
-release, not npm. Tests use MemoryReplica record frames with synthetic Reader
+The release-qualified corrected SDK successor `561501d0` archive/source/hash
+and SHA512 are pinned in `vendor/mdbase-next-sdk.json`, including SDK808's session
+fix, SDK809 leases and SDK811's fixture fix. This is source/package qualification,
+not per-app trust/origin/runtime/session/operation acceptance; no native Files
+producer is qualified here. The archive comes from release, not npm. Tests use MemoryReplica record frames with synthetic Reader
 contract/type metadata and controlled safety responses. They are not native
 parser, manifest-install, custody, sign-in, runtime or LAB acceptance.
 
@@ -66,7 +67,7 @@ parser, manifest-install, custody, sign-in, runtime or LAB acceptance.
   Native writes need actual admitted provider mappings, current full-source/CAS
   evidence and truthful supplied grant/state preflight, without widening consent.
 
-SDK807's operational hold remains separate from this permitted older data-only
-work. No successor browser/session artifact may be consumed until actual merge,
-coordinator authorization and release rebuild/qualification are supplied. Journal
-integration is last and remains local-only.
+The earlier SDK807 `5ba1314b` archive remains held and must not be reused. The
+corrected successor source/package pin was authorized after SDK808's actual merge
+and release qualification; it does not enable Reader's browser/session path.
+Journal integration remains last and local-only.
