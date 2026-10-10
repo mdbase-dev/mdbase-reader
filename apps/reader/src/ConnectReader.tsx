@@ -29,9 +29,11 @@ import {
 import { ConnectionRetry, SelectedAuthorizationAction } from "./ConnectionLayout.js";
 import { readerErrorMessage } from "./errors.js";
 import { ChevronRightIcon, CollectionIcon, PlusIcon } from "./icons.js";
+import { NativeSignIn } from "./NativeSignIn.js";
 import { requestedAnnotation, requestedSourceId } from "./SourceDeepLink.js";
 import { startReaderStartupTiming } from "./startup-timing.js";
 
+import type { NativeSignInBinding } from "./native-signin-ui.js";
 import type { ReaderApp as ReaderAppComponent } from "./ReaderApp.js";
 const loadReaderApp = (): Promise<{ readonly ReaderApp: typeof ReaderAppComponent }> =>
   import("./ReaderApp.js");
@@ -54,7 +56,17 @@ async function startSession(): Promise<Awaited<ReturnType<typeof readerSession.s
   }
 }
 
-export function ConnectReader(): JSX.Element {
+export function ConnectReader({
+  nativeSignIn,
+}: {
+  nativeSignIn?: { binding: NativeSignInBinding; onSignedOut(): void };
+} = {}): JSX.Element {
+  // Qualified native owner composition supplies this SDK binding; the existing
+  // runtime remains the default until its actual build inputs are delivered.
+  return nativeSignIn ? <NativeSignIn {...nativeSignIn} /> : <LegacyConnectReader />;
+}
+
+function LegacyConnectReader(): JSX.Element {
   const { reportError } = useFeedback();
   const session = useSyncExternalStore(subscribe, snapshot, snapshot);
   const [error, setError] = useState<string | null>(null);
