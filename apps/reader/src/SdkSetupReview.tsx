@@ -1,5 +1,6 @@
 import { ConnectLayout } from "@mdbase-dev/ui/screens";
 import {
+  describeError,
   isMdbaseError,
   type MdbaseApplication,
   type MdbaseSetupPlan,
@@ -12,10 +13,33 @@ type State =
   | { readonly kind: "applying"; readonly plan: MdbaseSetupPlan }
   | { readonly kind: "failed"; readonly message: string };
 
-type Setup = Pick<MdbaseApplication, "setup">;
+type Setup = Pick<MdbaseApplication, "setup" | "configure">;
 
 const changedNote =
-  "This collection changed while you were reviewing. Here are the updated changes.";
+  "This collection changed while you were reviewing. Nothing was changed. Here are the updated changes.";
+const unknownNote =
+  "Reader couldn't confirm whether setup finished. Here is the collection as it is now.";
+
+/** Only a known refusal proves nothing was written. A lost reply after the
+ * request was sent, or an error that isn't an SDK error, may have applied. */
+function setupOutcome(error: unknown): "changed" | "unknown" | "failed" {
+  if (!isMdbaseError(error)) {
+    return "unknown";
+  }
+  if (error.reason === "setup_changed") {
+    return "changed";
+  }
+  return error.code === "outcome_unknown" || error.mutationId !== undefined ? "unknown" : "failed";
+}
+
+/** Nothing to review: no changes, no conflicts and no refusal. */
+function quiet(plan: MdbaseSetupPlan): boolean {
+  return !plan.refusal && plan.changes.length === 0 && plan.conflicts.length === 0;
+}
+
+function describe(error: unknown, fallback: string): string {
+  return describeError(error)?.message ?? fallback;
+}
 
 /** Read through a call: the abort state changes across the awaited action. */
 function stopped(signal: AbortSignal): boolean {
@@ -35,6 +59,10 @@ function useSetupReview(
   const [state, setState] = useState<State>({ kind: "planning", note: null });
   const adopt = useRef<Readonly<Record<string, string>> | undefined>(undefined);
   const scope = useRef<AbortController | null>(null);
+  const applied = useRef(onApplied);
+  useEffect(() => {
+    applied.current = onApplied;
+  });
 
   const plan = useCallback(
     async (note?: string): Promise<void> => {
@@ -46,12 +74,25 @@ function useSetupReview(
       try {
         const options = adopt.current ? { signal, adopt: adopt.current } : { signal };
         const next = await application.setup.plan(options);
-        if (!stopped(signal)) {
-          setState({ kind: "review", plan: next, note: note ?? null });
+        if (stopped(signal)) {
+          return;
         }
-      } catch {
+        // Nothing to review keeps the plain configure() path, unless this is a
+        // re-assessment after an unconfirmed outcome that must be shown.
+        if (quiet(next) && note === undefined) {
+          await application.configure({ signal });
+          if (!stopped(signal)) {
+            applied.current?.();
+          }
+          return;
+        }
+        setState({ kind: "review", plan: next, note: note ?? null });
+      } catch (error) {
         if (!stopped(signal)) {
-          setState({ kind: "failed", message: "Reader couldn't check what setup would change." });
+          setState({
+            kind: "failed",
+            message: describe(error, "Reader couldn't check what setup would change."),
+          });
         }
       }
     },
@@ -79,17 +120,21 @@ function useSetupReview(
     try {
       await application.setup.apply(reviewed, { signal });
       if (!stopped(signal)) {
-        onApplied?.();
+        applied.current?.();
       }
     } catch (error) {
       if (stopped(signal)) {
         return;
       }
-      if (isMdbaseError(error) && error.reason === "setup_changed") {
-        await plan(changedNote);
+      const outcome = setupOutcome(error);
+      if (outcome !== "failed") {
+        await plan(outcome === "changed" ? changedNote : unknownNote);
         return;
       }
-      setState({ kind: "failed", message: "Setup didn't finish. Nothing was changed." });
+      setState({
+        kind: "failed",
+        message: describe(error, "Setup couldn't be completed. Please try again."),
+      });
     }
   };
   const chooseAppVersion = (reviewed: MdbaseSetupPlan): void => {
@@ -221,6 +266,11 @@ export function SdkSetupReview({
   const body = (
     <>
       {shown ? <p className="reader-setup-summary">{shown.summary}</p> : null}
+      {shown?.refusal ? (
+        <p className="reader-setup-refusal" role="alert">
+          {shown.refusal.message}
+        </p>
+      ) : null}
       {shown ? <ChangeList plan={shown} /> : null}
       <div className="connection-actions">
         <PrimaryAction review={review} />

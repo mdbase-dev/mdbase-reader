@@ -99,6 +99,13 @@ button {
   line-height: 1.5;
 }
 
+.reader-setup-refusal {
+  margin: 14px 0 0;
+  color: var(--color-danger);
+  font-size: 14px;
+  line-height: 1.45;
+}
+
 .reader-setup-changes {
   margin: 16px 0 0;
   padding: 0;

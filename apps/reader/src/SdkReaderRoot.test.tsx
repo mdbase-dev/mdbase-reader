@@ -118,7 +118,9 @@ const setupPlan: MdbaseSetupPlan = {
   records: [],
 };
 
-async function setupRequired(): Promise<ReturnType<typeof createApplicationFixture>> {
+async function setupRequired(
+  plan: MdbaseSetupPlan = setupPlan,
+): Promise<ReturnType<typeof createApplicationFixture>> {
   const created = fixture({
     status: "not_started",
     signIn: paired,
@@ -130,7 +132,7 @@ async function setupRequired(): Promise<ReturnType<typeof createApplicationFixtu
     ...application.getSnapshot(),
     status: "setup_required",
   }));
-  created.controls.setSetupPlan(setupPlan);
+  created.controls.setSetupPlan(plan);
   const renderNative = vi.fn(() => <p>workspace</p>);
   await act(async () =>
     root.render(
@@ -180,6 +182,43 @@ it("plans again when the collection changed during review, and Cancel writes not
   expect(host.textContent).toContain("needs mdbase Reader setup");
   expect(count(controls, "applySetup")).toBe(1);
   expect(count(controls, "configure")).toBe(0);
+});
+
+it("re-assesses after an unconfirmed setup outcome and never claims nothing changed", async () => {
+  const { controls } = await setupRequired();
+  controls.setHandler("applySetup", () => {
+    throw mdbaseError("outcome_unknown", "lost reply");
+  });
+  await act(async () => button("Confirm").click());
+  expect(host.textContent).toContain("couldn't confirm whether setup finished");
+  expect(count(controls, "planSetup")).toBe(2);
+  expect(host.textContent).not.toContain("Nothing was changed");
+  expect(host.textContent).toContain(setupPlan.summary);
+});
+
+it("keeps the plain configure path when the plan has nothing to review", async () => {
+  const { controls } = await setupRequired({
+    ...setupPlan,
+    status: "current",
+    canApply: false,
+    summary: "Already set up.",
+    changes: [],
+  });
+  expect(count(controls, "configure")).toBe(1);
+  expect(count(controls, "applySetup")).toBe(0);
+  expect(host.textContent).not.toContain("Already set up.");
+});
+
+it("shows the plan's refusal message plainly", async () => {
+  await setupRequired({
+    ...setupPlan,
+    status: "conflict",
+    canApply: false,
+    changes: [],
+    refusal: { code: "setup_forbidden", message: "Only the collection's owner can set up Reader." },
+  });
+  expect(host.textContent).toContain("Only the collection's owner can set up Reader.");
+  expect(button("Confirm").disabled).toBe(true);
 });
 
 it("opens the native collection only for a current READY connection, and retires it after", async () => {
