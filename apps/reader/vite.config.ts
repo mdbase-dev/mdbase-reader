@@ -23,6 +23,10 @@ export default defineConfig({
       "@codemirror/view",
     ],
   },
+  // The SDK starts its own module Worker from a module-relative URL; keep it out of
+  // dev pre-bundling so that URL still names the SDK's files, and emit ES workers.
+  optimizeDeps: { exclude: ["@mdbase-dev/sdk"] },
+  worker: { format: "es" },
   build: {
     sourcemap: true,
     target: "es2022",

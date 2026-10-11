@@ -26,6 +26,16 @@ const ImportPage = lazy(async () => {
   return { default: module.ImportPage };
 });
 
+// LAB builds open collections through the public SDK entry, loaded only there.
+// Staging and production keep Connect: the SDK has no production release trust yet.
+const SdkReader = lazy(async () => {
+  const [{ SdkReaderRoot }, { readerSdk }] = await Promise.all([
+    import("./SdkReaderRoot.js"),
+    import("./sdk-application.js"),
+  ]);
+  return { default: () => <SdkReaderRoot sdk={readerSdk()} /> };
+});
+
 const stopPwaInstall = setupPwaInstall("mdbase reader");
 if (import.meta.hot) {
   import.meta.hot.dispose(stopPwaInstall);
@@ -49,6 +59,10 @@ createRoot(root).render(
       ) : new URL(location.href).searchParams.has("preview") ? (
         <Suspense fallback={null}>
           <PreviewReader />
+        </Suspense>
+      ) : import.meta.env.VITE_MDBASE_ENV === "lab" ? (
+        <Suspense fallback={null}>
+          <SdkReader />
         </Suspense>
       ) : (
         <ConnectReader />
