@@ -5,10 +5,10 @@ entry of the new SDK (`@mdbase-dev/sdk`, `MdbaseConnect`).
 
 ## Pin
 
-`packages/connect/vendor/mdbase-dev-sdk-dev-4b955381.tgz` is the original
-`sdk-dev-4b955381` cut from SDK source
-`4b9553819ddb769ff1487170c05494321d23ab8b`, SHA256
-`9874074d6a68287780de2092a069c1cb4e81d3558e432b719b7525974eb6b0ad` (4292587 bytes).
+`packages/connect/vendor/mdbase-dev-sdk-dev-6a576a5f.tgz` is the original
+`sdk-dev-6a576a5f` cut from SDK source
+`6a576a5f25231333bd899274ad6fed91f54a19ab`, SHA256
+`00ee3484b4d70b9df4b9fab72c6fcadf24476c1b5834eef6d4d9a4a9281ec56f` (4289200 bytes).
 Its source, SRI, native pins and original bundled protocol are recorded in
 `packages/connect/vendor/mdbase-next-sdk.json`. The SDK bundles beta129
 `3c14fc913a80`; the direct legacy protocol dependency remains `d765e675c3da` unchanged.
@@ -16,11 +16,11 @@ Its source, SRI, native pins and original bundled protocol are recorded in
 This is a **DEV/LAB development intake, not release-qualified**. It includes the
 public error/status helpers and portable/native-origin sign-in APIs in one pin.
 The SDK owns registration, authorization, selection, readiness, Worker, runtime
-and recovery. The original 3533579-byte native runtime matches the committed
-`38ca6f006aef7675ebe16abb981c7ba59fe0c27c287d78ee0b845c26aff37ba8` pin.
-The exact cut has a documented co0648 warning for an unreferenced extra protocol
-archive (`dfc5db0d…`), unused at runtime; this exception does not apply to the successor.
-The security/phase-2 successor is a separate future pin. Packaged integrity and
+and recovery. The original 3553905-byte native runtime matches the committed
+`08bb2dfcfd48e663147a7d1f3ebf2728b81bd82ac59183307c2cd7bc30c9ab67` pin.
+This cut delivers registration-refusal guidance, Private-collection availability
+reasons and collection deletion APIs. The earlier unused-protocol exception is
+not carried forward; this archive has no vendor warnings. Packaged integrity and
 ordinary/frozen installation do not establish live LAB acceptance.
 
 ## Design
