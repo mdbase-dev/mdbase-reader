@@ -12,6 +12,7 @@ import { useEffect, useRef, useState, useSyncExternalStore, type JSX, type React
 
 import { CollectionSwitchingContext } from "./CollectionPicker.js";
 import { ReaderWorkspace } from "./ReaderWorkspace.js";
+import { readyReaderConnection } from "./sdk-ready-connection.js";
 
 export type ReaderSdk = MdbaseApplicationEntry;
 
@@ -24,6 +25,8 @@ export interface ReaderNativeScope {
 export interface SdkReaderRootProps {
   readonly sdk: ReaderSdk;
   readonly onSignedOut?: () => void;
+  /** An existing app workflow can host connection actions without a nested main. */
+  readonly embedded?: boolean;
   /** Real native domain UI only; defaults to the reading workspace over the native collection. */
   readonly renderNative?: (scope: ReaderNativeScope) => ReactNode;
 }
@@ -51,7 +54,12 @@ export function SdkReaderRoot(props: SdkReaderRootProps): JSX.Element {
   return <ApplicationView key={key(props.sdk)} {...props} />;
 }
 
-function ApplicationView({ sdk, renderNative, onSignedOut }: SdkReaderRootProps): JSX.Element {
+function ApplicationView({
+  sdk,
+  renderNative,
+  onSignedOut,
+  embedded,
+}: SdkReaderRootProps): JSX.Element {
   const application = sdk.application();
   const snapshot = useSyncExternalStore(
     (listener) => application.subscribe(listener),
@@ -59,7 +67,7 @@ function ApplicationView({ sdk, renderNative, onSignedOut }: SdkReaderRootProps)
     () => application.getSnapshot(),
   );
   const { act, working, problem } = useApplicationLifecycle(application);
-  const connection = readyConnection(sdk, snapshot);
+  const connection = readyReaderConnection(sdk, snapshot);
   if (connection) {
     return (
       <CollectionSwitchingContext
@@ -86,12 +94,8 @@ function ApplicationView({ sdk, renderNative, onSignedOut }: SdkReaderRootProps)
     );
   }
   const screen = connectionScreen(snapshot, problem);
-  return (
-    <ConnectLayout
-      app="reader"
-      title="Open mdbase Reader"
-      {...(screen.error ? { error: screen.message } : { status: screen.message })}
-    >
+  const actions = (
+    <>
       {screen.identity ? <p className="mdbase-connect-status">{screen.identity}</p> : null}
       <ConnectionActions
         application={application}
@@ -102,6 +106,24 @@ function ApplicationView({ sdk, renderNative, onSignedOut }: SdkReaderRootProps)
         onSignedOut={onSignedOut}
       />
       <FeedbackButton />
+    </>
+  );
+  if (embedded) {
+    return (
+      <section className="import-step" aria-labelledby="import-destination-title">
+        <h2 id="import-destination-title">Choose a destination</h2>
+        <p role={screen.error ? "alert" : "status"}>{screen.message}</p>
+        {actions}
+      </section>
+    );
+  }
+  return (
+    <ConnectLayout
+      app="reader"
+      title="Open mdbase Reader"
+      {...(screen.error ? { error: screen.message } : { status: screen.message })}
+    >
+      {actions}
     </ConnectLayout>
   );
 }
@@ -181,32 +203,6 @@ function useApplicationLifecycle(application: MdbaseApplication): {
 /** Read through a call: the abort state changes across the awaited action. */
 function aborted(scope: AbortController): boolean {
   return scope.signal.aborted;
-}
-
-/** The selected connection, only while it is current and the SDK reports READY. */
-function readyConnection(
-  sdk: ReaderSdk,
-  snapshot: MdbaseApplicationSnapshot,
-): MdbaseApplicationConnection | null {
-  const selected = snapshot.selectedCollectionId;
-  if (!selected || snapshot.status !== "ready") {
-    return null;
-  }
-  const { readiness } = snapshot;
-  if (
-    readiness.checking ||
-    readiness.problem !== null ||
-    readiness.assessment?.status !== "ready" ||
-    readiness.assessment.problem !== null
-  ) {
-    return null;
-  }
-  const connection = sdk.connection(selected);
-  return connection?.id === selected &&
-    connection.records.hello.collection === connection.id &&
-    connection.isCurrent()
-    ? connection
-    : null;
 }
 
 interface ConnectionScreenState {

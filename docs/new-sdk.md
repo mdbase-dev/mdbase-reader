@@ -69,6 +69,25 @@ separately from live LAB acceptance.
 Live LAB registration, Worker start and readiness have not been exercised. Old local data and
 pending writes need no cutover handoff.
 
+## Library imports in SDK mode
+
+LAB `/import`, `/import/zotero` and `/import/readwise` use the same public SDK
+entry and original native collection as the reading workspace. The import home
+shows the existing tiles without starting sign-in. Service pages keep the existing
+inputs, preview, confirmation and progress UI, with embedded SDK destination
+actions instead of loading the legacy `readerSession`. Staging and production
+retain their existing import session and UI.
+
+The app import controller retains the parsed input while the SDK chooses a
+destination. Its narrow domain provider returns only the actual collection whose
+original connection and aggregate SDK readiness are current. The existing native
+migration target owns record/file operations through the public SDK, with original
+identities, receipt recovery and confirmed readback unchanged. A destination check
+is still required before import, and a started import stays bound to its confirmed
+collection. Retired scopes stop the job; late checks, progress and completions
+cannot become confirmation for a replacement scope. No SDK session, storage,
+setup or recovery engine is supplied by this UI.
+
 ## Checks
 
 The adapter, recovery and lifecycle tests run over the SDK's `MemoryReplica` and application
