@@ -26,6 +26,8 @@ describe("per-environment extension manifest", () => {
       "https://*/*",
     ]);
     expect(manifest["optional_host_permissions"]).toBeUndefined();
+    // The SDK's one owner is an offscreen document.
+    expect(manifest["permissions"]).toContain("offscreen");
     expect(manifest["content_security_policy"]).toEqual({
       extension_pages: "script-src 'self' 'wasm-unsafe-eval'; object-src 'self'",
     });

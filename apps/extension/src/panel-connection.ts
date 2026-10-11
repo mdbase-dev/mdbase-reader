@@ -1,7 +1,6 @@
 import { useEffect } from "react";
 
 import { problemMessage } from "./capture-model.js";
-import { refreshSavedUrlIndex } from "./saved-source-urls.js";
 import { useActionLock, type ActionLock } from "./use-action-lock.js";
 import { useConnect, type ConnectLink } from "./use-connect.js";
 
@@ -23,13 +22,5 @@ export function usePanelConnection(): PanelConnection {
       .catch((reason: unknown) => setProblem(problemMessage(reason)))
       .finally(release);
   }, [open, release, setProblem]);
-  // The worker marks saved pages from this index; it cannot open the collection itself.
-  const { extension, snapshot } = connection;
-  useEffect(() => {
-    const collection = snapshot.status === "ready" ? extension?.connectedCollection() : null;
-    if (collection) {
-      void refreshSavedUrlIndex(collection);
-    }
-  }, [extension, snapshot.status, snapshot.collectionId]);
   return { connection, lock };
 }

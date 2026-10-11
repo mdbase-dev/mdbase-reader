@@ -15,6 +15,9 @@ import {
 import { forgetTab } from "./tab-cleanup.js";
 import { fakeChrome } from "./testing/fake-chrome.js";
 
+import type { PageStatusConnect } from "./page-status-connect.js";
+import type { ReaderConnectedCollection } from "@mdbase-reader/connect";
+
 type Fake = ReturnType<typeof fakeChrome>;
 
 /** fakeChrome plus the worker-only APIs these modules use. */
@@ -64,6 +67,31 @@ function apiCalls(fake: Fake): number {
     .reduce((total, mock) => total + (mock as ReturnType<typeof vi.fn>).mock.calls.length, 0);
 }
 
+function collection(id = "c1"): ReaderConnectedCollection {
+  return { collectionId: id } as unknown as ReaderConnectedCollection;
+}
+
+function connectApi(
+  saved: Record<string, number>,
+  selected: ReaderConnectedCollection | null = collection(),
+): PageStatusConnect & { [K in keyof PageStatusConnect]: ReturnType<typeof vi.fn> } {
+  return {
+    selectedCollection: vi.fn(() => Promise.resolve(selected)),
+    savedSourceUrls: vi.fn(() => Promise.resolve(Object.keys(saved))),
+    savedQuotes: vi.fn((_: unknown, url: string) => {
+      const found = Object.entries(saved).find(
+        ([saved]) => savedUrlKey(saved) === savedUrlKey(url),
+      );
+      return Promise.resolve(
+        found
+          ? Array.from({ length: found[1] }, (_, index) => ({ exact: `q${String(index)}` }))
+          : null,
+      );
+    }),
+    drawPageQuotes: vi.fn(() => Promise.resolve()),
+  };
+}
+
 beforeEach(() => {
   resetPageMarkCache();
   resetPageStatusCache();
@@ -72,18 +100,20 @@ beforeEach(() => {
 afterEach(() => vi.unstubAllGlobals());
 
 describe("page status with site access withheld", () => {
-  it("asks Chrome once per worker lifetime", async () => {
+  it("asks Chrome once per worker lifetime and never loads Connect", async () => {
     const fake = workerChrome({ granted: false });
-    await updatePageStatus(1, "https://example.com/a");
+    const connect = vi.fn();
+    await updatePageStatus(1, "https://example.com/a", connect);
     const first = apiCalls(fake);
     // The marked tabs and the permission: one call each.
     expect(first).toBe(2);
     expect(fake.chrome.permissions.contains).toHaveBeenCalledTimes(1);
     for (let tab = 2; tab < 20; tab++) {
-      await updatePageStatus(tab, `https://example.com/${String(tab)}`);
+      await updatePageStatus(tab, `https://example.com/${String(tab)}`, connect);
     }
-    await updatePageStatus(3, "chrome://newtab/");
+    await updatePageStatus(3, "chrome://newtab/", connect);
     expect(apiCalls(fake)).toBe(first);
+    expect(connect).not.toHaveBeenCalled();
     expect(fake.chrome.action.setBadgeText).not.toHaveBeenCalled();
   });
 
@@ -92,9 +122,9 @@ describe("page status with site access withheld", () => {
     await markSavedPage(7, 2);
     vi.mocked(fake.chrome.action.setBadgeText).mockClear();
     resetPageMarkCache(); // a new worker: marks come back from storage.session
-    await updatePageStatus(8, "https://example.com/");
+    await updatePageStatus(8, "https://example.com/", vi.fn());
     expect(fake.chrome.action.setBadgeText).not.toHaveBeenCalled();
-    await updatePageStatus(7, "https://example.com/");
+    await updatePageStatus(7, "https://example.com/", vi.fn());
     expect(fake.chrome.action.setBadgeText).toHaveBeenCalledWith({ tabId: 7, text: "" });
     expect(fake.session.get("page-marks")).toEqual([]);
   });
@@ -107,23 +137,68 @@ describe("page status with site access", () => {
     return fake;
   }
 
-  it("marks a saved page from the panel's index, under any spelling of its address", async () => {
+  it("builds the index once, then dismisses unsaved pages without loading Connect", async () => {
+    enabled();
+    const api = connectApi({ "https://example.com/saved?utm_source=x": 2 });
+    const connect = vi.fn(() => api);
+    await updatePageStatus(1, "https://example.com/other", connect);
+    expect(api.savedSourceUrls).toHaveBeenCalledTimes(1);
+    expect(api.savedQuotes).not.toHaveBeenCalled();
+    connect.mockClear();
+    await updatePageStatus(1, "https://example.com/elsewhere", connect);
+    expect(connect).not.toHaveBeenCalled();
+  });
+
+  it("marks and draws a saved page under any spelling of its address", async () => {
     const fake = enabled();
-    // Older than the panel's refresh interval: the worker still marks what it knows.
-    await writeSavedUrlIndex("c1", ["https://www.example.com/saved/?utm_source=x"], 1_000);
-    await updatePageStatus(5, "https://example.com/saved#top");
-    expect(fake.chrome.action.setBadgeText).toHaveBeenCalledWith({ tabId: 5, text: "✓" });
-    vi.mocked(fake.chrome.action.setBadgeText).mockClear();
-    await updatePageStatus(6, "https://example.com/other");
-    expect(fake.chrome.action.setBadgeText).not.toHaveBeenCalledWith(
-      expect.objectContaining({ tabId: 6, text: "✓" }),
+    const api = connectApi({ "https://www.example.com/saved/?utm_source=x": 2 });
+    await updatePageStatus(5, "https://example.com/saved#top", () => api);
+    expect(fake.chrome.action.setBadgeText).toHaveBeenCalledWith({ tabId: 5, text: "2" });
+    expect(api.drawPageQuotes).toHaveBeenCalledWith(
+      5,
+      expect.any(Array),
+      "https://example.com/saved#top",
     );
   });
 
-  it("marks nothing before the panel has built the index", async () => {
+  it("leaves drawing to the side panel showing the tab but still sets the badge", async () => {
+    // Window 1's panel shows tab 5; tab 6 is in the background there.
+    const fake = enabled({ panels: [1] });
+    const api = connectApi({ "https://example.com/saved": 3 });
+    await updatePageStatus(5, "https://example.com/saved", () => api);
+    expect(fake.chrome.action.setBadgeText).toHaveBeenCalledWith({ tabId: 5, text: "3" });
+    expect(api.drawPageQuotes).not.toHaveBeenCalled();
+    await updatePageStatus(6, "https://example.com/saved", () => api);
+    expect(api.drawPageQuotes).toHaveBeenCalledWith(
+      6,
+      expect.any(Array),
+      "https://example.com/saved",
+    );
+  });
+
+  it("does not mark a page that was replaced while it was looked up", async () => {
     const fake = enabled();
-    await updatePageStatus(5, "https://example.com/saved");
-    expect(fake.chrome.action.setBadgeText).not.toHaveBeenCalled();
+    const api = connectApi({ "https://example.com/saved": 1 });
+    let release = (): void => undefined;
+    const lookup = new Promise((resolve) => {
+      release = () => resolve([{ exact: "q" }]);
+    });
+    api.savedQuotes.mockReturnValueOnce(lookup);
+    const slow = updatePageStatus(2, "https://example.com/saved", () => api);
+    await vi.waitFor(() => expect(api.savedQuotes).toHaveBeenCalled());
+    await updatePageStatus(2, "https://example.com/other", () => api);
+    release();
+    await slow;
+    expect(fake.chrome.action.setBadgeText).not.toHaveBeenCalledWith({ tabId: 2, text: "1" });
+  });
+
+  it("drops an index entry Connect no longer confirms", async () => {
+    enabled();
+    await writeSavedUrlIndex("c1", ["https://example.com/deleted"]);
+    const api = connectApi({});
+    await updatePageStatus(1, "https://example.com/deleted", () => api);
+    expect(api.savedQuotes).toHaveBeenCalledTimes(1);
+    await expect(savedUrlStatus("c1", "https://example.com/deleted")).resolves.toBe("unsaved");
   });
 });
 

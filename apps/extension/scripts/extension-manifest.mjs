@@ -71,7 +71,7 @@ export function extensionManifest(environment) {
     homepage_url: `${environment.readerOrigin}/`,
     icons,
     minimum_chrome_version: "123",
-    permissions: ["activeTab", "scripting", "storage", "contextMenus", "sidePanel"],
+    permissions: ["activeTab", "scripting", "storage", "contextMenus", "sidePanel", "offscreen"],
     // The mdbase control plane and log service the SDK talks to from the extension's
     // pages, and HTTPS pages: the side panel follows the active tab and saved pages are
     // marked, which needs to read each page without a click on the toolbar.

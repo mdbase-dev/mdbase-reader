@@ -1,12 +1,16 @@
 import { updatePageStatus } from "./background-page-status.js";
 import { intentKey, type CaptureIntent, type InvokeMessage } from "./messages.js";
+import { ensureHostMessage, ensureOffscreenDocument } from "./offscreen-document.js";
+import { loadPageStatusConnect, preloadPageStatusConnect } from "./page-status-loader.js";
 import { forgetTab } from "./tab-cleanup.js";
 
 /*
  * The service worker wakes for every page load and toolbar click, so this bundle stays
- * small and never loads the SDK: the SDK runtime lives in the extension's pages (the side
- * panel, welcome and settings pages).
+ * small: the Connect SDK lives in page-status.js, loaded only when a page may be saved
+ * (see page-status-loader.ts). Connect's credentialless fetch is installed there.
  */
+self.addEventListener("install", preloadPageStatusConnect);
+
 /**
  * Opens Reader's side panel in the tab's window; the panel follows the window's active
  * tab. Everything here starts synchronously inside the user gesture: Chrome only allows
@@ -56,9 +60,28 @@ chrome.contextMenus.onClicked.addListener((info, tab) => {
   }
 });
 
+// Extension pages ask for the SDK host here: the worker owns the offscreen document.
+chrome.runtime.onMessage.addListener((message: unknown, sender, sendResponse) => {
+  const fromExtension = sender.id === chrome.runtime.id && !sender.tab;
+  if (
+    !fromExtension ||
+    typeof message !== "object" ||
+    message === null ||
+    !("type" in message) ||
+    message.type !== ensureHostMessage
+  ) {
+    return false;
+  }
+  ensureOffscreenDocument().then(
+    () => sendResponse({ ok: true }),
+    (reason: unknown) => sendResponse({ error: String(reason) }),
+  );
+  return true;
+});
+
 chrome.tabs.onUpdated.addListener((tabId, change, tab) => {
   if (change.status === "complete") {
-    void updatePageStatus(tabId, tab.url);
+    void updatePageStatus(tabId, tab.url, loadPageStatusConnect);
   }
 });
 chrome.tabs.onRemoved.addListener((tabId) => {

@@ -21,12 +21,16 @@ function manifest(): Plugin {
 }
 
 /**
- * The service worker is one classic script, background.js, built after the pages as a
- * self-contained IIFE so it shares no chunks with them. It never includes the SDK: the
- * SDK's runtime lives in the extension's pages.
+ * The service worker's classic scripts, built after the pages as self-contained IIFEs so
+ * they share no chunks with them: background.js, and page-status.js, which it loads with
+ * importScripts() only when a page may be saved (see src/page-status-loader.ts). Neither
+ * includes the SDK, which runs in the offscreen host (src/offscreen.ts).
  */
 function serviceWorker(): Plugin {
-  const scripts = { background: "src/background.ts" };
+  const scripts = {
+    background: "src/background.ts",
+    "page-status": "src/page-status-worker.ts",
+  };
   return {
     name: "mdbase-reader-extension-service-worker",
     apply: "build",
@@ -96,6 +100,7 @@ export default defineConfig({
         capture: resolve(import.meta.dirname, "capture.html"),
         options: resolve(import.meta.dirname, "options.html"),
         welcome: resolve(import.meta.dirname, "welcome.html"),
+        offscreen: resolve(import.meta.dirname, "offscreen.html"),
       },
       output: {
         entryFileNames: "assets/[name]-[hash].js",

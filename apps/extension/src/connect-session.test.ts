@@ -1,6 +1,6 @@
 import { expect, it } from "vitest";
 
-import { extensionDeclaration } from "./connect-session.js";
+import { extensionDeclaration } from "./sdk-declaration.js";
 
 it("declares the extension's own origin, which its manifest lists for LAB", () => {
   const declaration = extensionDeclaration("kimdfjefhbfgfecconmaiaaindjccidp");
