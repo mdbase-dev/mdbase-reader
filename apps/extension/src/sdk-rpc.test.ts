@@ -1,212 +1,231 @@
-import { describe, expect, it, vi, type Mock } from "vitest";
+import { describeError, nativeReaderCollection } from "@mdbase-reader/connect/native";
+import { mdbaseError, memoryConnection } from "@mdbase-reader/connect/testing";
+import { afterEach, describe, expect, it, vi } from "vitest";
 
-import { createSdkClient, type SdkClientOptions } from "./sdk-client.js";
-import { serveSdk, type SdkHostSource } from "./sdk-host.js";
+import { createSdkClient, hostRestartedMessage, type SdkClient } from "./sdk-client.js";
+import { serveSdk, type SdkHost, type SdkHostSource } from "./sdk-host.js";
+import { decodeArgs, deserializeError, encodeArgs, serializeError } from "./sdk-rpc.js";
 import { memoryBus } from "./testing/memory-bus.js";
+import { applicationFixture } from "./testing/sdk-fixture.js";
 
-import type { ReaderConnectedCollection } from "@mdbase-reader/connect";
+import type { MdbaseApplicationSnapshot } from "@mdbase-reader/connect/native";
 
-function snapshot(selected: string): Record<string, unknown> {
-  return {
-    status: "ready",
-    signIn: { state: "paired" },
-    collections: [{ collectionId: selected, displayName: "[test] Library" }],
-    selectedCollectionId: selected,
-    selection: { state: "selected" },
-    readiness: { checking: false, problem: null, assessment: { status: "ready", problem: null } },
-  };
-}
-
-class SdkError extends Error {
-  override name = "MdbaseError";
-  constructor(
-    readonly code: string,
-    readonly requestId: string,
-  ) {
-    super(`failed: ${code}`);
+const owned: { close(): void }[] = [];
+afterEach(() => {
+  for (const item of owned.splice(0).reverse()) {
+    item.close();
   }
-}
+});
 
-interface FakeHost {
-  readonly source: SdkHostSource;
-  readonly application: { readonly select: Mock; readonly authorize: Mock };
-  readonly sources: { readonly list: Mock };
-}
-
-/** A host with one READY collection whose repositories are vi.fn()s. */
-function fakeHost(selected = "c1", key = `${selected}:1`): FakeHost {
-  let current = snapshot(selected);
-  const listeners = new Set<() => void>();
-  const sources = {
-    list: vi.fn(() => Promise.resolve({ items: [{ id: "s1", url: "https://example.com/" }] })),
-    get: vi.fn(),
-  };
-  const sourceImports = {
-    commitFile: vi.fn(
-      (plan: { bytes: Uint8Array }, options: { onProgress: (p: unknown) => void }) => {
-        options.onProgress({ phase: "uploading", completedBytes: plan.bytes.length });
-        return Promise.resolve({ id: "s2", size: plan.bytes.length });
-      },
-    ),
-  };
-  const annotations = {
-    listForSource: vi.fn(() => Promise.reject(new SdkError("collection_busy", "r1"))),
-  };
-  const bodyRecovery = {
-    pending: vi.fn((requestId: string) => requestId === "r1"),
-    recoverSource: vi.fn(),
-  };
-  const collection = {
-    collectionId: selected,
-    collectionName: "[test] Library",
-    sources,
-    sourceImports,
-    annotations,
-    bodyRecovery,
-  };
-  const application = {
-    getSnapshot: () => current,
-    subscribe: (listener: () => void) => {
-      listeners.add(listener);
-      return () => listeners.delete(listener);
-    },
-    start: vi.fn(() => Promise.resolve()),
-    authorize: vi.fn(() => Promise.resolve()),
-    select: vi.fn((id: string) => {
-      current = snapshot(id);
-      for (const listener of listeners) {
-        listener();
-      }
-      return Promise.resolve();
-    }),
-  };
-  const source: SdkHostSource = {
-    application: application as unknown as SdkHostSource["application"],
-    currentCollection: () => ({
-      key,
-      collection: collection as unknown as ReaderConnectedCollection,
-    }),
-  };
-  return { source, application, sources };
-}
-
-function client(
+function host(
   bus: ReturnType<typeof memoryBus>,
-  options: Partial<SdkClientOptions> = {},
-): ReturnType<typeof createSdkClient> {
-  return createSdkClient(bus.endpoint(), {
-    ensureHost: vi.fn(() => Promise.resolve()),
-    hostGone: () => new Promise<void>(() => undefined),
-    openSignIn: vi.fn(),
-    ...options,
-  });
+  id: string,
+  source: SdkHostSource,
+): { host: SdkHost; endpoint: ReturnType<ReturnType<typeof memoryBus>["endpoint"]> } {
+  const endpoint = bus.endpoint();
+  const served = serveSdk(endpoint, source, id);
+  owned.push(served, endpoint);
+  return { host: served, endpoint };
 }
+
+function fixtureHost(
+  bus: ReturnType<typeof memoryBus>,
+  id: string,
+  initial: Partial<MdbaseApplicationSnapshot> = {},
+): ReturnType<typeof applicationFixture> & { served: ReturnType<typeof host> } {
+  const sdk = applicationFixture(initial);
+  owned.push(sdk.controls);
+  const served = host(bus, id, {
+    application: sdk.entry.application(),
+    currentCollection: () => null,
+  });
+  return { ...sdk, served };
+}
+
+async function client(
+  bus: ReturnType<typeof memoryBus>,
+  options: {
+    hostGone?: (id: string) => Promise<void>;
+    ensureHost?: () => Promise<void>;
+    openSignIn?: (url: string) => void;
+  } = {},
+): Promise<SdkClient> {
+  const created = await createSdkClient(bus.endpoint(), {
+    ensureHost: options.ensureHost ?? (() => Promise.resolve()),
+    hostGone: options.hostGone ?? (() => new Promise<void>(() => undefined)),
+    openSignIn: options.openSignIn ?? (() => undefined),
+  });
+  owned.push({ close: () => created.dispose() });
+  return created;
+}
+
+const never = new Promise<MdbaseApplicationSnapshot>(() => undefined);
 
 describe("SDK RPC between extension pages and the offscreen host", () => {
-  it("serves the application and the READY collection with bytes, callbacks and SDK errors", async () => {
+  it("serves only the public application commands, with the SDK's snapshot", async () => {
     const bus = memoryBus();
-    const host = fakeHost();
-    serveSdk(bus.endpoint(), host.source, "h1");
+    const sdk = fixtureHost(bus, "h1");
     const remote = await client(bus);
-
-    expect(remote.application.getSnapshot()).toMatchObject({ selectedCollectionId: "c1" });
-    await remote.application.select("c2", { signal: new AbortController().signal });
-    expect(host.application.select).toHaveBeenCalledWith("c2", expect.anything());
-    await vi.waitFor(() =>
-      expect(remote.application.getSnapshot()).toMatchObject({ selectedCollectionId: "c2" }),
+    expect(remote.application.getSnapshot().status).toBe("signed_out");
+    await remote.application.select("c2");
+    expect(sdk.controls.observedActions()).toContainEqual(
+      expect.objectContaining({ action: "select", collectionId: "c2" }),
     );
-
-    const collection = remote.connectedCollection();
-    expect(collection).toMatchObject({ collectionId: "c1", collectionName: "[test] Library" });
-    if (!collection) {
-      throw new Error("no collection");
-    }
-    // Only methods the host collection has: optional ones stay absent.
-    expect(collection.sources.updateFields).toBeUndefined();
-    expect(collection.sources.listPages).toBeUndefined();
-    await expect(collection.sources.list({ collectionId: "c1" } as never)).resolves.toMatchObject({
-      items: [{ id: "s1" }],
+    // Not a command the extension may send, even though the application has it.
+    const raw = bus.endpoint();
+    const replies: unknown[] = [];
+    raw.listen((message) => replies.push(message));
+    raw.post({
+      kind: "call",
+      client: "raw",
+      id: 1,
+      target: { app: true },
+      method: "close",
+      args: [],
     });
-
-    const onProgress = vi.fn();
-    const saved = await collection.sourceImports.commitFile(
-      { bytes: new Uint8Array([1, 2, 3]) } as never,
-      { onProgress },
-    );
-    expect(saved).toMatchObject({ id: "s2", size: 3 });
-    expect(onProgress).toHaveBeenCalledWith({ phase: "uploading", completedBytes: 3 });
-
-    const failure = collection.annotations.listForSource("c1" as never, "s1" as never);
-    await expect(failure).rejects.toMatchObject({
-      name: "MdbaseError",
-      code: "collection_busy",
-      requestId: "r1",
-    });
-    // The host's answer for the failed request, available synchronously as the port requires.
-    expect(collection.bodyRecovery.pending("r1")).toBe(true);
+    await vi.waitFor(() => expect(replies).toContainEqual(expect.objectContaining({ ok: false })));
+    expect(sdk.controls.observedActions().some((call) => call.action === "close")).toBe(false);
   });
 
-  it("asks the page that started sign-in to open the mdbase tab", async () => {
+  it("opens sign-in only from the page that started it", async () => {
     const bus = memoryBus();
-    const host = fakeHost();
-    const served = serveSdk(bus.endpoint(), host.source, "h1");
-    host.application.authorize.mockImplementation(() => {
-      served.openSignIn("https://connect-lab.mdbase.dev/approve");
-      return Promise.resolve();
+    const sdk = fixtureHost(bus, "h1");
+    sdk.controls.setHandler("authorize", () => {
+      sdk.served.host.openSignIn("https://connect-lab.mdbase.dev/approve");
     });
-    const bystanderOpen = vi.fn();
-    await client(bus, { openSignIn: bystanderOpen });
-    const openSignIn = vi.fn();
-    const remote = await client(bus, { openSignIn });
+    const bystander = vi.fn();
+    await client(bus, { openSignIn: bystander });
+    const opener = vi.fn();
+    const remote = await client(bus, { openSignIn: opener });
     await remote.application.authorize();
     await vi.waitFor(() =>
-      expect(openSignIn).toHaveBeenCalledWith("https://connect-lab.mdbase.dev/approve"),
+      expect(opener).toHaveBeenCalledWith("https://connect-lab.mdbase.dev/approve"),
     );
-    expect(bystanderOpen).not.toHaveBeenCalled();
+    expect(bystander).not.toHaveBeenCalled();
   });
 
-  it("fails in-flight calls when the host closes, then reconnects to a new host", async () => {
+  it("fails calls the host never answered and reports the loss without inventing a status", async () => {
     const bus = memoryBus();
-    const first = fakeHost("c1", "c1:1");
-    first.sources.list.mockReturnValue(new Promise(() => undefined));
-    const firstEndpoint = bus.endpoint();
-    serveSdk(firstEndpoint, first.source, "h1");
+    const first = fixtureHost(bus, "h1");
+    first.controls.setHandler("authorize", () => never);
     let gone = (): void => undefined;
     const ensureHost = vi.fn(() => Promise.resolve());
     const remote = await client(bus, {
       ensureHost,
-      hostGone: (hostId) =>
-        new Promise<void>((resolve) => {
-          if (hostId === "h1") {
-            gone = resolve;
-          }
-        }),
+      hostGone: (id) =>
+        new Promise<void>((resolve) => (id === "h1" ? (gone = resolve) : undefined)),
     });
-    expect(ensureHost).toHaveBeenCalledTimes(1);
-    const before = remote.connectedCollection();
-    const pending = before?.sources.list({ collectionId: "c1" } as never);
+    const pending = remote.application.authorize();
+    await vi.waitFor(() =>
+      expect(first.controls.observedActions().some((call) => call.action === "authorize")).toBe(
+        true,
+      ),
+    );
     const listener = vi.fn();
     remote.application.subscribe(listener);
 
-    // Chrome closes the offscreen document.
-    firstEndpoint.close();
+    first.served.endpoint.close(); // Chrome closes the offscreen document.
     gone();
-    await expect(pending).rejects.toThrow(/restarted/u);
-    expect(remote.connectedCollection()).toBeNull();
-    expect(remote.application.getSnapshot()).toMatchObject({ status: "starting" });
+    await expect(pending).rejects.toThrow(hostRestartedMessage);
+    expect(remote.hostAvailable()).toBe(false);
+    expect(listener).toHaveBeenCalled();
+    // The last snapshot the SDK sent, unchanged: no status the SDK did not report.
+    expect(remote.application.getSnapshot().status).toBe("signed_out");
     await vi.waitFor(() => expect(ensureHost).toHaveBeenCalledTimes(2));
 
-    const second = fakeHost("c1", "c1:2");
-    serveSdk(bus.endpoint(), second.source, "h2");
-    await vi.waitFor(() =>
-      expect(remote.application.getSnapshot()).toMatchObject({ status: "ready" }),
+    const second = fixtureHost(bus, "h2", { status: "unselected" });
+    await vi.waitFor(() => expect(remote.hostAvailable()).toBe(true));
+    expect(remote.application.getSnapshot().status).toBe("unselected");
+    await remote.application.select("c1");
+    expect(second.controls.observedActions()).toContainEqual(
+      expect.objectContaining({ action: "select", collectionId: "c1" }),
     );
-    expect(listener).toHaveBeenCalled();
-    const after = remote.connectedCollection();
-    expect(after).not.toBe(before);
-    await expect(after?.sources.list({ collectionId: "c1" } as never)).resolves.toMatchObject({
-      items: [{ id: "s1" }],
+  });
+
+  it("settles a call to a replaced host and ignores that host's late answer", async () => {
+    const bus = memoryBus();
+    const first = fixtureHost(bus, "h1");
+    let finish = (): void => undefined;
+    first.controls.setHandler(
+      "authorize",
+      () =>
+        new Promise<void>((resolve) => {
+          finish = resolve;
+        }),
+    );
+    const remote = await client(bus);
+    const pending = remote.application.authorize().then(
+      () => "resolved",
+      (reason: unknown) => (reason instanceof Error ? reason.message : "rejected"),
+    );
+    await vi.waitFor(() =>
+      expect(first.controls.observedActions().some((call) => call.action === "authorize")).toBe(
+        true,
+      ),
+    );
+    // A second host announces itself before the first is known to be gone.
+    fixtureHost(bus, "h2");
+    await expect(pending).resolves.toBe(hostRestartedMessage);
+    finish();
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    await expect(pending).resolves.toBe(hostRestartedMessage);
+  });
+});
+
+describe("the READY collection over the SDK RPC", () => {
+  it("serves the READY collection's public repository commands", async () => {
+    const native = await memoryConnection({ where: () => false });
+    owned.push(native);
+    const collection = nativeReaderCollection(native.connection);
+    owned.push({ close: () => collection.dispose() });
+    const bus = memoryBus();
+    const sdk = applicationFixture();
+    owned.push(sdk.controls);
+    host(bus, "h1", {
+      application: sdk.entry.application(),
+      currentCollection: () => ({ key: "h1:c:1", collection }),
     });
-    expect(second.sources.list).toHaveBeenCalledTimes(1);
+    const remote = await client(bus);
+    const proxy = remote.connectedCollection();
+    expect(proxy?.collectionId).toBe(collection.collectionId);
+    // Streams cannot cross the channel; callers use the paged list instead.
+    expect(proxy?.sources.listPages).toBeUndefined();
+    // The SDK's own outcome, unchanged by the channel (this replica refuses queries).
+    const query = { collectionId: collection.collectionId, limit: 10 };
+    const direct = await collection.sources.list(query).catch((reason: unknown) => reason);
+    const bridged = await proxy?.sources.list(query).catch((reason: unknown) => reason);
+    expect(bridged).toBeInstanceOf(Error);
+    expect(bridged).toMatchObject({
+      name: (direct as Error).name,
+      message: (direct as Error).message,
+    });
+    // No pending answer from the host yet: recovery asks the SDK rather than assume.
+    expect(proxy?.bodyRecovery.pending("unknown-request")).toBe(true);
+  });
+});
+
+describe("SDK RPC arguments and errors", () => {
+  it("carries bytes and callbacks, and refuses an already-aborted signal", () => {
+    const callbacks: ((...args: unknown[]) => void)[] = [];
+    const progress = vi.fn();
+    const bytes = new Uint8Array([1, 2, 3]);
+    const encoded = structuredClone(encodeArgs([{ bytes }, { onProgress: progress }], callbacks));
+    const posted: unknown[] = [];
+    const decoded = decodeArgs(encoded, new AbortController().signal, (slot, args) =>
+      posted.push([slot, args]),
+    ) as [{ bytes: Uint8Array }, { onProgress: (value: number) => void }];
+    expect(decoded[0].bytes).toEqual(bytes);
+    decoded[1].onProgress(3);
+    expect(posted).toEqual([[0, [3]]]);
+    const aborted = new AbortController();
+    aborted.abort();
+    expect(() => encodeArgs([{ signal: aborted.signal }], [])).toThrow();
+  });
+
+  it("keeps an SDK error describable after it crosses the channel", () => {
+    const original = mdbaseError("unauthenticated", "Signed out.");
+    const crossed = deserializeError(structuredClone(serializeError(original)));
+    expect(crossed.name).toBe(original.name);
+    expect(describeError(crossed)?.title).toBe(describeError(original)?.title);
   });
 });

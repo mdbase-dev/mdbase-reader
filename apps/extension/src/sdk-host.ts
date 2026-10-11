@@ -1,7 +1,10 @@
 import {
+  collectionCommands,
+  decodeArgs,
   failedRequestId,
-  isCallbackSlot,
+  isApplicationCommand,
   isClientMessage,
+  isCollectionCommand,
   serializeError,
   type CallTarget,
   type ClientMessage,
@@ -28,37 +31,28 @@ export interface SdkHost {
   close(): void;
 }
 
-/** Methods whose results cannot cross the channel; callers fall back to their alternatives. */
-const unsupported = new Set(["constructor", "listPages"]);
-/** Calls a person starts; a sign-in they lead to opens from that person's page. */
-const interactive = new Set([
-  "authorize",
-  "approve",
-  "reauthorize",
-  "chooseAnother",
-  "select",
-  "configure",
-]);
+type CallMessage = Extract<ClientMessage, { kind: "call" }>;
+type Method = (...args: unknown[]) => unknown;
 
-function methodNames(value: object): string[] {
-  const names = new Set<string>();
-  for (let current: object | null = value; current && current !== Object.prototype;) {
-    for (const name of Object.getOwnPropertyNames(current)) {
-      const member = (value as Record<string, unknown>)[name];
-      if (typeof member === "function" && !unsupported.has(name)) {
-        names.add(name);
-      }
-    }
-    current = Object.getPrototypeOf(current) as object | null;
+/** Calls a person starts; a sign-in they lead to opens from that person's page. */
+const interactive = new Set(["authorize", "approve", "chooseAnother", "select", "configure"]);
+
+function member(owner: unknown, name: string): Method | null {
+  if (typeof owner !== "object" || owner === null) {
+    return null;
   }
-  return [...names];
+  const value = (owner as Record<string, unknown>)[name];
+  return typeof value === "function" ? (value as Method).bind(owner) : null;
 }
 
+/** The allowed commands this collection actually has, so optional ones stay absent. */
 function shapeOf(key: string, collection: ReaderConnectedCollection): CollectionShape {
   const repositories: Record<string, string[]> = {};
-  for (const [name, value] of Object.entries(collection as unknown as Record<string, unknown>)) {
-    if (typeof value === "object" && value !== null) {
-      repositories[name] = methodNames(value);
+  for (const [repository, commands] of Object.entries(collectionCommands)) {
+    const owner = (collection as unknown as Record<string, unknown>)[repository];
+    const present = commands.filter((command) => member(owner, command));
+    if (typeof owner === "object" && owner !== null) {
+      repositories[repository] = present;
     }
   }
   return {
@@ -69,73 +63,37 @@ function shapeOf(key: string, collection: ReaderConnectedCollection): Collection
   };
 }
 
-function isPlainObject(value: unknown): value is Record<string, unknown> {
-  return (
-    typeof value === "object" && value !== null && Object.getPrototypeOf(value) === Object.prototype
-  );
-}
-
-function decodeArgs(
-  message: Extract<ClientMessage, { kind: "call" }>,
-  signal: AbortSignal,
-  post: (message: HostMessage) => void,
-): unknown[] {
-  const callback =
-    (slot: number) =>
-    (...args: unknown[]): void =>
-      post({ kind: "callback", client: message.client, id: message.id, slot, args });
-  return message.args.map((arg) => {
-    if (isCallbackSlot(arg)) {
-      return callback(arg.callbackSlot);
-    }
-    if (!isPlainObject(arg)) {
-      return arg;
-    }
-    const decoded: Record<string, unknown> = {};
-    for (const [key, value] of Object.entries(arg)) {
-      if (key === "abortSignal") {
-        decoded["signal"] = signal;
-      } else {
-        decoded[key] = isCallbackSlot(value) ? callback(value.callbackSlot) : value;
-      }
-    }
-    return decoded;
-  });
-}
-
-type Method = (...args: unknown[]) => unknown;
-
-function boundMethod(owner: unknown, method: string): Method | null {
-  if (typeof owner !== "object" || owner === null) {
-    return null;
-  }
-  const member = (owner as Record<string, unknown>)[method];
-  return typeof member === "function" ? (member as Method).bind(owner) : null;
+function refused(message: string, code: string): Error {
+  return Object.assign(new Error(message), { code });
 }
 
 function resolveTarget(source: SdkHostSource, target: CallTarget, method: string): Method {
   if ("app" in target) {
-    const bound = boundMethod(source.application, method);
+    const bound = isApplicationCommand(method) ? member(source.application, method) : null;
     if (!bound) {
-      throw new Error(`mdbase has no ${method}.`);
+      throw refused(`mdbase Reader does not send ${method}.`, "command_not_allowed");
     }
     return bound;
   }
+  if (!isCollectionCommand(target.repository, method)) {
+    throw refused(
+      `mdbase Reader does not send ${target.repository}.${method}.`,
+      "command_not_allowed",
+    );
+  }
   const current = source.currentCollection();
   if (current?.key !== target.key) {
-    throw Object.assign(new Error("The collection connection changed. Try again."), {
-      code: "connection_retired",
-    });
+    throw refused("The collection connection changed. Try again.", "connection_retired");
   }
   const repository = (current.collection as unknown as Record<string, unknown>)[target.repository];
-  const bound = boundMethod(repository, method);
+  const bound = member(repository, method);
   if (!bound) {
-    throw new Error(`The collection has no ${target.repository}.${method}.`);
+    throw refused(`The collection has no ${target.repository}.${method}.`, "command_not_allowed");
   }
   return bound;
 }
 
-/** Serves the page-owned SDK entry to every extension context over `link`. */
+/** Serves the offscreen document's SDK entry to every extension context over `link`. */
 export function serveSdk(link: SdkLink, source: SdkHostSource, hostId: string): SdkHost {
   const { application } = source;
   const controllers = new Map<string, AbortController>();
@@ -152,7 +110,20 @@ export function serveSdk(link: SdkLink, source: SdkHostSource, hostId: string): 
     });
   };
 
-  const call = async (message: Extract<ClientMessage, { kind: "call" }>): Promise<void> => {
+  const failure = (
+    reason: unknown,
+  ): Pick<Extract<HostMessage, { kind: "result" }>, "value" | "pending"> => {
+    const requestId = failedRequestId(reason);
+    const recovery = source.currentCollection()?.collection.bodyRecovery;
+    return {
+      value: serializeError(reason),
+      ...(requestId && recovery
+        ? { pending: { requestId, pending: recovery.pending(requestId) } }
+        : {}),
+    };
+  };
+
+  const call = async (message: CallMessage): Promise<void> => {
     const controllerKey = `${message.client}:${String(message.id)}`;
     const controller = new AbortController();
     controllers.set(controllerKey, controller);
@@ -160,25 +131,21 @@ export function serveSdk(link: SdkLink, source: SdkHostSource, hostId: string): 
       lastClient = message.client;
     }
     const reply = { kind: "result", host: hostId, client: message.client, id: message.id } as const;
+    const onCallback = (slot: number, args: unknown[]): void =>
+      post({ kind: "callback", host: hostId, client: message.client, id: message.id, slot, args });
     try {
       const target = resolveTarget(source, message.target, message.method);
-      const value: unknown = await target(...decodeArgs(message, controller.signal, post));
+      const value: unknown = await target(
+        ...decodeArgs(message.args, controller.signal, onCallback),
+      );
       try {
         post({ ...reply, ok: true, value });
       } catch (reason) {
+        // The SDK's answer cannot cross the channel (it holds functions).
         post({ ...reply, ok: false, value: serializeError(reason) });
       }
     } catch (reason) {
-      const requestId = failedRequestId(reason);
-      const recovery = source.currentCollection()?.collection.bodyRecovery;
-      post({
-        ...reply,
-        ok: false,
-        value: serializeError(reason),
-        ...(requestId && recovery
-          ? { pending: { requestId, pending: recovery.pending(requestId) } }
-          : {}),
-      });
+      post({ ...reply, ok: false, ...failure(reason) });
     } finally {
       controllers.delete(controllerKey);
     }
@@ -204,7 +171,7 @@ export function serveSdk(link: SdkLink, source: SdkHostSource, hostId: string): 
   return {
     openSignIn(url) {
       if (lastClient) {
-        post({ kind: "open", client: lastClient, url });
+        post({ kind: "open", host: hostId, client: lastClient, url });
       }
     },
     close() {

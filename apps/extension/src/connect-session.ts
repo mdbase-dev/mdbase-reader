@@ -16,6 +16,8 @@ export interface ExtensionSession {
   readonly application: RemoteApplication;
   /** Reader's repositories over the host's current READY connection, or null. */
   connectedCollection(): ReaderConnectedCollection | null;
+  /** False while the SDK host restarts; the application snapshot is then the last one. */
+  hostAvailable(): boolean;
   /** Reader's capture journal, in extension storage so any page can recover it. */
   readonly journalStorage: KeyValueStorage;
   dispose(): void;
@@ -47,6 +49,7 @@ export async function createExtensionSession(
   return {
     application: client.application,
     connectedCollection: () => client.connectedCollection(),
+    hostAvailable: () => client.hostAvailable(),
     journalStorage: {
       get: (key) => Promise.resolve(storage.getItem(key)),
       set: (key, value) => Promise.resolve(storage.setItem(key, value)),

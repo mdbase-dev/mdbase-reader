@@ -1,6 +1,11 @@
 import {
   deserializeError,
+  encodeArgs,
+  isApplicationSnapshot,
   isHostMessage,
+  isReadinessSnapshot,
+  isValidSnapshotMessage,
+  type ApplicationCommand,
   type CallTarget,
   type CollectionShape,
   type HostMessage,
@@ -28,6 +33,9 @@ export interface SdkClient {
   readonly application: RemoteApplication;
   /** Reader's repositories over the host's current READY connection, or null. */
   connectedCollection(): ReaderConnectedCollection | null;
+  /** False while the host is gone and being restarted; the snapshot is then the last one. */
+  hostAvailable(): boolean;
+  /** Settles this context's pending calls; the host and its SDK keep running. */
   dispose(): void;
 }
 
@@ -43,64 +51,18 @@ export interface SdkClientOptions {
 type Callback = (...args: unknown[]) => void;
 
 interface Inflight {
+  /** The host the call was sent to; only it may answer. */
+  readonly host: string;
   resolve(value: unknown): void;
   reject(reason: unknown): void;
   readonly callbacks: readonly Callback[];
 }
-
-const applicationMethods = [
-  "start",
-  "authorize",
-  "approve",
-  "select",
-  "chooseAnother",
-  "assess",
-  "configure",
-] as const;
 
 const helloIntervalMs = 250;
 const startTimeoutMs = 20_000;
 
 export const hostRestartedMessage =
   "mdbase restarted in the background. Check whether your last change was saved, then try again.";
-
-function isPlainObject(value: unknown): value is Record<string, unknown> {
-  return (
-    typeof value === "object" && value !== null && Object.getPrototypeOf(value) === Object.prototype
-  );
-}
-
-/** Replaces functions with callback slots and an AbortSignal with a marker the host fills. */
-function encodeArgs(
-  args: readonly unknown[],
-  callbacks: Callback[],
-  onSignal: (signal: AbortSignal) => void,
-): unknown[] {
-  const slot = (fn: Callback): { callbackSlot: number } => {
-    callbacks.push(fn);
-    return { callbackSlot: callbacks.length - 1 };
-  };
-  return args.map((arg) => {
-    if (typeof arg === "function") {
-      return slot(arg as Callback);
-    }
-    if (!isPlainObject(arg)) {
-      return arg;
-    }
-    const encoded: Record<string, unknown> = {};
-    for (const [key, value] of Object.entries(arg)) {
-      if (value instanceof AbortSignal) {
-        onSignal(value);
-        encoded["abortSignal"] = true;
-      } else if (typeof value === "function") {
-        encoded[key] = slot(value as Callback);
-      } else if (value !== undefined) {
-        encoded[key] = value;
-      }
-    }
-    return encoded;
-  });
-}
 
 /** One context's connection to the host: requests, snapshots and reconnection. */
 class HostConnection {
@@ -172,17 +134,22 @@ class HostConnection {
   }
 
   async call(target: CallTarget, method: string, args: readonly unknown[]): Promise<unknown> {
+    const callbacks: Callback[] = [];
+    const signals: AbortSignal[] = [];
+    // Throws for an already-aborted signal: that call never reaches the SDK.
+    const encoded = encodeArgs(args, callbacks, signals);
     // A failed start is retried by the next call.
     await this.#connected.catch(() => this.connect());
-    if (!this.#host) {
+    for (const signal of signals) {
+      signal.throwIfAborted();
+    }
+    const host = this.#host;
+    if (!host || this.#disposed) {
       throw new Error(hostRestartedMessage);
     }
     const id = ++this.#nextId;
-    const callbacks: Callback[] = [];
-    const signals: AbortSignal[] = [];
-    const encoded = encodeArgs(args, callbacks, (signal) => signals.push(signal));
     return new Promise<unknown>((resolve, reject) => {
-      this.#inflight.set(id, { resolve, reject, callbacks });
+      this.#inflight.set(id, { host, resolve, reject, callbacks });
       for (const signal of signals) {
         signal.addEventListener(
           "abort",
@@ -204,10 +171,28 @@ class HostConnection {
     return this.#proxy.collection;
   }
 
+  hostAvailable(): boolean {
+    return this.#host !== null;
+  }
+
   dispose(): void {
     this.#disposed = true;
+    for (const id of this.#inflight.keys()) {
+      this.link.post({ kind: "abort", client: this.#client, id });
+    }
+    this.#fail(() => true);
     this.#unlisten();
     this.#listeners.clear();
+  }
+
+  /** Settles the matching calls with the restart outcome: they may or may not have run. */
+  #fail(matches: (call: Inflight) => boolean): void {
+    for (const [id, call] of [...this.#inflight]) {
+      if (matches(call)) {
+        this.#inflight.delete(id);
+        call.reject(new Error(hostRestartedMessage));
+      }
+    }
   }
 
   #notify(): void {
@@ -227,18 +212,28 @@ class HostConnection {
     if (message.kind === "result") {
       this.#settle(message);
     } else if (message.kind === "callback") {
-      this.#inflight.get(message.id)?.callbacks[message.slot]?.(...message.args);
-    } else {
+      const call = this.#inflight.get(message.id);
+      if (call?.host === message.host) {
+        call.callbacks[message.slot]?.(...message.args);
+      }
+    } else if (message.host === this.#host) {
       this.options.openSignIn(message.url);
     }
   }
 
   #adopt(message: Extract<HostMessage, { kind: "snapshot" }>): void {
+    const { snapshot } = message;
+    if (this.#disposed || !isValidSnapshotMessage(message) || !isApplicationSnapshot(snapshot)) {
+      return;
+    }
     if (message.host !== this.#host) {
+      // A new host replaced the old one: the old one will never answer.
+      this.#fail((call) => call.host !== message.host);
       this.#host = message.host;
+      this.#proxy = null;
       void this.options.hostGone(message.host).then(() => this.#hostGone(message.host));
     }
-    this.#snapshot = message.snapshot as MdbaseApplicationSnapshot;
+    this.#snapshot = snapshot;
     this.#shape = message.collection;
     this.#markConnected();
     this.#notify();
@@ -246,7 +241,7 @@ class HostConnection {
 
   #settle(message: Extract<HostMessage, { kind: "result" }>): void {
     const call = this.#inflight.get(message.id);
-    if (!call) {
+    if (call?.host !== message.host) {
       return;
     }
     this.#inflight.delete(message.id);
@@ -262,19 +257,16 @@ class HostConnection {
 
   /** The host closed or crashed: fail what it never answered, then start a new one. */
   #hostGone(gone: string): void {
-    if (gone !== this.#host || this.#disposed) {
+    if (this.#disposed) {
+      return;
+    }
+    this.#fail((call) => call.host === gone);
+    if (gone !== this.#host) {
       return;
     }
     this.#host = null;
     this.#shape = null;
     this.#proxy = null;
-    for (const call of this.#inflight.values()) {
-      call.reject(new Error(hostRestartedMessage));
-    }
-    this.#inflight.clear();
-    if (this.#snapshot) {
-      this.#snapshot = { ...this.#snapshot, status: "starting" };
-    }
     this.#notify();
     void this.connect().catch(() => undefined);
   }
@@ -292,7 +284,8 @@ class HostConnection {
       }
       if (repository === "bodyRecovery") {
         // Synchronous in the port: the host's answer arrives with the failed write.
-        stub["pending"] = (requestId: string) => this.#pendingBodies.get(requestId) ?? false;
+        // Unknown: let the SDK's recovery read the outcome back rather than assume none.
+        stub["pending"] = (requestId: string) => this.#pendingBodies.get(requestId) ?? true;
       }
       if (methods.includes("invalidateRecord")) {
         stub["invalidateRecord"] = (path: string): void => {
@@ -316,20 +309,38 @@ export async function createSdkClient(
   options: SdkClientOptions,
 ): Promise<SdkClient> {
   const connection = new HostConnection(link, options);
-  const application = {
+  /** An application command whose answer must be an SDK snapshot. */
+  const command =
+    (method: ApplicationCommand) =>
+    async (...args: unknown[]): Promise<MdbaseApplicationSnapshot> => {
+      const answer = await connection.call({ app: true }, method, args);
+      if (!isApplicationSnapshot(answer)) {
+        throw new Error(`mdbase answered ${method} with something other than its state.`);
+      }
+      return answer;
+    };
+  const application: RemoteApplication = {
     getSnapshot: () => connection.snapshot,
-    subscribe: (listener: () => void) => connection.subscribe(listener),
-    ...Object.fromEntries(
-      applicationMethods.map((method) => [
-        method,
-        (...args: unknown[]) => connection.call({ app: true }, method, args),
-      ]),
-    ),
-  } as unknown as RemoteApplication;
+    subscribe: (listener) => connection.subscribe(listener),
+    start: command("start"),
+    authorize: command("authorize"),
+    approve: command("approve"),
+    select: command("select"),
+    chooseAnother: command("chooseAnother"),
+    configure: command("configure"),
+    async assess(...args) {
+      const answer = await connection.call({ app: true }, "assess", args);
+      if (!isReadinessSnapshot(answer)) {
+        throw new Error("mdbase answered the readiness check with something else.");
+      }
+      return answer;
+    },
+  };
   await connection.connect();
   return {
     application,
     connectedCollection: () => connection.connectedCollection(),
+    hostAvailable: () => connection.hostAvailable(),
     dispose: () => connection.dispose(),
   };
 }

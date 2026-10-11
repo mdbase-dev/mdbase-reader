@@ -65,6 +65,7 @@ const ready = { collectionId: "test", annotations: { listForSource: mocks.list }
 const extension = {
   application,
   connectedCollection: () => (current["status"] === "ready" ? ready : null),
+  hostAvailable: () => true,
   journalStorage: {},
   dispose: vi.fn(),
 };

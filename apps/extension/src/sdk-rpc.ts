@@ -1,3 +1,7 @@
+import type { MdbaseApplicationSnapshot } from "@mdbase-reader/connect/native";
+
+type MdbaseApplicationReadinessSnapshot = MdbaseApplicationSnapshot["readiness"];
+
 /**
  * The extension's SDK channel. One offscreen document owns the SDK (sdk-host.ts); the side
  * panel, settings and welcome pages and the service worker reach it through sdk-client.ts.
@@ -25,6 +29,67 @@ export function broadcastLink(name = sdkChannelName): SdkLink & { close(): void 
     },
     close: () => channel.close(),
   };
+}
+
+/** The application commands the extension sends; nothing else reaches the SDK. */
+export const applicationCommands = [
+  "start",
+  "authorize",
+  "approve",
+  "select",
+  "chooseAnother",
+  "assess",
+  "configure",
+] as const;
+export type ApplicationCommand = (typeof applicationCommands)[number];
+
+/**
+ * Reader's public repository commands (packages/core ports) that cross the channel.
+ * Streams (`listPages`) and handles with methods (`documents.open`) cannot, and callers
+ * fall back to their alternatives; `bodyRecovery.pending` is answered client-side.
+ */
+export const collectionCommands = {
+  sources: [
+    "list",
+    "get",
+    "findByUrl",
+    "findByCitekeyPrefix",
+    "updateBody",
+    "updateReading",
+    "updateReadingStatus",
+    "updateFields",
+    "updateCitation",
+    "appendAnnotationEmbed",
+  ],
+  sourceImports: ["findExactDuplicate", "commitFile", "attachFile"],
+  annotations: [
+    "invalidateRecord",
+    "sourceIdsWithAnnotations",
+    "annotationCountsBySource",
+    "listAll",
+    "listForSource",
+    "create",
+    "updateBody",
+    "preflightDelete",
+    "delete",
+    "get",
+  ],
+  annotationAssets: ["store", "start", "mark"],
+  contentSearch: ["search"],
+  files: ["read"],
+  bodyRecovery: ["recoverSource", "recoverAnnotation"],
+} as const satisfies Record<string, readonly string[]>;
+export type CollectionRepository = keyof typeof collectionCommands;
+
+export function isApplicationCommand(method: string): method is ApplicationCommand {
+  return (applicationCommands as readonly string[]).includes(method);
+}
+
+export function isCollectionCommand(repository: string, method: string): boolean {
+  const commands = (collectionCommands as Record<string, readonly string[] | undefined>)[
+    repository
+  ];
+  return Object.hasOwn(collectionCommands, repository) && !!commands?.includes(method);
 }
 
 /** Which repository methods the host's collection has, so optional ones stay absent. */
@@ -74,12 +139,13 @@ export type HostMessage =
     }
   | {
       readonly kind: "callback";
+      readonly host: string;
       readonly client: string;
       readonly id: number;
       readonly slot: number;
       readonly args: readonly unknown[];
     }
-  | { readonly kind: "open"; readonly client: string; readonly url: string };
+  | { readonly kind: "open"; readonly host: string; readonly client: string; readonly url: string };
 
 function isObject(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null;
@@ -163,4 +229,127 @@ export function failedRequestId(reason: unknown): string | null {
     current = current["cause"];
   }
   return null;
+}
+
+function isPlainObject(value: unknown): value is Record<string, unknown> {
+  return (
+    typeof value === "object" && value !== null && Object.getPrototypeOf(value) === Object.prototype
+  );
+}
+
+type Callback = (...args: unknown[]) => void;
+
+/**
+ * Replaces functions with callback slots and an AbortSignal with a marker the host turns
+ * into its own signal (aborted with this one). Throws an already-aborted signal's reason:
+ * such a call must never reach the SDK.
+ */
+export function encodeArgs(
+  args: readonly unknown[],
+  callbacks: Callback[],
+  signals: AbortSignal[] = [],
+): unknown[] {
+  const slot = (fn: Callback): CallbackSlot => {
+    callbacks.push(fn);
+    return { callbackSlot: callbacks.length - 1 };
+  };
+  return args.map((arg) => {
+    if (typeof arg === "function") {
+      return slot(arg as Callback);
+    }
+    if (!isPlainObject(arg)) {
+      return arg;
+    }
+    const encoded: Record<string, unknown> = {};
+    for (const [key, value] of Object.entries(arg)) {
+      if (value instanceof AbortSignal) {
+        value.throwIfAborted();
+        signals.push(value);
+        encoded["abortSignal"] = true;
+      } else if (typeof value === "function") {
+        encoded[key] = slot(value as Callback);
+      } else if (value !== undefined) {
+        encoded[key] = value;
+      }
+    }
+    return encoded;
+  });
+}
+
+/** The host's side of {@link encodeArgs}. */
+export function decodeArgs(
+  args: readonly unknown[],
+  signal: AbortSignal,
+  onCallback: (slot: number, args: unknown[]) => void,
+): unknown[] {
+  const callback =
+    (slot: number) =>
+    (...values: unknown[]): void =>
+      onCallback(slot, values);
+  return args.map((arg) => {
+    if (isCallbackSlot(arg)) {
+      return callback(arg.callbackSlot);
+    }
+    if (!isPlainObject(arg)) {
+      return arg;
+    }
+    const decoded: Record<string, unknown> = {};
+    for (const [key, value] of Object.entries(arg)) {
+      if (key === "abortSignal") {
+        decoded["signal"] = signal;
+      } else {
+        decoded[key] = isCallbackSlot(value) ? callback(value.callbackSlot) : value;
+      }
+    }
+    return decoded;
+  });
+}
+
+/** The SDK readiness facet's shape, as `assess` answers it. */
+export function isReadinessSnapshot(value: unknown): value is MdbaseApplicationReadinessSnapshot {
+  return isObject(value) && typeof value["checking"] === "boolean";
+}
+
+/** The fields the client reads from a host snapshot; anything else is not one. */
+export function isApplicationSnapshot(value: unknown): value is MdbaseApplicationSnapshot {
+  if (!isObject(value)) {
+    return false;
+  }
+  const { status, collections, selection, readiness } = value;
+  return (
+    typeof status === "string" &&
+    Array.isArray(collections) &&
+    isObject(selection) &&
+    typeof selection["state"] === "string" &&
+    isReadinessSnapshot(readiness)
+  );
+}
+
+function isCollectionShape(value: unknown): value is CollectionShape {
+  if (!isObject(value) || !isObject(value["repositories"])) {
+    return false;
+  }
+  return (
+    typeof value["key"] === "string" &&
+    typeof value["collectionId"] === "string" &&
+    typeof value["collectionName"] === "string" &&
+    Object.entries(value["repositories"]).every(
+      ([repository, methods]) =>
+        Array.isArray(methods) &&
+        methods.every(
+          (method) => typeof method === "string" && isCollectionCommand(repository, method),
+        ),
+    )
+  );
+}
+
+/** A host snapshot message whose snapshot and collection shape have the expected form. */
+export function isValidSnapshotMessage(
+  message: Extract<HostMessage, { kind: "snapshot" }>,
+): boolean {
+  return (
+    typeof message.host === "string" &&
+    isApplicationSnapshot(message.snapshot) &&
+    (message.collection === null || isCollectionShape(message.collection))
+  );
 }
