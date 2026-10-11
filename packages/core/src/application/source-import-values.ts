@@ -38,6 +38,7 @@ export function validateMetadata(metadata: SourceImportMetadata): SourceImportMe
     ...(description ? { description } : {}),
     ...(language ? { language } : {}),
     ...(site ? { site } : {}),
+    ...(metadata.socialPost ? { socialPost: metadata.socialPost } : {}),
   };
 }
 

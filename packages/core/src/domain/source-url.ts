@@ -9,6 +9,17 @@ const trackingParameter =
 export function normalizedSourceUrl(value: string): string {
   const url = new URL(value);
   url.hash = "";
+  if (/^(?:(?:www|mobile)\.)?(?:x|twitter)\.com$/u.test(url.hostname)) {
+    const status = /^\/(?:[^/]+\/status|i\/web\/status|i\/status)\/(\d+)(?:\/|$)/u.exec(
+      url.pathname,
+    )?.[1];
+    if (status) {
+      return `https://x.com/i/status/${status}`;
+    }
+  }
+  if (url.hostname === "bsky.app" && /^\/profile\/[^/]+\/post\/[^/]+\/?$/u.test(url.pathname)) {
+    url.search = "";
+  }
   const cached = ampCacheOrigin(url);
   if (cached) {
     return normalizedSourceUrl(cached);
@@ -43,6 +54,10 @@ export function sameSourceUrl(value: string, normalized: string): boolean {
  */
 export function sourceUrlSearchKey(value: string): string {
   const url = new URL(normalizedSourceUrl(value));
+  // Every X spelling contains /status/ID, even when the stored hostname/author is old.
+  if (url.hostname === "x.com" && /^\/i\/status\/\d+$/u.test(url.pathname)) {
+    return url.pathname.replace(/^\/i/u, "");
+  }
   return `${url.hostname}${url.pathname === "/" ? "" : url.pathname}`.toLowerCase();
 }
 

@@ -8,6 +8,41 @@ import type { ReaderConnectClient } from "./repository-client.js";
 import type { PlannedSourceFileImport } from "@mdbase-reader/core";
 
 describe("ConnectSourceImportRepository web capture provenance", () => {
+  it("persists post identity, thread parts and media as portable source frontmatter", async () => {
+    const create = vi.fn(() => Promise.resolve(success(recordDocument())));
+    const repository = new ConnectSourceImportRepository(
+      { create } as unknown as ReaderConnectClient,
+      {
+        upload: vi.fn((path: string) =>
+          Promise.resolve(fileDescriptor({ path, mediaType: "text/html" })),
+        ),
+      },
+    );
+    const part = {
+      platform: "x" as const,
+      id: "100",
+      url: "https://x.com/i/status/100",
+      author: { id: "fixture", handle: "fixture", name: "Fixture Author" },
+      text: "Durable post",
+      media: [
+        { kind: "image" as const, url: "https://media.example/image.png", alt: "A blue square" },
+      ],
+    };
+    const post = { ...part, threadRoot: part.id, parts: [part], threadPartial: true };
+    const base = webCapturePlan();
+    await repository.commitFile({
+      ...base,
+      kind: "post",
+      metadata: { socialPost: post },
+      capture: { ...base.capture!, submittedUrl: part.url, canonicalUrl: part.url },
+    });
+    expect(create).toHaveBeenCalledWith(
+      expect.objectContaining({
+        frontmatter: expect.objectContaining({ kind: "post", url: part.url, social_post: post }),
+      }),
+    );
+  });
+
   it("preserves raw and readable web representations with capture metadata", async () => {
     const create = vi.fn(() => Promise.resolve(success(recordDocument())));
     const upload = vi.fn((path: string) =>

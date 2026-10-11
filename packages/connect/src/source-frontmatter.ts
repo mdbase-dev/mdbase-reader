@@ -37,6 +37,7 @@ function metadataFields(
     ...(metadata.description ? { description: metadata.description } : {}),
     ...(metadata.language ? { language: metadata.language } : {}),
     ...(metadata.site ? { site: metadata.site } : {}),
+    ...(metadata.socialPost ? { social_post: metadata.socialPost } : {}),
   };
 }
 

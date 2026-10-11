@@ -2,10 +2,13 @@ import {
   dateTime,
   type SourceCaptureProvenance,
   type SourceImportMetadata,
+  type SocialPost,
 } from "@mdbase-reader/core";
 
 import { citationAuthors } from "./csl-values.js";
 import { extractScholarlyMetadata, type ScholarlyMetadata } from "./scholarly-metadata.js";
+import { socialPostImport } from "./social/import.js";
+import { adapterFor, postAddress } from "./social/index.js";
 
 import type { Readability } from "@mozilla/readability";
 
@@ -16,6 +19,7 @@ export interface CapturedWebDocument {
   readonly canonicalUrl: string;
   readonly retrievedAt: string;
   readonly html: string;
+  readonly post?: SocialPost;
 }
 
 export interface WebCaptureImport {
@@ -53,6 +57,30 @@ export async function webCaptureImport(
   capture: CapturedWebDocument,
   options: WebCaptureImportOptions = {},
 ): Promise<WebCaptureImport> {
+  if (capture.post) {
+    return socialPostImport(capture.post, capture);
+  }
+  const socialDocument = options.document ?? parseHtml(capture.html);
+  const adapter = adapterFor(socialDocument, capture.submittedUrl);
+  if (adapter) {
+    if (adapter.detect(socialDocument, capture.submittedUrl) !== "single") {
+      throw new Error(
+        "Feeds cannot be saved as sources. Choose individual posts in the Reader extension.",
+      );
+    }
+    const address = postAddress(capture.submittedUrl);
+    if (!address) {
+      throw new Error("Open a post permalink to save it.");
+    }
+    const ref = adapter.items(socialDocument).find((item) => item.id === address.id) ?? {
+      ...address,
+      author: "",
+      snippet: "",
+      top: 0,
+      bottom: 0,
+    };
+    return socialPostImport(await adapter.extract(ref, socialDocument), capture);
+  }
   // Loaded on save only: opening the capture panel should not pay for Readability.
   const [{ Readability }, { prepareHtmlDocument }] = await Promise.all([
     import("@mozilla/readability"),

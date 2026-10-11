@@ -127,6 +127,10 @@ function cssSelector(element: Element, body: HTMLElement): string {
   if (element === body) {
     return "body";
   }
+  const post = postSelector(element);
+  if (post) {
+    return post;
+  }
   if (element.id) {
     return `#${escapeIdentifier(element.id)}`;
   }
@@ -145,6 +149,20 @@ function cssSelector(element: Element, body: HTMLElement): string {
     current = parent;
   }
   return segments[0]?.startsWith("#") ? segments.join(" > ") : `body > ${segments.join(" > ")}`;
+}
+
+function postSelector(element: Element): string | null {
+  let part = element.closest("[data-post-id]");
+  // Quoted context belongs to the containing post, even when the quote appears twice.
+  for (
+    let parent = part?.parentElement?.closest("[data-post-id]");
+    parent;
+    parent = parent.parentElement?.closest("[data-post-id]")
+  ) {
+    part = parent;
+  }
+  const id = part?.getAttribute("data-post-id");
+  return id ? `[data-post-id=${JSON.stringify(id)}]` : null;
 }
 
 function escapeIdentifier(value: string): string {

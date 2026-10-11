@@ -1,5 +1,6 @@
 import type { ReaderRequestOptions } from "./ports.js";
 import type { CollectionId, MutationId, SourceId } from "../domain/identity.js";
+import type { SocialPost } from "../domain/social-post.js";
 import type { Source, SourceSummary } from "../domain/source.js";
 import type { DateTime } from "../domain/time.js";
 
@@ -63,6 +64,7 @@ export interface SourceCaptureArchive {
 }
 
 export interface SourceImportMetadata {
+  readonly socialPost?: SocialPost;
   readonly authors?: readonly string[];
   readonly published?: string;
   readonly description?: string;
