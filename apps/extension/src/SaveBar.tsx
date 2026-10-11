@@ -120,5 +120,11 @@ function submitLabel(c: ExtensionCaptureController): string {
   if (c.busy) {
     return c.status === "saving" || c.progress ? "Saving…" : "Please wait…";
   }
-  return c.capture?.kind === "pdf" ? "Save PDF" : "Save page";
+  return c.capture?.kind === "pdf"
+    ? "Save PDF"
+    : c.postPicker
+      ? "Choose posts to save"
+      : c.capture?.kind === "html" && c.capture.post
+        ? "Save post"
+        : "Save page";
 }

@@ -1,3 +1,4 @@
+import { updateSocialStatus } from "./background-social-status.js";
 import { clearPageMark, markSavedPage } from "./page-badge.js";
 import { pageStatusEnabledCached } from "./page-status.js";
 import { panelShowsTab } from "./panel-presence.js";
@@ -71,6 +72,9 @@ export async function updatePageStatus(
     // Tab badges outlive navigation, so a marked tab loses its mark on every page load.
     await clearPageMark(tabId);
     if (!url?.startsWith("https://") || !(await pageStatusEnabledCached())) {
+      return;
+    }
+    if (await updateSocialStatus(tabId, url, (postUrl) => savedPage(postUrl, connect), current)) {
       return;
     }
     const found = await savedPage(url, connect);

@@ -5,6 +5,7 @@ import {
   restoreCollection,
 } from "./connect-session.js";
 import { annotationQuotes, drawPageQuotes, type PageQuote } from "./page-annotations.js";
+import { scopePostQuotes, storedSocialPost } from "./social-quotes.js";
 
 import type {
   ReaderConnectedCollection,
@@ -97,7 +98,7 @@ async function savedQuotes(
     collection.collectionId,
     source.id,
   );
-  return annotationQuotes(annotations);
+  return scopePostQuotes(annotationQuotes(annotations), storedSocialPost(source.properties));
 }
 
 export const pageStatusConnect: PageStatusConnect = {

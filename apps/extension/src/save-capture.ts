@@ -15,6 +15,7 @@ import {
   type DocumentDescriptor,
   type MutationId,
   type QuoteSelector,
+  type HtmlSelector,
   type Source,
   type SourceFileImportRequest,
   type SourceImportMetadata,
@@ -22,7 +23,12 @@ import {
   type SourceSummary,
 } from "@mdbase-reader/core";
 import { createReaderRuntimeServices, type KeyValueStorage } from "@mdbase-reader/platform";
-import { citationAuthors, citationYear, webCaptureImport } from "@mdbase-reader/web-capture";
+import {
+  citationAuthors,
+  citationYear,
+  postCitation,
+  webCaptureImport,
+} from "@mdbase-reader/web-capture";
 
 import {
   citekeyNeighbours,
@@ -83,6 +89,11 @@ export interface SaveCaptureInput {
 const savedTextLimit = 4;
 
 /** A saved source with the reading copy this save just uploaded, when it created the source. */
+interface SavedText {
+  readonly text: string;
+  readonly parts: ReadonlyMap<string, string>;
+}
+
 interface CreatedSource {
   readonly source: Source;
   readonly readable: Uint8Array | null;
@@ -93,7 +104,7 @@ export class CaptureWriter {
   readonly #runtime;
   readonly #annotations = new Map<string, { id: AnnotationId; mutation: MutationId }>();
   /** Keyed by the exact stored revision, so a changed copy is never matched from here. */
-  readonly #savedTexts = new Map<string, string>();
+  readonly #savedTexts = new Map<string, SavedText>();
 
   constructor(private readonly journalStorage: KeyValueStorage) {
     this.#runtime = createReaderRuntimeServices(journalStorage);
@@ -101,6 +112,7 @@ export class CaptureWriter {
 
   async save(input: SaveCaptureInput): Promise<SavedCapture> {
     const { session, collection, capture, draft, onSource } = input;
+    assertPostCapture(capture);
     const outcomes = await session.recoverPendingMutations();
     const failure = outcomes.find((outcome) => !outcome.ok);
     if (failure) {
@@ -134,7 +146,13 @@ export class CaptureWriter {
     void rememberSavedUrls(collection.collectionId, [capture.canonicalUrl, capture.submittedUrl]);
     const annotation =
       draft.highlight && capture.kind === "html" && capture.selection
-        ? await this.#highlight(collection, created ?? source, capture.selection, draft)
+        ? await this.#highlight(
+            collection,
+            created ?? source,
+            capture.selection,
+            draft,
+            capture.selectionPostId,
+          )
         : null;
     return { source, existing, annotation, notices };
   }
@@ -144,7 +162,8 @@ export class CaptureWriter {
     notices: string[],
     recoverExistingFiles: boolean,
   ): Promise<CreatedSource> {
-    const { collection, capture, draft, citation } = input;
+    const { collection, capture, draft } = input;
+    const citation = captureCitation(input);
     // The citekey lookup does not depend on the new source; fetch it while the page imports.
     const neighbours = citation ? citekeyNeighbours(collection, citation.citation) : null;
     neighbours?.catch(() => undefined);
@@ -189,6 +208,7 @@ export class CaptureWriter {
     saved: SourceSummary | CreatedSource,
     selection: QuoteSelector,
     draft: CaptureDraft,
+    postId?: string,
   ): Promise<Annotation> {
     // A source this save created is current as returned; others are read for their revision.
     const created = "readable" in saved ? saved : null;
@@ -209,6 +229,7 @@ export class CaptureWriter {
       comment,
       draft.color,
       draft.highlightTags,
+      ...(postId ? [postId] : []),
     ]);
     const recoveryKey = `capture-annotation:${await this.#runtime.hasher.sha256(new TextEncoder().encode(key))}`;
     const previous =
@@ -233,11 +254,12 @@ export class CaptureWriter {
       }
     }
     this.#annotations.set(key, identity);
-    const { document, quote } = await this.#savedTarget(
+    const { document, quote, html } = await this.#savedTarget(
       collection,
       source,
       selection,
       created?.readable ?? null,
+      postId,
     );
     await this.journalStorage.set(recoveryKey, JSON.stringify(identity));
     const result = await createAnnotation(
@@ -268,7 +290,7 @@ export class CaptureWriter {
               .filter(Boolean),
           ),
         ],
-        target: { quote },
+        target: { quote, ...(html ? { html } : {}) },
         body: highlightBody(quote.exact, comment),
       },
     );
@@ -311,14 +333,21 @@ export class CaptureWriter {
     source: Source,
     selection: QuoteSelector,
     uploaded: Uint8Array | null,
-  ): Promise<{ document: DocumentDescriptor; quote: QuoteSelector }> {
+    postId?: string,
+  ): Promise<{ document: DocumentDescriptor; quote: QuoteSelector; html?: HtmlSelector }> {
     const document = source.documents.find(
       (item) => ["primary", "readable"].includes(item.role) && item.mediaType === "text/html",
     );
     if (!document) {
       throw new Error("This source has no saved HTML reading copy. Open it in Reader to annotate.");
     }
-    const text = await this.#savedText(collection, source, document, uploaded);
+    const savedText = await this.#savedText(collection, source, document, uploaded);
+    const text = postId ? savedText.parts.get(postId) : savedText.text;
+    if (text === undefined) {
+      throw new Error(
+        "This thread part is absent from the saved copy. Open that copy in Reader; no highlight was created.",
+      );
+    }
     const match = matchTextQuote(text, selection);
     if (!match || match.ambiguous) {
       throw new Error(
@@ -326,7 +355,11 @@ export class CaptureWriter {
       );
     }
     // Stored as the saved copy reads, which is where Reader anchors it.
-    return { document, quote: textQuoteAt(text, match.start, match.end) };
+    return {
+      document,
+      quote: textQuoteAt(text, match.start, match.end),
+      ...(postId ? { html: { css: `[data-post-id=${JSON.stringify(postId)}]` } } : {}),
+    };
   }
 
   /** The reading copy's text at exactly `document.revision`, verified against its digest. */
@@ -335,7 +368,7 @@ export class CaptureWriter {
     source: Source,
     document: DocumentDescriptor,
     uploaded: Uint8Array | null,
-  ): Promise<string> {
+  ): Promise<SavedText> {
     const key = JSON.stringify([
       collection.collectionId,
       source.id,
@@ -354,7 +387,15 @@ export class CaptureWriter {
         ? uploaded
         : await this.#downloadVerified(collection, document);
     const parsed = new DOMParser().parseFromString(new TextDecoder().decode(bytes), "text/html");
-    const text = pageText({ action: "text" }, parsed).text ?? "";
+    const text: SavedText = {
+      text: pageText({ action: "text" }, parsed).text ?? "",
+      parts: new Map(
+        [...parsed.querySelectorAll("[data-post-id]")].map((part) => [
+          part.getAttribute("data-post-id") ?? "",
+          pageText({ action: "text" }, parsed, part).text ?? "",
+        ]),
+      ),
+    };
     this.#savedTexts.set(key, text);
     for (const oldest of this.#savedTexts.keys()) {
       if (this.#savedTexts.size <= savedTextLimit) {
@@ -380,6 +421,22 @@ export class CaptureWriter {
       );
     }
     return saved.bytes;
+  }
+}
+
+function captureCitation(input: SaveCaptureInput): CitationPreview | null {
+  if (input.citation) {
+    return input.citation;
+  }
+  const capture = input.capture;
+  return capture.kind === "html" && capture.post
+    ? { citation: postCitation(capture.post), origin: "page" }
+    : null;
+}
+
+function assertPostCapture(capture: PageCapture): void {
+  if (capture.kind === "html" && capture.social && !capture.post) {
+    throw new Error("Choose individual posts; feeds cannot be saved.");
   }
 }
 
@@ -426,6 +483,7 @@ async function htmlRequest(capture: SelectedWebCapture): Promise<ImportParts> {
     archive: prepared.archive,
     capture: prepared.capture,
     metadata: prepared.metadata,
+    ...(capture.post ? { kind: "post" } : {}),
   };
 }
 

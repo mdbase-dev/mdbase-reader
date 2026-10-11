@@ -17,13 +17,14 @@ export interface StoredDraftState {
 export function useStoredDraft(
   tabId: number,
   capture: PageCapture | null,
-  setSelection: (selection: QuoteSelector | null) => void,
+  setSelection: (selection: QuoteSelector | null, postId?: string) => void,
 ): StoredDraftState {
   const [draft, setDraft] = useState<CaptureDraft>(emptyDraft);
   const [loadedFor, setLoadedFor] = useState<string | null>(null);
   const [restored, setRestored] = useState(false);
   const page = capture?.canonicalUrl ?? null;
   const selection = capture?.kind === "html" ? capture.selection : null;
+  const selectionPostId = capture?.kind === "html" ? capture.selectionPostId : undefined;
 
   // A new passage is what the reader wants to highlight; a cleared one is done.
   const [seenSelection, setSeenSelection] = useState(selection);
@@ -46,7 +47,7 @@ export function useStoredDraft(
       if (stored) {
         setDraft({ ...stored.draft, title: stored.draft.title || capture.pageTitle });
         if (!selection && stored.selection) {
-          setSelection(stored.selection);
+          setSelection(stored.selection, stored.selectionPostId);
         }
         setRestored(Boolean(stored.draft.note.trim() || stored.draft.comment.trim()));
       } else {
@@ -69,9 +70,17 @@ export function useStoredDraft(
     if (!page || loadedFor !== page) {
       return;
     }
-    const timer = setTimeout(() => void saveDraft(tabId, page, { draft, selection }), 250);
+    const timer = setTimeout(
+      () =>
+        void saveDraft(tabId, page, {
+          draft,
+          selection,
+          ...(selectionPostId ? { selectionPostId } : {}),
+        }),
+      250,
+    );
     return () => clearTimeout(timer);
-  }, [draft, loadedFor, page, selection, tabId]);
+  }, [draft, loadedFor, page, selection, selectionPostId, tabId]);
 
   return { draft, setDraft, restored };
 }

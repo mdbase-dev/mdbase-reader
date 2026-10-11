@@ -10,7 +10,10 @@ export interface InvokeMessage {
   readonly tabId: number;
   readonly intent: CaptureIntent;
 }
-export type ExtensionMessage = SelectionMessage | InvokeMessage;
+export interface PostsChangedMessage {
+  readonly type: "mdbase-reader/posts-changed";
+}
+export type ExtensionMessage = SelectionMessage | InvokeMessage | PostsChangedMessage;
 
 /** The intent a newly opened panel should act on; consumed once. */
 export function intentKey(tabId: number): string {

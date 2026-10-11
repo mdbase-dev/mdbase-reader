@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 
-import { intentKey, isExtensionMessage, type CaptureIntent } from "./messages.js";
+import { intentKey, type CaptureIntent } from "./messages.js";
 import {
   captureTab,
   readSelection,
@@ -9,6 +9,8 @@ import {
   type PageCapture,
 } from "./page-capture.js";
 import { pageStatusEnabled, pageStatusOrigins } from "./page-status.js";
+import { useLoadedPosts } from "./use-loaded-posts.js";
+import { usePageEvents } from "./use-page-events.js";
 
 import type { QuoteSelector } from "@mdbase-reader/core";
 
@@ -28,7 +30,7 @@ export interface PageLink {
    * from a click: Chrome asks only during a user gesture.
    */
   readonly allowAllSites: () => Promise<boolean>;
-  readonly setSelection: (selection: QuoteSelector | null) => void;
+  readonly setSelection: (selection: QuoteSelector | null, postId?: string) => void;
 }
 
 /**
@@ -39,36 +41,37 @@ export interface PageLink {
  */
 export function usePageCapture(tabId: number, onProblem: (message: string) => void): PageLink {
   const [capture, setCapture] = useState<PageCapture | null>(null);
+  useLoadedPosts(tabId, setCapture);
   const [navigated, setNavigated] = useState(false);
   const [following, setFollowing] = useState(false);
-  // The page reports selections only while a panel shows its tab.
-  useEffect(() => () => unwatchTabSelection(tabId), [tabId]);
-  const [siteAccess, setSiteAccess] = useState<boolean | null>(null);
-  useEffect(() => {
-    const check = (): void => {
-      pageStatusEnabled()
-        .then(setSiteAccess)
-        .catch(() => setSiteAccess(false));
-    };
-    check();
-    chrome.permissions.onAdded.addListener(check);
-    chrome.permissions.onRemoved.addListener(check);
-    return () => {
-      chrome.permissions.onAdded.removeListener(check);
-      chrome.permissions.onRemoved.removeListener(check);
-    };
-  }, []);
+  const readingEpoch = useRef(0);
+  // Invalidate pending public-API captures when leaving the tab/panel.
+  useEffect(
+    () => () => {
+      ++readingEpoch.current;
+      unwatchTabSelection(tabId);
+    },
+    [tabId],
+  );
   const [invocation, setInvocation] = useState<PageLink["invocation"]>(null);
   const problem = useRef(onProblem);
   useEffect(() => {
     problem.current = onProblem;
   }, [onProblem]);
 
-  const setSelection = useCallback((selection: QuoteSelector | null) => {
-    setCapture((current) => (current?.kind === "html" ? { ...current, selection } : current));
+  const setSelection = useCallback((selection: QuoteSelector | null, postId?: string) => {
+    setCapture((current) =>
+      current?.kind === "html"
+        ? { ...current, selection, ...(postId ? { selectionPostId: postId } : {}) }
+        : current,
+    );
   }, []);
   const readPage = useCallback(async (): Promise<PageCapture> => {
+    const epoch = ++readingEpoch.current;
     const value = await captureTab(tabId);
+    if (epoch !== readingEpoch.current) {
+      return value;
+    }
     setCapture(value);
     setNavigated(false);
     setFollowing(false);
@@ -77,76 +80,37 @@ export function usePageCapture(tabId: number, onProblem: (message: string) => vo
     }
     return value;
   }, [tabId]);
+  const { siteAccess, allowAllSites } = useSiteAccess(readPage);
   const followSelection = useCallback(async () => {
+    const epoch = ++readingEpoch.current;
+    if (capture?.kind === "html" && capture.social) {
+      const next = await captureTab(tabId);
+      if (epoch === readingEpoch.current) {
+        setCapture(next);
+      }
+      return;
+    }
     const selection = await readSelection(tabId);
-    if (selection) {
+    if (selection && epoch === readingEpoch.current) {
       setSelection(selection);
     }
-  }, [setSelection, tabId]);
+  }, [capture, setSelection, tabId]);
 
-  useEffect(() => {
-    const onMessage = (message: unknown, sender: chrome.runtime.MessageSender): void => {
-      if (!isExtensionMessage(message)) {
-        return;
-      }
-      if (message.type === "mdbase-reader/selection" && sender.tab?.id === tabId) {
-        followSelection().catch(() => undefined);
-      }
-      if (message.type === "mdbase-reader/invoke" && message.tabId === tabId) {
-        const { intent } = message;
-        void chrome.storage.session.remove(intentKey(tabId)).catch(() => undefined);
-        // A new invocation grants activeTab, so a page not read yet can be read now.
-        // The intent counts once the selection it refers to has been read.
-        (navigated || !capture ? readPage() : followSelection())
-          .then(() => setInvocation({ intent, at: Date.now() }))
-          .catch((reason: unknown) =>
-            problem.current(reason instanceof Error ? reason.message : String(reason)),
-          );
-      }
-    };
-    const onUpdated = (updatedTab: number, change: { readonly status?: string }): void => {
-      if (updatedTab !== tabId) {
-        return;
-      }
-      if (change.status === "loading") {
-        setNavigated(true);
-        setFollowing(true);
-      }
-      if (change.status === "complete" && navigated && following) {
-        // A page Reader cannot read leaves the panel waiting for the toolbar button.
-        readPage().catch(() => setFollowing(false));
-      }
-    };
-    chrome.runtime.onMessage.addListener(onMessage);
-    chrome.tabs.onUpdated.addListener(onUpdated);
-    return () => {
-      chrome.runtime.onMessage.removeListener(onMessage);
-      chrome.tabs.onUpdated.removeListener(onUpdated);
-    };
-  }, [capture, followSelection, following, navigated, readPage, tabId]);
+  usePageEvents({
+    tabId,
+    capture,
+    navigated,
+    following,
+    readPage,
+    followSelection,
+    setNavigated,
+    setFollowing,
+    setInvocation,
+    readingEpoch,
+    problem,
+  });
 
-  useEffect(() => {
-    // The intent that opened this panel (e.g. "Highlight with a comment" from the context menu).
-    const key = intentKey(tabId);
-    chrome.storage.session
-      .get(key)
-      .then(async ({ [key]: intent }) => {
-        if (intent === "highlight" || intent === "note") {
-          setInvocation({ intent, at: Date.now() });
-        }
-        await chrome.storage.session.remove(key);
-      })
-      .catch(() => undefined);
-  }, [tabId]);
-
-  const allowAllSites = useCallback(async (): Promise<boolean> => {
-    // The request comes first, while the click still counts as a user gesture.
-    const granted = await chrome.permissions.request({ origins: pageStatusOrigins });
-    if (granted) {
-      await readPage();
-    }
-    return granted;
-  }, [readPage]);
+  useInitialIntent(tabId, setInvocation);
 
   return {
     capture,
@@ -158,4 +122,50 @@ export function usePageCapture(tabId: number, onProblem: (message: string) => vo
     allowAllSites,
     setSelection,
   };
+}
+
+function useSiteAccess(
+  readPage: PageLink["readPage"],
+): Pick<PageLink, "siteAccess" | "allowAllSites"> {
+  const [siteAccess, setSiteAccess] = useState<boolean | null>(null);
+  useEffect(() => {
+    const check = (): void => {
+      void pageStatusEnabled()
+        .then(setSiteAccess)
+        .catch(() => setSiteAccess(false));
+    };
+    check();
+    chrome.permissions.onAdded.addListener(check);
+    chrome.permissions.onRemoved.addListener(check);
+    return () => {
+      chrome.permissions.onAdded.removeListener(check);
+      chrome.permissions.onRemoved.removeListener(check);
+    };
+  }, []);
+  const allowAllSites = useCallback(async (): Promise<boolean> => {
+    const granted = await chrome.permissions.request({ origins: pageStatusOrigins });
+    if (granted) {
+      await readPage();
+    }
+    return granted;
+  }, [readPage]);
+  return { siteAccess, allowAllSites };
+}
+
+function useInitialIntent(
+  tabId: number,
+  setInvocation: (value: PageLink["invocation"]) => void,
+): void {
+  useEffect(() => {
+    const key = intentKey(tabId);
+    void chrome.storage.session
+      .get(key)
+      .then(async ({ [key]: intent }) => {
+        if (intent === "highlight" || intent === "note") {
+          setInvocation({ intent, at: Date.now() });
+        }
+        await chrome.storage.session.remove(key);
+      })
+      .catch(() => undefined);
+  }, [setInvocation, tabId]);
 }

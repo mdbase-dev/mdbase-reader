@@ -43,6 +43,18 @@ export async function markSavedPage(tabId: number, highlights: number): Promise<
   });
 }
 
+export async function markSavedPosts(
+  tabId: number,
+  posts: number,
+  highlights: number,
+): Promise<void> {
+  await markSavedPage(tabId, posts);
+  await chrome.action.setTitle({
+    tabId,
+    title: `${String(posts)} saved post${posts === 1 ? "" : "s"} in mdbase Reader · ${String(highlights)} highlights on visible posts`,
+  });
+}
+
 async function resetBadge(tabId: number): Promise<void> {
   await chrome.action.setBadgeText({ tabId, text: "" });
   const { action } = chrome.runtime.getManifest() as {

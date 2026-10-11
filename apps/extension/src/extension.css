@@ -3,6 +3,36 @@
    matches Reader's shell (11px meta, 12px controls, 13px body, 15px headings). Monospace is
    reserved for keyboard shortcuts and codes. */
 
+.post-picker fieldset {
+  border: 0;
+  padding: 0;
+  max-height: 50vh;
+  overflow: auto;
+}
+.post-picker-item {
+  display: flex;
+  gap: 10px;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--border);
+  cursor: pointer;
+}
+.post-picker-item > span {
+  min-width: 0;
+  display: grid;
+  gap: 4px;
+}
+.post-picker-item input {
+  flex: 0 0 auto;
+  align-self: start;
+}
+.post-picker-item time {
+  color: var(--muted);
+  font-size: 11px;
+}
+.post-picker .save-bar {
+  margin-top: 12px;
+}
+
 :root {
   /* Times is the last resort: Linux has Noto or DejaVu Serif, which sit better beside Atkinson. */
   --serif:

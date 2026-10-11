@@ -6,6 +6,7 @@ import {
 } from "@mdbase-reader/core";
 import {
   citationForPage,
+  postCitation,
   extractScholarlyMetadata,
   type CitationDraft,
   type CitationPreview,
@@ -21,6 +22,12 @@ export function prepareCitation(
   capture: PageCapture,
   signal?: AbortSignal,
 ): Promise<CitationPreview | null> {
+  if (capture.kind === "html" && capture.post) {
+    return Promise.resolve({ citation: postCitation(capture.post), origin: "page" });
+  }
+  if (capture.kind === "html" && capture.social && !capture.post) {
+    return Promise.resolve(null);
+  }
   const embedded =
     capture.kind === "html"
       ? extractScholarlyMetadata(parsedCaptureHtml(capture.html), capture.canonicalUrl)

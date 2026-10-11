@@ -128,6 +128,62 @@ afterEach(async () => {
   vi.unstubAllGlobals();
 });
 
+it("follows same-document navigation rather than leaving the old post in the panel", async () => {
+  await mount();
+  mocks.captureTab.mockResolvedValueOnce({
+    ...page,
+    canonicalUrl: "https://example.com/new",
+    submittedUrl: "https://example.com/new",
+  });
+  await act(async () => chromeFake.emit("updated", 1, { url: "https://example.com/new" }));
+  expect(controller.capture?.canonicalUrl).toBe("https://example.com/new");
+  expect(controller.navigated).toBe(false);
+});
+
+it("never discovers a feed snapshot and ignores a slow, superseded selection capture", async () => {
+  const feed = {
+    ...page,
+    canonicalUrl: "https://x.com/home",
+    submittedUrl: "https://x.com/home",
+    selection: null,
+    social: { mode: "multiple", items: [], nearest: null },
+  };
+  mocks.captureTab.mockResolvedValue(feed);
+  await mount();
+  expect(mocks.sourceForUrl).not.toHaveBeenCalled();
+  const first = {
+    ...feed,
+    canonicalUrl: "https://x.com/i/status/100",
+    selection: { exact: "First passage" },
+    selectionPostId: "100",
+  };
+  const latest = {
+    ...first,
+    canonicalUrl: "https://x.com/i/status/101",
+    selection: { exact: "Latest passage" },
+    selectionPostId: "101",
+  };
+  let finish!: (value: typeof first) => void;
+  mocks.captureTab
+    .mockImplementationOnce(
+      () =>
+        new Promise<typeof first>((resolve) => {
+          finish = resolve;
+        }),
+    )
+    .mockResolvedValueOnce(latest);
+  await act(async () =>
+    chromeFake.emit("message", { type: "mdbase-reader/selection" }, { tab: { id: 1 } }),
+  );
+  await act(async () =>
+    chromeFake.emit("message", { type: "mdbase-reader/selection" }, { tab: { id: 1 } }),
+  );
+  expect(controller.capture?.canonicalUrl).toBe(latest.canonicalUrl);
+  await act(async () => finish(first));
+  expect(controller.capture?.canonicalUrl).toBe(latest.canonicalUrl);
+  expect(controller.capture?.selection?.exact).toBe("Latest passage");
+});
+
 it("does not auto-save on opening or changing the destination, and remembers the choice", async () => {
   await mount();
   expect(controller.capture?.selection?.exact).toBe("quotation");

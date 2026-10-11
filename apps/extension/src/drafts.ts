@@ -10,6 +10,7 @@ import { highlightColors, type CaptureDraft, type HighlightColor } from "./save-
 export interface StoredDraft {
   readonly draft: CaptureDraft;
   readonly selection: QuoteSelector | null;
+  readonly selectionPostId?: string;
 }
 
 export const emptyDraft: CaptureDraft = {

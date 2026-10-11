@@ -6,8 +6,16 @@ import { connectionUnavailableMessage } from "./connection-status.js";
 import { rememberColor } from "./drafts.js";
 import { annotationQuotes } from "./page-annotations.js";
 import { markSavedPage } from "./page-badge.js";
-import { fetchPdf, renderAnnotations, revealAnnotation, type PageCapture } from "./page-capture.js";
+import {
+  captureSocialTab,
+  fetchPdf,
+  renderAnnotations,
+  revealAnnotation,
+  type PageCapture,
+  type SelectedWebCapture,
+} from "./page-capture.js";
 import { CaptureWriter, type CaptureDraft } from "./save-capture.js";
+import { scopePostQuotes } from "./social-quotes.js";
 import { rememberTags, splitTags } from "./tag-suggestions.js";
 import { useActionLock } from "./use-action-lock.js";
 import { useKnownTags } from "./use-known-tags.js";
@@ -30,6 +38,7 @@ import type {
   AnnotationId,
   SourceImportProgress,
   SourceSummary,
+  SocialPost,
 } from "@mdbase-reader/core";
 
 export type { ExtensionCaptureController } from "./capture-controller.js";
@@ -52,6 +61,8 @@ export function useExtensionCapture(
   const { connection, lock: connectionLock } = link;
   const busy = lock.busy || connectionLock.busy;
   const { capture } = page;
+  const [pickerOpen, setPickerOpen] = useState(false);
+  const capturedPost = socialCapture(capture)?.post;
   const stored = useStoredDraft(tabId, capture, page.setSelection);
   const [status, setStatus] = useState<CaptureStatus>("opening");
   const [source, setSource] = useState<SourceSummary | null>(null);
@@ -107,10 +118,11 @@ export function useExtensionCapture(
     capture,
   );
 
+  const picking = isPostPickerPage(capture);
   const display = useCallback(
     (values: readonly Annotation[], url: string, focus?: AnnotationId) =>
-      showSavedHighlights(tabId, values, url, focus),
-    [tabId],
+      showSavedHighlights(tabId, values, url, focus, capturedPost),
+    [tabId, capturedPost],
   );
 
   useEffect(() => {
@@ -121,7 +133,13 @@ export function useExtensionCapture(
       return;
     }
     void (async () => {
-      const existing = await sourceForUrl(collection, pageUrl, submittedUrl ? [submittedUrl] : []);
+      const existing = picking
+        ? null
+        : await sourceForUrl(
+            collection,
+            pageUrl,
+            !capturedPost && submittedUrl ? [submittedUrl] : [],
+          );
       if (epoch !== discovery.current) {
         return;
       }
@@ -166,7 +184,18 @@ export function useExtensionCapture(
       // What the lookup said was about the page or collection being left.
       setNotice(null);
     };
-  }, [collectionId, display, extension, pageKind, pageUrl, setNotice, submittedUrl, tabId]);
+  }, [
+    collectionId,
+    display,
+    extension,
+    pageKind,
+    pageUrl,
+    setNotice,
+    submittedUrl,
+    tabId,
+    capturedPost,
+    picking,
+  ]);
 
   const { setDraft } = stored;
   useEffect(() => {
@@ -198,8 +227,12 @@ export function useExtensionCapture(
   const citation = citationFor && citationFor.page === pageUrl ? citationFor.preview : null;
   const citationPending = Boolean(pageUrl) && citationFor?.page !== pageUrl;
 
-  const save = (changes?: Partial<CaptureDraft>): Promise<void> =>
-    lock.run(async () => {
+  const save = (changes?: Partial<CaptureDraft>): Promise<void> => {
+    if (socialCapture(capture)?.social?.mode === "multiple" && !changes?.highlight) {
+      setPickerOpen(true);
+      return Promise.resolve();
+    }
+    return lock.run(async () => {
       const collection = extension?.session.connectedCollection();
       if (!collection || !writer || !extension) {
         throw new Error(
@@ -260,6 +293,56 @@ export function useExtensionCapture(
         setStatus((current) => (current === "saving" ? "ready" : current));
       }
     }, "save");
+  };
+
+  const savePosts = (ids: readonly string[]): Promise<void> =>
+    lock.run(async () => {
+      const collection = extension?.session.connectedCollection();
+      if (!collection || !writer || !extension) {
+        throw new Error(connectionUnavailableMessage(connection.snapshot));
+      }
+      setStatus("saving");
+      let count = 0;
+      try {
+        for (const id of ids) {
+          const post = await captureSocialTab(tabId, id);
+          if (!post?.post) {
+            throw new Error("The chosen post is not loaded anymore.");
+          }
+          const result = await writer.save({
+            session: extension.session,
+            collection,
+            capture: { ...post, selection: null },
+            draft: {
+              ...stored.draft,
+              title: post.pageTitle,
+              highlight: false,
+              comment: "",
+              note: "",
+            },
+            citation: await prepareCitation(post),
+            onProgress: setProgress,
+            onSource: () => undefined,
+          });
+          count++;
+          if (result.notices.length) {
+            setNotice(result.notices.join(" "));
+          }
+        }
+        setPickerOpen(false);
+        setNotice(`${String(count)} post${count === 1 ? "" : "s"} saved. Feeds are never saved.`);
+        await page.readPage();
+        void chrome.runtime
+          .sendMessage({ type: "mdbase-reader/posts-refresh", tabId })
+          .catch(() => undefined);
+      } catch (reason) {
+        throw new Error(
+          `${String(count)} posts confirmed before the failure. Retry checks each post for duplicates. ${problemMessage(reason)}`,
+        );
+      } finally {
+        setStatus("ready");
+      }
+    }, "save");
 
   /**
    * The list is known when it was loaded for this source, or the source is new; then a new
@@ -294,7 +377,7 @@ export function useExtensionCapture(
       }
       setAnnotations(values);
       if (render && capture.kind === "html") {
-        const shown = await display(values, capture.submittedUrl);
+        const shown = await display(values, capture.pageUrl ?? capture.submittedUrl);
         if (epoch === refreshEpoch.current) {
           setProjection(shown);
         }
@@ -336,9 +419,9 @@ export function useExtensionCapture(
       }
       const redrawn = await revealAnnotation(
         tabId,
-        annotationQuotes(quoted),
+        scopePostQuotes(annotationQuotes(quoted), capturedPost),
         index,
-        capture.submittedUrl,
+        capture.pageUrl ?? capture.submittedUrl,
       );
       if (redrawn) {
         setProjection({
@@ -354,7 +437,7 @@ export function useExtensionCapture(
   const afterEdit = (next: readonly Annotation[]): void => {
     setAnnotations(next);
     if (capture?.kind === "html") {
-      const url = capture.submittedUrl;
+      const url = capture.pageUrl ?? capture.submittedUrl;
       void display(next, url)
         .then(setProjection)
         .catch(() => undefined);
@@ -459,6 +542,7 @@ export function useExtensionCapture(
     ...actions,
     snapshot: connection.snapshot,
     capture,
+    ...pickerProps(capture, pickerOpen, setPickerOpen, savePosts),
     draft: stored.draft,
     setDraft: stored.setDraft,
     draftRestored: stored.restored,
@@ -466,13 +550,11 @@ export function useExtensionCapture(
     problem: lock.problem ?? connectionLock.problem,
     problemKind: lock.problem ? lock.problemKind : connectionLock.problemKind,
     notice: lock.notice ?? connectionLock.notice,
-    source,
-    annotations,
+    ...visibleSourceState(pageUrl, source, annotations, projection),
     citation,
     citationPending,
     deviceCode: connection.deviceCode,
     directAccess: connection.directAccess,
-    projection,
     progress,
     refreshing,
     busy,
@@ -497,13 +579,20 @@ async function showSavedHighlights(
   values: readonly Annotation[],
   url: string,
   focus?: AnnotationId,
+  post?: SocialPost,
 ): Promise<PageHighlights> {
   const quoted = values.filter((annotation) => annotation.target?.quote);
-  void markSavedPage(tabId, quoted.length).catch(() => undefined);
+  if (post) {
+    void chrome.runtime
+      .sendMessage({ type: "mdbase-reader/posts-refresh", tabId })
+      .catch(() => undefined);
+  } else {
+    void markSavedPage(tabId, quoted.length).catch(() => undefined);
+  }
   const index = quoted.findIndex((annotation) => annotation.id === focus);
   const { report, outcomes } = await renderAnnotations(
     tabId,
-    annotationQuotes(quoted),
+    scopePostQuotes(annotationQuotes(quoted), post),
     url,
     index === -1 ? undefined : index,
   );
@@ -511,6 +600,52 @@ async function showSavedHighlights(
     report,
     outcomes: new Map(quoted.map((annotation, i) => [annotation.id, outcomes[i] ?? "missing"])),
   };
+}
+
+function isPostPickerPage(capture: PageCapture | null): boolean {
+  const social = socialCapture(capture);
+  return social?.social?.mode === "multiple" && !social.post;
+}
+
+function socialCapture(capture: PageCapture | null): SelectedWebCapture | null {
+  return capture?.kind === "html" ? capture : null;
+}
+
+function capturableUrl(capture: PageCapture | null): string | undefined {
+  const html = socialCapture(capture);
+  return html?.social && !html.post ? undefined : capture?.canonicalUrl;
+}
+
+function pickerProps(
+  capture: PageCapture | null,
+  open: boolean,
+  setOpen: (value: boolean) => void,
+  save: (ids: readonly string[]) => Promise<void>,
+): Pick<ExtensionCaptureController, "postPicker"> {
+  const listing = socialCapture(capture)?.social;
+  return listing?.mode === "multiple"
+    ? {
+        postPicker: {
+          open,
+          items: listing.items,
+          preselected: listing.nearest,
+          show: () => setOpen(true),
+          close: () => setOpen(false),
+          save,
+        },
+      }
+    : {};
+}
+
+function visibleSourceState(
+  url: string | undefined,
+  source: SourceSummary | null,
+  annotations: readonly Annotation[],
+  projection: PageHighlights | null,
+): Pick<ExtensionCaptureController, "source" | "annotations" | "projection"> {
+  return url
+    ? { source, annotations, projection }
+    : { source: null, annotations: [], projection: null };
 }
 
 /** What identifies the panel's current page and collection, for discarding stale work. */
@@ -528,11 +663,12 @@ function pageKeys(
   readonly attemptKey: string;
 } {
   const collectionId = snapshot.status === "ready" ? snapshot.collectionId : null;
-  const pageUrl = capture?.canonicalUrl;
+  const pageUrl = capturableUrl(capture);
   return {
     collectionId,
     pageUrl,
-    submittedUrl: capture?.submittedUrl,
+    submittedUrl:
+      capture?.kind === "html" ? (capture.pageUrl ?? capture.submittedUrl) : capture?.submittedUrl,
     pageKind: capture?.kind,
     discoveryKey: collectionId && pageUrl ? `${collectionId} ${pageUrl}` : null,
     attemptKey: `${collectionId ?? ""} ${pageUrl ?? ""}`,
