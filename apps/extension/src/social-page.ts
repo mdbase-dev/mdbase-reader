@@ -188,19 +188,22 @@ function drawSocialQuotes(
     throw new Error("The tab navigated away.");
   }
   const adapter = adapterFor(doc);
-  const listing = socialItems(doc);
   const outcomes: PageProjection["outcomes"][number][] = quotes.map(() => "missing");
   pageText({ action: "draw", quotes: [] }, doc);
-  if (adapter && listing) {
-    for (const ref of listing.items) {
-      const root = adapter.element(ref, doc);
-      if (!root) {
+  // Runs on every feed mutation: one pass over the posts, and quotes grouped by post up front.
+  const byPost = new Map<string, { quote: PageQuote; index: number }[]>();
+  quotes.forEach((quote, index) => {
+    if (quote.postUrl) {
+      const url = normalizedSourceUrl(quote.postUrl);
+      byPost.set(url, [...(byPost.get(url) ?? []), { quote, index }]);
+    }
+  });
+  if (adapter?.detect(doc) && byPost.size) {
+    for (const { ref, element: root } of adapter.entries(doc)) {
+      const matching = byPost.get(normalizedSourceUrl(canonical.get(ref.url) ?? ref.url)) ?? [];
+      if (!matching.length) {
         continue;
       }
-      const url = normalizedSourceUrl(canonical.get(ref.url) ?? ref.url);
-      const matching = quotes
-        .map((quote, index) => ({ quote, index }))
-        .filter(({ quote }) => quote.postUrl && normalizedSourceUrl(quote.postUrl) === url);
       const localFocus = matching.findIndex(({ index }) => index === focus);
       const projection = pageText(
         {

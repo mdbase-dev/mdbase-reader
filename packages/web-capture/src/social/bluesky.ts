@@ -67,6 +67,7 @@ export const blueskyAdapter = domAdapter(
     }
     return blueskyIdentity(address, options);
   },
+  blueskyRef,
 );
 
 function blueskyRef(element: Element): PostRef | null {
@@ -92,20 +93,6 @@ function blueskyRef(element: Element): PostRef | null {
     bottom: rect.bottom,
   };
 }
-
-blueskyAdapter.items = (document) =>
-  [...document.querySelectorAll(blueskySelectors.post)].flatMap((element) => {
-    const ref = blueskyRef(element);
-    return ref ? [ref] : [];
-  });
-blueskyAdapter.resolve = (element) => {
-  const root = element.closest(blueskySelectors.post);
-  return root ? blueskyRef(root) : null;
-};
-blueskyAdapter.element = (ref, document) =>
-  [...document.querySelectorAll(blueskySelectors.post)].find(
-    (element) => blueskyRef(element)?.id === ref.id,
-  ) ?? null;
 
 export async function blueskyThread(
   url: string,

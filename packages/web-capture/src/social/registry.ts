@@ -6,12 +6,21 @@ import type { SocialFetchOptions } from "./api.js";
 import type { SocialPost } from "@mdbase-reader/core";
 
 export type PostDetection = "single" | "multiple" | null;
+
+/** A loaded post and its element, found in one pass over the page. */
+export interface PostEntry {
+  readonly ref: PostRef;
+  readonly element: Element;
+}
+
 export interface SiteAdapter {
   readonly id: PostRef["platform"];
   matches(url: string): boolean;
   prepare(document: Document, options?: SocialFetchOptions): Promise<void>;
   identity(ref: PostRef, options?: SocialFetchOptions): Promise<{ id: string; url: string }>;
   detect(document: Document, url?: string): PostDetection;
+  /** Every loaded post with its element. Prefer this to `items` plus `element` per post. */
+  entries(document: Document): PostEntry[];
   items(document: Document): PostRef[];
   resolve(element: Element): PostRef | null;
   element(ref: PostRef, document: Document): Element | null;
@@ -25,7 +34,19 @@ export function domAdapter(
   selectors: DomSelectors,
   extract?: SiteAdapter["extract"],
   identity?: SiteAdapter["identity"],
+  refOf: (element: Element) => PostRef | null = (element) => refFor(element, id, selectors),
 ): SiteAdapter {
+  const entries = (document: Document): PostEntry[] => {
+    const seen = new Set<string>();
+    return [...document.querySelectorAll(selectors.post)].flatMap((element) => {
+      const ref = refOf(element);
+      if (!ref || seen.has(ref.id)) {
+        return [];
+      }
+      seen.add(ref.id);
+      return [{ ref, element }];
+    });
+  };
   const adapter: SiteAdapter = {
     id,
     matches,
@@ -37,34 +58,24 @@ export function domAdapter(
       }
       return postAddress(url)?.platform === id ? "single" : "multiple";
     },
-    items: (document) =>
-      [...document.querySelectorAll(selectors.post)]
-        .flatMap((element) => {
-          const ref = refFor(element, id, selectors);
-          return ref ? [ref] : [];
-        })
-        .filter((ref, index, items) => items.findIndex((item) => item.id === ref.id) === index),
+    entries,
+    items: (document) => entries(document).map(({ ref }) => ref),
     resolve: (element) => {
       const post = element.closest(selectors.post);
-      return post ? refFor(post, id, selectors) : null;
+      return post ? refOf(post) : null;
     },
     element: (ref, document) =>
-      [...document.querySelectorAll(selectors.post)].find(
-        (element) => refFor(element, id, selectors)?.id === ref.id,
-      ) ?? null,
+      entries(document).find((entry) => entry.ref.id === ref.id)?.element ?? null,
     extract:
       extract ??
       ((ref, document) => {
-        const element = adapter.element(ref, document);
+        const loaded = entries(document);
+        const element = loaded.find((entry) => entry.ref.id === ref.id)?.element;
         if (!element) {
           throw new Error("This post is no longer loaded. Scroll it into view and try again.");
         }
-        const selected = domPart(element, ref, selectors);
-        const available = adapter.items(document).flatMap((item) => {
-          const node = adapter.element(item, document);
-          return node ? [domPart(node, item, selectors)] : [];
-        });
-        return Promise.resolve(unrollThread(selected, available, true));
+        const available = loaded.map((entry) => domPart(entry.element, entry.ref, selectors));
+        return Promise.resolve(unrollThread(domPart(element, ref, selectors), available, true));
       }),
   };
   return adapter;

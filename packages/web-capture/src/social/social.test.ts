@@ -167,6 +167,19 @@ describe("saved DOM contracts", () => {
     expect(post.author).toMatchObject({ handle: "fixture", name: "Fixture Author" });
     expect(post.threadPartial).toBe(true);
   });
+  it("unrolls an X thread from the author's run around the focal post, without reply markup", async () => {
+    const doc = fixture("x-conversation", "https://x.com/fixture/status/100");
+    const focal = xAdapter.items(doc).find((item) => item.id === "100")!;
+    const post = await xAdapter.extract(focal, doc);
+    expect(post.threadRoot).toBe("99");
+    expect(post.parts.map((part) => part.id)).toEqual(["99", "100", "101"]);
+    expect(post.threadPartial).toBe(true);
+  });
+  it("never joins X posts into a thread on a feed", async () => {
+    const doc = fixture("x-conversation", "https://x.com/home");
+    const ref = xAdapter.items(doc).find((item) => item.id === "100")!;
+    expect((await xAdapter.extract(ref, doc)).parts.map((part) => part.id)).toEqual(["100"]);
+  });
 });
 
 describe("public API adapters", () => {
@@ -359,9 +372,38 @@ describe("portable post imports and capture safety", () => {
       retrievedAt: "2026-01-01T10:00:00Z",
     });
     expect(new TextDecoder().decode(prepared.bytes)).toContain(
-      "Audio (original URL retained in source metadata)",
+      "Audio (original URL kept in the archived copy)",
     );
     expect(prepared.metadata.socialPost?.media[0]?.url).toBe("https://media.example/note.mp3");
+    expect(new TextDecoder().decode(prepared.archive.bytes)).toContain(
+      'href="https://media.example/note.mp3"',
+    );
+  });
+  it("drops an image that cannot be made small enough to embed, keeping its caption", async () => {
+    const root = {
+      ...part("1", "author"),
+      media: [
+        { kind: "image" as const, url: "https://media.example/huge.png", alt: "A huge image" },
+      ],
+    };
+    const prepared = await socialPostImport(
+      unrollThread(root, [], false),
+      { retrievedAt: "2026-01-01T10:00:00Z" },
+      {
+        fetch: mockApi(
+          () =>
+            new Response(new Uint8Array(2 * 1024 * 1024), {
+              headers: { "content-type": "image/png" },
+            }),
+        ),
+      },
+    );
+    const readable = new TextDecoder().decode(prepared.bytes);
+    expect(readable).not.toContain("data:image");
+    expect(readable).toContain("A huge image — image unavailable offline");
+    expect(new TextDecoder().decode(prepared.archive.bytes)).toContain(
+      'src="https://media.example/huge.png"',
+    );
   });
   it("stores safe readable HTML, a post-only archive and portable metadata with offline images", async () => {
     const root = {

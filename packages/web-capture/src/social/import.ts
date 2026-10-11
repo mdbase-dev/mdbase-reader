@@ -33,7 +33,15 @@ function partHtml(part: PostPart): string {
     .map((paragraph) => `<p>${escape(paragraph).replaceAll("\n", "<br>")}</p>`)
     .join(
       "",
-    )}</div>${part.media.map((media) => `<figure>${media.kind === "image" ? `<img src="${escape(media.url)}" alt="${escape(media.alt)}">` : ""}<figcaption>${escape(mediaCaption(media))}</figcaption></figure>`).join("")}${part.quoted ? `<blockquote class="quoted-post" aria-label="Quoted post">${partHtml(part.quoted)}</blockquote>` : ""}</section>`;
+    )}</div>${part.media.map(mediaHtml).join("")}${part.quoted ? `<blockquote class="quoted-post" aria-label="Quoted post">${partHtml(part.quoted)}</blockquote>` : ""}</section>`;
+}
+
+/** The archive keeps every original media URL; the readable copy drops external links. */
+function mediaHtml(media: PostMedia): string {
+  const caption = escape(mediaCaption(media));
+  return media.kind === "image"
+    ? `<figure><img src="${escape(media.url)}" alt="${escape(media.alt)}"><figcaption>${caption}</figcaption></figure>`
+    : `<figure><figcaption><a href="${escape(media.url)}">${caption}</a></figcaption></figure>`;
 }
 
 function mediaCaption(media: PostMedia): string {
@@ -42,7 +50,7 @@ function mediaCaption(media: PostMedia): string {
   }
   return media.kind === "image"
     ? "Image"
-    : `${media.kind === "audio" ? "Audio" : "Video"} (original URL retained in source metadata)`;
+    : `${media.kind === "audio" ? "Audio" : "Video"} (original URL kept in the archived copy)`;
 }
 
 export async function socialPostImport(
@@ -53,20 +61,22 @@ export async function socialPostImport(
   const { prepareHtmlDocument } = await import("@mdbase-reader/renderer-html");
   const archive = postHtml(post);
   const parsed = new DOMParser().parseFromString(archive, "text/html");
-  let remaining = 20 * 1024 * 1024;
+  // Reading copies are self-contained (the renderer allows only data: images), so images
+  // are embedded, but scaled and re-encoded first to keep the copy light to sync and render.
+  let remaining = mediaBudget.total;
   for (const [index, image] of [...parsed.querySelectorAll("img")].entries()) {
     try {
-      if (index >= 20 || remaining <= 0) {
+      if (index >= mediaBudget.images || remaining <= 0) {
         throw new Error("Media budget reached");
       }
-      const data = await imageData(image.src, Math.min(remaining, 5 * 1024 * 1024), options);
+      const data = await embeddedImage(image.src, Math.min(remaining, mediaBudget.image), options);
       remaining -= data.size;
       image.src = data.url;
     } catch {
       options.signal?.throwIfAborted();
       const caption = image.parentElement?.querySelector("figcaption");
       if (caption) {
-        caption.append(" — image unavailable offline; original URL retained in source metadata.");
+        caption.append(" — image unavailable offline; the archived copy keeps its original URL.");
       }
       image.remove();
     }
@@ -98,11 +108,35 @@ export async function socialPostImport(
   };
 }
 
-async function imageData(
+const mediaBudget = {
+  images: 20,
+  /** Largest original accepted for scaling. */
+  download: 10 * 1024 * 1024,
+  /** Largest embedded image, after scaling. */
+  image: 1536 * 1024,
+  total: 6 * 1024 * 1024,
+};
+const maximumDimension = 1600;
+
+async function embeddedImage(
   url: string,
   maximum: number,
   options: SocialFetchOptions,
 ): Promise<{ url: string; size: number }> {
+  const original = await downloadImage(url, options);
+  const image = await scaledImage(original).catch(() => original);
+  if (image.size > maximum) {
+    throw new Error("Image too large");
+  }
+  const bytes = new Uint8Array(await image.arrayBuffer());
+  let binary = "";
+  for (let offset = 0; offset < bytes.length; offset += 0x8000) {
+    binary += String.fromCharCode(...bytes.subarray(offset, offset + 0x8000));
+  }
+  return { url: `data:${image.type};base64,${btoa(binary)}`, size: bytes.length };
+}
+
+async function downloadImage(url: string, options: SocialFetchOptions): Promise<Blob> {
   const response = await (options.fetch ?? fetch)(url, {
     credentials: "omit",
     redirect: "error",
@@ -113,23 +147,42 @@ async function imageData(
     throw new Error("Image unavailable");
   }
   const reader = response.body.getReader();
-  const chunks: Uint8Array[] = [];
+  const chunks: Uint8Array<ArrayBuffer>[] = [];
   let size = 0;
   for (let next = await reader.read(); !next.done; next = await reader.read()) {
     size += next.value.length;
-    if (size > maximum) {
+    if (size > mediaBudget.download) {
       await reader.cancel();
       throw new Error("Image too large");
     }
     chunks.push(next.value);
   }
-  let binary = "";
-  for (const chunk of chunks) {
-    for (let offset = 0; offset < chunk.length; offset += 0x8000) {
-      binary += String.fromCharCode(...chunk.subarray(offset, offset + 0x8000));
-    }
+  return new Blob(chunks, { type });
+}
+
+/** Large images are scaled down and re-encoded; animated GIFs are kept so they still play. */
+async function scaledImage(image: Blob): Promise<Blob> {
+  if (
+    image.type === "image/gif" ||
+    typeof createImageBitmap !== "function" ||
+    typeof OffscreenCanvas !== "function"
+  ) {
+    return image;
   }
-  return { url: `data:${type};base64,${btoa(binary)}`, size };
+  const bitmap = await createImageBitmap(image);
+  try {
+    const scale = Math.min(1, maximumDimension / Math.max(bitmap.width, bitmap.height));
+    const canvas = new OffscreenCanvas(
+      Math.max(1, Math.round(bitmap.width * scale)),
+      Math.max(1, Math.round(bitmap.height * scale)),
+    );
+    canvas.getContext("2d")?.drawImage(bitmap, 0, 0, canvas.width, canvas.height);
+    const encoded = await canvas.convertToBlob({ type: "image/webp", quality: 0.82 });
+    // Browsers without WebP encoding return PNG, which is rarely smaller than the original.
+    return encoded.type === "image/webp" && encoded.size < image.size ? encoded : image;
+  } finally {
+    bitmap.close();
+  }
 }
 
 function escape(value: string): string {
