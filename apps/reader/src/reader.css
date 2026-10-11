@@ -91,6 +91,34 @@ button {
   min-height: 42px;
 }
 
+/* Setup review: the SDK's summary and one plain line per change. */
+.reader-setup-summary {
+  margin: 14px 0 0;
+  color: var(--color-text-soft);
+  font-size: 15px;
+  line-height: 1.5;
+}
+
+.reader-setup-changes {
+  margin: 16px 0 0;
+  padding: 0;
+  list-style: none;
+  border-top: 1px solid var(--color-border);
+}
+
+.reader-setup-changes li {
+  padding: 10px 0;
+  border-bottom: 1px solid var(--color-border);
+  color: var(--color-text);
+  font-size: 14px;
+  line-height: 1.45;
+  overflow-wrap: anywhere;
+}
+
+.reader-setup-changes li.is-conflict {
+  color: var(--color-danger);
+}
+
 .connection-others {
   margin-top: 34px;
 }

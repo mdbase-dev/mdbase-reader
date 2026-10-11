@@ -1,6 +1,10 @@
 // @vitest-environment happy-dom
 /* eslint-disable @typescript-eslint/require-await -- async act flushes React's queued work */
-import { createApplicationFixture, memoryConnection } from "@mdbase-reader/connect/testing";
+import {
+  createApplicationFixture,
+  mdbaseError,
+  memoryConnection,
+} from "@mdbase-reader/connect/testing";
 import { act, StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import { afterEach, beforeEach, expect, it, vi } from "vitest";
@@ -8,7 +12,7 @@ import { afterEach, beforeEach, expect, it, vi } from "vitest";
 import manifest from "./generated/mdbase-app.json";
 import { SdkReaderRoot } from "./SdkReaderRoot.js";
 
-import type { MdbaseApplicationSnapshot } from "@mdbase-reader/connect/native";
+import type { MdbaseApplicationSnapshot, MdbaseSetupPlan } from "@mdbase-reader/connect/native";
 
 vi.mock("@mdbase-dev/ui/feedback", () => ({ FeedbackButton: () => null }));
 
@@ -99,34 +103,83 @@ function button(label: string): HTMLButtonElement {
   return found;
 }
 
-it("starts the SDK once and leaves setup to configure without inferring readiness", async () => {
-  const { entry, controls } = fixture({
+const setupPlan: MdbaseSetupPlan = {
+  status: "setup",
+  canApply: true,
+  digest: `sha256:${"a".repeat(64)}`,
+  summary: "This app will make 1 change to this collection.",
+  changes: [
+    { kind: "create", target: "_types/source.md", message: 'Add the "source" record type.' },
+  ],
+  conflicts: [],
+  adoptable: {},
+  packs: [],
+  staged: [],
+  records: [],
+};
+
+async function setupRequired(): Promise<ReturnType<typeof createApplicationFixture>> {
+  const created = fixture({
     status: "not_started",
     signIn: paired,
     selectedCollectionId: "c1",
     collections: [{ collectionId: "c1", displayName: "Reading", role: "owner" }],
   });
-  const application = entry.application();
-  controls.setHandler("start", () => ({ ...application.getSnapshot(), status: "setup_required" }));
+  const application = created.entry.application();
+  created.controls.setHandler("start", () => ({
+    ...application.getSnapshot(),
+    status: "setup_required",
+  }));
+  created.controls.setSetupPlan(setupPlan);
   const renderNative = vi.fn(() => <p>workspace</p>);
-
   await act(async () =>
     root.render(
       <StrictMode>
-        <SdkReaderRoot sdk={entry} renderNative={renderNative} />
+        <SdkReaderRoot sdk={created.entry} renderNative={renderNative} />
       </StrictMode>,
     ),
   );
-  await act(async () => button("Set up mdbase Reader").click());
-
-  const actions = controls.observedActions().map((call) => call.action);
-  expect(actions.filter((action) => action === "start")).toHaveLength(1);
-  expect(actions.filter((action) => action === "configure")).toHaveLength(1);
-  expect(
-    controls.observedActions().find((call) => call.action === "configure")?.signal,
-  ).toBeInstanceOf(AbortSignal);
   expect(host.textContent).toContain("needs mdbase Reader setup");
+  await act(async () => button("Set up mdbase Reader").click());
   expect(renderNative).not.toHaveBeenCalled();
+  return created;
+}
+const count = (
+  controls: { observedActions(): readonly { action: string }[] },
+  name: string,
+): number => controls.observedActions().filter(({ action }) => action === name).length;
+
+it("starts the SDK once and reviews setup before Confirm applies the reviewed plan", async () => {
+  const { controls } = await setupRequired();
+  expect(count(controls, "start")).toBe(1);
+  expect(host.textContent).toContain(setupPlan.summary);
+  expect(host.textContent).toContain('Add the "source" record type.');
+  expect(count(controls, "applySetup")).toBe(0);
+
+  await act(async () => button("Confirm").click());
+  expect(count(controls, "applySetup")).toBe(1);
+  expect(
+    controls.observedActions().find((call) => call.action === "applySetup")?.signal,
+  ).toBeInstanceOf(AbortSignal);
+  expect(count(controls, "configure")).toBe(0);
+  // Applying never infers readiness; the SDK's next snapshot decides.
+  expect(host.textContent).toContain("needs mdbase Reader setup");
+});
+
+it("plans again when the collection changed during review, and Cancel writes nothing", async () => {
+  const { controls } = await setupRequired();
+  controls.setHandler("applySetup", () => {
+    throw mdbaseError("conflict", "changed", "setup_changed");
+  });
+  await act(async () => button("Confirm").click());
+  expect(host.textContent).toContain("changed while you were reviewing");
+  expect(count(controls, "planSetup")).toBe(2);
+  expect(count(controls, "applySetup")).toBe(1);
+
+  await act(async () => button("Cancel").click());
+  expect(host.textContent).toContain("needs mdbase Reader setup");
+  expect(count(controls, "applySetup")).toBe(1);
+  expect(count(controls, "configure")).toBe(0);
 });
 
 it("opens the native collection only for a current READY connection, and retires it after", async () => {

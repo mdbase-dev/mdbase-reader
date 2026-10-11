@@ -15,6 +15,7 @@ import { useEffect, useRef, useState, useSyncExternalStore, type JSX, type React
 import { CollectionSwitchingContext } from "./CollectionPicker.js";
 import { ReaderWorkspace } from "./ReaderWorkspace.js";
 import { readyReaderConnection } from "./sdk-ready-connection.js";
+import { SdkSetupReview } from "./SdkSetupReview.js";
 
 export type ReaderSdk = MdbaseApplicationEntry;
 
@@ -69,6 +70,8 @@ function ApplicationView({
     () => application.getSnapshot(),
   );
   const { act, working, problem } = useApplicationLifecycle(application);
+  // Setup always goes through one review; nothing is written before Confirm.
+  const [reviewing, setReviewing] = useState(false);
   const connection = readyReaderConnection(sdk, snapshot);
   if (connection) {
     return (
@@ -95,7 +98,25 @@ function ApplicationView({
       </CollectionSwitchingContext>
     );
   }
-  const screen = connectionScreen(application, snapshot, problem);
+  const selected = snapshot.collections.find(
+    (collection) => collection.collectionId === snapshot.selectedCollectionId,
+  );
+  if (reviewing && selected && screenFlags(snapshot).setup) {
+    return (
+      <SdkSetupReview
+        application={application}
+        displayName={selected.displayName}
+        embedded={embedded ?? false}
+        onCancel={() => setReviewing(false)}
+        onApplied={() => setReviewing(false)}
+      />
+    );
+  }
+  const review: Run = () => {
+    setReviewing(true);
+    return Promise.resolve();
+  };
+  const screen = connectionScreen(application, snapshot, problem, review);
   const actions = (
     <>
       {screen.identity ? <p className="mdbase-connect-status">{screen.identity}</p> : null}
@@ -105,6 +126,7 @@ function ApplicationView({
         screen={screen}
         working={working}
         act={act}
+        review={review}
         onSignedOut={onSignedOut}
       />
       <FeedbackButton />
@@ -315,6 +337,7 @@ function settledScreen(
   application: MdbaseApplication,
   snapshot: MdbaseApplicationSnapshot,
   flags: ScreenFlags,
+  review: Run,
 ): SettledScreen {
   const described = describedProblem(snapshot, flags);
   const settledReady = snapshot.status === "ready" && !flags.opening;
@@ -327,6 +350,7 @@ function settledScreen(
           application,
           described,
           flags.readinessProblem && snapshot.status !== "blocked",
+          review,
         )
       : null,
     unchecked: settledReady && assessment === null && described === null,
@@ -375,9 +399,10 @@ function connectionScreen(
   application: MdbaseApplication,
   snapshot: MdbaseApplicationSnapshot,
   problem: boolean,
+  review: Run,
 ): ConnectionScreenState {
   const flags = screenFlags(snapshot);
-  const settled = settledScreen(application, snapshot, flags);
+  const settled = settledScreen(application, snapshot, flags, review);
   const signIn = !flags.closed && snapshot.signIn?.state === "paired" ? snapshot.signIn : null;
   const failed = problem || snapshot.status === "blocked";
   return {
@@ -402,6 +427,7 @@ function recoveryAction(
   application: MdbaseApplication,
   problem: MdbaseErrorDescription,
   readiness: boolean,
+  review: Run,
 ): Recovery | null {
   const label = problem.actionLabel ?? "Try again";
   switch (problem.action) {
@@ -410,7 +436,7 @@ function recoveryAction(
     case "approve":
       return { label, run: (signal) => application.approve(undefined, { signal }) };
     case "set_up":
-      return { label, run: (signal) => application.configure({ signal }) };
+      return { label, run: review };
     case "choose_collection":
       return { label, run: (signal) => application.chooseAnother({ signal }) };
     case "update_app":
@@ -444,6 +470,7 @@ function ConnectionActions({
   screen,
   working,
   act,
+  review,
   onSignedOut,
 }: {
   readonly application: MdbaseApplication;
@@ -451,6 +478,7 @@ function ConnectionActions({
   readonly screen: ConnectionScreenState;
   readonly working: boolean;
   readonly act: Act;
+  readonly review: Run;
   readonly onSignedOut: SdkReaderRootProps["onSignedOut"];
 }): JSX.Element {
   const selected = screen.closed ? null : snapshot.selectedCollectionId;
@@ -479,9 +507,7 @@ function ConnectionActions({
       {screen.choosing && !screen.signedIn && !recovery
         ? action("Sign in", (signal) => application.authorize({ signal }), true)
         : null}
-      {screen.setup
-        ? action("Set up mdbase Reader", (signal) => application.configure({ signal }), true)
-        : null}
+      {screen.setup ? action("Set up mdbase Reader", review, true) : null}
       {screen.approval
         ? action(
             "Approve this collection",

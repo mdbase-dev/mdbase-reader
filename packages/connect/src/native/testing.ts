@@ -4,6 +4,7 @@ import { connect, MdbasePeopleClient, type MdbaseApplicationConnection } from "@
 import { MemoryReplica, type MemoryReplicaOptions } from "@mdbase-dev/sdk/testing";
 
 export { createApplicationFixture, MemoryReplica } from "@mdbase-dev/sdk/testing";
+export { mdbaseError } from "@mdbase-dev/sdk";
 export type { ApplicationFixture } from "@mdbase-dev/sdk/testing";
 
 export async function memoryConnection(options: MemoryReplicaOptions = {}): Promise<{
