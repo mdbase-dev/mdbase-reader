@@ -227,8 +227,8 @@ importers:
         specifier: 0.1.0-beta.125
         version: 0.1.0-beta.125
       '@mdbase-dev/sdk':
-        specifier: file:vendor/mdbase-dev-sdk-38001079.tgz
-        version: file:packages/connect/vendor/mdbase-dev-sdk-38001079.tgz
+        specifier: file:vendor/mdbase-dev-sdk-dev-2e2ae687-n1.tgz
+        version: file:packages/connect/vendor/mdbase-dev-sdk-dev-2e2ae687-n1.tgz
       '@mdbase-reader/core':
         specifier: workspace:*
         version: link:../core
@@ -1135,17 +1135,15 @@ packages:
   '@mdbase-dev/connect-protocol@0.1.0-beta.125':
     resolution: {integrity: sha512-q6aEZ1+dVAXvoN84FgDLMhqCnCdlsXhp0K5M+Wcp2x2ICUIoE/lA+eDg4AJqDqdWZ3Nq2mkiczvat6HG2y8EeQ==}
 
-  '@mdbase-dev/connect-protocol@file:packages/connect/vendor/mdbase-dev-connect-protocol-0.1.0-beta.129-d765e675c3da.tgz':
-    resolution: {integrity: sha512-PFG1qmAzmcyJjmZLmGz4eoOOZRDgvTvDZATf6IGBccNHRc1eGZtMm7ZUA7gNAxuO5KerrN6mDIB9qQnpojyOAg==, tarball: file:packages/connect/vendor/mdbase-dev-connect-protocol-0.1.0-beta.129-d765e675c3da.tgz}
-    version: 0.1.0-beta.129
-
   '@mdbase-dev/connect@0.1.0-beta.125':
     resolution: {integrity: sha512-vEH4NQfu3dBQgMw0YQxG7LDtOOLxDyxET4DQhrWuHqtgr9qoch/H0QLzel9tFSqkyH+QWxuvW3Bet6ae1+qVyQ==}
 
-  '@mdbase-dev/sdk@file:packages/connect/vendor/mdbase-dev-sdk-38001079.tgz':
-    resolution: {integrity: sha512-8iDm7q7wbEGLJuQg0/qA/k2Yp418ZiAXsVhQsyEZAkjSCgiUE5wy6iz0kOnS3zxI99MLY6dZzAMwaJzWznUB/A==, tarball: file:packages/connect/vendor/mdbase-dev-sdk-38001079.tgz}
+  '@mdbase-dev/sdk@file:packages/connect/vendor/mdbase-dev-sdk-dev-2e2ae687-n1.tgz':
+    resolution: {integrity: sha512-jXEuBeyzl3tIGERWYVRXqiFva0UcTDQq6l3tqSaXE0McN+d7AZm9D6/DHkXknSI/8hH0QaQg7+vZW5FEpcOehA==, tarball: file:packages/connect/vendor/mdbase-dev-sdk-dev-2e2ae687-n1.tgz}
     version: 0.0.0
     engines: {node: '>=20'}
+    bundledDependencies:
+      - '@mdbase-dev/connect-protocol'
 
   '@mdbase-dev/ui@0.1.0-beta.125':
     resolution: {integrity: sha512-K2UAAzwW4yuPJxx65LofVDQXKLgs4lOgrAB61YMuiNwV/jOc1yuNhGugy7Fx++VwxBx5bZyG+Pk7tMQlOat+tg==}
@@ -4319,20 +4317,12 @@ snapshots:
       ajv-formats: 3.0.1(ajv@8.20.0)
       yaml: 2.9.1
 
-  '@mdbase-dev/connect-protocol@file:packages/connect/vendor/mdbase-dev-connect-protocol-0.1.0-beta.129-d765e675c3da.tgz':
-    dependencies:
-      '@noble/hashes': 2.4.0
-      ajv: 8.20.0
-      ajv-formats: 3.0.1(ajv@8.20.0)
-      yaml: 2.9.1
-
   '@mdbase-dev/connect@0.1.0-beta.125':
     dependencies:
       '@mdbase-dev/connect-protocol': 0.1.0-beta.125
 
-  '@mdbase-dev/sdk@file:packages/connect/vendor/mdbase-dev-sdk-38001079.tgz':
+  '@mdbase-dev/sdk@file:packages/connect/vendor/mdbase-dev-sdk-dev-2e2ae687-n1.tgz':
     dependencies:
-      '@mdbase-dev/connect-protocol': file:packages/connect/vendor/mdbase-dev-connect-protocol-0.1.0-beta.129-d765e675c3da.tgz
       '@noble/ciphers': 2.4.0
       '@noble/curves': 2.4.0
       '@noble/hashes': 2.4.0

@@ -5,16 +5,20 @@ entry of the new SDK (`@mdbase-dev/sdk`, `MdbaseConnect`).
 
 ## Pin
 
-`packages/connect/vendor/mdbase-dev-sdk-38001079.tgz` comes from SDK source
-`3800107992f345cbf62665b945a5073de34e07b6`, SHA256
-`d2c04aeb38932d43fba0601ab385f325898b3794845cee5322a42ca64ad412e4`. Its source commit, hashes
+`packages/connect/vendor/mdbase-dev-sdk-dev-2e2ae687-n1.tgz` is the distinct
+`sdk-dev-2e2ae687-n1` original cut from SDK source
+`2e2ae687f96d0a0c074ef6bc46bb77b97089f325`, SHA256
+`58bc19022164eed1ef2236e392786db7fba6447d32b9bc3f2163c247d1c42faf`. Its source commit, hashes
 and protocol dependency (beta129 `d765e675c3da`) are recorded in
 `packages/connect/vendor/mdbase-next-sdk.json`.
 
 This is a **development intake, not release-qualified**. It carries the live
 `MdbaseConnect` singleton: registration, then storage, then Worker, then runtime, plus
 `snapshot.selection` and `approve`/`reauthorize`/`chooseAnother`. Its public entry refuses the
-production environment.
+production environment. The original 3462973-byte native runtime matches the
+committed `6762b92e4b57b1a4df965c7991a064efe05eb950a66ec332e0504f73a8e42b72`
+pin; the original protocol is producer-bundled. Packaged integrity and ordinary/
+frozen installation do not establish live LAB acceptance.
 
 ## Design
 
@@ -60,7 +64,8 @@ production environment.
   `runtime-lab.wasm`, `sqlite3.wasm` and `sqlite3.js` are each emitted once. The SDK stays out of
   the eager entry chunks.
 
-The production build passes at `38001079`, and the emitted wasm matches the SDK's asset pins.
+The previous production build passed at `38001079`; n1 checks are recorded
+separately from live LAB acceptance.
 Live LAB registration, Worker start and readiness have not been exercised. Old local data and
 pending writes need no cutover handoff.
 
