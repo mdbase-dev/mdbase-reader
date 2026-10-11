@@ -9,7 +9,6 @@ import "./reader-shell.css";
 import "@mdbase-dev/ui/feedback.css";
 import "./feedback-shell.css";
 
-import { ConnectReader } from "./ConnectReader.js";
 import { EnvironmentBadge } from "./EnvironmentBadge.js";
 import { FeedbackRoot } from "./FeedbackRoot.js";
 import { forgetOfflineCopies } from "./forget-offline-copies.js";
@@ -17,13 +16,41 @@ import { importService } from "./import-navigation.js";
 import { keepFocusedFieldInView } from "./keep-focused-field-in-view.js";
 import "./environment-badge.css";
 import { setupPwaInstall } from "./pwa-install.js";
+
+import type { ImportService } from "./ImportPageView.js";
 import "./pwa-install.css";
 const PreviewReader = lazy(async () => ({ default: (await import("./preview.js")).PreviewReader }));
+const ConnectReader = lazy(async () => ({
+  default: (await import("./ConnectReader.js")).ConnectReader,
+}));
+const NativeImportPage = lazy(async () => ({
+  default: (await import("./NativeImportPage.js")).NativeImportPage,
+}));
 
 // Library imports bring PDF parsing and compression code that ordinary reading never needs.
 const ImportPage = lazy(async () => {
   const module = await import("./ImportPage.js");
   return { default: module.ImportPage };
+});
+
+// LAB builds open collections through the public SDK entry, loaded only there.
+// Staging and production keep Connect: the SDK has no production release trust yet.
+const SdkReader = lazy(async () => {
+  const [{ SdkReaderRoot }, { readerSdk }] = await Promise.all([
+    import("./SdkReaderRoot.js"),
+    import("./sdk-application.js"),
+  ]);
+  const sdk = readerSdk();
+  return {
+    default: ({ service }: { service?: ImportService }) =>
+      service ? (
+        <Suspense fallback={null}>
+          <NativeImportPage sdk={sdk} service={service} />
+        </Suspense>
+      ) : (
+        <SdkReaderRoot sdk={sdk} />
+      ),
+  };
 });
 
 const stopPwaInstall = setupPwaInstall("mdbase reader");
@@ -44,14 +71,24 @@ createRoot(root).render(
       <EnvironmentBadge />
       {migrationService ? (
         <Suspense fallback={null}>
-          <ImportPage service={migrationService} />
+          {import.meta.env.VITE_MDBASE_ENV === "lab" ? (
+            <SdkReader service={migrationService} />
+          ) : (
+            <ImportPage service={migrationService} />
+          )}
         </Suspense>
       ) : new URL(location.href).searchParams.has("preview") ? (
         <Suspense fallback={null}>
           <PreviewReader />
         </Suspense>
+      ) : import.meta.env.VITE_MDBASE_ENV === "lab" ? (
+        <Suspense fallback={null}>
+          <SdkReader />
+        </Suspense>
       ) : (
-        <ConnectReader />
+        <Suspense fallback={null}>
+          <ConnectReader />
+        </Suspense>
       )}
     </FeedbackRoot>
   </StrictMode>,

@@ -25,7 +25,7 @@ function connection(outcome: ConnectOutcome<RecordDocument>): {
     requestId === "lost" ? { requestId, operation: "update", recover } : null,
   );
   return {
-    recovery: new ConnectBodyUpdateRecovery({ pendingMutation } as never),
+    recovery: new ConnectBodyUpdateRecovery({ pendingMutation }),
     recover,
   };
 }

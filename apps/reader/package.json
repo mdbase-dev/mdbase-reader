@@ -22,6 +22,7 @@
   },
   "dependencies": {
     "@citation-js/plugin-csl": "0.8.2",
+    "@mdbase-dev/sdk": "file:../../vendor/mdbase-dev-sdk-0.0.0-729b5391.tgz",
     "@mdbase-dev/ui": "0.1.0-beta.125",
     "@mdbase-reader/connect": "workspace:*",
     "@mdbase-reader/core": "workspace:*",

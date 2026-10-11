@@ -8,6 +8,12 @@ const buildId = (process.env["MDBASE_READER_BUILD_ID"] ?? "local").replaceAll(
   "-",
 );
 
+const buildOutput = {
+  entryFileNames: `assets/[name]-[hash]-${buildId}.js`,
+  chunkFileNames: `assets/[name]-[hash]-${buildId}.js`,
+  assetFileNames: `assets/[name]-[hash]-${buildId}.[ext]`,
+};
+
 export default defineConfig({
   plugins: [react(), deploymentRevision(buildId)],
   resolve: {
@@ -23,15 +29,16 @@ export default defineConfig({
       "@codemirror/view",
     ],
   },
+  // The SDK starts its own module Worker from a module-relative URL; keep it out of
+  // dev pre-bundling so that URL still names the SDK's files, and emit ES workers.
+  optimizeDeps: { exclude: ["@mdbase-dev/sdk"] },
+  // Workers share the build-tagged names, so the SDK's native assets are emitted once.
+  worker: { format: "es", rolldownOptions: { output: buildOutput } },
   build: {
     sourcemap: true,
     target: "es2022",
     rolldownOptions: {
-      output: {
-        entryFileNames: `assets/[name]-[hash]-${buildId}.js`,
-        chunkFileNames: `assets/[name]-[hash]-${buildId}.js`,
-        assetFileNames: `assets/[name]-[hash]-${buildId}.[ext]`,
-      },
+      output: buildOutput,
     },
   },
 });
