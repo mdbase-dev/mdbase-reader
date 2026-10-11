@@ -121,6 +121,7 @@ describe("importSourceFile web and duplicate safeguards", () => {
           submittedUrl: "https://example.com/story#part",
           canonicalUrl: "https://www.example.com/story",
           retrievedAt: dateTime("2026-08-10T11:59:00.000Z"),
+          extractor: "defuddle@0.19.5",
         },
         archive: {
           name: "example-com.archive.html",
@@ -136,6 +137,7 @@ describe("importSourceFile web and duplicate safeguards", () => {
           submittedUrl: "https://example.com/story",
           canonicalUrl: "https://www.example.com/story",
           retrievedAt: "2026-08-10T11:59:00.000Z",
+          extractor: "defuddle@0.19.5",
         },
         representations: [
           expect.objectContaining({ role: "primary", derivedFromRole: "archive" }),

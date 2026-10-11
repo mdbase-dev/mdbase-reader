@@ -54,7 +54,7 @@ export function useWebCapture(
       setOffer(null);
       setNotice(null);
       try {
-        // Readability, the metadata extractors and PDFium load only when a source is added.
+        // The article extractor, metadata extractors and PDFium load only when a source is added.
         const [flow, { readerSourceAdditionServices }] = await Promise.all([
           import("./source-addition-flow.js"),
           import("./source-addition-services.js"),

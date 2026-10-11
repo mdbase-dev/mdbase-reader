@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <title>Ownership guide</title>
+    <meta name="author" content="Guide Author" />
+  </head>
+  <body>
+    <nav>Previous Next Search</nav>
+    <main>
+      <h1>Ownership guide</h1>
+      <p>
+        This guide explains how a small program owns a value and passes it to another function. The
+        examples are part of the explanation, and their captions carry information the reader may
+        need to highlight.
+      </p>
+      <p>
+        In the first example we retain the complete program, including its main function. Some
+        documentation sites wrap code in figures, so those containers must not be mistaken for
+        decorative images and removed.
+      </p>
+      <figure>
+        <pre><code class="language-rust">fn main() {
+    let value = String::from("durable reading copy");
+    println!("{}", value);
+}</code></pre>
+        <figcaption>Listing 1: The value belongs to the main function.</figcaption>
+      </figure>
+      <figure>
+        <img
+          src="data:image/png;base64,iVBORw0KGgo="
+          width="400"
+          height="200"
+          alt="The memory layout"
+        />
+        <figcaption>Figure 1: A pointer, a length, and a capacity identify this string.</figcaption>
+      </figure>
+      <p>
+        After the call returns, the owning function remains responsible for the value. These
+        explanatory paragraphs connect the code to the diagram and should remain in their original
+        order without synthetic whitespace changes.
+      </p>
+      <pre><code>fn length(value: &amp;str) -&gt; usize {
+    value.len()
+}</code></pre>
+      <p>
+        The helper borrows rather than takes ownership. This final statement completes the
+        explanation and provides a useful paragraph for checking that highlighting still locates the
+        exact text in the saved reading copy.
+      </p>
+    </main>
+    <aside>Recommended unrelated story</aside>
+    <footer>Newsletter Subscribe Account</footer>
+  </body>
+</html>

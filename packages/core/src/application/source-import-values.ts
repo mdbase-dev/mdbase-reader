@@ -21,7 +21,13 @@ export function validateCapture(
 ): NonNullable<SourceFileImportRequest["capture"]> {
   const submittedUrl = httpsUrl(capture.submittedUrl);
   const canonicalUrl = httpsUrl(capture.canonicalUrl);
-  return { submittedUrl, canonicalUrl, retrievedAt: capture.retrievedAt };
+  const extractor = normalizeOptionalText(capture.extractor, 100);
+  return {
+    submittedUrl,
+    canonicalUrl,
+    retrievedAt: capture.retrievedAt,
+    ...(extractor ? { extractor } : {}),
+  };
 }
 
 export function validateMetadata(metadata: SourceImportMetadata): SourceImportMetadata {

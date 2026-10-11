@@ -77,6 +77,7 @@ function captureFields(
       captured_at: capture.retrievedAt,
       submitted_url: capture.submittedUrl,
       canonical_url: capture.canonicalUrl,
+      ...(capture.extractor ? { extractor: capture.extractor } : {}),
     },
   };
 }
