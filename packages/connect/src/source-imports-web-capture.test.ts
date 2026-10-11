@@ -8,7 +8,7 @@ import type { ReaderConnectClient } from "./repository-client.js";
 import type { PlannedSourceFileImport } from "@mdbase-reader/core";
 
 describe("ConnectSourceImportRepository web capture provenance", () => {
-  it("persists post identity, thread parts and media as portable source frontmatter", async () => {
+  it("persists post identity and thread shape, leaving text and media to the body", async () => {
     const create = vi.fn(() => Promise.resolve(success(recordDocument())));
     const repository = new ConnectSourceImportRepository(
       { create } as unknown as ReaderConnectClient,
@@ -38,7 +38,19 @@ describe("ConnectSourceImportRepository web capture provenance", () => {
     });
     expect(create).toHaveBeenCalledWith(
       expect.objectContaining({
-        frontmatter: expect.objectContaining({ kind: "post", url: part.url, social_post: post }),
+        frontmatter: expect.objectContaining({
+          kind: "post",
+          url: part.url,
+          social_post: {
+            platform: "x",
+            id: "100",
+            url: part.url,
+            author: part.author,
+            threadRoot: "100",
+            threadPartial: true,
+            parts: [{ id: "100", url: part.url }],
+          },
+        }),
       }),
     );
   });

@@ -25,3 +25,21 @@ export interface SocialPost extends PostPart {
   /** APIs and live pages may omit deleted, private or not-yet-loaded thread parts. */
   readonly threadPartial: boolean;
 }
+
+export interface PostPartReference {
+  readonly id: string;
+  readonly url: string;
+  readonly quoted?: { readonly id: string; readonly url: string };
+}
+
+/** What a source's frontmatter keeps: identity and thread shape. Text and media live in the body. */
+export interface SocialPostReference {
+  readonly platform: SocialPlatform;
+  readonly id: string;
+  readonly url: string;
+  readonly author: PostPart["author"];
+  readonly published?: string;
+  readonly threadRoot: string;
+  readonly threadPartial: boolean;
+  readonly parts: readonly PostPartReference[];
+}

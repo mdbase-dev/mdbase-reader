@@ -91,7 +91,10 @@ describe("post-by-post live capture and annotation projection", () => {
   it("scopes annotations on thread parts and redraws after DOM replacement", async () => {
     const bridge = createSocialPageBridge(document);
     const capture = await bridge.capture("100");
-    const quotes = scopePostQuotes([{ exact: "The second durable post." }], capture?.post);
+    const quotes = scopePostQuotes(
+      [{ exact: "The second durable post.", postId: "101" }],
+      capture?.post,
+    );
     expect(quotes[0]?.postUrl).toBe("https://x.com/i/status/101");
     expect(bridge.draw(quotes, window.location.href).report.shown).toBe(1);
     const root = document.querySelectorAll('article[data-testid="tweet"]')[1]!;
@@ -111,6 +114,25 @@ describe("post-by-post live capture and annotation projection", () => {
     );
     expect(scopePostQuotes([{ exact: "Identical passage", postId: "101" }], post)[0]?.postUrl).toBe(
       "https://x.com/i/status/101",
+    );
+  });
+
+  it("resolves an unmarked quote only when the source is a single post", () => {
+    const part = { id: "100", url: "https://x.com/i/status/100" };
+    const post = {
+      platform: "x" as const,
+      ...part,
+      author: { id: "fixture", handle: "fixture", name: "Fixture Author" },
+      threadRoot: "100",
+      threadPartial: true,
+      parts: [{ ...part, quoted: { id: "900", url: "https://x.com/i/status/900" } }],
+    };
+    expect(scopePostQuotes([{ exact: "Anything" }], post)[0]?.postUrl).toBe(part.url);
+    // A quoted post is drawn inside the post quoting it.
+    expect(scopePostQuotes([{ exact: "Quoted", postId: "900" }], post)[0]?.postUrl).toBe(part.url);
+    const thread = { ...post, parts: [part, { id: "101", url: "https://x.com/i/status/101" }] };
+    expect(scopePostQuotes([{ exact: "Anything" }], thread)[0]?.postUrl).toContain(
+      "unresolved-post",
     );
   });
 
