@@ -5,13 +5,13 @@ entry of the new SDK (`@mdbase-dev/sdk`, `MdbaseConnect`).
 
 ## Pin
 
-`packages/connect/vendor/mdbase-dev-sdk-7193fd0d.tgz` comes from SDK source
-`7193fd0d396dfec3b339fd3b353248bf3354d963`, SHA256
-`2d03c9ddd75d844861ebf864cb7c0c4c51bbfed59965d8f29573053467ccfd03`. Its source commit, hashes
+`packages/connect/vendor/mdbase-dev-sdk-d53d7d76.tgz` comes from SDK source
+`d53d7d761c1a7caf100e065a1378384dcc5f6449`, SHA256
+`8b76b3fd687d9e557f3438f25313ac4c55bc0a8994c066bbbfb7c66e0f96cd1d`. Its source commit, hashes
 and protocol dependency (beta129 `d765e675c3da`) are recorded in
 `packages/connect/vendor/mdbase-next-sdk.json`.
 
-This is a **development intake, not release-qualified**. It is the first intake with the live
+This is a **development intake, not release-qualified**. It carries the live
 `MdbaseConnect` singleton: registration, then storage, then Worker, then runtime, plus
 `snapshot.selection` and `approve`/`reauthorize`/`chooseAnother`. Its public entry refuses the
 production environment.
@@ -51,13 +51,14 @@ production environment.
 - `src/main.tsx`: builds with `VITE_MDBASE_ENV=lab` (the LAB Pages deployment) lazily load
   `SdkReaderRoot` over that entry. Staging and production still render `ConnectReader` until
   the SDK has production release trust.
-- `vite.config.ts` excludes `@mdbase-dev/sdk` from dev pre-bundling and emits ES-module
-  workers, so the SDK's module-relative Worker URL resolves.
+- `vite.config.ts` excludes `@mdbase-dev/sdk` from dev pre-bundling, emits ES-module workers,
+  and gives worker bundles the same build-tagged file names, so the SDK Worker,
+  `runtime-lab.wasm`, `sqlite3.wasm` and `sqlite3.js` are each emitted once. The SDK stays out of
+  the eager entry chunks.
 
-**Blocked:** at `7193fd0d` the Reader build fails inside the SDK bundle. It references a
-`sqlite3-worker1.mjs` that the package does not ship. The SDK's native wasm is also not
-bundler-emitted. Both are SDK fixes; no app workaround is added. Old local data and pending
-writes need no cutover handoff.
+The production build passes at `d53d7d76`, and the emitted wasm matches the SDK's asset pins.
+Live LAB registration, Worker start and readiness have not been exercised. Old local data and
+pending writes need no cutover handoff.
 
 ## Checks
 
