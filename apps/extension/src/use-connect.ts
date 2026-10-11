@@ -1,11 +1,13 @@
 import { useCallback, useEffect, useState } from "react";
 
+import { problemMessage } from "./capture-model.js";
 import {
   createExtensionSession,
   rememberCollection,
   type ExtensionSession,
 } from "./connect-session.js";
 import { connectionView, startingView, type ConnectionView } from "./connection-view.js";
+
 
 import type { ActionLock } from "./use-action-lock.js";
 
@@ -35,7 +37,8 @@ function recovery(
   }
   switch (view.problem?.action) {
     case "sign_in":
-      return (signal) => application.authorize({ signal });
+      // A refused or expired sign-in starts again through approve (the SDK's sign_in).
+      return (signal) => application.approve(undefined, { signal });
     case "approve":
       return (signal) => application.approve(undefined, { signal });
     case "set_up":
@@ -60,7 +63,7 @@ function recovery(
 export function useConnect(lock: ActionLock): ConnectLink {
   const [extension, setExtension] = useState<ExtensionSession | null>(null);
   const [snapshot, setSnapshot] = useState<ConnectionView>(startingView);
-  const { run, locked } = lock;
+  const { run, locked, setProblem } = lock;
   const [scope] = useState(() => new AbortController());
 
   useEffect(() => {
@@ -117,15 +120,26 @@ export function useConnect(lock: ActionLock): ConnectLink {
       return (signal) => application.authorize({ signal });
     });
   // Without an SDK suggestion, retry starts again (or reopens, if opening failed).
-  const retry = (): Promise<void> =>
-    extension
-      ? act(
-          (session) =>
-            recovery(session, snapshot) ?? ((signal) => session.application.start({ signal })),
-        )
-      : run(async () => {
-          await open();
-        });
+  const retry = (): Promise<void> => {
+    if (!extension) {
+      return run(async () => {
+        await open();
+      });
+    }
+    if (snapshot.problem?.action === "sign_in") {
+      // From the click, never held behind a sign-in still authorizing: that one was
+      // refused or expired, and only a new one can finish.
+      const { application } = extension;
+      return application.approve(undefined, { signal: scope.signal }).then(
+        () => setProblem(null),
+        (reason: unknown) => setProblem(problemMessage(reason)),
+      );
+    }
+    return act(
+      (session) =>
+        recovery(session, snapshot) ?? ((signal) => session.application.start({ signal })),
+    );
+  };
   const applySetup = (): Promise<void> =>
     act(
       ({ application }) =>

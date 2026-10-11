@@ -188,7 +188,13 @@ function ProblemScreen({
       <h2>{problem?.title ?? "This collection can’t be used right now"}</h2>
       <p>{problem?.message}</p>
       {problem?.action && problem.actionLabel ? (
-        <button className="primary" type="button" disabled={c.busy} onClick={() => void c.retry()}>
+        <button
+          className="primary"
+          type="button"
+          // Sign-in stays available while a refused or expired one is still authorizing.
+          disabled={c.busy && problem.action !== "sign_in"}
+          onClick={() => void c.retry()}
+        >
           {problem.actionLabel}
         </button>
       ) : null}
@@ -283,7 +289,11 @@ function ProblemActions({
         </button>
       ) : null}
       {kind === "page" ? null : sdkProblem?.action && sdkProblem.actionLabel ? (
-        <button type="button" disabled={c.busy} onClick={() => void c.retry()}>
+        <button
+          type="button"
+          disabled={c.busy && sdkProblem.action !== "sign_in"}
+          onClick={() => void c.retry()}
+        >
           {sdkProblem.actionLabel}
         </button>
       ) : kind === "connection" ? (
