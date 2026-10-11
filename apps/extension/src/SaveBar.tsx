@@ -1,7 +1,7 @@
 import { useEffect } from "react";
 
 import { readerSourceUrl } from "./capture-model.js";
-import { connectionUnavailableMessage } from "./connection-status.js";
+import { connectionUnavailableMessage } from "./connection-view.js";
 
 import type { ExtensionCaptureController } from "./capture-controller.js";
 
@@ -19,10 +19,8 @@ export function saveBlocker(c: ExtensionCaptureController): string | null {
     return null;
   }
   if (c.snapshot.status !== "ready") {
-    // While Connect starts or checks setup there is nothing for the reader to do yet.
-    return ["not_started", "starting", "checking_setup", "destroyed"].includes(c.snapshot.status)
-      ? null
-      : connectionUnavailableMessage(c.snapshot);
+    // While mdbase starts or checks the collection there is nothing for the reader to do yet.
+    return c.snapshot.status === "opening" ? null : connectionUnavailableMessage(c.snapshot);
   }
   return c.draft.title.trim() ? null : "Give the source a title under Note to save it.";
 }

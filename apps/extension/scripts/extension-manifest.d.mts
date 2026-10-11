@@ -8,3 +8,4 @@ export function manifestVersion(version?: string): {
   version_name?: string;
 };
 export function extensionManifest(environment: ExtensionEnvironment): Record<string, unknown>;
+export const storeExtensionId: string;

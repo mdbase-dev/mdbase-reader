@@ -19,12 +19,32 @@ describe("per-environment extension manifest", () => {
       connectUrl: "https://connect-lab.mdbase.dev",
       readerOrigin: "https://lab.mdbase-reader.pages.dev",
     });
+    // The SDK runs in the extension's pages: it reaches the CP and LAB's log service.
     expect(manifest["host_permissions"]).toEqual([
       "https://connect-lab.mdbase.dev/*",
+      "https://mdbase-next-log-lab-20261005.callumalpass.workers.dev/*",
       "https://*/*",
     ]);
-    expect(manifest["optional_host_permissions"]).toEqual(["http://127.0.0.1/*"]);
+    expect(manifest["optional_host_permissions"]).toBeUndefined();
+    expect(manifest["content_security_policy"]).toEqual({
+      extension_pages: "script-src 'self' 'wasm-unsafe-eval'; object-src 'self'",
+    });
+    expect(environment.extensionOrigins).toEqual([
+      "chrome-extension://kimdfjefhbfgfecconmaiaaindjccidp",
+    ]);
     expect(manifest["name"]).toBe("mdbase Reader (LAB)");
+  });
+
+  it("declares an unpacked build's ID for LAB only", () => {
+    const devId = "abcdefghijklmnopabcdefghijklmnop";
+    expect(extensionEnvironment({ MDBASE_EXTENSION_DEV_ID: devId }).extensionOrigins).toEqual([
+      "chrome-extension://kimdfjefhbfgfecconmaiaaindjccidp",
+      `chrome-extension://${devId}`,
+    ]);
+    expect(() =>
+      extensionEnvironment({ MDBASE_ENV: "production", MDBASE_EXTENSION_DEV_ID: devId }),
+    ).toThrow(/LAB builds only/u);
+    expect(() => extensionEnvironment({ MDBASE_EXTENSION_DEV_ID: "not-an-id" })).toThrow();
   });
 
   it("targets production without an environment label", () => {

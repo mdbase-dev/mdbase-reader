@@ -1,15 +1,12 @@
 import { updatePageStatus } from "./background-page-status.js";
 import { intentKey, type CaptureIntent, type InvokeMessage } from "./messages.js";
-import { loadPageStatusConnect, preloadPageStatusConnect } from "./page-status-loader.js";
 import { forgetTab } from "./tab-cleanup.js";
 
 /*
  * The service worker wakes for every page load and toolbar click, so this bundle stays
- * small: the Connect SDK lives in page-status.js, loaded only when a page may be saved
- * (see page-status-loader.ts). Connect's credentialless fetch is installed there.
+ * small and never loads the SDK: the SDK runtime lives in the extension's pages (the side
+ * panel, welcome and settings pages).
  */
-self.addEventListener("install", preloadPageStatusConnect);
-
 /**
  * Opens Reader's side panel in the tab's window; the panel follows the window's active
  * tab. Everything here starts synchronously inside the user gesture: Chrome only allows
@@ -61,7 +58,7 @@ chrome.contextMenus.onClicked.addListener((info, tab) => {
 
 chrome.tabs.onUpdated.addListener((tabId, change, tab) => {
   if (change.status === "complete") {
-    void updatePageStatus(tabId, tab.url, loadPageStatusConnect);
+    void updatePageStatus(tabId, tab.url);
   }
 });
 chrome.tabs.onRemoved.addListener((tabId) => {

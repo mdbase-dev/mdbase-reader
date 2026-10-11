@@ -21,16 +21,12 @@ function manifest(): Plugin {
 }
 
 /**
- * The service worker is two classic scripts: background.js, which runs on every wake, and
- * page-status.js with the Connect SDK, which it loads with importScripts() only when a
- * page may be saved (see src/page-status-loader.ts). Each is a self-contained IIFE, built
- * after the pages so neither shares chunks with them.
+ * The service worker is one classic script, background.js, built after the pages as a
+ * self-contained IIFE so it shares no chunks with them. It never includes the SDK: the
+ * SDK's runtime lives in the extension's pages.
  */
 function serviceWorker(): Plugin {
-  const scripts = {
-    background: "src/background.ts",
-    "page-status": "src/page-status-worker.ts",
-  };
+  const scripts = { background: "src/background.ts" };
   return {
     name: "mdbase-reader-extension-service-worker",
     apply: "build",
@@ -47,7 +43,6 @@ function serviceWorker(): Plugin {
             outDir: "dist",
             emptyOutDir: false,
             copyPublicDir: false,
-            // Connect's lazily loaded modules are inlined: workers cannot import() them.
             modulePreload: false,
             rolldownOptions: {
               input: resolve(import.meta.dirname, entry),
@@ -77,6 +72,19 @@ function serviceWorker(): Plugin {
 
 export default defineConfig({
   plugins: [react(), manifest(), serviceWorker()],
+  // The SDK starts its own module Worker from a module-relative URL; keep it out of
+  // dev pre-bundling so that URL still names the SDK's files, and emit ES workers.
+  optimizeDeps: { exclude: ["@mdbase-dev/sdk"] },
+  worker: {
+    format: "es",
+    rolldownOptions: {
+      output: {
+        entryFileNames: "assets/[name]-[hash].js",
+        chunkFileNames: "assets/[name]-[hash].js",
+        assetFileNames: "assets/[name]-[hash][extname]",
+      },
+    },
+  },
   define: { __READER_EXTENSION_ENVIRONMENT__: JSON.stringify(environment) },
   build: {
     target: "es2022",

@@ -1,11 +1,11 @@
 import type { CitationPreview } from "./capture-citation.js";
+import type { ConnectionView } from "./connection-view.js";
 import type { CaptureIntent } from "./messages.js";
 import type { ProjectionReport, QuoteOutcome } from "./page-annotations.js";
 import type { PageCapture } from "./page-capture.js";
 import type { CaptureDraft } from "./save-capture.js";
 import type { ProblemKind } from "./use-action-lock.js";
 import type { SourceNoteController } from "./use-source-note.js";
-import type { ReaderConnectSnapshot, ReaderDirectAccessController } from "@mdbase-reader/connect";
 import type {
   Annotation,
   AnnotationDeletionPlan,
@@ -22,7 +22,7 @@ export interface PageHighlights {
   readonly outcomes: ReadonlyMap<AnnotationId, QuoteOutcome>;
 }
 export interface ExtensionCaptureController {
-  readonly snapshot: ReaderConnectSnapshot;
+  readonly snapshot: ConnectionView;
   readonly capture: PageCapture | null;
   readonly draft: CaptureDraft;
   readonly setDraft: Dispatch<SetStateAction<CaptureDraft>>;
@@ -35,8 +35,6 @@ export interface ExtensionCaptureController {
   readonly annotations: readonly Annotation[];
   readonly citation: CitationPreview | null;
   readonly citationPending: boolean;
-  readonly deviceCode: string | null;
-  readonly directAccess: ReaderDirectAccessController | null;
   readonly projection: PageHighlights | null;
   readonly progress: SourceImportProgress | null;
   readonly busy: boolean;

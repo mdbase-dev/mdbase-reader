@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import { prepareCitation, type CitationPreview } from "./capture-citation.js";
 import { problemMessage, sourceForUrl } from "./capture-model.js";
-import { connectionUnavailableMessage } from "./connection-status.js";
+import { connectionUnavailableMessage } from "./connection-view.js";
 import { rememberColor } from "./drafts.js";
 import { annotationQuotes } from "./page-annotations.js";
 import { markSavedPage } from "./page-badge.js";
@@ -116,8 +116,9 @@ export function useExtensionCapture(
   useEffect(() => {
     const epoch = ++discovery.current;
     refreshEpoch.current++;
-    const collection = extension?.session.connectedCollection();
-    if (!collection || !pageUrl) {
+    const collection = extension?.connectedCollection();
+    // Only once the panel shows that collection as ready, so the lookup runs once.
+    if (!collection || !pageUrl || collection.collectionId !== collectionId) {
       return;
     }
     void (async () => {
@@ -200,11 +201,9 @@ export function useExtensionCapture(
 
   const save = (changes?: Partial<CaptureDraft>): Promise<void> =>
     lock.run(async () => {
-      const collection = extension?.session.connectedCollection();
-      if (!collection || !writer || !extension) {
-        throw new Error(
-          connectionUnavailableMessage(extension?.session.getSnapshot() ?? connection.snapshot),
-        );
+      const collection = extension?.connectedCollection();
+      if (!collection || !writer) {
+        throw new Error(connectionUnavailableMessage(connection.snapshot));
       }
       if (!capture) {
         throw new Error("The page is not ready. Reopen Reader on this page before saving.");
@@ -221,7 +220,6 @@ export function useExtensionCapture(
       setStatus("saving");
       try {
         const result = await writer.save({
-          session: extension.session,
           collection,
           capture,
           draft,
@@ -280,7 +278,7 @@ export function useExtensionCapture(
   }
 
   async function refreshAnnotations(saved: SourceSummary, render: boolean): Promise<void> {
-    const collection = extension?.session.connectedCollection();
+    const collection = extension?.connectedCollection();
     if (!collection || !capture) {
       setNotice(connectionUnavailableMessage(connection.snapshot));
       return;
@@ -361,7 +359,7 @@ export function useExtensionCapture(
     }
   };
   const editing = (): { collection: ReaderConnectedCollection; writer: CaptureWriter } => {
-    const collection = extension?.session.connectedCollection();
+    const collection = extension?.connectedCollection();
     if (!collection || !writer) {
       throw new Error(connectionUnavailableMessage(connection.snapshot));
     }
@@ -419,7 +417,7 @@ export function useExtensionCapture(
 
   const tags = useKnownTags(extension, annotations);
   const connectedCollection = useCallback(
-    () => extension?.session.connectedCollection() ?? null,
+    () => extension?.connectedCollection() ?? null,
     [extension],
   );
   const note = useSourceNote(connectedCollection, source, setSource);
@@ -470,8 +468,6 @@ export function useExtensionCapture(
     annotations,
     citation,
     citationPending,
-    deviceCode: connection.deviceCode,
-    directAccess: connection.directAccess,
     projection,
     progress,
     refreshing,

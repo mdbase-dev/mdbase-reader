@@ -10,7 +10,7 @@ export function useKnownTags(
   extension: ExtensionSession | null,
   annotations: readonly Annotation[],
 ): { readonly knownTags: readonly string[]; readonly loadTags: () => void } {
-  const collection = extension?.session.connectedCollection() ?? null;
+  const collection = extension?.connectedCollection() ?? null;
   const [known, setKnown] = useState<{
     readonly collectionId: string;
     readonly tags: readonly string[];

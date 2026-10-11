@@ -4,11 +4,11 @@ import { lastCollectionKey } from "./collection-memory.js";
 
 /**
  * Which page addresses the selected collection has saved, kept per collection in
- * `chrome.storage.local` so the service worker can dismiss most page loads without
- * starting Connect. Entries are short hashes of the normalized source URL (the identity
+ * `chrome.storage.local` so the service worker can mark saved pages without the SDK,
+ * which runs only in the extension's pages. The side panel rebuilds it. Entries are short hashes of the normalized source URL (the identity
  * `sourceForUrl` compares), so the index stays small and a collision only costs one
  * real lookup. Pages saved elsewhere (Reader, another browser) are missed until the
- * index is rebuilt, so it expires after {@link savedUrlIndexTtlMs}.
+ * panel rebuilds the index, which it does once it is older than {@link savedUrlIndexTtlMs}.
  */
 export const savedUrlIndexTtlMs = 60 * 60_000;
 const keyPrefix = "saved-urls:";
@@ -125,18 +125,25 @@ export function pageStatusCollection(): Promise<string | null> {
   return collection;
 }
 
-/** "stale" when there is no index yet or it has expired: only then must Connect be asked. */
+/** "stale" when there is no index yet or it is older than `ttlMs`. */
 export async function savedUrlStatus(
   collectionId: string,
   url: string,
   now = Date.now(),
+  ttlMs = savedUrlIndexTtlMs,
 ): Promise<SavedUrlStatus> {
   const index = await loadIndex(collectionId);
-  if (!index || now - index.refreshedAt >= savedUrlIndexTtlMs || now < index.refreshedAt) {
+  if (!index || now - index.refreshedAt >= ttlMs || now < index.refreshedAt) {
     return "stale";
   }
   const key = savedUrlKey(url);
   return key !== null && index.urls.has(key) ? "saved" : "unsaved";
+}
+
+/** Whether the panel should rebuild the collection's index. */
+export async function savedUrlIndexStale(collectionId: string, now = Date.now()): Promise<boolean> {
+  const index = await loadIndex(collectionId);
+  return !index || now - index.refreshedAt >= savedUrlIndexTtlMs || now < index.refreshedAt;
 }
 
 /** Replaces the index with every address the collection's sources were saved under. */

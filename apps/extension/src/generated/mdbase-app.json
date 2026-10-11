@@ -2,6 +2,9 @@
   "manifest_version": 1,
   "id": "dev.mdbase.reader.extension",
   "name": "mdbase Reader browser extension",
+  "homepage": "https://lab.mdbase-reader.pages.dev/",
+  "icon": "https://lab.mdbase-reader.pages.dev/favicon.svg",
+  "redirect_uris": ["https://lab.mdbase-reader.pages.dev/"],
   "requirements": {
     "access": "full_collection",
     "contracts": [
@@ -186,6 +189,7 @@
       }
     ]
   },
-  "distribution": "portable",
-  "project_url": "https://reader.mdbase.dev/"
+  "installation_origins": {
+    "lab": { "app-runtime": ["chrome-extension://kimdfjefhbfgfecconmaiaaindjccidp"] }
+  }
 }
