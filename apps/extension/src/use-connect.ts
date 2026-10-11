@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 import { problemMessage } from "./capture-model.js";
 import {
@@ -7,7 +7,6 @@ import {
   type ExtensionSession,
 } from "./connect-session.js";
 import { connectionView, startingView, type ConnectionView } from "./connection-view.js";
-
 
 import type { ActionLock } from "./use-action-lock.js";
 
@@ -65,12 +64,15 @@ export function useConnect(lock: ActionLock): ConnectLink {
   const [snapshot, setSnapshot] = useState<ConnectionView>(startingView);
   const { run, locked, setProblem } = lock;
   const [scope] = useState(() => new AbortController());
+  const currentSession = useRef<ExtensionSession | null>(null);
+  const signInAction = useRef(0);
 
   useEffect(() => {
     if (!extension) {
       return;
     }
     const { application } = extension;
+    currentSession.current = extension;
     const publish = (): void => {
       const usable = extension.connectedCollection() !== null;
       const view = connectionView(application.getSnapshot(), usable, extension.hostAvailable());
@@ -84,6 +86,7 @@ export function useConnect(lock: ActionLock): ConnectLink {
     publish();
     return () => {
       unsubscribe();
+      currentSession.current = null;
       extension.dispose();
     };
   }, [extension]);
@@ -109,16 +112,43 @@ export function useConnect(lock: ActionLock): ConnectLink {
         await next(scope.signal);
       }
     });
+  const approveSignIn = (): Promise<void> => {
+    if (!extension || scope.signal.aborted) {
+      return Promise.resolve();
+    }
+    const ordinal = ++signInAction.current;
+    const current = (): boolean =>
+      !scope.signal.aborted &&
+      currentSession.current === extension &&
+      ordinal === signInAction.current;
+    // Invoke from the gesture even while authorizing; renewal belongs to the SDK.
+    return extension.application.approve(undefined, { signal: scope.signal }).then(
+      () => {
+        if (current()) {
+          setProblem(null);
+        }
+      },
+      (reason: unknown) => {
+        if (current()) {
+          setProblem(problemMessage(reason));
+        }
+      },
+    );
+  };
   const connect = (choose = false): Promise<void> =>
-    act(({ application }) => {
-      if (choose && snapshot.signedIn) {
-        return (signal) => application.approve(null, { signal });
-      }
-      if (snapshot.status === "approval") {
-        return (signal) => application.approve(undefined, { signal });
-      }
-      return (signal) => application.authorize({ signal });
-    });
+    choose && snapshot.signedIn
+      ? act(
+          ({ application }) =>
+            (signal) =>
+              application.approve(null, { signal }),
+        )
+      : snapshot.status === "waiting" || snapshot.problem?.action === "sign_in"
+        ? approveSignIn()
+        : act(
+            ({ application }) =>
+              (signal) =>
+                application.approve(undefined, { signal }),
+          );
   // Without an SDK suggestion, retry starts again (or reopens, if opening failed).
   const retry = (): Promise<void> => {
     if (!extension) {
@@ -127,13 +157,7 @@ export function useConnect(lock: ActionLock): ConnectLink {
       });
     }
     if (snapshot.problem?.action === "sign_in") {
-      // From the click, never held behind a sign-in still authorizing: that one was
-      // refused or expired, and only a new one can finish.
-      const { application } = extension;
-      return application.approve(undefined, { signal: scope.signal }).then(
-        () => setProblem(null),
-        (reason: unknown) => setProblem(problemMessage(reason)),
-      );
+      return approveSignIn();
     }
     return act(
       (session) =>

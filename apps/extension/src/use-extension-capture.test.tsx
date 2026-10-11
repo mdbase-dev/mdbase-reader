@@ -179,7 +179,7 @@ it("offers sign-in again from a refused sign-in, even while the first is still a
   await mount();
   // The first sign-in is still running, so the panel's action lock is held.
   let finish = (): void => undefined;
-  mocks.authorize.mockReturnValueOnce(new Promise<void>((resolve) => (finish = resolve)));
+  mocks.approve.mockReturnValueOnce(new Promise<void>((resolve) => (finish = resolve)));
   let first: Promise<void> = Promise.resolve();
   await act(async () => {
     first = controller.connect();
@@ -198,8 +198,8 @@ it("offers sign-in again from a refused sign-in, even while the first is still a
   await act(async () => {
     await controller.retry();
   });
-  expect(mocks.approve).toHaveBeenCalledTimes(1);
-  expect(mocks.authorize).toHaveBeenCalledTimes(1);
+  expect(mocks.approve).toHaveBeenCalledTimes(2);
+  expect(mocks.authorize).not.toHaveBeenCalled();
   await act(async () => {
     finish();
     await first;

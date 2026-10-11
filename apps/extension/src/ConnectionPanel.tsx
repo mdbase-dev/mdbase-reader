@@ -135,9 +135,14 @@ function StateScreen({
       );
     case "waiting":
       return (
-        <p role="status" className="device-code">
-          Approve mdbase Reader in the mdbase tab, then return here.
-        </p>
+        <>
+          <p role="status" className="device-code">
+            Approve mdbase Reader in the mdbase tab, then return here.
+          </p>
+          <button className="primary" type="button" onClick={() => void c.connect()}>
+            Sign in
+          </button>
+        </>
       );
     case "choosing":
       return snapshot.collections.length ? null : (

@@ -35,7 +35,7 @@ export interface SdkReaderRootProps {
   readonly renderNative?: (scope: ReaderNativeScope) => ReactNode;
 }
 
-type Act = (action: (signal: AbortSignal) => Promise<unknown>) => Promise<void>;
+type Act = (action: (signal: AbortSignal) => Promise<unknown>, signIn?: boolean) => Promise<void>;
 
 const keys = new WeakMap<ReaderSdk, number>();
 let nextKey = 0;
@@ -162,7 +162,8 @@ function useApplicationLifecycle(application: MdbaseApplication): {
   readonly problem: MdbaseErrorDescription | null;
 } {
   const caller = useRef<AbortController | null>(null);
-  const busy = useRef(false);
+  const busy = useRef(0);
+  const latestAction = useRef(0);
   const [working, setWorking] = useState(false);
   const [problem, setProblem] = useState<MdbaseErrorDescription | null>(null);
   useEffect(() => {
@@ -203,24 +204,26 @@ function useApplicationLifecycle(application: MdbaseApplication): {
       }
     };
   }, [application]);
-  const act: Act = async (action) => {
+  const act: Act = async (action, signIn = false) => {
     const scope = caller.current;
-    if (!scope || scope.signal.aborted || busy.current) {
+    if (!scope || scope.signal.aborted || (busy.current > 0 && !signIn)) {
       return;
     }
-    busy.current = true;
+    // The SDK owns sign-in serialization/renewal, not this UI's busy flag.
+    const ordinal = ++latestAction.current;
+    busy.current++;
     setWorking(true);
     setProblem(null);
     try {
       await action(scope.signal);
     } catch (error: unknown) {
-      if (!aborted(scope)) {
+      if (!aborted(scope) && ordinal === latestAction.current) {
         setProblem(describeError(error) ?? describeError("internal"));
       }
     } finally {
+      busy.current--;
       if (!aborted(scope)) {
-        busy.current = false;
-        setWorking(false);
+        setWorking(busy.current > 0);
       }
     }
   };
@@ -236,7 +239,7 @@ type Run = (signal: AbortSignal) => Promise<unknown>;
 /** The one SDK-suggested way out of a settled problem. */
 type Recovery =
   | { readonly label: string; readonly href: string }
-  | { readonly label: string; readonly run: Run }
+  | { readonly label: string; readonly run: Run; readonly signIn?: true }
   | { readonly label: string; readonly reload: true };
 
 interface ConnectionScreenState {
@@ -249,6 +252,7 @@ interface ConnectionScreenState {
   readonly error: boolean;
   readonly identity: string | null;
   readonly signedIn: boolean;
+  readonly waiting: boolean;
   readonly setup: boolean;
   readonly approval: boolean;
   /** The requested collection cannot open; offer the chooser instead. */
@@ -338,6 +342,21 @@ interface SettledScreen {
   readonly rechoose: boolean;
 }
 
+function actionableProblem(
+  snapshot: MdbaseApplicationSnapshot,
+  flags: ScreenFlags,
+): MdbaseErrorDescription | null {
+  if (flags.closed || flags.unavailable) {
+    return describedProblem(snapshot, flags);
+  }
+  const described = describeError(snapshot);
+  return described?.action === "sign_in" ? described : describedProblem(snapshot, flags);
+}
+
+function canContinueSignIn(flags: ScreenFlags): boolean {
+  return flags.waiting && !flags.closed && !flags.unavailable;
+}
+
 function settledScreen(
   application: MdbaseApplication,
   snapshot: MdbaseApplicationSnapshot,
@@ -345,7 +364,7 @@ function settledScreen(
   review: Run,
   actionProblem: MdbaseErrorDescription | null,
 ): SettledScreen {
-  const described = actionProblem ?? describedProblem(snapshot, flags);
+  const described = actionProblem ?? actionableProblem(snapshot, flags);
   const settledReady = snapshot.status === "ready" && !flags.opening;
   const { assessment } = snapshot.readiness;
   const retired = settledReady && !flags.readinessProblem && assessment?.status === "ready";
@@ -419,6 +438,7 @@ function connectionScreen(
     checkAgain: settled.unchecked,
     identity: identityLabel(signIn),
     signedIn: signIn !== null,
+    waiting: canContinueSignIn(flags),
     setup: flags.setup && settled.described?.action !== "set_up",
     approval: flags.approval,
     rechoose: flags.approval || flags.invalid || settled.rechoose,
@@ -438,7 +458,7 @@ function recoveryAction(
   const label = problem.actionLabel ?? "Try again";
   switch (problem.action) {
     case "sign_in":
-      return { label, run: (signal) => application.authorize({ signal }) };
+      return { label, signIn: true, run: (signal) => application.approve(undefined, { signal }) };
     case "approve":
       return { label, run: (signal) => application.approve(undefined, { signal }) };
     case "set_up":
@@ -494,13 +514,14 @@ function ConnectionActions({
     label: string,
     run: (signal: AbortSignal) => Promise<unknown>,
     primary = false,
+    signIn = false,
   ): JSX.Element => (
     <button
       key={label}
       type="button"
       className={`mdbase-connect-action mdbase-button${primary ? " is-primary" : ""}`}
-      disabled={working}
-      onClick={() => void act(run)}
+      disabled={working && !signIn}
+      onClick={() => void act(run, signIn)}
     >
       {label}
     </button>
@@ -512,8 +533,8 @@ function ConnectionActions({
       {screen.checkAgain
         ? action("Check again", (signal) => application.assess({ signal }), true)
         : null}
-      {screen.choosing && !screen.signedIn && !recovery
-        ? action("Sign in", (signal) => application.authorize({ signal }), true)
+      {((screen.choosing && !screen.signedIn) || screen.waiting) && !recovery
+        ? action("Sign in", (signal) => application.approve(undefined, { signal }), true, true)
         : null}
       {screen.setup ? action(setupActionLabel, review, true) : null}
       {screen.approval
@@ -569,8 +590,10 @@ function RecoveryControl({
     <button
       type="button"
       className={className}
-      disabled={working}
-      onClick={() => ("reload" in recovery ? window.location.reload() : void act(recovery.run))}
+      disabled={working && !("signIn" in recovery && recovery.signIn)}
+      onClick={() =>
+        "reload" in recovery ? window.location.reload() : void act(recovery.run, recovery.signIn)
+      }
     >
       {recovery.label}
     </button>

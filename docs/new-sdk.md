@@ -5,10 +5,10 @@ entry of the new SDK (`@mdbase-dev/sdk`, `MdbaseConnect`).
 
 ## Pin
 
-`packages/connect/vendor/mdbase-dev-sdk-dev-41c26ca7.tgz` is the original
-`sdk-dev-41c26ca7` cut from SDK source
-`41c26ca73f6c97551ba4732c35627d626b927f03`, SHA256
-`f8a00e2364d6adacb8a8ddcfa219f4ae5a5451bfd817758a9022ca32fb9ef1e3` (3978820 bytes).
+`packages/connect/vendor/mdbase-dev-sdk-dev-4c484d3c.tgz` is the original
+`sdk-dev-4c484d3c` cut from SDK source
+`4c484d3cc3d06b7ecbac8061b171a25d72be2ae4`, SHA256
+`b4cee1c3cd8141d62b1fdaf3239184ba70542e92e223e3b5014fb12e7f763d73` (4000217 bytes).
 Its source, SRI, native pins and original bundled protocol are recorded in
 `packages/connect/vendor/mdbase-next-sdk.json`. The SDK bundles beta129
 `c280cd194ffd`; the direct legacy protocol dependency remains `d765e675c3da` unchanged.
@@ -23,6 +23,12 @@ This cut delivers registration-refusal guidance, Private-collection availability
 reasons and collection deletion APIs. The earlier unused-protocol exception is
 not carried forward; this archive has no vendor warnings. Packaged integrity and
 ordinary/frozen installation do not establish live LAB acceptance.
+
+The current cut adds SDK-owned lazy Worker startup and pairing only from a
+sign-in gesture, native-return opening, and refused/expired sign-in recovery.
+Refusal copy and the enabled Sign in action come from the SDK; clicking invokes
+`approve()`, including while authorizing. No app-side pairing or renewal engine
+is introduced. Writer's optional file-access consent remains a later SDK capability.
 
 ## Design
 

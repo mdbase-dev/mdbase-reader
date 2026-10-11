@@ -154,6 +154,56 @@ const count = (
   name: string,
 ): number => controls.observedActions().filter(({ action }) => action === name).length;
 
+for (const reason of ["refused", "expired"]) {
+  it(`SDK ${reason} sign-in uses SDK copy and an explicit approval gesture`, async () => {
+    const h = fixture({ status: "blocked", problem: reason });
+    const copy = describeError(h.entry.application().getSnapshot());
+    if (!copy?.actionLabel) {
+      throw new Error("Missing SDK sign-in description");
+    }
+    await act(async () => root.render(<SdkReaderRoot sdk={h.entry} />));
+    expect(host.textContent).toContain(copy.title);
+    expect(host.textContent).toContain(copy.message);
+    const signIn = button(copy.actionLabel);
+    expect(signIn.disabled).toBe(false);
+    await act(async () => signIn.click());
+    expect(count(h.controls, "approve")).toBe(1);
+    expect(count(h.controls, "authorize")).toBe(0);
+  });
+}
+it("authorizing still offers an enabled explicit SDK approval gesture", async () => {
+  const h = fixture({ status: "authorizing" });
+  await act(async () => root.render(<SdkReaderRoot sdk={h.entry} />));
+  const signIn = button("Sign in");
+  expect(signIn.disabled).toBe(false);
+  await act(async () => signIn.click());
+  expect(count(h.controls, "approve")).toBe(1);
+});
+
+it("another explicit sign-in reaches SDK approve while the first gesture is pending", async () => {
+  const h = fixture({});
+  const pending: (() => void)[] = [];
+  const application = h.entry.application();
+  h.controls.setHandler("approve", () => {
+    h.controls.publishSnapshot({ ...application.getSnapshot(), status: "authorizing" });
+    return new Promise<void>((resolve) => pending.push(resolve));
+  });
+  await act(async () => root.render(<SdkReaderRoot sdk={h.entry} />));
+  try {
+    await act(async () => button("Sign in").click());
+    expect(button("Sign in").disabled).toBe(false);
+    await act(async () => button("Sign in").click());
+    expect(count(h.controls, "approve")).toBe(2);
+    expect(count(h.controls, "authorize")).toBe(0);
+  } finally {
+    await act(async () => {
+      for (const resolve of pending) {
+        resolve();
+      }
+    });
+  }
+});
+
 it("starts the SDK once and reviews setup before Confirm applies the reviewed plan", async () => {
   const { controls } = await setupRequired();
   expect(count(controls, "start")).toBe(1);
@@ -292,7 +342,7 @@ it("active checking ignores a retired incompatible assessment", async () => {
 
 it("SDK registration-refusal copy replaces raw action details without developerMessage", async () => {
   const { entry, controls } = fixture({});
-  controls.setHandler("authorize", () => {
+  controls.setHandler("approve", () => {
     throw Object.assign(new Error("sensitive raw diagnostics"), {
       code: "invalid_request",
       reason: "application_registration_refused",
@@ -429,5 +479,5 @@ it("a blocked open shows the SDK's title, copy and one action", async () => {
       [...buttons].filter((item) => item.textContent === "Sign in").length === 1,
   );
   await act(async () => button("Sign in").click());
-  expect(controls.observedActions().map((call) => call.action)).toContain("authorize");
+  expect(controls.observedActions().map((call) => call.action)).toContain("approve");
 });

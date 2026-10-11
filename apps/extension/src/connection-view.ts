@@ -130,6 +130,10 @@ function interruption(snapshot: MdbaseApplicationSnapshot): Screen | null {
   if (status === "closed") {
     return plain("closed");
   }
+  const signInProblem = sdkProblem(snapshot, false);
+  if (signInProblem?.action === "sign_in") {
+    return { status: "problem", problem: signInProblem };
+  }
   if (status === "authorizing" || selection.state === "approving") {
     return plain("waiting");
   }
