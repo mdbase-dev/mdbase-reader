@@ -1,5 +1,9 @@
 import { connect, type MdbaseClient } from "@mdbase-dev/sdk";
-import { MemoryReplica, type MemoryReplicaOptions } from "@mdbase-dev/sdk/testing";
+import {
+  MemoryReplica,
+  type MemoryContract,
+  type MemoryReplicaOptions,
+} from "@mdbase-dev/sdk/testing";
 import { afterEach, describe, expect, it } from "vitest";
 
 import { ConnectBodyUpdateRecovery } from "../body-update-recovery.js";
@@ -7,6 +11,12 @@ import { sourceContract } from "../contracts.js";
 import { outcomeValue } from "../repository-client.js";
 
 import { nativeReaderClient, type NativeReaderClient } from "./native-client.js";
+
+const memorySourceContract: MemoryContract = {
+  ...sourceContract,
+  type: "reader-source",
+  fields: { id: "id", title: "title", kind: "kind", saved_at: "saved_at" },
+};
 
 const clients: MdbaseClient[] = [];
 afterEach(() => {
@@ -122,10 +132,8 @@ describe("native Reader client", () => {
     expect(replica.allRecords.find((record) => record.path === "notes/a.md")?.body).toBe("kept");
   });
 
-  // RED at SDK df091839: MemoryReplica does not serve contract-scoped records
-  // (`contract_records_unsupported`). Enable when the SDK fixture gains them.
-  it.skip("reads and updates a source through its contract view, reading back the contract view", async () => {
-    const { replica, client } = await native();
+  it("reads and updates a source through its contract view, reading back the contract view", async () => {
+    const { replica, client } = await native({ contracts: [memorySourceContract] });
     replica.seed({
       path: "sources/c.md",
       types: ["reader-source"],

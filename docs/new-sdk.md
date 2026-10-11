@@ -5,9 +5,9 @@ entry of the new SDK (`@mdbase-dev/sdk`, `MdbaseConnect`).
 
 ## Pin
 
-`packages/connect/vendor/mdbase-dev-sdk-df091839.tgz` comes from SDK source
-`df09183980715ce595f95f66455d1f0fa72dfe82`, SHA256
-`4db016c3348170147ca7298dffe6039536c6deb9594f2dbe10245d7cafa7e0ee`. Its source commit, hashes
+`packages/connect/vendor/mdbase-dev-sdk-38001079.tgz` comes from SDK source
+`3800107992f345cbf62665b945a5073de34e07b6`, SHA256
+`d2c04aeb38932d43fba0601ab385f325898b3794845cee5322a42ca64ad412e4`. Its source commit, hashes
 and protocol dependency (beta129 `d765e675c3da`) are recorded in
 `packages/connect/vendor/mdbase-next-sdk.json`.
 
@@ -60,7 +60,7 @@ production environment.
   `runtime-lab.wasm`, `sqlite3.wasm` and `sqlite3.js` are each emitted once. The SDK stays out of
   the eager entry chunks.
 
-The production build passes at `df091839`, and the emitted wasm matches the SDK's asset pins.
+The production build passes at `38001079`, and the emitted wasm matches the SDK's asset pins.
 Live LAB registration, Worker start and readiness have not been exercised. Old local data and
 pending writes need no cutover handoff.
 
