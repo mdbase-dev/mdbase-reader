@@ -160,6 +160,50 @@ describe("adding a source from pasted text", () => {
   });
 });
 
+describe("adding social sources", () => {
+  it.each([
+    "https://x.com/home",
+    "https://x.com/fixture",
+    "https://bsky.app/search",
+    "https://bsky.app/profile/fixture.test",
+  ])("rejects feed/profile URLs without offering citation-only capture: %s", async (url) => {
+    const deps = services();
+    await expect(addSourceFromInput(url, deps)).rejects.toThrow("cannot be saved");
+    expect(deps.capture).not.toHaveBeenCalled();
+    expect(deps.lookUp).not.toHaveBeenCalled();
+  });
+  it("explains X's live-page requirement instead of requesting undocumented APIs", async () => {
+    const deps = services();
+    await expect(
+      addSourceFromInput("https://twitter.com/fixture/status/100", deps),
+    ).rejects.toThrow("extension");
+    expect(deps.capture).not.toHaveBeenCalled();
+  });
+  it("does not offer a citation-only Mastodon profile after marker-based feed rejection", async () => {
+    const deps = services({
+      capture: vi.fn(() =>
+        Promise.reject(
+          new Error(
+            "Feeds cannot be saved as sources. Choose individual posts in the Reader extension.",
+          ),
+        ),
+      ),
+    });
+    await expect(addSourceFromInput("https://any-instance.test/@fixture", deps)).rejects.toThrow(
+      "Feeds cannot",
+    );
+    expect(deps.lookUp).not.toHaveBeenCalled();
+    expect(deps.workspace.createSource).not.toHaveBeenCalled();
+  });
+  it("does not offer a citation-only post after an API failure", async () => {
+    const deps = services();
+    await expect(
+      addSourceFromInput("https://bsky.app/profile/fixture.test/post/first", deps),
+    ).rejects.toThrow("blocked");
+    expect(deps.lookUp).not.toHaveBeenCalled();
+  });
+});
+
 function source(): Source {
   return {
     collectionId: collectionId("reading"),

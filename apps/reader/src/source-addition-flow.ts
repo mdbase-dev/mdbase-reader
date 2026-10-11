@@ -5,6 +5,8 @@ import {
   citationYear,
   identifierLookup,
   parseSourceInput,
+  postAddress,
+  siteAdapters,
   type CitationDraft,
   type SourceIdentifier,
 } from "@mdbase-reader/web-capture";
@@ -67,12 +69,16 @@ async function addFromUrl(
   url: string,
   services: SourceAdditionServices,
 ): Promise<SourceAdditionOutcome> {
+  const socialAddress = assertSocialInput(url);
   services.onStatus("Fetching the page…");
   let captured: CaptureResult;
   try {
     captured = await services.capture(url, { allowPdf: true, ...signalOf(services) });
   } catch (reason) {
     services.signal?.throwIfAborted();
+    if (socialAddress || messageOf(reason).includes("Feeds cannot be saved as sources")) {
+      throw reason;
+    }
     services.onStatus("Looking up citation details instead…");
     const candidate = await services.lookUp({ kind: "url", value: url }).catch(() => null);
     if (candidate) {
@@ -102,11 +108,31 @@ async function addFromUrl(
       capture: page.capture,
       archive: page.archive,
       metadata: { ...fields?.metadata, ...page.metadata, ...authorsOf(fields) },
-      ...(fields?.kind && fields.kind !== "webpage" ? { kind: fields.kind } : {}),
+      ...capturedKind(page.metadata, fields?.kind),
     },
     services.importOptions,
   );
   return finish(source, preview?.citation, services);
+}
+
+function assertSocialInput(url: string): ReturnType<typeof postAddress> {
+  const address = postAddress(url);
+  if (siteAdapters.some((adapter) => adapter.matches(url)) && !address) {
+    throw new Error(
+      "Feeds, profiles and search pages cannot be saved. Choose individual posts in the Reader extension.",
+    );
+  }
+  if (address?.platform === "x") {
+    throw new Error("Save X posts from their live page using the mdbase Reader extension.");
+  }
+  return address;
+}
+
+function capturedKind(metadata: SourceImportMetadata, kind?: string): { kind?: string } {
+  if (metadata.socialPost) {
+    return { kind: "post" };
+  }
+  return kind && kind !== "webpage" ? { kind } : {};
 }
 
 async function addFromIdentifier(
@@ -191,7 +217,7 @@ async function finish(
     return { kind: "not-added" };
   }
   const save = services.workspace.saveNewSourceCitation;
-  if (!citation || !save) {
+  if (!citation || !save || source.citation) {
     return { kind: "added", source, notices: [] };
   }
   // A candidate's placeholder citekey is replaced with one unique in the collection.

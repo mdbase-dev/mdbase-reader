@@ -1,4 +1,6 @@
 export * from "./web-capture.js";
+export * from "./social/index.js";
+export { postHtml, postTitle, postCitation, socialPostImport } from "./social/import.js";
 export * from "./scholarly-metadata.js";
 export * from "./doi.js";
 export * from "./page-citation.js";

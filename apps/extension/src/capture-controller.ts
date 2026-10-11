@@ -13,6 +13,7 @@ import type {
   SourceImportProgress,
   SourceSummary,
 } from "@mdbase-reader/core";
+import type { PostRef } from "@mdbase-reader/web-capture";
 import type { Dispatch, SetStateAction } from "react";
 
 export type CaptureStatus = "opening" | "ready" | "saving" | "saved" | "existing";
@@ -24,6 +25,14 @@ export interface PageHighlights {
 export interface ExtensionCaptureController {
   readonly snapshot: ReaderConnectSnapshot;
   readonly capture: PageCapture | null;
+  readonly postPicker?: {
+    readonly open: boolean;
+    readonly items: readonly PostRef[];
+    readonly preselected: string | null;
+    readonly show: () => void;
+    readonly close: () => void;
+    readonly save: (ids: readonly string[]) => Promise<void>;
+  };
   readonly draft: CaptureDraft;
   readonly setDraft: Dispatch<SetStateAction<CaptureDraft>>;
   readonly draftRestored: boolean;

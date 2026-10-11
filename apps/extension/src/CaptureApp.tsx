@@ -8,6 +8,7 @@ import { ExtensionHeader } from "./ExtensionHeader.js";
 import { HighlightFields } from "./HighlightFields.js";
 import { NotePanel } from "./NotePanel.js";
 import { PanelTabContent, PanelTabs, usePanelTab, type PanelTab } from "./PanelTabs.js";
+import { PostPicker } from "./PostPicker.js";
 import { SaveBar, saveReady } from "./SaveBar.js";
 import { SavedHighlights } from "./SavedHighlights.js";
 import { openSettings, useShortcuts } from "./shortcuts.js";
@@ -78,6 +79,7 @@ export function CaptureApp({
               : "Waiting for the active tab"}
           </p>
           <SaveBar controller={controller} />
+          <PostPicker controller={controller} />
         </section>
       )}
       <PanelStatus controller={controller} />

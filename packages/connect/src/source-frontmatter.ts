@@ -2,7 +2,12 @@ import { ConnectRepositoryError } from "./repository-client.js";
 import { documentEntry } from "./source-files.js";
 
 import type { CollectionFileDescriptor } from "@mdbase-dev/connect";
-import type { PlannedSourceFileImport, PlannedSourceRepresentation } from "@mdbase-reader/core";
+import type {
+  PlannedSourceFileImport,
+  PlannedSourceRepresentation,
+  SocialPost,
+  SocialPostReference,
+} from "@mdbase-reader/core";
 
 type Descriptors = ReadonlyMap<PlannedSourceRepresentation["role"], CollectionFileDescriptor>;
 
@@ -37,6 +42,24 @@ function metadataFields(
     ...(metadata.description ? { description: metadata.description } : {}),
     ...(metadata.language ? { language: metadata.language } : {}),
     ...(metadata.site ? { site: metadata.site } : {}),
+    ...(metadata.socialPost ? { social_post: socialPostReference(metadata.socialPost) } : {}),
+  };
+}
+
+function socialPostReference(post: SocialPost): SocialPostReference {
+  return {
+    platform: post.platform,
+    id: post.id,
+    url: post.url,
+    author: post.author,
+    ...(post.published ? { published: post.published } : {}),
+    threadRoot: post.threadRoot,
+    threadPartial: post.threadPartial,
+    parts: post.parts.map((part) => ({
+      id: part.id,
+      url: part.url,
+      ...(part.quoted ? { quoted: { id: part.quoted.id, url: part.quoted.url } } : {}),
+    })),
   };
 }
 

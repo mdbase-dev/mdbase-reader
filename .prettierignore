@@ -1,5 +1,6 @@
 pnpm-lock.yaml
 .playwright-mcp/
+.scratch/
 dist/
 coverage/
 apps/capacitor/android/

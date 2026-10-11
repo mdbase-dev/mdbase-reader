@@ -4,6 +4,24 @@ import { describe, expect, it } from "vitest";
 import { htmlSelectionDraft, locateHtmlTarget } from "./html-range.js";
 
 describe("HTML ranges", () => {
+  it("anchors identical post passages to their thread part, including quoted context", () => {
+    document.body.innerHTML =
+      '<article><section data-post-id="100"><p>Same passage</p><blockquote><section data-post-id="quoted"><p>Quoted passage</p></section></blockquote></section><section data-post-id="101"><p>Same passage</p><blockquote><section data-post-id="quoted"><p>Quoted passage</p></section></blockquote></section></article>';
+    const second = document.querySelector('[data-post-id="101"] > p')!;
+    const range = document.createRange();
+    range.selectNodeContents(second);
+    const draft = htmlSelectionDraft({ document, range, href: "post.html", progression: 0.5 });
+    expect(draft?.target.html?.css).toBe('[data-post-id="101"]');
+    expect(locateHtmlTarget(document, draft!.target)?.startContainer.parentElement).toBe(second);
+    range.selectNodeContents(document.querySelector('[data-post-id="101"] blockquote p')!);
+    const quoted = htmlSelectionDraft({ document, range, href: "post.html", progression: 0.5 });
+    expect(quoted?.target.html?.css).toBe('[data-post-id="101"]');
+    expect(
+      locateHtmlTarget(document, quoted!.target)?.startContainer.parentElement?.closest(
+        '[data-post-id="101"]',
+      ),
+    ).not.toBeNull();
+  });
   it("captures quotation context and a stable CSS selector", () => {
     document.body.innerHTML = `<article id="essay"><p>Before selected passage after.</p></article>`;
     const text = document.querySelector("p")?.firstChild;

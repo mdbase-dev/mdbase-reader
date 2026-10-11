@@ -30,6 +30,7 @@ function serviceWorker(): Plugin {
   const scripts = {
     background: "src/background.ts",
     "page-status": "src/page-status-worker.ts",
+    "social-page": "src/social-page.ts",
   };
   return {
     name: "mdbase-reader-extension-service-worker",

@@ -1,0 +1,34 @@
+<!doctype html>
+<html>
+  <head>
+    <title>Fixture Bluesky profile</title>
+  </head>
+  <body>
+    <main>
+      <div data-testid="feedItem-by-fixture.test">
+        <a href="/profile/fixture.test"><div dir="auto">Fixture Author</div></a
+        ><a href="/profile/fixture.test/post/first"
+          ><time datetime="2026-01-01T10:00:00Z">10:00</time></a
+        >
+        <div data-testid="postText">The first durable post.</div>
+        <div data-testid="postImages">
+          <img src="https://media.example/one.png" alt="A blue square" />
+        </div>
+        <div data-testid="quotePost">
+          <a href="/profile/context.test"><div dir="auto">Context Author</div></a
+          ><a href="/profile/context.test/post/quote"
+            ><time datetime="2026-01-01T09:00:00Z">09:00</time></a
+          >
+          <div data-testid="postText">Quoted context.</div>
+        </div>
+      </div>
+      <div data-testid="feedItem-by-other.test">
+        <a href="/profile/other.test"><div dir="auto">Other Author</div></a
+        ><a href="/profile/other.test/post/reply"
+          ><time datetime="2026-01-01T10:02:00Z">10:02</time></a
+        >
+        <div data-testid="postText">Someone else's reply.</div>
+      </div>
+    </main>
+  </body>
+</html>

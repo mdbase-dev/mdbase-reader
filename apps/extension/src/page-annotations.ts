@@ -2,6 +2,9 @@ import type { Annotation, QuoteSelector } from "@mdbase-reader/core";
 
 export interface PageQuote extends QuoteSelector {
   readonly color?: string;
+  /** Canonical identity of the live post to search, never the surrounding feed. */
+  readonly postUrl?: string;
+  readonly postId?: string;
 }
 export interface ProjectionReport {
   readonly total: number;
@@ -21,6 +24,7 @@ export type PageTextRequest =
   | { readonly action: "selection" }
   | {
       readonly action: "draw";
+      readonly append?: boolean;
       readonly quotes: readonly PageQuote[];
       readonly expectedUrl?: string;
       /** Scroll to the quote with this index and mark it briefly. */
@@ -48,9 +52,28 @@ const navigatedMessage =
 export function annotationQuotes(annotations: readonly Annotation[]): readonly PageQuote[] {
   return annotations.flatMap((annotation) =>
     annotation.target?.quote
-      ? [{ ...annotation.target.quote, ...(annotation.color ? { color: annotation.color } : {}) }]
+      ? [
+          {
+            ...annotation.target.quote,
+            ...quotePostId(annotation.target.html?.css),
+            ...(annotation.color ? { color: annotation.color } : {}),
+          },
+        ]
       : [],
   );
+}
+
+function quotePostId(css?: string): { postId?: string } {
+  const value = /^\[data-post-id=("(?:[^"\\]|\\.)*")\]/u.exec(css ?? "")?.[1];
+  if (!value) {
+    return {};
+  }
+  try {
+    const id: unknown = JSON.parse(value);
+    return typeof id === "string" ? { postId: id } : {};
+  } catch {
+    return {};
+  }
 }
 
 /**
@@ -101,6 +124,10 @@ export async function injectPageText(
 ): Promise<PageTextResult> {
   let execution: chrome.scripting.InjectionResult<PageTextResult> | undefined;
   try {
+    const social = await injectSocialQuotes(tabId, request);
+    if (social) {
+      return social;
+    }
     [execution] = await chrome.scripting.executeScript({
       target: { tabId },
       func: pageText,
@@ -124,6 +151,29 @@ export async function injectPageText(
   return execution.result;
 }
 
+async function injectSocialQuotes(
+  tabId: number,
+  request: PageTextRequest,
+): Promise<PageTextResult | null> {
+  if (request.action !== "draw" && request.action !== "reveal") {
+    return null;
+  }
+  if (!request.quotes.some((quote) => quote.postUrl)) {
+    return null;
+  }
+  const [execution] = await chrome.scripting.executeScript({
+    target: { tabId },
+    func: (value: Extract<PageTextRequest, { action: "draw" | "reveal" }>) => {
+      const bridge = globalThis.mdbaseReaderSocialPage;
+      return bridge?.items()
+        ? { projection: bridge.draw(value.quotes, value.expectedUrl ?? location.href, value.focus) }
+        : null;
+    },
+    args: [request],
+  });
+  return execution?.result ?? null;
+}
+
 /**
  * Injected. Indexes the page's visible text, reads the selection, or anchors quotes in that
  * text and draws them. Anchoring mirrors `textQuoteMatcher` in core, which Reader uses; it
@@ -131,7 +181,11 @@ export async function injectPageText(
  * must be nested. page-annotations.test.ts checks that the two agree.
  */
 // eslint-disable-next-line max-lines-per-function
-export function pageText(request: PageTextRequest, doc: Document = document): PageTextResult {
+export function pageText(
+  request: PageTextRequest,
+  doc: Document = document,
+  root: Element = doc.body,
+): PageTextResult {
   if (
     "expectedUrl" in request &&
     request.expectedUrl &&
@@ -167,11 +221,11 @@ export function pageText(request: PageTextRequest, doc: Document = document): Pa
   function indexDocument(): { text: string; nodes: Entry[] } {
     const nodes: Entry[] = [];
     let text = "";
-    if (doc.body.closest(excluded)) {
+    if (root.closest(excluded)) {
       return { text, nodes };
     }
     // Rejecting an excluded element skips its whole subtree, so no text node needs a lookup.
-    const walker = doc.createTreeWalker(doc.body, NodeFilter.SHOW_ELEMENT | NodeFilter.SHOW_TEXT, {
+    const walker = doc.createTreeWalker(root, NodeFilter.SHOW_ELEMENT | NodeFilter.SHOW_TEXT, {
       acceptNode(node) {
         if (node.nodeType === Node.TEXT_NODE) {
           return NodeFilter.FILTER_ACCEPT;
@@ -216,16 +270,24 @@ export function pageText(request: PageTextRequest, doc: Document = document): Pa
     return range;
   }
 
-  /**
-   * Reads the selection from its own text and the context around it, without indexing the
-   * page. Text the index leaves out is left out here too.
-   */
-  function selection(): QuoteSelector | null {
+  function selectedRange(): Range | null {
     const selected = doc.defaultView?.getSelection();
     if (!selected?.rangeCount || selected.isCollapsed) {
       return null;
     }
     const range = selected.getRangeAt(0);
+    return root.contains(range.startContainer) && root.contains(range.endContainer) ? range : null;
+  }
+
+  /**
+   * Reads the selection from its own text and the context around it, without indexing the
+   * page. Text the index leaves out is left out here too.
+   */
+  function selection(): QuoteSelector | null {
+    const range = selectedRange();
+    if (!range) {
+      return null;
+    }
     const { indexed, step } = textWalker();
     const deepestLast = (node: Node): Node => (node.lastChild ? deepestLast(node.lastChild) : node);
     /** The indexed text at a range boundary, moving inward when the boundary is between nodes. */
@@ -312,8 +374,8 @@ export function pageText(request: PageTextRequest, doc: Document = document): Pa
       return verdict;
     };
     const indexed = (node: Node): node is Text =>
-      node.nodeType === Node.TEXT_NODE && !isExcluded(node.parentElement);
-    const walker = doc.createTreeWalker(doc.body, NodeFilter.SHOW_ELEMENT | NodeFilter.SHOW_TEXT, {
+      node.nodeType === Node.TEXT_NODE && root.contains(node) && !isExcluded(node.parentElement);
+    const walker = doc.createTreeWalker(root, NodeFilter.SHOW_ELEMENT | NodeFilter.SHOW_TEXT, {
       acceptNode(node) {
         if (node.nodeType === Node.TEXT_NODE) {
           return indexed(node) ? NodeFilter.FILTER_ACCEPT : NodeFilter.FILTER_REJECT;
@@ -349,7 +411,13 @@ export function pageText(request: PageTextRequest, doc: Document = document): Pa
   }
   /** Named after the quote itself, so a later reveal can find it without redrawing. */
   function highlightName(quote: PageQuote): string {
-    const key = [quote.color ?? "", quote.prefix ?? "", quote.exact, quote.suffix ?? ""].join("\0");
+    const key = [
+      quote.postUrl ?? "",
+      quote.color ?? "",
+      quote.prefix ?? "",
+      quote.exact,
+      quote.suffix ?? "",
+    ].join("\0");
     let hash = 0x811c9dc5;
     for (let i = 0; i < key.length; i++) {
       hash = Math.imul(hash ^ key.charCodeAt(i), 0x01000193);
@@ -408,12 +476,17 @@ export function pageText(request: PageTextRequest, doc: Document = document): Pa
         focused = index === focus ? { range, quote } : focused;
       }
     }
-    for (const name of registry.keys()) {
-      if (name.startsWith("mdbase-reader-")) {
-        registry.delete(name);
+    const append = request.action === "draw" && request.append;
+    if (!append) {
+      for (const name of registry.keys()) {
+        if (name.startsWith("mdbase-reader-")) {
+          registry.delete(name);
+        }
       }
+      doc
+        .querySelectorAll("style[data-mdbase-reader-highlights]")
+        .forEach((style) => style.remove());
     }
-    doc.querySelector("style[data-mdbase-reader-highlights]")?.remove();
     const style = doc.createElement("style");
     style.dataset["mdbaseReaderHighlights"] = "true";
     style.textContent = [...decorations]

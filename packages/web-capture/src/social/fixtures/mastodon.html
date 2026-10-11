@@ -1,0 +1,34 @@
+<!doctype html>
+<html>
+  <head>
+    <meta name="application-name" content="Mastodon" />
+    <title>Fixture federated timeline</title>
+  </head>
+  <body>
+    <div id="mastodon">
+      <main>
+        <div class="status" data-uri="https://home.example/users/fixture/statuses/100">
+          <a class="status__display-name" href="https://home.example/@fixture"
+            ><strong class="display-name__html">Fixture Author</strong
+            ><span class="display-name__account">@fixture@home.example</span></a
+          ><a class="status__relative-time" href="https://local.example/@fixture@home.example/555"
+            ><time datetime="2026-01-01T10:00:00Z">10:00</time></a
+          >
+          <div class="status__content"><p>The first durable post.</p></div>
+          <div class="media-gallery">
+            <img src="https://media.example/one.png" alt="A blue square" />
+          </div>
+        </div>
+        <div class="status">
+          <a class="status__display-name" href="https://local.example/@other"
+            ><strong class="display-name__html">Other Author</strong
+            ><span class="display-name__account">@other</span></a
+          ><a class="status__relative-time" href="https://local.example/@other/556"
+            ><time datetime="2026-01-01T10:02:00Z">10:02</time></a
+          >
+          <div class="status__content"><p>Someone else's reply.</p></div>
+        </div>
+      </main>
+    </div>
+  </body>
+</html>

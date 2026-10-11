@@ -5,6 +5,8 @@ import {
   citekeyForCitation,
   createSourceRecord,
   importSourceFile,
+  normalizedSourceUrl,
+  sameSourceUrl,
   planAnnotationDeletion,
   saveSourceCitation,
   transcludeAnnotation,
@@ -457,6 +459,20 @@ export class ConnectWorkspaceGateway implements ReaderWorkspaceGateway {
     request: Omit<SourceFileImportRequest, "collectionId">,
     options: SourceImportOptions = {},
   ): Promise<Source> {
+    const postUrl = request.metadata?.socialPost?.url;
+    if (postUrl) {
+      const found = this.sources.findByUrl
+        ? await this.sources.findByUrl(this.collectionId, postUrl, options)
+        : (await this.library(options.signal ? { signal: options.signal } : {})).sources.find(
+            (source) => source.url && sameSourceUrl(source.url, normalizedSourceUrl(postUrl)),
+          );
+      if (found) {
+        const existing = await this.source(found.id, options);
+        if (existing) {
+          return existing;
+        }
+      }
+    }
     const imported = await importSourceFile(
       {
         imports: this.sourceImports,

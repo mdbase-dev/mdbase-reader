@@ -64,6 +64,43 @@ chrome.tabs.onUpdated.addListener((tabId, change, tab) => {
     void updatePageStatus(tabId, tab.url, loadPageStatusConnect);
   }
 });
+const postUpdates = new Map<number, { dirty: boolean }>();
+chrome.runtime.onMessage.addListener((message: unknown, sender) => {
+  if (!message || typeof message !== "object" || !("type" in message)) {
+    return;
+  }
+  if (
+    message.type !== "mdbase-reader/posts-changed" &&
+    message.type !== "mdbase-reader/posts-refresh"
+  ) {
+    return;
+  }
+  const tabId =
+    sender.tab?.id ??
+    ("tabId" in message && typeof message.tabId === "number" ? message.tabId : undefined);
+  if (tabId === undefined) {
+    return;
+  }
+  const pending = postUpdates.get(tabId);
+  if (pending) {
+    pending.dirty = true;
+    return;
+  }
+  const state = { dirty: true };
+  postUpdates.set(tabId, state);
+  void refreshPosts(tabId, state)
+    .catch(() => undefined)
+    .finally(() => postUpdates.delete(tabId));
+});
+
+async function refreshPosts(tabId: number, state: { dirty: boolean }): Promise<void> {
+  do {
+    state.dirty = false;
+    const tab = await chrome.tabs.get(tabId);
+    await updatePageStatus(tabId, tab.url, loadPageStatusConnect);
+  } while (postUpdates.get(tabId)?.dirty);
+}
+
 chrome.tabs.onRemoved.addListener((tabId) => {
   // Drafts belong to a tab; free them when it closes.
   void forgetTab(tabId).catch(() => undefined);

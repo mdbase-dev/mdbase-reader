@@ -1,3 +1,4 @@
+import { postAddress, postFromUrl, socialPostImport } from "@mdbase-reader/web-capture";
 import { lookUpCitation } from "@mdbase-reader/web-capture/citation-lookup";
 
 import { readDocumentFileDetails } from "./document-details.js";
@@ -12,7 +13,33 @@ export function readerSourceAdditionServices(
   const signal = input.signal ? { signal: input.signal } : {};
   return {
     ...input,
-    capture: (url, options) => fetchCapture(url, options),
+    capture: async (url, options) => {
+      const activeSignal = options.signal ?? input.signal;
+      const fetchOptions = activeSignal ? { signal: activeSignal } : {};
+      const address = postAddress(url);
+      if (address) {
+        const document = new DOMParser().parseFromString("", "text/html");
+        const post = await postFromUrl(url, document, fetchOptions).catch((reason: unknown) => {
+          activeSignal?.throwIfAborted();
+          if (address.platform !== "mastodon") {
+            throw reason;
+          }
+          // A /@user/ID path alone is not proof of Mastodon. The HTML capture checks markers.
+          return null;
+        });
+        if (post) {
+          return {
+            kind: "html",
+            page: await socialPostImport(
+              post,
+              { retrievedAt: new Date().toISOString() },
+              fetchOptions,
+            ),
+          };
+        }
+      }
+      return fetchCapture(url, options);
+    },
     lookUp: (request) =>
       lookUpCitation(request, {
         clientName: `mdbase-reader (${globalThis.location.origin})`,

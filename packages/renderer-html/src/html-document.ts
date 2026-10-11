@@ -79,6 +79,12 @@ function readerStyle(document: Document): HTMLStyleElement {
     html { scroll-behavior: smooth; }
     body { max-width: 46rem; margin: 0 auto; padding: 5rem 3rem 9rem; font: 18px/1.72 Georgia, 'Times New Roman', serif; }
     main, article { display: block; }
+    .social-post > header h1 { font-size: 2rem; margin-bottom: .5rem; }
+    .social-post header, .social-post time, .social-post figcaption, .social-post footer { font: .85em/1.5 ui-sans-serif, system-ui, sans-serif; color: color-mix(in srgb, currentColor 72%, transparent); }
+    .post-part { margin-block: 2rem; padding-top: 1.5rem; border-top: 1px solid color-mix(in srgb, currentColor 18%, transparent); }
+    .post-part header p { margin-block: 0 .25rem; }
+    .social-post figure { margin-inline: 0; }
+    .quoted-post .post-part { border-top: 0; padding-top: 0; }
     h1, h2, h3, h4 { color: inherit; font-family: ui-sans-serif, system-ui, sans-serif; line-height: 1.15; letter-spacing: -0.025em; }
     h1 { margin: 0 0 2.4rem; font-size: clamp(2.15rem, 6vw, 3.7rem); }
     h2 { margin-top: 2.8rem; font-size: 1.65rem; }

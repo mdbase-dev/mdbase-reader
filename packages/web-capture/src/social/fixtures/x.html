@@ -1,0 +1,51 @@
+<!doctype html>
+<html>
+  <head>
+    <title>Fixture X timeline</title>
+  </head>
+  <body>
+    <nav>Not a source</nav>
+    <main>
+      <article data-testid="tweet">
+        <div data-testid="User-Name">
+          <a href="/fixture">Fixture Author</a><a href="/fixture">@fixture</a>
+        </div>
+        <a href="https://twitter.com/fixture/status/100?s=20"
+          ><time datetime="2026-01-01T10:00:00Z">10:00</time></a
+        >
+        <div data-testid="tweetText">The first durable post.</div>
+        <div data-testid="tweetPhoto">
+          <img src="https://media.example/one.png" alt="A blue square" />
+        </div>
+        <div role="link" tabindex="0">
+          <div data-testid="User-Name"><a href="/context">Context Author</a></div>
+          <a href="https://x.com/context/status/900"
+            ><time datetime="2026-01-01T09:00:00Z">09:00</time></a
+          >
+          <div data-testid="tweetText">Quoted context, not a thread reply.</div>
+        </div>
+      </article>
+      <article data-testid="tweet" data-in-reply-to="100">
+        <div data-testid="User-Name"><a href="/fixture">Fixture Author</a></div>
+        <a href="https://x.com/fixture/status/101?t=ignored"
+          ><time datetime="2026-01-01T10:01:00Z">10:01</time></a
+        >
+        <div data-testid="tweetText">The second durable post.</div>
+      </article>
+      <article data-testid="tweet" data-in-reply-to="100">
+        <div data-testid="User-Name"><a href="/other">Other Author</a></div>
+        <a href="https://x.com/other/status/102"
+          ><time datetime="2026-01-01T10:02:00Z">10:02</time></a
+        >
+        <div data-testid="tweetText">Someone else's reply must stay out.</div>
+      </article>
+      <article data-testid="tweet">
+        <div data-testid="User-Name"><a href="/fixture">Fixture Author</a></div>
+        <a href="https://x.com/fixture/status/103"
+          ><time datetime="2026-01-01T10:03:00Z">10:03</time></a
+        >
+        <div data-testid="tweetText">An unrelated post by the same author.</div>
+      </article>
+    </main>
+  </body>
+</html>

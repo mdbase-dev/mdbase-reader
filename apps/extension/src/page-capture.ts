@@ -6,12 +6,17 @@ import {
   type PageQuote,
 } from "./page-annotations.js";
 
+import type { SocialPageItems } from "./social-page.js";
 import type { QuoteSelector } from "@mdbase-reader/core";
 import type { LiveWebCapture } from "@mdbase-reader/web-capture";
 
 export interface SelectedWebCapture extends LiveWebCapture {
   readonly kind: "html";
   readonly selection: QuoteSelector | null;
+  readonly selectionPostId?: string;
+  /** The browsing page may be a feed; provenance always belongs to the post. */
+  readonly pageUrl?: string;
+  readonly social?: SocialPageItems;
 }
 
 /** A PDF open in Chrome's viewer. Its bytes are fetched only when saving. */
@@ -31,7 +36,28 @@ type PageSnapshot =
 
 const maximumPdfBytes = 40 * 1024 * 1024;
 
+export async function captureSocialTab(
+  tabId: number,
+  id?: string,
+): Promise<SelectedWebCapture | null> {
+  try {
+    await chrome.scripting.executeScript({ target: { tabId }, files: ["social-page.js"] });
+  } catch {
+    return null;
+  }
+  const [execution] = await chrome.scripting.executeScript({
+    target: { tabId },
+    func: async (postId?: string) => globalThis.mdbaseReaderSocialPage?.capture(postId) ?? null,
+    args: [id],
+  });
+  return execution?.result ?? null;
+}
+
 export async function captureTab(tabId: number): Promise<PageCapture> {
+  const social = await captureSocialTab(tabId);
+  if (social) {
+    return social;
+  }
   let snapshot: PageSnapshot | undefined;
   try {
     [{ result: snapshot } = { result: undefined }] = await chrome.scripting.executeScript({

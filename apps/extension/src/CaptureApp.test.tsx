@@ -6,6 +6,44 @@ import { CaptureApp } from "./CaptureApp.js";
 import type { ExtensionCaptureController } from "./capture-controller.js";
 import type { PanelTab } from "./PanelTabs.js";
 
+it("shows a feed picker with the viewport post preselected, without offering to save a feed", () => {
+  const html = markup({
+    postPicker: {
+      open: true,
+      preselected: "second",
+      items: [
+        {
+          platform: "x",
+          id: "first",
+          url: "https://x.com/i/status/100",
+          author: "First author",
+          snippet: "First post",
+          top: 0,
+          bottom: 200,
+        },
+        {
+          platform: "x",
+          id: "second",
+          url: "https://x.com/i/status/101",
+          author: "Second author",
+          snippet: "Second post",
+          published: "2026-01-01T10:00:00Z",
+          top: 300,
+          bottom: 500,
+        },
+      ],
+      show: vi.fn(),
+      close: vi.fn(),
+      save: vi.fn(),
+    },
+  });
+  expect(html).toContain("Choose posts to save");
+  expect(html).toContain("Feeds are never saved");
+  expect(html).toContain("Second author");
+  expect(html).toContain("Save 1 selected");
+  expect(html.match(/checked=""/gu)).toHaveLength(1);
+});
+
 function markup(changes: Partial<ExtensionCaptureController> = {}, tab?: PanelTab): string {
   const controller = {
     snapshot: { status: "unselected", connections: [] },
