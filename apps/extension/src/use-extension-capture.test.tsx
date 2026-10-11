@@ -27,6 +27,7 @@ const mocks = vi.hoisted(() => ({
   prepareCitation: vi.fn(),
   rememberCollection: vi.fn(),
   authorize: vi.fn(),
+  approve: vi.fn(),
   listeners: new Set<() => void>(),
 }));
 let current: Record<string, unknown> = {};
@@ -54,6 +55,7 @@ const application = {
   start: mocks.start,
   select: mocks.select,
   authorize: mocks.authorize,
+  approve: mocks.approve,
   getSnapshot: (): Record<string, unknown> => current,
   subscribe: (listener: () => void): (() => void) => {
     mocks.listeners.add(listener);
@@ -137,6 +139,7 @@ beforeEach(() => {
   mocks.createSession.mockImplementation(() => Promise.resolve(extension));
   mocks.start.mockResolvedValue(undefined);
   mocks.authorize.mockResolvedValue(undefined);
+  mocks.approve.mockResolvedValue(undefined);
   mocks.select.mockImplementation((id: string) => {
     publish(readySnapshot(id));
     return Promise.resolve();
@@ -172,23 +175,35 @@ it("does not auto-save on opening or changing the destination, and remembers the
   expect(mocks.rememberCollection).toHaveBeenCalledWith("other");
   expect(mocks.save).not.toHaveBeenCalled();
 });
-it("shows the SDK's description of a problem and retries with its suggested action", async () => {
+it("offers sign-in again from a refused sign-in, even while the first is still authorizing", async () => {
   await mount();
+  // The first sign-in is still running, so the panel's action lock is held.
+  let finish = (): void => undefined;
+  mocks.authorize.mockReturnValueOnce(new Promise<void>((resolve) => (finish = resolve)));
+  let first: Promise<void> = Promise.resolve();
+  await act(async () => {
+    first = controller.connect();
+  });
+  expect(controller.busy).toBe(true);
   await act(async () => {
     publish({
       ...readySnapshot("test"),
       status: "blocked",
       signIn: null,
-      problem: { code: "unauthenticated" },
+      problem: { code: "refused" },
     });
   });
-  expect(controller.snapshot.status).toBe("problem");
-  expect(controller.snapshot.problem?.title).toBe("Sign in again");
-  expect(JSON.stringify(controller.snapshot)).not.toContain("unauthenticated");
+  expect(controller.snapshot.problem?.action).toBe("sign_in");
+  expect(JSON.stringify(controller.snapshot)).not.toContain("refused");
   await act(async () => {
     await controller.retry();
   });
+  expect(mocks.approve).toHaveBeenCalledTimes(1);
   expect(mocks.authorize).toHaveBeenCalledTimes(1);
+  await act(async () => {
+    finish();
+    await first;
+  });
 });
 it("retains a failed draft and releases the action lock for an explicit retry", async () => {
   await mount();
