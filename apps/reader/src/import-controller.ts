@@ -12,7 +12,7 @@ import {
 
 import { markFraction, withMarkProgress } from "./mark-activity.js";
 
-import type { ReaderApplicationSession } from "@mdbase-reader/connect";
+import type { ReaderCollectionProvider } from "@mdbase-reader/connect";
 export interface ImportState {
   plan: MigrationPlan | null;
   message: string;
@@ -37,7 +37,7 @@ export class ImportController {
   private listeners = new Set<() => void>();
   private active: AbortController | null = null;
   private client: ReadwiseClient | null = null;
-  constructor(private session: ReaderApplicationSession) {}
+  constructor(private session: ReaderCollectionProvider) {}
   getSnapshot = (): ImportState => this.state;
   subscribe = (fn: () => void): (() => void) => {
     this.listeners.add(fn);
@@ -94,7 +94,11 @@ export class ImportController {
         }
         input.set(relative, file);
       }
-      const bundle = await readZoteroBundle(input, signal, (message) => this.update({ message }));
+      const bundle = await readZoteroBundle(input, signal, (message) => {
+        if (!signal.aborted) {
+          this.update({ message });
+        }
+      });
       const plan = await planZotero(bundle);
       signal.throwIfAborted();
       this.update({
@@ -111,9 +115,12 @@ export class ImportController {
       this.client?.forget();
       this.client = new ReadwiseClient(token.trim());
       this.update({ plan: null, preview: null, result: null });
-      const plan = await scanReadwise(this.client, includeFeed, signal, (message) =>
-        this.update({ message }),
-      );
+      const plan = await scanReadwise(this.client, includeFeed, signal, (message) => {
+        if (!signal.aborted) {
+          this.update({ message });
+        }
+      });
+      signal.throwIfAborted();
       this.update({
         plan,
         message: "Library scanned. Review the contents and choose a destination.",
@@ -130,6 +137,7 @@ export class ImportController {
     void this.task(async (signal) => {
       this.update({ message: "Checking existing import identities…" });
       const next = await previewMigration(plan, target, signal);
+      signal.throwIfAborted();
       this.update({
         preview: { ...next, collectionId: target.collectionId },
         message: "Destination checked. Confirm below to begin writing.",
@@ -156,6 +164,9 @@ export class ImportController {
       const result = await withMarkProgress(
         (mark) =>
           runMigration(plan, target, signal, (progress) => {
+            if (signal.aborted) {
+              return;
+            }
             mark(markFraction(progress.completed, progress.total));
             this.update({ progress, message: `${progress.phase} — ${name}` });
             saveProgress(plan.service, progress);
@@ -163,6 +174,7 @@ export class ImportController {
         undefined,
         signal,
       );
+      signal.throwIfAborted();
       this.client?.forget();
       this.update({
         result,

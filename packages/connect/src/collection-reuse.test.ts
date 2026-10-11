@@ -42,6 +42,9 @@ it("reuses repositories only for the same ready connection, without stale transp
     } as unknown as MdbaseConnection),
   ).not.toBe(first);
   const access = first.directAccess;
+  if (!access) {
+    throw new Error("Connect collections expose direct access.");
+  }
   expect(access.getSnapshot()).toBe(access.getSnapshot());
   const a = vi.fn(),
     b = vi.fn();

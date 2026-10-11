@@ -1,109 +1,119 @@
-# Native SDK preparation
+# Reader on the new mdbase SDK
 
-Reader's existing Connect web, extension and native-shell paths remain active.
-This branch does not enable a new sign-in or collection runtime. Historical
-Reader PR #60 is not the native SDK integration.
+Reader is being ported from prod Connect (`@mdbase-dev/connect`) to the public application
+entry of the new SDK (`@mdbase-dev/sdk`, `MdbaseConnect`).
 
-## Read-only records foundation
+## Pin
 
-`packages/connect/src/next-reader-records.ts` uses the public `@mdbase-dev/sdk`
-client directly. It is a source/annotation data foundation, not an implementation
-of Reader's complete application repositories or a Connect-compatible SDK facade.
-It returns actual SDK `RecordView` objects and native mapped/tagged values:
+`packages/connect/vendor/mdbase-dev-sdk-dev-41c26ca7.tgz` is the original
+`sdk-dev-41c26ca7` cut from SDK source
+`41c26ca73f6c97551ba4732c35627d626b927f03`, SHA256
+`f8a00e2364d6adacb8a8ddcfa219f4ae5a5451bfd817758a9022ca32fb9ef1e3` (3978820 bytes).
+Its source, SRI, native pins and original bundled protocol are recorded in
+`packages/connect/vendor/mdbase-next-sdk.json`. The SDK bundles beta129
+`c280cd194ffd`; the direct legacy protocol dependency remains `d765e675c3da` unchanged.
 
-- Requires caller-supplied, qualified **semantic** digests for the exact
-  `dev.mdbase.reader.source` and `dev.mdbase.reader.annotation` contracts,
-  both `1.0.0-beta.1`. Raw Markdown/type-pack resource hashes are not inferred
-  to be those semantic digests. These inputs still need native setup qualification.
-- Selects implementing types and field bindings from `describe`, not starter
-  filenames, paths or default type names. Ambiguous/missing contracts or providers,
-  required fields and nested field-reference bindings are refused explicitly.
-- Lists effective metadata without body reads, using SDK cursor pages without
-  automatic restart. Incomplete, changing-cut, duplicate-native-identity or
-  changing-provider results fail rather than become a complete library snapshot.
-  Consumers must discard an in-progress load on error; yielded pages are not a
-  separately saved or complete library.
-- Opens full source by captured native UUID/path; requires actual body/document
-  and matching document revision, then rechecks the provider binding. No Markdown
-  is reconstructed from frontmatter. Native pending/hold/unresolved state remains
-  available on the genuine view; a read does not imply saved or writable status.
-- Preserves the original source/annotation body and native field maps. Ordinary
-  core-domain mapping is still required before these rows can serve Reader's UI.
-  A portable source/annotation ID is not automatically a native record UUID.
-- Caller abort signals fence publication. The shared factory/session owns the
-  client lifetime; this module has no SDK/session/lease/auth engine and no writes.
+This is a **DEV/LAB development intake, not release-qualified**. It includes the
+public error/status helpers and portable/native-origin sign-in APIs in one pin.
+The SDK owns registration, authorization, selection, readiness, Worker, runtime
+and recovery. The original 3555291-byte native runtime matches the committed
+`9f90af73e1591cafe9c35bdd42f18ae49d5a91a0186e78695e841fecabcd833a` pin,
+including the public setup-assessment ABI and owner-binding fixes.
+This cut delivers registration-refusal guidance, Private-collection availability
+reasons and collection deletion APIs. The earlier unused-protocol exception is
+not carried forward; this archive has no vendor warnings. Packaged integrity and
+ordinary/frozen installation do not establish live LAB acceptance.
 
-The release-qualified SDK successor `729b5391` archive/source/hash and SHA512
-are pinned in `vendor/mdbase-next-sdk.json`, including the actual SDK819 shared
-native collection factory and SDK827 provider-receipt helpers, plus earlier
-session, lease, fixture, read-helper and environment fixes. Release qualified
-all 275 archive members, 1650 SDK tests and five browser-bundle checks (with three
-existing WASM-gated skips); the original archive bytes are vendored. Reader's
-working pages/get implementation is unchanged; helper batching is not a native
-atomic snapshot, and People producer compatibility is not qualified here. This is source/package qualification,
-not per-app trust/origin/runtime/session/operation acceptance; no native Files
-producer is qualified here. The archive comes from release, not npm. Tests use MemoryReplica record frames with synthetic Reader
-contract/type metadata and controlled safety responses. They are not native
-parser, manifest-install, custody, sign-in, runtime or LAB acceptance.
+## Design
 
-## Remaining integration boundaries
+- Apps reach the SDK only through `@mdbase-reader/connect`. The native adapter is the
+  `@mdbase-reader/connect/native` subpath, so the Connect-only bundles (extension, staging,
+  production) never parse the SDK entry or its Worker.
+- `nativeReaderCollection(connection)` builds Reader's existing repositories over the
+  connection's borrowed `records` client and `files`:
+  - `native-client.ts` maps Reader's Connect-shaped reads, queries and writes onto native
+    `get`/`find`/`query`/`pages`/`queryContract` and `create`/`update`/`replaceDocument`/`delete`.
+  - Contract-scoped reads and writes use `getContract` and the contract options of
+    `create`/`update`/`delete`. As in prod Connect, a contract view carries contract fields and
+    no body. A contract write is read back through the same contract view.
+  - File descriptors take their media type from the replica (`FileView.mediaType`).
+  - Writes keep one mutation ID. They report saved only after a confirmed receipt or readback;
+    otherwise they surface `operation_outcome_unknown` with the original `request_id`, which
+    can be recovered.
+  - `native-files.ts` resumes uploads with the same transfer and mutation IDs and checks
+    digests on download.
+  - Every await is fenced by `connection.isCurrent()`.
+- Unsupported features are refused (`unsupported_operation`), never emulated. See the gap list
+  in the coordinator's `reader-sdk-gaps.md`.
+- `SdkReaderRoot` leaves sign-in, consent, collection selection and approval, and setup
+  (`configure()`) to the SDK:
+  - It starts the entry once (StrictMode-safe) and forwards foreground state.
+  - It renders the reading workspace only for a current connection with READY readiness.
+  - It disposes its adapters, never the borrowed client.
+  - For a collection requested by the link, `approval_required` and `invalid` offer
+    **Approve this collection** or **Choose another collection**. Reader never falls back to
+    another collection.
 
-- Web/native-shell composition must use the shared sign-in, native collection
-  factory and manifest-driven setup helpers, with qualified trust/origin/runtime
-  inputs. Do not copy TaskNotes bootstrap, Worker, route, lease or auth glue.
-- The Chrome extension requires the shared portable device-code/grant session
-  following the sign-in join ledger, durable ownership/wake and the exact extension
-  origin. The old portable flow omits `client_noise_key` and cannot be blindly
-  reused. The first-party HTTPS/LAB-loopback session is not an extension fallback.
-- Native Files must preserve returned stable `fileId`, current content revision,
-  lifecycle/cancellation and recovery. A path lookup after upload confirmation or
-  a legacy HTTP shim cannot manufacture native upload identity.
-- Annotation creation currently shares one logical mutation ID across asset,
-  annotation and transclusion steps. Native integration needs distinct persisted
-  UUID intent IDs per step and a stable upload-transfer UUID. A flow-level ID such
-  as `mutation-1` is not a reusable native wire UUID.
-- Publish `asset-stored` only after the original `FileWrite.confirmed` succeeds.
-  Pending/unknown outcomes retain the original native `fileId` and intent/transfer
-  identities. Subsequent annotation/transclusion recovery must qualify their own
-  original receipts and actual readback; never replace a MID or resubmit merely
-  because transport lost a response.
-- Source/annotation create/edit/reading-state/session writes, saved views, file
-  reads/uploads, imports and extension page-status integration remain to be ported.
-  Native writes need actual admitted provider mappings, current full-source/CAS
-  evidence and truthful supplied grant/state preflight, without widening consent.
+## Live hookup
 
-The earlier SDK807 `5ba1314b` archive remains held and must not be reused. The
-corrected successor source/package pin was authorized after SDK808's actual merge
-and release qualification; it does not enable Reader's browser/session path.
-Journal integration remains last and local-only.
+- `src/sdk-application.ts`: `readerSdk()` is the page's single `MdbaseConnect`. It uses the
+  bundled canonical manifest unchanged: logical ID `dev.mdbase.reader`, name, and homepage
+  origin. The SDK registers it and rebinds to the actual registered ID before any storage.
+  Construction does no IO.
+- `src/main.tsx`: builds with `VITE_MDBASE_ENV=lab` (the LAB Pages deployment) lazily load
+  `SdkReaderRoot` over that entry. Staging and production still render `ConnectReader` until
+  the SDK has production release trust.
+- `vite.config.ts` excludes `@mdbase-dev/sdk` from dev pre-bundling, emits ES-module workers,
+  and gives worker bundles the same build-tagged file names, so the SDK Worker,
+  `runtime-lab.wasm`, `sqlite3.wasm` and `sqlite3.js` are each emitted once. The SDK stays out of
+  the eager entry chunks.
 
-## Public SDK sign-in UI
+The previous production build passed at `38001079`; n1 checks are recorded
+separately from live LAB acceptance.
+Live LAB registration, Worker start and readiness have not been exercised. Old local data and
+pending writes need no cutover handoff.
 
-The web app exposes an opt-in `ConnectReader.nativeSignIn` binding to the pinned
-SDK's actual `AppWebSignInSession`. `createNativeSignIn(options)` requires explicit
-owner-provided release, app identity, origins, runtime, locks and original signal;
-it does not guess them or replace the default Connect/extension runtimes.
+## Library imports in SDK mode
 
-Sign in synchronously reserves a named 620×760 Connect popup before SDK start
-or expiry renewal. The trusted popup keeps its production opener; the tab
-fallback detaches its opener before SDK-validated navigation. No secrets,
-postMessage approval or storage callback use the opener. The UI retains its
-original handle after handoff and closes on completed/terminal public statuses,
-never authorizing additional consent even when already paired. View teardown
-closes only its owned popup. A detached fallback tab is not claimed parent-closeable
-across origins. This follows TaskNotes' app-owned pattern without an SDK repin.
-The SDK owns approval detection and protected state. The UI uses
-canonical status/email, reopen-tab, popup-blocked and interrupted wording. Sign-in
-and secondary actions reuse Reader's existing shared control styles, including
-usable touch targets at 390px. It
-shows only states the SDK can distinguish, not a fabricated decline or setup
-result. Sign out waits for SDK close; it is local shutdown, not membership
-revocation or protected-store deletion. Forget uses the actual selected SDK ID.
-The owner closes its session on teardown and replaces it only after confirmed
-close or explicit sign-in; retired views cannot publish into a replacement.
+LAB `/import`, `/import/zotero` and `/import/readwise` use the same public SDK
+entry and original native collection as the reading workspace. The import home
+shows the existing tiles without starting sign-in. Service pages keep the existing
+inputs, preview, confirmation and progress UI, with embedded SDK destination
+actions instead of loading the legacy `readerSession`. Staging and production
+retain their existing import session and UI.
 
-The collection callback always refuses with **Opening collections isn't
-available in this build yet.** It creates no collection client or setup engine.
-Exact Reader native semantic pins await the shared native-digest producer; no
-Markdown/hash/fixture substitute is used. UI/presentation tests are stand-ins,
-not native authentication, Files, setup or LAB acceptance.
+The app import controller retains the parsed input while the SDK chooses a
+destination. Its narrow domain provider returns only the actual collection whose
+original connection and aggregate SDK readiness are current. The existing native
+migration target owns record/file operations through the public SDK, with original
+identities, receipt recovery and confirmed readback unchanged. A destination check
+is still required before import, and a started import stays bound to its confirmed
+collection. Retired scopes stop the job; late checks, progress and completions
+cannot become confirmation for a replacement scope. No SDK session, storage,
+setup or recovery engine is supplied by this UI.
+
+## Launch-branch integration
+
+`next/new-sdk` brings together the public-entry/import line, SDK-based readiness
+screens and SDK setup-plan review. Only setup/conflict plans need confirmation;
+nothing-to-review keeps `configure()`. Confirm applies the original plan. Unknown
+outcomes retain SDK recovery and never claim nothing changed. Migration, update
+requirements and account suspension show live `summarizeStatus` copy without
+retiring a still-current editable scope. Thrown actions use `describeError`,
+without raw or developer-only diagnostics.
+
+The older next-branch record-read foundation, provider rechecks and optional
+native sign-in/owned-popup controls are preserved, not substituted for the LAB
+public entry. Historical SDK819 artifacts are not the active dependency.
+
+The source-qualified Chrome Store identity is
+`chrome-extension://kimdfjefhbfgfecconmaiaaindjccidp`, documented in
+`docs/extension-releases.md` at `7ea5dded5b8d196763d4565224502c9840b2ced3`.
+This is distinct from unpacked development installs; it does not prove SDK
+extension acceptance or effective CORS configuration.
+
+## Checks
+
+The adapter, recovery and lifecycle tests run over the SDK's `MemoryReplica` and application
+fixture (`@mdbase-reader/connect/testing`). They do not qualify native runtime, registration or
+end-to-end LAB operation.
