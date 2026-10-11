@@ -15,6 +15,7 @@ export default tseslint.config(
       "**/coverage/**",
       "**/node_modules/**",
       "**/.wrangler/**",
+      "**/.scratch/**",
       "apps/capacitor/android/**",
       "apps/capacitor/ios/**",
     ],

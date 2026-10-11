@@ -293,7 +293,7 @@ describe("drawing on the page", () => {
 });
 
 describe("highlights made on the saved reading copy", () => {
-  // The reading copy is Readability's extraction, which drops text the live page shows.
+  // The reading copy is an article extraction, which drops text the live page shows.
   const live = `<!doctype html><html><head><title>Essay</title></head><body><nav>Home News</nav>
     <main><article><h1>A headline about things</h1>
     <p>The first paragraph has a sentence that ends here, with commas, and more commas, for scoring.</p>

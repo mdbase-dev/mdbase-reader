@@ -56,6 +56,8 @@ export interface SourceCaptureProvenance {
   readonly submittedUrl: string;
   readonly canonicalUrl: string;
   readonly retrievedAt: DateTime;
+  /** Extractor used for this new reading copy; absent on older captures. */
+  readonly extractor?: string;
 }
 
 export interface SourceCaptureArchive {

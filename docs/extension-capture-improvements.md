@@ -164,7 +164,7 @@ Selection capture targets the top-level page, not cross-origin embedded frames o
 shadow roots (capture includes it; the live selection index does not). Chrome's PDF viewer does not
 expose selections, so PDFs are highlighted in Reader. Live highlights are a projection, not the
 canonical annotation. Same-panel retry identity is not cross-window atomic deduplication. Missing
-passages in Readability's saved copy require opening that copy in Reader and selecting the
+passages in the extracted reading copy require opening that copy in Reader and selecting the
 intended text there; Reader will not silently substitute the live page or overwrite the archive.
 The service worker opens its own Connect session for page status; concurrent use with the panel
 relies on the SDK's grants tolerating two sessions in one extension origin.

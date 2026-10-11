@@ -55,66 +55,70 @@ describe("ConnectSourceImportRepository web capture provenance", () => {
     );
   });
 
-  it("preserves raw and readable web representations with capture metadata", async () => {
-    const create = vi.fn(() => Promise.resolve(success(recordDocument())));
-    const upload = vi.fn((path: string) =>
-      Promise.resolve(
-        fileDescriptor({
-          fileId: path.includes("archive") ? "file-archive" : "file-readable",
-          path,
-          mediaType: "text/html",
-        }),
-      ),
-    );
-    const repository = new ConnectSourceImportRepository(
-      { create } as unknown as ReaderConnectClient,
-      { upload },
-    );
+  it.each([undefined, "defuddle@0.19.5", "mozilla-readability@0.6.0"])(
+    "preserves raw and readable web representations with extractor %s",
+    async (extractor) => {
+      const create = vi.fn(() => Promise.resolve(success(recordDocument())));
+      const upload = vi.fn((path: string) =>
+        Promise.resolve(
+          fileDescriptor({
+            fileId: path.includes("archive") ? "file-archive" : "file-readable",
+            path,
+            mediaType: "text/html",
+          }),
+        ),
+      );
+      const repository = new ConnectSourceImportRepository(
+        { create } as unknown as ReaderConnectClient,
+        { upload },
+      );
 
-    await repository.commitFile(webCapturePlan());
+      await repository.commitFile(webCapturePlan(extractor));
 
-    expect(upload.mock.calls.map(([path]) => path)).toEqual([
-      "files/reader/src_import/example.archive.html",
-      "files/reader/src_import/example.readable.html",
-    ]);
-    expect(create).toHaveBeenCalledWith(
-      expect.objectContaining({
-        frontmatter: expect.objectContaining({
-          kind: "webpage",
-          url: "https://example.com/canonical",
-          original_url: "https://example.com/submitted",
-          authors: ["Jane Example"],
-          published: "2026-08-01",
-          description: "A captured essay.",
-          language: "en",
-          site: "Example Review",
-          capture: {
-            submitted_url: "https://example.com/submitted",
-            canonical_url: "https://example.com/canonical",
-            captured_at: "2026-08-10T11:59:00.000Z",
-            method: "url",
-            application: "dev.mdbase.reader",
-          },
-          documents: [
-            expect.objectContaining({
-              role: "primary",
-              file_id: "file-readable",
-              derived_from_file_id: "file-archive",
-            }),
-            expect.objectContaining({
-              role: "archive",
-              file_id: "file-archive",
-              origin_url: "https://example.com/canonical",
-              retrieved_at: "2026-08-10T11:59:00.000Z",
-            }),
-          ],
+      expect(upload.mock.calls.map(([path]) => path)).toEqual([
+        "files/reader/src_import/example.archive.html",
+        "files/reader/src_import/example.readable.html",
+      ]);
+      expect(create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          frontmatter: expect.objectContaining({
+            kind: "webpage",
+            url: "https://example.com/canonical",
+            original_url: "https://example.com/submitted",
+            authors: ["Jane Example"],
+            published: "2026-08-01",
+            description: "A captured essay.",
+            language: "en",
+            site: "Example Review",
+            capture: {
+              submitted_url: "https://example.com/submitted",
+              canonical_url: "https://example.com/canonical",
+              captured_at: "2026-08-10T11:59:00.000Z",
+              method: "url",
+              application: "dev.mdbase.reader",
+              ...(extractor ? { extractor } : {}),
+            },
+            documents: [
+              expect.objectContaining({
+                role: "primary",
+                file_id: "file-readable",
+                derived_from_file_id: "file-archive",
+              }),
+              expect.objectContaining({
+                role: "archive",
+                file_id: "file-archive",
+                origin_url: "https://example.com/canonical",
+                retrieved_at: "2026-08-10T11:59:00.000Z",
+              }),
+            ],
+          }),
         }),
-      }),
-    );
-  });
+      );
+    },
+  );
 });
 
-function webCapturePlan(): PlannedSourceFileImport {
+function webCapturePlan(extractor?: string): PlannedSourceFileImport {
   const base = plan();
   const representation = base.representations[0]!;
   return {
@@ -131,6 +135,7 @@ function webCapturePlan(): PlannedSourceFileImport {
       submittedUrl: "https://example.com/submitted",
       canonicalUrl: "https://example.com/canonical",
       retrievedAt: dateTime("2026-08-10T11:59:00.000Z"),
+      ...(extractor ? { extractor } : {}),
     },
     representations: [
       {

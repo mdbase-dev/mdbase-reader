@@ -10,9 +10,18 @@ import { extractScholarlyMetadata, type ScholarlyMetadata } from "./scholarly-me
 import { socialPostImport } from "./social/import.js";
 import { adapterFor, postAddress } from "./social/index.js";
 
-import type { Readability } from "@mozilla/readability";
+export const WEB_CAPTURE_EXTRACTOR = "defuddle@0.19.5";
+const fallbackExtractor = "mozilla-readability@0.6.0";
 
-export const WEB_CAPTURE_EXTRACTOR = "mozilla-readability@0.6.0";
+interface ExtractedArticle {
+  readonly content: string;
+  readonly title?: string | null;
+  readonly author?: string | null;
+  readonly published?: string | null;
+  readonly description?: string | null;
+  readonly language?: string | null;
+  readonly site?: string | null;
+}
 
 export interface CapturedWebDocument {
   readonly submittedUrl: string;
@@ -81,18 +90,20 @@ export async function webCaptureImport(
     };
     return socialPostImport(await adapter.extract(ref, socialDocument), capture);
   }
-  // Loaded on save only: opening the capture panel should not pay for Readability.
-  const [{ Readability }, { prepareHtmlDocument }] = await Promise.all([
-    import("@mozilla/readability"),
-    import("@mdbase-reader/renderer-html"),
-  ]);
   const parsed = options.document ?? parseHtml(capture.html);
   const canonicalUrl = new URL(capture.canonicalUrl);
-  const article = new Readability(parsed.cloneNode(true) as Document, {
-    keepClasses: false,
-  }).parse();
-  const title = normalizedText(article?.title, 300) ?? captureTitle(parsed, canonicalUrl.hostname);
-  const readable = articleDocument(parsed, article?.content ?? parsed.body.innerHTML, title);
+  // Loaded on save only: opening the capture panel should not pay for extraction.
+  const [{ article, extractor }, { prepareHtmlDocument }] = await Promise.all([
+    extractArticle(parsed, capture.canonicalUrl),
+    import("@mdbase-reader/renderer-html"),
+  ]);
+  const title = normalizedText(article.title, 300) ?? captureTitle(parsed, canonicalUrl.hostname);
+  const readable = articleDocument(
+    parsed,
+    article.content || parsed.body.innerHTML,
+    title,
+    article.language,
+  );
   const stem = safeStem(canonicalUrl.hostname);
   const scholarly = extractScholarlyMetadata(parsed, capture.canonicalUrl);
   const metadata = captureMetadata(parsed, canonicalUrl, article);
@@ -109,11 +120,77 @@ export async function webCaptureImport(
       submittedUrl: capture.submittedUrl,
       canonicalUrl: capture.canonicalUrl,
       retrievedAt: dateTime(capture.retrievedAt),
+      extractor,
     },
-    // Publisher tags list every author; Readability's byline is often a single display string.
+    // Publisher tags list every author; an extractor's byline is often a single display string.
     metadata: scholarlyAuthors.length ? { ...metadata, authors: scholarlyAuthors } : metadata,
     scholarly,
   };
+}
+
+async function extractArticle(
+  parsed: Document,
+  url: string,
+): Promise<{ readonly article: ExtractedArticle; readonly extractor: string }> {
+  const { default: Defuddle } = await import("defuddle");
+  const article: ExtractedArticle = new Defuddle(parsed.cloneNode(true) as Document, {
+    url,
+    useAsync: false,
+    fetch: extractionFetch,
+    // Prefer intact evidence over aggressive cleanup: rewriting structures, partial selectors,
+    // short-content patterns and hidden sidenotes all lost real text in the comparison corpus.
+    standardize: false,
+    removeContentPatterns: false,
+    removePartialSelectors: false,
+    removeHiddenElements: false,
+    removeSmallImages: false,
+  }).parse();
+  const extractedWords = wordCount(article.content);
+  if (suspiciouslyShort(parsed, extractedWords)) {
+    const { Readability } = await import("@mozilla/readability");
+    const fallback = new Readability(parsed.cloneNode(true) as Document, {
+      keepClasses: false,
+    }).parse();
+    // A large body can just be navigation. Switch only for substantially more readable text.
+    if (
+      fallback &&
+      wordCount(fallback.content ?? "") > Math.max(extractedWords * 1.5, extractedWords + 200)
+    ) {
+      return {
+        article: {
+          content: fallback.content ?? "",
+          title: fallback.title ?? null,
+          author: fallback.byline ?? null,
+          published: fallback.publishedTime ?? null,
+          description: fallback.excerpt ?? null,
+          language: fallback.lang ?? null,
+          site: fallback.siteName ?? null,
+        },
+        extractor: fallbackExtractor,
+      };
+    }
+  }
+  return { article, extractor: WEB_CAPTURE_EXTRACTOR };
+}
+
+function extractionFetch(): never {
+  throw new Error("Web capture extraction must not access the network.");
+}
+
+function wordCount(content: string): number {
+  const template = document.createElement("template");
+  template.innerHTML = content;
+  for (const element of template.content.querySelectorAll(
+    "script, style, noscript, template, nav, header, footer, [hidden]",
+  )) {
+    element.remove();
+  }
+  return template.content.textContent.trim().split(/\s+/u).filter(Boolean).length;
+}
+
+function suspiciouslyShort(document: Document, extractedWords: number): boolean {
+  const pageWords = wordCount(document.body.innerHTML);
+  return pageWords >= 400 && extractedWords < pageWords * 0.5;
 }
 
 function snapshotDocument(document: Document): Document {
@@ -135,23 +212,28 @@ function parseHtml(html: string): Document {
   return new DOMParser().parseFromString(html, "text/html");
 }
 
-function articleDocument(source: Document, content: string, title: string): string {
-  const language = normalizedText(source.documentElement.lang, 100);
+function articleDocument(
+  source: Document,
+  content: string,
+  title: string,
+  extractedLanguage?: string | null,
+): string {
+  const language = firstText([source.documentElement.lang, extractedLanguage], 100);
   return `<!doctype html><html${language ? ` lang="${escapeAttribute(language)}"` : ""}><head><meta charset="utf-8"><title>${escapeText(title)}</title></head><body><main><article>${content}</article></main></body></html>`;
 }
 
 function captureMetadata(
   document: Document,
   canonicalUrl: URL,
-  article: ReturnType<Readability["parse"]>,
+  article: ExtractedArticle,
 ): SourceImportMetadata {
   const authors = captureAuthors(document, article);
   const published = capturePublished(document, article);
   const description = captureDescription(document, article);
-  const language = firstText([article?.lang, document.documentElement.lang], 100);
+  const language = firstText([article.language, document.documentElement.lang], 100);
   const site = firstText(
     [
-      article?.siteName,
+      article.site,
       document.querySelector<HTMLMetaElement>('meta[property="og:site_name"]')?.content,
       canonicalUrl.hostname,
     ],
@@ -166,7 +248,7 @@ function captureMetadata(
   };
 }
 
-function captureAuthors(document: Document, article: ReturnType<Readability["parse"]>): string[] {
+function captureAuthors(document: Document, article: ExtractedArticle): string[] {
   const metaAuthors = [
     ...document.querySelectorAll<HTMLMetaElement>(
       'meta[name="author"], meta[property="article:author"]',
@@ -174,17 +256,14 @@ function captureAuthors(document: Document, article: ReturnType<Readability["par
   ]
     .map(({ content }) => normalizedText(content, 300))
     .filter((value): value is string => value !== undefined);
-  const byline = normalizedText(article?.byline, 300);
+  const byline = normalizedText(article.author, 300);
   return [...new Set([...(byline ? [byline] : []), ...metaAuthors])];
 }
 
-function capturePublished(
-  document: Document,
-  article: ReturnType<Readability["parse"]>,
-): string | undefined {
+function capturePublished(document: Document, article: ExtractedArticle): string | undefined {
   return firstText(
     [
-      article?.publishedTime,
+      article.published,
       document.querySelector<HTMLMetaElement>('meta[property="article:published_time"]')?.content,
       document.querySelector<HTMLMetaElement>('meta[name="date"]')?.content,
       document.querySelector<HTMLTimeElement>("time[datetime]")?.dateTime,
@@ -193,13 +272,10 @@ function capturePublished(
   );
 }
 
-function captureDescription(
-  document: Document,
-  article: ReturnType<Readability["parse"]>,
-): string | undefined {
+function captureDescription(document: Document, article: ExtractedArticle): string | undefined {
   return firstText(
     [
-      article?.excerpt,
+      article.description,
       document.querySelector<HTMLMetaElement>('meta[name="description"]')?.content,
       document.querySelector<HTMLMetaElement>('meta[property="og:description"]')?.content,
     ],
