@@ -6,7 +6,7 @@ import { beforeEach, describe, expect, it, vi, type Mock } from "vitest";
 
 import { webCaptureImport } from "../web-capture.js";
 
-import { blueskyPart, publicJson } from "./api.js";
+import { blueskyPart, mastodonPart, publicJson } from "./api.js";
 import { blueskyAdapter } from "./bluesky.js";
 import { nearestPost } from "./dom.js";
 import { postAddress } from "./identity.js";
@@ -287,16 +287,17 @@ describe("Mastodon anonymous profile placeholders", () => {
   });
 });
 
-describe("threads, picker and post imports", () => {
-  const part = (id: string, author: string, parent?: string): PostPart => ({
-    platform: "x",
-    id,
-    url: `https://x.com/i/status/${id}`,
-    text: `Part ${id}`,
-    author: { id: author, handle: author, name: author },
-    media: [],
-    ...(parent ? { inReplyTo: parent } : {}),
-  });
+const part = (id: string, author: string, parent?: string): PostPart => ({
+  platform: "x",
+  id,
+  url: `https://x.com/i/status/${id}`,
+  text: `Part ${id}`,
+  author: { id: author, handle: author, name: author },
+  media: [],
+  ...(parent ? { inReplyTo: parent } : {}),
+});
+
+describe("threads and picker", () => {
   it("unrolls ancestors and self-reply branches but excludes other authors and unrelated posts", () => {
     const root = part("1", "author");
     const middle = part("2", "author", "1");
@@ -325,6 +326,42 @@ describe("threads, picker and post imports", () => {
     const quoted = { ...bskyPost("quoted", "did:plc:quoted"), value: { text: "Quoted context" } };
     const post = blueskyPart({ ...bskyPost("first"), embed: { record: quoted } });
     expect(post.quoted?.text).toBe("Quoted context");
+  });
+});
+
+describe("portable post imports and capture safety", () => {
+  it("does not mistake another site's generic initial-state script for a Mastodon page", () => {
+    const parsed = new DOMParser().parseFromString(
+      '<script id="initial-state" type="application/json">{"app":"ordinary"}</script><article>Ordinary article</article>',
+      "text/html",
+    );
+    expect(mastodonAdapter.detect(parsed, "https://ordinary-site.test/@fixture/123")).toBeNull();
+    expect(adapterFor(parsed, "https://ordinary-site.test/article")).toBeNull();
+  });
+  it("retains Mastodon audio attachment URLs/types without pretending to archive playback", async () => {
+    const root = mastodonPart(
+      {
+        uri: "https://any-instance.test/users/fixture/statuses/100",
+        content: "<p>Audio note</p>",
+        account: {
+          url: "https://any-instance.test/@fixture",
+          acct: "fixture",
+          display_name: "Fixture Author",
+        },
+        media_attachments: [
+          { type: "audio", url: "https://media.example/note.mp3", description: "" },
+        ],
+      },
+      document,
+    );
+    expect(root.media[0]?.kind).toBe("audio");
+    const prepared = await socialPostImport(unrollThread(root, [], false), {
+      retrievedAt: "2026-01-01T10:00:00Z",
+    });
+    expect(new TextDecoder().decode(prepared.bytes)).toContain(
+      "Audio (original URL retained in source metadata)",
+    );
+    expect(prepared.metadata.socialPost?.media[0]?.url).toBe("https://media.example/note.mp3");
   });
   it("stores safe readable HTML, a post-only archive and portable metadata with offline images", async () => {
     const root = {

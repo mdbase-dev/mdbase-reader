@@ -1,8 +1,9 @@
-import { dateTime, type PostPart, type SocialPost } from "@mdbase-reader/core";
+import { dateTime, type PostMedia, type PostPart, type SocialPost } from "@mdbase-reader/core";
 
 import { cslDate, type CitationDraft } from "../csl-values.js";
 
-import type { SocialFetchOptions } from "./api.js";
+import { boundedSignal, type SocialFetchOptions } from "./api.js";
+
 import type { CapturedWebDocument, WebCaptureImport } from "../web-capture.js";
 
 export function postCitation(post: SocialPost): CitationDraft {
@@ -32,7 +33,16 @@ function partHtml(part: PostPart): string {
     .map((paragraph) => `<p>${escape(paragraph).replaceAll("\n", "<br>")}</p>`)
     .join(
       "",
-    )}</div>${part.media.map((media) => `<figure>${media.kind === "image" ? `<img src="${escape(media.url)}" alt="${escape(media.alt)}">` : ""}<figcaption>${escape(media.alt || (media.kind === "video" ? "Video (original URL retained in source metadata)" : "Image"))}</figcaption></figure>`).join("")}${part.quoted ? `<blockquote class="quoted-post" aria-label="Quoted post">${partHtml(part.quoted)}</blockquote>` : ""}</section>`;
+    )}</div>${part.media.map((media) => `<figure>${media.kind === "image" ? `<img src="${escape(media.url)}" alt="${escape(media.alt)}">` : ""}<figcaption>${escape(mediaCaption(media))}</figcaption></figure>`).join("")}${part.quoted ? `<blockquote class="quoted-post" aria-label="Quoted post">${partHtml(part.quoted)}</blockquote>` : ""}</section>`;
+}
+
+function mediaCaption(media: PostMedia): string {
+  if (media.alt) {
+    return media.alt;
+  }
+  return media.kind === "image"
+    ? "Image"
+    : `${media.kind === "audio" ? "Audio" : "Video"} (original URL retained in source metadata)`;
 }
 
 export async function socialPostImport(
@@ -96,7 +106,7 @@ async function imageData(
   const response = await (options.fetch ?? fetch)(url, {
     credentials: "omit",
     redirect: "error",
-    signal: options.signal ?? AbortSignal.timeout(8_000),
+    signal: boundedSignal(options.signal, 8_000),
   });
   const type = response.headers.get("content-type")?.split(";")[0];
   if (!response.ok || !type || !/^image\/(png|jpeg|webp|gif|avif)$/u.test(type) || !response.body) {

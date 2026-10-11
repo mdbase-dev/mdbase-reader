@@ -19,7 +19,7 @@ export const mastodonSelectors: DomSelectors = {
 export function mastodonMarker(document: Document): boolean {
   return Boolean(
     document.querySelector(
-      'meta[name="application-name"][content="Mastodon"], #mastodon, .mastodon, .detailed-status, .status__content, script#initial-state',
+      'meta[name="application-name"][content="Mastodon"], #mastodon, .mastodon, .detailed-status, .status__content',
     ),
   );
 }

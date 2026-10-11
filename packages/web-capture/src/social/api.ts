@@ -13,7 +13,7 @@ export async function publicJson(url: string, options: SocialFetchOptions): Prom
     credentials: "omit",
     redirect: "error",
     headers: { accept: "application/json" },
-    signal: options.signal ?? AbortSignal.timeout(12_000),
+    signal: boundedSignal(options.signal, 12_000),
   });
   if (!response.ok) {
     throw new Error(`Post API returned HTTP ${String(response.status)}.`);
@@ -39,6 +39,11 @@ export async function publicJson(url: string, options: SocialFetchOptions): Prom
     offset += chunk.length;
   }
   return JSON.parse(new TextDecoder().decode(bytes)) as unknown;
+}
+
+export function boundedSignal(signal: AbortSignal | undefined, milliseconds: number): AbortSignal {
+  const deadline = AbortSignal.timeout(milliseconds);
+  return signal ? AbortSignal.any([signal, deadline]) : deadline;
 }
 
 export async function blueskyIdentity(
@@ -141,7 +146,7 @@ export function mastodonPart(value: unknown, document: Document, depth = 0): Pos
             {
               url,
               alt: text(media["description"]),
-              kind: text(media["type"]) === "image" ? ("image" as const) : ("video" as const),
+              kind: attachmentKind(text(media["type"])),
             },
           ]
         : [];
@@ -149,6 +154,10 @@ export function mastodonPart(value: unknown, document: Document, depth = 0): Pos
     ...(parent ? { inReplyTo: parent } : {}),
     ...(quote && depth === 0 ? { quoted: mastodonPart(quote, document, 1) } : {}),
   };
+}
+
+function attachmentKind(type: string): PostMedia["kind"] {
+  return type === "image" || type === "audio" ? type : "video";
 }
 
 export function record(value: unknown): Record<string, unknown> {

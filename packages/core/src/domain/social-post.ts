@@ -3,7 +3,7 @@ export type SocialPlatform = "x" | "bluesky" | "mastodon";
 export interface PostMedia {
   readonly url: string;
   readonly alt: string;
-  readonly kind: "image" | "video";
+  readonly kind: "image" | "video" | "audio";
 }
 
 /** Portable post data; HTML is a reading representation, not the source identity. */
