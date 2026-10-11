@@ -5,20 +5,23 @@ entry of the new SDK (`@mdbase-dev/sdk`, `MdbaseConnect`).
 
 ## Pin
 
-`packages/connect/vendor/mdbase-dev-sdk-dev-2e2ae687-n1.tgz` is the distinct
-`sdk-dev-2e2ae687-n1` original cut from SDK source
-`2e2ae687f96d0a0c074ef6bc46bb77b97089f325`, SHA256
-`58bc19022164eed1ef2236e392786db7fba6447d32b9bc3f2163c247d1c42faf`. Its source commit, hashes
-and protocol dependency (beta129 `d765e675c3da`) are recorded in
-`packages/connect/vendor/mdbase-next-sdk.json`.
+`packages/connect/vendor/mdbase-dev-sdk-dev-4b955381.tgz` is the original
+`sdk-dev-4b955381` cut from SDK source
+`4b9553819ddb769ff1487170c05494321d23ab8b`, SHA256
+`9874074d6a68287780de2092a069c1cb4e81d3558e432b719b7525974eb6b0ad` (4292587 bytes).
+Its source, SRI, native pins and original bundled protocol are recorded in
+`packages/connect/vendor/mdbase-next-sdk.json`. The SDK bundles beta129
+`3c14fc913a80`; the direct legacy protocol dependency remains `d765e675c3da` unchanged.
 
-This is a **development intake, not release-qualified**. It carries the live
-`MdbaseConnect` singleton: registration, then storage, then Worker, then runtime, plus
-`snapshot.selection` and `approve`/`reauthorize`/`chooseAnother`. Its public entry refuses the
-production environment. The original 3462973-byte native runtime matches the
-committed `6762b92e4b57b1a4df965c7991a064efe05eb950a66ec332e0504f73a8e42b72`
-pin; the original protocol is producer-bundled. Packaged integrity and ordinary/
-frozen installation do not establish live LAB acceptance.
+This is a **DEV/LAB development intake, not release-qualified**. It includes the
+public error/status helpers and portable/native-origin sign-in APIs in one pin.
+The SDK owns registration, authorization, selection, readiness, Worker, runtime
+and recovery. The original 3533579-byte native runtime matches the committed
+`38ca6f006aef7675ebe16abb981c7ba59fe0c27c287d78ee0b845c26aff37ba8` pin.
+The exact cut has a documented co0648 warning for an unreferenced extra protocol
+archive (`dfc5db0d…`), unused at runtime; this exception does not apply to the successor.
+The security/phase-2 successor is a separate future pin. Packaged integrity and
+ordinary/frozen installation do not establish live LAB acceptance.
 
 ## Design
 
