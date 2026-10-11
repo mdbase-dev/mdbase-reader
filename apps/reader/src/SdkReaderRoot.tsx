@@ -1,11 +1,13 @@
 import { FeedbackButton } from "@mdbase-dev/ui/feedback";
 import { ConnectLayout, OpeningScreen } from "@mdbase-dev/ui/screens";
 import {
+  describeError,
   nativeReaderCollection,
   type MdbaseApplication,
   type MdbaseApplicationConnection,
   type MdbaseApplicationEntry,
   type MdbaseApplicationSnapshot,
+  type MdbaseErrorDescription,
   type NativeReaderCollection,
 } from "@mdbase-reader/connect/native";
 import { useEffect, useRef, useState, useSyncExternalStore, type JSX, type ReactNode } from "react";
@@ -93,7 +95,7 @@ function ApplicationView({
       </CollectionSwitchingContext>
     );
   }
-  const screen = connectionScreen(snapshot, problem);
+  const screen = connectionScreen(application, snapshot, problem);
   const actions = (
     <>
       {screen.identity ? <p className="mdbase-connect-status">{screen.identity}</p> : null}
@@ -112,6 +114,7 @@ function ApplicationView({
     return (
       <section className="import-step" aria-labelledby="import-destination-title">
         <h2 id="import-destination-title">Choose a destination</h2>
+        {screen.title ? <h3>{screen.title}</h3> : null}
         <p role={screen.error ? "alert" : "status"}>{screen.message}</p>
         {actions}
       </section>
@@ -120,7 +123,7 @@ function ApplicationView({
   return (
     <ConnectLayout
       app="reader"
-      title="Open mdbase Reader"
+      title={screen.title ?? "Open mdbase Reader"}
       {...(screen.error ? { error: screen.message } : { status: screen.message })}
     >
       {actions}
@@ -205,8 +208,20 @@ function aborted(scope: AbortController): boolean {
   return scope.signal.aborted;
 }
 
+type Run = (signal: AbortSignal) => Promise<unknown>;
+/** The one SDK-suggested way out of a settled problem. */
+type Recovery =
+  | { readonly label: string; readonly href: string }
+  | { readonly label: string; readonly run: Run }
+  | { readonly label: string; readonly reload: true };
+
 interface ConnectionScreenState {
   readonly message: string;
+  /** The SDK's heading for a settled problem; null keeps the default title. */
+  readonly title: string | null;
+  readonly recovery: Recovery | null;
+  /** Ready but unchecked: offer the SDK's readiness check. */
+  readonly checkAgain: boolean;
   readonly error: boolean;
   readonly identity: string | null;
   readonly signedIn: boolean;
@@ -218,6 +233,20 @@ interface ConnectionScreenState {
   readonly closed: boolean;
 }
 
+type ScreenFlags = ReturnType<typeof screenFlags>;
+
+/** A settled readiness problem or incompatible collection ends Opening. */
+function readinessState(snapshot: MdbaseApplicationSnapshot): {
+  readonly readinessProblem: boolean;
+  readonly incompatible: boolean;
+} {
+  const { problem, assessment } = snapshot.readiness;
+  return {
+    readinessProblem: problem !== null || assessment?.problem != null,
+    incompatible: assessment?.status === "incompatible",
+  };
+}
+
 function screenFlags(snapshot: MdbaseApplicationSnapshot): {
   readonly unavailable: boolean;
   readonly closed: boolean;
@@ -227,14 +256,22 @@ function screenFlags(snapshot: MdbaseApplicationSnapshot): {
   readonly approval: boolean;
   readonly invalid: boolean;
   readonly choosing: boolean;
+  readonly readinessProblem: boolean;
+  readonly incompatible: boolean;
 } {
   const unavailable = snapshot.problem === "application_not_yet_available";
   const closed = snapshot.status === "closed";
   const { state } = snapshot.selection;
   const waiting = snapshot.status === "authorizing" || state === "approving";
+  const readiness = readinessState(snapshot);
   const opening =
-    snapshot.status === "starting" || snapshot.status === "opening" || snapshot.readiness.checking;
+    !readiness.readinessProblem &&
+    !readiness.incompatible &&
+    (snapshot.status === "starting" ||
+      snapshot.status === "opening" ||
+      snapshot.readiness.checking);
   return {
+    ...readiness,
     unavailable,
     closed,
     approval: !closed && state === "approval_required",
@@ -250,44 +287,146 @@ function screenFlags(snapshot: MdbaseApplicationSnapshot): {
   };
 }
 
-function connectionScreen(
+/** Blocked, readiness and incompatible states use the SDK's shared copy and action. */
+function describedProblem(
   snapshot: MdbaseApplicationSnapshot,
-  problem: boolean,
-): ConnectionScreenState {
-  const { unavailable, closed, waiting, opening, setup, approval, invalid, choosing } =
-    screenFlags(snapshot);
-  const signIn = !closed && snapshot.signIn?.state === "paired" ? snapshot.signIn : null;
-  const failed = problem || snapshot.status === "blocked";
+  flags: ScreenFlags,
+): MdbaseErrorDescription | null {
+  const { closed, unavailable, waiting, invalid, approval, readinessProblem, incompatible } = flags;
+  if (closed || unavailable || waiting || invalid || approval) {
+    return null;
+  }
+  return snapshot.status === "blocked" || readinessProblem || incompatible
+    ? describeError(snapshot)
+    : null;
+}
+
+interface SettledScreen {
+  readonly described: MdbaseErrorDescription | null;
+  readonly recovery: Recovery | null;
+  readonly unchecked: boolean;
+  /** READY evidence without a usable connection: the SDK retired this one. */
+  readonly retired: boolean;
+  /** This collection cannot open as is; offer the chooser. */
+  readonly rechoose: boolean;
+}
+
+function settledScreen(
+  application: MdbaseApplication,
+  snapshot: MdbaseApplicationSnapshot,
+  flags: ScreenFlags,
+): SettledScreen {
+  const described = describedProblem(snapshot, flags);
+  const settledReady = snapshot.status === "ready" && !flags.opening;
+  const { assessment } = snapshot.readiness;
+  const retired = settledReady && !flags.readinessProblem && assessment?.status === "ready";
+  return {
+    described,
+    recovery: described
+      ? recoveryAction(
+          application,
+          described,
+          flags.readinessProblem && snapshot.status !== "blocked",
+        )
+      : null,
+    unchecked: settledReady && assessment === null && described === null,
+    retired,
+    rechoose: flags.incompatible || flags.readinessProblem || retired,
+  };
+}
+
+function screenMessage(
+  snapshot: MdbaseApplicationSnapshot,
+  flags: ScreenFlags,
+  settled: SettledScreen,
+  failed: boolean,
+  signedIn: boolean,
+): string {
   const selected = snapshot.collections.find(
     (collection) => collection.collectionId === snapshot.selectedCollectionId,
   );
   const message = [
-    [unavailable, "Opening collections isn't available in this build yet."],
-    [closed, "mdbase Reader has signed out. Reload to sign in again."],
+    [flags.unavailable, "Opening collections isn't available in this build yet."],
+    [flags.closed, "mdbase Reader has signed out. Reload to sign in again."],
+    [settled.described !== null, settled.described?.message ?? ""],
     [failed, "This action could not be completed. Please try again."],
-    [waiting, "Waiting for approval in the mdbase tab…"],
-    [invalid, "This link doesn't name a collection mdbase Reader can open."],
-    [approval, "mdbase Reader isn't approved for the collection in this link yet."],
-    [setup, "This collection needs mdbase Reader setup before reading."],
+    [flags.waiting, "Waiting for approval in the mdbase tab…"],
+    [flags.invalid, "This link doesn't name a collection mdbase Reader can open."],
+    [flags.approval, "mdbase Reader isn't approved for the collection in this link yet."],
+    [flags.setup, "This collection needs mdbase Reader setup before reading."],
+    [settled.unchecked, "This collection hasn't been checked yet. Check again before reading."],
     [
-      opening || snapshot.status === "ready",
+      settled.retired,
+      "The connection to this collection has changed. Choose the collection again.",
+    ],
+    [
+      flags.opening || snapshot.status === "ready",
       `Opening ${selected?.displayName ?? "your collection"}…`,
     ],
-    [signIn !== null, "Choose the collection you want to read from."],
+    [signedIn, "Choose the collection you want to read from."],
   ] as const;
+  return (
+    message.find(([applies]) => applies)?.[1] ??
+    "Sign in with your mdbase account to open your collections."
+  );
+}
+
+function connectionScreen(
+  application: MdbaseApplication,
+  snapshot: MdbaseApplicationSnapshot,
+  problem: boolean,
+): ConnectionScreenState {
+  const flags = screenFlags(snapshot);
+  const settled = settledScreen(application, snapshot, flags);
+  const signIn = !flags.closed && snapshot.signIn?.state === "paired" ? snapshot.signIn : null;
+  const failed = problem || snapshot.status === "blocked";
   return {
-    message:
-      message.find(([applies]) => applies)?.[1] ??
-      "Sign in with your mdbase account to open your collections.",
-    error: failed || unavailable || invalid,
+    message: screenMessage(snapshot, flags, settled, failed, signIn !== null),
+    error: failed || flags.unavailable || flags.invalid || settled.rechoose,
+    title: settled.described?.title ?? null,
+    recovery: settled.recovery,
+    checkAgain: settled.unchecked,
     identity: identityLabel(signIn),
     signedIn: signIn !== null,
-    setup,
-    approval,
-    rechoose: approval || invalid,
-    choosing,
-    closed,
+    setup: flags.setup && settled.described?.action !== "set_up",
+    approval: flags.approval,
+    rechoose: flags.approval || flags.invalid || settled.rechoose,
+    choosing: flags.choosing,
+    closed: flags.closed,
   };
+}
+
+/** Map the SDK's suggested action onto one Reader control. Readiness problems
+ * re-check rather than restart; a web app updates by reloading. */
+function recoveryAction(
+  application: MdbaseApplication,
+  problem: MdbaseErrorDescription,
+  readiness: boolean,
+): Recovery | null {
+  const label = problem.actionLabel ?? "Try again";
+  switch (problem.action) {
+    case "sign_in":
+      return { label, run: (signal) => application.authorize({ signal }) };
+    case "approve":
+      return { label, run: (signal) => application.approve(undefined, { signal }) };
+    case "set_up":
+      return { label, run: (signal) => application.configure({ signal }) };
+    case "choose_collection":
+      return { label, run: (signal) => application.chooseAnother({ signal }) };
+    case "update_app":
+      return problem.updateUrl ? { label, href: problem.updateUrl } : { label, reload: true };
+    case "retry":
+    case "check_connection":
+    case "reload":
+      if (readiness) {
+        return { label: "Check again", run: (signal) => application.assess({ signal }) };
+      }
+      return problem.action === "reload"
+        ? { label, reload: true }
+        : { label, run: (signal) => application.start({ signal }) };
+    default:
+      return null;
+  }
 }
 
 function identityLabel(signIn: MdbaseApplicationSnapshot["signIn"]): string | null {
@@ -330,9 +469,14 @@ function ConnectionActions({
       {label}
     </button>
   );
+  const { recovery } = screen;
   return (
     <>
-      {screen.choosing && !screen.signedIn
+      {recovery ? <RecoveryControl recovery={recovery} working={working} act={act} /> : null}
+      {screen.checkAgain
+        ? action("Check again", (signal) => application.assess({ signal }), true)
+        : null}
+      {screen.choosing && !screen.signedIn && !recovery
         ? action("Sign in", (signal) => application.authorize({ signal }), true)
         : null}
       {screen.setup
@@ -367,6 +511,35 @@ function ConnectionActions({
           )
         : null}
     </>
+  );
+}
+
+function RecoveryControl({
+  recovery,
+  working,
+  act,
+}: {
+  readonly recovery: Recovery;
+  readonly working: boolean;
+  readonly act: Act;
+}): JSX.Element {
+  const className = "mdbase-connect-action mdbase-button is-primary";
+  if ("href" in recovery) {
+    return (
+      <a className={className} href={recovery.href}>
+        {recovery.label}
+      </a>
+    );
+  }
+  return (
+    <button
+      type="button"
+      className={className}
+      disabled={working}
+      onClick={() => ("reload" in recovery ? window.location.reload() : void act(recovery.run))}
+    >
+      {recovery.label}
+    </button>
   );
 }
 

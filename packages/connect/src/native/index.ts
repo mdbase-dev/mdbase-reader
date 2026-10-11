@@ -1,5 +1,7 @@
 import { MdbaseConnect, type MdbaseApplicationDeclaration } from "@mdbase-dev/sdk";
 
+export { describeError } from "@mdbase-dev/sdk";
+
 export { nativeReaderCollection } from "./native-collection.js";
 export type { NativeReaderCollection } from "./native-collection.js";
 export type {
@@ -9,6 +11,7 @@ export type {
   MdbaseApplicationEntry,
   MdbaseApplicationSnapshot,
   MdbaseApplicationSelectionSnapshot,
+  MdbaseErrorDescription,
 } from "@mdbase-dev/sdk";
 
 /** Reader's declaration for the public SDK entry: the unchanged canonical manifest

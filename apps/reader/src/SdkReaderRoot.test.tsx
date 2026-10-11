@@ -198,3 +198,56 @@ it("offers approval or another collection for an unapproved collection named by 
   expect(actions).toContain("chooseAnother");
   expect(actions).not.toContain("select");
 });
+
+it.each(["readiness problem", "assessment problem", "incompatible", "unchecked"] as const)(
+  "a settled %s shows a clear screen and an action instead of endless Opening",
+  async (state) => {
+    const problem = { code: "private-readiness-diagnostic" };
+    const { entry, controls } = fixture({
+      status: "ready",
+      signIn: paired,
+      selectedCollectionId: "c1",
+      collections: [{ collectionId: "c1", displayName: "Reading", role: "owner" }],
+      readiness: {
+        ...signedOut.readiness,
+        problem: state === "readiness problem" ? problem : null,
+        assessment:
+          state === "unchecked"
+            ? null
+            : {
+                status: state === "incompatible" ? "incompatible" : "ready",
+                problem: state === "assessment problem" ? problem : null,
+              },
+      },
+    });
+    controls.setHandler("start", () => entry.application().getSnapshot());
+    await act(async () => root.render(<SdkReaderRoot sdk={entry} renderNative={vi.fn()} />));
+    expect(host.textContent).not.toContain("Opening");
+    expect(host.textContent).not.toContain("private-readiness-diagnostic");
+    if (state === "incompatible") {
+      expect(host.textContent).toContain("This collection isn't compatible");
+      const update = [...host.querySelectorAll("a")].find(
+        (link) => link.textContent === "Update the app",
+      );
+      expect(update?.getAttribute("href")).toMatch(/^https:\/\//);
+      await act(async () => button("Choose another collection").click());
+      expect(controls.observedActions().map((call) => call.action)).toContain("chooseAnother");
+    } else {
+      await act(async () => button("Check again").click());
+      expect(controls.observedActions().map((call) => call.action)).toContain("assess");
+    }
+  },
+);
+
+it("a blocked open shows the SDK's title, copy and one action", async () => {
+  const { entry, controls } = fixture({ status: "blocked", problem: "unauthenticated" });
+  await act(async () => root.render(<SdkReaderRoot sdk={entry} />));
+  expect(host.textContent).toContain("Sign in again");
+  expect(host.textContent).toContain("Your session has ended");
+  expect(host.querySelectorAll("button")).toSatisfy(
+    (buttons: NodeListOf<HTMLButtonElement>) =>
+      [...buttons].filter((item) => item.textContent === "Sign in").length === 1,
+  );
+  await act(async () => button("Sign in").click());
+  expect(controls.observedActions().map((call) => call.action)).toContain("authorize");
+});
