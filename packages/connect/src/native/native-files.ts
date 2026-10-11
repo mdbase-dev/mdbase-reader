@@ -97,7 +97,7 @@ export function nativeReaderFiles(
       check(options.signal);
       const view = await files.get(write.fileId, options.signal);
       check(options.signal);
-      return descriptor(view, options.mediaType);
+      return descriptor(view);
     };
     try {
       return await once();
@@ -144,8 +144,8 @@ export function nativeReaderFiles(
   };
 }
 
-/** Native files carry a media class but no media type; Reader derives it from the path. */
-function descriptor(view: FileView, mediaType?: string): CollectionFileDescriptor {
+/** The media type is the replica's, derived from the file extension; absent when unknown. */
+function descriptor(view: FileView): CollectionFileDescriptor {
   if (!view.digest.startsWith("sha256:")) {
     throw new Error("The collection returned a file without its content digest.");
   }
@@ -156,7 +156,7 @@ function descriptor(view: FileView, mediaType?: string): CollectionFileDescripto
     contentDigest: view.digest as `sha256:${string}`,
     size: view.size,
     mediaClass: view.media,
-    ...(mediaType ? { mediaType } : {}),
+    ...(view.mediaType ? { mediaType: view.mediaType } : {}),
     // Consumers treat an empty time as unknown; no time is invented.
     modifiedAt: view.mtime === undefined ? "" : new Date(view.mtime).toISOString(),
   };

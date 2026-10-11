@@ -3,6 +3,7 @@ import { MemoryReplica, type MemoryReplicaOptions } from "@mdbase-dev/sdk/testin
 import { afterEach, describe, expect, it } from "vitest";
 
 import { ConnectBodyUpdateRecovery } from "../body-update-recovery.js";
+import { sourceContract } from "../contracts.js";
 import { outcomeValue } from "../repository-client.js";
 
 import { nativeReaderClient, type NativeReaderClient } from "./native-client.js";
@@ -119,5 +120,45 @@ describe("native Reader client", () => {
     expect(recovered.body).toBe("kept");
     expect(recovery.pending(requestId)).toBe(false);
     expect(replica.allRecords.find((record) => record.path === "notes/a.md")?.body).toBe("kept");
+  });
+
+  // RED at SDK df091839: MemoryReplica does not serve contract-scoped records
+  // (`contract_records_unsupported`). Enable when the SDK fixture gains them.
+  it.skip("reads and updates a source through its contract view, reading back the contract view", async () => {
+    const { replica, client } = await native();
+    replica.seed({
+      path: "sources/c.md",
+      types: ["reader-source"],
+      frontmatter: {
+        type: "reader-source",
+        id: "c",
+        title: "Old",
+        kind: "web",
+        saved_at: "2026-10-11T00:00:00Z",
+      },
+      body: "kept body",
+    });
+
+    const read = outcomeValue(
+      await client.read({ path: "sources/c.md", contract: sourceContract }),
+      "contract read",
+    );
+    expect(read.effectiveFrontmatter["title"]).toBe("Old");
+    expect(read.body).toBeUndefined();
+
+    const saved = outcomeValue(
+      await client.update({
+        path: "sources/c.md",
+        contract: sourceContract,
+        ifRevision: read.revision,
+        patch: { title: "New" },
+      }),
+      "contract update",
+    );
+    expect(saved.effectiveFrontmatter["title"]).toBe("New");
+    expect(saved.contract?.id).toBe(sourceContract.id);
+    expect(replica.allRecords.find((record) => record.path === "sources/c.md")?.body).toBe(
+      "kept body",
+    );
   });
 });

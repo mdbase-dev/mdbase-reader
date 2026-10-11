@@ -2,6 +2,7 @@ import { connectSuccess } from "@mdbase-dev/connect/advanced";
 import { isMdbaseError, MdbaseError, uuidv7 } from "@mdbase-dev/sdk";
 
 import {
+  contractDocument,
   failure,
   fileMetadata,
   metadataRecord,
@@ -39,6 +40,7 @@ import type {
 } from "@mdbase-dev/connect";
 import type {
   ContractQueryRecord,
+  ContractSelector,
   Include,
   MdbaseClient,
   PlainValue,
@@ -54,6 +56,8 @@ export interface NativePendingWrite {
   readonly operation: "create" | "update" | "delete";
   readonly recordId: string;
   readonly createdAt: string;
+  /** Contract writes are read back through the same contract view. */
+  readonly contract?: ContractSelector;
 }
 
 /** The recovery handle Reader's body/migration recovery needs, by original request ID. */
@@ -131,10 +135,13 @@ class NativeRecords implements NativeReaderClient {
     options: ReaderRequestOptions = {},
   ): Promise<ConnectOutcome<RecordDocument>> {
     return outcome(async () => {
-      if (input.contract) {
-        throw unsupported("Reading one record through a contract view is not available natively.");
-      }
       const signal = this.#scope(options.signal);
+      if (input.contract) {
+        // Contract views carry contract fields only; the body is never part of them.
+        const view = await this.client.getContract({ path: input.path }, input.contract, signal);
+        this.#check(signal);
+        return contractDocument(view);
+      }
       const record = await this.client.get({ path: input.path }, fullInclude, signal);
       this.#check(signal);
       return recordDocument(record);
@@ -251,13 +258,14 @@ class NativeRecords implements NativeReaderClient {
 
   create(input: CreateInput): Promise<ConnectOutcome<RecordDocument>> {
     return outcome(async () => {
-      if (input.contract || input.ifRevision !== undefined) {
-        throw unsupported("Contract-targeted creates are not available natively.");
+      if (input.ifRevision !== undefined) {
+        throw unsupported("Conditional creates are not available natively.");
       }
       const signal = this.#scope();
       const id = uuidv7();
       const fields = {
         id,
+        ...(input.contract ? { contract: input.contract } : {}),
         ...(input.type ? { type: input.type } : {}),
         ...(input.path ? { path: input.path } : {}),
         ...(input.frontmatter
@@ -266,50 +274,47 @@ class NativeRecords implements NativeReaderClient {
         ...(input.body === undefined ? {} : { body: input.body }),
       };
       return saved(
-        await this.#write("create", id, (write) => this.client.create(fields, write), signal),
+        await this.#write(
+          {
+            operation: "create",
+            recordId: id,
+            ...(input.contract ? { contract: input.contract } : {}),
+          },
+          (write) => this.client.create(fields, write),
+          signal,
+        ),
       );
     });
   }
 
   update(input: UpdateInput): Promise<ConnectOutcome<RecordDocument>> {
     return outcome(async () => {
-      if (input.contract) {
-        throw unsupported("Contract-targeted updates are not available natively.");
-      }
       const signal = this.#scope();
+      if (input.contract) {
+        return saved(await this.#contractUpdate(input, input.contract, signal));
+      }
       const base = await this.#current(input.path, input.ifRevision, signal);
       if (input.document !== undefined) {
         const document = input.document;
         const ifRevision = input.ifRevision ?? base.revision;
         const submit: Submit = (write) =>
           this.client.replaceDocument(base, document, { ...write, ifRevision });
-        return saved(await this.#write("update", base.id, submit, signal));
+        return saved(await this.#write({ operation: "update", recordId: base.id }, submit, signal));
       }
-      // Connect patches remove a top-level field given null (mdbase §12.3).
-      const entries = Object.entries(input.patch).filter(([, value]) => value !== undefined);
-      const patch = Object.fromEntries(entries.filter(([, value]) => value !== null)) as Record<
-        string,
-        PlainValue
-      >;
-      const unset = entries.filter(([, value]) => value === null).map(([key]) => key);
       const changes = {
-        patch,
-        ...(unset.length > 0 ? { unset } : {}),
+        ...patchChanges(input.patch),
         ...(input.body === undefined ? {} : { body: input.body }),
         ...(input.ifRevision === undefined ? {} : { ifRevision: input.ifRevision }),
       };
       const submit: Submit = (write) => this.client.update(base, changes, write);
-      return saved(await this.#write("update", base.id, submit, signal));
+      return saved(await this.#write({ operation: "update", recordId: base.id }, submit, signal));
     });
   }
 
   preflightDelete(input: DeleteInput): Promise<ConnectOutcome<DeletePreflightResult>> {
     return outcome(async () => {
-      if (input.contract) {
-        throw unsupported("Contract-targeted deletes are not available natively.");
-      }
       const signal = this.#scope();
-      const base = await this.#current(input.path, input.ifRevision, signal);
+      const base = await this.#current(input.path, input.ifRevision, signal, input.contract);
       const preflight = await this.client.preflightDelete(base);
       this.#check(signal);
       const brokenLinks = uniquePaths(preflight.broken);
@@ -328,9 +333,6 @@ class NativeRecords implements NativeReaderClient {
     options: DeleteProgressOptions = {},
   ): Promise<ConnectOutcome<DeleteResult>> {
     return outcome(async () => {
-      if (input.contract) {
-        throw unsupported("Contract-targeted deletes are not available natively.");
-      }
       const started = Date.now();
       const progress = (state: "preflighting" | "applying" | "completed"): void =>
         options.onProgress?.({
@@ -343,14 +345,16 @@ class NativeRecords implements NativeReaderClient {
         });
       const signal = this.#scope(options.signal);
       progress("preflighting");
-      const base = await this.#current(input.path, input.ifRevision, signal);
+      const base = await this.#current(input.path, input.ifRevision, signal, input.contract);
       const brokenLinks = input.checkBacklinks
         ? await this.#confirmedBreaks(base, options, signal)
         : [];
       progress("applying");
       const ifRevision = input.ifRevision ?? base.revision;
-      const submit: Submit = (write) => this.client.delete(base, { ...write, ifRevision });
-      await this.#write("delete", base.id, submit, signal);
+      const contract = input.contract ? { contract: input.contract } : {};
+      const submit: Submit = (write) =>
+        this.client.delete(base, { ...write, ifRevision, ...contract });
+      await this.#write({ operation: "delete", recordId: base.id }, submit, signal);
       progress("completed");
       return {
         path: base.path,
@@ -424,11 +428,17 @@ class NativeRecords implements NativeReaderClient {
     ]);
   }
 
+  /** The record at `path`; with a contract, it must also implement that contract. */
   async #current(
     path: string,
     ifRevision: string | undefined,
     signal: AbortSignal,
+    contract?: ContractSelector,
   ): Promise<RecordView> {
+    if (contract) {
+      await this.client.getContract({ path }, contract, signal);
+      this.#check(signal);
+    }
     const record = await this.client.get({ path }, fullInclude, signal);
     this.#check(signal);
     if (ifRevision !== undefined && record.revision !== ifRevision) {
@@ -463,14 +473,19 @@ class NativeRecords implements NativeReaderClient {
   }
 
   async #write(
-    operation: NativePendingWrite["operation"],
-    recordId: string,
+    target: Pick<NativePendingWrite, "operation" | "recordId" | "contract">,
     submit: Submit,
     signal: AbortSignal,
   ): Promise<RecordDocument | null> {
     this.#check(signal);
     const mutationId = uuidv7();
-    const mutation = { mutationId, operation, recordId, createdAt: new Date().toISOString() };
+    const mutation: NativePendingWrite = {
+      mutationId,
+      operation: target.operation,
+      recordId: target.recordId,
+      createdAt: new Date().toISOString(),
+      ...(target.contract ? { contract: target.contract } : {}),
+    };
     this.#pending.set(mutationId, mutation);
     try {
       const submitted = await submit({ mutationId, signal });
@@ -542,8 +557,34 @@ class NativeRecords implements NativeReaderClient {
     if (record.state.state !== "confirmed" || record.state.hold || record.state.unresolved) {
       throw new OutcomeUnknown(mutation.mutationId);
     }
+    if (mutation.contract) {
+      const view = await this.client.getContract(record, mutation.contract, signal);
+      this.#check(signal);
+      this.#pending.delete(mutation.mutationId);
+      return contractDocument(view);
+    }
     this.#pending.delete(mutation.mutationId);
     return recordDocument(record);
+  }
+
+  /** Contract fields only: the replica maps them to the implementing type's fields. */
+  async #contractUpdate(
+    input: UpdateInput,
+    contract: ContractSelector,
+    signal: AbortSignal,
+  ): Promise<RecordDocument | null> {
+    if (input.document !== undefined || input.body !== undefined) {
+      throw unsupported("Contract updates change contract fields only, not the body.");
+    }
+    const view = await this.client.getContract({ path: input.path }, contract, signal);
+    this.#check(signal);
+    const changes = {
+      contract,
+      ...patchChanges(input.patch),
+      ifRevision: input.ifRevision ?? view.revision,
+    };
+    const submit: Submit = (write) => this.client.update(view, changes, write);
+    return this.#write({ operation: "update", recordId: view.id, contract }, submit, signal);
   }
 
   async *#ordinaryPages(
@@ -623,6 +664,20 @@ function contractRow(
     effectiveFrontmatter: fields,
     file: fileMetadata(view),
   };
+}
+
+/** Connect patches remove a top-level field given null (mdbase §12.3). */
+function patchChanges(input: Readonly<Record<string, unknown>>): {
+  patch: Record<string, PlainValue>;
+  unset?: string[];
+} {
+  const entries = Object.entries(input).filter(([, value]) => value !== undefined);
+  const patch = Object.fromEntries(entries.filter(([, value]) => value !== null)) as Record<
+    string,
+    PlainValue
+  >;
+  const unset = entries.filter(([, value]) => value === null).map(([key]) => key);
+  return { patch, ...(unset.length > 0 ? { unset } : {}) };
 }
 
 function saved(document: RecordDocument | null): RecordDocument {

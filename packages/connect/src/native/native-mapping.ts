@@ -14,6 +14,7 @@ import type {
   RecordDocument,
 } from "@mdbase-dev/connect";
 import type {
+  ContractRecordView,
   Include,
   Query,
   QueryResult as NativeQueryResult,
@@ -114,7 +115,9 @@ export function plain(value: ReadonlyMap<string, Value> | undefined): JsonObject
   return value ? Object.fromEntries([...value].map(([key, item]) => [key, toPlain(item)])) : {};
 }
 
-export function fileMetadata(record: Pick<RecordView, "path" | "mtime">): RecordDocument["file"] {
+export function fileMetadata(
+  record: Pick<RecordView, "path"> & Partial<Pick<RecordView, "mtime">>,
+): RecordDocument["file"] {
   const slash = record.path.lastIndexOf("/");
   const base = record.path.slice(slash + 1);
   const dot = base.lastIndexOf(".");
@@ -136,6 +139,20 @@ export function recordDocument(record: RecordView): RecordDocument {
     ...(record.body === undefined ? {} : { body: record.body }),
     ...(record.document === undefined ? {} : { document: record.document }),
     file: fileMetadata(record),
+  };
+}
+
+/** A contract view as Connect returns it: contract fields, no body (prod parity). */
+export function contractDocument(view: ContractRecordView): RecordDocument {
+  const fields = plain(view.fields);
+  return {
+    path: view.path,
+    revision: view.revision,
+    types: [view.contract.type],
+    frontmatter: fields,
+    effectiveFrontmatter: fields,
+    file: fileMetadata({ path: view.path }),
+    contract: { ...view.contract },
   };
 }
 

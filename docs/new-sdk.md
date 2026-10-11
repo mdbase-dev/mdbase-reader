@@ -5,9 +5,9 @@ entry of the new SDK (`@mdbase-dev/sdk`, `MdbaseConnect`).
 
 ## Pin
 
-`packages/connect/vendor/mdbase-dev-sdk-d53d7d76.tgz` comes from SDK source
-`d53d7d761c1a7caf100e065a1378384dcc5f6449`, SHA256
-`8b76b3fd687d9e557f3438f25313ac4c55bc0a8994c066bbbfb7c66e0f96cd1d`. Its source commit, hashes
+`packages/connect/vendor/mdbase-dev-sdk-df091839.tgz` comes from SDK source
+`df09183980715ce595f95f66455d1f0fa72dfe82`, SHA256
+`4db016c3348170147ca7298dffe6039536c6deb9594f2dbe10245d7cafa7e0ee`. Its source commit, hashes
 and protocol dependency (beta129 `d765e675c3da`) are recorded in
 `packages/connect/vendor/mdbase-next-sdk.json`.
 
@@ -25,6 +25,10 @@ production environment.
   connection's borrowed `records` client and `files`:
   - `native-client.ts` maps Reader's Connect-shaped reads, queries and writes onto native
     `get`/`find`/`query`/`pages`/`queryContract` and `create`/`update`/`replaceDocument`/`delete`.
+  - Contract-scoped reads and writes use `getContract` and the contract options of
+    `create`/`update`/`delete`. As in prod Connect, a contract view carries contract fields and
+    no body. A contract write is read back through the same contract view.
+  - File descriptors take their media type from the replica (`FileView.mediaType`).
   - Writes keep one mutation ID. They report saved only after a confirmed receipt or readback;
     otherwise they surface `operation_outcome_unknown` with the original `request_id`, which
     can be recovered.
@@ -56,7 +60,7 @@ production environment.
   `runtime-lab.wasm`, `sqlite3.wasm` and `sqlite3.js` are each emitted once. The SDK stays out of
   the eager entry chunks.
 
-The production build passes at `d53d7d76`, and the emitted wasm matches the SDK's asset pins.
+The production build passes at `df091839`, and the emitted wasm matches the SDK's asset pins.
 Live LAB registration, Worker start and readiness have not been exercised. Old local data and
 pending writes need no cutover handoff.
 
