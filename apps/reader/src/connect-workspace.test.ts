@@ -44,6 +44,43 @@ const annotation: Annotation = {
 };
 
 describe("ConnectWorkspaceGateway", () => {
+  it("reuses a saved post by canonical identity even when its capture bytes or title change", async () => {
+    const findByUrl = vi.fn().mockResolvedValue(source);
+    const imports = emptyImports();
+    const gateway = new ConnectWorkspaceGateway(
+      { findByUrl, get: vi.fn().mockResolvedValue(source) } as unknown as SourceRepository,
+      {} as AnnotationRepository,
+      { store: vi.fn() },
+      imports,
+      source.collectionId,
+      "[test] Posts",
+      createReaderRuntimeServices(new MemoryStorage()),
+    );
+    const part = {
+      platform: "bluesky" as const,
+      id: "at://did:plc:fixture/app.bsky.feed.post/first",
+      url: "https://bsky.app/profile/did:plc:fixture/post/first",
+      author: { id: "did:plc:fixture", handle: "fixture.test", name: "Fixture Author" },
+      text: "Durable post",
+      media: [],
+    };
+    const request = {
+      name: "post.html",
+      bytes: new Uint8Array(),
+      title: "New title",
+      metadata: {
+        socialPost: { ...part, threadRoot: part.id, parts: [part], threadPartial: false },
+      },
+    };
+    expect(await gateway.importSourceFile(request)).toBe(source);
+    expect(await gateway.importSourceFile({ ...request, bytes: new Uint8Array([1, 2, 3]) })).toBe(
+      source,
+    );
+    expect(findByUrl).toHaveBeenCalledWith(source.collectionId, part.url, {});
+    expect(imports.commitFile).not.toHaveBeenCalled();
+    expect(source.body).toBe("Original");
+  });
+
   it("loads summaries before source bodies and saves notes revision-safely", async () => {
     const controller = new AbortController();
     const updateBody = vi.fn().mockResolvedValue({ ...source, body: "Updated" });
