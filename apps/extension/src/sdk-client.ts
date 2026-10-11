@@ -296,6 +296,7 @@ class HostConnection {
       }
       collection[repository] = stub;
     }
+    // Trusted same-origin channel: allowlisted methods return structured clones of the host's typed Reader values.
     return collection as unknown as ReaderConnectedCollection;
   }
 }

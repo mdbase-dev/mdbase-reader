@@ -27,8 +27,9 @@ ordinary/frozen installation do not establish live LAB acceptance.
 ## Design
 
 - Apps reach the SDK only through `@mdbase-reader/connect`. The native adapter is the
-  `@mdbase-reader/connect/native` subpath, so the Connect-only bundles (extension, staging,
-  production) never parse the SDK entry or its Worker.
+  `@mdbase-reader/connect/native` subpath. Staging and production Reader web builds retain
+  legacy Connect. The extension loads the SDK only in its offscreen document, not in its
+  service worker or page-status bundle.
 - `nativeReaderCollection(connection)` builds Reader's existing repositories over the
   connection's borrowed `records` client and `files`:
   - `native-client.ts` maps Reader's Connect-shaped reads, queries and writes onto native
@@ -72,6 +73,21 @@ The previous production build passed at `38001079`; n1 checks are recorded
 separately from live LAB acceptance.
 Live LAB registration, Worker start and readiness have not been exercised. Old local data and
 pending writes need no cutover handoff.
+
+## Extension SDK owner
+
+The extension runs one SDK entry in an on-demand offscreen document. The service worker
+creates that document; extension pages and the worker use a same-origin BroadcastChannel
+with explicit public application and Reader repository commands. Repository results are
+structured clones of the host's typed values. Callers never close the SDK owner.
+
+Calls retain their original host generation. Already-aborted calls do not dispatch;
+caller disposal and host replacement settle outstanding calls without retrying mutations.
+The last SDK snapshot is retained unchanged during restart, with transport availability
+reported separately. Uncertain body writes go through SDK recovery of the original request
+and readback, never a fresh mutation. Saved-page marks and highlights work without an open
+panel. Public SDK-fixture tests are not real-Chrome, authenticated or durability acceptance;
+those checks remain pending an isolated LAB lease.
 
 ## Library imports in SDK mode
 
