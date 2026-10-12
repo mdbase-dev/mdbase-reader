@@ -31,9 +31,10 @@ export interface SdkReaderRootProps {
 }
 
 /**
- * Reader over the SDK's mdbase entry. The shared collection gate owns sign-in,
- * choosing, approval, setup and problems; Reader opens its workspace only for the
- * connection the gate hands over in phase `ready`, and never closes the entry.
+ * Reader over the SDK's mdbase entry. The shared collection gate starts it and
+ * owns sign-in, choosing, approval, setup and problems; Reader opens its
+ * workspace only for the connection the gate hands over in phase `ready`, and
+ * never closes the entry.
  * Production still starts `ConnectReader` (see docs/new-sdk.md).
  */
 export function SdkReaderRoot({
@@ -41,10 +42,6 @@ export function SdkReaderRoot({
   embedded = false,
   renderNative,
 }: SdkReaderRootProps): JSX.Element {
-  useEffect(() => {
-    // Safe to call again (StrictMode); failures surface as the snapshot's phase.
-    sdk.start().catch(() => undefined);
-  }, [sdk]);
   return (
     <ReaderMdbaseContext value={sdk}>
       <CollectionGate
