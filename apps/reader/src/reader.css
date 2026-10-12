@@ -91,6 +91,23 @@ button {
   min-height: 42px;
 }
 
+/* SDK connection screen: separate the buttons; they keep their own styles. */
+.sdk-connection-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  margin-top: 20px;
+}
+
+.sdk-connection-actions:empty {
+  display: none;
+}
+
+.sdk-connection-actions .mdbase-connect-action {
+  margin-top: 0;
+}
+
 /* Setup review: the SDK's summary and one plain line per change. */
 .reader-setup-summary {
   margin: 14px 0 0;

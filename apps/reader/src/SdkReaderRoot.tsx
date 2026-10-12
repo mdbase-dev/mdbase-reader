@@ -528,7 +528,7 @@ function ConnectionActions({
   );
   const { recovery } = screen;
   return (
-    <>
+    <div className="sdk-connection-actions">
       {recovery ? <RecoveryControl recovery={recovery} working={working} act={act} /> : null}
       {screen.checkAgain
         ? action("Check again", (signal) => application.assess({ signal }), true)
@@ -565,7 +565,7 @@ function ConnectionActions({
             }),
           )
         : null}
-    </>
+    </div>
   );
 }
 
