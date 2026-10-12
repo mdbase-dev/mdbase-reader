@@ -75,6 +75,12 @@ export function fixtureMdbase(fixture: { readonly entry: MdbaseApplicationEntry 
     approve: (id, options) => settle(app.approve(id, options)),
     select: (id, options) => settle(app.select(id, options)),
     chooseAnother: (options) => settle(app.chooseAnother(options)),
+    refreshCollectionList: (options) =>
+      app.refreshCollectionList
+        ? settle(app.refreshCollectionList(options))
+        : Promise.reject(new Error("No refreshCollectionList")),
+    reauthorize: (options) => settle(app.reauthorize(options)),
+    configure: (options) => settle(app.configure(options)),
     forget: (id, options) => settle(app.forget(id, options)),
     deleteCollection: (id, options) => settle(app.deleteCollection(id, options)),
     requestAccess: (request, options) => app.requestAccess(request, options),
