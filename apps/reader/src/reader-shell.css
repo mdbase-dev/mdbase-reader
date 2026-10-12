@@ -160,6 +160,12 @@
   cursor: default;
 }
 
+.reader-menu-panel > button.is-danger,
+.reader-menu-panel > button.is-danger:hover:not(:disabled),
+.reader-menu-panel > button.is-danger svg {
+  color: var(--danger);
+}
+
 .reader-menu-panel svg {
   width: 15px;
   height: 15px;
@@ -3019,6 +3025,37 @@
   font: 600 var(--ui-meta) / 1 inherit;
   letter-spacing: 0;
   text-transform: none;
+}
+
+.source-removal-details {
+  display: grid;
+  gap: 8px;
+  padding: 0 24px;
+  color: var(--muted);
+  font-size: var(--ui-control);
+  line-height: 1.5;
+}
+
+.source-removal-details p {
+  margin: 0;
+}
+
+.source-removal-details ul {
+  max-height: 120px;
+  margin: 0;
+  overflow: auto;
+  padding-left: 18px;
+  font-family: var(--mono);
+  font-size: var(--ui-meta);
+}
+
+.source-removal-problem {
+  color: var(--danger);
+}
+
+.source-removal-dialog .mdbase-button.is-danger {
+  border-color: var(--danger);
+  background: var(--danger);
 }
 
 .capture-form {

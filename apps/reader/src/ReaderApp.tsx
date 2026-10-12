@@ -24,6 +24,7 @@ import { useMdbaseLibraryViews } from "./use-mdbase-library-views.js";
 import { useReaderWorkspace, type ReaderWorkspaceController } from "./use-reader-workspace.js";
 import { useSourceAddition } from "./use-source-addition.js";
 import { useSourceExport } from "./use-source-export.js";
+import { useSourceRemoval } from "./use-source-removal.js";
 import { useSourceWorkspace } from "./use-source-workspace.js";
 
 import type { SourceDocumentRenderer } from "./RenderedSourceDocument.js";
@@ -140,6 +141,7 @@ function OpenedReaderApp({
     citationSources: library.sources,
     saveFile,
   });
+  const sourceRemoval = useSourceRemoval(workspace, sourceWorkspace.close);
 
   useReaderShortcuts({
     focusMode,
@@ -172,6 +174,7 @@ function OpenedReaderApp({
     documentAttachment,
     bibliographyExport,
     sourceExport,
+    sourceRemoval,
     renderDocument,
     onSurfaceChange,
     surfaces,

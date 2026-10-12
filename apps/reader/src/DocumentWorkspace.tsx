@@ -19,6 +19,7 @@ import type { AnnotationComposerController } from "./use-annotation-composer.js"
 import type { DocumentAttachmentController } from "./use-document-attachment.js";
 import type { ReadingResumeState } from "./use-reading-resume.js";
 import type { SourceExportController } from "./use-source-export.js";
+import type { SourceRemovalController } from "./use-source-removal.js";
 import type { SourceWorkspaceController } from "./use-source-workspace.js";
 import type { SourceSummary } from "@mdbase-reader/core";
 import type { ReadingSurface } from "@mdbase-reader/reading-surface";
@@ -31,6 +32,8 @@ export interface DocumentWorkspaceProps {
   readonly decorationProblem: string | null;
   readonly annotationComposer: AnnotationComposerController;
   readonly sourceExport: SourceExportController;
+  /** Offers removing the open source from its document actions when the collection can. */
+  readonly sourceRemoval?: SourceRemovalController;
   readonly renderDocument: (
     source: SourceSummary,
     paneId: WorkspacePaneId,
@@ -137,6 +140,7 @@ export function DocumentToolbar({
       bookmarking={composer.bookmarking}
       onBookmark={composer.bookmark}
       sourceExport={props.sourceExport}
+      onRemoveSource={props.sourceRemoval?.request ?? null}
       onToggleFocus={props.onToggleFocus}
       surfaces={props.surfaces}
       sessionId={tabId}

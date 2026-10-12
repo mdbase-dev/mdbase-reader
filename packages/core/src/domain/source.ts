@@ -57,6 +57,17 @@ export interface Source extends SourceSummary {
   readonly frontmatter: Readonly<Record<string, unknown>>;
 }
 
+/**
+ * A checked removal of one source record. It names the revision that was checked, so a source
+ * changed since then is not removed, and the records that link to it, which are kept.
+ */
+export interface SourceDeletionPlan {
+  readonly sourceId: SourceId;
+  readonly path: string;
+  readonly expectedRevision: RecordRevision;
+  readonly brokenLinkPaths: readonly string[];
+}
+
 export interface SourceQuery {
   readonly collectionId: CollectionId;
   readonly search?: string;

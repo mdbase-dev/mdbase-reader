@@ -18,6 +18,7 @@ import type {
   ReadingPosition,
   ReadingStatus,
   Source,
+  SourceDeletionPlan,
   SourceFieldChange,
   SourceQuery,
   SourceSummary,
@@ -82,6 +83,10 @@ export interface SourceRepository extends SourceLookups {
     readonly sourceId: SourceId;
     readonly citation: CslItem;
   }): Promise<Source>;
+  /** Checks removing a source record at its current revision and lists what links to it. */
+  preflightDelete?(source: Source): Promise<SourceDeletionPlan>;
+  /** Removes only the source record checked by `plan`; its files and annotations are kept. */
+  delete?(plan: SourceDeletionPlan): Promise<void>;
   appendAnnotationEmbed(input: {
     readonly collectionId: CollectionId;
     readonly sourceId: SourceId;

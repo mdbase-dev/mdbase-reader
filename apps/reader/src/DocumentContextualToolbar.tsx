@@ -10,6 +10,7 @@ import {
   MoreIcon,
   NoteIcon,
   ReadingModeIcon,
+  TrashIcon,
 } from "./icons.js";
 import { Menu } from "./Menu.js";
 import { DocumentStatus } from "./WorkspacePaneSupport.js";
@@ -34,6 +35,8 @@ export interface DocumentContextualToolbarProps {
   readonly canBookmark: boolean;
   readonly bookmarking: boolean;
   readonly sourceExport: SourceExportController;
+  /** Asks to remove the source, which confirms first; null when the collection cannot. */
+  readonly onRemoveSource?: ((source: SourceSummary) => void) | null;
   readonly onToggleFocus: () => void;
   readonly onToggleAreaSelection: () => void;
   readonly onBookmark: () => void;
@@ -55,6 +58,7 @@ export function DocumentContextualToolbar({
   canBookmark,
   bookmarking,
   sourceExport,
+  onRemoveSource = null,
   onToggleFocus,
   onToggleAreaSelection,
   onBookmark,
@@ -121,6 +125,7 @@ export function DocumentContextualToolbar({
           <ReadingModeIcon /> {focusMode ? "Leave reading mode" : "Reading mode"}
         </button>
         <ExportItem sourceExport={sourceExport} />
+        <RemoveItem source={source} onRemoveSource={onRemoveSource} />
       </Menu>
     </div>
   );
@@ -148,6 +153,23 @@ function ExportItem({
       ) : null}
     </>
   );
+}
+
+function RemoveItem({
+  source,
+  onRemoveSource,
+}: {
+  readonly source: SourceSummary;
+  readonly onRemoveSource: ((source: SourceSummary) => void) | null;
+}): JSX.Element | null {
+  return onRemoveSource ? (
+    <>
+      <hr />
+      <button type="button" className="is-danger" onClick={() => onRemoveSource(source)}>
+        <TrashIcon /> Remove source…
+      </button>
+    </>
+  ) : null;
 }
 
 function BookmarkItem({

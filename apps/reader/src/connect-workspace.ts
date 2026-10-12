@@ -57,6 +57,7 @@ import type {
   ReadingStatus,
   ReaderIdGenerator,
   Source,
+  SourceDeletionPlan,
   SourceId,
   SourceFileAttachmentRequest,
   SourceFileImportRequest,
@@ -645,6 +646,29 @@ export class ConnectWorkspaceGateway implements ReaderWorkspaceGateway {
     });
     this.#replaceSource(updated);
     return updated;
+  }
+
+  async planSourceRemoval(id: SourceId): Promise<SourceDeletionPlan> {
+    if (!this.sources.preflightDelete) {
+      throw new Error("This collection cannot remove sources.");
+    }
+    // Check the revision the collection holds now, not a copy cached when the source opened.
+    const source = await this.refreshSource(id);
+    if (!source) {
+      throw new Error("This source is no longer in the collection.");
+    }
+    return this.sources.preflightDelete(source);
+  }
+
+  async removeSource(plan: SourceDeletionPlan): Promise<void> {
+    if (!this.sources.delete) {
+      throw new Error("This collection cannot remove sources.");
+    }
+    await this.sources.delete(plan);
+    this.#sourcesById.delete(plan.sourceId);
+    if (this.#library) {
+      this.#library = this.#library.filter(({ id }) => id !== plan.sourceId);
+    }
   }
 
   #replaceSource(source: Source, prepend = false): void {

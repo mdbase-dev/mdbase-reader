@@ -15,6 +15,7 @@ import type { AsyncResource } from "./use-reader-workspace.js";
 import type { ReaderLibrarySnapshot, ReaderWorkspaceGateway } from "./workspace-model.js";
 import type {
   Source,
+  SourceDeletionPlan,
   SourceFileAttachmentRequest,
   SourceFileImportRequest,
   SourceId,
@@ -49,6 +50,10 @@ export interface LibrarySelection {
     source: Source,
     citation: Readonly<Record<string, unknown>>,
   ) => Promise<Source>;
+  /** Present when sources can be removed: checks one, listing the records that link to it. */
+  readonly planSourceRemoval?: (id: SourceId) => Promise<SourceDeletionPlan>;
+  /** Removes a checked source and drops it from the library; rejects with the problem. */
+  readonly removeSource?: (plan: SourceDeletionPlan) => Promise<void>;
 }
 
 export interface LibrarySelectionState extends LibrarySelection {
@@ -145,6 +150,12 @@ export function useLibrarySelection(
     () => sourceWrites(gateway, writeSource, reconcileSource),
     [gateway, reconcileSource, writeSource],
   );
+  const removal = useSourceRemovalWrites(
+    gateway,
+    setLibrary,
+    setSelectedSourceId,
+    selectedSourceIdRef,
+  );
   return {
     library,
     selectedSource,
@@ -153,6 +164,7 @@ export function useLibrarySelection(
     importStatus,
     importError,
     ...writes,
+    ...removal,
     selectedSourceId,
     reconcileSource,
   };
@@ -202,6 +214,31 @@ function sourceWrites(
         }
       : {}),
   };
+}
+
+/** Source removal, when the collection offers it; a removed source leaves the library. */
+function useSourceRemovalWrites(
+  gateway: ReaderWorkspaceGateway,
+  setLibrary: Dispatch<SetStateAction<AsyncResource<ReaderLibrarySnapshot>>>,
+  setSelectedSourceId: Dispatch<SetStateAction<SourceId | null>>,
+  selectedSourceIdRef: RefObject<SourceId | null>,
+): Pick<LibrarySelection, "planSourceRemoval" | "removeSource"> {
+  const planSourceRemoval = useMemo(() => gateway.planSourceRemoval?.bind(gateway), [gateway]);
+  const removeSource = useCallback(
+    async (plan: SourceDeletionPlan): Promise<void> => {
+      if (!gateway.removeSource) {
+        throw new Error("This collection cannot remove sources.");
+      }
+      await gateway.removeSource(plan);
+      setLibrary((current) => removeLibrarySource(current, plan.sourceId));
+      if (selectedSourceIdRef.current === plan.sourceId) {
+        selectedSourceIdRef.current = null;
+        setSelectedSourceId(null);
+      }
+    },
+    [gateway, selectedSourceIdRef, setLibrary, setSelectedSourceId],
+  );
+  return planSourceRemoval && gateway.removeSource ? { planSourceRemoval, removeSource } : {};
 }
 
 /** Runs one source mutation with shared busy state and errors, then updates the library. */
@@ -271,4 +308,16 @@ export function replaceLibrarySource(
     status: "ready",
     value: { ...current.value, sources },
   };
+}
+
+function removeLibrarySource(
+  current: AsyncResource<ReaderLibrarySnapshot>,
+  id: SourceId,
+): AsyncResource<ReaderLibrarySnapshot> {
+  return current.status === "ready"
+    ? {
+        status: "ready",
+        value: { ...current.value, sources: current.value.sources.filter((s) => s.id !== id) },
+      }
+    : current;
 }

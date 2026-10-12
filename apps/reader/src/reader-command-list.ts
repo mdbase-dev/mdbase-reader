@@ -19,6 +19,8 @@ export interface ReaderCommandInput {
   readonly activeSource: SourceSummary | null;
   readonly workspace: SourceWorkspaceController;
   readonly sourceExport: SourceExportController;
+  /** Asks to remove a source, which confirms first; null when the collection cannot. */
+  readonly removeSource?: ((source: SourceSummary) => void) | null;
   readonly bibliographyExport: BibliographyExportController;
   readonly focusMode: boolean;
   /** Bookmarks the focused document's current position; null without one. */
@@ -177,10 +179,12 @@ function workspaceCommands(input: ReaderCommandInput): readonly ReaderCommand[] 
 }
 
 function sourceCommands(input: ReaderCommandInput): readonly ReaderCommand[] {
-  const sourceId = input.activeSource?.id;
+  const activeSource = input.activeSource;
+  const sourceId = activeSource?.id;
   if (!sourceId) {
     return [];
   }
+  const removeSource = input.removeSource;
   return [
     {
       id: "export-source",
@@ -218,6 +222,18 @@ function sourceCommands(input: ReaderCommandInput): readonly ReaderCommand[] {
         run: () => input.workspace.openBeside(sourceId, "citation"),
       },
     },
+    ...(removeSource
+      ? [
+          {
+            id: "remove-source",
+            label: "Remove current source…",
+            detail: activeSource.title,
+            group: "Current source" as const,
+            keywords: "delete trash discard mistaken import",
+            run: () => removeSource(activeSource),
+          },
+        ]
+      : []),
   ];
 }
 

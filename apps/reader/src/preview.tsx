@@ -17,6 +17,7 @@ import {
   type ReadingPosition,
   type ReadingStatus,
   type Source,
+  type SourceDeletionPlan,
   type SourceId,
   type SourceFileImportRequest,
   type SourceRecordCreationRequest,
@@ -384,6 +385,24 @@ export class PreviewGateway implements ReaderWorkspaceGateway {
   }
   deleteAnnotation(annotation: Annotation): Promise<void> {
     this.#annotations = this.#annotations.filter((candidate) => candidate.id !== annotation.id);
+    return Promise.resolve();
+  }
+  planSourceRemoval(id: SourceId): Promise<SourceDeletionPlan> {
+    const source = this.#sources.find((item) => item.id === id);
+    if (!source) {
+      return Promise.reject(new Error("This source is no longer in the collection."));
+    }
+    return Promise.resolve({
+      sourceId: id,
+      path: source.path,
+      expectedRevision: source.recordRevision,
+      brokenLinkPaths: this.#annotations
+        .filter((annotation) => annotation.sourceId === id)
+        .map((annotation) => annotation.path ?? `annotations/${annotation.id}.md`),
+    });
+  }
+  removeSource(plan: SourceDeletionPlan): Promise<void> {
+    this.#sources = this.#sources.filter((item) => item.id !== plan.sourceId);
     return Promise.resolve();
   }
   transcludeAnnotation(source: Source, annotation: Annotation): Promise<Source> {
