@@ -28,14 +28,11 @@ export function createReaderMdbase(input: {
   readonly environment: MdbaseApplicationDeclaration["environment"];
   readonly manifest: { readonly id: string; readonly name: string; readonly homepage: string };
 }): Mdbase {
-  return createMdbase(
-    {
-      id: input.manifest.id,
-      name: input.manifest.name,
-      origin: new URL(input.manifest.homepage).origin,
-      environment: input.environment,
-      manifest: input.manifest,
-    },
-    { followVisibility: true },
-  );
+  return createMdbase({
+    id: input.manifest.id,
+    name: input.manifest.name,
+    origin: new URL(input.manifest.homepage).origin,
+    environment: input.environment,
+    manifest: input.manifest,
+  });
 }
