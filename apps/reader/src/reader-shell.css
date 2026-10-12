@@ -343,8 +343,14 @@
 }
 
 .reader-header .connection-state {
+  min-width: 0;
   color: var(--muted);
   font-size: var(--ui-meta);
+}
+
+.reader-header .connection-state > span {
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .reader-header-actions {

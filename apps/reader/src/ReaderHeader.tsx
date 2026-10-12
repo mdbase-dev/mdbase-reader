@@ -35,7 +35,7 @@ interface ReaderHeaderProps {
   readonly onChangeDensity?: (density: "comfortable" | "compact") => void;
   readonly collectionName: string;
   readonly beforeCollectionSwitch?: () => boolean;
-  readonly connectionState: "connected" | "offline" | "syncing";
+  readonly connectionState: ReaderConnectionState;
   readonly directAccess: ReaderDirectAccessState;
   readonly theme: ThemePreference;
   readonly onChangeTheme: (theme: ThemePreference) => void;
@@ -210,7 +210,7 @@ function ConnectionState({
   state,
   directAccess,
 }: {
-  readonly state: "connected" | "offline" | "syncing";
+  readonly state: ReaderConnectionState;
   readonly directAccess: ReaderDirectAccessState;
 }): JSX.Element {
   const { snapshot, working, problem, request } = directAccess;
@@ -257,17 +257,17 @@ function ConnectionState({
   );
 }
 
+/** saved_on_device: the SDK keeps changes on this device until it can sync them. */
+export type ReaderConnectionState = "connected" | "offline" | "syncing" | "saved_on_device";
+
 const connectionLabels = {
   connected: "Connected",
   offline: "Offline",
   syncing: "Syncing…",
+  saved_on_device: "Saved on this device; waiting for sync",
 } as const;
 
-function PlainConnectionState({
-  state,
-}: {
-  readonly state: "connected" | "offline" | "syncing";
-}): JSX.Element {
+function PlainConnectionState({ state }: { readonly state: ReaderConnectionState }): JSX.Element {
   // Connected is the normal state: a quiet dot, with the words kept for assistive technology.
   return (
     <span className={`connection-state is-${state}`} title={connectionLabels[state]}>

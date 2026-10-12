@@ -12,9 +12,11 @@ import { InspectorPane, type InspectorTab } from "./InspectorPane.js";
 import { LibraryNavigator } from "./LibraryNavigator.js";
 import { LibraryWorkspace } from "./LibraryWorkspace.js";
 import { mobileSourceBar } from "./mobile-source-bar.js";
+import { useReaderMdbase } from "./reader-collections.js";
 import { readerCommands } from "./reader-command-list.js";
 import { ReaderHeader } from "./ReaderHeader.js";
 import { RenderedSourceDocument } from "./RenderedSourceDocument.js";
+import { useSdkConnectionState } from "./sdk-connection-state.js";
 import { SourceAdditionOverlays } from "./SourceAdditionOverlays.js";
 import { SourceRemovalDialog } from "./SourceRemovalDialog.js";
 import { useAnnotationCounts } from "./use-annotation-counts.js";
@@ -100,6 +102,7 @@ export function ReaderWorkspaceView({
 }): JSX.Element {
   const { library, source, workspace, sourceWorkspace, composer, sourceAddition } = model;
   useReaderFeedbackContext(Boolean(sourceWorkspace.activeSourceId), library.collectionName);
+  const connectionState = useSdkConnectionState(useReaderMdbase(), library.connectionState);
   const shell = useWorkspaceShellPreferences(
     library.sources[0]?.collectionId ?? library.collectionName,
   );
@@ -212,7 +215,7 @@ export function ReaderWorkspaceView({
         beforeCollectionSwitch={() =>
           confirmCollectionSwitch(sourceWorkspace.layout, library.sources)
         }
-        connectionState={library.connectionState}
+        connectionState={connectionState}
         directAccess={model.directAccess}
         theme={model.theme}
         onChangeTheme={model.changeTheme}
