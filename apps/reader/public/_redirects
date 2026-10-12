@@ -1,0 +1,8 @@
+# Client routes served by the app shell. 404.html disables the Pages SPA
+# fallback, so every client route is listed; other paths get 404.html.
+/import / 200
+/import/ / 200
+/import/zotero / 200
+/import/zotero/ / 200
+/import/readwise / 200
+/import/readwise/ / 200
