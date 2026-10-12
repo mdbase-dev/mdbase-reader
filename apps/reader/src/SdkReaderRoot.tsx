@@ -103,7 +103,9 @@ function ApplicationView({
   const selected = snapshot.collections.find(
     (collection) => collection.collectionId === snapshot.selectedCollectionId,
   );
-  if (reviewing && selected && screenFlags(snapshot).setup) {
+  // The review stays until it finishes or is cancelled: status changes while
+  // setup is applying must not unmount it and abort the apply.
+  if (reviewing && selected) {
     return (
       <SdkSetupReview
         application={application}

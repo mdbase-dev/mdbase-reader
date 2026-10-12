@@ -221,6 +221,22 @@ it("starts the SDK once and reviews setup before Confirm applies the reviewed pl
   expect(host.textContent).toContain("needs mdbase Reader setup");
 });
 
+it("a status change while setup applies keeps the review and its apply running", async () => {
+  const { controls, entry } = await setupRequired();
+  const application = entry.application();
+  let finish!: () => void;
+  controls.setHandler("applySetup", () => {
+    controls.publishSnapshot({ ...application.getSnapshot(), status: "opening" });
+    return new Promise<void>((resolve) => (finish = resolve));
+  });
+  await act(async () => button("Confirm").click());
+  expect(host.textContent).toContain(setupPlan.summary);
+  expect(
+    controls.observedActions().find((call) => call.action === "applySetup")?.signal?.aborted,
+  ).toBe(false);
+  await act(async () => finish());
+});
+
 it("plans again when the collection changed during review, and Cancel writes nothing", async () => {
   const { controls } = await setupRequired();
   controls.setHandler("applySetup", () => {
