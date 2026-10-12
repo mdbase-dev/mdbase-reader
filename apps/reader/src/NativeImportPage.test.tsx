@@ -1,9 +1,5 @@
 // @vitest-environment happy-dom
-import {
-  createApplicationFixture,
-  fixtureMdbase,
-  memoryConnection,
-} from "@mdbase-reader/connect/testing";
+import { createTestApp, type TestApp } from "@mdbase-reader/connect/testing";
 import * as migration from "@mdbase-reader/migration";
 import { act, StrictMode } from "react";
 import { createRoot } from "react-dom/client";
@@ -11,8 +7,6 @@ import { afterEach, beforeEach, expect, it, vi } from "vitest";
 
 import manifest from "./generated/mdbase-app.json";
 import { NativeImportPage } from "./NativeImportPage.js";
-
-import type { MdbaseApplicationSnapshot } from "@mdbase-reader/connect/native";
 
 vi.mock("./connect.js", () => {
   throw new Error("Native imports must not load the legacy Reader session");
@@ -55,7 +49,7 @@ const bundle: Awaited<ReturnType<typeof migration.readZoteroBundle>> = {
 };
 let host: HTMLDivElement;
 let root: ReturnType<typeof createRoot>;
-const owned: { close(): void }[] = [];
+const owned: TestApp[] = [];
 
 beforeEach(() => {
   vi.stubGlobal("IS_REACT_ACT_ENVIRONMENT", true);
@@ -68,56 +62,14 @@ beforeEach(() => {
 afterEach(async () => {
   await act(() => Promise.resolve(root.unmount()));
   host.remove();
-  for (const scope of owned.splice(0).reverse()) {
-    scope.close();
-  }
+  await Promise.all(owned.splice(0).map((app) => app.close()));
   vi.restoreAllMocks();
   vi.clearAllMocks();
   vi.unstubAllGlobals();
 });
 
-async function fixture(ready = true): Promise<
-  ReturnType<typeof createApplicationFixture> & {
-    readonly native: Awaited<ReturnType<typeof memoryConnection>>;
-    readonly initial: MdbaseApplicationSnapshot;
-  }
-> {
-  const native = await memoryConnection({ where: () => false });
-  owned.push(native);
-  const facet = { checking: false, assessment: null, problem: null };
-  const initial: MdbaseApplicationSnapshot = {
-    status: ready ? "ready" : "signed_out",
-    signIn: null,
-    collections: [
-      {
-        collectionId: native.connection.id,
-        displayName: native.connection.displayName,
-        role: "owner",
-      },
-    ],
-    selectedCollectionId: ready ? native.connection.id : null,
-    problem: null,
-    timing: null,
-    selection: {
-      state: "none",
-      requested: { collectionId: null, source: "none", displayName: null, approved: false },
-      usable: null,
-      problem: null,
-    },
-    readiness: {
-      ...facet,
-      assessment: ready ? { status: "ready", problem: null } : null,
-      facets: {
-        capabilities: facet,
-        contracts: facet,
-        configuration: facet,
-        files: facet,
-        people: facet,
-        notifications: facet,
-      },
-    },
-  };
-  const h = createApplicationFixture({
+async function fixture(ready = true): Promise<TestApp> {
+  const app = await createTestApp({
     declaration: {
       id: "reader.fixture",
       name: manifest.name,
@@ -125,11 +77,11 @@ async function fixture(ready = true): Promise<
       environment: "lab",
       manifest,
     },
-    connections: [native.connection],
-    initialSnapshot: initial,
+    collections: [{ name: "Reading" }],
+    phase: ready ? "ready" : "signed_out",
   });
-  owned.push(h.controls);
-  return { ...h, native, initial };
+  owned.push(app);
+  return app;
 }
 function button(label: string): HTMLButtonElement {
   const found = [...host.querySelectorAll("button")].find((item) => item.textContent === label);
@@ -156,9 +108,7 @@ async function selectInput(): Promise<void> {
 
 it("native import home keeps the existing tiles without starting any SDK/legacy session", async () => {
   const h = await fixture(false);
-  await act(() =>
-    Promise.resolve(root.render(<NativeImportPage sdk={fixtureMdbase(h)} service="home" />)),
-  );
+  await act(() => Promise.resolve(root.render(<NativeImportPage sdk={h.mdbase} service="home" />)));
   expect(host.textContent).toContain("Bring your library with you.");
   expect(host.querySelector('a[href$="import/zotero"]')).not.toBeNull();
   expect(host.querySelector('a[href$="import/readwise"]')).not.toBeNull();
@@ -167,25 +117,21 @@ it("native import home keeps the existing tiles without starting any SDK/legacy 
 
 it("input/preview survives SDK destination changes without a nested main or borrowed client close", async () => {
   const h = await fixture();
-  const close = vi.spyOn(h.native.connection.records, "close");
-  const create = vi.spyOn(h.native.connection.records, "create");
-  h.controls.setHandler("chooseAnother", () => ({
-    ...h.initial,
-    status: "unselected",
-    selectedCollectionId: null,
-  }));
+  const close = vi.spyOn(h.client(), "close");
+  const create = vi.spyOn(h.client(), "create");
+  h.controls.setHandler("chooseAnother", () => h.set("choosing"));
   await act(() =>
     Promise.resolve(
       root.render(
         <StrictMode>
-          <NativeImportPage sdk={fixtureMdbase(h)} service="zotero" />
+          <NativeImportPage sdk={h.mdbase} service="zotero" />
         </StrictMode>,
       ),
     ),
   );
   await selectInput();
   expect(host.textContent).toContain("Owned preview retained");
-  expect(host.textContent).toContain(`Collection: ${h.native.connection.displayName}`);
+  expect(host.textContent).toContain("Collection: Reading");
   expect(host.querySelectorAll("main")).toHaveLength(1);
   expect(host.textContent).not.toContain("Import 1 sources into");
   await act(() => Promise.resolve(button("Choose another collection").click()));
@@ -194,9 +140,9 @@ it("input/preview survives SDK destination changes without a nested main or borr
   ).toHaveLength(1);
   expect(host.textContent).toContain("Owned preview retained");
   expect(host.textContent).not.toContain("Check destination:");
-  await act(() => Promise.resolve(h.controls.publishSnapshot(h.initial)));
+  await act(() => Promise.resolve(h.set("ready")));
   expect(host.textContent).toContain("Owned preview retained");
-  expect(button(`Check destination: ${h.native.connection.displayName}`)).toBeTruthy();
+  expect(button("Check destination: Reading")).toBeTruthy();
   expect(create).not.toHaveBeenCalled();
   expect(close).not.toHaveBeenCalled();
 });
@@ -211,23 +157,13 @@ it("a late destination check cannot confirm a retired scope after readiness retu
       }),
   );
   await act(() =>
-    Promise.resolve(root.render(<NativeImportPage sdk={fixtureMdbase(h)} service="zotero" />)),
+    Promise.resolve(root.render(<NativeImportPage sdk={h.mdbase} service="zotero" />)),
   );
   await selectInput();
-  await act(() =>
-    Promise.resolve(button(`Check destination: ${h.native.connection.displayName}`).click()),
-  );
+  await act(() => Promise.resolve(button("Check destination: Reading").click()));
   expect(preview).toHaveBeenCalledOnce();
-  await act(() =>
-    Promise.resolve(
-      h.controls.publishSnapshot({
-        ...h.initial,
-        status: "unselected",
-        selectedCollectionId: null,
-      }),
-    ),
-  );
-  await act(() => Promise.resolve(h.controls.publishSnapshot(h.initial)));
+  await act(() => Promise.resolve(h.set("choosing")));
+  await act(() => Promise.resolve(h.set("ready")));
   await act(() => Promise.resolve(finish({ newRecords: 1, existingRecords: 0 })));
   expect(host.textContent).toContain("Stopped. Already committed data is kept");
   expect(host.textContent).not.toContain("Destination checked. Confirm");

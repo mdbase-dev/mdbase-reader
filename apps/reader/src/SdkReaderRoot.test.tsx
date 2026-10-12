@@ -1,10 +1,6 @@
 // @vitest-environment happy-dom
 /* eslint-disable @typescript-eslint/require-await -- async act flushes React's queued work */
-import {
-  createApplicationFixture,
-  fixtureMdbase,
-  memoryConnection,
-} from "@mdbase-reader/connect/testing";
+import { createTestApp, type TestApp } from "@mdbase-reader/connect/testing";
 import { act, StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import { afterEach, beforeEach, expect, it, vi } from "vitest";
@@ -13,30 +9,11 @@ import manifest from "./generated/mdbase-app.json";
 import { ReaderCollectionSwitcher } from "./reader-collections.js";
 import { SdkReaderRoot, type ReaderNativeScope } from "./SdkReaderRoot.js";
 
-import type { Mdbase, MdbaseApplicationSnapshot } from "@mdbase-reader/connect/native";
-
 vi.mock("@mdbase-dev/ui/feedback", () => ({ FeedbackButton: () => null }));
-
-const facet = { checking: false, assessment: null, problem: null };
-const paired = {
-  requestId: "fixture-request",
-  installationId: "fixture-installation",
-  deviceId: "fixture-device",
-  appId: "fixture-app",
-  kind: "app-runtime",
-  verificationUri: "https://mdbase.test/approve",
-  state: "paired",
-  accountId: "fixture-account",
-  accountProvider: "github",
-  accountLogin: "reader-user",
-  collectionIds: [],
-  createCollections: false,
-  requestedCreateCollections: false,
-} as const;
 
 let host: HTMLDivElement;
 let root: ReturnType<typeof createRoot>;
-const owned: { close(): void }[] = [];
+const owned: TestApp[] = [];
 
 beforeEach(() => {
   vi.stubGlobal("IS_REACT_ACT_ENVIRONMENT", true);
@@ -47,55 +24,12 @@ beforeEach(() => {
 afterEach(async () => {
   await act(async () => root.unmount());
   host.remove();
-  for (const item of owned.splice(0).reverse()) {
-    item.close();
-  }
+  await Promise.all(owned.splice(0).map((app) => app.close()));
   vi.unstubAllGlobals();
 });
 
-type ReaderFixture = ReturnType<typeof createApplicationFixture> & {
-  readonly native: Awaited<ReturnType<typeof memoryConnection>>;
-  readonly mdbase: Mdbase;
-};
-
-async function fixture(ready: boolean): Promise<ReaderFixture> {
-  const native = await memoryConnection({ where: () => false });
-  owned.push(native);
-  const other = {
-    collectionId: "other-collection",
-    displayName: "Archive",
-    role: "editor",
-  } as const;
-  const snapshot: MdbaseApplicationSnapshot = {
-    status: ready ? "ready" : "unselected",
-    signIn: paired,
-    collections: [
-      { collectionId: native.connection.id, displayName: "Reading", role: "owner" },
-      other,
-    ],
-    selectedCollectionId: ready ? native.connection.id : null,
-    problem: null,
-    timing: null,
-    selection: {
-      state: "none",
-      requested: { collectionId: null, source: "none", displayName: null, approved: false },
-      usable: null,
-      problem: null,
-    },
-    readiness: {
-      ...facet,
-      assessment: ready ? { status: "ready", problem: null } : null,
-      facets: {
-        capabilities: facet,
-        contracts: facet,
-        configuration: facet,
-        files: facet,
-        people: facet,
-        notifications: facet,
-      },
-    },
-  };
-  const created = createApplicationFixture({
+async function fixture(ready: boolean): Promise<TestApp> {
+  const app = await createTestApp({
     declaration: {
       id: "reader.fixture",
       name: manifest.name,
@@ -103,11 +37,11 @@ async function fixture(ready: boolean): Promise<ReaderFixture> {
       environment: "lab",
       manifest,
     },
-    connections: [native.connection],
-    initialSnapshot: snapshot,
+    collections: [{ name: "Reading" }, { name: "Archive", role: "editor" }],
+    phase: ready ? "ready" : "choosing",
   });
-  owned.push(created.controls);
-  return { ...created, native, mdbase: fixtureMdbase(created) };
+  owned.push(app);
+  return app;
 }
 
 function button(label: string): HTMLElement {
@@ -120,11 +54,11 @@ function button(label: string): HTMLElement {
   return found;
 }
 
-function calls(h: ReaderFixture, action: string): number {
+function calls(h: TestApp, action: string): number {
   return h.controls.observedActions().filter((call) => call.action === action).length;
 }
 
-it("starts the SDK and renders Reader only once the gate hands over a ready connection", async () => {
+it("renders Reader only once the gate hands over a ready connection", async () => {
   const h = await fixture(true);
   const renderNative = vi.fn(({ collection }: ReaderNativeScope) => (
     <p>workspace: {collection.collectionName}</p>
@@ -136,14 +70,12 @@ it("starts the SDK and renders Reader only once the gate hands over a ready conn
       </StrictMode>,
     ),
   );
-  expect(calls(h, "start")).toBeGreaterThan(0);
   expect(host.textContent).toContain("workspace:");
-  expect(renderNative.mock.calls.at(-1)?.[0].connection.id).toBe(h.native.connection.id);
+  expect(renderNative.mock.calls.at(-1)?.[0].connection.id).toBe(h.client().collection);
 });
 
 it("lists collections on the shared gate and signs out with signOut, never close", async () => {
   const h = await fixture(false);
-  const close = vi.spyOn(h.mdbase, "close");
   const renderNative = vi.fn(() => <p>workspace</p>);
   await act(async () => root.render(<SdkReaderRoot sdk={h.mdbase} renderNative={renderNative} />));
   expect(renderNative).not.toHaveBeenCalled();
@@ -151,7 +83,7 @@ it("lists collections on the shared gate and signs out with signOut, never close
   expect(host.textContent).toContain("Archive");
   await act(async () => button("Sign out").click());
   expect(calls(h, "signOut")).toBe(1);
-  expect(close).not.toHaveBeenCalled();
+  expect(calls(h, "close")).toBe(0);
 });
 
 it("the header switcher asks about unsaved edits before switching collections", async () => {
