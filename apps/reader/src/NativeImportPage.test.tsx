@@ -1,5 +1,9 @@
 // @vitest-environment happy-dom
-import { createApplicationFixture, memoryConnection } from "@mdbase-reader/connect/testing";
+import {
+  createApplicationFixture,
+  fixtureMdbase,
+  memoryConnection,
+} from "@mdbase-reader/connect/testing";
 import * as migration from "@mdbase-reader/migration";
 import { act, StrictMode } from "react";
 import { createRoot } from "react-dom/client";
@@ -152,7 +156,9 @@ async function selectInput(): Promise<void> {
 
 it("native import home keeps the existing tiles without starting any SDK/legacy session", async () => {
   const h = await fixture(false);
-  await act(() => Promise.resolve(root.render(<NativeImportPage sdk={h.entry} service="home" />)));
+  await act(() =>
+    Promise.resolve(root.render(<NativeImportPage sdk={fixtureMdbase(h)} service="home" />)),
+  );
   expect(host.textContent).toContain("Bring your library with you.");
   expect(host.querySelector('a[href$="import/zotero"]')).not.toBeNull();
   expect(host.querySelector('a[href$="import/readwise"]')).not.toBeNull();
@@ -172,7 +178,7 @@ it("input/preview survives SDK destination changes without a nested main or borr
     Promise.resolve(
       root.render(
         <StrictMode>
-          <NativeImportPage sdk={h.entry} service="zotero" />
+          <NativeImportPage sdk={fixtureMdbase(h)} service="zotero" />
         </StrictMode>,
       ),
     ),
@@ -205,7 +211,7 @@ it("a late destination check cannot confirm a retired scope after readiness retu
       }),
   );
   await act(() =>
-    Promise.resolve(root.render(<NativeImportPage sdk={h.entry} service="zotero" />)),
+    Promise.resolve(root.render(<NativeImportPage sdk={fixtureMdbase(h)} service="zotero" />)),
   );
   await selectInput();
   await act(() =>
@@ -216,7 +222,8 @@ it("a late destination check cannot confirm a retired scope after readiness retu
     Promise.resolve(
       h.controls.publishSnapshot({
         ...h.initial,
-        readiness: { ...h.initial.readiness, checking: true, assessment: null },
+        status: "unselected",
+        selectedCollectionId: null,
       }),
     ),
   );

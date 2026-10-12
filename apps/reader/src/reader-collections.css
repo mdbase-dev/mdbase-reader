@@ -1,0 +1,29 @@
+/* Shared collection screens (@mdbase-dev/ui/collections) on Reader's tokens. */
+:root {
+  --mdbase-collections-accent: var(--accent);
+  --mdbase-collections-surface: var(--paper);
+  --mdbase-collections-canvas: var(--canvas);
+  --mdbase-collections-text: var(--ink);
+  --mdbase-collections-text-soft: var(--muted);
+  --mdbase-collections-border: var(--line);
+  --mdbase-collections-danger: var(--danger);
+}
+
+/* In the header the switcher is a place, set apart from the app menu like Reader's old picker. */
+.reader-header-context .reader-collection-switcher {
+  min-width: 0;
+  margin-left: 4px;
+  padding-left: 6px;
+  border-left: 1px solid var(--reader-hairline);
+  color: var(--ink-soft);
+  font-size: var(--ui-control);
+  --mdbase-collections-control-height: var(--ui-control-height, 32px);
+}
+
+@media (max-width: 680px) {
+  .reader-header-context .reader-collection-switcher {
+    margin-left: 0;
+    padding-left: 0;
+    border-left: 0;
+  }
+}

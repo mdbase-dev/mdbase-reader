@@ -8,7 +8,7 @@ import {
   unavailableCollection,
 } from "./native-signin-ui";
 
-import type { AppWebSignInSnapshot } from "@mdbase-dev/sdk/app-host";
+import type { AppWebSignInSnapshot } from "@mdbase-dev/sdk-legacy-729b5391/app-host";
 
 function snapshot(patch: Partial<AppWebSignInSnapshot> = {}): AppWebSignInSnapshot {
   return {

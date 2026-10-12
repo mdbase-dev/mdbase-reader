@@ -1,4 +1,4 @@
-import type { AppWebSignInPortal } from "@mdbase-dev/sdk/app-host";
+import type { AppWebSignInPortal } from "@mdbase-dev/sdk-legacy-729b5391/app-host";
 
 export class ConnectPopupBlocked extends Error {
   constructor() {

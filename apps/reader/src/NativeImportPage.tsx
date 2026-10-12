@@ -3,7 +3,6 @@ import { useEffect, useRef, useState, useSyncExternalStore, type JSX } from "rea
 
 import { ImportController } from "./import-controller.js";
 import { ImportPageView, type ImportService } from "./ImportPageView.js";
-import { isReadyReaderConnection } from "./sdk-ready-connection.js";
 import { SdkReaderRoot, type ReaderNativeScope, type ReaderSdk } from "./SdkReaderRoot.js";
 
 /** App input/progress survives the SDK's chooser. The provider returns the actual
@@ -13,13 +12,16 @@ interface NativeImportFlow {
   bind(scope: ReaderNativeScope): () => void;
 }
 
+/** Imports write only to the collection the SDK still reports as open and ready. */
+function isReadyConnection({ mdbase, connection }: ReaderNativeScope): boolean {
+  const { phase } = mdbase.getSnapshot();
+  return phase.kind === "ready" && phase.collectionId === connection.id && connection.isCurrent();
+}
+
 function importFlow(opened: (collection: NativeReaderCollection | null) => void): NativeImportFlow {
   let current: ReaderNativeScope | null = null;
   const controller = new ImportController({
-    connectedCollection: () =>
-      current && isReadyReaderConnection(current.connection, current.application.getSnapshot())
-        ? current.collection
-        : null,
+    connectedCollection: () => (current && isReadyConnection(current) ? current.collection : null),
   });
   return {
     controller,
@@ -72,11 +74,14 @@ export function NativeImportPage({
       opened={opened}
       destination={
         service === "home" ? null : (
-          <SdkReaderRoot
-            sdk={sdk}
-            embedded
-            renderNative={(scope) => <NativeImportDestination scope={scope} flow={flow} />}
-          />
+          <section className="import-step" aria-labelledby="import-destination-title">
+            <h2 id="import-destination-title">Choose a destination</h2>
+            <SdkReaderRoot
+              sdk={sdk}
+              embedded
+              renderNative={(scope) => <NativeImportDestination scope={scope} flow={flow} />}
+            />
+          </section>
         )
       }
     />
@@ -90,7 +95,7 @@ function NativeImportDestination({
   readonly scope: ReaderNativeScope;
   readonly flow: NativeImportFlow;
 }): JSX.Element {
-  const { application, connection, collection } = scope;
+  const { mdbase, connection, collection } = scope;
   const { controller } = flow;
   const state = useSyncExternalStore(
     controller.subscribe,
@@ -103,12 +108,12 @@ function NativeImportDestination({
   useEffect(() => {
     const control = new AbortController();
     caller.current = control;
-    const unbind = flow.bind({ application, connection, collection });
+    const unbind = flow.bind({ mdbase, connection, collection });
     return () => {
       control.abort();
       unbind();
     };
-  }, [flow, application, connection, collection]);
+  }, [flow, mdbase, connection, collection]);
   const choose = async (): Promise<void> => {
     const control = caller.current;
     if (!control || control.signal.aborted || busy.current || !connection.isCurrent()) {
@@ -117,7 +122,7 @@ function NativeImportDestination({
     busy.current = true;
     setWorking(true);
     try {
-      await application.chooseAnother({ signal: control.signal });
+      await mdbase.chooseAnother({ signal: control.signal });
     } catch (error: unknown) {
       if (!aborted(control)) {
         controller.update({
@@ -133,8 +138,7 @@ function NativeImportDestination({
     }
   };
   return (
-    <section className="import-step" aria-labelledby="import-destination-title">
-      <h2 id="import-destination-title">Choose a destination</h2>
+    <div className="import-step">
       <p>Collection: {collection.collectionName}</p>
       <button
         type="button"
@@ -143,7 +147,7 @@ function NativeImportDestination({
       >
         Choose another collection
       </button>
-    </section>
+    </div>
   );
 }
 

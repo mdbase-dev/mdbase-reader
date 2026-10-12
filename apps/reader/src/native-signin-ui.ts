@@ -1,4 +1,4 @@
-import { AppWebSignInSession } from "@mdbase-dev/sdk/app-host";
+import { AppWebSignInSession } from "@mdbase-dev/sdk-legacy-729b5391/app-host";
 
 import { openConnectPopup, type ConnectPopup } from "./connect-popup.js";
 
@@ -6,7 +6,7 @@ import type {
   AppWebSignInSessionOptions,
   AppWebSignInSnapshot,
   AppWebSignInPortal,
-} from "@mdbase-dev/sdk/app-host";
+} from "@mdbase-dev/sdk-legacy-729b5391/app-host";
 export { ConnectPopupBlocked as SignInTabBlocked } from "./connect-popup.js";
 
 export type NativeSignInSession = Pick<

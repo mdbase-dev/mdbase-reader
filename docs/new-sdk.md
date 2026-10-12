@@ -52,18 +52,22 @@ is introduced. Writer's optional file-access consent remains a later SDK capabil
   - Every await is fenced by `connection.isCurrent()`.
 - Unsupported features are refused (`unsupported_operation`), never emulated. See the gap list
   in the coordinator's `reader-sdk-gaps.md`.
-- `SdkReaderRoot` leaves sign-in, consent, collection selection and approval, and setup
-  (`configure()`) to the SDK:
-  - It starts the entry once (StrictMode-safe) and forwards foreground state.
-  - It renders the reading workspace only for a current connection with READY readiness.
-  - It disposes its adapters, never the borrowed client.
-  - For a collection requested by the link, `approval_required` and `invalid` offer
-    **Approve this collection** or **Choose another collection**. Reader never falls back to
-    another collection.
+- `SdkReaderRoot` renders the shared `CollectionGate` from `@mdbase-dev/ui/collections`
+  (vendored as `vendor/mdbase-dev-ui-dev-<cut>.tgz`, pinned in `vendor/mdbase-ui-dev.json`):
+  - The gate owns sign-in, choosing, approval, setup review, problems and sign-out
+    (`signOut()`, never `close()`). Reader supplies only its name and mark.
+  - It starts the entry once (StrictMode-safe); the entry follows page visibility.
+  - It renders the reading workspace only for the connection the gate hands over in
+    phase `ready`, and disposes its adapters, never the borrowed client.
+  - The header shows the shared `CollectionSwitcher`; unsaved edits are confirmed
+    before switching. Legacy `ConnectReader` keeps its own `CollectionPicker`.
+  - `apps/reader` depends on the same SDK cut as `packages/connect`, so app-ui's SDK
+    peer resolves to it. The legacy native sign-in imports the release SDK819 archive
+    under the alias `@mdbase-dev/sdk-legacy-729b5391`.
 
 ## Live hookup
 
-- `src/sdk-application.ts`: `readerSdk()` is the page's single `MdbaseConnect`. It uses the
+- `src/sdk-application.ts`: `readerSdk()` is the page's single `createMdbase` entry. It uses the
   bundled canonical manifest unchanged: logical ID `dev.mdbase.reader`, name, and homepage
   origin. The SDK registers it and rebinds to the actual registered ID before any storage.
   Construction does no IO.
@@ -116,13 +120,10 @@ setup or recovery engine is supplied by this UI.
 
 ## Launch-branch integration
 
-`next/new-sdk` brings together the public-entry/import line, SDK-based readiness
-screens and SDK setup-plan review. Only setup/conflict plans need confirmation;
-nothing-to-review keeps `configure()`. Confirm applies the original plan. Unknown
-outcomes retain SDK recovery and never claim nothing changed. Migration, update
-requirements and account suspension show live `summarizeStatus` copy without
-retiring a still-current editable scope. Thrown actions use `describeError`,
-without raw or developer-only diagnostics.
+`next/new-sdk` brings together the public-entry/import line and the shared collection
+screens. Setup review, problems and live notices (migration, update requirements,
+account suspension) come from `@mdbase-dev/ui/collections` over the SDK's phase and
+`describeError` copy, without raw or developer-only diagnostics.
 
 The older next-branch record-read foundation, provider rechecks and optional
 native sign-in/owned-popup controls are preserved, not substituted for the LAB

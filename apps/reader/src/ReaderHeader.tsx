@@ -6,6 +6,7 @@ import { useMdbaseMarkBusy } from "@mdbase-dev/ui/mark-activity";
 import { CollectionPicker } from "./CollectionPicker.js";
 import { DisplayMenu } from "./DisplayMenu.js";
 import { BackIcon, LeftPaneIcon, ReadingModeIcon, RightPaneIcon, SearchIcon } from "./icons.js";
+import { ReaderCollectionSwitcher, useReaderMdbase } from "./reader-collections.js";
 
 import type { ReaderDirectAccessState } from "./use-direct-access.js";
 import type { ThemePreference } from "@mdbase-dev/ui/theme";
@@ -103,6 +104,7 @@ function LibraryHeader({
   onToggleInspector,
   display,
 }: ReaderHeaderProps & { readonly display: ReactNode }): JSX.Element {
+  const mdbase = useReaderMdbase();
   return (
     <header className="reader-header">
       <div className="reader-header-brand">
@@ -119,10 +121,14 @@ function LibraryHeader({
         <AppSwitcher current="reader" urls={appUrls} />
       </div>
       <div className="reader-header-context">
-        <CollectionPicker
-          name={collectionName}
-          {...(beforeCollectionSwitch ? { beforeSwitch: beforeCollectionSwitch } : {})}
-        />
+        {mdbase ? (
+          <ReaderCollectionSwitcher mdbase={mdbase} beforeSwitch={beforeCollectionSwitch} />
+        ) : (
+          <CollectionPicker
+            name={collectionName}
+            {...(beforeCollectionSwitch ? { beforeSwitch: beforeCollectionSwitch } : {})}
+          />
+        )}
         <ConnectionState state={connectionState} directAccess={directAccess} />
       </div>
       <div className="reader-header-actions">
