@@ -36,6 +36,7 @@ export function ReaderWorkspace({
         opened.files,
         opened.libraryViews,
         opened.bodyRecovery,
+        opened.subscribeSourceChanges,
       ),
     [opened],
   );

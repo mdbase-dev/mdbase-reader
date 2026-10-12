@@ -74,6 +74,12 @@ export interface ReaderConnectedCollection {
   readonly contentSearch: ContentSearchRepository;
   readonly files: CollectionFileRepository;
   readonly libraryViews: LibraryViewRepository;
+  /**
+   * Calls `listener` when the source list may have changed outside this
+   * workspace's own writes: another tab, app or device added, edited or
+   * removed a source, or the change feed reset. Absent for Connect collections.
+   */
+  readonly subscribeSourceChanges?: (listener: () => void) => () => void;
   /** Connect loopback upgrade; absent for native SDK collections. */
   readonly directAccess?: ReaderDirectAccessController;
   readonly bodyRecovery: BodyUpdateRecovery;

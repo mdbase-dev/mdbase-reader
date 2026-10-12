@@ -27,7 +27,12 @@ import type {
   SavedViewExecution,
   SavedViewPresentation,
 } from "@mdbase-dev/connect";
-import type { MdbaseApplicationConnection, MdbaseClient, QueryResult } from "@mdbase-dev/sdk";
+import type {
+  Change,
+  MdbaseApplicationConnection,
+  MdbaseClient,
+  QueryResult,
+} from "@mdbase-dev/sdk";
 
 export interface NativeReaderCollection extends ReaderConnectedCollection {
   /** Retire this scope's adapters. The borrowed SDK client stays open for its owner. */
@@ -59,11 +64,27 @@ export function nativeReaderCollection(
     files: new ConnectCollectionFileRepository(files),
     libraryViews: nativeLibraryViews(connection.records, client, current),
     bodyRecovery: new ConnectBodyUpdateRecovery(client),
+    subscribeSourceChanges: (listener) => {
+      const watch = connection.records.watchChanges(undefined, (batch) => {
+        if (current() && (batch.reset || batch.changes.some(mayBeSource))) {
+          listener();
+        }
+      });
+      return () => {
+        watch();
+      };
+    },
     dispose: () => {
       disposed = true;
       client.dispose();
     },
   };
+}
+
+/** A record change that can add, change or remove a library source. Producers
+ * that cannot name the types are treated as possibly a source. */
+function mayBeSource(change: Change): boolean {
+  return change.entity !== "file" && (change.types?.includes("reader-source") ?? true);
 }
 
 function nativeLibraryViews(

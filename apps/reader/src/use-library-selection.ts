@@ -79,16 +79,30 @@ export function useLibrarySelection(
     status: "loading",
   });
   const [attempt, setAttempt] = useState(0);
+  // Bumped when another tab, app or device changes the sources.
+  const [libraryRevision, setLibraryRevision] = useState(0);
+  const libraryShown = useRef(false);
   const [selectedSourceId, setSelectedSourceId] = useState<SourceId | null>(initialSourceId);
   const [importStatus, setImportStatus] = useState<"idle" | "importing">("idle");
   const [importError, setImportError] = useState<string | null>(null);
   const selectedSourceIdRef = useRef<SourceId | null>(initialSourceId);
 
+  useEffect(
+    () => gateway.subscribeLibrary?.(() => setLibraryRevision((value) => value + 1)),
+    [gateway],
+  );
+
   useEffect(() => {
     const controller = new AbortController();
+    // A shown library stays as it is until the reread completes, rather than
+    // shrinking to the first page.
+    const progressive = !libraryShown.current;
     const updateLibrary = (snapshot: ReaderLibrarySnapshot): void => {
       if (controller.signal.aborted) {
         return;
+      }
+      if (snapshot.sourceIndex?.complete !== false) {
+        libraryShown.current = true;
       }
       setLibrary({ status: "ready", value: snapshot });
       const current = selectedSourceIdRef.current;
@@ -103,7 +117,7 @@ export function useLibrarySelection(
         .library({
           signal: controller.signal,
           replaceableFamily: "reader-library-load",
-          onProgress: updateLibrary,
+          ...(progressive ? { onProgress: updateLibrary } : {}),
         })
         .then(updateLibrary)
         .catch((reason: unknown) => {
@@ -119,7 +133,7 @@ export function useLibrarySelection(
       window.clearTimeout(timer);
       controller.abort();
     };
-  }, [attempt, gateway]);
+  }, [attempt, gateway, libraryRevision]);
 
   const selectedSource = useMemo(() => {
     if (library.status !== "ready" || !selectedSourceId) {

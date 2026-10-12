@@ -44,6 +44,8 @@ export interface ReaderLibraryRequestOptions extends ReaderRequestOptions {
 
 export interface ReaderWorkspaceGateway {
   library(options?: ReaderLibraryRequestOptions): Promise<ReaderLibrarySnapshot>;
+  /** Notifies when sources changed outside this workspace, so the library reloads. */
+  subscribeLibrary?: (listener: () => void) => () => void;
   listLibraryViews(options?: ReaderRequestOptions): Promise<readonly MdbaseLibraryView[]>;
   executeLibraryView(
     view: MdbaseLibraryView,

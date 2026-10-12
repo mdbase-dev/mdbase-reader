@@ -68,8 +68,12 @@ import type {
   SourceSummary,
 } from "@mdbase-reader/core";
 
+const noop = (): void => undefined;
+
 export class ConnectWorkspaceGateway implements ReaderWorkspaceGateway {
   #library: ReaderLibrarySnapshot["sources"] | null = null;
+  /** Bumped when a change outside this workspace makes the cached library stale. */
+  #libraryGeneration = 0;
   readonly #libraryLoads = new SharedRequests<
     string,
     ReaderLibrarySnapshot,
@@ -115,15 +119,30 @@ export class ConnectWorkspaceGateway implements ReaderWorkspaceGateway {
     private readonly files?: CollectionFileRepository,
     private readonly libraryViewRepository?: LibraryViewRepository,
     private readonly bodyRecovery?: BodyUpdateRecovery,
+    private readonly sourceChanges?: (listener: () => void) => () => void,
   ) {}
+
+  /** Calls `listener` after another tab, app or device changed the library's
+   * sources; the next `library()` reads them again. */
+  readonly subscribeLibrary = (listener: () => void): (() => void) => {
+    if (!this.sourceChanges) {
+      return noop;
+    }
+    return this.sourceChanges(() => {
+      this.#libraryGeneration += 1;
+      this.#library = null;
+      listener();
+    });
+  };
 
   async library(options: ReaderLibraryRequestOptions = {}): Promise<ReaderLibrarySnapshot> {
     options.signal?.throwIfAborted();
     if (this.#library) {
       return completeLibrarySnapshot(this.collectionName, this.#library);
     }
+    const generation = this.#libraryGeneration;
     return this.#libraryLoads.get(
-      "library",
+      `library:${String(generation)}`,
       options,
       async (signal, onProgress) => {
         const snapshot = await loadSourceLibrary({
@@ -134,7 +153,10 @@ export class ConnectWorkspaceGateway implements ReaderWorkspaceGateway {
           onProgress,
         });
         signal.throwIfAborted();
-        this.#library = snapshot.sources;
+        // A load that a later change overtook must not become the cached library.
+        if (generation === this.#libraryGeneration) {
+          this.#library = snapshot.sources;
+        }
         return snapshot;
       },
       options.onProgress,
