@@ -46,8 +46,6 @@ export function nativeReaderCollection(
   const current = (): boolean => !disposed && connection.isCurrent();
   const client = nativeReaderClient(connection.records, current);
   const files = nativeReaderFiles(connection.files, current);
-  // Re-adopt this session's unconfirmed writes so recovery can find them by ID.
-  void client.restorePending().catch(() => undefined);
   return {
     collectionId: collectionId(connection.id),
     collectionName: connection.displayName,

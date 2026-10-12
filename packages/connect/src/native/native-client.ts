@@ -50,12 +50,14 @@ import type {
 } from "@mdbase-dev/sdk";
 import type { ReaderRequestOptions } from "@mdbase-reader/core";
 
-/** One native write whose outcome Reader has not yet seen confirmed. */
-export interface NativePendingWrite {
+/** The log refused the write: a plain failure, nothing to recover. */
+class Refused extends MdbaseError {}
+
+/** One native write, kept by ID while its outcome is unknown. */
+interface NativeMutation {
   readonly mutationId: string;
   readonly operation: "create" | "update" | "delete";
   readonly recordId: string;
-  readonly createdAt: string;
   /** Contract writes are read back through the same contract view. */
   readonly contract?: ContractSelector;
 }
@@ -68,9 +70,6 @@ export interface NativePendingMutation {
 export interface NativeReaderClient extends ReaderConnectClient {
   /** The original native mutation for an `operation_outcome_unknown` request ID. */
   pendingMutation(requestId: string): NativePendingMutation | null;
-  pendingWrites(): readonly NativePendingWrite[];
-  /** Re-adopt this session's unconfirmed single-record mutations after a reload. */
-  restorePending(signal?: AbortSignal): Promise<void>;
   dispose(): void;
 }
 
@@ -85,7 +84,8 @@ type Submit = (options: { mutationId: string; signal: AbortSignal }) => Promise<
 
 const MAX_CONTRACT_PAGE = 128;
 const DEFAULT_PAGE = 200;
-const RECEIPT_WAIT_MS = 30_000;
+/** How long a save waits for the log before it counts as saved on this device (as `client.save()`). */
+const RECEIPT_WAIT_MS = 3_000;
 const REQUEST_BUDGET_MS = 45_000;
 const fullInclude: Include = { effective: true, body: true, document: true };
 const CONTRACT_REFUSED = [
@@ -111,12 +111,14 @@ export function nativeReaderClient(
  * Reader's record seam over one borrowed public SDK client. The SDK owns sign-in,
  * selection and the client's lifetime; this adapter never closes it, never resubmits
  * a write under a new identity, and stops at every await once `isCurrent` is false.
- * A write is reported saved only after its exact receipt confirms and a confirmed
- * readback exists; otherwise the original mutation ID is kept for recovery.
+ * A write the replica captured is saved: confirmed, or saved on this device when
+ * the log has not confirmed it within the wait. The SDK's write ledger keeps and
+ * settles those. Only a refused write fails, and only an unknown outcome keeps its
+ * original mutation ID for recovery.
  */
 class NativeRecords implements NativeReaderClient {
   readonly #lifetime = new AbortController();
-  readonly #pending = new Map<string, NativePendingWrite>();
+  readonly #unknown = new Map<string, NativeMutation>();
 
   constructor(
     private readonly client: MdbaseClient,
@@ -365,7 +367,7 @@ class NativeRecords implements NativeReaderClient {
   }
 
   pendingMutation(requestId: string): NativePendingMutation | null {
-    const mutation = this.#pending.get(requestId);
+    const mutation = this.#unknown.get(requestId);
     if (!mutation) {
       return null;
     }
@@ -379,32 +381,6 @@ class NativeRecords implements NativeReaderClient {
           return document;
         }),
     };
-  }
-
-  pendingWrites(): readonly NativePendingWrite[] {
-    return [...this.#pending.values()];
-  }
-
-  async restorePending(signal?: AbortSignal): Promise<void> {
-    const current = this.#scope(signal);
-    const writes = await this.client.pendingWrites(current);
-    this.#check(current);
-    for (const mutation of writes) {
-      const op = mutation.ops.length === 1 ? mutation.ops[0] : undefined;
-      if (!op || !("id" in op)) {
-        continue;
-      }
-      const operation = op.kind === "document" ? "update" : op.kind;
-      if (operation !== "create" && operation !== "update" && operation !== "delete") {
-        continue;
-      }
-      this.#pending.set(mutation.receipt.mutation, {
-        mutationId: mutation.receipt.mutation,
-        operation,
-        recordId: op.id,
-        createdAt: new Date(mutation.captured).toISOString(),
-      });
-    }
   }
 
   dispose(): void {
@@ -473,44 +449,34 @@ class NativeRecords implements NativeReaderClient {
   }
 
   async #write(
-    target: Pick<NativePendingWrite, "operation" | "recordId" | "contract">,
+    target: Omit<NativeMutation, "mutationId">,
     submit: Submit,
     signal: AbortSignal,
   ): Promise<RecordDocument | null> {
     this.#check(signal);
-    const mutationId = uuidv7();
-    const mutation: NativePendingWrite = {
-      mutationId,
-      operation: target.operation,
-      recordId: target.recordId,
-      createdAt: new Date().toISOString(),
-      ...(target.contract ? { contract: target.contract } : {}),
-    };
-    this.#pending.set(mutationId, mutation);
+    const mutation: NativeMutation = { mutationId: uuidv7(), ...target };
     try {
-      const submitted = await submit({ mutationId, signal });
-      if (submitted.mutationId !== mutationId) {
+      const submitted = await submit({ mutationId: mutation.mutationId, signal });
+      if (submitted.mutationId !== mutation.mutationId) {
         throw new Error("The native write changed its mutation identity.");
       }
     } catch (error) {
       // An error code alone does not prove the write was not captured. Only the
       // exact receipt settles it: no receipt for this ID means nothing was written.
-      if (await this.#captured(mutationId)) {
-        throw new OutcomeUnknown(mutationId);
+      if (!(await this.#captured(mutation.mutationId))) {
+        throw error;
       }
-      this.#pending.delete(mutationId);
-      throw error;
     }
     try {
-      this.#check(signal);
       return await this.#confirm(mutation, signal);
     } catch (error) {
-      // Still unsettled (a dropped link, a timeout, a retired scope): keep the
-      // original identity and report it for recovery, never as a plain failure.
-      if (this.#pending.has(mutationId) && !(error instanceof OutcomeUnknown)) {
-        throw new OutcomeUnknown(mutationId);
+      if (error instanceof Refused) {
+        throw error;
       }
-      throw error;
+      // Captured but not settled here (unknown, a dropped link, a retired scope):
+      // keep the original identity for recovery, never report a plain failure.
+      this.#unknown.set(mutation.mutationId, mutation);
+      throw error instanceof OutcomeUnknown ? error : new OutcomeUnknown(mutation.mutationId);
     }
   }
 
@@ -523,21 +489,29 @@ class NativeRecords implements NativeReaderClient {
     }
   }
 
-  async #confirm(
-    mutation: NativePendingWrite,
-    signal: AbortSignal,
-  ): Promise<RecordDocument | null> {
-    const receipt = await this.client.awaitReceipt(mutation.mutationId, this.receiptWaitMs, signal);
+  /** Settle a captured write: confirmed or saved on this device reads back; refused fails. */
+  async #confirm(mutation: NativeMutation, signal: AbortSignal): Promise<RecordDocument | null> {
+    this.#check(signal);
+    // Still pending after the wait is saved on this device, not a failure.
+    const receipt = await this.client
+      .awaitReceipt(mutation.mutationId, this.receiptWaitMs, signal)
+      .catch((error: unknown) => {
+        if (isMdbaseError(error, "cancelled")) {
+          throw error;
+        }
+        this.#check(signal);
+        return this.client.receipt(mutation.mutationId, signal);
+      });
     this.#check(signal);
     if (receipt.mutation !== mutation.mutationId) {
       throw new Error("The native receipt changed its mutation identity.");
     }
-    if (receipt.state === "pending" || receipt.state === "unknown") {
+    if (receipt.state === "unknown") {
       throw new OutcomeUnknown(mutation.mutationId);
     }
+    this.#unknown.delete(mutation.mutationId);
     if (receipt.state === "rejected" || receipt.status === "conflicted") {
-      this.#pending.delete(mutation.mutationId);
-      throw new MdbaseError(
+      throw new Refused(
         receipt.problem ?? {
           code: "conflict",
           recovery: "resolve_conflict",
@@ -546,7 +520,6 @@ class NativeRecords implements NativeReaderClient {
       );
     }
     if (mutation.operation === "delete") {
-      this.#pending.delete(mutation.mutationId);
       return null;
     }
     const record = await this.client.get(mutation.recordId, fullInclude, signal);
@@ -554,16 +527,14 @@ class NativeRecords implements NativeReaderClient {
     if (record.id !== mutation.recordId) {
       throw new Error("The saved record changed its identity.");
     }
-    if (record.state.state !== "confirmed" || record.state.hold || record.state.unresolved) {
+    if (record.state.hold || record.state.unresolved) {
       throw new OutcomeUnknown(mutation.mutationId);
     }
     if (mutation.contract) {
       const view = await this.client.getContract(record, mutation.contract, signal);
       this.#check(signal);
-      this.#pending.delete(mutation.mutationId);
       return contractDocument(view);
     }
-    this.#pending.delete(mutation.mutationId);
     return recordDocument(record);
   }
 

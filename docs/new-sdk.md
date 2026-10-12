@@ -44,9 +44,11 @@ is introduced. Writer's optional file-access consent remains a later SDK capabil
     `create`/`update`/`delete`. As in prod Connect, a contract view carries contract fields and
     no body. A contract write is read back through the same contract view.
   - File descriptors take their media type from the replica (`FileView.mediaType`).
-  - Writes keep one mutation ID. They report saved only after a confirmed receipt or readback;
-    otherwise they surface `operation_outcome_unknown` with the original `request_id`, which
-    can be recovered.
+  - Writes keep one mutation ID. A write the replica captured is saved: confirmed, or saved on
+    this device when the log hasn't confirmed it within 3 s. The SDK's write ledger keeps and
+    settles those across reloads, so Reader keeps no pending-write list of its own. Only a
+    refused write fails. An unknown outcome surfaces `operation_outcome_unknown` with the
+    original `request_id`, which can be recovered.
   - `native-files.ts` resumes uploads with the same transfer and mutation IDs and checks
     digests on download.
   - Every await is fenced by `connection.isCurrent()`.

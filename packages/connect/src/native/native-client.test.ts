@@ -6,7 +6,6 @@ import {
 } from "@mdbase-dev/sdk/testing";
 import { afterEach, describe, expect, it } from "vitest";
 
-import { ConnectBodyUpdateRecovery } from "../body-update-recovery.js";
 import { sourceContract } from "../contracts.js";
 import { outcomeValue } from "../repository-client.js";
 
@@ -103,32 +102,19 @@ describe("native Reader client", () => {
       patch: { title: "Stale" },
     });
     expect(stale.ok ? null : stale.problem.code).toBe("concurrent_modification");
-    expect(client.pendingWrites()).toEqual([]);
   });
 
-  it("keeps an unconfirmed write's original ID and recovers that exact write", async () => {
+  it("reports a write the log has not confirmed as saved on this device, with nothing to recover", async () => {
     const { replica, client } = await native({ confirmDelayMs: null }, 50);
     replica.seed({ path: "notes/a.md", types: ["reader-annotation"], frontmatter: { id: "a" } });
 
-    const outcome = await client.update({ path: "notes/a.md", patch: {}, body: "kept" });
+    const saved = outcomeValue(
+      await client.update({ path: "notes/a.md", patch: {}, body: "kept" }),
+      "update",
+    );
 
-    expect(outcome.ok).toBe(false);
-    const problem = outcome.ok ? null : outcome.problem;
-    expect(problem?.code).toBe("operation_outcome_unknown");
-    const requestId = (problem?.details as { request_id: string }).request_id;
-    expect(client.pendingWrites().map((write) => write.mutationId)).toEqual([requestId]);
-
+    expect(saved.body).toBe("kept");
     replica.confirmAll();
-    const recovery = new ConnectBodyUpdateRecovery(client);
-    expect(recovery.pending(requestId)).toBe(true);
-    const pending = client.pendingMutation(requestId);
-    if (!pending) {
-      throw new Error("The unconfirmed write was not kept for recovery.");
-    }
-    const recovered = outcomeValue(await pending.recover(), "recover");
-
-    expect(recovered.body).toBe("kept");
-    expect(recovery.pending(requestId)).toBe(false);
     expect(replica.allRecords.find((record) => record.path === "notes/a.md")?.body).toBe("kept");
   });
 

@@ -133,9 +133,6 @@ export class NativeMigrationTarget implements MigrationTarget {
     if (!pendingId) {
       return false;
     }
-    if (!this.records.pendingMutation(pendingId)) {
-      await this.records.restorePending(signal);
-    }
     if (this.records.pendingMutation(pendingId)) {
       await this.recover(record, pendingId, signal);
       storage?.removeItem(key);
