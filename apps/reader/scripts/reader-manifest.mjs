@@ -121,7 +121,9 @@ export async function buildReaderManifest({
         required: ["collection.read", "records.create", "records.edit", "records.delete"],
       },
       files: {
-        required: ["list", "read", "add"],
+        // Next accounts approve each record capability together with its file
+        // actions: editing needs replace and move, deleting needs delete.
+        required: ["list", "read", "add", "replace", "move", "delete"],
         scope: { kind: "collection" },
       },
     },
