@@ -1,4 +1,5 @@
 import { AppSwitcher } from "@mdbase-dev/ui/app-switcher";
+import { CollectionSaveWarning } from "@mdbase-dev/ui/collections";
 import { shortcutLabel } from "@mdbase-dev/ui/command-palette";
 import { FeedbackButton } from "@mdbase-dev/ui/feedback";
 import { useMdbaseMarkBusy } from "@mdbase-dev/ui/mark-activity";
@@ -130,6 +131,7 @@ function LibraryHeader({
           />
         )}
         <ConnectionState state={connectionState} directAccess={directAccess} />
+        <CollectionSaveWarning />
       </div>
       <div className="reader-header-actions">
         <button
