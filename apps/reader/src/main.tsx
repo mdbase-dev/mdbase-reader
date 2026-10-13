@@ -12,6 +12,7 @@ import "./feedback-shell.css";
 import { EnvironmentBadge } from "./EnvironmentBadge.js";
 import { FeedbackRoot } from "./FeedbackRoot.js";
 import { forgetOfflineCopies } from "./forget-offline-copies.js";
+import { completeAppGrantCallback } from "./grant-callback.js";
 import { importService } from "./import-navigation.js";
 import { keepFocusedFieldInView } from "./keep-focused-field-in-view.js";
 import "./environment-badge.css";
@@ -65,11 +66,18 @@ if (!root) {
 forgetOfflineCopies(globalThis.indexedDB);
 keepFocusedFieldInView(window);
 const migrationService = importService(location.pathname);
+// LAB: the Private collection consent popup returns here. It hands the result to
+// the waiting reader tab and closes, without starting a second mdbase entry.
+// (Staging and production keep Connect, whose own sign-in return is untouched.)
+const grantCallback =
+  import.meta.env.VITE_MDBASE_ENV === "lab" && completeAppGrantCallback(new URL(location.href));
 createRoot(root).render(
   <StrictMode>
     <FeedbackRoot>
       <EnvironmentBadge />
-      {migrationService ? (
+      {grantCallback ? (
+        <p className="reader-grant-callback">You can close this window.</p>
+      ) : migrationService ? (
         <Suspense fallback={null}>
           {import.meta.env.VITE_MDBASE_ENV === "lab" ? (
             <SdkReader service={migrationService} />

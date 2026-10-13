@@ -3814,3 +3814,11 @@
   text-underline-offset: 2px;
   cursor: pointer;
 }
+
+/* The consent popup's return window, shown while it closes. */
+.reader-grant-callback {
+  margin: 3rem auto;
+  max-width: 32rem;
+  padding: 0 1rem;
+  text-align: center;
+}
