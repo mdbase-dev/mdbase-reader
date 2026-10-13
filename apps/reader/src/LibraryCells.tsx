@@ -32,8 +32,8 @@ const builtinCells: Record<BuiltinLibraryColumn, CellRenderer> = {
         {formatLabel(source)}
       </span>
       <span className="library-title-copy">
-        <strong>{source.title}</strong>
-        <small>{source.creators.join(", ") || "Unknown creator"}</small>
+        <strong title={source.title}>{source.title}</strong>
+        {source.creators.length ? <small>{source.creators.join(", ")}</small> : null}
       </span>
     </>
   ),

@@ -86,9 +86,9 @@ export function columnLabel(
 const defaultWidths: Record<BuiltinLibraryColumn, number> = {
   title: 380,
   creator: 190,
-  published: 104,
-  annotations: 116,
-  opened: 124,
+  published: 132,
+  annotations: 144,
+  opened: 148,
   status: 136,
   format: 88,
   tags: 190,

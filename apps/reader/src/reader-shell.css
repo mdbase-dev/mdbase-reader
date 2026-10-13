@@ -1230,6 +1230,9 @@
 }
 
 .continue-reading-title strong {
+  overflow: visible;
+  white-space: normal;
+  overflow-wrap: anywhere;
   font-size: var(--ui-body);
   font-weight: 650;
 }
@@ -2241,6 +2244,37 @@
   }
 }
 
+/* The source title is live metadata; saved document text (and annotation anchors) stays intact. */
+.source-document {
+  height: 100%;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.source-document-heading {
+  flex: 0 0 auto;
+  padding: 12px 20px;
+  border-bottom: 1px solid var(--line);
+}
+
+.source-document-heading h1 {
+  margin: 0 0 4px;
+  color: var(--ink);
+  font-size: var(--ui-body);
+  overflow-wrap: anywhere;
+}
+
+.source-document-heading small {
+  color: var(--muted);
+  font-size: var(--ui-meta);
+}
+
+.source-document-surface {
+  flex: 1;
+  min-height: 0;
+}
+
 /* Document chrome ----------------------------------------------------------- */
 
 .document-toolbar {
@@ -2262,14 +2296,14 @@
 .document-area-action,
 .document-contents-menu > summary,
 .document-actions-menu > summary {
-  width: 32px;
-  height: 32px;
+  width: 36px;
+  height: 36px;
   display: grid;
   place-items: center;
   padding: 0;
   border: 0;
   border-radius: var(--ui-radius);
-  color: var(--muted);
+  color: var(--ink-soft);
   background: color-mix(in oklch, var(--paper) 80%, transparent);
   cursor: pointer;
 }
@@ -2289,8 +2323,19 @@
 .document-area-action svg,
 .document-contents-menu > summary svg,
 .document-actions-menu > summary svg {
-  width: 16px;
-  height: 16px;
+  width: 20px;
+  height: 20px;
+}
+
+@media (pointer: coarse) {
+  .document-toolbar :is(.icon-button, .document-area-action),
+  .document-toolbar .reader-menu > summary,
+  .reader-dock .dock-pane-actions .document-toolbar :is(.icon-button, .document-area-action),
+  .reader-dock .dock-pane-actions .document-toolbar .reader-menu > summary,
+  .reader-dock .dock-pane-menu > button {
+    width: 44px;
+    height: 44px;
+  }
 }
 
 /* Icon-only visually; the label stays as the accessible name. */

@@ -1,12 +1,21 @@
+/* Reserve a separate environment strip; it never covers header controls. */
+#root:has(> .environment-badge) {
+  box-sizing: border-box;
+  padding-top: 24px;
+}
+
 .environment-badge {
   position: fixed;
   z-index: 10000;
-  top: 5px;
-  right: 5px;
-  padding: 4px 7px 3px;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 24px;
+  display: grid;
+  place-items: center;
+  box-sizing: border-box;
   border: 1px solid currentColor;
   background: #f4f7f7;
-  box-shadow: 2px 2px 0 rgb(20 34 35 / 14%);
   color: #34585d;
   font:
     500 9px/1.2 "Azeret Mono",
@@ -34,9 +43,6 @@
 
 @media (max-width: 640px) {
   .environment-badge {
-    top: 3px;
-    right: 3px;
-    padding: 3px 5px 2px;
     font-size: 8px;
   }
 }

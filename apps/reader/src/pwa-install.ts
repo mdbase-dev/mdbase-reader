@@ -1,4 +1,4 @@
-// Keep this small, dependency-free module aligned across writer, reader and editor.
+// Installation is offered only after Reader has been used, never during first sign-in.
 interface InstallEvent extends Event {
   prompt(): Promise<void>;
   userChoice: Promise<{ outcome: "accepted" | "dismissed" }>;
@@ -7,6 +7,40 @@ interface InstallEvent extends Event {
 const COOLDOWN = 30 * 24 * 60 * 60 * 1000;
 const DELAY = 30_000;
 const STORAGE_KEY = "mdbase:pwa-install-dismissed";
+const USED_KEY = "mdbase:reader-used";
+const USED_EVENT = "mdbase:reader-document-opened";
+
+/** Opening a document is useful engagement; signing in alone is not. */
+export function markPwaInstallEligible(): void {
+  try {
+    localStorage.setItem(USED_KEY, "1");
+  } catch {
+    /* The current tab can still offer installation without persistent storage. */
+  }
+  window.dispatchEvent(new Event(USED_EVENT));
+}
+
+/** A delay starts only after useful engagement, including a previous used visit. */
+function waitForReaderUse(ready: () => void): () => void {
+  let timer: number | null = null;
+  const used = (): void => {
+    timer ??= window.setTimeout(ready, DELAY);
+  };
+  window.addEventListener(USED_EVENT, used);
+  try {
+    if (localStorage.getItem(USED_KEY) === "1") {
+      used();
+    }
+  } catch {
+    /* Wait for this tab to open a document. */
+  }
+  return () => {
+    if (timer !== null) {
+      window.clearTimeout(timer);
+    }
+    window.removeEventListener(USED_EVENT, used);
+  };
+}
 
 /** Installation is optional; no service worker or private-data cache is introduced. */
 export function setupPwaInstall(appName: string): () => void {
@@ -120,13 +154,13 @@ export function setupPwaInstall(appName: string): () => void {
   window.addEventListener("beforeinstallprompt", beforeInstall);
   window.addEventListener("appinstalled", installed);
   standalone.addEventListener("change", modeChanged);
-  const timer = window.setTimeout(() => {
+  const stopWaiting = waitForReaderUse(() => {
     ready = true;
     show();
-  }, DELAY);
+  });
   return () => {
     disposed = true;
-    window.clearTimeout(timer);
+    stopWaiting();
     window.removeEventListener("beforeinstallprompt", beforeInstall);
     window.removeEventListener("appinstalled", installed);
     standalone.removeEventListener("change", modeChanged);
