@@ -18,6 +18,7 @@
   --ui-heading: 15px;
   --ui-control-height: 30px;
   --ui-radius: 6px;
+  --mobile-source-control-height: 48px;
 }
 
 /* Shared controls (@mdbase-dev/ui) follow the shell's density. */
@@ -2496,7 +2497,7 @@
 }
 .mobile-source-views button {
   min-width: 0;
-  min-height: 48px;
+  min-height: var(--mobile-source-control-height);
   display: grid;
   place-items: center;
   align-content: center;
@@ -2549,7 +2550,7 @@
 .mobile-source-views.is-selection .selection-toolbar > button.icon-button {
   width: auto;
   height: auto;
-  min-height: 48px;
+  min-height: var(--mobile-source-control-height);
   display: grid;
   gap: 3px;
   padding: 0 4px;
