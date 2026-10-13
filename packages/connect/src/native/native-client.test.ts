@@ -104,6 +104,24 @@ describe("native Reader client", () => {
     expect(stale.ok ? null : stale.problem.code).toBe("concurrent_modification");
   });
 
+  it("lands a create retried under the same intent once, keeping the first attempt", async () => {
+    const { replica, client } = await native();
+    const create = (body: string): ReturnType<NativeReaderClient["create"]> =>
+      client.create(
+        { path: "annotations/a.md", type: "reader-annotation", frontmatter: { id: "a" }, body },
+        { intent: "save-a" },
+      );
+
+    const first = outcomeValue(await create("first"), "create");
+    const retried = outcomeValue(await create("retried"), "retried create");
+
+    expect(retried.body).toBe("first");
+    expect(replica.allRecords.filter((record) => record.path === "annotations/a.md")).toHaveLength(
+      1,
+    );
+    expect(first.path).toBe("annotations/a.md");
+  });
+
   it("reports a write the log has not confirmed as saved on this device, with nothing to recover", async () => {
     const { replica, client } = await native({ confirmDelayMs: null }, 50);
     replica.seed({ path: "notes/a.md", types: ["reader-annotation"], frontmatter: { id: "a" } });

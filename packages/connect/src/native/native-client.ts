@@ -18,7 +18,11 @@ import {
   unsupported,
 } from "./native-mapping.js";
 
-import type { ReaderConnectClient, ReaderQueryPagesOptions } from "../repository-client.js";
+import type {
+  ReaderConnectClient,
+  ReaderCreateOptions,
+  ReaderQueryPagesOptions,
+} from "../repository-client.js";
 import type {
   ConnectOutcome,
   CreateInput,
@@ -57,7 +61,8 @@ class Refused extends MdbaseError {}
 interface NativeMutation {
   readonly mutationId: string;
   readonly operation: "create" | "update" | "delete";
-  readonly recordId: string;
+  /** The record's ID, or the path of a create whose ID the SDK derived from its intent. */
+  readonly record: string | { readonly path: string };
   /** Contract writes are read back through the same contract view. */
   readonly contract?: ContractSelector;
 }
@@ -80,7 +85,11 @@ interface ContractPage {
 }
 
 type DataContract = NonNullable<QueryInput["contract"]>;
-type Submit = (options: { mutationId: string; signal: AbortSignal }) => Promise<Write>;
+/** A write either takes a minted mutation ID or names its intent; the SDK derives the rest. */
+type Submit = (
+  options: ({ mutationId: string } | { intent: string }) & { signal: AbortSignal },
+) => Promise<Write>;
+type WriteTarget = Omit<NativeMutation, "mutationId"> & { readonly intent?: string };
 
 const MAX_CONTRACT_PAGE = 128;
 const DEFAULT_PAGE = 200;
@@ -258,15 +267,29 @@ class NativeRecords implements NativeReaderClient {
     }
   }
 
-  create(input: CreateInput): Promise<ConnectOutcome<RecordDocument>> {
+  create(
+    input: CreateInput,
+    options: ReaderCreateOptions = {},
+  ): Promise<ConnectOutcome<RecordDocument>> {
     return outcome(async () => {
       if (input.ifRevision !== undefined) {
         throw unsupported("Conditional creates are not available natively.");
       }
+      const { intent } = options;
+      // With an intent the SDK derives the record ID, so a retry creates the same record;
+      // it is read back by its path.
+      const record: NativeMutation["record"] | undefined =
+        intent === undefined
+          ? uuidv7()
+          : input.path === undefined
+            ? undefined
+            : { path: input.path };
+      if (record === undefined) {
+        throw unsupported("A retryable create needs a path.");
+      }
       const signal = this.#scope();
-      const id = uuidv7();
       const fields = {
-        id,
+        ...(typeof record === "string" ? { id: record } : {}),
         ...(input.contract ? { contract: input.contract } : {}),
         ...(input.type ? { type: input.type } : {}),
         ...(input.path ? { path: input.path } : {}),
@@ -279,7 +302,8 @@ class NativeRecords implements NativeReaderClient {
         await this.#write(
           {
             operation: "create",
-            recordId: id,
+            record,
+            ...(intent === undefined ? {} : { intent }),
             ...(input.contract ? { contract: input.contract } : {}),
           },
           (write) => this.client.create(fields, write),
@@ -301,7 +325,7 @@ class NativeRecords implements NativeReaderClient {
         const ifRevision = input.ifRevision ?? base.revision;
         const submit: Submit = (write) =>
           this.client.replaceDocument(base, document, { ...write, ifRevision });
-        return saved(await this.#write({ operation: "update", recordId: base.id }, submit, signal));
+        return saved(await this.#write({ operation: "update", record: base.id }, submit, signal));
       }
       const changes = {
         ...patchChanges(input.patch),
@@ -309,7 +333,7 @@ class NativeRecords implements NativeReaderClient {
         ...(input.ifRevision === undefined ? {} : { ifRevision: input.ifRevision }),
       };
       const submit: Submit = (write) => this.client.update(base, changes, write);
-      return saved(await this.#write({ operation: "update", recordId: base.id }, submit, signal));
+      return saved(await this.#write({ operation: "update", record: base.id }, submit, signal));
     });
   }
 
@@ -356,7 +380,7 @@ class NativeRecords implements NativeReaderClient {
       const contract = input.contract ? { contract: input.contract } : {};
       const submit: Submit = (write) =>
         this.client.delete(base, { ...write, ifRevision, ...contract });
-      await this.#write({ operation: "delete", recordId: base.id }, submit, signal);
+      await this.#write({ operation: "delete", record: base.id }, submit, signal);
       progress("completed");
       return {
         path: base.path,
@@ -449,24 +473,30 @@ class NativeRecords implements NativeReaderClient {
   }
 
   async #write(
-    target: Omit<NativeMutation, "mutationId">,
+    { intent, ...target }: WriteTarget,
     submit: Submit,
     signal: AbortSignal,
   ): Promise<RecordDocument | null> {
     this.#check(signal);
-    const mutation: NativeMutation = { mutationId: uuidv7(), ...target };
+    const identity = intent === undefined ? { mutationId: uuidv7() } : { intent };
+    const minted = "mutationId" in identity ? identity.mutationId : undefined;
+    let mutationId = minted;
     try {
-      const submitted = await submit({ mutationId: mutation.mutationId, signal });
-      if (submitted.mutationId !== mutation.mutationId) {
+      const submitted = await submit({ ...identity, signal });
+      if (minted !== undefined && submitted.mutationId !== minted) {
         throw new Error("The native write changed its mutation identity.");
       }
+      mutationId = submitted.mutationId;
     } catch (error) {
+      // The SDK names the mutation an intent stood for on the error it reports.
+      mutationId ??= isMdbaseError(error) ? error.mutationId : undefined;
       // An error code alone does not prove the write was not captured. Only the
       // exact receipt settles it: no receipt for this ID means nothing was written.
-      if (!(await this.#captured(mutation.mutationId))) {
+      if (mutationId === undefined || !(await this.#captured(mutationId))) {
         throw error;
       }
     }
+    const mutation: NativeMutation = { mutationId, ...target };
     try {
       return await this.#confirm(mutation, signal);
     } catch (error) {
@@ -522,9 +552,13 @@ class NativeRecords implements NativeReaderClient {
     if (mutation.operation === "delete") {
       return null;
     }
-    const record = await this.client.get(mutation.recordId, fullInclude, signal);
+    const record = await this.client.get(mutation.record, fullInclude, signal);
     this.#check(signal);
-    if (record.id !== mutation.recordId) {
+    if (
+      typeof mutation.record === "string"
+        ? record.id !== mutation.record
+        : record.path !== mutation.record.path
+    ) {
       throw new Error("The saved record changed its identity.");
     }
     if (record.state.hold || record.state.unresolved) {
@@ -555,7 +589,7 @@ class NativeRecords implements NativeReaderClient {
       ifRevision: input.ifRevision ?? view.revision,
     };
     const submit: Submit = (write) => this.client.update(view, changes, write);
-    return this.#write({ operation: "update", recordId: view.id, contract }, submit, signal);
+    return this.#write({ operation: "update", record: view.id, contract }, submit, signal);
   }
 
   async *#ordinaryPages(
