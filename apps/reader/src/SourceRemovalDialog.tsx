@@ -59,9 +59,9 @@ function OpenSourceRemovalDialog({
         <div className="import-dialog-heading">
           <h2 id="reader-remove-source-title">Remove “{source.title}”?</h2>
           <p id="reader-remove-source-description">
-            This deletes the source record <span className="mono">{source.path}</span> from your
-            collection. Reader cannot undo this. Its stored files and annotations stay in the
-            collection.
+            This removes the source from your library and deletes its source note. Saved files and
+            annotation notes are kept in the collection. Links to this source will stop working.
+            Reader cannot undo this.
           </p>
         </div>
         <div className="source-removal-details">

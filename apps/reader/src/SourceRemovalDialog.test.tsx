@@ -64,6 +64,10 @@ describe("removing a source", () => {
   it("deletes nothing until the checked removal is confirmed, and nothing on cancel", async () => {
     await act(async () => removal.request?.(source));
     expect(host.textContent).toContain("Remove “Imported by mistake”?");
+    expect(host.textContent).toContain("deletes its source note");
+    expect(host.textContent).toContain("annotation notes are kept in the collection");
+    expect(host.textContent).toContain("Links to this source will stop working");
+    expect(host.textContent).not.toContain(source.path);
     expect(host.textContent).toContain("annotations/a1.md");
     expect(document.activeElement).toBe(button("Cancel"));
 
