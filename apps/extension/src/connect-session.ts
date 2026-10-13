@@ -2,7 +2,9 @@ import {
   ReaderPortableApplicationSession,
   type MdbaseAppManifest,
   type ReaderConnectSnapshot,
+  type ReaderPortableSession,
 } from "@mdbase-reader/connect";
+import { ReaderNextApplicationSession, readerSdkBackend } from "@mdbase-reader/connect/next";
 
 import { chromeStorageMirror } from "./chrome-storage.js";
 import { lastCollectionKey } from "./collection-memory.js";
@@ -14,21 +16,29 @@ import type { KeyValueStorage } from "@mdbase-reader/platform";
 export { rememberCollection, rememberedCollection } from "./collection-memory.js";
 
 export interface ExtensionSession {
-  readonly session: ReaderPortableApplicationSession;
+  readonly session: ReaderPortableSession;
   /** Reader's mutation journal, kept beside the grants so any extension context can recover it. */
   readonly journalStorage: KeyValueStorage;
 }
 
 export async function createExtensionSession(): Promise<ExtensionSession> {
   const storage = await chromeStorageMirror();
-  const session = new ReaderPortableApplicationSession({
-    serverUrl: environment.connectUrl,
-    loopbackUrl: environment.loopbackUrl,
-    manifest: manifest as MdbaseAppManifest,
-    storage,
-    // Interactive capture should not wait the SDK's ten-minute file-index default.
-    timeouts: { watchStartMs: 60_000, fileIndexMs: 30_000, uploadMs: 120_000 },
-  });
+  const session: ReaderPortableSession =
+    readerSdkBackend(null, environment.sdk) === "next"
+      ? // The client key is a non-extractable WebCrypto key kept in IndexedDB.
+        new ReaderNextApplicationSession({
+          serverUrl: environment.connectUrl,
+          app: { name: manifest.id, version: chrome.runtime.getManifest().version },
+          storage,
+        })
+      : new ReaderPortableApplicationSession({
+          serverUrl: environment.connectUrl,
+          loopbackUrl: environment.loopbackUrl,
+          manifest: manifest as MdbaseAppManifest,
+          storage,
+          // Interactive capture should not wait the SDK's ten-minute file-index default.
+          timeouts: { watchStartMs: 60_000, fileIndexMs: 30_000, uploadMs: 120_000 },
+        });
   return {
     session,
     journalStorage: {
@@ -41,7 +51,7 @@ export async function createExtensionSession(): Promise<ExtensionSession> {
 
 /** Selects the collection chosen last time, if it is still authorized. */
 export async function restoreCollection(
-  session: ReaderPortableApplicationSession,
+  session: ReaderPortableSession,
 ): Promise<ReaderConnectSnapshot> {
   const snapshot = session.getSnapshot();
   if (snapshot.status !== "unselected") {

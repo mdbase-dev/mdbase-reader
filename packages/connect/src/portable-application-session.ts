@@ -18,6 +18,7 @@ import {
   connectedReaderCollection,
   type ReaderConnectedCollection,
   type ReaderConnectSnapshot,
+  type ReaderSession,
 } from "./application-session.js";
 
 export interface ReaderPortableApplicationSessionOptions {
@@ -30,8 +31,18 @@ export interface ReaderPortableApplicationSessionOptions {
   readonly timeouts?: MdbaseConnectTimeouts;
 }
 
+/** What the extension needs from a portable session, whichever SDK backs it. */
+export interface ReaderPortableSession extends Omit<ReaderSession, "authorize"> {
+  clearSelection(): void;
+  recoverPendingMutations(): Promise<readonly ConnectOutcome<unknown>[]>;
+  authorize(
+    target: "choose" | "selected",
+    options?: MdbaseAuthorizeOptions,
+  ): Promise<ConnectOutcome<unknown>>;
+}
+
 /** Extension/download-friendly Reader session using the SDK's device-code flow. */
-export class ReaderPortableApplicationSession {
+export class ReaderPortableApplicationSession implements ReaderPortableSession {
   readonly #session;
 
   public constructor(options: ReaderPortableApplicationSessionOptions) {

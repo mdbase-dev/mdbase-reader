@@ -5,6 +5,8 @@ export interface ExtensionEnvironment {
   readonly connectUrl: string;
   readonly loopbackUrl: string;
   readonly readerOrigin: string;
+  /** `next` opts into the mdbase-next SDK backend (MDBASE_SDK=next at build time). */
+  readonly sdk?: "connect" | "next";
 }
 
 declare const __READER_EXTENSION_ENVIRONMENT__: ExtensionEnvironment;

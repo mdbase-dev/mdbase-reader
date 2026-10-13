@@ -39,6 +39,8 @@ import {
 } from "./repositories.js";
 import { connectSourceImportRepository } from "./source-imports.js";
 
+import type { MigrationTarget } from "@mdbase-reader/migration";
+
 export type ReaderConnectSnapshot = MdbaseApplicationSessionSnapshot;
 
 export interface ReaderDirectAccessSnapshot {
@@ -60,7 +62,7 @@ export interface ReaderConnectedCollection {
   readonly collectionName: string;
   readonly sources: SourceRepository;
   readonly sourceImports: SourceImportRepository;
-  readonly migration: ConnectMigrationTarget;
+  readonly migration: MigrationTarget;
   readonly annotations: AnnotationRepository;
   readonly annotationAssets: AnnotationAssetRepository;
   readonly documents: DocumentRepository;
@@ -80,7 +82,19 @@ export interface ReaderApplicationSessionOptions {
   readonly timeouts?: MdbaseConnectTimeouts;
 }
 
-export class ReaderApplicationSession {
+/** What Reader's web app needs from a session, whichever SDK backs it. */
+export interface ReaderSession {
+  start(): Promise<ConnectOutcome<ReaderConnectSnapshot>>;
+  destroy(): void;
+  getSnapshot(): ReaderConnectSnapshot;
+  subscribe(listener: () => void): () => void;
+  select(selectedCollectionId: string): ConnectOutcome<unknown>;
+  authorize(target: "choose" | "selected", popup?: boolean): Promise<ConnectOutcome<unknown>>;
+  applyCollectionSetup(): Promise<ConnectOutcome<ReaderConnectSnapshot>>;
+  connectedCollection(expectedCollectionId?: string): ReaderConnectedCollection | null;
+}
+
+export class ReaderApplicationSession implements ReaderSession {
   readonly #session;
 
   public constructor(options: ReaderApplicationSessionOptions) {

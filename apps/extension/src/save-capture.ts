@@ -42,10 +42,7 @@ import { pageText } from "./page-annotations.js";
 import { rememberSavedUrls } from "./saved-url-index.js";
 
 import type { PageCapture, PdfCapture, SelectedWebCapture } from "./page-capture.js";
-import type {
-  ReaderConnectedCollection,
-  ReaderPortableApplicationSession,
-} from "@mdbase-reader/connect";
+import type { ReaderConnectedCollection, ReaderPortableSession } from "@mdbase-reader/connect";
 
 export const highlightColors = ["yellow", "green", "blue", "pink", "purple"] as const;
 export type HighlightColor = (typeof highlightColors)[number];
@@ -67,7 +64,7 @@ export interface SavedCapture {
   readonly notices: readonly string[];
 }
 export interface SaveCaptureInput {
-  readonly session: ReaderPortableApplicationSession;
+  readonly session: ReaderPortableSession;
   readonly collection: ReaderConnectedCollection;
   readonly capture: PageCapture;
   readonly draft: CaptureDraft;
