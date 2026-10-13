@@ -5,10 +5,10 @@ entry of the new SDK (`@mdbase-dev/sdk`, `MdbaseConnect`).
 
 ## Pin
 
-`packages/connect/vendor/mdbase-dev-sdk-dev-1629d11e.tgz` is the original
-`sdk-dev-1629d11e` cut from SDK source
-`1629d11ee44ecdef02f3559c6a0c2a6251114ee4`, SHA256
-`82d121ceb40022251eca6bc63c2a42c6ff2aba5b7029901da6e7434184229b7a` (4293367 bytes).
+`packages/connect/vendor/mdbase-dev-sdk-dev-e00c1ff8.tgz` is the original
+`sdk-dev-e00c1ff8` cut from SDK source
+`e00c1ff839d7f2db8c88cccc5e946d4714f77762`, SHA256
+`5e61b34d6c66070487f29e8328669eca83daa5b897819ee35face31b58eeef39` (4296599 bytes).
 Its source, SRI, native pins and original bundled protocol are recorded in
 `packages/connect/vendor/mdbase-next-sdk.json`. The SDK bundles beta129
 `c280cd194ffd`; the direct legacy protocol dependency remains `d765e675c3da` unchanged.
