@@ -1,3 +1,4 @@
+import { offlineShellPlugin } from "@mdbase-dev/sdk/offline-shell/build";
 import react from "@vitejs/plugin-react";
 import { defineConfig } from "vite";
 
@@ -15,7 +16,7 @@ const buildOutput = {
 };
 
 export default defineConfig({
-  plugins: [react(), deploymentRevision(buildId)],
+  plugins: [react(), deploymentRevision(buildId), offlineShellPlugin()],
   resolve: {
     dedupe: [
       "react",
