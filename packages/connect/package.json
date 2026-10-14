@@ -14,7 +14,7 @@
   },
   "dependencies": {
     "@mdbase-dev/connect": "0.1.0-beta.125",
-    "@mdbase-dev/sdk": "file:vendor/mdbase-dev-sdk-dev-f1aa67e3.tgz",
+    "@mdbase-dev/sdk": "file:vendor/mdbase-dev-sdk-dev-bef3fe45.tgz",
     "@mdbase-reader/core": "workspace:*",
     "@mdbase-reader/migration": "workspace:*",
     "yaml": "^2.9.0"
