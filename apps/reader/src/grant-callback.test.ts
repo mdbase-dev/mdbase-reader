@@ -12,23 +12,21 @@ it("recognises the consent popup's return, approved or declined, and nothing els
   expect(isAppGrantCallback(new URL("https://reader.mdbase.dev/?code=c"))).toBe(false);
 });
 
-it("delivers the full return URL to the waiting tab, then closes, even when delivery fails", async () => {
+it("delivers without preempting the original SDK popup lifetime, including failed delivery", async () => {
   const url = new URL("http://127.0.0.1:48222/?state=s&code=c");
-  const close = vi.fn();
+  const close = vi.fn();vi.stubGlobal("window",{close});
   const deliver = vi.fn();
-  expect(completeAppGrantCallback(url, close, deliver)).toBe(true);
-  await vi.waitFor(() => expect(close).toHaveBeenCalledOnce());
+  expect(completeAppGrantCallback(url, deliver)).toBe(true);
+  await new Promise(resolve=>setTimeout(resolve,0));
+  expect(close).not.toHaveBeenCalled();
   expect(deliver).toHaveBeenCalledWith(url.href);
 
-  const closeAfterFailure = vi.fn();
   expect(
-    completeAppGrantCallback(url, closeAfterFailure, () => Promise.reject(new Error("no channel"))),
+    completeAppGrantCallback(url, () => Promise.reject(new Error("no channel"))),
   ).toBe(true);
-  await vi.waitFor(() => expect(closeAfterFailure).toHaveBeenCalledOnce());
+  await new Promise(resolve=>setTimeout(resolve,0));
+  expect(close).not.toHaveBeenCalled();
 
-  const untouched = vi.fn();
-  expect(completeAppGrantCallback(new URL("http://127.0.0.1:48222/"), untouched, deliver)).toBe(
-    false,
-  );
-  expect(untouched).not.toHaveBeenCalled();
+  expect(completeAppGrantCallback(new URL("http://127.0.0.1:48222/"), deliver)).toBe(false);
+  expect(close).not.toHaveBeenCalled();vi.unstubAllGlobals();
 });

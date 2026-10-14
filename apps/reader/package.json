@@ -6,6 +6,7 @@
   "scripts": {
     "icons": "node scripts/write-pwa-icons.mjs",
     "build": "node scripts/package-zotero.mjs && pnpm manifest && pnpm manifest:validate && vite build",
+    "build:lab": "VITE_MDBASE_ENV=lab pnpm build",
     "deploy:dev": "node scripts/deploy-pages.mjs",
     "deploy:prod": "MDBASE_READER_DEPLOY_TARGET=production node scripts/deploy-pages.mjs",
     "dev": "node scripts/package-zotero.mjs && pnpm manifest && vite --host 127.0.0.1",
@@ -22,7 +23,7 @@
   },
   "dependencies": {
     "@citation-js/plugin-csl": "0.8.2",
-    "@mdbase-dev/sdk": "file:../../packages/connect/vendor/mdbase-dev-sdk-dev-3f417b6d.tgz",
+    "@mdbase-dev/sdk": "file:../../packages/connect/vendor/mdbase-dev-sdk-dev-72f8ea6c.tgz",
     "@mdbase-dev/sdk-legacy-729b5391": "file:../../vendor/mdbase-dev-sdk-0.0.0-729b5391.tgz",
     "@mdbase-dev/ui": "file:../../vendor/mdbase-dev-ui-dev-9553ad66.tgz",
     "@mdbase-reader/connect": "workspace:*",
