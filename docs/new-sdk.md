@@ -2,9 +2,12 @@
 
 ## Current declared Private setup SDK intake — 2026-10-15
 
-SDK `d3559aaacbffc4177929e93f9fc8649df835c14c` replaces the prior
-`72f8ea6c` intake. Original archive SHA256:
-`0cb1b8ead1aecf50856711d655eaa28ae2f353a9c3eede9c3ea0658ac8f868e2`.
+SDK `9a033b252860ec8624da0abb5ffdecbac56332d2` replaces the prior
+`d3559aaa` intake. Native at this source compacts the shared lock from Reader's
+two declared packs into one atomic write with the original CAS guard; no
+manifest or permission changes. The SDK preserves actionable setup-conflict
+messages in every consuming app. Original archive SHA256:
+`90ef67523dfa11cb36efe0d996475f1a1c82ac71074e4cd4e95c6fbe02c18be9`.
 Native owns bounded declaration-bound setup and atomic starter publication;
 the SDK retains only the protected original MID for uncertain-result reconciliation.
 No unsigned administration, widened manifest or Hosted fallback is introduced.
