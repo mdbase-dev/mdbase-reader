@@ -23,7 +23,7 @@
   },
   "dependencies": {
     "@citation-js/plugin-csl": "0.8.2",
-    "@mdbase-dev/sdk": "file:../../packages/connect/vendor/mdbase-dev-sdk-dev-72f8ea6c.tgz",
+    "@mdbase-dev/sdk": "file:../../packages/connect/vendor/mdbase-dev-sdk-dev-d3559aaa.tgz",
     "@mdbase-dev/sdk-legacy-729b5391": "file:../../vendor/mdbase-dev-sdk-0.0.0-729b5391.tgz",
     "@mdbase-dev/ui": "file:../../vendor/mdbase-dev-ui-dev-9553ad66.tgz",
     "@mdbase-reader/connect": "workspace:*",

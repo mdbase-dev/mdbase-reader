@@ -1,10 +1,15 @@
 # Reader on the new mdbase SDK
 
-## Current unified SDK intake — 2026-10-14
+## Current declared Private setup SDK intake — 2026-10-15
 
-SDK `72f8ea6caeafa4b089d3ee14c3b38ce492511a2c` replaces the prior
-`3f417b6d` intake below. Original archive SHA256:
-`d58ee0fb78f2a3bfb49cc70e92bea69fe2292eb2b1cfff0cd9c222efba6d9374`.
+SDK `d3559aaacbffc4177929e93f9fc8649df835c14c` replaces the prior
+`72f8ea6c` intake. Original archive SHA256:
+`0cb1b8ead1aecf50856711d655eaa28ae2f353a9c3eede9c3ea0658ac8f868e2`.
+Native owns bounded declaration-bound setup and atomic starter publication;
+the SDK retains only the protected original MID for uncertain-result reconciliation.
+No unsigned administration, widened manifest or Hosted fallback is introduced.
+The packaged runtime is source `a4331ad466a0d16e87ab3bedeb0963a1e0d1867e`,
+SHA256 `3c803e83f81a05855f6e30ca79036d6b19383048a6b11ba5c9a0b5ebf3a1bbe2`.
 The ordinary Sign in / Add chooser owns one popup and the original Native
 preparation, callback and custody ACK. The callback page delivers only; the
 original SDK closes after completion. No app-side alternate protocol, scope,
