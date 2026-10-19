@@ -22,7 +22,6 @@ admission, READ/edit/reload or production release qualification.
 
 ## Prior intake notes (superseded SDK pin)
 
-
 Reader is being ported from prod Connect (`@mdbase-dev/connect`) to the public application
 entry of the new SDK (`@mdbase-dev/sdk`, `MdbaseConnect`).
 

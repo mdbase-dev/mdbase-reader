@@ -18,10 +18,7 @@ const deliverWithSdk: Deliver = async (href) => {
 };
 
 /** Hand the callback to the original SDK owner. False when it is not one. */
-export function completeAppGrantCallback(
-  url: URL,
-  deliver: Deliver = deliverWithSdk,
-): boolean {
+export function completeAppGrantCallback(url: URL, deliver: Deliver = deliverWithSdk): boolean {
   if (!isAppGrantCallback(url)) {
     return false;
   }
