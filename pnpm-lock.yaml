@@ -64,7 +64,7 @@ importers:
         version: 8.5.3
       '@capacitor/filesystem':
         specifier: latest
-        version: 8.1.4(@capacitor/core@8.5.3)
+        version: 8.1.5(@capacitor/core@8.5.3)
       '@capacitor/preferences':
         specifier: latest
         version: 8.0.1(@capacitor/core@8.5.3)
@@ -83,13 +83,13 @@ importers:
         version: link:../../packages/platform
       electron:
         specifier: latest
-        version: 44.7.2
+        version: 44.9.0
 
   apps/extension:
     dependencies:
       '@mdbase-dev/ui':
         specifier: file:../../vendor/mdbase-dev-ui-dev-9553ad66.tgz
-        version: file:vendor/mdbase-dev-ui-dev-9553ad66.tgz(@codemirror/view@6.43.8)(@mdbase-dev/sdk@file:packages/connect/vendor/mdbase-dev-sdk-dev-9a033b25.tgz)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
+        version: file:vendor/mdbase-dev-ui-dev-9553ad66.tgz(@codemirror/view@6.43.8)(@mdbase-dev/sdk@file:packages/connect/vendor/mdbase-dev-sdk-dev-0fabaf20.tgz)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
       '@mdbase-reader/connect':
         specifier: workspace:*
         version: link:../../packages/connect
@@ -134,14 +134,14 @@ importers:
         specifier: 0.8.2
         version: 0.8.2(@citation-js/core@0.8.2)
       '@mdbase-dev/sdk':
-        specifier: file:../../packages/connect/vendor/mdbase-dev-sdk-dev-9a033b25.tgz
-        version: file:packages/connect/vendor/mdbase-dev-sdk-dev-9a033b25.tgz
+        specifier: file:../../packages/connect/vendor/mdbase-dev-sdk-dev-0fabaf20.tgz
+        version: file:packages/connect/vendor/mdbase-dev-sdk-dev-0fabaf20.tgz
       '@mdbase-dev/sdk-legacy-729b5391':
         specifier: file:../../vendor/mdbase-dev-sdk-0.0.0-729b5391.tgz
         version: '@mdbase-dev/sdk@file:vendor/mdbase-dev-sdk-0.0.0-729b5391.tgz'
       '@mdbase-dev/ui':
         specifier: file:../../vendor/mdbase-dev-ui-dev-9553ad66.tgz
-        version: file:vendor/mdbase-dev-ui-dev-9553ad66.tgz(@codemirror/view@6.43.8)(@mdbase-dev/sdk@file:packages/connect/vendor/mdbase-dev-sdk-dev-9a033b25.tgz)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
+        version: file:vendor/mdbase-dev-ui-dev-9553ad66.tgz(@codemirror/view@6.43.8)(@mdbase-dev/sdk@file:packages/connect/vendor/mdbase-dev-sdk-dev-0fabaf20.tgz)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
       '@mdbase-reader/connect':
         specifier: workspace:*
         version: link:../../packages/connect
@@ -233,8 +233,8 @@ importers:
         specifier: 0.1.0-beta.125
         version: 0.1.0-beta.125
       '@mdbase-dev/sdk':
-        specifier: file:vendor/mdbase-dev-sdk-dev-9a033b25.tgz
-        version: file:packages/connect/vendor/mdbase-dev-sdk-dev-9a033b25.tgz
+        specifier: file:vendor/mdbase-dev-sdk-dev-0fabaf20.tgz
+        version: file:packages/connect/vendor/mdbase-dev-sdk-dev-0fabaf20.tgz
       '@mdbase-reader/core':
         specifier: workspace:*
         version: link:../core
@@ -281,7 +281,7 @@ importers:
         version: 1.2.3
       '@mdbase-dev/ui':
         specifier: file:../../vendor/mdbase-dev-ui-dev-9553ad66.tgz
-        version: file:vendor/mdbase-dev-ui-dev-9553ad66.tgz(@codemirror/view@6.43.8)(@mdbase-dev/sdk@file:packages/connect/vendor/mdbase-dev-sdk-dev-9a033b25.tgz)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
+        version: file:vendor/mdbase-dev-ui-dev-9553ad66.tgz(@codemirror/view@6.43.8)(@mdbase-dev/sdk@file:packages/connect/vendor/mdbase-dev-sdk-dev-0fabaf20.tgz)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
       '@mdbase-reader/core':
         specifier: workspace:*
         version: link:../core
@@ -421,7 +421,7 @@ importers:
         version: 5.3.0
       '@mdbase-dev/ui':
         specifier: file:../../vendor/mdbase-dev-ui-dev-9553ad66.tgz
-        version: file:vendor/mdbase-dev-ui-dev-9553ad66.tgz(@codemirror/view@6.43.8)(@mdbase-dev/sdk@file:packages/connect/vendor/mdbase-dev-sdk-dev-9a033b25.tgz)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
+        version: file:vendor/mdbase-dev-ui-dev-9553ad66.tgz(@codemirror/view@6.43.8)(@mdbase-dev/sdk@file:packages/connect/vendor/mdbase-dev-sdk-dev-0fabaf20.tgz)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
       '@phosphor-icons/react':
         specifier: ^2.1.10
         version: 2.1.10(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
@@ -531,8 +531,8 @@ packages:
   '@capacitor/core@8.5.3':
     resolution: {integrity: sha512-oBE1oGuYE4ZzYYrulC75OuHdSsD6zLUy7d5o1tFwDLG4govGoubY15cxpiI5l0+q87Lm5p0bhbehMdzJg4aFag==}
 
-  '@capacitor/filesystem@8.1.4':
-    resolution: {integrity: sha512-8MXmt10cb+dGWoh8jUeO8on0U6iETQCX5k+fmdB278PZ3MYDEVGQo08+hroaOtUbK3+5stiRk4/K6QBHKepv0A==}
+  '@capacitor/filesystem@8.1.5':
+    resolution: {integrity: sha512-m1RkI8L83NJeppEKyRWioK3MDp2vjlA+QfUQcF8/xRlcXNC2HYxqoyYJ+K4M0EcVovy+g+4F24S05+bhK4Vgdg==}
     peerDependencies:
       '@capacitor/core': '>=8.0.0'
 
@@ -1147,8 +1147,8 @@ packages:
   '@mdbase-dev/connect@0.1.0-beta.125':
     resolution: {integrity: sha512-vEH4NQfu3dBQgMw0YQxG7LDtOOLxDyxET4DQhrWuHqtgr9qoch/H0QLzel9tFSqkyH+QWxuvW3Bet6ae1+qVyQ==}
 
-  '@mdbase-dev/sdk@file:packages/connect/vendor/mdbase-dev-sdk-dev-9a033b25.tgz':
-    resolution: {integrity: sha512-Th4bgqvvgDPQQ7hkEwyo6ZG2SFQ7L7J6qdeaoTVjsOTyop2vmEmuUpMZ/EkUPZA0Fo0oq6wbOcsRk+en5vQEOQ==, tarball: file:packages/connect/vendor/mdbase-dev-sdk-dev-9a033b25.tgz}
+  '@mdbase-dev/sdk@file:packages/connect/vendor/mdbase-dev-sdk-dev-0fabaf20.tgz':
+    resolution: {integrity: sha512-3y+3UNP3nNdi7GAOhmK+1l38H4eUKCS7X7Bu9bq/m6vXNstcRllsIcykO4VRbruoPakrmmJQ8/JisA99fTiIFA==, tarball: file:packages/connect/vendor/mdbase-dev-sdk-dev-0fabaf20.tgz}
     version: 0.0.0
     engines: {node: '>=20'}
     bundledDependencies:
@@ -1964,8 +1964,8 @@ packages:
   electron-to-chromium@1.5.403:
     resolution: {integrity: sha512-MQsYmdaLzvaCX5j+ZZBr5Fm6uCCnPQcRtlvmvRlWqrXy+BH2O4ffXIAScF+JQznQWB9brWp4lSD9Z4yNmaf2BA==}
 
-  electron@44.7.2:
-    resolution: {integrity: sha512-u3Pbz0Hi1sSSwBMz2v8LiagsfUG4QURPUe/qphM+g4THKP8o4BYdnuboyhlLO8HIC/KfV5rvltyacbP4jEq9yw==}
+  electron@44.9.0:
+    resolution: {integrity: sha512-boP8zA5OIoMGYe3uWP4IqB1VJNoEzdHYgcBaVYnd1DBv5TogwXkbM4yJGSfNmYCzalVQ5J3TAIbaKOY+ILTnyg==}
     engines: {node: '>= 22.12.0'}
     hasBin: true
 
@@ -3551,7 +3551,7 @@ snapshots:
     dependencies:
       tslib: 2.8.1
 
-  '@capacitor/filesystem@8.1.4(@capacitor/core@8.5.3)':
+  '@capacitor/filesystem@8.1.5(@capacitor/core@8.5.3)':
     dependencies:
       '@capacitor/core': 8.5.3
       '@capacitor/synapse': 1.0.4
@@ -4346,7 +4346,7 @@ snapshots:
     dependencies:
       '@mdbase-dev/connect-protocol': 0.1.0-beta.125
 
-  '@mdbase-dev/sdk@file:packages/connect/vendor/mdbase-dev-sdk-dev-9a033b25.tgz':
+  '@mdbase-dev/sdk@file:packages/connect/vendor/mdbase-dev-sdk-dev-0fabaf20.tgz':
     dependencies:
       '@noble/ciphers': 2.4.0
       '@noble/curves': 2.4.0
@@ -4358,14 +4358,14 @@ snapshots:
       '@noble/curves': 2.4.0
       '@noble/hashes': 2.4.0
 
-  '@mdbase-dev/ui@file:vendor/mdbase-dev-ui-dev-9553ad66.tgz(@codemirror/view@6.43.8)(@mdbase-dev/sdk@file:packages/connect/vendor/mdbase-dev-sdk-dev-9a033b25.tgz)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)':
+  '@mdbase-dev/ui@file:vendor/mdbase-dev-ui-dev-9553ad66.tgz(@codemirror/view@6.43.8)(@mdbase-dev/sdk@file:packages/connect/vendor/mdbase-dev-sdk-dev-0fabaf20.tgz)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)':
     dependencies:
       '@fontsource-variable/atkinson-hyperlegible-next': 5.3.0
       '@fontsource/azeret-mono': 5.3.0
       react: 19.2.8
     optionalDependencies:
       '@codemirror/view': 6.43.8
-      '@mdbase-dev/sdk': file:packages/connect/vendor/mdbase-dev-sdk-dev-9a033b25.tgz
+      '@mdbase-dev/sdk': file:packages/connect/vendor/mdbase-dev-sdk-dev-0fabaf20.tgz
       react-dom: 19.2.8(react@19.2.8)
 
   '@mozilla/readability@0.6.0': {}
@@ -5109,7 +5109,7 @@ snapshots:
 
   electron-to-chromium@1.5.403: {}
 
-  electron@44.7.2:
+  electron@44.9.0:
     dependencies:
       '@electron-internal/extract-zip': 1.0.4
       '@electron/get': 5.0.0
