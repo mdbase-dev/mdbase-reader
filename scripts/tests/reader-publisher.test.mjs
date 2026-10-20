@@ -70,7 +70,7 @@ test("last current HEAD rejects moved branch even if source remains ancestor", a
   ])
     await assert.rejects(assertCurrentHead(env, async () => Response.json(value)));
 });
-test("ALL historical c0bc installed SDK/UI/protocol/peers: originals plus separately exact installer output", async () => {
+test("ALL current eaa4 installed SDK/UI/protocol/peers: originals plus separately exact installer output", async () => {
   const installerEvidence = [];
   const trust = await loadOriginals({
     target: "staging",
@@ -94,7 +94,7 @@ test("ALL historical c0bc installed SDK/UI/protocol/peers: originals plus separa
     assert.equal(r.path, "node_modules/.bin/yaml");
   }
   console.log(
-    "HISTORICAL c0bc data-only installer proof (NOT latest target/product-build/admission)",
+    "CURRENT eaa4 data-only installer proof (NOT product-build/admission)",
     JSON.stringify(installerEvidence),
   );
 });
@@ -109,7 +109,7 @@ async function intakeCopy() {
     "packages/markdown-editor/package.json",
     "packages/connect/package.json",
     "packages/connect/vendor/native-release",
-    "packages/connect/vendor/sdk-dev-a3023aee-staging.tgz",
+    "packages/connect/vendor/sdk-dev-eaa4e697-staging.tgz",
     "packages/connect/vendor/mdbase-dev-connect-protocol-0.1.0-beta.129-c280cd194ffd.tgz",
     "vendor/mdbase-dev-ui-dev-b2d7c464.tgz",
     "vendor/mdbase-dev-sdk-0.0.0-729b5391.tgz",
@@ -121,20 +121,21 @@ async function intakeCopy() {
   return root;
 }
 for (const [label, path] of Object.entries({
-  SDK: "packages/connect/vendor/sdk-dev-a3023aee-staging.tgz",
+  SDK: "packages/connect/vendor/sdk-dev-eaa4e697-staging.tgz",
   legacy: "vendor/mdbase-dev-sdk-0.0.0-729b5391.tgz",
   UI: "vendor/mdbase-dev-ui-dev-b2d7c464.tgz",
   protocol: "packages/connect/vendor/mdbase-dev-connect-protocol-0.1.0-beta.129-c280cd194ffd.tgz",
-  facts: "packages/connect/vendor/native-release/staging/artifact/artifact-facts.public.json",
-  provenance: "packages/connect/vendor/native-release/staging/artifact/provenance.json",
+  facts:
+    "packages/connect/vendor/native-release/staging-eaa4e697/artifact/artifact-facts.public.json",
+  provenance: "packages/connect/vendor/native-release/staging-eaa4e697/artifact/provenance.json",
   context:
-    "packages/connect/vendor/native-release/staging/verified-staging/next-trust/staging-context.json",
+    "packages/connect/vendor/native-release/staging-eaa4e697/verified-staging/next-trust/staging-context.json",
   rawAsset:
-    "packages/connect/vendor/native-release/staging/verified-staging/next-trust/staging.json",
-  receipt: "packages/connect/vendor/native-release/staging/sdk-build-receipt.json",
+    "packages/connect/vendor/native-release/staging-eaa4e697/verified-staging/next-trust/staging.json",
+  receipt: "packages/connect/vendor/native-release/staging-eaa4e697/sdk-build-receipt.json",
   proof:
-    "packages/connect/vendor/native-release/staging/verified-staging/release-trust-bundle.sigstore.json",
-  members: "packages/connect/vendor/native-release/staging/artifact/members.json",
+    "packages/connect/vendor/native-release/staging-eaa4e697/verified-staging/release-trust-bundle.sigstore.json",
+  members: "packages/connect/vendor/native-release/staging-eaa4e697/artifact/members.json",
 }))
   test(label + " data mutation refuses without executing candidate SDK", async () => {
     const root = await intakeCopy();
@@ -144,6 +145,34 @@ for (const [label, path] of Object.entries({
       await writeFile(join(root, path), "{}");
       await assert.rejects(
         loadOriginals({ target: "staging", repoRoot: root, hashes: approvedHashes }),
+      );
+    } finally {
+      await rm(root, { recursive: true, force: true });
+    }
+  });
+for (const kind of ["old-c0-archive", "old-d313-facts", "invalid-facts-JSON"])
+  test("fresh eaa4 independent pins refuse " + kind + " before SDK/JSON execution", async () => {
+    const root = await intakeCopy();
+    try {
+      const archive = "packages/connect/vendor/sdk-dev-eaa4e697-staging.tgz",
+        facts =
+          "packages/connect/vendor/native-release/staging-eaa4e697/artifact/artifact-facts.public.json";
+      const path = kind === "old-c0-archive" ? archive : facts;
+      const bytes =
+        kind === "old-c0-archive"
+          ? await readFile("packages/connect/vendor/sdk-dev-a3023aee-staging.tgz")
+          : kind === "old-d313-facts"
+            ? await readFile(
+                "packages/connect/vendor/native-release/staging/artifact/artifact-facts.public.json",
+              )
+            : Buffer.from("{invalid");
+      await rm(join(root, path));
+      await writeFile(join(root, path), bytes);
+      await assert.rejects(
+        loadOriginals({ target: "staging", repoRoot: root, hashes: approvedHashes }),
+        kind === "old-c0-archive"
+          ? /sdk protected archive hash mismatch/
+          : /approved target facts missing\/mismatched/,
       );
     } finally {
       await rm(root, { recursive: true, force: true });

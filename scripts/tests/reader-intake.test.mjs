@@ -16,7 +16,7 @@ test("Reader actual authenticated canonical staging originals, never LAB retarge
   );
   assert.equal(
     plan.packet.factsSha256,
-    "d313bb9dc2e291f957a77fa0c05fdff533a4cb79afa8973d63bca75c7897b44c",
+    "d54aef71521ab3561bd9a81cd1303410a3fde29f8fbd35a1e0041e58d0569de3",
   );
   assert.equal(
     plan.trustModuleSha256,

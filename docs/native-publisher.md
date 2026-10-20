@@ -1,11 +1,14 @@
 # Reader native publisher (source only)
 
-**HOLD (Pool065615/Co063830):** c0bc is retained immutable HISTORICAL custody,
-not the latest/future candidate or admission. No new c0bc product build or live
-publication. Sole NX-TNAPP owns the SDK fix/one PR CI and Co-authorized replacement
-originals. Final target intake and ONE causal web+extension build wait for actual
-qualified replacement originals plus independent facts relayed by the parent.
-No replacement READY/SHA/facts exist here; never guess, patch, repack or reauth.
+**Co072350 resumed current intake:** actual SDK merge
+`eaa4e697fc1198f32fc3714f377342a24c56d985` / tree
+`71ddecbca5dd54b5153d6bcd500cc89ce189474e`, sole CI39383342511/a1 SUCCESS.
+NX-TNAPP's ONE replacement STAGE original is CLOSED/READY; no producer rerun,
+SDK patch/repack/reauth or new signing authority. The prior c0bc HOLD was obeyed:
+no c0bc product build started. Its archive/packet remain immutable historical
+custody, not transferred qualification. Parent custody readback and independent
+Reader byte checks precede the fresh full check and ONE actual staging web plus
+extension consumer build. Live publication/admission remain separate future work.
 
 This is a separate manual path in the registered `deploy-reader.yml`. Leaving
 `source_sha` blank preserves the existing CI/main deployment jobs. A nonblank
@@ -32,14 +35,18 @@ CLI, without candidate/repository fallback:
 - `NATIVE_TRUST_ASSET_SHA256`: FULL RAW signed target asset, not module, context,
   receipt, native-WASM or archive digest.
 
-Reader's retained HISTORICAL staging custody is SDK `c0bc3776…`, UIb2 `8f785294…`,
-direct protocol `cd1e1523…` and raw asset `67e11764…`. The historical approved
-public-facts SHA is `d313bb9d…`. `reader-approved-intake.mjs` contains data/local
-qualification expectations ONLY; the live publisher never uses them as environment
-authority. These old facts do not authorize a replacement or override the HOLD.
+Current staging input is SDK `15eb64b5…` (4461608B), independently pinned fresh
+public facts `d54aef71…` (4746B), unchanged Reader UIb2 `8f785294…`, direct protocol
+`cd1e1523…` and raw asset `67e11764…`. Facts are pinned BEFORE JSON parsing; no old
+d313/new-archive mixture is accepted. `reader-approved-intake.mjs` contains data/
+local expectations ONLY; the live publisher never uses them as environment authority.
+Parent separately updates/audits ONLY the existing Stage SDK hash variable; source
+and local checks do not claim that Ops readback occurred.
 
-The original archive basename is `sdk-dev-a3023aee-staging.tgz`. Its unmodified
-canonical packet is under `packages/connect/vendor/native-release/staging/`:
+The new original archive basename is `sdk-dev-eaa4e697-staging.tgz`. Its original
+producer-layout packet is at
+`packages/connect/vendor/native-release/staging-eaa4e697/`; the OLD c0bc archive
+and `native-release/staging/` packet are retained byte-unchanged. New packet:
 
 - `artifact/artifact-facts.public.json`, `artifact/members.json`,
   `artifact/provenance.json`;
@@ -161,8 +168,8 @@ rpnpm run test:publisher:evidence
 rpnpm run test:publisher:offline
 rpnpm run test:publisher:installer
 rpnpm run check
-# HOLD: ONLY after qualified replacement originals, independent facts and authorized intake:
-# rpnpm --pull artifacts/build run build:native:staging reader-staging-public-input.json
+# ONE actual staging build ONLY after the fresh frozen full check succeeds:
+rpnpm --pull artifacts/build run build:native:staging reader-staging-public-input.json
 ```
 
 Remove ONLY that owned temporary public input after terminal checks. The runner

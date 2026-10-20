@@ -1,4 +1,4 @@
-// Data-only validation of the ACTUAL a3023aee SDK adapter's embedded manifest.
+// Data-only validation of the ACTUAL eaa4e697 SDK adapter's embedded manifest.
 // No eval/import of generated workers, no fictional standalone sidecar, and NO
 // substitution of the cache subset for the independent FULL final inventory.
 import { createHash } from "node:crypto";

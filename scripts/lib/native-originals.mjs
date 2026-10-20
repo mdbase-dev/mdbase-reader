@@ -387,17 +387,17 @@ export async function loadOriginals({
     }
   }
   // This is a delivery location, not a new approval descriptor/schema.
-  const packet = `packages/connect/vendor/native-release/${target}`;
+  const packet = `packages/connect/vendor/native-release/${target === "staging" ? "staging-eaa4e697" : target}`;
   const packetFile = (path) => regular(repoRoot, `${packet}/${path}`);
-  const factsBytes = await packetFile("artifact/artifact-facts.public.json"),
-    facts = JSON.parse(factsBytes);
+  const factsBytes = await packetFile("artifact/artifact-facts.public.json");
   // Approved public facts digest pinned from the authenticated owner handoff,
   // not candidate-computed authority. Production has no authorized intake yet.
   requireValue(
     target === "staging" &&
-      hash(factsBytes) === "d313bb9dc2e291f957a77fa0c05fdff533a4cb79afa8973d63bca75c7897b44c",
+      hash(factsBytes) === "d54aef71521ab3561bd9a81cd1303410a3fde29f8fbd35a1e0041e58d0569de3",
     "approved target facts missing/mismatched",
   );
+  const facts = JSON.parse(factsBytes); // independent facts pin BEFORE parsing
   const sdk = archives.sdk,
     sdkPath = join(repoRoot, sdk.path),
     members = originals.sdk;
