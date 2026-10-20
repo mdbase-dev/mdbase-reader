@@ -1,25 +1,19 @@
 import { readFile } from "node:fs/promises";
 import { resolve } from "node:path";
 
-import { formatValidationIssues, validateAppManifest } from "@mdbase-dev/connect-dev";
+import {
+  formatManifestValidationIssues,
+  validateAppManifest,
+} from "@mdbase-dev/connect-protocol/manifest";
 
-import { readerInstallationOrigins } from "./reader-manifest.mjs";
-
-/**
- * Validates the generated manifest. The legacy connect-dev schema predates
- * `installation_origins` (the native CP schema declares exact lab, staging and
- * production policies), so that one field is checked here against the deployment
- * table and the rest of the manifest keeps the legacy validation unchanged.
- */
-export function assertValidReaderManifest(manifest) {
-  const { installation_origins: installationOrigins, ...legacyManifest } = manifest;
-  const validation = validateAppManifest(legacyManifest);
+/** The SAME canonical schema and semantic origin checks for web and extension.
+ * TODO: restore connect-dev CLI usage once a published devkit carries this
+ * canonical installation_origins support. Never strip or hand-validate fields. */
+export function assertValidReaderManifest(manifest, { allowLocal = false } = {}) {
+  const validation = validateAppManifest(manifest, { allowLocal });
   if (!validation.valid) {
-    throw new Error(`Reader manifest is invalid: ${formatValidationIssues(validation.issues)}`);
-  }
-  if (JSON.stringify(installationOrigins) !== JSON.stringify(readerInstallationOrigins())) {
     throw new Error(
-      "Reader manifest installation_origins do not declare the exact per-environment origins.",
+      `Application manifest is invalid: ${formatManifestValidationIssues(validation.issues)}`,
     );
   }
 }
@@ -28,9 +22,12 @@ const isMain =
   process.argv[1] &&
   resolve(process.argv[1]) === resolve(import.meta.dirname, "validate-manifest.mjs");
 if (isMain) {
-  const manifestPath = process.argv[2];
-  if (!manifestPath) {
-    throw new Error("Usage: node scripts/validate-manifest.mjs <mdbase-app.json>");
+  const arguments_ = process.argv.slice(2);
+  const paths = arguments_.filter((argument) => argument !== "--allow-local");
+  if (paths.length !== 1 || paths[0].startsWith("-")) {
+    throw new Error("Usage: node scripts/validate-manifest.mjs <mdbase-app.json> [--allow-local]");
   }
-  assertValidReaderManifest(JSON.parse(await readFile(manifestPath, "utf8")));
+  assertValidReaderManifest(JSON.parse(await readFile(paths[0], "utf8")), {
+    allowLocal: arguments_.includes("--allow-local"),
+  });
 }

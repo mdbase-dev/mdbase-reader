@@ -1,6 +1,9 @@
 import { readFileSync } from "node:fs";
 
 import { readerDeploymentFor } from "../../reader/scripts/deployment-environment.mjs";
+import { assertValidReaderManifest } from "../../reader/scripts/validate-manifest.mjs";
+
+import { stagingExtensionId, stagingManifestKey } from "./staging-public-key.mjs";
 
 /** The Chrome Web Store build's ID; its origin is what Connect registers for the extension. */
 export const storeExtensionId = "kimdfjefhbfgfecconmaiaaindjccidp";
@@ -35,13 +38,17 @@ export function extensionEnvironment(environment = process.env) {
   }
   const stagingId = environment.MDBASE_EXTENSION_STAGING_ID;
   if (target === "staging") {
-    if (!stagingId || !chromeExtensionId.test(stagingId) || stagingId === storeExtensionId) {
+    if (!stagingId || !chromeExtensionId.test(stagingId) || stagingId !== stagingExtensionId) {
       throw new Error(
         "Staging extension builds require MDBASE_EXTENSION_STAGING_ID: the approved staging build's own Chrome extension ID (not the Web Store ID).",
       );
     }
   } else if (stagingId) {
     throw new Error("MDBASE_EXTENSION_STAGING_ID is for staging builds only.");
+  }
+  const stagingPublicKey = environment.MDBASE_EXTENSION_STAGING_PUBLIC_KEY;
+  if (target !== "staging" && stagingPublicKey) {
+    throw new Error("MDBASE_EXTENSION_STAGING_PUBLIC_KEY is for staging builds only.");
   }
   const extensionIds =
     target === "staging"
@@ -55,6 +62,7 @@ export function extensionEnvironment(environment = process.env) {
     loopbackUrl: deployment.loopbackUrl,
     readerOrigin: deployment.origin,
     extensionOrigins: extensionIds.map((id) => `chrome-extension://${id}`),
+    ...(target === "staging" && stagingPublicKey ? { stagingPublicKey } : {}),
   };
 }
 
@@ -65,7 +73,7 @@ export function extensionEnvironment(environment = process.env) {
  * another environment's name.
  */
 export function extensionMdbaseManifest(reader, environment) {
-  return {
+  const manifest = {
     ...reader,
     id: "dev.mdbase.reader.extension",
     name: "mdbase Reader browser extension",
@@ -76,6 +84,8 @@ export function extensionMdbaseManifest(reader, environment) {
       [environment.target]: { "app-runtime": environment.extensionOrigins },
     },
   };
+  assertValidReaderManifest(manifest);
+  return manifest;
 }
 
 const packageVersion = JSON.parse(
@@ -98,10 +108,23 @@ const icons = Object.fromEntries(
   [16, 32, 48, 128].map((size) => [String(size), `icons/icon-${size}.png`]),
 );
 
+export function extensionHostPermissions(environment) {
+  return [
+    `${environment.connectUrl}/*`,
+    ...(environment.logUrl ? [`${environment.logUrl}/*`] : []),
+    "https://*/*",
+  ];
+}
+
 export function extensionManifest(environment) {
+  // A declared origin alone cannot set an unpacked Chrome extension ID. Require
+  // its matching PUBLIC key in the Chrome manifest, never the keyring private key.
+  const key =
+    environment.target === "staging" ? stagingManifestKey(environment.stagingPublicKey) : undefined;
   const suffix = environment.label ? ` (${environment.label})` : "";
   return {
     manifest_version: 3,
+    ...(key ? { key } : {}),
     name: `mdbase Reader${suffix}`,
     description: "Save the page you are reading and revisit your mdbase annotations.",
     ...manifestVersion(),
@@ -112,11 +135,7 @@ export function extensionManifest(environment) {
     // The mdbase control plane and log service the SDK talks to from the extension's
     // pages, and HTTPS pages: the side panel follows the active tab and saved pages are
     // marked, which needs to read each page without a click on the toolbar.
-    host_permissions: [
-      `${environment.connectUrl}/*`,
-      ...(environment.logUrl ? [`${environment.logUrl}/*`] : []),
-      "https://*/*",
-    ],
+    host_permissions: extensionHostPermissions(environment),
     // The SDK's native runtime is WebAssembly.
     content_security_policy: {
       extension_pages: "script-src 'self' 'wasm-unsafe-eval'; object-src 'self'",

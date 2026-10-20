@@ -7,6 +7,7 @@ export function manifestVersion(version?: string): {
   version: string;
   version_name?: string;
 };
+export function extensionHostPermissions(environment: ExtensionEnvironment): string[];
 export function extensionManifest(environment: ExtensionEnvironment): Record<string, unknown>;
 export function extensionMdbaseManifest(
   reader: Record<string, unknown>,

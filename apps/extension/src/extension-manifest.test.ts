@@ -5,12 +5,13 @@ import { describe, expect, it } from "vitest";
 
 import {
   extensionEnvironment,
+  extensionHostPermissions,
   extensionManifest,
   extensionMdbaseManifest,
   manifestVersion,
 } from "../scripts/extension-manifest.mjs";
 
-const stagingId = "ponmlkjihgfedcbaponmlkjihgfedcba";
+const stagingId = "palmhjikdacodimpnkapmidobfbocdgf";
 
 describe("per-environment extension manifest", () => {
   it("defaults to LAB and only permanently reaches that Connect service", () => {
@@ -54,6 +55,23 @@ describe("per-environment extension manifest", () => {
 });
 
 describe("staging extension environment", () => {
+  it("refuses any plausible but unallocated staging identity", () => {
+    expect(() =>
+      extensionEnvironment({
+        MDBASE_ENV: "staging",
+        MDBASE_EXTENSION_STAGING_ID: "ponmlkjihgfedcbaponmlkjihgfedcba",
+      }),
+    ).toThrow(/approved|allocated/);
+  });
+
+  it("refuses staging Chrome packaging without its matching public key", () => {
+    const environment = extensionEnvironment({
+      MDBASE_ENV: "staging",
+      MDBASE_EXTENSION_STAGING_ID: stagingId,
+    });
+    expect(() => extensionManifest(environment)).toThrow(/public key/);
+  });
+
   it("targets staging exactly, with only its configured staging extension ID", () => {
     const environment = extensionEnvironment({
       MDBASE_ENV: "staging",
@@ -68,7 +86,7 @@ describe("staging extension environment", () => {
     });
     expect(environment.extensionOrigins).toEqual([`chrome-extension://${stagingId}`]);
     // No other environment's Connect or log origin is bound into a staging build.
-    expect(extensionManifest(environment)["host_permissions"]).toEqual([
+    expect(extensionHostPermissions(environment)).toEqual([
       "https://connect-staging.mdbase.dev/*",
       "https://*/*",
     ]);
@@ -98,7 +116,7 @@ describe("staging extension environment", () => {
   });
 
   it("declares installation origins under the build's exact environment", () => {
-    const reader = { homepage: "https://reader.mdbase.dev/" };
+    const reader = { manifest_version: 1, homepage: "https://reader.mdbase.dev/" };
     expect(extensionMdbaseManifest(reader, extensionEnvironment({})).installation_origins).toEqual({
       lab: { "app-runtime": ["chrome-extension://kimdfjefhbfgfecconmaiaaindjccidp"] },
     });
@@ -131,12 +149,7 @@ describe("extension manifest details", () => {
   });
 
   it("declares one window-wide side panel, shortcuts and no tab list access", () => {
-    const manifest = extensionManifest(
-      extensionEnvironment({
-        MDBASE_ENV: "staging",
-        MDBASE_EXTENSION_STAGING_ID: stagingId,
-      }),
-    );
+    const manifest = extensionManifest(extensionEnvironment({}));
     expect(manifest["permissions"]).toContain("sidePanel");
     expect(manifest["side_panel"]).toEqual({ default_path: "capture.html" });
     expect(manifest["permissions"]).not.toContain("tabs");

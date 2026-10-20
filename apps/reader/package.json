@@ -6,10 +6,11 @@
   "scripts": {
     "icons": "node scripts/write-pwa-icons.mjs",
     "build": "node scripts/package-zotero.mjs && pnpm manifest && pnpm manifest:validate && vite build",
-    "build:lab": "VITE_MDBASE_ENV=lab pnpm build",
+    "build:lab": "VITE_MDBASE_ENV=lab MDBASE_READER_ORIGIN=https://lab.mdbase-reader.pages.dev pnpm build",
     "deploy:dev": "node scripts/deploy-pages.mjs",
     "deploy:prod": "MDBASE_READER_DEPLOY_TARGET=production node scripts/deploy-pages.mjs",
-    "dev": "node scripts/package-zotero.mjs && pnpm manifest && vite --host 127.0.0.1",
+    "dev": "VITE_MDBASE_ENV=lab MDBASE_READER_ORIGIN=http://127.0.0.1:5173 pnpm dev:lab",
+    "dev:lab": "node scripts/package-zotero.mjs && pnpm manifest && pnpm manifest:validate --allow-local && vite --host 127.0.0.1 --port 5173 --strictPort",
     "manifest": "node scripts/write-manifest.mjs",
     "manifest:validate": "node scripts/validate-manifest.mjs public/.well-known/mdbase-app.json",
     "manifest:verify": "node scripts/verify-manifest.mjs",

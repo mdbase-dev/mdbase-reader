@@ -9,6 +9,8 @@ export interface ExtensionEnvironment {
   readonly readerOrigin: string;
   /** The extension origins this build declares to mdbase for its exact environment. */
   readonly extensionOrigins: readonly string[];
+  /** PUBLIC SPKI only, supplied at staging packaging time; never a private key. */
+  readonly stagingPublicKey?: string;
 }
 
 declare const __READER_EXTENSION_ENVIRONMENT__: ExtensionEnvironment;

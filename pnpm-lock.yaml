@@ -17,6 +17,9 @@ importers:
       '@mdbase-dev/connect-dev':
         specifier: 0.1.0-beta.125
         version: 0.1.0-beta.125
+      '@mdbase-dev/connect-protocol':
+        specifier: file:packages/connect/vendor/mdbase-dev-connect-protocol-0.1.0-beta.129-c280cd194ffd.tgz
+        version: file:packages/connect/vendor/mdbase-dev-connect-protocol-0.1.0-beta.129-c280cd194ffd.tgz
       '@types/node':
         specifier: ^22.19.11
         version: 22.20.1
@@ -1143,6 +1146,10 @@ packages:
 
   '@mdbase-dev/connect-protocol@0.1.0-beta.125':
     resolution: {integrity: sha512-q6aEZ1+dVAXvoN84FgDLMhqCnCdlsXhp0K5M+Wcp2x2ICUIoE/lA+eDg4AJqDqdWZ3Nq2mkiczvat6HG2y8EeQ==}
+
+  '@mdbase-dev/connect-protocol@file:packages/connect/vendor/mdbase-dev-connect-protocol-0.1.0-beta.129-c280cd194ffd.tgz':
+    resolution: {integrity: sha512-c0iOOWEcNJRstdyUJ6aqJ3puVR5C9jXW4MBHmQnHI2c4vgOeKi5VWfiuueWx3ArvtwB3nPuAaXHhll/OKH/+Yw==, tarball: file:packages/connect/vendor/mdbase-dev-connect-protocol-0.1.0-beta.129-c280cd194ffd.tgz}
+    version: 0.1.0-beta.129
 
   '@mdbase-dev/connect@0.1.0-beta.125':
     resolution: {integrity: sha512-vEH4NQfu3dBQgMw0YQxG7LDtOOLxDyxET4DQhrWuHqtgr9qoch/H0QLzel9tFSqkyH+QWxuvW3Bet6ae1+qVyQ==}
@@ -4340,6 +4347,11 @@ snapshots:
     dependencies:
       ajv: 8.20.0
       ajv-formats: 3.0.1(ajv@8.20.0)
+      yaml: 2.9.1
+
+  '@mdbase-dev/connect-protocol@file:packages/connect/vendor/mdbase-dev-connect-protocol-0.1.0-beta.129-c280cd194ffd.tgz':
+    dependencies:
+      '@noble/hashes': 2.4.0
       yaml: 2.9.1
 
   '@mdbase-dev/connect@0.1.0-beta.125':

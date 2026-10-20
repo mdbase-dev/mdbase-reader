@@ -115,7 +115,7 @@ export async function buildReaderManifest({
     redirect_uris: [appUrl],
     // The one app identity installs from its exact origin in each environment;
     // the SDK refuses an origin not declared for the build's environment.
-    installation_origins: readerInstallationOrigins(),
+    installation_origins: readerInstallationOrigins({ labOrigin: normalizedOrigin }),
     requirements: {
       access: "full_collection",
       contracts: [...contracts, ...viewPack.provides],
@@ -152,13 +152,26 @@ export async function buildReaderManifest({
   };
 }
 
-export function readerInstallationOrigins() {
-  return Object.fromEntries(
+export function readerInstallationOrigins({ labOrigin } = {}) {
+  const origins = Object.fromEntries(
     Object.entries(readerDeployments).map(([environment, deployment]) => [
       environment,
       { "app-runtime": [deployment.origin] },
     ]),
   );
+  // Only an explicitly requested LAB development manifest carries this exact
+  // app-loopback origin. Staging/production policies remain HTTPS-only.
+  if (labOrigin) {
+    const url = new URL(labOrigin);
+    if (
+      url.origin === labOrigin &&
+      url.protocol === "http:" &&
+      ["127.0.0.1", "localhost", "[::1]"].includes(url.hostname)
+    ) {
+      origins.lab = { "app-runtime": [labOrigin] };
+    }
+  }
+  return origins;
 }
 
 function digest(document) {
