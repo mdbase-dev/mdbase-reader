@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import { createHash, generateKeyPairSync } from "node:crypto";
-import { test } from "node:test";
+
+import { test } from "vitest";
 
 import { extensionEnvironment, extensionManifest } from "./extension-manifest.mjs";
 import {
