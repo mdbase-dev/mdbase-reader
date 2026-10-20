@@ -1,13 +1,18 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
+import { execFileSync } from "node:child_process";
 import { mkdtemp, mkdir, readFile, writeFile, rm, cp } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { parse as parseYaml } from "yaml";
-import { extensionEnvironment } from "../../apps/extension/scripts/extension-manifest.mjs";
+import {
+  extensionEnvironment,
+  extensionMdbaseManifest,
+} from "../../apps/extension/scripts/extension-manifest.mjs";
 import {
   assertDispatch,
   assertFullSha,
+  assertExactCleanCheckout,
   createReceipt,
   captureDeployment,
   assertInventoryCoverage,
@@ -118,6 +123,58 @@ test("native publisher scopes public staging key to target build, not default-LA
   );
   const build = job.steps.find((step) => step.id === "build");
   assert.equal(build.env[keyName], "${{ needs.native-inputs.outputs.public-key }}");
+});
+test("successful checks restore only the known generated extension manifest before strict clean-source guard", async () => {
+  const workflow = parseYaml(await readFile(".github/workflows/deploy-reader.yml", "utf8"));
+  const commands = workflow.jobs["native-build"].steps
+    .find((step) => step.id === "originals")
+    .run.split("\n");
+  const check = commands.indexOf("pnpm check");
+  assert.ok(check >= 0);
+  const path = "apps/extension/src/generated/mdbase-app.json";
+  const committed = await readFile(path);
+  const reader = JSON.parse(await readFile("apps/reader/src/generated/mdbase-app.json", "utf8"));
+  const generated = extensionMdbaseManifest(reader, extensionEnvironment({}));
+  assert.ok(JSON.parse(committed).installation_origins.production);
+  assert.ok(generated.installation_origins.lab);
+  // A local disposable DATA repository, not a GitHub build identity/authority.
+  const fixture = await mkdtemp(join(tmpdir(), "reader-check-generated-"));
+  try {
+    await mkdir(join(fixture, path, ".."), { recursive: true });
+    await writeFile(join(fixture, path), committed);
+    await writeFile(join(fixture, "other-source.txt"), "unchanged source DATA\n");
+    execFileSync(
+      "bash",
+      [
+        "-euc",
+        "git -c init.defaultBranch=fixture init -q; git add .; git -c core.hooksPath=/dev/null -c commit.gpgsign=false -c user.name=Fixture -c user.email=fixture@example.invalid commit -qm fixture",
+      ],
+      { cwd: fixture, stdio: ["ignore", "pipe", "pipe"] },
+    );
+    const sha = execFileSync("git", ["rev-parse", "HEAD"], {
+      cwd: fixture,
+      encoding: "utf8",
+    }).trim();
+    await writeFile(join(fixture, path), JSON.stringify(generated, null, 2) + "\n");
+    assert.throws(
+      () => assertExactCleanCheckout({ sha, cwd: fixture }),
+      /uncommitted paths: M apps\/extension\/src\/generated\/mdbase-app.json/,
+    );
+    execFileSync("bash", ["-euc", commands.slice(check + 1).join("\n")], {
+      cwd: fixture,
+      env: { ...process.env, SOURCE_SHA: sha },
+      stdio: ["ignore", "pipe", "pipe"],
+    });
+    assertExactCleanCheckout({ sha, cwd: fixture });
+    assert.deepEqual(await readFile(join(fixture, path)), committed);
+    await writeFile(join(fixture, "other-source.txt"), "real source change DATA\n");
+    assert.throws(
+      () => assertExactCleanCheckout({ sha, cwd: fixture }),
+      /uncommitted paths: M other-source.txt/,
+    );
+  } finally {
+    await rm(fixture, { recursive: true, force: true });
+  }
 });
 async function intakeCopy() {
   const root = await mkdtemp(join(tmpdir(), "reader-intake-data-"));

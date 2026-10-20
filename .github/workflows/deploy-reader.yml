@@ -186,6 +186,8 @@ jobs:
           cmp "$RUNNER_TEMP/reader-build/plan.json" "$RUNNER_TEMP/reader-installed-plan.json"
           pnpm rebuild --pending
           pnpm check
+          # Checks generate LAB metadata; restore only this tracked output in ephemeral CI.
+          git show "$SOURCE_SHA:apps/extension/src/generated/mdbase-app.json" > apps/extension/src/generated/mdbase-app.json
       - name: One actual target build, precompiled capture Worker, all final bytes
         id: build
         env:
