@@ -71,18 +71,18 @@ and UI peers. No unknown executable or symlink is ignored. The unchanged legacy7
 alias has its own frozen original SHA/SRI and ALL-member gate; it is NOT
 authenticated staging trust. Its package/file/pin remain unchanged.
 
-**Co064253 installer policy:** the initial genuine RED refused the SDK's generated
-`node_modules/.bin/yaml`. Reader now independently verifies its OWN pinned AND
-actual PNPM10.7.0 POSIX templates, not Writer's different tool version. Original
-SDK896/UI81/protocol67 files still ALL match. The SDK and direct protocol each
-have one separately counted, regular executable YAML shim; BOTH exact program,
-NODE_PATH branches and targets must match. All 233 original bundled YAML files
-match; the direct protocol's external YAML copy additionally matches EVERY one of
-those original files, with exact version/location/target resolution. Any changed
-original, unknown extra, changed shim, symlink or other manager/template refuses.
-No blanket `.bin` ignore, deletion or shim execution occurs. Installer evidence
-records original counts and total installed counts separately, is immutable-
-artifact digest-bound, and is NOT SDK authentication or product qualification.
+**Co100025 supersedes the exact generated-program classifier:** pnpm generates
+`node_modules/.bin/yaml`; its wrapper bytes are not SDK authority and are no
+longer compared to a shell template. Frozen-lockfile installation, pinned/actual
+PNPM10.7.0 and ALL original SDK896/UI81/protocol67 bytes remain checked. Only the
+sole known regular executable wrapper at that location is counted separately in
+SDK/direct-protocol installations; no arbitrary extra member or symlink is ignored.
+All233 original bundled YAML files and EVERY external protocol YAML file still
+match, with original version/location/bin binding. No wrapper is executed or
+removed. Existing installer evidence remains artifact-bound, not authentication.
+Run39398579665/a1 at879 failed on the obsolete protocol-wrapper template check;
+that genuine RED is preserved, not relabeled as success. No diagnostic capture
+or alternate template is needed for this explicit tooling-policy remedy.
 
 Production has no accepted target archive/packet. It refuses; staging is never
 retargeted to production or LAB. Old vendor archives/dead legacy files remain.
@@ -200,7 +200,7 @@ records transport-file SHA, SPKI SHA and public ID separately from Git source.
 Local plans explicitly carry `qualificationOnly: true`, null Git SHA/tree and no
 publication authority; CI plans come only from the exact-clean-source guard.
 The compiled target/native/SQLite/origin checks run only AFTER ALL original and
-separate exact installer-output gates.
+separate known-wrapper/original-YAML checks.
 The unchanged UI companion still says `label: "dev intake, not release-qualified"`
 and `releaseQualified: false`; those historical fields are not a live refusal
 condition. The current authorized Reader UIb2 source-lock component and protected

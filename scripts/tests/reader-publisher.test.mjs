@@ -70,7 +70,7 @@ test("last current HEAD rejects moved branch even if source remains ancestor", a
   ])
     await assert.rejects(assertCurrentHead(env, async () => Response.json(value)));
 });
-test("ALL current eaa4 installed SDK/UI/protocol/peers: originals plus separately exact installer output", async () => {
+test("ALL current eaa4 installed SDK/UI/protocol/peers: originals plus separately counted pnpm wrapper", async () => {
   const installerEvidence = [];
   const trust = await loadOriginals({
     target: "staging",

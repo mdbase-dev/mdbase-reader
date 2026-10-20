@@ -140,8 +140,8 @@ export async function assertInstalledOriginals(
     return;
   }
   // ALL original SDK files (including every YAML file) still have to match.
-  // This is the separate, independently verified installer-output class that
-  // Co064253 permits, NOT ignoring any extra executable/member.
+  // Co100025: the sole known pnpm-generated wrapper is not an SDK original;
+  // its program bytes are not classified. Other extra members still refuse.
   equal(
     actual.filter((m) => paths.has(m.path)),
     members,
@@ -664,7 +664,7 @@ export async function loadOriginals({
       manager: "pnpm@10.7.0",
       file: pnpmYamlShim,
       template:
-        "Reader exact pinned POSIX YAML shim; separate from SDK originals; all original YAML files still required",
+        "pnpm-generated wrapper bytes are not SDK authority; all original YAML files still required",
       originalYamlMembers: members.filter((m) => m.path.startsWith("node_modules/yaml/")).length,
     },
     release,
