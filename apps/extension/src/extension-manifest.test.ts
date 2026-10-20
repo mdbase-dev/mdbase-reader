@@ -1,4 +1,4 @@
-import { existsSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import { resolve } from "node:path";
 
 import { describe, expect, it } from "vitest";
@@ -115,8 +115,19 @@ describe("staging extension environment", () => {
     ).toThrow();
   });
 
+  it("does not widen omitted collection access when assembling an extension manifest", () => {
+    expect(() =>
+      extensionMdbaseManifest(
+        { manifest_version: 1, homepage: "https://reader.mdbase.dev/" },
+        extensionEnvironment({}),
+      ),
+    ).toThrow(/requirements\/access/u);
+  });
+
   it("declares installation origins under the build's exact environment", () => {
-    const reader = { manifest_version: 1, homepage: "https://reader.mdbase.dev/" };
+    const reader = JSON.parse(
+      readFileSync(new URL("../../reader/src/generated/mdbase-app.json", import.meta.url), "utf8"),
+    ) as Record<string, unknown>;
     expect(extensionMdbaseManifest(reader, extensionEnvironment({})).installation_origins).toEqual({
       lab: { "app-runtime": ["chrome-extension://kimdfjefhbfgfecconmaiaaindjccidp"] },
     });
