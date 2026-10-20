@@ -7,7 +7,7 @@ export interface ExtensionEnvironment {
   readonly logUrl: string | null;
   readonly loopbackUrl: string;
   readonly readerOrigin: string;
-  /** The extension origins this build declares to mdbase (Web Store, and a LAB dev ID). */
+  /** The extension origins this build declares to mdbase for its exact environment. */
   readonly extensionOrigins: readonly string[];
 }
 

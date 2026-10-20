@@ -6,8 +6,11 @@ import { readerDeploymentFor } from "../../reader/scripts/deployment-environment
 export const storeExtensionId = "kimdfjefhbfgfecconmaiaaindjccidp";
 
 /**
- * The SDK's log service for each environment, which the extension reaches from its pages.
- * Production has no SDK release trust yet, so it has no log origin to declare.
+ * The SDK's log service for each environment, which the extension reaches from its
+ * pages. Each value comes from the authenticated release trust bundled in that
+ * environment's pinned SDK archive (LAB matches the current pin's trust); staging
+ * and production have no SDK release trust yet, so they declare no log origin
+ * rather than reusing another environment's.
  */
 const sdkLogOrigins = Object.freeze({
   lab: "https://mdbase-next-log-lab-20261005.callumalpass.workers.dev",
@@ -19,7 +22,10 @@ const chromeExtensionId = /^[a-p]{32}$/u;
  * The extension targets exactly one mdbase environment, chosen at build time with
  * `MDBASE_ENV` (lab by default), like Reader's own deployments. A LAB build may also
  * declare an unpacked build's ID (`MDBASE_EXTENSION_DEV_ID`, from chrome://extensions)
- * so that build can register with LAB; other targets only declare the Web Store ID.
+ * so that build can register with LAB. Staging is an unpacked build, not a store
+ * channel: it declares only its own approved ID, named explicitly with
+ * `MDBASE_EXTENSION_STAGING_ID`, and refuses to build without one. Production
+ * declares only the Web Store ID.
  */
 export function extensionEnvironment(environment = process.env) {
   const { target, deployment } = readerDeploymentFor(environment);
@@ -27,6 +33,20 @@ export function extensionEnvironment(environment = process.env) {
   if (devId && (target !== "lab" || !chromeExtensionId.test(devId))) {
     throw new Error("MDBASE_EXTENSION_DEV_ID must be a Chrome extension ID, for LAB builds only.");
   }
+  const stagingId = environment.MDBASE_EXTENSION_STAGING_ID;
+  if (target === "staging") {
+    if (!stagingId || !chromeExtensionId.test(stagingId) || stagingId === storeExtensionId) {
+      throw new Error(
+        "Staging extension builds require MDBASE_EXTENSION_STAGING_ID: the approved staging build's own Chrome extension ID (not the Web Store ID).",
+      );
+    }
+  } else if (stagingId) {
+    throw new Error("MDBASE_EXTENSION_STAGING_ID is for staging builds only.");
+  }
+  const extensionIds =
+    target === "staging"
+      ? [stagingId]
+      : [storeExtensionId, ...(devId && devId !== storeExtensionId ? [devId] : [])];
   return {
     target,
     label: target === "production" ? "" : target.toUpperCase(),
@@ -34,10 +54,27 @@ export function extensionEnvironment(environment = process.env) {
     logUrl: sdkLogOrigins[target] ?? null,
     loopbackUrl: deployment.loopbackUrl,
     readerOrigin: deployment.origin,
-    extensionOrigins: [
-      storeExtensionId,
-      ...(devId && devId !== storeExtensionId ? [devId] : []),
-    ].map((id) => `chrome-extension://${id}`),
+    extensionOrigins: extensionIds.map((id) => `chrome-extension://${id}`),
+  };
+}
+
+/**
+ * The extension's mdbase manifest: a web app manifest whose pages are the
+ * extension's. Connect registers the extension's exact chrome-extension origins
+ * under `installation_origins` for this build's exact environment — never under
+ * another environment's name.
+ */
+export function extensionMdbaseManifest(reader, environment) {
+  return {
+    ...reader,
+    id: "dev.mdbase.reader.extension",
+    name: "mdbase Reader browser extension",
+    homepage: `${environment.readerOrigin}/`,
+    icon: `${environment.readerOrigin}/favicon.svg`,
+    redirect_uris: [`${environment.readerOrigin}/`],
+    installation_origins: {
+      [environment.target]: { "app-runtime": environment.extensionOrigins },
+    },
   };
 }
 

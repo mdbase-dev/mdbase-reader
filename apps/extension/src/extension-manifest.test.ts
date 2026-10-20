@@ -6,8 +6,11 @@ import { describe, expect, it } from "vitest";
 import {
   extensionEnvironment,
   extensionManifest,
+  extensionMdbaseManifest,
   manifestVersion,
 } from "../scripts/extension-manifest.mjs";
+
+const stagingId = "ponmlkjihgfedcbaponmlkjihgfedcba";
 
 describe("per-environment extension manifest", () => {
   it("defaults to LAB and only permanently reaches that Connect service", () => {
@@ -48,7 +51,76 @@ describe("per-environment extension manifest", () => {
     ).toThrow(/LAB builds only/u);
     expect(() => extensionEnvironment({ MDBASE_EXTENSION_DEV_ID: "not-an-id" })).toThrow();
   });
+});
 
+describe("staging extension environment", () => {
+  it("targets staging exactly, with only its configured staging extension ID", () => {
+    const environment = extensionEnvironment({
+      MDBASE_ENV: "staging",
+      MDBASE_EXTENSION_STAGING_ID: stagingId,
+    });
+    expect(environment).toMatchObject({
+      target: "staging",
+      label: "STAGING",
+      connectUrl: "https://connect-staging.mdbase.dev",
+      readerOrigin: "https://staging.mdbase-reader.pages.dev",
+      logUrl: null,
+    });
+    expect(environment.extensionOrigins).toEqual([`chrome-extension://${stagingId}`]);
+    // No other environment's Connect or log origin is bound into a staging build.
+    expect(extensionManifest(environment)["host_permissions"]).toEqual([
+      "https://connect-staging.mdbase.dev/*",
+      "https://*/*",
+    ]);
+  });
+
+  it("refuses staging without an explicit, valid, staging-only extension ID", () => {
+    expect(() => extensionEnvironment({ MDBASE_ENV: "staging" })).toThrow(/staging/u);
+    expect(() =>
+      extensionEnvironment({ MDBASE_ENV: "staging", MDBASE_EXTENSION_STAGING_ID: "not-an-id" }),
+    ).toThrow();
+    expect(() =>
+      extensionEnvironment({
+        MDBASE_ENV: "production",
+        MDBASE_EXTENSION_STAGING_ID: stagingId,
+      }),
+    ).toThrow(/staging/u);
+    expect(() => extensionEnvironment({ MDBASE_EXTENSION_STAGING_ID: stagingId })).toThrow(
+      /staging/u,
+    );
+    // The Web Store (production) ID never becomes the staging identity.
+    expect(() =>
+      extensionEnvironment({
+        MDBASE_ENV: "staging",
+        MDBASE_EXTENSION_STAGING_ID: "kimdfjefhbfgfecconmaiaaindjccidp",
+      }),
+    ).toThrow();
+  });
+
+  it("declares installation origins under the build's exact environment", () => {
+    const reader = { homepage: "https://reader.mdbase.dev/" };
+    expect(extensionMdbaseManifest(reader, extensionEnvironment({})).installation_origins).toEqual({
+      lab: { "app-runtime": ["chrome-extension://kimdfjefhbfgfecconmaiaaindjccidp"] },
+    });
+    expect(
+      extensionMdbaseManifest(
+        reader,
+        extensionEnvironment({
+          MDBASE_ENV: "staging",
+          MDBASE_EXTENSION_STAGING_ID: stagingId,
+        }),
+      ).installation_origins,
+    ).toEqual({ staging: { "app-runtime": [`chrome-extension://${stagingId}`] } });
+    expect(
+      extensionMdbaseManifest(reader, extensionEnvironment({ MDBASE_ENV: "production" }))
+        .installation_origins,
+    ).toEqual({
+      production: { "app-runtime": ["chrome-extension://kimdfjefhbfgfecconmaiaaindjccidp"] },
+    });
+  });
+});
+
+describe("extension manifest details", () => {
   it("targets production without an environment label", () => {
     const environment = extensionEnvironment({ MDBASE_ENV: "production" });
     expect(environment.label).toBe("");
@@ -59,7 +131,12 @@ describe("per-environment extension manifest", () => {
   });
 
   it("declares one window-wide side panel, shortcuts and no tab list access", () => {
-    const manifest = extensionManifest(extensionEnvironment({ MDBASE_ENV: "staging" }));
+    const manifest = extensionManifest(
+      extensionEnvironment({
+        MDBASE_ENV: "staging",
+        MDBASE_EXTENSION_STAGING_ID: stagingId,
+      }),
+    );
     expect(manifest["permissions"]).toContain("sidePanel");
     expect(manifest["side_panel"]).toEqual({ default_path: "capture.html" });
     expect(manifest["permissions"]).not.toContain("tabs");

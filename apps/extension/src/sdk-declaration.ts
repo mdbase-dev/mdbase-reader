@@ -1,11 +1,21 @@
+import {
+  sdkApplicationEnvironment,
+  type MdbaseApplicationDeclaration,
+  type SdkApplicationEnvironment,
+} from "@mdbase-reader/connect/native";
+
 import { environment } from "./environment.js";
 import manifest from "./generated/mdbase-app.json";
 
-import type { MdbaseApplicationDeclaration } from "@mdbase-reader/connect/native";
-
-/** This build's environment as the SDK names it; staging has no SDK environment. */
-export function sdkEnvironment(): MdbaseApplicationDeclaration["environment"] {
-  return environment.target === "lab" ? "lab" : "production";
+/**
+ * This build's environment as the SDK names it: the exact build environment,
+ * never mapped to another. The pinned SDK's types predate mdbase-next PR #941;
+ * `sdkApplicationEnvironment` is the one adapter (see packages/connect).
+ */
+export function sdkEnvironment(
+  target: SdkApplicationEnvironment = environment.target,
+): MdbaseApplicationDeclaration["environment"] {
+  return sdkApplicationEnvironment(target);
 }
 
 /**
