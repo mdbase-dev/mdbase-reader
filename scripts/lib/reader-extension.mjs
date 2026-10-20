@@ -1,6 +1,7 @@
 import { execFileSync } from "node:child_process";
 import { createHash } from "node:crypto";
 import { readFile } from "node:fs/promises";
+import { assertInventory } from "./native-publish-bytes.mjs";
 import { join } from "node:path";
 import {
   stagingExtensionId,
@@ -47,6 +48,32 @@ export async function assertExtension(root, trust) {
     await readFile(join(root, "extension/.well-known/mdbase-app.json"), "utf8"),
   );
   return assertExtensionManifests(chrome, app, trust);
+}
+export async function createExtensionZip(root, inventory) {
+  // Standard-library DATA packaging; do not depend on a host zip executable or
+  // rebuild the app to recover packaging/verification-only failures.
+  await assertInventory(join(root, "extension"), inventory);
+  execFileSync(
+    "python3",
+    [
+      "-I",
+      "-B",
+      "-c",
+      `import pathlib,stat,sys,zipfile
+root=pathlib.Path(sys.argv[1]);output=pathlib.Path(sys.argv[2])
+with zipfile.ZipFile(output,'x',compression=zipfile.ZIP_DEFLATED) as z:
+ for path in sorted(root.rglob('*')):
+  s=path.lstat();assert not stat.S_ISLNK(s.st_mode)
+  if stat.S_ISDIR(s.st_mode):continue
+  assert stat.S_ISREG(s.st_mode)
+  z.write(path,path.relative_to(root).as_posix())`,
+      join(root, "extension"),
+      join(root, "extension.zip"),
+    ],
+    { timeout: 60000, stdio: ["ignore", "pipe", "pipe"] },
+  );
+  await assertInventory(join(root, "extension"), inventory);
+  return assertExtensionZip(root, inventory);
 }
 export async function assertExtensionZip(root, inventory) {
   // Data-only ZIP validation: exact inventory/all bytes, no extraction/code/hooks.

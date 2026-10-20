@@ -9,7 +9,7 @@ import { loadOriginals, protectedHashes } from "./lib/native-originals.mjs";
 import { approvedHashes } from "./lib/reader-approved-intake.mjs";
 import { inventoryDirectory } from "./lib/native-publish-bytes.mjs";
 import { assertOfflineShell } from "./lib/reader-offline-shell.mjs";
-import { assertExtension, assertExtensionZip } from "./lib/reader-extension.mjs";
+import { assertExtension, createExtensionZip } from "./lib/reader-extension.mjs";
 import {
   sourceHostingPolicy,
   uploadConfiguration,
@@ -208,8 +208,7 @@ try {
     join(root, "extension-inventory.json"),
     JSON.stringify(extensionInventory, null, 2) + "\n",
   );
-  run("zip", ["-qr", join(root, "extension.zip"), "."], join(root, "extension"));
-  await assertExtensionZip(root, extensionInventory);
+  await createExtensionZip(root, extensionInventory);
   console.log(
     JSON.stringify(
       {

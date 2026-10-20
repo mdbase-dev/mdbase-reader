@@ -170,6 +170,8 @@ rpnpm run test:publisher:installer
 rpnpm run check
 # ONE actual staging build ONLY after the fresh frozen full check succeeds:
 rpnpm --pull artifacts/build run build:native:staging reader-staging-public-input.json
+# If compilation succeeded but ONLY packaging/post-verification failed, DO NOT rebuild:
+rpnpm --pull artifacts/build run postqualify:native:staging reader-staging-public-input.json
 ```
 
 Remove ONLY that owned temporary public input after terminal checks. The runner
@@ -184,7 +186,22 @@ condition. The current authorized Reader UIb2 source-lock component and protecte
 hash control the new tuple, without rewriting historical metadata or claiming
 new peer qualification.
 The extension ZIP is exact-inventoried and checked against its public-key and
-canonical app manifests. This is neither Chrome installation nor native admission.
+canonical app manifests. It uses Python's isolated standard-library ZIP writer,
+not an assumed host `zip` executable, and refuses overwriting an existing ZIP.
+Post-only recovery reasserts the SAVED full inventories (never regenerates them
+to bless changed/extra files), checks unchanged plan/original inputs, and performs
+NO app/SDK/Worker build, hooks, network or deployment. Its receipt is a sibling of
+the publish artifact root, so it cannot add unexpected live artifact attachments.
+This is neither Chrome installation nor native admission.
+
+The ONE eaa4 Reader compilation used source `f5e269a` / tree `a7ec1b3…`: web,
+extension and capture-Worker compilation passed. Initial command exit1 was solely
+missing host `zip`, after all target/native/SQLite/compiled-trust/inline-manifest
+checks. Standard-library packaging plus data-only post-check returned exit0 on
+the SAME saved inventories: web157 files, offline-cache89 entries, extension58
+files. Counts are Reader's actual output, not Tn's 58/69 or a peer transfer.
+Full logs, exact output digests and the compilation/final verification source
+identities are in the coordination report.
 
 ## External gates (not self-certified by source)
 

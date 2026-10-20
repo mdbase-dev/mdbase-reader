@@ -12,6 +12,7 @@ export default tseslint.config(
   {
     ignores: [
       "**/dist/**",
+      "artifacts/build/**", // generated delivery bytes, independently exact-inventoried
       "**/coverage/**",
       "**/node_modules/**",
       "**/.wrangler/**",

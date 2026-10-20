@@ -12,6 +12,7 @@
     "build": "pnpm -r --if-present build",
     "build:native:ci": "node scripts/qualify-native-staging.mjs ci-build",
     "build:native:staging": "node scripts/qualify-native-staging.mjs local-qualification",
+    "postqualify:native:staging": "node scripts/postqualify-native-staging.mjs",
     "check": "pnpm lint && pnpm typecheck && pnpm test",
     "check:architecture": "node scripts/check-architecture.mjs",
     "deploy:dev": "pnpm --filter @mdbase-reader/app deploy:dev",

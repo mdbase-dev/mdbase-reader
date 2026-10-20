@@ -1,13 +1,14 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import { readFile, mkdtemp, rm } from "node:fs/promises";
+import { readFile, mkdtemp, rm, mkdir, writeFile } from "node:fs/promises";
 import { execFileSync } from "node:child_process";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { createHash } from "node:crypto";
 import { metadataPhase } from "../lib/native-artifact-checkpoint.mjs";
 import { boundedResponseBytes, download, checkpointMetadataHttp } from "../lib/native-artifact.mjs";
-import { assertExtensionZip } from "../lib/reader-extension.mjs";
+import { assertExtensionZip, createExtensionZip } from "../lib/reader-extension.mjs";
+import { inventoryDirectory } from "../lib/native-publish-bytes.mjs";
 const expected = {
   id: "42",
   digest: "sha256:" + "d".repeat(64),
@@ -332,6 +333,37 @@ test("non-200 fetched metadata status persists before HTTP validation/body looku
   } finally {
     await rm(parent, { recursive: true, force: true });
   }
+});
+test("portable standard-library ZIP packages EVERY hidden/worker byte, never overwrites/rebuilds", async () => {
+  const root = await mkdtemp(join(tmpdir(), "reader-portable-zip-"));
+  try {
+    const dir = join(root, "extension");
+    await mkdir(join(dir, ".well-known"), { recursive: true });
+    for (const [path, data] of Object.entries({
+      ".well-known/mdbase-app.json": "{}",
+      ".nojekyll": "",
+      "worker.js": "fixture JS DATA, never executed",
+    }))
+      await writeFile(join(dir, path), data);
+    const inventory = await inventoryDirectory(dir);
+    assert.equal((await createExtensionZip(root, inventory)).length, 3);
+    const before = await readFile(join(root, "extension.zip"));
+    await assert.rejects(createExtensionZip(root, inventory));
+    assert.deepEqual(await readFile(join(root, "extension.zip")), before);
+    await writeFile(join(dir, ".extra"), "extra");
+    await assert.rejects(createExtensionZip(root, inventory));
+    assert.deepEqual(await readFile(join(root, "extension.zip")), before);
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});
+test("post-only recovery cannot compile/rebuild/deploy or regenerate saved inventories", async () => {
+  const source = await readFile("scripts/postqualify-native-staging.mjs", "utf8");
+  assert.ok(!/execFileSync\(['"](?:pnpm|wrangler|vite)['"]/.test(source));
+  assert.ok(!source.includes("--filter"));
+  assert.ok(!source.includes('writeFile(join(root, "inventory.json")'));
+  assert.ok(source.includes("await assertInventory"));
+  assert.ok(source.includes("preexisting build plan no longer matches exact original inputs"));
 });
 test("extension ZIP is exact all bytes/path set and rejects links/traversal/extras", async () => {
   const parent = await mkdtemp(join(tmpdir(), "reader-extension-zip-"));
