@@ -34,8 +34,8 @@ export interface SdkReaderRootProps {
  * Reader over the SDK's mdbase entry. The shared collection gate starts it and
  * owns sign-in, choosing, approval, setup and problems; Reader opens its
  * workspace only for the connection the gate hands over in phase `ready`, and
- * never closes the entry.
- * Production still starts `ConnectReader` (see docs/new-sdk.md).
+ * never closes the entry. This is the entry for every build environment
+ * (see docs/new-sdk.md).
  */
 export function SdkReaderRoot({
   sdk,

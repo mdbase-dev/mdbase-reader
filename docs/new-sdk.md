@@ -95,9 +95,12 @@ is introduced. Writer's optional file-access consent remains a later SDK capabil
   bundled canonical manifest unchanged: logical ID `dev.mdbase.reader`, name, and homepage
   origin. The SDK registers it and rebinds to the actual registered ID before any storage.
   Construction does no IO.
-- `src/main.tsx`: builds with `VITE_MDBASE_ENV=lab` (the LAB Pages deployment) lazily load
-  `SdkReaderRoot` over that entry. Staging and production still render `ConnectReader` until
-  the SDK has production release trust.
+- `src/main.tsx`: every build (`VITE_MDBASE_ENV` = `lab`, `staging` or `production`, set from
+  the deploy target) lazily loads `SdkReaderRoot` over that entry. There is no legacy
+  fallback: an unknown or missing environment refuses to start, and a manifest bundled for
+  another environment's origin refuses in `readerSdk()`. The pinned SDK's packaged trust is
+  still LAB, so staging and production builds fail closed inside the SDK until their
+  per-environment SDK archives are pinned (mdbase-next PR #941).
 - `vite.config.ts` excludes `@mdbase-dev/sdk` from dev pre-bundling, emits ES-module workers,
   and gives worker bundles the same build-tagged file names, so the SDK Worker,
   `runtime-lab.wasm`, `sqlite3.wasm` and `sqlite3.js` are each emitted once. The SDK stays out of
