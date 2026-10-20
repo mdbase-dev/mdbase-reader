@@ -5,6 +5,8 @@ import { resolve } from "node:path";
 import { dataContractDigest } from "@callumalpass/mdbase";
 import { parse as parseYaml } from "yaml";
 
+import { readerDeployments } from "./deployment-environment.mjs";
+
 // Pack releases are immutable independently of the data contracts they provide.
 // beta.2 was used historically; do not reuse it even though the contracts remain beta.1.
 // beta.4 ships version 2 of the starter types, which no longer pin or require `type`.
@@ -111,6 +113,9 @@ export async function buildReaderManifest({
     homepage: appUrl,
     icon: new URL("favicon.svg", appUrl).href,
     redirect_uris: [appUrl],
+    // The one app identity installs from its exact origin in each environment;
+    // the SDK refuses an origin not declared for the build's environment.
+    installation_origins: readerInstallationOrigins(),
     requirements: {
       access: "full_collection",
       contracts: [...contracts, ...viewPack.provides],
@@ -145,6 +150,15 @@ export async function buildReaderManifest({
       ],
     },
   };
+}
+
+export function readerInstallationOrigins() {
+  return Object.fromEntries(
+    Object.entries(readerDeployments).map(([environment, deployment]) => [
+      environment,
+      { "app-runtime": [deployment.origin] },
+    ]),
+  );
 }
 
 function digest(document) {

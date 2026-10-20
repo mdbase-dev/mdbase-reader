@@ -11,7 +11,7 @@
     "deploy:prod": "MDBASE_READER_DEPLOY_TARGET=production node scripts/deploy-pages.mjs",
     "dev": "node scripts/package-zotero.mjs && pnpm manifest && vite --host 127.0.0.1",
     "manifest": "node scripts/write-manifest.mjs",
-    "manifest:validate": "mdbase-connect-dev validate-manifest public/.well-known/mdbase-app.json",
+    "manifest:validate": "node scripts/validate-manifest.mjs public/.well-known/mdbase-app.json",
     "manifest:verify": "node scripts/verify-manifest.mjs",
     "preview": "vite preview --host 127.0.0.1",
     "test": "pnpm manifest && pnpm manifest:verify && node --test scripts/*.test.mjs && vitest run src capture --maxWorkers=2 --testTimeout=15000",
