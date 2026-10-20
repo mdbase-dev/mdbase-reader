@@ -4,3 +4,7 @@ dist/
 coverage/
 apps/capacitor/android/
 apps/capacitor/ios/
+# Exact reviewed shared helper and canonical original custody; NEVER rewrite bytes.
+scripts/lib/native-publish-bytes.mjs
+packages/connect/vendor/native-release/
+artifacts/

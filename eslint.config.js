@@ -20,6 +20,11 @@ export default tseslint.config(
     ],
   },
   eslint.configs.recommended,
+  {
+    // Shared reviewed helper is copied BYTE-UNCHANGED (hash asserted in tests).
+    files: ["scripts/lib/native-publish-bytes.mjs"],
+    rules: { "no-useless-escape": "off" },
+  },
   ...tseslint.configs.strictTypeChecked.map((config) => ({ ...config, files: sourceFiles })),
   ...tseslint.configs.stylisticTypeChecked.map((config) => ({ ...config, files: sourceFiles })),
   importX.flatConfigs.recommended,

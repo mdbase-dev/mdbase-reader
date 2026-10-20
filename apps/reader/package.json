@@ -24,7 +24,7 @@
   },
   "dependencies": {
     "@citation-js/plugin-csl": "0.8.2",
-    "@mdbase-dev/sdk": "file:../../packages/connect/vendor/mdbase-dev-sdk-dev-bd131b16.tgz",
+    "@mdbase-dev/sdk": "file:../../packages/connect/vendor/sdk-dev-a3023aee-staging.tgz",
     "@mdbase-dev/sdk-legacy-729b5391": "file:../../vendor/mdbase-dev-sdk-0.0.0-729b5391.tgz",
     "@mdbase-dev/ui": "file:../../vendor/mdbase-dev-ui-dev-b2d7c464.tgz",
     "@mdbase-reader/connect": "workspace:*",

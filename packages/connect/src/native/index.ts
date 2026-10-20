@@ -22,18 +22,12 @@ export type {
 /** The exact first-party build environments Reader ships for. */
 export type SdkApplicationEnvironment = "lab" | "staging" | "production";
 
-/**
- * The one adapter to the pinned SDK's environment type. The pinned SDK
- * (sdk-dev-bd131b16) predates mdbase-next PR #941 and its types lack "staging";
- * every environment is passed through exactly, never mapped to another. Until a
- * per-environment SDK archive is pinned, the pinned SDK also refuses "staging"
- * at runtime (its packaged trust is LAB), which is fail-closed, not a fallback.
- * TODO: drop the cast when repinning an SDK with PR #941.
- */
+/** Exact pass-through to the authenticated target SDK environment type.
+ * The a3023aee staging intake includes PR #941; no cast or LAB retarget. */
 export function sdkApplicationEnvironment(
   environment: SdkApplicationEnvironment,
 ): MdbaseApplicationDeclaration["environment"] {
-  return environment as MdbaseApplicationDeclaration["environment"];
+  return environment;
 }
 
 /** Reader's mdbase entry (`createMdbase`) from the unchanged canonical manifest

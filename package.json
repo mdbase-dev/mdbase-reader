@@ -10,6 +10,8 @@
   },
   "scripts": {
     "build": "pnpm -r --if-present build",
+    "build:native:ci": "node scripts/qualify-native-staging.mjs ci-build",
+    "build:native:staging": "node scripts/qualify-native-staging.mjs local-qualification",
     "check": "pnpm lint && pnpm typecheck && pnpm test",
     "check:architecture": "node scripts/check-architecture.mjs",
     "deploy:dev": "pnpm --filter @mdbase-reader/app deploy:dev",
@@ -19,8 +21,12 @@
     "format:check": "prettier --check .",
     "lint": "pnpm lint:code && pnpm format:check && pnpm check:architecture",
     "lint:code": "eslint . --max-warnings 0",
-    "test": "pnpm test:architecture && pnpm -r --if-present test",
+    "test": "pnpm test:architecture && pnpm test:publisher && pnpm -r --if-present test",
     "test:architecture": "node --test scripts/lib/architecture-check.test.mjs",
+    "test:publisher": "node --test scripts/tests/*.test.mjs",
+    "test:publisher:evidence": "node --test scripts/tests/reader-evidence.test.mjs",
+    "test:publisher:offline": "node --test scripts/tests/reader-offline.test.mjs",
+    "test:publisher:installer": "node --test scripts/tests/reader-installer.test.mjs",
     "test:coverage": "pnpm -r --if-present test:coverage",
     "typecheck": "pnpm -r --if-present typecheck"
   },

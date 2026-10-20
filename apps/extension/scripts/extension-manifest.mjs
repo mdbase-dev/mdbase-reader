@@ -11,12 +11,12 @@ export const storeExtensionId = "kimdfjefhbfgfecconmaiaaindjccidp";
 /**
  * The SDK's log service for each environment, which the extension reaches from its
  * pages. Each value comes from the authenticated release trust bundled in that
- * environment's pinned SDK archive (LAB matches the current pin's trust); staging
- * and production have no SDK release trust yet, so they declare no log origin
- * rather than reusing another environment's.
+ * environment's original SDK custody. Staging now has its own authenticated
+ * archive; production still has no approved intake. Never reuse another target.
  */
 const sdkLogOrigins = Object.freeze({
   lab: "https://mdbase-next-log-lab-20261005.callumalpass.workers.dev",
+  staging: "https://log-staging.mdbase.dev",
 });
 
 const chromeExtensionId = /^[a-p]{32}$/u;
@@ -59,7 +59,7 @@ export function extensionEnvironment(environment = process.env) {
     label: target === "production" ? "" : target.toUpperCase(),
     connectUrl: deployment.connectUrl,
     logUrl: sdkLogOrigins[target] ?? null,
-    loopbackUrl: deployment.loopbackUrl,
+    loopbackUrl: target === "staging" ? "" : deployment.loopbackUrl,
     readerOrigin: deployment.origin,
     extensionOrigins: extensionIds.map((id) => `chrome-extension://${id}`),
     ...(target === "staging" && stagingPublicKey ? { stagingPublicKey } : {}),

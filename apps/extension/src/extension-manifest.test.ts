@@ -82,12 +82,14 @@ describe("staging extension environment", () => {
       label: "STAGING",
       connectUrl: "https://connect-staging.mdbase.dev",
       readerOrigin: "https://staging.mdbase-reader.pages.dev",
-      logUrl: null,
+      logUrl: "https://log-staging.mdbase.dev",
+      loopbackUrl: "",
     });
     expect(environment.extensionOrigins).toEqual([`chrome-extension://${stagingId}`]);
     // No other environment's Connect or log origin is bound into a staging build.
     expect(extensionHostPermissions(environment)).toEqual([
       "https://connect-staging.mdbase.dev/*",
+      "https://log-staging.mdbase.dev/*",
       "https://*/*",
     ]);
   });
