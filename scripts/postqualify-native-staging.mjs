@@ -101,7 +101,10 @@ for (const dir of ["publish", "extension"]) {
   const files = dir === "publish" ? inventory : extensionInventory;
   const js = await Promise.all(
     files
-      .filter((f) => /\.m?js$/.test(f.path) && f.path !== "_worker.js")
+      .filter(
+        (f) =>
+          /\.m?js$/.test(f.path) && f.path !== "_worker.js" && !f.path.startsWith("_worker.js/"),
+      )
       .map((f) => readFile(join(root, dir, f.path), "utf8")),
   );
   for (const literal of [
