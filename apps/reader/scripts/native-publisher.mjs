@@ -189,7 +189,7 @@ export async function captureDeployment({
   if (!prefix || !accountId || !apiToken)
     throw new Error("Refusing: missing unique deployment URL or Cloudflare credentials");
   const response = await fetchImpl(
-    `https://api.cloudflare.com/client/v4/accounts/${encodeURIComponent(accountId)}/pages/projects/mdbase-reader/deployments?per_page=100`,
+    `https://api.cloudflare.com/client/v4/accounts/${encodeURIComponent(accountId)}/pages/projects/mdbase-reader/deployments?per_page=20`,
     {
       headers: { Authorization: `Bearer ${apiToken}` },
       redirect: "error",

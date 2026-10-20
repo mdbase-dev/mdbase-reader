@@ -157,7 +157,6 @@ jobs:
       NATIVE_UI_SHA256: ${{ needs.native-inputs.outputs.ui }}
       NATIVE_PROTOCOL_SHA256: ${{ needs.native-inputs.outputs.protocol }}
       NATIVE_TRUST_ASSET_SHA256: ${{ needs.native-inputs.outputs.trust }}
-      MDBASE_EXTENSION_STAGING_PUBLIC_KEY: ${{ needs.native-inputs.outputs.public-key }}
       WRANGLER_SEND_METRICS: "false"
     outputs:
       artifact-id: ${{ steps.artifact.outputs.artifact-id }}
@@ -189,6 +188,8 @@ jobs:
           pnpm check
       - name: One actual target build, precompiled capture Worker, all final bytes
         id: build
+        env:
+          MDBASE_EXTENSION_STAGING_PUBLIC_KEY: ${{ needs.native-inputs.outputs.public-key }}
         run: |
           set -euo pipefail
           node apps/reader/scripts/native-publisher.mjs guard --target "$TARGET" --sha "$SOURCE_SHA" --installed > "$RUNNER_TEMP/reader-confirmed-plan.json"

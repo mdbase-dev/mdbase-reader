@@ -3,6 +3,8 @@ import { test } from "node:test";
 import { mkdtemp, mkdir, readFile, writeFile, rm, cp } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
+import { parse as parseYaml } from "yaml";
+import { extensionEnvironment } from "../../apps/extension/scripts/extension-manifest.mjs";
 import {
   assertDispatch,
   assertFullSha,
@@ -97,6 +99,25 @@ test("ALL current eaa4 installed SDK/UI/protocol/peers: originals plus separatel
     "CURRENT eaa4 data-only installer proof (NOT product-build/admission)",
     JSON.stringify(installerEvidence),
   );
+});
+test("native publisher scopes public staging key to target build, not default-LAB manifest checks", async () => {
+  const workflow = parseYaml(await readFile(".github/workflows/deploy-reader.yml", "utf8"));
+  const job = workflow.jobs["native-build"];
+  const keyName = "MDBASE_EXTENSION_STAGING_PUBLIC_KEY";
+  // Explicit PUBLIC-only presence fixture, NOT an allocated key or GHA identity.
+  const publicInput = "public-only-unit-fixture";
+  const checkEnvironment = Object.fromEntries(
+    ["MDBASE_ENV", "VITE_MDBASE_ENV", keyName]
+      .filter((name) => name in job.env)
+      .map((name) => [name, name === keyName ? publicInput : job.env[name]]),
+  );
+  assert.equal(extensionEnvironment(checkEnvironment).target, "lab");
+  assert.throws(
+    () => extensionEnvironment({ MDBASE_ENV: "lab", [keyName]: publicInput }),
+    /staging builds only/,
+  );
+  const build = job.steps.find((step) => step.id === "build");
+  assert.equal(build.env[keyName], "${{ needs.native-inputs.outputs.public-key }}");
 });
 async function intakeCopy() {
   const root = await mkdtemp(join(tmpdir(), "reader-intake-data-"));
@@ -263,8 +284,12 @@ test("artifact API run event/attempt check occurs before ZIP retrieval", async (
   }
 });
 test("actual UUID resolves from URL + exact source + Pages channel, never URL-prefix ID", async () => {
-  const fetchImpl = async () =>
-    Response.json({
+  const fetchImpl = async (url) => {
+    assert.equal(
+      url,
+      "https://api.cloudflare.com/client/v4/accounts/fixture/pages/projects/mdbase-reader/deployments?per_page=20",
+    );
+    return Response.json({
       success: true,
       result: [
         {
@@ -274,6 +299,7 @@ test("actual UUID resolves from URL + exact source + Pages channel, never URL-pr
         },
       ],
     });
+  };
   const value = await captureDeployment({
     output: "https://12345678.mdbase-reader.pages.dev",
     target: "staging",
