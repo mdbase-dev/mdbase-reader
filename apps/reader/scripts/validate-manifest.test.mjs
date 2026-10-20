@@ -73,12 +73,26 @@ test("an explicit LAB development manifest binds only its exact app-loopback ori
   });
   assert.throws(() => assertValidReaderManifest(manifest));
   assert.doesNotThrow(() => assertValidReaderManifest(manifest, { allowLocal: true }));
-  manifest.installation_origins.staging["app-runtime"] = ["http://127.0.0.1:5173"];
-  assert.throws(() => assertValidReaderManifest(manifest, { allowLocal: true }));
+});
+
+test("staging construction uses its configured HTTPS homepage without local mode", async () => {
+  const manifest = await buildReaderManifest({ origin: "https://staging.mdbase-reader.pages.dev" });
+  assert.equal(manifest.homepage, "https://staging.mdbase-reader.pages.dev/");
+  assert.deepEqual(manifest.installation_origins.staging, {
+    "app-runtime": ["https://staging.mdbase-reader.pages.dev"],
+  });
+  assert.doesNotThrow(() => assertValidReaderManifest(manifest));
+  // Canonical origin-format parsing is NOT target authorization. LAB-only app
+  // loopback is separately enforced/tested by build-environment.test.ts.
+  manifest.homepage = "http://127.0.0.1:5173/";
+  assert.throws(() => assertValidReaderManifest(manifest), /homepage/u);
 });
 
 test("dev and build:lab declare their LAB environment and manifest origin", async () => {
   const pkg = JSON.parse(await readFile(new URL("../package.json", import.meta.url), "utf8"));
+  assert.match(pkg.scripts.build, /manifest:validate/);
+  assert.doesNotMatch(pkg.scripts.build, /--allow-local/);
+  assert.match(pkg.scripts["dev:lab"], /manifest:validate --allow-local/);
   assert.match(pkg.scripts.dev, /VITE_MDBASE_ENV=lab/);
   assert.match(pkg.scripts.dev, /MDBASE_READER_ORIGIN=http:\/\/127\.0\.0\.1:5173/);
   assert.match(pkg.scripts["build:lab"], /VITE_MDBASE_ENV=lab/);
