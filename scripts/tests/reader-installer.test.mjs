@@ -5,12 +5,7 @@ import { mkdtemp, mkdir, writeFile, readFile, chmod, rm, symlink, lstat } from "
 import { join } from "node:path";
 import { tmpdir } from "node:os";
 import { assertInstalledOriginals } from "../lib/native-originals.mjs";
-import {
-  pnpm107YamlTemplate,
-  verifyReaderYamlShim,
-  pnpmYamlShim,
-  pnpm107ProtocolYamlTemplate,
-} from "../lib/reader-pnpm-installer.mjs";
+import { verifyReaderYamlShim, pnpmYamlShim } from "../lib/reader-pnpm-installer.mjs";
 const hash = (b) => createHash("sha256").update(b).digest("hex");
 async function fixture() {
   const repo = await mkdtemp(join(tmpdir(), "reader-pnpm-policy-"));
@@ -33,7 +28,9 @@ async function fixture() {
   }
   members.sort((a, b) => (a.path < b.path ? -1 : 1));
   await mkdir(join(sdk, "node_modules/.bin"));
-  const bytes = pnpm107YamlTemplate(repo, sdk);
+  const bytes = Buffer.from(
+    "#!/bin/sh\n# pnpm-generated SDK wrapper fixture DATA, never executed\n",
+  );
   await writeFile(join(sdk, pnpmYamlShim), bytes);
   await chmod(join(sdk, pnpmYamlShim), 0o755);
   const options = {
@@ -63,7 +60,9 @@ async function protocolFixture(f) {
   });
   await writeFile(join(protocol, "package.json"), pkg);
   const members = [{ path: "package.json", bytes: Buffer.byteLength(pkg), sha256: hash(pkg) }];
-  const bytes = pnpm107ProtocolYamlTemplate(f.repo, protocol, yaml);
+  const bytes = Buffer.from(
+    "#!/bin/sh\n# pnpm-generated protocol wrapper fixture DATA, never executed\n",
+  );
   await writeFile(join(protocol, pnpmYamlShim), bytes);
   await chmod(join(protocol, pnpmYamlShim), 0o755);
   return {
@@ -80,7 +79,28 @@ async function protocolFixture(f) {
     },
   };
 }
-test("direct protocol exact PNPM shim additionally binds EVERY external YAML file to original SDK YAML", async () => {
+for (const kind of ["sdk", "protocol"])
+  test(`Co100025: differing pnpm-generated ${kind} wrapper bytes do not reject unchanged originals`, async () => {
+    const f = await fixture();
+    try {
+      const p =
+        kind === "protocol"
+          ? await protocolFixture(f)
+          : { protocol: f.sdk, members: f.members, options: f.options };
+      const bytes = Buffer.from("#!/bin/sh\n# different pnpm wrapper DATA; never executed\n");
+      await writeFile(join(p.protocol, pnpmYamlShim), bytes);
+      await assertInstalledOriginals(
+        p.protocol,
+        p.members,
+        "originals must still match",
+        p.options,
+      );
+      assert.deepEqual(await readFile(join(p.protocol, pnpmYamlShim)), bytes);
+    } finally {
+      await rm(f.repo, { recursive: true, force: true });
+    }
+  });
+test("direct protocol installation binds EVERY external YAML file to original SDK YAML", async () => {
   const f = await fixture();
   try {
     const p = await protocolFixture(f);
@@ -101,7 +121,6 @@ for (const mutation of [
   "external-YAML-extra",
   "external-YAML-link",
   "protocol-byte",
-  "protocol-shim-target",
   "protocol-extra-bin",
 ])
   test("protocol installer policy refuses " + mutation, async () => {
@@ -117,11 +136,6 @@ for (const mutation of [
         await symlink("dist/index.js", join(p.yaml, "bin.mjs"));
       }
       if (mutation === "protocol-byte") await writeFile(join(p.protocol, "package.json"), "{}");
-      if (mutation === "protocol-shim-target")
-        await writeFile(
-          join(p.protocol, pnpmYamlShim),
-          p.bytes.toString().replace("../../../../yaml/bin.mjs", "../evil.js"),
-        );
       if (mutation === "protocol-extra-bin")
         await writeFile(join(p.protocol, "node_modules/.bin/other"), "extra");
       await assert.rejects(
@@ -133,7 +147,7 @@ for (const mutation of [
       await rm(f.repo, { recursive: true, force: true });
     }
   });
-test("ALL original SDK/YAML members + sole exact PNPM10.7 shim verified separately, no deletion", async () => {
+test("ALL original SDK/YAML members + sole known pnpm wrapper retained separately, no deletion", async () => {
   const f = await fixture();
   try {
     await assertInstalledOriginals(f.sdk, f.members, "fixture originals", f.options);
@@ -152,8 +166,6 @@ test("ALL original SDK/YAML members + sole exact PNPM10.7 shim verified separate
 for (const mutation of [
   "SDK-byte",
   "YAML-byte",
-  "shim-extra-command",
-  "shim-target",
   "unknown-bin",
   "unknown-hidden",
   "symlink",
@@ -169,16 +181,6 @@ for (const mutation of [
           await writeFile(join(f.sdk, "dist/index.js"), "altered SDK DATA");
         if (mutation === "YAML-byte")
           await writeFile(join(f.sdk, "node_modules/yaml/dist/index.js"), "altered YAML DATA");
-        if (mutation === "shim-extra-command")
-          await writeFile(
-            join(f.sdk, pnpmYamlShim),
-            Buffer.concat([f.bytes, Buffer.from("echo extra\n")]),
-          );
-        if (mutation === "shim-target")
-          await writeFile(
-            join(f.sdk, pnpmYamlShim),
-            f.bytes.toString().replace("../yaml/bin.mjs", "../evil.js"),
-          );
         if (mutation === "unknown-bin")
           await writeFile(join(f.sdk, "node_modules/.bin/other"), "unknown");
         if (mutation === "unknown-hidden") await writeFile(join(f.sdk, ".hidden-extra"), "unknown");
@@ -198,7 +200,7 @@ for (const mutation of [
       }
     },
   );
-test("known template is NOT granted to another PNPM version or another root/target", async () => {
+test("original YAML binding, installed roots and pinned manager checks remain", async () => {
   const f = await fixture();
   try {
     const args = {
@@ -217,14 +219,10 @@ test("known template is NOT granted to another PNPM version or another root/targ
         originalMembers: f.members.filter((m) => m.path !== "node_modules/yaml/bin.mjs"),
       }),
     );
+    assert.throws(() => verifyReaderYamlShim({ ...args, repoRoot: "/tmp/unsafe;root" }));
     assert.throws(() =>
-      verifyReaderYamlShim({
-        ...args,
-        bytes: Buffer.from(f.bytes.toString().replace("$NODE_PATH", "OTHER")),
-      }),
+      verifyReaderYamlShim({ ...args, sdkRoot: "/elsewhere/node_modules/@mdbase-dev/sdk" }),
     );
-    assert.throws(() => pnpm107YamlTemplate("/tmp/unsafe;root", f.sdk));
-    assert.throws(() => pnpm107YamlTemplate(f.repo, "/elsewhere/node_modules/@mdbase-dev/sdk"));
   } finally {
     await rm(f.repo, { recursive: true, force: true });
   }

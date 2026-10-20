@@ -1,6 +1,6 @@
-// Reader-owned PNPM10.7.0 installer-output policy, NOT an SDK-original exception.
-// ALL original package/YAML files are compared independently BEFORE qualifying
-// these exact generated files. No blanket .bin ignore, deletion or execution.
+// Co100025: pnpm-generated wrappers are tooling, NOT SDK-original authority.
+// ALL original package/YAML files still match independently. Only the known
+// wrapper location is separate; no blanket .bin ignore, deletion or execution.
 import { execFileSync } from "node:child_process";
 import { createHash } from "node:crypto";
 import { join, relative, resolve } from "node:path";
@@ -47,55 +47,6 @@ function canonicalRoot(repoRoot, packageRoot, name) {
     "unexpected PNPM installed package root",
   );
 }
-function render(paths, target) {
-  return Buffer.from(
-    [
-      "#!/bin/sh",
-      String.raw`basedir=$(dirname "$(echo "$0" | sed -e 's,\\,/,g')")`,
-      "",
-      "case `uname` in",
-      '    *CYGWIN*) basedir=`cygpath -w "$basedir"`;;',
-      "esac",
-      "",
-      'if [ -z "$NODE_PATH" ]; then',
-      `  export NODE_PATH="${paths.join(":")}"`,
-      "else",
-      `  export NODE_PATH="${paths.join(":")}:$NODE_PATH"`,
-      "fi",
-      'if [ -x "$basedir/node" ]; then',
-      `  exec "$basedir/node"  "$basedir/${target}" "$@"`,
-      "else",
-      `  exec node  "$basedir/${target}" "$@"`,
-      "fi",
-      "",
-    ].join("\n"),
-  );
-}
-export function pnpm107YamlTemplate(repoRoot, sdkRoot) {
-  canonicalRoot(repoRoot, sdkRoot, "@mdbase-dev/sdk");
-  return render(
-    [
-      join(sdkRoot, "node_modules/yaml/node_modules"),
-      join(sdkRoot, "node_modules"),
-      join(sdkRoot, "../node_modules"),
-      resolve(sdkRoot, "../.."),
-      join(repoRoot, "node_modules/.pnpm/node_modules"),
-    ],
-    "../yaml/bin.mjs",
-  );
-}
-export function pnpm107ProtocolYamlTemplate(repoRoot, protocolRoot, yamlRoot) {
-  canonicalRoot(repoRoot, protocolRoot, "@mdbase-dev/connect-protocol");
-  canonicalRoot(repoRoot, yamlRoot, "yaml");
-  return render(
-    [
-      join(yamlRoot, "node_modules"),
-      resolve(yamlRoot, ".."),
-      join(repoRoot, "node_modules/.pnpm/node_modules"),
-    ],
-    "../../../../yaml/bin.mjs",
-  );
-}
 function originalYaml(yamlPackageBytes, originalMembers) {
   const yaml = originalMembers.filter((m) => m.path.startsWith("node_modules/yaml/"));
   const pkg = yaml.find((m) => m.path === "node_modules/yaml/package.json");
@@ -121,11 +72,11 @@ function evidence(bytes, count) {
     bytes: bytes.length,
     sha256: hash(bytes),
     manager: "pnpm@10.7.0",
-    policy: "exact POSIX template + separately verified ALL original package/YAML members",
+    policy: "pnpm-generated wrapper; separately verified ALL original package/YAML members",
     originalYamlMembers: count,
     targetOriginal: "node_modules/yaml/bin.mjs",
     disposition:
-      "retained as independently verified installer output; never counted as package original or executed",
+      "retained as pnpm-generated tooling; never counted as package original, SDK authority or executed",
   };
 }
 export function verifyReaderYamlShim({
@@ -138,11 +89,7 @@ export function verifyReaderYamlShim({
 }) {
   check(managerVersion === "10.7.0", "unqualified installer version");
   const { yaml } = originalYaml(yamlPackageBytes, originalMembers);
-  const expected = pnpm107YamlTemplate(repoRoot, sdkRoot);
-  check(
-    bytes.length === expected.length && bytes.equals(expected),
-    "generated SDK YAML shim differs from exact pinned PNPM template",
-  );
+  canonicalRoot(repoRoot, sdkRoot, "@mdbase-dev/sdk");
   return evidence(bytes, yaml.length);
 }
 export function verifyReaderProtocolYamlShim({
@@ -160,10 +107,7 @@ export function verifyReaderProtocolYamlShim({
     yamlRoot === join(repoRoot, `node_modules/.pnpm/yaml@${manifest.version}/node_modules/yaml`),
     "direct protocol YAML location/version differs from original SDK YAML",
   );
-  const expected = pnpm107ProtocolYamlTemplate(repoRoot, protocolRoot, yamlRoot);
-  check(
-    bytes.length === expected.length && bytes.equals(expected),
-    "generated protocol YAML shim differs from exact pinned PNPM template",
-  );
+  canonicalRoot(repoRoot, protocolRoot, "@mdbase-dev/connect-protocol");
+  canonicalRoot(repoRoot, yamlRoot, "yaml");
   return evidence(bytes, yaml.length);
 }
