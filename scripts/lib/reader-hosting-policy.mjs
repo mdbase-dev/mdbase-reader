@@ -80,7 +80,8 @@ export function coveredHostingControls(policy, inventory) {
           !parts.some((p) =>
             ["_headers", "_redirects", "_routes.json", "_worker.js"].includes(p),
           )) ||
-        ["_routes.json", "_redirects", "_worker.js"].includes(item.path),
+        ["_routes.json", "_redirects", "_worker.js"].includes(item.path) ||
+        item.path.startsWith("_worker.js/"),
       "unknown hosting control requires reviewed source policy",
     );
   }
@@ -97,13 +98,18 @@ export function coveredHostingControls(policy, inventory) {
         "source policy + immutable upload + scoped deployment metadata + bounded behavior probes",
     });
   }
-  const worker = inventory.find((a) => a.path === "_worker.js");
-  check(worker?.bytes > 0, "missing precompiled capture Worker");
-  covered.push({
-    ...worker,
-    evidence:
-      "source/run-bound precompiled Worker + scoped deployment metadata + capture denial probes; NOT Worker-source GET",
-  });
+  const workers = inventory.filter(
+    (a) => a.path === "_worker.js" || a.path.startsWith("_worker.js/"),
+  );
+  const entry = workers.find((a) => a.path === "_worker.js" || a.path === "_worker.js/index.js");
+  check(entry?.bytes > 0, "missing precompiled capture Worker");
+  covered.push(
+    ...workers.map((worker) => ({
+      ...worker,
+      evidence:
+        "source/run-bound precompiled Worker + scoped deployment metadata + capture denial probes; NOT Worker-source GET",
+    })),
+  );
   return covered;
 }
 export function safeProject(project, environment) {

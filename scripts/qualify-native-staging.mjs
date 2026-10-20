@@ -151,7 +151,7 @@ try {
       "functions",
       "build",
       join(repo, "apps/reader/functions"),
-      "--outfile",
+      "--outdir",
       join(repo, "apps/reader/dist/_worker.js"),
     ],
     tools,
@@ -189,7 +189,10 @@ try {
     const files = dir === "publish" ? inventory : extensionInventory;
     const js = await Promise.all(
       files
-        .filter((a) => /\.m?js$/.test(a.path) && a.path !== "_worker.js")
+        .filter(
+          (a) =>
+            /\.m?js$/.test(a.path) && a.path !== "_worker.js" && !a.path.startsWith("_worker.js/"),
+        )
         .map((a) => readFile(join(root, dir, a.path), "utf8")),
     );
     // Exact original native/SQLite members plus compiled authenticated trust

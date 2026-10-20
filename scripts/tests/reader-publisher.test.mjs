@@ -430,7 +430,7 @@ async function servedFixture() {
   };
   const transport = async (url) => {
     const path = new URL(url).pathname;
-    assert.notEqual(path, "/_worker.js");
+    assert.ok(path !== "/_worker.js" && !path.startsWith("/_worker.js/"));
     if (path === "/api/capture")
       return new Response(
         JSON.stringify({ code: "method_not_allowed", message: "Use POST to capture a page." }),
@@ -464,6 +464,82 @@ async function servedFixture() {
     transport,
   };
 }
+test("Pages Functions build emits advanced-mode modules, not a multipart outfile", async () => {
+  const build = await readFile("scripts/qualify-native-staging.mjs", "utf8");
+  const flag = build.match(
+    /"(--out(?:file|dir))",\s*join\(repo, "apps\/reader\/dist\/_worker\.js"\)/,
+  )?.[1];
+  // Official Wrangler 4.114 semantics already exercised by Writer's synthetic
+  // regression: outfile is a multipart upload body, outdir emits index.js.
+  assert.equal(flag, "--outdir");
+});
+test("advanced-mode Worker retains every module/map in inventory and hosting coverage", async () => {
+  const f = await servedFixture();
+  try {
+    const pub = join(f.root, "publish");
+    await rm(join(pub, "_worker.js"));
+    await mkdir(join(pub, "_worker.js"));
+    // SYNTHETIC module/map DATA only; never compiled or executed.
+    for (const [name, body] of Object.entries({
+      "index.js": "export default {};",
+      "module.mjs": "export {};",
+      "index.js.map": "{}",
+    }))
+      await writeFile(join(pub, "_worker.js", name), body);
+    const inventory = await inventoryDirectory(pub);
+    assert.doesNotThrow(() => assertInventoryCoverage(inventory, { nativeAssets: {} }));
+    const v = await verifyServedAssets({
+      origin,
+      inventory,
+      publication: f.publication,
+      fetch: f.transport,
+      attempts: 1,
+    });
+    assert.equal(v.ok, true, JSON.stringify(v));
+    assert.deepEqual(v.policyEvidence.coveredControls.map((a) => a.path).sort(), [
+      "_redirects",
+      "_routes.json",
+      "_worker.js/index.js",
+      "_worker.js/index.js.map",
+      "_worker.js/module.mjs",
+    ]);
+    assert.ok(v.verified.every((a) => !a.path.startsWith("_worker.js/")));
+    const args = {
+      target: "staging",
+      source: { sha: source, tree },
+      releaseRef: "release/native-staging",
+      sdkTrust: {},
+      inventory,
+      deploymentId: id,
+      verification: v,
+    };
+    assert.equal(createReceipt(args).status, "verified");
+    for (const mode of ["omitted-map", "changed-module"]) {
+      const broken = structuredClone(v);
+      if (mode === "omitted-map")
+        broken.policyEvidence.coveredControls = broken.policyEvidence.coveredControls.filter(
+          (a) => a.path !== "_worker.js/index.js.map",
+        );
+      else
+        broken.policyEvidence.coveredControls.find(
+          (a) => a.path === "_worker.js/module.mjs",
+        ).sha256 = "0".repeat(64);
+      assert.equal(createReceipt({ ...args, verification: broken }).status, "failed-or-incomplete");
+    }
+    const missingEntry = inventory.filter((a) => a.path !== "_worker.js/index.js");
+    assert.throws(
+      () => assertInventoryCoverage(missingEntry, {}),
+      /Missing precompiled Pages Worker/,
+    );
+    const policy = await sourceHostingPolicy(process.cwd());
+    assert.throws(
+      () => coveredHostingControls(policy, missingEntry),
+      /missing precompiled capture Worker/,
+    );
+  } finally {
+    await rm(f.root, { recursive: true, force: true });
+  }
+});
 test("ALL bytes + .nojekyll GET + source controls + 9 bounded route probes can verify", async () => {
   const f = await servedFixture();
   try {

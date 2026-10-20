@@ -142,7 +142,11 @@ export function assertInventoryCoverage(inventory, sdkTrust) {
     if (!inventory.some((asset) => asset.sha256 === pin.sha256 && asset.bytes === pin.bytes))
       throw new Error(`Missing exact SDK native/SQLite bytes for ${name}; refusing`);
   }
-  if (sdkTrust && !sdkTrust.extension && !inventory.some((asset) => asset.path === "_worker.js"))
+  if (
+    sdkTrust &&
+    !sdkTrust.extension &&
+    !inventory.some((asset) => asset.path === "_worker.js" || asset.path === "_worker.js/index.js")
+  )
     throw new Error("Missing precompiled Pages Worker; refusing");
   const present = new Set(inventory.map((asset) => classifyAsset(asset.path)));
   const missing = requiredAssetCategories.filter((category) => !present.has(category));
