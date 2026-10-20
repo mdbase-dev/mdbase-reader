@@ -40,8 +40,10 @@ public facts `d54aef71…` (4746B), unchanged Reader UIb2 `8f785294…`, direct 
 `cd1e1523…` and raw asset `67e11764…`. Facts are pinned BEFORE JSON parsing; no old
 d313/new-archive mixture is accepted. `reader-approved-intake.mjs` contains data/
 local expectations ONLY; the live publisher never uses them as environment authority.
-Parent separately updates/audits ONLY the existing Stage SDK hash variable; source
-and local checks do not claim that Ops readback occurred.
+Parent reports the existing Stage SDK variable update to15eb and the full four-
+hash GET readback completed with audit0; the other three Reader values and public
+SPKI are unchanged. That is parent Ops evidence, not an API operation or live
+publication proof performed by this source owner.
 
 The new original archive basename is `sdk-dev-eaa4e697-staging.tgz`. Its original
 producer-layout packet is at
@@ -117,6 +119,9 @@ retargeted to production or LAB. Old vendor archives/dead legacy files remain.
 5. The protected uploader installs NO app dependencies, runs NO app build/hooks
    and executes NO project scripts from an artifact. Trusted source code plus an
    isolated minimal integrity-locked Wrangler4.114.0 install are the only tools.
+   `pnpm/action-setup` selects `tools/native-publisher/package.json` explicitly:
+   requested11.15.1 equals that dedicated manifest, NOT the root's10.7.0. Reader's
+   qualified source/installer policy and root lock/manager remain10.7.0 unchanged.
    Its isolated SOURCE-derived cwd config prevents artifact workspace/config
    discovery; the precompiled Worker uses `--no-bundle`.
 6. Job-scoped `contents: read` and `actions: read` allow immutable Actions
@@ -131,6 +136,17 @@ retargeted to production or LAB. Old vendor archives/dead legacy files remain.
    GitHub error text/canonical documentation URLs are retained; non-JSON/opaque
    bodies are identified by bounded length/hash and safely omitted. Never tokens,
    SAS URLs, response headers, opaque exceptions, arbitrary payloads or context dumps.
+   The302 redirect uses the SAME bounded capture before Location validation or
+   any blob request: numeric status first, bounded length/hash, complete/truncated/
+   read-error/timeout flags and allowlisted projection. COMPLETE non-JSON302 is
+   valid; incomplete/truncated bodies forbid NEXT/blob/ZIP. Prefix identities are
+   explicitly incomplete, never actual ZIP identities. The complete downloaded
+   ZIP's observed size/hash is persisted BEFORE digest comparison or NEXT lookup.
+   BOTH after/runAfter observations precede extraction, including on bad digest
+   or extraction refusal. A bad digest remains primary if later metadata fails;
+   safe secondary reason/status is retained without opaque exception strings.
+   Requests/capture/extraction share a180s transport budget; the unchanged shared
+   served-byte helper retains its separate reviewed180s bound.
 7. The complete artifact is made read-only and reasserted immediately before the
    LAST ref check and ONE web-only upload. Actual API deployment UUID capture
    must SUCCEED before served verification. A URL prefix is not a UUID.
@@ -167,11 +183,16 @@ rpnpm run test:publisher
 rpnpm run test:publisher:evidence
 rpnpm run test:publisher:offline
 rpnpm run test:publisher:installer
+# Opt-in qualified transport regressions need the above exact PUBLIC input:
+rpnpm run test:publisher:review
 rpnpm run check
 # ONE actual staging build ONLY after the fresh frozen full check succeeds:
 rpnpm --pull artifacts/build run build:native:staging reader-staging-public-input.json
 # If compilation succeeded but ONLY packaging/post-verification failed, DO NOT rebuild:
 rpnpm --pull artifacts/build run postqualify:native:staging reader-staging-public-input.json
+# Read-only reverification of the EXISTING historical ZIP; NEVER package/overwrite:
+# Do not --pull: that would overwrite local output copies unnecessarily.
+rpnpm run postqualify:native:staging reader-staging-public-input.json --validate-existing b0d1957f038f8dad8d8efd144b38ca5706432aeb49bd9fc7d20c76898713343b
 ```
 
 Remove ONLY that owned temporary public input after terminal checks. The runner
@@ -188,6 +209,14 @@ new peer qualification.
 The extension ZIP is exact-inventoried and checked against its public-key and
 canonical app manifests. It uses Python's isolated standard-library ZIP writer,
 not an assumed host `zip` executable, and refuses overwriting an existing ZIP.
+Owned ZIPs contain ONLY explicitly POSIX-regular file entries: no directories
+(with or without trailing slash), DOS-directory bits, symlinks, encrypted or
+ambiguous zero-type/DOS-only entries. No directory is projected out of comparison.
+The opt-in `--validate-existing <independent-zip-sha256>` mode requires a regular
+existing ZIP and checks that exact digest before/after full member validation;
+missing/stale inputs refuse, never reconstruct. It writes ONLY a new sibling
+`reader-staging-existing-qualification-r2.json`, preserving the earlier recovery
+receipt and all saved inventories/compiled/ZIP bytes.
 Post-only recovery reasserts the SAVED full inventories (never regenerates them
 to bless changed/extra files), checks unchanged plan/original inputs, and performs
 NO app/SDK/Worker build, hooks, network or deployment. Its receipt is a sibling of

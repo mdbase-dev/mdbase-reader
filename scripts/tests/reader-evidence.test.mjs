@@ -378,7 +378,8 @@ with zipfile.ZipFile(sys.argv[1],'w') as z:
  mode=sys.argv[2]
  if mode=='link':
   i=zipfile.ZipInfo('link');i.create_system=3;i.external_attr=(stat.S_IFLNK|0o777)<<16;z.writestr(i,'target')
- else: z.writestr('../escape' if mode=='traversal' else 'a.txt','a')`,
+ else:
+  i=zipfile.ZipInfo('../escape' if mode=='traversal' else 'a.txt');i.create_system=3;i.external_attr=(stat.S_IFREG|0o644)<<16;z.writestr(i,'a')`,
         zip,
         mode,
       ]);

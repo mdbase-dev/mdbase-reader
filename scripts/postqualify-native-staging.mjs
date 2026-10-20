@@ -12,6 +12,7 @@ import {
   assertExtension,
   createExtensionZip,
   assertExtensionZip,
+  validateExistingExtensionZip,
 } from "./lib/reader-extension.mjs";
 import { sourceHostingPolicy, coveredHostingControls } from "./lib/reader-hosting-policy.mjs";
 import {
@@ -28,7 +29,14 @@ const check = (ok, why) => {
 };
 const repo = resolve("."),
   input = process.argv[2],
-  root = resolve("artifacts/build/native-staging");
+  root = resolve("artifacts/build/native-staging"),
+  existingOnly = process.argv[3] === "--validate-existing",
+  expectedZipSha256 = process.argv[4];
+check(
+  (existingOnly && process.argv.length === 5 && /^[a-f0-9]{64}$/.test(expectedZipSha256 ?? "")) ||
+    (!existingOnly && process.argv.length === 3),
+  "optional --validate-existing requires independent exact ZIP hash; no other arguments",
+);
 check(
   input &&
     !input.startsWith("/") &&
@@ -107,14 +115,18 @@ for (const dir of ["publish", "extension"]) {
       dir + " compiled original trust/CP/log/source binding",
     );
 }
-let zipExists = true;
-try {
-  await access(join(root, "extension.zip"));
-} catch {
-  zipExists = false;
+if (existingOnly) {
+  await validateExistingExtensionZip(root, extensionInventory, expectedZipSha256);
+} else {
+  let zipExists = true;
+  try {
+    await access(join(root, "extension.zip"));
+  } catch {
+    zipExists = false;
+  }
+  if (!zipExists) await createExtensionZip(root, extensionInventory); // ONLY packaging, no rebuild.
+  await assertExtensionZip(root, extensionInventory);
 }
-if (!zipExists) await createExtensionZip(root, extensionInventory); // ONLY packaging, no rebuild.
-await assertExtensionZip(root, extensionInventory);
 await assertInventory(join(root, "publish"), inventory);
 await assertInventory(join(root, "extension"), extensionInventory);
 check(
@@ -127,7 +139,10 @@ const facts = JSON.parse(
 );
 const result = {
   qualificationOnly: true,
-  mode: "post-only existing compiled output; ZERO product builds invoked",
+  mode: existingOnly
+    ? "validate-existing ONLY; ZERO builds/packaging/inventory regeneration"
+    : "post-only existing compiled output; ZERO product builds invoked",
+  independentlyExpectedExistingZipSha256: existingOnly ? expectedZipSha256 : null,
   inputEvidence: {
     transportFileSha256: hash(inputBytes),
     publicSpkiSha256: publicSha,
@@ -155,7 +170,11 @@ const result = {
   admission: false,
 };
 await writeFile(
-  resolve("artifacts/build/reader-staging-post-qualification.json"),
+  resolve(
+    existingOnly
+      ? "artifacts/build/reader-staging-existing-qualification-r2.json"
+      : "artifacts/build/reader-staging-post-qualification.json",
+  ),
   JSON.stringify(result, null, 2) + "\n",
 );
 console.log(JSON.stringify(result, null, 2));

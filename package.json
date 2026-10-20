@@ -26,6 +26,7 @@
     "test:architecture": "node --test scripts/lib/architecture-check.test.mjs",
     "test:publisher": "node --test scripts/tests/*.test.mjs",
     "test:publisher:evidence": "node --test scripts/tests/reader-evidence.test.mjs",
+    "test:publisher:review": "node --test scripts/review-tests/*.test.mjs",
     "test:publisher:offline": "node --test scripts/tests/reader-offline.test.mjs",
     "test:publisher:installer": "node --test scripts/tests/reader-installer.test.mjs",
     "test:coverage": "pnpm -r --if-present test:coverage",

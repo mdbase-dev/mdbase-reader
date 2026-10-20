@@ -90,80 +90,146 @@ export async function assertArtifactDirectory(root, expected, repoRoot = resolve
   void repoRoot;
   return { plan, inventory, envelope };
 }
-export async function boundedResponseBytes(response, limit, timeoutMs) {
-  const length = response.headers?.get("content-length");
-  requireValue(
-    length == null ||
-      (/^\d+$/.test(length) && Number.isSafeInteger(Number(length)) && Number(length) <= limit),
-    "response declared size",
-  );
-  let reader, timer;
+// One SOURCE-owned capture for metadata, redirect and ZIP. Incomplete prefixes
+// are bounded identities, NEVER represented as an actual complete ZIP digest.
+async function captureResponseBytes(response, limit, timeoutMs) {
+  const chunks = [];
+  let size = 0,
+    reader,
+    timer,
+    stopped = false,
+    complete = false,
+    reason = null;
+  const deadline = performance.now() + timeoutMs;
+  const refuse = (why) => {
+    reason ??= why;
+  };
   try {
-    return await Promise.race([
+    await Promise.race([
       (async () => {
-        requireValue(response.body?.getReader, "response byte stream");
-        reader = response.body.getReader();
-        const chunks = [];
-        let size = 0;
-        const deadline = performance.now() + timeoutMs;
-        for (;;) {
-          const { done, value } = await reader.read();
-          requireValue(performance.now() < deadline, "response timeout");
-          if (done) break;
-          requireValue(value instanceof Uint8Array, "response nonbyte chunk");
-          size += value.length;
-          requireValue(size <= limit, "response byte limit");
-          chunks.push(value);
+        const length = response.headers?.get("content-length");
+        if (length != null && (!/^\d+$/.test(length) || !Number.isSafeInteger(Number(length)))) {
+          refuse("body-declared-size");
+          return;
         }
-        requireValue(
-          length == null || size === Number(length),
-          "response declared length mismatch",
-        );
-        return Buffer.concat(chunks);
+        if (length != null && Number(length) > limit) {
+          refuse("body-byte-limit");
+          return;
+        }
+        if (response.body != null) {
+          if (typeof response.body.getReader !== "function") {
+            refuse("body-nonbyte-stream");
+            return;
+          }
+          reader = response.body.getReader();
+          for (;;) {
+            const { done, value } = await reader.read();
+            if (stopped) return; // Late reads cannot mutate the checkpoint after timeout.
+            if (performance.now() >= deadline) {
+              refuse("body-timeout");
+              return;
+            }
+            if (done) break;
+            if (!(value instanceof Uint8Array)) {
+              refuse("body-nonbyte-chunk");
+              return;
+            }
+            const take = Math.min(value.length, limit - size);
+            if (take) {
+              chunks.push(Buffer.from(value.subarray(0, take)));
+              size += take;
+            }
+            if (take !== value.length) {
+              refuse("body-byte-limit");
+              return;
+            }
+          }
+        }
+        if (length != null && size !== Number(length)) {
+          refuse("body-declared-length-mismatch");
+          return;
+        }
+        complete = true;
       })(),
-      new Promise((_, reject) => {
-        timer = setTimeout(() => reject(Error("Artifact response timeout")), timeoutMs);
+      new Promise((resolve) => {
+        timer = setTimeout(() => {
+          stopped = true;
+          refuse("body-timeout");
+          resolve();
+        }, timeoutMs);
       }),
     ]);
+  } catch {
+    refuse("body-read-error"); // NEVER retain arbitrary exception text.
   } finally {
+    stopped = true;
     clearTimeout(timer);
     try {
       Promise.resolve(reader ? reader.cancel() : response.body?.cancel()).catch(() => {});
     } catch {
-      /* Best-effort bounded cancellation; never log response contents. */
+      /* Bounded best-effort cancellation; no body/error contents. */
     }
   }
+  return { bytes: Buffer.concat(chunks, size), complete, reason };
 }
-export async function checkpointMetadataHttp(response, { state, save }) {
+export async function boundedResponseBytes(response, limit, timeoutMs) {
+  const captured = await captureResponseBytes(response, limit, timeoutMs);
+  requireValue(captured.complete, "bounded response body refused");
+  return captured.bytes;
+}
+async function checkpointHttpBody(response, { state, save, limit, timeoutMs, project = true }) {
   state.responses ??= {};
-  const entry = { httpStatus: response.status, bodyState: "bounded-public-body-pending" };
+  const status = response.status;
+  const entry = {
+    httpStatus: Number.isInteger(status) && status >= 100 && status <= 599 ? status : null,
+    bodyState: "bounded-public-body-pending",
+  };
   state.responses[state.stage] = entry;
-  await save(state); // numeric status survives even a body/stream failure.
-  let bytes;
-  try {
-    bytes = await boundedResponseBytes(response, 2 * 1024 * 1024, 30000);
-  } catch {
-    entry.bodyState = "bounded-public-body-read-refused";
-    await save(state);
-    throw Error("Artifact bounded metadata body refused");
-  }
-  entry.bodyBytes = bytes.length;
-  entry.bodySha256 = sha(bytes);
+  await save(state); // Numeric status IMMEDIATELY, before headers/body/validation.
+  const captured = await captureResponseBytes(response, limit, timeoutMs);
+  const { bytes, complete, reason } = captured;
+  Object.assign(entry, {
+    bodyBytes: bytes.length,
+    bodySha256: sha(bytes),
+    bodyIdentity: complete ? "complete-body" : "incomplete-prefix",
+    bodyComplete: complete,
+    bodyTruncated: reason === "body-byte-limit",
+    bodyReadError: reason === "body-read-error",
+    bodyTimedOut: reason === "body-timeout",
+    bodyRefusal: reason,
+  });
   let parsed,
-    validJSON = true;
-  try {
-    parsed = JSON.parse(bytes);
-  } catch {
     validJSON = false;
+  if (project && complete) {
+    try {
+      parsed = JSON.parse(bytes);
+      validJSON = true;
+    } catch {
+      /* Non-JSON redirect is valid DATA. */
+    }
+    entry.publicBody = publicMetadataBody(state.stage, parsed, status);
   }
-  entry.publicBody = publicMetadataBody(state.stage, parsed, response.status);
-  entry.bodyState = validJSON
-    ? "bounded-public-projection-captured"
-    : "non-JSON-public-body-omitted";
-  await save(state); // BODY + STATUS before HTTP status/metadata validation.
+  entry.bodyState = !complete
+    ? "bounded-public-body-read-refused"
+    : !project
+      ? "binary-body-not-projected"
+      : validJSON
+        ? "bounded-public-projection-captured"
+        : "non-JSON-public-body-omitted";
+  await save(state); // Bounded BODY identity + STATUS BEFORE refusal/NEXT request.
+  return { ...captured, parsed, validJSON };
+}
+export async function checkpointMetadataHttp(response, { state, save, timeoutMs = 30000 }) {
+  const captured = await checkpointHttpBody(response, {
+    state,
+    save,
+    limit: 2 * 1024 * 1024,
+    timeoutMs: Math.min(30000, timeoutMs),
+  });
+  requireValue(captured.complete, "bounded metadata body refused");
   requireValue(response.ok, "GitHub metadata HTTP status");
-  requireValue(validJSON, "GitHub metadata JSON");
-  return parsed;
+  requireValue(captured.validJSON, "GitHub metadata JSON");
+  return captured.parsed;
 }
 export async function download(expected, root, transport = fetch) {
   requireValue(
@@ -181,13 +247,40 @@ export async function download(expected, root, transport = fetch) {
   );
   const token = process.env.GITHUB_TOKEN;
   const base = `https://api.github.com/repos/${expected.repository}`;
+  const deadline = performance.now() + 180000;
+  const remaining = (ceiling) => {
+    const ms = Math.floor(deadline - performance.now());
+    requireValue(ms > 0, "overall transport deadline");
+    return Math.min(ceiling, ms);
+  };
+  const request = async (url, options, ceiling) => {
+    const timeoutMs = remaining(ceiling); // Refuse BEFORE starting any out-of-budget request.
+    const controller = new AbortController();
+    let timer;
+    try {
+      return await Promise.race([
+        transport(url, { ...options, signal: controller.signal }),
+        new Promise((_, reject) => {
+          timer = setTimeout(() => {
+            controller.abort();
+            reject(Error("Artifact request timeout"));
+          }, timeoutMs);
+        }),
+      ]);
+    } finally {
+      clearTimeout(timer);
+    }
+  };
   const get = async (path) => {
-    const response = await transport(base + path, {
-      headers: { Authorization: `Bearer ${token}`, Accept: "application/vnd.github+json" },
-      redirect: "error",
-      signal: AbortSignal.timeout(30000),
-    });
-    return checkpointMetadataHttp(response, { state, save });
+    const response = await request(
+      base + path,
+      {
+        headers: { Authorization: `Bearer ${token}`, Accept: "application/vnd.github+json" },
+        redirect: "error",
+      },
+      30000,
+    );
+    return checkpointMetadataHttp(response, { state, save, timeoutMs: remaining(30000) });
   };
   await mkdir(join(root, ".."), { recursive: true });
   const evidence = join(root, "../artifact-metadata.json");
@@ -204,11 +297,24 @@ export async function download(expected, root, transport = fetch) {
     state.stage = "archive";
     state.reason = "download-pending";
     await save(state);
-    const response = await transport(`${base}/actions/artifacts/${expected.id}/zip`, {
-      headers: { Authorization: `Bearer ${token}` },
-      redirect: "manual",
-      signal: AbortSignal.timeout(30000),
+    const response = await request(
+      `${base}/actions/artifacts/${expected.id}/zip`,
+      {
+        headers: { Authorization: `Bearer ${token}` },
+        redirect: "manual",
+      },
+      30000,
+    );
+    const redirectBody = await checkpointHttpBody(response, {
+      state,
+      save,
+      limit: 2 * 1024 * 1024,
+      timeoutMs: remaining(30000),
     });
+    requireValue(
+      redirectBody.complete && redirectBody.reason === null,
+      "complete bounded nontruncated archive redirect body",
+    );
     requireValue(response.status === 302, "archive redirect");
     const location = new URL(response.headers.get("location"));
     requireValue(
@@ -216,14 +322,40 @@ export async function download(expected, root, transport = fetch) {
       "archive HTTPS",
     );
     // Never forward GitHub credentials to the blob endpoint.
-    const blob = await transport(location, {
-      redirect: "error",
-      credentials: "omit",
-      signal: AbortSignal.timeout(60000),
+    state.stage = "blob";
+    const blob = await request(location, { redirect: "error", credentials: "omit" }, 60000);
+    const captured = await checkpointHttpBody(blob, {
+      state,
+      save,
+      limit: 512 * 1024 * 1024,
+      timeoutMs: remaining(60000),
+      project: false,
     });
+    requireValue(captured.complete, "complete bounded ZIP body");
+    const bytes = captured.bytes;
+    state.downloadedZip = { bytes: bytes.length, sha256: sha(bytes), complete: true };
+    await save(state); // Actual complete downloaded identity BEFORE comparison/NEXT lookup.
+    const digestMatches = `sha256:${state.downloadedZip.sha256}` === expected.digest;
+    if (!digestMatches)
+      state.primaryFailure = { stage: "archive", reason: "download-digest-mismatch" };
+    else if (!blob.ok) state.primaryFailure = { stage: "archive", reason: "archive-http-status" };
+    await save(state);
+    // Mandatory observations even for a COMPLETE bad digest/invalid ZIP. Neither
+    // extraction nor bad-SHA authorization may precede BOTH successful checks.
+    try {
+      await metadataPhase({ expected, get, save, state, after: true });
+    } catch {
+      if (state.primaryFailure)
+        state.secondaryFailure = { stage: state.stage, reason: state.reason };
+      throw Error("Artifact post-download metadata refused");
+    }
+    state.stage = "archive";
+    state.reason = state.primaryFailure
+      ? "download-validation-refused"
+      : "archive-extraction-pending";
+    await save(state);
+    requireValue(digestMatches, "download digest");
     requireValue(blob.ok, "archive HTTP status");
-    const bytes = await boundedResponseBytes(blob, 512 * 1024 * 1024, 60000);
-    requireValue(`sha256:${sha(bytes)}` === expected.digest, "download digest");
     await mkdir(root, { recursive: true });
     requireValue(
       (await inventoryDirectory(root)).length === 0,
@@ -251,9 +383,8 @@ with zipfile.ZipFile(sys.argv[1]) as z:
         zip,
         root,
       ],
-      { timeout: 60000 },
+      { timeout: remaining(60000), stdio: ["ignore", "pipe", "pipe"] },
     );
-    await metadataPhase({ expected, get, save, state, after: true });
     state.stage = "inventory";
     state.reason = "validation-pending";
     await save(state);
@@ -269,6 +400,7 @@ with zipfile.ZipFile(sys.argv[1]) as z:
   } catch {
     state.status = "failed-or-incomplete";
     if (!state.reason.endsWith("refused")) state.reason = "artifact-stage-refused";
+    state.primaryFailure ??= { stage: state.stage, reason: state.reason };
     await save(state);
     throw Error(`Artifact ${state.stage} refused; safe evidence retained`);
   }

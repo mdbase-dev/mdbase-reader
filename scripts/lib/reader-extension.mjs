@@ -1,6 +1,6 @@
 import { execFileSync } from "node:child_process";
 import { createHash } from "node:crypto";
-import { readFile } from "node:fs/promises";
+import { readFile, lstat } from "node:fs/promises";
 import { assertInventory } from "./native-publish-bytes.mjs";
 import { join } from "node:path";
 import {
@@ -89,11 +89,14 @@ with zipfile.ZipFile(sys.argv[1]) as z:
   name=i.filename;p=pathlib.PurePosixPath(name)
   assert not p.is_absolute() and all(x not in ('','.','..') for x in name.rstrip('/').split('/')) and '\\\\' not in name
   assert i.orig_filename == name and all(ord(c)>=32 for c in name)
-  assert stat.S_IFMT(i.external_attr>>16) in (0,stat.S_IFREG,stat.S_IFDIR) and name not in seen
+  # Owned packages contain ONLY explicitly regular members. Ambiguous zero
+  # POSIX types (including DOS-only files), directory bits and explicit dirs
+  # are not this contract. Never silently project away directory entries.
+  assert stat.S_IFMT(i.external_attr>>16)==stat.S_IFREG and not i.is_dir()
+  assert not (i.external_attr & 0x10) and not (i.flag_bits & 1) and name not in seen
   seen.add(name);total+=i.file_size
   assert len(seen)<=20000 and total<=512*1024*1024 and i.file_size<=128*1024*1024
-  if not i.is_dir():
-   b=z.read(i);rows.append(dict(path=name,bytes=len(b),sha256=hashlib.sha256(b).hexdigest()))
+  b=z.read(i);rows.append(dict(path=name,bytes=len(b),sha256=hashlib.sha256(b).hexdigest()))
 print(json.dumps(sorted(rows,key=lambda r:r['path'])))`,
       join(root, "extension.zip"),
     ],
@@ -106,4 +109,15 @@ print(json.dumps(sorted(rows,key=lambda r:r['path'])))`,
     "ZIP exact all bytes/path set",
   );
   return rows;
+}
+export async function validateExistingExtensionZip(root, inventory, expectedSha256) {
+  check(/^[a-f0-9]{64}$/.test(expectedSha256 ?? ""), "independent existing ZIP hash required");
+  const path = join(root, "extension.zip"),
+    stat = await lstat(path);
+  check(stat.isFile() && !stat.isSymbolicLink(), "existing ZIP must be regular");
+  const before = await readFile(path);
+  check(hash(before) === expectedSha256, "existing ZIP digest");
+  const rows = await assertExtensionZip(root, inventory);
+  check((await readFile(path)).equals(before), "existing ZIP bytes changed during validation");
+  return rows; // READ ONLY: never create, replace, reconstruct or repackage.
 }
