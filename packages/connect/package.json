@@ -17,6 +17,6 @@
     "@mdbase-dev/sdk": "file:vendor/sdk-dev-eaa4e697-staging.tgz",
     "@mdbase-reader/core": "workspace:*",
     "@mdbase-reader/migration": "workspace:*",
-    "yaml": "^2.9.0"
+    "yaml": "^2.9.1"
   }
 }

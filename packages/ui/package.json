@@ -16,9 +16,9 @@
     "@fontsource/azeret-mono": "^5.3.0",
     "@mdbase-dev/ui": "file:../../vendor/mdbase-dev-ui-dev-b2d7c464.tgz",
     "@phosphor-icons/react": "^2.1.10",
-    "react": "^19.2.8"
+    "react": "^19.3.1"
   },
   "devDependencies": {
-    "@types/react": "^19.2.14"
+    "@types/react": "^19.3.0"
   }
 }
