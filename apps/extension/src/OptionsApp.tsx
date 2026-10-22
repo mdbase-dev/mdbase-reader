@@ -14,7 +14,7 @@ import { useCollectionConnection } from "./use-collection-connection.js";
 export function OptionsApp(): React.JSX.Element {
   const connection = useCollectionConnection();
   const snapshot = connection.snapshot;
-  const collectionId = "collectionId" in snapshot ? snapshot.collectionId : null;
+  const collectionId = snapshot.status === "ready" ? snapshot.collectionId : null;
   useEffect(() => {
     document.title = "mdbase Reader settings";
   }, []);

@@ -1,3 +1,4 @@
+import { describeError } from "@mdbase-reader/connect/native";
 import { normalizedSourceUrl, sameSourceUrl, type SourceSummary } from "@mdbase-reader/core";
 
 import { environment } from "./environment.js";
@@ -67,6 +68,13 @@ export async function sourceForUrl(
 export function problemMessage(reason: unknown): string {
   if (!(reason instanceof Error)) {
     return String(reason);
+  }
+  // SDK errors carry codes; people see the SDK's description, never the code.
+  if (reason.name === "MdbaseError") {
+    const described = describeError(reason);
+    if (described) {
+      return described.message;
+    }
   }
   const messages = [reason.message];
   let cause: unknown = reason.cause;

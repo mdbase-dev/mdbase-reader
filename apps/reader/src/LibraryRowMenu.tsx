@@ -28,6 +28,8 @@ export interface LibraryRowMenuActions {
   readonly onChangeStatus?: (id: SourceId, status: ReadingStatus) => void;
   readonly onRename?: (source: SourceSummary) => void;
   readonly onExport?: (sources: readonly SourceSummary[]) => void;
+  /** Opens the removal confirmation; nothing is deleted from the menu itself. */
+  readonly onRemove?: (source: SourceSummary) => void;
 }
 
 /**
@@ -50,7 +52,7 @@ export function LibraryRowMenu({
   const { source } = target;
   const status = source.reading?.status ?? source.readingStatus ?? "inbox";
   const citekey = source.citation?.id;
-  // Opening and renaming move focus themselves; other actions return it to the row.
+  // Opening, renaming and removing move focus themselves; others return it to the row.
   const run =
     (action: () => void, movesFocus = false) =>
     (): void => {
@@ -114,6 +116,19 @@ export function LibraryRowMenu({
               {readingStatusLabel(choice)}
             </button>
           ))}
+        </>
+      ) : null}
+      {actions.onRemove ? (
+        <>
+          <hr />
+          <button
+            type="button"
+            role="menuitem"
+            className="is-danger"
+            onClick={run(() => actions.onRemove?.(source), true)}
+          >
+            Remove source…
+          </button>
         </>
       ) : null}
     </div>,

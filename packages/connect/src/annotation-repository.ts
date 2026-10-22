@@ -180,15 +180,19 @@ export class ConnectAnnotationRepository implements AnnotationRepository {
     );
   }
 
-  async create(annotation: Annotation, _idempotencyKey: MutationId): Promise<Annotation> {
+  async create(annotation: Annotation, idempotencyKey: MutationId): Promise<Annotation> {
     const result = outcomeValue(
-      await this.client.create({
-        path: `annotations/${annotation.id}.md`,
-        type: "reader-annotation",
-        frontmatter: annotationFrontmatter(annotation),
-        body: annotation.body,
-        includeDocument: true,
-      }),
+      await this.client.create(
+        {
+          path: `annotations/${annotation.id}.md`,
+          type: "reader-annotation",
+          frontmatter: annotationFrontmatter(annotation),
+          body: annotation.body,
+          includeDocument: true,
+        },
+        // A retried save keeps its mutation ID, so it lands once instead of colliding.
+        { intent: idempotencyKey },
+      ),
       "create annotation",
     );
     this.#records.put(result);

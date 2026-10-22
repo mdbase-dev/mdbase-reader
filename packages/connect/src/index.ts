@@ -8,6 +8,7 @@ export { readerDiagnostics, ReaderDiagnostics } from "./diagnostics.js";
 export type { ReaderTiming } from "./diagnostics.js";
 export * from "./library-views.js";
 export * from "./mapping.js";
+export * from "./next-reader-records.js";
 export * from "./portable-application-session.js";
 export * from "./record-session.js";
 export * from "./repositories.js";

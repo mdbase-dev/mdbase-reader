@@ -10,6 +10,7 @@ import {
   type Page,
   type ReaderRequestOptions,
   type Source,
+  type SourceDeletionPlan,
   type SourceFieldChange,
   type SourceId,
   type SourceQuery,
@@ -31,9 +32,11 @@ import { writeSourceFields } from "./source-fields.js";
 import * as lookups from "./source-lookups.js";
 
 import type { ReaderConnectClient } from "./repository-client.js";
-import type { QueryRecord } from "@mdbase-dev/connect";
+import type { DeletePreflightResult, QueryRecord } from "@mdbase-dev/connect";
 
 export class ConnectSourceRepository implements SourceRepository {
+  readonly #deletePreflights = new Map<string, DeletePreflightResult>();
+
   constructor(private readonly client: ReaderConnectClient) {}
 
   async list(query: SourceQuery, options: ReaderRequestOptions = {}): Promise<Page<SourceSummary>> {
@@ -224,6 +227,45 @@ export class ConnectSourceRepository implements SourceRepository {
     return recordRevision(updated.revision);
   }
 
+  async preflightDelete(source: Source): Promise<SourceDeletionPlan> {
+    const result = outcomeValue(
+      await this.client.preflightDelete({ path: source.path, ifRevision: source.recordRevision }),
+      "check source removal",
+    );
+    this.#deletePreflights.set(deletionKey(source.path, source.recordRevision), result);
+    return {
+      sourceId: source.id,
+      path: source.path,
+      expectedRevision: source.recordRevision,
+      brokenLinkPaths: [...new Set(result.brokenLinks?.map(({ path }) => path) ?? [])].sort(
+        (left, right) => left.localeCompare(right),
+      ),
+    };
+  }
+
+  /** Deletes the source record only; its stored files and annotation records are left as is. */
+  async delete(plan: SourceDeletionPlan): Promise<void> {
+    const key = deletionKey(plan.path, plan.expectedRevision);
+    const preflight = this.#deletePreflights.get(key);
+    if (!preflight) {
+      throw new Error("Source removal requires a current preflight confirmation.");
+    }
+    try {
+      const result = outcomeValue(
+        await this.client.deleteWithProgress(
+          { path: plan.path, ifRevision: plan.expectedRevision, checkBacklinks: true },
+          { preflight },
+        ),
+        "remove source",
+      );
+      if (!result.deleted) {
+        throw new Error(`mdbase Connect did not remove source ${plan.sourceId}.`);
+      }
+    } finally {
+      this.#deletePreflights.delete(key);
+    }
+  }
+
   async #path(id: SourceId, operation: string): Promise<string> {
     const path = await recordPathById(this.client, id);
     if (!path) {
@@ -252,4 +294,8 @@ export class ConnectSourceRepository implements SourceRepository {
       );
     return [...filterSources(sources, query.search)];
   }
+}
+
+function deletionKey(path: string, revision: string): string {
+  return `${path}\n${revision}`;
 }

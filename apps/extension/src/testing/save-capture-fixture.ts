@@ -18,10 +18,7 @@ import {
 } from "../save-capture.js";
 
 import type { PageCapture, SelectedWebCapture } from "../page-capture.js";
-import type {
-  ReaderConnectedCollection,
-  ReaderPortableApplicationSession,
-} from "@mdbase-reader/connect";
+import type { ReaderConnectedCollection } from "@mdbase-reader/connect";
 
 export const capture: SelectedWebCapture = {
   kind: "html",
@@ -117,9 +114,6 @@ export function fixture() {
       listForSource: vi.fn(() => Promise.resolve([...annotations.values()])),
     },
   } as unknown as ReaderConnectedCollection;
-  const session = {
-    recoverPendingMutations: vi.fn(() => Promise.resolve([])),
-  } as unknown as ReaderPortableApplicationSession;
   const onSource = vi.fn();
   const journal = new Map<string, string>();
   const storage = {
@@ -134,7 +128,6 @@ export function fixture() {
     extra: Partial<SaveCaptureInput> = {},
   ): Promise<SavedCapture> =>
     writer.save({
-      session,
       collection,
       capture: page,
       draft: { ...draft, ...changes },
@@ -146,7 +139,6 @@ export function fixture() {
     storage,
     save,
     collection,
-    session,
     commit,
     create,
     read,

@@ -12,10 +12,13 @@ import { InspectorPane, type InspectorTab } from "./InspectorPane.js";
 import { LibraryNavigator } from "./LibraryNavigator.js";
 import { LibraryWorkspace } from "./LibraryWorkspace.js";
 import { mobileSourceBar } from "./mobile-source-bar.js";
+import { useReaderMdbase } from "./reader-collections.js";
 import { readerCommands } from "./reader-command-list.js";
 import { ReaderHeader } from "./ReaderHeader.js";
 import { RenderedSourceDocument } from "./RenderedSourceDocument.js";
+import { useSdkConnectionState } from "./sdk-connection-state.js";
 import { SourceAdditionOverlays } from "./SourceAdditionOverlays.js";
+import { SourceRemovalDialog } from "./SourceRemovalDialog.js";
 import { useAnnotationCounts } from "./use-annotation-counts.js";
 import { useFileDrop } from "./use-file-drop.js";
 import { useMediaQuery } from "./use-media-query.js";
@@ -43,6 +46,7 @@ import type { ReaderWorkspaceController } from "./use-reader-workspace.js";
 import type { ReadingResumeState } from "./use-reading-resume.js";
 import type { SourceAdditionController } from "./use-source-addition.js";
 import type { SourceExportController } from "./use-source-export.js";
+import type { SourceRemovalController } from "./use-source-removal.js";
 import type { SourceWorkspaceController } from "./use-source-workspace.js";
 import type { ReaderLibrarySnapshot, ReaderWorkspaceGateway } from "./workspace-model.js";
 import type { ThemePreference } from "@mdbase-dev/ui/theme";
@@ -65,6 +69,7 @@ export interface ReaderWorkspaceViewModel {
   readonly documentAttachment: DocumentAttachmentController | null;
   readonly bibliographyExport: BibliographyExportController;
   readonly sourceExport: SourceExportController;
+  readonly sourceRemoval: SourceRemovalController;
   readonly renderDocument: SourceDocumentRenderer | undefined;
   readonly onSurfaceChange: (sessionId: string, surface: ReadingSurface | null) => void;
   readonly surfaces: ReadonlyMap<string, ReadingSurface>;
@@ -97,6 +102,7 @@ export function ReaderWorkspaceView({
 }): JSX.Element {
   const { library, source, workspace, sourceWorkspace, composer, sourceAddition } = model;
   useReaderFeedbackContext(Boolean(sourceWorkspace.activeSourceId), library.collectionName);
+  const connectionState = useSdkConnectionState(useReaderMdbase(), library.connectionState);
   const shell = useWorkspaceShellPreferences(
     library.sources[0]?.collectionId ?? library.collectionName,
   );
@@ -209,7 +215,7 @@ export function ReaderWorkspaceView({
         beforeCollectionSwitch={() =>
           confirmCollectionSwitch(sourceWorkspace.layout, library.sources)
         }
-        connectionState={library.connectionState}
+        connectionState={connectionState}
         directAccess={model.directAccess}
         theme={model.theme}
         onChangeTheme={model.changeTheme}
@@ -253,6 +259,7 @@ export function ReaderWorkspaceView({
           decorationProblem={model.decorationProblem}
           annotationComposer={composer}
           sourceExport={model.sourceExport}
+          sourceRemoval={model.sourceRemoval}
           renderDocument={(openSource, _paneId, sessionId) =>
             model.renderDocument ? (
               <RenderedSourceDocument
@@ -320,6 +327,9 @@ export function ReaderWorkspaceView({
                 bibliographyExport={model.bibliographyExport}
                 annotationCounts={annotationCounts}
                 onSourceChanged={workspace.reconcileSource}
+                {...(model.sourceRemoval.request
+                  ? { onRemoveSource: model.sourceRemoval.request }
+                  : {})}
                 onOpenAnnotation={(annotation, beside) => {
                   const sourceId = annotation.sourceId;
                   if (beside) {
@@ -383,6 +393,7 @@ export function ReaderWorkspaceView({
         addition={sourceAddition}
         canChooseFile={Boolean(model.pickSourceFile)}
       />
+      <SourceRemovalDialog removal={model.sourceRemoval} />
       <CommandPalette
         label="Reader commands"
         placeholder="Search sources and commands"
@@ -553,6 +564,7 @@ function commandsForView(
     activeSource: model.source,
     workspace: model.sourceWorkspace,
     sourceExport: model.sourceExport,
+    removeSource: model.sourceRemoval.request,
     bibliographyExport: model.bibliographyExport,
     focusMode: model.focusMode,
     bookmark: model.composer.canBookmark ? model.composer.bookmark : null,

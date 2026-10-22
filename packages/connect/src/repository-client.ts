@@ -25,6 +25,14 @@ import type { ReaderRequestOptions } from "@mdbase-reader/core";
 
 export const readerConnectBulkConcurrency = 4;
 
+export interface ReaderCreateOptions {
+  /**
+   * A stable name for this one save, such as its client-minted mutation ID. A retry with the
+   * same intent lands once natively; the legacy Connect client ignores it.
+   */
+  readonly intent?: string;
+}
+
 export interface ReaderQueryPagesOptions extends ReaderRequestOptions {
   readonly firstPageSize?: number;
   readonly pageSize?: number;
@@ -49,7 +57,10 @@ export interface ReaderConnectClient {
     input: QueryInput,
     options?: ReaderQueryPagesOptions,
   ): AsyncIterable<ConnectOutcome<QueryPage>>;
-  create(input: CreateInput): Promise<ConnectOutcome<RecordDocument>>;
+  create(
+    input: CreateInput,
+    options?: ReaderCreateOptions,
+  ): Promise<ConnectOutcome<RecordDocument>>;
   update(input: UpdateInput): Promise<ConnectOutcome<RecordDocument>>;
   preflightDelete(input: DeleteInput): Promise<ConnectOutcome<DeletePreflightResult>>;
   deleteWithProgress(

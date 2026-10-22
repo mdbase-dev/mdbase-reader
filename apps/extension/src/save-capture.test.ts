@@ -34,7 +34,6 @@ describe("explicit source and highlight saves", () => {
     );
     const reopened = new CaptureWriter(f.storage);
     await reopened.save({
-      session: f.session,
       collection: f.collection,
       capture,
       draft: { ...draft, highlight: false },
@@ -62,7 +61,6 @@ describe("explicit source and highlight saves", () => {
     await expect(f.save({ highlight: false })).rejects.toThrow("Response lost");
     const reopened = new CaptureWriter(f.storage);
     const recovered = await reopened.save({
-      session: f.session,
       collection: f.collection,
       capture,
       draft: { ...draft, highlight: false },
@@ -103,7 +101,6 @@ describe("saved source and annotation retries", () => {
     const reopened = new CaptureWriter(f.storage);
     await expect(
       reopened.save({
-        session: f.session,
         collection: f.collection,
         capture,
         draft,
@@ -154,7 +151,6 @@ describe("saved source and annotation retries", () => {
     await expect(f.save()).rejects.toThrow("Outcome unknown");
     const reopened = new CaptureWriter(f.storage);
     const result = await reopened.save({
-      session: f.session,
       collection: f.collection,
       capture,
       draft,

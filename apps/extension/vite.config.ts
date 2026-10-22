@@ -21,10 +21,10 @@ function manifest(): Plugin {
 }
 
 /**
- * The service worker is two classic scripts: background.js, which runs on every wake, and
- * page-status.js with the Connect SDK, which it loads with importScripts() only when a
- * page may be saved (see src/page-status-loader.ts). Each is a self-contained IIFE, built
- * after the pages so neither shares chunks with them.
+ * The service worker's classic scripts, built after the pages as self-contained IIFEs so
+ * they share no chunks with them: background.js, and page-status.js, which it loads with
+ * importScripts() only when a page may be saved (see src/page-status-loader.ts). Neither
+ * includes the SDK, which runs in the offscreen host (src/offscreen.ts).
  */
 function serviceWorker(): Plugin {
   const scripts = {
@@ -48,7 +48,6 @@ function serviceWorker(): Plugin {
             outDir: "dist",
             emptyOutDir: false,
             copyPublicDir: false,
-            // Connect's lazily loaded modules are inlined: workers cannot import() them.
             modulePreload: false,
             rolldownOptions: {
               input: resolve(import.meta.dirname, entry),
@@ -78,6 +77,19 @@ function serviceWorker(): Plugin {
 
 export default defineConfig({
   plugins: [react(), manifest(), serviceWorker()],
+  // The SDK starts its own module Worker from a module-relative URL; keep it out of
+  // dev pre-bundling so that URL still names the SDK's files, and emit ES workers.
+  optimizeDeps: { exclude: ["@mdbase-dev/sdk"] },
+  worker: {
+    format: "es",
+    rolldownOptions: {
+      output: {
+        entryFileNames: "assets/[name]-[hash].js",
+        chunkFileNames: "assets/[name]-[hash].js",
+        assetFileNames: "assets/[name]-[hash][extname]",
+      },
+    },
+  },
   define: { __READER_EXTENSION_ENVIRONMENT__: JSON.stringify(environment) },
   build: {
     target: "es2022",
@@ -89,6 +101,7 @@ export default defineConfig({
         capture: resolve(import.meta.dirname, "capture.html"),
         options: resolve(import.meta.dirname, "options.html"),
         welcome: resolve(import.meta.dirname, "welcome.html"),
+        offscreen: resolve(import.meta.dirname, "offscreen.html"),
       },
       output: {
         entryFileNames: "assets/[name]-[hash].js",

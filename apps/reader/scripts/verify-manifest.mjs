@@ -4,15 +4,13 @@ import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 
 import { Collection, applyTypePack, assessTypePack } from "@callumalpass/mdbase";
-import { formatValidationIssues, validateAppManifest } from "@mdbase-dev/connect-dev";
+
+import { assertValidReaderManifest } from "./validate-manifest.mjs";
 
 const projectRoot = resolve(import.meta.dirname, "..");
 const manifestPath = resolve(projectRoot, "public", ".well-known", "mdbase-app.json");
 const manifest = JSON.parse(await readFile(manifestPath, "utf8"));
-const validation = validateAppManifest(manifest);
-if (!validation.valid) {
-  fail(`Reader manifest is invalid: ${formatValidationIssues(validation.issues)}`);
-}
+assertValidReaderManifest(manifest);
 const packs = manifest.provisions?.type_packs ?? [];
 const provided = packs.flatMap((pack) =>
   pack.provides.map(({ id, version }) => `${id}@${version}`),

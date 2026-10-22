@@ -46,7 +46,7 @@ it("shows a feed picker with the viewport post preselected, without offering to 
 
 function markup(changes: Partial<ExtensionCaptureController> = {}, tab?: PanelTab): string {
   const controller = {
-    snapshot: { status: "unselected", connections: [] },
+    snapshot: { status: "signed_out", collections: [] },
     capture: {
       kind: "html",
       pageTitle: "[test] Article",
@@ -90,8 +90,8 @@ it("asks a new user only to connect, with editable metadata and no status noise"
 it("picks among connected collections with Reader's select", () => {
   const html = markup({
     snapshot: {
-      status: "unselected",
-      connections: [{ collectionId: "c1", displayName: "[test] Papers" }],
+      status: "choosing",
+      collections: [{ collectionId: "c1", displayName: "[test] Papers" }],
     } as unknown as ExtensionCaptureController["snapshot"],
   });
   expect(html).toContain("Save to collection");
@@ -105,7 +105,7 @@ it("links the brand to the Reader library on the selected collection", () => {
     snapshot: {
       status: "ready",
       collectionId: "c1",
-      connections: [{ collectionId: "c1", displayName: "[test] Papers" }],
+      collections: [{ collectionId: "c1", displayName: "[test] Papers" }],
     } as unknown as ExtensionCaptureController["snapshot"],
   });
   expect(html).toMatch(
@@ -182,7 +182,7 @@ it("names the connected collection in the header, with its controls behind it", 
     snapshot: {
       status: "ready",
       collectionId: "c1",
-      connections: [{ collectionId: "c1", displayName: "[test] Papers" }],
+      collections: [{ collectionId: "c1", displayName: "[test] Papers" }],
     } as unknown as ExtensionCaptureController["snapshot"],
   });
   expect(html).toMatch(
@@ -203,25 +203,26 @@ it("shows one status line at a time, with problems taking precedence", () => {
   expect(failing).toContain("offline");
   expect(failing).not.toContain("Highlight saved.");
 });
-it.each(["unavailable", "start_failed", "blocked"])(
-  "offers connection retry, not reapproval, for %s",
-  (status) => {
-    const html = markup({
-      snapshot: {
-        status,
-        collectionId: "c1",
-        connections: [{ collectionId: "c1", displayName: "Papers" }],
-        problem: { message: "Temporarily blocked" },
-      } as unknown as ExtensionCaptureController["snapshot"],
-      problem: "Request timed out",
-      problemKind: "save",
-      saveAttempted: true,
-    });
-    expect(html).toContain("Retry connection");
-    expect(html).not.toContain("approve access again");
-    expect(html).not.toContain("Review access");
-  },
-);
+it("offers the SDK's recovery, not reapproval, when the collection has a problem", () => {
+  const html = markup({
+    snapshot: {
+      status: "problem",
+      collectionId: "c1",
+      collections: [{ collectionId: "c1", displayName: "Papers" }],
+      problem: {
+        title: "Can't reach mdbase",
+        message: "Check your connection.",
+        action: "retry",
+        actionLabel: "Try again",
+      },
+    } as unknown as ExtensionCaptureController["snapshot"],
+    problem: "Request timed out",
+    problemKind: "save",
+    saveAttempted: true,
+  });
+  expect(html).toContain("Try again");
+  expect(html).not.toContain("Review access");
+});
 it("does not display stale write progress after a successful save", () => {
   const html = markup({
     status: "saved",
@@ -388,7 +389,7 @@ it("asks for a title from the save action when the draft has none", () => {
     snapshot: {
       status: "ready",
       collectionId: "c1",
-      connections: [{ collectionId: "c1", displayName: "[test] Papers" }],
+      collections: [{ collectionId: "c1", displayName: "[test] Papers" }],
     } as unknown as ExtensionCaptureController["snapshot"],
     draft: {
       title: " ",
@@ -497,7 +498,10 @@ it("titles the page as it will be saved, not as the tab names it", () => {
 });
 it("says why a selected passage cannot be saved yet", () => {
   const html = markup({
-    snapshot: { status: "unselected", connections: [] },
+    snapshot: {
+      status: "signed_out",
+      collections: [],
+    } as unknown as ExtensionCaptureController["snapshot"],
     capture: {
       kind: "html",
       pageTitle: "[test] Article",
@@ -505,6 +509,6 @@ it("says why a selected passage cannot be saved yet", () => {
       selection: { exact: "a passage" },
     } as ExtensionCaptureController["capture"],
   });
-  expect(html).toContain("Connect a collection before saving.");
+  expect(html).toContain("Sign in to mdbase before saving.");
   expect(html).toMatch(/class="swatch swatch-yellow[^"]*"[^>]*disabled=""/u);
 });

@@ -15,6 +15,7 @@ import type {
   ReadingPosition,
   ReadingStatus,
   Source,
+  SourceDeletionPlan,
   SourceId,
   SourceSummary,
   SourceFileAttachmentRequest,
@@ -43,6 +44,8 @@ export interface ReaderLibraryRequestOptions extends ReaderRequestOptions {
 
 export interface ReaderWorkspaceGateway {
   library(options?: ReaderLibraryRequestOptions): Promise<ReaderLibrarySnapshot>;
+  /** Notifies when sources changed outside this workspace, so the library reloads. */
+  subscribeLibrary?: (listener: () => void) => () => void;
   listLibraryViews(options?: ReaderRequestOptions): Promise<readonly MdbaseLibraryView[]>;
   executeLibraryView(
     view: MdbaseLibraryView,
@@ -119,6 +122,10 @@ export interface ReaderWorkspaceGateway {
   ): Promise<Source>;
   /** Moves a source through its reading lifecycle, e.g. from queued to finished. */
   saveReadingStatus?(sourceId: SourceId, status: ReadingStatus): Promise<Source>;
+  /** Checks removing a source at its current revision; the plan lists what links to it. */
+  planSourceRemoval?(id: SourceId): Promise<SourceDeletionPlan>;
+  /** Removes the checked source record. Its files and annotations stay in the collection. */
+  removeSource?(plan: SourceDeletionPlan): Promise<void>;
   /** Sets frontmatter fields by dotted path; null removes a field. */
   saveSourceFields?(sourceId: SourceId, fields: Readonly<Record<string, unknown>>): Promise<Source>;
 }

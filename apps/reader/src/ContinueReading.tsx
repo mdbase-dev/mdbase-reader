@@ -89,6 +89,7 @@ function ContinueReadingRow({
       className="continue-reading-item"
       type="button"
       aria-label={`Continue reading ${source.title}`}
+      title={source.title}
       onClick={() => onOpen(source.id)}
     >
       <span className="continue-reading-title">
@@ -101,9 +102,9 @@ function ContinueReadingRow({
         <span className="library-progress" aria-hidden="true">
           <i style={{ width: `${String(progress)}%` }} />
         </span>
-      ) : (
-        <span className="continue-reading-state">{location || "Just started"}</span>
-      )}
+      ) : !location ? (
+        <span className="continue-reading-state">Just started</span>
+      ) : null}
     </button>
   );
 }

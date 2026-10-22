@@ -1,4 +1,6 @@
-import { useCallback, type ReactNode } from "react";
+import { useCallback, useEffect, type ReactNode } from "react";
+
+import { markPwaInstallEligible } from "./pwa-install.js";
 
 import type { SourceSummary } from "@mdbase-reader/core";
 import type { ReadingSurface } from "@mdbase-reader/reading-surface";
@@ -23,7 +25,18 @@ export function RenderedSourceDocument({
     (surface: ReadingSurface | null): void => onSurfaceChange(sessionId, surface),
     [onSurfaceChange, sessionId],
   );
-  return render(source, update);
+  useEffect(() => {
+    markPwaInstallEligible();
+  }, []);
+  return (
+    <div className="source-document">
+      <header className="source-document-heading">
+        <h1>{source.title}</h1>
+        <small>Saved document · original headings below are unchanged</small>
+      </header>
+      <div className="source-document-surface">{render(source, update)}</div>
+    </div>
+  );
 }
 
 export function updateSurface(

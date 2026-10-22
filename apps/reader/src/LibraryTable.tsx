@@ -48,6 +48,8 @@ export interface LibraryTableProps {
   /** Saves a field edited in its cell; editing is offered only when this is present. */
   readonly onEditField?: (source: SourceSummary, key: string, text: string) => Promise<void>;
   readonly onExport?: (sources: readonly SourceSummary[]) => void;
+  /** Asks to remove a source, which confirms before anything is deleted. */
+  readonly onRemove?: (source: SourceSummary) => void;
 }
 
 interface EditingCell {
@@ -205,6 +207,7 @@ function rowMenuActions(
     onOpenBeside: props.onOpenBeside,
     ...(props.onChangeStatus ? { onChangeStatus: props.onChangeStatus } : {}),
     ...(props.onExport ? { onExport: props.onExport } : {}),
+    ...(props.onRemove ? { onRemove: props.onRemove } : {}),
     ...(props.onEditField && props.layout.columns.includes("title") ? { onRename: rename } : {}),
   };
 }

@@ -5,6 +5,11 @@
   "homepage": "https://reader.mdbase.dev/",
   "icon": "https://reader.mdbase.dev/favicon.svg",
   "redirect_uris": ["https://reader.mdbase.dev/"],
+  "installation_origins": {
+    "lab": { "app-runtime": ["https://lab.mdbase-reader.pages.dev"] },
+    "staging": { "app-runtime": ["https://staging.mdbase-reader.pages.dev"] },
+    "production": { "app-runtime": ["https://reader.mdbase.dev"] }
+  },
   "requirements": {
     "access": "full_collection",
     "contracts": [
@@ -28,7 +33,10 @@
       "contract_version": 2,
       "required": ["collection.read", "records.create", "records.edit", "records.delete"]
     },
-    "files": { "required": ["list", "read", "add"], "scope": { "kind": "collection" } }
+    "files": {
+      "required": ["list", "read", "add", "replace", "move", "delete"],
+      "scope": { "kind": "collection" }
+    }
   },
   "provisions": {
     "type_packs": [
