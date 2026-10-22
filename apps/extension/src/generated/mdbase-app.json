@@ -2,6 +2,12 @@
   "manifest_version": 1,
   "id": "dev.mdbase.reader.extension",
   "name": "mdbase Reader browser extension",
+  "homepage": "https://reader.mdbase.dev/",
+  "icon": "https://reader.mdbase.dev/favicon.svg",
+  "redirect_uris": ["https://reader.mdbase.dev/"],
+  "installation_origins": {
+    "production": { "app-runtime": ["chrome-extension://kimdfjefhbfgfecconmaiaaindjccidp"] }
+  },
   "requirements": {
     "access": "full_collection",
     "contracts": [
@@ -25,7 +31,10 @@
       "contract_version": 2,
       "required": ["collection.read", "records.create", "records.edit", "records.delete"]
     },
-    "files": { "required": ["list", "read", "add"], "scope": { "kind": "collection" } }
+    "files": {
+      "required": ["list", "read", "add", "replace", "move", "delete"],
+      "scope": { "kind": "collection" }
+    }
   },
   "provisions": {
     "type_packs": [
@@ -185,7 +194,5 @@
         ]
       }
     ]
-  },
-  "distribution": "portable",
-  "project_url": "https://reader.mdbase.dev/"
+  }
 }

@@ -8,7 +8,10 @@ export function DiagnosticsPanel(): React.JSX.Element {
   useEffect(() => () => readerDiagnostics.setEnabled(false), []);
   const toggle = (): void => {
     const next = !enabled;
-    readerDiagnostics.setEnabled(next, [environment.connectUrl, environment.loopbackUrl]);
+    readerDiagnostics.setEnabled(
+      next,
+      [environment.connectUrl, environment.loopbackUrl].filter(Boolean),
+    );
     setEnabled(next);
   };
   const download = (): void => {

@@ -11,15 +11,22 @@ on:
         options:
           - staging
           - production
+      source_sha:
+        description: Native path only — exact 40-hex HEAD of literal release/native-staging or release/native-production; blank preserves main path
+        required: false
+        type: string
+        default: ""
 
 permissions:
   contents: read
 
 jobs:
   ci:
+    if: inputs.source_sha == ''
     uses: ./.github/workflows/ci.yml
 
   deploy:
+    if: inputs.source_sha == ''
     name: Deploy Reader to ${{ inputs.target }}
     needs: ci
     runs-on: ubuntu-24.04
@@ -75,3 +82,277 @@ jobs:
           done
           echo "::error::$ORIGIN/.well-known/mdbase-app.json does not declare $ORIGIN/"
           exit 1
+
+  native-dispatch:
+    if: inputs.source_sha != ''
+    runs-on: ubuntu-24.04
+    timeout-minutes: 2
+    steps:
+      - name: Require literal native branch and full exact event SHA
+        env:
+          TARGET: ${{ inputs.target }}
+          SOURCE_SHA: ${{ inputs.source_sha }}
+        run: |
+          set -euo pipefail
+          case "$TARGET" in staging|production) ;; *) exit 1 ;; esac
+          [[ "$GITHUB_EVENT_NAME" == workflow_dispatch ]]
+          [[ "$SOURCE_SHA" =~ ^[0-9a-f]{40}$ ]]
+          [[ "$GITHUB_REF" == "refs/heads/release/native-$TARGET" ]]
+          [[ "$GITHUB_SHA" == "$SOURCE_SHA" ]]
+
+  native-inputs:
+    needs: native-dispatch
+    runs-on: ubuntu-24.04
+    timeout-minutes: 2
+    # Public handoff expectations only; no checkout/dependencies/Cloudflare secrets.
+    environment: reader-${{ inputs.target }}
+    env:
+      TARGET: ${{ inputs.target }}
+      SOURCE_SHA: ${{ inputs.source_sha }}
+    outputs:
+      sdk: ${{ steps.hashes.outputs.sdk }}
+      ui: ${{ steps.hashes.outputs.ui }}
+      protocol: ${{ steps.hashes.outputs.protocol }}
+      trust: ${{ steps.hashes.outputs.trust }}
+      public-key: ${{ steps.hashes.outputs.public-key }}
+    steps:
+      - name: Initialize SAFE input-failure receipt before protected variable intake
+        run: |
+          mkdir -p "$RUNNER_TEMP/reader-input-failure"
+          node --input-type=module -e 'import {writeFileSync} from "node:fs";writeFileSync(process.env.RUNNER_TEMP+"/reader-input-failure/receipt.json",JSON.stringify({schema:"mdbase-reader/native-input-failure@1",status:"failed-or-incomplete",qualifiedArtifact:false,target:process.env.TARGET,source:{sha:process.env.SOURCE_SHA,tree:null},run:{repository:process.env.GITHUB_REPOSITORY,id:process.env.GITHUB_RUN_ID,attempt:process.env.GITHUB_RUN_ATTEMPT},reason:"protected-public-input-validation-refused-or-incomplete"},null,2));'
+      - id: hashes
+        env:
+          NATIVE_SDK_SHA256: ${{ vars.NATIVE_SDK_SHA256 }}
+          NATIVE_UI_SHA256: ${{ vars.NATIVE_UI_SHA256 }}
+          NATIVE_PROTOCOL_SHA256: ${{ vars.NATIVE_PROTOCOL_SHA256 }}
+          NATIVE_TRUST_ASSET_SHA256: ${{ vars.NATIVE_TRUST_ASSET_SHA256 }}
+          MDBASE_EXTENSION_STAGING_PUBLIC_KEY: ${{ vars.MDBASE_EXTENSION_STAGING_PUBLIC_KEY }}
+        run: |
+          set -euo pipefail
+          for name in NATIVE_SDK_SHA256 NATIVE_UI_SHA256 NATIVE_PROTOCOL_SHA256 NATIVE_TRUST_ASSET_SHA256; do
+            [[ "${!name}" =~ ^[0-9a-f]{64}$ ]]
+          done
+          printf 'sdk=%s\nui=%s\nprotocol=%s\ntrust=%s\n' "$NATIVE_SDK_SHA256" "$NATIVE_UI_SHA256" "$NATIVE_PROTOCOL_SHA256" "$NATIVE_TRUST_ASSET_SHA256" >> "$GITHUB_OUTPUT"
+          [[ "$MDBASE_EXTENSION_STAGING_PUBLIC_KEY" =~ ^[A-Za-z0-9+/=]{1,4096}$ ]]
+          printf 'public-key=%s\n' "$MDBASE_EXTENSION_STAGING_PUBLIC_KEY" >> "$GITHUB_OUTPUT"
+      - name: Retain SAFE input failure only; never qualified artifact outputs
+        if: failure()
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6.0.0
+        with:
+          name: reader-native-input-failure-${{ inputs.target }}-${{ github.run_id }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/reader-input-failure/
+          if-no-files-found: error
+          retention-days: 90
+
+  native-build:
+    name: Unprivileged frozen Reader web and unpacked extension
+    needs: native-inputs
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    # NO environment and NO Cloudflare secrets. Public SPKI is build input only.
+    env:
+      TARGET: ${{ inputs.target }}
+      SOURCE_SHA: ${{ inputs.source_sha }}
+      NATIVE_SDK_SHA256: ${{ needs.native-inputs.outputs.sdk }}
+      NATIVE_UI_SHA256: ${{ needs.native-inputs.outputs.ui }}
+      NATIVE_PROTOCOL_SHA256: ${{ needs.native-inputs.outputs.protocol }}
+      NATIVE_TRUST_ASSET_SHA256: ${{ needs.native-inputs.outputs.trust }}
+      WRANGLER_SEND_METRICS: "false"
+    outputs:
+      artifact-id: ${{ steps.artifact.outputs.artifact-id }}
+      artifact-digest: ${{ steps.artifact.outputs.artifact-digest }}
+    steps:
+      - name: Initialize SAFE build-failure-only evidence before source/install/intake
+        run: |
+          mkdir -p "$RUNNER_TEMP/reader-build-failure"
+          node --input-type=module -e 'import {writeFileSync} from "node:fs"; writeFileSync(process.env.RUNNER_TEMP+"/reader-build-failure/receipt.json",JSON.stringify({schema:"mdbase-reader/native-build-failure@1",status:"failed-or-incomplete",qualifiedArtifact:false,target:process.env.TARGET,source:{sha:process.env.SOURCE_SHA,tree:null},run:{repository:process.env.GITHUB_REPOSITORY,id:process.env.GITHUB_RUN_ID,attempt:process.env.GITHUB_RUN_ATTEMPT},reason:"source-install-or-intake-not-complete"},null,2));'
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ inputs.source_sha }}
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: pnpm/action-setup@0ebf47130e4866e96fce0953f49152a61190b271 # v6.0.9
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: 22
+      - name: Exact clean source and frozen originals before any SDK execution
+        id: originals
+        run: |
+          set -euo pipefail
+          mkdir -p "$RUNNER_TEMP/reader-build"
+          node apps/reader/scripts/native-publisher.mjs guard --target "$TARGET" --sha "$SOURCE_SHA" > "$RUNNER_TEMP/reader-build/plan.json"
+          pnpm install --frozen-lockfile --ignore-scripts --ignore-pnpmfile
+          node apps/reader/scripts/native-publisher.mjs guard --target "$TARGET" --sha "$SOURCE_SHA" --installed --installer-evidence "$RUNNER_TEMP/reader-build-failure/installer-evidence.json" > "$RUNNER_TEMP/reader-installed-plan.json"
+          cmp "$RUNNER_TEMP/reader-build/plan.json" "$RUNNER_TEMP/reader-installed-plan.json"
+          pnpm rebuild --pending
+          pnpm check
+          # Checks generate LAB metadata; restore only this tracked output in ephemeral CI.
+          git show "$SOURCE_SHA:apps/extension/src/generated/mdbase-app.json" > apps/extension/src/generated/mdbase-app.json
+      - name: One actual target build, precompiled capture Worker, all final bytes
+        id: build
+        env:
+          MDBASE_EXTENSION_STAGING_PUBLIC_KEY: ${{ needs.native-inputs.outputs.public-key }}
+        run: |
+          set -euo pipefail
+          node apps/reader/scripts/native-publisher.mjs guard --target "$TARGET" --sha "$SOURCE_SHA" --installed > "$RUNNER_TEMP/reader-confirmed-plan.json"
+          cmp "$RUNNER_TEMP/reader-build/plan.json" "$RUNNER_TEMP/reader-confirmed-plan.json"
+          pnpm build:native:ci "$RUNNER_TEMP/reader-build/plan.json" "$RUNNER_TEMP/reader-build"
+          cmp "$RUNNER_TEMP/reader-build/plan.json" "$RUNNER_TEMP/reader-confirmed-plan.json"
+          node scripts/native-build-envelope.mjs "$RUNNER_TEMP/reader-build"
+      - id: artifact
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6.0.0
+        with:
+          name: reader-native-build-${{ inputs.target }}-${{ github.run_id }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/reader-build/
+          include-hidden-files: true
+          if-no-files-found: error
+          retention-days: 14
+      - name: Retain minimal SAFE public failure receipt without qualified outputs
+        if: failure()
+        env:
+          ORIGINALS_OUTCOME: ${{ steps.originals.outcome }}
+          BUILD_OUTCOME: ${{ steps.build.outcome }}
+        run: |
+          node --input-type=module -e 'import {readFileSync,writeFileSync} from "node:fs";import {execFileSync} from "node:child_process";const path=process.env.RUNNER_TEMP+"/reader-build-failure/receipt.json";const r=JSON.parse(readFileSync(path));try{const tree=execFileSync("git",["rev-parse","HEAD^{tree}"],{encoding:"utf8",stdio:["ignore","pipe","ignore"]}).trim();if(/^[a-f0-9]{40}$/.test(tree))r.source.tree=tree;}catch{}r.reason=process.env.ORIGINALS_OUTCOME!=="success"?"source-install-or-originals-refused":process.env.BUILD_OUTCOME!=="success"?"build-or-final-inventory-refused":"qualified-artifact-publication-refused";writeFileSync(path,JSON.stringify(r,null,2));'
+      - name: Build-failure artifact is evidence ONLY and never enables protected upload
+        if: failure()
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6.0.0
+        with:
+          name: reader-native-build-failure-${{ inputs.target }}-${{ github.run_id }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/reader-build-failure/
+          if-no-files-found: error
+          retention-days: 90
+
+  native-upload:
+    needs: native-build
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    permissions:
+      contents: read
+      actions: read
+    concurrency:
+      group: reader-native-${{ inputs.target }}
+      cancel-in-progress: false
+    # Parent reviews LIVE native-ref/environment/credential protections separately.
+    # Production: required Callum reviewer/no admin bypass, NOT prevent-self-review.
+    # Separate Callum GO BEFORE any production dispatch/tag, then Callum UI approval.
+    # Agents NEVER call pending_deployments/approval APIs. Hashes are not GO.
+    environment:
+      name: reader-${{ inputs.target }}
+      url: ${{ inputs.target == 'production' && 'https://reader.mdbase.dev/' || 'https://staging.mdbase-reader.pages.dev/' }}
+    env:
+      TARGET: ${{ inputs.target }}
+      SOURCE_SHA: ${{ inputs.source_sha }}
+      NATIVE_SDK_SHA256: ${{ vars.NATIVE_SDK_SHA256 }}
+      NATIVE_UI_SHA256: ${{ vars.NATIVE_UI_SHA256 }}
+      NATIVE_PROTOCOL_SHA256: ${{ vars.NATIVE_PROTOCOL_SHA256 }}
+      NATIVE_TRUST_ASSET_SHA256: ${{ vars.NATIVE_TRUST_ASSET_SHA256 }}
+      WRANGLER_SEND_METRICS: "false"
+    steps:
+      - name: Initialize minimal FAILED receipt BEFORE protected intake can refuse
+        run: |
+          mkdir -p "$RUNNER_TEMP/reader-native-receipt"
+          node --input-type=module -e 'import {writeFileSync} from "node:fs"; writeFileSync(process.env.RUNNER_TEMP+"/reader-native-receipt/receipt.json",JSON.stringify({schema:"mdbase-reader/native-publisher-receipt@1",status:"failed-or-incomplete",target:process.env.TARGET,source:{sha:process.env.SOURCE_SHA,tree:null},run:{repository:process.env.GITHUB_REPOSITORY,id:process.env.GITHUB_RUN_ID,attempt:process.env.GITHUB_RUN_ATTEMPT},deploymentId:null,assets:[],verification:null},null,2));'
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ inputs.source_sha }}
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: pnpm/action-setup@0ebf47130e4866e96fce0953f49152a61190b271 # v6.0.9
+        with:
+          version: 11.15.1
+          package_json_file: tools/native-publisher/package.json
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: 22
+      - name: Trusted SOURCE guard only; NO app dependencies/build/hooks
+        run: |
+          set -euo pipefail
+          node apps/reader/scripts/native-publisher.mjs guard --target "$TARGET" --sha "$SOURCE_SHA" > "$RUNNER_TEMP/reader-native-receipt/source-plan.json"
+          cp "$RUNNER_TEMP/reader-native-receipt/source-plan.json" "$RUNNER_TEMP/reader-native-receipt/plan.json"
+      - name: Isolated integrity-locked official Wrangler only, no app workspace
+        run: |
+          set -euo pipefail
+          mkdir -p "$RUNNER_TEMP/reader-tools" "$RUNNER_TEMP/reader-upload"
+          cp tools/native-publisher/{package.json,pnpm-lock.yaml} "$RUNNER_TEMP/reader-tools/"
+          (cd "$RUNNER_TEMP/reader-tools" && NPM_CONFIG_USERCONFIG=/dev/null NPM_CONFIG_GLOBALCONFIG=/dev/null pnpm --ignore-workspace install --frozen-lockfile --ignore-scripts --ignore-pnpmfile)
+          test "$(node -p "require('$RUNNER_TEMP/reader-tools/node_modules/wrangler/package.json').version")" = 4.114.0
+          # Pages forbids --config. SOURCE-derived isolated cwd config only.
+          node scripts/reader-hosting.mjs upload-config "$RUNNER_TEMP/reader-upload"
+          cp "$RUNNER_TEMP/reader-upload/wrangler.json" "$RUNNER_TEMP/reader-native-receipt/upload-config.json"
+          chmod a-w "$RUNNER_TEMP/reader-upload/wrangler.json"
+      - name: Immutable same repository/run/attempt/event/source/tree/target artifact
+        env:
+          ARTIFACT_ID: ${{ needs.native-build.outputs.artifact-id }}
+          ARTIFACT_DIGEST: ${{ needs.native-build.outputs.artifact-digest }}
+          GITHUB_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          node scripts/lib/native-artifact.mjs "$RUNNER_TEMP/reader-upload/artifact"
+          cp "$RUNNER_TEMP/reader-upload/artifact/"{plan.json,inventory.json,envelope.json,extension-inventory.json} "$RUNNER_TEMP/reader-native-receipt/"
+          cp "$RUNNER_TEMP/reader-upload/artifact-metadata.json" "$RUNNER_TEMP/reader-native-receipt/"
+          cmp "$RUNNER_TEMP/reader-native-receipt/source-plan.json" "$RUNNER_TEMP/reader-native-receipt/plan.json"
+          node apps/reader/scripts/native-publisher.mjs inventory --dist "$RUNNER_TEMP/reader-upload/artifact/publish" --plan "$RUNNER_TEMP/reader-native-receipt/source-plan.json" > "$RUNNER_TEMP/reader-native-receipt/revalidated-inventory.json"
+          cmp "$RUNNER_TEMP/reader-native-receipt/inventory.json" "$RUNNER_TEMP/reader-native-receipt/revalidated-inventory.json"
+          chmod -R a-w "$RUNNER_TEMP/reader-upload/artifact"
+      - name: Safe project identity/configuration preflight (no alias assumption)
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: node scripts/reader-hosting.mjs metadata "$RUNNER_TEMP/reader-native-receipt/hosting-preflight.json" "$RUNNER_TEMP/reader-native-receipt/plan.json"
+      - name: LAST exact current ref and full inventory then ONE web-only upload
+        id: upload
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          GITHUB_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          test -n "$CLOUDFLARE_API_TOKEN" && test -n "$CLOUDFLARE_ACCOUNT_ID"
+          branch=$(jq -er .pagesBranch "$RUNNER_TEMP/reader-native-receipt/plan.json")
+          node apps/reader/scripts/native-publisher.mjs assert-inventory --dist "$RUNNER_TEMP/reader-upload/artifact/publish" --inventory "$RUNNER_TEMP/reader-native-receipt/inventory.json"
+          node scripts/lib/native-artifact.mjs assert "$RUNNER_TEMP/reader-upload/artifact"
+          node scripts/native-current-head.mjs
+          cd "$RUNNER_TEMP/reader-upload"
+          "$RUNNER_TEMP/reader-tools/node_modules/.bin/wrangler" pages deploy artifact/publish --no-bundle --project-name mdbase-reader --branch "$branch" --commit-hash "$SOURCE_SHA" --commit-dirty=false 2>&1 | tee "$RUNNER_TEMP/reader-native-receipt/wrangler-output.txt"
+      - name: Capture actual UUID SUCCESS before served verification
+        id: deployment
+        if: always() && (steps.upload.outcome == 'success' || steps.upload.outcome == 'failure')
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: node apps/reader/scripts/native-publisher.mjs capture-deployment --target "$TARGET" --sha "$SOURCE_SHA" --wrangler-output "$RUNNER_TEMP/reader-native-receipt/wrangler-output.txt" > "$RUNNER_TEMP/reader-native-receipt/deployment.json"
+      - name: Bind actual successful deployment and safe project metadata
+        id: hosting
+        if: always() && steps.upload.outcome == 'success' && steps.deployment.outcome == 'success'
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: node scripts/reader-hosting.mjs metadata "$RUNNER_TEMP/reader-native-receipt/hosting-metadata.json" "$RUNNER_TEMP/reader-native-receipt/plan.json" "$RUNNER_TEMP/reader-native-receipt/deployment.json" "$RUNNER_TEMP/reader-native-receipt/hosting-preflight.json"
+      - name: ALL final served bytes plus trusted capture/route policy; any unknown blocks
+        if: always() && steps.upload.outcome == 'success' && steps.deployment.outcome == 'success' && steps.hosting.outcome == 'success'
+        run: |
+          set -euo pipefail
+          node apps/reader/scripts/native-publisher.mjs assert-inventory --dist "$RUNNER_TEMP/reader-upload/artifact/publish" --inventory "$RUNNER_TEMP/reader-native-receipt/inventory.json"
+          origin=$(jq -er .origin "$RUNNER_TEMP/reader-native-receipt/plan.json")
+          node apps/reader/scripts/verify-served.mjs --origin "$origin" --inventory "$RUNNER_TEMP/reader-native-receipt/inventory.json" --artifact "$RUNNER_TEMP/reader-upload/artifact" --plan "$RUNNER_TEMP/reader-native-receipt/plan.json" --deployment "$RUNNER_TEMP/reader-native-receipt/deployment.json" --metadata "$RUNNER_TEMP/reader-native-receipt/hosting-metadata.json" --preflight "$RUNNER_TEMP/reader-native-receipt/hosting-preflight.json" > "$RUNNER_TEMP/reader-native-receipt/verification.json"
+      - name: Preserve failed/incomplete receipt, never automatic rebuild/redeploy/rollback
+        if: always()
+        run: |
+          if [ -f "$RUNNER_TEMP/reader-upload/artifact-metadata.json" ]; then cp "$RUNNER_TEMP/reader-upload/artifact-metadata.json" "$RUNNER_TEMP/reader-native-receipt/"; fi
+          if [ -f apps/reader/scripts/native-publisher.mjs ]; then
+            code=0
+            node apps/reader/scripts/native-publisher.mjs receipt --target "$TARGET" --plan "$RUNNER_TEMP/reader-native-receipt/plan.json" --inventory "$RUNNER_TEMP/reader-native-receipt/inventory.json" --deployment "$RUNNER_TEMP/reader-native-receipt/deployment.json" --verification "$RUNNER_TEMP/reader-native-receipt/verification.json" > "$RUNNER_TEMP/reader-native-receipt/final-receipt.json" || code=$?
+            if [ -s "$RUNNER_TEMP/reader-native-receipt/final-receipt.json" ]; then cp "$RUNNER_TEMP/reader-native-receipt/final-receipt.json" "$RUNNER_TEMP/reader-native-receipt/receipt.json"; fi
+            exit "$code"
+          fi
+          exit 1
+      - name: Always retain safe source/run/artifact/inventory/UUID/failure evidence
+        if: always()
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6.0.0
+        with:
+          name: reader-native-receipt-${{ inputs.target }}-${{ github.run_id }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/reader-native-receipt/
+          include-hidden-files: true
+          if-no-files-found: error
+          retention-days: 90

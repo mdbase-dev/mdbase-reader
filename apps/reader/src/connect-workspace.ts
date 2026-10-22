@@ -59,6 +59,7 @@ import type {
   ReadingStatus,
   ReaderIdGenerator,
   Source,
+  SourceDeletionPlan,
   SourceId,
   SourceFileAttachmentRequest,
   SourceFileImportRequest,
@@ -69,8 +70,12 @@ import type {
   SourceSummary,
 } from "@mdbase-reader/core";
 
+const noop = (): void => undefined;
+
 export class ConnectWorkspaceGateway implements ReaderWorkspaceGateway {
   #library: ReaderLibrarySnapshot["sources"] | null = null;
+  /** Bumped when a change outside this workspace makes the cached library stale. */
+  #libraryGeneration = 0;
   readonly #libraryLoads = new SharedRequests<
     string,
     ReaderLibrarySnapshot,
@@ -116,15 +121,30 @@ export class ConnectWorkspaceGateway implements ReaderWorkspaceGateway {
     private readonly files?: CollectionFileRepository,
     private readonly libraryViewRepository?: LibraryViewRepository,
     private readonly bodyRecovery?: BodyUpdateRecovery,
+    private readonly sourceChanges?: (listener: () => void) => () => void,
   ) {}
+
+  /** Calls `listener` after another tab, app or device changed the library's
+   * sources; the next `library()` reads them again. */
+  readonly subscribeLibrary = (listener: () => void): (() => void) => {
+    if (!this.sourceChanges) {
+      return noop;
+    }
+    return this.sourceChanges(() => {
+      this.#libraryGeneration += 1;
+      this.#library = null;
+      listener();
+    });
+  };
 
   async library(options: ReaderLibraryRequestOptions = {}): Promise<ReaderLibrarySnapshot> {
     options.signal?.throwIfAborted();
     if (this.#library) {
       return completeLibrarySnapshot(this.collectionName, this.#library);
     }
+    const generation = this.#libraryGeneration;
     return this.#libraryLoads.get(
-      "library",
+      `library:${String(generation)}`,
       options,
       async (signal, onProgress) => {
         const snapshot = await loadSourceLibrary({
@@ -135,7 +155,10 @@ export class ConnectWorkspaceGateway implements ReaderWorkspaceGateway {
           onProgress,
         });
         signal.throwIfAborted();
-        this.#library = snapshot.sources;
+        // A load that a later change overtook must not become the cached library.
+        if (generation === this.#libraryGeneration) {
+          this.#library = snapshot.sources;
+        }
         return snapshot;
       },
       options.onProgress,
@@ -661,6 +684,29 @@ export class ConnectWorkspaceGateway implements ReaderWorkspaceGateway {
     });
     this.#replaceSource(updated);
     return updated;
+  }
+
+  async planSourceRemoval(id: SourceId): Promise<SourceDeletionPlan> {
+    if (!this.sources.preflightDelete) {
+      throw new Error("This collection cannot remove sources.");
+    }
+    // Check the revision the collection holds now, not a copy cached when the source opened.
+    const source = await this.refreshSource(id);
+    if (!source) {
+      throw new Error("This source is no longer in the collection.");
+    }
+    return this.sources.preflightDelete(source);
+  }
+
+  async removeSource(plan: SourceDeletionPlan): Promise<void> {
+    if (!this.sources.delete) {
+      throw new Error("This collection cannot remove sources.");
+    }
+    await this.sources.delete(plan);
+    this.#sourcesById.delete(plan.sourceId);
+    if (this.#library) {
+      this.#library = this.#library.filter(({ id }) => id !== plan.sourceId);
+    }
   }
 
   #replaceSource(source: Source, prepend = false): void {

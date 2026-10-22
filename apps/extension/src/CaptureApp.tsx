@@ -43,7 +43,7 @@ export function CaptureApp({
     <main className="capture-shell">
       <ExtensionHeader
         collectionId={
-          "collectionId" in controller.snapshot ? controller.snapshot.collectionId : null
+          controller.snapshot.status === "ready" ? controller.snapshot.collectionId : null
         }
         collection={
           collection

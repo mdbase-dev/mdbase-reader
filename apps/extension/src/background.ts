@@ -1,5 +1,6 @@
 import { updatePageStatus } from "./background-page-status.js";
 import { intentKey, type CaptureIntent, type InvokeMessage } from "./messages.js";
+import { ensureHostMessage, ensureOffscreenDocument } from "./offscreen-document.js";
 import { loadPageStatusConnect, preloadPageStatusConnect } from "./page-status-loader.js";
 import { forgetTab } from "./tab-cleanup.js";
 
@@ -57,6 +58,25 @@ chrome.contextMenus.onClicked.addListener((info, tab) => {
   if (info.menuItemId === "highlight" || info.menuItemId === "note") {
     openPanel(tab, info.menuItemId);
   }
+});
+
+// Extension pages ask for the SDK host here: the worker owns the offscreen document.
+chrome.runtime.onMessage.addListener((message: unknown, sender, sendResponse) => {
+  const fromExtension = sender.id === chrome.runtime.id && !sender.tab;
+  if (
+    !fromExtension ||
+    typeof message !== "object" ||
+    message === null ||
+    !("type" in message) ||
+    message.type !== ensureHostMessage
+  ) {
+    return false;
+  }
+  ensureOffscreenDocument().then(
+    () => sendResponse({ ok: true }),
+    (reason: unknown) => sendResponse({ error: String(reason) }),
+  );
+  return true;
 });
 
 chrome.tabs.onUpdated.addListener((tabId, change, tab) => {

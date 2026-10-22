@@ -12,7 +12,9 @@ const callbackUrl = new URL(applicationUrl);
 if (serverParameter) {
   callbackUrl.searchParams.set("server", new URL(serverParameter).origin);
 }
-const declaredManifest = bundledManifest as ReaderApplicationSessionOptions["manifest"];
+// The generated manifest is validated when it is written (scripts/validate-manifest.mjs);
+// its inferred JSON type is not the session's manifest type.
+const declaredManifest = bundledManifest as unknown as ReaderApplicationSessionOptions["manifest"];
 const manifest = isLoopbackApplication(location)
   ? manifestForApplicationUrl(declaredManifest, applicationUrl, callbackUrl.href)
   : declaredManifest;

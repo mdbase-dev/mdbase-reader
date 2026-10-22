@@ -190,6 +190,9 @@ while retaining the desktop arrangement. Reader limits resident document rendere
 
 Further implementation and validation notes:
 
+- [Native SDK preparation](new-sdk.md): the separate read-only source/annotation
+  foundation, artifact pin, and blocked shared session/setup/files integration.
+
 - [Source workspace architecture](architecture/source-workspace.md): session, persistence, and
   renderer-lifetime boundaries.
 - [Interface shell](interface-shell.md): header, menus, command palette, and stylesheet ownership.

@@ -83,7 +83,10 @@ export function LibraryWorkspace({
   onSourceChanged,
   annotationCounts = noCounts,
   onOpenAnnotation,
+  onRemoveSource,
 }: {
+  /** Asks to remove a source; the caller confirms before anything is deleted. */
+  readonly onRemoveSource?: (source: SourceSummary) => void;
   /** Opens an annotation in its source's document; defaults to opening the source. */
   readonly onOpenAnnotation?: (annotation: Annotation, beside: boolean) => void;
   readonly annotationCounts?: ReadonlyMap<SourceId, number>;
@@ -580,6 +583,7 @@ export function LibraryWorkspace({
                 onOpen={onOpenSource}
                 onOpenBeside={onOpenBeside}
                 onExport={bibliographyExport.runFor}
+                {...(onRemoveSource ? { onRemove: onRemoveSource } : {})}
                 {...(changeStatus ? { onChangeStatus: changeStatus } : {})}
                 {...(writes.saveField
                   ? {

@@ -21,7 +21,7 @@
     "@codemirror/state": "^6.5.2",
     "@codemirror/view": "^6.43.8",
     "@lezer/highlight": "^1.2.3",
-    "@mdbase-dev/ui": "0.1.0-beta.125",
+    "@mdbase-dev/ui": "file:../../vendor/mdbase-dev-ui-dev-b2d7c464.tgz",
     "@mdbase-reader/core": "workspace:*",
     "react": "^19.2.8"
   },

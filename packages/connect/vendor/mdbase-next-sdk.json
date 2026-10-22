@@ -1,0 +1,37 @@
+{
+  "package": "@mdbase-dev/sdk",
+  "version": "0.0.0",
+  "artifact": "mdbase-dev-sdk-dev-bd131b16.tgz",
+  "cutIdentity": "sdk-dev-bd131b16",
+  "sourceCommit": "bd131b16ccc2d69ffa33ddd37b28fff6366fa429",
+  "label": "dev intake, not release-qualified",
+  "sha256": "2331068b896103c9d3413b039e964459834a7d930085c943ea272978ef1ce354",
+  "integrity": "sha512-+0HHz8nPUQ070jZh32D2D06eOpJv8rGgJvPfm2NE6xiyRs9+jbAYw3sAvls/mAnfiWjWfrtVUexZ8j4f0dZqfQ==",
+  "bytes": 4449976,
+  "native": {
+    "available": true,
+    "sourceCommit": "a350db1ca88fa3572de3a8c97c43020d7039d035",
+    "bytes": 3668115,
+    "sha256": "28c261f86e6126091b9da07a8f744b54a0ee71ebfede9a7ea2c273be3e5d3b26"
+  },
+  "releaseQualified": false,
+  "localDependencies": [],
+  "bundledOriginalDependencies": [
+    {
+      "name": "@mdbase-dev/connect-protocol",
+      "file": "vendor/mdbase-dev-connect-protocol-0.1.0-beta.129-c280cd194ffd.tgz",
+      "bytes": 107322,
+      "sha256": "cd1e15236ab7e25c511a4ba13af6a9df23f4b41715161479bba97b0445e1c138",
+      "sri": "sha512-c0iOOWEcNJRstdyUJ6aqJ3puVR5C9jXW4MBHmQnHI2c4vgOeKi5VWfiuueWx3ArvtwB3nPuAaXHhll/OKH/+Yw=="
+    }
+  ],
+  "vendorWarnings": [],
+  "includesPublicApplicationEntry": true,
+  "includesPublicApplicationFixture": true,
+  "applicationRuntimeAvailable": true,
+  "sourceOnly": false,
+  "nativeRuntimeQualified": false,
+  "perAppRuntimeTrustOriginAndOperationsQualified": false,
+  "nativeAssetsPackaged": true,
+  "productionTrustAvailable": false
+}

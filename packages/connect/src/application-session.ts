@@ -39,12 +39,19 @@ import {
 } from "./repositories.js";
 import { connectSourceImportRepository } from "./source-imports.js";
 
+import type { MigrationTarget } from "@mdbase-reader/migration";
+
 export type ReaderConnectSnapshot = MdbaseApplicationSessionSnapshot;
 
 export interface ReaderDirectAccessSnapshot {
   readonly authority: "hosted" | "connector";
   readonly route: MdbaseConnectionRoute;
   readonly status: DirectAccessStatus;
+}
+
+/** Anything that can hand Reader its currently opened collection. */
+export interface ReaderCollectionProvider {
+  connectedCollection(): ReaderConnectedCollection | null;
 }
 
 export interface ReaderDirectAccessController {
@@ -60,14 +67,21 @@ export interface ReaderConnectedCollection {
   readonly collectionName: string;
   readonly sources: SourceRepository;
   readonly sourceImports: SourceImportRepository;
-  readonly migration: ConnectMigrationTarget;
+  readonly migration: MigrationTarget;
   readonly annotations: AnnotationRepository;
   readonly annotationAssets: AnnotationAssetRepository;
   readonly documents: DocumentRepository;
   readonly contentSearch: ContentSearchRepository;
   readonly files: CollectionFileRepository;
   readonly libraryViews: LibraryViewRepository;
-  readonly directAccess: ReaderDirectAccessController;
+  /**
+   * Calls `listener` when the source list may have changed outside this
+   * workspace's own writes: another tab, app or device added, edited or
+   * removed a source, or the change feed reset. Absent for Connect collections.
+   */
+  readonly subscribeSourceChanges?: (listener: () => void) => () => void;
+  /** Connect loopback upgrade; absent for native SDK collections. */
+  readonly directAccess?: ReaderDirectAccessController;
   readonly bodyRecovery: BodyUpdateRecovery;
 }
 

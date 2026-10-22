@@ -18,7 +18,7 @@ it("gathers collection, site access, shortcuts and version on the settings page"
   stubManifest();
   const html = renderToStaticMarkup(<OptionsApp />);
   expect(html).toContain("Collection");
-  expect(html).toContain("Connect a collection");
+  expect(html).toContain("Opening mdbase");
   expect(html).toContain("Pages you visit");
   expect(html).not.toContain("Mark pages I’ve saved");
   expect(html).toContain("Keyboard shortcuts");

@@ -67,6 +67,13 @@ async function verifyDeploymentArtifacts() {
   ) {
     throw new Error(`Reader deployment manifest does not declare ${deploymentOrigin}.`);
   }
+  const installationOrigins =
+    manifest.installation_origins?.[deploymentTarget]?.["app-runtime"] ?? [];
+  if (!installationOrigins.includes(deploymentOrigin)) {
+    throw new Error(
+      `Reader deployment manifest does not declare ${deploymentOrigin} for ${deploymentTarget}.`,
+    );
+  }
 
   const deploymentRevision = JSON.parse(
     await readFile(resolve(wellKnownDirectory, "mdbase-reader-build.json"), "utf8"),

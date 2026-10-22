@@ -19,7 +19,7 @@ export function WelcomeApp(): React.JSX.Element {
   }, []);
   return (
     <div className="extension-page">
-      <ExtensionHeader collectionId={"collectionId" in snapshot ? snapshot.collectionId : null} />
+      <ExtensionHeader collectionId={snapshot.status === "ready" ? snapshot.collectionId : null} />
       <main>
         <h1>mdbase Reader is installed</h1>
         <p className="lede">

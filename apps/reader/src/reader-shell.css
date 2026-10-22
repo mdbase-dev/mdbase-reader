@@ -18,6 +18,7 @@
   --ui-heading: 15px;
   --ui-control-height: 30px;
   --ui-radius: 6px;
+  --mobile-source-control-height: 48px;
 }
 
 /* Shared controls (@mdbase-dev/ui) follow the shell's density. */
@@ -158,6 +159,12 @@
 .reader-menu-panel > button:disabled {
   color: var(--faint);
   cursor: default;
+}
+
+.reader-menu-panel > button.is-danger,
+.reader-menu-panel > button.is-danger:hover:not(:disabled),
+.reader-menu-panel > button.is-danger svg {
+  color: var(--danger);
 }
 
 .reader-menu-panel svg {
@@ -337,8 +344,14 @@
 }
 
 .reader-header .connection-state {
+  min-width: 0;
   color: var(--muted);
   font-size: var(--ui-meta);
+}
+
+.reader-header .connection-state > span {
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .reader-header-actions {
@@ -1218,6 +1231,9 @@
 }
 
 .continue-reading-title strong {
+  overflow: visible;
+  white-space: normal;
+  overflow-wrap: anywhere;
   font-size: var(--ui-body);
   font-weight: 650;
 }
@@ -2229,6 +2245,37 @@
   }
 }
 
+/* The source title is live metadata; saved document text (and annotation anchors) stays intact. */
+.source-document {
+  height: 100%;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.source-document-heading {
+  flex: 0 0 auto;
+  padding: 12px 20px;
+  border-bottom: 1px solid var(--line);
+}
+
+.source-document-heading h1 {
+  margin: 0 0 4px;
+  color: var(--ink);
+  font-size: var(--ui-body);
+  overflow-wrap: anywhere;
+}
+
+.source-document-heading small {
+  color: var(--muted);
+  font-size: var(--ui-meta);
+}
+
+.source-document-surface {
+  flex: 1;
+  min-height: 0;
+}
+
 /* Document chrome ----------------------------------------------------------- */
 
 .document-toolbar {
@@ -2250,14 +2297,14 @@
 .document-area-action,
 .document-contents-menu > summary,
 .document-actions-menu > summary {
-  width: 32px;
-  height: 32px;
+  width: 36px;
+  height: 36px;
   display: grid;
   place-items: center;
   padding: 0;
   border: 0;
   border-radius: var(--ui-radius);
-  color: var(--muted);
+  color: var(--ink-soft);
   background: color-mix(in oklch, var(--paper) 80%, transparent);
   cursor: pointer;
 }
@@ -2277,8 +2324,19 @@
 .document-area-action svg,
 .document-contents-menu > summary svg,
 .document-actions-menu > summary svg {
-  width: 16px;
-  height: 16px;
+  width: 20px;
+  height: 20px;
+}
+
+@media (pointer: coarse) {
+  .document-toolbar :is(.icon-button, .document-area-action),
+  .document-toolbar .reader-menu > summary,
+  .reader-dock .dock-pane-actions .document-toolbar :is(.icon-button, .document-area-action),
+  .reader-dock .dock-pane-actions .document-toolbar .reader-menu > summary,
+  .reader-dock .dock-pane-menu > button {
+    width: 44px;
+    height: 44px;
+  }
 }
 
 /* Icon-only visually; the label stays as the accessible name. */
@@ -2439,7 +2497,7 @@
 }
 .mobile-source-views button {
   min-width: 0;
-  min-height: 48px;
+  min-height: var(--mobile-source-control-height);
   display: grid;
   place-items: center;
   align-content: center;
@@ -2492,7 +2550,7 @@
 .mobile-source-views.is-selection .selection-toolbar > button.icon-button {
   width: auto;
   height: auto;
-  min-height: 48px;
+  min-height: var(--mobile-source-control-height);
   display: grid;
   gap: 3px;
   padding: 0 4px;
@@ -3019,6 +3077,37 @@
   font: 600 var(--ui-meta) / 1 inherit;
   letter-spacing: 0;
   text-transform: none;
+}
+
+.source-removal-details {
+  display: grid;
+  gap: 8px;
+  padding: 0 24px;
+  color: var(--muted);
+  font-size: var(--ui-control);
+  line-height: 1.5;
+}
+
+.source-removal-details p {
+  margin: 0;
+}
+
+.source-removal-details ul {
+  max-height: 120px;
+  margin: 0;
+  overflow: auto;
+  padding-left: 18px;
+  font-family: var(--mono);
+  font-size: var(--ui-meta);
+}
+
+.source-removal-problem {
+  color: var(--danger);
+}
+
+.source-removal-dialog .mdbase-button.is-danger {
+  border-color: var(--danger);
+  background: var(--danger);
 }
 
 .capture-form {
@@ -3770,4 +3859,12 @@
   text-decoration: underline;
   text-underline-offset: 2px;
   cursor: pointer;
+}
+
+/* The consent popup's return window, shown while it closes. */
+.reader-grant-callback {
+  margin: 3rem auto;
+  max-width: 32rem;
+  padding: 0 1rem;
+  text-align: center;
 }

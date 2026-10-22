@@ -1,58 +1,60 @@
-import {
-  ReaderPortableApplicationSession,
-  type MdbaseAppManifest,
-  type ReaderConnectSnapshot,
-} from "@mdbase-reader/connect";
-
 import { chromeStorageMirror } from "./chrome-storage.js";
-import { lastCollectionKey } from "./collection-memory.js";
-import { environment } from "./environment.js";
-import manifest from "./generated/mdbase-app.json";
+import { requestSdkHost, sdkHostGone } from "./offscreen-document.js";
+import { createSdkClient, type RemoteApplication, type SdkClient } from "./sdk-client.js";
+import { broadcastLink } from "./sdk-rpc.js";
 
+import type { ReaderConnectedCollection } from "@mdbase-reader/connect";
 import type { KeyValueStorage } from "@mdbase-reader/platform";
 
 export { rememberCollection, rememberedCollection } from "./collection-memory.js";
 
+/**
+ * One extension page's link to the SDK. The SDK itself runs once, in the offscreen host
+ * (offscreen.ts); every page and the service worker share it, so none waits on another.
+ */
 export interface ExtensionSession {
-  readonly session: ReaderPortableApplicationSession;
-  /** Reader's mutation journal, kept beside the grants so any extension context can recover it. */
+  readonly application: RemoteApplication;
+  /** Reader's repositories over the host's current READY connection, or null. */
+  connectedCollection(): ReaderConnectedCollection | null;
+  /** False while the SDK host restarts; the application snapshot is then the last one. */
+  hostAvailable(): boolean;
+  /** Reader's capture journal, in extension storage so any page can recover it. */
   readonly journalStorage: KeyValueStorage;
+  dispose(): void;
 }
 
-export async function createExtensionSession(): Promise<ExtensionSession> {
-  const storage = await chromeStorageMirror();
-  const session = new ReaderPortableApplicationSession({
-    serverUrl: environment.connectUrl,
-    loopbackUrl: environment.loopbackUrl,
-    manifest: manifest as MdbaseAppManifest,
-    storage,
-    // Interactive capture should not wait the SDK's ten-minute file-index default.
-    timeouts: { watchStartMs: 60_000, fileIndexMs: 30_000, uploadMs: 120_000 },
+type CreateClient = () => Promise<SdkClient>;
+
+/** Sign-in opens mdbase in a tab, from the page whose action started it. */
+const createClient: CreateClient = async () => {
+  const link = broadcastLink();
+  const client = await createSdkClient(link, {
+    ensureHost: requestSdkHost,
+    hostGone: sdkHostGone,
+    openSignIn: (url) => void chrome.tabs.create({ url }).catch(() => undefined),
   });
   return {
-    session,
+    ...client,
+    dispose() {
+      client.dispose();
+      link.close();
+    },
+  };
+};
+
+export async function createExtensionSession(
+  create: CreateClient = createClient,
+): Promise<ExtensionSession> {
+  const [storage, client] = await Promise.all([chromeStorageMirror(), create()]);
+  return {
+    application: client.application,
+    connectedCollection: () => client.connectedCollection(),
+    hostAvailable: () => client.hostAvailable(),
     journalStorage: {
       get: (key) => Promise.resolve(storage.getItem(key)),
       set: (key, value) => Promise.resolve(storage.setItem(key, value)),
       remove: (key) => Promise.resolve(storage.removeItem(key)),
     },
+    dispose: () => client.dispose(),
   };
-}
-
-/** Selects the collection chosen last time, if it is still authorized. */
-export async function restoreCollection(
-  session: ReaderPortableApplicationSession,
-): Promise<ReaderConnectSnapshot> {
-  const snapshot = session.getSnapshot();
-  if (snapshot.status !== "unselected") {
-    return snapshot;
-  }
-  const { [lastCollectionKey]: remembered } = await chrome.storage.local.get(lastCollectionKey);
-  if (
-    typeof remembered === "string" &&
-    snapshot.connections.some((connection) => connection.collectionId === remembered)
-  ) {
-    session.select(remembered);
-  }
-  return session.getSnapshot();
 }

@@ -48,6 +48,7 @@ export function mobileSourceBar(
             bookmarking={composer.bookmarking}
             onBookmark={composer.bookmark}
             sourceExport={model.sourceExport}
+            onRemoveSource={model.sourceRemoval.request}
             onToggleFocus={() => model.setFocusMode((value) => !value)}
             surfaces={model.surfaces}
             sessionId={tab.id}

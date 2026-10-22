@@ -53,6 +53,11 @@
   --dv-context-menu-border-color: var(--line);
   color: var(--ink);
 }
+@media (pointer: coarse) {
+  .dockview-theme-reader {
+    --dv-tabs-and-actions-container-height: 44px;
+  }
+}
 .reader-dock-sidebar {
   height: 100%;
   min-height: 0;
@@ -234,12 +239,15 @@
   padding: 0;
   pointer-events: auto;
 }
-.reader-dock .dock-pane-actions .document-toolbar .icon-button {
-  width: 30px;
-  height: 30px;
+.reader-dock .dock-pane-actions .document-toolbar :is(.icon-button, .document-area-action),
+.reader-dock .dock-pane-actions .document-toolbar .reader-menu > summary {
+  width: 36px;
+  height: 36px;
+  color: var(--ink-soft);
 }
-.reader-dock .dock-pane-actions .document-area-action {
-  height: 30px;
+.reader-dock .dock-pane-actions .document-toolbar svg {
+  width: 20px;
+  height: 20px;
 }
 .dock-pane-menu {
   position: relative;
@@ -247,8 +255,8 @@
   font-size: 12px;
 }
 .dock-pane-menu > button {
-  width: 30px;
-  height: 30px;
+  width: 36px;
+  height: 36px;
   display: grid;
   place-items: center;
   padding: 0;
@@ -256,7 +264,7 @@
   border-radius: 7px;
   cursor: pointer;
   background: transparent;
-  color: var(--muted);
+  color: var(--ink-soft);
 }
 .dock-pane-menu > button:hover,
 .dock-pane-menu > button:focus-visible {
@@ -264,8 +272,8 @@
   background: var(--hover);
 }
 .dock-pane-menu > button svg {
-  width: 16px;
-  height: 16px;
+  width: 20px;
+  height: 20px;
 }
 .dock-pane-popover {
   position: fixed;

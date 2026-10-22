@@ -1,23 +1,12 @@
 import { FeedbackButton, useFeedback } from "@mdbase-dev/ui/feedback";
-import { ConnectLayout, OpeningScreen } from "@mdbase-dev/ui/screens";
+import { ConnectLayout } from "@mdbase-dev/ui/screens";
 import { connectProblemMessage, type ReaderConnectSnapshot } from "@mdbase-reader/connect";
-import { createReaderRuntimeServices, createWebPlatform } from "@mdbase-reader/platform";
 import { ReaderButton } from "@mdbase-reader/ui";
-import {
-  lazy,
-  Suspense,
-  useEffect,
-  useMemo,
-  useState,
-  useSyncExternalStore,
-  type JSX,
-} from "react";
+import { useEffect, useMemo, useState, useSyncExternalStore, type JSX } from "react";
 
 import { collectionSwitchUrl } from "./collection-switching.js";
 import { CollectionSwitchingContext } from "./CollectionPicker.js";
-import { ConnectWorkspaceGateway } from "./connect-workspace.js";
 import { readerSession } from "./connect.js";
-import { ConnectedDocument } from "./ConnectedDocument.js";
 import {
   connectionProblemDetail,
   connectionStatus,
@@ -29,18 +18,13 @@ import {
 import { ConnectionRetry, SelectedAuthorizationAction } from "./ConnectionLayout.js";
 import { readerErrorMessage } from "./errors.js";
 import { ChevronRightIcon, CollectionIcon, PlusIcon } from "./icons.js";
-import { requestedAnnotation, requestedSourceId } from "./SourceDeepLink.js";
+import { NativeSignIn } from "./NativeSignIn.js";
+import { loadReaderApp, ReaderWorkspace } from "./ReaderWorkspace.js";
 import { startReaderStartupTiming } from "./startup-timing.js";
 
-import type { ReaderApp as ReaderAppComponent } from "./ReaderApp.js";
-const loadReaderApp = (): Promise<{ readonly ReaderApp: typeof ReaderAppComponent }> =>
-  import("./ReaderApp.js");
-const ReaderApp = lazy(async () => ({ default: (await loadReaderApp()).ReaderApp }));
-
+import type { NativeSignInBinding } from "./native-signin-ui.js";
 const subscribe = (listener: () => void): (() => void) => readerSession.subscribe(listener);
 const snapshot = (): ReaderConnectSnapshot => readerSession.getSnapshot();
-const readerPlatform = createWebPlatform();
-const runtimeServices = createReaderRuntimeServices(readerPlatform.storage);
 
 async function startSession(): Promise<Awaited<ReturnType<typeof readerSession.start>>> {
   const finish = startReaderStartupTiming("connection");
@@ -54,7 +38,17 @@ async function startSession(): Promise<Awaited<ReturnType<typeof readerSession.s
   }
 }
 
-export function ConnectReader(): JSX.Element {
+export function ConnectReader({
+  nativeSignIn,
+}: {
+  nativeSignIn?: { binding: NativeSignInBinding; onSignedOut(): void };
+} = {}): JSX.Element {
+  // Qualified native owner composition supplies this SDK binding; the existing
+  // runtime remains the default until its actual build inputs are delivered.
+  return nativeSignIn ? <NativeSignIn {...nativeSignIn} /> : <LegacyConnectReader />;
+}
+
+function LegacyConnectReader(): JSX.Element {
   const { reportError } = useFeedback();
   const session = useSyncExternalStore(subscribe, snapshot, snapshot);
   const [error, setError] = useState<string | null>(null);
@@ -143,26 +137,7 @@ export function ConnectReader(): JSX.Element {
 
 function OpenedReader({ collectionId }: { readonly collectionId: string }): JSX.Element {
   const opened = useMemo(() => readerSession.connectedCollection(collectionId), [collectionId]);
-  const gateway = useMemo(
-    () =>
-      opened
-        ? new ConnectWorkspaceGateway(
-            opened.sources,
-            opened.annotations,
-            opened.annotationAssets,
-            opened.sourceImports,
-            opened.collectionId,
-            opened.collectionName,
-            runtimeServices,
-            opened.contentSearch,
-            opened.files,
-            opened.libraryViews,
-            opened.bodyRecovery,
-          )
-        : null,
-    [opened],
-  );
-  if (!opened || !gateway) {
+  if (!opened) {
     return (
       <ConnectLayout
         app="reader"
@@ -171,44 +146,7 @@ function OpenedReader({ collectionId }: { readonly collectionId: string }): JSX.
       />
     );
   }
-  return (
-    <Suspense
-      fallback={
-        <OpeningScreen
-          app="reader"
-          title="Opening your reading collection"
-          detail="Preparing the reading workspace"
-        />
-      }
-    >
-      <ReaderApp
-        key={collectionId}
-        gateway={gateway}
-        initialSourceId={requestedSourceId(location.href, collectionId)}
-        initialAnnotation={requestedAnnotation(location.href, collectionId)}
-        directAccess={opened.directAccess}
-        saveFile={(name, blob) => readerPlatform.saveFile(name, blob)}
-        pickSourceFile={() =>
-          readerPlatform.pickFile([
-            ".pdf",
-            ".epub",
-            ".html",
-            ".htm",
-            "application/pdf",
-            "application/epub+zip",
-            "text/html",
-          ])
-        }
-        renderDocument={(source, onSurfaceChange) => (
-          <ConnectedDocument
-            repository={opened.documents}
-            source={source}
-            onSurfaceChange={onSurfaceChange}
-          />
-        )}
-      />
-    </Suspense>
-  );
+  return <ReaderWorkspace opened={opened} />;
 }
 
 interface ConnectionScreenProps {

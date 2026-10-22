@@ -201,7 +201,7 @@ function ReaderDockTab(props: IDockviewPanelHeaderProps<{ tab?: WorkspaceTab }>)
     <div
       className={`reader-dock-tab${tab?.preview ? " is-preview" : ""}${tab?.dirty ? " is-dirty" : ""}${side ? " is-side" : ""}`}
       data-panel-id={props.api.id}
-      title="Drag to move or split · Right-click for pane actions · Delete closes the tab"
+      title={`${props.api.title ?? "Source"} · Drag to move or split · Right-click for pane actions · Delete closes the tab`}
       onDoubleClick={() => document.sourceWorkspace.dock.patch(props.api.id, { preview: false })}
       onKeyDown={(event) => {
         if (event.key === "Delete" && !side) {

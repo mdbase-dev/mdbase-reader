@@ -26,20 +26,50 @@ const mocks = vi.hoisted(() => ({
   readSelection: vi.fn(),
   prepareCitation: vi.fn(),
   rememberCollection: vi.fn(),
-  snapshot: {
-    status: "ready",
-    collectionId: "test",
-    connections: [],
-    info: { displayName: "[test] Library" },
-  },
+  authorize: vi.fn(),
+  approve: vi.fn(),
+  listeners: new Set<() => void>(),
 }));
-const session = {
+let current: Record<string, unknown> = {};
+/** The SDK's public application snapshot with `selected` READY. */
+function readySnapshot(selected: string): Record<string, unknown> {
+  return {
+    status: "ready",
+    signIn: { state: "paired", accountEmail: "test@example.com" },
+    collections: [
+      { collectionId: "test", displayName: "[test] Library" },
+      { collectionId: "other", displayName: "[test] Other" },
+    ],
+    selectedCollectionId: selected,
+    selection: { state: "selected" },
+    readiness: { checking: false, problem: null, assessment: { status: "ready", problem: null } },
+  };
+}
+function publish(snapshot: Record<string, unknown>): void {
+  current = snapshot;
+  for (const listener of mocks.listeners) {
+    listener();
+  }
+}
+const application = {
   start: mocks.start,
   select: mocks.select,
-  getSnapshot: (): typeof mocks.snapshot => mocks.snapshot,
-  subscribe: (): (() => void) => vi.fn(),
-  destroy: vi.fn(),
-  connectedCollection: () => ({ collectionId: "test", annotations: { listForSource: mocks.list } }),
+  authorize: mocks.authorize,
+  approve: mocks.approve,
+  getSnapshot: (): Record<string, unknown> => current,
+  subscribe: (listener: () => void): (() => void) => {
+    mocks.listeners.add(listener);
+    return () => mocks.listeners.delete(listener);
+  },
+};
+// Like the real session: one adapter per READY connection.
+const ready = { collectionId: "test", annotations: { listForSource: mocks.list } };
+const extension = {
+  application,
+  connectedCollection: () => (current["status"] === "ready" ? ready : null),
+  hostAvailable: () => true,
+  journalStorage: {},
+  dispose: vi.fn(),
 };
 vi.mock("@mdbase-reader/connect", () => ({
   connectProblemMessage: (outcome: { problem?: { message: string } }) =>
@@ -47,7 +77,6 @@ vi.mock("@mdbase-reader/connect", () => ({
 }));
 vi.mock("./connect-session.js", () => ({
   createExtensionSession: mocks.createSession,
-  restoreCollection: () => Promise.resolve(mocks.snapshot),
   rememberCollection: mocks.rememberCollection,
 }));
 vi.mock("./capture-model.js", () => ({
@@ -106,9 +135,15 @@ beforeEach(() => {
   vi.stubGlobal("IS_REACT_ACT_ENVIRONMENT", true);
   chromeFake = fakeChrome();
   vi.stubGlobal("chrome", chromeFake.chrome);
-  mocks.createSession.mockImplementation(() => Promise.resolve({ session, journalStorage: {} }));
-  mocks.start.mockResolvedValue({ ok: true });
-  mocks.select.mockReturnValue({ ok: true });
+  current = readySnapshot("test");
+  mocks.createSession.mockImplementation(() => Promise.resolve(extension));
+  mocks.start.mockResolvedValue(undefined);
+  mocks.authorize.mockResolvedValue(undefined);
+  mocks.approve.mockResolvedValue(undefined);
+  mocks.select.mockImplementation((id: string) => {
+    publish(readySnapshot(id));
+    return Promise.resolve();
+  });
   mocks.sourceForUrl.mockResolvedValue(null);
   mocks.list.mockResolvedValue([]);
   mocks.captureTab.mockResolvedValue(page);
@@ -192,18 +227,39 @@ it("does not auto-save on opening or changing the destination, and remembers the
   await act(async () => {
     controller.select("other");
   });
-  expect(mocks.select).toHaveBeenCalledWith("other");
+  expect(mocks.select).toHaveBeenCalledWith("other", expect.anything());
   expect(mocks.rememberCollection).toHaveBeenCalledWith("other");
   expect(mocks.save).not.toHaveBeenCalled();
 });
-it("recreates the transport on connection retry instead of restarting a stale session", async () => {
+it("offers sign-in again from a refused sign-in, even while the first is still authorizing", async () => {
   await mount();
-  expect(mocks.createSession).toHaveBeenCalledTimes(1);
+  // The first sign-in is still running, so the panel's action lock is held.
+  let finish = (): void => undefined;
+  mocks.approve.mockReturnValueOnce(new Promise<void>((resolve) => (finish = resolve)));
+  let first: Promise<void> = Promise.resolve();
+  await act(async () => {
+    first = controller.connect();
+  });
+  expect(controller.busy).toBe(true);
+  await act(async () => {
+    publish({
+      ...readySnapshot("test"),
+      status: "blocked",
+      signIn: null,
+      problem: { code: "refused" },
+    });
+  });
+  expect(controller.snapshot.problem?.action).toBe("sign_in");
+  expect(JSON.stringify(controller.snapshot)).not.toContain("refused");
   await act(async () => {
     await controller.retry();
   });
-  expect(mocks.createSession).toHaveBeenCalledTimes(2);
-  expect(session.destroy).toHaveBeenCalledTimes(1);
+  expect(mocks.approve).toHaveBeenCalledTimes(2);
+  expect(mocks.authorize).not.toHaveBeenCalled();
+  await act(async () => {
+    finish();
+    await first;
+  });
 });
 it("retains a failed draft and releases the action lock for an explicit retry", async () => {
   await mount();

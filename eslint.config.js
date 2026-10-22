@@ -12,6 +12,7 @@ export default tseslint.config(
   {
     ignores: [
       "**/dist/**",
+      "artifacts/build/**", // generated delivery bytes, independently exact-inventoried
       "**/coverage/**",
       "**/node_modules/**",
       "**/.wrangler/**",
@@ -21,6 +22,11 @@ export default tseslint.config(
     ],
   },
   eslint.configs.recommended,
+  {
+    // Shared reviewed helper is copied BYTE-UNCHANGED (hash asserted in tests).
+    files: ["scripts/lib/native-publish-bytes.mjs"],
+    rules: { "no-useless-escape": "off" },
+  },
   ...tseslint.configs.strictTypeChecked.map((config) => ({ ...config, files: sourceFiles })),
   ...tseslint.configs.stylisticTypeChecked.map((config) => ({ ...config, files: sourceFiles })),
   importX.flatConfigs.recommended,

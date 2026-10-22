@@ -77,7 +77,14 @@ export interface ReaderSourceWorkspaceController {
 export interface ReaderWorkspaceController
   extends
     ReaderSourceWorkspaceController,
-    Pick<LibrarySelection, "createSource" | "attachSourceFile" | "saveNewSourceCitation"> {
+    Pick<
+      LibrarySelection,
+      | "createSource"
+      | "attachSourceFile"
+      | "saveNewSourceCitation"
+      | "planSourceRemoval"
+      | "removeSource"
+    > {
   readonly library: AsyncResource<ReaderLibrarySnapshot>;
   readonly selectedSource: SourceSummary | null;
   readonly reconcileSource: (source: Source) => void;

@@ -16,6 +16,12 @@
     14px/1.5 system-ui,
     sans-serif;
 }
+/* Source controls include 8px padding and a 1px border above their safe area. */
+body:has(.mobile-source-views) .pwa-install {
+  bottom: calc(
+    var(--mobile-source-control-height, 48px) + 9px + env(safe-area-inset-bottom) + 16px
+  );
+}
 .pwa-install p {
   margin: 0 0 10px;
   font: inherit;

@@ -42,10 +42,7 @@ import { pageText } from "./page-annotations.js";
 import { rememberSavedUrls } from "./saved-url-index.js";
 
 import type { PageCapture, PdfCapture, SelectedWebCapture } from "./page-capture.js";
-import type {
-  ReaderConnectedCollection,
-  ReaderPortableApplicationSession,
-} from "@mdbase-reader/connect";
+import type { ReaderConnectedCollection } from "@mdbase-reader/connect";
 
 export const highlightColors = ["yellow", "green", "blue", "pink", "purple"] as const;
 export type HighlightColor = (typeof highlightColors)[number];
@@ -67,7 +64,6 @@ export interface SavedCapture {
   readonly notices: readonly string[];
 }
 export interface SaveCaptureInput {
-  readonly session: ReaderPortableApplicationSession;
   readonly collection: ReaderConnectedCollection;
   readonly capture: PageCapture;
   readonly draft: CaptureDraft;
@@ -111,13 +107,9 @@ export class CaptureWriter {
   }
 
   async save(input: SaveCaptureInput): Promise<SavedCapture> {
-    const { session, collection, capture, draft, onSource } = input;
+    // The native collection re-adopts this session's unconfirmed writes when it opens.
+    const { collection, capture, draft, onSource } = input;
     assertPostCapture(capture);
-    const outcomes = await session.recoverPendingMutations();
-    const failure = outcomes.find((outcome) => !outcome.ok);
-    if (failure) {
-      throw new Error(failure.problem.message);
-    }
     const notices: string[] = [];
     const recoveryKey = importRecoveryKey(input);
     // An import that was interrupted may have committed after the panel looked.
