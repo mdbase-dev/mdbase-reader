@@ -1,5 +1,8 @@
 # Reader performance paths
 
+See [bundle boundaries and measurements](reader-bundle-splitting.md) for the
+production chunk graph, renderer preloading and offline lazy-code checks.
+
 - **Annotation sidebar:** variable-height cards are virtualized with a bounded initial window
   and four-card overscan. Screenshot reads start only when their cards mount. An open editor and
   keyboard-focused card remain mounted outside the viewport. Selecting an annotation scrolls

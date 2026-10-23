@@ -3,14 +3,22 @@ import { useCallback, type JSX } from "react";
 import { AnnotationEditingContext } from "./AnnotationEditingContext.js";
 import { AnnotationList } from "./AnnotationList.js";
 import { AnnotationPanelActions } from "./AnnotationPanelActions.js";
-import { CitationEditor } from "./CitationEditor.js";
 import { CitationIcon, HighlightIcon, NoteIcon, PanelIcon } from "./icons.js";
-import { SourceNoteEditor } from "./SourceNoteEditor.js";
+import { lazyFeature } from "./lazy-feature.js";
 
 import type { AnnotationComposerController } from "./use-annotation-composer.js";
 import type { ReaderSourceWorkspaceController } from "./use-reader-workspace.js";
 import type { ReaderWorkspaceGateway } from "./workspace-model.js";
 import type { SourceId, SourceSummary } from "@mdbase-reader/core";
+
+const CitationEditor = lazyFeature(
+  async () => ({ default: (await import("./CitationEditor.js")).CitationEditor }),
+  "the citation editor",
+);
+const SourceNoteEditor = lazyFeature(
+  async () => ({ default: (await import("./SourceNoteEditor.js")).SourceNoteEditor }),
+  "the source note editor",
+);
 
 export type InspectorTab = "note" | "annotations" | "citation";
 
@@ -135,6 +143,8 @@ function InspectorTabs({
         disabled={!enabled}
         aria-selected={tab === "note"}
         title="Literature note"
+        onPointerEnter={SourceNoteEditor.preload}
+        onFocus={SourceNoteEditor.preload}
         onClick={() => onChange("note")}
       >
         <NoteIcon /> <span className="inspector-tab-label">Literature note</span>
@@ -145,6 +155,8 @@ function InspectorTabs({
         disabled={!enabled}
         aria-selected={tab === "citation"}
         title="Citation"
+        onPointerEnter={CitationEditor.preload}
+        onFocus={CitationEditor.preload}
         onClick={() => onChange("citation")}
       >
         <CitationIcon /> <span className="inspector-tab-label">Citation</span>

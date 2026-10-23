@@ -11,3 +11,9 @@ text, not file bytes, credentials or an offline collection mirror.
 Updates do not reload open tabs. An incomplete deployment does not replace the
 last successfully cached release. Shell caching never stores authentication or
 collection API responses.
+
+The Reader build verifies every public asset against the emitted precache SHA-256,
+including unvisited lazy chunks, workers and WASM. `build:report` additionally
+checks initial/workspace dependency boundaries. A local production-preview browser
+audit reloads offline and opens unvisited lazy UI/renderers; see
+[bundle splitting](reader-bundle-splitting.md) for commands and limits.

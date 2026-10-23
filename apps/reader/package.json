@@ -5,7 +5,8 @@
   "type": "module",
   "scripts": {
     "icons": "node scripts/write-pwa-icons.mjs",
-    "build": "node scripts/package-zotero.mjs && pnpm manifest && pnpm manifest:validate && vite build",
+    "build": "node scripts/package-zotero.mjs && pnpm manifest && pnpm manifest:validate && vite build && node scripts/check-bundle.mjs",
+    "build:report": "READER_BUNDLE_REPORT=1 pnpm build",
     "build:lab": "VITE_MDBASE_ENV=lab MDBASE_READER_ORIGIN=https://lab.mdbase-reader.pages.dev pnpm build",
     "deploy:dev": "node scripts/deploy-pages.mjs",
     "deploy:prod": "MDBASE_READER_DEPLOY_TARGET=production node scripts/deploy-pages.mjs",
@@ -46,7 +47,7 @@
     "dockview-react": "8.3.1",
     "react": "^19.2.8",
     "react-dom": "^19.2.8",
-    "yaml": "^2.9.0"
+    "yaml": "^2.9.1"
   },
   "devDependencies": {
     "@playwright/test": "1.61.1",

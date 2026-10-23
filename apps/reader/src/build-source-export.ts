@@ -37,7 +37,7 @@ export async function buildSourceExport(input: {
   readonly readFile: (file: string, expectedRevision?: FileRevision) => Promise<SourceExportFile>;
 }): Promise<SourceExportBundle> {
   const [{ BlobWriter, TextReader, Uint8ArrayReader, ZipWriter }, { stringify }] =
-    await Promise.all([import("@zip.js/zip.js"), import("yaml")]);
+    await Promise.all([import("@zip.js/zip.js"), import("./yaml-writer.js")]);
   const materialized = materializeSource(input.source, input.annotations, input.citationSources);
   const writer = new ZipWriter(new BlobWriter("application/zip"), { useWebWorkers: false });
   await writer.add(

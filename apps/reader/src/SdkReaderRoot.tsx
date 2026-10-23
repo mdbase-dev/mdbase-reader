@@ -9,10 +9,15 @@ import {
 } from "@mdbase-reader/connect/native";
 import { useEffect, useState, type JSX, type ReactNode } from "react";
 
+import { lazyFeature } from "./lazy-feature.js";
 import { readerCollectionApp, ReaderMdbaseContext } from "./reader-collections.js";
-import { ReaderWorkspace } from "./ReaderWorkspace.js";
 import "@mdbase-dev/ui/collections.css";
 import "./reader-collections.css";
+
+const ReaderWorkspace = lazyFeature(
+  async () => ({ default: (await import("./ReaderWorkspace.js")).ReaderWorkspace }),
+  "the reading workspace",
+);
 
 export type ReaderSdk = Mdbase;
 
@@ -76,6 +81,13 @@ function NativeScopeView({
   // back a new facade for the same scope; it must not retire these adapters.
   const [original] = useState(connection);
   const [collection, setCollection] = useState<NativeReaderCollection | null>(null);
+  useEffect(() => {
+    // The native gate does not need gateways/renderers while choosing or authorizing.
+    // Once ready, overlap workspace code with construction of its collection adapter.
+    if (!renderNative) {
+      ReaderWorkspace.preload();
+    }
+  }, [renderNative]);
   useEffect(() => {
     const opened = nativeReaderCollection(original);
     let active = true;
