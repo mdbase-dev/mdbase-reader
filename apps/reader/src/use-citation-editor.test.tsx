@@ -575,6 +575,31 @@ describe("saved citation dismissals", () => {
     },
   );
 
+  it("keeps an empty field open to other fills after dismissing one", async () => {
+    const empty: Source = {
+      ...explained,
+      citation: { ...citation, publisher: "" },
+      frontmatter: { csl: { ...citation, publisher: "" } },
+    };
+    citationClaims.mockResolvedValue([claim("publisher", "A press")]);
+    await render(empty);
+    await find();
+    await act(async () => controller.dismissSuggestion("publisher"));
+    await act(async () => controller.save());
+    const saved: Source = await saveSourceCitation.mock.results[0]!.value;
+    expect(saved.cslProvenance?.["publisher"]).toEqual({
+      rejected: [{ value: "A press", from: "user" }],
+    });
+    await act(async () => root.unmount());
+    root = createRoot(container);
+    await render(saved);
+    citationClaims.mockResolvedValue([claim("publisher", "Different press")]);
+    await find();
+    expect(controller.suggestions).toMatchObject([
+      { field: "publisher", reason: "fill", proposed: "Different press" },
+    ]);
+  });
+
   it("does not persist a discarded dismissal", async () => {
     citationClaims.mockResolvedValue([claim("publisher", "A press")]);
     await render(explained);

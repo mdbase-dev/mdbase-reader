@@ -314,7 +314,7 @@ describe("adding captured page citations", () => {
       expect.objectContaining({
         title: expect.objectContaining({
           value: "Australia",
-          source: "site-adapter:citoid/encyclopediaArticle",
+          source: "site-adapter:citoid/encyclopediaArticle Citoid encyclopediaArticle",
         }),
         author: expect.objectContaining({
           value: [{ literal: "Page Author" }],
@@ -325,7 +325,10 @@ describe("adding captured page citations", () => {
     expect(result).toMatchObject({
       kind: "added",
       provenance: {
-        title: { value: "Australia", source: "site-adapter:citoid/encyclopediaArticle" },
+        title: {
+          value: "Australia",
+          source: "site-adapter:citoid/encyclopediaArticle Citoid encyclopediaArticle",
+        },
       },
     });
   });
@@ -350,7 +353,9 @@ describe("adding captured page citations", () => {
       }),
     );
   });
+});
 
+describe("remote lookup boundaries for captured pages", () => {
   it("does not send social post URLs to remote providers or change their citation", async () => {
     const fetch = vi.fn<typeof globalThis.fetch>();
     vi.stubGlobal("fetch", fetch);

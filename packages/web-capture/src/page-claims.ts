@@ -1,6 +1,14 @@
 import { cslDate, cslName } from "./csl-values.js";
 import { arxivIdentifier, doiFromText, doiFromUrl } from "./doi.js";
-import { arrayValue, isRecord, jsonLdNames, nameOf, schemaTypes, stringValue } from "./json-ld.js";
+import {
+  arrayValue,
+  isRecord,
+  jsonLdNames,
+  nameOf,
+  resolveJsonLdReferences,
+  schemaTypes,
+  stringValue,
+} from "./json-ld.js";
 import { all, first, type MetaIndex } from "./meta-tags.js";
 import { absoluteHttps, arxivDoi, embeddedDoi } from "./metadata-identifiers.js";
 import {
@@ -176,6 +184,22 @@ export function pageClaims(document: Document, pageUrl: string, observedAt: stri
 const challengeTitle =
   /^(?:just a moment[.!…]*|attention required!?|access denied|are you a robot\??|human verification|verify (?:you are|you're) human|(?:error\s*)?403(?:\s*[-:]?\s*forbidden)?)(?:\s*[-|—]\s*.*)?$/iu;
 
+// Imperative interstitial copy, not articles merely discussing Cloudflare or verification.
+const challengeInstructions = [
+  /^(?:checking your browser|checking (?:if )?(?:the|your|this)(?: site)? connection is secure)(?: before (?:accessing|continuing)(?: .*)?)?[.!…]*$/iu,
+  /^(?:please wait(?:\.\.\.)?(?: while we (?:verify|check)(?: .*)?)?|verifying (?:you are|you're) human|performing security verification)[.!…]*$/iu,
+  /^(?:please )?(?:verify|confirm) (?:that )?(?:you are|you're) (?:a human|human|not a (?:robot|bot))(?: to (?:continue|proceed|access .*))?[.!…]*$/iu,
+  /^(?:please )?enable (?:javascript|js)(?: and (?:cookies|disable (?:any |your )?ad ?blocker))?(?: to continue)?[.!…]*$/iu,
+  /^(?:please )?(?:complete|solve) (?:the |this )?(?:security check|captcha|hcaptcha|recaptcha)(?: to (?:continue|access .*))?[.!…]*$/iu,
+  /^(?:press (?:&|and) hold|click (?:here|the (?:button|checkbox)))(?: to (?:confirm|verify) (?:that )?(?:you are|you're) (?:a )?human)(?: \(and not a bot\))?[.!…]*$/iu,
+  /^(?:we have |we've )?detected (?:unusual|suspicious) (?:activity|traffic) from your (?:computer(?: network)?|network|browser)[.!…]*$/iu,
+  /^(?:pardon our interruption|before we continue|you don['’]t have permission to access .+ on this server)[.!…:]*$/iu,
+];
+
+function challengeText(value: string): boolean {
+  return challengeTitle.test(value) || challengeInstructions.some((pattern) => pattern.test(value));
+}
+
 /**
  * A bot wall or interstitial, whose title and tags describe the wall rather than the work. A
  * challenge-like title alone is not enough: real works are titled "Access denied", so any sign
@@ -195,9 +219,9 @@ function challengePage(
     ) ||
     nodes.some((node) => isWork(node) && (node["headline"] ?? node["name"])) ||
     [meta.get("og:title")?.[0], heading].some(
-      (value) => value !== undefined && value !== title && !challengeTitle.test(value),
+      (value) => value !== undefined && value !== title && !challengeText(value),
     );
-  if (challengeTitle.test(title)) {
+  if (challengeText(title)) {
     return !work;
   }
   // Some interstitials expose only the bare host. That is not a work title.
@@ -537,12 +561,7 @@ function linkedNodes(document: Document, pageUrl: string): JsonLdNode[] {
       typeof node["@id"] === "string" ? [[node["@id"], node] as const] : [],
     ),
   );
-  const resolved = (value: unknown): unknown =>
-    Array.isArray(value)
-      ? value.slice(0, maxValues).map(resolved)
-      : isRecord(value) && typeof value["@id"] === "string" && Object.keys(value).length === 1
-        ? (byId.get(value["@id"]) ?? value)
-        : value;
+  const resolved = (value: unknown): unknown => resolveJsonLdReferences(value, byId);
   return pageWorkNodes(document, pageUrl, nodes)
     .filter((node) => isWork(node) || schemaTypes(node).includes("WebSite"))
     .map((node) => ({
@@ -588,6 +607,12 @@ function pageWorkNodes(document: Document, pageUrl: string, nodes: JsonLdNode[])
     }
     try {
       const url = new URL(identity, pageUrl);
+      if (url.protocol !== "http:" && url.protocol !== "https:") {
+        return undefined;
+      }
+      url.protocol = "https:";
+      url.hostname = url.hostname.replace(/^www\./u, "");
+      url.pathname = url.pathname.replace(/\/$/u, "");
       url.hash = "";
       return url.href;
     } catch {
@@ -641,9 +666,9 @@ function pageWorkNodes(document: Document, pageUrl: string, nodes: JsonLdNode[])
     // can still express alternate metadata about one work, as publishers commonly do.
     if (
       node["url"] ||
-      ((hasTarget || listing || works.length > maxUnscopedWorks) &&
-        typeof node["@id"] === "string" &&
-        !node["@id"].startsWith("#"))
+      (typeof node["@id"] === "string" &&
+        identityUrl(node["@id"]) !== undefined &&
+        !matchesPage(node["@id"]))
     ) {
       return false;
     }

@@ -142,7 +142,7 @@ function existingClaims(
   statuses: ReturnType<typeof cslFieldStatuses>,
 ): Claim[] {
   return Object.entries(statuses).flatMap(([field, status]) => {
-    if (status.kind !== "removed" && emptyField(citation[field])) {
+    if (status.kind === "unexplained" && emptyField(citation[field])) {
       return [];
     }
     const value = citation[field];
@@ -151,7 +151,7 @@ function existingClaims(
     }
     // The evidence that agreed when the value was chosen still backs it against a later lookup.
     // An agreed label naming no known source earns nothing; it must not outrank as the user.
-    return [status.provenance.source, ...(status.provenance.agreed ?? [])].flatMap(
+    return [...new Set([status.provenance.source, ...(status.provenance.agreed ?? [])])].flatMap(
       (label, index) => {
         const space = label.indexOf(" ");
         const source = parseClaimSourceLabel(space === -1 ? label : label.slice(0, space));
@@ -333,11 +333,17 @@ function groupClaims(claims: readonly CandidateClaim[]): ClaimGroup[] {
     // Generic remote metadata can repeat the very same document title; it is not another
     // independent work heading. Derived title candidates retain their original signal label.
     const hasPageTitle = group.some(pageTitleSignal);
+    // Legacy provenance can name only the source, not the winning evidence. That anonymous
+    // placeholder is not an independent vote in addition to this source's labelled signals.
+    const labelledSources = new Set(
+      group.filter((claim) => claim.evidence).map((claim) => claimSourceLabel(claim.source)),
+    );
     const independent = new Set(
       group
         .filter(
           (claim) =>
-            !(claim.field === "title" && claim.source.kind === "generic-remote" && hasPageTitle),
+            !(claim.field === "title" && claim.source.kind === "generic-remote" && hasPageTitle) &&
+            !(!claim.evidence && labelledSources.has(claimSourceLabel(claim.source))),
         )
         .map(evidenceLabel),
     );
@@ -647,7 +653,7 @@ function explainGroup(chosen: ClaimGroup, groups: readonly ClaimGroup[]): CslFie
   }
   return {
     value: chosen.value,
-    source: claimSourceLabel(chosen.winner.source),
+    source: evidenceLabel(chosen.winner),
     ...(agreed.length ? { agreed } : {}),
     ...(rejected.length ? { rejected } : {}),
   };

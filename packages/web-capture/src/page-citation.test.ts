@@ -92,7 +92,7 @@ describe("page citations", () => {
       origin: "page",
       doi: "10.1234/example",
       citation: { title: "Embedded title" },
-      provenance: { title: { value: "Embedded title", source: "page:highwire" } },
+      provenance: { title: { value: "Embedded title", source: "page:highwire citation_title" } },
       outcomes: [{ provider: "doi.org", result: "timeout" }],
     });
     expect(preview?.problem).toContain("did not answer");
@@ -144,7 +144,7 @@ describe("page citations", () => {
     expect(preview).toMatchObject({
       origin: "doi",
       citation: { title: "Registry title", abstract: "A page-only summary." },
-      provenance: { title: { value: "Registry title", source: "registry:doi.org" } },
+      provenance: { title: { value: "Registry title", source: "registry:doi.org doi.org CSL" } },
       outcomes: [{ provider: "doi.org", result: "ok" }],
     });
     expect(updates.map((next) => next.origin)).toEqual(["page", "doi"]);
@@ -298,7 +298,9 @@ describe("optional Citoid page citations", () => {
         "container-title": "Encyclopedia",
         abstract: "A page-only summary.",
       },
-      provenance: { title: { source: "site-adapter:citoid/encyclopediaArticle" } },
+      provenance: {
+        title: { source: "site-adapter:citoid/encyclopediaArticle Citoid encyclopediaArticle" },
+      },
       outcomes: [{ provider: "citoid", result: "ok" }],
     });
     expect(updates.map((next) => next.origin)).toEqual(["page", "citoid"]);

@@ -162,8 +162,9 @@ export function useCitationEditor(input: {
         for (const suggestion of dismissed) {
           const entry =
             updated[suggestion.field] ??
-            (next?.[suggestion.field] !== undefined
-              ? { value: next[suggestion.field], source: "user" }
+            // Dismissing a fill pins nothing: an empty value stays open to other proposals.
+            (!emptyCslValue(next?.[suggestion.field])
+              ? { value: next?.[suggestion.field], source: "user" }
               : { rejected: [] });
           updated[suggestion.field] = {
             ...entry,
@@ -401,4 +402,13 @@ function sourceKey(source: Source | null): string {
 
 function provenanceFor(source: Source | null): CslProvenance {
   return source?.cslProvenance ?? parseCslProvenance(source?.frontmatter["csl-provenance"]);
+}
+
+function emptyCslValue(value: unknown): boolean {
+  return (
+    value === undefined ||
+    value === null ||
+    (typeof value === "string" && !value.trim()) ||
+    (Array.isArray(value) && value.length === 0)
+  );
 }

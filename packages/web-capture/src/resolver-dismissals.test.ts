@@ -47,7 +47,6 @@ describe("dismissed citation suggestions", () => {
         },
         provenance: parseCslProvenance({
           publisher: {
-            ...(publisher !== undefined ? { value: publisher, source: "user" } : {}),
             rejected: [{ value: "Dismissed press", from: "user" }],
           },
         }),
