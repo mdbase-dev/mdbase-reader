@@ -5839,80 +5839,80 @@ msgstr "Readwiseの記事（Instapaper、Pocketなど）"
 
 #: packages/migration/src/readwise.ts
 msgid "Readwise books (Kindle, Apple Books…)"
-msgstr ""
+msgstr "Readwiseの書籍（Kindle、Apple Booksなど）"
 
 #: packages/migration/src/readwise-annotations.ts
 msgid "Readwise books whose Reader document is outside this import (unsaved Feed, or removed from Reader)"
-msgstr ""
+msgstr "Readerの文書がこのインポートの対象外にあるReadwise書籍（未保存のフィードやReaderから削除済みのもの）"
 
 #: packages/migration/src/readwise-annotations.ts
 msgid "Readwise books without an ID skipped"
-msgstr ""
+msgstr "IDのないReadwise書籍をスキップ"
 
 #: packages/migration/src/readwise-annotations.ts
 msgid "Readwise highlight identity could not be reconciled; matching quote retained once, native record archived: {key}"
-msgstr ""
+msgstr "Readwiseのハイライトの識別情報を照合できませんでした。一致する引用文は1件だけ保持し、元のレコードをアーカイブしました：{key}"
 
 #: packages/migration/src/readwise.ts
 msgid "Readwise highlights export: {message}"
-msgstr ""
+msgstr "Readwiseハイライトのエクスポート：{message}"
 
 #: packages/migration/src/readwise-annotations.ts
 msgid "Readwise highlights without an ID or any text skipped"
-msgstr ""
+msgstr "IDもテキストもないReadwiseハイライトをスキップ"
 
 #: packages/migration/src/readwise-client.ts
 msgid "Readwise is rate-limiting requests. Stop and try again later."
-msgstr ""
+msgstr "Readwiseのリクエスト制限に達しました。停止して後で再試行してください。"
 
 #: packages/migration/src/readwise-sources.ts
 msgid "Readwise no longer provides this source file. Scan again or use its full-file export."
-msgstr ""
+msgstr "Readwiseはこの資料のファイルを提供しなくなりました。再スキャンするか、ファイル全体のエクスポートを使用してください。"
 
 #: packages/migration/src/readwise.ts
 msgid "Readwise podcasts"
-msgstr ""
+msgstr "Readwiseのポッドキャスト"
 
 #: packages/migration/src/readwise-client.ts
 msgid "Readwise rejected this token or account access."
-msgstr ""
+msgstr "Readwiseがこのトークンまたはアカウントのアクセスを拒否しました。"
 
 #: packages/migration/src/readwise-client.ts
 msgid "Readwise request failed. Check your connection or browser access; your token was not saved."
-msgstr ""
+msgstr "Readwiseへのリクエストに失敗しました。接続やブラウザーのアクセスを確認してください。トークンは保存されていません。"
 
 #: packages/migration/src/readwise-client.ts
 msgid "Readwise returned a repeated pagination cursor."
-msgstr ""
+msgstr "Readwiseが繰り返しのページ送りカーソルを返しました。"
 
 #: packages/migration/src/readwise-client.ts
 msgid "Readwise returned an unexpected file host; download was refused."
-msgstr ""
+msgstr "Readwiseが想定外のファイルホストを返したため、ダウンロードを拒否しました。"
 
 #: packages/migration/src/readwise-client.ts
 msgid "Readwise returned an unreadable response. Scan again later."
-msgstr ""
+msgstr "Readwiseが読み取れない応答を返しました。後で再スキャンしてください。"
 
 #. placeholder {0}: String(response.status)
 #: packages/migration/src/readwise-client.ts
 msgid "Readwise returned HTTP {0}. No changes were made to Readwise."
-msgstr ""
+msgstr "ReadwiseがHTTP {0}を返しました。Readwise側への変更は行われていません。"
 
 #: packages/migration/src/readwise.ts
 msgid "Readwise returned missing or duplicate identities. Scan again."
-msgstr ""
+msgstr "Readwiseが存在しない識別情報または重複する識別情報を返しました。再スキャンしてください。"
 
 #: packages/migration/src/readwise.ts
 msgid "Readwise supplementals"
-msgstr ""
+msgstr "Readwiseの補足資料"
 
 #: packages/migration/src/readwise-client.ts
 msgid "Readwise token has been cleared. Reconnect to continue."
-msgstr ""
+msgstr "Readwiseのトークンを消去しました。続行するには再接続してください。"
 
 #: packages/migration/src/readwise.ts
 msgid "Readwise tweets"
-msgstr ""
+msgstr "Readwiseのツイート"
 
 #: apps/reader/src/CitationEditor.tsx
 msgid "Ready"
@@ -5921,7 +5921,7 @@ msgstr "準備完了"
 #: apps/reader/src/LibraryNavigator.tsx
 msgctxt "LibraryNavigator interface"
 msgid "Recent"
-msgstr ""
+msgstr "最近の項目"
 
 #: apps/reader/src/library-lenses.ts
 msgctxt "library lenses"
@@ -5936,73 +5936,73 @@ msgstr "最近開いた項目"
 #: apps/reader/src/LibraryWorkspace.tsx
 msgctxt "LibraryWorkspace sortFieldOptions"
 msgid "Recently saved"
-msgstr ""
+msgstr "最近保存した項目"
 
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "Recipient"
-msgstr ""
+msgstr "受信者"
 
 #: apps/reader/src/ConnectionLayout.tsx
 msgctxt "ConnectionLayout status or action"
 msgid "Reconnect collection"
-msgstr ""
+msgstr "コレクションに再接続"
 
 #: apps/extension/src/use-source-note.ts
 msgid "Reconnect the collection to save these details."
-msgstr ""
+msgstr "この詳細を保存するにはコレクションに再接続してください。"
 
 #: apps/extension/src/DiagnosticsPanel.tsx
 msgid "Record connection timings"
-msgstr ""
+msgstr "接続の所要時間を記録"
 
 #: apps/extension/src/DiagnosticsPanel.tsx
 msgid "Record timings in this panel only. No page text, paths, queries, IDs or credentials are recorded. Nothing is uploaded. Stopping or closing clears the recording."
-msgstr ""
+msgstr "所要時間はこのパネル内だけで記録します。ページのテキスト、パス、検索語、ID、認証情報は記録されません。アップロードも行われません。停止または閉じると記録は消去されます。"
 
 #: apps/reader/src/DraftRecoveryNotice.tsx
 msgid "Recovered changes saved on this device. Syncing to the collection…"
-msgstr ""
+msgstr "このデバイスに復元された変更が保存されています。コレクションと同期中…"
 
 #: packages/renderer-pdf/src/pdf-translations.ts
 msgctxt "PDF viewer panel"
 msgid "Redaction Sidebar"
-msgstr ""
+msgstr "墨消しサイドバー"
 
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "References"
-msgstr ""
+msgstr "参考文献"
 
 #: apps/reader/src/ImportPageView.tsx
 msgid "References, original files, notes, collections and native annotations."
-msgstr ""
+msgstr "参考文献、元のファイル、ノート、コレクション、元の注釈。"
 
 #: apps/extension/src/SavedHighlights.tsx
 msgid "Refresh"
-msgstr ""
+msgstr "更新"
 
 #: apps/reader/src/LibraryAnnotationToolbar.tsx
 msgid "Refresh annotations"
-msgstr ""
+msgstr "注釈を更新"
 
 #: apps/reader/src/CitationStructuredEditor.tsx
 msgid "Regenerate"
-msgstr ""
+msgstr "再生成"
 
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "Regulation"
-msgstr ""
+msgstr "規則"
 
 #: apps/extension/src/connection-view.ts
 #: apps/reader/src/DeploymentUpdateNotice.tsx
 msgid "Reload Reader"
-msgstr ""
+msgstr "Readerを再読み込み"
 
 #: apps/extension/src/ConnectionPanel.tsx
 msgid "Reload the page, then press the mdbase Reader toolbar button again. Some pages, such as the Chrome Web Store and browser settings, cannot be read by extensions."
-msgstr ""
+msgstr "ページを再読み込みしてから、mdbase Readerのツールバーボタンをもう一度押してください。Chromeウェブストアやブラウザー設定など、一部のページは拡張機能では読み取れません。"
 
 #: apps/reader/src/CitationAdditionalFields.tsx
 msgctxt "CitationAdditionalFields interface"
@@ -6022,16 +6022,16 @@ msgstr "削除"
 #. placeholder {0}: source.title
 #: apps/reader/src/SourceRemovalDialog.tsx
 msgid "Remove “{0}”?"
-msgstr ""
+msgstr "「{0}」を削除しますか？"
 
 #. placeholder {0}: String(index + 1)
 #: apps/reader/src/CitationContributors.tsx
 msgid "Remove {itemLabel} {0}"
-msgstr ""
+msgstr "{itemLabel} {0}を削除"
 
 #: apps/reader/src/CitationTypedFieldEditors.tsx
 msgid "Remove {key}"
-msgstr ""
+msgstr "{key}を削除"
 
 #: apps/reader/src/CitationAdditionalFields.tsx
 msgid "Remove {label}"
@@ -6044,21 +6044,21 @@ msgstr "条件を削除"
 
 #: apps/reader/src/reader-command-list.ts
 msgid "Remove current source…"
-msgstr ""
+msgstr "現在の資料を削除…"
 
 #: apps/reader/src/SourceRemovalDialog.tsx
 msgctxt "SourceRemovalDialog interface"
 msgid "Remove source"
-msgstr ""
+msgstr "資料を削除"
 
 #: apps/reader/src/LibraryRowMenu.tsx
 msgid "Remove source…"
-msgstr ""
+msgstr "資料を削除…"
 
 #. placeholder {0}: String(index + 1)
 #: apps/reader/src/CitationTypedFieldEditors.tsx
 msgid "Remove value {0}"
-msgstr ""
+msgstr "値{0}を削除"
 
 #: apps/reader/src/SourceRemovalDialog.tsx
 msgctxt "SourceRemovalDialog interface"
@@ -6067,62 +6067,62 @@ msgstr "削除中…"
 
 #: apps/reader/src/LibraryRowMenu.tsx
 msgid "Rename…"
-msgstr ""
+msgstr "名前を変更…"
 
 #: apps/reader/src/reader-command-list.ts
 msgctxt "reader command list"
 msgid "Reopen closed tab"
-msgstr ""
+msgstr "閉じたタブを再度開く"
 
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "Report"
-msgstr ""
+msgstr "レポート"
 
 #: apps/reader/src/citation-form-model.ts
 msgctxt "CSL item type"
 msgid "Report"
-msgstr ""
+msgstr "レポート"
 
 #: apps/reader/src/ReaderHeader.tsx
 msgid "Request local network access and connect directly to the mdbase relay on this computer."
-msgstr ""
+msgstr "ローカルネットワークへのアクセスを要求し、このコンピューターのmdbaseリレーに直接接続します。"
 
 #: apps/reader/src/DockPaneActions.tsx
 msgid "Reset arrangement (keep tabs)"
-msgstr ""
+msgstr "配置をリセット（タブは保持）"
 
 #: apps/reader/src/LibraryWorkspace.tsx
 msgid "Reset columns and layout"
-msgstr ""
+msgstr "列とレイアウトをリセット"
 
 #: apps/reader/src/LibraryAnnotationToolbar.tsx
 msgid "Reset columns and sort"
-msgstr ""
+msgstr "列と並べ替えをリセット"
 
 #: apps/reader/src/reader-command-list.ts
 msgid "Reset pane arrangement"
-msgstr ""
+msgstr "ペインの配置をリセット"
 
 #: apps/reader/src/dockview-menus.ts
 msgid "Reset pane arrangement (keep tabs)"
-msgstr ""
+msgstr "ペインの配置をリセット（タブは保持）"
 
 #: apps/reader/src/LibraryTableHeader.tsx
 msgid "Reset width"
-msgstr ""
+msgstr "幅をリセット"
 
 #: apps/reader/src/LibraryTableHeader.tsx
 msgid "Resize {label} column"
-msgstr ""
+msgstr "{label}列の幅を変更"
 
 #: apps/reader/src/use-annotation-deletion.ts
 msgid "Resolve the save problem or finish the other editor's deletion check first."
-msgstr ""
+msgstr "まず保存の問題を解決するか、別のエディターによる削除確認が終わるのを待ってください。"
 
 #: apps/reader/src/source-draft-session.ts
 msgid "Resolve the source note conflict before continuing."
-msgstr ""
+msgstr "続行する前に資料ノートの競合を解決してください。"
 
 #: apps/reader/src/AnnotationEditor.tsx
 msgid "Restore"
@@ -6130,25 +6130,25 @@ msgstr "復元"
 
 #: apps/extension/src/CaptureApp.tsx
 msgid "Restored your unsaved note from earlier."
-msgstr ""
+msgstr "以前の未保存のノートを復元しました。"
 
 #: apps/extension/src/NotePanel.tsx
 msgid "Restored your unsaved text from earlier."
-msgstr ""
+msgstr "以前の未保存のテキストを復元しました。"
 
 #: apps/reader/src/AnnotationCard.tsx
 msgctxt "AnnotationCard interface"
 msgid "Resume edits"
-msgstr ""
+msgstr "編集を再開"
 
 #: apps/reader/src/ImportReview.tsx
 msgctxt "ImportReview interface"
 msgid "Resume import"
-msgstr ""
+msgstr "インポートを再開"
 
 #: apps/reader/src/AnnotationComposer.tsx
 msgid "Resume unfinished annotation"
-msgstr ""
+msgstr "未完了の注釈を再開"
 
 #: apps/extension/src/CollectionSection.tsx
 #: apps/extension/src/connection-view.ts
@@ -6158,7 +6158,7 @@ msgstr "接続を再試行"
 
 #: apps/reader/src/ReaderHeader.tsx
 msgid "Retry local access"
-msgstr ""
+msgstr "ローカルアクセスを再試行"
 
 #: apps/extension/src/ConnectionPanel.tsx
 #: apps/extension/src/NotePanel.tsx
@@ -6173,7 +6173,7 @@ msgstr "保存を再試行"
 
 #: apps/extension/src/ConnectionPanel.tsx
 msgid "Retry Save to check for an existing source before creating anything else."
-msgstr ""
+msgstr "ほかの資料を作成する前に「保存を再試行」で既存の資料を確認してください。"
 
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
@@ -6187,73 +6187,73 @@ msgstr "アクセスを確認"
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "Review book"
-msgstr ""
+msgstr "書評"
 
 #: apps/reader/src/SourceDetails.tsx
 msgid "Review citation"
-msgstr ""
+msgstr "引用を確認"
 
 #: apps/reader/src/ImportDestination.tsx
 msgid "Review collection access"
-msgstr ""
+msgstr "コレクションへのアクセスを確認"
 
 #: apps/reader/src/CitationLookup.tsx
 msgid "Review found metadata"
-msgstr ""
+msgstr "見つかったメタデータを確認"
 
 #: apps/reader/src/connection-recovery.ts
 msgid "Review the Reader definitions before they are installed."
-msgstr ""
+msgstr "インストール前にReaderの定義を確認してください。"
 
 #: apps/reader/src/CitationEditor.tsx
 msgid "Review the suggested details before saving."
-msgstr ""
+msgstr "保存前に提案された詳細を確認してください。"
 
 #: apps/reader/src/ConnectionLayout.tsx
 msgid "Review updated access"
-msgstr ""
+msgstr "更新されたアクセス権を確認"
 
 #: apps/reader/src/ImportReview.tsx
 msgid "Review what will be imported"
-msgstr ""
+msgstr "インポートされる内容を確認"
 
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "Reviewed author"
-msgstr ""
+msgstr "書評の著者"
 
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "Reviewed genre"
-msgstr ""
+msgstr "書評対象のジャンル"
 
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "Reviewed title"
-msgstr ""
+msgstr "書評対象のタイトル"
 
 #: apps/extension/src/CaptureApp.tsx
 msgid "Right-click a selection to highlight it with a comment"
-msgstr ""
+msgstr "選択範囲を右クリックするとコメント付きのハイライトを作成できます"
 
 #: apps/extension/src/ShortcutList.tsx
 msgid "Right-click the selection"
-msgstr ""
+msgstr "選択範囲を右クリック"
 
 #: packages/renderer-pdf/src/pdf-translations.ts
 msgctxt "PDF viewer rotate"
 msgid "Rotate Clockwise"
-msgstr ""
+msgstr "右に回転"
 
 #: packages/renderer-pdf/src/pdf-translations.ts
 msgctxt "PDF viewer rotate"
 msgid "Rotate Counter-Clockwise"
-msgstr ""
+msgstr "左に回転"
 
 #: apps/reader/src/DisplayMenu.tsx
 msgctxt "DisplayMenu interface"
 msgid "Sans"
-msgstr ""
+msgstr "ゴシック体"
 
 #: apps/electron/src/main.ts
 msgctxt "Save an exported file"
@@ -6263,34 +6263,34 @@ msgstr "保存"
 #. placeholder {0}: modifierKey()
 #: apps/extension/src/SaveBar.tsx
 msgid "Save ({0}+Enter)"
-msgstr ""
+msgstr "保存（{0}+Enter）"
 
 #. placeholder {0}: String(loadedSelected.length)
 #: apps/extension/src/PostPicker.tsx
 msgid "Save {0} selected"
-msgstr ""
+msgstr "選択した{0}件を保存"
 
 #: apps/reader/src/SourceAddDialog.tsx
 msgid "Save a web page or PDF link, look up a work by DOI, arXiv ID or ISBN, or add a file from your device."
-msgstr ""
+msgstr "WebページやPDFリンクを保存するか、DOI・arXiv ID・ISBNで作品を検索するか、デバイスからファイルを追加します。"
 
 #: apps/reader/src/AnnotationComposer.tsx
 msgctxt "AnnotationComposer interface"
 msgid "Save area"
-msgstr ""
+msgstr "領域を保存"
 
 #: apps/extension/src/WelcomeApp.tsx
 msgid "Save articles and PDFs to your mdbase collection as you read, highlight passages, and find them again in Reader."
-msgstr ""
+msgstr "読書中に記事やPDFをmdbaseコレクションへ保存し、箇所をハイライトしてReaderで再び見つけられます。"
 
 #: apps/reader/src/LibraryViewSaveDialog.tsx
 msgid "Save as a new view"
-msgstr ""
+msgstr "新しいビューとして保存"
 
 #: apps/reader/src/LibraryAnnotationToolbar.tsx
 #: apps/reader/src/LibraryWorkspace.tsx
 msgid "Save as new view…"
-msgstr ""
+msgstr "新しいビューとして保存…"
 
 #: apps/reader/src/CitationEditor.tsx
 msgctxt "CitationEditor interface"
@@ -6299,69 +6299,69 @@ msgstr "変更を保存"
 
 #: apps/reader/src/SourceAddDialog.tsx
 msgid "Save citation only"
-msgstr ""
+msgstr "引用情報のみ保存"
 
 #: apps/extension/src/SavedHighlights.tsx
 msgid "Save comment"
-msgstr ""
+msgstr "コメントを保存"
 
 #: apps/reader/src/AnnotationPanelActions.tsx
 msgctxt "AnnotationPanelActions interface"
 msgid "Save comment"
-msgstr ""
+msgstr "コメントを保存"
 
 #: apps/electron/src/main.ts
 msgid "Save export"
-msgstr ""
+msgstr "エクスポート内容を保存"
 
 #: apps/extension/src/HighlightFields.tsx
 msgid "Save highlight"
-msgstr ""
+msgstr "ハイライトを保存"
 
 #: apps/reader/src/AnnotationComposer.tsx
 msgctxt "AnnotationComposer interface"
 msgid "Save highlight"
-msgstr ""
+msgstr "ハイライトを保存"
 
 #: apps/extension/src/background.ts
 msgid "Save highlight to mdbase Reader"
-msgstr ""
+msgstr "ハイライトをmdbase Readerに保存"
 
 #: apps/extension/src/HighlightFields.tsx
 msgid "Save in {colorLabel} ({shortcut}, or {modifier}+Enter)"
-msgstr ""
+msgstr "{colorLabel}で保存（{shortcut}または{modifier}+Enter）"
 
 #: apps/extension/src/HighlightFields.tsx
 msgid "Save in {colorLabel} ({shortcut})"
-msgstr ""
+msgstr "{colorLabel}で保存（{shortcut}）"
 
 #: apps/reader/src/LibraryViewSaveDialog.tsx
 msgid "Save library view"
-msgstr ""
+msgstr "ライブラリビューを保存"
 
 #: apps/reader/src/DraftRecoveryNotice.tsx
 msgid "Save my draft instead"
-msgstr ""
+msgstr "代わりに自分の下書きを保存"
 
 #: apps/extension/src/OptionsApp.tsx
 msgid "Save new sources to"
-msgstr ""
+msgstr "新しい資料の保存先"
 
 #: apps/extension/src/ConnectionPanel.tsx
 msgid "Save not confirmed"
-msgstr ""
+msgstr "保存は未確認です"
 
 #: apps/extension/src/CaptureApp.tsx
 msgid "Save not confirmed. Retry to check its outcome."
-msgstr ""
+msgstr "保存は未確認です。再試行して結果を確認してください。"
 
 #: apps/extension/src/SaveBar.tsx
 msgid "Save page"
-msgstr ""
+msgstr "ページを保存"
 
 #: apps/extension/src/HighlightFields.tsx
 msgid "Save page and highlight"
-msgstr ""
+msgstr "ページを保存してハイライト"
 
 #: apps/extension/src/SaveBar.tsx
 msgid "Save PDF"
