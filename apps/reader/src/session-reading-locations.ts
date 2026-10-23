@@ -1,3 +1,5 @@
+import { surfaceReadingContextKey } from "./source-reading-range.js";
+
 import type { ReaderLocator, ReadingSurface } from "@mdbase-reader/reading-surface";
 
 const restored = new WeakMap<ReadingSurface, ReaderLocator>();
@@ -18,8 +20,9 @@ export class SessionReadingLocations {
       return;
     }
     const target = surface.document.document;
-    const key = `${sessionId}:${target.fileId}:${target.revision}`;
+    const key = `${sessionId}:${surfaceReadingContextKey(surface)}:${target.fileId}:${target.revision}`;
     const previous = this.positions.get(key);
+    restored.delete(surface);
     if (previous) {
       restored.set(surface, previous);
     }

@@ -89,6 +89,8 @@ export interface SourceRepository extends SourceLookups {
     readonly expectedFrontmatter?: Source["frontmatter"];
     readonly documentFileId: FileId;
     readonly position: ReadingPosition;
+    /** Range-relative progress; null clears an unavailable measurement. */
+    readonly progress?: number | null;
     readonly openedAt: DateTime;
   }): Promise<Source>;
   updateReadingStatus?(input: {

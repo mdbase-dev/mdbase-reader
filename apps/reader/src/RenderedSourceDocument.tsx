@@ -1,6 +1,7 @@
 import { useCallback, useEffect, type ReactNode } from "react";
 
 import { markPwaInstallEligible } from "./pwa-install.js";
+import { bindSurfaceReadingContext, sourceReadingContextKey } from "./source-reading-range.js";
 
 import type { SourceSummary } from "@mdbase-reader/core";
 import type { ReadingSurface } from "@mdbase-reader/reading-surface";
@@ -21,9 +22,15 @@ export function RenderedSourceDocument({
   readonly render: SourceDocumentRenderer;
   readonly onSurfaceChange: (sessionId: string, surface: ReadingSurface | null) => void;
 }): ReactNode {
+  const contextKey = sourceReadingContextKey(source);
   const update = useCallback(
-    (surface: ReadingSurface | null): void => onSurfaceChange(sessionId, surface),
-    [onSurfaceChange, sessionId],
+    (surface: ReadingSurface | null): void => {
+      if (surface) {
+        bindSurfaceReadingContext(surface, contextKey);
+      }
+      onSurfaceChange(sessionId, surface);
+    },
+    [contextKey, onSurfaceChange, sessionId],
   );
   useEffect(() => {
     markPwaInstallEligible();

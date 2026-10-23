@@ -3,6 +3,7 @@ import { useCallback, useRef, type JSX, type ReactNode } from "react";
 import { AnnotationComposerLayer } from "./AnnotationComposerLayer.js";
 import { DocumentContextualToolbar } from "./DocumentContextualToolbar.js";
 import { SelectionToolbarLayer } from "./SelectionToolbar.js";
+import { SourceReadingBoundary } from "./SourceReadingBoundary.js";
 import { useDocumentAnnotationDirty } from "./use-annotation-draft.js";
 import { useDockPanelFocus } from "./use-dock-panel-focus.js";
 import { workspaceSessionKey } from "./use-progressive-workspace-tabs.js";
@@ -182,5 +183,18 @@ function sessionContent(
       />
     );
   }
-  return props.renderDocument(source, paneId, tab.id) ?? <DocumentEmpty onOpenNote={openNote} />;
+  return (
+    <div className="source-part-reading">
+      <SourceReadingBoundary
+        key={source.id}
+        source={source}
+        sources={props.sources}
+        surface={props.surfaces.get(tab.id) ?? null}
+        open={props.sourceWorkspace.open}
+      />
+      <div className="source-part-document">
+        {props.renderDocument(source, paneId, tab.id) ?? <DocumentEmpty onOpenNote={openNote} />}
+      </div>
+    </div>
+  );
 }

@@ -1,10 +1,11 @@
-import { searchDestinationMatchesDocument } from "@mdbase-reader/core";
+import { parseDocumentRange, searchDestinationMatchesDocument } from "@mdbase-reader/core";
 import { createEventEmitter, scrollMotionTracker } from "@mdbase-reader/reading-surface";
 
 import type { EmbedPdfRuntime } from "./embedpdf-runtime.js";
-import type { AnnotationId } from "@mdbase-reader/core";
+import type { AnnotationId, DocumentRange } from "@mdbase-reader/core";
 import type {
   ReadingMotion,
+  ReadingRangeResolution,
   ReadingSurface,
   ReaderLocator,
   SurfaceDocument,
@@ -130,16 +131,59 @@ export class EmbedPdfSurface implements ReadingSurface {
     };
   }
 
+  public async resolveReadingRange(range: DocumentRange): Promise<ReadingRangeResolution> {
+    const count = await this.#runtime.pageCount?.();
+    if (
+      !parseDocumentRange(range) ||
+      range.kind !== "pages" ||
+      count === undefined ||
+      range.end >= count
+    ) {
+      return {
+        valid: false,
+        message:
+          "The chapter page range is invalid for this PDF, or its page count is unavailable.",
+      };
+    }
+    return {
+      valid: true,
+      start: { kind: "pdf", pageIndex: range.start },
+      measure: (locator) => {
+        if (
+          locator.kind !== "pdf" ||
+          !Number.isSafeInteger(locator.pageIndex) ||
+          locator.pageIndex < 0 ||
+          locator.pageIndex >= count
+        ) {
+          return null;
+        }
+        return {
+          position:
+            locator.pageIndex < range.start
+              ? "before"
+              : locator.pageIndex > range.end
+                ? "after"
+                : "inside",
+          atEnd: locator.pageIndex >= range.end,
+          progress: Math.max(
+            0,
+            Math.min(1, (locator.pageIndex - range.start) / (range.end - range.start + 1)),
+          ),
+        };
+      },
+    };
+  }
+
   public currentLocation(): ReaderLocator {
     return { kind: "pdf", pageIndex: this.#pageIndex };
   }
 
-  public goTo(locator: ReaderLocator): Promise<boolean> {
+  public async goTo(locator: ReaderLocator): Promise<boolean> {
     if (locator.kind !== "pdf" || locator.pageIndex < 0 || !Number.isInteger(locator.pageIndex)) {
       return Promise.resolve(false);
     }
     this.#settleMotion();
-    this.#runtime.goToPage(locator.pageIndex);
+    await this.#runtime.goToPage(locator.pageIndex);
     this.#pageIndex = locator.pageIndex;
     return Promise.resolve(true);
   }

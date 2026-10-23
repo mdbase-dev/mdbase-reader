@@ -74,6 +74,7 @@ export interface ReaderSourceWorkspaceController {
     sourceId: SourceId,
     documentFileId: FileId,
     position: ReadingPosition,
+    progress?: number | null,
   ) => Promise<void>;
   /** Takes a source written elsewhere (an attached file, a stored citation) as current. */
   readonly adoptSource: (source: Source) => void;

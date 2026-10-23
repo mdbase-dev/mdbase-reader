@@ -712,6 +712,7 @@ export class ConnectWorkspaceGateway implements ReaderWorkspaceGateway {
     source: Source,
     documentFileId: FileId,
     position: ReadingPosition,
+    progress?: number | null,
   ): Promise<Source> {
     // Callers may hold the source as it was when the document opened; each save replaces the
     // cached copy, so it carries the newest revision this session has seen.
@@ -723,6 +724,7 @@ export class ConnectWorkspaceGateway implements ReaderWorkspaceGateway {
       expectedFrontmatter: latest.frontmatter,
       documentFileId,
       position,
+      ...(progress !== undefined ? { progress } : {}),
       openedAt: this.runtime.clock.now(),
     });
     this.#replaceSource(updated);

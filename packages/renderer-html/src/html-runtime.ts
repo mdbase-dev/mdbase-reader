@@ -11,14 +11,16 @@ import { clearCssHighlights, setCssHighlight, setCssHighlights } from "./html-cs
 import { htmlDocumentText } from "./html-document.js";
 import { followEmbedderPalette } from "./html-palette.js";
 import { HtmlTargetLocator, htmlLocator, htmlSelectionDraft } from "./html-range.js";
+import { htmlLocationTarget, resolveHtmlReadingRange } from "./html-reading-range.js";
 import { scrollHtmlElement } from "./html-scroll.js";
 import { applyHtmlTypography } from "./html-typography.js";
 
-import type { Annotation, AnnotationId, QuoteSelector } from "@mdbase-reader/core";
+import type { Annotation, AnnotationId, DocumentRange, QuoteSelector } from "@mdbase-reader/core";
 import type {
   ContentsEntry,
   ReaderLocator,
   ReadingMotion,
+  ReadingRangeResolution,
   ReadingTypography,
   TextSelectionDraft,
   ViewportRect,
@@ -148,14 +150,24 @@ export class HtmlDocumentRuntime {
     return htmlLocator(this.#href, scrollProgression(this.#document));
   }
 
+  public resolveReadingRange(range: DocumentRange): ReadingRangeResolution {
+    return resolveHtmlReadingRange(this.#document, this.#href, range);
+  }
+
   public goTo(locator: ReaderLocator): boolean {
-    if (locator.kind !== "html" || locator.href !== this.#href) {
+    const target = htmlLocationTarget(this.#document, this.#href, locator);
+    if (!target) {
       return false;
     }
-    const progression = locator.progression ?? 0;
-    const root = this.#document.scrollingElement ?? this.#document.documentElement;
     this.#motion.settle("jump");
-    this.#view.scrollTo({ top: progression * Math.max(0, root.scrollHeight - root.clientHeight) });
+    if (target.kind === "fragment") {
+      scrollHtmlElement(this.#view, target.element, "start");
+      return true;
+    }
+    const root = this.#document.scrollingElement ?? this.#document.documentElement;
+    this.#view.scrollTo({
+      top: target.progression * Math.max(0, root.scrollHeight - root.clientHeight),
+    });
     return true;
   }
 

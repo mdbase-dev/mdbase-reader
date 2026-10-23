@@ -16,6 +16,7 @@ import {
   parseSourceRelations,
   validateSourcePartChain,
   type DocumentRange,
+  type DocumentDescriptor,
   type FileRevision,
   validateCslItem,
   type Annotation,
@@ -38,7 +39,7 @@ import { Suspense, useMemo, type JSX } from "react";
 
 import { captureCitationProvenance } from "./capture-citation-provenance.js";
 import { CollectionSwitchingContext, type CollectionSwitching } from "./CollectionPicker.js";
-import { HtmlViewerSurface } from "./document-renderers.js";
+import { HtmlViewerSurface, PdfViewerSurface } from "./document-renderers.js";
 import {
   applyLibraryViewConfiguration,
   defaultLibraryView,
@@ -563,10 +564,29 @@ export class PreviewGateway implements ReaderWorkspaceGateway {
   }
   saveReadingPosition(
     source: Source,
-    _documentFileId: FileId,
-    _position: ReadingPosition,
+    documentFileId: FileId,
+    position: ReadingPosition,
+    progress?: number | null,
   ): Promise<Source> {
-    return Promise.resolve(source);
+    const current = this.#sources.find((item) => item.id === source.id) ?? source;
+    const reading = {
+      ...current.reading,
+      status: current.reading?.status ?? "reading",
+      documentFileId,
+      position,
+    };
+    if (progress !== undefined) {
+      Reflect.deleteProperty(reading, "progress");
+    }
+    const updated: Source = {
+      ...current,
+      reading: {
+        ...reading,
+        ...(typeof progress === "number" ? { progress } : {}),
+      },
+    };
+    this.#sources = this.#sources.map((item) => (item.id === source.id ? updated : item));
+    return Promise.resolve(updated);
   }
   sourceParts(id: SourceId): Promise<readonly SourceSummary[]> {
     return Promise.resolve(this.#sources.filter((source) => source.partOf === id));
@@ -710,6 +730,10 @@ function PreviewDocument({
     () => ({ document: previewDocument, mediaType: "text/html", url: previewUrl }),
     [],
   );
+  const descriptor = source.documents[0];
+  if (descriptor?.fileId === fileId("file_anthology_pdf")) {
+    return <PreviewAnthologyDocument descriptor={descriptor} onSurfaceChange={onSurfaceChange} />;
+  }
   if (source.id !== sourceId("src_james")) {
     return (
       <div className="preview-document">
@@ -735,6 +759,32 @@ function PreviewDocument({
         <span>Interface preview</span> No collection records or files are created.
       </div>
     </div>
+  );
+}
+
+function PreviewAnthologyDocument({
+  descriptor,
+  onSurfaceChange,
+}: {
+  readonly descriptor: DocumentDescriptor;
+  readonly onSurfaceChange: (surface: ReadingSurface | null) => void;
+}): JSX.Element {
+  const document = useMemo<SurfaceDocument>(
+    () => ({
+      document: descriptor,
+      mediaType: "application/pdf",
+      url: "/fixtures/anthology.pdf",
+    }),
+    [descriptor],
+  );
+  return (
+    <Suspense fallback={<p>Preparing anthology…</p>}>
+      <PdfViewerSurface
+        className="pdf-viewer"
+        document={document}
+        onSurfaceReady={onSurfaceChange}
+      />
+    </Suspense>
   );
 }
 

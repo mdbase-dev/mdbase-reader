@@ -2,10 +2,11 @@ import { searchDestinationMatchesDocument } from "@mdbase-reader/core";
 import { createEventEmitter } from "@mdbase-reader/reading-surface";
 
 import type { HtmlDocumentRuntime } from "./html-runtime.js";
-import type { Annotation, AnnotationId } from "@mdbase-reader/core";
+import type { Annotation, AnnotationId, DocumentRange } from "@mdbase-reader/core";
 import type {
   ReaderLocator,
   ReadingMotion,
+  ReadingRangeResolution,
   ReadingSurface,
   SurfaceDocument,
   TextSelectionDraft,
@@ -96,6 +97,10 @@ export class HtmlReadingSurface implements ReadingSurface {
           }
         : {}),
     };
+  }
+
+  public resolveReadingRange(range: DocumentRange): Promise<ReadingRangeResolution> {
+    return Promise.resolve(this.runtime.resolveReadingRange(range));
   }
 
   public currentLocation(): ReaderLocator {

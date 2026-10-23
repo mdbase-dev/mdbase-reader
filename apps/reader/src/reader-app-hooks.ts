@@ -215,9 +215,14 @@ export function useThemePreference(): readonly [ThemePreference, (next: ThemePre
 export function useReaderReadingResume(
   workspace: ReaderWorkspaceController,
   surface: ReadingSurface | null,
+  activeSourceId: SourceId | null,
 ): ReadingResumeState {
   return useReadingResume({
-    source: workspace.sourceRecord.status === "ready" ? workspace.sourceRecord.value : null,
+    source:
+      workspace.sourceRecord.status === "ready" &&
+      workspace.sourceRecord.value.id === activeSourceId
+        ? workspace.sourceRecord.value
+        : null,
     surface,
     save: workspace.saveReadingPosition,
   });

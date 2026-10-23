@@ -49,6 +49,7 @@ export function EpubViewerSurface({
           container,
           manifest: publication.manifest,
           publicationBaseUrl: publication.baseUrl,
+          packagePath: publication.packagePath,
         });
         if (isAborted(lifetime.signal)) {
           await runtime.destroy();

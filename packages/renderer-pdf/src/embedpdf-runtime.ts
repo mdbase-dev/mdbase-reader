@@ -11,6 +11,7 @@ import {
 
 import { createEmbedPdfAnnotationActivations } from "./embedpdf-annotation-activation.js";
 import { createPdfDecorationController } from "./pdf-decoration-controller.js";
+import { createPdfPageNavigation } from "./pdf-page-navigation.js";
 import { createPdfSearch } from "./pdf-search.js";
 import { observePdfSelection, type PdfSelectionAdjustment } from "./pdf-selection-publication.js";
 
@@ -34,7 +35,7 @@ export { textSelectionToDraft } from "./pdf-selection-publication.js";
 export interface EmbedPdfRuntime {
   currentPageIndex(): number;
   pageCount?(): Promise<number>;
-  goToPage(pageIndex: number): void;
+  goToPage(pageIndex: number): void | Promise<void>;
   beginAreaSelection(): void;
   cancelAreaSelection(): void;
   onPageChanged(listener: (pageIndex: number) => void): Unsubscribe;
@@ -94,21 +95,21 @@ export function createEmbedPdfRuntime(
   const decorations = createPdfDecorationController(annotationCapability);
   const annotationActivations = createEmbedPdfAnnotationActivations(annotationCapability);
   const subscriptions = new Set<Unsubscribe>();
-  const search = registry.getPlugin<SearchPlugin>(SearchPlugin.id)?.provides();
   const getDocument = (signal?: AbortSignal): Promise<PdfDocumentObject> =>
     registryPdfDocument(registry, signal);
+  const navigation = createPdfPageNavigation(registry, scroll, getDocument);
 
   const searchRuntime = createPdfSearch({
     engine: registry.getEngine(),
     document: getDocument,
-    search,
+    search: registry.getPlugin<SearchPlugin>(SearchPlugin.id)?.provides(),
     scroll,
   });
 
   return {
     currentPageIndex: () => Math.max(0, scroll.getCurrentPage() - 1),
     pageCount: async () => (await getDocument()).pageCount,
-    goToPage: (pageIndex) => scroll.scrollToPage({ pageNumber: pageIndex + 1 }),
+    goToPage: navigation.goToPage,
     beginAreaSelection: () => capture.enableMarqueeCapture(),
     cancelAreaSelection: () => capture.disableMarqueeCapture(),
     onPageChanged(listener) {
@@ -187,6 +188,7 @@ export function createEmbedPdfRuntime(
     setAnnotations: (annotations) => decorations.setAnnotations(annotations),
     setActiveAnnotation: (annotation) => decorations.setActiveAnnotation(annotation),
     destroy() {
+      navigation.destroy();
       searchRuntime.clearSearch();
       decorations.destroy();
       annotationActivations.destroy();
