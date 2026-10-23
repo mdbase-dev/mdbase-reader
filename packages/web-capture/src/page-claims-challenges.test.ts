@@ -35,6 +35,34 @@ it("does not turn a challenge h1 into a title", () => {
 });
 
 it.each([
+  "Checking your browser before accessing example.org",
+  "Checking if the site connection is secure",
+  "Verifying you are human...",
+  "Performing security verification",
+  "Please wait while we verify your request",
+  "Please verify you are a human",
+  "Verify you are not a robot",
+  "Press & Hold to confirm you are a human (and not a bot)",
+  "We have detected unusual activity from your computer network",
+  "Pardon our interruption",
+  "Before we continue...",
+  "You don't have permission to access https://example.org on this server.",
+  "Please enable JS and disable any ad blocker",
+  "Enable JavaScript and cookies to continue",
+  "Please complete the security check to access example.org",
+  "Please solve this hCaptcha to continue",
+  "Please complete the reCAPTCHA to continue",
+])("does not treat the challenge instruction %s as a real work heading", (heading) => {
+  expect(
+    claims(
+      "Just a moment...",
+      `<h1>${heading}</h1><p>Enable JavaScript and cookies to continue</p>`,
+    ),
+  ).toEqual([]);
+  expect(claims(heading)).toEqual([]);
+});
+
+it.each([
   "Cloudflare changes its policies",
   "Access denied: a history of censorship",
   "A human verification study",
@@ -42,6 +70,17 @@ it.each([
   expect(resolveCitation({ claims: claims(title, `<h1>${title}</h1>`) }).citation?.["title"]).toBe(
     title,
   );
+});
+
+it.each([
+  "Checking your browser: a guide to privacy settings",
+  "Why websites ask you to enable JavaScript and cookies",
+  "Cloudflare, Akamai, PerimeterX and DataDome compared",
+  "A history of hCaptcha and reCAPTCHA",
+])("keeps a real work heading behind a challenge-like title: %s", (heading) => {
+  expect(
+    resolveCitation({ claims: claims("Access denied", `<h1>${heading}</h1>`) }).citation,
+  ).not.toBeNull();
 });
 
 it("keeps a genuine host-named work with a heading", () => {

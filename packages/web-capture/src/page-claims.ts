@@ -166,6 +166,22 @@ export function pageClaims(document: Document, pageUrl: string, observedAt: stri
 const challengeTitle =
   /^(?:just a moment[.!…]*|attention required!?|access denied|are you a robot\??|human verification|verify (?:you are|you're) human|(?:error\s*)?403(?:\s*[-:]?\s*forbidden)?)(?:\s*[-|—]\s*.*)?$/iu;
 
+// Imperative interstitial copy, not articles merely discussing Cloudflare or verification.
+const challengeInstructions = [
+  /^(?:checking your browser|checking (?:if )?(?:the|your|this)(?: site)? connection is secure)(?: before (?:accessing|continuing)(?: .*)?)?[.!…]*$/iu,
+  /^(?:please wait(?:\.\.\.)?(?: while we (?:verify|check)(?: .*)?)?|verifying (?:you are|you're) human|performing security verification)[.!…]*$/iu,
+  /^(?:please )?(?:verify|confirm) (?:that )?(?:you are|you're) (?:a human|human|not a (?:robot|bot))(?: to (?:continue|proceed|access .*))?[.!…]*$/iu,
+  /^(?:please )?enable (?:javascript|js)(?: and (?:cookies|disable (?:any |your )?ad ?blocker))?(?: to continue)?[.!…]*$/iu,
+  /^(?:please )?(?:complete|solve) (?:the |this )?(?:security check|captcha|hcaptcha|recaptcha)(?: to (?:continue|access .*))?[.!…]*$/iu,
+  /^(?:press (?:&|and) hold|click (?:here|the (?:button|checkbox)))(?: to (?:confirm|verify) (?:that )?(?:you are|you're) (?:a )?human)(?: \(and not a bot\))?[.!…]*$/iu,
+  /^(?:we have |we've )?detected (?:unusual|suspicious) (?:activity|traffic) from your (?:computer(?: network)?|network|browser)[.!…]*$/iu,
+  /^(?:pardon our interruption|before we continue|you don['’]t have permission to access .+ on this server)[.!…:]*$/iu,
+];
+
+function challengeText(value: string): boolean {
+  return challengeTitle.test(value) || challengeInstructions.some((pattern) => pattern.test(value));
+}
+
 /**
  * A bot wall or interstitial, whose title and tags describe the wall rather than the work. A
  * challenge-like title alone is not enough: real works are titled "Access denied", so any sign
@@ -185,9 +201,9 @@ function challengePage(
     ) ||
     nodes.some((node) => isWork(node) && (node["headline"] ?? node["name"])) ||
     [meta.get("og:title")?.[0], heading].some(
-      (value) => value !== undefined && value !== title && !challengeTitle.test(value),
+      (value) => value !== undefined && value !== title && !challengeText(value),
     );
-  if (challengeTitle.test(title)) {
+  if (challengeText(title)) {
     return !work;
   }
   // Some interstitials expose only the bare host. That is not a work title.
