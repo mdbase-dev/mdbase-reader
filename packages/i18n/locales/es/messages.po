@@ -6450,498 +6450,498 @@ msgstr "El escaneo lee los metadatos de Reader, el HTML de los artículos guarda
 
 #: packages/migration/src/readwise.ts
 msgid "Scanning Readwise metadata and saved HTML; no collection writes…"
-msgstr ""
+msgstr "Analizando metadatos de Readwise y HTML guardado; sin escrituras en la colección…"
 
 #: apps/reader/src/annotation-body-content.ts
 msgid "Screenshot highlight"
-msgstr ""
+msgstr "Captura de resaltado"
 
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "Script writer"
-msgstr ""
+msgstr "Guionista"
 
 #: packages/renderer-pdf/src/pdf-translations.ts
 msgctxt "PDF viewer page"
 msgid "Scroll Layout"
-msgstr ""
+msgstr "Diseño de desplazamiento"
 
 #: apps/reader/src/ReaderHeader.tsx
 msgid "Search"
-msgstr ""
+msgstr "Buscar"
 
 #: packages/renderer-pdf/src/pdf-translations.ts
 msgctxt "PDF viewer panel"
 msgid "Search"
-msgstr ""
+msgstr "Buscar"
 
 #: packages/renderer-pdf/src/pdf-translations.ts
 msgctxt "PDF viewer search"
 msgid "Search"
-msgstr ""
+msgstr "Buscar"
 
 #: apps/reader/src/ReaderHeader.tsx
 msgid "Search and commands"
-msgstr ""
+msgstr "Buscar y ejecutar comandos"
 
 #: apps/reader/src/LibraryAnnotationToolbar.tsx
 msgid "Search annotations"
-msgstr ""
+msgstr "Buscar anotaciones"
 
 #: apps/reader/src/AnnotationList.tsx
 msgctxt "AnnotationList interface"
 msgid "Search annotations"
-msgstr ""
+msgstr "Buscar anotaciones"
 
 #: apps/reader/src/CitationLookup.tsx
 msgid "Search by DOI, ISBN, URL, or title"
-msgstr ""
+msgstr "Buscar por DOI, ISBN, URL o título"
 
 #: apps/reader/src/LibraryWorkspace.tsx
 msgid "Search notes and annotations"
-msgstr ""
+msgstr "Buscar notas y anotaciones"
 
 #: apps/reader/src/LibraryWorkspace.tsx
 msgid "Search open documents"
-msgstr ""
+msgstr "Buscar documentos abiertos"
 
 #: apps/reader/src/LibraryWorkspace.tsx
 msgctxt "LibraryWorkspace interface"
 msgid "Search scope"
-msgstr ""
+msgstr "Ámbito de búsqueda"
 
 #: apps/reader/src/ReaderWorkspaceView.tsx
 msgid "Search sources and commands"
-msgstr ""
+msgstr "Buscar fuentes y comandos"
 
 #. placeholder {0}: shortcutLabel("mod+k")
 #: apps/reader/src/ReaderHeader.tsx
 msgid "Search sources and run commands · {0}"
-msgstr ""
+msgstr "Buscar fuentes y ejecutar comandos · {0}"
 
 #: apps/reader/src/LibraryWorkspace.tsx
 msgid "Search this view"
-msgstr ""
+msgstr "Buscar en esta vista"
 
 #: apps/reader/src/use-open-document-search.ts
 msgid "Searched {loaded} of {readable} readable sources."
-msgstr ""
+msgstr "Se buscó en {loaded} de {readable} fuentes legibles."
 
 #: apps/reader/src/LibraryTextSearch.tsx
 msgid "Searches literature notes and annotation text, not PDF, EPUB or saved-page contents."
-msgstr ""
+msgstr "Busca en las notas bibliográficas y en el texto de las anotaciones, no en el contenido de PDF, EPUB ni páginas guardadas."
 
 #: apps/reader/src/LibraryTextSearch.tsx
 msgid "Searching notes and annotations…"
-msgstr ""
+msgstr "Buscando en notas y anotaciones…"
 
 #: apps/reader/src/CitationTypedFieldEditors.tsx
 msgid "Season"
-msgstr ""
+msgstr "Estación"
 
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL date field"
 msgid "Season"
-msgstr ""
+msgstr "Estación"
 
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "Section"
-msgstr ""
+msgstr "Sección"
 
 #: packages/renderer-pdf/src/pdf-translations.ts
 msgctxt "PDF viewer document"
 msgid "Security"
-msgstr ""
+msgstr "Seguridad"
 
 #. placeholder {0}: source.title
 #: apps/reader/src/LibraryCards.tsx
 msgid "Select {0}"
-msgstr ""
+msgstr "Seleccionar {0}"
 
 #. placeholder {0}: String(bulkOpenLimit)
 #: apps/reader/src/LibraryBulkBar.tsx
 msgid "Select {0} or fewer to open them together"
-msgstr ""
+msgstr "Selecciona {0} o menos para abrirlos juntos"
 
 #: apps/reader/src/ImportDestination.tsx
 msgid "Select a collection"
-msgstr ""
+msgstr "Selecciona una colección"
 
 #: apps/reader/src/DocumentContextualToolbar.tsx
 msgid "Select an area to annotate"
-msgstr ""
+msgstr "Selecciona un área para anotar"
 
 #: apps/reader/src/DocumentContextualToolbar.tsx
 msgctxt "DocumentContextualToolbar interface"
 msgid "Select area"
-msgstr ""
+msgstr "Seleccionar área"
 
 #: apps/reader/src/import-controller.ts
 msgid "Select one complete bundle folder with unique file paths."
-msgstr ""
+msgstr "Selecciona una carpeta de paquete completa con rutas de archivo únicas."
 
 #: apps/extension/src/CaptureApp.tsx
 msgid "Select text on the page to highlight it."
-msgstr ""
+msgstr "Selecciona texto en la página para resaltarlo."
 
 #: apps/reader/src/AnnotationList.tsx
 msgid "Select text or an area in the document, or add a comment or bookmark above."
-msgstr ""
+msgstr "Selecciona texto o un área del documento, o añade arriba un comentario o un marcador."
 
 #: apps/reader/src/LibraryAnnotationBars.tsx
 msgctxt "LibraryAnnotationBars interface"
 msgid "Selected annotations"
-msgstr ""
+msgstr "Anotaciones seleccionadas"
 
 #: apps/extension/src/HighlightFields.tsx
 msgid "Selected passage"
-msgstr ""
+msgstr "Pasaje seleccionado"
 
 #: apps/reader/src/AnnotationComposer.tsx
 msgid "Selected PDF area"
-msgstr ""
+msgstr "Área de PDF seleccionada"
 
 #: apps/reader/src/LibraryBulkBar.tsx
 msgctxt "LibraryBulkBar interface"
 msgid "Selected sources"
-msgstr ""
+msgstr "Fuentes seleccionadas"
 
 #: apps/reader/src/SelectionToolbar.tsx
 msgctxt "SelectionToolbar interface"
 msgid "Selected text"
-msgstr ""
+msgstr "Texto seleccionado"
 
 #: apps/reader/src/DisplayMenu.tsx
 msgctxt "DisplayMenu interface"
 msgid "Selecting text"
-msgstr ""
+msgstr "Selección de texto"
 
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "Series creator"
-msgstr ""
+msgstr "Creador de la serie"
 
 #: apps/reader/src/DisplayMenu.tsx
 msgctxt "DisplayMenu interface"
 msgid "Serif"
-msgstr ""
+msgstr "Con serifa"
 
 #: apps/reader/src/LibraryBulkBar.tsx
 msgid "Set a field on the selected sources"
-msgstr ""
+msgstr "Establecer un campo en las fuentes seleccionadas"
 
 #: apps/reader/src/LibraryBulkBar.tsx
 msgid "Set field…"
-msgstr ""
+msgstr "Establecer campo…"
 
 #: apps/reader/src/LibraryBulkBar.tsx
 msgid "Set reading status of the selected sources"
-msgstr ""
+msgstr "Establecer el estado de lectura de las fuentes seleccionadas"
 
 #: apps/reader/src/LibraryBulkBar.tsx
 msgctxt "LibraryBulkBar interface"
 msgid "Set status…"
-msgstr ""
+msgstr "Establecer estado…"
 
 #: apps/extension/src/connection-view.ts
 #: apps/extension/src/ConnectionPanel.tsx
 msgid "Set up collection"
-msgstr ""
+msgstr "Configurar colección"
 
 #: apps/extension/src/connection-view.ts
 msgid "Set up this collection for Reader before saving."
-msgstr ""
+msgstr "Configura esta colección para Reader antes de guardar."
 
 #: apps/reader/src/ConnectReader.tsx
 msgid "Set up this reading collection"
-msgstr ""
+msgstr "Configurar esta colección de lectura"
 
 #: apps/extension/src/OptionsApp.tsx
 msgid "Settings"
-msgstr ""
+msgstr "Ajustes"
 
 #: apps/extension/src/ExtensionHeader.tsx
 msgid "Settings and shortcuts"
-msgstr ""
+msgstr "Ajustes y atajos"
 
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "ShortTitle"
-msgstr ""
+msgstr "Título corto"
 
 #: apps/reader/src/AnnotationList.tsx
 msgid "Show"
-msgstr ""
+msgstr "Mostrar"
 
 #: apps/reader/src/LibraryWorkspace.tsx
 msgctxt "LibraryWorkspace interface"
 msgid "Show"
-msgstr ""
+msgstr "Mostrar"
 
 #: apps/reader/src/DisplayMenu.tsx
 msgctxt "DisplayMenu interface"
 msgid "Show actions"
-msgstr ""
+msgstr "Mostrar acciones"
 
 #: apps/reader/src/AnnotationCard.tsx
 msgid "Show in document"
-msgstr ""
+msgstr "Mostrar en el documento"
 
 #: apps/reader/src/LibraryTextSearch.tsx
 msgid "Show more results"
-msgstr ""
+msgstr "Mostrar más resultados"
 
 #: apps/extension/src/SavedHighlights.tsx
 msgid "Show on the page"
-msgstr ""
+msgstr "Mostrar en la página"
 
 #: apps/reader/src/AnnotationList.tsx
 msgid "Show selected annotation (clear filters)"
-msgstr ""
+msgstr "Mostrar la anotación seleccionada (borrar filtros)"
 
 #: packages/renderer-pdf/src/pdf-translations.ts
 msgctxt "PDF viewer panel"
 msgid "Sidebar"
-msgstr ""
+msgstr "Barra lateral"
 
 #: apps/reader/src/DisplayMenu.tsx
 msgid "Sidebar while reading"
-msgstr ""
+msgstr "Barra lateral al leer"
 
 #: apps/extension/src/connection-view.ts
 #: apps/extension/src/ConnectionPanel.tsx
 msgid "Sign in"
-msgstr ""
+msgstr "Iniciar sesión"
 
 #: apps/reader/src/native-signin-ui.ts
 msgctxt "Native sign-in"
 msgid "Sign in"
-msgstr ""
+msgstr "Iniciar sesión"
 
 #: apps/extension/src/connection-view.ts
 msgid "Sign in to mdbase before saving."
-msgstr ""
+msgstr "Inicia sesión en mdbase antes de guardar."
 
 #: apps/reader/src/native-signin-ui.ts
 msgid "Sign in with your mdbase account to sync {appName} across your devices."
-msgstr ""
+msgstr "Inicia sesión con tu cuenta de mdbase para sincronizar {appName} en todos tus dispositivos."
 
 #: apps/reader/src/native-signin-ui.ts
 msgctxt "Native sign-in"
 msgid "Sign out"
-msgstr ""
+msgstr "Cerrar sesión"
 
 #: apps/reader/src/NativeSignIn.tsx
 msgctxt "NativeSignIn interface"
 msgid "Sign-in status"
-msgstr ""
+msgstr "Estado del inicio de sesión"
 
 #: apps/reader/src/native-signin-ui.ts
 msgctxt "Native sign-in"
 msgid "Sign-in was interrupted. Please try again."
-msgstr ""
+msgstr "Se interrumpió el inicio de sesión. Inténtalo de nuevo."
 
 #: apps/reader/src/connect-popup.ts
 msgid "Sign-in window closed."
-msgstr ""
+msgstr "Se cerró la ventana de inicio de sesión."
 
 #. placeholder {0}: signIn.accountEmail
 #: apps/extension/src/connection-view.ts
 msgid "Signed in as {0}"
-msgstr ""
+msgstr "Sesión iniciada como {0}"
 
 #. placeholder {0}: signIn.accountLogin
 #: apps/extension/src/connection-view.ts
 msgid "Signed in as {0} on GitHub"
-msgstr ""
+msgstr "Sesión iniciada como {0} en GitHub"
 
 #: apps/reader/src/native-signin-ui.ts
 msgid "Signed in as {email}"
-msgstr ""
+msgstr "Sesión iniciada como {email}"
 
 #. placeholder {0}: selected.displayName
 #: apps/reader/src/native-signin-ui.ts
 msgid "Signed in. Opening {0}…"
-msgstr ""
+msgstr "Sesión iniciada. Abriendo {0}…"
 
 #: packages/renderer-pdf/src/pdf-translations.ts
 msgctxt "PDF viewer page"
 msgid "Single Page"
-msgstr ""
+msgstr "Una sola página"
 
 #: apps/extension/src/CaptureApp.tsx
 msgid "Site access is limited in Chrome, so Reader cannot follow your tabs."
-msgstr ""
+msgstr "El acceso a sitios está limitado en Chrome, por lo que Reader no puede seguir tus pestañas."
 
 #: apps/extension/src/SiteAccessStatus.tsx
 msgid "Site access is limited in Chrome, so the side panel cannot follow your tabs and saved pages are not marked. Press the toolbar button on a page to use Reader there."
-msgstr ""
+msgstr "El acceso a sitios está limitado en Chrome, por lo que el panel lateral no puede seguir tus pestañas y las páginas guardadas no se marcan. Pulsa el botón de la barra de herramientas en una página para usar Reader allí."
 
 #: apps/reader/src/DisplayMenu.tsx
 msgctxt "DisplayMenu interface"
 msgid "Smaller text"
-msgstr ""
+msgstr "Texto más pequeño"
 
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "Software"
-msgstr ""
+msgstr "Software"
 
 #: apps/reader/src/citation-form-model.ts
 msgctxt "CSL item type"
 msgid "Software"
-msgstr ""
+msgstr "Software"
 
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "Song"
-msgstr ""
+msgstr "Canción"
 
 #: apps/reader/src/LibraryAnnotationToolbar.tsx
 #: apps/reader/src/LibraryWorkspace.tsx
 msgid "Sort"
-msgstr ""
+msgstr "Ordenar"
 
 #: apps/reader/src/AnnotationList.tsx
 msgctxt "AnnotationList interface"
 msgid "Sort annotations"
-msgstr ""
+msgstr "Ordenar anotaciones"
 
 #: apps/reader/src/LibraryAnnotationToolbar.tsx
 #: apps/reader/src/LibraryTableHeader.tsx
 #: apps/reader/src/LibraryWorkspace.tsx
 msgid "Sort ascending"
-msgstr ""
+msgstr "Orden ascendente"
 
 #. placeholder {0}: label.toLocaleLowerCase()
 #: apps/reader/src/LibraryTableHeader.tsx
 msgid "Sort by {0} · Drag to move"
-msgstr ""
+msgstr "Ordenar por {0} · Arrastra para mover"
 
 #: apps/reader/src/LibraryAnnotationToolbar.tsx
 #: apps/reader/src/LibraryTableHeader.tsx
 #: apps/reader/src/LibraryWorkspace.tsx
 msgid "Sort descending"
-msgstr ""
+msgstr "Orden descendente"
 
 #: apps/reader/src/LibraryAnnotationToolbar.tsx
 msgctxt "LibraryAnnotationToolbar interface"
 msgid "Sort field"
-msgstr ""
+msgstr "Campo de ordenación"
 
 #: apps/reader/src/LibraryWorkspace.tsx
 msgctxt "LibraryWorkspace interface"
 msgid "Sort field"
-msgstr ""
+msgstr "Campo de ordenación"
 
 #: apps/reader/src/annotation-columns.ts
 msgctxt "Annotation table column"
 msgid "Source"
-msgstr ""
+msgstr "Fuente"
 
 #: apps/extension/src/PanelTabs.tsx
 msgctxt "Bibliographic source"
 msgid "Source"
-msgstr ""
+msgstr "Fuente"
 
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "Source"
-msgstr ""
+msgstr "Fuente"
 
 #: apps/reader/src/dockview-side-panels.ts
 msgctxt "dockview side panels"
 msgid "Source"
-msgstr ""
+msgstr "Fuente"
 
 #: apps/reader/src/DockviewWorkspace.tsx
 msgctxt "DockviewWorkspace status or action"
 msgid "Source"
-msgstr ""
+msgstr "Fuente"
 
 #: apps/reader/src/LibraryAnnotationToolbar.tsx
 msgctxt "LibraryAnnotationToolbar annotationSortOptions"
 msgid "Source"
-msgstr ""
+msgstr "Fuente"
 
 #: apps/reader/src/LibraryAnnotationToolbar.tsx
 msgctxt "LibraryAnnotationToolbar interface"
 msgid "Source"
-msgstr ""
+msgstr "Fuente"
 
 #: apps/reader/src/source-note-references.ts
 msgctxt "source note references"
 msgid "Source"
-msgstr ""
+msgstr "Fuente"
 
 #: apps/reader/src/workspace-tab-display.ts
 msgctxt "workspace tab display"
 msgid "Source"
-msgstr ""
+msgstr "Fuente"
 
 #: packages/migration/src/readwise-client.ts
 msgid "Source file download failed. The host may not support browser access; use Readwise’s full-file export as a fallback."
-msgstr ""
+msgstr "Falló la descarga del archivo de la fuente. Es posible que el host no admita el acceso desde el navegador; usa como alternativa la exportación completa de archivos de Readwise."
 
 #. placeholder {0}: String(response.status)
 #: packages/migration/src/readwise-client.ts
 msgid "Source file download returned HTTP {0}. Retry to obtain a fresh download link."
-msgstr ""
+msgstr "La descarga del archivo de la fuente devolvió HTTP {0}. Reintenta para obtener un enlace de descarga nuevo."
 
 #: packages/migration/src/run.ts
 msgid "Source file was not committed."
-msgstr ""
+msgstr "El archivo de la fuente no se confirmó."
 
 #: apps/reader/src/SourceNoteEditor.tsx
 msgid "Source literature note"
-msgstr ""
+msgstr "Nota bibliográfica de la fuente"
 
 #: apps/extension/src/NotePanel.tsx
 msgid "Source removed"
-msgstr ""
+msgstr "Fuente eliminada"
 
 #: apps/extension/src/NotePanel.tsx
 msgid "Source removed."
-msgstr ""
+msgstr "Fuente eliminada."
 
 #: apps/extension/src/CaptureApp.tsx
 msgid "Source saved in mdbase."
-msgstr ""
+msgstr "Fuente guardada en mdbase."
 
 #: apps/extension/src/ConnectionPanel.tsx
 msgid "Source saved. This action did not finish."
-msgstr ""
+msgstr "Fuente guardada. Esta acción no se completó."
 
 #: apps/reader/src/MobileSourceViews.tsx
 msgctxt "MobileSourceViews interface"
 msgid "Source views"
-msgstr ""
+msgstr "Vistas de fuentes"
 
 #: apps/reader/src/InspectorPane.tsx
 msgctxt "InspectorPane interface"
 msgid "Source workspace"
-msgstr ""
+msgstr "Espacio de trabajo de la fuente"
 
 #: apps/reader/src/ImportReview.tsx
 #: apps/reader/src/reader-command-list.ts
 msgid "Sources"
-msgstr ""
+msgstr "Fuentes"
 
 #: apps/reader/src/dockview-side-panels.ts
 msgctxt "dockview side panels"
 msgid "Sources"
-msgstr ""
+msgstr "Fuentes"
 
 #: apps/reader/src/LibraryCards.tsx
 msgctxt "LibraryCards interface"
 msgid "Sources"
-msgstr ""
+msgstr "Fuentes"
 
 #: apps/reader/src/LibraryNavigator.tsx
 msgctxt "LibraryNavigator interface"
 msgid "Sources"
-msgstr ""
+msgstr "Fuentes"
 
 #: apps/reader/src/LibraryTable.tsx
 msgctxt "LibraryTable interface"
