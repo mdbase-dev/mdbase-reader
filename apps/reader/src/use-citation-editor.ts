@@ -36,7 +36,10 @@ export interface CitationEditorController extends ReturnType<typeof useCitationL
   readonly assessment: ReturnType<typeof assessCitationDraft>;
   readonly status: "idle" | "saving" | "saved";
   readonly error: string | null;
-  readonly conflict: { readonly currentCitation: unknown } | null;
+  readonly conflict: Pick<
+    CitationChangedElsewhereError,
+    "currentCitation" | "currentProvenance"
+  > | null;
   readonly dirty: boolean;
   readonly suggested: boolean;
   readonly warnings: readonly string[];
@@ -60,9 +63,9 @@ export function useCitationEditor(input: {
     CitationEditorController["status"]
   > | null>(null);
   const [errorState, setErrorState] = useState<SelectedValue<string | null> | null>(null);
-  const [conflictState, setConflictState] = useState<SelectedValue<{
-    readonly currentCitation: unknown;
-  }> | null>(null);
+  const [conflictState, setConflictState] = useState<SelectedValue<
+    NonNullable<CitationEditorController["conflict"]>
+  > | null>(null);
   const sourceId = input.source?.id;
   const transaction = draftState?.source.id === sourceId ? draftState : null;
   const source = transaction?.source ?? input.source;
@@ -169,7 +172,10 @@ export function useCitationEditor(input: {
           if (reason instanceof CitationChangedElsewhereError) {
             setConflictState({
               sourceId: source.id,
-              value: { currentCitation: reason.currentCitation },
+              value: {
+                currentCitation: reason.currentCitation,
+                currentProvenance: reason.currentProvenance,
+              },
             });
           } else {
             setErrorState({
@@ -194,7 +200,12 @@ export function useCitationEditor(input: {
     const theirs = assessCitationDraft(value);
     const theirSource = {
       ...source,
-      frontmatter: { ...source.frontmatter, csl: conflict.currentCitation },
+      cslProvenance: conflict.currentProvenance,
+      frontmatter: {
+        ...source.frontmatter,
+        csl: conflict.currentCitation,
+        "csl-provenance": conflict.currentProvenance,
+      },
     };
     Reflect.deleteProperty(theirSource, "citation");
     if (theirs.valid) {
@@ -204,7 +215,7 @@ export function useCitationEditor(input: {
       source: theirSource,
       value,
       lastCitation: theirs.value ?? {},
-      provenance: provenanceFor(source),
+      provenance: conflict.currentProvenance,
     });
     lookup.resetLookup();
     setConflictState(null);

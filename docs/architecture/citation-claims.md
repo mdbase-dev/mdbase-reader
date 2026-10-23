@@ -289,9 +289,11 @@ field retains its previous pinned entry, or pins its former value as `user` if i
 entry. This removal marker is intentionally kept so subsequent lookups cannot refill it.
 
 Every editor save compares the loaded CSL, including an explicitly absent or malformed CSL
-baseline. A conflict preserves the draft. **Use their version** reloads the reported CSL
-without writing; **Keep mine** retries against that exact reported CSL, so another intervening
-edit still conflicts.
+baseline. A conflict preserves the draft. **Use their version** reloads the reported CSL and
+its current, leniently parsed provenance without writing. **Keep mine** retries against that
+exact reported CSL, so another intervening edit still conflicts. Keep mine replaces the other
+version entirely with the user’s draft and its provenance, including removal markers: it does
+not merge the other version’s pinned removals.
 
 The library view menu's **Citation quality · local only** section computes fixed category
 counts from indexed source CSL and provenance. It performs no requests and retains no

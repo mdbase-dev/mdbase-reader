@@ -190,6 +190,37 @@ describe("Connect citation compare-and-save", () => {
     },
   );
 
+  it("reports current provenance leniently with an outside citation edit", async () => {
+    const { repository, update, setCurrent } = fixture();
+    const currentCitation = { ...citation, title: "Recaptured" };
+    const currentProvenance = {
+      title: { value: "Recaptured", source: "registry:doi.org" },
+      language: { value: "en", source: "user" },
+    };
+    setCurrent(
+      document({
+        id: "src_01",
+        title: "Crime",
+        csl: currentCitation,
+        "csl-provenance": { ...currentProvenance, publisher: { source: 42 } },
+      }),
+    );
+
+    await expect(
+      repository.updateCitation({ ...input, expectedCitation: citation }),
+    ).rejects.toMatchObject({ currentCitation, currentProvenance });
+    expect(update).not.toHaveBeenCalled();
+  });
+
+  it.each([undefined, null, "broken"])("reports empty malformed provenance: %j", async (raw) => {
+    const { repository, setCurrent } = fixture();
+    setCurrent(document({ id: "src_01", csl: null, "csl-provenance": raw }));
+
+    await expect(
+      repository.updateCitation({ ...input, expectedCitation: citation }),
+    ).rejects.toMatchObject({ currentCitation: null, currentProvenance: {} });
+  });
+
   it.each([
     ["no citation", undefined, null],
     ["an invalid citation", { broken: true }, { broken: true }],

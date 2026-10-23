@@ -343,8 +343,53 @@ describe("citation editor save baseline and conflicts", () => {
     expect(controller.assessment.value).toEqual(theirs);
     expect(controller.dirty).toBe(false);
     expect(controller.conflict).toBeNull();
-    expect(container.textContent).toContain("edited manually");
+    expect(controller.provenance).toEqual({});
     expect(saveSourceCitation).toHaveBeenCalledTimes(1);
+  });
+
+  it("reloads their provenance and preserves their removals on the next save", async () => {
+    const theirs = { ...citation, title: "Recaptured" };
+    const theirProvenance = {
+      title: { value: "Recaptured", source: "registry:doi.org", agreed: ["doi.org CSL"] },
+      publisher: { value: "Removed press", source: "user" },
+    };
+    saveSourceCitation.mockRejectedValueOnce(
+      new CitationChangedElsewhereError(theirs, theirProvenance),
+    );
+    citationClaims.mockResolvedValue([claim("publisher", "Remote press")]);
+    await render(explained);
+    await act(async () => controller.setCitation({ ...citation, title: "Mine" }));
+    await act(async () => controller.save());
+    await click("Use their version");
+    expect(controller.provenance).toEqual(theirProvenance);
+    expect(container.textContent).not.toContain("edited manually");
+    expect(controller.dirty).toBe(false);
+    await find();
+    expect(controller.suggestions).toEqual([]);
+    await act(async () => controller.setCitation({ ...theirs, volume: "2" }));
+    await act(async () => controller.save());
+    expect(saveSourceCitation.mock.lastCall?.[2]).toEqual({
+      expectedCitation: theirs,
+      provenance: { ...theirProvenance, volume: { value: "2", source: "user" } },
+    });
+  });
+
+  it("replaces their provenance and pinned removals entirely when keeping mine", async () => {
+    const theirs = { ...citation, title: "Outside edit" };
+    saveSourceCitation.mockRejectedValueOnce(
+      new CitationChangedElsewhereError(theirs, {
+        URL: { value: citation.URL, source: "user" },
+        publisher: { value: "Removed press", source: "user" },
+      }),
+    );
+    await render(explained);
+    await act(async () => controller.setCitation({ ...citation, title: "Mine" }));
+    await act(async () => controller.save());
+    await click("Keep mine");
+    expect(saveSourceCitation.mock.lastCall?.[2]).toEqual({
+      expectedCitation: theirs,
+      provenance: { ...explained.cslProvenance, title: { value: "Mine", source: "user" } },
+    });
   });
 
   it("keeps mine by re-saving against the exact current citation, and still detects a second race", async () => {

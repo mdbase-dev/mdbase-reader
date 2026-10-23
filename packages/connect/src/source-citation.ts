@@ -3,6 +3,7 @@ import {
   cslProblemSummary,
   cslProvenanceKey,
   cslValuesEqual,
+  parseCslProvenance,
   recordRevision,
   validateCslItem,
   type Source,
@@ -73,7 +74,10 @@ async function unchangedCitationRevision(
   const citation = current.effectiveFrontmatter["csl"];
   // `null` is the baseline for a record that had no `csl` when it was loaded.
   if (!cslValuesEqual(citation ?? null, expectedCitation ?? null)) {
-    throw new CitationChangedElsewhereError(citation);
+    throw new CitationChangedElsewhereError(
+      citation,
+      parseCslProvenance(current.effectiveFrontmatter[cslProvenanceKey]),
+    );
   }
   return recordRevision(current.revision);
 }

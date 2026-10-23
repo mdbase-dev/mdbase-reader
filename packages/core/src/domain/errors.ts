@@ -1,3 +1,5 @@
+import type { CslProvenance } from "./csl-provenance.js";
+
 export type DomainProblemCode =
   | "invalid-identifier"
   | "invalid-revision"
@@ -27,7 +29,10 @@ export class DomainError extends Error {
 }
 
 export class CitationChangedElsewhereError extends DomainError {
-  public constructor(public readonly currentCitation: unknown) {
+  public constructor(
+    public readonly currentCitation: unknown,
+    public readonly currentProvenance: CslProvenance = {},
+  ) {
     super(
       "citation-changed-elsewhere",
       "This citation changed elsewhere. Reload it before saving.",
