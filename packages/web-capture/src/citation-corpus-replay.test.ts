@@ -69,27 +69,27 @@ async function wrongFields(entry: CorpusCase, remote: boolean): Promise<string[]
  * remove it here; when one breaks a field, justify it or fix the resolver.
  */
 const stillWrong: Record<string, { readonly page: string[]; readonly remote: string[] }> = {
-  abc: { page: ["type"], remote: ["type"] },
-  ars: { page: ["type"], remote: ["type"] },
+  abc: { page: [], remote: [] },
+  ars: { page: [], remote: [] },
   "arxiv-attention": { page: ["publisher"], remote: [] },
-  bbc: { page: ["type"], remote: ["type"] },
+  bbc: { page: [], remote: [] },
   "blog-paul-graham": {
     page: ["type", "author", "issued", "container-title"],
     remote: ["type", "author", "issued", "container-title"],
   },
-  "elife-brain": { page: ["type"], remote: ["title", "publisher", "URL"] },
+  "elife-brain": { page: [], remote: ["title", "publisher", "URL"] },
   "github-translation-server": { page: ["type", "title", "author"], remote: ["author"] },
   "government-ipcc": {
     page: ["type", "title", "author", "issued", "publisher"],
     remote: ["type", "title", "author", "issued", "publisher"],
   },
-  guardian: { page: ["type"], remote: ["type"] },
-  "guardian-ap": { page: ["type", "author"], remote: ["type", "author"] },
+  guardian: { page: [], remote: [] },
+  "guardian-ap": { page: [], remote: [] },
   "mdn-array-map": {
     page: ["author", "issued", "container-title", "publisher"],
     remote: ["title", "author", "container-title", "publisher"],
   },
-  "nature-dna": { page: ["type"], remote: ["publisher", "URL"] },
+  "nature-dna": { page: [], remote: ["publisher", "URL"] },
   nyt: { page: ["type", "title", "author", "issued", "container-title"], remote: [] },
   "openlibrary-fox": {
     page: ["type", "title", "author", "issued", "publisher", "URL"],
@@ -99,13 +99,13 @@ const stillWrong: Record<string, { readonly page: string[]; readonly remote: str
     page: ["type", "title", "author", "issued", "container-title", "publisher", "DOI"],
     remote: ["type", "title", "author", "issued", "container-title", "publisher", "DOI"],
   },
-  "plos-research": { page: ["type", "issued"], remote: ["publisher", "URL"] },
-  "springer-imagenet": { page: ["type", "publisher"], remote: ["publisher", "URL"] },
+  "plos-research": { page: ["issued"], remote: ["publisher", "URL"] },
+  "springer-imagenet": { page: ["publisher"], remote: ["publisher", "URL"] },
   "stackoverflow-branch": {
     page: ["type", "title", "author", "issued", "container-title"],
     remote: ["type", "author", "issued"],
   },
-  verge: { page: ["type"], remote: ["type"] },
+  verge: { page: [], remote: [] },
   "wikipedia-australia": { page: ["type", "issued", "URL"], remote: [] },
   "youtube-first": { page: ["type", "author", "issued"], remote: [] },
 };

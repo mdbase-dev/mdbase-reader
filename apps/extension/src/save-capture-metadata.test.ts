@@ -93,7 +93,12 @@ describe("capture citation baseline", () => {
   it("passes an existing source's loaded citation to the guarded save", async () => {
     const f = fixture();
     const first = await f.save({ highlight: false }, capture, {
-      citation: { citation: { type: "article", title: "Original" }, origin: "page" },
+      citation: {
+        citation: { type: "article", title: "Original" },
+        origin: "page",
+        provenance: {},
+        outcomes: [],
+      },
     });
     f.updateCitation.mockClear();
     const loaded = await f.collection.sources.get(f.collection.collectionId, first.source.id);

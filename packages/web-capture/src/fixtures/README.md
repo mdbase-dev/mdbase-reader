@@ -69,8 +69,10 @@ import `loadCitationCorpus()` from there in tests. It resolves fixtures relative
 to its module (not the working directory), is deliberately outside the package
 exports, and must not be imported by production code. The `test/` location also
 makes its `node:fs` dependency explicitly test-only to architecture checks.
-`citation-corpus.test.ts` validates all cases and pins an inline before-state
-field-match table for `extractScholarlyMetadata`. Case and whitespace are
-normalized; date precision, author structure and revision URLs are not. This
-baseline is **not** a resolver acceptance test: add separate assertions for the
-new claims resolver rather than weakening the hand-reviewed expected records.
+`citation-corpus.test.ts` validates all cases. Each case's notes record how the
+pre-claims `extractScholarlyMetadata` (d0c7061) scored against it.
+`citation-corpus-replay.test.ts` replays every case through page claims, the
+recorded doi.org and Citoid responses, and the resolver, and pins the fields each
+still gets wrong. Case and whitespace are normalized; date precision, author
+structure and revision URLs are not. When a change fixes a field, remove it from
+that table; never weaken the hand-reviewed expected records to make a case pass.
