@@ -5410,505 +5410,505 @@ msgstr "Reader 无法添加该视图。"
 
 #: apps/reader/src/use-library-selection.ts
 msgid "Reader could not add this source."
-msgstr ""
+msgstr "Reader 无法添加此来源。"
 
 #: apps/reader/src/ConnectReader.tsx
 msgid "Reader could not apply the reviewed setup."
-msgstr ""
+msgstr "Reader 无法应用已审阅的设置。"
 
 #: apps/reader/src/use-document-attachment.ts
 msgid "Reader could not attach a document."
-msgstr ""
+msgstr "Reader 无法附加文档。"
 
 #: apps/reader/src/web-capture-client.ts
 msgid "Reader could not capture that page."
-msgstr ""
+msgstr "Reader 无法捕获该页面。"
 
 #: apps/reader/src/LibraryWorkspace.tsx
 msgid "Reader could not change the reading status."
-msgstr ""
+msgstr "Reader 无法更改阅读状态。"
 
 #: apps/reader/src/use-source-removal.ts
 msgid "Reader could not check this source."
-msgstr ""
+msgstr "Reader 无法检查此来源。"
 
 #: apps/reader/src/CollectionPicker.tsx
 msgid "Reader could not connect another collection."
-msgstr ""
+msgstr "Reader 无法连接其他集合。"
 
 #: apps/reader/src/use-document-decorations.ts
 msgid "Reader could not display saved highlights."
-msgstr ""
+msgstr "Reader 无法显示已保存的高亮。"
 
 #: apps/reader/src/AnnotationImage.tsx
 msgid "Reader could not display this screenshot."
-msgstr ""
+msgstr "Reader 无法显示此截图。"
 
 #: apps/reader/src/LibraryWorkspace.tsx
 msgid "Reader could not execute this mdbase view."
-msgstr ""
+msgstr "Reader 无法执行此 mdbase 视图。"
 
 #: apps/reader/src/use-bibliography-export.ts
 msgid "Reader could not export the bibliography."
-msgstr ""
+msgstr "Reader 无法导出文献书目。"
 
 #: apps/reader/src/build-source-export.ts
 msgid "Reader could not export this file."
-msgstr ""
+msgstr "Reader 无法导出此文件。"
 
 #: apps/reader/src/use-source-export.ts
 msgid "Reader could not export this source."
-msgstr ""
+msgstr "Reader 无法导出此来源。"
 
 #: apps/reader/src/use-citation-editor.ts
 msgid "Reader could not find citation metadata."
-msgstr ""
+msgstr "Reader 找不到引文元数据。"
 
 #: apps/reader/src/use-citation-editor.ts
 msgid "Reader could not generate a citekey."
-msgstr ""
+msgstr "Reader 无法生成 citekey。"
 
 #: apps/reader/src/use-library-selection.ts
 msgid "Reader could not import this document."
-msgstr ""
+msgstr "Reader 无法导入此文档。"
 
 #: apps/reader/src/use-annotation-transclusion.ts
 msgid "Reader could not insert this annotation."
-msgstr ""
+msgstr "Reader 无法插入此注释。"
 
 #: apps/extension/src/page-capture.ts
 msgid "Reader could not inspect this page. Open an ordinary HTTPS page and try again."
-msgstr ""
+msgstr "Reader 无法检查此页面。请打开普通的 HTTPS 页面后重试。"
 
 #: apps/reader/src/use-library-annotations.ts
 msgid "Reader could not list annotations."
-msgstr ""
+msgstr "Reader 无法列出注释。"
 
 #: apps/reader/src/use-mdbase-library-views.ts
 msgid "Reader could not load saved library views."
-msgstr ""
+msgstr "Reader 无法加载已保存的文献库视图。"
 
 #: apps/reader/src/use-library-selection.ts
 msgid "Reader could not load this collection."
-msgstr ""
+msgstr "Reader 无法加载此集合。"
 
 #: apps/reader/src/shared-annotation-resource.ts
 msgid "Reader could not load this source's annotations."
-msgstr ""
+msgstr "Reader 无法加载此来源的注释。"
 
 #: apps/reader/src/use-source-import.ts
 msgid "Reader could not open the file picker."
-msgstr ""
+msgstr "Reader 无法打开文件选择器。"
 
 #: apps/reader/src/use-selected-source-resources.ts
 msgid "Reader could not open the source note."
-msgstr ""
+msgstr "Reader 无法打开来源笔记。"
 
 #: apps/reader/src/ConnectReader.tsx
 msgid "Reader could not open this collection."
-msgstr ""
+msgstr "Reader 无法打开此集合。"
 
 #: apps/reader/src/connection-recovery.ts
 msgid "Reader could not reach mdbase Connect. Check your connection, then try again."
-msgstr ""
+msgstr "Reader 无法连接到 mdbase Connect。请检查网络连接后重试。"
 
 #: apps/reader/src/use-direct-access.ts
 msgid "Reader could not reach the local mdbase connector. The relayed connection is still active."
-msgstr ""
+msgstr "Reader 无法连接到本地 mdbase 连接器。中继连接仍然有效。"
 
 #: apps/reader/src/use-source-removal.ts
 msgid "Reader could not remove this source."
-msgstr ""
+msgstr "Reader 无法移除此来源。"
 
 #: apps/reader/src/use-direct-access.ts
 msgid "Reader could not request local network access."
-msgstr ""
+msgstr "Reader 无法请求本地网络访问权限。"
 
 #: apps/reader/src/ConnectReader.tsx
 msgid "Reader could not review application access."
-msgstr ""
+msgstr "Reader 无法审阅应用访问权限。"
 
 #: apps/reader/src/LibraryWorkspace.tsx
 msgid "Reader could not save {key}."
-msgstr ""
+msgstr "Reader 无法保存 {key}。"
 
 #: apps/reader/src/use-source-fields.ts
 msgid "Reader could not save these details."
-msgstr ""
+msgstr "Reader 无法保存这些详情。"
 
 #: apps/reader/src/annotation-selection.ts
 msgid "Reader could not save this annotation."
-msgstr ""
+msgstr "Reader 无法保存此注释。"
 
 #: apps/reader/src/use-bookmark-action.ts
 msgid "Reader could not save this bookmark."
-msgstr ""
+msgstr "Reader 无法保存此书签。"
 
 #: apps/reader/src/use-citation-editor.ts
 msgid "Reader could not save this citation."
-msgstr ""
+msgstr "Reader 无法保存此引文。"
 
 #: apps/reader/src/AnnotationPanelActions.tsx
 msgid "Reader could not save this comment."
-msgstr ""
+msgstr "Reader 无法保存此评论。"
 
 #: apps/reader/src/use-mdbase-library-views.ts
 msgid "Reader could not save this library view."
-msgstr ""
+msgstr "Reader 无法保存此文献库视图。"
 
 #: apps/reader/src/source-draft-session.ts
 msgid "Reader could not save this note. Your draft is retained."
-msgstr ""
+msgstr "Reader 无法保存此笔记。你的草稿已保留。"
 
 #: apps/reader/src/WorkspacePaneSupport.tsx
 msgid "Reader could not save your place in this document."
-msgstr ""
+msgstr "Reader 无法保存你在此文档中的位置。"
 
 #: apps/reader/src/use-reading-resume.ts
 msgid "Reader could not save your reading position."
-msgstr ""
+msgstr "Reader 无法保存你的阅读位置。"
 
 #: apps/reader/src/use-library-search.ts
 msgid "Reader could not search note text."
-msgstr ""
+msgstr "Reader 无法搜索笔记文本。"
 
 #: apps/reader/src/CollectionPicker.tsx
 msgid "Reader could not switch collections."
-msgstr ""
+msgstr "Reader 无法切换集合。"
 
 #. placeholder {0}: lookup.offer.reason
 #. placeholder {1}: lookup.offer.title
 #: apps/reader/src/SourceAddDialog.tsx
 msgid "Reader couldn’t fetch that page ({0}), but it found the citation for “{1}”. You can save the citation now and attach the page or file later."
-msgstr ""
+msgstr "Reader 无法获取该页面（{0}），但找到了“{1}”的引文。你可以先保存引文，稍后再附加网页或文件。"
 
 #: apps/reader/src/ImportPageView.tsx
 msgid "Reader documents and files, plus highlights from Kindle, Apple Books and other Readwise sources."
-msgstr ""
+msgstr "Reader 文档和文件，以及来自 Kindle、Apple Books 和其他 Readwise 来源的高亮。"
 
 #: packages/migration/src/readwise.ts
 msgid "Reader emails"
-msgstr ""
+msgstr "Reader 邮件"
 
 #: packages/migration/src/readwise.ts
 msgid "Reader EPUBs"
-msgstr ""
+msgstr "Reader EPUB"
 
 #: apps/reader/src/web-capture-client.ts
 msgid "Reader expected a web page."
-msgstr ""
+msgstr "Reader 需要的是网页。"
 
 #: apps/reader/src/LibraryTableHeader.tsx
 msgid "Reader fields"
-msgstr ""
+msgstr "Reader 字段"
 
 #: apps/extension/src/ConnectionPanel.tsx
 msgid "Reader has signed out."
-msgstr ""
+msgstr "Reader 已退出登录。"
 
 #: apps/extension/src/connection-view.ts
 msgid "Reader has signed out. Sign in again before saving; your draft is kept."
-msgstr ""
+msgstr "Reader 已退出登录。请先重新登录再保存；你的草稿已保留。"
 
 #: packages/migration/src/readwise-annotations.ts
 msgid "Reader highlights on documents outside this import (for example unsaved Feed)"
-msgstr ""
+msgstr "此次导入范围之外的文档上的 Reader 高亮（例如未保存的 Feed）"
 
 #: apps/reader/src/InspectorPane.tsx
 msgid "Reader keeps one writable editor for each source record."
-msgstr ""
+msgstr "Reader 为每条来源记录保留一个可写编辑器。"
 
 #: apps/extension/src/ConnectionPanel.tsx
 msgid "Reader needs its source and annotation definitions in this collection."
-msgstr ""
+msgstr "Reader 需要此集合中的来源和注释定义。"
 
 #. placeholder {0}: session.info.displayName
 #: apps/reader/src/connection-recovery.ts
 msgid "Reader needs your approval to open {0}."
-msgstr ""
+msgstr "Reader 需要你批准才能打开 {0}。"
 
 #: apps/reader/src/ImportDestination.tsx
 msgid "Reader needs your approval to write to this collection."
-msgstr ""
+msgstr "Reader 需要你批准才能写入此集合。"
 
 #: packages/migration/src/readwise-annotations.ts
 msgid "Reader notes on documents outside this import (for example unsaved Feed)"
-msgstr ""
+msgstr "此次导入范围之外的文档上的 Reader 笔记（例如未保存的 Feed）"
 
 #: packages/migration/src/readwise.ts
 msgid "Reader PDFs"
-msgstr ""
+msgstr "Reader PDF"
 
 #: apps/reader/src/web-capture-client.ts
 msgid "Reader received an incomplete capture response."
-msgstr ""
+msgstr "Reader 收到的捕获响应不完整。"
 
 #: apps/reader/src/web-capture-client.ts
 msgid "Reader received an invalid capture response."
-msgstr ""
+msgstr "Reader 收到的捕获响应无效。"
 
 #: packages/migration/src/readwise.ts
 msgid "Reader RSS items"
-msgstr ""
+msgstr "Reader RSS 条目"
 
 #: packages/migration/src/readwise.ts
 msgid "Reader tweets"
-msgstr ""
+msgstr "Reader 推文"
 
 #: packages/migration/src/readwise.ts
 msgid "Reader videos"
-msgstr ""
+msgstr "Reader 视频"
 
 #: apps/extension/src/use-extension-capture.ts
 msgid "Reader was not given site access."
-msgstr ""
+msgstr "Reader 未获得网站访问权限。"
 
 #: apps/reader/src/DockviewWorkspace.tsx
 msgctxt "DockviewWorkspace interface"
 msgid "Reader workspace"
-msgstr ""
+msgstr "Reader 工作区"
 
 #: apps/reader/src/connection-recovery.ts
 msgid "Reader’s access to this collection has changed. Review the updated access to continue."
-msgstr ""
+msgstr "Reader 对此集合的访问权限已更改。请审阅更新后的访问权限以继续。"
 
 #: apps/reader/src/LibraryCells.tsx
 msgctxt "reading status"
 msgid "Reading"
-msgstr ""
+msgstr "正在阅读"
 
 #: apps/reader/src/DocumentContextualToolbar.tsx
 msgctxt "DocumentContextualToolbar interface"
 msgid "Reading mode"
-msgstr ""
+msgstr "阅读模式"
 
 #: apps/reader/src/ReaderHeader.tsx
 msgctxt "ReaderHeader interface"
 msgid "Reading mode"
-msgstr ""
+msgstr "阅读模式"
 
 #. placeholder {0}: source.title
 #: apps/reader/src/LibraryCells.tsx
 msgid "Reading status of {0}"
-msgstr ""
+msgstr "{0} 的阅读状态"
 
 #: apps/reader/src/SourceImportDialog.tsx
 msgid "Reading the file’s details…"
-msgstr ""
+msgstr "正在读取文件详情…"
 
 #: apps/extension/src/CaptureApp.tsx
 msgid "Reading the page…"
-msgstr ""
+msgstr "正在读取页面…"
 
 #: packages/renderer-epub/src/readium-runtime.ts
 msgid "Readium cannot open an EPUB with an empty reading order."
-msgstr ""
+msgstr "Readium 无法打开阅读顺序为空的 EPUB。"
 
 #: packages/renderer-epub/src/readium-runtime.ts
 msgid "Readium could not parse the publication manifest."
-msgstr ""
+msgstr "Readium 无法解析出版物清单。"
 
 #: packages/renderer-epub/src/epub-locator.ts
 msgid "Readium returned an empty EPUB resource location."
-msgstr ""
+msgstr "Readium 返回了空的 EPUB 资源位置。"
 
 #: packages/renderer-epub/src/epub-locator.ts
 msgid "Readium returned an EPUB location outside the prepared publication."
-msgstr ""
+msgstr "Readium 返回了已准备好的出版物之外的 EPUB 位置。"
 
 #: packages/renderer-epub/src/readium-runtime.ts
 msgid "Readium returned an invalid {name}."
-msgstr ""
+msgstr "Readium 返回了无效的 {name}。"
 
 #: packages/renderer-epub/src/epub-locator.ts
 msgid "Readium returned an invalid EPUB resource location: {value}"
-msgstr ""
+msgstr "Readium 返回了无效的 EPUB 资源位置：{value}"
 
 #: packages/migration/src/readwise.ts
 msgid "Readwise articles (Instapaper, Pocket…)"
-msgstr ""
+msgstr "Readwise 文章（Instapaper、Pocket…）"
 
 #: packages/migration/src/readwise.ts
 msgid "Readwise books (Kindle, Apple Books…)"
-msgstr ""
+msgstr "Readwise 书籍（Kindle、Apple Books…）"
 
 #: packages/migration/src/readwise-annotations.ts
 msgid "Readwise books whose Reader document is outside this import (unsaved Feed, or removed from Reader)"
-msgstr ""
+msgstr "其 Reader 文档不在此次导入范围内的 Readwise 书籍（未保存的 Feed，或已从 Reader 中移除）"
 
 #: packages/migration/src/readwise-annotations.ts
 msgid "Readwise books without an ID skipped"
-msgstr ""
+msgstr "已跳过没有 ID 的 Readwise 书籍"
 
 #: packages/migration/src/readwise-annotations.ts
 msgid "Readwise highlight identity could not be reconciled; matching quote retained once, native record archived: {key}"
-msgstr ""
+msgstr "无法协调 Readwise 高亮标识；匹配的引文仅保留一次，原生记录已存档：{key}"
 
 #: packages/migration/src/readwise.ts
 msgid "Readwise highlights export: {message}"
-msgstr ""
+msgstr "Readwise 高亮导出：{message}"
 
 #: packages/migration/src/readwise-annotations.ts
 msgid "Readwise highlights without an ID or any text skipped"
-msgstr ""
+msgstr "已跳过既没有 ID 也没有任何文本的 Readwise 高亮"
 
 #: packages/migration/src/readwise-client.ts
 msgid "Readwise is rate-limiting requests. Stop and try again later."
-msgstr ""
+msgstr "Readwise 正在限制请求速率。请停止并稍后重试。"
 
 #: packages/migration/src/readwise-sources.ts
 msgid "Readwise no longer provides this source file. Scan again or use its full-file export."
-msgstr ""
+msgstr "Readwise 不再提供此来源文件。请重新扫描，或使用其完整文件导出。"
 
 #: packages/migration/src/readwise.ts
 msgid "Readwise podcasts"
-msgstr ""
+msgstr "Readwise 播客"
 
 #: packages/migration/src/readwise-client.ts
 msgid "Readwise rejected this token or account access."
-msgstr ""
+msgstr "Readwise 拒绝了此令牌或账户访问。"
 
 #: packages/migration/src/readwise-client.ts
 msgid "Readwise request failed. Check your connection or browser access; your token was not saved."
-msgstr ""
+msgstr "Readwise 请求失败。请检查网络连接或浏览器访问权限；你的令牌未被保存。"
 
 #: packages/migration/src/readwise-client.ts
 msgid "Readwise returned a repeated pagination cursor."
-msgstr ""
+msgstr "Readwise 返回了重复的分页游标。"
 
 #: packages/migration/src/readwise-client.ts
 msgid "Readwise returned an unexpected file host; download was refused."
-msgstr ""
+msgstr "Readwise 返回了意外的文件主机；已拒绝下载。"
 
 #: packages/migration/src/readwise-client.ts
 msgid "Readwise returned an unreadable response. Scan again later."
-msgstr ""
+msgstr "Readwise 返回了无法读取的响应。请稍后重新扫描。"
 
 #. placeholder {0}: String(response.status)
 #: packages/migration/src/readwise-client.ts
 msgid "Readwise returned HTTP {0}. No changes were made to Readwise."
-msgstr ""
+msgstr "Readwise 返回 HTTP {0}。未对 Readwise 做任何更改。"
 
 #: packages/migration/src/readwise.ts
 msgid "Readwise returned missing or duplicate identities. Scan again."
-msgstr ""
+msgstr "Readwise 返回了缺失或重复的标识。请重新扫描。"
 
 #: packages/migration/src/readwise.ts
 msgid "Readwise supplementals"
-msgstr ""
+msgstr "Readwise 补充内容"
 
 #: packages/migration/src/readwise-client.ts
 msgid "Readwise token has been cleared. Reconnect to continue."
-msgstr ""
+msgstr "Readwise 令牌已清除。请重新连接以继续。"
 
 #: packages/migration/src/readwise.ts
 msgid "Readwise tweets"
-msgstr ""
+msgstr "Readwise 推文"
 
 #: apps/reader/src/CitationEditor.tsx
 msgid "Ready"
-msgstr ""
+msgstr "就绪"
 
 #: apps/reader/src/LibraryNavigator.tsx
 msgctxt "LibraryNavigator interface"
 msgid "Recent"
-msgstr ""
+msgstr "最近"
 
 #: apps/reader/src/library-lenses.ts
 msgctxt "library lenses"
 msgid "Recently opened"
-msgstr ""
+msgstr "最近打开"
 
 #: apps/reader/src/LibraryWorkspace.tsx
 msgctxt "LibraryWorkspace sortFieldOptions"
 msgid "Recently opened"
-msgstr ""
+msgstr "最近打开"
 
 #: apps/reader/src/LibraryWorkspace.tsx
 msgctxt "LibraryWorkspace sortFieldOptions"
 msgid "Recently saved"
-msgstr ""
+msgstr "最近保存"
 
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "Recipient"
-msgstr ""
+msgstr "收件人"
 
 #: apps/reader/src/ConnectionLayout.tsx
 msgctxt "ConnectionLayout status or action"
 msgid "Reconnect collection"
-msgstr ""
+msgstr "重新连接集合"
 
 #: apps/extension/src/use-source-note.ts
 msgid "Reconnect the collection to save these details."
-msgstr ""
+msgstr "请重新连接集合以保存这些详情。"
 
 #: apps/extension/src/DiagnosticsPanel.tsx
 msgid "Record connection timings"
-msgstr ""
+msgstr "记录连接耗时"
 
 #: apps/extension/src/DiagnosticsPanel.tsx
 msgid "Record timings in this panel only. No page text, paths, queries, IDs or credentials are recorded. Nothing is uploaded. Stopping or closing clears the recording."
-msgstr ""
+msgstr "仅在此面板中记录耗时。不会记录页面文本、路径、查询、ID 或凭据，也不会上传任何内容。停止或关闭后将清除记录。"
 
 #: apps/reader/src/DraftRecoveryNotice.tsx
 msgid "Recovered changes saved on this device. Syncing to the collection…"
-msgstr ""
+msgstr "已将恢复的更改保存在此设备上。正在同步到集合…"
 
 #: packages/renderer-pdf/src/pdf-translations.ts
 msgctxt "PDF viewer panel"
 msgid "Redaction Sidebar"
-msgstr ""
+msgstr "涂黑侧边栏"
 
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "References"
-msgstr ""
+msgstr "参考文献"
 
 #: apps/reader/src/ImportPageView.tsx
 msgid "References, original files, notes, collections and native annotations."
-msgstr ""
+msgstr "参考文献、原始文件、笔记、集合和原生注释。"
 
 #: apps/extension/src/SavedHighlights.tsx
 msgid "Refresh"
-msgstr ""
+msgstr "刷新"
 
 #: apps/reader/src/LibraryAnnotationToolbar.tsx
 msgid "Refresh annotations"
-msgstr ""
+msgstr "刷新注释"
 
 #: apps/reader/src/CitationStructuredEditor.tsx
 msgid "Regenerate"
-msgstr ""
+msgstr "重新生成"
 
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "Regulation"
-msgstr ""
+msgstr "条例"
 
 #: apps/extension/src/connection-view.ts
 #: apps/reader/src/DeploymentUpdateNotice.tsx
 msgid "Reload Reader"
-msgstr ""
+msgstr "重新加载 Reader"
 
 #: apps/extension/src/ConnectionPanel.tsx
 msgid "Reload the page, then press the mdbase Reader toolbar button again. Some pages, such as the Chrome Web Store and browser settings, cannot be read by extensions."
-msgstr ""
+msgstr "请重新加载页面，然后再次点击 mdbase Reader 工具栏按钮。有些页面（例如 Chrome 网上应用店和浏览器设置）无法被扩展程序读取。"
 
 #: apps/reader/src/CitationAdditionalFields.tsx
 msgctxt "CitationAdditionalFields interface"
 msgid "Remove"
-msgstr ""
+msgstr "移除"
 
 #: apps/reader/src/CitationContributors.tsx
 msgctxt "CitationContributors interface"
 msgid "Remove"
-msgstr ""
+msgstr "移除"
 
 #: apps/reader/src/CitationTypedFieldEditors.tsx
 msgctxt "CitationTypedFieldEditors interface"
 msgid "Remove"
-msgstr ""
+msgstr "移除"
 
 #. placeholder {0}: source.title
 #: apps/reader/src/SourceRemovalDialog.tsx
