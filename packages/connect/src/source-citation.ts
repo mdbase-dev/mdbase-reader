@@ -72,7 +72,8 @@ async function unchangedCitationRevision(
     "read source before saving citation metadata",
   );
   const citation = current.effectiveFrontmatter["csl"];
-  if (!cslValuesEqual(citation, expectedCitation)) {
+  // `null` is the baseline for a record that had no `csl` when it was loaded.
+  if (!cslValuesEqual(citation ?? null, expectedCitation ?? null)) {
     throw new CitationChangedElsewhereError(citation);
   }
   return recordRevision(current.revision);

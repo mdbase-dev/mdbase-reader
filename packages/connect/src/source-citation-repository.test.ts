@@ -171,6 +171,28 @@ describe("Connect citation compare-and-save", () => {
     },
   );
 
+  it.each([
+    ["no citation", undefined, null],
+    ["an invalid citation", { broken: true }, { broken: true }],
+  ])("guards a save over %s with the raw loaded value", async (_, csl, expectedCitation) => {
+    const { repository, update, setCurrent } = fixture();
+    setCurrent(document({ id: "src_01", title: "Crime", csl }, "rev-4"));
+
+    await repository.updateCitation({ ...input, expectedCitation });
+
+    expect(update.mock.calls[0]?.[0].ifRevision).toBe("rev-4");
+  });
+
+  it("refuses to save over a citation added elsewhere after loading none", async () => {
+    const { repository, update, setCurrent } = fixture();
+    setCurrent(document({ id: "src_01", title: "Crime", csl: citation }));
+
+    await expect(
+      repository.updateCitation({ ...input, expectedCitation: null }),
+    ).rejects.toMatchObject({ code: "citation-changed-elsewhere", currentCitation: citation });
+    expect(update).not.toHaveBeenCalled();
+  });
+
   it("saves without a read or precondition when no baseline is supplied", async () => {
     const { repository, read, update } = fixture();
 

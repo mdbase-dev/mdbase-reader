@@ -5,6 +5,7 @@ import {
   citekeyForCitation,
   createSourceRecord,
   importSourceFile,
+  loadedCitation,
   normalizedSourceUrl,
   sameSourceUrl,
   planAnnotationDeletion,
@@ -443,8 +444,9 @@ export class ConnectWorkspaceGateway implements ReaderWorkspaceGateway {
   }
 
   async saveSourceCitation(source: Source, citation: unknown): Promise<Source> {
+    const expectedCitation = loadedCitation(source);
     const updated = await saveSourceCitation(this.sources, source, this.#library ?? [], citation, {
-      ...(source.citation ? { expectedCitation: source.citation } : {}),
+      ...(expectedCitation !== undefined ? { expectedCitation } : {}),
     });
     this.#replaceSource(updated);
     return updated;

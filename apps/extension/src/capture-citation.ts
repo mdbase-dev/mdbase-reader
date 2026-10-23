@@ -1,5 +1,6 @@
 import {
   citekeyForCitation,
+  loadedCitation,
   saveSourceCitation,
   type Source,
   type SourceSummary,
@@ -68,13 +69,14 @@ export async function saveCaptureCitation(
 ): Promise<Source> {
   const library = await neighbours;
   const id = citekeyForCitation(citation, library, source.id);
+  const expectedCitation = loadedCitation(source);
   return saveSourceCitation(
     collection.sources,
     source,
     library,
     { ...citation, id },
     {
-      ...(source.citation ? { expectedCitation: source.citation } : {}),
+      ...(expectedCitation !== undefined ? { expectedCitation } : {}),
     },
   );
 }

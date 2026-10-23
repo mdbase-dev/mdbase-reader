@@ -28,7 +28,10 @@ function sourceWithCitation(
   source: Source,
   input: Parameters<SourceRepository["updateCitation"]>[0],
 ): Source {
-  if (input.expectedCitation && !cslValuesEqual(source.citation, input.expectedCitation)) {
+  if (
+    input.expectedCitation !== undefined &&
+    !cslValuesEqual(source.citation ?? null, input.expectedCitation)
+  ) {
     throw new CitationChangedElsewhereError(source.citation);
   }
   const updated = {

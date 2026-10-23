@@ -52,6 +52,14 @@ export interface SourceSummary {
   readonly properties?: Readonly<Record<string, unknown>>;
 }
 
+/**
+ * The `csl` value as read, for guarding a save against outside edits: the raw value even when
+ * invalid, and `null` when the record had none. `undefined` when the record was not read whole.
+ */
+export function loadedCitation(source: SourceSummary): unknown {
+  return source.properties ? (source.properties["csl"] ?? null) : source.citation;
+}
+
 export interface Source extends SourceSummary {
   readonly cslProvenance?: CslProvenance;
   readonly body: string;
