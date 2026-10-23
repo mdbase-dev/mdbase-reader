@@ -48,7 +48,9 @@ describe("page citations", () => {
     const resolve = vi.spyOn(resolver, "resolveCitation");
     const fetch = vi
       .fn<typeof globalThis.fetch>()
-      .mockResolvedValue(Response.json([{ itemType: "webpage", title: "Old remote copy" }]));
+      .mockResolvedValue(
+        Response.json([{ itemType: "webpage", title: "Old remote copy", url: pageUrl }]),
+      );
     await citationForPage(page, pageUrl, {
       fetch,
       citoid: {},
@@ -218,6 +220,7 @@ describe("page citation identifiers", () => {
 });
 
 const item = {
+  url: pageUrl,
   itemType: "encyclopediaArticle",
   title: "Remote title",
   encyclopediaTitle: "Encyclopedia",
@@ -234,7 +237,7 @@ describe("page citation provider boundaries", () => {
             "https://doi.org/",
           )
             ? Response.json({})
-            : Response.json([{ itemType: "webpage", title: "Embedded title" }]),
+            : Response.json([{ itemType: "webpage", title: "Embedded title", url: pageUrl }]),
         ),
       );
     const preview = await citationForPage(embedded, pageUrl, {

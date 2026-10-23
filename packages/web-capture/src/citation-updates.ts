@@ -1,7 +1,7 @@
 import { doiFromText, doiFromUrl } from "./doi.js";
 import { remoteCitationClaims } from "./remote-citation.js";
 
-import type { Claim } from "./claims.js";
+import type { Claim, ProviderOutcome } from "./claims.js";
 import type { CitoidClaimsOptions } from "./provider-claims.js";
 
 export { claimValuesMatch } from "./claim-matching.js";
@@ -15,10 +15,13 @@ export interface CitationUpdateRequest {
   readonly query: string;
   readonly url?: string;
   readonly doi?: string;
+  /** Optional local comparison context for refresh only; never sent to a provider. */
+  readonly citation?: Readonly<Record<string, unknown>>;
 }
 
 export interface CitationUpdateOptions extends CitoidClaimsOptions {
   readonly deadlineMs?: number;
+  readonly onOutcome?: (outcome: ProviderOutcome) => void;
 }
 
 /** User-initiated only: sends a URL and identifiers, never the citation or collection. */
@@ -37,8 +40,16 @@ export async function lookUpCitationClaims(
       ? (doiFromText(request.doi) ?? (url ? doiFromUrl(url) : undefined))
       : doiFromText(query);
   const claims: Claim[] = [];
-  await remoteCitationClaims(url, doi, { ...options, citoid: options }, (batch) => {
+  const work = {
+    citation: refresh ? (request.citation ?? {}) : {},
+    ...(doi ? { identifiers: { doi } } : {}),
+    ...(url ? { url } : {}),
+  };
+  await remoteCitationClaims(url, doi, { ...options, citoid: options, work }, (batch) => {
     claims.push(...batch.claims);
+    if (batch.outcome) {
+      options.onOutcome?.(batch.outcome);
+    }
   });
   return claims;
 }

@@ -3,6 +3,7 @@ import { expect, it } from "vitest";
 
 import { pageClaims } from "./page-claims.js";
 import { citoidClaims, doiClaims } from "./provider-claims.js";
+import { pageWorkIdentity } from "./remote-work-identity.js";
 import { resolveCitation } from "./resolver.js";
 import { loadCitationCorpus } from "./test/citation-corpus.js";
 
@@ -47,12 +48,13 @@ async function wrongFields(entry: CorpusCase, remote: boolean): Promise<string[]
   if (remote) {
     const now = (): Date => new Date(entry.retrievedAt);
     const doi = page.identifiers?.doi;
+    const work = pageWorkIdentity(page, entry.url);
     if (doi && entry.doi) {
-      claims.push(...(await doiClaims(doi, { fetch: recorded(entry.doi), now })).claims);
+      claims.push(...(await doiClaims(doi, { fetch: recorded(entry.doi), now, work })).claims);
     }
     if (entry.citoid) {
       claims.push(
-        ...(await citoidClaims(entry.url, { fetch: recorded(entry.citoid), now })).claims,
+        ...(await citoidClaims(entry.url, { fetch: recorded(entry.citoid), now, work })).claims,
       );
     }
   }
@@ -114,7 +116,7 @@ const stillWrong: Record<string, { readonly page: string[]; readonly remote: str
   "arxiv-adam": { page: ["publisher"], remote: [] },
   "arxiv-xgboost": {
     page: ["publisher"],
-    remote: ["type", "title", "issued", "publisher", "DOI", "URL"],
+    remote: ["publisher"],
   },
   "blog-web-bloat": {
     page: ["type", "author", "issued"],

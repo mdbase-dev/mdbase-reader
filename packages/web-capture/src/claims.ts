@@ -47,7 +47,15 @@ export interface ClaimIdentifiers {
 export type ProviderName = "doi.org" | "citoid" | "translation-server";
 
 export type ProviderResult =
-  "ok" | "not-found" | "rate-limited" | "blocked" | "timeout" | "failed" | "cancelled";
+  | "ok"
+  | "mismatch"
+  | "uncertain"
+  | "not-found"
+  | "rate-limited"
+  | "blocked"
+  | "timeout"
+  | "failed"
+  | "cancelled";
 
 /** One remote lookup's outcome, for diagnostics. Never carries URLs, values or messages. */
 export interface ProviderOutcome {

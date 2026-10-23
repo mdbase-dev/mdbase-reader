@@ -77,6 +77,34 @@ describe("citation update claims", () => {
     expect(urls(opts)).toEqual(["https://doi.org/10.1234/known"]);
   });
 
+  it("checks refresh against optional local citation context and reports a mismatch", async () => {
+    const opts = options();
+    opts.fetch.mockResolvedValue(
+      Response.json([{ itemType: "book", title: "The Roman Empire", DOI: "10.1234/other" }]),
+    );
+    const outcomes = vi.fn();
+    const claims = await lookUpCitationClaims(
+      {
+        query: "refresh",
+        url: "https://example.org/work",
+        citation: { title: "A Study of Trees" },
+      },
+      { ...opts, onOutcome: outcomes },
+    );
+    expect(claims).toEqual([]);
+    expect(opts.fetch).toHaveBeenCalledOnce();
+    expect(outcomes).toHaveBeenCalledWith(expect.objectContaining({ result: "mismatch" }));
+  });
+
+  it("does not compare explicit searches with the current citation or stale option context", async () => {
+    const opts = options();
+    const claims = await lookUpCitationClaims(
+      { query: "10.1234/typed", citation: { title: "Unrelated" }, doi: "10.1234/current" },
+      { ...opts, work: { citation: { DOI: "10.1234/current" } } },
+    );
+    expect(claims.find((claim) => claim.field === "title")?.value).toBe("Registered");
+  });
+
   it("falls back to Citoid after registry failure without retrying the same DOI", async () => {
     const opts = options();
     opts.fetch.mockImplementation((url) =>

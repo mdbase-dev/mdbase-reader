@@ -125,7 +125,14 @@ async function requestDoiCitation(
   ) {
     throw new Error(`The DOI registry returned no bibliographic data for ${doi}.`);
   }
-  return { ...citation, DOI: doi };
+  return { ...citation, DOI: responseDoi(citation, doi) };
+}
+
+function responseDoi(citation: CitationDraft, requested: string): string {
+  // A defective response may identify another work. Do not manufacture equality with the request.
+  return (
+    doiFromText(typeof citation["DOI"] === "string" ? citation["DOI"] : undefined) ?? requested
+  );
 }
 
 /** doi.org passes some Crossref records through with Crossref's type names, not CSL's. */

@@ -2,6 +2,7 @@ import { afterEach, expect, it, vi } from "vitest";
 
 import { citationForPage as lookupPage } from "./page-citation.js";
 import { createProviderQueue } from "./provider-queue.js";
+import { remoteCitationClaims } from "./remote-citation.js";
 
 import type { ClaimBatch } from "./claims.js";
 
@@ -60,7 +61,12 @@ it("does not add another three seconds for a DOI discovered near the deadline", 
             () =>
               resolve(
                 Response.json([
-                  { itemType: "journalArticle", title: "Remote title", DOI: "10.1234/discovered" },
+                  {
+                    itemType: "journalArticle",
+                    title: "Remote title",
+                    DOI: "10.1234/discovered",
+                    url,
+                  },
                 ]),
               ),
             5_500,
@@ -117,16 +123,27 @@ it("never grants a second DOI a fresh three-second budget", async () => {
         ),
     )
     .mockResolvedValueOnce(
-      Response.json([{ itemType: "journalArticle", title: "Remote", DOI: "10.1234/other" }]),
+      Response.json([{ itemType: "journalArticle", title: "Remote", DOI: "10.1234/other", url }]),
     )
     .mockImplementation(() => new Promise(() => undefined));
-  const settled = citationForPage({ ...page, identifiers: { doi: "10.1234/work" } }, url, {
-    fetch,
-    citoid: {},
-    timeoutMs: 10_000,
-  });
+  // A speculative initial lookup is not a known page identifier. A confirmed URL record
+  // can discover a different DOI, but cannot replenish the spent registry budget.
+  const outcomes: ClaimBatch["outcome"][] = [];
+  const settled = remoteCitationClaims(
+    url,
+    "10.1234/work",
+    {
+      fetch,
+      queue: createProviderQueue(),
+      citoid: {},
+      work: { citation: {}, url },
+      timeoutMs: 10_000,
+    },
+    (batch) => outcomes.push(batch.outcome),
+  );
   await vi.advanceTimersByTimeAsync(3_000);
-  expect((await settled)?.outcomes).toMatchObject([
+  await settled;
+  expect(outcomes).toMatchObject([
     { provider: "doi.org", result: "not-found" },
     { provider: "citoid", result: "ok" },
     { provider: "doi.org", result: "timeout", elapsedMs: 500 },
