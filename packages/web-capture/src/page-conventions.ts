@@ -1,9 +1,11 @@
 import { cslDate } from "./csl-values.js";
 import { first, type MetaIndex } from "./meta-tags.js";
+import { bibliographicConventions } from "./page-conventions-bibliographic.js";
+import { editorialConventions } from "./page-conventions-editorial.js";
 
 import type { Claim } from "./claims.js";
 
-type AddConvention = (name: string, field: string, value: unknown, evidence: string) => void;
+export type AddConvention = (name: string, field: string, value: unknown, evidence: string) => void;
 
 /** Small platform translators, not guesses about an arbitrary site's author or publisher. */
 export function pageConventionClaims(
@@ -12,6 +14,7 @@ export function pageConventionClaims(
   meta: MetaIndex,
   observedAt: string,
   hasIssued: boolean,
+  nodes: readonly Readonly<Record<string, unknown>>[] = [],
 ): Claim[] {
   let url: URL;
   try {
@@ -24,12 +27,19 @@ export function pageConventionClaims(
   }
   const claims: Claim[] = [];
   const add: AddConvention = (name, field, value, evidence) => {
-    if (value !== undefined) {
+    if (
+      value !== undefined &&
+      value !== "" &&
+      !(Array.isArray(value) && !value.length) &&
+      JSON.stringify(value).length <= 16_384
+    ) {
       claims.push({ field, value, source: { kind: "site-adapter", name }, evidence, observedAt });
     }
   };
   githubRepositoryClaims(url, meta, add);
   mdnReferenceClaims(document, url, meta, hasIssued, add);
+  bibliographicConventions(document, url, meta, add);
+  editorialConventions(document, url, meta, nodes, add);
   return claims;
 }
 

@@ -26,8 +26,27 @@ export const articleJsonLdTypes = new Map([
   ["SatiricalArticle", "webpage"],
 ]);
 
+/** Specific schema.org work genres, shared by graph selection and claim emission. */
+export const linkedWorkTypes = new Map([
+  ["Book", "book"],
+  ["Chapter", "chapter"],
+  ["Thesis", "thesis"],
+  ["Report", "report"],
+  ["Dataset", "dataset"],
+  ["VideoObject", "motion_picture"],
+  ["Legislation", "legislation"],
+  ["PodcastEpisode", "broadcast"],
+]);
+
 const bibliographicTypes = new Map([
   ["report", "report"],
+  ["working paper", "report"],
+  ["redif paper", "report"],
+  ["patent", "patent"],
+  ["legislation", "legislation"],
+  ["dataset", "dataset"],
+  ["thesis", "thesis"],
+  ["podcast episode", "broadcast"],
   ["technical report", "report"],
   ["book", "book"],
   ["chapter", "chapter"],
