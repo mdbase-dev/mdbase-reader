@@ -6,6 +6,7 @@ import type { CitoidClaimsOptions } from "./provider-claims.js";
 
 export { claimSourceLabel, parseClaimSourceLabel } from "./claims.js";
 export { resolveCitation } from "./resolver.js";
+export { pageClaims } from "./page-claims.js";
 export type { Claim, CitationSuggestion } from "./claims.js";
 
 export interface CitationUpdateRequest {

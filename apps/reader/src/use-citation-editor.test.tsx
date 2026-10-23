@@ -3,6 +3,8 @@
 import {
   CitationChangedElsewhereError,
   collectionId,
+  fileId,
+  fileRevision,
   recordRevision,
   sourceId,
   type Source,
@@ -11,6 +13,7 @@ import { act, useEffect } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
+import { archivedCitationClaims, MAX_CITATION_ARCHIVE_BYTES } from "./archived-citation-claims.js";
 import { CitationLookup } from "./CitationLookup.js";
 import { CitationProvenance } from "./CitationProvenance.js";
 import { CitationSaveConflict } from "./CitationSaveConflict.js";
@@ -55,7 +58,31 @@ const explained: Source = {
 const saveSourceCitation = vi.fn<ReaderWorkspaceGateway["saveSourceCitation"]>();
 const citationClaims = vi.fn<NonNullable<ReaderWorkspaceGateway["citationClaims"]>>();
 const resolveCitation = vi.fn<NonNullable<ReaderWorkspaceGateway["resolveCitation"]>>();
+const readFile = vi.fn<ReaderWorkspaceGateway["readFile"]>();
+const archivedSource: Source = {
+  ...source,
+  url: citation.URL,
+  documents: [
+    {
+      fileId: fileId("file-archive"),
+      file: "files/example.archive.html",
+      revision: fileRevision(`sha256:${"a".repeat(64)}`),
+      mediaType: "text/html",
+      role: "archive",
+    },
+  ],
+  frontmatter: { ...source.frontmatter, capture: { captured_at: "2026-08-10T11:59:00Z" } },
+};
+const archiveHtml = '<meta name="citation_publisher" content="Archived press">';
+function archiveFile(html = archiveHtml): Awaited<ReturnType<ReaderWorkspaceGateway["readFile"]>> {
+  return {
+    path: "files/example.archive.html",
+    mediaType: "text/html",
+    bytes: new TextEncoder().encode(html),
+  };
+}
 const gateway = {
+  readFile,
   saveSourceCitation,
   citationClaims,
   resolveCitation,
@@ -123,6 +150,8 @@ beforeEach(() => {
   resolveCitation.mockReset();
   citationClaims.mockReset();
   citationClaims.mockResolvedValue([]);
+  readFile.mockReset();
+  readFile.mockResolvedValue(archiveFile());
   container = document.createElement("div");
   document.body.append(container);
   root = createRoot(container);
@@ -130,6 +159,7 @@ beforeEach(() => {
 afterEach(async () => {
   await act(async () => root.unmount());
   container.remove();
+  vi.restoreAllMocks();
 });
 
 // eslint-disable-next-line max-lines-per-function
@@ -322,6 +352,189 @@ describe("citation provenance and lookups", () => {
     await act(async () => controller.setDraft("{"));
     await act(async () => controller.setDraft(JSON.stringify({ ...citation, publisher: "Typed" })));
     expect(controller.provenance["title"]).toEqual(explained.cslProvenance?.["title"]);
+  });
+});
+
+describe("citation lookup from the source archive", () => {
+  it("reviews archive fills alongside remote claims, without overwriting the draft", async () => {
+    citationClaims.mockResolvedValue([claim("volume", "7")]);
+    await render(archivedSource);
+    await find();
+    expect(readFile).toHaveBeenCalledExactlyOnceWith(
+      archivedSource.documents[0]!.file,
+      archivedSource.documents[0]!.revision,
+      { signal: citationClaims.mock.lastCall?.[1]?.signal, maxBytes: MAX_CITATION_ARCHIVE_BYTES },
+    );
+    expect(controller.suggestions).toContainEqual(
+      expect.objectContaining({
+        field: "publisher",
+        proposed: "Archived press",
+        reason: "fill",
+        source: { kind: "page", signal: "highwire" },
+      }),
+    );
+    expect(controller.suggestions).toContainEqual(
+      expect.objectContaining({ field: "volume", proposed: "7" }),
+    );
+    expect(controller.assessment.value).toEqual(citation);
+    expect(saveSourceCitation).not.toHaveBeenCalled();
+    await click("Accept Publisher");
+    expect(controller.assessment.value?.["publisher"]).toBe("Archived press");
+    expect(controller.provenance["publisher"]).toEqual({
+      value: "Archived press",
+      source: "page:highwire",
+      agreed: ["citation_publisher"],
+    });
+    expect(saveSourceCitation).not.toHaveBeenCalled();
+  });
+
+  it("does not read readable or primary documents when no archive exists", async () => {
+    citationClaims.mockResolvedValue([claim("publisher", "Remote press")]);
+    await render({
+      ...archivedSource,
+      documents: archivedSource.documents.map((item) => ({ ...item, role: "readable" })),
+    });
+    await find();
+    expect(readFile).not.toHaveBeenCalled();
+    expect(controller.suggestions).toEqual([
+      expect.objectContaining({ field: "publisher", proposed: "Remote press" }),
+    ]);
+  });
+
+  it("can use the archive when remote lookup fails", async () => {
+    citationClaims.mockRejectedValue(new Error("Offline"));
+    await render(archivedSource);
+    await find();
+    expect(controller.resolutionError).toBeNull();
+    expect(controller.suggestions).toContainEqual(
+      expect.objectContaining({ field: "publisher", proposed: "Archived press" }),
+    );
+  });
+});
+
+describe("bounded archive lookups", () => {
+  it.each(["oversized", "invalid encoding", "unreadable"])(
+    "keeps remote lookup working with an %s archive",
+    async (kind) => {
+      if (kind === "unreadable") {
+        readFile.mockRejectedValue(new Error("Missing archive"));
+      } else {
+        readFile.mockResolvedValue({
+          ...archiveFile(),
+          bytes:
+            kind === "oversized"
+              ? new Uint8Array(MAX_CITATION_ARCHIVE_BYTES + 1)
+              : new Uint8Array([0xff]),
+        });
+      }
+      citationClaims.mockResolvedValue([claim("publisher", "Remote press")]);
+      await render(archivedSource);
+      await find();
+      expect(controller.resolutionError).toBeNull();
+      expect(controller.suggestions).toEqual([
+        expect.objectContaining({ field: "publisher", proposed: "Remote press" }),
+      ]);
+    },
+  );
+
+  it("tolerates broken JSON-LD and incomplete HTML", async () => {
+    readFile.mockResolvedValue(
+      archiveFile(`${archiveHtml}<script type="application/ld+json">{broken</script><p`),
+    );
+    await render(archivedSource);
+    await find();
+    expect(controller.resolutionError).toBeNull();
+    expect(controller.suggestions).toContainEqual(
+      expect.objectContaining({ field: "publisher", proposed: "Archived press" }),
+    );
+  });
+
+  it("aborts the archive read and ignores late data when the source changes", async () => {
+    let finish!: (file: Awaited<ReturnType<ReaderWorkspaceGateway["readFile"]>>) => void;
+    readFile.mockReturnValue(
+      new Promise((resolve) => {
+        finish = resolve;
+      }),
+    );
+    await render(archivedSource);
+    await find();
+    const signal = readFile.mock.lastCall?.[2]?.signal;
+    expect(signal?.aborted).toBe(false);
+    await render({ ...source, id: sourceId("src_two") });
+    expect(signal?.aborted).toBe(true);
+    await act(async () => finish(archiveFile()));
+    expect(controller.suggestions).toEqual([]);
+    expect(controller.resolutionStatus).toBe("idle");
+  });
+});
+
+describe("archived citation evidence", () => {
+  it.each([false, true])(
+    "uses capture time and prefers document-specific provenance: %s",
+    async (documentTime) => {
+      const captured = {
+        ...archivedSource,
+        frontmatter: {
+          ...archivedSource.frontmatter,
+          ...(documentTime
+            ? {
+                documents: [
+                  {
+                    file_id: "file-archive",
+                    retrieved_at: "2026-08-09T00:00:00Z",
+                    origin_url: "https://original.example",
+                  },
+                ],
+              }
+            : {}),
+        },
+      };
+      const claims = await archivedCitationClaims(
+        gateway,
+        captured,
+        citation.URL,
+        new AbortController().signal,
+      );
+      expect(claims.find(({ field }) => field === "publisher")).toMatchObject({
+        value: "Archived press",
+        source: { kind: "page", signal: "highwire" },
+        observedAt: documentTime ? "2026-08-09T00:00:00Z" : "2026-08-10T11:59:00Z",
+      });
+      expect(claims).toContainEqual(
+        expect.objectContaining({
+          field: "URL",
+          value: documentTime ? "https://original.example" : citation.URL,
+        }),
+      );
+    },
+  );
+
+  it("only gives DOMParser non-loading metadata and preserves JSON-LD evidence", async () => {
+    const parse = vi.spyOn(DOMParser.prototype, "parseFromString");
+    readFile.mockResolvedValue(
+      archiveFile(`
+      <link rel="stylesheet canonical" href="https://network.example/style.css">
+      <meta http-equiv="refresh" content="0;url=https://network.example">
+      <img src="https://network.example/image" onerror="alert(1)">
+      <iframe src="https://network.example/frame"></iframe>
+      <style>@import "https://network.example/style";</style>
+      <script src="https://network.example/code">throw new Error("executed");</script>
+      <script type="application/ld+json" src="https://network.example/data">
+        {"@type":"Article","publisher":{"name":"JSON-LD press"}}
+      </script>`),
+    );
+    await render(archivedSource);
+    await find();
+    const markup = String(parse.mock.calls[0]?.[0]);
+    expect(markup).not.toMatch(/<img|<iframe|<style|src=|onerror=|http-equiv=|rel="stylesheet"/u);
+    expect(document.querySelector('script[type="application/ld+json"]')).toBeNull();
+    expect(controller.suggestions).toContainEqual(
+      expect.objectContaining({
+        field: "publisher",
+        proposed: "JSON-LD press",
+        source: { kind: "page", signal: "json-ld" },
+      }),
+    );
   });
 });
 
