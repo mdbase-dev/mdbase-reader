@@ -5913,483 +5913,483 @@ msgstr "移除"
 #. placeholder {0}: source.title
 #: apps/reader/src/SourceRemovalDialog.tsx
 msgid "Remove “{0}”?"
-msgstr ""
+msgstr "要移除“{0}”吗？"
 
 #. placeholder {0}: String(index + 1)
 #: apps/reader/src/CitationContributors.tsx
 msgid "Remove {itemLabel} {0}"
-msgstr ""
+msgstr "移除 {itemLabel} {0}"
 
 #: apps/reader/src/CitationTypedFieldEditors.tsx
 msgid "Remove {key}"
-msgstr ""
+msgstr "移除 {key}"
 
 #: apps/reader/src/CitationAdditionalFields.tsx
 msgid "Remove {label}"
-msgstr ""
+msgstr "移除 {label}"
 
 #: apps/reader/src/LibraryConditionsEditor.tsx
 msgctxt "LibraryConditionsEditor interface"
 msgid "Remove condition"
-msgstr ""
+msgstr "移除条件"
 
 #: apps/reader/src/reader-command-list.ts
 msgid "Remove current source…"
-msgstr ""
+msgstr "移除当前来源…"
 
 #: apps/reader/src/SourceRemovalDialog.tsx
 msgctxt "SourceRemovalDialog interface"
 msgid "Remove source"
-msgstr ""
+msgstr "移除来源"
 
 #: apps/reader/src/LibraryRowMenu.tsx
 msgid "Remove source…"
-msgstr ""
+msgstr "移除来源…"
 
 #. placeholder {0}: String(index + 1)
 #: apps/reader/src/CitationTypedFieldEditors.tsx
 msgid "Remove value {0}"
-msgstr ""
+msgstr "移除值 {0}"
 
 #: apps/reader/src/SourceRemovalDialog.tsx
 msgctxt "SourceRemovalDialog interface"
 msgid "Removing…"
-msgstr ""
+msgstr "正在移除…"
 
 #: apps/reader/src/LibraryRowMenu.tsx
 msgid "Rename…"
-msgstr ""
+msgstr "重命名…"
 
 #: apps/reader/src/reader-command-list.ts
 msgctxt "reader command list"
 msgid "Reopen closed tab"
-msgstr ""
+msgstr "重新打开已关闭的标签页"
 
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "Report"
-msgstr ""
+msgstr "报告"
 
 #: apps/reader/src/citation-form-model.ts
 msgctxt "CSL item type"
 msgid "Report"
-msgstr ""
+msgstr "报告"
 
 #: apps/reader/src/ReaderHeader.tsx
 msgid "Request local network access and connect directly to the mdbase relay on this computer."
-msgstr ""
+msgstr "请求本地网络访问权限，并直接连接到这台电脑上的 mdbase 中继。"
 
 #: apps/reader/src/DockPaneActions.tsx
 msgid "Reset arrangement (keep tabs)"
-msgstr ""
+msgstr "重置排列（保留标签页）"
 
 #: apps/reader/src/LibraryWorkspace.tsx
 msgid "Reset columns and layout"
-msgstr ""
+msgstr "重置列和布局"
 
 #: apps/reader/src/LibraryAnnotationToolbar.tsx
 msgid "Reset columns and sort"
-msgstr ""
+msgstr "重置列和排序"
 
 #: apps/reader/src/reader-command-list.ts
 msgid "Reset pane arrangement"
-msgstr ""
+msgstr "重置窗格排列"
 
 #: apps/reader/src/dockview-menus.ts
 msgid "Reset pane arrangement (keep tabs)"
-msgstr ""
+msgstr "重置窗格排列（保留标签页）"
 
 #: apps/reader/src/LibraryTableHeader.tsx
 msgid "Reset width"
-msgstr ""
+msgstr "重置宽度"
 
 #: apps/reader/src/LibraryTableHeader.tsx
 msgid "Resize {label} column"
-msgstr ""
+msgstr "调整“{label}”列的大小"
 
 #: apps/reader/src/use-annotation-deletion.ts
 msgid "Resolve the save problem or finish the other editor's deletion check first."
-msgstr ""
+msgstr "请先解决保存问题，或等待另一个编辑器完成删除检查。"
 
 #: apps/reader/src/source-draft-session.ts
 msgid "Resolve the source note conflict before continuing."
-msgstr ""
+msgstr "请先解决来源笔记冲突，然后再继续。"
 
 #: apps/reader/src/AnnotationEditor.tsx
 msgid "Restore"
-msgstr ""
+msgstr "恢复"
 
 #: apps/extension/src/CaptureApp.tsx
 msgid "Restored your unsaved note from earlier."
-msgstr ""
+msgstr "已恢复你之前未保存的笔记。"
 
 #: apps/extension/src/NotePanel.tsx
 msgid "Restored your unsaved text from earlier."
-msgstr ""
+msgstr "已恢复你之前未保存的文本。"
 
 #: apps/reader/src/AnnotationCard.tsx
 msgctxt "AnnotationCard interface"
 msgid "Resume edits"
-msgstr ""
+msgstr "继续编辑"
 
 #: apps/reader/src/ImportReview.tsx
 msgctxt "ImportReview interface"
 msgid "Resume import"
-msgstr ""
+msgstr "继续导入"
 
 #: apps/reader/src/AnnotationComposer.tsx
 msgid "Resume unfinished annotation"
-msgstr ""
+msgstr "继续未完成的注释"
 
 #: apps/extension/src/CollectionSection.tsx
 #: apps/extension/src/connection-view.ts
 #: apps/extension/src/ConnectionPanel.tsx
 msgid "Retry connection"
-msgstr ""
+msgstr "重试连接"
 
 #: apps/reader/src/ReaderHeader.tsx
 msgid "Retry local access"
-msgstr ""
+msgstr "重试本地访问"
 
 #: apps/extension/src/ConnectionPanel.tsx
 #: apps/extension/src/NotePanel.tsx
 #: apps/reader/src/SourceNoteEditor.tsx
 msgid "Retry save"
-msgstr ""
+msgstr "重试保存"
 
 #: apps/reader/src/AnnotationEditor.tsx
 msgctxt "AnnotationEditor interface"
 msgid "Retry save"
-msgstr ""
+msgstr "重试保存"
 
 #: apps/extension/src/ConnectionPanel.tsx
 msgid "Retry Save to check for an existing source before creating anything else."
-msgstr ""
+msgstr "请重试“保存”，以便在创建任何其他内容之前检查是否已存在该来源。"
 
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "Review"
-msgstr ""
+msgstr "评述"
 
 #: apps/extension/src/ConnectionPanel.tsx
 msgid "Review access"
-msgstr ""
+msgstr "审阅访问权限"
 
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "Review book"
-msgstr ""
+msgstr "书评"
 
 #: apps/reader/src/SourceDetails.tsx
 msgid "Review citation"
-msgstr ""
+msgstr "审阅引文"
 
 #: apps/reader/src/ImportDestination.tsx
 msgid "Review collection access"
-msgstr ""
+msgstr "审阅集合访问权限"
 
 #: apps/reader/src/CitationLookup.tsx
 msgid "Review found metadata"
-msgstr ""
+msgstr "审阅找到的元数据"
 
 #: apps/reader/src/connection-recovery.ts
 msgid "Review the Reader definitions before they are installed."
-msgstr ""
+msgstr "请在安装前审阅 Reader 定义。"
 
 #: apps/reader/src/CitationEditor.tsx
 msgid "Review the suggested details before saving."
-msgstr ""
+msgstr "保存前请审阅建议的详情。"
 
 #: apps/reader/src/ConnectionLayout.tsx
 msgid "Review updated access"
-msgstr ""
+msgstr "审阅更新后的访问权限"
 
 #: apps/reader/src/ImportReview.tsx
 msgid "Review what will be imported"
-msgstr ""
+msgstr "审阅将要导入的内容"
 
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "Reviewed author"
-msgstr ""
+msgstr "被评作者"
 
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "Reviewed genre"
-msgstr ""
+msgstr "被评体裁"
 
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "Reviewed title"
-msgstr ""
+msgstr "被评标题"
 
 #: apps/extension/src/CaptureApp.tsx
 msgid "Right-click a selection to highlight it with a comment"
-msgstr ""
+msgstr "右键点击所选内容，即可高亮并添加评论"
 
 #: apps/extension/src/ShortcutList.tsx
 msgid "Right-click the selection"
-msgstr ""
+msgstr "右键点击所选内容"
 
 #: packages/renderer-pdf/src/pdf-translations.ts
 msgctxt "PDF viewer rotate"
 msgid "Rotate Clockwise"
-msgstr ""
+msgstr "顺时针旋转"
 
 #: packages/renderer-pdf/src/pdf-translations.ts
 msgctxt "PDF viewer rotate"
 msgid "Rotate Counter-Clockwise"
-msgstr ""
+msgstr "逆时针旋转"
 
 #: apps/reader/src/DisplayMenu.tsx
 msgctxt "DisplayMenu interface"
 msgid "Sans"
-msgstr ""
+msgstr "无衬线"
 
 #: apps/electron/src/main.ts
 msgctxt "Save an exported file"
 msgid "Save"
-msgstr ""
+msgstr "保存"
 
 #. placeholder {0}: modifierKey()
 #: apps/extension/src/SaveBar.tsx
 msgid "Save ({0}+Enter)"
-msgstr ""
+msgstr "保存（{0}+Enter）"
 
 #. placeholder {0}: String(loadedSelected.length)
 #: apps/extension/src/PostPicker.tsx
 msgid "Save {0} selected"
-msgstr ""
+msgstr "保存所选的 {0} 篇帖子"
 
 #: apps/reader/src/SourceAddDialog.tsx
 msgid "Save a web page or PDF link, look up a work by DOI, arXiv ID or ISBN, or add a file from your device."
-msgstr ""
+msgstr "保存网页或 PDF 链接，通过 DOI、arXiv ID 或 ISBN 查找作品，或从你的设备添加文件。"
 
 #: apps/reader/src/AnnotationComposer.tsx
 msgctxt "AnnotationComposer interface"
 msgid "Save area"
-msgstr ""
+msgstr "保存区域"
 
 #: apps/extension/src/WelcomeApp.tsx
 msgid "Save articles and PDFs to your mdbase collection as you read, highlight passages, and find them again in Reader."
-msgstr ""
+msgstr "阅读时将文章和 PDF 保存到你的 mdbase 集合，高亮段落，并在 Reader 中再次找到它们。"
 
 #: apps/reader/src/LibraryViewSaveDialog.tsx
 msgid "Save as a new view"
-msgstr ""
+msgstr "另存为新视图"
 
 #: apps/reader/src/LibraryAnnotationToolbar.tsx
 #: apps/reader/src/LibraryWorkspace.tsx
 msgid "Save as new view…"
-msgstr ""
+msgstr "另存为新视图…"
 
 #: apps/reader/src/CitationEditor.tsx
 msgctxt "CitationEditor interface"
 msgid "Save changes"
-msgstr ""
+msgstr "保存更改"
 
 #: apps/reader/src/SourceAddDialog.tsx
 msgid "Save citation only"
-msgstr ""
+msgstr "仅保存引文"
 
 #: apps/extension/src/SavedHighlights.tsx
 msgid "Save comment"
-msgstr ""
+msgstr "保存评论"
 
 #: apps/reader/src/AnnotationPanelActions.tsx
 msgctxt "AnnotationPanelActions interface"
 msgid "Save comment"
-msgstr ""
+msgstr "保存评论"
 
 #: apps/electron/src/main.ts
 msgid "Save export"
-msgstr ""
+msgstr "保存导出"
 
 #: apps/extension/src/HighlightFields.tsx
 msgid "Save highlight"
-msgstr ""
+msgstr "保存高亮"
 
 #: apps/reader/src/AnnotationComposer.tsx
 msgctxt "AnnotationComposer interface"
 msgid "Save highlight"
-msgstr ""
+msgstr "保存高亮"
 
 #: apps/extension/src/background.ts
 msgid "Save highlight to mdbase Reader"
-msgstr ""
+msgstr "将高亮保存到 mdbase Reader"
 
 #: apps/extension/src/HighlightFields.tsx
 msgid "Save in {colorLabel} ({shortcut}, or {modifier}+Enter)"
-msgstr ""
+msgstr "保存为{colorLabel}（{shortcut}，或 {modifier}+Enter）"
 
 #: apps/extension/src/HighlightFields.tsx
 msgid "Save in {colorLabel} ({shortcut})"
-msgstr ""
+msgstr "保存为{colorLabel}（{shortcut}）"
 
 #: apps/reader/src/LibraryViewSaveDialog.tsx
 msgid "Save library view"
-msgstr ""
+msgstr "保存文献库视图"
 
 #: apps/reader/src/DraftRecoveryNotice.tsx
 msgid "Save my draft instead"
-msgstr ""
+msgstr "改为保存我的草稿"
 
 #: apps/extension/src/OptionsApp.tsx
 msgid "Save new sources to"
-msgstr ""
+msgstr "将新来源保存到"
 
 #: apps/extension/src/ConnectionPanel.tsx
 msgid "Save not confirmed"
-msgstr ""
+msgstr "保存未确认"
 
 #: apps/extension/src/CaptureApp.tsx
 msgid "Save not confirmed. Retry to check its outcome."
-msgstr ""
+msgstr "保存未确认。请重试以检查结果。"
 
 #: apps/extension/src/SaveBar.tsx
 msgid "Save page"
-msgstr ""
+msgstr "保存页面"
 
 #: apps/extension/src/HighlightFields.tsx
 msgid "Save page and highlight"
-msgstr ""
+msgstr "保存页面并高亮"
 
 #: apps/extension/src/SaveBar.tsx
 msgid "Save PDF"
-msgstr ""
+msgstr "保存 PDF"
 
 #: apps/extension/src/SaveBar.tsx
 msgid "Save post"
-msgstr ""
+msgstr "保存帖子"
 
 #: apps/reader/src/SourceImportDialog.tsx
 msgid "Save the citation found for this file:"
-msgstr ""
+msgstr "保存为此文件找到的引文："
 
 #: apps/extension/src/shell-messages.ts
 msgid "Save the page you are reading and revisit your mdbase annotations."
-msgstr ""
+msgstr "保存你正在阅读的页面，并重新查看你的 mdbase 注释。"
 
 #: apps/extension/src/CaptureApp.tsx
 msgid "Save the PDF, then open it there."
-msgstr ""
+msgstr "请先保存 PDF，然后在那里打开它。"
 
 #: apps/extension/src/NotePanel.tsx
 msgid "Save title and tags"
-msgstr ""
+msgstr "保存标题和标签"
 
 #: apps/extension/src/ConnectionPanel.tsx
 #: apps/extension/src/WelcomeApp.tsx
 msgid "Save to collection"
-msgstr ""
+msgstr "保存到集合"
 
 #: apps/extension/src/shell-messages.ts
 msgid "Save to mdbase Reader"
-msgstr ""
+msgstr "保存到 mdbase Reader"
 
 #: apps/reader/src/LibraryAnnotationToolbar.tsx
 #: apps/reader/src/LibraryWorkspace.tsx
 msgid "Save view"
-msgstr ""
+msgstr "保存视图"
 
 #: apps/reader/src/LibraryViewSaveDialog.tsx
 msgctxt "LibraryViewSaveDialog interface"
 msgid "Save view"
-msgstr ""
+msgstr "保存视图"
 
 #: apps/extension/src/WelcomeApp.tsx
 msgid "Save what you are reading"
-msgstr ""
+msgstr "保存你正在阅读的内容"
 
 #: apps/reader/src/source-addition-flow.ts
 msgid "Save X posts from their live page using the mdbase Reader extension."
-msgstr ""
+msgstr "使用 mdbase Reader 扩展，从实时页面保存 X 帖子。"
 
 #: apps/extension/src/NotePanel.tsx
 #: apps/extension/src/SaveBar.tsx
 #: apps/reader/src/AnnotationEditor.tsx
 msgid "Saved"
-msgstr ""
+msgstr "已保存"
 
 #: apps/reader/src/SourceNoteEditor.tsx
 msgctxt "SourceNoteEditor status or action"
 msgid "Saved"
-msgstr ""
+msgstr "已保存"
 
 #: apps/reader/src/RenderedSourceDocument.tsx
 msgid "Saved document · original headings below are unchanged"
-msgstr ""
+msgstr "已保存的文档 · 下方的原始标题保持不变"
 
 #. placeholder {0}: highlights.length ? <span>{highlights.length}</span> : null
 #: apps/extension/src/SavedHighlights.tsx
 msgid "Saved highlights {0}"
-msgstr ""
+msgstr "已保存的高亮 {0}"
 
 #: packages/migration/src/readwise.ts
 msgid "Saved HTML can reference external images. Those assets are not downloaded. Keep this tab open; reconnect and rescan to resume after closing it."
-msgstr ""
+msgstr "已保存的 HTML 可能引用外部图片。这些资源不会被下载。请保持此标签页打开；关闭后需重新连接并重新扫描才能继续。"
 
 #: apps/extension/src/page-badge.ts
 msgid "Saved in mdbase Reader"
-msgstr ""
+msgstr "已保存到 mdbase Reader"
 
 #: apps/reader/src/SourceNoteEditor.tsx
 msgctxt "SourceNoteEditor status or action"
 msgid "Saved locally"
-msgstr ""
+msgstr "已在本地保存"
 
 #: apps/reader/src/connect-workspace.ts
 msgid "Saved mdbase views are unavailable for this collection."
-msgstr ""
+msgstr "此集合不支持已保存的 mdbase 视图。"
 
 #: apps/reader/src/ReaderHeader.tsx
 msgid "Saved on this device; waiting for sync"
-msgstr ""
+msgstr "已保存在此设备上；等待同步"
 
 #. placeholder {0}: problemMessage(reason)
 #: apps/extension/src/use-extension-capture.ts
 msgid "Saved safely. Could not refresh highlights on this page: {0}. Retry refreshing highlights; do not save again."
-msgstr ""
+msgstr "已安全保存。无法刷新此页面上的高亮：{0}。请重试刷新高亮；不要再次保存。"
 
 #: apps/reader/src/SourceNoteEditor.tsx
 msgid "Saved to your collection"
-msgstr ""
+msgstr "已保存到你的集合"
 
 #: apps/reader/src/LibraryWorkspace.tsx
 msgctxt "LibraryWorkspace formatFilterOptions"
 msgid "Saved web page"
-msgstr ""
+msgstr "已保存的网页"
 
 #: apps/reader/src/library-lenses.ts
 msgctxt "library lenses"
 msgid "Saved web pages"
-msgstr ""
+msgstr "已保存的网页"
 
 #: apps/extension/src/NotePanel.tsx
 msgid "Saved with the source. Keep writing here after saving, or in Reader."
-msgstr ""
+msgstr "随来源一起保存。保存后可继续在这里书写，也可在 Reader 中书写。"
 
 #: apps/extension/src/ConnectionPanel.tsx
 msgid "Saved. This page could not be updated."
-msgstr ""
+msgstr "已保存。无法更新此页面。"
 
 #: apps/extension/src/CaptureApp.tsx
 msgid "Saving source record…"
-msgstr ""
+msgstr "正在保存来源记录…"
 
 #: apps/reader/src/source-addition-flow.ts
 msgctxt "source addition flow"
 msgid "Saving the PDF…"
-msgstr ""
+msgstr "正在保存 PDF…"
 
 #: apps/reader/src/source-addition-flow.ts
 msgid "Saving the source…"
-msgstr ""
+msgstr "正在保存来源…"
 
 #. placeholder {0}: collection.name
 #: apps/extension/src/ExtensionHeader.tsx
 msgid "Saving to {0}. Change collection"
-msgstr ""
+msgstr "正在保存到 {0}。更改集合"
 
 #: apps/extension/src/CaptureApp.tsx
 #: apps/extension/src/NotePanel.tsx
@@ -6398,55 +6398,55 @@ msgstr ""
 #: apps/extension/src/SavedHighlights.tsx
 #: apps/reader/src/AnnotationEditor.tsx
 msgid "Saving…"
-msgstr ""
+msgstr "正在保存…"
 
 #: apps/reader/src/AnnotationComposer.tsx
 msgctxt "AnnotationComposer interface"
 msgid "Saving…"
-msgstr ""
+msgstr "正在保存…"
 
 #: apps/reader/src/AnnotationEditor.tsx
 msgctxt "AnnotationEditor interface"
 msgid "Saving…"
-msgstr ""
+msgstr "正在保存…"
 
 #: apps/reader/src/AnnotationPanelActions.tsx
 msgctxt "AnnotationPanelActions interface"
 msgid "Saving…"
-msgstr ""
+msgstr "正在保存…"
 
 #: apps/reader/src/CitationEditor.tsx
 msgctxt "CitationEditor interface"
 msgid "Saving…"
-msgstr ""
+msgstr "正在保存…"
 
 #: apps/reader/src/LibraryViewSaveDialog.tsx
 msgctxt "LibraryViewSaveDialog interface"
 msgid "Saving…"
-msgstr ""
+msgstr "正在保存…"
 
 #: apps/reader/src/SourceNoteEditor.tsx
 msgctxt "SourceNoteEditor status or action"
 msgid "Saving…"
-msgstr ""
+msgstr "正在保存…"
 
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "Scale"
-msgstr ""
+msgstr "比例尺"
 
 #: apps/reader/src/ImportInput.tsx
 msgid "Scan Readwise library"
-msgstr ""
+msgstr "扫描 Readwise 文献库"
 
 #. placeholder {0}: result.length.toLocaleString(i18n.locale)
 #: packages/migration/src/readwise-client.ts
 msgid "Scanned {0} Readwise records…"
-msgstr ""
+msgstr "已扫描 {0} 条 Readwise 记录…"
 
 #: apps/reader/src/ImportInput.tsx
 msgid "Scanning reads Reader metadata, saved article HTML and every Readwise highlight, including Kindle, Apple Books, Instapaper and other classic sources (those import as metadata and highlights, without the book text). Original PDFs and EPUBs download only after confirmation. Readwise limits request rates, so large libraries take several minutes."
-msgstr ""
+msgstr "扫描会读取 Reader 元数据、已保存的文章 HTML 以及每一条 Readwise 高亮，包括来自 Kindle、Apple Books、Instapaper 和其他经典来源的高亮（这些仅导入元数据和高亮，不含书籍正文）。原始 PDF 和 EPUB 仅在确认后下载。Readwise 会限制请求速率，因此较大的文献库需要数分钟。"
 
 #: packages/migration/src/readwise.ts
 msgid "Scanning Readwise metadata and saved HTML; no collection writes…"
