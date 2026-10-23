@@ -17,7 +17,7 @@ import {
 import { PreviewGateway } from "../src/preview.js";
 import { ReaderApp } from "../src/ReaderApp.js";
 
-import type { ReaderLibrarySnapshot } from "../src/workspace-model.js";
+import type { ReaderLibrarySnapshot, ReaderWorkspaceGateway } from "../src/workspace-model.js";
 import type {
   Annotation,
   AnnotationCreationRequest,
@@ -145,6 +145,26 @@ const base = new AuditGateway();
 const gateway = Object.assign(base, {
   searchText: async (query: string): Promise<readonly SourceTextSearchMatch[]> =>
     api(`search?q=${encodeURIComponent(query)}`),
+  readFile: async (
+    ...[file, revision, options]: Parameters<ReaderWorkspaceGateway["readFile"]>
+  ) => {
+    const records = await api<readonly Source[]>("library");
+    const target = records.flatMap((source) => source.documents).find((item) => item.file === file);
+    if (!target || target.revision !== revision) {
+      throw new Error("[test] Indexed file revision changed");
+    }
+    const response = await fetch(`/__reader-audit/document/${target.fileId}?index=1`, {
+      signal: options?.signal ?? null,
+    });
+    if (!response.ok) {
+      throw new Error("[test] Indexed file unavailable");
+    }
+    const bytes = new Uint8Array(await response.arrayBuffer());
+    if (options?.maxBytes !== undefined && bytes.byteLength > options.maxBytes) {
+      throw new Error("[test] Indexed file exceeds the read limit");
+    }
+    return { bytes, path: file, mediaType: target.mediaType };
+  },
 });
 const repository: DocumentRepository = {
   async open(_collection, target, options) {
