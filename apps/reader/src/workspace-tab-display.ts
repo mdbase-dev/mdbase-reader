@@ -21,9 +21,11 @@ export function workspaceTabLabel(tab: WorkspaceTab, source: SourceSummary | nul
 }
 
 export function workspaceTabTitle(tab: WorkspaceTab, source: SourceSummary | null): string {
-  return tab.kind === "library"
-    ? tab.title
-    : (source?.title ?? t({ message: "Unavailable source" }));
+  if (tab.kind === "library") {
+    // Only the unsaved built-in view has a translated title; saved view names are user data.
+    return tab.libraryViewId === "all-sources" ? workspaceTabLabel(tab, source) : tab.title;
+  }
+  return source?.title ?? t({ message: "Unavailable source" });
 }
 
 export function workspaceTabAccessibleTitle(

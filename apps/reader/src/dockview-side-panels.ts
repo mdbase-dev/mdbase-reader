@@ -11,7 +11,7 @@ import type {
 } from "dockview-react";
 
 const positions = ["left", "right"] as const;
-function sidePanelTitle(id: string): string {
+export function sidePanelTitle(id: string): string {
   return id === navigatorPanelId
     ? t({ message: "Sources", context: "dockview side panels" })
     : t({ message: "Source", context: "dockview side panels" });

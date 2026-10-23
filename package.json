@@ -10,6 +10,7 @@
   },
   "scripts": {
     "build": "pnpm i18n:check && pnpm build:code",
+    "build:production": "MDBASE_ENV=production pnpm build",
     "build:code": "pnpm -r --if-present build",
     "build:native:ci": "node scripts/qualify-native-staging.mjs ci-build",
     "build:native:staging": "node scripts/qualify-native-staging.mjs local-qualification",

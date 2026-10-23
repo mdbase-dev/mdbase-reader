@@ -25,6 +25,7 @@ import { DockPaneActions } from "./DockPaneActions.js";
 import { dockTabMenu } from "./dockview-menus.js";
 import { inspectorPanelId, navigatorPanelId } from "./dockview-panel-ids.js";
 import { dockPanelVisible } from "./dockview-panel-visibility.js";
+import { sidePanelTitle } from "./dockview-side-panels.js";
 import { panelTab } from "./dockview-workspace-state.js";
 import {
   DocumentToolbar,
@@ -157,6 +158,7 @@ export function DockviewWorkspace({
 }
 
 function WorkspacePanel(props: IDockviewPanelProps<{ tab?: WorkspaceTab }>): JSX.Element | null {
+  const { t } = useLingui();
   const context = useDockContext();
   const tab = props.params.tab;
   const subscribe = useCallback(
@@ -173,7 +175,7 @@ function WorkspacePanel(props: IDockviewPanelProps<{ tab?: WorkspaceTab }>): JSX
     tab?.kind === "source" ? context.document.sources.find(({ id }) => id === tab.sourceId) : null;
   const title = tab
     ? workspaceTabAccessibleTitle(tab, source ?? null)
-    : translate({ message: "Source", context: "DockviewWorkspace status or action" });
+    : t({ message: "Source", context: "DockviewWorkspace status or action" });
   useEffect(() => {
     if (props.api.title !== title) {
       props.api.setTitle(title);
@@ -200,9 +202,15 @@ function ReaderDockTab(props: IDockviewPanelHeaderProps<{ tab?: WorkspaceTab }>)
   const tab = props.params.tab;
   const close = (): void => document.sourceWorkspace.dock.close(props.api.id);
   const side = sidePanelIds.has(props.api.id);
-  const title =
-    props.api.title ??
-    translate({ message: "Source", context: "DockviewWorkspace status or action" });
+  const title = side
+    ? sidePanelTitle(props.api.id)
+    : (props.api.title ??
+      translate({ message: "Source", context: "DockviewWorkspace status or action" }));
+  useEffect(() => {
+    if (side && props.api.title !== title) {
+      props.api.setTitle(title);
+    }
+  }, [props.api, side, title]);
   return (
     // A tab is one control, so its close affordance is pointer-only; the keyboard uses Delete,
     // the tab's context menu or the pane menu, all of which go through the dirty-tab guard.
