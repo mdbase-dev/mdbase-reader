@@ -122,7 +122,7 @@ function ReadyCitationEditor({
         />
         {mode === "fields" ? (
           <>
-            <CitationLookup citation={citation} editor={editor} />
+            <CitationLookup key={source.id} citation={citation} editor={editor} />
             <CitationStructuredEditor
               citation={citation}
               problems={editor.assessment.valid ? [] : (editor.assessment.problems ?? [])}

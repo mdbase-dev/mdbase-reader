@@ -12,7 +12,7 @@ import {
   claimSourceLabel,
   type CitationSuggestion,
 } from "@mdbase-reader/web-capture/citation-updates";
-import { useCallback, useState } from "react";
+import { useCallback, useRef, useState } from "react";
 
 import { assessCitationDraft, citationDraftForSource } from "./citation-editor-model.js";
 import { serializeCitation } from "./citation-form-model.js";
@@ -36,7 +36,10 @@ export interface CitationEditorController extends ReturnType<typeof useCitationL
   readonly assessment: ReturnType<typeof assessCitationDraft>;
   readonly status: "idle" | "saving" | "saved";
   readonly error: string | null;
-  readonly conflict: { readonly currentCitation: unknown } | null;
+  readonly conflict: Pick<
+    CitationChangedElsewhereError,
+    "currentCitation" | "currentProvenance"
+  > | null;
   readonly dirty: boolean;
   readonly suggested: boolean;
   readonly warnings: readonly string[];
@@ -56,13 +59,14 @@ export function useCitationEditor(input: {
   readonly onSaved: (source: Source) => void;
 }): CitationEditorController {
   const [draftState, setDraftState] = useState<DraftState | null>(null);
+  const pendingSaves = useRef(new Set<string>());
   const [statusState, setStatusState] = useState<SelectedValue<
     CitationEditorController["status"]
   > | null>(null);
   const [errorState, setErrorState] = useState<SelectedValue<string | null> | null>(null);
-  const [conflictState, setConflictState] = useState<SelectedValue<{
-    readonly currentCitation: unknown;
-  }> | null>(null);
+  const [conflictState, setConflictState] = useState<SelectedValue<
+    NonNullable<CitationEditorController["conflict"]>
+  > | null>(null);
   const sourceId = input.source?.id;
   const transaction = draftState?.source.id === sourceId ? draftState : null;
   const source = transaction?.source ?? input.source;
@@ -121,23 +125,34 @@ export function useCitationEditor(input: {
   const lookup = useCitationLookup({
     gateway: input.gateway,
     source,
-    citation: assessment.value ?? {},
+    citation: assessment.value ?? null,
     provenance,
-    onAccept: (suggestions) =>
+    onAccept: (suggestions) => {
+      if (!assessment.value || suggestions.length === 0) {
+        return;
+      }
       updateDraft(
         serializeCitation({
           ...assessment.value,
           ...Object.fromEntries(suggestions.map(({ field, proposed }) => [field, proposed])),
         }),
         suggestions,
-      ),
+      );
+    },
   });
 
   const persist = useCallback(
     (expectedCitation: unknown): void => {
-      if (!source || !assessment.valid || !dirty || status === "saving") {
+      if (
+        !source ||
+        !assessment.valid ||
+        !dirty ||
+        status === "saving" ||
+        pendingSaves.current.has(source.id)
+      ) {
         return;
       }
+      pendingSaves.current.add(source.id);
       const savedDraft = draft;
       setDraftState((previous) =>
         previous?.source.id === source.id
@@ -169,7 +184,10 @@ export function useCitationEditor(input: {
           if (reason instanceof CitationChangedElsewhereError) {
             setConflictState({
               sourceId: source.id,
-              value: { currentCitation: reason.currentCitation },
+              value: {
+                currentCitation: reason.currentCitation,
+                currentProvenance: reason.currentProvenance,
+              },
             });
           } else {
             setErrorState({
@@ -177,7 +195,8 @@ export function useCitationEditor(input: {
               value: readerErrorMessage(reason, "Reader could not save this citation."),
             });
           }
-        });
+        })
+        .finally(() => pendingSaves.current.delete(source.id));
     },
     [assessment, dirty, draft, input, provenance, source, status],
   );
@@ -194,7 +213,12 @@ export function useCitationEditor(input: {
     const theirs = assessCitationDraft(value);
     const theirSource = {
       ...source,
-      frontmatter: { ...source.frontmatter, csl: conflict.currentCitation },
+      cslProvenance: conflict.currentProvenance,
+      frontmatter: {
+        ...source.frontmatter,
+        csl: conflict.currentCitation,
+        "csl-provenance": conflict.currentProvenance,
+      },
     };
     Reflect.deleteProperty(theirSource, "citation");
     if (theirs.valid) {
@@ -204,7 +228,7 @@ export function useCitationEditor(input: {
       source: theirSource,
       value,
       lastCitation: theirs.value ?? {},
-      provenance: provenanceFor(source),
+      provenance: conflict.currentProvenance,
     });
     lookup.resetLookup();
     setConflictState(null);

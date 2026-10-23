@@ -9,6 +9,7 @@ export { resolveCitation } from "./resolver.js";
 export type { Claim, CitationSuggestion } from "./claims.js";
 
 export interface CitationUpdateRequest {
+  /** An explicit lookup target; empty or "refresh" uses the current URL and DOI. */
   readonly query: string;
   readonly url?: string;
   readonly doi?: string;
@@ -20,17 +21,21 @@ export async function lookUpCitationClaims(
   options: CitoidClaimsOptions = {},
 ): Promise<readonly Claim[]> {
   const query = request.query.trim();
-  const url = /^https?:\/\//iu.test(query) ? query : request.url;
+  const refresh = query === "" || query.toLowerCase() === "refresh";
+  const url = /^https?:\/\//iu.test(query) ? query : refresh ? request.url : undefined;
   const page = url ? await citoidClaims(url, options) : undefined;
+  const queryDoi = doiFromText(query) ?? doiFromUrl(query);
   const identifiers = new Set(
-    [
-      doiFromText(query) ?? doiFromUrl(query),
-      request.doi,
-      page?.identifiers?.doi,
-      ...(page?.claims ?? []).flatMap((claim) =>
-        claim.field === "DOI" && typeof claim.value === "string" ? [claim.value] : [],
-      ),
-    ].filter((doi): doi is string => Boolean(doi)),
+    (queryDoi
+      ? [queryDoi]
+      : [
+          ...(refresh ? [request.doi] : []),
+          page?.identifiers?.doi,
+          ...(page?.claims ?? []).flatMap((claim) =>
+            claim.field === "DOI" && typeof claim.value === "string" ? [claim.value] : [],
+          ),
+        ]
+    ).filter((doi): doi is string => Boolean(doi)),
   );
   // Bounded enrichment: a page and at most two distinct DOI records per explicit lookup.
   const registries = await Promise.all(

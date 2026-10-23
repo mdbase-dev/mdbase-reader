@@ -71,7 +71,7 @@ function Harness({ source }: { source: Source }): React.JSX.Element {
   }, [current]);
   return (
     <>
-      <CitationLookup citation={current.assessment.value ?? {}} editor={current} />
+      <CitationLookup key={source.id} citation={current.assessment.value ?? {}} editor={current} />
       <CitationProvenance
         citation={current.assessment.value ?? {}}
         provenance={current.provenance}
@@ -172,7 +172,7 @@ describe("citation provenance and lookups", () => {
     await render(explained);
     await find();
     expect(citationClaims).toHaveBeenCalledWith(
-      { query: "https://example.org", url: "https://example.org" },
+      { query: "https://example.org" },
       expect.objectContaining({ signal: expect.any(AbortSignal) }),
     );
     expect(controller.suggestions.map(({ field }) => field)).toEqual(["publisher", "title"]);
@@ -245,7 +245,7 @@ describe("citation provenance and lookups", () => {
     await render(explained);
     await find();
     await act(async () => controller.setCitation({ ...citation, publisher: "Typed" }));
-    await act(async () => finish([claim("publisher", "Remote")]));
+    await act(async () => finish([claim("publisher", "Remote"), claim("volume", "Stale")]));
     expect(controller.suggestions).toEqual([]);
     expect(controller.assessment.value?.["publisher"]).toBe("Typed");
   });
@@ -265,13 +265,94 @@ describe("citation provenance and lookups", () => {
     expect(signal?.aborted).toBe(true);
     expect(controller.suggestions).toEqual([]);
     expect(controller.resolutionStatus).toBe("idle");
+    await render(explained);
+    expect(controller.resolutionStatus).toBe("idle");
+    expect(container.textContent).not.toContain("Looking…");
+    await find();
+    expect(citationClaims).toHaveBeenCalledTimes(2);
   });
+
+  it("discards resolved suggestions on source changes, even after returning", async () => {
+    citationClaims.mockResolvedValue([claim("publisher", "Stale")]);
+    await render(explained);
+    await find();
+    expect(controller.suggestions).toHaveLength(1);
+    await render({ ...source, id: sourceId("src_two") });
+    expect(controller.suggestions).toEqual([]);
+    await render(explained);
+    expect(controller.suggestions).toEqual([]);
+    expect(controller.resolutionStatus).toBe("idle");
+  });
+
+  it("discards all suggestions when the citation changes", async () => {
+    citationClaims.mockResolvedValue([claim("publisher", "Stale")]);
+    await render(explained);
+    await find();
+    await act(async () => controller.setCitation({ ...citation, title: "Another work" }));
+    expect(controller.suggestions).toEqual([]);
+    expect(controller.resolutionStatus).toBe("idle");
+    await act(async () => controller.acceptSuggestions(new Set(["publisher"])));
+    expect(controller.assessment.value).toEqual({ ...citation, title: "Another work" });
+  });
+
+  it.each(["{", "[]", "null", '"not an object"'])(
+    "cannot accept suggestions into a non-object draft: %s",
+    async (draft) => {
+      citationClaims.mockResolvedValue([claim("publisher", "A press")]);
+      await render(explained);
+      await find();
+      const provenance = controller.provenance;
+      await act(async () => controller.setDraft(draft));
+      expect(controller.suggestions).toEqual([]);
+      expect(container.textContent).not.toContain("Accept all");
+      await act(async () => controller.acceptSuggestions(new Set(["publisher"])));
+      await act(async () => controller.resolve(citation.URL));
+      expect(citationClaims).toHaveBeenCalledTimes(1);
+      expect(controller.draft).toBe(draft);
+      expect(controller.provenance).toEqual(provenance);
+      await act(async () => controller.setDraft(JSON.stringify(citation)));
+      expect(controller.assessment.value).toEqual(citation);
+      expect(controller.provenance).toEqual(provenance);
+      expect(controller.suggestions).toEqual([]);
+    },
+  );
 
   it("preserves untouched provenance through an invalid raw JSON edit", async () => {
     await render(explained);
     await act(async () => controller.setDraft("{"));
     await act(async () => controller.setDraft(JSON.stringify({ ...citation, publisher: "Typed" })));
     expect(controller.provenance["title"]).toEqual(explained.cslProvenance?.["title"]);
+  });
+});
+
+describe("citation lookup targets", () => {
+  const withDoi = {
+    ...source,
+    url: "https://existing.example",
+    citation: { ...citation, DOI: "10.1234/existing" },
+    frontmatter: { csl: { ...citation, DOI: "10.1234/existing" } },
+  };
+
+  it.each(["10.1234/typed", "doi:10.1234/typed", "https://typed.example"])(
+    "does not attach current identifiers to a typed target: %s",
+    async (query) => {
+      await render(withDoi);
+      await act(async () => controller.resolve(query));
+      expect(citationClaims).toHaveBeenCalledExactlyOnceWith(
+        { query },
+        expect.objectContaining({ signal: expect.any(AbortSignal) }),
+      );
+      expect(resolveCitation).not.toHaveBeenCalled();
+    },
+  );
+
+  it.each(["", "refresh"])("uses current identifiers for a refresh: %j", async (query) => {
+    await render(withDoi);
+    await act(async () => controller.resolve(query));
+    expect(citationClaims).toHaveBeenCalledExactlyOnceWith(
+      { query: "", url: "https://existing.example", doi: "10.1234/existing" },
+      expect.objectContaining({ signal: expect.any(AbortSignal) }),
+    );
   });
 });
 
@@ -319,7 +400,54 @@ describe("citation editor save baseline and conflicts", () => {
       provenance: { title: { value: "Reader edit", source: "user" } },
     });
   });
+});
 
+describe("citation editor save guard", () => {
+  it("sends one save for same-turn clicks, including after edits while saving", async () => {
+    let finish!: (source: Source) => void;
+    saveSourceCitation.mockReturnValueOnce(
+      new Promise((resolve) => {
+        finish = resolve;
+      }),
+    );
+    const firstEdit = { ...citation, title: "First edit" };
+    await render(source);
+    await act(async () => controller.setCitation(firstEdit));
+    await act(async () => {
+      controller.save();
+      controller.save();
+    });
+    expect(saveSourceCitation).toHaveBeenCalledTimes(1);
+    const secondEdit = { ...citation, title: "Second edit" };
+    await act(async () => controller.setCitation(secondEdit));
+    await act(async () => controller.save());
+    expect(saveSourceCitation).toHaveBeenCalledTimes(1);
+    await act(async () =>
+      finish({ ...source, citation: firstEdit, frontmatter: { csl: firstEdit } }),
+    );
+    expect(controller.assessment.value).toEqual(secondEdit);
+    await act(async () => controller.save());
+    expect(saveSourceCitation).toHaveBeenCalledTimes(2);
+    expect(saveSourceCitation.mock.lastCall?.[2]?.expectedCitation).toEqual(firstEdit);
+  });
+
+  it("releases the save guard after failure so the draft can be retried", async () => {
+    saveSourceCitation.mockRejectedValueOnce(new Error("Offline"));
+    await render(source);
+    await act(async () => controller.setCitation({ ...citation, title: "Mine" }));
+    await act(async () => {
+      controller.save();
+      controller.save();
+    });
+    expect(saveSourceCitation).toHaveBeenCalledTimes(1);
+    expect(controller.error).toBe("Offline");
+    await act(async () => controller.save());
+    expect(saveSourceCitation).toHaveBeenCalledTimes(2);
+    expect(controller.dirty).toBe(false);
+  });
+});
+
+describe("citation editor save conflicts", () => {
   it("advances the baseline after a successful save, even without a parent refresh", async () => {
     await render(source);
     const edited = { ...citation, title: "First edit" };
@@ -343,8 +471,53 @@ describe("citation editor save baseline and conflicts", () => {
     expect(controller.assessment.value).toEqual(theirs);
     expect(controller.dirty).toBe(false);
     expect(controller.conflict).toBeNull();
-    expect(container.textContent).toContain("edited manually");
+    expect(controller.provenance).toEqual({});
     expect(saveSourceCitation).toHaveBeenCalledTimes(1);
+  });
+
+  it("reloads their provenance and preserves their removals on the next save", async () => {
+    const theirs = { ...citation, title: "Recaptured" };
+    const theirProvenance = {
+      title: { value: "Recaptured", source: "registry:doi.org", agreed: ["doi.org CSL"] },
+      publisher: { value: "Removed press", source: "user" },
+    };
+    saveSourceCitation.mockRejectedValueOnce(
+      new CitationChangedElsewhereError(theirs, theirProvenance),
+    );
+    citationClaims.mockResolvedValue([claim("publisher", "Remote press")]);
+    await render(explained);
+    await act(async () => controller.setCitation({ ...citation, title: "Mine" }));
+    await act(async () => controller.save());
+    await click("Use their version");
+    expect(controller.provenance).toEqual(theirProvenance);
+    expect(container.textContent).not.toContain("edited manually");
+    expect(controller.dirty).toBe(false);
+    await find();
+    expect(controller.suggestions).toEqual([]);
+    await act(async () => controller.setCitation({ ...theirs, volume: "2" }));
+    await act(async () => controller.save());
+    expect(saveSourceCitation.mock.lastCall?.[2]).toEqual({
+      expectedCitation: theirs,
+      provenance: { ...theirProvenance, volume: { value: "2", source: "user" } },
+    });
+  });
+
+  it("replaces their provenance and pinned removals entirely when keeping mine", async () => {
+    const theirs = { ...citation, title: "Outside edit" };
+    saveSourceCitation.mockRejectedValueOnce(
+      new CitationChangedElsewhereError(theirs, {
+        URL: { value: citation.URL, source: "user" },
+        publisher: { value: "Removed press", source: "user" },
+      }),
+    );
+    await render(explained);
+    await act(async () => controller.setCitation({ ...citation, title: "Mine" }));
+    await act(async () => controller.save());
+    await click("Keep mine");
+    expect(saveSourceCitation.mock.lastCall?.[2]).toEqual({
+      expectedCitation: theirs,
+      provenance: { ...explained.cslProvenance, title: { value: "Mine", source: "user" } },
+    });
   });
 
   it("keeps mine by re-saving against the exact current citation, and still detects a second race", async () => {
