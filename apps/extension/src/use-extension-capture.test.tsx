@@ -491,6 +491,28 @@ it.each(["My title", "", "Page title", "Encyclopedia title"])(
   },
 );
 
+it("drops captured title evidence for a draft edit supplied with the save itself", async () => {
+  const lookup = pendingCitation();
+  await mount();
+  await act(async () => lookup.finish(initialCitation));
+  mocks.save.mockResolvedValueOnce({
+    source: existing,
+    annotation: null,
+    existing: false,
+    notices: [],
+  });
+  await act(async () => controller.save({ title: "Edited while saving", highlight: false }));
+  expect(mocks.save).toHaveBeenCalledWith(
+    expect.objectContaining({
+      draft: expect.objectContaining({ title: "Edited while saving" }),
+      citation: expect.objectContaining({
+        citation: { ...initialCitation.citation, title: "Edited while saving" },
+        provenance: {},
+      }),
+    }),
+  );
+});
+
 it("keeps a restored title while later evidence upgrades the remaining citation", async () => {
   chromeFake.session.set("draft:1:https://example.com", {
     draft: {

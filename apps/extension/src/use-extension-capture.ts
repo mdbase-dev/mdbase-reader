@@ -304,7 +304,13 @@ export function useExtensionCapture(
           known: source,
           // A lookup that finished for this page and collection need not run again.
           lookedUp: discovered === `${collection.collectionId} ${pageUrl ?? ""}`,
-          citation,
+          citation: capturedPost
+            ? citation
+            : citationWithDraftTitle(
+                preview,
+                draft.title,
+                editedTitlePage === pageUrl || draft.title !== stored.draft.title,
+              ),
           pdfBytes: () => fetchPdf(tabId, capture.canonicalUrl),
           onProgress: setProgress,
           onSource: (saved, existing) => {
