@@ -8,7 +8,7 @@ import type { Source, SourceSummary } from "../domain/source.js";
 
 export interface SaveSourceCitationOptions {
   readonly provenance?: CslProvenance;
-  readonly expectedCitation?: CslItem;
+  readonly expectedCitation?: unknown;
 }
 
 export async function saveSourceCitation(
@@ -28,9 +28,7 @@ export async function saveSourceCitation(
     sourceId: source.id,
     citation: validation.item,
     ...(options.provenance !== undefined ? { provenance: options.provenance } : {}),
-    ...(options.expectedCitation !== undefined
-      ? { expectedCitation: options.expectedCitation }
-      : {}),
+    ...("expectedCitation" in options ? { expectedCitation: options.expectedCitation } : {}),
   });
 }
 

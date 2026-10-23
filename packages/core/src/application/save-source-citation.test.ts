@@ -73,6 +73,20 @@ describe("saveSourceCitation", () => {
     });
   });
 
+  it("passes an explicit absent baseline through for compare-and-save", async () => {
+    const updateCitation = vi.fn(() => Promise.resolve(source));
+    await saveSourceCitation(
+      { updateCitation } as unknown as SourceRepository,
+      source,
+      [source],
+      { id: "new", type: "book" },
+      { expectedCitation: undefined },
+    );
+    expect(updateCitation).toHaveBeenCalledWith(
+      expect.objectContaining({ expectedCitation: undefined }),
+    );
+  });
+
   it("rejects a citekey already used by another source", async () => {
     const repository = { updateCitation: vi.fn() } as unknown as SourceRepository;
     const other = {
