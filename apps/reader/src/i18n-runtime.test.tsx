@@ -1,6 +1,7 @@
 // @vitest-environment happy-dom
 import { msg } from "@lingui/core/macro";
 import { createI18nRuntime } from "@mdbase-dev/i18n";
+import { CommandPalette } from "@mdbase-dev/ui/command-palette";
 import { readerI18n } from "@mdbase-reader/i18n";
 import english from "@mdbase-reader/i18n/english";
 import french from "@mdbase-reader/i18n/locales/fr";
@@ -8,6 +9,8 @@ import { ReaderI18nProvider, ReaderLanguageSetting } from "@mdbase-reader/i18n/r
 import { act } from "react";
 import { createRoot } from "react-dom/client";
 import { afterEach, expect, it, vi } from "vitest";
+
+import { readerCommandGroupLabel, type ReaderCommand } from "./reader-command-list.js";
 
 afterEach(() => {
   vi.unstubAllGlobals();
@@ -20,6 +23,89 @@ it("composes real shared UI translations on the same Lingui singleton", async ()
     await readerI18n.selectLocale("ja");
     expect(readerI18n.i18n._(cancel)).toBe("キャンセル");
   } finally {
+    await readerI18n.selectLocale("en");
+  }
+});
+
+it("localizes public palette headings live without changing group, showAll or command identities", async () => {
+  vi.stubGlobal("IS_REACT_ACT_ENVIRONMENT", true);
+  const run = vi.fn();
+  const close = vi.fn();
+  const groups = [
+    "Open tabs",
+    "Current source",
+    "Sources",
+    "Library",
+    "Workspace",
+    "Display",
+  ] as const;
+  const commands: readonly ReaderCommand[] = groups.flatMap((group) =>
+    Array.from({ length: 8 }, (_, index) => ({
+      id: `${group}:${String(index)}`,
+      label: `User title ${String(index)}`,
+      group,
+      run: () => {
+        run(`${group}:${String(index)}`);
+      },
+    })),
+  );
+  const identities = commands.map(({ id, group }) => ({ id, group }));
+  const host = document.createElement("div");
+  document.body.append(host);
+  const root = createRoot(host);
+  try {
+    await act(async () => {
+      await readerI18n.selectLocale("ja");
+      root.render(
+        <ReaderI18nProvider>
+          <CommandPalette
+            open
+            commands={commands}
+            showAll={["Open tabs"]}
+            groupLabel={readerCommandGroupLabel}
+            onClose={close}
+          />
+        </ReaderI18nProvider>,
+      );
+    });
+    const headings = (): readonly (string | null)[] =>
+      [...host.querySelectorAll(".mdbase-command-group")].map((node) => node.textContent);
+    expect(headings()).toEqual([
+      "開いているタブ",
+      "現在の資料",
+      "資料",
+      "ライブラリ",
+      "ワークスペース",
+      "表示",
+    ]);
+    // Open tabs bypasses the six-command browse limit using its original English ID.
+    expect(host.querySelectorAll('[role="option"]')).toHaveLength(8 + 5 * 6);
+    await act(async () => {
+      await readerI18n.selectLocale("de");
+    });
+    expect(headings()).toEqual([
+      "Offene Tabs",
+      "Aktuelle Quelle",
+      "Quellen",
+      "Bibliothek",
+      "Arbeitsfläche",
+      "Anzeige",
+    ]);
+    expect(host.querySelectorAll('[role="option"]')).toHaveLength(8 + 5 * 6);
+    expect(commands.map(({ id, group }) => ({ id, group }))).toEqual(identities);
+    expect(readerCommandGroupLabel("Unknown group")).toBe("Unknown group");
+    const input = host.querySelector("input");
+    if (!input) {
+      throw new Error("Palette input missing");
+    }
+    act(() => {
+      input.dispatchEvent(new KeyboardEvent("keydown", { key: "Enter", bubbles: true }));
+    });
+    expect(run).toHaveBeenCalledWith("Open tabs:0");
+    expect(close).toHaveBeenCalledOnce();
+  } finally {
+    act(() => root.unmount());
+    host.remove();
     await readerI18n.selectLocale("en");
   }
 });

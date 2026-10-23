@@ -13,7 +13,7 @@ import type { SourceSummary } from "@mdbase-reader/core";
 export type ReaderCommandGroup =
   "Open tabs" | "Current source" | "Sources" | "Library" | "Workspace" | "Display";
 /** Group identity is stable, independently of its displayed language. */
-export function readerCommandGroupLabel(group: ReaderCommandGroup): string {
+export function readerCommandGroupLabel(group: string): string {
   const labels: Record<ReaderCommandGroup, string> = {
     "Open tabs": t`Open tabs`,
     "Current source": t`Current source`,
@@ -22,7 +22,7 @@ export function readerCommandGroupLabel(group: ReaderCommandGroup): string {
     Workspace: t`Workspace`,
     Display: t`Display`,
   };
-  return labels[group];
+  return Object.hasOwn(labels, group) ? labels[group as ReaderCommandGroup] : group;
 }
 
 export interface ReaderCommand extends Command {

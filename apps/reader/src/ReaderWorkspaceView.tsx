@@ -14,7 +14,7 @@ import { LibraryNavigator } from "./LibraryNavigator.js";
 import { LibraryWorkspace } from "./LibraryWorkspace.js";
 import { mobileSourceBar } from "./mobile-source-bar.js";
 import { useReaderMdbase } from "./reader-collections.js";
-import { readerCommands } from "./reader-command-list.js";
+import { readerCommandGroupLabel, readerCommands } from "./reader-command-list.js";
 import { ReaderHeader } from "./ReaderHeader.js";
 import { RenderedSourceDocument } from "./RenderedSourceDocument.js";
 import { useSdkConnectionState } from "./sdk-connection-state.js";
@@ -404,6 +404,7 @@ export function ReaderWorkspaceView({
         label={t({ message: "Reader commands", context: "ReaderWorkspaceView interface" })}
         placeholder={t({ message: "Search sources and commands" })}
         showAll={paletteShowsAll}
+        groupLabel={readerCommandGroupLabel}
         open={model.commandsOpen}
         commands={commands}
         onClose={() => model.setCommandsOpen(false)}
