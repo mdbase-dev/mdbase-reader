@@ -187,7 +187,7 @@ function tagNames(meta: MetaIndex, add: AddClaim): void {
     const authors = all(meta, key).flatMap((value) =>
       key === "citation_authors" ? value.split(";") : [value],
     );
-    add("author", authors.map(cslName).filter(Boolean), metaSignal(key), key);
+    add("author", tagAuthorNames(authors), metaSignal(key), key);
   }
   for (const group of [
     ["citation_author", "citation_authors"],
@@ -199,9 +199,17 @@ function tagNames(meta: MetaIndex, add: AddClaim): void {
           key === "citation_authors" ? value.split(";") : [value],
         ),
       );
-      add("author", authors.map(cslName).filter(Boolean), metaSignal(group[0]), group.join(" + "));
+      add("author", tagAuthorNames(authors), metaSignal(group[0]), group.join(" + "));
     }
   }
+}
+
+function tagAuthorNames(authors: readonly string[]): ReturnType<typeof cslName>[] {
+  // article:author commonly identifies a profile, not a person or an organisation's byline.
+  return authors
+    .filter((author) => !/^\s*(?:https?:)?\/\//iu.test(author))
+    .map(cslName)
+    .filter(Boolean);
 }
 
 function tagKeywords(meta: MetaIndex, add: AddClaim): void {
@@ -244,6 +252,12 @@ function tagPages(meta: MetaIndex, add: AddClaim): void {
 
 function linkedClaims(node: JsonLdNode, add: AddClaim): void {
   const signal = "json-ld";
+  const workType = arrayValue(node["@type"]).find(
+    (type): type is string =>
+      typeof type === "string" &&
+      (scholarlyJsonLdTypes.has(type) ||
+        (articleJsonLdTypes.has(type) && articleJsonLdTypes.get(type) !== "webpage")),
+  );
   const fields = [
     ["headline", "title"],
     ["name", "title"],
@@ -256,7 +270,10 @@ function linkedClaims(node: JsonLdNode, add: AddClaim): void {
   ] as const;
   for (const [key, field] of fields) {
     for (const value of arrayValue(node[key])) {
-      add(field, stringValue(value), signal, key);
+      // Preserve the node's specificity so a generic WebPage name cannot outvote the work.
+      const evidence =
+        workType && (key === "headline" || key === "name") ? `${workType} ${key}` : key;
+      add(field, stringValue(value), signal, evidence);
     }
   }
   add("author", jsonLdNames(node["author"]), signal, "author");
@@ -267,7 +284,10 @@ function linkedClaims(node: JsonLdNode, add: AddClaim): void {
     add("publisher", nameOf(value), signal, "publisher");
   }
   for (const value of arrayValue(node["isPartOf"])) {
-    add("container-title", nameOf(value), signal, "isPartOf");
+    // Article graphs often point to their own WebPage, not the containing publication.
+    if (!isRecord(value) || !arrayValue(value["@type"]).includes("WebPage")) {
+      add("container-title", nameOf(value), signal, "isPartOf");
+    }
   }
   const words = arrayValue(node["keywords"])
     .flatMap((value) => (typeof value === "string" ? value.split(",") : []))
@@ -298,12 +318,12 @@ function linkedType(type: string, add: AddClaim): void {
   const cslType =
     articleJsonLdTypes.get(type) ??
     scholarlyTypes.get(type) ??
-    (scholarlyJsonLdTypes.has(type) ? "article" : type === "WebPage" ? "webpage" : undefined);
+    (scholarlyJsonLdTypes.has(type)
+      ? "article-journal"
+      : type === "WebPage"
+        ? "webpage"
+        : undefined);
   add("type", cslType, "json-ld", "@type");
-  if (type === "ScholarlyArticle" || type === "MedicalScholarlyArticle") {
-    // Retain the legacy generic type alongside the schema's more specific candidate.
-    add("type", "article-journal", "json-ld", "@type");
-  }
 }
 
 function linkedNodes(document: Document): JsonLdNode[] {

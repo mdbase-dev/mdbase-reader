@@ -83,23 +83,61 @@ export function dateSpecificity(value: unknown): number {
   return dateParts(value)?.reduce((sum, part) => sum + part.length, 0) ?? 0;
 }
 
-/** Match entire role phrases, never a surname alone in a full personal name. */
+const agencyNames = new Set([
+  "associated press",
+  "ap",
+  "reuters",
+  "agence france-presse",
+  "afp",
+  "aap",
+  "pa media",
+  "press association",
+  "bloomberg",
+  "united press international",
+  "dpa",
+  "xinhua",
+  "kyodo",
+]);
+
+function organisationByline(phrase: string): boolean {
+  // Two-word names are ambiguous (Jane Press, John Staff); only known agencies bypass the
+  // three-word minimum. Explicit JSON-LD organisations already arrive as literal names.
+  return (
+    agencyNames.has(phrase.toLowerCase()) ||
+    (phrase.split(" ").length >= 3 &&
+      /\b(?:news|agency|press|media|staff|team|foundation|inc\.?|ltd\.?)$/iu.test(phrase))
+  );
+}
+
+/** Discard whole role phrases, never personal surnames; keep recognised organisations whole. */
 export function withoutRoleNames(value: unknown): unknown {
   if (!Array.isArray(value)) {
     return value;
   }
-  return value.filter((item: unknown) => {
+  return value.flatMap((item: unknown) => {
     const name = object(item);
     if (!name) {
-      return true;
+      return [item];
     }
-    const phrase = name["literal"] ?? [name["given"], name["family"]].filter(Boolean).join(" ");
-    return (
-      typeof phrase !== "string" ||
-      !/^(?:(?:the )?guardian )?(?:(?:staff|senior|chief|special|political|news|foreign|guest) )*(?:staff|reporters?|correspondents?|editors?|writers?|newsroom|editorial board|editorial team|news desk|press office)$/iu.test(
-        text(phrase),
+    // cslName parses a comma as "family, given", including corporate suffixes.
+    const phrase =
+      name["literal"] ??
+      (typeof name["given"] === "string" && /^(?:inc|ltd)\.?$/iu.test(name["given"])
+        ? `${String(name["family"])}, ${name["given"]}`
+        : [name["given"], name["family"]].filter(Boolean).join(" "));
+    if (typeof phrase !== "string") {
+      return [item];
+    }
+    const clean = text(phrase);
+    if (
+      /^(?:https?:)?\/\//iu.test(clean) ||
+      /^(?:(?:the )?guardian )?(?:(?:staff|senior|chief|special|political|news|foreign|guest) )*(?:staff|reporters?|correspondents?|editors?|writers?|newsroom|editorial board|editorial team|news desk|press office)$/iu.test(
+        clean,
       )
-    );
+    ) {
+      return [];
+    }
+    return [organisationByline(clean) ? { literal: clean } : item];
   });
 }
 

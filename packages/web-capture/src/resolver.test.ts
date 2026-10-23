@@ -115,6 +115,31 @@ describe("citation resolution: corpus cases", () => {
 });
 
 describe("citation resolution: scoring", () => {
+  it.each([registry, { kind: "user" } as const])(
+    "keeps an authoritative generic type from $kind",
+    (source) => {
+      const result = resolveCitation({
+        claims: [
+          claim("title", "A work"),
+          claim("type", "article", source),
+          ...Array.from({ length: 40 }, (_, index) =>
+            claim("type", "article-journal", page, `signal ${String(index)}`),
+          ),
+        ],
+      });
+      expect(result.citation?.type).toBe("article");
+    },
+  );
+
+  it("does not reparse a user's explicit name decision as an organisation", () => {
+    const author = [{ family: "Press", given: "Associated" }];
+    expect(
+      resolveCitation({
+        claims: [claim("title", "A work"), claim("author", author, { kind: "user" })],
+      }).citation?.["author"],
+    ).toEqual(author);
+  });
+
   it("does not count repeated source + evidence as independent corroboration", () => {
     const duplicate = claim("title", "Repeated", page, "headline", "2026-10-20T00:00:00Z");
     const result = resolveCitation({
