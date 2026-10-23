@@ -3151,52 +3151,52 @@ msgstr "mdbaseのタブでサインインまたは承認を完了してから保
 #: apps/reader/src/LibraryCells.tsx
 msgctxt "reading status"
 msgid "Finished"
-msgstr ""
+msgstr "読了"
 
 #: apps/reader/src/SourceImportDialog.tsx
 msgctxt "SourceImportDialog interface"
 msgid "Finishing…"
-msgstr ""
+msgstr "完了処理中…"
 
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "First reference note number"
-msgstr ""
+msgstr "最初の参照ノート番号"
 
 #: packages/renderer-pdf/src/pdf-translations.ts
 msgctxt "PDF viewer zoom"
 msgid "Fit to Page"
-msgstr ""
+msgstr "ページ全体を表示"
 
 #: packages/renderer-pdf/src/pdf-translations.ts
 msgctxt "PDF viewer zoom"
 msgid "Fit to Width"
-msgstr ""
+msgstr "幅に合わせる"
 
 #: apps/reader/src/CitationEditor.tsx
 msgid "Fix before saving"
-msgstr ""
+msgstr "保存前に修正"
 
 #: apps/reader/src/citation-editor-model.ts
 msgid "Fix the JSON syntax: {detail}"
-msgstr ""
+msgstr "JSONの構文を修正してください：{detail}"
 
 #: apps/reader/src/InspectorPane.tsx
 msgid "Focus a document, note, annotation, or citation tab to inspect its source."
-msgstr ""
+msgstr "資料を調べるには、文書、ノート、注釈、引用のいずれかのタブにフォーカスしてください。"
 
 #: apps/reader/src/reader-command-list.ts
 msgctxt "reader command list"
 msgid "Focus next pane"
-msgstr ""
+msgstr "次のペインにフォーカス"
 
 #: apps/extension/src/OptionsApp.tsx
 msgid "For reporting slow or failed saves. The panel can then record connection timings and download them; nothing is recorded until you start it there."
-msgstr ""
+msgstr "保存が遅い・失敗する場合の報告用です。有効にすると、パネルで接続の所要時間を記録してダウンロードできます。パネルで開始するまで何も記録されません。"
 
 #: apps/extension/src/OptionsApp.tsx
 msgid "For the side panel, this page and the welcome page. Reader keeps its own theme setting."
-msgstr ""
+msgstr "サイドパネル、このページ、ようこそページに適用されます。Reader独自のテーマ設定は維持されます。"
 
 #: apps/reader/src/NativeSignIn.tsx
 msgid "Forget collection"
@@ -3219,71 +3219,71 @@ msgstr "形式"
 #: apps/reader/src/SourceNoteEditor.tsx
 msgctxt "SourceNoteEditor interface"
 msgid "Format Markdown"
-msgstr ""
+msgstr "Markdownを整形"
 
 #: apps/reader/src/CitationLookup.tsx
 msgid "Found"
-msgstr ""
+msgstr "見つかりました"
 
 #: apps/extension/src/CitationCard.tsx
 msgid "From the DOI registry. Saved with the source; edit it later in Reader."
-msgstr ""
+msgstr "DOI登録機関の情報です。資料と一緒に保存され、後からReaderで編集できます。"
 
 #: apps/extension/src/CitationCard.tsx
 msgid "From the publisher’s page metadata. Saved with the source; edit it later in Reader."
-msgstr ""
+msgstr "出版社のページのメタデータです。資料と一緒に保存され、後からReaderで編集できます。"
 
 #: packages/renderer-pdf/src/pdf-translations.ts
 msgctxt "PDF viewer document"
 msgid "Fullscreen"
-msgstr ""
+msgstr "全画面表示"
 
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "Genre"
-msgstr ""
+msgstr "ジャンル"
 
 #: apps/reader/src/ImportInput.tsx
 msgid "Get your <0>Readwise access token</0>. It stays in memory in this tab and is sent only to Readwise. Although the token allows writes, this importer only reads."
-msgstr ""
+msgstr "<0>Readwiseのアクセストークンを取得</0>してください。このタブのメモリ内にのみ保持され、Readwise以外には送信されません。トークンには書き込み権限がありますが、このインポーターは読み取りのみを行います。"
 
 #: apps/extension/src/SaveBar.tsx
 msgid "Give the source a title under Note to save it."
-msgstr ""
+msgstr "保存するには、「ノート」の欄で資料にタイトルを付けてください。"
 
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "Given"
-msgstr ""
+msgstr "名"
 
 #: apps/reader/src/CitationContributors.tsx
 msgctxt "CitationContributors interface"
 msgid "Given names"
-msgstr ""
+msgstr "名"
 
 #: apps/reader/src/InspectorPane.tsx
 msgid "Go to workbench"
-msgstr ""
+msgstr "ワークベンチに移動"
 
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "Graphic"
-msgstr ""
+msgstr "図版"
 
 #: apps/extension/src/HighlightFields.tsx
 msgctxt "Highlight colour"
 msgid "green"
-msgstr ""
+msgstr "緑"
 
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "Guest"
-msgstr ""
+msgstr "ゲスト"
 
 #: apps/reader/src/library-lenses.ts
 msgctxt "library lenses"
 msgid "Has annotations"
-msgstr ""
+msgstr "注釈あり"
 
 #: apps/reader/src/SourceNoteEditor.tsx
 msgctxt "SourceNoteEditor formatActions"
@@ -3293,16 +3293,16 @@ msgstr "見出し"
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "Hearing"
-msgstr ""
+msgstr "公聴会"
 
 #: apps/reader/src/DisplayMenu.tsx
 msgctxt "DisplayMenu interface"
 msgid "Hide"
-msgstr ""
+msgstr "非表示"
 
 #: apps/reader/src/LibraryTableHeader.tsx
 msgid "Hide column"
-msgstr ""
+msgstr "列を非表示"
 
 #: apps/reader/src/annotation-kind.ts
 msgctxt "Annotation kind"
@@ -3322,88 +3322,88 @@ msgstr "ハイライト"
 #: apps/reader/src/SelectionToolbar.tsx
 msgctxt "SelectionToolbar interface"
 msgid "Highlight (H)"
-msgstr ""
+msgstr "ハイライト（H）"
 
 #: apps/reader/src/DisplayMenu.tsx
 msgid "Highlight at once"
-msgstr ""
+msgstr "すぐにハイライト"
 
 #: packages/migration/src/readwise-annotations.ts
 msgid "Highlight has no exposed full quote; retained as an unresolved note: {key}"
-msgstr ""
+msgstr "ハイライトの引用文全体を取得できません。未解決のノートとして保持しました：{key}"
 
 #: apps/extension/src/WelcomeApp.tsx
 msgid "Highlight passages"
-msgstr ""
+msgstr "箇所をハイライト"
 
 #: apps/extension/src/use-extension-capture.ts
 msgid "Highlight removed. The page stays saved."
-msgstr ""
+msgstr "ハイライトを削除しました。ページは保存済みのままです。"
 
 #: apps/extension/src/use-extension-capture.ts
 msgid "Highlight saved."
-msgstr ""
+msgstr "ハイライトを保存しました。"
 
 #: apps/extension/src/ShortcutList.tsx
 msgid "Highlight selected text, with or without a comment"
-msgstr ""
+msgstr "選択したテキストをハイライトします。コメントも追加できます"
 
 #: apps/extension/src/shell-messages.ts
 msgid "Highlight the selected passage in mdbase Reader"
-msgstr ""
+msgstr "選択した箇所をmdbase Readerでハイライト"
 
 #: apps/extension/src/background.ts
 msgid "Highlight with a comment in mdbase Reader"
-msgstr ""
+msgstr "mdbase Readerでコメント付きのハイライトを作成"
 
 #: packages/reading-surface/src/margin-markers.ts
 msgctxt "Reading margin marker tooltip"
 msgid "Highlight with a note"
-msgstr ""
+msgstr "コメント付きハイライト"
 
 #: apps/extension/src/PanelTabs.tsx
 msgid "Highlights"
-msgstr ""
+msgstr "ハイライト"
 
 #: apps/reader/src/AnnotationList.tsx
 msgctxt "AnnotationList annotationFilterOptions"
 msgid "Highlights"
-msgstr ""
+msgstr "ハイライト"
 
 #: apps/reader/src/LibraryAnnotationToolbar.tsx
 msgctxt "LibraryAnnotationToolbar annotationTypeOptions"
 msgid "Highlights"
-msgstr ""
+msgstr "ハイライト"
 
 #: apps/reader/src/SourceNoteInsertMenu.tsx
 msgid "Highlights and comments on this source appear here."
-msgstr ""
+msgstr "この資料のハイライトとコメントがここに表示されます。"
 
 #: apps/reader/src/LibraryAnnotations.tsx
 msgid "Highlights and notes you make while reading appear here."
-msgstr ""
+msgstr "読書中に作成したハイライトとノートがここに表示されます。"
 
 #: apps/extension/src/CaptureApp.tsx
 msgid "Highlights made there appear here."
-msgstr ""
+msgstr "そこで作成したハイライトがここに表示されます。"
 
 #: packages/migration/src/readwise-annotations.ts
 msgid "Highlights on those books not imported"
-msgstr ""
+msgstr "該当する書籍のハイライトはインポートされませんでした"
 
 #: apps/reader/src/WorkspacePaneSupport.tsx
 msgid "Highlights unavailable"
-msgstr ""
+msgstr "ハイライトを利用できません"
 
 #: packages/renderer-pdf/src/pdf-translations.ts
 msgctxt "PDF viewer page"
 msgid "Horizontal"
-msgstr ""
+msgstr "横方向"
 
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "Host"
-msgstr ""
+msgstr "司会者"
 
 #: apps/reader/src/collection-menu-model.ts
 msgctxt "collection menu model"
@@ -3413,131 +3413,131 @@ msgstr "mdbase がホスト"
 #. placeholder {0}: String(response.status)
 #: packages/renderer-html/src/html-viewer.tsx
 msgid "HTML download failed with HTTP {0}."
-msgstr ""
+msgstr "HTMLのダウンロードに失敗しました（HTTP {0}）。"
 
 #: packages/renderer-html/src/html-viewer.tsx
 msgid "HTML reading document"
-msgstr ""
+msgstr "HTML形式の閲覧文書"
 
 #: packages/migration/src/zotero.ts
 msgid "HTML snapshot resources are preserved as files; relative assets may not display in Reader yet."
-msgstr ""
+msgstr "HTMLの保存コピーに含まれるリソースはファイルとして保持されます。相対パスの素材はReaderでまだ表示されない場合があります。"
 
 #: apps/reader/src/SourceAddDialog.tsx
 msgid "https://…, DOI, arXiv ID or ISBN"
-msgstr ""
+msgstr "https://…、DOI、arXiv ID、またはISBN"
 
 #: apps/reader/src/CitationStructuredEditor.tsx
 msgid "Identifiers and access"
-msgstr ""
+msgstr "識別子とアクセス"
 
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "Illustrator"
-msgstr ""
+msgstr "イラストレーター"
 
 #: apps/reader/src/ImportPageView.tsx
 msgid "Import a library"
-msgstr ""
+msgstr "ライブラリをインポート"
 
 #: apps/reader/src/LibraryWorkspace.tsx
 msgid "Import a library…"
-msgstr ""
+msgstr "ライブラリをインポート…"
 
 #: apps/reader/src/reader-app-commands.ts
 msgctxt "reader app commands"
 msgid "Import a library…"
-msgstr ""
+msgstr "ライブラリをインポート…"
 
 #: apps/reader/src/ImportPageView.tsx
 msgid "Import an export bundle →"
-msgstr ""
+msgstr "エクスポートしたバンドルをインポート →"
 
 #. placeholder {0}: result.verified
 #: apps/reader/src/import-controller.ts
 msgid "Import complete into {name}. {0, plural, one {# record verified} other {# records verified}}."
-msgstr ""
+msgstr "{name}へのインポートが完了しました。{0, plural, one {#件のレコードを検証済み} other {#件のレコードを検証済み}}。"
 
 #. placeholder {0}: service === "zotero" ? "Zotero" : "Readwise Reader"
 #: apps/reader/src/ImportPageView.tsx
 msgid "Import from {0}"
-msgstr ""
+msgstr "{0}からインポート"
 
 #: packages/migration/src/run.ts
 msgid "Import identity collision. Existing records will not be overwritten."
-msgstr ""
+msgstr "インポート時に識別情報が衝突しました。既存のレコードは上書きされません。"
 
 #: apps/reader/src/ImportPageView.tsx
 msgctxt "ImportPageView interface"
 msgid "Import navigation"
-msgstr ""
+msgstr "インポートのナビゲーション"
 
 #: apps/reader/src/import-controller.ts
 msgid "Import operation failed."
-msgstr ""
+msgstr "インポート操作に失敗しました。"
 
 #: apps/reader/src/ImportReview.tsx
 msgctxt "ImportReview interface"
 msgid "Import progress"
-msgstr ""
+msgstr "インポートの進行状況"
 
 #: apps/reader/src/ImportReview.tsx
 msgctxt "ImportReview interface"
 msgid "Import status"
-msgstr ""
+msgstr "インポートの状態"
 
 #: packages/migration/src/run.ts
 msgid "Import verification failed: a record is missing."
-msgstr ""
+msgstr "インポートの検証に失敗しました。レコードがありません。"
 
 #: apps/reader/src/SourceImportDialog.tsx
 msgctxt "SourceImportDialog interface"
 msgid "Importing…"
-msgstr ""
+msgstr "インポート中…"
 
 #: apps/reader/src/LibraryWorkspace.tsx
 msgid "in"
-msgstr ""
+msgstr "次の値を含む"
 
 #: apps/reader/src/AnnotationCard.tsx
 msgid "In literature note"
-msgstr ""
+msgstr "文献ノート内"
 
 #: apps/reader/src/SourceNoteInsertMenu.tsx
 msgctxt "SourceNoteInsertMenu interface"
 msgid "In note"
-msgstr ""
+msgstr "ノート内"
 
 #: apps/extension/src/SaveBar.tsx
 msgid "In this collection"
-msgstr ""
+msgstr "このコレクション内"
 
 #: apps/reader/src/LibraryCells.tsx
 msgctxt "reading status"
 msgid "Inbox"
-msgstr ""
+msgstr "受信トレイ"
 
 #: packages/renderer-pdf/src/pdf-translations.ts
 msgctxt "PDF viewer print"
 msgid "Include annotations"
-msgstr ""
+msgstr "注釈を含める"
 
 #: apps/reader/src/ImportInput.tsx
 msgid "Include unsaved Feed items (archived library items are included either way)"
-msgstr ""
+msgstr "未保存のフィード項目を含める（アーカイブ済みのライブラリ項目は常に含まれます）"
 
 #: apps/reader/src/CitationEditor.tsx
 msgid "Incomplete"
-msgstr ""
+msgstr "未完了"
 
 #: packages/renderer-pdf/src/pdf-translations.ts
 msgctxt "PDF viewer passwordPrompt"
 msgid "Incorrect password. Please check and try again."
-msgstr ""
+msgstr "パスワードが正しくありません。確認して再試行してください。"
 
 #: apps/reader/src/use-open-document-search.ts
 msgid "Indexing {loaded} of {readable} readable sources."
-msgstr ""
+msgstr "閲覧可能な資料{readable}件中{loaded}件を索引化中。"
 
 #: apps/reader/src/SourceNoteEditor.tsx
 msgctxt "SourceNoteEditor formatActions"
@@ -3546,11 +3546,11 @@ msgstr "インラインコード"
 
 #: apps/reader/src/SourceNoteInsertMenu.tsx
 msgid "Insert [@{citekey}] at the cursor"
-msgstr ""
+msgstr "カーソル位置に[@{citekey}]を挿入"
 
 #: apps/reader/src/SourceNoteInsertMenu.tsx
 msgid "Insert a citation or annotation"
-msgstr ""
+msgstr "引用または注釈を挿入"
 
 #: apps/reader/src/SourceNoteInsertMenu.tsx
 msgid "Insert at the cursor"
@@ -3558,12 +3558,12 @@ msgstr "カーソル位置に挿入"
 
 #: apps/reader/src/AnnotationCard.tsx
 msgid "Insert this annotation in the literature note"
-msgstr ""
+msgstr "この注釈を文献ノートに挿入"
 
 #: apps/reader/src/AnnotationCard.tsx
 msgctxt "AnnotationCard interface"
 msgid "Inserting…"
-msgstr ""
+msgstr "挿入中…"
 
 #: apps/reader/src/pwa-install.ts
 msgctxt "pwa install"
@@ -3580,57 +3580,57 @@ msgstr "{appName}を専用ウィンドウで開いてすぐ使えるようにし
 
 #: apps/reader/src/ImportInput.tsx
 msgid "Install the experimental Zotero 10.0.x exporter, then use <0>Tools → Export for mdbase Reader…</0>. Select the whole exported folder—not Zotero’s data directory."
-msgstr ""
+msgstr "試験的なZotero 10.0.xエクスポーターをインストールし、<0>ツール → mdbase Reader向けにエクスポート…</0>を選択してください。Zoteroのデータディレクトリではなく、エクスポートしたフォルダー全体を選択します。"
 
 #: apps/reader/src/preview.tsx
 msgid "Interface preview document"
-msgstr ""
+msgstr "インターフェースのプレビュー文書"
 
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "Interview"
-msgstr ""
+msgstr "インタビュー"
 
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "Interviewer"
-msgstr ""
+msgstr "インタビュアー"
 
 #: packages/migration/src/model.ts
 msgid "Invalid {label}."
-msgstr ""
+msgstr "{label}が無効です。"
 
 #: packages/migration/src/zotero-validation.ts
 msgid "Invalid attachment payload reference."
-msgstr ""
+msgstr "添付ファイルのデータ参照が無効です。"
 
 #: packages/migration/src/zotero-validation.ts
 msgid "Invalid collection ancestry."
-msgstr ""
+msgstr "コレクションの親子関係が無効です。"
 
 #: packages/migration/src/zotero-validation.ts
 msgid "Invalid file manifest."
-msgstr ""
+msgstr "ファイルのマニフェストが無効です。"
 
 #: packages/migration/src/zotero-validation.ts
 msgid "Invalid missing attachment."
-msgstr ""
+msgstr "存在しない添付ファイルの指定が無効です。"
 
 #: packages/migration/src/readwise-client.ts
 msgid "Invalid Readwise API path."
-msgstr ""
+msgstr "ReadwiseのAPIパスが無効です。"
 
 #: packages/migration/src/zotero-validation.ts
 msgid "Invalid Zotero identity."
-msgstr ""
+msgstr "Zoteroの識別情報が無効です。"
 
 #: packages/migration/src/zotero-pdf.ts
 msgid "Invalid Zotero PDF position."
-msgstr ""
+msgstr "ZoteroのPDF内の位置が無効です。"
 
 #: packages/migration/src/zotero-pdf.ts
 msgid "Invalid Zotero PDF rectangle."
-msgstr ""
+msgstr "ZoteroのPDF矩形が無効です。"
 
 #: apps/reader/src/library-conditions.ts
 msgctxt "Field filter comparison operator"
@@ -3640,12 +3640,12 @@ msgstr "次と等しい"
 #: apps/reader/src/library-conditions.ts
 msgctxt "Field filter comparison operator"
 msgid "is at least"
-msgstr ""
+msgstr "以上"
 
 #: apps/reader/src/library-conditions.ts
 msgctxt "Field filter comparison operator"
 msgid "is at most"
-msgstr ""
+msgstr "以下"
 
 #: apps/reader/src/library-conditions.ts
 msgctxt "Field filter comparison operator"
@@ -3655,12 +3655,12 @@ msgstr "空"
 #: apps/reader/src/library-conditions.ts
 msgctxt "Field filter comparison operator"
 msgid "is greater than"
-msgstr ""
+msgstr "より大きい"
 
 #: apps/reader/src/library-conditions.ts
 msgctxt "Field filter comparison operator"
 msgid "is less than"
-msgstr ""
+msgstr "より小さい"
 
 #: apps/reader/src/library-conditions.ts
 msgctxt "Field filter comparison operator"
@@ -3670,17 +3670,17 @@ msgstr "次と等しくない"
 #: packages/core/src/domain/citation-validation.ts
 msgctxt "CSL validation"
 msgid "is not a CSL 1.0 field; preserve extension data under csl.custom"
-msgstr ""
+msgstr "CSL 1.0のフィールドではありません。拡張データはcsl.customに保持してください"
 
 #: packages/core/src/domain/citation-validation.ts
 msgctxt "CSL validation"
 msgid "is not a CSL date field"
-msgstr ""
+msgstr "CSLの日付フィールドではありません"
 
 #: packages/core/src/domain/citation-validation.ts
 msgctxt "CSL validation"
 msgid "is not a CSL name field"
-msgstr ""
+msgstr "CSLの名前フィールドではありません"
 
 #: apps/reader/src/library-conditions.ts
 msgctxt "Field filter comparison operator"
