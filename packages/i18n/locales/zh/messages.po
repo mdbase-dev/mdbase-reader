@@ -130,11 +130,9 @@ msgid "{0, plural, one {Copied # annotation as Markdown.} other {Copied # annota
 msgstr "{0, plural, other {已将 # 条注释复制为 Markdown。}}"
 
 #. placeholder {0}: plan.sources.length
-#. placeholder {1}: opened.collectionName
-#. placeholder {2}: opened.collectionName
 #: apps/reader/src/ImportReview.tsx
-msgid "{0, plural, one {Import # source into {1}} other {Import # sources into {2}}}"
-msgstr "{0, plural, one {将 # 个来源导入 {1}} other {将 # 个来源导入 {2}}}"
+msgid "{0, plural, one {Import # source into {collectionName}} other {Import # sources into {collectionName}}}"
+msgstr "{0, plural, other {将 # 个来源导入 {collectionName}}}"
 
 #. placeholder {0}: links.length
 #: apps/reader/src/SourceRemovalDialog.tsx
@@ -1211,18 +1209,6 @@ msgctxt "CSL bibliographic field or item type"
 msgid "Call number"
 msgstr "索书号"
 
-#: apps/extension/src/NotePanel.tsx
-#: apps/extension/src/PostPicker.tsx
-#: apps/extension/src/SavedHighlights.tsx
-#: apps/reader/src/AnnotationEditor.tsx
-#: apps/reader/src/AnnotationPanelActions.tsx
-#: apps/reader/src/LibraryBulkBar.tsx
-#: apps/reader/src/LibraryViewSaveDialog.tsx
-#: apps/reader/src/SourceRemovalDialog.tsx
-msgctxt "Reader action"
-msgid "Cancel"
-msgstr "取消"
-
 #: apps/reader/src/DocumentContextualToolbar.tsx
 msgctxt "DocumentContextualToolbar interface"
 msgid "Cancel"
@@ -1240,6 +1226,18 @@ msgstr "取消"
 
 #: packages/renderer-pdf/src/pdf-translations.ts
 msgctxt "PDF viewer print"
+msgid "Cancel"
+msgstr "取消"
+
+#: apps/extension/src/NotePanel.tsx
+#: apps/extension/src/PostPicker.tsx
+#: apps/extension/src/SavedHighlights.tsx
+#: apps/reader/src/AnnotationEditor.tsx
+#: apps/reader/src/AnnotationPanelActions.tsx
+#: apps/reader/src/LibraryBulkBar.tsx
+#: apps/reader/src/LibraryViewSaveDialog.tsx
+#: apps/reader/src/SourceRemovalDialog.tsx
+msgctxt "Reader action"
 msgid "Cancel"
 msgstr "取消"
 

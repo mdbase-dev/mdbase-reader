@@ -1,7 +1,8 @@
 // @vitest-environment happy-dom
+import { readFileSync } from "node:fs";
+
 import { msg } from "@lingui/core/macro";
 import { createI18nRuntime } from "@mdbase-dev/i18n";
-import { uiCatalogues } from "@mdbase-dev/ui/i18n";
 import { readerI18n } from "@mdbase-reader/i18n";
 import english from "@mdbase-reader/i18n/english";
 import french from "@mdbase-reader/i18n/locales/fr";
@@ -16,8 +17,25 @@ afterEach(() => {
 });
 
 it("keeps app message identities separate from independently authored shared UI", () => {
-  const shared = new Set(Object.keys(uiCatalogues.english.messages));
-  expect(Object.keys(english.messages).filter((id) => shared.has(id))).toEqual([]);
+  // Lingui's singleton can extend a loaded catalogue object in place; inspect
+  // the original deployment bytes, not those live mutable catalogue objects.
+  const readMessages = (url: URL) =>
+    (
+      JSON.parse(readFileSync(url, "utf8")) as {
+        messages: Record<string, unknown>;
+      }
+    ).messages;
+  const shared = new Set(
+    Object.keys(
+      readMessages(
+        new URL("./locales/en/messages.json", import.meta.resolve("@mdbase-dev/ui/i18n")),
+      ),
+    ),
+  );
+  const own = readMessages(
+    new URL("../../../packages/i18n/locales/en/messages.json", import.meta.url),
+  );
+  expect(Object.keys(own).filter((id) => shared.has(id))).toEqual([]);
 });
 
 it("composes real shared UI translations on the same Lingui singleton", async () => {

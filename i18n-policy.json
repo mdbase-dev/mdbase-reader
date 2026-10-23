@@ -1,4 +1,57 @@
 {
+  "allowIdentical": {
+    "fr": [
+      "tjZZdI",
+      "1fCV5M",
+      "VgBQSs",
+      "FC4Rpv",
+      "83nmD6",
+      "PZ5eL5",
+      "DVsJ94",
+      "6TjyV-",
+      "on0oBk"
+    ],
+    "es": [
+      "tjZZdI",
+      "1fCV5M",
+      "X-ByNB",
+      "4iY2Sk",
+      "6ekRAI",
+      "VgBQSs",
+      "FC4Rpv",
+      "83nmD6",
+      "1UzENP",
+      "ru_eLp",
+      "PZ5eL5",
+      "DVsJ94",
+      "6TjyV-",
+      "on0oBk"
+    ],
+    "ko": [
+      "tjZZdI",
+      "1fCV5M",
+      "X-ByNB",
+      "4iY2Sk",
+      "6ekRAI",
+      "VgBQSs",
+      "FC4Rpv",
+      "83nmD6",
+      "PZ5eL5",
+      "DVsJ94"
+    ],
+    "zh": [
+      "tjZZdI",
+      "1fCV5M",
+      "X-ByNB",
+      "C9WKjI",
+      "eOyonN",
+      "VgBQSs",
+      "FC4Rpv",
+      "83nmD6",
+      "PZ5eL5",
+      "DVsJ94"
+    ]
+  },
   "source": {
     "brands": [
       "mdbase Reader",

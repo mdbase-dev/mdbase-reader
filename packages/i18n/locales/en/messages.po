@@ -130,11 +130,9 @@ msgid "{0, plural, one {Copied # annotation as Markdown.} other {Copied # annota
 msgstr "{0, plural, one {Copied # annotation as Markdown.} other {Copied # annotations as Markdown.}}"
 
 #. placeholder {0}: plan.sources.length
-#. placeholder {1}: opened.collectionName
-#. placeholder {2}: opened.collectionName
 #: apps/reader/src/ImportReview.tsx
-msgid "{0, plural, one {Import # source into {1}} other {Import # sources into {2}}}"
-msgstr "{0, plural, one {Import # source into {1}} other {Import # sources into {2}}}"
+msgid "{0, plural, one {Import # source into {collectionName}} other {Import # sources into {collectionName}}}"
+msgstr "{0, plural, one {Import # source into {collectionName}} other {Import # sources into {collectionName}}}"
 
 #. placeholder {0}: links.length
 #: apps/reader/src/SourceRemovalDialog.tsx

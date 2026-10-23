@@ -106,6 +106,7 @@ export function ImportConfirm({
 }): JSX.Element | null {
   const { t } = useLingui();
   const { plan, preview, boundTarget, busy, result } = state;
+  const collectionName = opened.collectionName;
   if (!plan) {
     return null;
   }
@@ -139,8 +140,8 @@ export function ImportConfirm({
               ? t({ message: "Resume import", context: "ImportReview interface" })
               : t({
                   message: plural(plan.sources.length, {
-                    one: `Import # source into ${opened.collectionName}`,
-                    other: `Import # sources into ${opened.collectionName}`,
+                    one: `Import # source into ${collectionName}`,
+                    other: `Import # sources into ${collectionName}`,
                   }),
                 })}
           </button>
