@@ -5834,445 +5834,445 @@ msgstr "Статьи Readwise (Instapaper, Pocket…)"
 
 #: packages/migration/src/readwise.ts
 msgid "Readwise books (Kindle, Apple Books…)"
-msgstr ""
+msgstr "Книги Readwise (Kindle, Apple Books…) "
 
 #: packages/migration/src/readwise-annotations.ts
 msgid "Readwise books whose Reader document is outside this import (unsaved Feed, or removed from Reader)"
-msgstr ""
+msgstr "Книги Readwise, документ Reader которых находится вне этого импорта (несохранённая лента или удалённый документ Reader)"
 
 #: packages/migration/src/readwise-annotations.ts
 msgid "Readwise books without an ID skipped"
-msgstr ""
+msgstr "Книги Readwise без идентификатора пропущены"
 
 #: packages/migration/src/readwise-annotations.ts
 msgid "Readwise highlight identity could not be reconciled; matching quote retained once, native record archived: {key}"
-msgstr ""
+msgstr "Не удалось сопоставить идентификатор выделения Readwise; совпадающая цитата сохранена один раз, исходная запись архивирована: {key}"
 
 #: packages/migration/src/readwise.ts
 msgid "Readwise highlights export: {message}"
-msgstr ""
+msgstr "Экспорт выделений Readwise: {message}"
 
 #: packages/migration/src/readwise-annotations.ts
 msgid "Readwise highlights without an ID or any text skipped"
-msgstr ""
+msgstr "Выделения Readwise без идентификатора или текста пропущены"
 
 #: packages/migration/src/readwise-client.ts
 msgid "Readwise is rate-limiting requests. Stop and try again later."
-msgstr ""
+msgstr "Readwise ограничивает частоту запросов. Остановитесь и повторите попытку позже."
 
 #: packages/migration/src/readwise-sources.ts
 msgid "Readwise no longer provides this source file. Scan again or use its full-file export."
-msgstr ""
+msgstr "Readwise больше не предоставляет этот файл источника. Выполните сканирование ещё раз или используйте экспорт полного файла."
 
 #: packages/migration/src/readwise.ts
 msgid "Readwise podcasts"
-msgstr ""
+msgstr "Подкасты Readwise"
 
 #: packages/migration/src/readwise-client.ts
 msgid "Readwise rejected this token or account access."
-msgstr ""
+msgstr "Readwise отклонил этот токен или доступ к аккаунту."
 
 #: packages/migration/src/readwise-client.ts
 msgid "Readwise request failed. Check your connection or browser access; your token was not saved."
-msgstr ""
+msgstr "Запрос Readwise не выполнен. Проверьте подключение или доступ браузера; токен не сохранён."
 
 #: packages/migration/src/readwise-client.ts
 msgid "Readwise returned a repeated pagination cursor."
-msgstr ""
+msgstr "Readwise вернул повторяющийся указатель страниц."
 
 #: packages/migration/src/readwise-client.ts
 msgid "Readwise returned an unexpected file host; download was refused."
-msgstr ""
+msgstr "Readwise вернул неожиданный хост файла; скачивание отменено."
 
 #: packages/migration/src/readwise-client.ts
 msgid "Readwise returned an unreadable response. Scan again later."
-msgstr ""
+msgstr "Readwise вернул нечитаемый ответ. Повторите сканирование позже."
 
 #. placeholder {0}: String(response.status)
 #: packages/migration/src/readwise-client.ts
 msgid "Readwise returned HTTP {0}. No changes were made to Readwise."
-msgstr ""
+msgstr "Readwise вернул HTTP {0}. В Readwise ничего не изменено."
 
 #: packages/migration/src/readwise.ts
 msgid "Readwise returned missing or duplicate identities. Scan again."
-msgstr ""
+msgstr "Readwise вернул отсутствующие или повторяющиеся идентификаторы. Выполните сканирование ещё раз."
 
 #: packages/migration/src/readwise.ts
 msgid "Readwise supplementals"
-msgstr ""
+msgstr "Дополнительные материалы Readwise"
 
 #: packages/migration/src/readwise-client.ts
 msgid "Readwise token has been cleared. Reconnect to continue."
-msgstr ""
+msgstr "Токен Readwise удалён. Подключитесь снова, чтобы продолжить."
 
 #: packages/migration/src/readwise.ts
 msgid "Readwise tweets"
-msgstr ""
+msgstr "Публикации Readwise"
 
 #: apps/reader/src/CitationEditor.tsx
 msgid "Ready"
-msgstr ""
+msgstr "Готово"
 
 #: apps/reader/src/LibraryNavigator.tsx
 msgctxt "LibraryNavigator interface"
 msgid "Recent"
-msgstr ""
+msgstr "Недавние"
 
 #: apps/reader/src/library-lenses.ts
 msgctxt "library lenses"
 msgid "Recently opened"
-msgstr ""
+msgstr "Недавно открытые"
 
 #: apps/reader/src/LibraryWorkspace.tsx
 msgctxt "LibraryWorkspace sortFieldOptions"
 msgid "Recently opened"
-msgstr ""
+msgstr "Недавно открытые"
 
 #: apps/reader/src/LibraryWorkspace.tsx
 msgctxt "LibraryWorkspace sortFieldOptions"
 msgid "Recently saved"
-msgstr ""
+msgstr "Недавно сохранённые"
 
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "Recipient"
-msgstr ""
+msgstr "Получатель"
 
 #: apps/reader/src/ConnectionLayout.tsx
 msgctxt "ConnectionLayout status or action"
 msgid "Reconnect collection"
-msgstr ""
+msgstr "Переподключить коллекцию"
 
 #: apps/extension/src/use-source-note.ts
 msgid "Reconnect the collection to save these details."
-msgstr ""
+msgstr "Переподключите коллекцию, чтобы сохранить эти сведения."
 
 #: apps/extension/src/DiagnosticsPanel.tsx
 msgid "Record connection timings"
-msgstr ""
+msgstr "Записывать время подключения"
 
 #: apps/extension/src/DiagnosticsPanel.tsx
 msgid "Record timings in this panel only. No page text, paths, queries, IDs or credentials are recorded. Nothing is uploaded. Stopping or closing clears the recording."
-msgstr ""
+msgstr "Запись ведётся только на этой панели. Текст страниц, пути, запросы, идентификаторы и учётные данные не записываются. Данные никуда не отправляются. При остановке или закрытии запись удаляется."
 
 #: apps/reader/src/DraftRecoveryNotice.tsx
 msgid "Recovered changes saved on this device. Syncing to the collection…"
-msgstr ""
+msgstr "Восстановленные изменения сохранены на этом устройстве. Синхронизация с коллекцией…"
 
 #: packages/renderer-pdf/src/pdf-translations.ts
 msgctxt "PDF viewer panel"
 msgid "Redaction Sidebar"
-msgstr ""
+msgstr "Боковая панель редактирования"
 
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "References"
-msgstr ""
+msgstr "Ссылки"
 
 #: apps/reader/src/ImportPageView.tsx
 msgid "References, original files, notes, collections and native annotations."
-msgstr ""
+msgstr "Ссылки, исходные файлы, заметки, коллекции и исходные аннотации."
 
 #: apps/extension/src/SavedHighlights.tsx
 msgid "Refresh"
-msgstr ""
+msgstr "Обновить"
 
 #: apps/reader/src/LibraryAnnotationToolbar.tsx
 msgid "Refresh annotations"
-msgstr ""
+msgstr "Обновить аннотации"
 
 #: apps/reader/src/CitationStructuredEditor.tsx
 msgid "Regenerate"
-msgstr ""
+msgstr "Создать заново"
 
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "Regulation"
-msgstr ""
+msgstr "Постановление"
 
 #: apps/extension/src/connection-view.ts
 #: apps/reader/src/DeploymentUpdateNotice.tsx
 msgid "Reload Reader"
-msgstr ""
+msgstr "Перезагрузить Reader"
 
 #: apps/extension/src/ConnectionPanel.tsx
 msgid "Reload the page, then press the mdbase Reader toolbar button again. Some pages, such as the Chrome Web Store and browser settings, cannot be read by extensions."
-msgstr ""
+msgstr "Перезагрузите страницу, затем снова нажмите кнопку mdbase Reader на панели инструментов. Некоторые страницы, например интернет-магазин Chrome и настройки браузера, недоступны для чтения расширениями."
 
 #: apps/reader/src/CitationAdditionalFields.tsx
 msgctxt "CitationAdditionalFields interface"
 msgid "Remove"
-msgstr ""
+msgstr "Убрать"
 
 #: apps/reader/src/CitationContributors.tsx
 msgctxt "CitationContributors interface"
 msgid "Remove"
-msgstr ""
+msgstr "Убрать"
 
 #: apps/reader/src/CitationTypedFieldEditors.tsx
 msgctxt "CitationTypedFieldEditors interface"
 msgid "Remove"
-msgstr ""
+msgstr "Убрать"
 
 #. placeholder {0}: source.title
 #: apps/reader/src/SourceRemovalDialog.tsx
 msgid "Remove “{0}”?"
-msgstr ""
+msgstr "Убрать «{0}»?"
 
 #. placeholder {0}: String(index + 1)
 #: apps/reader/src/CitationContributors.tsx
 msgid "Remove {itemLabel} {0}"
-msgstr ""
+msgstr "Убрать {itemLabel} {0}"
 
 #: apps/reader/src/CitationTypedFieldEditors.tsx
 msgid "Remove {key}"
-msgstr ""
+msgstr "Убрать {key}"
 
 #: apps/reader/src/CitationAdditionalFields.tsx
 msgid "Remove {label}"
-msgstr ""
+msgstr "Убрать {label}"
 
 #: apps/reader/src/LibraryConditionsEditor.tsx
 msgctxt "LibraryConditionsEditor interface"
 msgid "Remove condition"
-msgstr ""
+msgstr "Убрать условие"
 
 #: apps/reader/src/reader-command-list.ts
 msgid "Remove current source…"
-msgstr ""
+msgstr "Убрать текущий источник…"
 
 #: apps/reader/src/SourceRemovalDialog.tsx
 msgctxt "SourceRemovalDialog interface"
 msgid "Remove source"
-msgstr ""
+msgstr "Убрать источник"
 
 #: apps/reader/src/LibraryRowMenu.tsx
 msgid "Remove source…"
-msgstr ""
+msgstr "Убрать источник…"
 
 #. placeholder {0}: String(index + 1)
 #: apps/reader/src/CitationTypedFieldEditors.tsx
 msgid "Remove value {0}"
-msgstr ""
+msgstr "Убрать значение {0}"
 
 #: apps/reader/src/SourceRemovalDialog.tsx
 msgctxt "SourceRemovalDialog interface"
 msgid "Removing…"
-msgstr ""
+msgstr "Удаление…"
 
 #: apps/reader/src/LibraryRowMenu.tsx
 msgid "Rename…"
-msgstr ""
+msgstr "Переименовать…"
 
 #: apps/reader/src/reader-command-list.ts
 msgctxt "reader command list"
 msgid "Reopen closed tab"
-msgstr ""
+msgstr "Снова открыть закрытую вкладку"
 
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "Report"
-msgstr ""
+msgstr "Отчёт"
 
 #: apps/reader/src/citation-form-model.ts
 msgctxt "CSL item type"
 msgid "Report"
-msgstr ""
+msgstr "Отчёт"
 
 #: apps/reader/src/ReaderHeader.tsx
 msgid "Request local network access and connect directly to the mdbase relay on this computer."
-msgstr ""
+msgstr "Запросите доступ к локальной сети и подключитесь напрямую к ретранслятору mdbase на этом компьютере."
 
 #: apps/reader/src/DockPaneActions.tsx
 msgid "Reset arrangement (keep tabs)"
-msgstr ""
+msgstr "Сбросить расположение панелей (сохранить вкладки)"
 
 #: apps/reader/src/LibraryWorkspace.tsx
 msgid "Reset columns and layout"
-msgstr ""
+msgstr "Сбросить столбцы и макет"
 
 #: apps/reader/src/LibraryAnnotationToolbar.tsx
 msgid "Reset columns and sort"
-msgstr ""
+msgstr "Сбросить столбцы и сортировку"
 
 #: apps/reader/src/reader-command-list.ts
 msgid "Reset pane arrangement"
-msgstr ""
+msgstr "Сбросить расположение панелей"
 
 #: apps/reader/src/dockview-menus.ts
 msgid "Reset pane arrangement (keep tabs)"
-msgstr ""
+msgstr "Сбросить расположение панелей (сохранить вкладки)"
 
 #: apps/reader/src/LibraryTableHeader.tsx
 msgid "Reset width"
-msgstr ""
+msgstr "Сбросить ширину"
 
 #: apps/reader/src/LibraryTableHeader.tsx
 msgid "Resize {label} column"
-msgstr ""
+msgstr "Изменить размер столбца {label}"
 
 #: apps/reader/src/use-annotation-deletion.ts
 msgid "Resolve the save problem or finish the other editor's deletion check first."
-msgstr ""
+msgstr "Устраните проблему сохранения или сначала завершите проверку удаления в другом редакторе."
 
 #: apps/reader/src/source-draft-session.ts
 msgid "Resolve the source note conflict before continuing."
-msgstr ""
+msgstr "Перед продолжением устраните конфликт заметки источника."
 
 #: apps/reader/src/AnnotationEditor.tsx
 msgid "Restore"
-msgstr ""
+msgstr "Восстановить"
 
 #: apps/extension/src/CaptureApp.tsx
 msgid "Restored your unsaved note from earlier."
-msgstr ""
+msgstr "Восстановлена ранее несохранённая заметка."
 
 #: apps/extension/src/NotePanel.tsx
 msgid "Restored your unsaved text from earlier."
-msgstr ""
+msgstr "Восстановлен ранее несохранённый текст."
 
 #: apps/reader/src/AnnotationCard.tsx
 msgctxt "AnnotationCard interface"
 msgid "Resume edits"
-msgstr ""
+msgstr "Продолжить редактирование"
 
 #: apps/reader/src/ImportReview.tsx
 msgctxt "ImportReview interface"
 msgid "Resume import"
-msgstr ""
+msgstr "Продолжить импорт"
 
 #: apps/reader/src/AnnotationComposer.tsx
 msgid "Resume unfinished annotation"
-msgstr ""
+msgstr "Продолжить незавершённую аннотацию"
 
 #: apps/extension/src/CollectionSection.tsx
 #: apps/extension/src/connection-view.ts
 #: apps/extension/src/ConnectionPanel.tsx
 msgid "Retry connection"
-msgstr ""
+msgstr "Повторить подключение"
 
 #: apps/reader/src/ReaderHeader.tsx
 msgid "Retry local access"
-msgstr ""
+msgstr "Повторить попытку доступа к локальной сети"
 
 #: apps/extension/src/ConnectionPanel.tsx
 #: apps/extension/src/NotePanel.tsx
 #: apps/reader/src/SourceNoteEditor.tsx
 msgid "Retry save"
-msgstr ""
+msgstr "Повторить сохранение"
 
 #: apps/reader/src/AnnotationEditor.tsx
 msgctxt "AnnotationEditor interface"
 msgid "Retry save"
-msgstr ""
+msgstr "Повторить сохранение"
 
 #: apps/extension/src/ConnectionPanel.tsx
 msgid "Retry Save to check for an existing source before creating anything else."
-msgstr ""
+msgstr "Повторите сохранение, чтобы проверить наличие источника перед созданием новых данных."
 
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "Review"
-msgstr ""
+msgstr "Проверить"
 
 #: apps/extension/src/ConnectionPanel.tsx
 msgid "Review access"
-msgstr ""
+msgstr "Проверить доступ"
 
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "Review book"
-msgstr ""
+msgstr "Проверить книгу"
 
 #: apps/reader/src/SourceDetails.tsx
 msgid "Review citation"
-msgstr ""
+msgstr "Проверить ссылку"
 
 #: apps/reader/src/ImportDestination.tsx
 msgid "Review collection access"
-msgstr ""
+msgstr "Проверить доступ к коллекции"
 
 #: apps/reader/src/CitationLookup.tsx
 msgid "Review found metadata"
-msgstr ""
+msgstr "Проверить найденные метаданные"
 
 #: apps/reader/src/connection-recovery.ts
 msgid "Review the Reader definitions before they are installed."
-msgstr ""
+msgstr "Перед установкой проверьте определения Reader."
 
 #: apps/reader/src/CitationEditor.tsx
 msgid "Review the suggested details before saving."
-msgstr ""
+msgstr "Перед сохранением проверьте предложенные сведения."
 
 #: apps/reader/src/ConnectionLayout.tsx
 msgid "Review updated access"
-msgstr ""
+msgstr "Проверить обновлённый доступ"
 
 #: apps/reader/src/ImportReview.tsx
 msgid "Review what will be imported"
-msgstr ""
+msgstr "Проверить, что будет импортировано"
 
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "Reviewed author"
-msgstr ""
+msgstr "Проверенный автор"
 
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "Reviewed genre"
-msgstr ""
+msgstr "Проверенный жанр"
 
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "Reviewed title"
-msgstr ""
+msgstr "Проверенное название"
 
 #: apps/extension/src/CaptureApp.tsx
 msgid "Right-click a selection to highlight it with a comment"
-msgstr ""
+msgstr "Щёлкните выделение правой кнопкой, чтобы добавить к нему комментарий"
 
 #: apps/extension/src/ShortcutList.tsx
 msgid "Right-click the selection"
-msgstr ""
+msgstr "Щёлкните выделение правой кнопкой"
 
 #: packages/renderer-pdf/src/pdf-translations.ts
 msgctxt "PDF viewer rotate"
 msgid "Rotate Clockwise"
-msgstr ""
+msgstr "Повернуть по часовой стрелке"
 
 #: packages/renderer-pdf/src/pdf-translations.ts
 msgctxt "PDF viewer rotate"
 msgid "Rotate Counter-Clockwise"
-msgstr ""
+msgstr "Повернуть против часовой стрелки"
 
 #: apps/reader/src/DisplayMenu.tsx
 msgctxt "DisplayMenu interface"
 msgid "Sans"
-msgstr ""
+msgstr "Без засечек"
 
 #: apps/electron/src/main.ts
 msgctxt "Save an exported file"
 msgid "Save"
-msgstr ""
+msgstr "Сохранить"
 
 #. placeholder {0}: modifierKey()
 #: apps/extension/src/SaveBar.tsx
 msgid "Save ({0}+Enter)"
-msgstr ""
+msgstr "Сохранить ({0}+Enter)"
 
 #. placeholder {0}: String(loadedSelected.length)
 #: apps/extension/src/PostPicker.tsx
 msgid "Save {0} selected"
-msgstr ""
+msgstr "Сохранить выбранное: {0}"
 
 #: apps/reader/src/SourceAddDialog.tsx
 msgid "Save a web page or PDF link, look up a work by DOI, arXiv ID or ISBN, or add a file from your device."
-msgstr ""
+msgstr "Сохраните веб-страницу или ссылку на PDF, найдите публикацию по DOI, arXiv ID или ISBN либо добавьте файл с устройства."
 
 #: apps/reader/src/AnnotationComposer.tsx
 msgctxt "AnnotationComposer interface"
 msgid "Save area"
-msgstr ""
+msgstr "Сохранить область"
 
 #: apps/extension/src/WelcomeApp.tsx
 msgid "Save articles and PDFs to your mdbase collection as you read, highlight passages, and find them again in Reader."
