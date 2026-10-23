@@ -1,3 +1,4 @@
+import { t as translate } from "@lingui/core/macro";
 import { useLingui } from "@lingui/react/macro";
 import { useEffect, useRef } from "react";
 
@@ -35,7 +36,7 @@ export function HtmlViewerSurface({
       try {
         const response = await fetch(document.url, { signal: lifetime.signal });
         if (!response.ok) {
-          throw new Error(t`HTML download failed with HTTP ${String(response.status)}.`);
+          throw new Error(translate`HTML download failed with HTTP ${String(response.status)}.`);
         }
         const prepared = prepareHtmlDocument(await response.text());
         await loadFrame(frame, prepared, lifetime.signal);
@@ -61,7 +62,7 @@ export function HtmlViewerSurface({
       surface = null;
       frame.srcdoc = "";
     };
-  }, [document, onDocumentError, onDocumentReady, onSurfaceReady, t]);
+  }, [document, onDocumentError, onDocumentReady, onSurfaceReady]);
   return (
     <iframe
       ref={frameRef}
