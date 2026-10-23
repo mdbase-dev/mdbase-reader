@@ -1,5 +1,6 @@
 import { cslValuesEqual } from "@mdbase-reader/core";
 
+import { WIKIMEDIA_CITOID_ENDPOINT } from "./citation-lookup.js";
 import { arxivIdentifier, doiFromText, doiFromUrl } from "./doi.js";
 import { arxivDoi } from "./metadata-identifiers.js";
 import { citoidClaims, doiClaims } from "./provider-claims.js";
@@ -90,7 +91,7 @@ export async function citationForPage(
     claims.push(...batch.claims);
     if (batch.outcome) {
       outcomes.push(batch.outcome);
-      if (batch.outcome.result !== "ok") {
+      if (batch.outcome.result !== "ok" && batch.outcome.result !== "cancelled") {
         problem ??= providerProblem(batch.outcome, options.timeoutMs ?? PAGE_DOI_TIMEOUT_MS);
       }
     }
@@ -104,31 +105,90 @@ export async function citationForPage(
       ...options,
       timeoutMs: options.timeoutMs ?? PAGE_DOI_TIMEOUT_MS,
     });
-    accept(batch);
-    return (
+    const registered =
       batch.outcome?.result === "ok" &&
-      batch.claims.some((claim) => claim.source.kind === "registry")
-    );
+      batch.claims.some((claim) => claim.source.kind === "registry");
+    if (registered) {
+      problem = undefined;
+    }
+    accept(batch);
+    return registered;
   }
 
   publish();
-  const registered = doi ? await registryLookup(doi) : false;
-  // A known DOI gets the short first chance, avoiding a redundant URL disclosure on success.
-  if (!registered && options.citoid) {
-    const batch = await citoidClaims(pageUrl, {
-      ...(options.fetch ? { fetch: options.fetch } : {}),
-      ...(options.now ? { now: options.now } : {}),
-      ...options.citoid,
-      ...(options.signal ? { signal: options.signal } : {}),
-    });
-    doi ??= batchDoi(batch);
-    accept(batch);
-    if (doi && !attempted.has(doi.toLowerCase())) {
-      await registryLookup(doi);
-    }
+  const citoidController = new AbortController();
+  let registered = false;
+  let discoveredDoi: string | undefined;
+  const registry = doi
+    ? registryLookup(doi).then((obtained) => {
+        registered = obtained;
+        if (obtained) {
+          citoidController.abort();
+        }
+      })
+    : Promise.resolve();
+  // Opted-in URL lookups can upgrade a slow DOI lookup, but never hold a registry result up.
+  const remote = options.citoid
+    ? lookupCitoid(pageUrl, options, options.citoid, citoidController.signal).then((batch) => {
+        if (registered) {
+          if (batch.outcome) {
+            outcomes.push(batch.outcome);
+          }
+          return;
+        }
+        discoveredDoi = batchDoi(batch);
+        doi ??= discoveredDoi;
+        accept(batch);
+      })
+    : Promise.resolve();
+  await Promise.all([registry, remote]);
+  if (!registered && discoveredDoi && !attempted.has(discoveredDoi.toLowerCase())) {
+    doi = discoveredDoi;
+    await registryLookup(doi);
   }
   options.signal?.throwIfAborted();
   return preview();
+}
+
+async function lookupCitoid(
+  pageUrl: string,
+  options: PageCitationOptions,
+  citoid: CitoidClaimsOptions,
+  stop: AbortSignal,
+): Promise<ClaimBatch> {
+  const now = options.now ?? (() => new Date());
+  const startedAt = now().getTime();
+  try {
+    return await citoidClaims(pageUrl, {
+      ...(options.fetch ? { fetch: options.fetch } : {}),
+      ...(options.now ? { now: options.now } : {}),
+      ...(options.setTimeout ? { setTimeout: options.setTimeout } : {}),
+      ...(options.clearTimeout ? { clearTimeout: options.clearTimeout } : {}),
+      ...citoid,
+      signal: AbortSignal.any([
+        stop,
+        ...(options.signal ? [options.signal] : []),
+        ...(citoid.signal ? [citoid.signal] : []),
+      ]),
+    });
+  } catch (reason) {
+    options.signal?.throwIfAborted();
+    citoid.signal?.throwIfAborted();
+    if (!stop.aborted) {
+      throw reason;
+    }
+    return {
+      claims: [],
+      outcome: {
+        provider:
+          citoid.citoidEndpoint && citoid.citoidEndpoint !== WIKIMEDIA_CITOID_ENDPOINT
+            ? "translation-server"
+            : "citoid",
+        result: "cancelled",
+        elapsedMs: Math.max(0, now().getTime() - startedAt),
+      },
+    };
+  }
 }
 
 function batchDoi(batch: ClaimBatch | null): string | undefined {

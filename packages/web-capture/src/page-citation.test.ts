@@ -220,13 +220,47 @@ describe("optional Citoid page citations", () => {
     expect(updates.map((next) => next.origin)).toEqual(["page", "citoid"]);
   });
 
-  it("does not make a redundant Citoid lookup when a registry record was obtained", async () => {
-    const fetch = vi
-      .fn<typeof globalThis.fetch>()
-      .mockResolvedValue(Response.json({ title: "Registered" }));
-    await citationForPage(embedded, pageUrl, { fetch, citoid: {} });
-    expect(fetch).toHaveBeenCalledOnce();
-    expect(fetch.mock.calls[0]?.[0]).toBe("https://doi.org/10.1234/example");
+  it("cancels an opted-in Citoid lookup once a registry record is obtained", async () => {
+    let resolveRegistry!: (response: Response) => void;
+    const fetch = vi.fn<typeof globalThis.fetch>((url) =>
+      String(url).startsWith("https://doi.org/")
+        ? new Promise((resolve) => {
+            resolveRegistry = resolve;
+          })
+        : new Promise(() => undefined),
+    );
+    const settled = citationForPage(embedded, pageUrl, { fetch, citoid: {} });
+    await vi.waitFor(() => expect(fetch).toHaveBeenCalledTimes(2));
+    resolveRegistry(Response.json({ title: "Registered" }));
+    expect(await settled).toMatchObject({
+      origin: "doi",
+      outcomes: [
+        { provider: "doi.org", result: "ok" },
+        { provider: "citoid", result: "cancelled" },
+      ],
+    });
+    expect(fetch.mock.calls[1]?.[1]?.signal?.aborted).toBe(true);
+  });
+
+  it("can upgrade from Citoid while a DOI lookup is still pending", async () => {
+    let resolveRegistry!: (response: Response) => void;
+    const fetch = vi.fn<typeof globalThis.fetch>((url) =>
+      String(url).startsWith("https://doi.org/")
+        ? new Promise((resolve) => {
+            resolveRegistry = resolve;
+          })
+        : Promise.resolve(Response.json([item])),
+    );
+    const updates: CitationPreview[] = [];
+    const settled = citationForPage(embedded, pageUrl, {
+      fetch,
+      citoid: {},
+      onUpdate: (next) => updates.push(next),
+    });
+    await vi.waitFor(() => expect(updates.map((next) => next.origin)).toEqual(["page", "citoid"]));
+    resolveRegistry(Response.json({ title: "Registered" }));
+    expect((await settled)?.origin).toBe("doi");
+    expect(updates.map((next) => next.origin)).toEqual(["page", "citoid", "doi"]);
   });
 
   it("uses Citoid if the known DOI failed, keeping both provider outcomes", async () => {
