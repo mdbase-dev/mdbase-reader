@@ -2171,538 +2171,538 @@ msgstr "策展人"
 
 #: apps/reader/src/CitationLookup.tsx
 msgid "Current"
-msgstr ""
+msgstr "当前"
 
 #: packages/renderer-pdf/src/pdf-translations.ts
 msgctxt "PDF viewer print"
 msgid "Current page ({currentPage})"
-msgstr ""
+msgstr "当前页（{currentPage}）"
 
 #: apps/reader/src/reader-command-list.ts
 msgid "Current source"
-msgstr ""
+msgstr "当前来源"
 
 #: apps/reader/src/library-lenses.ts
 msgctxt "library lenses"
 msgid "Currently reading"
-msgstr ""
+msgstr "正在阅读"
 
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "Custom"
-msgstr ""
+msgstr "自定义"
 
 #: apps/reader/src/CitationTypedFieldEditors.tsx
 msgid "Custom properties"
-msgstr ""
+msgstr "自定义属性"
 
 #: apps/reader/src/DisplayMenu.tsx
 msgid "Dark"
-msgstr ""
+msgstr "深色"
 
 #: apps/extension/src/OptionsApp.tsx
 msgctxt "Dark appearance theme"
 msgid "Dark"
-msgstr ""
+msgstr "深色"
 
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "Dataset"
-msgstr ""
+msgstr "数据集"
 
 #: apps/reader/src/citation-form-model.ts
 msgctxt "CSL item type"
 msgid "Dataset"
-msgstr ""
+msgstr "数据集"
 
 #: apps/reader/src/CitationSourceSync.tsx
 msgctxt "citation metadata field"
 msgid "Date"
-msgstr ""
+msgstr "日期"
 
 #: apps/reader/src/CitationSourceSync.tsx
 msgctxt "source metadata field"
 msgid "Date"
-msgstr ""
+msgstr "日期"
 
 #: apps/reader/src/CitationTypedFieldEditors.tsx
 msgid "Date as printed"
-msgstr ""
+msgstr "印刷日期"
 
 #: apps/reader/src/CitationTypedFieldEditors.tsx
 msgid "Date form"
-msgstr ""
+msgstr "日期形式"
 
 #: apps/reader/src/CitationTypedFieldEditors.tsx
 msgctxt "CitationTypedFieldEditors interface"
 msgid "Date form"
-msgstr ""
+msgstr "日期形式"
 
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL date field"
 msgid "Date parts"
-msgstr ""
+msgstr "日期部分"
 
 #: apps/extension/src/SavedHighlights.tsx
 msgid "Delete"
-msgstr ""
+msgstr "删除"
 
 #: apps/reader/src/AnnotationEditor.tsx
 msgctxt "AnnotationEditor interface"
 msgid "Delete"
-msgstr ""
+msgstr "删除"
 
 #: apps/reader/src/SelectionToolbar.tsx
 msgctxt "SelectionToolbar interface"
 msgid "Delete"
-msgstr ""
+msgstr "删除"
 
 #: apps/extension/src/SavedHighlights.tsx
 msgid "Delete highlight"
-msgstr ""
+msgstr "删除高亮"
 
 #: apps/reader/src/SelectionToolbar.tsx
 msgctxt "SelectionToolbar interface"
 msgid "Delete highlight"
-msgstr ""
+msgstr "删除高亮"
 
 #: apps/reader/src/AnnotationEditor.tsx
 msgid "Delete this annotation?"
-msgstr ""
+msgstr "要删除此注释吗？"
 
 #. placeholder {0}: links ? ( <Plural value={links} one=" # note links to it; those links will break." other=" # notes link to it; those links will break." /> ) : ( "" )
 #: apps/extension/src/SavedHighlights.tsx
 msgid "Delete this highlight from your collection?{0}"
-msgstr ""
+msgstr "要从你的集合中删除此高亮吗？{0}"
 
 #: apps/reader/src/SelectionToolbar.tsx
 msgctxt "SelectionToolbar interface"
 msgid "Delete?"
-msgstr ""
+msgstr "要删除吗？"
 
 #: packages/migration/src/readwise-annotations.ts
 msgid "Deleted Readwise books skipped"
-msgstr ""
+msgstr "已跳过已删除的 Readwise 书籍"
 
 #: packages/migration/src/readwise-annotations.ts
 msgid "Deleted Readwise highlights skipped"
-msgstr ""
+msgstr "已跳过已删除的 Readwise 高亮"
 
 #: apps/extension/src/SavedHighlights.tsx
 msgid "Deleting…"
-msgstr ""
+msgstr "正在删除…"
 
 #: apps/reader/src/AnnotationEditor.tsx
 msgctxt "AnnotationEditor interface"
 msgid "Deleting…"
-msgstr ""
+msgstr "正在删除…"
 
 #: apps/reader/src/SelectionToolbar.tsx
 msgctxt "SelectionToolbar interface"
 msgid "Deleting…"
-msgstr ""
+msgstr "正在删除…"
 
 #: apps/reader/src/DisplayMenu.tsx
 msgctxt "DisplayMenu interface"
 msgid "Density"
-msgstr ""
+msgstr "密度"
 
 #: apps/reader/src/LibraryAnnotationToolbar.tsx
 msgctxt "LibraryAnnotationToolbar interface"
 msgid "Descending"
-msgstr ""
+msgstr "降序"
 
 #: apps/reader/src/LibraryWorkspace.tsx
 msgctxt "LibraryWorkspace interface"
 msgid "Descending"
-msgstr ""
+msgstr "降序"
 
 #: apps/reader/src/SourceDetails.tsx
 msgctxt "SourceDetails fields"
 msgid "Description"
-msgstr ""
+msgstr "描述"
 
 #: apps/reader/src/import-controller.ts
 msgid "Destination checked. Confirm below to begin writing."
-msgstr ""
+msgstr "目标位置已检查。请在下方确认以开始写入。"
 
 #: apps/reader/src/CitationEditor.tsx
 #: apps/reader/src/SourceDetails.tsx
 msgid "Details"
-msgstr ""
+msgstr "详情"
 
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "Dimensions"
-msgstr ""
+msgstr "尺寸"
 
 #: apps/reader/src/ReaderHeader.tsx
 msgid "Direct connection"
-msgstr ""
+msgstr "直接连接"
 
 #: apps/reader/src/use-direct-access.ts
 msgid "Direct local access is not available for this connection."
-msgstr ""
+msgstr "此连接不支持直接本地访问。"
 
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "Director"
-msgstr ""
+msgstr "导演"
 
 #: apps/reader/src/AnnotationEditor.tsx
 msgid "Discard changes"
-msgstr ""
+msgstr "放弃更改"
 
 #: apps/reader/src/AnnotationPanelActions.tsx
 msgctxt "AnnotationPanelActions interface"
 msgid "Discard comment"
-msgstr ""
+msgstr "放弃评论"
 
 #: apps/reader/src/AnnotationComposer.tsx
 msgctxt "AnnotationComposer interface"
 msgid "Discard selection"
-msgstr ""
+msgstr "放弃所选内容"
 
 #: apps/reader/src/use-annotation-creation.ts
 msgid "Discard the unfinished annotation comment and comment on this?"
-msgstr ""
+msgstr "要放弃未完成的注释评论并改为对此添加评论吗？"
 
 #: apps/reader/src/use-selection-routing.ts
 msgid "Discard the unfinished annotation comment and use this area?"
-msgstr ""
+msgstr "要放弃未完成的注释评论并改用此区域吗？"
 
 #: apps/reader/src/use-annotation-edit.ts
 msgid "Discard this annotation's unsaved changes? The collection version will be kept."
-msgstr ""
+msgstr "要放弃此注释未保存的更改吗？将保留集合中的版本。"
 
 #: apps/reader/src/use-annotation-creation.ts
 msgid "Discard this unfinished annotation comment?"
-msgstr ""
+msgstr "要放弃这条未完成的注释评论吗？"
 
 #: apps/reader/src/AnnotationPanelActions.tsx
 msgid "Discard this unsaved comment?"
-msgstr ""
+msgstr "要放弃这条未保存的评论吗？"
 
 #: packages/migration/src/readwise-annotations.ts
 msgid "Discarded Readwise highlights skipped (kept in the native archive)"
-msgstr ""
+msgstr "已跳过已放弃的 Readwise 高亮（保留在原生存档中）"
 
 #: apps/reader/src/CitationLookup.tsx
 msgid "Dismiss"
-msgstr ""
+msgstr "忽略"
 
 #: apps/reader/src/reader-command-list.ts
 msgid "Display"
-msgstr ""
+msgstr "显示"
 
 #: apps/reader/src/DisplayMenu.tsx
 msgctxt "DisplayMenu interface"
 msgid "Display settings"
-msgstr ""
+msgstr "显示设置"
 
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "Division"
-msgstr ""
+msgstr "部门"
 
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "Document"
-msgstr ""
+msgstr "文档"
 
 #: apps/reader/src/citation-form-model.ts
 msgctxt "CSL item type"
 msgid "Document"
-msgstr ""
+msgstr "文档"
 
 #: apps/reader/src/reader-command-list.ts
 msgctxt "reader command list"
 msgid "Document"
-msgstr ""
+msgstr "文档"
 
 #: apps/reader/src/source-addition-flow.ts
 msgctxt "source addition flow"
 msgid "Document"
-msgstr ""
+msgstr "文档"
 
 #: apps/reader/src/DocumentContextualToolbar.tsx
 msgctxt "DocumentContextualToolbar interface"
 msgid "Document actions"
-msgstr ""
+msgstr "文档操作"
 
 #: packages/renderer-pdf/src/pdf-translations.ts
 msgctxt "PDF viewer document"
 msgid "Document Menu"
-msgstr ""
+msgstr "文档菜单"
 
 #: apps/reader/src/AnnotationList.tsx
 msgctxt "AnnotationList annotationOrderOptions"
 msgid "Document order"
-msgstr ""
+msgstr "文档顺序"
 
 #: apps/reader/src/AnnotationCard.tsx
 msgid "Document passage"
-msgstr ""
+msgstr "文档段落"
 
 #: apps/extension/src/CitationCard.tsx
 msgid "DOI"
-msgstr ""
+msgstr "DOI"
 
 #: apps/reader/src/CitationStructuredEditor.tsx
 msgid "DOI, ISBN, URL, and language"
-msgstr ""
+msgstr "DOI、ISBN、URL 和语言"
 
 #: apps/extension/src/ConnectionPanel.tsx
 msgid "Done"
-msgstr ""
+msgstr "完成"
 
 #: apps/reader/src/AnnotationEditor.tsx
 msgctxt "AnnotationEditor interface"
 msgid "Done"
-msgstr ""
+msgstr "完成"
 
 #: apps/reader/src/LibraryTableRow.tsx
 msgid "Double-click or press Enter to open"
-msgstr ""
+msgstr "双击或按 Enter 键打开"
 
 #: apps/reader/src/LibraryAnnotationRow.tsx
 msgid "Double-click or press Enter to open in its document"
-msgstr ""
+msgstr "双击或按 Enter 键在其文档中打开"
 
 #: apps/reader/src/NavigatorSections.tsx
 msgid "Double-click to keep open · Ctrl+Enter opens beside"
-msgstr ""
+msgstr "双击保持打开 · Ctrl+Enter 在旁边打开"
 
 #: apps/extension/src/DiagnosticsPanel.tsx
 msgid "Download timings"
-msgstr ""
+msgstr "下载耗时"
 
 #: packages/migration/src/readwise-sources.ts
 msgid "Downloaded file does not match the expected PDF/EPUB format."
-msgstr ""
+msgstr "下载的文件与预期的 PDF/EPUB 格式不符。"
 
 #: apps/reader/src/annotation-drafts.ts
 msgid "Draft storage could not open."
-msgstr ""
+msgstr "无法打开草稿存储。"
 
 #: apps/reader/src/annotation-drafts.ts
 msgid "Draft storage is blocked by another window."
-msgstr ""
+msgstr "草稿存储被另一个窗口阻止。"
 
 #: apps/reader/src/annotation-drafts.ts
 msgid "Draft storage read failed."
-msgstr ""
+msgstr "草稿存储读取失败。"
 
 #: apps/reader/src/annotation-drafts.ts
 msgid "Draft storage write failed."
-msgstr ""
+msgstr "草稿存储写入失败。"
 
 #: packages/renderer-pdf/src/pdf-touch-selection-view.ts
 msgid "Drag to adjust selection end; arrow keys move one character"
-msgstr ""
+msgstr "拖动可调整选区结尾；方向键每次移动一个字符"
 
 #: packages/renderer-pdf/src/pdf-touch-selection-view.ts
 msgid "Drag to adjust selection start; arrow keys move one character"
-msgstr ""
+msgstr "拖动可调整选区开头；方向键每次移动一个字符"
 
 #: apps/reader/src/CitationEditor.tsx
 msgid "Drag to insert this citation"
-msgstr ""
+msgstr "拖动以插入此引文"
 
 #: apps/reader/src/LibraryTableHeader.tsx
 msgid "Drag to move"
-msgstr ""
+msgstr "拖动以移动"
 
 #: apps/reader/src/LibraryTableHeader.tsx
 msgid "Drag to resize · Double-click to reset"
-msgstr ""
+msgstr "拖动以调整大小 · 双击重置"
 
 #: packages/renderer-pdf/src/pdf-translations.ts
 msgctxt "PDF viewer zoom"
 msgid "Drag to select area to zoom"
-msgstr ""
+msgstr "拖动选择要缩放的区域"
 
 #: apps/reader/src/SourceAddDialog.tsx
 msgid "Drop to add"
-msgstr ""
+msgstr "松开以添加"
 
 #: apps/reader/src/ReaderWorkspaceView.tsx
 msgid "Drop to add to your library"
-msgstr ""
+msgstr "松开以添加到你的文献库"
 
 #: apps/reader/src/WorkspacePaneSupport.tsx
 msgid "Drop to attach"
-msgstr ""
+msgstr "松开以附加"
 
 #: apps/reader/src/CitationContributors.tsx
 msgctxt "CitationContributors interface"
 msgid "Dropping particle"
-msgstr ""
+msgstr "可省略前缀"
 
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "Dropping particle"
-msgstr ""
+msgstr "可省略前缀"
 
 #: packages/migration/src/zotero-validation.ts
 msgid "Duplicate collection identity."
-msgstr ""
+msgstr "集合标识重复。"
 
 #: apps/reader/src/dockview-menus.ts
 msgid "Duplicate document in pane right"
-msgstr ""
+msgstr "在右侧窗格中复制文档"
 
 #: packages/migration/src/run-files.ts
 msgid "Duplicate import destination path."
-msgstr ""
+msgstr "导入目标路径重复。"
 
 #: apps/reader/src/reader-command-list.ts
 msgid "Duplicate in new pane right"
-msgstr ""
+msgstr "在右侧新窗格中复制"
 
 #: apps/reader/src/reader-command-list.ts
 msgid "Duplicate in pane below"
-msgstr ""
+msgstr "在下方窗格中复制"
 
 #: packages/migration/src/zotero-validation.ts
 msgid "Duplicate Zotero item identity."
-msgstr ""
+msgstr "Zotero 条目标识重复。"
 
 #: apps/reader/src/CitationAdditionalFields.tsx
 msgid "e.g. accessed, genre, PMID"
-msgstr ""
+msgstr "例如 accessed、genre、PMID"
 
 #: apps/reader/src/LibraryTableHeader.tsx
 msgid "e.g. course or csl.volume"
-msgstr ""
+msgstr "例如 course 或 csl.volume"
 
 #: apps/reader/src/LibraryAnnotations.tsx
 msgid "e.g. Quotes for chapter 2"
-msgstr ""
+msgstr "例如：第 2 章的引文摘录"
 
 #: apps/reader/src/LibraryWorkspace.tsx
 msgid "e.g. Reading this month"
-msgstr ""
+msgstr "例如：本月阅读"
 
 #: apps/reader/src/CitationTypedFieldEditors.tsx
 msgid "e.g. Spring or 1"
-msgstr ""
+msgstr "例如：Spring 或 1"
 
 #: packages/renderer-pdf/src/pdf-translations.ts
 msgctxt "PDF viewer print"
 msgid "e.g., 1-3, 5, 8-10"
-msgstr ""
+msgstr "例如：1-3, 5, 8-10"
 
 #: apps/reader/src/AnnotationCard.tsx
 msgctxt "AnnotationCard interface"
 msgid "Edit"
-msgstr ""
+msgstr "编辑"
 
 #: apps/reader/src/LibraryFieldCell.tsx
 msgid "Edit {fieldKey}"
-msgstr ""
+msgstr "编辑 {fieldKey}"
 
 #: apps/reader/src/AnnotationEditor.tsx
 msgctxt "AnnotationEditor interface"
 msgid "Edit annotation"
-msgstr ""
+msgstr "编辑注释"
 
 #: packages/markdown-editor/src/citation-card.ts
 msgctxt "citation card"
 msgid "Edit citation"
-msgstr ""
+msgstr "编辑引文"
 
 #: apps/extension/src/SavedHighlights.tsx
 msgid "Edit comment"
-msgstr ""
+msgstr "编辑评论"
 
 #: apps/reader/src/AnnotationEditor.tsx
 msgid "Edit here"
-msgstr ""
+msgstr "在此编辑"
 
 #: apps/reader/src/AnnotationCard.tsx
 msgctxt "AnnotationCard interface"
 msgid "Edit here"
-msgstr ""
+msgstr "在此编辑"
 
 #: packages/markdown-editor/src/annotation-widgets.ts
 msgctxt "annotation widgets"
 msgid "Edit highlight"
-msgstr ""
+msgstr "编辑高亮"
 
 #: apps/extension/src/CitationPanel.tsx
 #: apps/extension/src/NotePanel.tsx
 msgid "Edit in Reader"
-msgstr ""
+msgstr "在 Reader 中编辑"
 
 #: packages/markdown-editor/src/annotation-widgets.ts
 msgctxt "annotation widgets"
 msgid "Edit link"
-msgstr ""
+msgstr "编辑链接"
 
 #: packages/markdown-editor/src/citation-card.ts
 msgctxt "citation card"
 msgid "Edit metadata"
-msgstr ""
+msgstr "编辑元数据"
 
 #: apps/reader/src/AnnotationEditor.tsx
 msgid "Edited from the document text."
-msgstr ""
+msgstr "已根据文档文本编辑。"
 
 #: apps/reader/src/AnnotationCard.tsx
 msgid "Editing requires a saved annotation"
-msgstr ""
+msgstr "编辑需要已保存的注释"
 
 #: apps/reader/src/CitationStructuredEditor.tsx
 msgctxt "CitationStructuredEditor interface"
 msgid "Edition"
-msgstr ""
+msgstr "版本"
 
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "Edition"
-msgstr ""
+msgstr "版本"
 
 #: apps/reader/src/CitationContributors.tsx
 msgid "Editor"
-msgstr ""
+msgstr "编辑"
 
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "Editor"
-msgstr ""
+msgstr "编辑"
 
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "Editorial director"
-msgstr ""
+msgstr "编辑总监"
 
 #: apps/reader/src/CitationStructuredEditor.tsx
 msgctxt "CitationStructuredEditor interface"
 msgid "Editors"
-msgstr ""
+msgstr "编辑"
 
 #: apps/reader/src/CitationStructuredEditor.tsx
 msgid "Editors and translators"
-msgstr ""
+msgstr "编辑和译者"
 
 #: apps/reader/src/CitationTypedFieldEditors.tsx
 msgctxt "CitationTypedFieldEditors dateModeOptions"
 msgid "EDTF / raw date"
-msgstr ""
+msgstr "EDTF / 原始日期"
 
 #: apps/reader/src/CitationTypedFieldEditors.tsx
 msgid "EDTF or source date"
-msgstr ""
+msgstr "EDTF 或来源日期"
 
 #. placeholder {0}: this.candidate.label
 #: packages/markdown-editor/src/annotation-widgets.ts
 msgid "Embedded annotation: {0}"
-msgstr ""
+msgstr "嵌入的注释：{0}"
 
 #: packages/renderer-pdf/src/pdf-viewer.tsx
 msgid "EmbedPDF could not open this PDF."
-msgstr ""
+msgstr "EmbedPDF 无法打开此 PDF。"
 
 #: packages/renderer-pdf/src/embedpdf-runtime.ts
 #: packages/renderer-pdf/src/pdf-viewer.tsx
