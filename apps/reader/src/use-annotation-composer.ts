@@ -8,6 +8,7 @@ import {
 } from "./use-annotation-creation.js";
 import { useAnnotationNavigation } from "./use-annotation-navigation.js";
 import { useBookmarkAction } from "./use-bookmark-action.js";
+import { useReadingAnnotation } from "./use-reading-annotation.js";
 import { useSelectionAnchor } from "./use-selection-anchor.js";
 import { useSelectionToolbar, type SelectionToolbarState } from "./use-selection-toolbar.js";
 
@@ -20,6 +21,7 @@ export type { ComposerSelection } from "./annotation-composer-request.js";
 export interface AnnotationComposerController extends Omit<AnnotationCreationController, "pause"> {
   readonly canOpenAnnotation: boolean;
   readonly activeAnnotationId: AnnotationId | null;
+  readonly readingAnnotationId: AnnotationId | null;
   readonly revealedAnnotationId: AnnotationId | null;
   readonly editingAnnotationId: AnnotationId | null;
   readonly returnToReading: (() => void) | null;
@@ -57,6 +59,7 @@ export function useAnnotationComposer(
   const [revealedId, setRevealedId] = useState<AnnotationId | null>(null);
   const [editingId, setEditingId] = useState<AnnotationId | null>(null);
   const navigation = useAnnotationNavigation(sourceId, surface);
+  const readingAnnotationId = useReadingAnnotation(surface, annotations);
   const clearNavigationError = navigation.clearError;
   const resetSelection = useCallback(() => {
     setActiveId(null);
@@ -95,6 +98,7 @@ export function useAnnotationComposer(
     error: navigation.error ?? creation.error ?? bookmark.problem,
     canOpenAnnotation: surface !== null,
     activeAnnotationId: currentId(activeId),
+    readingAnnotationId,
     revealedAnnotationId: currentId(revealedId),
     editingAnnotationId: currentId(editingId),
     returnToReading: navigation.returnToReading,

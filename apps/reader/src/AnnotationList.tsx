@@ -1,10 +1,15 @@
 import { Select, type SelectItems } from "@mdbase-dev/ui/select";
 import { useMemo, useState, type JSX } from "react";
 
-import { browseAnnotations, type AnnotationFilter } from "./annotation-list-order.js";
+import {
+  indexAnnotations,
+  searchAnnotationIndex,
+  type AnnotationFilter,
+} from "./annotation-list-order.js";
 import { AnnotationCard } from "./AnnotationCard.js";
 import { FilterIcon, SearchIcon } from "./icons.js";
 import { Menu } from "./Menu.js";
+import { useAnnotationBrowserFind } from "./use-annotation-browser-find.js";
 import { VirtualAnnotationList } from "./VirtualAnnotationList.js";
 
 import type { AnnotationFileReader } from "./AnnotationImage.js";
@@ -21,6 +26,7 @@ export function AnnotationList({
   onOpen,
   editingId,
   activeId,
+  readingId = null,
   onCancelEdit,
   readFile,
 }: {
@@ -32,6 +38,7 @@ export function AnnotationList({
   readonly onOpen: (annotation: Annotation) => void;
   readonly editingId: AnnotationId | null;
   readonly activeId: AnnotationId | null;
+  readonly readingId?: AnnotationId | null;
   readonly onCancelEdit: () => void;
   readonly readFile: AnnotationFileReader;
 }): JSX.Element {
@@ -46,13 +53,15 @@ export function AnnotationList({
   const [query, setQuery] = useState("");
   const [filter, setFilter] = useState<AnnotationFilter>("all");
   const [order, setOrder] = useState<"document" | "newest">("document");
-  const results = useMemo(
-    () =>
-      annotations.status === "ready"
-        ? browseAnnotations(annotations.value, query, filter, order)
-        : [],
-    [annotations, query, filter, order],
+  const index = useMemo(
+    () => (annotations.status === "ready" ? indexAnnotations(annotations.value, order) : []),
+    [annotations, order],
   );
+  const results = useMemo(
+    () => searchAnnotationIndex(index, query, filter),
+    [index, query, filter],
+  );
+  const { renderAll, setRenderAll, browserRef } = useAnnotationBrowserFind();
   if (annotations.status !== "ready" || !annotations.value.length) {
     return <AnnotationListStatus annotations={annotations} />;
   }
@@ -64,7 +73,7 @@ export function AnnotationList({
     annotations.value.some(({ id }) => id === activeId) &&
     !results.some(({ id }) => id === activeId);
   return (
-    <>
+    <div className="annotation-browser" ref={browserRef}>
       <AnnotationBrowserControls
         query={query}
         filter={filter}
@@ -77,8 +86,19 @@ export function AnnotationList({
         onOrderChange={setOrder}
         onClear={clear}
       />
+      <label className="annotation-find-mode">
+        <input
+          type="checkbox"
+          checked={renderAll}
+          onChange={(event) => setRenderAll(event.target.checked)}
+        />
+        Render all for browser Find
+        <span>{renderAll ? "Slower with large lists" : "Search above covers all annotations"}</span>
+      </label>
       <VirtualAnnotationList
         results={results}
+        renderAll={renderAll}
+        readingId={readingId}
         editingId={currentEditing}
         activeId={activeId}
         renderCard={(annotation) => (
@@ -106,7 +126,7 @@ export function AnnotationList({
           </div>
         ) : null}
       </VirtualAnnotationList>
-    </>
+    </div>
   );
 }
 

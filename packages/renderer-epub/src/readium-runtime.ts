@@ -45,6 +45,7 @@ export interface ReadiumRuntime {
   onSelectionCleared?(listener: () => void): Unsubscribe;
   onMotion?(listener: (motion: ReadingMotion) => void): Unsubscribe;
   onAnnotationActivated(listener: (annotationId: AnnotationId) => void): Unsubscribe;
+  nearestAnnotation?(): AnnotationId | null;
   setAnnotations(annotations: readonly Annotation[]): void;
   setActiveAnnotation(annotation: Annotation | null): void;
   setTypography(typography: ReadingTypography): Promise<void>;
@@ -176,6 +177,7 @@ export async function createReadiumRuntime(input: {
       const stops = [annotationActivations.subscribe(listener), frames.onActivated(listener)];
       return () => stops.forEach((stop) => stop());
     },
+    nearestAnnotation: () => frames.nearestAnnotation(),
     setAnnotations(annotations) {
       applyAnnotationDecorations(navigator, annotations, publication, input.publicationBaseUrl);
       frames.setAnnotations(annotations);

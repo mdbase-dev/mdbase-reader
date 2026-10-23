@@ -182,6 +182,7 @@ export function InspectorContent({
           }
           annotations={workspace.annotations}
           activeId={composer.activeAnnotationId}
+          readingId={composer.readingAnnotationId}
           transclusion={workspace.transclusion}
           onUpdate={workspace.updateAnnotation}
           onPlanDelete={workspace.planAnnotationDeletion}

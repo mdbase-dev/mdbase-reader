@@ -16,6 +16,8 @@ export class MarginMarkers {
   readonly #layer: HTMLElement;
   #ranges: readonly MarginMarkerRange[] = [];
   #activeId: AnnotationId | null = null;
+  #positions: { id: AnnotationId; x: number; y: number }[] = [];
+  #layoutScale = 1;
 
   public constructor(document: Document, onActivate: (id: AnnotationId) => void) {
     this.#document = document;
@@ -63,6 +65,8 @@ export class MarginMarkers {
     // coordinates are converted into the layer's own positioning space.
     const origin = this.#layer.getBoundingClientRect();
     const scale = this.#scale();
+    this.#layoutScale = scale;
+    this.#positions = [];
     const markers = this.#ranges.flatMap(({ id, range, hasNote }) => {
       const rects = [...range.getClientRects()].filter(({ height }) => height > 0);
       const first = rects[0];
@@ -73,6 +77,11 @@ export class MarginMarkers {
       // Beside the passage's own block, so indents and paginated columns keep it close.
       const block = blockAncestor(range.startContainer);
       const edge = block ? block.getBoundingClientRect().left : first.left;
+      this.#positions.push({
+        id,
+        x: (first.left - origin.left) / scale,
+        y: (first.top - origin.top) / scale,
+      });
       const marker = this.#document.createElement("span");
       marker.dataset["annotation"] = id;
       marker.className = `${hasNote ? "has-note" : ""}${id === this.#activeId ? " is-active" : ""}`;
@@ -83,6 +92,27 @@ export class MarginMarkers {
       return [marker];
     });
     this.#layer.replaceChildren(...markers);
+  }
+
+  /** Reuses layout's coordinates: one geometry read, not thousands of Range reads per scroll. */
+  public nearest(): AnnotationId | null {
+    const view = this.#document.defaultView;
+    if (!view) {
+      return null;
+    }
+    const origin = this.#layer.getBoundingClientRect();
+    const x = (view.innerWidth / 2 - origin.left) / this.#layoutScale;
+    const y = (Math.min(40, view.innerHeight / 10) - origin.top) / this.#layoutScale;
+    let nearest: AnnotationId | null = null;
+    let distance = Infinity;
+    for (const point of this.#positions) {
+      const next = (point.x - x) ** 2 + (point.y - y) ** 2;
+      if (next < distance) {
+        nearest = point.id;
+        distance = next;
+      }
+    }
+    return nearest;
   }
 
   /** Rendered pixels per CSS pixel inside the layer, e.g. under a zoomed root. */
@@ -98,6 +128,7 @@ export class MarginMarkers {
   public destroy(): void {
     this.#layer.remove();
     this.#ranges = [];
+    this.#positions = [];
   }
 }
 
