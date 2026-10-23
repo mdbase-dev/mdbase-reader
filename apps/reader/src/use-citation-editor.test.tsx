@@ -172,7 +172,7 @@ describe("citation provenance and lookups", () => {
     await render(explained);
     await find();
     expect(citationClaims).toHaveBeenCalledWith(
-      { query: "https://example.org", url: "https://example.org" },
+      { query: "https://example.org" },
       expect.objectContaining({ signal: expect.any(AbortSignal) }),
     );
     expect(controller.suggestions.map(({ field }) => field)).toEqual(["publisher", "title"]);
@@ -322,6 +322,37 @@ describe("citation provenance and lookups", () => {
     await act(async () => controller.setDraft("{"));
     await act(async () => controller.setDraft(JSON.stringify({ ...citation, publisher: "Typed" })));
     expect(controller.provenance["title"]).toEqual(explained.cslProvenance?.["title"]);
+  });
+});
+
+describe("citation lookup targets", () => {
+  const withDoi = {
+    ...source,
+    url: "https://existing.example",
+    citation: { ...citation, DOI: "10.1234/existing" },
+    frontmatter: { csl: { ...citation, DOI: "10.1234/existing" } },
+  };
+
+  it.each(["10.1234/typed", "doi:10.1234/typed", "https://typed.example"])(
+    "does not attach current identifiers to a typed target: %s",
+    async (query) => {
+      await render(withDoi);
+      await act(async () => controller.resolve(query));
+      expect(citationClaims).toHaveBeenCalledExactlyOnceWith(
+        { query },
+        expect.objectContaining({ signal: expect.any(AbortSignal) }),
+      );
+      expect(resolveCitation).not.toHaveBeenCalled();
+    },
+  );
+
+  it.each(["", "refresh"])("uses current identifiers for a refresh: %j", async (query) => {
+    await render(withDoi);
+    await act(async () => controller.resolve(query));
+    expect(citationClaims).toHaveBeenCalledExactlyOnceWith(
+      { query: "", url: "https://existing.example", doi: "10.1234/existing" },
+      expect.objectContaining({ signal: expect.any(AbortSignal) }),
+    );
   });
 });
 

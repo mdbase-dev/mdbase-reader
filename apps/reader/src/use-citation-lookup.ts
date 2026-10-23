@@ -41,7 +41,7 @@ export function useCitationLookup(input: {
   const scope = JSON.stringify([sourceId, input.citation, input.provenance]);
   useEffect(() => () => pending.current?.abort(), [scope]);
   const current = state?.scope === scope ? state : null;
-  if (state?.scope !== undefined && !current) {
+  if (state && !current) {
     setState(null);
   }
   const suggestions = input.citation
@@ -52,7 +52,7 @@ export function useCitationLookup(input: {
     : [];
   const dismissFields = (fields: ReadonlySet<string>): void => {
     setState((previous) =>
-      previous && previous.scope === scope
+      previous?.scope === scope
         ? { ...previous, dismissed: new Set([...previous.dismissed, ...fields]) }
         : previous,
     );
@@ -114,17 +114,19 @@ async function lookupClaims(
   citation: Readonly<Record<string, unknown>>,
   signal: AbortSignal,
 ): Promise<readonly Claim[]> {
-  const request = resolutionRequest(query);
+  const trimmed = query.trim();
+  const refresh = trimmed === "" || trimmed.toLowerCase() === "refresh";
+  const request = resolutionRequest(trimmed);
   const doi = typeof citation["DOI"] === "string" ? citation["DOI"] : undefined;
   const url = source?.url ?? (typeof citation["URL"] === "string" ? citation["URL"] : undefined);
   if (
     gateway.citationClaims &&
-    (request.kind === "url" ||
-      /^10\.|^doi:/iu.test(query) ||
-      (query === citation["title"] && Boolean(doi ?? url)))
+    (refresh || request.kind === "url" || /^(?:doi:\s*)?10\.\d{4,9}\//iu.test(trimmed))
   ) {
     return gateway.citationClaims(
-      { query, ...(url ? { url } : {}), ...(doi ? { doi } : {}) },
+      refresh
+        ? { query: "", ...(url ? { url } : {}), ...(doi ? { doi } : {}) }
+        : { query: trimmed },
       { signal },
     );
   }
