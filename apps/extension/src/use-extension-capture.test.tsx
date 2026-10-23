@@ -646,6 +646,81 @@ it("reads a newly arrived preview when the writer starts importing during a pend
   await act(async () => lookup.finish(upgradedCitation));
 });
 
+it.each([
+  { name: "automatic", title: undefined, saveTitle: undefined, nextEdited: true },
+  { name: "manual", title: "My saved-page title", saveTitle: undefined, nextEdited: false },
+  { name: "cleared", title: "", saveTitle: undefined, nextEdited: true },
+  { name: "save-time", title: undefined, saveTitle: "Title supplied on save", nextEdited: false },
+])(
+  "keeps a pending save's $name title and evidence when the next page restores its draft",
+  async ({ title, saveTitle, nextEdited }) => {
+    const lookup = pendingCitation();
+    await mount();
+    let getCitation!: () => CitationPreview | null;
+    let finishSave!: (result: unknown) => void;
+    mocks.save.mockImplementationOnce((input: { getCitation: typeof getCitation }) => {
+      getCitation = input.getCitation;
+      return new Promise((resolve) => {
+        finishSave = resolve;
+      });
+    });
+    let saving!: Promise<void>;
+    await act(async () => {
+      saving = controller.save({ highlight: false, ...(saveTitle ? { title: saveTitle } : {}) });
+    });
+    if (title !== undefined) {
+      await act(async () => controller.setDraft((draft) => ({ ...draft, title })));
+    }
+    // This newer preview must survive even after the next page has its own preview.
+    await act(async () => lookup.update(upgradedCitation));
+    const expectedTitle =
+      saveTitle ?? (title === "" ? "Encyclopedia title" : (title ?? "Encyclopedia title"));
+    const expected = {
+      ...upgradedCitation,
+      citation: { ...upgradedCitation.citation, title: expectedTitle },
+      provenance:
+        title || saveTitle
+          ? { type: upgradedCitation.provenance["type"] }
+          : upgradedCitation.provenance,
+    };
+    expect(getCitation()).toEqual(expected);
+
+    let updateNext!: (preview: CitationPreview) => void;
+    mocks.prepareCitation.mockImplementationOnce(
+      (_capture: unknown, _signal: AbortSignal, onUpdate: typeof updateNext) => {
+        updateNext = onUpdate;
+        return new Promise(() => undefined);
+      },
+    );
+    chromeFake.session.set("draft:1:https://example.com/next", {
+      draft: {
+        ...controller.draft,
+        title: "My next-page title",
+        automaticTitle: "My next-page title",
+        titleEdited: nextEdited,
+      },
+      selection: null,
+    });
+    mocks.captureTab.mockResolvedValue({
+      ...page,
+      pageTitle: "Next work",
+      canonicalUrl: "https://example.com/next",
+      submittedUrl: "https://example.com/next",
+    });
+    await act(async () => chromeFake.emit("updated", 1, { url: "https://example.com/next" }));
+    expect(controller.draft.title).toBe("My next-page title");
+    expect(getCitation()).toEqual(expected);
+    await act(async () => updateNext(initialCitation));
+    expect(getCitation()).toEqual(expected);
+    await act(async () => lookup.finish(initialCitation));
+    expect(getCitation()).toEqual(expected);
+    await act(async () => {
+      finishSave({ source: existing, annotation: null, existing: false, notices: [] });
+      await saving;
+    });
+  },
+);
+
 it("ignores late citation updates and completion as soon as navigation aborts a capture", async () => {
   const lookup = pendingCitation();
   await mount();
