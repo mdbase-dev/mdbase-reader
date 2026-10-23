@@ -4856,557 +4856,557 @@ msgstr "正在打开文献笔记…"
 
 #: apps/extension/src/ConnectionPanel.tsx
 msgid "Opening mdbase…"
-msgstr ""
+msgstr "正在打开 mdbase…"
 
 #: apps/reader/src/CollectionMenu.tsx
 msgctxt "CollectionMenu interface"
 msgid "Opening mdbase…"
-msgstr ""
+msgstr "正在打开 mdbase…"
 
 #: apps/reader/src/ConnectionLayout.tsx
 msgctxt "ConnectionLayout interface"
 msgid "Opening mdbase…"
-msgstr ""
+msgstr "正在打开 mdbase…"
 
 #: apps/reader/src/ConnectReader.tsx
 msgctxt "ConnectReader interface"
 msgid "Opening mdbase…"
-msgstr ""
+msgstr "正在打开 mdbase…"
 
 #: apps/extension/src/NotePanel.tsx
 msgid "Opening the literature note…"
-msgstr ""
+msgstr "正在打开文献笔记…"
 
 #: apps/extension/src/CaptureApp.tsx
 msgid "Opening the new page…"
-msgstr ""
+msgstr "正在打开新页面…"
 
 #: apps/reader/src/ReaderApp.tsx
 #: apps/reader/src/ReaderWorkspace.tsx
 msgid "Opening your reading collection"
-msgstr ""
+msgstr "正在打开你的阅读集合"
 
 #: packages/renderer-pdf/src/pdf-translations.ts
 msgctxt "PDF viewer passwordPrompt"
 msgid "Opening..."
-msgstr ""
+msgstr "正在打开…"
 
 #: apps/reader/src/reader-app-commands.ts
 msgid "Opens in a new tab"
-msgstr ""
+msgstr "在新标签页中打开"
 
 #: apps/reader/src/CitationStructuredEditor.tsx
 msgid "Optional descriptive text"
-msgstr ""
+msgstr "可选的描述性文字"
 
 #: apps/reader/src/SourceAddDialog.tsx
 msgid "or"
-msgstr ""
+msgstr "或"
 
 #: apps/reader/src/ConnectReader.tsx
 msgid "Or open another collection"
-msgstr ""
+msgstr "或打开其他集合"
 
 #: apps/reader/src/AnnotationList.tsx
 msgid "Order"
-msgstr ""
+msgstr "顺序"
 
 #: apps/reader/src/CitationContributors.tsx
 msgctxt "CitationContributors contributorKindOptions"
 msgid "Organisation"
-msgstr ""
+msgstr "机构"
 
 #: apps/reader/src/CitationContributors.tsx
 msgctxt "CitationContributors interface"
 msgid "Organisation name"
-msgstr ""
+msgstr "机构名称"
 
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "Organizer"
-msgstr ""
+msgstr "组织者"
 
 #. placeholder {0}: category.toUpperCase()
 #: packages/migration/src/readwise-sources.ts
 msgid "Original {0} unavailable; saved HTML retained: {key}"
-msgstr ""
+msgstr "原始 {0} 不可用；已保留保存的 HTML：{key}"
 
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "Original author"
-msgstr ""
+msgstr "原作者"
 
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "Original date"
-msgstr ""
+msgstr "原始日期"
 
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "Original publisher"
-msgstr ""
+msgstr "原出版者"
 
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "Original publisher place"
-msgstr ""
+msgstr "原出版地"
 
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "Original title"
-msgstr ""
+msgstr "原标题"
 
 #: apps/reader/src/citation-form-model.ts
 msgctxt "CSL item type"
 msgid "Other"
-msgstr ""
+msgstr "其他"
 
 #: apps/extension/src/use-extension-capture.ts
 msgid "Other notes already link to this highlight. Delete it from Saved highlights to review them first."
-msgstr ""
+msgstr "其他笔记已链接到此高亮。请先在“已保存的高亮”中查看这些笔记，再删除它。"
 
 #: packages/migration/src/readwise.ts
 msgid "Other Reader sources"
-msgstr ""
+msgstr "其他 Reader 来源"
 
 #: packages/migration/src/readwise.ts
 msgid "Other Readwise sources"
-msgstr ""
+msgstr "其他 Readwise 来源"
 
 #: packages/renderer-pdf/src/pdf-viewer-ui-schema.ts
 msgctxt "PDF navigation outline"
 msgid "Outline"
-msgstr ""
+msgstr "大纲"
 
 #: packages/renderer-pdf/src/pdf-translations.ts
 msgctxt "PDF viewer outline"
 msgid "Outline"
-msgstr ""
+msgstr "大纲"
 
 #: packages/renderer-pdf/src/pdf-translations.ts
 msgctxt "PDF viewer panel"
 msgid "Outline"
-msgstr ""
+msgstr "大纲"
 
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "Page"
-msgstr ""
+msgstr "页码"
 
 #: packages/renderer-pdf/src/pdf-translations.ts
 msgctxt "PDF viewer search"
 msgid "Page {page}"
-msgstr ""
+msgstr "第 {page} 页"
 
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "Page first"
-msgstr ""
+msgstr "起始页"
 
 #: packages/renderer-pdf/src/pdf-translations.ts
 msgctxt "PDF viewer page"
 msgid "Page Rotation"
-msgstr ""
+msgstr "页面旋转"
 
 #: packages/renderer-pdf/src/pdf-translations.ts
 msgctxt "PDF viewer page"
 msgid "Page Settings"
-msgstr ""
+msgstr "页面设置"
 
 #: apps/reader/src/CitationStructuredEditor.tsx
 msgctxt "CitationStructuredEditor interface"
 msgid "Pages"
-msgstr ""
+msgstr "页码范围"
 
 #: packages/renderer-pdf/src/pdf-translations.ts
 msgctxt "PDF viewer print"
 msgid "Pages to print"
-msgstr ""
+msgstr "要打印的页面"
 
 #: apps/extension/src/WelcomeApp.tsx
 msgid "Pages you have saved are marked on the toolbar button and show your highlights."
-msgstr ""
+msgstr "你保存过的页面会在工具栏按钮上标记，并显示你的高亮。"
 
 #: apps/extension/src/OptionsApp.tsx
 msgid "Pages you visit"
-msgstr ""
+msgstr "你访问的页面"
 
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "Pamphlet"
-msgstr ""
+msgstr "小册子"
 
 #: apps/reader/src/reader-command-list.ts
 msgid "Pane {paneLabel}"
-msgstr ""
+msgstr "窗格 {paneLabel}"
 
 #: apps/reader/src/reader-command-list.ts
 msgid "Pane {paneLabel} is focused"
-msgstr ""
+msgstr "窗格 {paneLabel} 已获得焦点"
 
 #: apps/reader/src/DockPaneActions.tsx
 msgctxt "DockPaneActions interface"
 msgid "Pane actions"
-msgstr ""
+msgstr "窗格操作"
 
 #: apps/reader/src/CitationContributors.tsx
 msgid "Parse literal name"
-msgstr ""
+msgstr "解析字面姓名"
 
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "Parse names"
-msgstr ""
+msgstr "解析姓名"
 
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "Part"
-msgstr ""
+msgstr "部分"
 
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "Part title"
-msgstr ""
+msgstr "部分标题"
 
 #: apps/reader/src/annotation-columns.ts
 msgctxt "Annotation table column"
 msgid "Passage"
-msgstr ""
+msgstr "段落"
 
 #: apps/reader/src/LibraryAnnotationToolbar.tsx
 msgid "Passage, note, source or tag"
-msgstr ""
+msgstr "段落、笔记、来源或标签"
 
 #: packages/renderer-pdf/src/pdf-translations.ts
 msgctxt "PDF viewer passwordPrompt"
 msgid "Password"
-msgstr ""
+msgstr "密码"
 
 #: packages/renderer-pdf/src/pdf-translations.ts
 msgctxt "PDF viewer passwordPrompt"
 msgid "Password Required"
-msgstr ""
+msgstr "需要密码"
 
 #: apps/reader/src/source-addition-flow.ts
 msgid "Paste a web address, DOI, arXiv ID, ISBN or PubMed ID."
-msgstr ""
+msgstr "请粘贴网址、DOI、arXiv ID、ISBN 或 PubMed ID。"
 
 #: apps/reader/src/CitationLookup.tsx
 msgid "Paste an identifier, URL, or title"
-msgstr ""
+msgstr "粘贴标识符、URL 或标题"
 
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "Patent"
-msgstr ""
+msgstr "专利"
 
 #: packages/migration/src/zotero-validation.ts
 msgid "Payload count mismatch."
-msgstr ""
+msgstr "载荷数量不匹配。"
 
 #: apps/reader/src/LibraryWorkspace.tsx
 msgctxt "LibraryWorkspace formatFilterOptions"
 msgid "PDF"
-msgstr ""
+msgstr "PDF"
 
 #: packages/core/src/domain/selector.ts
 msgid "PDF coordinates must be finite numbers."
-msgstr ""
+msgstr "PDF 坐标必须是有限数值。"
 
 #: packages/migration/src/zotero-anchors.ts
 msgid "PDF geometry unavailable."
-msgstr ""
+msgstr "PDF 几何信息不可用。"
 
 #: packages/renderer-pdf/src/embedpdf-runtime.ts
 msgid "PDF text extraction was cancelled."
-msgstr ""
+msgstr "PDF 文本提取已取消。"
 
 #: apps/reader/src/ReaderWorkspaceView.tsx
 #: apps/reader/src/SourceAddDialog.tsx
 msgid "PDF, EPUB or saved web page"
-msgstr ""
+msgstr "PDF、EPUB 或已保存的网页"
 
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "Performance"
-msgstr ""
+msgstr "表演"
 
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "Performer"
-msgstr ""
+msgstr "表演者"
 
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "Periodical"
-msgstr ""
+msgstr "期刊"
 
 #: apps/reader/src/CitationContributors.tsx
 msgctxt "CitationContributors contributorKindOptions"
 msgid "Person"
-msgstr ""
+msgstr "个人"
 
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "Personal communication"
-msgstr ""
+msgstr "个人通信"
 
 #: apps/reader/src/dockview-menus.ts
 msgctxt "dockview menus"
 msgid "Pin tab"
-msgstr ""
+msgstr "固定标签页"
 
 #: apps/extension/src/WelcomeApp.tsx
 msgid "Pin the extension"
-msgstr ""
+msgstr "固定扩展程序"
 
 #: apps/extension/src/HighlightFields.tsx
 msgctxt "Highlight colour"
 msgid "pink"
-msgstr ""
+msgstr "粉色"
 
 #: apps/reader/src/DockviewWorkspace.tsx
 msgctxt "DockviewWorkspace interface"
 msgid "Pinned"
-msgstr ""
+msgstr "已固定"
 
 #: apps/reader/src/CitationStructuredEditor.tsx
 msgctxt "CitationStructuredEditor interface"
 msgid "Place"
-msgstr ""
+msgstr "地点"
 
 #: apps/extension/src/SaveBar.tsx
 msgid "Please wait…"
-msgstr ""
+msgstr "请稍候…"
 
 #: apps/reader/src/WorkspacePaneSupport.tsx
 msgid "Position not saved"
-msgstr ""
+msgstr "位置未保存"
 
 #: apps/extension/src/PostPicker.tsx
 msgid "Post"
-msgstr ""
+msgstr "帖子"
 
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "Post"
-msgstr ""
+msgstr "帖子"
 
 #: apps/extension/src/PostPicker.tsx
 msgid "Posts"
-msgstr ""
+msgstr "帖子"
 
 #: apps/extension/src/ConnectionPanel.tsx
 msgid "Prepare this collection"
-msgstr ""
+msgstr "准备此集合"
 
 #: apps/reader/src/import-controller.ts
 msgid "Preparing"
-msgstr ""
+msgstr "准备中"
 
 #: apps/reader/src/LibraryWorkspace.tsx
 msgctxt "LibraryWorkspace interface"
 msgid "Preparing bibliography…"
-msgstr ""
+msgstr "正在准备文献书目…"
 
 #: apps/reader/src/CitationPreview.tsx
 msgctxt "CitationPreview status or action"
 msgid "Preparing citation…"
-msgstr ""
+msgstr "正在准备引文…"
 
 #: packages/renderer-pdf/src/pdf-translations.ts
 msgctxt "PDF viewer print"
 msgid "Preparing document..."
-msgstr ""
+msgstr "正在准备文档..."
 
 #: apps/reader/src/DocumentContextualToolbar.tsx
 msgctxt "DocumentContextualToolbar interface"
 msgid "Preparing export…"
-msgstr ""
+msgstr "正在准备导出…"
 
 #: apps/reader/src/ConnectedDocument.tsx
 msgid "Preparing PDF pages…"
-msgstr ""
+msgstr "正在准备 PDF 页面…"
 
 #: apps/reader/src/ConnectedDocument.tsx
 msgctxt "ConnectedDocument status or action"
 msgid "Preparing publication…"
-msgstr ""
+msgstr "正在准备出版物…"
 
 #: apps/reader/src/ConnectedDocument.tsx
 msgid "Preparing saved page…"
-msgstr ""
+msgstr "正在准备已保存的网页…"
 
 #: apps/reader/src/ReaderWorkspace.tsx
 msgid "Preparing the reading workspace"
-msgstr ""
+msgstr "正在准备阅读工作区"
 
 #: apps/extension/src/CaptureApp.tsx
 msgid "Press the mdbase Reader toolbar button (Alt+Shift+S) to use Reader on this page. Browser pages and the Chrome Web Store cannot be read by extensions."
-msgstr ""
+msgstr "点击 mdbase Reader 工具栏按钮 (Alt+Shift+S) 即可在此页面上使用 Reader。扩展程序无法读取浏览器页面和 Chrome 网上应用店。"
 
 #: apps/reader/src/CitationPreview.tsx
 msgid "Preview"
-msgstr ""
+msgstr "预览"
 
 #: apps/reader/src/preview.tsx
 msgid "Preview files cannot be exported."
-msgstr ""
+msgstr "预览文件无法导出。"
 
 #: packages/renderer-epub/src/epub-page-navigation.tsx
 msgid "Previous page"
-msgstr ""
+msgstr "上一页"
 
 #: packages/renderer-pdf/src/pdf-translations.ts
 msgctxt "PDF viewer page"
 msgid "Previous Page"
-msgstr ""
+msgstr "上一页"
 
 #: packages/renderer-pdf/src/pdf-translations.ts
 msgctxt "PDF viewer document"
 msgid "Print"
-msgstr ""
+msgstr "打印"
 
 #: packages/renderer-pdf/src/pdf-translations.ts
 msgctxt "PDF viewer print"
 msgid "Print"
-msgstr ""
+msgstr "打印"
 
 #: packages/renderer-pdf/src/pdf-translations.ts
 msgctxt "PDF viewer print"
 msgid "Print Settings"
-msgstr ""
+msgstr "打印设置"
 
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "Printing"
-msgstr ""
+msgstr "印次"
 
 #: packages/renderer-pdf/src/pdf-translations.ts
 msgctxt "PDF viewer print"
 msgid "Printing..."
-msgstr ""
+msgstr "正在打印..."
 
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "Producer"
-msgstr ""
+msgstr "制片人"
 
 #: apps/reader/src/LibraryTableHeader.tsx
 msgid "Properties"
-msgstr ""
+msgstr "属性"
 
 #: apps/reader/src/CitationStructuredEditor.tsx
 msgid "Publication"
-msgstr ""
+msgstr "出版物"
 
 #: apps/reader/src/library-columns.ts
 msgctxt "Library table column"
 msgid "Published"
-msgstr ""
+msgstr "出版日期"
 
 #: apps/reader/src/LibraryWorkspace.tsx
 msgctxt "LibraryWorkspace sortFieldOptions"
 msgid "Published"
-msgstr ""
+msgstr "出版日期"
 
 #: apps/reader/src/SourceDetails.tsx
 msgctxt "SourceDetails fields"
 msgid "Published"
-msgstr ""
+msgstr "出版日期"
 
 #: apps/reader/src/CitationStructuredEditor.tsx
 msgctxt "CitationStructuredEditor interface"
 msgid "Publisher"
-msgstr ""
+msgstr "出版者"
 
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "Publisher"
-msgstr ""
+msgstr "出版者"
 
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "Publisher place"
-msgstr ""
+msgstr "出版地"
 
 #: apps/extension/src/HighlightFields.tsx
 msgctxt "Highlight colour"
 msgid "purple"
-msgstr ""
+msgstr "紫色"
 
 #: apps/reader/src/LibraryCells.tsx
 msgctxt "reading status"
 msgid "Queued"
-msgstr ""
+msgstr "待读"
 
 #: apps/reader/src/SourceNoteEditor.tsx
 msgctxt "SourceNoteEditor formatActions"
 msgid "Quote"
-msgstr ""
+msgstr "引用块"
 
 #: packages/core/src/domain/selector.ts
 msgid "quote.exact must not be empty."
-msgstr ""
+msgstr "quote.exact 不能为空。"
 
 #: apps/reader/src/AnnotationEditor.tsx
 msgctxt "AnnotationEditor interface"
 msgid "Quoted passage"
-msgstr ""
+msgstr "引用的段落"
 
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL date field"
 msgid "Raw date"
-msgstr ""
+msgstr "原始日期"
 
 #: apps/reader/src/MobileSourceViews.tsx
 msgctxt "MobileSourceViews views"
 msgid "Read"
-msgstr ""
+msgstr "阅读"
 
 #: apps/reader/src/NativeSignIn.tsx
 msgid "Read from your collection"
-msgstr ""
+msgstr "从你的集合读取"
 
 #: apps/electron/src/main.ts
 msgid "Readable documents"
-msgstr ""
+msgstr "可阅读的文档"
 
 #: packages/migration/src/readwise.ts
 msgid "Reader articles"
-msgstr ""
+msgstr "Reader 文章"
 
 #: apps/extension/src/capture-errors.ts
 #: apps/extension/src/page-capture.ts
 msgid "Reader can capture ordinary HTTPS pages only."
-msgstr ""
+msgstr "Reader 只能捕获普通的 HTTPS 页面。"
 
 #: apps/extension/src/save-capture.ts
 msgid "Reader cannot download this PDF from here. Download it and import the file in Reader."
-msgstr ""
+msgstr "Reader 无法从这里下载此 PDF。请下载后在 Reader 中导入该文件。"
 
 #. placeholder {0}: selection.imageType
 #: apps/reader/src/annotation-composer-request.ts
 msgid "Reader cannot persist an area capture of type {0}."
-msgstr ""
+msgstr "Reader 无法保存类型为 {0} 的区域截图。"
 
 #: apps/extension/src/CaptureApp.tsx
 #: apps/extension/src/ConnectionPanel.tsx
 msgid "Reader cannot read this page"
-msgstr ""
+msgstr "Reader 无法读取此页面"
 
 #: apps/reader/src/ReaderWorkspaceView.tsx
 msgctxt "ReaderWorkspaceView interface"
 msgid "Reader commands"
-msgstr ""
+msgstr "Reader 命令"
 
 #: apps/reader/src/use-web-capture.ts
 msgid "Reader could not add that source."
-msgstr ""
+msgstr "Reader 无法添加该来源。"
 
 #: apps/reader/src/use-annotation-view.ts
 msgid "Reader could not add the view."
-msgstr ""
+msgstr "Reader 无法添加该视图。"
 
 #: apps/reader/src/use-library-selection.ts
 msgid "Reader could not add this source."
