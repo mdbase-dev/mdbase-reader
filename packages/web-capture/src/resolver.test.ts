@@ -531,6 +531,20 @@ describe("citation resolution: existing CSL is canonical", () => {
     expect(result.suggestions).toEqual([]);
   });
 
+  it("gives an agreed label naming no known source no weight", () => {
+    const citation = { type: "webpage", title: "Original" };
+    const result = resolveCitation({
+      existing: {
+        citation,
+        provenance: { title: { value: "Original", source: "page:html", agreed: ["h1"] } },
+      },
+      claims: [claim("title", "Updated title", registry)],
+    });
+    expect(result.suggestions).toMatchObject([
+      { field: "title", reason: "change", proposed: "Updated title" },
+    ]);
+  });
+
   it("leaves a manually removed title absent rather than returning an enriched citation", () => {
     const citation = { type: "webpage" };
     const result = resolveCitation({
