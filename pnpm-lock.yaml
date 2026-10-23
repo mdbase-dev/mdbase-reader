@@ -8,27 +8,42 @@ importers:
 
   .:
     devDependencies:
+      '@babel/core':
+        specifier: 7.29.0
+        version: 7.29.0
       '@callumalpass/mdbase':
         specifier: 0.3.0-rc.9
         version: 0.3.0-rc.9
       '@eslint/js':
         specifier: ^9.39.2
         version: 9.39.5
+      '@lingui/babel-plugin-lingui-macro':
+        specifier: 6.9.0
+        version: 6.9.0(@babel/core@7.29.0)
       '@lingui/cli':
         specifier: 6.9.0
         version: 6.9.0(rolldown@1.2.15)
+      '@lingui/core':
+        specifier: 6.9.0
+        version: 6.9.0(@babel/core@7.29.0)
       '@lingui/format-po':
         specifier: 6.9.0
         version: 6.9.0
+      '@lingui/react':
+        specifier: 6.9.0
+        version: 6.9.0(@babel/core@7.29.0)(react@19.2.8)
       '@lingui/vite-plugin':
         specifier: 6.9.0
-        version: 6.9.0(@babel/core@7.29.7)(@lingui/babel-plugin-lingui-macro@6.9.0(@babel/core@7.29.7))(rolldown@1.2.15)(vite@8.3.5(@types/node@22.20.1)(jiti@2.7.0)(yaml@2.9.0))
+        version: 6.9.0(@babel/core@7.29.0)(@lingui/babel-plugin-lingui-macro@6.9.0(@babel/core@7.29.0))(rolldown@1.2.15)(vite@8.3.5(@types/node@22.20.1)(jiti@2.7.0)(yaml@2.9.0))
       '@mdbase-dev/connect-dev':
         specifier: 0.1.0-beta.125
         version: 0.1.0-beta.125
       '@mdbase-dev/connect-protocol':
         specifier: file:packages/connect/vendor/mdbase-dev-connect-protocol-0.1.0-beta.129-c280cd194ffd.tgz
         version: file:packages/connect/vendor/mdbase-dev-connect-protocol-0.1.0-beta.129-c280cd194ffd.tgz
+      '@mdbase-reader/i18n':
+        specifier: workspace:0.1.0-beta.0
+        version: link:packages/i18n
       '@types/node':
         specifier: ^22.19.11
         version: 22.20.1
@@ -80,6 +95,9 @@ importers:
       '@capacitor/preferences':
         specifier: latest
         version: 8.0.1(@capacitor/core@8.5.3)
+      '@lingui/core':
+        specifier: 6.9.0
+        version: 6.9.0(@babel/core@7.29.7)
       '@mdbase-reader/platform':
         specifier: workspace:*
         version: link:../../packages/platform
@@ -90,6 +108,9 @@ importers:
 
   apps/electron:
     dependencies:
+      '@lingui/core':
+        specifier: 6.9.0
+        version: 6.9.0(@babel/core@7.29.7)
       '@mdbase-reader/platform':
         specifier: workspace:*
         version: link:../../packages/platform
@@ -99,6 +120,12 @@ importers:
 
   apps/extension:
     dependencies:
+      '@lingui/core':
+        specifier: 6.9.0
+        version: 6.9.0(@babel/core@7.29.7)
+      '@lingui/react':
+        specifier: 6.9.0
+        version: 6.9.0(@babel/core@7.29.7)(react@19.2.8)
       '@mdbase-dev/ui':
         specifier: file:../../vendor/mdbase-dev-ui-dev-b2d7c464.tgz
         version: file:vendor/mdbase-dev-ui-dev-b2d7c464.tgz(@codemirror/view@6.43.8)(@mdbase-dev/sdk@file:packages/connect/vendor/sdk-eaa4e697-production-beta141.tgz)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
@@ -266,7 +293,11 @@ importers:
         specifier: ^2.9.0
         version: 2.9.1
 
-  packages/core: {}
+  packages/core:
+    dependencies:
+      '@lingui/core':
+        specifier: 6.9.0
+        version: 6.9.0(@babel/core@7.29.7)
 
   packages/i18n:
     dependencies:
@@ -316,6 +347,9 @@ importers:
       '@lezer/highlight':
         specifier: ^1.2.3
         version: 1.2.3
+      '@lingui/core':
+        specifier: 6.9.0
+        version: 6.9.0(@babel/core@7.29.7)
       '@mdbase-dev/ui':
         specifier: file:../../vendor/mdbase-dev-ui-dev-b2d7c464.tgz
         version: file:vendor/mdbase-dev-ui-dev-b2d7c464.tgz(@codemirror/view@6.43.8)(@mdbase-dev/sdk@file:packages/connect/vendor/sdk-eaa4e697-production-beta141.tgz)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
@@ -347,6 +381,9 @@ importers:
 
   packages/reading-surface:
     dependencies:
+      '@lingui/core':
+        specifier: 6.9.0
+        version: 6.9.0(@babel/core@7.29.7)
       '@mdbase-reader/core':
         specifier: workspace:*
         version: link:../core
@@ -357,6 +394,12 @@ importers:
 
   packages/renderer-epub:
     dependencies:
+      '@lingui/core':
+        specifier: 6.9.0
+        version: 6.9.0(@babel/core@7.29.7)
+      '@lingui/react':
+        specifier: 6.9.0
+        version: 6.9.0(@babel/core@7.29.7)(react@19.2.8)
       '@mdbase-reader/core':
         specifier: workspace:*
         version: link:../core
@@ -388,6 +431,9 @@ importers:
 
   packages/renderer-html:
     dependencies:
+      '@lingui/core':
+        specifier: 6.9.0
+        version: 6.9.0(@babel/core@7.29.7)
       '@mdbase-reader/core':
         specifier: workspace:*
         version: link:../core
@@ -425,6 +471,12 @@ importers:
       '@embedpdf/react-pdf-viewer':
         specifier: ^2.15.0
         version: 2.15.0(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(svelte@5.56.8(@typescript-eslint/types@8.66.0))(vue@3.5.41(typescript@5.9.3))
+      '@lingui/core':
+        specifier: 6.9.0
+        version: 6.9.0(@babel/core@7.29.7)
+      '@lingui/react':
+        specifier: 6.9.0
+        version: 6.9.0(@babel/core@7.29.7)(react@19.2.8)
       '@mdbase-reader/core':
         specifier: workspace:*
         version: link:../core
@@ -456,6 +508,9 @@ importers:
       '@fontsource/azeret-mono':
         specifier: ^5.3.0
         version: 5.3.0
+      '@lingui/core':
+        specifier: 6.9.0
+        version: 6.9.0(@babel/core@7.29.7)
       '@mdbase-dev/ui':
         specifier: file:../../vendor/mdbase-dev-ui-dev-b2d7c464.tgz
         version: file:vendor/mdbase-dev-ui-dev-b2d7c464.tgz(@codemirror/view@6.43.8)(@mdbase-dev/sdk@file:packages/connect/vendor/sdk-eaa4e697-production-beta141.tgz)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
@@ -493,6 +548,10 @@ packages:
 
   '@babel/compat-data@7.29.7':
     resolution: {integrity: sha512-locTkQyKvwIEgBzVrn8693ebc97F2U8ZHjbXwDXJ5Fn2TCpNwTlKcaKLkdHop5c/icOFE7qt7Q9JC5hnKNa6Gg==}
+    engines: {node: '>=6.9.0'}
+
+  '@babel/core@7.29.0':
+    resolution: {integrity: sha512-CGOfOJqWjg2qW/Mb6zNsDm+u5vFQ8DxXfbM09z69p5Z6+mE1ikP2jUXw+j42Pf1XTYED2Rni5f95npYeuwMDQA==}
     engines: {node: '>=6.9.0'}
 
   '@babel/core@7.29.7':
@@ -3903,6 +3962,26 @@ snapshots:
 
   '@babel/compat-data@7.29.7': {}
 
+  '@babel/core@7.29.0':
+    dependencies:
+      '@babel/code-frame': 7.29.7
+      '@babel/generator': 7.29.8
+      '@babel/helper-compilation-targets': 7.29.7
+      '@babel/helper-module-transforms': 7.29.7(@babel/core@7.29.0)
+      '@babel/helpers': 7.29.7
+      '@babel/parser': 7.29.8
+      '@babel/template': 7.29.7
+      '@babel/traverse': 7.29.8
+      '@babel/types': 7.29.8
+      '@jridgewell/remapping': 2.3.5
+      convert-source-map: 2.0.0
+      debug: 4.4.3
+      gensync: 1.0.0-beta.2
+      json5: 2.2.3
+      semver: 6.3.1
+    transitivePeerDependencies:
+      - supports-color
+
   '@babel/core@7.29.7':
     dependencies:
       '@babel/code-frame': 7.29.7
@@ -3922,6 +4001,7 @@ snapshots:
       semver: 6.3.1
     transitivePeerDependencies:
       - supports-color
+    optional: true
 
   '@babel/generator@7.29.8':
     dependencies:
@@ -3948,6 +4028,15 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
+  '@babel/helper-module-transforms@7.29.7(@babel/core@7.29.0)':
+    dependencies:
+      '@babel/core': 7.29.0
+      '@babel/helper-module-imports': 7.29.7
+      '@babel/helper-validator-identifier': 7.29.7
+      '@babel/traverse': 7.29.8
+    transitivePeerDependencies:
+      - supports-color
+
   '@babel/helper-module-transforms@7.29.7(@babel/core@7.29.7)':
     dependencies:
       '@babel/core': 7.29.7
@@ -3956,6 +4045,7 @@ snapshots:
       '@babel/traverse': 7.29.8
     transitivePeerDependencies:
       - supports-color
+    optional: true
 
   '@babel/helper-string-parser@7.29.7': {}
 
@@ -4833,6 +4923,14 @@ snapshots:
     dependencies:
       '@lingui/conf': 6.9.0
 
+  '@lingui/babel-plugin-lingui-macro@6.9.0(@babel/core@7.29.0)':
+    dependencies:
+      '@babel/types': 7.29.8
+      '@lingui/conf': 6.9.0
+      '@lingui/message-utils': 6.9.0
+    optionalDependencies:
+      '@babel/core': 7.29.0
+
   '@lingui/babel-plugin-lingui-macro@6.9.0(@babel/core@7.29.7)':
     dependencies:
       '@babel/types': 7.29.8
@@ -4843,14 +4941,14 @@ snapshots:
 
   '@lingui/cli@6.9.0(rolldown@1.2.15)':
     dependencies:
-      '@babel/core': 7.29.7
+      '@babel/core': 7.29.0
       '@babel/generator': 7.29.8
       '@babel/parser': 7.29.8
       '@babel/types': 7.29.8
       '@lingui/babel-plugin-extract-messages': 6.9.0
-      '@lingui/babel-plugin-lingui-macro': 6.9.0(@babel/core@7.29.7)
+      '@lingui/babel-plugin-lingui-macro': 6.9.0(@babel/core@7.29.0)
       '@lingui/conf': 6.9.0
-      '@lingui/core': 6.9.0(@babel/core@7.29.7)
+      '@lingui/core': 6.9.0(@babel/core@7.29.0)
       '@lingui/format-po': 6.9.0
       '@lingui/message-utils': 6.9.0
       '@lingui/native-tools': 0.1.6(@lingui/conf@6.9.0)
@@ -4877,6 +4975,13 @@ snapshots:
       jiti: 2.7.0
       lilconfig: 3.1.4
       normalize-path: 3.0.0
+
+  '@lingui/core@6.9.0(@babel/core@7.29.0)':
+    dependencies:
+      '@lingui/babel-plugin-lingui-macro': 6.9.0(@babel/core@7.29.0)
+      '@lingui/message-utils': 6.9.0
+    transitivePeerDependencies:
+      - '@babel/core'
 
   '@lingui/core@6.9.0(@babel/core@7.29.7)':
     dependencies:
@@ -4939,6 +5044,15 @@ snapshots:
       '@lingui/native-tools-win32-arm64-msvc': 0.1.6
       '@lingui/native-tools-win32-x64-msvc': 0.1.6
 
+  '@lingui/react@6.9.0(@babel/core@7.29.0)(react@19.2.8)':
+    dependencies:
+      '@lingui/babel-plugin-lingui-macro': 6.9.0(@babel/core@7.29.0)
+      '@lingui/core': 6.9.0(@babel/core@7.29.0)
+      react: 19.2.8
+      use-sync-external-store: 1.7.0(react@19.2.8)
+    transitivePeerDependencies:
+      - '@babel/core'
+
   '@lingui/react@6.9.0(@babel/core@7.29.7)(react@19.2.8)':
     dependencies:
       '@lingui/babel-plugin-lingui-macro': 6.9.0(@babel/core@7.29.7)
@@ -4948,15 +5062,15 @@ snapshots:
     transitivePeerDependencies:
       - '@babel/core'
 
-  '@lingui/vite-plugin@6.9.0(@babel/core@7.29.7)(@lingui/babel-plugin-lingui-macro@6.9.0(@babel/core@7.29.7))(rolldown@1.2.15)(vite@8.3.5(@types/node@22.20.1)(jiti@2.7.0)(yaml@2.9.0))':
+  '@lingui/vite-plugin@6.9.0(@babel/core@7.29.0)(@lingui/babel-plugin-lingui-macro@6.9.0(@babel/core@7.29.0))(rolldown@1.2.15)(vite@8.3.5(@types/node@22.20.1)(jiti@2.7.0)(yaml@2.9.0))':
     dependencies:
       '@lingui/cli': 6.9.0(rolldown@1.2.15)
       '@lingui/conf': 6.9.0
       '@lingui/native-tools': 0.1.6(@lingui/conf@6.9.0)
       vite: 8.3.5(@types/node@22.20.1)(jiti@2.7.0)(yaml@2.9.0)
     optionalDependencies:
-      '@babel/core': 7.29.7
-      '@lingui/babel-plugin-lingui-macro': 6.9.0(@babel/core@7.29.7)
+      '@babel/core': 7.29.0
+      '@lingui/babel-plugin-lingui-macro': 6.9.0(@babel/core@7.29.0)
       rolldown: 1.2.15
     transitivePeerDependencies:
       - babel-plugin-macros
@@ -6076,7 +6190,7 @@ snapshots:
 
   eslint-plugin-react-hooks@7.1.1(eslint@9.39.5(jiti@2.7.0)):
     dependencies:
-      '@babel/core': 7.29.7
+      '@babel/core': 7.29.0
       '@babel/parser': 7.29.8
       eslint: 9.39.5(jiti@2.7.0)
       hermes-parser: 0.25.1

@@ -14,6 +14,7 @@ export default defineConfig({
         "<rootDir>/apps/extension/src",
         "<rootDir>/apps/electron/src",
         "<rootDir>/apps/capacitor/src",
+        "<rootDir>/packages/core/src",
         "<rootDir>/packages/ui/src",
         "<rootDir>/packages/reading-surface/src",
         "<rootDir>/packages/markdown-editor/src",
