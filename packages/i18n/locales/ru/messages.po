@@ -6276,224 +6276,224 @@ msgstr "Сохранить область"
 
 #: apps/extension/src/WelcomeApp.tsx
 msgid "Save articles and PDFs to your mdbase collection as you read, highlight passages, and find them again in Reader."
-msgstr ""
+msgstr "Сохраняйте статьи и PDF в коллекцию mdbase во время чтения, выделяйте фрагменты и находите их снова в Reader."
 
 #: apps/reader/src/LibraryViewSaveDialog.tsx
 msgid "Save as a new view"
-msgstr ""
+msgstr "Сохранить как новое представление"
 
 #: apps/reader/src/LibraryAnnotationToolbar.tsx
 #: apps/reader/src/LibraryWorkspace.tsx
 msgid "Save as new view…"
-msgstr ""
+msgstr "Сохранить как новое представление…"
 
 #: apps/reader/src/CitationEditor.tsx
 msgctxt "CitationEditor interface"
 msgid "Save changes"
-msgstr ""
+msgstr "Сохранить изменения"
 
 #: apps/reader/src/SourceAddDialog.tsx
 msgid "Save citation only"
-msgstr ""
+msgstr "Сохранить только ссылку"
 
 #: apps/extension/src/SavedHighlights.tsx
 msgid "Save comment"
-msgstr ""
+msgstr "Сохранить комментарий"
 
 #: apps/reader/src/AnnotationPanelActions.tsx
 msgctxt "AnnotationPanelActions interface"
 msgid "Save comment"
-msgstr ""
+msgstr "Сохранить комментарий"
 
 #: apps/electron/src/main.ts
 msgid "Save export"
-msgstr ""
+msgstr "Сохранить экспорт"
 
 #: apps/extension/src/HighlightFields.tsx
 msgid "Save highlight"
-msgstr ""
+msgstr "Сохранить выделение"
 
 #: apps/reader/src/AnnotationComposer.tsx
 msgctxt "AnnotationComposer interface"
 msgid "Save highlight"
-msgstr ""
+msgstr "Сохранить выделение"
 
 #: apps/extension/src/background.ts
 msgid "Save highlight to mdbase Reader"
-msgstr ""
+msgstr "Сохранить выделение в mdbase Reader"
 
 #: apps/extension/src/HighlightFields.tsx
 msgid "Save in {colorLabel} ({shortcut}, or {modifier}+Enter)"
-msgstr ""
+msgstr "Сохранить цвет: {colorLabel} ({shortcut} или {modifier}+Enter)"
 
 #: apps/extension/src/HighlightFields.tsx
 msgid "Save in {colorLabel} ({shortcut})"
-msgstr ""
+msgstr "Сохранить цвет: {colorLabel} ({shortcut})"
 
 #: apps/reader/src/LibraryViewSaveDialog.tsx
 msgid "Save library view"
-msgstr ""
+msgstr "Сохранить представление библиотеки"
 
 #: apps/reader/src/DraftRecoveryNotice.tsx
 msgid "Save my draft instead"
-msgstr ""
+msgstr "Вместо этого сохранить мой черновик"
 
 #: apps/extension/src/OptionsApp.tsx
 msgid "Save new sources to"
-msgstr ""
+msgstr "Сохранять новые источники в"
 
 #: apps/extension/src/ConnectionPanel.tsx
 msgid "Save not confirmed"
-msgstr ""
+msgstr "Сохранение не подтверждено"
 
 #: apps/extension/src/CaptureApp.tsx
 msgid "Save not confirmed. Retry to check its outcome."
-msgstr ""
+msgstr "Сохранение не подтверждено. Повторите попытку, чтобы проверить результат."
 
 #: apps/extension/src/SaveBar.tsx
 msgid "Save page"
-msgstr ""
+msgstr "Сохранить страницу"
 
 #: apps/extension/src/HighlightFields.tsx
 msgid "Save page and highlight"
-msgstr ""
+msgstr "Сохранить страницу и выделение"
 
 #: apps/extension/src/SaveBar.tsx
 msgid "Save PDF"
-msgstr ""
+msgstr "Сохранить PDF"
 
 #: apps/extension/src/SaveBar.tsx
 msgid "Save post"
-msgstr ""
+msgstr "Сохранить публикацию"
 
 #: apps/reader/src/SourceImportDialog.tsx
 msgid "Save the citation found for this file:"
-msgstr ""
+msgstr "Сохранить ссылку, найденную для этого файла:"
 
 #: apps/extension/src/shell-messages.ts
 msgid "Save the page you are reading and revisit your mdbase annotations."
-msgstr ""
+msgstr "Сохраните страницу, которую читаете, чтобы вернуться к аннотациям mdbase."
 
 #: apps/extension/src/CaptureApp.tsx
 msgid "Save the PDF, then open it there."
-msgstr ""
+msgstr "Сохраните PDF, затем откройте его там."
 
 #: apps/extension/src/NotePanel.tsx
 msgid "Save title and tags"
-msgstr ""
+msgstr "Сохранить название и теги"
 
 #: apps/extension/src/ConnectionPanel.tsx
 #: apps/extension/src/WelcomeApp.tsx
 msgid "Save to collection"
-msgstr ""
+msgstr "Сохранить в коллекцию"
 
 #: apps/extension/src/shell-messages.ts
 msgid "Save to mdbase Reader"
-msgstr ""
+msgstr "Сохранить в mdbase Reader"
 
 #: apps/reader/src/LibraryAnnotationToolbar.tsx
 #: apps/reader/src/LibraryWorkspace.tsx
 msgid "Save view"
-msgstr ""
+msgstr "Сохранить представление"
 
 #: apps/reader/src/LibraryViewSaveDialog.tsx
 msgctxt "LibraryViewSaveDialog interface"
 msgid "Save view"
-msgstr ""
+msgstr "Сохранить представление"
 
 #: apps/extension/src/WelcomeApp.tsx
 msgid "Save what you are reading"
-msgstr ""
+msgstr "Сохранить текущий материал"
 
 #: apps/reader/src/source-addition-flow.ts
 msgid "Save X posts from their live page using the mdbase Reader extension."
-msgstr ""
+msgstr "Сохраняйте публикации X с их актуальной страницы с помощью расширения mdbase Reader."
 
 #: apps/extension/src/NotePanel.tsx
 #: apps/extension/src/SaveBar.tsx
 #: apps/reader/src/AnnotationEditor.tsx
 msgid "Saved"
-msgstr ""
+msgstr "Сохранено"
 
 #: apps/reader/src/SourceNoteEditor.tsx
 msgctxt "SourceNoteEditor status or action"
 msgid "Saved"
-msgstr ""
+msgstr "Сохранено"
 
 #: apps/reader/src/RenderedSourceDocument.tsx
 msgid "Saved document · original headings below are unchanged"
-msgstr ""
+msgstr "Документ сохранён · исходные заголовки ниже не изменены"
 
 #. placeholder {0}: highlights.length ? <span>{highlights.length}</span> : null
 #: apps/extension/src/SavedHighlights.tsx
 msgid "Saved highlights {0}"
-msgstr ""
+msgstr "Сохранённые выделения {0}"
 
 #: packages/migration/src/readwise.ts
 msgid "Saved HTML can reference external images. Those assets are not downloaded. Keep this tab open; reconnect and rescan to resume after closing it."
-msgstr ""
+msgstr "Сохранённый HTML может ссылаться на внешние изображения. Эти ресурсы не скачиваются. Не закрывайте эту вкладку; чтобы продолжить после закрытия, подключитесь заново и выполните сканирование."
 
 #: apps/extension/src/page-badge.ts
 msgid "Saved in mdbase Reader"
-msgstr ""
+msgstr "Сохранено в mdbase Reader"
 
 #: apps/reader/src/SourceNoteEditor.tsx
 msgctxt "SourceNoteEditor status or action"
 msgid "Saved locally"
-msgstr ""
+msgstr "Сохранено локально"
 
 #: apps/reader/src/connect-workspace.ts
 msgid "Saved mdbase views are unavailable for this collection."
-msgstr ""
+msgstr "Сохранённые представления mdbase недоступны для этой коллекции."
 
 #: apps/reader/src/ReaderHeader.tsx
 msgid "Saved on this device; waiting for sync"
-msgstr ""
+msgstr "Сохранено на этом устройстве; ожидается синхронизация"
 
 #. placeholder {0}: problemMessage(reason)
 #: apps/extension/src/use-extension-capture.ts
 msgid "Saved safely. Could not refresh highlights on this page: {0}. Retry refreshing highlights; do not save again."
-msgstr ""
+msgstr "Данные сохранены. Не удалось обновить выделения на этой странице: {0}. Повторите обновление выделений; не сохраняйте повторно."
 
 #: apps/reader/src/SourceNoteEditor.tsx
 msgid "Saved to your collection"
-msgstr ""
+msgstr "Сохранено в вашей коллекции"
 
 #: apps/reader/src/LibraryWorkspace.tsx
 msgctxt "LibraryWorkspace formatFilterOptions"
 msgid "Saved web page"
-msgstr ""
+msgstr "Сохранённая веб-страница"
 
 #: apps/reader/src/library-lenses.ts
 msgctxt "library lenses"
 msgid "Saved web pages"
-msgstr ""
+msgstr "Сохранённые веб-страницы"
 
 #: apps/extension/src/NotePanel.tsx
 msgid "Saved with the source. Keep writing here after saving, or in Reader."
-msgstr ""
+msgstr "Сохранено вместе с источником. Продолжайте писать здесь после сохранения или в Reader."
 
 #: apps/extension/src/ConnectionPanel.tsx
 msgid "Saved. This page could not be updated."
-msgstr ""
+msgstr "Сохранено. Не удалось обновить эту страницу."
 
 #: apps/extension/src/CaptureApp.tsx
 msgid "Saving source record…"
-msgstr ""
+msgstr "Сохранение записи источника…"
 
 #: apps/reader/src/source-addition-flow.ts
 msgctxt "source addition flow"
 msgid "Saving the PDF…"
-msgstr ""
+msgstr "Сохранение PDF…"
 
 #: apps/reader/src/source-addition-flow.ts
 msgid "Saving the source…"
-msgstr ""
+msgstr "Сохранение источника…"
 
 #. placeholder {0}: collection.name
 #: apps/extension/src/ExtensionHeader.tsx
 msgid "Saving to {0}. Change collection"
-msgstr ""
+msgstr "Сохранение в {0}. Изменить коллекцию"
 
 #: apps/extension/src/CaptureApp.tsx
 #: apps/extension/src/NotePanel.tsx
@@ -6502,224 +6502,224 @@ msgstr ""
 #: apps/extension/src/SavedHighlights.tsx
 #: apps/reader/src/AnnotationEditor.tsx
 msgid "Saving…"
-msgstr ""
+msgstr "Сохранение…"
 
 #: apps/reader/src/AnnotationComposer.tsx
 msgctxt "AnnotationComposer interface"
 msgid "Saving…"
-msgstr ""
+msgstr "Сохранение…"
 
 #: apps/reader/src/AnnotationEditor.tsx
 msgctxt "AnnotationEditor interface"
 msgid "Saving…"
-msgstr ""
+msgstr "Сохранение…"
 
 #: apps/reader/src/AnnotationPanelActions.tsx
 msgctxt "AnnotationPanelActions interface"
 msgid "Saving…"
-msgstr ""
+msgstr "Сохранение…"
 
 #: apps/reader/src/CitationEditor.tsx
 msgctxt "CitationEditor interface"
 msgid "Saving…"
-msgstr ""
+msgstr "Сохранение…"
 
 #: apps/reader/src/LibraryViewSaveDialog.tsx
 msgctxt "LibraryViewSaveDialog interface"
 msgid "Saving…"
-msgstr ""
+msgstr "Сохранение…"
 
 #: apps/reader/src/SourceNoteEditor.tsx
 msgctxt "SourceNoteEditor status or action"
 msgid "Saving…"
-msgstr ""
+msgstr "Сохранение…"
 
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "Scale"
-msgstr ""
+msgstr "Масштаб"
 
 #: apps/reader/src/ImportInput.tsx
 msgid "Scan Readwise library"
-msgstr ""
+msgstr "Сканировать библиотеку Readwise"
 
 #. placeholder {0}: result.length.toLocaleString(i18n.locale)
 #: packages/migration/src/readwise-client.ts
 msgid "Scanned {0} Readwise records…"
-msgstr ""
+msgstr "Просканировано записей Readwise: {0}…"
 
 #: apps/reader/src/ImportInput.tsx
 msgid "Scanning reads Reader metadata, saved article HTML and every Readwise highlight, including Kindle, Apple Books, Instapaper and other classic sources (those import as metadata and highlights, without the book text). Original PDFs and EPUBs download only after confirmation. Readwise limits request rates, so large libraries take several minutes."
-msgstr ""
+msgstr "Сканирование считывает метаданные Reader, сохранённый HTML статей и все выделения Readwise, включая Kindle, Apple Books, Instapaper и другие классические источники (они импортируются как метаданные и выделения, без текста книг). Исходные PDF и EPUB скачиваются только после подтверждения. Readwise ограничивает частоту запросов, поэтому большие библиотеки сканируются несколько минут."
 
 #: packages/migration/src/readwise.ts
 msgid "Scanning Readwise metadata and saved HTML; no collection writes…"
-msgstr ""
+msgstr "Сканирование метаданных Readwise и сохранённого HTML; запись в коллекцию не выполняется…"
 
 #: apps/reader/src/annotation-body-content.ts
 msgid "Screenshot highlight"
-msgstr ""
+msgstr "Выделение на снимке экрана"
 
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "Script writer"
-msgstr ""
+msgstr "Автор сценария"
 
 #: packages/renderer-pdf/src/pdf-translations.ts
 msgctxt "PDF viewer page"
 msgid "Scroll Layout"
-msgstr ""
+msgstr "Макет прокрутки"
 
 #: apps/reader/src/ReaderHeader.tsx
 msgid "Search"
-msgstr ""
+msgstr "Поиск"
 
 #: packages/renderer-pdf/src/pdf-translations.ts
 msgctxt "PDF viewer panel"
 msgid "Search"
-msgstr ""
+msgstr "Поиск"
 
 #: packages/renderer-pdf/src/pdf-translations.ts
 msgctxt "PDF viewer search"
 msgid "Search"
-msgstr ""
+msgstr "Поиск"
 
 #: apps/reader/src/ReaderHeader.tsx
 msgid "Search and commands"
-msgstr ""
+msgstr "Поиск и команды"
 
 #: apps/reader/src/LibraryAnnotationToolbar.tsx
 msgid "Search annotations"
-msgstr ""
+msgstr "Поиск аннотаций"
 
 #: apps/reader/src/AnnotationList.tsx
 msgctxt "AnnotationList interface"
 msgid "Search annotations"
-msgstr ""
+msgstr "Поиск аннотаций"
 
 #: apps/reader/src/CitationLookup.tsx
 msgid "Search by DOI, ISBN, URL, or title"
-msgstr ""
+msgstr "Поиск по DOI, ISBN, URL или названию"
 
 #: apps/reader/src/LibraryWorkspace.tsx
 msgid "Search notes and annotations"
-msgstr ""
+msgstr "Поиск заметок и аннотаций"
 
 #: apps/reader/src/LibraryWorkspace.tsx
 msgid "Search open documents"
-msgstr ""
+msgstr "Поиск открытых документов"
 
 #: apps/reader/src/LibraryWorkspace.tsx
 msgctxt "LibraryWorkspace interface"
 msgid "Search scope"
-msgstr ""
+msgstr "Область поиска"
 
 #: apps/reader/src/ReaderWorkspaceView.tsx
 msgid "Search sources and commands"
-msgstr ""
+msgstr "Поиск источников и команд"
 
 #. placeholder {0}: shortcutLabel("mod+k")
 #: apps/reader/src/ReaderHeader.tsx
 msgid "Search sources and run commands · {0}"
-msgstr ""
+msgstr "Поиск источников и запуск команд · {0}"
 
 #: apps/reader/src/LibraryWorkspace.tsx
 msgid "Search this view"
-msgstr ""
+msgstr "Поиск в этом представлении"
 
 #: apps/reader/src/use-open-document-search.ts
 msgid "Searched {loaded} of {readable} readable sources."
-msgstr ""
+msgstr "Выполнен поиск: {loaded} из {readable} доступных для чтения источников."
 
 #: apps/reader/src/LibraryTextSearch.tsx
 msgid "Searches literature notes and annotation text, not PDF, EPUB or saved-page contents."
-msgstr ""
+msgstr "Поиск выполняется по заметкам о литературе и тексту аннотаций, но не по содержимому PDF, EPUB или сохранённых веб-страниц."
 
 #: apps/reader/src/LibraryTextSearch.tsx
 msgid "Searching notes and annotations…"
-msgstr ""
+msgstr "Поиск заметок и аннотаций…"
 
 #: apps/reader/src/CitationTypedFieldEditors.tsx
 msgid "Season"
-msgstr ""
+msgstr "Сезон"
 
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL date field"
 msgid "Season"
-msgstr ""
+msgstr "Сезон"
 
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "Section"
-msgstr ""
+msgstr "Раздел"
 
 #: packages/renderer-pdf/src/pdf-translations.ts
 msgctxt "PDF viewer document"
 msgid "Security"
-msgstr ""
+msgstr "Безопасность"
 
 #. placeholder {0}: source.title
 #: apps/reader/src/LibraryCards.tsx
 msgid "Select {0}"
-msgstr ""
+msgstr "Выбрать {0}"
 
 #. placeholder {0}: String(bulkOpenLimit)
 #: apps/reader/src/LibraryBulkBar.tsx
 msgid "Select {0} or fewer to open them together"
-msgstr ""
+msgstr "Выберите не более {0} элементов, чтобы открыть их одновременно"
 
 #: apps/reader/src/ImportDestination.tsx
 msgid "Select a collection"
-msgstr ""
+msgstr "Выберите коллекцию"
 
 #: apps/reader/src/DocumentContextualToolbar.tsx
 msgid "Select an area to annotate"
-msgstr ""
+msgstr "Выберите область для аннотации"
 
 #: apps/reader/src/DocumentContextualToolbar.tsx
 msgctxt "DocumentContextualToolbar interface"
 msgid "Select area"
-msgstr ""
+msgstr "Выбрать область"
 
 #: apps/reader/src/import-controller.ts
 msgid "Select one complete bundle folder with unique file paths."
-msgstr ""
+msgstr "Выберите одну полную папку пакета с уникальными путями к файлам."
 
 #: apps/extension/src/CaptureApp.tsx
 msgid "Select text on the page to highlight it."
-msgstr ""
+msgstr "Выделите текст на странице, чтобы добавить выделение."
 
 #: apps/reader/src/AnnotationList.tsx
 msgid "Select text or an area in the document, or add a comment or bookmark above."
-msgstr ""
+msgstr "Выделите текст или область в документе либо добавьте комментарий или закладку выше."
 
 #: apps/reader/src/LibraryAnnotationBars.tsx
 msgctxt "LibraryAnnotationBars interface"
 msgid "Selected annotations"
-msgstr ""
+msgstr "Выбранные аннотации"
 
 #: apps/extension/src/HighlightFields.tsx
 msgid "Selected passage"
-msgstr ""
+msgstr "Выбранный фрагмент"
 
 #: apps/reader/src/AnnotationComposer.tsx
 msgid "Selected PDF area"
-msgstr ""
+msgstr "Выбранная область PDF"
 
 #: apps/reader/src/LibraryBulkBar.tsx
 msgctxt "LibraryBulkBar interface"
 msgid "Selected sources"
-msgstr ""
+msgstr "Выбранные источники"
 
 #: apps/reader/src/SelectionToolbar.tsx
 msgctxt "SelectionToolbar interface"
 msgid "Selected text"
-msgstr ""
+msgstr "Выбранный текст"
 
 #: apps/reader/src/DisplayMenu.tsx
 msgctxt "DisplayMenu interface"
 msgid "Selecting text"
-msgstr ""
+msgstr "Выделение текста"
 
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
