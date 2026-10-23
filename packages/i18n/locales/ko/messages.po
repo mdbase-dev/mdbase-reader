@@ -165,7 +165,7 @@ msgstr "{0} GiB"
 #: apps/reader/src/use-document-attachment.ts
 #: apps/reader/src/use-source-addition.ts
 msgid "{0} isn’t a PDF, EPUB or saved web page."
-msgstr ""
+msgstr "{0} 파일은 PDF, EPUB 또는 저장된 웹 페이지가 아닙니다."
 
 #. placeholder {0}: view.name
 #: apps/reader/src/LibraryWorkspace.tsx
@@ -228,7 +228,7 @@ msgstr "검색 결과 {count}개"
 
 #: apps/reader/src/use-annotation-view.ts
 msgid "{detail} Reader is applying its filters itself."
-msgstr ""
+msgstr "{detail} Reader가 자체적으로 필터를 적용하고 있습니다."
 
 #: apps/reader/src/EnvironmentBadge.tsx
 msgid "{environment} environment"
@@ -316,7 +316,7 @@ msgstr "{name} 개수가 일치하지 않습니다."
 
 #: packages/core/src/application/source-document-format.ts
 msgid "{name} is not a recognizable PDF, EPUB, or HTML document."
-msgstr ""
+msgstr "{name} 파일은 인식 가능한 PDF, EPUB 또는 HTML 문서가 아닙니다."
 
 #: packages/core/src/domain/identity.ts
 msgid "{name} must be a non-empty printable value."
@@ -1605,7 +1605,7 @@ msgstr "닫기"
 #: apps/reader/src/dockview-menus.ts
 msgctxt "Close workspace tab"
 msgid "Close"
-msgstr ""
+msgstr "닫기"
 
 #: packages/renderer-pdf/src/pdf-translations.ts
 msgctxt "PDF viewer common"
@@ -1937,7 +1937,7 @@ msgstr "컨테이너 제목 약칭"
 #: apps/reader/src/library-conditions.ts
 msgctxt "Field filter comparison operator"
 msgid "contains"
-msgstr ""
+msgstr "포함"
 
 #: apps/reader/src/ImportReview.tsx
 msgid "Content files"
@@ -2799,7 +2799,7 @@ msgstr "백과사전 항목"
 #: apps/reader/src/LibraryWorkspace.tsx
 msgctxt "LibraryWorkspace formatFilterOptions"
 msgid "EPUB"
-msgstr "EPUB"
+msgstr "EPUB 형식"
 
 #: packages/renderer-epub/src/epub-archive.ts
 msgid "EPUB archive contains a duplicate path: {path}"
@@ -3084,7 +3084,7 @@ msgstr "파일 전송에 실패했습니다."
 
 #: apps/reader/src/import-controller.ts
 msgid "Files: {completed} of {total}"
-msgstr ""
+msgstr "파일: {total}개 중 {completed}개 완료"
 
 #: apps/reader/src/LibraryWorkspace.tsx
 msgid "Filter"
@@ -3308,7 +3308,7 @@ msgstr "하이라이트"
 #: packages/reading-surface/src/margin-markers.ts
 msgctxt "Reading margin marker tooltip"
 msgid "Highlight"
-msgstr ""
+msgstr "하이라이트"
 
 #: apps/reader/src/SelectionToolbar.tsx
 msgctxt "SelectionToolbar interface"
@@ -3355,7 +3355,7 @@ msgstr "mdbase Reader에서 댓글과 함께 하이라이트"
 #: packages/reading-surface/src/margin-markers.ts
 msgctxt "Reading margin marker tooltip"
 msgid "Highlight with a note"
-msgstr ""
+msgstr "메모가 있는 하이라이트"
 
 #: apps/extension/src/PanelTabs.tsx
 msgid "Highlights"
@@ -3631,37 +3631,37 @@ msgstr "Zotero PDF 사각형이 올바르지 않습니다."
 #: apps/reader/src/library-conditions.ts
 msgctxt "Field filter comparison operator"
 msgid "is"
-msgstr ""
+msgstr "같음"
 
 #: apps/reader/src/library-conditions.ts
 msgctxt "Field filter comparison operator"
 msgid "is at least"
-msgstr ""
+msgstr "이상"
 
 #: apps/reader/src/library-conditions.ts
 msgctxt "Field filter comparison operator"
 msgid "is at most"
-msgstr ""
+msgstr "이하"
 
 #: apps/reader/src/library-conditions.ts
 msgctxt "Field filter comparison operator"
 msgid "is empty"
-msgstr ""
+msgstr "비어 있음"
 
 #: apps/reader/src/library-conditions.ts
 msgctxt "Field filter comparison operator"
 msgid "is greater than"
-msgstr ""
+msgstr "초과"
 
 #: apps/reader/src/library-conditions.ts
 msgctxt "Field filter comparison operator"
 msgid "is less than"
-msgstr ""
+msgstr "미만"
 
 #: apps/reader/src/library-conditions.ts
 msgctxt "Field filter comparison operator"
 msgid "is not"
-msgstr ""
+msgstr "같지 않음"
 
 #: packages/core/src/domain/citation-validation.ts
 msgctxt "CSL validation"
@@ -3681,7 +3681,7 @@ msgstr "CSL 이름 필드가 아닙니다"
 #: apps/reader/src/library-conditions.ts
 msgctxt "Field filter comparison operator"
 msgid "is not empty"
-msgstr ""
+msgstr "비어 있지 않음"
 
 #: apps/reader/src/CitationStructuredEditor.tsx
 msgctxt "CitationStructuredEditor interface"
@@ -4141,7 +4141,7 @@ msgstr "mdbase Connect의 응답이 너무 오래 걸립니다. 잠시 후 다�
 
 #: apps/reader/src/use-annotation-view.ts
 msgid "mdbase could not run this view."
-msgstr ""
+msgstr "mdbase가 이 뷰를 실행하지 못했습니다."
 
 #: apps/extension/src/sdk-client.ts
 msgid "mdbase could not start in the background. Reload the extension."
@@ -4285,17 +4285,17 @@ msgstr "탭을 오른쪽 패널로 이동"
 
 #: apps/reader/src/dockview-menus.ts
 msgid "Move to {title}"
-msgstr ""
+msgstr "{title} 위치로 이동"
 
 #: apps/reader/src/dockview-menus.ts
 msgctxt "Workspace tab destination"
 msgid "Move to bottom sidebar"
-msgstr ""
+msgstr "하단 사이드바로 이동"
 
 #: apps/reader/src/dockview-menus.ts
 msgctxt "Workspace tab destination"
 msgid "Move to left sidebar"
-msgstr ""
+msgstr "왼쪽 사이드바로 이동"
 
 #: apps/reader/src/dockview-menus.ts
 msgid "Move to new pane below"
@@ -4308,17 +4308,17 @@ msgstr "오른쪽 새 패널로 이동"
 #: apps/reader/src/dockview-menus.ts
 msgctxt "Workspace tab destination"
 msgid "Move to pane"
-msgstr ""
+msgstr "패널로 이동"
 
 #: apps/reader/src/dockview-menus.ts
 msgctxt "Workspace tab destination"
 msgid "Move to right sidebar"
-msgstr ""
+msgstr "오른쪽 사이드바로 이동"
 
 #: apps/reader/src/dockview-menus.ts
 msgctxt "Workspace tab destination"
 msgid "Move to top sidebar"
-msgstr ""
+msgstr "상단 사이드바로 이동"
 
 #: packages/migration/src/zotero-pdf.ts
 msgid "Multi-page or ink geometry is not yet supported."
@@ -5700,7 +5700,7 @@ msgstr "Reader에서 웹 페이지를 예상했습니다."
 
 #: apps/reader/src/build-source-export.ts
 msgid "Reader export report"
-msgstr ""
+msgstr "Reader 내보내기 보고서"
 
 #: apps/reader/src/LibraryTableHeader.tsx
 msgid "Reader fields"
