@@ -5413,424 +5413,424 @@ msgstr "Опубликовано"
 #: apps/reader/src/SourceDetails.tsx
 msgctxt "SourceDetails fields"
 msgid "Published"
-msgstr ""
+msgstr "Опубликовано"
 
 #: apps/reader/src/CitationStructuredEditor.tsx
 msgctxt "CitationStructuredEditor interface"
 msgid "Publisher"
-msgstr ""
+msgstr "Издатель"
 
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "Publisher"
-msgstr ""
+msgstr "Издатель"
 
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "Publisher place"
-msgstr ""
+msgstr "Место издания"
 
 #: apps/extension/src/HighlightFields.tsx
 msgctxt "Highlight colour"
 msgid "purple"
-msgstr ""
+msgstr "фиолетовый"
 
 #: apps/reader/src/LibraryCells.tsx
 msgctxt "reading status"
 msgid "Queued"
-msgstr ""
+msgstr "В очереди"
 
 #: apps/reader/src/SourceNoteEditor.tsx
 msgctxt "SourceNoteEditor formatActions"
 msgid "Quote"
-msgstr ""
+msgstr "Цитата"
 
 #: packages/core/src/domain/selector.ts
 msgid "quote.exact must not be empty."
-msgstr ""
+msgstr "quote.exact не может быть пустым."
 
 #: apps/reader/src/AnnotationEditor.tsx
 msgctxt "AnnotationEditor interface"
 msgid "Quoted passage"
-msgstr ""
+msgstr "Цитируемый фрагмент"
 
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL date field"
 msgid "Raw date"
-msgstr ""
+msgstr "Исходная дата"
 
 #: apps/reader/src/MobileSourceViews.tsx
 msgctxt "MobileSourceViews views"
 msgid "Read"
-msgstr ""
+msgstr "Читать"
 
 #: apps/reader/src/NativeSignIn.tsx
 msgid "Read from your collection"
-msgstr ""
+msgstr "Читать из коллекции"
 
 #: apps/electron/src/main.ts
 msgid "Readable documents"
-msgstr ""
+msgstr "Документы для чтения"
 
 #: packages/migration/src/readwise.ts
 msgid "Reader articles"
-msgstr ""
+msgstr "Статьи Reader"
 
 #: apps/extension/src/capture-errors.ts
 #: apps/extension/src/page-capture.ts
 msgid "Reader can capture ordinary HTTPS pages only."
-msgstr ""
+msgstr "Reader может сохранять только обычные страницы HTTPS."
 
 #: apps/extension/src/save-capture.ts
 msgid "Reader cannot download this PDF from here. Download it and import the file in Reader."
-msgstr ""
+msgstr "Отсюда Reader не может скачать этот PDF. Скачайте его и импортируйте файл в Reader."
 
 #. placeholder {0}: selection.imageType
 #: apps/reader/src/annotation-composer-request.ts
 msgid "Reader cannot persist an area capture of type {0}."
-msgstr ""
+msgstr "Reader не может сохранить снимок области типа {0}."
 
 #: apps/extension/src/CaptureApp.tsx
 #: apps/extension/src/ConnectionPanel.tsx
 msgid "Reader cannot read this page"
-msgstr ""
+msgstr "Reader не может прочитать эту страницу"
 
 #: apps/reader/src/ReaderWorkspaceView.tsx
 msgctxt "ReaderWorkspaceView interface"
 msgid "Reader commands"
-msgstr ""
+msgstr "Команды Reader"
 
 #: apps/reader/src/use-web-capture.ts
 msgid "Reader could not add that source."
-msgstr ""
+msgstr "Reader не удалось добавить этот источник."
 
 #: apps/reader/src/use-annotation-view.ts
 msgid "Reader could not add the view."
-msgstr ""
+msgstr "Reader не удалось добавить представление."
 
 #: apps/reader/src/use-library-selection.ts
 msgid "Reader could not add this source."
-msgstr ""
+msgstr "Reader не удалось добавить этот источник."
 
 #: apps/reader/src/ConnectReader.tsx
 msgid "Reader could not apply the reviewed setup."
-msgstr ""
+msgstr "Reader не удалось применить проверенные настройки."
 
 #: apps/reader/src/use-document-attachment.ts
 msgid "Reader could not attach a document."
-msgstr ""
+msgstr "Reader не удалось прикрепить документ."
 
 #: apps/reader/src/web-capture-client.ts
 msgid "Reader could not capture that page."
-msgstr ""
+msgstr "Reader не удалось сохранить снимок этой страницы."
 
 #: apps/reader/src/LibraryWorkspace.tsx
 msgid "Reader could not change the reading status."
-msgstr ""
+msgstr "Reader не удалось изменить статус чтения."
 
 #: apps/reader/src/use-source-removal.ts
 msgid "Reader could not check this source."
-msgstr ""
+msgstr "Reader не удалось проверить этот источник."
 
 #: apps/reader/src/CollectionPicker.tsx
 msgid "Reader could not connect another collection."
-msgstr ""
+msgstr "Reader не удалось подключить другую коллекцию."
 
 #: apps/reader/src/use-document-decorations.ts
 msgid "Reader could not display saved highlights."
-msgstr ""
+msgstr "Reader не удалось показать сохранённые выделения."
 
 #: apps/reader/src/AnnotationImage.tsx
 msgid "Reader could not display this screenshot."
-msgstr ""
+msgstr "Reader не удалось показать этот снимок экрана."
 
 #: apps/reader/src/LibraryWorkspace.tsx
 msgid "Reader could not execute this mdbase view."
-msgstr ""
+msgstr "Reader не удалось выполнить это представление mdbase."
 
 #: apps/reader/src/use-bibliography-export.ts
 msgid "Reader could not export the bibliography."
-msgstr ""
+msgstr "Reader не удалось экспортировать библиографию."
 
 #: apps/reader/src/build-source-export.ts
 msgid "Reader could not export this file."
-msgstr ""
+msgstr "Reader не удалось экспортировать этот файл."
 
 #: apps/reader/src/use-source-export.ts
 msgid "Reader could not export this source."
-msgstr ""
+msgstr "Reader не удалось экспортировать этот источник."
 
 #: apps/reader/src/use-citation-editor.ts
 msgid "Reader could not find citation metadata."
-msgstr ""
+msgstr "Reader не удалось найти библиографические метаданные."
 
 #: apps/reader/src/use-citation-editor.ts
 msgid "Reader could not generate a citekey."
-msgstr ""
+msgstr "Reader не удалось создать ключ цитирования."
 
 #: apps/reader/src/use-library-selection.ts
 msgid "Reader could not import this document."
-msgstr ""
+msgstr "Reader не удалось импортировать этот документ."
 
 #: apps/reader/src/use-annotation-transclusion.ts
 msgid "Reader could not insert this annotation."
-msgstr ""
+msgstr "Reader не удалось вставить эту аннотацию."
 
 #: apps/extension/src/page-capture.ts
 msgid "Reader could not inspect this page. Open an ordinary HTTPS page and try again."
-msgstr ""
+msgstr "Reader не удалось проверить эту страницу. Откройте обычную страницу HTTPS и повторите попытку."
 
 #: apps/reader/src/use-library-annotations.ts
 msgid "Reader could not list annotations."
-msgstr ""
+msgstr "Reader не удалось получить список аннотаций."
 
 #: apps/reader/src/use-mdbase-library-views.ts
 msgid "Reader could not load saved library views."
-msgstr ""
+msgstr "Reader не удалось загрузить сохранённые представления библиотеки."
 
 #: apps/reader/src/use-library-selection.ts
 msgid "Reader could not load this collection."
-msgstr ""
+msgstr "Reader не удалось загрузить эту коллекцию."
 
 #: apps/reader/src/shared-annotation-resource.ts
 msgid "Reader could not load this source's annotations."
-msgstr ""
+msgstr "Reader не удалось загрузить аннотации этого источника."
 
 #: apps/reader/src/use-source-import.ts
 msgid "Reader could not open the file picker."
-msgstr ""
+msgstr "Reader не удалось открыть выбор файла."
 
 #: apps/reader/src/use-selected-source-resources.ts
 msgid "Reader could not open the source note."
-msgstr ""
+msgstr "Reader не удалось открыть заметку источника."
 
 #: apps/reader/src/ConnectReader.tsx
 msgid "Reader could not open this collection."
-msgstr ""
+msgstr "Reader не удалось открыть эту коллекцию."
 
 #: apps/reader/src/connection-recovery.ts
 msgid "Reader could not reach mdbase Connect. Check your connection, then try again."
-msgstr ""
+msgstr "Reader не удалось подключиться к mdbase Connect. Проверьте подключение и повторите попытку."
 
 #: apps/reader/src/use-direct-access.ts
 msgid "Reader could not reach the local mdbase connector. The relayed connection is still active."
-msgstr ""
+msgstr "Reader не удалось подключиться к локальному коннектору mdbase. Подключение через ретранслятор по-прежнему активно."
 
 #: apps/reader/src/use-source-removal.ts
 msgid "Reader could not remove this source."
-msgstr ""
+msgstr "Reader не удалось удалить этот источник."
 
 #: apps/reader/src/use-direct-access.ts
 msgid "Reader could not request local network access."
-msgstr ""
+msgstr "Reader не удалось запросить доступ к локальной сети."
 
 #: apps/reader/src/ConnectReader.tsx
 msgid "Reader could not review application access."
-msgstr ""
+msgstr "Reader не удалось проверить доступ приложения."
 
 #: apps/reader/src/LibraryWorkspace.tsx
 msgid "Reader could not save {key}."
-msgstr ""
+msgstr "Reader не удалось сохранить {key}."
 
 #: apps/reader/src/use-source-fields.ts
 msgid "Reader could not save these details."
-msgstr ""
+msgstr "Reader не удалось сохранить эти сведения."
 
 #: apps/reader/src/annotation-selection.ts
 msgid "Reader could not save this annotation."
-msgstr ""
+msgstr "Reader не удалось сохранить эту аннотацию."
 
 #: apps/reader/src/use-bookmark-action.ts
 msgid "Reader could not save this bookmark."
-msgstr ""
+msgstr "Reader не удалось сохранить эту закладку."
 
 #: apps/reader/src/use-citation-editor.ts
 msgid "Reader could not save this citation."
-msgstr ""
+msgstr "Reader не удалось сохранить эту ссылку."
 
 #: apps/reader/src/AnnotationPanelActions.tsx
 msgid "Reader could not save this comment."
-msgstr ""
+msgstr "Reader не удалось сохранить этот комментарий."
 
 #: apps/reader/src/use-mdbase-library-views.ts
 msgid "Reader could not save this library view."
-msgstr ""
+msgstr "Reader не удалось сохранить это представление библиотеки."
 
 #: apps/reader/src/source-draft-session.ts
 msgid "Reader could not save this note. Your draft is retained."
-msgstr ""
+msgstr "Reader не удалось сохранить эту заметку. Черновик сохранён."
 
 #: apps/reader/src/WorkspacePaneSupport.tsx
 msgid "Reader could not save your place in this document."
-msgstr ""
+msgstr "Reader не удалось сохранить место в этом документе."
 
 #: apps/reader/src/use-reading-resume.ts
 msgid "Reader could not save your reading position."
-msgstr ""
+msgstr "Reader не удалось сохранить место чтения."
 
 #: apps/reader/src/use-library-search.ts
 msgid "Reader could not search note text."
-msgstr ""
+msgstr "Reader не удалось выполнить поиск по тексту заметки."
 
 #: apps/reader/src/CollectionPicker.tsx
 msgid "Reader could not switch collections."
-msgstr ""
+msgstr "Reader не удалось переключить коллекции."
 
 #. placeholder {0}: lookup.offer.reason
 #. placeholder {1}: lookup.offer.title
 #: apps/reader/src/SourceAddDialog.tsx
 msgid "Reader couldn’t fetch that page ({0}), but it found the citation for “{1}”. You can save the citation now and attach the page or file later."
-msgstr ""
+msgstr "Reader не удалось получить эту страницу ({0}), но удалось найти ссылку «{1}». Её можно сохранить сейчас, а страницу или файл прикрепить позже."
 
 #: apps/reader/src/ImportPageView.tsx
 msgid "Reader documents and files, plus highlights from Kindle, Apple Books and other Readwise sources."
-msgstr ""
+msgstr "Документы и файлы Reader, а также выделения из Kindle, Apple Books и других источников Readwise."
 
 #: packages/migration/src/readwise.ts
 msgid "Reader emails"
-msgstr ""
+msgstr "Письма Reader"
 
 #: packages/migration/src/readwise.ts
 msgid "Reader EPUBs"
-msgstr ""
+msgstr "Книги EPUB Reader"
 
 #: apps/reader/src/web-capture-client.ts
 msgid "Reader expected a web page."
-msgstr ""
+msgstr "Reader ожидал веб-страницу."
 
 #: apps/reader/src/build-source-export.ts
 msgid "Reader export report"
-msgstr ""
+msgstr "Отчёт об экспорте Reader"
 
 #: apps/reader/src/LibraryTableHeader.tsx
 msgid "Reader fields"
-msgstr ""
+msgstr "Поля Reader"
 
 #: apps/extension/src/ConnectionPanel.tsx
 msgid "Reader has signed out."
-msgstr ""
+msgstr "Выход из Reader выполнен."
 
 #: apps/extension/src/connection-view.ts
 msgid "Reader has signed out. Sign in again before saving; your draft is kept."
-msgstr ""
+msgstr "Выход из Reader выполнен. Перед сохранением снова войдите в систему; черновик сохранён."
 
 #: packages/migration/src/readwise-annotations.ts
 msgid "Reader highlights on documents outside this import (for example unsaved Feed)"
-msgstr ""
+msgstr "Выделения Reader в документах вне этого импорта (например, несохранённая лента)"
 
 #: apps/reader/src/InspectorPane.tsx
 msgid "Reader keeps one writable editor for each source record."
-msgstr ""
+msgstr "Reader использует один доступный для записи редактор для каждой записи источника."
 
 #: apps/extension/src/ConnectionPanel.tsx
 msgid "Reader needs its source and annotation definitions in this collection."
-msgstr ""
+msgstr "Reader требуются определения источников и аннотаций в этой коллекции."
 
 #. placeholder {0}: session.info.displayName
 #: apps/reader/src/connection-recovery.ts
 msgid "Reader needs your approval to open {0}."
-msgstr ""
+msgstr "Чтобы открыть {0}, Reader требуется ваше подтверждение."
 
 #: apps/reader/src/ImportDestination.tsx
 msgid "Reader needs your approval to write to this collection."
-msgstr ""
+msgstr "Для записи в эту коллекцию Reader требуется ваше подтверждение."
 
 #: packages/migration/src/readwise-annotations.ts
 msgid "Reader notes on documents outside this import (for example unsaved Feed)"
-msgstr ""
+msgstr "Заметки Reader в документах вне этого импорта (например, несохранённая лента)"
 
 #: packages/migration/src/readwise.ts
 msgid "Reader PDFs"
-msgstr ""
+msgstr "Файлы PDF Reader"
 
 #: apps/reader/src/web-capture-client.ts
 msgid "Reader received an incomplete capture response."
-msgstr ""
+msgstr "Reader получил неполный ответ о сохранении снимка."
 
 #: apps/reader/src/web-capture-client.ts
 msgid "Reader received an invalid capture response."
-msgstr ""
+msgstr "Reader получил недопустимый ответ о сохранении снимка."
 
 #: packages/migration/src/readwise.ts
 msgid "Reader RSS items"
-msgstr ""
+msgstr "Элементы RSS Reader"
 
 #: packages/migration/src/readwise.ts
 msgid "Reader tweets"
-msgstr ""
+msgstr "Публикации Twitter Reader"
 
 #: packages/migration/src/readwise.ts
 msgid "Reader videos"
-msgstr ""
+msgstr "Видео Reader"
 
 #: apps/extension/src/use-extension-capture.ts
 msgid "Reader was not given site access."
-msgstr ""
+msgstr "Reader не предоставлен доступ к сайту."
 
 #: apps/reader/src/DockviewWorkspace.tsx
 msgctxt "DockviewWorkspace interface"
 msgid "Reader workspace"
-msgstr ""
+msgstr "Рабочая область Reader"
 
 #: apps/reader/src/connection-recovery.ts
 msgid "Reader’s access to this collection has changed. Review the updated access to continue."
-msgstr ""
+msgstr "Доступ Reader к этой коллекции изменился. Для продолжения проверьте обновлённые разрешения."
 
 #: apps/reader/src/LibraryCells.tsx
 msgctxt "reading status"
 msgid "Reading"
-msgstr ""
+msgstr "Чтение"
 
 #: apps/reader/src/DocumentContextualToolbar.tsx
 msgctxt "DocumentContextualToolbar interface"
 msgid "Reading mode"
-msgstr ""
+msgstr "Режим чтения"
 
 #: apps/reader/src/ReaderHeader.tsx
 msgctxt "ReaderHeader interface"
 msgid "Reading mode"
-msgstr ""
+msgstr "Режим чтения"
 
 #. placeholder {0}: source.title
 #: apps/reader/src/LibraryCells.tsx
 msgid "Reading status of {0}"
-msgstr ""
+msgstr "Статус чтения: {0}"
 
 #: apps/reader/src/SourceImportDialog.tsx
 msgid "Reading the file’s details…"
-msgstr ""
+msgstr "Загрузка сведений о файле…"
 
 #: apps/extension/src/CaptureApp.tsx
 msgid "Reading the page…"
-msgstr ""
+msgstr "Загрузка страницы…"
 
 #: packages/renderer-epub/src/readium-runtime.ts
 msgid "Readium cannot open an EPUB with an empty reading order."
-msgstr ""
+msgstr "Readium не может открыть EPUB без порядка чтения."
 
 #: packages/renderer-epub/src/readium-runtime.ts
 msgid "Readium could not parse the publication manifest."
-msgstr ""
+msgstr "Readium не удалось разобрать манифест публикации."
 
 #: packages/renderer-epub/src/epub-locator.ts
 msgid "Readium returned an empty EPUB resource location."
-msgstr ""
+msgstr "Readium вернул пустое расположение ресурса EPUB."
 
 #: packages/renderer-epub/src/epub-locator.ts
 msgid "Readium returned an EPUB location outside the prepared publication."
-msgstr ""
+msgstr "Readium вернул расположение EPUB за пределами подготовленной публикации."
 
 #: packages/renderer-epub/src/readium-runtime.ts
 msgid "Readium returned an invalid {name}."
-msgstr ""
+msgstr "Readium вернул недопустимое значение: {name}."
 
 #: packages/renderer-epub/src/epub-locator.ts
 msgid "Readium returned an invalid EPUB resource location: {value}"
-msgstr ""
+msgstr "Readium вернул недопустимое расположение ресурса EPUB: {value}"
 
 #: packages/migration/src/readwise.ts
 msgid "Readwise articles (Instapaper, Pocket…)"
-msgstr ""
+msgstr "Статьи Readwise (Instapaper, Pocket…)"
 
 #: packages/migration/src/readwise.ts
 msgid "Readwise books (Kindle, Apple Books…)"
