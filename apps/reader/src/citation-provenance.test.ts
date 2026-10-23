@@ -10,8 +10,12 @@ import {
 describe("citation provenance labels", () => {
   it.each([
     ["site-adapter:Wikipedia", "Wikipedia (via Citoid)"],
+    ["site-adapter:The Guardian", "The Guardian (via Citoid)"],
     ["site-adapter:citoid/encyclopediaArticle", "Encyclopedia article (via Citoid)"],
     ["registry:doi.org", "doi.org"],
+    ["registry:doi.org DOI", "doi.org"],
+    ["parent", "From the book"],
+    ["parent title", "From the book"],
     ["page:json-ld", "page metadata"],
     ["page:html", "page title"],
     ["generic-remote:citoid", "Citoid"],
@@ -27,6 +31,13 @@ describe("citation provenance labels", () => {
     expect(citationStatusLabel({ kind: "unexplained" })).toBe("manual");
     expect(citationEvidenceLabel("page:json-ld name")).toBe("page metadata · name");
     expect(citationEvidenceLabel("h1")).toBe("h1");
+    expect(
+      citationStatusLabel({
+        kind: "explained",
+        provenance: { value: "Book", source: "parent title" },
+      }),
+    ).toBe("From the book");
+    expect(citationEvidenceLabel("parent title")).toBe("From the book · title");
   });
 
   it("keeps untouched entries, makes typing user-owned, and pins deliberate removals", () => {

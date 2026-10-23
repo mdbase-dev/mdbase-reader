@@ -17,6 +17,8 @@ export type ClaimSource =
   | { readonly kind: "page"; readonly signal: PageSignal }
   /** A remote service's generic extraction, e.g. Citoid's Embedded Metadata fallback. */
   | { readonly kind: "generic-remote"; readonly name: string }
+  /** Curated metadata from the immediate parent record; only inherited container fields. */
+  | { readonly kind: "parent" }
   /** The user's own value: an edit in Reader, an edit outside it, or a deliberate removal. */
   | { readonly kind: "user" };
 
@@ -101,13 +103,14 @@ export interface Resolution {
   readonly suggestions: readonly CitationSuggestion[];
 }
 
-/** `page:json-ld`, `site-adapter:Wikipedia`, `registry:doi.org`, `user`. */
+/** `page:json-ld`, `site-adapter:Wikipedia`, `registry:doi.org`, `parent`, `user`. */
 export function claimSourceLabel(source: ClaimSource): string {
   switch (source.kind) {
     case "page":
       return `page:${source.signal}`;
+    case "parent":
     case "user":
-      return "user";
+      return source.kind;
     default:
       return `${source.kind}:${source.name}`;
   }
@@ -115,8 +118,8 @@ export function claimSourceLabel(source: ClaimSource): string {
 
 /** The inverse of {@link claimSourceLabel}; `undefined` for labels it did not produce. */
 export function parseClaimSourceLabel(label: string): ClaimSource | undefined {
-  if (label === "user") {
-    return { kind: "user" };
+  if (label === "user" || label === "parent") {
+    return { kind: label };
   }
   const separator = label.indexOf(":");
   const kind = label.slice(0, separator);

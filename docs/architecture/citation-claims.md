@@ -69,6 +69,7 @@ type ClaimSource =
   | { readonly kind: "site-adapter"; readonly name: string }
   | { readonly kind: "page"; readonly signal: "json-ld" | "highwire" | "open-graph" | "html" }
   | { readonly kind: "generic-remote"; readonly name: string }
+  | { readonly kind: "parent" }
   | { readonly kind: "user" };
 ```
 
@@ -86,8 +87,9 @@ Zotero's generic Embedded Metadata translator produces, and counts as `generic-r
 For each field, the resolver groups claims whose values match after normalisation, scores each
 group, and chooses the highest:
 
-1. **Source strength.** `user` > `registry` > `site-adapter` > `page` and `generic-remote`. This
-   is a starting score, not an absolute order.
+1. **Source strength.** `user` (100) > `parent` (90, inherited fields only) > `registry` (80) >
+   `site-adapter` (60) > `page` and `generic-remote` (40). This is a starting score, not an
+   absolute order; user decisions remain pinned regardless of corroboration.
 2. **Corroboration.** Independent signals that agree add weight. Titles are compared ignoring
    case and surrounding whitespace. Only HTML `<title>`, `og:title` and `twitter:title` offer
    site-suffix-stripped candidates alongside the full title. Work headings and structured or
@@ -171,6 +173,53 @@ explicit save.
 
 To check: whether the mdbase source type accepts an undeclared `csl-provenance` key, or whether
 it must be declared in the type schema.
+
+## Parent records
+
+`parentCitationClaims(parentCsl, parentProvenance, observedAt, options?)` supplies pure claims
+from the **immediate parent** selected by the caller. It does not follow part-of links, read a
+collection, or recursively inherit from a grandparent. A parent that is itself a volume/part
+supplies its own title and volume/series metadata, not its `container-title` as the chapter's
+container. The caller supplies the chapter title and sets `type: chapter`; neither type nor
+chapter identity is inferred by this helper.
+
+| Parent CSL field                                                         | Chapter CSL field                          |
+| ------------------------------------------------------------------------ | ------------------------------------------ |
+| `title`, `title-short`                                                   | `container-title`, `container-title-short` |
+| `editor`                                                                 | `editor`                                   |
+| `author`                                                                 | `container-author`                         |
+| `publisher`, `publisher-place`, `issued`, `ISBN`, `edition`, `volume`    | Same field                                 |
+| `collection-title`, `collection-number`, `language`, `number-of-volumes` | Same field                                 |
+
+A book's author is **never** promoted to editor or chapter author, even when the book has no
+editors or the chapter has no author. CSL's `container-author` preserves the actual role and
+can coexist with `editor`; `options.includeContainerAuthor: false` can omit it. Chapter `title`,
+`author`, `page`, `DOI`, `URL`, `abstract`, `chapter-number`, `id` and `type` are never inherited.
+Empty, absent and invalid mapped values emit nothing. Parent CSL is canonical: parent provenance
+is accepted but not replayed, so external edits are inherited and removed values stay absent.
+It cannot multiply the parent's votes or transfer its own user/registry rank to the chapter.
+
+The fixed source label is `parent`, with only the mapped-from CSL variable as evidence (for
+example `parent title`). No source ID, path, book title, author name or upstream provider label
+enters these labels. With one immediate parent per call, identity is unnecessary. Reader
+presents this as **From the book**, and local quality summaries count a fixed `parent` category.
+
+Inherited claims start at **90** because the user-selected parent is curated container metadata:
+a conflicting chapter DOI record's `container-title` (80) loses to the parent, as do page,
+generic-remote and site-adapter claims. This is still score-based, not a veto: sufficient
+independent corroboration can outweigh 90. Chapter-specific evidence is untouched because
+parent claims cannot target chapter-specific fields, and chapter user edits always stay pinned.
+Parent publisher claims also retain their rank/attribution across the page-imprint heuristics.
+
+Creation composes `resolveCitation({ claims: [...pageOrRemoteClaims, ...parentClaims] })`.
+Refresh uses `resolveCitation({ existing: { citation, provenance }, claims: parentClaims })`:
+the saved CSL is unchanged; fills and changes are suggestions until explicitly accepted. A
+fresh parent claim replaces the old explained parent vote and its historical corroboration
+for that field, otherwise old agreement could prevent any book correction from surfacing.
+Edited, unexplained manual and deliberately removed chapter values remain user-owned.
+Dismissals (`rejected` entries from `user`) suppress the same proposed values on refresh,
+while different later values can still be suggested. Missing parent fields do not imply a
+chapter deletion: this helper emits no removal claims.
 
 ## Where the code runs
 

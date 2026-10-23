@@ -1,6 +1,7 @@
 import { cslFieldStatuses, parseCslProvenance } from "./csl-provenance.js";
 
 export const citationSourceKinds = [
+  "parent",
   "registry",
   "site-adapter",
   "page",
@@ -59,7 +60,7 @@ export function summariseCitationQuality(
 }
 
 function sourceKind(label: string): CitationSourceKind {
-  const kind = label.split(":")[0];
+  const kind = label.split(/[ :]/u)[0];
   return (
     citationSourceKinds.find((candidate) => candidate !== "unexplained" && candidate === kind) ??
     "unknown"
@@ -68,6 +69,7 @@ function sourceKind(label: string): CitationSourceKind {
 
 function emptyCounts(): Counts {
   return {
+    parent: 0,
     registry: 0,
     "site-adapter": 0,
     page: 0,

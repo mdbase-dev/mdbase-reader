@@ -21,7 +21,7 @@ export interface RejectedCslValue {
 export interface CslFieldExplanation {
   /** The value this entry explains, as it was written to `csl`. */
   readonly value: unknown;
-  /** The chosen claim's source label, for example `site-adapter:Wikipedia` or `registry:doi.org`. */
+  /** The chosen source label plus optional evidence, e.g. `registry:doi.org DOI` or `parent title`. */
   readonly source: string;
   /** Evidence of other claims that agreed with the chosen value, such as `json-ld name` or `h1`. */
   readonly agreed?: readonly string[];

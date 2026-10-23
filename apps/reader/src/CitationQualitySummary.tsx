@@ -62,6 +62,7 @@ export function CitationQualitySummary({
 }
 
 const kindLabels = {
+  parent: "From the book",
   registry: "Registry",
   "site-adapter": "Site translator",
   page: "Page",

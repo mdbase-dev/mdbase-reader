@@ -21,6 +21,7 @@ import {
 } from "./claim-matching.js";
 import { claimSourceLabel, parseClaimSourceLabel } from "./claims.js";
 import { doiFromUrl } from "./doi.js";
+import { isParentCitationField } from "./parent-claims.js";
 
 import type { Claim, CitationSuggestion, Resolution, ResolverInput } from "./claims.js";
 import type { CitationDraft } from "./csl-values.js";
@@ -31,6 +32,7 @@ import type { CslFieldProvenance, CslProvenance } from "@mdbase-reader/core";
 // other ranks are starting scores, not vetoes.
 const sourceStrength = {
   user: 100,
+  parent: 90,
   registry: 80,
   "site-adapter": 60,
   page: 40,
@@ -56,8 +58,14 @@ export function resolveCitation(input: ResolverInput): Resolution {
   const existing = input.existing;
   const previous = parseCslProvenance(existing?.provenance);
   const statuses = existing ? cslFieldStatuses(existing.citation, previous) : {};
-  const currentClaims = existing ? existingClaims(existing.citation, statuses) : [];
-  const claims = [...prepareClaims(input.claims), ...currentClaims];
+  const incoming = prepareClaims(input.claims);
+  const refreshedParentFields = new Set(
+    incoming.filter((claim) => claim.source.kind === "parent").map((claim) => claim.field),
+  );
+  const currentClaims = existing
+    ? existingClaims(existing.citation, statuses, refreshedParentFields)
+    : [];
+  const claims = [...incoming, ...currentClaims];
   const fields = [...new Set(claims.map((claim) => claim.field))].sort(compareText);
   const citation: Record<string, unknown> = {};
   const provenance: Record<string, CslFieldProvenance> = {};
@@ -140,6 +148,7 @@ function emptyField(value: unknown): boolean {
 function existingClaims(
   citation: Readonly<Record<string, unknown>>,
   statuses: ReturnType<typeof cslFieldStatuses>,
+  refreshedParentFields: ReadonlySet<string>,
 ): Claim[] {
   return Object.entries(statuses).flatMap(([field, status]) => {
     if (status.kind === "unexplained" && emptyField(citation[field])) {
@@ -148,6 +157,14 @@ function existingClaims(
     const value = citation[field];
     if (status.kind !== "explained") {
       return [{ field, value, source: { kind: "user" }, observedAt: existingObservation }];
+    }
+    // A refreshed parent replaces its historical vote (and old corroboration), not the CSL.
+    // Otherwise a previously corroborated book title could block every later book correction.
+    if (
+      refreshedParentFields.has(field) &&
+      parseClaimSourceLabel(status.provenance.source.split(" ")[0] ?? "")?.kind === "parent"
+    ) {
+      return [];
     }
     // The evidence that agreed when the value was chosen still backs it against a later lookup.
     // An agreed label naming no known source earns nothing; it must not outrank as the user.
@@ -179,6 +196,9 @@ const existingObservation = "";
 function prepareClaims(claims: readonly Claim[]): CandidateClaim[] {
   const prepared: CandidateClaim[] = [];
   for (const claim of claims) {
+    if (claim.source.kind === "parent" && !isParentCitationField(claim.field)) {
+      continue;
+    }
     let value = claim.value;
     if (value === undefined) {
       if (claim.source.kind === "user") {
@@ -317,7 +337,7 @@ function groupClaims(claims: readonly CandidateClaim[]): ClaimGroup[] {
     const ranked = [...group].sort(compareClaims);
     // Equivalent publisher spellings should credit the page that supplies the saved imprint.
     const winner =
-      (ranked[0]?.source.kind !== "user"
+      (ranked[0]?.source.kind !== "user" && ranked[0]?.source.kind !== "parent"
         ? ranked.find(
             (claim) =>
               claim.field === "publisher" &&
@@ -525,7 +545,9 @@ function chooseGroup(field: string, groups: readonly ClaimGroup[]): ClaimGroup |
         ).size > 1,
     );
     if (imprints.length) {
-      eligible = imprints;
+      eligible = groups.filter(
+        (group) => imprints.includes(group) || group.winner.source.kind === "parent",
+      );
     }
   } else if (field === "container-title") {
     // A publisher-only fallback is not evidence of the publication's name.
