@@ -177,7 +177,9 @@ it("delivers page evidence before the opted-in lookup upgrades it", async () => 
   expect(preview?.origin).toBe("citoid");
   expect(preview?.citation.type).toBe("entry-encyclopedia");
   expect(updates.at(-1)?.citation.type).toBe("entry-encyclopedia");
-  expect(preview?.provenance["type"]?.source).toBe("site-adapter:citoid/encyclopediaArticle");
+  expect(preview?.provenance["type"]?.source).toBe(
+    "site-adapter:citoid/encyclopediaArticle Citoid encyclopediaArticle",
+  );
   expect(fetcher.mock.calls[0]?.[1]?.credentials).toBe("omit");
 });
 

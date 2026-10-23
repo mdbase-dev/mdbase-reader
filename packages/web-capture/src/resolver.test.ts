@@ -525,7 +525,9 @@ describe("citation resolution: existing CSL is canonical", () => {
       { field: "title", reason: "change", proposed: "New title" },
     ]);
   });
+});
 
+describe("citation resolution: provenance replay", () => {
   it("retains the winning title signal's strength after saving provenance", () => {
     const first = resolveCitation({
       claims: [

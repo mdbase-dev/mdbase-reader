@@ -25,7 +25,7 @@ function values(document: Document, field: string): unknown[] {
     .map((claim) => claim.value);
 }
 
-describe("JSON-LD candidates", () => {
+describe("bounded JSON-LD values", () => {
   it.each(["publisher", "author", "isPartOf"])(
     "bounds recursion inside JSON-LD %s values without aborting extraction",
     (field) => {
@@ -77,7 +77,9 @@ describe("JSON-LD candidates", () => {
     cycle["isPartOf"] = cycle;
     expect(nameOf(cycle)).toBeUndefined();
   });
+});
 
+describe("JSON-LD page identities", () => {
   it.each(["@id", "url"])("rejects an explicitly off-page %s even in a small graph", (identity) => {
     const document = page(
       `<title>Current work</title>${linked({
@@ -147,7 +149,9 @@ describe("JSON-LD candidates", () => {
       );
     },
   );
+});
 
+describe("JSON-LD candidates", () => {
   it("reads every work in graphs, arrays and scripts, resolving references across scripts", () => {
     const document = page(`
       <script type="application/ld+json">not valid JSON</script>

@@ -4,7 +4,9 @@ const maxValueDepth = 32;
 const maxValueWork = 4_096;
 const maxArrayValues = 128;
 
-type ValueBudget = { remaining: number };
+interface ValueBudget {
+  remaining: number;
+}
 
 /** Bound nested arrays as well as graph enumeration; references themselves stay one-hop. */
 export function resolveJsonLdReferences(
