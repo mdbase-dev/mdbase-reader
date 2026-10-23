@@ -8344,148 +8344,148 @@ msgstr "Warum ist das wichtig?"
 #: apps/reader/src/DisplayMenu.tsx
 msgctxt "DisplayMenu interface"
 msgid "Wide"
-msgstr ""
+msgstr "Breit"
 
 #: apps/reader/src/AnnotationList.tsx
 msgctxt "AnnotationList annotationFilterOptions"
 msgid "With commentary"
-msgstr ""
+msgstr "Mit Kommentar"
 
 #: apps/extension/src/WelcomeApp.tsx
 msgid "With the panel open, select text on the page and it appears there. Choose a colour to save it, adding a comment first if you like."
-msgstr ""
+msgstr "Wählen Sie bei geöffneter Seitenleiste Text auf der Seite aus; er erscheint dort. Wählen Sie zum Speichern eine Farbe und fügen Sie bei Bedarf vorher einen Kommentar hinzu."
 
 #: apps/reader/src/reader-command-list.ts
 msgid "Workspace"
-msgstr ""
+msgstr "Arbeitsfläche"
 
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "Year suffix"
-msgstr ""
+msgstr "Jahreszusatz"
 
 #: apps/extension/src/HighlightFields.tsx
 msgctxt "Highlight colour"
 msgid "yellow"
-msgstr ""
+msgstr "gelb"
 
 #: apps/reader/src/citation-form-model.ts
 msgid "Yes"
-msgstr ""
+msgstr "Ja"
 
 #: apps/reader/src/library-columns.ts
 msgctxt "library columns"
 msgid "Yes"
-msgstr ""
+msgstr "Ja"
 
 #: apps/reader/src/LibraryCells.tsx
 msgid "Yesterday"
-msgstr ""
+msgstr "Gestern"
 
 #: apps/extension/src/WelcomeApp.tsx
 msgid "You can change the collection and shortcuts at any time in <0>Settings</0>."
-msgstr ""
+msgstr "Sie können die Sammlung und die Tastenkürzel jederzeit unter <0>Einstellungen</0> ändern."
 
 #: apps/reader/src/main.tsx
 msgid "You can close this window."
-msgstr ""
+msgstr "Sie können dieses Fenster schließen."
 
 #: packages/renderer-pdf/src/pdf-translations.ts
 msgctxt "PDF viewer emptyState"
 msgid "You can view multiple documents using tabs."
-msgstr ""
+msgstr "Sie können mehrere Dokumente in Tabs anzeigen."
 
 #: apps/reader/src/AnnotationComposer.tsx
 msgid "You selected other text."
-msgstr ""
+msgstr "Sie haben anderen Text ausgewählt."
 
 #: apps/reader/src/connection-recovery.ts
 msgid "Your access to this collection has been removed."
-msgstr ""
+msgstr "Ihr Zugriff auf diese Sammlung wurde entfernt."
 
 #: apps/reader/src/connect-popup.ts
 msgid "Your browser blocked the sign-in tab."
-msgstr ""
+msgstr "Ihr Browser hat den Anmelde-Tab blockiert."
 
 #: apps/reader/src/native-signin-ui.ts
 msgctxt "Native sign-in"
 msgid "Your browser blocked the sign-in tab."
-msgstr ""
+msgstr "Ihr Browser hat den Anmelde-Tab blockiert."
 
 #: apps/extension/src/source-note-session.ts
 msgid "Your browser could not keep a copy of this note. Keep the panel open until it is saved."
-msgstr ""
+msgstr "Ihr Browser konnte keine Kopie dieser Notiz behalten. Lassen Sie die Seitenleiste geöffnet, bis sie gespeichert ist."
 
 #: apps/extension/src/ConnectionPanel.tsx
 msgid "your collection"
-msgstr ""
+msgstr "Ihre Sammlung"
 
 #: apps/reader/src/use-annotation-view.ts
 msgid "Your collection already has it: {path}."
-msgstr ""
+msgstr "Ihre Sammlung enthält die Datei bereits: {path}."
 
 #: apps/reader/src/ConnectReader.tsx
 msgctxt "ConnectReader interface"
 msgid "Your collections"
-msgstr ""
+msgstr "Ihre Sammlungen"
 
 #: apps/reader/src/DraftRecoveryNotice.tsx
 msgid "Your draft"
-msgstr ""
+msgstr "Ihr Entwurf"
 
 #: apps/reader/src/DraftRecoveryNotice.tsx
 msgid "Your draft is retained. Compare both versions before choosing which to save. You can edit your draft below to combine them."
-msgstr ""
+msgstr "Ihr Entwurf bleibt erhalten. Vergleichen Sie beide Versionen, bevor Sie entscheiden, welche Sie speichern. Sie können Ihren Entwurf unten bearbeiten, um die Versionen zusammenzuführen."
 
 #: apps/reader/src/LibraryWorkspace.tsx
 msgid "Your library is empty"
-msgstr ""
+msgstr "Ihre Bibliothek ist leer"
 
 #: apps/extension/src/ConnectionPanel.tsx
 msgid "Your selection and note are kept for this browser session, even if you close the panel."
-msgstr ""
+msgstr "Ihre Auswahl und Notiz bleiben für diese Browsersitzung erhalten, auch wenn Sie die Seitenleiste schließen."
 
 #: apps/reader/src/ImportPageView.tsx
 msgid "Your sources, notes and files, in a collection you control. Preview first. Nothing is imported until you confirm the destination."
-msgstr ""
+msgstr "Ihre Quellen, Notizen und Dateien in einer Sammlung, die Sie kontrollieren. Erst prüfen: Bis Sie das Ziel bestätigen, wird nichts importiert."
 
 #: apps/extension/src/CaptureApp.tsx
 msgid "Your unsaved text for the previous page is kept for this browser session."
-msgstr ""
+msgstr "Ihr ungespeicherter Text für die vorherige Seite bleibt für diese Browsersitzung erhalten."
 
 #: apps/reader/src/CitationStructuredEditor.tsx
 msgid "YYYY, YYYY-MM-DD, or a season"
-msgstr ""
+msgstr "JJJJ, JJJJ-MM-TT oder eine Jahreszeit"
 
 #: apps/reader/src/CitationTypedFieldEditors.tsx
 msgid "YYYY, YYYY-MM, or YYYY-MM-DD"
-msgstr ""
+msgstr "JJJJ, JJJJ-MM oder JJJJ-MM-TT"
 
 #: packages/renderer-pdf/src/pdf-translations.ts
 msgctxt "PDF viewer menu"
 msgid "Zoom Controls"
-msgstr ""
+msgstr "Zoomsteuerung"
 
 #: packages/renderer-pdf/src/pdf-translations.ts
 msgctxt "PDF viewer zoom"
 msgid "Zoom In"
-msgstr ""
+msgstr "Vergrößern"
 
 #: packages/renderer-pdf/src/pdf-translations.ts
 msgctxt "PDF viewer zoom"
 msgid "Zoom Level ({level}%)"
-msgstr ""
+msgstr "Zoomstufe ({level}%)"
 
 #: packages/renderer-pdf/src/pdf-translations.ts
 msgctxt "PDF viewer zoom"
 msgid "Zoom Menu"
-msgstr ""
+msgstr "Zoommenü"
 
 #: packages/renderer-pdf/src/pdf-translations.ts
 msgctxt "PDF viewer zoom"
 msgid "Zoom Out"
-msgstr ""
+msgstr "Verkleinern"
 
 #: packages/migration/src/zotero-pdf.ts
 msgid "Zotero PDF page is unavailable."
-msgstr ""
+msgstr "Die Zotero-PDF-Seite ist nicht verfügbar."
