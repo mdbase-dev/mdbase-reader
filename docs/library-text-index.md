@@ -51,10 +51,23 @@ Queries AND whitespace-separated substring terms; double quotes preserve a
 phrase. Case and diacritics fold using Unicode NFD. Substring matching also works
 for CJK without depending on whitespace segmentation. Excerpts retain original
 Unicode spelling and give bounded context. Worker responses merge with resident
-text into one result per current source, with the matching file displayed.
-As before, results open a source's document surface, not a passage or an alternate
-attachment; use the renderer's Find control. Alternate-file destinations remain
-follow-up work.
+text into one result per current source, with the matching file displayed. Each
+worker hit includes an HTML quotation from the original indexed text, with up to
+64 characters of real prefix/suffix evidence (never excerpt ellipses). For AND
+queries, the passage is the first query term/quoted phrase; the file must still
+contain every term. Folded query offsets map back to original Unicode spelling.
+
+Hits become `SearchDestination`s bound to the indexed file identity and digest
+revision, including when the page has never been opened. A loaded-document
+destination takes precedence when both exist, together with its own excerpt and
+file label. The normal HTML renderer verifies the quotation before scrolling and
+shows a temporary passage highlight without creating an annotation. Ambiguous or
+changed text, a revision changed between search and opening, and an unsupported
+surface leave the document at its usual position with the explicit Find status.
+Stale hits are also filtered against current descriptors before display; they are
+never rebound to a new revision. Alternate-file opening remains follow-up work:
+if the opened file differs from the indexed target, verification falls back to
+Find rather than jumping in the wrong attachment.
 
 IndexedDB has an origin-wide **32 MiB estimated payload** and **2,048-entry**
 ceiling across collections, not an unbounded per-collection allocation. The
@@ -74,7 +87,21 @@ collection mirror.
 Unit tests cover persistence/collection isolation, revision replacement,
 unchanged-file skipping, partial/complete reconciliation, FIFO eviction, quota
 fallback, cancellation, idle/input/visibility scheduling, Unicode/phrase queries,
-HTML renderer text parity and deduplicated resident/index merging.
+HTML renderer text parity, hit-to-destination mapping with Unicode/context
+preservation, stale-revision rejection, ambiguous-quote verification and loaded
+destination preference during deduplicated resident/index merging.
+
+The owned loopback browser audit also searches and opens an **unopened indexed
+HTML page**, verifies the visible quotation highlight and focused status, and
+checks ambiguous indexed quotations fall back to Find without a highlight:
+
+```sh
+node apps/reader/scripts/audit-search-passages.mjs
+```
+
+Run it against a local Vite server on port 5217 (or set `READER_AUDIT_ORIGIN` to
+another loopback origin). The fixture uses the real worker, IndexedDB and HTML
+renderer with intercepted collection reads; it is not connected LAB acceptance.
 
 Run the isolated **local browser** benchmark (no Connect, no saved profile):
 

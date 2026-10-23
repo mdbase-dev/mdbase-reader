@@ -70,6 +70,8 @@ await context.addInitScript(() =>
 );
 const page = await context.newPage();
 const errors = [];
+const openedFiles = new Set();
+const indexedFiles = new Set();
 page.on("pageerror", (error) => errors.push(error.message));
 await context.route(`${origin}/__reader-audit/**`, async (route) => {
   const request = route.request();
@@ -87,7 +89,9 @@ await context.route(`${origin}/__reader-audit/**`, async (route) => {
     return respond(record ?? null);
   }
   if (path.startsWith("document/file_")) {
-    const file = files[Number(path.slice("document/file_".length))];
+    const index = Number(path.slice("document/file_".length));
+    (new URL(request.url()).searchParams.has("index") ? indexedFiles : openedFiles).add(index);
+    const file = files[index];
     return route.fulfill({ contentType: file.mediaType, body: file.bytes });
   }
   if (path.startsWith("search")) return respond([]);
@@ -98,11 +102,15 @@ try {
   await page.goto(`${origin}/test-fixtures/audit-reader.html`);
   for (const [index, file] of files.entries()) {
     const navigator = page.getByRole("textbox", { name: "Find a source by title, author or tag" });
-    await navigator.fill(`Passage ${index}`);
-    await page.getByRole("option", { name: new RegExp(`Passage ${index}`) }).dblclick();
-    await expect(page.locator(`.document-session.is-active .${file.kind}-viewer`)).toBeVisible({
-      timeout: 60_000,
-    });
+    // HTML must be found through the persistent worker index before any surface opens.
+    // PDF/EPUB still exercise loaded-document destinations.
+    if (file.kind !== "html") {
+      await navigator.fill(`Passage ${index}`);
+      await page.getByRole("option", { name: new RegExp(`Passage ${index}`) }).dblclick();
+      await expect(page.locator(`.document-session.is-active .${file.kind}-viewer`)).toBeVisible({
+        timeout: 60_000,
+      });
+    }
     if (file.kind === "pdf") {
       await expect
         .poll(
@@ -131,11 +139,17 @@ try {
     }
     await views.getByRole("button", { name: "All sources", exact: true }).click();
     await chooseOption(page.getByRole("combobox", { name: "Search scope" }), "documents");
-    await page.getByRole("textbox", { name: "Search this view" }).fill(file.query);
+    await page
+      .getByRole("textbox", { name: "Search this view" })
+      .fill(file.kind === "html" ? `"${file.query}"` : file.query);
     const result = page
       .getByRole("region", { name: "Text search results" })
       .getByRole("button", { name: new RegExp(`Passage ${index}`) });
     await expect(result).toBeVisible({ timeout: 30_000 });
+    if (file.kind === "html") {
+      expect(indexedFiles.has(index)).toBe(true);
+      expect(openedFiles.has(index)).toBe(false);
+    }
     await result.focus();
     await page.keyboard.press("Enter");
     const status = page.locator(".search-passage-status");
@@ -184,13 +198,29 @@ try {
         )
         .toBe(true);
     }
-    evidence.push({ kind: file.kind, query: file.query, message: await status.textContent() });
+    evidence.push({
+      kind: file.kind,
+      query: file.query,
+      unopenedIndexedPage: file.kind === "html",
+      message: await status.textContent(),
+    });
+    if (index === 3) {
+      expect(await status.textContent()).toContain("Find control");
+      expect(
+        await page
+          .frameLocator(".document-session.is-active iframe.html-viewer")
+          .locator("body")
+          .evaluate((body) =>
+            body.ownerDocument.defaultView.CSS.highlights.has("reader-search-passage"),
+          ),
+      ).toBe(false);
+    }
     await page.screenshot({ path: join(directory, `${index}-${file.kind}.png`) });
   }
   expect(errors).toEqual([]);
   await writeFile(join(directory, "result.json"), JSON.stringify({ evidence, errors }, null, 2));
   console.log(
-    `PASS: HTML, PDF, EPUB passage activation and ambiguity fallback. Evidence: ${directory}`,
+    `PASS: unopened indexed HTML passage activation/ambiguity fallback and loaded PDF/EPUB passages. Evidence: ${directory}`,
   );
 } catch (error) {
   await page.screenshot({ path: join(directory, "failure.png") });

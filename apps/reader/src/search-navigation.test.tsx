@@ -60,7 +60,7 @@ afterEach(() => {
   document.body.innerHTML = "";
 });
 
-describe("document search UI", () => {
+describe("search destination navigation", () => {
   it("restores the usual position if the renderer fails after starting navigation", async () => {
     const reading = surface(false);
     const previous = { kind: "html" as const, href: "page", progression: 0.7 };
@@ -79,6 +79,9 @@ describe("document search UI", () => {
     expect(await navigateToSearchDestination(broken, destination)).toBe(false);
     expect(goTo).toHaveBeenCalledWith(previous);
   });
+});
+
+describe("document search UI", () => {
   it("passes exact-revision destination evidence when activating the result button", async () => {
     vi.useFakeTimers();
     const onOpen = vi.fn();
@@ -119,9 +122,13 @@ describe("document search UI", () => {
     act(() => root.unmount());
   });
 
-  it.each([true, false])(
-    "announces and focuses the match status, or honest fallback (resolved=%s)",
-    async (found) => {
+  it.each([
+    { found: true, stale: false },
+    { found: false, stale: false },
+    { found: false, stale: true },
+  ])(
+    "announces and focuses the match status, or honest fallback ($found, stale=$stale)",
+    async ({ found, stale }) => {
       vi.useFakeTimers();
       const active = { kind: "source", view: "document", sourceId: source.id, id: "session" };
       const workspace = {
@@ -135,10 +142,19 @@ describe("document search UI", () => {
         openView: vi.fn(),
       } as unknown as SourceWorkspaceController;
       const reading = surface(found);
+      const requested = stale
+        ? {
+            ...destination,
+            document: {
+              ...target,
+              revision: fileRevision(`sha256:${"b".repeat(64)}`),
+            },
+          }
+        : destination;
       const surfaces = new Map([["session", reading]]);
       function Harness(): React.JSX.Element {
         const navigation = useSearchNavigation(workspace, surfaces);
-        const request = useRef(destination);
+        const request = useRef(requested);
         return (
           <>
             <button onClick={() => navigation.open(source.id, "document", request.current)}>
@@ -165,9 +181,13 @@ describe("document search UI", () => {
           : searchPassageFallback,
       );
       expect(document.activeElement).toBe(status);
-      expect(reading.capabilities.searchNavigation?.goToDestination).toHaveBeenCalledWith(
-        destination,
-      );
+      if (stale) {
+        expect(reading.capabilities.searchNavigation?.goToDestination).not.toHaveBeenCalled();
+      } else {
+        expect(reading.capabilities.searchNavigation?.goToDestination).toHaveBeenCalledWith(
+          destination,
+        );
+      }
       if (found) {
         await act(async () => {
           await vi.advanceTimersByTimeAsync(12_000);

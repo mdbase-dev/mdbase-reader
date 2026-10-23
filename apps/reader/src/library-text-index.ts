@@ -1,7 +1,10 @@
+import { textQuoteAt } from "@mdbase-reader/core";
+
 import { libraryTextKey } from "./library-text-store.js";
 
 import type { LibraryTextEntry, LibraryTextStore } from "./library-text-store.js";
 import type { SearchExcerpt } from "./search-passages.js";
+import type { QuoteSelector } from "@mdbase-reader/core";
 
 export interface IndexedFile {
   readonly fileId: string;
@@ -9,6 +12,7 @@ export interface IndexedFile {
 }
 export interface LibraryTextHit extends IndexedFile {
   readonly excerpt: SearchExcerpt;
+  readonly quote: QuoteSelector;
 }
 
 export function foldLibraryText(text: string): string {
@@ -80,7 +84,7 @@ export class LibraryTextIndex {
         hits.push({
           fileId: entry.fileId,
           revision: entry.revision,
-          excerpt: foldedExcerpt(entry.text, folded.indexOf(first), first.length),
+          ...foldedPassage(entry.text, folded.indexOf(first), first.length),
         });
       }
     }
@@ -93,7 +97,11 @@ export class LibraryTextIndex {
 }
 
 /** Map a folded offset back to original Unicode, including decomposed accents and Hangul. */
-function foldedExcerpt(text: string, offset: number, length: number): SearchExcerpt {
+function foldedPassage(
+  text: string,
+  offset: number,
+  length: number,
+): Pick<LibraryTextHit, "excerpt" | "quote"> {
   let folded = 0;
   let position = 0;
   // Most text needs no offset map. Skip large prefixes in blocks rather than
@@ -121,8 +129,11 @@ function foldedExcerpt(text: string, offset: number, length: number): SearchExce
     position += character.length;
   }
   return {
-    before: `${start > 90 ? "…" : ""}${text.slice(Math.max(0, start - 90), start)}`,
-    match: text.slice(start, end),
-    after: `${text.slice(end, end + 90)}${end + 90 < text.length ? "…" : ""}`,
+    quote: textQuoteAt(text, start, end),
+    excerpt: {
+      before: `${start > 90 ? "…" : ""}${text.slice(Math.max(0, start - 90), start)}`,
+      match: text.slice(start, end),
+      after: `${text.slice(end, end + 90)}${end + 90 < text.length ? "…" : ""}`,
+    },
   };
 }

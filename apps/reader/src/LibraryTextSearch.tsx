@@ -113,7 +113,7 @@ export function LibraryTextSearch({
             query={normalized}
             note={noteMatches.get(source.id)}
             document={indexed.matches.get(source.id)}
-            destination={documents.matches.get(source.id)?.destination}
+            destination={indexed.matches.get(source.id)?.destination}
             onOpen={onOpen}
           />
         ))}
