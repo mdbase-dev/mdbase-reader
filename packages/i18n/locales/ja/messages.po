@@ -3497,7 +3497,7 @@ msgstr "インポート中…"
 
 #: apps/reader/src/LibraryWorkspace.tsx
 msgid "in"
-msgstr "次の値を含む"
+msgstr "検索対象："
 
 #: apps/reader/src/AnnotationCard.tsx
 msgid "In literature note"
@@ -7393,7 +7393,7 @@ msgstr "見つかったレコードはこの引用情報に一致します。"
 
 #: apps/reader/src/preview.tsx
 msgid "The interface preview includes one sample document: The Principles of Psychology."
-msgstr "インターフェースのプレビューにはサンプル文書が1件含まれます：『心理学原理』。"
+msgstr "インターフェースのプレビューにはサンプル文書が1件含まれます：The Principles of Psychology。"
 
 #: packages/renderer-html/src/html-palette.ts
 #: packages/renderer-html/src/html-runtime.ts
