@@ -7,24 +7,7 @@ import {
 } from "./csl-values.js";
 import { arrayValue, jsonLdNames, jsonLdNode, nameOf, stringValue } from "./json-ld.js";
 import { all, defined, first, type MetaIndex } from "./meta-tags.js";
-
-/** schema.org article types and the CSL type each becomes. */
-const articleJsonLdTypes = new Map([
-  ["NewsArticle", "article-newspaper"],
-  ["AnalysisNewsArticle", "article-newspaper"],
-  ["BackgroundNewsArticle", "article-newspaper"],
-  ["OpinionNewsArticle", "article-newspaper"],
-  ["ReportageNewsArticle", "article-newspaper"],
-  ["ReviewNewsArticle", "article-newspaper"],
-  ["BlogPosting", "post-weblog"],
-  ["LiveBlogPosting", "post-weblog"],
-  ["SocialMediaPosting", "post"],
-  ["DiscussionForumPosting", "post"],
-  ["Article", "webpage"],
-  ["TechArticle", "webpage"],
-  ["AdvertiserContentArticle", "webpage"],
-  ["SatiricalArticle", "webpage"],
-]);
+import { articleJsonLdTypes } from "./metadata-types.js";
 
 type JsonLdNode = Readonly<Record<string, unknown>>;
 

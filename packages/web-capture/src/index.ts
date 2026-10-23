@@ -14,3 +14,4 @@ export {
   type CitationDraft,
 } from "./csl-values.js";
 export * from "./claims.js";
+export * from "./page-claims.js";

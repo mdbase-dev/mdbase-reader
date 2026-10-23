@@ -1,7 +1,8 @@
 import { cslDate, cslName, sanitizedCitation, type CitationDraft } from "./csl-values.js";
-import { arxivIdentifier, doiFromText, doiFromUrl } from "./doi.js";
 import { jsonLdNames, jsonLdNode, nameOf, stringValue } from "./json-ld.js";
 import { all, defined, first, metaIndex, type MetaIndex } from "./meta-tags.js";
+import { absoluteHttps, embeddedDoi } from "./metadata-identifiers.js";
+import { embeddedTypes, scholarlyJsonLdTypes } from "./metadata-types.js";
 import { webArticleCitation } from "./web-article-metadata.js";
 
 /**
@@ -19,16 +20,6 @@ export interface ScholarlyMetadata {
    */
   readonly citation?: CitationDraft;
 }
-
-const scholarlyJsonLdTypes = new Set([
-  "ScholarlyArticle",
-  "MedicalScholarlyArticle",
-  "Book",
-  "Chapter",
-  "Thesis",
-  "Report",
-  "Dataset",
-]);
 
 export function extractScholarlyMetadata(document: Document, pageUrl: string): ScholarlyMetadata {
   const meta = metaIndex(document);
@@ -50,19 +41,6 @@ export function extractScholarlyMetadata(document: Document, pageUrl: string): S
     URL: pageUrl,
   });
   return { ...(doi ? { doi } : {}), ...(pdfUrl ? { pdfUrl } : {}), citation };
-}
-
-function embeddedDoi(
-  meta: MetaIndex,
-  linked: Readonly<Record<string, unknown>> | undefined,
-  pageUrl: string,
-): string | undefined {
-  return (
-    doiFromText(first(meta, "citation_doi", "prism.doi", "dc.identifier", "dcterms.identifier")) ??
-    doiFromUrl(pageUrl) ??
-    doiFromText(stringValue(linked?.["identifier"]) ?? stringValue(linked?.["@id"])) ??
-    arxivDoi(first(meta, "citation_arxiv_id") ?? arxivIdentifier(pageUrl))
-  );
 }
 
 function embeddedCitation(meta: MetaIndex): Record<string, unknown> {
@@ -134,17 +112,7 @@ function embeddedCitation(meta: MetaIndex): Record<string, unknown> {
 }
 
 function embeddedType(meta: MetaIndex): string | undefined {
-  const types: readonly [string, string][] = [
-    ["citation_dissertation_institution", "thesis"],
-    ["citation_technical_report_institution", "report"],
-    ["citation_conference_title", "paper-conference"],
-    ["citation_inbook_title", "chapter"],
-    ["citation_book_title", "chapter"],
-    ["citation_journal_title", "article-journal"],
-    ["prism.publicationname", "article-journal"],
-    ["citation_isbn", "book"],
-  ];
-  return types.find(([key]) => meta.has(key))?.[1];
+  return embeddedTypes.find(([key]) => meta.has(key))?.[1];
 }
 
 function jsonLdCitation(
@@ -176,18 +144,4 @@ function jsonLdCitation(
 
 function scholarlyJsonLd(document: Document): Readonly<Record<string, unknown>> | undefined {
   return jsonLdNode(document, (type) => scholarlyJsonLdTypes.has(type));
-}
-
-function arxivDoi(identifier: string | undefined): string | undefined {
-  const bare = identifier?.replace(/^arxiv:/iu, "").replace(/v\d+$/u, "");
-  return bare ? `10.48550/arXiv.${bare}` : undefined;
-}
-
-function absoluteHttps(value: string | undefined, base: string): string | undefined {
-  try {
-    const url = value ? new URL(value, base) : undefined;
-    return url?.protocol === "https:" ? url.href : undefined;
-  } catch {
-    return undefined;
-  }
 }
