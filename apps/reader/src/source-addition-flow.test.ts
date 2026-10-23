@@ -243,6 +243,7 @@ describe("captured citation disclosure", () => {
     "http://192.168.1.1/",
     "http://[fd00::1]/private",
     "https://alice:secret@example.com/doc?token=secret#private",
+    "https://example.com/doc?token=private-secret",
     "https://example.com/private.pdf",
   ])("never discloses a protected captured canonical URL: %s", async (canonicalUrl) => {
     const fetch = vi.fn<typeof globalThis.fetch>().mockResolvedValue(Response.json([]));
@@ -259,7 +260,7 @@ describe("captured citation disclosure", () => {
     const fetch = vi.fn<typeof globalThis.fetch>().mockResolvedValue(Response.json([]));
     vi.stubGlobal("fetch", fetch);
     const base = capturedPage(pageClaims);
-    const canonicalUrl = "https://example.com/document?token=private-secret#private-fragment";
+    const canonicalUrl = "https://example.com/document?article=7#private-fragment";
     const page = { ...base, capture: { ...base.capture, canonicalUrl } };
     await addSourceFromInput(
       "https://example.com/document",
@@ -268,7 +269,7 @@ describe("captured citation disclosure", () => {
       }),
     );
     expect(fetch.mock.calls[0]?.[0]).toBe(
-      `https://en.wikipedia.org/api/rest_v1/data/citation/zotero/${encodeURIComponent("https://example.com/document?token=private-secret")}`,
+      `https://en.wikipedia.org/api/rest_v1/data/citation/zotero/${encodeURIComponent("https://example.com/document?article=7")}`,
     );
   });
 });

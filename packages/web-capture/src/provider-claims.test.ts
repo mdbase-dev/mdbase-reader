@@ -245,10 +245,22 @@ describe("Citoid disclosure boundary", () => {
 
   it("keeps query parameters needed by articles, but strips fragments", async () => {
     const fetch = vi.fn<typeof globalThis.fetch>().mockResolvedValue(Response.json([]));
-    await citoidClaims("https://example.com/document?token=secret&article=1#private", { fetch });
+    await citoidClaims("https://example.com/document?article=1&page=2#private", { fetch });
     expect(fetch.mock.calls[0]?.[0]).toBe(
-      `${WIKIMEDIA_CITOID_ENDPOINT}${encodeURIComponent("https://example.com/document?token=secret&article=1")}`,
+      `${WIKIMEDIA_CITOID_ENDPOINT}${encodeURIComponent("https://example.com/document?article=1&page=2")}`,
     );
+  });
+
+  it.each([
+    "https://example.com/document?token=secret&article=1",
+    "https://example.com/document?X-Amz-Signature=abc",
+    "https://example.com/document?session_id=abc",
+    "https://example.com/document?access-token=abc",
+  ])("never discloses a signed or session link %s", async (url) => {
+    const fetch = vi.fn<typeof globalThis.fetch>();
+    const batch = await citoidClaims(url, { fetch, queue: createProviderQueue() });
+    expect(fetch).not.toHaveBeenCalled();
+    expect(batch).toMatchObject({ claims: [], outcome: { result: "blocked" } });
   });
 });
 

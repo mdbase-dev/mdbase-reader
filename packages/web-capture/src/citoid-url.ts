@@ -12,6 +12,22 @@ const privateSuffixes = [
   ".test",
   ".invalid",
 ];
+const secretParameters = new Set([
+  "token",
+  "key",
+  "sig",
+  "signature",
+  "auth",
+  "session",
+  "code",
+  "password",
+  "accesstoken",
+  "refreshtoken",
+  "idtoken",
+  "apikey",
+  "authorization",
+  "sessionid",
+]);
 
 /** Validate at the disclosure boundary, not just in a particular UI. No DNS lookup is made. */
 export function citoidUrl(value: string, contentType?: string): string | undefined {
@@ -27,15 +43,25 @@ export function citoidUrl(value: string, contentType?: string): string | undefin
       /^[\d.]+$/u.test(host) ||
       privateSuffixes.some((suffix) => host.endsWith(suffix)) ||
       /\.pdf(?:$|\/)/iu.test(decodeURIComponent(url.pathname)) ||
-      contentType?.split(";")[0]?.trim().toLowerCase() === "application/pdf"
+      contentType?.split(";")[0]?.trim().toLowerCase() === "application/pdf" ||
+      [...url.searchParams.keys()].some(secretParameter)
     ) {
       return undefined;
     }
-    // Queries are retained: article identifiers and revision URLs often depend on them.
-    // Userinfo is rejected above; fragments are local state and must never be disclosed.
+    // Other queries are retained: article identifiers and revision URLs often depend on them.
+    // Signed or session links are refused above rather than trimmed, since the remainder may
+    // still identify the user. Fragments are local state and are never disclosed.
     url.hash = "";
     return url.href;
   } catch {
     return undefined;
   }
+}
+
+function secretParameter(key: string): boolean {
+  const name = key.toLowerCase();
+  return (
+    secretParameters.has(name.replace(/[-_]/gu, "")) ||
+    name.split(/[-_]/u).some((part) => secretParameters.has(part))
+  );
 }
