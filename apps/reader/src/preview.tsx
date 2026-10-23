@@ -1,10 +1,14 @@
 import {
   annotationId,
+  CitationChangedElsewhereError,
   citekeyForCitation,
   collectionId,
+  cslValuesEqual,
   dateTime,
   fileId,
   fileRevision,
+  loadedCitation,
+  parseCslProvenance,
   recordRevision,
   sourceId,
   validateCslItem,
@@ -297,16 +301,28 @@ export class PreviewGateway implements ReaderWorkspaceGateway {
     citation: unknown,
     options: Parameters<ReaderWorkspaceGateway["saveSourceCitation"]>[2] = {},
   ): Promise<Source> {
+    const current = this.#sources.find((item) => item.id === source.id) ?? source;
+    if (
+      "expectedCitation" in options &&
+      !cslValuesEqual(loadedCitation(current) ?? null, options.expectedCitation ?? null)
+    ) {
+      return Promise.reject(
+        new CitationChangedElsewhereError(
+          loadedCitation(current),
+          current.cslProvenance ?? parseCslProvenance(current.frontmatter["csl-provenance"]),
+        ),
+      );
+    }
     const validation = validateCslItem(citation);
     if (!validation.valid) {
       return Promise.reject(new Error("The preview citation is invalid."));
     }
     const updated: Source = {
-      ...source,
+      ...current,
       citation: validation.item,
       ...(options.provenance ? { cslProvenance: options.provenance } : {}),
       frontmatter: {
-        ...source.frontmatter,
+        ...current.frontmatter,
         csl: validation.item,
         ...(options.provenance ? { "csl-provenance": options.provenance } : {}),
       },
