@@ -1,6 +1,7 @@
 // @vitest-environment happy-dom
 import { describe, expect, it } from "vitest";
 
+import { jsonLdNames, jsonLdNode, nameOf, resolveJsonLdReferences } from "./json-ld.js";
 import { pageClaims } from "./page-claims.js";
 import { resolveCitation } from "./resolver.js";
 
@@ -25,6 +26,58 @@ function values(document: Document, field: string): unknown[] {
 }
 
 describe("JSON-LD candidates", () => {
+  it.each(["publisher", "author", "isPartOf"])(
+    "bounds recursion inside JSON-LD %s values without aborting extraction",
+    (field) => {
+      const nested =
+        field === "author"
+          ? "[".repeat(12_000) + '"Jane Doe"' + "]".repeat(12_000)
+          : '{"isPartOf":'.repeat(12_000) + '{"name":"Deep publisher"}' + "}".repeat(12_000);
+      const document = page(`<title>Work</title><script type="application/ld+json">{
+        "@type":"NewsArticle", "headline":"Work", "${field}":${nested}
+      }</script>`);
+      const batch = pageClaims(document, pageUrl, observedAt);
+      expect(resolveCitation({ claims: batch.claims }).citation?.["title"]).toBe("Work");
+      expect(
+        batch.claims.some(
+          (claim) =>
+            claim.field === field || (field === "isPartOf" && claim.field === "container-title"),
+        ),
+      ).toBe(false);
+      // The shared/legacy JSON-LD entry point must enforce the same traversal bounds.
+      const node = jsonLdNode(document, (type) => type === "NewsArticle");
+      expect(node?.["headline"]).toBe("Work");
+      expect(jsonLdNames(node?.["author"])).toEqual([]);
+      expect(nameOf(node?.[field])).toBeUndefined();
+    },
+  );
+
+  it("bounds work across wide nested JSON-LD arrays and keeps other fields", () => {
+    const references = new Map([["#author", { name: "Jane Doe" }]]);
+    const budget = { remaining: 4_096 };
+    const author = Array.from({ length: 128 }, () =>
+      Array.from({ length: 128 }, () => ({ "@id": "#author" })),
+    );
+    resolveJsonLdReferences(author, references, budget);
+    expect(budget.remaining).toBe(0);
+    const document = page(
+      linked({
+        "@type": "NewsArticle",
+        headline: "Work",
+        author,
+        publisher: { name: "Valid publisher" },
+      }),
+    );
+    expect(values(document, "publisher")).toEqual(["Valid publisher"]);
+  });
+
+  it("keeps ordinary nested publication names and ignores cyclic name paths", () => {
+    expect(nameOf({ isPartOf: { isPartOf: { name: "Journal" } } })).toBe("Journal");
+    const cycle: Record<string, unknown> = {};
+    cycle["isPartOf"] = cycle;
+    expect(nameOf(cycle)).toBeUndefined();
+  });
+
   it.each(["@id", "url"])("rejects an explicitly off-page %s even in a small graph", (identity) => {
     const document = page(
       `<title>Current work</title>${linked({

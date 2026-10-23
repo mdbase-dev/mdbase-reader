@@ -1,6 +1,13 @@
 import { cslDate, cslName } from "./csl-values.js";
 import { arxivIdentifier, doiFromText, doiFromUrl } from "./doi.js";
-import { arrayValue, isRecord, jsonLdNames, nameOf, stringValue } from "./json-ld.js";
+import {
+  arrayValue,
+  isRecord,
+  jsonLdNames,
+  nameOf,
+  resolveJsonLdReferences,
+  stringValue,
+} from "./json-ld.js";
 import { all, first, type MetaIndex } from "./meta-tags.js";
 import { absoluteHttps, arxivDoi, embeddedDoi } from "./metadata-identifiers.js";
 import { articleJsonLdTypes, embeddedTypes, scholarlyJsonLdTypes } from "./metadata-types.js";
@@ -468,12 +475,7 @@ function linkedNodes(document: Document, pageUrl: string): JsonLdNode[] {
       typeof node["@id"] === "string" ? [[node["@id"], node] as const] : [],
     ),
   );
-  const resolved = (value: unknown): unknown =>
-    Array.isArray(value)
-      ? value.slice(0, maxValues).map(resolved)
-      : isRecord(value) && typeof value["@id"] === "string" && Object.keys(value).length === 1
-        ? (byId.get(value["@id"]) ?? value)
-        : value;
+  const resolved = (value: unknown): unknown => resolveJsonLdReferences(value, byId);
   return pageWorkNodes(document, pageUrl, nodes)
     .filter((node) => isWork(node) || arrayValue(node["@type"]).includes("WebSite"))
     .map((node) => ({
