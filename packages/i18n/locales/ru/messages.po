@@ -7194,429 +7194,429 @@ msgstr "Дополнение"
 #: packages/renderer-pdf/src/pdf-translations.ts
 msgctxt "PDF viewer emptyState"
 msgid "Supported format: PDF"
-msgstr ""
+msgstr "Поддерживаемый формат: PDF"
 
 #: apps/reader/src/CollectionMenu.tsx
 msgctxt "CollectionMenu interface"
 msgid "Switch collection"
-msgstr ""
+msgstr "Переключить коллекцию"
 
 #: apps/reader/src/CollectionPicker.tsx
 msgctxt "CollectionPicker interface"
 msgid "Switch collection"
-msgstr ""
+msgstr "Переключить коллекцию"
 
 #: apps/reader/src/CollectionPicker.tsx
 msgid "Switch collection: {name}"
-msgstr ""
+msgstr "Переключить коллекцию: {name}"
 
 #: apps/reader/src/collection-switching.ts
 msgid "Switch collections with unsaved changes? Save your edits first to avoid losing work."
-msgstr ""
+msgstr "Переключить коллекцию с несохранёнными изменениями? Сначала сохраните правки, чтобы не потерять их."
 
 #: apps/reader/src/connection-recovery.ts
 msgid "Sync this collection on your computer before opening it."
-msgstr ""
+msgstr "Синхронизируйте эту коллекцию на компьютере, прежде чем открывать её."
 
 #: apps/reader/src/ReaderHeader.tsx
 msgid "Syncing…"
-msgstr ""
+msgstr "Синхронизация…"
 
 #: apps/reader/src/DisplayMenu.tsx
 msgid "System"
-msgstr ""
+msgstr "Системная"
 
 #: apps/extension/src/TagInput.tsx
 msgctxt "Keyboard key"
 msgid "Tab"
-msgstr ""
+msgstr "Вкладка"
 
 #: apps/reader/src/LibraryWorkspace.tsx
 msgctxt "LibraryWorkspace interface"
 msgid "Table"
-msgstr ""
+msgstr "Таблица"
 
 #: apps/reader/src/LibraryAnnotationToolbar.tsx
 #: apps/reader/src/LibraryWorkspace.tsx
 msgid "Tag"
-msgstr ""
+msgstr "Тег"
 
 #: apps/reader/src/LibraryAnnotationToolbar.tsx
 msgctxt "LibraryAnnotationToolbar interface"
 msgid "Tag"
-msgstr ""
+msgstr "Тег"
 
 #: apps/reader/src/annotation-columns.ts
 msgctxt "Annotation table column"
 msgid "Tags"
-msgstr ""
+msgstr "Теги"
 
 #: apps/reader/src/library-columns.ts
 msgctxt "Library table column"
 msgid "Tags"
-msgstr ""
+msgstr "Теги"
 
 #: apps/extension/src/HighlightFields.tsx
 #: apps/extension/src/NotePanel.tsx
 msgid "Tags <0>(comma-separated, optional)</0>"
-msgstr ""
+msgstr "Теги <0>(через запятую, необязательно)</0>"
 
 #: apps/extension/src/NotePanel.tsx
 msgid "Tags <0>(comma-separated)</0>"
-msgstr ""
+msgstr "Теги <0>(через запятую)</0>"
 
 #: apps/extension/src/ConnectionPanel.tsx
 msgid "Technical details"
-msgstr ""
+msgstr "Технические сведения"
 
 #: apps/reader/src/CitationTypedFieldEditors.tsx
 msgctxt "CitationTypedFieldEditors customValueTypeOptions"
 msgid "Text"
-msgstr ""
+msgstr "Текст"
 
 #: apps/reader/src/CitationTypedFieldEditors.tsx
 msgctxt "CitationTypedFieldEditors interface"
 msgid "Text"
-msgstr ""
+msgstr "Текст"
 
 #: apps/reader/src/CitationTypedFieldEditors.tsx
 msgctxt "CitationTypedFieldEditors scalarKindOptions"
 msgid "Text"
-msgstr ""
+msgstr "Текст"
 
 #: apps/reader/src/DisplayMenu.tsx
 msgid "Text and display"
-msgstr ""
+msgstr "Текст и отображение"
 
 #: packages/core/src/domain/selector.ts
 msgid "Text positions must use non-negative integer offsets with end at or after start."
-msgstr ""
+msgstr "Позиции текста должны быть неотрицательными целыми числами; конец не может предшествовать началу."
 
 #: apps/reader/src/LibraryTextSearch.tsx
 msgid "Text search failed. Change the query to retry."
-msgstr ""
+msgstr "Не удалось выполнить поиск по тексту. Измените запрос и повторите попытку."
 
 #: apps/reader/src/LibraryTextSearch.tsx
 msgid "Text search results"
-msgstr ""
+msgstr "Результаты поиска по тексту"
 
 #: apps/reader/src/DisplayMenu.tsx
 msgid "Text size"
-msgstr ""
+msgstr "Размер текста"
 
 #: apps/reader/src/selection-copy.ts
 msgid "The browser refused to copy."
-msgstr ""
+msgstr "Браузер запретил копирование."
 
 #: apps/reader/src/build-source-export.ts
 msgid "The canonical records were preserved. Review these incomplete derived outputs:"
-msgstr ""
+msgstr "Исходные записи сохранены. Проверьте эти неполные производные данные:"
 
 #: apps/extension/src/use-extension-capture.ts
 msgid "The chosen post is not loaded anymore."
-msgstr ""
+msgstr "Выбранная публикация больше не загружена."
 
 #: apps/reader/src/SourceDetails.tsx
 msgid "The citation has different details."
-msgstr ""
+msgstr "Сведения ссылки отличаются."
 
 #: apps/reader/src/CitationSourceSync.tsx
 msgid "The citation is missing details recorded in your library: {missingDetails}."
-msgstr ""
+msgstr "В ссылке отсутствуют сведения из вашей библиотеки: {missingDetails}."
 
 #. placeholder {0}: messageOf(reason)
 #: apps/reader/src/source-addition-flow.ts
 msgid "The citation was not stored: {0} Add it from the citation panel."
-msgstr ""
+msgstr "Ссылка не сохранена: {0} Добавьте её на панели ссылок."
 
 #. placeholder {0}: reason instanceof Error ? reason.message : String(reason)
 #: apps/extension/src/save-capture.ts
 msgid "The citation was not stored: {0}. Add it from the source's citation panel in Reader."
-msgstr ""
+msgstr "Ссылка не сохранена: {0}. Добавьте её на панели ссылок источника в Reader."
 
 #. placeholder {0}: citation.id
 #. placeholder {1}: collision.title
 #: packages/core/src/application/save-source-citation.ts
 msgid "The citekey @{0} is already used by “{1}”."
-msgstr ""
+msgstr "Ключ цитирования @{0} уже используется для «{1}»."
 
 #. placeholder {0}: source.citation.id
 #: packages/core/src/application/build-csl-bibliography.ts
 msgid "The citekey @{0} is not unique."
-msgstr ""
+msgstr "Ключ цитирования @{0} не уникален."
 
 #: apps/reader/src/SourceNoteEditor.tsx
 msgid "The collection changed while you were editing. Review the conflict to continue."
-msgstr ""
+msgstr "Коллекция изменилась во время редактирования. Чтобы продолжить, проверьте конфликт."
 
 #: apps/extension/src/NotePanel.tsx
 msgid "The collection did not accept the note. Your text is kept."
-msgstr ""
+msgstr "Коллекция не приняла заметку. Ваш текст сохранён."
 
 #: apps/extension/src/connection-view.ts
 msgid "The connection to this collection has changed. Choose the collection again."
-msgstr ""
+msgstr "Подключение к этой коллекции изменилось. Выберите коллекцию снова."
 
 #: apps/reader/src/AnnotationImage.tsx
 msgid "The embedded annotation asset is not an image."
-msgstr ""
+msgstr "Вложенный ресурс аннотации не является изображением."
 
 #: packages/renderer-epub/src/epub-resource-store.ts
 msgid "The EPUB resource layer could not take control of this Reader tab."
-msgstr ""
+msgstr "Слой ресурсов EPUB не смог взять под управление эту вкладку Reader."
 
 #: apps/capacitor/src/capacitor-platform.ts
 msgid "The export could not be encoded."
-msgstr ""
+msgstr "Не удалось закодировать экспорт."
 
 #: apps/reader/src/annotation-navigation.ts
 msgid "The file has changed, and this annotation's position cannot be verified in the current document. The annotation is still saved."
-msgstr ""
+msgstr "Файл изменился, поэтому позицию этой аннотации нельзя проверить в текущем документе. Аннотация сохранена."
 
 #: apps/reader/src/LibraryAnnotations.tsx
 msgid "The filters, sort and columns are saved in your collection as an mdbase view of annotations."
-msgstr ""
+msgstr "Фильтры, сортировка и столбцы сохранены в коллекции как представление аннотаций mdbase."
 
 #: apps/reader/src/LibraryWorkspace.tsx
 msgid "The filters, sort, columns and layout are saved in your collection."
-msgstr ""
+msgstr "Фильтры, сортировка, столбцы и макет сохранены в коллекции."
 
 #: apps/reader/src/CitationLookup.tsx
 msgid "The found record matches this citation."
-msgstr ""
+msgstr "Найденная запись соответствует этой ссылке."
 
 #: apps/reader/src/preview.tsx
 msgid "The interface preview includes one sample document: The Principles of Psychology."
-msgstr ""
+msgstr "Предварительный просмотр интерфейса включает один образец документа: «Принципы психологии»."
 
 #: packages/renderer-html/src/html-palette.ts
 #: packages/renderer-html/src/html-runtime.ts
 msgid "The isolated HTML document is unavailable."
-msgstr ""
+msgstr "Изолированный документ HTML недоступен."
 
 #: apps/reader/src/ImportReview.tsx
 msgid "The job is bound to its confirmed collection. Switching collections cannot redirect it. Keep this tab open; after a reload, reselect the same bundle (or reconnect Readwise), choose the same collection, and scan again to resume."
-msgstr ""
+msgstr "Задача привязана к подтверждённой коллекции. Переключение коллекции не изменит место назначения. Не закрывайте эту вкладку; после перезагрузки снова выберите тот же пакет (или подключите Readwise), ту же коллекцию и запустите сканирование, чтобы продолжить."
 
 #: apps/reader/src/citation-editor-model.ts
 msgid "The JSON could not be read."
-msgstr ""
+msgstr "Не удалось прочитать JSON."
 
 #: packages/i18n/src/react.tsx
 msgid "The language could not be loaded. Your current language is unchanged."
-msgstr ""
+msgstr "Не удалось загрузить язык. Текущий язык не изменён."
 
 #: apps/reader/src/CitationSourceSync.tsx
 msgid "The library has different details: {fields}."
-msgstr ""
+msgstr "В библиотеке указаны другие сведения: {fields}."
 
 #: apps/reader/src/SourceDeepLink.tsx
 msgid "The linked annotation is not in this source. It may have been removed or moved to another source."
-msgstr ""
+msgstr "Связанная аннотация не относится к этому источнику. Возможно, её удалили или переместили в другой источник."
 
 #: apps/reader/src/SourceDeepLink.tsx
 msgid "The linked source is not available in this collection. It may have been removed or your access may have changed."
-msgstr ""
+msgstr "Связанный источник недоступен в этой коллекции. Возможно, его удалили или изменились ваши права доступа."
 
 #: packages/core/src/application/create-annotation.ts
 msgid "The loaded annotation source no longer matches."
-msgstr ""
+msgstr "Загруженный источник аннотации больше не совпадает."
 
 #: apps/reader/src/SourceImportDialog.tsx
 msgid "The original file stays intact in your collection."
-msgstr ""
+msgstr "Исходный файл останется в коллекции без изменений."
 
 #: apps/extension/src/use-extension-capture.ts
 msgid "The page is not ready. Reopen Reader on this page before saving."
-msgstr ""
+msgstr "Страница не готова. Откройте Reader на этой странице заново перед сохранением."
 
 #: packages/renderer-pdf/src/pdf-translations.ts
 msgctxt "PDF viewer passwordPrompt"
 msgid "The password you entered was incorrect. Please try again."
-msgstr ""
+msgstr "Введён неверный пароль. Повторите попытку."
 
 #: apps/extension/src/capture-errors.ts
 msgid "The post is not loaded. Scroll it into view and try again."
-msgstr ""
+msgstr "Публикация не загружена. Прокрутите страницу, чтобы она появилась, и повторите попытку."
 
 #: apps/reader/src/preview.tsx
 msgid "The preview citation is invalid."
-msgstr ""
+msgstr "Недопустимый предварительный просмотр ссылки."
 
 #: apps/reader/src/preview.tsx
 msgid "The preview has one sample collection. Connect mdbase to switch between yours."
-msgstr ""
+msgstr "В предварительном просмотре используется образец коллекции. Подключите mdbase, чтобы переключаться между своими коллекциями."
 
 #: apps/reader/src/preview.tsx
 msgid "The preview source no longer exists."
-msgstr ""
+msgstr "Источник для предварительного просмотра больше не существует."
 
 #: packages/core/src/application/import-source-file.ts
 msgid "The readable page and immutable archive need distinct filenames."
-msgstr ""
+msgstr "Для читаемой страницы и неизменяемого архива нужны разные имена файлов."
 
 #: apps/extension/src/save-capture.ts
 msgid "The recovered highlight belongs to a different source. Review it before retrying; no duplicate was created."
-msgstr ""
+msgstr "Восстановленное выделение относится к другому источнику. Проверьте его перед повторной попыткой; дубликат не создан."
 
 #: apps/extension/src/save-capture.ts
 msgid "The saved document changed. Open the saved copy in Reader; no highlight was created."
-msgstr ""
+msgstr "Сохранённый документ изменился. Откройте сохранённую копию в Reader; выделение не создано."
 
 #: apps/extension/src/save-capture.ts
 msgid "The saved highlight recovery identity is invalid. No duplicate highlight was created."
-msgstr ""
+msgstr "Недопустимый идентификатор восстановления сохранённого выделения. Дубликат не создан."
 
 #: apps/extension/src/save-capture.ts
 msgid "The saved source is no longer available. Your highlight has not been saved."
-msgstr ""
+msgstr "Сохранённый источник больше недоступен. Выделение не сохранено."
 
 #: apps/reader/src/ConnectReader.tsx
 msgid "The selected collection is no longer available."
-msgstr ""
+msgstr "Выбранная коллекция больше недоступна."
 
 #: packages/core/src/application/create-annotation.ts
 msgid "The selected document does not belong to this source."
-msgstr ""
+msgstr "Выбранный документ не относится к этому источнику."
 
 #: packages/core/src/application/import-source-file.ts
 msgid "The selected file is empty."
-msgstr ""
+msgstr "Выбранный файл пуст."
 
 #: packages/core/src/application/source-import-values.ts
 msgid "The selected file needs a valid filename."
-msgstr ""
+msgstr "Для выбранного файла требуется допустимое имя."
 
 #: apps/extension/src/capture-errors.ts
 msgid "The selected passage is ambiguous inside this post. Select a longer passage."
-msgstr ""
+msgstr "Выбранный фрагмент неоднозначен в этой публикации. Выберите фрагмент подлиннее."
 
 #: apps/extension/src/SiteAccessStatus.tsx
 msgid "The side panel follows the tab you are on, and pages you have saved show a mark and your highlights. Reader looks up each page’s address in your selected collection and reads page text only to draw your highlights."
-msgstr ""
+msgstr "Боковая панель следует за активной вкладкой; сохранённые страницы отмечены значком, на них отображаются ваши выделения. Reader ищет адрес каждой страницы в выбранной коллекции и считывает только текст страницы, необходимый для отображения выделений."
 
 #: packages/core/src/application/source-import-values.ts
 msgid "The source needs a title."
-msgstr ""
+msgstr "У источника должно быть название."
 
 #: apps/reader/src/source-draft-session.ts
 msgid "The source note changed before saving."
-msgstr ""
+msgstr "Заметка источника изменилась до сохранения."
 
 #: packages/core/src/application/transclude-annotation.ts
 msgid "The source note disappeared after its annotation was inserted."
-msgstr ""
+msgstr "Заметка источника исчезла после вставки аннотации."
 
 #: packages/core/src/application/source-import-values.ts
 msgid "The source URL is invalid."
-msgstr ""
+msgstr "Недопустимый URL источника."
 
 #: packages/core/src/application/source-import-values.ts
 msgid "The source URL must be a public web address."
-msgstr ""
+msgstr "URL источника должен быть общедоступным веб-адресом."
 
 #: apps/extension/src/page-annotations.ts
 msgid "The tab has navigated to another page. Reopen Reader’s extension on that page."
-msgstr ""
+msgstr "Вкладка перешла на другую страницу. Снова откройте расширение Reader на этой странице."
 
 #: apps/extension/src/capture-errors.ts
 msgid "The tab navigated away."
-msgstr ""
+msgstr "Вкладка перешла на другую страницу."
 
 #: apps/reader/src/connect-workspace.ts
 msgid "The view was saved, but Reader could not reopen it."
-msgstr ""
+msgstr "Представление сохранено, но Reader не удалось открыть его снова."
 
 #: apps/extension/src/OptionsApp.tsx
 msgid "Theme"
-msgstr ""
+msgstr "Тема"
 
 #: apps/reader/src/DisplayMenu.tsx
 msgctxt "DisplayMenu interface"
 msgid "Theme"
-msgstr ""
+msgstr "Тема"
 
 #. placeholder {0}: duplicate.title
 #: packages/core/src/application/import-source-file.ts
 #: packages/core/src/application/source-records.ts
 msgid "These exact bytes are already stored in “{0}”."
-msgstr ""
+msgstr "Эти точные данные уже сохранены в «{0}»."
 
 #: apps/reader/src/AnnotationEditor.tsx
 msgid "These notes embed it and will show a broken embed:"
-msgstr ""
+msgstr "В эти заметки встроена ссылка на элемент; она станет недействительной:"
 
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "Thesis"
-msgstr ""
+msgstr "Диссертация"
 
 #: apps/reader/src/citation-form-model.ts
 msgctxt "CSL item type"
 msgid "Thesis"
-msgstr ""
+msgstr "Диссертация"
 
 #: apps/reader/src/AnnotationEditor.tsx
 msgid "This annotation changed elsewhere. Your version is kept until you choose."
-msgstr ""
+msgstr "Эта аннотация изменена в другом месте. Ваша версия сохранена до вашего решения."
 
 #: packages/core/src/application/delete-annotation.ts
 #: packages/core/src/application/update-annotation-body.ts
 msgid "This annotation does not have a canonical path and revision."
-msgstr ""
+msgstr "У этой аннотации нет канонического пути и ревизии."
 
 #: apps/reader/src/annotation-navigation.ts
 msgid "This annotation has no supported passage anchor. Its text and original metadata are preserved."
-msgstr ""
+msgstr "Для этой аннотации нет поддерживаемого якоря фрагмента. Её текст и исходные метаданные сохранены."
 
 #: apps/extension/src/capture-errors.ts
 msgid "This browser cannot display highlights. Open the saved copy in Reader."
-msgstr ""
+msgstr "Этот браузер не может отображать выделения. Откройте сохранённую копию в Reader."
 
 #: packages/renderer-epub/src/epub-resource-store.ts
 msgid "This browser cannot provide the isolated EPUB resource layer."
-msgstr ""
+msgstr "Этот браузер не поддерживает изолированный слой ресурсов EPUB."
 
 #: apps/reader/src/connection-recovery.ts
 msgid "This browser no longer has the key for this collection’s connection. Reconnect to keep reading."
-msgstr ""
+msgstr "В этом браузере больше нет ключа для подключения к этой коллекции. Подключитесь заново, чтобы продолжить чтение."
 
 #: apps/reader/src/citation-renderer.ts
 msgid "This citation cannot be formatted yet. Check its title, contributors, and date."
-msgstr ""
+msgstr "Пока не удаётся отформатировать эту ссылку. Проверьте название, участников и дату."
 
 #: apps/extension/src/ConnectionPanel.tsx
 msgid "This collection can’t be used right now"
-msgstr ""
+msgstr "Эту коллекцию сейчас нельзя использовать"
 
 #: apps/extension/src/connection-view.ts
 msgid "This collection can't be used right now."
-msgstr ""
+msgstr "Эту коллекцию сейчас нельзя использовать."
 
 #: apps/reader/src/use-document-attachment.ts
 #: packages/core/src/application/source-records.ts
 msgid "This collection cannot attach files to existing sources."
-msgstr ""
+msgstr "В этой коллекции нельзя прикреплять файлы к существующим источникам."
 
 #: apps/reader/src/connect-workspace.ts
 msgid "This collection cannot change reading status."
-msgstr ""
+msgstr "В этой коллекции нельзя изменить статус чтения."
 
 #: apps/extension/src/use-source-note.ts
 msgid "This collection cannot edit source details from the extension."
-msgstr ""
+msgstr "В этой коллекции нельзя изменять сведения об источнике из расширения."
 
 #: apps/reader/src/SourceDetails.tsx
 msgid "This collection cannot edit source details."
-msgstr ""
+msgstr "В этой коллекции нельзя изменять сведения об источнике."
 
 #: apps/reader/src/connect-workspace.ts
 msgid "This collection cannot edit source fields."
-msgstr ""
+msgstr "В этой коллекции нельзя изменять поля источника."
 
 #: apps/reader/src/source-addition-flow.ts
 msgid "This collection cannot hold sources without a document."
-msgstr ""
+msgstr "В этой коллекции нельзя хранить источники без документа."
 
 #: apps/reader/src/connect-workspace.ts
 #: apps/reader/src/use-library-annotations.ts
