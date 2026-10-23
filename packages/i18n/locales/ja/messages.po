@@ -4234,169 +4234,169 @@ msgstr "主な添付ファイルのデータがありません。"
 
 #: apps/reader/src/dockview-side-panels.ts
 msgid "Missing sidebar edge group"
-msgstr ""
+msgstr "サイドバーの端のグループがありません"
 
 #: packages/migration/src/zotero-pdf.ts
 msgid "Missing Zotero PDF rectangles."
-msgstr ""
+msgstr "Zotero PDFの矩形がありません。"
 
 #: apps/reader/src/MobileWorkspaceNavigation.tsx
 msgid "Mobile workspace navigation"
-msgstr ""
+msgstr "モバイルワークスペースのナビゲーション"
 
 #: apps/reader/src/DocumentContextualToolbar.tsx
 msgctxt "DocumentContextualToolbar interface"
 msgid "More actions"
-msgstr ""
+msgstr "その他の操作"
 
 #: apps/reader/src/DocumentContextualToolbar.tsx
 msgid "More document actions"
-msgstr ""
+msgstr "文書のその他の操作"
 
 #: apps/reader/src/CitationContributors.tsx
 msgid "More name details"
-msgstr ""
+msgstr "名前の詳細"
 
 #: packages/renderer-pdf/src/pdf-translations.ts
 msgctxt "PDF viewer menu"
 msgid "More Options"
-msgstr ""
+msgstr "その他のオプション"
 
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "Motion picture"
-msgstr ""
+msgstr "映画"
 
 #: apps/reader/src/reader-command-list.ts
 msgid "Move active tab to pane {otherPaneLabel}"
-msgstr ""
+msgstr "アクティブなタブを{otherPaneLabel}ペインに移動"
 
 #: apps/reader/src/LibraryTableHeader.tsx
 msgid "Move left"
-msgstr ""
+msgstr "左へ移動"
 
 #: apps/reader/src/LibraryTableHeader.tsx
 msgid "Move right"
-msgstr ""
+msgstr "右へ移動"
 
 #: apps/reader/src/DockPaneActions.tsx
 msgid "Move tab to pane below"
-msgstr ""
+msgstr "タブを下のペインに移動"
 
 #: apps/reader/src/DockPaneActions.tsx
 msgid "Move tab to pane right"
-msgstr ""
+msgstr "タブを右のペインに移動"
 
 #: apps/reader/src/dockview-menus.ts
 msgid "Move to {title}"
-msgstr ""
+msgstr "{title}に移動"
 
 #: apps/reader/src/dockview-menus.ts
 msgctxt "Workspace tab destination"
 msgid "Move to bottom sidebar"
-msgstr ""
+msgstr "下のサイドバーに移動"
 
 #: apps/reader/src/dockview-menus.ts
 msgctxt "Workspace tab destination"
 msgid "Move to left sidebar"
-msgstr ""
+msgstr "左のサイドバーに移動"
 
 #: apps/reader/src/dockview-menus.ts
 msgid "Move to new pane below"
-msgstr ""
+msgstr "下の新しいペインに移動"
 
 #: apps/reader/src/dockview-menus.ts
 msgid "Move to new pane right"
-msgstr ""
+msgstr "右の新しいペインに移動"
 
 #: apps/reader/src/dockview-menus.ts
 msgctxt "Workspace tab destination"
 msgid "Move to pane"
-msgstr ""
+msgstr "ペインに移動"
 
 #: apps/reader/src/dockview-menus.ts
 msgctxt "Workspace tab destination"
 msgid "Move to right sidebar"
-msgstr ""
+msgstr "右のサイドバーに移動"
 
 #: apps/reader/src/dockview-menus.ts
 msgctxt "Workspace tab destination"
 msgid "Move to top sidebar"
-msgstr ""
+msgstr "上のサイドバーに移動"
 
 #: packages/migration/src/zotero-pdf.ts
 msgid "Multi-page or ink geometry is not yet supported."
-msgstr ""
+msgstr "複数ページにまたがる形状やインクの形状にはまだ対応していません。"
 
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "Musical score"
-msgstr ""
+msgstr "楽譜"
 
 #: packages/core/src/domain/citation-validation.ts
 msgctxt "CSL validation"
 msgid "must be a CSL date object"
-msgstr ""
+msgstr "CSLの日付オブジェクトでなければなりません"
 
 #: packages/core/src/domain/citation.ts
 msgctxt "CSL validation"
 msgid "must be a non-empty Pandoc-compatible citekey"
-msgstr ""
+msgstr "空でないPandoc互換の引用キーでなければなりません"
 
 #: packages/core/src/domain/citation.ts
 msgctxt "CSL validation"
 msgid "must be a recognized CSL item type"
-msgstr ""
+msgstr "認識されるCSL項目の種類でなければなりません"
 
 #: packages/core/src/domain/citation-validation.ts
 msgctxt "CSL validation"
 msgid "must be a string"
-msgstr ""
+msgstr "文字列でなければなりません"
 
 #: packages/core/src/domain/citation-validation.ts
 msgctxt "CSL validation"
 msgid "must be a string or number"
-msgstr ""
+msgstr "文字列または数値でなければなりません"
 
 #: packages/core/src/domain/citation-validation.ts
 msgctxt "CSL validation"
 msgid "must be an array of CSL names"
-msgstr ""
+msgstr "CSLの名前の配列でなければなりません"
 
 #: packages/core/src/domain/citation-validation.ts
 msgctxt "CSL validation"
 msgid "must be an array of strings"
-msgstr ""
+msgstr "文字列の配列でなければなりません"
 
 #: packages/core/src/domain/citation-validation.ts
 msgctxt "CSL validation"
 msgid "must be an object"
-msgstr ""
+msgstr "オブジェクトでなければなりません"
 
 #: packages/core/src/domain/citation.ts
 msgctxt "CSL validation"
 msgid "must be one CSL object"
-msgstr ""
+msgstr "1つのCSLオブジェクトでなければなりません"
 
 #: packages/core/src/domain/citation-validation.ts
 msgctxt "CSL validation"
 msgid "must be scalar"
-msgstr ""
+msgstr "単一の値でなければなりません"
 
 #: packages/core/src/domain/citation-validation.ts
 msgctxt "CSL validation"
 msgid "must contain one or two date ranges"
-msgstr ""
+msgstr "1つまたは2つの日付範囲を含めてください"
 
 #: packages/core/src/domain/citation-validation.ts
 msgctxt "CSL validation"
 msgid "must contain one to three string or number date parts"
-msgstr ""
+msgstr "文字列または数値の日付要素を1～3個含めてください"
 
 #: packages/core/src/domain/citation.ts
 msgctxt "CSL validation"
 msgid "must contain only JSON-compatible values"
-msgstr ""
+msgstr "JSONで表現できる値のみを含めてください"
 
 #: apps/reader/src/LibraryViewSaveDialog.tsx
 msgctxt "LibraryViewSaveDialog interface"
@@ -4406,25 +4406,25 @@ msgstr "名前"
 #: apps/reader/src/CitationTypedFieldEditors.tsx
 msgctxt "CitationTypedFieldEditors interface"
 msgid "Names"
-msgstr ""
+msgstr "名前"
 
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "Narrator"
-msgstr ""
+msgstr "ナレーター"
 
 #: apps/reader/src/DisplayMenu.tsx
 msgctxt "DisplayMenu interface"
 msgid "Narrow"
-msgstr ""
+msgstr "狭い"
 
 #: apps/reader/src/ImportReview.tsx
 msgid "Native metadata is also archived as JSON. Existing records matched by import identity are kept unchanged; ambiguous title or URL matches are never silently merged."
-msgstr ""
+msgstr "元のメタデータもJSON形式でアーカイブされます。インポート識別情報が一致する既存のレコードは変更されません。タイトルやURLの一致が曖昧な場合、自動統合は行いません。"
 
 #: apps/reader/src/AnnotationComposer.tsx
 msgid "New area annotation"
-msgstr ""
+msgstr "新しい領域注釈"
 
 #: apps/reader/src/AnnotationPanelActions.tsx
 msgid "New comment"
@@ -4433,26 +4433,26 @@ msgstr "新しいコメント"
 #: apps/reader/src/AnnotationList.tsx
 msgctxt "AnnotationList annotationOrderOptions"
 msgid "Newest first"
-msgstr ""
+msgstr "新しい順"
 
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "Newspaper article"
-msgstr ""
+msgstr "新聞記事"
 
 #: apps/reader/src/citation-form-model.ts
 msgctxt "CSL item type"
 msgid "Newspaper article"
-msgstr ""
+msgstr "新聞記事"
 
 #: packages/renderer-epub/src/epub-page-navigation.tsx
 msgid "Next page"
-msgstr ""
+msgstr "次のページ"
 
 #: packages/renderer-pdf/src/pdf-translations.ts
 msgctxt "PDF viewer page"
 msgid "Next Page"
-msgstr ""
+msgstr "次のページ"
 
 #: apps/reader/src/citation-form-model.ts
 msgid "No"
@@ -4465,124 +4465,124 @@ msgstr "いいえ"
 
 #: apps/reader/src/LibraryAnnotations.tsx
 msgid "No annotations match"
-msgstr ""
+msgstr "一致する注釈はありません"
 
 #: apps/reader/src/AnnotationList.tsx
 #: apps/reader/src/LibraryAnnotations.tsx
 msgid "No annotations yet"
-msgstr ""
+msgstr "注釈はまだありません"
 
 #: packages/core/src/application/citation-citekey.ts
 msgid "No author or editor is recorded."
-msgstr ""
+msgstr "著者や編集者は記録されていません。"
 
 #: apps/extension/src/CitationPanel.tsx
 msgid "No citation details were found on this page. Save the source, then add them in Reader."
-msgstr ""
+msgstr "このページには引用情報がありません。資料を保存してからReaderで追加してください。"
 
 #. placeholder {0}: query.trim()
 #: apps/reader/src/CollectionMenu.tsx
 msgid "No collections match “{0}”."
-msgstr ""
+msgstr "「{0}」に一致するコレクションはありません。"
 
 #: apps/reader/src/connection-recovery.ts
 msgid "No computer is registered for this collection."
-msgstr ""
+msgstr "このコレクションにはコンピューターが登録されていません。"
 
 #: packages/core/src/application/build-csl-bibliography.ts
 msgid "No CSL citation metadata is attached."
-msgstr ""
+msgstr "CSL形式の引用メタデータが添付されていません。"
 
 #: apps/reader/src/WorkspacePaneSupport.tsx
 msgid "No document attached"
-msgstr ""
+msgstr "文書が添付されていません"
 
 #: packages/renderer-pdf/src/pdf-translations.ts
 msgctxt "PDF viewer emptyState"
 msgid "No Documents Open"
-msgstr ""
+msgstr "開いている文書はありません"
 
 #: packages/migration/src/readwise-sources.ts
 msgid "No downloadable content; importing metadata only: {key}"
-msgstr ""
+msgstr "ダウンロード可能な本文がないため、メタデータのみをインポートします：{key}"
 
 #: apps/reader/src/workspace-tab-display.ts
 msgctxt "workspace tab display"
 msgid "NO FILE"
-msgstr ""
+msgstr "ファイルなし"
 
 #: apps/reader/src/LibraryCells.tsx
 msgid "No file attached"
-msgstr ""
+msgstr "ファイルが添付されていません"
 
 #: apps/reader/src/LibraryWorkspace.tsx
 msgctxt "LibraryWorkspace formatFilterOptions"
 msgid "No file attached"
-msgstr ""
+msgstr "ファイルが添付されていません"
 
 #: apps/reader/src/LibraryNavigator.tsx
 msgid "No matches in the sources loaded so far. Loading more…"
-msgstr ""
+msgstr "読み込み済みの資料には一致するものがありません。さらに読み込み中…"
 
 #: apps/reader/src/AnnotationList.tsx
 msgid "No matching annotations"
-msgstr ""
+msgstr "一致する注釈はありません"
 
 #: apps/reader/src/use-document-attachment.ts
 msgid "No open-access PDF was found. Attach a copy you have, or save it from the publisher with the browser extension."
-msgstr ""
+msgstr "オープンアクセスのPDFが見つかりませんでした。お持ちのファイルを添付するか、ブラウザー拡張機能で出版社のページから保存してください。"
 
 #: packages/renderer-pdf/src/pdf-translations.ts
 msgctxt "PDF viewer outline"
 msgid "No outline available"
-msgstr ""
+msgstr "アウトラインがありません"
 
 #: apps/extension/src/PostPicker.tsx
 msgid "No posts loaded. Scroll the page to load some posts."
-msgstr ""
+msgstr "投稿を読み込めませんでした。ページをスクロールして投稿を読み込んでください。"
 
 #: packages/core/src/application/citation-citekey.ts
 msgid "No publication date is recorded."
-msgstr ""
+msgstr "刊行日は記録されていません。"
 
 #. placeholder {0}: document.mediaType
 #: apps/reader/src/ConnectedDocument.tsx
 msgid "No renderer is registered for {0}."
-msgstr ""
+msgstr "{0}に対応するビューアーが登録されていません。"
 
 #: apps/reader/src/InspectorPane.tsx
 msgid "No source in this pane"
-msgstr ""
+msgstr "このペインに資料はありません"
 
 #: apps/reader/src/LibraryWorkspace.tsx
 msgid "No sources match"
-msgstr ""
+msgstr "一致する資料はありません"
 
 #: apps/reader/src/LibraryNavigator.tsx
 msgid "No sources match."
-msgstr ""
+msgstr "一致する資料はありません。"
 
 #: apps/reader/src/LibraryNavigator.tsx
 msgid "No sources yet."
-msgstr ""
+msgstr "資料はまだありません。"
 
 #: apps/reader/src/use-bibliography-export.ts
 msgid "No valid citations are ready to export."
-msgstr ""
+msgstr "エクスポート可能な有効な引用情報はありません。"
 
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "Non dropping particle"
-msgstr ""
+msgstr "分離しない接頭辞"
 
 #: packages/migration/src/zotero-pdf.ts
 msgid "Non-default PDF UserUnit is not yet supported."
-msgstr ""
+msgstr "標準以外のPDF UserUnitにはまだ対応していません。"
 
 #: apps/reader/src/CitationContributors.tsx
 msgctxt "CitationContributors interface"
 msgid "Non-dropping particle"
-msgstr ""
+msgstr "分離しない接頭辞"
 
 #: apps/reader/src/CitationSourceSync.tsx
 msgctxt "empty metadata value"
@@ -4591,7 +4591,7 @@ msgstr "なし"
 
 #: apps/reader/src/import-controller.ts
 msgid "Not complete — review the error before resuming"
-msgstr ""
+msgstr "未完了です。再開前にエラーを確認してください"
 
 #: apps/extension/src/ConnectionPanel.tsx
 msgid "Not connected"
@@ -4599,12 +4599,12 @@ msgstr "未接続"
 
 #: apps/extension/src/SavedHighlights.tsx
 msgid "Not found on this page"
-msgstr ""
+msgstr "このページには見つかりません"
 
 #: apps/reader/src/ConnectReader.tsx
 msgctxt "ConnectReader interface"
 msgid "not installed"
-msgstr ""
+msgstr "未インストール"
 
 #: apps/reader/src/pwa-install.ts
 msgctxt "pwa install"
@@ -4613,7 +4613,7 @@ msgstr "後で"
 
 #: apps/reader/src/citation-form-model.ts
 msgid "Not recorded"
-msgstr ""
+msgstr "記録されていません"
 
 #: apps/extension/src/NotePanel.tsx
 #: apps/reader/src/AnnotationEditor.tsx
@@ -4627,15 +4627,15 @@ msgstr "未保存"
 
 #: apps/reader/src/AnnotationComposer.tsx
 msgid "Not saved yet — keep Reader open until you save this annotation."
-msgstr ""
+msgstr "まだ保存されていません。注釈を保存するまでReaderを開いたままにしてください。"
 
 #: apps/extension/src/NotePanel.tsx
 msgid "Not saved."
-msgstr ""
+msgstr "保存されていません。"
 
 #: apps/extension/src/ShortcutList.tsx
 msgid "Not set"
-msgstr ""
+msgstr "未設定"
 
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
@@ -4655,53 +4655,53 @@ msgstr "ノート"
 #: apps/reader/src/LibraryWorkspace.tsx
 msgctxt "LibraryWorkspace searchScopeOptions"
 msgid "Notes & annotations"
-msgstr ""
+msgstr "ノートと注釈"
 
 #: packages/migration/src/zotero.ts
 msgid "Notes become independent source-level annotations, not replacements for source prose. Original CSL IDs are archived; Reader assigns stable, collision-resistant citekeys."
-msgstr ""
+msgstr "ノートは元の資料本文を置き換えるのではなく、資料全体への独立した注釈になります。元のCSL IDはアーカイブされ、Readerが安定した重複しにくい引用キーを割り当てます。"
 
 #: apps/reader/src/InspectorPane.tsx
 msgid "Notes follow the active pane"
-msgstr ""
+msgstr "ノートはアクティブなペインに追従します"
 
 #: apps/extension/src/CaptureApp.tsx
 msgid "Nothing to save here"
-msgstr ""
+msgstr "ここには保存するものがありません"
 
 #: apps/reader/src/CitationTypedFieldEditors.tsx
 msgctxt "CitationTypedFieldEditors customValueTypeOptions"
 msgid "Number"
-msgstr ""
+msgstr "数値"
 
 #: apps/reader/src/CitationTypedFieldEditors.tsx
 msgctxt "CitationTypedFieldEditors interface"
 msgid "Number"
-msgstr ""
+msgstr "数値"
 
 #: apps/reader/src/CitationTypedFieldEditors.tsx
 msgctxt "CitationTypedFieldEditors scalarKindOptions"
 msgid "Number"
-msgstr ""
+msgstr "数値"
 
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "Number"
-msgstr ""
+msgstr "番号"
 
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "Number of pages"
-msgstr ""
+msgstr "ページ数"
 
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "Number of volumes"
-msgstr ""
+msgstr "巻数"
 
 #: apps/reader/src/LibraryConditionsEditor.tsx
 msgid "Numbers stored as text compare as text, as in saved mdbase views."
-msgstr ""
+msgstr "mdbaseの保存済みビューと同様、テキストとして保存された数値はテキストとして比較されます。"
 
 #: apps/reader/src/ReaderHeader.tsx
 msgid "Offline"
@@ -4709,11 +4709,11 @@ msgstr "オフライン"
 
 #: apps/extension/src/WelcomeApp.tsx
 msgid "On any page, press the toolbar button or <0>{open}</0>."
-msgstr ""
+msgstr "どのページでもツールバーボタンまたは<0>{open}</0>を押してください。"
 
 #: apps/extension/src/WelcomeApp.tsx
 msgid "On any page, press the toolbar button."
-msgstr ""
+msgstr "どのページでもツールバーボタンを押してください。"
 
 #: apps/reader/src/collection-menu-model.ts
 msgctxt "collection menu model"
@@ -4723,27 +4723,27 @@ msgstr "お使いのコンピューター上"
 #: apps/reader/src/SourceDetails.tsx
 msgctxt "SourceDetails fields"
 msgid "One per line"
-msgstr ""
+msgstr "1行に1件"
 
 #: apps/electron/src/validation.ts
 msgid "Only HTTP and HTTPS links may leave Reader."
-msgstr ""
+msgstr "Readerから開ける外部リンクはHTTPとHTTPSのみです。"
 
 #: apps/reader/src/use-open-document-search.ts
 msgid "Only loaded, supported documents are searched; suspended tabs are not included."
-msgstr ""
+msgstr "検索対象は読み込み済みの対応文書のみです。休止中のタブは含まれません。"
 
 #: apps/extension/src/PostPicker.tsx
 msgid "Only posts currently loaded on the page are listed. Feeds are never saved."
-msgstr ""
+msgstr "現在ページに読み込まれている投稿のみを一覧表示します。フィードは保存されません。"
 
 #: apps/reader/src/ConnectReader.tsx
 msgid "Only Reader’s source and annotation contracts and starter types will be added."
-msgstr ""
+msgstr "Readerの資料・注釈の規約と初期タイプのみが追加されます。"
 
 #: apps/reader/src/reader-command-list.ts
 msgid "Only the page, with the chrome out of the way"
-msgstr ""
+msgstr "操作画面を隠してページだけを表示"
 
 #: apps/reader/src/LibraryBulkBar.tsx
 msgctxt "LibraryBulkBar interface"
