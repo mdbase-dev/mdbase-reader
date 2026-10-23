@@ -1,3 +1,5 @@
+import { t } from "@lingui/core/macro";
+
 import { DomainError } from "./errors.js";
 import {
   targetRequiresDocument,
@@ -51,24 +53,36 @@ export interface AnnotationDeletionPlan {
 export function validateAnnotationDraft(draft: AnnotationDraft): void {
   const annotationType = draft.annotationType.trim();
   if (annotationType.length === 0) {
-    throw new DomainError("invalid-annotation", "An annotation type must not be empty.");
+    throw new DomainError(
+      "invalid-annotation",
+      t({ message: "An annotation type must not be empty." }),
+    );
   }
   if (draft.target) {
     validateAnnotationTarget(draft.target);
   }
   if (draft.annotationType === "highlight" && !draft.target?.quote) {
-    throw new DomainError("invalid-annotation", "A text highlight requires quote.exact.");
+    throw new DomainError(
+      "invalid-annotation",
+      t({ message: "A text highlight requires quote.exact." }),
+    );
   }
   if (draft.annotationType === "area" && !draft.target?.pdf) {
-    throw new DomainError("invalid-annotation", "An area annotation requires PDF geometry in v1.");
+    throw new DomainError(
+      "invalid-annotation",
+      t({ message: "An area annotation requires PDF geometry in v1." }),
+    );
   }
   if (draft.annotationType === "bookmark" && !draft.target) {
-    throw new DomainError("invalid-annotation", "A bookmark requires a document position.");
+    throw new DomainError(
+      "invalid-annotation",
+      t({ message: "A bookmark requires a document position." }),
+    );
   }
   if (draft.target && targetRequiresDocument(draft.target) && !draft.document) {
     throw new DomainError(
       "invalid-annotation",
-      "A file selector requires an exact document target.",
+      t({ message: "A file selector requires an exact document target." }),
     );
   }
 }
@@ -93,7 +107,10 @@ export function bodyEmbedsAnnotation(body: string, path: string): boolean {
 export function annotationEmbed(path: string): string {
   const normalized = path.trim().replace(/\.md$/u, "");
   if (normalized.length === 0 || normalized.includes("]]")) {
-    throw new DomainError("invalid-annotation", "An annotation path is not safe to transclude.");
+    throw new DomainError(
+      "invalid-annotation",
+      t({ message: "An annotation path is not safe to transclude." }),
+    );
   }
   return `![[${normalized}]]`;
 }

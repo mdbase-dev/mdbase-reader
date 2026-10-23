@@ -1,3 +1,5 @@
+import { t } from "@lingui/core/macro";
+
 import type { CslItem } from "../domain/citation.js";
 import type { SourceId } from "../domain/identity.js";
 import type { SourceSummary } from "../domain/source.js";
@@ -35,22 +37,22 @@ export function citekeyForCitation(
 export function citationCompletenessWarnings(citation: CslItem): readonly string[] {
   const warnings: string[] = [];
   if (!text(citation["title"])) {
-    warnings.push("Add a title before using this citation in a bibliography.");
+    warnings.push(t({ message: "Add a title before using this citation in a bibliography." }));
   }
   if (!hasNames(citation["author"]) && !hasNames(citation["editor"])) {
-    warnings.push("No author or editor is recorded.");
+    warnings.push(t({ message: "No author or editor is recorded." }));
   }
   if (!citation["issued"]) {
-    warnings.push("No publication date is recorded.");
+    warnings.push(t({ message: "No publication date is recorded." }));
   }
   if (citation.type === "article-journal" && !text(citation["container-title"])) {
-    warnings.push("A journal article normally needs a journal title.");
+    warnings.push(t({ message: "A journal article normally needs a journal title." }));
   }
   if (citation.type === "chapter" && !text(citation["container-title"])) {
-    warnings.push("A chapter normally needs a book or collection title.");
+    warnings.push(t({ message: "A chapter normally needs a book or collection title." }));
   }
   if (/^https?:\/\/(?:dx\.)?doi\.org\//iu.test(text(citation["DOI"]) ?? "")) {
-    warnings.push("Store the bare DOI rather than its https://doi.org/ URL.");
+    warnings.push(t({ message: "Store the bare DOI rather than its https://doi.org/ URL." }));
   }
   return warnings;
 }

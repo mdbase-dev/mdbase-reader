@@ -1,3 +1,5 @@
+import { t } from "@lingui/core/macro";
+
 import { DomainError } from "./errors.js";
 
 import type { ReadingPosition } from "./source.js";
@@ -63,7 +65,7 @@ export interface AnnotationTarget {
 
 function validateQuote(quote: QuoteSelector): void {
   if (quote.exact.length === 0) {
-    throw new DomainError("invalid-selector", "quote.exact must not be empty.");
+    throw new DomainError("invalid-selector", t({ message: "quote.exact must not be empty." }));
   }
 }
 
@@ -76,23 +78,31 @@ function validateTextPosition(position: TextPositionSelector): void {
   ) {
     throw new DomainError(
       "invalid-selector",
-      "Text positions must use non-negative integer offsets with end at or after start.",
+      t({
+        message: "Text positions must use non-negative integer offsets with end at or after start.",
+      }),
     );
   }
 }
 
 function validatePdf(pdf: PdfSelector): void {
   if (!Number.isInteger(pdf.pageIndex) || pdf.pageIndex < 0) {
-    throw new DomainError("invalid-selector", "A PDF page index must be a non-negative integer.");
+    throw new DomainError(
+      "invalid-selector",
+      t({ message: "A PDF page index must be a non-negative integer." }),
+    );
   }
   if (pdf.quadPoints.length === 0) {
     throw new DomainError(
       "invalid-selector",
-      "A PDF selector must contain at least one quadrilateral.",
+      t({ message: "A PDF selector must contain at least one quadrilateral." }),
     );
   }
   if (pdf.quadPoints.some((quad) => quad.some((coordinate) => !Number.isFinite(coordinate)))) {
-    throw new DomainError("invalid-selector", "PDF coordinates must be finite numbers.");
+    throw new DomainError(
+      "invalid-selector",
+      t({ message: "PDF coordinates must be finite numbers." }),
+    );
   }
 }
 
@@ -101,17 +111,26 @@ function validatePosition(position: ReadingPosition): void {
     position.kind === "pdf" &&
     (!Number.isInteger(position.pageIndex) || position.pageIndex < 0)
   ) {
-    throw new DomainError("invalid-selector", "A PDF page index must be a non-negative integer.");
+    throw new DomainError(
+      "invalid-selector",
+      t({ message: "A PDF page index must be a non-negative integer." }),
+    );
   }
   if (position.kind === "html") {
     if (position.href.trim().length === 0) {
-      throw new DomainError("invalid-selector", "An HTML position requires a document address.");
+      throw new DomainError(
+        "invalid-selector",
+        t({ message: "An HTML position requires a document address." }),
+      );
     }
     if (
       position.progression !== undefined &&
       !(position.progression >= 0 && position.progression <= 1)
     ) {
-      throw new DomainError("invalid-selector", "An HTML progression must be between 0 and 1.");
+      throw new DomainError(
+        "invalid-selector",
+        t({ message: "An HTML progression must be between 0 and 1." }),
+      );
     }
   }
 }
@@ -127,12 +146,12 @@ export function validateAnnotationTarget(target: AnnotationTarget): void {
     validatePdf(target.pdf);
   }
   if (target.epub?.cfi.trim().length === 0) {
-    throw new DomainError("invalid-selector", "An EPUB CFI must not be empty.");
+    throw new DomainError("invalid-selector", t({ message: "An EPUB CFI must not be empty." }));
   }
   if (target.html && !target.html.css && !target.html.xpath && !target.quote) {
     throw new DomainError(
       "invalid-selector",
-      "An HTML target requires CSS, XPath, or quotation evidence.",
+      t({ message: "An HTML target requires CSS, XPath, or quotation evidence." }),
     );
   }
   if (target.position) {

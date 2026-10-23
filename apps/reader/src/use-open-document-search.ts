@@ -1,3 +1,4 @@
+import { plural, t } from "@lingui/core/macro";
 import { useEffect, useMemo, useState } from "react";
 
 import { searchExcerpt, type SearchExcerpt } from "./search-passages.js";
@@ -13,6 +14,22 @@ interface IndexedText {
 }
 const characterLimit = 1_000_000;
 const emptySurfaces: ReadonlyMap<string, ReadingSurface> = new Map();
+
+function documentSearchCoverage(
+  pending: boolean,
+  loaded: number,
+  readable: number,
+  truncated: boolean,
+): string {
+  const progress = pending
+    ? t`Indexing ${loaded} of ${readable} readable sources.`
+    : t`Searched ${loaded} of ${readable} readable sources.`;
+  const scope = t`Only loaded, supported documents are searched; suspended tabs are not included.`;
+  const limit = truncated
+    ? t`Large documents are limited to their first 1,000,000 characters.`
+    : "";
+  return [progress, scope, limit].filter(Boolean).join(" ");
+}
 
 /** Only currently resident exact revisions; no background opening of the collection. */
 export function useOpenDocumentSearch(
@@ -94,7 +111,7 @@ export function useOpenDocumentSearch(
           setPending(false);
           setProblem(
             failures
-              ? `${String(failures)} loaded document(s) could not be indexed. Reopen document search to retry.`
+              ? t`${plural(failures, { one: "# loaded document could not be indexed", other: "# loaded documents could not be indexed" })}. Reopen document search to retry.`
               : null,
           );
         }
@@ -118,6 +135,11 @@ export function useOpenDocumentSearch(
   return {
     matches,
     problem,
-    coverage: `${pending ? "Indexing" : "Searched"} ${String(currentTexts.length)} of ${String(readable)} readable sources. Only loaded, supported documents are searched; suspended tabs are not included.${currentTexts.some((entry) => entry.truncated) ? " Large documents are limited to their first 1,000,000 characters." : ""}`,
+    coverage: documentSearchCoverage(
+      pending,
+      currentTexts.length,
+      readable,
+      currentTexts.some((entry) => entry.truncated),
+    ),
   };
 }

@@ -1,3 +1,5 @@
+import { t } from "@lingui/core/macro";
+
 import { hasBlockingAnnotationDrafts } from "./annotation-drafts.js";
 import { flushLocalDraftCheckpoints } from "./local-draft-checkpoint.js";
 import { hasUnsavedAnnotationEdits } from "./unsaved-annotation-edits.js";
@@ -29,6 +31,11 @@ export function confirmCollectionSwitch(
     );
   return (
     !dirty ||
-    confirm("Switch collections with unsaved changes? Save your edits first to avoid losing work.")
+    confirm(
+      t({
+        message:
+          "Switch collections with unsaved changes? Save your edits first to avoid losing work.",
+      }),
+    )
   );
 }

@@ -1,3 +1,5 @@
+import { t } from "@lingui/core/macro";
+
 import type { UISchema } from "@embedpdf/react-pdf-viewer";
 
 /**
@@ -118,14 +120,18 @@ export const readerPdfUiSchema = {
           {
             id: "thumbnails",
             labelKey: "panel.thumbnails",
-            label: "Thumbnails",
+            get label(): string {
+              return t`Thumbnails`;
+            },
             icon: "squares",
             componentId: "thumbnails-sidebar",
           },
           {
             id: "outline",
             labelKey: "panel.outline",
-            label: "Outline",
+            get label(): string {
+              return t({ message: "Outline", context: "PDF navigation outline" });
+            },
             icon: "listTree",
             componentId: "outline-sidebar",
           },

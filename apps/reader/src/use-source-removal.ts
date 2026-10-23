@@ -1,3 +1,4 @@
+import { t } from "@lingui/core/macro";
 import { useCallback, useRef, useState } from "react";
 
 import { readerErrorMessage } from "./errors.js";
@@ -54,7 +55,10 @@ export function useSourceRemoval(
               source,
               status: "confirming",
               plan: null,
-              problem: readerErrorMessage(reason, "Reader could not check this source."),
+              problem: readerErrorMessage(
+                reason,
+                t({ message: "Reader could not check this source." }),
+              ),
             });
           }
         },
@@ -87,7 +91,10 @@ export function useSourceRemoval(
             source,
             status: "confirming",
             plan: null,
-            problem: readerErrorMessage(reason, "Reader could not remove this source."),
+            problem: readerErrorMessage(
+              reason,
+              t({ message: "Reader could not remove this source." }),
+            ),
           });
         }
       },

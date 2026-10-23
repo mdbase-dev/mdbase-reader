@@ -1,3 +1,4 @@
+import { t } from "@lingui/core/macro";
 import {
   cslProblemSummary,
   suggestSourceCitation,
@@ -37,8 +38,11 @@ export function assessCitationDraft(draft: string): CitationDraftAssessment {
   try {
     value = JSON.parse(draft);
   } catch (reason) {
-    const detail = reason instanceof SyntaxError ? reason.message : "The JSON could not be read.";
-    return { valid: false, message: `Fix the JSON syntax: ${detail}` };
+    const detail =
+      reason instanceof SyntaxError
+        ? reason.message
+        : t({ message: "The JSON could not be read." });
+    return { valid: false, message: t`Fix the JSON syntax: ${detail}` };
   }
   const validation = validateCslItem(value);
   const editableValue = objectValue(value);

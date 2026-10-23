@@ -1,3 +1,5 @@
+import { t } from "@lingui/core/macro";
+
 import type { CslItem } from "@mdbase-reader/core";
 
 export const citationStyles = [
@@ -30,8 +32,13 @@ export async function formatCitation(
     engine.setOutputFormat("text");
     engine.updateItems([citation.id]);
     const bibliography = engine.makeBibliography();
-    return bibliography[1].join("").trim() || "Add more details to preview this citation.";
+    return (
+      bibliography[1].join("").trim() ||
+      t({ message: "Add more details to preview this citation." })
+    );
   } catch {
-    return "This citation cannot be formatted yet. Check its title, contributors, and date.";
+    return t({
+      message: "This citation cannot be formatted yet. Check its title, contributors, and date.",
+    });
   }
 }

@@ -7,6 +7,7 @@ import {
   ViewportPlugin,
   type PluginRegistry,
 } from "@embedpdf/react-pdf-viewer";
+import { t } from "@lingui/core/macro";
 
 import { createEmbedPdfAnnotationActivations } from "./embedpdf-annotation-activation.js";
 import { createPdfDecorationController } from "./pdf-decoration-controller.js";
@@ -70,7 +71,7 @@ export function createEmbedPdfRuntime(
   const selectionPlugin = registry.getPlugin<SelectionPlugin>(SelectionPlugin.id);
   const annotationPlugin = registry.getPlugin<AnnotationPlugin>(AnnotationPlugin.id);
   if (!capturePlugin || !scrollPlugin || !selectionPlugin || !annotationPlugin) {
-    throw new Error("EmbedPDF did not initialize the required Reader plugins.");
+    throw new Error(t({ message: "EmbedPDF did not initialize the required Reader plugins." }));
   }
 
   const capture = capturePlugin.provides();
@@ -166,7 +167,7 @@ export function createEmbedPdfRuntime(
     async extractText(options) {
       const manager = registry.getPlugin<DocumentManagerPlugin>(DocumentManagerPlugin.id);
       if (!manager) {
-        throw new Error("EmbedPDF did not initialize its document manager.");
+        throw new Error(t({ message: "EmbedPDF did not initialize its document manager." }));
       }
       const document = await activePdfDocument(manager.provides(), options?.signal);
       return extractPdfDocumentText(registry.getEngine(), document, options?.signal);
@@ -258,7 +259,7 @@ function yieldToBrowser(signal?: AbortSignal): Promise<void> {
 }
 
 function abortError(): DOMException {
-  return new DOMException("PDF text extraction was cancelled.", "AbortError");
+  return new DOMException(t({ message: "PDF text extraction was cancelled." }), "AbortError");
 }
 
 function abortReason(signal?: AbortSignal): Error {

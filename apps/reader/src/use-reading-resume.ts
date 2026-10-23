@@ -1,3 +1,4 @@
+import { t } from "@lingui/core/macro";
 import { useEffect, useRef, useState } from "react";
 
 import { readerErrorMessage } from "./errors.js";
@@ -50,11 +51,12 @@ export function useReadingResume(input: {
     resumed.current = surface;
     const local = restoredSessionLocation(surface);
     if (local) {
-      void surface
-        .goTo(local)
-        .catch(() =>
-          setState({ status: "error", message: "Could not restore this tab’s reading position." }),
-        );
+      void surface.goTo(local).catch(() =>
+        setState({
+          status: "error",
+          message: t({ message: "Could not restore this tab’s reading position." }),
+        }),
+      );
       return;
     }
     const reading = source.reading;
@@ -63,11 +65,12 @@ export function useReadingResume(input: {
       reading.documentFileId === surface.document.document.fileId &&
       reading.position.kind === surface.kind
     ) {
-      void surface
-        .goTo(reading.position)
-        .catch(() =>
-          setState({ status: "error", message: "Could not restore the saved reading position." }),
-        );
+      void surface.goTo(reading.position).catch(() =>
+        setState({
+          status: "error",
+          message: t({ message: "Could not restore the saved reading position." }),
+        }),
+      );
     }
   }, [source, sourceId, surface]);
 
@@ -89,7 +92,10 @@ export function useReadingResume(input: {
           if (report) {
             setState({
               status: "error",
-              message: readerErrorMessage(reason, "Reader could not save your reading position."),
+              message: readerErrorMessage(
+                reason,
+                t({ message: "Reader could not save your reading position." }),
+              ),
             });
           }
         });

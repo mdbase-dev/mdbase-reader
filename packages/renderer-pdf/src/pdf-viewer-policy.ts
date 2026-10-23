@@ -1,5 +1,6 @@
 import { LockModeType, type PDFViewerConfig } from "@embedpdf/react-pdf-viewer";
 
+import { readerPdfLocale } from "./pdf-translations.js";
 import { readerPdfTheme } from "./pdf-viewer-theme.js";
 import { readerPdfDisabledCategories, readerPdfUiSchema } from "./pdf-viewer-ui-schema.js";
 
@@ -26,6 +27,7 @@ export function createReaderPdfViewerConfig(
   return {
     src,
     tabBar: "never",
+    i18n: { defaultLocale: readerPdfLocale().code, locales: [readerPdfLocale()] },
     disabledCategories: [...readerPdfDisabledCategories],
     permissions: {
       overrides: {

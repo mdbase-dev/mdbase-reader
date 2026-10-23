@@ -1,3 +1,4 @@
+import { t } from "@lingui/core/macro";
 import { readingStatuses, type ReadingStatus, type SourceSummary } from "@mdbase-reader/core";
 
 import {
@@ -94,7 +95,9 @@ export const defaultLibraryView: MdbaseLibraryView = {
   path: null,
   revision: null,
   viewId: "all-sources",
-  name: "All sources",
+  get name(): string {
+    return t`All sources`;
+  },
   writable: false,
   owned: false,
   properties: [],

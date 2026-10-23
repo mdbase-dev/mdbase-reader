@@ -1,3 +1,4 @@
+import { t } from "@lingui/core/macro";
 import { signalMdbaseMark } from "@mdbase-dev/ui/mark-activity";
 import { useCallback, useState } from "react";
 
@@ -43,7 +44,7 @@ export function useSourceFields(input: {
         signalMdbaseMark("error");
         setErrorState({
           sourceId,
-          value: readerErrorMessage(reason, "Reader could not save these details."),
+          value: readerErrorMessage(reason, t({ message: "Reader could not save these details." })),
         });
         throw reason;
       } finally {

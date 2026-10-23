@@ -1,3 +1,4 @@
+import { t } from "@lingui/core/macro";
 import { sourceKindForCitation } from "@mdbase-reader/core";
 import {
   citationAuthors,
@@ -58,7 +59,7 @@ export async function addSourceFromInput(
 ): Promise<SourceAdditionOutcome> {
   const identifier = parseSourceInput(input);
   if (!identifier) {
-    throw new Error("Paste a web address, DOI, arXiv ID, ISBN or PubMed ID.");
+    throw new Error(t({ message: "Paste a web address, DOI, arXiv ID, ISBN or PubMed ID." }));
   }
   return identifier.kind === "url"
     ? addFromUrl(identifier.value, services)
@@ -70,7 +71,7 @@ async function addFromUrl(
   services: SourceAdditionServices,
 ): Promise<SourceAdditionOutcome> {
   const socialAddress = assertSocialInput(url);
-  services.onStatus("Fetching the page…");
+  services.onStatus(t({ message: "Fetching the page…" }));
   let captured: CaptureResult;
   try {
     captured = await services.capture(url, { allowPdf: true, ...signalOf(services) });
@@ -79,7 +80,7 @@ async function addFromUrl(
     if (socialAddress || messageOf(reason).includes("Feeds cannot be saved as sources")) {
       throw reason;
     }
-    services.onStatus("Looking up citation details instead…");
+    services.onStatus(t({ message: "Looking up citation details instead…" }));
     const candidate = await services.lookUp({ kind: "url", value: url }).catch(() => null);
     if (candidate) {
       return { kind: "citation-only", candidate, reason: messageOf(reason) };
@@ -92,7 +93,7 @@ async function addFromUrl(
     return importPdf(captured, candidate?.citation, captured.canonicalUrl, services);
   }
   const { page } = captured;
-  services.onStatus("Looking up citation details…");
+  services.onStatus(t({ message: "Looking up citation details…" }));
   const preview = await citationForPage(
     page.scholarly,
     page.capture.canonicalUrl,
@@ -119,11 +120,16 @@ function assertSocialInput(url: string): ReturnType<typeof postAddress> {
   const address = postAddress(url);
   if (siteAdapters.some((adapter) => adapter.matches(url)) && !address) {
     throw new Error(
-      "Feeds, profiles and search pages cannot be saved. Choose individual posts in the Reader extension.",
+      t({
+        message:
+          "Feeds, profiles and search pages cannot be saved. Choose individual posts in the Reader extension.",
+      }),
     );
   }
   if (address?.platform === "x") {
-    throw new Error("Save X posts from their live page using the mdbase Reader extension.");
+    throw new Error(
+      t({ message: "Save X posts from their live page using the mdbase Reader extension." }),
+    );
   }
   return address;
 }
@@ -139,12 +145,12 @@ async function addFromIdentifier(
   identifier: Exclude<SourceIdentifier, { kind: "url" }>,
   services: SourceAdditionServices,
 ): Promise<SourceAdditionOutcome> {
-  services.onStatus("Looking up citation details…");
+  services.onStatus(t({ message: "Looking up citation details…" }));
   const candidate = await services.lookUp(identifierLookup(identifier));
   const doi =
     stringField(candidate.citation, "DOI") ??
     (identifier.kind === "doi" ? identifier.value : undefined);
-  services.onStatus("Looking for an open-access PDF…");
+  services.onStatus(t({ message: "Looking for an open-access PDF…" }));
   const pdf = await findOpenAccessPdf(
     {
       ...(doi ? { doi } : {}),
@@ -168,13 +174,13 @@ export async function createWithoutDocument(
 ): Promise<SourceAdditionOutcome> {
   const { createSource } = services.workspace;
   if (!createSource) {
-    throw new Error("This collection cannot hold sources without a document.");
+    throw new Error(t({ message: "This collection cannot hold sources without a document." }));
   }
   const fields = citationFields(candidate.citation);
-  services.onStatus("Saving the source…");
+  services.onStatus(t({ message: "Saving the source…" }));
   const source = await createSource(
     {
-      title: fields.title ?? "Untitled source",
+      title: fields.title ?? t({ message: "Untitled source", context: "source addition flow" }),
       metadata: { ...fields.metadata, ...authorsOf(fields) },
       ...(fields.kind ? { kind: fields.kind } : {}),
       ...(url ? { url } : {}),
@@ -191,8 +197,13 @@ async function importPdf(
   services: SourceAdditionServices,
 ): Promise<SourceAdditionOutcome> {
   const fields = citation ? citationFields(citation) : undefined;
-  const title = fields?.title ?? pdfFileName(pdf.canonicalUrl, "Document").replace(/\.pdf$/iu, "");
-  services.onStatus("Saving the PDF…");
+  const title =
+    fields?.title ??
+    pdfFileName(
+      pdf.canonicalUrl,
+      t({ message: "Document", context: "source addition flow" }),
+    ).replace(/\.pdf$/iu, "");
+  services.onStatus(t({ message: "Saving the PDF…", context: "source addition flow" }));
   const source = await services.workspace.importSourceFile(
     {
       name: pdfFileName(pdf.canonicalUrl, title),
@@ -229,7 +240,7 @@ async function finish(
       kind: "added",
       source,
       notices: [
-        `The citation was not stored: ${messageOf(reason)} Add it from the citation panel.`,
+        t`The citation was not stored: ${messageOf(reason)} Add it from the citation panel.`,
       ],
     };
   }
@@ -247,7 +258,7 @@ async function lookUpWork(
   if (!request) {
     return null;
   }
-  services.onStatus("Looking up citation details…");
+  services.onStatus(t({ message: "Looking up citation details…" }));
   return services.lookUp(request).catch(() => null);
 }
 

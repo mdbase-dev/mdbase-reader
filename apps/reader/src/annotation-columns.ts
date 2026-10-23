@@ -1,3 +1,5 @@
+import { i18n, type MessageDescriptor } from "@lingui/core";
+import { msg } from "@lingui/core/macro";
 /** Columns the annotations view can show. */
 export const annotationColumns = [
   "passage",
@@ -22,18 +24,18 @@ export function isAnnotationSortField(value: unknown): value is AnnotationSortFi
   return value === "created" || value === "source" || value === "type";
 }
 
-const labels: Record<AnnotationColumn, string> = {
-  passage: "Passage",
-  source: "Source",
-  creator: "Creator",
-  type: "Type",
-  tags: "Tags",
-  location: "Location",
-  created: "Created",
+const labels: Record<AnnotationColumn, MessageDescriptor> = {
+  passage: msg({ message: "Passage", context: "Annotation table column" }),
+  source: msg({ message: "Source", context: "Annotation table column" }),
+  creator: msg({ message: "Creator", context: "Annotation table column" }),
+  type: msg({ message: "Type", context: "Annotation table column" }),
+  tags: msg({ message: "Tags", context: "Annotation table column" }),
+  location: msg({ message: "Location", context: "Annotation table column" }),
+  created: msg({ message: "Created", context: "Annotation table column" }),
 };
 
 export function annotationColumnLabel(column: AnnotationColumn): string {
-  return labels[column];
+  return i18n._(labels[column]);
 }
 
 const widths: Record<AnnotationColumn, number> = {

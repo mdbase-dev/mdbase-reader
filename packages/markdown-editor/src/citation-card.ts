@@ -1,4 +1,5 @@
 import { closeHoverTooltips, type EditorView } from "@codemirror/view";
+import { t } from "@lingui/core/macro";
 
 import type { CitationGroup } from "./citation-widgets.js";
 import type { CitationCompletionCandidate } from "./completions.js";
@@ -39,7 +40,7 @@ export function citationCard(
     if (onOpen) {
       actions.append(
         citationAction(
-          "Open source",
+          t({ message: "Open source", context: "citation card" }),
           dismissing(() => onOpen(candidate.id)),
         ),
       );
@@ -47,7 +48,7 @@ export function citationCard(
     if (onEditMetadata) {
       actions.append(
         citationAction(
-          "Edit metadata",
+          t({ message: "Edit metadata", context: "citation card" }),
           dismissing(() => onEditMetadata(candidate.id)),
         ),
       );
@@ -62,7 +63,9 @@ export function citationCard(
   syntax.textContent = widget.group.raw;
   footer.append(
     syntax,
-    citationAction("Edit citation", () => widget.select(view)),
+    citationAction(t({ message: "Edit citation", context: "citation card" }), () =>
+      widget.select(view),
+    ),
   );
   card.append(footer);
   return card;

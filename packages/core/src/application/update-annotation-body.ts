@@ -1,3 +1,5 @@
+import { t } from "@lingui/core/macro";
+
 import { DomainError } from "../domain/errors.js";
 
 import type { AnnotationRepository } from "./ports.js";
@@ -13,7 +15,7 @@ export async function updateAnnotationBody(
   if (!annotation.path || !annotation.recordRevision) {
     throw new DomainError(
       "invalid-annotation",
-      "This annotation does not have a canonical path and revision.",
+      t({ message: "This annotation does not have a canonical path and revision." }),
     );
   }
   return annotations.updateBody({ annotation, body, modifiedAt });
