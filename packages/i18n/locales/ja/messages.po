@@ -6916,39 +6916,39 @@ msgstr "並べ替え"
 #: apps/reader/src/AnnotationList.tsx
 msgctxt "AnnotationList interface"
 msgid "Sort annotations"
-msgstr ""
+msgstr "注釈を並べ替え"
 
 #: apps/reader/src/LibraryAnnotationToolbar.tsx
 #: apps/reader/src/LibraryTableHeader.tsx
 #: apps/reader/src/LibraryWorkspace.tsx
 msgid "Sort ascending"
-msgstr ""
+msgstr "昇順に並べ替え"
 
 #. placeholder {0}: label.toLocaleLowerCase()
 #: apps/reader/src/LibraryTableHeader.tsx
 msgid "Sort by {0} · Drag to move"
-msgstr ""
+msgstr "{0}で並べ替え · ドラッグして移動"
 
 #: apps/reader/src/LibraryAnnotationToolbar.tsx
 #: apps/reader/src/LibraryTableHeader.tsx
 #: apps/reader/src/LibraryWorkspace.tsx
 msgid "Sort descending"
-msgstr ""
+msgstr "降順に並べ替え"
 
 #: apps/reader/src/LibraryAnnotationToolbar.tsx
 msgctxt "LibraryAnnotationToolbar interface"
 msgid "Sort field"
-msgstr ""
+msgstr "並べ替えフィールド"
 
 #: apps/reader/src/LibraryWorkspace.tsx
 msgctxt "LibraryWorkspace interface"
 msgid "Sort field"
-msgstr ""
+msgstr "並べ替えフィールド"
 
 #: apps/reader/src/annotation-columns.ts
 msgctxt "Annotation table column"
 msgid "Source"
-msgstr "出典"
+msgstr "資料"
 
 #: apps/extension/src/PanelTabs.tsx
 msgctxt "Bibliographic source"
@@ -6963,139 +6963,139 @@ msgstr "出典"
 #: apps/reader/src/dockview-side-panels.ts
 msgctxt "dockview side panels"
 msgid "Source"
-msgstr "出典"
+msgstr "資料"
 
 #: apps/reader/src/DockviewWorkspace.tsx
 msgctxt "DockviewWorkspace status or action"
 msgid "Source"
-msgstr "出典"
+msgstr "資料"
 
 #: apps/reader/src/LibraryAnnotationToolbar.tsx
 msgctxt "LibraryAnnotationToolbar annotationSortOptions"
 msgid "Source"
-msgstr "出典"
+msgstr "資料"
 
 #: apps/reader/src/LibraryAnnotationToolbar.tsx
 msgctxt "LibraryAnnotationToolbar interface"
 msgid "Source"
-msgstr "出典"
+msgstr "資料"
 
 #: apps/reader/src/source-note-references.ts
 msgctxt "source note references"
 msgid "Source"
-msgstr "出典"
+msgstr "資料"
 
 #: apps/reader/src/workspace-tab-display.ts
 msgctxt "workspace tab display"
 msgid "Source"
-msgstr "出典"
+msgstr "資料"
 
 #: packages/migration/src/readwise-client.ts
 msgid "Source file download failed. The host may not support browser access; use Readwise’s full-file export as a fallback."
-msgstr ""
+msgstr "資料ファイルのダウンロードに失敗しました。ホストがブラウザーからのアクセスに対応していない可能性があります。代わりにReadwiseのファイル全体のエクスポートを使用してください。"
 
 #. placeholder {0}: String(response.status)
 #: packages/migration/src/readwise-client.ts
 msgid "Source file download returned HTTP {0}. Retry to obtain a fresh download link."
-msgstr ""
+msgstr "資料ファイルのダウンロードがHTTP {0}を返しました。再試行して新しいダウンロードリンクを取得してください。"
 
 #: packages/migration/src/run.ts
 msgid "Source file was not committed."
-msgstr ""
+msgstr "資料ファイルはコミットされませんでした。"
 
 #: apps/reader/src/SourceNoteEditor.tsx
 msgid "Source literature note"
-msgstr ""
+msgstr "資料の文献ノート"
 
 #: apps/extension/src/NotePanel.tsx
 msgid "Source removed"
-msgstr ""
+msgstr "資料を削除しました"
 
 #: apps/extension/src/NotePanel.tsx
 msgid "Source removed."
-msgstr ""
+msgstr "資料を削除しました。"
 
 #: apps/extension/src/CaptureApp.tsx
 msgid "Source saved in mdbase."
-msgstr ""
+msgstr "資料をmdbaseに保存しました。"
 
 #: apps/extension/src/ConnectionPanel.tsx
 msgid "Source saved. This action did not finish."
-msgstr ""
+msgstr "資料は保存されましたが、この操作は完了しませんでした。"
 
 #: apps/reader/src/MobileSourceViews.tsx
 msgctxt "MobileSourceViews interface"
 msgid "Source views"
-msgstr ""
+msgstr "資料のビュー"
 
 #: apps/reader/src/InspectorPane.tsx
 msgctxt "InspectorPane interface"
 msgid "Source workspace"
-msgstr ""
+msgstr "資料のワークスペース"
 
 #: apps/reader/src/ImportReview.tsx
 #: apps/reader/src/reader-command-list.ts
 msgid "Sources"
-msgstr "出典"
+msgstr "資料"
 
 #: apps/reader/src/dockview-side-panels.ts
 msgctxt "dockview side panels"
 msgid "Sources"
-msgstr "出典"
+msgstr "資料"
 
 #: apps/reader/src/LibraryCards.tsx
 msgctxt "LibraryCards interface"
 msgid "Sources"
-msgstr "出典"
+msgstr "資料"
 
 #: apps/reader/src/LibraryNavigator.tsx
 msgctxt "LibraryNavigator interface"
 msgid "Sources"
-msgstr "出典"
+msgstr "資料"
 
 #: apps/reader/src/LibraryTable.tsx
 msgctxt "LibraryTable interface"
 msgid "Sources"
-msgstr "出典"
+msgstr "資料"
 
 #: apps/reader/src/LibraryWorkspace.tsx
 msgctxt "LibraryWorkspace interface"
 msgid "Sources"
-msgstr "出典"
+msgstr "資料"
 
 #: apps/reader/src/CitationStructuredEditor.tsx
 msgctxt "CitationStructuredEditor status or action"
 msgid "Specialist"
-msgstr ""
+msgstr "専門項目"
 
 #: packages/renderer-pdf/src/pdf-translations.ts
 msgctxt "PDF viewer print"
 msgid "Specify pages"
-msgstr ""
+msgstr "印刷するページを指定"
 
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "Speech"
-msgstr ""
+msgstr "演説"
 
 #: packages/renderer-pdf/src/pdf-translations.ts
 msgctxt "PDF viewer page"
 msgid "Spread Mode"
-msgstr ""
+msgstr "見開き表示"
 
 #: apps/reader/src/reader-command-list.ts
 msgid "Stack panes top and bottom"
-msgstr ""
+msgstr "ペインを上下に並べる"
 
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "Standard"
-msgstr ""
+msgstr "規格"
 
 #: apps/reader/src/DisplayMenu.tsx
 msgctxt "DisplayMenu interface"
 msgid "Standard"
-msgstr ""
+msgstr "標準"
 
 #: apps/reader/src/CitationTypedFieldEditors.tsx
 msgctxt "CitationTypedFieldEditors interface"
@@ -7104,12 +7104,12 @@ msgstr "開始"
 
 #: packages/renderer-epub/src/epub-page-navigation.tsx
 msgid "Start of publication"
-msgstr ""
+msgstr "刊行開始日"
 
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "Static ordering"
-msgstr ""
+msgstr "固定された順序"
 
 #: apps/reader/src/LibraryRowMenu.tsx
 #: apps/reader/src/LibraryWorkspace.tsx
@@ -7142,20 +7142,20 @@ msgstr "状態"
 #. placeholder {3}: progress.skipped.toLocaleString(i18n.locale)
 #: apps/reader/src/ImportReview.tsx
 msgid "Steps: {0} / {1} · Created: {2} · Kept: {3}"
-msgstr ""
+msgstr "手順：{0}／{1} · 作成：{2} · 維持：{3}"
 
 #: apps/extension/src/DiagnosticsPanel.tsx
 msgid "Stop and clear timings"
-msgstr ""
+msgstr "記録を停止して所要時間を消去"
 
 #: apps/reader/src/SourceImportDialog.tsx
 msgctxt "SourceImportDialog interface"
 msgid "Stop import"
-msgstr ""
+msgstr "インポートを停止"
 
 #: apps/reader/src/ImportReview.tsx
 msgid "Stop safely"
-msgstr ""
+msgstr "安全に停止"
 
 #: apps/reader/src/import-controller.ts
 msgid "Stopped"
@@ -7163,44 +7163,44 @@ msgstr "停止しました"
 
 #: apps/reader/src/import-controller.ts
 msgid "Stopped. Already committed data is kept. Resume with the same input and destination; existing records will not be overwritten."
-msgstr ""
+msgstr "停止しました。コミット済みのデータは保持されます。同じ入力と保存先で再開してください。既存のレコードは上書きされません。"
 
 #: packages/core/src/application/citation-citekey.ts
 msgid "Store the bare DOI rather than its https://doi.org/ URL."
-msgstr ""
+msgstr "https://doi.org/のURLではなく、DOIそのものを保存します。"
 
 #: apps/extension/src/CitationPanel.tsx
 msgid "Stored citation"
-msgstr ""
+msgstr "保存済みの引用情報"
 
 #: apps/reader/src/CitationPreview.tsx
 msgid "Style"
-msgstr ""
+msgstr "スタイル"
 
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "Submitted"
-msgstr ""
+msgstr "提出日"
 
 #: apps/reader/src/CitationContributors.tsx
 msgctxt "CitationContributors interface"
 msgid "Suffix"
-msgstr ""
+msgstr "接尾辞"
 
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "Suffix"
-msgstr ""
+msgstr "接尾辞"
 
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "Supplement"
-msgstr ""
+msgstr "補遺"
 
 #: packages/renderer-pdf/src/pdf-translations.ts
 msgctxt "PDF viewer emptyState"
 msgid "Supported format: PDF"
-msgstr ""
+msgstr "対応形式：PDF"
 
 #: apps/reader/src/CollectionMenu.tsx
 msgctxt "CollectionMenu interface"
@@ -7218,11 +7218,11 @@ msgstr "コレクションを切り替え：{name}"
 
 #: apps/reader/src/collection-switching.ts
 msgid "Switch collections with unsaved changes? Save your edits first to avoid losing work."
-msgstr ""
+msgstr "未保存の変更があるままコレクションを切り替えますか？作業を失わないよう、先に編集を保存してください。"
 
 #: apps/reader/src/connection-recovery.ts
 msgid "Sync this collection on your computer before opening it."
-msgstr ""
+msgstr "開く前に、このコレクションをお使いのコンピューターで同期してください。"
 
 #: apps/reader/src/ReaderHeader.tsx
 msgid "Syncing…"
@@ -7235,7 +7235,7 @@ msgstr "システム"
 #: apps/extension/src/TagInput.tsx
 msgctxt "Keyboard key"
 msgid "Tab"
-msgstr ""
+msgstr "Tabキー"
 
 #: apps/reader/src/LibraryWorkspace.tsx
 msgctxt "LibraryWorkspace interface"
@@ -7245,12 +7245,12 @@ msgstr "表"
 #: apps/reader/src/LibraryAnnotationToolbar.tsx
 #: apps/reader/src/LibraryWorkspace.tsx
 msgid "Tag"
-msgstr ""
+msgstr "タグ"
 
 #: apps/reader/src/LibraryAnnotationToolbar.tsx
 msgctxt "LibraryAnnotationToolbar interface"
 msgid "Tag"
-msgstr ""
+msgstr "タグ"
 
 #: apps/reader/src/annotation-columns.ts
 msgctxt "Annotation table column"
@@ -7265,11 +7265,11 @@ msgstr "タグ"
 #: apps/extension/src/HighlightFields.tsx
 #: apps/extension/src/NotePanel.tsx
 msgid "Tags <0>(comma-separated, optional)</0>"
-msgstr ""
+msgstr "タグ<0>（コンマ区切り、省略可）</0>"
 
 #: apps/extension/src/NotePanel.tsx
 msgid "Tags <0>(comma-separated)</0>"
-msgstr ""
+msgstr "タグ<0>（コンマ区切り）</0>"
 
 #: apps/extension/src/ConnectionPanel.tsx
 msgid "Technical details"
@@ -7278,184 +7278,184 @@ msgstr "技術的な詳細"
 #: apps/reader/src/CitationTypedFieldEditors.tsx
 msgctxt "CitationTypedFieldEditors customValueTypeOptions"
 msgid "Text"
-msgstr ""
+msgstr "テキスト"
 
 #: apps/reader/src/CitationTypedFieldEditors.tsx
 msgctxt "CitationTypedFieldEditors interface"
 msgid "Text"
-msgstr ""
+msgstr "テキスト"
 
 #: apps/reader/src/CitationTypedFieldEditors.tsx
 msgctxt "CitationTypedFieldEditors scalarKindOptions"
 msgid "Text"
-msgstr ""
+msgstr "テキスト"
 
 #: apps/reader/src/DisplayMenu.tsx
 msgid "Text and display"
-msgstr ""
+msgstr "テキストと表示"
 
 #: packages/core/src/domain/selector.ts
 msgid "Text positions must use non-negative integer offsets with end at or after start."
-msgstr ""
+msgstr "テキスト内の位置は0以上の整数オフセットを使い、終点は始点以降でなければなりません。"
 
 #: apps/reader/src/LibraryTextSearch.tsx
 msgid "Text search failed. Change the query to retry."
-msgstr ""
+msgstr "テキスト検索に失敗しました。検索語を変更して再試行してください。"
 
 #: apps/reader/src/LibraryTextSearch.tsx
 msgid "Text search results"
-msgstr ""
+msgstr "テキストの検索結果"
 
 #: apps/reader/src/DisplayMenu.tsx
 msgid "Text size"
-msgstr ""
+msgstr "文字サイズ"
 
 #: apps/reader/src/selection-copy.ts
 msgid "The browser refused to copy."
-msgstr ""
+msgstr "ブラウザーがコピーを拒否しました。"
 
 #: apps/reader/src/build-source-export.ts
 msgid "The canonical records were preserved. Review these incomplete derived outputs:"
-msgstr ""
+msgstr "正本のレコードは保持されています。次の未完成の派生データを確認してください："
 
 #: apps/extension/src/use-extension-capture.ts
 msgid "The chosen post is not loaded anymore."
-msgstr ""
+msgstr "選択した投稿はもう読み込まれていません。"
 
 #: apps/reader/src/SourceDetails.tsx
 msgid "The citation has different details."
-msgstr ""
+msgstr "引用情報の詳細が異なります。"
 
 #: apps/reader/src/CitationSourceSync.tsx
 msgid "The citation is missing details recorded in your library: {missingDetails}."
-msgstr ""
+msgstr "引用情報には、ライブラリに記録された詳細がありません：{missingDetails}。"
 
 #. placeholder {0}: messageOf(reason)
 #: apps/reader/src/source-addition-flow.ts
 msgid "The citation was not stored: {0} Add it from the citation panel."
-msgstr ""
+msgstr "引用情報は保存されませんでした：{0} 引用パネルから追加してください。"
 
 #. placeholder {0}: reason instanceof Error ? reason.message : String(reason)
 #: apps/extension/src/save-capture.ts
 msgid "The citation was not stored: {0}. Add it from the source's citation panel in Reader."
-msgstr ""
+msgstr "引用情報は保存されませんでした：{0}。Readerの資料の引用パネルから追加してください。"
 
 #. placeholder {0}: citation.id
 #. placeholder {1}: collision.title
 #: packages/core/src/application/save-source-citation.ts
 msgid "The citekey @{0} is already used by “{1}”."
-msgstr ""
+msgstr "引用キー@{0}はすでに「{1}」で使われています。"
 
 #. placeholder {0}: source.citation.id
 #: packages/core/src/application/build-csl-bibliography.ts
 msgid "The citekey @{0} is not unique."
-msgstr ""
+msgstr "引用キー@{0}は一意ではありません。"
 
 #: apps/reader/src/SourceNoteEditor.tsx
 msgid "The collection changed while you were editing. Review the conflict to continue."
-msgstr ""
+msgstr "編集中にコレクションが変更されました。続行するには競合を確認してください。"
 
 #: apps/extension/src/NotePanel.tsx
 msgid "The collection did not accept the note. Your text is kept."
-msgstr ""
+msgstr "コレクションがノートを受け付けませんでした。テキストは保持されています。"
 
 #: apps/extension/src/connection-view.ts
 msgid "The connection to this collection has changed. Choose the collection again."
-msgstr ""
+msgstr "このコレクションへの接続が変更されました。コレクションをもう一度選択してください。"
 
 #: apps/reader/src/AnnotationImage.tsx
 msgid "The embedded annotation asset is not an image."
-msgstr ""
+msgstr "埋め込み注釈の素材は画像ではありません。"
 
 #: packages/renderer-epub/src/epub-resource-store.ts
 msgid "The EPUB resource layer could not take control of this Reader tab."
-msgstr ""
+msgstr "EPUBリソース層がこのReaderタブの制御を取得できませんでした。"
 
 #: apps/capacitor/src/capacitor-platform.ts
 msgid "The export could not be encoded."
-msgstr ""
+msgstr "エクスポート内容をエンコードできませんでした。"
 
 #: apps/reader/src/annotation-navigation.ts
 msgid "The file has changed, and this annotation's position cannot be verified in the current document. The annotation is still saved."
-msgstr ""
+msgstr "ファイルが変更されたため、この注釈の位置を現在の文書で確認できません。注釈は保存済みです。"
 
 #: apps/reader/src/LibraryAnnotations.tsx
 msgid "The filters, sort and columns are saved in your collection as an mdbase view of annotations."
-msgstr ""
+msgstr "フィルター、並べ替え、列の設定が注釈のmdbaseビューとしてコレクションに保存されます。"
 
 #: apps/reader/src/LibraryWorkspace.tsx
 msgid "The filters, sort, columns and layout are saved in your collection."
-msgstr ""
+msgstr "フィルター、並べ替え、列、レイアウトがコレクションに保存されます。"
 
 #: apps/reader/src/CitationLookup.tsx
 msgid "The found record matches this citation."
-msgstr ""
+msgstr "見つかったレコードはこの引用情報に一致します。"
 
 #: apps/reader/src/preview.tsx
 msgid "The interface preview includes one sample document: The Principles of Psychology."
-msgstr ""
+msgstr "インターフェースのプレビューにはサンプル文書が1件含まれます：『心理学原理』。"
 
 #: packages/renderer-html/src/html-palette.ts
 #: packages/renderer-html/src/html-runtime.ts
 msgid "The isolated HTML document is unavailable."
-msgstr ""
+msgstr "隔離されたHTML文書を利用できません。"
 
 #: apps/reader/src/ImportReview.tsx
 msgid "The job is bound to its confirmed collection. Switching collections cannot redirect it. Keep this tab open; after a reload, reselect the same bundle (or reconnect Readwise), choose the same collection, and scan again to resume."
-msgstr ""
+msgstr "この処理は確認済みのコレクションに結び付いています。コレクションを切り替えても保存先は変更できません。このタブを開いたままにしてください。再読み込み後は同じバンドルを再選択（またはReadwiseに再接続）し、同じコレクションを選んで再スキャンすると再開できます。"
 
 #: apps/reader/src/citation-editor-model.ts
 msgid "The JSON could not be read."
-msgstr ""
+msgstr "JSONを読み取れませんでした。"
 
 #: packages/i18n/src/react.tsx
 msgid "The language could not be loaded. Your current language is unchanged."
-msgstr ""
+msgstr "言語を読み込めませんでした。現在の言語設定は変更されていません。"
 
 #: apps/reader/src/CitationSourceSync.tsx
 msgid "The library has different details: {fields}."
-msgstr ""
+msgstr "ライブラリには異なる詳細があります：{fields}。"
 
 #: apps/reader/src/SourceDeepLink.tsx
 msgid "The linked annotation is not in this source. It may have been removed or moved to another source."
-msgstr ""
+msgstr "リンク先の注釈はこの資料にありません。削除されたか、別の資料に移動された可能性があります。"
 
 #: apps/reader/src/SourceDeepLink.tsx
 msgid "The linked source is not available in this collection. It may have been removed or your access may have changed."
-msgstr ""
+msgstr "リンク先の資料はこのコレクションで利用できません。削除されたか、アクセス権が変更された可能性があります。"
 
 #: packages/core/src/application/create-annotation.ts
 msgid "The loaded annotation source no longer matches."
-msgstr ""
+msgstr "読み込んだ注釈の資料が一致しなくなりました。"
 
 #: apps/reader/src/SourceImportDialog.tsx
 msgid "The original file stays intact in your collection."
-msgstr ""
+msgstr "元のファイルはコレクション内にそのまま残ります。"
 
 #: apps/extension/src/use-extension-capture.ts
 msgid "The page is not ready. Reopen Reader on this page before saving."
-msgstr ""
+msgstr "ページの準備ができていません。保存前にこのページでReaderを開き直してください。"
 
 #: packages/renderer-pdf/src/pdf-translations.ts
 msgctxt "PDF viewer passwordPrompt"
 msgid "The password you entered was incorrect. Please try again."
-msgstr ""
+msgstr "入力したパスワードが正しくありません。再試行してください。"
 
 #: apps/extension/src/capture-errors.ts
 msgid "The post is not loaded. Scroll it into view and try again."
-msgstr ""
+msgstr "投稿が読み込まれていません。表示される位置までスクロールして再試行してください。"
 
 #: apps/reader/src/preview.tsx
 msgid "The preview citation is invalid."
-msgstr ""
+msgstr "プレビューの引用情報が無効です。"
 
 #: apps/reader/src/preview.tsx
 msgid "The preview has one sample collection. Connect mdbase to switch between yours."
-msgstr ""
+msgstr "プレビューにはサンプルコレクションが1件あります。自分のコレクションを切り替えるにはmdbaseに接続してください。"
 
 #: apps/reader/src/preview.tsx
 msgid "The preview source no longer exists."
-msgstr ""
+msgstr "プレビューの資料はもう存在しません。"
 
 #: packages/core/src/application/import-source-file.ts
 msgid "The readable page and immutable archive need distinct filenames."
