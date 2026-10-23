@@ -1,6 +1,7 @@
 // @vitest-environment happy-dom
 import { describe, expect, it, vi } from "vitest";
 
+import { saveCaptureCitation } from "./capture-citation.js";
 import { capture, fixture } from "./testing/save-capture-fixture.js";
 
 import type { PageCapture } from "./page-capture.js";
@@ -78,5 +79,30 @@ describe("capture metadata and formats", () => {
     // Written with the import itself rather than as a second update.
     expect(plan?.url).toBe("https://arxiv.org/pdf/0704.0001");
     expect(f.updateFields).not.toHaveBeenCalled();
+  });
+});
+
+describe("capture citation baseline", () => {
+  it("passes an existing source's loaded citation to the guarded save", async () => {
+    const f = fixture();
+    const first = await f.save({ highlight: false }, capture, {
+      citation: { citation: { type: "article", title: "Original" }, origin: "page" },
+    });
+    f.updateCitation.mockClear();
+    const loaded = await f.collection.sources.get(f.collection.collectionId, first.source.id);
+    if (!loaded) {
+      throw new Error("Missing saved source");
+    }
+
+    await saveCaptureCitation(
+      f.collection,
+      loaded,
+      { type: "article", title: "Edited" },
+      Promise.resolve([]),
+    );
+
+    expect(f.updateCitation).toHaveBeenCalledExactlyOnceWith(
+      expect.objectContaining({ expectedCitation: loaded.citation }),
+    );
   });
 });

@@ -443,7 +443,9 @@ export class ConnectWorkspaceGateway implements ReaderWorkspaceGateway {
   }
 
   async saveSourceCitation(source: Source, citation: unknown): Promise<Source> {
-    const updated = await saveSourceCitation(this.sources, source, this.#library ?? [], citation);
+    const updated = await saveSourceCitation(this.sources, source, this.#library ?? [], citation, {
+      ...(source.citation ? { expectedCitation: source.citation } : {}),
+    });
     this.#replaceSource(updated);
     return updated;
   }

@@ -201,12 +201,17 @@ describe("ConnectWorkspaceGateway writes and search", () => {
     );
     await gateway.library();
 
-    const updated = await gateway.saveSourceCitation(source, citation);
+    const loadedCitation = { ...citation, title: "Original" };
+    const updated = await gateway.saveSourceCitation(
+      { ...source, citation: loadedCitation },
+      citation,
+    );
 
     expect(updateCitation).toHaveBeenCalledWith({
       collectionId: source.collectionId,
       sourceId: source.id,
       citation,
+      expectedCitation: loadedCitation,
     });
     expect(updated.citation).toEqual(citation);
     expect((await gateway.library()).sources[0]?.citation).toEqual(citation);

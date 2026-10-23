@@ -2,6 +2,7 @@ import type { SourceLookups } from "./source-lookups.js";
 import type { Annotation, AnnotationDeletionPlan, AnnotationDraft } from "../domain/annotation.js";
 import type { CitationCandidate, CitationResolutionRequest } from "../domain/citation-metadata.js";
 import type { CslItem } from "../domain/citation.js";
+import type { CslProvenance } from "../domain/csl-provenance.js";
 import type { DocumentTarget } from "../domain/document.js";
 import type {
   AnnotationId,
@@ -77,11 +78,14 @@ export interface SourceRepository extends SourceLookups {
   }): Promise<Source>;
   /** Sets frontmatter fields by dotted path; a null value removes the field. */
   updateFields?(input: SourceFieldChange): Promise<Source>;
-  /** Replaces only `csl`, so it needs no revision: no other field is at risk. */
+  /** Replaces `csl` and, when supplied, its sibling provenance. Empty provenance removes it. */
   updateCitation(input: {
     readonly collectionId: CollectionId;
     readonly sourceId: SourceId;
     readonly citation: CslItem;
+    readonly provenance?: CslProvenance;
+    /** The citation the editor loaded; unrelated record changes do not block the save. */
+    readonly expectedCitation?: CslItem;
   }): Promise<Source>;
   /** Checks removing a source record at its current revision and lists what links to it. */
   preflightDelete?(source: Source): Promise<SourceDeletionPlan>;

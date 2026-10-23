@@ -1,11 +1,15 @@
 import {
+  CitationChangedElsewhereError,
   collectionId,
+  cslProvenanceKey,
+  cslValuesEqual,
   fileId,
   fileRevision,
   recordRevision,
   type Annotation,
   type PlannedSourceFileImport,
   type Source,
+  type SourceRepository,
   type SourceSummary,
 } from "@mdbase-reader/core";
 import { vi } from "vitest";
@@ -19,6 +23,30 @@ import {
 
 import type { PageCapture, SelectedWebCapture } from "../page-capture.js";
 import type { ReaderConnectedCollection } from "@mdbase-reader/connect";
+
+function sourceWithCitation(
+  source: Source,
+  input: Parameters<SourceRepository["updateCitation"]>[0],
+): Source {
+  if (input.expectedCitation && !cslValuesEqual(source.citation, input.expectedCitation)) {
+    throw new CitationChangedElsewhereError(source.citation);
+  }
+  const updated = {
+    ...source,
+    citation: input.citation,
+    frontmatter: { ...source.frontmatter, csl: input.citation } as Record<string, unknown>,
+  };
+  if (input.provenance !== undefined) {
+    if (Object.keys(input.provenance).length > 0) {
+      updated.frontmatter[cslProvenanceKey] = input.provenance;
+      updated.cslProvenance = input.provenance;
+    } else {
+      Reflect.deleteProperty(updated.frontmatter, cslProvenanceKey);
+      Reflect.deleteProperty(updated, "cslProvenance");
+    }
+  }
+  return updated;
+}
 
 export const capture: SelectedWebCapture = {
   kind: "html",
@@ -87,8 +115,8 @@ export function fixture() {
   const read = vi.fn(() =>
     Promise.resolve({ path: "files/reading.html", mediaType: "text/html", bytes }),
   );
-  const updateCitation = vi.fn((input: { citation: Record<string, unknown> }): Promise<Source> => {
-    source = { ...saved(), citation: input.citation as Source["citation"] & object };
+  const updateCitation = vi.fn((input: Parameters<SourceRepository["updateCitation"]>[0]) => {
+    source = sourceWithCitation(saved(), input);
     return Promise.resolve(source);
   });
   const updateFields = vi.fn((input: { fields: Record<string, unknown> }) => {

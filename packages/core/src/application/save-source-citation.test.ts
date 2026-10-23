@@ -35,6 +35,44 @@ describe("saveSourceCitation", () => {
     });
   });
 
+  it.each([{}, { title: { value: "Crime and Punishment", source: "page:html" } }])(
+    "passes explicit provenance through unchanged",
+    async (provenance) => {
+      const updateCitation = vi.fn(() => Promise.resolve(source));
+      const repository = { updateCitation } as unknown as SourceRepository;
+      const citation = { id: "dostoevsky2002", type: "book", title: "Crime and Punishment" };
+
+      await saveSourceCitation(repository, source, [source], citation, { provenance });
+
+      expect(updateCitation).toHaveBeenCalledWith({
+        collectionId: "reading",
+        sourceId: "src_one",
+        citation,
+        provenance,
+      });
+    },
+  );
+
+  it("passes the loaded citation through with provenance", async () => {
+    const updateCitation = vi.fn(() => Promise.resolve(source));
+    const repository = { updateCitation } as unknown as SourceRepository;
+    const expectedCitation = { id: "dostoevsky2002", type: "book", title: "Original" };
+    const citation = { ...expectedCitation, title: "Edited" };
+
+    await saveSourceCitation(repository, source, [source], citation, {
+      expectedCitation,
+      provenance: {},
+    });
+
+    expect(updateCitation).toHaveBeenCalledExactlyOnceWith({
+      collectionId: "reading",
+      sourceId: "src_one",
+      citation,
+      expectedCitation,
+      provenance: {},
+    });
+  });
+
   it("rejects a citekey already used by another source", async () => {
     const repository = { updateCitation: vi.fn() } as unknown as SourceRepository;
     const other = {
