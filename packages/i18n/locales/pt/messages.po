@@ -8062,326 +8062,326 @@ msgstr "Usar o tema escuro"
 #. placeholder {0}: fieldLabel(difference.field)
 #: apps/reader/src/CitationLookup.tsx
 msgid "Use found {0}"
-msgstr ""
+msgstr "Usar {0} encontrado"
 
 #: apps/reader/src/AnnotationComposer.tsx
 msgid "Use it for this comment"
-msgstr ""
+msgstr "Usar neste comentário"
 
 #: apps/reader/src/reader-app-commands.ts
 msgid "Use light theme"
-msgstr ""
+msgstr "Usar o tema claro"
 
 #: apps/extension/src/NotePanel.tsx
 #: apps/reader/src/AnnotationEditor.tsx
 msgid "Use theirs"
-msgstr ""
+msgstr "Usar o deles"
 
 #: apps/reader/src/LibraryConditionsEditor.tsx
 msgctxt "LibraryConditionsEditor interface"
 msgid "value"
-msgstr ""
+msgstr "valor"
 
 #: apps/reader/src/LibraryConditionsEditor.tsx
 msgctxt "LibraryConditionsEditor interface"
 msgid "Value"
-msgstr ""
+msgstr "Valor"
 
 #: apps/reader/src/LibraryBulkBar.tsx
 msgid "Value (empty removes the field)"
-msgstr ""
+msgstr "Valor (vazio remove o campo)"
 
 #. placeholder {0}: String(index + 1)
 #: apps/reader/src/CitationTypedFieldEditors.tsx
 msgid "Value {0}"
-msgstr ""
+msgstr "Valor {0}"
 
 #: apps/reader/src/CitationTypedFieldEditors.tsx
 msgctxt "CitationTypedFieldEditors interface"
 msgid "Value type"
-msgstr ""
+msgstr "Tipo de valor"
 
 #: apps/reader/src/LibraryBulkBar.tsx
 msgid "value, or empty to remove"
-msgstr ""
+msgstr "valor, ou vazio para remover"
 
 #: apps/reader/src/CitationTypedFieldEditors.tsx
 msgid "Values"
-msgstr ""
+msgstr "Valores"
 
 #. placeholder {0}: String(i + 1)
 #. placeholder {1}: String(payloads.length)
 #: packages/migration/src/zotero-bundle.ts
 msgid "Verifying file {0} of {1}…"
-msgstr ""
+msgstr "Verificando o arquivo {0} de {1}…"
 
 #: apps/reader/src/import-controller.ts
 msgid "Verifying imported records"
-msgstr ""
+msgstr "Verificando os registros importados"
 
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "Version"
-msgstr ""
+msgstr "Versão"
 
 #: packages/renderer-pdf/src/pdf-translations.ts
 msgctxt "PDF viewer page"
 msgid "Vertical"
-msgstr ""
+msgstr "Vertical"
 
 #: packages/renderer-pdf/src/pdf-translations.ts
 msgctxt "PDF viewer menu"
 msgid "View Controls"
-msgstr ""
+msgstr "Controles de exibição"
 
 #: apps/reader/src/LibraryAnnotationToolbar.tsx
 msgctxt "LibraryAnnotationToolbar interface"
 msgid "View options"
-msgstr ""
+msgstr "Opções de exibição"
 
 #: apps/reader/src/LibraryWorkspace.tsx
 msgctxt "LibraryWorkspace interface"
 msgid "View options"
-msgstr ""
+msgstr "Opções de exibição"
 
 #. placeholder {0}: filterCount ? `, ${String(filterCount)} active filters` : ""
 #: apps/reader/src/LibraryWorkspace.tsx
 msgid "View options{0}"
-msgstr ""
+msgstr "Opções de exibição{0}"
 
 #: apps/reader/src/LibraryNavigator.tsx
 msgid "Views"
-msgstr ""
+msgstr "Visualizações"
 
 #: apps/reader/src/CitationStructuredEditor.tsx
 msgctxt "CitationStructuredEditor interface"
 msgid "Volume"
-msgstr ""
+msgstr "Volume"
 
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "Volume"
-msgstr ""
+msgstr "Volume"
 
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "Volume title"
-msgstr ""
+msgstr "Título do volume"
 
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "Volume title short"
-msgstr ""
+msgstr "Título curto do volume"
 
 #: apps/reader/src/native-signin-ui.ts
 msgctxt "Native sign-in"
 msgid "Waiting for approval in the mdbase tab…"
-msgstr ""
+msgstr "Aguardando a aprovação na aba do mdbase…"
 
 #: apps/extension/src/CaptureApp.tsx
 msgid "Waiting for the active tab"
-msgstr ""
+msgstr "Aguardando a aba ativa"
 
 #: apps/reader/src/LibraryCells.tsx
 msgctxt "source format"
 msgid "Web"
-msgstr ""
+msgstr "Web"
 
 #: apps/reader/src/workspace-tab-display.ts
 msgctxt "Source format badge for saved web pages"
 msgid "WEB"
-msgstr ""
+msgstr "WEB"
 
 #: packages/core/src/application/source-import-values.ts
 msgid "Web capture provenance contains an invalid URL."
-msgstr ""
+msgstr "A proveniência da captura da web contém uma URL inválida."
 
 #: packages/core/src/application/source-import-values.ts
 msgid "Web capture provenance must use public HTTPS URLs."
-msgstr ""
+msgstr "A proveniência da captura da web deve usar URLs HTTPS públicas."
 
 #: packages/core/src/application/import-source-file.ts
 msgid "Web captures must contain an HTML document."
-msgstr ""
+msgstr "Capturas da web devem conter um documento HTML."
 
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "Web page"
-msgstr ""
+msgstr "Página da web"
 
 #: apps/reader/src/citation-form-model.ts
 msgctxt "CSL item type"
 msgid "Web page"
-msgstr ""
+msgstr "Página da web"
 
 #: apps/extension/src/shell-messages.ts
 #: apps/extension/src/WelcomeApp.tsx
 msgid "Welcome to mdbase Reader"
-msgstr ""
+msgstr "Bem-vindo ao mdbase Reader"
 
 #: apps/reader/src/CitationStructuredEditor.tsx
 msgid "Where and when the work appeared"
-msgstr ""
+msgstr "Onde e quando a obra apareceu"
 
 #: apps/reader/src/annotation-wiki-candidates.ts
 msgctxt "annotation wiki candidates"
 msgid "Whole source"
-msgstr ""
+msgstr "Fonte inteira"
 
 #: packages/renderer-pdf/src/pdf-translations.ts
 msgctxt "PDF viewer search"
 msgid "Whole word"
-msgstr ""
+msgstr "Palavra inteira"
 
 #: apps/reader/src/AnnotationComposer.tsx
 msgid "Why does this matter?"
-msgstr ""
+msgstr "Por que isso importa?"
 
 #: apps/reader/src/DisplayMenu.tsx
 msgctxt "DisplayMenu interface"
 msgid "Wide"
-msgstr ""
+msgstr "Larga"
 
 #: apps/reader/src/AnnotationList.tsx
 msgctxt "AnnotationList annotationFilterOptions"
 msgid "With commentary"
-msgstr ""
+msgstr "Com comentários"
 
 #: apps/extension/src/WelcomeApp.tsx
 msgid "With the panel open, select text on the page and it appears there. Choose a colour to save it, adding a comment first if you like."
-msgstr ""
+msgstr "Com o painel aberto, selecione o texto na página e ele aparece lá. Escolha uma cor para salvá-lo, adicionando um comentário antes se quiser."
 
 #: apps/reader/src/reader-command-list.ts
 msgid "Workspace"
-msgstr ""
+msgstr "Área de trabalho"
 
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "Year suffix"
-msgstr ""
+msgstr "Sufixo do ano"
 
 #: apps/extension/src/HighlightFields.tsx
 msgctxt "Highlight colour"
 msgid "yellow"
-msgstr ""
+msgstr "amarelo"
 
 #: apps/reader/src/citation-form-model.ts
 msgid "Yes"
-msgstr ""
+msgstr "Sim"
 
 #: apps/reader/src/library-columns.ts
 msgctxt "library columns"
 msgid "Yes"
-msgstr ""
+msgstr "Sim"
 
 #: apps/reader/src/LibraryCells.tsx
 msgid "Yesterday"
-msgstr ""
+msgstr "Ontem"
 
 #: apps/extension/src/WelcomeApp.tsx
 msgid "You can change the collection and shortcuts at any time in <0>Settings</0>."
-msgstr ""
+msgstr "Você pode alterar a coleção e os atalhos a qualquer momento em <0>Configurações</0>."
 
 #: apps/reader/src/main.tsx
 msgid "You can close this window."
-msgstr ""
+msgstr "Você pode fechar esta janela."
 
 #: packages/renderer-pdf/src/pdf-translations.ts
 msgctxt "PDF viewer emptyState"
 msgid "You can view multiple documents using tabs."
-msgstr ""
+msgstr "Você pode ver vários documentos usando abas."
 
 #: apps/reader/src/AnnotationComposer.tsx
 msgid "You selected other text."
-msgstr ""
+msgstr "Você selecionou outro texto."
 
 #: apps/reader/src/connection-recovery.ts
 msgid "Your access to this collection has been removed."
-msgstr ""
+msgstr "Seu acesso a esta coleção foi removido."
 
 #: apps/reader/src/connect-popup.ts
 msgid "Your browser blocked the sign-in tab."
-msgstr ""
+msgstr "Seu navegador bloqueou a aba de login."
 
 #: apps/reader/src/native-signin-ui.ts
 msgctxt "Native sign-in"
 msgid "Your browser blocked the sign-in tab."
-msgstr ""
+msgstr "Seu navegador bloqueou a aba de login."
 
 #: apps/extension/src/source-note-session.ts
 msgid "Your browser could not keep a copy of this note. Keep the panel open until it is saved."
-msgstr ""
+msgstr "Seu navegador não conseguiu manter uma cópia desta nota. Mantenha o painel aberto até ela ser salva."
 
 #: apps/extension/src/ConnectionPanel.tsx
 msgid "your collection"
-msgstr ""
+msgstr "sua coleção"
 
 #: apps/reader/src/use-annotation-view.ts
 msgid "Your collection already has it: {path}."
-msgstr ""
+msgstr "Sua coleção já tem isso: {path}."
 
 #: apps/reader/src/ConnectReader.tsx
 msgctxt "ConnectReader interface"
 msgid "Your collections"
-msgstr ""
+msgstr "Suas coleções"
 
 #: apps/reader/src/DraftRecoveryNotice.tsx
 msgid "Your draft"
-msgstr ""
+msgstr "Seu rascunho"
 
 #: apps/reader/src/DraftRecoveryNotice.tsx
 msgid "Your draft is retained. Compare both versions before choosing which to save. You can edit your draft below to combine them."
-msgstr ""
+msgstr "Seu rascunho foi mantido. Compare as duas versões antes de escolher qual salvar. Você pode editar seu rascunho abaixo para combiná-las."
 
 #: apps/reader/src/LibraryWorkspace.tsx
 msgid "Your library is empty"
-msgstr ""
+msgstr "Sua biblioteca está vazia"
 
 #: apps/extension/src/ConnectionPanel.tsx
 msgid "Your selection and note are kept for this browser session, even if you close the panel."
-msgstr ""
+msgstr "Sua seleção e sua nota são mantidas nesta sessão do navegador, mesmo se você fechar o painel."
 
 #: apps/reader/src/ImportPageView.tsx
 msgid "Your sources, notes and files, in a collection you control. Preview first. Nothing is imported until you confirm the destination."
-msgstr ""
+msgstr "Suas fontes, notas e arquivos, em uma coleção que você controla. Veja a prévia primeiro. Nada é importado até você confirmar o destino."
 
 #: apps/extension/src/CaptureApp.tsx
 msgid "Your unsaved text for the previous page is kept for this browser session."
-msgstr ""
+msgstr "Seu texto não salvo da página anterior é mantido nesta sessão do navegador."
 
 #: apps/reader/src/CitationStructuredEditor.tsx
 msgid "YYYY, YYYY-MM-DD, or a season"
-msgstr ""
+msgstr "AAAA, AAAA-MM-DD ou uma estação"
 
 #: apps/reader/src/CitationTypedFieldEditors.tsx
 msgid "YYYY, YYYY-MM, or YYYY-MM-DD"
-msgstr ""
+msgstr "AAAA, AAAA-MM ou AAAA-MM-DD"
 
 #: packages/renderer-pdf/src/pdf-translations.ts
 msgctxt "PDF viewer menu"
 msgid "Zoom Controls"
-msgstr ""
+msgstr "Controles de zoom"
 
 #: packages/renderer-pdf/src/pdf-translations.ts
 msgctxt "PDF viewer zoom"
 msgid "Zoom In"
-msgstr ""
+msgstr "Aumentar o zoom"
 
 #: packages/renderer-pdf/src/pdf-translations.ts
 msgctxt "PDF viewer zoom"
 msgid "Zoom Level ({level}%)"
-msgstr ""
+msgstr "Nível de zoom ({level}%)"
 
 #: packages/renderer-pdf/src/pdf-translations.ts
 msgctxt "PDF viewer zoom"
 msgid "Zoom Menu"
-msgstr ""
+msgstr "Menu de zoom"
 
 #: packages/renderer-pdf/src/pdf-translations.ts
 msgctxt "PDF viewer zoom"
 msgid "Zoom Out"
-msgstr ""
+msgstr "Diminuir o zoom"
 
 #: packages/migration/src/zotero-pdf.ts
 msgid "Zotero PDF page is unavailable."
-msgstr ""
+msgstr "A página de PDF do Zotero está indisponível."
