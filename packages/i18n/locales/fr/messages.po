@@ -2799,7 +2799,7 @@ msgstr "Entrée d’encyclopédie"
 #: apps/reader/src/LibraryWorkspace.tsx
 msgctxt "LibraryWorkspace formatFilterOptions"
 msgid "EPUB"
-msgstr "Format EPUB"
+msgstr "EPUB"
 
 #: packages/renderer-epub/src/epub-archive.ts
 msgid "EPUB archive contains a duplicate path: {path}"
