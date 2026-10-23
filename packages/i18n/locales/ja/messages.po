@@ -82,52 +82,52 @@ msgstr " DOIレコードを利用できませんでした（{0}）。"
 #. placeholder {0}: selected.size
 #: apps/reader/src/CitationLookup.tsx
 msgid "{0, plural, =0 {Apply selected details} one {Apply # change} other {Apply # changes}}"
-msgstr "{0, plural, =0 {選択した詳細を適用} one {#件の変更を適用} other {#件の変更を適用}}"
+msgstr "{0, plural, =0 {選択した詳細を適用} other {#件の変更を適用}}"
 
 #. placeholder {0}: selected.length
 #: apps/reader/src/LibraryAnnotationBars.tsx
 msgid "{0, plural, one {# annotation selected} other {# annotations selected}}"
-msgstr "{0, plural, one {#件の注釈を選択中} other {#件の注釈を選択中}}"
+msgstr "{0, plural, other {#件の注釈を選択中}}"
 
 #. placeholder {0}: counts.duplicate
 #: apps/reader/src/use-bibliography-export.ts
 msgid "{0, plural, one {# citekey collision} other {# citekey collisions}}"
-msgstr "{0, plural, one {引用キーの重複：#件} other {引用キーの重複：#件}}"
+msgstr "{0, plural, other {引用キーの重複：#件}}"
 
 #. placeholder {0}: counts.invalid
 #: apps/reader/src/use-bibliography-export.ts
 msgid "{0, plural, one {# invalid record} other {# invalid records}}"
-msgstr "{0, plural, one {無効なレコード：#件} other {無効なレコード：#件}}"
+msgstr "{0, plural, other {無効なレコード：#件}}"
 
 #. placeholder {0}: editor.warnings.length
 #: apps/reader/src/CitationEditor.tsx
 msgid "{0, plural, one {# quality suggestion} other {# quality suggestions}}"
-msgstr "{0, plural, one {品質に関する提案：#件} other {品質に関する提案：#件}}"
+msgstr "{0, plural, other {品質に関する提案：#件}}"
 
 #. placeholder {0}: progress.failed
 #: apps/reader/src/LibraryBulkBar.tsx
 msgid "{0, plural, one {# source could not be updated} other {# sources could not be updated}}"
-msgstr "{0, plural, one {#件の資料を更新できませんでした} other {#件の資料を更新できませんでした}}"
+msgstr "{0, plural, other {#件の資料を更新できませんでした}}"
 
 #. placeholder {0}: selected.length
 #: apps/reader/src/LibraryBulkBar.tsx
 msgid "{0, plural, one {# source selected} other {# sources selected}}"
-msgstr "{0, plural, one {#件の資料を選択中} other {#件の資料を選択中}}"
+msgstr "{0, plural, other {#件の資料を選択中}}"
 
 #. placeholder {0}: plan.warnings.length
 #: apps/reader/src/ImportReview.tsx
 msgid "{0, plural, one {# warning and fidelity note} other {# warnings and fidelity notes}}"
-msgstr "{0, plural, one {警告・再現性に関する注記：#件} other {警告・再現性に関する注記：#件}}"
+msgstr "{0, plural, other {警告・再現性に関する注記：#件}}"
 
 #. placeholder {0}: counts.missing
 #: apps/reader/src/use-bibliography-export.ts
 msgid "{0, plural, one {# without citation} other {# without citations}}"
-msgstr "{0, plural, one {引用情報のない資料：#件} other {引用情報のない資料：#件}}"
+msgstr "{0, plural, other {引用情報のない資料：#件}}"
 
 #. placeholder {0}: selected.length
 #: apps/reader/src/LibraryAnnotationBars.tsx
 msgid "{0, plural, one {Copied # annotation as Markdown.} other {Copied # annotations as Markdown.}}"
-msgstr "{0, plural, one {#件の注釈をMarkdown形式でコピーしました。} other {#件の注釈をMarkdown形式でコピーしました。}}"
+msgstr "{0, plural, other {#件の注釈をMarkdown形式でコピーしました。}}"
 
 #. placeholder {0}: plan.sources.length
 #: apps/reader/src/ImportReview.tsx
@@ -137,7 +137,7 @@ msgstr "{0, plural, other {{collectionName}に#件の資料をインポート}}"
 #. placeholder {0}: links.length
 #: apps/reader/src/SourceRemovalDialog.tsx
 msgid "{0, plural, one {This record links to it and will show a broken link:} other {These # records link to it and will show a broken link:}}"
-msgstr "{0, plural, one {このレコードからリンクされています。リンク切れになります：} other {次の#件のレコードからリンクされています。リンク切れになります：}}"
+msgstr "{0, plural, other {次の#件のレコードからリンクされています。リンク切れになります：}}"
 
 #. placeholder {0}: migrationPhaseLabel(progress.phase)
 #: apps/reader/src/import-controller.ts
@@ -204,20 +204,20 @@ msgstr "{context}に{attribute}がありません。"
 
 #: apps/reader/src/LibraryCells.tsx
 msgid "{count, plural, one {# annotation} other {# annotations}}"
-msgstr "{count, plural, one {注釈#件} other {注釈#件}}"
+msgstr "{count, plural, other {注釈#件}}"
 
 #. placeholder {0}: problemMessage(reason)
 #: apps/extension/src/use-extension-capture.ts
 msgid "{count, plural, one {# post confirmed before the failure.} other {# posts confirmed before the failure.}} Retry checks each post for duplicates. {0}"
-msgstr "{count, plural, one {失敗前に#件の投稿を確認しました。} other {失敗前に#件の投稿を確認しました。}}再試行時は各投稿の重複を確認します。{0}"
+msgstr "{count, plural, other {失敗前に#件の投稿を確認しました。}}再試行時は各投稿の重複を確認します。{0}"
 
 #: apps/extension/src/use-extension-capture.ts
 msgid "{count, plural, one {# post saved. Feeds are never saved.} other {# posts saved. Feeds are never saved.}}"
-msgstr "{count, plural, one {#件の投稿を保存しました。フィードは保存されません。} other {#件の投稿を保存しました。フィードは保存されません。}}"
+msgstr "{count, plural, other {#件の投稿を保存しました。フィードは保存されません。}}"
 
 #: apps/reader/src/LibraryCells.tsx
 msgid "{count, plural, one {# source} other {# sources}}"
-msgstr "{count, plural, one {資料#件} other {資料#件}}"
+msgstr "{count, plural, other {資料#件}}"
 
 #: packages/renderer-pdf/src/pdf-translations.ts
 msgctxt "PDF viewer search"
@@ -239,7 +239,7 @@ msgstr "{errorName}でこのファイルを表示できませんでした：{0}"
 
 #: apps/reader/src/use-open-document-search.ts
 msgid "{failures, plural, one {# loaded document could not be indexed} other {# loaded documents could not be indexed}}. Reopen document search to retry."
-msgstr "{failures, plural, one {読み込み済みの文書#件を索引化できませんでした} other {読み込み済みの文書#件を索引化できませんでした}}。文書検索を開き直して再試行してください。"
+msgstr "{failures, plural, other {読み込み済みの文書#件を索引化できませんでした}}。文書検索を開き直して再試行してください。"
 
 #: apps/extension/src/SavedHighlights.tsx
 msgid "{hidden} not shown on this page, which may have changed since it was saved. They are still in the saved copy."
@@ -247,7 +247,7 @@ msgstr "{hidden}件はこのページに表示されていません。保存後�
 
 #: apps/extension/src/page-badge.ts
 msgid "{highlights, plural, one {Saved in mdbase Reader · # highlight} other {Saved in mdbase Reader · # highlights}}"
-msgstr "{highlights, plural, one {mdbase Readerに保存済み · ハイライト#件} other {mdbase Readerに保存済み · ハイライト#件}}"
+msgstr "{highlights, plural, other {mdbase Readerに保存済み · ハイライト#件}}"
 
 #. placeholder {0}: String(index + 1)
 #: apps/reader/src/CitationContributors.tsx
@@ -306,7 +306,7 @@ msgstr "{label}：{message}"
 
 #: apps/extension/src/SavedHighlights.tsx
 msgid "{links, plural, one { # note links to it; those links will break.} other { # notes link to it; those links will break.}}"
-msgstr "{links, plural, one { #件のノートがリンクしています。リンク切れになります。} other { #件のノートがリンクしています。リンク切れになります。}}"
+msgstr "{links, plural, other { #件のノートがリンクしています。リンク切れになります。}}"
 
 #: packages/migration/src/zotero-bundle.ts
 msgid "{name} count mismatch."
@@ -326,7 +326,7 @@ msgstr "{name}の値"
 
 #: apps/extension/src/page-badge.ts
 msgid "{posts, plural, one {# saved post} other {# saved posts}} in mdbase Reader · {highlights, plural, one {# highlight on visible posts} other {# highlights on visible posts}}"
-msgstr "{posts, plural, one {保存済みの投稿#件} other {保存済みの投稿#件}} · mdbase Reader · {highlights, plural, one {表示中の投稿のハイライト#件} other {表示中の投稿のハイライト#件}}"
+msgstr "{posts, plural, other {保存済みの投稿#件}} · mdbase Reader · {highlights, plural, other {表示中の投稿のハイライト#件}}"
 
 #. placeholder {0}: count.toLocaleString(i18n.locale)
 #: packages/migration/src/readwise-values.ts
@@ -339,7 +339,7 @@ msgstr "{total}件中{results}件"
 
 #: apps/reader/src/SelectionToolbar.tsx
 msgid "{state, plural, one {In # note · Review} other {In # notes · Review}}"
-msgstr "{state, plural, one {#件のノート内 · 確認} other {#件のノート内 · 確認}}"
+msgstr "{state, plural, other {#件のノート内 · 確認}}"
 
 #: apps/reader/src/DockviewWorkspace.tsx
 msgid "{title} · Drag to move or split · Right-click for pane actions · Delete closes the tab"
@@ -347,11 +347,11 @@ msgstr "{title} · ドラッグして移動・分割 · 右クリックでペイ
 
 #: apps/reader/src/CitationEditor.tsx
 msgid "{warnings, plural, one {# quality suggestion} other {# quality suggestions}}"
-msgstr "{warnings, plural, one {品質に関する提案：#件} other {品質に関する提案：#件}}"
+msgstr "{warnings, plural, other {品質に関する提案：#件}}"
 
 #: apps/reader/src/CitationEditor.tsx
 msgid "{warnings, plural, one {Show # quality suggestion} other {Show # quality suggestions}}"
-msgstr "{warnings, plural, one {品質に関する提案#件を表示} other {品質に関する提案#件を表示}}"
+msgstr "{warnings, plural, other {品質に関する提案#件を表示}}"
 
 #: apps/reader/src/CitationContributors.tsx
 msgid "+ Add{itemLabel}"
@@ -2985,13 +2985,13 @@ msgstr "資料をエクスポート"
 #. placeholder {0}: items.length
 #: apps/reader/src/use-bibliography-export.ts
 msgid "Exported {0, plural, one {# citation} other {# citations}}."
-msgstr "{0, plural, one {#件の引用をエクスポートしました。} other {#件の引用をエクスポートしました。}}"
+msgstr "{0, plural, other {#件の引用をエクスポートしました。}}"
 
 #. placeholder {0}: bundle.canonicalRecordCount
 #. placeholder {1}: bundle.originalFileCount
 #: apps/reader/src/use-source-export.ts
 msgid "Exported {0, plural, one {# record} other {# records}} and {1, plural, one {# original file} other {# original files}}."
-msgstr "{0, plural, one {#件のレコード} other {#件のレコード}}と{1, plural, one {#件の元ファイルをエクスポートしました。} other {#件の元ファイルをエクスポートしました。}}"
+msgstr "{0, plural, other {#件のレコード}}と{1, plural, other {#件の元ファイルをエクスポートしました。}}"
 
 #: apps/reader/src/ImportInput.tsx
 msgid "Exported folder"
@@ -2999,7 +2999,7 @@ msgstr "エクスポートしたフォルダー"
 
 #: apps/reader/src/use-source-export.ts
 msgid "Exported with {problemCount, plural, one {# item} other {# items}} to review."
-msgstr "エクスポートしました。{problemCount, plural, one {確認が必要な項目：#件} other {確認が必要な項目：#件}}"
+msgstr "エクスポートしました。{problemCount, plural, other {確認が必要な項目：#件}}"
 
 #: apps/reader/src/CitationTypedFieldEditors.tsx
 msgctxt "CitationTypedFieldEditors booleanOptions"
@@ -3454,7 +3454,7 @@ msgstr "エクスポートしたバンドルをインポート →"
 #. placeholder {0}: result.verified
 #: apps/reader/src/import-controller.ts
 msgid "Import complete into {name}. {0, plural, one {# record verified} other {# records verified}}."
-msgstr "{name}へのインポートが完了しました。{0, plural, one {#件のレコードを検証済み} other {#件のレコードを検証済み}}。"
+msgstr "{name}へのインポートが完了しました。{0, plural, other {#件のレコードを検証済み}}。"
 
 #. placeholder {0}: service === "zotero" ? "Zotero" : "Readwise Reader"
 #: apps/reader/src/ImportPageView.tsx

@@ -23,7 +23,7 @@
     "test:a11y": "node scripts/audit-accessibility.mjs"
   },
   "dependencies": {
-    "@mdbase-dev/i18n": "file:../../vendor/mdbase-dev-i18n-0.1.0-beta.141-b4134d71.tgz",
+    "@mdbase-dev/i18n": "file:../../vendor/mdbase-dev-i18n-0.1.0-beta.141-8785bd19.tgz",
     "@citation-js/plugin-csl": "0.8.2",
     "@lingui/core": "6.9.0",
     "@lingui/react": "6.9.0",
