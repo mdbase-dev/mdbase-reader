@@ -606,11 +606,13 @@ export function useExtensionCapture(
 }
 
 /** Only the title is editable here; preserve every other citation field and its evidence. */
+/** A cleared title keeps the resolved one: a citation without a title is not a citation. */
 function citationWithDraftTitle(
   preview: CitationPreview | null,
-  title: string,
+  draftTitle: string,
 ): CitationPreview | null {
-  if (!preview || preview.citation["title"] === title) {
+  const title = draftTitle.trim();
+  if (!preview || !title || preview.citation["title"] === title) {
     return preview;
   }
   return {

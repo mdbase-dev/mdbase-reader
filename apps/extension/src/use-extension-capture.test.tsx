@@ -459,7 +459,7 @@ it("upgrades an untouched visible citation and title without resetting the rest 
   await act(async () => lookup.finish(upgradedCitation));
 });
 
-it.each(["My title", "", "Page title"])(
+it.each(["My title", "Page title"])(
   "keeps an edited title (%s) while upgrading other untouched citation fields",
   async (title) => {
     const lookup = pendingCitation();
@@ -471,6 +471,19 @@ it.each(["My title", "", "Page title"])(
     expect(controller.draft.title).toBe(title);
     expect(controller.citation?.citation).toEqual({ ...upgradedCitation.citation, title });
     expect(controller.citation?.provenance["title"]).toEqual({ value: title, source: "user" });
+  },
+);
+
+it.each(["", "   "])(
+  "keeps the resolved citation title when the draft title is cleared (%j)",
+  async (title) => {
+    const lookup = pendingCitation();
+    await mount();
+    await act(async () => controller.setDraft((draft) => ({ ...draft, title })));
+    await act(async () => lookup.update(upgradedCitation));
+    await act(async () => lookup.finish(upgradedCitation));
+    expect(controller.draft.title).toBe(title);
+    expect(controller.citation).toEqual(upgradedCitation);
   },
 );
 
