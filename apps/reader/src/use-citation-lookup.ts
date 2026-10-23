@@ -86,10 +86,7 @@ export function useCitationLookup(input: {
       });
   };
   return {
-    resolutionAvailable:
-      input.gateway.citationClaims !== undefined ||
-      input.gateway.resolveCitation !== undefined ||
-      citationArchive(input.source) !== undefined,
+    resolutionAvailable: lookupAvailable(input.gateway, input.source),
     resolutionStatus: current?.status ?? "idle",
     resolutionError: current?.error ?? null,
     suggestions,
@@ -114,6 +111,14 @@ export function useCitationLookup(input: {
       setState(null);
     },
   };
+}
+
+function lookupAvailable(gateway: ReaderWorkspaceGateway, source: Source | null): boolean {
+  return (
+    gateway.citationClaims !== undefined ||
+    gateway.resolveCitation !== undefined ||
+    citationArchive(source) !== undefined
+  );
 }
 
 async function lookupClaims(
