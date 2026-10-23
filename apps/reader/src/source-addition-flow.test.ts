@@ -1,9 +1,12 @@
-import { collectionId, recordRevision, sourceId, type Source } from "@mdbase-reader/core";
-import { describe, expect, it, vi } from "vitest";
+import { collectionId, dateTime, recordRevision, sourceId, type Source } from "@mdbase-reader/core";
+import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { addSourceFromInput, type SourceAdditionServices } from "./source-addition-flow.js";
 
 import type { CaptureResult } from "./web-capture-client.js";
+import type { ClaimBatch, WebCaptureImport } from "@mdbase-reader/web-capture";
+
+afterEach(() => vi.unstubAllGlobals());
 
 const pdfBytes = new TextEncoder().encode("%PDF-1.7 fixture");
 
@@ -157,6 +160,139 @@ describe("adding a source from pasted text", () => {
     await expect(addSourceFromInput("Crime and Punishment", deps)).rejects.toThrow(
       "Paste a web address",
     );
+  });
+});
+
+function capturedPage(claims: ClaimBatch): WebCaptureImport {
+  return {
+    name: "example.readable.html",
+    title: "Captured title",
+    bytes: new TextEncoder().encode("<p>Captured article</p>"),
+    archive: { name: "example.archive.html", bytes: new Uint8Array() },
+    capture: {
+      submittedUrl: "https://example.com/article",
+      canonicalUrl: "https://example.com/article",
+      retrievedAt: dateTime("2026-10-21T00:00:00Z"),
+    },
+    metadata: {},
+    scholarly: {},
+    claims,
+  };
+}
+
+const pageClaims: ClaimBatch = {
+  claims: Object.entries({
+    type: "webpage",
+    title: "Page title",
+    author: [{ literal: "Page Author" }],
+  }).map(([field, value]) => ({
+    field,
+    value,
+    source: { kind: "page", signal: "json-ld" },
+    observedAt: "2026-10-21T00:00:00Z",
+  })),
+};
+
+describe("adding captured page citations", () => {
+  it("enables Citoid, saves the resolved citation as before and returns field provenance", async () => {
+    const fetch = vi.fn<typeof globalThis.fetch>().mockResolvedValue(
+      Response.json([
+        {
+          itemType: "encyclopediaArticle",
+          title: "Australia",
+          encyclopediaTitle: "Wikipedia",
+          date: "2026-10-20",
+        },
+      ]),
+    );
+    vi.stubGlobal("fetch", fetch);
+    const page = capturedPage(pageClaims);
+    const deps = services({ capture: vi.fn(() => Promise.resolve({ kind: "html", page })) });
+    const result = await addSourceFromInput(page.capture.canonicalUrl, deps);
+    expect(fetch.mock.calls[0]?.[0]).toBe(
+      `https://en.wikipedia.org/api/rest_v1/data/citation/zotero/${encodeURIComponent(page.capture.canonicalUrl)}`,
+    );
+    expect(deps.lookUp).not.toHaveBeenCalled();
+    expect(deps.workspace.importSourceFile).toHaveBeenCalledWith(
+      expect.objectContaining({
+        title: "Australia",
+        metadata: expect.objectContaining({ authors: ["Page Author"] }),
+      }),
+      undefined,
+    );
+    expect(deps.workspace.saveNewSourceCitation).toHaveBeenCalledWith(
+      source(),
+      expect.objectContaining({
+        title: "Australia",
+        type: "entry-encyclopedia",
+        "container-title": "Wikipedia",
+        author: [{ literal: "Page Author" }],
+      }),
+    );
+    expect(result).toMatchObject({
+      kind: "added",
+      provenance: {
+        title: { value: "Australia", source: "site-adapter:citoid/encyclopediaArticle" },
+      },
+    });
+  });
+
+  it("still saves page evidence when Citoid is unavailable", async () => {
+    const fetch = vi.fn<typeof globalThis.fetch>().mockRejectedValue(new Error("Offline"));
+    vi.stubGlobal("fetch", fetch);
+    const page = capturedPage(pageClaims);
+    const deps = services({ capture: vi.fn(() => Promise.resolve({ kind: "html", page })) });
+    const result = await addSourceFromInput(page.capture.canonicalUrl, deps);
+    expect(result).toMatchObject({
+      kind: "added",
+      provenance: { title: { value: "Page title", source: "page:json-ld" } },
+    });
+    expect(deps.workspace.saveNewSourceCitation).toHaveBeenCalledWith(
+      source(),
+      expect.objectContaining({ title: "Page title" }),
+    );
+  });
+
+  it("does not send social post URLs to remote providers or change their citation", async () => {
+    const fetch = vi.fn<typeof globalThis.fetch>();
+    vi.stubGlobal("fetch", fetch);
+    const citation = { type: "post", title: "A post", author: [{ literal: "A poster" }] };
+    const page: WebCaptureImport = {
+      ...capturedPage({ claims: [] }),
+      scholarly: { citation },
+      metadata: {
+        socialPost: {
+          platform: "bluesky",
+          id: "post",
+          url: "https://bsky.app/profile/fixture.test/post/first",
+          author: { id: "poster", name: "A poster", handle: "fixture.test" },
+          threadRoot: "post",
+          threadPartial: false,
+          parts: [],
+        },
+      },
+    };
+    const deps = services({ capture: vi.fn(() => Promise.resolve({ kind: "html", page })) });
+    await addSourceFromInput("https://bsky.app/profile/fixture.test/post/first", deps);
+    expect(fetch).not.toHaveBeenCalled();
+    expect(deps.workspace.saveNewSourceCitation).toHaveBeenCalledWith(source(), citation);
+  });
+
+  it("does not import after a caller cancels a remote lookup", async () => {
+    const controller = new AbortController();
+    const fetch = vi.fn<typeof globalThis.fetch>(() => new Promise(() => undefined));
+    vi.stubGlobal("fetch", fetch);
+    const page = capturedPage(pageClaims);
+    const deps = services({
+      capture: vi.fn(() => Promise.resolve({ kind: "html", page })),
+      signal: controller.signal,
+    });
+    const result = addSourceFromInput(page.capture.canonicalUrl, deps);
+    const rejected = expect(result).rejects.toThrow("Cancelled");
+    await vi.waitFor(() => expect(fetch).toHaveBeenCalledOnce());
+    controller.abort(new Error("Cancelled"));
+    await rejected;
+    expect(deps.workspace.importSourceFile).not.toHaveBeenCalled();
   });
 });
 

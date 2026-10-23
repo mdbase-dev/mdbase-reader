@@ -18,6 +18,7 @@ import type { CapturedPdfFile, CaptureResult } from "./web-capture-client.js";
 import type {
   CitationCandidate,
   CitationResolutionRequest,
+  CslProvenance,
   Source,
   SourceImportMetadata,
   SourceImportOptions,
@@ -42,7 +43,12 @@ export interface SourceAdditionServices extends PdfSearchServices {
 }
 
 export type SourceAdditionOutcome =
-  | { readonly kind: "added"; readonly source: Source; readonly notices: readonly string[] }
+  | {
+      readonly kind: "added";
+      readonly source: Source;
+      readonly notices: readonly string[];
+      readonly provenance?: CslProvenance;
+    }
   /** The workspace reported why nothing was written. */
   | { readonly kind: "not-added" }
   /** The page could not be fetched, but its citation was found and can be saved alone. */
@@ -93,12 +99,15 @@ async function addFromUrl(
   }
   const { page } = captured;
   services.onStatus("Looking up citation details…");
-  const preview = await citationForPage(
-    page.scholarly,
-    page.capture.canonicalUrl,
-    signalOf(services),
-  );
-  const fields = preview ? citationFields(preview.citation) : undefined;
+  const preview = page.metadata.socialPost
+    ? null
+    : await citationForPage(page.claims, page.capture.canonicalUrl, {
+        ...signalOf(services),
+        citoid: {},
+      });
+  const citation =
+    preview?.citation ?? (page.metadata.socialPost ? page.scholarly.citation : undefined);
+  const fields = citation ? citationFields(citation) : undefined;
   const source = await services.workspace.importSourceFile(
     {
       name: page.name,
@@ -112,7 +121,7 @@ async function addFromUrl(
     },
     services.importOptions,
   );
-  return finish(source, preview?.citation, services);
+  return finish(source, citation, services, preview?.provenance);
 }
 
 function assertSocialInput(url: string): ReturnType<typeof postAddress> {
@@ -212,22 +221,26 @@ async function finish(
   source: Source | null,
   citation: CitationDraft | Readonly<Record<string, unknown>> | undefined,
   services: Pick<SourceAdditionServices, "workspace">,
+  provenance?: CslProvenance,
 ): Promise<SourceAdditionOutcome> {
   if (!source) {
     return { kind: "not-added" };
   }
+  const evidence = provenance ? { provenance } : {};
   const save = services.workspace.saveNewSourceCitation;
   if (!citation || !save || source.citation) {
-    return { kind: "added", source, notices: [] };
+    return { kind: "added", source, notices: [], ...evidence };
   }
   // A candidate's placeholder citekey is replaced with one unique in the collection.
   const fields = Object.fromEntries(Object.entries(citation).filter(([key]) => key !== "id"));
   try {
-    return { kind: "added", source: await save(source, fields), notices: [] };
+    // TODO: persist csl-provenance when saveNewSourceCitation accepts field provenance.
+    return { kind: "added", source: await save(source, fields), notices: [], ...evidence };
   } catch (reason) {
     return {
       kind: "added",
       source,
+      ...evidence,
       notices: [
         `The citation was not stored: ${messageOf(reason)} Add it from the citation panel.`,
       ],
