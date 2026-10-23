@@ -188,9 +188,23 @@ Remaining opportunities:
   and digest revision. PDF/EPUB and larger saved pages still use loaded-document
   search, capped at its first 1,000,000 characters. Coverage and storage fallback
   remain explicit.
-- Passage-level document destinations. Results currently open the correct source
-  or note surface; document results tell the user to use the renderer's Find
-  control rather than pretending to have a precise PDF/EPUB locator.
+- Loaded-document results now carry revision-bound passage destinations (PDF page,
+  EPUB spine href, or HTML quotation). The renderers verify quotation evidence before
+  jumping and draw a separate, 12-second search highlight without saving an annotation.
+  A focused status announces the passage or an explicit Find fallback. Approximate,
+  ambiguous, changed-revision and unsupported destinations are not silently substituted.
+  PDF/EPUB native text navigation conservatively falls back on repeated native hits,
+  even when annotation quotation context alone could distinguish them. The core
+  `SearchDestination` contract is independent of the session index and can also be
+  populated by a persistent index; results found only through the HTML library index
+  do not carry one yet.
+
+  Fixture browser verification: `node apps/reader/scripts/audit-search-passages.mjs`
+  against an owned loopback Vite server covers Enter activation and focused announcements,
+  HTML range visibility, real PDF/EPUB rendering and transient highlights, plus ambiguity
+  fallback. It intercepts all collection requests and refuses annotation writes; it is
+  not connected LAB acceptance.
+
 - Cold-start offline authentication/collection discovery. Open a collection while
   connected first; the new document cache is not a complete offline mirror.
 - Browser cache quota management across many historical revisions, multi-window

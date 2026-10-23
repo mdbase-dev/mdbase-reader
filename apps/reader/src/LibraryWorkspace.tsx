@@ -61,6 +61,7 @@ import type {
   ReadingStatus,
   Source,
   SourceId,
+  SearchDestination,
   SourceSummary,
 } from "@mdbase-reader/core";
 import type { ReadingSurface } from "@mdbase-reader/reading-surface";
@@ -94,7 +95,11 @@ export function LibraryWorkspace({
   readonly bibliographyExport: BibliographyExportController;
   readonly onSourceChanged?: (source: Source) => void;
   readonly surfaces?: ReadonlyMap<string, ReadingSurface>;
-  readonly onOpenSourceView?: (id: SourceId, view: "document" | "note" | "annotations") => void;
+  readonly onOpenSourceView?: (
+    id: SourceId,
+    view: "document" | "note" | "annotations",
+    destination?: SearchDestination,
+  ) => void;
   readonly view: MdbaseLibraryView;
   readonly availableViews: readonly MdbaseLibraryView[];
   readonly allSources: readonly SourceSummary[];
@@ -530,8 +535,8 @@ export function LibraryWorkspace({
                 sources={sources}
                 gateway={gateway}
                 surfaces={surfaces}
-                onOpen={(id, view) =>
-                  onOpenSourceView ? onOpenSourceView(id, view) : onOpenSource(id)
+                onOpen={(id, view, destination) =>
+                  onOpenSourceView ? onOpenSourceView(id, view, destination) : onOpenSource(id)
                 }
               />
             ) : sources.length === 0 && !loading && !(indexLoading && !view.path) ? (

@@ -26,6 +26,7 @@ export * from "./domain/errors.js";
 export * from "./domain/identity.js";
 export * from "./domain/revision.js";
 export type * from "./domain/search.js";
+export * from "./domain/search-destination.js";
 export * from "./domain/selector.js";
 export * from "./domain/source.js";
 export type * from "./domain/social-post.js";

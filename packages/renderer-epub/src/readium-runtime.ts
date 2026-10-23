@@ -18,10 +18,16 @@ import { annotationToEpubDecoration, applyAnnotationDecorations } from "./epub-d
 import { EpubFrameEnhancements, clearFrameSelections } from "./epub-frames.js";
 import { sessionReadiumLocatorForPublication, stableReadiumLocator } from "./epub-locator.js";
 import { safePublicationFetch } from "./epub-safe-fetch.js";
+import { createEpubSearch } from "./epub-search.js";
 import { extractPublicationText } from "./epub-text.js";
 import { selectedTextDraft } from "./readium-selection.js";
 
-import type { Annotation, AnnotationId } from "@mdbase-reader/core";
+import type {
+  Annotation,
+  AnnotationId,
+  SearchDestination,
+  SearchTextSegment,
+} from "@mdbase-reader/core";
 import type {
   ContentsEntry,
   EventSource,
@@ -40,6 +46,11 @@ export interface ReadiumRuntime {
   goToContents?(id: string): Promise<boolean>;
   clearSelection(): void;
   extractText(options?: { readonly signal?: AbortSignal }): Promise<string>;
+  extractSearchSegments?(options?: {
+    readonly signal?: AbortSignal;
+  }): Promise<readonly SearchTextSegment[]>;
+  goToSearchDestination?(destination: SearchDestination): Promise<boolean>;
+  clearSearch?(): void;
   onLocationChanged(listener: (locator: Readonly<Record<string, unknown>>) => void): Unsubscribe;
   onTextSelected(listener: (selection: TextSelectionDraft) => void): Unsubscribe;
   onSelectionCleared?(listener: () => void): Unsubscribe;
@@ -162,6 +173,7 @@ export async function createReadiumRuntime(input: {
     ...sectionNavigation(publication, navigator, motion.settle),
     clearSelection: () => clearFrameSelections(input.container),
     extractText: (options) => extractPublicationText(publication, options?.signal),
+    ...createEpubSearch(navigator, publication, input.publicationBaseUrl, motion.settle),
     onLocationChanged(listener) {
       locationListeners.add(listener);
       return () => locationListeners.delete(listener);

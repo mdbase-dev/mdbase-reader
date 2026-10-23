@@ -1,4 +1,5 @@
 import { AnnotationPlugin } from "@embedpdf/plugin-annotation";
+import { SearchPlugin } from "@embedpdf/plugin-search";
 import { SelectionPlugin } from "@embedpdf/plugin-selection";
 import {
   CapturePlugin,
@@ -10,11 +11,17 @@ import {
 
 import { createEmbedPdfAnnotationActivations } from "./embedpdf-annotation-activation.js";
 import { createPdfDecorationController } from "./pdf-decoration-controller.js";
+import { createPdfSearch } from "./pdf-search.js";
 import { observePdfSelection, type PdfSelectionAdjustment } from "./pdf-selection-publication.js";
 
 import type { PdfDocumentObject, PdfEngine } from "@embedpdf/models";
 import type { CaptureAreaEvent } from "@embedpdf/plugin-capture";
-import type { Annotation, AnnotationId } from "@mdbase-reader/core";
+import type {
+  Annotation,
+  AnnotationId,
+  SearchTextSegment,
+  SearchDestination,
+} from "@mdbase-reader/core";
 import type {
   AreaSelectionDraft,
   EventSource,
@@ -39,6 +46,11 @@ export interface EmbedPdfRuntime {
   onAnnotationActivated(listener: (annotationId: AnnotationId) => void): Unsubscribe;
   clearTextSelection(): void;
   extractText(options?: { readonly signal?: AbortSignal }): Promise<string>;
+  extractSearchSegments?(options?: {
+    readonly signal?: AbortSignal;
+  }): Promise<readonly SearchTextSegment[]>;
+  goToSearchDestination?(destination: SearchDestination): Promise<boolean>;
+  clearSearch?(): void;
   setAnnotations(annotations: readonly Annotation[]): void;
   setActiveAnnotation(annotation: Annotation | null): void;
   destroy(): void;
@@ -81,6 +93,16 @@ export function createEmbedPdfRuntime(
   const decorations = createPdfDecorationController(annotationCapability);
   const annotationActivations = createEmbedPdfAnnotationActivations(annotationCapability);
   const subscriptions = new Set<Unsubscribe>();
+  const search = registry.getPlugin<SearchPlugin>(SearchPlugin.id)?.provides();
+  const getDocument = (signal?: AbortSignal): Promise<PdfDocumentObject> =>
+    registryPdfDocument(registry, signal);
+
+  const searchRuntime = createPdfSearch({
+    engine: registry.getEngine(),
+    document: getDocument,
+    search,
+    scroll,
+  });
 
   return {
     currentPageIndex: () => Math.max(0, scroll.getCurrentPage() - 1),
@@ -88,14 +110,10 @@ export function createEmbedPdfRuntime(
     beginAreaSelection: () => capture.enableMarqueeCapture(),
     cancelAreaSelection: () => capture.disableMarqueeCapture(),
     onPageChanged(listener) {
-      const unsubscribe = scroll.onPageChange((event) =>
-        listener(Math.max(0, event.pageNumber - 1)),
+      return trackSubscription(
+        subscriptions,
+        scroll.onPageChange((event) => listener(Math.max(0, event.pageNumber - 1))),
       );
-      subscriptions.add(unsubscribe);
-      return () => {
-        subscriptions.delete(unsubscribe);
-        unsubscribe();
-      };
     },
     ...(viewport
       ? {
@@ -120,14 +138,10 @@ export function createEmbedPdfRuntime(
         }
       : {}),
     onAreaSelected(listener) {
-      const unsubscribe = capture.onCaptureArea((event) =>
-        listener(captureEventToAreaSelection(event)),
+      return trackSubscription(
+        subscriptions,
+        capture.onCaptureArea((event) => listener(captureEventToAreaSelection(event))),
       );
-      subscriptions.add(unsubscribe);
-      return () => {
-        subscriptions.delete(unsubscribe);
-        unsubscribe();
-      };
     },
     onTextSelected(listener) {
       const unsubscribe = observePdfSelection(selection, listener, adjustments);
@@ -164,16 +178,14 @@ export function createEmbedPdfRuntime(
     },
     clearTextSelection: () => selection.clear(),
     async extractText(options) {
-      const manager = registry.getPlugin<DocumentManagerPlugin>(DocumentManagerPlugin.id);
-      if (!manager) {
-        throw new Error("EmbedPDF did not initialize its document manager.");
-      }
-      const document = await activePdfDocument(manager.provides(), options?.signal);
+      const document = await getDocument(options?.signal);
       return extractPdfDocumentText(registry.getEngine(), document, options?.signal);
     },
+    ...searchRuntime,
     setAnnotations: (annotations) => decorations.setAnnotations(annotations),
     setActiveAnnotation: (annotation) => decorations.setActiveAnnotation(annotation),
     destroy() {
+      searchRuntime.clearSearch();
       decorations.destroy();
       annotationActivations.destroy();
       for (const unsubscribe of subscriptions) {
@@ -182,6 +194,25 @@ export function createEmbedPdfRuntime(
       subscriptions.clear();
     },
   };
+}
+
+function trackSubscription(subscriptions: Set<Unsubscribe>, stop: Unsubscribe): Unsubscribe {
+  subscriptions.add(stop);
+  return () => {
+    subscriptions.delete(stop);
+    stop();
+  };
+}
+
+function registryPdfDocument(
+  registry: PluginRegistry,
+  signal?: AbortSignal,
+): Promise<PdfDocumentObject> {
+  const manager = registry.getPlugin<DocumentManagerPlugin>(DocumentManagerPlugin.id);
+  if (!manager) {
+    return Promise.reject(new Error("EmbedPDF did not initialize its document manager."));
+  }
+  return activePdfDocument(manager.provides(), signal);
 }
 
 type DocumentManagerCapability = ReturnType<DocumentManagerPlugin["provides"]>;

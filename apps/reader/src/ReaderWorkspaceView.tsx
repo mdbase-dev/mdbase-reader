@@ -17,12 +17,14 @@ import { readerCommands } from "./reader-command-list.js";
 import { ReaderHeader } from "./ReaderHeader.js";
 import { RenderedSourceDocument } from "./RenderedSourceDocument.js";
 import { useSdkConnectionState } from "./sdk-connection-state.js";
+import { SearchPassageStatus } from "./SearchPassageStatus.js";
 import { SourceAdditionOverlays } from "./SourceAdditionOverlays.js";
 import { SourceRemovalDialog } from "./SourceRemovalDialog.js";
 import { useAnnotationCounts } from "./use-annotation-counts.js";
 import { useFileDrop } from "./use-file-drop.js";
 import { useMediaQuery } from "./use-media-query.js";
 import { useReadingChrome } from "./use-reading-chrome.js";
+import { useSearchNavigation } from "./use-search-navigation.js";
 import {
   useWorkspaceShellPreferences,
   type WorkspaceShellPreferencesController,
@@ -117,6 +119,7 @@ export function ReaderWorkspaceView({
     [dock],
   );
   const pendingAnnotationRef = useRef<PendingWorkspaceAnnotation | null>(null);
+  const searchNavigation = useSearchNavigation(sourceWorkspace, model.surfaces);
   const fileDrop = useFileDrop((file) => void sourceAddition.addFile(file));
   const routedEditingIdRef = useRef(composer.editingAnnotationId);
   const commands = commandsForView(model, () => dock.toggleSidebar("right"), {
@@ -228,6 +231,7 @@ export function ReaderWorkspaceView({
         sourceBar={mobileSourceBar(model)}
       />
       <main className="reader-main reader-dock-main">
+        <SearchPassageStatus message={searchNavigation.message} />
         <DockviewWorkspace
           navigator={
             <LibraryNavigator
@@ -316,7 +320,7 @@ export function ReaderWorkspaceView({
                 indexLoading={library.sourceIndex?.complete === false}
                 gateway={model.gateway}
                 surfaces={model.surfaces}
-                onOpenSourceView={(id, view) => sourceWorkspace.openView(id, view)}
+                onOpenSourceView={searchNavigation.open}
                 controller={model.libraryViews}
                 focused={focused}
                 onOpenView={(next) => sourceWorkspace.openLibrary(next.key, next.name)}

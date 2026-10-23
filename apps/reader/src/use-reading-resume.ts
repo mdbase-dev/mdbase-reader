@@ -1,6 +1,10 @@
 import { useEffect, useRef, useState } from "react";
 
 import { readerErrorMessage } from "./errors.js";
+import {
+  hasExplicitReadingNavigation,
+  restoreReadingLocation,
+} from "./reading-navigation-priority.js";
 import { restoredSessionLocation } from "./session-reading-locations.js";
 
 import type { FileId, ReadingPosition, Source, SourceId } from "@mdbase-reader/core";
@@ -48,13 +52,14 @@ export function useReadingResume(input: {
       return;
     }
     resumed.current = surface;
+    if (hasExplicitReadingNavigation(surface)) {
+      return;
+    }
     const local = restoredSessionLocation(surface);
     if (local) {
-      void surface
-        .goTo(local)
-        .catch(() =>
-          setState({ status: "error", message: "Could not restore this tab’s reading position." }),
-        );
+      void restoreReadingLocation(surface, local).catch(() =>
+        setState({ status: "error", message: "Could not restore this tab’s reading position." }),
+      );
       return;
     }
     const reading = source.reading;
@@ -63,11 +68,9 @@ export function useReadingResume(input: {
       reading.documentFileId === surface.document.document.fileId &&
       reading.position.kind === surface.kind
     ) {
-      void surface
-        .goTo(reading.position)
-        .catch(() =>
-          setState({ status: "error", message: "Could not restore the saved reading position." }),
-        );
+      void restoreReadingLocation(surface, reading.position).catch(() =>
+        setState({ status: "error", message: "Could not restore the saved reading position." }),
+      );
     }
   }, [source, sourceId, surface]);
 

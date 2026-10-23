@@ -1,4 +1,4 @@
-import { matchTextQuote, type TextQuote } from "@mdbase-reader/core";
+import { matchTextQuote, resolveSearchQuote, type TextQuote } from "@mdbase-reader/core";
 
 export type { TextQuote } from "@mdbase-reader/core";
 
@@ -17,6 +17,13 @@ export function createTextQuoteLocator(root: Element): (quote: TextQuote) => Ran
     const match = matchTextQuote(index.text, quote);
     return match ? rangeAt(root.ownerDocument, index.nodes, match.start, match.end) : null;
   };
+}
+
+/** Strict search uses the same DOM range machinery without fuzzy annotation reanchoring. */
+export function locateSearchQuote(root: Element, quote: TextQuote): Range | null {
+  const index = textIndex(root);
+  const match = resolveSearchQuote(index.text, quote);
+  return match ? rangeAt(root.ownerDocument, index.nodes, match.start, match.end) : null;
 }
 
 interface IndexedText {

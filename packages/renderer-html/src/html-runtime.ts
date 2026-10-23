@@ -1,6 +1,7 @@
 import {
   MarginMarkers,
   forwardApplicationShortcut,
+  locateSearchQuote,
   scrollMotionTracker,
   selectionRangeKey,
   watchSettledSelection,
@@ -13,7 +14,7 @@ import { HtmlTargetLocator, htmlLocator, htmlSelectionDraft } from "./html-range
 import { scrollHtmlElement } from "./html-scroll.js";
 import { applyHtmlTypography } from "./html-typography.js";
 
-import type { Annotation, AnnotationId } from "@mdbase-reader/core";
+import type { Annotation, AnnotationId, QuoteSelector } from "@mdbase-reader/core";
 import type {
   ContentsEntry,
   ReaderLocator,
@@ -204,6 +205,31 @@ export class HtmlDocumentRuntime {
     this.#reportedRange = null;
   }
 
+  public clearSearch(): void {
+    setCssHighlight(this.#view, "reader-search-passage", []);
+  }
+
+  public goToSearchQuote(quote: QuoteSelector): boolean {
+    this.clearSearch();
+    const range = locateSearchQuote(this.#document.body, quote);
+    if (!range) {
+      return false;
+    }
+    setCssHighlight(this.#view, "reader-search-passage", [range]);
+    const element = parentElement(range.startContainer);
+    if (!element) {
+      return false;
+    }
+    this.#motion.settle("jump");
+    const bounds = range.getBoundingClientRect();
+    this.#view.scrollTo({
+      top: Math.max(0, this.#view.scrollY + bounds.top - this.#view.innerHeight / 2),
+      behavior: "instant",
+    });
+    this.#frame.focus();
+    return true;
+  }
+
   public extractText(): string {
     return htmlDocumentText(this.#document);
   }
@@ -222,6 +248,7 @@ export class HtmlDocumentRuntime {
     this.#reflow?.disconnect();
     this.#markers.destroy();
     this.#targets.destroy();
+    this.clearSearch();
     clearCssHighlights(this.#view);
     this.#locationListeners.clear();
     this.#selectionListeners.clear();
