@@ -158,7 +158,7 @@ const stillWrong: Record<string, { readonly page: string[]; readonly remote: str
   },
   "usenix-raft": { page: ["issued", "publisher"], remote: ["issued", "publisher", "ISBN"] },
   "zenodo-urban-sound": {
-    page: ["type", "issued", "publisher", "version"],
+    page: ["version"],
     remote: ["version", "URL"],
   },
 };
