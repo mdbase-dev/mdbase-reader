@@ -183,9 +183,11 @@ routing/authorization and real collection performance still require LAB retestin
 
 Remaining opportunities:
 
-- A persistent, revision-keyed whole-library document index. Currently only loaded
-  supported documents are searched; suspended/unopened documents are explicitly
-  excluded. Each loaded document is capped at its first 1,000,000 characters.
+- Whole-library PDF/EPUB indexing. The [device-local HTML index](library-text-index.md)
+  now covers unopened/suspended saved pages up to 256 KiB, keyed by file identity
+  and digest revision. PDF/EPUB and larger saved pages still use loaded-document
+  search, capped at its first 1,000,000 characters. Coverage and storage fallback
+  remain explicit.
 - Passage-level document destinations. Results currently open the correct source
   or note surface; document results tell the user to use the renderer's Find
   control rather than pretending to have a precise PDF/EPUB locator.

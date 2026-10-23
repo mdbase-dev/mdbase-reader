@@ -7,6 +7,7 @@ import {
 } from "@mdbase-reader/reading-surface";
 
 import { clearCssHighlights, setCssHighlight, setCssHighlights } from "./html-css-highlights.js";
+import { htmlDocumentText } from "./html-document.js";
 import { followEmbedderPalette } from "./html-palette.js";
 import { HtmlTargetLocator, htmlLocator, htmlSelectionDraft } from "./html-range.js";
 import { scrollHtmlElement } from "./html-scroll.js";
@@ -204,7 +205,7 @@ export class HtmlDocumentRuntime {
   }
 
   public extractText(): string {
-    return this.#document.body.textContent;
+    return htmlDocumentText(this.#document);
   }
 
   public destroy(): void {

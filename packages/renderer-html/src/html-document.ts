@@ -21,12 +21,26 @@ const unwrappedElements = ["form", "button"] as const;
 
 const urlAttributes = ["href", "src", "poster", "action", "formaction", "xlink:href"] as const;
 
-export function prepareHtmlDocument(source: string): string {
-  // A parsed document is inert: nothing loads before its attributes are sanitized below.
+/** Shared with background indexing: omit exactly the renderer's blocked content. */
+export function extractArchivedHtmlText(source: string): string {
+  return htmlDocumentText(parseHtmlDocument(source));
+}
+
+export function htmlDocumentText(document: Document): string {
+  return document.body.textContent;
+}
+
+function parseHtmlDocument(source: string): Document {
   const parsed = new DOMParser().parseFromString(source, "text/html");
   for (const element of parsed.querySelectorAll(blockedElements.join(","))) {
     element.remove();
   }
+  return parsed;
+}
+
+export function prepareHtmlDocument(source: string): string {
+  // A parsed document is inert: nothing loads before its attributes are sanitized below.
+  const parsed = parseHtmlDocument(source);
   // Removing these would drop text the original page shows, such as a page wrapped in a form.
   for (const element of parsed.querySelectorAll(unwrappedElements.join(","))) {
     element.replaceWith(...element.childNodes);

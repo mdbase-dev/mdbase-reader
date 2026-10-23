@@ -148,7 +148,11 @@ export default tseslint.config(
   {
     files: ["apps/reader/src/**/*.{ts,tsx}"],
     // Renderer integration points: document display, and reading a file's details before import.
-    ignores: ["apps/reader/src/ConnectedDocument.tsx", "apps/reader/src/document-details.ts"],
+    ignores: [
+      "apps/reader/src/ConnectedDocument.tsx",
+      "apps/reader/src/document-details.ts",
+      "apps/reader/src/document-text-extraction.ts",
+    ],
     rules: {
       "no-restricted-imports": [
         "error",
