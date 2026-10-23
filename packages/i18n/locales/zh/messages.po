@@ -1086,116 +1086,116 @@ msgstr "蓝色"
 #: apps/reader/src/SourceNoteEditor.tsx
 msgctxt "SourceNoteEditor formatActions"
 msgid "Bold"
-msgstr ""
+msgstr "加粗"
 
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "Book"
-msgstr ""
+msgstr "图书"
 
 #: apps/reader/src/citation-form-model.ts
 msgctxt "CSL item type"
 msgid "Book"
-msgstr ""
+msgstr "图书"
 
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "Book chapter"
-msgstr ""
+msgstr "图书章节"
 
 #: apps/reader/src/citation-form-model.ts
 msgctxt "CSL item type"
 msgid "Book chapter"
-msgstr ""
+msgstr "图书章节"
 
 #: apps/reader/src/annotation-kind.ts
 msgid "Bookmark"
-msgstr ""
+msgstr "书签"
 
 #: apps/reader/src/AnnotationPanelActions.tsx
 msgctxt "AnnotationPanelActions interface"
 msgid "Bookmark"
-msgstr ""
+msgstr "书签"
 
 #: apps/reader/src/AnnotationPanelActions.tsx
 msgid "Bookmark the current reading position"
-msgstr ""
+msgstr "为当前阅读位置添加书签"
 
 #: apps/reader/src/DocumentContextualToolbar.tsx
 #: apps/reader/src/reader-app-commands.ts
 msgid "Bookmark this position"
-msgstr ""
+msgstr "为此位置添加书签"
 
 #: apps/reader/src/AnnotationPanelActions.tsx
 msgctxt "AnnotationPanelActions interface"
 msgid "Bookmarking…"
-msgstr ""
+msgstr "正在添加书签…"
 
 #: apps/reader/src/AnnotationList.tsx
 msgctxt "AnnotationList annotationFilterOptions"
 msgid "Bookmarks"
-msgstr ""
+msgstr "书签"
 
 #: apps/reader/src/LibraryAnnotationToolbar.tsx
 msgctxt "LibraryAnnotationToolbar annotationTypeOptions"
 msgid "Bookmarks"
-msgstr ""
+msgstr "书签"
 
 #: packages/migration/src/readwise.ts
 msgid "Books from Kindle, Apple Books, Instapaper, podcasts and other classic Readwise sources are imported as metadata and highlights only; Readwise does not provide their text or files. Their locations are Readwise's labels (such as Kindle locations), not positions Reader can open."
-msgstr ""
+msgstr "来自 Kindle、Apple Books、Instapaper、播客及其他经典 Readwise 来源的书籍只会作为元数据和高亮导入；Readwise 不提供它们的文本或文件。它们的位置是 Readwise 的标签（例如 Kindle 位置），而非 Reader 可以打开的位置。"
 
 #: apps/reader/src/ImportPageView.tsx
 msgid "Bring your library with you."
-msgstr ""
+msgstr "带上你的文献库。"
 
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "Broadcast"
-msgstr ""
+msgstr "广播节目"
 
 #: apps/reader/src/SourceNoteEditor.tsx
 msgctxt "SourceNoteEditor formatActions"
 msgid "Bullet list"
-msgstr ""
+msgstr "项目符号列表"
 
 #: packages/migration/src/zotero.ts
 msgid "Bundle file changed since preview."
-msgstr ""
+msgstr "数据包在预览后已发生更改。"
 
 #: packages/migration/src/zotero.ts
 msgid "Bundle has no library identity."
-msgstr ""
+msgstr "数据包没有文献库标识。"
 
 #: packages/migration/src/zotero.ts
 msgid "Bundle manifest is missing."
-msgstr ""
+msgstr "缺少数据包清单。"
 
 #: packages/migration/src/zotero.ts
 msgid "Bundle payload is missing."
-msgstr ""
+msgstr "缺少数据包内容。"
 
 #: apps/reader/src/import-controller.ts
 msgid "Bundle verified. Review the contents and choose a destination."
-msgstr ""
+msgstr "数据包已验证。请审阅内容并选择目标位置。"
 
 #: apps/reader/src/ImportReview.tsx
 msgid "By category"
-msgstr ""
+msgstr "按类别"
 
 #: apps/reader/src/ImportReview.tsx
 msgid "Calculated during download"
-msgstr ""
+msgstr "下载时计算"
 
 #: apps/reader/src/CitationTypedFieldEditors.tsx
 msgctxt "CitationTypedFieldEditors dateModeOptions"
 msgid "Calendar date"
-msgstr ""
+msgstr "日历日期"
 
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "Call number"
-msgstr ""
+msgstr "索书号"
 
 #: apps/extension/src/NotePanel.tsx
 #: apps/extension/src/PostPicker.tsx
@@ -1206,432 +1206,432 @@ msgstr ""
 #: apps/reader/src/LibraryViewSaveDialog.tsx
 #: apps/reader/src/SourceRemovalDialog.tsx
 msgid "Cancel"
-msgstr ""
+msgstr "取消"
 
 #: apps/reader/src/DocumentContextualToolbar.tsx
 msgctxt "DocumentContextualToolbar interface"
 msgid "Cancel"
-msgstr ""
+msgstr "取消"
 
 #: packages/renderer-pdf/src/pdf-translations.ts
 msgctxt "PDF viewer common"
 msgid "Cancel"
-msgstr ""
+msgstr "取消"
 
 #: packages/renderer-pdf/src/pdf-translations.ts
 msgctxt "PDF viewer passwordPrompt"
 msgid "Cancel"
-msgstr ""
+msgstr "取消"
 
 #: packages/renderer-pdf/src/pdf-translations.ts
 msgctxt "PDF viewer print"
 msgid "Cancel"
-msgstr ""
+msgstr "取消"
 
 #: apps/reader/src/SourceImportDialog.tsx
 msgctxt "SourceImportDialog interface"
 msgid "Cancel"
-msgstr ""
+msgstr "取消"
 
 #: apps/reader/src/DocumentContextualToolbar.tsx
 msgid "Cancel area selection"
-msgstr ""
+msgstr "取消区域选择"
 
 #: packages/migration/src/readwise-client.ts
 msgid "Cancelled"
-msgstr ""
+msgstr "已取消"
 
 #: apps/reader/src/LibraryWorkspace.tsx
 msgctxt "LibraryWorkspace interface"
 msgid "Cards"
-msgstr ""
+msgstr "卡片"
 
 #: packages/renderer-pdf/src/pdf-translations.ts
 msgctxt "PDF viewer search"
 msgid "Case sensitive"
-msgstr ""
+msgstr "区分大小写"
 
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "Categories"
-msgstr ""
+msgstr "类别"
 
 #: apps/reader/src/ImportReview.tsx
 msgid "Category"
-msgstr ""
+msgstr "类别"
 
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "Chair"
-msgstr ""
+msgstr "主席"
 
 #: apps/extension/src/ShortcutList.tsx
 msgid "Change keyboard shortcuts"
-msgstr ""
+msgstr "更改键盘快捷键"
 
 #: apps/extension/src/NotePanel.tsx
 msgid "Changed elsewhere"
-msgstr ""
+msgstr "已在其他位置更改"
 
 #: apps/reader/src/AnnotationCard.tsx
 msgid "Changes need review"
-msgstr ""
+msgstr "更改需要审阅"
 
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "Chapter number"
-msgstr ""
+msgstr "章节编号"
 
 #: apps/extension/src/connection-view.ts
 #: apps/extension/src/ConnectionPanel.tsx
 #: apps/reader/src/SourceRemovalDialog.tsx
 msgid "Check again"
-msgstr ""
+msgstr "重新检查"
 
 #. placeholder {0}: opened.collectionName
 #: apps/reader/src/ImportReview.tsx
 msgid "Check destination: {0}"
-msgstr ""
+msgstr "检查目标位置：{0}"
 
 #: apps/extension/src/connection-view.ts
 msgid "Check this collection before saving."
-msgstr ""
+msgstr "保存前请检查此集合。"
 
 #: apps/reader/src/import-controller.ts
 msgid "Checking existing import identities…"
-msgstr ""
+msgstr "正在检查现有的导入标识…"
 
 #: apps/reader/src/SourceImportDialog.tsx
 msgid "Checking file and library"
-msgstr ""
+msgstr "正在检查文件和文献库"
 
 #: apps/reader/src/SourceImportDialog.tsx
 msgid "Checking files from the previous import"
-msgstr ""
+msgstr "正在检查上次导入的文件"
 
 #: apps/extension/src/CaptureApp.tsx
 msgid "Checking files from the previous save attempt…"
-msgstr ""
+msgstr "正在检查上次保存尝试中的文件…"
 
 #: apps/extension/src/CaptureApp.tsx
 msgid "Checking for duplicates…"
-msgstr ""
+msgstr "正在检查是否有重复…"
 
 #: apps/extension/src/SiteAccessStatus.tsx
 msgid "Checking site access…"
-msgstr ""
+msgstr "正在检查网站访问权限…"
 
 #: apps/reader/src/connection-recovery.ts
 msgid "Checking the collection’s Reader contracts…"
-msgstr ""
+msgstr "正在检查集合的 Reader 契约…"
 
 #: apps/extension/src/NotePanel.tsx
 msgid "Checking the last save…"
-msgstr ""
+msgstr "正在检查上次保存…"
 
 #: apps/reader/src/SourceRemovalDialog.tsx
 msgid "Checking what links to this source…"
-msgstr ""
+msgstr "正在检查哪些内容链接到此来源…"
 
 #: apps/reader/src/AnnotationEditor.tsx
 msgctxt "AnnotationEditor interface"
 msgid "Checking…"
-msgstr ""
+msgstr "正在检查…"
 
 #: apps/extension/src/connection-view.ts
 #: apps/extension/src/ConnectionPanel.tsx
 msgid "Choose a collection"
-msgstr ""
+msgstr "选择集合"
 
 #: apps/extension/src/connection-view.ts
 msgid "Choose a collection before saving."
-msgstr ""
+msgstr "保存前请选择集合。"
 
 #: apps/reader/src/ImportDestination.tsx
 msgid "Choose a collection to import into."
-msgstr ""
+msgstr "选择要导入的集合。"
 
 #: apps/reader/src/connection-recovery.ts
 msgid "Choose a collection to open in Reader."
-msgstr ""
+msgstr "选择要在 Reader 中打开的集合。"
 
 #: apps/reader/src/ImportDestination.tsx
 #: apps/reader/src/NativeImportPage.tsx
 msgid "Choose a destination"
-msgstr ""
+msgstr "选择目标位置"
 
 #: apps/reader/src/import-controller.ts
 msgid "Choose a service to bring your library into mdbase Reader."
-msgstr ""
+msgstr "选择一项服务，将你的文献库带入 mdbase Reader。"
 
 #: apps/reader/src/ImportDestination.tsx
 msgid "Choose an existing collection, or create a fresh hosted collection in mdbase’s secure approval window."
-msgstr ""
+msgstr "选择现有集合，或在 mdbase 的安全批准窗口中创建新的托管集合。"
 
 #: apps/reader/src/CitationAdditionalFields.tsx
 msgid "Choose an unused official CSL field."
-msgstr ""
+msgstr "请选择一个未使用的官方 CSL 字段。"
 
 #: apps/reader/src/NativeImportPage.tsx
 msgid "Choose another collection"
-msgstr ""
+msgstr "选择其他集合"
 
 #: apps/extension/src/save-capture.ts
 msgid "Choose individual posts; feeds cannot be saved."
-msgstr ""
+msgstr "请选择单篇帖子；无法保存订阅源。"
 
 #: apps/reader/src/SourceAddDialog.tsx
 msgid "Choose or drop a file"
-msgstr ""
+msgstr "选择或拖放文件"
 
 #: apps/extension/src/page-capture.ts
 #: apps/extension/src/PostPicker.tsx
 #: apps/extension/src/SaveBar.tsx
 msgid "Choose posts to save"
-msgstr ""
+msgstr "选择要保存的帖子"
 
 #: apps/extension/src/PostPicker.tsx
 msgid "Choose posts…"
-msgstr ""
+msgstr "选择帖子…"
 
 #: apps/extension/src/connection-view.ts
 msgid "Choose the collection again"
-msgstr ""
+msgstr "重新选择集合"
 
 #: apps/extension/src/CollectionSection.tsx
 msgid "Choose the mdbase collection that pages and highlights are saved into."
-msgstr ""
+msgstr "选择用于保存网页和高亮的 mdbase 集合。"
 
 #: apps/extension/src/ConnectionPanel.tsx
 msgid "Choose the mdbase collection to save into. Nothing is saved until you press Save."
-msgstr ""
+msgstr "选择要保存到的 mdbase 集合。在你点击“保存”之前不会保存任何内容。"
 
 #: apps/reader/src/ImportInput.tsx
 msgid "Choose what to bring"
-msgstr ""
+msgstr "选择要带入的内容"
 
 #: apps/extension/src/CaptureApp.tsx
 msgid "Chrome’s PDF viewer does not share selections, so PDFs are highlighted in Reader."
-msgstr ""
+msgstr "Chrome 的 PDF 查看器不共享选区，因此 PDF 需在 Reader 中高亮。"
 
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL approximate date field"
 msgid "Circa"
-msgstr ""
+msgstr "约"
 
 #: apps/extension/src/CitationCard.tsx
 #: apps/extension/src/PanelTabs.tsx
 #: apps/reader/src/InspectorPane.tsx
 #: apps/reader/src/SourceNoteInsertMenu.tsx
 msgid "Citation"
-msgstr ""
+msgstr "引文"
 
 #: apps/reader/src/InspectorPane.tsx
 msgctxt "InspectorPane interface"
 msgid "Citation"
-msgstr ""
+msgstr "引文"
 
 #: apps/reader/src/InspectorPane.tsx
 msgctxt "InspectorPane status or action"
 msgid "Citation"
-msgstr ""
+msgstr "引文"
 
 #: apps/reader/src/MobileSourceViews.tsx
 msgctxt "MobileSourceViews views"
 msgid "Citation"
-msgstr ""
+msgstr "引文"
 
 #: apps/reader/src/reader-command-list.ts
 msgctxt "reader command list"
 msgid "Citation"
-msgstr ""
+msgstr "引文"
 
 #: apps/reader/src/workspace-tab-display.ts
 msgctxt "workspace tab display"
 msgid "Citation"
-msgstr ""
+msgstr "引文"
 
 #: apps/extension/src/CitationCard.tsx
 msgid "CITATION"
-msgstr ""
+msgstr "引文"
 
 #: packages/core/src/application/materialize-source.ts
 msgid "Citation @{citekey} has no valid CSL record in this collection."
-msgstr ""
+msgstr "此集合中没有 @{citekey} 对应的有效 CSL 记录。"
 
 #: apps/reader/src/CitationStructuredEditor.tsx
 msgid "Citation details"
-msgstr ""
+msgstr "引文详情"
 
 #: apps/extension/src/CitationCard.tsx
 msgid "Citation details found."
-msgstr ""
+msgstr "已找到引文详情。"
 
 #: apps/reader/src/CitationEditor.tsx
 msgid "Citation editor mode"
-msgstr ""
+msgstr "引文编辑模式"
 
 #: apps/reader/src/CitationLookup.tsx
 msgid "Citation identifier, URL, or title"
-msgstr ""
+msgstr "引文标识符、URL 或标题"
 
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "Citation key"
-msgstr ""
+msgstr "引文键"
 
 #: apps/reader/src/CitationEditor.tsx
 msgid "Citation key needed"
-msgstr ""
+msgstr "需要引文键"
 
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "Citation label"
-msgstr ""
+msgstr "引文标签"
 
 #: apps/reader/src/CitationPreview.tsx
 msgctxt "CitationPreview interface"
 msgid "Citation locale"
-msgstr ""
+msgstr "引文语言区域"
 
 #: packages/markdown-editor/src/citation-widgets.ts
 msgctxt "citation widgets"
 msgid "Citation Markdown"
-msgstr ""
+msgstr "引文 Markdown"
 
 #: apps/reader/src/CitationEditor.tsx
 msgid "Citation metadata for {title}"
-msgstr ""
+msgstr "{title} 的引文元数据"
 
 #: packages/markdown-editor/src/citation-widgets.ts
 msgid "Citation not found"
-msgstr ""
+msgstr "未找到引文"
 
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "Citation number"
-msgstr ""
+msgstr "引文编号"
 
 #: apps/reader/src/CitationPreview.tsx
 msgctxt "CitationPreview interface"
 msgid "Citation preview"
-msgstr ""
+msgstr "引文预览"
 
 #: apps/reader/src/CitationPreview.tsx
 msgctxt "CitationPreview interface"
 msgid "Citation style"
-msgstr ""
+msgstr "引文格式"
 
 #. placeholder {0}: button.textContent
 #: packages/markdown-editor/src/citation-widgets.ts
 msgid "Citation: {0}. Edit citation Markdown"
-msgstr ""
+msgstr "引文：{0}。编辑引文 Markdown"
 
 #: apps/reader/src/SelectionToolbar.tsx
 msgid "Cite"
-msgstr ""
+msgstr "引用"
 
 #: apps/extension/src/CitationCard.tsx
 #: apps/reader/src/CitationStructuredEditor.tsx
 msgid "Citekey"
-msgstr ""
+msgstr "citekey"
 
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "Citekey"
-msgstr ""
+msgstr "citekey"
 
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "Classic"
-msgstr ""
+msgstr "经典著作"
 
 #: apps/reader/src/AnnotationList.tsx
 #: apps/reader/src/LibraryAnnotationBars.tsx
 msgid "Clear"
-msgstr ""
+msgstr "清除"
 
 #: apps/extension/src/HighlightFields.tsx
 msgctxt "Clear the selected passage"
 msgid "Clear"
-msgstr ""
+msgstr "清除"
 
 #: apps/reader/src/AnnotationList.tsx
 #: apps/reader/src/LibraryAnnotationToolbar.tsx
 #: apps/reader/src/LibraryWorkspace.tsx
 msgid "Clear filters"
-msgstr ""
+msgstr "清除筛选条件"
 
 #: apps/reader/src/LibraryWorkspace.tsx
 msgid "Clear search and filters"
-msgstr ""
+msgstr "清除搜索和筛选条件"
 
 #: apps/reader/src/LibraryBulkBar.tsx
 msgctxt "LibraryBulkBar interface"
 msgid "Clear selection"
-msgstr ""
+msgstr "清除选择"
 
 #: apps/reader/src/LibraryBulkBar.tsx
 msgid "Clear selection · Esc"
-msgstr ""
+msgstr "清除选择 · Esc"
 
 #: apps/extension/src/HighlightFields.tsx
 msgid "Clear the selection (Esc)"
-msgstr ""
+msgstr "清除选择（Esc）"
 
 #: apps/reader/src/LibraryTableRow.tsx
 msgid "Click to edit · F2"
-msgstr ""
+msgstr "点击编辑 · F2"
 
 #: apps/reader/src/AnnotationEditor.tsx
 msgctxt "AnnotationEditor interface"
 msgid "Close"
-msgstr ""
+msgstr "关闭"
 
 #: packages/renderer-pdf/src/pdf-translations.ts
 msgctxt "PDF viewer common"
 msgid "Close"
-msgstr ""
+msgstr "关闭"
 
 #: packages/renderer-pdf/src/pdf-translations.ts
 msgctxt "PDF viewer document"
 msgid "Close"
-msgstr ""
+msgstr "关闭"
 
 #: packages/renderer-pdf/src/pdf-translations.ts
 msgctxt "PDF viewer passwordPrompt"
 msgid "Close"
-msgstr ""
+msgstr "关闭"
 
 #: apps/reader/src/reader-command-list.ts
 msgctxt "reader command list"
 msgid "Close active tab"
-msgstr ""
+msgstr "关闭当前标签页"
 
 #: apps/reader/src/SourceAddDialog.tsx
 msgid "Close add source"
-msgstr ""
+msgstr "关闭添加来源"
 
 #: apps/reader/src/mobile-source-bar.tsx
 msgid "Close current tab"
-msgstr ""
+msgstr "关闭当前标签页"
 
 #: packages/renderer-pdf/src/pdf-translations.ts
 msgctxt "PDF viewer documentError"
 msgid "Close Document"
-msgstr ""
+msgstr "关闭文档"
 
 #: apps/reader/src/reader-command-list.ts
 msgid "Close focused pane and keep its tabs"
-msgstr ""
+msgstr "关闭当前窗格并保留其标签页"
 
 #: apps/reader/src/dockview-menus.ts
 msgid "Close other unpinned tabs"
-msgstr ""
+msgstr "关闭其他未固定的标签页"
 
 #: apps/reader/src/DockPaneActions.tsx
 msgid "Close pane and tabs…"
-msgstr ""
+msgstr "关闭窗格和标签页…"
 
 #: apps/reader/src/DockviewWorkspace.tsx
 msgctxt "DockviewWorkspace interface"
