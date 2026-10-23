@@ -25,7 +25,9 @@ import type {
   SourceTextSearchMatch,
   CitationCandidate,
   CitationResolutionRequest,
+  SaveSourceCitationOptions,
 } from "@mdbase-reader/core";
+import type { CitationUpdateRequest, Claim } from "@mdbase-reader/web-capture/citation-updates";
 
 export interface ReaderLibrarySnapshot {
   readonly collectionName: string;
@@ -77,7 +79,15 @@ export interface ReaderWorkspaceGateway {
   recoverAnnotationBody?(requestId: string): Promise<Annotation>;
   /** Whether an interrupted write is still durably pending. */
   mutationPending?(requestId: string): boolean;
-  saveSourceCitation(source: Source, citation: unknown): Promise<Source>;
+  saveSourceCitation(
+    source: Source,
+    citation: unknown,
+    options?: SaveSourceCitationOptions,
+  ): Promise<Source>;
+  citationClaims?(
+    request: CitationUpdateRequest,
+    options?: ReaderRequestOptions,
+  ): Promise<readonly Claim[]>;
   resolveCitation?(
     request: CitationResolutionRequest,
     options?: ReaderRequestOptions,

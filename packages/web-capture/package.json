@@ -6,6 +6,7 @@
   "exports": {
     ".": "./src/index.ts",
     "./citation-lookup": "./src/citation-lookup.ts",
+    "./citation-updates": "./src/citation-updates.ts",
     "./source-identifiers": "./src/source-identifiers.ts"
   },
   "scripts": {

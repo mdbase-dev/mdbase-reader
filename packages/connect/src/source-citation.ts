@@ -37,10 +37,9 @@ export async function writeSourceCitation(
       : {}),
   };
   for (let attempt = 1; ; attempt += 1) {
-    const revision =
-      input.expectedCitation === undefined
-        ? undefined
-        : await unchangedCitationRevision(client, path, input.expectedCitation);
+    const revision = !("expectedCitation" in input)
+      ? undefined
+      : await unchangedCitationRevision(client, path, input.expectedCitation);
     const outcome = await client.update({
       path,
       ...(revision === undefined ? {} : { ifRevision: revision }),

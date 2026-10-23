@@ -28,9 +28,7 @@ export async function saveSourceCitation(
     sourceId: source.id,
     citation: validation.item,
     ...(options.provenance !== undefined ? { provenance: options.provenance } : {}),
-    ...(options.expectedCitation !== undefined
-      ? { expectedCitation: options.expectedCitation }
-      : {}),
+    ...("expectedCitation" in options ? { expectedCitation: options.expectedCitation } : {}),
   });
 }
 

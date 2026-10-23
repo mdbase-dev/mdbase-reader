@@ -1,11 +1,17 @@
 import { SaveNotice } from "@mdbase-dev/ui/save-notice";
-import { citationGapsFromSource, sourceCitationDifferences } from "@mdbase-reader/core";
+import {
+  citationGapsFromSource,
+  cslFieldStatuses,
+  sourceCitationDifferences,
+} from "@mdbase-reader/core";
 import { ReaderButton } from "@mdbase-reader/ui";
 import { useState, type JSX } from "react";
 
 import { writeCitationDrag } from "./citation-drag.js";
 import { CitationLookup } from "./CitationLookup.js";
 import { CitationPreview } from "./CitationPreview.js";
+import { CitationProvenance } from "./CitationProvenance.js";
+import { CitationSaveConflict } from "./CitationSaveConflict.js";
 import { CitationGapFill, CitationSourceSync } from "./CitationSourceSync.js";
 import { CitationStructuredEditor } from "./CitationStructuredEditor.js";
 import { MultilineCodeEditor } from "./MultilineCodeEditor.js";
@@ -34,7 +40,7 @@ export function CitationEditor({
 }
 
 // The editor deliberately renders validity, quality, and mode states in one transaction.
-// eslint-disable-next-line complexity
+// eslint-disable-next-line complexity, max-lines-per-function
 function ReadyCitationEditor({
   source,
   editor,
@@ -100,10 +106,20 @@ function ReadyCitationEditor({
         ) : null}
         {editor.assessment.value ? (
           <CitationGapFill
-            gaps={citationGapsFromSource(editor.assessment.value, source)}
+            gaps={Object.fromEntries(
+              Object.entries(citationGapsFromSource(editor.assessment.value, source)).filter(
+                ([field]) =>
+                  cslFieldStatuses(citation, editor.provenance)[field]?.kind !== "removed",
+              ),
+            )}
             onApply={(gaps) => editor.setCitation({ ...citation, ...gaps })}
           />
         ) : null}
+        <CitationProvenance
+          citation={citation}
+          provenance={editor.provenance}
+          onChange={editor.setCitation}
+        />
         {mode === "fields" ? (
           <>
             <CitationLookup citation={citation} editor={editor} />
@@ -139,7 +155,12 @@ function ReadyCitationEditor({
           onSuggestionsToggle={setSuggestionsOpen}
         />
         <ReaderButton
-          disabled={!editor.assessment.valid || !editor.dirty || editor.status === "saving"}
+          disabled={
+            !editor.assessment.valid ||
+            !editor.dirty ||
+            editor.status === "saving" ||
+            editor.conflict !== null
+          }
           onClick={editor.save}
         >
           {editor.status === "saving" ? "Saving…" : "Save changes"}
@@ -204,6 +225,9 @@ function CitationFeedback({
   readonly suggestionsOpen: boolean;
   readonly onSuggestionsToggle: (open: boolean) => void;
 }): JSX.Element {
+  if (editor.conflict) {
+    return <CitationSaveConflict editor={editor} />;
+  }
   if (editor.error) {
     return (
       <div className="citation-feedback" aria-live="polite">
@@ -242,7 +266,7 @@ function CitationFeedback({
     <div className="citation-feedback mdbase-settle-host" aria-live="polite">
       {editor.suggested && editor.status !== "saved" ? (
         <span>Review the suggested details before saving.</span>
-      ) : editor.status === "saved" || !editor.dirty ? (
+      ) : !editor.dirty ? (
         <SaveNotice tone="saved" />
       ) : (
         <SaveNotice tone="pending" label="Unsaved changes" />

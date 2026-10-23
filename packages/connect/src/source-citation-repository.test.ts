@@ -128,6 +128,25 @@ describe("Connect source citation metadata", () => {
 });
 
 describe("Connect citation compare-and-save", () => {
+  it.each([undefined, null, { broken: true }])(
+    "can explicitly replace a removed or invalid baseline: %j",
+    async (expectedCitation) => {
+      const { repository, read, update, setCurrent } = fixture();
+      setCurrent(document({ id: "src_01", title: "Crime", csl: expectedCitation }, "rev-9"));
+      await repository.updateCitation({ ...input, expectedCitation });
+      expect(read).toHaveBeenCalledExactlyOnceWith({ path, includeDocument: true });
+      expect(update).toHaveBeenCalledWith(expect.objectContaining({ ifRevision: "rev-9" }));
+    },
+  );
+
+  it("does not confuse an expected absent citation with an unchecked write", async () => {
+    const { repository, update } = fixture();
+    await expect(
+      repository.updateCitation({ ...input, expectedCitation: undefined }),
+    ).rejects.toMatchObject({ code: "citation-changed-elsewhere" });
+    expect(update).not.toHaveBeenCalled();
+  });
+
   it("compares CSL structurally and preconditions the write on the fresh revision", async () => {
     const { repository, read, update, setCurrent } = fixture();
     const author = [{ family: "Dostoevsky", given: "Fyodor" }];
