@@ -1,9 +1,12 @@
 import { afterEach, expect, it, vi } from "vitest";
 
-import { citationForPage } from "./page-citation.js";
+import { citationForPage as lookupPage } from "./page-citation.js";
 import { createProviderQueue } from "./provider-queue.js";
 
 import type { ClaimBatch } from "./claims.js";
+
+const citationForPage: typeof lookupPage = (page, url, options) =>
+  lookupPage(page, url, { queue: createProviderQueue(), ...options });
 
 const page: ClaimBatch = {
   claims: [
@@ -101,6 +104,34 @@ it("counts queue time against the overall deadline", async () => {
   expect(fetch).not.toHaveBeenCalled();
   release(new Response());
   await occupied;
+});
+
+it("never grants a second DOI a fresh three-second budget", async () => {
+  vi.useFakeTimers();
+  const fetch = vi
+    .fn<typeof globalThis.fetch>()
+    .mockImplementationOnce(
+      () =>
+        new Promise((resolve) =>
+          setTimeout(() => resolve(new Response(null, { status: 404 })), 2_500),
+        ),
+    )
+    .mockResolvedValueOnce(
+      Response.json([{ itemType: "journalArticle", title: "Remote", DOI: "10.1234/other" }]),
+    )
+    .mockImplementation(() => new Promise(() => undefined));
+  const settled = citationForPage({ ...page, identifiers: { doi: "10.1234/work" } }, url, {
+    fetch,
+    citoid: {},
+    timeoutMs: 10_000,
+  });
+  await vi.advanceTimersByTimeAsync(3_000);
+  expect((await settled)?.outcomes).toMatchObject([
+    { provider: "doi.org", result: "not-found" },
+    { provider: "citoid", result: "ok" },
+    { provider: "doi.org", result: "timeout", elapsedMs: 500 },
+  ]);
+  expect(fetch).toHaveBeenCalledTimes(3);
 });
 
 it("keeps page evidence available with no budget and starts no provider", async () => {

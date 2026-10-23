@@ -1,12 +1,15 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { DOI_RESOLUTION_TIMEOUT_MS, resolveDoiCitation } from "./doi.js";
-import { citationForPage, PAGE_DOI_TIMEOUT_MS } from "./page-citation.js";
+import { citationForPage as lookupPage, PAGE_DOI_TIMEOUT_MS } from "./page-citation.js";
 import { createProviderQueue } from "./provider-queue.js";
 import * as resolver from "./resolver.js";
 
 import type { ClaimBatch } from "./claims.js";
 import type { CitationPreview } from "./page-citation.js";
+
+const citationForPage: typeof lookupPage = (page, url, options) =>
+  lookupPage(page, url, { queue: createProviderQueue(), ...options });
 
 const observedAt = "2026-10-21T00:00:00Z";
 const pageUrl = "https://example.com/article";
@@ -148,7 +151,7 @@ describe("page citations", () => {
     expect(updates[0]?.outcomes).toEqual([]);
   });
 
-  it("gives explicit lookups longer than page saves, and says when the registry timed out", async () => {
+  it("uses a short registry budget, and says when the registry timed out", async () => {
     const timeout = vi.spyOn(AbortSignal, "timeout");
     await expect(
       resolveDoiCitation("10.1234/example", {
@@ -156,7 +159,7 @@ describe("page citations", () => {
       }),
     ).rejects.toThrow("offline");
     expect(timeout).toHaveBeenCalledWith(DOI_RESOLUTION_TIMEOUT_MS);
-    expect(DOI_RESOLUTION_TIMEOUT_MS).toBeGreaterThan(PAGE_DOI_TIMEOUT_MS);
+    expect(DOI_RESOLUTION_TIMEOUT_MS).toBeLessThanOrEqual(PAGE_DOI_TIMEOUT_MS);
     await expect(
       resolveDoiCitation("10.1234/example", { fetch: hangingFetch(), timeoutMs: 10 }),
     ).rejects.toThrow("within 0.01 seconds");
@@ -220,6 +223,45 @@ const item = {
   encyclopediaTitle: "Encyclopedia",
   date: "2026-10-20",
 };
+
+describe("page citation provider boundaries", () => {
+  it("rejects an empty registry record and allows Citoid fallback", async () => {
+    const fetch = vi
+      .fn<typeof globalThis.fetch>()
+      .mockImplementation((url) =>
+        Promise.resolve(
+          (typeof url === "string" ? url : url instanceof URL ? url.href : url.url).startsWith(
+            "https://doi.org/",
+          )
+            ? Response.json({})
+            : Response.json([{ itemType: "webpage", title: "Embedded title" }]),
+        ),
+      );
+    const preview = await citationForPage(embedded, pageUrl, {
+      fetch,
+      citoid: { queue: createProviderQueue() },
+    });
+    expect(fetch).toHaveBeenCalledTimes(2);
+    expect(preview?.outcomes.map((outcome) => outcome.result)).toEqual(["failed", "ok"]);
+    expect(preview?.provenance["type"]?.source).not.toBe("registry:doi.org");
+  });
+
+  it.each([
+    "https://router.local/private",
+    "http://[fd00::1]/private",
+    "https://example.com/private.pdf",
+  ])("protects every page citation entry path: %s", async (url) => {
+    const fetch = vi.fn<typeof globalThis.fetch>();
+    await citationForPage(page, url, { fetch, citoid: {} });
+    expect(fetch).not.toHaveBeenCalled();
+  });
+
+  it("honours a known PDF content type", async () => {
+    const fetch = vi.fn<typeof globalThis.fetch>();
+    await citationForPage(page, pageUrl, { fetch, contentType: "application/pdf", citoid: {} });
+    expect(fetch).not.toHaveBeenCalled();
+  });
+});
 
 describe("optional Citoid page citations", () => {
   it.each([undefined, false] as const)("does not send the URL with citoid=%s", async (citoid) => {
