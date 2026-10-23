@@ -4,6 +4,7 @@ import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 
 import { pageClaims } from "./page-claims.js";
+import { resolveCitation } from "./resolver.js";
 import { extractScholarlyMetadata } from "./scholarly-metadata.js";
 
 const observedAt = "2026-10-21T09:00:00.000Z";
@@ -134,38 +135,29 @@ const fixtures = [
   },
 ];
 
-function expectLegacyFields(document: Document, url: string): void {
-  const legacy = extractScholarlyMetadata(document, url);
+function expectResolvedFields(document: Document, url: string): void {
+  const extracted = extractScholarlyMetadata(document, url);
   const batch = pageClaims(document, url, observedAt);
-  for (const [field, value] of Object.entries(legacy.citation ?? {})) {
-    expect(
-      batch.claims.filter((claim) => claim.field === field).map((claim) => claim.value),
-      field,
-    ).toContainEqual(value);
-  }
-  if (legacy.doi) {
-    expect(batch.identifiers?.doi).toBe(legacy.doi);
-  }
-  if (legacy.pdfUrl) {
-    expect(batch.pdfUrl).toBe(legacy.pdfUrl);
-  }
+  expect(extracted.citation ?? null).toEqual(resolveCitation({ claims: batch.claims }).citation);
+  expect(extracted.doi).toBe(batch.identifiers?.doi);
+  expect(extracted.pdfUrl).toBe(batch.pdfUrl);
 }
 
-describe("page claims preserve existing extractor evidence", () => {
-  it.each(fixtures)("includes every legacy field from $name", ({ head, url }) => {
+describe("capture extraction uses resolved page claims", () => {
+  it.each(fixtures)("resolves all fields from $name", ({ head, url }) => {
     const document = new DOMParser().parseFromString(
       `<html><head>${head}</head><body></body></html>`,
       "text/html",
     );
-    expectLegacyFields(document, url);
+    expectResolvedFields(document, url);
   });
 
   it.each(["academic", "encyclopedia", "code-guide"])(
-    "includes every legacy field from the %s capture fixture",
+    "resolves all fields from the %s capture fixture",
     (name) => {
       const html = readFileSync(`src/fixtures/${name}.html`, "utf8");
       const document = new DOMParser().parseFromString(html, "text/html");
-      expectLegacyFields(document, `https://example.org/${name}`);
+      expectResolvedFields(document, `https://example.org/${name}`);
     },
   );
 });

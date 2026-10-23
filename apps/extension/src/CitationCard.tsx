@@ -27,8 +27,10 @@ export function CitationCard({
       <p className="hint">
         {preview.origin === "doi"
           ? "From the DOI registry. Saved with the source; edit it later in Reader."
-          : "From the publisher’s page metadata. Saved with the source; edit it later in Reader."}
-        {preview.problem ? ` The DOI record was unavailable (${preview.problem}).` : ""}
+          : preview.origin === "citoid"
+            ? "Includes details from Wikimedia’s Citoid service. Saved with the source; edit it later in Reader."
+            : "From the page’s metadata. Saved with the source; edit it later in Reader."}
+        {preview.problem ? ` ${preview.problem}` : ""}
       </p>
     </section>
   );

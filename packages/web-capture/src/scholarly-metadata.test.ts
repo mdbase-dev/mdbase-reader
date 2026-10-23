@@ -47,9 +47,13 @@ describe("embedded scholarly metadata", () => {
     expect(validateCslItem({ id: "watsonmolecular1953", ...result.citation }).valid).toBe(true);
   });
 
-  it("uses Dublin Core only when it carries scholarly evidence", () => {
+  it("resolves Dublin Core pages with or without an identifier", () => {
     const plain = page('<meta name="DC.title" content="A blog post">');
-    expect(extractScholarlyMetadata(plain, "https://blog.example/post").citation).toBeUndefined();
+    expect(extractScholarlyMetadata(plain, "https://blog.example/post").citation).toEqual({
+      type: "webpage",
+      title: "A blog post",
+      URL: "https://blog.example/post",
+    });
     const identified = page(`
       <meta name="DC.title" content="Thesis title">
       <meta name="DC.creator" content="Ada Lovelace">
@@ -87,12 +91,14 @@ describe("embedded scholarly metadata", () => {
     expect(result.doi).toBe("10.48550/arXiv.0704.0001");
   });
 
-  it("leaves ordinary web pages alone", () => {
+  it("resolves ordinary web pages from their title evidence", () => {
     const result = extractScholarlyMetadata(
       page('<meta property="og:title" content="News">'),
       "https://news.example/story",
     );
-    expect(result).toEqual({});
+    expect(result).toEqual({
+      citation: { type: "webpage", title: "News", URL: "https://news.example/story" },
+    });
   });
 });
 

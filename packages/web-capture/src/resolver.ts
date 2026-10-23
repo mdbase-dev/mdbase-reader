@@ -156,7 +156,7 @@ function prepareClaims(claims: readonly Claim[]): Claim[] {
         });
       }
     }
-    if (claim.field === "author" || claim.field === "editor") {
+    if ((claim.field === "author" || claim.field === "editor") && claim.source.kind !== "user") {
       value = withoutRoleNames(value);
       if (Array.isArray(value) && !value.length) {
         continue;
@@ -209,7 +209,7 @@ function groupClaims(claims: readonly Claim[]): ClaimGroup[] {
         claims: ranked,
         winner,
         value: groupValue(winner, ranked),
-        score: sourceStrength[winner.source.kind] + corroborationBonus * (independent.size - 1),
+        score: Math.max(...ranked.map(claimStrength)) + corroborationBonus * (independent.size - 1),
         observedAt: Math.max(...group.map(observationTime)),
       },
     ];
@@ -239,6 +239,14 @@ function chooseGroup(field: string, groups: readonly ClaimGroup[]): ClaimGroup |
   const pinned = groups.filter((group) => group.winner.source.kind === "user");
   if (pinned.length) {
     eligible = pinned;
+  } else if (field === "type") {
+    // A registry's work type is authoritative. Otherwise prefer a positively identified work
+    // type over generic Article/WebPage/document signals, however often defaults are repeated.
+    const registered = groups.filter((group) => group.winner.source.kind === "registry");
+    const specific = groups.filter(
+      (group) => !["webpage", "article", "document"].includes(String(group.value)),
+    );
+    eligible = registered.length ? registered : specific.length ? specific : groups;
   } else if (field === "container-title") {
     // A publisher-only fallback is not evidence of the publication's name.
     eligible = groups.filter((group) =>
@@ -256,9 +264,35 @@ function chooseGroup(field: string, groups: readonly ClaimGroup[]): ClaimGroup |
     )[0];
 }
 
+function claimStrength(claim: Claim): number {
+  let strength = sourceStrength[claim.source.kind];
+  if (claim.source.kind === "page") {
+    // Work-specific titles survive truncated OG titles corroborated by generic WebPage nodes.
+    // Generic Article titles get no bonus: Wikipedia's headline can be a short description.
+    if (
+      claim.field === "title" &&
+      ((claim.source.signal === "json-ld" &&
+        /^[A-Z][A-Za-z]+ (?:headline|name)$/u.test(claim.evidence ?? "")) ||
+        (claim.source.signal === "highwire" && claim.evidence === "citation_title"))
+    ) {
+      strength += 12;
+    }
+    // A combined vocabulary list is complete evidence, not another competing single author.
+    if (
+      claim.field === "author" &&
+      /^(?:dc.creator \+ dcterms.creator|citation_author \+ citation_authors)$/u.test(
+        claim.evidence ?? "",
+      )
+    ) {
+      strength += 8;
+    }
+  }
+  return strength;
+}
+
 function compareClaims(a: Claim, b: Claim): number {
   return (
-    sourceStrength[b.source.kind] - sourceStrength[a.source.kind] ||
+    claimStrength(b) - claimStrength(a) ||
     descending(observationTime(a), observationTime(b)) ||
     compareText(evidenceLabel(a), evidenceLabel(b)) ||
     compareText(valueKey(a.value), valueKey(b.value))

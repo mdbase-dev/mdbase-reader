@@ -31,7 +31,7 @@ describe("capture metadata and formats", () => {
       issued: { "date-parts": [[1953]] },
     };
     const result = await f.save({ highlight: false }, capture, {
-      citation: { citation, origin: "doi", doi: "10.1038/171737a0" },
+      citation: { citation, origin: "doi", doi: "10.1038/171737a0", provenance: {}, outcomes: [] },
     });
     expect(f.updateCitation.mock.calls[0]?.[0].citation).toMatchObject({
       id: "watsonmolecular1953a",
@@ -44,7 +44,12 @@ describe("capture metadata and formats", () => {
     const f = fixture();
     f.updateCitation.mockRejectedValueOnce(new Error("revision conflict"));
     const result = await f.save({ highlight: false }, capture, {
-      citation: { citation: { type: "article", title: "T" }, origin: "page" },
+      citation: {
+        citation: { type: "article", title: "T" },
+        origin: "page",
+        provenance: {},
+        outcomes: [],
+      },
     });
     expect(result.source).toBeTruthy();
     expect(result.notices[0]).toContain("revision conflict");
@@ -69,6 +74,8 @@ describe("capture metadata and formats", () => {
             "Calculation of Prompt Diphoton Production Cross Sections at Tevatron and LHC Energies",
         },
         origin: "doi",
+        provenance: {},
+        outcomes: [],
       },
     });
     const plan = f.commit.mock.calls[0]?.[0];

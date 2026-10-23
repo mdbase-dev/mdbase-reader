@@ -8,6 +8,7 @@ import { usePanelConnection } from "./panel-connection.js";
 import { fakeChrome } from "./testing/fake-chrome.js";
 import { useExtensionCapture } from "./use-extension-capture.js";
 
+import type { CitationPreview } from "./capture-citation.js";
 import type { ExtensionCaptureController } from "./capture-controller.js";
 
 const mocks = vi.hoisted(() => ({
@@ -387,6 +388,144 @@ it("replaces the untouched page title with the citation title", async () => {
   expect(controller.draft.title).toBe("Molecular structure of nucleic acids");
   expect(controller.citation?.origin).toBe("doi");
 });
+const initialCitation: CitationPreview = {
+  citation: { type: "webpage", title: "Page title", author: [{ family: "Page" }] },
+  origin: "page",
+  provenance: { title: { value: "Page title", source: "page:html" } },
+  outcomes: [],
+};
+const upgradedCitation: CitationPreview = {
+  citation: {
+    type: "entry-encyclopedia",
+    title: "Encyclopedia title",
+    author: [{ literal: "Contributors" }],
+    "container-title": "Encyclopedia",
+  },
+  origin: "citoid",
+  provenance: {
+    title: { value: "Encyclopedia title", source: "site-adapter:citoid/encyclopediaArticle" },
+  },
+  outcomes: [{ provider: "citoid", result: "ok", elapsedMs: 10 }],
+};
+
+function pendingCitation(): {
+  update: (preview: CitationPreview) => void;
+  finish: (preview: CitationPreview | null) => void;
+  signal: () => AbortSignal;
+} {
+  let update!: (preview: CitationPreview) => void;
+  let finish!: (preview: CitationPreview | null) => void;
+  let signal!: AbortSignal;
+  mocks.prepareCitation.mockImplementationOnce(
+    (_capture: unknown, abort: AbortSignal, onUpdate: typeof update) => {
+      signal = abort;
+      update = onUpdate;
+      onUpdate(initialCitation);
+      return new Promise<CitationPreview | null>((resolve) => {
+        finish = resolve;
+      });
+    },
+  );
+  return {
+    update: (preview) => update(preview),
+    finish: (preview) => finish(preview),
+    signal: () => signal,
+  };
+}
+
+it("upgrades an untouched visible citation and title without resetting the rest of the draft", async () => {
+  const lookup = pendingCitation();
+  await mount();
+  expect(controller.citationPending).toBe(false);
+  expect(controller.draft.title).toBe("Page title");
+  await act(async () =>
+    controller.setDraft((draft) => ({
+      ...draft,
+      tags: "mine",
+      note: "My note",
+      comment: "My comment",
+      color: "green",
+    })),
+  );
+  await act(async () => lookup.update(upgradedCitation));
+  expect(controller.draft).toMatchObject({
+    title: "Encyclopedia title",
+    tags: "mine",
+    note: "My note",
+    comment: "My comment",
+    color: "green",
+  });
+  expect(controller.citation).toEqual(upgradedCitation);
+  await act(async () => lookup.finish(upgradedCitation));
+});
+
+it.each(["My title", "", "Page title"])(
+  "keeps an edited title (%s) while upgrading other untouched citation fields",
+  async (title) => {
+    const lookup = pendingCitation();
+    await mount();
+    await act(async () => controller.setDraft((draft) => ({ ...draft, title: "An edit" })));
+    await act(async () => controller.setDraft((draft) => ({ ...draft, title })));
+    await act(async () => lookup.update(upgradedCitation));
+    await act(async () => lookup.finish(upgradedCitation));
+    expect(controller.draft.title).toBe(title);
+    expect(controller.citation?.citation).toEqual({ ...upgradedCitation.citation, title });
+    expect(controller.citation?.provenance["title"]).toEqual({ value: title, source: "user" });
+  },
+);
+
+it("keeps a restored title while later evidence upgrades the remaining citation", async () => {
+  chromeFake.session.set("draft:1:https://example.com", {
+    draft: {
+      title: "Earlier title",
+      tags: "",
+      note: "Earlier note",
+      comment: "",
+      highlight: false,
+    },
+    selection: null,
+  });
+  const lookup = pendingCitation();
+  await mount();
+  await act(async () => lookup.update(upgradedCitation));
+  await act(async () => lookup.finish(upgradedCitation));
+  expect(controller.draft.title).toBe("Earlier title");
+  expect(controller.draft.note).toBe("Earlier note");
+  expect(controller.citation?.citation).toEqual({
+    ...upgradedCitation.citation,
+    title: "Earlier title",
+  });
+});
+
+it("ignores late citation updates and completion as soon as navigation aborts a capture", async () => {
+  const lookup = pendingCitation();
+  await mount();
+  await act(async () => chromeFake.emit("updated", 1, { status: "loading" }));
+  expect(lookup.signal().aborted).toBe(true);
+  const before = controller.draft.title;
+  await act(async () => lookup.update(upgradedCitation));
+  await act(async () => lookup.finish(upgradedCitation));
+  expect(controller.draft.title).toBe(before);
+  expect(controller.citation?.origin).not.toBe("citoid");
+});
+
+it("ignores an old page's completion after another page has loaded", async () => {
+  const lookup = pendingCitation();
+  await mount();
+  mocks.captureTab.mockResolvedValue({
+    ...page,
+    pageTitle: "Next page",
+    canonicalUrl: "https://example.com/next",
+    submittedUrl: "https://example.com/next",
+  });
+  await act(async () => chromeFake.emit("updated", 1, { url: "https://example.com/next" }));
+  expect(controller.capture?.canonicalUrl).toBe("https://example.com/next");
+  await act(async () => lookup.update(upgradedCitation));
+  await act(async () => lookup.finish(upgradedCitation));
+  expect(controller.draft.title).toBe("Next page");
+  expect(controller.citation).toBeNull();
+});
+
 it("asks to be invoked again after the tab navigates, then reads the new page", async () => {
   await mount();
   await act(async () => {

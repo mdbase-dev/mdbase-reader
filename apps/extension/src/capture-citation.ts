@@ -8,10 +8,12 @@ import {
 import {
   citationForPage,
   postCitation,
-  extractScholarlyMetadata,
+  pageClaims,
   type CitationDraft,
   type CitationPreview,
 } from "@mdbase-reader/web-capture";
+
+import { citoidEnabled } from "./citoid-setting.js";
 
 import type { PageCapture } from "./page-capture.js";
 import type { ReaderConnectedCollection } from "@mdbase-reader/connect";
@@ -19,21 +21,29 @@ import type { ReaderConnectedCollection } from "@mdbase-reader/connect";
 export type { CitationPreview } from "@mdbase-reader/web-capture";
 
 /** Resolves the citation for the page or PDF in the tab; see {@link citationForPage}. */
-export function prepareCitation(
+export async function prepareCitation(
   capture: PageCapture,
   signal?: AbortSignal,
+  onUpdate?: (preview: CitationPreview) => void,
 ): Promise<CitationPreview | null> {
+  signal?.throwIfAborted();
   if (capture.kind === "html" && capture.post) {
-    return Promise.resolve({ citation: postCitation(capture.post), origin: "page" });
+    return { citation: postCitation(capture.post), origin: "page", provenance: {}, outcomes: [] };
   }
   if (capture.kind === "html" && capture.social && !capture.post) {
-    return Promise.resolve(null);
+    return null;
   }
-  const embedded =
+  const claims =
     capture.kind === "html"
-      ? extractScholarlyMetadata(parsedCaptureHtml(capture.html), capture.canonicalUrl)
-      : {};
-  return citationForPage(embedded, capture.canonicalUrl, signal ? { signal } : {});
+      ? pageClaims(parsedCaptureHtml(capture.html), capture.canonicalUrl, capture.retrievedAt)
+      : null;
+  const enabled = await citoidEnabled();
+  signal?.throwIfAborted();
+  return citationForPage(claims, capture.canonicalUrl, {
+    ...(signal ? { signal } : {}),
+    citoid: enabled ? {} : false,
+    ...(onUpdate ? { onUpdate } : {}),
+  });
 }
 
 let parsedPage: { readonly html: string; readonly document: Document } | null = null;

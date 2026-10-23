@@ -39,6 +39,13 @@ describe("Reader web capture client", () => {
         site: "Example Review",
       },
     });
+    expect(planned.claims.claims).toContainEqual({
+      field: "title",
+      value: "A useful essay",
+      source: { kind: "page", signal: "html" },
+      evidence: "title",
+      observedAt: capture.retrievedAt,
+    });
     expect(archive).toBe(capture.html);
     expect(html).toContain("Readable");
     expect(html).toContain("Content-Security-Policy");

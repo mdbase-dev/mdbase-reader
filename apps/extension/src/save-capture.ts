@@ -422,7 +422,7 @@ function captureCitation(input: SaveCaptureInput): CitationPreview | null {
   }
   const capture = input.capture;
   return capture.kind === "html" && capture.post
-    ? { citation: postCitation(capture.post), origin: "page" }
+    ? { citation: postCitation(capture.post), origin: "page", provenance: {}, outcomes: [] }
     : null;
 }
 
