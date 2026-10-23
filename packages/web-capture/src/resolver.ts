@@ -338,6 +338,32 @@ function chooseGroup(field: string, groups: readonly ClaimGroup[]): ClaimGroup |
       (group) => !["webpage", "article", "document"].includes(String(group.value)),
     );
     eligible = registered.length ? registered : specific.length ? specific : groups;
+  } else if (field === "title") {
+    // Registries can omit a section prefix from the published title. Retain the full work
+    // title only when both its heading and structured work metadata explicitly agree.
+    const expanded = groups.filter(
+      (group) =>
+        group.claims.some((claim) => claim.source.kind === "page" && claim.evidence === "h1") &&
+        group.claims.some(
+          (claim) =>
+            claim.source.kind === "page" &&
+            ((claim.source.signal === "json-ld" &&
+              /^[A-Z][A-Za-z]+ (?:headline|name)$/u.test(claim.evidence ?? "")) ||
+              (claim.source.signal === "highwire" && claim.evidence === "citation_title")),
+        ),
+    );
+    eligible = groups.filter(
+      (group) =>
+        !(
+          group.winner.source.kind === "registry" &&
+          expanded.some(
+            (full) =>
+              typeof full.value === "string" &&
+              claimValuesMatch("title", full.value.replace(/^[^:]+:\s+/u, ""), group.value) &&
+              !claimValuesMatch("title", full.value, group.value),
+          )
+        ),
+    );
   } else if (field === "publisher") {
     const imprints = groups.filter(
       (group) =>

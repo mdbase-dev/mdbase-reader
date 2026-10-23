@@ -77,7 +77,7 @@ const stillWrong: Record<string, { readonly page: string[]; readonly remote: str
     page: ["type", "author", "issued", "container-title"],
     remote: ["type", "author", "issued", "container-title"],
   },
-  "elife-brain": { page: [], remote: ["title"] },
+  "elife-brain": { page: [], remote: [] },
   "github-translation-server": { page: ["type", "title", "author"], remote: ["author"] },
   "government-ipcc": {
     page: ["type", "title", "author", "issued", "publisher"],

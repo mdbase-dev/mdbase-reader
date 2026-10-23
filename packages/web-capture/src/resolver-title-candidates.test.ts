@@ -35,6 +35,26 @@ describe("title candidates", () => {
     expect(result.provenance).not.toHaveProperty("container-title");
   });
 
+  it("preserves a published section prefix omitted by the registry when heading and work metadata agree", () => {
+    const title = "Commentary: A detailed study of research practices";
+    const registry: Claim = {
+      field: "title",
+      value: "A detailed study of research practices",
+      source: { kind: "registry", name: "doi.org" },
+      observedAt,
+    };
+    const result = resolve(
+      `<title>${title}</title><meta name="citation_title" content="${title}">`,
+      `<h1>${title}</h1>`,
+      [registry],
+    );
+    expect(result.citation?.["title"]).toBe(title);
+    expect(result.provenance["title"]?.source).toBe("page:highwire");
+    expect(
+      resolve(`<title>${title}</title>`, `<h1>${title}</h1>`, [registry]).citation?.["title"],
+    ).toBe(registry.value);
+  });
+
   it("keeps a full JSON-LD headline and name with a dash", () => {
     const title = "Ukraine — the war one year on";
     expect(
