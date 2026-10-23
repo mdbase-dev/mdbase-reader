@@ -1,3 +1,4 @@
+import { Trans, useLingui } from "@lingui/react/macro";
 import { useMemo } from "react";
 
 import {
@@ -66,27 +67,42 @@ export function DocumentContextualToolbar({
   sessionId,
   compact = false,
 }: DocumentContextualToolbarProps): JSX.Element {
+  const { t } = useLingui();
   const contents = surfaces.get(sessionId)?.capabilities.contents;
   return (
-    <div className="document-toolbar" aria-label="Document actions">
+    <div
+      className="document-toolbar"
+      aria-label={t({
+        message: "Document actions",
+        context: "DocumentContextualToolbar interface",
+      })}
+    >
       {canSelectArea ? (
         <button
           type="button"
           className={selectingArea ? "document-area-action is-active" : "document-area-action"}
           aria-pressed={selectingArea}
-          title={selectingArea ? "Cancel area selection" : "Select an area to annotate"}
+          title={
+            selectingArea
+              ? t({ message: "Cancel area selection" })
+              : t({ message: "Select an area to annotate" })
+          }
           onClick={onToggleAreaSelection}
         >
           <AreaIcon />
-          <span>{selectingArea ? "Cancel" : "Select area"}</span>
+          <span>
+            {selectingArea
+              ? t({ message: "Cancel", context: "DocumentContextualToolbar interface" })
+              : t({ message: "Select area", context: "DocumentContextualToolbar interface" })}
+          </span>
         </button>
       ) : null}
       {canBookmark && !compact ? (
         <button
           type="button"
           className="icon-button document-bookmark-action"
-          aria-label="Bookmark this position"
-          title="Bookmark this position"
+          aria-label={t({ message: "Bookmark this position" })}
+          title={t({ message: "Bookmark this position" })}
           disabled={bookmarking}
           onClick={onBookmark}
         >
@@ -97,32 +113,39 @@ export function DocumentContextualToolbar({
       {contents ? <ContentsMenu contents={contents} /> : null}
       <Menu
         className="document-actions-menu"
-        label="More document actions"
-        title="More actions"
+        label={t({ message: "More document actions" })}
+        title={t({ message: "More actions", context: "DocumentContextualToolbar interface" })}
         trigger={<MoreIcon />}
       >
         {canBookmark && compact ? (
           <BookmarkItem bookmarking={bookmarking} onBookmark={onBookmark} />
         ) : null}
         <button type="button" onClick={() => workspace.openView(source.id, "annotations", pane.id)}>
-          <HighlightIcon /> Annotations
+          <HighlightIcon />
+          <Trans> Annotations</Trans>
         </button>
         <button type="button" onClick={() => workspace.openView(source.id, "note", pane.id)}>
-          <NoteIcon /> Literature note
+          <NoteIcon />
+          <Trans> Literature note</Trans>
         </button>
         <button type="button" onClick={() => workspace.openView(source.id, "citation", pane.id)}>
-          <CitationIcon /> Citation
+          <CitationIcon />
+          <Trans> Citation</Trans>
         </button>
         <hr />
         <button type="button" onClick={() => workspace.openBeside(source.id, "note")}>
-          <NoteIcon /> Open literature note beside
+          <NoteIcon />
+          <Trans> Open literature note beside</Trans>
         </button>
         <button
           type="button"
           className={focusMode ? "is-active" : undefined}
           onClick={onToggleFocus}
         >
-          <ReadingModeIcon /> {focusMode ? "Leave reading mode" : "Reading mode"}
+          <ReadingModeIcon />{" "}
+          {focusMode
+            ? t({ message: "Leave reading mode" })
+            : t({ message: "Reading mode", context: "DocumentContextualToolbar interface" })}
         </button>
         <ExportItem sourceExport={sourceExport} />
         <RemoveItem source={source} onRemoveSource={onRemoveSource} />
@@ -136,6 +159,7 @@ function ExportItem({
 }: {
   readonly sourceExport: SourceExportController;
 }): JSX.Element {
+  const { t } = useLingui();
   return (
     <>
       <button
@@ -144,7 +168,9 @@ function ExportItem({
         onClick={sourceExport.run}
       >
         <DownloadIcon />
-        {sourceExport.status === "exporting" ? "Preparing export…" : "Export source"}
+        {sourceExport.status === "exporting"
+          ? t({ message: "Preparing export…", context: "DocumentContextualToolbar interface" })
+          : t({ message: "Export source", context: "DocumentContextualToolbar interface" })}
       </button>
       {sourceExport.message ? (
         <p className={`menu-note${sourceExport.status === "error" ? " is-error" : ""}`}>
@@ -166,7 +192,8 @@ function RemoveItem({
     <>
       <hr />
       <button type="button" className="is-danger" onClick={() => onRemoveSource(source)}>
-        <TrashIcon /> Remove source…
+        <TrashIcon />
+        <Trans> Remove source…</Trans>
       </button>
     </>
   ) : null;
@@ -182,7 +209,8 @@ function BookmarkItem({
   return (
     <>
       <button type="button" disabled={bookmarking} onClick={onBookmark}>
-        <BookmarkIcon /> Bookmark this position
+        <BookmarkIcon />
+        <Trans> Bookmark this position</Trans>
       </button>
       <hr />
     </>
@@ -190,15 +218,18 @@ function BookmarkItem({
 }
 
 function ContentsMenu({ contents }: { readonly contents: ContentsCapability }): JSX.Element {
+  const { t } = useLingui();
   const entries = useMemo(() => contents.entries(), [contents]);
   return (
     <Menu
       className="document-contents-menu"
-      label="Contents"
-      title="Contents"
+      label={t({ message: "Contents", context: "DocumentContextualToolbar interface" })}
+      title={t({ message: "Contents", context: "DocumentContextualToolbar interface" })}
       trigger={<ListIcon />}
     >
-      <span className="menu-label">Contents</span>
+      <span className="menu-label">
+        <Trans>Contents</Trans>
+      </span>
       <div className="document-contents-list">
         {entries.map((entry) => (
           <button

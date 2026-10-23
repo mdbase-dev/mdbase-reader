@@ -1,3 +1,4 @@
+import { Trans, useLingui } from "@lingui/react/macro";
 import { useRef, useState, type JSX } from "react";
 
 import { LayoutIcon } from "./icons.js";
@@ -12,6 +13,7 @@ export function DockPaneActions({
   readonly group: DockviewGroupPanel;
   readonly dock: ReaderDockWorkspace;
 }): JSX.Element {
+  const { t } = useLingui();
   const menu = useRef<HTMLDivElement>(null);
   const [position, setPosition] = useState({ top: 0, left: 0 });
   const id = `reader-pane-menu-${group.id}`;
@@ -23,8 +25,8 @@ export function DockPaneActions({
     <div className="dock-pane-menu">
       <button
         type="button"
-        aria-label="Pane actions"
-        title="Pane actions"
+        aria-label={t({ message: "Pane actions", context: "DockPaneActions interface" })}
+        title={t({ message: "Pane actions", context: "DockPaneActions interface" })}
         popoverTarget={id}
         onClick={(event) => {
           const bounds = event.currentTarget.getBoundingClientRect();
@@ -43,7 +45,7 @@ export function DockPaneActions({
         className="dock-pane-popover"
         style={position}
         role="group"
-        aria-label="Pane actions"
+        aria-label={t({ message: "Pane actions", context: "DockPaneActions interface" })}
       >
         <button
           type="button"
@@ -52,7 +54,7 @@ export function DockPaneActions({
             run(() => (group.api.isMaximized() ? group.api.exitMaximized() : group.api.maximize()))
           }
         >
-          Maximize / restore pane
+          <Trans>Maximize / restore pane</Trans>
         </button>
         <button
           type="button"
@@ -66,7 +68,7 @@ export function DockPaneActions({
             })
           }
         >
-          Move tab to pane right
+          <Trans>Move tab to pane right</Trans>
         </button>
         <button
           type="button"
@@ -80,19 +82,19 @@ export function DockPaneActions({
             })
           }
         >
-          Move tab to pane below
+          <Trans>Move tab to pane below</Trans>
         </button>
         <button type="button" onClick={() => run(() => dock.merge(group.id))}>
-          Merge into another reading pane
+          <Trans>Merge into another reading pane</Trans>
         </button>
         <button
           type="button"
           onClick={() => run(() => dock.closeMany(group.panels.map(({ id }) => id)))}
         >
-          Close pane and tabs…
+          <Trans>Close pane and tabs…</Trans>
         </button>
         <button type="button" onClick={() => run(() => dock.reset())}>
-          Reset arrangement (keep tabs)
+          <Trans>Reset arrangement (keep tabs)</Trans>
         </button>
       </div>
     </div>

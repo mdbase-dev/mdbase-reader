@@ -1,3 +1,5 @@
+import { t as translate } from "@lingui/core/macro";
+import { Trans, useLingui } from "@lingui/react/macro";
 import {
   DockviewDefaultTab,
   DockviewReact,
@@ -94,6 +96,7 @@ export function DockviewWorkspace({
   readonly inspector: ReactNode;
   readonly inspectorSource?: SourceSummary | null;
 }): JSX.Element {
+  const { t } = useLingui();
   const inspectorTitle = inspectorSource?.title ?? null;
   const dock = document.sourceWorkspace.dock;
   const cleanup = useRef<(() => void) | undefined>(undefined);
@@ -126,7 +129,7 @@ export function DockviewWorkspace({
       <div
         className="reader-dock dockview-theme-light"
         data-mobile={dock.mobile || undefined}
-        aria-label="Reader workspace"
+        aria-label={t({ message: "Reader workspace", context: "DockviewWorkspace interface" })}
       >
         <MobileWorkspaceNavigation dock={dock} />
         <div className="reader-dock-engine" ref={engine}>
@@ -168,7 +171,9 @@ function WorkspacePanel(props: IDockviewPanelProps<{ tab?: WorkspaceTab }>): JSX
     nativeVisible && dockPanelVisible(context.document.sourceWorkspace.dock.api, props.api.id);
   const source =
     tab?.kind === "source" ? context.document.sources.find(({ id }) => id === tab.sourceId) : null;
-  const title = tab ? workspaceTabAccessibleTitle(tab, source ?? null) : "Source";
+  const title = tab
+    ? workspaceTabAccessibleTitle(tab, source ?? null)
+    : translate({ message: "Source", context: "DockviewWorkspace status or action" });
   useEffect(() => {
     if (props.api.title !== title) {
       props.api.setTitle(title);
@@ -190,6 +195,7 @@ function WorkspacePanel(props: IDockviewPanelProps<{ tab?: WorkspaceTab }>): JSX
   );
 }
 function ReaderDockTab(props: IDockviewPanelHeaderProps<{ tab?: WorkspaceTab }>): JSX.Element {
+  const { t } = useLingui();
   const { document, inspectorTitle } = useDockContext();
   const tab = props.params.tab;
   const close = (): void => document.sourceWorkspace.dock.close(props.api.id);
@@ -201,7 +207,7 @@ function ReaderDockTab(props: IDockviewPanelHeaderProps<{ tab?: WorkspaceTab }>)
     <div
       className={`reader-dock-tab${tab?.preview ? " is-preview" : ""}${tab?.dirty ? " is-dirty" : ""}${side ? " is-side" : ""}`}
       data-panel-id={props.api.id}
-      title={`${props.api.title ?? "Source"} · Drag to move or split · Right-click for pane actions · Delete closes the tab`}
+      title={t`${props.api.title ?? translate({ message: "Source", context: "DockviewWorkspace status or action" })} · Drag to move or split · Right-click for pane actions · Delete closes the tab`}
       onDoubleClick={() => document.sourceWorkspace.dock.patch(props.api.id, { preview: false })}
       onKeyDown={(event) => {
         if (event.key === "Delete" && !side) {
@@ -211,12 +217,18 @@ function ReaderDockTab(props: IDockviewPanelHeaderProps<{ tab?: WorkspaceTab }>)
       }}
     >
       {tab?.pinned ? (
-        <span aria-label="Pinned" className="dock-tab-marker is-pinned">
+        <span
+          aria-label={t({ message: "Pinned", context: "DockviewWorkspace interface" })}
+          className="dock-tab-marker is-pinned"
+        >
           <PinIcon />
         </span>
       ) : null}
       {tab?.dirty ? (
-        <span aria-label="Unsaved changes" className="dock-tab-marker is-dirty" />
+        <span
+          aria-label={t({ message: "Unsaved changes", context: "DockviewWorkspace interface" })}
+          className="dock-tab-marker is-dirty"
+        />
       ) : null}
       {props.api.id === inspectorPanelId && inspectorTitle ? (
         // The panel keeps its stable title; its tab names the source it inspects instead of
@@ -234,7 +246,7 @@ function ReaderDockTab(props: IDockviewPanelHeaderProps<{ tab?: WorkspaceTab }>)
         <span
           className="dv-default-tab-action reader-tab-close"
           aria-hidden="true"
-          title="Close tab"
+          title={t({ message: "Close tab", context: "DockviewWorkspace interface" })}
           onPointerDown={(event) => event.stopPropagation()}
           onClick={(event) => {
             event.stopPropagation();
@@ -276,10 +288,14 @@ function EmptyDock(): JSX.Element {
   const { document } = useDockContext();
   return (
     <div className="dock-empty">
-      <h2>Make room to read</h2>
-      <p>Open a source from the library. Drag tabs to arrange your workspace.</p>
+      <h2>
+        <Trans>Make room to read</Trans>
+      </h2>
+      <p>
+        <Trans>Open a source from the library. Drag tabs to arrange your workspace.</Trans>
+      </p>
       <button type="button" onClick={() => document.sourceWorkspace.openLibrary()}>
-        Open library
+        <Trans>Open library</Trans>
       </button>
     </div>
   );

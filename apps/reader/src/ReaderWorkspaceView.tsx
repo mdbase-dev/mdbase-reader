@@ -1,3 +1,4 @@
+import { Trans, useLingui } from "@lingui/react/macro";
 import { CommandPalette } from "@mdbase-dev/ui/command-palette";
 import { useCallback, useEffect, useMemo, useRef, type JSX, type RefObject } from "react";
 
@@ -100,6 +101,7 @@ export function ReaderWorkspaceView({
 }: {
   readonly model: ReaderWorkspaceViewModel;
 }): JSX.Element {
+  const { t } = useLingui();
   const { library, source, workspace, sourceWorkspace, composer, sourceAddition } = model;
   useReaderFeedbackContext(Boolean(sourceWorkspace.activeSourceId), library.collectionName);
   const connectionState = useSdkConnectionState(useReaderMdbase(), library.connectionState);
@@ -200,8 +202,12 @@ export function ReaderWorkspaceView({
       {fileDrop.active ? (
         <div className="file-drop-overlay" aria-hidden="true">
           <div>
-            <strong>Drop to add to your library</strong>
-            <span>PDF, EPUB or saved web page</span>
+            <strong>
+              <Trans>Drop to add to your library</Trans>
+            </strong>
+            <span>
+              <Trans>PDF, EPUB or saved web page</Trans>
+            </span>
           </div>
         </div>
       ) : null}
@@ -395,8 +401,8 @@ export function ReaderWorkspaceView({
       />
       <SourceRemovalDialog removal={model.sourceRemoval} />
       <CommandPalette
-        label="Reader commands"
-        placeholder="Search sources and commands"
+        label={t({ message: "Reader commands", context: "ReaderWorkspaceView interface" })}
+        placeholder={t({ message: "Search sources and commands" })}
         showAll={paletteShowsAll}
         open={model.commandsOpen}
         commands={commands}

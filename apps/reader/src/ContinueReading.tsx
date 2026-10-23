@@ -1,3 +1,5 @@
+import { Trans, useLingui } from "@lingui/react/macro";
+
 import type { SourceId, SourceSummary } from "@mdbase-reader/core";
 import type { JSX } from "react";
 
@@ -64,7 +66,9 @@ export function ContinueReading({
   }
   return (
     <section className="continue-reading" aria-labelledby="continue-reading-heading">
-      <h2 id="continue-reading-heading">Continue reading</h2>
+      <h2 id="continue-reading-heading">
+        <Trans>Continue reading</Trans>
+      </h2>
       <div className="continue-reading-list">
         {resumable.map((source) => (
           <ContinueReadingRow key={source.id} source={source} onOpen={onOpen} />
@@ -81,6 +85,7 @@ function ContinueReadingRow({
   readonly source: SourceSummary;
   readonly onOpen: (id: SourceId) => void;
 }): JSX.Element {
+  const { t } = useLingui();
   const progress = readingProgressValue(source);
   const location = readingLocationLabel(source);
   const creators = source.creators.join(", ");
@@ -88,7 +93,7 @@ function ContinueReadingRow({
     <button
       className="continue-reading-item"
       type="button"
-      aria-label={`Continue reading ${source.title}`}
+      aria-label={t`Continue reading ${source.title}`}
       title={source.title}
       onClick={() => onOpen(source.id)}
     >
@@ -103,7 +108,9 @@ function ContinueReadingRow({
           <i style={{ width: `${String(progress)}%` }} />
         </span>
       ) : !location ? (
-        <span className="continue-reading-state">Just started</span>
+        <span className="continue-reading-state">
+          <Trans>Just started</Trans>
+        </span>
       ) : null}
     </button>
   );

@@ -1,3 +1,4 @@
+import { Trans } from "@lingui/react/macro";
 import { useCallback, useEffect, type ReactNode } from "react";
 
 import { markPwaInstallEligible } from "./pwa-install.js";
@@ -32,7 +33,9 @@ export function RenderedSourceDocument({
     <div className="source-document">
       <header className="source-document-heading">
         <h1>{source.title}</h1>
-        <small>Saved document · original headings below are unchanged</small>
+        <small>
+          <Trans>Saved document · original headings below are unchanged</Trans>
+        </small>
       </header>
       <div className="source-document-surface">{render(source, update)}</div>
     </div>

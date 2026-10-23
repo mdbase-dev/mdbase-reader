@@ -2,10 +2,10 @@
 /* eslint-disable @typescript-eslint/require-await -- async act flushes React's queued work */
 import { sourceId, type SourceId } from "@mdbase-reader/core";
 import { act } from "react";
-import { createRoot } from "react-dom/client";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { emptyRowSelection, selectRow, type RowSelection } from "./library-row-selection.js";
+import { createRoot } from "./testing/i18n.js";
 import {
   inspectDelayMs,
   inspectedRowId,

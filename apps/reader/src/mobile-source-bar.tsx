@@ -1,3 +1,5 @@
+import { t as translate } from "@lingui/core/macro";
+
 import { panelTab } from "./dockview-workspace-state.js";
 import { DocumentContextualToolbar } from "./DocumentContextualToolbar.js";
 import { CloseIcon } from "./icons.js";
@@ -58,8 +60,8 @@ export function mobileSourceBar(
         <button
           type="button"
           className="icon-button"
-          aria-label="Close current tab"
-          title="Close tab"
+          aria-label={translate({ message: "Close current tab" })}
+          title={translate({ message: "Close tab", context: "mobile-source-bar interface" })}
           onClick={() => closeActiveTab(dock)}
         >
           <CloseIcon />

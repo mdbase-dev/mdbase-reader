@@ -1,3 +1,4 @@
+import { useLingui } from "@lingui/react/macro";
 import { useVirtualizer } from "@tanstack/react-virtual";
 import {
   useEffect,
@@ -43,6 +44,7 @@ export function LibraryCards({
   /** The scrolling results pane; cards may sit below other content in it. */
   readonly scrollRef: RefObject<HTMLDivElement | null>;
 }): JSX.Element {
+  const { t } = useLingui();
   const gridRef = useRef<HTMLDivElement>(null);
   const width = useElementWidth(scrollRef);
   const offset = useOffsetTop(gridRef);
@@ -70,7 +72,7 @@ export function LibraryCards({
         ref={gridRef}
         className="library-card-grid is-virtual"
         role="list"
-        aria-label="Sources"
+        aria-label={t({ message: "Sources", context: "LibraryCards interface" })}
         style={{ height: `${String(virtualizer.getTotalSize())}px` }}
       >
         {virtualizer.getVirtualItems().map((item) => (
@@ -127,12 +129,13 @@ function LibraryCard({
   readonly onLongPress: () => void;
   readonly onOpen: () => void;
 }): JSX.Element {
+  const { t } = useLingui();
   return (
     <article className={`library-card${selected ? " is-selected" : ""}`} role="listitem">
       <button
         type="button"
         className="library-card-hit-target"
-        aria-label={`Select ${source.title}`}
+        aria-label={t`Select ${source.title}`}
         aria-pressed={selected}
         {...press.bind(onLongPress)}
         onClick={(event) => {
@@ -161,10 +164,16 @@ function LibraryCard({
         <strong aria-hidden="true">{source.title.trim().charAt(0).toLocaleUpperCase()}</strong>
       </div>
       <div className="library-card-copy">
-        <span>{source.creators.join(", ") || "Unknown creator"}</span>
+        <span>
+          {source.creators.join(", ") ||
+            t({ message: "Unknown creator", context: "LibraryCards interface" })}
+        </span>
         <h3>{source.title}</h3>
         <div>
-          <small>{publicationDateLabel(source.published) ?? "Undated"}</small>
+          <small>
+            {publicationDateLabel(source.published) ??
+              t({ message: "Undated", context: "LibraryCards interface" })}
+          </small>
           <ReadingStatus source={source} />
         </div>
         {source.tags.length > 0 ? <p>{source.tags.slice(0, 3).map(String).join(" · ")}</p> : null}

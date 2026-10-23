@@ -1,3 +1,5 @@
+import { t as translate } from "@lingui/core/macro";
+import { Trans, useLingui } from "@lingui/react/macro";
 import { Select, type SelectItems } from "@mdbase-dev/ui/select";
 import { useEffect, useState, type JSX } from "react";
 
@@ -6,9 +8,12 @@ import { citationStyles, formatCitation } from "./citation-renderer.js";
 import type { CslItem } from "@mdbase-reader/core";
 
 export function CitationPreview({ citation }: { readonly citation: CslItem }): JSX.Element {
+  const { t } = useLingui();
   const [style, setStyle] = useState("apa");
   const [locale, setLocale] = useState("en-US");
-  const [preview, setPreview] = useState("Preparing citation…");
+  const [preview, setPreview] = useState(
+    translate({ message: "Preparing citation…", context: "CitationPreview status or action" }),
+  );
   useEffect(() => {
     let current = true;
     void formatCitation(citation, style, locale).then((value) => {
@@ -21,22 +26,27 @@ export function CitationPreview({ citation }: { readonly citation: CslItem }): J
     };
   }, [citation, locale, style]);
   return (
-    <section className="citation-proof" aria-label="Citation preview">
+    <section
+      className="citation-proof"
+      aria-label={t({ message: "Citation preview", context: "CitationPreview interface" })}
+    >
       <header className="citation-proof-controls">
-        <strong>Preview</strong>
+        <strong>
+          <Trans>Preview</Trans>
+        </strong>
         <label>
-          <span>Style</span>
+          <span>{t({ message: "Style" })}</span>
           <Select
-            aria-label="Citation style"
+            aria-label={t({ message: "Citation style", context: "CitationPreview interface" })}
             value={style}
             options={citationStyles.map(([value, label]) => ({ value, label }))}
             onChange={setStyle}
           />
         </label>
         <label>
-          <span>Locale</span>
+          <span>{t({ message: "Locale" })}</span>
           <Select
-            aria-label="Citation locale"
+            aria-label={t({ message: "Citation locale", context: "CitationPreview interface" })}
             value={locale}
             options={localeOptions}
             onChange={setLocale}

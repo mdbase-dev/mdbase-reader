@@ -1,3 +1,5 @@
+import { t as translate } from "@lingui/core/macro";
+import { Trans, useLingui } from "@lingui/react/macro";
 import { useCallback, type JSX } from "react";
 
 import { AnnotationEditingContext } from "./AnnotationEditingContext.js";
@@ -45,18 +47,19 @@ export function InspectorPane({
   onPromote,
   onOpenSourceView,
 }: InspectorPaneProps): JSX.Element {
+  const { t } = useLingui();
   return (
     <aside
       id="reader-source-tools"
       className={open ? "inspector-pane" : "inspector-pane is-mobile-closed"}
-      aria-label="Source workspace"
+      aria-label={t({ message: "Source workspace", context: "InspectorPane interface" })}
       aria-hidden={!open}
       inert={!open}
     >
       {/* The dock tab above names the source; this row only switches its tools. */}
       <div className="inspector-context">
         <span className="sr-only">
-          {paneLabel}: {source?.title ?? "No source in this pane"}
+          {paneLabel}: {source?.title ?? t({ message: "No source in this pane" })}
         </span>
         <InspectorTabs
           tab={tab}
@@ -70,8 +73,8 @@ export function InspectorPane({
           type="button"
           className="icon-button inspector-promote"
           disabled={!source}
-          aria-label={`Open ${tab} in workbench`}
-          title="Keep open as a workbench tab"
+          aria-label={t`Open ${tab} in workbench`}
+          title={t({ message: "Keep open as a workbench tab" })}
           onClick={() => onPromote(tab)}
         >
           <PanelIcon />
@@ -80,11 +83,17 @@ export function InspectorPane({
       {source && workbenchOwner?.tab === tab ? (
         <div className="inspector-status inspector-workbench-owner">
           <strong>
-            {tabLabel(tab)} is open in {workbenchOwner.paneLabel}
+            <Trans>
+              {tabLabel(tab)}
+              is open in
+              {workbenchOwner.paneLabel}
+            </Trans>
           </strong>
-          <span>Reader keeps one writable editor for each source record.</span>
+          <span>
+            <Trans>Reader keeps one writable editor for each source record.</Trans>
+          </span>
           <button type="button" onClick={workbenchOwner.onOpen}>
-            Go to workbench
+            <Trans>Go to workbench</Trans>
           </button>
         </div>
       ) : source ? (
@@ -97,8 +106,14 @@ export function InspectorPane({
         />
       ) : (
         <div className="inspector-status inspector-context-empty">
-          <strong>Notes follow the active pane</strong>
-          <span>Focus a document, note, annotation, or citation tab to inspect its source.</span>
+          <strong>
+            <Trans>Notes follow the active pane</Trans>
+          </strong>
+          <span>
+            <Trans>
+              Focus a document, note, annotation, or citation tab to inspect its source.
+            </Trans>
+          </span>
         </div>
       )}
     </aside>
@@ -116,6 +131,7 @@ function InspectorTabs({
   readonly annotationCount: number | null;
   readonly onChange: (tab: InspectorTab) => void;
 }): JSX.Element {
+  const { t } = useLingui();
   return (
     <div className="inspector-tabs" role="tablist">
       <button
@@ -123,10 +139,13 @@ function InspectorTabs({
         role="tab"
         disabled={!enabled}
         aria-selected={tab === "annotations"}
-        title="Annotations"
+        title={t({ message: "Annotations", context: "InspectorPane interface" })}
         onClick={() => onChange("annotations")}
       >
-        <HighlightIcon /> <span className="inspector-tab-label">Annotations</span>{" "}
+        <HighlightIcon />{" "}
+        <span className="inspector-tab-label">
+          <Trans>Annotations</Trans>
+        </span>{" "}
         <span className="inspector-tab-count">{annotationCount ?? "—"}</span>
       </button>
       <button
@@ -134,27 +153,37 @@ function InspectorTabs({
         role="tab"
         disabled={!enabled}
         aria-selected={tab === "note"}
-        title="Literature note"
+        title={t({ message: "Literature note", context: "InspectorPane interface" })}
         onClick={() => onChange("note")}
       >
-        <NoteIcon /> <span className="inspector-tab-label">Literature note</span>
+        <NoteIcon />{" "}
+        <span className="inspector-tab-label">
+          <Trans>Literature note</Trans>
+        </span>
       </button>
       <button
         type="button"
         role="tab"
         disabled={!enabled}
         aria-selected={tab === "citation"}
-        title="Citation"
+        title={t({ message: "Citation", context: "InspectorPane interface" })}
         onClick={() => onChange("citation")}
       >
-        <CitationIcon /> <span className="inspector-tab-label">Citation</span>
+        <CitationIcon />{" "}
+        <span className="inspector-tab-label">
+          <Trans>Citation</Trans>
+        </span>
       </button>
     </div>
   );
 }
 
 function tabLabel(tab: InspectorTab): string {
-  return tab === "note" ? "Literature note" : tab === "citation" ? "Citation" : "Annotations";
+  return tab === "note"
+    ? translate({ message: "Literature note", context: "InspectorPane status or action" })
+    : tab === "citation"
+      ? translate({ message: "Citation", context: "InspectorPane status or action" })
+      : translate({ message: "Annotations", context: "InspectorPane status or action" });
 }
 
 export function InspectorContent({

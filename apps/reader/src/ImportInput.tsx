@@ -1,3 +1,4 @@
+import { Trans, useLingui } from "@lingui/react/macro";
 import { useState, type JSX } from "react";
 
 import type { ImportController } from "./import-controller.js";
@@ -12,7 +13,9 @@ export function ImportInput({
 }): JSX.Element {
   return (
     <section className="import-step" aria-labelledby="import-input-title">
-      <h2 id="import-input-title">Choose what to bring</h2>
+      <h2 id="import-input-title">
+        <Trans>Choose what to bring</Trans>
+      </h2>
       {service === "zotero" ? (
         <ZoteroInput disabled={disabled} controller={controller} />
       ) : (
@@ -28,20 +31,28 @@ function ZoteroInput({
   disabled: boolean;
   controller: ImportController;
 }): JSX.Element {
+  const { t } = useLingui();
   return (
     <>
       <p>
-        Install the experimental Zotero 10.0.x exporter, then use{" "}
-        <strong>Tools → Export for mdbase Reader…</strong>. Select the whole exported folder—not
-        Zotero’s data directory.
+        <Trans>
+          Install the experimental Zotero 10.0.x exporter, then use{" "}
+          <strong>Tools → Export for mdbase Reader…</strong>. Select the whole exported folder—not
+          Zotero’s data directory.
+        </Trans>
       </p>
       <p>
-        <a href={`${import.meta.env.BASE_URL}downloads/mdbase-reader-exporter-0.1.0.xpi`} download>
-          Download Zotero exporter (.xpi)
-        </a>
+        <Trans>
+          <a
+            href={`${import.meta.env.BASE_URL}downloads/mdbase-reader-exporter-0.1.0.xpi`}
+            download
+          >
+            Download Zotero exporter (.xpi)
+          </a>
+        </Trans>
       </p>
       <label className="import-file">
-        Exported folder
+        {t({ message: "Exported folder" })}
         <input
           type="file"
           multiple
@@ -53,8 +64,10 @@ function ZoteroInput({
         />
       </label>
       <p>
-        Every payload checksum is verified before collection writes. Currently requires a browser
-        with folder selection support, such as Chrome.
+        <Trans>
+          Every payload checksum is verified before collection writes. Currently requires a browser
+          with folder selection support, such as Chrome.
+        </Trans>
       </p>
     </>
   );
@@ -66,20 +79,23 @@ function ReadwiseInput({
   disabled: boolean;
   controller: ImportController;
 }): JSX.Element {
+  const { t } = useLingui();
   const [token, setToken] = useState("");
   const [includeFeed, setIncludeFeed] = useState(false);
   return (
     <>
       <p>
-        Get your{" "}
-        <a href="https://readwise.io/access_token" target="_blank" rel="noreferrer">
-          Readwise access token
-        </a>
-        . It stays in memory in this tab and is sent only to Readwise. Although the token allows
-        writes, this importer only reads.
+        <Trans>
+          Get your{" "}
+          <a href="https://readwise.io/access_token" target="_blank" rel="noreferrer">
+            Readwise access token
+          </a>
+          . It stays in memory in this tab and is sent only to Readwise. Although the token allows
+          writes, this importer only reads.
+        </Trans>
       </p>
       <label>
-        API token
+        {t({ message: "API token" })}
         <input
           className="mdbase-field"
           type="password"
@@ -97,13 +113,17 @@ function ReadwiseInput({
           disabled={disabled}
           onChange={(e) => setIncludeFeed(e.target.checked)}
         />
-        Include unsaved Feed items (archived library items are included either way)
+        {t({
+          message: "Include unsaved Feed items (archived library items are included either way)",
+        })}
       </label>
       <p>
-        Scanning reads Reader metadata, saved article HTML and every Readwise highlight, including
-        Kindle, Apple Books, Instapaper and other classic sources (those import as metadata and
-        highlights, without the book text). Original PDFs and EPUBs download only after
-        confirmation. Readwise limits request rates, so large libraries take several minutes.
+        <Trans>
+          Scanning reads Reader metadata, saved article HTML and every Readwise highlight, including
+          Kindle, Apple Books, Instapaper and other classic sources (those import as metadata and
+          highlights, without the book text). Original PDFs and EPUBs download only after
+          confirmation. Readwise limits request rates, so large libraries take several minutes.
+        </Trans>
       </p>
       <button
         type="button"
@@ -113,7 +133,7 @@ function ReadwiseInput({
           setToken("");
         }}
       >
-        Scan Readwise library
+        <Trans>Scan Readwise library</Trans>
       </button>
     </>
   );

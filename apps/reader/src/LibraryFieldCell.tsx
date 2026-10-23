@@ -1,3 +1,4 @@
+import { useLingui } from "@lingui/react/macro";
 import { useState, type JSX } from "react";
 
 import { propertyValue } from "./library-columns.js";
@@ -20,6 +21,7 @@ export function LibraryFieldCellEditor({
   readonly onSave: (text: string) => Promise<void>;
   readonly onDone: () => void;
 }): JSX.Element {
+  const { t } = useLingui();
   const initial = editableText(propertyValue(source, fieldKey));
   const [text, setText] = useState(initial);
   const [saving, setSaving] = useState(false);
@@ -40,7 +42,7 @@ export function LibraryFieldCellEditor({
   return (
     <input
       className="library-field-editor"
-      aria-label={`Edit ${fieldKey}`}
+      aria-label={t`Edit ${fieldKey}`}
       value={text}
       disabled={saving}
       // eslint-disable-next-line jsx-a11y/no-autofocus -- editing begins by asking for this input.

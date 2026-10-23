@@ -1,3 +1,5 @@
+import { t as translate } from "@lingui/core/macro";
+import { Trans, useLingui } from "@lingui/react/macro";
 import { ReaderButton } from "@mdbase-reader/ui";
 import { useRef, useState } from "react";
 
@@ -15,10 +17,11 @@ export function DocumentStatus({
   readonly reading: ReadingResumeState;
   readonly decorationProblem: string | null;
 }): JSX.Element {
+  const { t } = useLingui();
   if (decorationProblem) {
     return (
       <span className="reading-position-status is-error" title={decorationProblem}>
-        Highlights unavailable
+        <Trans>Highlights unavailable</Trans>
       </span>
     );
   }
@@ -29,9 +32,11 @@ export function DocumentStatus({
   return (
     <span
       className="reading-position-status is-error"
-      title={reading.message ?? "Reader could not save your place in this document."}
+      title={
+        reading.message ?? t({ message: "Reader could not save your place in this document." })
+      }
     >
-      Position not saved
+      <Trans>Position not saved</Trans>
     </span>
   );
 }
@@ -45,6 +50,7 @@ export function DocumentEmpty({
   readonly source?: SourceSummary;
   readonly attachment?: DocumentAttachmentController | null;
 }): JSX.Element {
+  const { t } = useLingui();
   const target = attachment && source ? { attachment, source } : null;
   const state = attachmentState(target);
   const busy = state?.busy === true;
@@ -55,16 +61,22 @@ export function DocumentEmpty({
     <div className={`document-empty${drop.active ? " is-dragging" : ""}`} {...drop.handlers}>
       <div>
         <NoteIcon />
-        <h2>{drop.active ? "Drop to attach" : "No document attached"}</h2>
+        <h2>
+          {drop.active ? t({ message: "Drop to attach" }) : t({ message: "No document attached" })}
+        </h2>
         <p>
-          This source has no file yet. Its literature note, annotations and citation are in the
-          Source panel.
-          {target ? " Attach a PDF, EPUB or saved page, or drop one here." : ""}
+          <Trans>
+            This source has no file yet. Its literature note, annotations and citation are in the
+            Source panel.
+          </Trans>
+          {target ? t({ message: " Attach a PDF, EPUB or saved page, or drop one here." }) : ""}
         </p>
         {target ? (
           <AttachmentActions {...target} busy={busy} onOpenNote={onOpenNote} />
         ) : (
-          <ReaderButton onClick={onOpenNote}>Open literature note</ReaderButton>
+          <ReaderButton onClick={onOpenNote}>
+            <Trans>Open literature note</Trans>
+          </ReaderButton>
         )}
         <AttachmentStatus state={state} />
       </div>
@@ -97,7 +109,7 @@ function AttachmentActions({
     <div className="document-empty-actions">
       {attachment.canChooseFile ? (
         <ReaderButton disabled={busy} onClick={() => attachment.chooseFile(source)}>
-          Attach a file
+          <Trans>Attach a file</Trans>
         </ReaderButton>
       ) : null}
       {attachment.canFindPdf(source) ? (
@@ -107,11 +119,11 @@ function AttachmentActions({
           disabled={busy}
           onClick={() => attachment.findPdf(source)}
         >
-          Find an open-access PDF
+          <Trans>Find an open-access PDF</Trans>
         </button>
       ) : null}
       <button className="connection-secondary" type="button" onClick={onOpenNote}>
-        Open literature note
+        <Trans>Open literature note</Trans>
       </button>
     </div>
   );
@@ -152,7 +164,11 @@ function useAttachDrop(onFile: ((file: File) => void) | null): {
     return { active: false, handlers: {} };
   }
   const own = (event: DragEvent): boolean => {
-    if (!event.dataTransfer.types.includes("Files")) {
+    if (
+      !event.dataTransfer.types.includes(
+        translate({ message: "Files", context: "WorkspacePaneSupport status or action" }),
+      )
+    ) {
       return false;
     }
     event.preventDefault();

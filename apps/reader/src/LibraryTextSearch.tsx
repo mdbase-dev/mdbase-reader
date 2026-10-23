@@ -1,3 +1,5 @@
+import { t as translate } from "@lingui/core/macro";
+import { Trans, useLingui } from "@lingui/react/macro";
 import { useEffect, useId, useState, type JSX } from "react";
 
 import { readerErrorMessage } from "./errors.js";
@@ -27,6 +29,7 @@ export function LibraryTextSearch({
   surfaces,
   onOpen,
 }: LibraryTextSearchProps): JSX.Element {
+  const { t } = useLingui();
   const normalized = query.trim();
   const family = `reader-text-search:${useId()}`;
   const [result, setResult] = useState<{
@@ -54,7 +57,10 @@ export function LibraryTextSearch({
             setResult({
               query: normalized,
               matches: [],
-              problem: readerErrorMessage(reason, "Text search failed. Change the query to retry."),
+              problem: readerErrorMessage(
+                reason,
+                translate({ message: "Text search failed. Change the query to retry." }),
+              ),
             });
           }
         });
@@ -74,17 +80,20 @@ export function LibraryTextSearch({
         );
   const problem = scope === "documents" ? documents.problem : current?.problem;
   return (
-    <section className="library-text-search" aria-label="Text search results">
+    <section className="library-text-search" aria-label={t({ message: "Text search results" })}>
       <p className="search-coverage" role="status">
         {scope === "documents"
           ? documents.coverage
-          : "Searches literature notes and annotation text, not PDF, EPUB or saved-page contents."}
+          : t({
+              message:
+                "Searches literature notes and annotation text, not PDF, EPUB or saved-page contents.",
+            })}
       </p>
       {problem ? <p role="alert">{problem}</p> : null}
       <p role="status">{searchStatus(normalized, scope === "notes" && !current, visible.length)}</p>
       {scope === "documents" ? (
         <p className="search-coverage">
-          Open a result, then use the document’s Find control to locate the passage.
+          <Trans>Open a result, then use the document’s Find control to locate the passage.</Trans>
         </p>
       ) : null}
       <ul className="search-passage-list">
@@ -110,10 +119,10 @@ export function LibraryTextSearch({
                 <small>
                   {source.creators.join(", ")} ·{" "}
                   {view === "document"
-                    ? "Open document"
+                    ? t({ message: "Open document", context: "LibraryTextSearch interface" })
                     : view === "note"
-                      ? "Literature note"
-                      : "Annotation text"}
+                      ? t({ message: "Literature note", context: "LibraryTextSearch interface" })
+                      : t({ message: "Annotation text", context: "LibraryTextSearch interface" })}
                 </small>
                 {excerpt ? <Excerpt value={excerpt} /> : null}
               </button>
@@ -123,7 +132,7 @@ export function LibraryTextSearch({
       </ul>
       {visible.length > limit ? (
         <button type="button" onClick={() => setLimit((value) => value + 100)}>
-          Show more results
+          <Trans>Show more results</Trans>
         </button>
       ) : null}
     </section>
@@ -142,10 +151,10 @@ function Excerpt({ value }: { readonly value: SearchExcerpt }): JSX.Element {
 
 function searchStatus(query: string, searching: boolean, count: number): string {
   if (query.length < 2) {
-    return "Enter at least two characters.";
+    return translate({ message: "Enter at least two characters." });
   }
   if (searching) {
-    return "Searching notes and annotations…";
+    return translate({ message: "Searching notes and annotations…" });
   }
   return `${String(count)} matching ${count === 1 ? "source" : "sources"}`;
 }

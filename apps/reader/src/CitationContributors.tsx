@@ -1,3 +1,5 @@
+import { t as translate } from "@lingui/core/macro";
+import { Trans, useLingui } from "@lingui/react/macro";
 import { Select, type SelectItems } from "@mdbase-dev/ui/select";
 
 import { citationNames, type CslName } from "./citation-form-model.js";
@@ -5,7 +7,7 @@ import { citationNames, type CslName } from "./citation-form-model.js";
 import type { JSX } from "react";
 
 // Name rows intentionally keep the official CSL name surface together for auditability.
-// eslint-disable-next-line max-lines-per-function
+
 export function CitationContributors({
   citation,
   field,
@@ -17,8 +19,16 @@ export function CitationContributors({
   readonly label: string;
   readonly onChange: (field: string, value: unknown) => void;
 }): JSX.Element {
+  const { t } = useLingui();
   const names = citationNames(citation, field);
-  const itemLabel = singular(label);
+  const itemLabel =
+    field === "author"
+      ? t`Author`
+      : field === "editor"
+        ? t`Editor`
+        : field === "translator"
+          ? t`Translator`
+          : t`Contributor`;
   const update = (index: number, name: CslName): void => {
     onChange(
       field,
@@ -35,16 +45,16 @@ export function CitationContributors({
               {itemLabel} {String(index + 1)}
             </span>
             <Select
-              aria-label={`${itemLabel} ${String(index + 1)} kind`}
+              aria-label={t`${itemLabel} ${String(index + 1)} kind`}
               value={name.literal === undefined ? "person" : "organisation"}
-              options={contributorKindOptions}
+              options={contributorKindOptions()}
               onChange={(kind) =>
                 update(index, kind === "person" ? { given: "", family: "" } : { literal: "" })
               }
             />
             <button
               type="button"
-              aria-label={`Remove ${itemLabel.toLocaleLowerCase()} ${String(index + 1)}`}
+              aria-label={t`Remove ${itemLabel} ${String(index + 1)}`}
               onClick={() =>
                 onChange(
                   field,
@@ -52,7 +62,7 @@ export function CitationContributors({
                 )
               }
             >
-              Remove
+              <Trans context="CitationContributors interface">Remove</Trans>
             </button>
           </header>
           <div className="citation-contributor-fields">
@@ -60,15 +70,21 @@ export function CitationContributors({
               <>
                 <input
                   className="mdbase-field"
-                  aria-label={`${itemLabel} ${String(index + 1)} given name`}
-                  placeholder="Given names"
+                  aria-label={t`${itemLabel} ${String(index + 1)} given name`}
+                  placeholder={t({
+                    message: "Given names",
+                    context: "CitationContributors interface",
+                  })}
                   value={name.given ?? ""}
                   onChange={(event) => update(index, { ...name, given: event.target.value })}
                 />
                 <input
                   className="mdbase-field"
-                  aria-label={`${itemLabel} ${String(index + 1)} family name`}
-                  placeholder="Family name"
+                  aria-label={t`${itemLabel} ${String(index + 1)} family name`}
+                  placeholder={t({
+                    message: "Family name",
+                    context: "CitationContributors interface",
+                  })}
                   value={name.family ?? ""}
                   onChange={(event) => update(index, { ...name, family: event.target.value })}
                 />
@@ -76,74 +92,23 @@ export function CitationContributors({
             ) : (
               <input
                 className="mdbase-field"
-                aria-label={`${itemLabel} ${String(index + 1)} organisation`}
-                placeholder="Organisation name"
+                aria-label={t`${itemLabel} ${String(index + 1)} organisation`}
+                placeholder={t({
+                  message: "Organisation name",
+                  context: "CitationContributors interface",
+                })}
                 value={name.literal}
                 onChange={(event) => update(index, { literal: event.target.value })}
               />
             )}
           </div>
           {name.literal === undefined ? (
-            <details className="citation-name-details">
-              <summary>More name details</summary>
-              <div>
-                <input
-                  className="mdbase-field"
-                  aria-label={`${itemLabel} ${String(index + 1)} suffix`}
-                  placeholder="Suffix"
-                  value={name.suffix ?? ""}
-                  onChange={(event) => update(index, { ...name, suffix: event.target.value })}
-                />
-                <input
-                  className="mdbase-field"
-                  aria-label={`${itemLabel} ${String(index + 1)} dropping particle`}
-                  placeholder="Dropping particle"
-                  value={name["dropping-particle"] ?? ""}
-                  onChange={(event) =>
-                    update(index, { ...name, "dropping-particle": event.target.value })
-                  }
-                />
-                <input
-                  className="mdbase-field"
-                  aria-label={`${itemLabel} ${String(index + 1)} non-dropping particle`}
-                  placeholder="Non-dropping particle"
-                  value={name["non-dropping-particle"] ?? ""}
-                  onChange={(event) =>
-                    update(index, { ...name, "non-dropping-particle": event.target.value })
-                  }
-                />
-                <label>
-                  <input
-                    type="checkbox"
-                    checked={Boolean(name["comma-suffix"])}
-                    onChange={(event) =>
-                      update(index, { ...name, "comma-suffix": event.target.checked })
-                    }
-                  />
-                  Comma before suffix
-                </label>
-                <label>
-                  <input
-                    type="checkbox"
-                    checked={Boolean(name["static-ordering"])}
-                    onChange={(event) =>
-                      update(index, { ...name, "static-ordering": event.target.checked })
-                    }
-                  />
-                  Keep name order
-                </label>
-                <label>
-                  <input
-                    type="checkbox"
-                    checked={Boolean(name["parse-names"])}
-                    onChange={(event) =>
-                      update(index, { ...name, "parse-names": event.target.checked })
-                    }
-                  />
-                  Parse literal name
-                </label>
-              </div>
-            </details>
+            <ContributorNameDetails
+              name={name}
+              index={index}
+              itemLabel={itemLabel}
+              onChange={(next) => update(index, next)}
+            />
           ) : null}
         </div>
       ))}
@@ -152,17 +117,104 @@ export function CitationContributors({
         className="citation-add-row"
         onClick={() => onChange(field, [...names, { given: "", family: "" }])}
       >
-        + Add {itemLabel.toLocaleLowerCase()}
+        <Trans>
+          + Add
+          {itemLabel}
+        </Trans>
       </button>
     </fieldset>
   );
 }
 
-function singular(label: string): string {
-  return label.endsWith("s") ? label.slice(0, -1) : label;
+function ContributorNameDetails({
+  name,
+  index,
+  itemLabel,
+  onChange,
+}: {
+  readonly name: CslName;
+  readonly index: number;
+  readonly itemLabel: string;
+  readonly onChange: (name: CslName) => void;
+}): JSX.Element {
+  const { t } = useLingui();
+  return (
+    <details className="citation-name-details">
+      <summary>
+        <Trans>More name details</Trans>
+      </summary>
+      <div>
+        <input
+          className="mdbase-field"
+          aria-label={t`${itemLabel} ${String(index + 1)} suffix`}
+          placeholder={t({ message: "Suffix", context: "CitationContributors interface" })}
+          value={name.suffix ?? ""}
+          onChange={(event) => onChange({ ...name, suffix: event.target.value })}
+        />
+        <input
+          className="mdbase-field"
+          aria-label={t`${itemLabel} ${String(index + 1)} dropping particle`}
+          placeholder={t({
+            message: "Dropping particle",
+            context: "CitationContributors interface",
+          })}
+          value={name["dropping-particle"] ?? ""}
+          onChange={(event) => onChange({ ...name, "dropping-particle": event.target.value })}
+        />
+        <input
+          className="mdbase-field"
+          aria-label={t`${itemLabel} ${String(index + 1)} non-dropping particle`}
+          placeholder={t({
+            message: "Non-dropping particle",
+            context: "CitationContributors interface",
+          })}
+          value={name["non-dropping-particle"] ?? ""}
+          onChange={(event) => onChange({ ...name, "non-dropping-particle": event.target.value })}
+        />
+        <label>
+          <input
+            type="checkbox"
+            checked={Boolean(name["comma-suffix"])}
+            onChange={(event) => onChange({ ...name, "comma-suffix": event.target.checked })}
+          />
+          {t({ message: "Comma before suffix" })}
+        </label>
+        <label>
+          <input
+            type="checkbox"
+            checked={Boolean(name["static-ordering"])}
+            onChange={(event) => onChange({ ...name, "static-ordering": event.target.checked })}
+          />
+          {t({ message: "Keep name order" })}
+        </label>
+        <label>
+          <input
+            type="checkbox"
+            checked={Boolean(name["parse-names"])}
+            onChange={(event) => onChange({ ...name, "parse-names": event.target.checked })}
+          />
+          {t({ message: "Parse literal name" })}
+        </label>
+      </div>
+    </details>
+  );
 }
 
-const contributorKindOptions: SelectItems<"person" | "organisation"> = [
-  { value: "person", label: "Person" },
-  { value: "organisation", label: "Organisation" },
-];
+function contributorKindOptions(): SelectItems<"person" | "organisation"> {
+  return [
+    {
+      value: "person",
+      label: translate({
+        message: "Person",
+        context: "CitationContributors contributorKindOptions",
+      }),
+    },
+    {
+      value: "organisation",
+      label: translate({
+        message: "Organisation",
+        context: "CitationContributors contributorKindOptions",
+      }),
+    },
+  ];
+}
