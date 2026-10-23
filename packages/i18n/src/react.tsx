@@ -16,6 +16,7 @@ export function ReaderI18nProvider({
 }): JSX.Element {
   const [failed, setFailed] = useState(false);
   const onError = useCallback(() => setFailed(true), []);
+  useEffect(() => runtime.i18n.on("change", () => setFailed(false)), [runtime]);
   return (
     <LocaleProvider runtime={runtime} onError={onError}>
       <NativeLocaleBridge />
@@ -47,9 +48,10 @@ function LanguageLoadNotice(): JSX.Element {
 
 /** The kit supplies endonyms, pending state and accessible native-select behavior. */
 export function ReaderLanguageSetting(): JSX.Element {
-  const { t } = useLingui();
+  const { i18n, t } = useLingui();
   const id = useId();
   const [failed, setFailed] = useState(false);
+  useEffect(() => i18n.on("change", () => setFailed(false)), [i18n]);
   return (
     <div className="display-choice reader-language-setting" data-menu-keep-open>
       <label htmlFor={id}>

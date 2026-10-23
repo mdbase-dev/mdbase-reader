@@ -137,7 +137,7 @@ export function formatPropertyValue(value: unknown): string {
       : t({ message: "No", context: "library columns" });
   }
   if (typeof value === "number") {
-    return value.toLocaleString();
+    return value.toLocaleString(i18n.locale);
   }
   if (typeof value === "string") {
     // Wikilinks read as their alias or target, not their brackets.

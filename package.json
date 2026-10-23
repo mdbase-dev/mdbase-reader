@@ -9,7 +9,8 @@
     "node": ">=22.12 <23"
   },
   "scripts": {
-    "build": "pnpm i18n:check && pnpm -r --if-present build",
+    "build": "pnpm i18n:check && pnpm build:code",
+    "build:code": "pnpm -r --if-present build",
     "build:native:ci": "node scripts/qualify-native-staging.mjs ci-build",
     "build:native:staging": "node scripts/qualify-native-staging.mjs local-qualification",
     "postqualify:native:staging": "node scripts/postqualify-native-staging.mjs",
