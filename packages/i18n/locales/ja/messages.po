@@ -1549,17 +1549,17 @@ msgstr "引用"
 #: apps/extension/src/CitationCard.tsx
 #: apps/reader/src/CitationStructuredEditor.tsx
 msgid "Citekey"
-msgstr ""
+msgstr "引用キー"
 
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "Citekey"
-msgstr ""
+msgstr "引用キー"
 
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "Classic"
-msgstr ""
+msgstr "古典"
 
 #: apps/reader/src/AnnotationList.tsx
 #: apps/reader/src/LibraryAnnotationBars.tsx
@@ -1575,11 +1575,11 @@ msgstr "クリア"
 #: apps/reader/src/LibraryAnnotationToolbar.tsx
 #: apps/reader/src/LibraryWorkspace.tsx
 msgid "Clear filters"
-msgstr ""
+msgstr "フィルターをクリア"
 
 #: apps/reader/src/LibraryWorkspace.tsx
 msgid "Clear search and filters"
-msgstr ""
+msgstr "検索とフィルターをクリア"
 
 #: apps/reader/src/LibraryBulkBar.tsx
 msgctxt "LibraryBulkBar interface"
@@ -1588,15 +1588,15 @@ msgstr "選択をクリア"
 
 #: apps/reader/src/LibraryBulkBar.tsx
 msgid "Clear selection · Esc"
-msgstr ""
+msgstr "選択を解除 · Esc"
 
 #: apps/extension/src/HighlightFields.tsx
 msgid "Clear the selection (Esc)"
-msgstr ""
+msgstr "選択を解除（Esc）"
 
 #: apps/reader/src/LibraryTableRow.tsx
 msgid "Click to edit · F2"
-msgstr ""
+msgstr "クリックして編集 · F2"
 
 #: apps/reader/src/AnnotationEditor.tsx
 msgctxt "AnnotationEditor interface"
@@ -1626,54 +1626,54 @@ msgstr "閉じる"
 #: apps/reader/src/reader-command-list.ts
 msgctxt "reader command list"
 msgid "Close active tab"
-msgstr ""
+msgstr "アクティブなタブを閉じる"
 
 #: apps/reader/src/SourceAddDialog.tsx
 msgid "Close add source"
-msgstr ""
+msgstr "資料の追加を閉じる"
 
 #: apps/reader/src/mobile-source-bar.tsx
 msgid "Close current tab"
-msgstr ""
+msgstr "現在のタブを閉じる"
 
 #: packages/renderer-pdf/src/pdf-translations.ts
 msgctxt "PDF viewer documentError"
 msgid "Close Document"
-msgstr ""
+msgstr "文書を閉じる"
 
 #: apps/reader/src/reader-command-list.ts
 msgid "Close focused pane and keep its tabs"
-msgstr ""
+msgstr "フォーカス中のペインを閉じてタブを残す"
 
 #: apps/reader/src/dockview-menus.ts
 msgid "Close other unpinned tabs"
-msgstr ""
+msgstr "固定されていない他のタブを閉じる"
 
 #: apps/reader/src/DockPaneActions.tsx
 msgid "Close pane and tabs…"
-msgstr ""
+msgstr "ペインとタブを閉じる…"
 
 #: apps/reader/src/DockviewWorkspace.tsx
 msgctxt "DockviewWorkspace interface"
 msgid "Close tab"
-msgstr ""
+msgstr "タブを閉じる"
 
 #: apps/reader/src/mobile-source-bar.tsx
 msgctxt "mobile-source-bar interface"
 msgid "Close tab"
-msgstr ""
+msgstr "タブを閉じる"
 
 #: apps/reader/src/ReaderApp.tsx
 msgid "Close this tab with unsaved changes? Keep it open until saving finishes to avoid losing work."
-msgstr ""
+msgstr "未保存の変更があるタブを閉じますか？作業を失わないよう、保存が終わるまで開いたままにしてください。"
 
 #: apps/reader/src/dockview-menus.ts
 msgid "Close unpinned tabs to the right"
-msgstr ""
+msgstr "右側の固定されていないタブを閉じる"
 
 #: apps/reader/src/use-annotation-edit.ts
 msgid "Close with unsaved changes? Saving may continue in this window, but reloading Reader before it finishes will lose them."
-msgstr ""
+msgstr "未保存の変更があるまま閉じますか？このウィンドウ内では保存が続く場合がありますが、完了前にReaderを再読み込みすると変更が失われます。"
 
 #: apps/extension/src/ConnectionPanel.tsx
 #: apps/extension/src/OptionsApp.tsx
@@ -1694,17 +1694,17 @@ msgstr "コレクション"
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "Collection editor"
-msgstr ""
+msgstr "コレクションの編集者"
 
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "Collection number"
-msgstr ""
+msgstr "コレクション番号"
 
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "Collection title"
-msgstr ""
+msgstr "コレクションのタイトル"
 
 #: apps/reader/src/DraftRecoveryNotice.tsx
 msgid "Collection version"
@@ -1712,16 +1712,16 @@ msgstr "コレクションのバージョン"
 
 #: apps/reader/src/CollectionPicker.tsx
 msgid "Collection: "
-msgstr ""
+msgstr "コレクション："
 
 #. placeholder {0}: collection.collectionName
 #: apps/reader/src/NativeImportPage.tsx
 msgid "Collection: {0}"
-msgstr ""
+msgstr "コレクション：{0}"
 
 #: apps/reader/src/CollectionPicker.tsx
 msgid "Collection: {name}"
-msgstr ""
+msgstr "コレクション：{name}"
 
 #: apps/reader/src/CollectionMenu.tsx
 msgid "Collections"
@@ -1730,21 +1730,21 @@ msgstr "コレクション"
 #: apps/reader/src/LibraryTableHeader.tsx
 msgctxt "LibraryTableHeader interface"
 msgid "Column options"
-msgstr ""
+msgstr "列のオプション"
 
 #: apps/reader/src/DisplayMenu.tsx
 msgctxt "DisplayMenu interface"
 msgid "Comfortable"
-msgstr ""
+msgstr "ゆったり"
 
 #: apps/reader/src/CitationContributors.tsx
 msgid "Comma before suffix"
-msgstr ""
+msgstr "接尾辞の前にコンマ"
 
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "Comma suffix"
-msgstr ""
+msgstr "接尾辞のコンマ"
 
 #: apps/extension/src/SavedHighlights.tsx
 msgid "Comment"
@@ -1768,19 +1768,19 @@ msgstr "コメント"
 #: apps/reader/src/SelectionToolbar.tsx
 msgctxt "SelectionToolbar interface"
 msgid "Comment (C)"
-msgstr ""
+msgstr "コメント（C）"
 
 #: apps/extension/src/HighlightFields.tsx
 msgid "Comment <0>(optional)</0>"
-msgstr ""
+msgstr "コメント<0>（省略可）</0>"
 
 #: apps/reader/src/AnnotationComposer.tsx
 msgid "Comment on highlight"
-msgstr ""
+msgstr "ハイライトにコメント"
 
 #: apps/reader/src/AnnotationPanelActions.tsx
 msgid "Comment on the source as a whole"
-msgstr ""
+msgstr "資料全体にコメント"
 
 #: apps/reader/src/LibraryAnnotationToolbar.tsx
 msgctxt "LibraryAnnotationToolbar annotationTypeOptions"
@@ -1790,21 +1790,21 @@ msgstr "コメント"
 #: apps/reader/src/AnnotationList.tsx
 msgctxt "AnnotationList annotationFilterOptions"
 msgid "Comments on the source"
-msgstr ""
+msgstr "資料へのコメント"
 
 #: apps/reader/src/CitationStructuredEditor.tsx
 msgctxt "CitationStructuredEditor status or action"
 msgid "Common"
-msgstr ""
+msgstr "一般"
 
 #: apps/reader/src/DisplayMenu.tsx
 msgctxt "DisplayMenu interface"
 msgid "Compact"
-msgstr ""
+msgstr "コンパクト"
 
 #: apps/reader/src/AnnotationEditor.tsx
 msgid "Compare collection version"
-msgstr ""
+msgstr "コレクションのバージョンを比較"
 
 #: apps/reader/src/DraftRecoveryNotice.tsx
 msgid "Compare versions"
@@ -1813,12 +1813,12 @@ msgstr "バージョンを比較"
 #: apps/reader/src/LibraryConditionsEditor.tsx
 msgctxt "LibraryConditionsEditor interface"
 msgid "Comparison"
-msgstr ""
+msgstr "比較"
 
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "Compiler"
-msgstr ""
+msgstr "編纂者"
 
 #: apps/reader/src/import-controller.ts
 msgctxt "Import completed"
@@ -1828,26 +1828,26 @@ msgstr "完了"
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "Composer"
-msgstr ""
+msgstr "作曲者"
 
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "Conference paper"
-msgstr ""
+msgstr "学会発表論文"
 
 #: apps/reader/src/citation-form-model.ts
 msgctxt "CSL item type"
 msgid "Conference paper"
-msgstr ""
+msgstr "学会発表論文"
 
 #: apps/reader/src/ImportReview.tsx
 msgid "Confirm"
-msgstr ""
+msgstr "確認"
 
 #: apps/reader/src/SelectionToolbar.tsx
 msgctxt "SelectionToolbar interface"
 msgid "Confirm delete"
-msgstr ""
+msgstr "削除を確認"
 
 #: apps/reader/src/SourceNoteEditor.tsx
 msgctxt "SourceNoteEditor status or action"
@@ -1861,12 +1861,12 @@ msgstr "コレクションを接続"
 
 #: apps/reader/src/ImportPageView.tsx
 msgid "Connect and scan your library →"
-msgstr ""
+msgstr "接続してライブラリをスキャン →"
 
 #: apps/extension/src/ConnectionPanel.tsx
 #: apps/reader/src/ConnectReader.tsx
 msgid "Connect another collection"
-msgstr ""
+msgstr "別のコレクションを接続"
 
 #: apps/reader/src/CollectionMenu.tsx
 msgid "Connect another collection…"
@@ -1875,16 +1875,16 @@ msgstr "別のコレクションを接続…"
 #: apps/reader/src/ReaderHeader.tsx
 msgctxt "ReaderHeader interface"
 msgid "Connect directly"
-msgstr ""
+msgstr "直接接続"
 
 #. placeholder {0}: environment.label || "mdbase"
 #: apps/extension/src/ConnectionPanel.tsx
 msgid "Connect rejected this extension’s origin. Reload the current extension build and retry. If it persists, check the {0} Connect configuration; Reader will not bypass the origin check."
-msgstr ""
+msgstr "Connectがこの拡張機能のオリジンを拒否しました。現在の拡張機能を再読み込みして再試行してください。解決しない場合は{0}のConnect設定を確認してください。Readerはオリジンの確認を迂回しません。"
 
 #: apps/extension/src/ConnectionPanel.tsx
 msgid "Connect to mdbase{target}"
-msgstr ""
+msgstr "mdbase{target}に接続"
 
 #: apps/reader/src/ReaderHeader.tsx
 msgid "Connected"
@@ -1897,19 +1897,19 @@ msgstr "接続済みコレクション"
 
 #: apps/reader/src/ReaderHeader.tsx
 msgid "Connected directly to this computer"
-msgstr ""
+msgstr "このコンピューターに直接接続中"
 
 #: apps/extension/src/CollectionSection.tsx
 msgid "Connected. The panel saves here unless you choose another."
-msgstr ""
+msgstr "接続しました。別の保存先を選ばない限り、このパネルからはここに保存されます。"
 
 #: apps/reader/src/preview.tsx
 msgid "Connecting a collection needs mdbase Connect, outside the preview."
-msgstr ""
+msgstr "コレクションの接続には、プレビュー外のmdbase Connectが必要です。"
 
 #: apps/reader/src/ImportDestination.tsx
 msgid "Connecting to mdbase…"
-msgstr ""
+msgstr "mdbaseに接続中…"
 
 #: apps/extension/src/ConnectionPanel.tsx
 #: apps/reader/src/ReaderHeader.tsx
@@ -1918,22 +1918,22 @@ msgstr "接続中…"
 
 #: apps/extension/src/DiagnosticsPanel.tsx
 msgid "Connection diagnostics"
-msgstr ""
+msgstr "接続の診断情報"
 
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "Container author"
-msgstr ""
+msgstr "収録作品の著者"
 
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "Container title"
-msgstr ""
+msgstr "収録先のタイトル"
 
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "Container title short"
-msgstr ""
+msgstr "収録先の略称"
 
 #: apps/reader/src/library-conditions.ts
 msgctxt "Field filter comparison operator"
@@ -1942,42 +1942,42 @@ msgstr "次を含む"
 
 #: apps/reader/src/ImportReview.tsx
 msgid "Content files"
-msgstr ""
+msgstr "コンテンツファイル"
 
 #: apps/reader/src/ImportReview.tsx
 msgid "Content size"
-msgstr ""
+msgstr "コンテンツのサイズ"
 
 #: apps/reader/src/DocumentContextualToolbar.tsx
 msgid "Contents"
-msgstr ""
+msgstr "目次"
 
 #: apps/reader/src/DocumentContextualToolbar.tsx
 msgctxt "DocumentContextualToolbar interface"
 msgid "Contents"
-msgstr ""
+msgstr "目次"
 
 #: apps/reader/src/ContinueReading.tsx
 msgid "Continue reading"
-msgstr ""
+msgstr "続きを読む"
 
 #. placeholder {0}: source.title
 #: apps/reader/src/ContinueReading.tsx
 msgid "Continue reading {0}"
-msgstr ""
+msgstr "{0}の続きを読む"
 
 #: apps/reader/src/CitationContributors.tsx
 msgid "Contributor"
-msgstr ""
+msgstr "寄稿者"
 
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "Contributor"
-msgstr ""
+msgstr "寄稿者"
 
 #: apps/reader/src/CitationStructuredEditor.tsx
 msgid "Contributors"
-msgstr ""
+msgstr "寄稿者"
 
 #: apps/extension/src/CitationPanel.tsx
 msgid "Copied"
@@ -1990,7 +1990,7 @@ msgstr "コピーしました"
 
 #: apps/reader/src/SelectionToolbar.tsx
 msgid "Copied with citation"
-msgstr ""
+msgstr "引用情報付きでコピーしました"
 
 #: apps/reader/src/SelectionToolbar.tsx
 msgid "Copy"
@@ -2004,86 +2004,86 @@ msgstr "コピー"
 #. placeholder {0}: composer.quoteCitation.citekey
 #: apps/reader/src/SelectionToolbar.tsx
 msgid "Copy as a quote citing @{0}"
-msgstr ""
+msgstr "@{0}を引用した引用文としてコピー"
 
 #: apps/reader/src/SelectionToolbar.tsx
 msgid "Copy as a quote citing the source's title"
-msgstr ""
+msgstr "資料のタイトルを示す引用文としてコピー"
 
 #: apps/reader/src/LibraryAnnotationBars.tsx
 msgid "Copy as Markdown"
-msgstr ""
+msgstr "Markdown形式でコピー"
 
 #: apps/extension/src/CitationPanel.tsx
 msgid "Copy citekey"
-msgstr ""
+msgstr "引用キーをコピー"
 
 #: apps/reader/src/LibraryRowMenu.tsx
 msgid "Copy citekey <0>@{citekey}</0>"
-msgstr ""
+msgstr "引用キー<0>@{citekey}</0>をコピー"
 
 #: apps/extension/src/CitationPanel.tsx
 msgid "Copy CSL-JSON"
-msgstr ""
+msgstr "CSL-JSONをコピー"
 
 #: packages/renderer-pdf/src/pdf-translations.ts
 msgctxt "PDF viewer selection"
 msgid "Copy Selection"
-msgstr ""
+msgstr "選択範囲をコピー"
 
 #: apps/reader/src/SelectionToolbar.tsx
 msgctxt "SelectionToolbar interface"
 msgid "Copy text"
-msgstr ""
+msgstr "テキストをコピー"
 
 #: apps/reader/src/SelectionToolbar.tsx
 msgid "Copy with citation"
-msgstr ""
+msgstr "引用情報付きでコピー"
 
 #: apps/reader/src/LibraryAnnotationBars.tsx
 msgid "Copying needs clipboard permission."
-msgstr ""
+msgstr "コピーにはクリップボードへのアクセス許可が必要です。"
 
 #: apps/reader/src/NativeImportPage.tsx
 msgid "Could not change the collection. Please try again."
-msgstr ""
+msgstr "コレクションを変更できませんでした。再試行してください。"
 
 #. placeholder {0}: problemMessage(reason)
 #: apps/extension/src/use-extension-capture.ts
 msgid "Could not check existing sources: {0}"
-msgstr ""
+msgstr "既存の資料を確認できませんでした：{0}"
 
 #: apps/reader/src/use-annotation-deletion.ts
 msgid "Could not check this annotation."
-msgstr ""
+msgstr "この注釈を確認できませんでした。"
 
 #: apps/reader/src/ImportPage.tsx
 msgid "Could not connect to mdbase."
-msgstr ""
+msgstr "mdbaseに接続できませんでした。"
 
 #: apps/extension/src/CitationPanel.tsx
 msgid "Could not copy"
-msgstr ""
+msgstr "コピーできませんでした"
 
 #: apps/reader/src/use-annotation-deletion.ts
 msgid "Could not delete this annotation."
-msgstr ""
+msgstr "この注釈を削除できませんでした。"
 
 #: apps/extension/src/page-capture.ts
 msgid "Could not download this PDF (HTTP {status})."
-msgstr ""
+msgstr "このPDFをダウンロードできませんでした（HTTP {status}）。"
 
 #: apps/reader/src/use-annotation-navigation.ts
 msgid "Could not locate this annotation."
-msgstr ""
+msgstr "この注釈の位置が見つかりませんでした。"
 
 #: apps/reader/src/annotation-navigation.ts
 msgid "Could not locate this passage. The annotation is safe; the document may have changed."
-msgstr ""
+msgstr "この箇所の位置が見つかりませんでした。注釈は安全に保存されていますが、文書が変更された可能性があります。"
 
 #: apps/reader/src/ImportDestination.tsx
 msgid "Could not open mdbase approval. Allow popups and try again."
-msgstr ""
+msgstr "mdbaseの承認画面を開けませんでした。ポップアップを許可して再試行してください。"
 
 #: apps/extension/src/NotePanel.tsx
 msgid "Could not open the literature note."
