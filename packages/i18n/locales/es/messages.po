@@ -7901,487 +7901,487 @@ msgstr "Error desconocido al crear la anotación"
 #: apps/reader/src/LibraryCards.tsx
 msgctxt "LibraryCards interface"
 msgid "Unknown creator"
-msgstr ""
+msgstr "Creador desconocido"
 
 #: apps/reader/src/LibraryNavigator.tsx
 msgctxt "LibraryNavigator interface"
 msgid "Unknown creator"
-msgstr ""
+msgstr "Creador desconocido"
 
 #: apps/reader/src/NavigatorSections.tsx
 msgctxt "NavigatorSections status or action"
 msgid "Unknown creator"
-msgstr ""
+msgstr "Creador desconocido"
 
 #: apps/reader/src/reader-command-list.ts
 msgctxt "reader command list"
 msgid "Unknown creator"
-msgstr ""
+msgstr "Creador desconocido"
 
 #: apps/reader/src/annotation-overview.ts
 msgid "Unknown source"
-msgstr ""
+msgstr "Fuente desconocida"
 
 #: apps/reader/src/LibraryAnnotationRow.tsx
 msgctxt "LibraryAnnotationRow interface"
 msgid "Unknown source"
-msgstr ""
+msgstr "Fuente desconocida"
 
 #: packages/migration/src/zotero-bundle.ts
 msgid "Unlisted file in bundle."
-msgstr ""
+msgstr "Archivo no listado en el paquete."
 
 #: apps/reader/src/dockview-menus.ts
 msgctxt "dockview menus"
 msgid "Unpin tab"
-msgstr ""
+msgstr "Desanclar pestaña"
 
 #: apps/reader/src/library-lenses.ts
 msgctxt "library lenses"
 msgid "Unread inbox"
-msgstr ""
+msgstr "Bandeja de entrada sin leer"
 
 #: packages/migration/src/zotero-validation.ts
 msgid "Unreported missing parent."
-msgstr ""
+msgstr "Falta un elemento principal no informado."
 
 #: packages/migration/src/model.ts
 msgid "Unsafe import path."
-msgstr ""
+msgstr "Ruta de importación no segura."
 
 #: apps/reader/src/AnnotationEditor.tsx
 msgid "Unsaved"
-msgstr ""
+msgstr "Sin guardar"
 
 #: apps/extension/src/NotePanel.tsx
 msgid "Unsaved changes"
-msgstr ""
+msgstr "Cambios sin guardar"
 
 #: apps/reader/src/AnnotationCard.tsx
 msgctxt "AnnotationCard interface"
 msgid "Unsaved changes"
-msgstr ""
+msgstr "Cambios sin guardar"
 
 #: apps/reader/src/CitationEditor.tsx
 msgctxt "CitationEditor interface"
 msgid "Unsaved changes"
-msgstr ""
+msgstr "Cambios sin guardar"
 
 #: apps/reader/src/DockviewWorkspace.tsx
 msgctxt "DockviewWorkspace interface"
 msgid "Unsaved changes"
-msgstr ""
+msgstr "Cambios sin guardar"
 
 #: packages/migration/src/readwise.ts
 msgid "Unsaved Feed items excluded (choose “Include unsaved Feed items” to import)"
-msgstr ""
+msgstr "Elementos de Feed sin guardar excluidos (elige «Incluir elementos de Feed sin guardar» para importarlos)"
 
 #: packages/migration/src/zotero-pdf.ts
 msgid "Unsupported PDF page geometry."
-msgstr ""
+msgstr "Geometría de página de PDF no admitida."
 
 #: apps/reader/src/citation-form-model.ts
 msgid "Unsupported value"
-msgstr ""
+msgstr "Valor no admitido"
 
 #: packages/migration/src/zotero-bundle.ts
 msgid "Unsupported Zotero bundle version."
-msgstr ""
+msgstr "Versión del paquete de Zotero no admitida."
 
 #: apps/reader/src/annotation-wiki-candidates.ts
 msgid "Untitled annotation"
-msgstr ""
+msgstr "Anotación sin título"
 
 #: apps/reader/src/source-addition-flow.ts
 msgctxt "source addition flow"
 msgid "Untitled source"
-msgstr ""
+msgstr "Fuente sin título"
 
 #: apps/reader/src/CitationSourceSync.tsx
 msgid "Update library details"
-msgstr ""
+msgstr "Actualizar detalles de la biblioteca"
 
 #: apps/reader/src/connection-recovery.ts
 msgid "Update mdbase Connect on your computer to open this collection."
-msgstr ""
+msgstr "Actualiza mdbase Connect en tu ordenador para abrir esta colección."
 
 #: apps/extension/src/connection-view.ts
 msgid "Update Reader"
-msgstr ""
+msgstr "Actualizar Reader"
 
 #: apps/reader/src/LibraryBulkBar.tsx
 msgctxt "LibraryBulkBar interface"
 msgid "Updated"
-msgstr ""
+msgstr "Actualizado"
 
 #. placeholder {0}: String(progress.done)
 #. placeholder {1}: String(progress.total)
 #: apps/reader/src/LibraryBulkBar.tsx
 msgid "Updating {0} of {1}…"
-msgstr ""
+msgstr "Actualizando {0} de {1}…"
 
 #: apps/extension/src/SavedHighlights.tsx
 #: apps/reader/src/CitationSourceSync.tsx
 msgid "Updating…"
-msgstr ""
+msgstr "Actualizando…"
 
 #: packages/migration/src/run-files.ts
 msgid "Uploaded checksum does not match the original file."
-msgstr ""
+msgstr "La suma de comprobación subida no coincide con el archivo original."
 
 #. placeholder {0}: String(progress.fileIndex)
 #. placeholder {1}: String(progress.fileCount)
 #: apps/reader/src/SourceImportDialog.tsx
 msgid "Uploading file {0} of {1}"
-msgstr ""
+msgstr "Subiendo el archivo {0} de {1}"
 
 #: apps/extension/src/CaptureApp.tsx
 msgid "Uploading file {fileIndex} of {fileCount} · {percent}%"
-msgstr ""
+msgstr "Subiendo el archivo {fileIndex} de {fileCount} · {percent}%"
 
 #: packages/migration/src/zotero-validation.ts
 msgid "URL attachment contains unexpected files."
-msgstr ""
+msgstr "El adjunto de URL contiene archivos inesperados."
 
 #: apps/reader/src/DraftRecoveryNotice.tsx
 msgid "Use collection version"
-msgstr ""
+msgstr "Usar la versión de la colección"
 
 #: apps/reader/src/reader-app-commands.ts
 msgid "Use comfortable density"
-msgstr ""
+msgstr "Usar densidad cómoda"
 
 #: apps/reader/src/reader-app-commands.ts
 msgid "Use compact density"
-msgstr ""
+msgstr "Usar densidad compacta"
 
 #: apps/reader/src/reader-app-commands.ts
 msgid "Use dark theme"
-msgstr ""
+msgstr "Usar tema oscuro"
 
 #. placeholder {0}: fieldLabel(difference.field)
 #: apps/reader/src/CitationLookup.tsx
 msgid "Use found {0}"
-msgstr ""
+msgstr "Usar {0} encontrado"
 
 #: apps/reader/src/AnnotationComposer.tsx
 msgid "Use it for this comment"
-msgstr ""
+msgstr "Usarlo para este comentario"
 
 #: apps/reader/src/reader-app-commands.ts
 msgid "Use light theme"
-msgstr ""
+msgstr "Usar tema claro"
 
 #: apps/extension/src/NotePanel.tsx
 #: apps/reader/src/AnnotationEditor.tsx
 msgid "Use theirs"
-msgstr ""
+msgstr "Usar su versión"
 
 #: apps/reader/src/LibraryConditionsEditor.tsx
 msgctxt "LibraryConditionsEditor interface"
 msgid "value"
-msgstr ""
+msgstr "valor"
 
 #: apps/reader/src/LibraryConditionsEditor.tsx
 msgctxt "LibraryConditionsEditor interface"
 msgid "Value"
-msgstr ""
+msgstr "Valor"
 
 #: apps/reader/src/LibraryBulkBar.tsx
 msgid "Value (empty removes the field)"
-msgstr ""
+msgstr "Valor (si está vacío, se elimina el campo)"
 
 #. placeholder {0}: String(index + 1)
 #: apps/reader/src/CitationTypedFieldEditors.tsx
 msgid "Value {0}"
-msgstr ""
+msgstr "Valor {0}"
 
 #: apps/reader/src/CitationTypedFieldEditors.tsx
 msgctxt "CitationTypedFieldEditors interface"
 msgid "Value type"
-msgstr ""
+msgstr "Tipo de valor"
 
 #: apps/reader/src/LibraryBulkBar.tsx
 msgid "value, or empty to remove"
-msgstr ""
+msgstr "valor, o vacío para eliminarlo"
 
 #: apps/reader/src/CitationTypedFieldEditors.tsx
 msgid "Values"
-msgstr ""
+msgstr "Valores"
 
 #. placeholder {0}: String(i + 1)
 #. placeholder {1}: String(payloads.length)
 #: packages/migration/src/zotero-bundle.ts
 msgid "Verifying file {0} of {1}…"
-msgstr ""
+msgstr "Verificando el archivo {0} de {1}…"
 
 #: apps/reader/src/import-controller.ts
 msgid "Verifying imported records"
-msgstr ""
+msgstr "Verificando los registros importados"
 
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "Version"
-msgstr ""
+msgstr "Versión"
 
 #: packages/renderer-pdf/src/pdf-translations.ts
 msgctxt "PDF viewer page"
 msgid "Vertical"
-msgstr ""
+msgstr "Vertical"
 
 #: packages/renderer-pdf/src/pdf-translations.ts
 msgctxt "PDF viewer menu"
 msgid "View Controls"
-msgstr ""
+msgstr "Controles de vista"
 
 #: apps/reader/src/LibraryAnnotationToolbar.tsx
 msgctxt "LibraryAnnotationToolbar interface"
 msgid "View options"
-msgstr ""
+msgstr "Opciones de vista"
 
 #: apps/reader/src/LibraryWorkspace.tsx
 msgctxt "LibraryWorkspace interface"
 msgid "View options"
-msgstr ""
+msgstr "Opciones de vista"
 
 #. placeholder {0}: filterCount ? `, ${String(filterCount)} active filters` : ""
 #: apps/reader/src/LibraryWorkspace.tsx
 msgid "View options{0}"
-msgstr ""
+msgstr "Opciones de vista{0}"
 
 #: apps/reader/src/LibraryNavigator.tsx
 msgid "Views"
-msgstr ""
+msgstr "Vistas"
 
 #: apps/reader/src/CitationStructuredEditor.tsx
 msgctxt "CitationStructuredEditor interface"
 msgid "Volume"
-msgstr ""
+msgstr "Volumen"
 
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "Volume"
-msgstr ""
+msgstr "Volumen"
 
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "Volume title"
-msgstr ""
+msgstr "Título del volumen"
 
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "Volume title short"
-msgstr ""
+msgstr "Título corto del volumen"
 
 #: apps/reader/src/native-signin-ui.ts
 msgctxt "Native sign-in"
 msgid "Waiting for approval in the mdbase tab…"
-msgstr ""
+msgstr "Esperando aprobación en la pestaña de mdbase…"
 
 #: apps/extension/src/CaptureApp.tsx
 msgid "Waiting for the active tab"
-msgstr ""
+msgstr "Esperando la pestaña activa"
 
 #: apps/reader/src/LibraryCells.tsx
 msgctxt "source format"
 msgid "Web"
-msgstr ""
+msgstr "Web"
 
 #: apps/reader/src/workspace-tab-display.ts
 msgctxt "Source format badge for saved web pages"
 msgid "WEB"
-msgstr ""
+msgstr "WEB"
 
 #: packages/core/src/application/source-import-values.ts
 msgid "Web capture provenance contains an invalid URL."
-msgstr ""
+msgstr "La procedencia de la captura web contiene una URL no válida."
 
 #: packages/core/src/application/source-import-values.ts
 msgid "Web capture provenance must use public HTTPS URLs."
-msgstr ""
+msgstr "La procedencia de la captura web debe usar URL HTTPS públicas."
 
 #: packages/core/src/application/import-source-file.ts
 msgid "Web captures must contain an HTML document."
-msgstr ""
+msgstr "Las capturas web deben contener un documento HTML."
 
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "Web page"
-msgstr ""
+msgstr "Página web"
 
 #: apps/reader/src/citation-form-model.ts
 msgctxt "CSL item type"
 msgid "Web page"
-msgstr ""
+msgstr "Página web"
 
 #: apps/extension/src/shell-messages.ts
 #: apps/extension/src/WelcomeApp.tsx
 msgid "Welcome to mdbase Reader"
-msgstr ""
+msgstr "Te damos la bienvenida a mdbase Reader"
 
 #: apps/reader/src/CitationStructuredEditor.tsx
 msgid "Where and when the work appeared"
-msgstr ""
+msgstr "Dónde y cuándo apareció la obra"
 
 #: apps/reader/src/annotation-wiki-candidates.ts
 msgctxt "annotation wiki candidates"
 msgid "Whole source"
-msgstr ""
+msgstr "Fuente completa"
 
 #: packages/renderer-pdf/src/pdf-translations.ts
 msgctxt "PDF viewer search"
 msgid "Whole word"
-msgstr ""
+msgstr "Palabra completa"
 
 #: apps/reader/src/AnnotationComposer.tsx
 msgid "Why does this matter?"
-msgstr ""
+msgstr "¿Por qué importa esto?"
 
 #: apps/reader/src/DisplayMenu.tsx
 msgctxt "DisplayMenu interface"
 msgid "Wide"
-msgstr ""
+msgstr "Ancho"
 
 #: apps/reader/src/AnnotationList.tsx
 msgctxt "AnnotationList annotationFilterOptions"
 msgid "With commentary"
-msgstr ""
+msgstr "Con comentario"
 
 #: apps/extension/src/WelcomeApp.tsx
 msgid "With the panel open, select text on the page and it appears there. Choose a colour to save it, adding a comment first if you like."
-msgstr ""
+msgstr "Con el panel abierto, selecciona texto en la página y aparecerá allí. Elige un color para guardarlo, añadiendo antes un comentario si quieres."
 
 #: apps/reader/src/reader-command-list.ts
 msgid "Workspace"
-msgstr ""
+msgstr "Espacio de trabajo"
 
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "Year suffix"
-msgstr ""
+msgstr "Sufijo del año"
 
 #: apps/extension/src/HighlightFields.tsx
 msgctxt "Highlight colour"
 msgid "yellow"
-msgstr ""
+msgstr "amarillo"
 
 #: apps/reader/src/citation-form-model.ts
 msgid "Yes"
-msgstr ""
+msgstr "Sí"
 
 #: apps/reader/src/library-columns.ts
 msgctxt "library columns"
 msgid "Yes"
-msgstr ""
+msgstr "Sí"
 
 #: apps/reader/src/LibraryCells.tsx
 msgid "Yesterday"
-msgstr ""
+msgstr "Ayer"
 
 #: apps/extension/src/WelcomeApp.tsx
 msgid "You can change the collection and shortcuts at any time in <0>Settings</0>."
-msgstr ""
+msgstr "Puedes cambiar la colección y los atajos en cualquier momento en <0>Ajustes</0>."
 
 #: apps/reader/src/main.tsx
 msgid "You can close this window."
-msgstr ""
+msgstr "Puedes cerrar esta ventana."
 
 #: packages/renderer-pdf/src/pdf-translations.ts
 msgctxt "PDF viewer emptyState"
 msgid "You can view multiple documents using tabs."
-msgstr ""
+msgstr "Puedes ver varios documentos usando pestañas."
 
 #: apps/reader/src/AnnotationComposer.tsx
 msgid "You selected other text."
-msgstr ""
+msgstr "Seleccionaste otro texto."
 
 #: apps/reader/src/connection-recovery.ts
 msgid "Your access to this collection has been removed."
-msgstr ""
+msgstr "Tu acceso a esta colección se ha eliminado."
 
 #: apps/reader/src/connect-popup.ts
 msgid "Your browser blocked the sign-in tab."
-msgstr ""
+msgstr "Tu navegador bloqueó la pestaña de inicio de sesión."
 
 #: apps/reader/src/native-signin-ui.ts
 msgctxt "Native sign-in"
 msgid "Your browser blocked the sign-in tab."
-msgstr ""
+msgstr "Tu navegador bloqueó la pestaña de inicio de sesión."
 
 #: apps/extension/src/source-note-session.ts
 msgid "Your browser could not keep a copy of this note. Keep the panel open until it is saved."
-msgstr ""
+msgstr "Tu navegador no pudo conservar una copia de esta nota. Mantén abierto el panel hasta que se guarde."
 
 #: apps/extension/src/ConnectionPanel.tsx
 msgid "your collection"
-msgstr ""
+msgstr "tu colección"
 
 #: apps/reader/src/use-annotation-view.ts
 msgid "Your collection already has it: {path}."
-msgstr ""
+msgstr "Tu colección ya lo tiene: {path}."
 
 #: apps/reader/src/ConnectReader.tsx
 msgctxt "ConnectReader interface"
 msgid "Your collections"
-msgstr ""
+msgstr "Tus colecciones"
 
 #: apps/reader/src/DraftRecoveryNotice.tsx
 msgid "Your draft"
-msgstr ""
+msgstr "Tu borrador"
 
 #: apps/reader/src/DraftRecoveryNotice.tsx
 msgid "Your draft is retained. Compare both versions before choosing which to save. You can edit your draft below to combine them."
-msgstr ""
+msgstr "Se conserva tu borrador. Compara ambas versiones antes de elegir cuál guardar. Puedes editar tu borrador abajo para combinarlas."
 
 #: apps/reader/src/LibraryWorkspace.tsx
 msgid "Your library is empty"
-msgstr ""
+msgstr "Tu biblioteca está vacía"
 
 #: apps/extension/src/ConnectionPanel.tsx
 msgid "Your selection and note are kept for this browser session, even if you close the panel."
-msgstr ""
+msgstr "Tu selección y tu nota se conservan durante esta sesión del navegador, aunque cierres el panel."
 
 #: apps/reader/src/ImportPageView.tsx
 msgid "Your sources, notes and files, in a collection you control. Preview first. Nothing is imported until you confirm the destination."
-msgstr ""
+msgstr "Tus fuentes, notas y archivos, en una colección que controlas. Vista previa primero. No se importa nada hasta que confirmes el destino."
 
 #: apps/extension/src/CaptureApp.tsx
 msgid "Your unsaved text for the previous page is kept for this browser session."
-msgstr ""
+msgstr "Tu texto sin guardar de la página anterior se conserva durante esta sesión del navegador."
 
 #: apps/reader/src/CitationStructuredEditor.tsx
 msgid "YYYY, YYYY-MM-DD, or a season"
-msgstr ""
+msgstr "AAAA, AAAA-MM-DD o una estación"
 
 #: apps/reader/src/CitationTypedFieldEditors.tsx
 msgid "YYYY, YYYY-MM, or YYYY-MM-DD"
-msgstr ""
+msgstr "AAAA, AAAA-MM o AAAA-MM-DD"
 
 #: packages/renderer-pdf/src/pdf-translations.ts
 msgctxt "PDF viewer menu"
 msgid "Zoom Controls"
-msgstr ""
+msgstr "Controles de zoom"
 
 #: packages/renderer-pdf/src/pdf-translations.ts
 msgctxt "PDF viewer zoom"
 msgid "Zoom In"
-msgstr ""
+msgstr "Acercar"
 
 #: packages/renderer-pdf/src/pdf-translations.ts
 msgctxt "PDF viewer zoom"
 msgid "Zoom Level ({level}%)"
-msgstr ""
+msgstr "Nivel de zoom ({level}%)"
 
 #: packages/renderer-pdf/src/pdf-translations.ts
 msgctxt "PDF viewer zoom"
 msgid "Zoom Menu"
-msgstr ""
+msgstr "Menú de zoom"
 
 #: packages/renderer-pdf/src/pdf-translations.ts
 msgctxt "PDF viewer zoom"
 msgid "Zoom Out"
-msgstr ""
+msgstr "Alejar"
 
 #: packages/migration/src/zotero-pdf.ts
 msgid "Zotero PDF page is unavailable."
-msgstr ""
+msgstr "La página de PDF de Zotero no está disponible."
