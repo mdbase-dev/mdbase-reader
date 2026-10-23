@@ -17,7 +17,9 @@ pnpm i18n:source
 pnpm i18n:check
 ```
 
-`i18n:check` uses the shared kit's extraction-sync, raw-PO completeness, generated-ID, ICU argument/plural/select/rich-text contracts, strict compilation and structural source guards. CI does not translate. Identical proper terms require explicit reviewed generated-ID allowlisting per locale in `i18n-policy.json`. Compiler-owned JSON is excluded from Prettier, not from catalogue validation.
+`i18n:check` uses the shared kit's extraction-sync, raw-PO completeness, generated-ID, ICU argument/plural/select/rich-text contracts, strict compilation and structural source guards. Both normal `check` and `build` enforce it, and CI runs those commands. CI does not translate. Identical proper terms require explicit reviewed generated-ID allowlisting per locale in `i18n-policy.json`. Compiler-owned JSON is excluded from Prettier, not from catalogue validation.
+
+During local authoring only, `check:code` runs the unchanged lint/typecheck/test suite and `build:code` builds every workspace without asserting catalogue completeness. Neither substitutes for the normal release gates. Run finite checks/builds via `rpnpm` on this machine.
 
 The initial kit's pnpm bin silently exits because its direct-entry guard compares a symlink against an ESM real path. `scripts/i18n.mjs` calls the actual kit `main()` explicitly and is a temporary portable entry adapter, not a check bypass.
 
@@ -27,7 +29,9 @@ While catalogues are being authored, `pnpm exec lingui compile --workers 1` perm
 
 Use `Trans` and bound `t` from `useLingui` in `@lingui/react/macro` for components. Static maps must contain lazy descriptors or translate only when called during rendering. Never eagerly translate at module scope, lowercase a translated label to derive another concept, or compare translated text to drive behavior. Counts use whole-message plurals; display-only numbers and dates use the active locale. Keep persisted timestamps, record fields and identifiers unchanged.
 
-Vite macro transforms cover the app, extension pages and separately built worker IIFEs. Package tests use the real English catalogue, not translator mocks. Native builds transform emitted JS after TypeScript so `/macro` imports are not shipped.
+Vite macro transforms cover the app, extension pages and separately built worker IIFEs. Extension pages mount the same provider with an asynchronous `chrome.storage.local` locale adapter; the classic service worker loads bundled JSON assets (no executable dynamic imports), follows the same storage key and refreshes persisted context-menu labels on activation. Chrome manifest descriptions/shortcuts use generated `_locales` catalogues; these framework-owned labels follow Chrome's language, while pages and context menus follow the explicit Reader extension choice.
+
+Electron's main process initializes synchronous English from copied compiler-owned JSON, negotiates OS preferences and persists its choice under userData. A narrow validated preload IPC updates native dialogs when the renderer language changes. Capacitor uses the shared renderer; framework-owned prompts follow the OS. Package tests use real Lingui catalogues, not translator mocks. Native builds transform emitted JS after TypeScript so `/macro` imports are not shipped.
 
 ## Shared kit dependency
 
@@ -40,4 +44,6 @@ This branch vendors `@mdbase-dev/i18n` from Connect commit `096d80bf`:
 
 ## Integration status
 
-This is not yet a complete multilingual release. Shell/renderer/model helper branches, shared public UI catalogues, target-language authoring, strict complete-catalogue gates, both builds and browser acceptance are still being integrated. Sample preview record contents are intentionally preserved as user-like data.
+This is not yet a complete multilingual release. Translation handoff `5eab755` contains 1,872 English messages and eight deliberately empty target PO scaffolds. The shell/renderer/model source helpers are merged, with a final renderer follow-up pending. Shared public UI catalogue composition, authored target languages, final full remote gates/builds and translated-layout acceptance remain in progress. Sample preview record contents are intentionally preserved as user-like data.
+
+Recorded Chromium preview acceptance (2026-10-23, desk `gcp/reader-i18n`, 1280×686 page viewport) verified all nine picker options, Japanese `html.lang` and date formatting, persisted reload, failed German chunk retaining Japanese and its saved choice, and clearing the failure notice after successful recovery. This used development-fallback target data: it is **not** acceptance of translated Japanese/German copy or their final layouts, connected LAB workflows, or native GUI behavior.
