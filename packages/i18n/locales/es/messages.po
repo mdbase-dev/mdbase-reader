@@ -1,0 +1,3142 @@
+msgid ""
+msgstr ""
+"POT-Creation-Date: 2026-10-23 22:02+1100\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"X-Generator: @lingui/cli\n"
+"Language: es\n"
+
+#. placeholder {0}: (progress.transferredBytes / 1024 ** 2).toFixed(1)
+#: apps/reader/src/ImportReview.tsx
+msgid " · {0} MiB latest file progress"
+msgstr ""
+
+#: apps/reader/src/LibraryWorkspace.tsx
+msgid " · Loading more…"
+msgstr ""
+
+#: apps/reader/src/SelectionToolbar.tsx
+msgid " · Review"
+msgstr ""
+
+#: apps/reader/src/LibraryConditionsEditor.tsx
+msgid " Add a field condition"
+msgstr ""
+
+#: apps/reader/src/ImportReview.tsx
+msgid " already imported. No existing records will be overwritten."
+msgstr ""
+
+#: apps/reader/src/DocumentContextualToolbar.tsx
+msgid " Annotations"
+msgstr ""
+
+#: apps/reader/src/WorkspacePaneSupport.tsx
+msgid " Attach a PDF, EPUB or saved page, or drop one here."
+msgstr ""
+
+#: apps/reader/src/DocumentContextualToolbar.tsx
+msgid " Bookmark this position"
+msgstr ""
+
+#: apps/reader/src/DocumentContextualToolbar.tsx
+msgid " Citation"
+msgstr ""
+
+#: apps/reader/src/AnnotationPanelActions.tsx
+#: apps/reader/src/SelectionToolbar.tsx
+msgid " Comment"
+msgstr ""
+
+#: apps/reader/src/ImportReview.tsx
+msgid " created · "
+msgstr ""
+
+#: apps/reader/src/SelectionToolbar.tsx
+msgid " Highlight"
+msgstr ""
+
+#: apps/reader/src/SourceNoteInsertMenu.tsx
+msgid " Insert"
+msgstr ""
+
+#: apps/reader/src/InspectorPane.tsx
+msgid " is open in "
+msgstr ""
+
+#: apps/reader/src/ImportReview.tsx
+msgid " kept"
+msgstr ""
+
+#: apps/reader/src/DocumentContextualToolbar.tsx
+msgid " Literature note"
+msgstr ""
+
+#: apps/reader/src/SourceRemovalDialog.tsx
+msgid " more"
+msgstr ""
+
+#: apps/reader/src/ImportReview.tsx
+msgid " new records;"
+msgstr ""
+
+#: apps/reader/src/preview.tsx
+msgid " No collection records or files are created."
+msgstr ""
+
+#: apps/reader/src/AnnotationList.tsx
+msgid " of "
+msgstr ""
+
+#: apps/reader/src/DocumentContextualToolbar.tsx
+msgid " Open literature note beside"
+msgstr ""
+
+#: apps/reader/src/MobileWorkspaceNavigation.tsx
+msgid " open tabs"
+msgstr ""
+
+#: apps/reader/src/CitationEditor.tsx
+msgid " quality"
+msgstr ""
+
+#: apps/reader/src/DocumentContextualToolbar.tsx
+msgid " Remove source…"
+msgstr ""
+
+#: apps/reader/src/LibraryAnnotationBars.tsx
+#: apps/reader/src/LibraryBulkBar.tsx
+msgid " selected"
+msgstr ""
+
+#: apps/reader/src/ImportReview.tsx
+msgid " steps ·"
+msgstr ""
+
+#: apps/reader/src/CitationSourceSync.tsx
+msgid ", which the library records."
+msgstr ""
+
+#: apps/reader/src/ImportInput.tsx
+msgid ". It stays in memory in this tab and is sent only to Readwise. Although the token allows writes, this importer only reads."
+msgstr ""
+
+#: apps/reader/src/ImportInput.tsx
+msgid ". Select the whole exported folder—not Zotero’s data directory."
+msgstr ""
+
+#. placeholder {0}: props.api.title ?? "Source"
+#: apps/reader/src/DockviewWorkspace.tsx
+msgid "{0} · Drag to move or split · Right-click for pane actions · Delete closes the tab"
+msgstr ""
+
+#. placeholder {0}: annotation.locator.label
+#: apps/reader/src/AnnotationCard.tsx
+msgid "{0} · saved without a link to the exact passage"
+msgstr ""
+
+#. placeholder {0}: annotationKindLabel(annotation.annotationType)
+#: apps/reader/src/AnnotationCard.tsx
+msgid "{0} annotation"
+msgstr ""
+
+#. placeholder {0}: countLabel(progress.failed, "source")
+#: apps/reader/src/LibraryBulkBar.tsx
+msgid "{0} could not be updated"
+msgstr ""
+
+#. placeholder {0}: (plan.summary.bytes / 1024 ** 3).toFixed(2)
+#: apps/reader/src/ImportReview.tsx
+msgid "{0} GiB"
+msgstr ""
+
+#. placeholder {0}: view.name
+#: apps/reader/src/LibraryWorkspace.tsx
+msgid "{0} library view"
+msgstr ""
+
+#. placeholder {0}: String(tabs.length)
+#: apps/reader/src/MobileWorkspaceNavigation.tsx
+msgid "{0} open tabs"
+msgstr ""
+
+#. placeholder {0}: readingMode ? "Leave" : "Enter"
+#. placeholder {1}: shortcutLabel("mod+.")
+#: apps/reader/src/ReaderHeader.tsx
+msgid "{0} reading mode · {1}"
+msgstr ""
+
+#. placeholder {0}: plan.warnings.length
+#: apps/reader/src/ImportReview.tsx
+msgid "{0} warnings and fidelity notes"
+msgstr ""
+
+#. placeholder {0}: String(progress)
+#: apps/reader/src/LibraryCells.tsx
+msgid "{0}% read"
+msgstr ""
+
+#: apps/reader/src/EnvironmentBadge.tsx
+msgid "{environment} environment"
+msgstr ""
+
+#. placeholder {0}: state.message
+#: apps/reader/src/DocumentRendererStage.tsx
+msgid "{errorName} could not render this file: {0}"
+msgstr ""
+
+#. placeholder {0}: String(index + 1)
+#: apps/reader/src/CitationContributors.tsx
+msgid "{itemLabel} {0} dropping particle"
+msgstr ""
+
+#. placeholder {0}: String(index + 1)
+#: apps/reader/src/CitationContributors.tsx
+msgid "{itemLabel} {0} family name"
+msgstr ""
+
+#. placeholder {0}: String(index + 1)
+#: apps/reader/src/CitationContributors.tsx
+msgid "{itemLabel} {0} given name"
+msgstr ""
+
+#. placeholder {0}: String(index + 1)
+#: apps/reader/src/CitationContributors.tsx
+msgid "{itemLabel} {0} kind"
+msgstr ""
+
+#. placeholder {0}: String(index + 1)
+#: apps/reader/src/CitationContributors.tsx
+msgid "{itemLabel} {0} non-dropping particle"
+msgstr ""
+
+#. placeholder {0}: String(index + 1)
+#: apps/reader/src/CitationContributors.tsx
+msgid "{itemLabel} {0} organisation"
+msgstr ""
+
+#. placeholder {0}: String(index + 1)
+#: apps/reader/src/CitationContributors.tsx
+msgid "{itemLabel} {0} suffix"
+msgstr ""
+
+#: apps/reader/src/CitationTypedFieldEditors.tsx
+msgid "{key} property name"
+msgstr ""
+
+#: apps/reader/src/CitationTypedFieldEditors.tsx
+msgid "{key} value type"
+msgstr ""
+
+#: apps/reader/src/LibraryTableHeader.tsx
+msgid "{label} column options"
+msgstr ""
+
+#: apps/reader/src/CitationTypedFieldEditors.tsx
+msgid "{label} JSON value"
+msgstr ""
+
+#: apps/reader/src/CitationTypedFieldEditors.tsx
+msgid "{name} value"
+msgstr ""
+
+#: apps/reader/src/CitationContributors.tsx
+msgid "+ Add "
+msgstr ""
+
+#: apps/reader/src/ImportInput.tsx
+msgid "<0>Download Zotero exporter (.xpi)</0>"
+msgstr ""
+
+#: apps/reader/src/ImportReview.tsx
+msgid "<0>Open imported collection →</0>"
+msgstr ""
+
+#: apps/reader/src/DeploymentUpdateNotice.tsx
+msgid "A newer Reader is ready."
+msgstr ""
+
+#: apps/reader/src/LibraryAnnotationToolbar.tsx
+msgid "A saved view that lists the annotations of whichever source it runs against"
+msgstr ""
+
+#: apps/reader/src/AnnotationPanelActions.tsx
+msgid "A thought about this source as a whole"
+msgstr ""
+
+#: apps/reader/src/CitationStructuredEditor.tsx
+msgid "Abstract"
+msgstr ""
+
+#. placeholder {0}: source.title
+#: apps/reader/src/LibraryRowMenu.tsx
+msgid "Actions for {0}"
+msgstr ""
+
+#: apps/reader/src/LibraryTableHeader.tsx
+msgctxt "LibraryTableHeader interface"
+msgid "Add"
+msgstr ""
+
+#: apps/reader/src/SourceAddDialog.tsx
+msgctxt "SourceAddDialog interface"
+msgid "Add"
+msgstr ""
+
+#: apps/reader/src/LibraryAnnotationToolbar.tsx
+msgid "Add “Annotations for this source” view"
+msgstr ""
+
+#: apps/reader/src/AnnotationComposer.tsx
+msgid "Add a comment"
+msgstr ""
+
+#: apps/reader/src/AnnotationEditor.tsx
+msgid "Add a comment…"
+msgstr ""
+
+#: apps/reader/src/LibraryWorkspace.tsx
+msgid "Add a PDF, EPUB or web page to start reading."
+msgstr ""
+
+#: apps/reader/src/LibraryWorkspace.tsx
+#: apps/reader/src/SourceAddDialog.tsx
+msgid "Add a source"
+msgstr ""
+
+#: apps/reader/src/SourceNoteInsertMenu.tsx
+msgid "Add citation details first"
+msgstr ""
+
+#: apps/reader/src/LibraryAnnotationTableHead.tsx
+msgctxt "LibraryAnnotationTableHead interface"
+msgid "Add column"
+msgstr ""
+
+#: apps/reader/src/LibraryTableHeader.tsx
+msgctxt "LibraryTableHeader interface"
+msgid "Add column"
+msgstr ""
+
+#: apps/reader/src/CitationAdditionalFields.tsx
+msgid "Add field"
+msgstr ""
+
+#: apps/reader/src/CitationAdditionalFields.tsx
+msgid "Add less common CSL metadata"
+msgstr ""
+
+#: apps/reader/src/LibraryNavigator.tsx
+msgid "Add one"
+msgstr ""
+
+#: apps/reader/src/CitationTypedFieldEditors.tsx
+msgid "Add property"
+msgstr ""
+
+#: apps/reader/src/SourceImportDialog.tsx
+msgid "Add source"
+msgstr ""
+
+#: apps/reader/src/LibraryWorkspace.tsx
+msgctxt "LibraryWorkspace interface"
+msgid "Add source"
+msgstr ""
+
+#: apps/reader/src/NavigatorSections.tsx
+msgctxt "NavigatorSections interface"
+msgid "Add source"
+msgstr ""
+
+#: apps/reader/src/SourceImportDialog.tsx
+msgctxt "SourceImportDialog interface"
+msgid "Add source"
+msgstr ""
+
+#: apps/reader/src/CitationSourceSync.tsx
+msgid "Add to citation"
+msgstr ""
+
+#: apps/reader/src/AnnotationCard.tsx
+msgid "Add to literature note"
+msgstr ""
+
+#: apps/reader/src/CitationTypedFieldEditors.tsx
+msgid "Add value"
+msgstr ""
+
+#. placeholder {0}: lookup.notice.message
+#: apps/reader/src/SourceAddDialog.tsx
+msgid "Added. {0}"
+msgstr ""
+
+#: apps/reader/src/NavigatorSections.tsx
+msgctxt "NavigatorSections interface"
+msgid "Adding source"
+msgstr ""
+
+#: apps/reader/src/NavigatorSections.tsx
+msgctxt "NavigatorSections interface"
+msgid "Adding…"
+msgstr ""
+
+#: apps/reader/src/SourceAddDialog.tsx
+msgctxt "SourceAddDialog interface"
+msgid "Adding…"
+msgstr ""
+
+#: apps/reader/src/CitationAdditionalFields.tsx
+msgid "Additional fields"
+msgstr ""
+
+#: apps/reader/src/CitationTypedFieldEditors.tsx
+msgid "Advanced JSON"
+msgstr ""
+
+#: apps/reader/src/CitationAdditionalFields.tsx
+msgid "All fields added"
+msgstr ""
+
+#: apps/reader/src/SourceNoteInsertMenu.tsx
+msgid "Already embedded in this note"
+msgstr ""
+
+#: apps/reader/src/AnnotationCard.tsx
+msgid "Already included in the literature note"
+msgstr ""
+
+#: apps/reader/src/SourceRemovalDialog.tsx
+msgid "and "
+msgstr ""
+
+#: apps/reader/src/LibraryAnnotationToolbar.tsx
+msgid "Annotation"
+msgstr ""
+
+#: apps/reader/src/AnnotationEditor.tsx
+msgctxt "AnnotationEditor interface"
+msgid "Annotation Markdown"
+msgstr ""
+
+#: apps/reader/src/LibraryTextSearch.tsx
+msgctxt "LibraryTextSearch interface"
+msgid "Annotation text"
+msgstr ""
+
+#. placeholder {0}: filterCount ? `, ${String(filterCount)} active filters` : ""
+#: apps/reader/src/LibraryAnnotationToolbar.tsx
+msgid "Annotation view options{0}"
+msgstr ""
+
+#: apps/reader/src/InspectorPane.tsx
+#: apps/reader/src/SourceNoteInsertMenu.tsx
+msgid "Annotations"
+msgstr ""
+
+#: apps/reader/src/InspectorPane.tsx
+msgctxt "InspectorPane interface"
+msgid "Annotations"
+msgstr ""
+
+#: apps/reader/src/LibraryAnnotationTable.tsx
+msgctxt "LibraryAnnotationTable interface"
+msgid "Annotations"
+msgstr ""
+
+#: apps/reader/src/LibraryWorkspace.tsx
+msgctxt "LibraryWorkspace interface"
+msgid "Annotations"
+msgstr ""
+
+#: apps/reader/src/VirtualAnnotationList.tsx
+msgctxt "VirtualAnnotationList interface"
+msgid "Annotations"
+msgstr ""
+
+#: apps/reader/src/ImportReview.tsx
+msgid "Annotations and notes"
+msgstr ""
+
+#: apps/reader/src/LibraryTableHeader.tsx
+msgid "Any field"
+msgstr ""
+
+#: apps/reader/src/LibraryAnnotationToolbar.tsx
+msgctxt "LibraryAnnotationToolbar interface"
+msgid "Any tag"
+msgstr ""
+
+#: apps/reader/src/LibraryWorkspace.tsx
+msgctxt "LibraryWorkspace interface"
+msgid "Any tag"
+msgstr ""
+
+#: apps/reader/src/ImportInput.tsx
+msgid "API token"
+msgstr ""
+
+#: apps/reader/src/DisplayMenu.tsx
+msgid "Applies to EPUBs and saved web pages. PDFs keep their layout."
+msgstr ""
+
+#: apps/reader/src/CitationLookup.tsx
+#: apps/reader/src/LibraryBulkBar.tsx
+msgid "Apply"
+msgstr ""
+
+#: apps/reader/src/CitationTypedFieldEditors.tsx
+msgid "Apply JSON"
+msgstr ""
+
+#: apps/reader/src/ImportDestination.tsx
+msgid "Apply Reader collection setup"
+msgstr ""
+
+#: apps/reader/src/ConnectReader.tsx
+msgid "Apply reviewed setup"
+msgstr ""
+
+#: apps/reader/src/ConnectReader.tsx
+msgctxt "ConnectReader interface"
+msgid "Applying setup…"
+msgstr ""
+
+#: apps/reader/src/CitationTypedFieldEditors.tsx
+msgid "Approximate"
+msgstr ""
+
+#: apps/reader/src/LibraryAnnotationToolbar.tsx
+msgctxt "LibraryAnnotationToolbar interface"
+msgid "Ascending"
+msgstr ""
+
+#: apps/reader/src/LibraryWorkspace.tsx
+msgctxt "LibraryWorkspace interface"
+msgid "Ascending"
+msgstr ""
+
+#: apps/reader/src/WorkspacePaneSupport.tsx
+msgid "Attach a file"
+msgstr ""
+
+#: apps/reader/src/CitationStructuredEditor.tsx
+msgctxt "CitationStructuredEditor interface"
+msgid "Authors"
+msgstr ""
+
+#: apps/reader/src/CitationStructuredEditor.tsx
+msgid "Authors, editors, translators, and organisations"
+msgstr ""
+
+#: apps/reader/src/SourceNoteEditor.tsx
+msgid "B"
+msgstr ""
+
+#: apps/reader/src/MobileWorkspaceNavigation.tsx
+msgctxt "MobileWorkspaceNavigation interface"
+msgid "Back"
+msgstr ""
+
+#: apps/reader/src/ImportPageView.tsx
+#: apps/reader/src/ReaderHeader.tsx
+msgid "Back to library"
+msgstr ""
+
+#: apps/reader/src/AnnotationComposer.tsx
+msgid "Back to reading position"
+msgstr ""
+
+#: apps/reader/src/MobileWorkspaceNavigation.tsx
+msgid "Back to workspace"
+msgstr ""
+
+#: apps/reader/src/AnnotationEditor.tsx
+msgid "Being edited in another pane."
+msgstr ""
+
+#: apps/reader/src/AnnotationPanelActions.tsx
+msgctxt "AnnotationPanelActions interface"
+msgid "Bookmark"
+msgstr ""
+
+#: apps/reader/src/AnnotationPanelActions.tsx
+msgid "Bookmark the current reading position"
+msgstr ""
+
+#: apps/reader/src/DocumentContextualToolbar.tsx
+msgid "Bookmark this position"
+msgstr ""
+
+#: apps/reader/src/AnnotationPanelActions.tsx
+msgctxt "AnnotationPanelActions interface"
+msgid "Bookmarking…"
+msgstr ""
+
+#: apps/reader/src/ImportPageView.tsx
+msgid "Bring your library with you."
+msgstr ""
+
+#: apps/reader/src/ImportReview.tsx
+msgid "By category"
+msgstr ""
+
+#: apps/reader/src/ImportReview.tsx
+msgid "Calculated during download"
+msgstr ""
+
+#: apps/reader/src/AnnotationEditor.tsx
+#: apps/reader/src/AnnotationPanelActions.tsx
+#: apps/reader/src/LibraryBulkBar.tsx
+#: apps/reader/src/LibraryViewSaveDialog.tsx
+#: apps/reader/src/SourceRemovalDialog.tsx
+msgid "Cancel"
+msgstr ""
+
+#: apps/reader/src/DocumentContextualToolbar.tsx
+msgctxt "DocumentContextualToolbar interface"
+msgid "Cancel"
+msgstr ""
+
+#: apps/reader/src/SourceImportDialog.tsx
+msgctxt "SourceImportDialog interface"
+msgid "Cancel"
+msgstr ""
+
+#: apps/reader/src/DocumentContextualToolbar.tsx
+msgid "Cancel area selection"
+msgstr ""
+
+#: apps/reader/src/LibraryWorkspace.tsx
+msgctxt "LibraryWorkspace interface"
+msgid "Cards"
+msgstr ""
+
+#: apps/reader/src/ImportReview.tsx
+msgid "Category"
+msgstr ""
+
+#: apps/reader/src/CitationLookup.tsx
+msgctxt "CitationLookup interface"
+msgid "change"
+msgstr ""
+
+#: apps/reader/src/CitationLookup.tsx
+msgctxt "CitationLookup interface"
+msgid "changes"
+msgstr ""
+
+#: apps/reader/src/AnnotationCard.tsx
+msgid "Changes need review"
+msgstr ""
+
+#: apps/reader/src/SourceRemovalDialog.tsx
+msgid "Check again"
+msgstr ""
+
+#. placeholder {0}: opened.collectionName
+#: apps/reader/src/ImportReview.tsx
+msgid "Check destination: {0}"
+msgstr ""
+
+#: apps/reader/src/SourceRemovalDialog.tsx
+msgid "Checking what links to this source…"
+msgstr ""
+
+#: apps/reader/src/AnnotationEditor.tsx
+msgctxt "AnnotationEditor interface"
+msgid "Checking…"
+msgstr ""
+
+#: apps/reader/src/ImportDestination.tsx
+#: apps/reader/src/NativeImportPage.tsx
+msgid "Choose a destination"
+msgstr ""
+
+#: apps/reader/src/ImportDestination.tsx
+msgid "Choose an existing collection, or create a fresh hosted collection in mdbase’s secure approval window."
+msgstr ""
+
+#: apps/reader/src/CitationAdditionalFields.tsx
+msgid "Choose an unused official CSL field."
+msgstr ""
+
+#: apps/reader/src/NativeImportPage.tsx
+msgid "Choose another collection"
+msgstr ""
+
+#: apps/reader/src/SourceAddDialog.tsx
+msgid "Choose or drop a file"
+msgstr ""
+
+#: apps/reader/src/ImportInput.tsx
+msgid "Choose what to bring"
+msgstr ""
+
+#: apps/reader/src/InspectorPane.tsx
+#: apps/reader/src/SourceNoteInsertMenu.tsx
+msgid "Citation"
+msgstr ""
+
+#: apps/reader/src/InspectorPane.tsx
+msgctxt "InspectorPane interface"
+msgid "Citation"
+msgstr ""
+
+#: apps/reader/src/CitationStructuredEditor.tsx
+msgid "Citation details"
+msgstr ""
+
+#: apps/reader/src/CitationEditor.tsx
+msgid "Citation editor mode"
+msgstr ""
+
+#: apps/reader/src/CitationLookup.tsx
+msgid "Citation identifier, URL, or title"
+msgstr ""
+
+#: apps/reader/src/CitationEditor.tsx
+msgid "Citation key needed"
+msgstr ""
+
+#: apps/reader/src/CitationPreview.tsx
+msgctxt "CitationPreview interface"
+msgid "Citation locale"
+msgstr ""
+
+#: apps/reader/src/CitationEditor.tsx
+msgid "Citation metadata for {title}"
+msgstr ""
+
+#: apps/reader/src/CitationPreview.tsx
+msgctxt "CitationPreview interface"
+msgid "Citation preview"
+msgstr ""
+
+#: apps/reader/src/CitationPreview.tsx
+msgctxt "CitationPreview interface"
+msgid "Citation style"
+msgstr ""
+
+#: apps/reader/src/SelectionToolbar.tsx
+msgid "Cite"
+msgstr ""
+
+#: apps/reader/src/CitationStructuredEditor.tsx
+msgid "Citekey"
+msgstr ""
+
+#: apps/reader/src/AnnotationList.tsx
+#: apps/reader/src/LibraryAnnotationBars.tsx
+msgid "Clear"
+msgstr ""
+
+#: apps/reader/src/AnnotationList.tsx
+#: apps/reader/src/LibraryAnnotationToolbar.tsx
+#: apps/reader/src/LibraryWorkspace.tsx
+msgid "Clear filters"
+msgstr ""
+
+#: apps/reader/src/LibraryWorkspace.tsx
+msgid "Clear search and filters"
+msgstr ""
+
+#: apps/reader/src/LibraryBulkBar.tsx
+msgctxt "LibraryBulkBar interface"
+msgid "Clear selection"
+msgstr ""
+
+#: apps/reader/src/LibraryBulkBar.tsx
+msgid "Clear selection · Esc"
+msgstr ""
+
+#: apps/reader/src/LibraryTableRow.tsx
+msgid "Click to edit · F2"
+msgstr ""
+
+#: apps/reader/src/AnnotationEditor.tsx
+msgctxt "AnnotationEditor interface"
+msgid "Close"
+msgstr ""
+
+#: apps/reader/src/SourceAddDialog.tsx
+msgid "Close add source"
+msgstr ""
+
+#: apps/reader/src/mobile-source-bar.tsx
+msgid "Close current tab"
+msgstr ""
+
+#: apps/reader/src/DockPaneActions.tsx
+msgid "Close pane and tabs…"
+msgstr ""
+
+#: apps/reader/src/DockviewWorkspace.tsx
+msgctxt "DockviewWorkspace interface"
+msgid "Close tab"
+msgstr ""
+
+#: apps/reader/src/mobile-source-bar.tsx
+msgctxt "mobile-source-bar interface"
+msgid "Close tab"
+msgstr ""
+
+#: apps/reader/src/ImportDestination.tsx
+msgid "Collection"
+msgstr ""
+
+#: apps/reader/src/ImportDestination.tsx
+msgctxt "ImportDestination interface"
+msgid "Collection"
+msgstr ""
+
+#: apps/reader/src/DraftRecoveryNotice.tsx
+msgid "Collection version"
+msgstr ""
+
+#: apps/reader/src/CollectionPicker.tsx
+msgid "Collection: "
+msgstr ""
+
+#. placeholder {0}: collection.collectionName
+#: apps/reader/src/NativeImportPage.tsx
+msgid "Collection: {0}"
+msgstr ""
+
+#: apps/reader/src/CollectionPicker.tsx
+msgid "Collection: {name}"
+msgstr ""
+
+#: apps/reader/src/CollectionMenu.tsx
+msgid "Collections"
+msgstr ""
+
+#: apps/reader/src/LibraryTableHeader.tsx
+msgctxt "LibraryTableHeader interface"
+msgid "Column options"
+msgstr ""
+
+#: apps/reader/src/DisplayMenu.tsx
+msgctxt "DisplayMenu interface"
+msgid "Comfortable"
+msgstr ""
+
+#: apps/reader/src/CitationContributors.tsx
+msgid "Comma before suffix"
+msgstr ""
+
+#: apps/reader/src/SelectionToolbar.tsx
+msgctxt "SelectionToolbar interface"
+msgid "Comment (C)"
+msgstr ""
+
+#: apps/reader/src/AnnotationComposer.tsx
+msgid "Comment on highlight"
+msgstr ""
+
+#: apps/reader/src/AnnotationPanelActions.tsx
+msgid "Comment on the source as a whole"
+msgstr ""
+
+#: apps/reader/src/DisplayMenu.tsx
+msgctxt "DisplayMenu interface"
+msgid "Compact"
+msgstr ""
+
+#: apps/reader/src/AnnotationEditor.tsx
+msgid "Compare collection version"
+msgstr ""
+
+#: apps/reader/src/DraftRecoveryNotice.tsx
+msgid "Compare versions"
+msgstr ""
+
+#: apps/reader/src/LibraryConditionsEditor.tsx
+msgctxt "LibraryConditionsEditor interface"
+msgid "Comparison"
+msgstr ""
+
+#: apps/reader/src/ImportReview.tsx
+msgid "Confirm"
+msgstr ""
+
+#: apps/reader/src/SelectionToolbar.tsx
+msgctxt "SelectionToolbar interface"
+msgid "Confirm delete"
+msgstr ""
+
+#: apps/reader/src/ImportPageView.tsx
+msgid "Connect and scan your library →"
+msgstr ""
+
+#: apps/reader/src/ConnectReader.tsx
+msgid "Connect another collection"
+msgstr ""
+
+#: apps/reader/src/CollectionMenu.tsx
+msgid "Connect another collection…"
+msgstr ""
+
+#: apps/reader/src/ReaderHeader.tsx
+msgctxt "ReaderHeader interface"
+msgid "Connect directly"
+msgstr ""
+
+#: apps/reader/src/CollectionMenu.tsx
+msgctxt "CollectionMenu interface"
+msgid "Connected collections"
+msgstr ""
+
+#: apps/reader/src/ReaderHeader.tsx
+msgid "Connected directly to this computer"
+msgstr ""
+
+#: apps/reader/src/ReaderHeader.tsx
+msgid "Connecting…"
+msgstr ""
+
+#: apps/reader/src/ImportReview.tsx
+msgid "Content files"
+msgstr ""
+
+#: apps/reader/src/ImportReview.tsx
+msgid "Content size"
+msgstr ""
+
+#: apps/reader/src/DocumentContextualToolbar.tsx
+msgid "Contents"
+msgstr ""
+
+#: apps/reader/src/DocumentContextualToolbar.tsx
+msgctxt "DocumentContextualToolbar interface"
+msgid "Contents"
+msgstr ""
+
+#: apps/reader/src/ContinueReading.tsx
+msgid "Continue reading"
+msgstr ""
+
+#. placeholder {0}: source.title
+#: apps/reader/src/ContinueReading.tsx
+msgid "Continue reading {0}"
+msgstr ""
+
+#: apps/reader/src/CitationStructuredEditor.tsx
+msgid "Contributors"
+msgstr ""
+
+#: apps/reader/src/SelectionToolbar.tsx
+msgctxt "SelectionToolbar interface"
+msgid "Copied"
+msgstr ""
+
+#: apps/reader/src/SelectionToolbar.tsx
+msgid "Copied with citation"
+msgstr ""
+
+#: apps/reader/src/SelectionToolbar.tsx
+msgid "Copy"
+msgstr ""
+
+#: apps/reader/src/SelectionToolbar.tsx
+msgctxt "SelectionToolbar interface"
+msgid "Copy"
+msgstr ""
+
+#. placeholder {0}: composer.quoteCitation.citekey
+#: apps/reader/src/SelectionToolbar.tsx
+msgid "Copy as a quote citing @{0}"
+msgstr ""
+
+#: apps/reader/src/SelectionToolbar.tsx
+msgid "Copy as a quote citing the source's title"
+msgstr ""
+
+#: apps/reader/src/LibraryAnnotationBars.tsx
+msgid "Copy as Markdown"
+msgstr ""
+
+#: apps/reader/src/LibraryRowMenu.tsx
+msgid "Copy citekey <0>@{citekey}</0>"
+msgstr ""
+
+#: apps/reader/src/SelectionToolbar.tsx
+msgctxt "SelectionToolbar interface"
+msgid "Copy text"
+msgstr ""
+
+#: apps/reader/src/SelectionToolbar.tsx
+msgid "Copy with citation"
+msgstr ""
+
+#: apps/reader/src/SelectionToolbar.tsx
+msgctxt "SelectionToolbar interface"
+msgid "Couldn’t copy"
+msgstr ""
+
+#: apps/reader/src/ImportDestination.tsx
+msgid "Create or connect a collection…"
+msgstr ""
+
+#: apps/reader/src/CitationEditor.tsx
+msgid "CSL"
+msgstr ""
+
+#: apps/reader/src/CitationEditor.tsx
+msgid "CSL JSON citation metadata"
+msgstr ""
+
+#: apps/reader/src/CitationLookup.tsx
+msgid "Current"
+msgstr ""
+
+#: apps/reader/src/CitationTypedFieldEditors.tsx
+msgid "Custom properties"
+msgstr ""
+
+#: apps/reader/src/CitationTypedFieldEditors.tsx
+msgid "Date as printed"
+msgstr ""
+
+#: apps/reader/src/CitationTypedFieldEditors.tsx
+msgid "Date form"
+msgstr ""
+
+#: apps/reader/src/CitationTypedFieldEditors.tsx
+msgctxt "CitationTypedFieldEditors interface"
+msgid "Date form"
+msgstr ""
+
+#: apps/reader/src/AnnotationEditor.tsx
+msgctxt "AnnotationEditor interface"
+msgid "Delete"
+msgstr ""
+
+#: apps/reader/src/SelectionToolbar.tsx
+msgctxt "SelectionToolbar interface"
+msgid "Delete"
+msgstr ""
+
+#: apps/reader/src/SelectionToolbar.tsx
+msgctxt "SelectionToolbar interface"
+msgid "Delete highlight"
+msgstr ""
+
+#: apps/reader/src/AnnotationEditor.tsx
+msgid "Delete this annotation?"
+msgstr ""
+
+#: apps/reader/src/SelectionToolbar.tsx
+msgctxt "SelectionToolbar interface"
+msgid "Delete?"
+msgstr ""
+
+#: apps/reader/src/AnnotationEditor.tsx
+msgctxt "AnnotationEditor interface"
+msgid "Deleting…"
+msgstr ""
+
+#: apps/reader/src/SelectionToolbar.tsx
+msgctxt "SelectionToolbar interface"
+msgid "Deleting…"
+msgstr ""
+
+#: apps/reader/src/DisplayMenu.tsx
+msgctxt "DisplayMenu interface"
+msgid "Density"
+msgstr ""
+
+#: apps/reader/src/LibraryAnnotationToolbar.tsx
+msgctxt "LibraryAnnotationToolbar interface"
+msgid "Descending"
+msgstr ""
+
+#: apps/reader/src/LibraryWorkspace.tsx
+msgctxt "LibraryWorkspace interface"
+msgid "Descending"
+msgstr ""
+
+#: apps/reader/src/CitationEditor.tsx
+#: apps/reader/src/SourceDetails.tsx
+msgid "Details"
+msgstr ""
+
+#: apps/reader/src/ReaderHeader.tsx
+msgid "Direct connection"
+msgstr ""
+
+#: apps/reader/src/AnnotationEditor.tsx
+msgid "Discard changes"
+msgstr ""
+
+#: apps/reader/src/AnnotationPanelActions.tsx
+msgctxt "AnnotationPanelActions interface"
+msgid "Discard comment"
+msgstr ""
+
+#: apps/reader/src/AnnotationComposer.tsx
+msgctxt "AnnotationComposer interface"
+msgid "Discard selection"
+msgstr ""
+
+#: apps/reader/src/CitationLookup.tsx
+msgid "Dismiss"
+msgstr ""
+
+#: apps/reader/src/DisplayMenu.tsx
+msgctxt "DisplayMenu interface"
+msgid "Display settings"
+msgstr ""
+
+#: apps/reader/src/DocumentContextualToolbar.tsx
+msgctxt "DocumentContextualToolbar interface"
+msgid "Document actions"
+msgstr ""
+
+#: apps/reader/src/CitationStructuredEditor.tsx
+msgid "DOI, ISBN, URL, and language"
+msgstr ""
+
+#: apps/reader/src/AnnotationEditor.tsx
+msgctxt "AnnotationEditor interface"
+msgid "Done"
+msgstr ""
+
+#: apps/reader/src/LibraryTableRow.tsx
+msgid "Double-click or press Enter to open"
+msgstr ""
+
+#: apps/reader/src/LibraryAnnotationRow.tsx
+msgid "Double-click or press Enter to open in its document"
+msgstr ""
+
+#: apps/reader/src/NavigatorSections.tsx
+msgid "Double-click to keep open · Ctrl+Enter opens beside"
+msgstr ""
+
+#: apps/reader/src/CitationEditor.tsx
+msgid "Drag to insert this citation"
+msgstr ""
+
+#: apps/reader/src/LibraryTableHeader.tsx
+msgid "Drag to move"
+msgstr ""
+
+#: apps/reader/src/LibraryTableHeader.tsx
+msgid "Drag to resize · Double-click to reset"
+msgstr ""
+
+#: apps/reader/src/SourceAddDialog.tsx
+msgid "Drop to add"
+msgstr ""
+
+#: apps/reader/src/ReaderWorkspaceView.tsx
+msgid "Drop to add to your library"
+msgstr ""
+
+#: apps/reader/src/WorkspacePaneSupport.tsx
+msgid "Drop to attach"
+msgstr ""
+
+#: apps/reader/src/CitationContributors.tsx
+msgctxt "CitationContributors interface"
+msgid "Dropping particle"
+msgstr ""
+
+#: apps/reader/src/CitationAdditionalFields.tsx
+msgid "e.g. accessed, genre, PMID"
+msgstr ""
+
+#: apps/reader/src/LibraryTableHeader.tsx
+msgid "e.g. course or csl.volume"
+msgstr ""
+
+#: apps/reader/src/LibraryAnnotations.tsx
+msgid "e.g. Quotes for chapter 2"
+msgstr ""
+
+#: apps/reader/src/LibraryWorkspace.tsx
+msgid "e.g. Reading this month"
+msgstr ""
+
+#: apps/reader/src/CitationTypedFieldEditors.tsx
+msgid "e.g. Spring or 1"
+msgstr ""
+
+#: apps/reader/src/AnnotationCard.tsx
+msgctxt "AnnotationCard interface"
+msgid "Edit"
+msgstr ""
+
+#: apps/reader/src/LibraryFieldCell.tsx
+msgid "Edit {fieldKey}"
+msgstr ""
+
+#: apps/reader/src/AnnotationEditor.tsx
+msgctxt "AnnotationEditor interface"
+msgid "Edit annotation"
+msgstr ""
+
+#: apps/reader/src/AnnotationEditor.tsx
+msgid "Edit here"
+msgstr ""
+
+#: apps/reader/src/AnnotationCard.tsx
+msgctxt "AnnotationCard interface"
+msgid "Edit here"
+msgstr ""
+
+#: apps/reader/src/AnnotationEditor.tsx
+msgid "Edited from the document text."
+msgstr ""
+
+#: apps/reader/src/AnnotationCard.tsx
+msgid "Editing requires a saved annotation"
+msgstr ""
+
+#: apps/reader/src/CitationStructuredEditor.tsx
+msgctxt "CitationStructuredEditor interface"
+msgid "Edition"
+msgstr ""
+
+#: apps/reader/src/CitationStructuredEditor.tsx
+msgctxt "CitationStructuredEditor interface"
+msgid "Editors"
+msgstr ""
+
+#: apps/reader/src/CitationStructuredEditor.tsx
+msgid "Editors and translators"
+msgstr ""
+
+#: apps/reader/src/CitationTypedFieldEditors.tsx
+msgid "EDTF or source date"
+msgstr ""
+
+#: apps/reader/src/CitationTypedFieldEditors.tsx
+msgctxt "CitationTypedFieldEditors interface"
+msgid "End (optional)"
+msgstr ""
+
+#: apps/reader/src/CitationTypedFieldEditors.tsx
+msgid "Enter valid JSON to apply this value."
+msgstr ""
+
+#: apps/reader/src/LibraryAnnotationTableHead.tsx
+msgid "Every column is shown."
+msgstr ""
+
+#: apps/reader/src/CitationEditor.tsx
+msgid "Every official field is preserved exactly as entered."
+msgstr ""
+
+#: apps/reader/src/ImportInput.tsx
+msgid "Every payload checksum is verified before collection writes. Currently requires a browser with folder selection support, such as Chrome."
+msgstr ""
+
+#: apps/reader/src/LibraryWorkspace.tsx
+msgctxt "LibraryWorkspace interface"
+msgid "Export bibliography"
+msgstr ""
+
+#: apps/reader/src/LibraryRowMenu.tsx
+msgid "Export citation"
+msgstr ""
+
+#: apps/reader/src/LibraryBulkBar.tsx
+msgid "Export citations"
+msgstr ""
+
+#: apps/reader/src/DocumentContextualToolbar.tsx
+msgctxt "DocumentContextualToolbar interface"
+msgid "Export source"
+msgstr ""
+
+#: apps/reader/src/ImportInput.tsx
+msgid "Exported folder"
+msgstr ""
+
+#: apps/reader/src/CitationContributors.tsx
+msgctxt "CitationContributors interface"
+msgid "Family name"
+msgstr ""
+
+#: apps/reader/src/LibraryBulkBar.tsx
+msgctxt "LibraryBulkBar interface"
+msgid "field"
+msgstr ""
+
+#: apps/reader/src/LibraryConditionsEditor.tsx
+msgctxt "LibraryConditionsEditor interface"
+msgid "field"
+msgstr ""
+
+#: apps/reader/src/LibraryBulkBar.tsx
+msgctxt "LibraryBulkBar interface"
+msgid "Field"
+msgstr ""
+
+#: apps/reader/src/LibraryConditionsEditor.tsx
+msgctxt "LibraryConditionsEditor interface"
+msgid "Field"
+msgstr ""
+
+#: apps/reader/src/LibraryConditionsEditor.tsx
+msgctxt "LibraryConditionsEditor interface"
+msgid "Field condition"
+msgstr ""
+
+#: apps/reader/src/LibraryConditionsEditor.tsx
+msgid "Fields"
+msgstr ""
+
+#: apps/reader/src/LibraryWorkspace.tsx
+msgid "Filter"
+msgstr ""
+
+#. placeholder {0}: filter === "all" ? "" : ", filtered"
+#: apps/reader/src/AnnotationList.tsx
+msgid "Filter and sort annotations{0}"
+msgstr ""
+
+#: apps/reader/src/AnnotationList.tsx
+msgctxt "AnnotationList interface"
+msgid "Filter annotations"
+msgstr ""
+
+#: apps/reader/src/CollectionMenu.tsx
+msgctxt "CollectionMenu interface"
+msgid "Filter collections"
+msgstr ""
+
+#: apps/reader/src/CitationLookup.tsx
+msgctxt "CitationLookup interface"
+msgid "Find"
+msgstr ""
+
+#: apps/reader/src/CitationAdditionalFields.tsx
+msgid "Find a field"
+msgstr ""
+
+#: apps/reader/src/LibraryNavigator.tsx
+msgid "Find a source"
+msgstr ""
+
+#: apps/reader/src/LibraryNavigator.tsx
+msgid "Find a source by title, author or tag"
+msgstr ""
+
+#: apps/reader/src/WorkspacePaneSupport.tsx
+msgid "Find an open-access PDF"
+msgstr ""
+
+#: apps/reader/src/CitationLookup.tsx
+msgid "Find citation details"
+msgstr ""
+
+#: apps/reader/src/SourceImportDialog.tsx
+msgctxt "SourceImportDialog interface"
+msgid "Finishing…"
+msgstr ""
+
+#: apps/reader/src/CitationEditor.tsx
+msgid "Fix before saving"
+msgstr ""
+
+#: apps/reader/src/InspectorPane.tsx
+msgid "Focus a document, note, annotation, or citation tab to inspect its source."
+msgstr ""
+
+#: apps/reader/src/NativeSignIn.tsx
+msgid "Forget collection"
+msgstr ""
+
+#: apps/reader/src/LibraryWorkspace.tsx
+msgid "Format"
+msgstr ""
+
+#: apps/reader/src/LibraryWorkspace.tsx
+msgctxt "LibraryWorkspace interface"
+msgid "Format"
+msgstr ""
+
+#: apps/reader/src/SourceNoteEditor.tsx
+msgctxt "SourceNoteEditor interface"
+msgid "Format Markdown"
+msgstr ""
+
+#: apps/reader/src/CitationLookup.tsx
+msgid "Found"
+msgstr ""
+
+#: apps/reader/src/ImportInput.tsx
+msgid "Get your"
+msgstr ""
+
+#: apps/reader/src/CitationContributors.tsx
+msgctxt "CitationContributors interface"
+msgid "Given names"
+msgstr ""
+
+#: apps/reader/src/InspectorPane.tsx
+msgid "Go to workbench"
+msgstr ""
+
+#: apps/reader/src/SourceNoteEditor.tsx
+msgid "H"
+msgstr ""
+
+#: apps/reader/src/DisplayMenu.tsx
+msgctxt "DisplayMenu interface"
+msgid "Hide"
+msgstr ""
+
+#: apps/reader/src/LibraryTableHeader.tsx
+msgid "Hide column"
+msgstr ""
+
+#: apps/reader/src/SelectionToolbar.tsx
+msgctxt "SelectionToolbar interface"
+msgid "Highlight"
+msgstr ""
+
+#: apps/reader/src/SelectionToolbar.tsx
+msgctxt "SelectionToolbar interface"
+msgid "Highlight (H)"
+msgstr ""
+
+#: apps/reader/src/DisplayMenu.tsx
+msgid "Highlight at once"
+msgstr ""
+
+#: apps/reader/src/SourceNoteInsertMenu.tsx
+msgid "Highlights and comments on this source appear here."
+msgstr ""
+
+#: apps/reader/src/LibraryAnnotations.tsx
+msgid "Highlights and notes you make while reading appear here."
+msgstr ""
+
+#: apps/reader/src/WorkspacePaneSupport.tsx
+msgid "Highlights unavailable"
+msgstr ""
+
+#: apps/reader/src/SourceAddDialog.tsx
+msgid "https://…, DOI, arXiv ID or ISBN"
+msgstr ""
+
+#: apps/reader/src/SourceNoteEditor.tsx
+msgid "I"
+msgstr ""
+
+#: apps/reader/src/CitationStructuredEditor.tsx
+msgid "Identifiers and access"
+msgstr ""
+
+#. placeholder {0}: plan.sources.length.toLocaleString()
+#. placeholder {1}: opened.collectionName
+#: apps/reader/src/ImportReview.tsx
+msgid "Import {0} sources into {1}"
+msgstr ""
+
+#: apps/reader/src/ImportPageView.tsx
+msgid "Import a library"
+msgstr ""
+
+#: apps/reader/src/LibraryWorkspace.tsx
+msgid "Import a library…"
+msgstr ""
+
+#: apps/reader/src/ImportPageView.tsx
+msgid "Import an export bundle →"
+msgstr ""
+
+#. placeholder {0}: service === "zotero" ? "Zotero" : "Readwise Reader"
+#: apps/reader/src/ImportPageView.tsx
+msgid "Import from {0}"
+msgstr ""
+
+#: apps/reader/src/ImportPageView.tsx
+msgctxt "ImportPageView interface"
+msgid "Import navigation"
+msgstr ""
+
+#: apps/reader/src/ImportReview.tsx
+msgctxt "ImportReview interface"
+msgid "Import progress"
+msgstr ""
+
+#: apps/reader/src/ImportReview.tsx
+msgctxt "ImportReview interface"
+msgid "Import status"
+msgstr ""
+
+#: apps/reader/src/SourceImportDialog.tsx
+msgctxt "SourceImportDialog interface"
+msgid "Importing…"
+msgstr ""
+
+#: apps/reader/src/LibraryWorkspace.tsx
+msgid "in"
+msgstr ""
+
+#: apps/reader/src/SelectionToolbar.tsx
+msgid "In "
+msgstr ""
+
+#: apps/reader/src/AnnotationCard.tsx
+msgid "In literature note"
+msgstr ""
+
+#: apps/reader/src/SourceNoteInsertMenu.tsx
+msgctxt "SourceNoteInsertMenu interface"
+msgid "In note"
+msgstr ""
+
+#: apps/reader/src/ImportInput.tsx
+msgid "Include unsaved Feed items (archived library items are included either way)"
+msgstr ""
+
+#: apps/reader/src/CitationEditor.tsx
+msgid "Incomplete"
+msgstr ""
+
+#: apps/reader/src/SourceNoteInsertMenu.tsx
+msgid "Insert [@{citekey}] at the cursor"
+msgstr ""
+
+#: apps/reader/src/SourceNoteInsertMenu.tsx
+msgid "Insert a citation or annotation"
+msgstr ""
+
+#: apps/reader/src/SourceNoteInsertMenu.tsx
+msgid "Insert at the cursor"
+msgstr ""
+
+#: apps/reader/src/AnnotationCard.tsx
+msgid "Insert this annotation in the literature note"
+msgstr ""
+
+#: apps/reader/src/AnnotationCard.tsx
+msgctxt "AnnotationCard interface"
+msgid "Inserting…"
+msgstr ""
+
+#: apps/reader/src/ImportInput.tsx
+msgid "Install the experimental Zotero 10.0.x exporter, then use"
+msgstr ""
+
+#: apps/reader/src/preview.tsx
+msgid "Interface preview"
+msgstr ""
+
+#: apps/reader/src/preview.tsx
+msgid "Interface preview document"
+msgstr ""
+
+#: apps/reader/src/CitationStructuredEditor.tsx
+msgctxt "CitationStructuredEditor interface"
+msgid "Issue"
+msgstr ""
+
+#: apps/reader/src/CitationStructuredEditor.tsx
+msgctxt "CitationStructuredEditor interface"
+msgid "Issued"
+msgstr ""
+
+#: apps/reader/src/CitationStructuredEditor.tsx
+msgid "Journal, book or site"
+msgstr ""
+
+#: apps/reader/src/ContinueReading.tsx
+msgid "Just started"
+msgstr ""
+
+#: apps/reader/src/AnnotationEditor.tsx
+msgid "Keep mine"
+msgstr ""
+
+#: apps/reader/src/CitationContributors.tsx
+msgid "Keep name order"
+msgstr ""
+
+#: apps/reader/src/DisplayMenu.tsx
+msgctxt "DisplayMenu interface"
+msgid "Keep open"
+msgstr ""
+
+#: apps/reader/src/InspectorPane.tsx
+msgid "Keep open as a workbench tab"
+msgstr ""
+
+#: apps/reader/src/CitationStructuredEditor.tsx
+msgctxt "CitationStructuredEditor interface"
+msgid "Language"
+msgstr ""
+
+#: apps/reader/src/DisplayMenu.tsx
+msgctxt "DisplayMenu interface"
+msgid "Larger text"
+msgstr ""
+
+#: apps/reader/src/LibraryWorkspace.tsx
+msgid "Layout"
+msgstr ""
+
+#: apps/reader/src/DocumentContextualToolbar.tsx
+msgid "Leave reading mode"
+msgstr ""
+
+#: apps/reader/src/LibraryNavigator.tsx
+msgctxt "LibraryNavigator interface"
+msgid "Library navigator"
+msgstr ""
+
+#: apps/reader/src/LibraryWorkspace.tsx
+msgctxt "LibraryWorkspace interface"
+msgid "Library presentation"
+msgstr ""
+
+#: apps/reader/src/LibraryWorkspace.tsx
+msgctxt "LibraryWorkspace interface"
+msgid "Library view"
+msgstr ""
+
+#: apps/reader/src/LibraryNavigator.tsx
+msgid "Library views and sources"
+msgstr ""
+
+#: apps/reader/src/DocumentWorkspace.tsx
+msgctxt "DocumentWorkspace interface"
+msgid "Library workspace"
+msgstr ""
+
+#: apps/reader/src/DisplayMenu.tsx
+msgctxt "DisplayMenu interface"
+msgid "Line length"
+msgstr ""
+
+#: apps/reader/src/SourceAddDialog.tsx
+msgid "Link or identifier"
+msgstr ""
+
+#: apps/reader/src/InspectorPane.tsx
+msgid "Literature note"
+msgstr ""
+
+#: apps/reader/src/InspectorPane.tsx
+msgctxt "InspectorPane interface"
+msgid "Literature note"
+msgstr ""
+
+#: apps/reader/src/LibraryTextSearch.tsx
+msgctxt "LibraryTextSearch interface"
+msgid "Literature note"
+msgstr ""
+
+#: apps/reader/src/DraftRecoveryNotice.tsx
+msgid "Literature note conflict"
+msgstr ""
+
+#: apps/reader/src/AnnotationList.tsx
+#: apps/reader/src/LibraryAnnotationBars.tsx
+msgid "Loading annotations…"
+msgstr ""
+
+#: apps/reader/src/AnnotationImage.tsx
+msgid "Loading screenshot…"
+msgstr ""
+
+#: apps/reader/src/LibraryNavigator.tsx
+msgid "Loading sources…"
+msgstr ""
+
+#: apps/reader/src/ConnectedDocument.tsx
+msgid "Loading the EPUB renderer…"
+msgstr ""
+
+#: apps/reader/src/ReaderApp.tsx
+msgid "Loading the first sources; the rest of the library will load in the background"
+msgstr ""
+
+#: apps/reader/src/ConnectedDocument.tsx
+msgid "Loading the HTML renderer…"
+msgstr ""
+
+#: apps/reader/src/ConnectedDocument.tsx
+msgid "Loading the PDF renderer…"
+msgstr ""
+
+#: apps/reader/src/AnnotationEditor.tsx
+#: apps/reader/src/LibraryNavigator.tsx
+msgid "Loading…"
+msgstr ""
+
+#: apps/reader/src/LibraryAnnotationToolbar.tsx
+msgctxt "LibraryAnnotationToolbar interface"
+msgid "Loading…"
+msgstr ""
+
+#: apps/reader/src/LibraryWorkspace.tsx
+msgctxt "LibraryWorkspace interface"
+msgid "Loading…"
+msgstr ""
+
+#: apps/reader/src/ConnectReader.tsx
+msgid "Local HTTP development uses the local Connect stack at <0>http://127.0.0.1:8787</0>. The managed service requires an HTTPS Reader origin."
+msgstr ""
+
+#: apps/reader/src/CitationPreview.tsx
+msgid "Locale"
+msgstr ""
+
+#: apps/reader/src/CitationLookup.tsx
+msgctxt "CitationLookup interface"
+msgid "Looking…"
+msgstr ""
+
+#: apps/reader/src/DockviewWorkspace.tsx
+msgid "Make room to read"
+msgstr ""
+
+#: apps/reader/src/LibraryNavigator.tsx
+msgid "Matches"
+msgstr ""
+
+#: apps/reader/src/DockPaneActions.tsx
+msgid "Maximize / restore pane"
+msgstr ""
+
+#: apps/reader/src/DockPaneActions.tsx
+msgid "Merge into another reading pane"
+msgstr ""
+
+#: apps/reader/src/CitationLookup.tsx
+msgid "Metadata lookup will be available when a resolver is connected. You can still edit and format CSL locally."
+msgstr ""
+
+#: apps/reader/src/MobileWorkspaceNavigation.tsx
+msgid "Mobile workspace navigation"
+msgstr ""
+
+#: apps/reader/src/DocumentContextualToolbar.tsx
+msgctxt "DocumentContextualToolbar interface"
+msgid "More actions"
+msgstr ""
+
+#: apps/reader/src/DocumentContextualToolbar.tsx
+msgid "More document actions"
+msgstr ""
+
+#: apps/reader/src/CitationContributors.tsx
+msgid "More name details"
+msgstr ""
+
+#: apps/reader/src/LibraryTableHeader.tsx
+msgid "Move left"
+msgstr ""
+
+#: apps/reader/src/LibraryTableHeader.tsx
+msgid "Move right"
+msgstr ""
+
+#: apps/reader/src/DockPaneActions.tsx
+msgid "Move tab to pane below"
+msgstr ""
+
+#: apps/reader/src/DockPaneActions.tsx
+msgid "Move tab to pane right"
+msgstr ""
+
+#: apps/reader/src/LibraryViewSaveDialog.tsx
+msgctxt "LibraryViewSaveDialog interface"
+msgid "Name"
+msgstr ""
+
+#: apps/reader/src/CitationTypedFieldEditors.tsx
+msgctxt "CitationTypedFieldEditors interface"
+msgid "Names"
+msgstr ""
+
+#: apps/reader/src/DisplayMenu.tsx
+msgctxt "DisplayMenu interface"
+msgid "Narrow"
+msgstr ""
+
+#: apps/reader/src/ImportReview.tsx
+msgid "Native metadata is also archived as JSON. Existing records matched by import identity are kept unchanged; ambiguous title or URL matches are never silently merged."
+msgstr ""
+
+#: apps/reader/src/AnnotationComposer.tsx
+msgid "New area annotation"
+msgstr ""
+
+#: apps/reader/src/AnnotationPanelActions.tsx
+msgid "New comment"
+msgstr ""
+
+#: apps/reader/src/LibraryAnnotations.tsx
+msgid "No annotations match"
+msgstr ""
+
+#: apps/reader/src/AnnotationList.tsx
+#: apps/reader/src/LibraryAnnotations.tsx
+msgid "No annotations yet"
+msgstr ""
+
+#: apps/reader/src/CollectionMenu.tsx
+msgid "No collections match “"
+msgstr ""
+
+#: apps/reader/src/WorkspacePaneSupport.tsx
+msgid "No document attached"
+msgstr ""
+
+#: apps/reader/src/LibraryCells.tsx
+msgid "No file attached"
+msgstr ""
+
+#: apps/reader/src/LibraryNavigator.tsx
+msgid "No matches in the sources loaded so far. Loading more…"
+msgstr ""
+
+#: apps/reader/src/AnnotationList.tsx
+msgid "No matching annotations"
+msgstr ""
+
+#. placeholder {0}: document.mediaType
+#: apps/reader/src/ConnectedDocument.tsx
+msgid "No renderer is registered for {0}."
+msgstr ""
+
+#: apps/reader/src/InspectorPane.tsx
+msgid "No source in this pane"
+msgstr ""
+
+#: apps/reader/src/LibraryWorkspace.tsx
+msgid "No sources match"
+msgstr ""
+
+#: apps/reader/src/LibraryNavigator.tsx
+msgid "No sources match."
+msgstr ""
+
+#: apps/reader/src/LibraryNavigator.tsx
+msgid "No sources yet."
+msgstr ""
+
+#: apps/reader/src/CitationContributors.tsx
+msgctxt "CitationContributors interface"
+msgid "Non-dropping particle"
+msgstr ""
+
+#: apps/reader/src/ConnectReader.tsx
+msgctxt "ConnectReader interface"
+msgid "not installed"
+msgstr ""
+
+#: apps/reader/src/AnnotationComposer.tsx
+msgid "Not saved yet — keep Reader open until you save this annotation."
+msgstr ""
+
+#: apps/reader/src/SelectionToolbar.tsx
+msgctxt "SelectionToolbar interface"
+msgid "note"
+msgstr ""
+
+#: apps/reader/src/SelectionToolbar.tsx
+msgctxt "SelectionToolbar interface"
+msgid "notes"
+msgstr ""
+
+#: apps/reader/src/InspectorPane.tsx
+msgid "Notes follow the active pane"
+msgstr ""
+
+#: apps/reader/src/CitationTypedFieldEditors.tsx
+msgctxt "CitationTypedFieldEditors interface"
+msgid "Number"
+msgstr ""
+
+#: apps/reader/src/LibraryConditionsEditor.tsx
+msgid "Numbers stored as text compare as text, as in saved mdbase views."
+msgstr ""
+
+#: apps/reader/src/ConnectReader.tsx
+msgid "Only Reader’s source and annotation contracts and starter types will be added."
+msgstr ""
+
+#: apps/reader/src/LibraryBulkBar.tsx
+msgctxt "LibraryBulkBar interface"
+msgid "Open"
+msgstr ""
+
+#: apps/reader/src/LibraryNavigator.tsx
+msgctxt "LibraryNavigator interface"
+msgid "Open"
+msgstr ""
+
+#: apps/reader/src/LibraryRowMenu.tsx
+msgctxt "LibraryRowMenu interface"
+msgid "Open"
+msgstr ""
+
+#. placeholder {0}: connection.displayName
+#: apps/reader/src/ConnectReader.tsx
+msgid "Open {0}"
+msgstr ""
+
+#: apps/reader/src/InspectorPane.tsx
+msgid "Open {tab} in workbench"
+msgstr ""
+
+#: apps/reader/src/ReaderHeader.tsx
+msgid "Open a document to use reading mode"
+msgstr ""
+
+#: apps/reader/src/LibraryTextSearch.tsx
+msgid "Open a result, then use the document’s Find control to locate the passage."
+msgstr ""
+
+#: apps/reader/src/DockviewWorkspace.tsx
+msgid "Open a source from the library. Drag tabs to arrange your workspace."
+msgstr ""
+
+#: apps/reader/src/LibraryRowMenu.tsx
+msgid "Open beside"
+msgstr ""
+
+#: apps/reader/src/LibraryTextSearch.tsx
+msgctxt "LibraryTextSearch interface"
+msgid "Open document"
+msgstr ""
+
+#: apps/reader/src/LibraryBulkBar.tsx
+msgid "Open each in its own tab"
+msgstr ""
+
+#: apps/reader/src/DockviewWorkspace.tsx
+msgid "Open library"
+msgstr ""
+
+#: apps/reader/src/WorkspacePaneSupport.tsx
+msgid "Open literature note"
+msgstr ""
+
+#: apps/reader/src/ConnectReader.tsx
+msgid "Open mdbase Reader"
+msgstr ""
+
+#: apps/reader/src/SourceAddDialog.tsx
+msgid "Open source"
+msgstr ""
+
+#: apps/reader/src/AnnotationPanelActions.tsx
+msgid "Open the document to bookmark a position"
+msgstr ""
+
+#: apps/reader/src/MobileWorkspaceNavigation.tsx
+msgid "Open workspace tab"
+msgstr ""
+
+#. placeholder {0}: original.displayName
+#: apps/reader/src/SdkReaderRoot.tsx
+msgid "Opening {0}"
+msgstr ""
+
+#: apps/reader/src/CitationEditor.tsx
+msgid "Opening citation metadata…"
+msgstr ""
+
+#: apps/reader/src/ConnectedDocument.tsx
+msgctxt "ConnectedDocument interface"
+msgid "Opening document…"
+msgstr ""
+
+#: apps/reader/src/MultilineCodeEditor.tsx
+msgid "Opening editor…"
+msgstr ""
+
+#: apps/reader/src/SourceNoteEditor.tsx
+msgid "Opening literature note…"
+msgstr ""
+
+#: apps/reader/src/CollectionMenu.tsx
+msgctxt "CollectionMenu interface"
+msgid "Opening mdbase…"
+msgstr ""
+
+#: apps/reader/src/ConnectionLayout.tsx
+msgctxt "ConnectionLayout interface"
+msgid "Opening mdbase…"
+msgstr ""
+
+#: apps/reader/src/ConnectReader.tsx
+msgctxt "ConnectReader interface"
+msgid "Opening mdbase…"
+msgstr ""
+
+#: apps/reader/src/ReaderApp.tsx
+#: apps/reader/src/ReaderWorkspace.tsx
+msgid "Opening your reading collection"
+msgstr ""
+
+#: apps/reader/src/CitationStructuredEditor.tsx
+msgid "Optional descriptive text"
+msgstr ""
+
+#: apps/reader/src/SourceAddDialog.tsx
+msgid "or"
+msgstr ""
+
+#: apps/reader/src/ConnectReader.tsx
+msgid "Or open another collection"
+msgstr ""
+
+#: apps/reader/src/AnnotationList.tsx
+msgid "Order"
+msgstr ""
+
+#: apps/reader/src/CitationContributors.tsx
+msgctxt "CitationContributors interface"
+msgid "Organisation name"
+msgstr ""
+
+#: apps/reader/src/CitationStructuredEditor.tsx
+msgctxt "CitationStructuredEditor interface"
+msgid "Pages"
+msgstr ""
+
+#: apps/reader/src/DockPaneActions.tsx
+msgctxt "DockPaneActions interface"
+msgid "Pane actions"
+msgstr ""
+
+#: apps/reader/src/CitationContributors.tsx
+msgid "Parse literal name"
+msgstr ""
+
+#: apps/reader/src/LibraryAnnotationToolbar.tsx
+msgid "Passage, note, source or tag"
+msgstr ""
+
+#: apps/reader/src/CitationLookup.tsx
+msgid "Paste an identifier, URL, or title"
+msgstr ""
+
+#: apps/reader/src/ReaderWorkspaceView.tsx
+#: apps/reader/src/SourceAddDialog.tsx
+msgid "PDF, EPUB or saved web page"
+msgstr ""
+
+#: apps/reader/src/DockviewWorkspace.tsx
+msgctxt "DockviewWorkspace interface"
+msgid "Pinned"
+msgstr ""
+
+#: apps/reader/src/CitationStructuredEditor.tsx
+msgctxt "CitationStructuredEditor interface"
+msgid "Place"
+msgstr ""
+
+#: apps/reader/src/WorkspacePaneSupport.tsx
+msgid "Position not saved"
+msgstr ""
+
+#: apps/reader/src/LibraryWorkspace.tsx
+msgctxt "LibraryWorkspace interface"
+msgid "Preparing bibliography…"
+msgstr ""
+
+#: apps/reader/src/DocumentContextualToolbar.tsx
+msgctxt "DocumentContextualToolbar interface"
+msgid "Preparing export…"
+msgstr ""
+
+#: apps/reader/src/ReaderWorkspace.tsx
+msgid "Preparing the reading workspace"
+msgstr ""
+
+#: apps/reader/src/CitationPreview.tsx
+msgid "Preview"
+msgstr ""
+
+#: apps/reader/src/LibraryTableHeader.tsx
+msgid "Properties"
+msgstr ""
+
+#: apps/reader/src/CitationStructuredEditor.tsx
+msgid "Publication"
+msgstr ""
+
+#: apps/reader/src/CitationStructuredEditor.tsx
+msgctxt "CitationStructuredEditor interface"
+msgid "Publisher"
+msgstr ""
+
+#: apps/reader/src/AnnotationEditor.tsx
+msgctxt "AnnotationEditor interface"
+msgid "Quoted passage"
+msgstr ""
+
+#: apps/reader/src/ImportPageView.tsx
+msgid "R"
+msgstr ""
+
+#: apps/reader/src/NativeSignIn.tsx
+msgid "Read from your collection"
+msgstr ""
+
+#: apps/reader/src/ReaderWorkspaceView.tsx
+msgctxt "ReaderWorkspaceView interface"
+msgid "Reader commands"
+msgstr ""
+
+#: apps/reader/src/WorkspacePaneSupport.tsx
+msgid "Reader could not save your place in this document."
+msgstr ""
+
+#. placeholder {0}: lookup.offer.reason
+#. placeholder {1}: lookup.offer.title
+#: apps/reader/src/SourceAddDialog.tsx
+msgid "Reader couldn’t fetch that page ({0}), but it found the citation for “{1}”. You can save the citation now and attach the page or file later."
+msgstr ""
+
+#: apps/reader/src/ImportPageView.tsx
+msgid "Reader documents and files, plus highlights from Kindle, Apple Books and other Readwise sources."
+msgstr ""
+
+#: apps/reader/src/LibraryTableHeader.tsx
+msgid "Reader fields"
+msgstr ""
+
+#: apps/reader/src/InspectorPane.tsx
+msgid "Reader keeps one writable editor for each source record."
+msgstr ""
+
+#: apps/reader/src/DockviewWorkspace.tsx
+msgctxt "DockviewWorkspace interface"
+msgid "Reader workspace"
+msgstr ""
+
+#: apps/reader/src/DocumentContextualToolbar.tsx
+msgctxt "DocumentContextualToolbar interface"
+msgid "Reading mode"
+msgstr ""
+
+#: apps/reader/src/ReaderHeader.tsx
+msgctxt "ReaderHeader interface"
+msgid "Reading mode"
+msgstr ""
+
+#. placeholder {0}: source.title
+#: apps/reader/src/LibraryCells.tsx
+msgid "Reading status of {0}"
+msgstr ""
+
+#: apps/reader/src/SourceImportDialog.tsx
+msgid "Reading the file’s details…"
+msgstr ""
+
+#: apps/reader/src/ImportInput.tsx
+msgid "Readwise access token"
+msgstr ""
+
+#: apps/reader/src/ImportPageView.tsx
+msgid "Readwise Reader"
+msgstr ""
+
+#: apps/reader/src/ImportPageView.tsx
+msgctxt "ImportPageView interface"
+msgid "Readwise Reader"
+msgstr ""
+
+#: apps/reader/src/CitationEditor.tsx
+msgid "Ready"
+msgstr ""
+
+#: apps/reader/src/LibraryNavigator.tsx
+msgctxt "LibraryNavigator interface"
+msgid "Recent"
+msgstr ""
+
+#: apps/reader/src/DraftRecoveryNotice.tsx
+msgid "Recovered changes saved on this device. Syncing to the collection…"
+msgstr ""
+
+#: apps/reader/src/ImportPageView.tsx
+msgid "References, original files, notes, collections and native annotations."
+msgstr ""
+
+#: apps/reader/src/LibraryAnnotationToolbar.tsx
+msgid "Refresh annotations"
+msgstr ""
+
+#: apps/reader/src/CitationStructuredEditor.tsx
+msgid "Regenerate"
+msgstr ""
+
+#: apps/reader/src/DeploymentUpdateNotice.tsx
+msgid "Reload Reader"
+msgstr ""
+
+#: apps/reader/src/CitationAdditionalFields.tsx
+msgctxt "CitationAdditionalFields interface"
+msgid "Remove"
+msgstr ""
+
+#: apps/reader/src/CitationContributors.tsx
+msgctxt "CitationContributors interface"
+msgid "Remove"
+msgstr ""
+
+#: apps/reader/src/CitationTypedFieldEditors.tsx
+msgctxt "CitationTypedFieldEditors interface"
+msgid "Remove"
+msgstr ""
+
+#. placeholder {0}: source.title
+#: apps/reader/src/SourceRemovalDialog.tsx
+msgid "Remove “{0}”?"
+msgstr ""
+
+#. placeholder {0}: itemLabel.toLocaleLowerCase()
+#. placeholder {1}: String(index + 1)
+#: apps/reader/src/CitationContributors.tsx
+msgid "Remove {0} {1}"
+msgstr ""
+
+#: apps/reader/src/CitationTypedFieldEditors.tsx
+msgid "Remove {key}"
+msgstr ""
+
+#: apps/reader/src/CitationAdditionalFields.tsx
+msgid "Remove {label}"
+msgstr ""
+
+#: apps/reader/src/LibraryConditionsEditor.tsx
+msgctxt "LibraryConditionsEditor interface"
+msgid "Remove condition"
+msgstr ""
+
+#: apps/reader/src/SourceRemovalDialog.tsx
+msgctxt "SourceRemovalDialog interface"
+msgid "Remove source"
+msgstr ""
+
+#: apps/reader/src/LibraryRowMenu.tsx
+msgid "Remove source…"
+msgstr ""
+
+#. placeholder {0}: String(index + 1)
+#: apps/reader/src/CitationTypedFieldEditors.tsx
+msgid "Remove value {0}"
+msgstr ""
+
+#: apps/reader/src/SourceRemovalDialog.tsx
+msgctxt "SourceRemovalDialog interface"
+msgid "Removing…"
+msgstr ""
+
+#: apps/reader/src/LibraryRowMenu.tsx
+msgid "Rename…"
+msgstr ""
+
+#: apps/reader/src/DockPaneActions.tsx
+msgid "Reset arrangement (keep tabs)"
+msgstr ""
+
+#: apps/reader/src/LibraryWorkspace.tsx
+msgid "Reset columns and layout"
+msgstr ""
+
+#: apps/reader/src/LibraryAnnotationToolbar.tsx
+msgid "Reset columns and sort"
+msgstr ""
+
+#: apps/reader/src/LibraryTableHeader.tsx
+msgid "Reset width"
+msgstr ""
+
+#: apps/reader/src/LibraryTableHeader.tsx
+msgid "Resize {label} column"
+msgstr ""
+
+#: apps/reader/src/AnnotationEditor.tsx
+msgid "Restore"
+msgstr ""
+
+#: apps/reader/src/AnnotationCard.tsx
+msgctxt "AnnotationCard interface"
+msgid "Resume edits"
+msgstr ""
+
+#: apps/reader/src/ImportReview.tsx
+msgctxt "ImportReview interface"
+msgid "Resume import"
+msgstr ""
+
+#: apps/reader/src/AnnotationComposer.tsx
+msgid "Resume unfinished annotation"
+msgstr ""
+
+#: apps/reader/src/ReaderHeader.tsx
+msgid "Retry local access"
+msgstr ""
+
+#: apps/reader/src/SourceNoteEditor.tsx
+msgid "Retry save"
+msgstr ""
+
+#: apps/reader/src/AnnotationEditor.tsx
+msgctxt "AnnotationEditor interface"
+msgid "Retry save"
+msgstr ""
+
+#: apps/reader/src/SourceDetails.tsx
+msgid "Review citation"
+msgstr ""
+
+#: apps/reader/src/ImportDestination.tsx
+msgid "Review collection access"
+msgstr ""
+
+#: apps/reader/src/CitationLookup.tsx
+msgid "Review found metadata"
+msgstr ""
+
+#: apps/reader/src/CitationEditor.tsx
+msgid "Review the suggested details before saving."
+msgstr ""
+
+#: apps/reader/src/ImportReview.tsx
+msgid "Review what will be imported"
+msgstr ""
+
+#: apps/reader/src/DisplayMenu.tsx
+msgctxt "DisplayMenu interface"
+msgid "Sans"
+msgstr ""
+
+#: apps/reader/src/SourceAddDialog.tsx
+msgid "Save a web page or PDF link, look up a work by DOI, arXiv ID or ISBN, or add a file from your device."
+msgstr ""
+
+#: apps/reader/src/AnnotationComposer.tsx
+msgctxt "AnnotationComposer interface"
+msgid "Save area"
+msgstr ""
+
+#: apps/reader/src/LibraryViewSaveDialog.tsx
+msgid "Save as a new view"
+msgstr ""
+
+#: apps/reader/src/LibraryAnnotationToolbar.tsx
+#: apps/reader/src/LibraryWorkspace.tsx
+msgid "Save as new view…"
+msgstr ""
+
+#: apps/reader/src/CitationEditor.tsx
+msgctxt "CitationEditor interface"
+msgid "Save changes"
+msgstr ""
+
+#: apps/reader/src/SourceAddDialog.tsx
+msgid "Save citation only"
+msgstr ""
+
+#: apps/reader/src/AnnotationPanelActions.tsx
+msgctxt "AnnotationPanelActions interface"
+msgid "Save comment"
+msgstr ""
+
+#: apps/reader/src/AnnotationComposer.tsx
+msgctxt "AnnotationComposer interface"
+msgid "Save highlight"
+msgstr ""
+
+#: apps/reader/src/LibraryViewSaveDialog.tsx
+msgid "Save library view"
+msgstr ""
+
+#: apps/reader/src/DraftRecoveryNotice.tsx
+msgid "Save my draft instead"
+msgstr ""
+
+#: apps/reader/src/SourceImportDialog.tsx
+msgid "Save the citation found for this file: "
+msgstr ""
+
+#: apps/reader/src/LibraryAnnotationToolbar.tsx
+#: apps/reader/src/LibraryWorkspace.tsx
+msgid "Save view"
+msgstr ""
+
+#: apps/reader/src/LibraryViewSaveDialog.tsx
+msgctxt "LibraryViewSaveDialog interface"
+msgid "Save view"
+msgstr ""
+
+#: apps/reader/src/RenderedSourceDocument.tsx
+msgid "Saved document · original headings below are unchanged"
+msgstr ""
+
+#: apps/reader/src/AnnotationComposer.tsx
+msgctxt "AnnotationComposer interface"
+msgid "Saving…"
+msgstr ""
+
+#: apps/reader/src/AnnotationEditor.tsx
+msgctxt "AnnotationEditor interface"
+msgid "Saving…"
+msgstr ""
+
+#: apps/reader/src/AnnotationPanelActions.tsx
+msgctxt "AnnotationPanelActions interface"
+msgid "Saving…"
+msgstr ""
+
+#: apps/reader/src/CitationEditor.tsx
+msgctxt "CitationEditor interface"
+msgid "Saving…"
+msgstr ""
+
+#: apps/reader/src/LibraryViewSaveDialog.tsx
+msgctxt "LibraryViewSaveDialog interface"
+msgid "Saving…"
+msgstr ""
+
+#: apps/reader/src/ImportInput.tsx
+msgid "Scan Readwise library"
+msgstr ""
+
+#: apps/reader/src/ImportInput.tsx
+msgid "Scanning reads Reader metadata, saved article HTML and every Readwise highlight, including Kindle, Apple Books, Instapaper and other classic sources (those import as metadata and highlights, without the book text). Original PDFs and EPUBs download only after confirmation. Readwise limits request rates, so large libraries take several minutes."
+msgstr ""
+
+#: apps/reader/src/ReaderHeader.tsx
+msgid "Search"
+msgstr ""
+
+#: apps/reader/src/ReaderHeader.tsx
+msgid "Search and commands"
+msgstr ""
+
+#: apps/reader/src/LibraryAnnotationToolbar.tsx
+msgid "Search annotations"
+msgstr ""
+
+#: apps/reader/src/AnnotationList.tsx
+msgctxt "AnnotationList interface"
+msgid "Search annotations"
+msgstr ""
+
+#: apps/reader/src/CitationLookup.tsx
+msgid "Search by DOI, ISBN, URL, or title"
+msgstr ""
+
+#: apps/reader/src/LibraryWorkspace.tsx
+msgid "Search notes and annotations"
+msgstr ""
+
+#: apps/reader/src/LibraryWorkspace.tsx
+msgid "Search open documents"
+msgstr ""
+
+#: apps/reader/src/LibraryWorkspace.tsx
+msgctxt "LibraryWorkspace interface"
+msgid "Search scope"
+msgstr ""
+
+#: apps/reader/src/ReaderWorkspaceView.tsx
+msgid "Search sources and commands"
+msgstr ""
+
+#. placeholder {0}: shortcutLabel("mod+k")
+#: apps/reader/src/ReaderHeader.tsx
+msgid "Search sources and run commands · {0}"
+msgstr ""
+
+#: apps/reader/src/LibraryWorkspace.tsx
+msgid "Search this view"
+msgstr ""
+
+#: apps/reader/src/LibraryTextSearch.tsx
+msgid "Searches literature notes and annotation text, not PDF, EPUB or saved-page contents."
+msgstr ""
+
+#: apps/reader/src/CitationTypedFieldEditors.tsx
+msgid "Season"
+msgstr ""
+
+#. placeholder {0}: source.title
+#: apps/reader/src/LibraryCards.tsx
+msgid "Select {0}"
+msgstr ""
+
+#. placeholder {0}: String(bulkOpenLimit)
+#: apps/reader/src/LibraryBulkBar.tsx
+msgid "Select {0} or fewer to open them together"
+msgstr ""
+
+#: apps/reader/src/ImportDestination.tsx
+msgid "Select a collection"
+msgstr ""
+
+#: apps/reader/src/DocumentContextualToolbar.tsx
+msgid "Select an area to annotate"
+msgstr ""
+
+#: apps/reader/src/DocumentContextualToolbar.tsx
+msgctxt "DocumentContextualToolbar interface"
+msgid "Select area"
+msgstr ""
+
+#: apps/reader/src/AnnotationList.tsx
+msgid "Select text or an area in the document, or add a comment or bookmark above."
+msgstr ""
+
+#: apps/reader/src/LibraryAnnotationBars.tsx
+msgctxt "LibraryAnnotationBars interface"
+msgid "Selected annotations"
+msgstr ""
+
+#: apps/reader/src/CitationLookup.tsx
+msgctxt "CitationLookup interface"
+msgid "selected details"
+msgstr ""
+
+#: apps/reader/src/AnnotationComposer.tsx
+msgid "Selected PDF area"
+msgstr ""
+
+#: apps/reader/src/LibraryBulkBar.tsx
+msgctxt "LibraryBulkBar interface"
+msgid "Selected sources"
+msgstr ""
+
+#: apps/reader/src/SelectionToolbar.tsx
+msgctxt "SelectionToolbar interface"
+msgid "Selected text"
+msgstr ""
+
+#: apps/reader/src/DisplayMenu.tsx
+msgctxt "DisplayMenu interface"
+msgid "Selecting text"
+msgstr ""
+
+#: apps/reader/src/DisplayMenu.tsx
+msgctxt "DisplayMenu interface"
+msgid "Serif"
+msgstr ""
+
+#: apps/reader/src/LibraryBulkBar.tsx
+msgid "Set a field on the selected sources"
+msgstr ""
+
+#: apps/reader/src/LibraryBulkBar.tsx
+msgid "Set field…"
+msgstr ""
+
+#: apps/reader/src/LibraryBulkBar.tsx
+msgid "Set reading status of the selected sources"
+msgstr ""
+
+#: apps/reader/src/LibraryBulkBar.tsx
+msgctxt "LibraryBulkBar interface"
+msgid "Set status…"
+msgstr ""
+
+#: apps/reader/src/ConnectReader.tsx
+msgid "Set up this reading collection"
+msgstr ""
+
+#: apps/reader/src/AnnotationList.tsx
+msgid "Show"
+msgstr ""
+
+#: apps/reader/src/LibraryWorkspace.tsx
+msgctxt "LibraryWorkspace interface"
+msgid "Show"
+msgstr ""
+
+#: apps/reader/src/CitationEditor.tsx
+msgid "Show {suggestions}"
+msgstr ""
+
+#: apps/reader/src/DisplayMenu.tsx
+msgctxt "DisplayMenu interface"
+msgid "Show actions"
+msgstr ""
+
+#: apps/reader/src/AnnotationCard.tsx
+msgid "Show in document"
+msgstr ""
+
+#: apps/reader/src/LibraryTextSearch.tsx
+msgid "Show more results"
+msgstr ""
+
+#: apps/reader/src/AnnotationList.tsx
+msgid "Show selected annotation (clear filters)"
+msgstr ""
+
+#: apps/reader/src/DisplayMenu.tsx
+msgid "Sidebar while reading"
+msgstr ""
+
+#: apps/reader/src/NativeSignIn.tsx
+msgctxt "NativeSignIn interface"
+msgid "Sign-in status"
+msgstr ""
+
+#: apps/reader/src/DisplayMenu.tsx
+msgctxt "DisplayMenu interface"
+msgid "Smaller text"
+msgstr ""
+
+#: apps/reader/src/LibraryAnnotationToolbar.tsx
+#: apps/reader/src/LibraryWorkspace.tsx
+msgid "Sort"
+msgstr ""
+
+#. placeholder {0}: configuration.sortDirection === "asc" ? "descending" : "ascending"
+#. placeholder {0}: layout.sortDirection === "asc" ? "descending" : "ascending"
+#: apps/reader/src/LibraryAnnotationToolbar.tsx
+#: apps/reader/src/LibraryWorkspace.tsx
+msgid "Sort {0}"
+msgstr ""
+
+#: apps/reader/src/AnnotationList.tsx
+msgctxt "AnnotationList interface"
+msgid "Sort annotations"
+msgstr ""
+
+#: apps/reader/src/LibraryTableHeader.tsx
+msgid "Sort ascending"
+msgstr ""
+
+#. placeholder {0}: label.toLocaleLowerCase()
+#: apps/reader/src/LibraryTableHeader.tsx
+msgid "Sort by {0} · Drag to move"
+msgstr ""
+
+#: apps/reader/src/LibraryTableHeader.tsx
+msgid "Sort descending"
+msgstr ""
+
+#: apps/reader/src/LibraryAnnotationToolbar.tsx
+msgctxt "LibraryAnnotationToolbar interface"
+msgid "Sort field"
+msgstr ""
+
+#: apps/reader/src/LibraryWorkspace.tsx
+msgctxt "LibraryWorkspace interface"
+msgid "Sort field"
+msgstr ""
+
+#: apps/reader/src/LibraryAnnotationToolbar.tsx
+msgctxt "LibraryAnnotationToolbar interface"
+msgid "Source"
+msgstr ""
+
+#: apps/reader/src/SourceNoteEditor.tsx
+msgid "Source literature note"
+msgstr ""
+
+#: apps/reader/src/MobileSourceViews.tsx
+msgctxt "MobileSourceViews interface"
+msgid "Source views"
+msgstr ""
+
+#: apps/reader/src/InspectorPane.tsx
+msgctxt "InspectorPane interface"
+msgid "Source workspace"
+msgstr ""
+
+#: apps/reader/src/ImportReview.tsx
+msgid "Sources"
+msgstr ""
+
+#: apps/reader/src/LibraryCards.tsx
+msgctxt "LibraryCards interface"
+msgid "Sources"
+msgstr ""
+
+#: apps/reader/src/LibraryNavigator.tsx
+msgctxt "LibraryNavigator interface"
+msgid "Sources"
+msgstr ""
+
+#: apps/reader/src/LibraryTable.tsx
+msgctxt "LibraryTable interface"
+msgid "Sources"
+msgstr ""
+
+#: apps/reader/src/LibraryWorkspace.tsx
+msgctxt "LibraryWorkspace interface"
+msgid "Sources"
+msgstr ""
+
+#: apps/reader/src/DisplayMenu.tsx
+msgctxt "DisplayMenu interface"
+msgid "Standard"
+msgstr ""
+
+#: apps/reader/src/CitationTypedFieldEditors.tsx
+msgctxt "CitationTypedFieldEditors interface"
+msgid "Start"
+msgstr ""
+
+#: apps/reader/src/LibraryRowMenu.tsx
+#: apps/reader/src/LibraryWorkspace.tsx
+msgid "Status"
+msgstr ""
+
+#: apps/reader/src/LibraryWorkspace.tsx
+msgctxt "LibraryWorkspace interface"
+msgid "Status"
+msgstr ""
+
+#: apps/reader/src/SourceImportDialog.tsx
+msgctxt "SourceImportDialog interface"
+msgid "Stop import"
+msgstr ""
+
+#: apps/reader/src/ImportReview.tsx
+msgid "Stop safely"
+msgstr ""
+
+#: apps/reader/src/CitationPreview.tsx
+msgid "Style"
+msgstr ""
+
+#: apps/reader/src/CitationContributors.tsx
+msgctxt "CitationContributors interface"
+msgid "Suffix"
+msgstr ""
+
+#: apps/reader/src/CitationEditor.tsx
+msgctxt "CitationEditor interface"
+msgid "suggestion"
+msgstr ""
+
+#: apps/reader/src/CitationEditor.tsx
+msgctxt "CitationEditor interface"
+msgid "suggestions"
+msgstr ""
+
+#: apps/reader/src/CollectionMenu.tsx
+msgctxt "CollectionMenu interface"
+msgid "Switch collection"
+msgstr ""
+
+#: apps/reader/src/CollectionPicker.tsx
+msgctxt "CollectionPicker interface"
+msgid "Switch collection"
+msgstr ""
+
+#: apps/reader/src/CollectionPicker.tsx
+msgid "Switch collection: {name}"
+msgstr ""
+
+#: apps/reader/src/LibraryWorkspace.tsx
+msgctxt "LibraryWorkspace interface"
+msgid "Table"
+msgstr ""
+
+#: apps/reader/src/LibraryAnnotationToolbar.tsx
+#: apps/reader/src/LibraryWorkspace.tsx
+msgid "Tag"
+msgstr ""
+
+#: apps/reader/src/LibraryAnnotationToolbar.tsx
+msgctxt "LibraryAnnotationToolbar interface"
+msgid "Tag"
+msgstr ""
+
+#: apps/reader/src/CitationTypedFieldEditors.tsx
+msgctxt "CitationTypedFieldEditors interface"
+msgid "Text"
+msgstr ""
+
+#: apps/reader/src/DisplayMenu.tsx
+msgid "Text and display"
+msgstr ""
+
+#: apps/reader/src/LibraryTextSearch.tsx
+msgid "Text search results"
+msgstr ""
+
+#: apps/reader/src/DisplayMenu.tsx
+msgid "Text size"
+msgstr ""
+
+#: apps/reader/src/SourceDetails.tsx
+msgid "The citation has different details."
+msgstr ""
+
+#: apps/reader/src/LibraryAnnotations.tsx
+msgid "The filters, sort and columns are saved in your collection as an mdbase view of annotations."
+msgstr ""
+
+#: apps/reader/src/LibraryWorkspace.tsx
+msgid "The filters, sort, columns and layout are saved in your collection."
+msgstr ""
+
+#: apps/reader/src/CitationLookup.tsx
+msgid "The found record matches this citation."
+msgstr ""
+
+#: apps/reader/src/preview.tsx
+msgid "The interface preview includes one sample document: The Principles of Psychology."
+msgstr ""
+
+#: apps/reader/src/ImportReview.tsx
+msgid "The job is bound to its confirmed collection. Switching collections cannot redirect it. Keep this tab open; after a reload, reselect the same bundle (or reconnect Readwise), choose the same collection, and scan again to resume."
+msgstr ""
+
+#: apps/reader/src/CitationSourceSync.tsx
+msgid "The library shows a different "
+msgstr ""
+
+#: apps/reader/src/SourceDeepLink.tsx
+msgid "The linked annotation is not in this source. It may have been removed or moved to another source."
+msgstr ""
+
+#: apps/reader/src/SourceDeepLink.tsx
+msgid "The linked source is not available in this collection. It may have been removed or your access may have changed."
+msgstr ""
+
+#: apps/reader/src/SourceImportDialog.tsx
+msgid "The original file stays intact in your collection."
+msgstr ""
+
+#: apps/reader/src/DisplayMenu.tsx
+msgctxt "DisplayMenu interface"
+msgid "Theme"
+msgstr ""
+
+#. placeholder {0}: String(links.length)
+#: apps/reader/src/SourceRemovalDialog.tsx
+msgid "These {0} records link"
+msgstr ""
+
+#: apps/reader/src/AnnotationEditor.tsx
+msgid "These notes embed it and will show a broken embed:"
+msgstr ""
+
+#: apps/reader/src/AnnotationEditor.tsx
+msgid "This annotation changed elsewhere. Your version is kept until you choose."
+msgstr ""
+
+#: apps/reader/src/CitationSourceSync.tsx
+msgid "This citation is missing"
+msgstr ""
+
+#: apps/reader/src/SourceDetails.tsx
+msgid "This collection cannot edit source details."
+msgstr ""
+
+#: apps/reader/src/ImportDestination.tsx
+msgid "This collection needs Reader’s source and annotation types. No library content will be imported until you confirm below."
+msgstr ""
+
+#: apps/reader/src/ConnectedDocument.tsx
+msgid "This file has changed. Some saved annotation positions may need checking."
+msgstr ""
+
+#: apps/reader/src/DraftRecoveryNotice.tsx
+msgid "This note changed in the collection"
+msgstr ""
+
+#: apps/reader/src/SourceRemovalDialog.tsx
+msgid "This record links"
+msgstr ""
+
+#: apps/reader/src/CitationAdditionalFields.tsx
+msgid "This record only uses the core fields above."
+msgstr ""
+
+#: apps/reader/src/SourceRemovalDialog.tsx
+msgid "This removes the source from your library and deletes its source note. Saved files and annotation notes are kept in the collection. Links to this source will stop working. Reader cannot undo this."
+msgstr ""
+
+#: apps/reader/src/WorkspacePaneSupport.tsx
+msgid "This source has no file yet. Its literature note, annotations and citation are in the Source panel."
+msgstr ""
+
+#: apps/reader/src/ConnectedDocument.tsx
+msgid "This source has no readable representation."
+msgstr ""
+
+#: apps/reader/src/DocumentWorkspace.tsx
+msgid "This source is no longer available."
+msgstr ""
+
+#: apps/reader/src/CitationStructuredEditor.tsx
+msgctxt "CitationStructuredEditor interface"
+msgid "Title"
+msgstr ""
+
+#: apps/reader/src/SourceImportDialog.tsx
+msgctxt "SourceImportDialog interface"
+msgid "Title"
+msgstr ""
+
+#: apps/reader/src/LibraryWorkspace.tsx
+msgid "Title, author or tag"
+msgstr ""
+
+#: apps/reader/src/CitationStructuredEditor.tsx
+msgid "Title, work type, and citation key"
+msgstr ""
+
+#: apps/reader/src/SourceRemovalDialog.tsx
+msgid "to it and will show a broken link:"
+msgstr ""
+
+#: apps/reader/src/ReaderHeader.tsx
+msgid "Toggle left sidebar"
+msgstr ""
+
+#. placeholder {0}: shortcutLabel("mod+\\")
+#: apps/reader/src/ReaderHeader.tsx
+msgid "Toggle left sidebar · {0}"
+msgstr ""
+
+#: apps/reader/src/ReaderHeader.tsx
+msgid "Toggle right sidebar"
+msgstr ""
+
+#. placeholder {0}: shortcutLabel("mod+shift+\\")
+#: apps/reader/src/ReaderHeader.tsx
+msgid "Toggle right sidebar · {0}"
+msgstr ""
+
+#: apps/reader/src/ImportInput.tsx
+msgid "Tools → Export for mdbase Reader…"
+msgstr ""
+
+#: apps/reader/src/CitationStructuredEditor.tsx
+msgctxt "CitationStructuredEditor interface"
+msgid "Translators"
+msgstr ""
+
+#: apps/reader/src/LibraryAnnotations.tsx
+#: apps/reader/src/LibraryWorkspace.tsx
+msgid "Try a different search, or clear the filters."
+msgstr ""
+
+#: apps/reader/src/ConnectionLayout.tsx
+#: apps/reader/src/LibraryAnnotationBars.tsx
+msgid "Try again"
+msgstr ""
+
+#: apps/reader/src/ConnectedDocument.tsx
+msgid "Try this tab again"
+msgstr ""
+
+#: apps/reader/src/CitationStructuredEditor.tsx
+msgctxt "CitationStructuredEditor interface"
+msgid "Type"
+msgstr ""
+
+#: apps/reader/src/LibraryAnnotationToolbar.tsx
+msgctxt "LibraryAnnotationToolbar interface"
+msgid "Type"
+msgstr ""
+
+#: apps/reader/src/DisplayMenu.tsx
+msgctxt "DisplayMenu interface"
+msgid "Typeface"
+msgstr ""
+
+#: apps/reader/src/LibraryCards.tsx
+msgctxt "LibraryCards interface"
+msgid "Undated"
+msgstr ""
+
+#: apps/reader/src/LibraryCards.tsx
+msgctxt "LibraryCards interface"
+msgid "Unknown creator"
+msgstr ""
+
+#: apps/reader/src/LibraryNavigator.tsx
+msgctxt "LibraryNavigator interface"
+msgid "Unknown creator"
+msgstr ""
+
+#: apps/reader/src/LibraryAnnotationRow.tsx
+msgctxt "LibraryAnnotationRow interface"
+msgid "Unknown source"
+msgstr ""
+
+#: apps/reader/src/AnnotationCard.tsx
+msgctxt "AnnotationCard interface"
+msgid "Unsaved changes"
+msgstr ""
+
+#: apps/reader/src/CitationEditor.tsx
+msgctxt "CitationEditor interface"
+msgid "Unsaved changes"
+msgstr ""
+
+#: apps/reader/src/DockviewWorkspace.tsx
+msgctxt "DockviewWorkspace interface"
+msgid "Unsaved changes"
+msgstr ""
+
+#: apps/reader/src/CitationSourceSync.tsx
+msgid "Update library details"
+msgstr ""
+
+#: apps/reader/src/LibraryBulkBar.tsx
+msgctxt "LibraryBulkBar interface"
+msgid "Updated"
+msgstr ""
+
+#. placeholder {0}: String(progress.done)
+#. placeholder {1}: String(progress.total)
+#: apps/reader/src/LibraryBulkBar.tsx
+msgid "Updating {0} of {1}…"
+msgstr ""
+
+#: apps/reader/src/CitationSourceSync.tsx
+msgctxt "CitationSourceSync interface"
+msgid "Updating…"
+msgstr ""
+
+#: apps/reader/src/DraftRecoveryNotice.tsx
+msgid "Use collection version"
+msgstr ""
+
+#: apps/reader/src/CitationLookup.tsx
+msgid "Use found "
+msgstr ""
+
+#: apps/reader/src/AnnotationComposer.tsx
+msgid "Use it for this comment"
+msgstr ""
+
+#: apps/reader/src/AnnotationEditor.tsx
+msgid "Use theirs"
+msgstr ""
+
+#: apps/reader/src/LibraryConditionsEditor.tsx
+msgctxt "LibraryConditionsEditor interface"
+msgid "value"
+msgstr ""
+
+#: apps/reader/src/LibraryConditionsEditor.tsx
+msgctxt "LibraryConditionsEditor interface"
+msgid "Value"
+msgstr ""
+
+#: apps/reader/src/LibraryBulkBar.tsx
+msgid "Value (empty removes the field)"
+msgstr ""
+
+#. placeholder {0}: String(index + 1)
+#: apps/reader/src/CitationTypedFieldEditors.tsx
+msgid "Value {0}"
+msgstr ""
+
+#: apps/reader/src/CitationTypedFieldEditors.tsx
+msgctxt "CitationTypedFieldEditors interface"
+msgid "Value type"
+msgstr ""
+
+#: apps/reader/src/LibraryBulkBar.tsx
+msgid "value, or empty to remove"
+msgstr ""
+
+#: apps/reader/src/CitationTypedFieldEditors.tsx
+msgid "Values"
+msgstr ""
+
+#: apps/reader/src/LibraryAnnotationToolbar.tsx
+msgctxt "LibraryAnnotationToolbar interface"
+msgid "View options"
+msgstr ""
+
+#: apps/reader/src/LibraryWorkspace.tsx
+msgctxt "LibraryWorkspace interface"
+msgid "View options"
+msgstr ""
+
+#. placeholder {0}: filterCount ? `, ${String(filterCount)} active filters` : ""
+#: apps/reader/src/LibraryWorkspace.tsx
+msgid "View options{0}"
+msgstr ""
+
+#: apps/reader/src/LibraryNavigator.tsx
+msgid "Views"
+msgstr ""
+
+#: apps/reader/src/CitationStructuredEditor.tsx
+msgctxt "CitationStructuredEditor interface"
+msgid "Volume"
+msgstr ""
+
+#: apps/reader/src/CitationStructuredEditor.tsx
+msgid "Where and when the work appeared"
+msgstr ""
+
+#: apps/reader/src/AnnotationComposer.tsx
+msgid "Why does this matter?"
+msgstr ""
+
+#: apps/reader/src/DisplayMenu.tsx
+msgctxt "DisplayMenu interface"
+msgid "Wide"
+msgstr ""
+
+#: apps/reader/src/main.tsx
+msgid "You can close this window."
+msgstr ""
+
+#: apps/reader/src/AnnotationComposer.tsx
+msgid "You selected other text."
+msgstr ""
+
+#: apps/reader/src/ConnectReader.tsx
+msgctxt "ConnectReader interface"
+msgid "Your collections"
+msgstr ""
+
+#: apps/reader/src/DraftRecoveryNotice.tsx
+msgid "Your draft"
+msgstr ""
+
+#: apps/reader/src/DraftRecoveryNotice.tsx
+msgid "Your draft is retained. Compare both versions before choosing which to save. You can edit your draft below to combine them."
+msgstr ""
+
+#: apps/reader/src/LibraryWorkspace.tsx
+msgid "Your library is empty"
+msgstr ""
+
+#: apps/reader/src/ImportPageView.tsx
+msgid "Your sources, notes and files, in a collection you control. Preview first. Nothing is imported until you confirm the destination."
+msgstr ""
+
+#: apps/reader/src/CitationStructuredEditor.tsx
+msgid "YYYY, YYYY-MM-DD, or a season"
+msgstr ""
+
+#: apps/reader/src/CitationTypedFieldEditors.tsx
+msgid "YYYY, YYYY-MM, or YYYY-MM-DD"
+msgstr ""
+
+#: apps/reader/src/ImportPageView.tsx
+msgid "Z"
+msgstr ""
+
+#: apps/reader/src/ImportPageView.tsx
+msgid "Zotero"
+msgstr ""
+
+#: apps/reader/src/ImportPageView.tsx
+msgctxt "ImportPageView interface"
+msgid "Zotero"
+msgstr ""

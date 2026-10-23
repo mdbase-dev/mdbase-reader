@@ -1,6 +1,6 @@
 pnpm-lock.yaml
 # Compiler-owned Lingui ICU data; preserve deterministic bytes.
-locales/**/*.json
+packages/i18n/locales/**/*.json
 .playwright-mcp/
 .scratch/
 dist/

@@ -166,6 +166,9 @@ importers:
       '@mdbase-reader/core':
         specifier: workspace:*
         version: link:../../packages/core
+      '@mdbase-reader/i18n':
+        specifier: workspace:*
+        version: link:../../packages/i18n
       '@mdbase-reader/markdown-editor':
         specifier: workspace:*
         version: link:../../packages/markdown-editor
@@ -264,6 +267,22 @@ importers:
         version: 2.9.1
 
   packages/core: {}
+
+  packages/i18n:
+    dependencies:
+      '@lingui/core':
+        specifier: 6.9.0
+        version: 6.9.0(@babel/core@7.29.7)
+      '@lingui/react':
+        specifier: 6.9.0
+        version: 6.9.0(@babel/core@7.29.7)(react@19.2.8)
+      react:
+        specifier: ^19.2.8
+        version: 19.2.8
+    devDependencies:
+      '@types/react':
+        specifier: ^19.2.14
+        version: 19.2.18
 
   packages/markdown-editor:
     dependencies:
