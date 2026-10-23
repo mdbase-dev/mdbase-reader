@@ -3148,449 +3148,449 @@ msgstr "Завершите вход или подтверждение на вк�
 #: apps/reader/src/LibraryCells.tsx
 msgctxt "reading status"
 msgid "Finished"
-msgstr ""
+msgstr "Готово"
 
 #: apps/reader/src/SourceImportDialog.tsx
 msgctxt "SourceImportDialog interface"
 msgid "Finishing…"
-msgstr ""
+msgstr "Завершение…"
 
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "First reference note number"
-msgstr ""
+msgstr "Номер первой ссылки в сноске"
 
 #: packages/renderer-pdf/src/pdf-translations.ts
 msgctxt "PDF viewer zoom"
 msgid "Fit to Page"
-msgstr ""
+msgstr "По размеру страницы"
 
 #: packages/renderer-pdf/src/pdf-translations.ts
 msgctxt "PDF viewer zoom"
 msgid "Fit to Width"
-msgstr ""
+msgstr "По ширине"
 
 #: apps/reader/src/CitationEditor.tsx
 msgid "Fix before saving"
-msgstr ""
+msgstr "Исправьте перед сохранением"
 
 #: apps/reader/src/citation-editor-model.ts
 msgid "Fix the JSON syntax: {detail}"
-msgstr ""
+msgstr "Исправьте синтаксис JSON: {detail}"
 
 #: apps/reader/src/InspectorPane.tsx
 msgid "Focus a document, note, annotation, or citation tab to inspect its source."
-msgstr ""
+msgstr "Выберите вкладку документа, заметки, аннотации или ссылки, чтобы просмотреть её источник."
 
 #: apps/reader/src/reader-command-list.ts
 msgctxt "reader command list"
 msgid "Focus next pane"
-msgstr ""
+msgstr "Перейти к следующей панели"
 
 #: apps/extension/src/OptionsApp.tsx
 msgid "For reporting slow or failed saves. The panel can then record connection timings and download them; nothing is recorded until you start it there."
-msgstr ""
+msgstr "Для отчётов о медленном или неудачном сохранении. Панель сможет записывать время подключения и скачивать его; запись начнётся только после запуска на панели."
 
 #: apps/extension/src/OptionsApp.tsx
 msgid "For the side panel, this page and the welcome page. Reader keeps its own theme setting."
-msgstr ""
+msgstr "Для боковой панели, этой страницы и страницы приветствия. Reader использует собственную настройку темы."
 
 #: apps/reader/src/NativeSignIn.tsx
 msgid "Forget collection"
-msgstr ""
+msgstr "Забыть коллекцию"
 
 #: apps/reader/src/LibraryWorkspace.tsx
 msgid "Format"
-msgstr ""
+msgstr "Формат"
 
 #: apps/reader/src/library-columns.ts
 msgctxt "Library table column"
 msgid "Format"
-msgstr ""
+msgstr "Формат"
 
 #: apps/reader/src/LibraryWorkspace.tsx
 msgctxt "LibraryWorkspace interface"
 msgid "Format"
-msgstr ""
+msgstr "Формат"
 
 #: apps/reader/src/SourceNoteEditor.tsx
 msgctxt "SourceNoteEditor interface"
 msgid "Format Markdown"
-msgstr ""
+msgstr "Форматировать Markdown"
 
 #: apps/reader/src/CitationLookup.tsx
 msgid "Found"
-msgstr ""
+msgstr "Найдено"
 
 #: apps/extension/src/CitationCard.tsx
 msgid "From the DOI registry. Saved with the source; edit it later in Reader."
-msgstr ""
+msgstr "Из реестра DOI. Сохранено вместе с источником; позже можно изменить в Reader."
 
 #: apps/extension/src/CitationCard.tsx
 msgid "From the publisher’s page metadata. Saved with the source; edit it later in Reader."
-msgstr ""
+msgstr "Из метаданных страницы издателя. Сохранено вместе с источником; позже можно изменить в Reader."
 
 #: packages/renderer-pdf/src/pdf-translations.ts
 msgctxt "PDF viewer document"
 msgid "Fullscreen"
-msgstr ""
+msgstr "На весь экран"
 
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "Genre"
-msgstr ""
+msgstr "Жанр"
 
 #: apps/reader/src/ImportInput.tsx
 msgid "Get your <0>Readwise access token</0>. It stays in memory in this tab and is sent only to Readwise. Although the token allows writes, this importer only reads."
-msgstr ""
+msgstr "Получите <0>токен доступа Readwise</0>. Он хранится в памяти этой вкладки и отправляется только в Readwise. Хотя токен разрешает запись, этот импортёр только читает данные."
 
 #: apps/extension/src/SaveBar.tsx
 msgid "Give the source a title under Note to save it."
-msgstr ""
+msgstr "Чтобы сохранить источник, укажите его название в разделе «Заметка»."
 
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "Given"
-msgstr ""
+msgstr "Имя"
 
 #: apps/reader/src/CitationContributors.tsx
 msgctxt "CitationContributors interface"
 msgid "Given names"
-msgstr ""
+msgstr "Имена"
 
 #: apps/reader/src/InspectorPane.tsx
 msgid "Go to workbench"
-msgstr ""
+msgstr "Перейти на рабочую панель"
 
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "Graphic"
-msgstr ""
+msgstr "Графический материал"
 
 #: apps/extension/src/HighlightFields.tsx
 msgctxt "Highlight colour"
 msgid "green"
-msgstr ""
+msgstr "зелёный"
 
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "Guest"
-msgstr ""
+msgstr "Гость"
 
 #: apps/reader/src/library-lenses.ts
 msgctxt "library lenses"
 msgid "Has annotations"
-msgstr ""
+msgstr "Есть аннотации"
 
 #: apps/reader/src/SourceNoteEditor.tsx
 msgctxt "SourceNoteEditor formatActions"
 msgid "Heading"
-msgstr ""
+msgstr "Заголовок"
 
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "Hearing"
-msgstr ""
+msgstr "Слушание"
 
 #: apps/reader/src/DisplayMenu.tsx
 msgctxt "DisplayMenu interface"
 msgid "Hide"
-msgstr ""
+msgstr "Скрыть"
 
 #: apps/reader/src/LibraryTableHeader.tsx
 msgid "Hide column"
-msgstr ""
+msgstr "Скрыть столбец"
 
 #: apps/reader/src/annotation-kind.ts
 msgid "Highlight"
-msgstr ""
+msgstr "Выделение"
 
 #: packages/reading-surface/src/margin-markers.ts
 msgctxt "Reading margin marker tooltip"
 msgid "Highlight"
-msgstr ""
+msgstr "Выделение"
 
 #: apps/reader/src/SelectionToolbar.tsx
 msgctxt "SelectionToolbar interface"
 msgid "Highlight"
-msgstr ""
+msgstr "Выделение"
 
 #: apps/reader/src/SelectionToolbar.tsx
 msgctxt "SelectionToolbar interface"
 msgid "Highlight (H)"
-msgstr ""
+msgstr "Выделение (H)"
 
 #: apps/reader/src/DisplayMenu.tsx
 msgid "Highlight at once"
-msgstr ""
+msgstr "Выделить сразу"
 
 #: packages/migration/src/readwise-annotations.ts
 msgid "Highlight has no exposed full quote; retained as an unresolved note: {key}"
-msgstr ""
+msgstr "У выделения нет полного доступного текста цитаты; оно сохранено как неразрешённая заметка: {key}"
 
 #: apps/extension/src/WelcomeApp.tsx
 msgid "Highlight passages"
-msgstr ""
+msgstr "Выделить фрагменты"
 
 #: apps/extension/src/use-extension-capture.ts
 msgid "Highlight removed. The page stays saved."
-msgstr ""
+msgstr "Выделение удалено. Страница остаётся сохранённой."
 
 #: apps/extension/src/use-extension-capture.ts
 msgid "Highlight saved."
-msgstr ""
+msgstr "Выделение сохранено."
 
 #: apps/extension/src/ShortcutList.tsx
 msgid "Highlight selected text, with or without a comment"
-msgstr ""
+msgstr "Выделить текст, с комментарием или без него"
 
 #: apps/extension/src/shell-messages.ts
 msgid "Highlight the selected passage in mdbase Reader"
-msgstr ""
+msgstr "Выделить фрагмент в mdbase Reader"
 
 #: apps/extension/src/background.ts
 msgid "Highlight with a comment in mdbase Reader"
-msgstr ""
+msgstr "Выделить фрагмент и добавить комментарий в mdbase Reader"
 
 #: packages/reading-surface/src/margin-markers.ts
 msgctxt "Reading margin marker tooltip"
 msgid "Highlight with a note"
-msgstr ""
+msgstr "Выделить фрагмент и добавить заметку"
 
 #: apps/extension/src/PanelTabs.tsx
 msgid "Highlights"
-msgstr ""
+msgstr "Выделения"
 
 #: apps/reader/src/AnnotationList.tsx
 msgctxt "AnnotationList annotationFilterOptions"
 msgid "Highlights"
-msgstr ""
+msgstr "Выделения"
 
 #: apps/reader/src/LibraryAnnotationToolbar.tsx
 msgctxt "LibraryAnnotationToolbar annotationTypeOptions"
 msgid "Highlights"
-msgstr ""
+msgstr "Выделения"
 
 #: apps/reader/src/SourceNoteInsertMenu.tsx
 msgid "Highlights and comments on this source appear here."
-msgstr ""
+msgstr "Здесь отображаются выделения и комментарии к этому источнику."
 
 #: apps/reader/src/LibraryAnnotations.tsx
 msgid "Highlights and notes you make while reading appear here."
-msgstr ""
+msgstr "Здесь отображаются выделения и заметки, сделанные во время чтения."
 
 #: apps/extension/src/CaptureApp.tsx
 msgid "Highlights made there appear here."
-msgstr ""
+msgstr "Здесь отображаются созданные там выделения."
 
 #: packages/migration/src/readwise-annotations.ts
 msgid "Highlights on those books not imported"
-msgstr ""
+msgstr "Выделения из этих книг не импортированы"
 
 #: apps/reader/src/WorkspacePaneSupport.tsx
 msgid "Highlights unavailable"
-msgstr ""
+msgstr "Выделения недоступны"
 
 #: packages/renderer-pdf/src/pdf-translations.ts
 msgctxt "PDF viewer page"
 msgid "Horizontal"
-msgstr ""
+msgstr "По горизонтали"
 
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "Host"
-msgstr ""
+msgstr "Хост"
 
 #: apps/reader/src/collection-menu-model.ts
 msgctxt "collection menu model"
 msgid "Hosted by mdbase"
-msgstr ""
+msgstr "Размещено в mdbase"
 
 #. placeholder {0}: String(response.status)
 #: packages/renderer-html/src/html-viewer.tsx
 msgid "HTML download failed with HTTP {0}."
-msgstr ""
+msgstr "Не удалось скачать HTML: HTTP {0}."
 
 #: packages/renderer-html/src/html-viewer.tsx
 msgid "HTML reading document"
-msgstr ""
+msgstr "Документ для чтения HTML"
 
 #: packages/migration/src/zotero.ts
 msgid "HTML snapshot resources are preserved as files; relative assets may not display in Reader yet."
-msgstr ""
+msgstr "Ресурсы снимка HTML сохраняются как файлы; относительные ресурсы пока могут не отображаться в Reader."
 
 #: apps/reader/src/SourceAddDialog.tsx
 msgid "https://…, DOI, arXiv ID or ISBN"
-msgstr ""
+msgstr "https://…, DOI, идентификатор arXiv или ISBN"
 
 #: apps/reader/src/CitationStructuredEditor.tsx
 msgid "Identifiers and access"
-msgstr ""
+msgstr "Идентификаторы и доступ"
 
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "Illustrator"
-msgstr ""
+msgstr "Иллюстратор"
 
 #: apps/reader/src/ImportPageView.tsx
 msgid "Import a library"
-msgstr ""
+msgstr "Импортировать библиотеку"
 
 #: apps/reader/src/LibraryWorkspace.tsx
 msgid "Import a library…"
-msgstr ""
+msgstr "Импортировать библиотеку…"
 
 #: apps/reader/src/reader-app-commands.ts
 msgctxt "reader app commands"
 msgid "Import a library…"
-msgstr ""
+msgstr "Импортировать библиотеку…"
 
 #: apps/reader/src/ImportPageView.tsx
 msgid "Import an export bundle →"
-msgstr ""
+msgstr "Импортировать пакет экспорта →"
 
 #. placeholder {0}: result.verified
 #: apps/reader/src/import-controller.ts
 msgid "Import complete into {name}. {0, plural, one {# record verified} other {# records verified}}."
-msgstr ""
+msgstr "Импорт в {name} завершён. {0, plural, one {Проверена # запись} few {Проверены # записи} many {Проверено # записей} other {Проверены # записи}}."
 
 #. placeholder {0}: service === "zotero" ? "Zotero" : "Readwise Reader"
 #: apps/reader/src/ImportPageView.tsx
 msgid "Import from {0}"
-msgstr ""
+msgstr "Импортировать из {0}"
 
 #: packages/migration/src/run.ts
 msgid "Import identity collision. Existing records will not be overwritten."
-msgstr ""
+msgstr "Конфликт идентификаторов импорта. Существующие записи не будут перезаписаны."
 
 #: apps/reader/src/ImportPageView.tsx
 msgctxt "ImportPageView interface"
 msgid "Import navigation"
-msgstr ""
+msgstr "Навигация по импорту"
 
 #: apps/reader/src/import-controller.ts
 msgid "Import operation failed."
-msgstr ""
+msgstr "Не удалось выполнить импорт."
 
 #: apps/reader/src/ImportReview.tsx
 msgctxt "ImportReview interface"
 msgid "Import progress"
-msgstr ""
+msgstr "Ход импорта"
 
 #: apps/reader/src/ImportReview.tsx
 msgctxt "ImportReview interface"
 msgid "Import status"
-msgstr ""
+msgstr "Состояние импорта"
 
 #: packages/migration/src/run.ts
 msgid "Import verification failed: a record is missing."
-msgstr ""
+msgstr "Не удалось проверить импорт: запись отсутствует."
 
 #: apps/reader/src/SourceImportDialog.tsx
 msgctxt "SourceImportDialog interface"
 msgid "Importing…"
-msgstr ""
+msgstr "Импорт…"
 
 #: apps/reader/src/LibraryWorkspace.tsx
 msgid "in"
-msgstr ""
+msgstr "в"
 
 #: apps/reader/src/AnnotationCard.tsx
 msgid "In literature note"
-msgstr ""
+msgstr "В заметке о литературе"
 
 #: apps/reader/src/SourceNoteInsertMenu.tsx
 msgctxt "SourceNoteInsertMenu interface"
 msgid "In note"
-msgstr ""
+msgstr "В заметке"
 
 #: apps/extension/src/SaveBar.tsx
 msgid "In this collection"
-msgstr ""
+msgstr "В этой коллекции"
 
 #: apps/reader/src/LibraryCells.tsx
 msgctxt "reading status"
 msgid "Inbox"
-msgstr ""
+msgstr "Входящие"
 
 #: packages/renderer-pdf/src/pdf-translations.ts
 msgctxt "PDF viewer print"
 msgid "Include annotations"
-msgstr ""
+msgstr "Включить аннотации"
 
 #: apps/reader/src/ImportInput.tsx
 msgid "Include unsaved Feed items (archived library items are included either way)"
-msgstr ""
+msgstr "Включить несохранённые элементы ленты (архивные элементы библиотеки включаются в любом случае)"
 
 #: apps/reader/src/CitationEditor.tsx
 msgid "Incomplete"
-msgstr ""
+msgstr "Не завершено"
 
 #: packages/renderer-pdf/src/pdf-translations.ts
 msgctxt "PDF viewer passwordPrompt"
 msgid "Incorrect password. Please check and try again."
-msgstr ""
+msgstr "Неверный пароль. Проверьте его и повторите попытку."
 
 #: apps/reader/src/use-open-document-search.ts
 msgid "Indexing {loaded} of {readable} readable sources."
-msgstr ""
+msgstr "Индексация: {loaded} из {readable} доступных для чтения источников."
 
 #: apps/reader/src/SourceNoteEditor.tsx
 msgctxt "SourceNoteEditor formatActions"
 msgid "Inline code"
-msgstr ""
+msgstr "Встроенный код"
 
 #: apps/reader/src/SourceNoteInsertMenu.tsx
 msgid "Insert [@{citekey}] at the cursor"
-msgstr ""
+msgstr "Вставить [@{citekey}] в позицию курсора"
 
 #: apps/reader/src/SourceNoteInsertMenu.tsx
 msgid "Insert a citation or annotation"
-msgstr ""
+msgstr "Вставить ссылку или аннотацию"
 
 #: apps/reader/src/SourceNoteInsertMenu.tsx
 msgid "Insert at the cursor"
-msgstr ""
+msgstr "Вставить в позицию курсора"
 
 #: apps/reader/src/AnnotationCard.tsx
 msgid "Insert this annotation in the literature note"
-msgstr ""
+msgstr "Вставить эту аннотацию в заметку о литературе"
 
 #: apps/reader/src/AnnotationCard.tsx
 msgctxt "AnnotationCard interface"
 msgid "Inserting…"
-msgstr ""
+msgstr "Вставка…"
 
 #: apps/reader/src/pwa-install.ts
 msgctxt "pwa install"
 msgid "Install"
-msgstr ""
+msgstr "Установить"
 
 #: apps/reader/src/pwa-install.ts
 msgid "Install {appName}"
-msgstr ""
+msgstr "Установить {appName}"
 
 #: apps/reader/src/pwa-install.ts
 msgid "Install {appName} for quick access in its own window."
-msgstr ""
+msgstr "Установите {appName} для быстрого доступа в отдельном окне."
 
 #: apps/reader/src/ImportInput.tsx
 msgid "Install the experimental Zotero 10.0.x exporter, then use <0>Tools → Export for mdbase Reader…</0>. Select the whole exported folder—not Zotero’s data directory."
-msgstr ""
+msgstr "Установите экспериментальный экспортёр Zotero 10.0.x, затем выберите <0>«Инструменты → Экспортировать для mdbase Reader…»</0>. Укажите всю экспортированную папку, а не каталог данных Zotero."
 
 #: apps/reader/src/preview.tsx
 msgid "Interface preview document"
-msgstr ""
+msgstr "Документ предварительного просмотра интерфейса"
 
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "Interview"
-msgstr ""
+msgstr "Интервью"
 
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "Interviewer"
-msgstr ""
+msgstr "Интервьюер"
 
 #: packages/migration/src/model.ts
 msgid "Invalid {label}."
