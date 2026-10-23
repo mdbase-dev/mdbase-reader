@@ -1,0 +1,26 @@
+{
+  "status": 200,
+  "body": [
+    {
+      "key": "6MUQ724I",
+      "version": 0,
+      "itemType": "book",
+      "creators": [
+        {
+          "firstName": "Roald",
+          "lastName": "Dahl",
+          "creatorType": "author"
+        }
+      ],
+      "tags": [],
+      "title": "Fantastic Mr. Fox",
+      "publisher": "Puffin",
+      "date": "1988-10-01",
+      "numPages": "96",
+      "extra": "Open Library ID: OL7353617M",
+      "libraryCatalog": "The Open Library",
+      "url": "https://openlibrary.org/books/OL7353617M/Fantastic_Mr._Fox",
+      "accessDate": "2026-10-23"
+    }
+  ]
+}

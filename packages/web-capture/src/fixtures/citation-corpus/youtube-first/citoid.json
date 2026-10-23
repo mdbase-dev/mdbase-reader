@@ -1,0 +1,24 @@
+{
+  "status": 200,
+  "body": [
+    {
+      "key": "5RE3ALKG",
+      "version": 0,
+      "itemType": "videoRecording",
+      "creators": [
+        {
+          "name": "jawed",
+          "creatorType": "author"
+        }
+      ],
+      "tags": [],
+      "title": "Me at the zoo",
+      "url": "https://www.youtube.com/watch?v=jNQXAC9IVRw",
+      "runningTime": "0:19",
+      "date": "2005-04-23",
+      "abstractNote": "Microplastics are accumulating in human brains at an alarming ratehttps://www.youtube.com/watch?v=0PT5c1z3LL8“Nanoplastics and Human Health” with Matthew J C...",
+      "libraryCatalog": "YouTube",
+      "accessDate": "2026-10-23"
+    }
+  ]
+}

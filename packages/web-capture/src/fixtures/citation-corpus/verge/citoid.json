@@ -1,0 +1,25 @@
+{
+  "status": 200,
+  "body": [
+    {
+      "key": "BSHQ4GPF",
+      "version": 0,
+      "itemType": "webpage",
+      "creators": [
+        {
+          "firstName": "Jay",
+          "lastName": "Peters",
+          "creatorType": "author"
+        }
+      ],
+      "tags": [],
+      "title": "Etsy is cracking down on AI slop listings",
+      "websiteTitle": "The Verge",
+      "date": "2026-10-23",
+      "url": "https://www.theverge.com/tech/1017261/etsy-ai-rules-policies-restrictions-listing",
+      "abstractNote": "Listings must “accurately represent” items being sold.",
+      "language": "en-US",
+      "accessDate": "2026-10-23"
+    }
+  ]
+}

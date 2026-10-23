@@ -1,0 +1,21 @@
+{
+  "type": "article-journal",
+  "title": "Molecular Structure of Nucleic Acids: A Structure for Deoxyribose Nucleic Acid",
+  "author": [
+    {
+      "family": "Watson",
+      "given": "J. D."
+    },
+    {
+      "family": "Crick",
+      "given": "F. H. C."
+    }
+  ],
+  "issued": {
+    "date-parts": [[1953, 4, 25]]
+  },
+  "container-title": "Nature",
+  "publisher": "Nature Publishing Group",
+  "DOI": "10.1038/171737a0",
+  "URL": "https://www.nature.com/articles/171737a0"
+}

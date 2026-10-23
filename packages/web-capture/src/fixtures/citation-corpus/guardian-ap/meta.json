@@ -1,0 +1,10 @@
+{
+  "url": "https://www.theguardian.com/world/2026/oct/23/magnitude-7-earthquake-hits-china-tibet",
+  "retrievedAt": "2026-10-23T06:17:45.331722+00:00",
+  "notes": [
+    "Original reduced reproduction of the captured HTML; article prose, descriptions, images, styles, tracking and executable scripts omitted. Citation metadata values are retained; JSON-LD keeps only citation-related properties.",
+    "Page HTTP status: 200. Final URL: https://www.theguardian.com/world/2026/oct/23/magnitude-7-earthquake-hits-china-tibet.",
+    "The visible address/byline and article:author credit Associated Press. JSON-LD misleadingly says Person / Guardian staff reporter. Preserve the agency as a literal corporate author; do not split it into a surname. The end credit \"With Agence France-Presse\" is a contribution, not the primary byline.",
+    "Baseline extractScholarlyMetadata at d0c7061: 6/7 expected fields match; wrong or missing fields: author. Cosmetic case/whitespace differences are ignored; absent expected fields are not scored."
+  ]
+}

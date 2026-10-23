@@ -1,0 +1,61 @@
+{
+  "status": 200,
+  "body": [
+    {
+      "key": "Y97PBCG2",
+      "version": 0,
+      "itemType": "newspaperArticle",
+      "creators": [
+        {
+          "firstName": "Giles",
+          "lastName": "Richards",
+          "creatorType": "author"
+        }
+      ],
+      "tags": [
+        {
+          "tag": "Formula One 2026",
+          "type": 1
+        },
+        {
+          "tag": "Lewis Hamilton",
+          "type": 1
+        },
+        {
+          "tag": "Ferrari",
+          "type": 1
+        },
+        {
+          "tag": "Formula One",
+          "type": 1
+        },
+        {
+          "tag": "Motor sport",
+          "type": 1
+        },
+        {
+          "tag": "Rwanda",
+          "type": 1
+        },
+        {
+          "tag": "Africa",
+          "type": 1
+        },
+        {
+          "tag": "Sport",
+          "type": 1
+        }
+      ],
+      "title": "Lewis Hamilton aims to extend career till early 2030s so he can race in African Grand Prix",
+      "publicationTitle": "The Guardian",
+      "section": "Sport",
+      "date": "2026-10-22",
+      "url": "https://www.theguardian.com/sport/2026/oct/22/lewis-hamilton-aims-to-extend-career-till-early-2030s-so-he-can-race-in-african-grand-prix",
+      "abstractNote": "The 41-year-old is set on fulfilling his ‘dream to be able to race in Africa’, specifically Rwanda which will host despite criticism of its human rights record",
+      "language": "en-GB",
+      "libraryCatalog": "The Guardian",
+      "accessDate": "2026-10-23",
+      "ISSN": "0261-3077"
+    }
+  ]
+}

@@ -1,0 +1,29 @@
+{
+  "type": "article-journal",
+  "title": "Meta-Research: Gender variations in citation distributions in medicine are very small and due to self-citation and journal prestige",
+  "author": [
+    {
+      "family": "Andersen",
+      "given": "Jens Peter"
+    },
+    {
+      "family": "Schneider",
+      "given": "Jesper Wiborg"
+    },
+    {
+      "family": "Jagsi",
+      "given": "Reshma"
+    },
+    {
+      "family": "Nielsen",
+      "given": "Mathias Wullum"
+    }
+  ],
+  "issued": {
+    "date-parts": [[2019, 7, 15]]
+  },
+  "container-title": "eLife",
+  "publisher": "eLife Sciences Publications Limited",
+  "DOI": "10.7554/eLife.45374",
+  "URL": "https://elifesciences.org/articles/45374"
+}

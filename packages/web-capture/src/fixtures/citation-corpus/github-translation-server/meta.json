@@ -1,0 +1,10 @@
+{
+  "url": "https://github.com/zotero/translation-server",
+  "retrievedAt": "2026-10-23T06:14:19.855152+00:00",
+  "notes": [
+    "Original reduced reproduction of the captured HTML; article prose, descriptions, images, styles, tracking and executable scripts omitted. Citation metadata values are retained; JSON-LD keeps only citation-related properties.",
+    "Page HTTP status: 200. Final URL: https://github.com/zotero/translation-server.",
+    "A repository/software work, not its README title or the GitHub SEO title. Repository owner zotero is a corporate author. No release/version date is asserted: Citoid date reflects repository activity, not a verified release.",
+    "Baseline extractScholarlyMetadata at d0c7061: 0/5 expected fields match; wrong or missing fields: type, title, author, container-title, URL. Cosmetic case/whitespace differences are ignored; absent expected fields are not scored."
+  ]
+}

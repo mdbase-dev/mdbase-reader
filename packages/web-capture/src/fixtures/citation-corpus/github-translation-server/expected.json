@@ -1,0 +1,11 @@
+{
+  "type": "software",
+  "title": "zotero/translation-server",
+  "author": [
+    {
+      "literal": "Zotero"
+    }
+  ],
+  "container-title": "GitHub",
+  "URL": "https://github.com/zotero/translation-server"
+}

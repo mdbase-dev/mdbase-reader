@@ -1,0 +1,10 @@
+{
+  "url": "https://paulgraham.com/writes.html",
+  "retrievedAt": "2026-10-23T06:15:49.917988+00:00",
+  "notes": [
+    "Original reduced reproduction of the captured HTML; article prose, descriptions, images, styles, tracking and executable scripts omitted. Citation metadata values are retained; JSON-LD keeps only citation-related properties.",
+    "Page HTTP status: 200. Final URL: https://paulgraham.com/writes.html.",
+    "The page gives only October 2024, so do not invent a day. Title is an image alt/title and the document title, not an h1. Personal-site authorship is Paul Graham. No JSON-LD, OG or Highwire; Citoid also misses author/date.",
+    "Baseline extractScholarlyMetadata at d0c7061: 0/6 expected fields match; wrong or missing fields: type, title, author, issued, container-title, URL. Cosmetic case/whitespace differences are ignored; absent expected fields are not scored."
+  ]
+}
