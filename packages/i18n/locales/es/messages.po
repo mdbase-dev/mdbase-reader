@@ -72,7 +72,7 @@ msgstr " pestañas abiertas"
 
 #: apps/reader/src/DocumentContextualToolbar.tsx
 msgid " Remove source…"
-msgstr " Eliminar fuente…"
+msgstr " Quitar fuente…"
 
 #. placeholder {0}: preview.problem
 #: apps/extension/src/CitationCard.tsx
@@ -827,7 +827,7 @@ msgstr "Anotaciones, nota bibliográfica y cita"
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "Annote"
-msgstr "Nota bibliográfica"
+msgstr "Anotación bibliográfica"
 
 #: apps/reader/src/LibraryTableHeader.tsx
 msgid "Any field"
@@ -1803,7 +1803,7 @@ msgstr "Compilador"
 #: apps/reader/src/import-controller.ts
 msgctxt "Import completed"
 msgid "Complete"
-msgstr "Completo"
+msgstr "Completado"
 
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
