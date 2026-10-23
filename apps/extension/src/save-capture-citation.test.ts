@@ -9,6 +9,24 @@ import type { CitationPreview } from "./capture-citation.js";
 beforeEach(() => vi.stubGlobal("chrome", fakeChrome().chrome));
 afterEach(() => vi.unstubAllGlobals());
 
+it("keeps the captured preview if navigation has replaced the panel's live preview", async () => {
+  const citation: CitationPreview = {
+    citation: { type: "webpage", title: "Original page" },
+    origin: "page",
+    provenance: {},
+    outcomes: [],
+  };
+  const f = fixture();
+  const result = await f.save(
+    { highlight: false, title: "Original page", automaticTitle: "Original page" },
+    capture,
+    { citation, getCitation: () => null },
+  );
+  const source = await f.collection.sources.get(f.collection.collectionId, result.source.id);
+  expect(source?.title).toBe("Original page");
+  expect(source?.citation?.["title"]).toBe("Original page");
+});
+
 it("pins the latest preview and automatic title together immediately before import", async () => {
   const initial: CitationPreview = {
     citation: { type: "webpage", title: "Australia" },

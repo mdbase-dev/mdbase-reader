@@ -570,6 +570,15 @@ it("continues upgrading a restored automatically titled draft with captured prov
   expect(controller.draft.automaticTitle).toBe("Encyclopedia title");
   expect(controller.draft.note).toBe("Kept note");
   expect(controller.citation?.provenance["title"]).toEqual(upgradedCitation.provenance["title"]);
+  await vi.waitFor(() =>
+    expect(chromeFake.session.get("draft:1:https://example.com")).toMatchObject({
+      draft: {
+        title: "Encyclopedia title",
+        automaticTitle: "Encyclopedia title",
+        titleEdited: false,
+      },
+    }),
+  );
 });
 
 it("keeps a restored manual title even when it equals an earlier automatic title", async () => {

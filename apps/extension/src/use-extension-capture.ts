@@ -632,7 +632,7 @@ function pageCitationPending(
   pageUrl: string | undefined,
   state: { readonly page: string; readonly pending: boolean } | null,
 ): boolean {
-  return !!pageUrl && (!state || state.page !== pageUrl || state.pending);
+  return Boolean(pageUrl) && (state?.page !== pageUrl || Boolean(state?.pending));
 }
 
 /**

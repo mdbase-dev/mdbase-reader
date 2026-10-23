@@ -432,11 +432,9 @@ export class CaptureWriter {
 }
 
 function captureCitation(input: SaveCaptureInput): CitationPreview | null {
-  if (input.getCitation) {
-    return input.getCitation();
-  }
-  if (input.citation) {
-    return input.citation;
+  const citation = input.getCitation?.() ?? input.citation;
+  if (citation) {
+    return citation;
   }
   const capture = input.capture;
   return capture.kind === "html" && capture.post
