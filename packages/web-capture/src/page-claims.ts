@@ -1,6 +1,6 @@
 import { cslDate, cslName } from "./csl-values.js";
 import { arxivIdentifier, doiFromText, doiFromUrl } from "./doi.js";
-import { arrayValue, isRecord, jsonLdNames, nameOf, stringValue } from "./json-ld.js";
+import { arrayValue, isRecord, jsonLdNames, jsonLdNode, nameOf, stringValue } from "./json-ld.js";
 import { all, first, metaIndex, type MetaIndex } from "./meta-tags.js";
 import { absoluteHttps, arxivDoi, embeddedDoi } from "./metadata-identifiers.js";
 import { articleJsonLdTypes, embeddedTypes, scholarlyJsonLdTypes } from "./metadata-types.js";
@@ -97,8 +97,9 @@ export function pageClaims(document: Document, pageUrl: string, observedAt: stri
       add("type", "article", claim.source.signal, claim.evidence ?? "DOI");
     }
   }
+  const scholarly = jsonLdNode(document, (type) => scholarlyJsonLdTypes.has(type));
   const identifiers: ClaimIdentifiers = {
-    ...identifier("doi", embeddedDoi(meta, nodes[0], pageUrl) ?? firstDoi(claims)),
+    ...identifier("doi", embeddedDoi(meta, scholarly ?? nodes[0], pageUrl) ?? firstDoi(claims)),
     ...identifier("arxiv", arxiv?.replace(/^arxiv:/iu, "").trim()),
     ...identifier("isbn", first(meta, "citation_isbn")),
     ...identifier("pmid", first(meta, "citation_pmid")),
@@ -188,17 +189,18 @@ function tagNames(meta: MetaIndex, add: AddClaim): void {
     );
     add("author", authors.map(cslName).filter(Boolean), metaSignal(key), key);
   }
-  if (meta.has("citation_author") && meta.has("citation_authors")) {
-    const authors = [
-      ...all(meta, "citation_author"),
-      ...all(meta, "citation_authors").flatMap((value) => value.split(";")),
-    ];
-    add(
-      "author",
-      authors.map(cslName).filter(Boolean),
-      "highwire",
-      "citation_author + citation_authors",
-    );
+  for (const group of [
+    ["citation_author", "citation_authors"],
+    ["dc.creator", "dcterms.creator"],
+  ] as const) {
+    if (group.every((key) => meta.has(key))) {
+      const authors = group.flatMap((key) =>
+        all(meta, key).flatMap((value) =>
+          key === "citation_authors" ? value.split(";") : [value],
+        ),
+      );
+      add("author", authors.map(cslName).filter(Boolean), metaSignal(group[0]), group.join(" + "));
+    }
   }
 }
 
@@ -286,19 +288,20 @@ function linkedClaims(node: JsonLdNode, add: AddClaim): void {
 }
 
 function linkedType(type: string, add: AddClaim): void {
-  const scholarlyTypes: Readonly<Record<string, string>> = {
-    Book: "book",
-    Chapter: "chapter",
-    Thesis: "thesis",
-    Report: "report",
-    Dataset: "dataset",
-  };
+  const scholarlyTypes = new Map([
+    ["Book", "book"],
+    ["Chapter", "chapter"],
+    ["Thesis", "thesis"],
+    ["Report", "report"],
+    ["Dataset", "dataset"],
+  ]);
   const cslType =
     articleJsonLdTypes.get(type) ??
-    scholarlyTypes[type] ??
+    scholarlyTypes.get(type) ??
     (scholarlyJsonLdTypes.has(type) ? "article" : type === "WebPage" ? "webpage" : undefined);
   add("type", cslType, "json-ld", "@type");
   if (type === "ScholarlyArticle" || type === "MedicalScholarlyArticle") {
+    // Retain the legacy generic type alongside the schema's more specific candidate.
     add("type", "article-journal", "json-ld", "@type");
   }
 }
