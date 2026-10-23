@@ -92,6 +92,19 @@ export class ConnectWorkspaceGateway implements ReaderWorkspaceGateway {
   readonly #countListeners = new Set<() => void>();
   #countsRevision = 0;
   #annotationCacheEpoch = 0;
+  #annotationRevision = 0;
+  readonly #annotationListeners = new Set<() => void>();
+  readonly subscribeAnnotationChanges = (listener: () => void): (() => void) => {
+    this.#annotationListeners.add(listener);
+    return () => {
+      this.#annotationListeners.delete(listener);
+    };
+  };
+  readonly annotationChangesRevision = (): number => this.#annotationRevision;
+  #annotationsChanged(): void {
+    this.#annotationRevision += 1;
+    this.#annotationListeners.forEach((listener) => listener());
+  }
 
   readonly subscribeAnnotationCounts = (listener: () => void): (() => void) => {
     this.#countListeners.add(listener);
@@ -103,6 +116,7 @@ export class ConnectWorkspaceGateway implements ReaderWorkspaceGateway {
   readonly annotationCountsRevision = (): number => this.#countsRevision;
 
   #countsChanged(): void {
+    this.#annotationsChanged();
     this.#countsRevision += 1;
     for (const listener of this.#countListeners) {
       listener();
@@ -349,6 +363,36 @@ export class ConnectWorkspaceGateway implements ReaderWorkspaceGateway {
     );
     this.#annotationsBySource.set(id, annotations);
     return annotations;
+  }
+
+  async annotationsForSources(
+    ids: ReadonlySet<SourceId>,
+    options: ReaderRequestOptions = {},
+  ): Promise<readonly Annotation[]> {
+    if (!this.annotationsRepository.listAll) {
+      throw new Error("This collection cannot batch-load chapter annotations.");
+    }
+    return this.annotationsRepository.listAll(this.collectionId, {
+      ...options,
+      sourceIds: ids,
+      refresh: true,
+    });
+  }
+
+  async moveAnnotationOwner(annotation: Annotation, owner: Source): Promise<Annotation> {
+    if (!this.annotationsRepository.moveOwner) {
+      throw new Error("This collection cannot move annotation owners.");
+    }
+    const updated = await this.annotationsRepository.moveOwner({
+      annotation,
+      owner,
+      modifiedAt: this.runtime.clock.now(),
+    });
+    this.#annotationCacheEpoch += 1;
+    this.#annotationsBySource.delete(annotation.sourceId);
+    this.#annotationsBySource.delete(owner.id);
+    this.#countsChanged();
+    return updated;
   }
 
   annotationSourceIds(options: ReaderRequestOptions = {}): Promise<readonly SourceId[]> {
@@ -630,6 +674,7 @@ export class ConnectWorkspaceGateway implements ReaderWorkspaceGateway {
       annotation.sourceId,
       current.map((candidate) => (candidate.id === updated.id ? updated : candidate)),
     );
+    this.#annotationsChanged();
     return updated;
   }
 
@@ -719,6 +764,7 @@ export class ConnectWorkspaceGateway implements ReaderWorkspaceGateway {
       parentId,
     });
     this.#replaceSource(updated);
+    this.#annotationsChanged();
     return updated;
   }
 
@@ -740,6 +786,7 @@ export class ConnectWorkspaceGateway implements ReaderWorkspaceGateway {
       range,
     });
     this.#replaceSource(updated);
+    this.#annotationsChanged();
     return updated;
   }
 
@@ -780,6 +827,7 @@ export class ConnectWorkspaceGateway implements ReaderWorkspaceGateway {
     if (this.#library) {
       this.#library = this.#library.filter(({ id }) => id !== plan.sourceId);
     }
+    this.#countsChanged();
   }
 
   #replaceSource(source: Source, prepend = false): void {

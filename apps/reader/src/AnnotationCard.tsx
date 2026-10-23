@@ -6,11 +6,12 @@ import { scrollAnnotationCard } from "./annotation-card-scroll.js";
 import { annotationKindLabel } from "./annotation-kind.js";
 import { AnnotationBodyEditor } from "./AnnotationEditor.js";
 import { AnnotationImage, type AnnotationFileReader } from "./AnnotationImage.js";
+import { AnnotationOwnerActions } from "./AnnotationOwnerActions.js";
 import { FocusIcon } from "./icons.js";
 import { useAnnotationSession } from "./use-annotation-session.js";
 
 import type { AnnotationTransclusionController } from "./use-annotation-transclusion.js";
-import type { Annotation, AnnotationDeletionPlan } from "@mdbase-reader/core";
+import type { Annotation, AnnotationDeletionPlan, SourceSummary } from "@mdbase-reader/core";
 const annotationDate = new Intl.DateTimeFormat(undefined, { month: "short", day: "numeric" });
 
 export function AnnotationCard({
@@ -25,8 +26,13 @@ export function AnnotationCard({
   onDelete,
   onOpen,
   readFile,
+  owners,
+  onMoveOwner,
 }: {
   readonly annotation: Annotation;
+  readonly owners?: readonly SourceSummary[] | undefined;
+  readonly onMoveOwner?:
+    ((annotation: Annotation, owner: SourceSummary) => Promise<void>) | undefined;
   readonly editing: boolean;
   readonly active: boolean;
   readonly transclusion: AnnotationTransclusionController;
@@ -85,6 +91,12 @@ export function AnnotationCard({
           </small>
         ) : null}
       </header>
+      <AnnotationOwnerActions
+        annotation={annotation}
+        sources={owners}
+        onMove={onMoveOwner}
+        disabled={cannotMoveOwner(editing, needsAttention, snapshot.editing)}
+      />
       {editing ? (
         <>
           {annotationBodyContent(annotation.body).images.map((image) => (
@@ -118,6 +130,14 @@ export function AnnotationCard({
       ) : null}
     </div>
   );
+}
+
+function cannotMoveOwner(
+  editing: boolean,
+  needsAttention: boolean,
+  editingElsewhere: boolean,
+): boolean {
+  return editing || needsAttention || editingElsewhere;
 }
 
 function useScrollToEditing(editing: boolean): RefObject<HTMLDivElement | null> {

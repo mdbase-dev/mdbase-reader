@@ -15,8 +15,29 @@ import { VirtualAnnotationList } from "./VirtualAnnotationList.js";
 import type { AnnotationFileReader } from "./AnnotationImage.js";
 import type { AnnotationTransclusionController } from "./use-annotation-transclusion.js";
 import type { AsyncResource } from "./use-reader-workspace.js";
-import type { Annotation, AnnotationDeletionPlan, AnnotationId } from "@mdbase-reader/core";
+import type {
+  Annotation,
+  AnnotationDeletionPlan,
+  AnnotationId,
+  SourceSummary,
+} from "@mdbase-reader/core";
 
+interface AnnotationListProps {
+  readonly annotations: AsyncResource<readonly Annotation[]>;
+  readonly owners?: readonly SourceSummary[] | undefined;
+  readonly onMoveOwner?:
+    ((annotation: Annotation, owner: SourceSummary) => Promise<void>) | undefined;
+  readonly transclusion: AnnotationTransclusionController;
+  readonly onUpdate: (annotation: Annotation, body: string) => Promise<Annotation>;
+  readonly onPlanDelete: (annotation: Annotation) => Promise<AnnotationDeletionPlan>;
+  readonly onDelete: (annotation: Annotation, plan: AnnotationDeletionPlan) => Promise<void>;
+  readonly onOpen: (annotation: Annotation) => void;
+  readonly editingId: AnnotationId | null;
+  readonly activeId: AnnotationId | null;
+  readonly readingId?: AnnotationId | null;
+  readonly onCancelEdit: () => void;
+  readonly readFile: AnnotationFileReader;
+}
 export function AnnotationList({
   annotations,
   transclusion,
@@ -29,19 +50,9 @@ export function AnnotationList({
   readingId = null,
   onCancelEdit,
   readFile,
-}: {
-  readonly annotations: AsyncResource<readonly Annotation[]>;
-  readonly transclusion: AnnotationTransclusionController;
-  readonly onUpdate: (annotation: Annotation, body: string) => Promise<Annotation>;
-  readonly onPlanDelete: (annotation: Annotation) => Promise<AnnotationDeletionPlan>;
-  readonly onDelete: (annotation: Annotation, plan: AnnotationDeletionPlan) => Promise<void>;
-  readonly onOpen: (annotation: Annotation) => void;
-  readonly editingId: AnnotationId | null;
-  readonly activeId: AnnotationId | null;
-  readonly readingId?: AnnotationId | null;
-  readonly onCancelEdit: () => void;
-  readonly readFile: AnnotationFileReader;
-}): JSX.Element {
+  owners,
+  onMoveOwner,
+}: AnnotationListProps): JSX.Element {
   const [editing, setEditing] = useState({ external: editingId, id: editingId });
   const currentEditing = editing.external === editingId ? editing.id : editingId;
   const closeEditor = (): void => {
@@ -51,6 +62,7 @@ export function AnnotationList({
     }
   };
   const [query, setQuery] = useState("");
+  const [ownerFilter, setOwnerFilter] = useState("");
   const [filter, setFilter] = useState<AnnotationFilter>("all");
   const [order, setOrder] = useState<"document" | "newest">("document");
   const index = useMemo(
@@ -58,8 +70,11 @@ export function AnnotationList({
     [annotations, order],
   );
   const results = useMemo(
-    () => searchAnnotationIndex(index, query, filter),
-    [index, query, filter],
+    () =>
+      searchAnnotationIndex(index, query, filter).filter(
+        (annotation) => !ownerFilter || annotation.sourceId === ownerFilter,
+      ),
+    [index, query, filter, ownerFilter],
   );
   const { renderAll, setRenderAll, browserRef } = useAnnotationBrowserFind();
   if (annotations.status !== "ready" || !annotations.value.length) {
@@ -68,12 +83,14 @@ export function AnnotationList({
   const clear = (): void => {
     setQuery("");
     setFilter("all");
+    setOwnerFilter("");
   };
   const hiddenActive =
     annotations.value.some(({ id }) => id === activeId) &&
     !results.some(({ id }) => id === activeId);
   return (
     <div className="annotation-browser" ref={browserRef}>
+      <ChapterAnnotationFilter owners={owners} value={ownerFilter} onChange={setOwnerFilter} />
       <AnnotationBrowserControls
         query={query}
         filter={filter}
@@ -104,6 +121,8 @@ export function AnnotationList({
         renderCard={(annotation) => (
           <AnnotationCard
             annotation={annotation}
+            owners={owners}
+            onMoveOwner={onMoveOwner}
             editing={currentEditing === annotation.id}
             active={activeId === annotation.id}
             transclusion={transclusion}
@@ -127,6 +146,37 @@ export function AnnotationList({
         ) : null}
       </VirtualAnnotationList>
     </div>
+  );
+}
+
+function ChapterAnnotationFilter({
+  owners,
+  value,
+  onChange,
+}: {
+  readonly owners?: readonly SourceSummary[] | undefined;
+  readonly value: string;
+  readonly onChange: (value: string) => void;
+}): JSX.Element | null {
+  if (!owners || owners.length < 2) {
+    return null;
+  }
+  return (
+    <label className="annotation-chapter-filter">
+      Chapter{" "}
+      <select
+        aria-label="Filter annotations by chapter"
+        value={value}
+        onChange={(event) => onChange(event.target.value)}
+      >
+        <option value="">All chapters and book</option>
+        {owners.map((owner) => (
+          <option key={owner.id} value={owner.id}>
+            {owner.title}
+          </option>
+        ))}
+      </select>
+    </label>
   );
 }
 

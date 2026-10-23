@@ -18,6 +18,7 @@ import { useReadingResume, type ReadingResumeState } from "./use-reading-resume.
 import type { LibraryLensId } from "./library-lenses.js";
 import type { LibrarySort } from "./library-view-state.js";
 import type { ReaderWorkspaceController } from "./use-reader-workspace.js";
+import type { ReaderWorkspaceGateway } from "./workspace-model.js";
 import type { SourceId, SourceSummary } from "@mdbase-reader/core";
 import type { ReadingSurface } from "@mdbase-reader/reading-surface";
 
@@ -226,6 +227,7 @@ export function useReaderAnnotationComposer(
   workspace: ReaderWorkspaceController,
   sourceId: SourceId | null,
   surface: ReadingSurface | null,
+  gateway?: ReaderWorkspaceGateway,
 ): AnnotationComposerController {
   const source = workspace.sourceRecord.status === "ready" ? workspace.sourceRecord.value : null;
   return useAnnotationComposer({
@@ -233,6 +235,8 @@ export function useReaderAnnotationComposer(
     source: source?.id === sourceId ? source : null,
     surface,
     create: workspace.createAnnotation,
+    ...(workspace.annotationView ? { ownershipSources: workspace.annotationView.sources } : {}),
+    ...(gateway ? { ownerGateway: gateway } : {}),
     annotations: workspace.annotations.status === "ready" ? workspace.annotations.value : [],
     planDeletion: workspace.planAnnotationDeletion,
     deleteAnnotation: workspace.deleteAnnotation,

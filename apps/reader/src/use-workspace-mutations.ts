@@ -1,6 +1,8 @@
 import { annotationId, dateTime } from "@mdbase-reader/core";
 import { useCallback, type Dispatch, type SetStateAction } from "react";
 
+import { publishSharedAnnotation, sharedAnnotationResource } from "./shared-annotation-resource.js";
+
 import type { SelectedValue } from "./selected-resource.js";
 import type { AsyncResource } from "./use-reader-workspace.js";
 import type { ReaderWorkspaceGateway } from "./workspace-model.js";
@@ -19,12 +21,13 @@ type SourceState = SelectedValue<AsyncResource<Source>> | null;
 
 export function useAnnotationCreation(
   gateway: ReaderWorkspaceGateway,
-  setAnnotations: Dispatch<SetStateAction<AnnotationState>>,
+  _setAnnotations: Dispatch<SetStateAction<AnnotationState>>,
 ): (request: AnnotationCreationRequest) => Promise<Annotation> {
   return useCallback(
     async (request: AnnotationCreationRequest): Promise<Annotation> => {
       const pending = pendingAnnotation(request);
-      setAnnotations((current) => {
+      const setOwnerAnnotations = sharedAnnotationResource(gateway, request.sourceId).set;
+      setOwnerAnnotations((current) => {
         const values =
           current?.sourceId === request.sourceId && current.value.status === "ready"
             ? current.value.value
@@ -36,14 +39,14 @@ export function useAnnotationCreation(
       });
       try {
         const created = await gateway.createAnnotation(request);
-        setAnnotations((current) => replacePendingAnnotation(current, pending, created));
+        setOwnerAnnotations((current) => replacePendingAnnotation(current, pending, created));
         return created;
       } catch (reason) {
-        setAnnotations((current) => removePendingAnnotation(current, pending));
+        setOwnerAnnotations((current) => removePendingAnnotation(current, pending));
         throw reason;
       }
     },
-    [gateway, setAnnotations],
+    [gateway],
   );
 }
 
@@ -103,6 +106,7 @@ export function useAnnotationUpdate(
   return useCallback(
     async (annotation, body) => {
       const updated = await gateway.updateAnnotation(annotation, body);
+      publishSharedAnnotation(gateway, annotation, updated);
       setAnnotations((current) => {
         if (current?.sourceId !== annotation.sourceId || current.value.status !== "ready") {
           return current;
@@ -137,6 +141,7 @@ export function useAnnotationDeletion(
   const remove = useCallback(
     async (annotation: Annotation, deletionPlan: AnnotationDeletionPlan): Promise<void> => {
       await gateway.deleteAnnotation(annotation, deletionPlan);
+      publishSharedAnnotation(gateway, annotation, null);
       setAnnotations((current) => {
         if (current?.sourceId !== annotation.sourceId || current.value.status !== "ready") {
           return current;

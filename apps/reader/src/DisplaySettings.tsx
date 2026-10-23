@@ -1,5 +1,9 @@
 import { themePreferences, type ThemePreference } from "@mdbase-dev/ui/theme";
 
+import {
+  setAnnotationOwnerPreference,
+  useAnnotationOwnerPreference,
+} from "./annotation-owner-preference.js";
 import { setHighlightOnSelect, useHighlightOnSelect } from "./highlight-preference.js";
 import { typographyScaleSteps } from "./workspace-shell-preferences.js";
 
@@ -27,6 +31,7 @@ export function DisplaySettings({
   readonly onChangeSidebarWhileReading?: (value: "hide" | "keep") => void;
 }): JSX.Element {
   const highlightOnSelect = useHighlightOnSelect();
+  const annotationOwner = useAnnotationOwnerPreference();
   return (
     <>
       {typography && onChangeTypography ? (
@@ -60,6 +65,15 @@ export function DisplaySettings({
           onChange={onChangeSidebarWhileReading}
         />
       ) : null}
+      <DisplayChoice
+        legend="Annotations made inside a chapter belong to"
+        value={annotationOwner}
+        options={[
+          { value: "chapter", label: "Chapter" },
+          { value: "book", label: "Book" },
+        ]}
+        onChange={setAnnotationOwnerPreference}
+      />
       <DisplayChoice
         legend="Selecting text"
         value={highlightOnSelect}

@@ -33,6 +33,7 @@ export { textSelectionToDraft } from "./pdf-selection-publication.js";
 
 export interface EmbedPdfRuntime {
   currentPageIndex(): number;
+  pageCount?(): Promise<number>;
   goToPage(pageIndex: number): void;
   beginAreaSelection(): void;
   cancelAreaSelection(): void;
@@ -106,6 +107,7 @@ export function createEmbedPdfRuntime(
 
   return {
     currentPageIndex: () => Math.max(0, scroll.getCurrentPage() - 1),
+    pageCount: async () => (await getDocument()).pageCount,
     goToPage: (pageIndex) => scroll.scrollToPage({ pageNumber: pageIndex + 1 }),
     beginAreaSelection: () => capture.enableMarqueeCapture(),
     cancelAreaSelection: () => capture.disableMarqueeCapture(),

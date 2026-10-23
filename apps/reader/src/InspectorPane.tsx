@@ -1,10 +1,12 @@
 import { useCallback, type JSX } from "react";
 
+import { confirmAnnotationDiscard } from "./annotation-draft-actions.js";
 import { AnnotationEditingContext } from "./AnnotationEditingContext.js";
 import { AnnotationList } from "./AnnotationList.js";
 import { AnnotationPanelActions } from "./AnnotationPanelActions.js";
 import { CitationIcon, HighlightIcon, NoteIcon, PanelIcon } from "./icons.js";
 import { lazyFeature } from "./lazy-feature.js";
+import { publishSharedAnnotation } from "./shared-annotation-resource.js";
 
 import type { AnnotationComposerController } from "./use-annotation-composer.js";
 import type { ReaderSourceWorkspaceController } from "./use-reader-workspace.js";
@@ -186,13 +188,49 @@ export function InspectorContent({
   );
   return tab === "annotations" ? (
     <div className="annotation-workspace">
-      <AnnotationPanelActions workspace={workspace} composer={composer} />
+      <AnnotationPanelActions workspace={workspace} composer={composer} gateway={gateway} />
+      {workspace.sourceRecord.status === "ready" && workspace.sourceRecord.value.partOf ? (
+        <label>
+          <input
+            type="checkbox"
+            checked={workspace.annotationView?.wholeBook ?? false}
+            onChange={(event) => workspace.annotationView?.setWholeBook(event.target.checked)}
+          />
+          Show the whole book’s annotations
+        </label>
+      ) : null}
+      {workspace.annotationView?.problem ? (
+        <p role="status">{workspace.annotationView.problem}</p>
+      ) : null}
       <AnnotationEditingContext value={gateway}>
         <AnnotationList
           key={
             workspace.sourceRecord.status === "ready" ? workspace.sourceRecord.value.id : "loading"
           }
           annotations={workspace.annotations}
+          owners={workspace.annotationView?.sources}
+          onMoveOwner={
+            gateway.moveAnnotationOwner
+              ? async (annotation, owner) => {
+                  if (
+                    !confirmAnnotationDiscard(
+                      `Move this annotation to “${owner.title}”? Its document target, selector, revision and note embeds will not change. The new owner may not include this passage in its range.`,
+                    )
+                  ) {
+                    return;
+                  }
+                  const fullOwner = await gateway.source(owner.id);
+                  if (!fullOwner) {
+                    throw new Error("The chosen owner no longer exists.");
+                  }
+                  if (!gateway.moveAnnotationOwner) {
+                    throw new Error("Moving annotations is unavailable.");
+                  }
+                  const updated = await gateway.moveAnnotationOwner(annotation, fullOwner);
+                  publishSharedAnnotation(gateway, annotation, updated);
+                }
+              : undefined
+          }
           activeId={composer.activeAnnotationId}
           readingId={composer.readingAnnotationId}
           transclusion={workspace.transclusion}

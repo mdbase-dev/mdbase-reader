@@ -85,6 +85,31 @@ const document = {
   url: "https://files.example/document.pdf",
 } as const;
 
+it("verifies annotation containment against real page count, not approximate location", async () => {
+  const fixture = runtimeFixture();
+  const surface = new EmbedPdfSurface(document, {
+    ...fixture.runtime,
+    pageCount: () => Promise.resolve(20),
+  });
+  const contains = surface.capabilities.annotationRange!.contains;
+  await expect(
+    contains({ kind: "pages", start: 2, end: 9 }, { position: { kind: "pdf", pageIndex: 2 } }),
+  ).resolves.toBe(true);
+  await expect(
+    contains({ kind: "pages", start: 2, end: 9 }, { position: { kind: "pdf", pageIndex: 10 } }),
+  ).resolves.toBe(false);
+  await expect(
+    contains({ kind: "pages", start: 2, end: 22 }, { position: { kind: "pdf", pageIndex: 3 } }),
+  ).resolves.toBeNull();
+  await expect(
+    contains(
+      { kind: "pages", start: 2, end: 9 },
+      { quote: { exact: "cross-page selection without exact geometry" } },
+    ),
+  ).resolves.toBeNull();
+  await surface.destroy();
+});
+
 describe("EmbedPdfSurface", () => {
   it("publishes activated saved annotations", () => {
     const fixture = runtimeFixture();

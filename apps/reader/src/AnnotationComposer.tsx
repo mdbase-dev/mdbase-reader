@@ -2,6 +2,7 @@ import { ReaderButton } from "@mdbase-reader/ui";
 import { useEffect, useRef, useState } from "react";
 
 import { annotationEditorKeys } from "./annotation-draft-actions.js";
+import { AnnotationOwnerChooser } from "./AnnotationOwnerChooser.js";
 import { AnnotationTextArea } from "./AnnotationTextArea.js";
 import { CloseIcon } from "./icons.js";
 
@@ -49,6 +50,7 @@ export function AnnotationComposer({
           <CloseIcon />
         </button>
       </header>
+      <AnnotationOwnerChooser control={composer.ownerControl} />
       {composer.selection.kind === "text" ? (
         <blockquote>{composer.selection.value.target.quote.exact}</blockquote>
       ) : (
@@ -92,7 +94,7 @@ export function AnnotationComposer({
             Add a comment
           </button>
         )}
-        <ReaderButton disabled={composer.status === "saving"} onClick={composer.save}>
+        <ReaderButton disabled={annotationSaveDisabled(composer)} onClick={composer.save}>
           {composer.status === "saving"
             ? "Saving…"
             : composer.selection.kind === "area"
@@ -122,6 +124,10 @@ function AreaPreview({ image }: { readonly image: Blob }): JSX.Element {
       <img ref={preview} alt="Selected PDF area" />
     </div>
   );
+}
+
+function annotationSaveDisabled(composer: AnnotationComposerController): boolean {
+  return composer.status === "saving" || Boolean(composer.ownerControl?.pending);
 }
 
 function AnnotationComposerNotices({

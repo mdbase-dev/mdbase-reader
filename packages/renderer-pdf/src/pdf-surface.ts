@@ -66,6 +66,27 @@ export class EmbedPdfSurface implements ReadingSurface {
       this.locations.emit({ kind: "pdf", pageIndex });
     });
     this.capabilities = {
+      annotationRange: {
+        contains: async (range, target) => {
+          if (range.kind !== "pages" || !runtime.pageCount) {
+            return null;
+          }
+          const count = await runtime.pageCount();
+          if (
+            !Number.isSafeInteger(range.start) ||
+            !Number.isSafeInteger(range.end) ||
+            range.start < 0 ||
+            range.end < range.start ||
+            range.end >= count
+          ) {
+            return null;
+          }
+          const page =
+            target.pdf?.pageIndex ??
+            (target.position?.kind === "pdf" ? target.position.pageIndex : undefined);
+          return page === undefined ? null : page >= range.start && page <= range.end;
+        },
+      },
       textSelection: {
         selections: this.#textSelections,
         cleared: this.#cleared,

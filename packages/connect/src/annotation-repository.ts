@@ -1,3 +1,5 @@
+import { sourceLink } from "@mdbase-reader/core";
+
 import { annotationCandidatesForSource, annotationRecordsAt } from "./annotation-query.js";
 import { AnnotationRecordCache } from "./annotation-record-cache.js";
 import * as sources from "./annotation-source.js";
@@ -118,7 +120,13 @@ export class ConnectAnnotationRepository implements AnnotationRepository {
           }
         });
         options.signal?.throwIfAborted();
-        annotations.push(...batch.filter((annotation) => annotation !== null));
+        annotations.push(
+          ...batch.filter(
+            (annotation): annotation is Annotation =>
+              annotation !== null &&
+              (!options.sourceIds || options.sourceIds.has(annotation.sourceId)),
+          ),
+        );
         offset += batchSize;
         if (
           annotations.length <= 128 ||
@@ -222,6 +230,30 @@ export class ConnectAnnotationRepository implements AnnotationRepository {
     this.#records.put(result);
     // The revision check guarantees the source link is the one already resolved.
     return this.#map(annotation.collectionId, result, annotation.sourceId);
+  }
+
+  async moveOwner(
+    input: Parameters<NonNullable<AnnotationRepository["moveOwner"]>>[0],
+  ): Promise<Annotation> {
+    const { annotation, owner, modifiedAt } = input;
+    if (
+      !annotation.path ||
+      !annotation.recordRevision ||
+      owner.collectionId !== annotation.collectionId
+    ) {
+      throw new Error("Moving requires a saved annotation and an owner in the same collection.");
+    }
+    const result = outcomeValue(
+      await this.client.update({
+        path: annotation.path,
+        ifRevision: annotation.recordRevision,
+        patch: { source: sourceLink(owner), modified_at: modifiedAt },
+        includeDocument: true,
+      }),
+      "move annotation owner",
+    );
+    this.#records.put(result);
+    return this.#map(annotation.collectionId, result, owner.id);
   }
 
   async preflightDelete(annotation: Annotation): Promise<AnnotationDeletionPlan> {
@@ -346,10 +378,9 @@ export class ConnectAnnotationRepository implements AnnotationRepository {
         ? this.client.queryPages({ ...input, output: "metadata", includeBody: false }, paging)
         : this.client.queryPages(input, paging);
       for await (const outcome of pages) {
-        yield outcomeValue<QueryPage | QueryMetadataPage>(
-          outcome,
-          "query annotations",
-        ).results.flatMap((record) => annotationSourceEntry(record, selected));
+        yield outcomeValue<QueryPage | QueryMetadataPage>(outcome, "query annotations")
+          .results.flatMap((record) => annotationSourceEntry(record, selected))
+          .filter((entry) => !options.sourceIds || options.sourceIds.has(entry.source));
       }
     }
   }

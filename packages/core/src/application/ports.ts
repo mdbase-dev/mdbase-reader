@@ -165,6 +165,12 @@ export interface AnnotationRepository {
     readonly body: string;
     readonly modifiedAt: DateTime;
   }): Promise<Annotation>;
+  /** Ownership only: preserve target, selector, body and explicit embeds. */
+  moveOwner?(input: {
+    readonly annotation: Annotation;
+    readonly owner: Source;
+    readonly modifiedAt: DateTime;
+  }): Promise<Annotation>;
   preflightDelete(annotation: Annotation): Promise<AnnotationDeletionPlan>;
   delete(annotation: Annotation, plan: AnnotationDeletionPlan): Promise<void>;
   get(
@@ -177,6 +183,8 @@ export interface AnnotationRepository {
 /** A scoped annotation read. Progress snapshots are cumulative and may be incomplete. */
 export interface AnnotationListOptions extends ReaderRequestOptions {
   readonly paths?: ReadonlySet<string>;
+  /** Filter resolved owners before hydrating records, not one query per source. */
+  readonly sourceIds?: ReadonlySet<SourceId>;
   readonly onProgress?: (annotations: readonly Annotation[]) => void;
   /** Bypass short-lived record caches, e.g. for an explicit retry. */
   readonly refresh?: boolean;
@@ -267,6 +275,8 @@ export interface ContentHasher {
 
 export interface AnnotationCreationRequest extends AnnotationDraft {
   readonly sourceRecord: Source;
+  /** Reading context when the chosen owner does not list the opened representation. */
+  readonly documentSourceRecord?: Source;
   readonly attachment?: {
     readonly bytes: Uint8Array;
     readonly mediaType: "image/png";

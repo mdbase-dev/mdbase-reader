@@ -48,6 +48,7 @@ import {
   type MdbaseLibraryView,
 } from "./mdbase-library-views.js";
 import { ReaderApp } from "./ReaderApp.js";
+import { requestedAnnotation, requestedSourceId } from "./SourceDeepLink.js";
 
 import type { ReaderLibrarySnapshot, ReaderWorkspaceGateway } from "./workspace-model.js";
 import type { ReadingSurface, SurfaceDocument } from "@mdbase-reader/reading-surface";
@@ -247,7 +248,36 @@ const annotations: readonly Annotation[] = [
 export class PreviewGateway implements ReaderWorkspaceGateway {
   #sources = [...sources, ...previewAnthology()].map(withRecordFrontmatter);
   #partRevision = 0;
-  #annotations = [...annotations];
+  #annotations = [
+    ...annotations,
+    ...previewAnthology().map((source, index): Annotation => ({
+      collectionId: collection,
+      id: annotationId(`ann_anthology_${String(index)}`),
+      path: `annotations/ann_anthology_${String(index)}.md`,
+      recordRevision: recordRevision(`preview-ann-${String(index)}`),
+      sourceId: source.id,
+      source: sourceLink(source),
+      ...(source.documents[0] ? { document: source.documents[0] } : {}),
+      annotationType: "bookmark",
+      target: { position: { kind: "pdf", pageIndex: index === 2 ? 10 : 0 } },
+      tags: [],
+      body: `A note owned by ${source.title}.`,
+      createdAt: dateTime("2026-08-10T09:40:00+10:00"),
+    })),
+  ];
+  #annotationRevision = 0;
+  #annotationListeners = new Set<() => void>();
+  subscribeAnnotationCounts = (listener: () => void): (() => void) => {
+    this.#annotationListeners.add(listener);
+    return () => {
+      this.#annotationListeners.delete(listener);
+    };
+  };
+  annotationCountsRevision = (): number => this.#annotationRevision;
+  #annotationsChanged(): void {
+    this.#annotationRevision++;
+    this.#annotationListeners.forEach((listener) => listener());
+  }
   #views: MdbaseLibraryView[] = [
     defaultLibraryView,
     {
@@ -326,6 +356,31 @@ export class PreviewGateway implements ReaderWorkspaceGateway {
   }
   annotations(id: SourceId): Promise<readonly Annotation[]> {
     return Promise.resolve(this.#annotations.filter(({ sourceId: source }) => source === id));
+  }
+  annotationsForSources(ids: ReadonlySet<SourceId>): Promise<readonly Annotation[]> {
+    return Promise.resolve(this.#annotations.filter(({ sourceId }) => ids.has(sourceId)));
+  }
+  moveAnnotationOwner(annotation: Annotation, owner: Source): Promise<Annotation> {
+    const current = this.#annotations.find(({ id }) => id === annotation.id);
+    if (
+      !current ||
+      !annotation.recordRevision ||
+      current.recordRevision !== annotation.recordRevision
+    ) {
+      return Promise.reject(
+        new Error("The annotation changed elsewhere. Refresh before moving it."),
+      );
+    }
+    const updated = {
+      ...current,
+      sourceId: owner.id,
+      source: sourceLink(owner),
+      modifiedAt: dateTime(new Date().toISOString()),
+      recordRevision: recordRevision(`preview-move-${String(++this.#partRevision)}`),
+    };
+    this.#annotations = this.#annotations.map((item) => (item.id === updated.id ? updated : item));
+    this.#annotationsChanged();
+    return Promise.resolve(updated);
   }
   allAnnotations(): Promise<readonly Annotation[]> {
     return Promise.resolve([...this.#annotations]);
@@ -444,12 +499,16 @@ export class PreviewGateway implements ReaderWorkspaceGateway {
     );
   }
   createAnnotation(request: AnnotationCreationRequest): Promise<Annotation> {
+    const id = annotationId(`preview-${String(this.#annotations.length + 1)}`);
     const annotation: Annotation = {
       ...request,
-      id: annotationId(`preview-${String(this.#annotations.length + 1)}`),
+      id,
+      path: `annotations/${id}.md`,
+      recordRevision: recordRevision(`preview-created-${id}`),
       createdAt: dateTime(new Date().toISOString()),
     };
     this.#annotations.unshift(annotation);
+    this.#annotationsChanged();
     return Promise.resolve(annotation);
   }
   updateAnnotation(annotation: Annotation, body: string): Promise<Annotation> {
@@ -461,6 +520,7 @@ export class PreviewGateway implements ReaderWorkspaceGateway {
     this.#annotations = this.#annotations.map((candidate) =>
       candidate.id === updated.id ? updated : candidate,
     );
+    this.#annotationsChanged();
     return Promise.resolve(updated);
   }
   planAnnotationDeletion(annotation: Annotation): Promise<AnnotationDeletionPlan> {
@@ -475,6 +535,7 @@ export class PreviewGateway implements ReaderWorkspaceGateway {
   }
   deleteAnnotation(annotation: Annotation): Promise<void> {
     this.#annotations = this.#annotations.filter((candidate) => candidate.id !== annotation.id);
+    this.#annotationsChanged();
     return Promise.resolve();
   }
   planSourceRemoval(id: SourceId): Promise<SourceDeletionPlan> {
@@ -493,6 +554,7 @@ export class PreviewGateway implements ReaderWorkspaceGateway {
   }
   removeSource(plan: SourceDeletionPlan): Promise<void> {
     this.#sources = this.#sources.filter((item) => item.id !== plan.sourceId);
+    this.#annotationsChanged();
     return Promise.resolve();
   }
   transcludeAnnotation(source: Source, annotation: Annotation): Promise<Source> {
@@ -573,6 +635,7 @@ export class PreviewGateway implements ReaderWorkspaceGateway {
       recordRevision: recordRevision(`preview-part-${String(++this.#partRevision)}`),
     };
     this.#sources = this.#sources.map((item) => (item.id === source.id ? updated : item));
+    this.#annotationsChanged();
     return updated;
   }
   saveSourceFields(id: SourceId, fields: Readonly<Record<string, unknown>>): Promise<Source> {
@@ -681,6 +744,8 @@ export function PreviewReader(): JSX.Element {
     <CollectionSwitchingContext value={previewCollections}>
       <ReaderApp
         gateway={gateway}
+        initialSourceId={requestedSourceId(location.href, collection)}
+        initialAnnotation={requestedAnnotation(location.href, collection)}
         renderDocument={(source, onSurfaceChange) => (
           <PreviewDocument source={source} onSurfaceChange={onSurfaceChange} />
         )}

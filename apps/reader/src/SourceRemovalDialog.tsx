@@ -61,7 +61,9 @@ function OpenSourceRemovalDialog({
           <p id="reader-remove-source-description">
             This removes the source from your library and deletes its source note. Saved files and
             annotation notes are kept in the collection. Links to this source will stop working.
-            Reader cannot undo this.
+            Owned annotations are not reassigned: their owner links will be broken until you repair
+            them. Parts are not deleted or detached automatically. Cancel to move annotations or
+            detach/re-parent parts first. Reader cannot undo this.
           </p>
         </div>
         <div className="source-removal-details">
