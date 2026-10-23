@@ -5,7 +5,12 @@ import { searchExcerpt, type SearchExcerpt } from "./search-passages.js";
 import { useOpenDocumentSearch } from "./use-open-document-search.js";
 
 import type { ReaderWorkspaceGateway } from "./workspace-model.js";
-import type { SourceId, SourceSummary, SourceTextSearchMatch } from "@mdbase-reader/core";
+import type {
+  SearchDestination,
+  SourceId,
+  SourceSummary,
+  SourceTextSearchMatch,
+} from "@mdbase-reader/core";
 import type { ReadingSurface } from "@mdbase-reader/reading-surface";
 
 export type LibrarySearchScope = "sources" | "notes" | "documents";
@@ -16,7 +21,11 @@ interface LibraryTextSearchProps {
   readonly sources: readonly SourceSummary[];
   readonly gateway: ReaderWorkspaceGateway;
   readonly surfaces: ReadonlyMap<string, ReadingSurface> | undefined;
-  readonly onOpen: (id: SourceId, view: "document" | "note" | "annotations") => void;
+  readonly onOpen: (
+    id: SourceId,
+    view: "document" | "note" | "annotations",
+    destination?: SearchDestination,
+  ) => void;
 }
 
 export function LibraryTextSearch({
@@ -51,11 +60,7 @@ export function LibraryTextSearch({
         })
         .catch((reason: unknown) => {
           if (!controller.signal.aborted) {
-            setResult({
-              query: normalized,
-              matches: [],
-              problem: readerErrorMessage(reason, "Text search failed. Change the query to retry."),
-            });
+            setResult(failedSearch(normalized, reason));
           }
         });
     }, 180);
@@ -84,7 +89,8 @@ export function LibraryTextSearch({
       <p role="status">{searchStatus(normalized, scope === "notes" && !current, visible.length)}</p>
       {scope === "documents" ? (
         <p className="search-coverage">
-          Open a result, then use the document’s Find control to locate the passage.
+          Open a result at its matching passage. If the passage cannot be verified, use the
+          document’s Find control.
         </p>
       ) : null}
       <ul className="search-passage-list">
@@ -105,7 +111,18 @@ export function LibraryTextSearch({
                 : "note";
           return (
             <li key={source.id}>
-              <button type="button" onClick={() => onOpen(source.id, view)}>
+              <button
+                type="button"
+                onClick={() =>
+                  onOpen(
+                    source.id,
+                    view,
+                    scope === "documents"
+                      ? documents.matches.get(source.id)?.destination
+                      : undefined,
+                  )
+                }
+              >
                 <strong>{source.title}</strong>
                 <small>
                   {source.creators.join(", ")} ·{" "}
@@ -128,6 +145,17 @@ export function LibraryTextSearch({
       ) : null}
     </section>
   );
+}
+
+function failedSearch(
+  query: string,
+  reason: unknown,
+): { query: string; matches: readonly SourceTextSearchMatch[]; problem: string } {
+  return {
+    query,
+    matches: [],
+    problem: readerErrorMessage(reason, "Text search failed. Change the query to retry."),
+  };
 }
 
 function Excerpt({ value }: { readonly value: SearchExcerpt }): JSX.Element {

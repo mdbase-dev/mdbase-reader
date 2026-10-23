@@ -4,6 +4,8 @@ import type {
   AnnotationId,
   AnnotationTarget,
   DocumentTarget,
+  SearchDestination,
+  SearchTextSegment,
 } from "@mdbase-reader/core";
 
 export type SurfaceKind = "pdf" | "epub" | "html";
@@ -121,6 +123,9 @@ export interface TypographyCapability {
 
 export interface TextExtractionCapability {
   extractText(options?: { readonly signal?: AbortSignal }): Promise<string>;
+  extractSearchSegments?(options?: {
+    readonly signal?: AbortSignal;
+  }): Promise<readonly SearchTextSegment[]>;
 }
 
 /**
@@ -141,6 +146,11 @@ export interface ReadingSurfaceCapabilities {
   readonly annotationNavigation?: AnnotationNavigationCapability;
   readonly annotationActivation?: AnnotationActivationCapability;
   readonly textExtraction?: TextExtractionCapability;
+  /** Verifies exact revision and quotation before scrolling; never creates an annotation. */
+  readonly searchNavigation?: {
+    goToDestination(destination: SearchDestination): Promise<boolean>;
+    clear(): void;
+  };
   readonly contents?: ContentsCapability;
   readonly typography?: TypographyCapability;
 }
