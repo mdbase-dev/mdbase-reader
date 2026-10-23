@@ -6450,556 +6450,556 @@ msgstr "扫描会读取 Reader 元数据、已保存的文章 HTML 以及每一�
 
 #: packages/migration/src/readwise.ts
 msgid "Scanning Readwise metadata and saved HTML; no collection writes…"
-msgstr ""
+msgstr "正在扫描 Readwise 元数据和已保存的 HTML；不会写入集合…"
 
 #: apps/reader/src/annotation-body-content.ts
 msgid "Screenshot highlight"
-msgstr ""
+msgstr "截图高亮"
 
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "Script writer"
-msgstr ""
+msgstr "编剧"
 
 #: packages/renderer-pdf/src/pdf-translations.ts
 msgctxt "PDF viewer page"
 msgid "Scroll Layout"
-msgstr ""
+msgstr "滚动布局"
 
 #: apps/reader/src/ReaderHeader.tsx
 msgid "Search"
-msgstr ""
+msgstr "搜索"
 
 #: packages/renderer-pdf/src/pdf-translations.ts
 msgctxt "PDF viewer panel"
 msgid "Search"
-msgstr ""
+msgstr "搜索"
 
 #: packages/renderer-pdf/src/pdf-translations.ts
 msgctxt "PDF viewer search"
 msgid "Search"
-msgstr ""
+msgstr "搜索"
 
 #: apps/reader/src/ReaderHeader.tsx
 msgid "Search and commands"
-msgstr ""
+msgstr "搜索和命令"
 
 #: apps/reader/src/LibraryAnnotationToolbar.tsx
 msgid "Search annotations"
-msgstr ""
+msgstr "搜索注释"
 
 #: apps/reader/src/AnnotationList.tsx
 msgctxt "AnnotationList interface"
 msgid "Search annotations"
-msgstr ""
+msgstr "搜索注释"
 
 #: apps/reader/src/CitationLookup.tsx
 msgid "Search by DOI, ISBN, URL, or title"
-msgstr ""
+msgstr "按 DOI、ISBN、URL 或标题搜索"
 
 #: apps/reader/src/LibraryWorkspace.tsx
 msgid "Search notes and annotations"
-msgstr ""
+msgstr "搜索笔记和注释"
 
 #: apps/reader/src/LibraryWorkspace.tsx
 msgid "Search open documents"
-msgstr ""
+msgstr "搜索已打开的文档"
 
 #: apps/reader/src/LibraryWorkspace.tsx
 msgctxt "LibraryWorkspace interface"
 msgid "Search scope"
-msgstr ""
+msgstr "搜索范围"
 
 #: apps/reader/src/ReaderWorkspaceView.tsx
 msgid "Search sources and commands"
-msgstr ""
+msgstr "搜索来源和命令"
 
 #. placeholder {0}: shortcutLabel("mod+k")
 #: apps/reader/src/ReaderHeader.tsx
 msgid "Search sources and run commands · {0}"
-msgstr ""
+msgstr "搜索来源并运行命令 · {0}"
 
 #: apps/reader/src/LibraryWorkspace.tsx
 msgid "Search this view"
-msgstr ""
+msgstr "在此视图中搜索"
 
 #: apps/reader/src/use-open-document-search.ts
 msgid "Searched {loaded} of {readable} readable sources."
-msgstr ""
+msgstr "已搜索 {loaded} / {readable} 个可读来源。"
 
 #: apps/reader/src/LibraryTextSearch.tsx
 msgid "Searches literature notes and annotation text, not PDF, EPUB or saved-page contents."
-msgstr ""
+msgstr "搜索文献笔记和注释文本，不搜索 PDF、EPUB 或已保存网页的内容。"
 
 #: apps/reader/src/LibraryTextSearch.tsx
 msgid "Searching notes and annotations…"
-msgstr ""
+msgstr "正在搜索笔记和注释…"
 
 #: apps/reader/src/CitationTypedFieldEditors.tsx
 msgid "Season"
-msgstr ""
+msgstr "季节"
 
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL date field"
 msgid "Season"
-msgstr ""
+msgstr "季节"
 
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "Section"
-msgstr ""
+msgstr "章节"
 
 #: packages/renderer-pdf/src/pdf-translations.ts
 msgctxt "PDF viewer document"
 msgid "Security"
-msgstr ""
+msgstr "安全性"
 
 #. placeholder {0}: source.title
 #: apps/reader/src/LibraryCards.tsx
 msgid "Select {0}"
-msgstr ""
+msgstr "选择 {0}"
 
 #. placeholder {0}: String(bulkOpenLimit)
 #: apps/reader/src/LibraryBulkBar.tsx
 msgid "Select {0} or fewer to open them together"
-msgstr ""
+msgstr "最多选择 {0} 项即可一起打开"
 
 #: apps/reader/src/ImportDestination.tsx
 msgid "Select a collection"
-msgstr ""
+msgstr "选择集合"
 
 #: apps/reader/src/DocumentContextualToolbar.tsx
 msgid "Select an area to annotate"
-msgstr ""
+msgstr "选择要注释的区域"
 
 #: apps/reader/src/DocumentContextualToolbar.tsx
 msgctxt "DocumentContextualToolbar interface"
 msgid "Select area"
-msgstr ""
+msgstr "选择区域"
 
 #: apps/reader/src/import-controller.ts
 msgid "Select one complete bundle folder with unique file paths."
-msgstr ""
+msgstr "请选择一个完整的数据包文件夹，且文件路径不得重复。"
 
 #: apps/extension/src/CaptureApp.tsx
 msgid "Select text on the page to highlight it."
-msgstr ""
+msgstr "选中页面上的文本即可高亮。"
 
 #: apps/reader/src/AnnotationList.tsx
 msgid "Select text or an area in the document, or add a comment or bookmark above."
-msgstr ""
+msgstr "在文档中选择文本或区域，或在上方添加评论或书签。"
 
 #: apps/reader/src/LibraryAnnotationBars.tsx
 msgctxt "LibraryAnnotationBars interface"
 msgid "Selected annotations"
-msgstr ""
+msgstr "所选注释"
 
 #: apps/extension/src/HighlightFields.tsx
 msgid "Selected passage"
-msgstr ""
+msgstr "所选段落"
 
 #: apps/reader/src/AnnotationComposer.tsx
 msgid "Selected PDF area"
-msgstr ""
+msgstr "所选 PDF 区域"
 
 #: apps/reader/src/LibraryBulkBar.tsx
 msgctxt "LibraryBulkBar interface"
 msgid "Selected sources"
-msgstr ""
+msgstr "所选来源"
 
 #: apps/reader/src/SelectionToolbar.tsx
 msgctxt "SelectionToolbar interface"
 msgid "Selected text"
-msgstr ""
+msgstr "所选文本"
 
 #: apps/reader/src/DisplayMenu.tsx
 msgctxt "DisplayMenu interface"
 msgid "Selecting text"
-msgstr ""
+msgstr "选择文本"
 
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "Series creator"
-msgstr ""
+msgstr "丛书作者"
 
 #: apps/reader/src/DisplayMenu.tsx
 msgctxt "DisplayMenu interface"
 msgid "Serif"
-msgstr ""
+msgstr "衬线"
 
 #: apps/reader/src/LibraryBulkBar.tsx
 msgid "Set a field on the selected sources"
-msgstr ""
+msgstr "为所选来源设置字段"
 
 #: apps/reader/src/LibraryBulkBar.tsx
 msgid "Set field…"
-msgstr ""
+msgstr "设置字段…"
 
 #: apps/reader/src/LibraryBulkBar.tsx
 msgid "Set reading status of the selected sources"
-msgstr ""
+msgstr "设置所选来源的阅读状态"
 
 #: apps/reader/src/LibraryBulkBar.tsx
 msgctxt "LibraryBulkBar interface"
 msgid "Set status…"
-msgstr ""
+msgstr "设置状态…"
 
 #: apps/extension/src/connection-view.ts
 #: apps/extension/src/ConnectionPanel.tsx
 msgid "Set up collection"
-msgstr ""
+msgstr "设置集合"
 
 #: apps/extension/src/connection-view.ts
 msgid "Set up this collection for Reader before saving."
-msgstr ""
+msgstr "保存前，请先为 Reader 设置此集合。"
 
 #: apps/reader/src/ConnectReader.tsx
 msgid "Set up this reading collection"
-msgstr ""
+msgstr "设置此阅读集合"
 
 #: apps/extension/src/OptionsApp.tsx
 msgid "Settings"
-msgstr ""
+msgstr "设置"
 
 #: apps/extension/src/ExtensionHeader.tsx
 msgid "Settings and shortcuts"
-msgstr ""
+msgstr "设置和快捷键"
 
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "ShortTitle"
-msgstr ""
+msgstr "简称"
 
 #: apps/reader/src/AnnotationList.tsx
 msgid "Show"
-msgstr ""
+msgstr "显示"
 
 #: apps/reader/src/LibraryWorkspace.tsx
 msgctxt "LibraryWorkspace interface"
 msgid "Show"
-msgstr ""
+msgstr "显示"
 
 #: apps/reader/src/DisplayMenu.tsx
 msgctxt "DisplayMenu interface"
 msgid "Show actions"
-msgstr ""
+msgstr "显示操作"
 
 #: apps/reader/src/AnnotationCard.tsx
 msgid "Show in document"
-msgstr ""
+msgstr "在文档中显示"
 
 #: apps/reader/src/LibraryTextSearch.tsx
 msgid "Show more results"
-msgstr ""
+msgstr "显示更多结果"
 
 #: apps/extension/src/SavedHighlights.tsx
 msgid "Show on the page"
-msgstr ""
+msgstr "在页面上显示"
 
 #: apps/reader/src/AnnotationList.tsx
 msgid "Show selected annotation (clear filters)"
-msgstr ""
+msgstr "显示所选注释（清除筛选条件）"
 
 #: packages/renderer-pdf/src/pdf-translations.ts
 msgctxt "PDF viewer panel"
 msgid "Sidebar"
-msgstr ""
+msgstr "侧边栏"
 
 #: apps/reader/src/DisplayMenu.tsx
 msgid "Sidebar while reading"
-msgstr ""
+msgstr "阅读时的侧边栏"
 
 #: apps/extension/src/connection-view.ts
 #: apps/extension/src/ConnectionPanel.tsx
 msgid "Sign in"
-msgstr ""
+msgstr "登录"
 
 #: apps/reader/src/native-signin-ui.ts
 msgctxt "Native sign-in"
 msgid "Sign in"
-msgstr ""
+msgstr "登录"
 
 #: apps/extension/src/connection-view.ts
 msgid "Sign in to mdbase before saving."
-msgstr ""
+msgstr "保存前请先登录 mdbase。"
 
 #: apps/reader/src/native-signin-ui.ts
 msgid "Sign in with your mdbase account to sync {appName} across your devices."
-msgstr ""
+msgstr "使用你的 mdbase 账户登录，即可在你的设备之间同步 {appName}。"
 
 #: apps/reader/src/native-signin-ui.ts
 msgctxt "Native sign-in"
 msgid "Sign out"
-msgstr ""
+msgstr "退出登录"
 
 #: apps/reader/src/NativeSignIn.tsx
 msgctxt "NativeSignIn interface"
 msgid "Sign-in status"
-msgstr ""
+msgstr "登录状态"
 
 #: apps/reader/src/native-signin-ui.ts
 msgctxt "Native sign-in"
 msgid "Sign-in was interrupted. Please try again."
-msgstr ""
+msgstr "登录被中断。请重试。"
 
 #: apps/reader/src/connect-popup.ts
 msgid "Sign-in window closed."
-msgstr ""
+msgstr "登录窗口已关闭。"
 
 #. placeholder {0}: signIn.accountEmail
 #: apps/extension/src/connection-view.ts
 msgid "Signed in as {0}"
-msgstr ""
+msgstr "已登录为 {0}"
 
 #. placeholder {0}: signIn.accountLogin
 #: apps/extension/src/connection-view.ts
 msgid "Signed in as {0} on GitHub"
-msgstr ""
+msgstr "已登录为 GitHub 上的 {0}"
 
 #: apps/reader/src/native-signin-ui.ts
 msgid "Signed in as {email}"
-msgstr ""
+msgstr "已登录为 {email}"
 
 #. placeholder {0}: selected.displayName
 #: apps/reader/src/native-signin-ui.ts
 msgid "Signed in. Opening {0}…"
-msgstr ""
+msgstr "已登录。正在打开 {0}…"
 
 #: packages/renderer-pdf/src/pdf-translations.ts
 msgctxt "PDF viewer page"
 msgid "Single Page"
-msgstr ""
+msgstr "单页"
 
 #: apps/extension/src/CaptureApp.tsx
 msgid "Site access is limited in Chrome, so Reader cannot follow your tabs."
-msgstr ""
+msgstr "Chrome 中的网站访问权限受限，因此 Reader 无法跟随你的标签页。"
 
 #: apps/extension/src/SiteAccessStatus.tsx
 msgid "Site access is limited in Chrome, so the side panel cannot follow your tabs and saved pages are not marked. Press the toolbar button on a page to use Reader there."
-msgstr ""
+msgstr "Chrome 中的网站访问权限受限，因此侧边栏无法跟随你的标签页，也不会标记已保存的页面。请在页面上点击工具栏按钮，以便在该页面使用 Reader。"
 
 #: apps/reader/src/DisplayMenu.tsx
 msgctxt "DisplayMenu interface"
 msgid "Smaller text"
-msgstr ""
+msgstr "较小文字"
 
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "Software"
-msgstr ""
+msgstr "软件"
 
 #: apps/reader/src/citation-form-model.ts
 msgctxt "CSL item type"
 msgid "Software"
-msgstr ""
+msgstr "软件"
 
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "Song"
-msgstr ""
+msgstr "歌曲"
 
 #: apps/reader/src/LibraryAnnotationToolbar.tsx
 #: apps/reader/src/LibraryWorkspace.tsx
 msgid "Sort"
-msgstr ""
+msgstr "排序"
 
 #: apps/reader/src/AnnotationList.tsx
 msgctxt "AnnotationList interface"
 msgid "Sort annotations"
-msgstr ""
+msgstr "为注释排序"
 
 #: apps/reader/src/LibraryAnnotationToolbar.tsx
 #: apps/reader/src/LibraryTableHeader.tsx
 #: apps/reader/src/LibraryWorkspace.tsx
 msgid "Sort ascending"
-msgstr ""
+msgstr "升序排序"
 
 #. placeholder {0}: label.toLocaleLowerCase()
 #: apps/reader/src/LibraryTableHeader.tsx
 msgid "Sort by {0} · Drag to move"
-msgstr ""
+msgstr "按{0}排序 · 拖动可移动"
 
 #: apps/reader/src/LibraryAnnotationToolbar.tsx
 #: apps/reader/src/LibraryTableHeader.tsx
 #: apps/reader/src/LibraryWorkspace.tsx
 msgid "Sort descending"
-msgstr ""
+msgstr "降序排序"
 
 #: apps/reader/src/LibraryAnnotationToolbar.tsx
 msgctxt "LibraryAnnotationToolbar interface"
 msgid "Sort field"
-msgstr ""
+msgstr "排序字段"
 
 #: apps/reader/src/LibraryWorkspace.tsx
 msgctxt "LibraryWorkspace interface"
 msgid "Sort field"
-msgstr ""
+msgstr "排序字段"
 
 #: apps/reader/src/annotation-columns.ts
 msgctxt "Annotation table column"
 msgid "Source"
-msgstr ""
+msgstr "来源"
 
 #: apps/extension/src/PanelTabs.tsx
 msgctxt "Bibliographic source"
 msgid "Source"
-msgstr ""
+msgstr "来源"
 
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "Source"
-msgstr ""
+msgstr "来源"
 
 #: apps/reader/src/dockview-side-panels.ts
 msgctxt "dockview side panels"
 msgid "Source"
-msgstr ""
+msgstr "来源"
 
 #: apps/reader/src/DockviewWorkspace.tsx
 msgctxt "DockviewWorkspace status or action"
 msgid "Source"
-msgstr ""
+msgstr "来源"
 
 #: apps/reader/src/LibraryAnnotationToolbar.tsx
 msgctxt "LibraryAnnotationToolbar annotationSortOptions"
 msgid "Source"
-msgstr ""
+msgstr "来源"
 
 #: apps/reader/src/LibraryAnnotationToolbar.tsx
 msgctxt "LibraryAnnotationToolbar interface"
 msgid "Source"
-msgstr ""
+msgstr "来源"
 
 #: apps/reader/src/source-note-references.ts
 msgctxt "source note references"
 msgid "Source"
-msgstr ""
+msgstr "来源"
 
 #: apps/reader/src/workspace-tab-display.ts
 msgctxt "workspace tab display"
 msgid "Source"
-msgstr ""
+msgstr "来源"
 
 #: packages/migration/src/readwise-client.ts
 msgid "Source file download failed. The host may not support browser access; use Readwise’s full-file export as a fallback."
-msgstr ""
+msgstr "来源文件下载失败。该主机可能不支持浏览器访问；请改用 Readwise 的完整文件导出。"
 
 #. placeholder {0}: String(response.status)
 #: packages/migration/src/readwise-client.ts
 msgid "Source file download returned HTTP {0}. Retry to obtain a fresh download link."
-msgstr ""
+msgstr "来源文件下载返回 HTTP {0}。请重试以获取新的下载链接。"
 
 #: packages/migration/src/run.ts
 msgid "Source file was not committed."
-msgstr ""
+msgstr "来源文件未提交。"
 
 #: apps/reader/src/SourceNoteEditor.tsx
 msgid "Source literature note"
-msgstr ""
+msgstr "来源文献笔记"
 
 #: apps/extension/src/NotePanel.tsx
 msgid "Source removed"
-msgstr ""
+msgstr "来源已移除"
 
 #: apps/extension/src/NotePanel.tsx
 msgid "Source removed."
-msgstr ""
+msgstr "来源已移除。"
 
 #: apps/extension/src/CaptureApp.tsx
 msgid "Source saved in mdbase."
-msgstr ""
+msgstr "来源已保存到 mdbase。"
 
 #: apps/extension/src/ConnectionPanel.tsx
 msgid "Source saved. This action did not finish."
-msgstr ""
+msgstr "来源已保存。此操作未完成。"
 
 #: apps/reader/src/MobileSourceViews.tsx
 msgctxt "MobileSourceViews interface"
 msgid "Source views"
-msgstr ""
+msgstr "来源视图"
 
 #: apps/reader/src/InspectorPane.tsx
 msgctxt "InspectorPane interface"
 msgid "Source workspace"
-msgstr ""
+msgstr "来源工作区"
 
 #: apps/reader/src/ImportReview.tsx
 #: apps/reader/src/reader-command-list.ts
 msgid "Sources"
-msgstr ""
+msgstr "来源"
 
 #: apps/reader/src/dockview-side-panels.ts
 msgctxt "dockview side panels"
 msgid "Sources"
-msgstr ""
+msgstr "来源"
 
 #: apps/reader/src/LibraryCards.tsx
 msgctxt "LibraryCards interface"
 msgid "Sources"
-msgstr ""
+msgstr "来源"
 
 #: apps/reader/src/LibraryNavigator.tsx
 msgctxt "LibraryNavigator interface"
 msgid "Sources"
-msgstr ""
+msgstr "来源"
 
 #: apps/reader/src/LibraryTable.tsx
 msgctxt "LibraryTable interface"
 msgid "Sources"
-msgstr ""
+msgstr "来源"
 
 #: apps/reader/src/LibraryWorkspace.tsx
 msgctxt "LibraryWorkspace interface"
 msgid "Sources"
-msgstr ""
+msgstr "来源"
 
 #: apps/reader/src/CitationStructuredEditor.tsx
 msgctxt "CitationStructuredEditor status or action"
 msgid "Specialist"
-msgstr ""
+msgstr "专业"
 
 #: packages/renderer-pdf/src/pdf-translations.ts
 msgctxt "PDF viewer print"
 msgid "Specify pages"
-msgstr ""
+msgstr "指定页面"
 
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "Speech"
-msgstr ""
+msgstr "演讲"
 
 #: packages/renderer-pdf/src/pdf-translations.ts
 msgctxt "PDF viewer page"
 msgid "Spread Mode"
-msgstr ""
+msgstr "双页模式"
 
 #: apps/reader/src/reader-command-list.ts
 msgid "Stack panes top and bottom"
-msgstr ""
+msgstr "上下堆叠窗格"
 
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "Standard"
-msgstr ""
+msgstr "标准"
 
 #: apps/reader/src/DisplayMenu.tsx
 msgctxt "DisplayMenu interface"
 msgid "Standard"
-msgstr ""
+msgstr "标准"
 
 #: apps/reader/src/CitationTypedFieldEditors.tsx
 msgctxt "CitationTypedFieldEditors interface"
 msgid "Start"
-msgstr ""
+msgstr "开始"
 
 #: packages/renderer-epub/src/epub-page-navigation.tsx
 msgid "Start of publication"
-msgstr ""
+msgstr "出版物开头"
 
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "Static ordering"
-msgstr ""
+msgstr "固定排序"
 
 #: apps/reader/src/LibraryRowMenu.tsx
 #: apps/reader/src/LibraryWorkspace.tsx
