@@ -1,5 +1,7 @@
 import {
   citekeyForCitation,
+  cslValuesEqual,
+  type CslProvenance,
   loadedCitation,
   saveSourceCitation,
   type Source,
@@ -76,6 +78,7 @@ export async function saveCaptureCitation(
   source: Source,
   citation: CitationDraft,
   neighbours: Promise<readonly SourceSummary[]> = citekeyNeighbours(collection, citation),
+  provenance?: CslProvenance,
 ): Promise<Source> {
   const library = await neighbours;
   const id = citekeyForCitation(citation, library, source.id);
@@ -87,6 +90,19 @@ export async function saveCaptureCitation(
     { ...citation, id },
     {
       ...(expectedCitation !== undefined ? { expectedCitation } : {}),
+      ...(provenance !== undefined
+        ? {
+            // The citekey is generated here, not captured. Keep evidence only for saved values.
+            provenance: Object.fromEntries(
+              Object.entries(provenance).filter(
+                ([field, entry]) =>
+                  field !== "id" &&
+                  citation[field] !== undefined &&
+                  cslValuesEqual(citation[field], entry.value),
+              ),
+            ),
+          }
+        : {}),
     },
   );
 }

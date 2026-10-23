@@ -3,6 +3,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import { DOI_RESOLUTION_TIMEOUT_MS, resolveDoiCitation } from "./doi.js";
 import { citationForPage, PAGE_DOI_TIMEOUT_MS } from "./page-citation.js";
 import { createProviderQueue } from "./provider-queue.js";
+import * as resolver from "./resolver.js";
 
 import type { ClaimBatch } from "./claims.js";
 import type { CitationPreview } from "./page-citation.js";
@@ -40,6 +41,45 @@ afterEach(() => {
 });
 
 describe("page citations", () => {
+  it("dates provider content to the captured snapshot, not a later lookup response", async () => {
+    const resolve = vi.spyOn(resolver, "resolveCitation");
+    const fetch = vi
+      .fn<typeof globalThis.fetch>()
+      .mockResolvedValue(Response.json([{ itemType: "webpage", title: "Old remote copy" }]));
+    await citationForPage(page, pageUrl, {
+      fetch,
+      citoid: {},
+      now: () => new Date("2026-11-23T00:00:00Z"),
+    });
+    expect(
+      resolve.mock.lastCall?.[0].claims.filter((claim) => claim.source.kind !== "page"),
+    ).toEqual(expect.arrayContaining([expect.objectContaining({ observedAt })]));
+
+    fetch.mockResolvedValue(Response.json({ title: "Registry work" }));
+    await citationForPage(embedded, pageUrl, {
+      fetch,
+      now: () => new Date("2026-11-23T00:00:00Z"),
+    });
+    expect(
+      resolve.mock.lastCall?.[0].claims.filter((claim) => claim.source.kind === "registry"),
+    ).toEqual(expect.arrayContaining([expect.objectContaining({ observedAt })]));
+  });
+
+  it("keeps the snapshot time even when a blocked page has no claims", async () => {
+    const resolve = vi.spyOn(resolver, "resolveCitation");
+    const fetch = vi
+      .fn<typeof globalThis.fetch>()
+      .mockResolvedValue(Response.json([{ itemType: "webpage", title: "Recovered" }]));
+    await citationForPage({ claims: [], observedAt }, pageUrl, {
+      fetch,
+      citoid: {},
+      now: () => new Date("2026-11-23T00:00:00Z"),
+    });
+    expect(
+      resolve.mock.lastCall?.[0].claims.every((claim) => claim.observedAt === observedAt),
+    ).toBe(true);
+  });
+
   it("falls back to page claims when doi.org does not answer in time", async () => {
     vi.useFakeTimers();
     const settled = citationForPage(embedded, pageUrl, { fetch: hangingFetch(), timeoutMs: 20 });

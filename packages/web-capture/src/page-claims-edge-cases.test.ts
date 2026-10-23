@@ -288,14 +288,11 @@ it.each([
 });
 
 it.each([" - ", " | ", " — ", " · "])(
-  "reports the trailing title suffix separated by %s",
+  "leaves the title with separator %s intact for the resolver",
   (separator) => {
     const document = page(`<title>Notes - An experiment${separator}Example Site</title>`);
-    expect(values(document, "title")).toEqual([
-      `Notes - An experiment${separator}Example Site`,
-      "Notes - An experiment",
-    ]);
-    expect(values(document, "container-title")).toEqual(["Example Site"]);
+    expect(values(document, "title")).toEqual([`Notes - An experiment${separator}Example Site`]);
+    expect(values(document, "container-title")).toEqual([]);
   },
 );
 

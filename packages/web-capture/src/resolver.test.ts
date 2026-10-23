@@ -28,6 +28,7 @@ function wikipediaClaims(): Claim[] {
     claim("title", "Australia", page, "name"),
     claim("title", "Australia", html, "h1"),
     claim("title", "Australia - Wikipedia", { kind: "page", signal: "open-graph" }, "og:title"),
+    claim("URL", "https://en.wikipedia.org/wiki/Australia", html, "page URL"),
     claim("title", "Australia", adapter),
     claim("container-title", "Wikipedia", adapter),
     claim("container-title", "Wikimedia Foundation, Inc.", page, "publisher name"),
@@ -47,17 +48,19 @@ describe("citation resolution: corpus cases", () => {
       "container-title": "Wikipedia",
       publisher: "Wikimedia Foundation, Inc.",
       issued: { "date-parts": [[2026, 10, 20]] },
+      URL: "https://en.wikipedia.org/wiki/Australia",
     });
     expect(result.suggestions).toEqual([]);
     expect(result.provenance["title"]).toEqual({
       value: "Australia",
       source: "site-adapter:Wikipedia",
       agreed: ["page:html h1", "page:json-ld name", "page:open-graph og:title"],
-      rejected: [{ value: "country", from: "page:json-ld headline" }],
+      rejected: [
+        { value: "country", from: "page:json-ld headline" },
+        { value: "Australia - Wikipedia", from: "page:open-graph og:title" },
+      ],
     });
-    expect(result.provenance["container-title"]?.agreed).toContain(
-      "page:open-graph og:title title suffix",
-    );
+    expect(result.provenance["container-title"]?.agreed).toContain("page:open-graph og:title");
     expect(result.provenance["container-title"]?.rejected).toEqual([
       { value: "Wikimedia Foundation, Inc.", from: "page:json-ld publisher name" },
     ]);
@@ -131,6 +134,19 @@ describe("citation resolution: scoring", () => {
     },
   );
 
+  it("treats even registry webpage defaults only as fallback to a positive specific type", () => {
+    const result = resolveCitation({
+      claims: [
+        claim("title", "Story"),
+        claim("type", "webpage", registry),
+        claim("type", "webpage", remote),
+        claim("type", "article-newspaper", page, "@type"),
+      ],
+    });
+    expect(result.citation?.type).toBe("article-newspaper");
+    expect(result.provenance["type"]?.agreed).toBeUndefined();
+  });
+
   it("does not reparse a user's explicit name decision as an organisation", () => {
     const author = [{ family: "Press", given: "Associated" }];
     expect(
@@ -160,17 +176,17 @@ describe("citation resolution: scoring", () => {
     expect(result.provenance["title"]?.agreed).toHaveLength(1);
   });
 
-  it("settles a one-signal near-tie by freshness", () => {
+  it("does not let lookup freshness beat a corroborated page headline", () => {
     const old = "2026-10-20T00:00:00Z";
     expect(
       resolveCitation({
         claims: [
-          claim("title", "Old", html, "h1", old),
-          claim("title", "Old", page, "name", old),
-          claim("title", "New", remote),
+          claim("title", "Live headline", html, "h1", old),
+          claim("title", "Live headline", html, "title", old),
+          claim("title", "Breaking: old", remote),
         ],
       }).citation?.["title"],
-    ).toBe("New");
+    ).toBe("Live headline");
   });
 
   it("keeps at most two best losing distinct values", () => {
@@ -216,10 +232,10 @@ describe("citation resolution: scoring", () => {
 });
 
 describe("citation resolution: normalization and validation", () => {
-  it("writes clean titles while matching punctuation, quotes, whitespace and site suffixes", () => {
+  it("matches punctuation, quotes and whitespace without splitting trusted titles", () => {
     const result = resolveCitation({
       claims: [
-        claim("title", "  “Australia”   today! | Wikipedia ", adapter),
+        claim("title", "“Australia” today!", adapter),
         claim("title", '"AUSTRALIA" today.', page, "name"),
         claim("title", '"Australia" today', html, "h1"),
       ],
@@ -247,7 +263,7 @@ describe("citation resolution: normalization and validation", () => {
     expect(result.provenance["author"]?.source).toBe("registry:doi.org");
   });
 
-  it("enriches a compatible partial date without letting a year bridge conflicting dates", () => {
+  it("keeps an ambiguous registry year instead of crediting it with a page's conflicting day", () => {
     const result = resolveCitation({
       claims: [
         claim("title", "Report"),
@@ -262,10 +278,118 @@ describe("citation resolution: normalization and validation", () => {
         ),
       ],
     });
-    expect(result.citation?.["issued"]).toEqual({ "date-parts": [[2026, 10, 20]] });
-    expect(result.provenance["issued"]?.agreed).toEqual(["page:json-ld issued"]);
+    expect(result.citation?.["issued"]).toEqual({ "date-parts": [[2026]] });
+    expect(result.provenance["issued"]).toEqual({
+      value: { "date-parts": [[2026]] },
+      source: "registry:doi.org",
+      rejected: [
+        { value: { "date-parts": [[2026, 10, 20]] }, from: "page:json-ld issued" },
+        { value: { "date-parts": [[2026, 11, 4]] }, from: "generic-remote:Citoid issued" },
+      ],
+    });
   });
 
+  it("prefers the common year to equally scored conflicting days, regardless of label or freshness", () => {
+    const claims = [
+      claim("title", "Report"),
+      claim(
+        "issued",
+        { "date-parts": [[2020]] },
+        { kind: "page", signal: "highwire" },
+        "citation_year",
+        "2026-10-20T00:00:00Z",
+      ),
+      claim(
+        "issued",
+        { "date-parts": [[2020, 3, 4]] },
+        { kind: "page", signal: "highwire" },
+        "citation_publication_date",
+      ),
+      claim(
+        "issued",
+        { "date-parts": [[2020, 5, 6]] },
+        { kind: "page", signal: "open-graph" },
+        "article:published_time",
+      ),
+    ];
+    const result = resolveCitation({ claims });
+    expect(result.citation?.["issued"]).toEqual({ "date-parts": [[2020]] });
+    expect(result.provenance["issued"]?.source).toBe("page:highwire");
+    expect(result.provenance["issued"]?.agreed).toBeUndefined();
+    expect(resolveCitation({ claims: [...claims].reverse() })).toEqual(result);
+  });
+
+  it("enriches a partial date only when there is a unique compatible specific date", () => {
+    const result = resolveCitation({
+      claims: [
+        claim("title", "Report"),
+        claim("issued", { "date-parts": [[2020]] }, registry, "reg"),
+        claim("issued", { "date-parts": [[2020, 3, 4]] }, page, "publication"),
+        claim("issued", { "date-parts": [[2019, 5, 6]] }, { kind: "user" }),
+      ],
+    });
+    expect(result.provenance["issued"]?.rejected).toEqual([
+      { value: { "date-parts": [[2020, 3, 4]] }, from: "page:json-ld publication" },
+    ]);
+  });
+
+  it("allows a specific date to win with independent evidence, without borrowing an ambiguous year", () => {
+    const claims = [
+      claim("title", "Report"),
+      claim("issued", { "date-parts": [[2020]] }, registry, "reg"),
+      claim("issued", { "date-parts": [[2020, 3, 4]] }, registry, "online"),
+      claim("issued", { "date-parts": [[2020, 3, 4]] }, page, "publication"),
+      claim("issued", { "date-parts": [[2020, 5, 6]] }, page, "print"),
+    ];
+    const result = resolveCitation({ claims });
+    expect(result.citation?.["issued"]).toEqual({ "date-parts": [[2020, 3, 4]] });
+    expect(result.provenance["issued"]?.agreed).toEqual(["page:json-ld publication"]);
+    expect(resolveCitation({ claims: [...claims].reverse() })).toEqual(result);
+  });
+});
+
+describe("citation resolution: landing URLs", () => {
+  it.each(["http://dx.doi.org/10.1234/work", "https://doi.org/10.1234/work"])(
+    "prefers an explicit landing URL over the registry resolver link %s",
+    (url) => {
+      const result = resolveCitation({
+        claims: [
+          claim("title", "Report"),
+          claim("DOI", "10.1234/work", registry),
+          claim("URL", url, registry),
+          claim("URL", "https://doi.org/10.1234/work", adapter),
+          claim("URL", "https://publisher.example/work", html, "canonical"),
+          claim("URL", "https://publisher.example/work?tracking=1", html, "page URL"),
+        ],
+      });
+      expect(result.citation).toMatchObject({
+        DOI: "10.1234/work",
+        URL: "https://publisher.example/work",
+      });
+      expect(result.provenance["URL"]?.source).toBe("page:html");
+    },
+  );
+
+  it("does not replace registry landing URLs or use an unendorsed request URL instead of a DOI", () => {
+    const claims = [
+      claim("title", "Report"),
+      claim("URL", "https://doi.org/10.1234/work", registry),
+      claim("URL", "https://publisher.example/request", html, "page URL"),
+    ];
+    expect(resolveCitation({ claims }).citation?.["URL"]).toBe("https://doi.org/10.1234/work");
+    expect(
+      resolveCitation({
+        claims: [
+          ...claims,
+          claim("URL", "https://publisher.example/landing", registry),
+          claim("URL", "https://publisher.example/alternate", html, "canonical"),
+        ],
+      }).citation?.["URL"],
+    ).toBe("https://publisher.example/landing");
+  });
+});
+
+describe("citation resolution: container and validation boundaries", () => {
   it("never promotes a publisher fallback merely because the publisher agrees", () => {
     const result = resolveCitation({
       claims: [

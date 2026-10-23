@@ -54,17 +54,15 @@ describe("page claims from article signals", () => {
         claim("title", "country", "json-ld", "headline"),
         claim("title", "Australia", "json-ld", "name"),
         claim("title", "Australia - Wikipedia", "html", "title"),
-        claim("title", "Australia", "html", "title"),
         claim("title", "Australia", "html", "h1"),
         claim("title", "Australia", "open-graph", "og:title"),
-        claim("container-title", "Wikipedia", "html", "title suffix"),
         claim("publisher", "Wikimedia Foundation, Inc.", "json-ld", "publisher"),
         claim("author", [{ literal: "Contributors to Wikimedia projects" }], "json-ld", "author"),
         claim("issued", { "date-parts": [[2001, 11, 4]] }, "json-ld", "datePublished"),
         claim("type", "webpage", "open-graph", "og:type"),
       ]),
     );
-    expect(values(result, "container-title")).toEqual(["Wikipedia"]);
+    expect(values(result, "container-title")).toEqual([]);
     expect(values(result, "issued")).toEqual([{ "date-parts": [[2001, 11, 4]] }]);
     expect(result.claims.every((entry) => entry.observedAt === observedAt)).toBe(true);
   });
@@ -178,6 +176,7 @@ describe("page claims from tags and HTML", () => {
     );
     const before = document.documentElement.outerHTML;
     expect(pageClaims(document, pageUrl, observedAt)).toEqual({
+      observedAt,
       claims: [
         claim("title", "Plain notes", "html", "title"),
         claim("title", "Notes from a small experiment", "html", "h1"),

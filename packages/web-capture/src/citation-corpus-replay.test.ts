@@ -77,7 +77,7 @@ const stillWrong: Record<string, { readonly page: string[]; readonly remote: str
     page: ["type", "author", "issued", "container-title"],
     remote: ["type", "author", "issued", "container-title"],
   },
-  "elife-brain": { page: [], remote: ["title", "publisher", "URL"] },
+  "elife-brain": { page: [], remote: [] },
   "github-translation-server": { page: ["type", "title", "author"], remote: ["author"] },
   "government-ipcc": {
     page: ["type", "title", "author", "issued", "publisher"],
@@ -86,28 +86,29 @@ const stillWrong: Record<string, { readonly page: string[]; readonly remote: str
   guardian: { page: [], remote: [] },
   "guardian-ap": { page: [], remote: [] },
   "mdn-array-map": {
-    page: ["author", "issued", "container-title", "publisher"],
-    remote: ["title", "author", "container-title", "publisher"],
+    page: ["author", "issued", "publisher"],
+    remote: ["author", "publisher"],
   },
-  "nature-dna": { page: [], remote: ["publisher", "URL"] },
-  nyt: { page: ["type", "title", "author", "issued", "container-title"], remote: [] },
+  "nature-dna": { page: [], remote: [] },
+  // A blocked page now yields no citation, including no URL-only shell masquerading as one.
+  nyt: { page: ["type", "title", "author", "issued", "container-title", "URL"], remote: [] },
   "openlibrary-fox": {
     page: ["type", "title", "author", "issued", "publisher", "URL"],
     remote: [],
   },
   "peerj-sharing": {
-    page: ["type", "title", "author", "issued", "container-title", "publisher", "DOI"],
-    remote: ["type", "title", "author", "issued", "container-title", "publisher", "DOI"],
+    page: ["type", "title", "author", "issued", "container-title", "publisher", "DOI", "URL"],
+    remote: ["type", "title", "author", "issued", "container-title", "publisher", "DOI", "URL"],
   },
-  "plos-research": { page: ["issued"], remote: ["publisher", "URL"] },
-  "springer-imagenet": { page: ["publisher"], remote: ["publisher", "URL"] },
+  "plos-research": { page: [], remote: [] },
+  "springer-imagenet": { page: [], remote: [] },
   "stackoverflow-branch": {
-    page: ["type", "title", "author", "issued", "container-title"],
+    page: ["type", "title", "author", "issued", "container-title", "URL"],
     remote: ["type", "author", "issued"],
   },
   verge: { page: [], remote: [] },
   "wikipedia-australia": { page: ["type", "issued", "URL"], remote: [] },
-  "youtube-first": { page: ["type", "author", "issued"], remote: [] },
+  "youtube-first": { page: [], remote: [] },
 };
 
 it("replays the corpus through claims and the resolver", async () => {

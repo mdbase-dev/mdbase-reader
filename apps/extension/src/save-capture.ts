@@ -185,7 +185,13 @@ export class CaptureWriter {
     await this.journalStorage.remove(recoveryKey);
     if (citation && neighbours) {
       try {
-        source = await saveCaptureCitation(collection, source, citation.citation, neighbours);
+        source = await saveCaptureCitation(
+          collection,
+          source,
+          citation.citation,
+          neighbours,
+          citation.provenance,
+        );
       } catch (reason) {
         notices.push(
           `The citation was not stored: ${reason instanceof Error ? reason.message : String(reason)}. Add it from the source's citation panel in Reader.`,

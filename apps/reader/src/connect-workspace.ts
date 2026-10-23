@@ -14,6 +14,7 @@ import {
   updateAnnotationBody,
 } from "@mdbase-reader/core";
 
+import { captureCitationProvenance } from "./capture-citation-provenance.js";
 import {
   annotationViewConfiguration,
   buildAnnotationView,
@@ -53,6 +54,7 @@ import type {
   CollectionId,
   ContentHasher,
   ContentSearchRepository,
+  CslProvenance,
   FileId,
   MutationJournal,
   ReaderRequestOptions,
@@ -557,12 +559,16 @@ export class ConnectWorkspaceGateway implements ReaderWorkspaceGateway {
   async saveNewSourceCitation(
     source: Source,
     citation: Readonly<Record<string, unknown>>,
+    provenance?: CslProvenance,
   ): Promise<Source> {
     const { sources } = await this.library();
-    return this.saveSourceCitation(source, {
-      ...citation,
-      id: citekeyForCitation(citation, sources, source.id),
-    });
+    return this.saveSourceCitation(
+      source,
+      { ...citation, id: citekeyForCitation(citation, sources, source.id) },
+      provenance !== undefined
+        ? { provenance: captureCitationProvenance(citation, provenance) }
+        : {},
+    );
   }
 
   async createAnnotation(request: AnnotationCreationRequest): Promise<Annotation> {

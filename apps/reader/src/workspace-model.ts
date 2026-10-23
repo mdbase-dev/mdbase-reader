@@ -26,6 +26,7 @@ import type {
   CitationCandidate,
   CitationResolutionRequest,
   SaveSourceCitationOptions,
+  CslProvenance,
 } from "@mdbase-reader/core";
 import type { CitationUpdateRequest, Claim } from "@mdbase-reader/web-capture/citation-updates";
 
@@ -114,10 +115,11 @@ export interface ReaderWorkspaceGateway {
     request: SourceFileAttachmentRequest,
     options?: SourceImportOptions,
   ): Promise<Source>;
-  /** Stores a found citation on a source, under a citekey no other source uses. */
+  /** Stores a found citation and its evidence; the locally generated citekey has no evidence. */
   saveNewSourceCitation?(
     source: Source,
     citation: Readonly<Record<string, unknown>>,
+    provenance?: CslProvenance,
   ): Promise<Source>;
   createAnnotation(request: AnnotationCreationRequest): Promise<Annotation>;
   updateAnnotation(annotation: Annotation, body: string): Promise<Annotation>;

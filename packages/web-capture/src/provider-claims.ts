@@ -20,6 +20,8 @@ export interface ProviderClaimsOptions {
   readonly signal?: AbortSignal;
   readonly timeoutMs?: number;
   readonly now?: () => Date;
+  /** When the described content was observed, not when the lookup finished. */
+  readonly observedAt?: string;
   readonly setTimeout?: typeof globalThis.setTimeout;
   readonly clearTimeout?: typeof globalThis.clearTimeout;
 }
@@ -230,7 +232,7 @@ function citationIdentifiers(citation: Readonly<Record<string, unknown>>): Claim
 }
 
 function observedAt(options: ProviderClaimsOptions): string {
-  return (options.now?.() ?? new Date()).toISOString();
+  return options.observedAt ?? (options.now?.() ?? new Date()).toISOString();
 }
 
 function text(value: unknown): string | undefined {

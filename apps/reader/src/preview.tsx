@@ -13,6 +13,7 @@ import {
   type AnnotationDeletionPlan,
   type CitationCandidate,
   type CitationResolutionRequest,
+  type CslProvenance,
   type FileId,
   type ReadingPosition,
   type ReadingStatus,
@@ -25,6 +26,7 @@ import {
 } from "@mdbase-reader/core";
 import { lazy, Suspense, useMemo, type JSX } from "react";
 
+import { captureCitationProvenance } from "./capture-citation-provenance.js";
 import { CollectionSwitchingContext, type CollectionSwitching } from "./CollectionPicker.js";
 import {
   applyLibraryViewConfiguration,
@@ -309,6 +311,10 @@ export class PreviewGateway implements ReaderWorkspaceGateway {
         ...(options.provenance ? { "csl-provenance": options.provenance } : {}),
       },
     };
+    if (options.provenance !== undefined && Object.keys(options.provenance).length === 0) {
+      Reflect.deleteProperty(updated.frontmatter, "csl-provenance");
+      Reflect.deleteProperty(updated, "cslProvenance");
+    }
     this.#sources = this.#sources.map((item) => (item.id === source.id ? updated : item));
     return Promise.resolve(updated);
   }
@@ -365,11 +371,15 @@ export class PreviewGateway implements ReaderWorkspaceGateway {
   saveNewSourceCitation(
     source: Source,
     citation: Readonly<Record<string, unknown>>,
+    provenance?: CslProvenance,
   ): Promise<Source> {
-    return this.saveSourceCitation(source, {
-      ...citation,
-      id: citekeyForCitation(citation, this.#sources, source.id),
-    });
+    return this.saveSourceCitation(
+      source,
+      { ...citation, id: citekeyForCitation(citation, this.#sources, source.id) },
+      provenance !== undefined
+        ? { provenance: captureCitationProvenance(citation, provenance) }
+        : {},
+    );
   }
   createAnnotation(request: AnnotationCreationRequest): Promise<Annotation> {
     const annotation: Annotation = {

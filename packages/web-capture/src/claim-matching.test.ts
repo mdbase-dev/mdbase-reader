@@ -14,13 +14,32 @@ describe("claim matching", () => {
       title: "Australia",
       suffix: "Wikipedia",
     });
-    expect(claimValuesMatch("title", `Australia${separator}Wikipedia`, "AUSTRALIA.")).toBe(true);
+    expect(claimValuesMatch("title", `Australia${separator}Wikipedia`, "AUSTRALIA.")).toBe(false);
   });
 
   it("ignores case, curly quotes, whitespace and trailing punctuation in titles", () => {
     expect(claimValuesMatch("title", "  It’s   ‘Australia’!  ", "it's 'australia'.")).toBe(true);
     expect(claimValuesMatch("title", "Australia", "Austria")).toBe(false);
     expect(splitTitle("A well-known country")).toEqual({ title: "A well-known country" });
+  });
+
+  it("matches equivalent publisher legal suffixes and parenthetical acronyms only", () => {
+    expect(
+      claimValuesMatch(
+        "publisher",
+        "eLife Sciences Publications, Ltd",
+        "eLife Sciences Publications Limited",
+      ),
+    ).toBe(true);
+    expect(
+      claimValuesMatch(
+        "publisher",
+        "Public Library of Science (PLoS)",
+        "Public Library of Science",
+      ),
+    ).toBe(true);
+    expect(claimValuesMatch("publisher", "Example Press (Australia)", "Example Press")).toBe(false);
+    expect(claimValuesMatch("publisher", "Example Press", "Another Press")).toBe(false);
   });
 
   it("matches family names or literals in order, without requiring the same given names", () => {

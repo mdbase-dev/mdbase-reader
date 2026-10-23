@@ -3,6 +3,7 @@ import { afterEach, beforeEach, expect, it, vi } from "vitest";
 
 import { prepareCitation, type CitationPreview } from "./capture-citation.js";
 import { fakeChrome } from "./testing/fake-chrome.js";
+import { fixture } from "./testing/save-capture-fixture.js";
 
 import type { PageCapture } from "./page-capture.js";
 
@@ -37,6 +38,20 @@ it.each([undefined, false, "true"])(
     expect(fetcher).not.toHaveBeenCalled();
   },
 );
+
+it("persists the page preview's provenance beside its citation on capture save", async () => {
+  const preview = await prepareCitation(capture);
+  expect(preview).not.toBeNull();
+  const f = fixture();
+  const saved = await f.save({ highlight: false, title: "Australia" }, capture, {
+    citation: preview,
+  });
+  const source = await f.collection.sources.get(f.collection.collectionId, saved.source.id);
+  expect(source?.citation?.["title"]).toBe("Australia");
+  expect(source?.cslProvenance).toEqual(preview?.provenance);
+  expect(source?.frontmatter["csl-provenance"]).toEqual(preview?.provenance);
+  expect(source?.cslProvenance).not.toHaveProperty("id");
+});
 
 it("delivers page evidence before the opted-in lookup upgrades it", async () => {
   fake.local.set("citoid-enabled", true);

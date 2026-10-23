@@ -17,14 +17,15 @@ import {
   withoutRoleNames,
 } from "./claim-matching.js";
 import { claimSourceLabel, parseClaimSourceLabel } from "./claims.js";
+import { doiFromUrl } from "./doi.js";
 
 import type { Claim, CitationSuggestion, Resolution, ResolverInput } from "./claims.js";
 import type { CitationDraft } from "./csl-values.js";
 import type { CslFieldProvenance, CslProvenance } from "@mdbase-reader/core";
 
-// Each distinct source + evidence after the first adds 4 points. A gap of at most 4 is a
-// near-tie, settled by observation time, then score and stable lexical order. User decisions
-// are pinned regardless of corroboration; other ranks are starting scores, not vetoes.
+// Each independent signal after the first adds 4 points. Score precedes observation time;
+// freshness only settles exact ties. User decisions are pinned regardless of corroboration;
+// other ranks are starting scores, not vetoes.
 const sourceStrength = {
   user: 100,
   registry: 80,
@@ -33,11 +34,15 @@ const sourceStrength = {
   "generic-remote": 40,
 };
 const corroborationBonus = 4;
-const nearTie = 4;
+
+interface CandidateClaim extends Claim {
+  readonly siteSuffixStripped?: boolean;
+  readonly ambiguousDate?: boolean;
+}
 
 interface ClaimGroup {
-  readonly claims: readonly Claim[];
-  readonly winner: Claim;
+  readonly claims: readonly CandidateClaim[];
+  readonly winner: CandidateClaim;
   readonly value: unknown;
   readonly score: number;
   readonly observedAt: number;
@@ -134,8 +139,8 @@ function existingClaims(
   });
 }
 
-function prepareClaims(claims: readonly Claim[]): Claim[] {
-  const prepared: Claim[] = [];
+function prepareClaims(claims: readonly Claim[]): CandidateClaim[] {
+  const prepared: CandidateClaim[] = [];
   for (const claim of claims) {
     let value = claim.value;
     if (value === undefined) {
@@ -144,18 +149,7 @@ function prepareClaims(claims: readonly Claim[]): Claim[] {
       }
       continue;
     }
-    if (claim.field === "title" && typeof value === "string") {
-      const { title, suffix } = splitTitle(value);
-      value = title;
-      if (suffix && claim.source.kind !== "user") {
-        prepared.push({
-          ...claim,
-          field: "container-title",
-          value: suffix,
-          evidence: `${claim.evidence ? `${claim.evidence} ` : ""}title suffix`,
-        });
-      }
-    }
+    prepared.push(...titleCandidates(claim, claims));
     if ((claim.field === "author" || claim.field === "editor") && claim.source.kind !== "user") {
       value = withoutRoleNames(value);
       if (Array.isArray(value) && !value.length) {
@@ -169,6 +163,83 @@ function prepareClaims(claims: readonly Claim[]): Claim[] {
   return prepared;
 }
 
+function titleCandidates(claim: Claim, claims: readonly Claim[]): CandidateClaim[] {
+  if (!pageTitleSignal(claim) || typeof claim.value !== "string") {
+    return [];
+  }
+  const candidates: CandidateClaim[] = [];
+  let candidate = splitTitle(claim.value);
+  const container = supportedSuffix(candidate.suffix, claim, claims);
+  if (container) {
+    candidates.push({ ...claim, field: "container-title", value: container });
+  }
+  let outermost = true;
+  while (candidate.suffix) {
+    if (
+      (outermost && container) ||
+      claims.some(
+        (other) =>
+          other.field === "title" &&
+          !pageTitleSignal(other) &&
+          claimValuesMatch("title", candidate.title, other.value),
+      )
+    ) {
+      candidates.push({ ...claim, value: candidate.title, siteSuffixStripped: !!container });
+    }
+    candidate = splitTitle(candidate.title);
+    outermost = false;
+  }
+  return candidates;
+}
+
+function pageTitleSignal(claim: Claim): boolean {
+  return (
+    claim.field === "title" &&
+    claim.source.kind === "page" &&
+    ((claim.source.signal === "html" && claim.evidence === "title") ||
+      (claim.source.signal === "open-graph" &&
+        ["og:title", "twitter:title"].includes(claim.evidence ?? "")))
+  );
+}
+
+function supportedSuffix(
+  suffix: string | undefined,
+  title: Claim,
+  claims: readonly Claim[],
+): string | undefined {
+  if (!suffix) {
+    return undefined;
+  }
+  const containers = claims.filter(
+    (claim) => claim.field === "container-title" && !/publisher/iu.test(claim.evidence ?? ""),
+  );
+  if (containers.length) {
+    return containers.some((claim) => claimValuesMatch("container-title", suffix, claim.value))
+      ? suffix
+      : undefined;
+  }
+  const key = suffix.toLowerCase().replace(/[^a-z0-9]/gu, "");
+  const hostMatches = claims.some((claim) => {
+    if (claim.field !== "URL" || claim.source.kind !== "page" || typeof claim.value !== "string") {
+      return false;
+    }
+    try {
+      return new URL(claim.value).hostname.split(".").some((part) => part === key);
+    } catch {
+      return false;
+    }
+  });
+  const repeated = claims.some(
+    (claim) =>
+      pageTitleSignal(claim) &&
+      evidenceLabel(claim) !== evidenceLabel(title) &&
+      typeof claim.value === "string" &&
+      claimValuesMatch("container-title", suffix, splitTitle(claim.value).suffix) &&
+      !claimValuesMatch("title", claim.value, title.value),
+  );
+  return hostMatches || repeated ? suffix : undefined;
+}
+
 function validField(field: string, value: unknown): boolean {
   if (value === "" || (typeof value === "string" && !value.trim())) {
     return false;
@@ -179,9 +250,9 @@ function validField(field: string, value: unknown): boolean {
   return validateCslItem({ id: "candidate", type: "webpage", [field]: value }).valid;
 }
 
-/** More specific date anchors go first, so a year cannot bridge two conflicting full dates. */
-function groupClaims(claims: readonly Claim[]): ClaimGroup[] {
-  const groups: Claim[][] = [];
+/** A partial date shared by conflicting anchors stands alone, not in either anchor's group. */
+function groupClaims(claims: readonly CandidateClaim[]): ClaimGroup[] {
+  const groups: CandidateClaim[][] = [];
   const ordered = [...claims].sort(
     (a, b) => dateSpecificity(b.value) - dateSpecificity(a.value) || compareClaims(a, b),
   );
@@ -189,21 +260,53 @@ function groupClaims(claims: readonly Claim[]): ClaimGroup[] {
     const matches = groups.filter((group) =>
       group.every((other) => claimValuesMatch(claim.field, claim.value, other.value)),
     );
-    if (!matches.length) {
+    if (matches.length > 1 && cslFieldKinds.get(claim.field) === "date") {
+      const exact = matches.find((group) =>
+        group.every((other) => cslValuesEqual(claim.value, other.value)),
+      );
+      const partial = { ...claim, ambiguousDate: true };
+      if (exact) {
+        exact.push(partial);
+      } else {
+        groups.push([partial]);
+      }
+    } else if (!matches.length) {
       groups.push([claim]);
     } else {
-      for (const group of matches) {
-        group.push(claim);
-      }
+      matches[0]?.push(claim);
     }
   }
   return groups.flatMap((group) => {
     const ranked = [...group].sort(compareClaims);
-    const winner = ranked[0];
+    // Equivalent publisher spellings should credit the page that supplies the saved imprint.
+    const winner =
+      (ranked[0]?.source.kind !== "user"
+        ? ranked.find(
+            (claim) =>
+              claim.field === "publisher" &&
+              claim.source.kind === "page" &&
+              ["citation_publisher", "dc.publisher", "dcterms.publisher"].includes(
+                claim.evidence ?? "",
+              ),
+          )
+        : undefined) ?? ranked[0];
     if (!winner) {
       return [];
     }
-    const independent = new Set(group.map(evidenceLabel));
+    // Generic remote metadata can repeat the very same document title; it is not another
+    // independent work heading. Derived title candidates retain their original signal label.
+    const independent = new Set(
+      group
+        .filter(
+          (claim) =>
+            !(
+              claim.field === "title" &&
+              claim.source.kind === "generic-remote" &&
+              group.some(pageTitleSignal)
+            ),
+        )
+        .map(evidenceLabel),
+    );
     return [
       {
         claims: ranked,
@@ -242,30 +345,86 @@ function chooseGroup(field: string, groups: readonly ClaimGroup[]): ClaimGroup |
   } else if (field === "type") {
     // A registry's work type is authoritative. Otherwise prefer a positively identified work
     // type over generic Article/WebPage/document signals, however often defaults are repeated.
-    const registered = groups.filter((group) => group.winner.source.kind === "registry");
+    const registered = groups.filter(
+      (group) => group.winner.source.kind === "registry" && group.value !== "webpage",
+    );
     const specific = groups.filter(
       (group) => !["webpage", "article", "document"].includes(String(group.value)),
     );
     eligible = registered.length ? registered : specific.length ? specific : groups;
+  } else if (field === "title") {
+    // Registries can omit a section prefix from the published title. Retain the full work
+    // title only when both its heading and structured work metadata explicitly agree.
+    const expanded = groups.filter(
+      (group) =>
+        group.claims.some((claim) => claim.source.kind === "page" && claim.evidence === "h1") &&
+        group.claims.some(
+          (claim) =>
+            claim.source.kind === "page" &&
+            ((claim.source.signal === "json-ld" &&
+              /^[A-Z][A-Za-z]+ (?:headline|name)$/u.test(claim.evidence ?? "")) ||
+              (claim.source.signal === "highwire" && claim.evidence === "citation_title")),
+        ),
+    );
+    eligible = groups.filter(
+      (group) =>
+        !(
+          group.winner.source.kind === "registry" &&
+          expanded.some(
+            (full) =>
+              typeof full.value === "string" &&
+              claimValuesMatch("title", full.value.replace(/^[^:]+:\s+/u, ""), group.value) &&
+              !claimValuesMatch("title", full.value, group.value),
+          )
+        ),
+    );
+  } else if (field === "publisher") {
+    const imprints = groups.filter(
+      (group) =>
+        group.claims.some(
+          (claim) => claim.source.kind === "page" && claim.evidence === "citation_publisher",
+        ) &&
+        new Set(
+          group.claims.flatMap((claim) =>
+            claim.source.kind === "page" ? [claim.source.signal] : [],
+          ),
+        ).size > 1,
+    );
+    if (imprints.length) {
+      eligible = imprints;
+    }
   } else if (field === "container-title") {
     // A publisher-only fallback is not evidence of the publication's name.
     eligible = groups.filter((group) =>
       group.claims.some((claim) => !/publisher/iu.test(claim.evidence ?? "")),
     );
   }
-  const bestScore = Math.max(...eligible.map((group) => group.score));
-  return eligible
-    .filter((group) => group.score >= bestScore - nearTie)
-    .sort(
-      (a, b) =>
-        descending(a.observedAt, b.observedAt) ||
-        b.score - a.score ||
-        compareClaims(a.winner, b.winner),
-    )[0];
+  return [...eligible].sort(
+    (a, b) =>
+      b.score - a.score ||
+      cautiousDateOrder(a, b) ||
+      descending(a.observedAt, b.observedAt) ||
+      compareClaims(a.winner, b.winner),
+  )[0];
 }
 
-function claimStrength(claim: Claim): number {
-  let strength = sourceStrength[claim.source.kind];
+function cautiousDateOrder(a: ClaimGroup, b: ClaimGroup): number {
+  const partialA = a.claims.some((claim) => claim.ambiguousDate);
+  const partialB = b.claims.some((claim) => claim.ambiguousDate);
+  // A conflicting full date must independently outscore the common prefix, not just be newer.
+  return (
+    Number(partialB) - Number(partialA) ||
+    (partialA && partialB ? dateSpecificity(a.value) - dateSpecificity(b.value) : 0)
+  );
+}
+
+function claimStrength(claim: CandidateClaim): number {
+  // A confirmed site suffix breaks an otherwise exact tie, but never outweighs corroboration.
+  let strength = sourceStrength[claim.source.kind] + (claim.siteSuffixStripped ? 1 : 0);
+  const urlStrength = urlClaimStrength(claim);
+  if (urlStrength !== undefined) {
+    return urlStrength;
+  }
   if (claim.source.kind === "page") {
     // Work-specific titles survive truncated OG titles corroborated by generic WebPage nodes.
     // Generic Article titles get no bonus: Wikipedia's headline can be a short description.
@@ -290,7 +449,33 @@ function claimStrength(claim: Claim): number {
   return strength;
 }
 
-function compareClaims(a: Claim, b: Claim): number {
+function urlClaimStrength(claim: Claim): number | undefined {
+  if (claim.field !== "URL") {
+    return undefined;
+  }
+  if (claim.source.kind !== "user" && doiResolverUrl(claim.value)) {
+    return 30;
+  }
+  return claim.source.kind === "page" &&
+    claim.source.signal === "html" &&
+    claim.evidence === "page URL"
+    ? 28
+    : undefined;
+}
+
+function doiResolverUrl(value: unknown): boolean {
+  if (typeof value !== "string") {
+    return false;
+  }
+  try {
+    const url = new URL(value);
+    return ["doi.org", "dx.doi.org"].includes(url.hostname) && !!doiFromUrl(value);
+  } catch {
+    return false;
+  }
+}
+
+function compareClaims(a: CandidateClaim, b: CandidateClaim): number {
   return (
     claimStrength(b) - claimStrength(a) ||
     descending(observationTime(a), observationTime(b)) ||
@@ -328,7 +513,8 @@ function explainGroup(chosen: ClaimGroup, groups: readonly ClaimGroup[]): CslFie
     }
     losers.splice(losers.indexOf(next), 1);
     if (!rejected.some((item) => claimValuesMatch(chosen.winner.field, item.value, next.value))) {
-      rejected.push({ value: next.value, from: evidenceLabel(next.winner) });
+      const supplier = next.claims.find((claim) => cslValuesEqual(claim.value, next.value));
+      rejected.push({ value: next.value, from: evidenceLabel(supplier ?? next.winner) });
     }
   }
   return {

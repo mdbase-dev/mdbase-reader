@@ -10,6 +10,15 @@ import type { Claim, ClaimBatch, ClaimIdentifiers, PageSignal } from "./claims.j
 type AddClaim = (field: string, value: unknown, signal: PageSignal, evidence: string) => void;
 type JsonLdNode = Readonly<Record<string, unknown>>;
 
+const linkedWorkTypes = new Map([
+  ["Book", "book"],
+  ["Chapter", "chapter"],
+  ["Thesis", "thesis"],
+  ["Report", "report"],
+  ["Dataset", "dataset"],
+  ["VideoObject", "motion_picture"],
+]);
+
 const metaFields: readonly (readonly [string, readonly string[]])[] = [
   ["title", ["citation_title", "dc.title", "dcterms.title", "og:title", "twitter:title"]],
   [
@@ -81,9 +90,13 @@ export function pageClaims(document: Document, pageUrl: string, observedAt: stri
   };
   const meta = metaIndex(document);
   const nodes = linkedNodes(document);
+  if (challengePage(document, pageUrl, nodes)) {
+    return { claims: [], observedAt };
+  }
   for (const node of nodes) {
     linkedClaims(node, add);
   }
+  videoClaims(document, nodes, add);
   tagClaims(meta, pageUrl, add);
   htmlClaims(document, pageUrl, add);
   const arxiv = first(meta, "citation_arxiv_id") ?? arxivIdentifier(pageUrl);
@@ -110,9 +123,66 @@ export function pageClaims(document: Document, pageUrl: string, observedAt: stri
     .find((value) => value !== undefined);
   return {
     claims,
+    observedAt,
     ...(Object.keys(identifiers).length ? { identifiers } : {}),
     ...(pdfUrl ? { pdfUrl } : {}),
   };
+}
+
+function challengePage(document: Document, pageUrl: string, nodes: readonly JsonLdNode[]): boolean {
+  const title = textValue(document.title) ?? "";
+  if (
+    /^(?:just a moment[.!…]*|attention required!?|access denied|are you a robot\??|human verification|verify (?:you are|you're) human|(?:error\s*)?403(?:\s*[-:]?\s*forbidden)?)(?:\s*[-|—]\s*.*)?$/iu.test(
+      title,
+    )
+  ) {
+    return true;
+  }
+  // Some interstitials expose only the bare host. That is not a work title; retain it only
+  // when a work heading or structured title independently identifies actual content.
+  try {
+    const host = new URL(pageUrl).hostname.replace(/^www\./u, "");
+    return (
+      title.toLowerCase().replace(/^www\./u, "") === host &&
+      !document.querySelector("h1") &&
+      !nodes.some((node) => isWork(node) && (node["headline"] ?? node["name"]))
+    );
+  } catch {
+    return false;
+  }
+}
+
+function videoClaims(document: Document, nodes: readonly JsonLdNode[], add: AddClaim): void {
+  const videos = nodes.filter((node) => arrayValue(node["@type"]).includes("VideoObject"));
+  if (!videos.length) {
+    return;
+  }
+  for (const node of videos) {
+    add("issued", cslDate(stringValue(node["uploadDate"])), "json-ld", "uploadDate");
+  }
+  const authors = [...document.querySelectorAll('[itemprop~="author"][itemscope]')].flatMap(
+    videoAuthor,
+  );
+  add("author", authors, "html", "VideoObject microdata author");
+}
+
+function videoAuthor(scope: Element): NonNullable<ReturnType<typeof cslName>>[] {
+  const owner = scope.parentElement?.closest("[itemscope]");
+  if (
+    owner &&
+    !owner
+      .getAttribute("itemtype")
+      ?.split(/\s+/u)
+      .some((type) => type.endsWith("/VideoObject"))
+  ) {
+    return [];
+  }
+  const property = scope.querySelector('[itemprop~="name"]');
+  const name = textValue(property?.getAttribute("content") ?? property?.textContent);
+  const author = name && cslName(name);
+  return author
+    ? [scope.getAttribute("itemtype")?.endsWith("/Organization") ? { literal: name } : author]
+    : [];
 }
 
 function tagClaims(meta: MetaIndex, pageUrl: string, add: AddClaim): void {
@@ -252,6 +322,10 @@ function tagPages(meta: MetaIndex, add: AddClaim): void {
 
 function linkedClaims(node: JsonLdNode, add: AddClaim): void {
   const signal = "json-ld";
+  if (arrayValue(node["@type"]).includes("WebSite")) {
+    add("container-title", nameOf(node), signal, "WebSite name");
+    return;
+  }
   const workType = specificWorkType(node);
   const fields = [
     ["headline", "title"],
@@ -311,21 +385,15 @@ function specificWorkType(node: JsonLdNode): string | undefined {
     (type): type is string =>
       typeof type === "string" &&
       (scholarlyJsonLdTypes.has(type) ||
-        (articleJsonLdTypes.has(type) && articleJsonLdTypes.get(type) !== "webpage")),
+        (articleJsonLdTypes.has(type) && articleJsonLdTypes.get(type) !== "webpage") ||
+        linkedWorkTypes.has(type)),
   );
 }
 
 function linkedType(type: string, add: AddClaim): void {
-  const scholarlyTypes = new Map([
-    ["Book", "book"],
-    ["Chapter", "chapter"],
-    ["Thesis", "thesis"],
-    ["Report", "report"],
-    ["Dataset", "dataset"],
-  ]);
   const cslType =
     articleJsonLdTypes.get(type) ??
-    scholarlyTypes.get(type) ??
+    linkedWorkTypes.get(type) ??
     (scholarlyJsonLdTypes.has(type)
       ? "article-journal"
       : type === "WebPage"
@@ -354,12 +422,14 @@ function linkedNodes(document: Document): JsonLdNode[] {
       : isRecord(value) && typeof value["@id"] === "string" && Object.keys(value).length === 1
         ? (byId.get(value["@id"]) ?? value)
         : value;
-  return nodes.filter(isWork).map((node) => ({
-    ...node,
-    author: resolved(node["author"]),
-    publisher: resolved(node["publisher"]),
-    isPartOf: resolved(node["isPartOf"]),
-  }));
+  return nodes
+    .filter((node) => isWork(node) || arrayValue(node["@type"]).includes("WebSite"))
+    .map((node) => ({
+      ...node,
+      author: resolved(node["author"]),
+      publisher: resolved(node["publisher"]),
+      isPartOf: resolved(node["isPartOf"]),
+    }));
 }
 
 function graphNodes(value: unknown, depth = 0): JsonLdNode[] {
@@ -369,25 +439,29 @@ function graphNodes(value: unknown, depth = 0): JsonLdNode[] {
   if (Array.isArray(value)) {
     return value.flatMap((item) => graphNodes(item, depth + 1));
   }
-  return isRecord(value) ? [value, ...graphNodes(value["@graph"], depth + 1)] : [];
+  return isRecord(value)
+    ? [
+        value,
+        ...graphNodes(value["@graph"], depth + 1),
+        ...graphNodes(value["mainEntity"], depth + 1),
+      ]
+    : [];
 }
 
 function isWork(node: JsonLdNode): boolean {
   return arrayValue(node["@type"]).some(
     (type) =>
       typeof type === "string" &&
-      (scholarlyJsonLdTypes.has(type) || articleJsonLdTypes.has(type) || type === "WebPage"),
+      (scholarlyJsonLdTypes.has(type) ||
+        articleJsonLdTypes.has(type) ||
+        linkedWorkTypes.has(type) ||
+        type === "WebPage"),
   );
 }
 
 function htmlClaims(document: Document, pageUrl: string, add: AddClaim): void {
   const title = textValue(document.title);
   add("title", title, "html", "title");
-  const suffix = /^(.+)\s[-|—·]\s(.+)$/u.exec(title ?? "");
-  if (suffix) {
-    add("title", suffix[1]?.trim(), "html", "title");
-    add("container-title", suffix[2]?.trim(), "html", "title suffix");
-  }
   const headings = document.querySelectorAll("h1");
   const heading =
     headings.length === 1 ? headings[0] : document.querySelector("main h1, article h1");

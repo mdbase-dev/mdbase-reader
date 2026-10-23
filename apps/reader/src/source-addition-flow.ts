@@ -248,8 +248,8 @@ async function finish(
   // A candidate's placeholder citekey is replaced with one unique in the collection.
   const fields = Object.fromEntries(Object.entries(citation).filter(([key]) => key !== "id"));
   try {
-    // TODO: persist csl-provenance when saveNewSourceCitation accepts field provenance.
-    return { kind: "added", source: await save(source, fields), notices: [], ...evidence };
+    const saved = provenance ? await save(source, fields, provenance) : await save(source, fields);
+    return { kind: "added", source: saved, notices: [], ...evidence };
   } catch (reason) {
     return {
       kind: "added",

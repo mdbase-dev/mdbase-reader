@@ -28,16 +28,46 @@ export function cslName(value: string): CslName | undefined {
   return { family, given: parts.join(" ") };
 }
 
-/** Accepts 2023, 2023-04, 2023/04/12 and ISO timestamps. */
-export function cslDate(value: string | undefined): { "date-parts": number[][] } | undefined {
-  const match = /^\s*(\d{4})(?:[-/.](\d{1,2}))?(?:[-/.](\d{1,2}))?/u.exec(value ?? "");
-  if (!match) {
+const months = [
+  "january",
+  "february",
+  "march",
+  "april",
+  "may",
+  "june",
+  "july",
+  "august",
+  "september",
+  "october",
+  "november",
+  "december",
+];
+
+function namedDate(value: string): number[] | undefined {
+  const monthFirst = /^([a-z]+)\.?\s+(?:(\d{1,2}),?\s+)?(\d{4})$/iu.exec(value.trim());
+  const dayFirst = /^(\d{1,2})\s+([a-z]+)\.?\s+(\d{4})$/iu.exec(value.trim());
+  const name = monthFirst?.[1] ?? dayFirst?.[2];
+  const month = months.findIndex(
+    (month) => month === name?.toLowerCase() || month.slice(0, 3) === name?.toLowerCase(),
+  );
+  if (month < 0) {
     return undefined;
   }
-  const parts = [match[1], match[2], match[3]]
-    .filter((part): part is string => part !== undefined)
-    .map(Number);
-  return parts.every((part) => Number.isFinite(part) && part > 0)
+  const day = monthFirst?.[2] ?? dayFirst?.[1];
+  return [Number(monthFirst?.[3] ?? dayFirst?.[3]), month + 1, ...(day ? [Number(day)] : [])];
+}
+
+/** ISO dates/timestamps and unambiguous English month-name dates; never locale-dependent parsing. */
+export function cslDate(value: string | undefined): { "date-parts": number[][] } | undefined {
+  const match = /^\s*(\d{4})(?:[-/.](\d{1,2}))?(?:[-/.](\d{1,2}))?/u.exec(value ?? "");
+  const parts = match
+    ? [match[1], match[2], match[3]]
+        .filter((part): part is string => part !== undefined)
+        .map(Number)
+    : namedDate(value ?? "");
+  return parts?.every((part) => Number.isFinite(part) && part > 0) &&
+    (parts[1] ?? 1) <= 12 &&
+    (parts[2] ?? 1) <= 31
     ? { "date-parts": [parts] }
     : undefined;
 }

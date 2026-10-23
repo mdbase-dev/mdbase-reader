@@ -1,6 +1,7 @@
 # Citation claims: field-level evidence for page citations
 
-Status: proposal, not implemented. Extends [Citation metadata](citation-metadata.md), whose
+Status: claims, resolver and capture-save provenance implemented; snapshot replay and adapters
+remain staged below. Extends [Citation metadata](citation-metadata.md), whose
 decisions stand: the `csl` object on the source record is canonical, and inferred metadata is a
 candidate, not a write.
 
@@ -88,17 +89,30 @@ group, and chooses the highest:
 1. **Source strength.** `user` > `registry` > `site-adapter` > `page` and `generic-remote`. This
    is a starting score, not an absolute order.
 2. **Corroboration.** Independent signals that agree add weight. Titles are compared ignoring
-   case, surrounding whitespace, and a trailing site suffix such as " - Wikipedia".
+   case and surrounding whitespace. Only HTML `<title>`, `og:title` and `twitter:title` offer
+   site-suffix-stripped candidates alongside the full title. Work headings and structured or
+   remote titles are never split. Derived candidates retain the original signal's identity;
+   generic remote metadata repeating a document title is not independent corroboration.
 3. **Field rules,** kept here rather than in extractors: a publisher's name is not evidence for
    `container-title`; role phrases such as "staff reporter" or "editorial board" are not
-   personal names; a `<title>` suffix is evidence for the site name.
-4. **Freshness.** When scores are close, the more recent observation wins.
+   personal names. A page title suffix supplies container evidence only with container, host or
+   repeated-title support. A generic `webpage` type is fallback evidence, not a vote against a
+   positively identified work type. An ambiguous partial date stays at its actual precision
+   rather than endorsing several conflicting full dates; rejected values credit their supplier.
+   DOI-resolver URLs are weaker than explicit landing-page URLs. Equivalent publisher legal-name
+   spellings use the page's imprint; a conflicting registry member name yields only to an imprint
+   corroborated by independent page vocabularies. Challenge pages supply no work claims.
+4. **Freshness.** Score wins first; only exact ties use observation time. `citationForPage`
+   dates provider claims to the page snapshot, not the response's arrival. A later Citoid fetch
+   can be cached and does not prove newer content. Without a snapshot, the lookup's start time
+   is the best available observation time; callers may supply an independently known content
+   observation time.
 
 Start with fixed ranks and a corroboration bonus. Add weights only when a corpus page needs them.
 
 Applied to Wikipedia, "Australia" is backed by `name`, `<h1>`, `og:title` and Citoid, while
 "country" is backed by nothing. The resolver chooses "Australia" even without Citoid. The live
-ABC headline beats Citoid's older copy on freshness; the BBC author fills Citoid's gap.
+ABC headline beats Citoid's older copy on corroboration; the BBC author fills Citoid's gap.
 
 The resolver returns the chosen CSL item, provenance for each field, and **suggestions**:
 values from a stronger source that differ from an existing field.
@@ -129,6 +143,13 @@ Each entry pins the value it explains. When Reader reads a record:
 - **Field is gone but provenance pins a value:** it was deliberately removed. That is recorded
   as a user decision, and later lookups do not restore it.
 - **No provenance:** every field is the user's, as for hand-written or imported citations.
+
+Capture saves write the resolved citation and its matching field provenance together. Reader and
+extension generate a collection-unique `id` (citekey) locally, so capture provenance never
+includes `id`. Fields edited in the extension draft lose their captured provenance; untouched
+fields keep it. Absent or mismatched values are not given captured provenance. Lookups that
+return only a `CitationCandidate` (rather than field-level `CitationPreview` evidence) do not
+invent field provenance from the candidate's provider summary.
 
 Malformed provenance is ignored field by field. Deleting `csl-provenance` loses only the
 explanations. Entries keep the chosen source and at most two rejected values; full evidence is
