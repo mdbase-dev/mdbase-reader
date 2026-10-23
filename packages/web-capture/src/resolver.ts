@@ -35,9 +35,13 @@ const sourceStrength = {
 const corroborationBonus = 4;
 const nearTie = 4;
 
+interface CandidateClaim extends Claim {
+  readonly siteSuffixStripped?: boolean;
+}
+
 interface ClaimGroup {
-  readonly claims: readonly Claim[];
-  readonly winner: Claim;
+  readonly claims: readonly CandidateClaim[];
+  readonly winner: CandidateClaim;
   readonly value: unknown;
   readonly score: number;
   readonly observedAt: number;
@@ -134,8 +138,8 @@ function existingClaims(
   });
 }
 
-function prepareClaims(claims: readonly Claim[]): Claim[] {
-  const prepared: Claim[] = [];
+function prepareClaims(claims: readonly Claim[]): CandidateClaim[] {
+  const prepared: CandidateClaim[] = [];
   for (const claim of claims) {
     let value = claim.value;
     if (value === undefined) {
@@ -144,16 +148,25 @@ function prepareClaims(claims: readonly Claim[]): Claim[] {
       }
       continue;
     }
-    if (claim.field === "title" && typeof value === "string") {
-      const { title, suffix } = splitTitle(value);
-      value = title;
-      if (suffix && claim.source.kind !== "user") {
-        prepared.push({
-          ...claim,
-          field: "container-title",
-          value: suffix,
-          evidence: `${claim.evidence ? `${claim.evidence} ` : ""}title suffix`,
-        });
+    if (pageTitleSignal(claim) && typeof value === "string") {
+      let candidate = splitTitle(value);
+      const container = supportedSuffix(candidate.suffix, claim, claims);
+      if (container) {
+        prepared.push({ ...claim, field: "container-title", value: container });
+      }
+      while (candidate.suffix) {
+        if (
+          container ||
+          claims.some(
+            (other) =>
+              other.field === "title" &&
+              !pageTitleSignal(other) &&
+              claimValuesMatch("title", candidate.title, other.value),
+          )
+        ) {
+          prepared.push({ ...claim, value: candidate.title, siteSuffixStripped: !!container });
+        }
+        candidate = splitTitle(candidate.title);
       }
     }
     if ((claim.field === "author" || claim.field === "editor") && claim.source.kind !== "user") {
@@ -169,6 +182,53 @@ function prepareClaims(claims: readonly Claim[]): Claim[] {
   return prepared;
 }
 
+function pageTitleSignal(claim: Claim): boolean {
+  return (
+    claim.field === "title" &&
+    claim.source.kind === "page" &&
+    ((claim.source.signal === "html" && claim.evidence === "title") ||
+      (claim.source.signal === "open-graph" &&
+        ["og:title", "twitter:title"].includes(claim.evidence ?? "")))
+  );
+}
+
+function supportedSuffix(
+  suffix: string | undefined,
+  title: Claim,
+  claims: readonly Claim[],
+): string | undefined {
+  if (!suffix) {
+    return undefined;
+  }
+  const containers = claims.filter(
+    (claim) => claim.field === "container-title" && !/publisher/iu.test(claim.evidence ?? ""),
+  );
+  if (containers.length) {
+    return containers.some((claim) => claimValuesMatch("container-title", suffix, claim.value))
+      ? suffix
+      : undefined;
+  }
+  const key = suffix.toLowerCase().replace(/[^a-z0-9]/gu, "");
+  const hostMatches = claims.some((claim) => {
+    if (claim.field !== "URL" || claim.source.kind !== "page" || typeof claim.value !== "string") {
+      return false;
+    }
+    try {
+      return new URL(claim.value).hostname.split(".").some((part) => part === key);
+    } catch {
+      return false;
+    }
+  });
+  const repeated = claims.some(
+    (claim) =>
+      pageTitleSignal(claim) &&
+      evidenceLabel(claim) !== evidenceLabel(title) &&
+      typeof claim.value === "string" &&
+      claimValuesMatch("container-title", suffix, splitTitle(claim.value).suffix),
+  );
+  return hostMatches || repeated ? suffix : undefined;
+}
+
 function validField(field: string, value: unknown): boolean {
   if (value === "" || (typeof value === "string" && !value.trim())) {
     return false;
@@ -180,8 +240,8 @@ function validField(field: string, value: unknown): boolean {
 }
 
 /** More specific date anchors go first, so a year cannot bridge two conflicting full dates. */
-function groupClaims(claims: readonly Claim[]): ClaimGroup[] {
-  const groups: Claim[][] = [];
+function groupClaims(claims: readonly CandidateClaim[]): ClaimGroup[] {
+  const groups: CandidateClaim[][] = [];
   const ordered = [...claims].sort(
     (a, b) => dateSpecificity(b.value) - dateSpecificity(a.value) || compareClaims(a, b),
   );
@@ -203,7 +263,20 @@ function groupClaims(claims: readonly Claim[]): ClaimGroup[] {
     if (!winner) {
       return [];
     }
-    const independent = new Set(group.map(evidenceLabel));
+    // Generic remote metadata can repeat the very same document title; it is not another
+    // independent work heading. Derived title candidates retain their original signal label.
+    const independent = new Set(
+      group
+        .filter(
+          (claim) =>
+            !(
+              claim.field === "title" &&
+              claim.source.kind === "generic-remote" &&
+              group.some(pageTitleSignal)
+            ),
+        )
+        .map(evidenceLabel),
+    );
     return [
       {
         claims: ranked,
@@ -264,8 +337,9 @@ function chooseGroup(field: string, groups: readonly ClaimGroup[]): ClaimGroup |
     )[0];
 }
 
-function claimStrength(claim: Claim): number {
-  let strength = sourceStrength[claim.source.kind];
+function claimStrength(claim: CandidateClaim): number {
+  // A confirmed site suffix breaks an otherwise exact tie, but never outweighs corroboration.
+  let strength = sourceStrength[claim.source.kind] + (claim.siteSuffixStripped ? 1 : 0);
   if (claim.source.kind === "page") {
     // Work-specific titles survive truncated OG titles corroborated by generic WebPage nodes.
     // Generic Article titles get no bonus: Wikipedia's headline can be a short description.
@@ -290,7 +364,7 @@ function claimStrength(claim: Claim): number {
   return strength;
 }
 
-function compareClaims(a: Claim, b: Claim): number {
+function compareClaims(a: CandidateClaim, b: CandidateClaim): number {
   return (
     claimStrength(b) - claimStrength(a) ||
     descending(observationTime(a), observationTime(b)) ||

@@ -28,6 +28,7 @@ function wikipediaClaims(): Claim[] {
     claim("title", "Australia", page, "name"),
     claim("title", "Australia", html, "h1"),
     claim("title", "Australia - Wikipedia", { kind: "page", signal: "open-graph" }, "og:title"),
+    claim("URL", "https://en.wikipedia.org/wiki/Australia", html, "page URL"),
     claim("title", "Australia", adapter),
     claim("container-title", "Wikipedia", adapter),
     claim("container-title", "Wikimedia Foundation, Inc.", page, "publisher name"),
@@ -47,17 +48,19 @@ describe("citation resolution: corpus cases", () => {
       "container-title": "Wikipedia",
       publisher: "Wikimedia Foundation, Inc.",
       issued: { "date-parts": [[2026, 10, 20]] },
+      URL: "https://en.wikipedia.org/wiki/Australia",
     });
     expect(result.suggestions).toEqual([]);
     expect(result.provenance["title"]).toEqual({
       value: "Australia",
       source: "site-adapter:Wikipedia",
       agreed: ["page:html h1", "page:json-ld name", "page:open-graph og:title"],
-      rejected: [{ value: "country", from: "page:json-ld headline" }],
+      rejected: [
+        { value: "country", from: "page:json-ld headline" },
+        { value: "Australia - Wikipedia", from: "page:open-graph og:title" },
+      ],
     });
-    expect(result.provenance["container-title"]?.agreed).toContain(
-      "page:open-graph og:title title suffix",
-    );
+    expect(result.provenance["container-title"]?.agreed).toContain("page:open-graph og:title");
     expect(result.provenance["container-title"]?.rejected).toEqual([
       { value: "Wikimedia Foundation, Inc.", from: "page:json-ld publisher name" },
     ]);
@@ -216,10 +219,10 @@ describe("citation resolution: scoring", () => {
 });
 
 describe("citation resolution: normalization and validation", () => {
-  it("writes clean titles while matching punctuation, quotes, whitespace and site suffixes", () => {
+  it("matches punctuation, quotes and whitespace without splitting trusted titles", () => {
     const result = resolveCitation({
       claims: [
-        claim("title", "  “Australia”   today! | Wikipedia ", adapter),
+        claim("title", "“Australia” today!", adapter),
         claim("title", '"AUSTRALIA" today.', page, "name"),
         claim("title", '"Australia" today', html, "h1"),
       ],

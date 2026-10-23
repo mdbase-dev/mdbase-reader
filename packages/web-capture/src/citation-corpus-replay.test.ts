@@ -86,8 +86,8 @@ const stillWrong: Record<string, { readonly page: string[]; readonly remote: str
   guardian: { page: [], remote: [] },
   "guardian-ap": { page: [], remote: [] },
   "mdn-array-map": {
-    page: ["author", "issued", "container-title", "publisher"],
-    remote: ["title", "author", "container-title", "publisher"],
+    page: ["author", "issued", "publisher"],
+    remote: ["author", "publisher"],
   },
   "nature-dna": { page: [], remote: ["publisher", "URL"] },
   nyt: { page: ["type", "title", "author", "issued", "container-title"], remote: [] },

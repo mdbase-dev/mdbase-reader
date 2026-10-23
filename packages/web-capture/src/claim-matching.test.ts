@@ -14,7 +14,7 @@ describe("claim matching", () => {
       title: "Australia",
       suffix: "Wikipedia",
     });
-    expect(claimValuesMatch("title", `Australia${separator}Wikipedia`, "AUSTRALIA.")).toBe(true);
+    expect(claimValuesMatch("title", `Australia${separator}Wikipedia`, "AUSTRALIA.")).toBe(false);
   });
 
   it("ignores case, curly quotes, whitespace and trailing punctuation in titles", () => {

@@ -252,6 +252,10 @@ function tagPages(meta: MetaIndex, add: AddClaim): void {
 
 function linkedClaims(node: JsonLdNode, add: AddClaim): void {
   const signal = "json-ld";
+  if (arrayValue(node["@type"]).includes("WebSite")) {
+    add("container-title", nameOf(node), signal, "WebSite name");
+    return;
+  }
   const workType = specificWorkType(node);
   const fields = [
     ["headline", "title"],
@@ -354,12 +358,14 @@ function linkedNodes(document: Document): JsonLdNode[] {
       : isRecord(value) && typeof value["@id"] === "string" && Object.keys(value).length === 1
         ? (byId.get(value["@id"]) ?? value)
         : value;
-  return nodes.filter(isWork).map((node) => ({
-    ...node,
-    author: resolved(node["author"]),
-    publisher: resolved(node["publisher"]),
-    isPartOf: resolved(node["isPartOf"]),
-  }));
+  return nodes
+    .filter((node) => isWork(node) || arrayValue(node["@type"]).includes("WebSite"))
+    .map((node) => ({
+      ...node,
+      author: resolved(node["author"]),
+      publisher: resolved(node["publisher"]),
+      isPartOf: resolved(node["isPartOf"]),
+    }));
 }
 
 function graphNodes(value: unknown, depth = 0): JsonLdNode[] {
@@ -383,11 +389,6 @@ function isWork(node: JsonLdNode): boolean {
 function htmlClaims(document: Document, pageUrl: string, add: AddClaim): void {
   const title = textValue(document.title);
   add("title", title, "html", "title");
-  const suffix = /^(.+)\s[-|—·]\s(.+)$/u.exec(title ?? "");
-  if (suffix) {
-    add("title", suffix[1]?.trim(), "html", "title");
-    add("container-title", suffix[2]?.trim(), "html", "title suffix");
-  }
   const headings = document.querySelectorAll("h1");
   const heading =
     headings.length === 1 ? headings[0] : document.querySelector("main h1, article h1");

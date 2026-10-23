@@ -11,7 +11,7 @@ function titleKey(value: string): string {
     .toLowerCase();
 }
 
-/** A spaced final site separator is not part of the work's title. */
+/** A possible final site separator; only page title-ish signals may offer stripped candidates. */
 export function splitTitle(value: string): { title: string; suffix?: string } {
   const clean = value.replace(/\s+/gu, " ").trim();
   const match = /^(.*)\s+[-|—·]\s+([^|—·]+)$/u.exec(clean);
@@ -46,7 +46,7 @@ function datePartKey(value: unknown): unknown {
 /** Partial dates corroborate compatible, more precise dates, but not conflicting days/months. */
 export function claimValuesMatch(field: string, left: unknown, right: unknown): boolean {
   if (field === "title" && typeof left === "string" && typeof right === "string") {
-    return titleKey(splitTitle(left).title) === titleKey(splitTitle(right).title);
+    return titleKey(left) === titleKey(right);
   }
   if (cslFieldKinds.get(field) === "name" && Array.isArray(left) && Array.isArray(right)) {
     return (
