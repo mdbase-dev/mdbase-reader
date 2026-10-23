@@ -8,6 +8,7 @@
     "@mdbase-reader/capacitor": ["@mdbase-reader/platform"],
     "@mdbase-reader/electron": ["@mdbase-reader/platform"],
     "@mdbase-reader/extension": [
+      "@mdbase-reader/i18n",
       "@mdbase-reader/connect",
       "@mdbase-reader/core",
       "@mdbase-reader/platform",

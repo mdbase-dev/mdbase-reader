@@ -1,3 +1,4 @@
+import { t } from "@lingui/core/macro";
 import { useCallback, useState } from "react";
 
 import { useSourceImport, type SourceImportFlow } from "./use-source-import.js";
@@ -48,7 +49,7 @@ export function useSourceAddition(
     async (file: File): Promise<void> => {
       const mediaType = droppedMediaType(file);
       if (!mediaType) {
-        setDropError(`${file.name} isn’t a PDF, EPUB or saved web page.`);
+        setDropError(t`${file.name} isn’t a PDF, EPUB or saved web page.`);
         setDialogOpen(true);
         return;
       }

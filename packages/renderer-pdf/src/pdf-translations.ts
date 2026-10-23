@@ -215,7 +215,9 @@ function translatePhrases(dictionary: PhraseDictionary): Locale["translations"] 
   return Object.fromEntries(
     Object.entries(dictionary).map(([key, value]) => [
       key,
-      isPhrase(value) ? i18n._(value.descriptor, value.parameters) : translatePhrases(value),
+      isPhrase(value)
+        ? i18n._({ ...value.descriptor, values: value.parameters ?? {} })
+        : translatePhrases(value),
     ]),
   );
 }

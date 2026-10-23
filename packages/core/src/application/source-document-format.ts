@@ -1,3 +1,5 @@
+import { t } from "@lingui/core/macro";
+
 import { DomainError } from "../domain/errors.js";
 
 import type { SourceDocumentFormat } from "./ports.js";
@@ -52,6 +54,6 @@ function fileExtension(name: string): string {
 function unsupported(name: string): DomainError {
   return new DomainError(
     "unsupported-source-file",
-    `${name} is not a recognizable PDF, EPUB, or HTML document.`,
+    t`${name} is not a recognizable PDF, EPUB, or HTML document.`,
   );
 }

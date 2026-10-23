@@ -1,5 +1,6 @@
 import { i18n, type MessageDescriptor } from "@lingui/core";
 import { msg } from "@lingui/core/macro";
+import { collectionId, detectDocumentFormat, sourceId } from "@mdbase-reader/core";
 import { afterEach, describe, expect, it } from "vitest";
 
 import "./i18n.js";
@@ -7,6 +8,8 @@ import { annotationColumnLabel } from "./annotation-columns.js";
 import { cslFieldLabel } from "./citation-form-model.js";
 import { connectionProblemDetail, describeConnectionProblem } from "./connection-recovery.js";
 import { columnLabel, formatPropertyValue, propertySortValue } from "./library-columns.js";
+import { fieldValueSuggestions, matchesCondition, operatorLabels } from "./library-conditions.js";
+import { publicationDateLabel } from "./library-publication-date.js";
 import { signInCopy } from "./native-signin-ui.js";
 import { readerCommandGroupLabel } from "./reader-command-list.js";
 
@@ -52,6 +55,52 @@ describe("Reader model copy uses the active real Lingui catalogue", () => {
     expect(cslFieldLabel("original-publisher-place")).toBe("Lieu de publication original");
     expect(cslFieldLabel("DOI")).toBe("DOI");
     expect(cslFieldLabel("custom_field")).toBe("custom_field");
+  });
+
+  it("translates filter operators without changing stored filter operands", () => {
+    const source = {
+      collectionId: collectionId("c"),
+      id: sourceId("s"),
+      path: "sources/s.md",
+      title: "User title",
+      creators: [],
+      tags: [],
+      documents: [],
+      properties: { reviewed: true },
+    };
+    const condition = { key: "reviewed", operator: "is", value: "Yes" } as const;
+    expect(matchesCondition(source, condition)).toBe(true);
+    i18n.load("fr", {
+      [id(msg({ message: "is", context: "Field filter comparison operator" }))]: "est",
+      [id(msg({ message: "Yes", context: "library columns" }))]: "Oui",
+    });
+    i18n.activate("fr");
+    expect(operatorLabels.is).toBe("est");
+    expect(formatPropertyValue(true)).toBe("Oui");
+    expect(matchesCondition(source, condition)).toBe(true);
+    expect(fieldValueSuggestions([source], "reviewed")).toEqual(["Yes"]);
+  });
+
+  it("formats publication dates with the active locale without changing stored or free-form dates", () => {
+    expect(publicationDateLabel("1974-3-9")).toBe("9 Mar 1974");
+    i18n.load("fr", {});
+    i18n.activate("fr");
+    expect(publicationDateLabel("1974-3-9")).toBe("9 mars 1974");
+    expect(publicationDateLabel("2023-1")).toBe("janv. 2023");
+    expect(publicationDateLabel("2023")).toBe("2023");
+    expect(publicationDateLabel("Spring 2022")).toBe("Spring 2022");
+    expect(publicationDateLabel("2023-2-31")).toBe("2023-2-31");
+  });
+
+  it("translates document validation while retaining the user filename", () => {
+    i18n.load("fr", {
+      [id(msg({ message: "{name} is not a recognizable PDF, EPUB, or HTML document." }))]:
+        "{name} n’est pas un document PDF, EPUB ou HTML reconnu.",
+    });
+    i18n.activate("fr");
+    expect(() =>
+      detectDocumentFormat("My notes.txt", "text/plain", new TextEncoder().encode("User text")),
+    ).toThrow("My notes.txt n’est pas un document PDF, EPUB ou HTML reconnu.");
   });
 
   it("retains original diagnostics even when translated display text happens to match", () => {

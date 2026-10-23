@@ -12,7 +12,10 @@ export function dockTabMenu(
 ): ReactContextMenuItemConfig[] {
   const tab = panelTab(panel);
   const items: ReactContextMenuItemConfig[] = [
-    { label: "Close", action: () => dock.close(panel.id) },
+    {
+      label: t({ message: "Close", context: "Close workspace tab" }),
+      action: () => dock.close(panel.id),
+    },
     {
       label: t({ message: "Move to new pane right" }),
       disabled: panel.group.panels.length < 2,
@@ -32,7 +35,7 @@ export function dockTabMenu(
   for (const group of dock.api?.groups ?? []) {
     if (group.id !== panel.group.id) {
       items.push({
-        label: t`Move to ${group.activePanel?.title ?? (group.api.location.type === "edge" ? `${group.api.location.position} sidebar` : "pane")}`,
+        label: moveToGroupLabel(group),
         action: () => dock.move(panel.id, group.id),
       });
     }
@@ -83,4 +86,24 @@ export function dockTabMenu(
     action: () => dock.reset(),
   });
   return items;
+}
+
+function moveToGroupLabel(group: IDockviewPanel["group"]): string {
+  const title = group.activePanel?.title;
+  if (title) {
+    return t`Move to ${title}`;
+  }
+  if (group.api.location.type !== "edge") {
+    return t({ message: "Move to pane", context: "Workspace tab destination" });
+  }
+  switch (group.api.location.position) {
+    case "left":
+      return t({ message: "Move to left sidebar", context: "Workspace tab destination" });
+    case "right":
+      return t({ message: "Move to right sidebar", context: "Workspace tab destination" });
+    case "top":
+      return t({ message: "Move to top sidebar", context: "Workspace tab destination" });
+    case "bottom":
+      return t({ message: "Move to bottom sidebar", context: "Workspace tab destination" });
+  }
 }
