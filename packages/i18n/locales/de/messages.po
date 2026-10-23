@@ -5666,523 +5666,523 @@ msgstr "Reader konnte Ihre Position in diesem Dokument nicht speichern."
 
 #: apps/reader/src/use-reading-resume.ts
 msgid "Reader could not save your reading position."
-msgstr ""
+msgstr "Reader konnte Ihre Leseposition nicht speichern."
 
 #: apps/reader/src/use-library-search.ts
 msgid "Reader could not search note text."
-msgstr ""
+msgstr "Reader konnte den Notiztext nicht durchsuchen."
 
 #: apps/reader/src/CollectionPicker.tsx
 msgid "Reader could not switch collections."
-msgstr ""
+msgstr "Reader konnte die Sammlung nicht wechseln."
 
 #. placeholder {0}: lookup.offer.reason
 #. placeholder {1}: lookup.offer.title
 #: apps/reader/src/SourceAddDialog.tsx
 msgid "Reader couldn’t fetch that page ({0}), but it found the citation for “{1}”. You can save the citation now and attach the page or file later."
-msgstr ""
+msgstr "Reader konnte diese Seite nicht abrufen ({0}), hat aber die Quellenangabe für „{1}“ gefunden. Sie können die Quellenangabe jetzt speichern und die Seite oder Datei später anhängen."
 
 #: apps/reader/src/ImportPageView.tsx
 msgid "Reader documents and files, plus highlights from Kindle, Apple Books and other Readwise sources."
-msgstr ""
+msgstr "Reader-Dokumente und -Dateien sowie Hervorhebungen aus Kindle, Apple Books und anderen Readwise-Quellen."
 
 #: packages/migration/src/readwise.ts
 msgid "Reader emails"
-msgstr ""
+msgstr "Reader-E-Mails"
 
 #: packages/migration/src/readwise.ts
 msgid "Reader EPUBs"
-msgstr ""
+msgstr "Reader-EPUBs"
 
 #: apps/reader/src/web-capture-client.ts
 msgid "Reader expected a web page."
-msgstr ""
+msgstr "Reader hat eine Webseite erwartet."
 
 #: apps/reader/src/build-source-export.ts
 msgid "Reader export report"
-msgstr ""
+msgstr "Reader-Exportbericht"
 
 #: apps/reader/src/LibraryTableHeader.tsx
 msgid "Reader fields"
-msgstr ""
+msgstr "Reader-Felder"
 
 #: apps/extension/src/ConnectionPanel.tsx
 msgid "Reader has signed out."
-msgstr ""
+msgstr "Reader wurde abgemeldet."
 
 #: apps/extension/src/connection-view.ts
 msgid "Reader has signed out. Sign in again before saving; your draft is kept."
-msgstr ""
+msgstr "Reader wurde abgemeldet. Melden Sie sich vor dem Speichern erneut an; Ihr Entwurf bleibt erhalten."
 
 #: packages/migration/src/readwise-annotations.ts
 msgid "Reader highlights on documents outside this import (for example unsaved Feed)"
-msgstr ""
+msgstr "Reader-Hervorhebungen in Dokumenten außerhalb dieses Imports (z. B. ungespeicherter Feed)"
 
 #: apps/reader/src/InspectorPane.tsx
 msgid "Reader keeps one writable editor for each source record."
-msgstr ""
+msgstr "Reader hält für jeden Quelldatensatz einen beschreibbaren Editor vor."
 
 #: apps/extension/src/ConnectionPanel.tsx
 msgid "Reader needs its source and annotation definitions in this collection."
-msgstr ""
+msgstr "Reader benötigt seine Quellen- und Anmerkungsdefinitionen in dieser Sammlung."
 
 #. placeholder {0}: session.info.displayName
 #: apps/reader/src/connection-recovery.ts
 msgid "Reader needs your approval to open {0}."
-msgstr ""
+msgstr "Reader benötigt Ihre Bestätigung, um {0} zu öffnen."
 
 #: apps/reader/src/ImportDestination.tsx
 msgid "Reader needs your approval to write to this collection."
-msgstr ""
+msgstr "Reader benötigt Ihre Bestätigung, um in diese Sammlung zu schreiben."
 
 #: packages/migration/src/readwise-annotations.ts
 msgid "Reader notes on documents outside this import (for example unsaved Feed)"
-msgstr ""
+msgstr "Reader-Notizen zu Dokumenten außerhalb dieses Imports (z. B. ungespeicherter Feed)"
 
 #: packages/migration/src/readwise.ts
 msgid "Reader PDFs"
-msgstr ""
+msgstr "Reader-PDFs"
 
 #: apps/reader/src/web-capture-client.ts
 msgid "Reader received an incomplete capture response."
-msgstr ""
+msgstr "Reader hat eine unvollständige Erfassungsantwort erhalten."
 
 #: apps/reader/src/web-capture-client.ts
 msgid "Reader received an invalid capture response."
-msgstr ""
+msgstr "Reader hat eine ungültige Erfassungsantwort erhalten."
 
 #: packages/migration/src/readwise.ts
 msgid "Reader RSS items"
-msgstr ""
+msgstr "Reader-RSS-Einträge"
 
 #: packages/migration/src/readwise.ts
 msgid "Reader tweets"
-msgstr ""
+msgstr "Reader-Tweets"
 
 #: packages/migration/src/readwise.ts
 msgid "Reader videos"
-msgstr ""
+msgstr "Reader-Videos"
 
 #: apps/extension/src/use-extension-capture.ts
 msgid "Reader was not given site access."
-msgstr ""
+msgstr "Reader hat keinen Zugriff auf die Website erhalten."
 
 #: apps/reader/src/DockviewWorkspace.tsx
 msgctxt "DockviewWorkspace interface"
 msgid "Reader workspace"
-msgstr ""
+msgstr "Reader-Arbeitsfläche"
 
 #: apps/reader/src/connection-recovery.ts
 msgid "Reader’s access to this collection has changed. Review the updated access to continue."
-msgstr ""
+msgstr "Der Zugriff von Reader auf diese Sammlung hat sich geändert. Prüfen Sie die aktualisierten Berechtigungen, um fortzufahren."
 
 #: apps/reader/src/LibraryCells.tsx
 msgctxt "reading status"
 msgid "Reading"
-msgstr ""
+msgstr "Lesen"
 
 #: apps/reader/src/DocumentContextualToolbar.tsx
 msgctxt "DocumentContextualToolbar interface"
 msgid "Reading mode"
-msgstr ""
+msgstr "Lesemodus"
 
 #: apps/reader/src/ReaderHeader.tsx
 msgctxt "ReaderHeader interface"
 msgid "Reading mode"
-msgstr ""
+msgstr "Lesemodus"
 
 #. placeholder {0}: source.title
 #: apps/reader/src/LibraryCells.tsx
 msgid "Reading status of {0}"
-msgstr ""
+msgstr "Lesestatus von {0}"
 
 #: apps/reader/src/SourceImportDialog.tsx
 msgid "Reading the file’s details…"
-msgstr ""
+msgstr "Dateiangaben werden gelesen…"
 
 #: apps/extension/src/CaptureApp.tsx
 msgid "Reading the page…"
-msgstr ""
+msgstr "Seite wird gelesen…"
 
 #: packages/renderer-epub/src/readium-runtime.ts
 msgid "Readium cannot open an EPUB with an empty reading order."
-msgstr ""
+msgstr "Readium kann ein EPUB ohne Lesereihenfolge nicht öffnen."
 
 #: packages/renderer-epub/src/readium-runtime.ts
 msgid "Readium could not parse the publication manifest."
-msgstr ""
+msgstr "Readium konnte das Veröffentlichungsmanifest nicht auswerten."
 
 #: packages/renderer-epub/src/epub-locator.ts
 msgid "Readium returned an empty EPUB resource location."
-msgstr ""
+msgstr "Readium hat eine leere EPUB-Ressourcenposition zurückgegeben."
 
 #: packages/renderer-epub/src/epub-locator.ts
 msgid "Readium returned an EPUB location outside the prepared publication."
-msgstr ""
+msgstr "Readium hat eine EPUB-Position außerhalb der vorbereiteten Veröffentlichung zurückgegeben."
 
 #: packages/renderer-epub/src/readium-runtime.ts
 msgid "Readium returned an invalid {name}."
-msgstr ""
+msgstr "Readium hat einen ungültigen Wert für {name} zurückgegeben."
 
 #: packages/renderer-epub/src/epub-locator.ts
 msgid "Readium returned an invalid EPUB resource location: {value}"
-msgstr ""
+msgstr "Readium hat eine ungültige EPUB-Ressourcenposition zurückgegeben: {value}"
 
 #: packages/migration/src/readwise.ts
 msgid "Readwise articles (Instapaper, Pocket…)"
-msgstr ""
+msgstr "Readwise-Artikel (Instapaper, Pocket…)"
 
 #: packages/migration/src/readwise.ts
 msgid "Readwise books (Kindle, Apple Books…)"
-msgstr ""
+msgstr "Readwise-Bücher (Kindle, Apple Books…)"
 
 #: packages/migration/src/readwise-annotations.ts
 msgid "Readwise books whose Reader document is outside this import (unsaved Feed, or removed from Reader)"
-msgstr ""
+msgstr "Readwise-Bücher, deren Reader-Dokument außerhalb dieses Imports liegt (ungespeicherter Feed oder aus Reader entfernt)"
 
 #: packages/migration/src/readwise-annotations.ts
 msgid "Readwise books without an ID skipped"
-msgstr ""
+msgstr "Readwise-Bücher ohne ID übersprungen"
 
 #: packages/migration/src/readwise-annotations.ts
 msgid "Readwise highlight identity could not be reconciled; matching quote retained once, native record archived: {key}"
-msgstr ""
+msgstr "Readwise-Hervorhebungskennung konnte nicht abgeglichen werden; übereinstimmendes Zitat einmal beibehalten, Originaldatensatz archiviert: {key}"
 
 #: packages/migration/src/readwise.ts
 msgid "Readwise highlights export: {message}"
-msgstr ""
+msgstr "Readwise-Hervorhebungsexport: {message}"
 
 #: packages/migration/src/readwise-annotations.ts
 msgid "Readwise highlights without an ID or any text skipped"
-msgstr ""
+msgstr "Readwise-Hervorhebungen ohne ID oder Text übersprungen"
 
 #: packages/migration/src/readwise-client.ts
 msgid "Readwise is rate-limiting requests. Stop and try again later."
-msgstr ""
+msgstr "Readwise begrenzt die Anfragerate. Beenden Sie den Vorgang und versuchen Sie es später erneut."
 
 #: packages/migration/src/readwise-sources.ts
 msgid "Readwise no longer provides this source file. Scan again or use its full-file export."
-msgstr ""
+msgstr "Readwise stellt diese Quelldatei nicht mehr bereit. Durchsuchen Sie sie erneut oder verwenden Sie den vollständigen Dateiexport."
 
 #: packages/migration/src/readwise.ts
 msgid "Readwise podcasts"
-msgstr ""
+msgstr "Readwise-Podcasts"
 
 #: packages/migration/src/readwise-client.ts
 msgid "Readwise rejected this token or account access."
-msgstr ""
+msgstr "Readwise hat diesen Token oder den Kontozugriff abgelehnt."
 
 #: packages/migration/src/readwise-client.ts
 msgid "Readwise request failed. Check your connection or browser access; your token was not saved."
-msgstr ""
+msgstr "Readwise-Anfrage fehlgeschlagen. Prüfen Sie Ihre Verbindung oder den Browserzugriff; Ihr Token wurde nicht gespeichert."
 
 #: packages/migration/src/readwise-client.ts
 msgid "Readwise returned a repeated pagination cursor."
-msgstr ""
+msgstr "Readwise hat einen wiederholten Seiten-Cursor zurückgegeben."
 
 #: packages/migration/src/readwise-client.ts
 msgid "Readwise returned an unexpected file host; download was refused."
-msgstr ""
+msgstr "Readwise hat einen unerwarteten Datei-Host zurückgegeben; der Download wurde verweigert."
 
 #: packages/migration/src/readwise-client.ts
 msgid "Readwise returned an unreadable response. Scan again later."
-msgstr ""
+msgstr "Readwise hat eine nicht lesbare Antwort zurückgegeben. Versuchen Sie die Suche später erneut."
 
 #. placeholder {0}: String(response.status)
 #: packages/migration/src/readwise-client.ts
 msgid "Readwise returned HTTP {0}. No changes were made to Readwise."
-msgstr ""
+msgstr "Readwise hat HTTP {0} zurückgegeben. An Readwise wurden keine Änderungen vorgenommen."
 
 #: packages/migration/src/readwise.ts
 msgid "Readwise returned missing or duplicate identities. Scan again."
-msgstr ""
+msgstr "Readwise hat fehlende oder doppelte Kennungen zurückgegeben. Suchen Sie erneut."
 
 #: packages/migration/src/readwise.ts
 msgid "Readwise supplementals"
-msgstr ""
+msgstr "Zusatzdaten aus Readwise"
 
 #: packages/migration/src/readwise-client.ts
 msgid "Readwise token has been cleared. Reconnect to continue."
-msgstr ""
+msgstr "Der Readwise-Token wurde gelöscht. Verbinden Sie sich erneut, um fortzufahren."
 
 #: packages/migration/src/readwise.ts
 msgid "Readwise tweets"
-msgstr ""
+msgstr "Readwise-Tweets"
 
 #: apps/reader/src/CitationEditor.tsx
 msgid "Ready"
-msgstr ""
+msgstr "Bereit"
 
 #: apps/reader/src/LibraryNavigator.tsx
 msgctxt "LibraryNavigator interface"
 msgid "Recent"
-msgstr ""
+msgstr "Kürzlich"
 
 #: apps/reader/src/library-lenses.ts
 msgctxt "library lenses"
 msgid "Recently opened"
-msgstr ""
+msgstr "Zuletzt geöffnet"
 
 #: apps/reader/src/LibraryWorkspace.tsx
 msgctxt "LibraryWorkspace sortFieldOptions"
 msgid "Recently opened"
-msgstr ""
+msgstr "Zuletzt geöffnet"
 
 #: apps/reader/src/LibraryWorkspace.tsx
 msgctxt "LibraryWorkspace sortFieldOptions"
 msgid "Recently saved"
-msgstr ""
+msgstr "Kürzlich gespeichert"
 
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "Recipient"
-msgstr ""
+msgstr "Empfänger"
 
 #: apps/reader/src/ConnectionLayout.tsx
 msgctxt "ConnectionLayout status or action"
 msgid "Reconnect collection"
-msgstr ""
+msgstr "Sammlung erneut verbinden"
 
 #: apps/extension/src/use-source-note.ts
 msgid "Reconnect the collection to save these details."
-msgstr ""
+msgstr "Verbinden Sie die Sammlung erneut, um diese Angaben zu speichern."
 
 #: apps/extension/src/DiagnosticsPanel.tsx
 msgid "Record connection timings"
-msgstr ""
+msgstr "Verbindungszeiten erfassen"
 
 #: apps/extension/src/DiagnosticsPanel.tsx
 msgid "Record timings in this panel only. No page text, paths, queries, IDs or credentials are recorded. Nothing is uploaded. Stopping or closing clears the recording."
-msgstr ""
+msgstr "Zeiten nur in dieser Seitenleiste erfassen. Seitentext, Pfade, Suchanfragen, IDs und Zugangsdaten werden nicht erfasst. Nichts wird hochgeladen. Beim Stoppen oder Schließen wird die Aufzeichnung gelöscht."
 
 #: apps/reader/src/DraftRecoveryNotice.tsx
 msgid "Recovered changes saved on this device. Syncing to the collection…"
-msgstr ""
+msgstr "Wiederhergestellte Änderungen auf diesem Gerät gespeichert. Sie werden mit der Sammlung synchronisiert…"
 
 #: packages/renderer-pdf/src/pdf-translations.ts
 msgctxt "PDF viewer panel"
 msgid "Redaction Sidebar"
-msgstr ""
+msgstr "Seitenleiste für Schwärzungen"
 
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "References"
-msgstr ""
+msgstr "Referenzen"
 
 #: apps/reader/src/ImportPageView.tsx
 msgid "References, original files, notes, collections and native annotations."
-msgstr ""
+msgstr "Referenzen, Originaldateien, Notizen, Sammlungen und ursprüngliche Anmerkungen."
 
 #: apps/extension/src/SavedHighlights.tsx
 msgid "Refresh"
-msgstr ""
+msgstr "Aktualisieren"
 
 #: apps/reader/src/LibraryAnnotationToolbar.tsx
 msgid "Refresh annotations"
-msgstr ""
+msgstr "Anmerkungen aktualisieren"
 
 #: apps/reader/src/CitationStructuredEditor.tsx
 msgid "Regenerate"
-msgstr ""
+msgstr "Neu erzeugen"
 
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "Regulation"
-msgstr ""
+msgstr "Verordnung"
 
 #: apps/extension/src/connection-view.ts
 #: apps/reader/src/DeploymentUpdateNotice.tsx
 msgid "Reload Reader"
-msgstr ""
+msgstr "Reader neu laden"
 
 #: apps/extension/src/ConnectionPanel.tsx
 msgid "Reload the page, then press the mdbase Reader toolbar button again. Some pages, such as the Chrome Web Store and browser settings, cannot be read by extensions."
-msgstr ""
+msgstr "Laden Sie die Seite neu und drücken Sie dann erneut die mdbase-Reader-Schaltfläche in der Symbolleiste. Einige Seiten, etwa der Chrome Web Store und die Browser-Einstellungen, können von Erweiterungen nicht gelesen werden."
 
 #: apps/reader/src/CitationAdditionalFields.tsx
 msgctxt "CitationAdditionalFields interface"
 msgid "Remove"
-msgstr ""
+msgstr "Entfernen"
 
 #: apps/reader/src/CitationContributors.tsx
 msgctxt "CitationContributors interface"
 msgid "Remove"
-msgstr ""
+msgstr "Entfernen"
 
 #: apps/reader/src/CitationTypedFieldEditors.tsx
 msgctxt "CitationTypedFieldEditors interface"
 msgid "Remove"
-msgstr ""
+msgstr "Entfernen"
 
 #. placeholder {0}: source.title
 #: apps/reader/src/SourceRemovalDialog.tsx
 msgid "Remove “{0}”?"
-msgstr ""
+msgstr "„{0}“ entfernen?"
 
 #. placeholder {0}: String(index + 1)
 #: apps/reader/src/CitationContributors.tsx
 msgid "Remove {itemLabel} {0}"
-msgstr ""
+msgstr "{itemLabel} {0} entfernen"
 
 #: apps/reader/src/CitationTypedFieldEditors.tsx
 msgid "Remove {key}"
-msgstr ""
+msgstr "{key} entfernen"
 
 #: apps/reader/src/CitationAdditionalFields.tsx
 msgid "Remove {label}"
-msgstr ""
+msgstr "{label} entfernen"
 
 #: apps/reader/src/LibraryConditionsEditor.tsx
 msgctxt "LibraryConditionsEditor interface"
 msgid "Remove condition"
-msgstr ""
+msgstr "Bedingung entfernen"
 
 #: apps/reader/src/reader-command-list.ts
 msgid "Remove current source…"
-msgstr ""
+msgstr "Aktuelle Quelle entfernen…"
 
 #: apps/reader/src/SourceRemovalDialog.tsx
 msgctxt "SourceRemovalDialog interface"
 msgid "Remove source"
-msgstr ""
+msgstr "Quelle entfernen"
 
 #: apps/reader/src/LibraryRowMenu.tsx
 msgid "Remove source…"
-msgstr ""
+msgstr "Quelle entfernen…"
 
 #. placeholder {0}: String(index + 1)
 #: apps/reader/src/CitationTypedFieldEditors.tsx
 msgid "Remove value {0}"
-msgstr ""
+msgstr "Wert {0} entfernen"
 
 #: apps/reader/src/SourceRemovalDialog.tsx
 msgctxt "SourceRemovalDialog interface"
 msgid "Removing…"
-msgstr ""
+msgstr "Wird entfernt…"
 
 #: apps/reader/src/LibraryRowMenu.tsx
 msgid "Rename…"
-msgstr ""
+msgstr "Umbenennen…"
 
 #: apps/reader/src/reader-command-list.ts
 msgctxt "reader command list"
 msgid "Reopen closed tab"
-msgstr ""
+msgstr "Geschlossenen Tab erneut öffnen"
 
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "Report"
-msgstr ""
+msgstr "Bericht"
 
 #: apps/reader/src/citation-form-model.ts
 msgctxt "CSL item type"
 msgid "Report"
-msgstr ""
+msgstr "Bericht"
 
 #: apps/reader/src/ReaderHeader.tsx
 msgid "Request local network access and connect directly to the mdbase relay on this computer."
-msgstr ""
+msgstr "Lokalen Netzwerkzugriff anfordern und direkt mit dem mdbase-Relay auf diesem Computer verbinden."
 
 #: apps/reader/src/DockPaneActions.tsx
 msgid "Reset arrangement (keep tabs)"
-msgstr ""
+msgstr "Anordnung zurücksetzen (Tabs behalten)"
 
 #: apps/reader/src/LibraryWorkspace.tsx
 msgid "Reset columns and layout"
-msgstr ""
+msgstr "Spalten und Layout zurücksetzen"
 
 #: apps/reader/src/LibraryAnnotationToolbar.tsx
 msgid "Reset columns and sort"
-msgstr ""
+msgstr "Spalten und Sortierung zurücksetzen"
 
 #: apps/reader/src/reader-command-list.ts
 msgid "Reset pane arrangement"
-msgstr ""
+msgstr "Bereichsanordnung zurücksetzen"
 
 #: apps/reader/src/dockview-menus.ts
 msgid "Reset pane arrangement (keep tabs)"
-msgstr ""
+msgstr "Bereichsanordnung zurücksetzen (Tabs behalten)"
 
 #: apps/reader/src/LibraryTableHeader.tsx
 msgid "Reset width"
-msgstr ""
+msgstr "Breite zurücksetzen"
 
 #: apps/reader/src/LibraryTableHeader.tsx
 msgid "Resize {label} column"
-msgstr ""
+msgstr "Größe der Spalte {label} ändern"
 
 #: apps/reader/src/use-annotation-deletion.ts
 msgid "Resolve the save problem or finish the other editor's deletion check first."
-msgstr ""
+msgstr "Beheben Sie zuerst das Speicherproblem oder schließen Sie die Löschprüfung des anderen Editors ab."
 
 #: apps/reader/src/source-draft-session.ts
 msgid "Resolve the source note conflict before continuing."
-msgstr ""
+msgstr "Beheben Sie den Konflikt der Literaturnotiz, bevor Sie fortfahren."
 
 #: apps/reader/src/AnnotationEditor.tsx
 msgid "Restore"
-msgstr ""
+msgstr "Wiederherstellen"
 
 #: apps/extension/src/CaptureApp.tsx
 msgid "Restored your unsaved note from earlier."
-msgstr ""
+msgstr "Ihre zuvor ungespeicherte Notiz wurde wiederhergestellt."
 
 #: apps/extension/src/NotePanel.tsx
 msgid "Restored your unsaved text from earlier."
-msgstr ""
+msgstr "Ihr zuvor ungespeicherter Text wurde wiederhergestellt."
 
 #: apps/reader/src/AnnotationCard.tsx
 msgctxt "AnnotationCard interface"
 msgid "Resume edits"
-msgstr ""
+msgstr "Änderungen fortsetzen"
 
 #: apps/reader/src/ImportReview.tsx
 msgctxt "ImportReview interface"
 msgid "Resume import"
-msgstr ""
+msgstr "Import fortsetzen"
 
 #: apps/reader/src/AnnotationComposer.tsx
 msgid "Resume unfinished annotation"
-msgstr ""
+msgstr "Unfertige Anmerkung fortsetzen"
 
 #: apps/extension/src/CollectionSection.tsx
 #: apps/extension/src/connection-view.ts
 #: apps/extension/src/ConnectionPanel.tsx
 msgid "Retry connection"
-msgstr ""
+msgstr "Verbindung erneut versuchen"
 
 #: apps/reader/src/ReaderHeader.tsx
 msgid "Retry local access"
-msgstr ""
+msgstr "Lokalen Zugriff erneut versuchen"
 
 #: apps/extension/src/ConnectionPanel.tsx
 #: apps/extension/src/NotePanel.tsx
 #: apps/reader/src/SourceNoteEditor.tsx
 msgid "Retry save"
-msgstr ""
+msgstr "Speichern erneut versuchen"
 
 #: apps/reader/src/AnnotationEditor.tsx
 msgctxt "AnnotationEditor interface"
 msgid "Retry save"
-msgstr ""
+msgstr "Speichern erneut versuchen"
 
 #: apps/extension/src/ConnectionPanel.tsx
 msgid "Retry Save to check for an existing source before creating anything else."
-msgstr ""
+msgstr "Versuchen Sie das Speichern erneut, um vor dem Erstellen weiterer Einträge nach einer vorhandenen Quelle zu suchen."
 
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "Review"
-msgstr ""
+msgstr "Prüfen"
 
 #: apps/extension/src/ConnectionPanel.tsx
 msgid "Review access"
-msgstr ""
+msgstr "Zugriff prüfen"
 
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "Review book"
-msgstr ""
+msgstr "Buch prüfen"
 
 #: apps/reader/src/SourceDetails.tsx
 msgid "Review citation"
