@@ -109,6 +109,61 @@ const stillWrong: Record<string, { readonly page: string[]; readonly remote: str
   verge: { page: [], remote: [] },
   "wikipedia-australia": { page: ["type", "issued", "URL"], remote: [] },
   "youtube-first": { page: [], remote: [] },
+  // Expansion captured against 9128f24; expectations describe the work, not the winner.
+  "acl-bleu": {
+    page: ["container-title", "publisher"],
+    remote: ["title", "issued", "container-title", "page"],
+  },
+  "arxiv-adam": { page: ["publisher"], remote: [] },
+  "arxiv-xgboost": {
+    page: ["publisher"],
+    remote: ["type", "title", "issued", "publisher", "DOI", "URL"],
+  },
+  "blog-web-bloat": {
+    page: ["type", "author", "issued"],
+    remote: ["type", "author", "issued"],
+  },
+  "book-gutenberg": {
+    page: ["type", "title", "author", "issued", "publisher"],
+    remote: ["publisher"],
+  },
+  "legislation-data-protection": {
+    page: ["type", "issued", "number", "URL"],
+    remote: ["type", "issued", "number", "URL"],
+  },
+  "nonenglish-cnrs-medieval": {
+    page: ["type", "author", "issued"],
+    remote: ["type", "author", "issued"],
+  },
+  "ons-inflation": {
+    page: ["type", "author"],
+    remote: ["type", "title", "author"],
+  },
+  "patent-pagerank": {
+    page: ["type", "title", "author", "issued", "number"],
+    remote: ["issued"],
+  },
+  "podcast-changelog": {
+    page: ["type", "title", "author", "issued", "container-title", "publisher", "number"],
+    remote: ["type", "title", "author", "container-title", "publisher", "number"],
+  },
+  "repec-working-paper": {
+    page: ["type", "author", "issued", "publisher", "DOI", "URL"],
+    remote: ["type", "publisher", "DOI", "URL"],
+  },
+  "rfc-http": {
+    page: ["type", "title", "editor", "issued", "publisher", "number", "DOI"],
+    remote: ["editor", "publisher", "number", "URL"],
+  },
+  "substack-cyborgs": {
+    page: ["type", "container-title"],
+    remote: ["type", "container-title"],
+  },
+  "usenix-raft": { page: ["issued", "publisher"], remote: ["issued", "publisher", "ISBN"] },
+  "zenodo-urban-sound": {
+    page: ["type", "issued", "publisher", "version"],
+    remote: ["version", "URL"],
+  },
 };
 
 it("replays the corpus through claims and the resolver", async () => {

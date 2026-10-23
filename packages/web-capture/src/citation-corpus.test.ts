@@ -9,7 +9,7 @@ const parse = (html: string): Document => new DOMParser().parseFromString(html, 
 
 describe("citation replay corpus", () => {
   it("contains the nine comparison sites and a variety of non-news works", () => {
-    expect(corpus.length).toBe(21);
+    expect(corpus.length).toBe(36);
     expect(new Set(corpus.map(({ slug }) => slug)).size).toBe(corpus.length);
     expect(corpus.map(({ slug }) => slug)).toEqual(
       expect.arrayContaining([
@@ -22,9 +22,24 @@ describe("citation replay corpus", () => {
         "bbc",
         "verge",
         "ars",
+        "arxiv-xgboost",
+        "arxiv-adam",
+        "repec-working-paper",
+        "substack-cyborgs",
+        "blog-web-bloat",
+        "zenodo-urban-sound",
+        "ons-inflation",
+        "legislation-data-protection",
+        "podcast-changelog",
+        "acl-bleu",
+        "book-gutenberg",
+        "rfc-http",
+        "usenix-raft",
+        "nonenglish-cnrs-medieval",
+        "patent-pagerank",
       ]),
     );
-    expect(corpus.filter(({ doi }) => doi).length).toBe(6);
+    expect(corpus.filter(({ doi }) => doi).length).toBe(10);
   });
 
   it.each(corpus)("$slug is a small, inert, valid replay case", (entry) => {

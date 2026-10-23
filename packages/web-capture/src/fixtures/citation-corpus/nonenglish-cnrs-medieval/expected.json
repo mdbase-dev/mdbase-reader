@@ -1,0 +1,16 @@
+{
+  "type": "article-magazine",
+  "title": "Et le Moyen Âge créa l’animal",
+  "author": [
+    {
+      "family": "Julienne",
+      "given": "Marina"
+    }
+  ],
+  "issued": {
+    "date-parts": [[2026, 10, 23]]
+  },
+  "container-title": "CNRS Le journal",
+  "language": "fr",
+  "URL": "https://lejournal.cnrs.fr/articles/et-le-moyen-age-crea-lanimal"
+}

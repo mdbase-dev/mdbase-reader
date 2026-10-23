@@ -1,0 +1,11 @@
+{
+  "url": "https://www.oneusefulthing.org/p/centaurs-and-cyborgs-on-the-jagged",
+  "retrievedAt": "2026-10-23T10:32:45.157390+00:00",
+  "notes": [
+    "Original reduced reproduction of fetched public HTML; retained citation metadata order/duplicates, canonical, HTML language, citation-related JSON-LD and relevant title/byline/date wrappers. Omitted prose, descriptions, images, references, styles, tracking and executable scripts. Raw downloads stay in gitignored .scratch/corpus/expand; helpers outside download directories ran with python3 -I. No downloaded content was executed.",
+    "Page HTTP status: 200. Requested and final URL: https://www.oneusefulthing.org/p/centaurs-and-cyborgs-on-the-jagged -> https://www.oneusefulthing.org/p/centaurs-and-cyborgs-on-the-jagged. Captured 2026-10-23T10:32:45.157390+00:00; original 255798 bytes, reduced HTML 4103 bytes before formatting.",
+    "Recorded citoid HTTP 200 at 2026-10-23T10:37:09.126436+00:00; request https://en.wikipedia.org/api/rest_v1/data/citation/zotero/https%3A%2F%2Fwww.oneusefulthing.org%2Fp%2Fcentaurs-and-cyborgs-on-the-jagged. Raw response dialect retained; only long abstracts shortened to first sentence.",
+    "Ground truth: Ethan Mollick own One Useful Thing post, visible headline/byline/date and publisher JSON-LD on the source URL. It is a Substack blog/newsletter post, not a newspaper article despite NewsArticle markup. Publication is 16 September 2023, not article:modified_time. Publication name is One Useful Thing, not the hosting platform Substack.",
+    "Claims/resolver replay at 9128f240fb905807949f035d7ee0aae77f6a07cf: page-only wrong fields: type, container-title; with recorded remotes: type, container-title. Pinned in citation-corpus-replay.test.ts; expected CSL was hand-catalogued independently before replay."
+  ]
+}

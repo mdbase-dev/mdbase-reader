@@ -1,0 +1,13 @@
+{
+  "url": "https://www.rfc-editor.org/rfc/rfc9110.html",
+  "retrievedAt": "2026-10-23T10:34:24.830460+00:00",
+  "notes": [
+    "Original reduced reproduction of fetched public HTML; retained citation metadata order/duplicates, canonical, HTML language, citation-related JSON-LD and relevant title/byline/date wrappers. Omitted prose, descriptions, images, references, styles, tracking and executable scripts. Raw downloads stay in gitignored .scratch/corpus/expand; helpers outside download directories ran with python3 -I. No downloaded content was executed.",
+    "Page HTTP status: 200. Requested and final URL: https://www.rfc-editor.org/rfc/rfc9110.html -> https://www.rfc-editor.org/rfc/rfc9110.html. Captured 2026-10-23T10:34:24.830460+00:00; original 1187554 bytes, reduced HTML 890 bytes before formatting.",
+    "Recorded citoid HTTP 200 at 2026-10-23T10:38:49.437635+00:00; request https://en.wikipedia.org/api/rest_v1/data/citation/zotero/https%3A%2F%2Fwww.rfc-editor.org%2Frfc%2Frfc9110.html. Raw response dialect retained; only long abstracts shortened to first sentence.",
+    "Initial Citoid HTTP 429 was retried after Retry-After elapsed; fixture records the later HTTP 200 response. Initial and retry downloads retained separately.",
+    "Ground truth: RFC Editor title/identifiers block, published June 2022, RFC 9110; contributors are explicitly credited Ed. Full names match the head author metadata. Independently checked against https://doi.org/10.17487/RFC9110: report, publisher RFC Editor, month June 2022 and the same three editors (initials in registry). Cite HTTP Semantics, not the document-number prefix in the browser title.",
+    "DOI is verified independently but absent from discoverable page metadata, so the verification response is not replayed as a DOI lookup. This tests metadata discovery failure as well as treating editors as editors. Bibliographic number is RFC number 9110, not STD 97.",
+    "Claims/resolver replay at 9128f240fb905807949f035d7ee0aae77f6a07cf: page-only wrong fields: type, title, editor, issued, publisher, number, DOI; with recorded remotes: editor, publisher, number, URL. Pinned in citation-corpus-replay.test.ts; expected CSL was hand-catalogued independently before replay."
+  ]
+}

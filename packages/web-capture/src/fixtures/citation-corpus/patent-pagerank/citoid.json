@@ -1,0 +1,49 @@
+{
+  "status": 200,
+  "body": [
+    {
+      "key": "8TPIUWWL",
+      "version": 0,
+      "itemType": "patent",
+      "creators": [
+        {
+          "firstName": "Lawrence",
+          "lastName": "Page",
+          "creatorType": "inventor"
+        }
+      ],
+      "tags": [
+        {
+          "tag": "documents",
+          "type": 1
+        },
+        {
+          "tag": "linked",
+          "type": 1
+        },
+        {
+          "tag": "linking",
+          "type": 1
+        },
+        {
+          "tag": "score",
+          "type": 1
+        },
+        {
+          "tag": "document",
+          "type": 1
+        }
+      ],
+      "title": "Method for node ranking in a linked database",
+      "issueDate": "2001-09-04",
+      "filingDate": "1998-01-09",
+      "patentNumber": "US6285999B1",
+      "assignee": "Leland Stanford Junior University",
+      "applicationNumber": "US09004827",
+      "country": "US",
+      "issuingAuthority": "United States",
+      "url": "https://patents.google.com/patent/US6285999B1/en",
+      "accessDate": "2026-10-23"
+    }
+  ]
+}

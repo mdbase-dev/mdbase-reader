@@ -1,0 +1,19 @@
+{
+  "status": 200,
+  "body": [
+    {
+      "key": "FQ9RF3II",
+      "version": 0,
+      "itemType": "webpage",
+      "creators": [],
+      "tags": [],
+      "title": "The legacy of CSS-Tricks with Chris Coyier (Changelog Interviews #500)",
+      "websiteTitle": "Changelog",
+      "url": "https://changelog.com/podcast/500",
+      "abstractNote": "Episode 500!!!",
+      "date": "2022-08-05",
+      "language": "en",
+      "accessDate": "2026-10-23"
+    }
+  ]
+}
