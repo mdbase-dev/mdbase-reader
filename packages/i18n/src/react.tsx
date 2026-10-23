@@ -1,6 +1,6 @@
 import { Trans, useLingui } from "@lingui/react/macro";
 import { LanguagePicker, LocaleProvider } from "@mdbase-dev/i18n/react";
-import { useCallback, useId, useState } from "react";
+import { useCallback, useEffect, useId, useState } from "react";
 
 import { readerI18n } from "./runtime.js";
 
@@ -18,10 +18,23 @@ export function ReaderI18nProvider({
   const onError = useCallback(() => setFailed(true), []);
   return (
     <LocaleProvider runtime={runtime} onError={onError}>
+      <NativeLocaleBridge />
       {failed ? <LanguageLoadNotice /> : null}
       {children}
     </LocaleProvider>
   );
+}
+
+/** Optional, narrow Electron preload API; native dialogs follow the renderer choice. */
+function NativeLocaleBridge(): null {
+  const { i18n } = useLingui();
+  useEffect(() => {
+    const bridge = (
+      globalThis as { mdbaseReader?: { setLocale?: (locale: string) => Promise<void> } }
+    ).mdbaseReader;
+    void bridge?.setLocale?.(i18n.locale).catch(() => undefined);
+  }, [i18n, i18n.locale]);
+  return null;
 }
 
 function LanguageLoadNotice(): JSX.Element {

@@ -9,7 +9,7 @@
     "node": ">=22.12 <23"
   },
   "scripts": {
-    "build": "pnpm -r --if-present build",
+    "build": "pnpm i18n:check && pnpm -r --if-present build",
     "build:native:ci": "node scripts/qualify-native-staging.mjs ci-build",
     "build:native:staging": "node scripts/qualify-native-staging.mjs local-qualification",
     "postqualify:native:staging": "node scripts/postqualify-native-staging.mjs",
@@ -17,7 +17,8 @@
     "i18n:compile": "node scripts/i18n.mjs compile",
     "i18n:source": "node scripts/i18n.mjs source",
     "i18n:check": "node scripts/i18n.mjs check",
-    "check": "pnpm lint && pnpm typecheck && pnpm test",
+    "check": "pnpm check:code && pnpm i18n:check",
+    "check:code": "pnpm lint && pnpm typecheck && pnpm test",
     "check:architecture": "node scripts/check-architecture.mjs",
     "deploy:dev": "pnpm --filter @mdbase-reader/app deploy:dev",
     "deploy:prod": "pnpm --filter @mdbase-reader/app deploy:prod",
@@ -44,6 +45,7 @@
     "@lingui/cli": "6.9.0",
     "@lingui/core": "6.9.0",
     "@lingui/format-po": "6.9.0",
+    "@lingui/message-utils": "6.9.0",
     "@lingui/react": "6.9.0",
     "@lingui/vite-plugin": "6.9.0",
     "@mdbase-dev/connect-dev": "0.1.0-beta.125",

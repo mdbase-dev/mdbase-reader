@@ -1,4 +1,5 @@
 import { t } from "@lingui/core/macro";
+
 import { format, object, text, type MigrationPlan } from "./model.js";
 import { convertZoteroPdfPosition, readPdfGeometry, type PdfPageGeometry } from "./zotero-pdf.js";
 

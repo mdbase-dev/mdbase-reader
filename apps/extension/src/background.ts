@@ -1,5 +1,7 @@
+import { i18n } from "@lingui/core";
 import { t } from "@lingui/core/macro";
 
+import { backgroundLocaleReady } from "./background-i18n.js";
 import { updatePageStatus } from "./background-page-status.js";
 import { intentKey, type CaptureIntent, type InvokeMessage } from "./messages.js";
 import { ensureHostMessage, ensureOffscreenDocument } from "./offscreen-document.js";
@@ -41,21 +43,32 @@ chrome.runtime.onInstalled.addListener(({ reason }) => {
   if (reason === "install") {
     void chrome.tabs.create({ url: chrome.runtime.getURL("welcome.html") }).catch(() => undefined);
   }
-  chrome.contextMenus.removeAll(() => {
-    chrome.contextMenus.create({
-      id: "highlight",
-      title: t`Save highlight to mdbase Reader`,
-      contexts: ["selection"],
-      documentUrlPatterns: ["https://*/*"],
-    });
-    chrome.contextMenus.create({
-      id: "note",
-      title: t`Highlight with a comment in mdbase Reader`,
-      contexts: ["selection"],
-      documentUrlPatterns: ["https://*/*"],
-    });
-  });
+  void backgroundLocaleReady.then(refreshContextMenus);
 });
+
+let menuRefresh = Promise.resolve();
+function refreshContextMenus(): void {
+  menuRefresh = menuRefresh
+    .catch(() => undefined)
+    .then(async () => {
+      await chrome.contextMenus.removeAll();
+      chrome.contextMenus.create({
+        id: "highlight",
+        title: t`Save highlight to mdbase Reader`,
+        contexts: ["selection"],
+        documentUrlPatterns: ["https://*/*"],
+      });
+      chrome.contextMenus.create({
+        id: "note",
+        title: t`Highlight with a comment in mdbase Reader`,
+        contexts: ["selection"],
+        documentUrlPatterns: ["https://*/*"],
+      });
+    })
+    .catch(() => undefined);
+}
+i18n.on("change", refreshContextMenus);
+void backgroundLocaleReady.then(refreshContextMenus);
 chrome.contextMenus.onClicked.addListener((info, tab) => {
   if (info.menuItemId === "highlight" || info.menuItemId === "note") {
     openPanel(tab, info.menuItemId);
@@ -83,7 +96,7 @@ chrome.runtime.onMessage.addListener((message: unknown, sender, sendResponse) =>
 
 chrome.tabs.onUpdated.addListener((tabId, change, tab) => {
   if (change.status === "complete") {
-    void updatePageStatus(tabId, tab.url, loadPageStatusConnect);
+    void backgroundLocaleReady.then(() => updatePageStatus(tabId, tab.url, loadPageStatusConnect));
   }
 });
 const postUpdates = new Map<number, { dirty: boolean }>();
@@ -116,6 +129,7 @@ chrome.runtime.onMessage.addListener((message: unknown, sender) => {
 });
 
 async function refreshPosts(tabId: number, state: { dirty: boolean }): Promise<void> {
+  await backgroundLocaleReady;
   do {
     state.dirty = false;
     const tab = await chrome.tabs.get(tabId);

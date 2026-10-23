@@ -6,6 +6,7 @@ import { build, type Plugin } from "vite";
 import { defineConfig } from "vitest/config";
 
 import { extensionEnvironment, extensionManifest } from "./scripts/extension-manifest.mjs";
+import { chromeLocales, chromeMessages, shellCatalogue } from "./scripts/localized-shell.mjs";
 
 const environment = extensionEnvironment();
 
@@ -13,6 +14,18 @@ function manifest(): Plugin {
   return {
     name: "mdbase-reader-extension-manifest",
     generateBundle() {
+      for (const [locale, chromeLocale] of Object.entries(chromeLocales)) {
+        this.emitFile({
+          type: "asset",
+          fileName: `_locales/${chromeLocale}/messages.json`,
+          source: JSON.stringify(chromeMessages(locale)),
+        });
+        this.emitFile({
+          type: "asset",
+          fileName: `locales/${locale}.json`,
+          source: shellCatalogue(locale),
+        });
+      }
       this.emitFile({
         type: "asset",
         fileName: "manifest.json",

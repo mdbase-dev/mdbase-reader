@@ -6,6 +6,7 @@ import { t } from "@lingui/core/macro";
 import { BrowserWindow, app, dialog, ipcMain, shell } from "electron";
 
 import { electronChannels } from "./channels.js";
+import { initializeNativeLocale, selectNativeLocale } from "./native-i18n.js";
 import { safeExportName, validatedExternalUrl } from "./validation.js";
 
 const sourceDirectory = dirname(fileURLToPath(import.meta.url));
@@ -38,6 +39,9 @@ function createWindow(): BrowserWindow {
   return window;
 }
 
+ipcMain.handle(electronChannels.setLocale, async (_event, locale: unknown) =>
+  selectNativeLocale(locale),
+);
 ipcMain.handle(electronChannels.openExternal, async (_event, value: string) =>
   shell.openExternal(validatedExternalUrl(value)),
 );
@@ -73,6 +77,7 @@ ipcMain.handle(electronChannels.saveFile, async (_event, name: string, bytes: Ui
 });
 
 await app.whenReady();
+initializeNativeLocale(app.getPath("userData"), app.getPreferredSystemLanguages());
 createWindow();
 app.on("activate", () => {
   if (BrowserWindow.getAllWindows().length === 0) {

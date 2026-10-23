@@ -1,4 +1,5 @@
 import { t } from "@lingui/core/macro";
+
 import { hash, identity, type MigrationFile, type MigrationPlan } from "./model.js";
 
 import type { ImportedFile, MigrationProgress, MigrationTarget } from "./run.js";

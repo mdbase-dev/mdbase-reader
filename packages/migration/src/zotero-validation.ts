@@ -1,4 +1,5 @@
 import { t } from "@lingui/core/macro";
+
 import { array, object, safePath, text, type Fields } from "./model.js";
 
 import type { ZoteroBundle, ZoteroRow } from "./zotero-bundle.js";

@@ -1,5 +1,6 @@
 import { i18n } from "@lingui/core";
 import { t } from "@lingui/core/macro";
+
 import { array, object, type Fields, type Progress } from "./model.js";
 import { scalar } from "./readwise-values.js";
 export interface ReadwisePage {

@@ -1,6 +1,7 @@
 import { msg } from "@lingui/core/macro";
 import { Trans, useLingui } from "@lingui/react/macro";
 import { themePreferences, type ThemePreference } from "@mdbase-dev/ui/theme";
+import { ReaderLanguageSetting } from "@mdbase-reader/i18n/react";
 import { useEffect } from "react";
 
 import { readerLibraryUrl } from "./capture-model.js";
@@ -41,6 +42,7 @@ export function OptionsApp(): React.JSX.Element {
             <Trans>Appearance</Trans>
           </h2>
           <ThemeSetting />
+          <ReaderLanguageSetting />
         </section>
         <section aria-labelledby="page-status-heading">
           <h2 id="page-status-heading">

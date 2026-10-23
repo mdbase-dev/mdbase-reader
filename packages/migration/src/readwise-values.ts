@@ -1,5 +1,6 @@
 import { i18n } from "@lingui/core";
 import { t } from "@lingui/core/macro";
+
 import { object, text, type Fields } from "./model.js";
 export function archiveReadwise(value: Fields): Fields {
   const result = { ...value };
