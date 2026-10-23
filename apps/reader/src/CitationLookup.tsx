@@ -1,5 +1,5 @@
 import { claimSourceLabel } from "@mdbase-reader/web-capture/citation-updates";
-import { useState, type JSX, type SyntheticEvent } from "react";
+import { useLayoutEffect, useRef, useState, type JSX, type SyntheticEvent } from "react";
 
 import { cslFieldLabel, displayCslValue } from "./citation-form-model.js";
 import { citationSourceLabel } from "./citation-provenance.js";
@@ -69,22 +69,50 @@ function CitationSuggestions({
 }: {
   readonly editor: CitationEditorController;
 }): JSX.Element {
+  const results = useRef<HTMLElement>(null);
+  const focusIndex = useRef<number | null>(null);
+  useLayoutEffect(() => {
+    if (focusIndex.current === null) {
+      return;
+    }
+    const actions = results.current?.querySelectorAll<HTMLButtonElement>(
+      ".citation-review-actions button:first-child",
+    );
+    const target =
+      actions?.[Math.min(focusIndex.current, actions.length - 1)] ??
+      results.current?.querySelector<HTMLElement>("[data-citation-results-status]");
+    target?.focus();
+    focusIndex.current = null;
+  });
+  const review = (index: number, action: () => void): void => {
+    focusIndex.current = index;
+    action();
+  };
   return (
-    <section className="citation-suggestions" aria-label="Citation suggestions" aria-live="polite">
+    <section
+      ref={results}
+      className="citation-suggestions"
+      aria-label="Citation suggestions"
+      aria-live="polite"
+    >
       {editor.suggestions.length ? (
         <>
           <header>
-            <strong>Review found metadata</strong>
+            <strong tabIndex={-1} data-citation-results-status>
+              Review found metadata
+            </strong>
             <button
               type="button"
               onClick={() =>
-                editor.acceptSuggestions(new Set(editor.suggestions.map(({ field }) => field)))
+                review(0, () =>
+                  editor.acceptSuggestions(new Set(editor.suggestions.map(({ field }) => field))),
+                )
               }
             >
               Accept all
             </button>
           </header>
-          {editor.suggestions.map((suggestion) => (
+          {editor.suggestions.map((suggestion, index) => (
             <div className="citation-suggestion" key={suggestion.field}>
               <strong>{cslFieldLabel(suggestion.field)}</strong>
               <div className="citation-difference-copy">
@@ -102,14 +130,16 @@ function CitationSuggestions({
                 <button
                   type="button"
                   aria-label={`Accept ${cslFieldLabel(suggestion.field)}`}
-                  onClick={() => editor.acceptSuggestions(new Set([suggestion.field]))}
+                  onClick={() =>
+                    review(index, () => editor.acceptSuggestions(new Set([suggestion.field])))
+                  }
                 >
                   Accept
                 </button>
                 <button
                   type="button"
                   aria-label={`Dismiss ${cslFieldLabel(suggestion.field)}`}
-                  onClick={() => editor.dismissSuggestion(suggestion.field)}
+                  onClick={() => review(index, () => editor.dismissSuggestion(suggestion.field))}
                 >
                   Dismiss
                 </button>
@@ -118,7 +148,7 @@ function CitationSuggestions({
           ))}
         </>
       ) : (
-        <p className="citation-lookup-note">
+        <p className="citation-lookup-note" tabIndex={-1} data-citation-results-status>
           No suggestions to review. Manual edits and removed fields are kept.
         </p>
       )}

@@ -156,6 +156,11 @@ export function preserveCslDismissals(next: CslProvenance, previous: CslProvenan
 
 /** Structural equality for CSL JSON values; object key order does not matter. */
 export function cslValuesEqual(left: unknown, right: unknown): boolean {
+  if (left instanceof Date || right instanceof Date) {
+    return (
+      left instanceof Date && right instanceof Date && Object.is(left.getTime(), right.getTime())
+    );
+  }
   if (Array.isArray(left) || Array.isArray(right)) {
     return (
       Array.isArray(left) &&

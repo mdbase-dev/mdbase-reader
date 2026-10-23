@@ -121,6 +121,17 @@ describe("CSL provenance comparison and status", () => {
     expect(cslValuesEqual("1", 1)).toBe(false);
   });
 
+  it("compares raw Date values by timestamp, not enumerable properties", () => {
+    const january = new Date("2026-01-01");
+    expect(
+      cslValuesEqual({ custom: { date: january } }, { custom: { date: new Date("2026-02-01") } }),
+    ).toBe(false);
+    expect(cslValuesEqual(january, new Date("2026-01-01"))).toBe(true);
+    expect(cslValuesEqual(january, {})).toBe(false);
+    expect(cslValuesEqual({}, january)).toBe(false);
+    expect(cslValuesEqual(january, january.toISOString())).toBe(false);
+  });
+
   it("reports explained, edited, removed and unexplained fields", () => {
     const provenance = parseCslProvenance({
       title: { value: "Australia", source: "page:html" },
