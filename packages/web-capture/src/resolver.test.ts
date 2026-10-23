@@ -199,7 +199,7 @@ describe("citation resolution: normalization and validation", () => {
         claim("title", '"Australia" today', html, "h1"),
       ],
     });
-    expect(result.citation?.["title"]).toBe('"Australia" today!');
+    expect(result.citation?.["title"]).toBe("“Australia” today!");
     expect(result.provenance["title"]?.agreed).toHaveLength(2);
   });
 
@@ -372,6 +372,62 @@ describe("citation resolution: existing CSL is canonical", () => {
     });
     expect(result.citation).toBe(citation);
     expect(result.suggestions).toEqual([]);
+  });
+});
+
+describe("citation resolution: existing-field edge cases", () => {
+  it("does not re-extract existing titles into self-suggestions or user container claims", () => {
+    const citation = { type: "webpage", title: "  Australia - Wikipedia  " };
+    const provenance = { title: { value: citation.title, source: "page:html" } };
+    const result = resolveCitation({ existing: { citation, provenance }, claims: [] });
+    expect(result.citation).toBe(citation);
+    expect(result.suggestions).toEqual([]);
+    expect(result.provenance["title"]).toEqual(provenance.title);
+    expect(result.provenance).not.toHaveProperty("container-title");
+
+    const fill = resolveCitation({
+      existing: { citation },
+      claims: [claim("container-title", "An explicitly observed site")],
+    });
+    expect(fill.suggestions).toMatchObject([
+      { field: "container-title", reason: "fill", proposed: "An explicitly observed site" },
+    ]);
+  });
+
+  it("proposes fills for empty, non-removed fields without mutating them", () => {
+    const citation = {
+      type: "webpage",
+      title: "Report",
+      author: [],
+      publisher: "",
+      language: null,
+    };
+    const result = resolveCitation({
+      existing: { citation },
+      claims: [
+        claim("author", [{ family: "Davies" }]),
+        claim("publisher", "Publisher"),
+        claim("language", "en"),
+      ],
+    });
+    expect(result.citation).toBe(citation);
+    expect(result.suggestions.map(({ field, reason }) => ({ field, reason }))).toEqual([
+      { field: "author", reason: "fill" },
+      { field: "language", reason: "fill" },
+      { field: "publisher", reason: "fill" },
+    ]);
+  });
+
+  it("uses weak default type provenance so a later specific type can be suggested", () => {
+    const first = resolveCitation({ claims: [claim("title", "Report")] });
+    const result = resolveCitation({
+      existing: { citation: first.citation!, provenance: first.provenance },
+      claims: [claim("type", "article-journal", registry)],
+    });
+    expect(result.citation?.type).toBe("webpage");
+    expect(result.suggestions).toMatchObject([
+      { field: "type", reason: "change", proposed: "article-journal" },
+    ]);
   });
 });
 

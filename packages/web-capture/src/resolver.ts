@@ -48,16 +48,8 @@ export function resolveCitation(input: ResolverInput): Resolution {
   const existing = input.existing;
   const previous = parseCslProvenance(existing?.provenance);
   const statuses = existing ? cslFieldStatuses(existing.citation, previous) : {};
-  const currentClaims: Claim[] = Object.entries(statuses).map(([field, status]) => ({
-    field,
-    value: existing?.citation[field],
-    source:
-      status.kind === "explained"
-        ? (parseClaimSourceLabel(status.provenance.source) ?? { kind: "user" })
-        : { kind: "user" },
-    observedAt: "",
-  }));
-  const claims = prepareClaims([...input.claims, ...currentClaims]);
+  const currentClaims = existing ? existingClaims(existing.citation, statuses) : [];
+  const claims = [...prepareClaims(input.claims), ...currentClaims];
   const fields = [...new Set(claims.map((claim) => claim.field))].sort(compareText);
   const citation: Record<string, unknown> = {};
   const provenance: Record<string, CslFieldProvenance> = {};
@@ -92,6 +84,7 @@ export function resolveCitation(input: ResolverInput): Resolution {
   }
   if (citation["type"] === undefined) {
     citation["type"] = "webpage";
+    // The conservative HTML baseline stays weak enough for a later, specific type to win.
     provenance["type"] = { value: "webpage", source: "page:html" };
   }
   return { citation: citation as CitationDraft, provenance, suggestions: [] };
@@ -103,12 +96,42 @@ function suggestChange(chosen: ClaimGroup, current: unknown): CitationSuggestion
   }
   return {
     field: chosen.winner.field,
-    reason: current === undefined || current === "" ? "fill" : "change",
+    reason: emptyField(current) ? "fill" : "change",
     proposed: chosen.value,
     ...(current !== undefined ? { current } : {}),
     source: chosen.winner.source,
     ...(chosen.winner.evidence ? { evidence: chosen.winner.evidence } : {}),
   };
+}
+
+function emptyField(value: unknown): boolean {
+  return (
+    value == null ||
+    (typeof value === "string" && !value.trim()) ||
+    (Array.isArray(value) && !value.length)
+  );
+}
+
+function existingClaims(
+  citation: Readonly<Record<string, unknown>>,
+  statuses: ReturnType<typeof cslFieldStatuses>,
+): Claim[] {
+  return Object.entries(statuses).flatMap(([field, status]) => {
+    if (status.kind !== "removed" && emptyField(citation[field])) {
+      return [];
+    }
+    return [
+      {
+        field,
+        value: citation[field],
+        source:
+          status.kind === "explained"
+            ? (parseClaimSourceLabel(status.provenance.source) ?? { kind: "user" })
+            : { kind: "user" },
+        observedAt: "",
+      },
+    ];
+  });
 }
 
 function prepareClaims(claims: readonly Claim[]): Claim[] {
@@ -124,7 +147,7 @@ function prepareClaims(claims: readonly Claim[]): Claim[] {
     if (claim.field === "title" && typeof value === "string") {
       const { title, suffix } = splitTitle(value);
       value = title;
-      if (suffix) {
+      if (suffix && claim.source.kind !== "user") {
         prepared.push({
           ...claim,
           field: "container-title",

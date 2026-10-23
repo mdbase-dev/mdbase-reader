@@ -92,7 +92,9 @@ describe("claim matching", () => {
     ).toBe(true);
     expect(claimValuesMatch("issued", { "date-parts": [[2026]] }, { literal: "2026" })).toBe(false);
   });
+});
 
+describe("claim name rules", () => {
   it.each([
     "staff reporter",
     "Guardian staff reporter",
@@ -122,6 +124,16 @@ describe("claim matching", () => {
     expect(withoutRoleNames([{ family: "reporter", given: "Guardian staff" }, ...names])).toEqual(
       names,
     );
+  });
+
+  it("matches CSL date-parts represented by strings or numbers", () => {
+    expect(
+      claimValuesMatch(
+        "issued",
+        { "date-parts": [["2026", "01"]] },
+        { "date-parts": [[2026, 1, 20]] },
+      ),
+    ).toBe(true);
   });
 
   it("uses stable object-key ordering for final tie breaks", () => {

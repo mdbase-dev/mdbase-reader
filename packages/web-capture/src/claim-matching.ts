@@ -13,7 +13,7 @@ function titleKey(value: string): string {
 
 /** A spaced final site separator is not part of the work's title. */
 export function splitTitle(value: string): { title: string; suffix?: string } {
-  const clean = text(value);
+  const clean = value.replace(/\s+/gu, " ").trim();
   const match = /^(.*)\s+[-|—·]\s+([^|—·]+)$/u.exec(clean);
   const title = match?.[1]?.trim();
   const suffix = match?.[2]?.trim();
@@ -39,6 +39,10 @@ function dateParts(value: unknown): readonly (readonly unknown[])[] | undefined 
     : undefined;
 }
 
+function datePartKey(value: unknown): unknown {
+  return typeof value === "string" && /^-?\d+$/u.test(value) ? Number(value) : value;
+}
+
 /** Partial dates corroborate compatible, more precise dates, but not conflicting days/months. */
 export function claimValuesMatch(field: string, left: unknown, right: unknown): boolean {
   if (field === "title" && typeof left === "string" && typeof right === "string") {
@@ -61,11 +65,10 @@ export function claimValuesMatch(field: string, left: unknown, right: unknown): 
         a.length === b.length &&
         a.every((part, index) => {
           const other = b[index];
-          return other !== undefined && part.every((n, i) => i >= other.length || n === other[i]);
-        }) &&
-        b.every((part, index) => {
-          const other = a[index];
-          return other !== undefined && part.every((n, i) => i >= other.length || n === other[i]);
+          return (
+            other !== undefined &&
+            part.every((n, i) => i >= other.length || datePartKey(n) === datePartKey(other[i]))
+          );
         })
       );
     }
