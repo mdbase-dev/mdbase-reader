@@ -575,6 +575,26 @@ describe("citation resolution: existing-field edge cases", () => {
     ]);
   });
 
+  it.each(["", "   ", null, []])("pins a deliberately cleared edited field (%j)", (value) => {
+    const citation = { type: "webpage", title: "Work", publisher: value };
+    const result = resolveCitation({
+      existing: {
+        citation,
+        provenance: { publisher: { value: "Old publisher", source: "registry:doi.org" } },
+      },
+      claims: [claim("publisher", "New publisher", registry)],
+    });
+    expect(result.citation).toBe(citation);
+    expect(result.suggestions).toEqual([]);
+    expect(result.provenance["publisher"]).toEqual({ value, source: "user" });
+    expect(
+      resolveCitation({
+        existing: { citation, provenance: result.provenance },
+        claims: [claim("publisher", "New publisher", registry)],
+      }).suggestions,
+    ).toEqual([]);
+  });
+
   it("proposes fills for empty, non-removed fields without mutating them", () => {
     const citation = {
       type: "webpage",

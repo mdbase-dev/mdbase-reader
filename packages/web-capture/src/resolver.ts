@@ -124,7 +124,7 @@ function existingClaims(
   statuses: ReturnType<typeof cslFieldStatuses>,
 ): Claim[] {
   return Object.entries(statuses).flatMap(([field, status]) => {
-    if (status.kind !== "removed" && emptyField(citation[field])) {
+    if (status.kind === "unexplained" && emptyField(citation[field])) {
       return [];
     }
     const value = citation[field];
