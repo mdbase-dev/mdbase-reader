@@ -276,6 +276,7 @@ describe("captured citation disclosure", () => {
 
 describe("adding captured page citations", () => {
   it("enables Citoid and saves the resolved citation with pinned field provenance", async () => {
+    const page = capturedPage(pageClaims);
     const fetch = vi.fn<typeof globalThis.fetch>().mockResolvedValue(
       Response.json([
         {
@@ -283,11 +284,12 @@ describe("adding captured page citations", () => {
           title: "Australia",
           encyclopediaTitle: "Wikipedia",
           date: "2026-10-20",
+          // A remote title override requires proof that this record is about the captured work.
+          url: page.capture.canonicalUrl,
         },
       ]),
     );
     vi.stubGlobal("fetch", fetch);
-    const page = capturedPage(pageClaims);
     const deps = services({
       capture: vi.fn(() => Promise.resolve({ kind: "html" as const, page })),
     });
@@ -331,6 +333,35 @@ describe("adding captured page citations", () => {
         },
       },
     });
+  });
+});
+
+describe("captured citation remote fallbacks", () => {
+  it("keeps the captured citation when Citoid returns a different work", async () => {
+    const fetch = vi.fn<typeof globalThis.fetch>().mockResolvedValue(
+      Response.json([
+        {
+          itemType: "encyclopediaArticle",
+          title: "Australia",
+          url: "https://en.wikipedia.org/wiki/Australia",
+          DOI: "10.1234/unrelated",
+        },
+      ]),
+    );
+    vi.stubGlobal("fetch", fetch);
+    const page = capturedPage(pageClaims);
+    const deps = services({ capture: vi.fn().mockResolvedValue({ kind: "html", page }) });
+    const result = await addSourceFromInput(page.capture.canonicalUrl, deps);
+    expect(result).toMatchObject({
+      kind: "added",
+      provenance: { title: { value: "Page title", source: "page:json-ld" } },
+    });
+    expect(fetch).toHaveBeenCalledOnce();
+    expect(deps.workspace.saveNewSourceCitation).toHaveBeenCalledWith(
+      source(),
+      expect.objectContaining({ title: "Page title" }),
+      expect.anything(),
+    );
   });
 
   it("still saves page evidence when Citoid is unavailable", async () => {

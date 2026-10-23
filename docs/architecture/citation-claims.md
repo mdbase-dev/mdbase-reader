@@ -82,6 +82,56 @@ A Citoid result counts as `site-adapter` when its Zotero item type is specific
 generic translator that produces those types. A `webpage` or `newspaperArticle` result is what
 Zotero's generic Embedded Metadata translator produces, and counts as `generic-remote`.
 
+## Remote work identity
+
+Remote authority applies to a **work**, not merely to a field. Before doi.org, Citoid or a
+private Translation Server contributes claims, `remote-work-identity.ts` compares the whole
+record with the local page-only resolution. The comparison context stays local; it is never
+sent in requests. The resolver's scoring rules are unchanged.
+
+- **Same:** DOI equality (case-insensitive, stripped of URL/`doi:` wrappers) always confirms
+  identity, even if other metadata disagrees. Otherwise, matching arXiv identifiers, ISBNs
+  (ignoring separators), or canonical/landing URLs confirm it. URL comparison ignores fragments
+  and HTTP versus HTTPS, but retains paths, trailing slashes and queries, including editions.
+  Known conflicting DOIs, arXiv IDs or ISBNs take precedence over a shared landing URL.
+- **Related versions:** on an arXiv page the effective work DOI is the repository DOI derived
+  from its arXiv ID, **not** an embedded published-work DOI. A different remote DOI or an
+  explicitly journal/conference/chapter record is a mismatch, even with the preprint's title,
+  authors or arXiv backlink. Equality with the repository DOI still confirms identity. The
+  published DOI is not substituted or followed as a new identity; automatic lookup targets
+  the repository DOI. We do not currently persist a separate related-publication DOI note.
+- **Without strong identity:** titles are NFKD-normalized, case/accent/punctuation-insensitive
+  Unicode word sets. A Dice overlap of at least 0.85 plus agreement on **one** of first-author
+  family name, issued year or container confirms the work. Overlap below 0.35 is a mismatch.
+  Missing titles, intermediate similarity, or a title without a bibliographic anchor are
+  uncertain, not proof of a different work.
+- **Mismatch:** drop the entire batch, including discovered identifiers, and report provider
+  result `mismatch`. A rejected Citoid record cannot launch a DOI lookup. A rejected registry
+  response can fall back to Citoid within the original deadline.
+- **Uncertain:** keep claims but change their source to `generic-remote` (weight 40), including
+  registry records normally weighted 80 and site-adapters normally weighted 60. Report
+  `uncertain`; they may fill gaps or compete at ordinary page strength, not registry strength.
+  Their DOI discoveries do not self-confirm the subsequent registry record: it is still checked
+  against the original context. Only a confirmed same-work Citoid record can establish a new
+  DOI identity for registry enrichment.
+
+A DOI response's actual DOI is preserved rather than overwritten with the requested DOI;
+only a missing DOI is filled from the request. Otherwise a defective response would manufacture
+its own identity proof. Page previews publish mismatch/uncertainty diagnostics even when no
+citation field changed. Explicit citation-update searches use only the typed URL/identifier;
+refresh may supply its current citation as local comparison context. `onOutcome` exposes the
+same diagnostics to citation-update callers.
+
+Identity is not a cure for defective fields in the **same** work. In the 36-case replay,
+XGBoost's remote wrong fields fall from six to one (publisher remains missing on the page).
+The other remote regressions are deliberately retained: ACL's matching DOI has a defective
+short title/year/pages/container; ONS's matching canonical URL has an incomplete title; RFC
+has the same work at another institutional URL; Zenodo's matching DOI has a legacy record URL;
+USENIX has an equivalent but differently formatted ISBN. Rejecting those as different works
+would violate the strong-identity rule or lose legitimate enrichment. Field/representation
+repairs remain separate resolver/provider work. Page wrong-field total stays 89; remote falls
+from 65 to 60, with no case regressing.
+
 ## Resolver
 
 For each field, the resolver groups claims whose values match after normalisation, scores each
@@ -245,7 +295,7 @@ then produces the same claims everywhere, which snapshot tests depend on.
 2. In the side panel or an offscreen document, the core runs generic extractors and matching
    adapters. The resolver shows a first citation within milliseconds.
 3. If claims include a DOI, doi.org adds registry claims first. Only a failed registry lookup
-   (including not-found, timeout, rate-limit or block) falls back to Citoid. Without a DOI,
+   (including not-found, timeout, rate-limit, block, identity mismatch or uncertainty) falls back to Citoid. Without a DOI,
    Citoid adds claims for the URL when enabled. The resolver reruns each time. The draft retains
    its last automatically applied title and an explicit edit marker across panel restores and
    lookup restarts, so only a genuinely edited title is protected.

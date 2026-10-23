@@ -8,6 +8,7 @@ import {
   ProviderCooldownError,
   retryAfterMs,
 } from "./provider-queue.js";
+import { checkRemoteWork } from "./remote-work-identity.js";
 import { cslFromZoteroItem } from "./zotero-csl.js";
 
 import type {
@@ -21,8 +22,11 @@ import type {
 } from "./claims.js";
 import type { CitationDraft } from "./csl-values.js";
 import type { ProviderQueue } from "./provider-queue.js";
+import type { RemoteWorkIdentity } from "./remote-work-identity.js";
 
 export interface ProviderClaimsOptions {
+  /** Local comparison only: never disclosed to the provider. */
+  readonly work?: RemoteWorkIdentity;
   readonly fetch?: typeof fetch;
   readonly signal?: AbortSignal;
   readonly timeoutMs?: number;
@@ -75,7 +79,7 @@ export function doiClaims(doi: string, options: ProviderClaimsOptions = {}): Pro
         "doi.org CSL",
         observedAt(options),
       ),
-      identifiers: { ...citationIdentifiers(citation), doi },
+      identifiers: citationIdentifiers(citation),
     };
   });
 }
@@ -217,7 +221,8 @@ async function collectClaims(
       ...batch
     } = await untilAborted(() => work(signal, fetcher), signal);
     options.signal?.throwIfAborted();
-    return { ...batch, outcome: outcome(result, known) };
+    const collected = { ...batch, outcome: outcome(result, known) };
+    return options.work ? checkRemoteWork(collected, options.work) : collected;
   } catch (reason) {
     options.signal?.throwIfAborted();
     if (reason instanceof ProviderCooldownError) {

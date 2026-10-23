@@ -3,6 +3,7 @@ import { cslValuesEqual } from "@mdbase-reader/core";
 import { arxivIdentifier, doiFromText, doiFromUrl } from "./doi.js";
 import { arxivDoi } from "./metadata-identifiers.js";
 import { remoteCitationClaims } from "./remote-citation.js";
+import { pageWorkIdentity, workDoi } from "./remote-work-identity.js";
 import { resolveCitation } from "./resolver.js";
 
 import type { ClaimBatch, ProviderOutcome } from "./claims.js";
@@ -43,7 +44,9 @@ export async function citationForPage(
   const claims = [...(page?.claims ?? [])];
   const observedAt = snapshotObservedAt(page, options);
   const outcomes: ProviderOutcome[] = page?.outcome ? [page.outcome] : [];
-  let doi = batchDoi(page) ?? doiFromUrl(pageUrl) ?? arxivDoi(arxivIdentifier(pageUrl));
+  const work = pageWorkIdentity(page, pageUrl);
+  let doi =
+    workDoi(work) ?? batchDoi(page) ?? doiFromUrl(pageUrl) ?? arxivDoi(arxivIdentifier(pageUrl));
   let problem: string | undefined;
   let lastUpdate: CitationPreview | null = null;
 
@@ -80,7 +83,9 @@ export async function citationForPage(
       next &&
       (!lastUpdate ||
         !cslValuesEqual(next.citation, lastUpdate.citation) ||
-        !cslValuesEqual(next.provenance, lastUpdate.provenance))
+        !cslValuesEqual(next.provenance, lastUpdate.provenance) ||
+        (next.outcomes.some(({ result }) => result === "mismatch" || result === "uncertain") &&
+          !cslValuesEqual(next.outcomes, lastUpdate.outcomes)))
     ) {
       lastUpdate = next;
       options.onUpdate?.(next);
@@ -92,7 +97,9 @@ export async function citationForPage(
     if (batch.outcome) {
       outcomes.push(batch.outcome);
       if (
-        batch.outcome.provider === "doi.org" &&
+        (batch.outcome.provider === "doi.org" ||
+          batch.outcome.result === "mismatch" ||
+          batch.outcome.result === "uncertain") &&
         batch.outcome.result !== "ok" &&
         batch.outcome.result !== "cancelled"
       ) {
@@ -106,7 +113,7 @@ export async function citationForPage(
   await remoteCitationClaims(
     pageUrl,
     doi,
-    { ...options, observedAt },
+    { ...options, observedAt, work },
     (batch, timeoutMs, identifier) => {
       doi = identifier;
       if (batch.outcome?.provider === "doi.org" && batch.outcome.result === "ok") {
@@ -144,6 +151,10 @@ function batchDoi(batch: ClaimBatch | null): string | undefined {
 
 function providerProblem(outcome: ProviderOutcome, doiTimeoutMs: number): string {
   switch (outcome.result) {
+    case "mismatch":
+      return "Remote metadata describes a different work or version and was not used.";
+    case "uncertain":
+      return "Remote work identity is uncertain; its metadata was given reduced weight.";
     case "timeout":
       return `The DOI registry did not answer within ${String(doiTimeoutMs / 1_000)} seconds.`;
     case "not-found":
