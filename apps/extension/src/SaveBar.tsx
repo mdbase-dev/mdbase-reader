@@ -1,3 +1,5 @@
+import { t } from "@lingui/core/macro";
+import { Trans, useLingui } from "@lingui/react/macro";
 import { useEffect } from "react";
 
 import { readerSourceUrl } from "./capture-model.js";
@@ -22,7 +24,7 @@ export function saveBlocker(c: ExtensionCaptureController): string | null {
     // While mdbase starts or checks the collection there is nothing for the reader to do yet.
     return c.snapshot.status === "opening" ? null : connectionUnavailableMessage(c.snapshot);
   }
-  return c.draft.title.trim() ? null : "Give the source a title under Note to save it.";
+  return c.draft.title.trim() ? null : t`Give the source a title under Note to save it.`;
 }
 
 /**
@@ -34,6 +36,7 @@ export function SaveBar({
 }: {
   readonly controller: ExtensionCaptureController;
 }): React.JSX.Element | null {
+  const { t } = useLingui();
   const ready = saveReady(c);
   const blocker = saveBlocker(c);
   const selection = c.capture?.kind === "html" ? c.capture.selection : null;
@@ -78,13 +81,13 @@ export function SaveBar({
         target="_blank"
         rel="noreferrer"
       >
-        Open in Reader to highlight
+        <Trans>Open in Reader to highlight</Trans>
       </a>
     ) : (
       <p className="saved-line">
-        {c.status === "existing" ? "In this collection" : "Saved"} ·{" "}
+        {c.status === "existing" ? t`In this collection` : t`Saved`} ·{" "}
         <a href={readerSourceUrl(source)} target="_blank" rel="noreferrer">
-          Open in Reader
+          <Trans>Open in Reader</Trans>
         </a>
       </p>
     );
@@ -97,7 +100,7 @@ export function SaveBar({
         type="button"
         disabled={!ready}
         aria-keyshortcuts={selection ? undefined : "Control+Enter Meta+Enter"}
-        title={selection ? undefined : `Save (${modifierKey()}+Enter)`}
+        title={selection ? undefined : t`Save (${modifierKey()}+Enter)`}
         onClick={() => void save({ highlight: false })}
       >
         {submitLabel(c)}
@@ -116,13 +119,13 @@ export function modifierKey(): string {
 
 function submitLabel(c: ExtensionCaptureController): string {
   if (c.busy) {
-    return c.status === "saving" || c.progress ? "Saving…" : "Please wait…";
+    return c.status === "saving" || c.progress ? t`Saving…` : t`Please wait…`;
   }
   return c.capture?.kind === "pdf"
-    ? "Save PDF"
+    ? t`Save PDF`
     : c.postPicker
-      ? "Choose posts to save"
+      ? t`Choose posts to save`
       : c.capture?.kind === "html" && c.capture.post
-        ? "Save post"
-        : "Save page";
+        ? t`Save post`
+        : t`Save page`;
 }

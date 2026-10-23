@@ -1,3 +1,6 @@
+import { t } from "@lingui/core/macro";
+import { useLingui as useI18n } from "@lingui/react";
+import { Trans, useLingui } from "@lingui/react/macro";
 import { useEffect, useState } from "react";
 
 import { CitationPanel } from "./CitationPanel.js";
@@ -19,13 +22,16 @@ export function CaptureApp({
   controller,
   initialTab,
 }: ControllerProps & { readonly initialTab?: PanelTab }): React.JSX.Element {
+  const { t } = useLingui();
   const [diagnostics] = useDiagnosticsShown();
   const [tab, setTab] = usePanelTab(controller, initialTab);
   const [collectionOpen, setCollectionOpen] = useState(false);
   const collection = collectionName(controller);
   useEffect(() => {
-    document.title = `mdbase Reader — ${controller.source ? "source saved" : "capture"}`;
-  }, [controller.source]);
+    document.title = controller.source
+      ? t`mdbase Reader — source saved`
+      : t`mdbase Reader — capture`;
+  }, [controller.source, t]);
   useEffect(() => {
     // Drafts survive closing the panel; an in-flight save's outcome would not be shown.
     const warn = (event: BeforeUnloadEvent): void => {
@@ -65,8 +71,12 @@ export function CaptureApp({
       {unreadable(controller) ? (
         <>
           <section className="page-card">
-            <h1>Reader cannot read this page</h1>
-            <p>Nothing to save here</p>
+            <h1>
+              <Trans>Reader cannot read this page</Trans>
+            </h1>
+            <p>
+              <Trans>Nothing to save here</Trans>
+            </p>
           </section>
           <UnreadablePage controller={controller} />
         </>
@@ -76,7 +86,7 @@ export function CaptureApp({
           <p>
             {controller.capture
               ? `${new URL(controller.capture.canonicalUrl).hostname}${controller.capture.kind === "pdf" ? " · PDF" : ""}`
-              : "Waiting for the active tab"}
+              : t`Waiting for the active tab`}
           </p>
           <SaveBar controller={controller} />
           <PostPicker controller={controller} />
@@ -117,8 +127,14 @@ function HighlightsPanel({ controller: c }: ControllerProps): React.JSX.Element 
     <>
       {c.capture?.kind === "pdf" ? (
         <p className="tab-hint">
-          Chrome’s PDF viewer does not share selections, so PDFs are highlighted in Reader.
-          {c.source ? " Highlights made there appear here." : " Save the PDF, then open it there."}
+          <Trans>
+            Chrome’s PDF viewer does not share selections, so PDFs are highlighted in Reader.
+          </Trans>{" "}
+          {c.source ? (
+            <Trans>Highlights made there appear here.</Trans>
+          ) : (
+            <Trans>Save the PDF, then open it there.</Trans>
+          )}
         </p>
       ) : selection ? (
         <fieldset
@@ -141,7 +157,7 @@ function pageTitle(c: ExtensionCaptureController): string {
   if (c.source) {
     return c.source.title;
   }
-  return c.capture ? c.draft.title.trim() || c.capture.pageTitle : "Reading the page…";
+  return c.capture ? c.draft.title.trim() || c.capture.pageTitle : t`Reading the page…`;
 }
 
 /**
@@ -157,17 +173,25 @@ function HighlightHint(): React.JSX.Element {
   const shortcut = useShortcuts()?.find((value) => value.name === "save-highlight")?.keys;
   return (
     <div className="tab-hint">
-      <p>Select text on the page to highlight it.</p>
+      <p>
+        <Trans>Select text on the page to highlight it.</Trans>
+      </p>
       <ul className="hint-keys">
         <li>
-          <kbd>1</kbd>–<kbd>5</kbd> save the selection in a colour; <kbd>Esc</kbd> clears it
+          <Trans>
+            <kbd>1</kbd>–<kbd>5</kbd> save the selection in a colour; <kbd>Esc</kbd> clears it
+          </Trans>
         </li>
         {shortcut ? (
           <li>
-            <kbd>{shortcut}</kbd> highlights the selection from the page
+            <Trans>
+              <kbd>{shortcut}</kbd> highlights the selection from the page
+            </Trans>
           </li>
         ) : null}
-        <li>Right-click a selection to highlight it with a comment</li>
+        <li>
+          <Trans>Right-click a selection to highlight it with a comment</Trans>
+        </li>
       </ul>
     </div>
   );
@@ -184,21 +208,27 @@ function UnreadablePage({ controller: c }: ControllerProps): React.JSX.Element {
   return (
     <section className="page-note" role="status">
       <p>
-        Press the mdbase Reader toolbar button (Alt+Shift+S) to use Reader on this page. Browser
-        pages and the Chrome Web Store cannot be read by extensions.
+        <Trans>
+          Press the mdbase Reader toolbar button (Alt+Shift+S) to use Reader on this page. Browser
+          pages and the Chrome Web Store cannot be read by extensions.
+        </Trans>
       </p>
       {moved ? (
-        <p>Your unsaved text for the previous page is kept for this browser session.</p>
+        <p>
+          <Trans>Your unsaved text for the previous page is kept for this browser session.</Trans>
+        </p>
       ) : null}
       {c.siteAccess === false ? (
         <>
-          <p>Site access is limited in Chrome, so Reader cannot follow your tabs.</p>
+          <p>
+            <Trans>Site access is limited in Chrome, so Reader cannot follow your tabs.</Trans>
+          </p>
           <button
             type="button"
             className="secondary compact"
             onClick={() => void c.allowAllSites()}
           >
-            Allow on all sites
+            <Trans>Allow on all sites</Trans>
           </button>
         </>
       ) : null}
@@ -211,6 +241,7 @@ function UnreadablePage({ controller: c }: ControllerProps): React.JSX.Element {
  * relevant status line. Says nothing while the panel is simply waiting.
  */
 function PanelStatus({ controller: c }: ControllerProps): React.JSX.Element {
+  useI18n();
   const message = c.problem ? null : statusMessage(c);
   return (
     <>
@@ -228,7 +259,7 @@ function PanelStatus({ controller: c }: ControllerProps): React.JSX.Element {
                   className="inline-link"
                   onClick={() => void c.undoHighlight()}
                 >
-                  Undo
+                  <Trans>Undo</Trans>
                 </button>
               </>
             ) : null}
@@ -241,37 +272,41 @@ function PanelStatus({ controller: c }: ControllerProps): React.JSX.Element {
 
 function statusMessage(c: ExtensionCaptureController): string | null {
   if (c.navigated && c.following) {
-    return "Opening the new page…";
+    return t`Opening the new page…`;
   }
   const progress = importProgressMessage(c.busy ? c.progress : null);
   if (progress) {
     return progress;
   }
   if (c.status === "saving") {
-    return "Saving…";
+    return t`Saving…`;
   }
   if (c.notice) {
     return c.notice;
   }
   if (c.status === "saved") {
-    return "Source saved in mdbase.";
+    return t`Source saved in mdbase.`;
   }
   if (c.saveAttempted && !c.source && !c.busy) {
-    return "Save not confirmed. Retry to check its outcome.";
+    return t`Save not confirmed. Retry to check its outcome.`;
   }
-  return c.draftRestored ? "Restored your unsaved note from earlier." : null;
+  return c.draftRestored ? t`Restored your unsaved note from earlier.` : null;
 }
 
 function importProgressMessage(p: ExtensionCaptureController["progress"]): string | null {
   switch (p?.phase) {
-    case "uploading":
-      return `Uploading file ${String(p.fileIndex)} of ${String(p.fileCount)} · ${String(p.totalBytes ? Math.round((p.completedBytes / p.totalBytes) * 100) : 0)}%`;
+    case "uploading": {
+      const fileIndex = p.fileIndex;
+      const fileCount = p.fileCount;
+      const percent = p.totalBytes ? Math.round((p.completedBytes / p.totalBytes) * 100) : 0;
+      return t`Uploading file ${fileIndex} of ${fileCount} · ${percent}%`;
+    }
     case "recovering":
-      return "Checking files from the previous save attempt…";
+      return t`Checking files from the previous save attempt…`;
     case "creating":
-      return "Saving source record…";
+      return t`Saving source record…`;
     case "checking":
-      return "Checking for duplicates…";
+      return t`Checking for duplicates…`;
     default:
       return null;
   }

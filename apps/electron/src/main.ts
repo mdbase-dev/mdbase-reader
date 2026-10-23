@@ -2,6 +2,7 @@ import { readFile, writeFile } from "node:fs/promises";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
+import { t } from "@lingui/core/macro";
 import { BrowserWindow, app, dialog, ipcMain, shell } from "electron";
 
 import { electronChannels } from "./channels.js";
@@ -45,7 +46,7 @@ ipcMain.handle(electronChannels.pickFile, async (_event, accept: readonly string
     properties: ["openFile"],
     filters: [
       {
-        name: "Readable documents",
+        name: t`Readable documents`,
         extensions: accept.map((item) => item.replace(/^\./u, "")),
       },
     ],

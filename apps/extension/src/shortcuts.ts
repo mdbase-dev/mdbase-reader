@@ -1,3 +1,4 @@
+import { t } from "@lingui/core/macro";
 import { useEffect, useState } from "react";
 
 export interface Shortcut {
@@ -32,7 +33,7 @@ function describe(command: chrome.commands.Command): string {
   if (command.description) {
     return command.description;
   }
-  return command.name === "_execute_action" ? "Open mdbase Reader for this page" : "";
+  return command.name === "_execute_action" ? t`Open mdbase Reader for this page` : "";
 }
 
 /** Chrome reports an unbound command with an empty shortcut. */

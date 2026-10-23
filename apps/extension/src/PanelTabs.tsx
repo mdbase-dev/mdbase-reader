@@ -1,18 +1,25 @@
+import { msg } from "@lingui/core/macro";
+import { useLingui } from "@lingui/react/macro";
 import { CitationIcon, HighlightIcon, NoteIcon } from "@mdbase-reader/ui";
 import { useRef, useState } from "react";
 
 import type { ExtensionCaptureController } from "./capture-controller.js";
+import type { MessageDescriptor } from "@lingui/core";
 
 export type PanelTab = "highlights" | "note" | "citation";
 
 const tabs: readonly {
   readonly id: PanelTab;
-  readonly label: string;
+  readonly label: MessageDescriptor;
   readonly Icon: typeof NoteIcon;
 }[] = [
-  { id: "highlights", label: "Highlights", Icon: HighlightIcon },
-  { id: "note", label: "Note", Icon: NoteIcon },
-  { id: "citation", label: "Citation", Icon: CitationIcon },
+  { id: "highlights", label: msg`Highlights`, Icon: HighlightIcon },
+  {
+    id: "note",
+    label: msg({ message: "Note", context: "Source literature note tab" }),
+    Icon: NoteIcon,
+  },
+  { id: "citation", label: msg`Citation`, Icon: CitationIcon },
 ];
 
 /**
@@ -29,6 +36,7 @@ export function PanelTabs({
   readonly highlightCount: number | null;
   readonly onChange: (tab: PanelTab) => void;
 }): React.JSX.Element {
+  const { t, i18n } = useLingui();
   const list = useRef<HTMLDivElement>(null);
   // Arrow keys move between tabs and select them, as in a native tab strip.
   const onKeyDown = (event: React.KeyboardEvent): void => {
@@ -51,7 +59,12 @@ export function PanelTabs({
     }
   };
   return (
-    <div className="panel-tabs" role="tablist" aria-label="Source" ref={list}>
+    <div
+      className="panel-tabs"
+      role="tablist"
+      aria-label={t({ message: "Source", context: "Bibliographic source" })}
+      ref={list}
+    >
       {tabs.map(({ id, label, Icon }) => (
         <button
           key={id}
@@ -61,12 +74,12 @@ export function PanelTabs({
           aria-selected={tab === id}
           aria-controls={panelId(id)}
           tabIndex={tab === id ? 0 : -1}
-          title={label}
+          title={i18n._(label)}
           onClick={() => onChange(id)}
           onKeyDown={onKeyDown}
         >
           <Icon />
-          <span className="panel-tab-label">{label}</span>
+          <span className="panel-tab-label">{i18n._(label)}</span>
           {id === "highlights" && highlightCount !== null ? (
             <span className="panel-tab-count">{highlightCount}</span>
           ) : null}

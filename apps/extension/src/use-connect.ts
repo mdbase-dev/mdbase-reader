@@ -1,3 +1,4 @@
+import { t } from "@lingui/core/macro";
 import { useCallback, useEffect, useRef, useState } from "react";
 
 import { problemMessage } from "./capture-model.js";
@@ -105,7 +106,7 @@ export function useConnect(lock: ActionLock): ConnectLink {
   const act = (action: (session: ExtensionSession) => Run | null): Promise<void> =>
     run(async () => {
       if (!extension) {
-        throw new Error("mdbase is still starting. Try again in a moment.");
+        throw new Error(t`mdbase is still starting. Try again in a moment.`);
       }
       const next = action(extension);
       if (next) {

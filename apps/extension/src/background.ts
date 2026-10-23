@@ -1,3 +1,5 @@
+import { t } from "@lingui/core/macro";
+
 import { updatePageStatus } from "./background-page-status.js";
 import { intentKey, type CaptureIntent, type InvokeMessage } from "./messages.js";
 import { ensureHostMessage, ensureOffscreenDocument } from "./offscreen-document.js";
@@ -42,13 +44,13 @@ chrome.runtime.onInstalled.addListener(({ reason }) => {
   chrome.contextMenus.removeAll(() => {
     chrome.contextMenus.create({
       id: "highlight",
-      title: "Save highlight to mdbase Reader",
+      title: t`Save highlight to mdbase Reader`,
       contexts: ["selection"],
       documentUrlPatterns: ["https://*/*"],
     });
     chrome.contextMenus.create({
       id: "note",
-      title: "Highlight with a comment in mdbase Reader",
+      title: t`Highlight with a comment in mdbase Reader`,
       contexts: ["selection"],
       documentUrlPatterns: ["https://*/*"],
     });

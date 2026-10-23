@@ -1,3 +1,5 @@
+import { Trans, useLingui } from "@lingui/react/macro";
+
 import { ConnectionPanel } from "./ConnectionPanel.js";
 
 import type { CollectionConnection } from "./use-collection-connection.js";
@@ -10,22 +12,25 @@ export function CollectionSection({
   readonly connection: CollectionConnection;
   readonly label: string;
 }): React.JSX.Element {
+  const { t } = useLingui();
   return (
     <>
       <ConnectionPanel
         controller={c}
         label={label}
-        intro="Choose the mdbase collection that pages and highlights are saved into."
+        intro={t`Choose the mdbase collection that pages and highlights are saved into.`}
       />
       {c.snapshot.status === "ready" ? (
-        <p className="connected-note">Connected. The panel saves here unless you choose another.</p>
+        <p className="connected-note">
+          <Trans>Connected. The panel saves here unless you choose another.</Trans>
+        </p>
       ) : null}
       {c.problem ? (
         <div className="problem" role="alert">
           <p>{c.problem}</p>
           <div className="problem-actions">
             <button type="button" disabled={c.busy} onClick={() => void c.retry()}>
-              Retry connection
+              <Trans>Retry connection</Trans>
             </button>
           </div>
         </div>

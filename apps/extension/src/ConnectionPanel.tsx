@@ -1,3 +1,5 @@
+import { t } from "@lingui/core/macro";
+import { Trans, useLingui } from "@lingui/react/macro";
 import { Select } from "@mdbase-dev/ui/select";
 
 import { environment } from "./environment.js";
@@ -42,7 +44,7 @@ export function ConnectionPanel({
             aria-expanded="true"
             onClick={onDone}
           >
-            Done
+            <Trans>Done</Trans>
           </button>
         ) : null
       }
@@ -64,7 +66,7 @@ export function collectionName(controller: ConnectionControls): string | null {
   }
   return (
     snapshot.collections.find((collection) => collection.collectionId === snapshot.collectionId)
-      ?.displayName ?? "your collection"
+      ?.displayName ?? t`your collection`
   );
 }
 
@@ -76,6 +78,7 @@ function CollectionChoice({
   readonly controller: ConnectionControls;
   readonly label: string;
 }): React.JSX.Element {
+  const { t } = useLingui();
   const { snapshot, busy } = c;
   return (
     <>
@@ -86,7 +89,7 @@ function CollectionChoice({
         className="collection-select"
         aria-labelledby="collection-label"
         value={snapshot.collectionId ?? ""}
-        placeholder="Choose a collection"
+        placeholder={t`Choose a collection`}
         disabled={busy}
         options={snapshot.collections.map((collection) => ({
           value: collection.collectionId,
@@ -100,7 +103,7 @@ function CollectionChoice({
         disabled={busy}
         onClick={() => void c.connect(true)}
       >
-        Connect another collection
+        <Trans>Connect another collection</Trans>
       </button>
     </>
   );
@@ -114,6 +117,7 @@ function StateScreen({
   readonly controller: ConnectionControls;
   readonly intro: string;
 }): React.JSX.Element | null {
+  const { t } = useLingui();
   const { snapshot, busy } = c;
   const target = environment.label ? ` ${environment.label}` : "";
   const primary = (label: string, run: () => Promise<void>): React.JSX.Element => (
@@ -123,55 +127,71 @@ function StateScreen({
   );
   switch (snapshot.status) {
     case "opening":
-      return <p role="status">Opening mdbase…</p>;
+      return (
+        <p role="status">
+          <Trans>Opening mdbase…</Trans>
+        </p>
+      );
     case "signed_out":
     case "closed":
       return (
         <>
-          <h2>Connect a collection</h2>
-          <p>{snapshot.status === "closed" ? "Reader has signed out." : intro}</p>
-          {primary(busy ? "Connecting…" : `Connect to mdbase${target}`, () => c.connect())}
+          <h2>
+            <Trans>Connect a collection</Trans>
+          </h2>
+          <p>{snapshot.status === "closed" ? t`Reader has signed out.` : intro}</p>
+          {primary(busy ? t`Connecting…` : t`Connect to mdbase${target}`, () => c.connect())}
         </>
       );
     case "waiting":
       return (
         <>
           <p role="status" className="device-code">
-            Approve mdbase Reader in the mdbase tab, then return here.
+            <Trans>Approve mdbase Reader in the mdbase tab, then return here.</Trans>
           </p>
           <button className="primary" type="button" onClick={() => void c.connect()}>
-            Sign in
+            <Trans>Sign in</Trans>
           </button>
         </>
       );
     case "choosing":
       return snapshot.collections.length ? null : (
         <>
-          <h2>Choose a collection</h2>
+          <h2>
+            <Trans>Choose a collection</Trans>
+          </h2>
           <p>{intro}</p>
-          {primary("Choose a collection", () => c.connect(true))}
+          {primary(t`Choose a collection`, () => c.connect(true))}
         </>
       );
     case "approval":
       return (
         <>
-          <p>This collection needs you to approve mdbase Reader for it.</p>
-          {primary("Approve access", () => c.connect())}
+          <p>
+            <Trans>This collection needs you to approve mdbase Reader for it.</Trans>
+          </p>
+          {primary(t`Approve access`, () => c.connect())}
         </>
       );
     case "setup":
       return (
         <>
-          <h2>Prepare this collection</h2>
-          <p>Reader needs its source and annotation definitions in this collection.</p>
-          {primary("Set up collection", c.applySetup)}
+          <h2>
+            <Trans>Prepare this collection</Trans>
+          </h2>
+          <p>
+            <Trans>Reader needs its source and annotation definitions in this collection.</Trans>
+          </p>
+          {primary(t`Set up collection`, c.applySetup)}
         </>
       );
     case "unchecked":
       return (
         <>
-          <p>This collection hasn’t been checked yet. Check it before saving.</p>
-          {primary("Check again", c.retry)}
+          <p>
+            <Trans>This collection hasn’t been checked yet. Check it before saving.</Trans>
+          </p>
+          {primary(t`Check again`, c.retry)}
         </>
       );
     case "problem":
@@ -188,9 +208,10 @@ function ProblemScreen({
   readonly problem: ConnectionView["problem"];
   readonly controller: ConnectionControls;
 }): React.JSX.Element {
+  const { t } = useLingui();
   return (
     <div role="alert">
-      <h2>{problem?.title ?? "This collection can’t be used right now"}</h2>
+      <h2>{problem?.title ?? t`This collection can’t be used right now`}</h2>
       <p>{problem?.message}</p>
       {problem?.action && problem.actionLabel ? (
         <button
@@ -209,16 +230,17 @@ function ProblemScreen({
 
 function ConnectionControlsPanel({
   controller: c,
-  label = "Save to collection",
-  intro = "Choose the mdbase collection to save into. Nothing is saved until you press Save.",
+  label = t`Save to collection`,
+  intro = t`Choose the mdbase collection to save into. Nothing is saved until you press Save.`,
   done,
 }: ConnectionPanelProps & { readonly done?: React.ReactNode }): React.JSX.Element {
+  const { t } = useLingui();
   const { snapshot } = c;
   const choose =
     snapshot.collections.length > 0 &&
     !["opening", "waiting", "signed_out", "closed"].includes(snapshot.status);
   return (
-    <section className="action-panel" aria-label="Collection">
+    <section className="action-panel" aria-label={t`Collection`}>
       {done}
       {choose ? <CollectionChoice controller={c} label={label} /> : null}
       <StateScreen controller={c} intro={intro} />
@@ -249,27 +271,37 @@ export function ConnectionProblem({
     <section className="problem" role="alert">
       <strong>{problemTitle(c, kind)}</strong>
       {c.saveAttempted && !c.source ? (
-        <p>Retry Save to check for an existing source before creating anything else.</p>
+        <p>
+          <Trans>Retry Save to check for an existing source before creating anything else.</Trans>
+        </p>
       ) : null}
       <p>{c.problem}</p>
       {originDenied ? (
         <details className="technical">
-          <summary>Technical details</summary>
+          <summary>
+            <Trans>Technical details</Trans>
+          </summary>
           <p>
-            Connect rejected this extension’s origin. Reload the current extension build and retry.
-            If it persists, check the {environment.label || "mdbase"} Connect configuration; Reader
-            will not bypass the origin check.
+            <Trans>
+              Connect rejected this extension’s origin. Reload the current extension build and
+              retry. If it persists, check the {environment.label || "mdbase"} Connect
+              configuration; Reader will not bypass the origin check.
+            </Trans>
           </p>
         </details>
       ) : null}
       {kind === "page" ? (
         <p>
-          Reload the page, then press the mdbase Reader toolbar button again. Some pages, such as
-          the Chrome Web Store and browser settings, cannot be read by extensions.
+          <Trans>
+            Reload the page, then press the mdbase Reader toolbar button again. Some pages, such as
+            the Chrome Web Store and browser settings, cannot be read by extensions.
+          </Trans>
         </p>
       ) : (
         <p>
-          Your selection and note are kept for this browser session, even if you close the panel.
+          <Trans>
+            Your selection and note are kept for this browser session, even if you close the panel.
+          </Trans>
         </p>
       )}
       <ProblemActions controller={c} kind={kind} />
@@ -290,7 +322,7 @@ function ProblemActions({
     <div className="problem-actions">
       {kind === "save" ? (
         <button type="button" disabled={c.busy} onClick={() => void c.save()}>
-          Retry save
+          <Trans>Retry save</Trans>
         </button>
       ) : null}
       {kind === "page" ? null : sdkProblem?.action && sdkProblem.actionLabel ? (
@@ -303,12 +335,12 @@ function ProblemActions({
         </button>
       ) : kind === "connection" ? (
         <button type="button" disabled={c.busy} onClick={() => void c.retry()}>
-          Retry connection
+          <Trans>Retry connection</Trans>
         </button>
       ) : null}
       {kind !== "page" && !sdkProblem ? (
         <button type="button" disabled={c.busy} onClick={() => void c.connect()}>
-          Review access
+          <Trans>Review access</Trans>
         </button>
       ) : null}
     </div>
@@ -321,11 +353,11 @@ function problemTitle(
 ): string {
   if (c.source) {
     return kind === "page"
-      ? "Saved. This page could not be updated."
-      : "Source saved. This action did not finish.";
+      ? t`Saved. This page could not be updated.`
+      : t`Source saved. This action did not finish.`;
   }
   if (c.saveAttempted) {
-    return "Save not confirmed";
+    return t`Save not confirmed`;
   }
-  return kind === "page" ? "Reader cannot read this page" : "Not connected";
+  return kind === "page" ? t`Reader cannot read this page` : t`Not connected`;
 }

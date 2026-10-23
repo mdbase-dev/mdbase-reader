@@ -1,7 +1,7 @@
-import { renderToStaticMarkup } from "react-dom/server";
 import { expect, it, vi } from "vitest";
 
 import { CaptureApp } from "./CaptureApp.js";
+import { renderWithI18n as renderToStaticMarkup } from "./testing/i18n.js";
 
 import type { ExtensionCaptureController } from "./capture-controller.js";
 import type { PanelTab } from "./PanelTabs.js";

@@ -1,3 +1,4 @@
+import { t } from "@lingui/core/macro";
 import { describeError, type MdbaseApplicationSnapshot } from "@mdbase-reader/connect/native";
 
 /**
@@ -66,13 +67,38 @@ export const startingView: ConnectionView = {
   problem: null,
 };
 
-const retired: ConnectionProblemView = {
-  title: "Choose the collection again",
-  message: "The connection to this collection has changed. Choose the collection again.",
-  action: "choose_collection",
-  actionLabel: "Choose a collection",
-  updateUrl: null,
-};
+function retiredProblem(): ConnectionProblemView {
+  return {
+    title: t`Choose the collection again`,
+    message: t`The connection to this collection has changed. Choose the collection again.`,
+    action: "choose_collection",
+    actionLabel: t`Choose a collection`,
+    updateUrl: null,
+  };
+}
+
+function recoveryActionLabel(action: RecoveryAction): string | null {
+  switch (action) {
+    case "sign_in":
+      return t`Sign in`;
+    case "approve":
+      return t`Approve access`;
+    case "set_up":
+      return t`Set up collection`;
+    case "choose_collection":
+      return t`Choose a collection`;
+    case "update_app":
+      return t`Update Reader`;
+    case "retry":
+      return t`Retry connection`;
+    case "reload":
+      return t`Reload Reader`;
+    case "check_again":
+      return t`Check again`;
+    default:
+      return null;
+  }
+}
 
 /** The SDK's description of a settled problem, as one extension control. */
 function sdkProblem(
@@ -103,7 +129,7 @@ function sdkProblem(
     title: described.title,
     message: described.message,
     action: mapped,
-    actionLabel: mapped === "check_again" ? "Check again" : described.actionLabel,
+    actionLabel: recoveryActionLabel(mapped) ?? described.actionLabel,
     updateUrl: described.updateUrl,
   };
 }
@@ -113,10 +139,10 @@ function identityLabel(signIn: MdbaseApplicationSnapshot["signIn"]): string | nu
     return null;
   }
   if (signIn.accountEmail) {
-    return `Signed in as ${signIn.accountEmail}`;
+    return t`Signed in as ${signIn.accountEmail}`;
   }
   return signIn.accountProvider === "github" && signIn.accountLogin
-    ? `Signed in as ${signIn.accountLogin} on GitHub`
+    ? t`Signed in as ${signIn.accountLogin} on GitHub`
     : null;
 }
 
@@ -177,7 +203,7 @@ function screen(snapshot: MdbaseApplicationSnapshot, usable: boolean): Screen {
   }
   return snapshot.readiness.assessment === null
     ? plain("unchecked")
-    : { status: "problem", problem: retired };
+    : { status: "problem", problem: retiredProblem() };
 }
 
 /**
@@ -204,22 +230,22 @@ export function connectionView(
 export function connectionUnavailableMessage(view: ConnectionView): string {
   switch (view.status) {
     case "problem":
-      return view.problem?.message ?? "This collection can't be used right now.";
+      return view.problem?.message ?? t`This collection can't be used right now.`;
     case "signed_out":
-      return "Sign in to mdbase before saving.";
+      return t`Sign in to mdbase before saving.`;
     case "waiting":
-      return "Finish signing in or approving in the mdbase tab, then save.";
+      return t`Finish signing in or approving in the mdbase tab, then save.`;
     case "choosing":
-      return "Choose a collection before saving.";
+      return t`Choose a collection before saving.`;
     case "approval":
-      return "Approve access to this collection before saving.";
+      return t`Approve access to this collection before saving.`;
     case "setup":
-      return "Set up this collection for Reader before saving.";
+      return t`Set up this collection for Reader before saving.`;
     case "unchecked":
-      return "Check this collection before saving.";
+      return t`Check this collection before saving.`;
     case "closed":
-      return "Reader has signed out. Sign in again before saving; your draft is kept.";
+      return t`Reader has signed out. Sign in again before saving; your draft is kept.`;
     default:
-      return "mdbase is still getting ready. Try again in a moment.";
+      return t`mdbase is still getting ready. Try again in a moment.`;
   }
 }

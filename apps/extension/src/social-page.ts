@@ -118,7 +118,7 @@ function readableSelection(
   const partText = pageText({ action: "text" }, parsed, part).text ?? "";
   const match = matchTextQuote(partText, raw);
   if (!match || match.ambiguous) {
-    throw new Error("The selected passage is ambiguous inside this post. Select a longer passage.");
+    throw new Error("reader/ambiguous-post-selection");
   }
   // Context is taken from the post's readable representation, not feed chrome or neighbours.
   return textQuoteAt(partText, match.start, match.end);
@@ -140,14 +140,14 @@ async function captureSocialPage(
   const retrievedAt = new Date().toISOString();
   if (!ref) {
     if (id || listing.mode === "single") {
-      throw new Error("The post is not loaded. Scroll it into view and try again.");
+      throw new Error("reader/post-not-loaded");
     }
     return {
       kind: "html",
       submittedUrl: pageUrl,
       canonicalUrl: pageUrl,
       retrievedAt,
-      pageTitle: "Choose posts to save",
+      pageTitle: "",
       html: "",
       selection: null,
       pageUrl,
@@ -185,7 +185,7 @@ function drawSocialQuotes(
   focus?: number,
 ): PageProjection {
   if (doc.location.href.split("#")[0] !== expectedUrl.split("#")[0]) {
-    throw new Error("The tab navigated away.");
+    throw new Error("reader/tab-navigated");
   }
   const adapter = adapterFor(doc);
   const outcomes: PageProjection["outcomes"][number][] = quotes.map(() => "missing");

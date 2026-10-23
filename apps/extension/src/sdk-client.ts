@@ -1,3 +1,5 @@
+import { t } from "@lingui/core/macro";
+
 import {
   deserializeError,
   encodeArgs,
@@ -61,8 +63,9 @@ interface Inflight {
 const helloIntervalMs = 250;
 const startTimeoutMs = 20_000;
 
-export const hostRestartedMessage =
-  "mdbase restarted in the background. Check whether your last change was saved, then try again.";
+export function hostRestartedMessage(): string {
+  return t`mdbase restarted in the background. Check whether your last change was saved, then try again.`;
+}
 
 /** One context's connection to the host: requests, snapshots and reconnection. */
 class HostConnection {
@@ -93,7 +96,7 @@ class HostConnection {
 
   get snapshot(): MdbaseApplicationSnapshot {
     if (!this.#snapshot) {
-      throw new Error("mdbase has not started yet.");
+      throw new Error(t`mdbase has not started yet.`);
     }
     return this.#snapshot;
   }
@@ -109,7 +112,7 @@ class HostConnection {
       let hello: ReturnType<typeof setInterval> | undefined;
       const timeout = setTimeout(() => {
         clearInterval(hello);
-        reject(new Error("mdbase could not start in the background. Reload the extension."));
+        reject(new Error(t`mdbase could not start in the background. Reload the extension.`));
       }, startTimeoutMs);
       this.#markConnected = () => {
         clearInterval(hello);
@@ -145,7 +148,7 @@ class HostConnection {
     }
     const host = this.#host;
     if (!host || this.#disposed) {
-      throw new Error(hostRestartedMessage);
+      throw new Error(hostRestartedMessage());
     }
     const id = ++this.#nextId;
     return new Promise<unknown>((resolve, reject) => {
@@ -190,7 +193,7 @@ class HostConnection {
     for (const [id, call] of [...this.#inflight]) {
       if (matches(call)) {
         this.#inflight.delete(id);
-        call.reject(new Error(hostRestartedMessage));
+        call.reject(new Error(hostRestartedMessage()));
       }
     }
   }
