@@ -203,7 +203,7 @@ function exportReport(
   files: readonly SourceExportProblem[],
 ): string {
   const lines = [
-    "# Reader export report",
+    `# ${t`Reader export report`}`,
     "",
     t({
       message: "The canonical records were preserved. Review these incomplete derived outputs:",
