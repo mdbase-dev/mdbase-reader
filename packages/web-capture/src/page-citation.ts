@@ -118,15 +118,15 @@ export async function citationForPage(
   publish();
   const citoidController = new AbortController();
   let registered = false;
-  let discoveredDoi: string | undefined;
   const registry = doi
     ? registryLookup(doi).then((obtained) => {
         registered = obtained;
         if (obtained) {
           citoidController.abort();
         }
+        return obtained;
       })
-    : Promise.resolve();
+    : Promise.resolve(false);
   // Opted-in URL lookups can upgrade a slow DOI lookup, but never hold a registry result up.
   const remote = options.citoid
     ? lookupCitoid(pageUrl, options, options.citoid, citoidController.signal).then((batch) => {
@@ -136,13 +136,14 @@ export async function citationForPage(
           }
           return;
         }
-        discoveredDoi = batchDoi(batch);
+        const discoveredDoi = batchDoi(batch);
         doi ??= discoveredDoi;
         accept(batch);
+        return discoveredDoi;
       })
-    : Promise.resolve();
-  await Promise.all([registry, remote]);
-  if (!registered && discoveredDoi && !attempted.has(discoveredDoi.toLowerCase())) {
+    : Promise.resolve(undefined);
+  const [obtained, discoveredDoi] = await Promise.all([registry, remote]);
+  if (!obtained && discoveredDoi && !attempted.has(discoveredDoi.toLowerCase())) {
     doi = discoveredDoi;
     await registryLookup(doi);
   }

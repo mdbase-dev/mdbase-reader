@@ -21,7 +21,7 @@ function linked(node: unknown): string {
   return `<script type="application/ld+json">${JSON.stringify(node)}</script>`;
 }
 
-function resolve(document: Document) {
+function resolve(document: Document): ReturnType<typeof resolveCitation> {
   return resolveCitation({ claims: pageClaims(document, url, observedAt).claims });
 }
 
@@ -72,7 +72,9 @@ describe("page claims through the resolver", () => {
     expect(resolveCitation({ claims }).citation).toMatchObject(expected);
     expect(resolveCitation({ claims: [...claims].reverse() }).citation).toMatchObject(expected);
   });
+});
 
+describe("specific page work types", () => {
   it.each([
     "NewsArticle",
     "ReportageNewsArticle",
@@ -155,7 +157,9 @@ describe("page claims through the resolver", () => {
     ).toEqual([]);
     expect(resolve(document).citation).not.toHaveProperty("container-title");
   });
+});
 
+describe("organisational bylines through the resolver", () => {
   it.each([
     "Associated Press",
     "AP",

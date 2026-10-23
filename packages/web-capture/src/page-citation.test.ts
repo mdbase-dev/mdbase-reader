@@ -121,7 +121,9 @@ describe("page citations", () => {
       resolveDoiCitation("10.1234/example", { fetch: hangingFetch(), timeoutMs: 10 }),
     ).rejects.toThrow("within 0.01 seconds");
   });
+});
 
+describe("page citation identifiers", () => {
   it.each([
     ["https://doi.org/10.1234/from-url", "10.1234/from-url"],
     ["https://arxiv.org/pdf/0704.0001v2.pdf", "10.48550/arXiv.0704.0001"],
@@ -172,14 +174,14 @@ describe("page citations", () => {
   });
 });
 
-describe("optional Citoid page citations", () => {
-  const item = {
-    itemType: "encyclopediaArticle",
-    title: "Remote title",
-    encyclopediaTitle: "Encyclopedia",
-    date: "2026-10-20",
-  };
+const item = {
+  itemType: "encyclopediaArticle",
+  title: "Remote title",
+  encyclopediaTitle: "Encyclopedia",
+  date: "2026-10-20",
+};
 
+describe("optional Citoid page citations", () => {
   it.each([undefined, false] as const)("does not send the URL with citoid=%s", async (citoid) => {
     const fetch = vi.fn<typeof globalThis.fetch>();
     const preview = await citationForPage(page, pageUrl, {
@@ -223,7 +225,9 @@ describe("optional Citoid page citations", () => {
   it("cancels an opted-in Citoid lookup once a registry record is obtained", async () => {
     let resolveRegistry!: (response: Response) => void;
     const fetch = vi.fn<typeof globalThis.fetch>((url) =>
-      String(url).startsWith("https://doi.org/")
+      (typeof url === "string" ? url : url instanceof URL ? url.href : url.url).startsWith(
+        "https://doi.org/",
+      )
         ? new Promise((resolve) => {
             resolveRegistry = resolve;
           })
@@ -245,7 +249,9 @@ describe("optional Citoid page citations", () => {
   it("can upgrade from Citoid while a DOI lookup is still pending", async () => {
     let resolveRegistry!: (response: Response) => void;
     const fetch = vi.fn<typeof globalThis.fetch>((url) =>
-      String(url).startsWith("https://doi.org/")
+      (typeof url === "string" ? url : url instanceof URL ? url.href : url.url).startsWith(
+        "https://doi.org/",
+      )
         ? new Promise((resolve) => {
             resolveRegistry = resolve;
           })
@@ -277,7 +283,9 @@ describe("optional Citoid page citations", () => {
     });
     expect(fetch).toHaveBeenCalledTimes(2);
   });
+});
 
+describe("Citoid discoveries and failures", () => {
   it("follows a DOI discovered by Citoid in a bounded second round", async () => {
     const fetch = vi
       .fn<typeof globalThis.fetch>()

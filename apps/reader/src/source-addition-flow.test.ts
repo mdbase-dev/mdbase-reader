@@ -207,7 +207,9 @@ describe("adding captured page citations", () => {
     );
     vi.stubGlobal("fetch", fetch);
     const page = capturedPage(pageClaims);
-    const deps = services({ capture: vi.fn(() => Promise.resolve({ kind: "html", page })) });
+    const deps = services({
+      capture: vi.fn(() => Promise.resolve({ kind: "html" as const, page })),
+    });
     const result = await addSourceFromInput(page.capture.canonicalUrl, deps);
     expect(fetch.mock.calls[0]?.[0]).toBe(
       `https://en.wikipedia.org/api/rest_v1/data/citation/zotero/${encodeURIComponent(page.capture.canonicalUrl)}`,
@@ -241,7 +243,9 @@ describe("adding captured page citations", () => {
     const fetch = vi.fn<typeof globalThis.fetch>().mockRejectedValue(new Error("Offline"));
     vi.stubGlobal("fetch", fetch);
     const page = capturedPage(pageClaims);
-    const deps = services({ capture: vi.fn(() => Promise.resolve({ kind: "html", page })) });
+    const deps = services({
+      capture: vi.fn(() => Promise.resolve({ kind: "html" as const, page })),
+    });
     const result = await addSourceFromInput(page.capture.canonicalUrl, deps);
     expect(result).toMatchObject({
       kind: "added",
@@ -268,11 +272,15 @@ describe("adding captured page citations", () => {
           author: { id: "poster", name: "A poster", handle: "fixture.test" },
           threadRoot: "post",
           threadPartial: false,
+          text: "A post",
+          media: [],
           parts: [],
         },
       },
     };
-    const deps = services({ capture: vi.fn(() => Promise.resolve({ kind: "html", page })) });
+    const deps = services({
+      capture: vi.fn(() => Promise.resolve({ kind: "html" as const, page })),
+    });
     await addSourceFromInput("https://bsky.app/profile/fixture.test/post/first", deps);
     expect(fetch).not.toHaveBeenCalled();
     expect(deps.workspace.saveNewSourceCitation).toHaveBeenCalledWith(source(), citation);
@@ -284,7 +292,7 @@ describe("adding captured page citations", () => {
     vi.stubGlobal("fetch", fetch);
     const page = capturedPage(pageClaims);
     const deps = services({
-      capture: vi.fn(() => Promise.resolve({ kind: "html", page })),
+      capture: vi.fn(() => Promise.resolve({ kind: "html" as const, page })),
       signal: controller.signal,
     });
     const result = addSourceFromInput(page.capture.canonicalUrl, deps);

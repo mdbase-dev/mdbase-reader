@@ -252,12 +252,7 @@ function tagPages(meta: MetaIndex, add: AddClaim): void {
 
 function linkedClaims(node: JsonLdNode, add: AddClaim): void {
   const signal = "json-ld";
-  const workType = arrayValue(node["@type"]).find(
-    (type): type is string =>
-      typeof type === "string" &&
-      (scholarlyJsonLdTypes.has(type) ||
-        (articleJsonLdTypes.has(type) && articleJsonLdTypes.get(type) !== "webpage")),
-  );
+  const workType = specificWorkType(node);
   const fields = [
     ["headline", "title"],
     ["name", "title"],
@@ -284,10 +279,7 @@ function linkedClaims(node: JsonLdNode, add: AddClaim): void {
     add("publisher", nameOf(value), signal, "publisher");
   }
   for (const value of arrayValue(node["isPartOf"])) {
-    // Article graphs often point to their own WebPage, not the containing publication.
-    if (!isRecord(value) || !arrayValue(value["@type"]).includes("WebPage")) {
-      add("container-title", nameOf(value), signal, "isPartOf");
-    }
+    add("container-title", linkedContainer(value), signal, "isPartOf");
   }
   const words = arrayValue(node["keywords"])
     .flatMap((value) => (typeof value === "string" ? value.split(",") : []))
@@ -305,6 +297,22 @@ function linkedClaims(node: JsonLdNode, add: AddClaim): void {
       linkedType(type, add);
     }
   }
+}
+
+function linkedContainer(value: unknown): string | undefined {
+  // Article graphs often point to their own WebPage, not the containing publication.
+  return isRecord(value) && arrayValue(value["@type"]).includes("WebPage")
+    ? undefined
+    : nameOf(value);
+}
+
+function specificWorkType(node: JsonLdNode): string | undefined {
+  return arrayValue(node["@type"]).find(
+    (type): type is string =>
+      typeof type === "string" &&
+      (scholarlyJsonLdTypes.has(type) ||
+        (articleJsonLdTypes.has(type) && articleJsonLdTypes.get(type) !== "webpage")),
+  );
 }
 
 function linkedType(type: string, add: AddClaim): void {

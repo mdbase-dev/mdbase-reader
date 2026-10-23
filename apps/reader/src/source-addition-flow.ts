@@ -9,6 +9,7 @@ import {
   siteAdapters,
   type CitationDraft,
   type SourceIdentifier,
+  type WebCaptureImport,
 } from "@mdbase-reader/web-capture";
 
 import { findOpenAccessPdf, pdfFileName, type PdfSearchServices } from "./open-access-pdf.js";
@@ -82,7 +83,7 @@ async function addFromUrl(
     captured = await services.capture(url, { allowPdf: true, ...signalOf(services) });
   } catch (reason) {
     services.signal?.throwIfAborted();
-    if (socialAddress || messageOf(reason).includes("Feeds cannot be saved as sources")) {
+    if (cannotOfferCitationOnly(socialAddress, reason)) {
       throw reason;
     }
     services.onStatus("Looking up citation details instead…");
@@ -99,14 +100,8 @@ async function addFromUrl(
   }
   const { page } = captured;
   services.onStatus("Looking up citation details…");
-  const preview = page.metadata.socialPost
-    ? null
-    : await citationForPage(page.claims, page.capture.canonicalUrl, {
-        ...signalOf(services),
-        citoid: {},
-      });
-  const citation =
-    preview?.citation ?? (page.metadata.socialPost ? page.scholarly.citation : undefined);
+  const preview = await capturedPageCitation(page, services);
+  const citation = preview?.citation ?? page.scholarly.citation;
   const fields = citation ? citationFields(citation) : undefined;
   const source = await services.workspace.importSourceFile(
     {
@@ -122,6 +117,25 @@ async function addFromUrl(
     services.importOptions,
   );
   return finish(source, citation, services, preview?.provenance);
+}
+
+function cannotOfferCitationOnly(
+  address: ReturnType<typeof postAddress>,
+  reason: unknown,
+): boolean {
+  return Boolean(address) || messageOf(reason).includes("Feeds cannot be saved as sources");
+}
+
+function capturedPageCitation(
+  page: WebCaptureImport,
+  services: SourceAdditionServices,
+): ReturnType<typeof citationForPage> {
+  return page.metadata.socialPost
+    ? Promise.resolve(null)
+    : citationForPage(page.claims, page.capture.canonicalUrl, {
+        ...signalOf(services),
+        citoid: {},
+      });
 }
 
 function assertSocialInput(url: string): ReturnType<typeof postAddress> {
