@@ -205,6 +205,22 @@ describe("successful remote claims", () => {
   });
 });
 
+describe("Citoid cooldowns", () => {
+  it("reports a pause longer than the deadline as rate-limited without queueing", async () => {
+    const queue = createProviderQueue({ now: () => 0 });
+    const limited = vi
+      .fn<typeof fetch>()
+      .mockResolvedValue(new Response(null, { status: 429, headers: { "Retry-After": "60" } }));
+    await citoidClaims(pageUrl, { fetch: limited, now, queue });
+    const fetcher = vi.fn<typeof fetch>();
+    expect(await citoidClaims(pageUrl, { fetch: fetcher, now, queue })).toEqual({
+      claims: [],
+      outcome: { provider: "citoid", result: "rate-limited", elapsedMs: 0, retryAfterMs: 60_000 },
+    });
+    expect(fetcher).not.toHaveBeenCalled();
+  });
+});
+
 describe.each(["doi.org", "citoid"] as const)("%s provider failures", (provider) => {
   it.each([
     [400, "not-found"],

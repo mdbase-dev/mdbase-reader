@@ -9,6 +9,8 @@ export interface ProviderQueueOptions {
 export interface ProviderQueue {
   /** FIFO within each host; unrelated hosts have independent limits and cooldowns. */
   run(url: string, request: () => Promise<Response>, signal?: AbortSignal): Promise<Response>;
+  /** How long new requests to the URL's host will wait before starting; 0 when not paused. */
+  cooldownMs(url: string): number;
 }
 
 interface PendingRequest {
@@ -29,6 +31,8 @@ interface HostQueue {
 
 const INITIAL_BACKOFF_MS = 5_000;
 const MAX_BACKOFF_MS = 60_000;
+/** A provider's Retry-After pauses its host for at most this long; lookups are optional. */
+const MAX_RETRY_AFTER_MS = 10 * 60_000;
 const MAX_TIMER_MS = 2_147_483_647;
 
 /** Seconds or an HTTP date; missing, malformed and non-finite values have no duration. */
@@ -77,7 +81,10 @@ export function createProviderQueue(options: ProviderQueueOptions = {}): Provide
     if (response.status === 429) {
       const backoff = Math.min(INITIAL_BACKOFF_MS * 2 ** host.rateLimits, MAX_BACKOFF_MS);
       host.rateLimits = Math.min(host.rateLimits + 1, 4);
-      const delay = retryAfterMs(response.headers.get("Retry-After"), now()) ?? backoff;
+      const delay = Math.min(
+        retryAfterMs(response.headers.get("Retry-After"), now()) ?? backoff,
+        MAX_RETRY_AFTER_MS,
+      );
       host.pausedUntil = Math.max(host.pausedUntil, now() + delay);
     } else if (response.ok && now() >= host.pausedUntil) {
       host.rateLimits = 0;
@@ -103,6 +110,10 @@ export function createProviderQueue(options: ProviderQueueOptions = {}): Provide
   }
 
   return {
+    cooldownMs(url): number {
+      const host = hosts.get(new URL(url).host);
+      return host ? Math.max(0, host.pausedUntil - now()) : 0;
+    },
     run(url, request, signal): Promise<Response> {
       return new Promise((resolve, reject) => {
         signal?.throwIfAborted();

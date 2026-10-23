@@ -83,7 +83,13 @@ export function citoidClaims(url: string, options: CitoidClaimsOptions = {}): Pr
     options.timeoutMs ?? CITOID_TIMEOUT_MS,
     async (signal, fetcher) => {
       const requestUrl = `${endpoint}${encodeURIComponent(url)}`;
-      const response = await (options.queue ?? defaultQueue).run(
+      const queue = options.queue ?? defaultQueue;
+      // Waiting out a pause longer than the deadline would only end in a misleading timeout.
+      const cooldown = queue.cooldownMs(requestUrl);
+      if (cooldown >= (options.timeoutMs ?? CITOID_TIMEOUT_MS)) {
+        return { claims: [], result: "rate-limited", retryAfterMs: cooldown };
+      }
+      const response = await queue.run(
         requestUrl,
         () =>
           untilAborted(
@@ -124,7 +130,10 @@ export function citoidClaims(url: string, options: CitoidClaimsOptions = {}): Pr
   );
 }
 
-type ProviderReply = Omit<ClaimBatch, "outcome"> & { readonly result?: ProviderResult };
+type ProviderReply = Omit<ClaimBatch, "outcome"> & {
+  readonly result?: ProviderResult;
+  readonly retryAfterMs?: number;
+};
 type ProviderWork = (signal: AbortSignal, fetcher: typeof fetch) => Promise<ProviderReply>;
 
 async function collectClaims(
@@ -151,10 +160,10 @@ async function collectClaims(
     response = await (options.fetch ?? globalThis.fetch.bind(globalThis))(input, init);
     return response;
   };
-  function outcome(result: ProviderResult): ProviderOutcome {
+  function outcome(result: ProviderResult, known?: number): ProviderOutcome {
     const delay =
       result === "rate-limited"
-        ? retryAfterMs(response?.headers.get("Retry-After") ?? null, now().getTime())
+        ? (known ?? retryAfterMs(response?.headers.get("Retry-After") ?? null, now().getTime()))
         : undefined;
     return {
       provider,
@@ -164,9 +173,13 @@ async function collectClaims(
     };
   }
   try {
-    const { result = "ok", ...batch } = await untilAborted(() => work(signal, fetcher), signal);
+    const {
+      result = "ok",
+      retryAfterMs: known,
+      ...batch
+    } = await untilAborted(() => work(signal, fetcher), signal);
     options.signal?.throwIfAborted();
-    return { ...batch, outcome: outcome(result) };
+    return { ...batch, outcome: outcome(result, known) };
   } catch {
     options.signal?.throwIfAborted();
     const result = controller.signal.aborted

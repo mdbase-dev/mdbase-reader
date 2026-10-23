@@ -134,6 +134,17 @@ describe("provider queue cooldowns", () => {
     await next;
   });
 
+  it("caps a provider's Retry-After at ten minutes", async () => {
+    let clock = 0;
+    const queue = createProviderQueue({ now: () => clock });
+    await queue.run(endpoint, () =>
+      Promise.resolve(new Response(null, { status: 429, headers: { "Retry-After": "86400" } })),
+    );
+    expect(queue.cooldownMs(endpoint)).toBe(600_000);
+    clock = 600_000;
+    expect(queue.cooldownMs(endpoint)).toBe(0);
+  });
+
   it("parses seconds and past dates, and rejects malformed Retry-After", () => {
     expect(retryAfterMs("1.5", 0)).toBe(1_500);
     expect(retryAfterMs("Wed, 21 Oct 2026 00:00:00 GMT", Date.parse("2026-10-22"))).toBe(0);
