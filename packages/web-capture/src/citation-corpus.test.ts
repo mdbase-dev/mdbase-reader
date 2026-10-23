@@ -87,6 +87,7 @@ describe("citation replay corpus", () => {
     });
     expect(entry.expected["title"]).toEqual(expect.any(String));
     expect(entry.expected["URL"]).toEqual(expect.any(String));
+    expect(new URL(String(entry.expected["URL"])).protocol).toBe("https:");
     expect(entry.citoid).toBeDefined();
     for (const response of [entry.citoid, entry.doi]) {
       if (!response) {
@@ -102,7 +103,18 @@ describe("citation replay corpus", () => {
 });
 
 it("documents the pre-claims extractor's field-level baseline (not a resolver target)", () => {
-  expect(baseline()).toEqual({
+  const report = baseline();
+  for (const entry of corpus) {
+    const result = report[entry.slug];
+    if (!result) {
+      throw new Error(`Missing baseline for ${entry.slug}`);
+    }
+    const wrong = result.wrong.length ? result.wrong.join(", ") : "none";
+    expect(entry.notes).toContain(
+      `Baseline extractScholarlyMetadata at d0c7061: ${String(result.matched)}/${String(result.total)} expected fields match; wrong or missing fields: ${wrong}. Cosmetic case/whitespace differences are ignored; absent expected fields are not scored.`,
+    );
+  }
+  expect(report).toEqual({
     abc: { matched: 7, total: 7, wrong: [] },
     ars: { matched: 7, total: 7, wrong: [] },
     "arxiv-attention": { matched: 6, total: 7, wrong: ["publisher"] },
