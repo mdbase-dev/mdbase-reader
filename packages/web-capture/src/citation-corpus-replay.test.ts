@@ -100,7 +100,7 @@ const stillWrong: Record<string, { readonly page: string[]; readonly remote: str
     page: ["type", "title", "author", "issued", "container-title", "publisher", "DOI", "URL"],
     remote: ["type", "title", "author", "issued", "container-title", "publisher", "DOI", "URL"],
   },
-  "plos-research": { page: ["issued"], remote: [] },
+  "plos-research": { page: [], remote: [] },
   "springer-imagenet": { page: [], remote: [] },
   "stackoverflow-branch": {
     page: ["type", "title", "author", "issued", "container-title", "URL"],
