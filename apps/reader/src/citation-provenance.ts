@@ -8,8 +8,10 @@ import { parseClaimSourceLabel } from "@mdbase-reader/web-capture/citation-updat
 
 /** Stored labels remain machine-readable; only this presentation layer expands them. */
 export function citationSourceLabel(label: string): string {
-  const source = parseClaimSourceLabel(label);
+  const source = parseClaimSourceLabel(label) ?? parseClaimSourceLabel(label.split(" ")[0] ?? "");
   switch (source?.kind) {
+    case "parent":
+      return "From the book";
     case "registry":
       return source.name;
     case "site-adapter":

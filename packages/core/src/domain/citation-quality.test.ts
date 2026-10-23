@@ -3,6 +3,25 @@ import { describe, expect, it } from "vitest";
 import { summariseCitationQuality } from "./citation-quality.js";
 
 describe("local citation quality", () => {
+  it("counts parent explanations, edits and removals without retaining identifying data", () => {
+    const summary = summariseCitationQuality([
+      {
+        csl: { "container-title": "Private book", publisher: "Manual press" },
+        cslProvenance: {
+          "container-title": { value: "Private book", source: "parent title" },
+          publisher: { value: "Old press", source: "parent publisher" },
+          ISBN: { value: "Private ISBN", source: "parent ISBN" },
+        },
+      },
+    ]);
+    expect(summary.fieldsBySource.parent).toBe(1);
+    expect(summary.fieldsBySource.user).toBe(1);
+    expect(summary.editedBySource.parent).toBe(1);
+    expect(summary.removedBySource.parent).toBe(1);
+    expect(summary.removedFields).toBe(1);
+    expect(JSON.stringify(summary)).not.toMatch(/Private|ISBN|press|title/u);
+  });
+
   it("counts current fields, external edits by original kind, and removals", () => {
     const summary = summariseCitationQuality([
       {
@@ -31,6 +50,7 @@ describe("local citation quality", () => {
     ]);
     expect(summary.sources).toBe(3);
     expect(summary.fieldsBySource).toEqual({
+      parent: 0,
       registry: 1,
       "site-adapter": 0,
       page: 0,

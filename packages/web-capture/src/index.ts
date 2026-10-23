@@ -16,6 +16,7 @@ export {
 export * from "./claims.js";
 export * from "./page-claims.js";
 export * from "./resolver.js";
+export * from "./parent-claims.js";
 export * from "./provider-queue.js";
 export * from "./provider-claims.js";
 export * from "./citoid-url.js";
