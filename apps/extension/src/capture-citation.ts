@@ -68,7 +68,15 @@ export async function saveCaptureCitation(
 ): Promise<Source> {
   const library = await neighbours;
   const id = citekeyForCitation(citation, library, source.id);
-  return saveSourceCitation(collection.sources, source, library, { ...citation, id });
+  return saveSourceCitation(
+    collection.sources,
+    source,
+    library,
+    { ...citation, id },
+    {
+      ...(source.citation ? { expectedCitation: source.citation } : {}),
+    },
+  );
 }
 
 async function sourcesWithCitekeyPrefix(

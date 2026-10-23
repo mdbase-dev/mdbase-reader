@@ -1,10 +1,7 @@
 import {
   bodyEmbedsAnnotation,
-  cslProblemSummary,
-  cslProvenanceKey,
   filterSources,
   recordRevision,
-  validateCslItem,
   type AnnotationId,
   type CollectionId,
   type MutationId,
@@ -29,6 +26,7 @@ import {
   readWithOptions,
   recordPathById,
 } from "./repository-client.js";
+import { writeSourceCitation } from "./source-citation.js";
 import { writeSourceFields } from "./source-fields.js";
 import * as lookups from "./source-lookups.js";
 
@@ -175,33 +173,8 @@ export class ConnectSourceRepository implements SourceRepository {
   }
 
   async updateCitation(input: Parameters<SourceRepository["updateCitation"]>[0]): Promise<Source> {
-    const validation = validateCslItem(input.citation);
-    if (!validation.valid) {
-      throw new ConnectRepositoryError(
-        "save citation metadata",
-        cslProblemSummary(validation.problems),
-      );
-    }
     const path = await this.#path(input.sourceId, "save citation metadata");
-    const updated = outcomeValue(
-      await this.client.update({
-        path,
-        // A citation save only replaces `csl`. Checking the revision the editor loaded would
-        // refuse it after any unrelated write, such as a reading position.
-        patch: {
-          csl: validation.item,
-          ...(input.provenance !== undefined
-            ? {
-                [cslProvenanceKey]:
-                  Object.keys(input.provenance).length > 0 ? input.provenance : null,
-              }
-            : {}),
-        },
-        includeDocument: true,
-      }),
-      "save citation metadata",
-    );
-    return sourceFromDocument(input.collectionId, updated);
+    return writeSourceCitation(this.client, path, input);
   }
 
   async appendAnnotationEmbed(input: {

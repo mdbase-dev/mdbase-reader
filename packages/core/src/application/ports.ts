@@ -84,6 +84,8 @@ export interface SourceRepository extends SourceLookups {
     readonly sourceId: SourceId;
     readonly citation: CslItem;
     readonly provenance?: CslProvenance;
+    /** The citation the editor loaded; unrelated record changes do not block the save. */
+    readonly expectedCitation?: CslItem;
   }): Promise<Source>;
   /** Checks removing a source record at its current revision and lists what links to it. */
   preflightDelete?(source: Source): Promise<SourceDeletionPlan>;

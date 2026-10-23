@@ -7,6 +7,7 @@ export type DomainProblemCode =
   | "invalid-source-import"
   | "duplicate-source-import"
   | "invalid-citation"
+  | "citation-changed-elsewhere"
   | "duplicate-citekey"
   | "unsupported-source-file"
   | "unsupported-source-attachment"
@@ -22,5 +23,14 @@ export class DomainError extends Error {
     super(message);
     this.name = "DomainError";
     this.code = code;
+  }
+}
+
+export class CitationChangedElsewhereError extends DomainError {
+  public constructor(public readonly currentCitation: unknown) {
+    super(
+      "citation-changed-elsewhere",
+      "This citation changed elsewhere. Reload it before saving.",
+    );
   }
 }

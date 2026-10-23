@@ -46,7 +46,9 @@ export function useCitationEditor(input: {
   readonly source: Source | null;
   readonly onSaved: (source: Source) => void;
 }): CitationEditorController {
-  const [draftState, setDraftState] = useState<SelectedValue<string> | null>(null);
+  const [draftState, setDraftState] = useState<
+    (SelectedValue<string> & { readonly source: Source }) | null
+  >(null);
   const [statusState, setStatusState] = useState<SelectedValue<
     CitationEditorController["status"]
   > | null>(null);
@@ -72,13 +74,18 @@ export function useCitationEditor(input: {
   const assessment = assessCitationDraft(draft);
   const setDraft = useCallback(
     (value: string): void => {
-      if (sourceId) {
-        setDraftState({ sourceId, value });
+      const source = input.source;
+      if (sourceId && source) {
+        setDraftState((previous) => ({
+          sourceId,
+          value,
+          source: previous?.sourceId === sourceId ? previous.source : source,
+        }));
         setStatusState({ sourceId, value: "idle" });
         setErrorState({ sourceId, value: null });
       }
     },
-    [sourceId],
+    [input.source, sourceId],
   );
   const setCitation = useCallback(
     (value: Readonly<Record<string, unknown>>): void => {
@@ -87,7 +94,8 @@ export function useCitationEditor(input: {
     [setDraft],
   );
   const save = useCallback((): void => {
-    const source = input.source;
+    const source =
+      draftState && draftState.sourceId === input.source?.id ? draftState.source : input.source;
     if (!source || !assessment.valid || !dirty || status === "saving") {
       return;
     }
@@ -97,6 +105,9 @@ export function useCitationEditor(input: {
       .saveSourceCitation(source, assessment.value)
       .then((updated) => {
         input.onSaved(updated);
+        setDraftState((previous) =>
+          previous?.sourceId === updated.id ? { ...previous, source: updated } : previous,
+        );
         setStatusState({ sourceId: updated.id, value: "saved" });
         // The editor's SaveNotice usually plays this too; the mark plays it once.
         signalMdbaseMark("saved");
@@ -110,7 +121,7 @@ export function useCitationEditor(input: {
           value: readerErrorMessage(reason, "Reader could not save this citation."),
         });
       });
-  }, [assessment, dirty, input, status]);
+  }, [assessment, dirty, draftState, input, status]);
 
   const resolve = useCallback(
     (query: string): void => {
