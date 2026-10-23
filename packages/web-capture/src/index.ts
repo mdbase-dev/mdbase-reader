@@ -13,3 +13,4 @@ export {
   sanitizedCitation,
   type CitationDraft,
 } from "./csl-values.js";
+export * from "./claims.js";

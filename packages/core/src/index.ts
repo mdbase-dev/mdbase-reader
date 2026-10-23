@@ -19,6 +19,7 @@ export * from "./domain/annotation.js";
 export * from "./domain/citation.js";
 export * from "./domain/citation-schema.js";
 export type * from "./domain/citation-metadata.js";
+export * from "./domain/csl-provenance.js";
 export * from "./domain/document.js";
 export * from "./domain/errors.js";
 export * from "./domain/identity.js";
