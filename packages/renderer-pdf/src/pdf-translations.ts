@@ -1,8 +1,8 @@
 import { i18n } from "@lingui/core";
 import { msg } from "@lingui/core/macro";
 
-import type { MessageDescriptor } from "@lingui/core";
 import type { Locale } from "@embedpdf/react-pdf-viewer";
+import type { MessageDescriptor } from "@lingui/core";
 
 interface Phrase {
   readonly descriptor: MessageDescriptor;

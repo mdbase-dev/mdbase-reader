@@ -1,4 +1,5 @@
 import { t } from "@lingui/core/macro";
+
 import { cslFieldKinds, nameFlagFields, nameStringFields } from "./citation-schema.js";
 
 import type { CslValidationProblem } from "./citation.js";

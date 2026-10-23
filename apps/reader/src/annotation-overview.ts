@@ -1,4 +1,5 @@
 import { t } from "@lingui/core/macro";
+
 import { annotationBodyContent } from "./annotation-body-content.js";
 import { matchesCondition, type FieldCondition } from "./library-conditions.js";
 

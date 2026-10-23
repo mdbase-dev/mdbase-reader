@@ -158,6 +158,13 @@ export function propertySortValue(value: unknown): string | number {
   if (typeof value === "number") {
     return value;
   }
+  if (Array.isArray(value)) {
+    return value
+      .map(propertySortValue)
+      .filter((item) => item !== "")
+      .join(", ")
+      .toLocaleLowerCase();
+  }
   // Sorting uses stable values, never translated boolean display labels.
   return typeof value === "boolean"
     ? String(value)

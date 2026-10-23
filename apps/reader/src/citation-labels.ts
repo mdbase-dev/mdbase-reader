@@ -4,6 +4,10 @@ import type { MessageDescriptor } from "@lingui/core";
 
 /** CSL identifiers stay stable; only these presentation labels are translated. */
 export const citationLabels: Readonly<Record<string, MessageDescriptor>> = {
+  "date-parts": msg({ message: "Date parts", context: "CSL date field" }),
+  season: msg({ message: "Season", context: "CSL date field" }),
+  circa: msg({ message: "Circa", context: "CSL approximate date field" }),
+  raw: msg({ message: "Raw date", context: "CSL date field" }),
   abstract: msg({ message: "Abstract", context: "CSL bibliographic field or item type" }),
   accessed: msg({ message: "Accessed", context: "CSL bibliographic field or item type" }),
   annote: msg({ message: "Annote", context: "CSL bibliographic field or item type" }),

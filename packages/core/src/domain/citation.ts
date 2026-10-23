@@ -1,4 +1,5 @@
 import { t } from "@lingui/core/macro";
+
 import { citekeyPattern, cslTypes } from "./citation-schema.js";
 import { isJsonValue, isObject, validateCslField } from "./citation-validation.js";
 

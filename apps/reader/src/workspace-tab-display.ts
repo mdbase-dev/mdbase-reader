@@ -50,7 +50,7 @@ export function sourceFormat(source: SourceSummary): string {
     return "EPUB";
   }
   if (mediaType.includes("html")) {
-    return "WEB";
+    return t({ message: "WEB", context: "Source format badge for saved web pages" });
   }
   return source.documents[0]
     ? t({ message: "FILE", context: "workspace tab display" })

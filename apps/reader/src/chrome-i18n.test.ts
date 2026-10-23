@@ -46,6 +46,7 @@ describe("Reader model copy uses the active real Lingui catalogue", () => {
     );
     expect(formatPropertyValue(true)).toBe("Oui");
     expect(propertySortValue(true)).toBe("true");
+    expect(propertySortValue([true, false])).toBe("true, false");
     expect(signInCopy.signIn).toBe("Se connecter");
     expect(readerCommandGroupLabel("Workspace")).toBe("Espace de travail");
     expect(cslFieldLabel("original-publisher-place")).toBe("Lieu de publication original");

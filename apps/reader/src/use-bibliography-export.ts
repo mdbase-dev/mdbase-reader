@@ -88,7 +88,9 @@ export function bibliographyProblemSummary(
     counts[kind] += 1;
   }
   return [
-    counts.missing ? t`${counts.missing} without citation` : null,
+    counts.missing
+      ? plural(counts.missing, { one: "# without citation", other: "# without citations" })
+      : null,
     counts.invalid
       ? plural(counts.invalid, { one: "# invalid record", other: "# invalid records" })
       : null,

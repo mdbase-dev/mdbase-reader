@@ -54,7 +54,7 @@ export async function buildEpubManifest(
   const itemsById = new Map(items.map((item) => [item.id, item]));
   const spine = object(packageRoot["spine"]);
   const readingOrder = asArray(spine?.["itemref"]).map((value) => {
-    const reference = requiredAttribute(value, "idref", "EPUB spine item");
+    const reference = requiredAttribute(value, "idref", t`EPUB spine item`);
     const item = itemsById.get(reference);
     if (!item) {
       throw new Error(t`EPUB spine references an unknown manifest item: ${reference}`);
@@ -114,12 +114,12 @@ export async function packageDocumentPath(reader: EpubPackageReader): Promise<st
 }
 
 function packageItem(value: unknown, packagePath: string): PackageItem {
-  const id = requiredAttribute(value, "id", "EPUB manifest item");
-  const href = requiredAttribute(value, "href", `EPUB manifest item ${id}`);
+  const id = requiredAttribute(value, "id", t`EPUB manifest item`);
+  const href = requiredAttribute(value, "href", t`EPUB manifest item ${id}`);
   return {
     id,
     path: resolveEpubPath(packagePath, href),
-    mediaType: requiredAttribute(value, "media-type", `EPUB manifest item ${id}`),
+    mediaType: requiredAttribute(value, "media-type", t`EPUB manifest item ${id}`),
     properties: tokens(object(value)?.["@properties"]),
   };
 }
