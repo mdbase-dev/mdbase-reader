@@ -9,6 +9,7 @@ import { cslFieldLabel } from "./citation-form-model.js";
 import { connectionProblemDetail, describeConnectionProblem } from "./connection-recovery.js";
 import { columnLabel, formatPropertyValue, propertySortValue } from "./library-columns.js";
 import { fieldValueSuggestions, matchesCondition, operatorLabels } from "./library-conditions.js";
+import { publicationDateLabel } from "./library-publication-date.js";
 import { signInCopy } from "./native-signin-ui.js";
 import { readerCommandGroupLabel } from "./reader-command-list.js";
 
@@ -78,6 +79,17 @@ describe("Reader model copy uses the active real Lingui catalogue", () => {
     expect(formatPropertyValue(true)).toBe("Oui");
     expect(matchesCondition(source, condition)).toBe(true);
     expect(fieldValueSuggestions([source], "reviewed")).toEqual(["Yes"]);
+  });
+
+  it("formats publication dates with the active locale without changing stored or free-form dates", () => {
+    expect(publicationDateLabel("1974-3-9")).toBe("9 Mar 1974");
+    i18n.load("fr", {});
+    i18n.activate("fr");
+    expect(publicationDateLabel("1974-3-9")).toBe("9 mars 1974");
+    expect(publicationDateLabel("2023-1")).toBe("janv. 2023");
+    expect(publicationDateLabel("2023")).toBe("2023");
+    expect(publicationDateLabel("Spring 2022")).toBe("Spring 2022");
+    expect(publicationDateLabel("2023-2-31")).toBe("2023-2-31");
   });
 
   it("translates document validation while retaining the user filename", () => {
