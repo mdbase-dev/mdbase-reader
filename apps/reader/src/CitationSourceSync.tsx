@@ -1,13 +1,13 @@
+import { t as translate } from "@lingui/core/macro";
+import { Trans, useLingui } from "@lingui/react/macro";
+
 import { displayCslValue } from "./citation-form-model.js";
 
 import type { SourceFieldsController } from "./use-source-fields.js";
 import type { SourceFieldDifference } from "@mdbase-reader/core";
 import type { JSX } from "react";
 
-/**
- * The library shows the source's own fields, not its citation. Saving a citation never
- * rewrites them, so offer the copy explicitly when they disagree.
- */
+/** Citation saves never overwrite the library's fields without this explicit choice. */
 export function CitationSourceSync({
   differences,
   controller,
@@ -15,18 +15,29 @@ export function CitationSourceSync({
   readonly differences: readonly SourceFieldDifference[];
   readonly controller: SourceFieldsController;
 }): JSX.Element | null {
+  const { t, i18n } = useLingui();
   if (!differences.length) {
     return null;
   }
-  const labels = differences.map(({ field }) => sourceFieldPhrases[field]);
+  const labels: Record<SourceFieldDifference["field"], string> = {
+    title: t({ message: "Title", context: "source metadata field" }),
+    authors: t({ message: "Authors", context: "source metadata field" }),
+    published: t({ message: "Date", context: "source metadata field" }),
+    url: "URL",
+  };
+  const fields = new Intl.ListFormat(i18n.locale, { type: "conjunction" }).format(
+    differences.map(({ field }) => labels[field]),
+  );
   return (
     <div className="citation-source-sync" role="status">
       <details>
-        <summary>The library shows a different {labels.join(", ")}.</summary>
+        <summary>
+          <Trans>The library has different details: {fields}.</Trans>
+        </summary>
         <dl>
           {differences.map((difference) => (
             <div key={difference.field}>
-              <dt>{sourceFieldLabels[difference.field]}</dt>
+              <dt>{labels[difference.field]}</dt>
               <dd>
                 <span>{displaySourceValue(difference.current)}</span>
                 <span aria-hidden="true">→</span>
@@ -42,11 +53,11 @@ export function CitationSourceSync({
         onClick={() =>
           void controller
             .save(Object.fromEntries(differences.map((d) => [d.field, d.citation])))
-            // The controller reports the failure beside the details.
+            // The controller reports failure beside the details.
             .catch(() => undefined)
         }
       >
-        {controller.saving ? "Updating…" : "Update library details"}
+        {controller.saving ? t`Updating…` : t`Update library details`}
       </button>
       {controller.error ? (
         <span className="is-error" role="alert">
@@ -57,33 +68,16 @@ export function CitationSourceSync({
   );
 }
 
-const sourceFieldLabels: Record<SourceFieldDifference["field"], string> = {
-  title: "Title",
-  authors: "Authors",
-  published: "Date",
-  url: "URL",
-};
-
-const sourceFieldPhrases: Record<SourceFieldDifference["field"], string> = {
-  title: "title",
-  authors: "author list",
-  published: "date",
-  url: "URL",
-};
-
 function displaySourceValue(value: unknown): string {
   if (Array.isArray(value)) {
-    return value.join("; ") || "None";
+    return value.join("; ") || translate({ message: "None", context: "empty metadata value" });
   }
-  return typeof value === "string" || typeof value === "number" ? String(value) : "None";
+  return typeof value === "string" || typeof value === "number"
+    ? String(value)
+    : translate({ message: "None", context: "empty metadata value" });
 }
 
-const gapLabels: Record<string, string> = { author: "authors", issued: "date", URL: "URL" };
-
-/**
- * The citation leaves fields empty that the library record has, e.g. no date while the
- * library records 1952. Filling them edits the draft; saving stays the person's choice.
- */
+/** Filling gaps edits only the draft. Saving remains the person's choice. */
 export function CitationGapFill({
   gaps,
   onApply,
@@ -91,30 +85,29 @@ export function CitationGapFill({
   readonly gaps: Readonly<Record<string, unknown>>;
   readonly onApply: (gaps: Readonly<Record<string, unknown>>) => void;
 }): JSX.Element | null {
+  const { t, i18n } = useLingui();
   const fields = Object.keys(gaps);
   if (!fields.length) {
     return null;
   }
+  const labels: Readonly<Record<string, string>> = {
+    author: t({ message: "Authors", context: "citation metadata field" }),
+    issued: t({ message: "Date", context: "citation metadata field" }),
+    URL: "URL",
+  };
+  const missingDetails = new Intl.ListFormat(i18n.locale, { type: "conjunction" }).format(
+    fields.map((field) => `${labels[field] ?? field} (${displayGap(gaps[field])})`),
+  );
   return (
     <div className="citation-source-sync is-gap" role="status">
       <p>
-        This citation is missing{" "}
-        {listPhrase(
-          fields.map((field) => `the ${gapLabels[field] ?? field} (${displayGap(gaps[field])})`),
-        )}
-        , which the library records.
+        <Trans>The citation is missing details recorded in your library: {missingDetails}.</Trans>
       </p>
       <button type="button" onClick={() => onApply(gaps)}>
-        Add to citation
+        <Trans>Add to citation</Trans>
       </button>
     </div>
   );
-}
-
-function listPhrase(items: readonly string[]): string {
-  return items.length < 2
-    ? (items[0] ?? "")
-    : `${items.slice(0, -1).join(", ")} and ${items.at(-1) ?? ""}`;
 }
 
 function displayGap(value: unknown): string {

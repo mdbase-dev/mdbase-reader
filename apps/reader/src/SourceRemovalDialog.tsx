@@ -1,3 +1,4 @@
+import { Plural, Trans, useLingui } from "@lingui/react/macro";
 import { useEffect, useRef, type JSX } from "react";
 
 import type { SourceRemovalController } from "./use-source-removal.js";
@@ -15,13 +16,13 @@ export function SourceRemovalDialog({
   return pending ? <OpenSourceRemovalDialog removal={removal} pending={pending} /> : null;
 }
 
-function OpenSourceRemovalDialog({
-  removal,
-  pending,
-}: {
+interface OpenSourceRemovalDialogProps {
   readonly removal: SourceRemovalController;
   readonly pending: NonNullable<SourceRemovalController["pending"]>;
-}): JSX.Element {
+}
+
+function OpenSourceRemovalDialog({ removal, pending }: OpenSourceRemovalDialogProps): JSX.Element {
+  const { t } = useLingui();
   const { source, status, plan, problem } = pending;
   const removing = status === "removing";
   const cancelRef = useRef<HTMLButtonElement>(null);
@@ -57,30 +58,43 @@ function OpenSourceRemovalDialog({
         aria-describedby="reader-remove-source-description"
       >
         <div className="import-dialog-heading">
-          <h2 id="reader-remove-source-title">Remove “{source.title}”?</h2>
+          <h2 id="reader-remove-source-title">
+            <Trans>Remove “{source.title}”?</Trans>
+          </h2>
           <p id="reader-remove-source-description">
-            This removes the source from your library and deletes its source note. Saved files and
-            annotation notes are kept in the collection. Links to this source will stop working.
-            Reader cannot undo this.
+            <Trans>
+              This removes the source from your library and deletes its source note. Saved files and
+              annotation notes are kept in the collection. Links to this source will stop working.
+              Reader cannot undo this.
+            </Trans>
           </p>
         </div>
         <div className="source-removal-details">
           {status === "checking" ? (
-            <p role="status">Checking what links to this source…</p>
+            <p role="status">
+              <Trans>Checking what links to this source…</Trans>
+            </p>
           ) : links.length > 0 ? (
             <>
               <p>
-                {links.length === 1
-                  ? "This record links"
-                  : `These ${String(links.length)} records link`}{" "}
-                to it and will show a broken link:
+                <Plural
+                  value={links.length}
+                  one="This record links to it and will show a broken link:"
+                  other="These # records link to it and will show a broken link:"
+                />
               </p>
               <ul>
                 {links.slice(0, shownLinks).map((path) => (
                   <li key={path}>{path}</li>
                 ))}
                 {links.length > shownLinks ? (
-                  <li>and {String(links.length - shownLinks)} more</li>
+                  <li>
+                    <Trans>
+                      and
+                      {String(links.length - shownLinks)}
+                      more
+                    </Trans>
+                  </li>
                 ) : null}
               </ul>
             </>
@@ -99,7 +113,7 @@ function OpenSourceRemovalDialog({
             disabled={removing}
             onClick={cancel}
           >
-            Cancel
+            <Trans>Cancel</Trans>
           </button>
           {problem && !plan ? (
             <button
@@ -107,7 +121,7 @@ function OpenSourceRemovalDialog({
               type="button"
               onClick={() => removal.request?.(source)}
             >
-              Check again
+              <Trans>Check again</Trans>
             </button>
           ) : null}
           <button
@@ -116,7 +130,9 @@ function OpenSourceRemovalDialog({
             disabled={status !== "confirming" || !plan}
             onClick={removal.confirm}
           >
-            {removing ? "Removing…" : "Remove source"}
+            {removing
+              ? t({ message: "Removing…", context: "SourceRemovalDialog interface" })
+              : t({ message: "Remove source", context: "SourceRemovalDialog interface" })}
           </button>
         </div>
       </section>

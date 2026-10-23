@@ -1,3 +1,4 @@
+import { Trans, useLingui } from "@lingui/react/macro";
 import { Select } from "@mdbase-dev/ui/select";
 
 import { panelTab } from "./dockview-workspace-state.js";
@@ -39,12 +40,13 @@ export function WorkspaceTabSwitcher({
 }: {
   readonly dock: ReaderDockWorkspace;
 }): JSX.Element {
+  const { t } = useLingui();
   const active = dock.api?.activePanel;
   const tabs = dock.contentPanels();
   return (
     <div className="mobile-tab-switcher">
       <Select
-        aria-label="Open workspace tab"
+        aria-label={t({ message: "Open workspace tab" })}
         className="is-quiet"
         disabled={!tabs.length}
         value={active?.id ?? ""}
@@ -55,9 +57,11 @@ export function WorkspaceTabSwitcher({
         onChange={(id) => dock.activate(id)}
       />
       {tabs.length > 1 ? (
-        <span className="mobile-tab-count" title={`${String(tabs.length)} open tabs`}>
+        <span className="mobile-tab-count" title={t`${String(tabs.length)} open tabs`}>
           {tabs.length}
-          <span className="sr-only"> open tabs</span>
+          <span className="sr-only">
+            <Trans> open tabs</Trans>
+          </span>
         </span>
       ) : null}
     </div>
@@ -69,6 +73,7 @@ export function MobileWorkspaceNavigation({
 }: {
   readonly dock: ReaderDockWorkspace;
 }): JSX.Element | null {
+  const { t } = useLingui();
   if (!dock.mobile || mobileSourceActive(dock)) {
     return null;
   }
@@ -77,16 +82,21 @@ export function MobileWorkspaceNavigation({
   const tabs = dock.contentPanels();
   if (side) {
     return (
-      <nav className="mobile-workspace-navigation" aria-label="Mobile workspace navigation">
+      <nav
+        className="mobile-workspace-navigation"
+        aria-label={t({ message: "Mobile workspace navigation" })}
+      >
         <button
           className="mobile-back"
           type="button"
-          aria-label="Back to workspace"
+          aria-label={t({ message: "Back to workspace" })}
           disabled={!tabs.length}
           onClick={dock.backToContent}
         >
           <BackIcon />
-          <span>Back</span>
+          <span>
+            <Trans context="MobileWorkspaceNavigation interface">Back</Trans>
+          </span>
         </button>
         <strong>{active.title}</strong>
       </nav>
@@ -97,7 +107,10 @@ export function MobileWorkspaceNavigation({
     return null;
   }
   return (
-    <nav className="mobile-workspace-navigation" aria-label="Mobile workspace navigation">
+    <nav
+      className="mobile-workspace-navigation"
+      aria-label={t({ message: "Mobile workspace navigation" })}
+    >
       <WorkspaceTabSwitcher dock={dock} />
     </nav>
   );

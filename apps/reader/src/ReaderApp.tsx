@@ -1,3 +1,5 @@
+import { t as translate } from "@lingui/core/macro";
+import { useLingui } from "@lingui/react/macro";
 import { OpeningScreen } from "@mdbase-dev/ui/screens";
 import { sourceId } from "@mdbase-reader/core";
 import { useCallback, useEffect, useState, type JSX } from "react";
@@ -54,13 +56,16 @@ export function ReaderApp({
   pickSourceFile,
   saveFile,
 }: ReaderAppProps): JSX.Element {
+  const { t } = useLingui();
   const workspace = useReaderWorkspace(gateway, initialSourceId ? sourceId(initialSourceId) : null);
   if (workspace.library.status !== "ready") {
     return (
       <OpeningScreen
         app="reader"
-        title="Opening your reading collection"
-        detail="Loading the first sources; the rest of the library will load in the background"
+        title={t({ message: "Opening your reading collection" })}
+        detail={t({
+          message: "Loading the first sources; the rest of the library will load in the background",
+        })}
         error={workspace.library.status === "error" ? workspace.library.message : null}
         onRetry={workspace.retryLibrary}
       />
@@ -230,7 +235,10 @@ function confirmCloseDirtyTab(): boolean {
   // Native confirmation keeps tab and pane closing synchronous with the workspace action.
   // eslint-disable-next-line no-alert
   return globalThis.confirm(
-    "Close this tab with unsaved changes? Keep it open until saving finishes to avoid losing work.",
+    translate({
+      message:
+        "Close this tab with unsaved changes? Keep it open until saving finishes to avoid losing work.",
+    }),
   );
 }
 

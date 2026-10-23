@@ -1,3 +1,4 @@
+import { Trans, useLingui } from "@lingui/react/macro";
 import { moveMenuFocus } from "@mdbase-dev/ui/popover";
 import {
   useCallback,
@@ -46,6 +47,7 @@ export function LibraryRowMenu({
   /** Dismissing returns focus to the row; an action that ran may have moved it on purpose. */
   readonly onClose: (dismissed: boolean) => void;
 }): JSX.Element {
+  const { t } = useLingui();
   const ref = useRef<HTMLDivElement>(null);
   const position = useMenuPosition(ref, target);
   useDismiss(ref, onClose);
@@ -67,23 +69,23 @@ export function LibraryRowMenu({
       className="reader-menu-panel library-row-menu"
       role="menu"
       tabIndex={-1}
-      aria-label={`Actions for ${source.title}`}
+      aria-label={t`Actions for ${source.title}`}
       style={{ left: `${String(position.x)}px`, top: `${String(position.y)}px` }}
       onKeyDown={(event) => moveMenuFocus(event, ref.current)}
     >
       <button type="button" role="menuitem" onClick={run(() => actions.onOpen(source.id), true)}>
-        Open
+        <Trans context="LibraryRowMenu interface">Open</Trans>
       </button>
       <button
         type="button"
         role="menuitem"
         onClick={run(() => actions.onOpenBeside(source.id), true)}
       >
-        Open beside
+        <Trans>Open beside</Trans>
       </button>
       {actions.onRename ? (
         <button type="button" role="menuitem" onClick={run(() => actions.onRename?.(source), true)}>
-          Rename…
+          <Trans>Rename…</Trans>
         </button>
       ) : null}
       {citekey ? (
@@ -92,18 +94,20 @@ export function LibraryRowMenu({
           role="menuitem"
           onClick={run(() => void navigator.clipboard.writeText(`@${citekey}`))}
         >
-          Copy citekey <kbd>@{citekey}</kbd>
+          <Trans>
+            Copy citekey <kbd>@{citekey}</kbd>
+          </Trans>
         </button>
       ) : null}
       {actions.onExport ? (
         <button type="button" role="menuitem" onClick={run(() => actions.onExport?.([source]))}>
-          Export citation
+          <Trans>Export citation</Trans>
         </button>
       ) : null}
       {actions.onChangeStatus ? (
         <>
           <span className="menu-label" role="presentation">
-            Status
+            <Trans>Status</Trans>
           </span>
           {readingStatusChoices.map((choice) => (
             <button
@@ -127,7 +131,7 @@ export function LibraryRowMenu({
             className="is-danger"
             onClick={run(() => actions.onRemove?.(source), true)}
           >
-            Remove source…
+            <Trans>Remove source…</Trans>
           </button>
         </>
       ) : null}

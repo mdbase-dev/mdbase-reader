@@ -1,3 +1,5 @@
+import { t as translate } from "@lingui/core/macro";
+import { Trans, useLingui } from "@lingui/react/macro";
 import { FeedbackButton, useFeedback } from "@mdbase-dev/ui/feedback";
 import { ConnectLayout } from "@mdbase-dev/ui/screens";
 import { connectProblemMessage, type ReaderConnectSnapshot } from "@mdbase-reader/connect";
@@ -66,7 +68,12 @@ function LegacyConnectReader(): JSX.Element {
         return;
       }
       reportError({ code: "source_open_failed" });
-      setError(readerErrorMessage(reason, "Reader could not open this collection."));
+      setError(
+        readerErrorMessage(
+          reason,
+          translate({ message: "Reader could not open this collection." }),
+        ),
+      );
     }
   };
 
@@ -84,7 +91,12 @@ function LegacyConnectReader(): JSX.Element {
       .catch((reason: unknown) => {
         if (active && !(reason instanceof DOMException && reason.name === "AbortError")) {
           reportError({ code: "source_open_failed" });
-          setError(readerErrorMessage(reason, "Reader could not open this collection."));
+          setError(
+            readerErrorMessage(
+              reason,
+              translate({ message: "Reader could not open this collection." }),
+            ),
+          );
         }
       });
     return () => {
@@ -136,13 +148,14 @@ function LegacyConnectReader(): JSX.Element {
 }
 
 function OpenedReader({ collectionId }: { readonly collectionId: string }): JSX.Element {
+  const { t } = useLingui();
   const opened = useMemo(() => readerSession.connectedCollection(collectionId), [collectionId]);
   if (!opened) {
     return (
       <ConnectLayout
         app="reader"
-        title="Open mdbase Reader"
-        status="The selected collection is no longer available."
+        title={t({ message: "Open mdbase Reader" })}
+        status={translate({ message: "The selected collection is no longer available." })}
       />
     );
   }
@@ -162,12 +175,87 @@ function ConnectionScreen({
   onError,
   onRetry,
 }: ConnectionScreenProps): JSX.Element {
-  const { reportError } = useFeedback();
-  const [working, setWorking] = useState(false);
+  const { t } = useLingui();
+  const { working, authorize, applySetup } = useConnectionActions(onError);
   const selectedCollectionId = "collectionId" in session ? session.collectionId : null;
   // Some failures arrive only as the session's status, not as a step's error.
   const problem = error ?? connectionStatus(session);
 
+  const otherConnections = session.connections.filter(
+    ({ collectionId }) => collectionId !== selectedCollectionId,
+  );
+  const select = (collectionId: string): void => {
+    onError(connectProblemMessage(readerSession.select(collectionId)));
+  };
+
+  return (
+    <ConnectLayout
+      app="reader"
+      title={t({ message: "Open mdbase Reader" })}
+      status={describeConnectionProblem(connectionStatus(session))}
+      error={describeConnectionProblem(error)}
+      detail={connectionProblemDetail(problem)}
+    >
+      {session.status === "setup_review_required" ? (
+        <CollectionSetupReview
+          session={session}
+          working={working}
+          onApply={() => void applySetup()}
+        />
+      ) : null}
+      <div className="connection-actions">
+        <SelectedAuthorizationAction
+          session={session}
+          error={problem}
+          working={working}
+          hasSelectedCollection={Boolean(selectedCollectionId)}
+          onAuthorize={() => void authorize("selected")}
+        />
+        {requiresReconnect(problem) || requiresAccessReview(problem) ? null : (
+          <ConnectionRetry error={error} onRetry={onRetry} />
+        )}
+      </div>
+      <OtherCollections
+        connections={otherConnections}
+        heading={
+          selectedCollectionId
+            ? t({ message: "Or open another collection" })
+            : t({ message: "Your collections", context: "ConnectReader interface" })
+        }
+        disabled={working}
+        onSelect={select}
+      />
+      <button
+        className="connection-connect"
+        disabled={working}
+        type="button"
+        onClick={() => void authorize("choose")}
+      >
+        <PlusIcon />
+        {working
+          ? t({ message: "Opening mdbase…", context: "ConnectReader interface" })
+          : t({ message: "Connect another collection" })}
+      </button>
+      {isLocalhost(location) ? (
+        <p className="connection-local-note">
+          <Trans>
+            Local HTTP development uses the local Connect stack at{" "}
+            <code>http://127.0.0.1:8787</code>. The managed service requires an HTTPS Reader origin.
+          </Trans>
+        </p>
+      ) : null}
+      <FeedbackButton />
+    </ConnectLayout>
+  );
+}
+
+function useConnectionActions(onError: ConnectionScreenProps["onError"]): {
+  readonly working: boolean;
+  readonly authorize: (target: "choose" | "selected") => Promise<void>;
+  readonly applySetup: () => Promise<void>;
+} {
+  const { reportError } = useFeedback();
+  const [working, setWorking] = useState(false);
   const authorize = async (target: "choose" | "selected"): Promise<void> => {
     setWorking(true);
     onError(null);
@@ -182,7 +270,12 @@ function ConnectionScreen({
         return;
       }
       reportError({ code: "unknown_error" });
-      onError(readerErrorMessage(reason, "Reader could not review application access."));
+      onError(
+        readerErrorMessage(
+          reason,
+          translate({ message: "Reader could not review application access." }),
+        ),
+      );
     } finally {
       setWorking(false);
     }
@@ -201,80 +294,55 @@ function ConnectionScreen({
         return;
       }
       reportError({ code: "unknown_error" });
-      onError(readerErrorMessage(reason, "Reader could not apply the reviewed setup."));
+      onError(
+        readerErrorMessage(
+          reason,
+          translate({ message: "Reader could not apply the reviewed setup." }),
+        ),
+      );
     } finally {
       setWorking(false);
     }
   };
-  const otherConnections = session.connections.filter(
-    ({ collectionId }) => collectionId !== selectedCollectionId,
-  );
-  const select = (collectionId: string): void => {
-    onError(connectProblemMessage(readerSession.select(collectionId)));
-  };
+  return { working, authorize, applySetup };
+}
 
+function CollectionSetupReview({
+  session,
+  working,
+  onApply,
+}: {
+  readonly session: Extract<ReaderConnectSnapshot, { status: "setup_review_required" }>;
+  readonly working: boolean;
+  readonly onApply: () => void;
+}): JSX.Element {
+  const { t } = useLingui();
   return (
-    <ConnectLayout
-      app="reader"
-      title="Open mdbase Reader"
-      status={describeConnectionProblem(connectionStatus(session))}
-      error={describeConnectionProblem(error)}
-      detail={connectionProblemDetail(problem)}
-    >
-      {session.status === "setup_review_required" ? (
-        <section className="connection-setup" aria-labelledby="reader-setup-title">
-          <h2 id="reader-setup-title">Set up this reading collection</h2>
-          <p>Only Reader’s source and annotation contracts and starter types will be added.</p>
-          <ul>
-            {session.update.typePacks.map((pack) => (
-              <li key={pack.id}>
-                {pack.name}: {pack.currentVersion ?? "not installed"} → {pack.desiredVersion}
-              </li>
-            ))}
-          </ul>
-          <ReaderButton
-            disabled={working || !session.update.canApply}
-            onClick={() => void applySetup()}
-          >
-            {working ? "Applying setup…" : "Apply reviewed setup"}
-          </ReaderButton>
-        </section>
-      ) : null}
-      <div className="connection-actions">
-        <SelectedAuthorizationAction
-          session={session}
-          error={problem}
-          working={working}
-          hasSelectedCollection={Boolean(selectedCollectionId)}
-          onAuthorize={() => void authorize("selected")}
-        />
-        {requiresReconnect(problem) || requiresAccessReview(problem) ? null : (
-          <ConnectionRetry error={error} onRetry={onRetry} />
-        )}
-      </div>
-      <OtherCollections
-        connections={otherConnections}
-        heading={selectedCollectionId ? "Or open another collection" : "Your collections"}
-        disabled={working}
-        onSelect={select}
-      />
-      <button
-        className="connection-connect"
-        disabled={working}
-        type="button"
-        onClick={() => void authorize("choose")}
-      >
-        <PlusIcon />
-        {working ? "Opening mdbase…" : "Connect another collection"}
-      </button>
-      {isLocalhost(location) ? (
-        <p className="connection-local-note">
-          Local HTTP development uses the local Connect stack at <code>http://127.0.0.1:8787</code>.
-          The managed service requires an HTTPS Reader origin.
-        </p>
-      ) : null}
-      <FeedbackButton />
-    </ConnectLayout>
+    <section className="connection-setup" aria-labelledby="reader-setup-title">
+      <h2 id="reader-setup-title">
+        <Trans>Set up this reading collection</Trans>
+      </h2>
+      <p>
+        <Trans>
+          Only Reader’s source and annotation contracts and starter types will be added.
+        </Trans>
+      </p>
+      <ul>
+        {session.update.typePacks.map((pack) => (
+          <li key={pack.id}>
+            {pack.name}:{" "}
+            {pack.currentVersion ??
+              t({ message: "not installed", context: "ConnectReader interface" })}{" "}
+            → {pack.desiredVersion}
+          </li>
+        ))}
+      </ul>
+      <ReaderButton disabled={working || !session.update.canApply} onClick={onApply}>
+        {working
+          ? t({ message: "Applying setup…", context: "ConnectReader interface" })
+          : t({ message: "Apply reviewed setup" })}
+      </ReaderButton>
+    </section>
   );
 }
 
@@ -289,6 +357,7 @@ function OtherCollections({
   readonly disabled: boolean;
   readonly onSelect: (collectionId: string) => void;
 }): JSX.Element | null {
+  const { t } = useLingui();
   if (connections.length === 0) {
     return null;
   }
@@ -303,7 +372,7 @@ function OtherCollections({
               className="connection-other"
               disabled={disabled}
               title={connection.displayName}
-              aria-label={`Open ${connection.displayName}`}
+              aria-label={t`Open ${connection.displayName}`}
               onClick={() => onSelect(connection.collectionId)}
             >
               <CollectionIcon />

@@ -1,3 +1,5 @@
+import { t as translate } from "@lingui/core/macro";
+import { Trans, useLingui } from "@lingui/react/macro";
 import { AppSwitcher } from "@mdbase-dev/ui/app-switcher";
 import { CollectionSaveWarning } from "@mdbase-dev/ui/collections";
 import { shortcutLabel } from "@mdbase-dev/ui/command-palette";
@@ -105,6 +107,7 @@ function LibraryHeader({
   onToggleInspector,
   display,
 }: ReaderHeaderProps & { readonly display: ReactNode }): JSX.Element {
+  const { t } = useLingui();
   const mdbase = useReaderMdbase();
   return (
     <header className="reader-header">
@@ -112,9 +115,9 @@ function LibraryHeader({
         <button
           type="button"
           className="icon-button header-pane-toggle is-library"
-          aria-label="Toggle left sidebar"
+          aria-label={t({ message: "Toggle left sidebar" })}
           aria-expanded={libraryOpen}
-          title={`Toggle left sidebar · ${shortcutLabel("mod+\\")}`}
+          title={t`Toggle left sidebar · ${shortcutLabel("mod+\\")}`}
           onClick={onToggleLibrary}
         >
           <LeftPaneIcon />
@@ -137,25 +140,29 @@ function LibraryHeader({
         <button
           className="header-command-button"
           type="button"
-          aria-label="Search and commands"
-          title={`Search sources and run commands · ${shortcutLabel("mod+k")}`}
+          aria-label={t({ message: "Search and commands" })}
+          title={t`Search sources and run commands · ${shortcutLabel("mod+k")}`}
           onClick={onOpenCommands}
         >
           <SearchIcon />
-          <span>Search</span>
+          <span>
+            <Trans>Search</Trans>
+          </span>
           <kbd>{shortcutLabel("mod+k")}</kbd>
         </button>
         {onToggleReadingMode ? (
           <button
             className="icon-button header-reading-mode"
             type="button"
-            aria-label="Reading mode"
+            aria-label={t({ message: "Reading mode", context: "ReaderHeader interface" })}
             aria-pressed={readingMode}
             disabled={!readingModeAvailable && !readingMode}
             title={
               readingModeAvailable || readingMode
-                ? `${readingMode ? "Leave" : "Enter"} reading mode · ${shortcutLabel("mod+.")}`
-                : "Open a document to use reading mode"
+                ? readingMode
+                  ? t`Leave reading mode · ${shortcutLabel("mod+.")}`
+                  : t`Enter reading mode · ${shortcutLabel("mod+.")}`
+                : t({ message: "Open a document to use reading mode" })
             }
             onClick={onToggleReadingMode}
           >
@@ -167,10 +174,10 @@ function LibraryHeader({
         <button
           className="icon-button header-pane-toggle is-inspector"
           type="button"
-          aria-label="Toggle right sidebar"
+          aria-label={t({ message: "Toggle right sidebar" })}
           aria-pressed={inspectorOpen}
           disabled={!inspectorAvailable}
-          title={`Toggle right sidebar · ${shortcutLabel("mod+shift+\\")}`}
+          title={t`Toggle right sidebar · ${shortcutLabel("mod+shift+\\")}`}
           onClick={onToggleInspector}
         >
           <RightPaneIcon />
@@ -187,13 +194,14 @@ function SourceBarHeader({
   readonly bar: ReaderHeaderSourceBar;
   readonly display: ReactNode;
 }): JSX.Element {
+  const { t } = useLingui();
   return (
     <header className="reader-header is-source-bar">
       <button
         type="button"
         className="icon-button header-back"
-        aria-label="Back to library"
-        title="Back to library"
+        aria-label={t({ message: "Back to library" })}
+        title={t({ message: "Back to library" })}
         onClick={bar.onBack}
       >
         <BackIcon />
@@ -215,6 +223,7 @@ function ConnectionState({
   readonly state: ReaderConnectionState;
   readonly directAccess: ReaderDirectAccessState;
 }): JSX.Element {
+  const { t } = useLingui();
   const { snapshot, working, problem, request } = directAccess;
   useMdbaseMarkBusy(state === "syncing" && "stream");
   if (snapshot?.authority !== "connector" || state !== "connected") {
@@ -224,16 +233,18 @@ function ConnectionState({
     return (
       <span
         className="connection-state is-connected is-direct"
-        title="Connected directly to this computer"
+        title={t({ message: "Connected directly to this computer" })}
       >
-        <span className="sr-only">Direct connection</span>
+        <span className="sr-only">
+          <Trans>Direct connection</Trans>
+        </span>
       </span>
     );
   }
   if (working || snapshot.status === "checking") {
     return (
       <span className="connection-state is-connected is-checking" aria-live="polite">
-        Connecting…
+        <Trans>Connecting…</Trans>
       </span>
     );
   }
@@ -244,8 +255,14 @@ function ConnectionState({
   const title =
     problem ??
     (denied
-      ? "Local network access is blocked. Allow it in your browser’s site settings, then retry."
-      : "Request local network access and connect directly to the mdbase relay on this computer.");
+      ? translate({
+          message:
+            "Local network access is blocked. Allow it in your browser’s site settings, then retry.",
+        })
+      : translate({
+          message:
+            "Request local network access and connect directly to the mdbase relay on this computer.",
+        }));
   return (
     <button
       className={`connection-state connection-direct-action${problem ? " has-problem" : ""}`}
@@ -254,7 +271,9 @@ function ConnectionState({
       aria-label={title}
       onClick={request}
     >
-      {denied ? "Retry local access" : "Connect directly"}
+      {denied
+        ? t({ message: "Retry local access" })
+        : t({ message: "Connect directly", context: "ReaderHeader interface" })}
     </button>
   );
 }
@@ -262,14 +281,14 @@ function ConnectionState({
 /** saved_on_device: the SDK keeps changes on this device until it can sync them. */
 export type ReaderConnectionState = "connected" | "offline" | "syncing" | "saved_on_device";
 
-const connectionLabels = {
-  connected: "Connected",
-  offline: "Offline",
-  syncing: "Syncing…",
-  saved_on_device: "Saved on this device; waiting for sync",
-} as const;
-
 function PlainConnectionState({ state }: { readonly state: ReaderConnectionState }): JSX.Element {
+  const { t } = useLingui();
+  const connectionLabels = {
+    connected: t`Connected`,
+    offline: t`Offline`,
+    syncing: t`Syncing…`,
+    saved_on_device: t`Saved on this device; waiting for sync`,
+  };
   // Connected is the normal state: a quiet dot, with the words kept for assistive technology.
   return (
     <span className={`connection-state is-${state}`} title={connectionLabels[state]}>

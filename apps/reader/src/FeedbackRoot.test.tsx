@@ -1,8 +1,8 @@
 import { FeedbackButton } from "@mdbase-dev/ui/feedback";
-import { renderToStaticMarkup } from "react-dom/server";
 import { afterEach, expect, it, vi } from "vitest";
 
 import { FeedbackRoot } from "./FeedbackRoot.js";
+import { renderToStaticMarkup } from "./testing/i18n.js";
 
 afterEach(() => vi.unstubAllEnvs());
 

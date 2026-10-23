@@ -1,3 +1,4 @@
+import { useLingui } from "@lingui/react/macro";
 import { useVirtualizer } from "@tanstack/react-virtual";
 import { useRef, type JSX, type KeyboardEvent, type RefObject } from "react";
 
@@ -42,6 +43,7 @@ export function AnnotationTable({
   readonly scrollRef: RefObject<HTMLDivElement | null>;
   readonly onOpen: (annotation: Annotation, beside: boolean) => void;
 }): JSX.Element {
+  const { t } = useLingui();
   const gridRef = useRef<HTMLDivElement>(null);
   const offset = useOffsetTop(gridRef);
   const press = useLongPress();
@@ -69,7 +71,7 @@ export function AnnotationTable({
         className="library-table library-annotation-table"
         role="grid"
         tabIndex={-1}
-        aria-label="Annotations"
+        aria-label={t({ message: "Annotations", context: "LibraryAnnotationTable interface" })}
         aria-rowcount={entries.length + 1}
         aria-colcount={layout.columns.length}
         aria-multiselectable="true"

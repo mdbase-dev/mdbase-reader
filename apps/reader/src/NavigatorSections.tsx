@@ -1,3 +1,6 @@
+import { t as translate } from "@lingui/core/macro";
+import { useLingui } from "@lingui/react/macro";
+
 import { PlusIcon } from "./icons.js";
 
 import type { SourceId, SourceSummary } from "@mdbase-reader/core";
@@ -20,6 +23,7 @@ export function NavigatorShortList({
   readonly onOpenSource: (id: SourceId) => void;
   readonly onOpenBeside: (id: SourceId) => void;
 }): JSX.Element {
+  const { t } = useLingui();
   return (
     <section className="navigator-source-section is-short">
       <header>
@@ -31,7 +35,7 @@ export function NavigatorShortList({
             <button
               type="button"
               aria-current={source.id === selectedSourceId ? "true" : undefined}
-              title="Double-click to keep open · Ctrl+Enter opens beside"
+              title={t({ message: "Double-click to keep open · Ctrl+Enter opens beside" })}
               onClick={() => onPreviewSource(source.id)}
               onDoubleClick={() => onOpenSource(source.id)}
               onKeyDown={(event) => {
@@ -77,7 +81,9 @@ export function recentSources(
 }
 
 function sourceDetail(source: SourceSummary): string {
-  const creators = source.creators.join(", ") || "Unknown creator";
+  const creators =
+    source.creators.join(", ") ||
+    translate({ message: "Unknown creator", context: "NavigatorSections status or action" });
   const progress = source.reading?.progress;
   return progress !== undefined && progress > 0 && progress < 1
     ? `${creators} · ${String(Math.round(progress * 100))}%`
@@ -106,17 +112,26 @@ export function NavigatorFooter({
   readonly addingSource: boolean;
   readonly onAddSource: () => void;
 }): JSX.Element {
+  const { t } = useLingui();
   return (
     <footer className="navigator-footer">
       <button
         className="navigator-add-source"
         type="button"
         disabled={addingSource}
-        aria-label={addingSource ? "Adding source" : "Add source"}
+        aria-label={
+          addingSource
+            ? t({ message: "Adding source", context: "NavigatorSections interface" })
+            : t({ message: "Add source", context: "NavigatorSections interface" })
+        }
         onClick={onAddSource}
       >
         <PlusIcon />
-        <span>{addingSource ? "Adding…" : "Add source"}</span>
+        <span>
+          {addingSource
+            ? t({ message: "Adding…", context: "NavigatorSections interface" })
+            : t({ message: "Add source", context: "NavigatorSections interface" })}
+        </span>
       </button>
     </footer>
   );

@@ -1,3 +1,5 @@
+import { plural } from "@lingui/core/macro";
+import { Plural, Trans, useLingui } from "@lingui/react/macro";
 import { SaveNotice } from "@mdbase-dev/ui/save-notice";
 import { citationGapsFromSource, sourceCitationDifferences } from "@mdbase-reader/core";
 import { ReaderButton } from "@mdbase-reader/ui";
@@ -44,6 +46,7 @@ function ReadyCitationEditor({
   readonly editor: CitationEditorController;
   readonly sourceFields: SourceFieldsController;
 }): JSX.Element {
+  const { t } = useLingui();
   const [mode, setMode] = useState<"fields" | "raw">("fields");
   const [suggestionsOpen, setSuggestionsOpen] = useState(false);
   const citation = editor.assessment.value ?? {};
@@ -54,9 +57,9 @@ function ReadyCitationEditor({
     <div className="citation-editor">
       <header
         className="citation-bookplate"
-        aria-label={`Citation metadata for ${title}`}
+        aria-label={t`Citation metadata for ${title}`}
         draggable={validCitation !== null}
-        title={validCitation ? "Drag to insert this citation" : undefined}
+        title={validCitation ? t({ message: "Drag to insert this citation" }) : undefined}
         onDragStart={(event) =>
           validCitation && writeCitationDrag(event.dataTransfer, validCitation)
         }
@@ -68,23 +71,23 @@ function ReadyCitationEditor({
             onShowSuggestions={() => setSuggestionsOpen(true)}
           />
           <code className={citekey ? undefined : "is-empty"}>
-            {citekey ? `@${citekey}` : "Citation key needed"}
+            {citekey ? `@${citekey}` : t({ message: "Citation key needed" })}
           </code>
         </div>
-        <nav className="citation-editor-tabs" aria-label="Citation editor mode">
+        <nav className="citation-editor-tabs" aria-label={t({ message: "Citation editor mode" })}>
           <button
             type="button"
             aria-current={mode === "fields" ? "page" : undefined}
             onClick={() => setMode("fields")}
           >
-            Details
+            <Trans>Details</Trans>
           </button>
           <button
             type="button"
             aria-current={mode === "raw" ? "page" : undefined}
             onClick={() => setMode("raw")}
           >
-            CSL
+            <Trans>CSL</Trans>
           </button>
         </nav>
       </header>
@@ -118,11 +121,13 @@ function ReadyCitationEditor({
           <div className="citation-raw-editor">
             <div>
               <strong>CSL-JSON</strong>
-              <span>Every official field is preserved exactly as entered.</span>
+              <span>
+                <Trans>Every official field is preserved exactly as entered.</Trans>
+              </span>
             </div>
             <MultilineCodeEditor
               className="citation-json"
-              ariaLabel="CSL JSON citation metadata"
+              ariaLabel={t({ message: "CSL JSON citation metadata" })}
               language="json"
               value={editor.draft}
               onChange={editor.setDraft}
@@ -142,7 +147,9 @@ function ReadyCitationEditor({
           disabled={!editor.assessment.valid || !editor.dirty || editor.status === "saving"}
           onClick={editor.save}
         >
-          {editor.status === "saving" ? "Saving…" : "Save changes"}
+          {editor.status === "saving"
+            ? t({ message: "Saving…", context: "CitationEditor interface" })
+            : t({ message: "Save changes", context: "CitationEditor interface" })}
         </ReaderButton>
       </footer>
     </div>
@@ -159,7 +166,9 @@ function CitationLoadStatus({
       {resource.message}
     </div>
   ) : (
-    <div className="inspector-status">Opening citation metadata…</div>
+    <div className="inspector-status">
+      <Trans>Opening citation metadata…</Trans>
+    </div>
   );
 }
 
@@ -173,18 +182,30 @@ function CitationValidity({
   readonly warnings: number;
   readonly onShowSuggestions: () => void;
 }): JSX.Element {
+  const { t } = useLingui();
   if (!valid) {
-    return <span className="is-invalid">Incomplete</span>;
+    return (
+      <span className="is-invalid">
+        <Trans>Incomplete</Trans>
+      </span>
+    );
   }
-  const suggestions = `${String(warnings)} quality ${warnings === 1 ? "suggestion" : "suggestions"}`;
+  const suggestions = t({
+    message: plural(warnings, { one: "# quality suggestion", other: "# quality suggestions" }),
+  });
   return (
     <span className="is-valid">
-      Ready
+      <Trans>Ready</Trans>
       {warnings ? (
         <button
           type="button"
           className="citation-suggestion-count"
-          aria-label={`Show ${suggestions}`}
+          aria-label={t({
+            message: plural(warnings, {
+              one: "Show # quality suggestion",
+              other: "Show # quality suggestions",
+            }),
+          })}
           title={suggestions}
           onClick={onShowSuggestions}
         >
@@ -204,6 +225,7 @@ function CitationFeedback({
   readonly suggestionsOpen: boolean;
   readonly onSuggestionsToggle: (open: boolean) => void;
 }): JSX.Element {
+  const { t } = useLingui();
   if (editor.error) {
     return (
       <div className="citation-feedback" aria-live="polite">
@@ -216,7 +238,9 @@ function CitationFeedback({
   if (!editor.assessment.valid) {
     return (
       <div className="citation-feedback" aria-live="polite">
-        <strong>Fix before saving</strong>
+        <strong>
+          <Trans>Fix before saving</Trans>
+        </strong>
         <span className="is-error">{editor.assessment.message}</span>
       </div>
     );
@@ -229,8 +253,11 @@ function CitationFeedback({
         onToggle={(event) => onSuggestionsToggle(event.currentTarget.open)}
       >
         <summary>
-          {editor.warnings.length} quality{" "}
-          {editor.warnings.length === 1 ? "suggestion" : "suggestions"}
+          <Plural
+            value={editor.warnings.length}
+            one="# quality suggestion"
+            other="# quality suggestions"
+          />
         </summary>
         {editor.warnings.map((warning) => (
           <span key={warning}>{warning}</span>
@@ -241,11 +268,16 @@ function CitationFeedback({
   return (
     <div className="citation-feedback mdbase-settle-host" aria-live="polite">
       {editor.suggested && editor.status !== "saved" ? (
-        <span>Review the suggested details before saving.</span>
+        <span>
+          <Trans>Review the suggested details before saving.</Trans>
+        </span>
       ) : editor.status === "saved" || !editor.dirty ? (
         <SaveNotice tone="saved" />
       ) : (
-        <SaveNotice tone="pending" label="Unsaved changes" />
+        <SaveNotice
+          tone="pending"
+          label={t({ message: "Unsaved changes", context: "CitationEditor interface" })}
+        />
       )}
     </div>
   );

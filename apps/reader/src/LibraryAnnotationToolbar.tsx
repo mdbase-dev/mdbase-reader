@@ -1,3 +1,5 @@
+import { t as translate } from "@lingui/core/macro";
+import { Trans, useLingui } from "@lingui/react/macro";
 import { Select, type SelectItems } from "@mdbase-dev/ui/select";
 
 import { emptyAnnotationFilter, type AnnotationFilter } from "./annotation-overview.js";
@@ -45,22 +47,25 @@ export function AnnotationToolbar({
   readonly sources: readonly SourceSummary[];
   readonly actions: AnnotationViewActions;
 }): JSX.Element {
+  const { t } = useLingui();
   const filterCount =
     Number(filter.type !== "all") + Number(Boolean(filter.tag)) + filter.sourceConditions.length;
   return (
     <div className="library-annotations-toolbar">
       <label className="library-workspace-search">
         <SearchIcon />
-        <span className="sr-only">Search annotations</span>
+        <span className="sr-only">{t({ message: "Search annotations" })}</span>
         <input
           className="library-annotations-search"
           value={filter.query}
-          placeholder="Passage, note, source or tag"
+          placeholder={t({ message: "Passage, note, source or tag" })}
           onChange={(event) => onFilterChange({ ...filter, query: event.target.value })}
         />
       </label>
       <span className="library-result-count" role="status">
-        {count === null ? "Loading…" : countLabel(count, "annotation")}
+        {count === null
+          ? t({ message: "Loading…", context: "LibraryAnnotationToolbar interface" })
+          : countLabel(count, "annotation")}
       </span>
       {actions.onSave ? (
         <button
@@ -69,13 +74,13 @@ export function AnnotationToolbar({
           disabled={actions.saving}
           onClick={actions.onSave}
         >
-          Save view
+          <Trans>Save view</Trans>
         </button>
       ) : null}
       <Menu
         className="library-workspace-more"
-        label={`Annotation view options${filterCount ? `, ${String(filterCount)} active filters` : ""}`}
-        title="View options"
+        label={t`Annotation view options${filterCount ? `, ${String(filterCount)} active filters` : ""}`}
+        title={t({ message: "View options", context: "LibraryAnnotationToolbar interface" })}
         trigger={
           <>
             <FilterIcon />
@@ -97,20 +102,20 @@ export function AnnotationToolbar({
               type="button"
               onClick={() => onFilterChange({ ...emptyAnnotationFilter, query: filter.query })}
             >
-              Clear filters
+              <Trans>Clear filters</Trans>
             </button>
           ) : null}
           <AnnotationSortControl layout={layout} onLayoutChange={onLayoutChange} />
         </div>
         <hr />
         <button type="button" onClick={actions.onRefresh} disabled={!actions.onRefresh}>
-          Refresh annotations
+          <Trans>Refresh annotations</Trans>
         </button>
         <button type="button" disabled={!actions.onReset} onClick={actions.onReset}>
-          Reset columns and sort
+          <Trans>Reset columns and sort</Trans>
         </button>
         <button type="button" onClick={actions.onSaveAs}>
-          Save as new view…
+          <Trans>Save as new view…</Trans>
         </button>
         {actions.sourceAnnotationsView ? (
           <>
@@ -118,10 +123,13 @@ export function AnnotationToolbar({
               type="button"
               data-menu-keep-open
               disabled={actions.sourceAnnotationsView.busy}
-              title="A saved view that lists the annotations of whichever source it runs against"
+              title={t({
+                message:
+                  "A saved view that lists the annotations of whichever source it runs against",
+              })}
               onClick={actions.sourceAnnotationsView.run}
             >
-              Add “Annotations for this source” view
+              <Trans>Add “Annotations for this source” view</Trans>
             </button>
             {actions.sourceAnnotationsView.message ? (
               <p className="menu-note" role="status">
@@ -148,31 +156,39 @@ function AnnotationFilters({
   readonly propertyKeys: readonly string[];
   readonly sources: readonly SourceSummary[];
 }): JSX.Element {
+  const { t } = useLingui();
   return (
     <>
-      <span className="menu-label">Annotation</span>
+      <span className="menu-label">
+        <Trans>Annotation</Trans>
+      </span>
       <label>
-        <span>Type</span>
+        <span>{t({ message: "Type", context: "LibraryAnnotationToolbar interface" })}</span>
         <Select
-          aria-label="Type"
+          aria-label={t({ message: "Type", context: "LibraryAnnotationToolbar interface" })}
           value={filter.type}
-          options={annotationTypeOptions}
+          options={annotationTypeOptions()}
           onChange={(type) => onFilterChange({ ...filter, type })}
         />
       </label>
       <label>
-        <span>Tag</span>
+        <span>{t({ message: "Tag" })}</span>
         <Select
-          aria-label="Tag"
+          aria-label={t({ message: "Tag", context: "LibraryAnnotationToolbar interface" })}
           value={filter.tag}
           options={[
-            { value: "", label: "Any tag" },
+            {
+              value: "",
+              label: t({ message: "Any tag", context: "LibraryAnnotationToolbar interface" }),
+            },
             ...tags.map((tag) => ({ value: tag, label: tag })),
           ]}
           onChange={(tag) => onFilterChange({ ...filter, tag })}
         />
       </label>
-      <span className="menu-label">Source</span>
+      <span className="menu-label">
+        <Trans context="LibraryAnnotationToolbar interface">Source</Trans>
+      </span>
       <LibraryConditionsEditor
         conditions={filter.sourceConditions}
         propertyKeys={propertyKeys}
@@ -190,20 +206,27 @@ function AnnotationSortControl({
   readonly layout: AnnotationLayout;
   readonly onLayoutChange: (layout: AnnotationLayout) => void;
 }): JSX.Element {
+  const { t } = useLingui();
   return (
     <>
-      <span className="menu-label">Sort</span>
+      <span className="menu-label">
+        <Trans>Sort</Trans>
+      </span>
       <div className="library-sort-control">
         <Select
-          aria-label="Sort field"
+          aria-label={t({ message: "Sort field", context: "LibraryAnnotationToolbar interface" })}
           value={layout.sortField}
-          options={annotationSortOptions}
+          options={annotationSortOptions()}
           onChange={(sortField) => onLayoutChange({ ...layout, sortField })}
         />
         <button
           type="button"
-          aria-label={`Sort ${layout.sortDirection === "asc" ? "descending" : "ascending"}`}
-          title={layout.sortDirection === "asc" ? "Ascending" : "Descending"}
+          aria-label={layout.sortDirection === "asc" ? t`Sort descending` : t`Sort ascending`}
+          title={
+            layout.sortDirection === "asc"
+              ? t({ message: "Ascending", context: "LibraryAnnotationToolbar interface" })
+              : t({ message: "Descending", context: "LibraryAnnotationToolbar interface" })
+          }
           onClick={() =>
             onLayoutChange({
               ...layout,
@@ -218,16 +241,68 @@ function AnnotationSortControl({
   );
 }
 
-const annotationTypeOptions: SelectItems<AnnotationFilter["type"]> = [
-  { value: "all", label: "Any type" },
-  { value: "highlight", label: "Highlights" },
-  { value: "area", label: "Areas" },
-  { value: "note", label: "Comments" },
-  { value: "bookmark", label: "Bookmarks" },
-];
+function annotationTypeOptions(): SelectItems<AnnotationFilter["type"]> {
+  return [
+    {
+      value: "all",
+      label: translate({
+        message: "Any type",
+        context: "LibraryAnnotationToolbar annotationTypeOptions",
+      }),
+    },
+    {
+      value: "highlight",
+      label: translate({
+        message: "Highlights",
+        context: "LibraryAnnotationToolbar annotationTypeOptions",
+      }),
+    },
+    {
+      value: "area",
+      label: translate({
+        message: "Areas",
+        context: "LibraryAnnotationToolbar annotationTypeOptions",
+      }),
+    },
+    {
+      value: "note",
+      label: translate({
+        message: "Comments",
+        context: "LibraryAnnotationToolbar annotationTypeOptions",
+      }),
+    },
+    {
+      value: "bookmark",
+      label: translate({
+        message: "Bookmarks",
+        context: "LibraryAnnotationToolbar annotationTypeOptions",
+      }),
+    },
+  ];
+}
 
-const annotationSortOptions: SelectItems<AnnotationSortField> = [
-  { value: "created", label: "Created" },
-  { value: "source", label: "Source" },
-  { value: "type", label: "Type" },
-];
+function annotationSortOptions(): SelectItems<AnnotationSortField> {
+  return [
+    {
+      value: "created",
+      label: translate({
+        message: "Created",
+        context: "LibraryAnnotationToolbar annotationSortOptions",
+      }),
+    },
+    {
+      value: "source",
+      label: translate({
+        message: "Source",
+        context: "LibraryAnnotationToolbar annotationSortOptions",
+      }),
+    },
+    {
+      value: "type",
+      label: translate({
+        message: "Type",
+        context: "LibraryAnnotationToolbar annotationSortOptions",
+      }),
+    },
+  ];
+}
