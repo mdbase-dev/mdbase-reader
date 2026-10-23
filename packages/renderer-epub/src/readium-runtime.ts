@@ -87,6 +87,24 @@ const readerEpubDefaults = {
   optimalLineLength: 65,
 };
 
+/** The requested starting point, when it names a resource in the reading order. */
+function startingLocator(
+  input: {
+    readonly initialLocator?: Readonly<Record<string, unknown>>;
+    readonly publicationBaseUrl: string;
+  },
+  publication: Publication,
+): ReturnType<typeof sessionReadiumLocatorForPublication> {
+  const requested = input.initialLocator
+    ? sessionReadiumLocatorForPublication(
+        input.initialLocator,
+        publication,
+        input.publicationBaseUrl,
+      )
+    : null;
+  return requested && publication.readingOrder.findWithHref(requested.href) ? requested : null;
+}
+
 export async function createReadiumRuntime(input: {
   readonly container: HTMLElement;
   readonly manifest: unknown;
@@ -104,17 +122,7 @@ export async function createReadiumRuntime(input: {
   if (positions.length === 0) {
     throw new Error("Readium cannot open an EPUB with an empty reading order.");
   }
-  const requestedLocator = input.initialLocator
-    ? sessionReadiumLocatorForPublication(
-        input.initialLocator,
-        publication,
-        input.publicationBaseUrl,
-      )
-    : null;
-  const initialLocator =
-    requestedLocator && publication.readingOrder.findWithHref(requestedLocator.href)
-      ? requestedLocator
-      : positions[0];
+  const initialLocator = startingLocator(input, publication) ?? positions[0];
 
   const listeners: EpubNavigatorListeners = {
     frameLoaded: () => undefined,
