@@ -2,10 +2,10 @@
 /* eslint-disable @typescript-eslint/require-await -- async act flushes React's queued work */
 import { sourceId, type Annotation, type SourceSummary } from "@mdbase-reader/core";
 import { act } from "react";
-import { createRoot } from "react-dom/client";
 import { expect, it, vi } from "vitest";
 
 import { requestedAnnotation, requestedSourceId, SourceDeepLink } from "./SourceDeepLink.js";
+import { createRoot } from "./testing/i18n.js";
 
 it("only resolves the source parameter for the requested collection", () => {
   const url = "https://reader.example/?collection=c1&source=s1";

@@ -1,3 +1,5 @@
+import { t as translate } from "@lingui/core/macro";
+import { Trans, useLingui } from "@lingui/react/macro";
 import { Select, type SelectItems } from "@mdbase-dev/ui/select";
 import { useState, type JSX } from "react";
 
@@ -34,6 +36,7 @@ export function CitationTypedFieldEditor({
   readonly problem: string | undefined;
   readonly onChange: (value: unknown) => void;
 }): JSX.Element {
+  const { t } = useLingui();
   if (kind === "string" || kind === "number") {
     return <ScalarEditor kind={kind} value={value} problem={problem} onChange={onChange} />;
   }
@@ -43,7 +46,7 @@ export function CitationTypedFieldEditor({
         <CitationContributors
           citation={{ [field]: value }}
           field={field}
-          label="Names"
+          label={t({ message: "Names", context: "CitationTypedFieldEditors interface" })}
           onChange={(_, next) => onChange(next)}
         />
       ) : null}
@@ -51,7 +54,9 @@ export function CitationTypedFieldEditor({
       {kind === "string-list" ? <StringListEditor value={value} onChange={onChange} /> : null}
       {kind === "object" ? <CustomObjectEditor value={value} onChange={onChange} /> : null}
       <details className="citation-advanced-value">
-        <summary>Advanced JSON</summary>
+        <summary>
+          <Trans>Advanced JSON</Trans>
+        </summary>
         <AdvancedJsonEditor
           key={JSON.stringify(value)}
           label={label}
@@ -74,19 +79,24 @@ function ScalarEditor({
   readonly problem: string | undefined;
   readonly onChange: (value: unknown) => void;
 }): JSX.Element {
+  const { t } = useLingui();
   const numeric = kind === "number" && typeof value === "number";
   return (
     <div className="citation-scalar-editor">
       {kind === "number" ? (
         <Select
-          aria-label="Value type"
+          aria-label={t({ message: "Value type", context: "CitationTypedFieldEditors interface" })}
           value={numeric ? "number" : "text"}
-          options={scalarKindOptions}
+          options={scalarKindOptions()}
           onChange={(next) => onChange(next === "number" ? 0 : scalarText(value))}
         />
       ) : null}
       <label className="citation-field">
-        <span>{numeric ? "Number" : "Text"}</span>
+        <span>
+          {numeric
+            ? t({ message: "Number", context: "CitationTypedFieldEditors interface" })
+            : t({ message: "Text", context: "CitationTypedFieldEditors interface" })}
+        </span>
         <input
           className="mdbase-field"
           aria-invalid={problem ? true : undefined}
@@ -108,6 +118,7 @@ function DateEditor({
   readonly value: unknown;
   readonly onChange: (value: unknown) => void;
 }): JSX.Element {
+  const { t } = useLingui();
   const date = record(value) ?? {};
   const mode =
     typeof date["literal"] === "string"
@@ -118,11 +129,11 @@ function DateEditor({
   return (
     <div className="citation-date-editor">
       <label className="citation-field citation-date-mode">
-        <span>Date form</span>
+        <span>{t({ message: "Date form" })}</span>
         <Select
-          aria-label="Date form"
+          aria-label={t({ message: "Date form", context: "CitationTypedFieldEditors interface" })}
           value={mode}
-          options={dateModeOptions}
+          options={dateModeOptions()}
           onChange={(nextMode) =>
             onChange(
               nextMode === "literal" ? { literal: "" } : nextMode === "raw" ? { raw: "" } : {},
@@ -133,21 +144,21 @@ function DateEditor({
       {mode === "structured" ? (
         <div className="citation-date-grid">
           <DatePartInput
-            label="Start"
+            label={t({ message: "Start", context: "CitationTypedFieldEditors interface" })}
             value={datePartText(date, 0)}
             onChange={(next) => onChange(updateDatePart(date, 0, next))}
           />
           <DatePartInput
-            label="End (optional)"
+            label={t({ message: "End (optional)", context: "CitationTypedFieldEditors interface" })}
             value={datePartText(date, 1)}
             disabled={!datePartText(date, 0)}
             onChange={(next) => onChange(updateDatePart(date, 1, next))}
           />
           <label className="citation-field">
-            <span>Season</span>
+            <span>{t({ message: "Season" })}</span>
             <input
               className="mdbase-field"
-              placeholder="e.g. Spring or 1"
+              placeholder={t({ message: "e.g. Spring or 1" })}
               value={scalarText(date["season"])}
               onChange={(event) => onChange(updateObject(date, "season", event.target.value))}
             />
@@ -160,12 +171,16 @@ function DateEditor({
                 onChange(updateObject(date, "circa", event.target.checked || undefined))
               }
             />
-            Approximate
+            {t({ message: "Approximate" })}
           </label>
         </div>
       ) : (
         <label className="citation-field">
-          <span>{mode === "literal" ? "Date as printed" : "EDTF or source date"}</span>
+          <span>
+            {mode === "literal"
+              ? t({ message: "Date as printed" })
+              : t({ message: "EDTF or source date" })}
+          </span>
           <input
             className="mdbase-field"
             value={scalarText(date[mode])}
@@ -188,13 +203,14 @@ function DatePartInput({
   readonly disabled?: boolean;
   readonly onChange: (value: string) => void;
 }): JSX.Element {
+  const { t } = useLingui();
   return (
     <label className="citation-field">
       <span>{label}</span>
       <input
         className="mdbase-field"
         disabled={disabled}
-        placeholder="YYYY, YYYY-MM, or YYYY-MM-DD"
+        placeholder={t({ message: "YYYY, YYYY-MM, or YYYY-MM-DD" })}
         value={value}
         onChange={(event) => onChange(event.target.value)}
       />
@@ -209,17 +225,20 @@ function StringListEditor({
   readonly value: unknown;
   readonly onChange: (value: unknown) => void;
 }): JSX.Element {
+  const { t } = useLingui();
   const values = Array.isArray(value)
     ? value.filter((item): item is string => typeof item === "string")
     : [];
   return (
     <fieldset className="citation-list-editor">
-      <legend>Values</legend>
+      <legend>
+        <Trans>Values</Trans>
+      </legend>
       {values.map((item, index) => (
         <div className="citation-list-row" key={String(index)}>
           <input
             className="mdbase-field"
-            aria-label={`Value ${String(index + 1)}`}
+            aria-label={t`Value ${String(index + 1)}`}
             value={item}
             onChange={(event) =>
               onChange(
@@ -231,15 +250,15 @@ function StringListEditor({
           />
           <button
             type="button"
-            aria-label={`Remove value ${String(index + 1)}`}
+            aria-label={t`Remove value ${String(index + 1)}`}
             onClick={() => onChange(values.filter((_, position) => position !== index))}
           >
-            Remove
+            <Trans context="CitationTypedFieldEditors interface">Remove</Trans>
           </button>
         </div>
       ))}
       <button type="button" className="citation-add-row" onClick={() => onChange([...values, ""])}>
-        Add value
+        <Trans>Add value</Trans>
       </button>
     </fieldset>
   );
@@ -252,16 +271,19 @@ function CustomObjectEditor({
   readonly value: unknown;
   readonly onChange: (value: unknown) => void;
 }): JSX.Element {
+  const { t } = useLingui();
   const object = record(value) ?? {};
   const entries = Object.entries(object);
   return (
     <fieldset className="citation-custom-editor">
-      <legend>Custom properties</legend>
+      <legend>
+        <Trans>Custom properties</Trans>
+      </legend>
       {entries.map(([key, entryValue]) => (
         <div className="citation-custom-row" key={key}>
           <input
             className="mdbase-field"
-            aria-label={`${key} property name`}
+            aria-label={t`${key} property name`}
             defaultValue={key}
             onBlur={(event) => {
               const nextKey = event.target.value.trim();
@@ -271,9 +293,9 @@ function CustomObjectEditor({
             }}
           />
           <Select
-            aria-label={`${key} value type`}
+            aria-label={t`${key} value type`}
             value={customValueType(entryValue)}
-            options={customValueTypeOptions}
+            options={customValueTypeOptions()}
             onChange={(type) => onChange({ ...object, [key]: defaultCustomValue(type) })}
           />
           <CustomValueInput
@@ -283,10 +305,10 @@ function CustomObjectEditor({
           />
           <button
             type="button"
-            aria-label={`Remove ${key}`}
+            aria-label={t`Remove ${key}`}
             onClick={() => onChange(withoutKey(object, key))}
           >
-            Remove
+            <Trans context="CitationTypedFieldEditors interface">Remove</Trans>
           </button>
         </div>
       ))}
@@ -295,7 +317,7 @@ function CustomObjectEditor({
         className="citation-add-row"
         onClick={() => onChange({ ...object, [nextCustomKey(object)]: "" })}
       >
-        Add property
+        <Trans>Add property</Trans>
       </button>
     </fieldset>
   );
@@ -310,6 +332,7 @@ function CustomValueInput({
   readonly value: unknown;
   readonly onChange: (value: unknown) => void;
 }): JSX.Element | null {
+  const { t } = useLingui();
   const type = customValueType(value);
   if (type === "null") {
     return null;
@@ -317,9 +340,9 @@ function CustomValueInput({
   if (type === "boolean") {
     return (
       <Select
-        aria-label={`${name} value`}
+        aria-label={t`${name} value`}
         value={value === true ? "true" : "false"}
-        options={booleanOptions}
+        options={booleanOptions()}
         onChange={(next) => onChange(next === "true")}
       />
     );
@@ -338,7 +361,7 @@ function CustomValueInput({
   return (
     <input
       className="mdbase-field"
-      aria-label={`${name} value`}
+      aria-label={t`${name} value`}
       inputMode={type === "number" ? "decimal" : undefined}
       value={scalarText(value)}
       onChange={(event) =>
@@ -359,13 +382,14 @@ function AdvancedJsonEditor({
   readonly compact?: boolean;
   readonly onApply: (value: unknown) => void;
 }): JSX.Element {
+  const { t } = useLingui();
   const [draft, setDraft] = useState(JSON.stringify(value, null, compact ? 0 : 2));
   const parsed = parseJson(draft);
   return (
     <div className={compact ? "citation-json-value is-compact" : "citation-json-value"}>
       <textarea
         className="mdbase-field"
-        aria-label={`${label} JSON value`}
+        aria-label={t`${label} JSON value`}
         aria-invalid={!parsed.valid ? true : undefined}
         rows={compact ? 2 : Math.min(8, Math.max(3, draft.split("\n").length))}
         value={draft}
@@ -380,35 +404,108 @@ function AdvancedJsonEditor({
           }
         }}
       >
-        Apply JSON
+        <Trans>Apply JSON</Trans>
       </button>
       {!parsed.valid ? (
-        <small className="citation-field-problem">Enter valid JSON to apply this value.</small>
+        <small className="citation-field-problem">
+          <Trans>Enter valid JSON to apply this value.</Trans>
+        </small>
       ) : null}
     </div>
   );
 }
 
-const scalarKindOptions: SelectItems<"text" | "number"> = [
-  { value: "text", label: "Text" },
-  { value: "number", label: "Number" },
-];
+function scalarKindOptions(): SelectItems<"text" | "number"> {
+  return [
+    {
+      value: "text",
+      label: translate({ message: "Text", context: "CitationTypedFieldEditors scalarKindOptions" }),
+    },
+    {
+      value: "number",
+      label: translate({
+        message: "Number",
+        context: "CitationTypedFieldEditors scalarKindOptions",
+      }),
+    },
+  ];
+}
 
-const dateModeOptions: SelectItems<"structured" | "literal" | "raw"> = [
-  { value: "structured", label: "Calendar date" },
-  { value: "literal", label: "Literal date" },
-  { value: "raw", label: "EDTF / raw date" },
-];
+function dateModeOptions(): SelectItems<"structured" | "literal" | "raw"> {
+  return [
+    {
+      value: "structured",
+      label: translate({
+        message: "Calendar date",
+        context: "CitationTypedFieldEditors dateModeOptions",
+      }),
+    },
+    {
+      value: "literal",
+      label: translate({
+        message: "Literal date",
+        context: "CitationTypedFieldEditors dateModeOptions",
+      }),
+    },
+    {
+      value: "raw",
+      label: translate({
+        message: "EDTF / raw date",
+        context: "CitationTypedFieldEditors dateModeOptions",
+      }),
+    },
+  ];
+}
 
-const customValueTypeOptions: SelectItems = [
-  { value: "string", label: "Text" },
-  { value: "number", label: "Number" },
-  { value: "boolean", label: "True / false" },
-  { value: "null", label: "Empty" },
-  { value: "json", label: "JSON value" },
-];
+function customValueTypeOptions(): SelectItems {
+  return [
+    {
+      value: "string",
+      label: translate({
+        message: "Text",
+        context: "CitationTypedFieldEditors customValueTypeOptions",
+      }),
+    },
+    {
+      value: "number",
+      label: translate({
+        message: "Number",
+        context: "CitationTypedFieldEditors customValueTypeOptions",
+      }),
+    },
+    {
+      value: "boolean",
+      label: translate({
+        message: "True / false",
+        context: "CitationTypedFieldEditors customValueTypeOptions",
+      }),
+    },
+    {
+      value: "null",
+      label: translate({
+        message: "Empty",
+        context: "CitationTypedFieldEditors customValueTypeOptions",
+      }),
+    },
+    {
+      value: "json",
+      label: translate({
+        message: "JSON value",
+        context: "CitationTypedFieldEditors customValueTypeOptions",
+      }),
+    },
+  ];
+}
 
-const booleanOptions: SelectItems<"true" | "false"> = [
-  { value: "true", label: "True" },
-  { value: "false", label: "False" },
-];
+function booleanOptions(): SelectItems<"true" | "false"> {
+  return [
+    {
+      value: "true",
+      label: translate({ message: "True", context: "CitationTypedFieldEditors booleanOptions" }),
+    },
+    {
+      value: "false",
+      label: translate({ message: "False", context: "CitationTypedFieldEditors booleanOptions" }),
+    },
+  ];
+}

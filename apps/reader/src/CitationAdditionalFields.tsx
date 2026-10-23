@@ -1,3 +1,4 @@
+import { Trans, useLingui } from "@lingui/react/macro";
 import { useId, useMemo, useState, type JSX } from "react";
 
 import {
@@ -19,6 +20,7 @@ export function CitationAdditionalFields({
   readonly problems: readonly CslValidationProblem[];
   readonly onChange: (citation: Readonly<Record<string, unknown>>) => void;
 }): JSX.Element {
+  const { t } = useLingui();
   const [selected, setSelected] = useState("");
   const fieldListId = useId();
   const definitions = useMemo(
@@ -40,17 +42,25 @@ export function CitationAdditionalFields({
     <details className="citation-field-section citation-field-shelf">
       <summary>
         <span>
-          <strong>Additional fields</strong>
-          <small>Add less common CSL metadata</small>
+          <strong>
+            <Trans>Additional fields</Trans>
+          </strong>
+          <small>
+            <Trans>Add less common CSL metadata</Trans>
+          </small>
         </span>
       </summary>
       <div className="citation-field-picker">
         <label>
-          <span>Find a field</span>
+          <span>{t({ message: "Find a field" })}</span>
           <input
             className="mdbase-field"
             list={fieldListId}
-            placeholder={definitions.length ? "e.g. accessed, genre, PMID" : "All fields added"}
+            placeholder={
+              definitions.length
+                ? t({ message: "e.g. accessed, genre, PMID" })
+                : t({ message: "All fields added" })
+            }
             value={selected}
             onChange={(event) => setSelected(event.target.value)}
             onKeyDown={(event) => {
@@ -69,11 +79,13 @@ export function CitationAdditionalFields({
           </datalist>
         </label>
         <button type="button" disabled={!definition} onClick={addField}>
-          Add field
+          <Trans>Add field</Trans>
         </button>
       </div>
       {selected && !definition ? (
-        <small className="citation-field-picker-note">Choose an unused official CSL field.</small>
+        <small className="citation-field-picker-note">
+          <Trans>Choose an unused official CSL field.</Trans>
+        </small>
       ) : null}
       {active.length ? (
         <div className="citation-specialist-fields">
@@ -89,7 +101,9 @@ export function CitationAdditionalFields({
           ))}
         </div>
       ) : (
-        <p className="citation-field-shelf-empty">This record only uses the core fields above.</p>
+        <p className="citation-field-shelf-empty">
+          <Trans>This record only uses the core fields above.</Trans>
+        </p>
       )}
     </details>
   );
@@ -108,6 +122,7 @@ function AdditionalField({
   readonly onChange: (value: unknown) => void;
   readonly onRemove: () => void;
 }): JSX.Element {
+  const { t } = useLingui();
   const label = cslFieldLabel(definition.name);
   return (
     <article className="citation-specialist-field">
@@ -116,8 +131,8 @@ function AdditionalField({
           <strong>{label}</strong>
           <code>{definition.name}</code>
         </div>
-        <button type="button" aria-label={`Remove ${label}`} onClick={onRemove}>
-          Remove
+        <button type="button" aria-label={t`Remove ${label}`} onClick={onRemove}>
+          <Trans context="CitationAdditionalFields interface">Remove</Trans>
         </button>
       </header>
       <CitationTypedFieldEditor

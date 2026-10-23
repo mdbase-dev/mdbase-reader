@@ -1,3 +1,4 @@
+import { Trans, useLingui } from "@lingui/react/macro";
 import { ReaderButton } from "@mdbase-reader/ui";
 import { useEffect, useRef, useState, type JSX } from "react";
 
@@ -54,6 +55,7 @@ function OpenSourceAddDialog({
   onDropFile,
   lookup,
 }: Omit<Parameters<typeof SourceAddDialog>[0], "open">): JSX.Element {
+  const { t } = useLingui();
   const [url, setUrl] = useState("");
   const input = useRef<HTMLInputElement>(null);
   useEffect(() => {
@@ -85,17 +87,21 @@ function OpenSourceAddDialog({
         <button
           className="icon-button source-add-close"
           type="button"
-          aria-label="Close add source"
+          aria-label={t({ message: "Close add source" })}
           disabled={busy}
           onClick={onClose}
         >
           <CloseIcon />
         </button>
         <div className="import-dialog-heading">
-          <h2 id="reader-add-source-title">Add a source</h2>
+          <h2 id="reader-add-source-title">
+            <Trans>Add a source</Trans>
+          </h2>
           <p>
-            Save a web page or PDF link, look up a work by DOI, arXiv ID or ISBN, or add a file from
-            your device.
+            <Trans>
+              Save a web page or PDF link, look up a work by DOI, arXiv ID or ISBN, or add a file
+              from your device.
+            </Trans>
           </p>
         </div>
         <form
@@ -108,7 +114,7 @@ function OpenSourceAddDialog({
           }}
         >
           <label className="capture-url-field">
-            <span>Link or identifier</span>
+            <span>{t({ message: "Link or identifier" })}</span>
             <span className="capture-url-row">
               <input
                 className="mdbase-field"
@@ -117,7 +123,7 @@ function OpenSourceAddDialog({
                 inputMode="url"
                 autoComplete="url"
                 spellCheck={false}
-                placeholder="https://…, DOI, arXiv ID or ISBN"
+                placeholder={t({ message: "https://…, DOI, arXiv ID or ISBN" })}
                 value={url}
                 disabled={busy}
                 onChange={(event) => {
@@ -125,7 +131,11 @@ function OpenSourceAddDialog({
                   onEdit();
                 }}
               />
-              <ReaderButton disabled={busy || !url.trim()}>{busy ? "Adding…" : "Add"}</ReaderButton>
+              <ReaderButton disabled={busy || !url.trim()}>
+                {busy
+                  ? t({ message: "Adding…", context: "SourceAddDialog interface" })
+                  : t({ message: "Add", context: "SourceAddDialog interface" })}
+              </ReaderButton>
             </span>
           </label>
           {busy && lookup.progress ? (
@@ -141,7 +151,9 @@ function OpenSourceAddDialog({
           <LookupFollowUp busy={busy} lookup={lookup} />
         </form>
         <div className="source-add-divider">
-          <span>or</span>
+          <span>
+            <Trans>or</Trans>
+          </span>
         </div>
         <FileChoice disabled={busy || !canChooseFile} onChoose={onChooseFile} onDrop={onDropFile} />
       </section>
@@ -160,8 +172,12 @@ function LookupFollowUp({
   if (lookup.notice) {
     return (
       <div className="capture-follow-up" role="status">
-        <p>Added. {lookup.notice.message}</p>
-        <ReaderButton onClick={lookup.openNoticed}>Open source</ReaderButton>
+        <p>
+          <Trans>Added. {lookup.notice.message}</Trans>
+        </p>
+        <ReaderButton onClick={lookup.openNoticed}>
+          <Trans>Open source</Trans>
+        </ReaderButton>
       </div>
     );
   }
@@ -169,8 +185,10 @@ function LookupFollowUp({
     return (
       <div className="capture-follow-up">
         <p>
-          Reader couldn’t fetch that page ({lookup.offer.reason}), but it found the citation for “
-          {lookup.offer.title}”. You can save the citation now and attach the page or file later.
+          <Trans>
+            Reader couldn’t fetch that page ({lookup.offer.reason}), but it found the citation for “
+            {lookup.offer.title}”. You can save the citation now and attach the page or file later.
+          </Trans>
         </p>
         <button
           className="connection-secondary"
@@ -178,7 +196,7 @@ function LookupFollowUp({
           disabled={busy}
           onClick={() => void lookup.saveCitationOnly()}
         >
-          Save citation only
+          <Trans>Save citation only</Trans>
         </button>
       </div>
     );
@@ -195,6 +213,7 @@ function FileChoice({
   readonly onChoose: () => void;
   readonly onDrop: (file: File) => void;
 }): JSX.Element {
+  const { t } = useLingui();
   const [dragging, setDragging] = useState(false);
   return (
     <button
@@ -220,8 +239,12 @@ function FileChoice({
     >
       <FileIcon />
       <span>
-        <strong>{dragging ? "Drop to add" : "Choose or drop a file"}</strong>
-        <small>PDF, EPUB or saved web page</small>
+        <strong>
+          {dragging ? t({ message: "Drop to add" }) : t({ message: "Choose or drop a file" })}
+        </strong>
+        <small>
+          <Trans>PDF, EPUB or saved web page</Trans>
+        </small>
       </span>
     </button>
   );

@@ -1,3 +1,4 @@
+import { useLingui } from "@lingui/react/macro";
 import { useVirtualizer } from "@tanstack/react-virtual";
 import {
   useEffect,
@@ -58,23 +59,12 @@ interface EditingCell {
 }
 
 export function LibraryTable(props: LibraryTableProps): JSX.Element {
+  const { t } = useLingui();
   const { sources, layout, selection, onSelectionChange, scrollRef } = props;
   const gridRef = useRef<HTMLDivElement>(null);
   const table = useLibraryColumns(props);
   const rowIds = useMemo(() => sources.map(({ id }) => id), [sources]);
-  const offset = useOffsetTop(gridRef);
-  // TanStack Virtual returns fresh functions each render; the React Compiler must not memoize them.
-  // eslint-disable-next-line react-hooks/incompatible-library
-  const virtualizer = useVirtualizer({
-    count: sources.length,
-    getScrollElement: () => scrollRef.current,
-    estimateSize: () => libraryRowHeight,
-    getItemKey: (index) => sources[index]?.id ?? index,
-    overscan: 10,
-    scrollPaddingStart: headerHeight,
-    // Rows are measured from the top of the scroller; content above the table offsets them.
-    scrollMargin: offset + headerHeight,
-  });
+  const { virtualizer, margin } = useSourceRows(sources, scrollRef, gridRef);
   const focusRow = useRowFocus(gridRef);
   const press = useLongPress();
   const [editing, setEditing] = useState<EditingCell | null>(null);
@@ -92,7 +82,6 @@ export function LibraryTable(props: LibraryTableProps): JSX.Element {
   );
   const gridTemplateColumns = `${sizes.map((size) => `${String(size)}px`).join(" ")} minmax(44px, 1fr)`;
   const width = sizes.reduce((total, size) => total + size, 0) + 60;
-  const margin = offset + headerHeight;
   return (
     <div className="library-table-frame">
       <div
@@ -100,7 +89,7 @@ export function LibraryTable(props: LibraryTableProps): JSX.Element {
         className={`library-table${layout.columns.includes("creator") ? " has-creator-column" : ""}`}
         role="grid"
         tabIndex={-1}
-        aria-label="Sources"
+        aria-label={t({ message: "Sources", context: "LibraryTable interface" })}
         aria-rowcount={sources.length + 1}
         aria-colcount={layout.columns.length}
         aria-multiselectable="true"
@@ -179,6 +168,30 @@ export function LibraryTable(props: LibraryTableProps): JSX.Element {
       {rowMenu.element}
     </div>
   );
+}
+
+function useSourceRows(
+  sources: readonly SourceSummary[],
+  scrollRef: RefObject<HTMLDivElement | null>,
+  gridRef: RefObject<HTMLDivElement | null>,
+): {
+  readonly virtualizer: ReturnType<typeof useVirtualizer<HTMLDivElement, Element>>;
+  readonly margin: number;
+} {
+  const offset = useOffsetTop(gridRef);
+  // TanStack Virtual returns fresh functions each render; the React Compiler must not memoize them.
+  // eslint-disable-next-line react-hooks/incompatible-library
+  const virtualizer = useVirtualizer({
+    count: sources.length,
+    getScrollElement: () => scrollRef.current,
+    estimateSize: () => libraryRowHeight,
+    getItemKey: (index) => sources[index]?.id ?? index,
+    overscan: 10,
+    scrollPaddingStart: headerHeight,
+    // Rows are measured from the top of the scroller; content above the table offsets them.
+    scrollMargin: offset + headerHeight,
+  });
+  return { virtualizer, margin: offset + headerHeight };
 }
 
 /** F2 edits the focused row's first editable field, like renaming in a file manager. */

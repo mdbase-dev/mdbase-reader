@@ -6,7 +6,6 @@ import {
   sourceId,
   type SourceSummary,
 } from "@mdbase-reader/core";
-import { renderToStaticMarkup } from "react-dom/server";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 import {
@@ -15,6 +14,7 @@ import {
   type ReaderCommandInput,
 } from "./reader-command-list.js";
 import { ReaderHeader } from "./ReaderHeader.js";
+import { renderToStaticMarkup } from "./testing/i18n.js";
 
 const source = (id: string, overrides: Partial<SourceSummary> = {}): SourceSummary => ({
   collectionId: collectionId("c"),

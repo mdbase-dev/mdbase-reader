@@ -1,3 +1,4 @@
+import { t as translate } from "@lingui/core/macro";
 import { useEffect, useLayoutEffect, useRef, type JSX } from "react";
 
 /** Native editing, selection and IME; no Markdown parser or shared document transactions. */
@@ -6,7 +7,7 @@ export function AnnotationTextArea({
   onChange,
   readOnly = false,
   placeholder,
-  label = "Comment",
+  label = translate({ message: "Comment", context: "AnnotationTextArea status or action" }),
   rows = 7,
   focusOnMount = true,
   autoSize = false,

@@ -1,3 +1,4 @@
+import { t as translate } from "@lingui/core/macro";
 import { connectProblemMessage, type ReaderConnectSnapshot } from "@mdbase-reader/connect";
 import { useEffect, useMemo, useState, useSyncExternalStore, type JSX } from "react";
 
@@ -32,7 +33,9 @@ export function ImportPage({ service }: { service: ImportService }): JSX.Element
           controller.update({ error });
         }
       })
-      .catch(() => controller.update({ error: "Could not connect to mdbase." }));
+      .catch(() =>
+        controller.update({ error: translate({ message: "Could not connect to mdbase." }) }),
+      );
     const warn = (event: BeforeUnloadEvent): void => {
       if (controller.getSnapshot().busy) {
         event.preventDefault();

@@ -9,10 +9,10 @@ import {
   type SourceSummary,
 } from "@mdbase-reader/core";
 import { act, type JSX } from "react";
-import { createRoot } from "react-dom/client";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { SourceRemovalDialog } from "./SourceRemovalDialog.js";
+import { createRoot } from "./testing/i18n.js";
 import { useSourceRemoval, type SourceRemovalController } from "./use-source-removal.js";
 
 const source: SourceSummary = {

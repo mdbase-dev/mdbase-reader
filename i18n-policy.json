@@ -1,0 +1,28 @@
+{
+  "source": {
+    "brands": [
+      "mdbase Reader",
+      "Zotero",
+      "Readwise Reader",
+      "PDF",
+      "EPUB",
+      "HTML",
+      "JSON",
+      "CSL",
+      "CSL-JSON",
+      "DOI",
+      "ISBN",
+      "ISSN",
+      "URL",
+      "URI",
+      "ORCID",
+      "A",
+      "Aa",
+      "B",
+      "I",
+      "H",
+      "Z",
+      "R"
+    ]
+  }
+}

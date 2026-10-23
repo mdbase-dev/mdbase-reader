@@ -1,3 +1,4 @@
+import { Trans } from "@lingui/react/macro";
 import { lazy, Suspense, type JSX } from "react";
 
 import type {
@@ -37,7 +38,13 @@ export function MultilineCodeEditor({
   readonly onSave?: () => void;
 }): JSX.Element {
   return (
-    <Suspense fallback={<div className={`${className ?? ""} editor-loading`}>Opening editor…</div>}>
+    <Suspense
+      fallback={
+        <div className={`${className ?? ""} editor-loading`}>
+          <Trans>Opening editor…</Trans>
+        </div>
+      }
+    >
       <CodeEditor
         value={value}
         {...(sharedDocument ? { sharedDocument } : {})}

@@ -1,3 +1,5 @@
+import { t as translate } from "@lingui/core/macro";
+import { Trans, useLingui } from "@lingui/react/macro";
 import { Select, type SelectItems } from "@mdbase-dev/ui/select";
 import { useMemo, useState, type JSX } from "react";
 
@@ -99,9 +101,11 @@ export function AnnotationList({
       >
         {!results.length ? (
           <div className="inspector-status">
-            <strong>No matching annotations</strong>
+            <strong>
+              <Trans>No matching annotations</Trans>
+            </strong>
             <button type="button" onClick={clear}>
-              Clear filters
+              <Trans>Clear filters</Trans>
             </button>
           </div>
         ) : null}
@@ -121,14 +125,20 @@ function AnnotationListStatus({
         {annotations.message}
       </div>
     ) : (
-      <div className="inspector-status">Loading annotations…</div>
+      <div className="inspector-status">
+        <Trans>Loading annotations…</Trans>
+      </div>
     );
   }
   if (!annotations.value.length) {
     return (
       <div className="inspector-status annotation-empty">
-        <strong>No annotations yet</strong>
-        <span>Select text or an area in the document, or add a comment or bookmark above.</span>
+        <strong>
+          <Trans>No annotations yet</Trans>
+        </strong>
+        <span>
+          <Trans>Select text or an area in the document, or add a comment or bookmark above.</Trans>
+        </span>
       </div>
     );
   }
@@ -160,6 +170,7 @@ function AnnotationBrowserControls({
   readonly onOrderChange: (order: AnnotationOrder) => void;
   readonly onClear: () => void;
 }): JSX.Element {
+  const { t } = useLingui();
   const filtered = query.trim() !== "" || filter !== "all";
   return (
     <div className="annotation-browser-controls">
@@ -167,33 +178,40 @@ function AnnotationBrowserControls({
         <SearchIcon />
         <input
           type="search"
-          aria-label="Search annotations"
-          placeholder="Search annotations"
+          aria-label={t({ message: "Search annotations", context: "AnnotationList interface" })}
+          placeholder={t({ message: "Search annotations", context: "AnnotationList interface" })}
           value={query}
           onChange={(event) => onQueryChange(event.target.value)}
         />
         <Menu
           className="annotation-view-menu"
-          label={`Filter and sort annotations${filter === "all" ? "" : ", filtered"}`}
+          label={
+            filter === "all"
+              ? t`Filter and sort annotations`
+              : t`Filter and sort annotations, filtered`
+          }
           triggerClassName={`icon-button${filter === "all" ? "" : " is-active"}`}
           trigger={<FilterIcon />}
         >
           <div className="library-options" data-menu-keep-open>
             <label>
-              <span>Show</span>
+              <span>{t({ message: "Show" })}</span>
               <Select
-                aria-label="Filter annotations"
+                aria-label={t({
+                  message: "Filter annotations",
+                  context: "AnnotationList interface",
+                })}
                 value={filter}
-                options={annotationFilterOptions}
+                options={annotationFilterOptions()}
                 onChange={onFilterChange}
               />
             </label>
             <label>
-              <span>Order</span>
+              <span>{t({ message: "Order" })}</span>
               <Select
-                aria-label="Sort annotations"
+                aria-label={t({ message: "Sort annotations", context: "AnnotationList interface" })}
                 value={order}
-                options={annotationOrderOptions}
+                options={annotationOrderOptions()}
                 onChange={onOrderChange}
               />
             </label>
@@ -202,31 +220,79 @@ function AnnotationBrowserControls({
       </div>
       {filtered ? (
         <small role="status">
-          {results} of {total}
+          <Trans>
+            {results} of {total}
+          </Trans>
           <button type="button" onClick={onClear}>
-            Clear
+            <Trans>Clear</Trans>
           </button>
         </small>
       ) : null}
       {hiddenActive ? (
         <button type="button" onClick={onClear}>
-          Show selected annotation (clear filters)
+          <Trans>Show selected annotation (clear filters)</Trans>
         </button>
       ) : null}
     </div>
   );
 }
 
-const annotationFilterOptions: SelectItems<AnnotationFilter> = [
-  { value: "all", label: "All" },
-  { value: "comments", label: "With commentary" },
-  { value: "highlight", label: "Highlights" },
-  { value: "area", label: "Area captures" },
-  { value: "note", label: "Comments on the source" },
-  { value: "bookmark", label: "Bookmarks" },
-];
+function annotationFilterOptions(): SelectItems<AnnotationFilter> {
+  return [
+    {
+      value: "all",
+      label: translate({ message: "All", context: "AnnotationList annotationFilterOptions" }),
+    },
+    {
+      value: "comments",
+      label: translate({
+        message: "With commentary",
+        context: "AnnotationList annotationFilterOptions",
+      }),
+    },
+    {
+      value: "highlight",
+      label: translate({
+        message: "Highlights",
+        context: "AnnotationList annotationFilterOptions",
+      }),
+    },
+    {
+      value: "area",
+      label: translate({
+        message: "Area captures",
+        context: "AnnotationList annotationFilterOptions",
+      }),
+    },
+    {
+      value: "note",
+      label: translate({
+        message: "Comments on the source",
+        context: "AnnotationList annotationFilterOptions",
+      }),
+    },
+    {
+      value: "bookmark",
+      label: translate({ message: "Bookmarks", context: "AnnotationList annotationFilterOptions" }),
+    },
+  ];
+}
 
-const annotationOrderOptions: SelectItems<AnnotationOrder> = [
-  { value: "document", label: "Document order" },
-  { value: "newest", label: "Newest first" },
-];
+function annotationOrderOptions(): SelectItems<AnnotationOrder> {
+  return [
+    {
+      value: "document",
+      label: translate({
+        message: "Document order",
+        context: "AnnotationList annotationOrderOptions",
+      }),
+    },
+    {
+      value: "newest",
+      label: translate({
+        message: "Newest first",
+        context: "AnnotationList annotationOrderOptions",
+      }),
+    },
+  ];
+}
