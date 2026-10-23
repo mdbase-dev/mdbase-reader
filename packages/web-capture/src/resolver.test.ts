@@ -289,6 +289,36 @@ describe("citation resolution: normalization and validation", () => {
     });
   });
 
+  it("prefers the common year to equally scored conflicting days, regardless of label or freshness", () => {
+    const claims = [
+      claim("title", "Report"),
+      claim(
+        "issued",
+        { "date-parts": [[2020]] },
+        { kind: "page", signal: "highwire" },
+        "citation_year",
+        "2026-10-20T00:00:00Z",
+      ),
+      claim(
+        "issued",
+        { "date-parts": [[2020, 3, 4]] },
+        { kind: "page", signal: "highwire" },
+        "citation_publication_date",
+      ),
+      claim(
+        "issued",
+        { "date-parts": [[2020, 5, 6]] },
+        { kind: "page", signal: "open-graph" },
+        "article:published_time",
+      ),
+    ];
+    const result = resolveCitation({ claims });
+    expect(result.citation?.["issued"]).toEqual({ "date-parts": [[2020]] });
+    expect(result.provenance["issued"]?.source).toBe("page:highwire");
+    expect(result.provenance["issued"]?.agreed).toBeUndefined();
+    expect(resolveCitation({ claims: [...claims].reverse() })).toEqual(result);
+  });
+
   it("enriches a partial date only when there is a unique compatible specific date", () => {
     const result = resolveCitation({
       claims: [

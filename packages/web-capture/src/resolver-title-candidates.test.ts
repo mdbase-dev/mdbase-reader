@@ -92,6 +92,14 @@ describe("title candidates", () => {
     });
   });
 
+  it("does not treat identical title and OG copies as proof that a subtitle is a site", () => {
+    const result = resolve(
+      '<title>War — A History</title><meta property="og:title" content="War — A History">',
+    );
+    expect(result.citation?.["title"]).toBe("War — A History");
+    expect(result.citation).not.toHaveProperty("container-title");
+  });
+
   it("does not invent a container from an unsupported subtitle", () => {
     expect(resolve("<title>A story - A subtitle</title>").citation).toMatchObject({
       title: "A story - A subtitle",

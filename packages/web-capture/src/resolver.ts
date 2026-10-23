@@ -37,6 +37,7 @@ const corroborationBonus = 4;
 
 interface CandidateClaim extends Claim {
   readonly siteSuffixStripped?: boolean;
+  readonly ambiguousDate?: boolean;
 }
 
 interface ClaimGroup {
@@ -233,7 +234,8 @@ function supportedSuffix(
       pageTitleSignal(claim) &&
       evidenceLabel(claim) !== evidenceLabel(title) &&
       typeof claim.value === "string" &&
-      claimValuesMatch("container-title", suffix, splitTitle(claim.value).suffix),
+      claimValuesMatch("container-title", suffix, splitTitle(claim.value).suffix) &&
+      !claimValuesMatch("title", claim.value, title.value),
   );
   return hostMatches || repeated ? suffix : undefined;
 }
@@ -262,10 +264,11 @@ function groupClaims(claims: readonly CandidateClaim[]): ClaimGroup[] {
       const exact = matches.find((group) =>
         group.every((other) => cslValuesEqual(claim.value, other.value)),
       );
+      const partial = { ...claim, ambiguousDate: true };
       if (exact) {
-        exact.push(claim);
+        exact.push(partial);
       } else {
-        groups.push([claim]);
+        groups.push([partial]);
       }
     } else if (!matches.length) {
       groups.push([claim]);
@@ -399,9 +402,20 @@ function chooseGroup(field: string, groups: readonly ClaimGroup[]): ClaimGroup |
   return [...eligible].sort(
     (a, b) =>
       b.score - a.score ||
+      cautiousDateOrder(a, b) ||
       descending(a.observedAt, b.observedAt) ||
       compareClaims(a.winner, b.winner),
   )[0];
+}
+
+function cautiousDateOrder(a: ClaimGroup, b: ClaimGroup): number {
+  const partialA = a.claims.some((claim) => claim.ambiguousDate);
+  const partialB = b.claims.some((claim) => claim.ambiguousDate);
+  // A conflicting full date must independently outscore the common prefix, not just be newer.
+  return (
+    Number(partialB) - Number(partialA) ||
+    (partialA && partialB ? dateSpecificity(a.value) - dateSpecificity(b.value) : 0)
+  );
 }
 
 function claimStrength(claim: CandidateClaim): number {

@@ -161,16 +161,28 @@ function videoClaims(document: Document, nodes: readonly JsonLdNode[], add: AddC
     add("issued", cslDate(stringValue(node["uploadDate"])), "json-ld", "uploadDate");
   }
   const authors = [...document.querySelectorAll('[itemprop~="author"][itemscope]')].flatMap(
-    (scope) => {
-      const property = scope.querySelector('[itemprop~="name"]');
-      const name = textValue(property?.getAttribute("content") ?? property?.textContent);
-      const author = name && cslName(name);
-      return author
-        ? [scope.getAttribute("itemtype")?.endsWith("/Organization") ? { literal: name } : author]
-        : [];
-    },
+    videoAuthor,
   );
   add("author", authors, "html", "VideoObject microdata author");
+}
+
+function videoAuthor(scope: Element): NonNullable<ReturnType<typeof cslName>>[] {
+  const owner = scope.parentElement?.closest("[itemscope]");
+  if (
+    owner &&
+    !owner
+      .getAttribute("itemtype")
+      ?.split(/\s+/u)
+      .some((type) => type.endsWith("/VideoObject"))
+  ) {
+    return [];
+  }
+  const property = scope.querySelector('[itemprop~="name"]');
+  const name = textValue(property?.getAttribute("content") ?? property?.textContent);
+  const author = name && cslName(name);
+  return author
+    ? [scope.getAttribute("itemtype")?.endsWith("/Organization") ? { literal: name } : author]
+    : [];
 }
 
 function tagClaims(meta: MetaIndex, pageUrl: string, add: AddClaim): void {

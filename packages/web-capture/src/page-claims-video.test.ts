@@ -25,6 +25,22 @@ it("reads VideoObject upload dates in their published local day and scoped micro
   });
 });
 
+it("does not confuse review authors with a video's creators", () => {
+  const document = new DOMParser().parseFromString(
+    `<html><head>
+    <script type="application/ld+json">{"@type":"VideoObject","name":"Film","author":{"@type":"Person","name":"Jane Director"}}</script>
+    </head><body><aside itemscope itemtype="https://schema.org/Review">
+      <div itemprop="author" itemscope itemtype="https://schema.org/Person">
+        <span itemprop="name">Bob Reviewer</span></div></aside></body></html>`,
+    "text/html",
+  );
+  const result = resolveCitation({
+    claims: pageClaims(document, "https://example.org/video", "2026-10-23T12:00:00Z").claims,
+  });
+  expect(result.citation?.["author"]).toEqual([{ given: "Jane", family: "Director" }]);
+  expect(result.provenance["author"]?.rejected).toBeUndefined();
+});
+
 it("does not treat an unscoped name or unrelated Person scope as a video's creator", () => {
   const document = new DOMParser().parseFromString(
     `<html><head>
