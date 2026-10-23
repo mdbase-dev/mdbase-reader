@@ -4856,557 +4856,557 @@ msgstr "Abriendo nota bibliográfica…"
 
 #: apps/extension/src/ConnectionPanel.tsx
 msgid "Opening mdbase…"
-msgstr ""
+msgstr "Abriendo mdbase…"
 
 #: apps/reader/src/CollectionMenu.tsx
 msgctxt "CollectionMenu interface"
 msgid "Opening mdbase…"
-msgstr ""
+msgstr "Abriendo mdbase…"
 
 #: apps/reader/src/ConnectionLayout.tsx
 msgctxt "ConnectionLayout interface"
 msgid "Opening mdbase…"
-msgstr ""
+msgstr "Abriendo mdbase…"
 
 #: apps/reader/src/ConnectReader.tsx
 msgctxt "ConnectReader interface"
 msgid "Opening mdbase…"
-msgstr ""
+msgstr "Abriendo mdbase…"
 
 #: apps/extension/src/NotePanel.tsx
 msgid "Opening the literature note…"
-msgstr ""
+msgstr "Abriendo la nota bibliográfica…"
 
 #: apps/extension/src/CaptureApp.tsx
 msgid "Opening the new page…"
-msgstr ""
+msgstr "Abriendo la página nueva…"
 
 #: apps/reader/src/ReaderApp.tsx
 #: apps/reader/src/ReaderWorkspace.tsx
 msgid "Opening your reading collection"
-msgstr ""
+msgstr "Abriendo tu colección de lectura"
 
 #: packages/renderer-pdf/src/pdf-translations.ts
 msgctxt "PDF viewer passwordPrompt"
 msgid "Opening..."
-msgstr ""
+msgstr "Abriendo..."
 
 #: apps/reader/src/reader-app-commands.ts
 msgid "Opens in a new tab"
-msgstr ""
+msgstr "Se abre en una pestaña nueva"
 
 #: apps/reader/src/CitationStructuredEditor.tsx
 msgid "Optional descriptive text"
-msgstr ""
+msgstr "Texto descriptivo opcional"
 
 #: apps/reader/src/SourceAddDialog.tsx
 msgid "or"
-msgstr ""
+msgstr "o"
 
 #: apps/reader/src/ConnectReader.tsx
 msgid "Or open another collection"
-msgstr ""
+msgstr "O abre otra colección"
 
 #: apps/reader/src/AnnotationList.tsx
 msgid "Order"
-msgstr ""
+msgstr "Orden"
 
 #: apps/reader/src/CitationContributors.tsx
 msgctxt "CitationContributors contributorKindOptions"
 msgid "Organisation"
-msgstr ""
+msgstr "Organización"
 
 #: apps/reader/src/CitationContributors.tsx
 msgctxt "CitationContributors interface"
 msgid "Organisation name"
-msgstr ""
+msgstr "Nombre de la organización"
 
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "Organizer"
-msgstr ""
+msgstr "Organizador"
 
 #. placeholder {0}: category.toUpperCase()
 #: packages/migration/src/readwise-sources.ts
 msgid "Original {0} unavailable; saved HTML retained: {key}"
-msgstr ""
+msgstr "{0} original no disponible; se conserva el HTML guardado: {key}"
 
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "Original author"
-msgstr ""
+msgstr "Autor original"
 
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "Original date"
-msgstr ""
+msgstr "Fecha original"
 
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "Original publisher"
-msgstr ""
+msgstr "Editorial original"
 
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "Original publisher place"
-msgstr ""
+msgstr "Lugar de la editorial original"
 
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "Original title"
-msgstr ""
+msgstr "Título original"
 
 #: apps/reader/src/citation-form-model.ts
 msgctxt "CSL item type"
 msgid "Other"
-msgstr ""
+msgstr "Otro"
 
 #: apps/extension/src/use-extension-capture.ts
 msgid "Other notes already link to this highlight. Delete it from Saved highlights to review them first."
-msgstr ""
+msgstr "Otras notas ya enlazan con este resaltado. Elimínalo de Resaltados guardados para revisarlas primero."
 
 #: packages/migration/src/readwise.ts
 msgid "Other Reader sources"
-msgstr ""
+msgstr "Otras fuentes de Reader"
 
 #: packages/migration/src/readwise.ts
 msgid "Other Readwise sources"
-msgstr ""
+msgstr "Otras fuentes de Readwise"
 
 #: packages/renderer-pdf/src/pdf-viewer-ui-schema.ts
 msgctxt "PDF navigation outline"
 msgid "Outline"
-msgstr ""
+msgstr "Esquema"
 
 #: packages/renderer-pdf/src/pdf-translations.ts
 msgctxt "PDF viewer outline"
 msgid "Outline"
-msgstr ""
+msgstr "Esquema"
 
 #: packages/renderer-pdf/src/pdf-translations.ts
 msgctxt "PDF viewer panel"
 msgid "Outline"
-msgstr ""
+msgstr "Esquema"
 
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "Page"
-msgstr ""
+msgstr "Página"
 
 #: packages/renderer-pdf/src/pdf-translations.ts
 msgctxt "PDF viewer search"
 msgid "Page {page}"
-msgstr ""
+msgstr "Página {page}"
 
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "Page first"
-msgstr ""
+msgstr "Página inicial"
 
 #: packages/renderer-pdf/src/pdf-translations.ts
 msgctxt "PDF viewer page"
 msgid "Page Rotation"
-msgstr ""
+msgstr "Rotación de página"
 
 #: packages/renderer-pdf/src/pdf-translations.ts
 msgctxt "PDF viewer page"
 msgid "Page Settings"
-msgstr ""
+msgstr "Configuración de página"
 
 #: apps/reader/src/CitationStructuredEditor.tsx
 msgctxt "CitationStructuredEditor interface"
 msgid "Pages"
-msgstr ""
+msgstr "Páginas"
 
 #: packages/renderer-pdf/src/pdf-translations.ts
 msgctxt "PDF viewer print"
 msgid "Pages to print"
-msgstr ""
+msgstr "Páginas para imprimir"
 
 #: apps/extension/src/WelcomeApp.tsx
 msgid "Pages you have saved are marked on the toolbar button and show your highlights."
-msgstr ""
+msgstr "Las páginas que has guardado se marcan en el botón de la barra de herramientas y muestran tus resaltados."
 
 #: apps/extension/src/OptionsApp.tsx
 msgid "Pages you visit"
-msgstr ""
+msgstr "Páginas que visitas"
 
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "Pamphlet"
-msgstr ""
+msgstr "Folleto"
 
 #: apps/reader/src/reader-command-list.ts
 msgid "Pane {paneLabel}"
-msgstr ""
+msgstr "Panel {paneLabel}"
 
 #: apps/reader/src/reader-command-list.ts
 msgid "Pane {paneLabel} is focused"
-msgstr ""
+msgstr "El panel {paneLabel} tiene el foco"
 
 #: apps/reader/src/DockPaneActions.tsx
 msgctxt "DockPaneActions interface"
 msgid "Pane actions"
-msgstr ""
+msgstr "Acciones del panel"
 
 #: apps/reader/src/CitationContributors.tsx
 msgid "Parse literal name"
-msgstr ""
+msgstr "Analizar nombre literal"
 
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "Parse names"
-msgstr ""
+msgstr "Analizar nombres"
 
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "Part"
-msgstr ""
+msgstr "Parte"
 
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "Part title"
-msgstr ""
+msgstr "Título de la parte"
 
 #: apps/reader/src/annotation-columns.ts
 msgctxt "Annotation table column"
 msgid "Passage"
-msgstr ""
+msgstr "Pasaje"
 
 #: apps/reader/src/LibraryAnnotationToolbar.tsx
 msgid "Passage, note, source or tag"
-msgstr ""
+msgstr "Pasaje, nota, fuente o etiqueta"
 
 #: packages/renderer-pdf/src/pdf-translations.ts
 msgctxt "PDF viewer passwordPrompt"
 msgid "Password"
-msgstr ""
+msgstr "Contraseña"
 
 #: packages/renderer-pdf/src/pdf-translations.ts
 msgctxt "PDF viewer passwordPrompt"
 msgid "Password Required"
-msgstr ""
+msgstr "Se requiere contraseña"
 
 #: apps/reader/src/source-addition-flow.ts
 msgid "Paste a web address, DOI, arXiv ID, ISBN or PubMed ID."
-msgstr ""
+msgstr "Pega una dirección web, un DOI, un ID de arXiv, un ISBN o un ID de PubMed."
 
 #: apps/reader/src/CitationLookup.tsx
 msgid "Paste an identifier, URL, or title"
-msgstr ""
+msgstr "Pega un identificador, una URL o un título"
 
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "Patent"
-msgstr ""
+msgstr "Patente"
 
 #: packages/migration/src/zotero-validation.ts
 msgid "Payload count mismatch."
-msgstr ""
+msgstr "El número de elementos de la carga no coincide."
 
 #: apps/reader/src/LibraryWorkspace.tsx
 msgctxt "LibraryWorkspace formatFilterOptions"
 msgid "PDF"
-msgstr ""
+msgstr "PDF"
 
 #: packages/core/src/domain/selector.ts
 msgid "PDF coordinates must be finite numbers."
-msgstr ""
+msgstr "Las coordenadas del PDF deben ser números finitos."
 
 #: packages/migration/src/zotero-anchors.ts
 msgid "PDF geometry unavailable."
-msgstr ""
+msgstr "La geometría del PDF no está disponible."
 
 #: packages/renderer-pdf/src/embedpdf-runtime.ts
 msgid "PDF text extraction was cancelled."
-msgstr ""
+msgstr "Se canceló la extracción de texto del PDF."
 
 #: apps/reader/src/ReaderWorkspaceView.tsx
 #: apps/reader/src/SourceAddDialog.tsx
 msgid "PDF, EPUB or saved web page"
-msgstr ""
+msgstr "PDF, EPUB o página web guardada"
 
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "Performance"
-msgstr ""
+msgstr "Actuación"
 
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "Performer"
-msgstr ""
+msgstr "Intérprete"
 
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "Periodical"
-msgstr ""
+msgstr "Publicación periódica"
 
 #: apps/reader/src/CitationContributors.tsx
 msgctxt "CitationContributors contributorKindOptions"
 msgid "Person"
-msgstr ""
+msgstr "Persona"
 
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "Personal communication"
-msgstr ""
+msgstr "Comunicación personal"
 
 #: apps/reader/src/dockview-menus.ts
 msgctxt "dockview menus"
 msgid "Pin tab"
-msgstr ""
+msgstr "Fijar pestaña"
 
 #: apps/extension/src/WelcomeApp.tsx
 msgid "Pin the extension"
-msgstr ""
+msgstr "Fijar la extensión"
 
 #: apps/extension/src/HighlightFields.tsx
 msgctxt "Highlight colour"
 msgid "pink"
-msgstr ""
+msgstr "rosa"
 
 #: apps/reader/src/DockviewWorkspace.tsx
 msgctxt "DockviewWorkspace interface"
 msgid "Pinned"
-msgstr ""
+msgstr "Fijada"
 
 #: apps/reader/src/CitationStructuredEditor.tsx
 msgctxt "CitationStructuredEditor interface"
 msgid "Place"
-msgstr ""
+msgstr "Lugar"
 
 #: apps/extension/src/SaveBar.tsx
 msgid "Please wait…"
-msgstr ""
+msgstr "Espera un momento…"
 
 #: apps/reader/src/WorkspacePaneSupport.tsx
 msgid "Position not saved"
-msgstr ""
+msgstr "Posición sin guardar"
 
 #: apps/extension/src/PostPicker.tsx
 msgid "Post"
-msgstr ""
+msgstr "Publicación"
 
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "Post"
-msgstr ""
+msgstr "Publicación"
 
 #: apps/extension/src/PostPicker.tsx
 msgid "Posts"
-msgstr ""
+msgstr "Publicaciones"
 
 #: apps/extension/src/ConnectionPanel.tsx
 msgid "Prepare this collection"
-msgstr ""
+msgstr "Prepara esta colección"
 
 #: apps/reader/src/import-controller.ts
 msgid "Preparing"
-msgstr ""
+msgstr "Preparando"
 
 #: apps/reader/src/LibraryWorkspace.tsx
 msgctxt "LibraryWorkspace interface"
 msgid "Preparing bibliography…"
-msgstr ""
+msgstr "Preparando bibliografía…"
 
 #: apps/reader/src/CitationPreview.tsx
 msgctxt "CitationPreview status or action"
 msgid "Preparing citation…"
-msgstr ""
+msgstr "Preparando cita…"
 
 #: packages/renderer-pdf/src/pdf-translations.ts
 msgctxt "PDF viewer print"
 msgid "Preparing document..."
-msgstr ""
+msgstr "Preparando documento..."
 
 #: apps/reader/src/DocumentContextualToolbar.tsx
 msgctxt "DocumentContextualToolbar interface"
 msgid "Preparing export…"
-msgstr ""
+msgstr "Preparando exportación…"
 
 #: apps/reader/src/ConnectedDocument.tsx
 msgid "Preparing PDF pages…"
-msgstr ""
+msgstr "Preparando páginas del PDF…"
 
 #: apps/reader/src/ConnectedDocument.tsx
 msgctxt "ConnectedDocument status or action"
 msgid "Preparing publication…"
-msgstr ""
+msgstr "Preparando publicación…"
 
 #: apps/reader/src/ConnectedDocument.tsx
 msgid "Preparing saved page…"
-msgstr ""
+msgstr "Preparando página guardada…"
 
 #: apps/reader/src/ReaderWorkspace.tsx
 msgid "Preparing the reading workspace"
-msgstr ""
+msgstr "Preparando el espacio de lectura"
 
 #: apps/extension/src/CaptureApp.tsx
 msgid "Press the mdbase Reader toolbar button (Alt+Shift+S) to use Reader on this page. Browser pages and the Chrome Web Store cannot be read by extensions."
-msgstr ""
+msgstr "Pulsa el botón de mdbase Reader en la barra de herramientas (Alt+Mayús+S) para usar Reader en esta página. Las extensiones no pueden leer las páginas del navegador ni Chrome Web Store."
 
 #: apps/reader/src/CitationPreview.tsx
 msgid "Preview"
-msgstr ""
+msgstr "Vista previa"
 
 #: apps/reader/src/preview.tsx
 msgid "Preview files cannot be exported."
-msgstr ""
+msgstr "Los archivos de vista previa no se pueden exportar."
 
 #: packages/renderer-epub/src/epub-page-navigation.tsx
 msgid "Previous page"
-msgstr ""
+msgstr "Página anterior"
 
 #: packages/renderer-pdf/src/pdf-translations.ts
 msgctxt "PDF viewer page"
 msgid "Previous Page"
-msgstr ""
+msgstr "Página anterior"
 
 #: packages/renderer-pdf/src/pdf-translations.ts
 msgctxt "PDF viewer document"
 msgid "Print"
-msgstr ""
+msgstr "Imprimir"
 
 #: packages/renderer-pdf/src/pdf-translations.ts
 msgctxt "PDF viewer print"
 msgid "Print"
-msgstr ""
+msgstr "Imprimir"
 
 #: packages/renderer-pdf/src/pdf-translations.ts
 msgctxt "PDF viewer print"
 msgid "Print Settings"
-msgstr ""
+msgstr "Configuración de impresión"
 
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "Printing"
-msgstr ""
+msgstr "Impresión"
 
 #: packages/renderer-pdf/src/pdf-translations.ts
 msgctxt "PDF viewer print"
 msgid "Printing..."
-msgstr ""
+msgstr "Imprimiendo..."
 
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "Producer"
-msgstr ""
+msgstr "Productor"
 
 #: apps/reader/src/LibraryTableHeader.tsx
 msgid "Properties"
-msgstr ""
+msgstr "Propiedades"
 
 #: apps/reader/src/CitationStructuredEditor.tsx
 msgid "Publication"
-msgstr ""
+msgstr "Publicación"
 
 #: apps/reader/src/library-columns.ts
 msgctxt "Library table column"
 msgid "Published"
-msgstr ""
+msgstr "Publicado"
 
 #: apps/reader/src/LibraryWorkspace.tsx
 msgctxt "LibraryWorkspace sortFieldOptions"
 msgid "Published"
-msgstr ""
+msgstr "Publicado"
 
 #: apps/reader/src/SourceDetails.tsx
 msgctxt "SourceDetails fields"
 msgid "Published"
-msgstr ""
+msgstr "Publicado"
 
 #: apps/reader/src/CitationStructuredEditor.tsx
 msgctxt "CitationStructuredEditor interface"
 msgid "Publisher"
-msgstr ""
+msgstr "Editorial"
 
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "Publisher"
-msgstr ""
+msgstr "Editorial"
 
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "Publisher place"
-msgstr ""
+msgstr "Lugar de la editorial"
 
 #: apps/extension/src/HighlightFields.tsx
 msgctxt "Highlight colour"
 msgid "purple"
-msgstr ""
+msgstr "morado"
 
 #: apps/reader/src/LibraryCells.tsx
 msgctxt "reading status"
 msgid "Queued"
-msgstr ""
+msgstr "En cola"
 
 #: apps/reader/src/SourceNoteEditor.tsx
 msgctxt "SourceNoteEditor formatActions"
 msgid "Quote"
-msgstr ""
+msgstr "Cita"
 
 #: packages/core/src/domain/selector.ts
 msgid "quote.exact must not be empty."
-msgstr ""
+msgstr "quote.exact no debe estar vacío."
 
 #: apps/reader/src/AnnotationEditor.tsx
 msgctxt "AnnotationEditor interface"
 msgid "Quoted passage"
-msgstr ""
+msgstr "Pasaje citado"
 
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL date field"
 msgid "Raw date"
-msgstr ""
+msgstr "Fecha sin procesar"
 
 #: apps/reader/src/MobileSourceViews.tsx
 msgctxt "MobileSourceViews views"
 msgid "Read"
-msgstr ""
+msgstr "Leer"
 
 #: apps/reader/src/NativeSignIn.tsx
 msgid "Read from your collection"
-msgstr ""
+msgstr "Leer desde tu colección"
 
 #: apps/electron/src/main.ts
 msgid "Readable documents"
-msgstr ""
+msgstr "Documentos legibles"
 
 #: packages/migration/src/readwise.ts
 msgid "Reader articles"
-msgstr ""
+msgstr "Artículos de Reader"
 
 #: apps/extension/src/capture-errors.ts
 #: apps/extension/src/page-capture.ts
 msgid "Reader can capture ordinary HTTPS pages only."
-msgstr ""
+msgstr "Reader solo puede capturar páginas HTTPS normales."
 
 #: apps/extension/src/save-capture.ts
 msgid "Reader cannot download this PDF from here. Download it and import the file in Reader."
-msgstr ""
+msgstr "Reader no puede descargar este PDF desde aquí. Descárgalo e importa el archivo en Reader."
 
 #. placeholder {0}: selection.imageType
 #: apps/reader/src/annotation-composer-request.ts
 msgid "Reader cannot persist an area capture of type {0}."
-msgstr ""
+msgstr "Reader no puede conservar una captura de área de tipo {0}."
 
 #: apps/extension/src/CaptureApp.tsx
 #: apps/extension/src/ConnectionPanel.tsx
 msgid "Reader cannot read this page"
-msgstr ""
+msgstr "Reader no puede leer esta página"
 
 #: apps/reader/src/ReaderWorkspaceView.tsx
 msgctxt "ReaderWorkspaceView interface"
 msgid "Reader commands"
-msgstr ""
+msgstr "Comandos de Reader"
 
 #: apps/reader/src/use-web-capture.ts
 msgid "Reader could not add that source."
-msgstr ""
+msgstr "Reader no pudo añadir esa fuente."
 
 #: apps/reader/src/use-annotation-view.ts
 msgid "Reader could not add the view."
-msgstr ""
+msgstr "Reader no pudo añadir la vista."
 
 #: apps/reader/src/use-library-selection.ts
 msgid "Reader could not add this source."
