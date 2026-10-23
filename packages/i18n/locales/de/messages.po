@@ -6186,314 +6186,314 @@ msgstr "Buch prüfen"
 
 #: apps/reader/src/SourceDetails.tsx
 msgid "Review citation"
-msgstr ""
+msgstr "Quellenangabe prüfen"
 
 #: apps/reader/src/ImportDestination.tsx
 msgid "Review collection access"
-msgstr ""
+msgstr "Sammlungszugriff prüfen"
 
 #: apps/reader/src/CitationLookup.tsx
 msgid "Review found metadata"
-msgstr ""
+msgstr "Gefundene Metadaten prüfen"
 
 #: apps/reader/src/connection-recovery.ts
 msgid "Review the Reader definitions before they are installed."
-msgstr ""
+msgstr "Prüfen Sie die Reader-Definitionen, bevor sie installiert werden."
 
 #: apps/reader/src/CitationEditor.tsx
 msgid "Review the suggested details before saving."
-msgstr ""
+msgstr "Prüfen Sie die vorgeschlagenen Angaben vor dem Speichern."
 
 #: apps/reader/src/ConnectionLayout.tsx
 msgid "Review updated access"
-msgstr ""
+msgstr "Aktualisierten Zugriff prüfen"
 
 #: apps/reader/src/ImportReview.tsx
 msgid "Review what will be imported"
-msgstr ""
+msgstr "Prüfen, was importiert wird"
 
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "Reviewed author"
-msgstr ""
+msgstr "Geprüfter Autor"
 
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "Reviewed genre"
-msgstr ""
+msgstr "Geprüftes Genre"
 
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "Reviewed title"
-msgstr ""
+msgstr "Geprüfter Titel"
 
 #: apps/extension/src/CaptureApp.tsx
 msgid "Right-click a selection to highlight it with a comment"
-msgstr ""
+msgstr "Klicken Sie mit der rechten Maustaste auf eine Auswahl, um sie mit einem Kommentar hervorzuheben"
 
 #: apps/extension/src/ShortcutList.tsx
 msgid "Right-click the selection"
-msgstr ""
+msgstr "Rechtsklick auf die Auswahl"
 
 #: packages/renderer-pdf/src/pdf-translations.ts
 msgctxt "PDF viewer rotate"
 msgid "Rotate Clockwise"
-msgstr ""
+msgstr "Im Uhrzeigersinn drehen"
 
 #: packages/renderer-pdf/src/pdf-translations.ts
 msgctxt "PDF viewer rotate"
 msgid "Rotate Counter-Clockwise"
-msgstr ""
+msgstr "Gegen den Uhrzeigersinn drehen"
 
 #: apps/reader/src/DisplayMenu.tsx
 msgctxt "DisplayMenu interface"
 msgid "Sans"
-msgstr ""
+msgstr "Serifenlos"
 
 #: apps/electron/src/main.ts
 msgctxt "Save an exported file"
 msgid "Save"
-msgstr ""
+msgstr "Speichern"
 
 #. placeholder {0}: modifierKey()
 #: apps/extension/src/SaveBar.tsx
 msgid "Save ({0}+Enter)"
-msgstr ""
+msgstr "Speichern ({0}+Enter)"
 
 #. placeholder {0}: String(loadedSelected.length)
 #: apps/extension/src/PostPicker.tsx
 msgid "Save {0} selected"
-msgstr ""
+msgstr "{0} ausgewählte speichern"
 
 #: apps/reader/src/SourceAddDialog.tsx
 msgid "Save a web page or PDF link, look up a work by DOI, arXiv ID or ISBN, or add a file from your device."
-msgstr ""
+msgstr "Speichern Sie eine Webseite oder einen PDF-Link, suchen Sie ein Werk anhand einer DOI, arXiv-ID oder ISBN, oder fügen Sie eine Datei von Ihrem Gerät hinzu."
 
 #: apps/reader/src/AnnotationComposer.tsx
 msgctxt "AnnotationComposer interface"
 msgid "Save area"
-msgstr ""
+msgstr "Bereich speichern"
 
 #: apps/extension/src/WelcomeApp.tsx
 msgid "Save articles and PDFs to your mdbase collection as you read, highlight passages, and find them again in Reader."
-msgstr ""
+msgstr "Speichern Sie Artikel und PDFs beim Lesen in Ihrer mdbase-Sammlung, heben Sie Textstellen hervor und finden Sie sie später in Reader wieder."
 
 #: apps/reader/src/LibraryViewSaveDialog.tsx
 msgid "Save as a new view"
-msgstr ""
+msgstr "Als neue Ansicht speichern"
 
 #: apps/reader/src/LibraryAnnotationToolbar.tsx
 #: apps/reader/src/LibraryWorkspace.tsx
 msgid "Save as new view…"
-msgstr ""
+msgstr "Als neue Ansicht speichern…"
 
 #: apps/reader/src/CitationEditor.tsx
 msgctxt "CitationEditor interface"
 msgid "Save changes"
-msgstr ""
+msgstr "Änderungen speichern"
 
 #: apps/reader/src/SourceAddDialog.tsx
 msgid "Save citation only"
-msgstr ""
+msgstr "Nur Quellenangabe speichern"
 
 #: apps/extension/src/SavedHighlights.tsx
 msgid "Save comment"
-msgstr ""
+msgstr "Kommentar speichern"
 
 #: apps/reader/src/AnnotationPanelActions.tsx
 msgctxt "AnnotationPanelActions interface"
 msgid "Save comment"
-msgstr ""
+msgstr "Kommentar speichern"
 
 #: apps/electron/src/main.ts
 msgid "Save export"
-msgstr ""
+msgstr "Export speichern"
 
 #: apps/extension/src/HighlightFields.tsx
 msgid "Save highlight"
-msgstr ""
+msgstr "Hervorhebung speichern"
 
 #: apps/reader/src/AnnotationComposer.tsx
 msgctxt "AnnotationComposer interface"
 msgid "Save highlight"
-msgstr ""
+msgstr "Hervorhebung speichern"
 
 #: apps/extension/src/background.ts
 msgid "Save highlight to mdbase Reader"
-msgstr ""
+msgstr "Hervorhebung in mdbase Reader speichern"
 
 #: apps/extension/src/HighlightFields.tsx
 msgid "Save in {colorLabel} ({shortcut}, or {modifier}+Enter)"
-msgstr ""
+msgstr "In {colorLabel} speichern ({shortcut} oder {modifier}+Enter)"
 
 #: apps/extension/src/HighlightFields.tsx
 msgid "Save in {colorLabel} ({shortcut})"
-msgstr ""
+msgstr "In {colorLabel} speichern ({shortcut})"
 
 #: apps/reader/src/LibraryViewSaveDialog.tsx
 msgid "Save library view"
-msgstr ""
+msgstr "Bibliotheksansicht speichern"
 
 #: apps/reader/src/DraftRecoveryNotice.tsx
 msgid "Save my draft instead"
-msgstr ""
+msgstr "Stattdessen meinen Entwurf speichern"
 
 #: apps/extension/src/OptionsApp.tsx
 msgid "Save new sources to"
-msgstr ""
+msgstr "Neue Quellen speichern in"
 
 #: apps/extension/src/ConnectionPanel.tsx
 msgid "Save not confirmed"
-msgstr ""
+msgstr "Speichern nicht bestätigt"
 
 #: apps/extension/src/CaptureApp.tsx
 msgid "Save not confirmed. Retry to check its outcome."
-msgstr ""
+msgstr "Speichern nicht bestätigt. Versuchen Sie es erneut, um das Ergebnis zu prüfen."
 
 #: apps/extension/src/SaveBar.tsx
 msgid "Save page"
-msgstr ""
+msgstr "Seite speichern"
 
 #: apps/extension/src/HighlightFields.tsx
 msgid "Save page and highlight"
-msgstr ""
+msgstr "Seite speichern und hervorheben"
 
 #: apps/extension/src/SaveBar.tsx
 msgid "Save PDF"
-msgstr ""
+msgstr "PDF speichern"
 
 #: apps/extension/src/SaveBar.tsx
 msgid "Save post"
-msgstr ""
+msgstr "Beitrag speichern"
 
 #: apps/reader/src/SourceImportDialog.tsx
 msgid "Save the citation found for this file:"
-msgstr ""
+msgstr "Gefundene Quellenangabe für diese Datei speichern:"
 
 #: apps/extension/src/shell-messages.ts
 msgid "Save the page you are reading and revisit your mdbase annotations."
-msgstr ""
+msgstr "Speichern Sie die Seite, die Sie gerade lesen, und rufen Sie Ihre mdbase-Anmerkungen später wieder auf."
 
 #: apps/extension/src/CaptureApp.tsx
 msgid "Save the PDF, then open it there."
-msgstr ""
+msgstr "Speichern Sie das PDF und öffnen Sie es dann dort."
 
 #: apps/extension/src/NotePanel.tsx
 msgid "Save title and tags"
-msgstr ""
+msgstr "Titel und Tags speichern"
 
 #: apps/extension/src/ConnectionPanel.tsx
 #: apps/extension/src/WelcomeApp.tsx
 msgid "Save to collection"
-msgstr ""
+msgstr "In Sammlung speichern"
 
 #: apps/extension/src/shell-messages.ts
 msgid "Save to mdbase Reader"
-msgstr ""
+msgstr "In mdbase Reader speichern"
 
 #: apps/reader/src/LibraryAnnotationToolbar.tsx
 #: apps/reader/src/LibraryWorkspace.tsx
 msgid "Save view"
-msgstr ""
+msgstr "Ansicht speichern"
 
 #: apps/reader/src/LibraryViewSaveDialog.tsx
 msgctxt "LibraryViewSaveDialog interface"
 msgid "Save view"
-msgstr ""
+msgstr "Ansicht speichern"
 
 #: apps/extension/src/WelcomeApp.tsx
 msgid "Save what you are reading"
-msgstr ""
+msgstr "Speichern Sie Ihre Lektüre"
 
 #: apps/reader/src/source-addition-flow.ts
 msgid "Save X posts from their live page using the mdbase Reader extension."
-msgstr ""
+msgstr "Speichern Sie X Beiträge von ihrer aktuellen Seite mit der mdbase-Reader-Erweiterung."
 
 #: apps/extension/src/NotePanel.tsx
 #: apps/extension/src/SaveBar.tsx
 #: apps/reader/src/AnnotationEditor.tsx
 msgid "Saved"
-msgstr ""
+msgstr "Gespeichert"
 
 #: apps/reader/src/SourceNoteEditor.tsx
 msgctxt "SourceNoteEditor status or action"
 msgid "Saved"
-msgstr ""
+msgstr "Gespeichert"
 
 #: apps/reader/src/RenderedSourceDocument.tsx
 msgid "Saved document · original headings below are unchanged"
-msgstr ""
+msgstr "Gespeichertes Dokument · die ursprünglichen Überschriften unten sind unverändert"
 
 #. placeholder {0}: highlights.length ? <span>{highlights.length}</span> : null
 #: apps/extension/src/SavedHighlights.tsx
 msgid "Saved highlights {0}"
-msgstr ""
+msgstr "Gespeicherte Hervorhebungen {0}"
 
 #: packages/migration/src/readwise.ts
 msgid "Saved HTML can reference external images. Those assets are not downloaded. Keep this tab open; reconnect and rescan to resume after closing it."
-msgstr ""
+msgstr "Gespeichertes HTML kann externe Bilder referenzieren. Diese Ressourcen werden nicht heruntergeladen. Lassen Sie diesen Tab geöffnet; verbinden Sie sich erneut und durchsuchen Sie die Quelle erneut, um nach dem Schließen fortzufahren."
 
 #: apps/extension/src/page-badge.ts
 msgid "Saved in mdbase Reader"
-msgstr ""
+msgstr "In mdbase Reader gespeichert"
 
 #: apps/reader/src/SourceNoteEditor.tsx
 msgctxt "SourceNoteEditor status or action"
 msgid "Saved locally"
-msgstr ""
+msgstr "Lokal gespeichert"
 
 #: apps/reader/src/connect-workspace.ts
 msgid "Saved mdbase views are unavailable for this collection."
-msgstr ""
+msgstr "Gespeicherte mdbase-Ansichten sind für diese Sammlung nicht verfügbar."
 
 #: apps/reader/src/ReaderHeader.tsx
 msgid "Saved on this device; waiting for sync"
-msgstr ""
+msgstr "Auf diesem Gerät gespeichert; wartet auf Synchronisierung"
 
 #. placeholder {0}: problemMessage(reason)
 #: apps/extension/src/use-extension-capture.ts
 msgid "Saved safely. Could not refresh highlights on this page: {0}. Retry refreshing highlights; do not save again."
-msgstr ""
+msgstr "Sicher gespeichert. Hervorhebungen auf dieser Seite konnten nicht aktualisiert werden: {0}. Versuchen Sie erneut, die Hervorhebungen zu aktualisieren; speichern Sie nicht noch einmal."
 
 #: apps/reader/src/SourceNoteEditor.tsx
 msgid "Saved to your collection"
-msgstr ""
+msgstr "In Ihrer Sammlung gespeichert"
 
 #: apps/reader/src/LibraryWorkspace.tsx
 msgctxt "LibraryWorkspace formatFilterOptions"
 msgid "Saved web page"
-msgstr ""
+msgstr "Gespeicherte Webseite"
 
 #: apps/reader/src/library-lenses.ts
 msgctxt "library lenses"
 msgid "Saved web pages"
-msgstr ""
+msgstr "Gespeicherte Webseiten"
 
 #: apps/extension/src/NotePanel.tsx
 msgid "Saved with the source. Keep writing here after saving, or in Reader."
-msgstr ""
+msgstr "Mit der Quelle gespeichert. Schreiben Sie nach dem Speichern hier oder in Reader weiter."
 
 #: apps/extension/src/ConnectionPanel.tsx
 msgid "Saved. This page could not be updated."
-msgstr ""
+msgstr "Gespeichert. Diese Seite konnte nicht aktualisiert werden."
 
 #: apps/extension/src/CaptureApp.tsx
 msgid "Saving source record…"
-msgstr ""
+msgstr "Quelldatensatz wird gespeichert…"
 
 #: apps/reader/src/source-addition-flow.ts
 msgctxt "source addition flow"
 msgid "Saving the PDF…"
-msgstr ""
+msgstr "PDF wird gespeichert…"
 
 #: apps/reader/src/source-addition-flow.ts
 msgid "Saving the source…"
-msgstr ""
+msgstr "Quelle wird gespeichert…"
 
 #. placeholder {0}: collection.name
 #: apps/extension/src/ExtensionHeader.tsx
 msgid "Saving to {0}. Change collection"
-msgstr ""
+msgstr "Wird in {0} gespeichert. Sammlung wechseln"
 
 #: apps/extension/src/CaptureApp.tsx
 #: apps/extension/src/NotePanel.tsx
@@ -6502,224 +6502,224 @@ msgstr ""
 #: apps/extension/src/SavedHighlights.tsx
 #: apps/reader/src/AnnotationEditor.tsx
 msgid "Saving…"
-msgstr ""
+msgstr "Wird gespeichert…"
 
 #: apps/reader/src/AnnotationComposer.tsx
 msgctxt "AnnotationComposer interface"
 msgid "Saving…"
-msgstr ""
+msgstr "Wird gespeichert…"
 
 #: apps/reader/src/AnnotationEditor.tsx
 msgctxt "AnnotationEditor interface"
 msgid "Saving…"
-msgstr ""
+msgstr "Wird gespeichert…"
 
 #: apps/reader/src/AnnotationPanelActions.tsx
 msgctxt "AnnotationPanelActions interface"
 msgid "Saving…"
-msgstr ""
+msgstr "Wird gespeichert…"
 
 #: apps/reader/src/CitationEditor.tsx
 msgctxt "CitationEditor interface"
 msgid "Saving…"
-msgstr ""
+msgstr "Wird gespeichert…"
 
 #: apps/reader/src/LibraryViewSaveDialog.tsx
 msgctxt "LibraryViewSaveDialog interface"
 msgid "Saving…"
-msgstr ""
+msgstr "Wird gespeichert…"
 
 #: apps/reader/src/SourceNoteEditor.tsx
 msgctxt "SourceNoteEditor status or action"
 msgid "Saving…"
-msgstr ""
+msgstr "Wird gespeichert…"
 
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "Scale"
-msgstr ""
+msgstr "Skalierung"
 
 #: apps/reader/src/ImportInput.tsx
 msgid "Scan Readwise library"
-msgstr ""
+msgstr "Readwise-Bibliothek durchsuchen"
 
 #. placeholder {0}: result.length.toLocaleString(i18n.locale)
 #: packages/migration/src/readwise-client.ts
 msgid "Scanned {0} Readwise records…"
-msgstr ""
+msgstr "{0} Readwise-Datensätze durchsucht…"
 
 #: apps/reader/src/ImportInput.tsx
 msgid "Scanning reads Reader metadata, saved article HTML and every Readwise highlight, including Kindle, Apple Books, Instapaper and other classic sources (those import as metadata and highlights, without the book text). Original PDFs and EPUBs download only after confirmation. Readwise limits request rates, so large libraries take several minutes."
-msgstr ""
+msgstr "Beim Durchsuchen werden Reader-Metadaten, gespeichertes Artikel-HTML und alle Readwise-Hervorhebungen gelesen, einschließlich Kindle, Apple Books, Instapaper und anderer klassischer Quellen (diese werden ohne Buchtext als Metadaten und Hervorhebungen importiert). Original-PDFs und -EPUBs werden erst nach Bestätigung heruntergeladen. Readwise begrenzt die Anfragerate, daher dauern große Bibliotheken mehrere Minuten."
 
 #: packages/migration/src/readwise.ts
 msgid "Scanning Readwise metadata and saved HTML; no collection writes…"
-msgstr ""
+msgstr "Readwise-Metadaten und gespeichertes HTML werden durchsucht; keine Schreibvorgänge in der Sammlung…"
 
 #: apps/reader/src/annotation-body-content.ts
 msgid "Screenshot highlight"
-msgstr ""
+msgstr "Screenshot-Hervorhebung"
 
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "Script writer"
-msgstr ""
+msgstr "Drehbuchautor"
 
 #: packages/renderer-pdf/src/pdf-translations.ts
 msgctxt "PDF viewer page"
 msgid "Scroll Layout"
-msgstr ""
+msgstr "Scroll-Layout"
 
 #: apps/reader/src/ReaderHeader.tsx
 msgid "Search"
-msgstr ""
+msgstr "Suche"
 
 #: packages/renderer-pdf/src/pdf-translations.ts
 msgctxt "PDF viewer panel"
 msgid "Search"
-msgstr ""
+msgstr "Suche"
 
 #: packages/renderer-pdf/src/pdf-translations.ts
 msgctxt "PDF viewer search"
 msgid "Search"
-msgstr ""
+msgstr "Suche"
 
 #: apps/reader/src/ReaderHeader.tsx
 msgid "Search and commands"
-msgstr ""
+msgstr "Suche und Befehle"
 
 #: apps/reader/src/LibraryAnnotationToolbar.tsx
 msgid "Search annotations"
-msgstr ""
+msgstr "Anmerkungen durchsuchen"
 
 #: apps/reader/src/AnnotationList.tsx
 msgctxt "AnnotationList interface"
 msgid "Search annotations"
-msgstr ""
+msgstr "Anmerkungen durchsuchen"
 
 #: apps/reader/src/CitationLookup.tsx
 msgid "Search by DOI, ISBN, URL, or title"
-msgstr ""
+msgstr "Nach DOI, ISBN, URL oder Titel suchen"
 
 #: apps/reader/src/LibraryWorkspace.tsx
 msgid "Search notes and annotations"
-msgstr ""
+msgstr "Notizen und Anmerkungen durchsuchen"
 
 #: apps/reader/src/LibraryWorkspace.tsx
 msgid "Search open documents"
-msgstr ""
+msgstr "Offene Dokumente durchsuchen"
 
 #: apps/reader/src/LibraryWorkspace.tsx
 msgctxt "LibraryWorkspace interface"
 msgid "Search scope"
-msgstr ""
+msgstr "Suchbereich"
 
 #: apps/reader/src/ReaderWorkspaceView.tsx
 msgid "Search sources and commands"
-msgstr ""
+msgstr "Quellen durchsuchen und Befehle ausführen"
 
 #. placeholder {0}: shortcutLabel("mod+k")
 #: apps/reader/src/ReaderHeader.tsx
 msgid "Search sources and run commands · {0}"
-msgstr ""
+msgstr "Quellen durchsuchen und Befehle ausführen · {0}"
 
 #: apps/reader/src/LibraryWorkspace.tsx
 msgid "Search this view"
-msgstr ""
+msgstr "Diese Ansicht durchsuchen"
 
 #: apps/reader/src/use-open-document-search.ts
 msgid "Searched {loaded} of {readable} readable sources."
-msgstr ""
+msgstr "{loaded} von {readable} lesbaren Quellen durchsucht."
 
 #: apps/reader/src/LibraryTextSearch.tsx
 msgid "Searches literature notes and annotation text, not PDF, EPUB or saved-page contents."
-msgstr ""
+msgstr "Durchsucht Literaturnotizen und Anmerkungstext, nicht den Inhalt von PDFs, EPUBs oder gespeicherten Seiten."
 
 #: apps/reader/src/LibraryTextSearch.tsx
 msgid "Searching notes and annotations…"
-msgstr ""
+msgstr "Notizen und Anmerkungen werden durchsucht…"
 
 #: apps/reader/src/CitationTypedFieldEditors.tsx
 msgid "Season"
-msgstr ""
+msgstr "Staffel"
 
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL date field"
 msgid "Season"
-msgstr ""
+msgstr "Staffel"
 
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "Section"
-msgstr ""
+msgstr "Abschnitt"
 
 #: packages/renderer-pdf/src/pdf-translations.ts
 msgctxt "PDF viewer document"
 msgid "Security"
-msgstr ""
+msgstr "Sicherheit"
 
 #. placeholder {0}: source.title
 #: apps/reader/src/LibraryCards.tsx
 msgid "Select {0}"
-msgstr ""
+msgstr "{0} auswählen"
 
 #. placeholder {0}: String(bulkOpenLimit)
 #: apps/reader/src/LibraryBulkBar.tsx
 msgid "Select {0} or fewer to open them together"
-msgstr ""
+msgstr "Wählen Sie höchstens {0} aus, um sie gemeinsam zu öffnen"
 
 #: apps/reader/src/ImportDestination.tsx
 msgid "Select a collection"
-msgstr ""
+msgstr "Sammlung auswählen"
 
 #: apps/reader/src/DocumentContextualToolbar.tsx
 msgid "Select an area to annotate"
-msgstr ""
+msgstr "Bereich zum Kommentieren auswählen"
 
 #: apps/reader/src/DocumentContextualToolbar.tsx
 msgctxt "DocumentContextualToolbar interface"
 msgid "Select area"
-msgstr ""
+msgstr "Bereich auswählen"
 
 #: apps/reader/src/import-controller.ts
 msgid "Select one complete bundle folder with unique file paths."
-msgstr ""
+msgstr "Wählen Sie einen vollständigen Paketordner mit eindeutigen Dateipfaden aus."
 
 #: apps/extension/src/CaptureApp.tsx
 msgid "Select text on the page to highlight it."
-msgstr ""
+msgstr "Wählen Sie Text auf der Seite aus, um ihn hervorzuheben."
 
 #: apps/reader/src/AnnotationList.tsx
 msgid "Select text or an area in the document, or add a comment or bookmark above."
-msgstr ""
+msgstr "Wählen Sie Text oder einen Bereich im Dokument aus oder fügen Sie oben einen Kommentar oder ein Lesezeichen hinzu."
 
 #: apps/reader/src/LibraryAnnotationBars.tsx
 msgctxt "LibraryAnnotationBars interface"
 msgid "Selected annotations"
-msgstr ""
+msgstr "Ausgewählte Anmerkungen"
 
 #: apps/extension/src/HighlightFields.tsx
 msgid "Selected passage"
-msgstr ""
+msgstr "Ausgewählte Textstelle"
 
 #: apps/reader/src/AnnotationComposer.tsx
 msgid "Selected PDF area"
-msgstr ""
+msgstr "Ausgewählter PDF-Bereich"
 
 #: apps/reader/src/LibraryBulkBar.tsx
 msgctxt "LibraryBulkBar interface"
 msgid "Selected sources"
-msgstr ""
+msgstr "Ausgewählte Quellen"
 
 #: apps/reader/src/SelectionToolbar.tsx
 msgctxt "SelectionToolbar interface"
 msgid "Selected text"
-msgstr ""
+msgstr "Ausgewählter Text"
 
 #: apps/reader/src/DisplayMenu.tsx
 msgctxt "DisplayMenu interface"
 msgid "Selecting text"
-msgstr ""
+msgstr "Text wird ausgewählt"
 
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
