@@ -3,6 +3,7 @@
 import {
   CitationChangedElsewhereError,
   collectionId,
+  loadedCitation,
   recordRevision,
   sourceId,
   type Source,
@@ -118,6 +119,7 @@ beforeEach(() => {
       citation: citation as NonNullable<Source["citation"]>,
       cslProvenance: options?.provenance ?? {},
       frontmatter: { ...source.frontmatter, csl: citation, "csl-provenance": options?.provenance },
+      properties: { ...source.properties, csl: citation, "csl-provenance": options?.provenance },
     }),
   );
   resolveCitation.mockReset();
@@ -546,5 +548,190 @@ describe("citation editor save conflicts", () => {
     await act(async () => controller.save());
     await click("Keep mine");
     expect(saveSourceCitation.mock.lastCall?.[2]).toHaveProperty("expectedCitation", undefined);
+  });
+
+  it("keeps mine even after reverting the draft to the original baseline", async () => {
+    const baseline = { ...source, cslProvenance: { title: { value: "Original", source: "user" } } };
+    const theirs = { ...citation, title: "Outside edit" };
+    saveSourceCitation.mockRejectedValueOnce(new CitationChangedElsewhereError(theirs));
+    await render(baseline);
+    await act(async () => controller.setCitation({ ...citation, title: "Mine" }));
+    await act(async () => controller.save());
+    await act(async () => controller.setCitation(citation));
+    expect(controller.dirty).toBe(false);
+    await click("Keep mine");
+    expect(saveSourceCitation).toHaveBeenCalledTimes(2);
+    expect(saveSourceCitation.mock.lastCall?.[1]).toEqual(citation);
+    expect(saveSourceCitation.mock.lastCall?.[2]?.expectedCitation).toEqual(theirs);
+    expect(controller.conflict).toBeNull();
+  });
+});
+
+function outsideSource(title: string): Source {
+  const csl = { ...citation, title };
+  return {
+    ...source,
+    recordRevision: recordRevision(`rev-${title}`),
+    citation: csl,
+    frontmatter: { csl },
+    properties: { csl },
+  };
+}
+
+const secondSource: Source = { ...source, id: sourceId("src_two"), path: "sources/two.md" };
+
+describe("citation editor revision reconciliation", () => {
+  it.each([
+    { frontmatter: {}, properties: { csl: citation } },
+    { frontmatter: { csl: citation }, properties: {} },
+    { frontmatter: {}, properties: { csl: { invalid: "raw" } } },
+  ])("guards saves against raw loaded CSL: %j", async (fields) => {
+    const loaded = { ...source, ...fields };
+    await render(loaded);
+    await act(async () => controller.setCitation({ ...citation, title: "Mine" }));
+    await act(async () => controller.save());
+    expect(saveSourceCitation.mock.lastCall?.[2]?.expectedCitation).toEqual(loadedCitation(loaded));
+  });
+
+  it("refreshes a clean saved editor, without rolling back to stale parent props", async () => {
+    await render(source);
+    await act(async () => controller.setCitation({ ...citation, title: "Mine" }));
+    await act(async () => controller.save());
+    await render({ ...source });
+    expect(controller.assessment.value?.["title"]).toBe("Mine");
+    expect(controller.dirty).toBe(false);
+    const later = outsideSource("Outside later");
+    await render(later);
+    expect(controller.assessment.value?.["title"]).toBe("Outside later");
+    expect(controller.dirty).toBe(false);
+    await render(source);
+    expect(controller.assessment.value?.["title"]).toBe("Outside later");
+  });
+
+  it("uses a new revision on return after navigation", async () => {
+    await render(source);
+    await act(async () => controller.setCitation({ ...citation, title: "Mine" }));
+    await act(async () => controller.save());
+    await render(secondSource);
+    await render(outsideSource("Outside after navigation"));
+    expect(controller.assessment.value?.["title"]).toBe("Outside after navigation");
+    expect(controller.dirty).toBe(false);
+  });
+
+  it("reconciles a refresh once an unsaved draft becomes clean again", async () => {
+    const baseline = { ...source, cslProvenance: { title: { value: "Original", source: "user" } } };
+    await render(baseline);
+    await act(async () => controller.setCitation({ ...citation, title: "Mine" }));
+    await render(outsideSource("Outside later"));
+    expect(controller.assessment.value?.["title"]).toBe("Mine");
+    await act(async () => controller.setCitation(citation));
+    expect(controller.assessment.value?.["title"]).toBe("Outside later");
+  });
+
+  it.each(["success", "conflict", "error"])(
+    "ignores a late source A save %s while B has a conflict",
+    async (outcome) => {
+      let finish!: (source: Source) => void;
+      let fail!: (reason: Error) => void;
+      saveSourceCitation.mockReturnValueOnce(
+        new Promise((resolve, reject) => {
+          finish = resolve;
+          fail = reject;
+        }),
+      );
+      await render(source);
+      await act(async () => controller.setCitation({ ...citation, title: "Mine A" }));
+      await act(async () => controller.save());
+      await render(secondSource);
+      await act(async () => controller.setCitation({ ...citation, title: "Mine B" }));
+      const theirs = { ...citation, title: "Theirs B" };
+      saveSourceCitation.mockRejectedValueOnce(new CitationChangedElsewhereError(theirs));
+      await act(async () => controller.save());
+      await act(async () => {
+        if (outcome === "success") {
+          finish(outsideSource("Mine A"));
+        } else {
+          fail(
+            outcome === "conflict"
+              ? new CitationChangedElsewhereError(citation)
+              : new Error("Late error"),
+          );
+        }
+      });
+      expect(controller.conflict?.currentCitation).toEqual(theirs);
+      expect(controller.error).toBeNull();
+      expect(controller.assessment.value?.["title"]).toBe("Mine B");
+    },
+  );
+
+  it("ignores old save completion after leaving and returning to the same source", async () => {
+    let finish!: (source: Source) => void;
+    saveSourceCitation.mockReturnValueOnce(
+      new Promise((resolve) => {
+        finish = resolve;
+      }),
+    );
+    await render(source);
+    await act(async () => controller.setCitation({ ...citation, title: "Old draft" }));
+    await act(async () => controller.save());
+    await render(secondSource);
+    await render(source);
+    await act(async () => controller.setCitation({ ...citation, title: "New transaction" }));
+    await act(async () => finish(outsideSource("Old draft")));
+    expect(controller.assessment.value?.["title"]).toBe("New transaction");
+    expect(controller.status).toBe("idle");
+  });
+});
+
+describe("citation lookup review lifecycle", () => {
+  it("keeps remaining claims and dismissals across accepts in the same source", async () => {
+    citationClaims.mockResolvedValue([
+      claim("publisher", "A press"),
+      claim("volume", "7"),
+      claim("issue", "2"),
+    ]);
+    await render(explained);
+    await find();
+    await click("Dismiss Issue");
+    await click("Accept Publisher");
+    expect(controller.assessment.value?.["publisher"]).toBe("A press");
+    expect(controller.suggestions.map(({ field }) => field)).toEqual(["volume"]);
+    await click("Accept Volume");
+    expect(controller.suggestions).toEqual([]);
+    await render(secondSource);
+    expect(controller.resolutionStatus).toBe("idle");
+    expect(controller.suggestions).toEqual([]);
+  });
+
+  it.each(["Accept", "Dismiss"])(
+    "%s moves focus to the next action, previous action, then results status",
+    async (action) => {
+      citationClaims.mockResolvedValue([
+        claim("publisher", "A press"),
+        claim("volume", "7"),
+        claim("issue", "2"),
+      ]);
+      await render(explained);
+      await find();
+      const focused = container.querySelector<HTMLButtonElement>(
+        `button[aria-label="${action} Publisher"]`,
+      )!;
+      focused.focus();
+      await act(async () => focused.click());
+      expect(document.activeElement?.getAttribute("aria-label")).toBe("Accept Volume");
+      await click(`${action} Volume`);
+      expect(document.activeElement?.getAttribute("aria-label")).toBe("Accept Issue");
+      await click(`${action} Issue`);
+      expect(container.contains(document.activeElement)).toBe(true);
+      expect(document.activeElement?.textContent).toContain("No suggestions to review");
+    },
+  );
+
+  it("accept all moves focus to results status", async () => {
+    citationClaims.mockResolvedValue([claim("publisher", "A press")]);
+    await render(explained);
+    await find();
+    await click("Accept all");
+    expect(document.activeElement?.textContent).toContain("No suggestions to review");
   });
 });

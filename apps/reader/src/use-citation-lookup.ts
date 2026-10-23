@@ -38,7 +38,7 @@ export function useCitationLookup(input: {
   const [state, setState] = useState<LookupState | null>(null);
   const pending = useRef<AbortController | null>(null);
   const sourceId = input.source?.id;
-  const scope = JSON.stringify([sourceId, input.citation, input.provenance]);
+  const scope = JSON.stringify([input.source?.collectionId, sourceId]);
   useEffect(() => () => pending.current?.abort(), [scope]);
   const current = state?.scope === scope ? state : null;
   if (state && !current) {

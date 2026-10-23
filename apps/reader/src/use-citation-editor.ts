@@ -4,6 +4,7 @@ import {
   citationCompletenessWarnings,
   citekeyForCitation,
   cslValuesEqual,
+  loadedCitation,
   parseCslProvenance,
   type CslProvenance,
   type Source,
@@ -12,7 +13,7 @@ import {
   claimSourceLabel,
   type CitationSuggestion,
 } from "@mdbase-reader/web-capture/citation-updates";
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
 
 import { assessCitationDraft, citationDraftForSource } from "./citation-editor-model.js";
 import { serializeCitation } from "./citation-form-model.js";
@@ -25,6 +26,8 @@ import type { ReaderWorkspaceGateway } from "./workspace-model.js";
 
 interface DraftState {
   readonly source: Source;
+  readonly parentSource: Source | null;
+  readonly expectedCitation: unknown;
   readonly value: string;
   readonly provenance: CslProvenance;
   readonly lastCitation: Readonly<Record<string, unknown>>;
@@ -67,9 +70,36 @@ export function useCitationEditor(input: {
   const [conflictState, setConflictState] = useState<SelectedValue<
     NonNullable<CitationEditorController["conflict"]>
   > | null>(null);
+  // Revisions are opaque: remember those already seen rather than ordering them. In particular,
+  // a parent still rendering the pre-save revision must not undo a successful local save.
+  const [active, setActive] = useState(() => selectionFor(input.source));
+  const selection = useRef(active);
+  useLayoutEffect(() => {
+    selection.current = active;
+  }, [active]);
+  if (active.key !== sourceKey(input.source)) {
+    setActive(selectionFor(input.source));
+    setDraftState(null);
+    setStatusState(null);
+    setErrorState(null);
+    setConflictState(null);
+  } else if (!active.revisions.has(input.source?.recordRevision)) {
+    setActive({
+      ...active,
+      latest: input.source,
+      revisions: new Set([...active.revisions, input.source?.recordRevision]),
+    });
+  }
+  const mounted = useRef(true);
+  useEffect(() => {
+    mounted.current = true;
+    return () => {
+      mounted.current = false;
+    };
+  }, []);
   const sourceId = input.source?.id;
   const transaction = draftState?.source.id === sourceId ? draftState : null;
-  const source = transaction?.source ?? input.source;
+  const source = transaction?.source ?? active.latest;
   const draft = transaction?.value ?? (source ? citationDraftForSource(source) : "");
   const provenance = transaction?.provenance ?? provenanceFor(source);
   const status = statusState?.sourceId === sourceId ? (statusState?.value ?? "idle") : "idle";
@@ -82,6 +112,16 @@ export function useCitationEditor(input: {
       !cslValuesEqual(provenance, provenanceFor(source))),
   );
 
+  if (
+    transaction &&
+    !dirty &&
+    status !== "saving" &&
+    !conflict &&
+    transaction.parentSource !== active.latest
+  ) {
+    setDraftState(null);
+  }
+
   const updateDraft = useCallback(
     (value: string, accepted: readonly CitationSuggestion[] = []): void => {
       if (!source) {
@@ -91,7 +131,14 @@ export function useCitationEditor(input: {
         const current =
           previous?.source.id === source.id
             ? previous
-            : { source, value: draft, provenance, lastCitation: assessment.value ?? {} };
+            : {
+                source,
+                parentSource: active.latest,
+                expectedCitation: loadedCitation(source),
+                value: draft,
+                provenance,
+                lastCitation: assessment.value ?? {},
+              };
         const next = assessCitationDraft(value).value;
         const updated = next
           ? {
@@ -115,12 +162,7 @@ export function useCitationEditor(input: {
       setStatusState({ sourceId: source.id, value: "idle" });
       setErrorState({ sourceId: source.id, value: null });
     },
-    [assessment.value, draft, provenance, source],
-  );
-  const setDraft = useCallback((value: string): void => updateDraft(value), [updateDraft]);
-  const setCitation = useCallback(
-    (value: Readonly<Record<string, unknown>>): void => setDraft(serializeCitation(value)),
-    [setDraft],
+    [active, assessment.value, draft, provenance, source],
   );
   const lookup = useCitationLookup({
     gateway: input.gateway,
@@ -141,12 +183,21 @@ export function useCitationEditor(input: {
     },
   });
 
+  const setDraft = (value: string): void => {
+    // Manual edits may change the work being looked up. Accepted fields, in contrast, use
+    // updateDraft directly so the same review keeps its remaining claims and dismissals.
+    lookup.resetLookup();
+    updateDraft(value);
+  };
+  const setCitation = (value: Readonly<Record<string, unknown>>): void =>
+    setDraft(serializeCitation(value));
+
   const persist = useCallback(
-    (expectedCitation: unknown): void => {
+    (expectedCitation: unknown, replaceConflict = false): void => {
       if (
         !source ||
         !assessment.valid ||
-        !dirty ||
+        (!dirty && !replaceConflict) ||
         status === "saving" ||
         pendingSaves.current.has(source.id)
       ) {
@@ -157,19 +208,36 @@ export function useCitationEditor(input: {
       setDraftState((previous) =>
         previous?.source.id === source.id
           ? previous
-          : { source, value: draft, provenance, lastCitation: assessment.value },
+          : {
+              source,
+              parentSource: active.latest,
+              expectedCitation,
+              value: draft,
+              provenance,
+              lastCitation: assessment.value,
+            },
       );
       setStatusState({ sourceId: source.id, value: "saving" });
       setErrorState({ sourceId: source.id, value: null });
       void input.gateway
         .saveSourceCitation(source, assessment.value, { provenance, expectedCitation })
         .then((updated) => {
+          if (!mounted.current || selection.current.token !== active.token) {
+            return;
+          }
+          const parentSource = selection.current.latest;
+          setActive((previous) => ({
+            ...previous,
+            revisions: new Set([...previous.revisions, updated.recordRevision]),
+          }));
           input.onSaved(updated);
           setDraftState((previous) =>
             previous?.source.id === updated.id
               ? {
                   ...previous,
                   source: updated,
+                  parentSource,
+                  expectedCitation: loadedCitation(updated),
                   ...(previous.value === savedDraft ? { provenance: provenanceFor(updated) } : {}),
                 }
               : previous,
@@ -179,6 +247,9 @@ export function useCitationEditor(input: {
           signalMdbaseMark("saved");
         })
         .catch((reason: unknown) => {
+          if (!mounted.current || selection.current.token !== active.token) {
+            return;
+          }
           signalMdbaseMark("error");
           setStatusState({ sourceId: source.id, value: "idle" });
           if (reason instanceof CitationChangedElsewhereError) {
@@ -198,11 +269,11 @@ export function useCitationEditor(input: {
         })
         .finally(() => pendingSaves.current.delete(source.id));
     },
-    [assessment, dirty, draft, input, provenance, source, status],
+    [active, assessment, dirty, draft, input, provenance, source, status],
   );
   const save = (): void => {
     if (!conflict) {
-      persist(source?.frontmatter["csl"]);
+      persist(transaction ? transaction.expectedCitation : source && loadedCitation(source));
     }
   };
   const useTheirVersion = (): void => {
@@ -214,6 +285,7 @@ export function useCitationEditor(input: {
     const theirSource = {
       ...source,
       cslProvenance: conflict.currentProvenance,
+      properties: { ...source.properties, csl: conflict.currentCitation },
       frontmatter: {
         ...source.frontmatter,
         csl: conflict.currentCitation,
@@ -226,6 +298,8 @@ export function useCitationEditor(input: {
     }
     setDraftState({
       source: theirSource,
+      parentSource: active.latest,
+      expectedCitation: conflict.currentCitation,
       value,
       lastCitation: theirs.value ?? {},
       provenance: conflict.currentProvenance,
@@ -242,17 +316,22 @@ export function useCitationEditor(input: {
     void input.gateway
       .library()
       .then(({ sources }) => {
+        if (!mounted.current || selection.current.token !== active.token) {
+          return;
+        }
         setCitation({
           ...assessment.value,
           id: citekeyForCitation(assessment.value ?? {}, sources, source.id),
         });
       })
-      .catch((reason: unknown) =>
-        setErrorState({
-          sourceId: source.id,
-          value: readerErrorMessage(reason, "Reader could not generate a citekey."),
-        }),
-      );
+      .catch((reason: unknown) => {
+        if (mounted.current && selection.current.token === active.token) {
+          setErrorState({
+            sourceId: source.id,
+            value: readerErrorMessage(reason, "Reader could not generate a citekey."),
+          });
+        }
+      });
   };
 
   return {
@@ -270,9 +349,27 @@ export function useCitationEditor(input: {
     setCitation,
     save,
     useTheirVersion,
-    keepMine: () => conflict && persist(conflict.currentCitation),
+    keepMine: () => conflict && persist(conflict.currentCitation, true),
     regenerateCitekey,
   };
+}
+
+function selectionFor(source: Source | null): {
+  readonly key: string;
+  readonly token: symbol;
+  readonly latest: Source | null;
+  readonly revisions: ReadonlySet<Source["recordRevision"] | undefined>;
+} {
+  return {
+    key: sourceKey(source),
+    token: Symbol(),
+    latest: source,
+    revisions: new Set([source?.recordRevision]),
+  };
+}
+
+function sourceKey(source: Source | null): string {
+  return JSON.stringify([source?.collectionId, source?.id]);
 }
 
 function provenanceFor(source: Source | null): CslProvenance {
