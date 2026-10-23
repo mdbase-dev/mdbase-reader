@@ -304,6 +304,45 @@ describe("citation resolution: normalization and validation", () => {
     expect(resolveCitation({ claims: [...claims].reverse() })).toEqual(result);
   });
 
+  it.each(["http://dx.doi.org/10.1234/work", "https://doi.org/10.1234/work"])(
+    "prefers an explicit landing URL over the registry resolver link %s",
+    (url) => {
+      const result = resolveCitation({
+        claims: [
+          claim("title", "Report"),
+          claim("DOI", "10.1234/work", registry),
+          claim("URL", url, registry),
+          claim("URL", "https://doi.org/10.1234/work", adapter),
+          claim("URL", "https://publisher.example/work", html, "canonical"),
+          claim("URL", "https://publisher.example/work?tracking=1", html, "page URL"),
+        ],
+      });
+      expect(result.citation).toMatchObject({
+        DOI: "10.1234/work",
+        URL: "https://publisher.example/work",
+      });
+      expect(result.provenance["URL"]?.source).toBe("page:html");
+    },
+  );
+
+  it("does not replace registry landing URLs or use an unendorsed request URL instead of a DOI", () => {
+    const claims = [
+      claim("title", "Report"),
+      claim("URL", "https://doi.org/10.1234/work", registry),
+      claim("URL", "https://publisher.example/request", html, "page URL"),
+    ];
+    expect(resolveCitation({ claims }).citation?.["URL"]).toBe("https://doi.org/10.1234/work");
+    expect(
+      resolveCitation({
+        claims: [
+          ...claims,
+          claim("URL", "https://publisher.example/landing", registry),
+          claim("URL", "https://publisher.example/alternate", html, "canonical"),
+        ],
+      }).citation?.["URL"],
+    ).toBe("https://publisher.example/landing");
+  });
+
   it("never promotes a publisher fallback merely because the publisher agrees", () => {
     const result = resolveCitation({
       claims: [

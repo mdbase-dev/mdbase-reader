@@ -77,7 +77,7 @@ const stillWrong: Record<string, { readonly page: string[]; readonly remote: str
     page: ["type", "author", "issued", "container-title"],
     remote: ["type", "author", "issued", "container-title"],
   },
-  "elife-brain": { page: [], remote: ["title", "publisher", "URL"] },
+  "elife-brain": { page: [], remote: ["title", "publisher"] },
   "github-translation-server": { page: ["type", "title", "author"], remote: ["author"] },
   "government-ipcc": {
     page: ["type", "title", "author", "issued", "publisher"],
@@ -89,7 +89,7 @@ const stillWrong: Record<string, { readonly page: string[]; readonly remote: str
     page: ["author", "issued", "publisher"],
     remote: ["author", "publisher"],
   },
-  "nature-dna": { page: [], remote: ["publisher", "URL"] },
+  "nature-dna": { page: [], remote: ["publisher"] },
   nyt: { page: ["type", "title", "author", "issued", "container-title"], remote: [] },
   "openlibrary-fox": {
     page: ["type", "title", "author", "issued", "publisher", "URL"],
@@ -99,8 +99,8 @@ const stillWrong: Record<string, { readonly page: string[]; readonly remote: str
     page: ["type", "title", "author", "issued", "container-title", "publisher", "DOI"],
     remote: ["type", "title", "author", "issued", "container-title", "publisher", "DOI"],
   },
-  "plos-research": { page: ["issued"], remote: ["publisher", "URL"] },
-  "springer-imagenet": { page: ["publisher"], remote: ["publisher", "URL"] },
+  "plos-research": { page: ["issued"], remote: ["publisher"] },
+  "springer-imagenet": { page: ["publisher"], remote: ["publisher"] },
   "stackoverflow-branch": {
     page: ["type", "title", "author", "issued", "container-title"],
     remote: ["type", "author", "issued"],

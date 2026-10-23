@@ -17,6 +17,7 @@ import {
   withoutRoleNames,
 } from "./claim-matching.js";
 import { claimSourceLabel, parseClaimSourceLabel } from "./claims.js";
+import { doiFromUrl } from "./doi.js";
 
 import type { Claim, CitationSuggestion, Resolution, ResolverInput } from "./claims.js";
 import type { CitationDraft } from "./csl-values.js";
@@ -343,6 +344,18 @@ function chooseGroup(field: string, groups: readonly ClaimGroup[]): ClaimGroup |
 function claimStrength(claim: CandidateClaim): number {
   // A confirmed site suffix breaks an otherwise exact tie, but never outweighs corroboration.
   let strength = sourceStrength[claim.source.kind] + (claim.siteSuffixStripped ? 1 : 0);
+  if (claim.field === "URL") {
+    if (claim.source.kind !== "user" && doiResolverUrl(claim.value)) {
+      return 30;
+    }
+    if (
+      claim.source.kind === "page" &&
+      claim.source.signal === "html" &&
+      claim.evidence === "page URL"
+    ) {
+      return 28;
+    }
+  }
   if (claim.source.kind === "page") {
     // Work-specific titles survive truncated OG titles corroborated by generic WebPage nodes.
     // Generic Article titles get no bonus: Wikipedia's headline can be a short description.
@@ -365,6 +378,18 @@ function claimStrength(claim: CandidateClaim): number {
     }
   }
   return strength;
+}
+
+function doiResolverUrl(value: unknown): boolean {
+  if (typeof value !== "string") {
+    return false;
+  }
+  try {
+    const url = new URL(value);
+    return ["doi.org", "dx.doi.org"].includes(url.hostname) && !!doiFromUrl(value);
+  } catch {
+    return false;
+  }
 }
 
 function compareClaims(a: CandidateClaim, b: CandidateClaim): number {
