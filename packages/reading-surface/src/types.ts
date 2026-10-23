@@ -4,6 +4,7 @@ import type {
   AnnotationId,
   AnnotationTarget,
   DocumentTarget,
+  DocumentRange,
   SearchDestination,
   SearchTextSegment,
 } from "@mdbase-reader/core";
@@ -141,6 +142,10 @@ export interface ReadingMotionCapability {
 }
 
 export interface ReadingSurfaceCapabilities {
+  /** Exact containment against opened bytes. Null means unverified, never approximate. */
+  readonly annotationRange?: {
+    readonly contains: (range: DocumentRange, target: AnnotationTarget) => Promise<boolean | null>;
+  };
   readonly textSelection?: TextSelectionCapability;
   readonly motion?: ReadingMotionCapability;
   readonly areaSelection?: AreaSelectionCapability;

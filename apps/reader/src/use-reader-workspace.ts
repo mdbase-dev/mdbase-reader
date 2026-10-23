@@ -12,6 +12,10 @@ import {
   useSelectedSourceResources,
   type AnnotationState,
 } from "./use-selected-source-resources.js";
+import {
+  useSourceAnnotationView,
+  type SourceAnnotationView,
+} from "./use-source-annotation-view.js";
 import { useSourceDraft } from "./use-source-draft.js";
 import { useSourceFields, type SourceFieldsController } from "./use-source-fields.js";
 import {
@@ -45,6 +49,7 @@ export type AsyncResource<Value> =
 export interface ReaderSourceWorkspaceController {
   readonly sourceRecord: AsyncResource<Source>;
   readonly annotations: AsyncResource<readonly Annotation[]>;
+  readonly annotationView?: SourceAnnotationView;
   readonly draft: string;
   readonly draftReady: boolean;
   readonly draftDocument?: SharedTextDocument;
@@ -178,6 +183,11 @@ export function useSourceToolsWorkspace(
   const { source, setSource, annotations, setAnnotations } = resources;
   const sourceRecord = selectedResource(selectedSourceId, source);
   const annotationResource = selectedResource(selectedSourceId, annotations);
+  const aggregate = useSourceAnnotationView(
+    gateway,
+    sourceRecord.status === "ready" ? sourceRecord.value : null,
+    annotationResource,
+  );
   const publishSource = useCallback(
     (value: SelectedValue<AsyncResource<Source>>): void => {
       setSource((current) => (current?.sourceId === value.sourceId ? value : current));
@@ -229,7 +239,8 @@ export function useSourceToolsWorkspace(
 
   return {
     sourceRecord,
-    annotations: annotationResource,
+    annotations: aggregate.annotations,
+    annotationView: aggregate.view,
     draft: draftValue,
     draftReady: session !== null,
     ...(session ? { draftDocument: session } : {}),

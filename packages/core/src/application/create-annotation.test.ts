@@ -123,6 +123,31 @@ const request = {
   body: "> Selected text",
 } as const;
 
+describe("annotation ownership separate from reading context", () => {
+  it("keeps the exact opened target when the chosen book does not list the chapter PDF", async () => {
+    const fixture = dependencies();
+    const owner = { ...sourceFixture(), id: sourceId("book"), documents: [] };
+    const result = await createAnnotation(fixture.value, {
+      ...request,
+      sourceId: owner.id,
+      source: "[[sources/book]]",
+      sourceRecord: owner,
+      documentSourceRecord: sourceFixture(),
+    });
+    expect(result.annotation.sourceId).toBe(owner.id);
+    expect(result.annotation.document).toEqual(request.document);
+    expect(result.annotation.target).toEqual(request.target);
+    expect(result.annotation).not.toHaveProperty("documentSourceRecord");
+    expect(fixture.append).not.toHaveBeenCalled();
+    await expect(
+      createAnnotation(fixture.value, {
+        ...request,
+        documentSourceRecord: { ...sourceFixture(), collectionId: collectionId("other") },
+      }),
+    ).rejects.toThrow("another collection");
+  });
+});
+
 describe("createAnnotation", () => {
   it("persists an annotation and a deliberate source transclusion", async () => {
     const fixture = dependencies();

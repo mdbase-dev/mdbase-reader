@@ -9,6 +9,8 @@ import {
 } from "react";
 
 import { annotationBodyContent } from "./annotation-body-content.js";
+import { AnnotationOwnerActions } from "./AnnotationOwnerActions.js";
+import { AnnotationOwnerChooser } from "./AnnotationOwnerChooser.js";
 import { CommentIcon, CopyIcon, HighlightIcon, QuoteIcon, TrashIcon } from "./icons.js";
 import { citableLocator, citedQuote, copyText } from "./selection-copy.js";
 import { selectionToolbarPlacement } from "./selection-toolbar-placement.js";
@@ -157,7 +159,20 @@ function SelectionToolbar({
       style={style}
     >
       {target.kind === "selection" ? (
-        <button type="button" title="Highlight (H)" onClick={highlight}>
+        <AnnotationOwnerChooser control={composer.ownerControl} />
+      ) : (
+        <AnnotationOwnerActions
+          annotation={target.annotation}
+          sources={composer.ownerControl?.sources}
+        />
+      )}
+      {target.kind === "selection" ? (
+        <button
+          disabled={composer.ownerControl?.pending}
+          type="button"
+          title="Highlight (H)"
+          onClick={highlight}
+        >
           <HighlightIcon /> Highlight
         </button>
       ) : null}

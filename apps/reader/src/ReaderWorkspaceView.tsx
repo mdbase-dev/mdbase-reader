@@ -484,10 +484,11 @@ function useLibraryAnnotationCounts(
   const sourceId =
     model.workspace.sourceRecord.status === "ready" ? model.workspace.sourceRecord.value.id : null;
   return useMemo(() => {
-    if (!sourceId || loaded.status !== "ready" || counts.get(sourceId) === loaded.value.length) {
+    if (!sourceId || loaded.status !== "ready") {
       return counts;
     }
-    return new Map(counts).set(sourceId, loaded.value.length);
+    const ownedCount = loaded.value.filter((annotation) => annotation.sourceId === sourceId).length;
+    return counts.get(sourceId) === ownedCount ? counts : new Map(counts).set(sourceId, ownedCount);
   }, [counts, loaded, sourceId]);
 }
 

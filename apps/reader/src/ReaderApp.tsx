@@ -6,7 +6,7 @@ import { navigatorPanelId } from "./dockview-workspace-state.js";
 import { LibraryDocumentIndex } from "./LibraryDocumentIndex.js";
 import {
   useDocumentSurfaceTiming,
-  useReaderAnnotationComposer,
+  useReaderAnnotationComposer as useComposer,
   useReaderReadingResume,
   useReaderShortcuts,
   useThemePreference,
@@ -125,7 +125,7 @@ function OpenedReaderApp({
     },
     [sessionLocations],
   );
-  const composer = useReaderAnnotationComposer(workspace, sourceWorkspace.activeSourceId, surface);
+  const composer = useComposer(workspace, sourceWorkspace.activeSourceId, surface, gateway);
   const readingResume = useReaderReadingResume(workspace, surface);
   const decorationProblem = useDocumentDecorations(
     surface,

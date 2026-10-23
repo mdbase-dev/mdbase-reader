@@ -3,22 +3,34 @@ import { useEffect, useState, useSyncExternalStore } from "react";
 import { annotationCreationBuffer } from "./annotation-creation-buffer.js";
 import { confirmAnnotationDiscard } from "./annotation-draft-actions.js";
 import { annotationDraftKey } from "./annotation-drafts.js";
+import { useAnnotationOwner, type AnnotationOwnerControl } from "./use-annotation-owner.js";
 import { useAreaSelectionMode } from "./use-area-selection-mode.js";
 import { useCreationSaving } from "./use-creation-saving.js";
 import { useSelectionRouting } from "./use-selection-routing.js";
 
 import type { ComposerSelection } from "./annotation-composer-request.js";
 import type { SelectionToolbarController, TextComposerSelection } from "./use-selection-toolbar.js";
-import type { Annotation, AnnotationCreationRequest, Source, SourceId } from "@mdbase-reader/core";
+import type { ReaderWorkspaceGateway } from "./workspace-model.js";
+import type {
+  SourceSummary,
+  Annotation,
+  AnnotationCreationRequest,
+  Source,
+  SourceId,
+} from "@mdbase-reader/core";
 import type { ReadingSurface } from "@mdbase-reader/reading-surface";
 
 export interface AnnotationCreationInput {
   readonly sourceId: SourceId | null;
   readonly source: Source | null;
+  readonly ownershipSources?: readonly SourceSummary[];
+  readonly ownerGateway?: ReaderWorkspaceGateway;
   readonly surface: ReadingSurface | null;
   readonly create: (request: AnnotationCreationRequest) => Promise<Annotation>;
 }
 export interface AnnotationCreationController {
+  readonly ownerControl?: AnnotationOwnerControl | undefined;
+  readonly createOwned?: (request: AnnotationCreationRequest) => Promise<Annotation>;
   readonly selection: ComposerSelection | null;
   readonly note: string;
   readonly status: "idle" | "saving";
@@ -50,7 +62,7 @@ export function useAnnotationCreation(
   toolbar: SelectionToolbarController,
   onCreated: (annotation: Annotation) => void,
 ): AnnotationCreationController {
-  const { sourceId, source, surface, create } = input;
+  const { sourceId, source, surface } = input;
   const key = creationKey(source, surface);
   const buffer = annotationCreationBuffer(
     key,
@@ -58,11 +70,12 @@ export function useAnnotationCreation(
   );
   const draft = useSyncExternalStore(buffer.subscribe, buffer.getSnapshot, buffer.getSnapshot);
   useEffect(() => buffer.start(), [buffer]);
+  const ownership = useCreationOwner(input, draft.value?.selection, toolbar);
   const saving = useCreationSaving({
     source,
     surface,
     buffer,
-    create,
+    create: ownership.create,
     onCreated,
     beforeHighlight: toolbar.hide,
   });
@@ -92,7 +105,7 @@ export function useAnnotationCreation(
     busy,
     offerSwitch: (value) => setSwitchTo({ key, value }),
     compose: (value) => open(value),
-    highlight: saving.highlight,
+    highlight: ownershipHighlight(input.ownershipSources, open, saving.highlight),
     showToolbar: toolbar.showSelection,
   });
   const dismiss = (): void => {
@@ -110,8 +123,10 @@ export function useAnnotationCreation(
     setSwitchTo(null);
     area.endAreaSelection();
   };
-  const pendingSwitch = switchTo?.key === key && selection ? switchTo : null;
+  const pendingSwitch = pendingSelectionSwitch(switchTo, key, selection);
   return {
+    ownerControl: ownership.control,
+    createOwned: ownership.create,
     selection,
     note: buffer.get()?.body ?? "",
     status: saving.saving ? "saving" : "idle",
@@ -144,4 +159,37 @@ export function useAnnotationCreation(
     },
     toggleAreaSelection: area.toggleAreaSelection,
   };
+}
+
+function pendingSelectionSwitch<T extends { readonly key: string }>(
+  value: T | null,
+  key: string,
+  selection: ComposerSelection | null,
+): T | null {
+  return value?.key === key && selection ? value : null;
+}
+
+function useCreationOwner(
+  input: AnnotationCreationInput,
+  selection: ComposerSelection | null | undefined,
+  toolbar: SelectionToolbarController,
+): ReturnType<typeof useAnnotationOwner> {
+  return useAnnotationOwner({
+    source: input.source,
+    surface: input.surface,
+    create: input.create,
+    selection:
+      selection ??
+      (toolbar.state?.target.kind === "selection" ? toolbar.state.target.selection : null),
+    sources: input.ownershipSources,
+    gateway: input.ownerGateway,
+  });
+}
+
+function ownershipHighlight(
+  sources: readonly SourceSummary[] | undefined,
+  compose: (value: ComposerSelection) => void,
+  highlight: (value: TextComposerSelection) => void,
+): (value: TextComposerSelection) => void {
+  return sources && sources.length > 1 ? compose : highlight;
 }

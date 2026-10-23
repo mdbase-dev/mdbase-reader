@@ -3,12 +3,15 @@ import { useState, type JSX } from "react";
 
 import { commentRequest } from "./annotation-composer-request.js";
 import { annotationEditorKeys, confirmAnnotationDiscard } from "./annotation-draft-actions.js";
+import { AnnotationOwnerChooser } from "./AnnotationOwnerChooser.js";
 import { AnnotationTextArea } from "./AnnotationTextArea.js";
 import { readerErrorMessage } from "./errors.js";
 import { BookmarkIcon, CloseIcon, CommentIcon } from "./icons.js";
+import { useAnnotationOwner, type AnnotationOwnerControl } from "./use-annotation-owner.js";
 
 import type { AnnotationComposerController } from "./use-annotation-composer.js";
 import type { ReaderSourceWorkspaceController } from "./use-reader-workspace.js";
+import type { ReaderWorkspaceGateway } from "./workspace-model.js";
 
 /**
  * Annotations that need no selection: a comment about the whole source, or a bookmark at the
@@ -17,12 +20,22 @@ import type { ReaderSourceWorkspaceController } from "./use-reader-workspace.js"
 export function AnnotationPanelActions({
   workspace,
   composer,
+  gateway,
 }: {
+  readonly gateway?: ReaderWorkspaceGateway;
   readonly workspace: ReaderSourceWorkspaceController;
   readonly composer: AnnotationComposerController;
 }): JSX.Element {
   const [commenting, setCommenting] = useState(false);
   const source = workspace.sourceRecord.status === "ready" ? workspace.sourceRecord.value : null;
+  const ownership = useAnnotationOwner({
+    source,
+    surface: null,
+    selection: null,
+    sources: workspace.annotationView?.sources,
+    gateway,
+    create: workspace.createAnnotation,
+  });
   return (
     <>
       <div className="annotation-panel-actions">
@@ -51,8 +64,9 @@ export function AnnotationPanelActions({
       {commenting && source ? (
         <SourceCommentComposer
           key={source.id}
+          ownerControl={ownership.control}
           onSave={(comment) =>
-            workspace.createAnnotation(commentRequest(source, comment)).then(() => undefined)
+            ownership.create(commentRequest(source, comment)).then(() => undefined)
           }
           onClose={() => setCommenting(false)}
         />
@@ -64,7 +78,9 @@ export function AnnotationPanelActions({
 function SourceCommentComposer({
   onSave,
   onClose,
+  ownerControl,
 }: {
+  readonly ownerControl?: AnnotationOwnerControl | undefined;
   readonly onSave: (comment: string) => Promise<void>;
   readonly onClose: () => void;
 }): JSX.Element {
@@ -108,6 +124,7 @@ function SourceCommentComposer({
           <CloseIcon />
         </button>
       </header>
+      <AnnotationOwnerChooser control={ownerControl} />
       <AnnotationTextArea
         value={comment}
         readOnly={saving}

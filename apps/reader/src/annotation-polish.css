@@ -1,3 +1,49 @@
+.annotation-owner-control {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+  padding-block: 6px;
+  color: var(--ink);
+  overflow-wrap: anywhere;
+  font-size: 12px;
+}
+.annotation-owner-control a {
+  color: var(--accent);
+}
+.annotation-owner-control label,
+.annotation-chapter-filter {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+}
+.annotation-owner-control select,
+.annotation-chapter-filter select {
+  max-width: 100%;
+  min-width: 0;
+  min-height: 32px;
+  font: inherit;
+  color: var(--ink);
+  background: var(--paper);
+}
+.annotation-chapter-filter {
+  padding: 8px 16px;
+  font-size: 12px;
+}
+.selection-toolbar:has(.annotation-owner-control) {
+  flex-wrap: wrap;
+  max-width: min(380px, 100%);
+}
+.selection-toolbar > .annotation-owner-control {
+  flex-basis: 100%;
+}
+.selection-toolbar .annotation-owner-control small {
+  white-space: normal;
+}
+.mobile-source-views.is-selection:has(.annotation-owner-control) {
+  height: auto;
+}
+
 /* Cards without a passage to jump to do not pretend to be links. */
 .annotation-card:not(.is-linked) {
   cursor: default;

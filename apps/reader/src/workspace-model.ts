@@ -76,6 +76,12 @@ export interface ReaderWorkspaceGateway {
   /** Bypass session caches when comparing revisions before a draft write. */
   refreshSource?(id: SourceId, options?: ReaderRequestOptions): Promise<Source | null>;
   annotations(id: SourceId, options?: ReaderRequestOptions): Promise<readonly Annotation[]>;
+  /** One bounded discovery/batch hydration for a set of owners. */
+  annotationsForSources?(
+    ids: ReadonlySet<SourceId>,
+    options?: ReaderRequestOptions,
+  ): Promise<readonly Annotation[]>;
+  moveAnnotationOwner?(annotation: Annotation, owner: Source): Promise<Annotation>;
   annotationSourceIds?(options?: ReaderRequestOptions): Promise<readonly SourceId[]>;
   annotationCounts?(options?: ReaderRequestOptions): Promise<ReadonlyMap<SourceId, number>>;
   /** Every annotation in the collection, read-only, for the library's annotations view. */
@@ -83,6 +89,9 @@ export interface ReaderWorkspaceGateway {
   /** Counts change on membership mutations, not on source selection or body edits. */
   subscribeAnnotationCounts?: (listener: () => void) => () => void;
   annotationCountsRevision?: () => number;
+  /** Includes body changes without forcing library-count queries. */
+  subscribeAnnotationChanges?: (listener: () => void) => () => void;
+  annotationChangesRevision?: () => number;
   saveSourceBody(source: Source, body: string): Promise<Source>;
   /** Exact recovery of an interrupted source note write. Only a live connection offers it. */
   recoverSourceBody?(requestId: string): Promise<Source>;

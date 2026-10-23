@@ -108,7 +108,13 @@ export async function createAnnotation(
   if (source.collectionId !== request.collectionId || source.id !== request.sourceId) {
     throw new DomainError("source-not-found", "The loaded annotation source no longer matches.");
   }
-  assertCurrentDocument(request, source);
+  if (
+    request.documentSourceRecord &&
+    request.documentSourceRecord.collectionId !== request.collectionId
+  ) {
+    throw new DomainError("source-not-found", "The reading source is in another collection.");
+  }
+  assertCurrentDocument(request, request.documentSourceRecord ?? source);
 
   const annotationId = dependencies.ids.annotation();
   const mutationId = dependencies.ids.mutation();

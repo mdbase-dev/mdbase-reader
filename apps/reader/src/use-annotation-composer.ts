@@ -74,7 +74,11 @@ export function useAnnotationComposer(
   };
   const toolbar = useSelectionToolbar(surface);
   const creation = useAnnotationCreation(input, resetSelection, toolbar, select);
-  const bookmark = useBookmarkAction({ ...input, onCreated: select });
+  const bookmark = useBookmarkAction({
+    ...input,
+    create: creation.createOwned ?? input.create,
+    onCreated: select,
+  });
   const currentId = (id: AnnotationId | null): AnnotationId | null =>
     annotations.some((annotation) => annotation.id === id) ? id : null;
   const edit = (annotation: Annotation): void => {
