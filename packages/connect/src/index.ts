@@ -13,4 +13,5 @@ export * from "./portable-application-session.js";
 export * from "./record-session.js";
 export * from "./repositories.js";
 export * from "./source-imports.js";
+export { sourcePartOfPatch, documentRangePatch } from "./source-frontmatter.js";
 export type { JsonObject, MdbaseAppManifest } from "@mdbase-dev/connect";

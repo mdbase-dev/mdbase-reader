@@ -56,6 +56,8 @@ import type {
   ContentSearchRepository,
   CslProvenance,
   FileId,
+  FileRevision,
+  DocumentRange,
   MutationJournal,
   ReaderRequestOptions,
   ReadingPosition,
@@ -691,6 +693,51 @@ export class ConnectWorkspaceGateway implements ReaderWorkspaceGateway {
       sourceId,
       status,
       changedAt: this.runtime.clock.now(),
+    });
+    this.#replaceSource(updated);
+    return updated;
+  }
+
+  async sourceParts(
+    id: SourceId,
+    options: ReaderRequestOptions = {},
+  ): Promise<readonly SourceSummary[]> {
+    if (!this.sources.sourceParts) {
+      throw new Error("This collection cannot list source parts.");
+    }
+    return this.sources.sourceParts(this.collectionId, id, options);
+  }
+
+  async setSourcePartOf(source: Source, parentId: SourceId | null): Promise<Source> {
+    if (!this.sources.setSourcePartOf) {
+      throw new Error("This collection cannot set source parents.");
+    }
+    const updated = await this.sources.setSourcePartOf({
+      collectionId: this.collectionId,
+      sourceId: source.id,
+      expectedRevision: source.recordRevision,
+      parentId,
+    });
+    this.#replaceSource(updated);
+    return updated;
+  }
+
+  async setDocumentRange(
+    source: Source,
+    documentFileId: FileId,
+    expectedDocumentRevision: FileRevision,
+    range: DocumentRange | null,
+  ): Promise<Source> {
+    if (!this.sources.setDocumentRange) {
+      throw new Error("This collection cannot set document ranges.");
+    }
+    const updated = await this.sources.setDocumentRange({
+      collectionId: this.collectionId,
+      sourceId: source.id,
+      expectedRevision: source.recordRevision,
+      documentFileId,
+      expectedDocumentRevision,
+      range,
     });
     this.#replaceSource(updated);
     return updated;

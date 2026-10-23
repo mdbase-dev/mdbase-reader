@@ -4,6 +4,7 @@ import type { CslItem, CslValidationProblem } from "./citation.js";
 import type { CslProvenance } from "./csl-provenance.js";
 import type { DocumentDescriptor } from "./document.js";
 import type { CollectionId, FileId, RecordRevision, SourceId } from "./identity.js";
+import type { SourceRelation } from "./source-parts.js";
 import type { DateTime } from "./time.js";
 
 export const readingStatuses = [
@@ -48,6 +49,9 @@ export interface SourceSummary {
   readonly citation?: CslItem;
   readonly citationProblems?: readonly CslValidationProblem[];
   readonly documents: readonly DocumentDescriptor[];
+  readonly relations?: readonly SourceRelation[];
+  /** Undefined when the parent link cannot be resolved by the collection. */
+  readonly partOf?: SourceId;
   /** The record's frontmatter as read, for views that show arbitrary fields. */
   readonly properties?: Readonly<Record<string, unknown>>;
 }

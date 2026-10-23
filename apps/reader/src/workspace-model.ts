@@ -12,6 +12,7 @@ import type {
   ExportedCollectionFile,
   FileId,
   FileRevision,
+  DocumentRange,
   ReaderRequestOptions,
   ReadingPosition,
   ReadingStatus,
@@ -64,6 +65,14 @@ export interface ReaderWorkspaceGateway {
   /** Adds the collection's "Annotations for this source" view unless it already has one. */
   ensureSourceAnnotationsView?(): Promise<{ readonly path: string; readonly created: boolean }>;
   source(id: SourceId, options?: ReaderRequestOptions): Promise<Source | null>;
+  sourceParts?(id: SourceId, options?: ReaderRequestOptions): Promise<readonly SourceSummary[]>;
+  setSourcePartOf?(source: Source, parentId: SourceId | null): Promise<Source>;
+  setDocumentRange?(
+    source: Source,
+    documentFileId: FileId,
+    expectedDocumentRevision: FileRevision,
+    range: DocumentRange | null,
+  ): Promise<Source>;
   /** Bypass session caches when comparing revisions before a draft write. */
   refreshSource?(id: SourceId, options?: ReaderRequestOptions): Promise<Source | null>;
   annotations(id: SourceId, options?: ReaderRequestOptions): Promise<readonly Annotation[]>;

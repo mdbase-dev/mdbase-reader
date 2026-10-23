@@ -1,3 +1,4 @@
+import { documentRangePatch, sourcePartOfPatch } from "@mdbase-reader/connect";
 import {
   annotationId,
   CitationChangedElsewhereError,
@@ -11,6 +12,11 @@ import {
   parseCslProvenance,
   recordRevision,
   sourceId,
+  sourceLink,
+  parseSourceRelations,
+  validateSourcePartChain,
+  type DocumentRange,
+  type FileRevision,
   validateCslItem,
   type Annotation,
   type AnnotationCreationRequest,
@@ -152,6 +158,43 @@ const sources: readonly Source[] = [
   },
 ];
 
+function previewAnthology(): readonly Source[] {
+  const document = {
+    fileId: fileId("file_anthology_pdf"),
+    file: "[[files/anthology.pdf]]",
+    revision: fileRevision("sha256:aa0000"),
+    mediaType: "application/pdf",
+    role: "primary",
+  };
+  const book: Source = {
+    collectionId: collection,
+    id: sourceId("src_anthology"),
+    path: "sources/anthology.md",
+    title: "An anthology of attention",
+    creators: ["Various authors"],
+    tags: [],
+    documents: [document],
+    body: "A book shared by its chapters.",
+    recordRevision: recordRevision("preview-anthology"),
+    frontmatter: {},
+  };
+  return [
+    book,
+    ...[0, 1].map((index): Source => ({
+      ...book,
+      id: sourceId(`src_anthology_chapter_${String(index + 1)}`),
+      path: `sources/anthology-chapter-${String(index + 1)}.md`,
+      title: `Chapter ${String(index + 1)}`,
+      partOf: book.id,
+      relations: [{ relation: "part-of", target: sourceLink(book) }],
+      documents: [
+        { ...document, range: { kind: "pages", start: index * 10, end: index * 10 + 9 } },
+      ],
+      recordRevision: recordRevision(`preview-anthology-${String(index + 1)}`),
+    })),
+  ];
+}
+
 const annotations: readonly Annotation[] = [
   {
     collectionId: collection,
@@ -202,7 +245,8 @@ const annotations: readonly Annotation[] = [
 ];
 
 export class PreviewGateway implements ReaderWorkspaceGateway {
-  #sources = sources.map(withRecordFrontmatter);
+  #sources = [...sources, ...previewAnthology()].map(withRecordFrontmatter);
+  #partRevision = 0;
   #annotations = [...annotations];
   #views: MdbaseLibraryView[] = [
     defaultLibraryView,
@@ -462,6 +506,75 @@ export class PreviewGateway implements ReaderWorkspaceGateway {
   ): Promise<Source> {
     return Promise.resolve(source);
   }
+  sourceParts(id: SourceId): Promise<readonly SourceSummary[]> {
+    return Promise.resolve(this.#sources.filter((source) => source.partOf === id));
+  }
+  async setSourcePartOf(source: Source, parentId: SourceId | null): Promise<Source> {
+    const current = await this.#guardPartWrite(source);
+    const parent = parentId ? await this.source(parentId) : null;
+    if (parentId && !parent) {
+      throw new Error("Parent source not found.");
+    }
+    const rest = { ...current };
+    Reflect.deleteProperty(rest, "partOf");
+    const proposed: Source = { ...rest, ...(parentId ? { partOf: parentId } : {}) };
+    const chain = validateSourcePartChain(
+      source.id,
+      new Map(this.#sources.map((item) => [item.id, item.id === source.id ? proposed : item])),
+    );
+    if (chain.problem) {
+      throw new Error(`Invalid part-of relation: ${chain.problem}.`);
+    }
+    const frontmatter = {
+      ...current.frontmatter,
+      ...sourcePartOfPatch(current.frontmatter, parent ? sourceLink(parent) : null),
+    };
+    if (frontmatter["relations"] === null) {
+      Reflect.deleteProperty(frontmatter, "relations");
+    }
+    return this.#savePartWrite({
+      ...proposed,
+      relations: parseSourceRelations(frontmatter["relations"]),
+      frontmatter,
+      properties: frontmatter,
+    });
+  }
+  async setDocumentRange(
+    source: Source,
+    id: FileId,
+    revision: FileRevision,
+    range: DocumentRange | null,
+  ): Promise<Source> {
+    const current = await this.#guardPartWrite(source);
+    const frontmatter = {
+      ...current.frontmatter,
+      ...documentRangePatch(current.frontmatter, id, revision, range),
+    };
+    const documents = current.documents.map((document) => {
+      if (document.fileId !== id) {
+        return document;
+      }
+      const rest = { ...document };
+      Reflect.deleteProperty(rest, "range");
+      return { ...rest, ...(range ? { range } : {}) };
+    });
+    return this.#savePartWrite({ ...current, documents, frontmatter, properties: frontmatter });
+  }
+  async #guardPartWrite(source: Source): Promise<Source> {
+    const current = await this.source(source.id);
+    if (current?.recordRevision !== source.recordRevision) {
+      throw new Error("Source revision changed.");
+    }
+    return current;
+  }
+  #savePartWrite(source: Source): Source {
+    const updated = {
+      ...source,
+      recordRevision: recordRevision(`preview-part-${String(++this.#partRevision)}`),
+    };
+    this.#sources = this.#sources.map((item) => (item.id === source.id ? updated : item));
+    return updated;
+  }
   saveSourceFields(id: SourceId, fields: Readonly<Record<string, unknown>>): Promise<Source> {
     const source = this.#sources.find((item) => item.id === id);
     if (!source) {
@@ -610,6 +723,15 @@ function withRecordFrontmatter(source: Source): Source {
     ...(source.creators.length ? { authors: source.creators } : {}),
     ...(source.published !== undefined ? { published: source.published } : {}),
     ...(source.url ? { url: source.url } : {}),
+    documents: source.documents.map((document) => ({
+      file_id: document.fileId,
+      file: document.file,
+      revision: document.revision,
+      role: document.role,
+      media_type: document.mediaType,
+      ...(document.range ? { range: document.range } : {}),
+    })),
+    ...(source.relations ? { relations: source.relations } : {}),
     ...source.properties,
     ...source.frontmatter,
   };

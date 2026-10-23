@@ -1,5 +1,6 @@
 import type { FileId } from "./identity.js";
 import type { FileRevision } from "./revision.js";
+import type { DocumentRange } from "./source-parts.js";
 
 export const documentRoles = [
   "primary",
@@ -20,6 +21,7 @@ export interface DocumentDescriptor {
   readonly mediaType: string;
   readonly role: DocumentRole;
   readonly title?: string;
+  readonly range?: DocumentRange;
 }
 
 export interface DocumentTarget {
