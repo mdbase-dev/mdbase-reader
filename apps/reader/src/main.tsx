@@ -1,3 +1,4 @@
+import { Trans } from "@lingui/react/macro";
 import { lazy, StrictMode, Suspense } from "react";
 import { createRoot } from "react-dom/client";
 
@@ -14,6 +15,7 @@ import { EnvironmentBadge } from "./EnvironmentBadge.js";
 import { FeedbackRoot } from "./FeedbackRoot.js";
 import { forgetOfflineCopies } from "./forget-offline-copies.js";
 import { completeAppGrantCallback } from "./grant-callback.js";
+import { ReaderI18nProvider } from "./i18n.js";
 import { importService } from "./import-navigation.js";
 import { keepFocusedFieldInView } from "./keep-focused-field-in-view.js";
 import "./environment-badge.css";
@@ -69,23 +71,27 @@ const buildEnvironment =
 const grantCallback = buildEnvironment !== null && completeAppGrantCallback(new URL(location.href));
 createRoot(root).render(
   <StrictMode>
-    <FeedbackRoot>
-      <EnvironmentBadge />
-      {grantCallback ? (
-        <p className="reader-grant-callback">You can close this window.</p>
-      ) : migrationService ? (
-        <Suspense fallback={null}>
-          <SdkReader service={migrationService} />
-        </Suspense>
-      ) : preview ? (
-        <Suspense fallback={null}>
-          <PreviewReader />
-        </Suspense>
-      ) : (
-        <Suspense fallback={null}>
-          <SdkReader />
-        </Suspense>
-      )}
-    </FeedbackRoot>
+    <ReaderI18nProvider>
+      <FeedbackRoot>
+        <EnvironmentBadge />
+        {grantCallback ? (
+          <p className="reader-grant-callback">
+            <Trans>You can close this window.</Trans>
+          </p>
+        ) : migrationService ? (
+          <Suspense fallback={null}>
+            <SdkReader service={migrationService} />
+          </Suspense>
+        ) : preview ? (
+          <Suspense fallback={null}>
+            <PreviewReader />
+          </Suspense>
+        ) : (
+          <Suspense fallback={null}>
+            <SdkReader />
+          </Suspense>
+        )}
+      </FeedbackRoot>
+    </ReaderI18nProvider>
   </StrictMode>,
 );
