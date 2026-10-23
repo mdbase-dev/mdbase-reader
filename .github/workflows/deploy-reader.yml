@@ -126,15 +126,17 @@ jobs:
           NATIVE_UI_SHA256: ${{ vars.NATIVE_UI_SHA256 }}
           NATIVE_PROTOCOL_SHA256: ${{ vars.NATIVE_PROTOCOL_SHA256 }}
           NATIVE_TRUST_ASSET_SHA256: ${{ vars.NATIVE_TRUST_ASSET_SHA256 }}
-          MDBASE_EXTENSION_STAGING_PUBLIC_KEY: ${{ vars.MDBASE_EXTENSION_STAGING_PUBLIC_KEY }}
+          MDBASE_EXTENSION_STAGING_PUBLIC_KEY: ${{ inputs.target == 'staging' && vars.MDBASE_EXTENSION_STAGING_PUBLIC_KEY || '' }}
         run: |
           set -euo pipefail
           for name in NATIVE_SDK_SHA256 NATIVE_UI_SHA256 NATIVE_PROTOCOL_SHA256 NATIVE_TRUST_ASSET_SHA256; do
             [[ "${!name}" =~ ^[0-9a-f]{64}$ ]]
           done
           printf 'sdk=%s\nui=%s\nprotocol=%s\ntrust=%s\n' "$NATIVE_SDK_SHA256" "$NATIVE_UI_SHA256" "$NATIVE_PROTOCOL_SHA256" "$NATIVE_TRUST_ASSET_SHA256" >> "$GITHUB_OUTPUT"
-          [[ "$MDBASE_EXTENSION_STAGING_PUBLIC_KEY" =~ ^[A-Za-z0-9+/=]{1,4096}$ ]]
-          printf 'public-key=%s\n' "$MDBASE_EXTENSION_STAGING_PUBLIC_KEY" >> "$GITHUB_OUTPUT"
+          if [[ "$TARGET" == staging ]]; then
+            [[ "$MDBASE_EXTENSION_STAGING_PUBLIC_KEY" =~ ^[A-Za-z0-9+/=]{1,4096}$ ]]
+            printf 'public-key=%s\n' "$MDBASE_EXTENSION_STAGING_PUBLIC_KEY" >> "$GITHUB_OUTPUT"
+          fi
       - name: Retain SAFE input failure only; never qualified artifact outputs
         if: failure()
         uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6.0.0
@@ -191,7 +193,7 @@ jobs:
       - name: One actual target build, precompiled capture Worker, all final bytes
         id: build
         env:
-          MDBASE_EXTENSION_STAGING_PUBLIC_KEY: ${{ needs.native-inputs.outputs.public-key }}
+          MDBASE_EXTENSION_STAGING_PUBLIC_KEY: ${{ inputs.target == 'staging' && needs.native-inputs.outputs.public-key || '' }}
         run: |
           set -euo pipefail
           node apps/reader/scripts/native-publisher.mjs guard --target "$TARGET" --sha "$SOURCE_SHA" --installed > "$RUNNER_TEMP/reader-confirmed-plan.json"

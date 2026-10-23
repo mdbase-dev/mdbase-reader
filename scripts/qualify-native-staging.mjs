@@ -6,7 +6,8 @@ import { createHash } from "node:crypto";
 import { cp, mkdir, mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
 import { join, resolve, relative } from "node:path";
 import { loadOriginals, protectedHashes } from "./lib/native-originals.mjs";
-import { approvedHashes } from "./lib/reader-approved-intake.mjs";
+import { approvedHashes, approvedProductionHashes } from "./lib/reader-approved-intake.mjs";
+import { storeExtensionId } from "../apps/extension/scripts/extension-manifest.mjs";
 import { inventoryDirectory } from "./lib/native-publish-bytes.mjs";
 import { assertOfflineShell } from "./lib/reader-offline-shell.mjs";
 import { assertExtension, createExtensionZip } from "./lib/reader-extension.mjs";
@@ -32,6 +33,7 @@ if (process.env.CLOUDFLARE_API_TOKEN || process.env.CLOUDFLARE_ACCOUNT_ID)
   throw Error("Unprivileged build must not receive Cloudflare credentials");
 const installerEvidence = [];
 let plan, key, inputEvidence;
+let target = "staging";
 if (mode === "local-qualification") {
   if (
     !input ||
@@ -41,25 +43,30 @@ if (mode === "local-qualification") {
     throw Error("Relative PUBLIC-only input file required");
   const bytes = await readFile(join(repo, input)),
     value = JSON.parse(bytes);
-  if (value.publicId !== stagingExtensionId || value.privateMaterialExported !== false)
-    throw Error("Public-only transport identity");
-  key = stagingManifestKey(value.publicSpkiBase64);
-  const publicSpkiSha256 = hash(Buffer.from(key, "base64"));
-  if (value.publicSpkiSha256 !== publicSpkiSha256) throw Error("Public transport digest");
-  inputEvidence = {
-    transportFileSha256: hash(bytes),
-    publicSpkiSha256,
-    publicId: stagingExtensionId,
-  };
+  target = value.target ?? value.environment ?? "staging";
+  if (target === "staging") {
+    if (value.publicId !== stagingExtensionId || value.privateMaterialExported !== false)
+      throw Error("Public-only transport identity");
+    key = stagingManifestKey(value.publicSpkiBase64);
+    const publicSpkiSha256 = hash(Buffer.from(key, "base64"));
+    if (value.publicSpkiSha256 !== publicSpkiSha256) throw Error("Public transport digest");
+    inputEvidence = {
+      transportFileSha256: hash(bytes),
+      publicSpkiSha256,
+      publicId: stagingExtensionId,
+    };
+  } else {
+    inputEvidence = { transportFileSha256: hash(bytes), publicId: storeExtensionId };
+  }
   // NOT publication authority. Source tree qualification only; no Git substitute.
   plan = {
     sha: null,
     tree: null,
     qualificationOnly: true,
     sdkTrust: await loadOriginals({
-      target: "staging",
+      target,
       repoRoot: repo,
-      hashes: approvedHashes,
+      hashes: target === "staging" ? approvedHashes : approvedProductionHashes,
       installed: true,
       installerEvidence,
     }),
@@ -72,8 +79,9 @@ if (mode === "local-qualification") {
     !/^[a-f0-9]{40}$/.test(plan.tree)
   )
     throw Error("CI exact-source plan required");
+  target = plan.target ?? plan.sdkTrust.environment;
   const actual = await loadOriginals({
-    target: "staging",
+    target,
     repoRoot: repo,
     hashes: protectedHashes(),
     installed: true,
@@ -81,13 +89,16 @@ if (mode === "local-qualification") {
   });
   if (JSON.stringify(actual) !== JSON.stringify(plan.sdkTrust))
     throw Error("Installed plan changed");
-  key = stagingManifestKey(process.env.MDBASE_EXTENSION_STAGING_PUBLIC_KEY);
-  inputEvidence = {
-    publicSpkiSha256: hash(Buffer.from(key, "base64")),
-    publicId: stagingExtensionId,
-  };
+  inputEvidence = { publicId: storeExtensionId };
+  if (target === "staging") {
+    key = stagingManifestKey(process.env.MDBASE_EXTENSION_STAGING_PUBLIC_KEY);
+    inputEvidence = {
+      publicSpkiSha256: hash(Buffer.from(key, "base64")),
+      publicId: stagingExtensionId,
+    };
+  }
 }
-const root = resolve(output ?? "artifacts/build/native-staging");
+const root = resolve(output ?? `artifacts/build/native-${target}`);
 if (root === repo || relative(repo, root) === "") throw Error("Unsafe build output");
 await mkdir(root, { recursive: true });
 await writeFile(
@@ -96,19 +107,19 @@ await writeFile(
 );
 plan.origin = plan.sdkTrust.appOrigin;
 plan.connectOrigin = plan.sdkTrust.connectOrigin;
-plan.pagesBranch = "staging";
+plan.pagesBranch = target === "production" ? "main" : "staging";
 await writeFile(join(root, "plan.json"), JSON.stringify(plan, null, 2) + "\n");
 const env = {
   ...process.env,
-  MDBASE_ENV: "staging",
-  VITE_MDBASE_ENV: "staging",
+  MDBASE_ENV: target,
+  VITE_MDBASE_ENV: target,
   MDBASE_READER_ORIGIN: plan.origin,
-  MDBASE_READER_BUILD_ID: plan.sha ?? "source-qualification-staging",
-  VITE_MDBASE_READER_BUILD_ID: plan.sha ?? "source-qualification-staging",
+  MDBASE_READER_BUILD_ID: plan.sha ?? `source-qualification-${target}`,
+  VITE_MDBASE_READER_BUILD_ID: plan.sha ?? `source-qualification-${target}`,
   VITE_MDBASE_CONNECT_URL: plan.connectOrigin,
   VITE_MDBASE_CONNECT_LOOPBACK_URL: "",
-  MDBASE_EXTENSION_STAGING_ID: stagingExtensionId,
-  MDBASE_EXTENSION_STAGING_PUBLIC_KEY: key,
+  MDBASE_EXTENSION_STAGING_ID: target === "staging" ? stagingExtensionId : "",
+  MDBASE_EXTENSION_STAGING_PUBLIC_KEY: key ?? "",
   WRANGLER_SEND_METRICS: "false",
   NPM_CONFIG_USERCONFIG: "/dev/null",
   NPM_CONFIG_GLOBALCONFIG: "/dev/null",
@@ -171,7 +182,7 @@ try {
     maxFileBytes: 25 * 1024 * 1024,
   });
   assertBuiltTarget({
-    target: "staging",
+    target,
     manifest: JSON.parse(await readFile(join(root, "publish/.well-known/mdbase-app.json"))),
     routes: JSON.parse(await readFile(join(root, "publish/_routes.json"))),
   });

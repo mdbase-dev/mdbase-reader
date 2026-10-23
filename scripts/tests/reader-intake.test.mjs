@@ -4,7 +4,8 @@ import { execFileSync } from "node:child_process";
 import { createHash } from "node:crypto";
 import { readFile } from "node:fs/promises";
 import { loadOriginals, protectedHashes } from "../lib/native-originals.mjs";
-import { approvedHashes } from "../lib/reader-approved-intake.mjs";
+import { approvedHashes, approvedProductionHashes } from "../lib/reader-approved-intake.mjs";
+import { assertExtensionManifests } from "../lib/reader-extension.mjs";
 test("Reader pins the original production eaa4 SDK with beta141 trust", async () => {
   const vendor = "packages/connect/vendor/";
   const pin = JSON.parse(await readFile(vendor + "sdk-production-beta141.json", "utf8"));
@@ -50,7 +51,42 @@ test("actual staging extension has exact log and no native loopback", async () =
 });
 test("live hashes have no repository/candidate fallback", () =>
   assert.throws(() => protectedHashes({}), /four protected/));
-test("production refuses staging originals and missing production custody", async () => {
+test("production intake binds installed originals and the unchanged beta141 packet", async () => {
+  const trust = await loadOriginals({
+    target: "production",
+    repoRoot: process.cwd(),
+    hashes: approvedProductionHashes,
+    installed: true,
+  });
+  assert.equal(trust.environment, "production");
+  assert.equal(trust.archives.sdk.members, 896);
+  assert.equal(trust.nativeAssets["runtime.wasm"].bytes, 3676583);
+  assert.equal(trust.release.source.version, "0.1.0-beta.141");
+  assert.equal(trust.release.assetSha256, approvedProductionHashes.NATIVE_TRUST_ASSET_SHA256);
+  assert.equal(trust.appOrigin, "https://reader.mdbase.dev");
+  assert.equal(trust.connectOrigin, "https://connect.mdbase.dev");
+  assert.equal(trust.release.logOrigin, "https://log.mdbase.dev");
+  assert.equal(trust.editorOrigin, "https://editor.mdbase.dev");
+  const { extensionEnvironment, extensionManifest, extensionMdbaseManifest } =
+    await import("../../apps/extension/scripts/extension-manifest.mjs");
+  const environment = extensionEnvironment({ MDBASE_ENV: trust.environment });
+  const reader = JSON.parse(await readFile("apps/reader/src/generated/mdbase-app.json"));
+  const chrome = extensionManifest(environment);
+  assert.equal(chrome.key, undefined);
+  assert.deepEqual(
+    assertExtensionManifests(chrome, extensionMdbaseManifest(reader, environment), trust),
+    {
+      publicId: "kimdfjefhbfgfecconmaiaaindjccidp",
+      webStorePublished: false,
+      nativeAdmission: false,
+    },
+  );
+  assert.equal(
+    trust.packet.factsSha256,
+    "51bdf004a7f5a72a358b4534660b11f23196cb23a8d583138b75bbc284719617",
+  );
+});
+test("production still refuses staging protected hashes", async () => {
   await assert.rejects(
     loadOriginals({ target: "production", repoRoot: process.cwd(), hashes: approvedHashes }),
   );
