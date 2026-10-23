@@ -71,7 +71,7 @@ async function wrongFields(entry: CorpusCase, remote: boolean): Promise<string[]
 const stillWrong: Record<string, { readonly page: string[]; readonly remote: string[] }> = {
   abc: { page: [], remote: [] },
   ars: { page: [], remote: [] },
-  "arxiv-attention": { page: ["publisher"], remote: [] },
+  "arxiv-attention": { page: [], remote: [] },
   bbc: { page: [], remote: [] },
   "blog-paul-graham": {
     page: ["type", "author", "container-title"],
@@ -108,55 +108,34 @@ const stillWrong: Record<string, { readonly page: string[]; readonly remote: str
   "youtube-first": { page: [], remote: [] },
   // Expansion captured against 9128f24; expectations describe the work, not the winner.
   "acl-bleu": {
-    page: ["container-title", "publisher"],
+    page: [],
     remote: ["title", "issued", "container-title", "page"],
   },
-  "arxiv-adam": { page: ["publisher"], remote: [] },
+  "arxiv-adam": { page: [], remote: [] },
   "arxiv-xgboost": {
-    page: ["publisher"],
+    page: [],
     remote: ["type", "title", "issued", "publisher", "DOI", "URL"],
   },
   "blog-web-bloat": {
     page: ["type", "author", "issued"],
     remote: ["type", "author", "issued"],
   },
-  "book-gutenberg": {
-    page: ["type", "title", "author", "issued", "publisher"],
-    remote: ["publisher"],
-  },
-  "legislation-data-protection": {
-    page: ["type", "issued", "number", "URL"],
-    remote: ["type", "issued", "number", "URL"],
-  },
-  "nonenglish-cnrs-medieval": {
-    page: ["type", "author", "issued"],
-    remote: ["type", "author", "issued"],
-  },
-  "ons-inflation": {
-    page: ["type", "author"],
-    remote: ["type", "title", "author"],
-  },
-  "patent-pagerank": {
-    page: ["type", "title", "author", "issued", "number"],
-    remote: ["issued"],
-  },
-  "podcast-changelog": {
-    page: ["type", "title", "author", "issued", "container-title", "publisher", "number"],
-    remote: ["type", "title", "author", "container-title", "publisher", "number"],
-  },
+  "book-gutenberg": { page: [], remote: [] },
+  "legislation-data-protection": { page: ["issued"], remote: ["issued"] },
+  "nonenglish-cnrs-medieval": { page: [], remote: [] },
+  "ons-inflation": { page: [], remote: ["title"] },
+  "patent-pagerank": { page: [], remote: [] },
+  "podcast-changelog": { page: ["author"], remote: ["author"] },
   "repec-working-paper": {
-    page: ["type", "author", "issued", "publisher", "DOI", "URL"],
+    page: ["DOI"],
     remote: ["type", "publisher", "DOI", "URL"],
   },
   "rfc-http": {
-    page: ["type", "title", "editor", "issued", "publisher", "number", "DOI"],
-    remote: ["editor", "publisher", "number", "URL"],
+    page: ["DOI"],
+    remote: ["publisher", "number", "URL"],
   },
-  "substack-cyborgs": {
-    page: ["type", "container-title"],
-    remote: ["type", "container-title"],
-  },
-  "usenix-raft": { page: ["issued", "publisher"], remote: ["issued", "publisher", "ISBN"] },
+  "substack-cyborgs": { page: [], remote: [] },
+  "usenix-raft": { page: ["issued"], remote: ["issued", "ISBN"] },
   "zenodo-urban-sound": {
     page: ["version"],
     remote: ["version", "URL"],

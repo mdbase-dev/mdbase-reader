@@ -15,9 +15,12 @@ import {
   articleJsonLdTypes,
   bibliographicType,
   embeddedTypes,
+  linkedWorkTypes,
   scholarlyJsonLdTypes,
 } from "./metadata-types.js";
+import { conventionCreatorRoles } from "./page-conventions-bibliographic.js";
 import { pageConventionClaims } from "./page-conventions.js";
+import { structuredWorkClaims } from "./page-structured.js";
 
 import type { Claim, ClaimBatch, ClaimIdentifiers, PageSignal } from "./claims.js";
 
@@ -33,15 +36,6 @@ const maxValues = 128;
 const maxFieldClaims = 128;
 const maxValueCharacters = 16_384;
 const maxUnscopedWorks = 8;
-
-const linkedWorkTypes = new Map([
-  ["Book", "book"],
-  ["Chapter", "chapter"],
-  ["Thesis", "thesis"],
-  ["Report", "report"],
-  ["Dataset", "dataset"],
-  ["VideoObject", "motion_picture"],
-]);
 
 const metaFields: readonly (readonly [string, readonly string[]])[] = [
   ["title", ["citation_title", "dc.title", "dcterms.title", "og:title", "twitter:title"]],
@@ -134,6 +128,7 @@ export function pageClaims(document: Document, pageUrl: string, observedAt: stri
   const revision = wikiRevision(document);
   for (const node of nodes) {
     linkedClaims(node, add, wikiRevisionDate(node, revision));
+    structuredWorkClaims(node, add);
   }
   videoClaims(document, nodes, add);
   claims.push(...documentClaims);
@@ -144,6 +139,7 @@ export function pageClaims(document: Document, pageUrl: string, observedAt: stri
       meta,
       observedAt,
       claims.some((claim) => claim.field === "issued"),
+      nodes,
     ),
   );
   if (!claims.some((claim) => claim.field === "issued")) {
@@ -174,7 +170,7 @@ export function pageClaims(document: Document, pageUrl: string, observedAt: stri
     .map((value) => absoluteHttps(value, pageUrl))
     .find((value) => value !== undefined);
   return {
-    claims,
+    claims: conventionCreatorRoles(claims),
     observedAt,
     ...(Object.keys(identifiers).length ? { identifiers } : {}),
     ...(pdfUrl ? { pdfUrl } : {}),
@@ -567,8 +563,10 @@ function linkedNodes(document: Document, pageUrl: string): JsonLdNode[] {
     .map((node) => ({
       ...node,
       author: resolved(node["author"]),
+      editor: resolved(node["editor"]),
       publisher: resolved(node["publisher"]),
       isPartOf: resolved(node["isPartOf"]),
+      partOfSeries: resolved(node["partOfSeries"]),
     }));
 }
 
@@ -688,6 +686,11 @@ function boundedMetaIndex(document: Document): MetaIndex {
       element.getAttribute("property") ??
       ""
     ).toLowerCase();
+    // Qualified DC dates describe different events, not competing publication dates.
+    const scheme = element.getAttribute("scheme")?.toLowerCase();
+    if (key === "dc.date" && scheme && /^(?:datesubmitted|datemodified|created)$/u.test(scheme)) {
+      continue;
+    }
     const content = element.content;
     if (key && content && content.length <= maxValueCharacters) {
       const values = index.get(key) ?? [];

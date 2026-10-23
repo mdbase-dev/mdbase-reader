@@ -94,6 +94,83 @@ repository DOI to every paper; Adam therefore represents _no external
 publication DOI_, not a falsely stripped or fictitious DOI-free arXiv page.
 XGBoost explicitly contrasts a repository DOI with a related publication DOI.
 
+## Page-only extraction round 2
+
+Implemented on `t3/corpus-round2` from `9d25d85` (the merged
+`feat/citation-claims` baseline). Expected CSL was checked against the captured
+bibliographic headers, labelled dates and the independent verification notes
+above. **No expected values were changed**: missing evidence is not a reason to
+change the work's date, role, DOI or edition to match extraction.
+
+For the assigned cases (including the original arXiv Attention record), wrong
+asserted page fields fell **51 → 8**, and wrong fields with recorded remotes fell
+**44 → 25**. The other corpus cases are unchanged in both modes. The executable
+ratchet retains every case and removes only fields that now pass.
+
+| Case                        | Page wrong before → after                                                | Remote wrong before → after                                      |
+| --------------------------- | ------------------------------------------------------------------------ | ---------------------------------------------------------------- |
+| blog-web-bloat              | type, author, issued → unchanged                                         | type, author, issued → unchanged                                 |
+| legislation-data-protection | type, issued, number, URL → issued                                       | type, issued, number, URL → issued                               |
+| nonenglish-cnrs-medieval    | type, author, issued → —                                                 | type, author, issued → —                                         |
+| ons-inflation               | type, author → —                                                         | type, title, author → title                                      |
+| patent-pagerank             | type, title, author, issued, number → —                                  | issued → —                                                       |
+| podcast-changelog           | type, title, author, issued, container-title, publisher, number → author | type, title, author, container-title, publisher, number → author |
+| repec-working-paper         | type, author, issued, publisher, DOI, URL → DOI                          | type, publisher, DOI, URL → unchanged                            |
+| rfc-http                    | type, title, editor, issued, publisher, number, DOI → DOI                | editor, publisher, number, URL → publisher, number, URL          |
+| substack-cyborgs            | type, container-title → —                                                | type, container-title → —                                        |
+| usenix-raft                 | issued, publisher → issued                                               | issued, publisher, ISBN → issued, ISBN                           |
+| book-gutenberg              | type, title, author, issued, publisher → —                               | publisher → —                                                    |
+| acl-bleu                    | container-title, publisher → —                                           | title, issued, container-title, page → unchanged                 |
+| arxiv-adam                  | publisher → —                                                            | — → —                                                            |
+| arxiv-xgboost               | publisher → —                                                            | type, title, issued, publisher, DOI, URL → unchanged             |
+| arxiv-attention             | publisher → —                                                            | — → —                                                            |
+
+Rules added:
+
+- General explicit bibliographic genres (patent, legislation, working/ReDIF paper,
+  dataset, podcast episode), schema.org Legislation/PodcastEpisode work types,
+  editor roles, report/legislation/episode numbers, legislation dates and podcast
+  series; do not confuse qualified DC submitted/modified dates with publication.
+- Host **and** document-shape scoped translators for Google Patents' inventor and
+  issue metadata; Gutenberg's Book bibliographic table and labelled release date;
+  RFC Editor's numbered header, publication time and explicit editor roles;
+  RePEc's ReDIF report metadata and NBER imprint; legislation.gov.uk's enacted
+  UK Public General Act year/chapter and edition URL; arXiv abstract publisher;
+  and ACL conference container metadata (ACL publisher only for the explicitly
+  named ACL Annual Meeting, not all Anthology-hosted proceedings).
+- CNRS Le journal's article byline/French dateline; ONS's institutional suggested
+  citation (not the enquiries contact); Changelog's episode headline, show/number,
+  publisher copyright and Published rather than Recorded time; Substack's
+  publication identity and profile-linked byline, including custom domains.
+  Substack graph nodes must already match the captured page and their publisher
+  origin must match its host.
+
+Conventions have positive replay coverage and negative tests for copied markup
+on another host, homepages/listings, and missing page-shape evidence. Additional
+negatives cover non-ACL publishers, mismatching arXiv identifiers, missing RFC
+editor roles, unverified Substack identities and absent DOI/date/creator evidence.
+Resolver weights and provider behavior were not changed.
+
+Page-only limitations deliberately retained:
+
+- **Dan Luu:** the reduced HTML has only a title. No byline, blog marker or date;
+  the independently verified feed date is not available offline. A personal
+  domain is not itself authorship evidence.
+- **Legislation:** the enacted URL identifies year and chapter, not royal assent
+  day. DC.Date.Modified is not enactment.
+- **Podcast:** the captured avatar list mixes guest and hosts without role labels.
+  Known personalities/order must not substitute for explicit creator evidence.
+- **RFC / NBER:** verified DOIs are absent from the captured page. No DOI is
+  synthesized from an RFC/report number; verification downloads are not replay
+  responses or page evidence.
+- **USENIX:** the captured Highwire date supplies only 2014; the independently
+  checked BibTeX month was not retained in this fixture. The year is kept, not
+  padded with a guessed conference month.
+
+Remaining remote mismatches (ACL registry defects, related ACM DOI for XGBoost,
+ONS's shortened remote title, RePEc/RFC identity/imprint conflicts and USENIX ISBN)
+remain resolver/provider work, not grounds for inflating page-convention weights.
+
 ## Skipped candidates
 
 No blocked or JavaScript-only candidate was turned into an invented successful
