@@ -276,11 +276,15 @@ claims. Step 2 depends on it.
 
 The citation editor's **Field sources** disclosure reports the current field statuses, with
 agreed evidence and rejected alternatives nested beneath explained fields. Applying an
-alternative is a manual draft edit. **Find citation details** collects Citoid claims for the
-source URL and DOI registry claims for existing or discovered DOIs, then resolves against the
-current draft and its provenance. Accept, Dismiss, and Accept all never save automatically.
-Manual values and removed fields remain protected. ISBN and title-only lookups can still use
-the gateway's existing candidate lookup, converted to claims for the same review boundary.
+alternative is a manual draft edit. **Find citation details** looks up an explicit identifier
+on its own; an explicit URL adds Citoid claims for that URL and registry claims for its DOI.
+An empty query or `refresh` uses the current source URL and DOI instead. It never combines a
+typed identifier with the current citation’s unrelated identifiers. Results resolve against
+the current draft and its provenance, and are discarded when that draft or the selected source
+changes. A non-object or unparsable CSL draft cannot accept suggestions. Accept, Dismiss, and
+Accept all never save automatically. Manual values and removed fields remain protected. ISBN
+and title-only lookups can still use the gateway’s existing candidate lookup, converted to
+claims for the same review boundary.
 
 On save, untouched provenance entries are kept. Accepted suggestions pin the proposed value,
 use `claimSourceLabel` for their source, and retain their evidence in `agreed`. Typed values
