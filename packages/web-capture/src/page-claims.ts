@@ -109,7 +109,7 @@ export function pageClaims(document: Document, pageUrl: string, observedAt: stri
   };
   const meta = boundedMetaIndex(document);
   const nodes = linkedNodes(document, pageUrl);
-  if (challengePage(document, pageUrl, nodes)) {
+  if (challengePage(document, pageUrl, meta, nodes)) {
     return { claims: [], observedAt };
   }
   // Reserve room for document-level evidence even on pages with excessive linked values.
@@ -156,24 +156,37 @@ export function pageClaims(document: Document, pageUrl: string, observedAt: stri
   };
 }
 
-function challengePage(document: Document, pageUrl: string, nodes: readonly JsonLdNode[]): boolean {
+const challengeTitle =
+  /^(?:just a moment[.!…]*|attention required!?|access denied|are you a robot\??|human verification|verify (?:you are|you're) human|(?:error\s*)?403(?:\s*[-:]?\s*forbidden)?)(?:\s*[-|—]\s*.*)?$/iu;
+
+/**
+ * A bot wall or interstitial, whose title and tags describe the wall rather than the work. A
+ * challenge-like title alone is not enough: real works are titled "Access denied", so any sign
+ * of the work itself (scholarly tags, a JSON-LD work, a different og:title or heading) wins.
+ */
+function challengePage(
+  document: Document,
+  pageUrl: string,
+  meta: MetaIndex,
+  nodes: readonly JsonLdNode[],
+): boolean {
   const title = textValue(document.title) ?? "";
-  if (
-    /^(?:just a moment[.!…]*|attention required!?|access denied|are you a robot\??|human verification|verify (?:you are|you're) human|(?:error\s*)?403(?:\s*[-:]?\s*forbidden)?)(?:\s*[-|—]\s*.*)?$/iu.test(
-      title,
-    )
-  ) {
-    return true;
+  const heading = textValue(document.querySelector("h1")?.textContent ?? "");
+  const work =
+    [...meta.keys()].some(
+      (key) => key.startsWith("citation_") || key.startsWith("prism.") || key === "dc.title",
+    ) ||
+    nodes.some((node) => isWork(node) && (node["headline"] ?? node["name"])) ||
+    [meta.get("og:title")?.[0], heading].some(
+      (value) => value !== undefined && value !== title && !challengeTitle.test(value),
+    );
+  if (challengeTitle.test(title)) {
+    return !work;
   }
-  // Some interstitials expose only the bare host. That is not a work title; retain it only
-  // when a work heading or structured title independently identifies actual content.
+  // Some interstitials expose only the bare host. That is not a work title.
   try {
     const host = new URL(pageUrl).hostname.replace(/^www\./u, "");
-    return (
-      title.toLowerCase().replace(/^www\./u, "") === host &&
-      !document.querySelector("h1") &&
-      !nodes.some((node) => isWork(node) && (node["headline"] ?? node["name"]))
-    );
+    return title.toLowerCase().replace(/^www\./u, "") === host && heading === undefined && !work;
   } catch {
     return false;
   }

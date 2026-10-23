@@ -49,3 +49,36 @@ it("keeps a genuine host-named work with a heading", () => {
     resolveCitation({ claims: claims("example.org", "<h1>example.org</h1>") }).citation?.["title"],
   ).toBe("example.org");
 });
+
+it.each([
+  [
+    "Access Denied | The MIT Press",
+    '<meta name="citation_title" content="Access Denied"><meta name="citation_doi" content="10.7551/mitpress/8551.001.0001">',
+  ],
+  [
+    "Just a moment - The New Yorker",
+    '<meta property="og:title" content="Just a moment: the pause before a decision">',
+  ],
+])("reads a real work whose title looks like a challenge: %s", (title, head) => {
+  const document = new DOMParser().parseFromString(
+    `<html><head><title>${title}</title>${head}</head><body><h1>A work</h1></body></html>`,
+    "text/html",
+  );
+  const page = pageClaims(document, "https://www.example.org/work", observedAt);
+  expect(page.claims.some((claim) => claim.field === "title")).toBe(true);
+});
+
+it("reads a JSON-LD work behind a challenge-like title", () => {
+  const document = new DOMParser().parseFromString(
+    `<html><head><title>Access denied</title><script type="application/ld+json">${JSON.stringify({
+      "@type": "Book",
+      name: "Access Denied: The Practice and Policy of Global Internet Filtering",
+    })}</script></head><body></body></html>`,
+    "text/html",
+  );
+  expect(
+    resolveCitation({
+      claims: pageClaims(document, "https://www.example.org/work", observedAt).claims,
+    }).citation?.["title"],
+  ).toBe("Access Denied: The Practice and Policy of Global Internet Filtering");
+});
