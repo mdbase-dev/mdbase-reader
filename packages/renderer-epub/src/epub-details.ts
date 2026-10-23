@@ -1,7 +1,7 @@
 import { XMLParser } from "fast-xml-parser";
 
 import { EpubArchive } from "./epub-archive.js";
-import { packageDocumentPath, type EpubPackageReader } from "./epub-manifest.js";
+import { buildEpubManifest, packageDocumentPath, type EpubPackageReader } from "./epub-manifest.js";
 
 /** The bibliographic part of an EPUB's package metadata (Dublin Core). */
 export interface EpubDetails {
@@ -29,6 +29,54 @@ export async function readEpubDetails(bytes: Uint8Array): Promise<EpubDetails> {
   const archive = await EpubArchive.open(new Blob([bytes.slice().buffer]));
   try {
     return await epubDetails(archive);
+  } finally {
+    await archive.close();
+  }
+}
+
+export async function readEpubChapterOutline(bytes: Uint8Array): Promise<{
+  readonly spine: readonly string[];
+  readonly entries: readonly {
+    readonly title: string;
+    readonly level: number;
+    readonly href: string;
+    readonly fragment?: string;
+  }[];
+}> {
+  const archive = await EpubArchive.open(new Blob([bytes.slice().buffer]));
+  try {
+    const { manifest } = await buildEpubManifest(archive, "");
+    const links = (value: unknown): readonly Readonly<Record<string, unknown>>[] =>
+      Array.isArray(value)
+        ? value.flatMap((item) => {
+            const link = record(item);
+            return link ? [link] : [];
+          })
+        : [];
+    const hrefOf = (link: Readonly<Record<string, unknown>>): string =>
+      typeof link["href"] === "string" ? link["href"] : "";
+    const pathOf = (href: string): string => decodeURIComponent(href.split("#")[0] ?? "");
+    const flatten = (
+      items: readonly Readonly<Record<string, unknown>>[],
+      level: number,
+    ): { title: string; level: number; href: string; fragment?: string }[] =>
+      items.flatMap((link) => {
+        const href = hrefOf(link);
+        const fragment = href.split("#")[1];
+        return [
+          {
+            title: typeof link["title"] === "string" ? link["title"] : "Untitled section",
+            level,
+            href: pathOf(href),
+            ...(fragment ? { fragment } : {}),
+          },
+          ...flatten(links(link["children"]), level + 1),
+        ];
+      });
+    return {
+      spine: links(manifest["readingOrder"]).map((link) => pathOf(hrefOf(link))),
+      entries: flatten(links(manifest["toc"]), 0),
+    };
   } finally {
     await archive.close();
   }

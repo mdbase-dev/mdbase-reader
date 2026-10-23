@@ -1,0 +1,122 @@
+.library-part-title {
+  display: flex;
+  flex: 1;
+  min-width: 0;
+  flex-direction: column;
+  gap: 2px;
+}
+.library-part-value {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+.library-part-title > small {
+  font-size: var(--ui-meta);
+  padding-inline-start: 46px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.library-part-spacer {
+  width: 32px;
+  flex-shrink: 0;
+}
+.library-card .library-part-spacer {
+  display: none;
+}
+.library-part-disclosure {
+  flex-shrink: 0;
+  position: relative;
+  z-index: 1;
+}
+.library-part-disclosure[aria-expanded="false"] svg {
+  transform: rotate(-90deg);
+}
+.import-dialog.source-parts-dialog {
+  position: fixed;
+  inset: 0;
+  margin: auto;
+  width: min(720px, calc(100vw - 32px));
+  max-width: calc(100vw - 32px);
+  max-height: min(85dvh, calc(100dvh - 32px));
+  padding: 24px;
+  overflow: auto;
+  color: var(--ink);
+  background: var(--paper);
+  font: var(--ui-body) / 1.5 var(--sans);
+}
+.source-parts-dialog::backdrop {
+  background: var(--color-scrim);
+}
+.source-parts-dialog h2 {
+  margin: 0 0 8px;
+  font-size: 18px;
+}
+.source-parts-dialog p {
+  margin-block: 8px 16px;
+  line-height: 1.5;
+}
+.source-parts-dialog fieldset {
+  min-inline-size: 0;
+  padding: 0;
+  margin: 0;
+  border: 0;
+}
+.source-parts-dialog legend {
+  font-weight: 600;
+  padding-block: 12px 0;
+}
+.source-parts-dialog label {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  flex-wrap: wrap;
+  margin-block: 8px;
+}
+.chapter-choice > label:has(input:not([type="checkbox"])) {
+  display: grid;
+  gap: 4px;
+}
+.source-parts-dialog label:has(> input[type="checkbox"]) {
+  display: grid;
+  grid-template-columns: 16px minmax(0, 1fr);
+  align-items: start;
+}
+.source-parts-dialog label > input[type="checkbox"] {
+  margin-block-start: 4px;
+}
+.source-parts-dialog input:not([type="checkbox"]),
+.source-parts-dialog select {
+  flex: 1;
+  min-width: 80px;
+  max-width: 100%;
+  min-height: 36px;
+  padding: 6px 8px;
+  color: var(--ink);
+  background: var(--paper);
+  border: 1px solid var(--line);
+  border-radius: var(--control-radius);
+}
+.chapter-choice {
+  padding-block: 12px;
+  border-block-end: 1px solid var(--line);
+}
+.chapter-boundaries,
+.source-parts-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+.chapter-boundaries label {
+  flex: 1 1 180px;
+  display: grid;
+  gap: 4px;
+}
+.source-parts-actions {
+  justify-content: flex-end;
+  margin-block-start: 20px;
+}
+.source-parts-dialog pre {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}

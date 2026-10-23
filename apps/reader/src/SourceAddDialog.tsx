@@ -1,7 +1,10 @@
 import { ReaderButton } from "@mdbase-reader/ui";
 import { useEffect, useRef, useState, type JSX } from "react";
 
+import { chapterIsbns } from "./chapter-doi.js";
 import { CloseIcon, FileIcon } from "./icons.js";
+import { chapterCitation } from "./source-part-creation.js";
+import { citationText } from "./use-chapter-doi.js";
 
 import type { SourceAdditionController } from "./use-source-addition.js";
 
@@ -157,6 +160,9 @@ function LookupFollowUp({
   readonly busy: boolean;
   readonly lookup: SourceAdditionController["lookup"];
 }): JSX.Element | null {
+  if (lookup.chapterOffer) {
+    return <ChapterDoiReview busy={busy} lookup={lookup} />;
+  }
   if (lookup.notice) {
     return (
       <div className="capture-follow-up" role="status">
@@ -184,6 +190,124 @@ function LookupFollowUp({
     );
   }
   return null;
+}
+
+function ChapterDoiReview({
+  busy,
+  lookup,
+}: {
+  readonly busy: boolean;
+  readonly lookup: SourceAdditionController["lookup"];
+}): JSX.Element | null {
+  const [book, setBook] = useState("");
+  const [isbn, setIsbn] = useState("");
+  const offer = lookup.chapterOffer;
+  const isbns = chapterIsbns(offer?.candidate.citation["ISBN"]);
+  if (!offer) {
+    return null;
+  }
+  return (
+    <div className="capture-follow-up">
+      <p>
+        Chapter: {citationText(offer.candidate.citation, "title", "Untitled chapter")}. Create a
+        metadata-only chapter with its own DOI and citation; no PDF page range is inferred.
+      </p>
+      <details>
+        <summary>Review chapter citation</summary>
+        <pre>{JSON.stringify(offer.candidate.citation, null, 2)}</pre>
+      </details>
+      {offer.books.length ? (
+        <>
+          <label>
+            Attach to the matching book
+            <select value={book} disabled={busy} onChange={(event) => setBook(event.target.value)}>
+              <option value="">Choose the correct book edition</option>
+              {offer.books.map((source) => (
+                <option key={source.id} value={source.id}>
+                  {source.title} · {citationText(source.citation ?? {}, "ISBN")} · {source.path}
+                </option>
+              ))}
+            </select>
+          </label>
+          {offer.books
+            .filter(({ id }) => id === book)
+            .map((source) => (
+              <details key={source.id}>
+                <summary>Preview citation with From the book details</summary>
+                <pre>
+                  {JSON.stringify(
+                    chapterCitation(
+                      { ...(source.citation ? { citation: source.citation } : {}) },
+                      citationText(offer.candidate.citation, "title", "Untitled chapter"),
+                      Object.entries(offer.candidate.citation)
+                        .filter(([field]) => field !== "id")
+                        .map(([field, value]) => ({
+                          field,
+                          value,
+                          source: { kind: "registry", name: "doi.org" },
+                          observedAt: offer.candidate.provenance.retrievedAt,
+                        })),
+                    ).citation,
+                    null,
+                    2,
+                  )}
+                </pre>
+              </details>
+            ))}
+          <button
+            type="button"
+            disabled={busy || !offer.books.some(({ id }) => id === book)}
+            onClick={() => {
+              const source = offer.books.find(({ id }) => id === book);
+              if (source) {
+                void lookup.confirmChapter(source.id);
+              }
+            }}
+          >
+            Confirm and create chapter
+          </button>
+        </>
+      ) : lookup.bookOffer ? (
+        <>
+          <p>
+            Create the book first:{" "}
+            {citationText(lookup.bookOffer.citation, "title", "Untitled book")}
+          </p>
+          <pre>{JSON.stringify(lookup.bookOffer.citation, null, 2)}</pre>
+          <button type="button" disabled={busy} onClick={() => void lookup.saveChapterBook()}>
+            Confirm and create book first
+          </button>
+        </>
+      ) : (
+        <>
+          <p>
+            No matching book is indexed. Look up the container ISBN to review a book before creating
+            the chapter.
+          </p>
+          {isbns.length > 1 ? (
+            <label>
+              Container ISBN / edition
+              <select value={isbn} onChange={(event) => setIsbn(event.target.value)}>
+                <option value="">Choose the correct edition</option>
+                {isbns.map((value) => (
+                  <option key={value} value={value}>
+                    {value}
+                  </option>
+                ))}
+              </select>
+            </label>
+          ) : null}
+          <button
+            type="button"
+            disabled={busy || (isbns.length > 1 && !isbn)}
+            onClick={() => void lookup.findChapterBook(isbn || undefined)}
+          >
+            Find book by container ISBN…
+          </button>
+        </>
+      )}
+    </div>
+  );
 }
 
 function FileChoice({

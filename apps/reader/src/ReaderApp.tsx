@@ -14,8 +14,10 @@ import {
 import { ReaderWorkspaceView, type ReaderWorkspaceViewModel } from "./ReaderWorkspaceView.js";
 import { updateSurface } from "./RenderedSourceDocument.js";
 import { SessionReadingLocations } from "./session-reading-locations.js";
+import { sourcePartCreationEnabled } from "./source-parts-features.js";
 import { SourceDeepLink } from "./SourceDeepLink.js";
 import { SourceLibraryContext } from "./SourceLibraryContext.js";
+import { SourcePartCreation } from "./SourcePartCreation.js";
 import { useBibliographyExport } from "./use-bibliography-export.js";
 import { useDeploymentUpdate } from "./use-deployment-update.js";
 import { useDirectAccess } from "./use-direct-access.js";
@@ -84,6 +86,8 @@ export function ReaderApp({
   );
 }
 
+// Workspace composition preserves the existing focused sessions and controller ownership.
+// eslint-disable-next-line max-lines-per-function
 function OpenedReaderApp({
   gateway,
   initialSourceId = null,
@@ -132,9 +136,14 @@ function OpenedReaderApp({
     workspace.annotations,
     composer.activeAnnotationId,
   );
-  const sourceAddition = useSourceAddition(workspace, pickSourceFile, (sourceId) => {
-    sourceWorkspace.open(sourceId);
-  });
+  const sourceAddition = useSourceAddition(
+    workspace,
+    pickSourceFile,
+    (sourceId) => {
+      sourceWorkspace.open(sourceId);
+    },
+    sourcePartCreationEnabled ? gateway : undefined,
+  );
   const documentAttachment = useDocumentAttachment(workspace, pickSourceFile);
   const bibliographyExport = useBibliographyExport(library.sources, saveFile);
   const sourceExport = useSourceExport({
@@ -193,16 +202,25 @@ function OpenedReaderApp({
   } satisfies ReaderWorkspaceViewModel;
   return (
     <SourceLibraryContext value={library.sources}>
-      <SourceDeepLink
-        id={initialSourceId}
-        annotation={initialAnnotation}
-        library={library}
-        open={sourceWorkspace.open}
-        activeSourceId={sourceWorkspace.activeSourceId}
-        annotations={workspace.annotations}
-        openAnnotation={composer.open}
-      />
-      <ReaderWorkspaceView model={model} />
+      <SourcePartCreation
+        enabled={sourcePartCreationEnabled}
+        gateway={gateway}
+        onCreated={(source) => {
+          workspace.reconcileSource(source);
+          workspace.retryLibrary();
+        }}
+      >
+        <SourceDeepLink
+          id={initialSourceId}
+          annotation={initialAnnotation}
+          library={library}
+          open={sourceWorkspace.open}
+          activeSourceId={sourceWorkspace.activeSourceId}
+          annotations={workspace.annotations}
+          openAnnotation={composer.open}
+        />
+        <ReaderWorkspaceView model={model} />
+      </SourcePartCreation>
     </SourceLibraryContext>
   );
 }

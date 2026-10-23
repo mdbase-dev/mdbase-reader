@@ -24,6 +24,7 @@ import type {
   SourceFileImportRequest,
   SourceRecordCreationRequest,
   SourceImportOptions,
+  PlannedSourcePart,
   SourceTextSearchMatch,
   CitationCandidate,
   CitationResolutionRequest,
@@ -64,6 +65,8 @@ export interface ReaderWorkspaceGateway {
   ): Promise<ReadonlySet<string>>;
   /** Adds the collection's "Annotations for this source" view unless it already has one. */
   ensureSourceAnnotationsView?(): Promise<{ readonly path: string; readonly created: boolean }>;
+  /** Local citation/parent changes refresh open chapter suggestion panels. */
+  subscribeCitationChanges?: (listener: () => void) => () => void;
   source(id: SourceId, options?: ReaderRequestOptions): Promise<Source | null>;
   sourceParts?(id: SourceId, options?: ReaderRequestOptions): Promise<readonly SourceSummary[]>;
   setSourcePartOf?(source: Source, parentId: SourceId | null): Promise<Source>;
@@ -121,6 +124,7 @@ export interface ReaderWorkspaceGateway {
     request: Omit<SourceRecordCreationRequest, "collectionId">,
     options?: SourceImportOptions,
   ): Promise<Source>;
+  createSourcePart?(plan: PlannedSourcePart, options?: ReaderRequestOptions): Promise<Source>;
   attachSourceFile?(
     request: SourceFileAttachmentRequest,
     options?: SourceImportOptions,

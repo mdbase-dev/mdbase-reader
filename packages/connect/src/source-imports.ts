@@ -1,4 +1,5 @@
 import { sourceContract } from "./contracts.js";
+import { createSourcePart } from "./create-source-part.js";
 import { sourceFromDocument, sourceSummaryFromQuery } from "./mapping.js";
 import { ConnectRepositoryError, outcomeValue } from "./repository-client.js";
 import { attachRepresentation } from "./source-attachments.js";
@@ -59,6 +60,13 @@ export class ConnectSourceImportRepository implements SourceImportRepository {
       }
     }
     return null;
+  }
+
+  public createPart(
+    plan: Parameters<NonNullable<SourceImportRepository["createPart"]>>[0],
+    options: ReaderRequestOptions = {},
+  ): Promise<Source> {
+    return createSourcePart(this.records, plan, options);
   }
 
   public async commitFile(

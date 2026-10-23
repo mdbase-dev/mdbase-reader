@@ -89,6 +89,14 @@ export class ConnectWorkspaceGateway implements ReaderWorkspaceGateway {
   readonly #sourceLoads = new SharedRequests<SourceId, Source | null>();
   readonly #sourcesById = new Map<SourceId, Source>();
   readonly #annotationsBySource = new Map<SourceId, readonly Annotation[]>();
+  readonly #citationListeners = new Set<() => void>();
+  readonly subscribeCitationChanges = (listener: () => void): (() => void) => {
+    this.#citationListeners.add(listener);
+    return () => {
+      this.#citationListeners.delete(listener);
+    };
+  };
+
   readonly #countListeners = new Set<() => void>();
   #countsRevision = 0;
   #annotationCacheEpoch = 0;
@@ -458,6 +466,9 @@ export class ConnectWorkspaceGateway implements ReaderWorkspaceGateway {
       ...options,
     });
     this.#replaceSource(updated);
+    for (const listener of this.#citationListeners) {
+      listener();
+    }
     return updated;
   }
 
@@ -530,6 +541,25 @@ export class ConnectWorkspaceGateway implements ReaderWorkspaceGateway {
     );
     this.#replaceSource(imported, true);
     return imported;
+  }
+
+  async createSourcePart(
+    plan: Parameters<NonNullable<ReaderWorkspaceGateway["createSourcePart"]>>[0],
+    options: ReaderRequestOptions = {},
+  ): Promise<Source> {
+    if (!this.sourceImports.createPart || plan.collectionId !== this.collectionId) {
+      throw new Error("Chapter creation is unavailable.");
+    }
+    if (plan.document) {
+      const { readChapterOutline, validateChapterRange } = await import("./chapter-outline.js");
+      validateChapterRange(
+        plan.document.range,
+        await readChapterOutline(this, plan.document, options.signal),
+      );
+    }
+    const created = await this.sourceImports.createPart(plan, options);
+    this.#replaceSource(created, true);
+    return created;
   }
 
   async createSource(
@@ -718,6 +748,9 @@ export class ConnectWorkspaceGateway implements ReaderWorkspaceGateway {
       expectedRevision: source.recordRevision,
       parentId,
     });
+    for (const listener of this.#citationListeners) {
+      listener();
+    }
     this.#replaceSource(updated);
     return updated;
   }

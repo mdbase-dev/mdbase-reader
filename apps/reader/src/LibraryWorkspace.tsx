@@ -35,6 +35,7 @@ import {
   pruneRowSelection,
   type RowSelection,
 } from "./library-row-selection.js";
+import { librarySourceParts } from "./library-source-parts.js";
 import { LibraryAnnotations } from "./LibraryAnnotations.js";
 import { LibraryBulkBar } from "./LibraryBulkBar.js";
 import { LibraryCards } from "./LibraryCards.js";
@@ -194,16 +195,44 @@ export function LibraryWorkspace({
   const filterChanged = JSON.stringify(filter) !== JSON.stringify(view.configuration.filter);
   const baseSources = filterChanged || view.annotations ? allSources : freshSources;
   const { sortField, sortDirection } = layout;
-  const sources = useMemo(
+  const matches = useMemo(
     () =>
-      applyLibraryViewConfiguration(baseSources, {
-        ...view.configuration,
-        sortField,
-        sortDirection,
-        filter: searchScope === "sources" ? filter : { ...filter, query: "" },
-      }),
-    [baseSources, filter, searchScope, sortDirection, sortField, view.configuration],
+      applyLibraryViewConfiguration(
+        baseSources,
+        {
+          ...view.configuration,
+          sortField,
+          sortDirection,
+          filter: searchScope === "sources" ? filter : { ...filter, query: "" },
+        },
+        allSources,
+      ),
+    [baseSources, filter, searchScope, sortDirection, sortField, view.configuration, allSources],
   );
+  const [collapsed, setCollapsed] = useState<ReadonlySet<SourceId>>(() => new Set());
+  const [flatParts, setFlatParts] = useState(false);
+  const parts = useMemo(
+    () =>
+      librarySourceParts(
+        matches,
+        allSources,
+        collapsed,
+        flatParts || Boolean(filter.query.trim()),
+        !indexLoading,
+      ),
+    [matches, allSources, collapsed, flatParts, filter.query, indexLoading],
+  );
+  const sources = parts.sources;
+  const togglePart = (id: SourceId): void =>
+    setCollapsed((previous) => {
+      const next = new Set(previous);
+      if (next.has(id)) {
+        next.delete(id);
+      } else {
+        next.add(id);
+      }
+      return next;
+    });
   const visibleSelection = useMemo(
     () =>
       pruneRowSelection(
@@ -340,7 +369,7 @@ export function LibraryWorkspace({
                 <span className="library-result-count" role="status">
                   {loading
                     ? "Loading…"
-                    : `${countLabel(sources.length, "source")}${indexLoading && !view.path ? " · Loading more…" : ""}`}
+                    : `${countLabel(matches.length, "source")}${indexLoading && !view.path ? " · Loading more…" : ""}`}
                 </span>
               ) : null}
               {dirty && view.owned && view.writable && !view.annotations ? (
@@ -469,6 +498,13 @@ export function LibraryWorkspace({
                     ? "Preparing bibliography…"
                     : "Export bibliography"}
                 </button>
+                <button
+                  type="button"
+                  aria-pressed={flatParts}
+                  onClick={() => setFlatParts(!flatParts)}
+                >
+                  {flatParts ? "Nest parts under books" : "Show parts as a flat list"}
+                </button>
                 <CitationQualitySummary sources={allSources} loading={indexLoading} />
                 <a href={importHref()} target="_blank" rel="noopener noreferrer">
                   <ImportIcon />
@@ -502,6 +538,11 @@ export function LibraryWorkspace({
         </div>
       ) : null}
 
+      {indexLoading ? (
+        <p className="menu-note" role="status">
+          Source index is partial; more parts and shared-file references may exist.
+        </p>
+      ) : null}
       <div
         ref={resultsRef}
         className="library-workspace-results"
@@ -577,6 +618,8 @@ export function LibraryWorkspace({
               <LibraryTable
                 key={layoutResets}
                 sources={sources}
+                partRows={parts.rows}
+                onTogglePart={togglePart}
                 layout={layout}
                 onLayoutChange={setLayout}
                 properties={view.properties}
@@ -605,6 +648,8 @@ export function LibraryWorkspace({
             ) : (
               <LibraryCards
                 sources={sources}
+                partRows={parts.rows}
+                onTogglePart={togglePart}
                 selection={visibleSelection}
                 onSelectionChange={setSelection}
                 onOpen={onOpenSource}

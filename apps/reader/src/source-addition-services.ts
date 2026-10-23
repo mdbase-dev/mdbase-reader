@@ -8,7 +8,10 @@ import type { SourceAdditionServices } from "./source-addition-flow.js";
 
 /** The live services behind adding a source: Reader's capture service, doi.org and Citoid. */
 export function readerSourceAdditionServices(
-  input: Pick<SourceAdditionServices, "workspace" | "onStatus" | "signal" | "importOptions">,
+  input: Pick<
+    SourceAdditionServices,
+    "workspace" | "onStatus" | "signal" | "importOptions" | "chapterGateway"
+  >,
 ): SourceAdditionServices {
   const signal = input.signal ? { signal: input.signal } : {};
   return {

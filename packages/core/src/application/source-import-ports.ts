@@ -1,4 +1,6 @@
 import type { ReaderRequestOptions } from "./ports.js";
+import type { CslProvenance } from "../domain/csl-provenance.js";
+import type { DocumentDescriptor } from "../domain/document.js";
 import type { CollectionId, MutationId, SourceId } from "../domain/identity.js";
 import type { SocialPost } from "../domain/social-post.js";
 import type { Source, SourceSummary } from "../domain/source.js";
@@ -12,8 +14,21 @@ export interface SourceImportRepository {
   ): Promise<SourceSummary | null>;
   /** Uploads the planned files (possibly none) and creates the source record. */
   commitFile(plan: PlannedSourceFileImport, options?: SourceImportOptions): Promise<Source>;
+  /** Creates a reviewed part by reference; never uploads or copies shared bytes. */
+  createPart?(plan: PlannedSourcePart, options?: ReaderRequestOptions): Promise<Source>;
   /** Uploads one file and appends it to an existing source's `documents`. */
   attachFile?(plan: PlannedSourceAttachment, options?: SourceImportOptions): Promise<Source>;
+}
+
+export interface PlannedSourcePart {
+  readonly collectionId: CollectionId;
+  readonly sourceId: SourceId;
+  readonly recordPath: string;
+  readonly title: string;
+  readonly parent: Source;
+  readonly document?: DocumentDescriptor;
+  readonly citation: Readonly<Record<string, unknown>>;
+  readonly provenance: CslProvenance;
 }
 
 export type SourceDocumentFormat = "pdf" | "epub" | "html";
@@ -40,7 +55,7 @@ export interface SourceFileImportRequest {
 export type SourceRecordCreationRequest = Omit<
   SourceFileImportRequest,
   "name" | "declaredMediaType" | "bytes" | "capture" | "archive"
-> & { readonly title: string };
+> & { readonly title: string; readonly sourceId?: SourceId };
 
 export interface SourceFileAttachmentRequest {
   /** A library summary is enough: only identity, location and current documents are used. */
