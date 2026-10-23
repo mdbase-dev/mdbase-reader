@@ -117,7 +117,7 @@ export async function fetchPdf(tabId: number, url: string): Promise<Uint8Array> 
     const [execution] = await chrome.scripting.executeScript({
       target: { tabId },
       func: pagePdfBytes,
-      args: [maximumPdfBytes],
+      args: [url, maximumPdfBytes],
     });
     const result = execution?.result;
     if (result && "base64" in result) {
@@ -287,11 +287,12 @@ export function watchSelection(portName: string, graceMs: number): void {
   );
 }
 
-/** Injected into a PDF tab. Returns base64 because script results must be JSON. */
+/** Injected into a tab, which may have navigated since Save. Fetch only the captured URL. */
 export async function pagePdfBytes(
+  url: string,
   maximumBytes: number,
 ): Promise<{ readonly base64: string } | { readonly error: string }> {
-  const response = await fetch(location.href, { credentials: "include" });
+  const response = await fetch(url, { credentials: "include" });
   if (!response.ok) {
     return { error: `Could not download this PDF (HTTP ${String(response.status)}).` };
   }

@@ -88,7 +88,12 @@ export function useExtensionCapture(
     readonly preview: CitationPreview | null;
     readonly pending: boolean;
   } | null>(null);
-  const latestPreview = useRef<{ page: string; preview: CitationPreview | null } | null>(null);
+  // A save retains this page's object: navigation replaces it rather than changing its owner.
+  const latestCitation = useRef<{
+    page: string;
+    preview: CitationPreview | null;
+    draft: Pick<CaptureDraft, "title" | "titleEdited">;
+  } | null>(null);
   const discovery = useRef(0);
   const extension = connection.extension;
   const writer = useMemo(
@@ -201,10 +206,16 @@ export function useExtensionCapture(
   ]);
 
   const { setDraft } = stored;
-  const latestDraft = useRef(stored.draft);
   useEffect(() => {
-    latestDraft.current = stored.draft;
-  }, [stored.draft]);
+    if (!pageUrl || stored.loadedFor !== pageUrl) {
+      return;
+    }
+    if (latestCitation.current?.page === pageUrl) {
+      latestCitation.current.draft = stored.draft;
+    } else {
+      latestCitation.current = { page: pageUrl, preview: null, draft: stored.draft };
+    }
+  }, [pageUrl, stored.loadedFor, stored.draft]);
   // Once edited, even a cleared or subsequently reverted title belongs to the user.
   const editDraft: typeof setDraft = useCallback(
     (action) => {
@@ -221,12 +232,16 @@ export function useExtensionCapture(
     }
     const controller = new AbortController();
     const url = capture.canonicalUrl;
+    const current = latestCitation.current;
+    if (current?.page !== url) {
+      return;
+    }
     let updated = false;
     const show = (preview: CitationPreview | null, pending = true): void => {
       if (controller.signal.aborted) {
         return;
       }
-      latestPreview.current = { page: url, preview };
+      current.preview = preview;
       setCitationFor({ page: url, preview, pending });
       const title = preview?.citation["title"];
       if (typeof title === "string") {
@@ -247,12 +262,12 @@ export function useExtensionCapture(
         if (preview || !updated) {
           show(preview, false);
         } else if (!controller.signal.aborted) {
-          show(latestPreview.current?.preview ?? null, false);
+          show(current.preview, false);
         }
       },
       () => {
         if (!controller.signal.aborted) {
-          show(updated ? (latestPreview.current?.preview ?? null) : null, false);
+          show(updated ? current.preview : null, false);
         }
       },
     );
@@ -282,6 +297,10 @@ export function useExtensionCapture(
       }
       const draft = draftForSave(stored.draft, changes);
       const changedTitle = draft.title !== stored.draft.title;
+      const savingCitation =
+        latestCitation.current?.page === capture.canonicalUrl
+          ? latestCitation.current
+          : { preview, draft };
       if (changes) {
         editDraft((value) => ({ ...value, ...changes }));
       }
@@ -301,21 +320,14 @@ export function useExtensionCapture(
           lookedUp: discovered === `${collection.collectionId} ${pageUrl ?? ""}`,
           citation: capturedPost
             ? citation
-            : citationWithDraftTitle(
-                preview,
-                draft.title,
-                Boolean(draft.titleEdited) || draft.title !== stored.draft.title,
-              ),
+            : citationWithDraftTitle(preview, draft.title, Boolean(draft.titleEdited)),
           getCitation: () => {
-            const current = latestPreview.current;
-            const latest = { ...latestDraft.current, ...changes };
-            return current?.page === capture.canonicalUrl
-              ? citationWithDraftTitle(
-                  current.preview,
-                  latest.title,
-                  Boolean(latest.titleEdited) || changedTitle,
-                )
-              : null;
+            const latest = { ...savingCitation.draft, ...changes };
+            return citationWithDraftTitle(
+              savingCitation.preview,
+              latest.title,
+              Boolean(latest.titleEdited) || changedTitle,
+            );
           },
           pdfBytes: () => fetchPdf(tabId, capture.canonicalUrl),
           onProgress: setProgress,
