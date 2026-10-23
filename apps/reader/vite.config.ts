@@ -1,6 +1,7 @@
+import { lingui } from "@lingui/vite-plugin";
 import { offlineShellPlugin } from "@mdbase-dev/sdk/offline-shell/build";
 import react from "@vitejs/plugin-react";
-import { defineConfig } from "vite";
+import { defineConfig } from "vitest/config";
 
 import type { Plugin } from "vite";
 
@@ -16,7 +17,12 @@ const buildOutput = {
 };
 
 export default defineConfig({
-  plugins: [react(), deploymentRevision(buildId), offlineShellPlugin()],
+  plugins: [
+    react(),
+    lingui({ macroTransform: true }),
+    deploymentRevision(buildId),
+    offlineShellPlugin(),
+  ],
   resolve: {
     dedupe: [
       "react",
@@ -30,6 +36,7 @@ export default defineConfig({
       "@codemirror/view",
     ],
   },
+  test: { setupFiles: [new URL("../../scripts/test-i18n.mjs", import.meta.url).pathname] },
   // The SDK starts its own module Worker from a module-relative URL; keep it out of
   // dev pre-bundling so that URL still names the SDK's files, and emit ES workers.
   optimizeDeps: { exclude: ["@mdbase-dev/sdk"] },

@@ -1,3 +1,6 @@
+import { i18n } from "@lingui/core";
+import { plural, t as translate } from "@lingui/core/macro";
+import { useLingui } from "@lingui/react/macro";
 import { Select, type SelectOption } from "@mdbase-dev/ui/select";
 import { readingStatuses } from "@mdbase-reader/core";
 
@@ -27,7 +30,9 @@ const builtinCells: Record<BuiltinLibraryColumn, CellRenderer> = {
     <>
       <span
         className={`source-format-tag is-${sourceFormat(source)}`}
-        title={source.documents.length === 0 ? "No file attached" : undefined}
+        title={
+          source.documents.length === 0 ? translate({ message: "No file attached" }) : undefined
+        }
       >
         {formatLabel(source)}
       </span>
@@ -45,7 +50,7 @@ const builtinCells: Record<BuiltinLibraryColumn, CellRenderer> = {
   annotations: (_source, annotations) =>
     annotations > 0 ? (
       <span className="library-count" title={countLabel(annotations, "annotation")}>
-        {annotations.toLocaleString()}
+        {annotations.toLocaleString(i18n.locale)}
       </span>
     ) : (
       empty
@@ -53,7 +58,7 @@ const builtinCells: Record<BuiltinLibraryColumn, CellRenderer> = {
   opened: (source) => {
     const opened = source.reading?.lastOpenedAt;
     return opened ? (
-      <time dateTime={opened} title={new Date(opened).toLocaleString()}>
+      <time dateTime={opened} title={new Date(opened).toLocaleString(i18n.locale)}>
         {relativeDay(opened)}
       </time>
     ) : (
@@ -95,15 +100,15 @@ export function relativeDay(value: string, now = new Date()): string {
     new Date(day.getFullYear(), day.getMonth(), day.getDate()).getTime();
   const days = Math.round((startOf(now) - startOf(date)) / 86_400_000);
   if (days <= 0) {
-    return "Today";
+    return translate`Today`;
   }
   if (days === 1) {
-    return "Yesterday";
+    return translate`Yesterday`;
   }
   if (days < 7) {
-    return `${String(days)} days ago`;
+    return new Intl.RelativeTimeFormat(i18n.locale, { numeric: "auto" }).format(-days, "day");
   }
-  return date.toLocaleDateString(undefined, {
+  return date.toLocaleDateString(i18n.locale, {
     month: "short",
     day: "numeric",
     ...(date.getFullYear() === now.getFullYear() ? {} : { year: "numeric" }),
@@ -111,13 +116,14 @@ export function relativeDay(value: string, now = new Date()): string {
 }
 
 export function ReadingStatus({ source }: { readonly source: SourceSummary }): JSX.Element {
+  const { t } = useLingui();
   const progress = readingProgress(source);
   return (
     <span className={`library-status is-${readingStatusOf(source)}`}>
       <i className="library-status-mark" aria-hidden="true" />
       <span>{statusLabel(source)}</span>
       {progress !== null ? (
-        <span className="library-progress" aria-label={`${String(progress)}% read`}>
+        <span className="library-progress" aria-label={t`${String(progress)}% read`}>
           <i style={{ width: `${String(progress)}%` }} />
         </span>
       ) : null}
@@ -128,11 +134,23 @@ export function ReadingStatus({ source }: { readonly source: SourceSummary }): J
 export const readingStatusChoices: readonly ReadingStatusValue[] = readingStatuses;
 
 export function readingStatusLabel(status: string): string {
-  return status.charAt(0).toLocaleUpperCase() + status.slice(1);
+  const labels: Readonly<Record<string, string>> = {
+    inbox: translate({ message: "Inbox", context: "reading status" }),
+    queued: translate({ message: "Queued", context: "reading status" }),
+    reading: translate({ message: "Reading", context: "reading status" }),
+    finished: translate({ message: "Finished", context: "reading status" }),
+    archived: translate({ message: "Archived", context: "reading status" }),
+    abandoned: translate({ message: "Abandoned", context: "reading status" }),
+  };
+  return labels[status] ?? status;
 }
 
-export const readingStatusOptions: readonly SelectOption<ReadingStatusValue>[] =
-  readingStatusChoices.map((status) => ({ value: status, label: readingStatusLabel(status) }));
+export function readingStatusOptions(): readonly SelectOption<ReadingStatusValue>[] {
+  return readingStatusChoices.map((status) => ({
+    value: status,
+    label: readingStatusLabel(status),
+  }));
+}
 
 export function StatusPicker({
   source,
@@ -141,16 +159,17 @@ export function StatusPicker({
   readonly source: SourceSummary;
   readonly onChange: (id: SourceId, status: ReadingStatusValue) => void;
 }): JSX.Element {
+  const { t } = useLingui();
   const progress = readingProgress(source);
   const status = readingStatusOf(source);
   return (
     <span className={`library-status is-${status} is-editable`}>
       <i className="library-status-mark" aria-hidden="true" />
       <Select
-        aria-label={`Reading status of ${source.title}`}
+        aria-label={t`Reading status of ${source.title}`}
         className="is-quiet"
         value={status}
-        options={readingStatusOptions}
+        options={readingStatusOptions()}
         // The row owns clicks, double-clicks and grid keys; the picker keeps its own.
         onClick={(event) => event.stopPropagation()}
         onDoubleClick={(event) => event.stopPropagation()}
@@ -158,7 +177,7 @@ export function StatusPicker({
         onChange={(next) => onChange(source.id, next)}
       />
       {progress !== null ? (
-        <span className="library-progress" aria-label={`${String(progress)}% read`}>
+        <span className="library-progress" aria-label={t`${String(progress)}% read`}>
           <i style={{ width: `${String(progress)}%` }} />
         </span>
       ) : null}
@@ -184,9 +203,15 @@ function readingProgress(source: SourceSummary): number | null {
 
 export function formatLabel(source: SourceSummary): string {
   const format = sourceFormat(source);
-  return format === "web" ? "Web" : format === "note" ? "—" : format.toLocaleUpperCase();
+  return format === "web"
+    ? translate({ message: "Web", context: "source format" })
+    : format === "note"
+      ? "—"
+      : format.toLocaleUpperCase();
 }
 
-export function countLabel(count: number, noun: string): string {
-  return `${count.toLocaleString()} ${count === 1 ? noun : `${noun}s`}`;
+export function countLabel(count: number, noun: "source" | "annotation"): string {
+  return noun === "annotation"
+    ? plural(count, { one: "# annotation", other: "# annotations" })
+    : plural(count, { one: "# source", other: "# sources" });
 }

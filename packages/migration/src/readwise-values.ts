@@ -1,3 +1,6 @@
+import { i18n } from "@lingui/core";
+import { t } from "@lingui/core/macro";
+
 import { object, text, type Fields } from "./model.js";
 export function archiveReadwise(value: Fields): Fields {
   const result = { ...value };
@@ -38,6 +41,8 @@ export class SkipTally {
     }
   }
   warnings(): string[] {
-    return [...this.counts].map(([reason, count]) => `${reason}: ${count.toLocaleString("en")}`);
+    return [...this.counts].map(
+      ([reason, count]) => t`${reason}: ${count.toLocaleString(i18n.locale)}`,
+    );
   }
 }

@@ -1,3 +1,6 @@
+import { i18n, type MessageDescriptor } from "@lingui/core";
+import { msg, t } from "@lingui/core/macro";
+
 import type { SourceSummary } from "@mdbase-reader/core";
 
 /** Columns Reader knows how to present. */
@@ -54,15 +57,15 @@ export function isLibraryColumn(value: unknown): value is LibraryColumn {
     : isPropertyKey(key);
 }
 
-const builtinLabels: Record<BuiltinLibraryColumn, string> = {
-  title: "Title",
-  creator: "Creator",
-  published: "Published",
-  status: "Status",
-  format: "Format",
-  tags: "Tags",
-  annotations: "Annotations",
-  opened: "Last opened",
+const builtinLabels: Record<BuiltinLibraryColumn, MessageDescriptor> = {
+  title: msg({ message: "Title", context: "Library table column" }),
+  creator: msg({ message: "Creator", context: "Library table column" }),
+  published: msg({ message: "Published", context: "Library table column" }),
+  status: msg({ message: "Status", context: "Library table column" }),
+  format: msg({ message: "Format", context: "Library table column" }),
+  tags: msg({ message: "Tags", context: "Library table column" }),
+  annotations: msg({ message: "Annotations", context: "Library table column" }),
+  opened: msg({ message: "Last opened", context: "Library table column" }),
 };
 
 /** "reading.started_at" → "Started at"; a view's own label wins when it has one. */
@@ -72,7 +75,7 @@ export function columnLabel(
 ): string {
   const key = propertyKey(column);
   if (key === null) {
-    return builtinLabels[column as BuiltinLibraryColumn];
+    return i18n._(builtinLabels[column as BuiltinLibraryColumn]);
   }
   const declared = properties.find((property) => property.key === key)?.label;
   if (declared) {
@@ -129,10 +132,12 @@ export function formatPropertyValue(value: unknown): string {
     return value.map(formatPropertyValue).filter(Boolean).join(", ");
   }
   if (typeof value === "boolean") {
-    return value ? "Yes" : "No";
+    return value
+      ? t({ message: "Yes", context: "library columns" })
+      : t({ message: "No", context: "library columns" });
   }
   if (typeof value === "number") {
-    return value.toLocaleString();
+    return value.toLocaleString(i18n.locale);
   }
   if (typeof value === "string") {
     // Wikilinks read as their alias or target, not their brackets.
@@ -153,7 +158,17 @@ export function propertySortValue(value: unknown): string | number {
   if (typeof value === "number") {
     return value;
   }
-  return formatPropertyValue(value).toLocaleLowerCase();
+  if (Array.isArray(value)) {
+    return value
+      .map(propertySortValue)
+      .filter((item) => item !== "")
+      .join(", ")
+      .toLocaleLowerCase();
+  }
+  // Sorting uses stable values, never translated boolean display labels.
+  return typeof value === "boolean"
+    ? String(value)
+    : formatPropertyValue(value).toLocaleLowerCase();
 }
 
 // Contract fields Reader already presents, or that are structural rather than descriptive.

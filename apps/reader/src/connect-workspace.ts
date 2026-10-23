@@ -1,3 +1,4 @@
+import { t } from "@lingui/core/macro";
 import {
   createAnnotation,
   deleteAnnotation,
@@ -263,7 +264,7 @@ export class ConnectWorkspaceGateway implements ReaderWorkspaceGateway {
 
   async saveLibraryView(request: LibraryViewSaveRequest): Promise<MdbaseLibraryView> {
     if (!this.libraryViewRepository) {
-      throw new Error("Saved mdbase views are unavailable for this collection.");
+      throw new Error(t({ message: "Saved mdbase views are unavailable for this collection." }));
     }
     const frontmatter = request.annotations
       ? buildAnnotationView({
@@ -288,7 +289,7 @@ export class ConnectWorkspaceGateway implements ReaderWorkspaceGateway {
         view.name.toLocaleLowerCase() === request.name.trim().toLocaleLowerCase(),
     );
     if (!match) {
-      throw new Error("The view was saved, but Reader could not reopen it.");
+      throw new Error(t({ message: "The view was saved, but Reader could not reopen it." }));
     }
     return match;
   }
@@ -298,7 +299,7 @@ export class ConnectWorkspaceGateway implements ReaderWorkspaceGateway {
     options: ReaderRequestOptions = {},
   ): Promise<ReadonlySet<string>> {
     if (!view.path || !this.libraryViewRepository) {
-      throw new Error("Saved mdbase views are unavailable for this collection.");
+      throw new Error(t({ message: "Saved mdbase views are unavailable for this collection." }));
     }
     const execution = await this.libraryViewRepository.execute(
       { path: view.path, view: view.viewId },
@@ -312,7 +313,7 @@ export class ConnectWorkspaceGateway implements ReaderWorkspaceGateway {
     readonly created: boolean;
   }> {
     if (!this.libraryViewRepository) {
-      throw new Error("Saved mdbase views are unavailable for this collection.");
+      throw new Error(t({ message: "Saved mdbase views are unavailable for this collection." }));
     }
     const listed = await this.libraryViewRepository.list();
     const existing = listed.views.find((document) =>
@@ -355,7 +356,7 @@ export class ConnectWorkspaceGateway implements ReaderWorkspaceGateway {
 
   async allAnnotations(options: AnnotationListOptions = {}): Promise<readonly Annotation[]> {
     if (!this.annotationsRepository.listAll) {
-      throw new Error("This collection cannot list all annotations.");
+      throw new Error(t({ message: "This collection cannot list all annotations." }));
     }
     const epoch = this.#annotationCacheEpoch;
     const annotations = await this.annotationsRepository.listAll(this.collectionId, options);
@@ -437,7 +438,9 @@ export class ConnectWorkspaceGateway implements ReaderWorkspaceGateway {
 
   #bodyRecovery(): BodyUpdateRecovery {
     if (!this.bodyRecovery) {
-      throw new Error("Exact recovery is unavailable here. No new write was attempted.");
+      throw new Error(
+        t({ message: "Exact recovery is unavailable here. No new write was attempted." }),
+      );
     }
     return this.bodyRecovery;
   }
@@ -473,7 +476,9 @@ export class ConnectWorkspaceGateway implements ReaderWorkspaceGateway {
     options: ReaderRequestOptions = {},
   ): ReturnType<ReaderWorkspaceGateway["readFile"]> {
     if (!this.files) {
-      return Promise.reject(new Error("File export is unavailable for this connection."));
+      return Promise.reject(
+        new Error(t({ message: "File export is unavailable for this connection." })),
+      );
     }
     return this.files.read(this.collectionId, file, expectedRevision, options);
   }
@@ -658,7 +663,7 @@ export class ConnectWorkspaceGateway implements ReaderWorkspaceGateway {
 
   async saveReadingStatus(sourceId: SourceId, status: ReadingStatus): Promise<Source> {
     if (!this.sources.updateReadingStatus) {
-      throw new Error("This collection cannot change reading status.");
+      throw new Error(t({ message: "This collection cannot change reading status." }));
     }
     const updated = await this.sources.updateReadingStatus({
       collectionId: this.collectionId,
@@ -675,7 +680,7 @@ export class ConnectWorkspaceGateway implements ReaderWorkspaceGateway {
     fields: Readonly<Record<string, unknown>>,
   ): Promise<Source> {
     if (!this.sources.updateFields) {
-      throw new Error("This collection cannot edit source fields.");
+      throw new Error(t({ message: "This collection cannot edit source fields." }));
     }
     const updated = await this.sources.updateFields({
       collectionId: this.collectionId,
@@ -688,19 +693,19 @@ export class ConnectWorkspaceGateway implements ReaderWorkspaceGateway {
 
   async planSourceRemoval(id: SourceId): Promise<SourceDeletionPlan> {
     if (!this.sources.preflightDelete) {
-      throw new Error("This collection cannot remove sources.");
+      throw new Error(t({ message: "This collection cannot remove sources." }));
     }
     // Check the revision the collection holds now, not a copy cached when the source opened.
     const source = await this.refreshSource(id);
     if (!source) {
-      throw new Error("This source is no longer in the collection.");
+      throw new Error(t({ message: "This source is no longer in the collection." }));
     }
     return this.sources.preflightDelete(source);
   }
 
   async removeSource(plan: SourceDeletionPlan): Promise<void> {
     if (!this.sources.delete) {
-      throw new Error("This collection cannot remove sources.");
+      throw new Error(t({ message: "This collection cannot remove sources." }));
     }
     await this.sources.delete(plan);
     this.#sourcesById.delete(plan.sourceId);

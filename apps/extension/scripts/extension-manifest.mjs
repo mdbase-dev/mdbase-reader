@@ -126,7 +126,8 @@ export function extensionManifest(environment) {
     manifest_version: 3,
     ...(key ? { key } : {}),
     name: `mdbase Reader${suffix}`,
-    description: "Save the page you are reading and revisit your mdbase annotations.",
+    default_locale: "en",
+    description: "__MSG_description__",
     ...manifestVersion(),
     homepage_url: `${environment.readerOrigin}/`,
     icons,
@@ -141,7 +142,7 @@ export function extensionManifest(environment) {
       extension_pages: "script-src 'self' 'wasm-unsafe-eval'; object-src 'self'",
     },
     action: {
-      default_title: `Save to mdbase Reader${suffix}`,
+      default_title: `__MSG_actionTitle__${suffix}`,
       default_icon: { 16: icons["16"], 32: icons["32"] },
     },
     // One panel per window; it follows the window's active tab.
@@ -152,11 +153,11 @@ export function extensionManifest(environment) {
     commands: {
       _execute_action: {
         suggested_key: { default: "Alt+Shift+S" },
-        description: "Open mdbase Reader for this page",
+        description: "__MSG_openCommand__",
       },
       "save-highlight": {
         suggested_key: { default: "Alt+Shift+H" },
-        description: "Highlight the selected passage in mdbase Reader",
+        description: "__MSG_highlightCommand__",
       },
     },
   };

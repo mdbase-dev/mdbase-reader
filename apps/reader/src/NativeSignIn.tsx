@@ -1,3 +1,4 @@
+import { Trans, useLingui } from "@lingui/react/macro";
 import { ConnectLayout } from "@mdbase-dev/ui/screens";
 import { useEffect, useRef, useState, useSyncExternalStore, type JSX } from "react";
 
@@ -58,6 +59,7 @@ const portalCloseStatuses = new Set([
 ]);
 
 function NativeSignInView({ binding, onSignedOut }: NativeSignInProps): JSX.Element {
+  const { t } = useLingui();
   const { session, portal } = binding;
   const snapshot = useSyncExternalStore(
     (listener) => session.subscribe(listener),
@@ -123,8 +125,8 @@ function NativeSignInView({ binding, onSignedOut }: NativeSignInProps): JSX.Elem
     authorizeNativeSignIn(session, portal);
 
   return (
-    <ConnectLayout app="reader" title="Read from your collection">
-      <section aria-label="Sign-in status">
+    <ConnectLayout app="reader" title={t({ message: "Read from your collection" })}>
+      <section aria-label={t({ message: "Sign-in status", context: "NativeSignIn interface" })}>
         {view.identity ? <p>{view.identity}</p> : null}
         <p role={view.error ? "alert" : "status"} aria-live="polite">
           {view.message}
@@ -172,7 +174,7 @@ function NativeSignInView({ binding, onSignedOut }: NativeSignInProps): JSX.Elem
                 }
               }}
             >
-              Forget collection
+              <Trans>Forget collection</Trans>
             </button>
           ) : null}
         </div>

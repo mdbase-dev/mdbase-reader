@@ -1,3 +1,6 @@
+import { i18n, type MessageDescriptor } from "@lingui/core";
+import { msg, t } from "@lingui/core/macro";
+
 import type { ReaderConnectSnapshot } from "@mdbase-reader/connect";
 
 export function requiresAccessReview(message: string | null): boolean {
@@ -19,24 +22,38 @@ export function requiresReconnect(message: string | null): boolean {
 }
 
 /** Technical failures and what a person should read instead; unknown messages pass through. */
-const plainProblems: readonly (readonly [RegExp, string])[] = [
+const plainProblems: readonly (readonly [RegExp, MessageDescriptor])[] = [
   [
     /(?:encrypted grant key|remote authority signing key) is unavailable/iu,
-    "This browser no longer has the key for this collection’s connection. Reconnect to keep reading.",
+    msg({
+      message:
+        "This browser no longer has the key for this collection’s connection. Reconnect to keep reading.",
+    }),
   ],
   [
     /(?:exact application declaration|application declaration bound to this grant)/iu,
-    "Reader’s access to this collection has changed. Review the updated access to continue.",
+    msg({
+      message:
+        "Reader’s access to this collection has changed. Review the updated access to continue.",
+    }),
   ],
   [
     /application declaration is invalid/iu,
-    "mdbase Connect did not accept Reader’s app registration, so it cannot open collections here.",
+    msg({
+      message:
+        "mdbase Connect did not accept Reader’s app registration, so it cannot open collections here.",
+    }),
   ],
   [
     /failed to fetch|networkerror|network request failed|load failed/iu,
-    "Reader could not reach mdbase Connect. Check your connection, then try again.",
+    msg({
+      message: "Reader could not reach mdbase Connect. Check your connection, then try again.",
+    }),
   ],
-  [/timed? ?out/iu, "mdbase Connect took too long to answer. Try again in a moment."],
+  [
+    /timed? ?out/iu,
+    msg({ message: "mdbase Connect took too long to answer. Try again in a moment." }),
+  ],
 ];
 
 /** Connection failures as a person should read them. */
@@ -46,12 +63,13 @@ export function describeConnectionProblem(message: string | null): string | null
   if (!message) {
     return message;
   }
-  return plainProblems.find(([pattern]) => pattern.test(message))?.[1] ?? message;
+  const match = plainProblems.find(([pattern]) => pattern.test(message));
+  return match ? i18n._(match[1]) : message;
 }
 
 /** The original text behind a plain description, for a Details disclosure; null if none. */
 export function connectionProblemDetail(message: string | null): string | null {
-  return message && describeConnectionProblem(message) !== message ? message : null;
+  return message && plainProblems.some(([pattern]) => pattern.test(message)) ? message : null;
 }
 
 export function connectionStatus(
@@ -59,21 +77,55 @@ export function connectionStatus(
 ): string {
   switch (session.status) {
     case "starting":
-      return "Finding mdbase Connect…";
+      return t`Finding mdbase Connect…`;
     case "start_failed":
       return session.problem.message;
     case "authorization_required":
-      return `Reader needs your approval to open ${session.info.displayName}.`;
+      return t`Reader needs your approval to open ${session.info.displayName}.`;
     case "checking_setup":
-      return "Checking the collection’s Reader contracts…";
+      return t`Checking the collection’s Reader contracts…`;
     case "unavailable":
-      return `This collection is ${session.reason.replaceAll("_", " ")}.`;
+      return unavailableStatus(session.reason);
     case "blocked":
       return session.problem.message;
     case "setup_review_required":
-      return "Review the Reader definitions before they are installed.";
+      return t`Review the Reader definitions before they are installed.`;
     default:
-      return "Choose a collection to open in Reader.";
+      return t`Choose a collection to open in Reader.`;
+  }
+}
+
+function unavailableStatus(reason: string): string {
+  switch (reason) {
+    case "offline":
+    case "device_offline":
+      return t`This collection is offline.`;
+    case "desktop_update_required":
+      return t`Update mdbase Connect on your computer to open this collection.`;
+    case "old_connector_running":
+      return t`An older connector is running. Restart mdbase Connect on your computer.`;
+    case "approval_required":
+      return t`This collection needs approval on your computer.`;
+    case "sync_required":
+      return t`Sync this collection on your computer before opening it.`;
+    case "no_device_registered":
+      return t`No computer is registered for this collection.`;
+    case "access_removed":
+      return t`Your access to this collection has been removed.`;
+    case "collection_migrating":
+      return t`This collection is being migrated.`;
+    case "collection_not_yet_migrated":
+      return t`This collection has not been migrated yet.`;
+    case "collection_deleted":
+      return t`This collection has been deleted.`;
+    case "locked":
+      return t`This collection is locked.`;
+    case "not_found":
+      return t`This collection could not be found.`;
+    case "disconnected":
+      return t`This collection is disconnected.`;
+    default:
+      return t`This collection is unavailable.`;
   }
 }
 

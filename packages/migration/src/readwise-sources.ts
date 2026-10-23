@@ -1,3 +1,5 @@
+import { t } from "@lingui/core/macro";
+
 import {
   identity,
   stamp,
@@ -90,11 +92,11 @@ export function readwiseFiles(
     });
     if (["pdf", "epub"].includes(category)) {
       plan.warnings.push(
-        `Original ${category.toUpperCase()} unavailable; saved HTML retained: ${key}`,
+        t`Original ${category.toUpperCase()} unavailable; saved HTML retained: ${key}`,
       );
     }
   } else {
-    plan.warnings.push(`No downloadable content; importing metadata only: ${key}`);
+    plan.warnings.push(t`No downloadable content; importing metadata only: ${key}`);
   }
 }
 export function freshReadwiseUrl(value: string, now = Date.now()): boolean {
@@ -131,7 +133,10 @@ async function loadOriginal(
   }
   if (!url) {
     throw new Error(
-      "Readwise no longer provides this source file. Scan again or use its full-file export.",
+      t({
+        message:
+          "Readwise no longer provides this source file. Scan again or use its full-file export.",
+      }),
     );
   }
   const blob = await downloadReadwiseFile(url, signal);
@@ -141,7 +146,7 @@ async function loadOriginal(
       ? new TextDecoder().decode(head) === "%PDF-"
       : head[0] === 80 && head[1] === 75;
   if (!valid) {
-    throw new Error("Downloaded file does not match the expected PDF/EPUB format.");
+    throw new Error(t({ message: "Downloaded file does not match the expected PDF/EPUB format." }));
   }
   return blob;
 }

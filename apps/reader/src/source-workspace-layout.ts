@@ -1,3 +1,5 @@
+import { t } from "@lingui/core/macro";
+
 import type { SourceId } from "@mdbase-reader/core";
 
 export const sourceWorkspaceViews = ["document", "note", "annotations", "citation"] as const;
@@ -122,7 +124,7 @@ export function createWorkspaceTab(
 
 export function createLibraryWorkspaceTab(
   libraryViewId = "all-sources",
-  title = "Library",
+  title = t({ message: "Library", context: "source workspace layout" }),
   preview = false,
 ): LibraryWorkspaceTab {
   return {

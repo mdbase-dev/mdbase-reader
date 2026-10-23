@@ -1,3 +1,5 @@
+import { t } from "@lingui/core/macro";
+
 import type { SourceId, SourceSummary } from "@mdbase-reader/core";
 
 export const libraryLensIds = [
@@ -62,15 +64,15 @@ export function sourceMatchesLens(
 
 export function libraryLensLabel(lens: LibraryLensId): string {
   const labels: Record<LibraryLensId, string> = {
-    all: "All sources",
-    recent: "Recently opened",
-    reading: "Currently reading",
-    inbox: "Unread inbox",
-    annotated: "Has annotations",
-    "missing-citation": "Missing citation data",
+    all: t({ message: "All sources", context: "library lenses" }),
+    recent: t({ message: "Recently opened", context: "library lenses" }),
+    reading: t({ message: "Currently reading", context: "library lenses" }),
+    inbox: t({ message: "Unread inbox", context: "library lenses" }),
+    annotated: t({ message: "Has annotations", context: "library lenses" }),
+    "missing-citation": t({ message: "Missing citation data" }),
     pdf: "PDF",
     epub: "EPUB",
-    web: "Saved web pages",
+    web: t({ message: "Saved web pages", context: "library lenses" }),
   };
   return labels[lens];
 }

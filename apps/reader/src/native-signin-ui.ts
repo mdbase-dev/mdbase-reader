@@ -1,3 +1,4 @@
+import { t } from "@lingui/core/macro";
 import { AppWebSignInSession } from "@mdbase-dev/sdk-legacy-729b5391/app-host";
 
 import { openConnectPopup, type ConnectPopup } from "./connect-popup.js";
@@ -21,14 +22,33 @@ export type NativeSignInSession = Pick<
   | "setForeground"
 >;
 export const signInCopy = Object.freeze({
-  signIn: "Sign in",
-  waiting: "Waiting for approval in the mdbase tab…",
-  reopen: "Open the mdbase tab again",
-  tabBlocked: "Your browser blocked the sign-in tab.",
-  openSignIn: "Open sign-in",
-  interrupted: "Sign-in was interrupted. Please try again.",
-  signOut: "Sign out",
-  unavailable: "Opening collections isn't available in this build yet.",
+  get signIn(): string {
+    return t({ message: "Sign in", context: "Native sign-in" });
+  },
+  get waiting(): string {
+    return t({ message: "Waiting for approval in the mdbase tab…", context: "Native sign-in" });
+  },
+  get reopen(): string {
+    return t({ message: "Open the mdbase tab again", context: "Native sign-in" });
+  },
+  get tabBlocked(): string {
+    return t({ message: "Your browser blocked the sign-in tab.", context: "Native sign-in" });
+  },
+  get openSignIn(): string {
+    return t({ message: "Open sign-in", context: "Native sign-in" });
+  },
+  get interrupted(): string {
+    return t({ message: "Sign-in was interrupted. Please try again.", context: "Native sign-in" });
+  },
+  get signOut(): string {
+    return t({ message: "Sign out", context: "Native sign-in" });
+  },
+  get unavailable(): string {
+    return t({
+      message: "Opening collections isn't available in this build yet.",
+      context: "Native sign-in",
+    });
+  },
 });
 /** UI portal only. Navigation URI comes from the SDK. */
 export const openSignInPortal = openConnectPopup;
@@ -141,15 +161,29 @@ function messageFor(
     ({ collectionId }) => collectionId === snapshot.selectedCollectionId,
   );
   if (snapshot.status === "opening" && selected) {
-    return `Signed in. Opening ${selected.displayName}…`;
+    return t`Signed in. Opening ${selected.displayName}…`;
   }
   if (identity) {
     return identity;
   }
   return paired
     ? signInCopy.unavailable
-    : `Sign in with your mdbase account to sync ${appName} across your devices.`;
+    : t`Sign in with your mdbase account to sync ${appName} across your devices.`;
 }
+function hasStatusMessage(
+  snapshot: AppWebSignInSnapshot,
+  problem: "tab_blocked" | "interrupted" | null,
+): boolean {
+  return (
+    problem !== null ||
+    ["blocked", "authorizing"].includes(snapshot.status) ||
+    (snapshot.status === "opening" &&
+      snapshot.collections.some(
+        ({ collectionId }) => collectionId === snapshot.selectedCollectionId,
+      ))
+  );
+}
+
 export function signInPresentation(
   snapshot: AppWebSignInSnapshot,
   appName: string,
@@ -158,15 +192,16 @@ export function signInPresentation(
   const signIn =
     snapshot.status !== "closed" && snapshot.signIn?.state === "paired" ? snapshot.signIn : null;
   const email = signIn?.accountEmail;
-  const identity = email ? `Signed in as ${email}` : null;
+  const identity = email ? t`Signed in as ${email}` : null;
   const paired = signIn !== null;
   const message = messageFor(snapshot, appName, problem, identity, paired);
+  const statusMessage = hasStatusMessage(snapshot, problem);
   return {
     message,
-    identity: identity === message ? null : identity,
+    identity: statusMessage ? identity : null,
     waiting: snapshot.status === "authorizing" && problem === null,
     paired,
-    unavailable: paired && message !== signInCopy.unavailable,
+    unavailable: paired && (identity !== null || statusMessage),
     error: problem !== null || snapshot.status === "blocked",
     action: problem === "tab_blocked" ? signInCopy.openSignIn : signInCopy.signIn,
     disabled: ["starting", "opening", "closed"].includes(snapshot.status),

@@ -1,10 +1,12 @@
+import { plural } from "@lingui/core/macro";
+import { Plural, Trans, useLingui } from "@lingui/react/macro";
 import { Select } from "@mdbase-dev/ui/select";
 import { isEditableSourceField } from "@mdbase-reader/core";
 import { useId, useState, type JSX, type KeyboardEvent } from "react";
 
 import { CloseIcon } from "./icons.js";
 import { isPropertyKey } from "./library-columns.js";
-import { countLabel, readingStatusOptions } from "./LibraryCells.js";
+import { readingStatusOptions } from "./LibraryCells.js";
 
 import type { ReadingStatus, SourceSummary } from "@mdbase-reader/core";
 
@@ -44,20 +46,27 @@ export function LibraryBulkBar({
   readonly onOpen: (sources: readonly SourceSummary[]) => void;
   readonly onExport: (sources: readonly SourceSummary[]) => void;
 }): JSX.Element {
+  const { t } = useLingui();
   const [progress, setProgress] = useState<BulkStatusProgress | null>(null);
   const busy = progress !== null && progress.done < progress.total;
   const [fieldForm, setFieldForm] = useState<boolean>(false);
   return (
-    <div className="library-bulk-bar" role="toolbar" aria-label="Selected sources">
-      <strong aria-live="polite">{countLabel(selected.length, "source")} selected</strong>
+    <div
+      className="library-bulk-bar"
+      role="toolbar"
+      aria-label={t({ message: "Selected sources", context: "LibraryBulkBar interface" })}
+    >
+      <strong aria-live="polite">
+        <Plural value={selected.length} one="# source selected" other="# sources selected" />
+      </strong>
       {onSetStatus ? (
         <label className="library-bulk-status">
           <Select
-            aria-label="Set reading status of the selected sources"
+            aria-label={t({ message: "Set reading status of the selected sources" })}
             value=""
-            placeholder="Set status…"
+            placeholder={t({ message: "Set status…", context: "LibraryBulkBar interface" })}
             disabled={busy}
-            options={readingStatusOptions}
+            options={readingStatusOptions()}
             onChange={(status) => {
               setProgress({ done: 0, total: selected.length, failed: 0 });
               void onSetStatus(selected, status, setProgress);
@@ -70,19 +79,19 @@ export function LibraryBulkBar({
         disabled={selected.length > bulkOpenLimit}
         title={
           selected.length > bulkOpenLimit
-            ? `Select ${String(bulkOpenLimit)} or fewer to open them together`
-            : "Open each in its own tab"
+            ? t`Select ${String(bulkOpenLimit)} or fewer to open them together`
+            : t({ message: "Open each in its own tab" })
         }
         onClick={() => onOpen(selected)}
       >
-        Open
+        <Trans context="LibraryBulkBar interface">Open</Trans>
       </button>
       <button type="button" onClick={() => onExport(selected)}>
-        Export citations
+        <Trans>Export citations</Trans>
       </button>
       {onSetField && !fieldForm ? (
         <button type="button" disabled={busy} onClick={() => setFieldForm(true)}>
-          Set field…
+          <Trans>Set field…</Trans>
         </button>
       ) : null}
       {onSetField && fieldForm ? (
@@ -99,17 +108,22 @@ export function LibraryBulkBar({
       {progress ? (
         <span className="library-bulk-progress" role="status">
           {busy
-            ? `Updating ${String(progress.done)} of ${String(progress.total)}…`
+            ? t`Updating ${String(progress.done)} of ${String(progress.total)}…`
             : progress.failed > 0
-              ? `${countLabel(progress.failed, "source")} could not be updated`
-              : "Updated"}
+              ? t({
+                  message: plural(progress.failed, {
+                    one: "# source could not be updated",
+                    other: "# sources could not be updated",
+                  }),
+                })
+              : t({ message: "Updated", context: "LibraryBulkBar interface" })}
         </span>
       ) : null}
       <button
         type="button"
         className="icon-button library-bulk-clear"
-        aria-label="Clear selection"
-        title="Clear selection · Esc"
+        aria-label={t({ message: "Clear selection", context: "LibraryBulkBar interface" })}
+        title={t({ message: "Clear selection · Esc" })}
         onClick={onClear}
       >
         <CloseIcon />
@@ -128,6 +142,7 @@ function BulkFieldForm({
   readonly onApply: (key: string, value: string) => void;
   readonly onCancel: () => void;
 }): JSX.Element {
+  const { t } = useLingui();
   const [key, setKey] = useState("");
   const [value, setValue] = useState("");
   const fieldListId = useId();
@@ -141,7 +156,7 @@ function BulkFieldForm({
   return (
     <form
       className="library-bulk-field"
-      aria-label="Set a field on the selected sources"
+      aria-label={t({ message: "Set a field on the selected sources" })}
       onSubmit={(event) => {
         event.preventDefault();
         if (valid) {
@@ -151,10 +166,10 @@ function BulkFieldForm({
     >
       <input
         className="mdbase-field"
-        aria-label="Field"
+        aria-label={t({ message: "Field", context: "LibraryBulkBar interface" })}
         list={fieldListId}
         value={key}
-        placeholder="field"
+        placeholder={t({ message: "field", context: "LibraryBulkBar interface" })}
         spellCheck={false}
         // eslint-disable-next-line jsx-a11y/no-autofocus -- the form exists only to take this entry.
         autoFocus
@@ -168,17 +183,17 @@ function BulkFieldForm({
       </datalist>
       <input
         className="mdbase-field"
-        aria-label="Value (empty removes the field)"
+        aria-label={t({ message: "Value (empty removes the field)" })}
         value={value}
-        placeholder="value, or empty to remove"
+        placeholder={t({ message: "value, or empty to remove" })}
         onKeyDown={cancelOnEscape}
         onChange={(event) => setValue(event.target.value)}
       />
       <button type="submit" disabled={!valid}>
-        Apply
+        <Trans>Apply</Trans>
       </button>
       <button type="button" onClick={onCancel}>
-        Cancel
+        <Trans context="Reader action">Cancel</Trans>
       </button>
     </form>
   );

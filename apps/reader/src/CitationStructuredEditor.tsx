@@ -1,3 +1,6 @@
+import { i18n } from "@lingui/core";
+import { t as translate } from "@lingui/core/macro";
+import { Trans, useLingui } from "@lingui/react/macro";
 import { Select, type SelectItems } from "@mdbase-dev/ui/select";
 
 import {
@@ -26,6 +29,7 @@ export function CitationStructuredEditor({
   readonly onChange: (citation: Readonly<Record<string, unknown>>) => void;
   readonly onRegenerateCitekey: () => void;
 }): JSX.Element {
+  const { t } = useLingui();
   const update = (field: string, value: unknown): void =>
     onChange(updateCitationField(citation, field, value));
   const problem = (field: string): string | undefined =>
@@ -39,12 +43,18 @@ export function CitationStructuredEditor({
     <div className="citation-form">
       <section className="citation-field-section is-primary">
         <header>
-          <strong>Citation details</strong>
-          <small>Title, work type, and citation key</small>
+          <strong>
+            <Trans>Citation details</Trans>
+          </strong>
+          <small>
+            <Trans>Title, work type, and citation key</Trans>
+          </small>
         </header>
         <div className="citation-field-grid">
           <label className="citation-field is-wide">
-            <span>Title</span>
+            <span>
+              <Trans context="CitationStructuredEditor interface">Title</Trans>
+            </span>
             <input
               className="mdbase-field"
               aria-invalid={problem("title") ? true : undefined}
@@ -54,9 +64,11 @@ export function CitationStructuredEditor({
             <FieldProblem message={problem("title")} />
           </label>
           <label className="citation-field">
-            <span>Type</span>
+            <span>
+              <Trans context="CitationStructuredEditor interface">Type</Trans>
+            </span>
             <Select
-              aria-label="Type"
+              aria-label={t({ message: "Type", context: "CitationStructuredEditor interface" })}
               aria-invalid={problem("type") ? true : undefined}
               value={fieldText(citation, "type")}
               options={cslTypeOptions(fieldText(citation, "type"))}
@@ -65,7 +77,9 @@ export function CitationStructuredEditor({
             <FieldProblem message={problem("type")} />
           </label>
           <label className="citation-field citation-citekey-field">
-            <span>Citekey</span>
+            <span>
+              <Trans>Citekey</Trans>
+            </span>
             <div>
               <b>@</b>
               <input
@@ -77,7 +91,7 @@ export function CitationStructuredEditor({
             </div>
             <FieldProblem message={problem("id")} />
             <button type="button" onClick={onRegenerateCitekey}>
-              Regenerate
+              <Trans>Regenerate</Trans>
             </button>
           </label>
         </div>
@@ -85,28 +99,34 @@ export function CitationStructuredEditor({
 
       <section className="citation-field-section">
         <header>
-          <strong>Contributors</strong>
-          <small>Authors, editors, translators, and organisations</small>
+          <strong>
+            <Trans>Contributors</Trans>
+          </strong>
+          <small>
+            <Trans>Authors, editors, translators, and organisations</Trans>
+          </small>
         </header>
         <CitationContributors
           citation={citation}
           field="author"
-          label="Authors"
+          label={t({ message: "Authors", context: "CitationStructuredEditor interface" })}
           onChange={update}
         />
         <FieldProblem message={problem("author")} />
         <details>
-          <summary>Editors and translators</summary>
+          <summary>
+            <Trans>Editors and translators</Trans>
+          </summary>
           <CitationContributors
             citation={citation}
             field="editor"
-            label="Editors"
+            label={t({ message: "Editors", context: "CitationStructuredEditor interface" })}
             onChange={update}
           />
           <CitationContributors
             citation={citation}
             field="translator"
-            label="Translators"
+            label={t({ message: "Translators", context: "CitationStructuredEditor interface" })}
             onChange={update}
           />
         </details>
@@ -114,12 +134,16 @@ export function CitationStructuredEditor({
 
       <section className="citation-field-section">
         <header>
-          <strong>Publication</strong>
-          <small>Where and when the work appeared</small>
+          <strong>
+            <Trans>Publication</Trans>
+          </strong>
+          <small>
+            <Trans>Where and when the work appeared</Trans>
+          </small>
         </header>
         <div className="citation-field-grid">
           <DateField
-            label="Issued"
+            label={t({ message: "Issued", context: "CitationStructuredEditor interface" })}
             value={citationDateText(citation, "issued")}
             onChange={(value) => update("issued", cslDate(value))}
             problem={problem("issued")}
@@ -127,7 +151,7 @@ export function CitationStructuredEditor({
           <TextField
             citation={citation}
             field="container-title"
-            label="Journal, book or site"
+            label={t({ message: "Journal, book or site" })}
             wide
             onChange={update}
             problem={problem("container-title")}
@@ -135,42 +159,42 @@ export function CitationStructuredEditor({
           <TextField
             citation={citation}
             field="publisher"
-            label="Publisher"
+            label={t({ message: "Publisher", context: "CitationStructuredEditor interface" })}
             onChange={update}
             problem={problem("publisher")}
           />
           <TextField
             citation={citation}
             field="publisher-place"
-            label="Place"
+            label={t({ message: "Place", context: "CitationStructuredEditor interface" })}
             onChange={update}
             problem={problem("publisher-place")}
           />
           <TextField
             citation={citation}
             field="volume"
-            label="Volume"
+            label={t({ message: "Volume", context: "CitationStructuredEditor interface" })}
             onChange={update}
             problem={problem("volume")}
           />
           <TextField
             citation={citation}
             field="issue"
-            label="Issue"
+            label={t({ message: "Issue", context: "CitationStructuredEditor interface" })}
             onChange={update}
             problem={problem("issue")}
           />
           <TextField
             citation={citation}
             field="page"
-            label="Pages"
+            label={t({ message: "Pages", context: "CitationStructuredEditor interface" })}
             onChange={update}
             problem={problem("page")}
           />
           <TextField
             citation={citation}
             field="edition"
-            label="Edition"
+            label={t({ message: "Edition", context: "CitationStructuredEditor interface" })}
             onChange={update}
             problem={problem("edition")}
           />
@@ -180,8 +204,12 @@ export function CitationStructuredEditor({
       <details className="citation-field-section">
         <summary>
           <span>
-            <strong>Identifiers and access</strong>
-            <small>DOI, ISBN, URL, and language</small>
+            <strong>
+              <Trans>Identifiers and access</Trans>
+            </strong>
+            <small>
+              <Trans>DOI, ISBN, URL, and language</Trans>
+            </small>
           </span>
         </summary>
         <div className="citation-field-grid">
@@ -217,7 +245,7 @@ export function CitationStructuredEditor({
           <TextField
             citation={citation}
             field="language"
-            label="Language"
+            label={t({ message: "Language", context: "CitationStructuredEditor interface" })}
             onChange={update}
             problem={problem("language")}
           />
@@ -227,12 +255,18 @@ export function CitationStructuredEditor({
       <details className="citation-field-section citation-abstract-section">
         <summary>
           <span>
-            <strong>Abstract</strong>
-            <small>Optional descriptive text</small>
+            <strong>
+              <Trans>Abstract</Trans>
+            </strong>
+            <small>
+              <Trans>Optional descriptive text</Trans>
+            </small>
           </span>
         </summary>
         <label className="citation-field">
-          <span>Abstract</span>
+          <span>
+            <Trans>Abstract</Trans>
+          </span>
           <textarea
             className="mdbase-field"
             aria-invalid={problem("abstract") ? true : undefined}
@@ -288,13 +322,14 @@ function DateField({
   readonly onChange: (value: string) => void;
   readonly problem?: string | undefined;
 }): JSX.Element {
+  const { t } = useLingui();
   return (
     <label className="citation-field">
       <span>{label}</span>
       <input
         className="mdbase-field"
         aria-invalid={problem ? true : undefined}
-        placeholder="YYYY, YYYY-MM-DD, or a season"
+        placeholder={t({ message: "YYYY, YYYY-MM-DD, or a season" })}
         value={value}
         onChange={(event) => onChange(event.target.value)}
       />
@@ -317,10 +352,16 @@ function cslTypeOptions(current: string): SelectItems {
   const known = [...commonCslTypes, ...specialistCslTypes].some(([value]) => value === current);
   return [
     ...(known || !current ? [] : [{ value: current, label: current }]),
-    { label: "Common", options: commonCslTypes.map(([value, label]) => ({ value, label })) },
     {
-      label: "Specialist",
-      options: specialistCslTypes.map(([value, label]) => ({ value, label })),
+      label: translate({ message: "Common", context: "CitationStructuredEditor status or action" }),
+      options: commonCslTypes.map(([value, label]) => ({ value, label: i18n._(label) })),
+    },
+    {
+      label: translate({
+        message: "Specialist",
+        context: "CitationStructuredEditor status or action",
+      }),
+      options: specialistCslTypes.map(([value, label]) => ({ value, label: i18n._(label) })),
     },
   ];
 }

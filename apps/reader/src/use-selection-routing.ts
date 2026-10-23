@@ -1,3 +1,4 @@
+import { t } from "@lingui/core/macro";
 import { useEffect, useRef, type RefObject } from "react";
 
 import { confirmAnnotationDiscard } from "./annotation-draft-actions.js";
@@ -40,7 +41,9 @@ export function useSelectionRouting(input: {
       input.compose(value);
     } else if (decision === "confirm-compose") {
       if (
-        confirmAnnotationDiscard("Discard the unfinished annotation comment and use this area?")
+        confirmAnnotationDiscard(
+          t({ message: "Discard the unfinished annotation comment and use this area?" }),
+        )
       ) {
         input.compose(value);
       }

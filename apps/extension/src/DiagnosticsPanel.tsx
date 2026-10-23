@@ -1,9 +1,11 @@
+import { Trans, useLingui } from "@lingui/react/macro";
 import { readerDiagnostics } from "@mdbase-reader/connect";
 import { useEffect, useState } from "react";
 
 import { environment } from "./environment.js";
 
 export function DiagnosticsPanel(): React.JSX.Element {
+  const { t } = useLingui();
   const [enabled, setEnabled] = useState(readerDiagnostics.enabled);
   useEffect(() => () => readerDiagnostics.setEnabled(false), []);
   const toggle = (): void => {
@@ -26,17 +28,21 @@ export function DiagnosticsPanel(): React.JSX.Element {
   };
   return (
     <details>
-      <summary>Connection diagnostics</summary>
+      <summary>
+        <Trans>Connection diagnostics</Trans>
+      </summary>
       <p>
-        Record timings in this panel only. No page text, paths, queries, IDs or credentials are
-        recorded. Nothing is uploaded. Stopping or closing clears the recording.
+        <Trans>
+          Record timings in this panel only. No page text, paths, queries, IDs or credentials are
+          recorded. Nothing is uploaded. Stopping or closing clears the recording.
+        </Trans>
       </p>
       <button type="button" className="text-button" onClick={toggle}>
-        {enabled ? "Stop and clear timings" : "Record connection timings"}
+        {enabled ? t`Stop and clear timings` : t`Record connection timings`}
       </button>
       {enabled ? (
         <button type="button" className="text-button" onClick={download}>
-          Download timings
+          <Trans>Download timings</Trans>
         </button>
       ) : null}
     </details>

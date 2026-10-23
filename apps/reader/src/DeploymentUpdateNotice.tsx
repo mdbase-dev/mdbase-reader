@@ -1,11 +1,15 @@
+import { Trans } from "@lingui/react/macro";
+
 import type { JSX } from "react";
 
 export function DeploymentUpdateNotice(): JSX.Element {
   return (
     <div className="deployment-update" role="status">
-      <span>A newer Reader is ready.</span>
+      <span>
+        <Trans>A newer Reader is ready.</Trans>
+      </span>
       <button type="button" onClick={() => window.location.reload()}>
-        Reload Reader
+        <Trans>Reload Reader</Trans>
       </button>
     </div>
   );

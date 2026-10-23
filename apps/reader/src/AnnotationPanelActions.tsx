@@ -1,3 +1,5 @@
+import { t as translate } from "@lingui/core/macro";
+import { Trans, useLingui } from "@lingui/react/macro";
 import { ReaderButton } from "@mdbase-reader/ui";
 import { useState, type JSX } from "react";
 
@@ -21,6 +23,7 @@ export function AnnotationPanelActions({
   readonly workspace: ReaderSourceWorkspaceController;
   readonly composer: AnnotationComposerController;
 }): JSX.Element {
+  const { t } = useLingui();
   const [commenting, setCommenting] = useState(false);
   const source = workspace.sourceRecord.status === "ready" ? workspace.sourceRecord.value : null;
   return (
@@ -30,22 +33,26 @@ export function AnnotationPanelActions({
           type="button"
           aria-expanded={commenting}
           disabled={!source}
-          title="Comment on the source as a whole"
+          title={t({ message: "Comment on the source as a whole" })}
           onClick={() => setCommenting(true)}
         >
-          <CommentIcon /> Comment
+          <CommentIcon />
+          <Trans> Comment</Trans>
         </button>
         <button
           type="button"
           disabled={!composer.canBookmark || composer.bookmarking}
           title={
             composer.canBookmark
-              ? "Bookmark the current reading position"
-              : "Open the document to bookmark a position"
+              ? t({ message: "Bookmark the current reading position" })
+              : t({ message: "Open the document to bookmark a position" })
           }
           onClick={composer.bookmark}
         >
-          <BookmarkIcon /> {composer.bookmarking ? "Bookmarking…" : "Bookmark"}
+          <BookmarkIcon />{" "}
+          {composer.bookmarking
+            ? t({ message: "Bookmarking…", context: "AnnotationPanelActions interface" })
+            : t({ message: "Bookmark", context: "AnnotationPanelActions interface" })}
         </button>
       </div>
       {commenting && source ? (
@@ -68,11 +75,16 @@ function SourceCommentComposer({
   readonly onSave: (comment: string) => Promise<void>;
   readonly onClose: () => void;
 }): JSX.Element {
+  const { t } = useLingui();
   const [comment, setComment] = useState("");
   const [saving, setSaving] = useState(false);
   const [problem, setProblem] = useState<string | null>(null);
   const dismiss = (): void => {
-    if (saving || (comment.trim() && !confirmAnnotationDiscard("Discard this unsaved comment?"))) {
+    if (
+      saving ||
+      (comment.trim() &&
+        !confirmAnnotationDiscard(translate({ message: "Discard this unsaved comment?" })))
+    ) {
       return;
     }
     onClose();
@@ -84,7 +96,9 @@ function SourceCommentComposer({
     setSaving(true);
     setProblem(null);
     onSave(comment).then(onClose, (reason: unknown) => {
-      setProblem(readerErrorMessage(reason, "Reader could not save this comment."));
+      setProblem(
+        readerErrorMessage(reason, translate({ message: "Reader could not save this comment." })),
+      );
       setSaving(false);
     });
   };
@@ -97,11 +111,16 @@ function SourceCommentComposer({
       onKeyDown={(event) => annotationEditorKeys(event, dismiss, save)}
     >
       <header>
-        <strong id="source-comment-title">New comment</strong>
+        <strong id="source-comment-title">
+          <Trans>New comment</Trans>
+        </strong>
         <button
           type="button"
           className="icon-button"
-          aria-label="Discard comment"
+          aria-label={t({
+            message: "Discard comment",
+            context: "AnnotationPanelActions interface",
+          })}
           onClick={dismiss}
           disabled={saving}
         >
@@ -111,16 +130,18 @@ function SourceCommentComposer({
       <AnnotationTextArea
         value={comment}
         readOnly={saving}
-        placeholder="A thought about this source as a whole"
+        placeholder={t({ message: "A thought about this source as a whole" })}
         onChange={setComment}
       />
       {problem ? <p role="alert">{problem}</p> : null}
       <footer>
         <button type="button" onClick={dismiss} disabled={saving}>
-          Cancel
+          <Trans context="Reader action">Cancel</Trans>
         </button>
         <ReaderButton disabled={saving || !comment.trim()} onClick={save}>
-          {saving ? "Saving…" : "Save comment"}
+          {saving
+            ? t({ message: "Saving…", context: "AnnotationPanelActions interface" })
+            : t({ message: "Save comment", context: "AnnotationPanelActions interface" })}
         </ReaderButton>
       </footer>
     </section>

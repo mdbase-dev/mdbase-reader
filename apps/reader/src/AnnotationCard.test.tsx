@@ -6,10 +6,10 @@ import {
   sourceId,
   type Annotation,
 } from "@mdbase-reader/core";
-import { renderToStaticMarkup } from "react-dom/server";
 import { expect, it, vi } from "vitest";
 
 import { AnnotationCard } from "./AnnotationCard.js";
+import { renderToStaticMarkup } from "./testing/i18n.js";
 
 const base: Annotation = {
   id: annotationId("unanchored-note"),

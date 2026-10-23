@@ -1,3 +1,5 @@
+import { i18n } from "@lingui/core";
+import { Trans, useLingui } from "@lingui/react/macro";
 import { ReaderButton } from "@mdbase-reader/ui";
 import { useEffect, useRef, useState, type JSX } from "react";
 
@@ -22,6 +24,7 @@ export function SourceImportDialog({
   readonly onImport: (title: string, useCitation: boolean) => void;
   readonly suggestion?: FileImportSuggestion | null;
 }): JSX.Element {
+  const { t } = useLingui();
   const [typedTitle, setTypedTitle] = useState<string | null>(null);
   const [useCitation, setUseCitation] = useState(true);
   const title = typedTitle ?? suggestion?.title ?? titleFromName(file.name);
@@ -49,8 +52,12 @@ export function SourceImportDialog({
         aria-labelledby="reader-import-title"
       >
         <div className="import-dialog-heading">
-          <h2 id="reader-import-title">Add source</h2>
-          <p>The original file stays intact in your collection.</p>
+          <h2 id="reader-import-title">
+            <Trans>Add source</Trans>
+          </h2>
+          <p>
+            <Trans>The original file stays intact in your collection.</Trans>
+          </p>
         </div>
         <div className="import-file-summary">
           <span className="import-format">{formatLabel(file)}</span>
@@ -60,7 +67,7 @@ export function SourceImportDialog({
           </span>
         </div>
         <label className="import-title-field">
-          <span>Title</span>
+          <span>{t({ message: "Title", context: "SourceImportDialog interface" })}</span>
           <input
             className="mdbase-field"
             ref={titleInput}
@@ -93,10 +100,16 @@ export function SourceImportDialog({
             onClick={onCancel}
             disabled={isFinalizing}
           >
-            {isFinalizing ? "Finishing…" : importing ? "Stop import" : "Cancel"}
+            {isFinalizing
+              ? t({ message: "Finishing…", context: "SourceImportDialog interface" })
+              : importing
+                ? t({ message: "Stop import", context: "SourceImportDialog interface" })
+                : t({ message: "Cancel", context: "SourceImportDialog interface" })}
           </button>
           <ReaderButton disabled={importing || !title.trim()} onClick={submit}>
-            {importing ? "Importing…" : "Add source"}
+            {importing
+              ? t({ message: "Importing…", context: "SourceImportDialog interface" })
+              : t({ message: "Add source", context: "SourceImportDialog interface" })}
           </ReaderButton>
         </div>
       </section>
@@ -134,10 +147,11 @@ function FoundCitation({
   readonly disabled: boolean;
   readonly onChange: (checked: boolean) => void;
 }): JSX.Element | null {
+  const { t } = useLingui();
   if (!suggestion) {
     return (
       <p className="import-found-citation" role="status">
-        Reading the file’s details…
+        <Trans>Reading the file’s details…</Trans>
       </p>
     );
   }
@@ -154,7 +168,8 @@ function FoundCitation({
         onChange={(event) => onChange(event.target.checked)}
       />
       <span>
-        Save the citation found for this file: {citationLine(citation.citation)}
+        {t({ message: "Save the citation found for this file:" })}
+        {citationLine(citation.citation)}
         <small>{citation.provenance.provider}</small>
       </span>
     </label>
@@ -182,18 +197,19 @@ function ImportProgress({
 }: {
   readonly progress: SourceImportFlow["progress"];
 }): JSX.Element {
+  const { t } = useLingui();
   const value =
     progress?.phase === "uploading" && progress.totalBytes
       ? Math.round((progress.completedBytes / progress.totalBytes) * 100)
       : undefined;
   const label =
     progress?.phase === "uploading"
-      ? `Uploading file ${String(progress.fileIndex)} of ${String(progress.fileCount)}`
+      ? t`Uploading file ${String(progress.fileIndex)} of ${String(progress.fileCount)}`
       : progress?.phase === "recovering"
-        ? "Checking files from the previous import"
+        ? t`Checking files from the previous import`
         : progress?.phase === "creating"
-          ? "Creating source record"
-          : "Checking file and library";
+          ? t`Creating source record`
+          : t`Checking file and library`;
   return (
     <div className="import-progress" role="status" aria-live="polite">
       <span>
@@ -226,7 +242,7 @@ function formatBytes(size: number): string {
     return `${String(size)} B`;
   }
   if (size < 1024 * 1024) {
-    return `${(size / 1024).toFixed(1)} KB`;
+    return `${(size / 1024).toLocaleString(i18n.locale, { minimumFractionDigits: 1, maximumFractionDigits: 1 })} KB`;
   }
-  return `${(size / (1024 * 1024)).toFixed(1)} MB`;
+  return `${(size / (1024 * 1024)).toLocaleString(i18n.locale, { minimumFractionDigits: 1, maximumFractionDigits: 1 })} MB`;
 }

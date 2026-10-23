@@ -1,3 +1,4 @@
+import { plural, t } from "@lingui/core/macro";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import { prepareCitation, type CitationPreview } from "./capture-citation.js";
@@ -169,7 +170,7 @@ export function useExtensionCapture(
           }
         } catch (reason) {
           if (epoch === discovery.current) {
-            setNotice(`Could not show your highlights on this page: ${problemMessage(reason)}`);
+            setNotice(t`Could not show your highlights on this page: ${problemMessage(reason)}`);
           }
         }
       } else {
@@ -177,7 +178,7 @@ export function useExtensionCapture(
       }
     })().catch((reason: unknown) => {
       if (epoch === discovery.current) {
-        setNotice(`Could not check existing sources: ${problemMessage(reason)}`);
+        setNotice(t`Could not check existing sources: ${problemMessage(reason)}`);
       }
     });
     return () => {
@@ -239,7 +240,7 @@ export function useExtensionCapture(
         throw new Error(connectionUnavailableMessage(connection.snapshot));
       }
       if (!capture) {
-        throw new Error("The page is not ready. Reopen Reader on this page before saving.");
+        throw new Error(t`The page is not ready. Reopen Reader on this page before saving.`);
       }
       const draft = { ...stored.draft, ...changes };
       if (changes) {
@@ -279,7 +280,7 @@ export function useExtensionCapture(
         ];
         void rememberTags(collection.collectionId, used).catch(() => undefined);
         setNotice(
-          [result.annotation ? "Highlight saved." : null, ...result.notices]
+          [result.annotation ? t`Highlight saved.` : null, ...result.notices]
             .filter(Boolean)
             .join(" ") || null,
         );
@@ -305,7 +306,7 @@ export function useExtensionCapture(
         for (const id of ids) {
           const post = await captureSocialTab(tabId, id);
           if (!post?.post) {
-            throw new Error("The chosen post is not loaded anymore.");
+            throw new Error(t`The chosen post is not loaded anymore.`);
           }
           const result = await writer.save({
             collection,
@@ -327,14 +328,21 @@ export function useExtensionCapture(
           }
         }
         setPickerOpen(false);
-        setNotice(`${String(count)} post${count === 1 ? "" : "s"} saved. Feeds are never saved.`);
+        setNotice(
+          plural(count, {
+            one: "# post saved. Feeds are never saved.",
+            other: "# posts saved. Feeds are never saved.",
+          }),
+        );
         await page.readPage();
         void chrome.runtime
           .sendMessage({ type: "mdbase-reader/posts-refresh", tabId })
           .catch(() => undefined);
       } catch (reason) {
         throw new Error(
-          `${String(count)} posts confirmed before the failure. Retry checks each post for duplicates. ${problemMessage(reason)}`,
+          t({
+            message: `${plural(count, { one: "# post confirmed before the failure.", other: "# posts confirmed before the failure." })} Retry checks each post for duplicates. ${problemMessage(reason)}`,
+          }),
         );
       } finally {
         setStatus("ready");
@@ -386,7 +394,7 @@ export function useExtensionCapture(
     } catch (reason) {
       if (epoch === refreshEpoch.current) {
         setNotice(
-          `Saved safely. Could not refresh highlights on this page: ${problemMessage(reason)}. Retry refreshing highlights; do not save again.`,
+          t`Saved safely. Could not refresh highlights on this page: ${problemMessage(reason)}. Retry refreshing highlights; do not save again.`,
         );
       }
     } finally {
@@ -477,13 +485,13 @@ export function useExtensionCapture(
       if (plan.brokenLinkPaths.length) {
         setUndoable(null);
         throw new Error(
-          "Other notes already link to this highlight. Delete it from Saved highlights to review them first.",
+          t`Other notes already link to this highlight. Delete it from Saved highlights to review them first.`,
         );
       }
       await writer.delete(collection, annotation, plan);
       setUndoable(null);
       afterEdit(annotations.filter((value) => value.id !== annotation.id));
-      setNotice("Highlight removed. The page stays saved.");
+      setNotice(t`Highlight removed. The page stays saved.`);
     }, "save");
 
   const allowAllSites = (): Promise<void> =>
@@ -492,7 +500,7 @@ export function useExtensionCapture(
       .allowAllSites()
       .then((granted) => {
         if (!granted) {
-          setNotice("Reader was not given site access.");
+          setNotice(t`Reader was not given site access.`);
         }
       })
       .catch((reason: unknown) => setProblem(problemMessage(reason), "page"));

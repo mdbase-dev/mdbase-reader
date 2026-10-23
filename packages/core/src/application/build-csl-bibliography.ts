@@ -1,3 +1,5 @@
+import { t } from "@lingui/core/macro";
+
 import type { CslItem, CslValidationProblem } from "../domain/citation.js";
 import type { SourceId } from "../domain/identity.js";
 import type { SourceSummary } from "../domain/source.js";
@@ -53,13 +55,13 @@ function sourceProblems(
   duplicateIds: ReadonlySet<string>,
 ): readonly BibliographyProblem[] {
   if (source.citation && duplicateIds.has(source.citation.id)) {
-    return [problem(source, "duplicate", `The citekey @${source.citation.id} is not unique.`)];
+    return [problem(source, "duplicate", t`The citekey @${source.citation.id} is not unique.`)];
   }
   if (source.citationProblems?.length) {
     return [problem(source, "invalid", citationProblemMessage(source.citationProblems))];
   }
   if (!source.citation) {
-    return [problem(source, "missing", "No CSL citation metadata is attached.")];
+    return [problem(source, "missing", t({ message: "No CSL citation metadata is attached." }))];
   }
   return [];
 }

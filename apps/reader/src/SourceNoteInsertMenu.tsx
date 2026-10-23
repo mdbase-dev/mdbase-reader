@@ -1,3 +1,4 @@
+import { Trans, useLingui } from "@lingui/react/macro";
 import { useEffect, useId, useRef, useState, type CSSProperties, type JSX } from "react";
 
 import { CitationIcon, PlusIcon } from "./icons.js";
@@ -21,6 +22,7 @@ export function SourceNoteInsertMenu({
   readonly onInsertCitation: (citekey: string) => void;
   readonly onInsertAnnotation: (path: string) => void;
 }): JSX.Element {
+  const { t } = useLingui();
   // The menu opens in the top layer so a narrow pane's clipping cannot crop it.
   const menu = useRef<HTMLDivElement>(null);
   const id = useId();
@@ -44,31 +46,42 @@ export function SourceNoteInsertMenu({
     <div className="annotation-insert-menu">
       <button
         type="button"
-        aria-label="Insert a citation or annotation"
-        title="Insert at the cursor"
+        aria-label={t({ message: "Insert a citation or annotation" })}
+        title={t({ message: "Insert at the cursor" })}
         popoverTarget={id}
         onClick={(event) => setPlacement(insertMenuPlacement(event.currentTarget))}
       >
-        <PlusIcon /> Insert
+        <PlusIcon />
+        <Trans> Insert</Trans>
       </button>
       <div ref={menu} id={id} popover="auto" style={placement}>
         <button
           className="insert-citation"
           type="button"
           disabled={!citekey}
-          title={citekey ? `Insert [@${citekey}] at the cursor` : "Add citation details first"}
+          title={
+            citekey
+              ? t`Insert [@${citekey}] at the cursor`
+              : t({ message: "Add citation details first" })
+          }
           onPointerDown={(event) => event.preventDefault()}
           onClick={() => citekey && insert(() => onInsertCitation(citekey))}
         >
           <CitationIcon />
           <span>
-            <strong>Citation</strong>
-            <small>{citekey ? `@${citekey}` : "Add citation details first"}</small>
+            <strong>
+              <Trans>Citation</Trans>
+            </strong>
+            <small>{citekey ? `@${citekey}` : t({ message: "Add citation details first" })}</small>
           </span>
         </button>
-        <strong>Annotations</strong>
+        <strong>
+          <Trans>Annotations</Trans>
+        </strong>
         {candidates.length === 0 ? (
-          <p>Highlights and comments on this source appear here.</p>
+          <p>
+            <Trans>Highlights and comments on this source appear here.</Trans>
+          </p>
         ) : null}
         {candidates.map((candidate) => {
           const embedded = draft.includes(`![[${candidate.path}]]`);
@@ -77,12 +90,19 @@ export function SourceNoteInsertMenu({
               key={candidate.path}
               type="button"
               disabled={embedded}
-              title={embedded ? "Already embedded in this note" : "Insert at the cursor"}
+              title={
+                embedded
+                  ? t({ message: "Already embedded in this note" })
+                  : t({ message: "Insert at the cursor" })
+              }
               onPointerDown={(event) => event.preventDefault()}
               onClick={() => insert(() => onInsertAnnotation(candidate.path))}
             >
               <span>
-                {embedded ? "In note" : candidate.kind} · {candidate.detail}
+                {embedded
+                  ? t({ message: "In note", context: "SourceNoteInsertMenu interface" })
+                  : candidate.kind}{" "}
+                · {candidate.detail}
               </span>
               <strong>{candidate.label}</strong>
               {candidate.quote ? <small>{candidate.quote}</small> : null}

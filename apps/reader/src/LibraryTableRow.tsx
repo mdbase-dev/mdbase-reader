@@ -1,3 +1,4 @@
+import { useLingui } from "@lingui/react/macro";
 import { isEditableSourceField } from "@mdbase-reader/core";
 import { useEffect, useRef } from "react";
 
@@ -13,6 +14,22 @@ import type { JSX, MouseEvent } from "react";
 
 /** Longer than a double-click, so a click meant to open never starts an edit. */
 const EDIT_CLICK_DELAY_MS = 500;
+
+type LibraryTableRowProps = LibraryTableProps & {
+  readonly source: SourceSummary;
+  readonly index: number;
+  readonly top: number;
+  readonly gridTemplateColumns: string;
+  readonly tabbable: boolean;
+  readonly onSelect: (event: MouseEvent<HTMLElement>) => void;
+  readonly press: LongPress;
+  readonly onLongPress: () => void;
+  /** Opens this source's actions at a point, as a right-click does. */
+  readonly onMenu: (x: number, y: number) => void;
+  readonly editing: LibraryColumn | null;
+  readonly onEditCell: (column: LibraryColumn) => void;
+  readonly onEditDone: () => void;
+};
 
 export function LibraryTableRow({
   source,
@@ -34,21 +51,8 @@ export function LibraryTableRow({
   editing,
   onEditCell,
   onEditDone,
-}: LibraryTableProps & {
-  readonly source: SourceSummary;
-  readonly index: number;
-  readonly top: number;
-  readonly gridTemplateColumns: string;
-  readonly tabbable: boolean;
-  readonly onSelect: (event: MouseEvent<HTMLElement>) => void;
-  readonly press: LongPress;
-  readonly onLongPress: () => void;
-  /** Opens this source's actions at a point, as a right-click does. */
-  readonly onMenu: (x: number, y: number) => void;
-  readonly editing: LibraryColumn | null;
-  readonly onEditCell: (column: LibraryColumn) => void;
-  readonly onEditDone: () => void;
-}): JSX.Element {
+}: LibraryTableRowProps): JSX.Element {
+  const { t } = useLingui();
   const selected = selection.ids.has(source.id);
   const pressHandlers = press.bind(onLongPress);
   const editable = (column: LibraryColumn): boolean =>
@@ -65,7 +69,7 @@ export function LibraryTableRow({
       aria-selected={selected}
       data-row-index={index}
       tabIndex={tabbable ? 0 : -1}
-      title="Double-click or press Enter to open"
+      title={t({ message: "Double-click or press Enter to open" })}
       style={{ gridTemplateColumns, transform: `translateY(${String(top)}px)` }}
       {...pressHandlers}
       onContextMenu={(event) => {
@@ -102,7 +106,7 @@ export function LibraryTableRow({
           tabIndex={-1}
           aria-colindex={columnIndex + 1}
           className={`is-${columnClass(column)}${editable(column) ? " is-editable" : ""}`}
-          title={editable(column) ? "Click to edit · F2" : undefined}
+          title={editable(column) ? t({ message: "Click to edit · F2" }) : undefined}
           onClick={(event) => {
             // Like a spreadsheet: the first click selects the row, a click on its field edits it.
             // A finger's tap opens the source instead; renaming is in the row's menu.

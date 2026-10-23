@@ -1,4 +1,8 @@
+import { i18n } from "@lingui/core";
+import { msg, t } from "@lingui/core/macro";
 import { cslFieldDefinitions, cslTypes } from "@mdbase-reader/core";
+
+import { citationLabels } from "./citation-labels.js";
 
 import type {
   CitationResolutionRequest,
@@ -8,25 +12,28 @@ import type {
 } from "@mdbase-reader/core";
 
 export const commonCslTypes = [
-  ["article-journal", "Journal article"],
-  ["book", "Book"],
-  ["chapter", "Book chapter"],
-  ["webpage", "Web page"],
-  ["paper-conference", "Conference paper"],
-  ["thesis", "Thesis"],
-  ["report", "Report"],
-  ["dataset", "Dataset"],
-  ["software", "Software"],
-  ["article-newspaper", "Newspaper article"],
-  ["article-magazine", "Magazine article"],
-  ["post-weblog", "Blog post"],
-  ["document", "Document"],
+  ["article-journal", msg({ message: "Journal article", context: "CSL item type" })],
+  ["book", msg({ message: "Book", context: "CSL item type" })],
+  ["chapter", msg({ message: "Book chapter", context: "CSL item type" })],
+  ["webpage", msg({ message: "Web page", context: "CSL item type" })],
+  ["paper-conference", msg({ message: "Conference paper", context: "CSL item type" })],
+  ["thesis", msg({ message: "Thesis", context: "CSL item type" })],
+  ["report", msg({ message: "Report", context: "CSL item type" })],
+  ["dataset", msg({ message: "Dataset", context: "CSL item type" })],
+  ["software", msg({ message: "Software", context: "CSL item type" })],
+  ["article-newspaper", msg({ message: "Newspaper article", context: "CSL item type" })],
+  ["article-magazine", msg({ message: "Magazine article", context: "CSL item type" })],
+  ["post-weblog", msg({ message: "Blog post", context: "CSL item type" })],
+  ["document", msg({ message: "Document", context: "CSL item type" })],
 ] as const;
 
 export const specialistCslTypes = [...cslTypes]
   .filter((type) => !commonCslTypes.some(([common]) => common === type))
   .sort((left, right) => left.localeCompare(right))
-  .map((type) => [type, cslFieldLabel(type)] as const);
+  .map(
+    (type) =>
+      [type, citationLabels[type] ?? msg({ message: "Other", context: "CSL item type" })] as const,
+  );
 
 export const primaryCitationFields = new Set([
   "id",
@@ -63,10 +70,8 @@ export function cslFieldLabel(field: string): string {
     ["PMID", "PMID"],
     ["URL", "URL"],
   ]);
-  return (
-    knownAcronyms.get(field) ??
-    field.replaceAll(/[-_]/gu, " ").replace(/^./u, (letter) => letter.toLocaleUpperCase())
-  );
+  const label = citationLabels[field];
+  return knownAcronyms.get(field) ?? (label ? i18n._(label) : field);
 }
 
 export function emptyCslFieldValue(kind: CslFieldKind): unknown {
@@ -198,13 +203,13 @@ export function resolutionRequest(value: string): CitationResolutionRequest {
 
 export function displayCslValue(value: unknown): string {
   if (value === undefined) {
-    return "Not recorded";
+    return t`Not recorded`;
   }
   if (typeof value === "string" || typeof value === "number") {
     return String(value);
   }
   if (typeof value === "boolean") {
-    return value ? "Yes" : "No";
+    return value ? t`Yes` : t`No`;
   }
   if (Array.isArray(value)) {
     return value.map(displayCslValue).join("; ");
@@ -226,7 +231,7 @@ export function displayCslValue(value: unknown): string {
       .map(([field, fieldValue]) => `${cslFieldLabel(field)}: ${displayCslValue(fieldValue)}`)
       .join(", ");
   }
-  return "Unsupported value";
+  return t`Unsupported value`;
 }
 
 function emptyValue(value: unknown): boolean {

@@ -1,3 +1,5 @@
+import { i18n } from "@lingui/core";
+import { useLingui } from "@lingui/react/macro";
 import { useEffect, useRef, useSyncExternalStore, type JSX, type RefObject } from "react";
 
 import { hasPassageAnchor } from "./annotation-anchor.js";
@@ -36,6 +38,7 @@ export function AnnotationCard({
   readonly onOpen: () => void;
   readonly readFile: AnnotationFileReader;
 }): JSX.Element {
+  const { t } = useLingui();
   const cardRef = useScrollToEditing(active || editing);
   const session = useAnnotationSession(annotation, onSave);
   const snapshot = useSyncExternalStore(
@@ -53,7 +56,7 @@ export function AnnotationCard({
       className={`annotation-card${editing ? " is-editing" : ""}${active ? " is-selected" : ""}${hasPassageAnchor(annotation.target) ? " is-linked" : ""}`}
       data-annotation-id={annotation.id}
       role="group"
-      aria-label={`${annotationKindLabel(annotation.annotationType)} annotation`}
+      aria-label={t`${annotationKindLabel(annotation.annotationType)} annotation`}
       onClick={() => {
         if (!editing && hasPassageAnchor(annotation.target)) {
           onOpen();
@@ -70,15 +73,17 @@ export function AnnotationCard({
             title={
               hasPassageAnchor(annotation.target)
                 ? annotation.locator.label
-                : `${annotation.locator.label} · saved without a link to the exact passage`
+                : t`${annotation.locator.label} · saved without a link to the exact passage`
             }
           >
-            {annotation.locator.label.replace(/^\[\[.*\]\]$/u, "Document passage")}
+            {annotation.locator.label.replace(/^\[\[.*\]\]$/u, t`Document passage`)}
           </small>
         ) : null}
         {needsAttention && !editing ? (
           <small className="annotation-draft-badge">
-            {snapshot.conflict ? "Changes need review" : "Unsaved changes"}
+            {snapshot.conflict
+              ? t({ message: "Changes need review" })
+              : t({ message: "Unsaved changes", context: "AnnotationCard interface" })}
           </small>
         ) : null}
       </header>
@@ -163,10 +168,11 @@ function AnnotationCardFooter({
   readonly resume: boolean;
   readonly editingElsewhere: boolean;
 }): JSX.Element {
+  const { t } = useLingui();
   return (
     <footer>
       <time>
-        {new Date(annotation.createdAt).toLocaleDateString(undefined, {
+        {new Date(annotation.createdAt).toLocaleDateString(i18n.locale, {
           month: "short",
           day: "numeric",
         })}
@@ -177,7 +183,7 @@ function AnnotationCardFooter({
           disabled={!annotation.path || !annotation.recordRevision}
           title={
             !annotation.path || !annotation.recordRevision
-              ? "Editing requires a saved annotation"
+              ? t({ message: "Editing requires a saved annotation" })
               : undefined
           }
           onClick={(event) => {
@@ -185,15 +191,19 @@ function AnnotationCardFooter({
             onEdit();
           }}
         >
-          {editingElsewhere ? "Edit here" : resume ? "Resume edits" : "Edit"}
+          {editingElsewhere
+            ? t({ message: "Edit here", context: "AnnotationCard interface" })
+            : resume
+              ? t({ message: "Resume edits", context: "AnnotationCard interface" })
+              : t({ message: "Edit", context: "AnnotationCard interface" })}
         </button>
         <button
           type="button"
           disabled={transclusion.busyId !== null || transclusion.isEmbedded(annotation)}
           title={
             transclusion.isEmbedded(annotation)
-              ? "Already included in the literature note"
-              : "Insert this annotation in the literature note"
+              ? t({ message: "Already included in the literature note" })
+              : t({ message: "Insert this annotation in the literature note" })
           }
           onClick={(event) => {
             event.stopPropagation();
@@ -201,17 +211,17 @@ function AnnotationCardFooter({
           }}
         >
           {transclusion.busyId === annotation.id
-            ? "Inserting…"
+            ? t({ message: "Inserting…", context: "AnnotationCard interface" })
             : transclusion.isEmbedded(annotation)
-              ? "In literature note"
-              : "Add to literature note"}
+              ? t({ message: "In literature note" })
+              : t({ message: "Add to literature note" })}
         </button>
         {hasPassageAnchor(annotation.target) ? (
           <button
             className="icon-button"
             type="button"
-            aria-label="Show in document"
-            title="Show in document"
+            aria-label={t({ message: "Show in document" })}
+            title={t({ message: "Show in document" })}
             onClick={(event) => {
               event.stopPropagation();
               onOpen();

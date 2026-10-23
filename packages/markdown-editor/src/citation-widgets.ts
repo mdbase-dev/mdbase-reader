@@ -9,6 +9,8 @@ import {
   type ViewUpdate,
   WidgetType,
 } from "@codemirror/view";
+import { i18n } from "@lingui/core";
+import { t } from "@lingui/core/macro";
 
 import { citationCard, citationLabel } from "./citation-card.js";
 
@@ -156,7 +158,9 @@ function citationSyntax(
   const resolved = group.references.every(({ id }) => candidates.has(id));
   return Decoration.mark({
     class: `cm-citation-syntax is-${resolved ? "resolved" : "unresolved"}`,
-    attributes: resolved ? { title: "Citation Markdown" } : { title: "Citation not found" },
+    attributes: resolved
+      ? { title: t({ message: "Citation Markdown", context: "citation widgets" }) }
+      : { title: t({ message: "Citation not found" }) },
   }).range(group.from, group.to);
 }
 
@@ -171,6 +175,7 @@ function selected(view: EditorView, group: CitationGroup): boolean {
 }
 
 class CitationWidget extends WidgetType {
+  readonly locale = i18n.locale;
   constructor(
     readonly group: CitationGroup,
     readonly candidates: readonly CitationCompletionCandidate[],
@@ -180,6 +185,7 @@ class CitationWidget extends WidgetType {
 
   override eq(other: CitationWidget): boolean {
     return (
+      this.locale === other.locale &&
       other.group.raw === this.group.raw &&
       other.candidates.length === this.candidates.length &&
       other.candidates.every((item, index) => item === this.candidates[index])
@@ -191,7 +197,7 @@ class CitationWidget extends WidgetType {
     button.type = "button";
     button.className = "cm-citation-reference";
     button.textContent = this.candidates.map(citationLabel).join("; ");
-    button.setAttribute("aria-label", `Citation: ${button.textContent}. Edit citation Markdown`);
+    button.setAttribute("aria-label", t`Citation: ${button.textContent}. Edit citation Markdown`);
     button.addEventListener("mousedown", (event) => event.preventDefault());
     button.addEventListener("click", () => this.select(view));
     return button;

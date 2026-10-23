@@ -2,10 +2,10 @@
 /* eslint-disable @typescript-eslint/require-await -- async act flushes React's queued work */
 import { collectionId, recordRevision, sourceId } from "@mdbase-reader/core";
 import { act } from "react";
-import { createRoot } from "react-dom/client";
 import { afterEach, beforeEach, expect, it, vi } from "vitest";
 
 import { useDocumentSurfaceTiming } from "./reader-app-hooks.js";
+import { createRoot } from "./testing/i18n.js";
 import { useSelectedSourceResources } from "./use-selected-source-resources.js";
 
 import type { ReaderWorkspaceGateway } from "./workspace-model.js";

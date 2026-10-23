@@ -4,6 +4,8 @@
  * mark on its next page load. The marked tabs are remembered in `chrome.storage.session`
  * so the worker leaves every other tab alone, even after it restarts.
  */
+import { plural, t } from "@lingui/core/macro";
+
 const marksKey = "page-marks";
 
 let marks: Promise<Set<number>> | null = null;
@@ -39,7 +41,12 @@ export async function markSavedPage(tabId: number, highlights: number): Promise<
   await chrome.action.setBadgeText({ tabId, text: highlights ? String(highlights) : "✓" });
   await chrome.action.setTitle({
     tabId,
-    title: `Saved in mdbase Reader${highlights ? ` · ${String(highlights)} highlight${highlights === 1 ? "" : "s"}` : ""}`,
+    title: highlights
+      ? plural(highlights, {
+          one: "Saved in mdbase Reader · # highlight",
+          other: "Saved in mdbase Reader · # highlights",
+        })
+      : t`Saved in mdbase Reader`,
   });
 }
 
@@ -51,7 +58,9 @@ export async function markSavedPosts(
   await markSavedPage(tabId, posts);
   await chrome.action.setTitle({
     tabId,
-    title: `${String(posts)} saved post${posts === 1 ? "" : "s"} in mdbase Reader · ${String(highlights)} highlights on visible posts`,
+    title: t({
+      message: `${plural(posts, { one: "# saved post", other: "# saved posts" })} in mdbase Reader · ${plural(highlights, { one: "# highlight on visible posts", other: "# highlights on visible posts" })}`,
+    }),
   });
 }
 

@@ -1,3 +1,5 @@
+import { t } from "@lingui/core/macro";
+
 import { formatPropertyValue, isPropertyKey, propertyValue } from "./library-columns.js";
 
 import type { SourceSummary } from "@mdbase-reader/core";
@@ -23,16 +25,35 @@ export const conditionOperators = [
 ] as const;
 export type ConditionOperator = (typeof conditionOperators)[number];
 
+// Lazy getters keep the existing select API responsive to language activation.
 export const operatorLabels: Record<ConditionOperator, string> = {
-  is: "is",
-  "is-not": "is not",
-  contains: "contains",
-  "less-than": "is less than",
-  "at-most": "is at most",
-  "greater-than": "is greater than",
-  "at-least": "is at least",
-  empty: "is empty",
-  "not-empty": "is not empty",
+  get is() {
+    return t({ message: "is", context: "Field filter comparison operator" });
+  },
+  get "is-not"() {
+    return t({ message: "is not", context: "Field filter comparison operator" });
+  },
+  get contains() {
+    return t({ message: "contains", context: "Field filter comparison operator" });
+  },
+  get "less-than"() {
+    return t({ message: "is less than", context: "Field filter comparison operator" });
+  },
+  get "at-most"() {
+    return t({ message: "is at most", context: "Field filter comparison operator" });
+  },
+  get "greater-than"() {
+    return t({ message: "is greater than", context: "Field filter comparison operator" });
+  },
+  get "at-least"() {
+    return t({ message: "is at least", context: "Field filter comparison operator" });
+  },
+  get empty() {
+    return t({ message: "is empty", context: "Field filter comparison operator" });
+  },
+  get "not-empty"() {
+    return t({ message: "is not empty", context: "Field filter comparison operator" });
+  },
 };
 
 export function operatorNeedsValue(operator: ConditionOperator): boolean {
@@ -88,7 +109,7 @@ export function matchesCondition(
       ? []
       : [
           typeof item === "string" ? item.toLocaleLowerCase() : "",
-          formatPropertyValue(item).toLocaleLowerCase(),
+          conditionValue(item).toLocaleLowerCase(),
         ].filter(Boolean),
   );
   switch (condition.operator) {
@@ -131,6 +152,13 @@ function compare(items: readonly unknown[], condition: FieldCondition): boolean 
         return value >= target;
     }
   });
+}
+
+/** Saved condition operands are data, not translated display labels. Preserve the
+ * legacy English boolean operands so switching language never changes a filter.
+ */
+function conditionValue(value: unknown): string {
+  return typeof value === "boolean" ? (value ? "Yes" : "No") : formatPropertyValue(value);
 }
 
 /** Whether a field holds lists in this collection, which decides how a saved view tests it. */
@@ -249,7 +277,7 @@ export function fieldValueSuggestions(
   for (const source of sources.slice(0, 2000)) {
     const raw = propertyValue(source, key);
     for (const item of Array.isArray(raw) ? (raw as readonly unknown[]) : [raw]) {
-      const text = formatPropertyValue(item);
+      const text = conditionValue(item);
       if (text && text.length <= 80) {
         counts.set(text, (counts.get(text) ?? 0) + 1);
       }

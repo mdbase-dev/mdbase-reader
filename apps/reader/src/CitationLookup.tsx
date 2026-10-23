@@ -1,3 +1,5 @@
+import { i18n } from "@lingui/core";
+import { Plural, Trans, useLingui } from "@lingui/react/macro";
 import { useMemo, useState, type JSX, type SyntheticEvent } from "react";
 
 import { citationDifferences, displayCslValue } from "./citation-form-model.js";
@@ -12,6 +14,7 @@ export function CitationLookup({
   readonly citation: Readonly<Record<string, unknown>>;
   readonly editor: CitationEditorController;
 }): JSX.Element {
+  const { t } = useLingui();
   const [query, setQuery] = useState(lookupSeed(citation));
   const submit = (event: SyntheticEvent<HTMLFormElement>): void => {
     event.preventDefault();
@@ -22,17 +25,21 @@ export function CitationLookup({
       <summary>
         <SearchIcon />
         <span>
-          <strong>Find citation details</strong>
-          <small>Search by DOI, ISBN, URL, or title</small>
+          <strong>
+            <Trans>Find citation details</Trans>
+          </strong>
+          <small>
+            <Trans>Search by DOI, ISBN, URL, or title</Trans>
+          </small>
         </span>
       </summary>
       <form onSubmit={submit}>
         <input
           className="mdbase-field"
-          aria-label="Citation identifier, URL, or title"
+          aria-label={t({ message: "Citation identifier, URL, or title" })}
           value={query}
           onChange={(event) => setQuery(event.target.value)}
-          placeholder="Paste an identifier, URL, or title"
+          placeholder={t({ message: "Paste an identifier, URL, or title" })}
         />
         <button
           type="submit"
@@ -40,13 +47,17 @@ export function CitationLookup({
             !editor.resolutionAvailable || !query.trim() || editor.resolutionStatus === "resolving"
           }
         >
-          {editor.resolutionStatus === "resolving" ? "Looking…" : "Find"}
+          {editor.resolutionStatus === "resolving"
+            ? t({ message: "Looking…", context: "CitationLookup interface" })
+            : t({ message: "Find", context: "CitationLookup interface" })}
         </button>
       </form>
       {!editor.resolutionAvailable ? (
         <p className="citation-lookup-note">
-          Metadata lookup will be available when a resolver is connected. You can still edit and
-          format CSL locally.
+          <Trans>
+            Metadata lookup will be available when a resolver is connected. You can still edit and
+            format CSL locally.
+          </Trans>
         </p>
       ) : null}
       {editor.resolutionError ? (
@@ -75,6 +86,7 @@ function CitationMergeReview({
   readonly candidate: NonNullable<CitationEditorController["candidate"]>;
   readonly editor: CitationEditorController;
 }): JSX.Element {
+  const { t } = useLingui();
   const differences = useMemo(
     () => citationDifferences(citation, candidate.citation),
     [candidate, citation],
@@ -87,21 +99,23 @@ function CitationMergeReview({
     <div className="citation-merge-review">
       <div className="citation-merge-heading">
         <div>
-          <strong>Review found metadata</strong>
+          <strong>
+            <Trans>Review found metadata</Trans>
+          </strong>
           <span>
             {candidate.provenance.provider} ·{" "}
-            {new Date(candidate.provenance.retrievedAt).toLocaleDateString()}
+            {new Date(candidate.provenance.retrievedAt).toLocaleDateString(i18n.locale)}
           </span>
         </div>
         <button type="button" onClick={editor.dismissCandidate}>
-          Dismiss
+          <Trans>Dismiss</Trans>
         </button>
       </div>
       {differences.length ? (
         <div className="citation-differences">
           {differences.map((difference) => (
             <label key={difference.field}>
-              <span className="sr-only">Use found {fieldLabel(difference.field)}</span>
+              <span className="sr-only">{t`Use found ${fieldLabel(difference.field)}`}</span>
               <input
                 type="checkbox"
                 checked={selected.has(difference.field)}
@@ -110,11 +124,11 @@ function CitationMergeReview({
               <span className="citation-difference-copy">
                 <strong>{fieldLabel(difference.field)}</strong>
                 <span>
-                  <small>Current</small>
+                  <small>{t({ message: "Current", context: "Current citation value" })}</small>
                   <del>{displayCslValue(difference.current)}</del>
                 </span>
                 <span>
-                  <small>Found</small>
+                  <small>{t({ message: "Found" })}</small>
                   <ins>{displayCslValue(difference.candidate)}</ins>
                 </span>
               </span>
@@ -122,7 +136,9 @@ function CitationMergeReview({
           ))}
         </div>
       ) : (
-        <p className="citation-lookup-note">The found record matches this citation.</p>
+        <p className="citation-lookup-note">
+          <Trans>The found record matches this citation.</Trans>
+        </p>
       )}
       {candidate.warnings.map((warning) => (
         <p className="citation-lookup-error" key={warning}>
@@ -135,10 +151,12 @@ function CitationMergeReview({
         disabled={selected.size === 0}
         onClick={() => editor.applyCandidate(selected)}
       >
-        Apply{" "}
-        {selected.size === 0
-          ? "selected details"
-          : `${String(selected.size)} ${selected.size === 1 ? "change" : "changes"}`}
+        <Plural
+          value={selected.size}
+          _0="Apply selected details"
+          one="Apply # change"
+          other="Apply # changes"
+        />
       </button>
     </div>
   );

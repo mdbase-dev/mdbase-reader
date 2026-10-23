@@ -2,12 +2,12 @@
 /* eslint-disable @typescript-eslint/require-await -- async act flushes React's queued work */
 import { createTestApp, type TestApp } from "@mdbase-reader/connect/testing";
 import { act, StrictMode } from "react";
-import { createRoot } from "react-dom/client";
 import { afterEach, beforeEach, expect, it, vi } from "vitest";
 
 import manifest from "./generated/mdbase-app.json";
 import { ReaderCollectionSwitcher } from "./reader-collections.js";
 import { SdkReaderRoot, type ReaderNativeScope } from "./SdkReaderRoot.js";
+import { createRoot } from "./testing/i18n.js";
 
 vi.mock("@mdbase-dev/ui/feedback", () => ({ FeedbackButton: () => null }));
 

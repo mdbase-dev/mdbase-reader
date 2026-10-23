@@ -69,6 +69,10 @@ export function problemMessage(reason: unknown): string {
   if (!(reason instanceof Error)) {
     return String(reason);
   }
+  // Keep serialized content-script codes in the diagnostic cause, not in interface copy.
+  if (reason.name === "ReaderCaptureError") {
+    return reason.message;
+  }
   // SDK errors carry codes; people see the SDK's description, never the code.
   if (reason.name === "MdbaseError") {
     const described = describeError(reason);

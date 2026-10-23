@@ -1,3 +1,5 @@
+import { msg } from "@lingui/core/macro";
+import { Trans, useLingui } from "@lingui/react/macro";
 import { useEffect, useRef, useState } from "react";
 
 import { displayQuote } from "./highlight-body.js";
@@ -6,6 +8,14 @@ import { modifierKey, saveBlocker } from "./SaveBar.js";
 import { TagInput } from "./TagInput.js";
 
 import type { ExtensionCaptureController } from "./capture-controller.js";
+
+const colorLabels = {
+  yellow: msg({ message: "yellow", context: "Highlight colour" }),
+  green: msg({ message: "green", context: "Highlight colour" }),
+  blue: msg({ message: "blue", context: "Highlight colour" }),
+  pink: msg({ message: "pink", context: "Highlight colour" }),
+  purple: msg({ message: "purple", context: "Highlight colour" }),
+};
 
 /**
  * The selected passage and how to save it; follows the page selection live. Top to bottom
@@ -19,6 +29,7 @@ export function HighlightFields({
   /** Whether a save may start now (connected, titled, not busy). */
   readonly ready: boolean;
 }): React.JSX.Element | null {
+  const { t } = useLingui();
   const comment = useRef<HTMLTextAreaElement>(null);
   const [openDetails, setOpenDetails] = useState(false);
   const selection = c.capture?.kind === "html" ? c.capture.selection : null;
@@ -66,12 +77,14 @@ export function HighlightFields({
   const detailsOpen =
     openDetails || intent?.intent === "note" || Boolean(c.draft.comment || c.draft.highlightTags);
   return (
-    <section aria-label="Selected passage" className="highlight-fields">
+    <section aria-label={t`Selected passage`} className="highlight-fields">
       <blockquote>{displayQuote(selection.exact)}</blockquote>
       {detailsOpen ? (
         <>
           <label htmlFor="comment">
-            Comment <span>(optional)</span>
+            <Trans>
+              Comment <span>(optional)</span>
+            </Trans>
           </label>
           <textarea
             className="mdbase-field"
@@ -82,7 +95,9 @@ export function HighlightFields({
             onChange={(event) => update({ comment: event.target.value })}
           />
           <label htmlFor="highlight-tags">
-            Tags <span>(comma-separated, optional)</span>
+            <Trans>
+              Tags <span>(comma-separated, optional)</span>
+            </Trans>
           </label>
           <TagInput
             id="highlight-tags"
@@ -94,39 +109,61 @@ export function HighlightFields({
         </>
       ) : (
         <button type="button" className="text-button" onClick={() => setOpenDetails(true)}>
-          Add a comment or tags
+          <Trans>Add a comment or tags</Trans>
         </button>
       )}
       <div className="passage-actions">
         <span className="field-label" id="highlight-colors">
-          {c.source ? "Save highlight" : "Save page and highlight"}
+          {c.source ? t`Save highlight` : t`Save page and highlight`}
         </span>
         <button
           type="button"
           className="text-button"
           aria-keyshortcuts="Escape"
-          title="Clear the selection (Esc)"
+          title={t`Clear the selection (Esc)`}
           onClick={c.clearSelection}
         >
-          Clear
+          <Trans context="Clear the selected passage">Clear</Trans>
         </button>
       </div>
-      <div className="colors" role="group" aria-labelledby="highlight-colors">
-        {highlightColors.map((color, index) => (
+      <HighlightColors controller={c} ready={ready} />
+      {blocker ? <p className="hint">{blocker}</p> : null}
+    </section>
+  );
+}
+
+function HighlightColors({
+  controller: c,
+  ready,
+}: {
+  readonly controller: ExtensionCaptureController;
+  readonly ready: boolean;
+}): React.JSX.Element {
+  const { t, i18n } = useLingui();
+  return (
+    <div className="colors" role="group" aria-labelledby="highlight-colors">
+      {highlightColors.map((color, index) => {
+        const colorLabel = i18n._(colorLabels[color]);
+        const shortcut = String(index + 1);
+        const modifier = modifierKey();
+        const title =
+          c.draft.color === color
+            ? t`Save in ${colorLabel} (${shortcut}, or ${modifier}+Enter)`
+            : t`Save in ${colorLabel} (${shortcut})`;
+        return (
           <button
             key={color}
             type="button"
             className={`swatch swatch-${color}${c.draft.color === color ? " is-last" : ""}`}
-            aria-keyshortcuts={String(index + 1)}
-            title={`Save in ${color} (${String(index + 1)}${c.draft.color === color ? `, or ${modifierKey()}+Enter` : ""})`}
+            aria-keyshortcuts={shortcut}
+            title={title}
             disabled={!ready}
             onClick={() => void c.save({ highlight: true, color })}
           >
-            {color}
+            {colorLabel}
           </button>
-        ))}
-      </div>
-      {blocker ? <p className="hint">{blocker}</p> : null}
-    </section>
+        );
+      })}
+    </div>
   );
 }

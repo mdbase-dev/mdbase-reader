@@ -1,3 +1,5 @@
+import { t } from "@lingui/core/macro";
+
 import {
   annotationRequest,
   prepareAnnotationSelection,
@@ -52,7 +54,7 @@ export async function saveSelection(
   } catch (reason) {
     setProblem({
       sourceId: input.source.id,
-      message: readerErrorMessage(reason, "Reader could not save this annotation."),
+      message: readerErrorMessage(reason, t({ message: "Reader could not save this annotation." })),
     });
   } finally {
     setStatus("idle");

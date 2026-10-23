@@ -1,3 +1,5 @@
+import { t } from "@lingui/core/macro";
+
 import { cslFieldKinds, nameFlagFields, nameStringFields } from "./citation-schema.js";
 
 import type { CslValidationProblem } from "./citation.js";
@@ -21,19 +23,29 @@ export function validateCslField(
     validateStringArray(candidate, path, problems);
   } else if (kind === "object") {
     if (!isObject(candidate)) {
-      problems.push({ path, message: "must be an object" });
+      problems.push({
+        path,
+        message: t({ message: "must be an object", context: "CSL validation" }),
+      });
     }
   } else {
     problems.push({
+      code: "unknown_csl_field",
       path,
-      message: "is not a CSL 1.0 field; preserve extension data under csl.custom",
+      message: t({
+        message: "is not a CSL 1.0 field; preserve extension data under csl.custom",
+        context: "CSL validation",
+      }),
     });
   }
 }
 
 function validateNames(value: unknown, path: string, problems: CslValidationProblem[]): void {
   if (!Array.isArray(value)) {
-    problems.push({ path, message: "must be an array of CSL names" });
+    problems.push({
+      path,
+      message: t({ message: "must be an array of CSL names", context: "CSL validation" }),
+    });
     return;
   }
   value.forEach((name, index) => validateName(name, `${path}[${String(index)}]`, problems));
@@ -41,7 +53,10 @@ function validateNames(value: unknown, path: string, problems: CslValidationProb
 
 function validateName(value: unknown, path: string, problems: CslValidationProblem[]): void {
   if (!isObject(value)) {
-    problems.push({ path, message: "must be an object" });
+    problems.push({
+      path,
+      message: t({ message: "must be an object", context: "CSL validation" }),
+    });
     return;
   }
   for (const [field, candidate] of Object.entries(value)) {
@@ -50,14 +65,20 @@ function validateName(value: unknown, path: string, problems: CslValidationProbl
     } else if (nameFlagFields.has(field)) {
       expectScalar(candidate, `${path}.${field}`, problems);
     } else {
-      problems.push({ path: `${path}.${field}`, message: "is not a CSL name field" });
+      problems.push({
+        path: `${path}.${field}`,
+        message: t({ message: "is not a CSL name field", context: "CSL validation" }),
+      });
     }
   }
 }
 
 function validateDate(value: unknown, path: string, problems: CslValidationProblem[]): void {
   if (!isObject(value)) {
-    problems.push({ path, message: "must be a CSL date object" });
+    problems.push({
+      path,
+      message: t({ message: "must be a CSL date object", context: "CSL validation" }),
+    });
     return;
   }
   for (const [field, candidate] of Object.entries(value)) {
@@ -81,20 +102,29 @@ function validateDateField(
   } else if (field === "circa") {
     expectScalar(value, fieldPath, problems);
   } else {
-    problems.push({ path: fieldPath, message: "is not a CSL date field" });
+    problems.push({
+      path: fieldPath,
+      message: t({ message: "is not a CSL date field", context: "CSL validation" }),
+    });
   }
 }
 
 function validateDateParts(value: unknown, path: string, problems: CslValidationProblem[]): void {
   if (!Array.isArray(value) || value.length < 1 || value.length > 2) {
-    problems.push({ path, message: "must contain one or two date ranges" });
+    problems.push({
+      path,
+      message: t({ message: "must contain one or two date ranges", context: "CSL validation" }),
+    });
     return;
   }
   value.forEach((part, index) => {
     if (!validDatePart(part)) {
       problems.push({
         path: `${path}[${String(index)}]`,
-        message: "must contain one to three string or number date parts",
+        message: t({
+          message: "must contain one to three string or number date parts",
+          context: "CSL validation",
+        }),
       });
     }
   });
@@ -111,13 +141,16 @@ function validDatePart(value: unknown): boolean {
 
 function validateStringArray(value: unknown, path: string, problems: CslValidationProblem[]): void {
   if (!Array.isArray(value) || value.some((candidate) => typeof candidate !== "string")) {
-    problems.push({ path, message: "must be an array of strings" });
+    problems.push({
+      path,
+      message: t({ message: "must be an array of strings", context: "CSL validation" }),
+    });
   }
 }
 
 function expectString(value: unknown, path: string, problems: CslValidationProblem[]): void {
   if (typeof value !== "string") {
-    problems.push({ path, message: "must be a string" });
+    problems.push({ path, message: t({ message: "must be a string", context: "CSL validation" }) });
   }
 }
 
@@ -127,13 +160,16 @@ function expectStringOrNumber(
   problems: CslValidationProblem[],
 ): void {
   if (typeof value !== "string" && typeof value !== "number") {
-    problems.push({ path, message: "must be a string or number" });
+    problems.push({
+      path,
+      message: t({ message: "must be a string or number", context: "CSL validation" }),
+    });
   }
 }
 
 function expectScalar(value: unknown, path: string, problems: CslValidationProblem[]): void {
   if (!["string", "number", "boolean"].includes(typeof value)) {
-    problems.push({ path, message: "must be scalar" });
+    problems.push({ path, message: t({ message: "must be scalar", context: "CSL validation" }) });
   }
 }
 

@@ -1,6 +1,7 @@
 import { Browser } from "@capacitor/browser";
 import { Directory, Filesystem } from "@capacitor/filesystem";
 import { Preferences } from "@capacitor/preferences";
+import { t } from "@lingui/core/macro";
 import { pickBrowserFile } from "@mdbase-reader/platform";
 
 import type { KeyValueStorage, ReaderPlatform } from "@mdbase-reader/platform";
@@ -14,10 +15,10 @@ const storage: KeyValueStorage = {
 function blobToBase64(blob: Blob): Promise<string> {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
-    reader.onerror = () => reject(reader.error ?? new Error("Could not read export data."));
+    reader.onerror = () => reject(reader.error ?? new Error(t`Could not read export data.`));
     reader.onload = () => {
       if (typeof reader.result !== "string") {
-        reject(new Error("The export could not be encoded."));
+        reject(new Error(t`The export could not be encoded.`));
         return;
       }
       resolve(reader.result.split(",")[1] ?? "");

@@ -1,3 +1,4 @@
+import { Trans, useLingui } from "@lingui/react/macro";
 import { useState } from "react";
 
 import type { ExtensionCaptureController } from "./capture-controller.js";
@@ -21,7 +22,7 @@ export function PostPicker({
         disabled={c.busy || c.navigated}
         onClick={picker.show}
       >
-        Choose posts…
+        <Trans>Choose posts…</Trans>
       </button>
     );
   }
@@ -35,6 +36,7 @@ function OpenPostPicker({
   readonly picker: Picker;
   readonly controller: ExtensionCaptureController;
 }): React.JSX.Element {
+  const { t } = useLingui();
   // Mounted on opening only: scrolling must not discard a deliberate choice.
   const [selected, setSelected] = useState(
     () => new Set(picker.preselected ? [picker.preselected] : []),
@@ -42,12 +44,16 @@ function OpenPostPicker({
   const loadedSelected = [...selected].filter((id) => picker.items.some((item) => item.id === id));
   return (
     <section className="post-picker tab-section" aria-labelledby="post-picker-title">
-      <h2 id="post-picker-title">Choose posts to save</h2>
+      <h2 id="post-picker-title">
+        <Trans>Choose posts to save</Trans>
+      </h2>
       <p className="hint">
-        Only posts currently loaded on the page are listed. Feeds are never saved.
+        <Trans>Only posts currently loaded on the page are listed. Feeds are never saved.</Trans>
       </p>
       <fieldset disabled={c.busy}>
-        <legend>Posts</legend>
+        <legend>
+          <Trans>Posts</Trans>
+        </legend>
         {picker.items.map((item) => (
           <label className="post-picker-item" key={item.id}>
             <input
@@ -66,13 +72,17 @@ function OpenPostPicker({
               }
             />
             <span>
-              <strong>{item.author || "Post"}</strong>
-              <span>{item.snippet || "Media post"}</span>
+              <strong>{item.author || t`Post`}</strong>
+              <span>{item.snippet || t`Media post`}</span>
               {item.published ? <time dateTime={item.published}>{item.published}</time> : null}
             </span>
           </label>
         ))}
-        {!picker.items.length ? <p>No posts loaded. Scroll the page to load some posts.</p> : null}
+        {!picker.items.length ? (
+          <p>
+            <Trans>No posts loaded. Scroll the page to load some posts.</Trans>
+          </p>
+        ) : null}
       </fieldset>
       <div className="save-bar">
         <button
@@ -83,10 +93,10 @@ function OpenPostPicker({
           }
           onClick={() => void picker.save(loadedSelected)}
         >
-          {c.busy ? "Saving…" : `Save ${String(loadedSelected.length)} selected`}
+          {c.busy ? t`Saving…` : t`Save ${String(loadedSelected.length)} selected`}
         </button>
         <button type="button" className="secondary" disabled={c.busy} onClick={picker.close}>
-          Cancel
+          <Trans context="Reader action">Cancel</Trans>
         </button>
       </div>
     </section>

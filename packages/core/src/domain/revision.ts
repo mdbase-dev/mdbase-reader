@@ -1,3 +1,5 @@
+import { t } from "@lingui/core/macro";
+
 import { DomainError } from "./errors.js";
 
 declare const fileRevisionBrand: unique symbol;
@@ -11,7 +13,7 @@ export function fileRevision(value: string): FileRevision {
   if (!sha256Pattern.test(normalized)) {
     throw new DomainError(
       "invalid-revision",
-      "A file revision must be a lowercase SHA-256 value prefixed with sha256:.",
+      t({ message: "A file revision must be a lowercase SHA-256 value prefixed with sha256:." }),
     );
   }
   return normalized as FileRevision;

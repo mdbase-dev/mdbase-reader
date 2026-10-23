@@ -1,7 +1,7 @@
-import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it, vi } from "vitest";
 
 import { ReaderHeader } from "./ReaderHeader.js";
+import { renderToStaticMarkup } from "./testing/i18n.js";
 
 import type { ReaderDirectAccessState } from "./use-direct-access.js";
 

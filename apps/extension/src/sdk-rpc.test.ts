@@ -126,7 +126,7 @@ describe("SDK RPC between extension pages and the offscreen host", () => {
 
     first.served.endpoint.close(); // Chrome closes the offscreen document.
     gone();
-    await expect(pending).rejects.toThrow(hostRestartedMessage);
+    await expect(pending).rejects.toThrow(hostRestartedMessage());
     expect(remote.hostAvailable()).toBe(false);
     expect(listener).toHaveBeenCalled();
     // The last snapshot the SDK sent, unchanged: no status the SDK did not report.
@@ -165,10 +165,10 @@ describe("SDK RPC between extension pages and the offscreen host", () => {
     );
     // A second host announces itself before the first is known to be gone.
     fixtureHost(bus, "h2");
-    await expect(pending).resolves.toBe(hostRestartedMessage);
+    await expect(pending).resolves.toBe(hostRestartedMessage());
     finish();
     await new Promise((resolve) => setTimeout(resolve, 0));
-    await expect(pending).resolves.toBe(hostRestartedMessage);
+    await expect(pending).resolves.toBe(hostRestartedMessage());
   });
 });
 

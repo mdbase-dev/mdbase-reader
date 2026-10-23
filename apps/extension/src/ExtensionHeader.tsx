@@ -1,3 +1,4 @@
+import { useLingui } from "@lingui/react/macro";
 import { MdbaseMark } from "@mdbase-dev/ui/brand";
 import { ChevronDownIcon, SettingsIcon } from "@mdbase-reader/ui";
 
@@ -22,6 +23,7 @@ export function ExtensionHeader({
   } | null;
   readonly onSettings?: () => void;
 }): React.JSX.Element {
+  const { t } = useLingui();
   return (
     <header className="extension-header">
       <a
@@ -29,7 +31,7 @@ export function ExtensionHeader({
         href={readerLibraryUrl(collectionId)}
         target="_blank"
         rel="noreferrer"
-        title="Open your library in mdbase Reader"
+        title={t`Open your library in mdbase Reader`}
       >
         <MdbaseMark className="mark" />
         <strong>mdbase</strong>
@@ -41,10 +43,10 @@ export function ExtensionHeader({
             type="button"
             className="header-collection"
             aria-expanded={collection.expanded}
-            title={`Saving to ${collection.name}. Change collection`}
+            title={t`Saving to ${collection.name}. Change collection`}
+            aria-label={t`Saving to ${collection.name}. Change collection`}
             onClick={collection.onToggle}
           >
-            <span className="visually-hidden">Saving to </span>
             <span className="header-collection-name">{collection.name}</span>
             <ChevronDownIcon />
           </button>
@@ -54,8 +56,8 @@ export function ExtensionHeader({
           <button
             type="button"
             className="header-icon"
-            title="Settings and shortcuts"
-            aria-label="Settings and shortcuts"
+            title={t`Settings and shortcuts`}
+            aria-label={t`Settings and shortcuts`}
             onClick={onSettings}
           >
             <SettingsIcon />

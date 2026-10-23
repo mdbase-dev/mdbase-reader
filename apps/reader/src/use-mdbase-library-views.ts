@@ -1,3 +1,4 @@
+import { t } from "@lingui/core/macro";
 import { useCallback, useEffect, useMemo, useState } from "react";
 
 import { readerErrorMessage } from "./errors.js";
@@ -31,7 +32,9 @@ export function useMdbaseLibraryViews(
     try {
       setViews(await gateway.listLibraryViews());
     } catch (reason) {
-      setProblem(readerErrorMessage(reason, "Reader could not load saved library views."));
+      setProblem(
+        readerErrorMessage(reason, t({ message: "Reader could not load saved library views." })),
+      );
       setViews([defaultLibraryView]);
     } finally {
       setLoading(false);
@@ -58,7 +61,10 @@ export function useMdbaseLibraryViews(
         ]);
         return saved;
       } catch (reason) {
-        const message = readerErrorMessage(reason, "Reader could not save this library view.");
+        const message = readerErrorMessage(
+          reason,
+          t({ message: "Reader could not save this library view." }),
+        );
         setProblem(message);
         throw new Error(message);
       } finally {

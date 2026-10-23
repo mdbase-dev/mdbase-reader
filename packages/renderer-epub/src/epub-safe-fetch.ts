@@ -1,3 +1,5 @@
+import { t } from "@lingui/core/macro";
+
 import { inlinePublicationResources } from "./epub-resource-inlining.js";
 
 import type { FetchImplementation } from "@readium/shared";
@@ -34,7 +36,7 @@ export function sanitizePublicationMarkup(markup: string, mediaType: string): st
 function sanitizePublicationDocument(markup: string, mediaType: string): Document {
   const document = new DOMParser().parseFromString(markup, parserMediaType(mediaType));
   if (document.querySelector("parsererror")) {
-    throw new Error("EPUB content document contains invalid markup.");
+    throw new Error(t({ message: "EPUB content document contains invalid markup." }));
   }
   document.querySelectorAll(ACTIVE_ELEMENTS).forEach((element) => element.remove());
   document.querySelectorAll("meta[http-equiv]").forEach((element) => {

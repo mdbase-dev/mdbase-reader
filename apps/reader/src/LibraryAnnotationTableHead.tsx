@@ -1,3 +1,4 @@
+import { Trans, useLingui } from "@lingui/react/macro";
 import { useMemo, type JSX } from "react";
 
 import {
@@ -111,13 +112,14 @@ function AddAnnotationColumn({
   readonly columns: readonly AnnotationColumn[];
   readonly onAdd: (column: AnnotationColumn) => void;
 }): JSX.Element {
+  const { t } = useLingui();
   const hidden = annotationColumns.filter((column) => !columns.includes(column));
   return (
     <div role="columnheader" tabIndex={-1} className="library-column-header is-add">
       <Menu
         className="library-add-column"
-        label="Add column"
-        title="Add column"
+        label={t({ message: "Add column", context: "LibraryAnnotationTableHead interface" })}
+        title={t({ message: "Add column", context: "LibraryAnnotationTableHead interface" })}
         triggerClassName="icon-button library-add-column-trigger"
         trigger={<PlusIcon />}
       >
@@ -128,7 +130,9 @@ function AddAnnotationColumn({
             </button>
           ))
         ) : (
-          <p className="menu-note">Every column is shown.</p>
+          <p className="menu-note">
+            <Trans>Every column is shown.</Trans>
+          </p>
         )}
       </Menu>
     </div>

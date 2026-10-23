@@ -1,3 +1,4 @@
+import { t } from "@lingui/core/macro";
 import { signalMdbaseMark, useMdbaseMarkBusy } from "@mdbase-dev/ui/mark-activity";
 import { useCallback, useRef, useState } from "react";
 
@@ -86,7 +87,7 @@ export function useWebCapture(
         }
       } catch (reason) {
         signalMdbaseMark("error");
-        setError(readerErrorMessage(reason, "Reader could not add that source."));
+        setError(readerErrorMessage(reason, t({ message: "Reader could not add that source." })));
       } finally {
         setStatus("idle");
         setProgress(null);

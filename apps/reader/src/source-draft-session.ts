@@ -1,3 +1,4 @@
+import { t } from "@lingui/core/macro";
 import {
   MdbaseRecordSession,
   recordChanged,
@@ -27,7 +28,7 @@ export interface SourceDraftSnapshot {
   readonly savedSource?: Source;
 }
 
-const missing = "This source no longer exists. Your local draft has been retained.";
+const missing = (): string => t`This source no longer exists. Your local draft has been retained.`;
 
 /** Exact recovery of an interrupted write, where the gateway offers it. */
 export interface SourceDraftRecovery {
@@ -75,7 +76,7 @@ export class SourceDraftSession {
             return recordMissing();
           }
           if (current.recordRevision !== expected.recordRevision) {
-            return recordChanged("The source note changed before saving.");
+            return recordChanged(t({ message: "The source note changed before saving." }));
           }
           const body = change.body ?? current.body;
           try {
@@ -124,8 +125,10 @@ export class SourceDraftSession {
     } catch {
       this.snapshot = {
         ...this.snapshot,
-        localProblem:
-          "Local draft storage is unavailable or unreadable. Keep this tab open until the note is saved to the collection.",
+        localProblem: t({
+          message:
+            "Local draft storage is unavailable or unreadable. Keep this tab open until the note is saved to the collection.",
+        }),
       };
     }
     this.snapshot = this.project(this.snapshot);
@@ -172,7 +175,10 @@ export class SourceDraftSession {
     this.checkpoint.flush();
     const flushed = await this.record.flush();
     if (!flushed.ok) {
-      throw new Error(this.snapshot.error ?? "Resolve the source note conflict before continuing.");
+      throw new Error(
+        this.snapshot.error ??
+          t({ message: "Resolve the source note conflict before continuing." }),
+      );
     }
     return flushed.value;
   }
@@ -254,11 +260,11 @@ export class SourceDraftSession {
       conflict: record.remote,
       error:
         record.state === "deleted"
-          ? missing
+          ? missing()
           : status === "error"
             ? readerErrorMessage(
                 record.problem?.message,
-                "Reader could not save this note. Your draft is retained.",
+                t({ message: "Reader could not save this note. Your draft is retained." }),
               )
             : null,
     };
@@ -273,8 +279,10 @@ export class SourceDraftSession {
     } catch {
       this.update({
         locallySaved: false,
-        localProblem:
-          "This draft could not be saved locally. Keep this tab open and retry saving to the collection.",
+        localProblem: t({
+          message:
+            "This draft could not be saved locally. Keep this tab open and retry saving to the collection.",
+        }),
       });
     }
   }

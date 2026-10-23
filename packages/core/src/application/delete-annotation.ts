@@ -1,3 +1,5 @@
+import { t } from "@lingui/core/macro";
+
 import { DomainError } from "../domain/errors.js";
 
 import type { AnnotationRepository } from "./ports.js";
@@ -24,7 +26,7 @@ export async function deleteAnnotation(
   ) {
     throw new DomainError(
       "invalid-annotation",
-      "This deletion confirmation no longer matches the annotation revision.",
+      t({ message: "This deletion confirmation no longer matches the annotation revision." }),
     );
   }
   await annotations.delete(annotation, plan);
@@ -34,7 +36,7 @@ function requireCanonicalAnnotation(annotation: Annotation): void {
   if (!annotation.path || !annotation.recordRevision) {
     throw new DomainError(
       "invalid-annotation",
-      "This annotation does not have a canonical path and revision.",
+      t({ message: "This annotation does not have a canonical path and revision." }),
     );
   }
 }

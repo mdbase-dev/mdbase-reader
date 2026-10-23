@@ -1,3 +1,4 @@
+import { t } from "@lingui/core/macro";
 import { BlobReader, BlobWriter, TextWriter, ZipReader, type FileEntry } from "@zip.js/zip.js";
 
 import { safeEpubPath } from "./epub-path.js";
@@ -38,7 +39,7 @@ export class EpubArchive {
     try {
       const entries = await reader.getEntries();
       if (entries.length > MAX_ENTRIES) {
-        throw new Error(`EPUB archive exceeds the ${String(MAX_ENTRIES)}-entry safety limit.`);
+        throw new Error(t`EPUB archive exceeds the ${String(MAX_ENTRIES)}-entry safety limit.`);
       }
       const files = new Map<string, FileEntry>();
       let totalBytes = 0;
@@ -49,16 +50,18 @@ export class EpubArchive {
         const path = safeEpubPath(entry.filename);
         validateEntry(entry, path);
         if (files.has(path)) {
-          throw new Error(`EPUB archive contains a duplicate path: ${path}`);
+          throw new Error(t`EPUB archive contains a duplicate path: ${path}`);
         }
         totalBytes += entry.uncompressedSize;
         if (totalBytes > MAX_TOTAL_BYTES) {
-          throw new Error("EPUB archive exceeds the uncompressed size safety limit.");
+          throw new Error(
+            t({ message: "EPUB archive exceeds the uncompressed size safety limit." }),
+          );
         }
         files.set(path, entry);
       }
       if (!files.has("META-INF/container.xml")) {
-        throw new Error("EPUB archive is missing META-INF/container.xml.");
+        throw new Error(t({ message: "EPUB archive is missing META-INF/container.xml." }));
       }
       return new EpubArchive(reader, files);
     } catch (reason) {
@@ -84,12 +87,12 @@ export class EpubArchive {
 
   #entry(path: string): FileEntry {
     if (this.#closed) {
-      throw new Error("EPUB archive is closed.");
+      throw new Error(t({ message: "EPUB archive is closed." }));
     }
     const safePath = safeEpubPath(path);
     const entry = this.#files.get(safePath);
     if (!entry) {
-      throw new Error(`EPUB resource is missing: ${safePath}`);
+      throw new Error(t`EPUB resource is missing: ${safePath}`);
     }
     return entry;
   }
@@ -97,15 +100,15 @@ export class EpubArchive {
 
 function validateEntry(entry: FileEntry, path: string): void {
   if (entry.encrypted) {
-    throw new Error(`Encrypted EPUB resources are not supported: ${path}`);
+    throw new Error(t`Encrypted EPUB resources are not supported: ${path}`);
   }
   if (entry.uncompressedSize > MAX_ENTRY_BYTES) {
-    throw new Error(`EPUB resource exceeds the per-file safety limit: ${path}`);
+    throw new Error(t`EPUB resource exceeds the per-file safety limit: ${path}`);
   }
   if (
     entry.uncompressedSize >= RATIO_CHECK_THRESHOLD &&
     entry.uncompressedSize / Math.max(entry.compressedSize, 1) > MAX_COMPRESSION_RATIO
   ) {
-    throw new Error(`EPUB resource has an unsafe compression ratio: ${path}`);
+    throw new Error(t`EPUB resource has an unsafe compression ratio: ${path}`);
   }
 }

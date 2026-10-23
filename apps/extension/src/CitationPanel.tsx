@@ -1,3 +1,4 @@
+import { Trans, useLingui } from "@lingui/react/macro";
 import { useState } from "react";
 
 import { readerSourceUrl } from "./capture-model.js";
@@ -24,7 +25,9 @@ export function CitationPanel({
         <CitationCard controller={c} />
         {c.citationPending || c.citation ? null : (
           <p className="hint">
-            No citation details were found on this page. Save the source, then add them in Reader.
+            <Trans>
+              No citation details were found on this page. Save the source, then add them in Reader.
+            </Trans>
           </p>
         )}
       </div>
@@ -34,23 +37,26 @@ export function CitationPanel({
 }
 
 function SavedCitation({ source }: { readonly source: SourceSummary }): React.JSX.Element {
+  const { t } = useLingui();
   const citation = source.citation;
   const edit = (
     <a className="text-button" href={readerSourceUrl(source)} target="_blank" rel="noreferrer">
-      {citation ? "Edit in Reader" : "Add a citation in Reader"}
+      {citation ? t`Edit in Reader` : t`Add a citation in Reader`}
     </a>
   );
   if (!citation) {
     return (
       <div className="tab-section">
-        <p className="hint">This source has no citation yet.</p>
+        <p className="hint">
+          <Trans>This source has no citation yet.</Trans>
+        </p>
         {edit}
       </div>
     );
   }
   return (
     <div className="tab-section">
-      <section className="citation" aria-label="Stored citation">
+      <section className="citation" aria-label={t`Stored citation`}>
         <CitationDetails
           citation={{ ...citation, title: text(citation["title"]) ?? source.title }}
           doi={text(citation["DOI"])}
@@ -58,8 +64,8 @@ function SavedCitation({ source }: { readonly source: SourceSummary }): React.JS
         />
       </section>
       <div className="item-actions">
-        <CopyButton label="Copy citekey" value={`@${citation.id}`} />
-        <CopyButton label="Copy CSL-JSON" value={JSON.stringify(citation, null, 2)} />
+        <CopyButton label={t`Copy citekey`} value={`@${citation.id}`} />
+        <CopyButton label={t`Copy CSL-JSON`} value={JSON.stringify(citation, null, 2)} />
       </div>
       {edit}
     </div>
@@ -73,6 +79,7 @@ function CopyButton({
   readonly label: string;
   readonly value: string;
 }): React.JSX.Element {
+  const { t } = useLingui();
   const [state, setState] = useState<"idle" | "copied" | "failed">("idle");
   return (
     <button
@@ -85,7 +92,7 @@ function CopyButton({
         )
       }
     >
-      {state === "copied" ? "Copied" : state === "failed" ? "Could not copy" : label}
+      {state === "copied" ? t`Copied` : state === "failed" ? t`Could not copy` : label}
     </button>
   );
 }

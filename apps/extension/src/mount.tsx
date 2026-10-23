@@ -1,7 +1,10 @@
+import { readerI18n, setReaderLocaleStorage } from "@mdbase-reader/i18n";
+import { ReaderI18nProvider } from "@mdbase-reader/i18n/react";
 import "@mdbase-reader/ui/styles.css";
 import { createRoot } from "react-dom/client";
 
 import { credentiallessFetch } from "./credentialless-fetch.js";
+import { extensionLocaleStorage, followExtensionLocale } from "./extension-locale.js";
 import { startTheme } from "./extension-theme.js";
 import "./extension.css";
 
@@ -14,5 +17,7 @@ export function mount(page: React.JSX.Element): void {
   if (!root) {
     throw new Error("Reader extension root is missing.");
   }
-  createRoot(root).render(page);
+  setReaderLocaleStorage(extensionLocaleStorage);
+  followExtensionLocale(readerI18n);
+  createRoot(root).render(<ReaderI18nProvider>{page}</ReaderI18nProvider>);
 }

@@ -1,3 +1,4 @@
+import { useLingui } from "@lingui/react/macro";
 import { defaultRangeExtractor, useVirtualizer } from "@tanstack/react-virtual";
 import { useCallback, useEffect, useRef, useState, type JSX, type ReactNode } from "react";
 
@@ -17,6 +18,7 @@ export function VirtualAnnotationList({
   readonly renderCard: (annotation: Annotation) => ReactNode;
   readonly children?: ReactNode;
 }): JSX.Element {
+  const { t } = useLingui();
   const scrollRef = useRef<HTMLDivElement>(null);
   const [focusedId, setFocusedId] = useState<string | null>(null);
   const editingIndex = results.findIndex(({ id }) => id === editingId);
@@ -71,7 +73,7 @@ export function VirtualAnnotationList({
       {children}
       <div
         role="list"
-        aria-label="Annotations"
+        aria-label={t({ message: "Annotations", context: "VirtualAnnotationList interface" })}
         style={{ height: virtualizer.getTotalSize(), position: "relative" }}
       >
         {virtualizer.getVirtualItems().map((item) => {

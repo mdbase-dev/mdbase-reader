@@ -1,3 +1,5 @@
+import { t } from "@lingui/core/macro";
+
 import { dockPanelVisible } from "./dockview-panel-visibility.js";
 import { inspectorPanelId, navigatorPanelId } from "./dockview-workspace-state.js";
 
@@ -9,8 +11,10 @@ import type {
 } from "dockview-react";
 
 const positions = ["left", "right"] as const;
-function sidePanelTitle(id: string): string {
-  return id === navigatorPanelId ? "Sources" : "Source";
+export function sidePanelTitle(id: string): string {
+  return id === navigatorPanelId
+    ? t({ message: "Sources", context: "dockview side panels" })
+    : t({ message: "Source", context: "dockview side panels" });
 }
 function edgeGroup(api: DockviewApi, id: string, width: number): DockviewGroupPanel {
   const position = id === navigatorPanelId ? "left" : "right";
@@ -26,7 +30,7 @@ function edgeGroup(api: DockviewApi, id: string, width: number): DockviewGroupPa
   api.setEdgeGroupVisible(position, true);
   const group = api.groups.find((candidate) => candidate.id === edge.id);
   if (!group) {
-    throw new Error("Missing sidebar edge group");
+    throw new Error(t({ message: "Missing sidebar edge group" }));
   }
   return group;
 }

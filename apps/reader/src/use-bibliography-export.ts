@@ -1,3 +1,4 @@
+import { plural, t } from "@lingui/core/macro";
 import { signalMdbaseMark } from "@mdbase-dev/ui/mark-activity";
 import { buildCslBibliography, serializeCslBibliography } from "@mdbase-reader/core";
 import { useCallback, useMemo, useState } from "react";
@@ -35,11 +36,11 @@ export function useBibliographyExport(
   const save = useCallback(
     (items: ReturnType<typeof buildCslBibliography>["items"]): void => {
       if (!saveFile) {
-        fail("File export is unavailable in this build.");
+        fail(t({ message: "File export is unavailable in this build." }));
         return;
       }
       if (items.length === 0) {
-        fail("No valid citations are ready to export.");
+        fail(t({ message: "No valid citations are ready to export." }));
         return;
       }
       setState({ status: "exporting", message: null });
@@ -49,11 +50,15 @@ export function useBibliographyExport(
           signalMdbaseMark("saved");
           setState({
             status: "success",
-            message: `Exported ${countLabel(items.length, "citation")}.`,
+            message: t({
+              message: `Exported ${plural(items.length, { one: "# citation", other: "# citations" })}.`,
+            }),
           });
         })
         .catch((reason: unknown) =>
-          fail(readerErrorMessage(reason, "Reader could not export the bibliography.")),
+          fail(
+            readerErrorMessage(reason, t({ message: "Reader could not export the bibliography." })),
+          ),
         );
     },
     [fail, saveFile],
@@ -85,14 +90,16 @@ export function bibliographyProblemSummary(
     counts[kind] += 1;
   }
   return [
-    counts.missing ? countLabel(counts.missing, "without citation") : null,
-    counts.invalid ? countLabel(counts.invalid, "invalid record") : null,
-    counts.duplicate ? countLabel(counts.duplicate, "citekey collision") : null,
+    counts.missing
+      ? plural(counts.missing, { one: "# without citation", other: "# without citations" })
+      : null,
+    counts.invalid
+      ? plural(counts.invalid, { one: "# invalid record", other: "# invalid records" })
+      : null,
+    counts.duplicate
+      ? plural(counts.duplicate, { one: "# citekey collision", other: "# citekey collisions" })
+      : null,
   ]
     .filter((value): value is string => value !== null)
     .join(" · ");
-}
-
-function countLabel(count: number, singular: string): string {
-  return `${String(count)} ${singular}${count === 1 ? "" : "s"}`;
 }
