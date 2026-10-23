@@ -276,7 +276,7 @@ describe("adding captured page citations", () => {
       expect.objectContaining({
         title: expect.objectContaining({
           value: "Australia",
-          source: "site-adapter:citoid/encyclopediaArticle",
+          source: "site-adapter:citoid/encyclopediaArticle Citoid encyclopediaArticle",
         }),
         author: expect.objectContaining({
           value: [{ literal: "Page Author" }],
@@ -287,7 +287,10 @@ describe("adding captured page citations", () => {
     expect(result).toMatchObject({
       kind: "added",
       provenance: {
-        title: { value: "Australia", source: "site-adapter:citoid/encyclopediaArticle" },
+        title: {
+          value: "Australia",
+          source: "site-adapter:citoid/encyclopediaArticle Citoid encyclopediaArticle",
+        },
       },
     });
   });
