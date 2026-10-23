@@ -2,6 +2,7 @@
 import { describe, expect, it } from "vitest";
 
 import { pageClaims } from "./page-claims.js";
+import { resolveCitation } from "./resolver.js";
 
 const observedAt = "2026-10-21T09:00:00.000Z";
 const pageUrl = "https://example.org/notes";
@@ -24,6 +25,76 @@ function values(document: Document, field: string): unknown[] {
 }
 
 describe("JSON-LD candidates", () => {
+  it.each(["@id", "url"])("rejects an explicitly off-page %s even in a small graph", (identity) => {
+    const document = page(
+      `<title>Current work</title>${linked({
+        "@type": "NewsArticle",
+        [identity]: "https://other.example/recommended",
+        headline: "Recommended work",
+        identifier: "10.1234/unrelated",
+      })}`,
+    );
+    const batch = pageClaims(document, pageUrl, observedAt);
+    expect(batch.identifiers?.doi).toBeUndefined();
+    expect(resolveCitation({ claims: batch.claims }).citation?.["title"]).toBe("Current work");
+  });
+
+  it.each([
+    "https://example.org/notes",
+    "http://example.org/notes",
+    "https://www.example.org/notes/",
+    "https://example.org/notes#article",
+    "#article",
+  ])("accepts the same-page identity %s", (id) => {
+    const document = page(linked({ "@type": "NewsArticle", "@id": id, headline: "Work" }));
+    expect(values(document, "title")).toEqual(["Work"]);
+  });
+
+  it.each(["https://example.org/notes/amp", "https://example.org/notes?amp=1"])(
+    "accepts canonical-page identities when capturing %s",
+    (url) => {
+      const document = page(
+        `<link rel="canonical" href="https://example.org/notes">${linked({
+          "@type": "NewsArticle",
+          "@id": "http://www.example.org/notes/#article",
+          headline: "Canonical work",
+        })}`,
+      );
+      expect(pageClaims(document, url, observedAt).claims).toContainEqual(
+        expect.objectContaining({ field: "title", value: "Canonical work" }),
+      );
+    },
+  );
+
+  it.each(["mainEntity", "mainEntityOfPage", "url"])(
+    "accepts an off-page identity corroborated by %s",
+    (relationship) => {
+      const work = {
+        "@type": "NewsArticle",
+        "@id": "https://other.example/work",
+        headline: "Corroborated work",
+        identifier: "10.1234/work",
+        ...(relationship === "mainEntityOfPage" ? { mainEntityOfPage: { "@id": pageUrl } } : {}),
+        ...(relationship === "url" ? { url: pageUrl } : {}),
+      };
+      const document = page(
+        linked({
+          "@graph": [
+            work,
+            ...(relationship === "mainEntity"
+              ? [{ "@type": "WebPage", "@id": pageUrl, mainEntity: { "@id": work["@id"] } }]
+              : []),
+          ],
+        }),
+      );
+      const batch = pageClaims(document, pageUrl, observedAt);
+      expect(batch.identifiers?.doi).toBe("10.1234/work");
+      expect(resolveCitation({ claims: batch.claims }).citation?.["title"]).toBe(
+        "Corroborated work",
+      );
+    },
+  );
+
   it("reads every work in graphs, arrays and scripts, resolving references across scripts", () => {
     const document = page(`
       <script type="application/ld+json">not valid JSON</script>
@@ -249,6 +320,7 @@ it("keeps every DOI candidate while using the existing singleton identifier disc
       "@type": "ScholarlyArticle",
       identifier: ["10.1234/linked", { "@type": "PropertyValue", value: "doi:10.1234/property" }],
       "@id": "https://doi.org/10.1234/node",
+      mainEntityOfPage: "https://example.org/doi/10.1234/url",
     })}`);
   const batch = pageClaims(document, "https://example.org/doi/10.1234/url", observedAt);
   expect(batch.claims.filter((claim) => claim.field === "DOI").map((claim) => claim.value)).toEqual(

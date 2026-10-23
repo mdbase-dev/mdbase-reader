@@ -519,6 +519,12 @@ function pageWorkNodes(document: Document, pageUrl: string, nodes: JsonLdNode[])
     }
     try {
       const url = new URL(identity, pageUrl);
+      if (url.protocol !== "http:" && url.protocol !== "https:") {
+        return undefined;
+      }
+      url.protocol = "https:";
+      url.hostname = url.hostname.replace(/^www\./u, "");
+      url.pathname = url.pathname.replace(/\/$/u, "");
       url.hash = "";
       return url.href;
     } catch {
@@ -572,9 +578,9 @@ function pageWorkNodes(document: Document, pageUrl: string, nodes: JsonLdNode[])
     // can still express alternate metadata about one work, as publishers commonly do.
     if (
       node["url"] ||
-      ((hasTarget || listing || works.length > maxUnscopedWorks) &&
-        typeof node["@id"] === "string" &&
-        !node["@id"].startsWith("#"))
+      (typeof node["@id"] === "string" &&
+        identityUrl(node["@id"]) !== undefined &&
+        !matchesPage(node["@id"]))
     ) {
       return false;
     }
