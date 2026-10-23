@@ -10,533 +10,533 @@ msgstr ""
 #. placeholder {0}: (progress.transferredBytes / 1024 ** 2).toLocaleString(i18n.locale, { minimumFractionDigits: 1, maximumFractionDigits: 1 })
 #: apps/reader/src/ImportReview.tsx
 msgid " · {0} MiB latest file progress"
-msgstr ""
+msgstr " · {0} MiB de progreso del último archivo"
 
 #: apps/reader/src/LibraryWorkspace.tsx
 msgid " · Loading more…"
-msgstr ""
+msgstr " · Cargando más…"
 
 #. placeholder {0}: String(panes.indexOf(pane) + 1)
 #: apps/reader/src/reader-command-list.ts
 msgid " · pane {0}"
-msgstr ""
+msgstr " · panel {0}"
 
 #: apps/extension/src/CaptureApp.tsx
 msgid " · PDF"
-msgstr ""
+msgstr " · PDF"
 
 #: apps/reader/src/LibraryConditionsEditor.tsx
 msgid " Add a field condition"
-msgstr ""
+msgstr " Añadir una condición de campo"
 
 #: apps/reader/src/DocumentContextualToolbar.tsx
 msgid " Annotations"
-msgstr ""
+msgstr " Anotaciones"
 
 #: apps/reader/src/WorkspacePaneSupport.tsx
 msgid " Attach a PDF, EPUB or saved page, or drop one here."
-msgstr ""
+msgstr " Adjunta un PDF, EPUB o página guardada, o suéltalo aquí."
 
 #: apps/reader/src/DocumentContextualToolbar.tsx
 msgid " Bookmark this position"
-msgstr ""
+msgstr " Marcar esta posición"
 
 #: apps/reader/src/DocumentContextualToolbar.tsx
 msgid " Citation"
-msgstr ""
+msgstr " Cita"
 
 #: apps/reader/src/AnnotationPanelActions.tsx
 #: apps/reader/src/SelectionToolbar.tsx
 msgid " Comment"
-msgstr ""
+msgstr " Comentar"
 
 #: apps/reader/src/SelectionToolbar.tsx
 msgid " Highlight"
-msgstr ""
+msgstr " Resaltar"
 
 #: apps/reader/src/SourceNoteInsertMenu.tsx
 msgid " Insert"
-msgstr ""
+msgstr " Insertar"
 
 #: apps/reader/src/DocumentContextualToolbar.tsx
 msgid " Literature note"
-msgstr ""
+msgstr " Nota bibliográfica"
 
 #: apps/reader/src/DocumentContextualToolbar.tsx
 msgid " Open literature note beside"
-msgstr ""
+msgstr " Abrir nota bibliográfica al lado"
 
 #: apps/reader/src/MobileWorkspaceNavigation.tsx
 msgid " open tabs"
-msgstr ""
+msgstr " pestañas abiertas"
 
 #: apps/reader/src/DocumentContextualToolbar.tsx
 msgid " Remove source…"
-msgstr ""
+msgstr " Eliminar fuente…"
 
 #. placeholder {0}: preview.problem
 #: apps/extension/src/CitationCard.tsx
 msgid " The DOI record was unavailable ({0})."
-msgstr ""
+msgstr " El registro DOI no estaba disponible ({0})."
 
 #. placeholder {0}: selected.size
 #: apps/reader/src/CitationLookup.tsx
 msgid "{0, plural, =0 {Apply selected details} one {Apply # change} other {Apply # changes}}"
-msgstr ""
+msgstr "{0, plural, =0 {Aplicar los detalles seleccionados} one {Aplicar # cambio} other {Aplicar # cambios}}"
 
 #. placeholder {0}: selected.length
 #: apps/reader/src/LibraryAnnotationBars.tsx
 msgid "{0, plural, one {# annotation selected} other {# annotations selected}}"
-msgstr ""
+msgstr "{0, plural, one {# anotación seleccionada} other {# anotaciones seleccionadas}}"
 
 #. placeholder {0}: counts.duplicate
 #: apps/reader/src/use-bibliography-export.ts
 msgid "{0, plural, one {# citekey collision} other {# citekey collisions}}"
-msgstr ""
+msgstr "{0, plural, one {# conflicto de claves de cita} other {# conflictos de claves de cita}}"
 
 #. placeholder {0}: counts.invalid
 #: apps/reader/src/use-bibliography-export.ts
 msgid "{0, plural, one {# invalid record} other {# invalid records}}"
-msgstr ""
+msgstr "{0, plural, one {# registro no válido} other {# registros no válidos}}"
 
 #. placeholder {0}: editor.warnings.length
 #: apps/reader/src/CitationEditor.tsx
 msgid "{0, plural, one {# quality suggestion} other {# quality suggestions}}"
-msgstr ""
+msgstr "{0, plural, one {# sugerencia de calidad} other {# sugerencias de calidad}}"
 
 #. placeholder {0}: progress.failed
 #: apps/reader/src/LibraryBulkBar.tsx
 msgid "{0, plural, one {# source could not be updated} other {# sources could not be updated}}"
-msgstr ""
+msgstr "{0, plural, one {No se pudo actualizar # fuente} other {No se pudieron actualizar # fuentes}}"
 
 #. placeholder {0}: selected.length
 #: apps/reader/src/LibraryBulkBar.tsx
 msgid "{0, plural, one {# source selected} other {# sources selected}}"
-msgstr ""
+msgstr "{0, plural, one {# fuente seleccionada} other {# fuentes seleccionadas}}"
 
 #. placeholder {0}: plan.warnings.length
 #: apps/reader/src/ImportReview.tsx
 msgid "{0, plural, one {# warning and fidelity note} other {# warnings and fidelity notes}}"
-msgstr ""
+msgstr "{0, plural, one {# advertencia y nota de fidelidad} other {# advertencias y notas de fidelidad}}"
 
 #. placeholder {0}: counts.missing
 #: apps/reader/src/use-bibliography-export.ts
 msgid "{0, plural, one {# without citation} other {# without citations}}"
-msgstr ""
+msgstr "{0, plural, one {# sin cita} other {# sin citas}}"
 
 #. placeholder {0}: selected.length
 #: apps/reader/src/LibraryAnnotationBars.tsx
 msgid "{0, plural, one {Copied # annotation as Markdown.} other {Copied # annotations as Markdown.}}"
-msgstr ""
+msgstr "{0, plural, one {Se ha copiado # anotación como Markdown.} other {Se han copiado # anotaciones como Markdown.}}"
 
 #. placeholder {0}: plan.sources.length
 #. placeholder {1}: opened.collectionName
 #. placeholder {2}: opened.collectionName
 #: apps/reader/src/ImportReview.tsx
 msgid "{0, plural, one {Import # source into {1}} other {Import # sources into {2}}}"
-msgstr ""
+msgstr "{0, plural, one {Importar # fuente a {1}} other {Importar # fuentes a {2}}}"
 
 #. placeholder {0}: links.length
 #: apps/reader/src/SourceRemovalDialog.tsx
 msgid "{0, plural, one {This record links to it and will show a broken link:} other {These # records link to it and will show a broken link:}}"
-msgstr ""
+msgstr "{0, plural, one {Este registro enlaza con él y mostrará un enlace roto:} other {Estos # registros enlazan con él y mostrarán un enlace roto:}}"
 
 #. placeholder {0}: migrationPhaseLabel(progress.phase)
 #: apps/reader/src/import-controller.ts
 msgid "{0} — {name}"
-msgstr ""
+msgstr "{0} — {name}"
 
 #. placeholder {0}: annotation.locator.label
 #: apps/reader/src/AnnotationCard.tsx
 msgid "{0} · saved without a link to the exact passage"
-msgstr ""
+msgstr "{0} · guardado sin enlace al pasaje exacto"
 
 #. placeholder {0}: annotationKindLabel(annotation.annotationType)
 #: apps/reader/src/AnnotationCard.tsx
 msgid "{0} annotation"
-msgstr ""
+msgstr "Anotación de tipo {0}"
 
 #. placeholder {0}: (plan.summary.bytes / 1024 ** 3).toLocaleString(i18n.locale, { minimumFractionDigits: 2, maximumFractionDigits: 2 })
 #: apps/reader/src/ImportReview.tsx
 msgid "{0} GiB"
-msgstr ""
+msgstr "{0} GiB"
 
 #. placeholder {0}: view.name
 #: apps/reader/src/LibraryWorkspace.tsx
 msgid "{0} library view"
-msgstr ""
+msgstr "Vista de biblioteca {0}"
 
 #. placeholder {0}: String(tabs.length)
 #: apps/reader/src/MobileWorkspaceNavigation.tsx
 msgid "{0} open tabs"
-msgstr ""
+msgstr "{0} pestañas abiertas"
 
 #. placeholder {0}: String(converted)
 #. placeholder {1}: String(unresolved)
 #: packages/migration/src/zotero-anchors.ts
 msgid "{0} Zotero PDF annotations have converted page/rectangle anchors. {1} retain native selectors only (missing/unreadable PDFs, unsupported geometry, ink, or non-PDF annotations). Image crops are not generated."
-msgstr ""
+msgstr "Se han convertido los anclajes de página y rectángulo de {0} anotaciones PDF de Zotero. {1} conservan solo los selectores nativos (PDF ausentes o ilegibles, geometría no compatible, trazos o anotaciones que no son de PDF). No se generan recortes de imagen."
 
 #. placeholder {0}: String(progress)
 #: apps/reader/src/LibraryCells.tsx
 msgid "{0}% read"
-msgstr ""
+msgstr "{0}% leído"
 
 #. placeholder {0}: tabLabel(tab)
 #. placeholder {1}: workbenchOwner.paneLabel
 #: apps/reader/src/InspectorPane.tsx
 msgid "{0}is open in{1}"
-msgstr ""
+msgstr "{0}está abierto en{1}"
 
 #. placeholder {0}: preview.newRecords.toLocaleString(i18n.locale)
 #. placeholder {1}: preview.existingRecords.toLocaleString(i18n.locale)
 #: apps/reader/src/ImportReview.tsx
 msgid "{0}new records; {1}already imported. No existing records will be overwritten."
-msgstr ""
+msgstr "{0}registros nuevos; {1}ya importados. No se sobrescribirá ningún registro existente."
 
 #: packages/renderer-epub/src/epub-manifest.ts
 msgid "{context} is missing {attribute}."
-msgstr ""
+msgstr "Falta {attribute} en {context}."
 
 #: apps/reader/src/LibraryCells.tsx
 msgid "{count, plural, one {# annotation} other {# annotations}}"
-msgstr ""
+msgstr "{count, plural, one {# anotación} other {# anotaciones}}"
 
 #. placeholder {0}: problemMessage(reason)
 #: apps/extension/src/use-extension-capture.ts
 msgid "{count, plural, one {# post confirmed before the failure.} other {# posts confirmed before the failure.}} Retry checks each post for duplicates. {0}"
-msgstr ""
+msgstr "{count, plural, one {# publicación confirmada antes del fallo.} other {# publicaciones confirmadas antes del fallo.}} Al reintentar se comprueban los duplicados de cada publicación. {0}"
 
 #: apps/extension/src/use-extension-capture.ts
 msgid "{count, plural, one {# post saved. Feeds are never saved.} other {# posts saved. Feeds are never saved.}}"
-msgstr ""
+msgstr "{count, plural, one {# publicación guardada. Los canales nunca se guardan.} other {# publicaciones guardadas. Los canales nunca se guardan.}}"
 
 #: apps/reader/src/LibraryCells.tsx
 msgid "{count, plural, one {# source} other {# sources}}"
-msgstr ""
+msgstr "{count, plural, one {# fuente} other {# fuentes}}"
 
 #: packages/renderer-pdf/src/pdf-translations.ts
 msgctxt "PDF viewer search"
 msgid "{count} results found"
-msgstr ""
+msgstr "{count} resultados encontrados"
 
 #: apps/reader/src/EnvironmentBadge.tsx
 msgid "{environment} environment"
-msgstr ""
+msgstr "Entorno {environment}"
 
 #. placeholder {0}: state.message
 #: apps/reader/src/DocumentRendererStage.tsx
 msgid "{errorName} could not render this file: {0}"
-msgstr ""
+msgstr "{errorName} no pudo mostrar este archivo: {0}"
 
 #: apps/reader/src/use-open-document-search.ts
 msgid "{failures, plural, one {# loaded document could not be indexed} other {# loaded documents could not be indexed}}. Reopen document search to retry."
-msgstr ""
+msgstr "{failures, plural, one {No se pudo indexar # documento cargado} other {No se pudieron indexar # documentos cargados}}. Vuelve a abrir la búsqueda del documento para reintentar."
 
 #: apps/extension/src/SavedHighlights.tsx
 msgid "{hidden} not shown on this page, which may have changed since it was saved. They are still in the saved copy."
-msgstr ""
+msgstr "{hidden} no se muestran en esta página, que puede haber cambiado desde que se guardó. Siguen en la copia guardada."
 
 #: apps/extension/src/page-badge.ts
 msgid "{highlights, plural, one {Saved in mdbase Reader · # highlight} other {Saved in mdbase Reader · # highlights}}"
-msgstr ""
+msgstr "{highlights, plural, one {Guardado en mdbase Reader · # resaltado} other {Guardado en mdbase Reader · # resaltados}}"
 
 #. placeholder {0}: String(index + 1)
 #: apps/reader/src/CitationContributors.tsx
 msgid "{itemLabel} {0} dropping particle"
-msgstr ""
+msgstr "{itemLabel} {0}: partícula omisible"
 
 #. placeholder {0}: String(index + 1)
 #: apps/reader/src/CitationContributors.tsx
 msgid "{itemLabel} {0} family name"
-msgstr ""
+msgstr "{itemLabel} {0}: apellidos"
 
 #. placeholder {0}: String(index + 1)
 #: apps/reader/src/CitationContributors.tsx
 msgid "{itemLabel} {0} given name"
-msgstr ""
+msgstr "{itemLabel} {0}: nombre de pila"
 
 #. placeholder {0}: String(index + 1)
 #: apps/reader/src/CitationContributors.tsx
 msgid "{itemLabel} {0} kind"
-msgstr ""
+msgstr "{itemLabel} {0}: tipo"
 
 #. placeholder {0}: String(index + 1)
 #: apps/reader/src/CitationContributors.tsx
 msgid "{itemLabel} {0} non-dropping particle"
-msgstr ""
+msgstr "{itemLabel} {0}: partícula no omisible"
 
 #. placeholder {0}: String(index + 1)
 #: apps/reader/src/CitationContributors.tsx
 msgid "{itemLabel} {0} organisation"
-msgstr ""
+msgstr "{itemLabel} {0}: organización"
 
 #. placeholder {0}: String(index + 1)
 #: apps/reader/src/CitationContributors.tsx
 msgid "{itemLabel} {0} suffix"
-msgstr ""
+msgstr "{itemLabel} {0}: sufijo"
 
 #: apps/reader/src/CitationTypedFieldEditors.tsx
 msgid "{key} property name"
-msgstr ""
+msgstr "Nombre de la propiedad {key}"
 
 #: apps/reader/src/CitationTypedFieldEditors.tsx
 msgid "{key} value type"
-msgstr ""
+msgstr "Tipo de valor de {key}"
 
 #: apps/reader/src/LibraryTableHeader.tsx
 msgid "{label} column options"
-msgstr ""
+msgstr "Opciones de la columna {label}"
 
 #: apps/reader/src/CitationTypedFieldEditors.tsx
 msgid "{label} JSON value"
-msgstr ""
+msgstr "Valor JSON de {label}"
 
 #: packages/migration/src/readwise.ts
 msgid "{label}: {message}"
-msgstr ""
+msgstr "{label}: {message}"
 
 #: apps/extension/src/SavedHighlights.tsx
 msgid "{links, plural, one { # note links to it; those links will break.} other { # notes link to it; those links will break.}}"
-msgstr ""
+msgstr "{links, plural, one { # nota enlaza con él; esos enlaces se romperán.} other { # notas enlazan con él; esos enlaces se romperán.}}"
 
 #: packages/migration/src/zotero-bundle.ts
 msgid "{name} count mismatch."
-msgstr ""
+msgstr "El recuento de {name} no coincide."
 
 #: packages/core/src/domain/identity.ts
 msgid "{name} must be a non-empty printable value."
-msgstr ""
+msgstr "{name} debe ser un valor imprimible no vacío."
 
 #: apps/reader/src/CitationTypedFieldEditors.tsx
 msgid "{name} value"
-msgstr ""
+msgstr "Valor de {name}"
 
 #: apps/extension/src/page-badge.ts
 msgid "{posts, plural, one {# saved post} other {# saved posts}} in mdbase Reader · {highlights, plural, one {# highlight on visible posts} other {# highlights on visible posts}}"
-msgstr ""
+msgstr "{posts, plural, one {# publicación guardada} other {# publicaciones guardadas}} en mdbase Reader · {highlights, plural, one {# resaltado en las publicaciones visibles} other {# resaltados en las publicaciones visibles}}"
 
 #. placeholder {0}: count.toLocaleString(i18n.locale)
 #: packages/migration/src/readwise-values.ts
 msgid "{reason}: {0}"
-msgstr ""
+msgstr "{reason}: {0}"
 
 #: apps/reader/src/AnnotationList.tsx
 msgid "{results} of {total}"
-msgstr ""
+msgstr "{results} de {total}"
 
 #: apps/reader/src/SelectionToolbar.tsx
 msgid "{state, plural, one {In # note · Review} other {In # notes · Review}}"
-msgstr ""
+msgstr "{state, plural, one {En # nota · Revisar} other {En # notas · Revisar}}"
 
 #: apps/reader/src/DockviewWorkspace.tsx
 msgid "{title} · Drag to move or split · Right-click for pane actions · Delete closes the tab"
-msgstr ""
+msgstr "{title} · Arrastra para mover o dividir · Clic derecho para acciones del panel · Supr cierra la pestaña"
 
 #: apps/reader/src/CitationEditor.tsx
 msgid "{warnings, plural, one {# quality suggestion} other {# quality suggestions}}"
-msgstr ""
+msgstr "{warnings, plural, one {# sugerencia de calidad} other {# sugerencias de calidad}}"
 
 #: apps/reader/src/CitationEditor.tsx
 msgid "{warnings, plural, one {Show # quality suggestion} other {Show # quality suggestions}}"
-msgstr ""
+msgstr "{warnings, plural, one {Mostrar # sugerencia de calidad} other {Mostrar # sugerencias de calidad}}"
 
 #: apps/reader/src/CitationContributors.tsx
 msgid "+ Add{itemLabel}"
-msgstr ""
+msgstr "+ Añadir{itemLabel}"
 
 #: apps/extension/src/OptionsApp.tsx
 msgid "<0/>Show connection diagnostics in the side panel"
-msgstr ""
+msgstr "<0/>Mostrar diagnósticos de conexión en el panel lateral"
 
 #: apps/extension/src/CaptureApp.tsx
 msgid "<0>{shortcut}</0> highlights the selection from the page"
-msgstr ""
+msgstr "<0>{shortcut}</0> resalta la selección de la página"
 
 #: apps/extension/src/CaptureApp.tsx
 msgid "<0>1</0>–<1>5</1> save the selection in a colour; <2>Esc</2> clears it"
-msgstr ""
+msgstr "<0>1</0>–<1>5</1> guardan la selección en un color; <2>Esc</2> la borra"
 
 #: apps/reader/src/ImportInput.tsx
 msgid "<0>Download Zotero exporter (.xpi)</0>"
-msgstr ""
+msgstr "<0>Descargar exportador de Zotero (.xpi)</0>"
 
 #: apps/reader/src/preview.tsx
 msgid "<0>Interface preview</0>No collection records or files are created."
-msgstr ""
+msgstr "<0>Vista previa de la interfaz</0>No se crean registros ni archivos en la colección."
 
 #: apps/reader/src/ImportReview.tsx
 msgid "<0>Open imported collection →</0>"
-msgstr ""
+msgstr "<0>Abrir colección importada →</0>"
 
 #: packages/core/src/domain/annotation.ts
 msgid "A bookmark requires a document position."
-msgstr ""
+msgstr "Un marcador requiere una posición en el documento."
 
 #: packages/core/src/application/citation-citekey.ts
 msgid "A chapter normally needs a book or collection title."
-msgstr ""
+msgstr "Un capítulo normalmente necesita el título del libro o de la colección."
 
 #: packages/core/src/domain/time.ts
 msgid "A datetime must be a valid ISO 8601 value."
-msgstr ""
+msgstr "La fecha y hora deben ser un valor ISO 8601 válido."
 
 #: packages/core/src/domain/revision.ts
 msgid "A file revision must be a lowercase SHA-256 value prefixed with sha256:."
-msgstr ""
+msgstr "La revisión de un archivo debe ser un valor SHA-256 en minúsculas con el prefijo sha256:."
 
 #: packages/core/src/domain/annotation.ts
 msgid "A file selector requires an exact document target."
-msgstr ""
+msgstr "Un selector de archivo requiere un destino de documento exacto."
 
 #: packages/core/src/application/citation-citekey.ts
 msgid "A journal article normally needs a journal title."
-msgstr ""
+msgstr "Un artículo de revista normalmente necesita el título de la revista."
 
 #: apps/reader/src/DeploymentUpdateNotice.tsx
 msgid "A newer Reader is ready."
-msgstr ""
+msgstr "Hay una nueva versión de Reader disponible."
 
 #: packages/core/src/domain/selector.ts
 msgid "A PDF page index must be a non-negative integer."
-msgstr ""
+msgstr "El índice de página de un PDF debe ser un entero no negativo."
 
 #: packages/core/src/domain/selector.ts
 msgid "A PDF selector must contain at least one quadrilateral."
-msgstr ""
+msgstr "Un selector PDF debe contener al menos un cuadrilátero."
 
 #: apps/reader/src/LibraryAnnotationToolbar.tsx
 msgid "A saved view that lists the annotations of whichever source it runs against"
-msgstr ""
+msgstr "Una vista guardada que enumera las anotaciones de la fuente con la que se ejecuta"
 
 #: apps/extension/src/WelcomeApp.tsx
 msgid "A side panel opens where you can check the title and citation, add tags and a note, and save. It stays open as you move between tabs and pages, showing whatever you are reading."
-msgstr ""
+msgstr "Se abre un panel lateral donde puedes comprobar el título y la cita, añadir etiquetas y una nota, y guardar. Permanece abierto al cambiar de pestaña o página y muestra lo que estás leyendo."
 
 #: packages/core/src/domain/source.ts
 msgid "A source path is not safe to link."
-msgstr ""
+msgstr "La ruta de una fuente no es segura para crear un enlace."
 
 #: packages/core/src/domain/annotation.ts
 msgid "A text highlight requires quote.exact."
-msgstr ""
+msgstr "Un resaltado de texto requiere quote.exact."
 
 #: apps/reader/src/AnnotationPanelActions.tsx
 msgid "A thought about this source as a whole"
-msgstr ""
+msgstr "Una reflexión sobre esta fuente en su conjunto"
 
 #: packages/core/src/application/import-source-file.ts
 msgid "A web archive must contain HTML bytes."
-msgstr ""
+msgstr "Un archivo web debe contener bytes HTML."
 
 #: apps/reader/src/LibraryCells.tsx
 msgctxt "reading status"
 msgid "Abandoned"
-msgstr ""
+msgstr "Abandonado"
 
 #: apps/extension/src/OptionsApp.tsx
 msgid "About"
-msgstr ""
+msgstr "Acerca de"
 
 #: apps/reader/src/CitationStructuredEditor.tsx
 msgid "Abstract"
-msgstr ""
+msgstr "Resumen"
 
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "Abstract"
-msgstr ""
+msgstr "Resumen"
 
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "Accessed"
-msgstr ""
+msgstr "Fecha de consulta"
 
 #. placeholder {0}: source.title
 #: apps/reader/src/LibraryRowMenu.tsx
 msgid "Actions for {0}"
-msgstr ""
+msgstr "Acciones para {0}"
 
 #: apps/reader/src/LibraryTableHeader.tsx
 msgctxt "LibraryTableHeader interface"
 msgid "Add"
-msgstr ""
+msgstr "Añadir"
 
 #: apps/reader/src/SourceAddDialog.tsx
 msgctxt "SourceAddDialog interface"
 msgid "Add"
-msgstr ""
+msgstr "Añadir"
 
 #: apps/reader/src/LibraryAnnotationToolbar.tsx
 msgid "Add “Annotations for this source” view"
-msgstr ""
+msgstr "Añadir vista «Anotaciones de esta fuente»"
 
 #: apps/reader/src/pwa-install.ts
 msgid "Add {appName} to your Home Screen: tap Share, then Add to Home Screen."
-msgstr ""
+msgstr "Añade {appName} a tu pantalla de inicio: toca Compartir y luego Añadir a pantalla de inicio."
 
 #: apps/extension/src/CitationPanel.tsx
 msgid "Add a citation in Reader"
-msgstr ""
+msgstr "Añadir una cita en Reader"
 
 #: apps/reader/src/AnnotationComposer.tsx
 msgid "Add a comment"
-msgstr ""
+msgstr "Añadir un comentario"
 
 #: apps/extension/src/HighlightFields.tsx
 msgid "Add a comment or tags"
-msgstr ""
+msgstr "Añadir un comentario o etiquetas"
 
 #: apps/reader/src/AnnotationEditor.tsx
 msgid "Add a comment…"
-msgstr ""
+msgstr "Añadir un comentario…"
 
 #: apps/reader/src/LibraryWorkspace.tsx
 msgid "Add a PDF, EPUB or web page to start reading."
-msgstr ""
+msgstr "Añade un PDF, EPUB o página web para empezar a leer."
 
 #: apps/reader/src/LibraryWorkspace.tsx
 #: apps/reader/src/SourceAddDialog.tsx
 msgid "Add a source"
-msgstr ""
+msgstr "Añadir una fuente"
 
 #: packages/core/src/application/citation-citekey.ts
 msgid "Add a title before using this citation in a bibliography."
-msgstr ""
+msgstr "Añade un título antes de usar esta cita en una bibliografía."
 
 #: apps/reader/src/SourceNoteInsertMenu.tsx
 msgid "Add citation details first"
-msgstr ""
+msgstr "Añade primero los detalles de la cita"
 
 #: apps/reader/src/LibraryAnnotationTableHead.tsx
 msgctxt "LibraryAnnotationTableHead interface"
 msgid "Add column"
-msgstr ""
+msgstr "Añadir columna"
 
 #: apps/reader/src/LibraryTableHeader.tsx
 msgctxt "LibraryTableHeader interface"
 msgid "Add column"
-msgstr ""
+msgstr "Añadir columna"
 
 #: apps/extension/src/SavedHighlights.tsx
 msgid "Add comment"
-msgstr ""
+msgstr "Añadir comentario"
 
 #: apps/reader/src/CitationAdditionalFields.tsx
 msgid "Add field"
-msgstr ""
+msgstr "Añadir campo"
 
 #: apps/reader/src/CitationAdditionalFields.tsx
 msgid "Add less common CSL metadata"
-msgstr ""
+msgstr "Añadir metadatos CSL menos habituales"
 
 #: apps/reader/src/citation-renderer.ts
 msgid "Add more details to preview this citation."
-msgstr ""
+msgstr "Añade más detalles para ver una vista previa de esta cita."
 
 #: apps/reader/src/LibraryNavigator.tsx
 msgid "Add one"
-msgstr ""
+msgstr "Añadir uno"
 
 #: apps/reader/src/CitationTypedFieldEditors.tsx
 msgid "Add property"
