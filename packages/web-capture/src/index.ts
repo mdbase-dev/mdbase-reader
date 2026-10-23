@@ -16,3 +16,5 @@ export {
 export * from "./claims.js";
 export * from "./page-claims.js";
 export * from "./resolver.js";
+export * from "./provider-queue.js";
+export * from "./provider-claims.js";
