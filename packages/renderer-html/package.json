@@ -7,10 +7,11 @@
     ".": "./src/index.ts"
   },
   "scripts": {
-    "test": "vitest run --passWithNoTests",
+    "test": "vitest run --passWithNoTests --config ../../vitest.config.mjs",
     "typecheck": "tsc -p tsconfig.json"
   },
   "dependencies": {
+    "@lingui/core": "6.9.0",
     "@mdbase-reader/core": "workspace:*",
     "@mdbase-reader/reading-surface": "workspace:*",
     "react": "^19.2.8"

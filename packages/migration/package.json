@@ -7,7 +7,7 @@
     ".": "./src/index.ts"
   },
   "scripts": {
-    "test": "vitest run",
+    "test": "vitest run --config ../../vitest.config.mjs",
     "typecheck": "tsc -p tsconfig.json"
   },
   "dependencies": {

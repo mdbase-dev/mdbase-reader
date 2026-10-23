@@ -4,11 +4,12 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "build": "tsc -p tsconfig.build.json",
-    "test": "vitest run --passWithNoTests",
+    "build": "tsc -p tsconfig.build.json && node ../../scripts/compile-native-macros.mjs dist",
+    "test": "vitest run --passWithNoTests --config ../../vitest.config.mjs",
     "typecheck": "tsc -p tsconfig.json"
   },
   "dependencies": {
+    "@lingui/core": "6.9.0",
     "@mdbase-reader/platform": "workspace:*",
     "electron": "latest"
   }
