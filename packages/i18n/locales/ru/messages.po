@@ -8069,423 +8069,423 @@ msgstr "Несохранённые изменения"
 #: apps/reader/src/CitationEditor.tsx
 msgctxt "CitationEditor interface"
 msgid "Unsaved changes"
-msgstr ""
+msgstr "Несохранённые изменения"
 
 #: apps/reader/src/DockviewWorkspace.tsx
 msgctxt "DockviewWorkspace interface"
 msgid "Unsaved changes"
-msgstr ""
+msgstr "Несохранённые изменения"
 
 #: packages/migration/src/readwise.ts
 msgid "Unsaved Feed items excluded (choose “Include unsaved Feed items” to import)"
-msgstr ""
+msgstr "Несохранённые элементы ленты пропущены (выберите «Включить несохранённые элементы ленты», чтобы импортировать их)"
 
 #: packages/migration/src/zotero-pdf.ts
 msgid "Unsupported PDF page geometry."
-msgstr ""
+msgstr "Неподдерживаемая геометрия страницы PDF."
 
 #: apps/reader/src/citation-form-model.ts
 msgid "Unsupported value"
-msgstr ""
+msgstr "Неподдерживаемое значение"
 
 #: packages/migration/src/zotero-bundle.ts
 msgid "Unsupported Zotero bundle version."
-msgstr ""
+msgstr "Неподдерживаемая версия пакета Zotero."
 
 #: apps/reader/src/annotation-wiki-candidates.ts
 msgid "Untitled annotation"
-msgstr ""
+msgstr "Аннотация без названия"
 
 #: apps/reader/src/source-addition-flow.ts
 msgctxt "source addition flow"
 msgid "Untitled source"
-msgstr ""
+msgstr "Источник без названия"
 
 #: apps/reader/src/CitationSourceSync.tsx
 msgid "Update library details"
-msgstr ""
+msgstr "Обновить сведения библиотеки"
 
 #: apps/reader/src/connection-recovery.ts
 msgid "Update mdbase Connect on your computer to open this collection."
-msgstr ""
+msgstr "Обновите mdbase Connect на компьютере, чтобы открыть эту коллекцию."
 
 #: apps/extension/src/connection-view.ts
 msgid "Update Reader"
-msgstr ""
+msgstr "Обновить Reader"
 
 #: apps/reader/src/LibraryBulkBar.tsx
 msgctxt "LibraryBulkBar interface"
 msgid "Updated"
-msgstr ""
+msgstr "Обновлено"
 
 #. placeholder {0}: String(progress.done)
 #. placeholder {1}: String(progress.total)
 #: apps/reader/src/LibraryBulkBar.tsx
 msgid "Updating {0} of {1}…"
-msgstr ""
+msgstr "Обновление: {0} из {1}…"
 
 #: apps/extension/src/SavedHighlights.tsx
 #: apps/reader/src/CitationSourceSync.tsx
 msgid "Updating…"
-msgstr ""
+msgstr "Обновление…"
 
 #: packages/migration/src/run-files.ts
 msgid "Uploaded checksum does not match the original file."
-msgstr ""
+msgstr "Контрольная сумма загруженного файла не совпадает с исходной."
 
 #. placeholder {0}: String(progress.fileIndex)
 #. placeholder {1}: String(progress.fileCount)
 #: apps/reader/src/SourceImportDialog.tsx
 msgid "Uploading file {0} of {1}"
-msgstr ""
+msgstr "Загрузка файла {0} из {1}"
 
 #: apps/extension/src/CaptureApp.tsx
 msgid "Uploading file {fileIndex} of {fileCount} · {percent}%"
-msgstr ""
+msgstr "Загрузка файла {fileIndex} из {fileCount} · {percent}%"
 
 #: packages/migration/src/zotero-validation.ts
 msgid "URL attachment contains unexpected files."
-msgstr ""
+msgstr "Вложение URL содержит неожиданные файлы."
 
 #: apps/reader/src/DraftRecoveryNotice.tsx
 msgid "Use collection version"
-msgstr ""
+msgstr "Использовать версию коллекции"
 
 #: apps/reader/src/reader-app-commands.ts
 msgid "Use comfortable density"
-msgstr ""
+msgstr "Использовать удобную плотность"
 
 #: apps/reader/src/reader-app-commands.ts
 msgid "Use compact density"
-msgstr ""
+msgstr "Использовать компактную плотность"
 
 #: apps/reader/src/reader-app-commands.ts
 msgid "Use dark theme"
-msgstr ""
+msgstr "Использовать тёмную тему"
 
 #. placeholder {0}: fieldLabel(difference.field)
 #: apps/reader/src/CitationLookup.tsx
 msgid "Use found {0}"
-msgstr ""
+msgstr "Использовать найденное значение {0}"
 
 #: apps/reader/src/AnnotationComposer.tsx
 msgid "Use it for this comment"
-msgstr ""
+msgstr "Использовать для этого комментария"
 
 #: apps/reader/src/reader-app-commands.ts
 msgid "Use light theme"
-msgstr ""
+msgstr "Использовать светлую тему"
 
 #: apps/extension/src/NotePanel.tsx
 #: apps/reader/src/AnnotationEditor.tsx
 msgid "Use theirs"
-msgstr ""
+msgstr "Использовать чужую версию"
 
 #: apps/reader/src/LibraryConditionsEditor.tsx
 msgctxt "LibraryConditionsEditor interface"
 msgid "value"
-msgstr ""
+msgstr "значение"
 
 #: apps/reader/src/LibraryConditionsEditor.tsx
 msgctxt "LibraryConditionsEditor interface"
 msgid "Value"
-msgstr ""
+msgstr "Значение"
 
 #: apps/reader/src/LibraryBulkBar.tsx
 msgid "Value (empty removes the field)"
-msgstr ""
+msgstr "Значение (пустое удаляет поле)"
 
 #. placeholder {0}: String(index + 1)
 #: apps/reader/src/CitationTypedFieldEditors.tsx
 msgid "Value {0}"
-msgstr ""
+msgstr "Значение {0}"
 
 #: apps/reader/src/CitationTypedFieldEditors.tsx
 msgctxt "CitationTypedFieldEditors interface"
 msgid "Value type"
-msgstr ""
+msgstr "Тип значения"
 
 #: apps/reader/src/LibraryBulkBar.tsx
 msgid "value, or empty to remove"
-msgstr ""
+msgstr "значение или пусто, чтобы удалить"
 
 #: apps/reader/src/CitationTypedFieldEditors.tsx
 msgid "Values"
-msgstr ""
+msgstr "Значения"
 
 #. placeholder {0}: String(i + 1)
 #. placeholder {1}: String(payloads.length)
 #: packages/migration/src/zotero-bundle.ts
 msgid "Verifying file {0} of {1}…"
-msgstr ""
+msgstr "Проверка файла {0} из {1}…"
 
 #: apps/reader/src/import-controller.ts
 msgid "Verifying imported records"
-msgstr ""
+msgstr "Проверка импортированных записей"
 
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "Version"
-msgstr ""
+msgstr "Версия"
 
 #: packages/renderer-pdf/src/pdf-translations.ts
 msgctxt "PDF viewer page"
 msgid "Vertical"
-msgstr ""
+msgstr "Вертикальный"
 
 #: packages/renderer-pdf/src/pdf-translations.ts
 msgctxt "PDF viewer menu"
 msgid "View Controls"
-msgstr ""
+msgstr "Элементы управления представлением"
 
 #: apps/reader/src/LibraryAnnotationToolbar.tsx
 msgctxt "LibraryAnnotationToolbar interface"
 msgid "View options"
-msgstr ""
+msgstr "Параметры представления"
 
 #: apps/reader/src/LibraryWorkspace.tsx
 msgctxt "LibraryWorkspace interface"
 msgid "View options"
-msgstr ""
+msgstr "Параметры представления"
 
 #. placeholder {0}: filterCount ? `, ${String(filterCount)} active filters` : ""
 #: apps/reader/src/LibraryWorkspace.tsx
 msgid "View options{0}"
-msgstr ""
+msgstr "Параметры представления{0}"
 
 #: apps/reader/src/LibraryNavigator.tsx
 msgid "Views"
-msgstr ""
+msgstr "Представления"
 
 #: apps/reader/src/CitationStructuredEditor.tsx
 msgctxt "CitationStructuredEditor interface"
 msgid "Volume"
-msgstr ""
+msgstr "Том"
 
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "Volume"
-msgstr ""
+msgstr "Том"
 
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "Volume title"
-msgstr ""
+msgstr "Название тома"
 
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "Volume title short"
-msgstr ""
+msgstr "Краткое название тома"
 
 #: apps/reader/src/native-signin-ui.ts
 msgctxt "Native sign-in"
 msgid "Waiting for approval in the mdbase tab…"
-msgstr ""
+msgstr "Ожидание подтверждения во вкладке mdbase…"
 
 #: apps/extension/src/CaptureApp.tsx
 msgid "Waiting for the active tab"
-msgstr ""
+msgstr "Ожидание активной вкладки"
 
 #: apps/reader/src/LibraryCells.tsx
 msgctxt "source format"
 msgid "Web"
-msgstr ""
+msgstr "Веб"
 
 #: apps/reader/src/workspace-tab-display.ts
 msgctxt "Source format badge for saved web pages"
 msgid "WEB"
-msgstr ""
+msgstr "ВЕБ"
 
 #: packages/core/src/application/source-import-values.ts
 msgid "Web capture provenance contains an invalid URL."
-msgstr ""
+msgstr "В источнике снимка веб-страницы указан недопустимый URL."
 
 #: packages/core/src/application/source-import-values.ts
 msgid "Web capture provenance must use public HTTPS URLs."
-msgstr ""
+msgstr "В источнике снимка веб-страницы должны использоваться общедоступные URL HTTPS."
 
 #: packages/core/src/application/import-source-file.ts
 msgid "Web captures must contain an HTML document."
-msgstr ""
+msgstr "Снимки веб-страниц должны содержать документ HTML."
 
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "Web page"
-msgstr ""
+msgstr "Веб-страница"
 
 #: apps/reader/src/citation-form-model.ts
 msgctxt "CSL item type"
 msgid "Web page"
-msgstr ""
+msgstr "Веб-страница"
 
 #: apps/extension/src/shell-messages.ts
 #: apps/extension/src/WelcomeApp.tsx
 msgid "Welcome to mdbase Reader"
-msgstr ""
+msgstr "Добро пожаловать в mdbase Reader"
 
 #: apps/reader/src/CitationStructuredEditor.tsx
 msgid "Where and when the work appeared"
-msgstr ""
+msgstr "Место и дата публикации работы"
 
 #: apps/reader/src/annotation-wiki-candidates.ts
 msgctxt "annotation wiki candidates"
 msgid "Whole source"
-msgstr ""
+msgstr "Весь источник"
 
 #: packages/renderer-pdf/src/pdf-translations.ts
 msgctxt "PDF viewer search"
 msgid "Whole word"
-msgstr ""
+msgstr "Слово целиком"
 
 #: apps/reader/src/AnnotationComposer.tsx
 msgid "Why does this matter?"
-msgstr ""
+msgstr "Почему это важно?"
 
 #: apps/reader/src/DisplayMenu.tsx
 msgctxt "DisplayMenu interface"
 msgid "Wide"
-msgstr ""
+msgstr "Широкий"
 
 #: apps/reader/src/AnnotationList.tsx
 msgctxt "AnnotationList annotationFilterOptions"
 msgid "With commentary"
-msgstr ""
+msgstr "С комментариями"
 
 #: apps/extension/src/WelcomeApp.tsx
 msgid "With the panel open, select text on the page and it appears there. Choose a colour to save it, adding a comment first if you like."
-msgstr ""
+msgstr "Открыв панель, выделите текст на странице — он появится здесь. Выберите цвет, чтобы сохранить выделение; при желании сначала добавьте комментарий."
 
 #: apps/reader/src/reader-command-list.ts
 msgid "Workspace"
-msgstr ""
+msgstr "Рабочая область"
 
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "Year suffix"
-msgstr ""
+msgstr "Суффикс года"
 
 #: apps/extension/src/HighlightFields.tsx
 msgctxt "Highlight colour"
 msgid "yellow"
-msgstr ""
+msgstr "жёлтый"
 
 #: apps/reader/src/citation-form-model.ts
 msgid "Yes"
-msgstr ""
+msgstr "Да"
 
 #: apps/reader/src/library-columns.ts
 msgctxt "library columns"
 msgid "Yes"
-msgstr ""
+msgstr "Да"
 
 #: apps/reader/src/LibraryCells.tsx
 msgid "Yesterday"
-msgstr ""
+msgstr "Вчера"
 
 #: apps/extension/src/WelcomeApp.tsx
 msgid "You can change the collection and shortcuts at any time in <0>Settings</0>."
-msgstr ""
+msgstr "Коллекцию и сочетания клавиш можно изменить в любое время в разделе <0>«Настройки»</0>."
 
 #: apps/reader/src/main.tsx
 msgid "You can close this window."
-msgstr ""
+msgstr "Это окно можно закрыть."
 
 #: packages/renderer-pdf/src/pdf-translations.ts
 msgctxt "PDF viewer emptyState"
 msgid "You can view multiple documents using tabs."
-msgstr ""
+msgstr "Несколько документов можно просматривать во вкладках."
 
 #: apps/reader/src/AnnotationComposer.tsx
 msgid "You selected other text."
-msgstr ""
+msgstr "Вы выбрали другой фрагмент текста."
 
 #: apps/reader/src/connection-recovery.ts
 msgid "Your access to this collection has been removed."
-msgstr ""
+msgstr "Ваш доступ к этой коллекции отозван."
 
 #: apps/reader/src/connect-popup.ts
 msgid "Your browser blocked the sign-in tab."
-msgstr ""
+msgstr "Браузер заблокировал вкладку входа."
 
 #: apps/reader/src/native-signin-ui.ts
 msgctxt "Native sign-in"
 msgid "Your browser blocked the sign-in tab."
-msgstr ""
+msgstr "Браузер заблокировал вкладку входа."
 
 #: apps/extension/src/source-note-session.ts
 msgid "Your browser could not keep a copy of this note. Keep the panel open until it is saved."
-msgstr ""
+msgstr "Браузеру не удалось сохранить копию этой заметки. Не закрывайте панель, пока сохранение не завершится."
 
 #: apps/extension/src/ConnectionPanel.tsx
 msgid "your collection"
-msgstr ""
+msgstr "ваша коллекция"
 
 #: apps/reader/src/use-annotation-view.ts
 msgid "Your collection already has it: {path}."
-msgstr ""
+msgstr "Эта запись уже есть в коллекции: {path}."
 
 #: apps/reader/src/ConnectReader.tsx
 msgctxt "ConnectReader interface"
 msgid "Your collections"
-msgstr ""
+msgstr "Ваши коллекции"
 
 #: apps/reader/src/DraftRecoveryNotice.tsx
 msgid "Your draft"
-msgstr ""
+msgstr "Ваш черновик"
 
 #: apps/reader/src/DraftRecoveryNotice.tsx
 msgid "Your draft is retained. Compare both versions before choosing which to save. You can edit your draft below to combine them."
-msgstr ""
+msgstr "Черновик сохранён. Сравните обе версии, прежде чем выбрать, какую сохранить. Ниже можно изменить черновик и объединить их."
 
 #: apps/reader/src/LibraryWorkspace.tsx
 msgid "Your library is empty"
-msgstr ""
+msgstr "Ваша библиотека пуста"
 
 #: apps/extension/src/ConnectionPanel.tsx
 msgid "Your selection and note are kept for this browser session, even if you close the panel."
-msgstr ""
+msgstr "Выделение и заметка сохраняются в этой сессии браузера, даже если закрыть панель."
 
 #: apps/reader/src/ImportPageView.tsx
 msgid "Your sources, notes and files, in a collection you control. Preview first. Nothing is imported until you confirm the destination."
-msgstr ""
+msgstr "Ваши источники, заметки и файлы в коллекции под вашим управлением. Сначала просмотрите содержимое. Импорт начнётся только после подтверждения места назначения."
 
 #: apps/extension/src/CaptureApp.tsx
 msgid "Your unsaved text for the previous page is kept for this browser session."
-msgstr ""
+msgstr "Несохранённый текст для предыдущей страницы сохранён в этой сессии браузера."
 
 #: apps/reader/src/CitationStructuredEditor.tsx
 msgid "YYYY, YYYY-MM-DD, or a season"
-msgstr ""
+msgstr "ГГГГ, ГГГГ-ММ-ДД или сезон"
 
 #: apps/reader/src/CitationTypedFieldEditors.tsx
 msgid "YYYY, YYYY-MM, or YYYY-MM-DD"
-msgstr ""
+msgstr "ГГГГ, ГГГГ-ММ или ГГГГ-ММ-ДД"
 
 #: packages/renderer-pdf/src/pdf-translations.ts
 msgctxt "PDF viewer menu"
 msgid "Zoom Controls"
-msgstr ""
+msgstr "Элементы управления масштабом"
 
 #: packages/renderer-pdf/src/pdf-translations.ts
 msgctxt "PDF viewer zoom"
 msgid "Zoom In"
-msgstr ""
+msgstr "Увеличить"
 
 #: packages/renderer-pdf/src/pdf-translations.ts
 msgctxt "PDF viewer zoom"
 msgid "Zoom Level ({level}%)"
-msgstr ""
+msgstr "Масштаб ({level}%)"
 
 #: packages/renderer-pdf/src/pdf-translations.ts
 msgctxt "PDF viewer zoom"
 msgid "Zoom Menu"
-msgstr ""
+msgstr "Меню масштаба"
 
 #: packages/renderer-pdf/src/pdf-translations.ts
 msgctxt "PDF viewer zoom"
 msgid "Zoom Out"
-msgstr ""
+msgstr "Уменьшить"
 
 #: packages/migration/src/zotero-pdf.ts
 msgid "Zotero PDF page is unavailable."
-msgstr ""
+msgstr "Страница PDF Zotero недоступна."
