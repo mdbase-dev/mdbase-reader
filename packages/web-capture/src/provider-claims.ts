@@ -1,6 +1,12 @@
 import { WIKIMEDIA_CITOID_ENDPOINT } from "./citation-lookup.js";
+import { citoidUrl } from "./citoid-url.js";
 import { doiFromText, DOI_RESOLUTION_TIMEOUT_MS, resolveDoiCitation } from "./doi.js";
-import { createProviderQueue, retryAfterMs } from "./provider-queue.js";
+import {
+  createProviderQueue,
+  MAX_RETRY_AFTER_MS,
+  ProviderCooldownError,
+  retryAfterMs,
+} from "./provider-queue.js";
 import { cslFromZoteroItem } from "./zotero-csl.js";
 
 import type {
@@ -19,6 +25,9 @@ export interface ProviderClaimsOptions {
   readonly fetch?: typeof fetch;
   readonly signal?: AbortSignal;
   readonly timeoutMs?: number;
+  readonly queue?: ProviderQueue;
+  /** Known media type of the target, if already captured. PDFs are never disclosed. */
+  readonly contentType?: string;
   readonly now?: () => Date;
   /** When the described content was observed, not when the lookup finished. */
   readonly observedAt?: string;
@@ -30,7 +39,6 @@ export interface CitoidClaimsOptions extends ProviderClaimsOptions {
   /** Same path shape as Citoid; a private Translation Server can replace the endpoint. */
   readonly citoidEndpoint?: string;
   readonly clientName?: string;
-  readonly queue?: ProviderQueue;
 }
 
 export const CITOID_TIMEOUT_MS = 8_000;
@@ -50,7 +58,15 @@ const genericItemTypes = new Set([
 export function doiClaims(doi: string, options: ProviderClaimsOptions = {}): Promise<ClaimBatch> {
   const timeoutMs = options.timeoutMs ?? DOI_RESOLUTION_TIMEOUT_MS;
   return collectClaims("doi.org", options, timeoutMs, async (signal, fetcher) => {
-    const citation = await resolveDoiCitation(doi, { fetch: fetcher, signal, timeoutMs });
+    const queue = options.queue ?? defaultQueue;
+    const queuedFetch: typeof fetch = (input, init) =>
+      queue.run(
+        typeof input === "string" ? input : input instanceof URL ? input.href : input.url,
+        () => untilAborted(() => fetcher(input, init), signal),
+        signal,
+        timeoutMs,
+      );
+    const citation = await resolveDoiCitation(doi, { fetch: queuedFetch, signal, timeoutMs });
     return {
       claims: fieldClaims(
         citation,
@@ -84,13 +100,12 @@ export function citoidClaims(url: string, options: CitoidClaimsOptions = {}): Pr
     options,
     options.timeoutMs ?? CITOID_TIMEOUT_MS,
     async (signal, fetcher) => {
-      const requestUrl = `${endpoint}${encodeURIComponent(url)}`;
-      const queue = options.queue ?? defaultQueue;
-      // Waiting out a pause longer than the deadline would only end in a misleading timeout.
-      const cooldown = queue.cooldownMs(requestUrl);
-      if (cooldown >= (options.timeoutMs ?? CITOID_TIMEOUT_MS)) {
-        return { claims: [], result: "rate-limited", retryAfterMs: cooldown };
+      const safeUrl = citoidUrl(url, options.contentType);
+      if (!safeUrl) {
+        return { claims: [], result: "blocked" };
       }
+      const requestUrl = `${endpoint}${encodeURIComponent(safeUrl)}`;
+      const queue = options.queue ?? defaultQueue;
       const response = await queue.run(
         requestUrl,
         () =>
@@ -107,6 +122,7 @@ export function citoidClaims(url: string, options: CitoidClaimsOptions = {}): Pr
             signal,
           ),
         signal,
+        options.timeoutMs ?? CITOID_TIMEOUT_MS,
       );
       if (!response.ok) {
         return { claims: [], result: httpResult(response.status) };
@@ -165,7 +181,9 @@ async function collectClaims(
   function outcome(result: ProviderResult, known?: number): ProviderOutcome {
     const delay =
       result === "rate-limited"
-        ? (known ?? retryAfterMs(response?.headers.get("Retry-After") ?? null, now().getTime()))
+        ? boundedRetryAfter(
+            known ?? retryAfterMs(response?.headers.get("Retry-After") ?? null, now().getTime()),
+          )
         : undefined;
     return {
       provider,
@@ -182,8 +200,11 @@ async function collectClaims(
     } = await untilAborted(() => work(signal, fetcher), signal);
     options.signal?.throwIfAborted();
     return { ...batch, outcome: outcome(result, known) };
-  } catch {
+  } catch (reason) {
     options.signal?.throwIfAborted();
+    if (reason instanceof ProviderCooldownError) {
+      return { claims: [], outcome: outcome("rate-limited", reason.retryAfterMs) };
+    }
     const result = controller.signal.aborted
       ? "timeout"
       : response && !response.ok
@@ -193,6 +214,10 @@ async function collectClaims(
   } finally {
     cancel(timer);
   }
+}
+
+function boundedRetryAfter(delay: number | undefined): number | undefined {
+  return delay === undefined ? undefined : Math.min(delay, MAX_RETRY_AFTER_MS);
 }
 
 function httpResult(status: number): ProviderResult {

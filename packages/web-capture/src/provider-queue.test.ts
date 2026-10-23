@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 
-import { createProviderQueue, retryAfterMs } from "./provider-queue.js";
+import { createProviderQueue, ProviderCooldownError, retryAfterMs } from "./provider-queue.js";
 
 const endpoint = "https://en.wikipedia.org/api/rest_v1/data/citation/zotero/";
 
@@ -100,6 +100,26 @@ describe("provider queue cooldowns", () => {
       expect(request).toHaveBeenCalledOnce();
     },
   );
+
+  it("rechecks queued deadlines immediately even when all other slots remain active", async () => {
+    vi.useFakeTimers();
+    const queue = createProviderQueue({ concurrency: 2 });
+    const work = deferredResponse();
+    const first = queue.run(endpoint, () => work.promise);
+    const stillActive = deferredResponse();
+    const second = queue.run(endpoint, () => stillActive.promise);
+    const request = vi.fn(() => Promise.resolve(new Response()));
+    const queued = queue.run(endpoint, request, undefined, 1_000);
+    const rejection = expect(queued).rejects.toBeInstanceOf(ProviderCooldownError);
+    await flush();
+    work.resolve(new Response(null, { status: 429, headers: { "Retry-After": "600" } }));
+    await first;
+    await rejection;
+    expect(request).not.toHaveBeenCalled();
+    expect(vi.getTimerCount()).toBe(0);
+    stillActive.resolve(new Response());
+    await second;
+  });
 
   it("backs off repeated 429s without a header, capped at a minute", async () => {
     vi.useFakeTimers();

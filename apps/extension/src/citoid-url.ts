@@ -1,17 +1,4 @@
-const privateSuffixes = [
-  ".localhost",
-  ".local",
-  ".internal",
-  ".intranet",
-  ".lan",
-  ".home",
-  ".home.arpa",
-  ".corp",
-  ".private",
-  ".onion",
-  ".test",
-  ".invalid",
-];
+import { citoidUrl } from "@mdbase-reader/web-capture";
 const secretParameters = new Set([
   "token",
   "key",
@@ -32,16 +19,12 @@ const secretParameters = new Set([
 /** Automatic URL disclosure is conservative: no local names, IP literals or signed links. */
 export function citoidCaptureUrl(value: string): string | undefined {
   try {
-    const url = new URL(value);
-    const host = url.hostname.toLowerCase().replace(/\.$/u, "");
+    const safeUrl = citoidUrl(value);
+    if (!safeUrl) {
+      return undefined;
+    }
+    const url = new URL(safeUrl);
     if (
-      !["http:", "https:"].includes(url.protocol) ||
-      url.username ||
-      url.password ||
-      !host.includes(".") ||
-      host.includes(":") ||
-      /^[\d.]+$/u.test(host) ||
-      privateSuffixes.some((suffix) => host.endsWith(suffix)) ||
       [...url.searchParams.keys()].some(
         (key) =>
           secretParameters.has(key.toLowerCase().replace(/[-_]/gu, "")) ||
