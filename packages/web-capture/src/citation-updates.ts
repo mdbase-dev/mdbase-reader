@@ -4,6 +4,7 @@ import { citoidClaims, doiClaims } from "./provider-claims.js";
 import type { Claim } from "./claims.js";
 import type { CitoidClaimsOptions } from "./provider-claims.js";
 
+export { claimValuesMatch } from "./claim-matching.js";
 export { claimSourceLabel, parseClaimSourceLabel } from "./claims.js";
 export { resolveCitation } from "./resolver.js";
 export type { Claim, CitationSuggestion } from "./claims.js";

@@ -57,10 +57,9 @@ export async function citationForPage(
     if (!citation) {
       return null;
     }
-    const sources = Object.values(provenance).flatMap((entry) => [
-      entry.source,
-      ...(entry.agreed ?? []),
-    ]);
+    const sources = Object.values(provenance).flatMap((entry) =>
+      entry.source === undefined ? [] : [entry.source, ...(entry.agreed ?? [])],
+    );
     const origin = sources.some((source) => source.startsWith("registry:"))
       ? "doi"
       : sources.some((source) =>

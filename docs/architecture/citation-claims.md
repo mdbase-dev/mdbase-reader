@@ -315,9 +315,31 @@ claims for the same review boundary.
 
 On save, untouched provenance entries are kept. Accepted suggestions pin the proposed value,
 use `claimSourceLabel` for their source, and retain their evidence in `agreed`. Typed values
-(including rejected alternatives) receive `source: user`, without old alternatives. Clearing a
+(including rejected alternatives) receive `source: user`, without old resolver alternatives. Clearing a
 field retains its previous pinned entry, or pins its former value as `user` if it had no
 entry. This removal marker is intentionally kept so subsequent lookups cannot refill it.
+
+### Remembered dismissals
+
+Dismiss is a draft provenance edit, persisted only by **Save**. It reuses the existing
+`rejected` list: `{ value: <proposed CSL value>, from: "user" }` denotes an explicit dismissal,
+not a resolver-ranked alternative. The list stays bounded to two values per field, with user
+dismissals ahead of machine alternatives and newest decisions first. A third distinct dismissal
+evicts the oldest. Older readers can parse the unchanged shape without interpreting the user
+rejection as a resolver rule; records without user rejections behave as before.
+
+For an absent field, a dismissal-only entry uses `{ rejected: [...] }`, without `value` or
+`source`. It pins no chosen value and is not a deliberate removal: only the dismissed value
+is blocked, so a different fill can still be proposed. Older parsers ignore these entries
+because they require both `value` and `source`. An entry pinning a former value still protects
+a deliberate removal. Existing empty strings, arrays and explicit nulls retain their actual
+baseline value. No extra frontmatter key or local storage is involved.
+
+Suppression uses `claimValuesMatch` from `claim-matching.ts`, including normalized titles,
+publishers, names and compatible dates, regardless of which provider proposes the value.
+Manual edits, accepts, capture filtering and Connect provenance rewrites preserve user
+rejections. Guarded Connect saves merge them from the freshly read record on every retry,
+including provenance-only concurrent changes; other stale explanations are not restored.
 
 Every editor save compares the loaded CSL, including an explicitly absent or malformed CSL
 baseline. A conflict preserves the draft. **Use their version** reloads the reported CSL and
@@ -331,6 +353,6 @@ counts from indexed source CSL and provenance. It performs no requests and retai
 identifiers, field names, values, provider names, or event history. Edited counts describe
 current mismatches with recorded provenance, not lifetime corrections; a manual value saved as
 `user` no longer attributes an edit to its former provider. Partial library indexes are labelled.
-Acceptance/dismissal history is not retained. Archived-page re-extraction is deferred: the
+Aggregate acceptance/dismissal history is not retained. Archived-page re-extraction is deferred: the
 editor has no local snapshot/document handle, and does not fetch an archive merely to check
 citation updates.

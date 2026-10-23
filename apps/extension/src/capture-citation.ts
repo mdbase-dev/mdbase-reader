@@ -3,6 +3,7 @@ import {
   cslValuesEqual,
   type CslProvenance,
   loadedCitation,
+  preserveCslDismissals,
   saveSourceCitation,
   type Source,
   type SourceSummary,
@@ -96,13 +97,16 @@ export async function saveCaptureCitation(
       ...(provenance !== undefined
         ? {
             // The citekey is generated here, not captured. Keep evidence only for saved values.
-            provenance: Object.fromEntries(
-              Object.entries(provenance).filter(
-                ([field, entry]) =>
-                  field !== "id" &&
-                  citation[field] !== undefined &&
-                  cslValuesEqual(citation[field], entry.value),
+            provenance: preserveCslDismissals(
+              Object.fromEntries(
+                Object.entries(provenance).filter(
+                  ([field, entry]) =>
+                    field !== "id" &&
+                    citation[field] !== undefined &&
+                    cslValuesEqual(citation[field], entry.value),
+                ),
               ),
+              provenance,
             ),
           }
         : {}),

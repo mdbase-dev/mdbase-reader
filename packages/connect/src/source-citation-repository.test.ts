@@ -355,6 +355,87 @@ describe("Connect citation revision races", () => {
   });
 });
 
+describe("Connect preserves citation dismissals", () => {
+  const dismissal = {
+    rejected: [{ value: "Dismissed press", from: "user" }],
+  };
+
+  it.each([true, false])(
+    "preserves unknown dismissals on a provenance rewrite (guarded: %s)",
+    async (guarded) => {
+      const { repository, setCurrent, update } = fixture();
+      setCurrent(
+        document({
+          id: "src_01",
+          title: "Crime",
+          csl: citation,
+          "csl-provenance": { ...provenance, publisher: dismissal },
+        }),
+      );
+      const updated = await repository.updateCitation({
+        ...input,
+        provenance: {},
+        ...(guarded ? { expectedCitation: citation } : {}),
+      });
+      expect(update.mock.lastCall?.[0].patch?.["csl-provenance"]).toEqual({ publisher: dismissal });
+      expect(updated.cslProvenance).toEqual({ publisher: dismissal });
+      expect(updated.citation).toEqual(citation);
+    },
+  );
+
+  it("carries same-field dismissals onto a changed value without restoring old explanations", async () => {
+    const { repository, setCurrent } = fixture();
+    const rejected = [{ value: "Dismissed title", from: "user" }];
+    setCurrent(
+      document({
+        id: "src_01",
+        title: "Crime",
+        csl: citation,
+        "csl-provenance": {
+          title: { value: citation.title, source: "page:html", agreed: ["h1"], rejected },
+        },
+      }),
+    );
+    const updated = await repository.updateCitation({
+      ...input,
+      citation: { ...citation, title: "Accepted title" },
+      expectedCitation: citation,
+      provenance: { title: { value: "Accepted title", source: "registry:doi.org" } },
+    });
+    expect(updated.cslProvenance?.["title"]).toEqual({
+      value: "Accepted title",
+      source: "registry:doi.org",
+      rejected,
+    });
+  });
+
+  it("merges a provenance-only dismissal added during a guarded save race", async () => {
+    const { repository, update, setCurrent } = fixture();
+    update.mockImplementationOnce(() => {
+      setCurrent(
+        document(
+          {
+            id: "src_01",
+            title: "Crime",
+            csl: citation,
+            "csl-provenance": { publisher: dismissal },
+          },
+          "rev-3",
+        ),
+      );
+      return Promise.resolve(connectFailure(connectProblem("concurrent_modification", "Changed")));
+    });
+    const updated = await repository.updateCitation({
+      ...input,
+      expectedCitation: citation,
+      provenance,
+    });
+    expect(update).toHaveBeenCalledTimes(2);
+    expect(update.mock.lastCall?.[0].ifRevision).toBe("rev-3");
+    expect(updated.cslProvenance).toEqual({ ...provenance, publisher: dismissal });
+  });
+});
+
 async function* singleQueryPage(
   record: QueryPage["results"][number],
 ): AsyncGenerator<ConnectOutcome<QueryPage>> {

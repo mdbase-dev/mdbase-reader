@@ -4,6 +4,7 @@ import {
   cslValuesEqual,
   maxRejectedCslValues,
   parseCslProvenance,
+  preserveCslDismissals,
   validateCslItem,
 } from "@mdbase-reader/core";
 
@@ -71,7 +72,7 @@ export function resolveCitation(input: ResolverInput): Resolution {
     citation[field] = chosen.value;
     provenance[field] = explainGroup(chosen, groups);
     if (existing && statuses[field]?.kind !== "removed") {
-      const suggestion = suggestChange(chosen, existing.citation[field]);
+      const suggestion = suggestChange(chosen, existing.citation[field], previous[field]);
       if (suggestion) {
         suggestions.push(suggestion);
       }
@@ -82,7 +83,7 @@ export function resolveCitation(input: ResolverInput): Resolution {
     return {
       // Existing CSL is canonical, including omissions and deliberate external edits.
       citation: existing.citation as CitationDraft,
-      provenance: existingProvenance(existing.citation, statuses),
+      provenance: preserveCslDismissals(existingProvenance(existing.citation, statuses), previous),
       suggestions,
     };
   }
@@ -97,11 +98,27 @@ export function resolveCitation(input: ResolverInput): Resolution {
   return { citation: citation as CitationDraft, provenance, suggestions: [] };
 }
 
-function suggestChange(chosen: ClaimGroup, current: unknown): CitationSuggestion | undefined {
+function isDismissedSuggestion(
+  suggestion: CitationSuggestion,
+  provenance: CslFieldProvenance | undefined,
+): boolean {
+  return (
+    provenance?.rejected?.some(
+      ({ value, from }) =>
+        from === "user" && claimValuesMatch(suggestion.field, value, suggestion.proposed),
+    ) ?? false
+  );
+}
+
+function suggestChange(
+  chosen: ClaimGroup,
+  current: unknown,
+  provenance: CslFieldProvenance | undefined,
+): CitationSuggestion | undefined {
   if (cslValuesEqual(current, chosen.value) || chosen.winner.source.kind === "user") {
     return undefined;
   }
-  return {
+  const suggestion: CitationSuggestion = {
     field: chosen.winner.field,
     reason: emptyField(current) ? "fill" : "change",
     proposed: chosen.value,
@@ -109,6 +126,7 @@ function suggestChange(chosen: ClaimGroup, current: unknown): CitationSuggestion
     source: chosen.winner.source,
     ...(chosen.winner.evidence ? { evidence: chosen.winner.evidence } : {}),
   };
+  return isDismissedSuggestion(suggestion, provenance) ? undefined : suggestion;
 }
 
 function emptyField(value: unknown): boolean {

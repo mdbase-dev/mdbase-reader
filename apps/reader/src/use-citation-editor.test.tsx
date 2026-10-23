@@ -163,7 +163,7 @@ describe("citation provenance and lookups", () => {
     expect(saveSourceCitation).not.toHaveBeenCalled();
   });
 
-  it("reviews changes and fills, never suggests a removed field, and saves only accepted provenance", async () => {
+  it("reviews changes and fills, protects removals, and saves accepts and dismissals together", async () => {
     citationClaims.mockResolvedValue([
       claim("title", "Updated title"),
       claim("publisher", "A press"),
@@ -195,6 +195,9 @@ describe("citation provenance and lookups", () => {
         provenance: {
           ...explained.cslProvenance,
           title: { value: "Updated title", source: "registry:doi.org", agreed: ["doi.org CSL"] },
+          publisher: {
+            rejected: [{ value: "A press", from: "user" }],
+          },
         },
       },
     );
@@ -325,6 +328,81 @@ describe("citation provenance and lookups", () => {
   });
 });
 
+describe("saved citation dismissals", () => {
+  it.each([
+    ["title", "Updated title", "  UPDATED title. ", "Different title"],
+    ["publisher", "A press", " A PRESS ", "Different press"],
+  ])(
+    "remembers a dismissed %s through save, remount and another Find",
+    async (field, value, equivalent, different) => {
+      citationClaims.mockResolvedValue([claim(field, value)]);
+      await render(explained);
+      await find();
+      expect(controller.suggestions).toHaveLength(1);
+      await act(async () => controller.dismissSuggestion(field));
+      expect(controller.dirty).toBe(true);
+      expect(controller.suggestions).toEqual([]);
+      expect(saveSourceCitation).not.toHaveBeenCalled();
+      await act(async () => controller.save());
+      const saved: Source = await saveSourceCitation.mock.results[0]!.value;
+      expect(saved.cslProvenance?.[field]?.rejected?.[0]).toEqual({ value, from: "user" });
+      expect(saved.citation).toEqual(citation);
+      await act(async () => root.unmount());
+      root = createRoot(container);
+      await render(saved);
+      expect(controller.dirty).toBe(false);
+      citationClaims.mockResolvedValue([claim(field, equivalent)]);
+      await find();
+      expect(controller.suggestions).toEqual([]);
+      citationClaims.mockResolvedValue([claim(field, different)]);
+      await find();
+      expect(controller.suggestions).toMatchObject([{ field, proposed: different }]);
+    },
+  );
+
+  it("does not persist a discarded dismissal", async () => {
+    citationClaims.mockResolvedValue([claim("publisher", "A press")]);
+    await render(explained);
+    await find();
+    await click("Dismiss Publisher");
+    await find();
+    expect(controller.suggestions).toEqual([]);
+    await act(async () => root.unmount());
+    root = createRoot(container);
+    await render(explained);
+    await find();
+    expect(controller.suggestions).toMatchObject([{ field: "publisher", proposed: "A press" }]);
+    expect(saveSourceCitation).not.toHaveBeenCalled();
+  });
+
+  it("bounds dismissal history and preserves it through accepting and typing", async () => {
+    await render(explained);
+    for (const value of ["First", "Second", "Third"]) {
+      citationClaims.mockResolvedValue([claim("title", value)]);
+      await find();
+      await click("Dismiss Title");
+    }
+    expect(controller.provenance["title"]?.rejected).toEqual([
+      { value: "Third", from: "user" },
+      { value: "Second", from: "user" },
+    ]);
+    citationClaims.mockResolvedValue([claim("title", "Fourth")]);
+    await find();
+    await click("Accept Title");
+    expect(controller.provenance["title"]?.rejected).toHaveLength(2);
+    await act(async () => controller.setCitation({ ...citation, title: "Typed" }));
+    await act(async () => controller.save());
+    expect(saveSourceCitation.mock.lastCall?.[2]?.provenance?.["title"]).toEqual({
+      value: "Typed",
+      source: "user",
+      rejected: [
+        { value: "Third", from: "user" },
+        { value: "Second", from: "user" },
+      ],
+    });
+  });
+});
+
 describe("citation lookup targets", () => {
   const withDoi = {
     ...source,
@@ -429,6 +507,34 @@ describe("citation editor save guard", () => {
     await act(async () => controller.save());
     expect(saveSourceCitation).toHaveBeenCalledTimes(2);
     expect(saveSourceCitation.mock.lastCall?.[2]?.expectedCitation).toEqual(firstEdit);
+  });
+
+  it("keeps dismissals made while saving as unsaved provenance edits", async () => {
+    let finish!: (source: Source) => void;
+    saveSourceCitation.mockReturnValueOnce(
+      new Promise((resolve) => {
+        finish = resolve;
+      }),
+    );
+    citationClaims.mockResolvedValue([claim("publisher", "A press"), claim("volume", "7")]);
+    await render(explained);
+    await find();
+    await click("Dismiss Publisher");
+    await act(async () => controller.save());
+    const savedProvenance = saveSourceCitation.mock.lastCall?.[2]?.provenance ?? {};
+    await click("Dismiss Volume");
+    await act(async () =>
+      finish({
+        ...explained,
+        cslProvenance: savedProvenance,
+        frontmatter: { csl: citation, "csl-provenance": savedProvenance },
+      }),
+    );
+    expect(controller.provenance["volume"]?.rejected).toEqual([{ value: "7", from: "user" }]);
+    expect(controller.dirty).toBe(true);
+    await act(async () => controller.save());
+    expect(saveSourceCitation).toHaveBeenCalledTimes(2);
+    expect(controller.dirty).toBe(false);
   });
 
   it("releases the save guard after failure so the draft can be retried", async () => {
