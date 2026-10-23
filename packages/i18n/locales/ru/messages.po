@@ -2990,7 +2990,7 @@ msgstr "Экспортировано: {0, plural, one {# ссылка} few {# с
 #. placeholder {1}: bundle.originalFileCount
 #: apps/reader/src/use-source-export.ts
 msgid "Exported {0, plural, one {# record} other {# records}} and {1, plural, one {# original file} other {# original files}}."
-msgstr "Экспортировано {0, plural, one {# запись} few {# записи} many {# записей} other {# записи} и {1, plural, one {# исходный файл} few {# исходных файла} many {# исходных файлов} other {# исходного файла}}."
+msgstr "Экспортировано {0, plural, one {# запись} few {# записи} many {# записей} other {# записи}} и {1, plural, one {# исходный файл} few {# исходных файла} many {# исходных файлов} other {# исходного файла}}."
 
 #: apps/reader/src/ImportInput.tsx
 msgid "Exported folder"
