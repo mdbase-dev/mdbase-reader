@@ -7526,538 +7526,538 @@ msgstr "此集合无法移除来源。"
 
 #: apps/reader/src/connection-recovery.ts
 msgid "This collection could not be found."
-msgstr ""
+msgstr "找不到此集合。"
 
 #: apps/reader/src/connection-recovery.ts
 msgid "This collection has been deleted."
-msgstr ""
+msgstr "此集合已被删除。"
 
 #: apps/reader/src/connection-recovery.ts
 msgid "This collection has not been migrated yet."
-msgstr ""
+msgstr "此集合尚未迁移。"
 
 #: apps/extension/src/ConnectionPanel.tsx
 msgid "This collection hasn’t been checked yet. Check it before saving."
-msgstr ""
+msgstr "此集合尚未检查。保存前请先检查。"
 
 #: apps/reader/src/connection-recovery.ts
 msgid "This collection is being migrated."
-msgstr ""
+msgstr "此集合正在迁移。"
 
 #: apps/reader/src/connection-recovery.ts
 msgid "This collection is disconnected."
-msgstr ""
+msgstr "此集合已断开连接。"
 
 #: apps/reader/src/connection-recovery.ts
 msgid "This collection is locked."
-msgstr ""
+msgstr "此集合已锁定。"
 
 #: apps/reader/src/connection-recovery.ts
 msgid "This collection is offline."
-msgstr ""
+msgstr "此集合处于离线状态。"
 
 #: apps/reader/src/connection-recovery.ts
 msgid "This collection is unavailable."
-msgstr ""
+msgstr "此集合不可用。"
 
 #: apps/reader/src/connection-recovery.ts
 msgid "This collection needs approval on your computer."
-msgstr ""
+msgstr "此集合需要在你的电脑上批准。"
 
 #: apps/reader/src/ImportDestination.tsx
 msgid "This collection needs Reader’s setup before importing."
-msgstr ""
+msgstr "导入前，此集合需要先完成 Reader 的设置。"
 
 #: apps/reader/src/ImportDestination.tsx
 msgid "This collection needs Reader’s source and annotation types. No library content will be imported until you confirm below."
-msgstr ""
+msgstr "此集合需要 Reader 的来源和注释类型。在你于下方确认之前，不会导入任何文献库内容。"
 
 #: apps/extension/src/ConnectionPanel.tsx
 msgid "This collection needs you to approve mdbase Reader for it."
-msgstr ""
+msgstr "此集合需要你为其批准 mdbase Reader。"
 
 #: packages/core/src/application/delete-annotation.ts
 msgid "This deletion confirmation no longer matches the annotation revision."
-msgstr ""
+msgstr "此删除确认已与注释的修订版本不匹配。"
 
 #: packages/renderer-pdf/src/pdf-translations.ts
 msgctxt "PDF viewer outline"
 msgid "This document doesn't contain bookmarks"
-msgstr ""
+msgstr "此文档不包含书签"
 
 #: packages/renderer-pdf/src/pdf-translations.ts
 msgctxt "PDF viewer passwordPrompt"
 msgid "This document is password protected. Please enter the password to open it."
-msgstr ""
+msgstr "此文档受密码保护。请输入密码以打开。"
 
 #: apps/reader/src/source-draft-session.ts
 msgid "This draft could not be saved locally. Keep this tab open and retry saving to the collection."
-msgstr ""
+msgstr "无法在本地保存此草稿。请保持此标签页打开，并重试保存到集合。"
 
 #: packages/migration/src/zotero-bundle.ts
 msgid "This export is incomplete. Export again in Zotero."
-msgstr ""
+msgstr "此导出不完整。请在 Zotero 中重新导出。"
 
 #: apps/reader/src/ConnectedDocument.tsx
 msgid "This file has changed. Some saved annotation positions may need checking."
-msgstr ""
+msgstr "此文件已更改。部分已保存的注释位置可能需要检查。"
 
 #: packages/core/src/application/source-records.ts
 msgid "This file is already attached here."
-msgstr ""
+msgstr "此文件已附加在这里。"
 
 #: apps/extension/src/NotePanel.tsx
 msgid "This note changed elsewhere while you were writing."
-msgstr ""
+msgstr "你书写期间，此笔记在其他位置发生了更改。"
 
 #: apps/reader/src/DraftRecoveryNotice.tsx
 msgid "This note changed in the collection"
-msgstr ""
+msgstr "此笔记在集合中已更改"
 
 #: apps/extension/src/save-capture.ts
 msgid "This passage is missing or ambiguous in the saved copy. The source is saved, but the highlight is not. Open the saved copy in Reader to select it there."
-msgstr ""
+msgstr "该段落在已保存的副本中缺失或有歧义。来源已保存，但高亮未保存。请在 Reader 中打开已保存的副本，并在那里选择它。"
 
 #: apps/extension/src/page-capture.ts
 msgid "This PDF is larger than {maximumMb} MB. Download it and import the file in Reader."
-msgstr ""
+msgstr "此 PDF 大于 {maximumMb} MB。请下载后在 Reader 中导入该文件。"
 
 #: packages/core/src/application/create-annotation.ts
 msgid "This Reader connection cannot store annotation images."
-msgstr ""
+msgstr "此 Reader 连接无法存储注释图片。"
 
 #: apps/reader/src/CitationAdditionalFields.tsx
 msgid "This record only uses the core fields above."
-msgstr ""
+msgstr "此记录只使用上面的核心字段。"
 
 #: apps/reader/src/SourceRemovalDialog.tsx
 msgid "This removes the source from your library and deletes its source note. Saved files and annotation notes are kept in the collection. Links to this source will stop working. Reader cannot undo this."
-msgstr ""
+msgstr "这会将来源从你的文献库中移除，并删除其来源笔记。已保存的文件和注释笔记会保留在集合中。指向此来源的链接将失效。Reader 无法撤销此操作。"
 
 #: apps/extension/src/CitationPanel.tsx
 msgid "This source has no citation yet."
-msgstr ""
+msgstr "此来源还没有引文。"
 
 #: apps/reader/src/use-document-attachment.ts
 msgid "This source has no DOI, arXiv ID or web address to search with."
-msgstr ""
+msgstr "此来源没有可用于搜索的 DOI、arXiv ID 或网址。"
 
 #: apps/reader/src/WorkspacePaneSupport.tsx
 msgid "This source has no file yet. Its literature note, annotations and citation are in the Source panel."
-msgstr ""
+msgstr "此来源还没有文件。其文献笔记、注释和引文位于“来源”面板中。"
 
 #: apps/reader/src/ConnectedDocument.tsx
 msgid "This source has no readable representation."
-msgstr ""
+msgstr "此来源没有可阅读的表示形式。"
 
 #: apps/extension/src/save-capture.ts
 msgid "This source has no saved HTML reading copy. Open it in Reader to annotate."
-msgstr ""
+msgstr "此来源没有已保存的 HTML 阅读副本。请在 Reader 中打开它以添加注释。"
 
 #: apps/reader/src/DocumentWorkspace.tsx
 msgid "This source is no longer available."
-msgstr ""
+msgstr "此来源已不可用。"
 
 #: apps/extension/src/use-source-note.ts
 #: apps/reader/src/connect-workspace.ts
 #: apps/reader/src/preview.tsx
 msgid "This source is no longer in the collection."
-msgstr ""
+msgstr "此来源已不在集合中。"
 
 #: apps/extension/src/source-note-session.ts
 msgid "This source is no longer in the collection. Your text is kept in this panel."
-msgstr ""
+msgstr "此来源已不在集合中。你的文本保留在此面板中。"
 
 #: apps/reader/src/source-draft-session.ts
 msgid "This source no longer exists. Your local draft has been retained."
-msgstr ""
+msgstr "此来源已不存在。你的本地草稿已保留。"
 
 #: apps/reader/src/use-selected-source-resources.ts
 msgid "This source record no longer exists."
-msgstr ""
+msgstr "此来源记录已不存在。"
 
 #: apps/extension/src/save-capture.ts
 msgid "This thread part is absent from the saved copy. Open that copy in Reader; no highlight was created."
-msgstr ""
+msgstr "已保存的副本中缺少这部分串文。请在 Reader 中打开该副本；未创建高亮。"
 
 #: packages/renderer-pdf/src/pdf-viewer-ui-schema.ts
 msgid "Thumbnails"
-msgstr ""
+msgstr "缩略图"
 
 #: packages/renderer-pdf/src/pdf-translations.ts
 msgctxt "PDF viewer panel"
 msgid "Thumbnails"
-msgstr ""
+msgstr "缩略图"
 
 #: apps/extension/src/NotePanel.tsx
 msgid "Title"
-msgstr ""
+msgstr "标题"
 
 #: apps/reader/src/CitationStructuredEditor.tsx
 msgctxt "CitationStructuredEditor interface"
 msgid "Title"
-msgstr ""
+msgstr "标题"
 
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "Title"
-msgstr ""
+msgstr "标题"
 
 #: apps/reader/src/library-columns.ts
 msgctxt "Library table column"
 msgid "Title"
-msgstr ""
+msgstr "标题"
 
 #: apps/reader/src/LibraryWorkspace.tsx
 msgctxt "LibraryWorkspace sortFieldOptions"
 msgid "Title"
-msgstr ""
+msgstr "标题"
 
 #: apps/reader/src/CitationSourceSync.tsx
 msgctxt "source metadata field"
 msgid "Title"
-msgstr ""
+msgstr "标题"
 
 #: apps/reader/src/SourceDetails.tsx
 msgctxt "SourceDetails fields"
 msgid "Title"
-msgstr ""
+msgstr "标题"
 
 #: apps/reader/src/SourceImportDialog.tsx
 msgctxt "SourceImportDialog interface"
 msgid "Title"
-msgstr ""
+msgstr "标题"
 
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "Title short"
-msgstr ""
+msgstr "标题简称"
 
 #: apps/reader/src/LibraryWorkspace.tsx
 msgid "Title, author or tag"
-msgstr ""
+msgstr "标题、作者或标签"
 
 #: apps/reader/src/CitationStructuredEditor.tsx
 msgid "Title, work type, and citation key"
-msgstr ""
+msgstr "标题、作品类型和引文键"
 
 #: apps/extension/src/WelcomeApp.tsx
 msgid "To save a selection straight away, right-click it and choose Save highlight, or press <0>{highlight}</0>."
-msgstr ""
+msgstr "要立即保存所选内容，请右键点击它并选择“保存高亮”，或按 <0>{highlight}</0>。"
 
 #: apps/extension/src/WelcomeApp.tsx
 msgid "To save a selection straight away, right-click it and choose Save highlight."
-msgstr ""
+msgstr "要立即保存所选内容，请右键点击它并选择“保存高亮”。"
 
 #: apps/reader/src/LibraryCells.tsx
 msgid "Today"
-msgstr ""
+msgstr "今天"
 
 #: apps/reader/src/reader-command-list.ts
 #: apps/reader/src/ReaderHeader.tsx
 msgid "Toggle left sidebar"
-msgstr ""
+msgstr "切换左侧边栏"
 
 #. placeholder {0}: shortcutLabel("mod+\\")
 #: apps/reader/src/ReaderHeader.tsx
 msgid "Toggle left sidebar · {0}"
-msgstr ""
+msgstr "切换左侧边栏 · {0}"
 
 #: packages/renderer-pdf/src/pdf-translations.ts
 msgctxt "PDF viewer pan"
 msgid "Toggle Pan Mode"
-msgstr ""
+msgstr "切换平移模式"
 
 #: packages/renderer-pdf/src/pdf-translations.ts
 msgctxt "PDF viewer pointer"
 msgid "Toggle Pointer Mode"
-msgstr ""
+msgstr "切换指针模式"
 
 #: apps/reader/src/reader-command-list.ts
 #: apps/reader/src/ReaderHeader.tsx
 msgid "Toggle right sidebar"
-msgstr ""
+msgstr "切换右侧边栏"
 
 #. placeholder {0}: shortcutLabel("mod+shift+\\")
 #: apps/reader/src/ReaderHeader.tsx
 msgid "Toggle right sidebar · {0}"
-msgstr ""
+msgstr "切换右侧边栏 · {0}"
 
 #: packages/renderer-pdf/src/pdf-translations.ts
 msgctxt "PDF viewer print"
 msgid "Total pages in document: {totalPages}"
-msgstr ""
+msgstr "文档总页数：{totalPages}"
 
 #: apps/reader/src/CitationContributors.tsx
 msgid "Translator"
-msgstr ""
+msgstr "译者"
 
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "Translator"
-msgstr ""
+msgstr "译者"
 
 #: apps/reader/src/CitationStructuredEditor.tsx
 msgctxt "CitationStructuredEditor interface"
 msgid "Translators"
-msgstr ""
+msgstr "译者"
 
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "Treaty"
-msgstr ""
+msgstr "条约"
 
 #: apps/extension/src/OptionsApp.tsx
 msgid "Troubleshooting"
-msgstr ""
+msgstr "故障排查"
 
 #: apps/reader/src/CitationTypedFieldEditors.tsx
 msgctxt "CitationTypedFieldEditors booleanOptions"
 msgid "True"
-msgstr ""
+msgstr "是"
 
 #: apps/reader/src/CitationTypedFieldEditors.tsx
 msgctxt "CitationTypedFieldEditors customValueTypeOptions"
 msgid "True / false"
-msgstr ""
+msgstr "真 / 假"
 
 #: apps/reader/src/LibraryAnnotations.tsx
 #: apps/reader/src/LibraryWorkspace.tsx
 msgid "Try a different search, or clear the filters."
-msgstr ""
+msgstr "请尝试其他搜索，或清除筛选条件。"
 
 #: apps/extension/src/NotePanel.tsx
 #: apps/reader/src/ConnectionLayout.tsx
 #: apps/reader/src/LibraryAnnotationBars.tsx
 msgid "Try again"
-msgstr ""
+msgstr "重试"
 
 #: apps/reader/src/ConnectedDocument.tsx
 msgid "Try this tab again"
-msgstr ""
+msgstr "重试此标签页"
 
 #: packages/renderer-pdf/src/pdf-translations.ts
 msgctxt "PDF viewer page"
 msgid "Two Page (Even)"
-msgstr ""
+msgstr "双页（偶数页）"
 
 #: packages/renderer-pdf/src/pdf-translations.ts
 msgctxt "PDF viewer page"
 msgid "Two Page (Odd)"
-msgstr ""
+msgstr "双页（奇数页）"
 
 #: apps/reader/src/annotation-columns.ts
 msgctxt "Annotation table column"
 msgid "Type"
-msgstr ""
+msgstr "类型"
 
 #: apps/extension/src/CitationCard.tsx
 msgctxt "Citation item type"
 msgid "Type"
-msgstr ""
+msgstr "类型"
 
 #: apps/reader/src/CitationStructuredEditor.tsx
 msgctxt "CitationStructuredEditor interface"
 msgid "Type"
-msgstr ""
+msgstr "类型"
 
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "Type"
-msgstr ""
+msgstr "类型"
 
 #: apps/reader/src/LibraryAnnotationToolbar.tsx
 msgctxt "LibraryAnnotationToolbar annotationSortOptions"
 msgid "Type"
-msgstr ""
+msgstr "类型"
 
 #: apps/reader/src/LibraryAnnotationToolbar.tsx
 msgctxt "LibraryAnnotationToolbar interface"
 msgid "Type"
-msgstr ""
+msgstr "类型"
 
 #: apps/reader/src/DisplayMenu.tsx
 msgctxt "DisplayMenu interface"
 msgid "Typeface"
-msgstr ""
+msgstr "字体"
 
 #: apps/reader/src/workspace-tab-display.ts
 msgid "Unavailable source"
-msgstr ""
+msgstr "不可用的来源"
 
 #: apps/reader/src/LibraryCards.tsx
 msgctxt "LibraryCards interface"
 msgid "Undated"
-msgstr ""
+msgstr "无日期"
 
 #: apps/extension/src/CaptureApp.tsx
 msgid "Undo"
-msgstr ""
+msgstr "撤销"
 
 #: packages/core/src/application/create-annotation.ts
 msgid "Unknown annotation creation failure"
-msgstr ""
+msgstr "未知的注释创建失败"
 
 #: apps/reader/src/LibraryCards.tsx
 msgctxt "LibraryCards interface"
 msgid "Unknown creator"
-msgstr ""
+msgstr "未知创建者"
 
 #: apps/reader/src/LibraryNavigator.tsx
 msgctxt "LibraryNavigator interface"
 msgid "Unknown creator"
-msgstr ""
+msgstr "未知创建者"
 
 #: apps/reader/src/NavigatorSections.tsx
 msgctxt "NavigatorSections status or action"
 msgid "Unknown creator"
-msgstr ""
+msgstr "未知创建者"
 
 #: apps/reader/src/reader-command-list.ts
 msgctxt "reader command list"
 msgid "Unknown creator"
-msgstr ""
+msgstr "未知创建者"
 
 #: apps/reader/src/annotation-overview.ts
 msgid "Unknown source"
-msgstr ""
+msgstr "未知来源"
 
 #: apps/reader/src/LibraryAnnotationRow.tsx
 msgctxt "LibraryAnnotationRow interface"
 msgid "Unknown source"
-msgstr ""
+msgstr "未知来源"
 
 #: packages/migration/src/zotero-bundle.ts
 msgid "Unlisted file in bundle."
-msgstr ""
+msgstr "数据包中有未列出的文件。"
 
 #: apps/reader/src/dockview-menus.ts
 msgctxt "dockview menus"
 msgid "Unpin tab"
-msgstr ""
+msgstr "取消固定标签页"
 
 #: apps/reader/src/library-lenses.ts
 msgctxt "library lenses"
 msgid "Unread inbox"
-msgstr ""
+msgstr "未读收件箱"
 
 #: packages/migration/src/zotero-validation.ts
 msgid "Unreported missing parent."
-msgstr ""
+msgstr "存在未报告的缺失父级。"
 
 #: packages/migration/src/model.ts
 msgid "Unsafe import path."
-msgstr ""
+msgstr "导入路径不安全。"
 
 #: apps/reader/src/AnnotationEditor.tsx
 msgid "Unsaved"
-msgstr ""
+msgstr "未保存"
 
 #: apps/extension/src/NotePanel.tsx
 msgid "Unsaved changes"
-msgstr ""
+msgstr "未保存的更改"
 
 #: apps/reader/src/AnnotationCard.tsx
 msgctxt "AnnotationCard interface"
 msgid "Unsaved changes"
-msgstr ""
+msgstr "未保存的更改"
 
 #: apps/reader/src/CitationEditor.tsx
 msgctxt "CitationEditor interface"
 msgid "Unsaved changes"
-msgstr ""
+msgstr "未保存的更改"
 
 #: apps/reader/src/DockviewWorkspace.tsx
 msgctxt "DockviewWorkspace interface"
 msgid "Unsaved changes"
-msgstr ""
+msgstr "未保存的更改"
 
 #: packages/migration/src/readwise.ts
 msgid "Unsaved Feed items excluded (choose “Include unsaved Feed items” to import)"
-msgstr ""
+msgstr "已排除未保存的 Feed 条目（选择“包含未保存的 Feed 条目”即可导入）"
 
 #: packages/migration/src/zotero-pdf.ts
 msgid "Unsupported PDF page geometry."
-msgstr ""
+msgstr "不支持的 PDF 页面几何信息。"
 
 #: apps/reader/src/citation-form-model.ts
 msgid "Unsupported value"
-msgstr ""
+msgstr "不支持的值"
 
 #: packages/migration/src/zotero-bundle.ts
 msgid "Unsupported Zotero bundle version."
-msgstr ""
+msgstr "不支持的 Zotero 数据包版本。"
 
 #: apps/reader/src/annotation-wiki-candidates.ts
 msgid "Untitled annotation"
-msgstr ""
+msgstr "无标题注释"
 
 #: apps/reader/src/source-addition-flow.ts
 msgctxt "source addition flow"
 msgid "Untitled source"
-msgstr ""
+msgstr "无标题来源"
 
 #: apps/reader/src/CitationSourceSync.tsx
 msgid "Update library details"
-msgstr ""
+msgstr "更新文献库详情"
 
 #: apps/reader/src/connection-recovery.ts
 msgid "Update mdbase Connect on your computer to open this collection."
-msgstr ""
+msgstr "请在你的电脑上更新 mdbase Connect，以打开此集合。"
 
 #: apps/extension/src/connection-view.ts
 msgid "Update Reader"
-msgstr ""
+msgstr "更新 Reader"
 
 #: apps/reader/src/LibraryBulkBar.tsx
 msgctxt "LibraryBulkBar interface"
 msgid "Updated"
-msgstr ""
+msgstr "已更新"
 
 #. placeholder {0}: String(progress.done)
 #. placeholder {1}: String(progress.total)
 #: apps/reader/src/LibraryBulkBar.tsx
 msgid "Updating {0} of {1}…"
-msgstr ""
+msgstr "正在更新 {0} / {1}…"
 
 #: apps/extension/src/SavedHighlights.tsx
 #: apps/reader/src/CitationSourceSync.tsx
 msgid "Updating…"
-msgstr ""
+msgstr "正在更新…"
 
 #: packages/migration/src/run-files.ts
 msgid "Uploaded checksum does not match the original file."
-msgstr ""
+msgstr "上传的校验和与原始文件不匹配。"
 
 #. placeholder {0}: String(progress.fileIndex)
 #. placeholder {1}: String(progress.fileCount)
 #: apps/reader/src/SourceImportDialog.tsx
 msgid "Uploading file {0} of {1}"
-msgstr ""
+msgstr "正在上传文件 {0} / {1}"
 
 #: apps/extension/src/CaptureApp.tsx
 msgid "Uploading file {fileIndex} of {fileCount} · {percent}%"
-msgstr ""
+msgstr "正在上传文件 {fileIndex} / {fileCount} · {percent}%"
 
 #: packages/migration/src/zotero-validation.ts
 msgid "URL attachment contains unexpected files."
-msgstr ""
+msgstr "URL 附件包含意外的文件。"
 
 #: apps/reader/src/DraftRecoveryNotice.tsx
 msgid "Use collection version"
-msgstr ""
+msgstr "使用集合版本"
 
 #: apps/reader/src/reader-app-commands.ts
 msgid "Use comfortable density"
-msgstr ""
+msgstr "使用舒适密度"
 
 #: apps/reader/src/reader-app-commands.ts
 msgid "Use compact density"
-msgstr ""
+msgstr "使用紧凑密度"
 
 #: apps/reader/src/reader-app-commands.ts
 msgid "Use dark theme"
-msgstr ""
+msgstr "使用深色主题"
 
 #. placeholder {0}: fieldLabel(difference.field)
 #: apps/reader/src/CitationLookup.tsx
