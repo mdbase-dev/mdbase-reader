@@ -41,7 +41,7 @@ msgstr " Ajouter une condition sur un champ"
 
 #: apps/reader/src/DocumentContextualToolbar.tsx
 msgid " Annotations"
-msgstr " Annotations"
+msgstr " Notes et surlignages"
 
 
 
@@ -59,7 +59,7 @@ msgstr " Ajouter un signet à cette position"
 
 #: apps/reader/src/DocumentContextualToolbar.tsx
 msgid " Citation"
-msgstr " Citation"
+msgstr " Référence bibliographique"
 
 
 
@@ -280,7 +280,7 @@ msgstr "{context} ne contient pas {attribute}."
 
 #: apps/reader/src/LibraryCells.tsx
 msgid "{count, plural, one {# annotation} other {# annotations}}"
-msgstr "{count, plural, one {# annotation} other {# annotations}}"
+msgstr "{count, plural, one {# annotation de lecture} other {# annotations de lecture}}"
 
 
 
@@ -299,7 +299,7 @@ msgstr "{count, plural, one {# publication enregistrée. Les fils ne sont jamais
 
 #: apps/reader/src/LibraryCells.tsx
 msgid "{count, plural, one {# source} other {# sources}}"
-msgstr "{count, plural, one {# source} other {# sources}}"
+msgstr "{count, plural, one {# document source} other {# documents sources}}"
 
 
 
@@ -379,7 +379,7 @@ msgstr "{itemLabel} {0} particule non omissible"
 #. placeholder {0}: String(index + 1)
 #: apps/reader/src/CitationContributors.tsx
 msgid "{itemLabel} {0} organisation"
-msgstr "{itemLabel} {0} organisation"
+msgstr "{itemLabel} {0} organisme"
 
 
 
@@ -1042,7 +1042,7 @@ msgstr "et {0} autres"
 #: apps/reader/src/LibraryAnnotationToolbar.tsx
 #: packages/markdown-editor/src/annotation-widgets.ts
 msgid "Annotation"
-msgstr "Annotation"
+msgstr "Annotation de lecture"
 
 
 
@@ -1113,70 +1113,70 @@ msgstr "Options d’affichage des annotations{0}"
 #: apps/reader/src/InspectorPane.tsx
 #: apps/reader/src/SourceNoteInsertMenu.tsx
 msgid "Annotations"
-msgstr "Annotations"
+msgstr "Annotations de lecture"
 
 
 
 #: apps/reader/src/InspectorPane.tsx
 msgctxt "InspectorPane interface"
 msgid "Annotations"
-msgstr "Annotations"
+msgstr "Annotations de lecture"
 
 
 
 #: apps/reader/src/InspectorPane.tsx
 msgctxt "InspectorPane status or action"
 msgid "Annotations"
-msgstr "Annotations"
+msgstr "Annotations de lecture"
 
 
 
 #: apps/reader/src/library-columns.ts
 msgctxt "Library table column"
 msgid "Annotations"
-msgstr "Annotations"
+msgstr "Notes et surlignages"
 
 
 
 #: apps/reader/src/LibraryAnnotationTable.tsx
 msgctxt "LibraryAnnotationTable interface"
 msgid "Annotations"
-msgstr "Annotations"
+msgstr "Annotations de lecture"
 
 
 
 #: apps/reader/src/LibraryWorkspace.tsx
 msgctxt "LibraryWorkspace interface"
 msgid "Annotations"
-msgstr "Annotations"
+msgstr "Annotations de lecture"
 
 
 
 #: apps/reader/src/MobileSourceViews.tsx
 msgctxt "MobileSourceViews views"
 msgid "Annotations"
-msgstr "Annotations"
+msgstr "Annotations de lecture"
 
 
 
 #: apps/reader/src/reader-command-list.ts
 msgctxt "reader command list"
 msgid "Annotations"
-msgstr "Annotations"
+msgstr "Annotations de lecture"
 
 
 
 #: apps/reader/src/VirtualAnnotationList.tsx
 msgctxt "VirtualAnnotationList interface"
 msgid "Annotations"
-msgstr "Annotations"
+msgstr "Annotations de lecture"
 
 
 
 #: apps/reader/src/workspace-tab-display.ts
 msgctxt "workspace tab display"
 msgid "Annotations"
-msgstr "Annotations"
+msgstr "Annotations de lecture"
 
 
 
@@ -1317,7 +1317,7 @@ msgstr "Approximative"
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "Archive"
-msgstr "Archive"
+msgstr "Service d’archives"
 
 
 
@@ -2054,7 +2054,7 @@ msgstr "Environ"
 #: apps/reader/src/InspectorPane.tsx
 #: apps/reader/src/SourceNoteInsertMenu.tsx
 msgid "Citation"
-msgstr "Citation"
+msgstr "Référence bibliographique"
 
 
 
@@ -2062,7 +2062,7 @@ msgstr "Citation"
 #: apps/reader/src/InspectorPane.tsx
 msgctxt "InspectorPane interface"
 msgid "Citation"
-msgstr "Citation"
+msgstr "Référence bibliographique"
 
 
 
@@ -2070,7 +2070,7 @@ msgstr "Citation"
 #: apps/reader/src/InspectorPane.tsx
 msgctxt "InspectorPane status or action"
 msgid "Citation"
-msgstr "Citation"
+msgstr "Référence bibliographique"
 
 
 
@@ -2078,7 +2078,7 @@ msgstr "Citation"
 #: apps/reader/src/MobileSourceViews.tsx
 msgctxt "MobileSourceViews views"
 msgid "Citation"
-msgstr "Citation"
+msgstr "Référence bibliographique"
 
 
 
@@ -2086,7 +2086,7 @@ msgstr "Citation"
 #: apps/reader/src/reader-command-list.ts
 msgctxt "reader command list"
 msgid "Citation"
-msgstr "Citation"
+msgstr "Référence bibliographique"
 
 
 
@@ -2094,14 +2094,14 @@ msgstr "Citation"
 #: apps/reader/src/workspace-tab-display.ts
 msgctxt "workspace tab display"
 msgid "Citation"
-msgstr "Citation"
+msgstr "Référence bibliographique"
 
 
 
 
 #: apps/extension/src/CitationCard.tsx
 msgid "CITATION"
-msgstr "CITATION"
+msgstr "RÉFÉRENCE BIBLIOGRAPHIQUE"
 
 
 
@@ -2442,7 +2442,7 @@ msgstr "Fermer malgré des modifications non enregistrées ? L’enregistrement 
 #: apps/extension/src/OptionsApp.tsx
 #: apps/reader/src/ImportDestination.tsx
 msgid "Collection"
-msgstr "Collection"
+msgstr "Collection mdbase"
 
 
 
@@ -2450,7 +2450,7 @@ msgstr "Collection"
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "Collection"
-msgstr "Collection"
+msgstr "Collection éditoriale"
 
 
 
@@ -2458,7 +2458,7 @@ msgstr "Collection"
 #: apps/reader/src/ImportDestination.tsx
 msgctxt "ImportDestination interface"
 msgid "Collection"
-msgstr "Collection"
+msgstr "Collection mdbase"
 
 
 
@@ -2518,7 +2518,7 @@ msgstr "Collection : {name}"
 
 #: apps/reader/src/CollectionMenu.tsx
 msgid "Collections"
-msgstr "Collections"
+msgstr "Collections mdbase"
 
 
 
@@ -2641,7 +2641,7 @@ msgstr "Courants"
 #: apps/reader/src/DisplayMenu.tsx
 msgctxt "DisplayMenu interface"
 msgid "Compact"
-msgstr "Compact"
+msgstr "Affichage compact"
 
 
 
@@ -3376,7 +3376,7 @@ msgstr "Jeu de données"
 #: apps/reader/src/CitationSourceSync.tsx
 msgctxt "citation metadata field"
 msgid "Date"
-msgstr "Date"
+msgstr "Date de la référence"
 
 
 
@@ -3384,7 +3384,7 @@ msgstr "Date"
 #: apps/reader/src/CitationSourceSync.tsx
 msgctxt "source metadata field"
 msgid "Date"
-msgstr "Date"
+msgstr "Date de la source"
 
 
 
@@ -3544,7 +3544,7 @@ msgstr "Décroissant"
 #: apps/reader/src/SourceDetails.tsx
 msgctxt "SourceDetails fields"
 msgid "Description"
-msgstr "Description"
+msgstr "Description de la source"
 
 
 
@@ -3567,7 +3567,7 @@ msgstr "Détails"
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "Dimensions"
-msgstr "Dimensions"
+msgstr "Dimensions de l’ouvrage"
 
 
 
@@ -3684,7 +3684,7 @@ msgstr "Paramètres d’affichage"
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "Division"
-msgstr "Division"
+msgstr "Subdivision"
 
 
 
@@ -3692,7 +3692,7 @@ msgstr "Division"
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "Document"
-msgstr "Document"
+msgstr "Document (autre)"
 
 
 
@@ -3700,7 +3700,7 @@ msgstr "Document"
 #: apps/reader/src/citation-form-model.ts
 msgctxt "CSL item type"
 msgid "Document"
-msgstr "Document"
+msgstr "Document (autre)"
 
 
 
@@ -3708,7 +3708,7 @@ msgstr "Document"
 #: apps/reader/src/reader-command-list.ts
 msgctxt "reader command list"
 msgid "Document"
-msgstr "Document"
+msgstr "Document à lire"
 
 
 
@@ -3716,7 +3716,7 @@ msgstr "Document"
 #: apps/reader/src/source-addition-flow.ts
 msgctxt "source addition flow"
 msgid "Document"
-msgstr "Document"
+msgstr "Fichier PDF"
 
 
 
@@ -4689,7 +4689,7 @@ msgstr "Champs"
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "Figure"
-msgstr "Figure"
+msgstr "Illustration"
 
 
 
@@ -4905,21 +4905,21 @@ msgstr "Oublier la collection"
 
 #: apps/reader/src/LibraryWorkspace.tsx
 msgid "Format"
-msgstr "Format"
+msgstr "Format du fichier"
 
 
 
 #: apps/reader/src/library-columns.ts
 msgctxt "Library table column"
 msgid "Format"
-msgstr "Format"
+msgstr "Format du fichier"
 
 
 
 #: apps/reader/src/LibraryWorkspace.tsx
 msgctxt "LibraryWorkspace interface"
 msgid "Format"
-msgstr "Format"
+msgstr "Format du fichier"
 
 
 
@@ -4958,7 +4958,7 @@ msgstr "Plein écran"
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "Genre"
-msgstr "Genre"
+msgstr "Catégorie"
 
 
 
@@ -5170,7 +5170,7 @@ msgstr "Surlignages indisponibles"
 #: packages/renderer-pdf/src/pdf-translations.ts
 msgctxt "PDF viewer page"
 msgid "Horizontal"
-msgstr "Horizontal"
+msgstr "Défilement horizontal"
 
 
 
@@ -6349,7 +6349,7 @@ msgstr "mdbase est injoignable pour le moment. Vérifiez votre connexion et rée
 #: apps/extension/src/CaptureApp.tsx
 #: apps/extension/src/shell-messages.ts
 msgid "mdbase Reader — capture"
-msgstr "mdbase Reader — capture"
+msgstr "Capture avec mdbase Reader"
 
 
 
@@ -7022,21 +7022,21 @@ msgstr "Non défini"
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "Note"
-msgstr "Note"
+msgstr "Notice"
 
 
 
 #: apps/reader/src/MobileSourceViews.tsx
 msgctxt "MobileSourceViews views"
 msgid "Note"
-msgstr "Note"
+msgstr "Note de lecture"
 
 
 
 #: apps/extension/src/PanelTabs.tsx
 msgctxt "Source literature note tab"
 msgid "Note"
-msgstr "Note"
+msgstr "Note de lecture"
 
 
 
@@ -7694,7 +7694,7 @@ msgstr "Sommaire"
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "Page"
-msgstr "Page"
+msgstr "Numéro de page"
 
 
 
@@ -7734,7 +7734,7 @@ msgstr "Paramètres de page"
 #: apps/reader/src/CitationStructuredEditor.tsx
 msgctxt "CitationStructuredEditor interface"
 msgid "Pages"
-msgstr "Pages"
+msgstr "Plage de pages"
 
 
 
@@ -7825,7 +7825,7 @@ msgstr "Titre de la partie"
 #: apps/reader/src/annotation-columns.ts
 msgctxt "Annotation table column"
 msgid "Passage"
-msgstr "Passage"
+msgstr "Extrait"
 
 
 
@@ -8202,7 +8202,7 @@ msgstr "Propriétés"
 
 #: apps/reader/src/CitationStructuredEditor.tsx
 msgid "Publication"
-msgstr "Publication"
+msgstr "Données de publication"
 
 
 
@@ -10153,7 +10153,7 @@ msgstr "Saison"
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "Section"
-msgstr "Section"
+msgstr "Partie"
 
 
 
@@ -10282,7 +10282,7 @@ msgstr "Créateur de la série"
 #: apps/reader/src/DisplayMenu.tsx
 msgctxt "DisplayMenu interface"
 msgid "Serif"
-msgstr "Serif"
+msgstr "Avec empattements"
 
 
 
@@ -10633,7 +10633,7 @@ msgstr "Champ de tri"
 #: apps/reader/src/annotation-columns.ts
 msgctxt "Annotation table column"
 msgid "Source"
-msgstr "Source"
+msgstr "Document source"
 
 
 
@@ -10641,7 +10641,7 @@ msgstr "Source"
 #: apps/extension/src/PanelTabs.tsx
 msgctxt "Bibliographic source"
 msgid "Source"
-msgstr "Source"
+msgstr "Fiche de source"
 
 
 
@@ -10649,7 +10649,7 @@ msgstr "Source"
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "Source"
-msgstr "Source"
+msgstr "Document source"
 
 
 
@@ -10657,7 +10657,7 @@ msgstr "Source"
 #: apps/reader/src/dockview-side-panels.ts
 msgctxt "dockview side panels"
 msgid "Source"
-msgstr "Source"
+msgstr "Fiche de source"
 
 
 
@@ -10665,7 +10665,7 @@ msgstr "Source"
 #: apps/reader/src/DockviewWorkspace.tsx
 msgctxt "DockviewWorkspace status or action"
 msgid "Source"
-msgstr "Source"
+msgstr "Fiche de source"
 
 
 
@@ -10673,7 +10673,7 @@ msgstr "Source"
 #: apps/reader/src/LibraryAnnotationToolbar.tsx
 msgctxt "LibraryAnnotationToolbar annotationSortOptions"
 msgid "Source"
-msgstr "Source"
+msgstr "Document source"
 
 
 
@@ -10681,7 +10681,7 @@ msgstr "Source"
 #: apps/reader/src/LibraryAnnotationToolbar.tsx
 msgctxt "LibraryAnnotationToolbar interface"
 msgid "Source"
-msgstr "Source"
+msgstr "Document source"
 
 
 
@@ -10689,7 +10689,7 @@ msgstr "Source"
 #: apps/reader/src/source-note-references.ts
 msgctxt "source note references"
 msgid "Source"
-msgstr "Source"
+msgstr "Document source"
 
 
 
@@ -10697,7 +10697,7 @@ msgstr "Source"
 #: apps/reader/src/workspace-tab-display.ts
 msgctxt "workspace tab display"
 msgid "Source"
-msgstr "Source"
+msgstr "Fiche de source"
 
 
 
@@ -10778,7 +10778,7 @@ msgstr "Espace de travail de la source"
 #: apps/reader/src/ImportReview.tsx
 #: apps/reader/src/reader-command-list.ts
 msgid "Sources"
-msgstr "Sources"
+msgstr "Documents sources"
 
 
 
@@ -10786,7 +10786,7 @@ msgstr "Sources"
 #: apps/reader/src/dockview-side-panels.ts
 msgctxt "dockview side panels"
 msgid "Sources"
-msgstr "Sources"
+msgstr "Fiches de sources"
 
 
 
@@ -10794,7 +10794,7 @@ msgstr "Sources"
 #: apps/reader/src/LibraryCards.tsx
 msgctxt "LibraryCards interface"
 msgid "Sources"
-msgstr "Sources"
+msgstr "Documents sources"
 
 
 
@@ -10802,7 +10802,7 @@ msgstr "Sources"
 #: apps/reader/src/LibraryNavigator.tsx
 msgctxt "LibraryNavigator interface"
 msgid "Sources"
-msgstr "Sources"
+msgstr "Documents sources"
 
 
 
@@ -10810,7 +10810,7 @@ msgstr "Sources"
 #: apps/reader/src/LibraryTable.tsx
 msgctxt "LibraryTable interface"
 msgid "Sources"
-msgstr "Sources"
+msgstr "Documents sources"
 
 
 
@@ -10818,7 +10818,7 @@ msgstr "Sources"
 #: apps/reader/src/LibraryWorkspace.tsx
 msgctxt "LibraryWorkspace interface"
 msgid "Sources"
-msgstr "Sources"
+msgstr "Documents sources"
 
 
 
@@ -10873,7 +10873,7 @@ msgstr "Norme"
 #: apps/reader/src/DisplayMenu.tsx
 msgctxt "DisplayMenu interface"
 msgid "Standard"
-msgstr "Standard"
+msgstr "Largeur normale"
 
 
 
@@ -10978,7 +10978,7 @@ msgstr "Citation enregistrée"
 
 #: apps/reader/src/CitationPreview.tsx
 msgid "Style"
-msgstr "Style"
+msgstr "Style bibliographique"
 
 
 #: apps/reader/src/citation-labels.ts
@@ -12016,7 +12016,7 @@ msgstr "Deux pages (impaires)"
 #: apps/reader/src/annotation-columns.ts
 msgctxt "Annotation table column"
 msgid "Type"
-msgstr "Type"
+msgstr "Type d’annotation"
 
 
 
@@ -12024,7 +12024,7 @@ msgstr "Type"
 #: apps/extension/src/CitationCard.tsx
 msgctxt "Citation item type"
 msgid "Type"
-msgstr "Type"
+msgstr "Type de référence"
 
 
 
@@ -12032,7 +12032,7 @@ msgstr "Type"
 #: apps/reader/src/CitationStructuredEditor.tsx
 msgctxt "CitationStructuredEditor interface"
 msgid "Type"
-msgstr "Type"
+msgstr "Type de document"
 
 
 
@@ -12040,7 +12040,7 @@ msgstr "Type"
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "Type"
-msgstr "Type"
+msgstr "Type de document"
 
 
 
@@ -12048,7 +12048,7 @@ msgstr "Type"
 #: apps/reader/src/LibraryAnnotationToolbar.tsx
 msgctxt "LibraryAnnotationToolbar annotationSortOptions"
 msgid "Type"
-msgstr "Type"
+msgstr "Type d’annotation"
 
 
 
@@ -12056,7 +12056,7 @@ msgstr "Type"
 #: apps/reader/src/LibraryAnnotationToolbar.tsx
 msgctxt "LibraryAnnotationToolbar interface"
 msgid "Type"
-msgstr "Type"
+msgstr "Type d’annotation"
 
 
 
@@ -12469,7 +12469,7 @@ msgstr "Vérification des documents importés"
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "Version"
-msgstr "Version"
+msgstr "Numéro de version"
 
 
 
@@ -12477,7 +12477,7 @@ msgstr "Version"
 #: packages/renderer-pdf/src/pdf-translations.ts
 msgctxt "PDF viewer page"
 msgid "Vertical"
-msgstr "Vertical"
+msgstr "Défilement vertical"
 
 
 
@@ -12524,7 +12524,7 @@ msgstr "Vues"
 #: apps/reader/src/CitationStructuredEditor.tsx
 msgctxt "CitationStructuredEditor interface"
 msgid "Volume"
-msgstr "Volume"
+msgstr "Numéro de volume"
 
 
 
