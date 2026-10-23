@@ -1,8 +1,10 @@
+import { parseDocumentRange } from "@mdbase-reader/core";
+
 import { readingOrderIndexFromCfi, stableEpubHref } from "./epub-locator.js";
 import { resolveEpubPath, safeEpubPath } from "./epub-path.js";
 import { epubRangeCfiPoint } from "./epub-range-cfi.js";
 
-import type { DocumentRange } from "@mdbase-reader/core";
+import type { AnnotationTarget, DocumentRange } from "@mdbase-reader/core";
 import type {
   ReaderLocator,
   ReadingRangeLocation,
@@ -31,41 +33,14 @@ export async function resolveEpubReadingRange(
     return { valid: false, message: "EPUB reading requires an epub-spine range." };
   }
   try {
-    const hrefs = publication.readingOrder.items.map((link) =>
-      stableEpubHref(link.href, publicationBaseUrl),
-    );
-    const startHref = resolveEpubPath(packagePath, rangeHref(range.start));
-    const endHref = resolveEpubPath(packagePath, rangeHref(range.end));
-    const startIndex = endpointIndex(hrefs, startHref);
-    const endIndex = endpointIndex(hrefs, endHref);
-    if (startIndex > endIndex) {
-      throw new Error("EPUB range start follows its end in spine reading order.");
-    }
-    const documents = await endpointDocuments(publication, range, startIndex, endIndex);
-    const start =
-      range.start_cfi === undefined
-        ? Number.NEGATIVE_INFINITY
-        : epubRangeCfiPoint(range.start_cfi, startIndex, documents.get(startIndex), "start");
-    const end =
-      range.end_cfi === undefined
-        ? Number.POSITIVE_INFINITY
-        : epubRangeCfiPoint(range.end_cfi, endIndex, documents.get(endIndex), "end");
-    if (start === null || end === null) {
-      throw new Error(
-        "EPUB range CFI is unsupported or does not resolve in its endpoint resource.",
-      );
-    }
-    if (startIndex === endIndex && start > end) {
-      throw new Error("EPUB range CFI start follows its end.");
-    }
-    const bounds: ResolvedBounds = { hrefs, startIndex, endIndex, start, end, documents };
+    const bounds = await resolveBounds(publication, publicationBaseUrl, range, packagePath);
     return {
       valid: true,
       start: {
         kind: "epub",
         locator: {
-          href: startHref,
-          type: publication.readingOrder.items[startIndex]?.type ?? "application/xhtml+xml",
+          href: bounds.hrefs[bounds.startIndex],
+          type: publication.readingOrder.items[bounds.startIndex]?.type ?? "application/xhtml+xml",
           locations:
             range.start_cfi === undefined ? { progression: 0 } : { fragments: [range.start_cfi] },
         },
@@ -78,6 +53,134 @@ export async function resolveEpubReadingRange(
       message: error instanceof Error ? error.message : "EPUB reading range could not be verified.",
     };
   }
+}
+
+/** Certify both edges; a crossing selection is unknown, never merely outside. */
+export async function containsEpubAnnotationRange(
+  publication: Publication,
+  publicationBaseUrl: string,
+  range: DocumentRange,
+  target: AnnotationTarget,
+  packagePath = "package.opf",
+): Promise<boolean | null> {
+  try {
+    if (range.kind !== "epub-spine") {
+      return null;
+    }
+    const bounds = await resolveBounds(publication, publicationBaseUrl, range, packagePath);
+    const location = annotationLocation(bounds.hrefs, target);
+    if (!location) {
+      return null;
+    }
+    const edges = await annotationEdges(publication, bounds, location);
+    return edges ? containsEdges(bounds, location.index, edges) : null;
+  } catch {
+    return null;
+  }
+}
+
+function annotationLocation(
+  hrefs: readonly string[],
+  target: AnnotationTarget,
+): ReturnType<typeof absoluteLocation> {
+  if (target.pdf || target.html) {
+    return null;
+  }
+  const locator = target.epub
+    ? { locations: { fragments: [target.epub.cfi] } }
+    : target.position?.kind === "epub" && !target.quote
+      ? target.position.locator
+      : null;
+  if (!locator || unsupportedFragments(locator)) {
+    return null;
+  }
+  const location = absoluteLocation(hrefs, locator);
+  // A viewport/point CFI cannot describe the extent of a text selection.
+  return target.quote && location?.cfi?.split(",").length !== 3 ? null : location;
+}
+
+function unsupportedFragments(locator: Readonly<Record<string, unknown>>): boolean {
+  const fragments = record(locator["locations"])?.["fragments"];
+  return (
+    fragments !== undefined &&
+    (!Array.isArray(fragments) ||
+      fragments.some(
+        (fragment: unknown) => typeof fragment !== "string" || !fragment.startsWith("epubcfi("),
+      ))
+  );
+}
+
+interface AnnotationEdges {
+  readonly start: number | null;
+  readonly end: number | null;
+}
+
+async function annotationEdges(
+  publication: Publication,
+  bounds: ResolvedBounds,
+  { index, cfi }: NonNullable<ReturnType<typeof absoluteLocation>>,
+): Promise<AnnotationEdges | null> {
+  if (!cfi) {
+    return { start: null, end: null };
+  }
+  const document = bounds.documents.get(index) ?? (await resourceDocument(publication, index));
+  const start = epubRangeCfiPoint(cfi, index, document, "start");
+  const end = epubRangeCfiPoint(cfi, index, document, "end");
+  return start === null || end === null ? null : { start, end };
+}
+
+function containsEdges(
+  bounds: ResolvedBounds,
+  index: number,
+  { start, end }: AnnotationEdges,
+): boolean | null {
+  if (index < bounds.startIndex || index > bounds.endIndex) {
+    return false;
+  }
+  const lower = index === bounds.startIndex ? bounds.start : Number.NEGATIVE_INFINITY;
+  const upper = index === bounds.endIndex ? bounds.end : Number.POSITIVE_INFINITY;
+  if (start === null || end === null) {
+    return Number.isFinite(lower) || Number.isFinite(upper) ? null : true;
+  }
+  if (end < lower || start > upper) {
+    return false;
+  }
+  return start >= lower && end <= upper ? true : null;
+}
+
+async function resolveBounds(
+  publication: Publication,
+  publicationBaseUrl: string,
+  range: SpineRange,
+  packagePath: string,
+): Promise<ResolvedBounds> {
+  if (!parseDocumentRange(range)) {
+    throw new Error("The EPUB range is invalid.");
+  }
+  const hrefs = publication.readingOrder.items.map((link) =>
+    stableEpubHref(link.href, publicationBaseUrl),
+  );
+  const startIndex = endpointIndex(hrefs, resolveEpubPath(packagePath, rangeHref(range.start)));
+  const endIndex = endpointIndex(hrefs, resolveEpubPath(packagePath, rangeHref(range.end)));
+  if (startIndex > endIndex) {
+    throw new Error("EPUB range start follows its end in spine reading order.");
+  }
+  const documents = await endpointDocuments(publication, range, startIndex, endIndex);
+  const start =
+    range.start_cfi === undefined
+      ? Number.NEGATIVE_INFINITY
+      : epubRangeCfiPoint(range.start_cfi, startIndex, documents.get(startIndex), "start");
+  const end =
+    range.end_cfi === undefined
+      ? Number.POSITIVE_INFINITY
+      : epubRangeCfiPoint(range.end_cfi, endIndex, documents.get(endIndex), "end");
+  if (start === null || end === null) {
+    throw new Error("EPUB range CFI is unsupported or does not resolve in its endpoint resource.");
+  }
+  if (startIndex === endIndex && start > end) {
+    throw new Error("EPUB range CFI start follows its end.");
+  }
+  return { hrefs, startIndex, endIndex, start, end, documents };
 }
 
 function endpointIndex(hrefs: readonly string[], href: string): number {
@@ -103,29 +206,33 @@ async function endpointDocuments(
     if (cfi === undefined || documents.has(index)) {
       continue;
     }
-    const link = publication.readingOrder.items[index];
-    if (!link) {
-      throw new Error("EPUB range resource is missing.");
-    }
-    const resource = publication.get(link);
-    try {
-      const markup = await resource.readAsString();
-      if (!markup) {
-        throw new Error("EPUB range resource could not be read.");
-      }
-      const document = new DOMParser().parseFromString(
-        markup,
-        link.type === "application/xhtml+xml" ? "application/xhtml+xml" : "text/html",
-      );
-      if (document.querySelector("parsererror")) {
-        throw new Error("EPUB range resource could not be parsed.");
-      }
-      documents.set(index, document);
-    } finally {
-      resource.close();
-    }
+    documents.set(index, await resourceDocument(publication, index));
   }
   return documents;
+}
+
+async function resourceDocument(publication: Publication, index: number): Promise<Document> {
+  const link = publication.readingOrder.items[index];
+  if (!link) {
+    throw new Error("EPUB range resource is missing.");
+  }
+  const resource = publication.get(link);
+  try {
+    const markup = await resource.readAsString();
+    if (!markup) {
+      throw new Error("EPUB range resource could not be read.");
+    }
+    const document = new DOMParser().parseFromString(
+      markup,
+      link.type === "application/xhtml+xml" ? "application/xhtml+xml" : "text/html",
+    );
+    if (document.querySelector("parsererror")) {
+      throw new Error("EPUB range resource could not be parsed.");
+    }
+    return document;
+  } finally {
+    resource.close();
+  }
 }
 
 function measureRange(bounds: ResolvedBounds, locator: ReaderLocator): ReadingRangeLocation | null {
@@ -191,7 +298,8 @@ function absoluteLocation(
     // CFI-only absolute locators are also used by saved selections.
     const cfiIndex = cfi === undefined ? null : readingOrderIndexFromCfi(cfi);
     const index = typeof href === "string" ? hrefs.indexOf(rangeHref(href)) : (cfiIndex ?? -1);
-    if (index < 0 || index >= hrefs.length) {
+    const resolvedHref = hrefs[index];
+    if (resolvedHref === undefined || hrefs.lastIndexOf(resolvedHref) !== index) {
       return null;
     }
     if (cfi !== undefined && cfiIndex !== index) {

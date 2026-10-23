@@ -11,11 +11,21 @@ import { clearCssHighlights, setCssHighlight, setCssHighlights } from "./html-cs
 import { htmlDocumentText } from "./html-document.js";
 import { followEmbedderPalette } from "./html-palette.js";
 import { HtmlTargetLocator, htmlLocator, htmlSelectionDraft } from "./html-range.js";
-import { htmlLocationTarget, resolveHtmlReadingRange } from "./html-reading-range.js";
+import {
+  containsHtmlAnnotationRange,
+  htmlLocationTarget,
+  resolveHtmlReadingRange,
+} from "./html-reading-range.js";
 import { scrollHtmlElement } from "./html-scroll.js";
 import { applyHtmlTypography } from "./html-typography.js";
 
-import type { Annotation, AnnotationId, DocumentRange, QuoteSelector } from "@mdbase-reader/core";
+import type {
+  Annotation,
+  AnnotationId,
+  AnnotationTarget,
+  DocumentRange,
+  QuoteSelector,
+} from "@mdbase-reader/core";
 import type {
   ContentsEntry,
   ReaderLocator,
@@ -148,6 +158,12 @@ export class HtmlDocumentRuntime {
 
   public currentLocation(): ReaderLocator {
     return htmlLocator(this.#href, scrollProgression(this.#document));
+  }
+
+  public containsAnnotationRange(range: DocumentRange, target: AnnotationTarget): boolean | null {
+    return this.#destroyed
+      ? null
+      : containsHtmlAnnotationRange(this.#document, this.#href, range, target);
   }
 
   public resolveReadingRange(range: DocumentRange): ReadingRangeResolution {

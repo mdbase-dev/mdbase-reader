@@ -50,6 +50,12 @@ export class ReadiumEpubSurface implements ReadingSurface {
       this.#annotationActivations.emit(annotationId),
     );
     this.capabilities = {
+      annotationRange: {
+        contains: (range, target) =>
+          this.#destroyed
+            ? Promise.resolve(null)
+            : (runtime.containsAnnotationRange?.(range, target) ?? Promise.resolve(null)),
+      },
       textSelection: {
         selections: this.#selections,
         cleared: this.#cleared,
