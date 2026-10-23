@@ -165,7 +165,7 @@ msgstr "{0} GiB"
 #: apps/reader/src/use-document-attachment.ts
 #: apps/reader/src/use-source-addition.ts
 msgid "{0} isn’t a PDF, EPUB or saved web page."
-msgstr ""
+msgstr "{0} 不是 PDF、EPUB 或已保存的网页。"
 
 #. placeholder {0}: view.name
 #: apps/reader/src/LibraryWorkspace.tsx
@@ -228,7 +228,7 @@ msgstr "找到 {count} 个结果"
 
 #: apps/reader/src/use-annotation-view.ts
 msgid "{detail} Reader is applying its filters itself."
-msgstr ""
+msgstr "{detail} Reader 正自行应用筛选条件。"
 
 #: apps/reader/src/EnvironmentBadge.tsx
 msgid "{environment} environment"
@@ -316,7 +316,7 @@ msgstr "{name} 数量不匹配。"
 
 #: packages/core/src/application/source-document-format.ts
 msgid "{name} is not a recognizable PDF, EPUB, or HTML document."
-msgstr ""
+msgstr "{name} 不是可识别的 PDF、EPUB 或 HTML 文档。"
 
 #: packages/core/src/domain/identity.ts
 msgid "{name} must be a non-empty printable value."
@@ -1605,7 +1605,7 @@ msgstr "关闭"
 #: apps/reader/src/dockview-menus.ts
 msgctxt "Close workspace tab"
 msgid "Close"
-msgstr ""
+msgstr "关闭"
 
 #: packages/renderer-pdf/src/pdf-translations.ts
 msgctxt "PDF viewer common"
@@ -1937,7 +1937,7 @@ msgstr "容器标题简称"
 #: apps/reader/src/library-conditions.ts
 msgctxt "Field filter comparison operator"
 msgid "contains"
-msgstr ""
+msgstr "包含"
 
 #: apps/reader/src/ImportReview.tsx
 msgid "Content files"
@@ -2799,7 +2799,7 @@ msgstr "百科全书条目"
 #: apps/reader/src/LibraryWorkspace.tsx
 msgctxt "LibraryWorkspace formatFilterOptions"
 msgid "EPUB"
-msgstr "EPUB"
+msgstr "EPUB 格式"
 
 #: packages/renderer-epub/src/epub-archive.ts
 msgid "EPUB archive contains a duplicate path: {path}"
@@ -3084,7 +3084,7 @@ msgstr "文件传输失败。"
 
 #: apps/reader/src/import-controller.ts
 msgid "Files: {completed} of {total}"
-msgstr ""
+msgstr "文件：已完成 {completed} 个，共 {total} 个"
 
 #: apps/reader/src/LibraryWorkspace.tsx
 msgid "Filter"
@@ -3308,7 +3308,7 @@ msgstr "高亮"
 #: packages/reading-surface/src/margin-markers.ts
 msgctxt "Reading margin marker tooltip"
 msgid "Highlight"
-msgstr ""
+msgstr "高亮"
 
 #: apps/reader/src/SelectionToolbar.tsx
 msgctxt "SelectionToolbar interface"
@@ -3355,7 +3355,7 @@ msgstr "在 mdbase Reader 中高亮并添加评论"
 #: packages/reading-surface/src/margin-markers.ts
 msgctxt "Reading margin marker tooltip"
 msgid "Highlight with a note"
-msgstr ""
+msgstr "带注释的高亮"
 
 #: apps/extension/src/PanelTabs.tsx
 msgid "Highlights"
@@ -3631,37 +3631,37 @@ msgstr "Zotero PDF 矩形无效。"
 #: apps/reader/src/library-conditions.ts
 msgctxt "Field filter comparison operator"
 msgid "is"
-msgstr ""
+msgstr "等于"
 
 #: apps/reader/src/library-conditions.ts
 msgctxt "Field filter comparison operator"
 msgid "is at least"
-msgstr ""
+msgstr "不小于"
 
 #: apps/reader/src/library-conditions.ts
 msgctxt "Field filter comparison operator"
 msgid "is at most"
-msgstr ""
+msgstr "不大于"
 
 #: apps/reader/src/library-conditions.ts
 msgctxt "Field filter comparison operator"
 msgid "is empty"
-msgstr ""
+msgstr "为空"
 
 #: apps/reader/src/library-conditions.ts
 msgctxt "Field filter comparison operator"
 msgid "is greater than"
-msgstr ""
+msgstr "大于"
 
 #: apps/reader/src/library-conditions.ts
 msgctxt "Field filter comparison operator"
 msgid "is less than"
-msgstr ""
+msgstr "小于"
 
 #: apps/reader/src/library-conditions.ts
 msgctxt "Field filter comparison operator"
 msgid "is not"
-msgstr ""
+msgstr "不等于"
 
 #: packages/core/src/domain/citation-validation.ts
 msgctxt "CSL validation"
@@ -3681,7 +3681,7 @@ msgstr "不是 CSL 姓名字段"
 #: apps/reader/src/library-conditions.ts
 msgctxt "Field filter comparison operator"
 msgid "is not empty"
-msgstr ""
+msgstr "不为空"
 
 #: apps/reader/src/CitationStructuredEditor.tsx
 msgctxt "CitationStructuredEditor interface"
@@ -4141,7 +4141,7 @@ msgstr "mdbase Connect 响应时间过长。请稍后重试。"
 
 #: apps/reader/src/use-annotation-view.ts
 msgid "mdbase could not run this view."
-msgstr ""
+msgstr "mdbase 无法执行此视图。"
 
 #: apps/extension/src/sdk-client.ts
 msgid "mdbase could not start in the background. Reload the extension."
@@ -4285,17 +4285,17 @@ msgstr "将标签页移到右侧窗格"
 
 #: apps/reader/src/dockview-menus.ts
 msgid "Move to {title}"
-msgstr ""
+msgstr "移至 {title}"
 
 #: apps/reader/src/dockview-menus.ts
 msgctxt "Workspace tab destination"
 msgid "Move to bottom sidebar"
-msgstr ""
+msgstr "移至底部侧边栏"
 
 #: apps/reader/src/dockview-menus.ts
 msgctxt "Workspace tab destination"
 msgid "Move to left sidebar"
-msgstr ""
+msgstr "移至左侧边栏"
 
 #: apps/reader/src/dockview-menus.ts
 msgid "Move to new pane below"
@@ -4308,17 +4308,17 @@ msgstr "移到右侧新窗格"
 #: apps/reader/src/dockview-menus.ts
 msgctxt "Workspace tab destination"
 msgid "Move to pane"
-msgstr ""
+msgstr "移至窗格"
 
 #: apps/reader/src/dockview-menus.ts
 msgctxt "Workspace tab destination"
 msgid "Move to right sidebar"
-msgstr ""
+msgstr "移至右侧边栏"
 
 #: apps/reader/src/dockview-menus.ts
 msgctxt "Workspace tab destination"
 msgid "Move to top sidebar"
-msgstr ""
+msgstr "移至顶部侧边栏"
 
 #: packages/migration/src/zotero-pdf.ts
 msgid "Multi-page or ink geometry is not yet supported."
@@ -5700,7 +5700,7 @@ msgstr "Reader 需要的是网页。"
 
 #: apps/reader/src/build-source-export.ts
 msgid "Reader export report"
-msgstr ""
+msgstr "Reader 导出报告"
 
 #: apps/reader/src/LibraryTableHeader.tsx
 msgid "Reader fields"
