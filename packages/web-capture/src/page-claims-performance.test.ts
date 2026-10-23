@@ -10,10 +10,10 @@ const observedAt = "2026-10-21T12:00:00Z";
 const pageUrl = "https://news.example/stories";
 const stories = Array.from({ length: 2_000 }, (_, index) => ({
   "@type": "NewsArticle",
-  headline: `Story ${index}`,
-  author: { "@type": "Person", name: `Reporter ${index}` },
-  datePublished: `${2000 + Math.floor(index / 336)}-${String(1 + (Math.floor(index / 28) % 12)).padStart(2, "0")}-${String(1 + (index % 28)).padStart(2, "0")}`,
-  url: `https://news.example/story/${index}`,
+  headline: `Story ${String(index)}`,
+  author: { "@type": "Person", name: `Reporter ${String(index)}` },
+  datePublished: `${String(2000 + Math.floor(index / 336))}-${String(1 + (Math.floor(index / 28) % 12)).padStart(2, "0")}-${String(1 + (index % 28)).padStart(2, "0")}`,
+  url: `https://news.example/story/${String(index)}`,
 }));
 
 function bestTime(run: () => void): number {
@@ -39,7 +39,6 @@ it("resolves a 2,000-node listing without citing its first story in under 300ms"
   const ms = bestTime(() => {
     result = resolveCitation({ claims: pageClaims(document, pageUrl, observedAt).claims });
   });
-  console.info(`2k JSON-LD nodes, pageClaims + resolveCitation best-of-3: ${ms.toFixed(1)}ms`);
   expect(result!.citation).toMatchObject({ title: "Latest stories", type: "webpage" });
   expect(result!.citation).not.toHaveProperty("author");
   expect(ms).toBeLessThan(300);
@@ -58,6 +57,5 @@ it("groups 8,000 diverse claims without pairwise scans in under 750ms", () => {
   const ms = bestTime(() => {
     resolveCitation({ claims });
   });
-  console.info(`8k diverse claims, resolveCitation best-of-3: ${ms.toFixed(1)}ms`);
   expect(ms).toBeLessThan(750);
 }, 30_000);

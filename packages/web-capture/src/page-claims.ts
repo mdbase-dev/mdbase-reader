@@ -560,8 +560,8 @@ function pageWorkNodes(document: Document, pageUrl: string, nodes: JsonLdNode[])
     if (
       node["url"] ||
       ((hasTarget || listing || works.length > maxUnscopedWorks) &&
-        node["@id"] &&
-        !String(node["@id"]).startsWith("#"))
+        typeof node["@id"] === "string" &&
+        !node["@id"].startsWith("#"))
     ) {
       return false;
     }

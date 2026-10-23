@@ -8,15 +8,15 @@ const pageUrl = "https://news.example/stories";
 const observedAt = "2026-10-21T12:00:00Z";
 const linked = (data: unknown): string =>
   `<script type="application/ld+json">${JSON.stringify(data)}</script>`;
-const story = (index: number) => ({
-  "@id": `https://news.example/story/${index}#article`,
+const story = (index: number): Record<string, unknown> => ({
+  "@id": `https://news.example/story/${String(index)}#article`,
   "@type": "NewsArticle",
-  headline: `Story ${index}`,
-  author: { "@type": "Person", name: `Reporter ${index}` },
-  identifier: `10.1234/story${index}`,
+  headline: `Story ${String(index)}`,
+  author: { "@type": "Person", name: `Reporter ${String(index)}` },
+  identifier: `10.1234/story${String(index)}`,
 });
 
-function batch(head: string) {
+function batch(head: string): ReturnType<typeof pageClaims> {
   const document = new DOMParser().parseFromString(
     `<title>Latest stories</title>${head}<h1>Latest stories</h1>`,
     "text/html",
@@ -24,7 +24,7 @@ function batch(head: string) {
   return pageClaims(document, pageUrl, observedAt);
 }
 
-function citation(head: string) {
+function citation(head: string): ReturnType<typeof resolveCitation>["citation"] {
   return resolveCitation({ claims: batch(head).claims }).citation;
 }
 
@@ -56,8 +56,8 @@ describe("page-scoped linked data", () => {
         linked({
           "@graph": Array.from({ length: 100 }, (_, i) => ({
             "@type": kind === "mixed types" ? ["NewsArticle", "WebPage"] : "NewsArticle",
-            ...(kind === "anonymous" ? {} : { "@id": `#story-${i}` }),
-            headline: `Story ${i}`,
+            ...(kind === "anonymous" ? {} : { "@id": `#story-${String(i)}` }),
+            headline: `Story ${String(i)}`,
           })),
         }),
       );
@@ -156,7 +156,7 @@ describe("bounded untrusted metadata", () => {
       linked({
         "@graph": Array.from({ length: 5_000 }, (_, i) => ({
           "@type": "NewsArticle",
-          headline: `Story ${i}`,
+          headline: `Story ${String(i)}`,
         })),
       }),
     );
@@ -178,11 +178,12 @@ describe("bounded untrusted metadata", () => {
     const result = batch(
       linked({
         "@type": "NewsArticle",
-        headline: Array.from({ length: 10_000 }, (_, i) => `Story ${i}`),
+        headline: Array.from({ length: 10_000 }, (_, i) => `Story ${String(i)}`),
       }) +
-        Array.from({ length: 2_000 }, (_, i) => `<meta name="dc.title" content="Tag ${i}">`).join(
-          "",
-        ),
+        Array.from(
+          { length: 2_000 },
+          (_, i) => `<meta name="dc.title" content="Tag ${String(i)}">`,
+        ).join(""),
     );
     const titles = result.claims.filter(({ field }) => field === "title");
     expect(titles.length).toBeLessThanOrEqual(128);

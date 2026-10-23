@@ -29,27 +29,27 @@ const readingDocument = (bytes: Uint8Array): Document =>
 
 afterEach(() => vi.restoreAllMocks());
 
-describe("web capture extraction", () => {
-  it("parses the snapshot and extracts its ClaimBatch only once", async () => {
-    const html = fixture("academic");
-    const parse = vi.spyOn(DOMParser.prototype, "parseFromString");
-    const claims = vi.spyOn(pageClaimModule, "pageClaims");
-    const result = await webCaptureImport(capture(html));
-    expect(parse.mock.calls.filter(([source]) => source === html)).toHaveLength(1);
-    expect(claims).toHaveBeenCalledExactlyOnceWith(
-      expect.anything(),
-      capture(html).canonicalUrl,
-      capture(html).retrievedAt,
-    );
-    expect(result.claims).toBe(claims.mock.results[0]?.value);
-    expect(result.scholarly.citation).toEqual(
-      resolveCitation({ claims: result.claims.claims }).citation,
-    );
-    expect(
-      result.claims.claims.every(({ observedAt }) => observedAt === capture(html).retrievedAt),
-    ).toBe(true);
-  });
+it("parses the snapshot and extracts its ClaimBatch only once", async () => {
+  const html = fixture("academic");
+  const parse = vi.spyOn(DOMParser.prototype, "parseFromString");
+  const claims = vi.spyOn(pageClaimModule, "pageClaims");
+  const result = await webCaptureImport(capture(html));
+  expect(parse.mock.calls.filter(([source]) => source === html)).toHaveLength(1);
+  expect(claims).toHaveBeenCalledExactlyOnceWith(
+    expect.anything(),
+    capture(html).canonicalUrl,
+    capture(html).retrievedAt,
+  );
+  expect(result.claims).toBe(claims.mock.results[0]?.value);
+  expect(result.scholarly.citation).toEqual(
+    resolveCitation({ claims: result.claims.claims }).citation,
+  );
+  expect(
+    result.claims.claims.every(({ observedAt }) => observedAt === capture(html).retrievedAt),
+  ).toBe(true);
+});
 
+describe("web capture extraction", () => {
   it("extracts the article and metadata while retaining a separate archive", async () => {
     const html = `<!doctype html><html lang="en-AU"><head><title>A useful essay</title>
       <meta name="author" content="Jane Example"><meta property="article:published_time" content="2026-08-01">

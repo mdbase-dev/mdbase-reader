@@ -22,8 +22,8 @@ describe("normalized equivalence buckets", () => {
     ["volume", 3, 3],
     ["issued", { literal: "Spring", circa: undefined }, { literal: "Spring" }],
   ])("indexes equivalent %s values together", (field, left, right) => {
-    expect(claimValuesMatch(field as string, left, right)).toBe(true);
-    expect(claimMatchKey(field as string, left)).toBe(claimMatchKey(field as string, right));
+    expect(claimValuesMatch(field, left, right)).toBe(true);
+    expect(claimMatchKey(field, left)).toBe(claimMatchKey(field, right));
   });
 
   it("does not collide ordered names, separators within names, or numeric and string fields", () => {
