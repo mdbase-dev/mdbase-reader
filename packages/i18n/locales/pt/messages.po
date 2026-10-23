@@ -1086,116 +1086,116 @@ msgstr "azul"
 #: apps/reader/src/SourceNoteEditor.tsx
 msgctxt "SourceNoteEditor formatActions"
 msgid "Bold"
-msgstr ""
+msgstr "Negrito"
 
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "Book"
-msgstr ""
+msgstr "Livro"
 
 #: apps/reader/src/citation-form-model.ts
 msgctxt "CSL item type"
 msgid "Book"
-msgstr ""
+msgstr "Livro"
 
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "Book chapter"
-msgstr ""
+msgstr "Capítulo de livro"
 
 #: apps/reader/src/citation-form-model.ts
 msgctxt "CSL item type"
 msgid "Book chapter"
-msgstr ""
+msgstr "Capítulo de livro"
 
 #: apps/reader/src/annotation-kind.ts
 msgid "Bookmark"
-msgstr ""
+msgstr "Marcar"
 
 #: apps/reader/src/AnnotationPanelActions.tsx
 msgctxt "AnnotationPanelActions interface"
 msgid "Bookmark"
-msgstr ""
+msgstr "Marcar"
 
 #: apps/reader/src/AnnotationPanelActions.tsx
 msgid "Bookmark the current reading position"
-msgstr ""
+msgstr "Marcar a posição de leitura atual"
 
 #: apps/reader/src/DocumentContextualToolbar.tsx
 #: apps/reader/src/reader-app-commands.ts
 msgid "Bookmark this position"
-msgstr ""
+msgstr "Marcar esta posição"
 
 #: apps/reader/src/AnnotationPanelActions.tsx
 msgctxt "AnnotationPanelActions interface"
 msgid "Bookmarking…"
-msgstr ""
+msgstr "Marcando…"
 
 #: apps/reader/src/AnnotationList.tsx
 msgctxt "AnnotationList annotationFilterOptions"
 msgid "Bookmarks"
-msgstr ""
+msgstr "Marcadores"
 
 #: apps/reader/src/LibraryAnnotationToolbar.tsx
 msgctxt "LibraryAnnotationToolbar annotationTypeOptions"
 msgid "Bookmarks"
-msgstr ""
+msgstr "Marcadores"
 
 #: packages/migration/src/readwise.ts
 msgid "Books from Kindle, Apple Books, Instapaper, podcasts and other classic Readwise sources are imported as metadata and highlights only; Readwise does not provide their text or files. Their locations are Readwise's labels (such as Kindle locations), not positions Reader can open."
-msgstr ""
+msgstr "Livros do Kindle, Apple Books, Instapaper, podcasts e outras fontes clássicas do Readwise são importados apenas como metadados e destaques; o Readwise não fornece o texto nem os arquivos deles. As localizações são os rótulos do Readwise (como as posições do Kindle), não posições que o Reader pode abrir."
 
 #: apps/reader/src/ImportPageView.tsx
 msgid "Bring your library with you."
-msgstr ""
+msgstr "Leve sua biblioteca com você."
 
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "Broadcast"
-msgstr ""
+msgstr "Transmissão"
 
 #: apps/reader/src/SourceNoteEditor.tsx
 msgctxt "SourceNoteEditor formatActions"
 msgid "Bullet list"
-msgstr ""
+msgstr "Lista com marcadores"
 
 #: packages/migration/src/zotero.ts
 msgid "Bundle file changed since preview."
-msgstr ""
+msgstr "O arquivo do pacote mudou desde a prévia."
 
 #: packages/migration/src/zotero.ts
 msgid "Bundle has no library identity."
-msgstr ""
+msgstr "O pacote não tem identidade de biblioteca."
 
 #: packages/migration/src/zotero.ts
 msgid "Bundle manifest is missing."
-msgstr ""
+msgstr "Falta o manifesto do pacote."
 
 #: packages/migration/src/zotero.ts
 msgid "Bundle payload is missing."
-msgstr ""
+msgstr "Falta o conteúdo do pacote."
 
 #: apps/reader/src/import-controller.ts
 msgid "Bundle verified. Review the contents and choose a destination."
-msgstr ""
+msgstr "Pacote verificado. Revise o conteúdo e escolha um destino."
 
 #: apps/reader/src/ImportReview.tsx
 msgid "By category"
-msgstr ""
+msgstr "Por categoria"
 
 #: apps/reader/src/ImportReview.tsx
 msgid "Calculated during download"
-msgstr ""
+msgstr "Calculado durante o download"
 
 #: apps/reader/src/CitationTypedFieldEditors.tsx
 msgctxt "CitationTypedFieldEditors dateModeOptions"
 msgid "Calendar date"
-msgstr ""
+msgstr "Data do calendário"
 
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "Call number"
-msgstr ""
+msgstr "Número de chamada"
 
 #: apps/extension/src/NotePanel.tsx
 #: apps/extension/src/PostPicker.tsx
@@ -1206,432 +1206,432 @@ msgstr ""
 #: apps/reader/src/LibraryViewSaveDialog.tsx
 #: apps/reader/src/SourceRemovalDialog.tsx
 msgid "Cancel"
-msgstr ""
+msgstr "Cancelar"
 
 #: apps/reader/src/DocumentContextualToolbar.tsx
 msgctxt "DocumentContextualToolbar interface"
 msgid "Cancel"
-msgstr ""
+msgstr "Cancelar"
 
 #: packages/renderer-pdf/src/pdf-translations.ts
 msgctxt "PDF viewer common"
 msgid "Cancel"
-msgstr ""
+msgstr "Cancelar"
 
 #: packages/renderer-pdf/src/pdf-translations.ts
 msgctxt "PDF viewer passwordPrompt"
 msgid "Cancel"
-msgstr ""
+msgstr "Cancelar"
 
 #: packages/renderer-pdf/src/pdf-translations.ts
 msgctxt "PDF viewer print"
 msgid "Cancel"
-msgstr ""
+msgstr "Cancelar"
 
 #: apps/reader/src/SourceImportDialog.tsx
 msgctxt "SourceImportDialog interface"
 msgid "Cancel"
-msgstr ""
+msgstr "Cancelar"
 
 #: apps/reader/src/DocumentContextualToolbar.tsx
 msgid "Cancel area selection"
-msgstr ""
+msgstr "Cancelar a seleção de área"
 
 #: packages/migration/src/readwise-client.ts
 msgid "Cancelled"
-msgstr ""
+msgstr "Cancelado"
 
 #: apps/reader/src/LibraryWorkspace.tsx
 msgctxt "LibraryWorkspace interface"
 msgid "Cards"
-msgstr ""
+msgstr "Cartões"
 
 #: packages/renderer-pdf/src/pdf-translations.ts
 msgctxt "PDF viewer search"
 msgid "Case sensitive"
-msgstr ""
+msgstr "Diferenciar maiúsculas e minúsculas"
 
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "Categories"
-msgstr ""
+msgstr "Categorias"
 
 #: apps/reader/src/ImportReview.tsx
 msgid "Category"
-msgstr ""
+msgstr "Categoria"
 
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "Chair"
-msgstr ""
+msgstr "Presidente"
 
 #: apps/extension/src/ShortcutList.tsx
 msgid "Change keyboard shortcuts"
-msgstr ""
+msgstr "Alterar os atalhos de teclado"
 
 #: apps/extension/src/NotePanel.tsx
 msgid "Changed elsewhere"
-msgstr ""
+msgstr "Alterado em outro lugar"
 
 #: apps/reader/src/AnnotationCard.tsx
 msgid "Changes need review"
-msgstr ""
+msgstr "As alterações precisam de revisão"
 
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "Chapter number"
-msgstr ""
+msgstr "Número do capítulo"
 
 #: apps/extension/src/connection-view.ts
 #: apps/extension/src/ConnectionPanel.tsx
 #: apps/reader/src/SourceRemovalDialog.tsx
 msgid "Check again"
-msgstr ""
+msgstr "Verificar novamente"
 
 #. placeholder {0}: opened.collectionName
 #: apps/reader/src/ImportReview.tsx
 msgid "Check destination: {0}"
-msgstr ""
+msgstr "Verificar o destino: {0}"
 
 #: apps/extension/src/connection-view.ts
 msgid "Check this collection before saving."
-msgstr ""
+msgstr "Verifique esta coleção antes de salvar."
 
 #: apps/reader/src/import-controller.ts
 msgid "Checking existing import identities…"
-msgstr ""
+msgstr "Verificando as identidades de importação existentes…"
 
 #: apps/reader/src/SourceImportDialog.tsx
 msgid "Checking file and library"
-msgstr ""
+msgstr "Verificando o arquivo e a biblioteca"
 
 #: apps/reader/src/SourceImportDialog.tsx
 msgid "Checking files from the previous import"
-msgstr ""
+msgstr "Verificando os arquivos da importação anterior"
 
 #: apps/extension/src/CaptureApp.tsx
 msgid "Checking files from the previous save attempt…"
-msgstr ""
+msgstr "Verificando os arquivos da tentativa anterior de salvamento…"
 
 #: apps/extension/src/CaptureApp.tsx
 msgid "Checking for duplicates…"
-msgstr ""
+msgstr "Verificando duplicatas…"
 
 #: apps/extension/src/SiteAccessStatus.tsx
 msgid "Checking site access…"
-msgstr ""
+msgstr "Verificando o acesso ao site…"
 
 #: apps/reader/src/connection-recovery.ts
 msgid "Checking the collection’s Reader contracts…"
-msgstr ""
+msgstr "Verificando os contratos do Reader da coleção…"
 
 #: apps/extension/src/NotePanel.tsx
 msgid "Checking the last save…"
-msgstr ""
+msgstr "Verificando o último salvamento…"
 
 #: apps/reader/src/SourceRemovalDialog.tsx
 msgid "Checking what links to this source…"
-msgstr ""
+msgstr "Verificando o que está vinculado a esta fonte…"
 
 #: apps/reader/src/AnnotationEditor.tsx
 msgctxt "AnnotationEditor interface"
 msgid "Checking…"
-msgstr ""
+msgstr "Verificando…"
 
 #: apps/extension/src/connection-view.ts
 #: apps/extension/src/ConnectionPanel.tsx
 msgid "Choose a collection"
-msgstr ""
+msgstr "Escolher uma coleção"
 
 #: apps/extension/src/connection-view.ts
 msgid "Choose a collection before saving."
-msgstr ""
+msgstr "Escolha uma coleção antes de salvar."
 
 #: apps/reader/src/ImportDestination.tsx
 msgid "Choose a collection to import into."
-msgstr ""
+msgstr "Escolha uma coleção para a qual importar."
 
 #: apps/reader/src/connection-recovery.ts
 msgid "Choose a collection to open in Reader."
-msgstr ""
+msgstr "Escolha uma coleção para abrir no Reader."
 
 #: apps/reader/src/ImportDestination.tsx
 #: apps/reader/src/NativeImportPage.tsx
 msgid "Choose a destination"
-msgstr ""
+msgstr "Escolher um destino"
 
 #: apps/reader/src/import-controller.ts
 msgid "Choose a service to bring your library into mdbase Reader."
-msgstr ""
+msgstr "Escolha um serviço para trazer sua biblioteca para o mdbase Reader."
 
 #: apps/reader/src/ImportDestination.tsx
 msgid "Choose an existing collection, or create a fresh hosted collection in mdbase’s secure approval window."
-msgstr ""
+msgstr "Escolha uma coleção existente ou crie uma nova coleção hospedada na janela segura de aprovação do mdbase."
 
 #: apps/reader/src/CitationAdditionalFields.tsx
 msgid "Choose an unused official CSL field."
-msgstr ""
+msgstr "Escolha um campo CSL oficial ainda não utilizado."
 
 #: apps/reader/src/NativeImportPage.tsx
 msgid "Choose another collection"
-msgstr ""
+msgstr "Escolher outra coleção"
 
 #: apps/extension/src/save-capture.ts
 msgid "Choose individual posts; feeds cannot be saved."
-msgstr ""
+msgstr "Escolha publicações individuais; feeds não podem ser salvos."
 
 #: apps/reader/src/SourceAddDialog.tsx
 msgid "Choose or drop a file"
-msgstr ""
+msgstr "Escolha ou solte um arquivo"
 
 #: apps/extension/src/page-capture.ts
 #: apps/extension/src/PostPicker.tsx
 #: apps/extension/src/SaveBar.tsx
 msgid "Choose posts to save"
-msgstr ""
+msgstr "Escolha as publicações para salvar"
 
 #: apps/extension/src/PostPicker.tsx
 msgid "Choose posts…"
-msgstr ""
+msgstr "Escolher publicações…"
 
 #: apps/extension/src/connection-view.ts
 msgid "Choose the collection again"
-msgstr ""
+msgstr "Escolha a coleção novamente"
 
 #: apps/extension/src/CollectionSection.tsx
 msgid "Choose the mdbase collection that pages and highlights are saved into."
-msgstr ""
+msgstr "Escolha a coleção mdbase na qual as páginas e os destaques são salvos."
 
 #: apps/extension/src/ConnectionPanel.tsx
 msgid "Choose the mdbase collection to save into. Nothing is saved until you press Save."
-msgstr ""
+msgstr "Escolha a coleção mdbase na qual salvar. Nada é salvo até você pressionar Salvar."
 
 #: apps/reader/src/ImportInput.tsx
 msgid "Choose what to bring"
-msgstr ""
+msgstr "Escolha o que trazer"
 
 #: apps/extension/src/CaptureApp.tsx
 msgid "Chrome’s PDF viewer does not share selections, so PDFs are highlighted in Reader."
-msgstr ""
+msgstr "O visualizador de PDF do Chrome não compartilha seleções, por isso os PDFs são destacados no Reader."
 
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL approximate date field"
 msgid "Circa"
-msgstr ""
+msgstr "Aproximada"
 
 #: apps/extension/src/CitationCard.tsx
 #: apps/extension/src/PanelTabs.tsx
 #: apps/reader/src/InspectorPane.tsx
 #: apps/reader/src/SourceNoteInsertMenu.tsx
 msgid "Citation"
-msgstr ""
+msgstr "Citação"
 
 #: apps/reader/src/InspectorPane.tsx
 msgctxt "InspectorPane interface"
 msgid "Citation"
-msgstr ""
+msgstr "Citação"
 
 #: apps/reader/src/InspectorPane.tsx
 msgctxt "InspectorPane status or action"
 msgid "Citation"
-msgstr ""
+msgstr "Citação"
 
 #: apps/reader/src/MobileSourceViews.tsx
 msgctxt "MobileSourceViews views"
 msgid "Citation"
-msgstr ""
+msgstr "Citação"
 
 #: apps/reader/src/reader-command-list.ts
 msgctxt "reader command list"
 msgid "Citation"
-msgstr ""
+msgstr "Citação"
 
 #: apps/reader/src/workspace-tab-display.ts
 msgctxt "workspace tab display"
 msgid "Citation"
-msgstr ""
+msgstr "Citação"
 
 #: apps/extension/src/CitationCard.tsx
 msgid "CITATION"
-msgstr ""
+msgstr "CITAÇÃO"
 
 #: packages/core/src/application/materialize-source.ts
 msgid "Citation @{citekey} has no valid CSL record in this collection."
-msgstr ""
+msgstr "A citação @{citekey} não tem um registro CSL válido nesta coleção."
 
 #: apps/reader/src/CitationStructuredEditor.tsx
 msgid "Citation details"
-msgstr ""
+msgstr "Detalhes da citação"
 
 #: apps/extension/src/CitationCard.tsx
 msgid "Citation details found."
-msgstr ""
+msgstr "Detalhes da citação encontrados."
 
 #: apps/reader/src/CitationEditor.tsx
 msgid "Citation editor mode"
-msgstr ""
+msgstr "Modo do editor de citações"
 
 #: apps/reader/src/CitationLookup.tsx
 msgid "Citation identifier, URL, or title"
-msgstr ""
+msgstr "Identificador, URL ou título da citação"
 
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "Citation key"
-msgstr ""
+msgstr "Chave de citação"
 
 #: apps/reader/src/CitationEditor.tsx
 msgid "Citation key needed"
-msgstr ""
+msgstr "Chave de citação necessária"
 
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "Citation label"
-msgstr ""
+msgstr "Rótulo da citação"
 
 #: apps/reader/src/CitationPreview.tsx
 msgctxt "CitationPreview interface"
 msgid "Citation locale"
-msgstr ""
+msgstr "Localidade da citação"
 
 #: packages/markdown-editor/src/citation-widgets.ts
 msgctxt "citation widgets"
 msgid "Citation Markdown"
-msgstr ""
+msgstr "Markdown da citação"
 
 #: apps/reader/src/CitationEditor.tsx
 msgid "Citation metadata for {title}"
-msgstr ""
+msgstr "Metadados de citação de {title}"
 
 #: packages/markdown-editor/src/citation-widgets.ts
 msgid "Citation not found"
-msgstr ""
+msgstr "Citação não encontrada"
 
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "Citation number"
-msgstr ""
+msgstr "Número da citação"
 
 #: apps/reader/src/CitationPreview.tsx
 msgctxt "CitationPreview interface"
 msgid "Citation preview"
-msgstr ""
+msgstr "Prévia da citação"
 
 #: apps/reader/src/CitationPreview.tsx
 msgctxt "CitationPreview interface"
 msgid "Citation style"
-msgstr ""
+msgstr "Estilo de citação"
 
 #. placeholder {0}: button.textContent
 #: packages/markdown-editor/src/citation-widgets.ts
 msgid "Citation: {0}. Edit citation Markdown"
-msgstr ""
+msgstr "Citação: {0}. Editar o Markdown da citação"
 
 #: apps/reader/src/SelectionToolbar.tsx
 msgid "Cite"
-msgstr ""
+msgstr "Citar"
 
 #: apps/extension/src/CitationCard.tsx
 #: apps/reader/src/CitationStructuredEditor.tsx
 msgid "Citekey"
-msgstr ""
+msgstr "Chave de citação"
 
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "Citekey"
-msgstr ""
+msgstr "Chave de citação"
 
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "Classic"
-msgstr ""
+msgstr "Obra clássica"
 
 #: apps/reader/src/AnnotationList.tsx
 #: apps/reader/src/LibraryAnnotationBars.tsx
 msgid "Clear"
-msgstr ""
+msgstr "Limpar"
 
 #: apps/extension/src/HighlightFields.tsx
 msgctxt "Clear the selected passage"
 msgid "Clear"
-msgstr ""
+msgstr "Limpar"
 
 #: apps/reader/src/AnnotationList.tsx
 #: apps/reader/src/LibraryAnnotationToolbar.tsx
 #: apps/reader/src/LibraryWorkspace.tsx
 msgid "Clear filters"
-msgstr ""
+msgstr "Limpar os filtros"
 
 #: apps/reader/src/LibraryWorkspace.tsx
 msgid "Clear search and filters"
-msgstr ""
+msgstr "Limpar a pesquisa e os filtros"
 
 #: apps/reader/src/LibraryBulkBar.tsx
 msgctxt "LibraryBulkBar interface"
 msgid "Clear selection"
-msgstr ""
+msgstr "Limpar a seleção"
 
 #: apps/reader/src/LibraryBulkBar.tsx
 msgid "Clear selection · Esc"
-msgstr ""
+msgstr "Limpar a seleção · Esc"
 
 #: apps/extension/src/HighlightFields.tsx
 msgid "Clear the selection (Esc)"
-msgstr ""
+msgstr "Limpar a seleção (Esc)"
 
 #: apps/reader/src/LibraryTableRow.tsx
 msgid "Click to edit · F2"
-msgstr ""
+msgstr "Clique para editar · F2"
 
 #: apps/reader/src/AnnotationEditor.tsx
 msgctxt "AnnotationEditor interface"
 msgid "Close"
-msgstr ""
+msgstr "Fechar"
 
 #: packages/renderer-pdf/src/pdf-translations.ts
 msgctxt "PDF viewer common"
 msgid "Close"
-msgstr ""
+msgstr "Fechar"
 
 #: packages/renderer-pdf/src/pdf-translations.ts
 msgctxt "PDF viewer document"
 msgid "Close"
-msgstr ""
+msgstr "Fechar"
 
 #: packages/renderer-pdf/src/pdf-translations.ts
 msgctxt "PDF viewer passwordPrompt"
 msgid "Close"
-msgstr ""
+msgstr "Fechar"
 
 #: apps/reader/src/reader-command-list.ts
 msgctxt "reader command list"
 msgid "Close active tab"
-msgstr ""
+msgstr "Fechar a aba ativa"
 
 #: apps/reader/src/SourceAddDialog.tsx
 msgid "Close add source"
-msgstr ""
+msgstr "Fechar adicionar fonte"
 
 #: apps/reader/src/mobile-source-bar.tsx
 msgid "Close current tab"
-msgstr ""
+msgstr "Fechar a aba atual"
 
 #: packages/renderer-pdf/src/pdf-translations.ts
 msgctxt "PDF viewer documentError"
 msgid "Close Document"
-msgstr ""
+msgstr "Fechar o documento"
 
 #: apps/reader/src/reader-command-list.ts
 msgid "Close focused pane and keep its tabs"
-msgstr ""
+msgstr "Fechar o painel em foco e manter as abas dele"
 
 #: apps/reader/src/dockview-menus.ts
 msgid "Close other unpinned tabs"
-msgstr ""
+msgstr "Fechar as outras abas não fixadas"
 
 #: apps/reader/src/DockPaneActions.tsx
 msgid "Close pane and tabs…"
-msgstr ""
+msgstr "Fechar o painel e as abas…"
 
 #: apps/reader/src/DockviewWorkspace.tsx
 msgctxt "DockviewWorkspace interface"
