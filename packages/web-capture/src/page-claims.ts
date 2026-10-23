@@ -9,6 +9,7 @@ import {
   embeddedTypes,
   scholarlyJsonLdTypes,
 } from "./metadata-types.js";
+import { pageConventionClaims } from "./page-conventions.js";
 
 import type { Claim, ClaimBatch, ClaimIdentifiers, PageSignal } from "./claims.js";
 
@@ -128,6 +129,18 @@ export function pageClaims(document: Document, pageUrl: string, observedAt: stri
   }
   videoClaims(document, nodes, add);
   claims.push(...documentClaims);
+  claims.push(
+    ...pageConventionClaims(
+      document,
+      pageUrl,
+      meta,
+      observedAt,
+      claims.some((claim) => claim.field === "issued"),
+    ),
+  );
+  if (!claims.some((claim) => claim.field === "issued")) {
+    add("issued", leadingDateline(document), "html", "leading dateline");
+  }
   const arxiv = first(meta, "citation_arxiv_id") ?? arxivIdentifier(pageUrl);
   add("DOI", doiFromUrl(pageUrl), "html", "page URL");
   for (const identifier of all(meta, "citation_arxiv_id")) {
@@ -686,6 +699,44 @@ function htmlClaims(document: Document, pageUrl: string, add: AddClaim): void {
   add("language", textValue(document.documentElement.getAttribute("lang")), "html", "html lang");
   add("URL", pageUrl, "html", "page URL");
   add("type", "webpage", "html", "document");
+}
+
+/** A standalone date at the start of the work, never a date found by scanning prose. */
+function leadingDateline(document: Document): ReturnType<typeof cslDate> {
+  // Lists and search results do not have one publication dateline.
+  if (document.querySelectorAll("article").length > 1) {
+    return undefined;
+  }
+  const root = document.querySelector("article, main") ?? document.body;
+  const walker = document.createTreeWalker(root, 4 /* SHOW_TEXT */);
+  let visited = 0;
+  for (let node = walker.nextNode(); node && ++visited <= 256; node = walker.nextNode()) {
+    const parent = node.parentElement;
+    if (
+      !parent ||
+      parent.closest(
+        "script, style, noscript, nav, header, footer, aside, h1, [hidden], [aria-hidden='true']",
+      )
+    ) {
+      continue;
+    }
+    const text = textValue(node.textContent);
+    if (!text) {
+      continue;
+    }
+    // A linked archive label, heading, quotation or event time is not a dateline.
+    if (parent.closest("a, time, h2, h3, h4, h5, h6, pre, code, blockquote, li, th, caption")) {
+      return undefined;
+    }
+    // English month-name dates only: bare years and numeric prefixes are too easily
+    // section labels or data. The line must end here (a BR or a date-only wrapper).
+    const standalone =
+      node.nextSibling?.nodeName === "BR" || textValue(parent.textContent) === text;
+    return standalone && /^[a-z]+\.?\s+(?:\d{1,2},?\s+)?\d{4}$/iu.test(text)
+      ? cslDate(text)
+      : undefined;
+  }
+  return undefined;
 }
 
 function metaSignal(key: string): PageSignal {

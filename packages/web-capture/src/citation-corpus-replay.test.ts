@@ -74,21 +74,18 @@ const stillWrong: Record<string, { readonly page: string[]; readonly remote: str
   "arxiv-attention": { page: ["publisher"], remote: [] },
   bbc: { page: [], remote: [] },
   "blog-paul-graham": {
-    page: ["type", "author", "issued", "container-title"],
-    remote: ["type", "author", "issued", "container-title"],
+    page: ["type", "author", "container-title"],
+    remote: ["type", "author", "container-title"],
   },
   "elife-brain": { page: [], remote: [] },
-  "github-translation-server": { page: ["type", "title", "author"], remote: ["author"] },
+  "github-translation-server": { page: ["author"], remote: ["author"] },
   "government-ipcc": {
     page: ["type", "title", "author", "issued", "publisher"],
     remote: ["type", "title", "author", "issued", "publisher"],
   },
   guardian: { page: [], remote: [] },
   "guardian-ap": { page: [], remote: [] },
-  "mdn-array-map": {
-    page: ["author", "issued", "publisher"],
-    remote: ["author", "publisher"],
-  },
+  "mdn-array-map": { page: [], remote: [] },
   "nature-dna": { page: [], remote: [] },
   // A blocked page now yields no citation, including no URL-only shell masquerading as one.
   nyt: { page: ["type", "title", "author", "issued", "container-title", "URL"], remote: [] },
@@ -104,7 +101,7 @@ const stillWrong: Record<string, { readonly page: string[]; readonly remote: str
   "springer-imagenet": { page: [], remote: [] },
   "stackoverflow-branch": {
     page: ["type", "title", "author", "issued", "container-title", "URL"],
-    remote: ["type", "author", "issued"],
+    remote: ["author", "issued"],
   },
   verge: { page: [], remote: [] },
   "wikipedia-australia": { page: ["type", "URL"], remote: [] },
