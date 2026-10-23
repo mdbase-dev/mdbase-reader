@@ -6365,36 +6365,36 @@ msgstr "ページを保存してハイライト"
 
 #: apps/extension/src/SaveBar.tsx
 msgid "Save PDF"
-msgstr ""
+msgstr "PDFを保存"
 
 #: apps/extension/src/SaveBar.tsx
 msgid "Save post"
-msgstr ""
+msgstr "投稿を保存"
 
 #: apps/reader/src/SourceImportDialog.tsx
 msgid "Save the citation found for this file:"
-msgstr ""
+msgstr "このファイルについて見つかった引用情報を保存："
 
 #: apps/extension/src/shell-messages.ts
 msgid "Save the page you are reading and revisit your mdbase annotations."
-msgstr ""
+msgstr "読んでいるページを保存し、mdbaseの注釈に後から戻れます。"
 
 #: apps/extension/src/CaptureApp.tsx
 msgid "Save the PDF, then open it there."
-msgstr ""
+msgstr "PDFを保存してから、そこで開いてください。"
 
 #: apps/extension/src/NotePanel.tsx
 msgid "Save title and tags"
-msgstr ""
+msgstr "タイトルとタグを保存"
 
 #: apps/extension/src/ConnectionPanel.tsx
 #: apps/extension/src/WelcomeApp.tsx
 msgid "Save to collection"
-msgstr ""
+msgstr "コレクションに保存"
 
 #: apps/extension/src/shell-messages.ts
 msgid "Save to mdbase Reader"
-msgstr ""
+msgstr "mdbase Readerに保存"
 
 #: apps/reader/src/LibraryAnnotationToolbar.tsx
 #: apps/reader/src/LibraryWorkspace.tsx
@@ -6408,11 +6408,11 @@ msgstr "ビューを保存"
 
 #: apps/extension/src/WelcomeApp.tsx
 msgid "Save what you are reading"
-msgstr ""
+msgstr "読んでいる内容を保存"
 
 #: apps/reader/src/source-addition-flow.ts
 msgid "Save X posts from their live page using the mdbase Reader extension."
-msgstr ""
+msgstr "ライブページからX件の投稿をmdbase Reader拡張機能で保存します。"
 
 #: apps/extension/src/NotePanel.tsx
 #: apps/extension/src/SaveBar.tsx
@@ -6428,29 +6428,29 @@ msgstr "保存済み"
 
 #: apps/reader/src/RenderedSourceDocument.tsx
 msgid "Saved document · original headings below are unchanged"
-msgstr ""
+msgstr "保存済みの文書 · 以下の元の見出しは変更されていません"
 
 #. placeholder {0}: highlights.length ? <span>{highlights.length}</span> : null
 #: apps/extension/src/SavedHighlights.tsx
 msgid "Saved highlights {0}"
-msgstr ""
+msgstr "保存済みのハイライト：{0}件"
 
 #: packages/migration/src/readwise.ts
 msgid "Saved HTML can reference external images. Those assets are not downloaded. Keep this tab open; reconnect and rescan to resume after closing it."
-msgstr ""
+msgstr "保存済みHTMLには外部画像への参照が含まれる場合があります。それらの素材はダウンロードされません。このタブを開いたままにしてください。閉じた場合は再接続して再スキャンすると再開できます。"
 
 #: apps/extension/src/page-badge.ts
 msgid "Saved in mdbase Reader"
-msgstr ""
+msgstr "mdbase Readerに保存済み"
 
 #: apps/reader/src/SourceNoteEditor.tsx
 msgctxt "SourceNoteEditor status or action"
 msgid "Saved locally"
-msgstr ""
+msgstr "ローカルに保存済み"
 
 #: apps/reader/src/connect-workspace.ts
 msgid "Saved mdbase views are unavailable for this collection."
-msgstr ""
+msgstr "このコレクションでは保存済みのmdbaseビューを利用できません。"
 
 #: apps/reader/src/ReaderHeader.tsx
 msgid "Saved on this device; waiting for sync"
@@ -6459,47 +6459,47 @@ msgstr "このデバイスに保存済みです。同期を待っています。
 #. placeholder {0}: problemMessage(reason)
 #: apps/extension/src/use-extension-capture.ts
 msgid "Saved safely. Could not refresh highlights on this page: {0}. Retry refreshing highlights; do not save again."
-msgstr ""
+msgstr "安全に保存しました。このページのハイライトを更新できませんでした：{0}。ハイライトの更新を再試行してください。再度保存しないでください。"
 
 #: apps/reader/src/SourceNoteEditor.tsx
 msgid "Saved to your collection"
-msgstr ""
+msgstr "コレクションに保存済み"
 
 #: apps/reader/src/LibraryWorkspace.tsx
 msgctxt "LibraryWorkspace formatFilterOptions"
 msgid "Saved web page"
-msgstr ""
+msgstr "保存済みWebページ"
 
 #: apps/reader/src/library-lenses.ts
 msgctxt "library lenses"
 msgid "Saved web pages"
-msgstr ""
+msgstr "保存済みWebページ"
 
 #: apps/extension/src/NotePanel.tsx
 msgid "Saved with the source. Keep writing here after saving, or in Reader."
-msgstr ""
+msgstr "資料と一緒に保存されました。保存後もここかReaderで書き続けられます。"
 
 #: apps/extension/src/ConnectionPanel.tsx
 msgid "Saved. This page could not be updated."
-msgstr ""
+msgstr "保存しましたが、このページを更新できませんでした。"
 
 #: apps/extension/src/CaptureApp.tsx
 msgid "Saving source record…"
-msgstr ""
+msgstr "資料レコードを保存中…"
 
 #: apps/reader/src/source-addition-flow.ts
 msgctxt "source addition flow"
 msgid "Saving the PDF…"
-msgstr ""
+msgstr "PDFを保存中…"
 
 #: apps/reader/src/source-addition-flow.ts
 msgid "Saving the source…"
-msgstr ""
+msgstr "資料を保存中…"
 
 #. placeholder {0}: collection.name
 #: apps/extension/src/ExtensionHeader.tsx
 msgid "Saving to {0}. Change collection"
-msgstr ""
+msgstr "{0}に保存中。コレクションを変更"
 
 #: apps/extension/src/CaptureApp.tsx
 #: apps/extension/src/NotePanel.tsx
@@ -6543,38 +6543,38 @@ msgstr "保存中…"
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "Scale"
-msgstr ""
+msgstr "縮尺"
 
 #: apps/reader/src/ImportInput.tsx
 msgid "Scan Readwise library"
-msgstr ""
+msgstr "Readwiseライブラリをスキャン"
 
 #. placeholder {0}: result.length.toLocaleString(i18n.locale)
 #: packages/migration/src/readwise-client.ts
 msgid "Scanned {0} Readwise records…"
-msgstr ""
+msgstr "Readwiseのレコード{0}件をスキャンしました…"
 
 #: apps/reader/src/ImportInput.tsx
 msgid "Scanning reads Reader metadata, saved article HTML and every Readwise highlight, including Kindle, Apple Books, Instapaper and other classic sources (those import as metadata and highlights, without the book text). Original PDFs and EPUBs download only after confirmation. Readwise limits request rates, so large libraries take several minutes."
-msgstr ""
+msgstr "スキャンではReaderのメタデータ、保存済みの記事HTML、Kindle・Apple Books・Instapaperなど従来の資料を含むすべてのReadwiseハイライトを読み取ります（これらは本文なしでメタデータとハイライトをインポートします）。元のPDFとEPUBは確認後にのみダウンロードされます。Readwiseにはリクエスト制限があるため、大きなライブラリでは数分かかります。"
 
 #: packages/migration/src/readwise.ts
 msgid "Scanning Readwise metadata and saved HTML; no collection writes…"
-msgstr ""
+msgstr "Readwiseのメタデータと保存済みHTMLをスキャン中。コレクションへの書き込みは行いません…"
 
 #: apps/reader/src/annotation-body-content.ts
 msgid "Screenshot highlight"
-msgstr ""
+msgstr "スクリーンショットのハイライト"
 
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "Script writer"
-msgstr ""
+msgstr "脚本家"
 
 #: packages/renderer-pdf/src/pdf-translations.ts
 msgctxt "PDF viewer page"
 msgid "Scroll Layout"
-msgstr ""
+msgstr "スクロール表示"
 
 #: apps/reader/src/ReaderHeader.tsx
 msgid "Search"
@@ -6592,67 +6592,67 @@ msgstr "検索"
 
 #: apps/reader/src/ReaderHeader.tsx
 msgid "Search and commands"
-msgstr ""
+msgstr "検索とコマンド"
 
 #: apps/reader/src/LibraryAnnotationToolbar.tsx
 msgid "Search annotations"
-msgstr ""
+msgstr "注釈を検索"
 
 #: apps/reader/src/AnnotationList.tsx
 msgctxt "AnnotationList interface"
 msgid "Search annotations"
-msgstr ""
+msgstr "注釈を検索"
 
 #: apps/reader/src/CitationLookup.tsx
 msgid "Search by DOI, ISBN, URL, or title"
-msgstr ""
+msgstr "DOI、ISBN、URL、またはタイトルで検索"
 
 #: apps/reader/src/LibraryWorkspace.tsx
 msgid "Search notes and annotations"
-msgstr ""
+msgstr "ノートと注釈を検索"
 
 #: apps/reader/src/LibraryWorkspace.tsx
 msgid "Search open documents"
-msgstr ""
+msgstr "開いている文書を検索"
 
 #: apps/reader/src/LibraryWorkspace.tsx
 msgctxt "LibraryWorkspace interface"
 msgid "Search scope"
-msgstr ""
+msgstr "検索範囲"
 
 #: apps/reader/src/ReaderWorkspaceView.tsx
 msgid "Search sources and commands"
-msgstr ""
+msgstr "資料を検索してコマンドを実行"
 
 #. placeholder {0}: shortcutLabel("mod+k")
 #: apps/reader/src/ReaderHeader.tsx
 msgid "Search sources and run commands · {0}"
-msgstr ""
+msgstr "資料を検索してコマンドを実行 · {0}"
 
 #: apps/reader/src/LibraryWorkspace.tsx
 msgid "Search this view"
-msgstr ""
+msgstr "このビューを検索"
 
 #: apps/reader/src/use-open-document-search.ts
 msgid "Searched {loaded} of {readable} readable sources."
-msgstr ""
+msgstr "閲覧可能な資料{readable}件中{loaded}件を検索しました。"
 
 #: apps/reader/src/LibraryTextSearch.tsx
 msgid "Searches literature notes and annotation text, not PDF, EPUB or saved-page contents."
-msgstr ""
+msgstr "文献ノートと注釈のテキストを検索します。PDF、EPUB、保存済みページの本文は検索しません。"
 
 #: apps/reader/src/LibraryTextSearch.tsx
 msgid "Searching notes and annotations…"
-msgstr ""
+msgstr "ノートと注釈を検索中…"
 
 #: apps/reader/src/CitationTypedFieldEditors.tsx
 msgid "Season"
-msgstr ""
+msgstr "季節"
 
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL date field"
 msgid "Season"
-msgstr ""
+msgstr "季節"
 
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
@@ -6662,97 +6662,97 @@ msgstr "セクション"
 #: packages/renderer-pdf/src/pdf-translations.ts
 msgctxt "PDF viewer document"
 msgid "Security"
-msgstr ""
+msgstr "セキュリティ"
 
 #. placeholder {0}: source.title
 #: apps/reader/src/LibraryCards.tsx
 msgid "Select {0}"
-msgstr ""
+msgstr "{0}を選択"
 
 #. placeholder {0}: String(bulkOpenLimit)
 #: apps/reader/src/LibraryBulkBar.tsx
 msgid "Select {0} or fewer to open them together"
-msgstr ""
+msgstr "同時に開くには{0}件以下を選択してください"
 
 #: apps/reader/src/ImportDestination.tsx
 msgid "Select a collection"
-msgstr ""
+msgstr "コレクションを選択"
 
 #: apps/reader/src/DocumentContextualToolbar.tsx
 msgid "Select an area to annotate"
-msgstr ""
+msgstr "注釈を付ける領域を選択"
 
 #: apps/reader/src/DocumentContextualToolbar.tsx
 msgctxt "DocumentContextualToolbar interface"
 msgid "Select area"
-msgstr ""
+msgstr "領域を選択"
 
 #: apps/reader/src/import-controller.ts
 msgid "Select one complete bundle folder with unique file paths."
-msgstr ""
+msgstr "ファイルパスが重複していない、完全なバンドルフォルダーを1つ選択してください。"
 
 #: apps/extension/src/CaptureApp.tsx
 msgid "Select text on the page to highlight it."
-msgstr ""
+msgstr "ハイライトするにはページ上のテキストを選択してください。"
 
 #: apps/reader/src/AnnotationList.tsx
 msgid "Select text or an area in the document, or add a comment or bookmark above."
-msgstr ""
+msgstr "文書内のテキストか領域を選ぶか、上部からコメントまたはブックマークを追加してください。"
 
 #: apps/reader/src/LibraryAnnotationBars.tsx
 msgctxt "LibraryAnnotationBars interface"
 msgid "Selected annotations"
-msgstr ""
+msgstr "選択した注釈"
 
 #: apps/extension/src/HighlightFields.tsx
 msgid "Selected passage"
-msgstr ""
+msgstr "選択した箇所"
 
 #: apps/reader/src/AnnotationComposer.tsx
 msgid "Selected PDF area"
-msgstr ""
+msgstr "選択したPDF領域"
 
 #: apps/reader/src/LibraryBulkBar.tsx
 msgctxt "LibraryBulkBar interface"
 msgid "Selected sources"
-msgstr ""
+msgstr "選択した資料"
 
 #: apps/reader/src/SelectionToolbar.tsx
 msgctxt "SelectionToolbar interface"
 msgid "Selected text"
-msgstr ""
+msgstr "選択したテキスト"
 
 #: apps/reader/src/DisplayMenu.tsx
 msgctxt "DisplayMenu interface"
 msgid "Selecting text"
-msgstr ""
+msgstr "テキストの選択"
 
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "Series creator"
-msgstr ""
+msgstr "シリーズの作成者"
 
 #: apps/reader/src/DisplayMenu.tsx
 msgctxt "DisplayMenu interface"
 msgid "Serif"
-msgstr ""
+msgstr "明朝体"
 
 #: apps/reader/src/LibraryBulkBar.tsx
 msgid "Set a field on the selected sources"
-msgstr ""
+msgstr "選択した資料にフィールドを設定"
 
 #: apps/reader/src/LibraryBulkBar.tsx
 msgid "Set field…"
-msgstr ""
+msgstr "フィールドを設定…"
 
 #: apps/reader/src/LibraryBulkBar.tsx
 msgid "Set reading status of the selected sources"
-msgstr ""
+msgstr "選択した資料の読書ステータスを設定"
 
 #: apps/reader/src/LibraryBulkBar.tsx
 msgctxt "LibraryBulkBar interface"
 msgid "Set status…"
-msgstr ""
+msgstr "ステータスを設定…"
 
 #: apps/extension/src/connection-view.ts
 #: apps/extension/src/ConnectionPanel.tsx
@@ -6761,11 +6761,11 @@ msgstr "コレクションをセットアップ"
 
 #: apps/extension/src/connection-view.ts
 msgid "Set up this collection for Reader before saving."
-msgstr ""
+msgstr "保存前にこのコレクションをReader向けにセットアップしてください。"
 
 #: apps/reader/src/ConnectReader.tsx
 msgid "Set up this reading collection"
-msgstr ""
+msgstr "この読書用コレクションをセットアップ"
 
 #: apps/extension/src/OptionsApp.tsx
 msgid "Settings"
@@ -6773,12 +6773,12 @@ msgstr "設定"
 
 #: apps/extension/src/ExtensionHeader.tsx
 msgid "Settings and shortcuts"
-msgstr ""
+msgstr "設定とショートカット"
 
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "ShortTitle"
-msgstr ""
+msgstr "短いタイトル"
 
 #: apps/reader/src/AnnotationList.tsx
 msgid "Show"
@@ -6792,11 +6792,11 @@ msgstr "表示"
 #: apps/reader/src/DisplayMenu.tsx
 msgctxt "DisplayMenu interface"
 msgid "Show actions"
-msgstr ""
+msgstr "操作を表示"
 
 #: apps/reader/src/AnnotationCard.tsx
 msgid "Show in document"
-msgstr ""
+msgstr "文書内で表示"
 
 #: apps/reader/src/LibraryTextSearch.tsx
 msgid "Show more results"
@@ -6804,11 +6804,11 @@ msgstr "結果をさらに表示"
 
 #: apps/extension/src/SavedHighlights.tsx
 msgid "Show on the page"
-msgstr ""
+msgstr "ページ上に表示"
 
 #: apps/reader/src/AnnotationList.tsx
 msgid "Show selected annotation (clear filters)"
-msgstr ""
+msgstr "選択した注釈を表示（フィルターを解除）"
 
 #: packages/renderer-pdf/src/pdf-translations.ts
 msgctxt "PDF viewer panel"
@@ -6817,7 +6817,7 @@ msgstr "サイドバー"
 
 #: apps/reader/src/DisplayMenu.tsx
 msgid "Sidebar while reading"
-msgstr ""
+msgstr "読書中のサイドバー"
 
 #: apps/extension/src/connection-view.ts
 #: apps/extension/src/ConnectionPanel.tsx
@@ -6831,7 +6831,7 @@ msgstr "サインイン"
 
 #: apps/extension/src/connection-view.ts
 msgid "Sign in to mdbase before saving."
-msgstr ""
+msgstr "保存前にmdbaseにサインインしてください。"
 
 #: apps/reader/src/native-signin-ui.ts
 msgid "Sign in with your mdbase account to sync {appName} across your devices."
@@ -6859,12 +6859,12 @@ msgstr "サインインウィンドウが閉じられました。"
 #. placeholder {0}: signIn.accountEmail
 #: apps/extension/src/connection-view.ts
 msgid "Signed in as {0}"
-msgstr ""
+msgstr "{0}としてサインイン中"
 
 #. placeholder {0}: signIn.accountLogin
 #: apps/extension/src/connection-view.ts
 msgid "Signed in as {0} on GitHub"
-msgstr ""
+msgstr "GitHubで{0}としてサインイン中"
 
 #: apps/reader/src/native-signin-ui.ts
 msgid "Signed in as {email}"
@@ -6878,35 +6878,35 @@ msgstr "サインインしました。{0}を開いています…"
 #: packages/renderer-pdf/src/pdf-translations.ts
 msgctxt "PDF viewer page"
 msgid "Single Page"
-msgstr ""
+msgstr "単一ページ"
 
 #: apps/extension/src/CaptureApp.tsx
 msgid "Site access is limited in Chrome, so Reader cannot follow your tabs."
-msgstr ""
+msgstr "Chromeでサイトへのアクセスが制限されているため、Readerはタブの移動に追従できません。"
 
 #: apps/extension/src/SiteAccessStatus.tsx
 msgid "Site access is limited in Chrome, so the side panel cannot follow your tabs and saved pages are not marked. Press the toolbar button on a page to use Reader there."
-msgstr ""
+msgstr "Chromeでサイトへのアクセスが制限されているため、サイドパネルはタブの移動に追従できず、保存済みページにも印が付きません。そのページでReaderを使うにはツールバーボタンを押してください。"
 
 #: apps/reader/src/DisplayMenu.tsx
 msgctxt "DisplayMenu interface"
 msgid "Smaller text"
-msgstr ""
+msgstr "文字を小さく"
 
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "Software"
-msgstr ""
+msgstr "ソフトウェア"
 
 #: apps/reader/src/citation-form-model.ts
 msgctxt "CSL item type"
 msgid "Software"
-msgstr ""
+msgstr "ソフトウェア"
 
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "Song"
-msgstr ""
+msgstr "楽曲"
 
 #: apps/reader/src/LibraryAnnotationToolbar.tsx
 #: apps/reader/src/LibraryWorkspace.tsx
