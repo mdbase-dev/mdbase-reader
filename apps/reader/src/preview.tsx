@@ -315,8 +315,9 @@ export class PreviewGateway implements ReaderWorkspaceGateway {
       Reflect.deleteProperty(updated.frontmatter, "csl-provenance");
       Reflect.deleteProperty(updated, "cslProvenance");
     }
-    this.#sources = this.#sources.map((item) => (item.id === source.id ? updated : item));
-    return Promise.resolve(updated);
+    const saved: Source = { ...updated, properties: updated.frontmatter };
+    this.#sources = this.#sources.map((item) => (item.id === source.id ? saved : item));
+    return Promise.resolve(saved);
   }
   resolveCitation(request: CitationResolutionRequest): Promise<CitationCandidate> {
     return Promise.resolve({
