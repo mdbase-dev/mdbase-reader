@@ -28,6 +28,7 @@ export * from "./domain/revision.js";
 export type * from "./domain/search.js";
 export * from "./domain/selector.js";
 export * from "./domain/source.js";
+export * from "./domain/source-parts.js";
 export type * from "./domain/social-post.js";
 export * from "./domain/source-url.js";
 export * from "./domain/text-quote-match.js";

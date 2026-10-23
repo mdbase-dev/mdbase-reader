@@ -7,6 +7,7 @@ import {
 } from "@mdbase-reader/core";
 
 import { outcomeValue } from "./repository-client.js";
+import { withResolvedSourceParts } from "./source-part-links.js";
 
 import type { ReaderConnectClient } from "./repository-client.js";
 import type { QueryInput, QueryRecord } from "@mdbase-dev/connect";
@@ -25,7 +26,11 @@ export async function queryReaderSources(
   where: string,
   options: ReaderRequestOptions,
 ): Promise<QueryRecord[]> {
-  const input: QueryInput = { types: [readerSourceType], where, frontmatterMode: "effective" };
+  const input: QueryInput = withResolvedSourceParts({
+    types: [readerSourceType],
+    where,
+    frontmatterMode: "effective",
+  });
   const records: QueryRecord[] = [];
   for await (const outcome of client.queryPages(input, {
     ...options,

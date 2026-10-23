@@ -14,6 +14,7 @@ import type {
 } from "../domain/identity.js";
 import type { FileRevision } from "../domain/revision.js";
 import type { SourceTextSearchMatch } from "../domain/search.js";
+import type { DocumentRange, SourcePartChain } from "../domain/source-parts.js";
 import type {
   Page,
   ReadingPosition,
@@ -43,6 +44,26 @@ export interface BodyUpdateRecovery {
 }
 
 export interface SourceRepository extends SourceLookups {
+  sourceParts?(
+    collectionId: CollectionId,
+    id: SourceId,
+    options?: ReaderRequestOptions,
+  ): Promise<readonly SourceSummary[]>;
+  validatePartOf?(collectionId: CollectionId, id: SourceId): Promise<SourcePartChain>;
+  setSourcePartOf?(input: {
+    readonly collectionId: CollectionId;
+    readonly sourceId: SourceId;
+    readonly expectedRevision: RecordRevision;
+    readonly parentId: SourceId | null;
+  }): Promise<Source>;
+  setDocumentRange?(input: {
+    readonly collectionId: CollectionId;
+    readonly sourceId: SourceId;
+    readonly expectedRevision: RecordRevision;
+    readonly documentFileId: FileId;
+    readonly expectedDocumentRevision: FileRevision;
+    readonly range: DocumentRange | null;
+  }): Promise<Source>;
   list(query: SourceQuery, options?: ReaderRequestOptions): Promise<Page<SourceSummary>>;
   /** Stream one stable query when the backing store supports pinned pagination. */
   listPages?(

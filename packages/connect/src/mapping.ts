@@ -5,6 +5,9 @@ import {
   fileId,
   fileRevision,
   parseCslProvenance,
+  parseDocumentRange,
+  parseSourceRelations,
+  type SourceId,
   recordRevision,
   sourceId,
   validateCslItem,
@@ -16,6 +19,7 @@ import {
 } from "@mdbase-reader/core";
 
 import { readingPositionFromFrontmatter } from "./reading-position.js";
+import { partOfFromResult } from "./source-part-links.js";
 
 import type { QueryRecord, RecordDocument } from "@mdbase-dev/connect";
 
@@ -47,12 +51,16 @@ function documents(value: unknown): readonly DocumentDescriptor[] {
   }
   return value.flatMap((candidate) => {
     const item = object(candidate);
-    const id = text(item?.["file_id"]);
-    const file = text(item?.["file"]);
-    const revision = text(item?.["revision"]);
-    const role = text(item?.["role"]);
-    const mediaType = text(item?.["media_type"]);
-    const title = text(item?.["label"]);
+    if (!item) {
+      return [];
+    }
+    const id = text(item["file_id"]);
+    const file = text(item["file"]);
+    const revision = text(item["revision"]);
+    const role = text(item["role"]);
+    const mediaType = text(item["media_type"]);
+    const title = text(item["label"]);
+    const range = parseDocumentRange(item["range"]);
     if (!id || !file || !revision || !role || !mediaType) {
       return [];
     }
@@ -65,6 +73,7 @@ function documents(value: unknown): readonly DocumentDescriptor[] {
           role,
           mediaType,
           ...(title ? { title } : {}),
+          ...(range ? { range } : {}),
         } satisfies DocumentDescriptor,
       ];
     } catch {
@@ -139,6 +148,7 @@ function sourceFields(
     ...(citation?.valid ? { citation: citation.item } : {}),
     ...(citation && !citation.valid ? { citationProblems: citation.problems } : {}),
     documents: documents(frontmatter["documents"]),
+    relations: parseSourceRelations(frontmatter["relations"]),
   };
 }
 
@@ -172,13 +182,23 @@ export function sourceSummaryFromQuery(
 ): SourceSummary {
   const frontmatter = record.effectiveFrontmatter ?? record.frontmatter ?? {};
   // Library views can show any field as a column, so the listing keeps the frontmatter.
-  return { ...sourceFields(collection, record.path, frontmatter), properties: frontmatter };
+  const partOf = partOfFromResult(record);
+  return {
+    ...sourceFields(collection, record.path, frontmatter),
+    properties: frontmatter,
+    ...(partOf ? { partOf } : {}),
+  };
 }
 
-export function sourceFromDocument(collection: CollectionId, record: RecordDocument): Source {
+export function sourceFromDocument(
+  collection: CollectionId,
+  record: RecordDocument,
+  partOf?: SourceId,
+): Source {
   const provenance = record.effectiveFrontmatter[cslProvenanceKey];
   return {
     ...sourceFields(collection, record.path, record.effectiveFrontmatter),
+    ...(partOf ? { partOf } : {}),
     properties: record.effectiveFrontmatter,
     ...(provenance !== undefined ? { cslProvenance: parseCslProvenance(provenance) } : {}),
     body: record.body ?? "",

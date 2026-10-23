@@ -14,6 +14,7 @@ import {
   type SourceQuery,
   type SourceRepository,
   type SourceSummary,
+  type SourcePartChain,
 } from "@mdbase-reader/core";
 
 import { sourceContract } from "./contracts.js";
@@ -29,6 +30,17 @@ import {
 import { writeSourceCitation } from "./source-citation.js";
 import { writeSourceFields } from "./source-fields.js";
 import * as lookups from "./source-lookups.js";
+import {
+  withResolvedSourceParts,
+  sourcePartsWhere,
+  resolveSourceSummaryParts,
+} from "./source-part-links.js";
+import {
+  checkSourcePartChain,
+  resolvedSource,
+  writeDocumentRange,
+  writeSourcePartOf,
+} from "./source-parts.js";
 
 import type { ReaderConnectClient } from "./repository-client.js";
 import type { DeletePreflightResult, QueryRecord } from "@mdbase-dev/connect";
@@ -54,7 +66,11 @@ export class ConnectSourceRepository implements SourceRepository {
       ),
       "query sources",
     );
-    const items = this.#sourceItems(query, result.results);
+    const items = await resolveSourceSummaryParts(
+      this.client,
+      this.#sourceItems(query, result.results),
+      options,
+    );
     const hasMore = result.meta?.hasMore ?? false;
     return {
       items,
@@ -80,13 +96,56 @@ export class ConnectSourceRepository implements SourceRepository {
       },
     )) {
       const page = outcomeValue(outcome, "query sources");
-      const items = this.#sourceItems(query, page.results);
+      const items = await resolveSourceSummaryParts(
+        this.client,
+        this.#sourceItems(query, page.results),
+        options,
+      );
       yield {
         items,
         ...(page.cursor ? { nextCursor: page.cursor } : {}),
         ...(typeof page.meta?.totalCount === "number" ? { totalCount: page.meta.totalCount } : {}),
       };
     }
+  }
+
+  async sourceParts(
+    collection: CollectionId,
+    id: SourceId,
+    options: ReaderRequestOptions = {},
+  ): Promise<readonly SourceSummary[]> {
+    const records: SourceSummary[] = [];
+    for await (const outcome of this.client.queryPages(
+      withResolvedSourceParts({
+        types: ["reader-source"],
+        where: sourcePartsWhere(id),
+        frontmatterMode: "effective",
+      }),
+      options,
+    )) {
+      records.push(
+        ...outcomeValue(outcome, "list source parts").results.map((record) =>
+          sourceSummaryFromQuery(collection, record),
+        ),
+      );
+    }
+    return records;
+  }
+
+  validatePartOf(collection: CollectionId, id: SourceId): Promise<SourcePartChain> {
+    return checkSourcePartChain(this, collection, id);
+  }
+
+  setSourcePartOf(
+    input: Parameters<NonNullable<SourceRepository["setSourcePartOf"]>>[0],
+  ): Promise<Source> {
+    return writeSourcePartOf(this.client, this, input);
+  }
+
+  setDocumentRange(
+    input: Parameters<NonNullable<SourceRepository["setDocumentRange"]>>[0],
+  ): Promise<Source> {
+    return writeDocumentRange(this.client, this, input);
   }
 
   readonly findByUrl: NonNullable<SourceRepository["findByUrl"]> = (collectionId, url, options) =>
@@ -108,7 +167,7 @@ export class ConnectSourceRepository implements SourceRepository {
       await readWithOptions(this.client, { path, includeDocument: true }, options),
       "read source",
     );
-    return sourceFromDocument(collection, result);
+    return resolvedSource(this.client, sourceFromDocument(collection, result), options);
   }
 
   async updateBody(input: {
@@ -127,7 +186,7 @@ export class ConnectSourceRepository implements SourceRepository {
       }),
       "update source note",
     );
-    return sourceFromDocument(input.collectionId, updated);
+    return resolvedSource(this.client, sourceFromDocument(input.collectionId, updated));
   }
 
   async updateReading(input: Parameters<SourceRepository["updateReading"]>[0]): Promise<Source> {
@@ -141,7 +200,7 @@ export class ConnectSourceRepository implements SourceRepository {
         includeDocument: true,
       });
       if (outcome.ok) {
-        return sourceFromDocument(input.collectionId, outcome.value);
+        return resolvedSource(this.client, sourceFromDocument(input.collectionId, outcome.value));
       }
       // Authorities report a moved-on record in more than one way, so any refusal rebases on a
       // fresh read below; a lasting failure surfaces from that read or write instead.
@@ -159,22 +218,22 @@ export class ConnectSourceRepository implements SourceRepository {
       }),
       "save reading position",
     );
-    return sourceFromDocument(input.collectionId, updated);
+    return resolvedSource(this.client, sourceFromDocument(input.collectionId, updated));
   }
 
   async updateReadingStatus(input: ReadingStatusChange): Promise<Source> {
     const path = await this.#path(input.sourceId, "change reading status");
-    return writeReadingStatus(this.client, path, input);
+    return resolvedSource(this.client, await writeReadingStatus(this.client, path, input));
   }
 
   async updateFields(input: SourceFieldChange): Promise<Source> {
     const path = await this.#path(input.sourceId, "edit source fields");
-    return writeSourceFields(this.client, path, input);
+    return resolvedSource(this.client, await writeSourceFields(this.client, path, input));
   }
 
   async updateCitation(input: Parameters<SourceRepository["updateCitation"]>[0]): Promise<Source> {
     const path = await this.#path(input.sourceId, "save citation metadata");
-    return writeSourceCitation(this.client, path, input);
+    return resolvedSource(this.client, await writeSourceCitation(this.client, path, input));
   }
 
   async appendAnnotationEmbed(input: {
