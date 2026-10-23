@@ -1822,445 +1822,445 @@ msgstr "Компилятор"
 #: apps/reader/src/import-controller.ts
 msgctxt "Import completed"
 msgid "Complete"
-msgstr ""
+msgstr "Завершить"
 
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "Composer"
-msgstr ""
+msgstr "Редактор"
 
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "Conference paper"
-msgstr ""
+msgstr "Материалы конференции"
 
 #: apps/reader/src/citation-form-model.ts
 msgctxt "CSL item type"
 msgid "Conference paper"
-msgstr ""
+msgstr "Материалы конференции"
 
 #: apps/reader/src/ImportReview.tsx
 msgid "Confirm"
-msgstr ""
+msgstr "Подтвердить"
 
 #: apps/reader/src/SelectionToolbar.tsx
 msgctxt "SelectionToolbar interface"
 msgid "Confirm delete"
-msgstr ""
+msgstr "Подтвердить удаление"
 
 #: apps/reader/src/SourceNoteEditor.tsx
 msgctxt "SourceNoteEditor status or action"
 msgid "Conflict"
-msgstr ""
+msgstr "Конфликт"
 
 #: apps/extension/src/ConnectionPanel.tsx
 #: apps/extension/src/WelcomeApp.tsx
 msgid "Connect a collection"
-msgstr ""
+msgstr "Подключить коллекцию"
 
 #: apps/reader/src/ImportPageView.tsx
 msgid "Connect and scan your library →"
-msgstr ""
+msgstr "Подключитесь и просканируйте библиотеку →"
 
 #: apps/extension/src/ConnectionPanel.tsx
 #: apps/reader/src/ConnectReader.tsx
 msgid "Connect another collection"
-msgstr ""
+msgstr "Подключить другую коллекцию"
 
 #: apps/reader/src/CollectionMenu.tsx
 msgid "Connect another collection…"
-msgstr ""
+msgstr "Подключить другую коллекцию…"
 
 #: apps/reader/src/ReaderHeader.tsx
 msgctxt "ReaderHeader interface"
 msgid "Connect directly"
-msgstr ""
+msgstr "Подключиться напрямую"
 
 #. placeholder {0}: environment.label || "mdbase"
 #: apps/extension/src/ConnectionPanel.tsx
 msgid "Connect rejected this extension’s origin. Reload the current extension build and retry. If it persists, check the {0} Connect configuration; Reader will not bypass the origin check."
-msgstr ""
+msgstr "Connect отклонил источник этого расширения. Перезагрузите текущую сборку расширения и повторите попытку. Если проблема не исчезнет, проверьте конфигурацию Connect {0}; Reader не будет обходить проверку источника."
 
 #: apps/extension/src/ConnectionPanel.tsx
 msgid "Connect to mdbase{target}"
-msgstr ""
+msgstr "Подключиться к mdbase{target}"
 
 #: apps/reader/src/ReaderHeader.tsx
 msgid "Connected"
-msgstr ""
+msgstr "Подключено"
 
 #: apps/reader/src/CollectionMenu.tsx
 msgctxt "CollectionMenu interface"
 msgid "Connected collections"
-msgstr ""
+msgstr "Подключённые коллекции"
 
 #: apps/reader/src/ReaderHeader.tsx
 msgid "Connected directly to this computer"
-msgstr ""
+msgstr "Подключено напрямую к этому компьютеру"
 
 #: apps/extension/src/CollectionSection.tsx
 msgid "Connected. The panel saves here unless you choose another."
-msgstr ""
+msgstr "Подключено. Панель сохраняет здесь, если не выбрать другое место."
 
 #: apps/reader/src/preview.tsx
 msgid "Connecting a collection needs mdbase Connect, outside the preview."
-msgstr ""
+msgstr "Для подключения коллекции требуется mdbase Connect, недоступный в предварительном просмотре."
 
 #: apps/reader/src/ImportDestination.tsx
 msgid "Connecting to mdbase…"
-msgstr ""
+msgstr "Подключение к mdbase…"
 
 #: apps/extension/src/ConnectionPanel.tsx
 #: apps/reader/src/ReaderHeader.tsx
 msgid "Connecting…"
-msgstr ""
+msgstr "Подключение…"
 
 #: apps/extension/src/DiagnosticsPanel.tsx
 msgid "Connection diagnostics"
-msgstr ""
+msgstr "Диагностика подключения"
 
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "Container author"
-msgstr ""
+msgstr "Автор сборника"
 
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "Container title"
-msgstr ""
+msgstr "Название сборника"
 
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "Container title short"
-msgstr ""
+msgstr "Краткое название сборника"
 
 #: apps/reader/src/library-conditions.ts
 msgctxt "Field filter comparison operator"
 msgid "contains"
-msgstr ""
+msgstr "содержит"
 
 #: apps/reader/src/ImportReview.tsx
 msgid "Content files"
-msgstr ""
+msgstr "Файлы содержимого"
 
 #: apps/reader/src/ImportReview.tsx
 msgid "Content size"
-msgstr ""
+msgstr "Размер содержимого"
 
 #: apps/reader/src/DocumentContextualToolbar.tsx
 msgid "Contents"
-msgstr ""
+msgstr "Содержание"
 
 #: apps/reader/src/DocumentContextualToolbar.tsx
 msgctxt "DocumentContextualToolbar interface"
 msgid "Contents"
-msgstr ""
+msgstr "Содержание"
 
 #: apps/reader/src/ContinueReading.tsx
 msgid "Continue reading"
-msgstr ""
+msgstr "Продолжить чтение"
 
 #. placeholder {0}: source.title
 #: apps/reader/src/ContinueReading.tsx
 msgid "Continue reading {0}"
-msgstr ""
+msgstr "Продолжить чтение: {0}"
 
 #: apps/reader/src/CitationContributors.tsx
 msgid "Contributor"
-msgstr ""
+msgstr "Участник"
 
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "Contributor"
-msgstr ""
+msgstr "Участник"
 
 #: apps/reader/src/CitationStructuredEditor.tsx
 msgid "Contributors"
-msgstr ""
+msgstr "Участники"
 
 #: apps/extension/src/CitationPanel.tsx
 msgid "Copied"
-msgstr ""
+msgstr "Скопировано"
 
 #: apps/reader/src/SelectionToolbar.tsx
 msgctxt "SelectionToolbar interface"
 msgid "Copied"
-msgstr ""
+msgstr "Скопировано"
 
 #: apps/reader/src/SelectionToolbar.tsx
 msgid "Copied with citation"
-msgstr ""
+msgstr "Скопировано с цитатой"
 
 #: apps/reader/src/SelectionToolbar.tsx
 msgid "Copy"
-msgstr ""
+msgstr "Копировать"
 
 #: apps/reader/src/SelectionToolbar.tsx
 msgctxt "SelectionToolbar interface"
 msgid "Copy"
-msgstr ""
+msgstr "Копировать"
 
 #. placeholder {0}: composer.quoteCitation.citekey
 #: apps/reader/src/SelectionToolbar.tsx
 msgid "Copy as a quote citing @{0}"
-msgstr ""
+msgstr "Скопировать как цитату со ссылкой @{0}"
 
 #: apps/reader/src/SelectionToolbar.tsx
 msgid "Copy as a quote citing the source's title"
-msgstr ""
+msgstr "Скопировать как цитату с названием источника"
 
 #: apps/reader/src/LibraryAnnotationBars.tsx
 msgid "Copy as Markdown"
-msgstr ""
+msgstr "Скопировать как Markdown"
 
 #: apps/extension/src/CitationPanel.tsx
 msgid "Copy citekey"
-msgstr ""
+msgstr "Скопировать ключ цитирования"
 
 #: apps/reader/src/LibraryRowMenu.tsx
 msgid "Copy citekey <0>@{citekey}</0>"
-msgstr ""
+msgstr "Скопировать ключ цитирования <0>@{citekey}</0>"
 
 #: apps/extension/src/CitationPanel.tsx
 msgid "Copy CSL-JSON"
-msgstr ""
+msgstr "Скопировать CSL-JSON"
 
 #: packages/renderer-pdf/src/pdf-translations.ts
 msgctxt "PDF viewer selection"
 msgid "Copy Selection"
-msgstr ""
+msgstr "Скопировать выделенное"
 
 #: apps/reader/src/SelectionToolbar.tsx
 msgctxt "SelectionToolbar interface"
 msgid "Copy text"
-msgstr ""
+msgstr "Скопировать текст"
 
 #: apps/reader/src/SelectionToolbar.tsx
 msgid "Copy with citation"
-msgstr ""
+msgstr "Скопировать со ссылкой"
 
 #: apps/reader/src/LibraryAnnotationBars.tsx
 msgid "Copying needs clipboard permission."
-msgstr ""
+msgstr "Для копирования требуется разрешение на доступ к буферу обмена."
 
 #: apps/reader/src/NativeImportPage.tsx
 msgid "Could not change the collection. Please try again."
-msgstr ""
+msgstr "Не удалось изменить коллекцию. Повторите попытку."
 
 #. placeholder {0}: problemMessage(reason)
 #: apps/extension/src/use-extension-capture.ts
 msgid "Could not check existing sources: {0}"
-msgstr ""
+msgstr "Не удалось проверить существующие источники: {0}"
 
 #: apps/reader/src/use-annotation-deletion.ts
 msgid "Could not check this annotation."
-msgstr ""
+msgstr "Не удалось проверить эту аннотацию."
 
 #: apps/reader/src/ImportPage.tsx
 msgid "Could not connect to mdbase."
-msgstr ""
+msgstr "Не удалось подключиться к mdbase."
 
 #: apps/extension/src/CitationPanel.tsx
 msgid "Could not copy"
-msgstr ""
+msgstr "Не удалось скопировать"
 
 #: apps/reader/src/use-annotation-deletion.ts
 msgid "Could not delete this annotation."
-msgstr ""
+msgstr "Не удалось удалить эту аннотацию."
 
 #: apps/extension/src/page-capture.ts
 msgid "Could not download this PDF (HTTP {status})."
-msgstr ""
+msgstr "Не удалось скачать этот PDF (HTTP {status})."
 
 #: apps/reader/src/use-annotation-navigation.ts
 msgid "Could not locate this annotation."
-msgstr ""
+msgstr "Не удалось найти эту аннотацию."
 
 #: apps/reader/src/annotation-navigation.ts
 msgid "Could not locate this passage. The annotation is safe; the document may have changed."
-msgstr ""
+msgstr "Не удалось найти этот фрагмент. Аннотация в безопасности; возможно, документ изменился."
 
 #: apps/reader/src/ImportDestination.tsx
 msgid "Could not open mdbase approval. Allow popups and try again."
-msgstr ""
+msgstr "Не удалось открыть окно подтверждения mdbase. Разрешите всплывающие окна и повторите попытку."
 
 #: apps/extension/src/NotePanel.tsx
 msgid "Could not open the literature note."
-msgstr ""
+msgstr "Не удалось открыть заметку о литературе."
 
 #: apps/capacitor/src/capacitor-platform.ts
 msgid "Could not read export data."
-msgstr ""
+msgstr "Не удалось прочитать данные экспорта."
 
 #: apps/extension/src/page-annotations.ts
 msgid "Could not read this page. Reopen the extension on it."
-msgstr ""
+msgstr "Не удалось прочитать эту страницу. Снова откройте на ней расширение."
 
 #: apps/reader/src/use-reading-resume.ts
 msgid "Could not restore the saved reading position."
-msgstr ""
+msgstr "Не удалось восстановить сохранённое место чтения."
 
 #: apps/reader/src/use-reading-resume.ts
 msgid "Could not restore this tab’s reading position."
-msgstr ""
+msgstr "Не удалось восстановить место чтения этой вкладки."
 
 #: apps/reader/src/use-annotation-navigation.ts
 msgid "Could not return to reading."
-msgstr ""
+msgstr "Не удалось вернуться к чтению."
 
 #: apps/reader/src/use-annotation-navigation.ts
 msgid "Could not return to the previous reading position."
-msgstr ""
+msgstr "Не удалось вернуться к предыдущему месту чтения."
 
 #: apps/reader/src/annotation-drafts.ts
 msgid "Could not save this draft locally. Keep this window open and retry saving to the collection."
-msgstr ""
+msgstr "Не удалось сохранить черновик локально. Не закрывайте это окно и повторите сохранение в коллекцию."
 
 #: apps/reader/src/annotation-edit-session.ts
 msgid "Could not save. Keep Reader open and retry."
-msgstr ""
+msgstr "Не удалось сохранить. Не закрывайте Reader и повторите попытку."
 
 #. placeholder {0}: problemMessage(reason)
 #: apps/extension/src/use-extension-capture.ts
 msgid "Could not show your highlights on this page: {0}"
-msgstr ""
+msgstr "Не удалось показать ваши выделения на этой странице: {0}"
 
 #: packages/renderer-epub/src/epub-page-navigation.tsx
 msgid "Could not turn the page. Try again."
-msgstr ""
+msgstr "Не удалось перевернуть страницу. Повторите попытку."
 
 #: apps/reader/src/SelectionToolbar.tsx
 msgctxt "SelectionToolbar interface"
 msgid "Couldn’t copy"
-msgstr ""
+msgstr "Не удалось скопировать"
 
 #: apps/reader/src/ImportDestination.tsx
 msgid "Create or connect a collection…"
-msgstr ""
+msgstr "Создать коллекцию или подключиться к ней…"
 
 #: apps/reader/src/annotation-columns.ts
 msgctxt "Annotation table column"
 msgid "Created"
-msgstr ""
+msgstr "Создано"
 
 #: apps/reader/src/LibraryAnnotationToolbar.tsx
 msgctxt "LibraryAnnotationToolbar annotationSortOptions"
 msgid "Created"
-msgstr ""
+msgstr "Создано"
 
 #: apps/reader/src/import-controller.ts
 msgid "Creating annotations and notes"
-msgstr ""
+msgstr "Создание аннотаций и заметок"
 
 #: apps/reader/src/SourceImportDialog.tsx
 msgid "Creating source record"
-msgstr ""
+msgstr "Создание записи источника"
 
 #: apps/reader/src/import-controller.ts
 msgid "Creating sources"
-msgstr ""
+msgstr "Создание источников"
 
 #: apps/reader/src/annotation-columns.ts
 msgctxt "Annotation table column"
 msgid "Creator"
-msgstr ""
+msgstr "Создатель"
 
 #: apps/reader/src/library-columns.ts
 msgctxt "Library table column"
 msgid "Creator"
-msgstr ""
+msgstr "Создатель"
 
 #: apps/reader/src/LibraryWorkspace.tsx
 msgctxt "LibraryWorkspace sortFieldOptions"
 msgid "Creator"
-msgstr ""
+msgstr "Создатель"
 
 #: apps/reader/src/CitationEditor.tsx
 msgid "CSL"
-msgstr ""
+msgstr "CSL"
 
 #: apps/reader/src/CitationEditor.tsx
 msgid "CSL JSON citation metadata"
-msgstr ""
+msgstr "Библиографические метаданные цитаты CSL JSON"
 
 #. placeholder {0}: row.key
 #: packages/migration/src/zotero-records.ts
 msgid "CSL retained in native data but needs review: {0}"
-msgstr ""
+msgstr "CSL сохранён в исходных данных, но требует проверки: {0}"
 
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "Curator"
-msgstr ""
+msgstr "Куратор"
 
 #: apps/reader/src/CitationLookup.tsx
 msgid "Current"
-msgstr ""
+msgstr "Текущий"
 
 #: packages/renderer-pdf/src/pdf-translations.ts
 msgctxt "PDF viewer print"
 msgid "Current page ({currentPage})"
-msgstr ""
+msgstr "Текущая страница ({currentPage})"
 
 #: apps/reader/src/reader-command-list.ts
 msgid "Current source"
-msgstr ""
+msgstr "Текущий источник"
 
 #: apps/reader/src/library-lenses.ts
 msgctxt "library lenses"
 msgid "Currently reading"
-msgstr ""
+msgstr "Сейчас читается"
 
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "Custom"
-msgstr ""
+msgstr "Пользовательский"
 
 #: apps/reader/src/CitationTypedFieldEditors.tsx
 msgid "Custom properties"
-msgstr ""
+msgstr "Пользовательские свойства"
 
 #: apps/reader/src/DisplayMenu.tsx
 msgid "Dark"
-msgstr ""
+msgstr "Тёмный"
 
 #: apps/extension/src/OptionsApp.tsx
 msgctxt "Dark appearance theme"
 msgid "Dark"
-msgstr ""
+msgstr "Тёмный"
 
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "Dataset"
-msgstr ""
+msgstr "Набор данных"
 
 #: apps/reader/src/citation-form-model.ts
 msgctxt "CSL item type"
 msgid "Dataset"
-msgstr ""
+msgstr "Набор данных"
 
 #: apps/reader/src/CitationSourceSync.tsx
 msgctxt "citation metadata field"
 msgid "Date"
-msgstr ""
+msgstr "Дата"
 
 #: apps/reader/src/CitationSourceSync.tsx
 msgctxt "source metadata field"
 msgid "Date"
-msgstr ""
+msgstr "Дата"
 
 #: apps/reader/src/CitationTypedFieldEditors.tsx
 msgid "Date as printed"
-msgstr ""
+msgstr "Дата в печатном источнике"
 
 #: apps/reader/src/CitationTypedFieldEditors.tsx
 msgid "Date form"
-msgstr ""
+msgstr "Формат даты"
 
 #: apps/reader/src/CitationTypedFieldEditors.tsx
 msgctxt "CitationTypedFieldEditors interface"
 msgid "Date form"
-msgstr ""
+msgstr "Формат даты"
 
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL date field"
