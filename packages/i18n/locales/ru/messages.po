@@ -1363,461 +1363,461 @@ msgstr "Перед сохранением выберите коллекцию."
 
 #: apps/reader/src/ImportDestination.tsx
 msgid "Choose a collection to import into."
-msgstr ""
+msgstr "Выберите коллекцию для импорта."
 
 #: apps/reader/src/connection-recovery.ts
 msgid "Choose a collection to open in Reader."
-msgstr ""
+msgstr "Выберите коллекцию, которую нужно открыть в Reader."
 
 #: apps/reader/src/ImportDestination.tsx
 #: apps/reader/src/NativeImportPage.tsx
 msgid "Choose a destination"
-msgstr ""
+msgstr "Выберите место назначения"
 
 #: apps/reader/src/import-controller.ts
 msgid "Choose a service to bring your library into mdbase Reader."
-msgstr ""
+msgstr "Выберите сервис, из которого нужно перенести библиотеку в mdbase Reader."
 
 #: apps/reader/src/ImportDestination.tsx
 msgid "Choose an existing collection, or create a fresh hosted collection in mdbase’s secure approval window."
-msgstr ""
+msgstr "Выберите существующую коллекцию или создайте новую размещённую коллекцию в защищённом окне подтверждения mdbase."
 
 #: apps/reader/src/CitationAdditionalFields.tsx
 msgid "Choose an unused official CSL field."
-msgstr ""
+msgstr "Выберите неиспользуемое официальное поле CSL."
 
 #: apps/reader/src/NativeImportPage.tsx
 msgid "Choose another collection"
-msgstr ""
+msgstr "Выбрать другую коллекцию"
 
 #: apps/extension/src/save-capture.ts
 msgid "Choose individual posts; feeds cannot be saved."
-msgstr ""
+msgstr "Выберите отдельные публикации; ленты нельзя сохранить."
 
 #: apps/reader/src/SourceAddDialog.tsx
 msgid "Choose or drop a file"
-msgstr ""
+msgstr "Выберите файл или перетащите его сюда"
 
 #: apps/extension/src/page-capture.ts
 #: apps/extension/src/PostPicker.tsx
 #: apps/extension/src/SaveBar.tsx
 msgid "Choose posts to save"
-msgstr ""
+msgstr "Выберите публикации для сохранения"
 
 #: apps/extension/src/PostPicker.tsx
 msgid "Choose posts…"
-msgstr ""
+msgstr "Выберите публикации…"
 
 #: apps/extension/src/connection-view.ts
 msgid "Choose the collection again"
-msgstr ""
+msgstr "Снова выберите коллекцию"
 
 #: apps/extension/src/CollectionSection.tsx
 msgid "Choose the mdbase collection that pages and highlights are saved into."
-msgstr ""
+msgstr "Выберите коллекцию mdbase, в которой сохраняются страницы и выделения."
 
 #: apps/extension/src/ConnectionPanel.tsx
 msgid "Choose the mdbase collection to save into. Nothing is saved until you press Save."
-msgstr ""
+msgstr "Выберите коллекцию mdbase для сохранения. Данные не будут сохранены, пока вы не нажмёте «Сохранить»."
 
 #: apps/reader/src/ImportInput.tsx
 msgid "Choose what to bring"
-msgstr ""
+msgstr "Выберите, что перенести"
 
 #: apps/extension/src/CaptureApp.tsx
 msgid "Chrome’s PDF viewer does not share selections, so PDFs are highlighted in Reader."
-msgstr ""
+msgstr "Средство просмотра PDF в Chrome не передаёт выделенный текст, поэтому PDF выделяются в Reader."
 
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL approximate date field"
 msgid "Circa"
-msgstr ""
+msgstr "Около"
 
 #: apps/extension/src/CitationCard.tsx
 #: apps/extension/src/PanelTabs.tsx
 #: apps/reader/src/InspectorPane.tsx
 #: apps/reader/src/SourceNoteInsertMenu.tsx
 msgid "Citation"
-msgstr ""
+msgstr "Ссылка"
 
 #: apps/reader/src/InspectorPane.tsx
 msgctxt "InspectorPane interface"
 msgid "Citation"
-msgstr ""
+msgstr "Ссылка"
 
 #: apps/reader/src/InspectorPane.tsx
 msgctxt "InspectorPane status or action"
 msgid "Citation"
-msgstr ""
+msgstr "Ссылка"
 
 #: apps/reader/src/MobileSourceViews.tsx
 msgctxt "MobileSourceViews views"
 msgid "Citation"
-msgstr ""
+msgstr "Ссылка"
 
 #: apps/reader/src/reader-command-list.ts
 msgctxt "reader command list"
 msgid "Citation"
-msgstr ""
+msgstr "Ссылка"
 
 #: apps/reader/src/workspace-tab-display.ts
 msgctxt "workspace tab display"
 msgid "Citation"
-msgstr ""
+msgstr "Ссылка"
 
 #: apps/extension/src/CitationCard.tsx
 msgid "CITATION"
-msgstr ""
+msgstr "ССЫЛКА"
 
 #: packages/core/src/application/materialize-source.ts
 msgid "Citation @{citekey} has no valid CSL record in this collection."
-msgstr ""
+msgstr "Для ссылки @{citekey} в этой коллекции нет допустимой записи CSL."
 
 #: apps/reader/src/CitationStructuredEditor.tsx
 msgid "Citation details"
-msgstr ""
+msgstr "Сведения о ссылке"
 
 #: apps/extension/src/CitationCard.tsx
 msgid "Citation details found."
-msgstr ""
+msgstr "Сведения о ссылке найдены."
 
 #: apps/reader/src/CitationEditor.tsx
 msgid "Citation editor mode"
-msgstr ""
+msgstr "Режим редактора ссылок"
 
 #: apps/reader/src/CitationLookup.tsx
 msgid "Citation identifier, URL, or title"
-msgstr ""
+msgstr "Идентификатор ссылки, URL или название"
 
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "Citation key"
-msgstr ""
+msgstr "Ключ цитирования"
 
 #: apps/reader/src/CitationEditor.tsx
 msgid "Citation key needed"
-msgstr ""
+msgstr "Требуется ключ цитирования"
 
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "Citation label"
-msgstr ""
+msgstr "Метка ссылки"
 
 #: apps/reader/src/CitationPreview.tsx
 msgctxt "CitationPreview interface"
 msgid "Citation locale"
-msgstr ""
+msgstr "Язык ссылки"
 
 #: packages/markdown-editor/src/citation-widgets.ts
 msgctxt "citation widgets"
 msgid "Citation Markdown"
-msgstr ""
+msgstr "Ссылка в Markdown"
 
 #: apps/reader/src/CitationEditor.tsx
 msgid "Citation metadata for {title}"
-msgstr ""
+msgstr "Библиографические сведения для {title}"
 
 #: packages/markdown-editor/src/citation-widgets.ts
 msgid "Citation not found"
-msgstr ""
+msgstr "Ссылка не найдена"
 
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "Citation number"
-msgstr ""
+msgstr "Номер ссылки"
 
 #: apps/reader/src/CitationPreview.tsx
 msgctxt "CitationPreview interface"
 msgid "Citation preview"
-msgstr ""
+msgstr "Предварительный просмотр ссылки"
 
 #: apps/reader/src/CitationPreview.tsx
 msgctxt "CitationPreview interface"
 msgid "Citation style"
-msgstr ""
+msgstr "Стиль цитирования"
 
 #. placeholder {0}: button.textContent
 #: packages/markdown-editor/src/citation-widgets.ts
 msgid "Citation: {0}. Edit citation Markdown"
-msgstr ""
+msgstr "Ссылка: {0}. Изменить ссылку в Markdown"
 
 #: apps/reader/src/SelectionToolbar.tsx
 msgid "Cite"
-msgstr ""
+msgstr "Цитировать"
 
 #: apps/extension/src/CitationCard.tsx
 #: apps/reader/src/CitationStructuredEditor.tsx
 msgid "Citekey"
-msgstr ""
+msgstr "Ключ цитирования"
 
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "Citekey"
-msgstr ""
+msgstr "Ключ цитирования"
 
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "Classic"
-msgstr ""
+msgstr "Классический"
 
 #: apps/reader/src/AnnotationList.tsx
 #: apps/reader/src/LibraryAnnotationBars.tsx
 msgid "Clear"
-msgstr ""
+msgstr "Очистить"
 
 #: apps/extension/src/HighlightFields.tsx
 msgctxt "Clear the selected passage"
 msgid "Clear"
-msgstr ""
+msgstr "Очистить"
 
 #: apps/reader/src/AnnotationList.tsx
 #: apps/reader/src/LibraryAnnotationToolbar.tsx
 #: apps/reader/src/LibraryWorkspace.tsx
 msgid "Clear filters"
-msgstr ""
+msgstr "Сбросить фильтры"
 
 #: apps/reader/src/LibraryWorkspace.tsx
 msgid "Clear search and filters"
-msgstr ""
+msgstr "Очистить поиск и фильтры"
 
 #: apps/reader/src/LibraryBulkBar.tsx
 msgctxt "LibraryBulkBar interface"
 msgid "Clear selection"
-msgstr ""
+msgstr "Снять выделение"
 
 #: apps/reader/src/LibraryBulkBar.tsx
 msgid "Clear selection · Esc"
-msgstr ""
+msgstr "Снять выделение · Esc"
 
 #: apps/extension/src/HighlightFields.tsx
 msgid "Clear the selection (Esc)"
-msgstr ""
+msgstr "Снять выделение (Esc)"
 
 #: apps/reader/src/LibraryTableRow.tsx
 msgid "Click to edit · F2"
-msgstr ""
+msgstr "Нажмите, чтобы изменить · F2"
 
 #: apps/reader/src/AnnotationEditor.tsx
 msgctxt "AnnotationEditor interface"
 msgid "Close"
-msgstr ""
+msgstr "Закрыть"
 
 #: apps/reader/src/dockview-menus.ts
 msgctxt "Close workspace tab"
 msgid "Close"
-msgstr ""
+msgstr "Закрыть"
 
 #: packages/renderer-pdf/src/pdf-translations.ts
 msgctxt "PDF viewer common"
 msgid "Close"
-msgstr ""
+msgstr "Закрыть"
 
 #: packages/renderer-pdf/src/pdf-translations.ts
 msgctxt "PDF viewer document"
 msgid "Close"
-msgstr ""
+msgstr "Закрыть"
 
 #: packages/renderer-pdf/src/pdf-translations.ts
 msgctxt "PDF viewer passwordPrompt"
 msgid "Close"
-msgstr ""
+msgstr "Закрыть"
 
 #: apps/reader/src/reader-command-list.ts
 msgctxt "reader command list"
 msgid "Close active tab"
-msgstr ""
+msgstr "Закрыть активную вкладку"
 
 #: apps/reader/src/SourceAddDialog.tsx
 msgid "Close add source"
-msgstr ""
+msgstr "Закрыть добавление источника"
 
 #: apps/reader/src/mobile-source-bar.tsx
 msgid "Close current tab"
-msgstr ""
+msgstr "Закрыть текущую вкладку"
 
 #: packages/renderer-pdf/src/pdf-translations.ts
 msgctxt "PDF viewer documentError"
 msgid "Close Document"
-msgstr ""
+msgstr "Закрыть документ"
 
 #: apps/reader/src/reader-command-list.ts
 msgid "Close focused pane and keep its tabs"
-msgstr ""
+msgstr "Закрыть активную панель, не закрывая её вкладки"
 
 #: apps/reader/src/dockview-menus.ts
 msgid "Close other unpinned tabs"
-msgstr ""
+msgstr "Закрыть остальные незакреплённые вкладки"
 
 #: apps/reader/src/DockPaneActions.tsx
 msgid "Close pane and tabs…"
-msgstr ""
+msgstr "Закрыть панель и вкладки…"
 
 #: apps/reader/src/DockviewWorkspace.tsx
 msgctxt "DockviewWorkspace interface"
 msgid "Close tab"
-msgstr ""
+msgstr "Закрыть вкладку"
 
 #: apps/reader/src/mobile-source-bar.tsx
 msgctxt "mobile-source-bar interface"
 msgid "Close tab"
-msgstr ""
+msgstr "Закрыть вкладку"
 
 #: apps/reader/src/ReaderApp.tsx
 msgid "Close this tab with unsaved changes? Keep it open until saving finishes to avoid losing work."
-msgstr ""
+msgstr "Закрыть вкладку с несохранёнными изменениями? Не закрывайте её, пока сохранение не завершится, чтобы не потерять данные."
 
 #: apps/reader/src/dockview-menus.ts
 msgid "Close unpinned tabs to the right"
-msgstr ""
+msgstr "Закрыть незакреплённые вкладки справа"
 
 #: apps/reader/src/use-annotation-edit.ts
 msgid "Close with unsaved changes? Saving may continue in this window, but reloading Reader before it finishes will lose them."
-msgstr ""
+msgstr "Закрыть с несохранёнными изменениями? Сохранение может продолжаться в этом окне, но если перезагрузить Reader до его завершения, изменения будут потеряны."
 
 #: apps/extension/src/ConnectionPanel.tsx
 #: apps/extension/src/OptionsApp.tsx
 #: apps/reader/src/ImportDestination.tsx
 msgid "Collection"
-msgstr ""
+msgstr "Коллекция"
 
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "Collection"
-msgstr ""
+msgstr "Коллекция"
 
 #: apps/reader/src/ImportDestination.tsx
 msgctxt "ImportDestination interface"
 msgid "Collection"
-msgstr ""
+msgstr "Коллекция"
 
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "Collection editor"
-msgstr ""
+msgstr "Редактор коллекции"
 
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "Collection number"
-msgstr ""
+msgstr "Номер коллекции"
 
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "Collection title"
-msgstr ""
+msgstr "Название коллекции"
 
 #: apps/reader/src/DraftRecoveryNotice.tsx
 msgid "Collection version"
-msgstr ""
+msgstr "Версия коллекции"
 
 #: apps/reader/src/CollectionPicker.tsx
 msgid "Collection: "
-msgstr ""
+msgstr "Коллекция: "
 
 #. placeholder {0}: collection.collectionName
 #: apps/reader/src/NativeImportPage.tsx
 msgid "Collection: {0}"
-msgstr ""
+msgstr "Коллекция: {0}"
 
 #: apps/reader/src/CollectionPicker.tsx
 msgid "Collection: {name}"
-msgstr ""
+msgstr "Коллекция: {name}"
 
 #: apps/reader/src/CollectionMenu.tsx
 msgid "Collections"
-msgstr ""
+msgstr "Коллекции"
 
 #: apps/reader/src/LibraryTableHeader.tsx
 msgctxt "LibraryTableHeader interface"
 msgid "Column options"
-msgstr ""
+msgstr "Параметры столбца"
 
 #: apps/reader/src/DisplayMenu.tsx
 msgctxt "DisplayMenu interface"
 msgid "Comfortable"
-msgstr ""
+msgstr "Удобный"
 
 #: apps/reader/src/CitationContributors.tsx
 msgid "Comma before suffix"
-msgstr ""
+msgstr "Запятая перед суффиксом"
 
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "Comma suffix"
-msgstr ""
+msgstr "Суффикс с запятой"
 
 #: apps/extension/src/SavedHighlights.tsx
 msgid "Comment"
-msgstr ""
+msgstr "Комментарий"
 
 #: apps/reader/src/annotation-kind.ts
 msgctxt "Annotation type, distinct from literature note"
 msgid "Comment"
-msgstr ""
+msgstr "Комментарий"
 
 #: apps/reader/src/AnnotationTextArea.tsx
 msgctxt "AnnotationTextArea status or action"
 msgid "Comment"
-msgstr ""
+msgstr "Комментарий"
 
 #: packages/renderer-pdf/src/pdf-translations.ts
 msgctxt "PDF viewer panel"
 msgid "Comment"
-msgstr ""
+msgstr "Комментарий"
 
 #: apps/reader/src/SelectionToolbar.tsx
 msgctxt "SelectionToolbar interface"
 msgid "Comment (C)"
-msgstr ""
+msgstr "Комментарий (C)"
 
 #: apps/extension/src/HighlightFields.tsx
 msgid "Comment <0>(optional)</0>"
-msgstr ""
+msgstr "Комментарий <0>(необязательно)</0>"
 
 #: apps/reader/src/AnnotationComposer.tsx
 msgid "Comment on highlight"
-msgstr ""
+msgstr "Комментарий к выделению"
 
 #: apps/reader/src/AnnotationPanelActions.tsx
 msgid "Comment on the source as a whole"
-msgstr ""
+msgstr "Комментарий об источнике в целом"
 
 #: apps/reader/src/LibraryAnnotationToolbar.tsx
 msgctxt "LibraryAnnotationToolbar annotationTypeOptions"
 msgid "Comments"
-msgstr ""
+msgstr "Комментарии"
 
 #: apps/reader/src/AnnotationList.tsx
 msgctxt "AnnotationList annotationFilterOptions"
 msgid "Comments on the source"
-msgstr ""
+msgstr "Комментарии к источнику"
 
 #: apps/reader/src/CitationStructuredEditor.tsx
 msgctxt "CitationStructuredEditor status or action"
 msgid "Common"
-msgstr ""
+msgstr "Часто используемые"
 
 #: apps/reader/src/DisplayMenu.tsx
 msgctxt "DisplayMenu interface"
 msgid "Compact"
-msgstr ""
+msgstr "Компактный"
 
 #: apps/reader/src/AnnotationEditor.tsx
 msgid "Compare collection version"
-msgstr ""
+msgstr "Сравнить версии коллекции"
 
 #: apps/reader/src/DraftRecoveryNotice.tsx
 msgid "Compare versions"
-msgstr ""
+msgstr "Сравнить версии"
 
 #: apps/reader/src/LibraryConditionsEditor.tsx
 msgctxt "LibraryConditionsEditor interface"
 msgid "Comparison"
-msgstr ""
+msgstr "Сравнение"
 
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "Compiler"
-msgstr ""
+msgstr "Компилятор"
 
 #: apps/reader/src/import-controller.ts
 msgctxt "Import completed"
