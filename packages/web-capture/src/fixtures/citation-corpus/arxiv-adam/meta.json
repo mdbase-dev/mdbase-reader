@@ -1,0 +1,13 @@
+{
+  "url": "https://arxiv.org/abs/1412.6980",
+  "retrievedAt": "2026-10-23T10:35:18.602169+00:00",
+  "notes": [
+    "Original reduced reproduction of fetched public HTML; retained citation metadata order/duplicates, canonical, HTML language, citation-related JSON-LD and relevant title/byline/date wrappers. Omitted prose, descriptions, images, references, styles, tracking and executable scripts. Raw downloads stay in gitignored .scratch/corpus/expand; helpers outside download directories ran with python3 -I. No downloaded content was executed.",
+    "Page HTTP status: 200. Requested and final URL: https://arxiv.org/abs/1412.6980 -> https://arxiv.org/abs/1412.6980. Captured 2026-10-23T10:35:18.602169+00:00; original 43830 bytes, reduced HTML 1549 bytes before formatting.",
+    "Recorded citoid HTTP 200 at 2026-10-23T10:37:00.142882+00:00; request https://en.wikipedia.org/api/rest_v1/data/citation/zotero/https%3A%2F%2Farxiv.org%2Fabs%2F1412.6980. Raw response dialect retained; only long abstracts shortened to first sentence.",
+    "Recorded doi HTTP 200 at 2026-10-23T10:37:02.944915+00:00; request https://doi.org/10.48550/arXiv.1412.6980. Raw response dialect retained; only long abstracts shortened to first sentence.",
+    "Ground truth: arXiv own Cite as, byline and submission history at https://arxiv.org/abs/1412.6980. Initial submission is 22 December 2014; 30 January 2017 is a revision. Use repository byline Jimmy Ba, not a guessed expanded name.",
+    "No external publication DOI/citation_doi is present on this listing. arXiv now registers a repository DOI for every paper, so a literally DOI-free modern listing cannot be supplied honestly. This is the no-publication-DOI counterpart to XGBoost, exercising citation_arxiv_id discovery; DataCite supplies only year precision.",
+    "Claims/resolver replay at 9128f240fb905807949f035d7ee0aae77f6a07cf: page-only wrong fields: publisher; with recorded remotes: none. Pinned in citation-corpus-replay.test.ts; expected CSL was hand-catalogued independently before replay."
+  ]
+}

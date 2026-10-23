@@ -1,0 +1,18 @@
+{
+  "status": 200,
+  "body": [
+    {
+      "key": "3HJVSWYD",
+      "version": 0,
+      "itemType": "webpage",
+      "creators": [],
+      "tags": [],
+      "title": "Et le Moyen Âge créa l’animal",
+      "websiteTitle": "CNRS Le journal",
+      "url": "https://lejournal.cnrs.fr/articles/et-le-moyen-age-crea-lanimal",
+      "abstractNote": "Créatures hybrides représentées dans des situations ridiculisant l’espèce humaine, chiens qu’on emmenait à la messe, escargots traduits en cour de justice… Au Moyen Âge, l’animal est omniprésent, mais n’existe pas encore comme catégorie distincte des humains.",
+      "language": "fr",
+      "accessDate": "2026-10-23"
+    }
+  ]
+}

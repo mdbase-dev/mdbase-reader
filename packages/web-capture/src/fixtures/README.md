@@ -19,12 +19,16 @@ Tests exercise the final sanitized reading copy, not just raw extractor output.
 
 ## Citation replay corpus
 
-`citation-corpus/` contains 21 reduced reproductions observed on public pages on
-2026-10-23. It covers the nine site families in
+`citation-corpus/` contains 36 reduced reproductions observed on public pages on
+2026-10-23. The original 21 cover the nine site families in
 [`citation-claims.md`](../../../../docs/architecture/citation-claims.md), an
 additional Guardian agency byline, six scholarly/DOI pages, a personal blog,
 an intergovernmental report (IPCC), a Stack Overflow question, a YouTube video,
-and an Open Library book edition.
+and an Open Library book edition. The [15-case expansion](citation-corpus/README.md)
+adds preprints with and without an external publication DOI, a working paper,
+Substack and metadata-free blogs, a dataset, government statistics, legislation,
+a podcast, conference papers, an ebook, an RFC, a patent and a French article.
+There are ten recorded DOI lookups; all 36 cases have recorded Citoid responses.
 
 Each directory contains:
 
@@ -69,8 +73,9 @@ import `loadCitationCorpus()` from there in tests. It resolves fixtures relative
 to its module (not the working directory), is deliberately outside the package
 exports, and must not be imported by production code. The `test/` location also
 makes its `node:fs` dependency explicitly test-only to architecture checks.
-`citation-corpus.test.ts` validates all cases. Each case's notes record how the
-pre-claims `extractScholarlyMetadata` (d0c7061) scored against it.
+`citation-corpus.test.ts` validates all cases. The original cases' notes record how
+the pre-claims `extractScholarlyMetadata` (d0c7061) scored against them; expansion
+notes record claims/resolver replay at 9128f24 instead.
 `citation-corpus-replay.test.ts` replays every case through page claims, the
 recorded doi.org and Citoid responses, and the resolver, and pins the fields each
 still gets wrong. Case and whitespace are normalized; date precision, author

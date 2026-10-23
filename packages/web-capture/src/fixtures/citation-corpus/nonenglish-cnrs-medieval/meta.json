@@ -1,0 +1,12 @@
+{
+  "url": "https://lejournal.cnrs.fr/articles/et-le-moyen-age-crea-lanimal",
+  "retrievedAt": "2026-10-23T10:36:13.078101+00:00",
+  "notes": [
+    "Original reduced reproduction of fetched public HTML; retained citation metadata order/duplicates, canonical, HTML language, citation-related JSON-LD and relevant title/byline/date wrappers. Omitted prose, descriptions, images, references, styles, tracking and executable scripts. Raw downloads stay in gitignored .scratch/corpus/expand; helpers outside download directories ran with python3 -I. No downloaded content was executed.",
+    "Page HTTP status: 200. Requested and final URL: https://lejournal.cnrs.fr/articles/et-le-moyen-age-crea-lanimal -> https://lejournal.cnrs.fr/articles/et-le-moyen-age-crea-lanimal. Captured 2026-10-23T10:36:13.078101+00:00; original 115211 bytes, reduced HTML 1106 bytes before formatting.",
+    "Recorded citoid HTTP 200 at 2026-10-23T10:39:10.903752+00:00; request https://en.wikipedia.org/api/rest_v1/data/citation/zotero/https%3A%2F%2Flejournal.cnrs.fr%2Farticles%2Fet-le-moyen-age-crea-lanimal. Raw response dialect retained; only long abstracts shortened to first sentence.",
+    "Initial Citoid HTTP 429 was retried after Retry-After elapsed; fixture records the later HTTP 200 response. Initial and retry downloads retained separately.",
+    "Ground truth: CNRS Le journal French magazine interview, visible headline and date/byline wrapper 23.10.2026, par Marina Julienne. The author is the interviewer, not the interview subject or twitter:creator @CNRS. The article was discovered and corroborated via publisher https://lejournal.cnrs.fr/rss, retained privately. Keep Unicode accents and apostrophe; language is French.",
+    "Claims/resolver replay at 9128f240fb905807949f035d7ee0aae77f6a07cf: page-only wrong fields: type, author, issued; with recorded remotes: type, author, issued. Pinned in citation-corpus-replay.test.ts; expected CSL was hand-catalogued independently before replay."
+  ]
+}

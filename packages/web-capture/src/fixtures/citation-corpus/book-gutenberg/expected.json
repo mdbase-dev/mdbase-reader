@@ -1,0 +1,15 @@
+{
+  "type": "book",
+  "title": "Pride and Prejudice",
+  "author": [
+    {
+      "family": "Austen",
+      "given": "Jane"
+    }
+  ],
+  "issued": {
+    "date-parts": [[1998, 6, 1]]
+  },
+  "publisher": "Project Gutenberg",
+  "URL": "https://www.gutenberg.org/ebooks/1342"
+}

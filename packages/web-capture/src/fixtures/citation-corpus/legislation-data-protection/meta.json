@@ -1,0 +1,12 @@
+{
+  "url": "https://www.legislation.gov.uk/ukpga/2018/12/contents/enacted",
+  "retrievedAt": "2026-10-23T10:33:05.297948+00:00",
+  "notes": [
+    "Original reduced reproduction of fetched public HTML; retained citation metadata order/duplicates, canonical, HTML language, citation-related JSON-LD and relevant title/byline/date wrappers. Omitted prose, descriptions, images, references, styles, tracking and executable scripts. Raw downloads stay in gitignored .scratch/corpus/expand; helpers outside download directories ran with python3 -I. No downloaded content was executed.",
+    "Page HTTP status: 200. Requested and final URL: https://www.legislation.gov.uk/ukpga/2018/12/contents/enacted -> https://www.legislation.gov.uk/ukpga/2018/12/contents/enacted. Captured 2026-10-23T10:33:05.297948+00:00; original 409462 bytes, reduced HTML 547 bytes before formatting.",
+    "Recorded citoid HTTP 400 at 2026-10-23T10:37:25.293705+00:00; request https://en.wikipedia.org/api/rest_v1/data/citation/zotero/https%3A%2F%2Fwww.legislation.gov.uk%2Fukpga%2F2018%2F12%2Fcontents%2Fenacted. Raw response dialect retained; only long abstracts shortened to first sentence.",
+    "Ground truth: official original as-enacted table of contents and https://www.legislation.gov.uk/ukpga/2018/12/introduction/enacted, downloaded separately for verification. The introduction identifies 2018 CHAPTER 12 and Royal Assent [23rd May 2018]. Use the legal citation 2018 c. 12. No author is asserted for legislation.",
+    "The requested enacted edition is the cited object. Preserve the observed canonical link to /contents without /enacted and DC.Date.Modified=2024-03-26: neither changes the enactment date nor the edition being cited. Citoid returned HTTP 400, recorded verbatim.",
+    "Claims/resolver replay at 9128f240fb905807949f035d7ee0aae77f6a07cf: page-only wrong fields: type, issued, number, URL; with recorded remotes: type, issued, number, URL. Pinned in citation-corpus-replay.test.ts; expected CSL was hand-catalogued independently before replay."
+  ]
+}

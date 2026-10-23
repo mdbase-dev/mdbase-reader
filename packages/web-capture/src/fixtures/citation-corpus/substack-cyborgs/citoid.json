@@ -1,0 +1,25 @@
+{
+  "status": 200,
+  "body": [
+    {
+      "key": "5HKCHAXX",
+      "version": 0,
+      "itemType": "webpage",
+      "creators": [
+        {
+          "firstName": "Ethan",
+          "lastName": "Mollick",
+          "creatorType": "author"
+        }
+      ],
+      "tags": [],
+      "title": "Centaurs and Cyborgs on the Jagged Frontier",
+      "url": "https://www.oneusefulthing.org/p/centaurs-and-cyborgs-on-the-jagged",
+      "abstractNote": "I think we have an answer on whether AIs will reshape work....",
+      "date": "2023-09-16",
+      "language": "en",
+      "accessDate": "2026-10-23",
+      "websiteTitle": "www.oneusefulthing.org"
+    }
+  ]
+}

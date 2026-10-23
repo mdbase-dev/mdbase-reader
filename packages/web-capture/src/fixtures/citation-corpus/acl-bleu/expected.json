@@ -1,0 +1,30 @@
+{
+  "type": "paper-conference",
+  "title": "Bleu: a Method for Automatic Evaluation of Machine Translation",
+  "author": [
+    {
+      "family": "Papineni",
+      "given": "Kishore"
+    },
+    {
+      "family": "Roukos",
+      "given": "Salim"
+    },
+    {
+      "family": "Ward",
+      "given": "Todd"
+    },
+    {
+      "family": "Zhu",
+      "given": "Wei-Jing"
+    }
+  ],
+  "issued": {
+    "date-parts": [[2002, 7]]
+  },
+  "container-title": "Proceedings of the 40th Annual Meeting of the Association for Computational Linguistics",
+  "publisher": "Association for Computational Linguistics",
+  "page": "311-318",
+  "DOI": "10.3115/1073083.1073135",
+  "URL": "https://aclanthology.org/P02-1040/"
+}

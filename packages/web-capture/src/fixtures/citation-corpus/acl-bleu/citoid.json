@@ -1,0 +1,60 @@
+{
+  "status": 200,
+  "body": [
+    {
+      "key": "KCIMI29S",
+      "version": 0,
+      "itemType": "conferencePaper",
+      "creators": [
+        {
+          "firstName": "Kishore",
+          "lastName": "Papineni",
+          "creatorType": "author"
+        },
+        {
+          "firstName": "Salim",
+          "lastName": "Roukos",
+          "creatorType": "author"
+        },
+        {
+          "firstName": "Todd",
+          "lastName": "Ward",
+          "creatorType": "author"
+        },
+        {
+          "firstName": "Wei-Jing",
+          "lastName": "Zhu",
+          "creatorType": "author"
+        },
+        {
+          "firstName": "Pierre",
+          "lastName": "Isabelle",
+          "creatorType": "editor"
+        },
+        {
+          "firstName": "Eugene",
+          "lastName": "Charniak",
+          "creatorType": "editor"
+        },
+        {
+          "firstName": "Dekang",
+          "lastName": "Lin",
+          "creatorType": "editor"
+        }
+      ],
+      "tags": [],
+      "title": "Bleu: a Method for Automatic Evaluation of Machine Translation",
+      "proceedingsTitle": "Proceedings of the 40th Annual Meeting of the Association for Computational Linguistics",
+      "place": "Philadelphia, Pennsylvania, USA",
+      "publisher": "Association for Computational Linguistics",
+      "url": "https://aclanthology.org/P02-1040/",
+      "DOI": "10.3115/1073083.1073135",
+      "pages": "311–318",
+      "date": "2002-07",
+      "conferenceName": "ACL 2002",
+      "libraryCatalog": "ACLWeb",
+      "accessDate": "2026-10-23",
+      "shortTitle": "Bleu"
+    }
+  ]
+}

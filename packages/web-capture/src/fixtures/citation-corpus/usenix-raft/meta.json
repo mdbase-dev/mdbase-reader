@@ -1,0 +1,12 @@
+{
+  "url": "https://www.usenix.org/conference/atc14/technical-sessions/presentation/ongaro",
+  "retrievedAt": "2026-10-23T10:34:38.936566+00:00",
+  "notes": [
+    "Original reduced reproduction of fetched public HTML; retained citation metadata order/duplicates, canonical, HTML language, citation-related JSON-LD and relevant title/byline/date wrappers. Omitted prose, descriptions, images, references, styles, tracking and executable scripts. Raw downloads stay in gitignored .scratch/corpus/expand; helpers outside download directories ran with python3 -I. No downloaded content was executed.",
+    "Page HTTP status: 200. Requested and final URL: https://www.usenix.org/conference/atc14/technical-sessions/presentation/ongaro -> https://www.usenix.org/conference/atc14/technical-sessions/presentation/ongaro. Captured 2026-10-23T10:34:38.936566+00:00; original 50830 bytes, reduced HTML 1368 bytes before formatting.",
+    "Recorded citoid HTTP 200 at 2026-10-23T10:39:01.135099+00:00; request https://en.wikipedia.org/api/rest_v1/data/citation/zotero/https%3A%2F%2Fwww.usenix.org%2Fconference%2Fatc14%2Ftechnical-sessions%2Fpresentation%2Fongaro. Raw response dialect retained; only long abstracts shortened to first sentence.",
+    "Initial Citoid HTTP 429 was retried after Retry-After elapsed; fixture records the later HTTP 200 response. Initial and retry downloads retained separately.",
+    "Ground truth: USENIX own BibTeX on the captured page gives Ongaro and Ousterhout, full title, booktitle, year 2014, month jun, pages 305--319, ISBN 978-1-931971-10-2 and publisher USENIX Association. Do not discard the month merely because head citation_publication_date supplies only 2014. Cite the conference paper, not the presentation recording.",
+    "Claims/resolver replay at 9128f240fb905807949f035d7ee0aae77f6a07cf: page-only wrong fields: issued, publisher; with recorded remotes: issued, publisher, ISBN. Pinned in citation-corpus-replay.test.ts; expected CSL was hand-catalogued independently before replay."
+  ]
+}

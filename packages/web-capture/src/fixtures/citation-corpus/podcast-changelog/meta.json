@@ -1,0 +1,12 @@
+{
+  "url": "https://changelog.com/podcast/500",
+  "retrievedAt": "2026-10-23T10:33:07.101856+00:00",
+  "notes": [
+    "Original reduced reproduction of fetched public HTML; retained citation metadata order/duplicates, canonical, HTML language, citation-related JSON-LD and relevant title/byline/date wrappers. Omitted prose, descriptions, images, references, styles, tracking and executable scripts. Raw downloads stay in gitignored .scratch/corpus/expand; helpers outside download directories ran with python3 -I. No downloaded content was executed.",
+    "Page HTTP status: 200. Requested and final URL: https://changelog.com/podcast/500 -> https://changelog.com/podcast/500. Captured 2026-10-23T10:33:07.101856+00:00; original 412057 bytes, reduced HTML 1324 bytes before formatting.",
+    "Recorded citoid HTTP 200 at 2026-10-23T10:37:29.622898+00:00; request https://en.wikipedia.org/api/rest_v1/data/citation/zotero/https%3A%2F%2Fchangelog.com%2Fpodcast%2F500. Raw response dialect retained; only long abstracts shortened to first sentence.",
+    "Ground truth: Changelog own episode page, heading The legacy of CSS-Tricks, Changelog Interviews episode 500, Published Aug 5 2022. Credit hosts Adam Stacoviak and Jerod Santo as broadcast creators, not guest Chris Coyier. Recorded July 27 is not publication. Both time elements have the same observed datetime despite different visible dates; preserve the contradiction.",
+    "SEO title includes with Chris Coyier (Changelog Interviews #500), which is not part of the episode headline. Changelog Media LLC is the publisher credited in the page copyright metadata. Use CSL broadcast for the podcast episode, not webpage or music recording.",
+    "Claims/resolver replay at 9128f240fb905807949f035d7ee0aae77f6a07cf: page-only wrong fields: type, title, author, issued, container-title, publisher, number; with recorded remotes: type, title, author, container-title, publisher, number. Pinned in citation-corpus-replay.test.ts; expected CSL was hand-catalogued independently before replay."
+  ]
+}

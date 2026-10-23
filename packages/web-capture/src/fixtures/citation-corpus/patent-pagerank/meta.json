@@ -1,0 +1,13 @@
+{
+  "url": "https://patents.google.com/patent/US6285999B1/en",
+  "retrievedAt": "2026-10-23T10:36:16.059130+00:00",
+  "notes": [
+    "Original reduced reproduction of fetched public HTML; retained citation metadata order/duplicates, canonical, HTML language, citation-related JSON-LD and relevant title/byline/date wrappers. Omitted prose, descriptions, images, references, styles, tracking and executable scripts. Raw downloads stay in gitignored .scratch/corpus/expand; helpers outside download directories ran with python3 -I. No downloaded content was executed.",
+    "Page HTTP status: 200. Requested and final URL: https://patents.google.com/patent/US6285999B1/en -> https://patents.google.com/patent/US6285999B1/en. Captured 2026-10-23T10:36:16.059130+00:00; original 1826086 bytes, reduced HTML 1323 bytes before formatting.",
+    "Recorded citoid HTTP 200 at 2026-10-23T10:39:21.020427+00:00; request https://en.wikipedia.org/api/rest_v1/data/citation/zotero/https%3A%2F%2Fpatents.google.com%2Fpatent%2FUS6285999B1%2Fen. Raw response dialect retained; only long abstracts shortened to first sentence.",
+    "Initial Citoid HTTP 429 was retried after Retry-After elapsed; fixture records the later HTTP 200 response. Initial and retry downloads retained separately.",
+    "Ground truth: published US grant US6285999B1 as identified by Google Patents bibliographic record: title Method for node ranking in a linked database, inventor Lawrence Page, publication/grant date 4 September 2001. The 9 January 1998 date is filing, not publication. Do not make the assignee Leland Stanford Junior University the inventor. Retain both observed DC.date tags and their scheme attributes in their original order.",
+    "Only title, inventor and primary publication/filing identifiers are reproduced from the bibliographic header. Omit patent claims, drawings, reference/citation tables, application events and related-family records; no invented patent metadata is added.",
+    "Claims/resolver replay at 9128f240fb905807949f035d7ee0aae77f6a07cf: page-only wrong fields: type, title, author, issued, number; with recorded remotes: issued. Pinned in citation-corpus-replay.test.ts; expected CSL was hand-catalogued independently before replay."
+  ]
+}

@@ -1,0 +1,38 @@
+{
+  "status": 200,
+  "body": [
+    {
+      "key": "CLDHA2FE",
+      "version": 0,
+      "itemType": "report",
+      "creators": [
+        {
+          "firstName": "R.",
+          "lastName": "Fielding",
+          "creatorType": "author"
+        },
+        {
+          "firstName": "M.",
+          "lastName": "Nottingham",
+          "creatorType": "author"
+        },
+        {
+          "firstName": "J.",
+          "lastName": "Reschke",
+          "creatorType": "author"
+        }
+      ],
+      "tags": [],
+      "reportNumber": "RFC 9110",
+      "DOI": "10.17487/RFC9110",
+      "url": "https://datatracker.ietf.org/doc/rfc9110/",
+      "title": "HTTP Semantics",
+      "abstractNote": "The Hypertext Transfer Protocol (HTTP) is a stateless application-level protocol for distributed, collaborative, hypertext information systems.",
+      "date": "2022-06",
+      "institution": "Internet Engineering Task Force",
+      "reportType": "Request for Comments",
+      "libraryCatalog": "IETF",
+      "accessDate": "2026-10-23"
+    }
+  ]
+}

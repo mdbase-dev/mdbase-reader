@@ -1,0 +1,14 @@
+{
+  "type": "post-weblog",
+  "title": "How web bloat impacts users with slow connections",
+  "author": [
+    {
+      "family": "Luu",
+      "given": "Dan"
+    }
+  ],
+  "issued": {
+    "date-parts": [[2017, 2, 8]]
+  },
+  "URL": "https://danluu.com/web-bloat/"
+}

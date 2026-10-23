@@ -1,0 +1,13 @@
+{
+  "url": "https://zenodo.org/records/1203745",
+  "retrievedAt": "2026-10-23T10:34:08.892859+00:00",
+  "notes": [
+    "Original reduced reproduction of fetched public HTML; retained citation metadata order/duplicates, canonical, HTML language, citation-related JSON-LD and relevant title/byline/date wrappers. Omitted prose, descriptions, images, references, styles, tracking and executable scripts. Raw downloads stay in gitignored .scratch/corpus/expand; helpers outside download directories ran with python3 -I. No downloaded content was executed.",
+    "Page HTTP status: 200. Requested and final URL: https://zenodo.org/records/1203745 -> https://zenodo.org/records/1203745. Captured 2026-10-23T10:34:08.892859+00:00; original 67172 bytes, reduced HTML 2582 bytes before formatting.",
+    "Recorded citoid HTTP 404 at 2026-10-23T10:37:15.196157+00:00; request https://en.wikipedia.org/api/rest_v1/data/citation/zotero/https%3A%2F%2Fzenodo.org%2Frecords%2F1203745. Raw response dialect retained; only long abstracts shortened to first sentence.",
+    "Recorded doi HTTP 200 at 2026-10-23T10:37:19.275456+00:00; request https://doi.org/10.5281/zenodo.1203745. Raw response dialect retained; only long abstracts shortened to first sentence.",
+    "Ground truth: fixed version 1.0.0 of UrbanSound8K, Zenodo record https://zenodo.org/records/1203745 and its DataCite DOI 10.5281/zenodo.1203745. Title, ordered creators, release date 3 November 2014, repository publisher and version agree. Cite the dataset itself, not the related ACM paper A Dataset and Taxonomy for Urban Sound Research recommended in its description.",
+    "Schema type is the observed absolute URL https://schema.org/Dataset; do not silently shorten it in the reproduction. Canonical /records/ URL differs from DataCite legacy /record/ URL. Citoid returned HTTP 404; retain the raw error rather than inventing a dataset item.",
+    "Claims/resolver replay at 9128f240fb905807949f035d7ee0aae77f6a07cf: page-only wrong fields: type, issued, publisher, version; with recorded remotes: version, URL. Pinned in citation-corpus-replay.test.ts; expected CSL was hand-catalogued independently before replay."
+  ]
+}
