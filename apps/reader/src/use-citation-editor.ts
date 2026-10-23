@@ -190,7 +190,7 @@ export function useCitationEditor(input: {
   );
   const lookup = useCitationLookup({
     gateway: input.gateway,
-    source,
+    source: active.latest ?? source,
     citation: assessment.value ?? null,
     provenance,
     onDismiss: (suggestion) => updateDraft(draft, [], [suggestion]),
@@ -244,8 +244,16 @@ export function useCitationEditor(input: {
       );
       setStatusState({ sourceId: source.id, value: "saving" });
       setErrorState({ sourceId: source.id, value: null });
-      void input.gateway
-        .saveSourceCitation(source, assessment.value, { provenance, expectedCitation })
+      void lookup
+        .checkParentBeforeSave()
+        .then(async (parentSaved) => {
+          const updated = await input.gateway.saveSourceCitation(source, assessment.value, {
+            provenance,
+            expectedCitation,
+          });
+          parentSaved();
+          return updated;
+        })
         .then((updated) => {
           if (!mounted.current || selection.current.token !== active.token) {
             return;
@@ -297,7 +305,7 @@ export function useCitationEditor(input: {
         })
         .finally(() => pendingSaves.current.delete(source.id));
     },
-    [active, assessment, dirty, draft, input, provenance, source, status],
+    [active, assessment, dirty, draft, input, provenance, source, status, lookup],
   );
   const save = (): void => {
     if (!conflict) {

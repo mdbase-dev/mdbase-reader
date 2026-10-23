@@ -13,6 +13,7 @@ import {
   TrashIcon,
 } from "./icons.js";
 import { Menu } from "./Menu.js";
+import { useSourcePartCreation } from "./SourcePartCreation.js";
 import { DocumentStatus } from "./WorkspacePaneSupport.js";
 
 import type { SourceWorkspacePane } from "./source-workspace-layout.js";
@@ -67,6 +68,7 @@ export function DocumentContextualToolbar({
   compact = false,
 }: DocumentContextualToolbarProps): JSX.Element {
   const contents = surfaces.get(sessionId)?.capabilities.contents;
+  const createParts = useSourcePartCreation();
   return (
     <div className="document-toolbar" aria-label="Document actions">
       {canSelectArea ? (
@@ -124,11 +126,29 @@ export function DocumentContextualToolbar({
         >
           <ReadingModeIcon /> {focusMode ? "Leave reading mode" : "Reading mode"}
         </button>
+        <CreatePartsItem source={source} createParts={createParts} />
         <ExportItem sourceExport={sourceExport} />
         <RemoveItem source={source} onRemoveSource={onRemoveSource} />
       </Menu>
     </div>
   );
+}
+
+function CreatePartsItem({
+  source,
+  createParts,
+}: {
+  readonly source: SourceSummary;
+  readonly createParts: ((source: SourceSummary) => void) | null;
+}): JSX.Element | null {
+  return createParts &&
+    source.documents.some(({ mediaType }) =>
+      ["application/pdf", "application/epub+zip"].includes(mediaType),
+    ) ? (
+    <button type="button" onClick={() => createParts(source)}>
+      <ListIcon /> Add chapters as sources…
+    </button>
+  ) : null;
 }
 
 function ExportItem({

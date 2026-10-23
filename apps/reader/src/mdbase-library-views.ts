@@ -195,7 +195,9 @@ export function buildLibraryView(request: LibraryViewSaveRequest): JsonObject {
 export function applyLibraryViewConfiguration(
   sources: readonly SourceSummary[],
   configuration: LibraryViewConfiguration,
+  contextSources: readonly SourceSummary[] = sources,
 ): readonly SourceSummary[] {
+  const parentTitles = new Map(contextSources.map(({ id, title }) => [id, title]));
   const query = configuration.filter.query.trim().toLocaleLowerCase();
   const tag = configuration.filter.tag.trim().toLocaleLowerCase();
   const filtered = sources.filter((source) => {
@@ -221,7 +223,12 @@ export function applyLibraryViewConfiguration(
     }
     return (
       !query ||
-      [source.title, ...source.creators, ...source.tags.map(String)]
+      [
+        source.title,
+        ...source.creators,
+        ...source.tags.map(String),
+        source.partOf ? parentTitles.get(source.partOf) : undefined,
+      ]
         .join(" ")
         .toLocaleLowerCase()
         .includes(query)

@@ -1,4 +1,4 @@
-import type { PdfEngine } from "@embedpdf/models";
+import { PdfActionType, type PdfBookmarkObject, type PdfEngine } from "@embedpdf/models";
 
 /** The viewer loads PDFium from here too, so the browser's cached copy is shared. */
 export const PDFIUM_WASM_URL =
@@ -51,6 +51,55 @@ export async function readPdfDetails(
       ...present("keywords", metadata.keywords),
       openingText,
     };
+  } finally {
+    await engine
+      .closeDocument(document)
+      .toPromise()
+      .catch(() => false);
+  }
+}
+
+export async function readPdfChapterOutline(
+  bytes: Uint8Array,
+  options: PdfDetailsOptions = {},
+): Promise<{
+  readonly pageCount: number;
+  readonly entries: readonly {
+    readonly title: string;
+    readonly level: number;
+    readonly pageIndex?: number;
+  }[];
+}> {
+  const engine = await (options.engine ?? defaultEngine)();
+  options.signal?.throwIfAborted();
+  const document = await engine
+    .openDocumentBuffer({ id: `outline-${crypto.randomUUID()}`, content: bytes.slice().buffer })
+    .toPromise();
+  try {
+    const bookmarks = await engine.getBookmarks(document).toPromise();
+    options.signal?.throwIfAborted();
+    const flatten = (
+      items: readonly PdfBookmarkObject[],
+      level: number,
+    ): { title: string; level: number; pageIndex?: number }[] =>
+      items.flatMap((item) => {
+        const target = item.target;
+        const destination =
+          target?.type === "destination"
+            ? target.destination
+            : target?.type === "action" && target.action.type === PdfActionType.Goto
+              ? target.action.destination
+              : undefined;
+        return [
+          {
+            title: item.title,
+            level,
+            ...(destination ? { pageIndex: destination.pageIndex } : {}),
+          },
+          ...flatten(item.children ?? [], level + 1),
+        ];
+      });
+    return { pageCount: document.pageCount, entries: flatten(bookmarks.bookmarks, 0) };
   } finally {
     await engine
       .closeDocument(document)

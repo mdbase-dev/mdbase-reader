@@ -2,13 +2,21 @@ import { signalMdbaseMark, useMdbaseMarkBusy } from "@mdbase-dev/ui/mark-activit
 import { useCallback, useRef, useState } from "react";
 
 import { readerErrorMessage } from "./errors.js";
+import { useChapterDoi } from "./use-chapter-doi.js";
 
+import type { ChapterDoiOffer } from "./chapter-doi.js";
 import type * as SourceAdditionFlow from "./source-addition-flow.js";
 import type { SourceAdditionOutcome, SourceAdditionServices } from "./source-addition-flow.js";
 import type { ReaderWorkspaceController } from "./use-reader-workspace.js";
+import type { ReaderWorkspaceGateway } from "./workspace-model.js";
 import type { CitationCandidate, SourceId } from "@mdbase-reader/core";
 
 export interface WebCaptureFlow {
+  readonly chapterOffer: ChapterDoiOffer | null;
+  readonly bookOffer: CitationCandidate | null;
+  readonly confirmChapter: (bookId: SourceId) => Promise<void>;
+  readonly findChapterBook: (isbn?: string) => Promise<void>;
+  readonly saveChapterBook: () => Promise<void>;
   readonly status: "idle" | "capturing";
   /** What the current addition is doing, for a live status line. */
   readonly progress: string | null;
@@ -27,7 +35,10 @@ export interface WebCaptureFlow {
 export function useWebCapture(
   workspace: ReaderWorkspaceController,
   onImported: (sourceId: SourceId) => void,
+  gateway?: ReaderWorkspaceGateway,
 ): WebCaptureFlow {
+  const chapter = useChapterDoi(gateway, workspace, onImported);
+  const proposeChapter = chapter.propose;
   const [status, setStatus] = useState<WebCaptureFlow["status"]>("idle");
   const [progress, setProgress] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -62,6 +73,7 @@ export function useWebCapture(
         const outcome = await work(
           readerSourceAdditionServices({
             workspace,
+            chapterGateway: gateway,
             onStatus: setProgress,
             ...(recoveryInput.current === input
               ? { importOptions: { recoverExistingFiles: true } }
@@ -69,7 +81,9 @@ export function useWebCapture(
           }),
           flow,
         );
-        if (outcome.kind === "citation-only") {
+        if (outcome.kind === "chapter-offer") {
+          proposeChapter(outcome.offer);
+        } else if (outcome.kind === "citation-only") {
           setOffer({ candidate: outcome.candidate, url: input, reason: outcome.reason });
         } else if (outcome.kind === "not-added") {
           // The workspace reports why; the input is kept to recover the upload on retry.
@@ -92,7 +106,7 @@ export function useWebCapture(
         setProgress(null);
       }
     },
-    [onImported, workspace],
+    [onImported, workspace, gateway, proposeChapter],
   );
 
   const capture = useCallback(
@@ -109,9 +123,14 @@ export function useWebCapture(
   }, [offer, run]);
 
   return {
-    status,
+    chapterOffer: chapter.chapterOffer,
+    bookOffer: chapter.bookOffer,
+    confirmChapter: chapter.confirmChapter,
+    findChapterBook: chapter.findChapterBook,
+    saveChapterBook: chapter.saveChapterBook,
+    status: chapter.busy ? "capturing" : status,
     progress,
-    error: error ?? workspace.importError,
+    error: error ?? chapter.error ?? workspace.importError,
     offer: offer
       ? {
           title:
@@ -133,6 +152,7 @@ export function useWebCapture(
     clearError: () => {
       setError(null);
       setOffer(null);
+      proposeChapter(null);
     },
   };
 }

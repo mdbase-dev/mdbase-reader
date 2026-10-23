@@ -17,10 +17,12 @@ import {
   type RowSelection,
 } from "./library-row-selection.js";
 import { ReadingStatus, formatLabel } from "./LibraryCells.js";
+import { LibraryPartDisclosure } from "./LibraryPartDisclosure.js";
 import { useOffsetTop } from "./LibraryTable.js";
 import { sourceFormat } from "./mdbase-library-views.js";
 import { hasModifier, itemClick, useLongPress, type LongPress } from "./use-long-press.js";
 
+import type { LibraryPartRow } from "./library-source-parts.js";
 import type { SourceId, SourceSummary } from "@mdbase-reader/core";
 
 const cardHeight = 270;
@@ -35,8 +37,12 @@ export function LibraryCards({
   onSelectionChange,
   onOpen,
   scrollRef,
+  partRows,
+  onTogglePart,
 }: {
   readonly sources: readonly SourceSummary[];
+  readonly partRows?: ReadonlyMap<SourceId, LibraryPartRow>;
+  readonly onTogglePart?: (id: SourceId) => void;
   readonly selection: RowSelection;
   readonly onSelectionChange: (selection: RowSelection) => void;
   readonly onOpen: (id: SourceId) => void;
@@ -88,6 +94,8 @@ export function LibraryCards({
                 <LibraryCard
                   key={source.id}
                   source={source}
+                  part={partRows?.get(source.id)}
+                  onToggle={onTogglePart ? () => onTogglePart(source.id) : undefined}
                   selected={selection.ids.has(source.id)}
                   press={press}
                   touchSelecting={selection.touch === true}
@@ -118,7 +126,11 @@ function LibraryCard({
   touchSelecting,
   onLongPress,
   onOpen,
+  part,
+  onToggle,
 }: {
+  readonly part: LibraryPartRow | undefined;
+  readonly onToggle: (() => void) | undefined;
   readonly source: SourceSummary;
   readonly selected: boolean;
   readonly onSelect: (event: MouseEvent<HTMLElement>) => void;
@@ -162,7 +174,13 @@ function LibraryCard({
       </div>
       <div className="library-card-copy">
         <span>{source.creators.join(", ") || "Unknown creator"}</span>
-        <h3>{source.title}</h3>
+        <h3>
+          <LibraryPartDisclosure source={source} row={part} onToggle={onToggle} />
+          {source.title}
+        </h3>
+        {(part?.diagnostic ?? part?.context) ? (
+          <small>{part.diagnostic ?? part.context}</small>
+        ) : null}
         <div>
           <small>{publicationDateLabel(source.published) ?? "Undated"}</small>
           <ReadingStatus source={source} />

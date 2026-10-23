@@ -7,7 +7,11 @@ import type { CitoidClaimsOptions } from "./provider-claims.js";
 export { claimValuesMatch } from "./claim-matching.js";
 export { claimSourceLabel, parseClaimSourceLabel } from "./claims.js";
 export { resolveCitation } from "./resolver.js";
-export { parentCitationClaims, type ParentCitationClaimsOptions } from "./parent-claims.js";
+export {
+  parentCitationClaims,
+  isParentCitationField,
+  type ParentCitationClaimsOptions,
+} from "./parent-claims.js";
 export { pageClaims } from "./page-claims.js";
 export type { Claim, CitationSuggestion } from "./claims.js";
 

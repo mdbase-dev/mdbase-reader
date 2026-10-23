@@ -12,10 +12,12 @@ import {
   type WebCaptureImport,
 } from "@mdbase-reader/web-capture";
 
+import { chapterBooks, type ChapterDoiOffer } from "./chapter-doi.js";
 import { findOpenAccessPdf, pdfFileName, type PdfSearchServices } from "./open-access-pdf.js";
 
 import type { ReaderWorkspaceController } from "./use-reader-workspace.js";
 import type { CapturedPdfFile, CaptureResult } from "./web-capture-client.js";
+import type { ReaderWorkspaceGateway } from "./workspace-model.js";
 import type {
   CitationCandidate,
   CitationResolutionRequest,
@@ -26,6 +28,7 @@ import type {
 } from "@mdbase-reader/core";
 
 export interface SourceAdditionServices extends PdfSearchServices {
+  readonly chapterGateway?: ReaderWorkspaceGateway | undefined;
   readonly capture: (
     url: string,
     options: { readonly allowPdf: true; readonly signal?: AbortSignal },
@@ -44,6 +47,7 @@ export interface SourceAdditionServices extends PdfSearchServices {
 }
 
 export type SourceAdditionOutcome =
+  | { readonly kind: "chapter-offer"; readonly offer: ChapterDoiOffer }
   | {
       readonly kind: "added";
       readonly source: Source;
@@ -165,6 +169,24 @@ async function addFromIdentifier(
 ): Promise<SourceAdditionOutcome> {
   services.onStatus("Looking up citation details…");
   const candidate = await services.lookUp(identifierLookup(identifier));
+  if (
+    identifier.kind === "doi" &&
+    candidate.citation.type === "chapter" &&
+    services.chapterGateway?.createSourcePart
+  ) {
+    const library = await services.chapterGateway.library();
+    if (library.sourceIndex?.complete === false) {
+      throw new Error("The book index is partial. Finish loading before attaching a chapter.");
+    }
+    return {
+      kind: "chapter-offer",
+      offer: {
+        key: crypto.randomUUID(),
+        candidate,
+        books: chapterBooks(candidate, library.sources),
+      },
+    };
+  }
   const doi =
     stringField(candidate.citation, "DOI") ??
     (identifier.kind === "doi" ? identifier.value : undefined);

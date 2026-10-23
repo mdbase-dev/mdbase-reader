@@ -37,6 +37,15 @@ export async function checkSourcePartChain(
       if (!source) {
         break;
       }
+      if (proposed !== undefined) {
+        const relations = source.relations?.filter(({ relation }) => relation === "part-of") ?? [];
+        if (
+          new Set(relations.map(({ target }) => target)).size > 1 ||
+          (relations.length > 0 && !source.partOf)
+        ) {
+          throw new Error("Parent chain has unresolved or ambiguous part-of relations.");
+        }
+      }
       sources.set(current, source);
       current = source.partOf;
     }
@@ -62,8 +71,8 @@ export async function writeSourcePartOf(
     input.sourceId,
     input.parentId,
   );
-  if (chain.problem) {
-    throw new Error(`Invalid part-of relation: ${chain.problem}.`);
+  if (chain.problem || chain.missing) {
+    throw new Error(`Invalid part-of relation: ${chain.problem ?? "missing ancestor"}.`);
   }
   const parent = input.parentId ? await repository.get(input.collectionId, input.parentId) : null;
   if (input.parentId && !parent) {

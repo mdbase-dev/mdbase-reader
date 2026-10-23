@@ -9,6 +9,7 @@ import { useEffect, useRef, useState } from "react";
 import { archivedCitationClaims, citationArchive } from "./archived-citation-claims.js";
 import { resolutionRequest } from "./citation-form-model.js";
 import { readerErrorMessage } from "./errors.js";
+import { useParentCitation } from "./use-parent-citation.js";
 
 import type { ReaderWorkspaceGateway } from "./workspace-model.js";
 
@@ -36,7 +37,13 @@ export function useCitationLookup(input: {
   readonly acceptSuggestions: (fields: ReadonlySet<string>) => void;
   readonly dismissSuggestion: (field: string) => void;
   readonly resetLookup: () => void;
+  readonly checkParentBeforeSave: () => Promise<() => void>;
 } {
+  const parent = useParentCitation(
+    input.gateway,
+    input.source,
+    input.citation?.["type"] === "chapter",
+  );
   const [state, setState] = useState<LookupState | null>(null);
   const pending = useRef<AbortController | null>(null);
   const sourceId = input.source?.id;
@@ -48,7 +55,7 @@ export function useCitationLookup(input: {
   }
   const suggestions = input.citation
     ? resolveCitation({
-        claims: current?.claims ?? [],
+        claims: [...(current?.claims ?? []), ...parent.claims],
         existing: { citation: input.citation, provenance: input.provenance },
       }).suggestions.filter(({ field }) => field !== "id" && !current?.dismissed.has(field))
     : [];
@@ -86,6 +93,7 @@ export function useCitationLookup(input: {
       });
   };
   return {
+    checkParentBeforeSave: () => parent.checkBeforeSave(input.citation, input.provenance),
     resolutionAvailable: lookupAvailable(input.gateway, input.source),
     resolutionStatus: current?.status ?? "idle",
     resolutionError: current?.error ?? null,
@@ -97,6 +105,11 @@ export function useCitationLookup(input: {
           fields.has(suggestion.field) &&
           cslValuesEqual(input.citation?.[suggestion.field], suggestion.current),
       );
+      if (selected.some(({ source }) => source.kind === "parent")) {
+        parent.reviewed(
+          selected.filter(({ source }) => source.kind === "parent").map(({ field }) => field),
+        );
+      }
       input.onAccept(selected);
       dismissFields(new Set(selected.map(({ field }) => field)));
     },
@@ -115,6 +128,7 @@ export function useCitationLookup(input: {
 
 function lookupAvailable(gateway: ReaderWorkspaceGateway, source: Source | null): boolean {
   return (
+    Boolean(source?.partOf) ||
     gateway.citationClaims !== undefined ||
     gateway.resolveCitation !== undefined ||
     citationArchive(source) !== undefined

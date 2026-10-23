@@ -67,16 +67,28 @@ export function TableValue({
   column,
   annotations,
   selected,
+  context,
 }: {
   readonly source: SourceSummary;
   readonly column: LibraryColumn;
+  readonly context?: string | undefined;
   readonly annotations: number;
   /** Values a saved view selected for this source, keyed by field. */
   readonly selected?: Readonly<Record<string, unknown>> | undefined;
 }): JSX.Element {
   const key = propertyKey(column);
   if (key === null) {
-    return builtinCells[column as BuiltinLibraryColumn](source, annotations);
+    const value = builtinCells[column as BuiltinLibraryColumn](source, annotations);
+    return column === "title" && context ? (
+      <>
+        <span className="library-part-title">
+          <span className="library-part-value">{value}</span>
+          <small>{context}</small>
+        </span>
+      </>
+    ) : (
+      value
+    );
   }
   const text = formatPropertyValue(propertyValue(source, key, selected));
   return text ? (
