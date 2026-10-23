@@ -4057,537 +4057,537 @@ msgstr "Position"
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "Locator"
-msgstr ""
+msgstr "Positionsangabe"
 
 #: apps/reader/src/source-addition-flow.ts
 #: apps/reader/src/use-document-attachment.ts
 msgid "Looking for an open-access PDF…"
-msgstr ""
+msgstr "Frei zugängliches PDF wird gesucht…"
 
 #: apps/extension/src/CitationCard.tsx
 msgid "Looking for citation details…"
-msgstr ""
+msgstr "Angaben zur Quellenangabe werden gesucht…"
 
 #: apps/reader/src/source-addition-flow.ts
 msgid "Looking up citation details instead…"
-msgstr ""
+msgstr "Stattdessen werden Angaben zur Quellenangabe gesucht…"
 
 #: apps/reader/src/source-addition-flow.ts
 msgid "Looking up citation details…"
-msgstr ""
+msgstr "Angaben zur Quellenangabe werden abgefragt…"
 
 #: apps/reader/src/CitationLookup.tsx
 msgctxt "CitationLookup interface"
 msgid "Looking…"
-msgstr ""
+msgstr "Suche läuft…"
 
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "Magazine article"
-msgstr ""
+msgstr "Zeitschriftenartikel"
 
 #: apps/reader/src/citation-form-model.ts
 msgctxt "CSL item type"
 msgid "Magazine article"
-msgstr ""
+msgstr "Zeitschriftenartikel"
 
 #: apps/reader/src/DockviewWorkspace.tsx
 msgid "Make room to read"
-msgstr ""
+msgstr "Mehr Platz zum Lesen schaffen"
 
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "Manuscript"
-msgstr ""
+msgstr "Manuskript"
 
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "Map"
-msgstr ""
+msgstr "Karte"
 
 #: packages/renderer-pdf/src/pdf-translations.ts
 msgctxt "PDF viewer zoom"
 msgid "Marquee Zoom"
-msgstr ""
+msgstr "Bereichszoom"
 
 #: apps/extension/src/OptionsApp.tsx
 msgid "Match system"
-msgstr ""
+msgstr "Systemeinstellung übernehmen"
 
 #: apps/reader/src/reader-app-commands.ts
 msgid "Match system theme"
-msgstr ""
+msgstr "Systemdesign übernehmen"
 
 #: apps/reader/src/LibraryNavigator.tsx
 msgid "Matches"
-msgstr ""
+msgstr "Treffer"
 
 #: apps/extension/src/SavedHighlights.tsx
 msgid "Matches several places on this page"
-msgstr ""
+msgstr "Entspricht mehreren Stellen auf dieser Seite"
 
 #: apps/reader/src/DockPaneActions.tsx
 #: apps/reader/src/dockview-menus.ts
 msgid "Maximize / restore pane"
-msgstr ""
+msgstr "Bereich maximieren / wiederherstellen"
 
 #: apps/reader/src/connection-recovery.ts
 msgid "mdbase Connect did not accept Reader’s app registration, so it cannot open collections here."
-msgstr ""
+msgstr "mdbase Connect hat die App-Registrierung von Reader nicht akzeptiert; Reader kann hier keine Sammlungen öffnen."
 
 #: apps/reader/src/connection-recovery.ts
 msgid "mdbase Connect took too long to answer. Try again in a moment."
-msgstr ""
+msgstr "mdbase Connect hat zu lange für eine Antwort gebraucht. Versuchen Sie es gleich noch einmal."
 
 #: apps/reader/src/use-annotation-view.ts
 msgid "mdbase could not run this view."
-msgstr ""
+msgstr "mdbase konnte diese Ansicht nicht ausführen."
 
 #: apps/extension/src/sdk-client.ts
 msgid "mdbase could not start in the background. Reload the extension."
-msgstr ""
+msgstr "mdbase konnte nicht im Hintergrund gestartet werden. Laden Sie die Erweiterung neu."
 
 #: apps/extension/src/sdk-client.ts
 msgid "mdbase has not started yet."
-msgstr ""
+msgstr "mdbase wurde noch nicht gestartet."
 
 #: apps/extension/src/connection-view.ts
 msgid "mdbase is still getting ready. Try again in a moment."
-msgstr ""
+msgstr "mdbase wird noch vorbereitet. Versuchen Sie es gleich noch einmal."
 
 #: apps/extension/src/use-connect.ts
 msgid "mdbase is still starting. Try again in a moment."
-msgstr ""
+msgstr "mdbase wird noch gestartet. Versuchen Sie es gleich noch einmal."
 
 #: apps/reader/src/ImportDestination.tsx
 msgid "mdbase isn’t reachable right now. Check your connection and try again."
-msgstr ""
+msgstr "mdbase ist derzeit nicht erreichbar. Prüfen Sie Ihre Verbindung und versuchen Sie es erneut."
 
 #: apps/extension/src/CaptureApp.tsx
 #: apps/extension/src/shell-messages.ts
 msgid "mdbase Reader — capture"
-msgstr ""
+msgstr "mdbase Reader — Erfassung"
 
 #: apps/extension/src/CaptureApp.tsx
 msgid "mdbase Reader — source saved"
-msgstr ""
+msgstr "mdbase Reader — Quelle gespeichert"
 
 #. placeholder {0}: name ?? version
 #. placeholder {1}: environment.label ? ` · ${environment.label}` : ""
 #: apps/extension/src/OptionsApp.tsx
 msgid "mdbase Reader {0}{1}. Pages and highlights are saved into your mdbase collection through mdbase Connect."
-msgstr ""
+msgstr "mdbase Reader {0}{1}. Seiten und Hervorhebungen werden über mdbase Connect in Ihrer mdbase-Sammlung gespeichert."
 
 #: apps/extension/src/WelcomeApp.tsx
 msgid "mdbase Reader is installed"
-msgstr ""
+msgstr "mdbase Reader ist installiert"
 
 #: apps/extension/src/OptionsApp.tsx
 #: apps/extension/src/shell-messages.ts
 msgid "mdbase Reader settings"
-msgstr ""
+msgstr "Einstellungen von mdbase Reader"
 
 #: apps/extension/src/sdk-client.ts
 msgid "mdbase restarted in the background. Check whether your last change was saved, then try again."
-msgstr ""
+msgstr "mdbase wurde im Hintergrund neu gestartet. Prüfen Sie, ob Ihre letzte Änderung gespeichert wurde, und versuchen Sie es erneut."
 
 #: apps/extension/src/PostPicker.tsx
 msgid "Media post"
-msgstr ""
+msgstr "Medienbeitrag"
 
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "Medium"
-msgstr ""
+msgstr "Medium"
 
 #: apps/reader/src/DockPaneActions.tsx
 msgid "Merge into another reading pane"
-msgstr ""
+msgstr "Mit anderem Lesebereich zusammenführen"
 
 #: apps/reader/src/CitationLookup.tsx
 msgid "Metadata lookup will be available when a resolver is connected. You can still edit and format CSL locally."
-msgstr ""
+msgstr "Die Metadatensuche ist verfügbar, sobald ein Resolver verbunden ist. Sie können CSL weiterhin lokal bearbeiten und formatieren."
 
 #: packages/migration/src/zotero.ts
 msgid "Missing annotation owner."
-msgstr ""
+msgstr "Besitzer der Anmerkung fehlt."
 
 #: apps/reader/src/library-lenses.ts
 msgid "Missing citation data"
-msgstr ""
+msgstr "Daten zur Quellenangabe fehlen"
 
 #: packages/migration/src/zotero-validation.ts
 msgid "Missing collection."
-msgstr ""
+msgstr "Sammlung fehlt."
 
 #: packages/migration/src/zotero-bundle.ts
 msgid "Missing or oversized {name}."
-msgstr ""
+msgstr "{name} fehlt oder ist zu groß."
 
 #: packages/migration/src/zotero-validation.ts
 msgid "Missing primary attachment payload."
-msgstr ""
+msgstr "Daten des primären Anhangs fehlen."
 
 #: apps/reader/src/dockview-side-panels.ts
 msgid "Missing sidebar edge group"
-msgstr ""
+msgstr "Randgruppe der Seitenleiste fehlt"
 
 #: packages/migration/src/zotero-pdf.ts
 msgid "Missing Zotero PDF rectangles."
-msgstr ""
+msgstr "Zotero-PDF-Rechtecke fehlen."
 
 #: apps/reader/src/MobileWorkspaceNavigation.tsx
 msgid "Mobile workspace navigation"
-msgstr ""
+msgstr "Mobile Arbeitsflächennavigation"
 
 #: apps/reader/src/DocumentContextualToolbar.tsx
 msgctxt "DocumentContextualToolbar interface"
 msgid "More actions"
-msgstr ""
+msgstr "Weitere Aktionen"
 
 #: apps/reader/src/DocumentContextualToolbar.tsx
 msgid "More document actions"
-msgstr ""
+msgstr "Weitere Dokumentaktionen"
 
 #: apps/reader/src/CitationContributors.tsx
 msgid "More name details"
-msgstr ""
+msgstr "Weitere Namensangaben"
 
 #: packages/renderer-pdf/src/pdf-translations.ts
 msgctxt "PDF viewer menu"
 msgid "More Options"
-msgstr ""
+msgstr "Weitere Optionen"
 
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "Motion picture"
-msgstr ""
+msgstr "Film"
 
 #: apps/reader/src/reader-command-list.ts
 msgid "Move active tab to pane {otherPaneLabel}"
-msgstr ""
+msgstr "Aktiven Tab in Bereich {otherPaneLabel} verschieben"
 
 #: apps/reader/src/LibraryTableHeader.tsx
 msgid "Move left"
-msgstr ""
+msgstr "Nach links verschieben"
 
 #: apps/reader/src/LibraryTableHeader.tsx
 msgid "Move right"
-msgstr ""
+msgstr "Nach rechts verschieben"
 
 #: apps/reader/src/DockPaneActions.tsx
 msgid "Move tab to pane below"
-msgstr ""
+msgstr "Tab in Bereich darunter verschieben"
 
 #: apps/reader/src/DockPaneActions.tsx
 msgid "Move tab to pane right"
-msgstr ""
+msgstr "Tab in Bereich rechts verschieben"
 
 #: apps/reader/src/dockview-menus.ts
 msgid "Move to {title}"
-msgstr ""
+msgstr "Zu {title} verschieben"
 
 #: apps/reader/src/dockview-menus.ts
 msgctxt "Workspace tab destination"
 msgid "Move to bottom sidebar"
-msgstr ""
+msgstr "In untere Seitenleiste verschieben"
 
 #: apps/reader/src/dockview-menus.ts
 msgctxt "Workspace tab destination"
 msgid "Move to left sidebar"
-msgstr ""
+msgstr "In linke Seitenleiste verschieben"
 
 #: apps/reader/src/dockview-menus.ts
 msgid "Move to new pane below"
-msgstr ""
+msgstr "In neuen Bereich darunter verschieben"
 
 #: apps/reader/src/dockview-menus.ts
 msgid "Move to new pane right"
-msgstr ""
+msgstr "In neuen Bereich rechts verschieben"
 
 #: apps/reader/src/dockview-menus.ts
 msgctxt "Workspace tab destination"
 msgid "Move to pane"
-msgstr ""
+msgstr "In Bereich verschieben"
 
 #: apps/reader/src/dockview-menus.ts
 msgctxt "Workspace tab destination"
 msgid "Move to right sidebar"
-msgstr ""
+msgstr "In rechte Seitenleiste verschieben"
 
 #: apps/reader/src/dockview-menus.ts
 msgctxt "Workspace tab destination"
 msgid "Move to top sidebar"
-msgstr ""
+msgstr "In obere Seitenleiste verschieben"
 
 #: packages/migration/src/zotero-pdf.ts
 msgid "Multi-page or ink geometry is not yet supported."
-msgstr ""
+msgstr "Geometrie über mehrere Seiten oder für Freihandzeichnungen wird noch nicht unterstützt."
 
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "Musical score"
-msgstr ""
+msgstr "Musikpartitur"
 
 #: packages/core/src/domain/citation-validation.ts
 msgctxt "CSL validation"
 msgid "must be a CSL date object"
-msgstr ""
+msgstr "muss ein CSL-Datumsobjekt sein"
 
 #: packages/core/src/domain/citation.ts
 msgctxt "CSL validation"
 msgid "must be a non-empty Pandoc-compatible citekey"
-msgstr ""
+msgstr "muss ein nicht leerer, Pandoc-kompatibler Citekey sein"
 
 #: packages/core/src/domain/citation.ts
 msgctxt "CSL validation"
 msgid "must be a recognized CSL item type"
-msgstr ""
+msgstr "muss ein anerkannter CSL-Eintragstyp sein"
 
 #: packages/core/src/domain/citation-validation.ts
 msgctxt "CSL validation"
 msgid "must be a string"
-msgstr ""
+msgstr "muss eine Zeichenfolge sein"
 
 #: packages/core/src/domain/citation-validation.ts
 msgctxt "CSL validation"
 msgid "must be a string or number"
-msgstr ""
+msgstr "muss eine Zeichenfolge oder Zahl sein"
 
 #: packages/core/src/domain/citation-validation.ts
 msgctxt "CSL validation"
 msgid "must be an array of CSL names"
-msgstr ""
+msgstr "muss ein Array von CSL-Namen sein"
 
 #: packages/core/src/domain/citation-validation.ts
 msgctxt "CSL validation"
 msgid "must be an array of strings"
-msgstr ""
+msgstr "muss ein Array von Zeichenfolgen sein"
 
 #: packages/core/src/domain/citation-validation.ts
 msgctxt "CSL validation"
 msgid "must be an object"
-msgstr ""
+msgstr "muss ein Objekt sein"
 
 #: packages/core/src/domain/citation.ts
 msgctxt "CSL validation"
 msgid "must be one CSL object"
-msgstr ""
+msgstr "muss genau ein CSL-Objekt sein"
 
 #: packages/core/src/domain/citation-validation.ts
 msgctxt "CSL validation"
 msgid "must be scalar"
-msgstr ""
+msgstr "muss ein Einzelwert sein"
 
 #: packages/core/src/domain/citation-validation.ts
 msgctxt "CSL validation"
 msgid "must contain one or two date ranges"
-msgstr ""
+msgstr "muss einen oder zwei Datumsbereiche enthalten"
 
 #: packages/core/src/domain/citation-validation.ts
 msgctxt "CSL validation"
 msgid "must contain one to three string or number date parts"
-msgstr ""
+msgstr "muss ein bis drei Datumsbestandteile als Zeichenfolge oder Zahl enthalten"
 
 #: packages/core/src/domain/citation.ts
 msgctxt "CSL validation"
 msgid "must contain only JSON-compatible values"
-msgstr ""
+msgstr "darf nur JSON-kompatible Werte enthalten"
 
 #: apps/reader/src/LibraryViewSaveDialog.tsx
 msgctxt "LibraryViewSaveDialog interface"
 msgid "Name"
-msgstr ""
+msgstr "Name"
 
 #: apps/reader/src/CitationTypedFieldEditors.tsx
 msgctxt "CitationTypedFieldEditors interface"
 msgid "Names"
-msgstr ""
+msgstr "Namen"
 
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "Narrator"
-msgstr ""
+msgstr "Sprecher"
 
 #: apps/reader/src/DisplayMenu.tsx
 msgctxt "DisplayMenu interface"
 msgid "Narrow"
-msgstr ""
+msgstr "Schmal"
 
 #: apps/reader/src/ImportReview.tsx
 msgid "Native metadata is also archived as JSON. Existing records matched by import identity are kept unchanged; ambiguous title or URL matches are never silently merged."
-msgstr ""
+msgstr "Die ursprünglichen Metadaten werden außerdem als JSON archiviert. Vorhandene Datensätze mit gleicher Importkennung bleiben unverändert; mehrdeutige Titel- oder URL-Treffer werden niemals stillschweigend zusammengeführt."
 
 #: apps/reader/src/AnnotationComposer.tsx
 msgid "New area annotation"
-msgstr ""
+msgstr "Neue Bereichsanmerkung"
 
 #: apps/reader/src/AnnotationPanelActions.tsx
 msgid "New comment"
-msgstr ""
+msgstr "Neuer Kommentar"
 
 #: apps/reader/src/AnnotationList.tsx
 msgctxt "AnnotationList annotationOrderOptions"
 msgid "Newest first"
-msgstr ""
+msgstr "Neueste zuerst"
 
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "Newspaper article"
-msgstr ""
+msgstr "Zeitungsartikel"
 
 #: apps/reader/src/citation-form-model.ts
 msgctxt "CSL item type"
 msgid "Newspaper article"
-msgstr ""
+msgstr "Zeitungsartikel"
 
 #: packages/renderer-epub/src/epub-page-navigation.tsx
 msgid "Next page"
-msgstr ""
+msgstr "Nächste Seite"
 
 #: packages/renderer-pdf/src/pdf-translations.ts
 msgctxt "PDF viewer page"
 msgid "Next Page"
-msgstr ""
+msgstr "Nächste Seite"
 
 #: apps/reader/src/citation-form-model.ts
 msgid "No"
-msgstr ""
+msgstr "Nein"
 
 #: apps/reader/src/library-columns.ts
 msgctxt "library columns"
 msgid "No"
-msgstr ""
+msgstr "Nein"
 
 #: apps/reader/src/LibraryAnnotations.tsx
 msgid "No annotations match"
-msgstr ""
+msgstr "Keine passenden Anmerkungen"
 
 #: apps/reader/src/AnnotationList.tsx
 #: apps/reader/src/LibraryAnnotations.tsx
 msgid "No annotations yet"
-msgstr ""
+msgstr "Noch keine Anmerkungen"
 
 #: packages/core/src/application/citation-citekey.ts
 msgid "No author or editor is recorded."
-msgstr ""
+msgstr "Es ist kein Autor oder Herausgeber erfasst."
 
 #: apps/extension/src/CitationPanel.tsx
 msgid "No citation details were found on this page. Save the source, then add them in Reader."
-msgstr ""
+msgstr "Auf dieser Seite wurden keine Angaben zur Quellenangabe gefunden. Speichern Sie die Quelle und ergänzen Sie sie dann in Reader."
 
 #. placeholder {0}: query.trim()
 #: apps/reader/src/CollectionMenu.tsx
 msgid "No collections match “{0}”."
-msgstr ""
+msgstr "Keine Sammlungen entsprechen „{0}“."
 
 #: apps/reader/src/connection-recovery.ts
 msgid "No computer is registered for this collection."
-msgstr ""
+msgstr "Für diese Sammlung ist kein Computer registriert."
 
 #: packages/core/src/application/build-csl-bibliography.ts
 msgid "No CSL citation metadata is attached."
-msgstr ""
+msgstr "Es sind keine CSL-Metadaten für Quellenangaben hinterlegt."
 
 #: apps/reader/src/WorkspacePaneSupport.tsx
 msgid "No document attached"
-msgstr ""
+msgstr "Kein Dokument angehängt"
 
 #: packages/renderer-pdf/src/pdf-translations.ts
 msgctxt "PDF viewer emptyState"
 msgid "No Documents Open"
-msgstr ""
+msgstr "Keine Dokumente geöffnet"
 
 #: packages/migration/src/readwise-sources.ts
 msgid "No downloadable content; importing metadata only: {key}"
-msgstr ""
+msgstr "Keine herunterladbaren Inhalte; nur Metadaten werden importiert: {key}"
 
 #: apps/reader/src/workspace-tab-display.ts
 msgctxt "workspace tab display"
 msgid "NO FILE"
-msgstr ""
+msgstr "KEINE DATEI"
 
 #: apps/reader/src/LibraryCells.tsx
 msgid "No file attached"
-msgstr ""
+msgstr "Keine Datei angehängt"
 
 #: apps/reader/src/LibraryWorkspace.tsx
 msgctxt "LibraryWorkspace formatFilterOptions"
 msgid "No file attached"
-msgstr ""
+msgstr "Keine Datei angehängt"
 
 #: apps/reader/src/LibraryNavigator.tsx
 msgid "No matches in the sources loaded so far. Loading more…"
-msgstr ""
+msgstr "Keine Treffer in den bisher geladenen Quellen. Weitere werden geladen…"
 
 #: apps/reader/src/AnnotationList.tsx
 msgid "No matching annotations"
-msgstr ""
+msgstr "Keine passenden Anmerkungen"
 
 #: apps/reader/src/use-document-attachment.ts
 msgid "No open-access PDF was found. Attach a copy you have, or save it from the publisher with the browser extension."
-msgstr ""
+msgstr "Es wurde kein frei zugängliches PDF gefunden. Hängen Sie eine vorhandene Kopie an oder speichern Sie sie über die Browser-Erweiterung vom Verlag."
 
 #: packages/renderer-pdf/src/pdf-translations.ts
 msgctxt "PDF viewer outline"
 msgid "No outline available"
-msgstr ""
+msgstr "Keine Gliederung verfügbar"
 
 #: apps/extension/src/PostPicker.tsx
 msgid "No posts loaded. Scroll the page to load some posts."
-msgstr ""
+msgstr "Keine Beiträge geladen. Scrollen Sie auf der Seite, um Beiträge zu laden."
 
 #: packages/core/src/application/citation-citekey.ts
 msgid "No publication date is recorded."
-msgstr ""
+msgstr "Es ist kein Veröffentlichungsdatum erfasst."
 
 #. placeholder {0}: document.mediaType
 #: apps/reader/src/ConnectedDocument.tsx
 msgid "No renderer is registered for {0}."
-msgstr ""
+msgstr "Für {0} ist kein Renderer registriert."
 
 #: apps/reader/src/InspectorPane.tsx
 msgid "No source in this pane"
-msgstr ""
+msgstr "Keine Quelle in diesem Bereich"
 
 #: apps/reader/src/LibraryWorkspace.tsx
 msgid "No sources match"
-msgstr ""
+msgstr "Keine passenden Quellen"
 
 #: apps/reader/src/LibraryNavigator.tsx
 msgid "No sources match."
-msgstr ""
+msgstr "Keine passenden Quellen."
 
 #: apps/reader/src/LibraryNavigator.tsx
 msgid "No sources yet."
-msgstr ""
+msgstr "Noch keine Quellen."
 
 #: apps/reader/src/use-bibliography-export.ts
 msgid "No valid citations are ready to export."
-msgstr ""
+msgstr "Keine gültigen Quellenangaben für den Export vorhanden."
 
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "Non dropping particle"
-msgstr ""
+msgstr "Nicht abtrennbarer Namenspartikel"
 
 #: packages/migration/src/zotero-pdf.ts
 msgid "Non-default PDF UserUnit is not yet supported."
-msgstr ""
+msgstr "Eine vom Standard abweichende PDF-UserUnit wird noch nicht unterstützt."
 
 #: apps/reader/src/CitationContributors.tsx
 msgctxt "CitationContributors interface"
 msgid "Non-dropping particle"
-msgstr ""
+msgstr "Nicht abtrennbarer Namenspartikel"
 
 #: apps/reader/src/CitationSourceSync.tsx
 msgctxt "empty metadata value"
 msgid "None"
-msgstr ""
+msgstr "Keine"
 
 #: apps/reader/src/import-controller.ts
 msgid "Not complete — review the error before resuming"
-msgstr ""
+msgstr "Nicht abgeschlossen – prüfen Sie den Fehler, bevor Sie fortfahren"
 
 #: apps/extension/src/ConnectionPanel.tsx
 msgid "Not connected"
