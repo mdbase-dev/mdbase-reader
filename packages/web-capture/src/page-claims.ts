@@ -81,6 +81,9 @@ export function pageClaims(document: Document, pageUrl: string, observedAt: stri
   };
   const meta = metaIndex(document);
   const nodes = linkedNodes(document);
+  if (challengePage(document, pageUrl, nodes)) {
+    return { claims: [] };
+  }
   for (const node of nodes) {
     linkedClaims(node, add);
   }
@@ -113,6 +116,29 @@ export function pageClaims(document: Document, pageUrl: string, observedAt: stri
     ...(Object.keys(identifiers).length ? { identifiers } : {}),
     ...(pdfUrl ? { pdfUrl } : {}),
   };
+}
+
+function challengePage(document: Document, pageUrl: string, nodes: readonly JsonLdNode[]): boolean {
+  const title = textValue(document.title) ?? "";
+  if (
+    /^(?:just a moment[.!…]*|attention required!?|access denied|are you a robot\??|human verification|verify (?:you are|you're) human|(?:error\s*)?403(?:\s*[-:]?\s*forbidden)?)(?:\s*[-|—]\s*.*)?$/iu.test(
+      title,
+    )
+  ) {
+    return true;
+  }
+  // Some interstitials expose only the bare host. That is not a work title; retain it only
+  // when a work heading or structured title independently identifies actual content.
+  try {
+    const host = new URL(pageUrl).hostname.replace(/^www\./u, "");
+    return (
+      title.toLowerCase().replace(/^www\./u, "") === host &&
+      !document.querySelector("h1") &&
+      !nodes.some((node) => isWork(node) && (node["headline"] || node["name"]))
+    );
+  } catch {
+    return false;
+  }
 }
 
 function tagClaims(meta: MetaIndex, pageUrl: string, add: AddClaim): void {

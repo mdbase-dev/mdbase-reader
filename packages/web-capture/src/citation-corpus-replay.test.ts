@@ -90,19 +90,20 @@ const stillWrong: Record<string, { readonly page: string[]; readonly remote: str
     remote: ["author", "publisher"],
   },
   "nature-dna": { page: [], remote: ["publisher"] },
-  nyt: { page: ["type", "title", "author", "issued", "container-title"], remote: [] },
+  // A blocked page now yields no citation, including no URL-only shell masquerading as one.
+  nyt: { page: ["type", "title", "author", "issued", "container-title", "URL"], remote: [] },
   "openlibrary-fox": {
     page: ["type", "title", "author", "issued", "publisher", "URL"],
     remote: [],
   },
   "peerj-sharing": {
-    page: ["type", "title", "author", "issued", "container-title", "publisher", "DOI"],
-    remote: ["type", "title", "author", "issued", "container-title", "publisher", "DOI"],
+    page: ["type", "title", "author", "issued", "container-title", "publisher", "DOI", "URL"],
+    remote: ["type", "title", "author", "issued", "container-title", "publisher", "DOI", "URL"],
   },
   "plos-research": { page: ["issued"], remote: ["publisher"] },
   "springer-imagenet": { page: ["publisher"], remote: ["publisher"] },
   "stackoverflow-branch": {
-    page: ["type", "title", "author", "issued", "container-title"],
+    page: ["type", "title", "author", "issued", "container-title", "URL"],
     remote: ["type", "author", "issued"],
   },
   verge: { page: [], remote: [] },
