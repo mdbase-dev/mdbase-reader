@@ -238,7 +238,7 @@ function validField(field: string, value: unknown): boolean {
   return validateCslItem({ id: "candidate", type: "webpage", [field]: value }).valid;
 }
 
-/** More specific date anchors go first, so a year cannot bridge two conflicting full dates. */
+/** A partial date shared by conflicting anchors stands alone, not in either anchor's group. */
 function groupClaims(claims: readonly CandidateClaim[]): ClaimGroup[] {
   const groups: CandidateClaim[][] = [];
   const ordered = [...claims].sort(
@@ -248,12 +248,19 @@ function groupClaims(claims: readonly CandidateClaim[]): ClaimGroup[] {
     const matches = groups.filter((group) =>
       group.every((other) => claimValuesMatch(claim.field, claim.value, other.value)),
     );
-    if (!matches.length) {
+    if (matches.length > 1 && cslFieldKinds.get(claim.field) === "date") {
+      const exact = matches.find((group) =>
+        group.every((other) => cslValuesEqual(claim.value, other.value)),
+      );
+      if (exact) {
+        exact.push(claim);
+      } else {
+        groups.push([claim]);
+      }
+    } else if (!matches.length) {
       groups.push([claim]);
     } else {
-      for (const group of matches) {
-        group.push(claim);
-      }
+      matches[0]?.push(claim);
     }
   }
   return groups.flatMap((group) => {
@@ -398,7 +405,8 @@ function explainGroup(chosen: ClaimGroup, groups: readonly ClaimGroup[]): CslFie
     }
     losers.splice(losers.indexOf(next), 1);
     if (!rejected.some((item) => claimValuesMatch(chosen.winner.field, item.value, next.value))) {
-      rejected.push({ value: next.value, from: evidenceLabel(next.winner) });
+      const supplier = next.claims.find((claim) => cslValuesEqual(claim.value, next.value));
+      rejected.push({ value: next.value, from: evidenceLabel(supplier ?? next.winner) });
     }
   }
   return {

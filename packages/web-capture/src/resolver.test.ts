@@ -250,7 +250,7 @@ describe("citation resolution: normalization and validation", () => {
     expect(result.provenance["author"]?.source).toBe("registry:doi.org");
   });
 
-  it("enriches a compatible partial date without letting a year bridge conflicting dates", () => {
+  it("keeps an ambiguous registry year instead of crediting it with a page's conflicting day", () => {
     const result = resolveCitation({
       claims: [
         claim("title", "Report"),
@@ -265,8 +265,43 @@ describe("citation resolution: normalization and validation", () => {
         ),
       ],
     });
-    expect(result.citation?.["issued"]).toEqual({ "date-parts": [[2026, 10, 20]] });
-    expect(result.provenance["issued"]?.agreed).toEqual(["page:json-ld issued"]);
+    expect(result.citation?.["issued"]).toEqual({ "date-parts": [[2026]] });
+    expect(result.provenance["issued"]).toEqual({
+      value: { "date-parts": [[2026]] },
+      source: "registry:doi.org",
+      rejected: [
+        { value: { "date-parts": [[2026, 10, 20]] }, from: "page:json-ld issued" },
+        { value: { "date-parts": [[2026, 11, 4]] }, from: "generic-remote:Citoid issued" },
+      ],
+    });
+  });
+
+  it("enriches a partial date only when there is a unique compatible specific date", () => {
+    const result = resolveCitation({
+      claims: [
+        claim("title", "Report"),
+        claim("issued", { "date-parts": [[2020]] }, registry, "reg"),
+        claim("issued", { "date-parts": [[2020, 3, 4]] }, page, "publication"),
+        claim("issued", { "date-parts": [[2019, 5, 6]] }, { kind: "user" }),
+      ],
+    });
+    expect(result.provenance["issued"]?.rejected).toEqual([
+      { value: { "date-parts": [[2020, 3, 4]] }, from: "page:json-ld publication" },
+    ]);
+  });
+
+  it("allows a specific date to win with independent evidence, without borrowing an ambiguous year", () => {
+    const claims = [
+      claim("title", "Report"),
+      claim("issued", { "date-parts": [[2020]] }, registry, "reg"),
+      claim("issued", { "date-parts": [[2020, 3, 4]] }, registry, "online"),
+      claim("issued", { "date-parts": [[2020, 3, 4]] }, page, "publication"),
+      claim("issued", { "date-parts": [[2020, 5, 6]] }, page, "print"),
+    ];
+    const result = resolveCitation({ claims });
+    expect(result.citation?.["issued"]).toEqual({ "date-parts": [[2020, 3, 4]] });
+    expect(result.provenance["issued"]?.agreed).toEqual(["page:json-ld publication"]);
+    expect(resolveCitation({ claims: [...claims].reverse() })).toEqual(result);
   });
 
   it("never promotes a publisher fallback merely because the publisher agrees", () => {
