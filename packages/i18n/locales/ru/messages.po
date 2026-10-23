@@ -2265,446 +2265,446 @@ msgstr "Формат даты"
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL date field"
 msgid "Date parts"
-msgstr ""
+msgstr "Составные части даты"
 
 #: apps/extension/src/SavedHighlights.tsx
 msgid "Delete"
-msgstr ""
+msgstr "Удалить"
 
 #: apps/reader/src/AnnotationEditor.tsx
 msgctxt "AnnotationEditor interface"
 msgid "Delete"
-msgstr ""
+msgstr "Удалить"
 
 #: apps/reader/src/SelectionToolbar.tsx
 msgctxt "SelectionToolbar interface"
 msgid "Delete"
-msgstr ""
+msgstr "Удалить"
 
 #: apps/extension/src/SavedHighlights.tsx
 msgid "Delete highlight"
-msgstr ""
+msgstr "Удалить выделение"
 
 #: apps/reader/src/SelectionToolbar.tsx
 msgctxt "SelectionToolbar interface"
 msgid "Delete highlight"
-msgstr ""
+msgstr "Удалить выделение"
 
 #: apps/reader/src/AnnotationEditor.tsx
 msgid "Delete this annotation?"
-msgstr ""
+msgstr "Удалить эту аннотацию?"
 
 #. placeholder {0}: links ? ( <Plural value={links} one=" # note links to it; those links will break." other=" # notes link to it; those links will break." /> ) : ( "" )
 #: apps/extension/src/SavedHighlights.tsx
 msgid "Delete this highlight from your collection?{0}"
-msgstr ""
+msgstr "Удалить это выделение из коллекции?{0}"
 
 #: apps/reader/src/SelectionToolbar.tsx
 msgctxt "SelectionToolbar interface"
 msgid "Delete?"
-msgstr ""
+msgstr "Удалить?"
 
 #: packages/migration/src/readwise-annotations.ts
 msgid "Deleted Readwise books skipped"
-msgstr ""
+msgstr "Пропущены удалённые книги Readwise"
 
 #: packages/migration/src/readwise-annotations.ts
 msgid "Deleted Readwise highlights skipped"
-msgstr ""
+msgstr "Пропущены удалённые выделения Readwise"
 
 #: apps/extension/src/SavedHighlights.tsx
 msgid "Deleting…"
-msgstr ""
+msgstr "Удаление…"
 
 #: apps/reader/src/AnnotationEditor.tsx
 msgctxt "AnnotationEditor interface"
 msgid "Deleting…"
-msgstr ""
+msgstr "Удаление…"
 
 #: apps/reader/src/SelectionToolbar.tsx
 msgctxt "SelectionToolbar interface"
 msgid "Deleting…"
-msgstr ""
+msgstr "Удаление…"
 
 #: apps/reader/src/DisplayMenu.tsx
 msgctxt "DisplayMenu interface"
 msgid "Density"
-msgstr ""
+msgstr "Плотность"
 
 #: apps/reader/src/LibraryAnnotationToolbar.tsx
 msgctxt "LibraryAnnotationToolbar interface"
 msgid "Descending"
-msgstr ""
+msgstr "По убыванию"
 
 #: apps/reader/src/LibraryWorkspace.tsx
 msgctxt "LibraryWorkspace interface"
 msgid "Descending"
-msgstr ""
+msgstr "По убыванию"
 
 #: apps/reader/src/SourceDetails.tsx
 msgctxt "SourceDetails fields"
 msgid "Description"
-msgstr ""
+msgstr "Описание"
 
 #: apps/reader/src/import-controller.ts
 msgid "Destination checked. Confirm below to begin writing."
-msgstr ""
+msgstr "Место назначения проверено. Подтвердите ниже, чтобы начать запись."
 
 #: apps/reader/src/CitationEditor.tsx
 #: apps/reader/src/SourceDetails.tsx
 msgid "Details"
-msgstr ""
+msgstr "Сведения"
 
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "Dimensions"
-msgstr ""
+msgstr "Размеры"
 
 #: apps/reader/src/ReaderHeader.tsx
 msgid "Direct connection"
-msgstr ""
+msgstr "Прямое подключение"
 
 #: apps/reader/src/use-direct-access.ts
 msgid "Direct local access is not available for this connection."
-msgstr ""
+msgstr "Для этого подключения прямой локальный доступ недоступен."
 
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "Director"
-msgstr ""
+msgstr "Режиссёр"
 
 #: apps/reader/src/AnnotationEditor.tsx
 msgid "Discard changes"
-msgstr ""
+msgstr "Отменить изменения"
 
 #: apps/reader/src/AnnotationPanelActions.tsx
 msgctxt "AnnotationPanelActions interface"
 msgid "Discard comment"
-msgstr ""
+msgstr "Отменить комментарий"
 
 #: apps/reader/src/AnnotationComposer.tsx
 msgctxt "AnnotationComposer interface"
 msgid "Discard selection"
-msgstr ""
+msgstr "Снять выделение"
 
 #: apps/reader/src/use-annotation-creation.ts
 msgid "Discard the unfinished annotation comment and comment on this?"
-msgstr ""
+msgstr "Отменить незавершённый комментарий к аннотации и прокомментировать этот фрагмент?"
 
 #: apps/reader/src/use-selection-routing.ts
 msgid "Discard the unfinished annotation comment and use this area?"
-msgstr ""
+msgstr "Отменить незавершённый комментарий к аннотации и использовать эту область?"
 
 #: apps/reader/src/use-annotation-edit.ts
 msgid "Discard this annotation's unsaved changes? The collection version will be kept."
-msgstr ""
+msgstr "Отменить несохранённые изменения этой аннотации? Версия в коллекции останется без изменений."
 
 #: apps/reader/src/use-annotation-creation.ts
 msgid "Discard this unfinished annotation comment?"
-msgstr ""
+msgstr "Отменить этот незавершённый комментарий к аннотации?"
 
 #: apps/reader/src/AnnotationPanelActions.tsx
 msgid "Discard this unsaved comment?"
-msgstr ""
+msgstr "Отменить этот несохранённый комментарий?"
 
 #: packages/migration/src/readwise-annotations.ts
 msgid "Discarded Readwise highlights skipped (kept in the native archive)"
-msgstr ""
+msgstr "Пропущены удалённые выделения Readwise (сохранены в исходном архиве)"
 
 #: apps/reader/src/CitationLookup.tsx
 msgid "Dismiss"
-msgstr ""
+msgstr "Закрыть"
 
 #: apps/reader/src/reader-command-list.ts
 msgid "Display"
-msgstr ""
+msgstr "Отображение"
 
 #: apps/reader/src/DisplayMenu.tsx
 msgctxt "DisplayMenu interface"
 msgid "Display settings"
-msgstr ""
+msgstr "Настройки отображения"
 
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "Division"
-msgstr ""
+msgstr "Подразделение"
 
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "Document"
-msgstr ""
+msgstr "Документ"
 
 #: apps/reader/src/citation-form-model.ts
 msgctxt "CSL item type"
 msgid "Document"
-msgstr ""
+msgstr "Документ"
 
 #: apps/reader/src/reader-command-list.ts
 msgctxt "reader command list"
 msgid "Document"
-msgstr ""
+msgstr "Документ"
 
 #: apps/reader/src/source-addition-flow.ts
 msgctxt "source addition flow"
 msgid "Document"
-msgstr ""
+msgstr "Документ"
 
 #: apps/reader/src/DocumentContextualToolbar.tsx
 msgctxt "DocumentContextualToolbar interface"
 msgid "Document actions"
-msgstr ""
+msgstr "Действия с документом"
 
 #: packages/renderer-pdf/src/pdf-translations.ts
 msgctxt "PDF viewer document"
 msgid "Document Menu"
-msgstr ""
+msgstr "Меню документа"
 
 #: apps/reader/src/AnnotationList.tsx
 msgctxt "AnnotationList annotationOrderOptions"
 msgid "Document order"
-msgstr ""
+msgstr "Порядок документов"
 
 #: apps/reader/src/AnnotationCard.tsx
 msgid "Document passage"
-msgstr ""
+msgstr "Фрагмент документа"
 
 #: apps/extension/src/CitationCard.tsx
 msgid "DOI"
-msgstr ""
+msgstr "DOI"
 
 #: apps/reader/src/CitationStructuredEditor.tsx
 msgid "DOI, ISBN, URL, and language"
-msgstr ""
+msgstr "DOI, ISBN, URL и язык"
 
 #: apps/extension/src/ConnectionPanel.tsx
 msgid "Done"
-msgstr ""
+msgstr "Готово"
 
 #: apps/reader/src/AnnotationEditor.tsx
 msgctxt "AnnotationEditor interface"
 msgid "Done"
-msgstr ""
+msgstr "Готово"
 
 #: apps/reader/src/LibraryTableRow.tsx
 msgid "Double-click or press Enter to open"
-msgstr ""
+msgstr "Дважды щёлкните или нажмите Enter, чтобы открыть"
 
 #: apps/reader/src/LibraryAnnotationRow.tsx
 msgid "Double-click or press Enter to open in its document"
-msgstr ""
+msgstr "Дважды щёлкните или нажмите Enter, чтобы открыть в документе"
 
 #: apps/reader/src/NavigatorSections.tsx
 msgid "Double-click to keep open · Ctrl+Enter opens beside"
-msgstr ""
+msgstr "Дважды щёлкните, чтобы оставить открытым · Ctrl+Enter — открыть рядом"
 
 #: apps/extension/src/DiagnosticsPanel.tsx
 msgid "Download timings"
-msgstr ""
+msgstr "Время загрузки"
 
 #: packages/migration/src/readwise-sources.ts
 msgid "Downloaded file does not match the expected PDF/EPUB format."
-msgstr ""
+msgstr "Загруженный файл не соответствует ожидаемому формату PDF/EPUB."
 
 #: apps/reader/src/annotation-drafts.ts
 msgid "Draft storage could not open."
-msgstr ""
+msgstr "Не удалось открыть хранилище черновиков."
 
 #: apps/reader/src/annotation-drafts.ts
 msgid "Draft storage is blocked by another window."
-msgstr ""
+msgstr "Хранилище черновиков заблокировано другим окном."
 
 #: apps/reader/src/annotation-drafts.ts
 msgid "Draft storage read failed."
-msgstr ""
+msgstr "Не удалось прочитать хранилище черновиков."
 
 #: apps/reader/src/annotation-drafts.ts
 msgid "Draft storage write failed."
-msgstr ""
+msgstr "Не удалось записать данные в хранилище черновиков."
 
 #: packages/renderer-pdf/src/pdf-touch-selection-view.ts
 msgid "Drag to adjust selection end; arrow keys move one character"
-msgstr ""
+msgstr "Перетащите, чтобы изменить конец выделения; стрелками перемещайтесь по одному символу"
 
 #: packages/renderer-pdf/src/pdf-touch-selection-view.ts
 msgid "Drag to adjust selection start; arrow keys move one character"
-msgstr ""
+msgstr "Перетащите, чтобы изменить начало выделения; стрелками перемещайтесь по одному символу"
 
 #: apps/reader/src/CitationEditor.tsx
 msgid "Drag to insert this citation"
-msgstr ""
+msgstr "Перетащите, чтобы вставить эту ссылку"
 
 #: apps/reader/src/LibraryTableHeader.tsx
 msgid "Drag to move"
-msgstr ""
+msgstr "Перетащите, чтобы переместить"
 
 #: apps/reader/src/LibraryTableHeader.tsx
 msgid "Drag to resize · Double-click to reset"
-msgstr ""
+msgstr "Перетащите, чтобы изменить размер · Дважды щёлкните, чтобы сбросить"
 
 #: packages/renderer-pdf/src/pdf-translations.ts
 msgctxt "PDF viewer zoom"
 msgid "Drag to select area to zoom"
-msgstr ""
+msgstr "Перетащите, чтобы выделить область для увеличения"
 
 #: apps/reader/src/SourceAddDialog.tsx
 msgid "Drop to add"
-msgstr ""
+msgstr "Перетащите сюда, чтобы добавить"
 
 #: apps/reader/src/ReaderWorkspaceView.tsx
 msgid "Drop to add to your library"
-msgstr ""
+msgstr "Перетащите, чтобы добавить в библиотеку"
 
 #: apps/reader/src/WorkspacePaneSupport.tsx
 msgid "Drop to attach"
-msgstr ""
+msgstr "Перетащите сюда, чтобы прикрепить"
 
 #: apps/reader/src/CitationContributors.tsx
 msgctxt "CitationContributors interface"
 msgid "Dropping particle"
-msgstr ""
+msgstr "Частица, опускаемая при сортировке"
 
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "Dropping particle"
-msgstr ""
+msgstr "Частица, опускаемая при сортировке"
 
 #: packages/migration/src/zotero-validation.ts
 msgid "Duplicate collection identity."
-msgstr ""
+msgstr "Идентификатор коллекции повторяется."
 
 #: apps/reader/src/dockview-menus.ts
 msgid "Duplicate document in pane right"
-msgstr ""
+msgstr "Открыть дубликат документа в панели справа"
 
 #: packages/migration/src/run-files.ts
 msgid "Duplicate import destination path."
-msgstr ""
+msgstr "Путь назначения импорта повторяется."
 
 #: apps/reader/src/reader-command-list.ts
 msgid "Duplicate in new pane right"
-msgstr ""
+msgstr "Открыть дубликат в новой панели справа"
 
 #: apps/reader/src/reader-command-list.ts
 msgid "Duplicate in pane below"
-msgstr ""
+msgstr "Открыть дубликат в панели снизу"
 
 #: packages/migration/src/zotero-validation.ts
 msgid "Duplicate Zotero item identity."
-msgstr ""
+msgstr "Идентификатор элемента Zotero повторяется."
 
 #: apps/reader/src/CitationAdditionalFields.tsx
 msgid "e.g. accessed, genre, PMID"
-msgstr ""
+msgstr "Например: accessed, genre, PMID"
 
 #: apps/reader/src/LibraryTableHeader.tsx
 msgid "e.g. course or csl.volume"
-msgstr ""
+msgstr "Например: course или csl.volume"
 
 #: apps/reader/src/LibraryAnnotations.tsx
 msgid "e.g. Quotes for chapter 2"
-msgstr ""
+msgstr "Например: Цитаты для главы 2"
 
 #: apps/reader/src/LibraryWorkspace.tsx
 msgid "e.g. Reading this month"
-msgstr ""
+msgstr "Например: Читаю в этом месяце"
 
 #: apps/reader/src/CitationTypedFieldEditors.tsx
 msgid "e.g. Spring or 1"
-msgstr ""
+msgstr "Например: Весна или 1"
 
 #: packages/renderer-pdf/src/pdf-translations.ts
 msgctxt "PDF viewer print"
 msgid "e.g., 1-3, 5, 8-10"
-msgstr ""
+msgstr "Например: 1–3, 5, 8–10"
 
 #: apps/reader/src/AnnotationCard.tsx
 msgctxt "AnnotationCard interface"
 msgid "Edit"
-msgstr ""
+msgstr "Изменить"
 
 #: apps/reader/src/LibraryFieldCell.tsx
 msgid "Edit {fieldKey}"
-msgstr ""
+msgstr "Изменить: {fieldKey}"
 
 #: apps/reader/src/AnnotationEditor.tsx
 msgctxt "AnnotationEditor interface"
 msgid "Edit annotation"
-msgstr ""
+msgstr "Изменить аннотацию"
 
 #: packages/markdown-editor/src/citation-card.ts
 msgctxt "citation card"
 msgid "Edit citation"
-msgstr ""
+msgstr "Изменить ссылку"
 
 #: apps/extension/src/SavedHighlights.tsx
 msgid "Edit comment"
-msgstr ""
+msgstr "Изменить комментарий"
 
 #: apps/reader/src/AnnotationEditor.tsx
 msgid "Edit here"
-msgstr ""
+msgstr "Изменить здесь"
 
 #: apps/reader/src/AnnotationCard.tsx
 msgctxt "AnnotationCard interface"
 msgid "Edit here"
-msgstr ""
+msgstr "Изменить здесь"
 
 #: packages/markdown-editor/src/annotation-widgets.ts
 msgctxt "annotation widgets"
 msgid "Edit highlight"
-msgstr ""
+msgstr "Изменить выделение"
 
 #: apps/extension/src/CitationPanel.tsx
 #: apps/extension/src/NotePanel.tsx
 msgid "Edit in Reader"
-msgstr ""
+msgstr "Изменить в Reader"
 
 #: packages/markdown-editor/src/annotation-widgets.ts
 msgctxt "annotation widgets"
 msgid "Edit link"
-msgstr ""
+msgstr "Изменить ссылку"
 
 #: packages/markdown-editor/src/citation-card.ts
 msgctxt "citation card"
 msgid "Edit metadata"
-msgstr ""
+msgstr "Изменить метаданные"
 
 #: apps/reader/src/AnnotationEditor.tsx
 msgid "Edited from the document text."
-msgstr ""
+msgstr "Изменено по тексту документа."
 
 #: apps/reader/src/AnnotationCard.tsx
 msgid "Editing requires a saved annotation"
-msgstr ""
+msgstr "Для редактирования требуется сохранённая аннотация"
 
 #: apps/reader/src/CitationStructuredEditor.tsx
 msgctxt "CitationStructuredEditor interface"
 msgid "Edition"
-msgstr ""
+msgstr "Издание"
 
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "Edition"
-msgstr ""
+msgstr "Издание"
 
 #: apps/reader/src/CitationContributors.tsx
 msgid "Editor"
-msgstr ""
+msgstr "Редактор"
 
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "Editor"
-msgstr ""
+msgstr "Редактор"
 
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "Editorial director"
-msgstr ""
+msgstr "Ответственный редактор"
 
 #: apps/reader/src/CitationStructuredEditor.tsx
 msgctxt "CitationStructuredEditor interface"
 msgid "Editors"
-msgstr ""
+msgstr "Редакторы"
 
 #: apps/reader/src/CitationStructuredEditor.tsx
 msgid "Editors and translators"
