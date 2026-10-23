@@ -464,7 +464,7 @@ msgstr "要旨"
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "Accessed"
-msgstr ""
+msgstr "アクセス日"
 
 #. placeholder {0}: source.title
 #: apps/reader/src/LibraryRowMenu.tsx
@@ -483,7 +483,7 @@ msgstr "追加"
 
 #: apps/reader/src/LibraryAnnotationToolbar.tsx
 msgid "Add “Annotations for this source” view"
-msgstr ""
+msgstr "「この資料の注釈」ビューを追加"
 
 #: apps/reader/src/pwa-install.ts
 msgid "Add {appName} to your Home Screen: tap Share, then Add to Home Screen."
@@ -491,120 +491,120 @@ msgstr "ホーム画面に{appName}を追加：共有をタップし、「ホー
 
 #: apps/extension/src/CitationPanel.tsx
 msgid "Add a citation in Reader"
-msgstr ""
+msgstr "Readerで引用情報を追加"
 
 #: apps/reader/src/AnnotationComposer.tsx
 msgid "Add a comment"
-msgstr ""
+msgstr "コメントを追加"
 
 #: apps/extension/src/HighlightFields.tsx
 msgid "Add a comment or tags"
-msgstr ""
+msgstr "コメントまたはタグを追加"
 
 #: apps/reader/src/AnnotationEditor.tsx
 msgid "Add a comment…"
-msgstr ""
+msgstr "コメントを追加…"
 
 #: apps/reader/src/LibraryWorkspace.tsx
 msgid "Add a PDF, EPUB or web page to start reading."
-msgstr ""
+msgstr "PDF、EPUB、Webページを追加して読書を始めましょう。"
 
 #: apps/reader/src/LibraryWorkspace.tsx
 #: apps/reader/src/SourceAddDialog.tsx
 msgid "Add a source"
-msgstr ""
+msgstr "資料を追加"
 
 #: packages/core/src/application/citation-citekey.ts
 msgid "Add a title before using this citation in a bibliography."
-msgstr ""
+msgstr "参考文献でこの引用情報を使う前にタイトルを追加してください。"
 
 #: apps/reader/src/SourceNoteInsertMenu.tsx
 msgid "Add citation details first"
-msgstr ""
+msgstr "先に引用情報を追加してください"
 
 #: apps/reader/src/LibraryAnnotationTableHead.tsx
 msgctxt "LibraryAnnotationTableHead interface"
 msgid "Add column"
-msgstr ""
+msgstr "列を追加"
 
 #: apps/reader/src/LibraryTableHeader.tsx
 msgctxt "LibraryTableHeader interface"
 msgid "Add column"
-msgstr ""
+msgstr "列を追加"
 
 #: apps/extension/src/SavedHighlights.tsx
 msgid "Add comment"
-msgstr ""
+msgstr "コメントを追加"
 
 #: apps/reader/src/CitationAdditionalFields.tsx
 msgid "Add field"
-msgstr ""
+msgstr "フィールドを追加"
 
 #: apps/reader/src/CitationAdditionalFields.tsx
 msgid "Add less common CSL metadata"
-msgstr ""
+msgstr "使用頻度の低いCSLメタデータを追加"
 
 #: apps/reader/src/citation-renderer.ts
 msgid "Add more details to preview this citation."
-msgstr ""
+msgstr "この引用をプレビューするには詳細を追加してください。"
 
 #: apps/reader/src/LibraryNavigator.tsx
 msgid "Add one"
-msgstr ""
+msgstr "追加する"
 
 #: apps/reader/src/CitationTypedFieldEditors.tsx
 msgid "Add property"
-msgstr ""
+msgstr "プロパティを追加"
 
 #: apps/reader/src/SourceImportDialog.tsx
 msgid "Add source"
-msgstr ""
+msgstr "資料を追加"
 
 #: apps/reader/src/LibraryWorkspace.tsx
 msgctxt "LibraryWorkspace interface"
 msgid "Add source"
-msgstr ""
+msgstr "資料を追加"
 
 #: apps/reader/src/NavigatorSections.tsx
 msgctxt "NavigatorSections interface"
 msgid "Add source"
-msgstr ""
+msgstr "資料を追加"
 
 #: apps/reader/src/SourceImportDialog.tsx
 msgctxt "SourceImportDialog interface"
 msgid "Add source"
-msgstr ""
+msgstr "資料を追加"
 
 #: apps/reader/src/reader-app-commands.ts
 msgctxt "reader app commands"
 msgid "Add source…"
-msgstr ""
+msgstr "資料を追加…"
 
 #: apps/reader/src/CitationSourceSync.tsx
 msgid "Add to citation"
-msgstr ""
+msgstr "引用情報に追加"
 
 #: apps/reader/src/AnnotationCard.tsx
 msgid "Add to literature note"
-msgstr ""
+msgstr "文献ノートに追加"
 
 #: apps/reader/src/CitationTypedFieldEditors.tsx
 msgid "Add value"
-msgstr ""
+msgstr "値を追加"
 
 #: apps/reader/src/use-annotation-view.ts
 msgid "Added {path}. Run it with a source as its context in any mdbase tool."
-msgstr ""
+msgstr "{path}を追加しました。どのmdbaseツールでも、資料をコンテキストにして実行できます。"
 
 #. placeholder {0}: lookup.notice.message
 #: apps/reader/src/SourceAddDialog.tsx
 msgid "Added. {0}"
-msgstr ""
+msgstr "追加しました。{0}"
 
 #: apps/reader/src/NavigatorSections.tsx
 msgctxt "NavigatorSections interface"
 msgid "Adding source"
-msgstr ""
+msgstr "資料を追加中"
 
 #: apps/reader/src/NavigatorSections.tsx
 msgctxt "NavigatorSections interface"
@@ -618,19 +618,19 @@ msgstr "追加中…"
 
 #: apps/reader/src/CitationAdditionalFields.tsx
 msgid "Additional fields"
-msgstr ""
+msgstr "追加フィールド"
 
 #: packages/renderer-pdf/src/pdf-touch-selection-view.ts
 msgid "Adjust selection end"
-msgstr ""
+msgstr "選択範囲の終点を調整"
 
 #: packages/renderer-pdf/src/pdf-touch-selection-view.ts
 msgid "Adjust selection start"
-msgstr ""
+msgstr "選択範囲の始点を調整"
 
 #: apps/reader/src/CitationTypedFieldEditors.tsx
 msgid "Advanced JSON"
-msgstr ""
+msgstr "高度なJSON"
 
 #: apps/reader/src/AnnotationList.tsx
 msgctxt "AnnotationList annotationFilterOptions"
@@ -639,242 +639,242 @@ msgstr "すべて"
 
 #: apps/reader/src/CitationAdditionalFields.tsx
 msgid "All fields added"
-msgstr ""
+msgstr "すべてのフィールドを追加済み"
 
 #: packages/renderer-pdf/src/pdf-translations.ts
 msgctxt "PDF viewer print"
 msgid "All pages"
-msgstr ""
+msgstr "すべてのページ"
 
 #: apps/reader/src/mdbase-library-views.ts
 msgid "All sources"
-msgstr ""
+msgstr "すべての資料"
 
 #: apps/reader/src/library-lenses.ts
 msgctxt "library lenses"
 msgid "All sources"
-msgstr ""
+msgstr "すべての資料"
 
 #: apps/extension/src/CaptureApp.tsx
 #: apps/extension/src/SiteAccessStatus.tsx
 msgid "Allow on all sites"
-msgstr ""
+msgstr "すべてのサイトで許可"
 
 #: apps/reader/src/SourceNoteInsertMenu.tsx
 msgid "Already embedded in this note"
-msgstr ""
+msgstr "このノートに埋め込み済み"
 
 #: apps/reader/src/AnnotationCard.tsx
 msgid "Already included in the literature note"
-msgstr ""
+msgstr "文献ノートに追加済み"
 
 #: apps/reader/src/insert-annotation-in-draft.ts
 #: packages/core/src/application/transclude-annotation.ts
 msgid "An annotation can only be inserted into its originating source note."
-msgstr ""
+msgstr "注釈を挿入できるのは、元の資料のノートだけです。"
 
 #: packages/core/src/domain/annotation.ts
 msgid "An annotation path is not safe to transclude."
-msgstr ""
+msgstr "注釈のパスを安全に埋め込めません。"
 
 #: packages/core/src/domain/annotation.ts
 msgid "An annotation type must not be empty."
-msgstr ""
+msgstr "注釈の種類を空にはできません。"
 
 #: packages/core/src/domain/annotation.ts
 msgid "An area annotation requires PDF geometry in v1."
-msgstr ""
+msgstr "領域注釈にはv1形式のPDF座標情報が必要です。"
 
 #: packages/core/src/domain/selector.ts
 msgid "An EPUB CFI must not be empty."
-msgstr ""
+msgstr "EPUB CFIを空にはできません。"
 
 #: packages/migration/src/run.ts
 msgid "An existing source has different representations. Import into a new collection or review it explicitly; existing sources are never silently rewritten."
-msgstr ""
+msgstr "既存の資料には異なる表現形式があります。新しいコレクションにインポートするか、明示的に確認してください。既存の資料は自動的に書き換えられません。"
 
 #: apps/electron/src/validation.ts
 msgid "An export requires a safe file name."
-msgstr ""
+msgstr "エクスポートには安全なファイル名が必要です。"
 
 #: packages/core/src/domain/selector.ts
 msgid "An HTML position requires a document address."
-msgstr ""
+msgstr "HTML内の位置には文書のアドレスが必要です。"
 
 #: packages/core/src/domain/selector.ts
 msgid "An HTML progression must be between 0 and 1."
-msgstr ""
+msgstr "HTML内の進行度は0から1の範囲でなければなりません。"
 
 #: packages/core/src/domain/selector.ts
 msgid "An HTML target requires CSS, XPath, or quotation evidence."
-msgstr ""
+msgstr "HTML内の対象にはCSS、XPath、または引用文による根拠が必要です。"
 
 #: packages/core/src/application/import-source-file.ts
 msgid "An immutable archive can only accompany a web capture."
-msgstr ""
+msgstr "変更できないアーカイブを添付できるのはWebキャプチャだけです。"
 
 #: packages/migration/src/run-files.ts
 msgid "An import file path already contains different bytes. No replacement was attempted."
-msgstr ""
+msgstr "インポート先のファイルパスにはすでに異なるデータがあります。置き換えは行っていません。"
 
 #: apps/reader/src/connection-recovery.ts
 msgid "An older connector is running. Restart mdbase Connect on your computer."
-msgstr ""
+msgstr "古いコネクターが実行中です。お使いのコンピューターでmdbase Connectを再起動してください。"
 
 #: packages/renderer-pdf/src/pdf-translations.ts
 msgctxt "PDF viewer documentError"
 msgid "An unknown error occurred"
-msgstr ""
+msgstr "不明なエラーが発生しました"
 
 #. placeholder {0}: String(links.length - shownLinks)
 #: apps/reader/src/SourceRemovalDialog.tsx
 msgid "and{0}more"
-msgstr ""
+msgstr "ほか{0}件"
 
 #: apps/reader/src/LibraryAnnotationToolbar.tsx
 #: packages/markdown-editor/src/annotation-widgets.ts
 msgid "Annotation"
-msgstr ""
+msgstr "注釈"
 
 #: packages/core/src/application/materialize-source.ts
 msgid "Annotation embed {reference} could not be resolved."
-msgstr ""
+msgstr "埋め込み注釈{reference}を解決できませんでした。"
 
 #: packages/core/src/application/materialize-source.ts
 msgid "Annotation embed {reference} forms a transclusion cycle."
-msgstr ""
+msgstr "埋め込み注釈{reference}が循環参照を形成しています。"
 
 #: packages/migration/src/run.ts
 msgid "Annotation file was not committed."
-msgstr ""
+msgstr "注釈ファイルはコミットされませんでした。"
 
 #: packages/migration/src/zotero-validation.ts
 msgid "Annotation has no attachment."
-msgstr ""
+msgstr "注釈に添付ファイルがありません。"
 
 #: packages/migration/src/run.ts
 msgid "Annotation has no source."
-msgstr ""
+msgstr "注釈に資料がありません。"
 
 #: apps/reader/src/AnnotationEditor.tsx
 msgctxt "AnnotationEditor interface"
 msgid "Annotation Markdown"
-msgstr ""
+msgstr "注釈のMarkdown"
 
 #: packages/renderer-pdf/src/pdf-translations.ts
 msgctxt "PDF viewer panel"
 msgid "Annotation Style"
-msgstr ""
+msgstr "注釈のスタイル"
 
 #: packages/migration/src/run.ts
 msgid "Annotation target verification failed."
-msgstr ""
+msgstr "注釈の対象を確認できませんでした。"
 
 #: apps/reader/src/LibraryTextSearch.tsx
 msgctxt "LibraryTextSearch interface"
 msgid "Annotation text"
-msgstr ""
+msgstr "注釈のテキスト"
 
 #. placeholder {0}: filterCount ? `, ${String(filterCount)} active filters` : ""
 #: apps/reader/src/LibraryAnnotationToolbar.tsx
 msgid "Annotation view options{0}"
-msgstr ""
+msgstr "注釈ビューのオプション{0}"
 
 #: apps/reader/src/InspectorPane.tsx
 #: apps/reader/src/SourceNoteInsertMenu.tsx
 msgid "Annotations"
-msgstr ""
+msgstr "注釈"
 
 #: apps/reader/src/InspectorPane.tsx
 msgctxt "InspectorPane interface"
 msgid "Annotations"
-msgstr ""
+msgstr "注釈"
 
 #: apps/reader/src/InspectorPane.tsx
 msgctxt "InspectorPane status or action"
 msgid "Annotations"
-msgstr ""
+msgstr "注釈"
 
 #: apps/reader/src/library-columns.ts
 msgctxt "Library table column"
 msgid "Annotations"
-msgstr ""
+msgstr "注釈"
 
 #: apps/reader/src/LibraryAnnotationTable.tsx
 msgctxt "LibraryAnnotationTable interface"
 msgid "Annotations"
-msgstr ""
+msgstr "注釈"
 
 #: apps/reader/src/LibraryWorkspace.tsx
 msgctxt "LibraryWorkspace interface"
 msgid "Annotations"
-msgstr ""
+msgstr "注釈"
 
 #: apps/reader/src/MobileSourceViews.tsx
 msgctxt "MobileSourceViews views"
 msgid "Annotations"
-msgstr ""
+msgstr "注釈"
 
 #: apps/reader/src/reader-command-list.ts
 msgctxt "reader command list"
 msgid "Annotations"
-msgstr ""
+msgstr "注釈"
 
 #: apps/reader/src/VirtualAnnotationList.tsx
 msgctxt "VirtualAnnotationList interface"
 msgid "Annotations"
-msgstr ""
+msgstr "注釈"
 
 #: apps/reader/src/workspace-tab-display.ts
 msgctxt "workspace tab display"
 msgid "Annotations"
-msgstr ""
+msgstr "注釈"
 
 #: apps/reader/src/ImportReview.tsx
 msgid "Annotations and notes"
-msgstr ""
+msgstr "注釈とノート"
 
 #: apps/reader/src/reader-command-list.ts
 msgid "Annotations, literature note and citation"
-msgstr ""
+msgstr "注釈、文献ノート、引用情報"
 
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "Annote"
-msgstr ""
+msgstr "注釈"
 
 #: apps/reader/src/LibraryTableHeader.tsx
 msgid "Any field"
-msgstr ""
+msgstr "任意のフィールド"
 
 #: apps/reader/src/LibraryWorkspace.tsx
 msgctxt "LibraryWorkspace formatFilterOptions"
 msgid "Any format"
-msgstr ""
+msgstr "すべての形式"
 
 #: apps/reader/src/LibraryWorkspace.tsx
 msgctxt "LibraryWorkspace statusFilterOptions"
 msgid "Any status"
-msgstr ""
+msgstr "すべてのステータス"
 
 #: apps/reader/src/LibraryAnnotationToolbar.tsx
 msgctxt "LibraryAnnotationToolbar interface"
 msgid "Any tag"
-msgstr ""
+msgstr "すべてのタグ"
 
 #: apps/reader/src/LibraryWorkspace.tsx
 msgctxt "LibraryWorkspace interface"
 msgid "Any tag"
-msgstr ""
+msgstr "すべてのタグ"
 
 #: apps/reader/src/LibraryAnnotationToolbar.tsx
 msgctxt "LibraryAnnotationToolbar annotationTypeOptions"
 msgid "Any type"
-msgstr ""
+msgstr "すべての種類"
 
 #: apps/reader/src/ImportInput.tsx
 msgid "API token"
-msgstr ""
+msgstr "APIトークン"
 
 #: apps/extension/src/OptionsApp.tsx
 msgid "Appearance"
@@ -882,45 +882,45 @@ msgstr "外観"
 
 #: apps/reader/src/DisplayMenu.tsx
 msgid "Applies to EPUBs and saved web pages. PDFs keep their layout."
-msgstr ""
+msgstr "EPUBと保存済みWebページに適用されます。PDFのレイアウトは変わりません。"
 
 #: apps/reader/src/LibraryBulkBar.tsx
 msgid "Apply"
-msgstr ""
+msgstr "適用"
 
 #: apps/reader/src/CitationTypedFieldEditors.tsx
 msgid "Apply JSON"
-msgstr ""
+msgstr "JSONを適用"
 
 #: apps/reader/src/ImportDestination.tsx
 msgid "Apply Reader collection setup"
-msgstr ""
+msgstr "Readerのコレクション設定を適用"
 
 #: apps/reader/src/ConnectReader.tsx
 msgid "Apply reviewed setup"
-msgstr ""
+msgstr "確認済みの設定を適用"
 
 #: apps/reader/src/ConnectReader.tsx
 msgctxt "ConnectReader interface"
 msgid "Applying setup…"
-msgstr ""
+msgstr "設定を適用中…"
 
 #: apps/extension/src/connection-view.ts
 #: apps/extension/src/ConnectionPanel.tsx
 msgid "Approve access"
-msgstr ""
+msgstr "アクセスを承認"
 
 #: apps/extension/src/connection-view.ts
 msgid "Approve access to this collection before saving."
-msgstr ""
+msgstr "保存する前にこのコレクションへのアクセスを承認してください。"
 
 #: apps/extension/src/ConnectionPanel.tsx
 msgid "Approve mdbase Reader in the mdbase tab, then return here."
-msgstr ""
+msgstr "mdbaseのタブでmdbase Readerを承認してから、ここに戻ってください。"
 
 #: apps/reader/src/CitationTypedFieldEditors.tsx
 msgid "Approximate"
-msgstr ""
+msgstr "概算"
 
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
@@ -930,17 +930,17 @@ msgstr "アーカイブ"
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "Archive collection"
-msgstr ""
+msgstr "アーカイブコレクション"
 
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "Archive location"
-msgstr ""
+msgstr "アーカイブの場所"
 
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "Archive place"
-msgstr ""
+msgstr "アーカイブの所在地"
 
 #: apps/reader/src/LibraryCells.tsx
 msgctxt "reading status"
@@ -949,21 +949,21 @@ msgstr "アーカイブ済み"
 
 #: apps/reader/src/annotation-kind.ts
 msgid "Area"
-msgstr ""
+msgstr "領域"
 
 #: apps/reader/src/AnnotationList.tsx
 msgctxt "AnnotationList annotationFilterOptions"
 msgid "Area captures"
-msgstr ""
+msgstr "領域のキャプチャ"
 
 #: apps/reader/src/LibraryAnnotationToolbar.tsx
 msgctxt "LibraryAnnotationToolbar annotationTypeOptions"
 msgid "Areas"
-msgstr ""
+msgstr "領域"
 
 #: apps/reader/src/reader-command-list.ts
 msgid "Arrange panes side by side"
-msgstr ""
+msgstr "ペインを横に並べる"
 
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
@@ -982,12 +982,12 @@ msgstr "昇順"
 
 #: apps/reader/src/WorkspacePaneSupport.tsx
 msgid "Attach a file"
-msgstr ""
+msgstr "ファイルを添付"
 
 #. placeholder {0}: file.name
 #: apps/reader/src/use-document-attachment.ts
 msgid "Attaching {0}…"
-msgstr ""
+msgstr "{0}を添付中…"
 
 #: apps/reader/src/use-document-attachment.ts
 msgid "Attaching the PDF…"
