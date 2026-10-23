@@ -17,7 +17,7 @@ import { createEpubAnnotationActivations } from "./epub-annotation-activation.js
 import { annotationToEpubDecoration, applyAnnotationDecorations } from "./epub-decoration.js";
 import { EpubFrameEnhancements, clearFrameSelections } from "./epub-frames.js";
 import { sessionReadiumLocatorForPublication, stableReadiumLocator } from "./epub-locator.js";
-import { resolveEpubReadingRange } from "./epub-reading-range.js";
+import { containsEpubAnnotationRange, resolveEpubReadingRange } from "./epub-reading-range.js";
 import { safePublicationFetch } from "./epub-safe-fetch.js";
 import { createEpubSearch } from "./epub-search.js";
 import { extractPublicationText } from "./epub-text.js";
@@ -26,6 +26,8 @@ import { selectedTextDraft } from "./readium-selection.js";
 import type {
   Annotation,
   AnnotationId,
+  AnnotationTarget,
+  DocumentRange,
   SearchDestination,
   SearchTextSegment,
 } from "@mdbase-reader/core";
@@ -42,6 +44,7 @@ import type { Link } from "@readium/shared";
 
 export interface ReadiumRuntime {
   resolveReadingRange?: ReadingSurface["resolveReadingRange"];
+  containsAnnotationRange?(range: DocumentRange, target: AnnotationTarget): Promise<boolean | null>;
   currentLocator(): Readonly<Record<string, unknown>>;
   goTo(locator: Readonly<Record<string, unknown>>): Promise<boolean>;
   goPage?(direction: -1 | 1): Promise<boolean>;
@@ -67,6 +70,19 @@ export interface ReadiumRuntime {
 }
 
 export { readiumSelectionToDraft } from "./readium-selection.js";
+
+function publicationRanges(
+  publication: Publication,
+  baseUrl: string,
+  packagePath: string | undefined,
+): Pick<ReadiumRuntime, "resolveReadingRange" | "containsAnnotationRange"> {
+  return {
+    resolveReadingRange: (range) =>
+      resolveEpubReadingRange(publication, baseUrl, range, packagePath),
+    containsAnnotationRange: (range, target) =>
+      containsEpubAnnotationRange(publication, baseUrl, range, target, packagePath),
+  };
+}
 
 function objectValue(value: unknown, name: string): Readonly<Record<string, unknown>> {
   if (!value || typeof value !== "object" || Array.isArray(value)) {
@@ -170,8 +186,7 @@ export async function createReadiumRuntime(input: {
   });
 
   return {
-    resolveReadingRange: (range) =>
-      resolveEpubReadingRange(publication, input.publicationBaseUrl, range, input.packagePath),
+    ...publicationRanges(publication, input.publicationBaseUrl, input.packagePath),
     currentLocator: () => stableReadiumLocator(navigator.currentLocator, input.publicationBaseUrl),
     goTo(locator) {
       const destination = sessionReadiumLocatorForPublication(

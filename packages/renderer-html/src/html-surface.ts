@@ -41,6 +41,10 @@ export class HtmlReadingSurface implements ReadingSurface {
       this.#annotationActivations.emit(annotationId),
     );
     this.capabilities = {
+      annotationRange: {
+        contains: (range, target) =>
+          Promise.resolve(this.#destroyed ? null : runtime.containsAnnotationRange(range, target)),
+      },
       textSelection: {
         selections: this.#selections,
         cleared: this.#cleared,

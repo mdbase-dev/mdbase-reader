@@ -60,7 +60,8 @@ function rangeAt(
   let endNode: IndexedText["nodes"][number] | undefined;
   for (let index = nodes.length - 1; index >= 0; index -= 1) {
     const entry = nodes[index];
-    if (entry && end >= entry.start && end <= entry.end) {
+    // The end belongs to the text that ends here, not the following element at offset 0.
+    if (entry && end > entry.start && end <= entry.end) {
       endNode = entry;
       break;
     }

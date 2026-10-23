@@ -1,6 +1,8 @@
+import { locateSearchQuote } from "@mdbase-reader/reading-surface";
+
 import { htmlReadingInset } from "./html-scroll.js";
 
-import type { DocumentRange } from "@mdbase-reader/core";
+import type { AnnotationTarget, DocumentRange } from "@mdbase-reader/core";
 import type {
   ReaderLocator,
   ReadingRangeLocation,
@@ -50,12 +52,16 @@ export function htmlLocationTarget(
   return element ? { kind: "fragment", element } : null;
 }
 
-/** Validates loaded, inert HTML without changing its navigation or sandbox. */
-export function resolveHtmlReadingRange(
-  document: Document,
-  href: string,
-  range: DocumentRange,
-): ReadingRangeResolution {
+type HtmlInterval =
+  | { readonly valid: false; readonly message: string }
+  | {
+      readonly valid: true;
+      readonly start: Element;
+      readonly end: Element | null;
+      readonly interval: Range;
+    };
+
+function resolveHtmlInterval(document: Document, range: DocumentRange): HtmlInterval {
   if (range.kind !== "fragment") {
     return { valid: false, message: "HTML reading ranges require fragment IDs." };
   }
@@ -82,6 +88,22 @@ export function resolveHtmlReadingRange(
     // No end means precisely this element's subtree, not the remaining document.
     interval.setEndAfter(start);
   }
+  return { valid: true, start, end, interval };
+}
+
+/** Validates loaded, inert HTML without changing its navigation or sandbox. */
+export function resolveHtmlReadingRange(
+  document: Document,
+  href: string,
+  range: DocumentRange,
+): ReadingRangeResolution {
+  const bounds = resolveHtmlInterval(document, range);
+  if (!bounds.valid || range.kind !== "fragment") {
+    return bounds.valid
+      ? { valid: false, message: "HTML reading ranges require fragment IDs." }
+      : bounds;
+  }
+  const { start, end, interval } = bounds;
   return {
     valid: true,
     start: { kind: "html", href: `${href}${range.start}` },
@@ -101,6 +123,89 @@ export function resolveHtmlReadingRange(
         : measureScroll(document, start, end, target.progression);
     },
   };
+}
+
+/** Strict ownership resolution must not use fuzzy annotation reanchoring or scroll geometry. */
+export function containsHtmlAnnotationRange(
+  document: Document,
+  href: string,
+  range: DocumentRange,
+  target: AnnotationTarget,
+): boolean | null {
+  const bounds = resolveHtmlInterval(document, range);
+  if (!bounds.valid) {
+    return null;
+  }
+  const selected = annotationInterval(document, href, target);
+  if (!selected) {
+    return null;
+  }
+  const { interval } = bounds;
+  const start = selected.compareBoundaryPoints(Range.START_TO_START, interval);
+  const end = selected.compareBoundaryPoints(Range.END_TO_END, interval);
+  if (selected.collapsed) {
+    return start >= 0 && end < 0;
+  }
+  if (start >= 0 && end <= 0) {
+    return true;
+  }
+  const first = selected.cloneRange();
+  first.collapse(true);
+  const last = selected.cloneRange();
+  last.collapse(false);
+  if (
+    last.compareBoundaryPoints(Range.START_TO_START, interval) <= 0 ||
+    first.compareBoundaryPoints(Range.END_TO_END, interval) >= 0
+  ) {
+    return false;
+  }
+  return null;
+}
+
+function annotationInterval(
+  document: Document,
+  href: string,
+  target: AnnotationTarget,
+): Range | null {
+  if (target.epub || target.pdf || target.html?.xpath) {
+    return null;
+  }
+  if (target.position && !target.quote && !target.html) {
+    const location = htmlLocationTarget(document, href, target.position);
+    if (location?.kind !== "fragment") {
+      return null;
+    }
+    const point = document.createRange();
+    point.setStartBefore(location.element);
+    point.collapse(true);
+    return point;
+  }
+  const root = annotationRoot(document, target.html?.css);
+  if (!root) {
+    return null;
+  }
+  if (target.quote) {
+    return locateSearchQuote(root, target.quote);
+  }
+  if (!target.html?.css) {
+    return null;
+  }
+  const selected = document.createRange();
+  selected.selectNodeContents(root);
+  return selected;
+}
+
+function annotationRoot(document: Document, css: string | undefined): Element | null {
+  if (!css) {
+    return document.body;
+  }
+  try {
+    const matches = document.querySelectorAll(css);
+    const match = matches.length === 1 ? matches[0] : null;
+    return match && document.body.contains(match) ? match : null;
+  } catch {
+    return null;
+  }
 }
 
 function measureFragment(
