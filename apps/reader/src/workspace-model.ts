@@ -141,6 +141,7 @@ export interface ReaderWorkspaceGateway {
     source: Source,
     documentFileId: FileId,
     position: ReadingPosition,
+    progress?: number | null,
   ): Promise<Source>;
   /** Moves a source through its reading lifecycle, e.g. from queued to finished. */
   saveReadingStatus?(sourceId: SourceId, status: ReadingStatus): Promise<Source>;

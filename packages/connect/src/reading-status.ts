@@ -79,6 +79,7 @@ export function readingPatch(
   input: {
     readonly documentFileId: FileId;
     readonly position: ReadingPosition;
+    readonly progress?: number | null;
     readonly openedAt: DateTime;
   },
 ): Record<string, unknown> {
@@ -87,8 +88,15 @@ export function readingPatch(
     typeof value === "object" && value !== null && !Array.isArray(value)
       ? (value as Readonly<Record<string, unknown>>)
       : {};
+  const rest = { ...existing };
+  if (input.progress !== undefined) {
+    Reflect.deleteProperty(rest, "progress");
+  }
   return {
-    ...existing,
+    ...rest,
+    ...(typeof input.progress === "number" && Number.isFinite(input.progress)
+      ? { progress: Math.max(0, Math.min(1, input.progress)) }
+      : {}),
     status: typeof existing["status"] === "string" ? existing["status"] : "reading",
     document_file_id: input.documentFileId,
     position: positionFrontmatter(input.position),

@@ -4,6 +4,7 @@ import type {
   AnnotationId,
   AnnotationTarget,
   DocumentTarget,
+  DocumentRange,
   SearchDestination,
   SearchTextSegment,
 } from "@mdbase-reader/core";
@@ -157,11 +158,29 @@ export interface ReadingSurfaceCapabilities {
   readonly typography?: TypographyCapability;
 }
 
+/** Absolute coordinates; progress alone is relative to the validated source part. */
+export interface ReadingRangeLocation {
+  readonly position: "before" | "inside" | "after";
+  readonly atEnd: boolean;
+  /** Omitted when logical content progress cannot be measured reliably. */
+  readonly progress?: number;
+}
+
+export type ReadingRangeResolution =
+  | { readonly valid: false; readonly message: string }
+  | {
+      readonly valid: true;
+      readonly start: ReaderLocator;
+      measure(locator: ReaderLocator): ReadingRangeLocation | null;
+    };
+
 export interface ReadingSurface {
   readonly kind: SurfaceKind;
   readonly document: SurfaceDocument;
   readonly capabilities: ReadingSurfaceCapabilities;
   readonly locations: EventSource<ReaderLocator>;
+  /** Validates against loaded bytes, without navigating or restricting the renderer. */
+  resolveReadingRange?(range: DocumentRange): Promise<ReadingRangeResolution>;
   currentLocation(): ReaderLocator | null;
   goTo(locator: ReaderLocator): Promise<boolean>;
   destroy(): Promise<void>;

@@ -159,13 +159,23 @@ export function useReadingPositionSave(
   gateway: ReaderWorkspaceGateway,
   source: AsyncResource<Source>,
   setSource: (value: Exclude<SourceState, null>) => void,
-): (sourceId: SourceId, documentFileId: FileId, position: ReadingPosition) => Promise<void> {
+): (
+  sourceId: SourceId,
+  documentFileId: FileId,
+  position: ReadingPosition,
+  progress?: number | null,
+) => Promise<void> {
   return useCallback(
-    async (sourceId, documentFileId, position): Promise<void> => {
+    async (sourceId, documentFileId, position, progress): Promise<void> => {
       if (source.status !== "ready" || source.value.id !== sourceId) {
         return;
       }
-      const updated = await gateway.saveReadingPosition(source.value, documentFileId, position);
+      const updated = await gateway.saveReadingPosition(
+        source.value,
+        documentFileId,
+        position,
+        progress,
+      );
       setSource({ sourceId: updated.id, value: { status: "ready", value: updated } });
     },
     [gateway, setSource, source],

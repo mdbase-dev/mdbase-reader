@@ -126,7 +126,7 @@ function OpenedReaderApp({
     [sessionLocations],
   );
   const composer = useReaderAnnotationComposer(workspace, sourceWorkspace.activeSourceId, surface);
-  const readingResume = useReaderReadingResume(workspace, surface);
+  const readingResume = useReaderReadingResume(workspace, surface, sourceWorkspace.activeSourceId);
   const decorationProblem = useDocumentDecorations(
     surface,
     workspace.annotations,

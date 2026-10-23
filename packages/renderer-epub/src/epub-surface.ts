@@ -2,9 +2,10 @@ import { searchDestinationMatchesDocument } from "@mdbase-reader/core";
 import { createEventEmitter } from "@mdbase-reader/reading-surface";
 
 import type { ReadiumRuntime } from "./readium-runtime.js";
-import type { AnnotationId } from "@mdbase-reader/core";
+import type { AnnotationId, DocumentRange } from "@mdbase-reader/core";
 import type {
   ReadingMotion,
+  ReadingRangeResolution,
   ReadingSurface,
   ReaderLocator,
   SurfaceDocument,
@@ -97,6 +98,18 @@ export class ReadiumEpubSurface implements ReadingSurface {
       annotationActivation: { activations: this.#annotationActivations },
       typography: { setTypography: (typography) => runtime.setTypography(typography) },
     };
+  }
+
+  public async resolveReadingRange(range: DocumentRange): Promise<ReadingRangeResolution> {
+    if (this.#destroyed) {
+      return { valid: false, message: "The EPUB surface has been destroyed." };
+    }
+    return (
+      this.#runtime.resolveReadingRange?.(range) ?? {
+        valid: false,
+        message: "This EPUB runtime cannot verify reading ranges.",
+      }
+    );
   }
 
   public currentLocation(): ReaderLocator {

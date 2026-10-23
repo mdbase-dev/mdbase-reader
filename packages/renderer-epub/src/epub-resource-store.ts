@@ -10,6 +10,7 @@ const EXTRACTION_CONCURRENCY = 6;
 export interface PreparedEpubPublication {
   readonly manifest: Readonly<Record<string, unknown>>;
   readonly baseUrl: string;
+  readonly packagePath: string;
   close(): Promise<void>;
 }
 
@@ -38,6 +39,7 @@ export async function prepareEpubPublication(blob: Blob): Promise<PreparedEpubPu
     let closed = false;
     return {
       manifest: prepared.manifest,
+      packagePath: prepared.packagePath,
       baseUrl,
       async close() {
         if (!closed) {

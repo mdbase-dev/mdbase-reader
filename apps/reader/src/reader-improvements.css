@@ -47,6 +47,54 @@
   background: var(--paper);
   font-size: 0.82rem;
 }
+.source-part-reading {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;
+}
+.source-part-document {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+}
+.source-reading-boundary {
+  flex: 0 0 auto;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 16px;
+  padding: 8px 14px;
+  border-bottom: 1px solid var(--line);
+  background: var(--paper);
+  color: var(--ink);
+  font-size: var(--ui-meta);
+  overflow-wrap: anywhere;
+}
+.source-reading-boundary button,
+.source-reading-boundary a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 36px;
+  padding: 4px 8px;
+  color: var(--ink);
+  background: var(--paper);
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  cursor: pointer;
+}
+.source-reading-boundary button:hover,
+.source-reading-boundary a:hover {
+  background: var(--canvas);
+}
+@media (pointer: coarse) {
+  .source-reading-boundary button,
+  .source-reading-boundary a {
+    min-height: 44px;
+  }
+}
 .connected-document-content {
   position: relative;
   flex: 1;

@@ -1,12 +1,32 @@
-import { dateTime } from "@mdbase-reader/core";
+import { dateTime, fileId } from "@mdbase-reader/core";
 import { describe, expect, it } from "vitest";
 
-import { readingWithStatus } from "./reading-status.js";
+import { readingPatch, readingWithStatus } from "./reading-status.js";
 
 const started = dateTime("2026-09-01T09:00:00Z");
 const now = dateTime("2026-09-24T10:00:00Z");
 
 describe("readingWithStatus", () => {
+  it("stores range-relative progress without completing the source and clears unavailable measurements", () => {
+    const input = {
+      documentFileId: fileId("shared-book"),
+      position: { kind: "pdf", pageIndex: 15 } as const,
+      openedAt: now,
+    };
+    const original = { reading: { status: "queued", progress: 0.8 } };
+    expect(readingPatch(original, { ...input, progress: 0.5 })).toMatchObject({
+      progress: 0.5,
+      status: "queued",
+      position: { pdf: { page_index: 15 } },
+    });
+    expect(readingPatch(original, { ...input, progress: 1 })).toMatchObject({
+      progress: 1,
+      status: "queued",
+    });
+    expect(readingPatch(original, { ...input, progress: null })).not.toHaveProperty("progress");
+    expect(readingPatch(original, input)).toHaveProperty("progress", 0.8);
+  });
+
   it("records completion without moving an earlier start", () => {
     expect(readingWithStatus({ status: "reading", started_at: started }, "finished", now)).toEqual({
       status: "finished",
