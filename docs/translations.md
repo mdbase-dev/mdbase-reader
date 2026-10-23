@@ -40,7 +40,7 @@ This branch vendors `@mdbase-dev/i18n` from Connect commit `b4134d71`:
 - `vendor/mdbase-dev-i18n-0.1.0-beta.141-b4134d71.tgz`
 - SHA256 `3cc9e231dd0ea2ef3cbb34112689e7ed227111f30d976ce0f94d6cd991520806`
 
-Public UI integration uses `vendor/mdbase-dev-ui-0.1.0-beta.141-9041442d.tgz` (SHA256 `65b7ab3754fe840e04c0128e00f4b9f81dbbf999e0eb987acf97ee72c6b3b55b`). Its `uiCatalogues` source is composed by the shared runtime, so library strings remain library-owned and use the exact same Lingui singleton. Reader gives potentially colliding generic messages semantic contexts to prevent independent PO translations from conflicting. The integration tarball is not yet translation/release-qualified; refresh it after the shared-language deltas are reviewed.
+Public UI integration uses `vendor/mdbase-dev-ui-0.1.0-beta.141-9041442d.tgz` (SHA256 `65b7ab3754fe840e04c0128e00f4b9f81dbbf999e0eb987acf97ee72c6b3b55b`). Its `uiCatalogues` source is composed by the shared runtime, so library strings remain library-owned and use the exact same Lingui singleton. Reader gives potentially colliding generic messages semantic contexts to prevent independent PO translations from conflicting. The integration tarball is not yet translation/release-qualified; refresh it after the shared-language deltas are reviewed. Reader’s protected publisher gate currently refuses it against the approved UI original. Historical approved tarballs, trust pins and verification tests have not been changed; normal authorized intake/release qualification is required before that gate can be green.
 
 **Replace the file dependency with the published npm version at merge time**, after the next Connect release. No publication or deployment is authorized by this branch.
 
