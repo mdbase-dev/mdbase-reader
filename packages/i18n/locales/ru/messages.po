@@ -3594,465 +3594,465 @@ msgstr "Интервьюер"
 
 #: packages/migration/src/model.ts
 msgid "Invalid {label}."
-msgstr ""
+msgstr "Недопустимое значение: {label}."
 
 #: packages/migration/src/zotero-validation.ts
 msgid "Invalid attachment payload reference."
-msgstr ""
+msgstr "Недопустимая ссылка на данные вложения."
 
 #: packages/migration/src/zotero-validation.ts
 msgid "Invalid collection ancestry."
-msgstr ""
+msgstr "Недопустимая иерархия коллекций."
 
 #: packages/migration/src/zotero-validation.ts
 msgid "Invalid file manifest."
-msgstr ""
+msgstr "Недопустимый манифест файла."
 
 #: packages/migration/src/zotero-validation.ts
 msgid "Invalid missing attachment."
-msgstr ""
+msgstr "Недопустимое отсутствующее вложение."
 
 #: packages/migration/src/readwise-client.ts
 msgid "Invalid Readwise API path."
-msgstr ""
+msgstr "Недопустимый путь API Readwise."
 
 #: packages/migration/src/zotero-validation.ts
 msgid "Invalid Zotero identity."
-msgstr ""
+msgstr "Недопустимый идентификатор Zotero."
 
 #: packages/migration/src/zotero-pdf.ts
 msgid "Invalid Zotero PDF position."
-msgstr ""
+msgstr "Недопустимая позиция PDF Zotero."
 
 #: packages/migration/src/zotero-pdf.ts
 msgid "Invalid Zotero PDF rectangle."
-msgstr ""
+msgstr "Недопустимый прямоугольник PDF Zotero."
 
 #: apps/reader/src/library-conditions.ts
 msgctxt "Field filter comparison operator"
 msgid "is"
-msgstr ""
+msgstr "равно"
 
 #: apps/reader/src/library-conditions.ts
 msgctxt "Field filter comparison operator"
 msgid "is at least"
-msgstr ""
+msgstr "не меньше"
 
 #: apps/reader/src/library-conditions.ts
 msgctxt "Field filter comparison operator"
 msgid "is at most"
-msgstr ""
+msgstr "не больше"
 
 #: apps/reader/src/library-conditions.ts
 msgctxt "Field filter comparison operator"
 msgid "is empty"
-msgstr ""
+msgstr "пусто"
 
 #: apps/reader/src/library-conditions.ts
 msgctxt "Field filter comparison operator"
 msgid "is greater than"
-msgstr ""
+msgstr "больше"
 
 #: apps/reader/src/library-conditions.ts
 msgctxt "Field filter comparison operator"
 msgid "is less than"
-msgstr ""
+msgstr "меньше"
 
 #: apps/reader/src/library-conditions.ts
 msgctxt "Field filter comparison operator"
 msgid "is not"
-msgstr ""
+msgstr "не равно"
 
 #: packages/core/src/domain/citation-validation.ts
 msgctxt "CSL validation"
 msgid "is not a CSL 1.0 field; preserve extension data under csl.custom"
-msgstr ""
+msgstr "не является полем CSL 1.0; сохраните данные расширения в csl.custom"
 
 #: packages/core/src/domain/citation-validation.ts
 msgctxt "CSL validation"
 msgid "is not a CSL date field"
-msgstr ""
+msgstr "не является полем даты CSL"
 
 #: packages/core/src/domain/citation-validation.ts
 msgctxt "CSL validation"
 msgid "is not a CSL name field"
-msgstr ""
+msgstr "не является полем имени CSL"
 
 #: apps/reader/src/library-conditions.ts
 msgctxt "Field filter comparison operator"
 msgid "is not empty"
-msgstr ""
+msgstr "не пусто"
 
 #: apps/reader/src/CitationStructuredEditor.tsx
 msgctxt "CitationStructuredEditor interface"
 msgid "Issue"
-msgstr ""
+msgstr "Выпуск"
 
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "Issue"
-msgstr ""
+msgstr "Выпуск"
 
 #: apps/reader/src/CitationStructuredEditor.tsx
 msgctxt "CitationStructuredEditor interface"
 msgid "Issued"
-msgstr ""
+msgstr "Дата публикации"
 
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "Issued"
-msgstr ""
+msgstr "Дата публикации"
 
 #: apps/reader/src/SourceNoteEditor.tsx
 msgctxt "SourceNoteEditor formatActions"
 msgid "Italic"
-msgstr ""
+msgstr "Курсив"
 
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "Journal article"
-msgstr ""
+msgstr "Журнальная статья"
 
 #: apps/reader/src/citation-form-model.ts
 msgctxt "CSL item type"
 msgid "Journal article"
-msgstr ""
+msgstr "Журнальная статья"
 
 #: apps/reader/src/CitationStructuredEditor.tsx
 msgid "Journal, book or site"
-msgstr ""
+msgstr "Журнал, книга или сайт"
 
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "JournalAbbreviation"
-msgstr ""
+msgstr "Сокращённое название журнала"
 
 #: apps/reader/src/CitationTypedFieldEditors.tsx
 msgctxt "CitationTypedFieldEditors customValueTypeOptions"
 msgid "JSON value"
-msgstr ""
+msgstr "Значение JSON"
 
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "Jurisdiction"
-msgstr ""
+msgstr "Юрисдикция"
 
 #: apps/reader/src/ContinueReading.tsx
 msgid "Just started"
-msgstr ""
+msgstr "Только что началось"
 
 #: apps/extension/src/NotePanel.tsx
 #: apps/reader/src/AnnotationEditor.tsx
 msgid "Keep mine"
-msgstr ""
+msgstr "Оставить мою версию"
 
 #: apps/extension/src/NotePanel.tsx
 msgid "Keep mine to replace it with your text, or use theirs to discard your text."
-msgstr ""
+msgstr "Оставьте мою версию, чтобы заменить её своим текстом, или выберите чужую, чтобы отказаться от своего текста."
 
 #: apps/reader/src/CitationContributors.tsx
 msgid "Keep name order"
-msgstr ""
+msgstr "Сохранить порядок имён"
 
 #: apps/reader/src/DisplayMenu.tsx
 msgctxt "DisplayMenu interface"
 msgid "Keep open"
-msgstr ""
+msgstr "Оставить открытым"
 
 #: apps/reader/src/InspectorPane.tsx
 msgid "Keep open as a workbench tab"
-msgstr ""
+msgstr "Оставить открытым как вкладку рабочей панели"
 
 #: apps/reader/src/reader-command-list.ts
 msgid "Keeps all tabs open"
-msgstr ""
+msgstr "Оставляет открытыми все вкладки"
 
 #: apps/reader/src/SourceNoteEditor.tsx
 msgid "Kept on this device until the collection can be reached"
-msgstr ""
+msgstr "Сохраняется на этом устройстве до восстановления доступа к коллекции"
 
 #: apps/extension/src/OptionsApp.tsx
 msgid "Keyboard shortcuts"
-msgstr ""
+msgstr "Сочетания клавиш"
 
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "Keyword"
-msgstr ""
+msgstr "Ключевое слово"
 
 #: apps/reader/src/CitationStructuredEditor.tsx
 msgctxt "CitationStructuredEditor interface"
 msgid "Language"
-msgstr ""
+msgstr "Язык"
 
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "Language"
-msgstr ""
+msgstr "Язык"
 
 #: packages/i18n/src/react.tsx
 msgctxt "interface language setting"
 msgid "Language"
-msgstr ""
+msgstr "Язык"
 
 #: apps/reader/src/use-open-document-search.ts
 msgid "Large documents are limited to their first 1,000,000 characters."
-msgstr ""
+msgstr "Для больших документов доступно только первое 1 000 000 символов."
 
 #: apps/reader/src/DisplayMenu.tsx
 msgctxt "DisplayMenu interface"
 msgid "Larger text"
-msgstr ""
+msgstr "Крупный текст"
 
 #: apps/reader/src/library-columns.ts
 msgctxt "Library table column"
 msgid "Last opened"
-msgstr ""
+msgstr "Последнее открытие"
 
 #: apps/reader/src/LibraryWorkspace.tsx
 msgid "Layout"
-msgstr ""
+msgstr "Макет"
 
 #: apps/reader/src/DocumentContextualToolbar.tsx
 #: apps/reader/src/reader-command-list.ts
 msgid "Leave reading mode"
-msgstr ""
+msgstr "Выйти из режима чтения"
 
 #. placeholder {0}: shortcutLabel("mod+.")
 #: apps/reader/src/ReaderHeader.tsx
 msgid "Leave reading mode · {0}"
-msgstr ""
+msgstr "Выйти из режима чтения · {0}"
 
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "Legal case"
-msgstr ""
+msgstr "Судебное дело"
 
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "Legislation"
-msgstr ""
+msgstr "Законодательный акт"
 
 #: apps/reader/src/reader-command-list.ts
 msgid "Library"
-msgstr ""
+msgstr "Библиотека"
 
 #: apps/reader/src/dockview-workspace.ts
 msgctxt "dockview workspace"
 msgid "Library"
-msgstr ""
+msgstr "Библиотека"
 
 #: apps/reader/src/LibraryWorkspace.tsx
 msgctxt "LibraryWorkspace searchScopeOptions"
 msgid "Library"
-msgstr ""
+msgstr "Библиотека"
 
 #: apps/reader/src/source-workspace-layout.ts
 msgctxt "source workspace layout"
 msgid "Library"
-msgstr ""
+msgstr "Библиотека"
 
 #: apps/reader/src/source-workspace-persistence.ts
 msgctxt "source workspace persistence"
 msgid "Library"
-msgstr ""
+msgstr "Библиотека"
 
 #: apps/reader/src/workspace-tab-display.ts
 msgctxt "workspace tab display"
 msgid "Library"
-msgstr ""
+msgstr "Библиотека"
 
 #: apps/reader/src/LibraryNavigator.tsx
 msgctxt "LibraryNavigator interface"
 msgid "Library navigator"
-msgstr ""
+msgstr "Навигатор библиотеки"
 
 #: apps/reader/src/LibraryWorkspace.tsx
 msgctxt "LibraryWorkspace interface"
 msgid "Library presentation"
-msgstr ""
+msgstr "Представление библиотеки"
 
 #: apps/reader/src/import-controller.ts
 msgid "Library scanned. Review the contents and choose a destination."
-msgstr ""
+msgstr "Библиотека просканирована. Просмотрите содержимое и выберите место назначения."
 
 #: apps/reader/src/source-note-references.ts
 msgctxt "source note references"
 msgid "Library source"
-msgstr ""
+msgstr "Источник библиотеки"
 
 #: apps/reader/src/LibraryWorkspace.tsx
 msgctxt "LibraryWorkspace interface"
 msgid "Library view"
-msgstr ""
+msgstr "Представление библиотеки"
 
 #: apps/reader/src/LibraryNavigator.tsx
 msgid "Library views and sources"
-msgstr ""
+msgstr "Представления и источники библиотеки"
 
 #: apps/reader/src/DocumentWorkspace.tsx
 msgctxt "DocumentWorkspace interface"
 msgid "Library workspace"
-msgstr ""
+msgstr "Рабочая область библиотеки"
 
 #: apps/reader/src/DisplayMenu.tsx
 msgid "Light"
-msgstr ""
+msgstr "Светлый"
 
 #: apps/extension/src/OptionsApp.tsx
 msgctxt "Light appearance theme"
 msgid "Light"
-msgstr ""
+msgstr "Светлый"
 
 #: apps/reader/src/DisplayMenu.tsx
 msgctxt "DisplayMenu interface"
 msgid "Line length"
-msgstr ""
+msgstr "Длина строки"
 
 #: apps/reader/src/SourceNoteEditor.tsx
 msgctxt "SourceNoteEditor formatActions"
 msgid "Link"
-msgstr ""
+msgstr "Ссылка"
 
 #: apps/reader/src/SourceAddDialog.tsx
 msgid "Link or identifier"
-msgstr ""
+msgstr "Ссылка или идентификатор"
 
 #: packages/markdown-editor/src/annotation-widgets.ts
 msgid "Linked record not found: {path}"
-msgstr ""
+msgstr "Связанная запись не найдена: {path}"
 
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "Literal"
-msgstr ""
+msgstr "Текст"
 
 #: apps/reader/src/CitationTypedFieldEditors.tsx
 msgctxt "CitationTypedFieldEditors dateModeOptions"
 msgid "Literal date"
-msgstr ""
+msgstr "Дата текстом"
 
 #: apps/extension/src/NotePanel.tsx
 #: apps/reader/src/InspectorPane.tsx
 msgid "Literature note"
-msgstr ""
+msgstr "Заметка о литературе"
 
 #: apps/reader/src/InspectorPane.tsx
 msgctxt "InspectorPane interface"
 msgid "Literature note"
-msgstr ""
+msgstr "Заметка о литературе"
 
 #: apps/reader/src/InspectorPane.tsx
 msgctxt "InspectorPane status or action"
 msgid "Literature note"
-msgstr ""
+msgstr "Заметка о литературе"
 
 #: apps/reader/src/LibraryTextSearch.tsx
 msgctxt "LibraryTextSearch interface"
 msgid "Literature note"
-msgstr ""
+msgstr "Заметка о литературе"
 
 #: apps/reader/src/reader-command-list.ts
 msgctxt "reader command list"
 msgid "Literature note"
-msgstr ""
+msgstr "Заметка о литературе"
 
 #: apps/reader/src/workspace-tab-display.ts
 msgctxt "workspace tab display"
 msgid "Literature note"
-msgstr ""
+msgstr "Заметка о литературе"
 
 #: apps/extension/src/NotePanel.tsx
 msgid "Literature note <0>(optional)</0>"
-msgstr ""
+msgstr "Заметка о литературе <0>(необязательно)</0>"
 
 #: apps/reader/src/DraftRecoveryNotice.tsx
 msgid "Literature note conflict"
-msgstr ""
+msgstr "Конфликт заметки о литературе"
 
 #: apps/reader/src/AnnotationList.tsx
 #: apps/reader/src/LibraryAnnotationBars.tsx
 msgid "Loading annotations…"
-msgstr ""
+msgstr "Загрузка аннотаций…"
 
 #: packages/renderer-pdf/src/pdf-translations.ts
 msgctxt "PDF viewer document"
 msgid "Loading document..."
-msgstr ""
+msgstr "Загрузка документа…"
 
 #: packages/renderer-pdf/src/pdf-translations.ts
 msgctxt "PDF viewer outline"
 msgid "Loading outline..."
-msgstr ""
+msgstr "Загрузка структуры…"
 
 #: apps/reader/src/AnnotationImage.tsx
 msgid "Loading screenshot…"
-msgstr ""
+msgstr "Загрузка снимка экрана…"
 
 #: apps/reader/src/LibraryNavigator.tsx
 msgid "Loading sources…"
-msgstr ""
+msgstr "Загрузка источников…"
 
 #: apps/reader/src/ConnectedDocument.tsx
 msgid "Loading the EPUB renderer…"
-msgstr ""
+msgstr "Загрузка средства чтения EPUB…"
 
 #: apps/reader/src/ReaderApp.tsx
 msgid "Loading the first sources; the rest of the library will load in the background"
-msgstr ""
+msgstr "Загрузка первых источников; остальная часть библиотеки загрузится в фоновом режиме"
 
 #: apps/reader/src/ConnectedDocument.tsx
 msgid "Loading the HTML renderer…"
-msgstr ""
+msgstr "Загрузка средства чтения HTML…"
 
 #: apps/reader/src/ConnectedDocument.tsx
 msgid "Loading the PDF renderer…"
-msgstr ""
+msgstr "Загрузка средства чтения PDF…"
 
 #: apps/reader/src/AnnotationEditor.tsx
 #: apps/reader/src/LibraryNavigator.tsx
 msgid "Loading…"
-msgstr ""
+msgstr "Загрузка…"
 
 #: apps/reader/src/LibraryAnnotationToolbar.tsx
 msgctxt "LibraryAnnotationToolbar interface"
 msgid "Loading…"
-msgstr ""
+msgstr "Загрузка…"
 
 #: apps/reader/src/LibraryWorkspace.tsx
 msgctxt "LibraryWorkspace interface"
 msgid "Loading…"
-msgstr ""
+msgstr "Загрузка…"
 
 #: apps/reader/src/source-draft-session.ts
 msgid "Local draft storage is unavailable or unreadable. Keep this tab open until the note is saved to the collection."
-msgstr ""
+msgstr "Локальное хранилище черновиков недоступно или не читается. Не закрывайте эту вкладку, пока заметка не будет сохранена в коллекцию."
 
 #: apps/reader/src/annotation-drafts.ts
 msgid "Local draft storage is unavailable. Keep this window open until you save."
-msgstr ""
+msgstr "Локальное хранилище черновиков недоступно. Не закрывайте это окно, пока не сохраните данные."
 
 #: apps/reader/src/ConnectReader.tsx
 msgid "Local HTTP development uses the local Connect stack at <0>http://127.0.0.1:8787</0>. The managed service requires an HTTPS Reader origin."
-msgstr ""
+msgstr "Для локальной HTTP-разработки используется локальный стек Connect по адресу <0>http://127.0.0.1:8787</0>. Для управляемого сервиса требуется HTTPS-адрес Reader."
 
 #: apps/reader/src/ReaderHeader.tsx
 #: apps/reader/src/use-direct-access.ts
 msgid "Local network access is blocked. Allow it in your browser’s site settings, then retry."
-msgstr ""
+msgstr "Доступ к локальной сети заблокирован. Разрешите его в настройках сайта браузера и повторите попытку."
 
 #: apps/reader/src/use-direct-access.ts
 msgid "Local network access was not granted. Allow it when your browser asks, then retry."
-msgstr ""
+msgstr "Доступ к локальной сети не предоставлен. Разрешите его, когда браузер запросит доступ, и повторите попытку."
 
 #: apps/reader/src/CitationPreview.tsx
 msgid "Locale"
-msgstr ""
+msgstr "Язык и регион"
 
 #: apps/reader/src/annotation-columns.ts
 msgctxt "Annotation table column"
 msgid "Location"
-msgstr ""
+msgstr "Расположение"
 
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
