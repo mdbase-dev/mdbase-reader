@@ -4782,100 +4782,100 @@ msgstr "{0} を開く"
 
 #: apps/reader/src/InspectorPane.tsx
 msgid "Open {tab} in workbench"
-msgstr ""
+msgstr "{tab}をワークベンチで開く"
 
 #: apps/electron/src/main.ts
 msgid "Open a document"
-msgstr ""
+msgstr "文書を開く"
 
 #: apps/reader/src/ReaderHeader.tsx
 msgid "Open a document to use reading mode"
-msgstr ""
+msgstr "読書モードを使うには文書を開いてください"
 
 #: packages/renderer-pdf/src/pdf-translations.ts
 msgctxt "PDF viewer emptyState"
 msgid "Open a PDF document to get started."
-msgstr ""
+msgstr "PDF文書を開いて始めましょう。"
 
 #: apps/reader/src/LibraryTextSearch.tsx
 msgid "Open a result, then use the document’s Find control to locate the passage."
-msgstr ""
+msgstr "結果を開き、文書の検索機能で該当箇所を探してください。"
 
 #: apps/reader/src/DockviewWorkspace.tsx
 msgid "Open a source from the library. Drag tabs to arrange your workspace."
-msgstr ""
+msgstr "ライブラリから資料を開きます。タブをドラッグしてワークスペースを配置できます。"
 
 #: apps/reader/src/reader-command-list.ts
 msgctxt "reader command list"
 msgid "Open annotations"
-msgstr ""
+msgstr "注釈を開く"
 
 #: apps/reader/src/dockview-menus.ts
 msgid "Open another editor in pane right"
-msgstr ""
+msgstr "右側のペインに別のエディターを開く"
 
 #: apps/reader/src/LibraryRowMenu.tsx
 msgid "Open beside"
-msgstr ""
+msgstr "横に開く"
 
 #: apps/reader/src/reader-command-list.ts
 msgctxt "reader command list"
 msgid "Open beside"
-msgstr ""
+msgstr "横に開く"
 
 #: apps/extension/src/WelcomeApp.tsx
 msgid "Open Chrome’s extensions menu (the puzzle piece beside the address bar) and pin mdbase Reader so its button stays in the toolbar."
-msgstr ""
+msgstr "Chromeの拡張機能メニュー（アドレスバー横のパズルのピース）を開き、mdbase Readerを固定すると、ツールバーにボタンが表示されたままになります。"
 
 #: apps/reader/src/reader-command-list.ts
 msgid "Open citation data"
-msgstr ""
+msgstr "引用データを開く"
 
 #: apps/reader/src/LibraryTextSearch.tsx
 msgctxt "LibraryTextSearch interface"
 msgid "Open document"
-msgstr ""
+msgstr "文書を開く"
 
 #: packages/renderer-pdf/src/pdf-translations.ts
 msgctxt "PDF viewer emptyState"
 msgid "Open Document"
-msgstr ""
+msgstr "文書を開く"
 
 #: apps/reader/src/LibraryWorkspace.tsx
 msgctxt "LibraryWorkspace searchScopeOptions"
 msgid "Open documents"
-msgstr ""
+msgstr "開いている文書"
 
 #: apps/reader/src/LibraryBulkBar.tsx
 msgid "Open each in its own tab"
-msgstr ""
+msgstr "それぞれ別のタブで開く"
 
 #: packages/markdown-editor/src/annotation-widgets.ts
 msgctxt "annotation widgets"
 msgid "Open in document"
-msgstr ""
+msgstr "文書内で開く"
 
 #: apps/extension/src/SaveBar.tsx
 msgid "Open in Reader"
-msgstr ""
+msgstr "Readerで開く"
 
 #: apps/extension/src/SaveBar.tsx
 msgid "Open in Reader to highlight"
-msgstr ""
+msgstr "Readerで開いてハイライト"
 
 #: apps/reader/src/DockviewWorkspace.tsx
 msgid "Open library"
-msgstr ""
+msgstr "ライブラリを開く"
 
 #: apps/reader/src/reader-app-commands.ts
 msgctxt "reader app commands"
 msgid "Open library"
-msgstr ""
+msgstr "ライブラリを開く"
 
 #: apps/reader/src/reader-command-list.ts
 #: apps/reader/src/WorkspacePaneSupport.tsx
 msgid "Open literature note"
-msgstr ""
+msgstr "文献ノートを開く"
 
 #: apps/extension/src/OptionsApp.tsx
 #: apps/reader/src/ConnectReader.tsx
@@ -4885,7 +4885,7 @@ msgstr "mdbase Readerを開く"
 #: apps/extension/src/shell-messages.ts
 #: apps/extension/src/shortcuts.ts
 msgid "Open mdbase Reader for this page"
-msgstr ""
+msgstr "このページをmdbase Readerで開く"
 
 #: apps/reader/src/CollectionMenu.tsx
 msgctxt "CollectionMenu status or action"
@@ -4899,20 +4899,20 @@ msgstr "サインインを開く"
 
 #: apps/reader/src/SourceAddDialog.tsx
 msgid "Open source"
-msgstr ""
+msgstr "資料を開く"
 
 #: packages/markdown-editor/src/citation-card.ts
 msgctxt "citation card"
 msgid "Open source"
-msgstr ""
+msgstr "資料を開く"
 
 #: apps/reader/src/reader-command-list.ts
 msgid "Open tabs"
-msgstr ""
+msgstr "開いているタブ"
 
 #: apps/reader/src/AnnotationPanelActions.tsx
 msgid "Open the document to bookmark a position"
-msgstr ""
+msgstr "位置をブックマークするには文書を開いてください"
 
 #: apps/reader/src/native-signin-ui.ts
 msgctxt "Native sign-in"
@@ -4921,24 +4921,24 @@ msgstr "mdbaseのタブをもう一度開いてください"
 
 #: apps/reader/src/use-source-export.ts
 msgid "Open the source and its annotations before exporting."
-msgstr ""
+msgstr "エクスポートする前に資料と注釈を開いてください。"
 
 #: apps/reader/src/MobileWorkspaceNavigation.tsx
 msgid "Open workspace tab"
-msgstr ""
+msgstr "ワークスペースのタブを開く"
 
 #: apps/extension/src/ExtensionHeader.tsx
 msgid "Open your library in mdbase Reader"
-msgstr ""
+msgstr "mdbase Readerでライブラリを開く"
 
 #. placeholder {0}: original.displayName
 #: apps/reader/src/SdkReaderRoot.tsx
 msgid "Opening {0}"
-msgstr ""
+msgstr "{0}を開いています"
 
 #: apps/reader/src/CitationEditor.tsx
 msgid "Opening citation metadata…"
-msgstr ""
+msgstr "引用メタデータを開いています…"
 
 #: apps/reader/src/native-signin-ui.ts
 msgctxt "Native sign-in"
@@ -4948,15 +4948,15 @@ msgstr "このビルドではまだコレクションを開けません。"
 #: apps/reader/src/ConnectedDocument.tsx
 msgctxt "ConnectedDocument interface"
 msgid "Opening document…"
-msgstr ""
+msgstr "文書を開いています…"
 
 #: apps/reader/src/MultilineCodeEditor.tsx
 msgid "Opening editor…"
-msgstr ""
+msgstr "エディターを開いています…"
 
 #: apps/reader/src/SourceNoteEditor.tsx
 msgid "Opening literature note…"
-msgstr ""
+msgstr "文献ノートを開いています…"
 
 #: apps/extension/src/ConnectionPanel.tsx
 msgid "Opening mdbase…"
@@ -4979,21 +4979,21 @@ msgstr "mdbaseを開いています…"
 
 #: apps/extension/src/NotePanel.tsx
 msgid "Opening the literature note…"
-msgstr ""
+msgstr "文献ノートを開いています…"
 
 #: apps/extension/src/CaptureApp.tsx
 msgid "Opening the new page…"
-msgstr ""
+msgstr "新しいページを開いています…"
 
 #: apps/reader/src/ReaderApp.tsx
 #: apps/reader/src/ReaderWorkspace.tsx
 msgid "Opening your reading collection"
-msgstr ""
+msgstr "読書用コレクションを開いています"
 
 #: packages/renderer-pdf/src/pdf-translations.ts
 msgctxt "PDF viewer passwordPrompt"
 msgid "Opening..."
-msgstr ""
+msgstr "開いています…"
 
 #: apps/reader/src/reader-app-commands.ts
 msgctxt "Reader command detail"
@@ -5002,7 +5002,7 @@ msgstr "新しいタブで開きます"
 
 #: apps/reader/src/CitationStructuredEditor.tsx
 msgid "Optional descriptive text"
-msgstr ""
+msgstr "任意の説明文"
 
 #: apps/reader/src/SourceAddDialog.tsx
 msgid "or"
@@ -5010,56 +5010,56 @@ msgstr "または"
 
 #: apps/reader/src/ConnectReader.tsx
 msgid "Or open another collection"
-msgstr ""
+msgstr "または別のコレクションを開く"
 
 #: apps/reader/src/AnnotationList.tsx
 msgid "Order"
-msgstr ""
+msgstr "順序"
 
 #: apps/reader/src/CitationContributors.tsx
 msgctxt "CitationContributors contributorKindOptions"
 msgid "Organisation"
-msgstr ""
+msgstr "組織"
 
 #: apps/reader/src/CitationContributors.tsx
 msgctxt "CitationContributors interface"
 msgid "Organisation name"
-msgstr ""
+msgstr "組織名"
 
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "Organizer"
-msgstr ""
+msgstr "主催者"
 
 #. placeholder {0}: category.toUpperCase()
 #: packages/migration/src/readwise-sources.ts
 msgid "Original {0} unavailable; saved HTML retained: {key}"
-msgstr ""
+msgstr "元の{0}は利用できません。保存済みHTMLは保持されています：{key}"
 
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "Original author"
-msgstr ""
+msgstr "原著者"
 
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "Original date"
-msgstr ""
+msgstr "元の日付"
 
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "Original publisher"
-msgstr ""
+msgstr "元の出版社"
 
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "Original publisher place"
-msgstr ""
+msgstr "元の出版地"
 
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "Original title"
-msgstr ""
+msgstr "原題"
 
 #: apps/reader/src/citation-form-model.ts
 msgctxt "CSL item type"
@@ -5068,15 +5068,15 @@ msgstr "その他"
 
 #: apps/extension/src/use-extension-capture.ts
 msgid "Other notes already link to this highlight. Delete it from Saved highlights to review them first."
-msgstr ""
+msgstr "ほかのノートがすでにこのハイライトにリンクしています。先に「保存済みハイライト」から削除して確認してください。"
 
 #: packages/migration/src/readwise.ts
 msgid "Other Reader sources"
-msgstr ""
+msgstr "Readerのその他の資料"
 
 #: packages/migration/src/readwise.ts
 msgid "Other Readwise sources"
-msgstr ""
+msgstr "Readwiseのその他の資料"
 
 #: packages/renderer-pdf/src/pdf-viewer-ui-schema.ts
 msgctxt "PDF navigation outline"
@@ -5096,91 +5096,91 @@ msgstr "アウトライン"
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "Page"
-msgstr ""
+msgstr "ページ"
 
 #: packages/renderer-pdf/src/pdf-translations.ts
 msgctxt "PDF viewer search"
 msgid "Page {page}"
-msgstr ""
+msgstr "{page}ページ"
 
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "Page first"
-msgstr ""
+msgstr "最初のページ"
 
 #: packages/renderer-pdf/src/pdf-translations.ts
 msgctxt "PDF viewer page"
 msgid "Page Rotation"
-msgstr ""
+msgstr "ページの回転"
 
 #: packages/renderer-pdf/src/pdf-translations.ts
 msgctxt "PDF viewer page"
 msgid "Page Settings"
-msgstr ""
+msgstr "ページ設定"
 
 #: apps/reader/src/CitationStructuredEditor.tsx
 msgctxt "CitationStructuredEditor interface"
 msgid "Pages"
-msgstr ""
+msgstr "ページ"
 
 #: packages/renderer-pdf/src/pdf-translations.ts
 msgctxt "PDF viewer print"
 msgid "Pages to print"
-msgstr ""
+msgstr "印刷するページ"
 
 #: apps/extension/src/WelcomeApp.tsx
 msgid "Pages you have saved are marked on the toolbar button and show your highlights."
-msgstr ""
+msgstr "保存したページにはツールバーボタンに印が付き、ハイライトが表示されます。"
 
 #: apps/extension/src/OptionsApp.tsx
 msgid "Pages you visit"
-msgstr ""
+msgstr "閲覧したページ"
 
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "Pamphlet"
-msgstr ""
+msgstr "パンフレット"
 
 #: apps/reader/src/reader-command-list.ts
 msgid "Pane {paneLabel}"
-msgstr ""
+msgstr "ペイン{paneLabel}"
 
 #: apps/reader/src/reader-command-list.ts
 msgid "Pane {paneLabel} is focused"
-msgstr ""
+msgstr "ペイン{paneLabel}にフォーカス中"
 
 #: apps/reader/src/DockPaneActions.tsx
 msgctxt "DockPaneActions interface"
 msgid "Pane actions"
-msgstr ""
+msgstr "ペインの操作"
 
 #: apps/reader/src/CitationContributors.tsx
 msgid "Parse literal name"
-msgstr ""
+msgstr "名前を文字列として解析"
 
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "Parse names"
-msgstr ""
+msgstr "名前を解析"
 
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "Part"
-msgstr ""
+msgstr "部"
 
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "Part title"
-msgstr ""
+msgstr "部のタイトル"
 
 #: apps/reader/src/annotation-columns.ts
 msgctxt "Annotation table column"
 msgid "Passage"
-msgstr ""
+msgstr "箇所"
 
 #: apps/reader/src/LibraryAnnotationToolbar.tsx
 msgid "Passage, note, source or tag"
-msgstr ""
+msgstr "箇所、ノート、資料、またはタグ"
 
 #: packages/renderer-pdf/src/pdf-translations.ts
 msgctxt "PDF viewer passwordPrompt"
@@ -5190,139 +5190,139 @@ msgstr "パスワード"
 #: packages/renderer-pdf/src/pdf-translations.ts
 msgctxt "PDF viewer passwordPrompt"
 msgid "Password Required"
-msgstr ""
+msgstr "パスワードが必要です"
 
 #: apps/reader/src/source-addition-flow.ts
 msgid "Paste a web address, DOI, arXiv ID, ISBN or PubMed ID."
-msgstr ""
+msgstr "Webアドレス、DOI、arXiv ID、ISBN、またはPubMed IDを貼り付けてください。"
 
 #: apps/reader/src/CitationLookup.tsx
 msgid "Paste an identifier, URL, or title"
-msgstr ""
+msgstr "識別子、URL、またはタイトルを貼り付け"
 
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "Patent"
-msgstr ""
+msgstr "特許"
 
 #: packages/migration/src/zotero-validation.ts
 msgid "Payload count mismatch."
-msgstr ""
+msgstr "データの件数が一致しません。"
 
 #: apps/reader/src/LibraryWorkspace.tsx
 msgctxt "LibraryWorkspace formatFilterOptions"
 msgid "PDF"
-msgstr ""
+msgstr "PDF"
 
 #: packages/core/src/domain/selector.ts
 msgid "PDF coordinates must be finite numbers."
-msgstr ""
+msgstr "PDFの座標は有限の数値でなければなりません。"
 
 #: packages/migration/src/zotero-anchors.ts
 msgid "PDF geometry unavailable."
-msgstr ""
+msgstr "PDFの座標情報が利用できません。"
 
 #: packages/renderer-pdf/src/embedpdf-runtime.ts
 msgid "PDF text extraction was cancelled."
-msgstr ""
+msgstr "PDFのテキスト抽出がキャンセルされました。"
 
 #: apps/reader/src/ReaderWorkspaceView.tsx
 #: apps/reader/src/SourceAddDialog.tsx
 msgid "PDF, EPUB or saved web page"
-msgstr ""
+msgstr "PDF、EPUB、または保存済みWebページ"
 
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "Performance"
-msgstr ""
+msgstr "公演"
 
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "Performer"
-msgstr ""
+msgstr "実演者"
 
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "Periodical"
-msgstr ""
+msgstr "定期刊行物"
 
 #: apps/reader/src/CitationContributors.tsx
 msgctxt "CitationContributors contributorKindOptions"
 msgid "Person"
-msgstr ""
+msgstr "個人"
 
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "Personal communication"
-msgstr ""
+msgstr "私信"
 
 #: apps/reader/src/dockview-menus.ts
 msgctxt "dockview menus"
 msgid "Pin tab"
-msgstr ""
+msgstr "タブを固定"
 
 #: apps/extension/src/WelcomeApp.tsx
 msgid "Pin the extension"
-msgstr ""
+msgstr "拡張機能を固定"
 
 #: apps/extension/src/HighlightFields.tsx
 msgctxt "Highlight colour"
 msgid "pink"
-msgstr ""
+msgstr "ピンク"
 
 #: apps/reader/src/DockviewWorkspace.tsx
 msgctxt "DockviewWorkspace interface"
 msgid "Pinned"
-msgstr ""
+msgstr "固定済み"
 
 #: apps/reader/src/CitationStructuredEditor.tsx
 msgctxt "CitationStructuredEditor interface"
 msgid "Place"
-msgstr ""
+msgstr "場所"
 
 #: apps/extension/src/SaveBar.tsx
 msgid "Please wait…"
-msgstr ""
+msgstr "お待ちください…"
 
 #: apps/reader/src/WorkspacePaneSupport.tsx
 msgid "Position not saved"
-msgstr ""
+msgstr "位置は保存されていません"
 
 #: apps/extension/src/PostPicker.tsx
 msgid "Post"
-msgstr ""
+msgstr "投稿"
 
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "Post"
-msgstr ""
+msgstr "投稿"
 
 #: apps/extension/src/PostPicker.tsx
 msgid "Posts"
-msgstr ""
+msgstr "投稿"
 
 #: apps/extension/src/ConnectionPanel.tsx
 msgid "Prepare this collection"
-msgstr ""
+msgstr "このコレクションを準備"
 
 #: apps/reader/src/import-controller.ts
 msgid "Preparing"
-msgstr ""
+msgstr "準備中"
 
 #: apps/reader/src/LibraryWorkspace.tsx
 msgctxt "LibraryWorkspace interface"
 msgid "Preparing bibliography…"
-msgstr ""
+msgstr "参考文献を準備中…"
 
 #: apps/reader/src/CitationPreview.tsx
 msgctxt "CitationPreview status or action"
 msgid "Preparing citation…"
-msgstr ""
+msgstr "引用を準備中…"
 
 #: packages/renderer-pdf/src/pdf-translations.ts
 msgctxt "PDF viewer print"
 msgid "Preparing document..."
-msgstr ""
+msgstr "文書を準備中…"
 
 #: apps/reader/src/DocumentContextualToolbar.tsx
 msgctxt "DocumentContextualToolbar interface"
