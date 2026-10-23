@@ -28,7 +28,7 @@ export function libraryCommands(input: ReaderCommandInput): readonly ReaderComma
     {
       id: "import-library",
       label: t({ message: "Import a library…", context: "reader app commands" }),
-      detail: t({ message: "Opens in a new tab" }),
+      detail: t({ message: "Opens in a new tab", context: "Reader command detail" }),
       group: "Library",
       keywords: "zotero readwise migrate",
       run: () => {

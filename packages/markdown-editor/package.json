@@ -22,8 +22,8 @@
     "@codemirror/view": "^6.43.8",
     "@lezer/highlight": "^1.2.3",
     "@lingui/core": "6.9.0",
-    "@mdbase-dev/i18n": "file:../../vendor/mdbase-dev-i18n-0.1.0-beta.141-096d80bf.tgz",
-    "@mdbase-dev/ui": "file:../../vendor/mdbase-dev-ui-dev-b2d7c464.tgz",
+    "@mdbase-dev/i18n": "file:../../vendor/mdbase-dev-i18n-0.1.0-beta.141-b4134d71.tgz",
+    "@mdbase-dev/ui": "file:../../vendor/mdbase-dev-ui-0.1.0-beta.141-9041442d.tgz",
     "@mdbase-reader/core": "workspace:*",
     "react": "^19.2.8"
   },

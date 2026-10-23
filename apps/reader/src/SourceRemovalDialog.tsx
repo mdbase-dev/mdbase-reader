@@ -113,7 +113,7 @@ function OpenSourceRemovalDialog({ removal, pending }: OpenSourceRemovalDialogPr
             disabled={removing}
             onClick={cancel}
           >
-            <Trans>Cancel</Trans>
+            <Trans context="Reader action">Cancel</Trans>
           </button>
           {problem && !plan ? (
             <button

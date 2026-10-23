@@ -96,7 +96,7 @@ function OpenPostPicker({
           {c.busy ? t`Saving…` : t`Save ${String(loadedSelected.length)} selected`}
         </button>
         <button type="button" className="secondary" disabled={c.busy} onClick={picker.close}>
-          <Trans>Cancel</Trans>
+          <Trans context="Reader action">Cancel</Trans>
         </button>
       </div>
     </section>

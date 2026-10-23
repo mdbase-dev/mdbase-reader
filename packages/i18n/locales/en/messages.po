@@ -1211,17 +1211,6 @@ msgctxt "CSL bibliographic field or item type"
 msgid "Call number"
 msgstr "Call number"
 
-#: apps/extension/src/NotePanel.tsx
-#: apps/extension/src/PostPicker.tsx
-#: apps/extension/src/SavedHighlights.tsx
-#: apps/reader/src/AnnotationEditor.tsx
-#: apps/reader/src/AnnotationPanelActions.tsx
-#: apps/reader/src/LibraryBulkBar.tsx
-#: apps/reader/src/LibraryViewSaveDialog.tsx
-#: apps/reader/src/SourceRemovalDialog.tsx
-msgid "Cancel"
-msgstr "Cancel"
-
 #: apps/reader/src/DocumentContextualToolbar.tsx
 msgctxt "DocumentContextualToolbar interface"
 msgid "Cancel"
@@ -1239,6 +1228,18 @@ msgstr "Cancel"
 
 #: packages/renderer-pdf/src/pdf-translations.ts
 msgctxt "PDF viewer print"
+msgid "Cancel"
+msgstr "Cancel"
+
+#: apps/extension/src/NotePanel.tsx
+#: apps/extension/src/PostPicker.tsx
+#: apps/extension/src/SavedHighlights.tsx
+#: apps/reader/src/AnnotationEditor.tsx
+#: apps/reader/src/AnnotationPanelActions.tsx
+#: apps/reader/src/LibraryBulkBar.tsx
+#: apps/reader/src/LibraryViewSaveDialog.tsx
+#: apps/reader/src/SourceRemovalDialog.tsx
+msgctxt "Reader action"
 msgid "Cancel"
 msgstr "Cancel"
 
@@ -2194,6 +2195,7 @@ msgid "Curator"
 msgstr "Curator"
 
 #: apps/reader/src/CitationLookup.tsx
+msgctxt "Current citation value"
 msgid "Current"
 msgstr "Current"
 
@@ -2352,6 +2354,7 @@ msgstr "Destination checked. Confirm below to begin writing."
 
 #: apps/reader/src/CitationEditor.tsx
 #: apps/reader/src/SourceDetails.tsx
+msgctxt "Source metadata section"
 msgid "Details"
 msgstr "Details"
 
@@ -3302,6 +3305,7 @@ msgid "Hide column"
 msgstr "Hide column"
 
 #: apps/reader/src/annotation-kind.ts
+msgctxt "Annotation kind"
 msgid "Highlight"
 msgstr "Highlight"
 
@@ -4992,6 +4996,7 @@ msgid "Opening..."
 msgstr "Opening..."
 
 #: apps/reader/src/reader-app-commands.ts
+msgctxt "Reader command detail"
 msgid "Opens in a new tab"
 msgstr "Opens in a new tab"
 
@@ -6412,6 +6417,7 @@ msgstr "Save X posts from their live page using the mdbase Reader extension."
 #: apps/extension/src/NotePanel.tsx
 #: apps/extension/src/SaveBar.tsx
 #: apps/reader/src/AnnotationEditor.tsx
+msgctxt "Reader save status"
 msgid "Saved"
 msgstr "Saved"
 
@@ -7933,6 +7939,7 @@ msgstr "Try a different search, or clear the filters."
 #: apps/extension/src/NotePanel.tsx
 #: apps/reader/src/ConnectionLayout.tsx
 #: apps/reader/src/LibraryAnnotationBars.tsx
+msgctxt "Reader action"
 msgid "Try again"
 msgstr "Try again"
 
@@ -7995,6 +8002,7 @@ msgid "Undated"
 msgstr "Undated"
 
 #: apps/extension/src/CaptureApp.tsx
+msgctxt "Reader action"
 msgid "Undo"
 msgstr "Undo"
 
@@ -8054,6 +8062,7 @@ msgid "Unsafe import path."
 msgstr "Unsafe import path."
 
 #: apps/reader/src/AnnotationEditor.tsx
+msgctxt "Reader save status"
 msgid "Unsaved"
 msgstr "Unsaved"
 

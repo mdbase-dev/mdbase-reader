@@ -1,5 +1,8 @@
 // @vitest-environment happy-dom
+import { msg } from "@lingui/core/macro";
 import { createI18nRuntime } from "@mdbase-dev/i18n";
+import { uiCatalogues } from "@mdbase-dev/ui/i18n";
+import { readerI18n } from "@mdbase-reader/i18n";
 import english from "@mdbase-reader/i18n/english";
 import french from "@mdbase-reader/i18n/locales/fr";
 import { ReaderI18nProvider, ReaderLanguageSetting } from "@mdbase-reader/i18n/react";
@@ -10,6 +13,21 @@ import { afterEach, expect, it, vi } from "vitest";
 afterEach(() => {
   vi.unstubAllGlobals();
   document.documentElement.lang = "en";
+});
+
+it("keeps app message identities separate from independently authored shared UI", () => {
+  const shared = new Set(Object.keys(uiCatalogues.english.messages));
+  expect(Object.keys(english.messages).filter((id) => shared.has(id))).toEqual([]);
+});
+
+it("composes real shared UI translations on the same Lingui singleton", async () => {
+  const cancel = msg`Cancel`;
+  try {
+    await readerI18n.selectLocale("ja");
+    expect(readerI18n.i18n._(cancel)).toBe("キャンセル");
+  } finally {
+    await readerI18n.selectLocale("en");
+  }
 });
 
 it("retains the active locale on load failure and clears the notice after recovery", async () => {

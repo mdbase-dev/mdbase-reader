@@ -1,5 +1,6 @@
 import { i18n } from "@lingui/core";
 import { createI18nRuntime } from "@mdbase-dev/i18n";
+import { uiCatalogues } from "@mdbase-dev/ui/i18n";
 
 import english from "../locales/en/messages.json";
 
@@ -47,6 +48,7 @@ export function setReaderLocaleStorage(storage: LocaleStorage): void {
 export const readerI18n = createI18nRuntime({
   i18n,
   english,
+  libraries: [uiCatalogues],
   loadLocale: async (locale) => (await loaders[locale]()).default,
   storage: {
     getLocale: () => localeStorage.getLocale(),

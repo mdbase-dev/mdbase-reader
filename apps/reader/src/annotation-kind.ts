@@ -5,7 +5,7 @@ export function annotationKindLabel(type: string): string {
     case "note":
       return t({ message: "Comment", context: "Annotation type, distinct from literature note" });
     case "highlight":
-      return t`Highlight`;
+      return t({ message: "Highlight", context: "Annotation kind" });
     case "area":
       return t`Area`;
     case "bookmark":

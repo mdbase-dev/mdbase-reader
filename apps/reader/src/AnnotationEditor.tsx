@@ -225,9 +225,9 @@ function AnnotationSaveState({ status }: { readonly status: string }): JSX.Eleme
   const { t } = useLingui();
   const saveStateLabels: Readonly<Record<string, string>> = {
     failed: t`Not saved`,
-    saved: t`Saved`,
+    saved: t({ message: "Saved", context: "Reader save status" }),
     saving: t`Saving…`,
-    unsaved: t`Unsaved`,
+    unsaved: t({ message: "Unsaved", context: "Reader save status" }),
   };
   return (
     <small className={`annotation-save-state is-${status}`} role="status">
@@ -267,7 +267,7 @@ function AnnotationDeleteConfirmation({
       ) : null}
       <div>
         <button type="button" disabled={deleting} onClick={onCancel}>
-          <Trans>Cancel</Trans>
+          <Trans context="Reader action">Cancel</Trans>
         </button>
         <button className="is-danger" type="button" disabled={deleting} onClick={onConfirm}>
           {deleting

@@ -110,7 +110,7 @@ function SavedSourceNote({
           <p>{problem}</p>
           <div className="problem-actions">
             <button type="button" onClick={load}>
-              <Trans>Try again</Trans>
+              <Trans context="Reader action">Try again</Trans>
             </button>
           </div>
         </div>
@@ -204,7 +204,7 @@ function SourceDetailsForm({
               setProblem(null);
             }}
           >
-            <Trans>Cancel</Trans>
+            <Trans context="Reader action">Cancel</Trans>
           </button>
         </div>
       ) : null}
@@ -295,7 +295,7 @@ function SourceNoteEditor({ session }: { readonly session: SourceNoteSession }):
 function noteStateLabel(state: SourceNoteSnapshot["state"]): string {
   switch (state) {
     case "saved":
-      return t`Saved`;
+      return t({ message: "Saved", context: "Reader save status" });
     case "unsaved":
       return t`Unsaved changes`;
     case "saving":

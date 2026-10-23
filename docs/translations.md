@@ -21,7 +21,7 @@ pnpm i18n:check
 
 During local authoring only, `check:code` runs the unchanged lint/typecheck/test suite and `build:code` builds every workspace without asserting catalogue completeness. Neither substitutes for the normal release gates. Run finite checks/builds via `rpnpm` on this machine.
 
-The initial kit's pnpm bin silently exits because its direct-entry guard compares a symlink against an ESM real path. `scripts/i18n.mjs` calls the actual kit `main()` explicitly and is a temporary portable entry adapter, not a check bypass.
+Kit commit `b4134d71` fixes the original pnpm symlink entry bug. Scripts now invoke its public `mdbase-i18n` bin directly; the temporary exported-main adapter has been removed.
 
 While catalogues are being authored, `pnpm exec lingui compile --workers 1` permits development fallback; it is **not** evidence of translation completeness. Empty target PO entries must never be filled with English just to pass checks.
 
@@ -35,15 +35,17 @@ Electron's main process initializes synchronous English from copied compiler-own
 
 ## Shared kit dependency
 
-This branch vendors `@mdbase-dev/i18n` from Connect commit `096d80bf`:
+This branch vendors `@mdbase-dev/i18n` from Connect commit `b4134d71`:
 
-- `vendor/mdbase-dev-i18n-0.1.0-beta.141-096d80bf.tgz`
-- SHA256 `ba0d9ca37ab265482c8716672995523db9a5f56d15554507bf408b7dcf50e95b`
+- `vendor/mdbase-dev-i18n-0.1.0-beta.141-b4134d71.tgz`
+- SHA256 `3cc9e231dd0ea2ef3cbb34112689e7ed227111f30d976ce0f94d6cd991520806`
+
+Public UI integration uses `vendor/mdbase-dev-ui-0.1.0-beta.141-9041442d.tgz` (SHA256 `65b7ab3754fe840e04c0128e00f4b9f81dbbf999e0eb987acf97ee72c6b3b55b`). Its `uiCatalogues` source is composed by the shared runtime, so library strings remain library-owned and use the exact same Lingui singleton. Reader gives potentially colliding generic messages semantic contexts to prevent independent PO translations from conflicting. The integration tarball is not yet translation/release-qualified; refresh it after the shared-language deltas are reviewed.
 
 **Replace the file dependency with the published npm version at merge time**, after the next Connect release. No publication or deployment is authorized by this branch.
 
 ## Integration status
 
-This is not yet a complete multilingual release. Translation handoff `5eab755` contains 1,872 English messages and eight deliberately empty target PO scaffolds. The shell/renderer/model source helpers are merged, with a final renderer follow-up pending. Shared public UI catalogue composition, authored target languages, final full remote gates/builds and translated-layout acceptance remain in progress. Sample preview record contents are intentionally preserved as user-like data.
+This is not yet a complete multilingual release. The final source catalogue contains 1,894 English messages and eight deliberately empty target PO scaffolds; see the PR for the latest translation-handoff commit. Both restarted helpers are merged, and public UI catalogue composition is wired. Authored target languages, a release-qualified shared UI tarball, final full remote gates/builds and translated-layout acceptance remain in progress. The public CommandPalette still needs a presentation-only group-label API to localize its stable group identities. Sample preview record contents are intentionally preserved as user-like data.
 
 Recorded Chromium preview acceptance (2026-10-23, desk `gcp/reader-i18n`, 1280×686 page viewport) verified all nine picker options, Japanese `html.lang` and date formatting, persisted reload, failed German chunk retaining Japanese and its saved choice, and clearing the failure notice after successful recovery. This used development-fallback target data: it is **not** acceptance of translated Japanese/German copy or their final layouts, connected LAB workflows, or native GUI behavior.

@@ -272,7 +272,7 @@ function CommentEditor({
           {working ? t`Saving…` : t`Save comment`}
         </button>
         <button type="button" className="text-button" onClick={onCancel}>
-          <Trans>Cancel</Trans>
+          <Trans context="Reader action">Cancel</Trans>
         </button>
       </div>
     </form>
@@ -315,7 +315,7 @@ function DeleteConfirm({
           {working ? t`Deleting…` : t`Delete`}
         </button>
         <button type="button" className="text-button" onClick={onCancel}>
-          <Trans>Cancel</Trans>
+          <Trans context="Reader action">Cancel</Trans>
         </button>
       </div>
     </div>

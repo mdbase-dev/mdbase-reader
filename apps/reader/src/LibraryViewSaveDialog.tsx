@@ -60,7 +60,7 @@ export function LibraryViewSaveDialog({
         </label>
         <div>
           <button type="button" onClick={onCancel}>
-            <Trans>Cancel</Trans>
+            <Trans context="Reader action">Cancel</Trans>
           </button>
           <button type="submit" disabled={!name.trim() || saving}>
             {saving

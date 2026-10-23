@@ -83,7 +83,7 @@ export function AnnotationProblem({
       <div className="library-view-problem" role="alert">
         {load.message}{" "}
         <button type="button" onClick={onRetry}>
-          <Trans>Try again</Trans>
+          <Trans context="Reader action">Try again</Trans>
         </button>
       </div>
     );

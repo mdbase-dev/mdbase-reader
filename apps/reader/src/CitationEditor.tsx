@@ -80,7 +80,7 @@ function ReadyCitationEditor({
             aria-current={mode === "fields" ? "page" : undefined}
             onClick={() => setMode("fields")}
           >
-            <Trans>Details</Trans>
+            <Trans context="Source metadata section">Details</Trans>
           </button>
           <button
             type="button"

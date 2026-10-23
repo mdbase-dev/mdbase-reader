@@ -57,7 +57,7 @@ export function SourceDetails({
     <details className="source-details">
       <summary>
         <strong>
-          <Trans>Details</Trans>
+          <Trans context="Source metadata section">Details</Trans>
         </strong>
         <span>{detailSummary(source)}</span>
       </summary>

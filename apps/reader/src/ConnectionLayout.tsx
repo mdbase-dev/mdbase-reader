@@ -15,7 +15,7 @@ export function ConnectionRetry({
 }): JSX.Element | null {
   return error ? (
     <button type="button" className="mdbase-button" onClick={onRetry}>
-      <Trans>Try again</Trans>
+      <Trans context="Reader action">Try again</Trans>
     </button>
   ) : null;
 }

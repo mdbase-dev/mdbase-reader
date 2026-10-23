@@ -136,7 +136,7 @@ function SourceCommentComposer({
       {problem ? <p role="alert">{problem}</p> : null}
       <footer>
         <button type="button" onClick={dismiss} disabled={saving}>
-          <Trans>Cancel</Trans>
+          <Trans context="Reader action">Cancel</Trans>
         </button>
         <ReaderButton disabled={saving || !comment.trim()} onClick={save}>
           {saving

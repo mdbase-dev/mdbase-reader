@@ -85,7 +85,10 @@ export function SaveBar({
       </a>
     ) : (
       <p className="saved-line">
-        {c.status === "existing" ? t`In this collection` : t`Saved`} ·{" "}
+        {c.status === "existing"
+          ? t`In this collection`
+          : t({ message: "Saved", context: "Reader save status" })}{" "}
+        ·{" "}
         <a href={readerSourceUrl(source)} target="_blank" rel="noreferrer">
           <Trans>Open in Reader</Trans>
         </a>

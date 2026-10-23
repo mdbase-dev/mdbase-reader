@@ -30,7 +30,9 @@ export function shellCatalogue(locale) {
 }
 export function chromeMessages(locale) {
   const catalogue = JSON.parse(shellCatalogue(locale));
-  const translator = setupI18n({ locale, messages: catalogue.messages });
+  const translator = setupI18n();
+  translator.load(locale, catalogue.messages);
+  translator.activate(locale);
   return Object.fromEntries(
     Object.entries(messages).map(([key, message]) => {
       const id = generateMessageId(message);

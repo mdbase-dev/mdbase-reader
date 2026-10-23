@@ -193,7 +193,7 @@ function BulkFieldForm({
         <Trans>Apply</Trans>
       </button>
       <button type="button" onClick={onCancel}>
-        <Trans>Cancel</Trans>
+        <Trans context="Reader action">Cancel</Trans>
       </button>
     </form>
   );

@@ -259,7 +259,7 @@ function PanelStatus({ controller: c }: ControllerProps): React.JSX.Element {
                   className="inline-link"
                   onClick={() => void c.undoHighlight()}
                 >
-                  <Trans>Undo</Trans>
+                  <Trans context="Reader action">Undo</Trans>
                 </button>
               </>
             ) : null}

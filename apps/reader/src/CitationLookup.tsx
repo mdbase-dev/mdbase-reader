@@ -124,7 +124,7 @@ function CitationMergeReview({
               <span className="citation-difference-copy">
                 <strong>{fieldLabel(difference.field)}</strong>
                 <span>
-                  <small>{t({ message: "Current" })}</small>
+                  <small>{t({ message: "Current", context: "Current citation value" })}</small>
                   <del>{displayCslValue(difference.current)}</del>
                 </span>
                 <span>
