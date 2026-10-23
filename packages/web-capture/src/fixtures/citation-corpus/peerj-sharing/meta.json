@@ -5,6 +5,7 @@
     "Original reduced reproduction of the captured HTML; article prose, descriptions, images, styles, tracking and executable scripts omitted. Citation metadata values are retained; JSON-LD keeps only citation-related properties.",
     "Page HTTP status: 403. Final URL: https://peerj.com/articles/175/.",
     "HTTP 403 Cloudflare challenge; Citoid 404. Bibliographic expectations were verified against the successful DOI registry record, not against an accessible live article. This is a registry-only recovery case, not proof that these fields are discoverable in the fetched HTML.",
+    "Structured-metadata recheck on 2026-10-23: a fresh sequential browser-UA fetch still returned HTTP 403 with cf-mitigated: challenge. Raw downloads were isolated under a new gitignored .scratch/corpus/structured-verification-* directory and never executed. The recorded DOI response corroborates every expected bibliographic field, but the challenge contains no DOI and Citoid fails, so replay cannot invoke that response. Preserve this blocked case; add a separate successful, inert article reproduction if an authorized capture becomes available, or test an explicitly supplied independent DOI separately. Do not synthesize a DOI from this host's URL pattern.",
     "Baseline extractScholarlyMetadata at d0c7061: 0/8 expected fields match; wrong or missing fields: type, title, author, issued, container-title, publisher, DOI, URL. Cosmetic case/whitespace differences are ignored; absent expected fields are not scored."
   ]
 }
