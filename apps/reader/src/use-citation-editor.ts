@@ -12,7 +12,7 @@ import {
   claimSourceLabel,
   type CitationSuggestion,
 } from "@mdbase-reader/web-capture/citation-updates";
-import { useCallback, useState } from "react";
+import { useCallback, useRef, useState } from "react";
 
 import { assessCitationDraft, citationDraftForSource } from "./citation-editor-model.js";
 import { serializeCitation } from "./citation-form-model.js";
@@ -59,6 +59,7 @@ export function useCitationEditor(input: {
   readonly onSaved: (source: Source) => void;
 }): CitationEditorController {
   const [draftState, setDraftState] = useState<DraftState | null>(null);
+  const pendingSaves = useRef(new Set<string>());
   const [statusState, setStatusState] = useState<SelectedValue<
     CitationEditorController["status"]
   > | null>(null);
@@ -142,9 +143,16 @@ export function useCitationEditor(input: {
 
   const persist = useCallback(
     (expectedCitation: unknown): void => {
-      if (!source || !assessment.valid || !dirty || status === "saving") {
+      if (
+        !source ||
+        !assessment.valid ||
+        !dirty ||
+        status === "saving" ||
+        pendingSaves.current.has(source.id)
+      ) {
         return;
       }
+      pendingSaves.current.add(source.id);
       const savedDraft = draft;
       setDraftState((previous) =>
         previous?.source.id === source.id
@@ -187,7 +195,8 @@ export function useCitationEditor(input: {
               value: readerErrorMessage(reason, "Reader could not save this citation."),
             });
           }
-        });
+        })
+        .finally(() => pendingSaves.current.delete(source.id));
     },
     [assessment, dirty, draft, input, provenance, source, status],
   );

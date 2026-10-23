@@ -245,7 +245,7 @@ describe("citation provenance and lookups", () => {
     await render(explained);
     await find();
     await act(async () => controller.setCitation({ ...citation, publisher: "Typed" }));
-    await act(async () => finish([claim("publisher", "Remote")]));
+    await act(async () => finish([claim("publisher", "Remote"), claim("volume", "Stale")]));
     expect(controller.suggestions).toEqual([]);
     expect(controller.assessment.value?.["publisher"]).toBe("Typed");
   });
@@ -400,7 +400,54 @@ describe("citation editor save baseline and conflicts", () => {
       provenance: { title: { value: "Reader edit", source: "user" } },
     });
   });
+});
 
+describe("citation editor save guard", () => {
+  it("sends one save for same-turn clicks, including after edits while saving", async () => {
+    let finish!: (source: Source) => void;
+    saveSourceCitation.mockReturnValueOnce(
+      new Promise((resolve) => {
+        finish = resolve;
+      }),
+    );
+    const firstEdit = { ...citation, title: "First edit" };
+    await render(source);
+    await act(async () => controller.setCitation(firstEdit));
+    await act(async () => {
+      controller.save();
+      controller.save();
+    });
+    expect(saveSourceCitation).toHaveBeenCalledTimes(1);
+    const secondEdit = { ...citation, title: "Second edit" };
+    await act(async () => controller.setCitation(secondEdit));
+    await act(async () => controller.save());
+    expect(saveSourceCitation).toHaveBeenCalledTimes(1);
+    await act(async () =>
+      finish({ ...source, citation: firstEdit, frontmatter: { csl: firstEdit } }),
+    );
+    expect(controller.assessment.value).toEqual(secondEdit);
+    await act(async () => controller.save());
+    expect(saveSourceCitation).toHaveBeenCalledTimes(2);
+    expect(saveSourceCitation.mock.lastCall?.[2]?.expectedCitation).toEqual(firstEdit);
+  });
+
+  it("releases the save guard after failure so the draft can be retried", async () => {
+    saveSourceCitation.mockRejectedValueOnce(new Error("Offline"));
+    await render(source);
+    await act(async () => controller.setCitation({ ...citation, title: "Mine" }));
+    await act(async () => {
+      controller.save();
+      controller.save();
+    });
+    expect(saveSourceCitation).toHaveBeenCalledTimes(1);
+    expect(controller.error).toBe("Offline");
+    await act(async () => controller.save());
+    expect(saveSourceCitation).toHaveBeenCalledTimes(2);
+    expect(controller.dirty).toBe(false);
+  });
+});
+
+describe("citation editor save conflicts", () => {
   it("advances the baseline after a successful save, even without a parent refresh", async () => {
     await render(source);
     const edited = { ...citation, title: "First edit" };
