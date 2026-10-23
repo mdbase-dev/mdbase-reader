@@ -41,16 +41,7 @@ export async function citationForPage(
 ): Promise<CitationPreview | null> {
   options.signal?.throwIfAborted();
   const claims = [...(page?.claims ?? [])];
-  // Providers describe this capture unless they supply an independently dated snapshot.
-  // Fetching a potentially cached record later does not make its content newer.
-  const observedAt =
-    claims
-      .filter(
-        (claim) => claim.source.kind === "page" && Number.isFinite(Date.parse(claim.observedAt)),
-      )
-      .sort((a, b) => Date.parse(b.observedAt) - Date.parse(a.observedAt))[0]?.observedAt ??
-    options.observedAt ??
-    (options.now?.() ?? new Date()).toISOString();
+  const observedAt = snapshotObservedAt(page, options);
   const outcomes: ProviderOutcome[] = page?.outcome ? [page.outcome] : [];
   let doi = batchDoi(page) ?? doiFromUrl(pageUrl) ?? arxivDoi(arxivIdentifier(pageUrl));
   let problem: string | undefined;
@@ -165,6 +156,21 @@ export async function citationForPage(
   }
   options.signal?.throwIfAborted();
   return preview();
+}
+
+function snapshotObservedAt(page: ClaimBatch | null, options: PageCitationOptions): string {
+  // A later fetch of potentially cached metadata is not evidence of newer content.
+  const latest = page?.claims
+    .filter(
+      (claim) => claim.source.kind === "page" && Number.isFinite(Date.parse(claim.observedAt)),
+    )
+    .sort((a, b) => Date.parse(b.observedAt) - Date.parse(a.observedAt))[0]?.observedAt;
+  return (
+    page?.observedAt ??
+    latest ??
+    options.observedAt ??
+    (options.now?.() ?? new Date()).toISOString()
+  );
 }
 
 async function lookupCitoid(

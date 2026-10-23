@@ -148,27 +148,7 @@ function prepareClaims(claims: readonly Claim[]): CandidateClaim[] {
       }
       continue;
     }
-    if (pageTitleSignal(claim) && typeof value === "string") {
-      let candidate = splitTitle(value);
-      const container = supportedSuffix(candidate.suffix, claim, claims);
-      if (container) {
-        prepared.push({ ...claim, field: "container-title", value: container });
-      }
-      while (candidate.suffix) {
-        if (
-          container ||
-          claims.some(
-            (other) =>
-              other.field === "title" &&
-              !pageTitleSignal(other) &&
-              claimValuesMatch("title", candidate.title, other.value),
-          )
-        ) {
-          prepared.push({ ...claim, value: candidate.title, siteSuffixStripped: !!container });
-        }
-        candidate = splitTitle(candidate.title);
-      }
-    }
+    prepared.push(...titleCandidates(claim, claims));
     if ((claim.field === "author" || claim.field === "editor") && claim.source.kind !== "user") {
       value = withoutRoleNames(value);
       if (Array.isArray(value) && !value.length) {
@@ -180,6 +160,35 @@ function prepareClaims(claims: readonly Claim[]): CandidateClaim[] {
     }
   }
   return prepared;
+}
+
+function titleCandidates(claim: Claim, claims: readonly Claim[]): CandidateClaim[] {
+  if (!pageTitleSignal(claim) || typeof claim.value !== "string") {
+    return [];
+  }
+  const candidates: CandidateClaim[] = [];
+  let candidate = splitTitle(claim.value);
+  const container = supportedSuffix(candidate.suffix, claim, claims);
+  if (container) {
+    candidates.push({ ...claim, field: "container-title", value: container });
+  }
+  let outermost = true;
+  while (candidate.suffix) {
+    if (
+      (outermost && container) ||
+      claims.some(
+        (other) =>
+          other.field === "title" &&
+          !pageTitleSignal(other) &&
+          claimValuesMatch("title", candidate.title, other.value),
+      )
+    ) {
+      candidates.push({ ...claim, value: candidate.title, siteSuffixStripped: !!container });
+    }
+    candidate = splitTitle(candidate.title);
+    outermost = false;
+  }
+  return candidates;
 }
 
 function pageTitleSignal(claim: Claim): boolean {
@@ -333,7 +342,9 @@ function chooseGroup(field: string, groups: readonly ClaimGroup[]): ClaimGroup |
   } else if (field === "type") {
     // A registry's work type is authoritative. Otherwise prefer a positively identified work
     // type over generic Article/WebPage/document signals, however often defaults are repeated.
-    const registered = groups.filter((group) => group.winner.source.kind === "registry");
+    const registered = groups.filter(
+      (group) => group.winner.source.kind === "registry" && group.value !== "webpage",
+    );
     const specific = groups.filter(
       (group) => !["webpage", "article", "document"].includes(String(group.value)),
     );
@@ -396,17 +407,9 @@ function chooseGroup(field: string, groups: readonly ClaimGroup[]): ClaimGroup |
 function claimStrength(claim: CandidateClaim): number {
   // A confirmed site suffix breaks an otherwise exact tie, but never outweighs corroboration.
   let strength = sourceStrength[claim.source.kind] + (claim.siteSuffixStripped ? 1 : 0);
-  if (claim.field === "URL") {
-    if (claim.source.kind !== "user" && doiResolverUrl(claim.value)) {
-      return 30;
-    }
-    if (
-      claim.source.kind === "page" &&
-      claim.source.signal === "html" &&
-      claim.evidence === "page URL"
-    ) {
-      return 28;
-    }
+  const urlStrength = urlClaimStrength(claim);
+  if (urlStrength !== undefined) {
+    return urlStrength;
   }
   if (claim.source.kind === "page") {
     // Work-specific titles survive truncated OG titles corroborated by generic WebPage nodes.
@@ -430,6 +433,20 @@ function claimStrength(claim: CandidateClaim): number {
     }
   }
   return strength;
+}
+
+function urlClaimStrength(claim: Claim): number | undefined {
+  if (claim.field !== "URL") {
+    return undefined;
+  }
+  if (claim.source.kind !== "user" && doiResolverUrl(claim.value)) {
+    return 30;
+  }
+  return claim.source.kind === "page" &&
+    claim.source.signal === "html" &&
+    claim.evidence === "page URL"
+    ? 28
+    : undefined;
 }
 
 function doiResolverUrl(value: unknown): boolean {

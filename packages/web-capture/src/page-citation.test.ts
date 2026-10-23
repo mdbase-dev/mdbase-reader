@@ -65,6 +65,21 @@ describe("page citations", () => {
     ).toEqual(expect.arrayContaining([expect.objectContaining({ observedAt })]));
   });
 
+  it("keeps the snapshot time even when a blocked page has no claims", async () => {
+    const resolve = vi.spyOn(resolver, "resolveCitation");
+    const fetch = vi
+      .fn<typeof globalThis.fetch>()
+      .mockResolvedValue(Response.json([{ itemType: "webpage", title: "Recovered" }]));
+    await citationForPage({ claims: [], observedAt }, pageUrl, {
+      fetch,
+      citoid: {},
+      now: () => new Date("2026-11-23T00:00:00Z"),
+    });
+    expect(
+      resolve.mock.lastCall?.[0].claims.every((claim) => claim.observedAt === observedAt),
+    ).toBe(true);
+  });
+
   it("falls back to page claims when doi.org does not answer in time", async () => {
     vi.useFakeTimers();
     const settled = citationForPage(embedded, pageUrl, { fetch: hangingFetch(), timeoutMs: 20 });

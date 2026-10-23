@@ -61,6 +61,8 @@ export interface ProviderOutcome {
 /** What one source contributes: its claims, any identifiers it found, and, if remote, how it went. */
 export interface ClaimBatch {
   readonly claims: readonly Claim[];
+  /** Snapshot time, including captures such as challenge pages that supply no claims. */
+  readonly observedAt?: string;
   readonly identifiers?: ClaimIdentifiers;
   /** A PDF the page links, from `citation_pdf_url`. Not a citation field. */
   readonly pdfUrl?: string;

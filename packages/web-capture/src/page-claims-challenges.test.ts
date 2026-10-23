@@ -5,7 +5,7 @@ import { pageClaims } from "./page-claims.js";
 import { resolveCitation } from "./resolver.js";
 
 const observedAt = "2026-10-23T12:00:00Z";
-function claims(title: string, body = "") {
+function claims(title: string, body = ""): ReturnType<typeof pageClaims>["claims"] {
   const document = new DOMParser().parseFromString(
     `<html><head><title>${title}</title></head><body>${body}</body></html>`,
     "text/html",

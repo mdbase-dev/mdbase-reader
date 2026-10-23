@@ -134,6 +134,19 @@ describe("citation resolution: scoring", () => {
     },
   );
 
+  it("treats even registry webpage defaults only as fallback to a positive specific type", () => {
+    const result = resolveCitation({
+      claims: [
+        claim("title", "Story"),
+        claim("type", "webpage", registry),
+        claim("type", "webpage", remote),
+        claim("type", "article-newspaper", page, "@type"),
+      ],
+    });
+    expect(result.citation?.type).toBe("article-newspaper");
+    expect(result.provenance["type"]?.agreed).toBeUndefined();
+  });
+
   it("does not reparse a user's explicit name decision as an organisation", () => {
     const author = [{ family: "Press", given: "Associated" }];
     expect(
@@ -303,7 +316,9 @@ describe("citation resolution: normalization and validation", () => {
     expect(result.provenance["issued"]?.agreed).toEqual(["page:json-ld publication"]);
     expect(resolveCitation({ claims: [...claims].reverse() })).toEqual(result);
   });
+});
 
+describe("citation resolution: landing URLs", () => {
   it.each(["http://dx.doi.org/10.1234/work", "https://doi.org/10.1234/work"])(
     "prefers an explicit landing URL over the registry resolver link %s",
     (url) => {
@@ -342,7 +357,9 @@ describe("citation resolution: normalization and validation", () => {
       }).citation?.["URL"],
     ).toBe("https://publisher.example/landing");
   });
+});
 
+describe("citation resolution: container and validation boundaries", () => {
   it("never promotes a publisher fallback merely because the publisher agrees", () => {
     const result = resolveCitation({
       claims: [

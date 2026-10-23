@@ -91,7 +91,7 @@ export function pageClaims(document: Document, pageUrl: string, observedAt: stri
   const meta = metaIndex(document);
   const nodes = linkedNodes(document);
   if (challengePage(document, pageUrl, nodes)) {
-    return { claims: [] };
+    return { claims: [], observedAt };
   }
   for (const node of nodes) {
     linkedClaims(node, add);
@@ -123,6 +123,7 @@ export function pageClaims(document: Document, pageUrl: string, observedAt: stri
     .find((value) => value !== undefined);
   return {
     claims,
+    observedAt,
     ...(Object.keys(identifiers).length ? { identifiers } : {}),
     ...(pdfUrl ? { pdfUrl } : {}),
   };
@@ -144,7 +145,7 @@ function challengePage(document: Document, pageUrl: string, nodes: readonly Json
     return (
       title.toLowerCase().replace(/^www\./u, "") === host &&
       !document.querySelector("h1") &&
-      !nodes.some((node) => isWork(node) && (node["headline"] || node["name"]))
+      !nodes.some((node) => isWork(node) && (node["headline"] ?? node["name"]))
     );
   } catch {
     return false;
@@ -152,8 +153,12 @@ function challengePage(document: Document, pageUrl: string, nodes: readonly Json
 }
 
 function videoClaims(document: Document, nodes: readonly JsonLdNode[], add: AddClaim): void {
-  if (!nodes.some((node) => arrayValue(node["@type"]).includes("VideoObject"))) {
+  const videos = nodes.filter((node) => arrayValue(node["@type"]).includes("VideoObject"));
+  if (!videos.length) {
     return;
+  }
+  for (const node of videos) {
+    add("issued", cslDate(stringValue(node["uploadDate"])), "json-ld", "uploadDate");
   }
   const authors = [...document.querySelectorAll('[itemprop~="author"][itemscope]')].flatMap(
     (scope) => {
@@ -331,9 +336,6 @@ function linkedClaims(node: JsonLdNode, add: AddClaim): void {
   add("author", jsonLdNames(node["author"]), signal, "author");
   for (const value of arrayValue(node["datePublished"])) {
     add("issued", cslDate(stringValue(value)), signal, "datePublished");
-  }
-  if (arrayValue(node["@type"]).includes("VideoObject")) {
-    add("issued", cslDate(stringValue(node["uploadDate"])), signal, "uploadDate");
   }
   for (const value of arrayValue(node["publisher"])) {
     add("publisher", nameOf(value), signal, "publisher");

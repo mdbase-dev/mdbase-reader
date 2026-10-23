@@ -176,6 +176,7 @@ describe("page claims from tags and HTML", () => {
     );
     const before = document.documentElement.outerHTML;
     expect(pageClaims(document, pageUrl, observedAt)).toEqual({
+      observedAt,
       claims: [
         claim("title", "Plain notes", "html", "title"),
         claim("title", "Notes from a small experiment", "html", "h1"),

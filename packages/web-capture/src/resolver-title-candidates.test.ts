@@ -7,7 +7,11 @@ import { resolveCitation } from "./resolver.js";
 import type { Claim, ClaimSource } from "./claims.js";
 
 const observedAt = "2026-10-23T12:00:00Z";
-function resolve(head: string, body = "", remote: Claim[] = []) {
+function resolve(
+  head: string,
+  body = "",
+  remote: Claim[] = [],
+): ReturnType<typeof resolveCitation> {
   const document = new DOMParser().parseFromString(
     `<html><head>${head}</head><body>${body}</body></html>`,
     "text/html",
@@ -78,6 +82,16 @@ describe("title candidates", () => {
     ).toBe("A story - A subtitle");
   });
 
+  it("strips the confirmed site suffix without dropping an uncorroborated subtitle", () => {
+    const result = resolve(
+      '<title>Machine learning - a probabilistic perspective | Example Press</title><meta property="og:site_name" content="Example Press">',
+    );
+    expect(result.citation).toMatchObject({
+      title: "Machine learning - a probabilistic perspective",
+      "container-title": "Example Press",
+    });
+  });
+
   it("does not invent a container from an unsupported subtitle", () => {
     expect(resolve("<title>A story - A subtitle</title>").citation).toMatchObject({
       title: "A story - A subtitle",
@@ -86,7 +100,9 @@ describe("title candidates", () => {
       "container-title",
     );
   });
+});
 
+describe("page title suffix evidence", () => {
   it("does not double-count the title suffix or let generic types outvote NewsArticle", () => {
     const result = resolve(`<title>Big story - Opinion</title>
       <meta property="og:type" content="article">

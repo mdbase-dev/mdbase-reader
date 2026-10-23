@@ -44,13 +44,12 @@ function datePartKey(value: unknown): unknown {
 }
 
 function publisherKey(value: string): string {
-  const acronym = /^(.*?)\s+\(([a-z]+)\)$/iu.exec(value.trim());
-  const name = acronym?.[1];
+  const [, name, acronym] = /^(.*?)\s+\(([a-z]+)\)$/iu.exec(value.trim()) ?? [];
   const initials = name
     ?.split(/\s+/u)
     .map((word) => word[0])
     .join("");
-  return text(name && initials?.toLowerCase() === acronym?.[2]?.toLowerCase() ? name : value)
+  return text(name && initials?.toLowerCase() === acronym?.toLowerCase() ? name : value)
     .toLowerCase()
     .replace(/\bltd\b/gu, "limited")
     .replace(/[^\p{L}\p{N}]/gu, "");
@@ -58,11 +57,8 @@ function publisherKey(value: string): string {
 
 /** Partial dates corroborate compatible, more precise dates, but not conflicting days/months. */
 export function claimValuesMatch(field: string, left: unknown, right: unknown): boolean {
-  if (field === "title" && typeof left === "string" && typeof right === "string") {
-    return titleKey(left) === titleKey(right);
-  }
-  if (field === "publisher" && typeof left === "string" && typeof right === "string") {
-    return publisherKey(left) === publisherKey(right);
+  if (typeof left === "string" && typeof right === "string") {
+    return matchingText(field, left, right);
   }
   if (cslFieldKinds.get(field) === "name" && Array.isArray(left) && Array.isArray(right)) {
     return (
@@ -89,10 +85,17 @@ export function claimValuesMatch(field: string, left: unknown, right: unknown): 
       );
     }
   }
-  if (typeof left === "string" && typeof right === "string") {
-    return text(left).toLowerCase() === text(right).toLowerCase();
-  }
   return cslValuesEqual(left, right);
+}
+
+function matchingText(field: string, left: string, right: string): boolean {
+  if (field === "title") {
+    return titleKey(left) === titleKey(right);
+  }
+  if (field === "publisher") {
+    return publisherKey(left) === publisherKey(right);
+  }
+  return text(left).toLowerCase() === text(right).toLowerCase();
 }
 
 export function dateSpecificity(value: unknown): number {
