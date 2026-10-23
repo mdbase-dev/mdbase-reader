@@ -266,7 +266,18 @@ function groupClaims(claims: readonly CandidateClaim[]): ClaimGroup[] {
   }
   return groups.flatMap((group) => {
     const ranked = [...group].sort(compareClaims);
-    const winner = ranked[0];
+    // Equivalent publisher spellings should credit the page that supplies the saved imprint.
+    const winner =
+      (ranked[0]?.source.kind !== "user"
+        ? ranked.find(
+            (claim) =>
+              claim.field === "publisher" &&
+              claim.source.kind === "page" &&
+              ["citation_publisher", "dc.publisher", "dcterms.publisher"].includes(
+                claim.evidence ?? "",
+              ),
+          )
+        : undefined) ?? ranked[0];
     if (!winner) {
       return [];
     }
@@ -327,6 +338,21 @@ function chooseGroup(field: string, groups: readonly ClaimGroup[]): ClaimGroup |
       (group) => !["webpage", "article", "document"].includes(String(group.value)),
     );
     eligible = registered.length ? registered : specific.length ? specific : groups;
+  } else if (field === "publisher") {
+    const imprints = groups.filter(
+      (group) =>
+        group.claims.some(
+          (claim) => claim.source.kind === "page" && claim.evidence === "citation_publisher",
+        ) &&
+        new Set(
+          group.claims.flatMap((claim) =>
+            claim.source.kind === "page" ? [claim.source.signal] : [],
+          ),
+        ).size > 1,
+    );
+    if (imprints.length) {
+      eligible = imprints;
+    }
   } else if (field === "container-title") {
     // A publisher-only fallback is not evidence of the publication's name.
     eligible = groups.filter((group) =>

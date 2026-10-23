@@ -74,6 +74,52 @@ describe("page claims through the resolver", () => {
   });
 });
 
+describe("work-specific publisher imprints", () => {
+  it("reads a WebPage mainEntity and prefers its corroborated imprint to a registry member", () => {
+    const document = page(`<title>Work</title><meta name="citation_publisher" content="Example US">
+      <meta name="dc.publisher" content="Example">${linked({
+        "@type": "WebPage",
+        mainEntity: {
+          "@type": "ScholarlyArticle",
+          headline: "Work",
+          publisher: { "@type": "Organization", name: "Example US" },
+        },
+      })}`);
+    const result = resolveCitation({
+      claims: [
+        ...pageClaims(document, url, observedAt).claims,
+        {
+          field: "publisher",
+          value: "Example Science and Business Media LLC",
+          source: { kind: "registry", name: "doi.org" },
+          observedAt,
+        },
+      ],
+    });
+    expect(result.citation?.["publisher"]).toBe("Example US");
+    expect(result.provenance["publisher"]?.agreed).toContain("page:json-ld publisher");
+  });
+
+  it("does not let an uncorroborated generic page publisher override the registry", () => {
+    const result = resolveCitation({
+      claims: [
+        ...pageClaims(
+          page('<title>Work</title><meta name="citation_publisher" content="An imprint">'),
+          url,
+          observedAt,
+        ).claims,
+        {
+          field: "publisher",
+          value: "Registry Publisher",
+          source: { kind: "registry", name: "doi.org" },
+          observedAt,
+        },
+      ],
+    });
+    expect(result.citation?.["publisher"]).toBe("Registry Publisher");
+  });
+});
+
 describe("specific page work types", () => {
   it.each([
     "NewsArticle",

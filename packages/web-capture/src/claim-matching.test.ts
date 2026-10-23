@@ -23,6 +23,25 @@ describe("claim matching", () => {
     expect(splitTitle("A well-known country")).toEqual({ title: "A well-known country" });
   });
 
+  it("matches equivalent publisher legal suffixes and parenthetical acronyms only", () => {
+    expect(
+      claimValuesMatch(
+        "publisher",
+        "eLife Sciences Publications, Ltd",
+        "eLife Sciences Publications Limited",
+      ),
+    ).toBe(true);
+    expect(
+      claimValuesMatch(
+        "publisher",
+        "Public Library of Science (PLoS)",
+        "Public Library of Science",
+      ),
+    ).toBe(true);
+    expect(claimValuesMatch("publisher", "Example Press (Australia)", "Example Press")).toBe(false);
+    expect(claimValuesMatch("publisher", "Example Press", "Another Press")).toBe(false);
+  });
+
   it("matches family names or literals in order, without requiring the same given names", () => {
     expect(
       claimValuesMatch(

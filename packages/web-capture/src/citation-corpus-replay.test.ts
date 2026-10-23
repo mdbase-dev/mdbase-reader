@@ -77,7 +77,7 @@ const stillWrong: Record<string, { readonly page: string[]; readonly remote: str
     page: ["type", "author", "issued", "container-title"],
     remote: ["type", "author", "issued", "container-title"],
   },
-  "elife-brain": { page: [], remote: ["title", "publisher"] },
+  "elife-brain": { page: [], remote: ["title"] },
   "github-translation-server": { page: ["type", "title", "author"], remote: ["author"] },
   "government-ipcc": {
     page: ["type", "title", "author", "issued", "publisher"],
@@ -89,7 +89,7 @@ const stillWrong: Record<string, { readonly page: string[]; readonly remote: str
     page: ["author", "issued", "publisher"],
     remote: ["author", "publisher"],
   },
-  "nature-dna": { page: [], remote: ["publisher"] },
+  "nature-dna": { page: [], remote: [] },
   // A blocked page now yields no citation, including no URL-only shell masquerading as one.
   nyt: { page: ["type", "title", "author", "issued", "container-title", "URL"], remote: [] },
   "openlibrary-fox": {
@@ -100,8 +100,8 @@ const stillWrong: Record<string, { readonly page: string[]; readonly remote: str
     page: ["type", "title", "author", "issued", "container-title", "publisher", "DOI", "URL"],
     remote: ["type", "title", "author", "issued", "container-title", "publisher", "DOI", "URL"],
   },
-  "plos-research": { page: ["issued"], remote: ["publisher"] },
-  "springer-imagenet": { page: ["publisher"], remote: ["publisher"] },
+  "plos-research": { page: ["issued"], remote: [] },
+  "springer-imagenet": { page: [], remote: [] },
   "stackoverflow-branch": {
     page: ["type", "title", "author", "issued", "container-title", "URL"],
     remote: ["type", "author", "issued"],

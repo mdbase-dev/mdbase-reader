@@ -401,7 +401,13 @@ function graphNodes(value: unknown, depth = 0): JsonLdNode[] {
   if (Array.isArray(value)) {
     return value.flatMap((item) => graphNodes(item, depth + 1));
   }
-  return isRecord(value) ? [value, ...graphNodes(value["@graph"], depth + 1)] : [];
+  return isRecord(value)
+    ? [
+        value,
+        ...graphNodes(value["@graph"], depth + 1),
+        ...graphNodes(value["mainEntity"], depth + 1),
+      ]
+    : [];
 }
 
 function isWork(node: JsonLdNode): boolean {
