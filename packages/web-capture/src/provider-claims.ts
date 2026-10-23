@@ -1,5 +1,6 @@
 import { WIKIMEDIA_CITOID_ENDPOINT } from "./citation-lookup.js";
 import { doiFromText, DOI_RESOLUTION_TIMEOUT_MS, resolveDoiCitation } from "./doi.js";
+import { isStackExchangeQuestion } from "./page-conventions.js";
 import { createProviderQueue, retryAfterMs } from "./provider-queue.js";
 import { cslFromZoteroItem } from "./zotero-csl.js";
 
@@ -72,7 +73,24 @@ export function zoteroItemClaims(
   const source: ClaimSource = genericItemTypes.has(itemType)
     ? { kind: "generic-remote", name: "citoid" }
     : { kind: "site-adapter", name: `citoid/${itemType}` };
-  return fieldClaims(cslFromZoteroItem(item), source, `Citoid ${itemType}`, observedAt);
+  const citation = cslFromZoteroItem(item);
+  const claims = fieldClaims(citation, source, `Citoid ${itemType}`, observedAt);
+  // Only refine a successful generic record. A blocked page still supplies no title,
+  // author or date; the permalink identifies the kind of work, not its unseen content.
+  if (
+    itemType === "webpage" &&
+    text(citation["title"]) &&
+    isStackExchangeQuestion(citation["URL"])
+  ) {
+    claims.push({
+      field: "type",
+      value: "post",
+      source: { kind: "site-adapter", name: "stack-exchange/question" },
+      evidence: "question permalink",
+      observedAt,
+    });
+  }
+  return claims;
 }
 
 /** The deadline includes time spent queued. Caller aborts are rethrown, not reported as failures. */

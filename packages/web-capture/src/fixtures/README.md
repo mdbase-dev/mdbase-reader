@@ -76,3 +76,23 @@ recorded doi.org and Citoid responses, and the resolver, and pins the fields eac
 still gets wrong. Case and whitespace are normalized; date precision, author
 structure and revision URLs are not. When a change fixes a field, remove it from
 that table; never weaken the hand-reviewed expected records to make a case pass.
+
+### Ordinary-page extraction conventions
+
+`page-conventions.ts` contains small, independently tested platform translators:
+GitHub root repository URLs corroborated by their Open Graph title identify
+software and its repository name; MDN reference pages identify Mozilla as
+publisher and credit a same-document contributors link. MDN's visible revision
+date is an issued-date fallback for the mutable reference, not an override of an
+explicit publication date. A successful generic Citoid record for a Stack
+Exchange question permalink can identify a discussion post, but supplies no
+unseen author or creation date. Separately, the generic HTML fallback recognizes
+an opening, standalone English month-name dateline, preserving month precision.
+It never scans the rest of the article for a date.
+
+The Graham, GitHub, MDN and Stack Overflow expectations were reviewed against
+their capture notes without changes. Remaining gaps intentionally need more
+evidence: a personal-site hostname does not prove authorship or a blog title; a
+repository namespace (including a fork's owner) does not establish its author;
+and the blocked Stack Overflow capture cannot reveal its original author/date.
+Do not fill these with fixture-specific identity mappings.
