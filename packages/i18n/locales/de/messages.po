@@ -2447,526 +2447,526 @@ msgstr "Dokument"
 #: apps/reader/src/source-addition-flow.ts
 msgctxt "source addition flow"
 msgid "Document"
-msgstr ""
+msgstr "Dokument"
 
 #: apps/reader/src/DocumentContextualToolbar.tsx
 msgctxt "DocumentContextualToolbar interface"
 msgid "Document actions"
-msgstr ""
+msgstr "Dokumentaktionen"
 
 #: packages/renderer-pdf/src/pdf-translations.ts
 msgctxt "PDF viewer document"
 msgid "Document Menu"
-msgstr ""
+msgstr "Dokumentmenü"
 
 #: apps/reader/src/AnnotationList.tsx
 msgctxt "AnnotationList annotationOrderOptions"
 msgid "Document order"
-msgstr ""
+msgstr "Dokumentreihenfolge"
 
 #: apps/reader/src/AnnotationCard.tsx
 msgid "Document passage"
-msgstr ""
+msgstr "Textstelle im Dokument"
 
 #: apps/extension/src/CitationCard.tsx
 msgid "DOI"
-msgstr ""
+msgstr "DOI"
 
 #: apps/reader/src/CitationStructuredEditor.tsx
 msgid "DOI, ISBN, URL, and language"
-msgstr ""
+msgstr "DOI, ISBN, URL und Sprache"
 
 #: apps/extension/src/ConnectionPanel.tsx
 msgid "Done"
-msgstr ""
+msgstr "Fertig"
 
 #: apps/reader/src/AnnotationEditor.tsx
 msgctxt "AnnotationEditor interface"
 msgid "Done"
-msgstr ""
+msgstr "Fertig"
 
 #: apps/reader/src/LibraryTableRow.tsx
 msgid "Double-click or press Enter to open"
-msgstr ""
+msgstr "Zum Öffnen doppelklicken oder Enter drücken"
 
 #: apps/reader/src/LibraryAnnotationRow.tsx
 msgid "Double-click or press Enter to open in its document"
-msgstr ""
+msgstr "Zum Öffnen im zugehörigen Dokument doppelklicken oder Enter drücken"
 
 #: apps/reader/src/NavigatorSections.tsx
 msgid "Double-click to keep open · Ctrl+Enter opens beside"
-msgstr ""
+msgstr "Zum dauerhaften Öffnen doppelklicken · Ctrl+Enter öffnet daneben"
 
 #: apps/extension/src/DiagnosticsPanel.tsx
 msgid "Download timings"
-msgstr ""
+msgstr "Downloadzeiten"
 
 #: packages/migration/src/readwise-sources.ts
 msgid "Downloaded file does not match the expected PDF/EPUB format."
-msgstr ""
+msgstr "Die heruntergeladene Datei entspricht nicht dem erwarteten PDF-/EPUB-Format."
 
 #: apps/reader/src/annotation-drafts.ts
 msgid "Draft storage could not open."
-msgstr ""
+msgstr "Der Entwurfsspeicher konnte nicht geöffnet werden."
 
 #: apps/reader/src/annotation-drafts.ts
 msgid "Draft storage is blocked by another window."
-msgstr ""
+msgstr "Der Entwurfsspeicher wird von einem anderen Fenster blockiert."
 
 #: apps/reader/src/annotation-drafts.ts
 msgid "Draft storage read failed."
-msgstr ""
+msgstr "Lesen aus dem Entwurfsspeicher fehlgeschlagen."
 
 #: apps/reader/src/annotation-drafts.ts
 msgid "Draft storage write failed."
-msgstr ""
+msgstr "Schreiben in den Entwurfsspeicher fehlgeschlagen."
 
 #: packages/renderer-pdf/src/pdf-touch-selection-view.ts
 msgid "Drag to adjust selection end; arrow keys move one character"
-msgstr ""
+msgstr "Ziehen, um das Auswahlende anzupassen; Pfeiltasten bewegen es um ein Zeichen"
 
 #: packages/renderer-pdf/src/pdf-touch-selection-view.ts
 msgid "Drag to adjust selection start; arrow keys move one character"
-msgstr ""
+msgstr "Ziehen, um den Auswahlanfang anzupassen; Pfeiltasten bewegen ihn um ein Zeichen"
 
 #: apps/reader/src/CitationEditor.tsx
 msgid "Drag to insert this citation"
-msgstr ""
+msgstr "Ziehen, um diese Quellenangabe einzufügen"
 
 #: apps/reader/src/LibraryTableHeader.tsx
 msgid "Drag to move"
-msgstr ""
+msgstr "Zum Verschieben ziehen"
 
 #: apps/reader/src/LibraryTableHeader.tsx
 msgid "Drag to resize · Double-click to reset"
-msgstr ""
+msgstr "Zum Ändern der Größe ziehen · Doppelklick setzt sie zurück"
 
 #: packages/renderer-pdf/src/pdf-translations.ts
 msgctxt "PDF viewer zoom"
 msgid "Drag to select area to zoom"
-msgstr ""
+msgstr "Ziehen, um einen Bereich zum Vergrößern auszuwählen"
 
 #: apps/reader/src/SourceAddDialog.tsx
 msgid "Drop to add"
-msgstr ""
+msgstr "Zum Hinzufügen ablegen"
 
 #: apps/reader/src/ReaderWorkspaceView.tsx
 msgid "Drop to add to your library"
-msgstr ""
+msgstr "Zum Hinzufügen zu Ihrer Bibliothek ablegen"
 
 #: apps/reader/src/WorkspacePaneSupport.tsx
 msgid "Drop to attach"
-msgstr ""
+msgstr "Zum Anhängen ablegen"
 
 #: apps/reader/src/CitationContributors.tsx
 msgctxt "CitationContributors interface"
 msgid "Dropping particle"
-msgstr ""
+msgstr "Abtrennbarer Namenspartikel"
 
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "Dropping particle"
-msgstr ""
+msgstr "Abtrennbarer Namenspartikel"
 
 #: packages/migration/src/zotero-validation.ts
 msgid "Duplicate collection identity."
-msgstr ""
+msgstr "Sammlungskennung doppelt vorhanden."
 
 #: apps/reader/src/dockview-menus.ts
 msgid "Duplicate document in pane right"
-msgstr ""
+msgstr "Dokument im Bereich rechts duplizieren"
 
 #: packages/migration/src/run-files.ts
 msgid "Duplicate import destination path."
-msgstr ""
+msgstr "Import-Zielpfad doppelt vorhanden."
 
 #: apps/reader/src/reader-command-list.ts
 msgid "Duplicate in new pane right"
-msgstr ""
+msgstr "In neuem Bereich rechts duplizieren"
 
 #: apps/reader/src/reader-command-list.ts
 msgid "Duplicate in pane below"
-msgstr ""
+msgstr "Im Bereich darunter duplizieren"
 
 #: packages/migration/src/zotero-validation.ts
 msgid "Duplicate Zotero item identity."
-msgstr ""
+msgstr "Zotero-Eintragskennung doppelt vorhanden."
 
 #: apps/reader/src/CitationAdditionalFields.tsx
 msgid "e.g. accessed, genre, PMID"
-msgstr ""
+msgstr "z. B. accessed, genre, PMID"
 
 #: apps/reader/src/LibraryTableHeader.tsx
 msgid "e.g. course or csl.volume"
-msgstr ""
+msgstr "z. B. Kurs oder csl.volume"
 
 #: apps/reader/src/LibraryAnnotations.tsx
 msgid "e.g. Quotes for chapter 2"
-msgstr ""
+msgstr "z. B. Zitate für Kapitel 2"
 
 #: apps/reader/src/LibraryWorkspace.tsx
 msgid "e.g. Reading this month"
-msgstr ""
+msgstr "z. B. Lektüre in diesem Monat"
 
 #: apps/reader/src/CitationTypedFieldEditors.tsx
 msgid "e.g. Spring or 1"
-msgstr ""
+msgstr "z. B. Frühling oder 1"
 
 #: packages/renderer-pdf/src/pdf-translations.ts
 msgctxt "PDF viewer print"
 msgid "e.g., 1-3, 5, 8-10"
-msgstr ""
+msgstr "z. B. 1–3, 5, 8–10"
 
 #: apps/reader/src/AnnotationCard.tsx
 msgctxt "AnnotationCard interface"
 msgid "Edit"
-msgstr ""
+msgstr "Bearbeiten"
 
 #: apps/reader/src/LibraryFieldCell.tsx
 msgid "Edit {fieldKey}"
-msgstr ""
+msgstr "{fieldKey} bearbeiten"
 
 #: apps/reader/src/AnnotationEditor.tsx
 msgctxt "AnnotationEditor interface"
 msgid "Edit annotation"
-msgstr ""
+msgstr "Anmerkung bearbeiten"
 
 #: packages/markdown-editor/src/citation-card.ts
 msgctxt "citation card"
 msgid "Edit citation"
-msgstr ""
+msgstr "Quellenangabe bearbeiten"
 
 #: apps/extension/src/SavedHighlights.tsx
 msgid "Edit comment"
-msgstr ""
+msgstr "Kommentar bearbeiten"
 
 #: apps/reader/src/AnnotationEditor.tsx
 msgid "Edit here"
-msgstr ""
+msgstr "Hier bearbeiten"
 
 #: apps/reader/src/AnnotationCard.tsx
 msgctxt "AnnotationCard interface"
 msgid "Edit here"
-msgstr ""
+msgstr "Hier bearbeiten"
 
 #: packages/markdown-editor/src/annotation-widgets.ts
 msgctxt "annotation widgets"
 msgid "Edit highlight"
-msgstr ""
+msgstr "Hervorhebung bearbeiten"
 
 #: apps/extension/src/CitationPanel.tsx
 #: apps/extension/src/NotePanel.tsx
 msgid "Edit in Reader"
-msgstr ""
+msgstr "In Reader bearbeiten"
 
 #: packages/markdown-editor/src/annotation-widgets.ts
 msgctxt "annotation widgets"
 msgid "Edit link"
-msgstr ""
+msgstr "Link bearbeiten"
 
 #: packages/markdown-editor/src/citation-card.ts
 msgctxt "citation card"
 msgid "Edit metadata"
-msgstr ""
+msgstr "Metadaten bearbeiten"
 
 #: apps/reader/src/AnnotationEditor.tsx
 msgid "Edited from the document text."
-msgstr ""
+msgstr "Aus dem Dokumenttext bearbeitet."
 
 #: apps/reader/src/AnnotationCard.tsx
 msgid "Editing requires a saved annotation"
-msgstr ""
+msgstr "Zum Bearbeiten muss die Anmerkung gespeichert sein"
 
 #: apps/reader/src/CitationStructuredEditor.tsx
 msgctxt "CitationStructuredEditor interface"
 msgid "Edition"
-msgstr ""
+msgstr "Auflage"
 
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "Edition"
-msgstr ""
+msgstr "Auflage"
 
 #: apps/reader/src/CitationContributors.tsx
 msgid "Editor"
-msgstr ""
+msgstr "Herausgeber"
 
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "Editor"
-msgstr ""
+msgstr "Herausgeber"
 
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "Editorial director"
-msgstr ""
+msgstr "Redaktionsleitung"
 
 #: apps/reader/src/CitationStructuredEditor.tsx
 msgctxt "CitationStructuredEditor interface"
 msgid "Editors"
-msgstr ""
+msgstr "Herausgeber"
 
 #: apps/reader/src/CitationStructuredEditor.tsx
 msgid "Editors and translators"
-msgstr ""
+msgstr "Herausgeber und Übersetzer"
 
 #: apps/reader/src/CitationTypedFieldEditors.tsx
 msgctxt "CitationTypedFieldEditors dateModeOptions"
 msgid "EDTF / raw date"
-msgstr ""
+msgstr "EDTF / Rohdatum"
 
 #: apps/reader/src/CitationTypedFieldEditors.tsx
 msgid "EDTF or source date"
-msgstr ""
+msgstr "EDTF oder Quelldatum"
 
 #. placeholder {0}: this.candidate.label
 #: packages/markdown-editor/src/annotation-widgets.ts
 msgid "Embedded annotation: {0}"
-msgstr ""
+msgstr "Eingebettete Anmerkung: {0}"
 
 #: packages/renderer-pdf/src/pdf-viewer.tsx
 msgid "EmbedPDF could not open this PDF."
-msgstr ""
+msgstr "EmbedPDF konnte dieses PDF nicht öffnen."
 
 #: packages/renderer-pdf/src/embedpdf-runtime.ts
 #: packages/renderer-pdf/src/pdf-viewer.tsx
 msgid "EmbedPDF did not initialize its document manager."
-msgstr ""
+msgstr "EmbedPDF hat seine Dokumentverwaltung nicht initialisiert."
 
 #: packages/renderer-pdf/src/embedpdf-runtime.ts
 msgid "EmbedPDF did not initialize the required Reader plugins."
-msgstr ""
+msgstr "EmbedPDF hat die erforderlichen Reader-Plug-ins nicht initialisiert."
 
 #: apps/reader/src/CitationTypedFieldEditors.tsx
 msgctxt "CitationTypedFieldEditors customValueTypeOptions"
 msgid "Empty"
-msgstr ""
+msgstr "Leer"
 
 #: packages/migration/src/zotero-pdf.ts
 msgid "Empty Zotero PDF rectangle."
-msgstr ""
+msgstr "Leeres Rechteck einer Zotero-PDF-Anmerkung."
 
 #: packages/renderer-epub/src/epub-archive.ts
 msgid "Encrypted EPUB resources are not supported: {path}"
-msgstr ""
+msgstr "Verschlüsselte EPUB-Ressourcen werden nicht unterstützt: {path}"
 
 #: apps/reader/src/CitationTypedFieldEditors.tsx
 msgctxt "CitationTypedFieldEditors interface"
 msgid "End (optional)"
-msgstr ""
+msgstr "Ende (optional)"
 
 #: packages/renderer-epub/src/epub-page-navigation.tsx
 msgid "End of publication"
-msgstr ""
+msgstr "Ende der Veröffentlichung"
 
 #: apps/reader/src/LibraryTextSearch.tsx
 msgid "Enter at least two characters."
-msgstr ""
+msgstr "Geben Sie mindestens zwei Zeichen ein."
 
 #: packages/renderer-pdf/src/pdf-translations.ts
 msgctxt "PDF viewer passwordPrompt"
 msgid "Enter document password"
-msgstr ""
+msgstr "Dokumentpasswort eingeben"
 
 #: apps/reader/src/reader-command-list.ts
 msgid "Enter reading mode"
-msgstr ""
+msgstr "Lesemodus aktivieren"
 
 #. placeholder {0}: shortcutLabel("mod+.")
 #: apps/reader/src/ReaderHeader.tsx
 msgid "Enter reading mode · {0}"
-msgstr ""
+msgstr "Lesemodus aktivieren · {0}"
 
 #: apps/reader/src/CitationTypedFieldEditors.tsx
 msgid "Enter valid JSON to apply this value."
-msgstr ""
+msgstr "Geben Sie gültiges JSON ein, um diesen Wert zu übernehmen."
 
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "Entry"
-msgstr ""
+msgstr "Eintrag"
 
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "Entry dictionary"
-msgstr ""
+msgstr "Wörterbucheintrag"
 
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "Entry encyclopedia"
-msgstr ""
+msgstr "Lexikoneintrag"
 
 #: apps/reader/src/LibraryWorkspace.tsx
 msgctxt "LibraryWorkspace formatFilterOptions"
 msgid "EPUB"
-msgstr ""
+msgstr "EPUB"
 
 #: packages/renderer-epub/src/epub-archive.ts
 msgid "EPUB archive contains a duplicate path: {path}"
-msgstr ""
+msgstr "Das EPUB-Archiv enthält einen doppelten Pfad: {path}"
 
 #. placeholder {0}: String(MAX_ENTRIES)
 #: packages/renderer-epub/src/epub-archive.ts
 msgid "EPUB archive exceeds the {0}-entry safety limit."
-msgstr ""
+msgstr "Das EPUB-Archiv überschreitet die Sicherheitsgrenze von {0} Einträgen."
 
 #: packages/renderer-epub/src/epub-archive.ts
 msgid "EPUB archive exceeds the uncompressed size safety limit."
-msgstr ""
+msgstr "Das EPUB-Archiv überschreitet die Sicherheitsgrenze für die unkomprimierte Größe."
 
 #: packages/renderer-epub/src/epub-archive.ts
 msgid "EPUB archive is closed."
-msgstr ""
+msgstr "Das EPUB-Archiv ist geschlossen."
 
 #: packages/renderer-epub/src/epub-archive.ts
 msgid "EPUB archive is missing META-INF/container.xml."
-msgstr ""
+msgstr "Dem EPUB-Archiv fehlt META-INF/container.xml."
 
 #: packages/renderer-epub/src/epub-manifest.ts
 msgid "EPUB container does not identify a package document."
-msgstr ""
+msgstr "Der EPUB-Container benennt kein Paketdokument."
 
 #: packages/renderer-epub/src/epub-path.ts
 msgid "EPUB contains an invalid encoded path segment: {value}"
-msgstr ""
+msgstr "Das EPUB enthält einen ungültig codierten Pfadabschnitt: {value}"
 
 #: packages/renderer-epub/src/epub-path.ts
 msgid "EPUB contains an unsafe resource path: {value}"
-msgstr ""
+msgstr "Das EPUB enthält einen unsicheren Ressourcenpfad: {value}"
 
 #: packages/renderer-epub/src/epub-safe-fetch.ts
 msgid "EPUB content document contains invalid markup."
-msgstr ""
+msgstr "Das EPUB-Inhaltsdokument enthält ungültiges Markup."
 
 #. placeholder {0}: String(response.status)
 #: packages/renderer-epub/src/epub-viewer.tsx
 msgid "EPUB download failed with HTTP {0}."
-msgstr ""
+msgstr "Der EPUB-Download ist mit HTTP {0} fehlgeschlagen."
 
 #: packages/renderer-epub/src/epub-manifest.ts
 msgid "EPUB manifest item"
-msgstr ""
+msgstr "EPUB-Manifest-Eintrag"
 
 #: packages/renderer-epub/src/epub-manifest.ts
 msgid "EPUB manifest item {id}"
-msgstr ""
+msgstr "EPUB-Manifest-Eintrag {id}"
 
 #: packages/renderer-epub/src/epub-manifest.ts
 msgid "EPUB package document is missing its package element."
-msgstr ""
+msgstr "Dem EPUB-Paketdokument fehlt das Paket-Element."
 
 #: packages/renderer-epub/src/epub-manifest.ts
 msgid "EPUB package has no reading order."
-msgstr ""
+msgstr "Das EPUB-Paket hat keine Lesereihenfolge."
 
 #: packages/renderer-epub/src/epub-manifest.ts
 msgid "EPUB package metadata has no title."
-msgstr ""
+msgstr "Den EPUB-Paketmetadaten fehlt ein Titel."
 
 #: packages/renderer-epub/src/epub-page-navigation.tsx
 msgid "EPUB page navigation"
-msgstr ""
+msgstr "EPUB-Seitennavigation"
 
 #: packages/renderer-epub/src/epub-path.ts
 msgid "EPUB reference escapes its package root: {reference}"
-msgstr ""
+msgstr "Die EPUB-Referenz führt aus ihrem Paketstamm heraus: {reference}"
 
 #: packages/renderer-epub/src/epub-archive.ts
 msgid "EPUB resource exceeds the per-file safety limit: {path}"
-msgstr ""
+msgstr "Die EPUB-Ressource überschreitet die Sicherheitsgrenze pro Datei: {path}"
 
 #: packages/renderer-epub/src/epub-archive.ts
 msgid "EPUB resource has an unsafe compression ratio: {path}"
-msgstr ""
+msgstr "Die EPUB-Ressource hat ein unsicheres Kompressionsverhältnis: {path}"
 
 #: packages/renderer-epub/src/epub-archive.ts
 msgid "EPUB resource is missing: {safePath}"
-msgstr ""
+msgstr "Die EPUB-Ressource fehlt: {safePath}"
 
 #: packages/renderer-epub/src/epub-manifest.ts
 msgid "EPUB spine item"
-msgstr ""
+msgstr "EPUB-Spine-Eintrag"
 
 #: packages/renderer-epub/src/epub-manifest.ts
 msgid "EPUB spine references an unknown manifest item: {reference}"
-msgstr ""
+msgstr "Der EPUB-Spine verweist auf einen unbekannten Manifest-Eintrag: {reference}"
 
 #: packages/renderer-pdf/src/pdf-translations.ts
 msgctxt "PDF viewer documentError"
 msgid "Error Code: {code}"
-msgstr ""
+msgstr "Fehlercode: {code}"
 
 #: packages/renderer-pdf/src/pdf-translations.ts
 msgctxt "PDF viewer documentError"
 msgid "Error loading document"
-msgstr ""
+msgstr "Fehler beim Laden des Dokuments"
 
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "Event"
-msgstr ""
+msgstr "Ereignis"
 
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "Event date"
-msgstr ""
+msgstr "Ereignisdatum"
 
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "Event place"
-msgstr ""
+msgstr "Veranstaltungsort"
 
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "Event title"
-msgstr ""
+msgstr "Veranstaltungstitel"
 
 #: apps/reader/src/LibraryAnnotationTableHead.tsx
 msgid "Every column is shown."
-msgstr ""
+msgstr "Alle Spalten werden angezeigt."
 
 #: apps/reader/src/CitationEditor.tsx
 msgid "Every official field is preserved exactly as entered."
-msgstr ""
+msgstr "Jedes offizielle Feld bleibt genau wie eingegeben erhalten."
 
 #: apps/reader/src/ImportInput.tsx
 msgid "Every payload checksum is verified before collection writes. Currently requires a browser with folder selection support, such as Chrome."
-msgstr ""
+msgstr "Vor Schreibvorgängen in der Sammlung wird jede Nutzdaten-Prüfsumme verifiziert. Derzeit ist ein Browser mit Ordnerauswahl erforderlich, beispielsweise Chrome."
 
 #: packages/migration/src/readwise.ts
 msgid "Exact PDF geometry and EPUB positions are not supplied by this import. Highlights retain quotes and native location evidence, without claiming exact positioning."
-msgstr ""
+msgstr "Dieser Import liefert weder genaue PDF-Geometrie noch EPUB-Positionen. Hervorhebungen behalten Zitate und ursprüngliche Positionshinweise, ohne eine genaue Position zu behaupten."
 
 #: apps/reader/src/connect-workspace.ts
 msgid "Exact recovery is unavailable here. No new write was attempted."
-msgstr ""
+msgstr "Eine genaue Wiederherstellung ist hier nicht verfügbar. Es wurde kein neuer Schreibvorgang versucht."
 
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "Executive producer"
-msgstr ""
+msgstr "Ausführender Produzent"
 
 #: apps/extension/src/TagInput.tsx
 msgid "Existing tags"
-msgstr ""
+msgstr "Vorhandene Tags"
 
 #: packages/renderer-pdf/src/pdf-translations.ts
 msgctxt "PDF viewer document"
 msgid "Export"
-msgstr ""
+msgstr "Exportieren"
 
 #: apps/reader/src/reader-app-commands.ts
 msgid "Export bibliography"
-msgstr ""
+msgstr "Literaturverzeichnis exportieren"
 
 #: apps/reader/src/LibraryWorkspace.tsx
 msgctxt "LibraryWorkspace interface"
 msgid "Export bibliography"
-msgstr ""
+msgstr "Literaturverzeichnis exportieren"
 
 #: apps/reader/src/LibraryRowMenu.tsx
 msgid "Export citation"
-msgstr ""
+msgstr "Quellenangabe exportieren"
 
 #: apps/reader/src/LibraryBulkBar.tsx
 msgid "Export citations"
