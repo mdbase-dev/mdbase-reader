@@ -5327,28 +5327,28 @@ msgstr "文書を準備中…"
 #: apps/reader/src/DocumentContextualToolbar.tsx
 msgctxt "DocumentContextualToolbar interface"
 msgid "Preparing export…"
-msgstr ""
+msgstr "エクスポートを準備中…"
 
 #: apps/reader/src/ConnectedDocument.tsx
 msgid "Preparing PDF pages…"
-msgstr ""
+msgstr "PDFページを準備中…"
 
 #: apps/reader/src/ConnectedDocument.tsx
 msgctxt "ConnectedDocument status or action"
 msgid "Preparing publication…"
-msgstr ""
+msgstr "公開を準備中…"
 
 #: apps/reader/src/ConnectedDocument.tsx
 msgid "Preparing saved page…"
-msgstr ""
+msgstr "保存済みページを準備中…"
 
 #: apps/reader/src/ReaderWorkspace.tsx
 msgid "Preparing the reading workspace"
-msgstr ""
+msgstr "読書用ワークスペースを準備中"
 
 #: apps/extension/src/CaptureApp.tsx
 msgid "Press the mdbase Reader toolbar button (Alt+Shift+S) to use Reader on this page. Browser pages and the Chrome Web Store cannot be read by extensions."
-msgstr ""
+msgstr "このページでReaderを使うには、mdbase Readerのツールバーボタン（Alt+Shift+S）を押してください。ブラウザーの内部ページやChromeウェブストアは拡張機能で読み取れません。"
 
 #: apps/reader/src/CitationPreview.tsx
 msgid "Preview"
@@ -5356,46 +5356,46 @@ msgstr "プレビュー"
 
 #: apps/reader/src/preview.tsx
 msgid "Preview files cannot be exported."
-msgstr ""
+msgstr "プレビューのファイルはエクスポートできません。"
 
 #: packages/renderer-epub/src/epub-page-navigation.tsx
 msgid "Previous page"
-msgstr ""
+msgstr "前のページ"
 
 #: packages/renderer-pdf/src/pdf-translations.ts
 msgctxt "PDF viewer page"
 msgid "Previous Page"
-msgstr ""
+msgstr "前のページ"
 
 #: packages/renderer-pdf/src/pdf-translations.ts
 msgctxt "PDF viewer document"
 msgid "Print"
-msgstr ""
+msgstr "印刷"
 
 #: packages/renderer-pdf/src/pdf-translations.ts
 msgctxt "PDF viewer print"
 msgid "Print"
-msgstr ""
+msgstr "印刷"
 
 #: packages/renderer-pdf/src/pdf-translations.ts
 msgctxt "PDF viewer print"
 msgid "Print Settings"
-msgstr ""
+msgstr "印刷設定"
 
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "Printing"
-msgstr ""
+msgstr "印刷"
 
 #: packages/renderer-pdf/src/pdf-translations.ts
 msgctxt "PDF viewer print"
 msgid "Printing..."
-msgstr ""
+msgstr "印刷中…"
 
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "Producer"
-msgstr ""
+msgstr "プロデューサー"
 
 #: apps/reader/src/LibraryTableHeader.tsx
 msgid "Properties"
@@ -5403,47 +5403,47 @@ msgstr "プロパティ"
 
 #: apps/reader/src/CitationStructuredEditor.tsx
 msgid "Publication"
-msgstr ""
+msgstr "刊行物"
 
 #: apps/reader/src/library-columns.ts
 msgctxt "Library table column"
 msgid "Published"
-msgstr ""
+msgstr "刊行日"
 
 #: apps/reader/src/LibraryWorkspace.tsx
 msgctxt "LibraryWorkspace sortFieldOptions"
 msgid "Published"
-msgstr ""
+msgstr "刊行日"
 
 #: apps/reader/src/SourceDetails.tsx
 msgctxt "SourceDetails fields"
 msgid "Published"
-msgstr ""
+msgstr "刊行日"
 
 #: apps/reader/src/CitationStructuredEditor.tsx
 msgctxt "CitationStructuredEditor interface"
 msgid "Publisher"
-msgstr ""
+msgstr "出版社"
 
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "Publisher"
-msgstr ""
+msgstr "出版社"
 
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "Publisher place"
-msgstr ""
+msgstr "出版地"
 
 #: apps/extension/src/HighlightFields.tsx
 msgctxt "Highlight colour"
 msgid "purple"
-msgstr ""
+msgstr "紫"
 
 #: apps/reader/src/LibraryCells.tsx
 msgctxt "reading status"
 msgid "Queued"
-msgstr ""
+msgstr "待機中"
 
 #: apps/reader/src/SourceNoteEditor.tsx
 msgctxt "SourceNoteEditor formatActions"
@@ -5452,390 +5452,390 @@ msgstr "引用"
 
 #: packages/core/src/domain/selector.ts
 msgid "quote.exact must not be empty."
-msgstr ""
+msgstr "quote.exactを空にはできません。"
 
 #: apps/reader/src/AnnotationEditor.tsx
 msgctxt "AnnotationEditor interface"
 msgid "Quoted passage"
-msgstr ""
+msgstr "引用した箇所"
 
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL date field"
 msgid "Raw date"
-msgstr ""
+msgstr "元の日付"
 
 #: apps/reader/src/MobileSourceViews.tsx
 msgctxt "MobileSourceViews views"
 msgid "Read"
-msgstr "読み取り"
+msgstr "読む"
 
 #: apps/reader/src/NativeSignIn.tsx
 msgid "Read from your collection"
-msgstr ""
+msgstr "コレクションから読み込む"
 
 #: apps/electron/src/main.ts
 msgid "Readable documents"
-msgstr ""
+msgstr "閲覧可能な文書"
 
 #: packages/migration/src/readwise.ts
 msgid "Reader articles"
-msgstr ""
+msgstr "Readerの記事"
 
 #: apps/extension/src/capture-errors.ts
 #: apps/extension/src/page-capture.ts
 msgid "Reader can capture ordinary HTTPS pages only."
-msgstr ""
+msgstr "Readerがキャプチャできるのは通常のHTTPSページのみです。"
 
 #: apps/extension/src/save-capture.ts
 msgid "Reader cannot download this PDF from here. Download it and import the file in Reader."
-msgstr ""
+msgstr "ここからはReaderでこのPDFをダウンロードできません。ダウンロードしてからReaderにファイルをインポートしてください。"
 
 #. placeholder {0}: selection.imageType
 #: apps/reader/src/annotation-composer-request.ts
 msgid "Reader cannot persist an area capture of type {0}."
-msgstr ""
+msgstr "Readerは{0}形式の領域キャプチャを保存できません。"
 
 #: apps/extension/src/CaptureApp.tsx
 #: apps/extension/src/ConnectionPanel.tsx
 msgid "Reader cannot read this page"
-msgstr ""
+msgstr "Readerはこのページを読み取れません"
 
 #: apps/reader/src/ReaderWorkspaceView.tsx
 msgctxt "ReaderWorkspaceView interface"
 msgid "Reader commands"
-msgstr ""
+msgstr "Readerのコマンド"
 
 #: apps/reader/src/use-web-capture.ts
 msgid "Reader could not add that source."
-msgstr ""
+msgstr "Readerはその資料を追加できませんでした。"
 
 #: apps/reader/src/use-annotation-view.ts
 msgid "Reader could not add the view."
-msgstr ""
+msgstr "Readerはビューを追加できませんでした。"
 
 #: apps/reader/src/use-library-selection.ts
 msgid "Reader could not add this source."
-msgstr ""
+msgstr "Readerはこの資料を追加できませんでした。"
 
 #: apps/reader/src/ConnectReader.tsx
 msgid "Reader could not apply the reviewed setup."
-msgstr ""
+msgstr "Readerは確認済みの設定を適用できませんでした。"
 
 #: apps/reader/src/use-document-attachment.ts
 msgid "Reader could not attach a document."
-msgstr ""
+msgstr "Readerは文書を添付できませんでした。"
 
 #: apps/reader/src/web-capture-client.ts
 msgid "Reader could not capture that page."
-msgstr ""
+msgstr "Readerはそのページをキャプチャできませんでした。"
 
 #: apps/reader/src/LibraryWorkspace.tsx
 msgid "Reader could not change the reading status."
-msgstr ""
+msgstr "Readerは読書ステータスを変更できませんでした。"
 
 #: apps/reader/src/use-source-removal.ts
 msgid "Reader could not check this source."
-msgstr ""
+msgstr "Readerはこの資料を確認できませんでした。"
 
 #: apps/reader/src/CollectionPicker.tsx
 msgid "Reader could not connect another collection."
-msgstr ""
+msgstr "Readerは別のコレクションを接続できませんでした。"
 
 #: apps/reader/src/use-document-decorations.ts
 msgid "Reader could not display saved highlights."
-msgstr ""
+msgstr "Readerは保存済みのハイライトを表示できませんでした。"
 
 #: apps/reader/src/AnnotationImage.tsx
 msgid "Reader could not display this screenshot."
-msgstr ""
+msgstr "Readerはこのスクリーンショットを表示できませんでした。"
 
 #: apps/reader/src/LibraryWorkspace.tsx
 msgid "Reader could not execute this mdbase view."
-msgstr ""
+msgstr "Readerはこのmdbaseビューを実行できませんでした。"
 
 #: apps/reader/src/use-bibliography-export.ts
 msgid "Reader could not export the bibliography."
-msgstr ""
+msgstr "Readerは参考文献をエクスポートできませんでした。"
 
 #: apps/reader/src/build-source-export.ts
 msgid "Reader could not export this file."
-msgstr ""
+msgstr "Readerはこのファイルをエクスポートできませんでした。"
 
 #: apps/reader/src/use-source-export.ts
 msgid "Reader could not export this source."
-msgstr ""
+msgstr "Readerはこの資料をエクスポートできませんでした。"
 
 #: apps/reader/src/use-citation-editor.ts
 msgid "Reader could not find citation metadata."
-msgstr ""
+msgstr "Readerは引用メタデータを見つけられませんでした。"
 
 #: apps/reader/src/use-citation-editor.ts
 msgid "Reader could not generate a citekey."
-msgstr ""
+msgstr "Readerは引用キーを生成できませんでした。"
 
 #: apps/reader/src/use-library-selection.ts
 msgid "Reader could not import this document."
-msgstr ""
+msgstr "Readerはこの文書をインポートできませんでした。"
 
 #: apps/reader/src/use-annotation-transclusion.ts
 msgid "Reader could not insert this annotation."
-msgstr ""
+msgstr "Readerはこの注釈を挿入できませんでした。"
 
 #: apps/extension/src/page-capture.ts
 msgid "Reader could not inspect this page. Open an ordinary HTTPS page and try again."
-msgstr ""
+msgstr "Readerはこのページを確認できませんでした。通常のHTTPSページを開いて再試行してください。"
 
 #: apps/reader/src/use-library-annotations.ts
 msgid "Reader could not list annotations."
-msgstr ""
+msgstr "Readerは注釈を一覧表示できませんでした。"
 
 #: apps/reader/src/use-mdbase-library-views.ts
 msgid "Reader could not load saved library views."
-msgstr ""
+msgstr "Readerは保存済みのライブラリビューを読み込めませんでした。"
 
 #: apps/reader/src/use-library-selection.ts
 msgid "Reader could not load this collection."
-msgstr ""
+msgstr "Readerはこのコレクションを読み込めませんでした。"
 
 #: apps/reader/src/shared-annotation-resource.ts
 msgid "Reader could not load this source's annotations."
-msgstr ""
+msgstr "Readerはこの資料の注釈を読み込めませんでした。"
 
 #: apps/reader/src/use-source-import.ts
 msgid "Reader could not open the file picker."
-msgstr ""
+msgstr "Readerはファイル選択画面を開けませんでした。"
 
 #: apps/reader/src/use-selected-source-resources.ts
 msgid "Reader could not open the source note."
-msgstr ""
+msgstr "Readerは資料のノートを開けませんでした。"
 
 #: apps/reader/src/ConnectReader.tsx
 msgid "Reader could not open this collection."
-msgstr ""
+msgstr "Readerはこのコレクションを開けませんでした。"
 
 #: apps/reader/src/connection-recovery.ts
 msgid "Reader could not reach mdbase Connect. Check your connection, then try again."
-msgstr ""
+msgstr "Readerはmdbase Connectに接続できませんでした。接続を確認して再試行してください。"
 
 #: apps/reader/src/use-direct-access.ts
 msgid "Reader could not reach the local mdbase connector. The relayed connection is still active."
-msgstr ""
+msgstr "Readerはローカルのmdbaseコネクターに接続できませんでした。中継接続は引き続き有効です。"
 
 #: apps/reader/src/use-source-removal.ts
 msgid "Reader could not remove this source."
-msgstr ""
+msgstr "Readerはこの資料を削除できませんでした。"
 
 #: apps/reader/src/use-direct-access.ts
 msgid "Reader could not request local network access."
-msgstr ""
+msgstr "Readerはローカルネットワークへのアクセスを要求できませんでした。"
 
 #: apps/reader/src/ConnectReader.tsx
 msgid "Reader could not review application access."
-msgstr ""
+msgstr "Readerはアプリのアクセス権を確認できませんでした。"
 
 #: apps/reader/src/LibraryWorkspace.tsx
 msgid "Reader could not save {key}."
-msgstr ""
+msgstr "Readerは{key}を保存できませんでした。"
 
 #: apps/reader/src/use-source-fields.ts
 msgid "Reader could not save these details."
-msgstr ""
+msgstr "Readerはこれらの詳細を保存できませんでした。"
 
 #: apps/reader/src/annotation-selection.ts
 msgid "Reader could not save this annotation."
-msgstr ""
+msgstr "Readerはこの注釈を保存できませんでした。"
 
 #: apps/reader/src/use-bookmark-action.ts
 msgid "Reader could not save this bookmark."
-msgstr ""
+msgstr "Readerはこのブックマークを保存できませんでした。"
 
 #: apps/reader/src/use-citation-editor.ts
 msgid "Reader could not save this citation."
-msgstr ""
+msgstr "Readerはこの引用情報を保存できませんでした。"
 
 #: apps/reader/src/AnnotationPanelActions.tsx
 msgid "Reader could not save this comment."
-msgstr ""
+msgstr "Readerはこのコメントを保存できませんでした。"
 
 #: apps/reader/src/use-mdbase-library-views.ts
 msgid "Reader could not save this library view."
-msgstr ""
+msgstr "Readerはこのライブラリビューを保存できませんでした。"
 
 #: apps/reader/src/source-draft-session.ts
 msgid "Reader could not save this note. Your draft is retained."
-msgstr ""
+msgstr "Readerはこのノートを保存できませんでした。下書きは保持されています。"
 
 #: apps/reader/src/WorkspacePaneSupport.tsx
 msgid "Reader could not save your place in this document."
-msgstr ""
+msgstr "Readerはこの文書内の位置を保存できませんでした。"
 
 #: apps/reader/src/use-reading-resume.ts
 msgid "Reader could not save your reading position."
-msgstr ""
+msgstr "Readerは閲覧位置を保存できませんでした。"
 
 #: apps/reader/src/use-library-search.ts
 msgid "Reader could not search note text."
-msgstr ""
+msgstr "Readerはノートのテキストを検索できませんでした。"
 
 #: apps/reader/src/CollectionPicker.tsx
 msgid "Reader could not switch collections."
-msgstr ""
+msgstr "Readerはコレクションを切り替えられませんでした。"
 
 #. placeholder {0}: lookup.offer.reason
 #. placeholder {1}: lookup.offer.title
 #: apps/reader/src/SourceAddDialog.tsx
 msgid "Reader couldn’t fetch that page ({0}), but it found the citation for “{1}”. You can save the citation now and attach the page or file later."
-msgstr ""
+msgstr "Readerはそのページを取得できませんでした（{0}）が、「{1}」の引用情報は見つかりました。引用情報を先に保存して、ページやファイルを後から添付できます。"
 
 #: apps/reader/src/ImportPageView.tsx
 msgid "Reader documents and files, plus highlights from Kindle, Apple Books and other Readwise sources."
-msgstr ""
+msgstr "Readerの文書とファイル、およびKindle、Apple BooksなどのReadwise資料のハイライト。"
 
 #: packages/migration/src/readwise.ts
 msgid "Reader emails"
-msgstr ""
+msgstr "Readerのメール"
 
 #: packages/migration/src/readwise.ts
 msgid "Reader EPUBs"
-msgstr ""
+msgstr "ReaderのEPUB"
 
 #: apps/reader/src/web-capture-client.ts
 msgid "Reader expected a web page."
-msgstr ""
+msgstr "ReaderはWebページを想定していました。"
 
 #: apps/reader/src/build-source-export.ts
 msgid "Reader export report"
-msgstr ""
+msgstr "Readerのエクスポート報告"
 
 #: apps/reader/src/LibraryTableHeader.tsx
 msgid "Reader fields"
-msgstr ""
+msgstr "Readerのフィールド"
 
 #: apps/extension/src/ConnectionPanel.tsx
 msgid "Reader has signed out."
-msgstr ""
+msgstr "Readerからサインアウトしました。"
 
 #: apps/extension/src/connection-view.ts
 msgid "Reader has signed out. Sign in again before saving; your draft is kept."
-msgstr ""
+msgstr "Readerからサインアウトしました。保存前に再度サインインしてください。下書きは保持されています。"
 
 #: packages/migration/src/readwise-annotations.ts
 msgid "Reader highlights on documents outside this import (for example unsaved Feed)"
-msgstr ""
+msgstr "このインポートの対象外の文書にあるReaderのハイライト（未保存のフィードなど）"
 
 #: apps/reader/src/InspectorPane.tsx
 msgid "Reader keeps one writable editor for each source record."
-msgstr ""
+msgstr "Readerは資料レコードごとに書き込み可能なエディターを1つだけ維持します。"
 
 #: apps/extension/src/ConnectionPanel.tsx
 msgid "Reader needs its source and annotation definitions in this collection."
-msgstr ""
+msgstr "Readerがこのコレクションを使用するには、資料と注釈の定義が必要です。"
 
 #. placeholder {0}: session.info.displayName
 #: apps/reader/src/connection-recovery.ts
 msgid "Reader needs your approval to open {0}."
-msgstr ""
+msgstr "{0}を開くにはReaderへの承認が必要です。"
 
 #: apps/reader/src/ImportDestination.tsx
 msgid "Reader needs your approval to write to this collection."
-msgstr ""
+msgstr "このコレクションに書き込むにはReaderへの承認が必要です。"
 
 #: packages/migration/src/readwise-annotations.ts
 msgid "Reader notes on documents outside this import (for example unsaved Feed)"
-msgstr ""
+msgstr "このインポートの対象外の文書にあるReaderのノート（未保存のフィードなど）"
 
 #: packages/migration/src/readwise.ts
 msgid "Reader PDFs"
-msgstr ""
+msgstr "ReaderのPDF"
 
 #: apps/reader/src/web-capture-client.ts
 msgid "Reader received an incomplete capture response."
-msgstr ""
+msgstr "Readerが受け取ったキャプチャの応答は不完全です。"
 
 #: apps/reader/src/web-capture-client.ts
 msgid "Reader received an invalid capture response."
-msgstr ""
+msgstr "Readerが受け取ったキャプチャの応答は無効です。"
 
 #: packages/migration/src/readwise.ts
 msgid "Reader RSS items"
-msgstr ""
+msgstr "ReaderのRSS項目"
 
 #: packages/migration/src/readwise.ts
 msgid "Reader tweets"
-msgstr ""
+msgstr "Readerのツイート"
 
 #: packages/migration/src/readwise.ts
 msgid "Reader videos"
-msgstr ""
+msgstr "Readerの動画"
 
 #: apps/extension/src/use-extension-capture.ts
 msgid "Reader was not given site access."
-msgstr ""
+msgstr "Readerにはサイトへのアクセスが許可されていません。"
 
 #: apps/reader/src/DockviewWorkspace.tsx
 msgctxt "DockviewWorkspace interface"
 msgid "Reader workspace"
-msgstr ""
+msgstr "Readerのワークスペース"
 
 #: apps/reader/src/connection-recovery.ts
 msgid "Reader’s access to this collection has changed. Review the updated access to continue."
-msgstr ""
+msgstr "このコレクションに対するReaderのアクセス権が変更されました。続行するには更新後のアクセス権を確認してください。"
 
 #: apps/reader/src/LibraryCells.tsx
 msgctxt "reading status"
 msgid "Reading"
-msgstr ""
+msgstr "読書中"
 
 #: apps/reader/src/DocumentContextualToolbar.tsx
 msgctxt "DocumentContextualToolbar interface"
 msgid "Reading mode"
-msgstr ""
+msgstr "読書モード"
 
 #: apps/reader/src/ReaderHeader.tsx
 msgctxt "ReaderHeader interface"
 msgid "Reading mode"
-msgstr ""
+msgstr "読書モード"
 
 #. placeholder {0}: source.title
 #: apps/reader/src/LibraryCells.tsx
 msgid "Reading status of {0}"
-msgstr ""
+msgstr "{0}の読書ステータス"
 
 #: apps/reader/src/SourceImportDialog.tsx
 msgid "Reading the file’s details…"
-msgstr ""
+msgstr "ファイルの詳細を読み込み中…"
 
 #: apps/extension/src/CaptureApp.tsx
 msgid "Reading the page…"
-msgstr ""
+msgstr "ページを読み込み中…"
 
 #: packages/renderer-epub/src/readium-runtime.ts
 msgid "Readium cannot open an EPUB with an empty reading order."
-msgstr ""
+msgstr "読む順序が空のEPUBはReadiumで開けません。"
 
 #: packages/renderer-epub/src/readium-runtime.ts
 msgid "Readium could not parse the publication manifest."
-msgstr ""
+msgstr "Readiumは刊行物のマニフェストを解析できませんでした。"
 
 #: packages/renderer-epub/src/epub-locator.ts
 msgid "Readium returned an empty EPUB resource location."
-msgstr ""
+msgstr "Readiumが空のEPUBリソース位置を返しました。"
 
 #: packages/renderer-epub/src/epub-locator.ts
 msgid "Readium returned an EPUB location outside the prepared publication."
-msgstr ""
+msgstr "Readiumが準備済みの刊行物の範囲外にあるEPUB位置を返しました。"
 
 #: packages/renderer-epub/src/readium-runtime.ts
 msgid "Readium returned an invalid {name}."
-msgstr ""
+msgstr "Readiumが無効な{name}を返しました。"
 
 #: packages/renderer-epub/src/epub-locator.ts
 msgid "Readium returned an invalid EPUB resource location: {value}"
-msgstr ""
+msgstr "Readiumが無効なEPUBリソース位置を返しました：{value}"
 
 #: packages/migration/src/readwise.ts
 msgid "Readwise articles (Instapaper, Pocket…)"
-msgstr ""
+msgstr "Readwiseの記事（Instapaper、Pocketなど）"
 
 #: packages/migration/src/readwise.ts
 msgid "Readwise books (Kindle, Apple Books…)"
