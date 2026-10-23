@@ -1913,536 +1913,536 @@ msgstr "Verbindung zu mdbase wird hergestellt…"
 #: apps/extension/src/ConnectionPanel.tsx
 #: apps/reader/src/ReaderHeader.tsx
 msgid "Connecting…"
-msgstr ""
+msgstr "Verbindung wird hergestellt…"
 
 #: apps/extension/src/DiagnosticsPanel.tsx
 msgid "Connection diagnostics"
-msgstr ""
+msgstr "Verbindungsdiagnose"
 
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "Container author"
-msgstr ""
+msgstr "Autor des übergeordneten Werks"
 
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "Container title"
-msgstr ""
+msgstr "Titel des übergeordneten Werks"
 
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "Container title short"
-msgstr ""
+msgstr "Kurztitel des übergeordneten Werks"
 
 #: apps/reader/src/library-conditions.ts
 msgctxt "Field filter comparison operator"
 msgid "contains"
-msgstr ""
+msgstr "enthält"
 
 #: apps/reader/src/ImportReview.tsx
 msgid "Content files"
-msgstr ""
+msgstr "Inhaltsdateien"
 
 #: apps/reader/src/ImportReview.tsx
 msgid "Content size"
-msgstr ""
+msgstr "Inhaltsgröße"
 
 #: apps/reader/src/DocumentContextualToolbar.tsx
 msgid "Contents"
-msgstr ""
+msgstr "Inhalt"
 
 #: apps/reader/src/DocumentContextualToolbar.tsx
 msgctxt "DocumentContextualToolbar interface"
 msgid "Contents"
-msgstr ""
+msgstr "Inhalt"
 
 #: apps/reader/src/ContinueReading.tsx
 msgid "Continue reading"
-msgstr ""
+msgstr "Weiterlesen"
 
 #. placeholder {0}: source.title
 #: apps/reader/src/ContinueReading.tsx
 msgid "Continue reading {0}"
-msgstr ""
+msgstr "{0} weiterlesen"
 
 #: apps/reader/src/CitationContributors.tsx
 msgid "Contributor"
-msgstr ""
+msgstr "Mitwirkende Person"
 
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "Contributor"
-msgstr ""
+msgstr "Mitwirkende Person"
 
 #: apps/reader/src/CitationStructuredEditor.tsx
 msgid "Contributors"
-msgstr ""
+msgstr "Mitwirkende"
 
 #: apps/extension/src/CitationPanel.tsx
 msgid "Copied"
-msgstr ""
+msgstr "Kopiert"
 
 #: apps/reader/src/SelectionToolbar.tsx
 msgctxt "SelectionToolbar interface"
 msgid "Copied"
-msgstr ""
+msgstr "Kopiert"
 
 #: apps/reader/src/SelectionToolbar.tsx
 msgid "Copied with citation"
-msgstr ""
+msgstr "Mit Quellenangabe kopiert"
 
 #: apps/reader/src/SelectionToolbar.tsx
 msgid "Copy"
-msgstr ""
+msgstr "Kopieren"
 
 #: apps/reader/src/SelectionToolbar.tsx
 msgctxt "SelectionToolbar interface"
 msgid "Copy"
-msgstr ""
+msgstr "Kopieren"
 
 #. placeholder {0}: composer.quoteCitation.citekey
 #: apps/reader/src/SelectionToolbar.tsx
 msgid "Copy as a quote citing @{0}"
-msgstr ""
+msgstr "Als Zitat mit Verweis auf @{0} kopieren"
 
 #: apps/reader/src/SelectionToolbar.tsx
 msgid "Copy as a quote citing the source's title"
-msgstr ""
+msgstr "Als Zitat mit Verweis auf den Quellentitel kopieren"
 
 #: apps/reader/src/LibraryAnnotationBars.tsx
 msgid "Copy as Markdown"
-msgstr ""
+msgstr "Als Markdown kopieren"
 
 #: apps/extension/src/CitationPanel.tsx
 msgid "Copy citekey"
-msgstr ""
+msgstr "Citekey kopieren"
 
 #: apps/reader/src/LibraryRowMenu.tsx
 msgid "Copy citekey <0>@{citekey}</0>"
-msgstr ""
+msgstr "Citekey <0>@{citekey}</0> kopieren"
 
 #: apps/extension/src/CitationPanel.tsx
 msgid "Copy CSL-JSON"
-msgstr ""
+msgstr "CSL-JSON kopieren"
 
 #: packages/renderer-pdf/src/pdf-translations.ts
 msgctxt "PDF viewer selection"
 msgid "Copy Selection"
-msgstr ""
+msgstr "Auswahl kopieren"
 
 #: apps/reader/src/SelectionToolbar.tsx
 msgctxt "SelectionToolbar interface"
 msgid "Copy text"
-msgstr ""
+msgstr "Text kopieren"
 
 #: apps/reader/src/SelectionToolbar.tsx
 msgid "Copy with citation"
-msgstr ""
+msgstr "Mit Quellenangabe kopieren"
 
 #: apps/reader/src/LibraryAnnotationBars.tsx
 msgid "Copying needs clipboard permission."
-msgstr ""
+msgstr "Zum Kopieren ist eine Berechtigung für die Zwischenablage erforderlich."
 
 #: apps/reader/src/NativeImportPage.tsx
 msgid "Could not change the collection. Please try again."
-msgstr ""
+msgstr "Sammlung konnte nicht gewechselt werden. Versuchen Sie es erneut."
 
 #. placeholder {0}: problemMessage(reason)
 #: apps/extension/src/use-extension-capture.ts
 msgid "Could not check existing sources: {0}"
-msgstr ""
+msgstr "Vorhandene Quellen konnten nicht geprüft werden: {0}"
 
 #: apps/reader/src/use-annotation-deletion.ts
 msgid "Could not check this annotation."
-msgstr ""
+msgstr "Diese Anmerkung konnte nicht geprüft werden."
 
 #: apps/reader/src/ImportPage.tsx
 msgid "Could not connect to mdbase."
-msgstr ""
+msgstr "Verbindung zu mdbase konnte nicht hergestellt werden."
 
 #: apps/extension/src/CitationPanel.tsx
 msgid "Could not copy"
-msgstr ""
+msgstr "Kopieren fehlgeschlagen"
 
 #: apps/reader/src/use-annotation-deletion.ts
 msgid "Could not delete this annotation."
-msgstr ""
+msgstr "Diese Anmerkung konnte nicht gelöscht werden."
 
 #: apps/extension/src/page-capture.ts
 msgid "Could not download this PDF (HTTP {status})."
-msgstr ""
+msgstr "Dieses PDF konnte nicht heruntergeladen werden (HTTP {status})."
 
 #: apps/reader/src/use-annotation-navigation.ts
 msgid "Could not locate this annotation."
-msgstr ""
+msgstr "Diese Anmerkung konnte nicht gefunden werden."
 
 #: apps/reader/src/annotation-navigation.ts
 msgid "Could not locate this passage. The annotation is safe; the document may have changed."
-msgstr ""
+msgstr "Diese Textstelle konnte nicht gefunden werden. Die Anmerkung ist sicher; möglicherweise hat sich das Dokument geändert."
 
 #: apps/reader/src/ImportDestination.tsx
 msgid "Could not open mdbase approval. Allow popups and try again."
-msgstr ""
+msgstr "Das Bestätigungsfenster von mdbase konnte nicht geöffnet werden. Lassen Sie Pop-ups zu und versuchen Sie es erneut."
 
 #: apps/extension/src/NotePanel.tsx
 msgid "Could not open the literature note."
-msgstr ""
+msgstr "Die Literaturnotiz konnte nicht geöffnet werden."
 
 #: apps/capacitor/src/capacitor-platform.ts
 msgid "Could not read export data."
-msgstr ""
+msgstr "Exportdaten konnten nicht gelesen werden."
 
 #: apps/extension/src/page-annotations.ts
 msgid "Could not read this page. Reopen the extension on it."
-msgstr ""
+msgstr "Diese Seite konnte nicht gelesen werden. Öffnen Sie die Erweiterung auf der Seite erneut."
 
 #: apps/reader/src/use-reading-resume.ts
 msgid "Could not restore the saved reading position."
-msgstr ""
+msgstr "Die gespeicherte Leseposition konnte nicht wiederhergestellt werden."
 
 #: apps/reader/src/use-reading-resume.ts
 msgid "Could not restore this tab’s reading position."
-msgstr ""
+msgstr "Die Leseposition dieses Tabs konnte nicht wiederhergestellt werden."
 
 #: apps/reader/src/use-annotation-navigation.ts
 msgid "Could not return to reading."
-msgstr ""
+msgstr "Zur Lektüre konnte nicht zurückgekehrt werden."
 
 #: apps/reader/src/use-annotation-navigation.ts
 msgid "Could not return to the previous reading position."
-msgstr ""
+msgstr "Zur vorherigen Leseposition konnte nicht zurückgekehrt werden."
 
 #: apps/reader/src/annotation-drafts.ts
 msgid "Could not save this draft locally. Keep this window open and retry saving to the collection."
-msgstr ""
+msgstr "Dieser Entwurf konnte nicht lokal gespeichert werden. Lassen Sie dieses Fenster geöffnet und versuchen Sie erneut, ihn in der Sammlung zu speichern."
 
 #: apps/reader/src/annotation-edit-session.ts
 msgid "Could not save. Keep Reader open and retry."
-msgstr ""
+msgstr "Speichern fehlgeschlagen. Lassen Sie Reader geöffnet und versuchen Sie es erneut."
 
 #. placeholder {0}: problemMessage(reason)
 #: apps/extension/src/use-extension-capture.ts
 msgid "Could not show your highlights on this page: {0}"
-msgstr ""
+msgstr "Ihre Hervorhebungen konnten auf dieser Seite nicht angezeigt werden: {0}"
 
 #: packages/renderer-epub/src/epub-page-navigation.tsx
 msgid "Could not turn the page. Try again."
-msgstr ""
+msgstr "Die Seite konnte nicht umgeblättert werden. Versuchen Sie es erneut."
 
 #: apps/reader/src/SelectionToolbar.tsx
 msgctxt "SelectionToolbar interface"
 msgid "Couldn’t copy"
-msgstr ""
+msgstr "Kopieren fehlgeschlagen"
 
 #: apps/reader/src/ImportDestination.tsx
 msgid "Create or connect a collection…"
-msgstr ""
+msgstr "Sammlung erstellen oder verbinden…"
 
 #: apps/reader/src/annotation-columns.ts
 msgctxt "Annotation table column"
 msgid "Created"
-msgstr ""
+msgstr "Erstellt"
 
 #: apps/reader/src/LibraryAnnotationToolbar.tsx
 msgctxt "LibraryAnnotationToolbar annotationSortOptions"
 msgid "Created"
-msgstr ""
+msgstr "Erstellt"
 
 #: apps/reader/src/import-controller.ts
 msgid "Creating annotations and notes"
-msgstr ""
+msgstr "Anmerkungen und Notizen werden erstellt"
 
 #: apps/reader/src/SourceImportDialog.tsx
 msgid "Creating source record"
-msgstr ""
+msgstr "Quelldatensatz wird erstellt"
 
 #: apps/reader/src/import-controller.ts
 msgid "Creating sources"
-msgstr ""
+msgstr "Quellen werden erstellt"
 
 #: apps/reader/src/annotation-columns.ts
 msgctxt "Annotation table column"
 msgid "Creator"
-msgstr ""
+msgstr "Urheber"
 
 #: apps/reader/src/library-columns.ts
 msgctxt "Library table column"
 msgid "Creator"
-msgstr ""
+msgstr "Urheber"
 
 #: apps/reader/src/LibraryWorkspace.tsx
 msgctxt "LibraryWorkspace sortFieldOptions"
 msgid "Creator"
-msgstr ""
+msgstr "Urheber"
 
 #: apps/reader/src/CitationEditor.tsx
 msgid "CSL"
-msgstr ""
+msgstr "CSL"
 
 #: apps/reader/src/CitationEditor.tsx
 msgid "CSL JSON citation metadata"
-msgstr ""
+msgstr "CSL-JSON-Metadaten für Quellenangaben"
 
 #. placeholder {0}: row.key
 #: packages/migration/src/zotero-records.ts
 msgid "CSL retained in native data but needs review: {0}"
-msgstr ""
+msgstr "CSL in den Originaldaten beibehalten, muss aber geprüft werden: {0}"
 
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "Curator"
-msgstr ""
+msgstr "Kurator"
 
 #: apps/reader/src/CitationLookup.tsx
 msgid "Current"
-msgstr ""
+msgstr "Aktuell"
 
 #: packages/renderer-pdf/src/pdf-translations.ts
 msgctxt "PDF viewer print"
 msgid "Current page ({currentPage})"
-msgstr ""
+msgstr "Aktuelle Seite ({currentPage})"
 
 #: apps/reader/src/reader-command-list.ts
 msgid "Current source"
-msgstr ""
+msgstr "Aktuelle Quelle"
 
 #: apps/reader/src/library-lenses.ts
 msgctxt "library lenses"
 msgid "Currently reading"
-msgstr ""
+msgstr "Wird gerade gelesen"
 
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "Custom"
-msgstr ""
+msgstr "Benutzerdefiniert"
 
 #: apps/reader/src/CitationTypedFieldEditors.tsx
 msgid "Custom properties"
-msgstr ""
+msgstr "Benutzerdefinierte Eigenschaften"
 
 #: apps/reader/src/DisplayMenu.tsx
 msgid "Dark"
-msgstr ""
+msgstr "Dunkel"
 
 #: apps/extension/src/OptionsApp.tsx
 msgctxt "Dark appearance theme"
 msgid "Dark"
-msgstr ""
+msgstr "Dunkel"
 
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "Dataset"
-msgstr ""
+msgstr "Datensatz"
 
 #: apps/reader/src/citation-form-model.ts
 msgctxt "CSL item type"
 msgid "Dataset"
-msgstr ""
+msgstr "Datensatz"
 
 #: apps/reader/src/CitationSourceSync.tsx
 msgctxt "citation metadata field"
 msgid "Date"
-msgstr ""
+msgstr "Datum"
 
 #: apps/reader/src/CitationSourceSync.tsx
 msgctxt "source metadata field"
 msgid "Date"
-msgstr ""
+msgstr "Datum"
 
 #: apps/reader/src/CitationTypedFieldEditors.tsx
 msgid "Date as printed"
-msgstr ""
+msgstr "Datum wie gedruckt"
 
 #: apps/reader/src/CitationTypedFieldEditors.tsx
 msgid "Date form"
-msgstr ""
+msgstr "Datumsformat"
 
 #: apps/reader/src/CitationTypedFieldEditors.tsx
 msgctxt "CitationTypedFieldEditors interface"
 msgid "Date form"
-msgstr ""
+msgstr "Datumsformat"
 
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL date field"
 msgid "Date parts"
-msgstr ""
+msgstr "Datumsbestandteile"
 
 #: apps/extension/src/SavedHighlights.tsx
 msgid "Delete"
-msgstr ""
+msgstr "Löschen"
 
 #: apps/reader/src/AnnotationEditor.tsx
 msgctxt "AnnotationEditor interface"
 msgid "Delete"
-msgstr ""
+msgstr "Löschen"
 
 #: apps/reader/src/SelectionToolbar.tsx
 msgctxt "SelectionToolbar interface"
 msgid "Delete"
-msgstr ""
+msgstr "Löschen"
 
 #: apps/extension/src/SavedHighlights.tsx
 msgid "Delete highlight"
-msgstr ""
+msgstr "Hervorhebung löschen"
 
 #: apps/reader/src/SelectionToolbar.tsx
 msgctxt "SelectionToolbar interface"
 msgid "Delete highlight"
-msgstr ""
+msgstr "Hervorhebung löschen"
 
 #: apps/reader/src/AnnotationEditor.tsx
 msgid "Delete this annotation?"
-msgstr ""
+msgstr "Diese Anmerkung löschen?"
 
 #. placeholder {0}: links ? ( <Plural value={links} one=" # note links to it; those links will break." other=" # notes link to it; those links will break." /> ) : ( "" )
 #: apps/extension/src/SavedHighlights.tsx
 msgid "Delete this highlight from your collection?{0}"
-msgstr ""
+msgstr "Diese Hervorhebung aus Ihrer Sammlung löschen?{0}"
 
 #: apps/reader/src/SelectionToolbar.tsx
 msgctxt "SelectionToolbar interface"
 msgid "Delete?"
-msgstr ""
+msgstr "Löschen?"
 
 #: packages/migration/src/readwise-annotations.ts
 msgid "Deleted Readwise books skipped"
-msgstr ""
+msgstr "Gelöschte Readwise-Bücher übersprungen"
 
 #: packages/migration/src/readwise-annotations.ts
 msgid "Deleted Readwise highlights skipped"
-msgstr ""
+msgstr "Gelöschte Readwise-Hervorhebungen übersprungen"
 
 #: apps/extension/src/SavedHighlights.tsx
 msgid "Deleting…"
-msgstr ""
+msgstr "Wird gelöscht…"
 
 #: apps/reader/src/AnnotationEditor.tsx
 msgctxt "AnnotationEditor interface"
 msgid "Deleting…"
-msgstr ""
+msgstr "Wird gelöscht…"
 
 #: apps/reader/src/SelectionToolbar.tsx
 msgctxt "SelectionToolbar interface"
 msgid "Deleting…"
-msgstr ""
+msgstr "Wird gelöscht…"
 
 #: apps/reader/src/DisplayMenu.tsx
 msgctxt "DisplayMenu interface"
 msgid "Density"
-msgstr ""
+msgstr "Dichte"
 
 #: apps/reader/src/LibraryAnnotationToolbar.tsx
 msgctxt "LibraryAnnotationToolbar interface"
 msgid "Descending"
-msgstr ""
+msgstr "Absteigend"
 
 #: apps/reader/src/LibraryWorkspace.tsx
 msgctxt "LibraryWorkspace interface"
 msgid "Descending"
-msgstr ""
+msgstr "Absteigend"
 
 #: apps/reader/src/SourceDetails.tsx
 msgctxt "SourceDetails fields"
 msgid "Description"
-msgstr ""
+msgstr "Beschreibung"
 
 #: apps/reader/src/import-controller.ts
 msgid "Destination checked. Confirm below to begin writing."
-msgstr ""
+msgstr "Ziel geprüft. Bestätigen Sie unten, um mit dem Schreiben zu beginnen."
 
 #: apps/reader/src/CitationEditor.tsx
 #: apps/reader/src/SourceDetails.tsx
 msgid "Details"
-msgstr ""
+msgstr "Details"
 
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "Dimensions"
-msgstr ""
+msgstr "Abmessungen"
 
 #: apps/reader/src/ReaderHeader.tsx
 msgid "Direct connection"
-msgstr ""
+msgstr "Direktverbindung"
 
 #: apps/reader/src/use-direct-access.ts
 msgid "Direct local access is not available for this connection."
-msgstr ""
+msgstr "Direkter lokaler Zugriff ist für diese Verbindung nicht verfügbar."
 
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "Director"
-msgstr ""
+msgstr "Regie"
 
 #: apps/reader/src/AnnotationEditor.tsx
 msgid "Discard changes"
-msgstr ""
+msgstr "Änderungen verwerfen"
 
 #: apps/reader/src/AnnotationPanelActions.tsx
 msgctxt "AnnotationPanelActions interface"
 msgid "Discard comment"
-msgstr ""
+msgstr "Kommentar verwerfen"
 
 #: apps/reader/src/AnnotationComposer.tsx
 msgctxt "AnnotationComposer interface"
 msgid "Discard selection"
-msgstr ""
+msgstr "Auswahl verwerfen"
 
 #: apps/reader/src/use-annotation-creation.ts
 msgid "Discard the unfinished annotation comment and comment on this?"
-msgstr ""
+msgstr "Unfertigen Anmerkungskommentar verwerfen und diesen Eintrag kommentieren?"
 
 #: apps/reader/src/use-selection-routing.ts
 msgid "Discard the unfinished annotation comment and use this area?"
-msgstr ""
+msgstr "Unfertigen Anmerkungskommentar verwerfen und diesen Bereich verwenden?"
 
 #: apps/reader/src/use-annotation-edit.ts
 msgid "Discard this annotation's unsaved changes? The collection version will be kept."
-msgstr ""
+msgstr "Ungespeicherte Änderungen an dieser Anmerkung verwerfen? Die Sammlungsversion bleibt erhalten."
 
 #: apps/reader/src/use-annotation-creation.ts
 msgid "Discard this unfinished annotation comment?"
-msgstr ""
+msgstr "Diesen unfertigen Anmerkungskommentar verwerfen?"
 
 #: apps/reader/src/AnnotationPanelActions.tsx
 msgid "Discard this unsaved comment?"
-msgstr ""
+msgstr "Diesen ungespeicherten Kommentar verwerfen?"
 
 #: packages/migration/src/readwise-annotations.ts
 msgid "Discarded Readwise highlights skipped (kept in the native archive)"
-msgstr ""
+msgstr "Verworfene Readwise-Hervorhebungen übersprungen (im Originalarchiv beibehalten)"
 
 #: apps/reader/src/CitationLookup.tsx
 msgid "Dismiss"
-msgstr ""
+msgstr "Schließen"
 
 #: apps/reader/src/reader-command-list.ts
 msgid "Display"
-msgstr ""
+msgstr "Anzeige"
 
 #: apps/reader/src/DisplayMenu.tsx
 msgctxt "DisplayMenu interface"
 msgid "Display settings"
-msgstr ""
+msgstr "Anzeigeeinstellungen"
 
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "Division"
-msgstr ""
+msgstr "Abteilung"
 
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "Document"
-msgstr ""
+msgstr "Dokument"
 
 #: apps/reader/src/citation-form-model.ts
 msgctxt "CSL item type"
 msgid "Document"
-msgstr ""
+msgstr "Dokument"
 
 #: apps/reader/src/reader-command-list.ts
 msgctxt "reader command list"
 msgid "Document"
-msgstr ""
+msgstr "Dokument"
 
 #: apps/reader/src/source-addition-flow.ts
 msgctxt "source addition flow"
