@@ -2708,442 +2708,442 @@ msgstr "Редакторы"
 
 #: apps/reader/src/CitationStructuredEditor.tsx
 msgid "Editors and translators"
-msgstr ""
+msgstr "Редакторы и переводчики"
 
 #: apps/reader/src/CitationTypedFieldEditors.tsx
 msgctxt "CitationTypedFieldEditors dateModeOptions"
 msgid "EDTF / raw date"
-msgstr ""
+msgstr "EDTF / исходная дата"
 
 #: apps/reader/src/CitationTypedFieldEditors.tsx
 msgid "EDTF or source date"
-msgstr ""
+msgstr "EDTF или дата из источника"
 
 #. placeholder {0}: this.candidate.label
 #: packages/markdown-editor/src/annotation-widgets.ts
 msgid "Embedded annotation: {0}"
-msgstr ""
+msgstr "Встроенная аннотация: {0}"
 
 #: packages/renderer-pdf/src/pdf-viewer.tsx
 msgid "EmbedPDF could not open this PDF."
-msgstr ""
+msgstr "Не удалось открыть этот PDF в EmbedPDF."
 
 #: packages/renderer-pdf/src/embedpdf-runtime.ts
 #: packages/renderer-pdf/src/pdf-viewer.tsx
 msgid "EmbedPDF did not initialize its document manager."
-msgstr ""
+msgstr "Не удалось инициализировать менеджер документов EmbedPDF."
 
 #: packages/renderer-pdf/src/embedpdf-runtime.ts
 msgid "EmbedPDF did not initialize the required Reader plugins."
-msgstr ""
+msgstr "Не удалось инициализировать необходимые модули Reader."
 
 #: apps/reader/src/CitationTypedFieldEditors.tsx
 msgctxt "CitationTypedFieldEditors customValueTypeOptions"
 msgid "Empty"
-msgstr ""
+msgstr "Пусто"
 
 #: packages/migration/src/zotero-pdf.ts
 msgid "Empty Zotero PDF rectangle."
-msgstr ""
+msgstr "Пустой прямоугольник PDF Zotero."
 
 #: packages/renderer-epub/src/epub-archive.ts
 msgid "Encrypted EPUB resources are not supported: {path}"
-msgstr ""
+msgstr "Ресурсы EPUB с шифрованием не поддерживаются: {path}"
 
 #: apps/reader/src/CitationTypedFieldEditors.tsx
 msgctxt "CitationTypedFieldEditors interface"
 msgid "End (optional)"
-msgstr ""
+msgstr "Конец (необязательно)"
 
 #: packages/renderer-epub/src/epub-page-navigation.tsx
 msgid "End of publication"
-msgstr ""
+msgstr "Дата публикации"
 
 #: apps/reader/src/LibraryTextSearch.tsx
 msgid "Enter at least two characters."
-msgstr ""
+msgstr "Введите не менее двух символов."
 
 #: packages/renderer-pdf/src/pdf-translations.ts
 msgctxt "PDF viewer passwordPrompt"
 msgid "Enter document password"
-msgstr ""
+msgstr "Введите пароль документа"
 
 #: apps/reader/src/reader-command-list.ts
 msgid "Enter reading mode"
-msgstr ""
+msgstr "Перейти в режим чтения"
 
 #. placeholder {0}: shortcutLabel("mod+.")
 #: apps/reader/src/ReaderHeader.tsx
 msgid "Enter reading mode · {0}"
-msgstr ""
+msgstr "Перейти в режим чтения · {0}"
 
 #: apps/reader/src/CitationTypedFieldEditors.tsx
 msgid "Enter valid JSON to apply this value."
-msgstr ""
+msgstr "Введите допустимый JSON, чтобы применить это значение."
 
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "Entry"
-msgstr ""
+msgstr "Запись"
 
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "Entry dictionary"
-msgstr ""
+msgstr "Словарь"
 
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "Entry encyclopedia"
-msgstr ""
+msgstr "Энциклопедическая статья"
 
 #: apps/reader/src/LibraryWorkspace.tsx
 msgctxt "LibraryWorkspace formatFilterOptions"
 msgid "EPUB"
-msgstr ""
+msgstr "EPUB"
 
 #: packages/renderer-epub/src/epub-archive.ts
 msgid "EPUB archive contains a duplicate path: {path}"
-msgstr ""
+msgstr "Архив EPUB содержит повторяющийся путь: {path}"
 
 #. placeholder {0}: String(MAX_ENTRIES)
 #: packages/renderer-epub/src/epub-archive.ts
 msgid "EPUB archive exceeds the {0}-entry safety limit."
-msgstr ""
+msgstr "Архив EPUB превышает безопасный предел в {0} записей."
 
 #: packages/renderer-epub/src/epub-archive.ts
 msgid "EPUB archive exceeds the uncompressed size safety limit."
-msgstr ""
+msgstr "Архив EPUB превышает безопасный предел распакованного размера."
 
 #: packages/renderer-epub/src/epub-archive.ts
 msgid "EPUB archive is closed."
-msgstr ""
+msgstr "Архив EPUB закрыт."
 
 #: packages/renderer-epub/src/epub-archive.ts
 msgid "EPUB archive is missing META-INF/container.xml."
-msgstr ""
+msgstr "В архиве EPUB отсутствует META-INF/container.xml."
 
 #: packages/renderer-epub/src/epub-manifest.ts
 msgid "EPUB container does not identify a package document."
-msgstr ""
+msgstr "В контейнере EPUB не указан документ пакета."
 
 #: packages/renderer-epub/src/epub-path.ts
 msgid "EPUB contains an invalid encoded path segment: {value}"
-msgstr ""
+msgstr "В EPUB найден сегмент пути с недопустимым кодированием: {value}"
 
 #: packages/renderer-epub/src/epub-path.ts
 msgid "EPUB contains an unsafe resource path: {value}"
-msgstr ""
+msgstr "В EPUB найден небезопасный путь к ресурсу: {value}"
 
 #: packages/renderer-epub/src/epub-safe-fetch.ts
 msgid "EPUB content document contains invalid markup."
-msgstr ""
+msgstr "Документ содержимого EPUB содержит недопустимую разметку."
 
 #. placeholder {0}: String(response.status)
 #: packages/renderer-epub/src/epub-viewer.tsx
 msgid "EPUB download failed with HTTP {0}."
-msgstr ""
+msgstr "Не удалось скачать EPUB: HTTP {0}."
 
 #: packages/renderer-epub/src/epub-manifest.ts
 msgid "EPUB manifest item"
-msgstr ""
+msgstr "Элемент манифеста EPUB"
 
 #: packages/renderer-epub/src/epub-manifest.ts
 msgid "EPUB manifest item {id}"
-msgstr ""
+msgstr "Элемент манифеста EPUB {id}"
 
 #: packages/renderer-epub/src/epub-manifest.ts
 msgid "EPUB package document is missing its package element."
-msgstr ""
+msgstr "В документе пакета EPUB отсутствует элемент package."
 
 #: packages/renderer-epub/src/epub-manifest.ts
 msgid "EPUB package has no reading order."
-msgstr ""
+msgstr "В пакете EPUB не задан порядок чтения."
 
 #: packages/renderer-epub/src/epub-manifest.ts
 msgid "EPUB package metadata has no title."
-msgstr ""
+msgstr "В метаданных пакета EPUB отсутствует название."
 
 #: packages/renderer-epub/src/epub-page-navigation.tsx
 msgid "EPUB page navigation"
-msgstr ""
+msgstr "Навигация по страницам EPUB"
 
 #: packages/renderer-epub/src/epub-path.ts
 msgid "EPUB reference escapes its package root: {reference}"
-msgstr ""
+msgstr "Ссылка EPUB выходит за пределы корня пакета: {reference}"
 
 #: packages/renderer-epub/src/epub-archive.ts
 msgid "EPUB resource exceeds the per-file safety limit: {path}"
-msgstr ""
+msgstr "Ресурс EPUB превышает безопасный предел размера файла: {path}"
 
 #: packages/renderer-epub/src/epub-archive.ts
 msgid "EPUB resource has an unsafe compression ratio: {path}"
-msgstr ""
+msgstr "У ресурса EPUB небезопасное соотношение степеней сжатия: {path}"
 
 #: packages/renderer-epub/src/epub-archive.ts
 msgid "EPUB resource is missing: {safePath}"
-msgstr ""
+msgstr "Ресурс EPUB не найден: {safePath}"
 
 #: packages/renderer-epub/src/epub-manifest.ts
 msgid "EPUB spine item"
-msgstr ""
+msgstr "Элемент последовательности чтения EPUB"
 
 #: packages/renderer-epub/src/epub-manifest.ts
 msgid "EPUB spine references an unknown manifest item: {reference}"
-msgstr ""
+msgstr "В последовательности чтения EPUB указан неизвестный элемент манифеста: {reference}"
 
 #: packages/renderer-pdf/src/pdf-translations.ts
 msgctxt "PDF viewer documentError"
 msgid "Error Code: {code}"
-msgstr ""
+msgstr "Код ошибки: {code}"
 
 #: packages/renderer-pdf/src/pdf-translations.ts
 msgctxt "PDF viewer documentError"
 msgid "Error loading document"
-msgstr ""
+msgstr "Ошибка загрузки документа"
 
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "Event"
-msgstr ""
+msgstr "Событие"
 
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "Event date"
-msgstr ""
+msgstr "Дата события"
 
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "Event place"
-msgstr ""
+msgstr "Место проведения события"
 
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "Event title"
-msgstr ""
+msgstr "Название события"
 
 #: apps/reader/src/LibraryAnnotationTableHead.tsx
 msgid "Every column is shown."
-msgstr ""
+msgstr "Отображаются все столбцы."
 
 #: apps/reader/src/CitationEditor.tsx
 msgid "Every official field is preserved exactly as entered."
-msgstr ""
+msgstr "Все официальные поля сохраняются без изменений."
 
 #: apps/reader/src/ImportInput.tsx
 msgid "Every payload checksum is verified before collection writes. Currently requires a browser with folder selection support, such as Chrome."
-msgstr ""
+msgstr "Контрольная сумма каждого блока данных проверяется перед записью в коллекцию. Пока требуется браузер с поддержкой выбора папки, например Chrome."
 
 #: packages/migration/src/readwise.ts
 msgid "Exact PDF geometry and EPUB positions are not supplied by this import. Highlights retain quotes and native location evidence, without claiming exact positioning."
-msgstr ""
+msgstr "При этом импорте не предоставляются точная геометрия PDF и позиции EPUB. Для выделений сохраняются цитаты и исходные данные о расположении, но точная позиция не гарантируется."
 
 #: apps/reader/src/connect-workspace.ts
 msgid "Exact recovery is unavailable here. No new write was attempted."
-msgstr ""
+msgstr "Точное восстановление здесь недоступно. Новая запись не выполнялась."
 
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "Executive producer"
-msgstr ""
+msgstr "Исполнительный продюсер"
 
 #: apps/extension/src/TagInput.tsx
 msgid "Existing tags"
-msgstr ""
+msgstr "Существующие теги"
 
 #: packages/renderer-pdf/src/pdf-translations.ts
 msgctxt "PDF viewer document"
 msgid "Export"
-msgstr ""
+msgstr "Экспорт"
 
 #: apps/reader/src/reader-app-commands.ts
 msgid "Export bibliography"
-msgstr ""
+msgstr "Экспортировать библиографию"
 
 #: apps/reader/src/LibraryWorkspace.tsx
 msgctxt "LibraryWorkspace interface"
 msgid "Export bibliography"
-msgstr ""
+msgstr "Экспортировать библиографию"
 
 #: apps/reader/src/LibraryRowMenu.tsx
 msgid "Export citation"
-msgstr ""
+msgstr "Экспортировать ссылку"
 
 #: apps/reader/src/LibraryBulkBar.tsx
 msgid "Export citations"
-msgstr ""
+msgstr "Экспортировать ссылки"
 
 #: apps/reader/src/reader-command-list.ts
 msgid "Export current source"
-msgstr ""
+msgstr "Экспортировать текущий источник"
 
 #: apps/reader/src/DocumentContextualToolbar.tsx
 msgctxt "DocumentContextualToolbar interface"
 msgid "Export source"
-msgstr ""
+msgstr "Экспортировать источник"
 
 #. placeholder {0}: items.length
 #: apps/reader/src/use-bibliography-export.ts
 msgid "Exported {0, plural, one {# citation} other {# citations}}."
-msgstr ""
+msgstr "Экспортировано: {0, plural, one {# ссылка} few {# ссылки} many {# ссылок} other {# ссылки}}."
 
 #. placeholder {0}: bundle.canonicalRecordCount
 #. placeholder {1}: bundle.originalFileCount
 #: apps/reader/src/use-source-export.ts
 msgid "Exported {0, plural, one {# record} other {# records}} and {1, plural, one {# original file} other {# original files}}."
-msgstr ""
+msgstr "Экспортировано {0, plural, one {# запись} few {# записи} many {# записей} other {# записи} и {1, plural, one {# исходный файл} few {# исходных файла} many {# исходных файлов} other {# исходного файла}}."
 
 #: apps/reader/src/ImportInput.tsx
 msgid "Exported folder"
-msgstr ""
+msgstr "Экспортированная папка"
 
 #: apps/reader/src/use-source-export.ts
 msgid "Exported with {problemCount, plural, one {# item} other {# items}} to review."
-msgstr ""
+msgstr "Экспортировано с {problemCount, plural, one {# элементом для проверки} few {# элементами для проверки} many {# элементами для проверки} other {# элементом для проверки}}."
 
 #: apps/reader/src/CitationTypedFieldEditors.tsx
 msgctxt "CitationTypedFieldEditors booleanOptions"
 msgid "False"
-msgstr ""
+msgstr "Ложь"
 
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "Family"
-msgstr ""
+msgstr "Фамилия"
 
 #: apps/reader/src/CitationContributors.tsx
 msgctxt "CitationContributors interface"
 msgid "Family name"
-msgstr ""
+msgstr "Фамилия"
 
 #: apps/reader/src/source-addition-flow.ts
 msgid "Feeds, profiles and search pages cannot be saved. Choose individual posts in the Reader extension."
-msgstr ""
+msgstr "Ленты, профили и страницы поиска нельзя сохранить. Выберите отдельные публикации в расширении Reader."
 
 #: apps/reader/src/source-addition-flow.ts
 msgid "Fetching the page…"
-msgstr ""
+msgstr "Загрузка страницы…"
 
 #: apps/reader/src/LibraryBulkBar.tsx
 msgctxt "LibraryBulkBar interface"
 msgid "field"
-msgstr ""
+msgstr "поле"
 
 #: apps/reader/src/LibraryConditionsEditor.tsx
 msgctxt "LibraryConditionsEditor interface"
 msgid "field"
-msgstr ""
+msgstr "поле"
 
 #: apps/reader/src/LibraryBulkBar.tsx
 msgctxt "LibraryBulkBar interface"
 msgid "Field"
-msgstr ""
+msgstr "Поле"
 
 #: apps/reader/src/LibraryConditionsEditor.tsx
 msgctxt "LibraryConditionsEditor interface"
 msgid "Field"
-msgstr ""
+msgstr "Поле"
 
 #: apps/reader/src/LibraryConditionsEditor.tsx
 msgctxt "LibraryConditionsEditor interface"
 msgid "Field condition"
-msgstr ""
+msgstr "Условие по полю"
 
 #: apps/reader/src/LibraryConditionsEditor.tsx
 msgid "Fields"
-msgstr ""
+msgstr "Поля"
 
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "Figure"
-msgstr ""
+msgstr "Рисунок"
 
 #: apps/reader/src/workspace-tab-display.ts
 msgctxt "workspace tab display"
 msgid "FILE"
-msgstr ""
+msgstr "ФАЙЛ"
 
 #: packages/migration/src/run-files.ts
 msgid "File checksum changed since preview."
-msgstr ""
+msgstr "Контрольная сумма файла изменилась после предварительного просмотра."
 
 #: apps/reader/src/connect-workspace.ts
 msgid "File export is unavailable for this connection."
-msgstr ""
+msgstr "Экспорт файлов недоступен для этого подключения."
 
 #: apps/reader/src/use-bibliography-export.ts
 msgid "File export is unavailable in this build."
-msgstr ""
+msgstr "Экспорт файлов недоступен в этой сборке."
 
 #: apps/reader/src/preview.tsx
 msgid "File import is unavailable in the interface preview."
-msgstr ""
+msgstr "Импорт файлов недоступен в предварительном просмотре интерфейса."
 
 #: packages/migration/src/run-files.ts
 msgid "File transfer failed."
-msgstr ""
+msgstr "Не удалось передать файлы."
 
 #: apps/reader/src/import-controller.ts
 msgid "Files: {completed} of {total}"
-msgstr ""
+msgstr "Файлы: {completed} из {total}"
 
 #: apps/reader/src/LibraryWorkspace.tsx
 msgid "Filter"
-msgstr ""
+msgstr "Фильтр"
 
 #: apps/reader/src/AnnotationList.tsx
 msgid "Filter and sort annotations"
-msgstr ""
+msgstr "Фильтровать и сортировать аннотации"
 
 #: apps/reader/src/AnnotationList.tsx
 msgid "Filter and sort annotations, filtered"
-msgstr ""
+msgstr "Фильтровать и сортировать аннотации; применён фильтр"
 
 #: apps/reader/src/AnnotationList.tsx
 msgctxt "AnnotationList interface"
 msgid "Filter annotations"
-msgstr ""
+msgstr "Фильтровать аннотации"
 
 #: apps/reader/src/CollectionMenu.tsx
 msgctxt "CollectionMenu interface"
 msgid "Filter collections"
-msgstr ""
+msgstr "Фильтровать коллекции"
 
 #: apps/reader/src/reader-app-commands.ts
 msgid "Filter sources in the sidebar"
-msgstr ""
+msgstr "Фильтровать источники в боковой панели"
 
 #: apps/reader/src/CitationLookup.tsx
 msgctxt "CitationLookup interface"
 msgid "Find"
-msgstr ""
+msgstr "Найти"
 
 #: apps/reader/src/CitationAdditionalFields.tsx
 msgid "Find a field"
-msgstr ""
+msgstr "Найти поле"
 
 #: apps/reader/src/LibraryNavigator.tsx
 msgid "Find a source"
-msgstr ""
+msgstr "Найти источник"
 
 #: apps/reader/src/LibraryNavigator.tsx
 msgid "Find a source by title, author or tag"
-msgstr ""
+msgstr "Найти источник по названию, автору или тегу"
 
 #: apps/reader/src/WorkspacePaneSupport.tsx
 msgid "Find an open-access PDF"
-msgstr ""
+msgstr "Найти PDF в открытом доступе"
 
 #: apps/reader/src/CitationLookup.tsx
 msgid "Find citation details"
-msgstr ""
+msgstr "Найти сведения о ссылке"
 
 #: apps/reader/src/connection-recovery.ts
 msgid "Finding mdbase Connect…"
-msgstr ""
+msgstr "Поиск mdbase Connect…"
 
 #: apps/extension/src/connection-view.ts
 msgid "Finish signing in or approving in the mdbase tab, then save."
-msgstr ""
+msgstr "Завершите вход или подтверждение на вкладке mdbase, затем сохраните."
 
 #: apps/reader/src/LibraryCells.tsx
 msgctxt "reading status"
