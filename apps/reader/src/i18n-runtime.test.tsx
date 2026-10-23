@@ -19,7 +19,7 @@ afterEach(() => {
 it("keeps app message identities separate from independently authored shared UI", () => {
   // Lingui's singleton can extend a loaded catalogue object in place; inspect
   // the original deployment bytes, not those live mutable catalogue objects.
-  const readMessages = (url: URL) =>
+  const readMessages = (url: URL): Record<string, unknown> =>
     (
       JSON.parse(readFileSync(url, "utf8")) as {
         messages: Record<string, unknown>;
