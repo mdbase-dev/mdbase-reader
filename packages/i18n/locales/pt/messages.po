@@ -4320,539 +4320,539 @@ msgstr "Os metadados nativos também são arquivados como JSON. Registros existe
 
 #: apps/reader/src/AnnotationComposer.tsx
 msgid "New area annotation"
-msgstr ""
+msgstr "Nova anotação de área"
 
 #: apps/reader/src/AnnotationPanelActions.tsx
 msgid "New comment"
-msgstr ""
+msgstr "Novo comentário"
 
 #: apps/reader/src/AnnotationList.tsx
 msgctxt "AnnotationList annotationOrderOptions"
 msgid "Newest first"
-msgstr ""
+msgstr "Mais recentes primeiro"
 
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "Newspaper article"
-msgstr ""
+msgstr "Artigo de jornal"
 
 #: apps/reader/src/citation-form-model.ts
 msgctxt "CSL item type"
 msgid "Newspaper article"
-msgstr ""
+msgstr "Artigo de jornal"
 
 #: packages/renderer-epub/src/epub-page-navigation.tsx
 msgid "Next page"
-msgstr ""
+msgstr "Próxima página"
 
 #: packages/renderer-pdf/src/pdf-translations.ts
 msgctxt "PDF viewer page"
 msgid "Next Page"
-msgstr ""
+msgstr "Próxima página"
 
 #: apps/reader/src/citation-form-model.ts
 msgid "No"
-msgstr ""
+msgstr "Não"
 
 #: apps/reader/src/library-columns.ts
 msgctxt "library columns"
 msgid "No"
-msgstr ""
+msgstr "Não"
 
 #: apps/reader/src/LibraryAnnotations.tsx
 msgid "No annotations match"
-msgstr ""
+msgstr "Nenhuma anotação corresponde"
 
 #: apps/reader/src/AnnotationList.tsx
 #: apps/reader/src/LibraryAnnotations.tsx
 msgid "No annotations yet"
-msgstr ""
+msgstr "Nenhuma anotação ainda"
 
 #: packages/core/src/application/citation-citekey.ts
 msgid "No author or editor is recorded."
-msgstr ""
+msgstr "Nenhum autor ou editor está registrado."
 
 #: apps/extension/src/CitationPanel.tsx
 msgid "No citation details were found on this page. Save the source, then add them in Reader."
-msgstr ""
+msgstr "Nenhum detalhe de citação foi encontrado nesta página. Salve a fonte e adicione-os no Reader."
 
 #. placeholder {0}: query.trim()
 #: apps/reader/src/CollectionMenu.tsx
 msgid "No collections match “{0}”."
-msgstr ""
+msgstr "Nenhuma coleção corresponde a “{0}”."
 
 #: apps/reader/src/connection-recovery.ts
 msgid "No computer is registered for this collection."
-msgstr ""
+msgstr "Nenhum computador está registrado para esta coleção."
 
 #: packages/core/src/application/build-csl-bibliography.ts
 msgid "No CSL citation metadata is attached."
-msgstr ""
+msgstr "Nenhum metadado de citação CSL está anexado."
 
 #: apps/reader/src/WorkspacePaneSupport.tsx
 msgid "No document attached"
-msgstr ""
+msgstr "Nenhum documento anexado"
 
 #: packages/renderer-pdf/src/pdf-translations.ts
 msgctxt "PDF viewer emptyState"
 msgid "No Documents Open"
-msgstr ""
+msgstr "Nenhum documento aberto"
 
 #: packages/migration/src/readwise-sources.ts
 msgid "No downloadable content; importing metadata only: {key}"
-msgstr ""
+msgstr "Sem conteúdo baixável; importando apenas os metadados: {key}"
 
 #: apps/reader/src/workspace-tab-display.ts
 msgctxt "workspace tab display"
 msgid "NO FILE"
-msgstr ""
+msgstr "SEM ARQUIVO"
 
 #: apps/reader/src/LibraryCells.tsx
 msgid "No file attached"
-msgstr ""
+msgstr "Nenhum arquivo anexado"
 
 #: apps/reader/src/LibraryWorkspace.tsx
 msgctxt "LibraryWorkspace formatFilterOptions"
 msgid "No file attached"
-msgstr ""
+msgstr "Nenhum arquivo anexado"
 
 #: apps/reader/src/LibraryNavigator.tsx
 msgid "No matches in the sources loaded so far. Loading more…"
-msgstr ""
+msgstr "Nenhuma correspondência nas fontes carregadas até agora. Carregando mais…"
 
 #: apps/reader/src/AnnotationList.tsx
 msgid "No matching annotations"
-msgstr ""
+msgstr "Nenhuma anotação correspondente"
 
 #: apps/reader/src/use-document-attachment.ts
 msgid "No open-access PDF was found. Attach a copy you have, or save it from the publisher with the browser extension."
-msgstr ""
+msgstr "Nenhum PDF de acesso aberto foi encontrado. Anexe uma cópia que você tenha ou salve-a da editora com a extensão do navegador."
 
 #: packages/renderer-pdf/src/pdf-translations.ts
 msgctxt "PDF viewer outline"
 msgid "No outline available"
-msgstr ""
+msgstr "Nenhum sumário disponível"
 
 #: apps/extension/src/PostPicker.tsx
 msgid "No posts loaded. Scroll the page to load some posts."
-msgstr ""
+msgstr "Nenhuma publicação carregada. Role a página para carregar algumas publicações."
 
 #: packages/core/src/application/citation-citekey.ts
 msgid "No publication date is recorded."
-msgstr ""
+msgstr "Nenhuma data de publicação está registrada."
 
 #. placeholder {0}: document.mediaType
 #: apps/reader/src/ConnectedDocument.tsx
 msgid "No renderer is registered for {0}."
-msgstr ""
+msgstr "Nenhum exibidor está registrado para {0}."
 
 #: apps/reader/src/InspectorPane.tsx
 msgid "No source in this pane"
-msgstr ""
+msgstr "Nenhuma fonte neste painel"
 
 #: apps/reader/src/LibraryWorkspace.tsx
 msgid "No sources match"
-msgstr ""
+msgstr "Nenhuma fonte corresponde"
 
 #: apps/reader/src/LibraryNavigator.tsx
 msgid "No sources match."
-msgstr ""
+msgstr "Nenhuma fonte corresponde."
 
 #: apps/reader/src/LibraryNavigator.tsx
 msgid "No sources yet."
-msgstr ""
+msgstr "Nenhuma fonte ainda."
 
 #: apps/reader/src/use-bibliography-export.ts
 msgid "No valid citations are ready to export."
-msgstr ""
+msgstr "Nenhuma citação válida está pronta para exportar."
 
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "Non dropping particle"
-msgstr ""
+msgstr "Partícula que não se omite"
 
 #: packages/migration/src/zotero-pdf.ts
 msgid "Non-default PDF UserUnit is not yet supported."
-msgstr ""
+msgstr "UserUnit de PDF diferente do padrão ainda não é suportado."
 
 #: apps/reader/src/CitationContributors.tsx
 msgctxt "CitationContributors interface"
 msgid "Non-dropping particle"
-msgstr ""
+msgstr "Partícula que não se omite"
 
 #: apps/reader/src/CitationSourceSync.tsx
 msgctxt "empty metadata value"
 msgid "None"
-msgstr ""
+msgstr "Nenhum"
 
 #: apps/reader/src/import-controller.ts
 msgid "Not complete — review the error before resuming"
-msgstr ""
+msgstr "Não concluída — revise o erro antes de continuar"
 
 #: apps/extension/src/ConnectionPanel.tsx
 msgid "Not connected"
-msgstr ""
+msgstr "Não conectado"
 
 #: apps/extension/src/SavedHighlights.tsx
 msgid "Not found on this page"
-msgstr ""
+msgstr "Não encontrado nesta página"
 
 #: apps/reader/src/ConnectReader.tsx
 msgctxt "ConnectReader interface"
 msgid "not installed"
-msgstr ""
+msgstr "não instalado"
 
 #: apps/reader/src/pwa-install.ts
 msgctxt "pwa install"
 msgid "Not now"
-msgstr ""
+msgstr "Agora não"
 
 #: apps/reader/src/citation-form-model.ts
 msgid "Not recorded"
-msgstr ""
+msgstr "Não registrado"
 
 #: apps/extension/src/NotePanel.tsx
 #: apps/reader/src/AnnotationEditor.tsx
 msgid "Not saved"
-msgstr ""
+msgstr "Não salvo"
 
 #: apps/reader/src/SourceNoteEditor.tsx
 msgctxt "SourceNoteEditor status or action"
 msgid "Not saved"
-msgstr ""
+msgstr "Não salvo"
 
 #: apps/reader/src/AnnotationComposer.tsx
 msgid "Not saved yet — keep Reader open until you save this annotation."
-msgstr ""
+msgstr "Ainda não salvo — mantenha o Reader aberto até salvar esta anotação."
 
 #: apps/extension/src/NotePanel.tsx
 msgid "Not saved."
-msgstr ""
+msgstr "Não salvo."
 
 #: apps/extension/src/ShortcutList.tsx
 msgid "Not set"
-msgstr ""
+msgstr "Não definido"
 
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "Note"
-msgstr ""
+msgstr "Nota"
 
 #: apps/reader/src/MobileSourceViews.tsx
 msgctxt "MobileSourceViews views"
 msgid "Note"
-msgstr ""
+msgstr "Nota"
 
 #: apps/extension/src/PanelTabs.tsx
 msgctxt "Source literature note tab"
 msgid "Note"
-msgstr ""
+msgstr "Nota"
 
 #: apps/reader/src/LibraryWorkspace.tsx
 msgctxt "LibraryWorkspace searchScopeOptions"
 msgid "Notes & annotations"
-msgstr ""
+msgstr "Notas e anotações"
 
 #: packages/migration/src/zotero.ts
 msgid "Notes become independent source-level annotations, not replacements for source prose. Original CSL IDs are archived; Reader assigns stable, collision-resistant citekeys."
-msgstr ""
+msgstr "As notas se tornam anotações independentes no nível da fonte, não substituições do texto da fonte. Os IDs CSL originais são arquivados; o Reader atribui chaves de citação estáveis e resistentes a colisões."
 
 #: apps/reader/src/InspectorPane.tsx
 msgid "Notes follow the active pane"
-msgstr ""
+msgstr "As notas acompanham o painel ativo"
 
 #: apps/extension/src/CaptureApp.tsx
 msgid "Nothing to save here"
-msgstr ""
+msgstr "Nada para salvar aqui"
 
 #: apps/reader/src/CitationTypedFieldEditors.tsx
 msgctxt "CitationTypedFieldEditors customValueTypeOptions"
 msgid "Number"
-msgstr ""
+msgstr "Número"
 
 #: apps/reader/src/CitationTypedFieldEditors.tsx
 msgctxt "CitationTypedFieldEditors interface"
 msgid "Number"
-msgstr ""
+msgstr "Número"
 
 #: apps/reader/src/CitationTypedFieldEditors.tsx
 msgctxt "CitationTypedFieldEditors scalarKindOptions"
 msgid "Number"
-msgstr ""
+msgstr "Número"
 
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "Number"
-msgstr ""
+msgstr "Número"
 
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "Number of pages"
-msgstr ""
+msgstr "Número de páginas"
 
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "Number of volumes"
-msgstr ""
+msgstr "Número de volumes"
 
 #: apps/reader/src/LibraryConditionsEditor.tsx
 msgid "Numbers stored as text compare as text, as in saved mdbase views."
-msgstr ""
+msgstr "Números armazenados como texto são comparados como texto, como nas visualizações salvas do mdbase."
 
 #: apps/reader/src/ReaderHeader.tsx
 msgid "Offline"
-msgstr ""
+msgstr "Sem conexão"
 
 #: apps/extension/src/WelcomeApp.tsx
 msgid "On any page, press the toolbar button or <0>{open}</0>."
-msgstr ""
+msgstr "Em qualquer página, pressione o botão da barra de ferramentas ou <0>{open}</0>."
 
 #: apps/extension/src/WelcomeApp.tsx
 msgid "On any page, press the toolbar button."
-msgstr ""
+msgstr "Em qualquer página, pressione o botão da barra de ferramentas."
 
 #: apps/reader/src/collection-menu-model.ts
 msgctxt "collection menu model"
 msgid "On your computer"
-msgstr ""
+msgstr "No seu computador"
 
 #: apps/reader/src/SourceDetails.tsx
 msgctxt "SourceDetails fields"
 msgid "One per line"
-msgstr ""
+msgstr "Um por linha"
 
 #: apps/electron/src/validation.ts
 msgid "Only HTTP and HTTPS links may leave Reader."
-msgstr ""
+msgstr "Somente links HTTP e HTTPS podem sair do Reader."
 
 #: apps/reader/src/use-open-document-search.ts
 msgid "Only loaded, supported documents are searched; suspended tabs are not included."
-msgstr ""
+msgstr "Somente documentos carregados e suportados são pesquisados; abas suspensas não são incluídas."
 
 #: apps/extension/src/PostPicker.tsx
 msgid "Only posts currently loaded on the page are listed. Feeds are never saved."
-msgstr ""
+msgstr "Somente as publicações carregadas na página são listadas. Feeds nunca são salvos."
 
 #: apps/reader/src/ConnectReader.tsx
 msgid "Only Reader’s source and annotation contracts and starter types will be added."
-msgstr ""
+msgstr "Somente os contratos de fonte e anotação do Reader e os tipos iniciais serão adicionados."
 
 #: apps/reader/src/reader-command-list.ts
 msgid "Only the page, with the chrome out of the way"
-msgstr ""
+msgstr "Somente a página, sem os elementos da interface no caminho"
 
 #: apps/reader/src/LibraryBulkBar.tsx
 msgctxt "LibraryBulkBar interface"
 msgid "Open"
-msgstr ""
+msgstr "Abrir"
 
 #: apps/reader/src/LibraryNavigator.tsx
 msgctxt "LibraryNavigator interface"
 msgid "Open"
-msgstr ""
+msgstr "Abrir"
 
 #: apps/reader/src/LibraryRowMenu.tsx
 msgctxt "LibraryRowMenu interface"
 msgid "Open"
-msgstr ""
+msgstr "Abrir"
 
 #: apps/electron/src/main.ts
 msgctxt "Open a document from the file picker"
 msgid "Open"
-msgstr ""
+msgstr "Abrir"
 
 #: packages/renderer-pdf/src/pdf-translations.ts
 msgctxt "PDF viewer document"
 msgid "Open"
-msgstr ""
+msgstr "Abrir"
 
 #: packages/renderer-pdf/src/pdf-translations.ts
 msgctxt "PDF viewer passwordPrompt"
 msgid "Open"
-msgstr ""
+msgstr "Abrir"
 
 #. placeholder {0}: connection.displayName
 #: apps/reader/src/ConnectReader.tsx
 msgid "Open {0}"
-msgstr ""
+msgstr "Abrir {0}"
 
 #: apps/reader/src/InspectorPane.tsx
 msgid "Open {tab} in workbench"
-msgstr ""
+msgstr "Abrir {tab} na bancada"
 
 #: apps/electron/src/main.ts
 msgid "Open a document"
-msgstr ""
+msgstr "Abrir um documento"
 
 #: apps/reader/src/ReaderHeader.tsx
 msgid "Open a document to use reading mode"
-msgstr ""
+msgstr "Abra um documento para usar o modo de leitura"
 
 #: packages/renderer-pdf/src/pdf-translations.ts
 msgctxt "PDF viewer emptyState"
 msgid "Open a PDF document to get started."
-msgstr ""
+msgstr "Abra um documento PDF para começar."
 
 #: apps/reader/src/LibraryTextSearch.tsx
 msgid "Open a result, then use the document’s Find control to locate the passage."
-msgstr ""
+msgstr "Abra um resultado e use o controle Localizar do documento para encontrar o trecho."
 
 #: apps/reader/src/DockviewWorkspace.tsx
 msgid "Open a source from the library. Drag tabs to arrange your workspace."
-msgstr ""
+msgstr "Abra uma fonte da biblioteca. Arraste as abas para organizar sua área de trabalho."
 
 #: apps/reader/src/reader-command-list.ts
 msgctxt "reader command list"
 msgid "Open annotations"
-msgstr ""
+msgstr "Abrir as anotações"
 
 #: apps/reader/src/dockview-menus.ts
 msgid "Open another editor in pane right"
-msgstr ""
+msgstr "Abrir outro editor no painel à direita"
 
 #: apps/reader/src/LibraryRowMenu.tsx
 msgid "Open beside"
-msgstr ""
+msgstr "Abrir ao lado"
 
 #: apps/reader/src/reader-command-list.ts
 msgctxt "reader command list"
 msgid "Open beside"
-msgstr ""
+msgstr "Abrir ao lado"
 
 #: apps/extension/src/WelcomeApp.tsx
 msgid "Open Chrome’s extensions menu (the puzzle piece beside the address bar) and pin mdbase Reader so its button stays in the toolbar."
-msgstr ""
+msgstr "Abra o menu de extensões do Chrome (a peça de quebra-cabeça ao lado da barra de endereço) e fixe o mdbase Reader para que o botão dele fique na barra de ferramentas."
 
 #: apps/reader/src/reader-command-list.ts
 msgid "Open citation data"
-msgstr ""
+msgstr "Abrir os dados da citação"
 
 #: apps/reader/src/LibraryTextSearch.tsx
 msgctxt "LibraryTextSearch interface"
 msgid "Open document"
-msgstr ""
+msgstr "Abrir o documento"
 
 #: packages/renderer-pdf/src/pdf-translations.ts
 msgctxt "PDF viewer emptyState"
 msgid "Open Document"
-msgstr ""
+msgstr "Abrir o documento"
 
 #: apps/reader/src/LibraryWorkspace.tsx
 msgctxt "LibraryWorkspace searchScopeOptions"
 msgid "Open documents"
-msgstr ""
+msgstr "Documentos abertos"
 
 #: apps/reader/src/LibraryBulkBar.tsx
 msgid "Open each in its own tab"
-msgstr ""
+msgstr "Abrir cada um em sua própria aba"
 
 #: packages/markdown-editor/src/annotation-widgets.ts
 msgctxt "annotation widgets"
 msgid "Open in document"
-msgstr ""
+msgstr "Abrir no documento"
 
 #: apps/extension/src/SaveBar.tsx
 msgid "Open in Reader"
-msgstr ""
+msgstr "Abrir no Reader"
 
 #: apps/extension/src/SaveBar.tsx
 msgid "Open in Reader to highlight"
-msgstr ""
+msgstr "Abrir no Reader para destacar"
 
 #: apps/reader/src/DockviewWorkspace.tsx
 msgid "Open library"
-msgstr ""
+msgstr "Abrir a biblioteca"
 
 #: apps/reader/src/reader-app-commands.ts
 msgctxt "reader app commands"
 msgid "Open library"
-msgstr ""
+msgstr "Abrir a biblioteca"
 
 #: apps/reader/src/reader-command-list.ts
 #: apps/reader/src/WorkspacePaneSupport.tsx
 msgid "Open literature note"
-msgstr ""
+msgstr "Abrir a nota da fonte"
 
 #: apps/extension/src/OptionsApp.tsx
 #: apps/reader/src/ConnectReader.tsx
 msgid "Open mdbase Reader"
-msgstr ""
+msgstr "Abrir o mdbase Reader"
 
 #: apps/extension/src/shell-messages.ts
 #: apps/extension/src/shortcuts.ts
 msgid "Open mdbase Reader for this page"
-msgstr ""
+msgstr "Abrir o mdbase Reader para esta página"
 
 #: apps/reader/src/CollectionMenu.tsx
 msgctxt "CollectionMenu status or action"
 msgid "Open now"
-msgstr ""
+msgstr "Abrir agora"
 
 #: apps/reader/src/native-signin-ui.ts
 msgctxt "Native sign-in"
 msgid "Open sign-in"
-msgstr ""
+msgstr "Abrir o login"
 
 #: apps/reader/src/SourceAddDialog.tsx
 msgid "Open source"
-msgstr ""
+msgstr "Abrir a fonte"
 
 #: packages/markdown-editor/src/citation-card.ts
 msgctxt "citation card"
 msgid "Open source"
-msgstr ""
+msgstr "Abrir a fonte"
 
 #: apps/reader/src/reader-command-list.ts
 msgid "Open tabs"
-msgstr ""
+msgstr "Abas abertas"
 
 #: apps/reader/src/AnnotationPanelActions.tsx
 msgid "Open the document to bookmark a position"
-msgstr ""
+msgstr "Abra o documento para marcar uma posição"
 
 #: apps/reader/src/native-signin-ui.ts
 msgctxt "Native sign-in"
 msgid "Open the mdbase tab again"
-msgstr ""
+msgstr "Abrir a aba do mdbase novamente"
 
 #: apps/reader/src/use-source-export.ts
 msgid "Open the source and its annotations before exporting."
-msgstr ""
+msgstr "Abra a fonte e as anotações dela antes de exportar."
 
 #: apps/reader/src/MobileWorkspaceNavigation.tsx
 msgid "Open workspace tab"
-msgstr ""
+msgstr "Abrir a aba da área de trabalho"
 
 #: apps/extension/src/ExtensionHeader.tsx
 msgid "Open your library in mdbase Reader"
-msgstr ""
+msgstr "Abra sua biblioteca no mdbase Reader"
 
 #. placeholder {0}: original.displayName
 #: apps/reader/src/SdkReaderRoot.tsx
 msgid "Opening {0}"
-msgstr ""
+msgstr "Abrindo {0}"
 
 #: apps/reader/src/CitationEditor.tsx
 msgid "Opening citation metadata…"
-msgstr ""
+msgstr "Abrindo os metadados da citação…"
 
 #: apps/reader/src/native-signin-ui.ts
 msgctxt "Native sign-in"
 msgid "Opening collections isn't available in this build yet."
-msgstr ""
+msgstr "Abrir coleções ainda não está disponível nesta versão."
 
 #: apps/reader/src/ConnectedDocument.tsx
 msgctxt "ConnectedDocument interface"
 msgid "Opening document…"
-msgstr ""
+msgstr "Abrindo o documento…"
 
 #: apps/reader/src/MultilineCodeEditor.tsx
 msgid "Opening editor…"
-msgstr ""
+msgstr "Abrindo o editor…"
 
 #: apps/reader/src/SourceNoteEditor.tsx
 msgid "Opening literature note…"
-msgstr ""
+msgstr "Abrindo a nota da fonte…"
 
 #: apps/extension/src/ConnectionPanel.tsx
 msgid "Opening mdbase…"
