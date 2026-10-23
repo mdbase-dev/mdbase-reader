@@ -165,7 +165,7 @@ msgstr "{0} GiB"
 #: apps/reader/src/use-document-attachment.ts
 #: apps/reader/src/use-source-addition.ts
 msgid "{0} isn’t a PDF, EPUB or saved web page."
-msgstr ""
+msgstr "{0} no es un PDF, un EPUB ni una página web guardada."
 
 #. placeholder {0}: view.name
 #: apps/reader/src/LibraryWorkspace.tsx
@@ -228,7 +228,7 @@ msgstr "{count} resultados encontrados"
 
 #: apps/reader/src/use-annotation-view.ts
 msgid "{detail} Reader is applying its filters itself."
-msgstr ""
+msgstr "{detail} Reader está aplicando los filtros por su cuenta."
 
 #: apps/reader/src/EnvironmentBadge.tsx
 msgid "{environment} environment"
@@ -316,7 +316,7 @@ msgstr "El recuento de {name} no coincide."
 
 #: packages/core/src/application/source-document-format.ts
 msgid "{name} is not a recognizable PDF, EPUB, or HTML document."
-msgstr ""
+msgstr "{name} no se reconoce como documento PDF, EPUB ni HTML."
 
 #: packages/core/src/domain/identity.ts
 msgid "{name} must be a non-empty printable value."
@@ -1605,7 +1605,7 @@ msgstr "Cerrar"
 #: apps/reader/src/dockview-menus.ts
 msgctxt "Close workspace tab"
 msgid "Close"
-msgstr ""
+msgstr "Cerrar"
 
 #: packages/renderer-pdf/src/pdf-translations.ts
 msgctxt "PDF viewer common"
@@ -1937,7 +1937,7 @@ msgstr "Título abreviado de la obra contenedora"
 #: apps/reader/src/library-conditions.ts
 msgctxt "Field filter comparison operator"
 msgid "contains"
-msgstr ""
+msgstr "contiene"
 
 #: apps/reader/src/ImportReview.tsx
 msgid "Content files"
@@ -2371,7 +2371,7 @@ msgstr "El acceso local directo no está disponible para esta conexión."
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "Director"
-msgstr "Director"
+msgstr "Director o directora"
 
 #: apps/reader/src/AnnotationEditor.tsx
 msgid "Discard changes"
@@ -2689,12 +2689,12 @@ msgstr "Edición"
 
 #: apps/reader/src/CitationContributors.tsx
 msgid "Editor"
-msgstr "Editor"
+msgstr "Responsable de edición"
 
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "Editor"
-msgstr "Editor"
+msgstr "Responsable de edición"
 
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
@@ -2799,7 +2799,7 @@ msgstr "Entrada de enciclopedia"
 #: apps/reader/src/LibraryWorkspace.tsx
 msgctxt "LibraryWorkspace formatFilterOptions"
 msgid "EPUB"
-msgstr "EPUB"
+msgstr "Formato EPUB"
 
 #: packages/renderer-epub/src/epub-archive.ts
 msgid "EPUB archive contains a duplicate path: {path}"
@@ -3084,7 +3084,7 @@ msgstr "Error en la transferencia del archivo."
 
 #: apps/reader/src/import-controller.ts
 msgid "Files: {completed} of {total}"
-msgstr ""
+msgstr "Archivos: {completed} de {total}"
 
 #: apps/reader/src/LibraryWorkspace.tsx
 msgid "Filter"
@@ -3308,7 +3308,7 @@ msgstr "Resaltar"
 #: packages/reading-surface/src/margin-markers.ts
 msgctxt "Reading margin marker tooltip"
 msgid "Highlight"
-msgstr ""
+msgstr "Resaltado"
 
 #: apps/reader/src/SelectionToolbar.tsx
 msgctxt "SelectionToolbar interface"
@@ -3355,7 +3355,7 @@ msgstr "Resaltar con un comentario en mdbase Reader"
 #: packages/reading-surface/src/margin-markers.ts
 msgctxt "Reading margin marker tooltip"
 msgid "Highlight with a note"
-msgstr ""
+msgstr "Resaltado con nota"
 
 #: apps/extension/src/PanelTabs.tsx
 msgid "Highlights"
@@ -3394,7 +3394,7 @@ msgstr "Resaltados no disponibles"
 #: packages/renderer-pdf/src/pdf-translations.ts
 msgctxt "PDF viewer page"
 msgid "Horizontal"
-msgstr "Horizontal"
+msgstr "Orientación horizontal"
 
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
@@ -3631,37 +3631,37 @@ msgstr "Rectángulo PDF de Zotero no válido."
 #: apps/reader/src/library-conditions.ts
 msgctxt "Field filter comparison operator"
 msgid "is"
-msgstr ""
+msgstr "es"
 
 #: apps/reader/src/library-conditions.ts
 msgctxt "Field filter comparison operator"
 msgid "is at least"
-msgstr ""
+msgstr "es como mínimo"
 
 #: apps/reader/src/library-conditions.ts
 msgctxt "Field filter comparison operator"
 msgid "is at most"
-msgstr ""
+msgstr "es como máximo"
 
 #: apps/reader/src/library-conditions.ts
 msgctxt "Field filter comparison operator"
 msgid "is empty"
-msgstr ""
+msgstr "está vacío"
 
 #: apps/reader/src/library-conditions.ts
 msgctxt "Field filter comparison operator"
 msgid "is greater than"
-msgstr ""
+msgstr "es mayor que"
 
 #: apps/reader/src/library-conditions.ts
 msgctxt "Field filter comparison operator"
 msgid "is less than"
-msgstr ""
+msgstr "es menor que"
 
 #: apps/reader/src/library-conditions.ts
 msgctxt "Field filter comparison operator"
 msgid "is not"
-msgstr ""
+msgstr "no es"
 
 #: packages/core/src/domain/citation-validation.ts
 msgctxt "CSL validation"
@@ -3681,7 +3681,7 @@ msgstr "no es un campo de nombre de CSL"
 #: apps/reader/src/library-conditions.ts
 msgctxt "Field filter comparison operator"
 msgid "is not empty"
-msgstr ""
+msgstr "no está vacío"
 
 #: apps/reader/src/CitationStructuredEditor.tsx
 msgctxt "CitationStructuredEditor interface"
@@ -3925,7 +3925,7 @@ msgstr "No se encontró el registro enlazado: {path}"
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "Literal"
-msgstr "Literal"
+msgstr "Valor literal"
 
 #: apps/reader/src/CitationTypedFieldEditors.tsx
 msgctxt "CitationTypedFieldEditors dateModeOptions"
@@ -4141,7 +4141,7 @@ msgstr "mdbase Connect tardó demasiado en responder. Inténtalo de nuevo en un 
 
 #: apps/reader/src/use-annotation-view.ts
 msgid "mdbase could not run this view."
-msgstr ""
+msgstr "mdbase no pudo ejecutar esta vista."
 
 #: apps/extension/src/sdk-client.ts
 msgid "mdbase could not start in the background. Reload the extension."
@@ -4285,17 +4285,17 @@ msgstr "Mover la pestaña al panel derecho"
 
 #: apps/reader/src/dockview-menus.ts
 msgid "Move to {title}"
-msgstr ""
+msgstr "Mover a {title}"
 
 #: apps/reader/src/dockview-menus.ts
 msgctxt "Workspace tab destination"
 msgid "Move to bottom sidebar"
-msgstr ""
+msgstr "Mover a la barra lateral inferior"
 
 #: apps/reader/src/dockview-menus.ts
 msgctxt "Workspace tab destination"
 msgid "Move to left sidebar"
-msgstr ""
+msgstr "Mover a la barra lateral izquierda"
 
 #: apps/reader/src/dockview-menus.ts
 msgid "Move to new pane below"
@@ -4308,17 +4308,17 @@ msgstr "Mover a un panel nuevo a la derecha"
 #: apps/reader/src/dockview-menus.ts
 msgctxt "Workspace tab destination"
 msgid "Move to pane"
-msgstr ""
+msgstr "Mover al panel"
 
 #: apps/reader/src/dockview-menus.ts
 msgctxt "Workspace tab destination"
 msgid "Move to right sidebar"
-msgstr ""
+msgstr "Mover a la barra lateral derecha"
 
 #: apps/reader/src/dockview-menus.ts
 msgctxt "Workspace tab destination"
 msgid "Move to top sidebar"
-msgstr ""
+msgstr "Mover a la barra lateral superior"
 
 #: packages/migration/src/zotero-pdf.ts
 msgid "Multi-page or ink geometry is not yet supported."
@@ -5700,7 +5700,7 @@ msgstr "Reader esperaba una página web."
 
 #: apps/reader/src/build-source-export.ts
 msgid "Reader export report"
-msgstr ""
+msgstr "Informe de exportación de Reader"
 
 #: apps/reader/src/LibraryTableHeader.tsx
 msgid "Reader fields"
@@ -6890,12 +6890,12 @@ msgstr "Texto más pequeño"
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "Software"
-msgstr "Software"
+msgstr "Programa informático"
 
 #: apps/reader/src/citation-form-model.ts
 msgctxt "CSL item type"
 msgid "Software"
-msgstr "Software"
+msgstr "Programa informático"
 
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
@@ -8231,7 +8231,7 @@ msgstr "Versión"
 #: packages/renderer-pdf/src/pdf-translations.ts
 msgctxt "PDF viewer page"
 msgid "Vertical"
-msgstr "Vertical"
+msgstr "Orientación vertical"
 
 #: packages/renderer-pdf/src/pdf-translations.ts
 msgctxt "PDF viewer menu"
