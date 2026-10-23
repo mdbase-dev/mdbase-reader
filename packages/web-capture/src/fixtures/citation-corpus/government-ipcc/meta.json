@@ -5,6 +5,7 @@
     "Original reduced reproduction of the captured HTML; article prose, descriptions, images, styles, tracking and executable scripts omitted. Citation metadata values are retained; JSON-LD keeps only citation-related properties.",
     "Page HTTP status: 200. Final URL: https://www.ipcc.ch/report/ar6/syr/.",
     "Intergovernmental report landing page, not an authored news story. Use the report title (Climate Change 2023: Synthesis Report) rather than the navigation label AR6 Synthesis Report. Year-only date from report identity/copyright; the government/institutional category here is intergovernmental (IPCC). No DOI is asserted because this landing page links multiple report components/editions.",
+    "Verification for structured-metadata work: https://www.ipcc.ch/report/ar6/syr/resources/how-to-cite-this-report/ explicitly credits IPCC, 2023, Climate Change 2023: Synthesis Report, published by IPCC; the existing expected short report title and corporate author/publisher remain valid. The landing page supplies no structured report genre/byline/publication date, and this reduction omits the subtitle and copyright footer. Neither a report-related title nor a website copyright is sufficient to infer all report fields generally.",
     "Baseline extractScholarlyMetadata at d0c7061: 0/6 expected fields match; wrong or missing fields: type, title, author, issued, publisher, URL. Cosmetic case/whitespace differences are ignored; absent expected fields are not scored."
   ]
 }

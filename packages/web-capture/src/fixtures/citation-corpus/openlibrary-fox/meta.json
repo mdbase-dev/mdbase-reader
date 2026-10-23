@@ -5,6 +5,7 @@
     "Original reduced reproduction of the captured HTML; article prose, descriptions, images, styles, tracking and executable scripts omitted. Citation metadata values are retained; JSON-LD keeps only citation-related properties.",
     "Page HTTP status: 200. Final URL: https://openlibrary.org/verify_human?next=/books/OL7353617M/Fantastic_Mr._Fox.",
     "HTTP 200 redirects to Human Verification, not the catalogue entry. Edition identity, publication date and publisher independently checked using https://openlibrary.org/books/OL7353617M.json; Citoid corroborates the author and edition. Tony Ross is illustrator, not author. OL7353617M is Fantastic Mr. Fox even when an arbitrary Hobbit slug is appended; the corpus uses the corrected title slug.",
+    "Structured-metadata recheck: the edition JSON still gives Fantastic Mr. Fox, October 1, 1988, Puffin, and author /authors/OL34184A (Roald Dahl); Tony Ross remains a contributor/illustrator. Expected CSL is unchanged. The saved HTML is only Human Verification, not a book record; no general schema.org or citation-tag rule can recover its unseen edition data. Preserve the blocked snapshot rather than fabricating book tags.",
     "Baseline extractScholarlyMetadata at d0c7061: 0/6 expected fields match; wrong or missing fields: type, title, author, issued, publisher, URL. Cosmetic case/whitespace differences are ignored; absent expected fields are not scored."
   ]
 }

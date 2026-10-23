@@ -12,9 +12,7 @@ export function jsonLdNode(
       continue;
     }
     const nodes = jsonLdNodes(parsed);
-    const found = nodes.find((node) =>
-      arrayValue(node["@type"]).some((type) => typeof type === "string" && accepts(type)),
-    );
+    const found = nodes.find((node) => schemaTypes(node).some(accepts));
     if (found) {
       return withReferencesResolved(found, nodes);
     }
@@ -68,7 +66,7 @@ export function jsonLdNames(value: unknown): CslName[] {
     }
     const organisation =
       isRecord(author) &&
-      arrayValue(author["@type"]).some(
+      schemaTypes(author).some(
         (type) => type === "Organization" || type === "NewsMediaOrganization",
       );
     if (organisation) {
@@ -98,6 +96,15 @@ export function nameOf(value: unknown): string | undefined {
 export function stringValue(value: unknown): string | undefined {
   const candidate = Array.isArray(value) ? (value as unknown[])[0] : value;
   return typeof candidate === "string" && candidate.trim() ? candidate.trim() : undefined;
+}
+
+/** Accept bare schema.org terms and their full HTTP(S) IRIs, never another vocabulary. */
+export function schemaTypes(node: Readonly<Record<string, unknown>>): string[] {
+  return arrayValue(node["@type"]).flatMap((type) =>
+    typeof type === "string"
+      ? [type.replace(/^https?:\/\/schema\.org\/([A-Za-z][A-Za-z0-9]*)$/u, "$1")]
+      : [],
+  );
 }
 
 export function arrayValue(value: unknown): unknown[] {

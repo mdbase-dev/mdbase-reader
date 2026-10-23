@@ -107,7 +107,7 @@ const stillWrong: Record<string, { readonly page: string[]; readonly remote: str
     remote: ["type", "author", "issued"],
   },
   verge: { page: [], remote: [] },
-  "wikipedia-australia": { page: ["type", "issued", "URL"], remote: [] },
+  "wikipedia-australia": { page: ["type", "URL"], remote: [] },
   "youtube-first": { page: [], remote: [] },
 };
 
