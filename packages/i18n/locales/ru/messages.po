@@ -4057,450 +4057,450 @@ msgstr "Расположение"
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "Locator"
-msgstr ""
+msgstr "Локатор"
 
 #: apps/reader/src/source-addition-flow.ts
 #: apps/reader/src/use-document-attachment.ts
 msgid "Looking for an open-access PDF…"
-msgstr ""
+msgstr "Поиск PDF в открытом доступе…"
 
 #: apps/extension/src/CitationCard.tsx
 msgid "Looking for citation details…"
-msgstr ""
+msgstr "Поиск сведений о ссылке…"
 
 #: apps/reader/src/source-addition-flow.ts
 msgid "Looking up citation details instead…"
-msgstr ""
+msgstr "Поиск сведений о ссылке…"
 
 #: apps/reader/src/source-addition-flow.ts
 msgid "Looking up citation details…"
-msgstr ""
+msgstr "Поиск сведений о ссылке…"
 
 #: apps/reader/src/CitationLookup.tsx
 msgctxt "CitationLookup interface"
 msgid "Looking…"
-msgstr ""
+msgstr "Поиск…"
 
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "Magazine article"
-msgstr ""
+msgstr "Статья в журнале"
 
 #: apps/reader/src/citation-form-model.ts
 msgctxt "CSL item type"
 msgid "Magazine article"
-msgstr ""
+msgstr "Статья в журнале"
 
 #: apps/reader/src/DockviewWorkspace.tsx
 msgid "Make room to read"
-msgstr ""
+msgstr "Освободите место для чтения"
 
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "Manuscript"
-msgstr ""
+msgstr "Рукопись"
 
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "Map"
-msgstr ""
+msgstr "Карта"
 
 #: packages/renderer-pdf/src/pdf-translations.ts
 msgctxt "PDF viewer zoom"
 msgid "Marquee Zoom"
-msgstr ""
+msgstr "Увеличение рамкой"
 
 #: apps/extension/src/OptionsApp.tsx
 msgid "Match system"
-msgstr ""
+msgstr "Как в системе"
 
 #: apps/reader/src/reader-app-commands.ts
 msgid "Match system theme"
-msgstr ""
+msgstr "Использовать системную тему"
 
 #: apps/reader/src/LibraryNavigator.tsx
 msgid "Matches"
-msgstr ""
+msgstr "Совпадения"
 
 #: apps/extension/src/SavedHighlights.tsx
 msgid "Matches several places on this page"
-msgstr ""
+msgstr "На этой странице найдено несколько совпадений"
 
 #: apps/reader/src/DockPaneActions.tsx
 #: apps/reader/src/dockview-menus.ts
 msgid "Maximize / restore pane"
-msgstr ""
+msgstr "Развернуть / восстановить панель"
 
 #: apps/reader/src/connection-recovery.ts
 msgid "mdbase Connect did not accept Reader’s app registration, so it cannot open collections here."
-msgstr ""
+msgstr "mdbase Connect не принял регистрацию приложения Reader, поэтому здесь нельзя открывать коллекции."
 
 #: apps/reader/src/connection-recovery.ts
 msgid "mdbase Connect took too long to answer. Try again in a moment."
-msgstr ""
+msgstr "mdbase Connect слишком долго не отвечает. Повторите попытку через минуту."
 
 #: apps/reader/src/use-annotation-view.ts
 msgid "mdbase could not run this view."
-msgstr ""
+msgstr "mdbase не удалось запустить это представление."
 
 #: apps/extension/src/sdk-client.ts
 msgid "mdbase could not start in the background. Reload the extension."
-msgstr ""
+msgstr "mdbase не удалось запустить в фоновом режиме. Перезагрузите расширение."
 
 #: apps/extension/src/sdk-client.ts
 msgid "mdbase has not started yet."
-msgstr ""
+msgstr "mdbase ещё не запущен."
 
 #: apps/extension/src/connection-view.ts
 msgid "mdbase is still getting ready. Try again in a moment."
-msgstr ""
+msgstr "mdbase ещё готовится к запуску. Повторите попытку через минуту."
 
 #: apps/extension/src/use-connect.ts
 msgid "mdbase is still starting. Try again in a moment."
-msgstr ""
+msgstr "mdbase всё ещё запускается. Повторите попытку через минуту."
 
 #: apps/reader/src/ImportDestination.tsx
 msgid "mdbase isn’t reachable right now. Check your connection and try again."
-msgstr ""
+msgstr "Сейчас нет связи с mdbase. Проверьте подключение и повторите попытку."
 
 #: apps/extension/src/CaptureApp.tsx
 #: apps/extension/src/shell-messages.ts
 msgid "mdbase Reader — capture"
-msgstr ""
+msgstr "mdbase Reader — сохранение"
 
 #: apps/extension/src/CaptureApp.tsx
 msgid "mdbase Reader — source saved"
-msgstr ""
+msgstr "mdbase Reader — источник сохранён"
 
 #. placeholder {0}: name ?? version
 #. placeholder {1}: environment.label ? ` · ${environment.label}` : ""
 #: apps/extension/src/OptionsApp.tsx
 msgid "mdbase Reader {0}{1}. Pages and highlights are saved into your mdbase collection through mdbase Connect."
-msgstr ""
+msgstr "mdbase Reader {0}{1}. Страницы и выделения сохраняются в коллекции mdbase через mdbase Connect."
 
 #: apps/extension/src/WelcomeApp.tsx
 msgid "mdbase Reader is installed"
-msgstr ""
+msgstr "mdbase Reader установлен"
 
 #: apps/extension/src/OptionsApp.tsx
 #: apps/extension/src/shell-messages.ts
 msgid "mdbase Reader settings"
-msgstr ""
+msgstr "Настройки mdbase Reader"
 
 #: apps/extension/src/sdk-client.ts
 msgid "mdbase restarted in the background. Check whether your last change was saved, then try again."
-msgstr ""
+msgstr "mdbase перезапущен в фоновом режиме. Проверьте, сохранилось ли последнее изменение, и повторите попытку."
 
 #: apps/extension/src/PostPicker.tsx
 msgid "Media post"
-msgstr ""
+msgstr "Публикация в медиасервисе"
 
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "Medium"
-msgstr ""
+msgstr "Средний"
 
 #: apps/reader/src/DockPaneActions.tsx
 msgid "Merge into another reading pane"
-msgstr ""
+msgstr "Объединить с другой панелью чтения"
 
 #: apps/reader/src/CitationLookup.tsx
 msgid "Metadata lookup will be available when a resolver is connected. You can still edit and format CSL locally."
-msgstr ""
+msgstr "Поиск метаданных станет доступен после подключения службы разрешения. Пока можно редактировать и форматировать CSL локально."
 
 #: packages/migration/src/zotero.ts
 msgid "Missing annotation owner."
-msgstr ""
+msgstr "Не указан владелец аннотации."
 
 #: apps/reader/src/library-lenses.ts
 msgid "Missing citation data"
-msgstr ""
+msgstr "Нет данных цитирования"
 
 #: packages/migration/src/zotero-validation.ts
 msgid "Missing collection."
-msgstr ""
+msgstr "Нет коллекции."
 
 #: packages/migration/src/zotero-bundle.ts
 msgid "Missing or oversized {name}."
-msgstr ""
+msgstr "Отсутствует или слишком велик файл {name}."
 
 #: packages/migration/src/zotero-validation.ts
 msgid "Missing primary attachment payload."
-msgstr ""
+msgstr "Отсутствуют основные данные вложения."
 
 #: apps/reader/src/dockview-side-panels.ts
 msgid "Missing sidebar edge group"
-msgstr ""
+msgstr "Отсутствует группа границ боковой панели"
 
 #: packages/migration/src/zotero-pdf.ts
 msgid "Missing Zotero PDF rectangles."
-msgstr ""
+msgstr "Отсутствуют прямоугольники PDF Zotero."
 
 #: apps/reader/src/MobileWorkspaceNavigation.tsx
 msgid "Mobile workspace navigation"
-msgstr ""
+msgstr "Навигация рабочей области на мобильном устройстве"
 
 #: apps/reader/src/DocumentContextualToolbar.tsx
 msgctxt "DocumentContextualToolbar interface"
 msgid "More actions"
-msgstr ""
+msgstr "Другие действия"
 
 #: apps/reader/src/DocumentContextualToolbar.tsx
 msgid "More document actions"
-msgstr ""
+msgstr "Другие действия с документом"
 
 #: apps/reader/src/CitationContributors.tsx
 msgid "More name details"
-msgstr ""
+msgstr "Дополнительные сведения об имени"
 
 #: packages/renderer-pdf/src/pdf-translations.ts
 msgctxt "PDF viewer menu"
 msgid "More Options"
-msgstr ""
+msgstr "Другие параметры"
 
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "Motion picture"
-msgstr ""
+msgstr "Кинофильм"
 
 #: apps/reader/src/reader-command-list.ts
 msgid "Move active tab to pane {otherPaneLabel}"
-msgstr ""
+msgstr "Переместить активную вкладку на панель {otherPaneLabel}"
 
 #: apps/reader/src/LibraryTableHeader.tsx
 msgid "Move left"
-msgstr ""
+msgstr "Переместить влево"
 
 #: apps/reader/src/LibraryTableHeader.tsx
 msgid "Move right"
-msgstr ""
+msgstr "Переместить вправо"
 
 #: apps/reader/src/DockPaneActions.tsx
 msgid "Move tab to pane below"
-msgstr ""
+msgstr "Переместить вкладку на панель снизу"
 
 #: apps/reader/src/DockPaneActions.tsx
 msgid "Move tab to pane right"
-msgstr ""
+msgstr "Переместить вкладку на панель справа"
 
 #: apps/reader/src/dockview-menus.ts
 msgid "Move to {title}"
-msgstr ""
+msgstr "Переместить в {title}"
 
 #: apps/reader/src/dockview-menus.ts
 msgctxt "Workspace tab destination"
 msgid "Move to bottom sidebar"
-msgstr ""
+msgstr "Переместить в нижнюю боковую панель"
 
 #: apps/reader/src/dockview-menus.ts
 msgctxt "Workspace tab destination"
 msgid "Move to left sidebar"
-msgstr ""
+msgstr "Переместить в левую боковую панель"
 
 #: apps/reader/src/dockview-menus.ts
 msgid "Move to new pane below"
-msgstr ""
+msgstr "Переместить на новую панель снизу"
 
 #: apps/reader/src/dockview-menus.ts
 msgid "Move to new pane right"
-msgstr ""
+msgstr "Переместить на новую панель справа"
 
 #: apps/reader/src/dockview-menus.ts
 msgctxt "Workspace tab destination"
 msgid "Move to pane"
-msgstr ""
+msgstr "Переместить на панель"
 
 #: apps/reader/src/dockview-menus.ts
 msgctxt "Workspace tab destination"
 msgid "Move to right sidebar"
-msgstr ""
+msgstr "Переместить в правую боковую панель"
 
 #: apps/reader/src/dockview-menus.ts
 msgctxt "Workspace tab destination"
 msgid "Move to top sidebar"
-msgstr ""
+msgstr "Переместить в верхнюю боковую панель"
 
 #: packages/migration/src/zotero-pdf.ts
 msgid "Multi-page or ink geometry is not yet supported."
-msgstr ""
+msgstr "Геометрия многостраничных выделений и рукописных пометок пока не поддерживается."
 
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "Musical score"
-msgstr ""
+msgstr "Нотная запись"
 
 #: packages/core/src/domain/citation-validation.ts
 msgctxt "CSL validation"
 msgid "must be a CSL date object"
-msgstr ""
+msgstr "должно быть объектом даты CSL"
 
 #: packages/core/src/domain/citation.ts
 msgctxt "CSL validation"
 msgid "must be a non-empty Pandoc-compatible citekey"
-msgstr ""
+msgstr "должно быть непустым ключом цитирования, совместимым с Pandoc"
 
 #: packages/core/src/domain/citation.ts
 msgctxt "CSL validation"
 msgid "must be a recognized CSL item type"
-msgstr ""
+msgstr "должно быть распознаваемым типом элемента CSL"
 
 #: packages/core/src/domain/citation-validation.ts
 msgctxt "CSL validation"
 msgid "must be a string"
-msgstr ""
+msgstr "должно быть строкой"
 
 #: packages/core/src/domain/citation-validation.ts
 msgctxt "CSL validation"
 msgid "must be a string or number"
-msgstr ""
+msgstr "должно быть строкой или числом"
 
 #: packages/core/src/domain/citation-validation.ts
 msgctxt "CSL validation"
 msgid "must be an array of CSL names"
-msgstr ""
+msgstr "должно быть массивом имён CSL"
 
 #: packages/core/src/domain/citation-validation.ts
 msgctxt "CSL validation"
 msgid "must be an array of strings"
-msgstr ""
+msgstr "должно быть массивом строк"
 
 #: packages/core/src/domain/citation-validation.ts
 msgctxt "CSL validation"
 msgid "must be an object"
-msgstr ""
+msgstr "должно быть объектом"
 
 #: packages/core/src/domain/citation.ts
 msgctxt "CSL validation"
 msgid "must be one CSL object"
-msgstr ""
+msgstr "должно быть одним объектом CSL"
 
 #: packages/core/src/domain/citation-validation.ts
 msgctxt "CSL validation"
 msgid "must be scalar"
-msgstr ""
+msgstr "должно быть скалярным значением"
 
 #: packages/core/src/domain/citation-validation.ts
 msgctxt "CSL validation"
 msgid "must contain one or two date ranges"
-msgstr ""
+msgstr "должно содержать один или два диапазона дат"
 
 #: packages/core/src/domain/citation-validation.ts
 msgctxt "CSL validation"
 msgid "must contain one to three string or number date parts"
-msgstr ""
+msgstr "должно содержать от одной до трёх частей даты в виде строк или чисел"
 
 #: packages/core/src/domain/citation.ts
 msgctxt "CSL validation"
 msgid "must contain only JSON-compatible values"
-msgstr ""
+msgstr "должно содержать только значения, допустимые в JSON"
 
 #: apps/reader/src/LibraryViewSaveDialog.tsx
 msgctxt "LibraryViewSaveDialog interface"
 msgid "Name"
-msgstr ""
+msgstr "Имя"
 
 #: apps/reader/src/CitationTypedFieldEditors.tsx
 msgctxt "CitationTypedFieldEditors interface"
 msgid "Names"
-msgstr ""
+msgstr "Имена"
 
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "Narrator"
-msgstr ""
+msgstr "Диктор"
 
 #: apps/reader/src/DisplayMenu.tsx
 msgctxt "DisplayMenu interface"
 msgid "Narrow"
-msgstr ""
+msgstr "Узкий"
 
 #: apps/reader/src/ImportReview.tsx
 msgid "Native metadata is also archived as JSON. Existing records matched by import identity are kept unchanged; ambiguous title or URL matches are never silently merged."
-msgstr ""
+msgstr "Исходные метаданные также архивируются в формате JSON. Существующие записи, совпавшие по идентификатору импорта, не изменяются; неоднозначные совпадения по названию или URL никогда не объединяются без предупреждения."
 
 #: apps/reader/src/AnnotationComposer.tsx
 msgid "New area annotation"
-msgstr ""
+msgstr "Новая аннотация области"
 
 #: apps/reader/src/AnnotationPanelActions.tsx
 msgid "New comment"
-msgstr ""
+msgstr "Новый комментарий"
 
 #: apps/reader/src/AnnotationList.tsx
 msgctxt "AnnotationList annotationOrderOptions"
 msgid "Newest first"
-msgstr ""
+msgstr "Сначала новые"
 
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "Newspaper article"
-msgstr ""
+msgstr "Статья в газете"
 
 #: apps/reader/src/citation-form-model.ts
 msgctxt "CSL item type"
 msgid "Newspaper article"
-msgstr ""
+msgstr "Статья в газете"
 
 #: packages/renderer-epub/src/epub-page-navigation.tsx
 msgid "Next page"
-msgstr ""
+msgstr "Следующая страница"
 
 #: packages/renderer-pdf/src/pdf-translations.ts
 msgctxt "PDF viewer page"
 msgid "Next Page"
-msgstr ""
+msgstr "Следующая страница"
 
 #: apps/reader/src/citation-form-model.ts
 msgid "No"
-msgstr ""
+msgstr "Нет"
 
 #: apps/reader/src/library-columns.ts
 msgctxt "library columns"
 msgid "No"
-msgstr ""
+msgstr "Нет"
 
 #: apps/reader/src/LibraryAnnotations.tsx
 msgid "No annotations match"
-msgstr ""
+msgstr "Нет подходящих аннотаций"
 
 #: apps/reader/src/AnnotationList.tsx
 #: apps/reader/src/LibraryAnnotations.tsx
 msgid "No annotations yet"
-msgstr ""
+msgstr "Аннотаций пока нет"
 
 #: packages/core/src/application/citation-citekey.ts
 msgid "No author or editor is recorded."
-msgstr ""
+msgstr "Автор или редактор не указан."
 
 #: apps/extension/src/CitationPanel.tsx
 msgid "No citation details were found on this page. Save the source, then add them in Reader."
-msgstr ""
+msgstr "На этой странице не найдено сведений о ссылке. Сохраните источник, затем добавьте их в Reader."
 
 #. placeholder {0}: query.trim()
 #: apps/reader/src/CollectionMenu.tsx
 msgid "No collections match “{0}”."
-msgstr ""
+msgstr "Нет коллекций, соответствующих «{0}»."
 
 #: apps/reader/src/connection-recovery.ts
 msgid "No computer is registered for this collection."
-msgstr ""
+msgstr "Для этой коллекции не зарегистрирован компьютер."
 
 #: packages/core/src/application/build-csl-bibliography.ts
 msgid "No CSL citation metadata is attached."
-msgstr ""
+msgstr "Библиографические метаданные CSL не прикреплены."
 
 #: apps/reader/src/WorkspacePaneSupport.tsx
 msgid "No document attached"
-msgstr ""
+msgstr "Документ не прикреплён"
 
 #: packages/renderer-pdf/src/pdf-translations.ts
 msgctxt "PDF viewer emptyState"
 msgid "No Documents Open"
-msgstr ""
+msgstr "Нет открытых документов"
 
 #: packages/migration/src/readwise-sources.ts
 msgid "No downloadable content; importing metadata only: {key}"
-msgstr ""
+msgstr "Нет данных для скачивания; импортируются только метаданные: {key}"
 
 #: apps/reader/src/workspace-tab-display.ts
 msgctxt "workspace tab display"
