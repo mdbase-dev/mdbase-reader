@@ -2,7 +2,7 @@ import { cslValuesEqual } from "@mdbase-reader/core";
 
 import { arxivIdentifier, doiFromText, doiFromUrl } from "./doi.js";
 import { arxivDoi } from "./metadata-identifiers.js";
-import { CITOID_TIMEOUT_MS, citoidClaims, doiClaims } from "./provider-claims.js";
+import { remoteCitationClaims } from "./remote-citation.js";
 import { resolveCitation } from "./resolver.js";
 
 import type { ClaimBatch, ProviderOutcome } from "./claims.js";
@@ -10,9 +10,7 @@ import type { CitationDraft } from "./csl-values.js";
 import type { CitoidClaimsOptions, ProviderClaimsOptions } from "./provider-claims.js";
 import type { CslProvenance } from "@mdbase-reader/core";
 
-/** A save may be waiting on this lookup; past it, the page's embedded tags are used instead. */
-export const PAGE_DOI_TIMEOUT_MS = 3_000;
-export const PAGE_CITATION_DEADLINE_MS = 8_000;
+export { PAGE_DOI_TIMEOUT_MS, PAGE_CITATION_DEADLINE_MS } from "./remote-citation.js";
 
 export interface CitationPreview {
   readonly citation: CitationDraft;
@@ -42,9 +40,6 @@ export async function citationForPage(
   options: PageCitationOptions = {},
 ): Promise<CitationPreview | null> {
   options.signal?.throwIfAborted();
-  const now = options.now ?? (() => new Date());
-  const deadline = now().getTime() + (options.deadlineMs ?? PAGE_CITATION_DEADLINE_MS);
-  const remaining = (): number => Math.max(0, deadline - now().getTime());
   const claims = [...(page?.claims ?? [])];
   const observedAt = snapshotObservedAt(page, options);
   const outcomes: ProviderOutcome[] = page?.outcome ? [page.outcome] : [];
@@ -107,52 +102,19 @@ export async function citationForPage(
     publish();
   }
 
-  const attempted = new Set<string>();
-  async function registryLookup(identifier: string): Promise<boolean> {
-    const timeoutMs = Math.min(options.timeoutMs ?? PAGE_DOI_TIMEOUT_MS, remaining());
-    if (timeoutMs <= 0) {
-      return false;
-    }
-    attempted.add(identifier.toLowerCase());
-    const batch = await doiClaims(identifier, { ...options, observedAt, timeoutMs });
-    const registered =
-      batch.outcome?.result === "ok" &&
-      batch.claims.some((claim) => claim.source.kind === "registry");
-    if (registered) {
-      problem = undefined;
-    }
-    accept(batch, timeoutMs);
-    return registered;
-  }
-
-  async function citoidLookup(citoid: CitoidClaimsOptions): Promise<void> {
-    const timeoutMs = Math.min(citoid.timeoutMs ?? CITOID_TIMEOUT_MS, remaining());
-    if (timeoutMs <= 0) {
-      return;
-    }
-    const batch = await citoidClaims(pageUrl, {
-      ...options,
-      observedAt,
-      ...citoid,
-      timeoutMs,
-      ...combinedSignal(options.signal, citoid.signal),
-    });
-    const discoveredDoi = batchDoi(batch);
-    doi ??= discoveredDoi;
-    accept(batch, timeoutMs);
-    if (discoveredDoi && !attempted.has(discoveredDoi.toLowerCase())) {
-      doi = discoveredDoi;
-      await registryLookup(doi);
-    }
-  }
-
   publish();
-  const registered = doi ? await registryLookup(doi) : false;
-  // A known DOI goes to its registry first; only failures disclose the page URL to Citoid.
-  if (!registered && options.citoid) {
-    await citoidLookup(options.citoid);
-  }
-  options.signal?.throwIfAborted();
+  await remoteCitationClaims(
+    pageUrl,
+    doi,
+    { ...options, observedAt },
+    (batch, timeoutMs, identifier) => {
+      doi = identifier;
+      if (batch.outcome?.provider === "doi.org" && batch.outcome.result === "ok") {
+        problem = undefined;
+      }
+      accept(batch, timeoutMs);
+    },
+  );
   return preview();
 }
 
@@ -169,11 +131,6 @@ function snapshotObservedAt(page: ClaimBatch | null, options: PageCitationOption
     options.observedAt ??
     (options.now?.() ?? new Date()).toISOString()
   );
-}
-
-function combinedSignal(...signals: (AbortSignal | undefined)[]): { signal?: AbortSignal } {
-  const present = signals.filter((signal): signal is AbortSignal => signal !== undefined);
-  return present.length ? { signal: AbortSignal.any(present) } : {};
 }
 
 function batchDoi(batch: ClaimBatch | null): string | undefined {

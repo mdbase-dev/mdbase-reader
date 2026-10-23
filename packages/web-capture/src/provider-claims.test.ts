@@ -50,7 +50,7 @@ const newspaper = {
 
 function lookup(provider: "doi.org" | "citoid", options: CitoidClaimsOptions): Promise<ClaimBatch> {
   return provider === "doi.org"
-    ? doiClaims("10.1234/example", options)
+    ? doiClaims("10.1234/example", { queue: createProviderQueue(), ...options })
     : citoidClaims(pageUrl, { queue: createProviderQueue(), ...options });
 }
 
@@ -202,6 +202,109 @@ describe("successful remote claims", () => {
     expect(new Headers(fetcher.mock.calls[0]?.[1]?.headers).get("Api-User-Agent")).toBe(
       "mdbase-reader",
     );
+  });
+});
+
+describe("Citoid disclosure boundary", () => {
+  it.each([
+    "http://localhost/private",
+    "http://localhost./private",
+    "http://router.local/admin",
+    "http://10.0.0.1/",
+    "http://172.16.0.1/",
+    "http://192.168.1.1/",
+    "http://127.0.0.1/",
+    "http://169.254.1.1/",
+    "http://2130706433/",
+    "http://0x7f000001/",
+    "http://8.8.8.8/",
+    "http://[::1]/",
+    "http://[fd00::1]/",
+    "http://[fe80::1]/",
+    "http://[2001:4860:4860::8888]/",
+    "https://alice:secret@example.com/doc?token=secret#private",
+    "https://example.com/private.pdf",
+    "https://example.com/PRIVATE.PDF?download=1",
+    "https://example.com/private%2Epdf",
+    "file:///home/private.html",
+  ])("never discloses protected URL %s", async (url) => {
+    const fetch = vi.fn<typeof globalThis.fetch>();
+    const batch = await citoidClaims(url, { fetch, queue: createProviderQueue() });
+    expect(fetch).not.toHaveBeenCalled();
+    expect(batch).toMatchObject({ claims: [], outcome: { result: "blocked" } });
+  });
+
+  it("skips a known PDF media type even without a PDF extension", async () => {
+    const fetch = vi.fn<typeof globalThis.fetch>();
+    await citoidClaims("https://example.com/download?id=1", {
+      fetch,
+      contentType: "Application/PDF; charset=binary",
+    });
+    expect(fetch).not.toHaveBeenCalled();
+  });
+
+  it("keeps query parameters needed by articles, but strips fragments", async () => {
+    const fetch = vi.fn<typeof globalThis.fetch>().mockResolvedValue(Response.json([]));
+    await citoidClaims("https://example.com/document?token=secret&article=1#private", { fetch });
+    expect(fetch.mock.calls[0]?.[0]).toBe(
+      `${WIKIMEDIA_CITOID_ENDPOINT}${encodeURIComponent("https://example.com/document?token=secret&article=1")}`,
+    );
+  });
+});
+
+describe.each(["doi.org", "citoid"] as const)("%s cooldowns", (provider) => {
+  it("uses host-wide cooldowns across distinct identifiers/target URLs", async () => {
+    const queue = createProviderQueue();
+    const fetch = vi
+      .fn<typeof globalThis.fetch>()
+      .mockResolvedValue(new Response(null, { status: 429, headers: { "Retry-After": "600" } }));
+    await lookup(provider, { fetch, queue });
+    const batch =
+      provider === "doi.org"
+        ? await doiClaims("10.1234/another", { fetch, queue, timeoutMs: 100 })
+        : await citoidClaims("https://other.example/article", { fetch, queue, timeoutMs: 100 });
+    expect(fetch).toHaveBeenCalledOnce();
+    expect(batch.outcome?.result).toBe("rate-limited");
+    expect(batch.outcome?.retryAfterMs).toBeGreaterThan(599_000);
+  });
+
+  it("reports a new cooldown promptly for an already queued lookup", async () => {
+    vi.useFakeTimers();
+    const queue = createProviderQueue({ concurrency: 1 });
+    let release!: (response: Response) => void;
+    const active = queue.run(
+      provider === "doi.org" ? "https://doi.org/occupied" : WIKIMEDIA_CITOID_ENDPOINT,
+      () =>
+        new Promise((resolve) => {
+          release = resolve;
+        }),
+    );
+    await vi.advanceTimersByTimeAsync(0);
+    const fetch = vi.fn<typeof globalThis.fetch>();
+    let result: string | undefined;
+    const pending = lookup(provider, { fetch, queue, timeoutMs: 1_000 }).then((batch) => {
+      result = batch.outcome?.result;
+    });
+    await vi.advanceTimersByTimeAsync(10);
+    release(new Response(null, { status: 429, headers: { "Retry-After": "600" } }));
+    await active;
+    await vi.advanceTimersByTimeAsync(0);
+    expect(result).toBe("rate-limited");
+    await pending;
+    expect(fetch).not.toHaveBeenCalled();
+    expect(vi.getTimerCount()).toBe(0);
+  });
+
+  it("bounds both the reported and tracked Retry-After to ten minutes", async () => {
+    const queue = createProviderQueue();
+    const fetch = vi
+      .fn<typeof globalThis.fetch>()
+      .mockResolvedValue(new Response(null, { status: 429, headers: { "Retry-After": "86400" } }));
+    expect((await lookup(provider, { fetch, queue })).outcome?.retryAfterMs).toBe(600_000);
+    expect((await lookup(provider, { fetch, queue })).outcome?.retryAfterMs).toBeLessThanOrEqual(
+      600_000,
+    );
+    expect(fetch).toHaveBeenCalledOnce();
   });
 });
 

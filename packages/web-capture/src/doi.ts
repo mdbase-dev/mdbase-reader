@@ -17,11 +17,13 @@ export function doiFromUrl(value: string): string | undefined {
   } catch {
     return undefined;
   }
+  // Decode exactly once so encoded slashes work, without decoding a second layer into delimiters.
+  const pathname = safeDecode(url.pathname).split(/[?#]/u)[0] ?? "";
   if (/(^|\.)doi\.org$/u.test(url.hostname)) {
-    return doiFromText(url.pathname);
+    return doiFromPath(pathname);
   }
-  const path = /\/doi\/(?:abs\/|full\/|pdf\/|epdf\/|book\/)?(10\.\d{4,9}\/.+)$/u.exec(url.pathname);
-  return path ? doiFromText(path[1]) : undefined;
+  const path = /\/doi\/(?:abs\/|full\/|pdf\/|epdf\/|book\/)?(10\.\d{4,9}\/.+)$/u.exec(pathname);
+  return path ? doiFromPath(path[1] ?? "") : undefined;
 }
 
 /** arXiv abstract and PDF URLs carry their identifier; arXiv registers DOIs for every paper. */
@@ -44,8 +46,8 @@ export interface DoiResolutionOptions {
   readonly timeoutMs?: number;
 }
 
-/** Long enough for a busy registry; an explicit lookup the reader is waiting on. */
-export const DOI_RESOLUTION_TIMEOUT_MS = 10_000;
+/** The registry may use at most three seconds of an interactive lookup. */
+export const DOI_RESOLUTION_TIMEOUT_MS = 3_000;
 
 /**
  * Asks the DOI registration agency (Crossref, DataCite, mEDRA…) for CSL-JSON through doi.org
@@ -102,6 +104,27 @@ async function requestDoiCitation(
   const record = value as Record<string, unknown>;
   const type = typeof record["type"] === "string" ? crossrefTypes[record["type"]] : undefined;
   const citation = sanitizedCitation(type ? { ...record, type } : record);
+  // A title identifies a work. Without one, require a container plus a creator/date/publisher;
+  // transport identifiers and the sanitizer's default type alone are not bibliographic data.
+  const title = citation["title"];
+  const container = citation["container-title"];
+  if (
+    !(typeof title === "string" && title.trim()) &&
+    !(
+      typeof container === "string" &&
+      container.trim() &&
+      ["author", "editor", "issued", "publisher"].some((field) => {
+        const value = citation[field];
+        return typeof value === "string"
+          ? Boolean(value.trim())
+          : Array.isArray(value)
+            ? value.length > 0
+            : typeof value === "object" && value !== null && Object.keys(value).length > 0;
+      })
+    )
+  ) {
+    throw new Error(`The DOI registry returned no bibliographic data for ${doi}.`);
+  }
   return { ...citation, DOI: doi };
 }
 
@@ -128,6 +151,10 @@ function untilAborted<T>(work: Promise<T>, signal: AbortSignal): Promise<T> {
     signal.addEventListener("abort", abort, { once: true });
     void work.then(resolve, reject).finally(() => signal.removeEventListener("abort", abort));
   });
+}
+
+function doiFromPath(path: string): string | undefined {
+  return doiPattern.exec(path)?.[1]?.replace(/[.,;:)\]}]+$/u, "");
 }
 
 function safeDecode(value: string): string {

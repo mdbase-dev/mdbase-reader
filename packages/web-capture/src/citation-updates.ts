@@ -1,5 +1,5 @@
 import { doiFromText, doiFromUrl } from "./doi.js";
-import { citoidClaims, doiClaims } from "./provider-claims.js";
+import { remoteCitationClaims } from "./remote-citation.js";
 
 import type { Claim } from "./claims.js";
 import type { CitoidClaimsOptions } from "./provider-claims.js";
@@ -17,31 +17,28 @@ export interface CitationUpdateRequest {
   readonly doi?: string;
 }
 
+export interface CitationUpdateOptions extends CitoidClaimsOptions {
+  readonly deadlineMs?: number;
+}
+
 /** User-initiated only: sends a URL and identifiers, never the citation or collection. */
 export async function lookUpCitationClaims(
   request: CitationUpdateRequest,
-  options: CitoidClaimsOptions = {},
+  options: CitationUpdateOptions = {},
 ): Promise<readonly Claim[]> {
   const query = request.query.trim();
   const refresh = query === "" || query.toLowerCase() === "refresh";
-  const url = /^https?:\/\//iu.test(query) ? query : refresh ? request.url : undefined;
-  const page = url ? await citoidClaims(url, options) : undefined;
-  const queryDoi = doiFromText(query) ?? doiFromUrl(query);
-  const identifiers = new Set(
-    (queryDoi
-      ? [queryDoi]
-      : [
-          ...(refresh ? [request.doi] : []),
-          page?.identifiers?.doi,
-          ...(page?.claims ?? []).flatMap((claim) =>
-            claim.field === "DOI" && typeof claim.value === "string" ? [claim.value] : [],
-          ),
-        ]
-    ).filter((doi): doi is string => Boolean(doi)),
-  );
-  // Bounded enrichment: a page and at most two distinct DOI records per explicit lookup.
-  const registries = await Promise.all(
-    [...identifiers].slice(0, 2).map((doi) => doiClaims(doi, options)),
-  );
-  return [...(page?.claims ?? []), ...registries.flatMap((batch) => batch.claims)];
+  const isUrl = /^https?:\/\//iu.test(query);
+  const url = isUrl ? query : refresh ? request.url : undefined;
+  // URL search/hash are not part of the DOI; never run free-text extraction on a URL.
+  const doi = isUrl
+    ? doiFromUrl(query)
+    : refresh
+      ? (doiFromText(request.doi) ?? (url ? doiFromUrl(url) : undefined))
+      : doiFromText(query);
+  const claims: Claim[] = [];
+  await remoteCitationClaims(url, doi, { ...options, citoid: options }, (batch) => {
+    claims.push(...batch.claims);
+  });
+  return claims;
 }

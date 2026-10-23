@@ -1,79 +1,142 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { lookUpCitationClaims } from "./citation-updates.js";
-import { citoidClaims, doiClaims } from "./provider-claims.js";
+import { createProviderQueue } from "./provider-queue.js";
 
-vi.mock("./provider-claims.js", () => ({ citoidClaims: vi.fn(), doiClaims: vi.fn() }));
+function address(input: string | URL | Request): string {
+  return typeof input === "string" ? input : input instanceof URL ? input.href : input.url;
+}
 
-beforeEach(() => {
-  vi.mocked(citoidClaims).mockReset();
-  vi.mocked(doiClaims).mockReset();
-  vi.mocked(doiClaims).mockResolvedValue({ claims: [] });
-});
+function options(): {
+  fetch: ReturnType<typeof vi.fn<typeof globalThis.fetch>>;
+  queue: ReturnType<typeof createProviderQueue>;
+} {
+  const fetch = vi
+    .fn<typeof globalThis.fetch>()
+    .mockImplementation((url) =>
+      Promise.resolve(
+        address(url).startsWith("https://doi.org/")
+          ? Response.json({ title: "Registered" })
+          : Response.json([{ itemType: "webpage", title: "Remote", DOI: "10.1234/discovered" }]),
+      ),
+    );
+  return { fetch, queue: createProviderQueue() };
+}
+
+function urls(opts: ReturnType<typeof options>): string[] {
+  return opts.fetch.mock.calls.map(([url]) => address(url));
+}
+
+afterEach(() => vi.useRealTimers());
 
 describe("citation update claims", () => {
-  it.each(["", "refresh"])("refreshes only the current identifiers: %j", async (query) => {
-    vi.mocked(citoidClaims).mockResolvedValue({
-      claims: [
-        {
-          field: "title",
-          value: "Remote",
-          source: { kind: "generic-remote", name: "citoid" },
-          observedAt: "now",
-        },
-      ],
-      identifiers: { doi: "10.1234/discovered" },
-    });
-    vi.mocked(doiClaims).mockResolvedValue({ claims: [] });
-    const signal = new AbortController().signal;
+  it.each(["", "refresh"])("refreshes a known DOI registry-first: %j", async (query) => {
+    const opts = options();
     const claims = await lookUpCitationClaims(
-      { query, doi: "10.1234/existing", url: "https://example.org" },
-      { signal },
+      { query, doi: "10.1234/existing", url: "https://example.org/work" },
+      opts,
     );
-    expect(citoidClaims).toHaveBeenCalledWith("https://example.org", { signal });
-    expect(doiClaims).toHaveBeenCalledTimes(2);
-    expect(doiClaims).toHaveBeenCalledWith("10.1234/existing", { signal });
-    expect(doiClaims).toHaveBeenCalledWith("10.1234/discovered", { signal });
-    expect(claims).toHaveLength(1);
+    expect(urls(opts)).toEqual(["https://doi.org/10.1234/existing"]);
+    expect(claims.find((claim) => claim.field === "title")).toMatchObject({
+      value: "Registered",
+      source: { kind: "registry", name: "doi.org" },
+    });
   });
 
   it.each(["10.1234/typed", "doi:10.1234/typed", "  10.1234/typed  "])(
     "does not mix a typed DOI with the current work: %j",
     async (query) => {
-      await lookUpCitationClaims({
-        query,
-        doi: "10.1234/existing",
-        url: "https://existing.example",
-      });
-      expect(citoidClaims).not.toHaveBeenCalled();
-      expect(doiClaims).toHaveBeenCalledExactlyOnceWith("10.1234/typed", {});
+      const opts = options();
+      await lookUpCitationClaims(
+        { query, doi: "10.1234/existing", url: "https://existing.example" },
+        opts,
+      );
+      expect(urls(opts)).toEqual(["https://doi.org/10.1234/typed"]);
     },
   );
 
   it("only uses the typed URL and its discovered identifier", async () => {
-    vi.mocked(citoidClaims).mockResolvedValue({
-      claims: [],
-      identifiers: { doi: "10.1234/discovered" },
-    });
-    await lookUpCitationClaims({
-      query: "https://typed.example",
-      url: "https://existing.example",
-      doi: "10.1234/existing",
-    });
-    expect(citoidClaims).toHaveBeenCalledExactlyOnceWith("https://typed.example", {});
-    expect(doiClaims).toHaveBeenCalledExactlyOnceWith("10.1234/discovered", {});
+    const opts = options();
+    await lookUpCitationClaims(
+      { query: "https://typed.example/", url: "https://existing.example", doi: "10.1234/existing" },
+      opts,
+    );
+    expect(urls(opts)).toEqual([
+      `https://en.wikipedia.org/api/rest_v1/data/citation/zotero/${encodeURIComponent("https://typed.example/")}`,
+      "https://doi.org/10.1234/discovered",
+    ]);
   });
 
-  it("keeps an explicit DOI URL pinned to its identifier", async () => {
-    vi.mocked(citoidClaims).mockResolvedValue({
-      claims: [],
-      identifiers: { doi: "10.1234/unrelated" },
-    });
-    await lookUpCitationClaims({
-      query: "https://doi.org/10.1234/typed",
-      doi: "10.1234/existing",
-    });
-    expect(citoidClaims).toHaveBeenCalledExactlyOnceWith("https://doi.org/10.1234/typed", {});
-    expect(doiClaims).toHaveBeenCalledExactlyOnceWith("10.1234/typed", {});
+  it.each([
+    "https://doi.org/10.1234/known?token=secret#private",
+    "https://publisher.example/doi/10.1234/known?token=secret#private",
+    "https://publisher.example/doi/10.1234%2Fknown%3Ftoken=secret%23private",
+  ])("extracts a DOI only from the URL pathname: %s", async (query) => {
+    const opts = options();
+    await lookUpCitationClaims({ query }, opts);
+    expect(urls(opts)).toEqual(["https://doi.org/10.1234/known"]);
+  });
+
+  it("falls back to Citoid after registry failure without retrying the same DOI", async () => {
+    const opts = options();
+    opts.fetch.mockImplementation((url) =>
+      Promise.resolve(
+        address(url).startsWith("https://doi.org/")
+          ? new Response(null, { status: 404 })
+          : Response.json([{ itemType: "webpage", title: "Remote", DOI: "10.1234/known" }]),
+      ),
+    );
+    const claims = await lookUpCitationClaims(
+      { query: "refresh", doi: "10.1234/known", url: "https://example.org/work" },
+      opts,
+    );
+    expect(urls(opts).map((url) => new URL(url).host)).toEqual(["doi.org", "en.wikipedia.org"]);
+    expect(claims.find((claim) => claim.field === "title")?.value).toBe("Remote");
+  });
+});
+
+describe("citation update deadlines", () => {
+  it.each([8_000, 6_000])(
+    "shares one %i ms deadline with late DOI enrichment",
+    async (deadlineMs) => {
+      vi.useFakeTimers();
+      const opts = options();
+      opts.fetch.mockImplementation(async (url) => {
+        if (address(url).startsWith("https://doi.org/")) {
+          return new Promise(() => undefined);
+        }
+        await new Promise((resolve) => setTimeout(resolve, deadlineMs - 100));
+        return Response.json([
+          { itemType: "journalArticle", title: "Found", DOI: "10.1234/discovered" },
+        ]);
+      });
+      let completed = false;
+      const lookup = lookUpCitationClaims(
+        { query: "https://example.com/work" },
+        {
+          ...opts,
+          ...(deadlineMs === 6_000 ? { deadlineMs } : {}),
+        },
+      ).then(() => {
+        completed = true;
+      });
+      await vi.advanceTimersByTimeAsync(deadlineMs - 1);
+      expect(completed).toBe(false);
+      await vi.advanceTimersByTimeAsync(1);
+      await lookup;
+      expect(completed).toBe(true);
+      expect(opts.fetch).toHaveBeenCalledTimes(2);
+      expect(vi.getTimerCount()).toBe(0);
+    },
+  );
+
+  it("limits even an explicit DOI to three seconds", async () => {
+    vi.useFakeTimers();
+    const opts = options();
+    opts.fetch.mockImplementation(() => new Promise(() => undefined));
+    const lookup = lookUpCitationClaims({ query: "10.1234/known" }, opts);
+    await vi.advanceTimersByTimeAsync(3_000);
+    expect(await lookup).toEqual([]);
+    expect(vi.getTimerCount()).toBe(0);
   });
 });

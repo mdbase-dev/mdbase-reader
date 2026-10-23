@@ -236,6 +236,43 @@ it("limits a Citoid-discovered DOI round to six seconds total", async () => {
   );
 });
 
+describe("captured citation disclosure", () => {
+  it.each([
+    "https://router.local/admin",
+    "http://127.0.0.1/private",
+    "http://192.168.1.1/",
+    "http://[fd00::1]/private",
+    "https://alice:secret@example.com/doc?token=secret#private",
+    "https://example.com/private.pdf",
+  ])("never discloses a protected captured canonical URL: %s", async (canonicalUrl) => {
+    const fetch = vi.fn<typeof globalThis.fetch>().mockResolvedValue(Response.json([]));
+    vi.stubGlobal("fetch", fetch);
+    const base = capturedPage(pageClaims);
+    const page = { ...base, capture: { ...base.capture, canonicalUrl } };
+    const deps = services({ capture: vi.fn().mockResolvedValue({ kind: "html", page }) });
+    await addSourceFromInput("https://example.com/document", deps);
+    expect(fetch).not.toHaveBeenCalled();
+    expect(deps.workspace.importSourceFile).toHaveBeenCalled();
+  });
+
+  it("retains article queries but never discloses captured fragments", async () => {
+    const fetch = vi.fn<typeof globalThis.fetch>().mockResolvedValue(Response.json([]));
+    vi.stubGlobal("fetch", fetch);
+    const base = capturedPage(pageClaims);
+    const canonicalUrl = "https://example.com/document?token=private-secret#private-fragment";
+    const page = { ...base, capture: { ...base.capture, canonicalUrl } };
+    await addSourceFromInput(
+      "https://example.com/document",
+      services({
+        capture: vi.fn().mockResolvedValue({ kind: "html", page }),
+      }),
+    );
+    expect(fetch.mock.calls[0]?.[0]).toBe(
+      `https://en.wikipedia.org/api/rest_v1/data/citation/zotero/${encodeURIComponent("https://example.com/document?token=private-secret")}`,
+    );
+  });
+});
+
 describe("adding captured page citations", () => {
   it("enables Citoid and saves the resolved citation with pinned field provenance", async () => {
     const fetch = vi.fn<typeof globalThis.fetch>().mockResolvedValue(

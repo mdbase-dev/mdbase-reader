@@ -6,6 +6,46 @@ import { sanitizedCitation } from "./csl-values.js";
 import { arxivIdentifier, doiFromText, doiFromUrl, resolveDoiCitation } from "./doi.js";
 import { extractScholarlyMetadata } from "./scholarly-metadata.js";
 
+describe("registry bibliographic minimum", () => {
+  it.each([
+    {},
+    { type: "article" },
+    { DOI: "10.1234/work" },
+    { title: "  " },
+    { "container-title": "Journal" },
+    { title: 42 },
+    { "container-title": "Journal", author: [] },
+  ])("rejects records without meaningful work evidence: %j", async (record) => {
+    await expect(
+      resolveDoiCitation("10.1234/work", {
+        fetch: vi.fn<typeof fetch>().mockResolvedValue(Response.json(record)),
+      }),
+    ).rejects.toThrow("no bibliographic data");
+  });
+
+  it.each([
+    { title: "Work" },
+    { "container-title": "Journal", issued: { "date-parts": [[2026]] } },
+    { "container-title": "Journal", author: [{ family: "Example" }] },
+  ])("accepts a title or a container supported by other bibliography: %j", async (record) => {
+    await expect(
+      resolveDoiCitation("10.1234/work", {
+        fetch: vi.fn<typeof fetch>().mockResolvedValue(Response.json(record)),
+      }),
+    ).resolves.toMatchObject({ DOI: "10.1234/work" });
+  });
+
+  it.each([
+    ["https://doi.org/10.1234/known?token=secret#private", "10.1234/known"],
+    ["https://publisher.example/doi/10.1234%2Fknown%3Ftoken=secret", "10.1234/known"],
+    ["https://publisher.example/doi/10.1234/known%23private", "10.1234/known"],
+    ["https://publisher.example/doi/10.1234/bad%ZZ?token=secret", "10.1234/bad%ZZ"],
+    ["https://publisher.example/article?doi=10.1234/secret#10.1234/private", undefined],
+  ])("only decodes the DOI pathname: %s", (url, doi) => {
+    expect(doiFromUrl(url)).toBe(doi);
+  });
+});
+
 function page(head: string): Document {
   return new DOMParser().parseFromString(
     `<html><head>${head}</head><body></body></html>`,
