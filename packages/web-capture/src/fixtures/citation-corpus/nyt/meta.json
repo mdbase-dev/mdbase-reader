@@ -1,0 +1,10 @@
+{
+  "url": "https://www.nytimes.com/2026/10/22/science/space/earth-mars-formed-different.html",
+  "retrievedAt": "2026-10-23T06:14:31.215207+00:00",
+  "notes": [
+    "Original reduced reproduction of the captured HTML; article prose, descriptions, images, styles, tracking and executable scripts omitted. Citation metadata values are retained; JSON-LD keeps only citation-related properties.",
+    "Page HTTP status: 403. Final URL: https://www.nytimes.com/2026/10/22/science/space/earth-mars-formed-different.html.",
+    "HTTP 403 JavaScript/bot wall. Expected title, author and date independently verified against the publisher Science RSS feed at https://rss.nytimes.com/services/xml/rss/nyt/Science.xml; Citoid corroborates them. The committed page intentionally contains only the wall, not reconstructed article tags.",
+    "Baseline extractScholarlyMetadata at d0c7061: 0/6 expected fields match; wrong or missing fields: type, title, author, issued, container-title, URL. Cosmetic case/whitespace differences are ignored; absent expected fields are not scored."
+  ]
+}

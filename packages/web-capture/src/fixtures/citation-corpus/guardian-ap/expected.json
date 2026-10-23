@@ -1,0 +1,15 @@
+{
+  "type": "article-newspaper",
+  "title": "Magnitude-7 earthquake hits China’s Tibet, killing at least 16 and destroying hundreds of homes",
+  "author": [
+    {
+      "literal": "Associated Press"
+    }
+  ],
+  "issued": {
+    "date-parts": [[2026, 10, 23]]
+  },
+  "container-title": "The Guardian",
+  "publisher": "The Guardian",
+  "URL": "https://www.theguardian.com/world/2026/oct/23/magnitude-7-earthquake-hits-china-tibet"
+}

@@ -1,0 +1,10 @@
+{
+  "url": "https://peerj.com/articles/175/",
+  "retrievedAt": "2026-10-23T06:17:35.713583+00:00",
+  "notes": [
+    "Original reduced reproduction of the captured HTML; article prose, descriptions, images, styles, tracking and executable scripts omitted. Citation metadata values are retained; JSON-LD keeps only citation-related properties.",
+    "Page HTTP status: 403. Final URL: https://peerj.com/articles/175/.",
+    "HTTP 403 Cloudflare challenge; Citoid 404. Bibliographic expectations were verified against the successful DOI registry record, not against an accessible live article. This is a registry-only recovery case, not proof that these fields are discoverable in the fetched HTML.",
+    "Baseline extractScholarlyMetadata at d0c7061: 0/8 expected fields match; wrong or missing fields: type, title, author, issued, container-title, publisher, DOI, URL. Cosmetic case/whitespace differences are ignored; absent expected fields are not scored."
+  ]
+}

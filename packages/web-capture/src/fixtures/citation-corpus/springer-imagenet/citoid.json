@@ -1,0 +1,85 @@
+{
+  "status": 200,
+  "body": [
+    {
+      "key": "7YPHS9I5",
+      "version": 0,
+      "itemType": "journalArticle",
+      "creators": [
+        {
+          "firstName": "Olga",
+          "lastName": "Russakovsky",
+          "creatorType": "author"
+        },
+        {
+          "firstName": "Jia",
+          "lastName": "Deng",
+          "creatorType": "author"
+        },
+        {
+          "firstName": "Hao",
+          "lastName": "Su",
+          "creatorType": "author"
+        },
+        {
+          "firstName": "Jonathan",
+          "lastName": "Krause",
+          "creatorType": "author"
+        },
+        {
+          "firstName": "Sanjeev",
+          "lastName": "Satheesh",
+          "creatorType": "author"
+        },
+        {
+          "firstName": "Sean",
+          "lastName": "Ma",
+          "creatorType": "author"
+        },
+        {
+          "firstName": "Zhiheng",
+          "lastName": "Huang",
+          "creatorType": "author"
+        },
+        {
+          "firstName": "Andrej",
+          "lastName": "Karpathy",
+          "creatorType": "author"
+        },
+        {
+          "firstName": "Aditya",
+          "lastName": "Khosla",
+          "creatorType": "author"
+        },
+        {
+          "firstName": "Michael",
+          "lastName": "Bernstein",
+          "creatorType": "author"
+        },
+        {
+          "firstName": "Alexander C.",
+          "lastName": "Berg",
+          "creatorType": "author"
+        },
+        {
+          "firstName": "Li",
+          "lastName": "Fei-Fei",
+          "creatorType": "author"
+        }
+      ],
+      "tags": [],
+      "date": "2015-12-01",
+      "title": "ImageNet Large Scale Visual Recognition Challenge",
+      "pages": "211–252",
+      "abstractNote": "The ImageNet Large Scale Visual Recognition Challenge is a benchmark in object category classification and detection on hundreds of object categories and millions of images.",
+      "ISSN": "1573-1405",
+      "url": "https://doi.org/10.1007/s11263-015-0816-y",
+      "DOI": "10.1007/s11263-015-0816-y",
+      "volume": "115",
+      "issue": "3",
+      "publicationTitle": "International Journal of Computer Vision",
+      "libraryCatalog": "Springer Link",
+      "accessDate": "2026-10-23"
+    }
+  ]
+}

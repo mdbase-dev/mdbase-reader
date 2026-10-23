@@ -1,0 +1,10 @@
+{
+  "url": "https://www.youtube.com/watch?v=jNQXAC9IVRw",
+  "retrievedAt": "2026-10-23T06:16:09.133147+00:00",
+  "notes": [
+    "Original reduced reproduction of the captured HTML; article prose, descriptions, images, styles, tracking and executable scripts omitted. Citation metadata values are retained; JSON-LD keeps only citation-related properties.",
+    "Page HTTP status: 200. Final URL: https://www.youtube.com/watch?v=jNQXAC9IVRw.",
+    "Credit the displayed channel handle jawed, not an inferred real personal name. Date is the local upload date embedded in VideoObject/uploadDate (23 April), not conversion to the following UTC day. Non-JSON-LD scripts and video description are omitted.",
+    "Baseline extractScholarlyMetadata at d0c7061: 0/6 expected fields match; wrong or missing fields: type, title, author, issued, container-title, URL. Cosmetic case/whitespace differences are ignored; absent expected fields are not scored."
+  ]
+}

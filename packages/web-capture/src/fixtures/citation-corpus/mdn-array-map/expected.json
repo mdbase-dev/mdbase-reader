@@ -1,0 +1,15 @@
+{
+  "type": "webpage",
+  "title": "Array.prototype.map()",
+  "author": [
+    {
+      "literal": "MDN contributors"
+    }
+  ],
+  "issued": {
+    "date-parts": [[2026, 7, 12]]
+  },
+  "container-title": "MDN Web Docs",
+  "publisher": "Mozilla",
+  "URL": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/map"
+}

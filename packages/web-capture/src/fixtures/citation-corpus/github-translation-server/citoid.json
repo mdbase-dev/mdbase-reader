@@ -1,0 +1,21 @@
+{
+  "status": 200,
+  "body": [
+    {
+      "key": "Z7E5BW8T",
+      "version": 0,
+      "itemType": "computerProgram",
+      "creators": [],
+      "tags": [],
+      "url": "https://github.com/zotero/translation-server",
+      "title": "zotero/translation-server",
+      "abstractNote": "A Node.js-based server to run Zotero translators",
+      "libraryCatalog": "GitHub",
+      "programmingLanguage": "JavaScript",
+      "extra": "original-date: 2018-06-11T11:28:53Z",
+      "date": "2026-10-22",
+      "company": "Zotero",
+      "accessDate": "2026-10-23"
+    }
+  ]
+}

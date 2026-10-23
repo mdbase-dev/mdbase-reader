@@ -1,0 +1,25 @@
+{
+  "status": 200,
+  "body": [
+    {
+      "key": "W9YX6RQC",
+      "version": 0,
+      "itemType": "webpage",
+      "creators": [
+        {
+          "firstName": "Kyle",
+          "lastName": "Orland",
+          "creatorType": "author"
+        }
+      ],
+      "tags": [],
+      "title": "Switch 2 security takes a hit as hackers unlock homebrew access",
+      "websiteTitle": "Ars Technica",
+      "date": "2026-10-22",
+      "url": "https://arstechnica.com/gaming/2026/10/switch-2-jailbreak-gives-hackers-new-ways-to-run-homebrew-and-mod-games/",
+      "abstractNote": "Userland\" exploit relies on integer overflow found in \"SmileBasic\" interpreter.",
+      "language": "en",
+      "accessDate": "2026-10-23"
+    }
+  ]
+}

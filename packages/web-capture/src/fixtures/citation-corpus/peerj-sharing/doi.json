@@ -1,0 +1,452 @@
+{
+  "status": 200,
+  "body": {
+    "indexed": {
+      "date-parts": [[2026, 10, 17]],
+      "date-time": "2026-10-17T09:22:43Z",
+      "timestamp": 1792228963226,
+      "version": "4.4.0"
+    },
+    "reference-count": 35,
+    "publisher": "PeerJ",
+    "content-domain": {
+      "domain": [],
+      "crossmark-restriction": false
+    },
+    "DOI": "10.7717/peerj.175",
+    "type": "journal-article",
+    "created": {
+      "date-parts": [[2013, 10, 1]],
+      "date-time": "2013-10-01T05:06:40Z",
+      "timestamp": 1380604000000
+    },
+    "page": "e175",
+    "source": "Crossref",
+    "is-referenced-by-count": 409,
+    "title": "Data reuse and the open data citation advantage",
+    "prefix": "10.7717",
+    "volume": "1",
+    "author": [
+      {
+        "given": "Heather A.",
+        "family": "Piwowar",
+        "sequence": "first",
+        "affiliation": [
+          {
+            "name": "National Evolutionary Synthesis Center, Durham, NC, USA"
+          },
+          {
+            "name": "Department of Biology, Duke University, Durham, NC, USA"
+          }
+        ],
+        "role": [
+          {
+            "vocabulary": "crossref",
+            "role": "author"
+          }
+        ]
+      },
+      {
+        "given": "Todd J.",
+        "family": "Vision",
+        "sequence": "additional",
+        "affiliation": [
+          {
+            "name": "National Evolutionary Synthesis Center, Durham, NC, USA"
+          },
+          {
+            "name": "Department of Biology, Duke University, Durham, NC, USA"
+          },
+          {
+            "name": "Department of Biology, University of North Carolina - Chapel Hill, Chapel Hill, NC, USA"
+          }
+        ],
+        "role": [
+          {
+            "vocabulary": "crossref",
+            "role": "author"
+          }
+        ]
+      }
+    ],
+    "member": "4443",
+    "published-online": {
+      "date-parts": [[2013, 10, 1]]
+    },
+    "reference": [
+      {
+        "key": "10.7717/peerj.175/ref-1",
+        "year": "2013",
+        "unstructured": "knitcitations: citations for knitr markdown files. https://github.com/cboettig/knitcitations"
+      },
+      {
+        "issue": "3",
+        "key": "10.7717/peerj.175/ref-2",
+        "doi-asserted-by": "publisher",
+        "first-page": "239",
+        "DOI": "10.1016/j.joi.2007.04.001",
+        "article-title": "Do open access articles have greater citation impact?: A critical review of the literature",
+        "volume": "1",
+        "author": "Craig",
+        "year": "2007",
+        "journal-title": "Journal of Informetrics"
+      },
+      {
+        "key": "10.7717/peerj.175/ref-3",
+        "year": "2012",
+        "unstructured": "On the Citation Advantage of linking to data. hprints. Available at http://hprints.org/hprints-00714715 (accessed 5 July 2012)"
+      },
+      {
+        "key": "10.7717/peerj.175/ref-4",
+        "year": "2010",
+        "unstructured": "polycor: polychoric and polyserial correlations. http://CRAN.R-project.org/package=polycor"
+      },
+      {
+        "key": "10.7717/peerj.175/ref-5",
+        "first-page": "222",
+        "article-title": "Models for predicting and explaining citation count of biomedical articles",
+        "author": "Fu",
+        "year": "2008",
+        "journal-title": "AMIA Symposium"
+      },
+      {
+        "issue": "1",
+        "key": "10.7717/peerj.175/ref-6",
+        "first-page": "89",
+        "article-title": "Posting your data: will you be scooped or will you be famous?",
+        "volume": "4",
+        "author": "Gleditsch",
+        "year": "2003",
+        "journal-title": "International Studies Perspectives"
+      },
+      {
+        "key": "10.7717/peerj.175/ref-7",
+        "year": "2011",
+        "unstructured": "ascii: Export R objects to several markup languages. http://CRAN.R-project.org/package=ascii"
+      },
+      {
+        "key": "10.7717/peerj.175/ref-8",
+        "year": "2012",
+        "unstructured": "rms: regression modeling strategies. http://CRAN.R-project.org/package=rms"
+      },
+      {
+        "key": "10.7717/peerj.175/ref-9",
+        "year": "2011",
+        "unstructured": "Linking to data - effect on citation rates in astronomy. http://arxiv.org/abs/1111.3618"
+      },
+      {
+        "issue": "2",
+        "key": "10.7717/peerj.175/ref-10",
+        "doi-asserted-by": "publisher",
+        "first-page": "149",
+        "DOI": "10.1038/ng.295",
+        "article-title": "Repeatability of published microarray gene expression analyses",
+        "volume": "41",
+        "author": "Ioannidis",
+        "year": "2009",
+        "journal-title": "Nature Genetics"
+      },
+      {
+        "issue": "1",
+        "key": "10.7717/peerj.175/ref-11",
+        "doi-asserted-by": "publisher",
+        "first-page": "eP1035",
+        "DOI": "10.7710/2162-3309.1035",
+        "article-title": "The anatomy of a data citation: discovery, reuse, and credit",
+        "volume": "1",
+        "author": "Mooney",
+        "year": "2012",
+        "journal-title": "Journal of Librarianship and Scholarly Communication"
+      },
+      {
+        "key": "10.7717/peerj.175/ref-12",
+        "year": "2010",
+        "unstructured": "The enduring value of social science research: the use and reuse of primary research data. The Organisation, Economics and Policy of Scientific Research Workshop http://hdl.handle.net/2027.42/78307"
+      },
+      {
+        "issue": "7",
+        "key": "10.7717/peerj.175/ref-13",
+        "doi-asserted-by": "publisher",
+        "first-page": "e18657",
+        "DOI": "10.1371/journal.pone.0018657",
+        "article-title": "Who shares? Who doesn’t? Factors associated with openly archiving raw research data",
+        "volume": "6",
+        "author": "Piwowar",
+        "year": "2011",
+        "journal-title": "PLoS ONE"
+      },
+      {
+        "key": "10.7717/peerj.175/ref-14",
+        "doi-asserted-by": "publisher",
+        "DOI": "10.5061/dryad.mf1sd",
+        "article-title": "Data from: Who shares? Who doesn’t? Factors associated with openly archiving raw research data",
+        "author": "Piwowar",
+        "year": "2011",
+        "journal-title": "Dryad Digital Repository"
+      },
+      {
+        "issue": "7431",
+        "key": "10.7717/peerj.175/ref-15",
+        "doi-asserted-by": "publisher",
+        "first-page": "159",
+        "DOI": "10.1038/493159a",
+        "article-title": "Value all research products",
+        "volume": "493",
+        "author": "Piwowar",
+        "year": "2013",
+        "journal-title": "Nature"
+      },
+      {
+        "issue": "1",
+        "key": "10.7717/peerj.175/ref-16",
+        "doi-asserted-by": "publisher",
+        "first-page": "1",
+        "DOI": "10.1002/meet.2011.14504801337",
+        "article-title": "Beginning to track 1000 datasets from public repositories into the published literature",
+        "volume": "48",
+        "author": "Piwowar",
+        "year": "2011",
+        "journal-title": "Proceedings of the American Society for Information Science and Technology"
+      },
+      {
+        "key": "10.7717/peerj.175/ref-17",
+        "doi-asserted-by": "crossref",
+        "first-page": "7",
+        "DOI": "10.5210/disco.v5i0.2785",
+        "article-title": "Recall and bias of retrieving gene expression microarray datasets through PubMed identifiers",
+        "volume": "5",
+        "author": "Piwowar",
+        "year": "2010",
+        "journal-title": "Journal of Biomedical Discovery and Collaboration"
+      },
+      {
+        "issue": "3",
+        "key": "10.7717/peerj.175/ref-18",
+        "doi-asserted-by": "publisher",
+        "first-page": "e308",
+        "DOI": "10.1371/journal.pone.0000308",
+        "article-title": "Sharing detailed research data is associated with increased citation rate",
+        "volume": "2",
+        "author": "Piwowar",
+        "year": "2007",
+        "journal-title": "PLoS ONE"
+      },
+      {
+        "issue": "7347",
+        "key": "10.7717/peerj.175/ref-19",
+        "doi-asserted-by": "publisher",
+        "first-page": "285",
+        "DOI": "10.1038/473285a",
+        "article-title": "Data archiving is a good investment",
+        "volume": "473",
+        "author": "Piwowar",
+        "year": "2011",
+        "journal-title": "Nature"
+      },
+      {
+        "issue": "3",
+        "key": "10.7717/peerj.175/ref-20",
+        "doi-asserted-by": "publisher",
+        "first-page": "603",
+        "DOI": "10.1111/j.1558-5646.2009.00940.x",
+        "article-title": "Data archiving",
+        "volume": "64",
+        "author": "Rausher",
+        "year": "2010",
+        "journal-title": "Evolution"
+      },
+      {
+        "key": "10.7717/peerj.175/ref-21",
+        "doi-asserted-by": "publisher",
+        "first-page": "435",
+        "DOI": "10.1145/2441776.2441826",
+        "article-title": "Beyond trust and reliability: reusing data in collaborative cancer epidemiology research",
+        "volume-title": "CSCW ’13 Proceedings of the 2013 conference on computer supported cooperative work",
+        "author": "Rolland",
+        "year": "2013"
+      },
+      {
+        "issue": "2",
+        "key": "10.7717/peerj.175/ref-22",
+        "doi-asserted-by": "publisher",
+        "first-page": "89",
+        "DOI": "10.1038/nrg3394",
+        "article-title": "Reuse of public genome-wide gene expression data",
+        "volume": "14",
+        "author": "Rung",
+        "year": "2013",
+        "journal-title": "Nature Reviews Genetics"
+      },
+      {
+        "key": "10.7717/peerj.175/ref-23",
+        "year": "2011",
+        "unstructured": "Data sharing effect on article citation rate in paleoceanography. KomFor. [Blog]http://www.komfor.net/blog/unbenanntemitteilung"
+      },
+      {
+        "issue": "5",
+        "key": "10.7717/peerj.175/ref-24",
+        "doi-asserted-by": "publisher",
+        "first-page": "1129",
+        "DOI": "10.1093/ije/dyl191",
+        "article-title": "Commentary: the power of the unrelenting impact factor—Is it a force for good or harm?",
+        "volume": "35",
+        "author": "Smith",
+        "year": "2006",
+        "journal-title": "International Journal of Epidemiology"
+      },
+      {
+        "issue": "6",
+        "key": "10.7717/peerj.175/ref-25",
+        "doi-asserted-by": "publisher",
+        "first-page": "e21101",
+        "DOI": "10.1371/journal.pone.0021101",
+        "article-title": "Data sharing by scientists: practices and perceptions",
+        "volume": "6",
+        "author": "Tenopir",
+        "year": "2011",
+        "journal-title": "PLoS ONE"
+      },
+      {
+        "issue": "3",
+        "key": "10.7717/peerj.175/ref-26",
+        "doi-asserted-by": "publisher",
+        "first-page": "161",
+        "DOI": "10.1007/s12021-007-0012-5",
+        "article-title": "Sharing and reusing gene expression profiling data in neuroscience",
+        "volume": "5",
+        "author": "Wan",
+        "year": "2007",
+        "journal-title": "Neuroinformatics"
+      },
+      {
+        "key": "10.7717/peerj.175/ref-27",
+        "year": "2008",
+        "unstructured": "Peer review: benefits, perceptions and alternatives. PRC summary papers 4. Publishing Research Consortium. Available at http://www.publishingresearch.net/documents/PRCsummary4Warefinal.pdf"
+      },
+      {
+        "key": "10.7717/peerj.175/ref-28",
+        "year": "2012",
+        "unstructured": "gplots: various R programming tools for plotting data. http://CRAN.R-project.org/package=gplots"
+      },
+      {
+        "issue": "11",
+        "key": "10.7717/peerj.175/ref-29",
+        "doi-asserted-by": "publisher",
+        "first-page": "e26828",
+        "DOI": "10.1371/journal.pone.0026828",
+        "article-title": "Willingness to share research data is related to the strength of the evidence and the quality of reporting of statistical results",
+        "volume": "6",
+        "author": "Wicherts",
+        "year": "2011",
+        "journal-title": "PLoS ONE"
+      },
+      {
+        "issue": "12",
+        "key": "10.7717/peerj.175/ref-30",
+        "doi-asserted-by": "crossref",
+        "first-page": "1",
+        "DOI": "10.18637/jss.v021.i12",
+        "article-title": "Reshaping data with the reshape package",
+        "volume": "21",
+        "author": "Wickham",
+        "year": "2007",
+        "journal-title": "Journal of Statistical Software"
+      },
+      {
+        "key": "10.7717/peerj.175/ref-31",
+        "year": "2009",
+        "unstructured": "ggplot2: elegant graphics for data analysis. http://had.co.nz/ggplot2/book"
+      },
+      {
+        "issue": "1",
+        "key": "10.7717/peerj.175/ref-32",
+        "doi-asserted-by": "crossref",
+        "first-page": "1",
+        "DOI": "10.18637/jss.v040.i01",
+        "article-title": "The split-apply-combine strategy for data analysis",
+        "volume": "40",
+        "author": "Wickham",
+        "year": "2011",
+        "journal-title": "Journal of Statistical Software"
+      },
+      {
+        "key": "10.7717/peerj.175/ref-33",
+        "doi-asserted-by": "publisher",
+        "first-page": "19",
+        "DOI": "10.1145/2232817.2232822",
+        "article-title": "Data, data use, and scientific inquiry: two case studies of data practices",
+        "volume-title": "JCDL ’12 Proceedings of the 12th ACM/IEEE-CS joint conference on Digital Libraries",
+        "author": "Wynholds",
+        "year": "2012"
+      },
+      {
+        "key": "10.7717/peerj.175/ref-34",
+        "year": "2012",
+        "unstructured": "knitr: a general-purpose package for dynamic report generation in R. http://CRAN.R-project.org/package=knitr"
+      },
+      {
+        "key": "10.7717/peerj.175/ref-35",
+        "article-title": "Data sharing and secondary use of scientific data: experiences of ecologists",
+        "author": "Zimmerman",
+        "year": "2003",
+        "journal-title": "Dissertations and Thesis (Ph.D. and Master’s)"
+      }
+    ],
+    "container-title": "PeerJ",
+    "original-title": [],
+    "language": "en",
+    "link": [
+      {
+        "URL": "https://peerj.com/articles/175.pdf",
+        "content-type": "unspecified",
+        "content-version": "vor",
+        "intended-application": "similarity-checking"
+      }
+    ],
+    "deposited": {
+      "date-parts": [[2023, 7, 4]],
+      "date-time": "2023-07-04T19:40:06Z",
+      "timestamp": 1688499606000
+    },
+    "score": 1,
+    "resource": {
+      "primary": {
+        "URL": "https://peerj.com/articles/175"
+      }
+    },
+    "subtitle": [],
+    "short-title": [],
+    "issued": {
+      "date-parts": [[2013, 10, 1]]
+    },
+    "references-count": 35,
+    "alternative-id": ["10.7717/peerj.175"],
+    "URL": "http://dx.doi.org/10.7717/peerj.175",
+    "relation": {
+      "has-review": [
+        {
+          "id-type": "doi",
+          "id": "10.7287/peerj.175v0.1/reviews/1",
+          "asserted-by": "object"
+        },
+        {
+          "id-type": "doi",
+          "id": "10.7287/peerj.175v0.1/reviews/2",
+          "asserted-by": "object"
+        }
+      ],
+      "has-preprint": [
+        {
+          "id-type": "doi",
+          "id": "10.7287/peerj.preprints.1",
+          "asserted-by": "object"
+        }
+      ]
+    },
+    "ISSN": ["2167-8359"],
+    "subject": [],
+    "published": {
+      "date-parts": [[2013, 10, 1]]
+    }
+  }
+}

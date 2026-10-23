@@ -1,0 +1,14 @@
+{
+  "type": "motion_picture",
+  "title": "Me at the zoo",
+  "author": [
+    {
+      "literal": "jawed"
+    }
+  ],
+  "issued": {
+    "date-parts": [[2005, 4, 23]]
+  },
+  "container-title": "YouTube",
+  "URL": "https://www.youtube.com/watch?v=jNQXAC9IVRw"
+}

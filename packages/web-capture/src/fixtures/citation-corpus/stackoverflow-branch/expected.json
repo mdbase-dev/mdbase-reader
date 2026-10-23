@@ -1,0 +1,15 @@
+{
+  "type": "post",
+  "title": "How do I delete a Git branch locally and remotely?",
+  "author": [
+    {
+      "family": "Rankin",
+      "given": "Matthew"
+    }
+  ],
+  "issued": {
+    "date-parts": [[2010, 1, 5]]
+  },
+  "container-title": "Stack Overflow",
+  "URL": "https://stackoverflow.com/questions/2003505/how-do-i-delete-a-git-branch-locally-and-remotely"
+}

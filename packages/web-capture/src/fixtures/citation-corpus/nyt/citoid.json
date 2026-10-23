@@ -1,0 +1,57 @@
+{
+  "status": 200,
+  "body": [
+    {
+      "key": "UBXUMMW6",
+      "version": 0,
+      "itemType": "newspaperArticle",
+      "creators": [
+        {
+          "firstName": "Robin George",
+          "lastName": "Andrews",
+          "creatorType": "author"
+        }
+      ],
+      "tags": [
+        {
+          "tag": "Space and Astronomy",
+          "type": 1
+        },
+        {
+          "tag": "Planets",
+          "type": 1
+        },
+        {
+          "tag": "Solar System",
+          "type": 1
+        },
+        {
+          "tag": "Earth",
+          "type": 1
+        },
+        {
+          "tag": "Nature Astronomy (Journal)",
+          "type": 1
+        },
+        {
+          "tag": "Geology",
+          "type": 1
+        },
+        {
+          "tag": "Mars (Planet)",
+          "type": 1
+        }
+      ],
+      "title": "Earth and Mars May Have Formed in Weirdly Different Ways",
+      "section": "Science",
+      "date": "2026-10-22",
+      "url": "https://www.nytimes.com/2026/10/22/science/space/earth-mars-formed-different.html",
+      "abstractNote": "Chemical clues and computer simulations suggest the two rocky planets have unique origin stories.",
+      "language": "en-US",
+      "libraryCatalog": "NYTimes.com",
+      "accessDate": "2026-10-23",
+      "publicationTitle": "The New York Times",
+      "ISSN": "0362-4331"
+    }
+  ]
+}

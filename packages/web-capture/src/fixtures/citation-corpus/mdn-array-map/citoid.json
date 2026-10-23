@@ -1,0 +1,19 @@
+{
+  "status": 200,
+  "body": [
+    {
+      "key": "NDFUT3PR",
+      "version": 0,
+      "itemType": "webpage",
+      "creators": [],
+      "tags": [],
+      "title": "Array.prototype.map() - JavaScript | MDN",
+      "websiteTitle": "MDN Web Docs",
+      "url": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/map",
+      "abstractNote": "The map() method of Array instances creates\na new array populated with the results of calling a provided function on\nevery element in the calling array.",
+      "date": "2026-07-12",
+      "language": "en-US",
+      "accessDate": "2026-10-23"
+    }
+  ]
+}

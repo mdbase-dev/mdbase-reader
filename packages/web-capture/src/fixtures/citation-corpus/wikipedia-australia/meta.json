@@ -1,0 +1,10 @@
+{
+  "url": "https://en.wikipedia.org/wiki/Australia",
+  "retrievedAt": "2026-10-23T06:14:09.511848+00:00",
+  "notes": [
+    "Original reduced reproduction of the captured HTML; article prose, descriptions, images, styles, tracking and executable scripts omitted. Citation metadata values are retained; JSON-LD keeps only citation-related properties.",
+    "Page HTTP status: 200. Final URL: https://en.wikipedia.org/wiki/Australia.",
+    "Encyclopedia entry, not a generic Article. The Wikidata short description \"country\" is not the title. The footer/dateModified and Citoid agree on the revision date; datePublished is page creation, not this edition. Use the recorded oldid URL supplied by Citoid. No individually credited author is asserted.",
+    "Baseline extractScholarlyMetadata at d0c7061: 1/6 expected fields match; wrong or missing fields: type, title, issued, container-title, URL. Cosmetic case/whitespace differences are ignored; absent expected fields are not scored."
+  ]
+}
