@@ -92,7 +92,7 @@ export function useDocumentAttachment(
             sourceId: source.id,
             busy: false,
             message: null,
-            error: `${file.name} isn’t a PDF, EPUB or saved web page.`,
+            error: t`${file.name} isn’t a PDF, EPUB or saved web page.`,
           });
           return;
         }

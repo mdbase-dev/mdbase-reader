@@ -1,3 +1,6 @@
+import { i18n } from "@lingui/core";
+import { t } from "@lingui/core/macro";
+
 import type { AnnotationId } from "@mdbase-reader/core";
 
 export interface MarginMarkerRange {
@@ -14,6 +17,7 @@ export interface MarginMarkerRange {
 export class MarginMarkers {
   readonly #document: Document;
   readonly #layer: HTMLElement;
+  readonly #unsubscribe: () => void;
   #ranges: readonly MarginMarkerRange[] = [];
   #activeId: AnnotationId | null = null;
 
@@ -31,6 +35,7 @@ export class MarginMarkers {
       }
     });
     document.documentElement.append(this.#layer);
+    this.#unsubscribe = i18n.on("change", () => this.layout());
     if (!document.querySelector("style[data-mdbase-reader='margin-style']")) {
       const style = document.createElement("style");
       style.dataset["mdbaseReader"] = "margin-style";
@@ -79,7 +84,9 @@ export class MarginMarkers {
       marker.style.top = `${String((first.top - origin.top) / scale)}px`;
       marker.style.height = `${String(Math.max(12, (last.bottom - first.top) / scale))}px`;
       marker.style.left = `${String(Math.max(4, (edge - origin.left) / scale - 14))}px`;
-      marker.title = hasNote ? "Highlight with a note" : "Highlight";
+      marker.title = hasNote
+        ? t({ message: "Highlight with a note", context: "Reading margin marker tooltip" })
+        : t({ message: "Highlight", context: "Reading margin marker tooltip" });
       return [marker];
     });
     this.#layer.replaceChildren(...markers);
@@ -96,6 +103,7 @@ export class MarginMarkers {
   }
 
   public destroy(): void {
+    this.#unsubscribe();
     this.#layer.remove();
     this.#ranges = [];
   }

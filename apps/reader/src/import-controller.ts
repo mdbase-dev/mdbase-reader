@@ -205,7 +205,7 @@ function migrationPhaseLabel(phase: string): string {
     case "Complete":
       return t({ message: "Complete", context: "Import completed" });
     default: {
-      const files = /^Files: (\\d+) of (\\d+)$/u.exec(phase);
+      const files = /^Files: (\d+) of (\d+)$/u.exec(phase);
       return files ? t`Files: ${files[1]} of ${files[2]}` : phase;
     }
   }

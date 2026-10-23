@@ -83,7 +83,7 @@ export function useAnnotationViewExecution(
             execution: {
               paths: null,
               ready: true,
-              problem: `${readerErrorMessage(reason, "mdbase could not run this view.")} Reader is applying its filters itself.`,
+              problem: annotationViewProblem(reason),
             },
           });
         }
@@ -96,6 +96,11 @@ export function useAnnotationViewExecution(
   return result?.view === view && result.gateway === gateway && result.revision === revision
     ? result.execution
     : { paths: null, problem: null, ready: false };
+}
+
+function annotationViewProblem(reason: unknown): string {
+  const detail = readerErrorMessage(reason, t`mdbase could not run this view.`);
+  return t`${detail} Reader is applying its filters itself.`;
 }
 
 export interface SourceAnnotationsViewAction {
