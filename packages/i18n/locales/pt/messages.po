@@ -132,7 +132,7 @@ msgstr "{0, plural, one {# anotação copiada como Markdown.} other {# anotaçõ
 #. placeholder {0}: plan.sources.length
 #: apps/reader/src/ImportReview.tsx
 msgid "{0, plural, one {Import # source into {collectionName}} other {Import # sources into {collectionName}}}"
-msgstr ""
+msgstr "{0, plural, one {Importar # fonte para {collectionName}} other {Importar # fontes para {collectionName}}}"
 
 #. placeholder {0}: links.length
 #: apps/reader/src/SourceRemovalDialog.tsx
@@ -163,7 +163,7 @@ msgstr "{0} GiB"
 #: apps/reader/src/use-document-attachment.ts
 #: apps/reader/src/use-source-addition.ts
 msgid "{0} isn’t a PDF, EPUB or saved web page."
-msgstr ""
+msgstr "{0} não é um PDF, EPUB ou página da web salva."
 
 #. placeholder {0}: view.name
 #: apps/reader/src/LibraryWorkspace.tsx
@@ -226,7 +226,7 @@ msgstr "{count} resultados encontrados"
 
 #: apps/reader/src/use-annotation-view.ts
 msgid "{detail} Reader is applying its filters itself."
-msgstr ""
+msgstr "{detail} O Reader está aplicando os próprios filtros."
 
 #: apps/reader/src/EnvironmentBadge.tsx
 msgid "{environment} environment"
@@ -314,7 +314,7 @@ msgstr "Divergência na contagem de {name}."
 
 #: packages/core/src/application/source-document-format.ts
 msgid "{name} is not a recognizable PDF, EPUB, or HTML document."
-msgstr ""
+msgstr "{name} não é um documento PDF, EPUB ou HTML reconhecível."
 
 #: packages/core/src/domain/identity.ts
 msgid "{name} must be a non-empty printable value."
@@ -1936,7 +1936,7 @@ msgstr "Título curto da publicação principal"
 #: apps/reader/src/library-conditions.ts
 msgctxt "Field filter comparison operator"
 msgid "contains"
-msgstr ""
+msgstr "contém"
 
 #: apps/reader/src/ImportReview.tsx
 msgid "Content files"
@@ -3085,7 +3085,7 @@ msgstr "Falha na transferência do arquivo."
 
 #: apps/reader/src/import-controller.ts
 msgid "Files: {completed} of {total}"
-msgstr ""
+msgstr "Arquivos: {completed} de {total}"
 
 #: apps/reader/src/LibraryWorkspace.tsx
 msgid "Filter"
@@ -3357,7 +3357,7 @@ msgstr "Destacar com um comentário no mdbase Reader"
 #: packages/reading-surface/src/margin-markers.ts
 msgctxt "Reading margin marker tooltip"
 msgid "Highlight with a note"
-msgstr ""
+msgstr "Destacar com uma nota"
 
 #: apps/extension/src/PanelTabs.tsx
 msgid "Highlights"
@@ -3633,37 +3633,37 @@ msgstr "Retângulo de PDF do Zotero inválido."
 #: apps/reader/src/library-conditions.ts
 msgctxt "Field filter comparison operator"
 msgid "is"
-msgstr ""
+msgstr "é"
 
 #: apps/reader/src/library-conditions.ts
 msgctxt "Field filter comparison operator"
 msgid "is at least"
-msgstr ""
+msgstr "é no mínimo"
 
 #: apps/reader/src/library-conditions.ts
 msgctxt "Field filter comparison operator"
 msgid "is at most"
-msgstr ""
+msgstr "é no máximo"
 
 #: apps/reader/src/library-conditions.ts
 msgctxt "Field filter comparison operator"
 msgid "is empty"
-msgstr ""
+msgstr "está vazio"
 
 #: apps/reader/src/library-conditions.ts
 msgctxt "Field filter comparison operator"
 msgid "is greater than"
-msgstr ""
+msgstr "é maior que"
 
 #: apps/reader/src/library-conditions.ts
 msgctxt "Field filter comparison operator"
 msgid "is less than"
-msgstr ""
+msgstr "é menor que"
 
 #: apps/reader/src/library-conditions.ts
 msgctxt "Field filter comparison operator"
 msgid "is not"
-msgstr ""
+msgstr "não é"
 
 #: packages/core/src/domain/citation-validation.ts
 msgctxt "CSL validation"
@@ -3683,7 +3683,7 @@ msgstr "não é um campo de nome CSL"
 #: apps/reader/src/library-conditions.ts
 msgctxt "Field filter comparison operator"
 msgid "is not empty"
-msgstr ""
+msgstr "não está vazio"
 
 #: apps/reader/src/CitationStructuredEditor.tsx
 msgctxt "CitationStructuredEditor interface"
@@ -4143,7 +4143,7 @@ msgstr "O mdbase Connect demorou muito para responder. Tente novamente em instan
 
 #: apps/reader/src/use-annotation-view.ts
 msgid "mdbase could not run this view."
-msgstr ""
+msgstr "O mdbase não conseguiu executar esta visualização."
 
 #: apps/extension/src/sdk-client.ts
 msgid "mdbase could not start in the background. Reload the extension."
@@ -4287,17 +4287,17 @@ msgstr "Mover a aba para o painel à direita"
 
 #: apps/reader/src/dockview-menus.ts
 msgid "Move to {title}"
-msgstr ""
+msgstr "Mover para {title}"
 
 #: apps/reader/src/dockview-menus.ts
 msgctxt "Workspace tab destination"
 msgid "Move to bottom sidebar"
-msgstr ""
+msgstr "Mover para a barra lateral inferior"
 
 #: apps/reader/src/dockview-menus.ts
 msgctxt "Workspace tab destination"
 msgid "Move to left sidebar"
-msgstr ""
+msgstr "Mover para a barra lateral esquerda"
 
 #: apps/reader/src/dockview-menus.ts
 msgid "Move to new pane below"
@@ -4310,17 +4310,17 @@ msgstr "Mover para um novo painel à direita"
 #: apps/reader/src/dockview-menus.ts
 msgctxt "Workspace tab destination"
 msgid "Move to pane"
-msgstr ""
+msgstr "Mover para o painel"
 
 #: apps/reader/src/dockview-menus.ts
 msgctxt "Workspace tab destination"
 msgid "Move to right sidebar"
-msgstr ""
+msgstr "Mover para a barra lateral direita"
 
 #: apps/reader/src/dockview-menus.ts
 msgctxt "Workspace tab destination"
 msgid "Move to top sidebar"
-msgstr ""
+msgstr "Mover para a barra lateral superior"
 
 #: packages/migration/src/zotero-pdf.ts
 msgid "Multi-page or ink geometry is not yet supported."
@@ -5703,7 +5703,7 @@ msgstr "O Reader esperava uma página da web."
 
 #: apps/reader/src/build-source-export.ts
 msgid "Reader export report"
-msgstr ""
+msgstr "Relatório de exportação do Reader"
 
 #: apps/reader/src/LibraryTableHeader.tsx
 msgid "Reader fields"
