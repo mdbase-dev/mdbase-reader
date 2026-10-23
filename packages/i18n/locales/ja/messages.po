@@ -2618,7 +2618,7 @@ msgstr "例：春、または1"
 #: packages/renderer-pdf/src/pdf-translations.ts
 msgctxt "PDF viewer print"
 msgid "e.g., 1-3, 5, 8-10"
-msgstr ""
+msgstr "例：1-3、5、8-10"
 
 #: apps/reader/src/AnnotationCard.tsx
 msgctxt "AnnotationCard interface"
@@ -2627,68 +2627,68 @@ msgstr "編集"
 
 #: apps/reader/src/LibraryFieldCell.tsx
 msgid "Edit {fieldKey}"
-msgstr ""
+msgstr "{fieldKey}を編集"
 
 #: apps/reader/src/AnnotationEditor.tsx
 msgctxt "AnnotationEditor interface"
 msgid "Edit annotation"
-msgstr ""
+msgstr "注釈を編集"
 
 #: packages/markdown-editor/src/citation-card.ts
 msgctxt "citation card"
 msgid "Edit citation"
-msgstr ""
+msgstr "引用を編集"
 
 #: apps/extension/src/SavedHighlights.tsx
 msgid "Edit comment"
-msgstr ""
+msgstr "コメントを編集"
 
 #: apps/reader/src/AnnotationEditor.tsx
 msgid "Edit here"
-msgstr ""
+msgstr "ここで編集"
 
 #: apps/reader/src/AnnotationCard.tsx
 msgctxt "AnnotationCard interface"
 msgid "Edit here"
-msgstr ""
+msgstr "ここで編集"
 
 #: packages/markdown-editor/src/annotation-widgets.ts
 msgctxt "annotation widgets"
 msgid "Edit highlight"
-msgstr ""
+msgstr "ハイライトを編集"
 
 #: apps/extension/src/CitationPanel.tsx
 #: apps/extension/src/NotePanel.tsx
 msgid "Edit in Reader"
-msgstr ""
+msgstr "Readerで編集"
 
 #: packages/markdown-editor/src/annotation-widgets.ts
 msgctxt "annotation widgets"
 msgid "Edit link"
-msgstr ""
+msgstr "リンクを編集"
 
 #: packages/markdown-editor/src/citation-card.ts
 msgctxt "citation card"
 msgid "Edit metadata"
-msgstr ""
+msgstr "メタデータを編集"
 
 #: apps/reader/src/AnnotationEditor.tsx
 msgid "Edited from the document text."
-msgstr ""
+msgstr "文書のテキストから編集しました。"
 
 #: apps/reader/src/AnnotationCard.tsx
 msgid "Editing requires a saved annotation"
-msgstr ""
+msgstr "編集には保存済みの注釈が必要です"
 
 #: apps/reader/src/CitationStructuredEditor.tsx
 msgctxt "CitationStructuredEditor interface"
 msgid "Edition"
-msgstr ""
+msgstr "版"
 
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "Edition"
-msgstr ""
+msgstr "版"
 
 #: apps/reader/src/CitationContributors.tsx
 msgid "Editor"
@@ -2702,256 +2702,256 @@ msgstr "エディター"
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "Editorial director"
-msgstr ""
+msgstr "編集責任者"
 
 #: apps/reader/src/CitationStructuredEditor.tsx
 msgctxt "CitationStructuredEditor interface"
 msgid "Editors"
-msgstr ""
+msgstr "編集者"
 
 #: apps/reader/src/CitationStructuredEditor.tsx
 msgid "Editors and translators"
-msgstr ""
+msgstr "編集者と翻訳者"
 
 #: apps/reader/src/CitationTypedFieldEditors.tsx
 msgctxt "CitationTypedFieldEditors dateModeOptions"
 msgid "EDTF / raw date"
-msgstr ""
+msgstr "EDTF／元の日付"
 
 #: apps/reader/src/CitationTypedFieldEditors.tsx
 msgid "EDTF or source date"
-msgstr ""
+msgstr "EDTFまたは資料に記載の日付"
 
 #. placeholder {0}: this.candidate.label
 #: packages/markdown-editor/src/annotation-widgets.ts
 msgid "Embedded annotation: {0}"
-msgstr ""
+msgstr "埋め込み注釈：{0}"
 
 #: packages/renderer-pdf/src/pdf-viewer.tsx
 msgid "EmbedPDF could not open this PDF."
-msgstr ""
+msgstr "EmbedPDFでこのPDFを開けませんでした。"
 
 #: packages/renderer-pdf/src/embedpdf-runtime.ts
 #: packages/renderer-pdf/src/pdf-viewer.tsx
 msgid "EmbedPDF did not initialize its document manager."
-msgstr ""
+msgstr "EmbedPDFの文書マネージャーを初期化できませんでした。"
 
 #: packages/renderer-pdf/src/embedpdf-runtime.ts
 msgid "EmbedPDF did not initialize the required Reader plugins."
-msgstr ""
+msgstr "EmbedPDFに必要なReaderプラグインを初期化できませんでした。"
 
 #: apps/reader/src/CitationTypedFieldEditors.tsx
 msgctxt "CitationTypedFieldEditors customValueTypeOptions"
 msgid "Empty"
-msgstr ""
+msgstr "空"
 
 #: packages/migration/src/zotero-pdf.ts
 msgid "Empty Zotero PDF rectangle."
-msgstr ""
+msgstr "ZoteroのPDF矩形が空です。"
 
 #: packages/renderer-epub/src/epub-archive.ts
 msgid "Encrypted EPUB resources are not supported: {path}"
-msgstr ""
+msgstr "暗号化されたEPUBリソースには対応していません：{path}"
 
 #: apps/reader/src/CitationTypedFieldEditors.tsx
 msgctxt "CitationTypedFieldEditors interface"
 msgid "End (optional)"
-msgstr ""
+msgstr "終了日（省略可）"
 
 #: packages/renderer-epub/src/epub-page-navigation.tsx
 msgid "End of publication"
-msgstr ""
+msgstr "刊行終了日"
 
 #: apps/reader/src/LibraryTextSearch.tsx
 msgid "Enter at least two characters."
-msgstr ""
+msgstr "2文字以上入力してください。"
 
 #: packages/renderer-pdf/src/pdf-translations.ts
 msgctxt "PDF viewer passwordPrompt"
 msgid "Enter document password"
-msgstr ""
+msgstr "文書のパスワードを入力"
 
 #: apps/reader/src/reader-command-list.ts
 msgid "Enter reading mode"
-msgstr ""
+msgstr "読書モードに切り替え"
 
 #. placeholder {0}: shortcutLabel("mod+.")
 #: apps/reader/src/ReaderHeader.tsx
 msgid "Enter reading mode · {0}"
-msgstr ""
+msgstr "読書モードに切り替え · {0}"
 
 #: apps/reader/src/CitationTypedFieldEditors.tsx
 msgid "Enter valid JSON to apply this value."
-msgstr ""
+msgstr "この値を適用するには有効なJSONを入力してください。"
 
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "Entry"
-msgstr ""
+msgstr "項目"
 
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "Entry dictionary"
-msgstr ""
+msgstr "辞書の項目"
 
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "Entry encyclopedia"
-msgstr ""
+msgstr "百科事典の項目"
 
 #: apps/reader/src/LibraryWorkspace.tsx
 msgctxt "LibraryWorkspace formatFilterOptions"
 msgid "EPUB"
-msgstr ""
+msgstr "EPUB"
 
 #: packages/renderer-epub/src/epub-archive.ts
 msgid "EPUB archive contains a duplicate path: {path}"
-msgstr ""
+msgstr "EPUBアーカイブに重複するパスがあります：{path}"
 
 #. placeholder {0}: String(MAX_ENTRIES)
 #: packages/renderer-epub/src/epub-archive.ts
 msgid "EPUB archive exceeds the {0}-entry safety limit."
-msgstr ""
+msgstr "EPUBアーカイブが安全上の上限である{0}項目を超えています。"
 
 #: packages/renderer-epub/src/epub-archive.ts
 msgid "EPUB archive exceeds the uncompressed size safety limit."
-msgstr ""
+msgstr "EPUBアーカイブが展開後の安全なサイズ上限を超えています。"
 
 #: packages/renderer-epub/src/epub-archive.ts
 msgid "EPUB archive is closed."
-msgstr ""
+msgstr "EPUBアーカイブは閉じられています。"
 
 #: packages/renderer-epub/src/epub-archive.ts
 msgid "EPUB archive is missing META-INF/container.xml."
-msgstr ""
+msgstr "EPUBアーカイブにMETA-INF/container.xmlがありません。"
 
 #: packages/renderer-epub/src/epub-manifest.ts
 msgid "EPUB container does not identify a package document."
-msgstr ""
+msgstr "EPUBコンテナーにパッケージ文書の指定がありません。"
 
 #: packages/renderer-epub/src/epub-path.ts
 msgid "EPUB contains an invalid encoded path segment: {value}"
-msgstr ""
+msgstr "EPUBに無効なエンコード済みパス部分が含まれています：{value}"
 
 #: packages/renderer-epub/src/epub-path.ts
 msgid "EPUB contains an unsafe resource path: {value}"
-msgstr ""
+msgstr "EPUBに安全でないリソースパスが含まれています：{value}"
 
 #: packages/renderer-epub/src/epub-safe-fetch.ts
 msgid "EPUB content document contains invalid markup."
-msgstr ""
+msgstr "EPUBの本文に無効なマークアップがあります。"
 
 #. placeholder {0}: String(response.status)
 #: packages/renderer-epub/src/epub-viewer.tsx
 msgid "EPUB download failed with HTTP {0}."
-msgstr ""
+msgstr "EPUBのダウンロードに失敗しました（HTTP {0}）。"
 
 #: packages/renderer-epub/src/epub-manifest.ts
 msgid "EPUB manifest item"
-msgstr ""
+msgstr "EPUBマニフェストの項目"
 
 #: packages/renderer-epub/src/epub-manifest.ts
 msgid "EPUB manifest item {id}"
-msgstr ""
+msgstr "EPUBマニフェストの項目{id}"
 
 #: packages/renderer-epub/src/epub-manifest.ts
 msgid "EPUB package document is missing its package element."
-msgstr ""
+msgstr "EPUBパッケージ文書にpackage要素がありません。"
 
 #: packages/renderer-epub/src/epub-manifest.ts
 msgid "EPUB package has no reading order."
-msgstr ""
+msgstr "EPUBパッケージに読む順序がありません。"
 
 #: packages/renderer-epub/src/epub-manifest.ts
 msgid "EPUB package metadata has no title."
-msgstr ""
+msgstr "EPUBパッケージのメタデータにタイトルがありません。"
 
 #: packages/renderer-epub/src/epub-page-navigation.tsx
 msgid "EPUB page navigation"
-msgstr ""
+msgstr "EPUBのページ移動"
 
 #: packages/renderer-epub/src/epub-path.ts
 msgid "EPUB reference escapes its package root: {reference}"
-msgstr ""
+msgstr "EPUBの参照がパッケージのルート外を指しています：{reference}"
 
 #: packages/renderer-epub/src/epub-archive.ts
 msgid "EPUB resource exceeds the per-file safety limit: {path}"
-msgstr ""
+msgstr "EPUBリソースがファイルごとの安全なサイズ上限を超えています：{path}"
 
 #: packages/renderer-epub/src/epub-archive.ts
 msgid "EPUB resource has an unsafe compression ratio: {path}"
-msgstr ""
+msgstr "EPUBリソースの圧縮率が安全ではありません：{path}"
 
 #: packages/renderer-epub/src/epub-archive.ts
 msgid "EPUB resource is missing: {safePath}"
-msgstr ""
+msgstr "EPUBリソースがありません：{safePath}"
 
 #: packages/renderer-epub/src/epub-manifest.ts
 msgid "EPUB spine item"
-msgstr ""
+msgstr "EPUBのspine項目"
 
 #: packages/renderer-epub/src/epub-manifest.ts
 msgid "EPUB spine references an unknown manifest item: {reference}"
-msgstr ""
+msgstr "EPUBのspineが不明なマニフェスト項目を参照しています：{reference}"
 
 #: packages/renderer-pdf/src/pdf-translations.ts
 msgctxt "PDF viewer documentError"
 msgid "Error Code: {code}"
-msgstr ""
+msgstr "エラーコード：{code}"
 
 #: packages/renderer-pdf/src/pdf-translations.ts
 msgctxt "PDF viewer documentError"
 msgid "Error loading document"
-msgstr ""
+msgstr "文書の読み込みエラー"
 
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "Event"
-msgstr ""
+msgstr "イベント"
 
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "Event date"
-msgstr ""
+msgstr "イベントの日付"
 
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "Event place"
-msgstr ""
+msgstr "イベントの開催地"
 
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "Event title"
-msgstr ""
+msgstr "イベントのタイトル"
 
 #: apps/reader/src/LibraryAnnotationTableHead.tsx
 msgid "Every column is shown."
-msgstr ""
+msgstr "すべての列が表示されています。"
 
 #: apps/reader/src/CitationEditor.tsx
 msgid "Every official field is preserved exactly as entered."
-msgstr ""
+msgstr "公式フィールドはすべて、入力されたとおりに保持されます。"
 
 #: apps/reader/src/ImportInput.tsx
 msgid "Every payload checksum is verified before collection writes. Currently requires a browser with folder selection support, such as Chrome."
-msgstr ""
+msgstr "コレクションへの書き込み前にすべてのデータのチェックサムを検証します。現在はChromeなど、フォルダー選択に対応したブラウザーが必要です。"
 
 #: packages/migration/src/readwise.ts
 msgid "Exact PDF geometry and EPUB positions are not supplied by this import. Highlights retain quotes and native location evidence, without claiming exact positioning."
-msgstr ""
+msgstr "このインポートには正確なPDF座標やEPUB内の位置は含まれません。ハイライトには引用文と元の位置情報の根拠が残りますが、正確な位置を示すものではありません。"
 
 #: apps/reader/src/connect-workspace.ts
 msgid "Exact recovery is unavailable here. No new write was attempted."
-msgstr ""
+msgstr "ここでは正確な復元はできません。新たな書き込みは行われていません。"
 
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "Executive producer"
-msgstr ""
+msgstr "製作総指揮"
 
 #: apps/extension/src/TagInput.tsx
 msgid "Existing tags"
-msgstr ""
+msgstr "既存のタグ"
 
 #: packages/renderer-pdf/src/pdf-translations.ts
 msgctxt "PDF viewer document"
@@ -2960,100 +2960,100 @@ msgstr "エクスポート"
 
 #: apps/reader/src/reader-app-commands.ts
 msgid "Export bibliography"
-msgstr ""
+msgstr "参考文献をエクスポート"
 
 #: apps/reader/src/LibraryWorkspace.tsx
 msgctxt "LibraryWorkspace interface"
 msgid "Export bibliography"
-msgstr ""
+msgstr "参考文献をエクスポート"
 
 #: apps/reader/src/LibraryRowMenu.tsx
 msgid "Export citation"
-msgstr ""
+msgstr "引用をエクスポート"
 
 #: apps/reader/src/LibraryBulkBar.tsx
 msgid "Export citations"
-msgstr ""
+msgstr "引用をエクスポート"
 
 #: apps/reader/src/reader-command-list.ts
 msgid "Export current source"
-msgstr ""
+msgstr "現在の資料をエクスポート"
 
 #: apps/reader/src/DocumentContextualToolbar.tsx
 msgctxt "DocumentContextualToolbar interface"
 msgid "Export source"
-msgstr ""
+msgstr "資料をエクスポート"
 
 #. placeholder {0}: items.length
 #: apps/reader/src/use-bibliography-export.ts
 msgid "Exported {0, plural, one {# citation} other {# citations}}."
-msgstr ""
+msgstr "{0, plural, one {#件の引用をエクスポートしました。} other {#件の引用をエクスポートしました。}}"
 
 #. placeholder {0}: bundle.canonicalRecordCount
 #. placeholder {1}: bundle.originalFileCount
 #: apps/reader/src/use-source-export.ts
 msgid "Exported {0, plural, one {# record} other {# records}} and {1, plural, one {# original file} other {# original files}}."
-msgstr ""
+msgstr "{0, plural, one {#件のレコード} other {#件のレコード}}と{1, plural, one {#件の元ファイルをエクスポートしました。} other {#件の元ファイルをエクスポートしました。}}"
 
 #: apps/reader/src/ImportInput.tsx
 msgid "Exported folder"
-msgstr ""
+msgstr "エクスポートしたフォルダー"
 
 #: apps/reader/src/use-source-export.ts
 msgid "Exported with {problemCount, plural, one {# item} other {# items}} to review."
-msgstr ""
+msgstr "エクスポートしました。{problemCount, plural, one {確認が必要な項目：#件} other {確認が必要な項目：#件}}"
 
 #: apps/reader/src/CitationTypedFieldEditors.tsx
 msgctxt "CitationTypedFieldEditors booleanOptions"
 msgid "False"
-msgstr ""
+msgstr "偽"
 
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "Family"
-msgstr ""
+msgstr "姓"
 
 #: apps/reader/src/CitationContributors.tsx
 msgctxt "CitationContributors interface"
 msgid "Family name"
-msgstr ""
+msgstr "姓"
 
 #: apps/reader/src/source-addition-flow.ts
 msgid "Feeds, profiles and search pages cannot be saved. Choose individual posts in the Reader extension."
-msgstr ""
+msgstr "フィード、プロフィール、検索結果のページは保存できません。Reader拡張機能で個別の投稿を選択してください。"
 
 #: apps/reader/src/source-addition-flow.ts
 msgid "Fetching the page…"
-msgstr ""
+msgstr "ページを取得中…"
 
 #: apps/reader/src/LibraryBulkBar.tsx
 msgctxt "LibraryBulkBar interface"
 msgid "field"
-msgstr ""
+msgstr "フィールド"
 
 #: apps/reader/src/LibraryConditionsEditor.tsx
 msgctxt "LibraryConditionsEditor interface"
 msgid "field"
-msgstr ""
+msgstr "フィールド"
 
 #: apps/reader/src/LibraryBulkBar.tsx
 msgctxt "LibraryBulkBar interface"
 msgid "Field"
-msgstr ""
+msgstr "フィールド"
 
 #: apps/reader/src/LibraryConditionsEditor.tsx
 msgctxt "LibraryConditionsEditor interface"
 msgid "Field"
-msgstr ""
+msgstr "フィールド"
 
 #: apps/reader/src/LibraryConditionsEditor.tsx
 msgctxt "LibraryConditionsEditor interface"
 msgid "Field condition"
-msgstr ""
+msgstr "フィールド条件"
 
 #: apps/reader/src/LibraryConditionsEditor.tsx
 msgid "Fields"
-msgstr ""
+msgstr "フィールド"
 
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
@@ -3063,31 +3063,31 @@ msgstr "図"
 #: apps/reader/src/workspace-tab-display.ts
 msgctxt "workspace tab display"
 msgid "FILE"
-msgstr ""
+msgstr "ファイル"
 
 #: packages/migration/src/run-files.ts
 msgid "File checksum changed since preview."
-msgstr ""
+msgstr "プレビュー後にファイルのチェックサムが変わりました。"
 
 #: apps/reader/src/connect-workspace.ts
 msgid "File export is unavailable for this connection."
-msgstr ""
+msgstr "この接続ではファイルをエクスポートできません。"
 
 #: apps/reader/src/use-bibliography-export.ts
 msgid "File export is unavailable in this build."
-msgstr ""
+msgstr "このビルドではファイルをエクスポートできません。"
 
 #: apps/reader/src/preview.tsx
 msgid "File import is unavailable in the interface preview."
-msgstr ""
+msgstr "インターフェースのプレビューではファイルをインポートできません。"
 
 #: packages/migration/src/run-files.ts
 msgid "File transfer failed."
-msgstr ""
+msgstr "ファイルの転送に失敗しました。"
 
 #: apps/reader/src/import-controller.ts
 msgid "Files: {completed} of {total}"
-msgstr ""
+msgstr "ファイル：{total}件中{completed}件"
 
 #: apps/reader/src/LibraryWorkspace.tsx
 msgid "Filter"
@@ -3095,16 +3095,16 @@ msgstr "フィルター"
 
 #: apps/reader/src/AnnotationList.tsx
 msgid "Filter and sort annotations"
-msgstr ""
+msgstr "注釈を絞り込み・並べ替え"
 
 #: apps/reader/src/AnnotationList.tsx
 msgid "Filter and sort annotations, filtered"
-msgstr ""
+msgstr "注釈を絞り込み・並べ替え（絞り込み中）"
 
 #: apps/reader/src/AnnotationList.tsx
 msgctxt "AnnotationList interface"
 msgid "Filter annotations"
-msgstr ""
+msgstr "注釈を絞り込む"
 
 #: apps/reader/src/CollectionMenu.tsx
 msgctxt "CollectionMenu interface"
@@ -3113,7 +3113,7 @@ msgstr "コレクションを絞り込む"
 
 #: apps/reader/src/reader-app-commands.ts
 msgid "Filter sources in the sidebar"
-msgstr ""
+msgstr "サイドバーの資料を絞り込む"
 
 #: apps/reader/src/CitationLookup.tsx
 msgctxt "CitationLookup interface"
@@ -3122,7 +3122,7 @@ msgstr "検索"
 
 #: apps/reader/src/CitationAdditionalFields.tsx
 msgid "Find a field"
-msgstr ""
+msgstr "フィールドを検索"
 
 #: apps/reader/src/LibraryNavigator.tsx
 msgid "Find a source"
@@ -3130,23 +3130,23 @@ msgstr "出典を検索"
 
 #: apps/reader/src/LibraryNavigator.tsx
 msgid "Find a source by title, author or tag"
-msgstr ""
+msgstr "タイトル、著者、タグから資料を検索"
 
 #: apps/reader/src/WorkspacePaneSupport.tsx
 msgid "Find an open-access PDF"
-msgstr ""
+msgstr "オープンアクセスのPDFを探す"
 
 #: apps/reader/src/CitationLookup.tsx
 msgid "Find citation details"
-msgstr ""
+msgstr "引用情報を検索"
 
 #: apps/reader/src/connection-recovery.ts
 msgid "Finding mdbase Connect…"
-msgstr ""
+msgstr "mdbase Connectを検索中…"
 
 #: apps/extension/src/connection-view.ts
 msgid "Finish signing in or approving in the mdbase tab, then save."
-msgstr ""
+msgstr "mdbaseのタブでサインインまたは承認を完了してから保存してください。"
 
 #: apps/reader/src/LibraryCells.tsx
 msgctxt "reading status"
