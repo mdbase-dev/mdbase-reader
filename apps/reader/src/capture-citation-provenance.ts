@@ -1,16 +1,19 @@
-import { cslValuesEqual, type CslProvenance } from "@mdbase-reader/core";
+import { cslValuesEqual, preserveCslDismissals, type CslProvenance } from "@mdbase-reader/core";
 
-/** Only explain values actually saved; the locally generated citekey is not captured evidence. */
+/** Filter capture evidence to saved values, but retain user dismissals even on empty fields. */
 export function captureCitationProvenance(
   citation: Readonly<Record<string, unknown>>,
   provenance: CslProvenance,
 ): CslProvenance {
-  return Object.fromEntries(
-    Object.entries(provenance).filter(
-      ([field, entry]) =>
-        field !== "id" &&
-        citation[field] !== undefined &&
-        cslValuesEqual(citation[field], entry.value),
+  return preserveCslDismissals(
+    Object.fromEntries(
+      Object.entries(provenance).filter(
+        ([field, entry]) =>
+          field !== "id" &&
+          citation[field] !== undefined &&
+          cslValuesEqual(citation[field], entry.value),
+      ),
     ),
+    provenance,
   );
 }

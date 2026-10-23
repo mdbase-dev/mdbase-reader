@@ -3,30 +3,44 @@ import { isJsonValue, isObject } from "./citation-validation.js";
 /**
  * Why each field of a source's `csl` holds its value. Stored beside `csl` under the
  * `csl-provenance` frontmatter key, never inside it: `csl` stays pure CSL JSON for other tools
- * and is canonical. Each entry pins the value it explains, so a value edited outside Reader no
- * longer matches its entry and is treated as the user's. See docs/architecture/citation-claims.md.
+ * and is canonical. Explanations pin their chosen value, so an external edit no longer matches
+ * and is treated as the user's. Dismissal-only entries pin no value. See
+ * docs/architecture/citation-claims.md.
  */
 
 /** The frontmatter key that holds a source's {@link CslProvenance}. */
 export const cslProvenanceKey = "csl-provenance";
 
-/** A value the resolver considered and did not choose. */
+/** A value the resolver did not choose, or the user dismissed (`from: "user"`). */
 export interface RejectedCslValue {
   readonly value: unknown;
   /** A claim source label, such as `page:json-ld` with evidence `headline`. */
   readonly from: string;
 }
 
-export interface CslFieldProvenance {
+export interface CslFieldExplanation {
   /** The value this entry explains, as it was written to `csl`. */
   readonly value: unknown;
   /** The chosen claim's source label, for example `site-adapter:Wikipedia` or `registry:doi.org`. */
   readonly source: string;
   /** Evidence of other claims that agreed with the chosen value, such as `json-ld name` or `h1`. */
   readonly agreed?: readonly string[];
-  /** At most two rejected values. Full evidence belongs with the page snapshot. */
+  /** At most two rejected values, user dismissals first and newest first. */
   readonly rejected?: readonly RejectedCslValue[];
 }
+
+/**
+ * Dismissed fills need no pinned value. Older parsers safely ignore this entry because it
+ * lacks `value` and `source`, rather than mistaking an invented baseline for a removal.
+ */
+export interface CslFieldDismissals {
+  readonly value?: never;
+  readonly source?: never;
+  readonly agreed?: never;
+  readonly rejected: readonly RejectedCslValue[];
+}
+
+export type CslFieldProvenance = CslFieldExplanation | CslFieldDismissals;
 
 /** Keyed by CSL variable name. `id` and `type` may have entries like any other field. */
 export type CslProvenance = Readonly<Record<string, CslFieldProvenance>>;
@@ -34,11 +48,11 @@ export type CslProvenance = Readonly<Record<string, CslFieldProvenance>>;
 /** How a field's current `csl` value relates to its provenance entry. */
 export type CslFieldStatus =
   /** The value matches the pinned value; the entry explains it. */
-  | { readonly kind: "explained"; readonly provenance: CslFieldProvenance }
+  | { readonly kind: "explained"; readonly provenance: CslFieldExplanation }
   /** The value differs from the pinned value: someone edited it, inside or outside Reader. */
-  | { readonly kind: "edited"; readonly previous: CslFieldProvenance }
+  | { readonly kind: "edited"; readonly previous: CslFieldExplanation }
   /** The field is absent but an entry pins a value: someone removed it on purpose. */
-  | { readonly kind: "removed"; readonly previous: CslFieldProvenance }
+  | { readonly kind: "removed"; readonly previous: CslFieldExplanation }
   /** The field has a value and no entry: hand-written, imported, or saved before provenance. */
   | { readonly kind: "unexplained" };
 
@@ -64,26 +78,25 @@ export function parseCslProvenance(value: unknown): CslProvenance {
 }
 
 function fieldProvenance(value: unknown): CslFieldProvenance | undefined {
-  if (!isObject(value) || !("value" in value) || !isJsonValue(value["value"])) {
+  if (!isObject(value)) {
     return undefined;
   }
+  const rejected = rejectedValues(value["rejected"]);
+  if (!("value" in value) && !("source" in value)) {
+    const dismissed = rejected.filter(({ from }) => from === "user");
+    return dismissed.length ? { rejected: dismissed } : undefined;
+  }
   const source = value["source"];
-  if (typeof source !== "string" || !source.trim()) {
+  if (
+    !("value" in value) ||
+    !isJsonValue(value["value"]) ||
+    typeof source !== "string" ||
+    !source.trim()
+  ) {
     return undefined;
   }
   const agreed = Array.isArray(value["agreed"])
     ? value["agreed"].filter((item): item is string => typeof item === "string")
-    : [];
-  const rejected = Array.isArray(value["rejected"])
-    ? value["rejected"]
-        .filter(
-          (item): item is RejectedCslValue =>
-            isObject(item) &&
-            typeof item["from"] === "string" &&
-            "value" in item &&
-            isJsonValue(item["value"]),
-        )
-        .slice(0, maxRejectedCslValues)
     : [];
   return {
     value: value["value"],
@@ -91,6 +104,54 @@ function fieldProvenance(value: unknown): CslFieldProvenance | undefined {
     ...(agreed.length ? { agreed } : {}),
     ...(rejected.length ? { rejected } : {}),
   };
+}
+
+function rejectedValues(value: unknown): RejectedCslValue[] {
+  return Array.isArray(value)
+    ? value
+        .filter(
+          (item): item is RejectedCslValue =>
+            isObject(item) &&
+            typeof item["from"] === "string" &&
+            "value" in item &&
+            isJsonValue(item["value"]),
+        )
+        .sort((left, right) => Number(right.from === "user") - Number(left.from === "user"))
+        .slice(0, maxRejectedCslValues)
+    : [];
+}
+
+function hasExplanation(entry: CslFieldProvenance | undefined): entry is CslFieldExplanation {
+  return entry?.source !== undefined;
+}
+
+/**
+ * Carry user dismissals across provenance rewrites, even for absent fields. Incoming decisions
+ * take priority; resolver alternatives use any remaining slots. This layer only deduplicates
+ * structurally: the resolver/editor use claim equivalence when matching proposed values.
+ */
+export function preserveCslDismissals(next: CslProvenance, previous: CslProvenance): CslProvenance {
+  const result = { ...next };
+  for (const [field, entry] of Object.entries(previous)) {
+    const dismissed = entry.rejected?.filter(({ from }) => from === "user") ?? [];
+    if (!dismissed.length) {
+      continue;
+    }
+    const incoming = next[field] ?? entry;
+    const candidates = [
+      ...(incoming.rejected?.filter(({ from }) => from === "user") ?? []),
+      ...dismissed,
+      ...(incoming.rejected?.filter(({ from }) => from !== "user") ?? []),
+    ];
+    const rejected = candidates
+      .filter(
+        (item, index) =>
+          !candidates.slice(0, index).some((other) => cslValuesEqual(item.value, other.value)),
+      )
+      .slice(0, maxRejectedCslValues);
+    result[field] = { ...incoming, rejected };
+  }
+  return result;
 }
 
 /** Structural equality for CSL JSON values; object key order does not matter. */
@@ -117,8 +178,8 @@ export function cslValuesEqual(left: unknown, right: unknown): boolean {
 }
 
 /**
- * Classifies every field present in `citation` or `provenance`. A field edited anywhere, in
- * Reader or a text editor, no longer matches its pinned value and reports `edited`.
+ * Classifies fields present in `citation` or `provenance`, except dismissal-only entries.
+ * A field edited in Reader or a text editor no longer matches its pin and reports `edited`.
  */
 export function cslFieldStatuses(
   citation: Readonly<Record<string, unknown>>,
@@ -130,14 +191,14 @@ export function cslFieldStatuses(
       continue;
     }
     const entry = provenance[field];
-    statuses[field] = !entry
+    statuses[field] = !hasExplanation(entry)
       ? { kind: "unexplained" }
       : cslValuesEqual(value, entry.value)
         ? { kind: "explained", provenance: entry }
         : { kind: "edited", previous: entry };
   }
   for (const [field, entry] of Object.entries(provenance)) {
-    if (citation[field] === undefined) {
+    if (citation[field] === undefined && hasExplanation(entry)) {
       statuses[field] = { kind: "removed", previous: entry };
     }
   }

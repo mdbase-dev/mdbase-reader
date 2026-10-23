@@ -1,6 +1,11 @@
 import { describe, expect, it } from "vitest";
 
-import { cslFieldStatuses, cslValuesEqual, parseCslProvenance } from "./csl-provenance.js";
+import {
+  cslFieldStatuses,
+  cslValuesEqual,
+  parseCslProvenance,
+  preserveCslDismissals,
+} from "./csl-provenance.js";
 
 describe("CSL provenance", () => {
   it("keeps valid entries and drops malformed ones field by field", () => {
@@ -34,7 +39,78 @@ describe("CSL provenance", () => {
     });
     expect(parseCslProvenance("garbage")).toEqual({});
   });
+});
 
+describe("CSL provenance dismissals", () => {
+  it("round-trips user dismissals including dismissal-only fills without changing old records", () => {
+    const old = { title: { value: "Original", source: "page:html" } };
+    expect(parseCslProvenance(old)).toEqual(old);
+    expect(parseCslProvenance(undefined)).toEqual({});
+    const provenance = {
+      ...old,
+      publisher: {
+        rejected: [{ value: "Dismissed press", from: "user" }],
+      },
+    };
+    expect(parseCslProvenance(JSON.parse(JSON.stringify(provenance)))).toEqual(provenance);
+    // Legacy parsers require both properties; dismissal-only entries are safely ignored.
+    expect(provenance.publisher).not.toHaveProperty("value");
+    expect(provenance.publisher).not.toHaveProperty("source");
+    expect(cslFieldStatuses({ title: "Original" }, provenance)).not.toHaveProperty("publisher");
+    expect(cslFieldStatuses({ publisher: "Typed" }, provenance)["publisher"]?.kind).toBe(
+      "unexplained",
+    );
+    expect(
+      cslFieldStatuses({}, { publisher: { value: null, source: "user" } })["publisher"]?.kind,
+    ).toBe("removed");
+  });
+
+  it("only accepts bounded user rejections in dismissal-only entries", () => {
+    const rejected = [
+      { value: "Machine", from: "page:html" },
+      { value: "First", from: "user" },
+      { value: "Second", from: "user" },
+      { value: "Third", from: "user" },
+      { from: "user" },
+    ];
+    expect(
+      parseCslProvenance({
+        publisher: { rejected },
+        language: { rejected: [{ value: "en", from: "page:html" }] },
+        broken: { value: "No source", rejected },
+      }),
+    ).toEqual({ publisher: { rejected: rejected.slice(1, 3) } });
+  });
+
+  it("preserves and bounds user decisions across rewrites, preferring new decisions", () => {
+    const previous = {
+      title: {
+        value: "Original",
+        source: "page:html",
+        rejected: [{ value: "Old dismissal", from: "user" }],
+      },
+    };
+    const next = {
+      title: {
+        value: "Accepted",
+        source: "registry:doi.org",
+        rejected: [
+          { value: "New dismissal", from: "user" },
+          { value: "Machine alternative", from: "page:html" },
+        ],
+      },
+    };
+    expect(preserveCslDismissals(next, previous)["title"]?.rejected).toEqual([
+      { value: "New dismissal", from: "user" },
+      { value: "Old dismissal", from: "user" },
+    ]);
+    expect(preserveCslDismissals({}, previous)).toEqual(previous);
+    expect(preserveCslDismissals(previous, previous)).toEqual(previous);
+    expect(next.title.rejected).toHaveLength(2);
+  });
+});
+
+describe("CSL provenance comparison and status", () => {
   it("compares CSL values structurally, ignoring key order", () => {
     expect(
       cslValuesEqual([{ family: "Peters", given: "Jay" }], [{ given: "Jay", family: "Peters" }]),

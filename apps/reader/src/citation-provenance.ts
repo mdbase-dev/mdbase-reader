@@ -1,4 +1,9 @@
-import { cslValuesEqual, type CslFieldStatus, type CslProvenance } from "@mdbase-reader/core";
+import {
+  cslValuesEqual,
+  preserveCslDismissals,
+  type CslFieldStatus,
+  type CslProvenance,
+} from "@mdbase-reader/core";
 import { parseClaimSourceLabel } from "@mdbase-reader/web-capture/citation-updates";
 
 /** Stored labels remain machine-readable; only this presentation layer expands them. */
@@ -60,7 +65,7 @@ export function editedCitationProvenance(
       result[field] ??= { value: previous[field], source: "user" };
     }
   }
-  return result;
+  return preserveCslDismissals(result, provenance);
 }
 
 function citoidTypeLabel(type: string): string {

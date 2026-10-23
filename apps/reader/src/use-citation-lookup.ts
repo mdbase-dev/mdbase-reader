@@ -26,6 +26,7 @@ export function useCitationLookup(input: {
   readonly citation: Readonly<Record<string, unknown>> | null;
   readonly provenance: CslProvenance;
   readonly onAccept: (suggestions: readonly CitationSuggestion[]) => void;
+  readonly onDismiss: (suggestion: CitationSuggestion) => void;
 }): {
   readonly resolutionAvailable: boolean;
   readonly resolutionStatus: LookupState["status"];
@@ -39,7 +40,8 @@ export function useCitationLookup(input: {
   const [state, setState] = useState<LookupState | null>(null);
   const pending = useRef<AbortController | null>(null);
   const sourceId = input.source?.id;
-  const scope = JSON.stringify([sourceId, input.citation, input.provenance]);
+  // Provenance-only dismissals re-resolve these claims without discarding other suggestions.
+  const scope = JSON.stringify([sourceId, input.citation]);
   useEffect(() => () => pending.current?.abort(), [scope]);
   const current = state?.scope === scope ? state : null;
   if (state && !current) {
@@ -102,7 +104,12 @@ export function useCitationLookup(input: {
       input.onAccept(selected);
       dismissFields(new Set(selected.map(({ field }) => field)));
     },
-    dismissSuggestion: (field) => dismissFields(new Set([field])),
+    dismissSuggestion: (field) => {
+      const suggestion = suggestions.find((item) => item.field === field);
+      if (suggestion) {
+        input.onDismiss(suggestion);
+      }
+    },
     resetLookup: () => {
       pending.current?.abort();
       setState(null);

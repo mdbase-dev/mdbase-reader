@@ -61,6 +61,32 @@ describe("capture metadata and formats", () => {
     // Filtering evidence must not change the resolver's preview.
     expect(provenance).toHaveProperty("id");
   });
+});
+
+describe("capture provenance filtering", () => {
+  it("preserves dismissals when filtering capture provenance for saved values", async () => {
+    const f = fixture();
+    const publisher = {
+      rejected: [{ value: "Dismissed press", from: "user" }],
+    };
+    const title = {
+      value: "Original",
+      source: "page:html",
+      rejected: [{ value: "Dismissed title", from: "user" }],
+    };
+    await f.save({ highlight: false }, capture, {
+      citation: {
+        citation: { type: "article", title: "Typed" },
+        origin: "page",
+        provenance: { publisher, title, language: { value: "en", source: "page:html" } },
+        outcomes: [],
+      },
+    });
+    expect(f.updateCitation.mock.lastCall?.[0].provenance).toEqual({ publisher, title });
+  });
+});
+
+describe("capture save failures and PDFs", () => {
   it("keeps the source when its citation cannot be stored, and says so", async () => {
     const f = fixture();
     f.updateCitation.mockRejectedValueOnce(new Error("revision conflict"));

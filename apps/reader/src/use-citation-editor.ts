@@ -4,12 +4,15 @@ import {
   citationCompletenessWarnings,
   citekeyForCitation,
   cslValuesEqual,
+  maxRejectedCslValues,
   parseCslProvenance,
+  preserveCslDismissals,
   type CslProvenance,
   type Source,
 } from "@mdbase-reader/core";
 import {
   claimSourceLabel,
+  claimValuesMatch,
   type CitationSuggestion,
 } from "@mdbase-reader/web-capture/citation-updates";
 import { useCallback, useRef, useState } from "react";
@@ -83,7 +86,11 @@ export function useCitationEditor(input: {
   );
 
   const updateDraft = useCallback(
-    (value: string, accepted: readonly CitationSuggestion[] = []): void => {
+    (
+      value: string,
+      accepted: readonly CitationSuggestion[] = [],
+      dismissed: readonly CitationSuggestion[] = [],
+    ): void => {
       if (!source) {
         return;
       }
@@ -105,10 +112,26 @@ export function useCitationEditor(input: {
             ...(suggestion.evidence ? { agreed: [suggestion.evidence] } : {}),
           };
         }
+        for (const suggestion of dismissed) {
+          const entry =
+            updated[suggestion.field] ??
+            (next?.[suggestion.field] !== undefined
+              ? { value: next[suggestion.field], source: "user" }
+              : { rejected: [] });
+          updated[suggestion.field] = {
+            ...entry,
+            rejected: [
+              { value: suggestion.proposed, from: "user" },
+              ...(entry.rejected ?? []).filter(
+                ({ value }) => !claimValuesMatch(suggestion.field, value, suggestion.proposed),
+              ),
+            ].slice(0, maxRejectedCslValues),
+          };
+        }
         return {
           ...current,
           value,
-          provenance: updated,
+          provenance: preserveCslDismissals(updated, current.provenance),
           lastCitation: next ?? current.lastCitation,
         };
       });
@@ -127,6 +150,7 @@ export function useCitationEditor(input: {
     source,
     citation: assessment.value ?? null,
     provenance,
+    onDismiss: (suggestion) => updateDraft(draft, [], [suggestion]),
     onAccept: (suggestions) => {
       if (!assessment.value || suggestions.length === 0) {
         return;
@@ -170,7 +194,10 @@ export function useCitationEditor(input: {
               ? {
                   ...previous,
                   source: updated,
-                  ...(previous.value === savedDraft ? { provenance: provenanceFor(updated) } : {}),
+                  ...(previous.value === savedDraft &&
+                  cslValuesEqual(previous.provenance, provenance)
+                    ? { provenance: provenanceFor(updated) }
+                    : {}),
                 }
               : previous,
           );
