@@ -77,7 +77,9 @@ is introduced. Writer's optional file-access consent remains a later SDK capabil
 - Unsupported features are refused (`unsupported_operation`), never emulated. See the gap list
   in the coordinator's `reader-sdk-gaps.md`.
 - `SdkReaderRoot` renders the shared `CollectionGate` from `@mdbase-dev/ui/collections`
-  (vendored as `vendor/mdbase-dev-ui-dev-<cut>.tgz`, pinned in `vendor/mdbase-ui-dev.json`):
+  (this multilingual branch uses `vendor/mdbase-dev-ui-0.1.0-beta.141-9041442d.tgz`,
+  recorded in `vendor/mdbase-ui-i18n.json`; it is integration-only, not release-qualified.
+  The prior dev-intake original and `vendor/mdbase-ui-dev.json` remain untouched):
   - The gate owns sign-in, choosing, approval, setup review, problems and sign-out
     (`signOut()`, never `close()`). Reader supplies only its name and mark.
   - It starts the entry once (StrictMode-safe); the entry follows page visibility.
