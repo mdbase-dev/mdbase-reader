@@ -7459,79 +7459,79 @@ msgstr "プレビューの資料はもう存在しません。"
 
 #: packages/core/src/application/import-source-file.ts
 msgid "The readable page and immutable archive need distinct filenames."
-msgstr ""
+msgstr "閲覧用ページと変更できないアーカイブには別々のファイル名が必要です。"
 
 #: apps/extension/src/save-capture.ts
 msgid "The recovered highlight belongs to a different source. Review it before retrying; no duplicate was created."
-msgstr ""
+msgstr "復元したハイライトは別の資料に属します。再試行前に確認してください。重複は作成されていません。"
 
 #: apps/extension/src/save-capture.ts
 msgid "The saved document changed. Open the saved copy in Reader; no highlight was created."
-msgstr ""
+msgstr "保存済みの文書が変更されました。Readerで保存済みのコピーを開いてください。ハイライトは作成されていません。"
 
 #: apps/extension/src/save-capture.ts
 msgid "The saved highlight recovery identity is invalid. No duplicate highlight was created."
-msgstr ""
+msgstr "保存済みハイライトの復元識別情報が無効です。重複するハイライトは作成されていません。"
 
 #: apps/extension/src/save-capture.ts
 msgid "The saved source is no longer available. Your highlight has not been saved."
-msgstr ""
+msgstr "保存済みの資料はもう利用できません。ハイライトは保存されていません。"
 
 #: apps/reader/src/ConnectReader.tsx
 msgid "The selected collection is no longer available."
-msgstr ""
+msgstr "選択したコレクションはもう利用できません。"
 
 #: packages/core/src/application/create-annotation.ts
 msgid "The selected document does not belong to this source."
-msgstr ""
+msgstr "選択した文書はこの資料に属しません。"
 
 #: packages/core/src/application/import-source-file.ts
 msgid "The selected file is empty."
-msgstr ""
+msgstr "選択したファイルは空です。"
 
 #: packages/core/src/application/source-import-values.ts
 msgid "The selected file needs a valid filename."
-msgstr ""
+msgstr "選択したファイルには有効なファイル名が必要です。"
 
 #: apps/extension/src/capture-errors.ts
 msgid "The selected passage is ambiguous inside this post. Select a longer passage."
-msgstr ""
+msgstr "この投稿内には選択した箇所と一致する場所が複数あります。より長い箇所を選択してください。"
 
 #: apps/extension/src/SiteAccessStatus.tsx
 msgid "The side panel follows the tab you are on, and pages you have saved show a mark and your highlights. Reader looks up each page’s address in your selected collection and reads page text only to draw your highlights."
-msgstr ""
+msgstr "サイドパネルは現在のタブに追従し、保存したページには印とハイライトが表示されます。Readerは選択したコレクションで各ページのアドレスを照会し、ハイライトを描画するためだけにページのテキストを読み取ります。"
 
 #: packages/core/src/application/source-import-values.ts
 msgid "The source needs a title."
-msgstr ""
+msgstr "資料にはタイトルが必要です。"
 
 #: apps/reader/src/source-draft-session.ts
 msgid "The source note changed before saving."
-msgstr ""
+msgstr "保存前に資料ノートが変更されました。"
 
 #: packages/core/src/application/transclude-annotation.ts
 msgid "The source note disappeared after its annotation was inserted."
-msgstr ""
+msgstr "注釈を挿入した後、資料ノートが見つからなくなりました。"
 
 #: packages/core/src/application/source-import-values.ts
 msgid "The source URL is invalid."
-msgstr ""
+msgstr "資料のURLが無効です。"
 
 #: packages/core/src/application/source-import-values.ts
 msgid "The source URL must be a public web address."
-msgstr ""
+msgstr "資料のURLは公開されたWebアドレスでなければなりません。"
 
 #: apps/extension/src/page-annotations.ts
 msgid "The tab has navigated to another page. Reopen Reader’s extension on that page."
-msgstr ""
+msgstr "タブが別のページに移動しました。そのページでReader拡張機能を開き直してください。"
 
 #: apps/extension/src/capture-errors.ts
 msgid "The tab navigated away."
-msgstr ""
+msgstr "タブが別のページに移動しました。"
 
 #: apps/reader/src/connect-workspace.ts
 msgid "The view was saved, but Reader could not reopen it."
-msgstr ""
+msgstr "ビューは保存されましたが、Readerで再度開けませんでした。"
 
 #: apps/extension/src/OptionsApp.tsx
 msgid "Theme"
@@ -7546,258 +7546,258 @@ msgstr "テーマ"
 #: packages/core/src/application/import-source-file.ts
 #: packages/core/src/application/source-records.ts
 msgid "These exact bytes are already stored in “{0}”."
-msgstr ""
+msgstr "同じデータがすでに「{0}」に保存されています。"
 
 #: apps/reader/src/AnnotationEditor.tsx
 msgid "These notes embed it and will show a broken embed:"
-msgstr ""
+msgstr "次のノートはこれを埋め込んでいます。削除すると埋め込みが壊れます："
 
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "Thesis"
-msgstr ""
+msgstr "学位論文"
 
 #: apps/reader/src/citation-form-model.ts
 msgctxt "CSL item type"
 msgid "Thesis"
-msgstr ""
+msgstr "学位論文"
 
 #: apps/reader/src/AnnotationEditor.tsx
 msgid "This annotation changed elsewhere. Your version is kept until you choose."
-msgstr ""
+msgstr "この注釈は別の場所で変更されました。選択するまで自分の変更も保持されます。"
 
 #: packages/core/src/application/delete-annotation.ts
 #: packages/core/src/application/update-annotation-body.ts
 msgid "This annotation does not have a canonical path and revision."
-msgstr ""
+msgstr "この注釈には正規のパスとリビジョンがありません。"
 
 #: apps/reader/src/annotation-navigation.ts
 msgid "This annotation has no supported passage anchor. Its text and original metadata are preserved."
-msgstr ""
+msgstr "この注釈には対応する箇所のアンカーがありません。テキストと元のメタデータは保持されています。"
 
 #: apps/extension/src/capture-errors.ts
 msgid "This browser cannot display highlights. Open the saved copy in Reader."
-msgstr ""
+msgstr "このブラウザーではハイライトを表示できません。Readerで保存済みのコピーを開いてください。"
 
 #: packages/renderer-epub/src/epub-resource-store.ts
 msgid "This browser cannot provide the isolated EPUB resource layer."
-msgstr ""
+msgstr "このブラウザーは隔離されたEPUBリソース層を提供できません。"
 
 #: apps/reader/src/connection-recovery.ts
 msgid "This browser no longer has the key for this collection’s connection. Reconnect to keep reading."
-msgstr ""
+msgstr "このブラウザーには、このコレクションへの接続に必要なキーがもうありません。読書を続けるには再接続してください。"
 
 #: apps/reader/src/citation-renderer.ts
 msgid "This citation cannot be formatted yet. Check its title, contributors, and date."
-msgstr ""
+msgstr "この引用はまだ書式設定できません。タイトル、寄稿者、日付を確認してください。"
 
 #: apps/extension/src/ConnectionPanel.tsx
 msgid "This collection can’t be used right now"
-msgstr ""
+msgstr "現在このコレクションは利用できません"
 
 #: apps/extension/src/connection-view.ts
 msgid "This collection can't be used right now."
-msgstr ""
+msgstr "現在このコレクションは利用できません。"
 
 #: apps/reader/src/use-document-attachment.ts
 #: packages/core/src/application/source-records.ts
 msgid "This collection cannot attach files to existing sources."
-msgstr ""
+msgstr "このコレクションでは既存の資料にファイルを添付できません。"
 
 #: apps/reader/src/connect-workspace.ts
 msgid "This collection cannot change reading status."
-msgstr ""
+msgstr "このコレクションでは読書ステータスを変更できません。"
 
 #: apps/extension/src/use-source-note.ts
 msgid "This collection cannot edit source details from the extension."
-msgstr ""
+msgstr "このコレクションでは拡張機能から資料の詳細を編集できません。"
 
 #: apps/reader/src/SourceDetails.tsx
 msgid "This collection cannot edit source details."
-msgstr ""
+msgstr "このコレクションでは資料の詳細を編集できません。"
 
 #: apps/reader/src/connect-workspace.ts
 msgid "This collection cannot edit source fields."
-msgstr ""
+msgstr "このコレクションでは資料のフィールドを編集できません。"
 
 #: apps/reader/src/source-addition-flow.ts
 msgid "This collection cannot hold sources without a document."
-msgstr ""
+msgstr "このコレクションには文書のない資料を保存できません。"
 
 #: apps/reader/src/connect-workspace.ts
 #: apps/reader/src/use-library-annotations.ts
 msgid "This collection cannot list all annotations."
-msgstr ""
+msgstr "このコレクションではすべての注釈を一覧表示できません。"
 
 #: apps/reader/src/connect-workspace.ts
 #: apps/reader/src/use-library-selection.ts
 msgid "This collection cannot remove sources."
-msgstr ""
+msgstr "このコレクションでは資料を削除できません。"
 
 #: apps/reader/src/connection-recovery.ts
 msgid "This collection could not be found."
-msgstr ""
+msgstr "このコレクションが見つかりませんでした。"
 
 #: apps/reader/src/connection-recovery.ts
 msgid "This collection has been deleted."
-msgstr ""
+msgstr "このコレクションは削除されました。"
 
 #: apps/reader/src/connection-recovery.ts
 msgid "This collection has not been migrated yet."
-msgstr ""
+msgstr "このコレクションはまだ移行されていません。"
 
 #: apps/extension/src/ConnectionPanel.tsx
 msgid "This collection hasn’t been checked yet. Check it before saving."
-msgstr ""
+msgstr "このコレクションはまだ確認されていません。保存前に確認してください。"
 
 #: apps/reader/src/connection-recovery.ts
 msgid "This collection is being migrated."
-msgstr ""
+msgstr "このコレクションを移行中です。"
 
 #: apps/reader/src/connection-recovery.ts
 msgid "This collection is disconnected."
-msgstr ""
+msgstr "このコレクションは接続されていません。"
 
 #: apps/reader/src/connection-recovery.ts
 msgid "This collection is locked."
-msgstr ""
+msgstr "このコレクションはロックされています。"
 
 #: apps/reader/src/connection-recovery.ts
 msgid "This collection is offline."
-msgstr ""
+msgstr "このコレクションはオフラインです。"
 
 #: apps/reader/src/connection-recovery.ts
 msgid "This collection is unavailable."
-msgstr ""
+msgstr "このコレクションは利用できません。"
 
 #: apps/reader/src/connection-recovery.ts
 msgid "This collection needs approval on your computer."
-msgstr ""
+msgstr "このコレクションには、お使いのコンピューターでの承認が必要です。"
 
 #: apps/reader/src/ImportDestination.tsx
 msgid "This collection needs Reader’s setup before importing."
-msgstr ""
+msgstr "インポート前に、このコレクションにはReaderの設定が必要です。"
 
 #: apps/reader/src/ImportDestination.tsx
 msgid "This collection needs Reader’s source and annotation types. No library content will be imported until you confirm below."
-msgstr ""
+msgstr "このコレクションにはReaderの資料と注釈のタイプが必要です。以下で確定するまでライブラリの内容はインポートされません。"
 
 #: apps/extension/src/ConnectionPanel.tsx
 msgid "This collection needs you to approve mdbase Reader for it."
-msgstr ""
+msgstr "このコレクションに対してmdbase Readerを承認してください。"
 
 #: packages/core/src/application/delete-annotation.ts
 msgid "This deletion confirmation no longer matches the annotation revision."
-msgstr ""
+msgstr "この削除確認は現在の注釈のリビジョンと一致しません。"
 
 #: packages/renderer-pdf/src/pdf-translations.ts
 msgctxt "PDF viewer outline"
 msgid "This document doesn't contain bookmarks"
-msgstr ""
+msgstr "この文書にブックマークはありません"
 
 #: packages/renderer-pdf/src/pdf-translations.ts
 msgctxt "PDF viewer passwordPrompt"
 msgid "This document is password protected. Please enter the password to open it."
-msgstr ""
+msgstr "この文書はパスワードで保護されています。開くにはパスワードを入力してください。"
 
 #: apps/reader/src/source-draft-session.ts
 msgid "This draft could not be saved locally. Keep this tab open and retry saving to the collection."
-msgstr ""
+msgstr "この下書きをローカルに保存できませんでした。タブを開いたまま、コレクションへの保存を再試行してください。"
 
 #: packages/migration/src/zotero-bundle.ts
 msgid "This export is incomplete. Export again in Zotero."
-msgstr ""
+msgstr "このエクスポートは不完全です。Zoteroで再度エクスポートしてください。"
 
 #: apps/reader/src/ConnectedDocument.tsx
 msgid "This file has changed. Some saved annotation positions may need checking."
-msgstr ""
+msgstr "このファイルは変更されました。保存済みの注釈の位置を確認する必要がある場合があります。"
 
 #: packages/core/src/application/source-records.ts
 msgid "This file is already attached here."
-msgstr ""
+msgstr "このファイルはすでにここに添付されています。"
 
 #: apps/extension/src/NotePanel.tsx
 msgid "This note changed elsewhere while you were writing."
-msgstr ""
+msgstr "編集中にこのノートは別の場所で変更されました。"
 
 #: apps/reader/src/DraftRecoveryNotice.tsx
 msgid "This note changed in the collection"
-msgstr ""
+msgstr "このノートはコレクション内で変更されました"
 
 #: apps/extension/src/save-capture.ts
 msgid "This passage is missing or ambiguous in the saved copy. The source is saved, but the highlight is not. Open the saved copy in Reader to select it there."
-msgstr ""
+msgstr "選択した箇所が保存済みのコピーにないか、場所を特定できません。資料は保存されましたが、ハイライトは保存されていません。Readerで保存済みのコピーを開いて箇所を選択してください。"
 
 #: apps/extension/src/page-capture.ts
 msgid "This PDF is larger than {maximumMb} MB. Download it and import the file in Reader."
-msgstr ""
+msgstr "このPDFは{maximumMb} MBを超えています。ダウンロードしてからReaderにファイルをインポートしてください。"
 
 #: packages/core/src/application/create-annotation.ts
 msgid "This Reader connection cannot store annotation images."
-msgstr ""
+msgstr "このReader接続では注釈の画像を保存できません。"
 
 #: apps/reader/src/CitationAdditionalFields.tsx
 msgid "This record only uses the core fields above."
-msgstr ""
+msgstr "このレコードでは上記の基本フィールドのみを使用しています。"
 
 #: apps/reader/src/SourceRemovalDialog.tsx
 msgid "This removes the source from your library and deletes its source note. Saved files and annotation notes are kept in the collection. Links to this source will stop working. Reader cannot undo this."
-msgstr ""
+msgstr "資料をライブラリから削除し、資料ノートも削除します。保存済みのファイルと注釈ノートはコレクションに残ります。この資料へのリンクは機能しなくなります。Readerでは元に戻せません。"
 
 #: apps/extension/src/CitationPanel.tsx
 msgid "This source has no citation yet."
-msgstr ""
+msgstr "この資料にはまだ引用情報がありません。"
 
 #: apps/reader/src/use-document-attachment.ts
 msgid "This source has no DOI, arXiv ID or web address to search with."
-msgstr ""
+msgstr "この資料には検索に使えるDOI、arXiv ID、Webアドレスがありません。"
 
 #: apps/reader/src/WorkspacePaneSupport.tsx
 msgid "This source has no file yet. Its literature note, annotations and citation are in the Source panel."
-msgstr ""
+msgstr "この資料にはまだファイルがありません。文献ノート、注釈、引用情報は資料パネルにあります。"
 
 #: apps/reader/src/ConnectedDocument.tsx
 msgid "This source has no readable representation."
-msgstr ""
+msgstr "この資料には閲覧可能な形式がありません。"
 
 #: apps/extension/src/save-capture.ts
 msgid "This source has no saved HTML reading copy. Open it in Reader to annotate."
-msgstr ""
+msgstr "この資料には閲覧用の保存済みHTMLがありません。注釈するにはReaderで開いてください。"
 
 #: apps/reader/src/DocumentWorkspace.tsx
 msgid "This source is no longer available."
-msgstr ""
+msgstr "この資料はもう利用できません。"
 
 #: apps/extension/src/use-source-note.ts
 #: apps/reader/src/connect-workspace.ts
 #: apps/reader/src/preview.tsx
 msgid "This source is no longer in the collection."
-msgstr ""
+msgstr "この資料はもうコレクションにありません。"
 
 #: apps/extension/src/source-note-session.ts
 msgid "This source is no longer in the collection. Your text is kept in this panel."
-msgstr ""
+msgstr "この資料はもうコレクションにありません。テキストはこのパネルに保持されています。"
 
 #: apps/reader/src/source-draft-session.ts
 msgid "This source no longer exists. Your local draft has been retained."
-msgstr ""
+msgstr "この資料はもう存在しません。ローカルの下書きは保持されています。"
 
 #: apps/reader/src/use-selected-source-resources.ts
 msgid "This source record no longer exists."
-msgstr ""
+msgstr "この資料レコードはもう存在しません。"
 
 #: apps/extension/src/save-capture.ts
 msgid "This thread part is absent from the saved copy. Open that copy in Reader; no highlight was created."
-msgstr ""
+msgstr "このスレッドの一部が保存済みのコピーにありません。Readerでそのコピーを開いてください。ハイライトは作成されていません。"
 
 #: packages/renderer-pdf/src/pdf-viewer-ui-schema.ts
 msgid "Thumbnails"
-msgstr ""
+msgstr "サムネイル"
 
 #: packages/renderer-pdf/src/pdf-translations.ts
 msgctxt "PDF viewer panel"
 msgid "Thumbnails"
-msgstr ""
+msgstr "サムネイル"
 
 #: apps/extension/src/NotePanel.tsx
 msgid "Title"
@@ -7841,23 +7841,23 @@ msgstr "タイトル"
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "Title short"
-msgstr ""
+msgstr "短いタイトル"
 
 #: apps/reader/src/LibraryWorkspace.tsx
 msgid "Title, author or tag"
-msgstr ""
+msgstr "タイトル、著者、またはタグ"
 
 #: apps/reader/src/CitationStructuredEditor.tsx
 msgid "Title, work type, and citation key"
-msgstr ""
+msgstr "タイトル、作品の種類、引用キー"
 
 #: apps/extension/src/WelcomeApp.tsx
 msgid "To save a selection straight away, right-click it and choose Save highlight, or press <0>{highlight}</0>."
-msgstr ""
+msgstr "選択範囲をすぐに保存するには、右クリックして「ハイライトを保存」を選ぶか、<0>{highlight}</0>を押してください。"
 
 #: apps/extension/src/WelcomeApp.tsx
 msgid "To save a selection straight away, right-click it and choose Save highlight."
-msgstr ""
+msgstr "選択範囲をすぐに保存するには、右クリックして「ハイライトを保存」を選んでください。"
 
 #: apps/reader/src/LibraryCells.tsx
 msgid "Today"
@@ -7866,75 +7866,75 @@ msgstr "今日"
 #: apps/reader/src/reader-command-list.ts
 #: apps/reader/src/ReaderHeader.tsx
 msgid "Toggle left sidebar"
-msgstr ""
+msgstr "左サイドバーの表示を切り替え"
 
 #. placeholder {0}: shortcutLabel("mod+\\")
 #: apps/reader/src/ReaderHeader.tsx
 msgid "Toggle left sidebar · {0}"
-msgstr ""
+msgstr "左サイドバーの表示を切り替え · {0}"
 
 #: packages/renderer-pdf/src/pdf-translations.ts
 msgctxt "PDF viewer pan"
 msgid "Toggle Pan Mode"
-msgstr ""
+msgstr "パンモードを切り替え"
 
 #: packages/renderer-pdf/src/pdf-translations.ts
 msgctxt "PDF viewer pointer"
 msgid "Toggle Pointer Mode"
-msgstr ""
+msgstr "ポインターモードを切り替え"
 
 #: apps/reader/src/reader-command-list.ts
 #: apps/reader/src/ReaderHeader.tsx
 msgid "Toggle right sidebar"
-msgstr ""
+msgstr "右サイドバーの表示を切り替え"
 
 #. placeholder {0}: shortcutLabel("mod+shift+\\")
 #: apps/reader/src/ReaderHeader.tsx
 msgid "Toggle right sidebar · {0}"
-msgstr ""
+msgstr "右サイドバーの表示を切り替え · {0}"
 
 #: packages/renderer-pdf/src/pdf-translations.ts
 msgctxt "PDF viewer print"
 msgid "Total pages in document: {totalPages}"
-msgstr ""
+msgstr "文書の総ページ数：{totalPages}"
 
 #: apps/reader/src/CitationContributors.tsx
 msgid "Translator"
-msgstr ""
+msgstr "翻訳者"
 
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "Translator"
-msgstr ""
+msgstr "翻訳者"
 
 #: apps/reader/src/CitationStructuredEditor.tsx
 msgctxt "CitationStructuredEditor interface"
 msgid "Translators"
-msgstr ""
+msgstr "翻訳者"
 
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "Treaty"
-msgstr ""
+msgstr "条約"
 
 #: apps/extension/src/OptionsApp.tsx
 msgid "Troubleshooting"
-msgstr ""
+msgstr "トラブルシューティング"
 
 #: apps/reader/src/CitationTypedFieldEditors.tsx
 msgctxt "CitationTypedFieldEditors booleanOptions"
 msgid "True"
-msgstr ""
+msgstr "真"
 
 #: apps/reader/src/CitationTypedFieldEditors.tsx
 msgctxt "CitationTypedFieldEditors customValueTypeOptions"
 msgid "True / false"
-msgstr ""
+msgstr "真／偽"
 
 #: apps/reader/src/LibraryAnnotations.tsx
 #: apps/reader/src/LibraryWorkspace.tsx
 msgid "Try a different search, or clear the filters."
-msgstr ""
+msgstr "別の条件で検索するか、フィルターをクリアしてください。"
 
 #: apps/extension/src/NotePanel.tsx
 #: apps/reader/src/ConnectionLayout.tsx
@@ -7945,17 +7945,17 @@ msgstr "再試行"
 
 #: apps/reader/src/ConnectedDocument.tsx
 msgid "Try this tab again"
-msgstr ""
+msgstr "このタブで再試行"
 
 #: packages/renderer-pdf/src/pdf-translations.ts
 msgctxt "PDF viewer page"
 msgid "Two Page (Even)"
-msgstr ""
+msgstr "見開き（偶数ページ）"
 
 #: packages/renderer-pdf/src/pdf-translations.ts
 msgctxt "PDF viewer page"
 msgid "Two Page (Odd)"
-msgstr ""
+msgstr "見開き（奇数ページ）"
 
 #: apps/reader/src/annotation-columns.ts
 msgctxt "Annotation table column"
