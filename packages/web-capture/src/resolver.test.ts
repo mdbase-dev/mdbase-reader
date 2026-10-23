@@ -53,7 +53,7 @@ describe("citation resolution: corpus cases", () => {
     expect(result.suggestions).toEqual([]);
     expect(result.provenance["title"]).toEqual({
       value: "Australia",
-      source: "site-adapter:Wikipedia",
+      source: "site-adapter:Wikipedia title",
       agreed: ["page:html h1", "page:json-ld name", "page:open-graph og:title"],
       rejected: [
         { value: "country", from: "page:json-ld headline" },
@@ -260,7 +260,7 @@ describe("citation resolution: normalization and validation", () => {
       { family: "Peters", given: "J." },
     ]);
     expect(result.provenance["author"]?.value).toEqual(result.citation?.["author"]);
-    expect(result.provenance["author"]?.source).toBe("registry:doi.org");
+    expect(result.provenance["author"]?.source).toBe("registry:doi.org author");
   });
 
   it("keeps an ambiguous registry year instead of crediting it with a page's conflicting day", () => {
@@ -281,7 +281,7 @@ describe("citation resolution: normalization and validation", () => {
     expect(result.citation?.["issued"]).toEqual({ "date-parts": [[2026]] });
     expect(result.provenance["issued"]).toEqual({
       value: { "date-parts": [[2026]] },
-      source: "registry:doi.org",
+      source: "registry:doi.org issued",
       rejected: [
         { value: { "date-parts": [[2026, 10, 20]] }, from: "page:json-ld issued" },
         { value: { "date-parts": [[2026, 11, 4]] }, from: "generic-remote:Citoid issued" },
@@ -314,7 +314,7 @@ describe("citation resolution: normalization and validation", () => {
     ];
     const result = resolveCitation({ claims });
     expect(result.citation?.["issued"]).toEqual({ "date-parts": [[2020]] });
-    expect(result.provenance["issued"]?.source).toBe("page:highwire");
+    expect(result.provenance["issued"]?.source).toBe("page:highwire citation_year");
     expect(result.provenance["issued"]?.agreed).toBeUndefined();
     expect(resolveCitation({ claims: [...claims].reverse() })).toEqual(result);
   });
@@ -366,7 +366,7 @@ describe("citation resolution: landing URLs", () => {
         DOI: "10.1234/work",
         URL: "https://publisher.example/work",
       });
-      expect(result.provenance["URL"]?.source).toBe("page:html");
+      expect(result.provenance["URL"]?.source).toBe("page:html canonical");
     },
   );
 
@@ -525,6 +525,49 @@ describe("citation resolution: existing CSL is canonical", () => {
       { field: "title", reason: "change", proposed: "New title" },
     ]);
   });
+
+  it("retains the winning title signal's strength after saving provenance", () => {
+    const first = resolveCitation({
+      claims: [
+        claim("title", "Scholarly work", { kind: "page", signal: "highwire" }, "citation_title"),
+      ],
+    });
+    expect(first.provenance["title"]?.source).toBe("page:highwire citation_title");
+    const result = resolveCitation({
+      existing: { citation: first.citation!, provenance: first.provenance },
+      claims: [claim("title", "Generic heading", html, "h1")],
+    });
+    expect(result.suggestions).toEqual([]);
+  });
+
+  it.each([false, true])(
+    "does not manufacture a vote on provenance replay (legacy: %s)",
+    (legacy) => {
+      const first = resolveCitation({
+        claims: [claim("title", "Old", html, "h1"), claim("title", "Old", html, "title")],
+      });
+      const provenance = legacy
+        ? { ...first.provenance, title: { ...first.provenance["title"]!, source: "page:html" } }
+        : first.provenance;
+      const result = resolveCitation({
+        existing: { citation: first.citation!, provenance },
+        claims: [
+          claim("title", "Old", html, "h1", "2026-10-24T12:00:00Z"),
+          claim("title", "New", html, "h1", "2026-10-25T12:00:00Z"),
+          claim(
+            "title",
+            "New",
+            { kind: "page", signal: "open-graph" },
+            "og:title",
+            "2026-10-25T12:00:00Z",
+          ),
+        ],
+      });
+      expect(result.suggestions).toContainEqual(
+        expect.objectContaining({ field: "title", proposed: "New" }),
+      );
+    },
+  );
 
   it("credits a stored value with the evidence that agreed when it was chosen", () => {
     const citation = { type: "article-newspaper", title: "Live headline" };

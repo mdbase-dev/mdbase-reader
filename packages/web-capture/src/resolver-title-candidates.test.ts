@@ -53,7 +53,7 @@ describe("title candidates", () => {
       [registry],
     );
     expect(result.citation?.["title"]).toBe(title);
-    expect(result.provenance["title"]?.source).toBe("page:highwire");
+    expect(result.provenance["title"]?.source).toBe("page:highwire citation_title");
     expect(
       resolve(`<title>${title}</title>`, `<h1>${title}</h1>`, [registry]).citation?.["title"],
     ).toBe(registry.value);
@@ -124,7 +124,7 @@ describe("page title suffix evidence", () => {
     });
     expect(result.provenance["container-title"]).toEqual({
       value: "The Guardian",
-      source: "page:open-graph",
+      source: "page:open-graph og:site_name",
     });
   });
 
