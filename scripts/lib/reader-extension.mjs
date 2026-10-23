@@ -3,6 +3,7 @@ import { createHash } from "node:crypto";
 import { readFile, lstat } from "node:fs/promises";
 import { assertInventory } from "./native-publish-bytes.mjs";
 import { join } from "node:path";
+import { storeExtensionId } from "../../apps/extension/scripts/extension-manifest.mjs";
 import {
   stagingExtensionId,
   stagingManifestKey,
@@ -12,11 +13,15 @@ const check = (ok, reason) => {
 };
 const hash = (b) => createHash("sha256").update(b).digest("hex");
 export function assertExtensionManifests(chrome, app, trust) {
-  check(trust?.environment === "staging", "only unpacked staging extension is qualified");
-  stagingManifestKey(chrome.key);
+  const target = trust?.environment;
+  check(["staging", "production"].includes(target), "unknown extension target");
+  const publicId = target === "staging" ? stagingExtensionId : storeExtensionId;
+  if (target === "staging") stagingManifestKey(chrome.key);
   check(
     chrome.manifest_version === 3 &&
-      chrome.name.endsWith(" (STAGING)") &&
+      (target === "staging"
+        ? chrome.name.endsWith(" (STAGING)")
+        : chrome.name === "mdbase Reader") &&
       chrome.homepage_url === trust.appOrigin + "/",
     "Chrome target",
   );
@@ -25,7 +30,7 @@ export function assertExtensionManifests(chrome, app, trust) {
       app.homepage === trust.appOrigin + "/" &&
       JSON.stringify(app.installation_origins) ==
         JSON.stringify({
-          staging: { "app-runtime": [`chrome-extension://${stagingExtensionId}`] },
+          [target]: { "app-runtime": [`chrome-extension://${publicId}`] },
         }),
     "canonical extension identity/origins",
   );
@@ -36,8 +41,8 @@ export function assertExtensionManifests(chrome, app, trust) {
     "exact CP/log and no loopback",
   );
   return {
-    publicId: stagingExtensionId,
-    publicSpkiSha256: hash(Buffer.from(chrome.key, "base64")),
+    publicId,
+    ...(target === "staging" ? { publicSpkiSha256: hash(Buffer.from(chrome.key, "base64")) } : {}),
     webStorePublished: false,
     nativeAdmission: false,
   };

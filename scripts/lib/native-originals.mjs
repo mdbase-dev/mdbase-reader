@@ -390,13 +390,13 @@ export async function loadOriginals({
   const packet = `packages/connect/vendor/native-release/${target === "staging" ? "staging-eaa4e697" : target}`;
   const packetFile = (path) => regular(repoRoot, `${packet}/${path}`);
   const factsBytes = await packetFile("artifact/artifact-facts.public.json");
-  // Approved public facts digest pinned from the authenticated owner handoff,
-  // not candidate-computed authority. Production has no authorized intake yet.
-  requireValue(
-    target === "staging" &&
-      hash(factsBytes) === "d54aef71521ab3561bd9a81cd1303410a3fde29f8fbd35a1e0041e58d0569de3",
-    "approved target facts missing/mismatched",
-  );
+  // Approved public facts digests from the authenticated owner handoffs,
+  // not candidate-computed authority.
+  const factsSha256 =
+    target === "staging"
+      ? "d54aef71521ab3561bd9a81cd1303410a3fde29f8fbd35a1e0041e58d0569de3"
+      : "51bdf004a7f5a72a358b4534660b11f23196cb23a8d583138b75bbc284719617";
+  requireValue(hash(factsBytes) === factsSha256, "approved target facts missing/mismatched");
   const facts = JSON.parse(factsBytes); // independent facts pin BEFORE parsing
   const sdk = archives.sdk,
     sdkPath = join(repoRoot, sdk.path),
@@ -435,9 +435,9 @@ export async function loadOriginals({
       provenance.trust?.environment === target,
     "provenance target mismatch",
   );
-  const contextBytes = await packetFile(`verified-staging/next-trust/${target}-context.json`),
+  const contextBytes = await packetFile(`verified-${target}/next-trust/${target}-context.json`),
     context = JSON.parse(contextBytes);
-  const asset = await packetFile(`verified-staging/next-trust/${target}.json`);
+  const asset = await packetFile(`verified-${target}/next-trust/${target}.json`);
   const receiptBytes = await packetFile("sdk-build-receipt.json"),
     receipt = JSON.parse(receiptBytes);
   const cp =
@@ -495,7 +495,7 @@ export async function loadOriginals({
     "image-release-bundle.json",
     "image-release-bundle.sigstore.json",
   ]) {
-    proofs[filename] = await packetFile(`verified-staging/${filename}`);
+    proofs[filename] = await packetFile(`verified-${target}/${filename}`);
     equal(hash(proofs[filename]), h.proof_sha256?.[filename], `original proof ${filename}`);
   }
   const inventory = JSON.parse(proofs["release-trust-bundle.json"]),

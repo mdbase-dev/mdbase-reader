@@ -155,7 +155,16 @@ test("native publisher scopes public staging key to target build, not default-LA
     /staging builds only/,
   );
   const build = job.steps.find((step) => step.id === "build");
-  assert.equal(build.env[keyName], "${{ needs.native-inputs.outputs.public-key }}");
+  assert.equal(
+    build.env[keyName],
+    "${{ inputs.target == 'staging' && needs.native-inputs.outputs.public-key || '' }}",
+  );
+  const hashes = workflow.jobs["native-inputs"].steps.find((step) => step.id === "hashes");
+  assert.equal(
+    hashes.env[keyName],
+    "${{ inputs.target == 'staging' && vars.MDBASE_EXTENSION_STAGING_PUBLIC_KEY || '' }}",
+  );
+  assert.ok(hashes.run.includes('if [[ "$TARGET" == staging ]]; then'));
 });
 test("successful checks restore only the known generated extension manifest before strict clean-source guard", async () => {
   const workflow = parseYaml(await readFile(".github/workflows/deploy-reader.yml", "utf8"));
