@@ -25,5 +25,7 @@ export function localizedCaptureError(reason: unknown): unknown {
     default:
       return reason;
   }
-  return new Error(translated, { cause: reason });
+  const error = new Error(translated, { cause: reason });
+  error.name = "ReaderCaptureError";
+  return error;
 }

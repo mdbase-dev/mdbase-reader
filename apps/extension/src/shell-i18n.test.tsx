@@ -6,6 +6,7 @@ import { msg } from "@lingui/core/macro";
 import { afterEach, expect, it, vi } from "vitest";
 
 import { localizedCaptureError } from "./capture-errors.js";
+import { problemMessage } from "./capture-model.js";
 import { markSavedPage, markSavedPosts, resetPageMarkCache } from "./page-badge.js";
 import { fetchPdf, pagePdfBytes } from "./page-capture.js";
 import { PanelTabs } from "./PanelTabs.js";
@@ -67,6 +68,7 @@ it("localizes stable injected errors while preserving unknown authority diagnost
   expect(localized).toBeInstanceOf(Error);
   expect((localized as Error).message).toBe("La publication n’est pas chargée.");
   expect((localized as Error).cause).toBe(reason);
+  expect(problemMessage(localized)).toBe("La publication n’est pas chargée.");
   const authority = new Error("authority diagnostic");
   expect(localizedCaptureError(authority)).toBe(authority);
 });

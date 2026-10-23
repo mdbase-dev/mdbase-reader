@@ -43,6 +43,8 @@ ipcMain.handle(electronChannels.openExternal, async (_event, value: string) =>
 );
 ipcMain.handle(electronChannels.pickFile, async (_event, accept: readonly string[]) => {
   const result = await dialog.showOpenDialog({
+    title: t`Open a document`,
+    buttonLabel: t({ message: "Open", context: "Open a document from the file picker" }),
     properties: ["openFile"],
     filters: [
       {
@@ -59,7 +61,11 @@ ipcMain.handle(electronChannels.pickFile, async (_event, accept: readonly string
   return { name: safeExportName(path), bytes, size: bytes.byteLength };
 });
 ipcMain.handle(electronChannels.saveFile, async (_event, name: string, bytes: Uint8Array) => {
-  const result = await dialog.showSaveDialog({ defaultPath: safeExportName(name) });
+  const result = await dialog.showSaveDialog({
+    title: t`Save export`,
+    buttonLabel: t({ message: "Save", context: "Save an exported file" }),
+    defaultPath: safeExportName(name),
+  });
   if (result.canceled || !result.filePath) {
     return;
   }
