@@ -161,6 +161,12 @@ msgstr ""
 msgid "{0} GiB"
 msgstr ""
 
+#. placeholder {0}: file.name
+#: apps/reader/src/use-document-attachment.ts
+#: apps/reader/src/use-source-addition.ts
+msgid "{0} isn’t a PDF, EPUB or saved web page."
+msgstr ""
+
 #. placeholder {0}: view.name
 #: apps/reader/src/LibraryWorkspace.tsx
 msgid "{0} library view"
@@ -218,6 +224,10 @@ msgstr ""
 #: packages/renderer-pdf/src/pdf-translations.ts
 msgctxt "PDF viewer search"
 msgid "{count} results found"
+msgstr ""
+
+#: apps/reader/src/use-annotation-view.ts
+msgid "{detail} Reader is applying its filters itself."
 msgstr ""
 
 #: apps/reader/src/EnvironmentBadge.tsx
@@ -302,6 +312,10 @@ msgstr ""
 
 #: packages/migration/src/zotero-bundle.ts
 msgid "{name} count mismatch."
+msgstr ""
+
+#: packages/core/src/application/source-document-format.ts
+msgid "{name} is not a recognizable PDF, EPUB, or HTML document."
 msgstr ""
 
 #: packages/core/src/domain/identity.ts
@@ -1588,6 +1602,11 @@ msgctxt "AnnotationEditor interface"
 msgid "Close"
 msgstr ""
 
+#: apps/reader/src/dockview-menus.ts
+msgctxt "Close workspace tab"
+msgid "Close"
+msgstr ""
+
 #: packages/renderer-pdf/src/pdf-translations.ts
 msgctxt "PDF viewer common"
 msgid "Close"
@@ -1913,6 +1932,11 @@ msgstr ""
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "Container title short"
+msgstr ""
+
+#: apps/reader/src/library-conditions.ts
+msgctxt "Field filter comparison operator"
+msgid "contains"
 msgstr ""
 
 #: apps/reader/src/ImportReview.tsx
@@ -3058,10 +3082,8 @@ msgstr ""
 msgid "File transfer failed."
 msgstr ""
 
-#. placeholder {0}: files[1]
-#. placeholder {1}: files[2]
 #: apps/reader/src/import-controller.ts
-msgid "Files: {0} of {1}"
+msgid "Files: {completed} of {total}"
 msgstr ""
 
 #: apps/reader/src/LibraryWorkspace.tsx
@@ -3283,6 +3305,11 @@ msgstr ""
 msgid "Highlight"
 msgstr ""
 
+#: packages/reading-surface/src/margin-markers.ts
+msgctxt "Reading margin marker tooltip"
+msgid "Highlight"
+msgstr ""
+
 #: apps/reader/src/SelectionToolbar.tsx
 msgctxt "SelectionToolbar interface"
 msgid "Highlight"
@@ -3323,6 +3350,11 @@ msgstr ""
 
 #: apps/extension/src/background.ts
 msgid "Highlight with a comment in mdbase Reader"
+msgstr ""
+
+#: packages/reading-surface/src/margin-markers.ts
+msgctxt "Reading margin marker tooltip"
+msgid "Highlight with a note"
 msgstr ""
 
 #: apps/extension/src/PanelTabs.tsx
@@ -3596,6 +3628,41 @@ msgstr ""
 msgid "Invalid Zotero PDF rectangle."
 msgstr ""
 
+#: apps/reader/src/library-conditions.ts
+msgctxt "Field filter comparison operator"
+msgid "is"
+msgstr ""
+
+#: apps/reader/src/library-conditions.ts
+msgctxt "Field filter comparison operator"
+msgid "is at least"
+msgstr ""
+
+#: apps/reader/src/library-conditions.ts
+msgctxt "Field filter comparison operator"
+msgid "is at most"
+msgstr ""
+
+#: apps/reader/src/library-conditions.ts
+msgctxt "Field filter comparison operator"
+msgid "is empty"
+msgstr ""
+
+#: apps/reader/src/library-conditions.ts
+msgctxt "Field filter comparison operator"
+msgid "is greater than"
+msgstr ""
+
+#: apps/reader/src/library-conditions.ts
+msgctxt "Field filter comparison operator"
+msgid "is less than"
+msgstr ""
+
+#: apps/reader/src/library-conditions.ts
+msgctxt "Field filter comparison operator"
+msgid "is not"
+msgstr ""
+
 #: packages/core/src/domain/citation-validation.ts
 msgctxt "CSL validation"
 msgid "is not a CSL 1.0 field; preserve extension data under csl.custom"
@@ -3609,6 +3676,11 @@ msgstr ""
 #: packages/core/src/domain/citation-validation.ts
 msgctxt "CSL validation"
 msgid "is not a CSL name field"
+msgstr ""
+
+#: apps/reader/src/library-conditions.ts
+msgctxt "Field filter comparison operator"
+msgid "is not empty"
 msgstr ""
 
 #: apps/reader/src/CitationStructuredEditor.tsx
@@ -4067,6 +4139,10 @@ msgstr ""
 msgid "mdbase Connect took too long to answer. Try again in a moment."
 msgstr ""
 
+#: apps/reader/src/use-annotation-view.ts
+msgid "mdbase could not run this view."
+msgstr ""
+
 #: apps/extension/src/sdk-client.ts
 msgid "mdbase could not start in the background. Reload the extension."
 msgstr ""
@@ -4207,9 +4283,18 @@ msgstr ""
 msgid "Move tab to pane right"
 msgstr ""
 
-#. placeholder {0}: group.activePanel?.title ?? (group.api.location.type === "edge" ? `${group.api.location.position} sidebar` : "pane")
 #: apps/reader/src/dockview-menus.ts
-msgid "Move to {0}"
+msgid "Move to {title}"
+msgstr ""
+
+#: apps/reader/src/dockview-menus.ts
+msgctxt "Workspace tab destination"
+msgid "Move to bottom sidebar"
+msgstr ""
+
+#: apps/reader/src/dockview-menus.ts
+msgctxt "Workspace tab destination"
+msgid "Move to left sidebar"
 msgstr ""
 
 #: apps/reader/src/dockview-menus.ts
@@ -4218,6 +4303,21 @@ msgstr ""
 
 #: apps/reader/src/dockview-menus.ts
 msgid "Move to new pane right"
+msgstr ""
+
+#: apps/reader/src/dockview-menus.ts
+msgctxt "Workspace tab destination"
+msgid "Move to pane"
+msgstr ""
+
+#: apps/reader/src/dockview-menus.ts
+msgctxt "Workspace tab destination"
+msgid "Move to right sidebar"
+msgstr ""
+
+#: apps/reader/src/dockview-menus.ts
+msgctxt "Workspace tab destination"
+msgid "Move to top sidebar"
 msgstr ""
 
 #: packages/migration/src/zotero-pdf.ts
@@ -5596,6 +5696,10 @@ msgstr ""
 
 #: apps/reader/src/web-capture-client.ts
 msgid "Reader expected a web page."
+msgstr ""
+
+#: apps/reader/src/build-source-export.ts
+msgid "Reader export report"
 msgstr ""
 
 #: apps/reader/src/LibraryTableHeader.tsx

@@ -161,6 +161,12 @@ msgstr "{0} annotation"
 msgid "{0} GiB"
 msgstr "{0} GiB"
 
+#. placeholder {0}: file.name
+#: apps/reader/src/use-document-attachment.ts
+#: apps/reader/src/use-source-addition.ts
+msgid "{0} isn’t a PDF, EPUB or saved web page."
+msgstr "{0} isn’t a PDF, EPUB or saved web page."
+
 #. placeholder {0}: view.name
 #: apps/reader/src/LibraryWorkspace.tsx
 msgid "{0} library view"
@@ -219,6 +225,10 @@ msgstr "{count, plural, one {# source} other {# sources}}"
 msgctxt "PDF viewer search"
 msgid "{count} results found"
 msgstr "{count} results found"
+
+#: apps/reader/src/use-annotation-view.ts
+msgid "{detail} Reader is applying its filters itself."
+msgstr "{detail} Reader is applying its filters itself."
 
 #: apps/reader/src/EnvironmentBadge.tsx
 msgid "{environment} environment"
@@ -303,6 +313,10 @@ msgstr "{links, plural, one { # note links to it; those links will break.} other
 #: packages/migration/src/zotero-bundle.ts
 msgid "{name} count mismatch."
 msgstr "{name} count mismatch."
+
+#: packages/core/src/application/source-document-format.ts
+msgid "{name} is not a recognizable PDF, EPUB, or HTML document."
+msgstr "{name} is not a recognizable PDF, EPUB, or HTML document."
 
 #: packages/core/src/domain/identity.ts
 msgid "{name} must be a non-empty printable value."
@@ -1588,6 +1602,11 @@ msgctxt "AnnotationEditor interface"
 msgid "Close"
 msgstr "Close"
 
+#: apps/reader/src/dockview-menus.ts
+msgctxt "Close workspace tab"
+msgid "Close"
+msgstr "Close"
+
 #: packages/renderer-pdf/src/pdf-translations.ts
 msgctxt "PDF viewer common"
 msgid "Close"
@@ -1914,6 +1933,11 @@ msgstr "Container title"
 msgctxt "CSL bibliographic field or item type"
 msgid "Container title short"
 msgstr "Container title short"
+
+#: apps/reader/src/library-conditions.ts
+msgctxt "Field filter comparison operator"
+msgid "contains"
+msgstr "contains"
 
 #: apps/reader/src/ImportReview.tsx
 msgid "Content files"
@@ -3058,11 +3082,9 @@ msgstr "File import is unavailable in the interface preview."
 msgid "File transfer failed."
 msgstr "File transfer failed."
 
-#. placeholder {0}: files[1]
-#. placeholder {1}: files[2]
 #: apps/reader/src/import-controller.ts
-msgid "Files: {0} of {1}"
-msgstr "Files: {0} of {1}"
+msgid "Files: {completed} of {total}"
+msgstr "Files: {completed} of {total}"
 
 #: apps/reader/src/LibraryWorkspace.tsx
 msgid "Filter"
@@ -3283,6 +3305,11 @@ msgstr "Hide column"
 msgid "Highlight"
 msgstr "Highlight"
 
+#: packages/reading-surface/src/margin-markers.ts
+msgctxt "Reading margin marker tooltip"
+msgid "Highlight"
+msgstr "Highlight"
+
 #: apps/reader/src/SelectionToolbar.tsx
 msgctxt "SelectionToolbar interface"
 msgid "Highlight"
@@ -3324,6 +3351,11 @@ msgstr "Highlight the selected passage in mdbase Reader"
 #: apps/extension/src/background.ts
 msgid "Highlight with a comment in mdbase Reader"
 msgstr "Highlight with a comment in mdbase Reader"
+
+#: packages/reading-surface/src/margin-markers.ts
+msgctxt "Reading margin marker tooltip"
+msgid "Highlight with a note"
+msgstr "Highlight with a note"
 
 #: apps/extension/src/PanelTabs.tsx
 msgid "Highlights"
@@ -3596,6 +3628,41 @@ msgstr "Invalid Zotero PDF position."
 msgid "Invalid Zotero PDF rectangle."
 msgstr "Invalid Zotero PDF rectangle."
 
+#: apps/reader/src/library-conditions.ts
+msgctxt "Field filter comparison operator"
+msgid "is"
+msgstr "is"
+
+#: apps/reader/src/library-conditions.ts
+msgctxt "Field filter comparison operator"
+msgid "is at least"
+msgstr "is at least"
+
+#: apps/reader/src/library-conditions.ts
+msgctxt "Field filter comparison operator"
+msgid "is at most"
+msgstr "is at most"
+
+#: apps/reader/src/library-conditions.ts
+msgctxt "Field filter comparison operator"
+msgid "is empty"
+msgstr "is empty"
+
+#: apps/reader/src/library-conditions.ts
+msgctxt "Field filter comparison operator"
+msgid "is greater than"
+msgstr "is greater than"
+
+#: apps/reader/src/library-conditions.ts
+msgctxt "Field filter comparison operator"
+msgid "is less than"
+msgstr "is less than"
+
+#: apps/reader/src/library-conditions.ts
+msgctxt "Field filter comparison operator"
+msgid "is not"
+msgstr "is not"
+
 #: packages/core/src/domain/citation-validation.ts
 msgctxt "CSL validation"
 msgid "is not a CSL 1.0 field; preserve extension data under csl.custom"
@@ -3610,6 +3677,11 @@ msgstr "is not a CSL date field"
 msgctxt "CSL validation"
 msgid "is not a CSL name field"
 msgstr "is not a CSL name field"
+
+#: apps/reader/src/library-conditions.ts
+msgctxt "Field filter comparison operator"
+msgid "is not empty"
+msgstr "is not empty"
 
 #: apps/reader/src/CitationStructuredEditor.tsx
 msgctxt "CitationStructuredEditor interface"
@@ -4067,6 +4139,10 @@ msgstr "mdbase Connect did not accept Reader’s app registration, so it cannot 
 msgid "mdbase Connect took too long to answer. Try again in a moment."
 msgstr "mdbase Connect took too long to answer. Try again in a moment."
 
+#: apps/reader/src/use-annotation-view.ts
+msgid "mdbase could not run this view."
+msgstr "mdbase could not run this view."
+
 #: apps/extension/src/sdk-client.ts
 msgid "mdbase could not start in the background. Reload the extension."
 msgstr "mdbase could not start in the background. Reload the extension."
@@ -4207,10 +4283,19 @@ msgstr "Move tab to pane below"
 msgid "Move tab to pane right"
 msgstr "Move tab to pane right"
 
-#. placeholder {0}: group.activePanel?.title ?? (group.api.location.type === "edge" ? `${group.api.location.position} sidebar` : "pane")
 #: apps/reader/src/dockview-menus.ts
-msgid "Move to {0}"
-msgstr "Move to {0}"
+msgid "Move to {title}"
+msgstr "Move to {title}"
+
+#: apps/reader/src/dockview-menus.ts
+msgctxt "Workspace tab destination"
+msgid "Move to bottom sidebar"
+msgstr "Move to bottom sidebar"
+
+#: apps/reader/src/dockview-menus.ts
+msgctxt "Workspace tab destination"
+msgid "Move to left sidebar"
+msgstr "Move to left sidebar"
 
 #: apps/reader/src/dockview-menus.ts
 msgid "Move to new pane below"
@@ -4219,6 +4304,21 @@ msgstr "Move to new pane below"
 #: apps/reader/src/dockview-menus.ts
 msgid "Move to new pane right"
 msgstr "Move to new pane right"
+
+#: apps/reader/src/dockview-menus.ts
+msgctxt "Workspace tab destination"
+msgid "Move to pane"
+msgstr "Move to pane"
+
+#: apps/reader/src/dockview-menus.ts
+msgctxt "Workspace tab destination"
+msgid "Move to right sidebar"
+msgstr "Move to right sidebar"
+
+#: apps/reader/src/dockview-menus.ts
+msgctxt "Workspace tab destination"
+msgid "Move to top sidebar"
+msgstr "Move to top sidebar"
 
 #: packages/migration/src/zotero-pdf.ts
 msgid "Multi-page or ink geometry is not yet supported."
@@ -5597,6 +5697,10 @@ msgstr "Reader EPUBs"
 #: apps/reader/src/web-capture-client.ts
 msgid "Reader expected a web page."
 msgstr "Reader expected a web page."
+
+#: apps/reader/src/build-source-export.ts
+msgid "Reader export report"
+msgstr "Reader export report"
 
 #: apps/reader/src/LibraryTableHeader.tsx
 msgid "Reader fields"
