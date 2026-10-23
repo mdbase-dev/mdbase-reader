@@ -311,7 +311,26 @@ it("shows where a new source's citation comes from", () => {
   expect(html).toContain("10.1038/171737a0");
   expect(html).toContain("From the DOI registry");
 });
-it("labels Citoid evidence without claiming a failed URL lookup was a DOI lookup", () => {
+it("keeps the page preview visible while a quiet status reports the pending lookup", () => {
+  const html = markup(
+    {
+      citationPending: true,
+      citation: {
+        citation: { type: "webpage", title: "Page title" },
+        origin: "page",
+        provenance: {},
+        outcomes: [],
+      },
+    },
+    "citation",
+  );
+  expect(html).toContain("Page title");
+  expect(html).toContain('role="status"');
+  expect(html).toContain("Still looking for citation details… You can save now.");
+  expect(html).toContain("From the page’s metadata.");
+});
+
+it("labels Citoid evidence without showing provider failures as errors", () => {
   const html = markup(
     {
       citation: {
@@ -319,13 +338,12 @@ it("labels Citoid evidence without claiming a failed URL lookup was a DOI lookup
         origin: "citoid",
         provenance: {},
         outcomes: [],
-        problem: "The citation service did not answer in time.",
       },
     },
     "citation",
   );
   expect(html).toContain("Includes details from Wikimedia’s Citoid service.");
-  expect(html).toContain("The citation service did not answer in time.");
+  expect(html).not.toContain("did not answer");
   expect(html).not.toContain("DOI record was unavailable");
 });
 

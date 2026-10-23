@@ -49,6 +49,9 @@ export type HighlightColor = (typeof highlightColors)[number];
 
 export interface CaptureDraft {
   readonly title: string;
+  /** The last title applied by capture, retained across panel restores and lookup restarts. */
+  readonly automaticTitle?: string;
+  readonly titleEdited?: boolean;
   readonly tags: string;
   readonly note: string;
   readonly comment: string;
@@ -76,6 +79,8 @@ export interface SaveCaptureInput {
    */
   readonly lookedUp?: boolean;
   readonly citation?: CitationPreview | null;
+  /** Read after extraction, immediately before starting the source import. */
+  readonly getCitation?: () => CitationPreview | null;
   readonly pdfBytes?: () => Promise<Uint8Array>;
   readonly onSource: (source: SourceSummary, existing: boolean) => void;
   readonly onProgress: (progress: SourceImportProgress) => void;
@@ -155,13 +160,8 @@ export class CaptureWriter {
     recoverExistingFiles: boolean,
   ): Promise<CreatedSource> {
     const { collection, capture, draft } = input;
-    const citation = captureCitation(input);
-    // The citekey lookup does not depend on the new source; fetch it while the page imports.
-    const neighbours = citation ? citekeyNeighbours(collection, citation.citation) : null;
-    neighbours?.catch(() => undefined);
     const request =
       capture.kind === "html" ? await htmlRequest(capture) : await pdfRequest(capture, input);
-    const title = draft.title.trim() || request.title;
     const tags = draft.tags
       .split(",")
       .map((tag) => tag.trim())
@@ -170,6 +170,15 @@ export class CaptureWriter {
     // Persist before writing so closing/reopening the panel retains safe recovery.
     const recoveryKey = importRecoveryKey(input);
     await this.journalStorage.set(recoveryKey, "pending");
+    const citation = captureCitation(input);
+    // Pin citation and source metadata together when the import starts, not before extraction.
+    const automatic = draft.automaticTitle !== undefined && !draft.titleEdited;
+    const citationTitle = citation?.citation["title"];
+    const title =
+      (automatic && typeof citationTitle === "string" ? citationTitle : draft.title).trim() ||
+      request.title;
+    const neighbours = citation ? citekeyNeighbours(collection, citation.citation) : null;
+    neighbours?.catch(() => undefined);
     let source = await importSourceFile(
       { ...this.#runtime, imports: collection.sourceImports },
       {
@@ -423,6 +432,9 @@ export class CaptureWriter {
 }
 
 function captureCitation(input: SaveCaptureInput): CitationPreview | null {
+  if (input.getCitation) {
+    return input.getCitation();
+  }
   if (input.citation) {
     return input.citation;
   }
