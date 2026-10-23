@@ -1,3 +1,5 @@
+import { t } from "@lingui/core/macro";
+
 import { appendAnnotationQuoteFooter } from "../domain/annotation-body.js";
 import { validateCslItem, type CslItem } from "../domain/citation.js";
 
@@ -69,7 +71,7 @@ function resolveEmbeds(
         context.problems.push({
           kind: "broken-embed",
           reference,
-          message: `Annotation embed ${reference} could not be resolved.`,
+          message: t`Annotation embed ${reference} could not be resolved.`,
         });
       }
       return embed;
@@ -78,7 +80,7 @@ function resolveEmbeds(
       context.problems.push({
         kind: "cycle",
         reference,
-        message: `Annotation embed ${reference} forms a transclusion cycle.`,
+        message: t`Annotation embed ${reference} forms a transclusion cycle.`,
       });
       return embed;
     }
@@ -151,7 +153,7 @@ function collectBibliography(
       problems.push({
         kind: "missing-citation",
         reference: citekey,
-        message: `Citation @${citekey} has no valid CSL record in this collection.`,
+        message: t`Citation @${citekey} has no valid CSL record in this collection.`,
       });
     }
   }

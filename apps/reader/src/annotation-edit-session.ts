@@ -1,3 +1,4 @@
+import { t } from "@lingui/core/macro";
 import {
   MdbaseRecordSession,
   recordFailure,
@@ -205,7 +206,7 @@ export class AnnotationEditSession {
         status === "error"
           ? readerErrorMessage(
               record.problem?.message,
-              "Could not save. Keep Reader open and retry.",
+              t({ message: "Could not save. Keep Reader open and retry." }),
             )
           : null,
       ...(changed || loaded ? { textVersion: this.snapshot.textVersion + 1 } : {}),

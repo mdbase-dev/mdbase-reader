@@ -1,3 +1,4 @@
+import { t } from "@lingui/core/macro";
 export interface CollectionChoice {
   readonly collectionId: string;
   readonly displayName: string;
@@ -36,9 +37,9 @@ export function hueOf(collectionId: string): number {
 export function locationLabel(choice: CollectionChoice): string | null {
   switch (choice.authority?.kind) {
     case "hosted":
-      return "Hosted by mdbase";
+      return t({ message: "Hosted by mdbase", context: "collection menu model" });
     case "connector":
-      return "On your computer";
+      return t({ message: "On your computer", context: "collection menu model" });
     default:
       return null;
   }

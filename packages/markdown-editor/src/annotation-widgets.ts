@@ -6,6 +6,8 @@ import {
   type DecorationSet,
   type ViewUpdate,
 } from "@codemirror/view";
+import { i18n } from "@lingui/core";
+import { t } from "@lingui/core/macro";
 
 import { citationDecorations } from "./citation-widgets.js";
 import { referenceCompletions } from "./reference-completions.js";
@@ -105,7 +107,7 @@ function embeddedDecorations(
             class: candidate ? "cm-wikilink is-resolved" : "cm-wikilink is-unresolved",
             attributes: candidate
               ? { title: candidate.label }
-              : { title: `Linked record not found: ${path}` },
+              : { title: t`Linked record not found: ${path}` },
           }).range(start, end),
         );
       }
@@ -115,6 +117,7 @@ function embeddedDecorations(
 }
 
 class AnnotationEmbedWidget extends WidgetType {
+  readonly locale = i18n.locale;
   constructor(
     readonly candidate: WikiLinkCandidate,
     readonly onOpen: ((path: string) => void) | undefined,
@@ -125,13 +128,17 @@ class AnnotationEmbedWidget extends WidgetType {
   }
 
   override eq(other: AnnotationEmbedWidget): boolean {
-    return other.candidate === this.candidate && other.start === this.start;
+    return (
+      this.locale === other.locale &&
+      other.candidate === this.candidate &&
+      other.start === this.start
+    );
   }
 
   override toDOM(view: EditorView): HTMLElement {
     const card = document.createElement("aside");
     card.className = "cm-annotation-embed";
-    card.setAttribute("aria-label", `Embedded annotation: ${this.candidate.label}`);
+    card.setAttribute("aria-label", t`Embedded annotation: ${this.candidate.label}`);
     card.append(this.header(), ...this.content(), this.footer(view));
     return card;
   }
@@ -143,7 +150,7 @@ class AnnotationEmbedWidget extends WidgetType {
   private header(): HTMLElement {
     const header = document.createElement("header");
     const kind = document.createElement("span");
-    kind.textContent = this.candidate.kind ?? "Annotation";
+    kind.textContent = this.candidate.kind ?? t`Annotation`;
     const detail = document.createElement("small");
     detail.textContent = this.candidate.detail ?? "";
     header.append(kind, detail);
@@ -172,7 +179,7 @@ class AnnotationEmbedWidget extends WidgetType {
     footer.append(path);
     const edit = document.createElement("button");
     edit.type = "button";
-    edit.textContent = "Edit link";
+    edit.textContent = t({ message: "Edit link", context: "annotation widgets" });
     edit.addEventListener("mousedown", (event) => event.preventDefault());
     edit.addEventListener("click", () => {
       view.dispatch({ selection: { anchor: this.start + 3 }, scrollIntoView: true });
@@ -182,7 +189,7 @@ class AnnotationEmbedWidget extends WidgetType {
     if (this.onEdit) {
       const editAnnotation = document.createElement("button");
       editAnnotation.type = "button";
-      editAnnotation.textContent = "Edit highlight";
+      editAnnotation.textContent = t({ message: "Edit highlight", context: "annotation widgets" });
       editAnnotation.addEventListener("mousedown", (event) => event.preventDefault());
       editAnnotation.addEventListener("click", () => this.onEdit?.(this.candidate.path));
       footer.append(editAnnotation);
@@ -190,7 +197,7 @@ class AnnotationEmbedWidget extends WidgetType {
     if (this.onOpen) {
       const button = document.createElement("button");
       button.type = "button";
-      button.textContent = "Open in document";
+      button.textContent = t({ message: "Open in document", context: "annotation widgets" });
       button.addEventListener("mousedown", (event) => event.preventDefault());
       button.addEventListener("click", () => this.onOpen?.(this.candidate.path));
       footer.append(button);

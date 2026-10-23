@@ -1,3 +1,4 @@
+import { t } from "@lingui/core/macro";
 import { useCallback, useEffect, useRef, useState } from "react";
 
 import { navigateToAnnotation } from "./annotation-navigation.js";
@@ -44,7 +45,7 @@ export function useAnnotationNavigation(
       void navigateToAnnotation(annotation, surface).catch((reason: unknown) =>
         setProblem({
           sourceId,
-          message: readerErrorMessage(reason, "Could not locate this annotation."),
+          message: readerErrorMessage(reason, t({ message: "Could not locate this annotation." })),
         }),
       );
     },
@@ -66,14 +67,16 @@ export function useAnnotationNavigation(
             .goTo(point.locator)
             .then((found) => {
               if (!found) {
-                throw new Error("Could not return to the previous reading position.");
+                throw new Error(
+                  t({ message: "Could not return to the previous reading position." }),
+                );
               }
               setPoint(null);
             })
             .catch((reason: unknown) =>
               setProblem({
                 sourceId,
-                message: readerErrorMessage(reason, "Could not return to reading."),
+                message: readerErrorMessage(reason, t({ message: "Could not return to reading." })),
               }),
             );
         }

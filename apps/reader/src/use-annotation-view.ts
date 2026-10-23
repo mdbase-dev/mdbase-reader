@@ -1,3 +1,4 @@
+import { t } from "@lingui/core/macro";
 import { useEffect, useMemo, useState } from "react";
 
 import { readerErrorMessage } from "./errors.js";
@@ -123,12 +124,12 @@ export function useSourceAnnotationsView(
         .then(({ path, created }) =>
           setMessage(
             created
-              ? `Added ${path}. Run it with a source as its context in any mdbase tool.`
-              : `Your collection already has it: ${path}.`,
+              ? t`Added ${path}. Run it with a source as its context in any mdbase tool.`
+              : t`Your collection already has it: ${path}.`,
           ),
         )
         .catch((reason: unknown) =>
-          setMessage(readerErrorMessage(reason, "Reader could not add the view.")),
+          setMessage(readerErrorMessage(reason, t({ message: "Reader could not add the view." }))),
         )
         .finally(() => setBusy(false));
     },

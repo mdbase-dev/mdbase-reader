@@ -1,3 +1,5 @@
+import { t } from "@lingui/core/macro";
+import { useLingui } from "@lingui/react/macro";
 import { useEffect, useRef } from "react";
 
 import { prepareHtmlDocument } from "./html-document.js";
@@ -21,6 +23,7 @@ export function HtmlViewerSurface({
   onDocumentReady,
   onDocumentError,
 }: HtmlViewerSurfaceProps): React.JSX.Element {
+  const { t: uiT } = useLingui();
   const frameRef = useRef<HTMLIFrameElement>(null);
   useEffect(() => {
     const frame = frameRef.current;
@@ -33,7 +36,7 @@ export function HtmlViewerSurface({
       try {
         const response = await fetch(document.url, { signal: lifetime.signal });
         if (!response.ok) {
-          throw new Error(`HTML download failed with HTTP ${String(response.status)}.`);
+          throw new Error(t`HTML download failed with HTTP ${String(response.status)}.`);
         }
         const prepared = prepareHtmlDocument(await response.text());
         await loadFrame(frame, prepared, lifetime.signal);
@@ -65,7 +68,7 @@ export function HtmlViewerSurface({
       ref={frameRef}
       className={className}
       sandbox="allow-same-origin"
-      title="HTML reading document"
+      title={uiT`HTML reading document`}
     />
   );
 }

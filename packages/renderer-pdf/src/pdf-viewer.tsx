@@ -2,10 +2,13 @@ import { SelectionPlugin } from "@embedpdf/plugin-selection";
 import {
   DocumentManagerPlugin,
   InteractionManagerPlugin,
+  I18nPlugin,
   PDFViewer,
   type EmbedPdfContainer,
   type PluginRegistry,
 } from "@embedpdf/react-pdf-viewer";
+import { i18n } from "@lingui/core";
+import { t } from "@lingui/core/macro";
 import { createEventEmitter } from "@mdbase-reader/reading-surface";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
@@ -15,6 +18,7 @@ import { createEmbedPdfRuntime } from "./embedpdf-runtime.js";
 import { installLongPressSelection } from "./pdf-long-press-selection.js";
 import { EmbedPdfSurface } from "./pdf-surface.js";
 import { installTouchSelectionHandles } from "./pdf-touch-selection-handles.js";
+import { readerPdfLocale } from "./pdf-translations.js";
 import { createReaderPdfViewerConfig, pdfPansByDefault } from "./pdf-viewer-policy.js";
 
 import type { PdfSelectionAdjustment } from "./pdf-selection-publication.js";
@@ -69,10 +73,16 @@ export function PdfViewerSurface({
 
         const manager = registry.getPlugin<DocumentManagerPlugin>(DocumentManagerPlugin.id);
         if (!manager) {
-          throw new Error("EmbedPDF did not initialize its document manager.");
+          throw new Error(t`EmbedPDF did not initialize its document manager.`);
         }
         const documents = manager.provides();
+        const translations = registry.getPlugin<I18nPlugin>(I18nPlugin.id)?.provides();
         subscriptionsRef.current = [
+          i18n.on("change", () => {
+            const locale = readerPdfLocale();
+            translations?.registerLocale(locale);
+            translations?.setLocale(locale.code);
+          }),
           documents.onDocumentOpened(() => onDocumentReady?.()),
           documents.onDocumentError(({ message }) => onDocumentError?.(message)),
           ...(pansByDefault && containerRef.current
@@ -91,7 +101,7 @@ export function PdfViewerSurface({
         if (current?.status === "loaded") {
           onDocumentReady?.();
         } else if (current?.status === "error") {
-          onDocumentError?.(current.error ?? "EmbedPDF could not open this PDF.");
+          onDocumentError?.(current.error ?? t`EmbedPDF could not open this PDF.`);
         }
       } catch (reason) {
         onDocumentError?.(reason instanceof Error ? reason.message : String(reason));

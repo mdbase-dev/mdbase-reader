@@ -1,3 +1,4 @@
+import { plural, t } from "@lingui/core/macro";
 import { useCallback, useState } from "react";
 
 import { buildSourceExport } from "./build-source-export.js";
@@ -39,7 +40,7 @@ export function useSourceExport(input: {
     ) {
       setState({
         status: "error",
-        message: "Open the source and its annotations before exporting.",
+        message: t({ message: "Open the source and its annotations before exporting." }),
       });
       return;
     }
@@ -58,14 +59,17 @@ export function useSourceExport(input: {
         setState({
           status: "success",
           message: problemCount
-            ? `Exported with ${String(problemCount)} item${problemCount === 1 ? "" : "s"} to review.`
-            : `Exported ${String(bundle.canonicalRecordCount)} record${bundle.canonicalRecordCount === 1 ? "" : "s"} and ${String(bundle.originalFileCount)} original file${bundle.originalFileCount === 1 ? "" : "s"}.`,
+            ? t`Exported with ${plural(problemCount, { one: "# item", other: "# items" })} to review.`
+            : t`Exported ${plural(bundle.canonicalRecordCount, { one: "# record", other: "# records" })} and ${plural(bundle.originalFileCount, { one: "# original file", other: "# original files" })}.`,
         });
       })
       .catch((reason: unknown) =>
         setState({
           status: "error",
-          message: readerErrorMessage(reason, "Reader could not export this source."),
+          message: readerErrorMessage(
+            reason,
+            t({ message: "Reader could not export this source." }),
+          ),
         }),
       );
   }, [input]);

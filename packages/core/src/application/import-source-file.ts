@@ -1,3 +1,5 @@
+import { t } from "@lingui/core/macro";
+
 import { DomainError } from "../domain/errors.js";
 
 import { detectDocumentFormat, mediaTypeFor } from "./source-document-format.js";
@@ -63,7 +65,7 @@ export async function importSourceFile(
   if (duplicate) {
     throw new DomainError(
       "duplicate-source-import",
-      `These exact bytes are already stored in “${duplicate.title}”.`,
+      t`These exact bytes are already stored in “${duplicate.title}”.`,
     );
   }
   return dependencies.imports.commitFile(plan, options);
@@ -75,7 +77,7 @@ async function planSourceFileImport(
   sourceIdentity: SourceId,
 ): Promise<PlannedSourceFileImport> {
   if (request.bytes.byteLength === 0) {
-    throw new DomainError("invalid-source-import", "The selected file is empty.");
+    throw new DomainError("invalid-source-import", t({ message: "The selected file is empty." }));
   }
   const originalName = safeFileName(request.name);
   const format = detectDocumentFormat(originalName, request.declaredMediaType, request.bytes);
@@ -97,12 +99,15 @@ async function planSourceFileImport(
       })
     : null;
   if (archive && archive.format !== "html") {
-    throw new DomainError("invalid-source-import", "A web archive must contain HTML bytes.");
+    throw new DomainError(
+      "invalid-source-import",
+      t({ message: "A web archive must contain HTML bytes." }),
+    );
   }
   if (archive?.filePath === primary.filePath) {
     throw new DomainError(
       "invalid-source-import",
-      "The readable page and immutable archive need distinct filenames.",
+      t({ message: "The readable page and immutable archive need distinct filenames." }),
     );
   }
   return {
@@ -138,12 +143,15 @@ function validatedCaptureFor(
 ): SourceCaptureProvenance | undefined {
   const capture = request.capture ? validateCapture(request.capture) : undefined;
   if (capture && format !== "html") {
-    throw new DomainError("invalid-source-import", "Web captures must contain an HTML document.");
+    throw new DomainError(
+      "invalid-source-import",
+      t({ message: "Web captures must contain an HTML document." }),
+    );
   }
   if (request.archive && !capture) {
     throw new DomainError(
       "invalid-source-import",
-      "An immutable archive can only accompany a web capture.",
+      t({ message: "An immutable archive can only accompany a web capture." }),
     );
   }
   return capture;
@@ -161,7 +169,7 @@ export async function planRepresentation(
   },
 ): Promise<PlannedSourceRepresentation> {
   if (input.bytes.byteLength === 0) {
-    throw new DomainError("invalid-source-import", "The selected file is empty.");
+    throw new DomainError("invalid-source-import", t({ message: "The selected file is empty." }));
   }
   const originalName = safeFileName(input.name);
   const format = detectDocumentFormat(originalName, input.declaredMediaType, input.bytes);

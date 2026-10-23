@@ -1,3 +1,4 @@
+import { t } from "@lingui/core/macro";
 import { bodyEmbedsAnnotation } from "@mdbase-reader/core";
 import { useCallback, useState } from "react";
 
@@ -48,7 +49,10 @@ export function useAnnotationTransclusion(input: {
           setState({
             busyId: null,
             problemId: annotation.id,
-            problem: readerErrorMessage(reason, "Reader could not insert this annotation."),
+            problem: readerErrorMessage(
+              reason,
+              t({ message: "Reader could not insert this annotation." }),
+            ),
           }),
         );
     },

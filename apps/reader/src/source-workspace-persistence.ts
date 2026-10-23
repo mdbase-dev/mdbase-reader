@@ -1,3 +1,5 @@
+import { t } from "@lingui/core/macro";
+
 import {
   createPane,
   createLibraryWorkspaceTab,
@@ -149,7 +151,10 @@ function parseTab(value: unknown, knownSourceIds: ReadonlySet<SourceId>): readon
   if (value["kind"] === "library" || value["view"] === "library") {
     const libraryViewId =
       typeof value["libraryViewId"] === "string" ? value["libraryViewId"] : "all-sources";
-    const title = typeof value["title"] === "string" ? value["title"] : "Library";
+    const title =
+      typeof value["title"] === "string"
+        ? value["title"]
+        : t({ message: "Library", context: "source workspace persistence" });
     return [
       {
         ...createLibraryWorkspaceTab(libraryViewId, title, value["preview"] === true),
@@ -216,7 +221,10 @@ function parseLocation(
         kind: "library",
         libraryViewId:
           typeof value["libraryViewId"] === "string" ? value["libraryViewId"] : "all-sources",
-        title: typeof value["title"] === "string" ? value["title"] : "Library",
+        title:
+          typeof value["title"] === "string"
+            ? value["title"]
+            : t({ message: "Library", context: "source workspace persistence" }),
       },
     ];
   }

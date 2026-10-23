@@ -1,3 +1,4 @@
+import { t } from "@lingui/core/macro";
 import {
   webCaptureImport,
   type CapturedWebDocument as CaptureResponseDocument,
@@ -13,7 +14,7 @@ export async function fetchWebCapture(
 ): Promise<WebCaptureImport> {
   const captured = await fetchCapture(url, { fetch: fetcher });
   if (captured.kind !== "html") {
-    throw new Error("Reader expected a web page.");
+    throw new Error(t({ message: "Reader expected a web page." }));
   }
   return captured.page;
 }
@@ -60,14 +61,14 @@ export async function fetchCapture(
   }
   const value: unknown = await response.json().catch(() => null);
   if (!response.ok) {
-    throw new Error(captureProblem(value) ?? "Reader could not capture that page.");
+    throw new Error(captureProblem(value) ?? t({ message: "Reader could not capture that page." }));
   }
   return { kind: "html", page: await webCaptureImport(parseCaptureResponse(value)) };
 }
 
 function parseCaptureResponse(value: unknown): CaptureResponseDocument {
   if (!value || typeof value !== "object" || Array.isArray(value)) {
-    throw new Error("Reader received an invalid capture response.");
+    throw new Error(t({ message: "Reader received an invalid capture response." }));
   }
   const candidate = value as Readonly<Record<string, unknown>>;
   const submittedUrl = candidate["submittedUrl"];
@@ -80,7 +81,7 @@ function parseCaptureResponse(value: unknown): CaptureResponseDocument {
     typeof retrievedAt !== "string" ||
     typeof html !== "string"
   ) {
-    throw new Error("Reader received an incomplete capture response.");
+    throw new Error(t({ message: "Reader received an incomplete capture response." }));
   }
   return { submittedUrl, canonicalUrl, retrievedAt, html };
 }

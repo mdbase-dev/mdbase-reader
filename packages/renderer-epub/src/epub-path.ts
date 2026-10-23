@@ -1,3 +1,4 @@
+import { t } from "@lingui/core/macro";
 export function resolveEpubPath(baseFile: string, reference: string): string {
   const path = reference.split(/[?#]/u, 1)[0] ?? "";
   const base = baseFile.split("/").slice(0, -1);
@@ -9,7 +10,7 @@ export function resolveEpubPath(baseFile: string, reference: string): string {
     }
     if (segment === "..") {
       if (segments.length === 0) {
-        throw new Error(`EPUB reference escapes its package root: ${reference}`);
+        throw new Error(t`EPUB reference escapes its package root: ${reference}`);
       }
       segments.pop();
     } else {
@@ -27,7 +28,7 @@ export function safeEpubPath(value: string): string {
     normalized.includes("\0") ||
     normalized.split("/").some((segment) => segment === "..")
   ) {
-    throw new Error(`EPUB contains an unsafe resource path: ${value}`);
+    throw new Error(t`EPUB contains an unsafe resource path: ${value}`);
   }
   return normalized;
 }
@@ -44,6 +45,6 @@ function decodeSegment(value: string): string {
   try {
     return decodeURIComponent(value);
   } catch {
-    throw new Error(`EPUB contains an invalid encoded path segment: ${value}`);
+    throw new Error(t`EPUB contains an invalid encoded path segment: ${value}`);
   }
 }

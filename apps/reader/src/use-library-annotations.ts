@@ -1,3 +1,4 @@
+import { t } from "@lingui/core/macro";
 import { useEffect, useMemo, useState } from "react";
 
 import {
@@ -111,7 +112,10 @@ function useAnnotationsLoad(
             paths,
             load: {
               status: "error",
-              message: readerErrorMessage(reason, "Reader could not list annotations."),
+              message: readerErrorMessage(
+                reason,
+                t({ message: "Reader could not list annotations." }),
+              ),
             },
           });
         }
@@ -119,7 +123,10 @@ function useAnnotationsLoad(
     return () => controller.abort();
   }, [gateway, paths, reloads]);
   if (!gateway.allAnnotations) {
-    return { status: "error", message: "This collection cannot list all annotations." };
+    return {
+      status: "error",
+      message: t({ message: "This collection cannot list all annotations." }),
+    };
   }
   return result?.key === reloads && result.gateway === gateway && result.paths === paths
     ? result.load

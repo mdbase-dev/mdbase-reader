@@ -1,3 +1,4 @@
+import { t } from "@lingui/core/macro";
 import { useEffect, useState, useSyncExternalStore } from "react";
 
 import { annotationCreationBuffer } from "./annotation-creation-buffer.js";
@@ -99,7 +100,7 @@ export function useAnnotationCreation(
     if (
       busy.current ||
       (buffer.get()?.body.trim() &&
-        !confirmAnnotationDiscard("Discard this unfinished annotation comment?"))
+        !confirmAnnotationDiscard(t({ message: "Discard this unfinished annotation comment?" })))
     ) {
       return;
     }
@@ -137,7 +138,9 @@ export function useAnnotationCreation(
     comment: (value) => {
       if (
         !buffer.get()?.body.trim() ||
-        confirmAnnotationDiscard("Discard the unfinished annotation comment and comment on this?")
+        confirmAnnotationDiscard(
+          t({ message: "Discard the unfinished annotation comment and comment on this?" }),
+        )
       ) {
         open(value);
       }

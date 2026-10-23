@@ -24,6 +24,7 @@ import {
   placeholder as placeholderExtension,
 } from "@codemirror/view";
 import { tags } from "@lezer/highlight";
+import { englishCodeMirrorPhrases } from "@mdbase-dev/i18n/codemirror";
 
 import { markdownCommand, type MarkdownCommandName } from "./markdown-commands.js";
 
@@ -44,6 +45,7 @@ const readerHighlightStyle = HighlightStyle.define([
 ]);
 
 export function editorConfiguration(input: {
+  readonly phrases?: Readonly<Record<string, string>>;
   readonly ariaLabel: string;
   readonly language: EditorLanguage;
   readonly profile: EditorProfile;
@@ -53,7 +55,7 @@ export function editorConfiguration(input: {
 }): readonly Extension[] {
   return [
     languageExtension(input.language),
-    editorFoundation(input.language, input.profile),
+    editorFoundation(input.language, input.profile, input.phrases),
     input.placeholder ? placeholderExtension(input.placeholder) : [],
     EditorState.readOnly.of(input.readOnly),
     editorKeymap(input.language, input.profile, input.onSave),
@@ -108,7 +110,11 @@ function editorKeymap(
   ]);
 }
 
-function editorFoundation(language: EditorLanguage, profile: EditorProfile): readonly Extension[] {
+function editorFoundation(
+  language: EditorLanguage,
+  profile: EditorProfile,
+  phrases: Readonly<Record<string, string>> = englishCodeMirrorPhrases,
+): readonly Extension[] {
   return [
     syntaxHighlighting(readerHighlightStyle),
     drawSelection(),
@@ -118,7 +124,7 @@ function editorFoundation(language: EditorLanguage, profile: EditorProfile): rea
     indentOnInput(),
     highlightSelectionMatches(),
     search({ top: true }),
-    EditorState.phrases.of(searchPhrases),
+    EditorState.phrases.of(phrases),
     // Keep the line being typed clear of the pane's bottom edge while a note grows.
     profile === "prose" ? EditorView.scrollMargins.of(() => ({ bottom: 72 })) : [],
     profile === "code"
@@ -132,19 +138,6 @@ function editorFoundation(language: EditorLanguage, profile: EditorProfile): rea
     language === "json" ? linter(jsonParseLinter()) : [],
   ];
 }
-
-// CodeMirror's search panel labels are lower case; Reader writes controls in sentence case.
-const searchPhrases = {
-  next: "Next",
-  previous: "Previous",
-  all: "All",
-  "match case": "Match case",
-  regexp: "Regex",
-  "by word": "Whole word",
-  replace: "Replace",
-  "replace all": "Replace all",
-  close: "Close search",
-};
 
 export function dispatchPreservingFocus(
   view: EditorView,

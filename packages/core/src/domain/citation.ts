@@ -1,3 +1,5 @@
+import { t } from "@lingui/core/macro";
+
 import { citekeyPattern, cslTypes } from "./citation-schema.js";
 import { isJsonValue, isObject, validateCslField } from "./citation-validation.js";
 
@@ -26,10 +28,24 @@ export type CslValidation =
 export function validateCslItem(value: unknown): CslValidation {
   const problems: CslValidationProblem[] = [];
   if (!isObject(value)) {
-    return { valid: false, problems: [{ path: "csl", message: "must be one CSL object" }] };
+    return {
+      valid: false,
+      problems: [
+        {
+          path: "csl",
+          message: t({ message: "must be one CSL object", context: "CSL validation" }),
+        },
+      ],
+    };
   }
   if (!isJsonValue(value)) {
-    problems.push({ path: "csl", message: "must contain only JSON-compatible values" });
+    problems.push({
+      path: "csl",
+      message: t({
+        message: "must contain only JSON-compatible values",
+        context: "CSL validation",
+      }),
+    });
   }
   validateIdentity(value, problems);
   for (const [field, candidate] of Object.entries(value)) {
@@ -54,11 +70,17 @@ function validateIdentity(
   if (typeof id !== "string" || !citekeyPattern.test(id)) {
     problems.push({
       path: "csl.id",
-      message: "must be a non-empty Pandoc-compatible citekey",
+      message: t({
+        message: "must be a non-empty Pandoc-compatible citekey",
+        context: "CSL validation",
+      }),
     });
   }
   const type = value["type"];
   if (typeof type !== "string" || !cslTypes.has(type)) {
-    problems.push({ path: "csl.type", message: "must be a recognized CSL item type" });
+    problems.push({
+      path: "csl.type",
+      message: t({ message: "must be a recognized CSL item type", context: "CSL validation" }),
+    });
   }
 }

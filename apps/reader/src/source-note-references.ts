@@ -1,3 +1,5 @@
+import { t } from "@lingui/core/macro";
+
 import { annotationWikiCandidate } from "./annotation-wiki-candidates.js";
 
 import type { Annotation, SourceSummary } from "@mdbase-reader/core";
@@ -22,7 +24,7 @@ export function sourceNoteWikiCandidates(
             {
               label: source.title,
               path,
-              kind: "Source",
+              kind: t({ message: "Source", context: "source note references" }),
               detail: sourceDetail(source),
             },
           ];
@@ -33,7 +35,7 @@ export function sourceNoteWikiCandidates(
 function sourceDetail(source: SourceSummary): string {
   return source.creators.length > 0
     ? source.creators.join(", ")
-    : (source.publication ?? "Library source");
+    : (source.publication ?? t({ message: "Library source", context: "source note references" }));
 }
 
 export function sourceNoteCitationCandidates(

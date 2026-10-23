@@ -1,3 +1,4 @@
+import { t } from "@lingui/core/macro";
 import { signalMdbaseMark } from "@mdbase-dev/ui/mark-activity";
 import {
   citationCompletenessWarnings,
@@ -107,7 +108,7 @@ export function useCitationEditor(input: {
         setStatusState({ sourceId: source.id, value: "idle" });
         setErrorState({
           sourceId: source.id,
-          value: readerErrorMessage(reason, "Reader could not save this citation."),
+          value: readerErrorMessage(reason, t({ message: "Reader could not save this citation." })),
         });
       });
   }, [assessment, dirty, input, status]);
@@ -133,7 +134,7 @@ export function useCitationEditor(input: {
         .catch((reason: unknown) => {
           setResolutionStatus("idle");
           setResolutionError(
-            readerErrorMessage(reason, "Reader could not find citation metadata."),
+            readerErrorMessage(reason, t({ message: "Reader could not find citation metadata." })),
           );
         });
     },
@@ -172,7 +173,7 @@ export function useCitationEditor(input: {
       .catch((reason: unknown) => {
         setErrorState({
           sourceId: source.id,
-          value: readerErrorMessage(reason, "Reader could not generate a citekey."),
+          value: readerErrorMessage(reason, t({ message: "Reader could not generate a citekey." })),
         });
       });
   }, [assessment.value, input.gateway, input.source, setCitation]);

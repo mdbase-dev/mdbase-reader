@@ -1,3 +1,4 @@
+import { t } from "@lingui/core/macro";
 import { signalMdbaseMark } from "@mdbase-dev/ui/mark-activity";
 import { useEffect, useMemo, useState, useSyncExternalStore } from "react";
 
@@ -69,7 +70,10 @@ export function useAnnotationEdit(props: AnnotationEditProps): AnnotationEditCon
     if (
       session.getSnapshot().status !== "saved" &&
       !confirmAnnotationDiscard(
-        "Close with unsaved changes? Saving may continue in this window, but reloading Reader before it finishes will lose them.",
+        t({
+          message:
+            "Close with unsaved changes? Saving may continue in this window, but reloading Reader before it finishes will lose them.",
+        }),
       )
     ) {
       return;
@@ -123,7 +127,10 @@ export function useAnnotationEdit(props: AnnotationEditProps): AnnotationEditCon
         snapshot.status !== "saving" &&
         session.ownsEditor(editorOwner) &&
         confirmAnnotationDiscard(
-          "Discard this annotation's unsaved changes? The collection version will be kept.",
+          t({
+            message:
+              "Discard this annotation's unsaved changes? The collection version will be kept.",
+          }),
         )
       ) {
         session.discard();

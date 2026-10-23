@@ -1,3 +1,4 @@
+import { t } from "@lingui/core/macro";
 import { sourceLink } from "@mdbase-reader/core";
 
 import type {
@@ -147,7 +148,7 @@ async function areaAnnotationRequest(
   note: string,
 ): Promise<AnnotationCreationRequest> {
   if (selection.imageType !== "image/png") {
-    throw new Error(`Reader cannot persist an area capture of type ${selection.imageType}.`);
+    throw new Error(t`Reader cannot persist an area capture of type ${selection.imageType}.`);
   }
   return {
     ...annotationIdentity(source, surface),

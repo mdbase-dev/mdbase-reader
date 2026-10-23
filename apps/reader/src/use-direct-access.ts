@@ -1,3 +1,4 @@
+import { t } from "@lingui/core/macro";
 import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from "react";
 
 import { readerErrorMessage } from "./errors.js";
@@ -27,13 +28,22 @@ export function directAccessProblemMessage(outcome: DirectAccessOutcome): string
     case "available":
       return null;
     case "denied":
-      return "Local network access is blocked. Allow it in your browser’s site settings, then retry.";
+      return t({
+        message:
+          "Local network access is blocked. Allow it in your browser’s site settings, then retry.",
+      });
     case "unavailable":
-      return "Reader could not reach the local mdbase connector. The relayed connection is still active.";
+      return t({
+        message:
+          "Reader could not reach the local mdbase connector. The relayed connection is still active.",
+      });
     case "permission_required":
-      return "Local network access was not granted. Allow it when your browser asks, then retry.";
+      return t({
+        message:
+          "Local network access was not granted. Allow it when your browser asks, then retry.",
+      });
     case "disabled":
-      return "Direct local access is not available for this connection.";
+      return t({ message: "Direct local access is not available for this connection." });
     case "checking":
       return null;
   }
@@ -94,7 +104,12 @@ export function useDirectAccess(
         setProblem(directAccessProblemMessage(outcome));
       })
       .catch((reason: unknown) => {
-        setProblem(readerErrorMessage(reason, "Reader could not request local network access."));
+        setProblem(
+          readerErrorMessage(
+            reason,
+            t({ message: "Reader could not request local network access." }),
+          ),
+        );
       })
       .finally(() => setWorking(false));
   }, [controller]);
