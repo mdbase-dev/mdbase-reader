@@ -6,6 +6,7 @@ import { afterEach, beforeEach, expect, it, vi } from "vitest";
 
 import { usePanelConnection } from "./panel-connection.js";
 import { fakeChrome } from "./testing/fake-chrome.js";
+import { withI18n } from "./testing/i18n.js";
 import { useExtensionCapture } from "./use-extension-capture.js";
 
 import type { ExtensionCaptureController } from "./capture-controller.js";
@@ -125,7 +126,7 @@ async function mount(): Promise<void> {
   document.body.append(host);
   root = createRoot(host);
   await act(async () => {
-    root.render(<Harness />);
+    root.render(withI18n(<Harness />));
   });
   await act(async () => {
     await new Promise((resolve) => setTimeout(resolve, 0));

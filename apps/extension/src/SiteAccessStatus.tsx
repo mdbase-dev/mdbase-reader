@@ -1,3 +1,4 @@
+import { Trans } from "@lingui/react/macro";
 import { useEffect, useState } from "react";
 
 import { pageStatusEnabled, pageStatusOrigins } from "./page-status.js";
@@ -23,19 +24,27 @@ export function SiteAccessStatus(): React.JSX.Element {
     };
   }, []);
   if (granted === null) {
-    return <p className="hint">Checking site access…</p>;
+    return (
+      <p className="hint">
+        <Trans>Checking site access…</Trans>
+      </p>
+    );
   }
   return granted ? (
     <p className="hint">
-      The side panel follows the tab you are on, and pages you have saved show a mark and your
-      highlights. Reader looks up each page’s address in your selected collection and reads page
-      text only to draw your highlights.
+      <Trans>
+        The side panel follows the tab you are on, and pages you have saved show a mark and your
+        highlights. Reader looks up each page’s address in your selected collection and reads page
+        text only to draw your highlights.
+      </Trans>
     </p>
   ) : (
     <>
       <p className="hint">
-        Site access is limited in Chrome, so the side panel cannot follow your tabs and saved pages
-        are not marked. Press the toolbar button on a page to use Reader there.
+        <Trans>
+          Site access is limited in Chrome, so the side panel cannot follow your tabs and saved
+          pages are not marked. Press the toolbar button on a page to use Reader there.
+        </Trans>
       </p>
       <button
         type="button"
@@ -45,7 +54,7 @@ export function SiteAccessStatus(): React.JSX.Element {
           void chrome.permissions.request({ origins: pageStatusOrigins }).catch(() => false);
         }}
       >
-        Allow on all sites
+        <Trans>Allow on all sites</Trans>
       </button>
     </>
   );

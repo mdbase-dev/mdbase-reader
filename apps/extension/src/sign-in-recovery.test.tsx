@@ -6,6 +6,7 @@ import { afterEach, beforeEach, expect, it, vi } from "vitest";
 
 import { connectionView } from "./connection-view.js";
 import { ConnectionPanel, type ConnectionControls } from "./ConnectionPanel.js";
+import { withI18n } from "./testing/i18n.js";
 import { applicationFixture } from "./testing/sdk-fixture.js";
 
 let host: HTMLDivElement;
@@ -52,7 +53,7 @@ async function renderAndApprove(
     },
   };
   await act(async () => {
-    root.render(<ConnectionPanel controller={controller} />);
+    root.render(withI18n(<ConnectionPanel controller={controller} />));
     await Promise.resolve();
   });
   if (copy) {

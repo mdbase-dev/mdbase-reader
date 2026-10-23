@@ -1,7 +1,7 @@
-import { renderToStaticMarkup } from "react-dom/server";
 import { afterEach, expect, it, vi } from "vitest";
 
 import { OptionsApp } from "./OptionsApp.js";
+import { renderWithI18n as renderToStaticMarkup } from "./testing/i18n.js";
 import { WelcomeApp } from "./WelcomeApp.js";
 
 afterEach(() => {

@@ -1,3 +1,4 @@
+import { t } from "@lingui/core/macro";
 import { useCallback, useEffect, useRef, useState } from "react";
 
 import { problemMessage } from "./capture-model.js";
@@ -55,7 +56,7 @@ export function useSourceNote(
     void connected.sources.get(connected.collectionId, sourceId).then(
       (full) => {
         if (!full) {
-          throw new Error("This source is no longer in the collection.");
+          throw new Error(t`This source is no longer in the collection.`);
         }
         const created = new SourceNoteSession(full, connected);
         sessions.current.set(sourceId, created);
@@ -94,10 +95,10 @@ export function useSourceNote(
   const saveDetails = async (change: SourceDetailsChange): Promise<void> => {
     const connected = collection();
     if (!connected || !sourceId) {
-      throw new Error("Reconnect the collection to save these details.");
+      throw new Error(t`Reconnect the collection to save these details.`);
     }
     if (!connected.sources.updateFields) {
-      throw new Error("This collection cannot edit source details from the extension.");
+      throw new Error(t`This collection cannot edit source details from the extension.`);
     }
     const saved = await connected.sources.updateFields({
       collectionId: connected.collectionId,

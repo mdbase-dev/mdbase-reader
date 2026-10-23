@@ -1,3 +1,7 @@
+import { t } from "@lingui/core/macro";
+
+import { localizedCaptureError } from "./capture-errors.js";
+
 import type { Annotation, QuoteSelector } from "@mdbase-reader/core";
 
 export interface PageQuote extends QuoteSelector {
@@ -46,8 +50,9 @@ export interface PageTextResult {
   readonly navigated?: boolean;
 }
 
-const navigatedMessage =
-  "The tab has navigated to another page. Reopen Reader’s extension on that page.";
+function navigatedMessage(): string {
+  return t`The tab has navigated to another page. Reopen Reader’s extension on that page.`;
+}
 
 export function annotationQuotes(annotations: readonly Annotation[]): readonly PageQuote[] {
   return annotations.flatMap((annotation) =>
@@ -93,7 +98,7 @@ export async function drawPageQuotes(
     ...(focus === undefined ? {} : { focus }),
   });
   if (!projection) {
-    throw new Error("Could not read this page. Reopen the extension on it.");
+    throw new Error(t`Could not read this page. Reopen the extension on it.`);
   }
   return projection;
 }
@@ -138,15 +143,15 @@ export async function injectPageText(
     const url = "expectedUrl" in request ? request.expectedUrl : undefined;
     const tab = url ? await chrome.tabs.get(tabId).catch(() => null) : null;
     if (url && tab?.url && tab.url.split("#")[0] !== url.split("#")[0]) {
-      throw new Error(navigatedMessage, { cause: reason });
+      throw new Error(navigatedMessage(), { cause: reason });
     }
-    throw reason;
+    throw localizedCaptureError(reason);
   }
   if (!execution?.result) {
-    throw new Error("Could not read this page. Reopen the extension on it.");
+    throw new Error(t`Could not read this page. Reopen the extension on it.`);
   }
   if (execution.result.navigated) {
-    throw new Error(navigatedMessage);
+    throw new Error(navigatedMessage());
   }
   return execution.result;
 }
@@ -395,7 +400,7 @@ export function pageText(
     const HighlightClass = doc.defaultView?.Highlight;
     const registry = css?.highlights;
     if (!registry || !HighlightClass) {
-      throw new Error("This browser cannot display highlights. Open the saved copy in Reader.");
+      throw new Error("reader/highlights-unsupported");
     }
     return { registry, HighlightClass };
   }
