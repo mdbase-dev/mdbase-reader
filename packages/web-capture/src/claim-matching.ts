@@ -40,7 +40,8 @@ function dateParts(value: unknown): readonly (readonly unknown[])[] | undefined 
 }
 
 function datePartKey(value: unknown): unknown {
-  return typeof value === "string" && /^-?\d+$/u.test(value) ? Number(value) : value;
+  const part = typeof value === "string" && /^-?\d+$/u.test(value) ? Number(value) : value;
+  return Object.is(part, -0) ? 0 : part;
 }
 
 function publisherKey(value: string): string {
@@ -53,6 +54,23 @@ function publisherKey(value: string): string {
     .toLowerCase()
     .replace(/\bltd\b/gu, "limited")
     .replace(/[^\p{L}\p{N}]/gu, "");
+}
+
+/** Exact equivalence buckets; date-parts need the separate compatibility index below. */
+export function claimMatchKey(field: string, value: unknown): string | undefined {
+  if (typeof value === "string") {
+    return `text:${field === "title" ? titleKey(value) : field === "publisher" ? publisherKey(value) : text(value).toLowerCase()}`;
+  }
+  if (cslFieldKinds.get(field) === "name" && Array.isArray(value)) {
+    const keys = value.map(nameKey);
+    return keys.every((key) => key !== undefined) ? `names:${JSON.stringify(keys)}` : undefined;
+  }
+  return `value:${valueKey(value)}`;
+}
+
+/** Normalized parts retain endpoint count and precision, including numeric-string dates. */
+export function claimDateParts(value: unknown): readonly (readonly unknown[])[] | undefined {
+  return dateParts(value)?.map((part) => part.map(datePartKey));
 }
 
 /** Partial dates corroborate compatible, more precise dates, but not conflicting days/months. */
@@ -190,9 +208,13 @@ export function valueKey(value: unknown): string {
   if (Array.isArray(value)) {
     return `[${value.map(valueKey).join(",")}]`;
   }
+  if (Object.is(value, -0)) {
+    return "-0";
+  }
   const record = object(value);
   if (record) {
     return `{${Object.keys(record)
+      .filter((key) => record[key] !== undefined)
       .sort(compareText)
       .map((key) => `${JSON.stringify(key)}:${valueKey(record[key])}`)
       .join(",")}}`;
