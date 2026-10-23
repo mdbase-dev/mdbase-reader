@@ -218,7 +218,7 @@ msgstr "{count, plural, other {# 个来源}}"
 #: packages/renderer-pdf/src/pdf-translations.ts
 msgctxt "PDF viewer search"
 msgid "{count} results found"
-msgstr "[PDF viewer search] 找到 {count} 个结果"
+msgstr "找到 {count} 个结果"
 
 #: apps/reader/src/EnvironmentBadge.tsx
 msgid "{environment} environment"
@@ -540,548 +540,548 @@ msgstr "添加一项"
 
 #: apps/reader/src/CitationTypedFieldEditors.tsx
 msgid "Add property"
-msgstr ""
+msgstr "添加属性"
 
 #: apps/reader/src/SourceImportDialog.tsx
 msgid "Add source"
-msgstr ""
+msgstr "添加来源"
 
 #: apps/reader/src/LibraryWorkspace.tsx
 msgctxt "LibraryWorkspace interface"
 msgid "Add source"
-msgstr ""
+msgstr "添加来源"
 
 #: apps/reader/src/NavigatorSections.tsx
 msgctxt "NavigatorSections interface"
 msgid "Add source"
-msgstr ""
+msgstr "添加来源"
 
 #: apps/reader/src/SourceImportDialog.tsx
 msgctxt "SourceImportDialog interface"
 msgid "Add source"
-msgstr ""
+msgstr "添加来源"
 
 #: apps/reader/src/reader-app-commands.ts
 msgctxt "reader app commands"
 msgid "Add source…"
-msgstr ""
+msgstr "添加来源…"
 
 #: apps/reader/src/CitationSourceSync.tsx
 msgid "Add to citation"
-msgstr ""
+msgstr "添加到引文"
 
 #: apps/reader/src/AnnotationCard.tsx
 msgid "Add to literature note"
-msgstr ""
+msgstr "添加到文献笔记"
 
 #: apps/reader/src/CitationTypedFieldEditors.tsx
 msgid "Add value"
-msgstr ""
+msgstr "添加值"
 
 #: apps/reader/src/use-annotation-view.ts
 msgid "Added {path}. Run it with a source as its context in any mdbase tool."
-msgstr ""
+msgstr "已添加 {path}。可在任意 mdbase 工具中以某个来源作为上下文运行它。"
 
 #. placeholder {0}: lookup.notice.message
 #: apps/reader/src/SourceAddDialog.tsx
 msgid "Added. {0}"
-msgstr ""
+msgstr "已添加。{0}"
 
 #: apps/reader/src/NavigatorSections.tsx
 msgctxt "NavigatorSections interface"
 msgid "Adding source"
-msgstr ""
+msgstr "正在添加来源"
 
 #: apps/reader/src/NavigatorSections.tsx
 msgctxt "NavigatorSections interface"
 msgid "Adding…"
-msgstr ""
+msgstr "正在添加…"
 
 #: apps/reader/src/SourceAddDialog.tsx
 msgctxt "SourceAddDialog interface"
 msgid "Adding…"
-msgstr ""
+msgstr "正在添加…"
 
 #: apps/reader/src/CitationAdditionalFields.tsx
 msgid "Additional fields"
-msgstr ""
+msgstr "其他字段"
 
 #: packages/renderer-pdf/src/pdf-touch-selection-view.ts
 msgid "Adjust selection end"
-msgstr ""
+msgstr "调整选区结尾"
 
 #: packages/renderer-pdf/src/pdf-touch-selection-view.ts
 msgid "Adjust selection start"
-msgstr ""
+msgstr "调整选区开头"
 
 #: apps/reader/src/CitationTypedFieldEditors.tsx
 msgid "Advanced JSON"
-msgstr ""
+msgstr "高级 JSON"
 
 #: apps/reader/src/AnnotationList.tsx
 msgctxt "AnnotationList annotationFilterOptions"
 msgid "All"
-msgstr ""
+msgstr "全部"
 
 #: apps/reader/src/CitationAdditionalFields.tsx
 msgid "All fields added"
-msgstr ""
+msgstr "已添加所有字段"
 
 #: packages/renderer-pdf/src/pdf-translations.ts
 msgctxt "PDF viewer print"
 msgid "All pages"
-msgstr ""
+msgstr "所有页面"
 
 #: apps/reader/src/mdbase-library-views.ts
 msgid "All sources"
-msgstr ""
+msgstr "所有来源"
 
 #: apps/reader/src/library-lenses.ts
 msgctxt "library lenses"
 msgid "All sources"
-msgstr ""
+msgstr "所有来源"
 
 #: apps/extension/src/CaptureApp.tsx
 #: apps/extension/src/SiteAccessStatus.tsx
 msgid "Allow on all sites"
-msgstr ""
+msgstr "允许在所有网站上使用"
 
 #: apps/reader/src/SourceNoteInsertMenu.tsx
 msgid "Already embedded in this note"
-msgstr ""
+msgstr "已嵌入此笔记"
 
 #: apps/reader/src/AnnotationCard.tsx
 msgid "Already included in the literature note"
-msgstr ""
+msgstr "已包含在文献笔记中"
 
 #: apps/reader/src/insert-annotation-in-draft.ts
 #: packages/core/src/application/transclude-annotation.ts
 msgid "An annotation can only be inserted into its originating source note."
-msgstr ""
+msgstr "注释只能插入其所属来源的笔记中。"
 
 #: packages/core/src/domain/annotation.ts
 msgid "An annotation path is not safe to transclude."
-msgstr ""
+msgstr "注释路径不安全，无法嵌入。"
 
 #: packages/core/src/domain/annotation.ts
 msgid "An annotation type must not be empty."
-msgstr ""
+msgstr "注释类型不能为空。"
 
 #: packages/core/src/domain/annotation.ts
 msgid "An area annotation requires PDF geometry in v1."
-msgstr ""
+msgstr "区域注释在 v1 中需要 PDF 几何信息。"
 
 #: packages/core/src/domain/selector.ts
 msgid "An EPUB CFI must not be empty."
-msgstr ""
+msgstr "EPUB CFI 不能为空。"
 
 #: packages/migration/src/run.ts
 msgid "An existing source has different representations. Import into a new collection or review it explicitly; existing sources are never silently rewritten."
-msgstr ""
+msgstr "现有来源存在不同的表示形式。请导入到新集合，或明确审阅后再处理；现有来源绝不会被悄悄改写。"
 
 #: apps/electron/src/validation.ts
 msgid "An export requires a safe file name."
-msgstr ""
+msgstr "导出需要安全的文件名。"
 
 #: packages/core/src/domain/selector.ts
 msgid "An HTML position requires a document address."
-msgstr ""
+msgstr "HTML 位置需要文档地址。"
 
 #: packages/core/src/domain/selector.ts
 msgid "An HTML progression must be between 0 and 1."
-msgstr ""
+msgstr "HTML 进度必须介于 0 和 1 之间。"
 
 #: packages/core/src/domain/selector.ts
 msgid "An HTML target requires CSS, XPath, or quotation evidence."
-msgstr ""
+msgstr "HTML 目标需要 CSS、XPath 或引文证据。"
 
 #: packages/core/src/application/import-source-file.ts
 msgid "An immutable archive can only accompany a web capture."
-msgstr ""
+msgstr "不可变存档只能随网页捕获一起提供。"
 
 #: packages/migration/src/run-files.ts
 msgid "An import file path already contains different bytes. No replacement was attempted."
-msgstr ""
+msgstr "导入文件路径中已包含不同的字节内容。未尝试替换。"
 
 #: apps/reader/src/connection-recovery.ts
 msgid "An older connector is running. Restart mdbase Connect on your computer."
-msgstr ""
+msgstr "正在运行较旧的连接器。请在你的电脑上重启 mdbase Connect。"
 
 #: packages/renderer-pdf/src/pdf-translations.ts
 msgctxt "PDF viewer documentError"
 msgid "An unknown error occurred"
-msgstr ""
+msgstr "发生未知错误"
 
 #. placeholder {0}: String(links.length - shownLinks)
 #: apps/reader/src/SourceRemovalDialog.tsx
 msgid "and{0}more"
-msgstr ""
+msgstr "以及另外{0}条"
 
 #: apps/reader/src/LibraryAnnotationToolbar.tsx
 #: packages/markdown-editor/src/annotation-widgets.ts
 msgid "Annotation"
-msgstr ""
+msgstr "注释"
 
 #: packages/core/src/application/materialize-source.ts
 msgid "Annotation embed {reference} could not be resolved."
-msgstr ""
+msgstr "无法解析注释嵌入 {reference}。"
 
 #: packages/core/src/application/materialize-source.ts
 msgid "Annotation embed {reference} forms a transclusion cycle."
-msgstr ""
+msgstr "注释嵌入 {reference} 形成了嵌入循环。"
 
 #: packages/migration/src/run.ts
 msgid "Annotation file was not committed."
-msgstr ""
+msgstr "注释文件未提交。"
 
 #: packages/migration/src/zotero-validation.ts
 msgid "Annotation has no attachment."
-msgstr ""
+msgstr "注释没有附件。"
 
 #: packages/migration/src/run.ts
 msgid "Annotation has no source."
-msgstr ""
+msgstr "注释没有来源。"
 
 #: apps/reader/src/AnnotationEditor.tsx
 msgctxt "AnnotationEditor interface"
 msgid "Annotation Markdown"
-msgstr ""
+msgstr "注释 Markdown"
 
 #: packages/renderer-pdf/src/pdf-translations.ts
 msgctxt "PDF viewer panel"
 msgid "Annotation Style"
-msgstr ""
+msgstr "注释样式"
 
 #: packages/migration/src/run.ts
 msgid "Annotation target verification failed."
-msgstr ""
+msgstr "注释目标验证失败。"
 
 #: apps/reader/src/LibraryTextSearch.tsx
 msgctxt "LibraryTextSearch interface"
 msgid "Annotation text"
-msgstr ""
+msgstr "注释文本"
 
 #. placeholder {0}: filterCount ? `, ${String(filterCount)} active filters` : ""
 #: apps/reader/src/LibraryAnnotationToolbar.tsx
 msgid "Annotation view options{0}"
-msgstr ""
+msgstr "注释视图选项{0}"
 
 #: apps/reader/src/InspectorPane.tsx
 #: apps/reader/src/SourceNoteInsertMenu.tsx
 msgid "Annotations"
-msgstr ""
+msgstr "注释"
 
 #: apps/reader/src/InspectorPane.tsx
 msgctxt "InspectorPane interface"
 msgid "Annotations"
-msgstr ""
+msgstr "注释"
 
 #: apps/reader/src/InspectorPane.tsx
 msgctxt "InspectorPane status or action"
 msgid "Annotations"
-msgstr ""
+msgstr "注释"
 
 #: apps/reader/src/library-columns.ts
 msgctxt "Library table column"
 msgid "Annotations"
-msgstr ""
+msgstr "注释"
 
 #: apps/reader/src/LibraryAnnotationTable.tsx
 msgctxt "LibraryAnnotationTable interface"
 msgid "Annotations"
-msgstr ""
+msgstr "注释"
 
 #: apps/reader/src/LibraryWorkspace.tsx
 msgctxt "LibraryWorkspace interface"
 msgid "Annotations"
-msgstr ""
+msgstr "注释"
 
 #: apps/reader/src/MobileSourceViews.tsx
 msgctxt "MobileSourceViews views"
 msgid "Annotations"
-msgstr ""
+msgstr "注释"
 
 #: apps/reader/src/reader-command-list.ts
 msgctxt "reader command list"
 msgid "Annotations"
-msgstr ""
+msgstr "注释"
 
 #: apps/reader/src/VirtualAnnotationList.tsx
 msgctxt "VirtualAnnotationList interface"
 msgid "Annotations"
-msgstr ""
+msgstr "注释"
 
 #: apps/reader/src/workspace-tab-display.ts
 msgctxt "workspace tab display"
 msgid "Annotations"
-msgstr ""
+msgstr "注释"
 
 #: apps/reader/src/ImportReview.tsx
 msgid "Annotations and notes"
-msgstr ""
+msgstr "注释和笔记"
 
 #: apps/reader/src/reader-command-list.ts
 msgid "Annotations, literature note and citation"
-msgstr ""
+msgstr "注释、文献笔记和引文"
 
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "Annote"
-msgstr ""
+msgstr "注解"
 
 #: apps/reader/src/LibraryTableHeader.tsx
 msgid "Any field"
-msgstr ""
+msgstr "任意字段"
 
 #: apps/reader/src/LibraryWorkspace.tsx
 msgctxt "LibraryWorkspace formatFilterOptions"
 msgid "Any format"
-msgstr ""
+msgstr "任意格式"
 
 #: apps/reader/src/LibraryWorkspace.tsx
 msgctxt "LibraryWorkspace statusFilterOptions"
 msgid "Any status"
-msgstr ""
+msgstr "任意状态"
 
 #: apps/reader/src/LibraryAnnotationToolbar.tsx
 msgctxt "LibraryAnnotationToolbar interface"
 msgid "Any tag"
-msgstr ""
+msgstr "任意标签"
 
 #: apps/reader/src/LibraryWorkspace.tsx
 msgctxt "LibraryWorkspace interface"
 msgid "Any tag"
-msgstr ""
+msgstr "任意标签"
 
 #: apps/reader/src/LibraryAnnotationToolbar.tsx
 msgctxt "LibraryAnnotationToolbar annotationTypeOptions"
 msgid "Any type"
-msgstr ""
+msgstr "任意类型"
 
 #: apps/reader/src/ImportInput.tsx
 msgid "API token"
-msgstr ""
+msgstr "API 令牌"
 
 #: apps/extension/src/OptionsApp.tsx
 msgid "Appearance"
-msgstr ""
+msgstr "外观"
 
 #: apps/reader/src/DisplayMenu.tsx
 msgid "Applies to EPUBs and saved web pages. PDFs keep their layout."
-msgstr ""
+msgstr "适用于 EPUB 和已保存的网页。PDF 保持其原有版式。"
 
 #: apps/reader/src/LibraryBulkBar.tsx
 msgid "Apply"
-msgstr ""
+msgstr "应用"
 
 #: apps/reader/src/CitationTypedFieldEditors.tsx
 msgid "Apply JSON"
-msgstr ""
+msgstr "应用 JSON"
 
 #: apps/reader/src/ImportDestination.tsx
 msgid "Apply Reader collection setup"
-msgstr ""
+msgstr "应用 Reader 集合设置"
 
 #: apps/reader/src/ConnectReader.tsx
 msgid "Apply reviewed setup"
-msgstr ""
+msgstr "应用已审阅的设置"
 
 #: apps/reader/src/ConnectReader.tsx
 msgctxt "ConnectReader interface"
 msgid "Applying setup…"
-msgstr ""
+msgstr "正在应用设置…"
 
 #: apps/extension/src/connection-view.ts
 #: apps/extension/src/ConnectionPanel.tsx
 msgid "Approve access"
-msgstr ""
+msgstr "批准访问"
 
 #: apps/extension/src/connection-view.ts
 msgid "Approve access to this collection before saving."
-msgstr ""
+msgstr "保存前，请先批准对此集合的访问。"
 
 #: apps/extension/src/ConnectionPanel.tsx
 msgid "Approve mdbase Reader in the mdbase tab, then return here."
-msgstr ""
+msgstr "请在 mdbase 标签页中批准 mdbase Reader，然后返回此处。"
 
 #: apps/reader/src/CitationTypedFieldEditors.tsx
 msgid "Approximate"
-msgstr ""
+msgstr "大致"
 
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "Archive"
-msgstr ""
+msgstr "档案馆"
 
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "Archive collection"
-msgstr ""
+msgstr "档案馆藏"
 
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "Archive location"
-msgstr ""
+msgstr "档案存放位置"
 
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "Archive place"
-msgstr ""
+msgstr "档案馆所在地"
 
 #: apps/reader/src/LibraryCells.tsx
 msgctxt "reading status"
 msgid "Archived"
-msgstr ""
+msgstr "已归档"
 
 #: apps/reader/src/annotation-kind.ts
 msgid "Area"
-msgstr ""
+msgstr "区域"
 
 #: apps/reader/src/AnnotationList.tsx
 msgctxt "AnnotationList annotationFilterOptions"
 msgid "Area captures"
-msgstr ""
+msgstr "区域截图"
 
 #: apps/reader/src/LibraryAnnotationToolbar.tsx
 msgctxt "LibraryAnnotationToolbar annotationTypeOptions"
 msgid "Areas"
-msgstr ""
+msgstr "区域"
 
 #: apps/reader/src/reader-command-list.ts
 msgid "Arrange panes side by side"
-msgstr ""
+msgstr "并排排列窗格"
 
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "Article"
-msgstr ""
+msgstr "文章"
 
 #: apps/reader/src/LibraryAnnotationToolbar.tsx
 msgctxt "LibraryAnnotationToolbar interface"
 msgid "Ascending"
-msgstr ""
+msgstr "升序"
 
 #: apps/reader/src/LibraryWorkspace.tsx
 msgctxt "LibraryWorkspace interface"
 msgid "Ascending"
-msgstr ""
+msgstr "升序"
 
 #: apps/reader/src/WorkspacePaneSupport.tsx
 msgid "Attach a file"
-msgstr ""
+msgstr "附加文件"
 
 #. placeholder {0}: file.name
 #: apps/reader/src/use-document-attachment.ts
 msgid "Attaching {0}…"
-msgstr ""
+msgstr "正在附加 {0}…"
 
 #: apps/reader/src/use-document-attachment.ts
 msgid "Attaching the PDF…"
-msgstr ""
+msgstr "正在附加 PDF…"
 
 #. placeholder {0}: String(i + 1)
 #: packages/migration/src/zotero-bundle.ts
 msgid "Attachment checksum mismatch ({0}). Nothing has been imported."
-msgstr ""
+msgstr "附件校验和不匹配（{0}）。未导入任何内容。"
 
 #: packages/migration/src/zotero-validation.ts
 msgid "Attachment totals mismatch."
-msgstr ""
+msgstr "附件总数不匹配。"
 
 #: apps/reader/src/CitationContributors.tsx
 msgid "Author"
-msgstr ""
+msgstr "作者"
 
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "Author"
-msgstr ""
+msgstr "作者"
 
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "Authority"
-msgstr ""
+msgstr "颁发机构"
 
 #: apps/reader/src/ConnectionLayout.tsx
 msgctxt "ConnectionLayout status or action"
 msgid "Authorize collection"
-msgstr ""
+msgstr "授权集合"
 
 #: apps/reader/src/CitationSourceSync.tsx
 msgctxt "citation metadata field"
 msgid "Authors"
-msgstr ""
+msgstr "作者"
 
 #: apps/reader/src/CitationStructuredEditor.tsx
 msgctxt "CitationStructuredEditor interface"
 msgid "Authors"
-msgstr ""
+msgstr "作者"
 
 #: apps/reader/src/CitationSourceSync.tsx
 msgctxt "source metadata field"
 msgid "Authors"
-msgstr ""
+msgstr "作者"
 
 #: apps/reader/src/SourceDetails.tsx
 msgctxt "SourceDetails fields"
 msgid "Authors"
-msgstr ""
+msgstr "作者"
 
 #: apps/reader/src/CitationStructuredEditor.tsx
 msgid "Authors, editors, translators, and organisations"
-msgstr ""
+msgstr "作者、编辑、译者和机构"
 
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "Available date"
-msgstr ""
+msgstr "可用日期"
 
 #: apps/reader/src/MobileWorkspaceNavigation.tsx
 msgctxt "MobileWorkspaceNavigation interface"
 msgid "Back"
-msgstr ""
+msgstr "返回"
 
 #: packages/renderer-pdf/src/pdf-translations.ts
 msgctxt "PDF viewer common"
 msgid "Back"
-msgstr ""
+msgstr "返回"
 
 #: apps/reader/src/ImportPageView.tsx
 #: apps/reader/src/ReaderHeader.tsx
 msgid "Back to library"
-msgstr ""
+msgstr "返回文献库"
 
 #: apps/reader/src/AnnotationComposer.tsx
 msgid "Back to reading position"
-msgstr ""
+msgstr "返回阅读位置"
 
 #: apps/reader/src/MobileWorkspaceNavigation.tsx
 msgid "Back to workspace"
-msgstr ""
+msgstr "返回工作区"
 
 #: apps/reader/src/AnnotationEditor.tsx
 msgid "Being edited in another pane."
-msgstr ""
+msgstr "正在另一个窗格中编辑。"
 
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "Bill"
-msgstr ""
+msgstr "法案"
 
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "Blog post"
-msgstr ""
+msgstr "博客文章"
 
 #: apps/reader/src/citation-form-model.ts
 msgctxt "CSL item type"
 msgid "Blog post"
-msgstr ""
+msgstr "博客文章"
 
 #: apps/extension/src/HighlightFields.tsx
 msgctxt "Highlight colour"
 msgid "blue"
-msgstr ""
+msgstr "蓝色"
 
 #: apps/reader/src/SourceNoteEditor.tsx
 msgctxt "SourceNoteEditor formatActions"
