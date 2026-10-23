@@ -513,6 +513,24 @@ describe("citation resolution: existing CSL is canonical", () => {
     ]);
   });
 
+  it("credits a stored value with the evidence that agreed when it was chosen", () => {
+    const citation = { type: "article-newspaper", title: "Live headline" };
+    const result = resolveCitation({
+      existing: {
+        citation,
+        provenance: {
+          title: {
+            value: "Live headline",
+            source: "page:html h1",
+            agreed: ["page:html title", "page:json-ld headline", "page:open-graph og:title"],
+          },
+        },
+      },
+      claims: [claim("title", "Breaking: old headline", remote, "Citoid newspaperArticle")],
+    });
+    expect(result.suggestions).toEqual([]);
+  });
+
   it("leaves a manually removed title absent rather than returning an enriched citation", () => {
     const citation = { type: "webpage" };
     const result = resolveCitation({

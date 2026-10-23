@@ -127,19 +127,28 @@ function existingClaims(
     if (status.kind !== "removed" && emptyField(citation[field])) {
       return [];
     }
-    return [
-      {
+    const value = citation[field];
+    if (status.kind !== "explained") {
+      return [{ field, value, source: { kind: "user" }, observedAt: existingObservation }];
+    }
+    // The evidence that agreed when the value was chosen still backs it against a later lookup.
+    return [status.provenance.source, ...(status.provenance.agreed ?? [])].map((label) => {
+      const space = label.indexOf(" ");
+      const source = parseClaimSourceLabel(space === -1 ? label : label.slice(0, space));
+      const evidence = space === -1 ? undefined : label.slice(space + 1);
+      return {
         field,
-        value: citation[field],
-        source:
-          status.kind === "explained"
-            ? (parseClaimSourceLabel(status.provenance.source) ?? { kind: "user" })
-            : { kind: "user" },
-        observedAt: "",
-      },
-    ];
+        value,
+        source: source ?? { kind: "user" },
+        ...(evidence ? { evidence } : {}),
+        observedAt: existingObservation,
+      };
+    });
   });
 }
+
+/** The stored value's observation time is unknown, so it is treated as the oldest. */
+const existingObservation = "";
 
 function prepareClaims(claims: readonly Claim[]): CandidateClaim[] {
   const prepared: CandidateClaim[] = [];
