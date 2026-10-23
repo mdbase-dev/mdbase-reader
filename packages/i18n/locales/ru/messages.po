@@ -6724,411 +6724,411 @@ msgstr "Выделение текста"
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "Series creator"
-msgstr ""
+msgstr "Создатель серии"
 
 #: apps/reader/src/DisplayMenu.tsx
 msgctxt "DisplayMenu interface"
 msgid "Serif"
-msgstr ""
+msgstr "С засечками"
 
 #: apps/reader/src/LibraryBulkBar.tsx
 msgid "Set a field on the selected sources"
-msgstr ""
+msgstr "Задать поле для выбранных источников"
 
 #: apps/reader/src/LibraryBulkBar.tsx
 msgid "Set field…"
-msgstr ""
+msgstr "Задать поле…"
 
 #: apps/reader/src/LibraryBulkBar.tsx
 msgid "Set reading status of the selected sources"
-msgstr ""
+msgstr "Задать статус чтения выбранных источников"
 
 #: apps/reader/src/LibraryBulkBar.tsx
 msgctxt "LibraryBulkBar interface"
 msgid "Set status…"
-msgstr ""
+msgstr "Задать статус…"
 
 #: apps/extension/src/connection-view.ts
 #: apps/extension/src/ConnectionPanel.tsx
 msgid "Set up collection"
-msgstr ""
+msgstr "Настроить коллекцию"
 
 #: apps/extension/src/connection-view.ts
 msgid "Set up this collection for Reader before saving."
-msgstr ""
+msgstr "Перед сохранением настройте эту коллекцию для Reader."
 
 #: apps/reader/src/ConnectReader.tsx
 msgid "Set up this reading collection"
-msgstr ""
+msgstr "Настроить эту коллекцию для чтения"
 
 #: apps/extension/src/OptionsApp.tsx
 msgid "Settings"
-msgstr ""
+msgstr "Настройки"
 
 #: apps/extension/src/ExtensionHeader.tsx
 msgid "Settings and shortcuts"
-msgstr ""
+msgstr "Настройки и сочетания клавиш"
 
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "ShortTitle"
-msgstr ""
+msgstr "КраткоеНазвание"
 
 #: apps/reader/src/AnnotationList.tsx
 msgid "Show"
-msgstr ""
+msgstr "Показать"
 
 #: apps/reader/src/LibraryWorkspace.tsx
 msgctxt "LibraryWorkspace interface"
 msgid "Show"
-msgstr ""
+msgstr "Показать"
 
 #: apps/reader/src/DisplayMenu.tsx
 msgctxt "DisplayMenu interface"
 msgid "Show actions"
-msgstr ""
+msgstr "Показать действия"
 
 #: apps/reader/src/AnnotationCard.tsx
 msgid "Show in document"
-msgstr ""
+msgstr "Показать в документе"
 
 #: apps/reader/src/LibraryTextSearch.tsx
 msgid "Show more results"
-msgstr ""
+msgstr "Показать больше результатов"
 
 #: apps/extension/src/SavedHighlights.tsx
 msgid "Show on the page"
-msgstr ""
+msgstr "Показать на странице"
 
 #: apps/reader/src/AnnotationList.tsx
 msgid "Show selected annotation (clear filters)"
-msgstr ""
+msgstr "Показать выбранную аннотацию (сбросить фильтры)"
 
 #: packages/renderer-pdf/src/pdf-translations.ts
 msgctxt "PDF viewer panel"
 msgid "Sidebar"
-msgstr ""
+msgstr "Боковая панель"
 
 #: apps/reader/src/DisplayMenu.tsx
 msgid "Sidebar while reading"
-msgstr ""
+msgstr "Боковая панель при чтении"
 
 #: apps/extension/src/connection-view.ts
 #: apps/extension/src/ConnectionPanel.tsx
 msgid "Sign in"
-msgstr ""
+msgstr "Войти"
 
 #: apps/reader/src/native-signin-ui.ts
 msgctxt "Native sign-in"
 msgid "Sign in"
-msgstr ""
+msgstr "Войти"
 
 #: apps/extension/src/connection-view.ts
 msgid "Sign in to mdbase before saving."
-msgstr ""
+msgstr "Перед сохранением войдите в mdbase."
 
 #: apps/reader/src/native-signin-ui.ts
 msgid "Sign in with your mdbase account to sync {appName} across your devices."
-msgstr ""
+msgstr "Войдите в аккаунт mdbase, чтобы синхронизировать {appName} на всех своих устройствах."
 
 #: apps/reader/src/native-signin-ui.ts
 msgctxt "Native sign-in"
 msgid "Sign out"
-msgstr ""
+msgstr "Выйти"
 
 #: apps/reader/src/NativeSignIn.tsx
 msgctxt "NativeSignIn interface"
 msgid "Sign-in status"
-msgstr ""
+msgstr "Статус входа"
 
 #: apps/reader/src/native-signin-ui.ts
 msgctxt "Native sign-in"
 msgid "Sign-in was interrupted. Please try again."
-msgstr ""
+msgstr "Вход прерван. Повторите попытку."
 
 #: apps/reader/src/connect-popup.ts
 msgid "Sign-in window closed."
-msgstr ""
+msgstr "Окно входа закрыто."
 
 #. placeholder {0}: signIn.accountEmail
 #: apps/extension/src/connection-view.ts
 msgid "Signed in as {0}"
-msgstr ""
+msgstr "Вход выполнен: {0}"
 
 #. placeholder {0}: signIn.accountLogin
 #: apps/extension/src/connection-view.ts
 msgid "Signed in as {0} on GitHub"
-msgstr ""
+msgstr "Вход выполнен в GitHub: {0}"
 
 #: apps/reader/src/native-signin-ui.ts
 msgid "Signed in as {email}"
-msgstr ""
+msgstr "Вход выполнен: {email}"
 
 #. placeholder {0}: selected.displayName
 #: apps/reader/src/native-signin-ui.ts
 msgid "Signed in. Opening {0}…"
-msgstr ""
+msgstr "Вход выполнен. Открытие {0}…"
 
 #: packages/renderer-pdf/src/pdf-translations.ts
 msgctxt "PDF viewer page"
 msgid "Single Page"
-msgstr ""
+msgstr "Одна страница"
 
 #: apps/extension/src/CaptureApp.tsx
 msgid "Site access is limited in Chrome, so Reader cannot follow your tabs."
-msgstr ""
+msgstr "В Chrome доступ к сайтам ограничен, поэтому Reader не может переключаться вслед за вкладками."
 
 #: apps/extension/src/SiteAccessStatus.tsx
 msgid "Site access is limited in Chrome, so the side panel cannot follow your tabs and saved pages are not marked. Press the toolbar button on a page to use Reader there."
-msgstr ""
+msgstr "В Chrome доступ к сайтам ограничен, поэтому боковая панель не переключается вслед за вкладками, а сохранённые страницы не отмечаются. Чтобы использовать Reader, нажмите кнопку панели инструментов на странице."
 
 #: apps/reader/src/DisplayMenu.tsx
 msgctxt "DisplayMenu interface"
 msgid "Smaller text"
-msgstr ""
+msgstr "Мелкий текст"
 
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "Software"
-msgstr ""
+msgstr "Программное обеспечение"
 
 #: apps/reader/src/citation-form-model.ts
 msgctxt "CSL item type"
 msgid "Software"
-msgstr ""
+msgstr "Программное обеспечение"
 
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "Song"
-msgstr ""
+msgstr "Песня"
 
 #: apps/reader/src/LibraryAnnotationToolbar.tsx
 #: apps/reader/src/LibraryWorkspace.tsx
 msgid "Sort"
-msgstr ""
+msgstr "Сортировать"
 
 #: apps/reader/src/AnnotationList.tsx
 msgctxt "AnnotationList interface"
 msgid "Sort annotations"
-msgstr ""
+msgstr "Сортировать аннотации"
 
 #: apps/reader/src/LibraryAnnotationToolbar.tsx
 #: apps/reader/src/LibraryTableHeader.tsx
 #: apps/reader/src/LibraryWorkspace.tsx
 msgid "Sort ascending"
-msgstr ""
+msgstr "Сортировать по возрастанию"
 
 #. placeholder {0}: label.toLocaleLowerCase()
 #: apps/reader/src/LibraryTableHeader.tsx
 msgid "Sort by {0} · Drag to move"
-msgstr ""
+msgstr "Сортировать по {0} · Перетащите, чтобы переместить"
 
 #: apps/reader/src/LibraryAnnotationToolbar.tsx
 #: apps/reader/src/LibraryTableHeader.tsx
 #: apps/reader/src/LibraryWorkspace.tsx
 msgid "Sort descending"
-msgstr ""
+msgstr "Сортировать по убыванию"
 
 #: apps/reader/src/LibraryAnnotationToolbar.tsx
 msgctxt "LibraryAnnotationToolbar interface"
 msgid "Sort field"
-msgstr ""
+msgstr "Поле сортировки"
 
 #: apps/reader/src/LibraryWorkspace.tsx
 msgctxt "LibraryWorkspace interface"
 msgid "Sort field"
-msgstr ""
+msgstr "Поле сортировки"
 
 #: apps/reader/src/annotation-columns.ts
 msgctxt "Annotation table column"
 msgid "Source"
-msgstr ""
+msgstr "Источник"
 
 #: apps/extension/src/PanelTabs.tsx
 msgctxt "Bibliographic source"
 msgid "Source"
-msgstr ""
+msgstr "Источник"
 
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "Source"
-msgstr ""
+msgstr "Источник"
 
 #: apps/reader/src/dockview-side-panels.ts
 msgctxt "dockview side panels"
 msgid "Source"
-msgstr ""
+msgstr "Источник"
 
 #: apps/reader/src/DockviewWorkspace.tsx
 msgctxt "DockviewWorkspace status or action"
 msgid "Source"
-msgstr ""
+msgstr "Источник"
 
 #: apps/reader/src/LibraryAnnotationToolbar.tsx
 msgctxt "LibraryAnnotationToolbar annotationSortOptions"
 msgid "Source"
-msgstr ""
+msgstr "Источник"
 
 #: apps/reader/src/LibraryAnnotationToolbar.tsx
 msgctxt "LibraryAnnotationToolbar interface"
 msgid "Source"
-msgstr ""
+msgstr "Источник"
 
 #: apps/reader/src/source-note-references.ts
 msgctxt "source note references"
 msgid "Source"
-msgstr ""
+msgstr "Источник"
 
 #: apps/reader/src/workspace-tab-display.ts
 msgctxt "workspace tab display"
 msgid "Source"
-msgstr ""
+msgstr "Источник"
 
 #: packages/migration/src/readwise-client.ts
 msgid "Source file download failed. The host may not support browser access; use Readwise’s full-file export as a fallback."
-msgstr ""
+msgstr "Не удалось скачать файл источника. Возможно, хост не поддерживает доступ из браузера; используйте полный экспорт файла Readwise."
 
 #. placeholder {0}: String(response.status)
 #: packages/migration/src/readwise-client.ts
 msgid "Source file download returned HTTP {0}. Retry to obtain a fresh download link."
-msgstr ""
+msgstr "Скачивание файла источника вернуло HTTP {0}. Повторите попытку, чтобы получить новую ссылку для скачивания."
 
 #: packages/migration/src/run.ts
 msgid "Source file was not committed."
-msgstr ""
+msgstr "Файл источника не зафиксирован."
 
 #: apps/reader/src/SourceNoteEditor.tsx
 msgid "Source literature note"
-msgstr ""
+msgstr "Заметка о литературе источника"
 
 #: apps/extension/src/NotePanel.tsx
 msgid "Source removed"
-msgstr ""
+msgstr "Источник удалён"
 
 #: apps/extension/src/NotePanel.tsx
 msgid "Source removed."
-msgstr ""
+msgstr "Источник удалён."
 
 #: apps/extension/src/CaptureApp.tsx
 msgid "Source saved in mdbase."
-msgstr ""
+msgstr "Источник сохранён в mdbase."
 
 #: apps/extension/src/ConnectionPanel.tsx
 msgid "Source saved. This action did not finish."
-msgstr ""
+msgstr "Источник сохранён. Операция не завершилась."
 
 #: apps/reader/src/MobileSourceViews.tsx
 msgctxt "MobileSourceViews interface"
 msgid "Source views"
-msgstr ""
+msgstr "Представления источников"
 
 #: apps/reader/src/InspectorPane.tsx
 msgctxt "InspectorPane interface"
 msgid "Source workspace"
-msgstr ""
+msgstr "Рабочая область источников"
 
 #: apps/reader/src/ImportReview.tsx
 #: apps/reader/src/reader-command-list.ts
 msgid "Sources"
-msgstr ""
+msgstr "Источники"
 
 #: apps/reader/src/dockview-side-panels.ts
 msgctxt "dockview side panels"
 msgid "Sources"
-msgstr ""
+msgstr "Источники"
 
 #: apps/reader/src/LibraryCards.tsx
 msgctxt "LibraryCards interface"
 msgid "Sources"
-msgstr ""
+msgstr "Источники"
 
 #: apps/reader/src/LibraryNavigator.tsx
 msgctxt "LibraryNavigator interface"
 msgid "Sources"
-msgstr ""
+msgstr "Источники"
 
 #: apps/reader/src/LibraryTable.tsx
 msgctxt "LibraryTable interface"
 msgid "Sources"
-msgstr ""
+msgstr "Источники"
 
 #: apps/reader/src/LibraryWorkspace.tsx
 msgctxt "LibraryWorkspace interface"
 msgid "Sources"
-msgstr ""
+msgstr "Источники"
 
 #: apps/reader/src/CitationStructuredEditor.tsx
 msgctxt "CitationStructuredEditor status or action"
 msgid "Specialist"
-msgstr ""
+msgstr "Специалист"
 
 #: packages/renderer-pdf/src/pdf-translations.ts
 msgctxt "PDF viewer print"
 msgid "Specify pages"
-msgstr ""
+msgstr "Указать страницы"
 
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "Speech"
-msgstr ""
+msgstr "Речь"
 
 #: packages/renderer-pdf/src/pdf-translations.ts
 msgctxt "PDF viewer page"
 msgid "Spread Mode"
-msgstr ""
+msgstr "Разворот"
 
 #: apps/reader/src/reader-command-list.ts
 msgid "Stack panes top and bottom"
-msgstr ""
+msgstr "Расположить панели вертикально"
 
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "Standard"
-msgstr ""
+msgstr "Стандартный"
 
 #: apps/reader/src/DisplayMenu.tsx
 msgctxt "DisplayMenu interface"
 msgid "Standard"
-msgstr ""
+msgstr "Стандартный"
 
 #: apps/reader/src/CitationTypedFieldEditors.tsx
 msgctxt "CitationTypedFieldEditors interface"
 msgid "Start"
-msgstr ""
+msgstr "Начать"
 
 #: packages/renderer-epub/src/epub-page-navigation.tsx
 msgid "Start of publication"
-msgstr ""
+msgstr "Дата начала публикации"
 
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "Static ordering"
-msgstr ""
+msgstr "Фиксированный порядок"
 
 #: apps/reader/src/LibraryRowMenu.tsx
 #: apps/reader/src/LibraryWorkspace.tsx
 msgid "Status"
-msgstr ""
+msgstr "Статус"
 
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "Status"
-msgstr ""
+msgstr "Статус"
 
 #: apps/reader/src/library-columns.ts
 msgctxt "Library table column"
 msgid "Status"
-msgstr ""
+msgstr "Статус"
 
 #: apps/reader/src/LibraryWorkspace.tsx
 msgctxt "LibraryWorkspace interface"
 msgid "Status"
-msgstr ""
+msgstr "Статус"
 
 #: apps/reader/src/LibraryWorkspace.tsx
 msgctxt "LibraryWorkspace sortFieldOptions"
 msgid "Status"
-msgstr ""
+msgstr "Статус"
 
 #. placeholder {0}: progress.completed.toLocaleString(i18n.locale)
 #. placeholder {1}: progress.total.toLocaleString(i18n.locale)
@@ -7136,60 +7136,60 @@ msgstr ""
 #. placeholder {3}: progress.skipped.toLocaleString(i18n.locale)
 #: apps/reader/src/ImportReview.tsx
 msgid "Steps: {0} / {1} · Created: {2} · Kept: {3}"
-msgstr ""
+msgstr "Этапы: {0} / {1} · Создано: {2} · Сохранено: {3}"
 
 #: apps/extension/src/DiagnosticsPanel.tsx
 msgid "Stop and clear timings"
-msgstr ""
+msgstr "Остановить и очистить данные о времени"
 
 #: apps/reader/src/SourceImportDialog.tsx
 msgctxt "SourceImportDialog interface"
 msgid "Stop import"
-msgstr ""
+msgstr "Остановить импорт"
 
 #: apps/reader/src/ImportReview.tsx
 msgid "Stop safely"
-msgstr ""
+msgstr "Безопасно остановить"
 
 #: apps/reader/src/import-controller.ts
 msgid "Stopped"
-msgstr ""
+msgstr "Остановлено"
 
 #: apps/reader/src/import-controller.ts
 msgid "Stopped. Already committed data is kept. Resume with the same input and destination; existing records will not be overwritten."
-msgstr ""
+msgstr "Остановлено. Уже зафиксированные данные сохранены. Возобновите операцию с теми же входными данными и местом назначения; существующие записи не будут перезаписаны."
 
 #: packages/core/src/application/citation-citekey.ts
 msgid "Store the bare DOI rather than its https://doi.org/ URL."
-msgstr ""
+msgstr "Сохраните DOI без URL https://doi.org/."
 
 #: apps/extension/src/CitationPanel.tsx
 msgid "Stored citation"
-msgstr ""
+msgstr "Сохранённая ссылка"
 
 #: apps/reader/src/CitationPreview.tsx
 msgid "Style"
-msgstr ""
+msgstr "Стиль"
 
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "Submitted"
-msgstr ""
+msgstr "Отправлено"
 
 #: apps/reader/src/CitationContributors.tsx
 msgctxt "CitationContributors interface"
 msgid "Suffix"
-msgstr ""
+msgstr "Суффикс"
 
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "Suffix"
-msgstr ""
+msgstr "Суффикс"
 
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "Supplement"
-msgstr ""
+msgstr "Дополнение"
 
 #: packages/renderer-pdf/src/pdf-translations.ts
 msgctxt "PDF viewer emptyState"
