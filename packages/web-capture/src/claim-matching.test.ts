@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import {
+  claimMatchKey,
   claimValuesMatch,
   fillGivenNames,
   splitTitle,
@@ -9,6 +10,21 @@ import {
 } from "./claim-matching.js";
 
 describe("claim matching", () => {
+  it.each([
+    ["HTTPS://EXAMPLE.ORG/Paper", "https://example.org/Paper", true],
+    ["https://example.org:443/Paper", "https://example.org/Paper", true],
+    ["http://example.org:80/Paper", "http://example.org/Paper", true],
+    ["https://example.org", "https://example.org/", true],
+    ["https://example.org/Paper", "https://example.org/paper", false],
+    ["https://example.org/?q=Paper", "https://example.org/?q=paper", false],
+    ["https://example.org/#Paper", "https://example.org/#paper", false],
+    ["https://example.org/Paper", "https://example.org/Paper/", false],
+    ["http://example.org/Paper", "https://example.org/Paper", false],
+  ])("matches URLs %s and %s: %s", (left, right, matches) => {
+    expect(claimValuesMatch("URL", left, right)).toBe(matches);
+    expect(claimMatchKey("URL", left) === claimMatchKey("URL", right)).toBe(matches);
+  });
+
   it.each([" - ", " | ", " — ", " · "])("cleans the %s site suffix", (separator) => {
     expect(splitTitle(`Australia${separator}Wikipedia`)).toEqual({
       title: "Australia",

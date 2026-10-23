@@ -433,6 +433,19 @@ describe("citation resolution: container and validation boundaries", () => {
   });
 });
 
+it("keeps URL paths differing in case in separate equivalence groups", () => {
+  const result = resolveCitation({
+    claims: [
+      claim("title", "Work"),
+      claim("URL", "https://example.org/Paper", registry),
+      claim("URL", "https://example.org/paper", html, "canonical"),
+    ],
+  });
+  expect(result.provenance["URL"]).toMatchObject({
+    rejected: [{ value: "https://example.org/paper", from: "page:html canonical" }],
+  });
+});
+
 describe("citation resolution: existing CSL is canonical", () => {
   it("protects edited, unexplained and removed fields, proposing explained changes and fills", () => {
     const citation = {

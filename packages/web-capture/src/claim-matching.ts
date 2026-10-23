@@ -56,9 +56,21 @@ function publisherKey(value: string): string {
     .replace(/[^\p{L}\p{N}]/gu, "");
 }
 
+/** URL paths, queries and fragments are case-sensitive; only scheme/host are not. */
+function urlKey(value: string): string {
+  try {
+    return new URL(value.trim()).href;
+  } catch {
+    return value.trim();
+  }
+}
+
 /** Exact equivalence buckets; date-parts need the separate compatibility index below. */
 export function claimMatchKey(field: string, value: unknown): string | undefined {
   if (typeof value === "string") {
+    if (field === "URL") {
+      return `url:${urlKey(value)}`;
+    }
     return `text:${field === "title" ? titleKey(value) : field === "publisher" ? publisherKey(value) : text(value).toLowerCase()}`;
   }
   if (cslFieldKinds.get(field) === "name" && Array.isArray(value)) {
@@ -107,6 +119,9 @@ export function claimValuesMatch(field: string, left: unknown, right: unknown): 
 }
 
 function matchingText(field: string, left: string, right: string): boolean {
+  if (field === "URL") {
+    return urlKey(left) === urlKey(right);
+  }
   if (field === "title") {
     return titleKey(left) === titleKey(right);
   }
