@@ -11,6 +11,7 @@ import {
   type JSX,
 } from "react";
 
+import { CitationQualitySummary } from "./CitationQualitySummary.js";
 import { ContinueReading } from "./ContinueReading.js";
 import { readerErrorMessage } from "./errors.js";
 import {
@@ -463,6 +464,7 @@ export function LibraryWorkspace({
                     ? "Preparing bibliography…"
                     : "Export bibliography"}
                 </button>
+                <CitationQualitySummary sources={allSources} loading={indexLoading} />
                 <a href={importHref()} target="_blank" rel="noopener noreferrer">
                   <ImportIcon />
                   Import a library…

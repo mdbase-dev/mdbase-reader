@@ -1,6 +1,8 @@
-import { useMemo, useState, type JSX, type SyntheticEvent } from "react";
+import { claimSourceLabel } from "@mdbase-reader/web-capture/citation-updates";
+import { useState, type JSX, type SyntheticEvent } from "react";
 
-import { citationDifferences, displayCslValue } from "./citation-form-model.js";
+import { cslFieldLabel, displayCslValue } from "./citation-form-model.js";
+import { citationSourceLabel } from "./citation-provenance.js";
 import { SearchIcon } from "./icons.js";
 
 import type { CitationEditorController } from "./use-citation-editor.js";
@@ -23,7 +25,7 @@ export function CitationLookup({
         <SearchIcon />
         <span>
           <strong>Find citation details</strong>
-          <small>Search by DOI, ISBN, URL, or title</small>
+          <small>Check for updates by DOI, ISBN, URL, or title</small>
         </span>
       </summary>
       <form onSubmit={submit}>
@@ -43,10 +45,13 @@ export function CitationLookup({
           {editor.resolutionStatus === "resolving" ? "Looking…" : "Find"}
         </button>
       </form>
+      <p className="citation-lookup-note">
+        Lookup sends your search or source URL to metadata providers. Accepting changes only the
+        draft; Save changes writes them to your collection.
+      </p>
       {!editor.resolutionAvailable ? (
         <p className="citation-lookup-note">
-          Metadata lookup will be available when a resolver is connected. You can still edit and
-          format CSL locally.
+          Metadata lookup is unavailable here. You can still edit CSL locally.
         </p>
       ) : null}
       {editor.resolutionError ? (
@@ -54,93 +59,70 @@ export function CitationLookup({
           {editor.resolutionError}
         </p>
       ) : null}
-      {editor.candidate ? (
-        <CitationMergeReview
-          key={`${editor.candidate.provenance.query}:${editor.candidate.provenance.retrievedAt}`}
-          citation={citation}
-          candidate={editor.candidate}
-          editor={editor}
-        />
-      ) : null}
+      {editor.resolutionStatus === "resolved" ? <CitationSuggestions editor={editor} /> : null}
     </details>
   );
 }
 
-function CitationMergeReview({
-  citation,
-  candidate,
+function CitationSuggestions({
   editor,
 }: {
-  readonly citation: Readonly<Record<string, unknown>>;
-  readonly candidate: NonNullable<CitationEditorController["candidate"]>;
   readonly editor: CitationEditorController;
 }): JSX.Element {
-  const differences = useMemo(
-    () => citationDifferences(citation, candidate.citation),
-    [candidate, citation],
-  );
-  const [selected, setSelected] = useState<ReadonlySet<string>>(
-    () =>
-      new Set(differences.filter(({ current }) => current === undefined).map(({ field }) => field)),
-  );
   return (
-    <div className="citation-merge-review">
-      <div className="citation-merge-heading">
-        <div>
-          <strong>Review found metadata</strong>
-          <span>
-            {candidate.provenance.provider} ·{" "}
-            {new Date(candidate.provenance.retrievedAt).toLocaleDateString()}
-          </span>
-        </div>
-        <button type="button" onClick={editor.dismissCandidate}>
-          Dismiss
-        </button>
-      </div>
-      {differences.length ? (
-        <div className="citation-differences">
-          {differences.map((difference) => (
-            <label key={difference.field}>
-              <span className="sr-only">Use found {fieldLabel(difference.field)}</span>
-              <input
-                type="checkbox"
-                checked={selected.has(difference.field)}
-                onChange={() => setSelected(toggle(selected, difference.field))}
-              />
-              <span className="citation-difference-copy">
-                <strong>{fieldLabel(difference.field)}</strong>
+    <section className="citation-suggestions" aria-label="Citation suggestions" aria-live="polite">
+      {editor.suggestions.length ? (
+        <>
+          <header>
+            <strong>Review found metadata</strong>
+            <button
+              type="button"
+              onClick={() =>
+                editor.acceptSuggestions(new Set(editor.suggestions.map(({ field }) => field)))
+              }
+            >
+              Accept all
+            </button>
+          </header>
+          {editor.suggestions.map((suggestion) => (
+            <div className="citation-suggestion" key={suggestion.field}>
+              <strong>{cslFieldLabel(suggestion.field)}</strong>
+              <div className="citation-difference-copy">
                 <span>
                   <small>Current</small>
-                  <del>{displayCslValue(difference.current)}</del>
+                  <del>{displayCslValue(suggestion.current)}</del>
                 </span>
                 <span>
-                  <small>Found</small>
-                  <ins>{displayCslValue(difference.candidate)}</ins>
+                  <small>Proposed</small>
+                  <ins>{displayCslValue(suggestion.proposed)}</ins>
                 </span>
-              </span>
-            </label>
+              </div>
+              <small>{citationSourceLabel(claimSourceLabel(suggestion.source))}</small>
+              <div className="citation-review-actions">
+                <button
+                  type="button"
+                  aria-label={`Accept ${cslFieldLabel(suggestion.field)}`}
+                  onClick={() => editor.acceptSuggestions(new Set([suggestion.field]))}
+                >
+                  Accept
+                </button>
+                <button
+                  type="button"
+                  aria-label={`Dismiss ${cslFieldLabel(suggestion.field)}`}
+                  onClick={() => editor.dismissSuggestion(suggestion.field)}
+                >
+                  Dismiss
+                </button>
+              </div>
+            </div>
           ))}
-        </div>
+        </>
       ) : (
-        <p className="citation-lookup-note">The found record matches this citation.</p>
-      )}
-      {candidate.warnings.map((warning) => (
-        <p className="citation-lookup-error" key={warning}>
-          {warning}
+        <p className="citation-lookup-note">
+          No suggestions to review. Manual edits and removed fields are kept.
         </p>
-      ))}
-      <button
-        className="citation-apply-metadata"
-        type="button"
-        disabled={selected.size === 0}
-        onClick={() => editor.applyCandidate(selected)}
-      >
-        Apply{" "}
-        {selected.size === 0
-          ? "selected details"
-          : `${String(selected.size)} ${selected.size === 1 ? "change" : "changes"}`}
-      </button>
-    </div>
+      )}
+    </section>
   );
 }
 
@@ -152,18 +134,4 @@ function lookupSeed(citation: Readonly<Record<string, unknown>>): string {
     }
   }
   return "";
-}
-
-function toggle(values: ReadonlySet<string>, value: string): ReadonlySet<string> {
-  const updated = new Set(values);
-  if (updated.has(value)) {
-    updated.delete(value);
-  } else {
-    updated.add(value);
-  }
-  return updated;
-}
-
-function fieldLabel(field: string): string {
-  return field.replaceAll("-", " ").replace(/^./u, (letter) => letter.toLocaleUpperCase());
 }

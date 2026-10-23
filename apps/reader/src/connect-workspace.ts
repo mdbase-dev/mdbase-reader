@@ -442,12 +442,28 @@ export class ConnectWorkspaceGateway implements ReaderWorkspaceGateway {
     return this.bodyRecovery;
   }
 
-  async saveSourceCitation(source: Source, citation: unknown): Promise<Source> {
+  async saveSourceCitation(
+    source: Source,
+    citation: unknown,
+    options: Parameters<ReaderWorkspaceGateway["saveSourceCitation"]>[2] = {},
+  ): Promise<Source> {
     const updated = await saveSourceCitation(this.sources, source, this.#library ?? [], citation, {
-      ...(source.citation ? { expectedCitation: source.citation } : {}),
+      expectedCitation: "csl" in source.frontmatter ? source.frontmatter["csl"] : source.citation,
+      ...options,
     });
     this.#replaceSource(updated);
     return updated;
+  }
+
+  async citationClaims(
+    request: Parameters<NonNullable<ReaderWorkspaceGateway["citationClaims"]>>[0],
+    options: ReaderRequestOptions = {},
+  ): Promise<Awaited<ReturnType<NonNullable<ReaderWorkspaceGateway["citationClaims"]>>>> {
+    const { lookUpCitationClaims } = await import("@mdbase-reader/web-capture/citation-updates");
+    return lookUpCitationClaims(request, {
+      clientName: `mdbase-reader (${globalThis.location.origin})`,
+      ...(options.signal ? { signal: options.signal } : {}),
+    });
   }
 
   async resolveCitation(

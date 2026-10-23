@@ -1,3 +1,114 @@
+.citation-provenance {
+  padding: 12px 18px;
+  border-bottom: 1px solid var(--line);
+  color: var(--ink-soft);
+  font-size: var(--ui-meta);
+}
+.citation-provenance summary,
+.citation-quality-summary summary {
+  cursor: pointer;
+}
+.citation-provenance dl {
+  display: grid;
+  gap: 10px;
+  margin: 12px 0 0;
+}
+.citation-provenance dl > div {
+  display: grid;
+  grid-template-columns: minmax(70px, 1fr) minmax(0, 2fr);
+  gap: 12px;
+}
+.citation-provenance dt {
+  color: var(--muted);
+}
+.citation-provenance dd {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+.citation-provenance dd details {
+  margin-top: 5px;
+}
+.citation-provenance p {
+  line-height: 1.5;
+}
+.citation-alternative {
+  display: grid;
+  gap: 5px;
+  margin-top: 10px;
+}
+.citation-alternative small,
+.citation-suggestion > small {
+  color: var(--muted);
+}
+.citation-suggestions {
+  margin-top: 14px;
+  font-size: var(--ui-meta);
+}
+.citation-suggestions header,
+.citation-review-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+.citation-suggestions header {
+  justify-content: space-between;
+}
+.citation-suggestion {
+  display: grid;
+  gap: 8px;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--line);
+}
+.citation-suggestion .citation-difference-copy > span {
+  grid-template-columns: 55px minmax(0, 1fr);
+}
+.citation-review-actions button,
+.citation-suggestions header button,
+.citation-alternative button {
+  min-height: 32px;
+  width: fit-content;
+  padding: 4px 9px;
+  border: 1px solid var(--line);
+  border-radius: var(--control-radius);
+  color: var(--ink-soft);
+  background: var(--paper);
+  font: inherit;
+  cursor: pointer;
+}
+.citation-review-actions button:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+.citation-review-actions button:hover:not(:disabled),
+.citation-suggestions header button:hover,
+.citation-alternative button:hover {
+  border-color: var(--line-strong);
+  color: var(--ink);
+}
+.citation-quality-summary {
+  padding: 8px;
+  color: var(--ink-soft);
+  font-size: var(--ui-meta);
+}
+.citation-quality-summary table {
+  width: 100%;
+  margin-top: 10px;
+  border-collapse: collapse;
+  font-variant-numeric: tabular-nums;
+}
+.citation-quality-summary th,
+.citation-quality-summary td {
+  padding: 5px 3px;
+  border-bottom: 1px solid var(--line);
+  text-align: end;
+}
+.citation-quality-summary th:first-child {
+  text-align: start;
+}
+.citation-quality-summary .menu-note {
+  white-space: normal;
+}
 .citation-editor {
   container-type: inline-size;
   min-height: 0;

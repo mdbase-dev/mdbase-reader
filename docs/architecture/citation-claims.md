@@ -250,3 +250,33 @@ claims. Step 2 depends on it.
   field, or is replaced by the accepted source's claim.
 - Where snapshots and claim logs live in a collection, and how long they are kept.
 - Whether the extension's automatic Citoid lookup is on by default.
+
+## Reader review behaviour
+
+The citation editor's **Field sources** disclosure reports the current field statuses, with
+agreed evidence and rejected alternatives nested beneath explained fields. Applying an
+alternative is a manual draft edit. **Find citation details** collects Citoid claims for the
+source URL and DOI registry claims for existing or discovered DOIs, then resolves against the
+current draft and its provenance. Accept, Dismiss, and Accept all never save automatically.
+Manual values and removed fields remain protected. ISBN and title-only lookups can still use
+the gateway's existing candidate lookup, converted to claims for the same review boundary.
+
+On save, untouched provenance entries are kept. Accepted suggestions pin the proposed value,
+use `claimSourceLabel` for their source, and retain their evidence in `agreed`. Typed values
+(including rejected alternatives) receive `source: user`, without old alternatives. Clearing a
+field retains its previous pinned entry, or pins its former value as `user` if it had no
+entry. This removal marker is intentionally kept so subsequent lookups cannot refill it.
+
+Every editor save compares the loaded CSL, including an explicitly absent or malformed CSL
+baseline. A conflict preserves the draft. **Use their version** reloads the reported CSL
+without writing; **Keep mine** retries against that exact reported CSL, so another intervening
+edit still conflicts.
+
+The library view menu's **Citation quality · local only** section computes fixed category
+counts from indexed source CSL and provenance. It performs no requests and retains no
+identifiers, field names, values, provider names, or event history. Edited counts describe
+current mismatches with recorded provenance, not lifetime corrections; a manual value saved as
+`user` no longer attributes an edit to its former provider. Partial library indexes are labelled.
+Acceptance/dismissal history is not retained. Archived-page re-extraction is deferred: the
+editor has no local snapshot/document handle, and does not fetch an archive merely to check
+citation updates.

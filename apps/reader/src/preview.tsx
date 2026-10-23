@@ -60,6 +60,15 @@ const sources: readonly Source[] = [
     creators: ["William James"],
     tags: ["psychology", "attention"],
     citation: previewCitation,
+    cslProvenance: {
+      title: {
+        value: previewCitation.title,
+        source: "page:html",
+        agreed: ["page:json-ld name", "h1"],
+        rejected: [{ value: "Psychology", from: "page:json-ld headline" }],
+      },
+      language: { value: "en", source: "page:json-ld" },
+    },
     readingStatus: "reading",
     reading: {
       status: "reading",
@@ -281,7 +290,11 @@ export class PreviewGateway implements ReaderWorkspaceGateway {
     this.#sources = this.#sources.map((item) => (item.id === source.id ? { ...item, body } : item));
     return Promise.resolve(this.#sources.find((item) => item.id === source.id) ?? source);
   }
-  saveSourceCitation(source: Source, citation: unknown): Promise<Source> {
+  saveSourceCitation(
+    source: Source,
+    citation: unknown,
+    options: Parameters<ReaderWorkspaceGateway["saveSourceCitation"]>[2] = {},
+  ): Promise<Source> {
     const validation = validateCslItem(citation);
     if (!validation.valid) {
       return Promise.reject(new Error("The preview citation is invalid."));
@@ -289,7 +302,12 @@ export class PreviewGateway implements ReaderWorkspaceGateway {
     const updated: Source = {
       ...source,
       citation: validation.item,
-      frontmatter: { ...source.frontmatter, csl: validation.item },
+      ...(options.provenance ? { cslProvenance: options.provenance } : {}),
+      frontmatter: {
+        ...source.frontmatter,
+        csl: validation.item,
+        ...(options.provenance ? { "csl-provenance": options.provenance } : {}),
+      },
     };
     this.#sources = this.#sources.map((item) => (item.id === source.id ? updated : item));
     return Promise.resolve(updated);

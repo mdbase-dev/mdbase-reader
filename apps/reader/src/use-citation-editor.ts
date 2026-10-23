@@ -1,174 +1,217 @@
 import { signalMdbaseMark } from "@mdbase-dev/ui/mark-activity";
 import {
+  CitationChangedElsewhereError,
   citationCompletenessWarnings,
   citekeyForCitation,
-  type CitationCandidate,
+  cslValuesEqual,
+  parseCslProvenance,
+  type CslProvenance,
   type Source,
 } from "@mdbase-reader/core";
+import {
+  claimSourceLabel,
+  type CitationSuggestion,
+} from "@mdbase-reader/web-capture/citation-updates";
 import { useCallback, useState } from "react";
 
-import {
-  assessCitationDraft,
-  citationDraftForSource,
-  storedCitationDraftForSource,
-} from "./citation-editor-model.js";
-import { mergeCitation, resolutionRequest, serializeCitation } from "./citation-form-model.js";
+import { assessCitationDraft, citationDraftForSource } from "./citation-editor-model.js";
+import { serializeCitation } from "./citation-form-model.js";
+import { editedCitationProvenance } from "./citation-provenance.js";
 import { readerErrorMessage } from "./errors.js";
+import { useCitationLookup } from "./use-citation-lookup.js";
 
 import type { SelectedValue } from "./selected-resource.js";
 import type { ReaderWorkspaceGateway } from "./workspace-model.js";
 
-export interface CitationEditorController {
+interface DraftState {
+  readonly source: Source;
+  readonly value: string;
+  readonly provenance: CslProvenance;
+  readonly lastCitation: Readonly<Record<string, unknown>>;
+}
+
+export interface CitationEditorController extends ReturnType<typeof useCitationLookup> {
   readonly draft: string;
+  readonly provenance: CslProvenance;
   readonly assessment: ReturnType<typeof assessCitationDraft>;
   readonly status: "idle" | "saving" | "saved";
   readonly error: string | null;
+  readonly conflict: { readonly currentCitation: unknown } | null;
   readonly dirty: boolean;
   readonly suggested: boolean;
   readonly warnings: readonly string[];
-  readonly resolutionAvailable: boolean;
-  readonly resolutionStatus: "idle" | "resolving" | "resolved";
-  readonly resolutionError: string | null;
-  readonly candidate: CitationCandidate | null;
   readonly setDraft: (value: string) => void;
   readonly setCitation: (value: Readonly<Record<string, unknown>>) => void;
   readonly save: () => void;
-  readonly resolve: (query: string) => void;
-  readonly applyCandidate: (fields: ReadonlySet<string>) => void;
-  readonly dismissCandidate: () => void;
+  readonly useTheirVersion: () => void;
+  readonly keepMine: () => void;
   readonly regenerateCitekey: () => void;
 }
 
-// The hook intentionally owns one source-scoped editing transaction.
+// One source-scoped transaction pins the baseline even when unrelated writes refresh the source.
 // eslint-disable-next-line complexity, max-lines-per-function
 export function useCitationEditor(input: {
   readonly gateway: ReaderWorkspaceGateway;
   readonly source: Source | null;
   readonly onSaved: (source: Source) => void;
 }): CitationEditorController {
-  const [draftState, setDraftState] = useState<
-    (SelectedValue<string> & { readonly source: Source }) | null
-  >(null);
+  const [draftState, setDraftState] = useState<DraftState | null>(null);
   const [statusState, setStatusState] = useState<SelectedValue<
     CitationEditorController["status"]
   > | null>(null);
   const [errorState, setErrorState] = useState<SelectedValue<string | null> | null>(null);
-  const [candidateState, setCandidateState] =
-    useState<SelectedValue<CitationCandidate | null> | null>(null);
-  const [resolutionStatus, setResolutionStatus] = useState<"idle" | "resolving" | "resolved">(
-    "idle",
-  );
-  const [resolutionError, setResolutionError] = useState<string | null>(null);
-  const sourceId = input.source?.id ?? null;
-  const draft =
-    sourceId && draftState?.sourceId === sourceId
-      ? draftState.value
-      : input.source
-        ? citationDraftForSource(input.source)
-        : "";
-  const status = sourceId && statusState?.sourceId === sourceId ? statusState.value : "idle";
-  const error = sourceId && errorState?.sourceId === sourceId ? errorState.value : null;
-  const storedDraft = storedDraftFor(input.source);
-  const suggested = hasSuggestedDraft(input.source, storedDraft);
-  const dirty = isCitationDirty(input.source, storedDraft, draft);
+  const [conflictState, setConflictState] = useState<SelectedValue<{
+    readonly currentCitation: unknown;
+  }> | null>(null);
+  const sourceId = input.source?.id;
+  const transaction = draftState?.source.id === sourceId ? draftState : null;
+  const source = transaction?.source ?? input.source;
+  const draft = transaction?.value ?? (source ? citationDraftForSource(source) : "");
+  const provenance = transaction?.provenance ?? provenanceFor(source);
+  const status = statusState?.sourceId === sourceId ? (statusState?.value ?? "idle") : "idle";
+  const error = errorState?.sourceId === sourceId ? (errorState?.value ?? null) : null;
+  const conflict = conflictState?.sourceId === sourceId ? (conflictState?.value ?? null) : null;
   const assessment = assessCitationDraft(draft);
-  const setDraft = useCallback(
-    (value: string): void => {
-      const source = input.source;
-      if (sourceId && source) {
-        setDraftState((previous) => ({
-          sourceId,
-          value,
-          source: previous?.sourceId === sourceId ? previous.source : source,
-        }));
-        setStatusState({ sourceId, value: "idle" });
-        setErrorState({ sourceId, value: null });
-      }
-    },
-    [input.source, sourceId],
+  const dirty = Boolean(
+    source &&
+    (!cslValuesEqual(assessment.value, source.frontmatter["csl"]) ||
+      !cslValuesEqual(provenance, provenanceFor(source))),
   );
-  const setCitation = useCallback(
-    (value: Readonly<Record<string, unknown>>): void => {
-      setDraft(serializeCitation(value));
-    },
-    [setDraft],
-  );
-  const save = useCallback((): void => {
-    const source =
-      draftState && draftState.sourceId === input.source?.id ? draftState.source : input.source;
-    if (!source || !assessment.valid || !dirty || status === "saving") {
-      return;
-    }
-    setStatusState({ sourceId: source.id, value: "saving" });
-    setErrorState({ sourceId: source.id, value: null });
-    void input.gateway
-      .saveSourceCitation(source, assessment.value)
-      .then((updated) => {
-        input.onSaved(updated);
-        setDraftState((previous) =>
-          previous?.sourceId === updated.id ? { ...previous, source: updated } : previous,
-        );
-        setStatusState({ sourceId: updated.id, value: "saved" });
-        // The editor's SaveNotice usually plays this too; the mark plays it once.
-        signalMdbaseMark("saved");
-      })
-      .catch((reason: unknown) => {
-        // The editor's SaveNotice never shows attention; the error is reported below the form.
-        signalMdbaseMark("error");
-        setStatusState({ sourceId: source.id, value: "idle" });
-        setErrorState({
-          sourceId: source.id,
-          value: readerErrorMessage(reason, "Reader could not save this citation."),
-        });
-      });
-  }, [assessment, dirty, draftState, input, status]);
 
-  const resolve = useCallback(
-    (query: string): void => {
-      if (
-        !sourceId ||
-        !input.gateway.resolveCitation ||
-        !query.trim() ||
-        resolutionStatus === "resolving"
-      ) {
+  const updateDraft = useCallback(
+    (value: string, accepted: readonly CitationSuggestion[] = []): void => {
+      if (!source) {
         return;
       }
-      setResolutionStatus("resolving");
-      setResolutionError(null);
+      setDraftState((previous) => {
+        const current =
+          previous?.source.id === source.id
+            ? previous
+            : { source, value: draft, provenance, lastCitation: assessment.value ?? {} };
+        const next = assessCitationDraft(value).value;
+        const updated = next
+          ? {
+              ...editedCitationProvenance(current.lastCitation, next, current.provenance),
+            }
+          : { ...current.provenance };
+        for (const suggestion of accepted) {
+          updated[suggestion.field] = {
+            value: suggestion.proposed,
+            source: claimSourceLabel(suggestion.source),
+            ...(suggestion.evidence ? { agreed: [suggestion.evidence] } : {}),
+          };
+        }
+        return {
+          ...current,
+          value,
+          provenance: updated,
+          lastCitation: next ?? current.lastCitation,
+        };
+      });
+      setStatusState({ sourceId: source.id, value: "idle" });
+      setErrorState({ sourceId: source.id, value: null });
+    },
+    [assessment.value, draft, provenance, source],
+  );
+  const setDraft = useCallback((value: string): void => updateDraft(value), [updateDraft]);
+  const setCitation = useCallback(
+    (value: Readonly<Record<string, unknown>>): void => setDraft(serializeCitation(value)),
+    [setDraft],
+  );
+  const lookup = useCitationLookup({
+    gateway: input.gateway,
+    source,
+    citation: assessment.value ?? {},
+    provenance,
+    onAccept: (suggestions) =>
+      updateDraft(
+        serializeCitation({
+          ...assessment.value,
+          ...Object.fromEntries(suggestions.map(({ field, proposed }) => [field, proposed])),
+        }),
+        suggestions,
+      ),
+  });
+
+  const persist = useCallback(
+    (expectedCitation: unknown): void => {
+      if (!source || !assessment.valid || !dirty || status === "saving") {
+        return;
+      }
+      const savedDraft = draft;
+      setDraftState((previous) =>
+        previous?.source.id === source.id
+          ? previous
+          : { source, value: draft, provenance, lastCitation: assessment.value },
+      );
+      setStatusState({ sourceId: source.id, value: "saving" });
+      setErrorState({ sourceId: source.id, value: null });
       void input.gateway
-        .resolveCitation(resolutionRequest(query))
-        .then((candidate) => {
-          setCandidateState({ sourceId, value: candidate });
-          setResolutionStatus("resolved");
+        .saveSourceCitation(source, assessment.value, { provenance, expectedCitation })
+        .then((updated) => {
+          input.onSaved(updated);
+          setDraftState((previous) =>
+            previous?.source.id === updated.id
+              ? {
+                  ...previous,
+                  source: updated,
+                  ...(previous.value === savedDraft ? { provenance: provenanceFor(updated) } : {}),
+                }
+              : previous,
+          );
+          setConflictState(null);
+          setStatusState({ sourceId: updated.id, value: "saved" });
+          signalMdbaseMark("saved");
         })
         .catch((reason: unknown) => {
-          setResolutionStatus("idle");
-          setResolutionError(
-            readerErrorMessage(reason, "Reader could not find citation metadata."),
-          );
+          signalMdbaseMark("error");
+          setStatusState({ sourceId: source.id, value: "idle" });
+          if (reason instanceof CitationChangedElsewhereError) {
+            setConflictState({
+              sourceId: source.id,
+              value: { currentCitation: reason.currentCitation },
+            });
+          } else {
+            setErrorState({
+              sourceId: source.id,
+              value: readerErrorMessage(reason, "Reader could not save this citation."),
+            });
+          }
         });
     },
-    [input.gateway, resolutionStatus, sourceId],
+    [assessment, dirty, draft, input, provenance, source, status],
   );
-
-  const candidate = sourceId && candidateState?.sourceId === sourceId ? candidateState.value : null;
-  const dismissCandidate = useCallback((): void => {
-    if (sourceId) {
-      setCandidateState({ sourceId, value: null });
-      setResolutionStatus("idle");
+  const save = (): void => {
+    if (!conflict) {
+      persist(source?.frontmatter["csl"]);
     }
-  }, [sourceId]);
-  const applyCandidate = useCallback(
-    (fields: ReadonlySet<string>): void => {
-      if (candidate && assessment.value) {
-        setCitation(mergeCitation(assessment.value, candidate.citation, fields));
-        dismissCandidate();
-      }
-    },
-    [assessment.value, candidate, dismissCandidate, setCitation],
-  );
-  const regenerateCitekey = useCallback((): void => {
-    const source = input.source;
+  };
+  const useTheirVersion = (): void => {
+    if (!source || !conflict) {
+      return;
+    }
+    const value = JSON.stringify(conflict.currentCitation ?? {}, null, 2);
+    const theirs = assessCitationDraft(value);
+    const theirSource = {
+      ...source,
+      frontmatter: { ...source.frontmatter, csl: conflict.currentCitation },
+    };
+    Reflect.deleteProperty(theirSource, "citation");
+    if (theirs.valid) {
+      theirSource.citation = theirs.value;
+    }
+    setDraftState({
+      source: theirSource,
+      value,
+      lastCitation: theirs.value ?? {},
+      provenance: provenanceFor(source),
+    });
+    lookup.resetLookup();
+    setConflictState(null);
+    setErrorState(null);
+    setStatusState(null);
+  };
+  const regenerateCitekey = (): void => {
     if (!source || !assessment.value) {
       return;
     }
@@ -180,50 +223,34 @@ export function useCitationEditor(input: {
           id: citekeyForCitation(assessment.value ?? {}, sources, source.id),
         });
       })
-      .catch((reason: unknown) => {
+      .catch((reason: unknown) =>
         setErrorState({
           sourceId: source.id,
           value: readerErrorMessage(reason, "Reader could not generate a citekey."),
-        });
-      });
-  }, [assessment.value, input.gateway, input.source, setCitation]);
-
-  const warnings = assessment.valid ? citationCompletenessWarnings(assessment.value) : [];
+        }),
+      );
+  };
 
   return {
+    ...lookup,
     draft,
+    provenance,
     assessment,
     status,
     error,
+    conflict,
     dirty,
-    suggested,
-    warnings,
-    resolutionAvailable: input.gateway.resolveCitation !== undefined,
-    resolutionStatus,
-    resolutionError,
-    candidate,
+    suggested: source !== null && source.frontmatter["csl"] === undefined,
+    warnings: assessment.valid ? citationCompletenessWarnings(assessment.value) : [],
     setDraft,
     setCitation,
     save,
-    resolve,
-    applyCandidate,
-    dismissCandidate,
+    useTheirVersion,
+    keepMine: () => conflict && persist(conflict.currentCitation),
     regenerateCitekey,
   };
 }
 
-function storedDraftFor(source: Source | null): string | null {
-  return source ? storedCitationDraftForSource(source) : null;
-}
-
-function hasSuggestedDraft(source: Source | null, storedDraft: string | null): boolean {
-  return source !== null && storedDraft === null;
-}
-
-function isCitationDirty(
-  source: Source | null,
-  storedDraft: string | null,
-  draft: string,
-): boolean {
-  return source !== null && (storedDraft === null || draft !== storedDraft);
+function provenanceFor(source: Source | null): CslProvenance {
+  return source?.cslProvenance ?? parseCslProvenance(source?.frontmatter["csl-provenance"]);
 }
