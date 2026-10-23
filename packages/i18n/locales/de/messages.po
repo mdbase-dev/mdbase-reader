@@ -7786,560 +7786,560 @@ msgstr "Dieser Teil des Threads fehlt in der gespeicherten Kopie. Öffnen Sie di
 
 #: packages/renderer-pdf/src/pdf-viewer-ui-schema.ts
 msgid "Thumbnails"
-msgstr ""
+msgstr "Miniaturansichten"
 
 #: packages/renderer-pdf/src/pdf-translations.ts
 msgctxt "PDF viewer panel"
 msgid "Thumbnails"
-msgstr ""
+msgstr "Miniaturansichten"
 
 #: apps/extension/src/NotePanel.tsx
 msgid "Title"
-msgstr ""
+msgstr "Titel"
 
 #: apps/reader/src/CitationStructuredEditor.tsx
 msgctxt "CitationStructuredEditor interface"
 msgid "Title"
-msgstr ""
+msgstr "Titel"
 
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "Title"
-msgstr ""
+msgstr "Titel"
 
 #: apps/reader/src/library-columns.ts
 msgctxt "Library table column"
 msgid "Title"
-msgstr ""
+msgstr "Titel"
 
 #: apps/reader/src/LibraryWorkspace.tsx
 msgctxt "LibraryWorkspace sortFieldOptions"
 msgid "Title"
-msgstr ""
+msgstr "Titel"
 
 #: apps/reader/src/CitationSourceSync.tsx
 msgctxt "source metadata field"
 msgid "Title"
-msgstr ""
+msgstr "Titel"
 
 #: apps/reader/src/SourceDetails.tsx
 msgctxt "SourceDetails fields"
 msgid "Title"
-msgstr ""
+msgstr "Titel"
 
 #: apps/reader/src/SourceImportDialog.tsx
 msgctxt "SourceImportDialog interface"
 msgid "Title"
-msgstr ""
+msgstr "Titel"
 
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "Title short"
-msgstr ""
+msgstr "Kurztitel"
 
 #: apps/reader/src/LibraryWorkspace.tsx
 msgid "Title, author or tag"
-msgstr ""
+msgstr "Titel, Autor oder Tag"
 
 #: apps/reader/src/CitationStructuredEditor.tsx
 msgid "Title, work type, and citation key"
-msgstr ""
+msgstr "Titel, Werktyp und Citekey"
 
 #: apps/extension/src/WelcomeApp.tsx
 msgid "To save a selection straight away, right-click it and choose Save highlight, or press <0>{highlight}</0>."
-msgstr ""
+msgstr "Um eine Auswahl sofort zu speichern, klicken Sie mit der rechten Maustaste darauf und wählen Sie „Hervorhebung speichern“ oder drücken Sie <0>{highlight}</0>."
 
 #: apps/extension/src/WelcomeApp.tsx
 msgid "To save a selection straight away, right-click it and choose Save highlight."
-msgstr ""
+msgstr "Um eine Auswahl sofort zu speichern, klicken Sie mit der rechten Maustaste darauf und wählen Sie „Hervorhebung speichern“."
 
 #: apps/reader/src/LibraryCells.tsx
 msgid "Today"
-msgstr ""
+msgstr "Heute"
 
 #: apps/reader/src/reader-command-list.ts
 #: apps/reader/src/ReaderHeader.tsx
 msgid "Toggle left sidebar"
-msgstr ""
+msgstr "Linke Seitenleiste ein-/ausblenden"
 
 #. placeholder {0}: shortcutLabel("mod+\\")
 #: apps/reader/src/ReaderHeader.tsx
 msgid "Toggle left sidebar · {0}"
-msgstr ""
+msgstr "Linke Seitenleiste ein-/ausblenden · {0}"
 
 #: packages/renderer-pdf/src/pdf-translations.ts
 msgctxt "PDF viewer pan"
 msgid "Toggle Pan Mode"
-msgstr ""
+msgstr "Schwenkmodus ein-/ausschalten"
 
 #: packages/renderer-pdf/src/pdf-translations.ts
 msgctxt "PDF viewer pointer"
 msgid "Toggle Pointer Mode"
-msgstr ""
+msgstr "Zeigermodus ein-/ausschalten"
 
 #: apps/reader/src/reader-command-list.ts
 #: apps/reader/src/ReaderHeader.tsx
 msgid "Toggle right sidebar"
-msgstr ""
+msgstr "Rechte Seitenleiste ein-/ausblenden"
 
 #. placeholder {0}: shortcutLabel("mod+shift+\\")
 #: apps/reader/src/ReaderHeader.tsx
 msgid "Toggle right sidebar · {0}"
-msgstr ""
+msgstr "Rechte Seitenleiste ein-/ausblenden · {0}"
 
 #: packages/renderer-pdf/src/pdf-translations.ts
 msgctxt "PDF viewer print"
 msgid "Total pages in document: {totalPages}"
-msgstr ""
+msgstr "Seiten insgesamt im Dokument: {totalPages}"
 
 #: apps/reader/src/CitationContributors.tsx
 msgid "Translator"
-msgstr ""
+msgstr "Übersetzer"
 
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "Translator"
-msgstr ""
+msgstr "Übersetzer"
 
 #: apps/reader/src/CitationStructuredEditor.tsx
 msgctxt "CitationStructuredEditor interface"
 msgid "Translators"
-msgstr ""
+msgstr "Übersetzer"
 
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "Treaty"
-msgstr ""
+msgstr "Vertrag"
 
 #: apps/extension/src/OptionsApp.tsx
 msgid "Troubleshooting"
-msgstr ""
+msgstr "Fehlerbehebung"
 
 #: apps/reader/src/CitationTypedFieldEditors.tsx
 msgctxt "CitationTypedFieldEditors booleanOptions"
 msgid "True"
-msgstr ""
+msgstr "Wahr"
 
 #: apps/reader/src/CitationTypedFieldEditors.tsx
 msgctxt "CitationTypedFieldEditors customValueTypeOptions"
 msgid "True / false"
-msgstr ""
+msgstr "Wahr / falsch"
 
 #: apps/reader/src/LibraryAnnotations.tsx
 #: apps/reader/src/LibraryWorkspace.tsx
 msgid "Try a different search, or clear the filters."
-msgstr ""
+msgstr "Versuchen Sie eine andere Suche oder setzen Sie die Filter zurück."
 
 #: apps/extension/src/NotePanel.tsx
 #: apps/reader/src/ConnectionLayout.tsx
 #: apps/reader/src/LibraryAnnotationBars.tsx
 msgid "Try again"
-msgstr ""
+msgstr "Erneut versuchen"
 
 #: apps/reader/src/ConnectedDocument.tsx
 msgid "Try this tab again"
-msgstr ""
+msgstr "Diesen Tab erneut versuchen"
 
 #: packages/renderer-pdf/src/pdf-translations.ts
 msgctxt "PDF viewer page"
 msgid "Two Page (Even)"
-msgstr ""
+msgstr "Zwei Seiten (gerade)"
 
 #: packages/renderer-pdf/src/pdf-translations.ts
 msgctxt "PDF viewer page"
 msgid "Two Page (Odd)"
-msgstr ""
+msgstr "Zwei Seiten (ungerade)"
 
 #: apps/reader/src/annotation-columns.ts
 msgctxt "Annotation table column"
 msgid "Type"
-msgstr ""
+msgstr "Typ"
 
 #: apps/extension/src/CitationCard.tsx
 msgctxt "Citation item type"
 msgid "Type"
-msgstr ""
+msgstr "Typ"
 
 #: apps/reader/src/CitationStructuredEditor.tsx
 msgctxt "CitationStructuredEditor interface"
 msgid "Type"
-msgstr ""
+msgstr "Typ"
 
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "Type"
-msgstr ""
+msgstr "Typ"
 
 #: apps/reader/src/LibraryAnnotationToolbar.tsx
 msgctxt "LibraryAnnotationToolbar annotationSortOptions"
 msgid "Type"
-msgstr ""
+msgstr "Typ"
 
 #: apps/reader/src/LibraryAnnotationToolbar.tsx
 msgctxt "LibraryAnnotationToolbar interface"
 msgid "Type"
-msgstr ""
+msgstr "Typ"
 
 #: apps/reader/src/DisplayMenu.tsx
 msgctxt "DisplayMenu interface"
 msgid "Typeface"
-msgstr ""
+msgstr "Schriftart"
 
 #: apps/reader/src/workspace-tab-display.ts
 msgid "Unavailable source"
-msgstr ""
+msgstr "Nicht verfügbare Quelle"
 
 #: apps/reader/src/LibraryCards.tsx
 msgctxt "LibraryCards interface"
 msgid "Undated"
-msgstr ""
+msgstr "Ohne Datum"
 
 #: apps/extension/src/CaptureApp.tsx
 msgid "Undo"
-msgstr ""
+msgstr "Rückgängig"
 
 #: packages/core/src/application/create-annotation.ts
 msgid "Unknown annotation creation failure"
-msgstr ""
+msgstr "Unbekannter Fehler beim Erstellen der Anmerkung"
 
 #: apps/reader/src/LibraryCards.tsx
 msgctxt "LibraryCards interface"
 msgid "Unknown creator"
-msgstr ""
+msgstr "Unbekannter Urheber"
 
 #: apps/reader/src/LibraryNavigator.tsx
 msgctxt "LibraryNavigator interface"
 msgid "Unknown creator"
-msgstr ""
+msgstr "Unbekannter Urheber"
 
 #: apps/reader/src/NavigatorSections.tsx
 msgctxt "NavigatorSections status or action"
 msgid "Unknown creator"
-msgstr ""
+msgstr "Unbekannter Urheber"
 
 #: apps/reader/src/reader-command-list.ts
 msgctxt "reader command list"
 msgid "Unknown creator"
-msgstr ""
+msgstr "Unbekannter Urheber"
 
 #: apps/reader/src/annotation-overview.ts
 msgid "Unknown source"
-msgstr ""
+msgstr "Unbekannte Quelle"
 
 #: apps/reader/src/LibraryAnnotationRow.tsx
 msgctxt "LibraryAnnotationRow interface"
 msgid "Unknown source"
-msgstr ""
+msgstr "Unbekannte Quelle"
 
 #: packages/migration/src/zotero-bundle.ts
 msgid "Unlisted file in bundle."
-msgstr ""
+msgstr "Nicht aufgeführte Datei im Paket."
 
 #: apps/reader/src/dockview-menus.ts
 msgctxt "dockview menus"
 msgid "Unpin tab"
-msgstr ""
+msgstr "Tab lösen"
 
 #: apps/reader/src/library-lenses.ts
 msgctxt "library lenses"
 msgid "Unread inbox"
-msgstr ""
+msgstr "Ungelesener Eingang"
 
 #: packages/migration/src/zotero-validation.ts
 msgid "Unreported missing parent."
-msgstr ""
+msgstr "Fehlendes übergeordnetes Element nicht gemeldet."
 
 #: packages/migration/src/model.ts
 msgid "Unsafe import path."
-msgstr ""
+msgstr "Unsicherer Importpfad."
 
 #: apps/reader/src/AnnotationEditor.tsx
 msgid "Unsaved"
-msgstr ""
+msgstr "Ungespeichert"
 
 #: apps/extension/src/NotePanel.tsx
 msgid "Unsaved changes"
-msgstr ""
+msgstr "Ungespeicherte Änderungen"
 
 #: apps/reader/src/AnnotationCard.tsx
 msgctxt "AnnotationCard interface"
 msgid "Unsaved changes"
-msgstr ""
+msgstr "Ungespeicherte Änderungen"
 
 #: apps/reader/src/CitationEditor.tsx
 msgctxt "CitationEditor interface"
 msgid "Unsaved changes"
-msgstr ""
+msgstr "Ungespeicherte Änderungen"
 
 #: apps/reader/src/DockviewWorkspace.tsx
 msgctxt "DockviewWorkspace interface"
 msgid "Unsaved changes"
-msgstr ""
+msgstr "Ungespeicherte Änderungen"
 
 #: packages/migration/src/readwise.ts
 msgid "Unsaved Feed items excluded (choose “Include unsaved Feed items” to import)"
-msgstr ""
+msgstr "Ungespeicherte Feed-Einträge ausgeschlossen (zum Import „Ungespeicherte Feed-Einträge einschließen“ auswählen)"
 
 #: packages/migration/src/zotero-pdf.ts
 msgid "Unsupported PDF page geometry."
-msgstr ""
+msgstr "Nicht unterstützte PDF-Seitengeometrie."
 
 #: apps/reader/src/citation-form-model.ts
 msgid "Unsupported value"
-msgstr ""
+msgstr "Nicht unterstützter Wert"
 
 #: packages/migration/src/zotero-bundle.ts
 msgid "Unsupported Zotero bundle version."
-msgstr ""
+msgstr "Nicht unterstützte Zotero-Paketversion."
 
 #: apps/reader/src/annotation-wiki-candidates.ts
 msgid "Untitled annotation"
-msgstr ""
+msgstr "Unbenannte Anmerkung"
 
 #: apps/reader/src/source-addition-flow.ts
 msgctxt "source addition flow"
 msgid "Untitled source"
-msgstr ""
+msgstr "Unbenannte Quelle"
 
 #: apps/reader/src/CitationSourceSync.tsx
 msgid "Update library details"
-msgstr ""
+msgstr "Bibliotheksangaben aktualisieren"
 
 #: apps/reader/src/connection-recovery.ts
 msgid "Update mdbase Connect on your computer to open this collection."
-msgstr ""
+msgstr "Aktualisieren Sie mdbase Connect auf Ihrem Computer, um diese Sammlung zu öffnen."
 
 #: apps/extension/src/connection-view.ts
 msgid "Update Reader"
-msgstr ""
+msgstr "Reader aktualisieren"
 
 #: apps/reader/src/LibraryBulkBar.tsx
 msgctxt "LibraryBulkBar interface"
 msgid "Updated"
-msgstr ""
+msgstr "Aktualisiert"
 
 #. placeholder {0}: String(progress.done)
 #. placeholder {1}: String(progress.total)
 #: apps/reader/src/LibraryBulkBar.tsx
 msgid "Updating {0} of {1}…"
-msgstr ""
+msgstr "{0} von {1} werden aktualisiert…"
 
 #: apps/extension/src/SavedHighlights.tsx
 #: apps/reader/src/CitationSourceSync.tsx
 msgid "Updating…"
-msgstr ""
+msgstr "Wird aktualisiert…"
 
 #: packages/migration/src/run-files.ts
 msgid "Uploaded checksum does not match the original file."
-msgstr ""
+msgstr "Die Prüfsumme des Uploads stimmt nicht mit der Originaldatei überein."
 
 #. placeholder {0}: String(progress.fileIndex)
 #. placeholder {1}: String(progress.fileCount)
 #: apps/reader/src/SourceImportDialog.tsx
 msgid "Uploading file {0} of {1}"
-msgstr ""
+msgstr "Datei {0} von {1} wird hochgeladen"
 
 #: apps/extension/src/CaptureApp.tsx
 msgid "Uploading file {fileIndex} of {fileCount} · {percent}%"
-msgstr ""
+msgstr "Datei {fileIndex} von {fileCount} wird hochgeladen · {percent}%"
 
 #: packages/migration/src/zotero-validation.ts
 msgid "URL attachment contains unexpected files."
-msgstr ""
+msgstr "Der URL-Anhang enthält unerwartete Dateien."
 
 #: apps/reader/src/DraftRecoveryNotice.tsx
 msgid "Use collection version"
-msgstr ""
+msgstr "Sammlungsversion verwenden"
 
 #: apps/reader/src/reader-app-commands.ts
 msgid "Use comfortable density"
-msgstr ""
+msgstr "Bequeme Dichte verwenden"
 
 #: apps/reader/src/reader-app-commands.ts
 msgid "Use compact density"
-msgstr ""
+msgstr "Kompakte Dichte verwenden"
 
 #: apps/reader/src/reader-app-commands.ts
 msgid "Use dark theme"
-msgstr ""
+msgstr "Dunkles Design verwenden"
 
 #. placeholder {0}: fieldLabel(difference.field)
 #: apps/reader/src/CitationLookup.tsx
 msgid "Use found {0}"
-msgstr ""
+msgstr "Gefundenen Wert für {0} verwenden"
 
 #: apps/reader/src/AnnotationComposer.tsx
 msgid "Use it for this comment"
-msgstr ""
+msgstr "Für diesen Kommentar verwenden"
 
 #: apps/reader/src/reader-app-commands.ts
 msgid "Use light theme"
-msgstr ""
+msgstr "Helles Design verwenden"
 
 #: apps/extension/src/NotePanel.tsx
 #: apps/reader/src/AnnotationEditor.tsx
 msgid "Use theirs"
-msgstr ""
+msgstr "Andere Version verwenden"
 
 #: apps/reader/src/LibraryConditionsEditor.tsx
 msgctxt "LibraryConditionsEditor interface"
 msgid "value"
-msgstr ""
+msgstr "Wert"
 
 #: apps/reader/src/LibraryConditionsEditor.tsx
 msgctxt "LibraryConditionsEditor interface"
 msgid "Value"
-msgstr ""
+msgstr "Wert"
 
 #: apps/reader/src/LibraryBulkBar.tsx
 msgid "Value (empty removes the field)"
-msgstr ""
+msgstr "Wert (leer lassen, um das Feld zu entfernen)"
 
 #. placeholder {0}: String(index + 1)
 #: apps/reader/src/CitationTypedFieldEditors.tsx
 msgid "Value {0}"
-msgstr ""
+msgstr "Wert {0}"
 
 #: apps/reader/src/CitationTypedFieldEditors.tsx
 msgctxt "CitationTypedFieldEditors interface"
 msgid "Value type"
-msgstr ""
+msgstr "Werttyp"
 
 #: apps/reader/src/LibraryBulkBar.tsx
 msgid "value, or empty to remove"
-msgstr ""
+msgstr "Wert oder leer lassen zum Entfernen"
 
 #: apps/reader/src/CitationTypedFieldEditors.tsx
 msgid "Values"
-msgstr ""
+msgstr "Werte"
 
 #. placeholder {0}: String(i + 1)
 #. placeholder {1}: String(payloads.length)
 #: packages/migration/src/zotero-bundle.ts
 msgid "Verifying file {0} of {1}…"
-msgstr ""
+msgstr "Datei {0} von {1} wird geprüft…"
 
 #: apps/reader/src/import-controller.ts
 msgid "Verifying imported records"
-msgstr ""
+msgstr "Importierte Datensätze werden geprüft"
 
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "Version"
-msgstr ""
+msgstr "Version"
 
 #: packages/renderer-pdf/src/pdf-translations.ts
 msgctxt "PDF viewer page"
 msgid "Vertical"
-msgstr ""
+msgstr "Vertikal"
 
 #: packages/renderer-pdf/src/pdf-translations.ts
 msgctxt "PDF viewer menu"
 msgid "View Controls"
-msgstr ""
+msgstr "Ansichtssteuerung"
 
 #: apps/reader/src/LibraryAnnotationToolbar.tsx
 msgctxt "LibraryAnnotationToolbar interface"
 msgid "View options"
-msgstr ""
+msgstr "Ansichtsoptionen"
 
 #: apps/reader/src/LibraryWorkspace.tsx
 msgctxt "LibraryWorkspace interface"
 msgid "View options"
-msgstr ""
+msgstr "Ansichtsoptionen"
 
 #. placeholder {0}: filterCount ? `, ${String(filterCount)} active filters` : ""
 #: apps/reader/src/LibraryWorkspace.tsx
 msgid "View options{0}"
-msgstr ""
+msgstr "Ansichtsoptionen{0}"
 
 #: apps/reader/src/LibraryNavigator.tsx
 msgid "Views"
-msgstr ""
+msgstr "Ansichten"
 
 #: apps/reader/src/CitationStructuredEditor.tsx
 msgctxt "CitationStructuredEditor interface"
 msgid "Volume"
-msgstr ""
+msgstr "Band"
 
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "Volume"
-msgstr ""
+msgstr "Band"
 
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "Volume title"
-msgstr ""
+msgstr "Bandtitel"
 
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "Volume title short"
-msgstr ""
+msgstr "Kurztitel des Bands"
 
 #: apps/reader/src/native-signin-ui.ts
 msgctxt "Native sign-in"
 msgid "Waiting for approval in the mdbase tab…"
-msgstr ""
+msgstr "Warten auf Bestätigung im mdbase-Tab…"
 
 #: apps/extension/src/CaptureApp.tsx
 msgid "Waiting for the active tab"
-msgstr ""
+msgstr "Warten auf den aktiven Tab"
 
 #: apps/reader/src/LibraryCells.tsx
 msgctxt "source format"
 msgid "Web"
-msgstr ""
+msgstr "Web"
 
 #: apps/reader/src/workspace-tab-display.ts
 msgctxt "Source format badge for saved web pages"
 msgid "WEB"
-msgstr ""
+msgstr "WEB"
 
 #: packages/core/src/application/source-import-values.ts
 msgid "Web capture provenance contains an invalid URL."
-msgstr ""
+msgstr "Die Herkunftsangabe der Web-Erfassung enthält eine ungültige URL."
 
 #: packages/core/src/application/source-import-values.ts
 msgid "Web capture provenance must use public HTTPS URLs."
-msgstr ""
+msgstr "Die Herkunftsangabe der Web-Erfassung muss öffentliche HTTPS-URLs verwenden."
 
 #: packages/core/src/application/import-source-file.ts
 msgid "Web captures must contain an HTML document."
-msgstr ""
+msgstr "Web-Erfassungen müssen ein HTML-Dokument enthalten."
 
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "Web page"
-msgstr ""
+msgstr "Webseite"
 
 #: apps/reader/src/citation-form-model.ts
 msgctxt "CSL item type"
 msgid "Web page"
-msgstr ""
+msgstr "Webseite"
 
 #: apps/extension/src/shell-messages.ts
 #: apps/extension/src/WelcomeApp.tsx
 msgid "Welcome to mdbase Reader"
-msgstr ""
+msgstr "Willkommen bei mdbase Reader"
 
 #: apps/reader/src/CitationStructuredEditor.tsx
 msgid "Where and when the work appeared"
-msgstr ""
+msgstr "Wo und wann das Werk erschienen ist"
 
 #: apps/reader/src/annotation-wiki-candidates.ts
 msgctxt "annotation wiki candidates"
 msgid "Whole source"
-msgstr ""
+msgstr "Gesamte Quelle"
 
 #: packages/renderer-pdf/src/pdf-translations.ts
 msgctxt "PDF viewer search"
 msgid "Whole word"
-msgstr ""
+msgstr "Ganzes Wort"
 
 #: apps/reader/src/AnnotationComposer.tsx
 msgid "Why does this matter?"
-msgstr ""
+msgstr "Warum ist das wichtig?"
 
 #: apps/reader/src/DisplayMenu.tsx
 msgctxt "DisplayMenu interface"
