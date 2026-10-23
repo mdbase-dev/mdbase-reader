@@ -4320,539 +4320,539 @@ msgstr "原生元数据也会以 JSON 形式存档。按导入标识匹配到的
 
 #: apps/reader/src/AnnotationComposer.tsx
 msgid "New area annotation"
-msgstr ""
+msgstr "新建区域注释"
 
 #: apps/reader/src/AnnotationPanelActions.tsx
 msgid "New comment"
-msgstr ""
+msgstr "新评论"
 
 #: apps/reader/src/AnnotationList.tsx
 msgctxt "AnnotationList annotationOrderOptions"
 msgid "Newest first"
-msgstr ""
+msgstr "最新优先"
 
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "Newspaper article"
-msgstr ""
+msgstr "报纸文章"
 
 #: apps/reader/src/citation-form-model.ts
 msgctxt "CSL item type"
 msgid "Newspaper article"
-msgstr ""
+msgstr "报纸文章"
 
 #: packages/renderer-epub/src/epub-page-navigation.tsx
 msgid "Next page"
-msgstr ""
+msgstr "下一页"
 
 #: packages/renderer-pdf/src/pdf-translations.ts
 msgctxt "PDF viewer page"
 msgid "Next Page"
-msgstr ""
+msgstr "下一页"
 
 #: apps/reader/src/citation-form-model.ts
 msgid "No"
-msgstr ""
+msgstr "否"
 
 #: apps/reader/src/library-columns.ts
 msgctxt "library columns"
 msgid "No"
-msgstr ""
+msgstr "否"
 
 #: apps/reader/src/LibraryAnnotations.tsx
 msgid "No annotations match"
-msgstr ""
+msgstr "没有匹配的注释"
 
 #: apps/reader/src/AnnotationList.tsx
 #: apps/reader/src/LibraryAnnotations.tsx
 msgid "No annotations yet"
-msgstr ""
+msgstr "还没有注释"
 
 #: packages/core/src/application/citation-citekey.ts
 msgid "No author or editor is recorded."
-msgstr ""
+msgstr "未记录作者或编辑。"
 
 #: apps/extension/src/CitationPanel.tsx
 msgid "No citation details were found on this page. Save the source, then add them in Reader."
-msgstr ""
+msgstr "此页面上未找到引文详情。请先保存来源，再在 Reader 中添加。"
 
 #. placeholder {0}: query.trim()
 #: apps/reader/src/CollectionMenu.tsx
 msgid "No collections match “{0}”."
-msgstr ""
+msgstr "没有与“{0}”匹配的集合。"
 
 #: apps/reader/src/connection-recovery.ts
 msgid "No computer is registered for this collection."
-msgstr ""
+msgstr "没有电脑注册到此集合。"
 
 #: packages/core/src/application/build-csl-bibliography.ts
 msgid "No CSL citation metadata is attached."
-msgstr ""
+msgstr "未附加 CSL 引文元数据。"
 
 #: apps/reader/src/WorkspacePaneSupport.tsx
 msgid "No document attached"
-msgstr ""
+msgstr "未附加文档"
 
 #: packages/renderer-pdf/src/pdf-translations.ts
 msgctxt "PDF viewer emptyState"
 msgid "No Documents Open"
-msgstr ""
+msgstr "没有打开的文档"
 
 #: packages/migration/src/readwise-sources.ts
 msgid "No downloadable content; importing metadata only: {key}"
-msgstr ""
+msgstr "没有可下载的内容；仅导入元数据：{key}"
 
 #: apps/reader/src/workspace-tab-display.ts
 msgctxt "workspace tab display"
 msgid "NO FILE"
-msgstr ""
+msgstr "无文件"
 
 #: apps/reader/src/LibraryCells.tsx
 msgid "No file attached"
-msgstr ""
+msgstr "未附加文件"
 
 #: apps/reader/src/LibraryWorkspace.tsx
 msgctxt "LibraryWorkspace formatFilterOptions"
 msgid "No file attached"
-msgstr ""
+msgstr "未附加文件"
 
 #: apps/reader/src/LibraryNavigator.tsx
 msgid "No matches in the sources loaded so far. Loading more…"
-msgstr ""
+msgstr "目前已加载的来源中没有匹配项。正在加载更多…"
 
 #: apps/reader/src/AnnotationList.tsx
 msgid "No matching annotations"
-msgstr ""
+msgstr "没有匹配的注释"
 
 #: apps/reader/src/use-document-attachment.ts
 msgid "No open-access PDF was found. Attach a copy you have, or save it from the publisher with the browser extension."
-msgstr ""
+msgstr "未找到开放获取的 PDF。请附加你已有的副本，或使用浏览器扩展从出版商处保存。"
 
 #: packages/renderer-pdf/src/pdf-translations.ts
 msgctxt "PDF viewer outline"
 msgid "No outline available"
-msgstr ""
+msgstr "没有可用的大纲"
 
 #: apps/extension/src/PostPicker.tsx
 msgid "No posts loaded. Scroll the page to load some posts."
-msgstr ""
+msgstr "未加载任何帖子。请滚动页面以加载帖子。"
 
 #: packages/core/src/application/citation-citekey.ts
 msgid "No publication date is recorded."
-msgstr ""
+msgstr "未记录出版日期。"
 
 #. placeholder {0}: document.mediaType
 #: apps/reader/src/ConnectedDocument.tsx
 msgid "No renderer is registered for {0}."
-msgstr ""
+msgstr "没有为 {0} 注册的渲染器。"
 
 #: apps/reader/src/InspectorPane.tsx
 msgid "No source in this pane"
-msgstr ""
+msgstr "此窗格中没有来源"
 
 #: apps/reader/src/LibraryWorkspace.tsx
 msgid "No sources match"
-msgstr ""
+msgstr "没有匹配的来源"
 
 #: apps/reader/src/LibraryNavigator.tsx
 msgid "No sources match."
-msgstr ""
+msgstr "没有匹配的来源。"
 
 #: apps/reader/src/LibraryNavigator.tsx
 msgid "No sources yet."
-msgstr ""
+msgstr "还没有来源。"
 
 #: apps/reader/src/use-bibliography-export.ts
 msgid "No valid citations are ready to export."
-msgstr ""
+msgstr "没有可导出的有效引文。"
 
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "Non dropping particle"
-msgstr ""
+msgstr "不可省略前缀"
 
 #: packages/migration/src/zotero-pdf.ts
 msgid "Non-default PDF UserUnit is not yet supported."
-msgstr ""
+msgstr "暂不支持非默认的 PDF UserUnit。"
 
 #: apps/reader/src/CitationContributors.tsx
 msgctxt "CitationContributors interface"
 msgid "Non-dropping particle"
-msgstr ""
+msgstr "不可省略前缀"
 
 #: apps/reader/src/CitationSourceSync.tsx
 msgctxt "empty metadata value"
 msgid "None"
-msgstr ""
+msgstr "无"
 
 #: apps/reader/src/import-controller.ts
 msgid "Not complete — review the error before resuming"
-msgstr ""
+msgstr "未完成 — 请先查看错误再继续"
 
 #: apps/extension/src/ConnectionPanel.tsx
 msgid "Not connected"
-msgstr ""
+msgstr "未连接"
 
 #: apps/extension/src/SavedHighlights.tsx
 msgid "Not found on this page"
-msgstr ""
+msgstr "在此页面上未找到"
 
 #: apps/reader/src/ConnectReader.tsx
 msgctxt "ConnectReader interface"
 msgid "not installed"
-msgstr ""
+msgstr "未安装"
 
 #: apps/reader/src/pwa-install.ts
 msgctxt "pwa install"
 msgid "Not now"
-msgstr ""
+msgstr "暂不"
 
 #: apps/reader/src/citation-form-model.ts
 msgid "Not recorded"
-msgstr ""
+msgstr "未记录"
 
 #: apps/extension/src/NotePanel.tsx
 #: apps/reader/src/AnnotationEditor.tsx
 msgid "Not saved"
-msgstr ""
+msgstr "未保存"
 
 #: apps/reader/src/SourceNoteEditor.tsx
 msgctxt "SourceNoteEditor status or action"
 msgid "Not saved"
-msgstr ""
+msgstr "未保存"
 
 #: apps/reader/src/AnnotationComposer.tsx
 msgid "Not saved yet — keep Reader open until you save this annotation."
-msgstr ""
+msgstr "尚未保存 — 请保持 Reader 打开，直到保存此注释。"
 
 #: apps/extension/src/NotePanel.tsx
 msgid "Not saved."
-msgstr ""
+msgstr "未保存。"
 
 #: apps/extension/src/ShortcutList.tsx
 msgid "Not set"
-msgstr ""
+msgstr "未设置"
 
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "Note"
-msgstr ""
+msgstr "注"
 
 #: apps/reader/src/MobileSourceViews.tsx
 msgctxt "MobileSourceViews views"
 msgid "Note"
-msgstr ""
+msgstr "笔记"
 
 #: apps/extension/src/PanelTabs.tsx
 msgctxt "Source literature note tab"
 msgid "Note"
-msgstr ""
+msgstr "笔记"
 
 #: apps/reader/src/LibraryWorkspace.tsx
 msgctxt "LibraryWorkspace searchScopeOptions"
 msgid "Notes & annotations"
-msgstr ""
+msgstr "笔记和注释"
 
 #: packages/migration/src/zotero.ts
 msgid "Notes become independent source-level annotations, not replacements for source prose. Original CSL IDs are archived; Reader assigns stable, collision-resistant citekeys."
-msgstr ""
+msgstr "笔记会成为独立的来源级注释，而不是来源正文的替代品。原始 CSL ID 会被存档；Reader 会分配稳定且不易冲突的 citekey。"
 
 #: apps/reader/src/InspectorPane.tsx
 msgid "Notes follow the active pane"
-msgstr ""
+msgstr "笔记跟随当前窗格"
 
 #: apps/extension/src/CaptureApp.tsx
 msgid "Nothing to save here"
-msgstr ""
+msgstr "这里没有可保存的内容"
 
 #: apps/reader/src/CitationTypedFieldEditors.tsx
 msgctxt "CitationTypedFieldEditors customValueTypeOptions"
 msgid "Number"
-msgstr ""
+msgstr "数字"
 
 #: apps/reader/src/CitationTypedFieldEditors.tsx
 msgctxt "CitationTypedFieldEditors interface"
 msgid "Number"
-msgstr ""
+msgstr "数字"
 
 #: apps/reader/src/CitationTypedFieldEditors.tsx
 msgctxt "CitationTypedFieldEditors scalarKindOptions"
 msgid "Number"
-msgstr ""
+msgstr "数字"
 
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "Number"
-msgstr ""
+msgstr "编号"
 
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "Number of pages"
-msgstr ""
+msgstr "页数"
 
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "Number of volumes"
-msgstr ""
+msgstr "卷数"
 
 #: apps/reader/src/LibraryConditionsEditor.tsx
 msgid "Numbers stored as text compare as text, as in saved mdbase views."
-msgstr ""
+msgstr "以文本形式存储的数字按文本比较，与已保存的 mdbase 视图一致。"
 
 #: apps/reader/src/ReaderHeader.tsx
 msgid "Offline"
-msgstr ""
+msgstr "离线"
 
 #: apps/extension/src/WelcomeApp.tsx
 msgid "On any page, press the toolbar button or <0>{open}</0>."
-msgstr ""
+msgstr "在任意页面上，点击工具栏按钮或按 <0>{open}</0>。"
 
 #: apps/extension/src/WelcomeApp.tsx
 msgid "On any page, press the toolbar button."
-msgstr ""
+msgstr "在任意页面上，点击工具栏按钮。"
 
 #: apps/reader/src/collection-menu-model.ts
 msgctxt "collection menu model"
 msgid "On your computer"
-msgstr ""
+msgstr "在你的电脑上"
 
 #: apps/reader/src/SourceDetails.tsx
 msgctxt "SourceDetails fields"
 msgid "One per line"
-msgstr ""
+msgstr "每行一项"
 
 #: apps/electron/src/validation.ts
 msgid "Only HTTP and HTTPS links may leave Reader."
-msgstr ""
+msgstr "只有 HTTP 和 HTTPS 链接才能离开 Reader。"
 
 #: apps/reader/src/use-open-document-search.ts
 msgid "Only loaded, supported documents are searched; suspended tabs are not included."
-msgstr ""
+msgstr "仅搜索已加载且受支持的文档；已挂起的标签页不包括在内。"
 
 #: apps/extension/src/PostPicker.tsx
 msgid "Only posts currently loaded on the page are listed. Feeds are never saved."
-msgstr ""
+msgstr "仅列出页面上当前已加载的帖子。不会保存订阅源。"
 
 #: apps/reader/src/ConnectReader.tsx
 msgid "Only Reader’s source and annotation contracts and starter types will be added."
-msgstr ""
+msgstr "仅会添加 Reader 的来源和注释契约以及初始类型。"
 
 #: apps/reader/src/reader-command-list.ts
 msgid "Only the page, with the chrome out of the way"
-msgstr ""
+msgstr "只显示页面，收起其余界面"
 
 #: apps/reader/src/LibraryBulkBar.tsx
 msgctxt "LibraryBulkBar interface"
 msgid "Open"
-msgstr ""
+msgstr "打开"
 
 #: apps/reader/src/LibraryNavigator.tsx
 msgctxt "LibraryNavigator interface"
 msgid "Open"
-msgstr ""
+msgstr "打开"
 
 #: apps/reader/src/LibraryRowMenu.tsx
 msgctxt "LibraryRowMenu interface"
 msgid "Open"
-msgstr ""
+msgstr "打开"
 
 #: apps/electron/src/main.ts
 msgctxt "Open a document from the file picker"
 msgid "Open"
-msgstr ""
+msgstr "打开"
 
 #: packages/renderer-pdf/src/pdf-translations.ts
 msgctxt "PDF viewer document"
 msgid "Open"
-msgstr ""
+msgstr "打开"
 
 #: packages/renderer-pdf/src/pdf-translations.ts
 msgctxt "PDF viewer passwordPrompt"
 msgid "Open"
-msgstr ""
+msgstr "打开"
 
 #. placeholder {0}: connection.displayName
 #: apps/reader/src/ConnectReader.tsx
 msgid "Open {0}"
-msgstr ""
+msgstr "打开 {0}"
 
 #: apps/reader/src/InspectorPane.tsx
 msgid "Open {tab} in workbench"
-msgstr ""
+msgstr "在工作台中打开 {tab}"
 
 #: apps/electron/src/main.ts
 msgid "Open a document"
-msgstr ""
+msgstr "打开文档"
 
 #: apps/reader/src/ReaderHeader.tsx
 msgid "Open a document to use reading mode"
-msgstr ""
+msgstr "请先打开文档以使用阅读模式"
 
 #: packages/renderer-pdf/src/pdf-translations.ts
 msgctxt "PDF viewer emptyState"
 msgid "Open a PDF document to get started."
-msgstr ""
+msgstr "打开 PDF 文档以开始使用。"
 
 #: apps/reader/src/LibraryTextSearch.tsx
 msgid "Open a result, then use the document’s Find control to locate the passage."
-msgstr ""
+msgstr "打开一个结果，然后使用文档的查找功能定位该段落。"
 
 #: apps/reader/src/DockviewWorkspace.tsx
 msgid "Open a source from the library. Drag tabs to arrange your workspace."
-msgstr ""
+msgstr "从文献库打开一个来源。拖动标签页即可排列你的工作区。"
 
 #: apps/reader/src/reader-command-list.ts
 msgctxt "reader command list"
 msgid "Open annotations"
-msgstr ""
+msgstr "打开注释"
 
 #: apps/reader/src/dockview-menus.ts
 msgid "Open another editor in pane right"
-msgstr ""
+msgstr "在右侧窗格中打开另一个编辑器"
 
 #: apps/reader/src/LibraryRowMenu.tsx
 msgid "Open beside"
-msgstr ""
+msgstr "在旁边打开"
 
 #: apps/reader/src/reader-command-list.ts
 msgctxt "reader command list"
 msgid "Open beside"
-msgstr ""
+msgstr "在旁边打开"
 
 #: apps/extension/src/WelcomeApp.tsx
 msgid "Open Chrome’s extensions menu (the puzzle piece beside the address bar) and pin mdbase Reader so its button stays in the toolbar."
-msgstr ""
+msgstr "打开 Chrome 的扩展程序菜单（地址栏旁的拼图图标），并固定 mdbase Reader，使其按钮保留在工具栏中。"
 
 #: apps/reader/src/reader-command-list.ts
 msgid "Open citation data"
-msgstr ""
+msgstr "打开引文数据"
 
 #: apps/reader/src/LibraryTextSearch.tsx
 msgctxt "LibraryTextSearch interface"
 msgid "Open document"
-msgstr ""
+msgstr "打开文档"
 
 #: packages/renderer-pdf/src/pdf-translations.ts
 msgctxt "PDF viewer emptyState"
 msgid "Open Document"
-msgstr ""
+msgstr "打开文档"
 
 #: apps/reader/src/LibraryWorkspace.tsx
 msgctxt "LibraryWorkspace searchScopeOptions"
 msgid "Open documents"
-msgstr ""
+msgstr "已打开的文档"
 
 #: apps/reader/src/LibraryBulkBar.tsx
 msgid "Open each in its own tab"
-msgstr ""
+msgstr "分别在各自的标签页中打开"
 
 #: packages/markdown-editor/src/annotation-widgets.ts
 msgctxt "annotation widgets"
 msgid "Open in document"
-msgstr ""
+msgstr "在文档中打开"
 
 #: apps/extension/src/SaveBar.tsx
 msgid "Open in Reader"
-msgstr ""
+msgstr "在 Reader 中打开"
 
 #: apps/extension/src/SaveBar.tsx
 msgid "Open in Reader to highlight"
-msgstr ""
+msgstr "在 Reader 中打开以进行高亮"
 
 #: apps/reader/src/DockviewWorkspace.tsx
 msgid "Open library"
-msgstr ""
+msgstr "打开文献库"
 
 #: apps/reader/src/reader-app-commands.ts
 msgctxt "reader app commands"
 msgid "Open library"
-msgstr ""
+msgstr "打开文献库"
 
 #: apps/reader/src/reader-command-list.ts
 #: apps/reader/src/WorkspacePaneSupport.tsx
 msgid "Open literature note"
-msgstr ""
+msgstr "打开文献笔记"
 
 #: apps/extension/src/OptionsApp.tsx
 #: apps/reader/src/ConnectReader.tsx
 msgid "Open mdbase Reader"
-msgstr ""
+msgstr "打开 mdbase Reader"
 
 #: apps/extension/src/shell-messages.ts
 #: apps/extension/src/shortcuts.ts
 msgid "Open mdbase Reader for this page"
-msgstr ""
+msgstr "为此页面打开 mdbase Reader"
 
 #: apps/reader/src/CollectionMenu.tsx
 msgctxt "CollectionMenu status or action"
 msgid "Open now"
-msgstr ""
+msgstr "立即打开"
 
 #: apps/reader/src/native-signin-ui.ts
 msgctxt "Native sign-in"
 msgid "Open sign-in"
-msgstr ""
+msgstr "打开登录页面"
 
 #: apps/reader/src/SourceAddDialog.tsx
 msgid "Open source"
-msgstr ""
+msgstr "打开来源"
 
 #: packages/markdown-editor/src/citation-card.ts
 msgctxt "citation card"
 msgid "Open source"
-msgstr ""
+msgstr "打开来源"
 
 #: apps/reader/src/reader-command-list.ts
 msgid "Open tabs"
-msgstr ""
+msgstr "打开的标签页"
 
 #: apps/reader/src/AnnotationPanelActions.tsx
 msgid "Open the document to bookmark a position"
-msgstr ""
+msgstr "请先打开文档，再为某个位置添加书签"
 
 #: apps/reader/src/native-signin-ui.ts
 msgctxt "Native sign-in"
 msgid "Open the mdbase tab again"
-msgstr ""
+msgstr "重新打开 mdbase 标签页"
 
 #: apps/reader/src/use-source-export.ts
 msgid "Open the source and its annotations before exporting."
-msgstr ""
+msgstr "导出前，请先打开来源及其注释。"
 
 #: apps/reader/src/MobileWorkspaceNavigation.tsx
 msgid "Open workspace tab"
-msgstr ""
+msgstr "打开工作区标签页"
 
 #: apps/extension/src/ExtensionHeader.tsx
 msgid "Open your library in mdbase Reader"
-msgstr ""
+msgstr "在 mdbase Reader 中打开你的文献库"
 
 #. placeholder {0}: original.displayName
 #: apps/reader/src/SdkReaderRoot.tsx
 msgid "Opening {0}"
-msgstr ""
+msgstr "正在打开 {0}"
 
 #: apps/reader/src/CitationEditor.tsx
 msgid "Opening citation metadata…"
-msgstr ""
+msgstr "正在打开引文元数据…"
 
 #: apps/reader/src/native-signin-ui.ts
 msgctxt "Native sign-in"
 msgid "Opening collections isn't available in this build yet."
-msgstr ""
+msgstr "此版本暂不支持打开集合。"
 
 #: apps/reader/src/ConnectedDocument.tsx
 msgctxt "ConnectedDocument interface"
 msgid "Opening document…"
-msgstr ""
+msgstr "正在打开文档…"
 
 #: apps/reader/src/MultilineCodeEditor.tsx
 msgid "Opening editor…"
-msgstr ""
+msgstr "正在打开编辑器…"
 
 #: apps/reader/src/SourceNoteEditor.tsx
 msgid "Opening literature note…"
-msgstr ""
+msgstr "正在打开文献笔记…"
 
 #: apps/extension/src/ConnectionPanel.tsx
 msgid "Opening mdbase…"
