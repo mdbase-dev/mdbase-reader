@@ -76,6 +76,7 @@ export class ReadiumEpubSurface implements ReadingSurface {
           }
         : {}),
       decorations: {
+        nearestAnnotation: () => runtime.nearestAnnotation?.() ?? null,
         setAnnotations: (annotations) => {
           runtime.setAnnotations(
             annotations.filter(

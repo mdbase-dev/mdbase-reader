@@ -69,6 +69,10 @@ export async function auditAnnotations(page, { screenshot, blockWrites }) {
     await page.getByRole("button", { name: "Toggle right sidebar" }).click();
   }
   await expect(tools.locator(".annotation-card.is-selected")).toBeVisible();
+  await expect(tools.locator(".annotation-reading-context")).toContainText(
+    "Near reading position: Document passage",
+  );
+  await expect(tools.locator('[aria-current="location"]')).toBeVisible();
   await expect(tools.locator(".annotation-card.is-selected")).toHaveCSS("box-shadow", "none");
   await expect(tools.getByRole("textbox", { name: "Comment" })).toHaveCount(0);
   await expect(page.locator("iframe.html-viewer:visible")).toBeVisible();

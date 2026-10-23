@@ -66,6 +66,34 @@ export class EpubFrameEnhancements {
     }
   }
 
+  /** Only the currently visible spread contributes; preloaded/offscreen chapters do not. */
+  public nearestAnnotation(): AnnotationId | null {
+    const viewport = this.#container.getBoundingClientRect();
+    for (const frame of this.#container.querySelectorAll<HTMLIFrameElement>("iframe")) {
+      const document = frame.contentDocument;
+      const markers = document ? this.#frames.get(document)?.markers : undefined;
+      if (!markers) {
+        continue;
+      }
+      const rect = frame.getBoundingClientRect();
+      if (
+        rect.width === 0 ||
+        rect.height === 0 ||
+        rect.right <= viewport.left ||
+        rect.left >= viewport.right ||
+        rect.bottom <= viewport.top ||
+        rect.top >= viewport.bottom
+      ) {
+        continue;
+      }
+      const id = markers.nearest();
+      if (id) {
+        return id;
+      }
+    }
+    return null;
+  }
+
   public setActive(id: AnnotationId | null): void {
     this.#activeId = id;
     for (const { markers } of this.#frames.values()) {

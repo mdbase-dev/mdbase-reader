@@ -8,31 +8,51 @@ export function browseAnnotations(
   filter: AnnotationFilter,
   order: "document" | "newest",
 ): Annotation[] {
-  const search = query.trim().toLocaleLowerCase();
-  return annotations
-    .filter((annotation) => {
-      const matches =
-        filter === "all" ||
-        (filter === "comments"
-          ? Boolean(annotationBodyContent(annotation.body).note.trim())
-          : annotation.annotationType === filter);
-      return (
-        matches &&
-        (!search ||
-          [
-            annotation.body,
-            annotation.target?.quote?.exact,
-            annotation.locator?.label,
-            ...annotation.tags,
-          ]
-            .join(" ")
-            .toLocaleLowerCase()
-            .includes(search))
-      );
-    })
+  return searchAnnotationIndex(indexAnnotations(annotations, order), query, filter);
+}
+
+/** Sort and normalize once per snapshot/order, not on each search keystroke. */
+interface AnnotationSearchEntry {
+  readonly annotation: Annotation;
+  readonly text: string;
+}
+export function indexAnnotations(
+  annotations: readonly Annotation[],
+  order: "document" | "newest",
+): AnnotationSearchEntry[] {
+  return [...annotations]
     .sort(
       order === "newest" ? (a, b) => b.createdAt.localeCompare(a.createdAt) : compareDocumentOrder,
-    );
+    )
+    .map((annotation) => ({
+      annotation,
+      text: [
+        annotation.body,
+        annotation.target?.quote?.exact,
+        annotation.locator?.label,
+        ...annotation.tags,
+      ]
+        .join(" ")
+        .toLocaleLowerCase(),
+    }));
+}
+
+export function searchAnnotationIndex(
+  index: ReturnType<typeof indexAnnotations>,
+  query: string,
+  filter: AnnotationFilter,
+): Annotation[] {
+  const search = query.trim().toLocaleLowerCase();
+  return index
+    .filter(
+      ({ annotation, text }) =>
+        (filter === "all" ||
+          (filter === "comments"
+            ? Boolean(annotationBodyContent(annotation.body).note.trim())
+            : annotation.annotationType === filter)) &&
+        (!search || text.includes(search)),
+    )
+    .map(({ annotation }) => annotation);
 }
 function documentKey(annotation: Annotation): string {
   return `${annotation.document?.fileId ?? ""}@${annotation.document?.revision ?? ""}`;
@@ -69,6 +89,7 @@ function position(annotation: Annotation): Position {
   }
   return { kind: 3, section: "", offset: 0 };
 }
+const sectionOrder = new Intl.Collator(undefined, { numeric: true });
 function compareDocumentOrder(a: Annotation, b: Annotation): number {
   // Offsets are only comparable inside the same file, revision and coordinate basis.
   const ap = position(a),
@@ -76,7 +97,7 @@ function compareDocumentOrder(a: Annotation, b: Annotation): number {
   return (
     documentKey(a).localeCompare(documentKey(b)) ||
     ap.kind - bp.kind ||
-    ap.section.localeCompare(bp.section, undefined, { numeric: true }) ||
+    sectionOrder.compare(ap.section, bp.section) ||
     ap.offset - bp.offset ||
     a.createdAt.localeCompare(b.createdAt) ||
     a.id.localeCompare(b.id)

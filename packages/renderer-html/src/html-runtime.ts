@@ -188,6 +188,10 @@ export class HtmlDocumentRuntime {
     );
   }
 
+  public nearestAnnotation(): AnnotationId | null {
+    return this.#markers.nearest();
+  }
+
   public setActiveAnnotation(annotation: Annotation | null): void {
     const range = annotation?.target ? this.#targets.locate(annotation.target) : null;
     setCssHighlight(this.#view, "reader-active-annotation", range ? [range] : []);

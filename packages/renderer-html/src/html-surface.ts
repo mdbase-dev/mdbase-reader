@@ -47,6 +47,7 @@ export class HtmlReadingSurface implements ReadingSurface {
       },
       motion: { motions: this.#motions },
       decorations: {
+        nearestAnnotation: () => runtime.nearestAnnotation(),
         setAnnotations: (annotations) => {
           runtime.setAnnotations(this.forThisDocument(annotations));
           return Promise.resolve();

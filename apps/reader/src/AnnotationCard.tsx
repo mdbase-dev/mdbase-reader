@@ -11,6 +11,8 @@ import { useAnnotationSession } from "./use-annotation-session.js";
 
 import type { AnnotationTransclusionController } from "./use-annotation-transclusion.js";
 import type { Annotation, AnnotationDeletionPlan } from "@mdbase-reader/core";
+const annotationDate = new Intl.DateTimeFormat(undefined, { month: "short", day: "numeric" });
+
 export function AnnotationCard({
   annotation,
   editing,
@@ -36,7 +38,8 @@ export function AnnotationCard({
   readonly onOpen: () => void;
   readonly readFile: AnnotationFileReader;
 }): JSX.Element {
-  const cardRef = useScrollToEditing(active || editing);
+  // The list reveals explicit selection once; remounting a windowed selected card must not jump.
+  const cardRef = useScrollToEditing(editing);
   const session = useAnnotationSession(annotation, onSave);
   const snapshot = useSyncExternalStore(
     session.subscribe,
@@ -165,12 +168,7 @@ function AnnotationCardFooter({
 }): JSX.Element {
   return (
     <footer>
-      <time>
-        {new Date(annotation.createdAt).toLocaleDateString(undefined, {
-          month: "short",
-          day: "numeric",
-        })}
-      </time>
+      <time>{annotationDate.format(new Date(annotation.createdAt))}</time>
       <div className="annotation-card-actions">
         <button
           type="button"

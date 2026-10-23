@@ -101,6 +101,7 @@ afterEach(async () => {
 async function render(
   editingId: ReturnType<typeof annotationId> | null = null,
   activeId: ReturnType<typeof annotationId> | null = null,
+  readingId: ReturnType<typeof annotationId> | null = null,
 ): Promise<HTMLDivElement> {
   if (!host) {
     host = document.createElement("div");
@@ -108,7 +109,9 @@ async function render(
     root = createRoot(host);
   }
   await act(async () => {
-    root!.render(<AnnotationList {...props} editingId={editingId} activeId={activeId} />);
+    root!.render(
+      <AnnotationList {...props} editingId={editingId} activeId={activeId} readingId={readingId} />,
+    );
     await Promise.resolve();
   });
   return host;
@@ -145,5 +148,91 @@ describe("virtual annotation sidebar", () => {
       ({ id }) => id === "ann_950",
     );
     expect(virtual.scrollToIndex).toHaveBeenCalledWith(index, { align: "auto" });
+  });
+
+  it("navigates across unmounted cards with End/Home and keeps list positions", async () => {
+    const element = await render();
+    const first = element.querySelector<HTMLElement>('[role="listitem"]')!;
+    await act(async () => {
+      first.focus();
+      first.dispatchEvent(new KeyboardEvent("keydown", { key: "End", bubbles: true }));
+      await Promise.resolve();
+    });
+    const last = element.querySelector<HTMLElement>('[aria-posinset="1000"]')!;
+    expect(document.activeElement).toBe(last);
+    expect(last.getAttribute("aria-setsize")).toBe("1000");
+    await act(async () => {
+      last.dispatchEvent(new KeyboardEvent("keydown", { key: "Home", bubbles: true }));
+      await Promise.resolve();
+    });
+    expect(document.activeElement).toBe(first);
+  });
+
+  it("Tabs to the logical next item, not the next mounted window after pinned focus", async () => {
+    const element = await render();
+    const first = element.querySelector<HTMLElement>('[role="listitem"]')!;
+    await act(async () => {
+      first.querySelector("button")!.focus();
+      await Promise.resolve();
+    });
+    virtual.startIndex = 500;
+    virtual.endIndex = 503;
+    await render();
+    await act(async () => {
+      first
+        .querySelector("button")!
+        .dispatchEvent(new KeyboardEvent("keydown", { key: "Tab", bubbles: true }));
+      await Promise.resolve();
+    });
+    expect(document.activeElement?.getAttribute("aria-posinset")).toBe("2");
+  });
+
+  it("can materialize all filtered cards for native browser Find and return to windowing", async () => {
+    const element = await render();
+    const toggle = element.querySelector<HTMLInputElement>('input[type="checkbox"]')!;
+    await act(async () => {
+      toggle.click();
+      await Promise.resolve();
+    });
+    expect(element.querySelectorAll('[role="listitem"]')).toHaveLength(1000);
+    await act(async () => {
+      toggle.click();
+      await Promise.resolve();
+    });
+    expect(element.querySelectorAll('[role="listitem"]')).toHaveLength(4);
+    await act(async () => {
+      element.querySelector<HTMLInputElement>('input[type="search"]')!.focus();
+      document.dispatchEvent(
+        new KeyboardEvent("keydown", { key: "f", ctrlKey: true, bubbles: true }),
+      );
+      await Promise.resolve();
+    });
+    expect(toggle.checked).toBe(true);
+  });
+
+  it("highlights reading context but pauses automatic reveals on manual list interaction", async () => {
+    const values = browseAnnotations(annotations, "", "all", "document");
+    const element = await render(null, null, values[1]!.id);
+    expect(element.querySelector('[aria-current="location"]')?.getAttribute("aria-posinset")).toBe(
+      "2",
+    );
+    expect(virtual.scrollToIndex).toHaveBeenCalledWith(1, { align: "auto" });
+    await act(async () => {
+      element
+        .querySelector(".annotation-list")!
+        .dispatchEvent(new Event("wheel", { bubbles: true }));
+      await Promise.resolve();
+    });
+    virtual.scrollToIndex.mockClear();
+    await render(null, null, values[800]!.id);
+    expect(virtual.scrollToIndex).not.toHaveBeenCalledWith(800, { align: "auto" });
+    const follow = [...element.querySelectorAll("button")].find(
+      (button) => button.textContent === "Follow reading",
+    )!;
+    await act(async () => {
+      follow.click();
+      await Promise.resolve();
+    });
+    expect(virtual.scrollToIndex).toHaveBeenCalledWith(800, { align: "auto" });
   });
 });

@@ -82,6 +82,8 @@ export interface AreaSelectionCapability {
 }
 
 export interface DecorationCapability {
+  /** Nearest resolved passage to the viewport's reading edge; never relocates the document. */
+  nearestAnnotation?(): AnnotationId | null;
   setAnnotations(annotations: readonly Annotation[]): Promise<void>;
   setActiveAnnotation(annotation: Annotation | null): Promise<void>;
 }
