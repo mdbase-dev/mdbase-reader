@@ -2707,534 +2707,534 @@ msgstr "EmbedPDF 无法打开此 PDF。"
 #: packages/renderer-pdf/src/embedpdf-runtime.ts
 #: packages/renderer-pdf/src/pdf-viewer.tsx
 msgid "EmbedPDF did not initialize its document manager."
-msgstr ""
+msgstr "EmbedPDF 未能初始化其文档管理器。"
 
 #: packages/renderer-pdf/src/embedpdf-runtime.ts
 msgid "EmbedPDF did not initialize the required Reader plugins."
-msgstr ""
+msgstr "EmbedPDF 未能初始化所需的 Reader 插件。"
 
 #: apps/reader/src/CitationTypedFieldEditors.tsx
 msgctxt "CitationTypedFieldEditors customValueTypeOptions"
 msgid "Empty"
-msgstr ""
+msgstr "空值"
 
 #: packages/migration/src/zotero-pdf.ts
 msgid "Empty Zotero PDF rectangle."
-msgstr ""
+msgstr "Zotero PDF 矩形为空。"
 
 #: packages/renderer-epub/src/epub-archive.ts
 msgid "Encrypted EPUB resources are not supported: {path}"
-msgstr ""
+msgstr "不支持加密的 EPUB 资源：{path}"
 
 #: apps/reader/src/CitationTypedFieldEditors.tsx
 msgctxt "CitationTypedFieldEditors interface"
 msgid "End (optional)"
-msgstr ""
+msgstr "结束（可选）"
 
 #: packages/renderer-epub/src/epub-page-navigation.tsx
 msgid "End of publication"
-msgstr ""
+msgstr "出版物结尾"
 
 #: apps/reader/src/LibraryTextSearch.tsx
 msgid "Enter at least two characters."
-msgstr ""
+msgstr "请至少输入两个字符。"
 
 #: packages/renderer-pdf/src/pdf-translations.ts
 msgctxt "PDF viewer passwordPrompt"
 msgid "Enter document password"
-msgstr ""
+msgstr "输入文档密码"
 
 #: apps/reader/src/reader-command-list.ts
 msgid "Enter reading mode"
-msgstr ""
+msgstr "进入阅读模式"
 
 #. placeholder {0}: shortcutLabel("mod+.")
 #: apps/reader/src/ReaderHeader.tsx
 msgid "Enter reading mode · {0}"
-msgstr ""
+msgstr "进入阅读模式 · {0}"
 
 #: apps/reader/src/CitationTypedFieldEditors.tsx
 msgid "Enter valid JSON to apply this value."
-msgstr ""
+msgstr "请输入有效的 JSON 以应用此值。"
 
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "Entry"
-msgstr ""
+msgstr "条目"
 
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "Entry dictionary"
-msgstr ""
+msgstr "词典条目"
 
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "Entry encyclopedia"
-msgstr ""
+msgstr "百科全书条目"
 
 #: apps/reader/src/LibraryWorkspace.tsx
 msgctxt "LibraryWorkspace formatFilterOptions"
 msgid "EPUB"
-msgstr ""
+msgstr "EPUB"
 
 #: packages/renderer-epub/src/epub-archive.ts
 msgid "EPUB archive contains a duplicate path: {path}"
-msgstr ""
+msgstr "EPUB 压缩包包含重复路径：{path}"
 
 #. placeholder {0}: String(MAX_ENTRIES)
 #: packages/renderer-epub/src/epub-archive.ts
 msgid "EPUB archive exceeds the {0}-entry safety limit."
-msgstr ""
+msgstr "EPUB 压缩包超出 {0} 个条目的安全上限。"
 
 #: packages/renderer-epub/src/epub-archive.ts
 msgid "EPUB archive exceeds the uncompressed size safety limit."
-msgstr ""
+msgstr "EPUB 压缩包超出解压后大小的安全上限。"
 
 #: packages/renderer-epub/src/epub-archive.ts
 msgid "EPUB archive is closed."
-msgstr ""
+msgstr "EPUB 压缩包已关闭。"
 
 #: packages/renderer-epub/src/epub-archive.ts
 msgid "EPUB archive is missing META-INF/container.xml."
-msgstr ""
+msgstr "EPUB 压缩包缺少 META-INF/container.xml。"
 
 #: packages/renderer-epub/src/epub-manifest.ts
 msgid "EPUB container does not identify a package document."
-msgstr ""
+msgstr "EPUB 容器未指明包文档。"
 
 #: packages/renderer-epub/src/epub-path.ts
 msgid "EPUB contains an invalid encoded path segment: {value}"
-msgstr ""
+msgstr "EPUB 包含无效的编码路径段：{value}"
 
 #: packages/renderer-epub/src/epub-path.ts
 msgid "EPUB contains an unsafe resource path: {value}"
-msgstr ""
+msgstr "EPUB 包含不安全的资源路径：{value}"
 
 #: packages/renderer-epub/src/epub-safe-fetch.ts
 msgid "EPUB content document contains invalid markup."
-msgstr ""
+msgstr "EPUB 内容文档包含无效标记。"
 
 #. placeholder {0}: String(response.status)
 #: packages/renderer-epub/src/epub-viewer.tsx
 msgid "EPUB download failed with HTTP {0}."
-msgstr ""
+msgstr "EPUB 下载失败，HTTP {0}。"
 
 #: packages/renderer-epub/src/epub-manifest.ts
 msgid "EPUB manifest item"
-msgstr ""
+msgstr "EPUB 清单项"
 
 #: packages/renderer-epub/src/epub-manifest.ts
 msgid "EPUB manifest item {id}"
-msgstr ""
+msgstr "EPUB 清单项 {id}"
 
 #: packages/renderer-epub/src/epub-manifest.ts
 msgid "EPUB package document is missing its package element."
-msgstr ""
+msgstr "EPUB 包文档缺少 package 元素。"
 
 #: packages/renderer-epub/src/epub-manifest.ts
 msgid "EPUB package has no reading order."
-msgstr ""
+msgstr "EPUB 包没有阅读顺序。"
 
 #: packages/renderer-epub/src/epub-manifest.ts
 msgid "EPUB package metadata has no title."
-msgstr ""
+msgstr "EPUB 包元数据没有标题。"
 
 #: packages/renderer-epub/src/epub-page-navigation.tsx
 msgid "EPUB page navigation"
-msgstr ""
+msgstr "EPUB 页面导航"
 
 #: packages/renderer-epub/src/epub-path.ts
 msgid "EPUB reference escapes its package root: {reference}"
-msgstr ""
+msgstr "EPUB 引用超出了其包根目录：{reference}"
 
 #: packages/renderer-epub/src/epub-archive.ts
 msgid "EPUB resource exceeds the per-file safety limit: {path}"
-msgstr ""
+msgstr "EPUB 资源超出单个文件的安全上限：{path}"
 
 #: packages/renderer-epub/src/epub-archive.ts
 msgid "EPUB resource has an unsafe compression ratio: {path}"
-msgstr ""
+msgstr "EPUB 资源的压缩比不安全：{path}"
 
 #: packages/renderer-epub/src/epub-archive.ts
 msgid "EPUB resource is missing: {safePath}"
-msgstr ""
+msgstr "缺少 EPUB 资源：{safePath}"
 
 #: packages/renderer-epub/src/epub-manifest.ts
 msgid "EPUB spine item"
-msgstr ""
+msgstr "EPUB spine 项"
 
 #: packages/renderer-epub/src/epub-manifest.ts
 msgid "EPUB spine references an unknown manifest item: {reference}"
-msgstr ""
+msgstr "EPUB spine 引用了未知的清单项：{reference}"
 
 #: packages/renderer-pdf/src/pdf-translations.ts
 msgctxt "PDF viewer documentError"
 msgid "Error Code: {code}"
-msgstr ""
+msgstr "错误代码：{code}"
 
 #: packages/renderer-pdf/src/pdf-translations.ts
 msgctxt "PDF viewer documentError"
 msgid "Error loading document"
-msgstr ""
+msgstr "加载文档时出错"
 
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "Event"
-msgstr ""
+msgstr "活动"
 
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "Event date"
-msgstr ""
+msgstr "活动日期"
 
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "Event place"
-msgstr ""
+msgstr "活动地点"
 
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "Event title"
-msgstr ""
+msgstr "活动标题"
 
 #: apps/reader/src/LibraryAnnotationTableHead.tsx
 msgid "Every column is shown."
-msgstr ""
+msgstr "已显示所有列。"
 
 #: apps/reader/src/CitationEditor.tsx
 msgid "Every official field is preserved exactly as entered."
-msgstr ""
+msgstr "所有官方字段都会按输入内容原样保留。"
 
 #: apps/reader/src/ImportInput.tsx
 msgid "Every payload checksum is verified before collection writes. Currently requires a browser with folder selection support, such as Chrome."
-msgstr ""
+msgstr "写入集合之前会验证每个载荷的校验和。目前需要支持文件夹选择的浏览器，例如 Chrome。"
 
 #: packages/migration/src/readwise.ts
 msgid "Exact PDF geometry and EPUB positions are not supplied by this import. Highlights retain quotes and native location evidence, without claiming exact positioning."
-msgstr ""
+msgstr "此次导入不提供精确的 PDF 几何信息和 EPUB 位置。高亮会保留引文和原生位置证据，但不声称位置精确。"
 
 #: apps/reader/src/connect-workspace.ts
 msgid "Exact recovery is unavailable here. No new write was attempted."
-msgstr ""
+msgstr "此处无法进行精确恢复。未尝试新的写入。"
 
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "Executive producer"
-msgstr ""
+msgstr "执行制片人"
 
 #: apps/extension/src/TagInput.tsx
 msgid "Existing tags"
-msgstr ""
+msgstr "现有标签"
 
 #: packages/renderer-pdf/src/pdf-translations.ts
 msgctxt "PDF viewer document"
 msgid "Export"
-msgstr ""
+msgstr "导出"
 
 #: apps/reader/src/reader-app-commands.ts
 msgid "Export bibliography"
-msgstr ""
+msgstr "导出文献书目"
 
 #: apps/reader/src/LibraryWorkspace.tsx
 msgctxt "LibraryWorkspace interface"
 msgid "Export bibliography"
-msgstr ""
+msgstr "导出文献书目"
 
 #: apps/reader/src/LibraryRowMenu.tsx
 msgid "Export citation"
-msgstr ""
+msgstr "导出引文"
 
 #: apps/reader/src/LibraryBulkBar.tsx
 msgid "Export citations"
-msgstr ""
+msgstr "导出引文"
 
 #: apps/reader/src/reader-command-list.ts
 msgid "Export current source"
-msgstr ""
+msgstr "导出当前来源"
 
 #: apps/reader/src/DocumentContextualToolbar.tsx
 msgctxt "DocumentContextualToolbar interface"
 msgid "Export source"
-msgstr ""
+msgstr "导出来源"
 
 #. placeholder {0}: items.length
 #: apps/reader/src/use-bibliography-export.ts
 msgid "Exported {0, plural, one {# citation} other {# citations}}."
-msgstr ""
+msgstr "已导出 {0, plural, other {# 条引文}}。"
 
 #. placeholder {0}: bundle.canonicalRecordCount
 #. placeholder {1}: bundle.originalFileCount
 #: apps/reader/src/use-source-export.ts
 msgid "Exported {0, plural, one {# record} other {# records}} and {1, plural, one {# original file} other {# original files}}."
-msgstr ""
+msgstr "已导出 {0, plural, other {# 条记录}}和 {1, plural, other {# 个原始文件}}。"
 
 #: apps/reader/src/ImportInput.tsx
 msgid "Exported folder"
-msgstr ""
+msgstr "已导出的文件夹"
 
 #: apps/reader/src/use-source-export.ts
 msgid "Exported with {problemCount, plural, one {# item} other {# items}} to review."
-msgstr ""
+msgstr "已导出，有 {problemCount, plural, other {# 项}}待审阅。"
 
 #: apps/reader/src/CitationTypedFieldEditors.tsx
 msgctxt "CitationTypedFieldEditors booleanOptions"
 msgid "False"
-msgstr ""
+msgstr "否"
 
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "Family"
-msgstr ""
+msgstr "姓氏"
 
 #: apps/reader/src/CitationContributors.tsx
 msgctxt "CitationContributors interface"
 msgid "Family name"
-msgstr ""
+msgstr "姓氏"
 
 #: apps/reader/src/source-addition-flow.ts
 msgid "Feeds, profiles and search pages cannot be saved. Choose individual posts in the Reader extension."
-msgstr ""
+msgstr "无法保存订阅源、个人主页和搜索页面。请在 Reader 扩展中选择单篇帖子。"
 
 #: apps/reader/src/source-addition-flow.ts
 msgid "Fetching the page…"
-msgstr ""
+msgstr "正在获取页面…"
 
 #: apps/reader/src/LibraryBulkBar.tsx
 msgctxt "LibraryBulkBar interface"
 msgid "field"
-msgstr ""
+msgstr "字段"
 
 #: apps/reader/src/LibraryConditionsEditor.tsx
 msgctxt "LibraryConditionsEditor interface"
 msgid "field"
-msgstr ""
+msgstr "字段"
 
 #: apps/reader/src/LibraryBulkBar.tsx
 msgctxt "LibraryBulkBar interface"
 msgid "Field"
-msgstr ""
+msgstr "字段"
 
 #: apps/reader/src/LibraryConditionsEditor.tsx
 msgctxt "LibraryConditionsEditor interface"
 msgid "Field"
-msgstr ""
+msgstr "字段"
 
 #: apps/reader/src/LibraryConditionsEditor.tsx
 msgctxt "LibraryConditionsEditor interface"
 msgid "Field condition"
-msgstr ""
+msgstr "字段条件"
 
 #: apps/reader/src/LibraryConditionsEditor.tsx
 msgid "Fields"
-msgstr ""
+msgstr "字段"
 
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "Figure"
-msgstr ""
+msgstr "插图"
 
 #: apps/reader/src/workspace-tab-display.ts
 msgctxt "workspace tab display"
 msgid "FILE"
-msgstr ""
+msgstr "文件"
 
 #: packages/migration/src/run-files.ts
 msgid "File checksum changed since preview."
-msgstr ""
+msgstr "文件校验和在预览后已发生更改。"
 
 #: apps/reader/src/connect-workspace.ts
 msgid "File export is unavailable for this connection."
-msgstr ""
+msgstr "此连接不支持文件导出。"
 
 #: apps/reader/src/use-bibliography-export.ts
 msgid "File export is unavailable in this build."
-msgstr ""
+msgstr "此版本不支持文件导出。"
 
 #: apps/reader/src/preview.tsx
 msgid "File import is unavailable in the interface preview."
-msgstr ""
+msgstr "界面预览中无法导入文件。"
 
 #: packages/migration/src/run-files.ts
 msgid "File transfer failed."
-msgstr ""
+msgstr "文件传输失败。"
 
 #. placeholder {0}: files[1]
 #. placeholder {1}: files[2]
 #: apps/reader/src/import-controller.ts
 msgid "Files: {0} of {1}"
-msgstr ""
+msgstr "文件：{0} / {1}"
 
 #: apps/reader/src/LibraryWorkspace.tsx
 msgid "Filter"
-msgstr ""
+msgstr "筛选"
 
 #: apps/reader/src/AnnotationList.tsx
 msgid "Filter and sort annotations"
-msgstr ""
+msgstr "筛选和排序注释"
 
 #: apps/reader/src/AnnotationList.tsx
 msgid "Filter and sort annotations, filtered"
-msgstr ""
+msgstr "筛选和排序注释，已筛选"
 
 #: apps/reader/src/AnnotationList.tsx
 msgctxt "AnnotationList interface"
 msgid "Filter annotations"
-msgstr ""
+msgstr "筛选注释"
 
 #: apps/reader/src/CollectionMenu.tsx
 msgctxt "CollectionMenu interface"
 msgid "Filter collections"
-msgstr ""
+msgstr "筛选集合"
 
 #: apps/reader/src/reader-app-commands.ts
 msgid "Filter sources in the sidebar"
-msgstr ""
+msgstr "在侧边栏中筛选来源"
 
 #: apps/reader/src/CitationLookup.tsx
 msgctxt "CitationLookup interface"
 msgid "Find"
-msgstr ""
+msgstr "查找"
 
 #: apps/reader/src/CitationAdditionalFields.tsx
 msgid "Find a field"
-msgstr ""
+msgstr "查找字段"
 
 #: apps/reader/src/LibraryNavigator.tsx
 msgid "Find a source"
-msgstr ""
+msgstr "查找来源"
 
 #: apps/reader/src/LibraryNavigator.tsx
 msgid "Find a source by title, author or tag"
-msgstr ""
+msgstr "按标题、作者或标签查找来源"
 
 #: apps/reader/src/WorkspacePaneSupport.tsx
 msgid "Find an open-access PDF"
-msgstr ""
+msgstr "查找开放获取的 PDF"
 
 #: apps/reader/src/CitationLookup.tsx
 msgid "Find citation details"
-msgstr ""
+msgstr "查找引文详情"
 
 #: apps/reader/src/connection-recovery.ts
 msgid "Finding mdbase Connect…"
-msgstr ""
+msgstr "正在查找 mdbase Connect…"
 
 #: apps/extension/src/connection-view.ts
 msgid "Finish signing in or approving in the mdbase tab, then save."
-msgstr ""
+msgstr "请在 mdbase 标签页中完成登录或批准，然后再保存。"
 
 #: apps/reader/src/LibraryCells.tsx
 msgctxt "reading status"
 msgid "Finished"
-msgstr ""
+msgstr "已读完"
 
 #: apps/reader/src/SourceImportDialog.tsx
 msgctxt "SourceImportDialog interface"
 msgid "Finishing…"
-msgstr ""
+msgstr "正在完成…"
 
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "First reference note number"
-msgstr ""
+msgstr "首次引用注释编号"
 
 #: packages/renderer-pdf/src/pdf-translations.ts
 msgctxt "PDF viewer zoom"
 msgid "Fit to Page"
-msgstr ""
+msgstr "适合页面"
 
 #: packages/renderer-pdf/src/pdf-translations.ts
 msgctxt "PDF viewer zoom"
 msgid "Fit to Width"
-msgstr ""
+msgstr "适合宽度"
 
 #: apps/reader/src/CitationEditor.tsx
 msgid "Fix before saving"
-msgstr ""
+msgstr "保存前请修复"
 
 #: apps/reader/src/citation-editor-model.ts
 msgid "Fix the JSON syntax: {detail}"
-msgstr ""
+msgstr "请修复 JSON 语法：{detail}"
 
 #: apps/reader/src/InspectorPane.tsx
 msgid "Focus a document, note, annotation, or citation tab to inspect its source."
-msgstr ""
+msgstr "聚焦文档、笔记、注释或引文标签页以查看其来源。"
 
 #: apps/reader/src/reader-command-list.ts
 msgctxt "reader command list"
 msgid "Focus next pane"
-msgstr ""
+msgstr "聚焦下一个窗格"
 
 #: apps/extension/src/OptionsApp.tsx
 msgid "For reporting slow or failed saves. The panel can then record connection timings and download them; nothing is recorded until you start it there."
-msgstr ""
+msgstr "用于报告缓慢或失败的保存。面板随后可以记录连接耗时并下载；在你于面板中启动之前，不会记录任何内容。"
 
 #: apps/extension/src/OptionsApp.tsx
 msgid "For the side panel, this page and the welcome page. Reader keeps its own theme setting."
-msgstr ""
+msgstr "适用于侧边栏、此页面和欢迎页面。Reader 有其自己的主题设置。"
 
 #: apps/reader/src/NativeSignIn.tsx
 msgid "Forget collection"
-msgstr ""
+msgstr "忘记集合"
 
 #: apps/reader/src/LibraryWorkspace.tsx
 msgid "Format"
-msgstr ""
+msgstr "格式"
 
 #: apps/reader/src/library-columns.ts
 msgctxt "Library table column"
 msgid "Format"
-msgstr ""
+msgstr "格式"
 
 #: apps/reader/src/LibraryWorkspace.tsx
 msgctxt "LibraryWorkspace interface"
 msgid "Format"
-msgstr ""
+msgstr "格式"
 
 #: apps/reader/src/SourceNoteEditor.tsx
 msgctxt "SourceNoteEditor interface"
 msgid "Format Markdown"
-msgstr ""
+msgstr "格式化 Markdown"
 
 #: apps/reader/src/CitationLookup.tsx
 msgid "Found"
-msgstr ""
+msgstr "已找到"
 
 #: apps/extension/src/CitationCard.tsx
 msgid "From the DOI registry. Saved with the source; edit it later in Reader."
-msgstr ""
+msgstr "来自 DOI 注册库。随来源一起保存；之后可在 Reader 中编辑。"
 
 #: apps/extension/src/CitationCard.tsx
 msgid "From the publisher’s page metadata. Saved with the source; edit it later in Reader."
-msgstr ""
+msgstr "来自出版商的页面元数据。随来源一起保存；之后可在 Reader 中编辑。"
 
 #: packages/renderer-pdf/src/pdf-translations.ts
 msgctxt "PDF viewer document"
 msgid "Fullscreen"
-msgstr ""
+msgstr "全屏"
 
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "Genre"
-msgstr ""
+msgstr "体裁"
 
 #: apps/reader/src/ImportInput.tsx
 msgid "Get your <0>Readwise access token</0>. It stays in memory in this tab and is sent only to Readwise. Although the token allows writes, this importer only reads."
-msgstr ""
+msgstr "获取你的 <0>Readwise 访问令牌</0>。它仅保存在此标签页的内存中，并且只会发送给 Readwise。虽然该令牌允许写入，但此导入器只读取。"
 
 #: apps/extension/src/SaveBar.tsx
 msgid "Give the source a title under Note to save it."
-msgstr ""
+msgstr "请在“笔记”下为来源填写标题以保存。"
 
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "Given"
-msgstr ""
+msgstr "名"
 
 #: apps/reader/src/CitationContributors.tsx
 msgctxt "CitationContributors interface"
 msgid "Given names"
-msgstr ""
+msgstr "名字"
 
 #: apps/reader/src/InspectorPane.tsx
 msgid "Go to workbench"
