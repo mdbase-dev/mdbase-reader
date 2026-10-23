@@ -10,7 +10,7 @@ msgstr ""
 #. placeholder {0}: (progress.transferredBytes / 1024 ** 2).toLocaleString(i18n.locale, { minimumFractionDigits: 1, maximumFractionDigits: 1 })
 #: apps/reader/src/ImportReview.tsx
 msgid " · {0} MiB latest file progress"
-msgstr " · {0} MiB Fortschritt neueste Datei"
+msgstr " · {0} MiB Fortschritt bei der neuesten Datei"
 
 #: apps/reader/src/LibraryWorkspace.tsx
 msgid " · Loading more…"
@@ -459,17 +459,17 @@ msgstr "Zusammenfassung"
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "Abstract"
-msgstr "Abgerufen"
+msgstr "Zusammenfassung"
 
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "Accessed"
-msgstr "Aktionen für {0}"
+msgstr "Abgerufen"
 
 #. placeholder {0}: source.title
 #: apps/reader/src/LibraryRowMenu.tsx
 msgid "Actions for {0}"
-msgstr "Hinzufügen"
+msgstr "Aktionen für {0}"
 
 #: apps/reader/src/LibraryTableHeader.tsx
 msgctxt "LibraryTableHeader interface"
@@ -479,48 +479,48 @@ msgstr "Hinzufügen"
 #: apps/reader/src/SourceAddDialog.tsx
 msgctxt "SourceAddDialog interface"
 msgid "Add"
-msgstr "Ansicht „Anmerkungen zu dieser Quelle“ hinzufügen"
+msgstr "Hinzufügen"
 
 #: apps/reader/src/LibraryAnnotationToolbar.tsx
 msgid "Add “Annotations for this source” view"
-msgstr "{appName} zum Home-Bildschirm hinzufügen: „Teilen“ und dann „Zum Home-Bildschirm“ antippen."
+msgstr "Ansicht „Anmerkungen zu dieser Quelle“ hinzufügen"
 
 #: apps/reader/src/pwa-install.ts
 msgid "Add {appName} to your Home Screen: tap Share, then Add to Home Screen."
-msgstr "Zitat in Reader hinzufügen"
+msgstr "{appName} zum Home-Bildschirm hinzufügen: „Teilen“ und dann „Zum Home-Bildschirm“ antippen."
 
 #: apps/extension/src/CitationPanel.tsx
 msgid "Add a citation in Reader"
-msgstr "Kommentar hinzufügen"
+msgstr "Quellenangabe in Reader hinzufügen"
 
 #: apps/reader/src/AnnotationComposer.tsx
 msgid "Add a comment"
-msgstr "Kommentar oder Tags hinzufügen"
+msgstr "Kommentar hinzufügen"
 
 #: apps/extension/src/HighlightFields.tsx
 msgid "Add a comment or tags"
-msgstr "Kommentar hinzufügen…"
+msgstr "Kommentar oder Tags hinzufügen"
 
 #: apps/reader/src/AnnotationEditor.tsx
 msgid "Add a comment…"
-msgstr "Zum Lesen eine PDF, EPUB-Datei oder Webseite hinzufügen."
+msgstr "Kommentar hinzufügen…"
 
 #: apps/reader/src/LibraryWorkspace.tsx
 msgid "Add a PDF, EPUB or web page to start reading."
-msgstr "Quelle hinzufügen"
+msgstr "Zum Lesen eine PDF, EPUB-Datei oder Webseite hinzufügen."
 
 #: apps/reader/src/LibraryWorkspace.tsx
 #: apps/reader/src/SourceAddDialog.tsx
 msgid "Add a source"
-msgstr "Fügen Sie vor der Verwendung dieses Zitats im Literaturverzeichnis einen Titel hinzu."
+msgstr "Quelle hinzufügen"
 
 #: packages/core/src/application/citation-citekey.ts
 msgid "Add a title before using this citation in a bibliography."
-msgstr "Zuerst Zitatdetails hinzufügen"
+msgstr "Fügen Sie vor der Verwendung dieses Zitats im Literaturverzeichnis einen Titel hinzu."
 
 #: apps/reader/src/SourceNoteInsertMenu.tsx
 msgid "Add citation details first"
-msgstr "Spalte hinzufügen"
+msgstr "Zuerst Angaben zur Quellenangabe hinzufügen"
 
 #: apps/reader/src/LibraryAnnotationTableHead.tsx
 msgctxt "LibraryAnnotationTableHead interface"
@@ -530,11 +530,11 @@ msgstr "Spalte hinzufügen"
 #: apps/reader/src/LibraryTableHeader.tsx
 msgctxt "LibraryTableHeader interface"
 msgid "Add column"
-msgstr "Kommentar hinzufügen"
+msgstr "Spalte hinzufügen"
 
 #: apps/extension/src/SavedHighlights.tsx
 msgid "Add comment"
-msgstr "Feld hinzufügen"
+msgstr "Kommentar hinzufügen"
 
 #: apps/reader/src/CitationAdditionalFields.tsx
 msgid "Add field"
@@ -582,7 +582,7 @@ msgstr "Quelle hinzufügen…"
 
 #: apps/reader/src/CitationSourceSync.tsx
 msgid "Add to citation"
-msgstr "Zum Zitat hinzufügen"
+msgstr "Zur Quellenangabe hinzufügen"
 
 #: apps/reader/src/AnnotationCard.tsx
 msgid "Add to literature note"
@@ -832,35 +832,35 @@ msgstr "Anmerkungen"
 
 #: apps/reader/src/ImportReview.tsx
 msgid "Annotations and notes"
-msgstr "Anmerkungen"
+msgstr "Anmerkungen und Notizen"
 
 #: apps/reader/src/reader-command-list.ts
 msgid "Annotations, literature note and citation"
-msgstr "Anmerkungen und Notizen"
+msgstr "Anmerkungen, Literaturnotiz und Zitat"
 
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "Annote"
-msgstr "Anmerkungen, Literaturnotiz und Zitat"
+msgstr "Anmerkung"
 
 #: apps/reader/src/LibraryTableHeader.tsx
 msgid "Any field"
-msgstr "Anmerkung"
+msgstr "Beliebiges Feld"
 
 #: apps/reader/src/LibraryWorkspace.tsx
 msgctxt "LibraryWorkspace formatFilterOptions"
 msgid "Any format"
-msgstr "Beliebiges Feld"
+msgstr "Beliebiges Format"
 
 #: apps/reader/src/LibraryWorkspace.tsx
 msgctxt "LibraryWorkspace statusFilterOptions"
 msgid "Any status"
-msgstr "Beliebiges Format"
+msgstr "Beliebiger Status"
 
 #: apps/reader/src/LibraryAnnotationToolbar.tsx
 msgctxt "LibraryAnnotationToolbar interface"
 msgid "Any tag"
-msgstr "Beliebiger Status"
+msgstr "Beliebiges Tag"
 
 #: apps/reader/src/LibraryWorkspace.tsx
 msgctxt "LibraryWorkspace interface"
@@ -870,110 +870,110 @@ msgstr "Beliebiges Tag"
 #: apps/reader/src/LibraryAnnotationToolbar.tsx
 msgctxt "LibraryAnnotationToolbar annotationTypeOptions"
 msgid "Any type"
-msgstr "Beliebiges Tag"
+msgstr "Beliebiger Typ"
 
 #: apps/reader/src/ImportInput.tsx
 msgid "API token"
-msgstr "Beliebiger Typ"
+msgstr "API-Token"
 
 #: apps/extension/src/OptionsApp.tsx
 msgid "Appearance"
-msgstr "API-Token"
+msgstr "Erscheinungsbild"
 
 #: apps/reader/src/DisplayMenu.tsx
 msgid "Applies to EPUBs and saved web pages. PDFs keep their layout."
-msgstr "Erscheinungsbild"
+msgstr "Gilt für EPUBs und gespeicherte Webseiten. PDFs behalten ihr Layout."
 
 #: apps/reader/src/LibraryBulkBar.tsx
 msgid "Apply"
-msgstr "Gilt für EPUBs und gespeicherte Webseiten. PDFs behalten ihr Layout."
+msgstr "Anwenden"
 
 #: apps/reader/src/CitationTypedFieldEditors.tsx
 msgid "Apply JSON"
-msgstr "Anwenden"
+msgstr "JSON anwenden"
 
 #: apps/reader/src/ImportDestination.tsx
 msgid "Apply Reader collection setup"
-msgstr "JSON anwenden"
+msgstr "Reader-Sammlungseinrichtung anwenden"
 
 #: apps/reader/src/ConnectReader.tsx
 msgid "Apply reviewed setup"
-msgstr "Reader-Sammlungseinrichtung anwenden"
+msgstr "Geprüfte Einrichtung anwenden"
 
 #: apps/reader/src/ConnectReader.tsx
 msgctxt "ConnectReader interface"
 msgid "Applying setup…"
-msgstr "Geprüfte Einrichtung anwenden"
+msgstr "Einrichtung wird angewendet…"
 
 #: apps/extension/src/connection-view.ts
 #: apps/extension/src/ConnectionPanel.tsx
 msgid "Approve access"
-msgstr "Einrichtung wird angewendet…"
+msgstr "Zugriff genehmigen"
 
 #: apps/extension/src/connection-view.ts
 msgid "Approve access to this collection before saving."
-msgstr "Zugriff genehmigen"
+msgstr "Genehmigen Sie den Zugriff auf diese Sammlung, bevor Sie speichern."
 
 #: apps/extension/src/ConnectionPanel.tsx
 msgid "Approve mdbase Reader in the mdbase tab, then return here."
-msgstr "Genehmigen Sie den Zugriff auf diese Sammlung, bevor Sie speichern."
+msgstr "Genehmigen Sie mdbase Reader im mdbase-Tab und kehren Sie dann hierher zurück."
 
 #: apps/reader/src/CitationTypedFieldEditors.tsx
 msgid "Approximate"
-msgstr "Genehmigen Sie mdbase Reader im mdbase-Tab und kehren Sie dann hierher zurück."
-
-#: apps/reader/src/citation-labels.ts
-msgctxt "CSL bibliographic field or item type"
-msgid "Archive"
 msgstr "Ungefähr"
 
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
-msgid "Archive collection"
+msgid "Archive"
 msgstr "Archiv"
 
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
-msgid "Archive location"
+msgid "Archive collection"
 msgstr "Archivsammlung"
 
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
-msgid "Archive place"
+msgid "Archive location"
 msgstr "Archivstandort"
+
+#: apps/reader/src/citation-labels.ts
+msgctxt "CSL bibliographic field or item type"
+msgid "Archive place"
+msgstr "Archivort"
 
 #: apps/reader/src/LibraryCells.tsx
 msgctxt "reading status"
 msgid "Archived"
-msgstr "Archivort"
+msgstr "Archiviert"
 
 #: apps/reader/src/annotation-kind.ts
 msgid "Area"
-msgstr "Archiviert"
+msgstr "Bereich"
 
 #: apps/reader/src/AnnotationList.tsx
 msgctxt "AnnotationList annotationFilterOptions"
 msgid "Area captures"
-msgstr "Bereich"
+msgstr "Flächenerfassungen"
 
 #: apps/reader/src/LibraryAnnotationToolbar.tsx
 msgctxt "LibraryAnnotationToolbar annotationTypeOptions"
 msgid "Areas"
-msgstr "Flächenerfassungen"
+msgstr "Bereiche"
 
 #: apps/reader/src/reader-command-list.ts
 msgid "Arrange panes side by side"
-msgstr "Bereiche"
+msgstr "Bereiche nebeneinander anordnen"
 
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "Article"
-msgstr "Bereiche nebeneinander anordnen"
+msgstr "Artikel"
 
 #: apps/reader/src/LibraryAnnotationToolbar.tsx
 msgctxt "LibraryAnnotationToolbar interface"
 msgid "Ascending"
-msgstr "Artikel"
+msgstr "Aufsteigend"
 
 #: apps/reader/src/LibraryWorkspace.tsx
 msgctxt "LibraryWorkspace interface"
@@ -982,12 +982,12 @@ msgstr "Aufsteigend"
 
 #: apps/reader/src/WorkspacePaneSupport.tsx
 msgid "Attach a file"
-msgstr "Aufsteigend"
+msgstr "Datei anhängen"
 
 #. placeholder {0}: file.name
 #: apps/reader/src/use-document-attachment.ts
 msgid "Attaching {0}…"
-msgstr "Datei anhängen"
+msgstr "Wird {0} angehängt…"
 
 #: apps/reader/src/use-document-attachment.ts
 msgid "Attaching the PDF…"
@@ -1817,7 +1817,7 @@ msgstr "Vergleich"
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "Compiler"
-msgstr "Compiler"
+msgstr "Zusammensteller"
 
 #: apps/reader/src/import-controller.ts
 msgctxt "Import completed"
@@ -3394,12 +3394,12 @@ msgstr "Hervorhebungen nicht verfügbar"
 #: packages/renderer-pdf/src/pdf-translations.ts
 msgctxt "PDF viewer page"
 msgid "Horizontal"
-msgstr "Horizontal"
+msgstr "Waagerecht"
 
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "Host"
-msgstr "Host"
+msgstr "Gastgeber"
 
 #: apps/reader/src/collection-menu-model.ts
 msgctxt "collection menu model"
