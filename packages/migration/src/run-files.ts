@@ -1,3 +1,4 @@
+import { t } from "@lingui/core/macro";
 import { hash, identity, type MigrationFile, type MigrationPlan } from "./model.js";
 
 import type { ImportedFile, MigrationProgress, MigrationTarget } from "./run.js";
@@ -14,7 +15,7 @@ export async function commitFiles(
   for (const file of plan.files) {
     signal.throwIfAborted();
     if (seen.has(file.path)) {
-      throw new Error("Duplicate import destination path.");
+      throw new Error(t({ message: "Duplicate import destination path." }));
     }
     seen.add(file.path);
   }
@@ -50,7 +51,7 @@ export async function commitFiles(
     const failed = settled.find((outcome) => outcome.status === "rejected");
     if (failed?.status === "rejected") {
       const reason: unknown = failed.reason;
-      throw reason instanceof Error ? reason : new Error("File transfer failed.");
+      throw reason instanceof Error ? reason : new Error(t({ message: "File transfer failed." }));
     }
   }
   return result;
@@ -69,12 +70,15 @@ async function commitFile(
   signal.throwIfAborted();
   const digest = `sha256:${await hash(blob)}`;
   if (file.digest && file.digest !== digest) {
-    throw new Error("File checksum changed since preview.");
+    throw new Error(t({ message: "File checksum changed since preview." }));
   }
   if (existing) {
     if (existing.contentDigest !== digest) {
       throw new Error(
-        "An import file path already contains different bytes. No replacement was attempted.",
+        t({
+          message:
+            "An import file path already contains different bytes. No replacement was attempted.",
+        }),
       );
     }
     return existing;
@@ -90,7 +94,7 @@ async function commitFile(
     progress,
   );
   if (descriptor.contentDigest !== digest) {
-    throw new Error("Uploaded checksum does not match the original file.");
+    throw new Error(t({ message: "Uploaded checksum does not match the original file." }));
   }
   return descriptor;
 }

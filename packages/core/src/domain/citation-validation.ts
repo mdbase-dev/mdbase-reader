@@ -30,6 +30,7 @@ export function validateCslField(
     }
   } else {
     problems.push({
+      code: "unknown_csl_field",
       path,
       message: t({
         message: "is not a CSL 1.0 field; preserve extension data under csl.custom",

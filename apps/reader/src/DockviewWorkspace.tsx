@@ -200,6 +200,9 @@ function ReaderDockTab(props: IDockviewPanelHeaderProps<{ tab?: WorkspaceTab }>)
   const tab = props.params.tab;
   const close = (): void => document.sourceWorkspace.dock.close(props.api.id);
   const side = sidePanelIds.has(props.api.id);
+  const title =
+    props.api.title ??
+    translate({ message: "Source", context: "DockviewWorkspace status or action" });
   return (
     // A tab is one control, so its close affordance is pointer-only; the keyboard uses Delete,
     // the tab's context menu or the pane menu, all of which go through the dirty-tab guard.
@@ -207,7 +210,7 @@ function ReaderDockTab(props: IDockviewPanelHeaderProps<{ tab?: WorkspaceTab }>)
     <div
       className={`reader-dock-tab${tab?.preview ? " is-preview" : ""}${tab?.dirty ? " is-dirty" : ""}${side ? " is-side" : ""}`}
       data-panel-id={props.api.id}
-      title={t`${props.api.title ?? translate({ message: "Source", context: "DockviewWorkspace status or action" })} · Drag to move or split · Right-click for pane actions · Delete closes the tab`}
+      title={t`${title} · Drag to move or split · Right-click for pane actions · Delete closes the tab`}
       onDoubleClick={() => document.sourceWorkspace.dock.patch(props.api.id, { preview: false })}
       onKeyDown={(event) => {
         if (event.key === "Delete" && !side) {

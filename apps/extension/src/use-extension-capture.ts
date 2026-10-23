@@ -340,7 +340,9 @@ export function useExtensionCapture(
           .catch(() => undefined);
       } catch (reason) {
         throw new Error(
-          t`${plural(count, { one: "# post confirmed before the failure.", other: "# posts confirmed before the failure." })} Retry checks each post for duplicates. ${problemMessage(reason)}`,
+          t({
+            message: `${plural(count, { one: "# post confirmed before the failure.", other: "# posts confirmed before the failure." })} Retry checks each post for duplicates. ${problemMessage(reason)}`,
+          }),
         );
       } finally {
         setStatus("ready");

@@ -59,8 +59,12 @@ export function useSourceExport(input: {
         setState({
           status: "success",
           message: problemCount
-            ? t`Exported with ${plural(problemCount, { one: "# item", other: "# items" })} to review.`
-            : t`Exported ${plural(bundle.canonicalRecordCount, { one: "# record", other: "# records" })} and ${plural(bundle.originalFileCount, { one: "# original file", other: "# original files" })}.`,
+            ? t({
+                message: `Exported with ${plural(problemCount, { one: "# item", other: "# items" })} to review.`,
+              })
+            : t({
+                message: `Exported ${plural(bundle.canonicalRecordCount, { one: "# record", other: "# records" })} and ${plural(bundle.originalFileCount, { one: "# original file", other: "# original files" })}.`,
+              }),
         });
       })
       .catch((reason: unknown) =>

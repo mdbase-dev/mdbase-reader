@@ -1,4 +1,3 @@
-import { t } from "@lingui/core/macro";
 import { useLingui } from "@lingui/react/macro";
 import { useEffect, useRef } from "react";
 
@@ -23,7 +22,7 @@ export function HtmlViewerSurface({
   onDocumentReady,
   onDocumentError,
 }: HtmlViewerSurfaceProps): React.JSX.Element {
-  const { t: uiT } = useLingui();
+  const { t } = useLingui();
   const frameRef = useRef<HTMLIFrameElement>(null);
   useEffect(() => {
     const frame = frameRef.current;
@@ -62,13 +61,13 @@ export function HtmlViewerSurface({
       surface = null;
       frame.srcdoc = "";
     };
-  }, [document, onDocumentError, onDocumentReady, onSurfaceReady]);
+  }, [document, onDocumentError, onDocumentReady, onSurfaceReady, t]);
   return (
     <iframe
       ref={frameRef}
       className={className}
       sandbox="allow-same-origin"
-      title={uiT`HTML reading document`}
+      title={t`HTML reading document`}
     />
   );
 }

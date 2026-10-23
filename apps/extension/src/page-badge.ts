@@ -58,7 +58,9 @@ export async function markSavedPosts(
   await markSavedPage(tabId, posts);
   await chrome.action.setTitle({
     tabId,
-    title: t`${plural(posts, { one: "# saved post", other: "# saved posts" })} in mdbase Reader · ${plural(highlights, { one: "# highlight on visible posts", other: "# highlights on visible posts" })}`,
+    title: t({
+      message: `${plural(posts, { one: "# saved post", other: "# saved posts" })} in mdbase Reader · ${plural(highlights, { one: "# highlight on visible posts", other: "# highlights on visible posts" })}`,
+    }),
   });
 }
 

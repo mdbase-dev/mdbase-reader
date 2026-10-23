@@ -1,3 +1,4 @@
+import { t } from "@lingui/core/macro";
 import { PDFDocument, PDFName, PDFNumber } from "pdf-lib";
 
 import type { Fields } from "./model.js";
@@ -16,7 +17,7 @@ export async function readPdfGeometry(blob: Blob): Promise<PdfPageGeometry[]> {
   return pdf.getPages().map((page) => {
     const unit = page.node.lookupMaybe(PDFName.of("UserUnit"), PDFNumber)?.asNumber() ?? 1;
     if (unit !== 1) {
-      throw new Error("Non-default PDF UserUnit is not yet supported.");
+      throw new Error(t({ message: "Non-default PDF UserUnit is not yet supported." }));
     }
     const media = page.getMediaBox();
     const crop = page.getCropBox();
@@ -39,7 +40,7 @@ function validateGeometry(page: PdfPageGeometry): void {
     page.top <= page.bottom ||
     ![0, 90, 180, 270].includes(page.rotation)
   ) {
-    throw new Error("Unsupported PDF page geometry.");
+    throw new Error(t({ message: "Unsupported PDF page geometry." }));
   }
 }
 
@@ -54,33 +55,33 @@ export function convertZoteroPdfPosition(
 ): Fields {
   const position: unknown = typeof raw === "string" ? JSON.parse(raw) : raw;
   if (!position || typeof position !== "object" || Array.isArray(position)) {
-    throw new Error("Invalid Zotero PDF position.");
+    throw new Error(t({ message: "Invalid Zotero PDF position." }));
   }
   const value = position as Record<string, unknown>;
   const index = value["pageIndex"];
   if (typeof index !== "number" || !Number.isInteger(index) || index < 0 || !pages[index]) {
-    throw new Error("Zotero PDF page is unavailable.");
+    throw new Error(t({ message: "Zotero PDF page is unavailable." }));
   }
   if (
     value["nextPageRects"] !== undefined ||
     value["paths"] !== undefined ||
     !["highlight", "note", "image"].includes(kind)
   ) {
-    throw new Error("Multi-page or ink geometry is not yet supported.");
+    throw new Error(t({ message: "Multi-page or ink geometry is not yet supported." }));
   }
   const rects = value["rects"];
   if (!Array.isArray(rects) || rects.length === 0) {
-    throw new Error("Missing Zotero PDF rectangles.");
+    throw new Error(t({ message: "Missing Zotero PDF rectangles." }));
   }
   const page = pages[index];
   validateGeometry(page);
   const quads = rects.map((rect: unknown) => {
     if (!Array.isArray(rect) || rect.length !== 4 || !rect.every(Number.isFinite)) {
-      throw new Error("Invalid Zotero PDF rectangle.");
+      throw new Error(t({ message: "Invalid Zotero PDF rectangle." }));
     }
     const [left, bottom, right, top] = rect as [number, number, number, number];
     if (left >= right || bottom >= top) {
-      throw new Error("Empty Zotero PDF rectangle.");
+      throw new Error(t({ message: "Empty Zotero PDF rectangle." }));
     }
     const corners: [number, number][] = [
       [left, bottom],

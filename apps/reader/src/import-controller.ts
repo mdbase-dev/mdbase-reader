@@ -25,20 +25,25 @@ export interface ImportState {
   boundTarget: string | null;
 }
 export class ImportController {
-  private state: ImportState = {
-    plan: null,
-    message: t({ message: "Choose a service to bring your library into mdbase Reader." }),
-    error: "",
-    busy: false,
-    preview: null,
-    progress: null,
-    result: null,
-    boundTarget: null,
-  };
+  private state: ImportState;
+  private initialState(): ImportState {
+    return {
+      plan: null,
+      message: t({ message: "Choose a service to bring your library into mdbase Reader." }),
+      error: "",
+      busy: false,
+      preview: null,
+      progress: null,
+      result: null,
+      boundTarget: null,
+    };
+  }
   private listeners = new Set<() => void>();
   private active: AbortController | null = null;
   private client: ReadwiseClient | null = null;
-  constructor(private session: ReaderCollectionProvider) {}
+  constructor(private session: ReaderCollectionProvider) {
+    this.state = this.initialState();
+  }
   getSnapshot = (): ImportState => this.state;
   subscribe = (fn: () => void): (() => void) => {
     this.listeners.add(fn);
@@ -186,7 +191,9 @@ export class ImportController {
       this.client?.forget();
       this.update({
         result,
-        message: t`Import complete into ${name}. ${plural(result.verified, { one: "# record verified", other: "# records verified" })}.`,
+        message: t({
+          message: `Import complete into ${name}. ${plural(result.verified, { one: "# record verified", other: "# records verified" })}.`,
+        }),
       });
     });
   };
@@ -205,7 +212,7 @@ function migrationPhaseLabel(phase: string): string {
     case "Complete":
       return t({ message: "Complete", context: "Import completed" });
     default: {
-      const files = /^Files: (\\d+) of (\\d+)$/u.exec(phase);
+      const files = /^Files: (\d+) of (\d+)$/u.exec(phase);
       return files ? t`Files: ${files[1]} of ${files[2]}` : phase;
     }
   }

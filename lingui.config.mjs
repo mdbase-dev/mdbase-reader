@@ -9,6 +9,7 @@ export default i18nConfig({
     "<rootDir>/apps/capacitor/src",
     "<rootDir>/packages/i18n/src",
     "<rootDir>/packages/core/src",
+    "<rootDir>/packages/migration/src",
     "<rootDir>/packages/ui/src",
     "<rootDir>/packages/reading-surface/src",
     "<rootDir>/packages/markdown-editor/src",
@@ -16,5 +17,5 @@ export default i18nConfig({
     "<rootDir>/packages/renderer-epub/src",
     "<rootDir>/packages/renderer-html/src",
   ],
-  exclude: ["**/*.test.*", "**/*.spec.*", "**/testing/**"],
+  exclude: ["**/*.test.*", "**/*.spec.*", "**/testing/**", "**/tests/**"],
 });

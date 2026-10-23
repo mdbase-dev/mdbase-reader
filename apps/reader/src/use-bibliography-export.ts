@@ -50,7 +50,9 @@ export function useBibliographyExport(
           signalMdbaseMark("saved");
           setState({
             status: "success",
-            message: t`Exported ${plural(items.length, { one: "# citation", other: "# citations" })}.`,
+            message: t({
+              message: `Exported ${plural(items.length, { one: "# citation", other: "# citations" })}.`,
+            }),
           });
         })
         .catch((reason: unknown) =>

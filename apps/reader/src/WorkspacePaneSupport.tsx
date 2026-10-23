@@ -164,11 +164,8 @@ function useAttachDrop(onFile: ((file: File) => void) | null): {
     return { active: false, handlers: {} };
   }
   const own = (event: DragEvent): boolean => {
-    if (
-      !event.dataTransfer.types.includes(
-        translate({ message: "Files", context: "WorkspacePaneSupport status or action" }),
-      )
-    ) {
+    // HTML drag-and-drop format token, not a displayed file label.
+    if (!event.dataTransfer.types.includes("Files")) {
       return false;
     }
     event.preventDefault();

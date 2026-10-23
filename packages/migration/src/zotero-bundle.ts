@@ -1,3 +1,4 @@
+import { t } from "@lingui/core/macro";
 import { array, hash, object, safePath, text, type Fields, type Progress } from "./model.js";
 import {
   payload,
@@ -34,24 +35,24 @@ export async function readZoteroBundle(
     signal.throwIfAborted();
     const file = files.get(name);
     if (!file || file.size > 64 * 1024 * 1024) {
-      throw new Error(`Missing or oversized ${name}.`);
+      throw new Error(t`Missing or oversized ${name}.`);
     }
     metadata.set(name, file);
     return JSON.parse(await file.text()) as unknown;
   };
   const manifest = object(await read("manifest.json"));
   if (manifest["format"] !== "dev.mdbase.reader.zotero-bundle" || manifest["version"] !== 1) {
-    throw new Error("Unsupported Zotero bundle version.");
+    throw new Error(t({ message: "Unsupported Zotero bundle version." }));
   }
   if (!["complete", "complete-with-warnings"].includes(text(manifest["status"]))) {
-    throw new Error("This export is incomplete. Export again in Zotero.");
+    throw new Error(t({ message: "This export is incomplete. Export again in Zotero." }));
   }
   const counts = object(manifest["counts"]);
   const rows = {} as ZoteroBundle["rows"];
   for (const name of ["items", "notes", "annotations", "attachments", "collections"] as const) {
     rows[name] = array(await read(`${name}.json`)).map(zoteroRow);
     if (rows[name].length !== counts[name]) {
-      throw new Error(`${name} count mismatch.`);
+      throw new Error(t`${name} count mismatch.`);
     }
   }
   const warnings = array(manifest["warnings"]).map((w) => object(w));
@@ -61,7 +62,7 @@ export async function readZoteroBundle(
   const paths = validatePayloads(rows, payloads, counts, warnings);
   for (const name of files.keys()) {
     if (!metadata.has(name) && !paths.has(name)) {
-      throw new Error("Unlisted file in bundle.");
+      throw new Error(t({ message: "Unlisted file in bundle." }));
     }
   }
   await verifyPayloads(payloads, files, signal, progress);
@@ -75,11 +76,11 @@ async function verifyPayloads(
 ): Promise<void> {
   for (const [i, file] of payloads.entries()) {
     signal.throwIfAborted();
-    progress(`Verifying file ${String(i + 1)} of ${String(payloads.length)}…`);
+    progress(t`Verifying file ${String(i + 1)} of ${String(payloads.length)}…`);
     const blob = files.get(file.path);
     if (blob?.size !== file.bytes || (await hash(blob)) !== file.sha256) {
       throw new Error(
-        `Attachment checksum mismatch (${String(i + 1)}). Nothing has been imported.`,
+        t`Attachment checksum mismatch (${String(i + 1)}). Nothing has been imported.`,
       );
     }
   }

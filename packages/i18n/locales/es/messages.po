@@ -16,6 +16,15 @@ msgstr ""
 msgid " · Loading more…"
 msgstr ""
 
+#. placeholder {0}: String(panes.indexOf(pane) + 1)
+#: apps/reader/src/reader-command-list.ts
+msgid " · pane {0}"
+msgstr ""
+
+#: apps/extension/src/CaptureApp.tsx
+msgid " · PDF"
+msgstr ""
+
 #: apps/reader/src/LibraryConditionsEditor.tsx
 msgid " Add a field condition"
 msgstr ""
@@ -65,6 +74,11 @@ msgstr ""
 msgid " Remove source…"
 msgstr ""
 
+#. placeholder {0}: preview.problem
+#: apps/extension/src/CitationCard.tsx
+msgid " The DOI record was unavailable ({0})."
+msgstr ""
+
 #. placeholder {0}: selected.size
 #: apps/reader/src/CitationLookup.tsx
 msgid "{0, plural, =0 {Apply selected details} one {Apply # change} other {Apply # changes}}"
@@ -73,6 +87,16 @@ msgstr ""
 #. placeholder {0}: selected.length
 #: apps/reader/src/LibraryAnnotationBars.tsx
 msgid "{0, plural, one {# annotation selected} other {# annotations selected}}"
+msgstr ""
+
+#. placeholder {0}: counts.duplicate
+#: apps/reader/src/use-bibliography-export.ts
+msgid "{0, plural, one {# citekey collision} other {# citekey collisions}}"
+msgstr ""
+
+#. placeholder {0}: counts.invalid
+#: apps/reader/src/use-bibliography-export.ts
+msgid "{0, plural, one {# invalid record} other {# invalid records}}"
 msgstr ""
 
 #. placeholder {0}: editor.warnings.length
@@ -95,6 +119,11 @@ msgstr ""
 msgid "{0, plural, one {# warning and fidelity note} other {# warnings and fidelity notes}}"
 msgstr ""
 
+#. placeholder {0}: counts.missing
+#: apps/reader/src/use-bibliography-export.ts
+msgid "{0, plural, one {# without citation} other {# without citations}}"
+msgstr ""
+
 #. placeholder {0}: selected.length
 #: apps/reader/src/LibraryAnnotationBars.tsx
 msgid "{0, plural, one {Copied # annotation as Markdown.} other {Copied # annotations as Markdown.}}"
@@ -112,9 +141,9 @@ msgstr ""
 msgid "{0, plural, one {This record links to it and will show a broken link:} other {These # records link to it and will show a broken link:}}"
 msgstr ""
 
-#. placeholder {0}: props.api.title ?? translate({ message: "Source", context: "DockviewWorkspace status or action" })
-#: apps/reader/src/DockviewWorkspace.tsx
-msgid "{0} · Drag to move or split · Right-click for pane actions · Delete closes the tab"
+#. placeholder {0}: migrationPhaseLabel(progress.phase)
+#: apps/reader/src/import-controller.ts
+msgid "{0} — {name}"
 msgstr ""
 
 #. placeholder {0}: annotation.locator.label
@@ -142,6 +171,12 @@ msgstr ""
 msgid "{0} open tabs"
 msgstr ""
 
+#. placeholder {0}: String(converted)
+#. placeholder {1}: String(unresolved)
+#: packages/migration/src/zotero-anchors.ts
+msgid "{0} Zotero PDF annotations have converted page/rectangle anchors. {1} retain native selectors only (missing/unreadable PDFs, unsupported geometry, ink, or non-PDF annotations). Image crops are not generated."
+msgstr ""
+
 #. placeholder {0}: String(progress)
 #: apps/reader/src/LibraryCells.tsx
 msgid "{0}% read"
@@ -159,12 +194,30 @@ msgstr ""
 msgid "{0}new records; {1}already imported. No existing records will be overwritten."
 msgstr ""
 
+#: packages/renderer-epub/src/epub-manifest.ts
+msgid "{context} is missing {attribute}."
+msgstr ""
+
 #: apps/reader/src/LibraryCells.tsx
 msgid "{count, plural, one {# annotation} other {# annotations}}"
 msgstr ""
 
+#. placeholder {0}: problemMessage(reason)
+#: apps/extension/src/use-extension-capture.ts
+msgid "{count, plural, one {# post confirmed before the failure.} other {# posts confirmed before the failure.}} Retry checks each post for duplicates. {0}"
+msgstr ""
+
+#: apps/extension/src/use-extension-capture.ts
+msgid "{count, plural, one {# post saved. Feeds are never saved.} other {# posts saved. Feeds are never saved.}}"
+msgstr ""
+
 #: apps/reader/src/LibraryCells.tsx
 msgid "{count, plural, one {# source} other {# sources}}"
+msgstr ""
+
+#: packages/renderer-pdf/src/pdf-translations.ts
+msgctxt "PDF viewer search"
+msgid "{count} results found"
 msgstr ""
 
 #: apps/reader/src/EnvironmentBadge.tsx
@@ -174,6 +227,18 @@ msgstr ""
 #. placeholder {0}: state.message
 #: apps/reader/src/DocumentRendererStage.tsx
 msgid "{errorName} could not render this file: {0}"
+msgstr ""
+
+#: apps/reader/src/use-open-document-search.ts
+msgid "{failures, plural, one {# loaded document could not be indexed} other {# loaded documents could not be indexed}}. Reopen document search to retry."
+msgstr ""
+
+#: apps/extension/src/SavedHighlights.tsx
+msgid "{hidden} not shown on this page, which may have changed since it was saved. They are still in the saved copy."
+msgstr ""
+
+#: apps/extension/src/page-badge.ts
+msgid "{highlights, plural, one {Saved in mdbase Reader · # highlight} other {Saved in mdbase Reader · # highlights}}"
 msgstr ""
 
 #. placeholder {0}: String(index + 1)
@@ -227,8 +292,33 @@ msgstr ""
 msgid "{label} JSON value"
 msgstr ""
 
+#: packages/migration/src/readwise.ts
+msgid "{label}: {message}"
+msgstr ""
+
+#: apps/extension/src/SavedHighlights.tsx
+msgid "{links, plural, one { # note links to it; those links will break.} other { # notes link to it; those links will break.}}"
+msgstr ""
+
+#: packages/migration/src/zotero-bundle.ts
+msgid "{name} count mismatch."
+msgstr ""
+
+#: packages/core/src/domain/identity.ts
+msgid "{name} must be a non-empty printable value."
+msgstr ""
+
 #: apps/reader/src/CitationTypedFieldEditors.tsx
 msgid "{name} value"
+msgstr ""
+
+#: apps/extension/src/page-badge.ts
+msgid "{posts, plural, one {# saved post} other {# saved posts}} in mdbase Reader · {highlights, plural, one {# highlight on visible posts} other {# highlights on visible posts}}"
+msgstr ""
+
+#. placeholder {0}: count.toLocaleString(i18n.locale)
+#: packages/migration/src/readwise-values.ts
+msgid "{reason}: {0}"
 msgstr ""
 
 #: apps/reader/src/AnnotationList.tsx
@@ -237,6 +327,10 @@ msgstr ""
 
 #: apps/reader/src/SelectionToolbar.tsx
 msgid "{state, plural, one {In # note · Review} other {In # notes · Review}}"
+msgstr ""
+
+#: apps/reader/src/DockviewWorkspace.tsx
+msgid "{title} · Drag to move or split · Right-click for pane actions · Delete closes the tab"
 msgstr ""
 
 #: apps/reader/src/CitationEditor.tsx
@@ -251,6 +345,18 @@ msgstr ""
 msgid "+ Add{itemLabel}"
 msgstr ""
 
+#: apps/extension/src/OptionsApp.tsx
+msgid "<0/>Show connection diagnostics in the side panel"
+msgstr ""
+
+#: apps/extension/src/CaptureApp.tsx
+msgid "<0>{shortcut}</0> highlights the selection from the page"
+msgstr ""
+
+#: apps/extension/src/CaptureApp.tsx
+msgid "<0>1</0>–<1>5</1> save the selection in a colour; <2>Esc</2> clears it"
+msgstr ""
+
 #: apps/reader/src/ImportInput.tsx
 msgid "<0>Download Zotero exporter (.xpi)</0>"
 msgstr ""
@@ -263,16 +369,64 @@ msgstr ""
 msgid "<0>Open imported collection →</0>"
 msgstr ""
 
+#: packages/core/src/domain/annotation.ts
+msgid "A bookmark requires a document position."
+msgstr ""
+
+#: packages/core/src/application/citation-citekey.ts
+msgid "A chapter normally needs a book or collection title."
+msgstr ""
+
+#: packages/core/src/domain/time.ts
+msgid "A datetime must be a valid ISO 8601 value."
+msgstr ""
+
+#: packages/core/src/domain/revision.ts
+msgid "A file revision must be a lowercase SHA-256 value prefixed with sha256:."
+msgstr ""
+
+#: packages/core/src/domain/annotation.ts
+msgid "A file selector requires an exact document target."
+msgstr ""
+
+#: packages/core/src/application/citation-citekey.ts
+msgid "A journal article normally needs a journal title."
+msgstr ""
+
 #: apps/reader/src/DeploymentUpdateNotice.tsx
 msgid "A newer Reader is ready."
+msgstr ""
+
+#: packages/core/src/domain/selector.ts
+msgid "A PDF page index must be a non-negative integer."
+msgstr ""
+
+#: packages/core/src/domain/selector.ts
+msgid "A PDF selector must contain at least one quadrilateral."
 msgstr ""
 
 #: apps/reader/src/LibraryAnnotationToolbar.tsx
 msgid "A saved view that lists the annotations of whichever source it runs against"
 msgstr ""
 
+#: apps/extension/src/WelcomeApp.tsx
+msgid "A side panel opens where you can check the title and citation, add tags and a note, and save. It stays open as you move between tabs and pages, showing whatever you are reading."
+msgstr ""
+
+#: packages/core/src/domain/source.ts
+msgid "A source path is not safe to link."
+msgstr ""
+
+#: packages/core/src/domain/annotation.ts
+msgid "A text highlight requires quote.exact."
+msgstr ""
+
 #: apps/reader/src/AnnotationPanelActions.tsx
 msgid "A thought about this source as a whole"
+msgstr ""
+
+#: packages/core/src/application/import-source-file.ts
+msgid "A web archive must contain HTML bytes."
 msgstr ""
 
 #: apps/reader/src/LibraryCells.tsx
@@ -280,8 +434,22 @@ msgctxt "reading status"
 msgid "Abandoned"
 msgstr ""
 
+#: apps/extension/src/OptionsApp.tsx
+msgid "About"
+msgstr ""
+
 #: apps/reader/src/CitationStructuredEditor.tsx
 msgid "Abstract"
+msgstr ""
+
+#: apps/reader/src/citation-labels.ts
+msgctxt "CSL bibliographic field or item type"
+msgid "Abstract"
+msgstr ""
+
+#: apps/reader/src/citation-labels.ts
+msgctxt "CSL bibliographic field or item type"
+msgid "Accessed"
 msgstr ""
 
 #. placeholder {0}: source.title
@@ -303,8 +471,20 @@ msgstr ""
 msgid "Add “Annotations for this source” view"
 msgstr ""
 
+#: apps/reader/src/pwa-install.ts
+msgid "Add {appName} to your Home Screen: tap Share, then Add to Home Screen."
+msgstr ""
+
+#: apps/extension/src/CitationPanel.tsx
+msgid "Add a citation in Reader"
+msgstr ""
+
 #: apps/reader/src/AnnotationComposer.tsx
 msgid "Add a comment"
+msgstr ""
+
+#: apps/extension/src/HighlightFields.tsx
+msgid "Add a comment or tags"
 msgstr ""
 
 #: apps/reader/src/AnnotationEditor.tsx
@@ -318,6 +498,10 @@ msgstr ""
 #: apps/reader/src/LibraryWorkspace.tsx
 #: apps/reader/src/SourceAddDialog.tsx
 msgid "Add a source"
+msgstr ""
+
+#: packages/core/src/application/citation-citekey.ts
+msgid "Add a title before using this citation in a bibliography."
 msgstr ""
 
 #: apps/reader/src/SourceNoteInsertMenu.tsx
@@ -334,12 +518,20 @@ msgctxt "LibraryTableHeader interface"
 msgid "Add column"
 msgstr ""
 
+#: apps/extension/src/SavedHighlights.tsx
+msgid "Add comment"
+msgstr ""
+
 #: apps/reader/src/CitationAdditionalFields.tsx
 msgid "Add field"
 msgstr ""
 
 #: apps/reader/src/CitationAdditionalFields.tsx
 msgid "Add less common CSL metadata"
+msgstr ""
+
+#: apps/reader/src/citation-renderer.ts
+msgid "Add more details to preview this citation."
 msgstr ""
 
 #: apps/reader/src/LibraryNavigator.tsx
@@ -369,6 +561,11 @@ msgctxt "SourceImportDialog interface"
 msgid "Add source"
 msgstr ""
 
+#: apps/reader/src/reader-app-commands.ts
+msgctxt "reader app commands"
+msgid "Add source…"
+msgstr ""
+
 #: apps/reader/src/CitationSourceSync.tsx
 msgid "Add to citation"
 msgstr ""
@@ -379,6 +576,10 @@ msgstr ""
 
 #: apps/reader/src/CitationTypedFieldEditors.tsx
 msgid "Add value"
+msgstr ""
+
+#: apps/reader/src/use-annotation-view.ts
+msgid "Added {path}. Run it with a source as its context in any mdbase tool."
 msgstr ""
 
 #. placeholder {0}: lookup.notice.message
@@ -405,6 +606,14 @@ msgstr ""
 msgid "Additional fields"
 msgstr ""
 
+#: packages/renderer-pdf/src/pdf-touch-selection-view.ts
+msgid "Adjust selection end"
+msgstr ""
+
+#: packages/renderer-pdf/src/pdf-touch-selection-view.ts
+msgid "Adjust selection start"
+msgstr ""
+
 #: apps/reader/src/CitationTypedFieldEditors.tsx
 msgid "Advanced JSON"
 msgstr ""
@@ -418,6 +627,25 @@ msgstr ""
 msgid "All fields added"
 msgstr ""
 
+#: packages/renderer-pdf/src/pdf-translations.ts
+msgctxt "PDF viewer print"
+msgid "All pages"
+msgstr ""
+
+#: apps/reader/src/mdbase-library-views.ts
+msgid "All sources"
+msgstr ""
+
+#: apps/reader/src/library-lenses.ts
+msgctxt "library lenses"
+msgid "All sources"
+msgstr ""
+
+#: apps/extension/src/CaptureApp.tsx
+#: apps/extension/src/SiteAccessStatus.tsx
+msgid "Allow on all sites"
+msgstr ""
+
 #: apps/reader/src/SourceNoteInsertMenu.tsx
 msgid "Already embedded in this note"
 msgstr ""
@@ -426,18 +654,106 @@ msgstr ""
 msgid "Already included in the literature note"
 msgstr ""
 
+#: apps/reader/src/insert-annotation-in-draft.ts
+#: packages/core/src/application/transclude-annotation.ts
+msgid "An annotation can only be inserted into its originating source note."
+msgstr ""
+
+#: packages/core/src/domain/annotation.ts
+msgid "An annotation path is not safe to transclude."
+msgstr ""
+
+#: packages/core/src/domain/annotation.ts
+msgid "An annotation type must not be empty."
+msgstr ""
+
+#: packages/core/src/domain/annotation.ts
+msgid "An area annotation requires PDF geometry in v1."
+msgstr ""
+
+#: packages/core/src/domain/selector.ts
+msgid "An EPUB CFI must not be empty."
+msgstr ""
+
+#: packages/migration/src/run.ts
+msgid "An existing source has different representations. Import into a new collection or review it explicitly; existing sources are never silently rewritten."
+msgstr ""
+
+#: apps/electron/src/validation.ts
+msgid "An export requires a safe file name."
+msgstr ""
+
+#: packages/core/src/domain/selector.ts
+msgid "An HTML position requires a document address."
+msgstr ""
+
+#: packages/core/src/domain/selector.ts
+msgid "An HTML progression must be between 0 and 1."
+msgstr ""
+
+#: packages/core/src/domain/selector.ts
+msgid "An HTML target requires CSS, XPath, or quotation evidence."
+msgstr ""
+
+#: packages/core/src/application/import-source-file.ts
+msgid "An immutable archive can only accompany a web capture."
+msgstr ""
+
+#: packages/migration/src/run-files.ts
+msgid "An import file path already contains different bytes. No replacement was attempted."
+msgstr ""
+
+#: apps/reader/src/connection-recovery.ts
+msgid "An older connector is running. Restart mdbase Connect on your computer."
+msgstr ""
+
+#: packages/renderer-pdf/src/pdf-translations.ts
+msgctxt "PDF viewer documentError"
+msgid "An unknown error occurred"
+msgstr ""
+
 #. placeholder {0}: String(links.length - shownLinks)
 #: apps/reader/src/SourceRemovalDialog.tsx
 msgid "and{0}more"
 msgstr ""
 
 #: apps/reader/src/LibraryAnnotationToolbar.tsx
+#: packages/markdown-editor/src/annotation-widgets.ts
 msgid "Annotation"
+msgstr ""
+
+#: packages/core/src/application/materialize-source.ts
+msgid "Annotation embed {reference} could not be resolved."
+msgstr ""
+
+#: packages/core/src/application/materialize-source.ts
+msgid "Annotation embed {reference} forms a transclusion cycle."
+msgstr ""
+
+#: packages/migration/src/run.ts
+msgid "Annotation file was not committed."
+msgstr ""
+
+#: packages/migration/src/zotero-validation.ts
+msgid "Annotation has no attachment."
+msgstr ""
+
+#: packages/migration/src/run.ts
+msgid "Annotation has no source."
 msgstr ""
 
 #: apps/reader/src/AnnotationEditor.tsx
 msgctxt "AnnotationEditor interface"
 msgid "Annotation Markdown"
+msgstr ""
+
+#: packages/renderer-pdf/src/pdf-translations.ts
+msgctxt "PDF viewer panel"
+msgid "Annotation Style"
+msgstr ""
+
+#: packages/migration/src/run.ts
+msgid "Annotation target verification failed."
 msgstr ""
 
 #: apps/reader/src/LibraryTextSearch.tsx
@@ -465,6 +781,11 @@ msgctxt "InspectorPane status or action"
 msgid "Annotations"
 msgstr ""
 
+#: apps/reader/src/library-columns.ts
+msgctxt "Library table column"
+msgid "Annotations"
+msgstr ""
+
 #: apps/reader/src/LibraryAnnotationTable.tsx
 msgctxt "LibraryAnnotationTable interface"
 msgid "Annotations"
@@ -480,13 +801,32 @@ msgctxt "MobileSourceViews views"
 msgid "Annotations"
 msgstr ""
 
+#: apps/reader/src/reader-command-list.ts
+msgctxt "reader command list"
+msgid "Annotations"
+msgstr ""
+
 #: apps/reader/src/VirtualAnnotationList.tsx
 msgctxt "VirtualAnnotationList interface"
 msgid "Annotations"
 msgstr ""
 
+#: apps/reader/src/workspace-tab-display.ts
+msgctxt "workspace tab display"
+msgid "Annotations"
+msgstr ""
+
 #: apps/reader/src/ImportReview.tsx
 msgid "Annotations and notes"
+msgstr ""
+
+#: apps/reader/src/reader-command-list.ts
+msgid "Annotations, literature note and citation"
+msgstr ""
+
+#: apps/reader/src/citation-labels.ts
+msgctxt "CSL bibliographic field or item type"
+msgid "Annote"
 msgstr ""
 
 #: apps/reader/src/LibraryTableHeader.tsx
@@ -522,6 +862,10 @@ msgstr ""
 msgid "API token"
 msgstr ""
 
+#: apps/extension/src/OptionsApp.tsx
+msgid "Appearance"
+msgstr ""
+
 #: apps/reader/src/DisplayMenu.tsx
 msgid "Applies to EPUBs and saved web pages. PDFs keep their layout."
 msgstr ""
@@ -547,13 +891,50 @@ msgctxt "ConnectReader interface"
 msgid "Applying setup…"
 msgstr ""
 
+#: apps/extension/src/connection-view.ts
+#: apps/extension/src/ConnectionPanel.tsx
+msgid "Approve access"
+msgstr ""
+
+#: apps/extension/src/connection-view.ts
+msgid "Approve access to this collection before saving."
+msgstr ""
+
+#: apps/extension/src/ConnectionPanel.tsx
+msgid "Approve mdbase Reader in the mdbase tab, then return here."
+msgstr ""
+
 #: apps/reader/src/CitationTypedFieldEditors.tsx
 msgid "Approximate"
+msgstr ""
+
+#: apps/reader/src/citation-labels.ts
+msgctxt "CSL bibliographic field or item type"
+msgid "Archive"
+msgstr ""
+
+#: apps/reader/src/citation-labels.ts
+msgctxt "CSL bibliographic field or item type"
+msgid "Archive collection"
+msgstr ""
+
+#: apps/reader/src/citation-labels.ts
+msgctxt "CSL bibliographic field or item type"
+msgid "Archive location"
+msgstr ""
+
+#: apps/reader/src/citation-labels.ts
+msgctxt "CSL bibliographic field or item type"
+msgid "Archive place"
 msgstr ""
 
 #: apps/reader/src/LibraryCells.tsx
 msgctxt "reading status"
 msgid "Archived"
+msgstr ""
+
+#: apps/reader/src/annotation-kind.ts
+msgid "Area"
 msgstr ""
 
 #: apps/reader/src/AnnotationList.tsx
@@ -564,6 +945,15 @@ msgstr ""
 #: apps/reader/src/LibraryAnnotationToolbar.tsx
 msgctxt "LibraryAnnotationToolbar annotationTypeOptions"
 msgid "Areas"
+msgstr ""
+
+#: apps/reader/src/reader-command-list.ts
+msgid "Arrange panes side by side"
+msgstr ""
+
+#: apps/reader/src/citation-labels.ts
+msgctxt "CSL bibliographic field or item type"
+msgid "Article"
 msgstr ""
 
 #: apps/reader/src/LibraryAnnotationToolbar.tsx
@@ -580,8 +970,36 @@ msgstr ""
 msgid "Attach a file"
 msgstr ""
 
+#. placeholder {0}: file.name
+#: apps/reader/src/use-document-attachment.ts
+msgid "Attaching {0}…"
+msgstr ""
+
+#: apps/reader/src/use-document-attachment.ts
+msgid "Attaching the PDF…"
+msgstr ""
+
+#. placeholder {0}: String(i + 1)
+#: packages/migration/src/zotero-bundle.ts
+msgid "Attachment checksum mismatch ({0}). Nothing has been imported."
+msgstr ""
+
+#: packages/migration/src/zotero-validation.ts
+msgid "Attachment totals mismatch."
+msgstr ""
+
 #: apps/reader/src/CitationContributors.tsx
 msgid "Author"
+msgstr ""
+
+#: apps/reader/src/citation-labels.ts
+msgctxt "CSL bibliographic field or item type"
+msgid "Author"
+msgstr ""
+
+#: apps/reader/src/citation-labels.ts
+msgctxt "CSL bibliographic field or item type"
+msgid "Authority"
 msgstr ""
 
 #: apps/reader/src/ConnectionLayout.tsx
@@ -613,8 +1031,18 @@ msgstr ""
 msgid "Authors, editors, translators, and organisations"
 msgstr ""
 
+#: apps/reader/src/citation-labels.ts
+msgctxt "CSL bibliographic field or item type"
+msgid "Available date"
+msgstr ""
+
 #: apps/reader/src/MobileWorkspaceNavigation.tsx
 msgctxt "MobileWorkspaceNavigation interface"
+msgid "Back"
+msgstr ""
+
+#: packages/renderer-pdf/src/pdf-translations.ts
+msgctxt "PDF viewer common"
 msgid "Back"
 msgstr ""
 
@@ -635,9 +1063,53 @@ msgstr ""
 msgid "Being edited in another pane."
 msgstr ""
 
+#: apps/reader/src/citation-labels.ts
+msgctxt "CSL bibliographic field or item type"
+msgid "Bill"
+msgstr ""
+
+#: apps/reader/src/citation-labels.ts
+msgctxt "CSL bibliographic field or item type"
+msgid "Blog post"
+msgstr ""
+
+#: apps/reader/src/citation-form-model.ts
+msgctxt "CSL item type"
+msgid "Blog post"
+msgstr ""
+
+#: apps/extension/src/HighlightFields.tsx
+msgctxt "Highlight colour"
+msgid "blue"
+msgstr ""
+
 #: apps/reader/src/SourceNoteEditor.tsx
 msgctxt "SourceNoteEditor formatActions"
 msgid "Bold"
+msgstr ""
+
+#: apps/reader/src/citation-labels.ts
+msgctxt "CSL bibliographic field or item type"
+msgid "Book"
+msgstr ""
+
+#: apps/reader/src/citation-form-model.ts
+msgctxt "CSL item type"
+msgid "Book"
+msgstr ""
+
+#: apps/reader/src/citation-labels.ts
+msgctxt "CSL bibliographic field or item type"
+msgid "Book chapter"
+msgstr ""
+
+#: apps/reader/src/citation-form-model.ts
+msgctxt "CSL item type"
+msgid "Book chapter"
+msgstr ""
+
+#: apps/reader/src/annotation-kind.ts
+msgid "Bookmark"
 msgstr ""
 
 #: apps/reader/src/AnnotationPanelActions.tsx
@@ -650,6 +1122,7 @@ msgid "Bookmark the current reading position"
 msgstr ""
 
 #: apps/reader/src/DocumentContextualToolbar.tsx
+#: apps/reader/src/reader-app-commands.ts
 msgid "Bookmark this position"
 msgstr ""
 
@@ -668,13 +1141,42 @@ msgctxt "LibraryAnnotationToolbar annotationTypeOptions"
 msgid "Bookmarks"
 msgstr ""
 
+#: packages/migration/src/readwise.ts
+msgid "Books from Kindle, Apple Books, Instapaper, podcasts and other classic Readwise sources are imported as metadata and highlights only; Readwise does not provide their text or files. Their locations are Readwise's labels (such as Kindle locations), not positions Reader can open."
+msgstr ""
+
 #: apps/reader/src/ImportPageView.tsx
 msgid "Bring your library with you."
+msgstr ""
+
+#: apps/reader/src/citation-labels.ts
+msgctxt "CSL bibliographic field or item type"
+msgid "Broadcast"
 msgstr ""
 
 #: apps/reader/src/SourceNoteEditor.tsx
 msgctxt "SourceNoteEditor formatActions"
 msgid "Bullet list"
+msgstr ""
+
+#: packages/migration/src/zotero.ts
+msgid "Bundle file changed since preview."
+msgstr ""
+
+#: packages/migration/src/zotero.ts
+msgid "Bundle has no library identity."
+msgstr ""
+
+#: packages/migration/src/zotero.ts
+msgid "Bundle manifest is missing."
+msgstr ""
+
+#: packages/migration/src/zotero.ts
+msgid "Bundle payload is missing."
+msgstr ""
+
+#: apps/reader/src/import-controller.ts
+msgid "Bundle verified. Review the contents and choose a destination."
 msgstr ""
 
 #: apps/reader/src/ImportReview.tsx
@@ -690,6 +1192,14 @@ msgctxt "CitationTypedFieldEditors dateModeOptions"
 msgid "Calendar date"
 msgstr ""
 
+#: apps/reader/src/citation-labels.ts
+msgctxt "CSL bibliographic field or item type"
+msgid "Call number"
+msgstr ""
+
+#: apps/extension/src/NotePanel.tsx
+#: apps/extension/src/PostPicker.tsx
+#: apps/extension/src/SavedHighlights.tsx
 #: apps/reader/src/AnnotationEditor.tsx
 #: apps/reader/src/AnnotationPanelActions.tsx
 #: apps/reader/src/LibraryBulkBar.tsx
@@ -703,6 +1213,21 @@ msgctxt "DocumentContextualToolbar interface"
 msgid "Cancel"
 msgstr ""
 
+#: packages/renderer-pdf/src/pdf-translations.ts
+msgctxt "PDF viewer common"
+msgid "Cancel"
+msgstr ""
+
+#: packages/renderer-pdf/src/pdf-translations.ts
+msgctxt "PDF viewer passwordPrompt"
+msgid "Cancel"
+msgstr ""
+
+#: packages/renderer-pdf/src/pdf-translations.ts
+msgctxt "PDF viewer print"
+msgid "Cancel"
+msgstr ""
+
 #: apps/reader/src/SourceImportDialog.tsx
 msgctxt "SourceImportDialog interface"
 msgid "Cancel"
@@ -712,19 +1237,53 @@ msgstr ""
 msgid "Cancel area selection"
 msgstr ""
 
+#: packages/migration/src/readwise-client.ts
+msgid "Cancelled"
+msgstr ""
+
 #: apps/reader/src/LibraryWorkspace.tsx
 msgctxt "LibraryWorkspace interface"
 msgid "Cards"
+msgstr ""
+
+#: packages/renderer-pdf/src/pdf-translations.ts
+msgctxt "PDF viewer search"
+msgid "Case sensitive"
+msgstr ""
+
+#: apps/reader/src/citation-labels.ts
+msgctxt "CSL bibliographic field or item type"
+msgid "Categories"
 msgstr ""
 
 #: apps/reader/src/ImportReview.tsx
 msgid "Category"
 msgstr ""
 
+#: apps/reader/src/citation-labels.ts
+msgctxt "CSL bibliographic field or item type"
+msgid "Chair"
+msgstr ""
+
+#: apps/extension/src/ShortcutList.tsx
+msgid "Change keyboard shortcuts"
+msgstr ""
+
+#: apps/extension/src/NotePanel.tsx
+msgid "Changed elsewhere"
+msgstr ""
+
 #: apps/reader/src/AnnotationCard.tsx
 msgid "Changes need review"
 msgstr ""
 
+#: apps/reader/src/citation-labels.ts
+msgctxt "CSL bibliographic field or item type"
+msgid "Chapter number"
+msgstr ""
+
+#: apps/extension/src/connection-view.ts
+#: apps/extension/src/ConnectionPanel.tsx
 #: apps/reader/src/SourceRemovalDialog.tsx
 msgid "Check again"
 msgstr ""
@@ -734,12 +1293,40 @@ msgstr ""
 msgid "Check destination: {0}"
 msgstr ""
 
+#: apps/extension/src/connection-view.ts
+msgid "Check this collection before saving."
+msgstr ""
+
+#: apps/reader/src/import-controller.ts
+msgid "Checking existing import identities…"
+msgstr ""
+
 #: apps/reader/src/SourceImportDialog.tsx
 msgid "Checking file and library"
 msgstr ""
 
 #: apps/reader/src/SourceImportDialog.tsx
 msgid "Checking files from the previous import"
+msgstr ""
+
+#: apps/extension/src/CaptureApp.tsx
+msgid "Checking files from the previous save attempt…"
+msgstr ""
+
+#: apps/extension/src/CaptureApp.tsx
+msgid "Checking for duplicates…"
+msgstr ""
+
+#: apps/extension/src/SiteAccessStatus.tsx
+msgid "Checking site access…"
+msgstr ""
+
+#: apps/reader/src/connection-recovery.ts
+msgid "Checking the collection’s Reader contracts…"
+msgstr ""
+
+#: apps/extension/src/NotePanel.tsx
+msgid "Checking the last save…"
 msgstr ""
 
 #: apps/reader/src/SourceRemovalDialog.tsx
@@ -751,13 +1338,30 @@ msgctxt "AnnotationEditor interface"
 msgid "Checking…"
 msgstr ""
 
+#: apps/extension/src/connection-view.ts
+#: apps/extension/src/ConnectionPanel.tsx
+msgid "Choose a collection"
+msgstr ""
+
+#: apps/extension/src/connection-view.ts
+msgid "Choose a collection before saving."
+msgstr ""
+
 #: apps/reader/src/ImportDestination.tsx
 msgid "Choose a collection to import into."
+msgstr ""
+
+#: apps/reader/src/connection-recovery.ts
+msgid "Choose a collection to open in Reader."
 msgstr ""
 
 #: apps/reader/src/ImportDestination.tsx
 #: apps/reader/src/NativeImportPage.tsx
 msgid "Choose a destination"
+msgstr ""
+
+#: apps/reader/src/import-controller.ts
+msgid "Choose a service to bring your library into mdbase Reader."
 msgstr ""
 
 #: apps/reader/src/ImportDestination.tsx
@@ -772,14 +1376,51 @@ msgstr ""
 msgid "Choose another collection"
 msgstr ""
 
+#: apps/extension/src/save-capture.ts
+msgid "Choose individual posts; feeds cannot be saved."
+msgstr ""
+
 #: apps/reader/src/SourceAddDialog.tsx
 msgid "Choose or drop a file"
+msgstr ""
+
+#: apps/extension/src/page-capture.ts
+#: apps/extension/src/PostPicker.tsx
+#: apps/extension/src/SaveBar.tsx
+msgid "Choose posts to save"
+msgstr ""
+
+#: apps/extension/src/PostPicker.tsx
+msgid "Choose posts…"
+msgstr ""
+
+#: apps/extension/src/connection-view.ts
+msgid "Choose the collection again"
+msgstr ""
+
+#: apps/extension/src/CollectionSection.tsx
+msgid "Choose the mdbase collection that pages and highlights are saved into."
+msgstr ""
+
+#: apps/extension/src/ConnectionPanel.tsx
+msgid "Choose the mdbase collection to save into. Nothing is saved until you press Save."
 msgstr ""
 
 #: apps/reader/src/ImportInput.tsx
 msgid "Choose what to bring"
 msgstr ""
 
+#: apps/extension/src/CaptureApp.tsx
+msgid "Chrome’s PDF viewer does not share selections, so PDFs are highlighted in Reader."
+msgstr ""
+
+#: apps/reader/src/citation-labels.ts
+msgctxt "CSL approximate date field"
+msgid "Circa"
+msgstr ""
+
+#: apps/extension/src/CitationCard.tsx
+#: apps/extension/src/PanelTabs.tsx
 #: apps/reader/src/InspectorPane.tsx
 #: apps/reader/src/SourceNoteInsertMenu.tsx
 msgid "Citation"
@@ -800,8 +1441,30 @@ msgctxt "MobileSourceViews views"
 msgid "Citation"
 msgstr ""
 
+#: apps/reader/src/reader-command-list.ts
+msgctxt "reader command list"
+msgid "Citation"
+msgstr ""
+
+#: apps/reader/src/workspace-tab-display.ts
+msgctxt "workspace tab display"
+msgid "Citation"
+msgstr ""
+
+#: apps/extension/src/CitationCard.tsx
+msgid "CITATION"
+msgstr ""
+
+#: packages/core/src/application/materialize-source.ts
+msgid "Citation @{citekey} has no valid CSL record in this collection."
+msgstr ""
+
 #: apps/reader/src/CitationStructuredEditor.tsx
 msgid "Citation details"
+msgstr ""
+
+#: apps/extension/src/CitationCard.tsx
+msgid "Citation details found."
 msgstr ""
 
 #: apps/reader/src/CitationEditor.tsx
@@ -812,8 +1475,18 @@ msgstr ""
 msgid "Citation identifier, URL, or title"
 msgstr ""
 
+#: apps/reader/src/citation-labels.ts
+msgctxt "CSL bibliographic field or item type"
+msgid "Citation key"
+msgstr ""
+
 #: apps/reader/src/CitationEditor.tsx
 msgid "Citation key needed"
+msgstr ""
+
+#: apps/reader/src/citation-labels.ts
+msgctxt "CSL bibliographic field or item type"
+msgid "Citation label"
 msgstr ""
 
 #: apps/reader/src/CitationPreview.tsx
@@ -821,8 +1494,22 @@ msgctxt "CitationPreview interface"
 msgid "Citation locale"
 msgstr ""
 
+#: packages/markdown-editor/src/citation-widgets.ts
+msgctxt "citation widgets"
+msgid "Citation Markdown"
+msgstr ""
+
 #: apps/reader/src/CitationEditor.tsx
 msgid "Citation metadata for {title}"
+msgstr ""
+
+#: packages/markdown-editor/src/citation-widgets.ts
+msgid "Citation not found"
+msgstr ""
+
+#: apps/reader/src/citation-labels.ts
+msgctxt "CSL bibliographic field or item type"
+msgid "Citation number"
 msgstr ""
 
 #: apps/reader/src/CitationPreview.tsx
@@ -835,16 +1522,37 @@ msgctxt "CitationPreview interface"
 msgid "Citation style"
 msgstr ""
 
+#. placeholder {0}: button.textContent
+#: packages/markdown-editor/src/citation-widgets.ts
+msgid "Citation: {0}. Edit citation Markdown"
+msgstr ""
+
 #: apps/reader/src/SelectionToolbar.tsx
 msgid "Cite"
 msgstr ""
 
+#: apps/extension/src/CitationCard.tsx
 #: apps/reader/src/CitationStructuredEditor.tsx
 msgid "Citekey"
 msgstr ""
 
+#: apps/reader/src/citation-labels.ts
+msgctxt "CSL bibliographic field or item type"
+msgid "Citekey"
+msgstr ""
+
+#: apps/reader/src/citation-labels.ts
+msgctxt "CSL bibliographic field or item type"
+msgid "Classic"
+msgstr ""
+
 #: apps/reader/src/AnnotationList.tsx
 #: apps/reader/src/LibraryAnnotationBars.tsx
+msgid "Clear"
+msgstr ""
+
+#: apps/extension/src/HighlightFields.tsx
+msgctxt "Clear the selected passage"
 msgid "Clear"
 msgstr ""
 
@@ -867,6 +1575,10 @@ msgstr ""
 msgid "Clear selection · Esc"
 msgstr ""
 
+#: apps/extension/src/HighlightFields.tsx
+msgid "Clear the selection (Esc)"
+msgstr ""
+
 #: apps/reader/src/LibraryTableRow.tsx
 msgid "Click to edit · F2"
 msgstr ""
@@ -876,12 +1588,45 @@ msgctxt "AnnotationEditor interface"
 msgid "Close"
 msgstr ""
 
+#: packages/renderer-pdf/src/pdf-translations.ts
+msgctxt "PDF viewer common"
+msgid "Close"
+msgstr ""
+
+#: packages/renderer-pdf/src/pdf-translations.ts
+msgctxt "PDF viewer document"
+msgid "Close"
+msgstr ""
+
+#: packages/renderer-pdf/src/pdf-translations.ts
+msgctxt "PDF viewer passwordPrompt"
+msgid "Close"
+msgstr ""
+
+#: apps/reader/src/reader-command-list.ts
+msgctxt "reader command list"
+msgid "Close active tab"
+msgstr ""
+
 #: apps/reader/src/SourceAddDialog.tsx
 msgid "Close add source"
 msgstr ""
 
 #: apps/reader/src/mobile-source-bar.tsx
 msgid "Close current tab"
+msgstr ""
+
+#: packages/renderer-pdf/src/pdf-translations.ts
+msgctxt "PDF viewer documentError"
+msgid "Close Document"
+msgstr ""
+
+#: apps/reader/src/reader-command-list.ts
+msgid "Close focused pane and keep its tabs"
+msgstr ""
+
+#: apps/reader/src/dockview-menus.ts
+msgid "Close other unpinned tabs"
 msgstr ""
 
 #: apps/reader/src/DockPaneActions.tsx
@@ -902,13 +1647,43 @@ msgstr ""
 msgid "Close this tab with unsaved changes? Keep it open until saving finishes to avoid losing work."
 msgstr ""
 
+#: apps/reader/src/dockview-menus.ts
+msgid "Close unpinned tabs to the right"
+msgstr ""
+
+#: apps/reader/src/use-annotation-edit.ts
+msgid "Close with unsaved changes? Saving may continue in this window, but reloading Reader before it finishes will lose them."
+msgstr ""
+
+#: apps/extension/src/ConnectionPanel.tsx
+#: apps/extension/src/OptionsApp.tsx
 #: apps/reader/src/ImportDestination.tsx
+msgid "Collection"
+msgstr ""
+
+#: apps/reader/src/citation-labels.ts
+msgctxt "CSL bibliographic field or item type"
 msgid "Collection"
 msgstr ""
 
 #: apps/reader/src/ImportDestination.tsx
 msgctxt "ImportDestination interface"
 msgid "Collection"
+msgstr ""
+
+#: apps/reader/src/citation-labels.ts
+msgctxt "CSL bibliographic field or item type"
+msgid "Collection editor"
+msgstr ""
+
+#: apps/reader/src/citation-labels.ts
+msgctxt "CSL bibliographic field or item type"
+msgid "Collection number"
+msgstr ""
+
+#: apps/reader/src/citation-labels.ts
+msgctxt "CSL bibliographic field or item type"
+msgid "Collection title"
 msgstr ""
 
 #: apps/reader/src/DraftRecoveryNotice.tsx
@@ -946,14 +1721,37 @@ msgstr ""
 msgid "Comma before suffix"
 msgstr ""
 
+#: apps/reader/src/citation-labels.ts
+msgctxt "CSL bibliographic field or item type"
+msgid "Comma suffix"
+msgstr ""
+
+#: apps/extension/src/SavedHighlights.tsx
+msgid "Comment"
+msgstr ""
+
+#: apps/reader/src/annotation-kind.ts
+msgctxt "Annotation type, distinct from literature note"
+msgid "Comment"
+msgstr ""
+
 #: apps/reader/src/AnnotationTextArea.tsx
 msgctxt "AnnotationTextArea status or action"
+msgid "Comment"
+msgstr ""
+
+#: packages/renderer-pdf/src/pdf-translations.ts
+msgctxt "PDF viewer panel"
 msgid "Comment"
 msgstr ""
 
 #: apps/reader/src/SelectionToolbar.tsx
 msgctxt "SelectionToolbar interface"
 msgid "Comment (C)"
+msgstr ""
+
+#: apps/extension/src/HighlightFields.tsx
+msgid "Comment <0>(optional)</0>"
 msgstr ""
 
 #: apps/reader/src/AnnotationComposer.tsx
@@ -997,6 +1795,31 @@ msgctxt "LibraryConditionsEditor interface"
 msgid "Comparison"
 msgstr ""
 
+#: apps/reader/src/citation-labels.ts
+msgctxt "CSL bibliographic field or item type"
+msgid "Compiler"
+msgstr ""
+
+#: apps/reader/src/import-controller.ts
+msgctxt "Import completed"
+msgid "Complete"
+msgstr ""
+
+#: apps/reader/src/citation-labels.ts
+msgctxt "CSL bibliographic field or item type"
+msgid "Composer"
+msgstr ""
+
+#: apps/reader/src/citation-labels.ts
+msgctxt "CSL bibliographic field or item type"
+msgid "Conference paper"
+msgstr ""
+
+#: apps/reader/src/citation-form-model.ts
+msgctxt "CSL item type"
+msgid "Conference paper"
+msgstr ""
+
 #: apps/reader/src/ImportReview.tsx
 msgid "Confirm"
 msgstr ""
@@ -1011,10 +1834,16 @@ msgctxt "SourceNoteEditor status or action"
 msgid "Conflict"
 msgstr ""
 
+#: apps/extension/src/ConnectionPanel.tsx
+#: apps/extension/src/WelcomeApp.tsx
+msgid "Connect a collection"
+msgstr ""
+
 #: apps/reader/src/ImportPageView.tsx
 msgid "Connect and scan your library →"
 msgstr ""
 
+#: apps/extension/src/ConnectionPanel.tsx
 #: apps/reader/src/ConnectReader.tsx
 msgid "Connect another collection"
 msgstr ""
@@ -1026,6 +1855,15 @@ msgstr ""
 #: apps/reader/src/ReaderHeader.tsx
 msgctxt "ReaderHeader interface"
 msgid "Connect directly"
+msgstr ""
+
+#. placeholder {0}: environment.label || "mdbase"
+#: apps/extension/src/ConnectionPanel.tsx
+msgid "Connect rejected this extension’s origin. Reload the current extension build and retry. If it persists, check the {0} Connect configuration; Reader will not bypass the origin check."
+msgstr ""
+
+#: apps/extension/src/ConnectionPanel.tsx
+msgid "Connect to mdbase{target}"
 msgstr ""
 
 #: apps/reader/src/ReaderHeader.tsx
@@ -1041,6 +1879,10 @@ msgstr ""
 msgid "Connected directly to this computer"
 msgstr ""
 
+#: apps/extension/src/CollectionSection.tsx
+msgid "Connected. The panel saves here unless you choose another."
+msgstr ""
+
 #: apps/reader/src/preview.tsx
 msgid "Connecting a collection needs mdbase Connect, outside the preview."
 msgstr ""
@@ -1049,8 +1891,28 @@ msgstr ""
 msgid "Connecting to mdbase…"
 msgstr ""
 
+#: apps/extension/src/ConnectionPanel.tsx
 #: apps/reader/src/ReaderHeader.tsx
 msgid "Connecting…"
+msgstr ""
+
+#: apps/extension/src/DiagnosticsPanel.tsx
+msgid "Connection diagnostics"
+msgstr ""
+
+#: apps/reader/src/citation-labels.ts
+msgctxt "CSL bibliographic field or item type"
+msgid "Container author"
+msgstr ""
+
+#: apps/reader/src/citation-labels.ts
+msgctxt "CSL bibliographic field or item type"
+msgid "Container title"
+msgstr ""
+
+#: apps/reader/src/citation-labels.ts
+msgctxt "CSL bibliographic field or item type"
+msgid "Container title short"
 msgstr ""
 
 #: apps/reader/src/ImportReview.tsx
@@ -1083,8 +1945,17 @@ msgstr ""
 msgid "Contributor"
 msgstr ""
 
+#: apps/reader/src/citation-labels.ts
+msgctxt "CSL bibliographic field or item type"
+msgid "Contributor"
+msgstr ""
+
 #: apps/reader/src/CitationStructuredEditor.tsx
 msgid "Contributors"
+msgstr ""
+
+#: apps/extension/src/CitationPanel.tsx
+msgid "Copied"
 msgstr ""
 
 #: apps/reader/src/SelectionToolbar.tsx
@@ -1118,8 +1989,21 @@ msgstr ""
 msgid "Copy as Markdown"
 msgstr ""
 
+#: apps/extension/src/CitationPanel.tsx
+msgid "Copy citekey"
+msgstr ""
+
 #: apps/reader/src/LibraryRowMenu.tsx
 msgid "Copy citekey <0>@{citekey}</0>"
+msgstr ""
+
+#: apps/extension/src/CitationPanel.tsx
+msgid "Copy CSL-JSON"
+msgstr ""
+
+#: packages/renderer-pdf/src/pdf-translations.ts
+msgctxt "PDF viewer selection"
+msgid "Copy Selection"
 msgstr ""
 
 #: apps/reader/src/SelectionToolbar.tsx
@@ -1139,12 +2023,86 @@ msgstr ""
 msgid "Could not change the collection. Please try again."
 msgstr ""
 
+#. placeholder {0}: problemMessage(reason)
+#: apps/extension/src/use-extension-capture.ts
+msgid "Could not check existing sources: {0}"
+msgstr ""
+
+#: apps/reader/src/use-annotation-deletion.ts
+msgid "Could not check this annotation."
+msgstr ""
+
 #: apps/reader/src/ImportPage.tsx
 msgid "Could not connect to mdbase."
 msgstr ""
 
+#: apps/extension/src/CitationPanel.tsx
+msgid "Could not copy"
+msgstr ""
+
+#: apps/reader/src/use-annotation-deletion.ts
+msgid "Could not delete this annotation."
+msgstr ""
+
+#: apps/extension/src/page-capture.ts
+msgid "Could not download this PDF (HTTP {status})."
+msgstr ""
+
+#: apps/reader/src/use-annotation-navigation.ts
+msgid "Could not locate this annotation."
+msgstr ""
+
+#: apps/reader/src/annotation-navigation.ts
+msgid "Could not locate this passage. The annotation is safe; the document may have changed."
+msgstr ""
+
 #: apps/reader/src/ImportDestination.tsx
 msgid "Could not open mdbase approval. Allow popups and try again."
+msgstr ""
+
+#: apps/extension/src/NotePanel.tsx
+msgid "Could not open the literature note."
+msgstr ""
+
+#: apps/capacitor/src/capacitor-platform.ts
+msgid "Could not read export data."
+msgstr ""
+
+#: apps/extension/src/page-annotations.ts
+msgid "Could not read this page. Reopen the extension on it."
+msgstr ""
+
+#: apps/reader/src/use-reading-resume.ts
+msgid "Could not restore the saved reading position."
+msgstr ""
+
+#: apps/reader/src/use-reading-resume.ts
+msgid "Could not restore this tab’s reading position."
+msgstr ""
+
+#: apps/reader/src/use-annotation-navigation.ts
+msgid "Could not return to reading."
+msgstr ""
+
+#: apps/reader/src/use-annotation-navigation.ts
+msgid "Could not return to the previous reading position."
+msgstr ""
+
+#: apps/reader/src/annotation-drafts.ts
+msgid "Could not save this draft locally. Keep this window open and retry saving to the collection."
+msgstr ""
+
+#: apps/reader/src/annotation-edit-session.ts
+msgid "Could not save. Keep Reader open and retry."
+msgstr ""
+
+#. placeholder {0}: problemMessage(reason)
+#: apps/extension/src/use-extension-capture.ts
+msgid "Could not show your highlights on this page: {0}"
+msgstr ""
+
+#: packages/renderer-epub/src/epub-page-navigation.tsx
+msgid "Could not turn the page. Try again."
 msgstr ""
 
 #: apps/reader/src/SelectionToolbar.tsx
@@ -1156,13 +2114,36 @@ msgstr ""
 msgid "Create or connect a collection…"
 msgstr ""
 
+#: apps/reader/src/annotation-columns.ts
+msgctxt "Annotation table column"
+msgid "Created"
+msgstr ""
+
 #: apps/reader/src/LibraryAnnotationToolbar.tsx
 msgctxt "LibraryAnnotationToolbar annotationSortOptions"
 msgid "Created"
 msgstr ""
 
+#: apps/reader/src/import-controller.ts
+msgid "Creating annotations and notes"
+msgstr ""
+
 #: apps/reader/src/SourceImportDialog.tsx
 msgid "Creating source record"
+msgstr ""
+
+#: apps/reader/src/import-controller.ts
+msgid "Creating sources"
+msgstr ""
+
+#: apps/reader/src/annotation-columns.ts
+msgctxt "Annotation table column"
+msgid "Creator"
+msgstr ""
+
+#: apps/reader/src/library-columns.ts
+msgctxt "Library table column"
+msgid "Creator"
 msgstr ""
 
 #: apps/reader/src/LibraryWorkspace.tsx
@@ -1178,8 +2159,37 @@ msgstr ""
 msgid "CSL JSON citation metadata"
 msgstr ""
 
+#. placeholder {0}: row.key
+#: packages/migration/src/zotero-records.ts
+msgid "CSL retained in native data but needs review: {0}"
+msgstr ""
+
+#: apps/reader/src/citation-labels.ts
+msgctxt "CSL bibliographic field or item type"
+msgid "Curator"
+msgstr ""
+
 #: apps/reader/src/CitationLookup.tsx
 msgid "Current"
+msgstr ""
+
+#: packages/renderer-pdf/src/pdf-translations.ts
+msgctxt "PDF viewer print"
+msgid "Current page ({currentPage})"
+msgstr ""
+
+#: apps/reader/src/reader-command-list.ts
+msgid "Current source"
+msgstr ""
+
+#: apps/reader/src/library-lenses.ts
+msgctxt "library lenses"
+msgid "Currently reading"
+msgstr ""
+
+#: apps/reader/src/citation-labels.ts
+msgctxt "CSL bibliographic field or item type"
+msgid "Custom"
 msgstr ""
 
 #: apps/reader/src/CitationTypedFieldEditors.tsx
@@ -1188,6 +2198,21 @@ msgstr ""
 
 #: apps/reader/src/DisplayMenu.tsx
 msgid "Dark"
+msgstr ""
+
+#: apps/extension/src/OptionsApp.tsx
+msgctxt "Dark appearance theme"
+msgid "Dark"
+msgstr ""
+
+#: apps/reader/src/citation-labels.ts
+msgctxt "CSL bibliographic field or item type"
+msgid "Dataset"
+msgstr ""
+
+#: apps/reader/src/citation-form-model.ts
+msgctxt "CSL item type"
+msgid "Dataset"
 msgstr ""
 
 #: apps/reader/src/CitationSourceSync.tsx
@@ -1213,6 +2238,15 @@ msgctxt "CitationTypedFieldEditors interface"
 msgid "Date form"
 msgstr ""
 
+#: apps/reader/src/citation-labels.ts
+msgctxt "CSL date field"
+msgid "Date parts"
+msgstr ""
+
+#: apps/extension/src/SavedHighlights.tsx
+msgid "Delete"
+msgstr ""
+
 #: apps/reader/src/AnnotationEditor.tsx
 msgctxt "AnnotationEditor interface"
 msgid "Delete"
@@ -1221,6 +2255,10 @@ msgstr ""
 #: apps/reader/src/SelectionToolbar.tsx
 msgctxt "SelectionToolbar interface"
 msgid "Delete"
+msgstr ""
+
+#: apps/extension/src/SavedHighlights.tsx
+msgid "Delete highlight"
 msgstr ""
 
 #: apps/reader/src/SelectionToolbar.tsx
@@ -1232,9 +2270,26 @@ msgstr ""
 msgid "Delete this annotation?"
 msgstr ""
 
+#. placeholder {0}: links ? ( <Plural value={links} one=" # note links to it; those links will break." other=" # notes link to it; those links will break." /> ) : ( "" )
+#: apps/extension/src/SavedHighlights.tsx
+msgid "Delete this highlight from your collection?{0}"
+msgstr ""
+
 #: apps/reader/src/SelectionToolbar.tsx
 msgctxt "SelectionToolbar interface"
 msgid "Delete?"
+msgstr ""
+
+#: packages/migration/src/readwise-annotations.ts
+msgid "Deleted Readwise books skipped"
+msgstr ""
+
+#: packages/migration/src/readwise-annotations.ts
+msgid "Deleted Readwise highlights skipped"
+msgstr ""
+
+#: apps/extension/src/SavedHighlights.tsx
+msgid "Deleting…"
 msgstr ""
 
 #: apps/reader/src/AnnotationEditor.tsx
@@ -1267,13 +2322,31 @@ msgctxt "SourceDetails fields"
 msgid "Description"
 msgstr ""
 
+#: apps/reader/src/import-controller.ts
+msgid "Destination checked. Confirm below to begin writing."
+msgstr ""
+
 #: apps/reader/src/CitationEditor.tsx
 #: apps/reader/src/SourceDetails.tsx
 msgid "Details"
 msgstr ""
 
+#: apps/reader/src/citation-labels.ts
+msgctxt "CSL bibliographic field or item type"
+msgid "Dimensions"
+msgstr ""
+
 #: apps/reader/src/ReaderHeader.tsx
 msgid "Direct connection"
+msgstr ""
+
+#: apps/reader/src/use-direct-access.ts
+msgid "Direct local access is not available for this connection."
+msgstr ""
+
+#: apps/reader/src/citation-labels.ts
+msgctxt "CSL bibliographic field or item type"
+msgid "Director"
 msgstr ""
 
 #: apps/reader/src/AnnotationEditor.tsx
@@ -1290,12 +2363,36 @@ msgctxt "AnnotationComposer interface"
 msgid "Discard selection"
 msgstr ""
 
+#: apps/reader/src/use-annotation-creation.ts
+msgid "Discard the unfinished annotation comment and comment on this?"
+msgstr ""
+
+#: apps/reader/src/use-selection-routing.ts
+msgid "Discard the unfinished annotation comment and use this area?"
+msgstr ""
+
+#: apps/reader/src/use-annotation-edit.ts
+msgid "Discard this annotation's unsaved changes? The collection version will be kept."
+msgstr ""
+
+#: apps/reader/src/use-annotation-creation.ts
+msgid "Discard this unfinished annotation comment?"
+msgstr ""
+
 #: apps/reader/src/AnnotationPanelActions.tsx
 msgid "Discard this unsaved comment?"
 msgstr ""
 
+#: packages/migration/src/readwise-annotations.ts
+msgid "Discarded Readwise highlights skipped (kept in the native archive)"
+msgstr ""
+
 #: apps/reader/src/CitationLookup.tsx
 msgid "Dismiss"
+msgstr ""
+
+#: apps/reader/src/reader-command-list.ts
+msgid "Display"
 msgstr ""
 
 #: apps/reader/src/DisplayMenu.tsx
@@ -1303,9 +2400,39 @@ msgctxt "DisplayMenu interface"
 msgid "Display settings"
 msgstr ""
 
+#: apps/reader/src/citation-labels.ts
+msgctxt "CSL bibliographic field or item type"
+msgid "Division"
+msgstr ""
+
+#: apps/reader/src/citation-labels.ts
+msgctxt "CSL bibliographic field or item type"
+msgid "Document"
+msgstr ""
+
+#: apps/reader/src/citation-form-model.ts
+msgctxt "CSL item type"
+msgid "Document"
+msgstr ""
+
+#: apps/reader/src/reader-command-list.ts
+msgctxt "reader command list"
+msgid "Document"
+msgstr ""
+
+#: apps/reader/src/source-addition-flow.ts
+msgctxt "source addition flow"
+msgid "Document"
+msgstr ""
+
 #: apps/reader/src/DocumentContextualToolbar.tsx
 msgctxt "DocumentContextualToolbar interface"
 msgid "Document actions"
+msgstr ""
+
+#: packages/renderer-pdf/src/pdf-translations.ts
+msgctxt "PDF viewer document"
+msgid "Document Menu"
 msgstr ""
 
 #: apps/reader/src/AnnotationList.tsx
@@ -1317,8 +2444,16 @@ msgstr ""
 msgid "Document passage"
 msgstr ""
 
+#: apps/extension/src/CitationCard.tsx
+msgid "DOI"
+msgstr ""
+
 #: apps/reader/src/CitationStructuredEditor.tsx
 msgid "DOI, ISBN, URL, and language"
+msgstr ""
+
+#: apps/extension/src/ConnectionPanel.tsx
+msgid "Done"
 msgstr ""
 
 #: apps/reader/src/AnnotationEditor.tsx
@@ -1338,6 +2473,38 @@ msgstr ""
 msgid "Double-click to keep open · Ctrl+Enter opens beside"
 msgstr ""
 
+#: apps/extension/src/DiagnosticsPanel.tsx
+msgid "Download timings"
+msgstr ""
+
+#: packages/migration/src/readwise-sources.ts
+msgid "Downloaded file does not match the expected PDF/EPUB format."
+msgstr ""
+
+#: apps/reader/src/annotation-drafts.ts
+msgid "Draft storage could not open."
+msgstr ""
+
+#: apps/reader/src/annotation-drafts.ts
+msgid "Draft storage is blocked by another window."
+msgstr ""
+
+#: apps/reader/src/annotation-drafts.ts
+msgid "Draft storage read failed."
+msgstr ""
+
+#: apps/reader/src/annotation-drafts.ts
+msgid "Draft storage write failed."
+msgstr ""
+
+#: packages/renderer-pdf/src/pdf-touch-selection-view.ts
+msgid "Drag to adjust selection end; arrow keys move one character"
+msgstr ""
+
+#: packages/renderer-pdf/src/pdf-touch-selection-view.ts
+msgid "Drag to adjust selection start; arrow keys move one character"
+msgstr ""
+
 #: apps/reader/src/CitationEditor.tsx
 msgid "Drag to insert this citation"
 msgstr ""
@@ -1348,6 +2515,11 @@ msgstr ""
 
 #: apps/reader/src/LibraryTableHeader.tsx
 msgid "Drag to resize · Double-click to reset"
+msgstr ""
+
+#: packages/renderer-pdf/src/pdf-translations.ts
+msgctxt "PDF viewer zoom"
+msgid "Drag to select area to zoom"
 msgstr ""
 
 #: apps/reader/src/SourceAddDialog.tsx
@@ -1365,6 +2537,35 @@ msgstr ""
 #: apps/reader/src/CitationContributors.tsx
 msgctxt "CitationContributors interface"
 msgid "Dropping particle"
+msgstr ""
+
+#: apps/reader/src/citation-labels.ts
+msgctxt "CSL bibliographic field or item type"
+msgid "Dropping particle"
+msgstr ""
+
+#: packages/migration/src/zotero-validation.ts
+msgid "Duplicate collection identity."
+msgstr ""
+
+#: apps/reader/src/dockview-menus.ts
+msgid "Duplicate document in pane right"
+msgstr ""
+
+#: packages/migration/src/run-files.ts
+msgid "Duplicate import destination path."
+msgstr ""
+
+#: apps/reader/src/reader-command-list.ts
+msgid "Duplicate in new pane right"
+msgstr ""
+
+#: apps/reader/src/reader-command-list.ts
+msgid "Duplicate in pane below"
+msgstr ""
+
+#: packages/migration/src/zotero-validation.ts
+msgid "Duplicate Zotero item identity."
 msgstr ""
 
 #: apps/reader/src/CitationAdditionalFields.tsx
@@ -1387,6 +2588,11 @@ msgstr ""
 msgid "e.g. Spring or 1"
 msgstr ""
 
+#: packages/renderer-pdf/src/pdf-translations.ts
+msgctxt "PDF viewer print"
+msgid "e.g., 1-3, 5, 8-10"
+msgstr ""
+
 #: apps/reader/src/AnnotationCard.tsx
 msgctxt "AnnotationCard interface"
 msgid "Edit"
@@ -1401,6 +2607,15 @@ msgctxt "AnnotationEditor interface"
 msgid "Edit annotation"
 msgstr ""
 
+#: packages/markdown-editor/src/citation-card.ts
+msgctxt "citation card"
+msgid "Edit citation"
+msgstr ""
+
+#: apps/extension/src/SavedHighlights.tsx
+msgid "Edit comment"
+msgstr ""
+
 #: apps/reader/src/AnnotationEditor.tsx
 msgid "Edit here"
 msgstr ""
@@ -1408,6 +2623,26 @@ msgstr ""
 #: apps/reader/src/AnnotationCard.tsx
 msgctxt "AnnotationCard interface"
 msgid "Edit here"
+msgstr ""
+
+#: packages/markdown-editor/src/annotation-widgets.ts
+msgctxt "annotation widgets"
+msgid "Edit highlight"
+msgstr ""
+
+#: apps/extension/src/CitationPanel.tsx
+#: apps/extension/src/NotePanel.tsx
+msgid "Edit in Reader"
+msgstr ""
+
+#: packages/markdown-editor/src/annotation-widgets.ts
+msgctxt "annotation widgets"
+msgid "Edit link"
+msgstr ""
+
+#: packages/markdown-editor/src/citation-card.ts
+msgctxt "citation card"
+msgid "Edit metadata"
 msgstr ""
 
 #: apps/reader/src/AnnotationEditor.tsx
@@ -1423,8 +2658,23 @@ msgctxt "CitationStructuredEditor interface"
 msgid "Edition"
 msgstr ""
 
+#: apps/reader/src/citation-labels.ts
+msgctxt "CSL bibliographic field or item type"
+msgid "Edition"
+msgstr ""
+
 #: apps/reader/src/CitationContributors.tsx
 msgid "Editor"
+msgstr ""
+
+#: apps/reader/src/citation-labels.ts
+msgctxt "CSL bibliographic field or item type"
+msgid "Editor"
+msgstr ""
+
+#: apps/reader/src/citation-labels.ts
+msgctxt "CSL bibliographic field or item type"
+msgid "Editorial director"
 msgstr ""
 
 #: apps/reader/src/CitationStructuredEditor.tsx
@@ -1445,9 +2695,35 @@ msgstr ""
 msgid "EDTF or source date"
 msgstr ""
 
+#. placeholder {0}: this.candidate.label
+#: packages/markdown-editor/src/annotation-widgets.ts
+msgid "Embedded annotation: {0}"
+msgstr ""
+
+#: packages/renderer-pdf/src/pdf-viewer.tsx
+msgid "EmbedPDF could not open this PDF."
+msgstr ""
+
+#: packages/renderer-pdf/src/embedpdf-runtime.ts
+#: packages/renderer-pdf/src/pdf-viewer.tsx
+msgid "EmbedPDF did not initialize its document manager."
+msgstr ""
+
+#: packages/renderer-pdf/src/embedpdf-runtime.ts
+msgid "EmbedPDF did not initialize the required Reader plugins."
+msgstr ""
+
 #: apps/reader/src/CitationTypedFieldEditors.tsx
 msgctxt "CitationTypedFieldEditors customValueTypeOptions"
 msgid "Empty"
+msgstr ""
+
+#: packages/migration/src/zotero-pdf.ts
+msgid "Empty Zotero PDF rectangle."
+msgstr ""
+
+#: packages/renderer-epub/src/epub-archive.ts
+msgid "Encrypted EPUB resources are not supported: {path}"
 msgstr ""
 
 #: apps/reader/src/CitationTypedFieldEditors.tsx
@@ -1455,8 +2731,21 @@ msgctxt "CitationTypedFieldEditors interface"
 msgid "End (optional)"
 msgstr ""
 
+#: packages/renderer-epub/src/epub-page-navigation.tsx
+msgid "End of publication"
+msgstr ""
+
 #: apps/reader/src/LibraryTextSearch.tsx
 msgid "Enter at least two characters."
+msgstr ""
+
+#: packages/renderer-pdf/src/pdf-translations.ts
+msgctxt "PDF viewer passwordPrompt"
+msgid "Enter document password"
+msgstr ""
+
+#: apps/reader/src/reader-command-list.ts
+msgid "Enter reading mode"
 msgstr ""
 
 #. placeholder {0}: shortcutLabel("mod+.")
@@ -1468,9 +2757,144 @@ msgstr ""
 msgid "Enter valid JSON to apply this value."
 msgstr ""
 
+#: apps/reader/src/citation-labels.ts
+msgctxt "CSL bibliographic field or item type"
+msgid "Entry"
+msgstr ""
+
+#: apps/reader/src/citation-labels.ts
+msgctxt "CSL bibliographic field or item type"
+msgid "Entry dictionary"
+msgstr ""
+
+#: apps/reader/src/citation-labels.ts
+msgctxt "CSL bibliographic field or item type"
+msgid "Entry encyclopedia"
+msgstr ""
+
 #: apps/reader/src/LibraryWorkspace.tsx
 msgctxt "LibraryWorkspace formatFilterOptions"
 msgid "EPUB"
+msgstr ""
+
+#: packages/renderer-epub/src/epub-archive.ts
+msgid "EPUB archive contains a duplicate path: {path}"
+msgstr ""
+
+#. placeholder {0}: String(MAX_ENTRIES)
+#: packages/renderer-epub/src/epub-archive.ts
+msgid "EPUB archive exceeds the {0}-entry safety limit."
+msgstr ""
+
+#: packages/renderer-epub/src/epub-archive.ts
+msgid "EPUB archive exceeds the uncompressed size safety limit."
+msgstr ""
+
+#: packages/renderer-epub/src/epub-archive.ts
+msgid "EPUB archive is closed."
+msgstr ""
+
+#: packages/renderer-epub/src/epub-archive.ts
+msgid "EPUB archive is missing META-INF/container.xml."
+msgstr ""
+
+#: packages/renderer-epub/src/epub-manifest.ts
+msgid "EPUB container does not identify a package document."
+msgstr ""
+
+#: packages/renderer-epub/src/epub-path.ts
+msgid "EPUB contains an invalid encoded path segment: {value}"
+msgstr ""
+
+#: packages/renderer-epub/src/epub-path.ts
+msgid "EPUB contains an unsafe resource path: {value}"
+msgstr ""
+
+#: packages/renderer-epub/src/epub-safe-fetch.ts
+msgid "EPUB content document contains invalid markup."
+msgstr ""
+
+#. placeholder {0}: String(response.status)
+#: packages/renderer-epub/src/epub-viewer.tsx
+msgid "EPUB download failed with HTTP {0}."
+msgstr ""
+
+#: packages/renderer-epub/src/epub-manifest.ts
+msgid "EPUB manifest item"
+msgstr ""
+
+#: packages/renderer-epub/src/epub-manifest.ts
+msgid "EPUB manifest item {id}"
+msgstr ""
+
+#: packages/renderer-epub/src/epub-manifest.ts
+msgid "EPUB package document is missing its package element."
+msgstr ""
+
+#: packages/renderer-epub/src/epub-manifest.ts
+msgid "EPUB package has no reading order."
+msgstr ""
+
+#: packages/renderer-epub/src/epub-manifest.ts
+msgid "EPUB package metadata has no title."
+msgstr ""
+
+#: packages/renderer-epub/src/epub-page-navigation.tsx
+msgid "EPUB page navigation"
+msgstr ""
+
+#: packages/renderer-epub/src/epub-path.ts
+msgid "EPUB reference escapes its package root: {reference}"
+msgstr ""
+
+#: packages/renderer-epub/src/epub-archive.ts
+msgid "EPUB resource exceeds the per-file safety limit: {path}"
+msgstr ""
+
+#: packages/renderer-epub/src/epub-archive.ts
+msgid "EPUB resource has an unsafe compression ratio: {path}"
+msgstr ""
+
+#: packages/renderer-epub/src/epub-archive.ts
+msgid "EPUB resource is missing: {safePath}"
+msgstr ""
+
+#: packages/renderer-epub/src/epub-manifest.ts
+msgid "EPUB spine item"
+msgstr ""
+
+#: packages/renderer-epub/src/epub-manifest.ts
+msgid "EPUB spine references an unknown manifest item: {reference}"
+msgstr ""
+
+#: packages/renderer-pdf/src/pdf-translations.ts
+msgctxt "PDF viewer documentError"
+msgid "Error Code: {code}"
+msgstr ""
+
+#: packages/renderer-pdf/src/pdf-translations.ts
+msgctxt "PDF viewer documentError"
+msgid "Error loading document"
+msgstr ""
+
+#: apps/reader/src/citation-labels.ts
+msgctxt "CSL bibliographic field or item type"
+msgid "Event"
+msgstr ""
+
+#: apps/reader/src/citation-labels.ts
+msgctxt "CSL bibliographic field or item type"
+msgid "Event date"
+msgstr ""
+
+#: apps/reader/src/citation-labels.ts
+msgctxt "CSL bibliographic field or item type"
+msgid "Event place"
+msgstr ""
+
+#: apps/reader/src/citation-labels.ts
+msgctxt "CSL bibliographic field or item type"
+msgid "Event title"
 msgstr ""
 
 #: apps/reader/src/LibraryAnnotationTableHead.tsx
@@ -1483,6 +2907,32 @@ msgstr ""
 
 #: apps/reader/src/ImportInput.tsx
 msgid "Every payload checksum is verified before collection writes. Currently requires a browser with folder selection support, such as Chrome."
+msgstr ""
+
+#: packages/migration/src/readwise.ts
+msgid "Exact PDF geometry and EPUB positions are not supplied by this import. Highlights retain quotes and native location evidence, without claiming exact positioning."
+msgstr ""
+
+#: apps/reader/src/connect-workspace.ts
+msgid "Exact recovery is unavailable here. No new write was attempted."
+msgstr ""
+
+#: apps/reader/src/citation-labels.ts
+msgctxt "CSL bibliographic field or item type"
+msgid "Executive producer"
+msgstr ""
+
+#: apps/extension/src/TagInput.tsx
+msgid "Existing tags"
+msgstr ""
+
+#: packages/renderer-pdf/src/pdf-translations.ts
+msgctxt "PDF viewer document"
+msgid "Export"
+msgstr ""
+
+#: apps/reader/src/reader-app-commands.ts
+msgid "Export bibliography"
 msgstr ""
 
 #: apps/reader/src/LibraryWorkspace.tsx
@@ -1498,13 +2948,32 @@ msgstr ""
 msgid "Export citations"
 msgstr ""
 
+#: apps/reader/src/reader-command-list.ts
+msgid "Export current source"
+msgstr ""
+
 #: apps/reader/src/DocumentContextualToolbar.tsx
 msgctxt "DocumentContextualToolbar interface"
 msgid "Export source"
 msgstr ""
 
+#. placeholder {0}: items.length
+#: apps/reader/src/use-bibliography-export.ts
+msgid "Exported {0, plural, one {# citation} other {# citations}}."
+msgstr ""
+
+#. placeholder {0}: bundle.canonicalRecordCount
+#. placeholder {1}: bundle.originalFileCount
+#: apps/reader/src/use-source-export.ts
+msgid "Exported {0, plural, one {# record} other {# records}} and {1, plural, one {# original file} other {# original files}}."
+msgstr ""
+
 #: apps/reader/src/ImportInput.tsx
 msgid "Exported folder"
+msgstr ""
+
+#: apps/reader/src/use-source-export.ts
+msgid "Exported with {problemCount, plural, one {# item} other {# items}} to review."
 msgstr ""
 
 #: apps/reader/src/CitationTypedFieldEditors.tsx
@@ -1512,9 +2981,22 @@ msgctxt "CitationTypedFieldEditors booleanOptions"
 msgid "False"
 msgstr ""
 
+#: apps/reader/src/citation-labels.ts
+msgctxt "CSL bibliographic field or item type"
+msgid "Family"
+msgstr ""
+
 #: apps/reader/src/CitationContributors.tsx
 msgctxt "CitationContributors interface"
 msgid "Family name"
+msgstr ""
+
+#: apps/reader/src/source-addition-flow.ts
+msgid "Feeds, profiles and search pages cannot be saved. Choose individual posts in the Reader extension."
+msgstr ""
+
+#: apps/reader/src/source-addition-flow.ts
+msgid "Fetching the page…"
 msgstr ""
 
 #: apps/reader/src/LibraryBulkBar.tsx
@@ -1546,13 +3028,40 @@ msgstr ""
 msgid "Fields"
 msgstr ""
 
+#: apps/reader/src/citation-labels.ts
+msgctxt "CSL bibliographic field or item type"
+msgid "Figure"
+msgstr ""
+
+#: apps/reader/src/workspace-tab-display.ts
+msgctxt "workspace tab display"
+msgid "FILE"
+msgstr ""
+
+#: packages/migration/src/run-files.ts
+msgid "File checksum changed since preview."
+msgstr ""
+
+#: apps/reader/src/connect-workspace.ts
+msgid "File export is unavailable for this connection."
+msgstr ""
+
+#: apps/reader/src/use-bibliography-export.ts
+msgid "File export is unavailable in this build."
+msgstr ""
+
 #: apps/reader/src/preview.tsx
 msgid "File import is unavailable in the interface preview."
 msgstr ""
 
-#: apps/reader/src/WorkspacePaneSupport.tsx
-msgctxt "WorkspacePaneSupport status or action"
-msgid "Files"
+#: packages/migration/src/run-files.ts
+msgid "File transfer failed."
+msgstr ""
+
+#. placeholder {0}: files[1]
+#. placeholder {1}: files[2]
+#: apps/reader/src/import-controller.ts
+msgid "Files: {0} of {1}"
 msgstr ""
 
 #: apps/reader/src/LibraryWorkspace.tsx
@@ -1575,6 +3084,10 @@ msgstr ""
 #: apps/reader/src/CollectionMenu.tsx
 msgctxt "CollectionMenu interface"
 msgid "Filter collections"
+msgstr ""
+
+#: apps/reader/src/reader-app-commands.ts
+msgid "Filter sources in the sidebar"
 msgstr ""
 
 #: apps/reader/src/CitationLookup.tsx
@@ -1602,6 +3115,14 @@ msgstr ""
 msgid "Find citation details"
 msgstr ""
 
+#: apps/reader/src/connection-recovery.ts
+msgid "Finding mdbase Connect…"
+msgstr ""
+
+#: apps/extension/src/connection-view.ts
+msgid "Finish signing in or approving in the mdbase tab, then save."
+msgstr ""
+
 #: apps/reader/src/LibraryCells.tsx
 msgctxt "reading status"
 msgid "Finished"
@@ -1612,12 +3133,44 @@ msgctxt "SourceImportDialog interface"
 msgid "Finishing…"
 msgstr ""
 
+#: apps/reader/src/citation-labels.ts
+msgctxt "CSL bibliographic field or item type"
+msgid "First reference note number"
+msgstr ""
+
+#: packages/renderer-pdf/src/pdf-translations.ts
+msgctxt "PDF viewer zoom"
+msgid "Fit to Page"
+msgstr ""
+
+#: packages/renderer-pdf/src/pdf-translations.ts
+msgctxt "PDF viewer zoom"
+msgid "Fit to Width"
+msgstr ""
+
 #: apps/reader/src/CitationEditor.tsx
 msgid "Fix before saving"
 msgstr ""
 
+#: apps/reader/src/citation-editor-model.ts
+msgid "Fix the JSON syntax: {detail}"
+msgstr ""
+
 #: apps/reader/src/InspectorPane.tsx
 msgid "Focus a document, note, annotation, or citation tab to inspect its source."
+msgstr ""
+
+#: apps/reader/src/reader-command-list.ts
+msgctxt "reader command list"
+msgid "Focus next pane"
+msgstr ""
+
+#: apps/extension/src/OptionsApp.tsx
+msgid "For reporting slow or failed saves. The panel can then record connection timings and download them; nothing is recorded until you start it there."
+msgstr ""
+
+#: apps/extension/src/OptionsApp.tsx
+msgid "For the side panel, this page and the welcome page. Reader keeps its own theme setting."
 msgstr ""
 
 #: apps/reader/src/NativeSignIn.tsx
@@ -1625,6 +3178,11 @@ msgid "Forget collection"
 msgstr ""
 
 #: apps/reader/src/LibraryWorkspace.tsx
+msgid "Format"
+msgstr ""
+
+#: apps/reader/src/library-columns.ts
+msgctxt "Library table column"
 msgid "Format"
 msgstr ""
 
@@ -1642,8 +3200,35 @@ msgstr ""
 msgid "Found"
 msgstr ""
 
+#: apps/extension/src/CitationCard.tsx
+msgid "From the DOI registry. Saved with the source; edit it later in Reader."
+msgstr ""
+
+#: apps/extension/src/CitationCard.tsx
+msgid "From the publisher’s page metadata. Saved with the source; edit it later in Reader."
+msgstr ""
+
+#: packages/renderer-pdf/src/pdf-translations.ts
+msgctxt "PDF viewer document"
+msgid "Fullscreen"
+msgstr ""
+
+#: apps/reader/src/citation-labels.ts
+msgctxt "CSL bibliographic field or item type"
+msgid "Genre"
+msgstr ""
+
 #: apps/reader/src/ImportInput.tsx
 msgid "Get your <0>Readwise access token</0>. It stays in memory in this tab and is sent only to Readwise. Although the token allows writes, this importer only reads."
+msgstr ""
+
+#: apps/extension/src/SaveBar.tsx
+msgid "Give the source a title under Note to save it."
+msgstr ""
+
+#: apps/reader/src/citation-labels.ts
+msgctxt "CSL bibliographic field or item type"
+msgid "Given"
 msgstr ""
 
 #: apps/reader/src/CitationContributors.tsx
@@ -1655,9 +3240,34 @@ msgstr ""
 msgid "Go to workbench"
 msgstr ""
 
+#: apps/reader/src/citation-labels.ts
+msgctxt "CSL bibliographic field or item type"
+msgid "Graphic"
+msgstr ""
+
+#: apps/extension/src/HighlightFields.tsx
+msgctxt "Highlight colour"
+msgid "green"
+msgstr ""
+
+#: apps/reader/src/citation-labels.ts
+msgctxt "CSL bibliographic field or item type"
+msgid "Guest"
+msgstr ""
+
+#: apps/reader/src/library-lenses.ts
+msgctxt "library lenses"
+msgid "Has annotations"
+msgstr ""
+
 #: apps/reader/src/SourceNoteEditor.tsx
 msgctxt "SourceNoteEditor formatActions"
 msgid "Heading"
+msgstr ""
+
+#: apps/reader/src/citation-labels.ts
+msgctxt "CSL bibliographic field or item type"
+msgid "Hearing"
 msgstr ""
 
 #: apps/reader/src/DisplayMenu.tsx
@@ -1667,6 +3277,10 @@ msgstr ""
 
 #: apps/reader/src/LibraryTableHeader.tsx
 msgid "Hide column"
+msgstr ""
+
+#: apps/reader/src/annotation-kind.ts
+msgid "Highlight"
 msgstr ""
 
 #: apps/reader/src/SelectionToolbar.tsx
@@ -1681,6 +3295,38 @@ msgstr ""
 
 #: apps/reader/src/DisplayMenu.tsx
 msgid "Highlight at once"
+msgstr ""
+
+#: packages/migration/src/readwise-annotations.ts
+msgid "Highlight has no exposed full quote; retained as an unresolved note: {key}"
+msgstr ""
+
+#: apps/extension/src/WelcomeApp.tsx
+msgid "Highlight passages"
+msgstr ""
+
+#: apps/extension/src/use-extension-capture.ts
+msgid "Highlight removed. The page stays saved."
+msgstr ""
+
+#: apps/extension/src/use-extension-capture.ts
+msgid "Highlight saved."
+msgstr ""
+
+#: apps/extension/src/ShortcutList.tsx
+msgid "Highlight selected text, with or without a comment"
+msgstr ""
+
+#: apps/extension/src/shell-messages.ts
+msgid "Highlight the selected passage in mdbase Reader"
+msgstr ""
+
+#: apps/extension/src/background.ts
+msgid "Highlight with a comment in mdbase Reader"
+msgstr ""
+
+#: apps/extension/src/PanelTabs.tsx
+msgid "Highlights"
 msgstr ""
 
 #: apps/reader/src/AnnotationList.tsx
@@ -1701,8 +3347,44 @@ msgstr ""
 msgid "Highlights and notes you make while reading appear here."
 msgstr ""
 
+#: apps/extension/src/CaptureApp.tsx
+msgid "Highlights made there appear here."
+msgstr ""
+
+#: packages/migration/src/readwise-annotations.ts
+msgid "Highlights on those books not imported"
+msgstr ""
+
 #: apps/reader/src/WorkspacePaneSupport.tsx
 msgid "Highlights unavailable"
+msgstr ""
+
+#: packages/renderer-pdf/src/pdf-translations.ts
+msgctxt "PDF viewer page"
+msgid "Horizontal"
+msgstr ""
+
+#: apps/reader/src/citation-labels.ts
+msgctxt "CSL bibliographic field or item type"
+msgid "Host"
+msgstr ""
+
+#: apps/reader/src/collection-menu-model.ts
+msgctxt "collection menu model"
+msgid "Hosted by mdbase"
+msgstr ""
+
+#. placeholder {0}: String(response.status)
+#: packages/renderer-html/src/html-viewer.tsx
+msgid "HTML download failed with HTTP {0}."
+msgstr ""
+
+#: packages/renderer-html/src/html-viewer.tsx
+msgid "HTML reading document"
+msgstr ""
+
+#: packages/migration/src/zotero.ts
+msgid "HTML snapshot resources are preserved as files; relative assets may not display in Reader yet."
 msgstr ""
 
 #: apps/reader/src/SourceAddDialog.tsx
@@ -1713,6 +3395,11 @@ msgstr ""
 msgid "Identifiers and access"
 msgstr ""
 
+#: apps/reader/src/citation-labels.ts
+msgctxt "CSL bibliographic field or item type"
+msgid "Illustrator"
+msgstr ""
+
 #: apps/reader/src/ImportPageView.tsx
 msgid "Import a library"
 msgstr ""
@@ -1721,8 +3408,18 @@ msgstr ""
 msgid "Import a library…"
 msgstr ""
 
+#: apps/reader/src/reader-app-commands.ts
+msgctxt "reader app commands"
+msgid "Import a library…"
+msgstr ""
+
 #: apps/reader/src/ImportPageView.tsx
 msgid "Import an export bundle →"
+msgstr ""
+
+#. placeholder {0}: result.verified
+#: apps/reader/src/import-controller.ts
+msgid "Import complete into {name}. {0, plural, one {# record verified} other {# records verified}}."
 msgstr ""
 
 #. placeholder {0}: service === "zotero" ? "Zotero" : "Readwise Reader"
@@ -1730,9 +3427,17 @@ msgstr ""
 msgid "Import from {0}"
 msgstr ""
 
+#: packages/migration/src/run.ts
+msgid "Import identity collision. Existing records will not be overwritten."
+msgstr ""
+
 #: apps/reader/src/ImportPageView.tsx
 msgctxt "ImportPageView interface"
 msgid "Import navigation"
+msgstr ""
+
+#: apps/reader/src/import-controller.ts
+msgid "Import operation failed."
 msgstr ""
 
 #: apps/reader/src/ImportReview.tsx
@@ -1743,6 +3448,10 @@ msgstr ""
 #: apps/reader/src/ImportReview.tsx
 msgctxt "ImportReview interface"
 msgid "Import status"
+msgstr ""
+
+#: packages/migration/src/run.ts
+msgid "Import verification failed: a record is missing."
 msgstr ""
 
 #: apps/reader/src/SourceImportDialog.tsx
@@ -1763,9 +3472,18 @@ msgctxt "SourceNoteInsertMenu interface"
 msgid "In note"
 msgstr ""
 
+#: apps/extension/src/SaveBar.tsx
+msgid "In this collection"
+msgstr ""
+
 #: apps/reader/src/LibraryCells.tsx
 msgctxt "reading status"
 msgid "Inbox"
+msgstr ""
+
+#: packages/renderer-pdf/src/pdf-translations.ts
+msgctxt "PDF viewer print"
+msgid "Include annotations"
 msgstr ""
 
 #: apps/reader/src/ImportInput.tsx
@@ -1774,6 +3492,15 @@ msgstr ""
 
 #: apps/reader/src/CitationEditor.tsx
 msgid "Incomplete"
+msgstr ""
+
+#: packages/renderer-pdf/src/pdf-translations.ts
+msgctxt "PDF viewer passwordPrompt"
+msgid "Incorrect password. Please check and try again."
+msgstr ""
+
+#: apps/reader/src/use-open-document-search.ts
+msgid "Indexing {loaded} of {readable} readable sources."
 msgstr ""
 
 #: apps/reader/src/SourceNoteEditor.tsx
@@ -1802,6 +3529,19 @@ msgctxt "AnnotationCard interface"
 msgid "Inserting…"
 msgstr ""
 
+#: apps/reader/src/pwa-install.ts
+msgctxt "pwa install"
+msgid "Install"
+msgstr ""
+
+#: apps/reader/src/pwa-install.ts
+msgid "Install {appName}"
+msgstr ""
+
+#: apps/reader/src/pwa-install.ts
+msgid "Install {appName} for quick access in its own window."
+msgstr ""
+
 #: apps/reader/src/ImportInput.tsx
 msgid "Install the experimental Zotero 10.0.x exporter, then use <0>Tools → Export for mdbase Reader…</0>. Select the whole exported folder—not Zotero’s data directory."
 msgstr ""
@@ -1810,8 +3550,74 @@ msgstr ""
 msgid "Interface preview document"
 msgstr ""
 
+#: apps/reader/src/citation-labels.ts
+msgctxt "CSL bibliographic field or item type"
+msgid "Interview"
+msgstr ""
+
+#: apps/reader/src/citation-labels.ts
+msgctxt "CSL bibliographic field or item type"
+msgid "Interviewer"
+msgstr ""
+
+#: packages/migration/src/model.ts
+msgid "Invalid {label}."
+msgstr ""
+
+#: packages/migration/src/zotero-validation.ts
+msgid "Invalid attachment payload reference."
+msgstr ""
+
+#: packages/migration/src/zotero-validation.ts
+msgid "Invalid collection ancestry."
+msgstr ""
+
+#: packages/migration/src/zotero-validation.ts
+msgid "Invalid file manifest."
+msgstr ""
+
+#: packages/migration/src/zotero-validation.ts
+msgid "Invalid missing attachment."
+msgstr ""
+
+#: packages/migration/src/readwise-client.ts
+msgid "Invalid Readwise API path."
+msgstr ""
+
+#: packages/migration/src/zotero-validation.ts
+msgid "Invalid Zotero identity."
+msgstr ""
+
+#: packages/migration/src/zotero-pdf.ts
+msgid "Invalid Zotero PDF position."
+msgstr ""
+
+#: packages/migration/src/zotero-pdf.ts
+msgid "Invalid Zotero PDF rectangle."
+msgstr ""
+
+#: packages/core/src/domain/citation-validation.ts
+msgctxt "CSL validation"
+msgid "is not a CSL 1.0 field; preserve extension data under csl.custom"
+msgstr ""
+
+#: packages/core/src/domain/citation-validation.ts
+msgctxt "CSL validation"
+msgid "is not a CSL date field"
+msgstr ""
+
+#: packages/core/src/domain/citation-validation.ts
+msgctxt "CSL validation"
+msgid "is not a CSL name field"
+msgstr ""
+
 #: apps/reader/src/CitationStructuredEditor.tsx
 msgctxt "CitationStructuredEditor interface"
+msgid "Issue"
+msgstr ""
+
+#: apps/reader/src/citation-labels.ts
+msgctxt "CSL bibliographic field or item type"
 msgid "Issue"
 msgstr ""
 
@@ -1820,13 +3626,33 @@ msgctxt "CitationStructuredEditor interface"
 msgid "Issued"
 msgstr ""
 
+#: apps/reader/src/citation-labels.ts
+msgctxt "CSL bibliographic field or item type"
+msgid "Issued"
+msgstr ""
+
 #: apps/reader/src/SourceNoteEditor.tsx
 msgctxt "SourceNoteEditor formatActions"
 msgid "Italic"
 msgstr ""
 
+#: apps/reader/src/citation-labels.ts
+msgctxt "CSL bibliographic field or item type"
+msgid "Journal article"
+msgstr ""
+
+#: apps/reader/src/citation-form-model.ts
+msgctxt "CSL item type"
+msgid "Journal article"
+msgstr ""
+
 #: apps/reader/src/CitationStructuredEditor.tsx
 msgid "Journal, book or site"
+msgstr ""
+
+#: apps/reader/src/citation-labels.ts
+msgctxt "CSL bibliographic field or item type"
+msgid "JournalAbbreviation"
 msgstr ""
 
 #: apps/reader/src/CitationTypedFieldEditors.tsx
@@ -1834,12 +3660,22 @@ msgctxt "CitationTypedFieldEditors customValueTypeOptions"
 msgid "JSON value"
 msgstr ""
 
+#: apps/reader/src/citation-labels.ts
+msgctxt "CSL bibliographic field or item type"
+msgid "Jurisdiction"
+msgstr ""
+
 #: apps/reader/src/ContinueReading.tsx
 msgid "Just started"
 msgstr ""
 
+#: apps/extension/src/NotePanel.tsx
 #: apps/reader/src/AnnotationEditor.tsx
 msgid "Keep mine"
+msgstr ""
+
+#: apps/extension/src/NotePanel.tsx
+msgid "Keep mine to replace it with your text, or use theirs to discard your text."
 msgstr ""
 
 #: apps/reader/src/CitationContributors.tsx
@@ -1855,12 +3691,30 @@ msgstr ""
 msgid "Keep open as a workbench tab"
 msgstr ""
 
+#: apps/reader/src/reader-command-list.ts
+msgid "Keeps all tabs open"
+msgstr ""
+
 #: apps/reader/src/SourceNoteEditor.tsx
 msgid "Kept on this device until the collection can be reached"
 msgstr ""
 
+#: apps/extension/src/OptionsApp.tsx
+msgid "Keyboard shortcuts"
+msgstr ""
+
+#: apps/reader/src/citation-labels.ts
+msgctxt "CSL bibliographic field or item type"
+msgid "Keyword"
+msgstr ""
+
 #: apps/reader/src/CitationStructuredEditor.tsx
 msgctxt "CitationStructuredEditor interface"
+msgid "Language"
+msgstr ""
+
+#: apps/reader/src/citation-labels.ts
+msgctxt "CSL bibliographic field or item type"
 msgid "Language"
 msgstr ""
 
@@ -1869,9 +3723,18 @@ msgctxt "interface language setting"
 msgid "Language"
 msgstr ""
 
+#: apps/reader/src/use-open-document-search.ts
+msgid "Large documents are limited to their first 1,000,000 characters."
+msgstr ""
+
 #: apps/reader/src/DisplayMenu.tsx
 msgctxt "DisplayMenu interface"
 msgid "Larger text"
+msgstr ""
+
+#: apps/reader/src/library-columns.ts
+msgctxt "Library table column"
+msgid "Last opened"
 msgstr ""
 
 #: apps/reader/src/LibraryWorkspace.tsx
@@ -1879,6 +3742,7 @@ msgid "Layout"
 msgstr ""
 
 #: apps/reader/src/DocumentContextualToolbar.tsx
+#: apps/reader/src/reader-command-list.ts
 msgid "Leave reading mode"
 msgstr ""
 
@@ -1887,8 +3751,42 @@ msgstr ""
 msgid "Leave reading mode · {0}"
 msgstr ""
 
+#: apps/reader/src/citation-labels.ts
+msgctxt "CSL bibliographic field or item type"
+msgid "Legal case"
+msgstr ""
+
+#: apps/reader/src/citation-labels.ts
+msgctxt "CSL bibliographic field or item type"
+msgid "Legislation"
+msgstr ""
+
+#: apps/reader/src/reader-command-list.ts
+msgid "Library"
+msgstr ""
+
+#: apps/reader/src/dockview-workspace.ts
+msgctxt "dockview workspace"
+msgid "Library"
+msgstr ""
+
 #: apps/reader/src/LibraryWorkspace.tsx
 msgctxt "LibraryWorkspace searchScopeOptions"
+msgid "Library"
+msgstr ""
+
+#: apps/reader/src/source-workspace-layout.ts
+msgctxt "source workspace layout"
+msgid "Library"
+msgstr ""
+
+#: apps/reader/src/source-workspace-persistence.ts
+msgctxt "source workspace persistence"
+msgid "Library"
+msgstr ""
+
+#: apps/reader/src/workspace-tab-display.ts
+msgctxt "workspace tab display"
 msgid "Library"
 msgstr ""
 
@@ -1900,6 +3798,15 @@ msgstr ""
 #: apps/reader/src/LibraryWorkspace.tsx
 msgctxt "LibraryWorkspace interface"
 msgid "Library presentation"
+msgstr ""
+
+#: apps/reader/src/import-controller.ts
+msgid "Library scanned. Review the contents and choose a destination."
+msgstr ""
+
+#: apps/reader/src/source-note-references.ts
+msgctxt "source note references"
+msgid "Library source"
 msgstr ""
 
 #: apps/reader/src/LibraryWorkspace.tsx
@@ -1920,6 +3827,11 @@ msgstr ""
 msgid "Light"
 msgstr ""
 
+#: apps/extension/src/OptionsApp.tsx
+msgctxt "Light appearance theme"
+msgid "Light"
+msgstr ""
+
 #: apps/reader/src/DisplayMenu.tsx
 msgctxt "DisplayMenu interface"
 msgid "Line length"
@@ -1934,11 +3846,21 @@ msgstr ""
 msgid "Link or identifier"
 msgstr ""
 
+#: packages/markdown-editor/src/annotation-widgets.ts
+msgid "Linked record not found: {path}"
+msgstr ""
+
+#: apps/reader/src/citation-labels.ts
+msgctxt "CSL bibliographic field or item type"
+msgid "Literal"
+msgstr ""
+
 #: apps/reader/src/CitationTypedFieldEditors.tsx
 msgctxt "CitationTypedFieldEditors dateModeOptions"
 msgid "Literal date"
 msgstr ""
 
+#: apps/extension/src/NotePanel.tsx
 #: apps/reader/src/InspectorPane.tsx
 msgid "Literature note"
 msgstr ""
@@ -1958,6 +3880,20 @@ msgctxt "LibraryTextSearch interface"
 msgid "Literature note"
 msgstr ""
 
+#: apps/reader/src/reader-command-list.ts
+msgctxt "reader command list"
+msgid "Literature note"
+msgstr ""
+
+#: apps/reader/src/workspace-tab-display.ts
+msgctxt "workspace tab display"
+msgid "Literature note"
+msgstr ""
+
+#: apps/extension/src/NotePanel.tsx
+msgid "Literature note <0>(optional)</0>"
+msgstr ""
+
 #: apps/reader/src/DraftRecoveryNotice.tsx
 msgid "Literature note conflict"
 msgstr ""
@@ -1965,6 +3901,16 @@ msgstr ""
 #: apps/reader/src/AnnotationList.tsx
 #: apps/reader/src/LibraryAnnotationBars.tsx
 msgid "Loading annotations…"
+msgstr ""
+
+#: packages/renderer-pdf/src/pdf-translations.ts
+msgctxt "PDF viewer document"
+msgid "Loading document..."
+msgstr ""
+
+#: packages/renderer-pdf/src/pdf-translations.ts
+msgctxt "PDF viewer outline"
+msgid "Loading outline..."
 msgstr ""
 
 #: apps/reader/src/AnnotationImage.tsx
@@ -2006,16 +3952,56 @@ msgctxt "LibraryWorkspace interface"
 msgid "Loading…"
 msgstr ""
 
+#: apps/reader/src/source-draft-session.ts
+msgid "Local draft storage is unavailable or unreadable. Keep this tab open until the note is saved to the collection."
+msgstr ""
+
+#: apps/reader/src/annotation-drafts.ts
+msgid "Local draft storage is unavailable. Keep this window open until you save."
+msgstr ""
+
 #: apps/reader/src/ConnectReader.tsx
 msgid "Local HTTP development uses the local Connect stack at <0>http://127.0.0.1:8787</0>. The managed service requires an HTTPS Reader origin."
 msgstr ""
 
 #: apps/reader/src/ReaderHeader.tsx
+#: apps/reader/src/use-direct-access.ts
 msgid "Local network access is blocked. Allow it in your browser’s site settings, then retry."
+msgstr ""
+
+#: apps/reader/src/use-direct-access.ts
+msgid "Local network access was not granted. Allow it when your browser asks, then retry."
 msgstr ""
 
 #: apps/reader/src/CitationPreview.tsx
 msgid "Locale"
+msgstr ""
+
+#: apps/reader/src/annotation-columns.ts
+msgctxt "Annotation table column"
+msgid "Location"
+msgstr ""
+
+#: apps/reader/src/citation-labels.ts
+msgctxt "CSL bibliographic field or item type"
+msgid "Locator"
+msgstr ""
+
+#: apps/reader/src/source-addition-flow.ts
+#: apps/reader/src/use-document-attachment.ts
+msgid "Looking for an open-access PDF…"
+msgstr ""
+
+#: apps/extension/src/CitationCard.tsx
+msgid "Looking for citation details…"
+msgstr ""
+
+#: apps/reader/src/source-addition-flow.ts
+msgid "Looking up citation details instead…"
+msgstr ""
+
+#: apps/reader/src/source-addition-flow.ts
+msgid "Looking up citation details…"
 msgstr ""
 
 #: apps/reader/src/CitationLookup.tsx
@@ -2023,20 +4009,119 @@ msgctxt "CitationLookup interface"
 msgid "Looking…"
 msgstr ""
 
+#: apps/reader/src/citation-labels.ts
+msgctxt "CSL bibliographic field or item type"
+msgid "Magazine article"
+msgstr ""
+
+#: apps/reader/src/citation-form-model.ts
+msgctxt "CSL item type"
+msgid "Magazine article"
+msgstr ""
+
 #: apps/reader/src/DockviewWorkspace.tsx
 msgid "Make room to read"
+msgstr ""
+
+#: apps/reader/src/citation-labels.ts
+msgctxt "CSL bibliographic field or item type"
+msgid "Manuscript"
+msgstr ""
+
+#: apps/reader/src/citation-labels.ts
+msgctxt "CSL bibliographic field or item type"
+msgid "Map"
+msgstr ""
+
+#: packages/renderer-pdf/src/pdf-translations.ts
+msgctxt "PDF viewer zoom"
+msgid "Marquee Zoom"
+msgstr ""
+
+#: apps/extension/src/OptionsApp.tsx
+msgid "Match system"
+msgstr ""
+
+#: apps/reader/src/reader-app-commands.ts
+msgid "Match system theme"
 msgstr ""
 
 #: apps/reader/src/LibraryNavigator.tsx
 msgid "Matches"
 msgstr ""
 
+#: apps/extension/src/SavedHighlights.tsx
+msgid "Matches several places on this page"
+msgstr ""
+
 #: apps/reader/src/DockPaneActions.tsx
+#: apps/reader/src/dockview-menus.ts
 msgid "Maximize / restore pane"
+msgstr ""
+
+#: apps/reader/src/connection-recovery.ts
+msgid "mdbase Connect did not accept Reader’s app registration, so it cannot open collections here."
+msgstr ""
+
+#: apps/reader/src/connection-recovery.ts
+msgid "mdbase Connect took too long to answer. Try again in a moment."
+msgstr ""
+
+#: apps/extension/src/sdk-client.ts
+msgid "mdbase could not start in the background. Reload the extension."
+msgstr ""
+
+#: apps/extension/src/sdk-client.ts
+msgid "mdbase has not started yet."
+msgstr ""
+
+#: apps/extension/src/connection-view.ts
+msgid "mdbase is still getting ready. Try again in a moment."
+msgstr ""
+
+#: apps/extension/src/use-connect.ts
+msgid "mdbase is still starting. Try again in a moment."
 msgstr ""
 
 #: apps/reader/src/ImportDestination.tsx
 msgid "mdbase isn’t reachable right now. Check your connection and try again."
+msgstr ""
+
+#: apps/extension/src/CaptureApp.tsx
+#: apps/extension/src/shell-messages.ts
+msgid "mdbase Reader — capture"
+msgstr ""
+
+#: apps/extension/src/CaptureApp.tsx
+msgid "mdbase Reader — source saved"
+msgstr ""
+
+#. placeholder {0}: name ?? version
+#. placeholder {1}: environment.label ? ` · ${environment.label}` : ""
+#: apps/extension/src/OptionsApp.tsx
+msgid "mdbase Reader {0}{1}. Pages and highlights are saved into your mdbase collection through mdbase Connect."
+msgstr ""
+
+#: apps/extension/src/WelcomeApp.tsx
+msgid "mdbase Reader is installed"
+msgstr ""
+
+#: apps/extension/src/OptionsApp.tsx
+#: apps/extension/src/shell-messages.ts
+msgid "mdbase Reader settings"
+msgstr ""
+
+#: apps/extension/src/sdk-client.ts
+msgid "mdbase restarted in the background. Check whether your last change was saved, then try again."
+msgstr ""
+
+#: apps/extension/src/PostPicker.tsx
+msgid "Media post"
+msgstr ""
+
+#: apps/reader/src/citation-labels.ts
+msgctxt "CSL bibliographic field or item type"
+msgid "Medium"
 msgstr ""
 
 #: apps/reader/src/DockPaneActions.tsx
@@ -2045,6 +4130,34 @@ msgstr ""
 
 #: apps/reader/src/CitationLookup.tsx
 msgid "Metadata lookup will be available when a resolver is connected. You can still edit and format CSL locally."
+msgstr ""
+
+#: packages/migration/src/zotero.ts
+msgid "Missing annotation owner."
+msgstr ""
+
+#: apps/reader/src/library-lenses.ts
+msgid "Missing citation data"
+msgstr ""
+
+#: packages/migration/src/zotero-validation.ts
+msgid "Missing collection."
+msgstr ""
+
+#: packages/migration/src/zotero-bundle.ts
+msgid "Missing or oversized {name}."
+msgstr ""
+
+#: packages/migration/src/zotero-validation.ts
+msgid "Missing primary attachment payload."
+msgstr ""
+
+#: apps/reader/src/dockview-side-panels.ts
+msgid "Missing sidebar edge group"
+msgstr ""
+
+#: packages/migration/src/zotero-pdf.ts
+msgid "Missing Zotero PDF rectangles."
 msgstr ""
 
 #: apps/reader/src/MobileWorkspaceNavigation.tsx
@@ -2064,6 +4177,20 @@ msgstr ""
 msgid "More name details"
 msgstr ""
 
+#: packages/renderer-pdf/src/pdf-translations.ts
+msgctxt "PDF viewer menu"
+msgid "More Options"
+msgstr ""
+
+#: apps/reader/src/citation-labels.ts
+msgctxt "CSL bibliographic field or item type"
+msgid "Motion picture"
+msgstr ""
+
+#: apps/reader/src/reader-command-list.ts
+msgid "Move active tab to pane {otherPaneLabel}"
+msgstr ""
+
 #: apps/reader/src/LibraryTableHeader.tsx
 msgid "Move left"
 msgstr ""
@@ -2080,6 +4207,93 @@ msgstr ""
 msgid "Move tab to pane right"
 msgstr ""
 
+#. placeholder {0}: group.activePanel?.title ?? (group.api.location.type === "edge" ? `${group.api.location.position} sidebar` : "pane")
+#: apps/reader/src/dockview-menus.ts
+msgid "Move to {0}"
+msgstr ""
+
+#: apps/reader/src/dockview-menus.ts
+msgid "Move to new pane below"
+msgstr ""
+
+#: apps/reader/src/dockview-menus.ts
+msgid "Move to new pane right"
+msgstr ""
+
+#: packages/migration/src/zotero-pdf.ts
+msgid "Multi-page or ink geometry is not yet supported."
+msgstr ""
+
+#: apps/reader/src/citation-labels.ts
+msgctxt "CSL bibliographic field or item type"
+msgid "Musical score"
+msgstr ""
+
+#: packages/core/src/domain/citation-validation.ts
+msgctxt "CSL validation"
+msgid "must be a CSL date object"
+msgstr ""
+
+#: packages/core/src/domain/citation.ts
+msgctxt "CSL validation"
+msgid "must be a non-empty Pandoc-compatible citekey"
+msgstr ""
+
+#: packages/core/src/domain/citation.ts
+msgctxt "CSL validation"
+msgid "must be a recognized CSL item type"
+msgstr ""
+
+#: packages/core/src/domain/citation-validation.ts
+msgctxt "CSL validation"
+msgid "must be a string"
+msgstr ""
+
+#: packages/core/src/domain/citation-validation.ts
+msgctxt "CSL validation"
+msgid "must be a string or number"
+msgstr ""
+
+#: packages/core/src/domain/citation-validation.ts
+msgctxt "CSL validation"
+msgid "must be an array of CSL names"
+msgstr ""
+
+#: packages/core/src/domain/citation-validation.ts
+msgctxt "CSL validation"
+msgid "must be an array of strings"
+msgstr ""
+
+#: packages/core/src/domain/citation-validation.ts
+msgctxt "CSL validation"
+msgid "must be an object"
+msgstr ""
+
+#: packages/core/src/domain/citation.ts
+msgctxt "CSL validation"
+msgid "must be one CSL object"
+msgstr ""
+
+#: packages/core/src/domain/citation-validation.ts
+msgctxt "CSL validation"
+msgid "must be scalar"
+msgstr ""
+
+#: packages/core/src/domain/citation-validation.ts
+msgctxt "CSL validation"
+msgid "must contain one or two date ranges"
+msgstr ""
+
+#: packages/core/src/domain/citation-validation.ts
+msgctxt "CSL validation"
+msgid "must contain one to three string or number date parts"
+msgstr ""
+
+#: packages/core/src/domain/citation.ts
+msgctxt "CSL validation"
+msgid "must contain only JSON-compatible values"
+msgstr ""
+
 #: apps/reader/src/LibraryViewSaveDialog.tsx
 msgctxt "LibraryViewSaveDialog interface"
 msgid "Name"
@@ -2088,6 +4302,11 @@ msgstr ""
 #: apps/reader/src/CitationTypedFieldEditors.tsx
 msgctxt "CitationTypedFieldEditors interface"
 msgid "Names"
+msgstr ""
+
+#: apps/reader/src/citation-labels.ts
+msgctxt "CSL bibliographic field or item type"
+msgid "Narrator"
 msgstr ""
 
 #: apps/reader/src/DisplayMenu.tsx
@@ -2112,6 +4331,34 @@ msgctxt "AnnotationList annotationOrderOptions"
 msgid "Newest first"
 msgstr ""
 
+#: apps/reader/src/citation-labels.ts
+msgctxt "CSL bibliographic field or item type"
+msgid "Newspaper article"
+msgstr ""
+
+#: apps/reader/src/citation-form-model.ts
+msgctxt "CSL item type"
+msgid "Newspaper article"
+msgstr ""
+
+#: packages/renderer-epub/src/epub-page-navigation.tsx
+msgid "Next page"
+msgstr ""
+
+#: packages/renderer-pdf/src/pdf-translations.ts
+msgctxt "PDF viewer page"
+msgid "Next Page"
+msgstr ""
+
+#: apps/reader/src/citation-form-model.ts
+msgid "No"
+msgstr ""
+
+#: apps/reader/src/library-columns.ts
+msgctxt "library columns"
+msgid "No"
+msgstr ""
+
 #: apps/reader/src/LibraryAnnotations.tsx
 msgid "No annotations match"
 msgstr ""
@@ -2121,13 +4368,43 @@ msgstr ""
 msgid "No annotations yet"
 msgstr ""
 
+#: packages/core/src/application/citation-citekey.ts
+msgid "No author or editor is recorded."
+msgstr ""
+
+#: apps/extension/src/CitationPanel.tsx
+msgid "No citation details were found on this page. Save the source, then add them in Reader."
+msgstr ""
+
 #. placeholder {0}: query.trim()
 #: apps/reader/src/CollectionMenu.tsx
 msgid "No collections match “{0}”."
 msgstr ""
 
+#: apps/reader/src/connection-recovery.ts
+msgid "No computer is registered for this collection."
+msgstr ""
+
+#: packages/core/src/application/build-csl-bibliography.ts
+msgid "No CSL citation metadata is attached."
+msgstr ""
+
 #: apps/reader/src/WorkspacePaneSupport.tsx
 msgid "No document attached"
+msgstr ""
+
+#: packages/renderer-pdf/src/pdf-translations.ts
+msgctxt "PDF viewer emptyState"
+msgid "No Documents Open"
+msgstr ""
+
+#: packages/migration/src/readwise-sources.ts
+msgid "No downloadable content; importing metadata only: {key}"
+msgstr ""
+
+#: apps/reader/src/workspace-tab-display.ts
+msgctxt "workspace tab display"
+msgid "NO FILE"
 msgstr ""
 
 #: apps/reader/src/LibraryCells.tsx
@@ -2145,6 +4422,23 @@ msgstr ""
 
 #: apps/reader/src/AnnotationList.tsx
 msgid "No matching annotations"
+msgstr ""
+
+#: apps/reader/src/use-document-attachment.ts
+msgid "No open-access PDF was found. Attach a copy you have, or save it from the publisher with the browser extension."
+msgstr ""
+
+#: packages/renderer-pdf/src/pdf-translations.ts
+msgctxt "PDF viewer outline"
+msgid "No outline available"
+msgstr ""
+
+#: apps/extension/src/PostPicker.tsx
+msgid "No posts loaded. Scroll the page to load some posts."
+msgstr ""
+
+#: packages/core/src/application/citation-citekey.ts
+msgid "No publication date is recorded."
 msgstr ""
 
 #. placeholder {0}: document.mediaType
@@ -2168,6 +4462,19 @@ msgstr ""
 msgid "No sources yet."
 msgstr ""
 
+#: apps/reader/src/use-bibliography-export.ts
+msgid "No valid citations are ready to export."
+msgstr ""
+
+#: apps/reader/src/citation-labels.ts
+msgctxt "CSL bibliographic field or item type"
+msgid "Non dropping particle"
+msgstr ""
+
+#: packages/migration/src/zotero-pdf.ts
+msgid "Non-default PDF UserUnit is not yet supported."
+msgstr ""
+
 #: apps/reader/src/CitationContributors.tsx
 msgctxt "CitationContributors interface"
 msgid "Non-dropping particle"
@@ -2178,11 +4485,33 @@ msgctxt "empty metadata value"
 msgid "None"
 msgstr ""
 
+#: apps/reader/src/import-controller.ts
+msgid "Not complete — review the error before resuming"
+msgstr ""
+
+#: apps/extension/src/ConnectionPanel.tsx
+msgid "Not connected"
+msgstr ""
+
+#: apps/extension/src/SavedHighlights.tsx
+msgid "Not found on this page"
+msgstr ""
+
 #: apps/reader/src/ConnectReader.tsx
 msgctxt "ConnectReader interface"
 msgid "not installed"
 msgstr ""
 
+#: apps/reader/src/pwa-install.ts
+msgctxt "pwa install"
+msgid "Not now"
+msgstr ""
+
+#: apps/reader/src/citation-form-model.ts
+msgid "Not recorded"
+msgstr ""
+
+#: apps/extension/src/NotePanel.tsx
 #: apps/reader/src/AnnotationEditor.tsx
 msgid "Not saved"
 msgstr ""
@@ -2196,8 +4525,26 @@ msgstr ""
 msgid "Not saved yet — keep Reader open until you save this annotation."
 msgstr ""
 
+#: apps/extension/src/NotePanel.tsx
+msgid "Not saved."
+msgstr ""
+
+#: apps/extension/src/ShortcutList.tsx
+msgid "Not set"
+msgstr ""
+
+#: apps/reader/src/citation-labels.ts
+msgctxt "CSL bibliographic field or item type"
+msgid "Note"
+msgstr ""
+
 #: apps/reader/src/MobileSourceViews.tsx
 msgctxt "MobileSourceViews views"
+msgid "Note"
+msgstr ""
+
+#: apps/extension/src/PanelTabs.tsx
+msgctxt "Source literature note tab"
 msgid "Note"
 msgstr ""
 
@@ -2206,8 +4553,16 @@ msgctxt "LibraryWorkspace searchScopeOptions"
 msgid "Notes & annotations"
 msgstr ""
 
+#: packages/migration/src/zotero.ts
+msgid "Notes become independent source-level annotations, not replacements for source prose. Original CSL IDs are archived; Reader assigns stable, collision-resistant citekeys."
+msgstr ""
+
 #: apps/reader/src/InspectorPane.tsx
 msgid "Notes follow the active pane"
+msgstr ""
+
+#: apps/extension/src/CaptureApp.tsx
+msgid "Nothing to save here"
 msgstr ""
 
 #: apps/reader/src/CitationTypedFieldEditors.tsx
@@ -2225,6 +4580,21 @@ msgctxt "CitationTypedFieldEditors scalarKindOptions"
 msgid "Number"
 msgstr ""
 
+#: apps/reader/src/citation-labels.ts
+msgctxt "CSL bibliographic field or item type"
+msgid "Number"
+msgstr ""
+
+#: apps/reader/src/citation-labels.ts
+msgctxt "CSL bibliographic field or item type"
+msgid "Number of pages"
+msgstr ""
+
+#: apps/reader/src/citation-labels.ts
+msgctxt "CSL bibliographic field or item type"
+msgid "Number of volumes"
+msgstr ""
+
 #: apps/reader/src/LibraryConditionsEditor.tsx
 msgid "Numbers stored as text compare as text, as in saved mdbase views."
 msgstr ""
@@ -2233,13 +4603,42 @@ msgstr ""
 msgid "Offline"
 msgstr ""
 
+#: apps/extension/src/WelcomeApp.tsx
+msgid "On any page, press the toolbar button or <0>{open}</0>."
+msgstr ""
+
+#: apps/extension/src/WelcomeApp.tsx
+msgid "On any page, press the toolbar button."
+msgstr ""
+
+#: apps/reader/src/collection-menu-model.ts
+msgctxt "collection menu model"
+msgid "On your computer"
+msgstr ""
+
 #: apps/reader/src/SourceDetails.tsx
 msgctxt "SourceDetails fields"
 msgid "One per line"
 msgstr ""
 
+#: apps/electron/src/validation.ts
+msgid "Only HTTP and HTTPS links may leave Reader."
+msgstr ""
+
+#: apps/reader/src/use-open-document-search.ts
+msgid "Only loaded, supported documents are searched; suspended tabs are not included."
+msgstr ""
+
+#: apps/extension/src/PostPicker.tsx
+msgid "Only posts currently loaded on the page are listed. Feeds are never saved."
+msgstr ""
+
 #: apps/reader/src/ConnectReader.tsx
 msgid "Only Reader’s source and annotation contracts and starter types will be added."
+msgstr ""
+
+#: apps/reader/src/reader-command-list.ts
+msgid "Only the page, with the chrome out of the way"
 msgstr ""
 
 #: apps/reader/src/LibraryBulkBar.tsx
@@ -2257,6 +4656,21 @@ msgctxt "LibraryRowMenu interface"
 msgid "Open"
 msgstr ""
 
+#: apps/electron/src/main.ts
+msgctxt "Open a document from the file picker"
+msgid "Open"
+msgstr ""
+
+#: packages/renderer-pdf/src/pdf-translations.ts
+msgctxt "PDF viewer document"
+msgid "Open"
+msgstr ""
+
+#: packages/renderer-pdf/src/pdf-translations.ts
+msgctxt "PDF viewer passwordPrompt"
+msgid "Open"
+msgstr ""
+
 #. placeholder {0}: connection.displayName
 #: apps/reader/src/ConnectReader.tsx
 msgid "Open {0}"
@@ -2266,8 +4680,17 @@ msgstr ""
 msgid "Open {tab} in workbench"
 msgstr ""
 
+#: apps/electron/src/main.ts
+msgid "Open a document"
+msgstr ""
+
 #: apps/reader/src/ReaderHeader.tsx
 msgid "Open a document to use reading mode"
+msgstr ""
+
+#: packages/renderer-pdf/src/pdf-translations.ts
+msgctxt "PDF viewer emptyState"
+msgid "Open a PDF document to get started."
 msgstr ""
 
 #: apps/reader/src/LibraryTextSearch.tsx
@@ -2278,13 +4701,40 @@ msgstr ""
 msgid "Open a source from the library. Drag tabs to arrange your workspace."
 msgstr ""
 
+#: apps/reader/src/reader-command-list.ts
+msgctxt "reader command list"
+msgid "Open annotations"
+msgstr ""
+
+#: apps/reader/src/dockview-menus.ts
+msgid "Open another editor in pane right"
+msgstr ""
+
 #: apps/reader/src/LibraryRowMenu.tsx
 msgid "Open beside"
+msgstr ""
+
+#: apps/reader/src/reader-command-list.ts
+msgctxt "reader command list"
+msgid "Open beside"
+msgstr ""
+
+#: apps/extension/src/WelcomeApp.tsx
+msgid "Open Chrome’s extensions menu (the puzzle piece beside the address bar) and pin mdbase Reader so its button stays in the toolbar."
+msgstr ""
+
+#: apps/reader/src/reader-command-list.ts
+msgid "Open citation data"
 msgstr ""
 
 #: apps/reader/src/LibraryTextSearch.tsx
 msgctxt "LibraryTextSearch interface"
 msgid "Open document"
+msgstr ""
+
+#: packages/renderer-pdf/src/pdf-translations.ts
+msgctxt "PDF viewer emptyState"
+msgid "Open Document"
 msgstr ""
 
 #: apps/reader/src/LibraryWorkspace.tsx
@@ -2296,16 +4746,41 @@ msgstr ""
 msgid "Open each in its own tab"
 msgstr ""
 
+#: packages/markdown-editor/src/annotation-widgets.ts
+msgctxt "annotation widgets"
+msgid "Open in document"
+msgstr ""
+
+#: apps/extension/src/SaveBar.tsx
+msgid "Open in Reader"
+msgstr ""
+
+#: apps/extension/src/SaveBar.tsx
+msgid "Open in Reader to highlight"
+msgstr ""
+
 #: apps/reader/src/DockviewWorkspace.tsx
 msgid "Open library"
 msgstr ""
 
+#: apps/reader/src/reader-app-commands.ts
+msgctxt "reader app commands"
+msgid "Open library"
+msgstr ""
+
+#: apps/reader/src/reader-command-list.ts
 #: apps/reader/src/WorkspacePaneSupport.tsx
 msgid "Open literature note"
 msgstr ""
 
+#: apps/extension/src/OptionsApp.tsx
 #: apps/reader/src/ConnectReader.tsx
 msgid "Open mdbase Reader"
+msgstr ""
+
+#: apps/extension/src/shell-messages.ts
+#: apps/extension/src/shortcuts.ts
+msgid "Open mdbase Reader for this page"
 msgstr ""
 
 #: apps/reader/src/CollectionMenu.tsx
@@ -2313,16 +4788,43 @@ msgctxt "CollectionMenu status or action"
 msgid "Open now"
 msgstr ""
 
+#: apps/reader/src/native-signin-ui.ts
+msgctxt "Native sign-in"
+msgid "Open sign-in"
+msgstr ""
+
 #: apps/reader/src/SourceAddDialog.tsx
 msgid "Open source"
+msgstr ""
+
+#: packages/markdown-editor/src/citation-card.ts
+msgctxt "citation card"
+msgid "Open source"
+msgstr ""
+
+#: apps/reader/src/reader-command-list.ts
+msgid "Open tabs"
 msgstr ""
 
 #: apps/reader/src/AnnotationPanelActions.tsx
 msgid "Open the document to bookmark a position"
 msgstr ""
 
+#: apps/reader/src/native-signin-ui.ts
+msgctxt "Native sign-in"
+msgid "Open the mdbase tab again"
+msgstr ""
+
+#: apps/reader/src/use-source-export.ts
+msgid "Open the source and its annotations before exporting."
+msgstr ""
+
 #: apps/reader/src/MobileWorkspaceNavigation.tsx
 msgid "Open workspace tab"
+msgstr ""
+
+#: apps/extension/src/ExtensionHeader.tsx
+msgid "Open your library in mdbase Reader"
 msgstr ""
 
 #. placeholder {0}: original.displayName
@@ -2332,6 +4834,11 @@ msgstr ""
 
 #: apps/reader/src/CitationEditor.tsx
 msgid "Opening citation metadata…"
+msgstr ""
+
+#: apps/reader/src/native-signin-ui.ts
+msgctxt "Native sign-in"
+msgid "Opening collections isn't available in this build yet."
 msgstr ""
 
 #: apps/reader/src/ConnectedDocument.tsx
@@ -2345,6 +4852,10 @@ msgstr ""
 
 #: apps/reader/src/SourceNoteEditor.tsx
 msgid "Opening literature note…"
+msgstr ""
+
+#: apps/extension/src/ConnectionPanel.tsx
+msgid "Opening mdbase…"
 msgstr ""
 
 #: apps/reader/src/CollectionMenu.tsx
@@ -2362,9 +4873,26 @@ msgctxt "ConnectReader interface"
 msgid "Opening mdbase…"
 msgstr ""
 
+#: apps/extension/src/NotePanel.tsx
+msgid "Opening the literature note…"
+msgstr ""
+
+#: apps/extension/src/CaptureApp.tsx
+msgid "Opening the new page…"
+msgstr ""
+
 #: apps/reader/src/ReaderApp.tsx
 #: apps/reader/src/ReaderWorkspace.tsx
 msgid "Opening your reading collection"
+msgstr ""
+
+#: packages/renderer-pdf/src/pdf-translations.ts
+msgctxt "PDF viewer passwordPrompt"
+msgid "Opening..."
+msgstr ""
+
+#: apps/reader/src/reader-app-commands.ts
+msgid "Opens in a new tab"
 msgstr ""
 
 #: apps/reader/src/CitationStructuredEditor.tsx
@@ -2393,9 +4921,127 @@ msgctxt "CitationContributors interface"
 msgid "Organisation name"
 msgstr ""
 
+#: apps/reader/src/citation-labels.ts
+msgctxt "CSL bibliographic field or item type"
+msgid "Organizer"
+msgstr ""
+
+#. placeholder {0}: category.toUpperCase()
+#: packages/migration/src/readwise-sources.ts
+msgid "Original {0} unavailable; saved HTML retained: {key}"
+msgstr ""
+
+#: apps/reader/src/citation-labels.ts
+msgctxt "CSL bibliographic field or item type"
+msgid "Original author"
+msgstr ""
+
+#: apps/reader/src/citation-labels.ts
+msgctxt "CSL bibliographic field or item type"
+msgid "Original date"
+msgstr ""
+
+#: apps/reader/src/citation-labels.ts
+msgctxt "CSL bibliographic field or item type"
+msgid "Original publisher"
+msgstr ""
+
+#: apps/reader/src/citation-labels.ts
+msgctxt "CSL bibliographic field or item type"
+msgid "Original publisher place"
+msgstr ""
+
+#: apps/reader/src/citation-labels.ts
+msgctxt "CSL bibliographic field or item type"
+msgid "Original title"
+msgstr ""
+
+#: apps/reader/src/citation-form-model.ts
+msgctxt "CSL item type"
+msgid "Other"
+msgstr ""
+
+#: apps/extension/src/use-extension-capture.ts
+msgid "Other notes already link to this highlight. Delete it from Saved highlights to review them first."
+msgstr ""
+
+#: packages/migration/src/readwise.ts
+msgid "Other Reader sources"
+msgstr ""
+
+#: packages/migration/src/readwise.ts
+msgid "Other Readwise sources"
+msgstr ""
+
+#: packages/renderer-pdf/src/pdf-viewer-ui-schema.ts
+msgctxt "PDF navigation outline"
+msgid "Outline"
+msgstr ""
+
+#: packages/renderer-pdf/src/pdf-translations.ts
+msgctxt "PDF viewer outline"
+msgid "Outline"
+msgstr ""
+
+#: packages/renderer-pdf/src/pdf-translations.ts
+msgctxt "PDF viewer panel"
+msgid "Outline"
+msgstr ""
+
+#: apps/reader/src/citation-labels.ts
+msgctxt "CSL bibliographic field or item type"
+msgid "Page"
+msgstr ""
+
+#: packages/renderer-pdf/src/pdf-translations.ts
+msgctxt "PDF viewer search"
+msgid "Page {page}"
+msgstr ""
+
+#: apps/reader/src/citation-labels.ts
+msgctxt "CSL bibliographic field or item type"
+msgid "Page first"
+msgstr ""
+
+#: packages/renderer-pdf/src/pdf-translations.ts
+msgctxt "PDF viewer page"
+msgid "Page Rotation"
+msgstr ""
+
+#: packages/renderer-pdf/src/pdf-translations.ts
+msgctxt "PDF viewer page"
+msgid "Page Settings"
+msgstr ""
+
 #: apps/reader/src/CitationStructuredEditor.tsx
 msgctxt "CitationStructuredEditor interface"
 msgid "Pages"
+msgstr ""
+
+#: packages/renderer-pdf/src/pdf-translations.ts
+msgctxt "PDF viewer print"
+msgid "Pages to print"
+msgstr ""
+
+#: apps/extension/src/WelcomeApp.tsx
+msgid "Pages you have saved are marked on the toolbar button and show your highlights."
+msgstr ""
+
+#: apps/extension/src/OptionsApp.tsx
+msgid "Pages you visit"
+msgstr ""
+
+#: apps/reader/src/citation-labels.ts
+msgctxt "CSL bibliographic field or item type"
+msgid "Pamphlet"
+msgstr ""
+
+#: apps/reader/src/reader-command-list.ts
+msgid "Pane {paneLabel}"
+msgstr ""
+
+#: apps/reader/src/reader-command-list.ts
+msgid "Pane {paneLabel} is focused"
 msgstr ""
 
 #: apps/reader/src/DockPaneActions.tsx
@@ -2407,12 +5053,55 @@ msgstr ""
 msgid "Parse literal name"
 msgstr ""
 
+#: apps/reader/src/citation-labels.ts
+msgctxt "CSL bibliographic field or item type"
+msgid "Parse names"
+msgstr ""
+
+#: apps/reader/src/citation-labels.ts
+msgctxt "CSL bibliographic field or item type"
+msgid "Part"
+msgstr ""
+
+#: apps/reader/src/citation-labels.ts
+msgctxt "CSL bibliographic field or item type"
+msgid "Part title"
+msgstr ""
+
+#: apps/reader/src/annotation-columns.ts
+msgctxt "Annotation table column"
+msgid "Passage"
+msgstr ""
+
 #: apps/reader/src/LibraryAnnotationToolbar.tsx
 msgid "Passage, note, source or tag"
 msgstr ""
 
+#: packages/renderer-pdf/src/pdf-translations.ts
+msgctxt "PDF viewer passwordPrompt"
+msgid "Password"
+msgstr ""
+
+#: packages/renderer-pdf/src/pdf-translations.ts
+msgctxt "PDF viewer passwordPrompt"
+msgid "Password Required"
+msgstr ""
+
+#: apps/reader/src/source-addition-flow.ts
+msgid "Paste a web address, DOI, arXiv ID, ISBN or PubMed ID."
+msgstr ""
+
 #: apps/reader/src/CitationLookup.tsx
 msgid "Paste an identifier, URL, or title"
+msgstr ""
+
+#: apps/reader/src/citation-labels.ts
+msgctxt "CSL bibliographic field or item type"
+msgid "Patent"
+msgstr ""
+
+#: packages/migration/src/zotero-validation.ts
+msgid "Payload count mismatch."
 msgstr ""
 
 #: apps/reader/src/LibraryWorkspace.tsx
@@ -2420,14 +5109,60 @@ msgctxt "LibraryWorkspace formatFilterOptions"
 msgid "PDF"
 msgstr ""
 
+#: packages/core/src/domain/selector.ts
+msgid "PDF coordinates must be finite numbers."
+msgstr ""
+
+#: packages/migration/src/zotero-anchors.ts
+msgid "PDF geometry unavailable."
+msgstr ""
+
+#: packages/renderer-pdf/src/embedpdf-runtime.ts
+msgid "PDF text extraction was cancelled."
+msgstr ""
+
 #: apps/reader/src/ReaderWorkspaceView.tsx
 #: apps/reader/src/SourceAddDialog.tsx
 msgid "PDF, EPUB or saved web page"
 msgstr ""
 
+#: apps/reader/src/citation-labels.ts
+msgctxt "CSL bibliographic field or item type"
+msgid "Performance"
+msgstr ""
+
+#: apps/reader/src/citation-labels.ts
+msgctxt "CSL bibliographic field or item type"
+msgid "Performer"
+msgstr ""
+
+#: apps/reader/src/citation-labels.ts
+msgctxt "CSL bibliographic field or item type"
+msgid "Periodical"
+msgstr ""
+
 #: apps/reader/src/CitationContributors.tsx
 msgctxt "CitationContributors contributorKindOptions"
 msgid "Person"
+msgstr ""
+
+#: apps/reader/src/citation-labels.ts
+msgctxt "CSL bibliographic field or item type"
+msgid "Personal communication"
+msgstr ""
+
+#: apps/reader/src/dockview-menus.ts
+msgctxt "dockview menus"
+msgid "Pin tab"
+msgstr ""
+
+#: apps/extension/src/WelcomeApp.tsx
+msgid "Pin the extension"
+msgstr ""
+
+#: apps/extension/src/HighlightFields.tsx
+msgctxt "Highlight colour"
+msgid "pink"
 msgstr ""
 
 #: apps/reader/src/DockviewWorkspace.tsx
@@ -2440,8 +5175,33 @@ msgctxt "CitationStructuredEditor interface"
 msgid "Place"
 msgstr ""
 
+#: apps/extension/src/SaveBar.tsx
+msgid "Please wait…"
+msgstr ""
+
 #: apps/reader/src/WorkspacePaneSupport.tsx
 msgid "Position not saved"
+msgstr ""
+
+#: apps/extension/src/PostPicker.tsx
+msgid "Post"
+msgstr ""
+
+#: apps/reader/src/citation-labels.ts
+msgctxt "CSL bibliographic field or item type"
+msgid "Post"
+msgstr ""
+
+#: apps/extension/src/PostPicker.tsx
+msgid "Posts"
+msgstr ""
+
+#: apps/extension/src/ConnectionPanel.tsx
+msgid "Prepare this collection"
+msgstr ""
+
+#: apps/reader/src/import-controller.ts
+msgid "Preparing"
 msgstr ""
 
 #: apps/reader/src/LibraryWorkspace.tsx
@@ -2452,6 +5212,11 @@ msgstr ""
 #: apps/reader/src/CitationPreview.tsx
 msgctxt "CitationPreview status or action"
 msgid "Preparing citation…"
+msgstr ""
+
+#: packages/renderer-pdf/src/pdf-translations.ts
+msgctxt "PDF viewer print"
+msgid "Preparing document..."
 msgstr ""
 
 #: apps/reader/src/DocumentContextualToolbar.tsx
@@ -2476,6 +5241,10 @@ msgstr ""
 msgid "Preparing the reading workspace"
 msgstr ""
 
+#: apps/extension/src/CaptureApp.tsx
+msgid "Press the mdbase Reader toolbar button (Alt+Shift+S) to use Reader on this page. Browser pages and the Chrome Web Store cannot be read by extensions."
+msgstr ""
+
 #: apps/reader/src/CitationPreview.tsx
 msgid "Preview"
 msgstr ""
@@ -2484,12 +5253,56 @@ msgstr ""
 msgid "Preview files cannot be exported."
 msgstr ""
 
+#: packages/renderer-epub/src/epub-page-navigation.tsx
+msgid "Previous page"
+msgstr ""
+
+#: packages/renderer-pdf/src/pdf-translations.ts
+msgctxt "PDF viewer page"
+msgid "Previous Page"
+msgstr ""
+
+#: packages/renderer-pdf/src/pdf-translations.ts
+msgctxt "PDF viewer document"
+msgid "Print"
+msgstr ""
+
+#: packages/renderer-pdf/src/pdf-translations.ts
+msgctxt "PDF viewer print"
+msgid "Print"
+msgstr ""
+
+#: packages/renderer-pdf/src/pdf-translations.ts
+msgctxt "PDF viewer print"
+msgid "Print Settings"
+msgstr ""
+
+#: apps/reader/src/citation-labels.ts
+msgctxt "CSL bibliographic field or item type"
+msgid "Printing"
+msgstr ""
+
+#: packages/renderer-pdf/src/pdf-translations.ts
+msgctxt "PDF viewer print"
+msgid "Printing..."
+msgstr ""
+
+#: apps/reader/src/citation-labels.ts
+msgctxt "CSL bibliographic field or item type"
+msgid "Producer"
+msgstr ""
+
 #: apps/reader/src/LibraryTableHeader.tsx
 msgid "Properties"
 msgstr ""
 
 #: apps/reader/src/CitationStructuredEditor.tsx
 msgid "Publication"
+msgstr ""
+
+#: apps/reader/src/library-columns.ts
+msgctxt "Library table column"
+msgid "Published"
 msgstr ""
 
 #: apps/reader/src/LibraryWorkspace.tsx
@@ -2507,6 +5320,21 @@ msgctxt "CitationStructuredEditor interface"
 msgid "Publisher"
 msgstr ""
 
+#: apps/reader/src/citation-labels.ts
+msgctxt "CSL bibliographic field or item type"
+msgid "Publisher"
+msgstr ""
+
+#: apps/reader/src/citation-labels.ts
+msgctxt "CSL bibliographic field or item type"
+msgid "Publisher place"
+msgstr ""
+
+#: apps/extension/src/HighlightFields.tsx
+msgctxt "Highlight colour"
+msgid "purple"
+msgstr ""
+
 #: apps/reader/src/LibraryCells.tsx
 msgctxt "reading status"
 msgid "Queued"
@@ -2517,9 +5345,18 @@ msgctxt "SourceNoteEditor formatActions"
 msgid "Quote"
 msgstr ""
 
+#: packages/core/src/domain/selector.ts
+msgid "quote.exact must not be empty."
+msgstr ""
+
 #: apps/reader/src/AnnotationEditor.tsx
 msgctxt "AnnotationEditor interface"
 msgid "Quoted passage"
+msgstr ""
+
+#: apps/reader/src/citation-labels.ts
+msgctxt "CSL date field"
+msgid "Raw date"
 msgstr ""
 
 #: apps/reader/src/MobileSourceViews.tsx
@@ -2531,21 +5368,76 @@ msgstr ""
 msgid "Read from your collection"
 msgstr ""
 
+#: apps/electron/src/main.ts
+msgid "Readable documents"
+msgstr ""
+
+#: packages/migration/src/readwise.ts
+msgid "Reader articles"
+msgstr ""
+
+#: apps/extension/src/capture-errors.ts
+#: apps/extension/src/page-capture.ts
+msgid "Reader can capture ordinary HTTPS pages only."
+msgstr ""
+
+#: apps/extension/src/save-capture.ts
+msgid "Reader cannot download this PDF from here. Download it and import the file in Reader."
+msgstr ""
+
+#. placeholder {0}: selection.imageType
+#: apps/reader/src/annotation-composer-request.ts
+msgid "Reader cannot persist an area capture of type {0}."
+msgstr ""
+
+#: apps/extension/src/CaptureApp.tsx
+#: apps/extension/src/ConnectionPanel.tsx
+msgid "Reader cannot read this page"
+msgstr ""
+
 #: apps/reader/src/ReaderWorkspaceView.tsx
 msgctxt "ReaderWorkspaceView interface"
 msgid "Reader commands"
+msgstr ""
+
+#: apps/reader/src/use-web-capture.ts
+msgid "Reader could not add that source."
+msgstr ""
+
+#: apps/reader/src/use-annotation-view.ts
+msgid "Reader could not add the view."
+msgstr ""
+
+#: apps/reader/src/use-library-selection.ts
+msgid "Reader could not add this source."
 msgstr ""
 
 #: apps/reader/src/ConnectReader.tsx
 msgid "Reader could not apply the reviewed setup."
 msgstr ""
 
+#: apps/reader/src/use-document-attachment.ts
+msgid "Reader could not attach a document."
+msgstr ""
+
+#: apps/reader/src/web-capture-client.ts
+msgid "Reader could not capture that page."
+msgstr ""
+
 #: apps/reader/src/LibraryWorkspace.tsx
 msgid "Reader could not change the reading status."
 msgstr ""
 
+#: apps/reader/src/use-source-removal.ts
+msgid "Reader could not check this source."
+msgstr ""
+
 #: apps/reader/src/CollectionPicker.tsx
 msgid "Reader could not connect another collection."
+msgstr ""
+
+#: apps/reader/src/use-document-decorations.ts
+msgid "Reader could not display saved highlights."
 msgstr ""
 
 #: apps/reader/src/AnnotationImage.tsx
@@ -2556,8 +5448,80 @@ msgstr ""
 msgid "Reader could not execute this mdbase view."
 msgstr ""
 
+#: apps/reader/src/use-bibliography-export.ts
+msgid "Reader could not export the bibliography."
+msgstr ""
+
+#: apps/reader/src/build-source-export.ts
+msgid "Reader could not export this file."
+msgstr ""
+
+#: apps/reader/src/use-source-export.ts
+msgid "Reader could not export this source."
+msgstr ""
+
+#: apps/reader/src/use-citation-editor.ts
+msgid "Reader could not find citation metadata."
+msgstr ""
+
+#: apps/reader/src/use-citation-editor.ts
+msgid "Reader could not generate a citekey."
+msgstr ""
+
+#: apps/reader/src/use-library-selection.ts
+msgid "Reader could not import this document."
+msgstr ""
+
+#: apps/reader/src/use-annotation-transclusion.ts
+msgid "Reader could not insert this annotation."
+msgstr ""
+
+#: apps/extension/src/page-capture.ts
+msgid "Reader could not inspect this page. Open an ordinary HTTPS page and try again."
+msgstr ""
+
+#: apps/reader/src/use-library-annotations.ts
+msgid "Reader could not list annotations."
+msgstr ""
+
+#: apps/reader/src/use-mdbase-library-views.ts
+msgid "Reader could not load saved library views."
+msgstr ""
+
+#: apps/reader/src/use-library-selection.ts
+msgid "Reader could not load this collection."
+msgstr ""
+
+#: apps/reader/src/shared-annotation-resource.ts
+msgid "Reader could not load this source's annotations."
+msgstr ""
+
+#: apps/reader/src/use-source-import.ts
+msgid "Reader could not open the file picker."
+msgstr ""
+
+#: apps/reader/src/use-selected-source-resources.ts
+msgid "Reader could not open the source note."
+msgstr ""
+
 #: apps/reader/src/ConnectReader.tsx
 msgid "Reader could not open this collection."
+msgstr ""
+
+#: apps/reader/src/connection-recovery.ts
+msgid "Reader could not reach mdbase Connect. Check your connection, then try again."
+msgstr ""
+
+#: apps/reader/src/use-direct-access.ts
+msgid "Reader could not reach the local mdbase connector. The relayed connection is still active."
+msgstr ""
+
+#: apps/reader/src/use-source-removal.ts
+msgid "Reader could not remove this source."
+msgstr ""
+
+#: apps/reader/src/use-direct-access.ts
+msgid "Reader could not request local network access."
 msgstr ""
 
 #: apps/reader/src/ConnectReader.tsx
@@ -2568,12 +5532,44 @@ msgstr ""
 msgid "Reader could not save {key}."
 msgstr ""
 
+#: apps/reader/src/use-source-fields.ts
+msgid "Reader could not save these details."
+msgstr ""
+
+#: apps/reader/src/annotation-selection.ts
+msgid "Reader could not save this annotation."
+msgstr ""
+
+#: apps/reader/src/use-bookmark-action.ts
+msgid "Reader could not save this bookmark."
+msgstr ""
+
+#: apps/reader/src/use-citation-editor.ts
+msgid "Reader could not save this citation."
+msgstr ""
+
 #: apps/reader/src/AnnotationPanelActions.tsx
 msgid "Reader could not save this comment."
 msgstr ""
 
+#: apps/reader/src/use-mdbase-library-views.ts
+msgid "Reader could not save this library view."
+msgstr ""
+
+#: apps/reader/src/source-draft-session.ts
+msgid "Reader could not save this note. Your draft is retained."
+msgstr ""
+
 #: apps/reader/src/WorkspacePaneSupport.tsx
 msgid "Reader could not save your place in this document."
+msgstr ""
+
+#: apps/reader/src/use-reading-resume.ts
+msgid "Reader could not save your reading position."
+msgstr ""
+
+#: apps/reader/src/use-library-search.ts
+msgid "Reader could not search note text."
 msgstr ""
 
 #: apps/reader/src/CollectionPicker.tsx
@@ -2590,21 +5586,90 @@ msgstr ""
 msgid "Reader documents and files, plus highlights from Kindle, Apple Books and other Readwise sources."
 msgstr ""
 
+#: packages/migration/src/readwise.ts
+msgid "Reader emails"
+msgstr ""
+
+#: packages/migration/src/readwise.ts
+msgid "Reader EPUBs"
+msgstr ""
+
+#: apps/reader/src/web-capture-client.ts
+msgid "Reader expected a web page."
+msgstr ""
+
 #: apps/reader/src/LibraryTableHeader.tsx
 msgid "Reader fields"
+msgstr ""
+
+#: apps/extension/src/ConnectionPanel.tsx
+msgid "Reader has signed out."
+msgstr ""
+
+#: apps/extension/src/connection-view.ts
+msgid "Reader has signed out. Sign in again before saving; your draft is kept."
+msgstr ""
+
+#: packages/migration/src/readwise-annotations.ts
+msgid "Reader highlights on documents outside this import (for example unsaved Feed)"
 msgstr ""
 
 #: apps/reader/src/InspectorPane.tsx
 msgid "Reader keeps one writable editor for each source record."
 msgstr ""
 
+#: apps/extension/src/ConnectionPanel.tsx
+msgid "Reader needs its source and annotation definitions in this collection."
+msgstr ""
+
+#. placeholder {0}: session.info.displayName
+#: apps/reader/src/connection-recovery.ts
+msgid "Reader needs your approval to open {0}."
+msgstr ""
+
 #: apps/reader/src/ImportDestination.tsx
 msgid "Reader needs your approval to write to this collection."
+msgstr ""
+
+#: packages/migration/src/readwise-annotations.ts
+msgid "Reader notes on documents outside this import (for example unsaved Feed)"
+msgstr ""
+
+#: packages/migration/src/readwise.ts
+msgid "Reader PDFs"
+msgstr ""
+
+#: apps/reader/src/web-capture-client.ts
+msgid "Reader received an incomplete capture response."
+msgstr ""
+
+#: apps/reader/src/web-capture-client.ts
+msgid "Reader received an invalid capture response."
+msgstr ""
+
+#: packages/migration/src/readwise.ts
+msgid "Reader RSS items"
+msgstr ""
+
+#: packages/migration/src/readwise.ts
+msgid "Reader tweets"
+msgstr ""
+
+#: packages/migration/src/readwise.ts
+msgid "Reader videos"
+msgstr ""
+
+#: apps/extension/src/use-extension-capture.ts
+msgid "Reader was not given site access."
 msgstr ""
 
 #: apps/reader/src/DockviewWorkspace.tsx
 msgctxt "DockviewWorkspace interface"
 msgid "Reader workspace"
+msgstr ""
+
+#: apps/reader/src/connection-recovery.ts
+msgid "Reader’s access to this collection has changed. Review the updated access to continue."
 msgstr ""
 
 #: apps/reader/src/LibraryCells.tsx
@@ -2631,6 +5696,115 @@ msgstr ""
 msgid "Reading the file’s details…"
 msgstr ""
 
+#: apps/extension/src/CaptureApp.tsx
+msgid "Reading the page…"
+msgstr ""
+
+#: packages/renderer-epub/src/readium-runtime.ts
+msgid "Readium cannot open an EPUB with an empty reading order."
+msgstr ""
+
+#: packages/renderer-epub/src/readium-runtime.ts
+msgid "Readium could not parse the publication manifest."
+msgstr ""
+
+#: packages/renderer-epub/src/epub-locator.ts
+msgid "Readium returned an empty EPUB resource location."
+msgstr ""
+
+#: packages/renderer-epub/src/epub-locator.ts
+msgid "Readium returned an EPUB location outside the prepared publication."
+msgstr ""
+
+#: packages/renderer-epub/src/readium-runtime.ts
+msgid "Readium returned an invalid {name}."
+msgstr ""
+
+#: packages/renderer-epub/src/epub-locator.ts
+msgid "Readium returned an invalid EPUB resource location: {value}"
+msgstr ""
+
+#: packages/migration/src/readwise.ts
+msgid "Readwise articles (Instapaper, Pocket…)"
+msgstr ""
+
+#: packages/migration/src/readwise.ts
+msgid "Readwise books (Kindle, Apple Books…)"
+msgstr ""
+
+#: packages/migration/src/readwise-annotations.ts
+msgid "Readwise books whose Reader document is outside this import (unsaved Feed, or removed from Reader)"
+msgstr ""
+
+#: packages/migration/src/readwise-annotations.ts
+msgid "Readwise books without an ID skipped"
+msgstr ""
+
+#: packages/migration/src/readwise-annotations.ts
+msgid "Readwise highlight identity could not be reconciled; matching quote retained once, native record archived: {key}"
+msgstr ""
+
+#: packages/migration/src/readwise.ts
+msgid "Readwise highlights export: {message}"
+msgstr ""
+
+#: packages/migration/src/readwise-annotations.ts
+msgid "Readwise highlights without an ID or any text skipped"
+msgstr ""
+
+#: packages/migration/src/readwise-client.ts
+msgid "Readwise is rate-limiting requests. Stop and try again later."
+msgstr ""
+
+#: packages/migration/src/readwise-sources.ts
+msgid "Readwise no longer provides this source file. Scan again or use its full-file export."
+msgstr ""
+
+#: packages/migration/src/readwise.ts
+msgid "Readwise podcasts"
+msgstr ""
+
+#: packages/migration/src/readwise-client.ts
+msgid "Readwise rejected this token or account access."
+msgstr ""
+
+#: packages/migration/src/readwise-client.ts
+msgid "Readwise request failed. Check your connection or browser access; your token was not saved."
+msgstr ""
+
+#: packages/migration/src/readwise-client.ts
+msgid "Readwise returned a repeated pagination cursor."
+msgstr ""
+
+#: packages/migration/src/readwise-client.ts
+msgid "Readwise returned an unexpected file host; download was refused."
+msgstr ""
+
+#: packages/migration/src/readwise-client.ts
+msgid "Readwise returned an unreadable response. Scan again later."
+msgstr ""
+
+#. placeholder {0}: String(response.status)
+#: packages/migration/src/readwise-client.ts
+msgid "Readwise returned HTTP {0}. No changes were made to Readwise."
+msgstr ""
+
+#: packages/migration/src/readwise.ts
+msgid "Readwise returned missing or duplicate identities. Scan again."
+msgstr ""
+
+#: packages/migration/src/readwise.ts
+msgid "Readwise supplementals"
+msgstr ""
+
+#: packages/migration/src/readwise-client.ts
+msgid "Readwise token has been cleared. Reconnect to continue."
+msgstr ""
+
+#: packages/migration/src/readwise.ts
+msgid "Readwise tweets"
+msgstr ""
+
 #: apps/reader/src/CitationEditor.tsx
 msgid "Ready"
 msgstr ""
@@ -2638,6 +5812,11 @@ msgstr ""
 #: apps/reader/src/LibraryNavigator.tsx
 msgctxt "LibraryNavigator interface"
 msgid "Recent"
+msgstr ""
+
+#: apps/reader/src/library-lenses.ts
+msgctxt "library lenses"
+msgid "Recently opened"
 msgstr ""
 
 #: apps/reader/src/LibraryWorkspace.tsx
@@ -2650,17 +5829,48 @@ msgctxt "LibraryWorkspace sortFieldOptions"
 msgid "Recently saved"
 msgstr ""
 
+#: apps/reader/src/citation-labels.ts
+msgctxt "CSL bibliographic field or item type"
+msgid "Recipient"
+msgstr ""
+
 #: apps/reader/src/ConnectionLayout.tsx
 msgctxt "ConnectionLayout status or action"
 msgid "Reconnect collection"
+msgstr ""
+
+#: apps/extension/src/use-source-note.ts
+msgid "Reconnect the collection to save these details."
+msgstr ""
+
+#: apps/extension/src/DiagnosticsPanel.tsx
+msgid "Record connection timings"
+msgstr ""
+
+#: apps/extension/src/DiagnosticsPanel.tsx
+msgid "Record timings in this panel only. No page text, paths, queries, IDs or credentials are recorded. Nothing is uploaded. Stopping or closing clears the recording."
 msgstr ""
 
 #: apps/reader/src/DraftRecoveryNotice.tsx
 msgid "Recovered changes saved on this device. Syncing to the collection…"
 msgstr ""
 
+#: packages/renderer-pdf/src/pdf-translations.ts
+msgctxt "PDF viewer panel"
+msgid "Redaction Sidebar"
+msgstr ""
+
+#: apps/reader/src/citation-labels.ts
+msgctxt "CSL bibliographic field or item type"
+msgid "References"
+msgstr ""
+
 #: apps/reader/src/ImportPageView.tsx
 msgid "References, original files, notes, collections and native annotations."
+msgstr ""
+
+#: apps/extension/src/SavedHighlights.tsx
+msgid "Refresh"
 msgstr ""
 
 #: apps/reader/src/LibraryAnnotationToolbar.tsx
@@ -2671,8 +5881,18 @@ msgstr ""
 msgid "Regenerate"
 msgstr ""
 
+#: apps/reader/src/citation-labels.ts
+msgctxt "CSL bibliographic field or item type"
+msgid "Regulation"
+msgstr ""
+
+#: apps/extension/src/connection-view.ts
 #: apps/reader/src/DeploymentUpdateNotice.tsx
 msgid "Reload Reader"
+msgstr ""
+
+#: apps/extension/src/ConnectionPanel.tsx
+msgid "Reload the page, then press the mdbase Reader toolbar button again. Some pages, such as the Chrome Web Store and browser settings, cannot be read by extensions."
 msgstr ""
 
 #: apps/reader/src/CitationAdditionalFields.tsx
@@ -2713,6 +5933,10 @@ msgctxt "LibraryConditionsEditor interface"
 msgid "Remove condition"
 msgstr ""
 
+#: apps/reader/src/reader-command-list.ts
+msgid "Remove current source…"
+msgstr ""
+
 #: apps/reader/src/SourceRemovalDialog.tsx
 msgctxt "SourceRemovalDialog interface"
 msgid "Remove source"
@@ -2736,6 +5960,21 @@ msgstr ""
 msgid "Rename…"
 msgstr ""
 
+#: apps/reader/src/reader-command-list.ts
+msgctxt "reader command list"
+msgid "Reopen closed tab"
+msgstr ""
+
+#: apps/reader/src/citation-labels.ts
+msgctxt "CSL bibliographic field or item type"
+msgid "Report"
+msgstr ""
+
+#: apps/reader/src/citation-form-model.ts
+msgctxt "CSL item type"
+msgid "Report"
+msgstr ""
+
 #: apps/reader/src/ReaderHeader.tsx
 msgid "Request local network access and connect directly to the mdbase relay on this computer."
 msgstr ""
@@ -2752,6 +5991,14 @@ msgstr ""
 msgid "Reset columns and sort"
 msgstr ""
 
+#: apps/reader/src/reader-command-list.ts
+msgid "Reset pane arrangement"
+msgstr ""
+
+#: apps/reader/src/dockview-menus.ts
+msgid "Reset pane arrangement (keep tabs)"
+msgstr ""
+
 #: apps/reader/src/LibraryTableHeader.tsx
 msgid "Reset width"
 msgstr ""
@@ -2760,8 +6007,24 @@ msgstr ""
 msgid "Resize {label} column"
 msgstr ""
 
+#: apps/reader/src/use-annotation-deletion.ts
+msgid "Resolve the save problem or finish the other editor's deletion check first."
+msgstr ""
+
+#: apps/reader/src/source-draft-session.ts
+msgid "Resolve the source note conflict before continuing."
+msgstr ""
+
 #: apps/reader/src/AnnotationEditor.tsx
 msgid "Restore"
+msgstr ""
+
+#: apps/extension/src/CaptureApp.tsx
+msgid "Restored your unsaved note from earlier."
+msgstr ""
+
+#: apps/extension/src/NotePanel.tsx
+msgid "Restored your unsaved text from earlier."
 msgstr ""
 
 #: apps/reader/src/AnnotationCard.tsx
@@ -2778,10 +6041,18 @@ msgstr ""
 msgid "Resume unfinished annotation"
 msgstr ""
 
+#: apps/extension/src/CollectionSection.tsx
+#: apps/extension/src/connection-view.ts
+#: apps/extension/src/ConnectionPanel.tsx
+msgid "Retry connection"
+msgstr ""
+
 #: apps/reader/src/ReaderHeader.tsx
 msgid "Retry local access"
 msgstr ""
 
+#: apps/extension/src/ConnectionPanel.tsx
+#: apps/extension/src/NotePanel.tsx
 #: apps/reader/src/SourceNoteEditor.tsx
 msgid "Retry save"
 msgstr ""
@@ -2789,6 +6060,24 @@ msgstr ""
 #: apps/reader/src/AnnotationEditor.tsx
 msgctxt "AnnotationEditor interface"
 msgid "Retry save"
+msgstr ""
+
+#: apps/extension/src/ConnectionPanel.tsx
+msgid "Retry Save to check for an existing source before creating anything else."
+msgstr ""
+
+#: apps/reader/src/citation-labels.ts
+msgctxt "CSL bibliographic field or item type"
+msgid "Review"
+msgstr ""
+
+#: apps/extension/src/ConnectionPanel.tsx
+msgid "Review access"
+msgstr ""
+
+#: apps/reader/src/citation-labels.ts
+msgctxt "CSL bibliographic field or item type"
+msgid "Review book"
 msgstr ""
 
 #: apps/reader/src/SourceDetails.tsx
@@ -2803,6 +6092,10 @@ msgstr ""
 msgid "Review found metadata"
 msgstr ""
 
+#: apps/reader/src/connection-recovery.ts
+msgid "Review the Reader definitions before they are installed."
+msgstr ""
+
 #: apps/reader/src/CitationEditor.tsx
 msgid "Review the suggested details before saving."
 msgstr ""
@@ -2815,9 +6108,57 @@ msgstr ""
 msgid "Review what will be imported"
 msgstr ""
 
+#: apps/reader/src/citation-labels.ts
+msgctxt "CSL bibliographic field or item type"
+msgid "Reviewed author"
+msgstr ""
+
+#: apps/reader/src/citation-labels.ts
+msgctxt "CSL bibliographic field or item type"
+msgid "Reviewed genre"
+msgstr ""
+
+#: apps/reader/src/citation-labels.ts
+msgctxt "CSL bibliographic field or item type"
+msgid "Reviewed title"
+msgstr ""
+
+#: apps/extension/src/CaptureApp.tsx
+msgid "Right-click a selection to highlight it with a comment"
+msgstr ""
+
+#: apps/extension/src/ShortcutList.tsx
+msgid "Right-click the selection"
+msgstr ""
+
+#: packages/renderer-pdf/src/pdf-translations.ts
+msgctxt "PDF viewer rotate"
+msgid "Rotate Clockwise"
+msgstr ""
+
+#: packages/renderer-pdf/src/pdf-translations.ts
+msgctxt "PDF viewer rotate"
+msgid "Rotate Counter-Clockwise"
+msgstr ""
+
 #: apps/reader/src/DisplayMenu.tsx
 msgctxt "DisplayMenu interface"
 msgid "Sans"
+msgstr ""
+
+#: apps/electron/src/main.ts
+msgctxt "Save an exported file"
+msgid "Save"
+msgstr ""
+
+#. placeholder {0}: modifierKey()
+#: apps/extension/src/SaveBar.tsx
+msgid "Save ({0}+Enter)"
+msgstr ""
+
+#. placeholder {0}: String(loadedSelected.length)
+#: apps/extension/src/PostPicker.tsx
+msgid "Save {0} selected"
 msgstr ""
 
 #: apps/reader/src/SourceAddDialog.tsx
@@ -2827,6 +6168,10 @@ msgstr ""
 #: apps/reader/src/AnnotationComposer.tsx
 msgctxt "AnnotationComposer interface"
 msgid "Save area"
+msgstr ""
+
+#: apps/extension/src/WelcomeApp.tsx
+msgid "Save articles and PDFs to your mdbase collection as you read, highlight passages, and find them again in Reader."
 msgstr ""
 
 #: apps/reader/src/LibraryViewSaveDialog.tsx
@@ -2847,14 +6192,38 @@ msgstr ""
 msgid "Save citation only"
 msgstr ""
 
+#: apps/extension/src/SavedHighlights.tsx
+msgid "Save comment"
+msgstr ""
+
 #: apps/reader/src/AnnotationPanelActions.tsx
 msgctxt "AnnotationPanelActions interface"
 msgid "Save comment"
 msgstr ""
 
+#: apps/electron/src/main.ts
+msgid "Save export"
+msgstr ""
+
+#: apps/extension/src/HighlightFields.tsx
+msgid "Save highlight"
+msgstr ""
+
 #: apps/reader/src/AnnotationComposer.tsx
 msgctxt "AnnotationComposer interface"
 msgid "Save highlight"
+msgstr ""
+
+#: apps/extension/src/background.ts
+msgid "Save highlight to mdbase Reader"
+msgstr ""
+
+#: apps/extension/src/HighlightFields.tsx
+msgid "Save in {colorLabel} ({shortcut}, or {modifier}+Enter)"
+msgstr ""
+
+#: apps/extension/src/HighlightFields.tsx
+msgid "Save in {colorLabel} ({shortcut})"
 msgstr ""
 
 #: apps/reader/src/LibraryViewSaveDialog.tsx
@@ -2865,8 +6234,57 @@ msgstr ""
 msgid "Save my draft instead"
 msgstr ""
 
+#: apps/extension/src/OptionsApp.tsx
+msgid "Save new sources to"
+msgstr ""
+
+#: apps/extension/src/ConnectionPanel.tsx
+msgid "Save not confirmed"
+msgstr ""
+
+#: apps/extension/src/CaptureApp.tsx
+msgid "Save not confirmed. Retry to check its outcome."
+msgstr ""
+
+#: apps/extension/src/SaveBar.tsx
+msgid "Save page"
+msgstr ""
+
+#: apps/extension/src/HighlightFields.tsx
+msgid "Save page and highlight"
+msgstr ""
+
+#: apps/extension/src/SaveBar.tsx
+msgid "Save PDF"
+msgstr ""
+
+#: apps/extension/src/SaveBar.tsx
+msgid "Save post"
+msgstr ""
+
 #: apps/reader/src/SourceImportDialog.tsx
 msgid "Save the citation found for this file:"
+msgstr ""
+
+#: apps/extension/src/shell-messages.ts
+msgid "Save the page you are reading and revisit your mdbase annotations."
+msgstr ""
+
+#: apps/extension/src/CaptureApp.tsx
+msgid "Save the PDF, then open it there."
+msgstr ""
+
+#: apps/extension/src/NotePanel.tsx
+msgid "Save title and tags"
+msgstr ""
+
+#: apps/extension/src/ConnectionPanel.tsx
+#: apps/extension/src/WelcomeApp.tsx
+msgid "Save to collection"
+msgstr ""
+
+#: apps/extension/src/shell-messages.ts
+msgid "Save to mdbase Reader"
 msgstr ""
 
 #: apps/reader/src/LibraryAnnotationToolbar.tsx
@@ -2879,6 +6297,16 @@ msgctxt "LibraryViewSaveDialog interface"
 msgid "Save view"
 msgstr ""
 
+#: apps/extension/src/WelcomeApp.tsx
+msgid "Save what you are reading"
+msgstr ""
+
+#: apps/reader/src/source-addition-flow.ts
+msgid "Save X posts from their live page using the mdbase Reader extension."
+msgstr ""
+
+#: apps/extension/src/NotePanel.tsx
+#: apps/extension/src/SaveBar.tsx
 #: apps/reader/src/AnnotationEditor.tsx
 msgid "Saved"
 msgstr ""
@@ -2892,13 +6320,35 @@ msgstr ""
 msgid "Saved document · original headings below are unchanged"
 msgstr ""
 
+#. placeholder {0}: highlights.length ? <span>{highlights.length}</span> : null
+#: apps/extension/src/SavedHighlights.tsx
+msgid "Saved highlights {0}"
+msgstr ""
+
+#: packages/migration/src/readwise.ts
+msgid "Saved HTML can reference external images. Those assets are not downloaded. Keep this tab open; reconnect and rescan to resume after closing it."
+msgstr ""
+
+#: apps/extension/src/page-badge.ts
+msgid "Saved in mdbase Reader"
+msgstr ""
+
 #: apps/reader/src/SourceNoteEditor.tsx
 msgctxt "SourceNoteEditor status or action"
 msgid "Saved locally"
 msgstr ""
 
+#: apps/reader/src/connect-workspace.ts
+msgid "Saved mdbase views are unavailable for this collection."
+msgstr ""
+
 #: apps/reader/src/ReaderHeader.tsx
 msgid "Saved on this device; waiting for sync"
+msgstr ""
+
+#. placeholder {0}: problemMessage(reason)
+#: apps/extension/src/use-extension-capture.ts
+msgid "Saved safely. Could not refresh highlights on this page: {0}. Retry refreshing highlights; do not save again."
 msgstr ""
 
 #: apps/reader/src/SourceNoteEditor.tsx
@@ -2910,6 +6360,42 @@ msgctxt "LibraryWorkspace formatFilterOptions"
 msgid "Saved web page"
 msgstr ""
 
+#: apps/reader/src/library-lenses.ts
+msgctxt "library lenses"
+msgid "Saved web pages"
+msgstr ""
+
+#: apps/extension/src/NotePanel.tsx
+msgid "Saved with the source. Keep writing here after saving, or in Reader."
+msgstr ""
+
+#: apps/extension/src/ConnectionPanel.tsx
+msgid "Saved. This page could not be updated."
+msgstr ""
+
+#: apps/extension/src/CaptureApp.tsx
+msgid "Saving source record…"
+msgstr ""
+
+#: apps/reader/src/source-addition-flow.ts
+msgctxt "source addition flow"
+msgid "Saving the PDF…"
+msgstr ""
+
+#: apps/reader/src/source-addition-flow.ts
+msgid "Saving the source…"
+msgstr ""
+
+#. placeholder {0}: collection.name
+#: apps/extension/src/ExtensionHeader.tsx
+msgid "Saving to {0}. Change collection"
+msgstr ""
+
+#: apps/extension/src/CaptureApp.tsx
+#: apps/extension/src/NotePanel.tsx
+#: apps/extension/src/PostPicker.tsx
+#: apps/extension/src/SaveBar.tsx
+#: apps/extension/src/SavedHighlights.tsx
 #: apps/reader/src/AnnotationEditor.tsx
 msgid "Saving…"
 msgstr ""
@@ -2944,15 +6430,53 @@ msgctxt "SourceNoteEditor status or action"
 msgid "Saving…"
 msgstr ""
 
+#: apps/reader/src/citation-labels.ts
+msgctxt "CSL bibliographic field or item type"
+msgid "Scale"
+msgstr ""
+
 #: apps/reader/src/ImportInput.tsx
 msgid "Scan Readwise library"
+msgstr ""
+
+#. placeholder {0}: result.length.toLocaleString(i18n.locale)
+#: packages/migration/src/readwise-client.ts
+msgid "Scanned {0} Readwise records…"
 msgstr ""
 
 #: apps/reader/src/ImportInput.tsx
 msgid "Scanning reads Reader metadata, saved article HTML and every Readwise highlight, including Kindle, Apple Books, Instapaper and other classic sources (those import as metadata and highlights, without the book text). Original PDFs and EPUBs download only after confirmation. Readwise limits request rates, so large libraries take several minutes."
 msgstr ""
 
+#: packages/migration/src/readwise.ts
+msgid "Scanning Readwise metadata and saved HTML; no collection writes…"
+msgstr ""
+
+#: apps/reader/src/annotation-body-content.ts
+msgid "Screenshot highlight"
+msgstr ""
+
+#: apps/reader/src/citation-labels.ts
+msgctxt "CSL bibliographic field or item type"
+msgid "Script writer"
+msgstr ""
+
+#: packages/renderer-pdf/src/pdf-translations.ts
+msgctxt "PDF viewer page"
+msgid "Scroll Layout"
+msgstr ""
+
 #: apps/reader/src/ReaderHeader.tsx
+msgid "Search"
+msgstr ""
+
+#: packages/renderer-pdf/src/pdf-translations.ts
+msgctxt "PDF viewer panel"
+msgid "Search"
+msgstr ""
+
+#: packages/renderer-pdf/src/pdf-translations.ts
+msgctxt "PDF viewer search"
 msgid "Search"
 msgstr ""
 
@@ -2999,6 +6523,10 @@ msgstr ""
 msgid "Search this view"
 msgstr ""
 
+#: apps/reader/src/use-open-document-search.ts
+msgid "Searched {loaded} of {readable} readable sources."
+msgstr ""
+
 #: apps/reader/src/LibraryTextSearch.tsx
 msgid "Searches literature notes and annotation text, not PDF, EPUB or saved-page contents."
 msgstr ""
@@ -3009,6 +6537,21 @@ msgstr ""
 
 #: apps/reader/src/CitationTypedFieldEditors.tsx
 msgid "Season"
+msgstr ""
+
+#: apps/reader/src/citation-labels.ts
+msgctxt "CSL date field"
+msgid "Season"
+msgstr ""
+
+#: apps/reader/src/citation-labels.ts
+msgctxt "CSL bibliographic field or item type"
+msgid "Section"
+msgstr ""
+
+#: packages/renderer-pdf/src/pdf-translations.ts
+msgctxt "PDF viewer document"
+msgid "Security"
 msgstr ""
 
 #. placeholder {0}: source.title
@@ -3034,6 +6577,14 @@ msgctxt "DocumentContextualToolbar interface"
 msgid "Select area"
 msgstr ""
 
+#: apps/reader/src/import-controller.ts
+msgid "Select one complete bundle folder with unique file paths."
+msgstr ""
+
+#: apps/extension/src/CaptureApp.tsx
+msgid "Select text on the page to highlight it."
+msgstr ""
+
 #: apps/reader/src/AnnotationList.tsx
 msgid "Select text or an area in the document, or add a comment or bookmark above."
 msgstr ""
@@ -3041,6 +6592,10 @@ msgstr ""
 #: apps/reader/src/LibraryAnnotationBars.tsx
 msgctxt "LibraryAnnotationBars interface"
 msgid "Selected annotations"
+msgstr ""
+
+#: apps/extension/src/HighlightFields.tsx
+msgid "Selected passage"
 msgstr ""
 
 #: apps/reader/src/AnnotationComposer.tsx
@@ -3060,6 +6615,11 @@ msgstr ""
 #: apps/reader/src/DisplayMenu.tsx
 msgctxt "DisplayMenu interface"
 msgid "Selecting text"
+msgstr ""
+
+#: apps/reader/src/citation-labels.ts
+msgctxt "CSL bibliographic field or item type"
+msgid "Series creator"
 msgstr ""
 
 #: apps/reader/src/DisplayMenu.tsx
@@ -3084,8 +6644,30 @@ msgctxt "LibraryBulkBar interface"
 msgid "Set status…"
 msgstr ""
 
+#: apps/extension/src/connection-view.ts
+#: apps/extension/src/ConnectionPanel.tsx
+msgid "Set up collection"
+msgstr ""
+
+#: apps/extension/src/connection-view.ts
+msgid "Set up this collection for Reader before saving."
+msgstr ""
+
 #: apps/reader/src/ConnectReader.tsx
 msgid "Set up this reading collection"
+msgstr ""
+
+#: apps/extension/src/OptionsApp.tsx
+msgid "Settings"
+msgstr ""
+
+#: apps/extension/src/ExtensionHeader.tsx
+msgid "Settings and shortcuts"
+msgstr ""
+
+#: apps/reader/src/citation-labels.ts
+msgctxt "CSL bibliographic field or item type"
+msgid "ShortTitle"
 msgstr ""
 
 #: apps/reader/src/AnnotationList.tsx
@@ -3110,12 +6692,44 @@ msgstr ""
 msgid "Show more results"
 msgstr ""
 
+#: apps/extension/src/SavedHighlights.tsx
+msgid "Show on the page"
+msgstr ""
+
 #: apps/reader/src/AnnotationList.tsx
 msgid "Show selected annotation (clear filters)"
 msgstr ""
 
+#: packages/renderer-pdf/src/pdf-translations.ts
+msgctxt "PDF viewer panel"
+msgid "Sidebar"
+msgstr ""
+
 #: apps/reader/src/DisplayMenu.tsx
 msgid "Sidebar while reading"
+msgstr ""
+
+#: apps/extension/src/connection-view.ts
+#: apps/extension/src/ConnectionPanel.tsx
+msgid "Sign in"
+msgstr ""
+
+#: apps/reader/src/native-signin-ui.ts
+msgctxt "Native sign-in"
+msgid "Sign in"
+msgstr ""
+
+#: apps/extension/src/connection-view.ts
+msgid "Sign in to mdbase before saving."
+msgstr ""
+
+#: apps/reader/src/native-signin-ui.ts
+msgid "Sign in with your mdbase account to sync {appName} across your devices."
+msgstr ""
+
+#: apps/reader/src/native-signin-ui.ts
+msgctxt "Native sign-in"
+msgid "Sign out"
 msgstr ""
 
 #: apps/reader/src/NativeSignIn.tsx
@@ -3123,9 +6737,65 @@ msgctxt "NativeSignIn interface"
 msgid "Sign-in status"
 msgstr ""
 
+#: apps/reader/src/native-signin-ui.ts
+msgctxt "Native sign-in"
+msgid "Sign-in was interrupted. Please try again."
+msgstr ""
+
+#: apps/reader/src/connect-popup.ts
+msgid "Sign-in window closed."
+msgstr ""
+
+#. placeholder {0}: signIn.accountEmail
+#: apps/extension/src/connection-view.ts
+msgid "Signed in as {0}"
+msgstr ""
+
+#. placeholder {0}: signIn.accountLogin
+#: apps/extension/src/connection-view.ts
+msgid "Signed in as {0} on GitHub"
+msgstr ""
+
+#: apps/reader/src/native-signin-ui.ts
+msgid "Signed in as {email}"
+msgstr ""
+
+#. placeholder {0}: selected.displayName
+#: apps/reader/src/native-signin-ui.ts
+msgid "Signed in. Opening {0}…"
+msgstr ""
+
+#: packages/renderer-pdf/src/pdf-translations.ts
+msgctxt "PDF viewer page"
+msgid "Single Page"
+msgstr ""
+
+#: apps/extension/src/CaptureApp.tsx
+msgid "Site access is limited in Chrome, so Reader cannot follow your tabs."
+msgstr ""
+
+#: apps/extension/src/SiteAccessStatus.tsx
+msgid "Site access is limited in Chrome, so the side panel cannot follow your tabs and saved pages are not marked. Press the toolbar button on a page to use Reader there."
+msgstr ""
+
 #: apps/reader/src/DisplayMenu.tsx
 msgctxt "DisplayMenu interface"
 msgid "Smaller text"
+msgstr ""
+
+#: apps/reader/src/citation-labels.ts
+msgctxt "CSL bibliographic field or item type"
+msgid "Software"
+msgstr ""
+
+#: apps/reader/src/citation-form-model.ts
+msgctxt "CSL item type"
+msgid "Software"
+msgstr ""
+
+#: apps/reader/src/citation-labels.ts
+msgctxt "CSL bibliographic field or item type"
+msgid "Song"
 msgstr ""
 
 #: apps/reader/src/LibraryAnnotationToolbar.tsx
@@ -3165,6 +6835,26 @@ msgctxt "LibraryWorkspace interface"
 msgid "Sort field"
 msgstr ""
 
+#: apps/reader/src/annotation-columns.ts
+msgctxt "Annotation table column"
+msgid "Source"
+msgstr ""
+
+#: apps/extension/src/PanelTabs.tsx
+msgctxt "Bibliographic source"
+msgid "Source"
+msgstr ""
+
+#: apps/reader/src/citation-labels.ts
+msgctxt "CSL bibliographic field or item type"
+msgid "Source"
+msgstr ""
+
+#: apps/reader/src/dockview-side-panels.ts
+msgctxt "dockview side panels"
+msgid "Source"
+msgstr ""
+
 #: apps/reader/src/DockviewWorkspace.tsx
 msgctxt "DockviewWorkspace status or action"
 msgid "Source"
@@ -3180,8 +6870,47 @@ msgctxt "LibraryAnnotationToolbar interface"
 msgid "Source"
 msgstr ""
 
+#: apps/reader/src/source-note-references.ts
+msgctxt "source note references"
+msgid "Source"
+msgstr ""
+
+#: apps/reader/src/workspace-tab-display.ts
+msgctxt "workspace tab display"
+msgid "Source"
+msgstr ""
+
+#: packages/migration/src/readwise-client.ts
+msgid "Source file download failed. The host may not support browser access; use Readwise’s full-file export as a fallback."
+msgstr ""
+
+#. placeholder {0}: String(response.status)
+#: packages/migration/src/readwise-client.ts
+msgid "Source file download returned HTTP {0}. Retry to obtain a fresh download link."
+msgstr ""
+
+#: packages/migration/src/run.ts
+msgid "Source file was not committed."
+msgstr ""
+
 #: apps/reader/src/SourceNoteEditor.tsx
 msgid "Source literature note"
+msgstr ""
+
+#: apps/extension/src/NotePanel.tsx
+msgid "Source removed"
+msgstr ""
+
+#: apps/extension/src/NotePanel.tsx
+msgid "Source removed."
+msgstr ""
+
+#: apps/extension/src/CaptureApp.tsx
+msgid "Source saved in mdbase."
+msgstr ""
+
+#: apps/extension/src/ConnectionPanel.tsx
+msgid "Source saved. This action did not finish."
 msgstr ""
 
 #: apps/reader/src/MobileSourceViews.tsx
@@ -3195,6 +6924,12 @@ msgid "Source workspace"
 msgstr ""
 
 #: apps/reader/src/ImportReview.tsx
+#: apps/reader/src/reader-command-list.ts
+msgid "Sources"
+msgstr ""
+
+#: apps/reader/src/dockview-side-panels.ts
+msgctxt "dockview side panels"
 msgid "Sources"
 msgstr ""
 
@@ -3223,6 +6958,30 @@ msgctxt "CitationStructuredEditor status or action"
 msgid "Specialist"
 msgstr ""
 
+#: packages/renderer-pdf/src/pdf-translations.ts
+msgctxt "PDF viewer print"
+msgid "Specify pages"
+msgstr ""
+
+#: apps/reader/src/citation-labels.ts
+msgctxt "CSL bibliographic field or item type"
+msgid "Speech"
+msgstr ""
+
+#: packages/renderer-pdf/src/pdf-translations.ts
+msgctxt "PDF viewer page"
+msgid "Spread Mode"
+msgstr ""
+
+#: apps/reader/src/reader-command-list.ts
+msgid "Stack panes top and bottom"
+msgstr ""
+
+#: apps/reader/src/citation-labels.ts
+msgctxt "CSL bibliographic field or item type"
+msgid "Standard"
+msgstr ""
+
 #: apps/reader/src/DisplayMenu.tsx
 msgctxt "DisplayMenu interface"
 msgid "Standard"
@@ -3233,8 +6992,27 @@ msgctxt "CitationTypedFieldEditors interface"
 msgid "Start"
 msgstr ""
 
+#: packages/renderer-epub/src/epub-page-navigation.tsx
+msgid "Start of publication"
+msgstr ""
+
+#: apps/reader/src/citation-labels.ts
+msgctxt "CSL bibliographic field or item type"
+msgid "Static ordering"
+msgstr ""
+
 #: apps/reader/src/LibraryRowMenu.tsx
 #: apps/reader/src/LibraryWorkspace.tsx
+msgid "Status"
+msgstr ""
+
+#: apps/reader/src/citation-labels.ts
+msgctxt "CSL bibliographic field or item type"
+msgid "Status"
+msgstr ""
+
+#: apps/reader/src/library-columns.ts
+msgctxt "Library table column"
 msgid "Status"
 msgstr ""
 
@@ -3256,6 +7034,10 @@ msgstr ""
 msgid "Steps: {0} / {1} · Created: {2} · Kept: {3}"
 msgstr ""
 
+#: apps/extension/src/DiagnosticsPanel.tsx
+msgid "Stop and clear timings"
+msgstr ""
+
 #: apps/reader/src/SourceImportDialog.tsx
 msgctxt "SourceImportDialog interface"
 msgid "Stop import"
@@ -3265,13 +7047,49 @@ msgstr ""
 msgid "Stop safely"
 msgstr ""
 
+#: apps/reader/src/import-controller.ts
+msgid "Stopped"
+msgstr ""
+
+#: apps/reader/src/import-controller.ts
+msgid "Stopped. Already committed data is kept. Resume with the same input and destination; existing records will not be overwritten."
+msgstr ""
+
+#: packages/core/src/application/citation-citekey.ts
+msgid "Store the bare DOI rather than its https://doi.org/ URL."
+msgstr ""
+
+#: apps/extension/src/CitationPanel.tsx
+msgid "Stored citation"
+msgstr ""
+
 #: apps/reader/src/CitationPreview.tsx
 msgid "Style"
+msgstr ""
+
+#: apps/reader/src/citation-labels.ts
+msgctxt "CSL bibliographic field or item type"
+msgid "Submitted"
 msgstr ""
 
 #: apps/reader/src/CitationContributors.tsx
 msgctxt "CitationContributors interface"
 msgid "Suffix"
+msgstr ""
+
+#: apps/reader/src/citation-labels.ts
+msgctxt "CSL bibliographic field or item type"
+msgid "Suffix"
+msgstr ""
+
+#: apps/reader/src/citation-labels.ts
+msgctxt "CSL bibliographic field or item type"
+msgid "Supplement"
+msgstr ""
+
+#: packages/renderer-pdf/src/pdf-translations.ts
+msgctxt "PDF viewer emptyState"
+msgid "Supported format: PDF"
 msgstr ""
 
 #: apps/reader/src/CollectionMenu.tsx
@@ -3288,12 +7106,25 @@ msgstr ""
 msgid "Switch collection: {name}"
 msgstr ""
 
+#: apps/reader/src/collection-switching.ts
+msgid "Switch collections with unsaved changes? Save your edits first to avoid losing work."
+msgstr ""
+
+#: apps/reader/src/connection-recovery.ts
+msgid "Sync this collection on your computer before opening it."
+msgstr ""
+
 #: apps/reader/src/ReaderHeader.tsx
 msgid "Syncing…"
 msgstr ""
 
 #: apps/reader/src/DisplayMenu.tsx
 msgid "System"
+msgstr ""
+
+#: apps/extension/src/TagInput.tsx
+msgctxt "Keyboard key"
+msgid "Tab"
 msgstr ""
 
 #: apps/reader/src/LibraryWorkspace.tsx
@@ -3309,6 +7140,29 @@ msgstr ""
 #: apps/reader/src/LibraryAnnotationToolbar.tsx
 msgctxt "LibraryAnnotationToolbar interface"
 msgid "Tag"
+msgstr ""
+
+#: apps/reader/src/annotation-columns.ts
+msgctxt "Annotation table column"
+msgid "Tags"
+msgstr ""
+
+#: apps/reader/src/library-columns.ts
+msgctxt "Library table column"
+msgid "Tags"
+msgstr ""
+
+#: apps/extension/src/HighlightFields.tsx
+#: apps/extension/src/NotePanel.tsx
+msgid "Tags <0>(comma-separated, optional)</0>"
+msgstr ""
+
+#: apps/extension/src/NotePanel.tsx
+msgid "Tags <0>(comma-separated)</0>"
+msgstr ""
+
+#: apps/extension/src/ConnectionPanel.tsx
+msgid "Technical details"
 msgstr ""
 
 #: apps/reader/src/CitationTypedFieldEditors.tsx
@@ -3330,6 +7184,10 @@ msgstr ""
 msgid "Text and display"
 msgstr ""
 
+#: packages/core/src/domain/selector.ts
+msgid "Text positions must use non-negative integer offsets with end at or after start."
+msgstr ""
+
 #: apps/reader/src/LibraryTextSearch.tsx
 msgid "Text search failed. Change the query to retry."
 msgstr ""
@@ -3342,6 +7200,18 @@ msgstr ""
 msgid "Text size"
 msgstr ""
 
+#: apps/reader/src/selection-copy.ts
+msgid "The browser refused to copy."
+msgstr ""
+
+#: apps/reader/src/build-source-export.ts
+msgid "The canonical records were preserved. Review these incomplete derived outputs:"
+msgstr ""
+
+#: apps/extension/src/use-extension-capture.ts
+msgid "The chosen post is not loaded anymore."
+msgstr ""
+
 #: apps/reader/src/SourceDetails.tsx
 msgid "The citation has different details."
 msgstr ""
@@ -3350,12 +7220,53 @@ msgstr ""
 msgid "The citation is missing details recorded in your library: {missingDetails}."
 msgstr ""
 
+#. placeholder {0}: messageOf(reason)
+#: apps/reader/src/source-addition-flow.ts
+msgid "The citation was not stored: {0} Add it from the citation panel."
+msgstr ""
+
+#. placeholder {0}: reason instanceof Error ? reason.message : String(reason)
+#: apps/extension/src/save-capture.ts
+msgid "The citation was not stored: {0}. Add it from the source's citation panel in Reader."
+msgstr ""
+
+#. placeholder {0}: citation.id
+#. placeholder {1}: collision.title
+#: packages/core/src/application/save-source-citation.ts
+msgid "The citekey @{0} is already used by “{1}”."
+msgstr ""
+
+#. placeholder {0}: source.citation.id
+#: packages/core/src/application/build-csl-bibliography.ts
+msgid "The citekey @{0} is not unique."
+msgstr ""
+
 #: apps/reader/src/SourceNoteEditor.tsx
 msgid "The collection changed while you were editing. Review the conflict to continue."
 msgstr ""
 
+#: apps/extension/src/NotePanel.tsx
+msgid "The collection did not accept the note. Your text is kept."
+msgstr ""
+
+#: apps/extension/src/connection-view.ts
+msgid "The connection to this collection has changed. Choose the collection again."
+msgstr ""
+
 #: apps/reader/src/AnnotationImage.tsx
 msgid "The embedded annotation asset is not an image."
+msgstr ""
+
+#: packages/renderer-epub/src/epub-resource-store.ts
+msgid "The EPUB resource layer could not take control of this Reader tab."
+msgstr ""
+
+#: apps/capacitor/src/capacitor-platform.ts
+msgid "The export could not be encoded."
+msgstr ""
+
+#: apps/reader/src/annotation-navigation.ts
+msgid "The file has changed, and this annotation's position cannot be verified in the current document. The annotation is still saved."
 msgstr ""
 
 #: apps/reader/src/LibraryAnnotations.tsx
@@ -3374,8 +7285,17 @@ msgstr ""
 msgid "The interface preview includes one sample document: The Principles of Psychology."
 msgstr ""
 
+#: packages/renderer-html/src/html-palette.ts
+#: packages/renderer-html/src/html-runtime.ts
+msgid "The isolated HTML document is unavailable."
+msgstr ""
+
 #: apps/reader/src/ImportReview.tsx
 msgid "The job is bound to its confirmed collection. Switching collections cannot redirect it. Keep this tab open; after a reload, reselect the same bundle (or reconnect Readwise), choose the same collection, and scan again to resume."
+msgstr ""
+
+#: apps/reader/src/citation-editor-model.ts
+msgid "The JSON could not be read."
 msgstr ""
 
 #: packages/i18n/src/react.tsx
@@ -3394,8 +7314,25 @@ msgstr ""
 msgid "The linked source is not available in this collection. It may have been removed or your access may have changed."
 msgstr ""
 
+#: packages/core/src/application/create-annotation.ts
+msgid "The loaded annotation source no longer matches."
+msgstr ""
+
 #: apps/reader/src/SourceImportDialog.tsx
 msgid "The original file stays intact in your collection."
+msgstr ""
+
+#: apps/extension/src/use-extension-capture.ts
+msgid "The page is not ready. Reopen Reader on this page before saving."
+msgstr ""
+
+#: packages/renderer-pdf/src/pdf-translations.ts
+msgctxt "PDF viewer passwordPrompt"
+msgid "The password you entered was incorrect. Please try again."
+msgstr ""
+
+#: apps/extension/src/capture-errors.ts
+msgid "The post is not loaded. Scroll it into view and try again."
 msgstr ""
 
 #: apps/reader/src/preview.tsx
@@ -3410,8 +7347,84 @@ msgstr ""
 msgid "The preview source no longer exists."
 msgstr ""
 
+#: packages/core/src/application/import-source-file.ts
+msgid "The readable page and immutable archive need distinct filenames."
+msgstr ""
+
+#: apps/extension/src/save-capture.ts
+msgid "The recovered highlight belongs to a different source. Review it before retrying; no duplicate was created."
+msgstr ""
+
+#: apps/extension/src/save-capture.ts
+msgid "The saved document changed. Open the saved copy in Reader; no highlight was created."
+msgstr ""
+
+#: apps/extension/src/save-capture.ts
+msgid "The saved highlight recovery identity is invalid. No duplicate highlight was created."
+msgstr ""
+
+#: apps/extension/src/save-capture.ts
+msgid "The saved source is no longer available. Your highlight has not been saved."
+msgstr ""
+
 #: apps/reader/src/ConnectReader.tsx
 msgid "The selected collection is no longer available."
+msgstr ""
+
+#: packages/core/src/application/create-annotation.ts
+msgid "The selected document does not belong to this source."
+msgstr ""
+
+#: packages/core/src/application/import-source-file.ts
+msgid "The selected file is empty."
+msgstr ""
+
+#: packages/core/src/application/source-import-values.ts
+msgid "The selected file needs a valid filename."
+msgstr ""
+
+#: apps/extension/src/capture-errors.ts
+msgid "The selected passage is ambiguous inside this post. Select a longer passage."
+msgstr ""
+
+#: apps/extension/src/SiteAccessStatus.tsx
+msgid "The side panel follows the tab you are on, and pages you have saved show a mark and your highlights. Reader looks up each page’s address in your selected collection and reads page text only to draw your highlights."
+msgstr ""
+
+#: packages/core/src/application/source-import-values.ts
+msgid "The source needs a title."
+msgstr ""
+
+#: apps/reader/src/source-draft-session.ts
+msgid "The source note changed before saving."
+msgstr ""
+
+#: packages/core/src/application/transclude-annotation.ts
+msgid "The source note disappeared after its annotation was inserted."
+msgstr ""
+
+#: packages/core/src/application/source-import-values.ts
+msgid "The source URL is invalid."
+msgstr ""
+
+#: packages/core/src/application/source-import-values.ts
+msgid "The source URL must be a public web address."
+msgstr ""
+
+#: apps/extension/src/page-annotations.ts
+msgid "The tab has navigated to another page. Reopen Reader’s extension on that page."
+msgstr ""
+
+#: apps/extension/src/capture-errors.ts
+msgid "The tab navigated away."
+msgstr ""
+
+#: apps/reader/src/connect-workspace.ts
+msgid "The view was saved, but Reader could not reopen it."
+msgstr ""
+
+#: apps/extension/src/OptionsApp.tsx
+msgid "Theme"
 msgstr ""
 
 #: apps/reader/src/DisplayMenu.tsx
@@ -3419,16 +7432,136 @@ msgctxt "DisplayMenu interface"
 msgid "Theme"
 msgstr ""
 
+#. placeholder {0}: duplicate.title
+#: packages/core/src/application/import-source-file.ts
+#: packages/core/src/application/source-records.ts
+msgid "These exact bytes are already stored in “{0}”."
+msgstr ""
+
 #: apps/reader/src/AnnotationEditor.tsx
 msgid "These notes embed it and will show a broken embed:"
+msgstr ""
+
+#: apps/reader/src/citation-labels.ts
+msgctxt "CSL bibliographic field or item type"
+msgid "Thesis"
+msgstr ""
+
+#: apps/reader/src/citation-form-model.ts
+msgctxt "CSL item type"
+msgid "Thesis"
 msgstr ""
 
 #: apps/reader/src/AnnotationEditor.tsx
 msgid "This annotation changed elsewhere. Your version is kept until you choose."
 msgstr ""
 
+#: packages/core/src/application/delete-annotation.ts
+#: packages/core/src/application/update-annotation-body.ts
+msgid "This annotation does not have a canonical path and revision."
+msgstr ""
+
+#: apps/reader/src/annotation-navigation.ts
+msgid "This annotation has no supported passage anchor. Its text and original metadata are preserved."
+msgstr ""
+
+#: apps/extension/src/capture-errors.ts
+msgid "This browser cannot display highlights. Open the saved copy in Reader."
+msgstr ""
+
+#: packages/renderer-epub/src/epub-resource-store.ts
+msgid "This browser cannot provide the isolated EPUB resource layer."
+msgstr ""
+
+#: apps/reader/src/connection-recovery.ts
+msgid "This browser no longer has the key for this collection’s connection. Reconnect to keep reading."
+msgstr ""
+
+#: apps/reader/src/citation-renderer.ts
+msgid "This citation cannot be formatted yet. Check its title, contributors, and date."
+msgstr ""
+
+#: apps/extension/src/ConnectionPanel.tsx
+msgid "This collection can’t be used right now"
+msgstr ""
+
+#: apps/extension/src/connection-view.ts
+msgid "This collection can't be used right now."
+msgstr ""
+
+#: apps/reader/src/use-document-attachment.ts
+#: packages/core/src/application/source-records.ts
+msgid "This collection cannot attach files to existing sources."
+msgstr ""
+
+#: apps/reader/src/connect-workspace.ts
+msgid "This collection cannot change reading status."
+msgstr ""
+
+#: apps/extension/src/use-source-note.ts
+msgid "This collection cannot edit source details from the extension."
+msgstr ""
+
 #: apps/reader/src/SourceDetails.tsx
 msgid "This collection cannot edit source details."
+msgstr ""
+
+#: apps/reader/src/connect-workspace.ts
+msgid "This collection cannot edit source fields."
+msgstr ""
+
+#: apps/reader/src/source-addition-flow.ts
+msgid "This collection cannot hold sources without a document."
+msgstr ""
+
+#: apps/reader/src/connect-workspace.ts
+#: apps/reader/src/use-library-annotations.ts
+msgid "This collection cannot list all annotations."
+msgstr ""
+
+#: apps/reader/src/connect-workspace.ts
+#: apps/reader/src/use-library-selection.ts
+msgid "This collection cannot remove sources."
+msgstr ""
+
+#: apps/reader/src/connection-recovery.ts
+msgid "This collection could not be found."
+msgstr ""
+
+#: apps/reader/src/connection-recovery.ts
+msgid "This collection has been deleted."
+msgstr ""
+
+#: apps/reader/src/connection-recovery.ts
+msgid "This collection has not been migrated yet."
+msgstr ""
+
+#: apps/extension/src/ConnectionPanel.tsx
+msgid "This collection hasn’t been checked yet. Check it before saving."
+msgstr ""
+
+#: apps/reader/src/connection-recovery.ts
+msgid "This collection is being migrated."
+msgstr ""
+
+#: apps/reader/src/connection-recovery.ts
+msgid "This collection is disconnected."
+msgstr ""
+
+#: apps/reader/src/connection-recovery.ts
+msgid "This collection is locked."
+msgstr ""
+
+#: apps/reader/src/connection-recovery.ts
+msgid "This collection is offline."
+msgstr ""
+
+#: apps/reader/src/connection-recovery.ts
+msgid "This collection is unavailable."
+msgstr ""
+
+#: apps/reader/src/connection-recovery.ts
+msgid "This collection needs approval on your computer."
 msgstr ""
 
 #: apps/reader/src/ImportDestination.tsx
@@ -3439,12 +7572,58 @@ msgstr ""
 msgid "This collection needs Reader’s source and annotation types. No library content will be imported until you confirm below."
 msgstr ""
 
+#: apps/extension/src/ConnectionPanel.tsx
+msgid "This collection needs you to approve mdbase Reader for it."
+msgstr ""
+
+#: packages/core/src/application/delete-annotation.ts
+msgid "This deletion confirmation no longer matches the annotation revision."
+msgstr ""
+
+#: packages/renderer-pdf/src/pdf-translations.ts
+msgctxt "PDF viewer outline"
+msgid "This document doesn't contain bookmarks"
+msgstr ""
+
+#: packages/renderer-pdf/src/pdf-translations.ts
+msgctxt "PDF viewer passwordPrompt"
+msgid "This document is password protected. Please enter the password to open it."
+msgstr ""
+
+#: apps/reader/src/source-draft-session.ts
+msgid "This draft could not be saved locally. Keep this tab open and retry saving to the collection."
+msgstr ""
+
+#: packages/migration/src/zotero-bundle.ts
+msgid "This export is incomplete. Export again in Zotero."
+msgstr ""
+
 #: apps/reader/src/ConnectedDocument.tsx
 msgid "This file has changed. Some saved annotation positions may need checking."
 msgstr ""
 
+#: packages/core/src/application/source-records.ts
+msgid "This file is already attached here."
+msgstr ""
+
+#: apps/extension/src/NotePanel.tsx
+msgid "This note changed elsewhere while you were writing."
+msgstr ""
+
 #: apps/reader/src/DraftRecoveryNotice.tsx
 msgid "This note changed in the collection"
+msgstr ""
+
+#: apps/extension/src/save-capture.ts
+msgid "This passage is missing or ambiguous in the saved copy. The source is saved, but the highlight is not. Open the saved copy in Reader to select it there."
+msgstr ""
+
+#: apps/extension/src/page-capture.ts
+msgid "This PDF is larger than {maximumMb} MB. Download it and import the file in Reader."
+msgstr ""
+
+#: packages/core/src/application/create-annotation.ts
+msgid "This Reader connection cannot store annotation images."
 msgstr ""
 
 #: apps/reader/src/CitationAdditionalFields.tsx
@@ -3455,6 +7634,14 @@ msgstr ""
 msgid "This removes the source from your library and deletes its source note. Saved files and annotation notes are kept in the collection. Links to this source will stop working. Reader cannot undo this."
 msgstr ""
 
+#: apps/extension/src/CitationPanel.tsx
+msgid "This source has no citation yet."
+msgstr ""
+
+#: apps/reader/src/use-document-attachment.ts
+msgid "This source has no DOI, arXiv ID or web address to search with."
+msgstr ""
+
 #: apps/reader/src/WorkspacePaneSupport.tsx
 msgid "This source has no file yet. Its literature note, annotations and citation are in the Source panel."
 msgstr ""
@@ -3463,16 +7650,61 @@ msgstr ""
 msgid "This source has no readable representation."
 msgstr ""
 
+#: apps/extension/src/save-capture.ts
+msgid "This source has no saved HTML reading copy. Open it in Reader to annotate."
+msgstr ""
+
 #: apps/reader/src/DocumentWorkspace.tsx
 msgid "This source is no longer available."
 msgstr ""
 
+#: apps/extension/src/use-source-note.ts
+#: apps/reader/src/connect-workspace.ts
 #: apps/reader/src/preview.tsx
 msgid "This source is no longer in the collection."
 msgstr ""
 
+#: apps/extension/src/source-note-session.ts
+msgid "This source is no longer in the collection. Your text is kept in this panel."
+msgstr ""
+
+#: apps/reader/src/source-draft-session.ts
+msgid "This source no longer exists. Your local draft has been retained."
+msgstr ""
+
+#: apps/reader/src/use-selected-source-resources.ts
+msgid "This source record no longer exists."
+msgstr ""
+
+#: apps/extension/src/save-capture.ts
+msgid "This thread part is absent from the saved copy. Open that copy in Reader; no highlight was created."
+msgstr ""
+
+#: packages/renderer-pdf/src/pdf-viewer-ui-schema.ts
+msgid "Thumbnails"
+msgstr ""
+
+#: packages/renderer-pdf/src/pdf-translations.ts
+msgctxt "PDF viewer panel"
+msgid "Thumbnails"
+msgstr ""
+
+#: apps/extension/src/NotePanel.tsx
+msgid "Title"
+msgstr ""
+
 #: apps/reader/src/CitationStructuredEditor.tsx
 msgctxt "CitationStructuredEditor interface"
+msgid "Title"
+msgstr ""
+
+#: apps/reader/src/citation-labels.ts
+msgctxt "CSL bibliographic field or item type"
+msgid "Title"
+msgstr ""
+
+#: apps/reader/src/library-columns.ts
+msgctxt "Library table column"
 msgid "Title"
 msgstr ""
 
@@ -3496,6 +7728,11 @@ msgctxt "SourceImportDialog interface"
 msgid "Title"
 msgstr ""
 
+#: apps/reader/src/citation-labels.ts
+msgctxt "CSL bibliographic field or item type"
+msgid "Title short"
+msgstr ""
+
 #: apps/reader/src/LibraryWorkspace.tsx
 msgid "Title, author or tag"
 msgstr ""
@@ -3504,10 +7741,19 @@ msgstr ""
 msgid "Title, work type, and citation key"
 msgstr ""
 
+#: apps/extension/src/WelcomeApp.tsx
+msgid "To save a selection straight away, right-click it and choose Save highlight, or press <0>{highlight}</0>."
+msgstr ""
+
+#: apps/extension/src/WelcomeApp.tsx
+msgid "To save a selection straight away, right-click it and choose Save highlight."
+msgstr ""
+
 #: apps/reader/src/LibraryCells.tsx
 msgid "Today"
 msgstr ""
 
+#: apps/reader/src/reader-command-list.ts
 #: apps/reader/src/ReaderHeader.tsx
 msgid "Toggle left sidebar"
 msgstr ""
@@ -3517,6 +7763,17 @@ msgstr ""
 msgid "Toggle left sidebar · {0}"
 msgstr ""
 
+#: packages/renderer-pdf/src/pdf-translations.ts
+msgctxt "PDF viewer pan"
+msgid "Toggle Pan Mode"
+msgstr ""
+
+#: packages/renderer-pdf/src/pdf-translations.ts
+msgctxt "PDF viewer pointer"
+msgid "Toggle Pointer Mode"
+msgstr ""
+
+#: apps/reader/src/reader-command-list.ts
 #: apps/reader/src/ReaderHeader.tsx
 msgid "Toggle right sidebar"
 msgstr ""
@@ -3526,13 +7783,32 @@ msgstr ""
 msgid "Toggle right sidebar · {0}"
 msgstr ""
 
+#: packages/renderer-pdf/src/pdf-translations.ts
+msgctxt "PDF viewer print"
+msgid "Total pages in document: {totalPages}"
+msgstr ""
+
 #: apps/reader/src/CitationContributors.tsx
+msgid "Translator"
+msgstr ""
+
+#: apps/reader/src/citation-labels.ts
+msgctxt "CSL bibliographic field or item type"
 msgid "Translator"
 msgstr ""
 
 #: apps/reader/src/CitationStructuredEditor.tsx
 msgctxt "CitationStructuredEditor interface"
 msgid "Translators"
+msgstr ""
+
+#: apps/reader/src/citation-labels.ts
+msgctxt "CSL bibliographic field or item type"
+msgid "Treaty"
+msgstr ""
+
+#: apps/extension/src/OptionsApp.tsx
+msgid "Troubleshooting"
 msgstr ""
 
 #: apps/reader/src/CitationTypedFieldEditors.tsx
@@ -3550,6 +7826,7 @@ msgstr ""
 msgid "Try a different search, or clear the filters."
 msgstr ""
 
+#: apps/extension/src/NotePanel.tsx
 #: apps/reader/src/ConnectionLayout.tsx
 #: apps/reader/src/LibraryAnnotationBars.tsx
 msgid "Try again"
@@ -3559,8 +7836,33 @@ msgstr ""
 msgid "Try this tab again"
 msgstr ""
 
+#: packages/renderer-pdf/src/pdf-translations.ts
+msgctxt "PDF viewer page"
+msgid "Two Page (Even)"
+msgstr ""
+
+#: packages/renderer-pdf/src/pdf-translations.ts
+msgctxt "PDF viewer page"
+msgid "Two Page (Odd)"
+msgstr ""
+
+#: apps/reader/src/annotation-columns.ts
+msgctxt "Annotation table column"
+msgid "Type"
+msgstr ""
+
+#: apps/extension/src/CitationCard.tsx
+msgctxt "Citation item type"
+msgid "Type"
+msgstr ""
+
 #: apps/reader/src/CitationStructuredEditor.tsx
 msgctxt "CitationStructuredEditor interface"
+msgid "Type"
+msgstr ""
+
+#: apps/reader/src/citation-labels.ts
+msgctxt "CSL bibliographic field or item type"
 msgid "Type"
 msgstr ""
 
@@ -3579,9 +7881,21 @@ msgctxt "DisplayMenu interface"
 msgid "Typeface"
 msgstr ""
 
+#: apps/reader/src/workspace-tab-display.ts
+msgid "Unavailable source"
+msgstr ""
+
 #: apps/reader/src/LibraryCards.tsx
 msgctxt "LibraryCards interface"
 msgid "Undated"
+msgstr ""
+
+#: apps/extension/src/CaptureApp.tsx
+msgid "Undo"
+msgstr ""
+
+#: packages/core/src/application/create-annotation.ts
+msgid "Unknown annotation creation failure"
 msgstr ""
 
 #: apps/reader/src/LibraryCards.tsx
@@ -3599,13 +7913,48 @@ msgctxt "NavigatorSections status or action"
 msgid "Unknown creator"
 msgstr ""
 
+#: apps/reader/src/reader-command-list.ts
+msgctxt "reader command list"
+msgid "Unknown creator"
+msgstr ""
+
+#: apps/reader/src/annotation-overview.ts
+msgid "Unknown source"
+msgstr ""
+
 #: apps/reader/src/LibraryAnnotationRow.tsx
 msgctxt "LibraryAnnotationRow interface"
 msgid "Unknown source"
 msgstr ""
 
+#: packages/migration/src/zotero-bundle.ts
+msgid "Unlisted file in bundle."
+msgstr ""
+
+#: apps/reader/src/dockview-menus.ts
+msgctxt "dockview menus"
+msgid "Unpin tab"
+msgstr ""
+
+#: apps/reader/src/library-lenses.ts
+msgctxt "library lenses"
+msgid "Unread inbox"
+msgstr ""
+
+#: packages/migration/src/zotero-validation.ts
+msgid "Unreported missing parent."
+msgstr ""
+
+#: packages/migration/src/model.ts
+msgid "Unsafe import path."
+msgstr ""
+
 #: apps/reader/src/AnnotationEditor.tsx
 msgid "Unsaved"
+msgstr ""
+
+#: apps/extension/src/NotePanel.tsx
+msgid "Unsaved changes"
 msgstr ""
 
 #: apps/reader/src/AnnotationCard.tsx
@@ -3623,8 +7972,41 @@ msgctxt "DockviewWorkspace interface"
 msgid "Unsaved changes"
 msgstr ""
 
+#: packages/migration/src/readwise.ts
+msgid "Unsaved Feed items excluded (choose “Include unsaved Feed items” to import)"
+msgstr ""
+
+#: packages/migration/src/zotero-pdf.ts
+msgid "Unsupported PDF page geometry."
+msgstr ""
+
+#: apps/reader/src/citation-form-model.ts
+msgid "Unsupported value"
+msgstr ""
+
+#: packages/migration/src/zotero-bundle.ts
+msgid "Unsupported Zotero bundle version."
+msgstr ""
+
+#: apps/reader/src/annotation-wiki-candidates.ts
+msgid "Untitled annotation"
+msgstr ""
+
+#: apps/reader/src/source-addition-flow.ts
+msgctxt "source addition flow"
+msgid "Untitled source"
+msgstr ""
+
 #: apps/reader/src/CitationSourceSync.tsx
 msgid "Update library details"
+msgstr ""
+
+#: apps/reader/src/connection-recovery.ts
+msgid "Update mdbase Connect on your computer to open this collection."
+msgstr ""
+
+#: apps/extension/src/connection-view.ts
+msgid "Update Reader"
 msgstr ""
 
 #: apps/reader/src/LibraryBulkBar.tsx
@@ -3638,8 +8020,13 @@ msgstr ""
 msgid "Updating {0} of {1}…"
 msgstr ""
 
+#: apps/extension/src/SavedHighlights.tsx
 #: apps/reader/src/CitationSourceSync.tsx
 msgid "Updating…"
+msgstr ""
+
+#: packages/migration/src/run-files.ts
+msgid "Uploaded checksum does not match the original file."
 msgstr ""
 
 #. placeholder {0}: String(progress.fileIndex)
@@ -3648,8 +8035,28 @@ msgstr ""
 msgid "Uploading file {0} of {1}"
 msgstr ""
 
+#: apps/extension/src/CaptureApp.tsx
+msgid "Uploading file {fileIndex} of {fileCount} · {percent}%"
+msgstr ""
+
+#: packages/migration/src/zotero-validation.ts
+msgid "URL attachment contains unexpected files."
+msgstr ""
+
 #: apps/reader/src/DraftRecoveryNotice.tsx
 msgid "Use collection version"
+msgstr ""
+
+#: apps/reader/src/reader-app-commands.ts
+msgid "Use comfortable density"
+msgstr ""
+
+#: apps/reader/src/reader-app-commands.ts
+msgid "Use compact density"
+msgstr ""
+
+#: apps/reader/src/reader-app-commands.ts
+msgid "Use dark theme"
 msgstr ""
 
 #. placeholder {0}: fieldLabel(difference.field)
@@ -3661,6 +8068,11 @@ msgstr ""
 msgid "Use it for this comment"
 msgstr ""
 
+#: apps/reader/src/reader-app-commands.ts
+msgid "Use light theme"
+msgstr ""
+
+#: apps/extension/src/NotePanel.tsx
 #: apps/reader/src/AnnotationEditor.tsx
 msgid "Use theirs"
 msgstr ""
@@ -3697,6 +8109,31 @@ msgstr ""
 msgid "Values"
 msgstr ""
 
+#. placeholder {0}: String(i + 1)
+#. placeholder {1}: String(payloads.length)
+#: packages/migration/src/zotero-bundle.ts
+msgid "Verifying file {0} of {1}…"
+msgstr ""
+
+#: apps/reader/src/import-controller.ts
+msgid "Verifying imported records"
+msgstr ""
+
+#: apps/reader/src/citation-labels.ts
+msgctxt "CSL bibliographic field or item type"
+msgid "Version"
+msgstr ""
+
+#: packages/renderer-pdf/src/pdf-translations.ts
+msgctxt "PDF viewer page"
+msgid "Vertical"
+msgstr ""
+
+#: packages/renderer-pdf/src/pdf-translations.ts
+msgctxt "PDF viewer menu"
+msgid "View Controls"
+msgstr ""
+
 #: apps/reader/src/LibraryAnnotationToolbar.tsx
 msgctxt "LibraryAnnotationToolbar interface"
 msgid "View options"
@@ -3721,13 +8158,79 @@ msgctxt "CitationStructuredEditor interface"
 msgid "Volume"
 msgstr ""
 
+#: apps/reader/src/citation-labels.ts
+msgctxt "CSL bibliographic field or item type"
+msgid "Volume"
+msgstr ""
+
+#: apps/reader/src/citation-labels.ts
+msgctxt "CSL bibliographic field or item type"
+msgid "Volume title"
+msgstr ""
+
+#: apps/reader/src/citation-labels.ts
+msgctxt "CSL bibliographic field or item type"
+msgid "Volume title short"
+msgstr ""
+
+#: apps/reader/src/native-signin-ui.ts
+msgctxt "Native sign-in"
+msgid "Waiting for approval in the mdbase tab…"
+msgstr ""
+
+#: apps/extension/src/CaptureApp.tsx
+msgid "Waiting for the active tab"
+msgstr ""
+
 #: apps/reader/src/LibraryCells.tsx
 msgctxt "source format"
 msgid "Web"
 msgstr ""
 
+#: apps/reader/src/workspace-tab-display.ts
+msgctxt "Source format badge for saved web pages"
+msgid "WEB"
+msgstr ""
+
+#: packages/core/src/application/source-import-values.ts
+msgid "Web capture provenance contains an invalid URL."
+msgstr ""
+
+#: packages/core/src/application/source-import-values.ts
+msgid "Web capture provenance must use public HTTPS URLs."
+msgstr ""
+
+#: packages/core/src/application/import-source-file.ts
+msgid "Web captures must contain an HTML document."
+msgstr ""
+
+#: apps/reader/src/citation-labels.ts
+msgctxt "CSL bibliographic field or item type"
+msgid "Web page"
+msgstr ""
+
+#: apps/reader/src/citation-form-model.ts
+msgctxt "CSL item type"
+msgid "Web page"
+msgstr ""
+
+#: apps/extension/src/shell-messages.ts
+#: apps/extension/src/WelcomeApp.tsx
+msgid "Welcome to mdbase Reader"
+msgstr ""
+
 #: apps/reader/src/CitationStructuredEditor.tsx
 msgid "Where and when the work appeared"
+msgstr ""
+
+#: apps/reader/src/annotation-wiki-candidates.ts
+msgctxt "annotation wiki candidates"
+msgid "Whole source"
+msgstr ""
+
+#: packages/renderer-pdf/src/pdf-translations.ts
+msgctxt "PDF viewer search"
+msgid "Whole word"
 msgstr ""
 
 #: apps/reader/src/AnnotationComposer.tsx
@@ -3744,16 +8247,77 @@ msgctxt "AnnotationList annotationFilterOptions"
 msgid "With commentary"
 msgstr ""
 
+#: apps/extension/src/WelcomeApp.tsx
+msgid "With the panel open, select text on the page and it appears there. Choose a colour to save it, adding a comment first if you like."
+msgstr ""
+
+#: apps/reader/src/reader-command-list.ts
+msgid "Workspace"
+msgstr ""
+
+#: apps/reader/src/citation-labels.ts
+msgctxt "CSL bibliographic field or item type"
+msgid "Year suffix"
+msgstr ""
+
+#: apps/extension/src/HighlightFields.tsx
+msgctxt "Highlight colour"
+msgid "yellow"
+msgstr ""
+
+#: apps/reader/src/citation-form-model.ts
+msgid "Yes"
+msgstr ""
+
+#: apps/reader/src/library-columns.ts
+msgctxt "library columns"
+msgid "Yes"
+msgstr ""
+
 #: apps/reader/src/LibraryCells.tsx
 msgid "Yesterday"
+msgstr ""
+
+#: apps/extension/src/WelcomeApp.tsx
+msgid "You can change the collection and shortcuts at any time in <0>Settings</0>."
 msgstr ""
 
 #: apps/reader/src/main.tsx
 msgid "You can close this window."
 msgstr ""
 
+#: packages/renderer-pdf/src/pdf-translations.ts
+msgctxt "PDF viewer emptyState"
+msgid "You can view multiple documents using tabs."
+msgstr ""
+
 #: apps/reader/src/AnnotationComposer.tsx
 msgid "You selected other text."
+msgstr ""
+
+#: apps/reader/src/connection-recovery.ts
+msgid "Your access to this collection has been removed."
+msgstr ""
+
+#: apps/reader/src/connect-popup.ts
+msgid "Your browser blocked the sign-in tab."
+msgstr ""
+
+#: apps/reader/src/native-signin-ui.ts
+msgctxt "Native sign-in"
+msgid "Your browser blocked the sign-in tab."
+msgstr ""
+
+#: apps/extension/src/source-note-session.ts
+msgid "Your browser could not keep a copy of this note. Keep the panel open until it is saved."
+msgstr ""
+
+#: apps/extension/src/ConnectionPanel.tsx
+msgid "your collection"
+msgstr ""
+
+#: apps/reader/src/use-annotation-view.ts
+msgid "Your collection already has it: {path}."
 msgstr ""
 
 #: apps/reader/src/ConnectReader.tsx
@@ -3773,8 +8337,16 @@ msgstr ""
 msgid "Your library is empty"
 msgstr ""
 
+#: apps/extension/src/ConnectionPanel.tsx
+msgid "Your selection and note are kept for this browser session, even if you close the panel."
+msgstr ""
+
 #: apps/reader/src/ImportPageView.tsx
 msgid "Your sources, notes and files, in a collection you control. Preview first. Nothing is imported until you confirm the destination."
+msgstr ""
+
+#: apps/extension/src/CaptureApp.tsx
+msgid "Your unsaved text for the previous page is kept for this browser session."
 msgstr ""
 
 #: apps/reader/src/CitationStructuredEditor.tsx
@@ -3783,4 +8355,33 @@ msgstr ""
 
 #: apps/reader/src/CitationTypedFieldEditors.tsx
 msgid "YYYY, YYYY-MM, or YYYY-MM-DD"
+msgstr ""
+
+#: packages/renderer-pdf/src/pdf-translations.ts
+msgctxt "PDF viewer menu"
+msgid "Zoom Controls"
+msgstr ""
+
+#: packages/renderer-pdf/src/pdf-translations.ts
+msgctxt "PDF viewer zoom"
+msgid "Zoom In"
+msgstr ""
+
+#: packages/renderer-pdf/src/pdf-translations.ts
+msgctxt "PDF viewer zoom"
+msgid "Zoom Level ({level}%)"
+msgstr ""
+
+#: packages/renderer-pdf/src/pdf-translations.ts
+msgctxt "PDF viewer zoom"
+msgid "Zoom Menu"
+msgstr ""
+
+#: packages/renderer-pdf/src/pdf-translations.ts
+msgctxt "PDF viewer zoom"
+msgid "Zoom Out"
+msgstr ""
+
+#: packages/migration/src/zotero-pdf.ts
+msgid "Zotero PDF page is unavailable."
 msgstr ""

@@ -9,6 +9,8 @@ export type CslItem = Readonly<Record<string, unknown>> & {
 };
 
 export interface CslValidationProblem {
+  /** Stable semantic identity; display prose must never drive import decisions. */
+  readonly code?: "unknown_csl_field";
   readonly path: string;
   readonly message: string;
 }

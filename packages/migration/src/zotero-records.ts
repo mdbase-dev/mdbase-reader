@@ -1,3 +1,4 @@
+import { t } from "@lingui/core/macro";
 import { validateCslItem } from "@mdbase-reader/core";
 
 import {
@@ -88,7 +89,7 @@ export function enrichZoteroSource(
     if (csl) {
       source.fields["csl"] = csl;
     } else {
-      warnings.push(`CSL retained in native data but needs review: ${row.key}`);
+      warnings.push(t`CSL retained in native data but needs review: ${row.key}`);
     }
   }
 }
@@ -99,7 +100,7 @@ export function normalizeZoteroCsl(csl: Fields): Fields | null {
   }
   const extensions = new Map<string, Fields[string]>();
   for (const problem of checked.problems) {
-    if (!problem.message.startsWith("is not a CSL 1.0 field")) {
+    if (problem.code !== "unknown_csl_field") {
       return null;
     }
     const field = problem.path.slice(4);

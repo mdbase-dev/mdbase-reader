@@ -111,7 +111,9 @@ export function useOpenDocumentSearch(
           setPending(false);
           setProblem(
             failures
-              ? t`${plural(failures, { one: "# loaded document could not be indexed", other: "# loaded documents could not be indexed" })}. Reopen document search to retry.`
+              ? t({
+                  message: `${plural(failures, { one: "# loaded document could not be indexed", other: "# loaded documents could not be indexed" })}. Reopen document search to retry.`,
+                })
               : null,
           );
         }

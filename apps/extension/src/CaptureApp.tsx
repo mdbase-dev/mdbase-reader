@@ -85,7 +85,7 @@ export function CaptureApp({
           <h1>{pageTitle(controller)}</h1>
           <p>
             {controller.capture
-              ? `${new URL(controller.capture.canonicalUrl).hostname}${controller.capture.kind === "pdf" ? " · PDF" : ""}`
+              ? `${new URL(controller.capture.canonicalUrl).hostname}${controller.capture.kind === "pdf" ? t` · PDF` : ""}`
               : t`Waiting for the active tab`}
           </p>
           <SaveBar controller={controller} />

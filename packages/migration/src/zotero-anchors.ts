@@ -1,3 +1,4 @@
+import { t } from "@lingui/core/macro";
 import { format, object, text, type MigrationPlan } from "./model.js";
 import { convertZoteroPdfPosition, readPdfGeometry, type PdfPageGeometry } from "./zotero-pdf.js";
 
@@ -36,7 +37,7 @@ export async function addZoteroPdfTargets(
     const pages = geometry.get(attachment.path);
     try {
       if (!pages) {
-        throw new Error("PDF geometry unavailable.");
+        throw new Error(t({ message: "PDF geometry unavailable." }));
       }
       object(annotation.fields["target"])["pdf"] = convertZoteroPdfPosition(
         row.zotero["annotationPosition"],
@@ -49,6 +50,6 @@ export async function addZoteroPdfTargets(
     }
   }
   plan.warnings.push(
-    `${String(converted)} Zotero PDF annotations have converted page/rectangle anchors. ${String(unresolved)} retain native selectors only (missing/unreadable PDFs, unsupported geometry, ink, or non-PDF annotations). Image crops are not generated.`,
+    t`${String(converted)} Zotero PDF annotations have converted page/rectangle anchors. ${String(unresolved)} retain native selectors only (missing/unreadable PDFs, unsupported geometry, ink, or non-PDF annotations). Image crops are not generated.`,
   );
 }

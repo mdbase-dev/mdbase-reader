@@ -1,3 +1,4 @@
+import { t } from "@lingui/core/macro";
 import {
   array,
   identity,
@@ -48,7 +49,11 @@ export async function readwiseAnnotations(
       continue;
     }
     if (!source) {
-      skipped.add("Reader highlights on documents outside this import (for example unsaved Feed)");
+      skipped.add(
+        t({
+          message: "Reader highlights on documents outside this import (for example unsaved Feed)",
+        }),
+      );
       continue;
     }
     await unmatchedHighlight(join, source, row);
@@ -60,7 +65,7 @@ export async function readwiseAnnotations(
 async function joinBook(join: Join, book: Fields): Promise<boolean> {
   const highlights = array(book["highlights"] ?? []).length;
   if (book["is_deleted"] === true) {
-    join.skipped.add("Deleted Readwise books skipped");
+    join.skipped.add(t`Deleted Readwise books skipped`);
     return false;
   }
   const external = text(book["external_id"]);
@@ -70,9 +75,9 @@ async function joinBook(join: Join, book: Fields): Promise<boolean> {
     const source = join.sources.get(external);
     if (!source) {
       join.skipped.add(
-        "Readwise books whose Reader document is outside this import (unsaved Feed, or removed from Reader)",
+        t`Readwise books whose Reader document is outside this import (unsaved Feed, or removed from Reader)`,
       );
-      join.skipped.add("Highlights on those books not imported", highlights);
+      join.skipped.add(t`Highlights on those books not imported`, highlights);
       // Their Reader copies are already counted here; do not count them again below.
       for (const value of array(book["highlights"] ?? [])) {
         join.done.add(text(object(value)["external_id"]));
@@ -84,8 +89,8 @@ async function joinBook(join: Join, book: Fields): Promise<boolean> {
   }
   const key = classicKey(book);
   if (!key) {
-    join.skipped.add("Readwise books without an ID skipped");
-    join.skipped.add("Highlights on those books not imported", highlights);
+    join.skipped.add(t`Readwise books without an ID skipped`);
+    join.skipped.add(t`Highlights on those books not imported`, highlights);
     return false;
   }
   let source = join.sources.get(key);
@@ -112,16 +117,16 @@ async function joinBook(join: Join, book: Fields): Promise<boolean> {
 }
 function skipReason(highlight: Fields): string {
   if (highlight["is_deleted"] === true) {
-    return "Deleted Readwise highlights skipped";
+    return t`Deleted Readwise highlights skipped`;
   }
   if (highlight["is_discard"] === true) {
-    return "Discarded Readwise highlights skipped (kept in the native archive)";
+    return t`Discarded Readwise highlights skipped (kept in the native archive)`;
   }
   if (
     !scalar(highlight["id"]) ||
     (!text(highlight["text"]).trim() && !text(highlight["note"]).trim())
   ) {
-    return "Readwise highlights without an ID or any text skipped";
+    return t`Readwise highlights without an ID or any text skipped`;
   }
   return "";
 }
@@ -167,13 +172,13 @@ async function unmatchedHighlight(join: Join, source: MigrationSource, row: Fiel
   if (same) {
     join.aliases.set(key, same.key);
     plan.warnings.push(
-      `Readwise highlight identity could not be reconciled; matching quote retained once, native record archived: ${key}`,
+      t`Readwise highlight identity could not be reconciled; matching quote retained once, native record archived: ${key}`,
     );
     return;
   }
   if (!quote) {
     plan.warnings.push(
-      `Highlight has no exposed full quote; retained as an unresolved note: ${key}`,
+      t`Highlight has no exposed full quote; retained as an unresolved note: ${key}`,
     );
   }
   join.done.add(key);
@@ -191,7 +196,7 @@ async function notes(join: Join, rows: Fields[]): Promise<void> {
     const parent = native.get(parentId);
     const source = sources.get(parentId) ?? sources.get(text(parent?.["parent_id"]));
     if (!source) {
-      join.skipped.add("Reader notes on documents outside this import (for example unsaved Feed)");
+      join.skipped.add(t`Reader notes on documents outside this import (for example unsaved Feed)`);
       continue;
     }
     const note = plain(text(row["html_content"])) || text(row["content"]) || text(row["notes"]);

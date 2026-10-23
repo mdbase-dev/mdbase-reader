@@ -1,3 +1,4 @@
+import { t } from "@lingui/core/macro";
 import {
   array,
   format,
@@ -21,7 +22,7 @@ import type { ZoteroBundle } from "./zotero-bundle.js";
 export async function planZotero(bundle: ZoteroBundle): Promise<MigrationPlan> {
   const library = text(object(bundle.manifest["source"])["library"]);
   if (!library) {
-    throw new Error("Bundle has no library identity.");
+    throw new Error(t({ message: "Bundle has no library identity." }));
   }
   const namespace = `zotero:${library}`;
   const plan: MigrationPlan = {
@@ -64,7 +65,7 @@ export async function planZotero(bundle: ZoteroBundle): Promise<MigrationPlan> {
     const attachment = bundle.rows.attachments.find((a) => a.key === row.zotero["parentItem"]);
     const owner = attachment && owners.get(attachment.key);
     if (!attachment || !owner) {
-      throw new Error("Missing annotation owner.");
+      throw new Error(t({ message: "Missing annotation owner." }));
     }
     plan.annotations.push(await zoteroAnnotation(namespace, row, owner, attachment, fallback));
   }
@@ -72,11 +73,17 @@ export async function planZotero(bundle: ZoteroBundle): Promise<MigrationPlan> {
   await planFiles(bundle, plan);
   if (bundle.rows.attachments.some((a) => a.zotero["contentType"] === "text/html")) {
     plan.warnings.push(
-      "HTML snapshot resources are preserved as files; relative assets may not display in Reader yet.",
+      t({
+        message:
+          "HTML snapshot resources are preserved as files; relative assets may not display in Reader yet.",
+      }),
     );
   }
   plan.warnings.push(
-    "Notes become independent source-level annotations, not replacements for source prose. Original CSL IDs are archived; Reader assigns stable, collision-resistant citekeys.",
+    t({
+      message:
+        "Notes become independent source-level annotations, not replacements for source prose. Original CSL IDs are archived; Reader assigns stable, collision-resistant citekeys.",
+    }),
   );
   plan.summary.sources = plan.sources.length;
   return plan;
@@ -122,7 +129,7 @@ async function planFiles(bundle: ZoteroBundle, plan: MigrationPlan): Promise<voi
   for (const f of bundle.payloads) {
     const blob = bundle.files.get(f.path);
     if (!blob) {
-      throw new Error("Bundle payload is missing.");
+      throw new Error(t({ message: "Bundle payload is missing." }));
     }
     const attachment = bundle.rows.attachments.find((a) => a.path === f.path);
     plan.files.push({
@@ -134,7 +141,7 @@ async function planFiles(bundle: ZoteroBundle, plan: MigrationPlan): Promise<voi
       load: async (signal) => {
         signal.throwIfAborted();
         if ((await hash(blob)) !== f.sha256) {
-          throw new Error("Bundle file changed since preview.");
+          throw new Error(t({ message: "Bundle file changed since preview." }));
         }
         signal.throwIfAborted();
         return blob;
@@ -143,7 +150,7 @@ async function planFiles(bundle: ZoteroBundle, plan: MigrationPlan): Promise<voi
   }
   const manifest = bundle.metadata.get("manifest.json");
   if (!manifest) {
-    throw new Error("Bundle manifest is missing.");
+    throw new Error(t({ message: "Bundle manifest is missing." }));
   }
   const archiveId = (await hash(manifest)).slice(0, 24);
   for (const [name, blob] of bundle.metadata) {

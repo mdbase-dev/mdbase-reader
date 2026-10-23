@@ -1,3 +1,5 @@
+import { i18n } from "@lingui/core";
+import { t } from "@lingui/core/macro";
 import { array, object, type Fields, type Progress } from "./model.js";
 import { scalar } from "./readwise-values.js";
 export interface ReadwisePage {
@@ -26,12 +28,14 @@ export class ReadwiseClient {
         signal.throwIfAborted();
         await delay(Math.max(0, this.nextRequestAt - Date.now()), signal);
         if (!this.token) {
-          throw new Error("Readwise token has been cleared. Reconnect to continue.");
+          throw new Error(
+            t({ message: "Readwise token has been cleared. Reconnect to continue." }),
+          );
         }
         this.nextRequestAt = Date.now() + this.intervalMs;
         const url = new URL(path, "https://readwise.io");
         if (url.origin !== "https://readwise.io" || !url.pathname.startsWith("/api/")) {
-          throw new Error("Invalid Readwise API path.");
+          throw new Error(t({ message: "Invalid Readwise API path." }));
         }
         url.search = new URLSearchParams(params).toString();
         let response: Response;
@@ -47,7 +51,10 @@ export class ReadwiseClient {
         } catch {
           signal.throwIfAborted();
           throw new Error(
-            "Readwise request failed. Check your connection or browser access; your token was not saved.",
+            t({
+              message:
+                "Readwise request failed. Check your connection or browser access; your token was not saved.",
+            }),
           );
         }
         // GETs are safe to repeat; gateways time out on large export pages.
@@ -57,21 +64,25 @@ export class ReadwiseClient {
           continue;
         }
         if (response.status === 401 || response.status === 403) {
-          throw new Error("Readwise rejected this token or account access.");
+          throw new Error(t({ message: "Readwise rejected this token or account access." }));
         }
         if (!response.ok) {
           throw new Error(
-            `Readwise returned HTTP ${String(response.status)}. No changes were made to Readwise.`,
+            t`Readwise returned HTTP ${String(response.status)}. No changes were made to Readwise.`,
           );
         }
         try {
           return object(await response.json());
         } catch {
           signal.throwIfAborted();
-          throw new Error("Readwise returned an unreadable response. Scan again later.");
+          throw new Error(
+            t({ message: "Readwise returned an unreadable response. Scan again later." }),
+          );
         }
       }
-      throw new Error("Readwise is rate-limiting requests. Stop and try again later.");
+      throw new Error(
+        t({ message: "Readwise is rate-limiting requests. Stop and try again later." }),
+      );
     };
     const result = this.queue.then(run, run);
     this.queue = result.catch(() => undefined);
@@ -96,7 +107,7 @@ export class ReadwiseClient {
     const seen = new Set<string>();
     do {
       if (seen.has(cursor)) {
-        throw new Error("Readwise returned a repeated pagination cursor.");
+        throw new Error(t({ message: "Readwise returned a repeated pagination cursor." }));
       }
       seen.add(cursor);
       const data = await this.request(
@@ -105,7 +116,7 @@ export class ReadwiseClient {
         signal,
       );
       result.push(...array(data["results"]).map((r) => object(r)));
-      progress(`Scanned ${result.length.toLocaleString()} Readwise records…`);
+      progress(t`Scanned ${result.length.toLocaleString(i18n.locale)} Readwise records…`);
       // Documented as a string, null on the last page; accept a numeric cursor too.
       cursor = scalar(data["nextPageCursor"]);
     } while (cursor);
@@ -123,7 +134,9 @@ export function delay(ms: number, signal: AbortSignal): Promise<void> {
   return new Promise((resolve, reject) => {
     const abort = (): void => {
       clearTimeout(timer);
-      reject(signal.reason instanceof Error ? signal.reason : new Error("Cancelled"));
+      reject(
+        signal.reason instanceof Error ? signal.reason : new Error(t({ message: "Cancelled" })),
+      );
     };
     const timer = setTimeout(() => {
       signal.removeEventListener("abort", abort);
@@ -144,7 +157,9 @@ export async function downloadReadwiseFile(
     parsed.username ||
     parsed.password
   ) {
-    throw new Error("Readwise returned an unexpected file host; download was refused.");
+    throw new Error(
+      t({ message: "Readwise returned an unexpected file host; download was refused." }),
+    );
   }
   let response: Response;
   try {
@@ -157,12 +172,15 @@ export async function downloadReadwiseFile(
   } catch {
     signal.throwIfAborted();
     throw new Error(
-      "Source file download failed. The host may not support browser access; use Readwise’s full-file export as a fallback.",
+      t({
+        message:
+          "Source file download failed. The host may not support browser access; use Readwise’s full-file export as a fallback.",
+      }),
     );
   }
   if (!response.ok) {
     throw new Error(
-      `Source file download returned HTTP ${String(response.status)}. Retry to obtain a fresh download link.`,
+      t`Source file download returned HTTP ${String(response.status)}. Retry to obtain a fresh download link.`,
     );
   }
   return response.blob();

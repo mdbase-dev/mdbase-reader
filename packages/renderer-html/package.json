@@ -12,6 +12,7 @@
   },
   "dependencies": {
     "@lingui/core": "6.9.0",
+    "@lingui/react": "6.9.0",
     "@mdbase-reader/core": "workspace:*",
     "@mdbase-reader/reading-surface": "workspace:*",
     "react": "^19.2.8"

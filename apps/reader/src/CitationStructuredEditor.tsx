@@ -1,3 +1,4 @@
+import { i18n } from "@lingui/core";
 import { t as translate } from "@lingui/core/macro";
 import { Trans, useLingui } from "@lingui/react/macro";
 import { Select, type SelectItems } from "@mdbase-dev/ui/select";
@@ -353,14 +354,14 @@ function cslTypeOptions(current: string): SelectItems {
     ...(known || !current ? [] : [{ value: current, label: current }]),
     {
       label: translate({ message: "Common", context: "CitationStructuredEditor status or action" }),
-      options: commonCslTypes.map(([value, label]) => ({ value, label })),
+      options: commonCslTypes.map(([value, label]) => ({ value, label: i18n._(label) })),
     },
     {
       label: translate({
         message: "Specialist",
         context: "CitationStructuredEditor status or action",
       }),
-      options: specialistCslTypes.map(([value, label]) => ({ value, label })),
+      options: specialistCslTypes.map(([value, label]) => ({ value, label: i18n._(label) })),
     },
   ];
 }

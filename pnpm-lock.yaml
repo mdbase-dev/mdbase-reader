@@ -375,6 +375,9 @@ importers:
 
   packages/migration:
     dependencies:
+      '@lingui/core':
+        specifier: 6.9.0
+        version: 6.9.0(@babel/core@7.29.7)
       '@mdbase-reader/core':
         specifier: workspace:*
         version: link:../core
@@ -443,6 +446,9 @@ importers:
       '@lingui/core':
         specifier: 6.9.0
         version: 6.9.0(@babel/core@7.29.7)
+      '@lingui/react':
+        specifier: 6.9.0
+        version: 6.9.0(@babel/core@7.29.7)(react@19.2.8)
       '@mdbase-reader/core':
         specifier: workspace:*
         version: link:../core

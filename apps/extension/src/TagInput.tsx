@@ -46,7 +46,7 @@ export function TagInput({
           {suggestions.map((tag, index) => (
             <button key={tag} type="button" className="tag-chip" onClick={() => choose(tag)}>
               {tag}
-              {index === 0 ? <kbd>Tab</kbd> : null}
+              {index === 0 ? <kbd>{t({ message: "Tab", context: "Keyboard key" })}</kbd> : null}
             </button>
           ))}
         </div>
