@@ -199,33 +199,73 @@ export function useExtensionCapture(
   ]);
 
   const { setDraft } = stored;
+  // Once edited, even a cleared or subsequently reverted title belongs to the user.
+  const editedTitleFor = useRef<string | null>(null);
+  const editDraft: typeof setDraft = useCallback(
+    (action) => {
+      setDraft((draft) => {
+        const next = typeof action === "function" ? action(draft) : action;
+        if (next.title !== draft.title) {
+          editedTitleFor.current = pageUrl ?? null;
+        }
+        return next;
+      });
+    },
+    [pageUrl, setDraft],
+  );
   useEffect(() => {
-    if (!capture) {
+    if (!capture || page.navigated || stored.loadedFor !== capture.canonicalUrl) {
       return;
     }
     const controller = new AbortController();
-    const page = capture.canonicalUrl;
-    void prepareCitation(capture, controller.signal)
-      .catch(() => null)
-      .then((preview) => {
-        if (controller.signal.aborted) {
-          return;
+    const url = capture.canonicalUrl;
+    let previousTitle = capture.pageTitle;
+    let updated = false;
+    const show = (preview: CitationPreview | null): void => {
+      if (controller.signal.aborted) {
+        return;
+      }
+      setCitationFor({ page: url, preview });
+      const title = preview?.citation["title"];
+      if (typeof title === "string") {
+        const before = previousTitle;
+        previousTitle = title;
+        setDraft((draft) => {
+          if (editedTitleFor.current === url) {
+            return draft;
+          }
+          if (draft.title !== before && draft.title !== "") {
+            // A restored draft is also the user's, not a fresh page title.
+            editedTitleFor.current = url;
+            return draft;
+          }
+          return { ...draft, title };
+        });
+      }
+    };
+    void prepareCitation(capture, controller.signal, (preview) => {
+      updated = true;
+      show(preview);
+    }).then(
+      (preview) => {
+        // The final preview also carries provider outcomes when no citation field changed.
+        if (preview || !updated) {
+          show(preview);
         }
-        setCitationFor({ page, preview });
-        const title = preview?.citation["title"];
-        if (typeof title === "string") {
-          // Replace only the untouched page title; never an edited one.
-          setDraft((draft) =>
-            draft.title === capture.pageTitle || !draft.title ? { ...draft, title } : draft,
-          );
+      },
+      () => {
+        if (!updated) {
+          show(null);
         }
-      });
+      },
+    );
     return () => controller.abort();
-    // Only a new page (not a new selection) changes its citation.
+    // Only a new page (not a new selection) changes its citation. Navigation cancels it early.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [pageUrl, capture?.kind]);
+  }, [pageUrl, capture?.kind, page.navigated, stored.loadedFor]);
 
-  const citation = citationFor && citationFor.page === pageUrl ? citationFor.preview : null;
+  const preview = citationFor && citationFor.page === pageUrl ? citationFor.preview : null;
+  const citation = capturedPost ? preview : citationWithDraftTitle(preview, stored.draft.title);
   const citationPending = Boolean(pageUrl) && citationFor?.page !== pageUrl;
 
   const save = (changes?: Partial<CaptureDraft>): Promise<void> => {
@@ -243,7 +283,7 @@ export function useExtensionCapture(
       }
       const draft = { ...stored.draft, ...changes };
       if (changes) {
-        stored.setDraft((value) => ({ ...value, ...changes }));
+        editDraft((value) => ({ ...value, ...changes }));
       }
       discovery.current++;
       refreshEpoch.current++;
@@ -541,7 +581,7 @@ export function useExtensionCapture(
     capture,
     ...pickerProps(capture, pickerOpen, setPickerOpen, savePosts),
     draft: stored.draft,
-    setDraft: stored.setDraft,
+    setDraft: editDraft,
     draftRestored: stored.restored,
     status,
     problem: lock.problem ?? connectionLock.problem,
@@ -562,6 +602,21 @@ export function useExtensionCapture(
     knownTags: tags.knownTags,
     loadTags: tags.loadTags,
     note,
+  };
+}
+
+/** Only the title is editable here; preserve every other citation field and its evidence. */
+function citationWithDraftTitle(
+  preview: CitationPreview | null,
+  title: string,
+): CitationPreview | null {
+  if (!preview || preview.citation["title"] === title) {
+    return preview;
+  }
+  return {
+    ...preview,
+    citation: { ...preview.citation, title },
+    provenance: { ...preview.provenance, title: { value: title, source: "user" } },
   };
 }
 

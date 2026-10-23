@@ -8,6 +8,8 @@ import type { QuoteSelector } from "@mdbase-reader/core";
 
 export interface StoredDraftState {
   readonly draft: CaptureDraft;
+  /** The page whose draft has finished restoring, before metadata may upgrade its title. */
+  readonly loadedFor: string | null;
   readonly setDraft: Dispatch<SetStateAction<CaptureDraft>>;
   /** True when unsaved text from an earlier panel was brought back. */
   readonly restored: boolean;
@@ -82,5 +84,5 @@ export function useStoredDraft(
     return () => clearTimeout(timer);
   }, [draft, loadedFor, page, selection, selectionPostId, tabId]);
 
-  return { draft, setDraft, restored };
+  return { draft, setDraft, restored, loadedFor };
 }

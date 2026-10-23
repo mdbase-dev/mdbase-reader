@@ -300,6 +300,8 @@ it("shows where a new source's citation comes from", () => {
         },
         origin: "doi",
         doi: "10.1038/171737a0",
+        provenance: {},
+        outcomes: [],
       },
     },
     "citation",
@@ -309,6 +311,24 @@ it("shows where a new source's citation comes from", () => {
   expect(html).toContain("10.1038/171737a0");
   expect(html).toContain("From the DOI registry");
 });
+it("labels Citoid evidence without claiming a failed URL lookup was a DOI lookup", () => {
+  const html = markup(
+    {
+      citation: {
+        citation: { type: "entry-encyclopedia", title: "Australia" },
+        origin: "citoid",
+        provenance: {},
+        outcomes: [],
+        problem: "The citation service did not answer in time.",
+      },
+    },
+    "citation",
+  );
+  expect(html).toContain("Includes details from Wikimedia’s Citoid service.");
+  expect(html).toContain("The citation service did not answer in time.");
+  expect(html).not.toContain("DOI record was unavailable");
+});
+
 it("saves PDFs without offering in-page highlighting", () => {
   const html = markup({
     capture: {

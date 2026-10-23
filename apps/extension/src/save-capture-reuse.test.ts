@@ -61,7 +61,12 @@ describe("citations written with a new source", () => {
   it("looks up colliding citekeys while the page is still importing", async () => {
     const f = fixture();
     await f.save({ highlight: false }, capture, {
-      citation: { citation: { type: "article", title: "T" }, origin: "page" },
+      citation: {
+        citation: { type: "article", title: "T" },
+        origin: "page",
+        provenance: {},
+        outcomes: [],
+      },
     });
     expect(f.findByCitekeyPrefix.mock.invocationCallOrder[0]).toBeLessThan(
       f.commit.mock.invocationCallOrder[0] ?? 0,
@@ -73,7 +78,12 @@ describe("citations written with a new source", () => {
     const f = fixture();
     f.findByCitekeyPrefix.mockRejectedValueOnce(new Error("lookup offline"));
     const result = await f.save({ highlight: false }, capture, {
-      citation: { citation: { type: "article", title: "T" }, origin: "page" },
+      citation: {
+        citation: { type: "article", title: "T" },
+        origin: "page",
+        provenance: {},
+        outcomes: [],
+      },
     });
     expect(f.commit).toHaveBeenCalledOnce();
     expect(result.notices[0]).toContain("lookup offline");
