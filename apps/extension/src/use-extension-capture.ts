@@ -201,12 +201,14 @@ export function useExtensionCapture(
   const { setDraft } = stored;
   // Once edited, even a cleared or subsequently reverted title belongs to the user.
   const editedTitleFor = useRef<string | null>(null);
+  const [editedTitlePage, setEditedTitlePage] = useState<string | null>(null);
   const editDraft: typeof setDraft = useCallback(
     (action) => {
       setDraft((draft) => {
         const next = typeof action === "function" ? action(draft) : action;
         if (next.title !== draft.title) {
           editedTitleFor.current = pageUrl ?? null;
+          setEditedTitlePage(pageUrl ?? null);
         }
         return next;
       });
@@ -237,6 +239,7 @@ export function useExtensionCapture(
           if (draft.title !== before && draft.title !== "") {
             // A restored draft is also the user's, not a fresh page title.
             editedTitleFor.current = url;
+            setEditedTitlePage(url);
             return draft;
           }
           return { ...draft, title };
@@ -265,7 +268,9 @@ export function useExtensionCapture(
   }, [pageUrl, capture?.kind, page.navigated, stored.loadedFor]);
 
   const preview = citationFor && citationFor.page === pageUrl ? citationFor.preview : null;
-  const citation = capturedPost ? preview : citationWithDraftTitle(preview, stored.draft.title);
+  const citation = capturedPost
+    ? preview
+    : citationWithDraftTitle(preview, stored.draft.title, editedTitlePage === pageUrl);
   const citationPending = Boolean(pageUrl) && citationFor?.page !== pageUrl;
 
   const save = (changes?: Partial<CaptureDraft>): Promise<void> => {
@@ -609,14 +614,18 @@ export function useExtensionCapture(
 function citationWithDraftTitle(
   preview: CitationPreview | null,
   title: string,
+  edited: boolean,
 ): CitationPreview | null {
-  if (!preview || preview.citation["title"] === title) {
+  if (!preview || (!edited && preview.citation["title"] === title)) {
     return preview;
   }
   return {
     ...preview,
     citation: { ...preview.citation, title },
-    provenance: { ...preview.provenance, title: { value: title, source: "user" } },
+    // An edited draft is the user's value, not a captured claim.
+    provenance: Object.fromEntries(
+      Object.entries(preview.provenance).filter(([field]) => field !== "title"),
+    ),
   };
 }
 

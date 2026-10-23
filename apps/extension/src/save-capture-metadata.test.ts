@@ -25,13 +25,22 @@ describe("capture metadata and formats", () => {
       } as unknown as SourceSummary,
     ]);
     const citation = {
+      id: "placeholder",
       type: "article-journal",
       title: "Molecular structure of nucleic acids",
       author: [{ family: "Watson", given: "James D." }],
       issued: { "date-parts": [[1953]] },
     };
+    const provenance = {
+      title: { value: citation.title, source: "registry:doi.org", agreed: ["json-ld headline"] },
+      author: { value: citation.author, source: "registry:doi.org" },
+      issued: { value: citation.issued, source: "registry:doi.org" },
+      id: { value: "placeholder", source: "registry:doi.org" },
+      publisher: { value: "Not saved", source: "page:html" },
+      type: { value: "webpage", source: "page:html" },
+    };
     const result = await f.save({ highlight: false }, capture, {
-      citation: { citation, origin: "doi", doi: "10.1038/171737a0", provenance: {}, outcomes: [] },
+      citation: { citation, origin: "doi", doi: "10.1038/171737a0", provenance, outcomes: [] },
     });
     expect(f.updateCitation.mock.calls[0]?.[0].citation).toMatchObject({
       id: "watsonmolecular1953a",
@@ -39,6 +48,18 @@ describe("capture metadata and formats", () => {
     });
     expect(f.commit.mock.calls[0]?.[0].metadata?.authors).toEqual(["James D. Watson"]);
     expect(result.notices).toEqual([]);
+    const expected = {
+      title: provenance.title,
+      author: provenance.author,
+      issued: provenance.issued,
+    };
+    expect(f.updateCitation.mock.calls[0]?.[0]).toMatchObject({ provenance: expected });
+    const loaded = await f.collection.sources.get(f.collection.collectionId, result.source.id);
+    expect(loaded?.cslProvenance).toEqual(expected);
+    expect(loaded?.frontmatter["csl-provenance"]).toEqual(expected);
+    expect(loaded?.frontmatter["csl"]).not.toHaveProperty("provenance");
+    // Filtering evidence must not change the resolver's preview.
+    expect(provenance).toHaveProperty("id");
   });
   it("keeps the source when its citation cannot be stored, and says so", async () => {
     const f = fixture();
@@ -111,10 +132,11 @@ describe("capture citation baseline", () => {
       loaded,
       { type: "article", title: "Edited" },
       Promise.resolve([]),
+      {},
     );
 
     expect(f.updateCitation).toHaveBeenCalledExactlyOnceWith(
-      expect.objectContaining({ expectedCitation: loaded.citation }),
+      expect.objectContaining({ expectedCitation: loaded.citation, provenance: {} }),
     );
   });
 });

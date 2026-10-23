@@ -157,8 +157,8 @@ export function adoptingWrites(
       : {}),
     ...(saveNewSourceCitation
       ? {
-          saveNewSourceCitation: async (target, citation) => {
-            const updated = await saveNewSourceCitation(target, citation);
+          saveNewSourceCitation: async (target, citation, provenance) => {
+            const updated = await saveNewSourceCitation(target, citation, provenance);
             adoptSource(updated);
             return updated;
           },

@@ -14,6 +14,7 @@ import {
   updateAnnotationBody,
 } from "@mdbase-reader/core";
 
+import { captureCitationProvenance } from "./capture-citation-provenance.js";
 import {
   annotationViewConfiguration,
   buildAnnotationView,
@@ -53,6 +54,7 @@ import type {
   CollectionId,
   ContentHasher,
   ContentSearchRepository,
+  CslProvenance,
   FileId,
   MutationJournal,
   ReaderRequestOptions,
@@ -443,10 +445,15 @@ export class ConnectWorkspaceGateway implements ReaderWorkspaceGateway {
     return this.bodyRecovery;
   }
 
-  async saveSourceCitation(source: Source, citation: unknown): Promise<Source> {
+  async saveSourceCitation(
+    source: Source,
+    citation: unknown,
+    provenance?: CslProvenance,
+  ): Promise<Source> {
     const expectedCitation = loadedCitation(source);
     const updated = await saveSourceCitation(this.sources, source, this.#library ?? [], citation, {
       ...(expectedCitation !== undefined ? { expectedCitation } : {}),
+      ...(provenance !== undefined ? { provenance } : {}),
     });
     this.#replaceSource(updated);
     return updated;
@@ -541,12 +548,14 @@ export class ConnectWorkspaceGateway implements ReaderWorkspaceGateway {
   async saveNewSourceCitation(
     source: Source,
     citation: Readonly<Record<string, unknown>>,
+    provenance?: CslProvenance,
   ): Promise<Source> {
     const { sources } = await this.library();
-    return this.saveSourceCitation(source, {
-      ...citation,
-      id: citekeyForCitation(citation, sources, source.id),
-    });
+    return this.saveSourceCitation(
+      source,
+      { ...citation, id: citekeyForCitation(citation, sources, source.id) },
+      provenance !== undefined ? captureCitationProvenance(citation, provenance) : undefined,
+    );
   }
 
   async createAnnotation(request: AnnotationCreationRequest): Promise<Annotation> {

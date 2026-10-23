@@ -194,7 +194,7 @@ const pageClaims: ClaimBatch = {
 };
 
 describe("adding captured page citations", () => {
-  it("enables Citoid, saves the resolved citation as before and returns field provenance", async () => {
+  it("enables Citoid and saves the resolved citation with pinned field provenance", async () => {
     const fetch = vi.fn<typeof globalThis.fetch>().mockResolvedValue(
       Response.json([
         {
@@ -230,6 +230,16 @@ describe("adding captured page citations", () => {
         "container-title": "Wikipedia",
         author: [{ literal: "Page Author" }],
       }),
+      expect.objectContaining({
+        title: expect.objectContaining({
+          value: "Australia",
+          source: "site-adapter:citoid/encyclopediaArticle",
+        }),
+        author: expect.objectContaining({
+          value: [{ literal: "Page Author" }],
+          source: "page:json-ld",
+        }),
+      }),
     );
     expect(result).toMatchObject({
       kind: "added",
@@ -254,6 +264,9 @@ describe("adding captured page citations", () => {
     expect(deps.workspace.saveNewSourceCitation).toHaveBeenCalledWith(
       source(),
       expect.objectContaining({ title: "Page title" }),
+      expect.objectContaining({
+        title: expect.objectContaining({ value: "Page title", source: "page:json-ld" }),
+      }),
     );
   });
 

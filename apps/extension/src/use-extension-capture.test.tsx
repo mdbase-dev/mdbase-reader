@@ -404,6 +404,7 @@ const upgradedCitation: CitationPreview = {
   origin: "citoid",
   provenance: {
     title: { value: "Encyclopedia title", source: "site-adapter:citoid/encyclopediaArticle" },
+    type: { value: "entry-encyclopedia", source: "site-adapter:citoid/encyclopediaArticle" },
   },
   outcomes: [{ provider: "citoid", result: "ok", elapsedMs: 10 }],
 };
@@ -459,7 +460,7 @@ it("upgrades an untouched visible citation and title without resetting the rest 
   await act(async () => lookup.finish(upgradedCitation));
 });
 
-it.each(["My title", "", "Page title"])(
+it.each(["My title", "", "Page title", "Encyclopedia title"])(
   "keeps an edited title (%s) while upgrading other untouched citation fields",
   async (title) => {
     const lookup = pendingCitation();
@@ -470,7 +471,23 @@ it.each(["My title", "", "Page title"])(
     await act(async () => lookup.finish(upgradedCitation));
     expect(controller.draft.title).toBe(title);
     expect(controller.citation?.citation).toEqual({ ...upgradedCitation.citation, title });
-    expect(controller.citation?.provenance["title"]).toEqual({ value: title, source: "user" });
+    expect(controller.citation?.provenance).not.toHaveProperty("title");
+    expect(controller.citation?.provenance["type"]).toEqual(upgradedCitation.provenance["type"]);
+    mocks.save.mockResolvedValueOnce({
+      source: existing,
+      annotation: null,
+      existing: false,
+      notices: [],
+    });
+    await act(async () => controller.save({ highlight: false }));
+    expect(mocks.save).toHaveBeenCalledWith(
+      expect.objectContaining({
+        citation: expect.objectContaining({
+          citation: { ...upgradedCitation.citation, title },
+          provenance: { type: upgradedCitation.provenance["type"] },
+        }),
+      }),
+    );
   },
 );
 

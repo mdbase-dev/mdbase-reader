@@ -130,6 +130,13 @@ Each entry pins the value it explains. When Reader reads a record:
   as a user decision, and later lookups do not restore it.
 - **No provenance:** every field is the user's, as for hand-written or imported citations.
 
+Capture saves write the resolved citation and its matching field provenance together. Reader and
+extension generate a collection-unique `id` (citekey) locally, so capture provenance never
+includes `id`. Fields edited in the extension draft lose their captured provenance; untouched
+fields keep it. Absent or mismatched values are not given captured provenance. Lookups that
+return only a `CitationCandidate` (rather than field-level `CitationPreview` evidence) do not
+invent field provenance from the candidate's provider summary.
+
 Malformed provenance is ignored field by field. Deleting `csl-provenance` loses only the
 explanations. Entries keep the chosen source and at most two rejected values; full evidence is
 stored with the snapshot.
