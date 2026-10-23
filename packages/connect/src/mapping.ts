@@ -1,8 +1,10 @@
 import {
   collectionId,
+  cslProvenanceKey,
   dateTime,
   fileId,
   fileRevision,
+  parseCslProvenance,
   recordRevision,
   sourceId,
   validateCslItem,
@@ -174,9 +176,11 @@ export function sourceSummaryFromQuery(
 }
 
 export function sourceFromDocument(collection: CollectionId, record: RecordDocument): Source {
+  const provenance = record.effectiveFrontmatter[cslProvenanceKey];
   return {
     ...sourceFields(collection, record.path, record.effectiveFrontmatter),
     properties: record.effectiveFrontmatter,
+    ...(provenance !== undefined ? { cslProvenance: parseCslProvenance(provenance) } : {}),
     body: record.body ?? "",
     recordRevision: recordRevision(record.revision),
     frontmatter: record.frontmatter,

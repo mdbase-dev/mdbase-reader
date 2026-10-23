@@ -1,6 +1,7 @@
 import {
   bodyEmbedsAnnotation,
   cslProblemSummary,
+  cslProvenanceKey,
   filterSources,
   recordRevision,
   validateCslItem,
@@ -187,7 +188,15 @@ export class ConnectSourceRepository implements SourceRepository {
         path,
         // A citation save only replaces `csl`. Checking the revision the editor loaded would
         // refuse it after any unrelated write, such as a reading position.
-        patch: { csl: validation.item },
+        patch: {
+          csl: validation.item,
+          ...(input.provenance !== undefined
+            ? {
+                [cslProvenanceKey]:
+                  Object.keys(input.provenance).length > 0 ? input.provenance : null,
+              }
+            : {}),
+        },
         includeDocument: true,
       }),
       "save citation metadata",

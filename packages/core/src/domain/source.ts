@@ -1,6 +1,7 @@
 import { DomainError } from "./errors.js";
 
 import type { CslItem, CslValidationProblem } from "./citation.js";
+import type { CslProvenance } from "./csl-provenance.js";
 import type { DocumentDescriptor } from "./document.js";
 import type { CollectionId, FileId, RecordRevision, SourceId } from "./identity.js";
 import type { DateTime } from "./time.js";
@@ -52,6 +53,7 @@ export interface SourceSummary {
 }
 
 export interface Source extends SourceSummary {
+  readonly cslProvenance?: CslProvenance;
   readonly body: string;
   readonly recordRevision: RecordRevision;
   readonly frontmatter: Readonly<Record<string, unknown>>;
