@@ -191,12 +191,17 @@ export interface ExportedCollectionFile {
   readonly bytes: Uint8Array;
 }
 
+export interface CollectionFileReadOptions extends ReaderRequestOptions {
+  /** Refuse oversized files before download and before allocating their byte buffer. */
+  readonly maxBytes?: number;
+}
+
 export interface CollectionFileRepository {
   read(
     collectionId: CollectionId,
     file: string,
     expectedRevision?: FileRevision,
-    options?: ReaderRequestOptions,
+    options?: CollectionFileReadOptions,
   ): Promise<ExportedCollectionFile>;
 }
 

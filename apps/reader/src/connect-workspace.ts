@@ -492,7 +492,7 @@ export class ConnectWorkspaceGateway implements ReaderWorkspaceGateway {
   readFile(
     file: string,
     expectedRevision?: Parameters<ReaderWorkspaceGateway["readFile"]>[1],
-    options: ReaderRequestOptions = {},
+    options: NonNullable<Parameters<ReaderWorkspaceGateway["readFile"]>[2]> = {},
   ): ReturnType<ReaderWorkspaceGateway["readFile"]> {
     if (!this.files) {
       return Promise.reject(new Error("File export is unavailable for this connection."));

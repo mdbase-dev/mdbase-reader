@@ -8,6 +8,7 @@ import type {
   AnnotationListOptions,
   AnnotationDeletionPlan,
   AnnotationCreationRequest,
+  CollectionFileReadOptions,
   ExportedCollectionFile,
   FileId,
   FileRevision,
@@ -100,7 +101,7 @@ export interface ReaderWorkspaceGateway {
   readFile(
     file: string,
     expectedRevision?: FileRevision,
-    options?: ReaderRequestOptions,
+    options?: CollectionFileReadOptions,
   ): Promise<ExportedCollectionFile>;
   importSourceFile(
     request: Omit<SourceFileImportRequest, "collectionId">,

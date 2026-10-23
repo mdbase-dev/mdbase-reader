@@ -117,6 +117,53 @@ function readFixture(download: (file: CollectionFileDescriptor) => Promise<Blob>
   return { repository: new ConnectCollectionFileRepository({ stat, download }), stat };
 }
 
+describe("size-limited collection file reads", () => {
+  it("refuses an oversized file from stat before downloading it", async () => {
+    const download = vi.fn().mockResolvedValue(new Blob(["PNG"]));
+    const { repository } = readFixture(download);
+    await expect(
+      repository.read(collectionId("reading"), "files/0.png", undefined, { maxBytes: 2 }),
+    ).rejects.toThrow("file_too_large");
+    expect(download).not.toHaveBeenCalled();
+  });
+
+  it("checks downloaded size before allocating a byte buffer and releases its lane", async () => {
+    const blob = new Blob(["oversized"]);
+    const arrayBuffer = vi.spyOn(blob, "arrayBuffer");
+    const download = vi
+      .fn()
+      .mockResolvedValueOnce(blob)
+      .mockResolvedValue(new Blob(["PNG"]));
+    const { repository } = readFixture(download);
+    await expect(
+      repository.read(collectionId("reading"), "files/0.png", undefined, { maxBytes: 3 }),
+    ).rejects.toThrow("file_too_large");
+    expect(arrayBuffer).not.toHaveBeenCalled();
+    await expect(
+      repository.read(collectionId("reading"), "files/1.png", undefined, { maxBytes: 3 }),
+    ).resolves.toMatchObject({ bytes: new Uint8Array([80, 78, 71]) });
+  });
+
+  it("does not start a download if cancelled during stat", async () => {
+    const abort = new AbortController();
+    const download = vi.fn();
+    const fixture = readFixture(download);
+    const original = fixture.stat.getMockImplementation()!;
+    fixture.stat.mockImplementation(async (target, options) => {
+      const result = await original(target, options);
+      abort.abort();
+      return result;
+    });
+    await expect(
+      fixture.repository.read(collectionId("reading"), "files/0.png", undefined, {
+        signal: abort.signal,
+        maxBytes: 3,
+      }),
+    ).rejects.toThrow();
+    expect(download).not.toHaveBeenCalled();
+  });
+});
+
 describe("ConnectCollectionFileRepository", () => {
   it("exports exact revisions using fresh point metadata rather than a folder index", async () => {
     const revision: `sha256:${string}` = `sha256:${"a".repeat(64)}`;

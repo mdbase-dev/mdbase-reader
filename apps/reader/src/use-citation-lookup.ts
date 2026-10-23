@@ -6,6 +6,7 @@ import {
 } from "@mdbase-reader/web-capture/citation-updates";
 import { useEffect, useRef, useState } from "react";
 
+import { archivedCitationClaims, citationArchive } from "./archived-citation-claims.js";
 import { resolutionRequest } from "./citation-form-model.js";
 import { readerErrorMessage } from "./errors.js";
 
@@ -85,7 +86,9 @@ export function useCitationLookup(input: {
   };
   return {
     resolutionAvailable:
-      input.gateway.citationClaims !== undefined || input.gateway.resolveCitation !== undefined,
+      input.gateway.citationClaims !== undefined ||
+      input.gateway.resolveCitation !== undefined ||
+      citationArchive(input.source) !== undefined,
     resolutionStatus: current?.status ?? "idle",
     resolutionError: current?.error ?? null,
     suggestions,
@@ -108,6 +111,26 @@ export function useCitationLookup(input: {
 }
 
 async function lookupClaims(
+  gateway: ReaderWorkspaceGateway,
+  query: string,
+  source: Source | null,
+  citation: Readonly<Record<string, unknown>>,
+  signal: AbortSignal,
+): Promise<readonly Claim[]> {
+  const url = source?.url ?? (typeof citation["URL"] === "string" ? citation["URL"] : undefined);
+  const [archive, remote] = await Promise.allSettled([
+    archivedCitationClaims(gateway, source, url, signal),
+    remoteLookupClaims(gateway, query, source, citation, signal),
+  ]);
+  signal.throwIfAborted();
+  const claims = archive.status === "fulfilled" ? archive.value : [];
+  if (remote.status === "rejected" && claims.length === 0) {
+    throw remote.reason;
+  }
+  return [...claims, ...(remote.status === "fulfilled" ? remote.value : [])];
+}
+
+async function remoteLookupClaims(
   gateway: ReaderWorkspaceGateway,
   query: string,
   source: Source | null,
