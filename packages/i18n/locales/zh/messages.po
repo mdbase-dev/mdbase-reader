@@ -2861,11 +2861,11 @@ msgstr "缺少 EPUB 资源：{safePath}"
 
 #: packages/renderer-epub/src/epub-manifest.ts
 msgid "EPUB spine item"
-msgstr "EPUB spine 项"
+msgstr "EPUB 阅读顺序项"
 
 #: packages/renderer-epub/src/epub-manifest.ts
 msgid "EPUB spine references an unknown manifest item: {reference}"
-msgstr "EPUB spine 引用了未知的清单项：{reference}"
+msgstr "EPUB 阅读顺序引用了未知的清单项：{reference}"
 
 #: packages/renderer-pdf/src/pdf-translations.ts
 msgctxt "PDF viewer documentError"
