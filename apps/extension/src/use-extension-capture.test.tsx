@@ -437,7 +437,7 @@ function pendingCitation(): {
 it("upgrades an untouched visible citation and title without resetting the rest of the draft", async () => {
   const lookup = pendingCitation();
   await mount();
-  expect(controller.citationPending).toBe(false);
+  expect(controller.citationPending).toBe(true);
   expect(controller.draft.title).toBe("Page title");
   await act(async () =>
     controller.setDraft((draft) => ({
@@ -458,6 +458,7 @@ it("upgrades an untouched visible citation and title without resetting the rest 
   });
   expect(controller.citation).toEqual(upgradedCitation);
   await act(async () => lookup.finish(upgradedCitation));
+  expect(controller.citationPending).toBe(false);
 });
 
 it.each(["My title", "Page title", "Encyclopedia title"])(
@@ -547,6 +548,102 @@ it("keeps a restored title while later evidence upgrades the remaining citation"
     ...upgradedCitation.citation,
     title: "Earlier title",
   });
+});
+
+it("continues upgrading a restored automatically titled draft with captured provenance", async () => {
+  chromeFake.session.set("draft:1:https://example.com", {
+    draft: {
+      title: "Earlier automatic title",
+      automaticTitle: "Earlier automatic title",
+      tags: "",
+      note: "Kept note",
+      comment: "",
+      highlight: false,
+    },
+    selection: null,
+  });
+  const lookup = pendingCitation();
+  await mount();
+  await act(async () => lookup.update(upgradedCitation));
+  await act(async () => lookup.finish(upgradedCitation));
+  expect(controller.draft.title).toBe("Encyclopedia title");
+  expect(controller.draft.automaticTitle).toBe("Encyclopedia title");
+  expect(controller.draft.note).toBe("Kept note");
+  expect(controller.citation?.provenance["title"]).toEqual(upgradedCitation.provenance["title"]);
+  await vi.waitFor(() =>
+    expect(chromeFake.session.get("draft:1:https://example.com")).toMatchObject({
+      draft: {
+        title: "Encyclopedia title",
+        automaticTitle: "Encyclopedia title",
+        titleEdited: false,
+      },
+    }),
+  );
+});
+
+it("keeps a restored manual title even when it equals an earlier automatic title", async () => {
+  chromeFake.session.set("draft:1:https://example.com", {
+    draft: {
+      title: "Page title",
+      automaticTitle: "Page title",
+      titleEdited: true,
+      tags: "",
+      note: "Kept note",
+      comment: "",
+      highlight: false,
+    },
+    selection: null,
+  });
+  const lookup = pendingCitation();
+  await mount();
+  await act(async () => lookup.finish(upgradedCitation));
+  expect(controller.draft.title).toBe("Page title");
+  expect(controller.citation?.provenance).not.toHaveProperty("title");
+});
+
+it("retains automatic title identity when navigation restarts a lookup on the same page", async () => {
+  const first = pendingCitation();
+  await mount();
+  await act(async () => first.update(upgradedCitation));
+  await act(async () => chromeFake.emit("updated", 1, { status: "loading" }));
+  const second = pendingCitation();
+  await act(async () =>
+    chromeFake.emit("message", { type: "mdbase-reader/invoke", tabId: 1, intent: "capture" }, {}),
+  );
+  const next = {
+    ...upgradedCitation,
+    citation: { ...upgradedCitation.citation, title: "Latest automatic title" },
+    provenance: {
+      title: { value: "Latest automatic title", source: "site-adapter:citoid/encyclopediaArticle" },
+    },
+  };
+  await act(async () => second.finish(next));
+  expect(controller.draft.title).toBe("Latest automatic title");
+  expect(controller.citation?.provenance["title"]).toEqual(next.provenance.title);
+});
+
+it("reads a newly arrived preview when the writer starts importing during a pending save", async () => {
+  const lookup = pendingCitation();
+  await mount();
+  let getCitation!: () => CitationPreview | null;
+  let finishSave!: (result: unknown) => void;
+  mocks.save.mockImplementationOnce((input: { getCitation: typeof getCitation }) => {
+    getCitation = input.getCitation;
+    return new Promise((resolve) => {
+      finishSave = resolve;
+    });
+  });
+  let saving!: Promise<void>;
+  await act(async () => {
+    saving = controller.save({ highlight: false });
+  });
+  await act(async () => lookup.update(upgradedCitation));
+  expect(getCitation()).toEqual(upgradedCitation);
+  await act(async () => {
+    finishSave({ source: existing, annotation: null, existing: false, notices: [] });
+    await saving;
+  });
+  await act(async () => lookup.finish(upgradedCitation));
 });
 
 it("ignores late citation updates and completion as soon as navigation aborts a capture", async () => {

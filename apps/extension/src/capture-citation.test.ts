@@ -39,6 +39,101 @@ it.each([undefined, false, "true"])(
   },
 );
 
+it.each([
+  "http://localhost/article",
+  "https://foo.localhost/article",
+  "https://intranet/article",
+  "https://printer.local/article",
+  "https://wiki.internal/article",
+  "https://router.home.arpa/article",
+  "http://10.0.0.1/article",
+  "http://172.16.0.1/article",
+  "http://192.168.1.1/article",
+  "http://127.1/article",
+  "http://0x7f000001/article",
+  "http://169.254.169.254/article",
+  "http://[::1]/article",
+  "http://[fc00::1]/article",
+  "http://[fe80::1]/article",
+  "http://[::ffff:192.168.1.1]/article",
+  "https://wiki.local./article",
+  "file:///tmp/article",
+  "ftp://example.com/article",
+  "not a URL",
+  "https://person:password@example.com/article",
+  "https://person@example.com/article",
+  ...[
+    "token",
+    "key",
+    "sig",
+    "signature",
+    "auth",
+    "session",
+    "code",
+    "password",
+    "access_token",
+    "apiKey",
+    "X-Amz-Signature",
+  ].map((key) => `https://example.com/article?${key}=secret`),
+])("does not disclose an unsafe address to Citoid: %s", async (url) => {
+  fake.local.set("citoid-enabled", true);
+  const fetcher = vi.fn<typeof fetch>();
+  vi.stubGlobal("fetch", fetcher);
+  const preview = await prepareCitation({ ...capture, canonicalUrl: url, submittedUrl: url });
+  expect(preview?.origin).toBe("page");
+  expect(fetcher).not.toHaveBeenCalled();
+});
+
+it("strips fragments but keeps ordinary query parameters in public Citoid lookups", async () => {
+  fake.local.set("citoid-enabled", true);
+  const fetcher = vi.fn<typeof fetch>().mockResolvedValue(Response.json([]));
+  vi.stubGlobal("fetch", fetcher);
+  const url = "https://example.com/article?chapter=2#private-note";
+  await prepareCitation({ ...capture, canonicalUrl: url, submittedUrl: url });
+  expect(fetcher.mock.calls[0]?.[0]).toBe(
+    `https://en.wikipedia.org/api/rest_v1/data/citation/zotero/${encodeURIComponent("https://example.com/article?chapter=2")}`,
+  );
+});
+
+it("does not replace an identifier-free PDF filename with a generic Citoid result", async () => {
+  fake.local.set("citoid-enabled", true);
+  const fetcher = vi
+    .fn<typeof fetch>()
+    .mockResolvedValue(Response.json([{ itemType: "webpage", title: "Unrelated webpage" }]));
+  vi.stubGlobal("fetch", fetcher);
+  expect(
+    await prepareCitation({
+      kind: "pdf",
+      canonicalUrl: "https://example.com/paper.pdf",
+      submittedUrl: "https://example.com/paper.pdf",
+      pageTitle: "paper.pdf",
+      retrievedAt: capture.retrievedAt,
+      selection: null,
+    }),
+  ).toBeNull();
+  expect(fetcher).not.toHaveBeenCalled();
+});
+
+it("still looks up the DOI of a PDF tab without sending its URL to Citoid", async () => {
+  fake.local.set("citoid-enabled", true);
+  const fetcher = vi
+    .fn<typeof fetch>()
+    .mockResolvedValue(Response.json({ title: "Registered work" }));
+  vi.stubGlobal("fetch", fetcher);
+  expect(
+    await prepareCitation({
+      kind: "pdf",
+      canonicalUrl: "https://arxiv.org/pdf/0704.0001",
+      submittedUrl: "https://arxiv.org/pdf/0704.0001",
+      pageTitle: "0704.0001.pdf",
+      retrievedAt: capture.retrievedAt,
+      selection: null,
+    }),
+  ).toMatchObject({ origin: "doi", citation: { title: "Registered work" } });
+  expect(fetcher).toHaveBeenCalledOnce();
+  expect(fetcher.mock.calls[0]?.[0]).toBe("https://doi.org/10.48550/arXiv.0704.0001");
+});
+
 it("persists the page preview's provenance beside its citation on capture save", async () => {
   const preview = await prepareCitation(capture);
   expect(preview).not.toBeNull();

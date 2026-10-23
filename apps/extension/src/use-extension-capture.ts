@@ -86,7 +86,9 @@ export function useExtensionCapture(
   const [citationFor, setCitationFor] = useState<{
     readonly page: string;
     readonly preview: CitationPreview | null;
+    readonly pending: boolean;
   } | null>(null);
+  const latestPreview = useRef<{ page: string; preview: CitationPreview | null } | null>(null);
   const discovery = useRef(0);
   const extension = connection.extension;
   const writer = useMemo(
@@ -199,21 +201,19 @@ export function useExtensionCapture(
   ]);
 
   const { setDraft } = stored;
+  const latestDraft = useRef(stored.draft);
+  useEffect(() => {
+    latestDraft.current = stored.draft;
+  }, [stored.draft]);
   // Once edited, even a cleared or subsequently reverted title belongs to the user.
-  const editedTitleFor = useRef<string | null>(null);
-  const [editedTitlePage, setEditedTitlePage] = useState<string | null>(null);
   const editDraft: typeof setDraft = useCallback(
     (action) => {
       setDraft((draft) => {
         const next = typeof action === "function" ? action(draft) : action;
-        if (next.title !== draft.title) {
-          editedTitleFor.current = pageUrl ?? null;
-          setEditedTitlePage(pageUrl ?? null);
-        }
-        return next;
+        return next.title !== draft.title ? { ...next, titleEdited: true } : next;
       });
     },
-    [pageUrl, setDraft],
+    [setDraft],
   );
   useEffect(() => {
     if (!capture || page.navigated || stored.loadedFor !== capture.canonicalUrl) {
@@ -221,28 +221,20 @@ export function useExtensionCapture(
     }
     const controller = new AbortController();
     const url = capture.canonicalUrl;
-    let previousTitle = capture.pageTitle;
     let updated = false;
-    const show = (preview: CitationPreview | null): void => {
+    const show = (preview: CitationPreview | null, pending = true): void => {
       if (controller.signal.aborted) {
         return;
       }
-      setCitationFor({ page: url, preview });
+      latestPreview.current = { page: url, preview };
+      setCitationFor({ page: url, preview, pending });
       const title = preview?.citation["title"];
       if (typeof title === "string") {
-        const before = previousTitle;
-        previousTitle = title;
         setDraft((draft) => {
-          if (editedTitleFor.current === url) {
+          if (draft.titleEdited) {
             return draft;
           }
-          if (draft.title !== before && draft.title !== "") {
-            // A restored draft is also the user's, not a fresh page title.
-            editedTitleFor.current = url;
-            setEditedTitlePage(url);
-            return draft;
-          }
-          return { ...draft, title };
+          return { ...draft, title, automaticTitle: title };
         });
       }
     };
@@ -253,12 +245,14 @@ export function useExtensionCapture(
       (preview) => {
         // The final preview also carries provider outcomes when no citation field changed.
         if (preview || !updated) {
-          show(preview);
+          show(preview, false);
+        } else if (!controller.signal.aborted) {
+          show(latestPreview.current?.preview ?? null, false);
         }
       },
       () => {
-        if (!updated) {
-          show(null);
+        if (!controller.signal.aborted) {
+          show(updated ? (latestPreview.current?.preview ?? null) : null, false);
         }
       },
     );
@@ -270,8 +264,8 @@ export function useExtensionCapture(
   const preview = citationFor && citationFor.page === pageUrl ? citationFor.preview : null;
   const citation = capturedPost
     ? preview
-    : citationWithDraftTitle(preview, stored.draft.title, editedTitlePage === pageUrl);
-  const citationPending = Boolean(pageUrl) && citationFor?.page !== pageUrl;
+    : citationWithDraftTitle(preview, stored.draft.title, Boolean(stored.draft.titleEdited));
+  const citationPending = pageCitationPending(pageUrl, citationFor);
 
   const save = (changes?: Partial<CaptureDraft>): Promise<void> => {
     if (socialCapture(capture)?.social?.mode === "multiple" && !changes?.highlight) {
@@ -286,7 +280,8 @@ export function useExtensionCapture(
       if (!capture) {
         throw new Error("The page is not ready. Reopen Reader on this page before saving.");
       }
-      const draft = { ...stored.draft, ...changes };
+      const draft = draftForSave(stored.draft, changes);
+      const changedTitle = draft.title !== stored.draft.title;
       if (changes) {
         editDraft((value) => ({ ...value, ...changes }));
       }
@@ -309,8 +304,19 @@ export function useExtensionCapture(
             : citationWithDraftTitle(
                 preview,
                 draft.title,
-                editedTitlePage === pageUrl || draft.title !== stored.draft.title,
+                Boolean(draft.titleEdited) || draft.title !== stored.draft.title,
               ),
+          getCitation: () => {
+            const current = latestPreview.current;
+            const latest = { ...latestDraft.current, ...changes };
+            return current?.page === capture.canonicalUrl
+              ? citationWithDraftTitle(
+                  current.preview,
+                  latest.title,
+                  Boolean(latest.titleEdited) || changedTitle,
+                )
+              : null;
+          },
           pdfBytes: () => fetchPdf(tabId, capture.canonicalUrl),
           onProgress: setProgress,
           onSource: (saved, existing) => {
@@ -616,6 +622,19 @@ export function useExtensionCapture(
   };
 }
 
+function draftForSave(draft: CaptureDraft, changes?: Partial<CaptureDraft>): CaptureDraft {
+  const titleEdited =
+    Boolean(draft.titleEdited) || (changes?.title !== undefined && changes.title !== draft.title);
+  return { ...draft, ...changes, titleEdited };
+}
+
+function pageCitationPending(
+  pageUrl: string | undefined,
+  state: { readonly page: string; readonly pending: boolean } | null,
+): boolean {
+  return Boolean(pageUrl) && (state?.page !== pageUrl || Boolean(state?.pending));
+}
+
 /**
  * Only the title is editable here; preserve every other citation field and its evidence. A cleared
  * title keeps the resolved one: a citation without a title is not a citation.
@@ -626,7 +645,7 @@ function citationWithDraftTitle(
   edited: boolean,
 ): CitationPreview | null {
   const title = draftTitle.trim();
-  if (!preview || !title || (!edited && preview.citation["title"] === title)) {
+  if (!preview || !title || !edited) {
     return preview;
   }
   return {

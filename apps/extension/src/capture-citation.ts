@@ -16,6 +16,7 @@ import {
 } from "@mdbase-reader/web-capture";
 
 import { citoidEnabled } from "./citoid-setting.js";
+import { citoidCaptureUrl } from "./citoid-url.js";
 
 import type { PageCapture } from "./page-capture.js";
 import type { ReaderConnectedCollection } from "@mdbase-reader/connect";
@@ -39,9 +40,11 @@ export async function prepareCitation(
     capture.kind === "html"
       ? pageClaims(parsedCaptureHtml(capture.html), capture.canonicalUrl, capture.retrievedAt)
       : null;
-  const enabled = await citoidEnabled();
+  // PDF tabs have no page evidence to distinguish a work from a generic filename result.
+  const remoteUrl = capture.kind === "html" ? citoidCaptureUrl(capture.canonicalUrl) : undefined;
+  const enabled = remoteUrl ? await citoidEnabled() : false;
   signal?.throwIfAborted();
-  return citationForPage(claims, capture.canonicalUrl, {
+  return citationForPage(claims, remoteUrl ?? capture.canonicalUrl, {
     ...(signal ? { signal } : {}),
     citoid: enabled ? {} : false,
     ...(onUpdate ? { onUpdate } : {}),

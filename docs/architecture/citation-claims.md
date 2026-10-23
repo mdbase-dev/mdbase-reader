@@ -108,6 +108,16 @@ group, and chooses the highest:
    is the best available observation time; callers may supply an independently known content
    observation time.
 
+Scalar values and ordered name lists use normalized equivalence buckets; partial dates use a
+precision/prefix compatibility index so ambiguous years do not merge conflicting full dates.
+Page extraction scopes JSON-LD to the page/canonical identity and explicit `mainEntity` links,
+not recommendation or ItemList entries. Unscoped graphs with more than eight works are ignored.
+Extraction limits JSON-LD to 32 scripts, 2 million characters and 4,096 graph entries; exceeding
+those limits discards the graph rather than selecting its first work. Metadata is bounded to
+512 tags, 128 values per array and 128 claims per field, with HTML fallback evidence reserved.
+`webCaptureImport` shares its parsed document and `ClaimBatch` with
+`scholarlyMetadataFromClaims` instead of extracting the snapshot twice.
+
 Start with fixed ranks and a corroboration bonus. Add weights only when a corpus page needs them.
 
 Applied to Wikipedia, "Australia" is backed by `name`, `<h1>`, `og:title` and Citoid, while
@@ -185,10 +195,19 @@ then produces the same claims everywhere, which snapshot tests depend on.
 1. The content script freezes the page, as it does now.
 2. In the side panel or an offscreen document, the core runs generic extractors and matching
    adapters. The resolver shows a first citation within milliseconds.
-3. If claims include a DOI, doi.org adds registry claims. If no site adapter matched, Citoid adds
-   claims for the URL. The resolver reruns each time, and an edited draft title is never
-   replaced.
-4. New identifiers can trigger further lookups, at most two rounds, each with a time limit.
+3. If claims include a DOI, doi.org adds registry claims first. Only a failed registry lookup
+   (including not-found, timeout, rate-limit or block) falls back to Citoid. Without a DOI,
+   Citoid adds claims for the URL when enabled. The resolver reruns each time. The draft retains
+   its last automatically applied title and an explicit edit marker across panel restores and
+   lookup restarts, so only a genuinely edited title is protected.
+4. New identifiers can trigger further lookups, at most two rounds. `PageCitationOptions.deadlineMs`
+   bounds all remote work together, including queueing: 8 seconds by default, with each DOI
+   lookup capped at 3 seconds and each Citoid lookup capped at its remaining budget. Reader URL
+   adds use a 6-second overall citation budget. Page-only previews are published before any
+   remote work. The extension keeps that preview visible with a quiet pending status until
+   lookups settle; saving pins the latest available citation, provenance and source metadata
+   together immediately before import, without waiting for outstanding lookups or applying
+   later results to an already saved source.
 
 The broker fetches only from the page's own site, using the optional host permission for that
 origin, so requests carry the user's cookies. This covers exports such as RIS without becoming a
@@ -217,8 +236,16 @@ in flight and honour `Retry-After`. A 429, timeout or block falls back to the pa
 without an error.
 
 A background Citoid lookup sends the page URL to Wikimedia. Reader URL adds already send it to
-`/api/capture`; extension captures currently send it nowhere. The extension needs a setting
-before lookups happen automatically there.
+`/api/capture`; the extension requires an explicit, default-off setting before automatic Citoid
+lookups. Automatic extension lookups accept only HTTP(S) URLs without credentials, local or
+intranet host suffixes, single-label hosts, or IP literals (even public IP literals are skipped
+conservatively). Fragments are removed. URLs with obvious secret-bearing query parameters
+(`token`, `key`, `sig`, `signature`, `auth`, `session`, `code`, `password`, and common compound
+forms such as `access_token` and `apiKey`) are skipped, not rewritten: removing a signature
+could change the resource being cited. This is a URL disclosure filter, not DNS validation;
+Reader's existing server-side public-address validation is unchanged. PDF tabs skip Citoid
+entirely, since a generic webpage result is not evidence for replacing their filename title;
+DOI/arXiv registry lookup remains available.
 
 The accepted plan for a private Translation Server behind an mdbase service fits as a drop-in
 provider through `CitationLookupOptions.citoidEndpoint`. Translation Server cannot run in a

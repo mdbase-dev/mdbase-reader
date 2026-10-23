@@ -6,7 +6,10 @@ import { addSourceFromInput, type SourceAdditionServices } from "./source-additi
 import type { CaptureResult } from "./web-capture-client.js";
 import type { ClaimBatch, WebCaptureImport } from "@mdbase-reader/web-capture";
 
-afterEach(() => vi.unstubAllGlobals());
+afterEach(() => {
+  vi.unstubAllGlobals();
+  vi.useRealTimers();
+});
 
 const pdfBytes = new TextEncoder().encode("%PDF-1.7 fixture");
 
@@ -192,6 +195,46 @@ const pageClaims: ClaimBatch = {
     observedAt: "2026-10-21T00:00:00Z",
   })),
 };
+
+it("limits a Citoid-discovered DOI round to six seconds total", async () => {
+  vi.useFakeTimers();
+  const fetch = vi
+    .fn<typeof globalThis.fetch>()
+    .mockImplementationOnce(
+      () =>
+        new Promise((resolve) =>
+          setTimeout(
+            () =>
+              resolve(
+                Response.json([
+                  {
+                    itemType: "journalArticle",
+                    title: "Remote title",
+                    DOI: "10.1234/discovered",
+                  },
+                ]),
+              ),
+            5_500,
+          ),
+        ),
+    )
+    .mockImplementation(() => new Promise(() => undefined));
+  vi.stubGlobal("fetch", fetch);
+  const page = capturedPage(pageClaims);
+  const deps = services({
+    capture: vi.fn(() => Promise.resolve({ kind: "html" as const, page })),
+  });
+  const result = addSourceFromInput(page.capture.canonicalUrl, deps);
+  await vi.advanceTimersByTimeAsync(5_999);
+  expect(deps.workspace.importSourceFile).not.toHaveBeenCalled();
+  await vi.advanceTimersByTimeAsync(1);
+  expect(await result).toMatchObject({ kind: "added" });
+  expect(deps.workspace.saveNewSourceCitation).toHaveBeenCalledWith(
+    source(),
+    expect.objectContaining({ title: "Remote title" }),
+    expect.anything(),
+  );
+});
 
 describe("adding captured page citations", () => {
   it("enables Citoid and saves the resolved citation with pinned field provenance", async () => {

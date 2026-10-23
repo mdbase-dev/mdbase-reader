@@ -134,6 +134,7 @@ function capturedPageCitation(
     ? Promise.resolve(null)
     : citationForPage(page.claims, page.capture.canonicalUrl, {
         ...signalOf(services),
+        deadlineMs: 6_000,
         citoid: {},
       });
 }

@@ -8,6 +8,8 @@ import {
 } from "@mdbase-reader/core";
 
 import {
+  claimDateParts,
+  claimMatchKey,
   claimValuesMatch,
   compareText,
   dateSpecificity,
@@ -253,27 +255,27 @@ function validField(field: string, value: unknown): boolean {
 /** A partial date shared by conflicting anchors stands alone, not in either anchor's group. */
 function groupClaims(claims: readonly CandidateClaim[]): ClaimGroup[] {
   const groups: CandidateClaim[][] = [];
+  const exact = new Map<string, CandidateClaim[]>();
+  const dates = new DateGroupIndex();
   const ordered = [...claims].sort(
     (a, b) => dateSpecificity(b.value) - dateSpecificity(a.value) || compareClaims(a, b),
   );
   for (const claim of ordered) {
-    const matches = groups.filter((group) =>
-      group.every((other) => claimValuesMatch(claim.field, claim.value, other.value)),
-    );
-    if (matches.length > 1 && cslFieldKinds.get(claim.field) === "date") {
-      const exact = matches.find((group) =>
-        group.every((other) => cslValuesEqual(claim.value, other.value)),
-      );
-      const partial = { ...claim, ambiguousDate: true };
-      if (exact) {
-        exact.push(partial);
-      } else {
-        groups.push([partial]);
-      }
-    } else if (!matches.length) {
-      groups.push([claim]);
+    const parts = cslFieldKinds.get(claim.field) === "date" && claimDateParts(claim.value);
+    if (parts) {
+      dates.add(claim, parts, groups);
+      continue;
+    }
+    const key = claimMatchKey(claim.field, claim.value);
+    const group = key === undefined ? undefined : exact.get(key);
+    if (group) {
+      group.push(claim);
     } else {
-      matches[0]?.push(claim);
+      const created = [claim];
+      groups.push(created);
+      if (key !== undefined) {
+        exact.set(key, created);
+      }
     }
   }
   return groups.flatMap((group) => {
@@ -295,15 +297,12 @@ function groupClaims(claims: readonly CandidateClaim[]): ClaimGroup[] {
     }
     // Generic remote metadata can repeat the very same document title; it is not another
     // independent work heading. Derived title candidates retain their original signal label.
+    const hasPageTitle = group.some(pageTitleSignal);
     const independent = new Set(
       group
         .filter(
           (claim) =>
-            !(
-              claim.field === "title" &&
-              claim.source.kind === "generic-remote" &&
-              group.some(pageTitleSignal)
-            ),
+            !(claim.field === "title" && claim.source.kind === "generic-remote" && hasPageTitle),
         )
         .map(evidenceLabel),
     );
@@ -317,6 +316,100 @@ function groupClaims(claims: readonly CandidateClaim[]): ClaimGroup[] {
       },
     ];
   });
+}
+
+type DateParts = NonNullable<ReturnType<typeof claimDateParts>>;
+interface DateGroup {
+  readonly claims: CandidateClaim[];
+  parts: DateParts;
+  uniformKey: string | undefined;
+}
+
+/**
+ * Date compatibility is not transitive. Index each group's merged constraints by precision
+ * and prefix (at most nine keys for a CSL date range), not by every member. A year can then
+ * detect ambiguity in two lookups/hits without endorsing either conflicting full date.
+ */
+class DateGroupIndex {
+  private readonly shapes = new Map<
+    string,
+    { readonly lengths: readonly number[]; readonly prefixes: Map<string, Set<DateGroup>> }
+  >();
+  private readonly uniform = new Map<string, DateGroup>();
+
+  add(claim: CandidateClaim, parts: DateParts, groups: CandidateClaim[][]): void {
+    const matches: DateGroup[] = [];
+    for (const shape of this.shapes.values()) {
+      if (shape.lengths.length !== parts.length) {
+        continue;
+      }
+      const key = valueKey(parts.map((part, i) => part.slice(0, shape.lengths[i])));
+      for (const group of shape.prefixes.get(key) ?? []) {
+        matches.push(group);
+        if (matches.length === 2) {
+          break;
+        }
+      }
+      if (matches.length === 2) {
+        break;
+      }
+    }
+    const key = valueKey(claim.value);
+    const ambiguous = matches.length > 1;
+    const group = ambiguous ? this.uniform.get(key) : matches[0];
+    const candidate = ambiguous ? { ...claim, ambiguousDate: true } : claim;
+    if (!group) {
+      const created: DateGroup = { claims: [candidate], parts, uniformKey: key };
+      groups.push(created.claims);
+      this.uniform.set(key, created);
+      this.index(created, true);
+      return;
+    }
+    group.claims.push(candidate);
+    if (group.uniformKey !== key && group.uniformKey !== undefined) {
+      this.uniform.delete(group.uniformKey);
+      group.uniformKey = undefined;
+    }
+    const merged = parts.map((part, i) => {
+      const previous = group.parts[i] ?? [];
+      return previous.length > part.length ? previous : part;
+    });
+    if (valueKey(merged) !== valueKey(group.parts)) {
+      this.index(group, false);
+      group.parts = merged;
+      this.index(group, true);
+    }
+  }
+
+  private index(group: DateGroup, add: boolean): void {
+    const lengths = group.parts.map((part) => part.length);
+    const shapeKey = lengths.join(",");
+    let shape = this.shapes.get(shapeKey);
+    if (!shape) {
+      shape = { lengths, prefixes: new Map() };
+      this.shapes.set(shapeKey, shape);
+    }
+    let prefixes: DateParts[] = [[]];
+    for (const part of group.parts) {
+      prefixes = prefixes.flatMap((prefix) =>
+        Array.from({ length: part.length }, (_, i) => [...prefix, part.slice(0, i + 1)]),
+      );
+    }
+    for (const prefix of prefixes) {
+      const key = valueKey(prefix);
+      if (add) {
+        const bucket = shape.prefixes.get(key) ?? new Set<DateGroup>();
+        bucket.add(group);
+        shape.prefixes.set(key, bucket);
+      } else {
+        const bucket = shape.prefixes.get(key);
+        bucket?.delete(group);
+        if (!bucket?.size) {
+          shape.prefixes.delete(key);
+        }
+      }
+    }
+  }
 }
 
 function groupValue(winner: Claim, ranked: readonly Claim[]): unknown {

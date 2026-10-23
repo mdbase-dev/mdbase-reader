@@ -1,7 +1,7 @@
 import { cslDate, cslName } from "./csl-values.js";
 import { arxivIdentifier, doiFromText, doiFromUrl } from "./doi.js";
-import { arrayValue, isRecord, jsonLdNames, jsonLdNode, nameOf, stringValue } from "./json-ld.js";
-import { all, first, metaIndex, type MetaIndex } from "./meta-tags.js";
+import { arrayValue, isRecord, jsonLdNames, nameOf, stringValue } from "./json-ld.js";
+import { all, first, type MetaIndex } from "./meta-tags.js";
 import { absoluteHttps, arxivDoi, embeddedDoi } from "./metadata-identifiers.js";
 import { articleJsonLdTypes, embeddedTypes, scholarlyJsonLdTypes } from "./metadata-types.js";
 
@@ -9,6 +9,16 @@ import type { Claim, ClaimBatch, ClaimIdentifiers, PageSignal } from "./claims.j
 
 type AddClaim = (field: string, value: unknown, signal: PageSignal, evidence: string) => void;
 type JsonLdNode = Readonly<Record<string, unknown>>;
+
+// Page data is untrusted, not a bibliography import. On overflow keep the HTML/tag fallback,
+// never a truncated graph whose first recommendation could masquerade as the captured work.
+const maxLinkedCharacters = 2_000_000;
+const maxLinkedNodes = 4_096;
+const maxMetadataTags = 512;
+const maxValues = 128;
+const maxFieldClaims = 128;
+const maxValueCharacters = 16_384;
+const maxUnscopedWorks = 8;
 
 const linkedWorkTypes = new Map([
   ["Book", "book"],
@@ -83,22 +93,35 @@ const doiKeys = ["citation_doi", "prism.doi", "dc.identifier", "dcterms.identifi
 /** Reports evidence without choosing a citation, changing the document or making requests. */
 export function pageClaims(document: Document, pageUrl: string, observedAt: string): ClaimBatch {
   const claims: Claim[] = [];
+  const counts = new Map<string, number>();
   const add: AddClaim = (field, value, signal, evidence) => {
-    if (value !== undefined && value !== "" && !(Array.isArray(value) && !value.length)) {
+    const count = counts.get(field) ?? 0;
+    if (
+      count < maxFieldClaims &&
+      value !== undefined &&
+      value !== "" &&
+      !(Array.isArray(value) && !value.length) &&
+      !(typeof value === "string" && value.length > maxValueCharacters)
+    ) {
+      counts.set(field, count + 1);
       claims.push({ field, value, source: { kind: "page", signal }, evidence, observedAt });
     }
   };
-  const meta = metaIndex(document);
-  const nodes = linkedNodes(document);
+  const meta = boundedMetaIndex(document);
+  const nodes = linkedNodes(document, pageUrl);
   if (challengePage(document, pageUrl, nodes)) {
     return { claims: [], observedAt };
   }
+  // Reserve room for document-level evidence even on pages with excessive linked values.
+  htmlClaims(document, pageUrl, add);
+  const html = claims.splice(0);
+  tagClaims(meta, pageUrl, add);
+  const documentClaims = [...claims.splice(0), ...html];
   for (const node of nodes) {
     linkedClaims(node, add);
   }
   videoClaims(document, nodes, add);
-  tagClaims(meta, pageUrl, add);
-  htmlClaims(document, pageUrl, add);
+  claims.push(...documentClaims);
   const arxiv = first(meta, "citation_arxiv_id") ?? arxivIdentifier(pageUrl);
   add("DOI", doiFromUrl(pageUrl), "html", "page URL");
   for (const identifier of all(meta, "citation_arxiv_id")) {
@@ -110,7 +133,11 @@ export function pageClaims(document: Document, pageUrl: string, observedAt: stri
       add("type", "article", claim.source.signal, claim.evidence ?? "DOI");
     }
   }
-  const scholarly = jsonLdNode(document, (type) => scholarlyJsonLdTypes.has(type));
+  const scholarly = nodes.find((node) =>
+    arrayValue(node["@type"]).some(
+      (type) => typeof type === "string" && scholarlyJsonLdTypes.has(type),
+    ),
+  );
   const identifiers: ClaimIdentifiers = {
     ...identifier("doi", embeddedDoi(meta, scholarly ?? nodes[0], pageUrl) ?? firstDoi(claims)),
     ...identifier("arxiv", arxiv?.replace(/^arxiv:/iu, "").trim()),
@@ -277,6 +304,7 @@ function tagNames(meta: MetaIndex, add: AddClaim): void {
 function tagAuthorNames(authors: readonly string[]): ReturnType<typeof cslName>[] {
   // article:author commonly identifies a profile, not a person or an organisation's byline.
   return authors
+    .slice(0, maxMetadataTags)
     .filter((author) => !/^\s*(?:https?:)?\/\//iu.test(author))
     .map(cslName)
     .filter(Boolean);
@@ -307,7 +335,7 @@ function tagPages(meta: MetaIndex, add: AddClaim): void {
         add("page", start, "highwire", firstKey);
       }
       for (const lastKey of lastKeys) {
-        for (const end of all(meta, lastKey)) {
+        for (const end of all(meta, lastKey).slice(0, maxValues)) {
           add(
             "page",
             start === end ? start : `${start}-${end}`,
@@ -338,30 +366,31 @@ function linkedClaims(node: JsonLdNode, add: AddClaim): void {
     ["issn", "ISSN"],
   ] as const;
   for (const [key, field] of fields) {
-    for (const value of arrayValue(node[key])) {
+    for (const value of arrayValue(node[key]).slice(0, maxValues)) {
       // Preserve the node's specificity so a generic WebPage name cannot outvote the work.
       const evidence =
         workType && (key === "headline" || key === "name") ? `${workType} ${key}` : key;
       add(field, stringValue(value), signal, evidence);
     }
   }
-  add("author", jsonLdNames(node["author"]), signal, "author");
-  for (const value of arrayValue(node["datePublished"])) {
+  add("author", jsonLdNames(arrayValue(node["author"]).slice(0, maxValues)), signal, "author");
+  for (const value of arrayValue(node["datePublished"]).slice(0, maxValues)) {
     add("issued", cslDate(stringValue(value)), signal, "datePublished");
   }
-  for (const value of arrayValue(node["publisher"])) {
+  for (const value of arrayValue(node["publisher"]).slice(0, maxValues)) {
     add("publisher", nameOf(value), signal, "publisher");
   }
-  for (const value of arrayValue(node["isPartOf"])) {
+  for (const value of arrayValue(node["isPartOf"]).slice(0, maxValues)) {
     add("container-title", linkedContainer(value), signal, "isPartOf");
   }
   const words = arrayValue(node["keywords"])
+    .slice(0, maxValues)
     .flatMap((value) => (typeof value === "string" ? value.split(",") : []))
     .map((word) => word.trim())
     .filter(Boolean);
   add("keyword", [...new Set(words)].join(", "), signal, "keywords");
   for (const key of ["identifier", "@id"]) {
-    for (const value of arrayValue(node[key])) {
+    for (const value of arrayValue(node[key]).slice(0, maxValues)) {
       const doi = doiFromText(stringValue(isRecord(value) ? value["value"] : value));
       add("DOI", doi, signal, key);
     }
@@ -402,11 +431,21 @@ function linkedType(type: string, add: AddClaim): void {
   add("type", cslType, "json-ld", "@type");
 }
 
-function linkedNodes(document: Document): JsonLdNode[] {
+function linkedNodes(document: Document, pageUrl: string): JsonLdNode[] {
   const nodes: JsonLdNode[] = [];
+  let characters = 0;
+  let scripts = 0;
+  const budget = { remaining: maxLinkedNodes };
   for (const script of document.querySelectorAll('script[type="application/ld+json"]')) {
+    characters += script.textContent.length;
+    if (++scripts > 32 || characters > maxLinkedCharacters) {
+      return [];
+    }
     try {
-      nodes.push(...graphNodes(JSON.parse(script.textContent)));
+      graphNodes(JSON.parse(script.textContent), nodes, budget);
+      if (budget.remaining < 0) {
+        return [];
+      }
     } catch {
       continue;
     }
@@ -418,11 +457,11 @@ function linkedNodes(document: Document): JsonLdNode[] {
   );
   const resolved = (value: unknown): unknown =>
     Array.isArray(value)
-      ? value.map(resolved)
+      ? value.slice(0, maxValues).map(resolved)
       : isRecord(value) && typeof value["@id"] === "string" && Object.keys(value).length === 1
         ? (byId.get(value["@id"]) ?? value)
         : value;
-  return nodes
+  return pageWorkNodes(document, pageUrl, nodes)
     .filter((node) => isWork(node) || arrayValue(node["@type"]).includes("WebSite"))
     .map((node) => ({
       ...node,
@@ -432,20 +471,127 @@ function linkedNodes(document: Document): JsonLdNode[] {
     }));
 }
 
-function graphNodes(value: unknown, depth = 0): JsonLdNode[] {
-  if (depth > 4) {
-    return [];
+function graphNodes(
+  value: unknown,
+  nodes: JsonLdNode[],
+  budget: { remaining: number },
+  depth = 0,
+): void {
+  if (value === undefined || depth > 6 || budget.remaining < 0) {
+    return;
+  }
+  if (--budget.remaining < 0) {
+    return;
   }
   if (Array.isArray(value)) {
-    return value.flatMap((item) => graphNodes(item, depth + 1));
+    for (const item of value) {
+      graphNodes(item, nodes, budget, depth + 1);
+      if (budget.remaining < 0) {
+        break;
+      }
+    }
+  } else if (isRecord(value)) {
+    nodes.push(value);
+    graphNodes(value["@graph"], nodes, budget, depth + 1);
+    graphNodes(value["mainEntity"], nodes, budget, depth + 1);
   }
-  return isRecord(value)
-    ? [
-        value,
-        ...graphNodes(value["@graph"], depth + 1),
-        ...graphNodes(value["mainEntity"], depth + 1),
-      ]
-    : [];
+}
+
+/** Recommendations/list entries describe other works, not the page being captured. */
+function pageWorkNodes(document: Document, pageUrl: string, nodes: JsonLdNode[]): JsonLdNode[] {
+  const identityUrl = (value: unknown): string | undefined => {
+    const identity = isRecord(value) ? (value["@id"] ?? value["url"]) : value;
+    if (typeof identity !== "string") {
+      return undefined;
+    }
+    try {
+      const url = new URL(identity, pageUrl);
+      url.hash = "";
+      return url.href;
+    } catch {
+      return undefined;
+    }
+  };
+  const pageUrls = new Set([identityUrl(pageUrl)]);
+  for (const link of document.querySelectorAll('link[rel~="canonical"]')) {
+    const url = identityUrl(link.getAttribute("href"));
+    if (url) {
+      pageUrls.add(url);
+    }
+  }
+  const matchesPage = (value: unknown): boolean => {
+    const url = identityUrl(value);
+    return url !== undefined && pageUrls.has(url);
+  };
+  const nodeIdentityMatches = (node: JsonLdNode): boolean =>
+    arrayValue(node["url"]).some(matchesPage) || matchesPage(node["@id"]);
+  const mainEntities = new Set<unknown>();
+  for (const node of nodes) {
+    if (
+      arrayValue(node["@type"]).includes("WebPage") &&
+      (matchesPage(node["@id"] ?? node["url"]) || (!node["@id"] && !node["url"]))
+    ) {
+      for (const entity of arrayValue(node["mainEntity"])) {
+        mainEntities.add(isRecord(entity) ? (entity["@id"] ?? entity) : entity);
+      }
+    }
+  }
+  const pageOnly = (node: JsonLdNode): boolean =>
+    arrayValue(node["@type"]).includes("WebPage") &&
+    !arrayValue(node["@type"]).some((type) => type !== "WebPage" && isWork({ "@type": type }));
+  const works = nodes.filter((node) => isWork(node) && !pageOnly(node));
+  const identified = works.filter(nodeIdentityMatches);
+  const targeted = (node: JsonLdNode): boolean =>
+    (identified.length <= maxUnscopedWorks && nodeIdentityMatches(node)) ||
+    arrayValue(node["mainEntityOfPage"]).some(matchesPage) ||
+    mainEntities.has(node["@id"] ?? node);
+  const hasTarget = works.some(targeted);
+  const listing = nodes.some((node) =>
+    arrayValue(node["@type"]).some((type) =>
+      ["ItemList", "CollectionPage", "SearchResultsPage"].includes(String(type)),
+    ),
+  );
+  return nodes.filter((node) => {
+    if (!isWork(node) || targeted(node)) {
+      return true;
+    }
+    // Explicit off-page identities are never evidence for this page. Small anonymous graphs
+    // can still express alternate metadata about one work, as publishers commonly do.
+    if (
+      node["url"] ||
+      ((hasTarget || listing || works.length > maxUnscopedWorks) &&
+        typeof node["@id"] === "string" &&
+        !node["@id"].startsWith("#"))
+    ) {
+      return false;
+    }
+    return pageOnly(node) || (!hasTarget && !listing && works.length <= maxUnscopedWorks);
+  });
+}
+
+function boundedMetaIndex(document: Document): MetaIndex {
+  const index = new Map<string, string[]>();
+  let count = 0;
+  for (const element of document.querySelectorAll<HTMLMetaElement>("meta[name], meta[property]")) {
+    if (++count > maxMetadataTags) {
+      break;
+    }
+    const key = (
+      element.getAttribute("name") ??
+      element.getAttribute("property") ??
+      ""
+    ).toLowerCase();
+    const content = element.content;
+    if (key && content && content.length <= maxValueCharacters) {
+      const values = index.get(key) ?? [];
+      const clean = textValue(content);
+      if (values.length < maxValues && clean) {
+        values.push(clean);
+        index.set(key, values);
+      }
+    }
+  }
+  return index;
 }
 
 function isWork(node: JsonLdNode): boolean {

@@ -47,7 +47,16 @@ export function useStoredDraft(
         return;
       }
       if (stored) {
-        setDraft({ ...stored.draft, title: stored.draft.title || capture.pageTitle });
+        const title = stored.draft.titleEdited
+          ? stored.draft.title
+          : stored.draft.title || capture.pageTitle;
+        const automaticTitle = stored.draft.automaticTitle ?? capture.pageTitle;
+        setDraft({
+          ...stored.draft,
+          title,
+          automaticTitle,
+          titleEdited: stored.draft.titleEdited ?? title !== automaticTitle,
+        });
         if (!selection && stored.selection) {
           setSelection(stored.selection, stored.selectionPostId);
         }
@@ -56,6 +65,8 @@ export function useStoredDraft(
         setDraft((current) => ({
           ...(followed ? emptyDraft : current),
           title: (followed ? "" : current.title) || capture.pageTitle,
+          automaticTitle: capture.pageTitle,
+          titleEdited: !followed && Boolean(current.title) && current.title !== capture.pageTitle,
           highlight: Boolean(selection),
           color,
         }));
