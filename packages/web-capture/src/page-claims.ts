@@ -1,9 +1,14 @@
 import { cslDate, cslName } from "./csl-values.js";
 import { arxivIdentifier, doiFromText, doiFromUrl } from "./doi.js";
-import { arrayValue, isRecord, jsonLdNames, nameOf, stringValue } from "./json-ld.js";
+import { arrayValue, isRecord, jsonLdNames, nameOf, schemaTypes, stringValue } from "./json-ld.js";
 import { all, first, type MetaIndex } from "./meta-tags.js";
 import { absoluteHttps, arxivDoi, embeddedDoi } from "./metadata-identifiers.js";
-import { articleJsonLdTypes, embeddedTypes, scholarlyJsonLdTypes } from "./metadata-types.js";
+import {
+  articleJsonLdTypes,
+  bibliographicType,
+  embeddedTypes,
+  scholarlyJsonLdTypes,
+} from "./metadata-types.js";
 
 import type { Claim, ClaimBatch, ClaimIdentifiers, PageSignal } from "./claims.js";
 
@@ -117,8 +122,9 @@ export function pageClaims(document: Document, pageUrl: string, observedAt: stri
   const html = claims.splice(0);
   tagClaims(meta, pageUrl, add);
   const documentClaims = [...claims.splice(0), ...html];
+  const revision = wikiRevision(document);
   for (const node of nodes) {
-    linkedClaims(node, add);
+    linkedClaims(node, add, wikiRevisionDate(node, revision));
   }
   videoClaims(document, nodes, add);
   claims.push(...documentClaims);
@@ -134,9 +140,7 @@ export function pageClaims(document: Document, pageUrl: string, observedAt: stri
     }
   }
   const scholarly = nodes.find((node) =>
-    arrayValue(node["@type"]).some(
-      (type) => typeof type === "string" && scholarlyJsonLdTypes.has(type),
-    ),
+    schemaTypes(node).some((type) => scholarlyJsonLdTypes.has(type)),
   );
   const identifiers: ClaimIdentifiers = {
     ...identifier("doi", embeddedDoi(meta, scholarly ?? nodes[0], pageUrl) ?? firstDoi(claims)),
@@ -193,7 +197,7 @@ function challengePage(
 }
 
 function videoClaims(document: Document, nodes: readonly JsonLdNode[], add: AddClaim): void {
-  const videos = nodes.filter((node) => arrayValue(node["@type"]).includes("VideoObject"));
+  const videos = nodes.filter((node) => schemaTypes(node).includes("VideoObject"));
   if (!videos.length) {
     return;
   }
@@ -263,6 +267,11 @@ function tagClaims(meta: MetaIndex, pageUrl: string, add: AddClaim): void {
 }
 
 function tagTypes(meta: MetaIndex, add: AddClaim): void {
+  for (const key of ["citation_type", "dc.type", "dcterms.type"]) {
+    for (const value of all(meta, key)) {
+      add("type", bibliographicType(value), metaSignal(key), key);
+    }
+  }
   for (const [key, type] of embeddedTypes) {
     if (meta.has(key)) {
       add("type", type, "highwire", key);
@@ -361,9 +370,56 @@ function tagPages(meta: MetaIndex, add: AddClaim): void {
   }
 }
 
-function linkedClaims(node: JsonLdNode, add: AddClaim): void {
+/**
+ * MediaWiki's visible revision footer describes the captured edition, not page creation.
+ * Require the standard heading, an ordinary Article/WebPage, and agreement between the
+ * footer and structured modification date. A wiki engine alone does not imply encyclopedia.
+ */
+interface WikiRevision {
+  readonly heading: string;
+  readonly date: readonly number[];
+}
+
+function wikiRevision(document: Document): WikiRevision | undefined {
+  const heading = textValue(
+    document.querySelector("h1#firstHeading .mw-page-title-main")?.textContent,
+  );
+  if (!heading) {
+    return undefined;
+  }
+  const footer = textValue(document.querySelector("#footer-info-lastmod")?.textContent);
+  const date = /^This page was last edited on (\d{1,2} [A-Za-z]+ \d{4}),/u.exec(footer ?? "")?.[1];
+  const parts = cslDate(date)?.["date-parts"][0];
+  return parts?.length === 3 ? { heading, date: parts } : undefined;
+}
+
+function wikiRevisionDate(
+  node: JsonLdNode,
+  revision: WikiRevision | undefined,
+): string | undefined {
+  if (!revision) {
+    return undefined;
+  }
+  const types = schemaTypes(node);
+  const name = textValue(stringValue(node["name"]) ?? stringValue(node["headline"]));
+  if (
+    !types.length ||
+    types.some((type) => !["Article", "WebPage"].includes(type)) ||
+    name !== revision.heading
+  ) {
+    return undefined;
+  }
+  const modified = stringValue(node["dateModified"]);
+  const structured = cslDate(modified)?.["date-parts"][0];
+  return structured?.length === 3 &&
+    revision.date.every((part, index) => part === structured[index])
+    ? modified
+    : undefined;
+}
+
+function linkedClaims(node: JsonLdNode, add: AddClaim, revision?: string): void {
   const signal = "json-ld";
-  if (arrayValue(node["@type"]).includes("WebSite")) {
+  if (schemaTypes(node).includes("WebSite")) {
     add("container-title", nameOf(node), signal, "WebSite name");
     return;
   }
@@ -387,8 +443,13 @@ function linkedClaims(node: JsonLdNode, add: AddClaim): void {
     }
   }
   add("author", jsonLdNames(arrayValue(node["author"]).slice(0, maxValues)), signal, "author");
-  for (const value of arrayValue(node["datePublished"]).slice(0, maxValues)) {
-    add("issued", cslDate(stringValue(value)), signal, "datePublished");
+  // For a visibly identified wiki revision, page creation is not this edition's date.
+  if (revision) {
+    add("issued", cslDate(revision), signal, "MediaWiki revision dateModified");
+  } else {
+    for (const value of arrayValue(node["datePublished"]).slice(0, maxValues)) {
+      add("issued", cslDate(stringValue(value)), signal, "datePublished");
+    }
   }
   for (const value of arrayValue(node["publisher"]).slice(0, maxValues)) {
     add("publisher", nameOf(value), signal, "publisher");
@@ -408,27 +469,22 @@ function linkedClaims(node: JsonLdNode, add: AddClaim): void {
       add("DOI", doi, signal, key);
     }
   }
-  for (const type of arrayValue(node["@type"])) {
-    if (typeof type === "string") {
-      linkedType(type, add);
-    }
+  for (const type of schemaTypes(node)) {
+    linkedType(type, add);
   }
 }
 
 function linkedContainer(value: unknown): string | undefined {
   // Article graphs often point to their own WebPage, not the containing publication.
-  return isRecord(value) && arrayValue(value["@type"]).includes("WebPage")
-    ? undefined
-    : nameOf(value);
+  return isRecord(value) && schemaTypes(value).includes("WebPage") ? undefined : nameOf(value);
 }
 
 function specificWorkType(node: JsonLdNode): string | undefined {
-  return arrayValue(node["@type"]).find(
-    (type): type is string =>
-      typeof type === "string" &&
-      (scholarlyJsonLdTypes.has(type) ||
-        (articleJsonLdTypes.has(type) && articleJsonLdTypes.get(type) !== "webpage") ||
-        linkedWorkTypes.has(type)),
+  return schemaTypes(node).find(
+    (type) =>
+      scholarlyJsonLdTypes.has(type) ||
+      (articleJsonLdTypes.has(type) && articleJsonLdTypes.get(type) !== "webpage") ||
+      linkedWorkTypes.has(type),
   );
 }
 
@@ -475,7 +531,7 @@ function linkedNodes(document: Document, pageUrl: string): JsonLdNode[] {
         ? (byId.get(value["@id"]) ?? value)
         : value;
   return pageWorkNodes(document, pageUrl, nodes)
-    .filter((node) => isWork(node) || arrayValue(node["@type"]).includes("WebSite"))
+    .filter((node) => isWork(node) || schemaTypes(node).includes("WebSite"))
     .map((node) => ({
       ...node,
       author: resolved(node["author"]),
@@ -541,7 +597,7 @@ function pageWorkNodes(document: Document, pageUrl: string, nodes: JsonLdNode[])
   const mainEntities = new Set<unknown>();
   for (const node of nodes) {
     if (
-      arrayValue(node["@type"]).includes("WebPage") &&
+      schemaTypes(node).includes("WebPage") &&
       (matchesPage(node["@id"] ?? node["url"]) || (!node["@id"] && !node["url"]))
     ) {
       for (const entity of arrayValue(node["mainEntity"])) {
@@ -550,8 +606,8 @@ function pageWorkNodes(document: Document, pageUrl: string, nodes: JsonLdNode[])
     }
   }
   const pageOnly = (node: JsonLdNode): boolean =>
-    arrayValue(node["@type"]).includes("WebPage") &&
-    !arrayValue(node["@type"]).some((type) => type !== "WebPage" && isWork({ "@type": type }));
+    schemaTypes(node).includes("WebPage") &&
+    !schemaTypes(node).some((type) => type !== "WebPage" && isWork({ "@type": type }));
   const works = nodes.filter((node) => isWork(node) && !pageOnly(node));
   const identified = works.filter(nodeIdentityMatches);
   const targeted = (node: JsonLdNode): boolean =>
@@ -560,8 +616,8 @@ function pageWorkNodes(document: Document, pageUrl: string, nodes: JsonLdNode[])
     mainEntities.has(node["@id"] ?? node);
   const hasTarget = works.some(targeted);
   const listing = nodes.some((node) =>
-    arrayValue(node["@type"]).some((type) =>
-      ["ItemList", "CollectionPage", "SearchResultsPage"].includes(String(type)),
+    schemaTypes(node).some((type) =>
+      ["ItemList", "CollectionPage", "SearchResultsPage"].includes(type),
     ),
   );
   return nodes.filter((node) => {
@@ -608,13 +664,12 @@ function boundedMetaIndex(document: Document): MetaIndex {
 }
 
 function isWork(node: JsonLdNode): boolean {
-  return arrayValue(node["@type"]).some(
+  return schemaTypes(node).some(
     (type) =>
-      typeof type === "string" &&
-      (scholarlyJsonLdTypes.has(type) ||
-        articleJsonLdTypes.has(type) ||
-        linkedWorkTypes.has(type) ||
-        type === "WebPage"),
+      scholarlyJsonLdTypes.has(type) ||
+      articleJsonLdTypes.has(type) ||
+      linkedWorkTypes.has(type) ||
+      type === "WebPage",
   );
 }
 
