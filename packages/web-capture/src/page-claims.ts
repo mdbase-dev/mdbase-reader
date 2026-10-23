@@ -10,6 +10,15 @@ import type { Claim, ClaimBatch, ClaimIdentifiers, PageSignal } from "./claims.j
 type AddClaim = (field: string, value: unknown, signal: PageSignal, evidence: string) => void;
 type JsonLdNode = Readonly<Record<string, unknown>>;
 
+const linkedWorkTypes = new Map([
+  ["Book", "book"],
+  ["Chapter", "chapter"],
+  ["Thesis", "thesis"],
+  ["Report", "report"],
+  ["Dataset", "dataset"],
+  ["VideoObject", "motion_picture"],
+]);
+
 const metaFields: readonly (readonly [string, readonly string[]])[] = [
   ["title", ["citation_title", "dc.title", "dcterms.title", "og:title", "twitter:title"]],
   [
@@ -87,6 +96,7 @@ export function pageClaims(document: Document, pageUrl: string, observedAt: stri
   for (const node of nodes) {
     linkedClaims(node, add);
   }
+  videoClaims(document, nodes, add);
   tagClaims(meta, pageUrl, add);
   htmlClaims(document, pageUrl, add);
   const arxiv = first(meta, "citation_arxiv_id") ?? arxivIdentifier(pageUrl);
@@ -139,6 +149,23 @@ function challengePage(document: Document, pageUrl: string, nodes: readonly Json
   } catch {
     return false;
   }
+}
+
+function videoClaims(document: Document, nodes: readonly JsonLdNode[], add: AddClaim): void {
+  if (!nodes.some((node) => arrayValue(node["@type"]).includes("VideoObject"))) {
+    return;
+  }
+  const authors = [...document.querySelectorAll('[itemprop~="author"][itemscope]')].flatMap(
+    (scope) => {
+      const property = scope.querySelector('[itemprop~="name"]');
+      const name = textValue(property?.getAttribute("content") ?? property?.textContent);
+      const author = name && cslName(name);
+      return author
+        ? [scope.getAttribute("itemtype")?.endsWith("/Organization") ? { literal: name } : author]
+        : [];
+    },
+  );
+  add("author", authors, "html", "VideoObject microdata author");
 }
 
 function tagClaims(meta: MetaIndex, pageUrl: string, add: AddClaim): void {
@@ -305,6 +332,9 @@ function linkedClaims(node: JsonLdNode, add: AddClaim): void {
   for (const value of arrayValue(node["datePublished"])) {
     add("issued", cslDate(stringValue(value)), signal, "datePublished");
   }
+  if (arrayValue(node["@type"]).includes("VideoObject")) {
+    add("issued", cslDate(stringValue(node["uploadDate"])), signal, "uploadDate");
+  }
   for (const value of arrayValue(node["publisher"])) {
     add("publisher", nameOf(value), signal, "publisher");
   }
@@ -341,21 +371,15 @@ function specificWorkType(node: JsonLdNode): string | undefined {
     (type): type is string =>
       typeof type === "string" &&
       (scholarlyJsonLdTypes.has(type) ||
-        (articleJsonLdTypes.has(type) && articleJsonLdTypes.get(type) !== "webpage")),
+        (articleJsonLdTypes.has(type) && articleJsonLdTypes.get(type) !== "webpage") ||
+        linkedWorkTypes.has(type)),
   );
 }
 
 function linkedType(type: string, add: AddClaim): void {
-  const scholarlyTypes = new Map([
-    ["Book", "book"],
-    ["Chapter", "chapter"],
-    ["Thesis", "thesis"],
-    ["Report", "report"],
-    ["Dataset", "dataset"],
-  ]);
   const cslType =
     articleJsonLdTypes.get(type) ??
-    scholarlyTypes.get(type) ??
+    linkedWorkTypes.get(type) ??
     (scholarlyJsonLdTypes.has(type)
       ? "article-journal"
       : type === "WebPage"
@@ -414,7 +438,10 @@ function isWork(node: JsonLdNode): boolean {
   return arrayValue(node["@type"]).some(
     (type) =>
       typeof type === "string" &&
-      (scholarlyJsonLdTypes.has(type) || articleJsonLdTypes.has(type) || type === "WebPage"),
+      (scholarlyJsonLdTypes.has(type) ||
+        articleJsonLdTypes.has(type) ||
+        linkedWorkTypes.has(type) ||
+        type === "WebPage"),
   );
 }
 

@@ -108,7 +108,7 @@ const stillWrong: Record<string, { readonly page: string[]; readonly remote: str
   },
   verge: { page: [], remote: [] },
   "wikipedia-australia": { page: ["type", "issued", "URL"], remote: [] },
-  "youtube-first": { page: ["type", "author", "issued"], remote: [] },
+  "youtube-first": { page: [], remote: [] },
 };
 
 it("replays the corpus through claims and the resolver", async () => {
