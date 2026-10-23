@@ -1,4 +1,4 @@
-import { useEffect, useRef, type JSX, type ReactNode, type RefObject } from "react";
+import { useEffect, useRef, useState, type JSX, type ReactNode, type RefObject } from "react";
 
 /**
  * A disclosure menu built on native details/summary. It closes on an outside
@@ -12,6 +12,8 @@ export function Menu({
   triggerClassName = "icon-button",
   align = "end",
   children,
+  defer = false,
+  onIntent,
 }: {
   readonly className?: string;
   readonly label: string;
@@ -20,14 +22,31 @@ export function Menu({
   readonly triggerClassName?: string;
   readonly align?: "start" | "end";
   readonly children: ReactNode;
+  readonly defer?: boolean;
+  readonly onIntent?: () => void;
 }): JSX.Element {
   const ref = useDismissableDetails();
+  const [opened, setOpened] = useState(false);
   return (
-    <details ref={ref} className={`reader-menu is-${align}${className ? ` ${className}` : ""}`}>
-      <summary className={triggerClassName} aria-label={label} title={title ?? label}>
+    <details
+      ref={ref}
+      className={`reader-menu is-${align}${className ? ` ${className}` : ""}`}
+      onToggle={(event) => {
+        if (event.currentTarget.open) {
+          setOpened(true);
+        }
+      }}
+    >
+      <summary
+        className={triggerClassName}
+        aria-label={label}
+        title={title ?? label}
+        onPointerEnter={onIntent}
+        onFocus={onIntent}
+      >
         {trigger}
       </summary>
-      <div className="reader-menu-panel">{children}</div>
+      <div className="reader-menu-panel">{!defer || opened ? children : null}</div>
     </details>
   );
 }

@@ -1,6 +1,5 @@
 import { useCallback, useState } from "react";
 
-import { buildSourceExport } from "./build-source-export.js";
 import { readerErrorMessage } from "./errors.js";
 
 import type { AsyncResource } from "./use-reader-workspace.js";
@@ -46,12 +45,15 @@ export function useSourceExport(input: {
     const source = input.source.value;
     const annotations = input.annotations.value;
     setState({ status: "exporting", message: null });
-    void buildSourceExport({
-      source,
-      annotations,
-      citationSources: input.citationSources,
-      readFile: (file, revision) => input.gateway.readFile(file, revision),
-    })
+    void import("./build-source-export.js")
+      .then(({ buildSourceExport }) =>
+        buildSourceExport({
+          source,
+          annotations,
+          citationSources: input.citationSources,
+          readFile: (file, revision) => input.gateway.readFile(file, revision),
+        }),
+      )
       .then(async (bundle) => {
         await input.saveFile?.(bundle.fileName, bundle.blob);
         const problemCount = bundle.fileProblems.length + bundle.materializationProblems.length;

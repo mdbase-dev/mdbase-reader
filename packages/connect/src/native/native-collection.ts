@@ -195,6 +195,6 @@ function viewExecution(result: QueryResult, input: ExecuteViewInput): SavedViewE
 }
 
 async function viewDocument(frontmatter: JsonObject): Promise<string> {
-  const { stringify } = await import("yaml");
+  const { stringify } = await import("../yaml-writer.js");
   return `---\n${stringify(frontmatter).trimEnd()}\n---\n\n`;
 }

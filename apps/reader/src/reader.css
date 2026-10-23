@@ -1062,6 +1062,15 @@ button {
   background: var(--reader-canvas);
 }
 
+/* A chunk download failure must stay actionable above the preparing-page overlay. */
+.document-renderer-stage .lazy-feature-error {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  padding: 1rem;
+  background: var(--reader-canvas);
+}
+
 .epub-viewer {
   position: relative;
   overflow: hidden;

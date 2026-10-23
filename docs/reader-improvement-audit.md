@@ -198,5 +198,7 @@ Remaining opportunities:
   scrolling tabs on every layout event interferes with native dragging.
 - Native-shell coverage and further PDF/EPUB position coverage across renderer
   eviction. Browser docking now has pointer, touch, persistence, and mobile coverage.
-- Further initial bundle splitting. The production build still warns about large
-  renderer chunks and YAML being imported both statically and dynamically.
+- Large on-demand renderer dependencies. [Further bundle splitting](reader-bundle-splitting.md)
+  now defers secondary surfaces, overlaps selected-renderer loading with document
+  fetching, and shares one YAML runtime behind async writer adapters. Large PDF,
+  Readium and Dockview chunks still need dependency-specific reductions.

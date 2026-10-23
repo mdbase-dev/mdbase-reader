@@ -9,8 +9,8 @@ import { useReaderFeedbackContext } from "./FeedbackRoot.js";
 import { importHref } from "./import-navigation.js";
 import { inspectorSourceForTab } from "./inspector-source.js";
 import { InspectorPane, type InspectorTab } from "./InspectorPane.js";
+import { lazyFeature } from "./lazy-feature.js";
 import { LibraryNavigator } from "./LibraryNavigator.js";
-import { LibraryWorkspace } from "./LibraryWorkspace.js";
 import { mobileSourceBar } from "./mobile-source-bar.js";
 import { useReaderMdbase } from "./reader-collections.js";
 import { readerCommands } from "./reader-command-list.js";
@@ -90,6 +90,11 @@ interface PendingWorkspaceAnnotation {
   readonly paneId: WorkspacePaneId | null;
   readonly sourceId: SourceId;
 }
+
+const LibraryWorkspace = lazyFeature(
+  async () => ({ default: (await import("./LibraryWorkspace.js")).LibraryWorkspace }),
+  "the library view",
+);
 
 /** Every open tab is listed; other groups show a few until the reader types. */
 const paletteShowsAll = ["Open tabs"];

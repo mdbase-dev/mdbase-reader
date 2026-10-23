@@ -1,5 +1,5 @@
 import { signalMdbaseMark } from "@mdbase-dev/ui/mark-activity";
-import { buildCslBibliography, serializeCslBibliography } from "@mdbase-reader/core";
+import { buildCslBibliography } from "@mdbase-reader/core";
 import { useCallback, useMemo, useState } from "react";
 
 import { readerErrorMessage } from "./errors.js";
@@ -43,8 +43,8 @@ export function useBibliographyExport(
         return;
       }
       setState({ status: "exporting", message: null });
-      const contents = serializeCslBibliography(items);
-      void saveFile("references.json", new Blob([contents], { type: "application/json" }))
+      void import("./bibliography-download.js")
+        .then(({ saveBibliography }) => saveBibliography(items, saveFile))
         .then(() => {
           signalMdbaseMark("saved");
           setState({

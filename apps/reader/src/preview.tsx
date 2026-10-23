@@ -24,10 +24,11 @@ import {
   type SourceRecordCreationRequest,
   type SourceSummary,
 } from "@mdbase-reader/core";
-import { lazy, Suspense, useMemo, type JSX } from "react";
+import { Suspense, useMemo, type JSX } from "react";
 
 import { captureCitationProvenance } from "./capture-citation-provenance.js";
 import { CollectionSwitchingContext, type CollectionSwitching } from "./CollectionPicker.js";
+import { HtmlViewerSurface } from "./document-renderers.js";
 import {
   applyLibraryViewConfiguration,
   defaultLibraryView,
@@ -493,11 +494,6 @@ export class PreviewGateway implements ReaderWorkspaceGateway {
     return Promise.resolve(updated);
   }
 }
-
-const HtmlViewerSurface = lazy(async () => {
-  const module = await import("@mdbase-reader/renderer-html");
-  return { default: module.HtmlViewerSurface };
-});
 
 const previewHtml = `<!doctype html><html lang="en"><head><title>The Principles of Psychology</title></head><body>
 <article>

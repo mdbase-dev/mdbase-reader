@@ -2,6 +2,8 @@ import { offlineShellPlugin } from "@mdbase-dev/sdk/offline-shell/build";
 import react from "@vitejs/plugin-react";
 import { defineConfig } from "vite";
 
+import { bundleReport } from "./scripts/bundle-report.js";
+
 import type { Plugin } from "vite";
 
 const buildId = (process.env["MDBASE_READER_BUILD_ID"] ?? "local").replaceAll(
@@ -15,12 +17,21 @@ const buildOutput = {
   assetFileNames: `assets/[name]-[hash]-${buildId}.[ext]`,
 };
 
-export default defineConfig({
-  plugins: [react(), deploymentRevision(buildId), offlineShellPlugin()],
+export default defineConfig(({ mode }) => ({
+  plugins: [
+    react(),
+    deploymentRevision(buildId),
+    ...(mode === "bundle-report" || process.env["READER_BUNDLE_REPORT"] === "1"
+      ? [bundleReport()]
+      : []),
+    offlineShellPlugin(),
+  ],
   resolve: {
     dedupe: [
       "react",
       "react-dom",
+      // The SDK/protocol and Reader exports must share one YAML runtime.
+      "yaml",
       "@codemirror/autocomplete",
       "@codemirror/commands",
       "@codemirror/language",
@@ -42,7 +53,7 @@ export default defineConfig({
       output: buildOutput,
     },
   },
-});
+}));
 
 function deploymentRevision(revision: string): Plugin {
   return {
