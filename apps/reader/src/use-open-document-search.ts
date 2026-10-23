@@ -118,6 +118,6 @@ export function useOpenDocumentSearch(
   return {
     matches,
     problem,
-    coverage: `${pending ? "Indexing" : "Searched"} ${String(currentTexts.length)} of ${String(readable)} readable sources. Only loaded, supported documents are searched; suspended tabs are not included.${currentTexts.some((entry) => entry.truncated) ? " Large documents are limited to their first 1,000,000 characters." : ""}`,
+    coverage: `Loaded-document fallback: ${pending ? "indexing" : "searched"} ${String(currentTexts.length)} of ${String(readable)} readable sources. Suspended/unopened PDF/EPUB files are not included.${currentTexts.some((entry) => entry.truncated) ? " Loaded documents are limited to their first 1,000,000 characters." : ""}`,
   };
 }

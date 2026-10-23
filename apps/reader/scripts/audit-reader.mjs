@@ -364,13 +364,13 @@ try {
     await chooseOption(page.getByRole("combobox", { name: "Search scope" }), "documents");
     await page.getByRole("textbox", { name: "Search this view" }).fill("patient attention");
     await expect(page.getByRole("region", { name: "Text search results" })).toContainText(
-      "Only loaded, supported documents",
+      "Saved HTML pages up to 256 KiB are indexed on this device",
     );
     await expect(
       page.getByRole("region", { name: "Text search results" }).locator("mark").first(),
     ).toHaveText("patient attention", { timeout: 20000 });
     completed.push(
-      "Notes and loaded-document search: snippets, highlighted matches, explicit coverage",
+      "Notes and library/loaded-document search: snippets, highlighted matches, explicit coverage",
     );
 
     const display = page.getByLabel("Display settings", { exact: true });

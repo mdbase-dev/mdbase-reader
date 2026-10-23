@@ -3,6 +3,7 @@ import { sourceId } from "@mdbase-reader/core";
 import { useCallback, useEffect, useState, type JSX } from "react";
 
 import { navigatorPanelId } from "./dockview-workspace-state.js";
+import { LibraryDocumentIndex } from "./LibraryDocumentIndex.js";
 import {
   useDocumentSurfaceTiming,
   useReaderAnnotationComposer,
@@ -67,17 +68,19 @@ export function ReaderApp({
     );
   }
   return (
-    <OpenedReaderApp
-      gateway={gateway}
-      initialSourceId={initialSourceId}
-      initialAnnotation={initialAnnotation}
-      {...(directAccess ? { directAccess } : {})}
-      workspace={workspace}
-      library={workspace.library.value}
-      {...(renderDocument ? { renderDocument } : {})}
-      {...(pickSourceFile ? { pickSourceFile } : {})}
-      {...(saveFile ? { saveFile } : {})}
-    />
+    <LibraryDocumentIndex library={workspace.library.value} gateway={gateway}>
+      <OpenedReaderApp
+        gateway={gateway}
+        initialSourceId={initialSourceId}
+        initialAnnotation={initialAnnotation}
+        {...(directAccess ? { directAccess } : {})}
+        workspace={workspace}
+        library={workspace.library.value}
+        {...(renderDocument ? { renderDocument } : {})}
+        {...(pickSourceFile ? { pickSourceFile } : {})}
+        {...(saveFile ? { saveFile } : {})}
+      />
+    </LibraryDocumentIndex>
   );
 }
 
