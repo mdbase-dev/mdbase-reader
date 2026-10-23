@@ -124,16 +124,20 @@ export function useCitationEditor(input: {
   const lookup = useCitationLookup({
     gateway: input.gateway,
     source,
-    citation: assessment.value ?? {},
+    citation: assessment.value ?? null,
     provenance,
-    onAccept: (suggestions) =>
+    onAccept: (suggestions) => {
+      if (!assessment.value || suggestions.length === 0) {
+        return;
+      }
       updateDraft(
         serializeCitation({
           ...assessment.value,
           ...Object.fromEntries(suggestions.map(({ field, proposed }) => [field, proposed])),
         }),
         suggestions,
-      ),
+      );
+    },
   });
 
   const persist = useCallback(

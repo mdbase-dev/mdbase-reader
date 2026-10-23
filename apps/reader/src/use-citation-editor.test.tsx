@@ -71,7 +71,7 @@ function Harness({ source }: { source: Source }): React.JSX.Element {
   }, [current]);
   return (
     <>
-      <CitationLookup citation={current.assessment.value ?? {}} editor={current} />
+      <CitationLookup key={source.id} citation={current.assessment.value ?? {}} editor={current} />
       <CitationProvenance
         citation={current.assessment.value ?? {}}
         provenance={current.provenance}
@@ -265,7 +265,57 @@ describe("citation provenance and lookups", () => {
     expect(signal?.aborted).toBe(true);
     expect(controller.suggestions).toEqual([]);
     expect(controller.resolutionStatus).toBe("idle");
+    await render(explained);
+    expect(controller.resolutionStatus).toBe("idle");
+    expect(container.textContent).not.toContain("Looking…");
+    await find();
+    expect(citationClaims).toHaveBeenCalledTimes(2);
   });
+
+  it("discards resolved suggestions on source changes, even after returning", async () => {
+    citationClaims.mockResolvedValue([claim("publisher", "Stale")]);
+    await render(explained);
+    await find();
+    expect(controller.suggestions).toHaveLength(1);
+    await render({ ...source, id: sourceId("src_two") });
+    expect(controller.suggestions).toEqual([]);
+    await render(explained);
+    expect(controller.suggestions).toEqual([]);
+    expect(controller.resolutionStatus).toBe("idle");
+  });
+
+  it("discards all suggestions when the citation changes", async () => {
+    citationClaims.mockResolvedValue([claim("publisher", "Stale")]);
+    await render(explained);
+    await find();
+    await act(async () => controller.setCitation({ ...citation, title: "Another work" }));
+    expect(controller.suggestions).toEqual([]);
+    expect(controller.resolutionStatus).toBe("idle");
+    await act(async () => controller.acceptSuggestions(new Set(["publisher"])));
+    expect(controller.assessment.value).toEqual({ ...citation, title: "Another work" });
+  });
+
+  it.each(["{", "[]", "null", '"not an object"'])(
+    "cannot accept suggestions into a non-object draft: %s",
+    async (draft) => {
+      citationClaims.mockResolvedValue([claim("publisher", "A press")]);
+      await render(explained);
+      await find();
+      const provenance = controller.provenance;
+      await act(async () => controller.setDraft(draft));
+      expect(controller.suggestions).toEqual([]);
+      expect(container.textContent).not.toContain("Accept all");
+      await act(async () => controller.acceptSuggestions(new Set(["publisher"])));
+      await act(async () => controller.resolve(citation.URL));
+      expect(citationClaims).toHaveBeenCalledTimes(1);
+      expect(controller.draft).toBe(draft);
+      expect(controller.provenance).toEqual(provenance);
+      await act(async () => controller.setDraft(JSON.stringify(citation)));
+      expect(controller.assessment.value).toEqual(citation);
+      expect(controller.provenance).toEqual(provenance);
+      expect(controller.suggestions).toEqual([]);
+    },
+  );
 
   it("preserves untouched provenance through an invalid raw JSON edit", async () => {
     await render(explained);

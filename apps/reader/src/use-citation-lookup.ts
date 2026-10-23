@@ -12,7 +12,7 @@ import { readerErrorMessage } from "./errors.js";
 import type { ReaderWorkspaceGateway } from "./workspace-model.js";
 
 interface LookupState {
-  readonly sourceId: string;
+  readonly scope: string;
   readonly status: "idle" | "resolving" | "resolved";
   readonly error: string | null;
   readonly claims: readonly Claim[];
@@ -22,7 +22,7 @@ interface LookupState {
 export function useCitationLookup(input: {
   readonly gateway: ReaderWorkspaceGateway;
   readonly source: Source | null;
-  readonly citation: Readonly<Record<string, unknown>>;
+  readonly citation: Readonly<Record<string, unknown>> | null;
   readonly provenance: CslProvenance;
   readonly onAccept: (suggestions: readonly CitationSuggestion[]) => void;
 }): {
@@ -38,37 +38,43 @@ export function useCitationLookup(input: {
   const [state, setState] = useState<LookupState | null>(null);
   const pending = useRef<AbortController | null>(null);
   const sourceId = input.source?.id;
-  useEffect(() => () => pending.current?.abort(), [sourceId]);
-  const current = state?.sourceId === sourceId ? state : null;
-  const suggestions = resolveCitation({
-    claims: current?.claims ?? [],
-    existing: { citation: input.citation, provenance: input.provenance },
-  }).suggestions.filter(({ field }) => field !== "id" && !current?.dismissed.has(field));
+  const scope = JSON.stringify([sourceId, input.citation, input.provenance]);
+  useEffect(() => () => pending.current?.abort(), [scope]);
+  const current = state?.scope === scope ? state : null;
+  if (state?.scope !== undefined && !current) {
+    setState(null);
+  }
+  const suggestions = input.citation
+    ? resolveCitation({
+        claims: current?.claims ?? [],
+        existing: { citation: input.citation, provenance: input.provenance },
+      }).suggestions.filter(({ field }) => field !== "id" && !current?.dismissed.has(field))
+    : [];
   const dismissFields = (fields: ReadonlySet<string>): void => {
     setState((previous) =>
-      previous && previous.sourceId === sourceId
+      previous && previous.scope === scope
         ? { ...previous, dismissed: new Set([...previous.dismissed, ...fields]) }
         : previous,
     );
   };
   const resolve = (query: string): void => {
-    if (!sourceId || !query.trim()) {
+    if (!sourceId || !input.citation) {
       return;
     }
     pending.current?.abort();
     const controller = new AbortController();
     pending.current = controller;
-    setState({ sourceId, status: "resolving", error: null, claims: [], dismissed: new Set() });
+    setState({ scope, status: "resolving", error: null, claims: [], dismissed: new Set() });
     void lookupClaims(input.gateway, query, input.source, input.citation, controller.signal)
       .then((claims) => {
         if (!controller.signal.aborted) {
-          setState({ sourceId, status: "resolved", error: null, claims, dismissed: new Set() });
+          setState({ scope, status: "resolved", error: null, claims, dismissed: new Set() });
         }
       })
       .catch((reason: unknown) => {
         if (!controller.signal.aborted) {
           setState({
-            sourceId,
+            scope,
             status: "idle",
             error: readerErrorMessage(reason, "Reader could not find citation metadata."),
             claims: [],
@@ -88,7 +94,7 @@ export function useCitationLookup(input: {
       const selected = suggestions.filter(
         (suggestion) =>
           fields.has(suggestion.field) &&
-          cslValuesEqual(input.citation[suggestion.field], suggestion.current),
+          cslValuesEqual(input.citation?.[suggestion.field], suggestion.current),
       );
       input.onAccept(selected);
       dismissFields(new Set(selected.map(({ field }) => field)));
