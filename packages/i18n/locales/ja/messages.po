@@ -7990,16 +7990,16 @@ msgstr "種類"
 #: apps/reader/src/DisplayMenu.tsx
 msgctxt "DisplayMenu interface"
 msgid "Typeface"
-msgstr ""
+msgstr "書体"
 
 #: apps/reader/src/workspace-tab-display.ts
 msgid "Unavailable source"
-msgstr ""
+msgstr "利用できない資料"
 
 #: apps/reader/src/LibraryCards.tsx
 msgctxt "LibraryCards interface"
 msgid "Undated"
-msgstr ""
+msgstr "日付なし"
 
 #: apps/extension/src/CaptureApp.tsx
 msgctxt "Reader action"
@@ -8008,58 +8008,58 @@ msgstr "元に戻す"
 
 #: packages/core/src/application/create-annotation.ts
 msgid "Unknown annotation creation failure"
-msgstr ""
+msgstr "注釈作成中に不明なエラーが発生しました"
 
 #: apps/reader/src/LibraryCards.tsx
 msgctxt "LibraryCards interface"
 msgid "Unknown creator"
-msgstr ""
+msgstr "作成者不明"
 
 #: apps/reader/src/LibraryNavigator.tsx
 msgctxt "LibraryNavigator interface"
 msgid "Unknown creator"
-msgstr ""
+msgstr "作成者不明"
 
 #: apps/reader/src/NavigatorSections.tsx
 msgctxt "NavigatorSections status or action"
 msgid "Unknown creator"
-msgstr ""
+msgstr "作成者不明"
 
 #: apps/reader/src/reader-command-list.ts
 msgctxt "reader command list"
 msgid "Unknown creator"
-msgstr ""
+msgstr "作成者不明"
 
 #: apps/reader/src/annotation-overview.ts
 msgid "Unknown source"
-msgstr ""
+msgstr "不明な資料"
 
 #: apps/reader/src/LibraryAnnotationRow.tsx
 msgctxt "LibraryAnnotationRow interface"
 msgid "Unknown source"
-msgstr ""
+msgstr "不明な資料"
 
 #: packages/migration/src/zotero-bundle.ts
 msgid "Unlisted file in bundle."
-msgstr ""
+msgstr "バンドルに一覧外のファイルがあります。"
 
 #: apps/reader/src/dockview-menus.ts
 msgctxt "dockview menus"
 msgid "Unpin tab"
-msgstr ""
+msgstr "タブの固定を解除"
 
 #: apps/reader/src/library-lenses.ts
 msgctxt "library lenses"
 msgid "Unread inbox"
-msgstr ""
+msgstr "未読の受信トレイ"
 
 #: packages/migration/src/zotero-validation.ts
 msgid "Unreported missing parent."
-msgstr ""
+msgstr "報告されていない親項目の欠落。"
 
 #: packages/migration/src/model.ts
 msgid "Unsafe import path."
-msgstr ""
+msgstr "安全でないインポートパス。"
 
 #: apps/reader/src/AnnotationEditor.tsx
 msgctxt "Reader save status"
@@ -8087,51 +8087,51 @@ msgstr "未保存の変更"
 
 #: packages/migration/src/readwise.ts
 msgid "Unsaved Feed items excluded (choose “Include unsaved Feed items” to import)"
-msgstr ""
+msgstr "未保存のフィード項目を除外しました（インポートするには「未保存のフィード項目を含める」を選択してください）"
 
 #: packages/migration/src/zotero-pdf.ts
 msgid "Unsupported PDF page geometry."
-msgstr ""
+msgstr "対応していないPDFページの座標情報です。"
 
 #: apps/reader/src/citation-form-model.ts
 msgid "Unsupported value"
-msgstr ""
+msgstr "対応していない値"
 
 #: packages/migration/src/zotero-bundle.ts
 msgid "Unsupported Zotero bundle version."
-msgstr ""
+msgstr "対応していないZoteroバンドルのバージョンです。"
 
 #: apps/reader/src/annotation-wiki-candidates.ts
 msgid "Untitled annotation"
-msgstr ""
+msgstr "無題の注釈"
 
 #: apps/reader/src/source-addition-flow.ts
 msgctxt "source addition flow"
 msgid "Untitled source"
-msgstr ""
+msgstr "無題の資料"
 
 #: apps/reader/src/CitationSourceSync.tsx
 msgid "Update library details"
-msgstr ""
+msgstr "ライブラリの詳細を更新"
 
 #: apps/reader/src/connection-recovery.ts
 msgid "Update mdbase Connect on your computer to open this collection."
-msgstr ""
+msgstr "このコレクションを開くには、お使いのコンピューターでmdbase Connectを更新してください。"
 
 #: apps/extension/src/connection-view.ts
 msgid "Update Reader"
-msgstr ""
+msgstr "Readerを更新"
 
 #: apps/reader/src/LibraryBulkBar.tsx
 msgctxt "LibraryBulkBar interface"
 msgid "Updated"
-msgstr ""
+msgstr "更新済み"
 
 #. placeholder {0}: String(progress.done)
 #. placeholder {1}: String(progress.total)
 #: apps/reader/src/LibraryBulkBar.tsx
 msgid "Updating {0} of {1}…"
-msgstr ""
+msgstr "{1}件中{0}件を更新中…"
 
 #: apps/extension/src/SavedHighlights.tsx
 #: apps/reader/src/CitationSourceSync.tsx
@@ -8140,21 +8140,21 @@ msgstr "更新中…"
 
 #: packages/migration/src/run-files.ts
 msgid "Uploaded checksum does not match the original file."
-msgstr ""
+msgstr "アップロードされたファイルのチェックサムが元のファイルと一致しません。"
 
 #. placeholder {0}: String(progress.fileIndex)
 #. placeholder {1}: String(progress.fileCount)
 #: apps/reader/src/SourceImportDialog.tsx
 msgid "Uploading file {0} of {1}"
-msgstr ""
+msgstr "ファイルをアップロード中：{1}件中{0}件"
 
 #: apps/extension/src/CaptureApp.tsx
 msgid "Uploading file {fileIndex} of {fileCount} · {percent}%"
-msgstr ""
+msgstr "ファイルをアップロード中：{fileCount}件中{fileIndex}件 · {percent}%"
 
 #: packages/migration/src/zotero-validation.ts
 msgid "URL attachment contains unexpected files."
-msgstr ""
+msgstr "URLの添付ファイルに想定外のファイルが含まれています。"
 
 #: apps/reader/src/DraftRecoveryNotice.tsx
 msgid "Use collection version"
@@ -8162,38 +8162,38 @@ msgstr "コレクションのバージョンを使用"
 
 #: apps/reader/src/reader-app-commands.ts
 msgid "Use comfortable density"
-msgstr ""
+msgstr "ゆったりした表示密度を使用"
 
 #: apps/reader/src/reader-app-commands.ts
 msgid "Use compact density"
-msgstr ""
+msgstr "コンパクトな表示密度を使用"
 
 #: apps/reader/src/reader-app-commands.ts
 msgid "Use dark theme"
-msgstr ""
+msgstr "ダークテーマを使用"
 
 #. placeholder {0}: fieldLabel(difference.field)
 #: apps/reader/src/CitationLookup.tsx
 msgid "Use found {0}"
-msgstr ""
+msgstr "見つかった{0}を使用"
 
 #: apps/reader/src/AnnotationComposer.tsx
 msgid "Use it for this comment"
-msgstr ""
+msgstr "このコメントに使用"
 
 #: apps/reader/src/reader-app-commands.ts
 msgid "Use light theme"
-msgstr ""
+msgstr "ライトテーマを使用"
 
 #: apps/extension/src/NotePanel.tsx
 #: apps/reader/src/AnnotationEditor.tsx
 msgid "Use theirs"
-msgstr ""
+msgstr "相手の変更を使用"
 
 #: apps/reader/src/LibraryConditionsEditor.tsx
 msgctxt "LibraryConditionsEditor interface"
 msgid "value"
-msgstr ""
+msgstr "値"
 
 #: apps/reader/src/LibraryConditionsEditor.tsx
 msgctxt "LibraryConditionsEditor interface"
@@ -8202,50 +8202,50 @@ msgstr "値"
 
 #: apps/reader/src/LibraryBulkBar.tsx
 msgid "Value (empty removes the field)"
-msgstr ""
+msgstr "値（空にするとフィールドを削除）"
 
 #. placeholder {0}: String(index + 1)
 #: apps/reader/src/CitationTypedFieldEditors.tsx
 msgid "Value {0}"
-msgstr ""
+msgstr "値{0}"
 
 #: apps/reader/src/CitationTypedFieldEditors.tsx
 msgctxt "CitationTypedFieldEditors interface"
 msgid "Value type"
-msgstr ""
+msgstr "値の型"
 
 #: apps/reader/src/LibraryBulkBar.tsx
 msgid "value, or empty to remove"
-msgstr ""
+msgstr "値、または空欄にして削除"
 
 #: apps/reader/src/CitationTypedFieldEditors.tsx
 msgid "Values"
-msgstr ""
+msgstr "値"
 
 #. placeholder {0}: String(i + 1)
 #. placeholder {1}: String(payloads.length)
 #: packages/migration/src/zotero-bundle.ts
 msgid "Verifying file {0} of {1}…"
-msgstr ""
+msgstr "ファイルを検証中：{1}件中{0}件…"
 
 #: apps/reader/src/import-controller.ts
 msgid "Verifying imported records"
-msgstr ""
+msgstr "インポートしたレコードを検証中"
 
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "Version"
-msgstr ""
+msgstr "バージョン"
 
 #: packages/renderer-pdf/src/pdf-translations.ts
 msgctxt "PDF viewer page"
 msgid "Vertical"
-msgstr ""
+msgstr "縦方向"
 
 #: packages/renderer-pdf/src/pdf-translations.ts
 msgctxt "PDF viewer menu"
 msgid "View Controls"
-msgstr ""
+msgstr "表示の操作"
 
 #: apps/reader/src/LibraryAnnotationToolbar.tsx
 msgctxt "LibraryAnnotationToolbar interface"
@@ -8260,7 +8260,7 @@ msgstr "ビューのオプション"
 #. placeholder {0}: filterCount ? `, ${String(filterCount)} active filters` : ""
 #: apps/reader/src/LibraryWorkspace.tsx
 msgid "View options{0}"
-msgstr ""
+msgstr "ビューのオプション{0}"
 
 #: apps/reader/src/LibraryNavigator.tsx
 msgid "Views"
@@ -8269,22 +8269,22 @@ msgstr "ビュー"
 #: apps/reader/src/CitationStructuredEditor.tsx
 msgctxt "CitationStructuredEditor interface"
 msgid "Volume"
-msgstr ""
+msgstr "巻"
 
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "Volume"
-msgstr ""
+msgstr "巻"
 
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "Volume title"
-msgstr ""
+msgstr "巻のタイトル"
 
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "Volume title short"
-msgstr ""
+msgstr "巻の略称"
 
 #: apps/reader/src/native-signin-ui.ts
 msgctxt "Native sign-in"
@@ -8293,90 +8293,90 @@ msgstr "mdbase タブでの承認を待っています…"
 
 #: apps/extension/src/CaptureApp.tsx
 msgid "Waiting for the active tab"
-msgstr ""
+msgstr "アクティブなタブを待機中"
 
 #: apps/reader/src/LibraryCells.tsx
 msgctxt "source format"
 msgid "Web"
-msgstr ""
+msgstr "Web"
 
 #: apps/reader/src/workspace-tab-display.ts
 msgctxt "Source format badge for saved web pages"
 msgid "WEB"
-msgstr ""
+msgstr "Web"
 
 #: packages/core/src/application/source-import-values.ts
 msgid "Web capture provenance contains an invalid URL."
-msgstr ""
+msgstr "Webキャプチャの出所情報に無効なURLが含まれています。"
 
 #: packages/core/src/application/source-import-values.ts
 msgid "Web capture provenance must use public HTTPS URLs."
-msgstr ""
+msgstr "Webキャプチャの出所情報には公開されたHTTPSのURLが必要です。"
 
 #: packages/core/src/application/import-source-file.ts
 msgid "Web captures must contain an HTML document."
-msgstr ""
+msgstr "WebキャプチャにはHTML文書が必要です。"
 
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "Web page"
-msgstr ""
+msgstr "Webページ"
 
 #: apps/reader/src/citation-form-model.ts
 msgctxt "CSL item type"
 msgid "Web page"
-msgstr ""
+msgstr "Webページ"
 
 #: apps/extension/src/shell-messages.ts
 #: apps/extension/src/WelcomeApp.tsx
 msgid "Welcome to mdbase Reader"
-msgstr ""
+msgstr "mdbase Readerへようこそ"
 
 #: apps/reader/src/CitationStructuredEditor.tsx
 msgid "Where and when the work appeared"
-msgstr ""
+msgstr "作品の発表場所と発表時期"
 
 #: apps/reader/src/annotation-wiki-candidates.ts
 msgctxt "annotation wiki candidates"
 msgid "Whole source"
-msgstr ""
+msgstr "資料全体"
 
 #: packages/renderer-pdf/src/pdf-translations.ts
 msgctxt "PDF viewer search"
 msgid "Whole word"
-msgstr ""
+msgstr "単語全体を一致させる"
 
 #: apps/reader/src/AnnotationComposer.tsx
 msgid "Why does this matter?"
-msgstr ""
+msgstr "これが重要な理由"
 
 #: apps/reader/src/DisplayMenu.tsx
 msgctxt "DisplayMenu interface"
 msgid "Wide"
-msgstr ""
+msgstr "広い"
 
 #: apps/reader/src/AnnotationList.tsx
 msgctxt "AnnotationList annotationFilterOptions"
 msgid "With commentary"
-msgstr ""
+msgstr "コメント付き"
 
 #: apps/extension/src/WelcomeApp.tsx
 msgid "With the panel open, select text on the page and it appears there. Choose a colour to save it, adding a comment first if you like."
-msgstr ""
+msgstr "パネルを開いた状態でページ上のテキストを選択すると、そこに表示されます。色を選んで保存してください。必要なら先にコメントを追加できます。"
 
 #: apps/reader/src/reader-command-list.ts
 msgid "Workspace"
-msgstr ""
+msgstr "ワークスペース"
 
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "Year suffix"
-msgstr ""
+msgstr "年の接尾辞"
 
 #: apps/extension/src/HighlightFields.tsx
 msgctxt "Highlight colour"
 msgid "yellow"
-msgstr ""
+msgstr "黄"
 
 #: apps/reader/src/citation-form-model.ts
 msgid "Yes"
@@ -8393,7 +8393,7 @@ msgstr "昨日"
 
 #: apps/extension/src/WelcomeApp.tsx
 msgid "You can change the collection and shortcuts at any time in <0>Settings</0>."
-msgstr ""
+msgstr "コレクションとショートカットはいつでも<0>設定</0>から変更できます。"
 
 #: apps/reader/src/main.tsx
 msgid "You can close this window."
@@ -8402,15 +8402,15 @@ msgstr "このウィンドウは閉じてかまいません。"
 #: packages/renderer-pdf/src/pdf-translations.ts
 msgctxt "PDF viewer emptyState"
 msgid "You can view multiple documents using tabs."
-msgstr ""
+msgstr "タブを使って複数の文書を表示できます。"
 
 #: apps/reader/src/AnnotationComposer.tsx
 msgid "You selected other text."
-msgstr ""
+msgstr "別のテキストを選択しました。"
 
 #: apps/reader/src/connection-recovery.ts
 msgid "Your access to this collection has been removed."
-msgstr ""
+msgstr "このコレクションへのアクセス権が削除されました。"
 
 #: apps/reader/src/connect-popup.ts
 msgid "Your browser blocked the sign-in tab."
@@ -8423,15 +8423,15 @@ msgstr "ブラウザーによりサインインタブがブロックされまし
 
 #: apps/extension/src/source-note-session.ts
 msgid "Your browser could not keep a copy of this note. Keep the panel open until it is saved."
-msgstr ""
+msgstr "ブラウザーがこのノートのコピーを保持できませんでした。保存されるまでパネルを開いたままにしてください。"
 
 #: apps/extension/src/ConnectionPanel.tsx
 msgid "your collection"
-msgstr ""
+msgstr "あなたのコレクション"
 
 #: apps/reader/src/use-annotation-view.ts
 msgid "Your collection already has it: {path}."
-msgstr ""
+msgstr "コレクションにすでにあります：{path}。"
 
 #: apps/reader/src/ConnectReader.tsx
 msgctxt "ConnectReader interface"
@@ -8440,61 +8440,61 @@ msgstr "あなたのコレクション"
 
 #: apps/reader/src/DraftRecoveryNotice.tsx
 msgid "Your draft"
-msgstr ""
+msgstr "下書き"
 
 #: apps/reader/src/DraftRecoveryNotice.tsx
 msgid "Your draft is retained. Compare both versions before choosing which to save. You can edit your draft below to combine them."
-msgstr ""
+msgstr "下書きは保持されています。どちらを保存するか選ぶ前に両方のバージョンを比較してください。以下で下書きを編集し、両方の内容を組み合わせることもできます。"
 
 #: apps/reader/src/LibraryWorkspace.tsx
 msgid "Your library is empty"
-msgstr ""
+msgstr "ライブラリは空です"
 
 #: apps/extension/src/ConnectionPanel.tsx
 msgid "Your selection and note are kept for this browser session, even if you close the panel."
-msgstr ""
+msgstr "パネルを閉じても、このブラウザーセッション中は選択範囲とノートが保持されます。"
 
 #: apps/reader/src/ImportPageView.tsx
 msgid "Your sources, notes and files, in a collection you control. Preview first. Nothing is imported until you confirm the destination."
-msgstr ""
+msgstr "自分で管理するコレクションに保存された資料、ノート、ファイルです。まずプレビューしてください。保存先を確定するまでインポートされません。"
 
 #: apps/extension/src/CaptureApp.tsx
 msgid "Your unsaved text for the previous page is kept for this browser session."
-msgstr ""
+msgstr "前のページの未保存のテキストは、このブラウザーセッション中保持されます。"
 
 #: apps/reader/src/CitationStructuredEditor.tsx
 msgid "YYYY, YYYY-MM-DD, or a season"
-msgstr ""
+msgstr "年（YYYY）、年月日（YYYY-MM-DD）、または季節"
 
 #: apps/reader/src/CitationTypedFieldEditors.tsx
 msgid "YYYY, YYYY-MM, or YYYY-MM-DD"
-msgstr ""
+msgstr "年（YYYY）、年月（YYYY-MM）、または年月日（YYYY-MM-DD）"
 
 #: packages/renderer-pdf/src/pdf-translations.ts
 msgctxt "PDF viewer menu"
 msgid "Zoom Controls"
-msgstr ""
+msgstr "拡大・縮小の操作"
 
 #: packages/renderer-pdf/src/pdf-translations.ts
 msgctxt "PDF viewer zoom"
 msgid "Zoom In"
-msgstr ""
+msgstr "拡大"
 
 #: packages/renderer-pdf/src/pdf-translations.ts
 msgctxt "PDF viewer zoom"
 msgid "Zoom Level ({level}%)"
-msgstr ""
+msgstr "拡大率（{level}%）"
 
 #: packages/renderer-pdf/src/pdf-translations.ts
 msgctxt "PDF viewer zoom"
 msgid "Zoom Menu"
-msgstr ""
+msgstr "拡大・縮小メニュー"
 
 #: packages/renderer-pdf/src/pdf-translations.ts
 msgctxt "PDF viewer zoom"
 msgid "Zoom Out"
-msgstr ""
+msgstr "縮小"
 
 #: packages/migration/src/zotero-pdf.ts
 msgid "Zotero PDF page is unavailable."
-msgstr ""
+msgstr "Zotero PDFのページを利用できません。"
