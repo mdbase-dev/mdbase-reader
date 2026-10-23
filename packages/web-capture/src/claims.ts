@@ -31,7 +31,7 @@ export interface Claim {
   readonly source: ClaimSource;
   /** Where exactly: `headline`, `name`, `h1`, `title suffix`, `og:title`, `RIS export`, … */
   readonly evidence?: string;
-  /** ISO time the value was observed; decides near-ties in favour of fresher values. */
+  /** ISO time the described content was observed; freshness settles exact score ties only. */
   readonly observedAt: string;
 }
 

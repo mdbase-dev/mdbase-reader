@@ -163,17 +163,17 @@ describe("citation resolution: scoring", () => {
     expect(result.provenance["title"]?.agreed).toHaveLength(1);
   });
 
-  it("settles a one-signal near-tie by freshness", () => {
+  it("does not let lookup freshness beat a corroborated page headline", () => {
     const old = "2026-10-20T00:00:00Z";
     expect(
       resolveCitation({
         claims: [
-          claim("title", "Old", html, "h1", old),
-          claim("title", "Old", page, "name", old),
-          claim("title", "New", remote),
+          claim("title", "Live headline", html, "h1", old),
+          claim("title", "Live headline", html, "title", old),
+          claim("title", "Breaking: old", remote),
         ],
       }).citation?.["title"],
-    ).toBe("New");
+    ).toBe("Live headline");
   });
 
   it("keeps at most two best losing distinct values", () => {

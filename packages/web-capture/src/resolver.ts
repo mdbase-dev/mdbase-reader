@@ -22,9 +22,9 @@ import type { Claim, CitationSuggestion, Resolution, ResolverInput } from "./cla
 import type { CitationDraft } from "./csl-values.js";
 import type { CslFieldProvenance, CslProvenance } from "@mdbase-reader/core";
 
-// Each distinct source + evidence after the first adds 4 points. A gap of at most 4 is a
-// near-tie, settled by observation time, then score and stable lexical order. User decisions
-// are pinned regardless of corroboration; other ranks are starting scores, not vetoes.
+// Each independent signal after the first adds 4 points. Score precedes observation time;
+// freshness only settles exact ties. User decisions are pinned regardless of corroboration;
+// other ranks are starting scores, not vetoes.
 const sourceStrength = {
   user: 100,
   registry: 80,
@@ -33,7 +33,6 @@ const sourceStrength = {
   "generic-remote": 40,
 };
 const corroborationBonus = 4;
-const nearTie = 4;
 
 interface CandidateClaim extends Claim {
   readonly siteSuffixStripped?: boolean;
@@ -326,15 +325,12 @@ function chooseGroup(field: string, groups: readonly ClaimGroup[]): ClaimGroup |
       group.claims.some((claim) => !/publisher/iu.test(claim.evidence ?? "")),
     );
   }
-  const bestScore = Math.max(...eligible.map((group) => group.score));
-  return eligible
-    .filter((group) => group.score >= bestScore - nearTie)
-    .sort(
-      (a, b) =>
-        descending(a.observedAt, b.observedAt) ||
-        b.score - a.score ||
-        compareClaims(a.winner, b.winner),
-    )[0];
+  return [...eligible].sort(
+    (a, b) =>
+      b.score - a.score ||
+      descending(a.observedAt, b.observedAt) ||
+      compareClaims(a.winner, b.winner),
+  )[0];
 }
 
 function claimStrength(claim: CandidateClaim): number {

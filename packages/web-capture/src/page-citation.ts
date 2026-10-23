@@ -41,6 +41,16 @@ export async function citationForPage(
 ): Promise<CitationPreview | null> {
   options.signal?.throwIfAborted();
   const claims = [...(page?.claims ?? [])];
+  // Providers describe this capture unless they supply an independently dated snapshot.
+  // Fetching a potentially cached record later does not make its content newer.
+  const observedAt =
+    claims
+      .filter(
+        (claim) => claim.source.kind === "page" && Number.isFinite(Date.parse(claim.observedAt)),
+      )
+      .sort((a, b) => Date.parse(b.observedAt) - Date.parse(a.observedAt))[0]?.observedAt ??
+    options.observedAt ??
+    (options.now?.() ?? new Date()).toISOString();
   const outcomes: ProviderOutcome[] = page?.outcome ? [page.outcome] : [];
   let doi = batchDoi(page) ?? doiFromUrl(pageUrl) ?? arxivDoi(arxivIdentifier(pageUrl));
   let problem: string | undefined;
@@ -103,6 +113,7 @@ export async function citationForPage(
     attempted.add(identifier.toLowerCase());
     const batch = await doiClaims(identifier, {
       ...options,
+      observedAt,
       timeoutMs: options.timeoutMs ?? PAGE_DOI_TIMEOUT_MS,
     });
     const registered =
@@ -129,7 +140,12 @@ export async function citationForPage(
     : Promise.resolve(false);
   // Opted-in URL lookups can upgrade a slow DOI lookup, but never hold a registry result up.
   const remote = options.citoid
-    ? lookupCitoid(pageUrl, options, options.citoid, citoidController.signal).then((batch) => {
+    ? lookupCitoid(
+        pageUrl,
+        options,
+        { observedAt, ...options.citoid },
+        citoidController.signal,
+      ).then((batch) => {
         if (registered) {
           if (batch.outcome) {
             outcomes.push(batch.outcome);
