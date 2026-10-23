@@ -8062,326 +8062,326 @@ msgstr "使用深色主题"
 #. placeholder {0}: fieldLabel(difference.field)
 #: apps/reader/src/CitationLookup.tsx
 msgid "Use found {0}"
-msgstr ""
+msgstr "使用找到的{0}"
 
 #: apps/reader/src/AnnotationComposer.tsx
 msgid "Use it for this comment"
-msgstr ""
+msgstr "用于此评论"
 
 #: apps/reader/src/reader-app-commands.ts
 msgid "Use light theme"
-msgstr ""
+msgstr "使用浅色主题"
 
 #: apps/extension/src/NotePanel.tsx
 #: apps/reader/src/AnnotationEditor.tsx
 msgid "Use theirs"
-msgstr ""
+msgstr "使用对方的"
 
 #: apps/reader/src/LibraryConditionsEditor.tsx
 msgctxt "LibraryConditionsEditor interface"
 msgid "value"
-msgstr ""
+msgstr "值"
 
 #: apps/reader/src/LibraryConditionsEditor.tsx
 msgctxt "LibraryConditionsEditor interface"
 msgid "Value"
-msgstr ""
+msgstr "值"
 
 #: apps/reader/src/LibraryBulkBar.tsx
 msgid "Value (empty removes the field)"
-msgstr ""
+msgstr "值（留空则移除该字段）"
 
 #. placeholder {0}: String(index + 1)
 #: apps/reader/src/CitationTypedFieldEditors.tsx
 msgid "Value {0}"
-msgstr ""
+msgstr "值 {0}"
 
 #: apps/reader/src/CitationTypedFieldEditors.tsx
 msgctxt "CitationTypedFieldEditors interface"
 msgid "Value type"
-msgstr ""
+msgstr "值类型"
 
 #: apps/reader/src/LibraryBulkBar.tsx
 msgid "value, or empty to remove"
-msgstr ""
+msgstr "值，留空则移除"
 
 #: apps/reader/src/CitationTypedFieldEditors.tsx
 msgid "Values"
-msgstr ""
+msgstr "值"
 
 #. placeholder {0}: String(i + 1)
 #. placeholder {1}: String(payloads.length)
 #: packages/migration/src/zotero-bundle.ts
 msgid "Verifying file {0} of {1}…"
-msgstr ""
+msgstr "正在验证文件 {0} / {1}…"
 
 #: apps/reader/src/import-controller.ts
 msgid "Verifying imported records"
-msgstr ""
+msgstr "正在验证已导入的记录"
 
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "Version"
-msgstr ""
+msgstr "版本"
 
 #: packages/renderer-pdf/src/pdf-translations.ts
 msgctxt "PDF viewer page"
 msgid "Vertical"
-msgstr ""
+msgstr "垂直"
 
 #: packages/renderer-pdf/src/pdf-translations.ts
 msgctxt "PDF viewer menu"
 msgid "View Controls"
-msgstr ""
+msgstr "视图控制"
 
 #: apps/reader/src/LibraryAnnotationToolbar.tsx
 msgctxt "LibraryAnnotationToolbar interface"
 msgid "View options"
-msgstr ""
+msgstr "视图选项"
 
 #: apps/reader/src/LibraryWorkspace.tsx
 msgctxt "LibraryWorkspace interface"
 msgid "View options"
-msgstr ""
+msgstr "视图选项"
 
 #. placeholder {0}: filterCount ? `, ${String(filterCount)} active filters` : ""
 #: apps/reader/src/LibraryWorkspace.tsx
 msgid "View options{0}"
-msgstr ""
+msgstr "视图选项{0}"
 
 #: apps/reader/src/LibraryNavigator.tsx
 msgid "Views"
-msgstr ""
+msgstr "视图"
 
 #: apps/reader/src/CitationStructuredEditor.tsx
 msgctxt "CitationStructuredEditor interface"
 msgid "Volume"
-msgstr ""
+msgstr "卷"
 
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "Volume"
-msgstr ""
+msgstr "卷"
 
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "Volume title"
-msgstr ""
+msgstr "卷标题"
 
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "Volume title short"
-msgstr ""
+msgstr "卷标题简称"
 
 #: apps/reader/src/native-signin-ui.ts
 msgctxt "Native sign-in"
 msgid "Waiting for approval in the mdbase tab…"
-msgstr ""
+msgstr "正在 mdbase 标签页中等待批准…"
 
 #: apps/extension/src/CaptureApp.tsx
 msgid "Waiting for the active tab"
-msgstr ""
+msgstr "正在等待活动标签页"
 
 #: apps/reader/src/LibraryCells.tsx
 msgctxt "source format"
 msgid "Web"
-msgstr ""
+msgstr "网页"
 
 #: apps/reader/src/workspace-tab-display.ts
 msgctxt "Source format badge for saved web pages"
 msgid "WEB"
-msgstr ""
+msgstr "网页"
 
 #: packages/core/src/application/source-import-values.ts
 msgid "Web capture provenance contains an invalid URL."
-msgstr ""
+msgstr "网页捕获来源信息包含无效的 URL。"
 
 #: packages/core/src/application/source-import-values.ts
 msgid "Web capture provenance must use public HTTPS URLs."
-msgstr ""
+msgstr "网页捕获来源信息必须使用公开的 HTTPS URL。"
 
 #: packages/core/src/application/import-source-file.ts
 msgid "Web captures must contain an HTML document."
-msgstr ""
+msgstr "网页捕获必须包含 HTML 文档。"
 
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "Web page"
-msgstr ""
+msgstr "网页"
 
 #: apps/reader/src/citation-form-model.ts
 msgctxt "CSL item type"
 msgid "Web page"
-msgstr ""
+msgstr "网页"
 
 #: apps/extension/src/shell-messages.ts
 #: apps/extension/src/WelcomeApp.tsx
 msgid "Welcome to mdbase Reader"
-msgstr ""
+msgstr "欢迎使用 mdbase Reader"
 
 #: apps/reader/src/CitationStructuredEditor.tsx
 msgid "Where and when the work appeared"
-msgstr ""
+msgstr "作品发表的地点和时间"
 
 #: apps/reader/src/annotation-wiki-candidates.ts
 msgctxt "annotation wiki candidates"
 msgid "Whole source"
-msgstr ""
+msgstr "整个来源"
 
 #: packages/renderer-pdf/src/pdf-translations.ts
 msgctxt "PDF viewer search"
 msgid "Whole word"
-msgstr ""
+msgstr "全字匹配"
 
 #: apps/reader/src/AnnotationComposer.tsx
 msgid "Why does this matter?"
-msgstr ""
+msgstr "为什么这很重要？"
 
 #: apps/reader/src/DisplayMenu.tsx
 msgctxt "DisplayMenu interface"
 msgid "Wide"
-msgstr ""
+msgstr "宽"
 
 #: apps/reader/src/AnnotationList.tsx
 msgctxt "AnnotationList annotationFilterOptions"
 msgid "With commentary"
-msgstr ""
+msgstr "含评论"
 
 #: apps/extension/src/WelcomeApp.tsx
 msgid "With the panel open, select text on the page and it appears there. Choose a colour to save it, adding a comment first if you like."
-msgstr ""
+msgstr "打开面板后，在页面上选中的文本会显示在其中。选择一种颜色即可保存，也可以先添加评论。"
 
 #: apps/reader/src/reader-command-list.ts
 msgid "Workspace"
-msgstr ""
+msgstr "工作区"
 
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "Year suffix"
-msgstr ""
+msgstr "年份后缀"
 
 #: apps/extension/src/HighlightFields.tsx
 msgctxt "Highlight colour"
 msgid "yellow"
-msgstr ""
+msgstr "黄色"
 
 #: apps/reader/src/citation-form-model.ts
 msgid "Yes"
-msgstr ""
+msgstr "是"
 
 #: apps/reader/src/library-columns.ts
 msgctxt "library columns"
 msgid "Yes"
-msgstr ""
+msgstr "是"
 
 #: apps/reader/src/LibraryCells.tsx
 msgid "Yesterday"
-msgstr ""
+msgstr "昨天"
 
 #: apps/extension/src/WelcomeApp.tsx
 msgid "You can change the collection and shortcuts at any time in <0>Settings</0>."
-msgstr ""
+msgstr "你可以随时在<0>设置</0>中更改集合和快捷键。"
 
 #: apps/reader/src/main.tsx
 msgid "You can close this window."
-msgstr ""
+msgstr "你可以关闭此窗口。"
 
 #: packages/renderer-pdf/src/pdf-translations.ts
 msgctxt "PDF viewer emptyState"
 msgid "You can view multiple documents using tabs."
-msgstr ""
+msgstr "你可以使用标签页查看多个文档。"
 
 #: apps/reader/src/AnnotationComposer.tsx
 msgid "You selected other text."
-msgstr ""
+msgstr "你选择了其他文本。"
 
 #: apps/reader/src/connection-recovery.ts
 msgid "Your access to this collection has been removed."
-msgstr ""
+msgstr "你对此集合的访问权限已被移除。"
 
 #: apps/reader/src/connect-popup.ts
 msgid "Your browser blocked the sign-in tab."
-msgstr ""
+msgstr "你的浏览器阻止了登录标签页。"
 
 #: apps/reader/src/native-signin-ui.ts
 msgctxt "Native sign-in"
 msgid "Your browser blocked the sign-in tab."
-msgstr ""
+msgstr "你的浏览器阻止了登录标签页。"
 
 #: apps/extension/src/source-note-session.ts
 msgid "Your browser could not keep a copy of this note. Keep the panel open until it is saved."
-msgstr ""
+msgstr "你的浏览器无法保留此笔记的副本。请保持面板打开，直到笔记保存。"
 
 #: apps/extension/src/ConnectionPanel.tsx
 msgid "your collection"
-msgstr ""
+msgstr "你的集合"
 
 #: apps/reader/src/use-annotation-view.ts
 msgid "Your collection already has it: {path}."
-msgstr ""
+msgstr "你的集合中已有：{path}。"
 
 #: apps/reader/src/ConnectReader.tsx
 msgctxt "ConnectReader interface"
 msgid "Your collections"
-msgstr ""
+msgstr "你的集合"
 
 #: apps/reader/src/DraftRecoveryNotice.tsx
 msgid "Your draft"
-msgstr ""
+msgstr "你的草稿"
 
 #: apps/reader/src/DraftRecoveryNotice.tsx
 msgid "Your draft is retained. Compare both versions before choosing which to save. You can edit your draft below to combine them."
-msgstr ""
+msgstr "你的草稿已保留。请先比较两个版本，再选择保存哪一个。你可以在下方编辑草稿，将两者合并。"
 
 #: apps/reader/src/LibraryWorkspace.tsx
 msgid "Your library is empty"
-msgstr ""
+msgstr "你的文献库是空的"
 
 #: apps/extension/src/ConnectionPanel.tsx
 msgid "Your selection and note are kept for this browser session, even if you close the panel."
-msgstr ""
+msgstr "即使你关闭面板，你的选择和笔记也会在本次浏览器会话中保留。"
 
 #: apps/reader/src/ImportPageView.tsx
 msgid "Your sources, notes and files, in a collection you control. Preview first. Nothing is imported until you confirm the destination."
-msgstr ""
+msgstr "你的来源、笔记和文件，保存在由你掌控的集合中。先预览。在你确认目标位置之前，不会导入任何内容。"
 
 #: apps/extension/src/CaptureApp.tsx
 msgid "Your unsaved text for the previous page is kept for this browser session."
-msgstr ""
+msgstr "你为上一个页面输入的未保存文本会在本次浏览器会话中保留。"
 
 #: apps/reader/src/CitationStructuredEditor.tsx
 msgid "YYYY, YYYY-MM-DD, or a season"
-msgstr ""
+msgstr "YYYY、YYYY-MM-DD 或季节"
 
 #: apps/reader/src/CitationTypedFieldEditors.tsx
 msgid "YYYY, YYYY-MM, or YYYY-MM-DD"
-msgstr ""
+msgstr "YYYY、YYYY-MM 或 YYYY-MM-DD"
 
 #: packages/renderer-pdf/src/pdf-translations.ts
 msgctxt "PDF viewer menu"
 msgid "Zoom Controls"
-msgstr ""
+msgstr "缩放控制"
 
 #: packages/renderer-pdf/src/pdf-translations.ts
 msgctxt "PDF viewer zoom"
 msgid "Zoom In"
-msgstr ""
+msgstr "放大"
 
 #: packages/renderer-pdf/src/pdf-translations.ts
 msgctxt "PDF viewer zoom"
 msgid "Zoom Level ({level}%)"
-msgstr ""
+msgstr "缩放级别（{level}%）"
 
 #: packages/renderer-pdf/src/pdf-translations.ts
 msgctxt "PDF viewer zoom"
 msgid "Zoom Menu"
-msgstr ""
+msgstr "缩放菜单"
 
 #: packages/renderer-pdf/src/pdf-translations.ts
 msgctxt "PDF viewer zoom"
 msgid "Zoom Out"
-msgstr ""
+msgstr "缩小"
 
 #: packages/migration/src/zotero-pdf.ts
 msgid "Zotero PDF page is unavailable."
-msgstr ""
+msgstr "Zotero PDF 页面不可用。"
