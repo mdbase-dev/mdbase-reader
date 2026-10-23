@@ -10,11 +10,11 @@ import { TagInput } from "./TagInput.js";
 import type { ExtensionCaptureController } from "./capture-controller.js";
 
 const colorLabels = {
-  yellow: msg({ message: "Yellow", context: "Highlight colour" }),
-  green: msg({ message: "Green", context: "Highlight colour" }),
-  blue: msg({ message: "Blue", context: "Highlight colour" }),
-  pink: msg({ message: "Pink", context: "Highlight colour" }),
-  purple: msg({ message: "Purple", context: "Highlight colour" }),
+  yellow: msg({ message: "yellow", context: "Highlight colour" }),
+  green: msg({ message: "green", context: "Highlight colour" }),
+  blue: msg({ message: "blue", context: "Highlight colour" }),
+  pink: msg({ message: "pink", context: "Highlight colour" }),
+  purple: msg({ message: "purple", context: "Highlight colour" }),
 };
 
 /**
