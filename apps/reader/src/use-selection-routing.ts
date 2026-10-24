@@ -43,7 +43,8 @@ export function useSelectionRouting(input: {
         (await confirmAnnotationDiscard(
           "Discard the unfinished annotation comment and use this area?",
         )) &&
-        routeRef.current === route &&
+        // The route function is recreated every render; only a change of document matters.
+        target.current === `${key}|${String(sourceId)}` &&
         input.buffer.get() === previous &&
         !input.busy.current
       ) {
@@ -58,8 +59,10 @@ export function useSelectionRouting(input: {
     }
   };
   const routeRef = useRef(route);
+  const target = useRef(`${key}|${String(sourceId)}`);
   useEffect(() => {
     routeRef.current = route;
+    target.current = `${key}|${String(sourceId)}`;
   });
   // Listen from the start: only the composer path needs the stored draft, and selections made
   // while it loads from device storage would otherwise be dropped.
