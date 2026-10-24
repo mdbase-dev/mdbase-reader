@@ -6,8 +6,8 @@ action, and one stylesheet section for each redesigned component.
 ## Behaviour
 
 - **Header.** Sidebar toggle, brand, collection name, a quiet connection dot (words appear only
-  when offline or syncing), search/commands with the platform's shortcut, a **Display** menu
-  (theme and density as explicit choices), and the source-tools toggle. Import moved to the
+  when offline or syncing), **Search and commands** with the platform's shortcut, a **Display** menu
+  (theme and density as explicit choices), and the Notes panel toggle. Import moved to the
   library options menu and the command palette.
 - **Sources sidebar** (formerly "Library navigator"). A filter field, saved views, and the
   source list with its count and an add button. The duplicated library heading, export button
@@ -17,7 +17,7 @@ action, and one stylesheet section for each redesigned component.
   is a single row with progress. The table labels formats in text, shows status with a progress
   bar, hides optional columns that are empty for every visible source, and becomes a two-line
   list in narrow panes. Row checkboxes were removed because no bulk action used them.
-- **Source tools.** The duplicate close button is gone (the dock tab, or Back on mobile, closes
+- **Notes panel.** The duplicate close button is gone (the dock tab, or Back on mobile, closes
   the panel). Annotation search is one row; filter and order sit in a menu, and the count appears
   only while filtering. Cards use readable labels and fall back to the selector quote when the
   body has none.
@@ -69,7 +69,7 @@ action, and one stylesheet section for each redesigned component.
   library tab restores it, but only when Reader hid it (Display → _Sidebar while reading_
   turns this off). Focus mode is now **Reading mode**: a header button and `mod+.`, with the
   tab strip fading alongside the header. `mod+\` toggles the sidebar and `mod+shift+\` the
-  notes panel. A side panel alone in its group has no close button, and its pane menu appears
+  Notes panel. A side panel alone in its group has no close button, and its pane menu appears
   on hover.
 - **Shortcuts from inside a document.** Once the reader clicks into a saved page or an EPUB,
   key events stay in its frame. `forwardApplicationShortcut` (`reading-surface/keyboard.ts`)
@@ -92,7 +92,7 @@ action, and one stylesheet section for each redesigned component.
   without a passage selector shows its location label and omits _Show in document_.
 - **Sidebar.** The filter searches the whole library. Without a query the sidebar lists views,
   open sources and up to eight recent ones (by `reading.last_opened_at`, then sources marked
-  _reading_), and ends with _Add source_. The full list lives in the library tab.
+  _reading_), and ends with _Add source…_. The full list lives in the library tab.
 - **Library.** Default columns are Title (with creator beneath), Published, Annotations, Last
   opened and Status. Annotation counts come from the connector's annotation index
   (`annotationCountsBySource`), corrected by the selected source's loaded annotations. They
@@ -192,7 +192,7 @@ action, and one stylesheet section for each redesigned component.
 ## Stylesheets
 
 `src/reader-shell.css` loads last and owns the header, menus, Sources sidebar, library tab,
-source-tools header and tabs, annotation browsing controls and card labels, document chrome,
+Notes panel header and tabs, annotation browsing controls and card labels, document chrome,
 empty states, command palette and mobile navigation. Older rules for those components were
 removed rather than overridden. Annotation card bodies, editors and the composer body still
 live in `reader.css` and `annotation-polish.css`.

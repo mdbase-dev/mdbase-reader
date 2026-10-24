@@ -191,7 +191,7 @@ await context.route(`${origin}/__reader-audit/**`, async (route) => {
 });
 const navigate = async () => {
   await page.goto(`${origin}/test-fixtures/audit-reader.html`);
-  await expect(page.getByRole("button", { name: "Toggle left sidebar" })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Toggle Sources sidebar" })).toBeVisible();
 };
 const screenshot = async (name) =>
   page.screenshot({ path: join(directory, `${name}.png`), animations: "disabled" });
@@ -306,8 +306,8 @@ try {
     await page.getByRole("button", { name: "Continue reading", exact: false }).first().click();
     await expect(page.locator("iframe.html-viewer")).toBeVisible({ timeout: 30000 });
     await page.getByLabel("More document actions", { exact: true }).click();
-    await page.getByRole("button", { name: "Literature note", exact: true }).click();
-    const editor = page.getByRole("textbox", { name: "Source literature note" });
+    await page.getByRole("button", { name: "Source note", exact: true }).click();
+    const editor = page.getByRole("textbox", { name: "Source note" });
     await expect(editor).toBeVisible();
     writesBlocked = true;
     await editor.fill("[test] Unsaved draft survives a reload. Patient attention.");
@@ -325,15 +325,15 @@ try {
     records[0].body = "[test] A different application edited the collection version.";
     records[0].recordRevision = "external-revision";
     await page.reload();
-    await expect(page.getByRole("region", { name: "Literature note conflict" })).toBeVisible({
+    await expect(page.getByRole("region", { name: "Source note conflict" })).toBeVisible({
       timeout: 20000,
     });
     await page.getByText("Compare versions", { exact: true }).click();
-    await expect(page.getByRole("region", { name: "Literature note conflict" })).toContainText(
+    await expect(page.getByRole("region", { name: "Source note conflict" })).toContainText(
       "A different application",
     );
     expect(
-      (await page.getByRole("region", { name: "Literature note conflict" }).boundingBox()).height,
+      (await page.getByRole("region", { name: "Source note conflict" }).boundingBox()).height,
     ).toBeGreaterThan(180);
     await screenshot("draft-conflict");
     writesBlocked = false;
@@ -383,16 +383,16 @@ try {
     await page.getByRole("button", { name: "Comfortable", exact: true }).click();
     await page.keyboard.press("Escape");
     await page.setViewportSize({ width: 390, height: 844 });
-    await expect(page.getByRole("complementary", { name: "Library navigator" })).toHaveCount(0);
+    await expect(page.getByRole("complementary", { name: "Sources sidebar" })).toHaveCount(0);
     expect(
       await page.evaluate(
         () => globalThis.document.documentElement.scrollWidth <= globalThis.innerWidth,
       ),
     ).toBe(true);
     await screenshot("mobile-library");
-    await page.getByRole("button", { name: "Toggle left sidebar" }).click();
-    await expect(page.getByRole("complementary", { name: "Library navigator" })).toBeVisible();
-    await page.getByRole("button", { name: "Toggle left sidebar" }).click();
+    await page.getByRole("button", { name: "Toggle Sources sidebar" }).click();
+    await expect(page.getByRole("complementary", { name: "Sources sidebar" })).toBeVisible();
+    await page.getByRole("button", { name: "Toggle Sources sidebar" }).click();
     await page.keyboard.press("Control+Shift+f");
     await expect(
       page.getByRole("textbox", { name: "Find a source by title, author or tag" }),

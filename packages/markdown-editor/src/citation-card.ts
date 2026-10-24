@@ -47,7 +47,7 @@ export function citationCard(
     if (onEditMetadata) {
       actions.append(
         citationAction(
-          "Edit metadata",
+          "Edit citation details",
           dismissing(() => onEditMetadata(candidate.id)),
         ),
       );
@@ -62,7 +62,7 @@ export function citationCard(
   syntax.textContent = widget.group.raw;
   footer.append(
     syntax,
-    citationAction("Edit citation", () => widget.select(view)),
+    citationAction("Edit citation Markdown", () => widget.select(view)),
   );
   card.append(footer);
   return card;

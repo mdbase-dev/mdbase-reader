@@ -32,7 +32,7 @@ try {
   await page.getByLabel("Display settings", { exact: true }).first().click();
   await page.getByRole("group", { name: "Theme", exact: true }).waitFor();
   await page.keyboard.press("Escape");
-  await page.getByRole("button", { name: "Toggle right sidebar", exact: true }).click();
+  await page.getByRole("button", { name: "Toggle Notes panel", exact: true }).click();
   await page.getByRole("tab", { name: "Citation", exact: true }).click();
   await page.getByRole("button", { name: "Save changes", exact: true }).waitFor();
   assert.deepEqual(errors, []);

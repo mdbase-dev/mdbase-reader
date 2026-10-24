@@ -134,11 +134,13 @@ function ReadyCitationEditor({
           <div className="citation-raw-editor">
             <div>
               <strong>CSL-JSON</strong>
-              <span>Every official field is preserved exactly as entered.</span>
+              <span>
+                Citation Style Language in JSON format. Every field is preserved exactly as entered.
+              </span>
             </div>
             <MultilineCodeEditor
               className="citation-json"
-              ariaLabel="CSL JSON citation metadata"
+              ariaLabel="CSL-JSON citation details"
               language="json"
               value={editor.draft}
               onChange={editor.setDraft}

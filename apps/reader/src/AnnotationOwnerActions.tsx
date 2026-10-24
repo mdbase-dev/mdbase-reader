@@ -51,15 +51,15 @@ export function AnnotationOwnerActions({
       role="presentation"
     >
       <small>
-        Owner:{" "}
+        Source:{" "}
         {owner ? <a href={ownerHref(annotation, owner)}>{owner.title}</a> : annotation.source}
       </small>
       {outsideChapter(annotation, owner) ? (
-        <small>Outside chapter range — still owned by this chapter</small>
+        <small>Outside chapter range — still belongs to this chapter</small>
       ) : null}
       {onMove && sources.length > 1 ? (
         <label>
-          Move annotation
+          Move annotation to source
           <select
             aria-label="Move annotation to source"
             value={annotation.sourceId}
@@ -85,11 +85,7 @@ export function AnnotationOwnerActions({
           >
             {sources.map((source) => (
               <option key={source.id} value={source.id}>
-                {source.id === annotation.sourceId
-                  ? source.title
-                  : source.partOf
-                    ? `Move to ${source.title}`
-                    : "Move to the book"}
+                {source.id === annotation.sourceId ? source.title : `Move to ${source.title}`}
               </option>
             ))}
           </select>

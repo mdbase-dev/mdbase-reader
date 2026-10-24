@@ -119,11 +119,11 @@ export function NavigatorFooter({
         className="navigator-add-source"
         type="button"
         disabled={addingSource}
-        aria-label={addingSource ? "Adding source" : "Add source"}
+        aria-label={addingSource ? "Adding…" : "Add source…"}
         onClick={onAddSource}
       >
         <PlusIcon />
-        <span>{addingSource ? "Adding…" : "Add source"}</span>
+        <span>{addingSource ? "Adding…" : "Add source…"}</span>
       </button>
     </footer>
   );

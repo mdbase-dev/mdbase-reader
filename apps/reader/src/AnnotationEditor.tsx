@@ -104,7 +104,7 @@ function AnnotationEditorActions({
         disabled={locked || status === "loading"}
         onClick={edit.requestDelete}
       >
-        {deleteStatus === "checking" ? "Checking…" : "Delete"}
+        {deleteStatus === "checking" ? "Checking…" : "Delete annotation"}
       </button>
       <AnnotationSaveState status={failed ? "failed" : shown} />
       {status === "unsaved" || status === "error" ? (
@@ -250,7 +250,7 @@ export function AnnotationDeleteConfirmation({
           Cancel
         </button>
         <button className="is-danger" type="button" disabled={deleting} onClick={onConfirm}>
-          {deleting ? "Deleting…" : "Delete"}
+          {deleting ? "Deleting…" : "Delete annotation"}
         </button>
       </div>
     </section>

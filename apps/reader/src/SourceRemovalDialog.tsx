@@ -56,12 +56,12 @@ function OpenSourceRemovalDialog({
         <h2 id="reader-remove-source-title">Remove “{source.title}”?</h2>
         <p id="reader-remove-source-description">
           This removes the source from your library and deletes its source note. Saved files and
-          annotation notes are kept in the collection, but links to this source will stop working,
+          annotations are kept in the collection, but links to this source will stop working,
           including from its annotations and from any chapters of it.
           {source.partOf
-            ? " To keep an annotation with the book or another chapter, cancel and use Move annotation on it first."
+            ? " To keep an annotation with the book or another chapter, cancel and use Move annotation to source on it first."
             : inFamily
-              ? " To keep an annotation with one of its chapters, cancel and use Move annotation on it first."
+              ? " To keep an annotation with one of its chapters, cancel and use Move annotation to source on it first."
               : null}{" "}
           Reader cannot undo this.
         </p>

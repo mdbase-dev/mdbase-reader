@@ -105,7 +105,7 @@ export function useAnnotationEdit(props: AnnotationEditProps): AnnotationEditCon
       snapshot.status !== "saving" &&
       session.ownsEditor(editorOwner) &&
       (await confirmAnnotationDiscard(
-        "Discard this annotation's unsaved changes? The collection version will be kept.",
+        "Discard this annotation’s unsaved changes? The collection version will be kept.",
       )) &&
       session.ownsEditor(editorOwner) &&
       session.getSnapshot().status !== "saving" &&

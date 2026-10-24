@@ -10,13 +10,13 @@ export async function navigateToAnnotation(
 ): Promise<void> {
   if (!annotationMatchesSurface(annotation, surface)) {
     throw new Error(
-      "The file has changed, and this annotation's position cannot be verified in the current document. The annotation is still saved.",
+      "The file has changed, and this annotation’s position cannot be verified in the current document. The annotation is still saved.",
     );
   }
   const target = annotation.target;
   if (!hasPassageAnchor(target)) {
     throw new Error(
-      "This annotation has no supported passage anchor. Its text and original metadata are preserved.",
+      "This annotation has no supported link to a passage. Its text and original metadata are preserved.",
     );
   }
   let found = false;

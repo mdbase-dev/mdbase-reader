@@ -109,7 +109,7 @@ it("distinguishes unsupported anchors from failed passage navigation", async () 
   const surface = { goTo, capabilities: {} } as unknown as ReadingSurface;
   await expect(
     navigateToAnnotation({ ...base, target: { quote: { exact: "Preserved quotation" } } }, surface),
-  ).rejects.toThrow("no supported passage anchor");
+  ).rejects.toThrow("no supported link to a passage");
   expect(goTo).not.toHaveBeenCalled();
 });
 

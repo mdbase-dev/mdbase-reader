@@ -50,12 +50,12 @@ export async function defaultAnnotationOwner(
       owner: book,
       reason:
         book === source && source.partOf
-          ? "Book unavailable; keeping the current owner."
-          : "Your ownership setting keeps new annotations on the book.",
+          ? "Book unavailable; keeping the current source."
+          : "Your annotation setting keeps new annotations on the book.",
     };
   }
   if (sources.length === 1 && !source.partOf) {
-    return { owner: source, reason: "Owned by this source." };
+    return { owner: source, reason: "Saved to this source." };
   }
   if (!input.document || !input.target) {
     return { owner: source, reason: "A note about this source as a whole." };
@@ -72,7 +72,7 @@ export async function defaultAnnotationOwner(
         owner: source,
         reason:
           unique.length > 1
-            ? "Chapter ranges overlap; choose an owner explicitly."
+            ? "Chapter ranges overlap; choose a source."
             : "No verified chapter contains the whole selection; keeping this on the book.",
       };
 }

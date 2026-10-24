@@ -116,6 +116,23 @@ describe("command palette", () => {
     expect(titled(closed.title)).toEqual(["Sources"]);
     const themes = commands.filter(({ id }) => id.startsWith("theme:")).map(({ id }) => id);
     expect(themes).toEqual(["theme:system", "theme:light"]);
+    const active = readerCommands({ ...input, activeSource: open });
+    expect(active.find(({ id }) => id === "note")?.label).toBe("Open source note");
+    expect(active.find(({ id }) => id === "citation")?.label).toBe("Open citation details");
+    expect(active.find(({ id }) => id === "split-right")?.label).toBe("Open beside");
+    expect(active.find(({ id }) => id === "split-below")?.label).toBe("Open below");
+    for (const [query, id] of [
+      ["literature note", "note"],
+      ["owner", "annotations"],
+      ["citekey", "citation"],
+      ["field sources", "citation"],
+      ["duplicate", "split-right"],
+      ["duplicate", "split-below"],
+      ["left sidebar", "toggle-library"],
+      ["right sidebar", "toggle-source-tools"],
+    ]) {
+      expect(matchingCommands(active, query!).map((command) => command.id)).toContain(id);
+    }
   });
 });
 

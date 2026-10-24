@@ -111,14 +111,14 @@ export function DocumentContextualToolbar({
           <HighlightIcon /> Annotations
         </button>
         <button type="button" onClick={() => workspace.openView(source.id, "note", pane.id)}>
-          <NoteIcon /> Literature note
+          <NoteIcon /> Source note
         </button>
         <button type="button" onClick={() => workspace.openView(source.id, "citation", pane.id)}>
           <CitationIcon /> Citation
         </button>
         <hr />
         <button type="button" onClick={() => workspace.openBeside(source.id, "note")}>
-          <NoteIcon /> Open literature note beside
+          <NoteIcon /> Open source note beside
         </button>
         <button
           type="button"

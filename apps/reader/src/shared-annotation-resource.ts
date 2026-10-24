@@ -80,7 +80,7 @@ export class SharedAnnotationResource {
               status: "error",
               message: readerErrorMessage(
                 reason,
-                "Reader could not load this source's annotations.",
+                "Reader could not load this source’s annotations.",
               ),
             },
           });

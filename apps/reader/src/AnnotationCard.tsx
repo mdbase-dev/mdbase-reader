@@ -226,8 +226,8 @@ function AnnotationCardFooter({
           disabled={transclusion.busyId !== null || transclusion.isEmbedded(annotation)}
           title={
             transclusion.isEmbedded(annotation)
-              ? "Already included in the literature note"
-              : "Insert this annotation in the literature note"
+              ? "Already included in the source note"
+              : "Insert this annotation in the source note"
           }
           onClick={(event) => {
             event.stopPropagation();
@@ -237,8 +237,8 @@ function AnnotationCardFooter({
           {transclusion.busyId === annotation.id
             ? "Inserting…"
             : transclusion.isEmbedded(annotation)
-              ? "In literature note"
-              : "Add to literature note"}
+              ? "In source note"
+              : "Insert into source note"}
         </button>
         {hasPassageAnchor(annotation.target) ? (
           <button

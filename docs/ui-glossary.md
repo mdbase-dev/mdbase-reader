@@ -1,6 +1,6 @@
 # UI terminology glossary
 
-Proposed copy contract, not an implemented rename. Based on `PRODUCT.md`,
+The table below has been applied to Reader and Markdown editor user-visible copy. Based on `PRODUCT.md`,
 [Interface shell](interface-shell.md), [Annotation UX audit](annotation-ux-audit.md),
 [Reader improvement audit](reader-improvement-audit.md), and current UI strings.
 Historical audits describe earlier states; code establishes current behaviour.
@@ -174,6 +174,6 @@ occurrences share a row; these are representative replacements, not a migration 
 | Edit citation                                                                                  | Edit citation Markdown                                                                            | M/citation-card.ts:65                                                                      |
 | CSL JSON citation metadata                                                                     | CSL-JSON citation details                                                                         | R/CitationEditor.tsx:141                                                                   |
 
-**Product-owner confirmation requested:** adopt Source note despite Literature note’s UI
-prevalence; retain Notes as the broader panel name; retain Remove source despite
-its destructive note deletion. Other changes clarify existing distinctions.
+**Product-owner choices accepted:** Source note replaces Literature note; Notes remains
+the broader panel name; Remove source remains despite its destructive note deletion.
+Other changes clarify existing distinctions.

@@ -389,7 +389,7 @@ export class ConnectWorkspaceGateway implements ReaderWorkspaceGateway {
 
   async moveAnnotationOwner(annotation: Annotation, owner: Source): Promise<Annotation> {
     if (!this.annotationsRepository.moveOwner) {
-      throw new Error("This collection cannot move annotation owners.");
+      throw new Error("This collection cannot move annotations between sources.");
     }
     const updated = await this.annotationsRepository.moveOwner({
       annotation,

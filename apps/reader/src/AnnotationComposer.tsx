@@ -38,7 +38,7 @@ export function AnnotationComposer({
     >
       <header>
         <strong id="annotation-composer-title">
-          {composer.selection.kind === "area" ? "New area annotation" : "Comment on highlight"}
+          {composer.selection.kind === "area" ? "New area capture" : "Comment on highlight"}
         </strong>
         <button
           type="button"
@@ -98,7 +98,7 @@ export function AnnotationComposer({
           {composer.status === "saving"
             ? "Saving…"
             : composer.selection.kind === "area"
-              ? "Save area"
+              ? "Save area capture"
               : "Save highlight"}
         </ReaderButton>
       </footer>

@@ -72,6 +72,41 @@ describe("selection toolbar shortcuts", () => {
     expect(comment).not.toHaveBeenCalled();
   });
 
+  it("keeps highlight deletion inline and requires two clicks with outcome labels", async () => {
+    const annotation = {
+      id: "highlight",
+      body: "",
+      sourceId: "source",
+      source: "Source",
+      target: selection.value.target,
+    };
+    const remove = vi.fn().mockResolvedValue([]);
+    const composer = {
+      toolbar: { target: { kind: "annotation", annotation }, rect: null },
+      remove,
+      edit: vi.fn(),
+      dismissToolbar: vi.fn(),
+    } as unknown as AnnotationComposerController;
+    await act(async () => root.render(<SelectionToolbarLayer composer={composer} />));
+    const deleteButton = (): HTMLButtonElement =>
+      host.querySelector<HTMLButtonElement>('[aria-label="Delete highlight"]')!;
+    expect(deleteButton().textContent.trim()).toBe("Delete highlight");
+    await act(async () => deleteButton().click());
+    expect(remove).not.toHaveBeenCalled();
+    expect(deleteButton().className).toBe("is-danger");
+    expect(deleteButton().textContent).toBe("Delete highlight");
+    expect(host.querySelector("dialog")).toBeNull();
+    await act(async () => deleteButton().click());
+    expect(remove).toHaveBeenCalledExactlyOnceWith(annotation);
+  });
+
+  it("names the selection action and tooltip Comment on highlight", () => {
+    const action = [...host.querySelectorAll("button")].find(
+      (button) => button.textContent.trim() === "Comment on highlight",
+    );
+    expect(action?.title).toBe("Comment on highlight (C)");
+  });
+
   it("names the citation button with its visible word", () => {
     const cite = [...host.querySelectorAll("button")].find((button) =>
       button.textContent.includes("Cite"),

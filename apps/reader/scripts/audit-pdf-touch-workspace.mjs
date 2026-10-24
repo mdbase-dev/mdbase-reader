@@ -6,7 +6,7 @@ export async function auditPdfTouchWorkspace(page, { screenshot }) {
   const open = async () => {
     const search = page.getByRole("textbox", { name: "Find a source by title, author or tag" });
     if (!(await search.isVisible()))
-      await page.getByRole("button", { name: "Toggle left sidebar" }).tap();
+      await page.getByRole("button", { name: "Toggle Sources sidebar" }).tap();
     await search.fill("Research 0020");
     await page.getByRole("option", { name: /Research 0020/ }).dblclick();
     await waitPdf();

@@ -72,18 +72,18 @@ it("batch-loads the family, labels owners and filters chapters without new queri
   // Native-Find mode deliberately renders every filtered card in happy-dom as in the product.
   act(() => host.querySelector<HTMLInputElement>('input[type="checkbox"]')!.click());
   expect(batch).toHaveBeenCalledTimes(1);
-  expect(host.textContent).toContain("Owner: Chapter 1");
-  expect(host.textContent).toContain("Owner: Chapter 2");
+  expect(host.textContent).toContain("Source: Chapter 1");
+  expect(host.textContent).toContain("Source: Chapter 2");
   const filter = host.querySelector<HTMLSelectElement>(
-    '[aria-label="Filter annotations by chapter"]',
+    '[aria-label="Filter annotations by source"]',
   )!;
   act(() => {
     filter.value = chapterId;
     filter.dispatchEvent(new Event("change", { bubbles: true }));
   });
   expect(host.querySelectorAll("[data-annotation-id]")).toHaveLength(1);
-  expect(host.textContent).toContain("Owner: Chapter 1");
-  expect(host.textContent).not.toContain("Owner: Chapter 2");
+  expect(host.textContent).toContain("Source: Chapter 1");
+  expect(host.textContent).not.toContain("Source: Chapter 2");
   expect(batch).toHaveBeenCalledTimes(1);
 });
 it("shows only a chapter’s owned annotations until whole-book visibility is requested", async () => {
@@ -147,7 +147,7 @@ it.each([0, 1])("omits the owner picker and explanation with %i choices", async 
         sources: [book],
         choices: [book].slice(0, count),
         pending: false,
-        reason: "Owned by this source.",
+        reason: "Saved to this source.",
         choose: vi.fn(),
       }}
     />,
@@ -194,9 +194,9 @@ it("keeps the toolbar chooser compact with an accessible ownership explanation",
       }}
     />,
   );
-  expect(host.querySelector("label")!.textContent).toContain("Owner");
+  expect(host.querySelector("label")!.textContent).toContain("Save to source");
   expect(host.querySelector("label")!.textContent).not.toContain("Annotation owner");
-  expect(host.querySelector("select")!.getAttribute("aria-label")).toBe("Annotation owner");
+  expect(host.querySelector("select")!.getAttribute("aria-label")).toBe("Save to source");
   expect(host.querySelector("select")!.title).toContain("verified range");
   expect(host.querySelector('[role="status"]')!.className).toBe("sr-only");
 });
@@ -280,7 +280,7 @@ it("gives the owner chooser a native accessible name and keyboard-compatible cha
       }}
     />,
   );
-  const select = host.querySelector<HTMLSelectElement>('[aria-label="Annotation owner"]')!;
+  const select = host.querySelector<HTMLSelectElement>('[aria-label="Save to source"]')!;
   expect(select.value).toBe(chapterId);
   act(() => {
     select.value = bookId;

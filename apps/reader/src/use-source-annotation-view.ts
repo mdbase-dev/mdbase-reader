@@ -54,7 +54,9 @@ export function useSourceAnnotationView(
       .library(options)
       .then(async (library) => {
         if (library.sourceIndex?.complete === false) {
-          throw new Error("Chapter index is incomplete; only owned annotations are shown.");
+          throw new Error(
+            "Chapter index is incomplete; only annotations saved to this source are shown.",
+          );
         }
         const sources = sourceAnnotationFamily(source, library.sources);
         const annotations =
@@ -76,7 +78,7 @@ export function useSourceAnnotationView(
           setProblem(
             readerErrorMessage(
               reason,
-              "Chapter annotations could not be loaded; only owned annotations are shown.",
+              "Chapter annotations could not be loaded; only annotations saved to this source are shown.",
             ),
           );
         }

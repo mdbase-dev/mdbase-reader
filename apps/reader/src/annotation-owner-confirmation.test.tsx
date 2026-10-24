@@ -280,7 +280,7 @@ it("keeps the in-app warning for an explicitly chosen owner whose range is unver
   expect(create).not.toHaveBeenCalled();
   await settle(() =>
     [...host.querySelectorAll("button")]
-      .find((button) => button.textContent === "Choose another owner")!
+      .find((button) => button.textContent === "Choose another source")!
       .click(),
   );
   expect(isAnnotationSaveCancelled(await pending)).toBe(true);

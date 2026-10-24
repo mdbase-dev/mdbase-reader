@@ -3,7 +3,7 @@ import { expect } from "@playwright/test";
 /** Compare the same real Reader interactions with grid and experimental edge sidebars. */
 export async function auditSidebarLayout(page, { screenshot, measurements }) {
   const results = (measurements.sidebars = {});
-  const navigator = page.getByRole("complementary", { name: "Library navigator" });
+  const navigator = page.getByRole("complementary", { name: "Sources sidebar" });
   const inspector = page.getByRole("complementary", { name: "Source workspace" });
   const tab = (n) =>
     page.locator(".reader-dock-tab:not(.is-side)").filter({
@@ -61,7 +61,7 @@ export async function auditSidebarLayout(page, { screenshot, measurements }) {
     element.ownerDocument.defaultView.__sidebarSentinel = "original";
     element.ownerDocument.defaultView.scrollTo(0, 900);
   });
-  await page.getByRole("button", { name: "Toggle right sidebar" }).click();
+  await page.getByRole("button", { name: "Toggle Notes panel" }).click();
   await expect(inspector).toBeVisible();
   await measure("initial");
   for (const n of [1, 2, 3]) {
@@ -77,9 +77,9 @@ export async function auditSidebarLayout(page, { screenshot, measurements }) {
       element.ownerDocument.defaultView.__sidebarSentinel === "original" &&
       element.ownerDocument.defaultView.scrollY > 700,
   );
-  await page.getByRole("button", { name: "Toggle right sidebar" }).click();
+  await page.getByRole("button", { name: "Toggle Notes panel" }).click();
   await measure("inspector-hidden");
-  await page.getByRole("button", { name: "Toggle right sidebar" }).click();
+  await page.getByRole("button", { name: "Toggle Notes panel" }).click();
   await measure("inspector-restored");
   const beforeResize = await navigator.boundingBox();
   await page.mouse.move(

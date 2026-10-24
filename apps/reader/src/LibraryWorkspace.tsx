@@ -521,8 +521,8 @@ export function LibraryWorkspace({
               <button
                 className="icon-button library-add-button"
                 type="button"
-                aria-label="Add source"
-                title="Add source"
+                aria-label="Add source…"
+                title="Add source…"
                 onClick={onAddSource}
               >
                 <PlusIcon />
@@ -588,7 +588,7 @@ export function LibraryWorkspace({
                     <strong>Your library is empty</strong>
                     <span>Add a PDF, EPUB or web page to start reading.</span>
                     <button type="button" onClick={onAddSource}>
-                      Add a source
+                      Add source…
                     </button>
                   </>
                 ) : (

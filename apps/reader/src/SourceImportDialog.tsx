@@ -87,10 +87,10 @@ export function SourceImportDialog({
           onClick={onCancel}
           disabled={isFinalizing}
         >
-          {isFinalizing ? "Finishing…" : importing ? "Stop import" : "Cancel"}
+          {isFinalizing ? "Finishing adding…" : importing ? "Stop adding" : "Cancel"}
         </button>
         <ReaderButton disabled={importing || !title.trim()} onClick={submit}>
-          {importing ? "Importing…" : "Add source"}
+          {importing ? "Adding…" : "Add source"}
         </ReaderButton>
       </div>
     </ModalDialog>
@@ -183,7 +183,7 @@ function ImportProgress({
     progress?.phase === "uploading"
       ? `Uploading file ${String(progress.fileIndex)} of ${String(progress.fileCount)}`
       : progress?.phase === "recovering"
-        ? "Checking files from the previous import"
+        ? "Checking previously added files"
         : progress?.phase === "creating"
           ? "Creating source record"
           : "Checking file and library";

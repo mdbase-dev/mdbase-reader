@@ -10,7 +10,7 @@ export interface QuoteCitation {
 
 /**
  * The passage as a Markdown blockquote with a citation line: a Pandoc citation when the source
- * has a citekey, otherwise its title. Pasted into a literature note it renders and cites cleanly.
+ * has a citekey, otherwise its title. Pasted into a source note it renders and cites cleanly.
  */
 export function citedQuote(text: string, citation: QuoteCitation): string {
   const quote = text

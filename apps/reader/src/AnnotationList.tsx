@@ -163,13 +163,13 @@ function ChapterAnnotationFilter({
   }
   return (
     <label className="annotation-chapter-filter">
-      Chapter{" "}
+      Source{" "}
       <select
-        aria-label="Filter annotations by chapter"
+        aria-label="Filter annotations by source"
         value={value}
         onChange={(event) => onChange(event.target.value)}
       >
-        <option value="">All chapters and book</option>
+        <option value="">All sources</option>
         {owners.map((owner) => (
           <option key={owner.id} value={owner.id}>
             {owner.title}
@@ -198,7 +198,9 @@ function AnnotationListStatus({
     return (
       <div className="inspector-status annotation-empty">
         <strong>No annotations yet</strong>
-        <span>Select text or an area in the document, or add a comment or bookmark above.</span>
+        <span>
+          Select text or an area in the document, or add a source comment or bookmark above.
+        </span>
       </div>
     );
   }
@@ -289,10 +291,10 @@ function AnnotationBrowserControls({
 
 const annotationFilterOptions: SelectItems<AnnotationFilter> = [
   { value: "all", label: "All" },
-  { value: "comments", label: "With commentary" },
+  { value: "comments", label: "With comments" },
   { value: "highlight", label: "Highlights" },
   { value: "area", label: "Area captures" },
-  { value: "note", label: "Comments on the source" },
+  { value: "note", label: "Source comments" },
   { value: "bookmark", label: "Bookmarks" },
 ];
 

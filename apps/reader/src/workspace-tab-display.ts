@@ -6,7 +6,7 @@ export function workspaceTabLabel(tab: WorkspaceTab, source: SourceSummary | nul
     return "Library";
   }
   if (tab.view === "note") {
-    return "Literature note";
+    return "Source note";
   }
   if (tab.view === "annotations") {
     return "Annotations";

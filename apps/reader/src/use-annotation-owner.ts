@@ -99,7 +99,7 @@ export function useAnnotationOwner(input: OwnerInput): {
             choices: [source],
             decision: {
               owner: source,
-              reason: "Chapter boundaries could not be verified; keeping the current owner.",
+              reason: "Chapter boundaries could not be verified; keeping the current source.",
             },
           });
         }
@@ -119,7 +119,7 @@ export function useAnnotationOwner(input: OwnerInput): {
           choices: resolved?.key === key ? resolved.choices : [owner],
           pending: !decision,
           reason: explicit
-            ? "Owner chosen explicitly. Existing note embeds will not move."
+            ? "Source chosen. Existing note embeds will not move."
             : (decision?.reason ?? "Checking chapter boundaries…"),
           choose: (id) => setChosen({ key, id }),
         }
@@ -161,7 +161,7 @@ async function saveOwnedAnnotation(
   // Comments and selection saves disclose ownership in AnnotationOwnerChooser.
   const fullOwner = proposed.id === source.id ? source : await gateway.source(proposed.id);
   if (!fullOwner) {
-    throw new Error("The chosen owner no longer exists. Choose an owner again.");
+    throw new Error("The chosen source no longer exists. Choose another source.");
   }
   if (chosen) {
     await confirmExplicitOwner(request, fullOwner, surface);
@@ -185,11 +185,11 @@ async function confirmExplicitOwner(
   if (
     (!document || contains !== true) &&
     !(await requestConfirmation({
-      title: "Save with this owner?",
+      title: `Save annotation to “${owner.title}”?`,
       message:
-        "The chosen owner does not list this document or its verified range does not contain the selector. The document target will remain unchanged.",
-      confirmLabel: "Save anyway",
-      cancelLabel: "Choose another owner",
+        "The chosen source does not list this document or its verified range does not contain the selector. The document target will remain unchanged.",
+      confirmLabel: "Save annotation",
+      cancelLabel: "Choose another source",
     }))
   ) {
     throw new AnnotationSaveCancelled();

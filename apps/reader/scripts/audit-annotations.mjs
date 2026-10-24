@@ -56,7 +56,7 @@ export async function auditAnnotations(page, { screenshot, blockWrites }) {
   await frame().locator("#p0").press("h");
   await expect(selectionBar).toHaveCount(0);
   const navigatorWidth = (
-    await page.getByRole("complementary", { name: "Library navigator" }).boundingBox()
+    await page.getByRole("complementary", { name: "Sources sidebar" }).boundingBox()
   ).width;
   await frame()
     .locator("#p0")
@@ -66,7 +66,7 @@ export async function auditAnnotations(page, { screenshot, blockWrites }) {
   await expect(page.getByRole("toolbar", { name: "Highlight" })).toBeVisible();
   await screenshot("annotation-highlight-toolbar");
   if (!(await tools.isVisible())) {
-    await page.getByRole("button", { name: "Toggle right sidebar" }).click();
+    await page.getByRole("button", { name: "Toggle Notes panel" }).click();
   }
   await expect(tools.locator(".annotation-card.is-selected")).toBeVisible();
   await expect(tools.locator(".annotation-reading-context")).toContainText(
@@ -79,7 +79,7 @@ export async function auditAnnotations(page, { screenshot, blockWrites }) {
   await expect
     .poll(
       async () =>
-        (await page.getByRole("complementary", { name: "Library navigator" }).boundingBox()).width,
+        (await page.getByRole("complementary", { name: "Sources sidebar" }).boundingBox()).width,
     )
     .toBeCloseTo(navigatorWidth, 0);
   await screenshot("annotation-selected-not-editing");
@@ -116,7 +116,7 @@ export async function auditAnnotations(page, { screenshot, blockWrites }) {
 
   await page.keyboard.press("Escape");
   await select(1);
-  await selectionBar.getByRole("button", { name: "Comment" }).click();
+  await selectionBar.getByRole("button", { name: "Comment on highlight" }).click();
   const composer = page.getByRole("region", { name: "Comment on highlight" });
   await composer
     .getByRole("textbox", { name: "Comment" })
@@ -145,7 +145,7 @@ export async function auditAnnotations(page, { screenshot, blockWrites }) {
   await composer.getByRole("textbox", { name: "Comment" }).press("Control+s");
   await expect(composer).toHaveCount(0);
   completed.push(
-    "New comments remain in memory across source switching; a new selection never replaces them, and discarding requires confirmation",
+    "New source comments remain in memory across source switching; a new selection never replaces them, and discarding requires confirmation",
   );
 
   await tools.getByRole("searchbox", { name: "Search annotations" }).fill("recoverable");

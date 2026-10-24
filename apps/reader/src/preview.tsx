@@ -262,7 +262,7 @@ export class PreviewGateway implements ReaderWorkspaceGateway {
       annotationType: "bookmark",
       target: { position: { kind: "pdf", pageIndex: index === 2 ? 10 : 0 } },
       tags: [],
-      body: `A note owned by ${source.title}.`,
+      body: `An annotation saved to ${source.title}.`,
       createdAt: dateTime("2026-08-10T09:40:00+10:00"),
     })),
   ];
@@ -463,7 +463,7 @@ export class PreviewGateway implements ReaderWorkspaceGateway {
     return Promise.reject(new Error("Preview files cannot be exported."));
   }
   importSourceFile(_request: Omit<SourceFileImportRequest, "collectionId">): Promise<Source> {
-    return Promise.reject(new Error("File import is unavailable in the interface preview."));
+    return Promise.reject(new Error("Adding a file is unavailable in the interface preview."));
   }
   /** Sources without a document need no file storage, so the preview can hold them. */
   createSource(request: Omit<SourceRecordCreationRequest, "collectionId">): Promise<Source> {

@@ -67,7 +67,7 @@ describe("removing a source", () => {
     await act(async () => removal.request?.(source));
     expect(host.textContent).toContain("Remove “Imported by mistake”?");
     expect(host.textContent).toContain("deletes its source note");
-    expect(host.textContent).toContain("annotation notes are kept in the collection");
+    expect(host.textContent).toContain("annotations are kept in the collection");
     expect(host.textContent).toContain("links to this source will stop working");
     expect(host.textContent).not.toContain(source.path);
     // Linking notes are named, not listed by record path.
@@ -126,6 +126,6 @@ describe("removing a source", () => {
     await act(async () => removal.request?.(chapter));
     expect(host.querySelector("li")?.textContent).toBe("Linking source");
     expect(host.querySelector("li")?.getAttribute("title")).toBe("annotations/a1.md");
-    expect(host.textContent).toContain("use Move annotation on it first");
+    expect(host.textContent).toContain("use Move annotation to source on it first");
   });
 });

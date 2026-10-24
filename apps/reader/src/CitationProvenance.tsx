@@ -20,7 +20,7 @@ export function CitationProvenance({
   );
   return (
     <details className="citation-provenance">
-      <summary>Field sources</summary>
+      <summary>Field evidence</summary>
       <dl>
         {statuses.map(([field, status]) => (
           <div key={field}>

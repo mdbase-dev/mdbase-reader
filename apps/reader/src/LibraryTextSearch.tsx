@@ -94,7 +94,7 @@ export function LibraryTextSearch({
           ? indexed.paused
             ? "Saved-page indexing is paused. Open documents are still searched."
             : "Searches saved web pages and open documents. PDFs and EPUBs must be open."
-          : "Searches literature notes and annotation text, not PDF, EPUB or saved-page contents."}
+          : "Searches source notes and annotation text, not PDF, EPUB or saved-page contents."}
       </p>
       {scope === "documents" ? (
         <details className="search-coverage search-details">
@@ -170,7 +170,7 @@ function SearchResult({
     view === "document"
       ? documentPassageLabel(descriptor, destination, document?.file)
       : view === "note"
-        ? "Literature note"
+        ? "Source note"
         : "Annotation text";
   return (
     <li>

@@ -135,7 +135,7 @@ try {
     await navigator.fill("");
     const views = page.getByRole("navigation", { name: "Library views and sources" });
     if (!(await views.isVisible())) {
-      await page.getByRole("button", { name: "Toggle left sidebar" }).click();
+      await page.getByRole("button", { name: "Toggle Sources sidebar" }).click();
     }
     await views.getByRole("button", { name: "All sources", exact: true }).click();
     await chooseOption(page.getByRole("combobox", { name: "Search scope" }), "documents");

@@ -84,7 +84,7 @@ function OpenSourceAddDialog({
         <CloseIcon />
       </button>
       <div className="import-dialog-heading">
-        <h2 id="reader-add-source-title">Add a source</h2>
+        <h2 id="reader-add-source-title">Add source</h2>
         <p>
           Save a web page or PDF link, look up a work by DOI, arXiv ID or ISBN, or add a file from
           your device.
@@ -117,7 +117,9 @@ function OpenSourceAddDialog({
                 onEdit();
               }}
             />
-            <ReaderButton disabled={busy || !url.trim()}>{busy ? "Adding…" : "Add"}</ReaderButton>
+            <ReaderButton disabled={busy || !url.trim()}>
+              {busy ? "Adding…" : "Add source"}
+            </ReaderButton>
           </span>
         </label>
         {busy ? (
@@ -127,7 +129,7 @@ function OpenSourceAddDialog({
             disabled={!lookup.canCancel}
             onClick={lookup.cancel}
           >
-            {lookup.canCancel ? "Cancel" : "Finishing…"}
+            {lookup.canCancel ? "Stop adding" : "Finishing adding…"}
           </button>
         ) : null}
         {busy && lookup.progress ? (
@@ -259,7 +261,7 @@ function ChapterDoiReview({
               }
             }}
           >
-            Confirm and create chapter
+            Create chapter
           </button>
         </>
       ) : lookup.bookOffer ? (
@@ -270,7 +272,7 @@ function ChapterDoiReview({
           </p>
           <CitationSummary citation={lookup.bookOffer.citation} />
           <button type="button" disabled={busy} onClick={() => void lookup.saveChapterBook()}>
-            Confirm and create book first
+            Create book first
           </button>
         </>
       ) : (
@@ -297,7 +299,7 @@ function ChapterDoiReview({
             disabled={busy || (isbns.length > 1 && !isbn)}
             onClick={() => void lookup.findChapterBook(isbn || undefined)}
           >
-            Find book by container ISBN…
+            Find book by ISBN
           </button>
         </>
       )}

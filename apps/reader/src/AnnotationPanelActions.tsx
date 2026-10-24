@@ -44,10 +44,10 @@ export function AnnotationPanelActions({
           type="button"
           aria-expanded={commenting}
           disabled={!source}
-          title="Comment on the source as a whole"
+          title="Add source comment"
           onClick={() => setCommenting(true)}
         >
-          <CommentIcon /> Comment
+          <CommentIcon /> Add source comment
         </button>
         <button
           type="button"
@@ -105,7 +105,7 @@ function SourceCommentComposer({
     setProblem(null);
     onSave(comment).then(onClose, (reason: unknown) => {
       if (!isAnnotationSaveCancelled(reason)) {
-        setProblem(readerErrorMessage(reason, "Reader could not save this comment."));
+        setProblem(readerErrorMessage(reason, "Reader could not save this source comment."));
       }
       setSaving(false);
     });
@@ -119,11 +119,11 @@ function SourceCommentComposer({
       onKeyDown={(event) => annotationEditorKeys(event, () => void dismiss(), save)}
     >
       <header>
-        <strong id="source-comment-title">New comment</strong>
+        <strong id="source-comment-title">New source comment</strong>
         <button
           type="button"
           className="icon-button"
-          aria-label="Discard comment"
+          aria-label="Discard source comment"
           onClick={() => void dismiss()}
           disabled={saving}
         >
@@ -143,7 +143,7 @@ function SourceCommentComposer({
           Cancel
         </button>
         <ReaderButton disabled={saving || !comment.trim()} onClick={save}>
-          {saving ? "Saving…" : "Save comment"}
+          {saving ? "Saving…" : "Save source comment"}
         </ReaderButton>
       </footer>
     </section>

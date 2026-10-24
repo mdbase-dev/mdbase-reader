@@ -203,7 +203,7 @@ function sourceWrites(
     importSourceFile: (request, options) =>
       writeSource(
         () => gateway.importSourceFile(request, options),
-        "Reader could not import this document.",
+        "Reader could not add this document.",
       ),
     ...(createSource
       ? {

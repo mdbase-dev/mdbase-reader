@@ -87,7 +87,7 @@ export function bibliographyProblemSummary(
   return [
     counts.missing ? countLabel(counts.missing, "without citation") : null,
     counts.invalid ? countLabel(counts.invalid, "invalid record") : null,
-    counts.duplicate ? countLabel(counts.duplicate, "citekey collision") : null,
+    counts.duplicate ? countLabel(counts.duplicate, "citation key conflict") : null,
   ]
     .filter((value): value is string => value !== null)
     .join(" · ");

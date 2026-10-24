@@ -9,7 +9,7 @@ const SourceAddDialog = lazyFeature(
 );
 const SourceImportOverlay = lazyFeature(
   async () => ({ default: (await import("./SourceImportDialog.js")).SourceImportOverlay }),
-  "the file import dialog",
+  "the add source dialog",
 );
 
 export function SourceAdditionOverlays({

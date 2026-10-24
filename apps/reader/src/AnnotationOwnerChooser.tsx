@@ -2,7 +2,7 @@ import type { AnnotationOwnerControl } from "./use-annotation-owner.js";
 import type { JSX } from "react";
 
 const routineReasons = new Set([
-  "Owned by this source.",
+  "Saved to this source.",
   "A note about this source as a whole.",
   "Created in this chapter.",
 ]);
@@ -29,9 +29,9 @@ export function AnnotationOwnerChooser({
   return (
     <div className={`annotation-owner-control${compact ? " is-compact" : ""}`}>
       <label>
-        {compact ? "Owner" : "Annotation owner"}{" "}
+        Save to source{" "}
         <select
-          aria-label="Annotation owner"
+          aria-label="Save to source"
           title={compact ? control.reason : undefined}
           value={control.ownerId}
           disabled={control.pending}

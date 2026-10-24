@@ -144,12 +144,12 @@ function InspectorTabs({
         role="tab"
         disabled={!enabled}
         aria-selected={tab === "note"}
-        title="Literature note"
+        title="Source note"
         onPointerEnter={SourceNoteEditor.preload}
         onFocus={SourceNoteEditor.preload}
         onClick={() => onChange("note")}
       >
-        <NoteIcon /> <span className="inspector-tab-label">Literature note</span>
+        <NoteIcon /> <span className="inspector-tab-label">Source note</span>
       </button>
       <button
         type="button"
@@ -168,7 +168,7 @@ function InspectorTabs({
 }
 
 function tabLabel(tab: InspectorTab): string {
-  return tab === "note" ? "Literature note" : tab === "citation" ? "Citation" : "Annotations";
+  return tab === "note" ? "Source note" : tab === "citation" ? "Citation" : "Annotations";
 }
 
 export function InspectorContent({
@@ -216,16 +216,16 @@ export function InspectorContent({
                     !(await requestConfirmation({
                       title: `Move annotation to “${owner.title}”?`,
                       message:
-                        "Its document target, selector, revision and note embeds will not change. The new owner may not include this passage in its range.",
-                      confirmLabel: "Move annotation",
-                      cancelLabel: "Keep owner",
+                        "Its document target, selector, revision and note embeds will not change. The new source may not include this passage in its range.",
+                      confirmLabel: "Move annotation to source",
+                      cancelLabel: "Keep source",
                     }))
                   ) {
                     return;
                   }
                   const fullOwner = await gateway.source(owner.id);
                   if (!fullOwner) {
-                    throw new Error("The chosen owner no longer exists.");
+                    throw new Error("The chosen source no longer exists. Choose another source.");
                   }
                   if (!gateway.moveAnnotationOwner) {
                     throw new Error("Moving annotations is unavailable.");

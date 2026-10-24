@@ -95,7 +95,7 @@ export function LibraryRowMenu({
           role="menuitem"
           onClick={run(() => void navigator.clipboard.writeText(`@${citekey}`))}
         >
-          Copy citekey <kbd>@{citekey}</kbd>
+          Copy citation key <kbd>@{citekey}</kbd>
         </button>
       ) : null}
       {actions.onExport ? (

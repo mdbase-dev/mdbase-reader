@@ -113,9 +113,9 @@ function LibraryHeader({
         <button
           type="button"
           className="icon-button header-pane-toggle is-library"
-          aria-label="Toggle left sidebar"
+          aria-label="Toggle Sources sidebar"
           aria-expanded={libraryOpen}
-          title={`Toggle left sidebar · ${shortcutLabel("mod+\\")}`}
+          title={`Toggle Sources sidebar · ${shortcutLabel("mod+\\")}`}
           onClick={onToggleLibrary}
         >
           <LeftPaneIcon />
@@ -143,7 +143,7 @@ function LibraryHeader({
           onClick={onOpenCommands}
         >
           <SearchIcon />
-          <span>Search</span>
+          <span>Search and commands</span>
           <kbd>{shortcutLabel("mod+k")}</kbd>
         </button>
         {onToggleReadingMode ? (
@@ -158,10 +158,10 @@ function LibraryHeader({
         <button
           className="icon-button header-pane-toggle is-inspector"
           type="button"
-          aria-label="Toggle right sidebar"
+          aria-label="Toggle Notes panel"
           aria-pressed={inspectorOpen}
           disabled={!inspectorAvailable}
-          title={`Toggle right sidebar · ${shortcutLabel("mod+shift+\\")}`}
+          title={`Toggle Notes panel · ${shortcutLabel("mod+shift+\\")}`}
           onClick={onToggleInspector}
         >
           <RightPaneIcon />

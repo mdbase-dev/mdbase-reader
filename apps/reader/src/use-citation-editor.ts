@@ -368,7 +368,7 @@ export function useCitationEditor(input: {
         if (mounted.current && selection.current.token === active.token) {
           setErrorState({
             sourceId: source.id,
-            value: readerErrorMessage(reason, "Reader could not generate a citekey."),
+            value: readerErrorMessage(reason, "Reader could not generate a citation key."),
           });
         }
       });

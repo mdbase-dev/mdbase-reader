@@ -101,7 +101,7 @@ export function libraryChapterCommands(input: ReaderCommandInput): readonly Read
     .filter((source) => !source.partOf && supportsChapterCreation(source))
     .map((source) => ({
       id: `add-chapters-as-sources:${source.id}`,
-      label: `Add chapters to ${source.title}…`,
+      label: `Add chapters as sources… — ${source.title}`,
       detail: "Book chapters as sources",
       group: "Sources",
       keywords: chapterKeywords,

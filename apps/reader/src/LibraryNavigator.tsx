@@ -66,7 +66,7 @@ export function LibraryNavigator({
     <aside
       id="reader-library-navigator"
       className="library-pane library-navigator"
-      aria-label="Library navigator"
+      aria-label="Sources sidebar"
       aria-hidden={!open}
       inert={!open}
     >

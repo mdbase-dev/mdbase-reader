@@ -114,7 +114,7 @@ function ChapterCreationDialog({
             type="submit"
             disabled={model.busy || !model.plans.length}
           >
-            {model.busy ? "Creating…" : "Confirm and create chapters"}
+            {model.busy ? "Creating…" : "Create chapters"}
           </button>
         </div>
       </form>

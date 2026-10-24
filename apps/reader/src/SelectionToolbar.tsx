@@ -191,8 +191,8 @@ function SelectionToolbar({
           <HighlightIcon /> Highlight
         </button>
       ) : null}
-      <button type="button" title="Comment (C)" onClick={comment}>
-        <CommentIcon /> Comment
+      <button type="button" title="Comment on highlight (C)" onClick={comment}>
+        <CommentIcon /> Comment on highlight
       </button>
       <span className="selection-toolbar-divider" aria-hidden="true" />
       <button
@@ -215,7 +215,7 @@ function SelectionToolbar({
         title={
           composer.quoteCitation?.citekey
             ? `Copy as a quote citing @${composer.quoteCitation.citekey}`
-            : "Copy as a quote citing the source's title"
+            : "Copy as a quote citing the source’s title"
         }
         disabled={!passage.text}
         onClick={() => copy("citation")}
@@ -272,7 +272,7 @@ function DeleteHighlightButton({
         onClick={() => onChange("confirming")}
       >
         <TrashIcon />
-        <span className="selection-toolbar-label">Delete</span>
+        <span className="selection-toolbar-label">Delete highlight</span>
       </button>
     );
   }
@@ -281,7 +281,7 @@ function DeleteHighlightButton({
       type="button"
       className="is-danger"
       // The name starts with the visible words, so speech users can say what they see.
-      aria-label={state === "deleting" ? undefined : "Delete highlight?"}
+      aria-label={state === "deleting" ? undefined : "Delete highlight"}
       disabled={state === "deleting"}
       onClick={() => {
         onChange("deleting");
@@ -291,7 +291,7 @@ function DeleteHighlightButton({
         );
       }}
     >
-      {state === "deleting" ? "Deleting…" : "Delete?"}
+      {state === "deleting" ? "Deleting…" : "Delete highlight"}
     </button>
   );
 }

@@ -86,7 +86,10 @@ describe("current-source chapter command", () => {
         ({ id }) => id.startsWith("add-chapters-as-sources"),
       );
       expect(commands.map(({ id }) => id)).toEqual(["add-chapters-as-sources:book"]);
-      expect(commands[0]).toMatchObject({ label: "Add chapters to book…", group: "Sources" });
+      expect(commands[0]).toMatchObject({
+        label: "Add chapters as sources… — book",
+        group: "Sources",
+      });
       expect(commands[0]!.label.toLocaleLowerCase()).toContain("chap");
       commands[0]!.run();
       expect(create).toHaveBeenLastCalledWith(book);

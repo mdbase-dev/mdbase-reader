@@ -79,7 +79,7 @@ it("warns before losing an unfinished new annotation, without checkpointing its 
   const put = vi.spyOn(IDBObjectStore.prototype, "put");
   try {
     buffer.replace({ body: "" });
-    buffer.edit("New comment");
+    buffer.edit("New source comment");
     const event = new Event("beforeunload", { cancelable: true });
     window.dispatchEvent(event);
     expect(event.defaultPrevented).toBe(true);

@@ -153,7 +153,7 @@ describe("cancellable source addition", () => {
     await dismiss();
     expect(onClose).not.toHaveBeenCalled();
     await act(async () => {
-      button("Cancel")?.click();
+      button("Stop adding")?.click();
       await pending;
     });
     expect(signal?.aborted).toBe(true);
@@ -172,7 +172,7 @@ describe("cancellable source addition", () => {
     await start("9780140449136");
     const cancelled = pending;
     const signal = (mocks.services.mock.calls[0]?.[0] as SourceAdditionServices).signal;
-    await act(async () => button("Cancel")?.click());
+    await act(async () => button("Stop adding")?.click());
     expect(signal?.aborted).toBe(true);
     await act(async () => {
       pending = flow.capture("9780140449136");
@@ -198,7 +198,7 @@ describe("cancellable source addition", () => {
     });
     const signal = (mocks.services.mock.calls[0]?.[0] as SourceAdditionServices).signal;
     expect(flow.canCancel).toBe(false);
-    expect(button("Finishing…")?.disabled).toBe(true);
+    expect(button("Finishing adding…")?.disabled).toBe(true);
     await act(async () => flow.cancel());
     await dismiss();
     expect(signal?.aborted).toBe(false);

@@ -10,8 +10,8 @@ export function CitationSaveConflict({
     <div className="citation-feedback citation-conflict" role="alert">
       <strong>This citation changed elsewhere.</strong>
       <span>
-        Your draft is still here. Use their version to reload their citation and field sources. Keep
-        mine replaces both with your draft, including any removed fields.
+        Your draft is still here. Use their version to reload their citation and field evidence.
+        Keep mine replaces both with your draft, including any removed fields.
       </span>
       <div className="citation-review-actions">
         <button
