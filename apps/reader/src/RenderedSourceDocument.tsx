@@ -39,11 +39,19 @@ export function RenderedSourceDocument({
     <div className="source-document">
       <header className="source-document-heading">
         <h1>{source.title}</h1>
-        <small>Saved document · original headings below are unchanged</small>
+        {isSavedWebPage(source) ? (
+          <small>Saved web page · original headings below are unchanged</small>
+        ) : null}
       </header>
       <div className="source-document-surface">{render(source, update)}</div>
     </div>
   );
+}
+
+/** Only a saved web page keeps headings of its own that a renamed title can differ from. */
+function isSavedWebPage(source: SourceSummary): boolean {
+  const mediaType = source.documents[0]?.mediaType ?? "";
+  return mediaType === "text/html" || mediaType === "application/xhtml+xml";
 }
 
 export function updateSurface(
