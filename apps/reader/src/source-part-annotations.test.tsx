@@ -156,6 +156,26 @@ it.each([0, 1])("omits the owner picker and explanation with %i choices", async 
   expect(host.querySelector("select")).toBeNull();
 });
 
+it("still explains a chapter fallback when the book is the only owner", async () => {
+  const gateway = new PreviewGateway();
+  const book = (await gateway.source(bookId))!;
+  const reason = "Chapter range revision differs from the opened file; keeping this on the book.";
+  await mount(
+    <AnnotationOwnerChooser
+      control={{
+        ownerId: bookId,
+        sources: [book],
+        choices: [book],
+        pending: false,
+        reason,
+        choose: vi.fn(),
+      }}
+    />,
+  );
+  expect(host.querySelector("select")).toBeNull();
+  expect(host.querySelector('[role="status"]')!.textContent).toBe(reason);
+});
+
 it("keeps the toolbar chooser compact with an accessible ownership explanation", async () => {
   const gateway = new PreviewGateway();
   const sources = (await gateway.library()).sources.filter(
