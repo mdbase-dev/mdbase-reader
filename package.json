@@ -53,7 +53,7 @@
     "@lingui/vite-plugin": "6.9.0",
     "@mdbase-dev/connect-dev": "0.1.0-beta.125",
     "@mdbase-dev/connect-protocol": "file:packages/connect/vendor/mdbase-dev-connect-protocol-0.1.0-beta.129-c280cd194ffd.tgz",
-    "@mdbase-dev/i18n": "file:vendor/mdbase-dev-i18n-0.1.0-beta.141-a36fa009.tgz",
+    "@mdbase-dev/i18n": "file:vendor/mdbase-dev-i18n-0.1.0-beta.141-49bea0aa.tgz",
     "@mdbase-reader/i18n": "workspace:0.1.0-beta.0",
     "@types/node": "^22.19.11",
     "eslint": "^9.39.2",

@@ -1,10 +1,11 @@
 // @vitest-environment happy-dom
 import { msg } from "@lingui/core/macro";
-import { createI18nRuntime } from "@mdbase-dev/i18n";
+import { createI18nRuntime, formatters, locales } from "@mdbase-dev/i18n";
 import { CommandPalette } from "@mdbase-dev/ui/command-palette";
 import { readerI18n } from "@mdbase-reader/i18n";
 import english from "@mdbase-reader/i18n/english";
 import french from "@mdbase-reader/i18n/locales/fr";
+import italian from "@mdbase-reader/i18n/locales/it";
 import { ReaderI18nProvider, ReaderLanguageSetting } from "@mdbase-reader/i18n/react";
 import { act } from "react";
 import { createRoot } from "react-dom/client";
@@ -92,6 +93,18 @@ it("localizes public palette headings live without changing group, showAll or co
       "Anzeige",
     ]);
     expect(host.querySelectorAll('[role="option"]')).toHaveLength(8 + 5 * 6);
+    await act(async () => {
+      await readerI18n.selectLocale("it");
+    });
+    expect(headings()).toEqual([
+      "Schede aperte",
+      "Fonte corrente",
+      "Fonti",
+      "Biblioteca",
+      "Spazio di lavoro",
+      "Visualizzazione",
+    ]);
+    expect(host.querySelectorAll('[role="option"]')).toHaveLength(8 + 5 * 6);
     expect(commands.map(({ id, group }) => ({ id, group }))).toEqual(identities);
     expect(readerCommandGroupLabel("Unknown group")).toBe("Unknown group");
     const input = host.querySelector("input");
@@ -108,6 +121,49 @@ it("localizes public palette headings live without changing group, showAll or co
     host.remove();
     await readerI18n.selectLocale("en");
   }
+});
+
+it("negotiates Italian regional preferences, persists choices and renders real plurals and dates", async () => {
+  let saved: string | null = null;
+  const makeRuntime = (preferences: readonly string[]): ReturnType<typeof createI18nRuntime> =>
+    createI18nRuntime({
+      english,
+      preferences,
+      loadLocale: () => Promise.resolve(italian),
+      storage: {
+        getLocale: () => saved,
+        setLocale: (locale) => {
+          saved = locale;
+        },
+      },
+    });
+  const runtime = makeRuntime(["it-IT", "en-US"]);
+  await runtime.initialize();
+  expect(runtime.i18n.locale).toBe("it");
+  expect(runtime.i18n._(msg({ message: "Language", context: "interface language setting" }))).toBe(
+    "Lingua",
+  );
+  const selected = msg`{0, plural, one {# source selected} other {# sources selected}}`;
+  const copied = msg`{0, plural, one {Copied # annotation as Markdown.} other {Copied # annotations as Markdown.}}`;
+  for (const [count, source, annotation] of [
+    [0, "0 fonti selezionate", "0 annotazioni copiate come Markdown."],
+    [1, "1 fonte selezionata", "1 annotazione copiata come Markdown."],
+    [2, "2 fonti selezionate", "2 annotazioni copiate come Markdown."],
+    [1_000_000, "1.000.000 fonti selezionate", "1.000.000 annotazioni copiate come Markdown."],
+  ] as const) {
+    expect(runtime.i18n._(selected.id, { 0: count })).toBe(source);
+    expect(runtime.i18n._(copied.id, { 0: count })).toBe(annotation);
+  }
+  const date = formatters(runtime.i18n.locale).date(new Date("2026-10-24T12:00:00Z"), {
+    dateStyle: "long",
+    timeZone: "UTC",
+  });
+  expect(date).toBe("24 ottobre 2026");
+  await runtime.selectLocale("it");
+  expect(saved).toBe("it");
+  const restored = makeRuntime(["en-US"]);
+  await restored.initialize();
+  expect(restored.i18n.locale).toBe("it");
 });
 
 it("retains the active locale on load failure and clears the notice after recovery", async () => {
@@ -150,7 +206,8 @@ it("retains the active locale on load failure and clears the notice after recove
       );
       await runtime.initialize();
     });
-    expect(host.querySelectorAll("option")).toHaveLength(9);
+    expect([...host.querySelectorAll("option")].map((option) => option.value)).toEqual(locales);
+    expect(host.querySelector('option[value="it"]')?.textContent).toBe("Italiano");
     await choose("de");
     expect(runtime.i18n.locale).toBe("en");
     expect(saved).toEqual([]);
