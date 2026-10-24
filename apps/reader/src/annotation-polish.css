@@ -224,8 +224,9 @@
   line-height: 1.5;
 }
 .annotation-textarea:focus-visible {
-  outline: 2px solid var(--accent);
+  outline: 2px solid transparent;
   outline-offset: 2px;
+  box-shadow: var(--focus-ring);
 }
 /* Editing: the quotation reads as the card's blockquote, the comment as a quiet field below. */
 .annotation-body-editor .annotation-textarea:not(.is-quote) {

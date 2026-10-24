@@ -211,8 +211,9 @@ button {
 }
 
 .connection-direct-action:focus-visible {
-  outline: 2px solid var(--accent);
+  outline: 2px solid transparent;
   outline-offset: 2px;
+  box-shadow: var(--focus-ring);
 }
 
 .connection-direct-action.has-problem {
@@ -1188,13 +1189,7 @@ button {
   outline-offset: -2px;
 }
 
-button:focus-visible,
-summary:focus-visible,
-select:focus-visible,
-input:focus-visible {
-  outline: 2px solid color-mix(in oklch, var(--accent) 70%, white);
-  outline-offset: 2px;
-}
+/* Native controls take the shared focus ring from reader-tokens.css. */
 
 .annotation-card:first-of-type {
   border-top: 1px solid var(--line);

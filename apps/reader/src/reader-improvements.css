@@ -227,8 +227,9 @@
 .reader-shell summary:focus-visible,
 .reader-shell select:focus-visible,
 .reader-shell input:focus-visible {
-  outline: 2px solid var(--accent);
+  outline: 2px solid transparent;
   outline-offset: 2px;
+  box-shadow: var(--focus-ring);
 }
 @media (max-width: 680px) {
   .library-text-search {

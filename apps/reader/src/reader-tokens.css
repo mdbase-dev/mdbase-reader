@@ -250,17 +250,20 @@
   --focus-ring: 0 0 0 2px var(--bg-surface), 0 0 0 4px var(--accent-color);
 }
 
-/* Focus is always visible. The outline with a 2px offset renders the same gap
-   and ring as `--focus-ring` without colliding with components' own shadows.
-   Zero specificity: fields that ring their container still opt out locally. */
-:where(a, button, input, select, textarea, summary, [tabindex]):focus-visible {
-  outline: 2px solid var(--accent);
+/* Focus is always visible and has one treatment: the --focus-ring token. The
+   transparent outline becomes visible in forced-colours mode, where shadows are
+   dropped. Native controls match at element specificity, so they override the
+   shared package's outline; fields that ring their container opt out with a
+   more specific rule. */
+:is(a, button, input, select, textarea, summary):focus-visible {
+  outline: 2px solid transparent;
   outline-offset: 2px;
+  box-shadow: var(--focus-ring);
 }
 
 @media (forced-colors: active) {
-  :where(a, button, input, select, textarea, summary, [tabindex]):focus-visible {
-    outline: 2px solid Highlight;
+  :is(a, button, input, select, textarea, summary):focus-visible {
+    outline-color: Highlight;
   }
 }
 
