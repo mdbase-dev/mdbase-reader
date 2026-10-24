@@ -1,4 +1,9 @@
-import { annotationCommands, displayCommands, libraryCommands } from "./reader-app-commands.js";
+import {
+  annotationCommands,
+  chapterCommands,
+  displayCommands,
+  libraryCommands,
+} from "./reader-app-commands.js";
 
 import type { BibliographyExportController } from "./use-bibliography-export.js";
 import type { SourceExportController } from "./use-source-export.js";
@@ -21,6 +26,8 @@ export interface ReaderCommandInput {
   readonly sourceExport: SourceExportController;
   /** Asks to remove a source, which confirms first; null when the collection cannot. */
   readonly removeSource?: ((source: SourceSummary) => void) | null;
+  /** Null when chapter creation is disabled or unavailable for this collection. */
+  readonly createSourceParts?: ((source: SourceSummary) => void) | null;
   readonly bibliographyExport: BibliographyExportController;
   readonly focusMode: boolean;
   /** Bookmarks the focused document's current position; null without one. */
@@ -193,6 +200,7 @@ function sourceCommands(input: ReaderCommandInput): readonly ReaderCommand[] {
       run: input.sourceExport.run,
     },
     ...annotationCommands(input),
+    ...chapterCommands(input),
     {
       id: "annotations",
       label: "Open annotations",

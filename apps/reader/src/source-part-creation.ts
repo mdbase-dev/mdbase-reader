@@ -53,9 +53,15 @@ export function pdfChapterProposals(
       level: entry.level,
       ...(valid
         ? { range: { kind: "pages" as const, start, end } }
-        : { problem: "Missing, inverted or same-page outline boundary — enter a page range." }),
+        : {
+            problem:
+              "The table of contents does not give clear start and end pages. Enter them below.",
+          }),
       ...((entries[index + 1]?.level ?? -1) > entry.level
-        ? { warning: "Includes nested sections. Selecting those too creates overlapping parts." }
+        ? {
+            warning:
+              "Includes nested sections. Selecting those too means the chapters will share pages.",
+          }
         : {}),
     };
   });
@@ -86,12 +92,12 @@ export function epubChapterProposals(
         ? { range: { kind: "epub-spine" as const, start: entry.href, end: endHref } }
         : {
             problem:
-              "TOC boundary is within one spine item or outside the spine. Choose whole-spine boundaries.",
+              "The table of contents does not give clear start and end sections. Choose them below.",
           }),
       ...(entry.fragment || peer?.fragment
         ? {
             warning:
-              "TOC uses fragments. Whole endpoint resources are included; review boundaries before saving.",
+              "A heading starts partway through a section. The whole section will be included; check the start and end sections.",
           }
         : {}),
     };
@@ -258,7 +264,7 @@ export async function confirmChapterPlans(
   const library = await gateway.library();
   if (library.sourceIndex?.complete === false) {
     throw new Error(
-      "The source index is partial. Finish loading before checking for duplicate parts.",
+      "The library is still loading. Wait for it to finish before adding chapters so we can check for duplicates.",
     );
   }
   const previous: SourceSummary[] = [...library.sources];
@@ -286,14 +292,16 @@ export async function confirmChapterPlans(
     });
   }
   if (warnings.length && !acknowledged) {
-    throw new Error(`${warnings.join("; ")}. Review and acknowledge overlaps before saving.`);
+    throw new Error(
+      `${warnings.join("; ")}. Check the shared pages or sections, then tick the confirmation box to continue.`,
+    );
   }
   for (const [index, plan] of plans.entries()) {
     try {
       onCreated(await gateway.createSourcePart(plan));
     } catch (error) {
       throw new Error(
-        `${String(index)} of ${String(plans.length)} chapters completed. Retry keeps the same identities. ${error instanceof Error ? error.message : "Creation failed."}`,
+        `${String(index)} of ${String(plans.length)} chapters created. You can retry without creating duplicates. ${error instanceof Error ? error.message : "Could not create the chapter."}`,
       );
     }
   }

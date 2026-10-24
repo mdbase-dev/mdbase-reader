@@ -43,21 +43,29 @@ export async function readChapterOutline(
   throw new Error("Chapter ranges require a PDF or EPUB.");
 }
 
-// The two disjoint range forms have intentionally explicit field checks.
-// eslint-disable-next-line complexity
+function validatePageRange(range: DocumentRange | undefined, pageCount: number): void {
+  if (range?.kind !== "pages") {
+    throw new Error("Enter a start page and an end page.");
+  }
+  for (const endpoint of ["start", "end"] as const) {
+    const page = range[endpoint];
+    if (!Number.isSafeInteger(page) || page < 0 || page >= pageCount) {
+      throw new Error(
+        `${endpoint === "start" ? "Start page" : "End page"} must be a whole number from 1 to ${String(pageCount)}.`,
+      );
+    }
+  }
+  if (range.end < range.start) {
+    throw new Error("End page must be the same as or after start page.");
+  }
+}
+
 export function validateChapterRange(
   range: DocumentRange | undefined,
   outline: ChapterOutline,
 ): void {
-  if (
-    range?.kind === "pages" &&
-    outline.pageCount &&
-    Number.isSafeInteger(range.start) &&
-    Number.isSafeInteger(range.end) &&
-    range.start >= 0 &&
-    range.end >= range.start &&
-    range.end < outline.pageCount
-  ) {
+  if (outline.pageCount !== undefined) {
+    validatePageRange(range, outline.pageCount);
     return;
   }
   if (range?.kind === "epub-spine" && outline.spine && !range.start_cfi && !range.end_cfi) {
@@ -67,7 +75,5 @@ export function validateChapterRange(
       return;
     }
   }
-  throw new Error(
-    "Invalid chapter range. Use absolute file-page indexes or whole spine resources from this document.",
-  );
+  throw new Error("Choose a start section and an end section in reading order from this book.");
 }

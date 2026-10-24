@@ -77,7 +77,7 @@ describe("outline proposals", () => {
     }
     expect(() =>
       validateChapterRange({ kind: "pages", start: 0, end: 12 }, { pageCount: 12, proposals: [] }),
-    ).toThrow("Invalid chapter range");
+    ).toThrow("End page must be a whole number from 1 to 12.");
   });
   it("uses actual EPUB spine order and exposes fragment and same-resource uncertainty", () => {
     const entries = epubChapterProposals(
@@ -92,7 +92,7 @@ describe("outline proposals", () => {
       start: "z.xhtml",
       end: "middle.xhtml",
     });
-    expect(entries[0]?.warning).toContain("fragments");
+    expect(entries[0]?.warning).toContain("partway through a section");
     expect(entries[1]?.range).toEqual({ kind: "epub-spine", start: "a.xhtml", end: "a.xhtml" });
     expect(
       epubChapterProposals(
@@ -143,7 +143,9 @@ describe("reviewed chapter creation", () => {
       "Duplicate range",
     );
     library.mockResolvedValue({ sources: [book], sourceIndex: { complete: false } });
-    await expect(confirmChapterPlans(gateway, [plan], true, vi.fn())).rejects.toThrow("partial");
+    await expect(confirmChapterPlans(gateway, [plan], true, vi.fn())).rejects.toThrow(
+      "library is still loading",
+    );
     const overlapping = chapterPlan(
       book,
       { ...proposal, key: "other", range: { kind: "pages", start: 4, end: 8 } },

@@ -116,7 +116,27 @@
   justify-content: flex-end;
   margin-block-start: 20px;
 }
-.source-parts-dialog pre {
-  white-space: pre-wrap;
+.chapter-preview {
+  padding-block: 16px;
+  border-block-end: 1px solid var(--line);
   overflow-wrap: anywhere;
+}
+.chapter-preview h3 {
+  margin: 0 0 8px;
+  font-size: var(--ui-body);
+}
+.chapter-preview dl {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 4px 16px;
+  margin: 0;
+}
+.chapter-preview dt {
+  font-weight: 600;
+}
+.chapter-preview dd {
+  margin: 0;
+}
+.source-parts-dialog .chapter-preview-citation {
+  margin-block: 12px 0;
 }

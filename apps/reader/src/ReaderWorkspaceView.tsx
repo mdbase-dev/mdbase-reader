@@ -19,6 +19,7 @@ import { RenderedSourceDocument } from "./RenderedSourceDocument.js";
 import { useSdkConnectionState } from "./sdk-connection-state.js";
 import { SearchPassageStatus } from "./SearchPassageStatus.js";
 import { SourceAdditionOverlays } from "./SourceAdditionOverlays.js";
+import { useSourcePartCreation } from "./SourcePartCreation.js";
 import { SourceRemovalDialog } from "./SourceRemovalDialog.js";
 import { useAnnotationCounts } from "./use-annotation-counts.js";
 import { useFileDrop } from "./use-file-drop.js";
@@ -127,7 +128,7 @@ export function ReaderWorkspaceView({
   const searchNavigation = useSearchNavigation(sourceWorkspace, model.surfaces);
   const fileDrop = useFileDrop((file) => void sourceAddition.addFile(file));
   const routedEditingIdRef = useRef(composer.editingAnnotationId);
-  const commands = commandsForView(model, () => dock.toggleSidebar("right"), {
+  const commands = useCommandsForView(model, () => dock.toggleSidebar("right"), {
     density: shell.value.density,
     setDensity: (density) => shell.update({ density }),
   });
@@ -561,7 +562,7 @@ function findWorkbenchOwner(
 // prettier-ignore
 function focusLibrarySearch(): void { globalThis.setTimeout(() => document.querySelector<HTMLInputElement>("#reader-library-search")?.focus(), 0); }
 
-function commandsForView(
+function useCommandsForView(
   model: ReaderWorkspaceViewModel,
   toggleInspector: () => void,
   display: {
@@ -569,12 +570,14 @@ function commandsForView(
     readonly setDensity: (density: "comfortable" | "compact") => void;
   },
 ): ReturnType<typeof readerCommands> {
+  const createSourceParts = useSourcePartCreation();
   return readerCommands({
     sources: model.library.sources,
     activeSource: model.source,
     workspace: model.sourceWorkspace,
     sourceExport: model.sourceExport,
     removeSource: model.sourceRemoval.request,
+    createSourceParts,
     bibliographyExport: model.bibliographyExport,
     focusMode: model.focusMode,
     bookmark: model.composer.canBookmark ? model.composer.bookmark : null,
