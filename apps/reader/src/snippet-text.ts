@@ -28,6 +28,19 @@ export function snippetText(text: string): string {
   );
 }
 
+const blockMarkers = /(^|\n)[\t ]*(?:(?:#{1,6}|>|[-*+])[\t ]+|>)+/gu;
+
+/**
+ * Display only: Markdown block markers (headings, blockquotes, list bullets) read as noise in a
+ * one-line snippet. Only markers at a line start are removed, and `lineStart` says whether the
+ * text itself begins one; inline Markdown and `#tags` stay.
+ */
+export function withoutBlockMarkup(text: string, lineStart: boolean): string {
+  return text.replace(blockMarkers, (markers, boundary: string) =>
+    boundary || lineStart ? boundary : markers,
+  );
+}
+
 export function snippetExcerpt(excerpt: SearchExcerpt): SearchExcerpt {
   return {
     before: snippetText(excerpt.before),

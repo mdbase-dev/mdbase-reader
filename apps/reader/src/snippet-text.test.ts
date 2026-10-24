@@ -42,6 +42,25 @@ describe("snippet display text", () => {
     expect(text.slice(range.start, range.end)).toBe(quote.exact);
   });
 
+  it("hides Markdown block markers in note snippets without moving the match", () => {
+    const note = "# Adam: A Method\n\n> Quoted *line*\n- first point, see #tag\n  * nested";
+    expect(searchExcerpt(note, "adam", { markdown: true })).toEqual({
+      before: "",
+      match: "Adam",
+      after: ": A Method Quoted *line* first point, see #tag nested",
+    });
+    // Document text and mid-line context are left alone.
+    expect(searchExcerpt(note, "adam")?.before).toBe("# ");
+    expect(searchExcerpt("x - y # z match", "match", { markdown: true })?.before).toBe(
+      "x - y # z ",
+    );
+    // Context cut mid-line can start with a marker character that is not a marker.
+    const cut = `xxxxx> ${"b".repeat(88)}match`;
+    expect(searchExcerpt(cut, "match", { markdown: true })?.before).toBe(`…> ${"b".repeat(88)}`);
+    const range = resolveSearchQuote(note, searchQuote(note, "adam")!)!;
+    expect(note.slice(range.start, range.end)).toBe("Adam");
+  });
+
   it("keeps literal query syntax and whitespace matching", () => {
     expect(searchExcerpt("Before [ﬁle]\n match after", "[ﬁle] match")?.match).toBe("[file] match");
     expect(searchExcerpt("İSTANBUL MATCH", "match")?.match).toBe("MATCH");

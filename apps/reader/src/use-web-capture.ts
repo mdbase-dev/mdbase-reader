@@ -6,7 +6,11 @@ import { useChapterDoi } from "./use-chapter-doi.js";
 
 import type { ChapterDoiOffer } from "./chapter-doi.js";
 import type * as SourceAdditionFlow from "./source-addition-flow.js";
-import type { SourceAdditionOutcome, SourceAdditionServices } from "./source-addition-flow.js";
+import type {
+  SourceAdditionNotice,
+  SourceAdditionOutcome,
+  SourceAdditionServices,
+} from "./source-addition-flow.js";
 import type { ReaderWorkspaceController } from "./use-reader-workspace.js";
 import type { ReaderWorkspaceGateway } from "./workspace-model.js";
 import type { CitationCandidate, SourceId } from "@mdbase-reader/core";
@@ -24,7 +28,11 @@ export interface WebCaptureFlow {
   /** A page could not be fetched but its citation was found; it can be saved on its own. */
   readonly offer: { readonly title: string; readonly reason: string } | null;
   /** A source was added with a problem worth reading before it opens. */
-  readonly notice: { readonly message: string; readonly sourceId: SourceId } | null;
+  readonly notice: {
+    readonly message: string;
+    readonly detail?: string;
+    readonly sourceId: SourceId;
+  } | null;
   readonly capture: (input: string) => Promise<void>;
   readonly saveCitationOnly: () => Promise<void>;
   readonly openNoticed: () => void;
@@ -93,7 +101,7 @@ export function useWebCapture(
           signalMdbaseMark("saved");
           recoveryInput.current = null;
           if (outcome.notices.length) {
-            setNotice({ message: outcome.notices.join(" "), sourceId: outcome.source.id });
+            setNotice(additionNotice(outcome.notices, outcome.source.id));
           } else {
             onImported(outcome.source.id);
           }
@@ -154,5 +162,18 @@ export function useWebCapture(
       setOffer(null);
       proposeChapter(null);
     },
+  };
+}
+
+/** Notices read as one message; their underlying errors stay together in its details. */
+function additionNotice(
+  notices: readonly SourceAdditionNotice[],
+  sourceId: SourceId,
+): NonNullable<WebCaptureFlow["notice"]> {
+  const detail = notices.flatMap((notice) => notice.detail ?? []).join(" ");
+  return {
+    message: notices.map((notice) => notice.message).join(" "),
+    ...(detail ? { detail } : {}),
+    sourceId,
   };
 }

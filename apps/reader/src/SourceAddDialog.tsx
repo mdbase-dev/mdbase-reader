@@ -2,11 +2,13 @@ import { ReaderButton } from "@mdbase-reader/ui";
 import { useEffect, useRef, useState, type JSX } from "react";
 
 import { chapterIsbns } from "./chapter-doi.js";
+import { citationDateText, citationNames, displayCslValue } from "./citation-form-model.js";
 import { CloseIcon, FileIcon } from "./icons.js";
 import { chapterCitation } from "./source-part-creation.js";
 import { citationText } from "./use-chapter-doi.js";
 
 import type { SourceAdditionController } from "./use-source-addition.js";
+import type { SourceSummary } from "@mdbase-reader/core";
 
 export function SourceAddDialog({
   open,
@@ -166,7 +168,8 @@ function LookupFollowUp({
   if (lookup.notice) {
     return (
       <div className="capture-follow-up" role="status">
-        <p>Added. {lookup.notice.message}</p>
+        <p>{lookup.notice.message}</p>
+        <ProblemDetails detail={lookup.notice.detail} />
         <ReaderButton onClick={lookup.openNoticed}>Open source</ReaderButton>
       </div>
     );
@@ -175,9 +178,10 @@ function LookupFollowUp({
     return (
       <div className="capture-follow-up">
         <p>
-          Reader couldn’t fetch that page ({lookup.offer.reason}), but it found the citation for “
-          {lookup.offer.title}”. You can save the citation now and attach the page or file later.
+          Reader couldn’t open that page, but it found the citation for “{lookup.offer.title}”. You
+          can save the citation now and attach the page or file later.
         </p>
+        <ProblemDetails detail={lookup.offer.reason} />
         <button
           className="connection-secondary"
           type="button"
@@ -212,10 +216,7 @@ function ChapterDoiReview({
         Chapter: {citationText(offer.candidate.citation, "title", "Untitled chapter")}. Create a
         metadata-only chapter with its own DOI and citation; no PDF page range is inferred.
       </p>
-      <details>
-        <summary>Review chapter citation</summary>
-        <pre>{JSON.stringify(offer.candidate.citation, null, 2)}</pre>
-      </details>
+      <CitationSummary citation={offer.candidate.citation} />
       {offer.books.length ? (
         <>
           <label>
@@ -224,7 +225,7 @@ function ChapterDoiReview({
               <option value="">Choose the correct book edition</option>
               {offer.books.map((source) => (
                 <option key={source.id} value={source.id}>
-                  {source.title} · {citationText(source.citation ?? {}, "ISBN")} · {source.path}
+                  {bookOptionLabel(source)}
                 </option>
               ))}
             </select>
@@ -233,9 +234,9 @@ function ChapterDoiReview({
             .filter(({ id }) => id === book)
             .map((source) => (
               <details key={source.id}>
-                <summary>Preview citation with From the book details</summary>
-                <pre>
-                  {JSON.stringify(
+                <summary>Preview the chapter citation with the book’s details</summary>
+                <CitationSummary
+                  citation={
                     chapterCitation(
                       { ...(source.citation ? { citation: source.citation } : {}) },
                       citationText(offer.candidate.citation, "title", "Untitled chapter"),
@@ -247,11 +248,9 @@ function ChapterDoiReview({
                           source: { kind: "registry", name: "doi.org" },
                           observedAt: offer.candidate.provenance.retrievedAt,
                         })),
-                    ).citation,
-                    null,
-                    2,
-                  )}
-                </pre>
+                    ).citation
+                  }
+                />
               </details>
             ))}
           <button
@@ -273,7 +272,7 @@ function ChapterDoiReview({
             Create the book first:{" "}
             {citationText(lookup.bookOffer.citation, "title", "Untitled book")}
           </p>
-          <pre>{JSON.stringify(lookup.bookOffer.citation, null, 2)}</pre>
+          <CitationSummary citation={lookup.bookOffer.citation} />
           <button type="button" disabled={busy} onClick={() => void lookup.saveChapterBook()}>
             Confirm and create book first
           </button>
@@ -308,6 +307,61 @@ function ChapterDoiReview({
       )}
     </div>
   );
+}
+
+/** The error behind a plain message, for anyone who wants to report or look into it. */
+function ProblemDetails({ detail }: { readonly detail: string | undefined }): JSX.Element | null {
+  return detail ? (
+    <details>
+      <summary>Details</summary>
+      <p>{detail}</p>
+    </details>
+  ) : null;
+}
+
+/** The fields a reader checks before confirming a citation; the full record stays one step away. */
+function CitationSummary({
+  citation,
+}: {
+  readonly citation: Readonly<Record<string, unknown>> | null;
+}): JSX.Element | null {
+  if (!citation) {
+    return null;
+  }
+  const fields: readonly (readonly [string, string])[] = [
+    ["Title", citationText(citation, "title")],
+    ["Authors", citationNames(citation, "author").map(displayCslValue).join(", ")],
+    ["Published in", citationText(citation, "container-title")],
+    ["Year", citationDateText(citation, "issued").slice(0, 4)],
+    ["Pages", citationText(citation, "page")],
+    ["DOI", citationText(citation, "DOI")],
+  ];
+  return (
+    <>
+      <dl className="capture-citation-fields">
+        {fields
+          .filter(([, value]) => value)
+          .map(([label, value]) => (
+            <div key={label}>
+              <dt>{label}</dt>
+              <dd>{value}</dd>
+            </div>
+          ))}
+      </dl>
+      <details>
+        <summary>Full citation (CSL-JSON)</summary>
+        <pre>{JSON.stringify(citation, null, 2)}</pre>
+      </details>
+    </>
+  );
+}
+
+/** Editions often share a title, so the ISBN and year tell them apart. */
+function bookOptionLabel(source: SourceSummary): string {
+  const published = source.published ?? citationDateText(source.citation ?? {}, "issued");
+  const year = /\d{4}/u.exec(String(published))?.[0];
+  const isbn = citationText(source.citation ?? {}, "ISBN");
+  return [source.title, isbn && `ISBN ${isbn}`, year].filter(Boolean).join(" · ");
 }
 
 function FileChoice({

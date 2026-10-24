@@ -93,7 +93,7 @@ function checkSaved(saved: Source, expected: string): void {
       citationStatusLabel(
         cslFieldStatuses(saved.citation ?? {}, saved.cslProvenance ?? {})[field]!,
       ),
-    ).not.toBe("manual");
+    ).not.toBe("no recorded source");
   }
   expect(saved.citation).toEqual({ ...candidate.citation, id: "adam2014" });
   expect(saved.cslProvenance).not.toHaveProperty("id");

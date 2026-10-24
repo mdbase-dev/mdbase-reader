@@ -3208,6 +3208,27 @@
   margin: 0;
 }
 
+.capture-citation-fields {
+  display: grid;
+  gap: 2px;
+  margin: 0;
+}
+
+.capture-citation-fields div {
+  display: grid;
+  grid-template-columns: 7.5em minmax(0, 1fr);
+  gap: 12px;
+}
+
+.capture-citation-fields dt {
+  color: var(--muted);
+}
+
+.capture-citation-fields dd {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+
 .source-add-divider {
   position: relative;
   display: flex;

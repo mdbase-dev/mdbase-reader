@@ -276,6 +276,10 @@ describe("readable chapter previews", () => {
     expect(host.textContent).toContain("End section");
     expect(host.textContent).toContain("1–2 of 2 sections (included in full)");
     expect(host.textContent).not.toMatch(/spine|CFI|resource/u);
+    // An untitled section is numbered; its file stays out of the option text.
+    const untitled = host.querySelector<HTMLOptionElement>('option[value="two.xhtml"]');
+    expect(untitled?.textContent).toBe("2. Section 2");
+    expect(untitled?.title).toBe("two.xhtml");
   });
 });
 

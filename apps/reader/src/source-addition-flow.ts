@@ -50,12 +50,18 @@ export interface SourceAdditionServices extends PdfSearchServices {
   readonly onStatus: (message: string) => void;
 }
 
+/** A problem with an added source: a plain message, and the underlying error for its details. */
+export interface SourceAdditionNotice {
+  readonly message: string;
+  readonly detail?: string;
+}
+
 export type SourceAdditionOutcome =
   | { readonly kind: "chapter-offer"; readonly offer: ChapterDoiOffer }
   | {
       readonly kind: "added";
       readonly source: Source;
-      readonly notices: readonly string[];
+      readonly notices: readonly SourceAdditionNotice[];
       readonly provenance?: CslProvenance;
     }
   /** The workspace reported why nothing was written. */
@@ -313,7 +319,11 @@ async function finish(
       source,
       ...evidence,
       notices: [
-        `The citation was not stored: ${messageOf(reason)} Add it from the citation panel.`,
+        {
+          message:
+            "The source was saved without its citation. You can add one in its Citation tab.",
+          detail: messageOf(reason),
+        },
       ],
     };
   }

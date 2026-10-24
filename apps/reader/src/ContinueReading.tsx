@@ -1,3 +1,5 @@
+import { sourceCreatorsText, sourcesById } from "./source-creators.js";
+
 import type { SourceId, SourceSummary } from "@mdbase-reader/core";
 import type { JSX } from "react";
 
@@ -62,12 +64,18 @@ export function ContinueReading({
   if (resumable.length === 0) {
     return null;
   }
+  const library = sourcesById(sources);
   return (
     <section className="continue-reading" aria-labelledby="continue-reading-heading">
       <h2 id="continue-reading-heading">Continue reading</h2>
       <div className="continue-reading-list">
         {resumable.map((source) => (
-          <ContinueReadingRow key={source.id} source={source} onOpen={onOpen} />
+          <ContinueReadingRow
+            key={source.id}
+            source={source}
+            creators={sourceCreatorsText(source, library)}
+            onOpen={onOpen}
+          />
         ))}
       </div>
     </section>
@@ -76,14 +84,15 @@ export function ContinueReading({
 
 function ContinueReadingRow({
   source,
+  creators,
   onOpen,
 }: {
   readonly source: SourceSummary;
+  readonly creators: string;
   readonly onOpen: (id: SourceId) => void;
 }): JSX.Element {
   const progress = readingProgressValue(source);
   const location = readingLocationLabel(source);
-  const creators = source.creators.join(", ");
   return (
     <button
       className="continue-reading-item"

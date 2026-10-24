@@ -289,12 +289,12 @@ function ChapterRangeEditor({
             >
               <option value="">Choose a section</option>
               {outline.spine?.map((href, index) => (
-                <option key={href} value={href}>
+                <option key={href} value={href} title={href}>
                   {String(index + 1)}.{" "}
                   {outline.proposals.find(
                     (proposal) =>
                       proposal.range?.kind === "epub-spine" && proposal.range.start === href,
-                  )?.title ?? href}
+                  )?.title ?? `Section ${String(index + 1)}`}
                 </option>
               ))}
             </select>

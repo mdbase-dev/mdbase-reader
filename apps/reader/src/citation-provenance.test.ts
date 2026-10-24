@@ -9,18 +9,19 @@ import {
 
 describe("citation provenance labels", () => {
   it.each([
-    ["site-adapter:Wikipedia", "Wikipedia (via Citoid)"],
-    ["site-adapter:The Guardian", "The Guardian (via Citoid)"],
-    ["site-adapter:citoid/encyclopediaArticle", "Encyclopedia article (via Citoid)"],
+    ["site-adapter:Wikipedia", "Wikipedia"],
+    ["site-adapter:The Guardian", "The Guardian"],
+    ["site-adapter:citoid/encyclopediaArticle", "Encyclopedia article"],
+    ["site-adapter:citoid/webpage", "From the web page"],
     ["registry:doi.org", "doi.org"],
     ["registry:doi.org DOI", "doi.org"],
     ["parent", "From the book"],
     ["parent title", "From the book"],
     ["page:json-ld", "page metadata"],
     ["page:html", "page title"],
-    ["generic-remote:citoid", "Citoid"],
+    ["generic-remote:citoid", "From the web page"],
     ["user", "edited manually"],
-    ["unrecognised", "manual"],
+    ["unrecognised", "other source"],
   ])("formats %s", (label, expected) => expect(citationSourceLabel(label)).toBe(expected));
 
   it("labels all four field statuses and agreed evidence", () => {
@@ -28,7 +29,7 @@ describe("citation provenance labels", () => {
     expect(citationStatusLabel({ kind: "explained", provenance })).toBe("doi.org");
     expect(citationStatusLabel({ kind: "edited", previous: provenance })).toBe("edited manually");
     expect(citationStatusLabel({ kind: "removed", previous: provenance })).toBe("removed");
-    expect(citationStatusLabel({ kind: "unexplained" })).toBe("manual");
+    expect(citationStatusLabel({ kind: "unexplained" })).toBe("no recorded source");
     expect(citationEvidenceLabel("page:json-ld name")).toBe("page metadata · name");
     expect(citationEvidenceLabel("h1")).toBe("h1");
     expect(

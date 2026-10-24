@@ -16,16 +16,16 @@ export function citationSourceLabel(label: string): string {
       return source.name;
     case "site-adapter":
       return source.name.startsWith("citoid/")
-        ? `${citoidTypeLabel(source.name.slice(7))} (via Citoid)`
-        : `${source.name} (via Citoid)`;
+        ? citoidTypeLabel(source.name.slice(7))
+        : source.name;
     case "generic-remote":
-      return source.name.toLowerCase() === "citoid" ? "Citoid" : source.name;
+      return source.name.toLowerCase() === "citoid" ? "From the web page" : source.name;
     case "page":
       return source.signal === "html" ? "page title" : "page metadata";
     case "user":
       return "edited manually";
     default:
-      return "manual";
+      return "other source";
   }
 }
 
@@ -38,7 +38,7 @@ export function citationStatusLabel(status: CslFieldStatus): string {
     case "removed":
       return "removed";
     case "unexplained":
-      return "manual";
+      return "no recorded source";
   }
 }
 
@@ -70,6 +70,7 @@ export function editedCitationProvenance(
   return preserveCslDismissals(result, provenance);
 }
 
+/** The page's item type names the source only where it is distinctive; otherwise it is the page. */
 function citoidTypeLabel(type: string): string {
-  return type === "encyclopediaArticle" ? "Encyclopedia article" : "Site translator";
+  return type === "encyclopediaArticle" ? "Encyclopedia article" : "From the web page";
 }
