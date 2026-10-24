@@ -161,7 +161,7 @@ function ChapterChecklist({
             : "I checked the sections and want to include them in full, even if chapters share a section."}
         </label>
         <details>
-          <summary>Preview {chapterCount(model.plans.length)} and citations</summary>
+          <summary>Preview {chapterCount(model.plans.length)} and {model.plans.length === 1 ? "its citation" : "their citations"}</summary>
           {model.plans.length ? (
             model.plans.map((plan) => (
               <ChapterPreview key={plan.sourceId} plan={plan} outline={outline} />

@@ -264,7 +264,7 @@ export async function confirmChapterPlans(
   const library = await gateway.library();
   if (library.sourceIndex?.complete === false) {
     throw new Error(
-      "The library is still loading. Wait for it to finish before adding chapters so we can check for duplicates.",
+      "The library is still loading. Wait for it to finish so duplicate chapters can be checked.",
     );
   }
   const previous: SourceSummary[] = [...library.sources];

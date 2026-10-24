@@ -56,7 +56,7 @@ function validatePageRange(range: DocumentRange | undefined, pageCount: number):
     }
   }
   if (range.end < range.start) {
-    throw new Error("End page must be the same as or after start page.");
+    throw new Error("End page must be the same as or after the start page.");
   }
 }
 

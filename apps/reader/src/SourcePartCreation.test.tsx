@@ -203,7 +203,7 @@ describe("page entry", () => {
   it.each([
     ["0", "10", "Start page must be a whole number from 1 to 10."],
     ["1", "11", "End page must be a whole number from 1 to 10."],
-    ["5", "4", "End page must be the same as or after start page."],
+    ["5", "4", "End page must be the same as or after the start page."],
     ["", "10", "Start page must be a whole number from 1 to 10."],
     ["1.5", "10", "Start page must be a whole number from 1 to 10."],
   ])("rejects pages %s–%s with a friendly message and no writes", async (start, end, message) => {
@@ -214,6 +214,13 @@ describe("page entry", () => {
     expect(host.querySelector('[role="alert"]')?.textContent).toBe(message);
     expect(field("Start page").getAttribute("aria-describedby")).toBe("stable-range-problem");
     expect(createSourcePart).not.toHaveBeenCalled();
+  });
+
+  it("waits for the end page before reporting a problem", async () => {
+    await open();
+    await type(field("Start page"), "3");
+    expect(host.querySelector('[role="alert"]')).toBeNull();
+    expect(field("End page").getAttribute("aria-invalid")).toBe("false");
   });
 });
 
@@ -246,7 +253,7 @@ describe("readable chapter previews", () => {
     );
     expect(host.textContent).toContain("1 chapter selected.");
     expect(host.textContent).not.toContain("1 chapters");
-    expect(host.querySelector("summary")?.textContent).toBe("Preview 1 chapter and citations");
+    expect(host.querySelector("summary")?.textContent).toBe("Preview 1 chapter and its citation");
     expect(host.querySelector("pre")).toBeNull();
     expect(preview?.textContent).not.toMatch(/sha256|book-file|fileId|revision|src_stable/u);
     expect(createSourcePart).not.toHaveBeenCalled();

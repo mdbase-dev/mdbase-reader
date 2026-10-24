@@ -134,6 +134,13 @@ function updatedChoice(
 ): ChapterChoice {
   const updated = { ...choice, ...patch };
   if (patch.range) {
+    // Wait for both pages before judging; confirming still validates every choice.
+    if (
+      patch.range.kind === "pages" &&
+      (Number.isNaN(patch.range.start) || Number.isNaN(patch.range.end))
+    ) {
+      return { ...updated, problem: "" };
+    }
     try {
       validateChapterRange(patch.range, outline);
       return { ...updated, problem: "" };
@@ -145,6 +152,28 @@ function updatedChoice(
     }
   }
   return updated;
+}
+
+/** Range problems shown beside their chapters, or null when every selected range is valid. */
+function withRangeProblems(
+  choices: readonly ChapterChoice[],
+  selected: readonly ChapterChoice[],
+  outline: ChapterOutline,
+): readonly ChapterChoice[] | null {
+  const problems = new Map<string, string>();
+  for (const choice of selected) {
+    try {
+      validateChapterRange(choice.range, outline);
+    } catch (reason) {
+      problems.set(choice.key, readerErrorMessage(reason, "Check the chapter’s pages or sections."));
+    }
+  }
+  return problems.size
+    ? choices.map((choice) => {
+        const problem = problems.get(choice.key);
+        return problem ? { ...choice, problem } : choice;
+      })
+    : null;
 }
 
 export function useChapterCreation(
@@ -212,6 +241,11 @@ export function useChapterCreation(
   };
   const confirm = async (): Promise<void> => {
     if (!result || !plans.length || pending.current) {
+      return;
+    }
+    const flagged = withRangeProblems(choices, selected, result.outline);
+    if (flagged) {
+      setDraft((previous) => (previous ? { ...previous, choices: flagged } : previous));
       return;
     }
     pending.current = true;
