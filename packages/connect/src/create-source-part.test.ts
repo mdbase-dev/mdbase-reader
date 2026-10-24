@@ -50,6 +50,10 @@ describe("guarded reference-existing-file chapter create", () => {
         path: proposed.recordPath,
         frontmatter: expect.objectContaining({
           id: proposed.sourceId,
+          // The reader-source type requires every field the source contract does.
+          title: proposed.title,
+          kind: "document",
+          saved_at: expect.stringMatching(/^\d{4}-\d{2}-\d{2}T/u),
           csl: proposed.citation,
           relations: [{ relation: "part-of", target: "[[sources/src_import|Manuscript]]" }],
           documents: [
@@ -84,11 +88,9 @@ describe("guarded reference-existing-file chapter create", () => {
     vi.spyOn(ConnectSourceRepository.prototype, "get").mockResolvedValue(proposed.parent);
     let saved: unknown;
     const create = vi.fn((input: Parameters<ReaderConnectClient["create"]>[0]) => {
-      saved = {
-        ...recordDocument(),
-        frontmatter: input.frontmatter,
-        effectiveFrontmatter: input.frontmatter,
-      };
+      // An earlier attempt landed with its own save time.
+      const frontmatter = { ...input.frontmatter, saved_at: "2026-01-01T00:00:00.000Z" };
+      saved = { ...recordDocument(), frontmatter, effectiveFrontmatter: frontmatter };
       return Promise.resolve({ ok: false, error: { code: "unknown", message: "Outcome unknown" } });
     });
     const read = vi.fn(() => Promise.resolve({ ok: true, value: saved }));

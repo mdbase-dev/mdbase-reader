@@ -70,6 +70,7 @@ export async function createSourcePart(
     id: plan.sourceId,
     title: plan.title,
     kind: "document",
+    saved_at: new Date().toISOString(),
     reading: { status: "inbox" },
     relations: [{ relation: "part-of", target: sourceLink(parent) }],
     csl: plan.citation,
@@ -101,14 +102,16 @@ export async function createSourcePart(
     return sourceFromDocument(plan.collectionId, created.value, parent.id);
   }
   // Unknown outcomes and explicit retries reconcile the exact reviewed identity, never a title.
+  // Each attempt stamps its own save time, so an earlier attempt's write differs only there.
   const existing = await records.read(
     { path: plan.recordPath, contract: sourceContract, includeDocument: true },
     options,
   );
   if (
     existing.ok &&
-    Object.entries(frontmatter).every(([key, value]) =>
-      cslValuesEqual(existing.value.effectiveFrontmatter[key], value),
+    Object.entries(frontmatter).every(
+      ([key, value]) =>
+        key === "saved_at" || cslValuesEqual(existing.value.effectiveFrontmatter[key], value),
     )
   ) {
     return sourceFromDocument(plan.collectionId, existing.value, parent.id);
