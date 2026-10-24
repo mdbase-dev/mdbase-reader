@@ -28,7 +28,7 @@ jobs:
           node-version: 22
           cache: pnpm
       - run: pnpm install --frozen-lockfile
-      # Tests assume the default (lab) environment.
+      # Tests build against the production-pinned SDK unless an environment is selected.
       - run: pnpm check
       - name: Install Chromium for PDF touch regression tests
         run: pnpm --filter @mdbase-reader/app exec playwright install --with-deps chromium

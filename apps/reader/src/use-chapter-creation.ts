@@ -165,7 +165,10 @@ function withRangeProblems(
     try {
       validateChapterRange(choice.range, outline);
     } catch (reason) {
-      problems.set(choice.key, readerErrorMessage(reason, "Check the chapter’s pages or sections."));
+      problems.set(
+        choice.key,
+        readerErrorMessage(reason, "Check the chapter’s pages or sections."),
+      );
     }
   }
   return problems.size

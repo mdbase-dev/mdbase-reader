@@ -71,7 +71,7 @@
     }
   },
   "intake": {
-    "source": "/tmp/reader-lab-probe/sdk-dev-eaa4e697-lab.tgz",
+    "source": "LAB-packaged archive of SDK commit eaa4e697, produced for the citation-claims LAB acceptance run",
     "originalArchiveUnmodified": true,
     "releaseQualified": false,
     "note": "Archive identity and embedded public release context only; not new trust authentication or deployment qualification."
