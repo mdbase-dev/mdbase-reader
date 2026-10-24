@@ -1,9 +1,9 @@
+import { claimFrameShortcut, type ViewportRect } from "@mdbase-reader/reading-surface";
 import { useEffect, useLayoutEffect, useRef, useState, type CSSProperties, type JSX } from "react";
 
 import { CheckIcon } from "./icons.js";
 
 import type { SavedHighlight } from "./use-highlight-undo.js";
-import type { ViewportRect } from "@mdbase-reader/reading-surface";
 
 /** How long Undo stays offered while the pointer and focus are elsewhere. */
 export const highlightUndoMilliseconds = 6000;
@@ -63,6 +63,10 @@ export function HighlightSavedNotice({
           style={{ left: rect.x, top: rect.y, width: rect.width, height: rect.height }}
         />
       ) : null}
+      {/* Present, and empty, while saving, so the message that fills it is announced. */}
+      <span role="status" className="sr-only">
+        {savedMessage(saved)}
+      </span>
       {saved.status === "saving" ? null : (
         <div
           className={`highlight-saved${rect ? " is-anchored" : ""}`}
@@ -72,34 +76,55 @@ export function HighlightSavedNotice({
           onFocus={() => setHeld(true)}
           onBlur={() => setHeld(false)}
         >
-          <SavedStatus status={saved.status} onUndo={onUndo} />
+          <SavedStatus saved={saved} onUndo={onUndo} />
         </div>
       )}
     </div>
   );
 }
 
+function savedMessage(saved: SavedHighlight): string {
+  switch (saved.status) {
+    case "saving":
+      return "";
+    case "saved":
+      return "Highlight saved";
+    case "undoing":
+      return "Removing…";
+    case "embedded":
+      return "Couldn’t undo: a note embeds this highlight.";
+    case "failed":
+      return `Couldn’t undo: ${saved.problem ?? "Reader could not delete this highlight."}`;
+  }
+}
+
 function SavedStatus({
-  status,
+  saved,
   onUndo,
 }: {
-  readonly status: Exclude<SavedHighlight["status"], "saving">;
+  readonly saved: SavedHighlight;
   readonly onUndo: () => void;
 }): JSX.Element {
-  if (status === "failed") {
-    return <span role="status">Couldn’t undo: a note embeds this highlight.</span>;
+  // The live region above speaks the message; this copy is for the eye.
+  const message = (
+    <span className="highlight-saved-message" aria-hidden="true">
+      {savedMessage(saved)}
+    </span>
+  );
+  if (saved.status === "embedded" || saved.status === "failed") {
+    return message;
   }
   return (
     <>
-      <span role="status">
-        <span className="highlight-saved-check" aria-hidden="true">
+      <span className="highlight-saved-message" aria-hidden="true">
+        <span className="highlight-saved-check">
           <CheckIcon />
         </span>
-        {status === "undoing" ? "Removing…" : "Highlight saved"}
+        {savedMessage(saved)}
       </span>
       <button
         type="button"
-        disabled={status === "undoing"}
+        disabled={saved.status === "undoing"}
         aria-keyshortcuts="Control+Z Meta+Z"
         title="Undo highlight (Ctrl+Z)"
         onClick={onUndo}
@@ -118,7 +143,7 @@ function useNoticeLifetime(
   onDismiss: () => void,
 ): void {
   useEffect(() => {
-    if ((status !== "saved" && status !== "failed") || held) {
+    if (status === undefined || status === "saving" || status === "undoing" || held) {
       return undefined;
     }
     const timer = setTimeout(onDismiss, highlightUndoMilliseconds);
@@ -128,6 +153,8 @@ function useNoticeLifetime(
     if (status !== "saved") {
       return undefined;
     }
+    // Focus is usually still in the page just highlighted, so ask it to pass Undo on.
+    const release = claimFrameShortcut(document, "undo");
     const onKeyDown = (event: KeyboardEvent): void => {
       const undoKey =
         event.key.toLocaleLowerCase() === "z" &&
@@ -140,7 +167,10 @@ function useNoticeLifetime(
       }
     };
     document.addEventListener("keydown", onKeyDown);
-    return () => document.removeEventListener("keydown", onKeyDown);
+    return () => {
+      document.removeEventListener("keydown", onKeyDown);
+      release();
+    };
   }, [status, onUndo]);
 }
 

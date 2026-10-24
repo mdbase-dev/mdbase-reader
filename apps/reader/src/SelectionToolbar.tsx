@@ -1,4 +1,5 @@
 import { highlightColorKey, highlightColorKeys, type HighlightColorKey } from "@mdbase-reader/core";
+import { claimFrameShortcut, type ReaderLocator } from "@mdbase-reader/reading-surface";
 import {
   useEffect,
   useLayoutEffect,
@@ -21,7 +22,6 @@ import { selectionToolbarPlacement } from "./selection-toolbar-placement.js";
 
 import type { AnnotationComposerController } from "./use-annotation-composer.js";
 import type { SelectionToolbarTarget } from "./use-selection-toolbar.js";
-import type { ReaderLocator } from "@mdbase-reader/reading-surface";
 
 /** The passage and its human locator, whether it is still a selection or already a highlight. */
 function passageOf(target: SelectionToolbarTarget): {
@@ -153,6 +153,7 @@ function SelectionToolbar({
       : composer.edit(target.annotation);
   const swatches = toolbarSwatches(target, composer, lastColor);
   useToolbarKeys(barRef, composer.dismissToolbar, { c: comment, ...colorKeys(swatches) });
+  useFrameColorKeys(swatches?.mode === "recolor" && !swatches.disabled);
   const copy = (kind: "text" | "citation"): void => {
     const citation = composer.quoteCitation;
     const text =
@@ -274,7 +275,8 @@ function toolbarSwatches(
   return {
     mode: "recolor",
     ringed: highlightColorKey(annotation.color),
-    disabled: false,
+    // A highlight still being saved has no record to change yet.
+    disabled: !annotation.path || !annotation.recordRevision,
     choose: (color) => recolor(annotation, color),
   };
 }
@@ -294,6 +296,14 @@ function colorKeys(swatches: ToolbarSwatches | null): Partial<Record<ToolbarKey,
     ),
     ...(swatches.mode === "highlight" && ringed ? { h: () => choose(ringed) } : {}),
   };
+}
+
+/**
+ * A clicked highlight leaves focus in the page, which keeps 1–5 to itself when nothing is
+ * selected; ask it to pass them on while the colours are offered.
+ */
+function useFrameColorKeys(active: boolean): void {
+  useEffect(() => (active ? claimFrameShortcut(document, "colors") : undefined), [active]);
 }
 
 /**

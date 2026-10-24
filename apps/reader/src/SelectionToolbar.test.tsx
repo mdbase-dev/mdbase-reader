@@ -1,5 +1,6 @@
 // @vitest-environment happy-dom
 /* eslint-disable @typescript-eslint/require-await -- async act flushes React's queued work */
+import { isClaimedShortcut } from "@mdbase-reader/reading-surface";
 import { act } from "react";
 import { createRoot } from "react-dom/client";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
@@ -120,17 +121,21 @@ describe("selection toolbar colours", () => {
 });
 
 describe("selection toolbar on a highlight", () => {
-  it("changes a clicked highlight's colour by swatch or number", async () => {
-    const annotation = {
-      id: "highlight",
-      annotationType: "highlight",
-      color: "blue",
-      body: "",
-      sourceId: "source",
-      source: "Source",
-      target: selection.value.target,
-    };
-    const recolor = vi.fn();
+  const savedHighlight = {
+    id: "highlight",
+    annotationType: "highlight",
+    color: "blue",
+    body: "",
+    sourceId: "source",
+    source: "Source",
+    target: selection.value.target,
+    path: "annotations/highlight.md",
+    recordRevision: "sha256:1",
+  };
+  const showHighlight = async (
+    annotation: Record<string, unknown>,
+    recolor: (...args: unknown[]) => void,
+  ): Promise<void> => {
     const composer = {
       toolbar: { target: { kind: "annotation", annotation }, rect: null },
       remove: vi.fn(),
@@ -139,6 +144,29 @@ describe("selection toolbar on a highlight", () => {
       dismissToolbar: vi.fn(),
     } as unknown as AnnotationComposerController;
     await act(async () => root.render(<SelectionToolbarLayer composer={composer} />));
+  };
+
+  it("offers no colours for a highlight that is still being saved", async () => {
+    const recolor = vi.fn();
+    await showHighlight({ ...savedHighlight, path: undefined, recordRevision: undefined }, recolor);
+    const swatches = [...host.querySelectorAll<HTMLButtonElement>(".highlight-swatch")];
+    expect(swatches.every((swatch) => swatch.disabled)).toBe(true);
+    press(document, "2");
+    expect(recolor).not.toHaveBeenCalled();
+    expect(isClaimedShortcut(new KeyboardEvent("keydown", { key: "2" }), document)).toBe(false);
+  });
+
+  it("asks EPUB and web pages to pass 1–5 on while a highlight offers its colours", async () => {
+    await showHighlight(savedHighlight, vi.fn());
+    expect(isClaimedShortcut(new KeyboardEvent("keydown", { key: "2" }), document)).toBe(true);
+    await act(async () => root.render(<></>));
+    expect(isClaimedShortcut(new KeyboardEvent("keydown", { key: "2" }), document)).toBe(false);
+  });
+
+  it("changes a clicked highlight's colour by swatch or number", async () => {
+    const annotation = savedHighlight;
+    const recolor = vi.fn();
+    await showHighlight(annotation, recolor);
     const blue = host.querySelector<HTMLButtonElement>("[data-highlight-color='blue']");
     expect(blue?.getAttribute("aria-pressed")).toBe("true");
     expect(blue?.getAttribute("aria-label")).toBe("Blue");

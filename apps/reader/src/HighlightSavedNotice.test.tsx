@@ -1,5 +1,6 @@
 // @vitest-environment happy-dom
 /* eslint-disable @typescript-eslint/require-await -- async act flushes React's queued work */
+import { isClaimedShortcut } from "@mdbase-reader/reading-surface";
 import { act, useEffect } from "react";
 import { createRoot } from "react-dom/client";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
@@ -61,7 +62,11 @@ describe("highlight saved notice", () => {
     await render(saved("saving"));
     expect(host.querySelector(".highlight-sweep")).not.toBeNull();
     expect(host.querySelector("button")).toBeNull();
+    // The live region is there, empty, before its message arrives, so the message is announced.
+    const status = host.querySelector("[role='status']");
+    expect(status?.textContent).toBe("");
     await render(saved("saved"));
+    expect(host.querySelector("[role='status']")).toBe(status);
     expect(host.querySelector("[role='status']")?.textContent).toBe("Highlight saved");
     await act(async () => host.querySelector("button")?.click());
     expect(onUndo).toHaveBeenCalledOnce();
@@ -83,6 +88,16 @@ describe("highlight saved notice", () => {
     press(document, { key: "Z", ctrlKey: true });
     expect(onUndo).toHaveBeenCalledTimes(2);
     field.remove();
+  });
+
+  it("asks EPUB and web pages to pass Undo on only while it is offered", async () => {
+    const undoKey = new KeyboardEvent("keydown", { key: "z", ctrlKey: true });
+    await render(saved("saving"));
+    expect(isClaimedShortcut(undoKey, document)).toBe(false);
+    await render(saved("saved"));
+    expect(isClaimedShortcut(undoKey, document)).toBe(true);
+    await render(null);
+    expect(isClaimedShortcut(undoKey, document)).toBe(false);
   });
 
   it("skips the sweep with reduced motion but keeps Undo", async () => {
@@ -107,9 +122,17 @@ describe("highlight saved notice", () => {
   });
 
   it("says when a note already embeds the highlight", async () => {
-    await render(saved("failed"));
+    await render(saved("embedded"));
     expect(host.querySelector("[role='status']")?.textContent).toBe(
       "Couldn’t undo: a note embeds this highlight.",
+    );
+    expect(host.querySelector("button")).toBeNull();
+  });
+
+  it("gives a failed deletion its own message", async () => {
+    await render({ ...saved("failed"), problem: "The collection is offline." });
+    expect(host.querySelector("[role='status']")?.textContent).toBe(
+      "Couldn’t undo: The collection is offline.",
     );
     expect(host.querySelector("button")).toBeNull();
   });
@@ -120,12 +143,19 @@ describe("useHighlightUndo", () => {
   let root: ReturnType<typeof createRoot>;
   let controller: HighlightUndoController | null = null;
 
+  type Remove = (annotation: Annotation) => Promise<readonly string[]>;
+  const firstScope = ["source-a", "document-a"] as const;
+
   function Harness({
     remove,
+    annotations = [],
+    scope = firstScope,
   }: {
-    readonly remove: (annotation: Annotation) => Promise<readonly string[]>;
+    readonly remove: Remove;
+    readonly annotations?: readonly Annotation[];
+    readonly scope?: readonly unknown[];
   }): null {
-    const value = useHighlightUndo(remove);
+    const value = useHighlightUndo({ annotations, scope, remove });
     useEffect(() => {
       controller = value;
     });
@@ -133,8 +163,12 @@ describe("useHighlightUndo", () => {
   }
 
   const mount = async (
-    remove: (annotation: Annotation) => Promise<readonly string[]>,
-  ): Promise<void> => act(async () => root.render(<Harness remove={remove} />));
+    remove: Remove,
+    options: {
+      readonly annotations?: readonly Annotation[];
+      readonly scope?: readonly unknown[];
+    } = {},
+  ): Promise<void> => act(async () => root.render(<Harness remove={remove} {...options} />));
 
   beforeEach(() => {
     (globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
@@ -169,6 +203,43 @@ describe("useHighlightUndo", () => {
     const tracker = await act(async () => controller!.trackHighlight("blue", null));
     await act(async () => tracker.saved(annotation));
     await act(async () => controller!.undoSavedHighlight());
-    expect(controller!.savedHighlight?.status).toBe("failed");
+    expect(controller!.savedHighlight?.status).toBe("embedded");
+  });
+
+  it("deletes the highlight as it is now, after a recolour or a comment", async () => {
+    const remove = vi.fn().mockResolvedValue([]);
+    await mount(remove);
+    const tracker = await act(async () => controller!.trackHighlight("green", null));
+    await act(async () => tracker.saved(annotation));
+    const recoloured = { ...annotation, color: "pink", body: "Later" } as Annotation;
+    await mount(remove, { annotations: [recoloured] });
+    await act(async () => controller!.undoSavedHighlight());
+    expect(remove).toHaveBeenCalledExactlyOnceWith(recoloured);
+  });
+
+  it("reports a failed deletion apart from an embedding note", async () => {
+    const remove = vi.fn().mockRejectedValue(new Error("The collection is offline."));
+    await mount(remove);
+    const tracker = await act(async () => controller!.trackHighlight("green", null));
+    await act(async () => tracker.saved(annotation));
+    await act(async () => controller!.undoSavedHighlight());
+    expect(controller!.savedHighlight).toMatchObject({
+      status: "failed",
+      problem: "The collection is offline.",
+    });
+  });
+
+  it("stops offering Undo once the reader leaves the source or document", async () => {
+    const remove = vi.fn().mockResolvedValue([]);
+    await mount(remove);
+    const tracker = await act(async () => controller!.trackHighlight("green", null));
+    await act(async () => tracker.saved(annotation));
+    await mount(remove, { scope: ["source-a", "document-b"] });
+    expect(controller!.savedHighlight).toBeNull();
+    await act(async () => controller!.undoSavedHighlight());
+    // Coming back does not bring the offer back either.
+    await mount(remove, { scope: firstScope });
+    expect(controller!.savedHighlight).toBeNull();
+    expect(remove).not.toHaveBeenCalled();
   });
 });

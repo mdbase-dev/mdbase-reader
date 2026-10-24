@@ -1,5 +1,5 @@
 import { signalMdbaseMark } from "@mdbase-dev/ui/mark-activity";
-import { useCallback, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 
 import { readerErrorMessage } from "./errors.js";
 import { useAnnotationActivations } from "./use-annotation-activations.js";
@@ -91,6 +91,7 @@ export function useAnnotationComposer(
   const toolbar = useSelectionToolbar(surface);
   const { planDeletion, deleteAnnotation } = input;
   const hideToolbar = toolbar.hide;
+  const hideAnnotationToolbar = toolbar.hideAnnotation;
   const remove = useCallback(
     async (annotation: Annotation): Promise<readonly string[]> => {
       const plan = await planDeletion(annotation);
@@ -98,13 +99,15 @@ export function useAnnotationComposer(
         return plan.brokenLinkPaths;
       }
       await deleteAnnotation(annotation, plan);
-      hideToolbar();
-      setActiveId(null);
+      // The reader may have moved on to another highlight meanwhile; leave that one be.
+      hideAnnotationToolbar(annotation.id);
+      setActiveId((id) => (id === annotation.id ? null : id));
       return [];
     },
-    [planDeletion, deleteAnnotation, hideToolbar],
+    [planDeletion, deleteAnnotation, hideAnnotationToolbar],
   );
-  const undo = useHighlightUndo(remove);
+  const undoScope = useMemo(() => [sourceId, surface] as const, [sourceId, surface]);
+  const undo = useHighlightUndo({ annotations, scope: undoScope, remove });
   const creation = useAnnotationCreation(input, resetSelection, toolbar, select, (value, color) =>
     undo.trackHighlight(color, value.value.anchor ?? toolbar.state?.rect ?? null),
   );
