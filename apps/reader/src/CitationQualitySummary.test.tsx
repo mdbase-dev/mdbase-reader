@@ -16,8 +16,24 @@ it("renders only local aggregate counts, including partial-library context", () 
   expect(markup).toContain("Citation quality · local only");
   expect(markup).toContain("library still loading");
   expect(markup).toContain("nothing is sent or retained");
-  expect(markup).toContain("Registry");
+  expect(markup).toContain("Identifier registry");
   expect(markup).not.toMatch(/Private title|private-key|doi.org/u);
+});
+
+it("names every kind of evidence in plain words", () => {
+  const markup = renderToStaticMarkup(<CitationQualitySummary sources={[]} loading={false} />);
+  for (const label of [
+    "From the book",
+    "Identifier registry",
+    "From the website",
+    "Page metadata",
+    "Online lookup",
+    "Edited manually",
+    "No recorded source",
+  ]) {
+    expect(markup).toContain(label);
+  }
+  expect(markup).not.toMatch(/Site translator|Unrecorded|Remote metadata/u);
 });
 
 describe("empty quality summary", () => {

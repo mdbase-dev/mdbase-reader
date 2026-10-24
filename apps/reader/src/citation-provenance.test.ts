@@ -19,7 +19,11 @@ describe("citation provenance labels", () => {
     ["parent title", "From the book"],
     ["page:json-ld", "page metadata"],
     ["page:html", "page title"],
-    ["generic-remote:citoid", "From the web page"],
+    ["site-adapter:stack-exchange/question", "From the web page"],
+    ["site-adapter:translation-server/encyclopediaArticle", "Encyclopedia article"],
+    ["generic-remote:citoid", "From an online lookup"],
+    ["generic-remote:translation-server", "From an online lookup"],
+    ["generic-remote:Citoid (Zotero translators via Wikimedia)", "From an online lookup"],
     ["user", "edited manually"],
     ["unrecognised", "other source"],
   ])("formats %s", (label, expected) => expect(citationSourceLabel(label)).toBe(expected));

@@ -6,7 +6,10 @@ import {
 } from "@mdbase-reader/core";
 import { parseClaimSourceLabel } from "@mdbase-reader/web-capture/citation-updates";
 
-/** Stored labels remain machine-readable; only this presentation layer expands them. */
+/**
+ * Stored labels remain machine-readable; only this presentation layer expands them. Labels follow
+ * the evidence kind, not the provider that happened to deliver it.
+ */
 export function citationSourceLabel(label: string): string {
   const source = parseClaimSourceLabel(label) ?? parseClaimSourceLabel(label.split(" ")[0] ?? "");
   switch (source?.kind) {
@@ -15,11 +18,10 @@ export function citationSourceLabel(label: string): string {
     case "registry":
       return source.name;
     case "site-adapter":
-      return source.name.startsWith("citoid/")
-        ? citoidTypeLabel(source.name.slice(7))
-        : source.name;
+      return siteAdapterLabel(source.name);
     case "generic-remote":
-      return source.name.toLowerCase() === "citoid" ? "From the web page" : source.name;
+      // A remote service's generic extraction, whichever service ran it.
+      return "From an online lookup";
     case "page":
       return source.signal === "html" ? "page title" : "page metadata";
     case "user":
@@ -70,7 +72,16 @@ export function editedCitationProvenance(
   return preserveCslDismissals(result, provenance);
 }
 
-/** The page's item type names the source only where it is distinctive; otherwise it is the page. */
-function citoidTypeLabel(type: string): string {
-  return type === "encyclopediaArticle" ? "Encyclopedia article" : "From the web page";
+/**
+ * A named site adapter (`Wikipedia`) names its site. One reached through a service records only
+ * `service/itemType`; the item type names it where distinctive, otherwise it is the page.
+ */
+function siteAdapterLabel(name: string): string {
+  const slash = name.indexOf("/");
+  if (slash === -1) {
+    return name;
+  }
+  return name.slice(slash + 1) === "encyclopediaArticle"
+    ? "Encyclopedia article"
+    : "From the web page";
 }
