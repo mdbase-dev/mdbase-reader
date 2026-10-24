@@ -9,6 +9,13 @@ describe("publicationDateLabel", () => {
     expect(publicationDateLabel(1982)).toBe("1982");
   });
 
+  it("shows a recorded date-time as its date", () => {
+    expect(publicationDateLabel("2006-06-30T22:22:49Z")).toBe("30 Jun 2006");
+    expect(publicationDateLabel("2021-11-02T09:15:00.000+01:00")).toBe("2 Nov 2021");
+    expect(publicationDateLabel("2021-11-02 09:15")).toBe("2 Nov 2021");
+    expect(publicationDateLabel("2021-11-02Tlater")).toBe("2021-11-02Tlater");
+  });
+
   it("preserves descriptive and invalid dates", () => {
     expect(publicationDateLabel("Spring 2022")).toBe("Spring 2022");
     expect(publicationDateLabel("2022-14-2")).toBe("2022-14-2");
