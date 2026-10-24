@@ -1,0 +1,1683 @@
+<!doctype html>
+<html lang="en" data-theme="light">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=1280" />
+    <title>Notes panel — current and proposed · mdbase Reader design mockup</title>
+    <style>
+      /* ==========================================================================
+   Proposed mdbase Reader tokens (see docs/design-direction.md).
+   Scoped to .p so the recreated "current" UI keeps its own values.
+   ========================================================================== */
+      :root {
+        --font-ui:
+          "Atkinson Hyperlegible Next Variable", "Atkinson Hyperlegible Next", system-ui,
+          -apple-system, "Segoe UI", sans-serif;
+        --font-read:
+          "Iowan Old Style", Charter, "Bitstream Charter", "Source Serif 4", "Noto Serif", Georgia,
+          serif;
+        --font-mono: "Azeret Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      }
+      .p {
+        /* Type: size / line-height pairs. */
+        --text-xs: 12px;
+        --lh-xs: 16px;
+        --text-sm: 13px;
+        --lh-sm: 18px;
+        --text-md: 14px;
+        --lh-md: 20px;
+        --text-lg: 16px;
+        --lh-lg: 24px;
+        --text-xl: 20px;
+        --lh-xl: 28px;
+        --text-2xl: 28px;
+        --lh-2xl: 34px;
+        --text-quote: 15px;
+        --lh-quote: 1.6;
+        --weight-regular: 400;
+        --weight-medium: 520;
+        --weight-strong: 650;
+
+        /* Space: 4px grid. */
+        --sp-0-5: 2px;
+        --sp-1: 4px;
+        --sp-2: 8px;
+        --sp-3: 12px;
+        --sp-4: 16px;
+        --sp-5: 20px;
+        --sp-6: 24px;
+        --sp-8: 32px;
+        --sp-12: 48px;
+
+        /* Radii. */
+        --r-xs: 4px;
+        --r-sm: 6px;
+        --r-md: 8px;
+        --r-lg: 12px;
+        --r-xl: 16px;
+        --r-full: 999px;
+
+        /* Controls. */
+        --control-h: 32px;
+        --control-h-sm: 28px;
+        --target-min: 24px;
+
+        /* Motion. */
+        --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+        --dur-fast: 120ms;
+        --dur-base: 180ms;
+        --dur-slow: 260ms;
+
+        color-scheme: light;
+        --bg-canvas: oklch(96.9% 0.006 80);
+        --bg-surface: oklch(99.1% 0.004 85);
+        --bg-raised: oklch(100% 0 0);
+        --bg-sunken: oklch(95.6% 0.007 80);
+        --bg-hover: oklch(95.2% 0.008 80);
+        --bg-paper: oklch(99.6% 0.004 90);
+        --text-1: oklch(24% 0.012 60);
+        --text-2: oklch(44% 0.012 60);
+        --text-3: oklch(52% 0.011 60);
+        --line: oklch(91.5% 0.007 75);
+        --line-strong: oklch(84% 0.009 75);
+        --line-control: oklch(64% 0.01 75);
+        --accent: oklch(47% 0.115 250);
+        --accent-strong: oklch(41% 0.115 250);
+        --accent-soft: oklch(94.6% 0.024 250);
+        --on-accent: oklch(99% 0.004 250);
+        --success: oklch(47% 0.09 150);
+        --warning-text: oklch(46% 0.085 65);
+        --warning-soft: oklch(96.2% 0.03 85);
+        --danger: oklch(50% 0.14 28);
+        --shadow-color: oklch(30% 0.02 60);
+        --e-1: 0 1px 2px color-mix(in oklch, var(--shadow-color) 8%, transparent);
+        --e-2:
+          0 0 0 1px color-mix(in oklch, var(--shadow-color) 7%, transparent),
+          0 6px 20px color-mix(in oklch, var(--shadow-color) 12%, transparent);
+        --e-3:
+          0 0 0 1px color-mix(in oklch, var(--shadow-color) 8%, transparent),
+          0 20px 56px color-mix(in oklch, var(--shadow-color) 20%, transparent);
+        --focus-ring: 0 0 0 2px var(--bg-surface), 0 0 0 4px var(--accent);
+
+        /* Highlights: wash (behind text) and ink (margin bars, swatches). */
+        --hl-yellow: oklch(92% 0.1 95);
+        --hl-green: oklch(91.5% 0.075 150);
+        --hl-blue: oklch(91% 0.055 235);
+        --hl-pink: oklch(91% 0.06 355);
+        --hl-purple: oklch(90.5% 0.055 300);
+        --ink-yellow: oklch(76% 0.15 82);
+        --ink-green: oklch(63% 0.13 150);
+        --ink-blue: oklch(60% 0.12 245);
+        --ink-pink: oklch(62% 0.15 355);
+        --ink-purple: oklch(56% 0.13 300);
+      }
+      [data-theme="dark"] .p {
+        color-scheme: dark;
+        --bg-canvas: oklch(16.5% 0.006 70);
+        --bg-surface: oklch(19.5% 0.006 70);
+        --bg-raised: oklch(25.5% 0.008 70);
+        --bg-sunken: oklch(16% 0.005 70);
+        --bg-hover: oklch(24.5% 0.007 70);
+        --bg-paper: oklch(21.5% 0.006 75);
+        --text-1: oklch(92.5% 0.008 80);
+        --text-2: oklch(76% 0.01 80);
+        --text-3: oklch(66% 0.01 80);
+        --line: oklch(29% 0.007 70);
+        --line-strong: oklch(37% 0.008 70);
+        --line-control: oklch(56% 0.01 70);
+        --accent: oklch(77% 0.1 245);
+        --accent-strong: oklch(83% 0.09 245);
+        --accent-soft: oklch(31% 0.05 250);
+        --on-accent: oklch(18% 0.02 250);
+        --success: oklch(74% 0.1 150);
+        --warning-text: oklch(82% 0.08 80);
+        --warning-soft: oklch(27% 0.03 80);
+        --danger: oklch(72% 0.13 28);
+        --shadow-color: oklch(5% 0.01 60);
+        --e-1: 0 1px 2px color-mix(in oklch, var(--shadow-color) 40%, transparent);
+        --e-2:
+          0 0 0 1px oklch(100% 0 0 / 0.06),
+          0 8px 24px color-mix(in oklch, var(--shadow-color) 55%, transparent);
+        --e-3:
+          0 0 0 1px oklch(100% 0 0 / 0.07),
+          0 24px 64px color-mix(in oklch, var(--shadow-color) 70%, transparent);
+        --hl-yellow: oklch(41% 0.075 88);
+        --hl-green: oklch(39% 0.06 150);
+        --hl-blue: oklch(39% 0.06 245);
+        --hl-pink: oklch(39% 0.07 355);
+        --hl-purple: oklch(38% 0.06 300);
+        --ink-yellow: oklch(83% 0.14 88);
+        --ink-green: oklch(75% 0.12 150);
+        --ink-blue: oklch(74% 0.11 245);
+        --ink-pink: oklch(75% 0.12 355);
+        --ink-purple: oklch(73% 0.11 300);
+      }
+      @media (prefers-reduced-motion: reduce) {
+        .p {
+          --dur-fast: 0ms;
+          --dur-base: 0ms;
+          --dur-slow: 0ms;
+        }
+      }
+      .p {
+        font-family: var(--font-ui);
+        font-size: var(--text-md);
+        line-height: var(--lh-md);
+        color: var(--text-1);
+        font-variant-numeric: tabular-nums;
+        -webkit-font-smoothing: antialiased;
+      }
+      .p button {
+        font: inherit;
+        color: inherit;
+      }
+      .p :focus-visible {
+        outline: none;
+        box-shadow: var(--focus-ring);
+      }
+
+      /* --- Proposed components -------------------------------------------------- */
+      .p .btn {
+        display: inline-flex;
+        align-items: center;
+        gap: var(--sp-2);
+        height: var(--control-h);
+        padding: 0 var(--sp-3);
+        border: 1px solid var(--line-strong);
+        border-radius: var(--r-md);
+        background: var(--bg-surface);
+        color: var(--text-1);
+        font-size: var(--text-sm);
+        font-weight: var(--weight-medium);
+        white-space: nowrap;
+        cursor: pointer;
+      }
+      .p .btn:hover {
+        background: var(--bg-hover);
+      }
+      .p .btn.primary {
+        border-color: transparent;
+        background: var(--accent);
+        color: var(--on-accent);
+      }
+      .p .btn.primary:hover {
+        background: var(--accent-strong);
+      }
+      .p .btn.quiet {
+        border-color: transparent;
+        background: transparent;
+        color: var(--text-2);
+      }
+      .p .btn.quiet:hover {
+        background: var(--bg-hover);
+        color: var(--text-1);
+      }
+      .p .icon-btn {
+        display: inline-grid;
+        place-items: center;
+        width: var(--control-h);
+        height: var(--control-h);
+        border: 0;
+        border-radius: var(--r-md);
+        background: transparent;
+        color: var(--text-2);
+        cursor: pointer;
+      }
+      .p .icon-btn:hover {
+        background: var(--bg-hover);
+        color: var(--text-1);
+      }
+      .p .icon-btn svg,
+      .p .btn svg {
+        width: 16px;
+        height: 16px;
+        flex: none;
+      }
+      .p .field {
+        display: flex;
+        align-items: center;
+        gap: var(--sp-2);
+        height: var(--control-h);
+        padding: 0 var(--sp-3);
+        border: 1px solid var(--line);
+        border-radius: var(--r-md);
+        background: var(--bg-sunken);
+        color: var(--text-3);
+        font-size: var(--text-sm);
+      }
+      .p .field svg {
+        width: 15px;
+        height: 15px;
+        flex: none;
+      }
+      .p .field .grow {
+        flex: 1;
+        min-width: 0;
+      }
+      .p .kbd {
+        padding: 0 5px;
+        border: 1px solid var(--line);
+        border-radius: var(--r-xs);
+        font-family: var(--font-mono);
+        font-size: 11px;
+        line-height: 16px;
+        color: var(--text-3);
+      }
+      .p .chip {
+        display: inline-flex;
+        align-items: center;
+        gap: var(--sp-1);
+        height: 22px;
+        padding: 0 var(--sp-2);
+        border-radius: var(--r-full);
+        background: var(--bg-sunken);
+        color: var(--text-2);
+        font-size: var(--text-xs);
+      }
+      .p .dot {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        flex: none;
+      }
+      .p .menu {
+        min-width: 220px;
+        padding: var(--sp-1);
+        border-radius: var(--r-lg);
+        background: var(--bg-raised);
+        box-shadow: var(--e-2);
+        font-size: var(--text-sm);
+      }
+      .p .menu .item {
+        display: flex;
+        align-items: center;
+        gap: var(--sp-2);
+        min-height: 32px;
+        padding: 0 var(--sp-2);
+        border-radius: var(--r-sm);
+        color: var(--text-1);
+      }
+      .p .menu .item.on {
+        background: var(--bg-hover);
+      }
+      .p .menu .item .end {
+        margin-left: auto;
+        color: var(--text-3);
+      }
+      .p .menu .label {
+        padding: var(--sp-2) var(--sp-2) var(--sp-1);
+        color: var(--text-3);
+        font-size: var(--text-xs);
+      }
+      .p .menu hr {
+        margin: var(--sp-1) 0;
+        border: 0;
+        border-top: 1px solid var(--line);
+      }
+      .p .tabs {
+        display: flex;
+        gap: var(--sp-4);
+        border-bottom: 1px solid var(--line);
+      }
+      .p .tab {
+        position: relative;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        height: 40px;
+        color: var(--text-2);
+        font-size: var(--text-sm);
+        font-weight: var(--weight-medium);
+      }
+      .p .tab.on {
+        color: var(--text-1);
+      }
+      .p .tab.on::after {
+        content: "";
+        position: absolute;
+        inset: auto 0 -1px;
+        height: 2px;
+        border-radius: 2px;
+        background: var(--accent);
+      }
+      .p .tab .n {
+        color: var(--text-3);
+        font-weight: var(--weight-regular);
+      }
+      .p .quote {
+        font-family: var(--font-read);
+        font-size: var(--text-quote);
+        line-height: var(--lh-quote);
+        color: var(--text-1);
+      }
+
+      /* --- Mockup board (not part of the proposal) ----------------------------- */
+      * {
+        box-sizing: border-box;
+      }
+      html,
+      body {
+        margin: 0;
+      }
+      body {
+        min-width: 1280px;
+        background: oklch(93% 0.004 80);
+        color: oklch(30% 0.01 60);
+        font-family:
+          "Atkinson Hyperlegible Next Variable", "Atkinson Hyperlegible Next", system-ui, sans-serif;
+        -webkit-font-smoothing: antialiased;
+      }
+      [data-theme="dark"] body {
+        background: oklch(12.5% 0.004 70);
+        color: oklch(82% 0.008 80);
+      }
+      .board {
+        width: 1280px;
+        margin: 0 auto;
+        padding: 32px 40px 56px;
+      }
+      .board-head {
+        display: flex;
+        align-items: flex-end;
+        justify-content: space-between;
+        gap: 24px;
+        margin-bottom: 24px;
+      }
+      .board-head h1 {
+        margin: 0 0 6px;
+        font-size: 22px;
+        line-height: 28px;
+        font-weight: 650;
+        letter-spacing: -0.01em;
+      }
+      .board-head p {
+        max-width: 760px;
+        margin: 0;
+        font-size: 14px;
+        line-height: 21px;
+        opacity: 0.78;
+      }
+      .theme-toggle {
+        display: inline-flex;
+        padding: 3px;
+        border-radius: 999px;
+        background: oklch(88% 0.005 80);
+      }
+      [data-theme="dark"] .theme-toggle {
+        background: oklch(22% 0.006 70);
+      }
+      .theme-toggle button {
+        height: 28px;
+        padding: 0 14px;
+        border: 0;
+        border-radius: 999px;
+        background: transparent;
+        color: inherit;
+        font: inherit;
+        font-size: 13px;
+        cursor: pointer;
+      }
+      .theme-toggle button[aria-pressed="true"] {
+        background: oklch(99% 0.003 80);
+        box-shadow: 0 1px 2px oklch(0% 0 0 / 0.12);
+      }
+      [data-theme="dark"] .theme-toggle button[aria-pressed="true"] {
+        background: oklch(32% 0.007 70);
+      }
+      .theme-toggle button:focus-visible {
+        outline: 2px solid oklch(55% 0.12 250);
+        outline-offset: 2px;
+      }
+      .tag {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        margin: 0 0 10px;
+        font-size: 12px;
+        font-weight: 650;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+        opacity: 0.7;
+      }
+      .tag::before {
+        content: "";
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background: oklch(62% 0.02 255);
+      }
+      .tag.is-proposed::before {
+        background: oklch(60% 0.13 250);
+      }
+      .frame {
+        overflow: hidden;
+        border-radius: 12px;
+        box-shadow:
+          0 0 0 1px oklch(0% 0 0 / 0.08),
+          0 12px 32px oklch(30% 0.02 60 / 0.12);
+      }
+      [data-theme="dark"] .frame {
+        box-shadow:
+          0 0 0 1px oklch(100% 0 0 / 0.08),
+          0 12px 32px oklch(0% 0 0 / 0.5);
+      }
+      .notes {
+        margin: 14px 0 0;
+        padding: 0 0 0 18px;
+        font-size: 13px;
+        line-height: 20px;
+        opacity: 0.85;
+      }
+      .notes li + li {
+        margin-top: 4px;
+      }
+      .notes b {
+        font-weight: 650;
+      }
+      .cols {
+        display: grid;
+        gap: 32px;
+        align-items: start;
+      }
+      .section-title {
+        margin: 40px 0 14px;
+        font-size: 15px;
+        font-weight: 650;
+      }
+
+      /* --- Recreated current UI (values from @mdbase-dev/ui tokens and
+   reader-shell.css; the UI face falls back because --sans names the
+   unloaded "Atkinson Hyperlegible"). -------------------------------------- */
+      .c {
+        --paper: oklch(99.5% 0.002 255);
+        --canvas: oklch(99.5% 0.002 255);
+        --hover: oklch(97.8% 0.003 255);
+        --ink: oklch(21% 0.018 255);
+        --soft: oklch(50% 0.014 255);
+        --muted: oklch(54% 0.01 255);
+        --faint: oklch(70% 0.009 255);
+        --line: oklch(92% 0.006 255);
+        --line-strong: oklch(82% 0.008 255);
+        --accent: oklch(47% 0.1 238);
+        --sel: color-mix(in srgb, oklch(86% 0.12 86) 20%, oklch(99.5% 0.002 255));
+        --hl: oklch(80% 0.11 86 / 0.52);
+        --hl-strong: oklch(80% 0.13 80 / 0.85);
+        --bar: oklch(66% 0.13 76);
+        --tool: oklch(96.2% 0.004 255);
+        color-scheme: light;
+        font-family: "Atkinson Hyperlegible", "Segoe UI", Arial, sans-serif;
+        font-size: 13px;
+        color: var(--ink);
+        background: var(--paper);
+      }
+      [data-theme="dark"] .c {
+        --paper: oklch(19.5% 0.012 255);
+        --canvas: oklch(17.5% 0.012 255);
+        --hover: oklch(22.5% 0.012 255);
+        --ink: oklch(92% 0.008 255);
+        --soft: oklch(70% 0.012 255);
+        --muted: oklch(62% 0.011 255);
+        --faint: oklch(56% 0.011 255);
+        --line: oklch(29% 0.012 255);
+        --line-strong: oklch(39% 0.012 255);
+        --accent: oklch(73% 0.105 238);
+        --sel: oklch(23.5% 0.012 255);
+        --hl: oklch(55% 0.1 86 / 0.45);
+        --hl-strong: oklch(62% 0.12 80 / 0.7);
+        --tool: oklch(17.5% 0.012 255);
+        color-scheme: dark;
+      }
+      .c button {
+        font: inherit;
+        color: inherit;
+      }
+      .c svg {
+        width: 14px;
+        height: 14px;
+        flex: none;
+      }
+
+      .cols {
+        grid-template-columns: 372px 372px 1fr;
+      }
+
+      /* ---------- Current recreation ---------- */
+      .c.panel {
+        height: 780px;
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+      }
+      .c .ph {
+        height: 36px;
+        padding: 0 8px;
+        display: flex;
+        align-items: center;
+        background: var(--canvas);
+        color: var(--soft);
+        font-size: 12px;
+        font-weight: 700;
+        border-bottom: 1px solid var(--line);
+      }
+      .c .tabs {
+        display: flex;
+        align-items: center;
+        gap: 18px;
+        height: 40px;
+        padding: 0 14px;
+        border-bottom: 1px solid var(--line);
+        color: var(--muted);
+      }
+      .c .tabs .on {
+        position: relative;
+        display: flex;
+        align-items: center;
+        gap: 5px;
+        height: 100%;
+        color: var(--ink);
+      }
+      .c .tabs .on::after {
+        content: "";
+        position: absolute;
+        inset: auto -2px 0;
+        height: 2px;
+        background: var(--accent);
+      }
+      .c .tabs .n {
+        padding: 0 5px;
+        border-radius: 3px;
+        background: var(--hover);
+        color: var(--muted);
+        font-size: 11px;
+      }
+      .c .row {
+        display: flex;
+        gap: 4px;
+        padding: 8px 12px 0;
+      }
+      .c .b {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        height: 28px;
+        padding: 0 10px;
+        border: 1px solid var(--line);
+        border-radius: 6px;
+        background: var(--paper);
+        font-size: 12px;
+      }
+      .c .search {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        height: 32px;
+        margin: 8px 12px 10px;
+        padding: 0 10px;
+        border: 1px solid var(--line-strong);
+        border-radius: 6px;
+        color: var(--muted);
+        font-size: 13px;
+      }
+      .c .search span {
+        flex: 1;
+      }
+      .c .incl {
+        padding: 10px 16px 8px;
+        border-top: 1px solid var(--line);
+        font-size: 12px;
+      }
+      .c .incl label {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+      .c .incl i {
+        width: 13px;
+        height: 13px;
+        border: 1px solid var(--line-strong);
+        border-radius: 2px;
+      }
+      .c .incl small {
+        display: block;
+        margin-top: 6px;
+        color: var(--muted);
+        font-size: 12px;
+      }
+      .c .near {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 6px 4px 6px 16px;
+        border-top: 1px solid var(--line);
+        border-bottom: 1px solid var(--line);
+        font-size: 12px;
+      }
+      .c .near span:last-child {
+        padding: 7px 6px;
+        border-radius: 3px;
+        background: var(--hover);
+        font-size: 13px;
+      }
+      .c .list {
+        flex: 1;
+        overflow: hidden;
+        padding: 6px 20px 0 32px;
+      }
+      .c .card {
+        margin: 0 -12px 0 -12px;
+        padding: 14px 12px 12px;
+      }
+      .c .card.sel {
+        background: var(--sel);
+      }
+      .c .kind {
+        display: flex;
+        justify-content: space-between;
+        font-size: 12px;
+        font-weight: 700;
+        color: var(--soft);
+      }
+      .c .kind span:first-child {
+        display: flex;
+        align-items: center;
+        gap: 7px;
+      }
+      .c .kind span:first-child::before {
+        content: "";
+        width: 7px;
+        height: 7px;
+        background: var(--dot, oklch(78% 0.13 80));
+      }
+      .c .kind span:last-child {
+        font-weight: 400;
+        color: var(--muted);
+      }
+      .c .owner {
+        margin-top: 4px;
+        font-size: 10px;
+      }
+      .c .owner a {
+        color: var(--accent);
+      }
+      .c blockquote {
+        margin: 14px 0 12px;
+        padding: 0 0 0 14px;
+        border-left: 2px solid var(--bar);
+        font-size: 13.5px;
+        line-height: 1.6;
+        color: var(--soft);
+      }
+      .c .body {
+        margin: 12px 0;
+        font-size: 13.5px;
+        line-height: 1.55;
+        color: var(--soft);
+      }
+      .c .foot {
+        display: flex;
+        gap: 18px;
+        font-size: 12px;
+        color: var(--muted);
+      }
+      .c .foot span:first-child {
+        flex: 1;
+      }
+      .c .near-label {
+        margin: 8px 0 -4px -12px;
+        font-size: 12px;
+        font-weight: 700;
+      }
+
+      /* ---------- Proposed ---------- */
+      .p.panel {
+        height: 780px;
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+        background: var(--bg-surface);
+      }
+      .p .ptabs {
+        padding: 0 var(--sp-4);
+        display: flex;
+        align-items: center;
+        gap: var(--sp-2);
+        border-bottom: 1px solid var(--line);
+      }
+      .p .ptabs .tabs {
+        flex: 1;
+        border: 0;
+      }
+      .p .tools {
+        display: flex;
+        align-items: center;
+        gap: var(--sp-1);
+        padding: var(--sp-3) var(--sp-3) var(--sp-2) var(--sp-4);
+      }
+      .p .tools .field {
+        flex: 1;
+      }
+      .p .badge {
+        position: relative;
+      }
+      .p .badge.on::after {
+        content: "";
+        position: absolute;
+        top: 6px;
+        right: 6px;
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+        background: var(--accent);
+        box-shadow: 0 0 0 2px var(--bg-surface);
+      }
+      .p .list {
+        flex: 1;
+        overflow: hidden;
+        padding: 0 var(--sp-2) var(--sp-4);
+      }
+      .p .group {
+        display: flex;
+        align-items: baseline;
+        gap: var(--sp-2);
+        padding: var(--sp-4) var(--sp-2) var(--sp-1);
+        color: var(--text-3);
+        font-size: var(--text-xs);
+        line-height: var(--lh-xs);
+      }
+      .p .group b {
+        color: var(--text-2);
+        font-weight: var(--weight-medium);
+      }
+      .p .ann {
+        position: relative;
+        display: grid;
+        grid-template-columns: 3px 1fr;
+        column-gap: var(--sp-3);
+        padding: var(--sp-3) var(--sp-3) var(--sp-3) var(--sp-2);
+        border-radius: var(--r-lg);
+      }
+      .p .ann:hover,
+      .p .ann.hover {
+        background: var(--bg-hover);
+      }
+      .p .ann.sel {
+        background: color-mix(in srgb, var(--hl, var(--hl-yellow)) 45%, var(--bg-surface));
+      }
+      .p .ann .bar {
+        grid-row: 1 / span 3;
+        border-radius: 3px;
+        background: var(--ink, var(--ink-yellow));
+      }
+      .p .ann .q {
+        margin: 0;
+      }
+      .p .ann .cm {
+        margin: var(--sp-2) 0 0;
+        color: var(--text-2);
+        font-size: var(--text-md);
+        line-height: 21px;
+      }
+      .p .ann .meta {
+        display: flex;
+        align-items: center;
+        gap: var(--sp-2);
+        margin-top: var(--sp-2);
+        color: var(--text-3);
+        font-size: var(--text-xs);
+        line-height: var(--lh-xs);
+      }
+      .p .ann .meta .chip {
+        height: 20px;
+      }
+      .p .ann .acts {
+        position: absolute;
+        right: 8px;
+        bottom: 6px;
+        display: none;
+        gap: 2px;
+        padding: 2px;
+        border-radius: var(--r-md);
+        background: var(--bg-raised);
+        box-shadow: var(--e-2);
+      }
+      .p .ann .acts .icon-btn {
+        width: 28px;
+        height: 28px;
+      }
+      .p .ann.hover .acts,
+      .p .ann:hover .acts,
+      .p .ann:focus-within .acts {
+        display: flex;
+      }
+      .p .ann.plain {
+        grid-template-columns: 1fr;
+        padding-left: 23px;
+      }
+      .p .list {
+        -webkit-mask-image: linear-gradient(#000 calc(100% - 40px), transparent);
+        mask-image: linear-gradient(#000 calc(100% - 40px), transparent);
+      }
+      .p .ann .kindline {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        color: var(--text-3);
+        font-size: var(--text-xs);
+        line-height: var(--lh-xs);
+      }
+      .p .ann .kindline svg {
+        width: 13px;
+        height: 13px;
+      }
+      .p .ann .note {
+        margin: 6px 0 0;
+        font-size: var(--text-md);
+        line-height: 21px;
+      }
+      .p .here {
+        display: flex;
+        align-items: center;
+        gap: var(--sp-2);
+        margin: var(--sp-2) var(--sp-2);
+        color: var(--accent);
+        font-size: var(--text-xs);
+        font-weight: var(--weight-medium);
+      }
+      .p .here::before,
+      .p .here::after {
+        content: "";
+        height: 1px;
+        flex: 1;
+        background: color-mix(in oklch, var(--accent) 45%, transparent);
+      }
+      .p .here span {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+      }
+      .p .here svg {
+        width: 12px;
+        height: 12px;
+      }
+      .p .owner {
+        margin-top: var(--sp-3);
+        padding-top: var(--sp-2);
+        border-top: 1px solid color-mix(in oklch, var(--text-1) 10%, transparent);
+        color: var(--text-3);
+        font-size: var(--text-xs);
+        line-height: var(--lh-xs);
+        display: flex;
+        justify-content: space-between;
+      }
+      .p .owner a {
+        color: var(--text-2);
+        text-decoration: none;
+      }
+      .p .owner button {
+        padding: 0;
+        border: 0;
+        background: none;
+        color: var(--accent);
+        font-size: var(--text-xs);
+      }
+      .p .acts-row {
+        display: flex;
+        gap: var(--sp-1);
+        margin-top: var(--sp-3);
+      }
+      .p .acts-row .btn {
+        height: var(--control-h-sm);
+        padding: 0 var(--sp-2);
+        font-size: var(--text-xs);
+      }
+
+      /* Column 3: on-demand states */
+      .stack {
+        display: grid;
+        gap: 20px;
+      }
+      .demo {
+        border-radius: 12px;
+        padding: 20px;
+        background: var(--bg-canvas);
+      }
+      .demo h3 {
+        margin: 0 0 12px;
+        font-size: var(--text-xs);
+        font-weight: var(--weight-medium);
+        color: var(--text-3);
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+      }
+      .menu .radio {
+        width: 14px;
+        height: 14px;
+        border-radius: 50%;
+        border: 1.5px solid var(--line-control);
+      }
+      .menu .radio.on {
+        border: 4px solid var(--accent);
+      }
+      .menu .switch {
+        margin-left: auto;
+        width: 28px;
+        height: 16px;
+        border-radius: 999px;
+        background: var(--line-control);
+        position: relative;
+      }
+      .menu .switch::after {
+        content: "";
+        position: absolute;
+        top: 2px;
+        left: 2px;
+        width: 12px;
+        height: 12px;
+        border-radius: 50%;
+        background: var(--bg-raised);
+      }
+      .menu .switch.on {
+        background: var(--accent);
+      }
+      .menu .switch.on::after {
+        left: 14px;
+      }
+      .menu .swatches {
+        display: flex;
+        gap: 6px;
+        padding: 4px 8px 8px;
+      }
+      .menu .swatches span {
+        width: 18px;
+        height: 18px;
+        border-radius: 50%;
+      }
+      .menu .swatches span.on {
+        box-shadow:
+          0 0 0 2px var(--bg-raised),
+          0 0 0 3.5px var(--text-2);
+      }
+      .empty {
+        display: grid;
+        justify-items: center;
+        gap: 10px;
+        padding: 28px 24px 24px;
+        border-radius: var(--r-lg);
+        background: var(--bg-surface);
+        text-align: center;
+      }
+      .empty .line {
+        width: 200px;
+        font-family: var(--font-read);
+        font-size: 14px;
+        line-height: 1.6;
+        color: var(--text-3);
+      }
+      .empty .line mark {
+        color: var(--text-1);
+        background: linear-gradient(var(--hl-yellow), var(--hl-yellow)) no-repeat 0 100% / 100% 90%;
+        border-radius: 2px;
+      }
+      .empty strong {
+        font-size: var(--text-lg);
+        font-weight: var(--weight-strong);
+      }
+      .empty p {
+        margin: 0;
+        max-width: 280px;
+        color: var(--text-2);
+        font-size: var(--text-sm);
+        line-height: 20px;
+      }
+    </style>
+  </head>
+  <body>
+    <svg width="0" height="0" style="position: absolute" aria-hidden="true">
+      <defs>
+        <symbol
+          id="i-search"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="1.8"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        >
+          <circle cx="11" cy="11" r="7" />
+          <path d="m20 20-3.5-3.5" />
+        </symbol>
+        <symbol
+          id="i-filter"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="1.8"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        >
+          <path d="M3 5h18l-7 8v6l-4 2v-8z" />
+        </symbol>
+        <symbol
+          id="i-sliders"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="1.8"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        >
+          <path d="M4 7h10M18 7h2M4 17h4M12 17h8" />
+          <circle cx="16" cy="7" r="2" />
+          <circle cx="10" cy="17" r="2" />
+        </symbol>
+        <symbol
+          id="i-plus"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="1.8"
+          stroke-linecap="round"
+        >
+          <path d="M12 5v14M5 12h14" />
+        </symbol>
+        <symbol id="i-more" viewBox="0 0 24 24" fill="currentColor">
+          <circle cx="5" cy="12" r="1.6" />
+          <circle cx="12" cy="12" r="1.6" />
+          <circle cx="19" cy="12" r="1.6" />
+        </symbol>
+        <symbol
+          id="i-chev"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="1.8"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        >
+          <path d="m6 9 6 6 6-6" />
+        </symbol>
+        <symbol
+          id="i-chev-r"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="1.8"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        >
+          <path d="m9 6 6 6-6 6" />
+        </symbol>
+        <symbol
+          id="i-comment"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="1.8"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        >
+          <path d="M21 12a8 8 0 0 1-11.8 7L4 20l1.2-4.4A8 8 0 1 1 21 12z" />
+        </symbol>
+        <symbol
+          id="i-bookmark"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="1.8"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        >
+          <path d="M6 3h12v18l-6-4-6 4z" />
+        </symbol>
+        <symbol
+          id="i-copy"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="1.8"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        >
+          <rect x="8" y="8" width="12" height="12" rx="2" />
+          <path d="M16 8V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h2" />
+        </symbol>
+        <symbol id="i-cite" viewBox="0 0 24 24" fill="currentColor">
+          <path
+            d="M4 18v-5.5C4 8.4 6 6 9.6 5.4l.6 1.6C8.2 7.7 7.3 9 7.2 11H10v7zm9 0v-5.5c0-4.1 2-6.5 5.6-7.1l.6 1.6c-2 .7-2.9 2-3 4H19v7z"
+          />
+        </symbol>
+        <symbol
+          id="i-trash"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="1.8"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        >
+          <path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3" />
+        </symbol>
+        <symbol
+          id="i-check"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2.2"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        >
+          <path d="m5 12.5 4.5 4.5L19 7.5" />
+        </symbol>
+        <symbol id="i-pause" viewBox="0 0 24 24" fill="currentColor">
+          <rect x="7" y="5" width="3.2" height="14" rx="1" />
+          <rect x="13.8" y="5" width="3.2" height="14" rx="1" />
+        </symbol>
+        <symbol
+          id="i-note"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="1.8"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        >
+          <path d="M5 3h10l4 4v14H5z" />
+          <path d="M14 3v5h5M8 12h8M8 16h6" />
+        </symbol>
+        <symbol
+          id="i-at"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="1.8"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        >
+          <circle cx="12" cy="12" r="4" />
+          <path d="M16 8v5a3 3 0 0 0 6 0v-1a10 10 0 1 0-4 8" />
+        </symbol>
+        <symbol
+          id="i-hl"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="1.8"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        >
+          <path d="m9 11-5 5v4h4l5-5M9 11l7-7 4 4-7 7M9 11l4 4" />
+        </symbol>
+        <symbol
+          id="i-x"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="1.8"
+          stroke-linecap="round"
+        >
+          <path d="M6 6l12 12M18 6 6 18" />
+        </symbol>
+        <symbol
+          id="i-sidebar"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="1.8"
+          stroke-linejoin="round"
+        >
+          <rect x="3" y="4" width="18" height="16" rx="2" />
+          <path d="M9 4v16" />
+        </symbol>
+        <symbol
+          id="i-panel"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="1.8"
+          stroke-linejoin="round"
+        >
+          <rect x="3" y="4" width="18" height="16" rx="2" />
+          <path d="M15 4v16" />
+        </symbol>
+        <symbol
+          id="i-book"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="1.8"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        >
+          <path d="M12 6c-2-1.5-5-2-8-2v14c3 0 6 .5 8 2 2-1.5 5-2 8-2V4c-3 0-6 .5-8 2zM12 6v14" />
+        </symbol>
+        <symbol
+          id="i-pen"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="1.8"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        >
+          <path d="M4 20h4L19 9l-4-4L4 16z" />
+        </symbol>
+        <symbol
+          id="i-insert"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="1.8"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        >
+          <path d="M5 3h10l4 4v14H5z" />
+          <path d="M12 10v6M9 13h6" />
+        </symbol>
+        <symbol
+          id="i-target"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="1.8"
+          stroke-linecap="round"
+        >
+          <circle cx="12" cy="12" r="7" />
+          <circle cx="12" cy="12" r="2.5" />
+        </symbol>
+        <symbol
+          id="i-sort"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="1.8"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        >
+          <path d="M7 4v16M3 16l4 4 4-4M17 20V4M13 8l4-4 4 4" />
+        </symbol>
+        <symbol
+          id="i-layout"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="1.8"
+          stroke-linejoin="round"
+        >
+          <rect x="3" y="4" width="18" height="16" rx="2" />
+          <path d="M3 10h18M10 10v10" />
+        </symbol>
+        <symbol
+          id="i-type"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="1.8"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        >
+          <path d="M4 7V5h16v2M12 5v14M9 19h6" />
+        </symbol>
+        <symbol
+          id="i-sparkle"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="1.8"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        >
+          <path d="M12 3v4M12 17v4M3 12h4M17 12h4" />
+        </symbol>
+        <symbol
+          id="i-wrench"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="1.8"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        >
+          <path d="M14.5 6.5a4 4 0 0 0 5 5L21 13l-8 8-3-3 8-8zM3 21l6-6" />
+        </symbol>
+        <symbol
+          id="i-pin"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="1.8"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        >
+          <path d="M9 4h6l-1 6 4 3v2H6v-2l4-3zM12 15v6" />
+        </symbol>
+      </defs>
+    </svg>
+
+    <main class="board">
+      <header class="board-head">
+        <div>
+          <h1>Notes panel · Annotations</h1>
+          <p>
+            Quotes first, controls on demand. Five rows of controls collapse into one; the
+            annotation source appears only when it differs from the open source; filters, ordering
+            and “follow reading position” fold into one Filter menu.
+          </p>
+        </div>
+        <div class="theme-toggle" role="group" aria-label="Theme">
+          <button type="button" data-set="light">Light</button>
+          <button type="button" data-set="dark">Dark</button>
+        </div>
+      </header>
+
+      <div class="cols">
+        <!-- ===================== CURRENT ===================== -->
+        <section>
+          <div class="tag">Current</div>
+          <div class="frame">
+            <div class="c panel" aria-label="Current Notes panel (recreation)">
+              <div class="ph">Adam: A Method for Stochastic Optimization</div>
+              <div class="tabs">
+                <span class="on"
+                  ><svg><use href="#i-at" /></svg> Annotations <span class="n">5</span></span
+                >
+                <svg><use href="#i-note" /></svg>
+                <svg><use href="#i-at" /></svg>
+                <span style="margin-left: auto"
+                  ><svg><use href="#i-panel" /></svg
+                ></span>
+              </div>
+              <div class="row">
+                <span class="b"
+                  ><svg><use href="#i-comment" /></svg>Comment</span
+                >
+                <span class="b"
+                  ><svg><use href="#i-bookmark" /></svg>Bookmark</span
+                >
+              </div>
+              <div class="search">
+                <svg><use href="#i-search" /></svg><span>Search annotations</span
+                ><svg><use href="#i-filter" /></svg>
+              </div>
+              <div class="incl">
+                <label><i></i>Include all annotations in page search</label>
+                <small>Search above covers all annotations</small>
+              </div>
+              <div class="near">
+                <span>Near reading position: 2 Algorithm</span><span>Pause following</span>
+              </div>
+              <div class="list">
+                <div class="card">
+                  <div class="kind"><span>Highlight</span><span>p. 1</span></div>
+                  <div class="owner">Owner: <a>Adam: A Method for Stochastic Optimization</a></div>
+                  <blockquote>
+                    We introduce Adam, an algorithm for first-order gradient-based optimization of
+                    stochastic objective functions, based on adaptive estimates of lower-order
+                    moments.
+                  </blockquote>
+                  <div class="body">
+                    The core claim: per-parameter step sizes from running moment estimates.
+                  </div>
+                  <div class="foot"><span>Aug 9</span></div>
+                </div>
+                <div class="card" style="--dot: oklch(45% 0.1 238)">
+                  <div class="kind"><span>Comment</span><span>p. 1</span></div>
+                  <div class="owner">Owner: <a>Adam: A Method for Stochastic Optimization</a></div>
+                  <div class="body">
+                    Compare with RMSProp and AdaGrad: Adam is roughly RMSProp with momentum plus
+                    bias correction.
+                  </div>
+                  <div class="foot"><span>Aug 8</span></div>
+                </div>
+                <div class="near-label">Near reading position</div>
+                <div class="card sel">
+                  <div class="kind"><span>Highlight</span><span>p. 2</span></div>
+                  <div class="owner">Owner: <a>Adam: A Method for Stochastic Optimization</a></div>
+                  <blockquote>
+                    The algorithm updates exponential moving averages of the gradient (mₜ) and the
+                    squared gradient (vₜ) where the hyper-parameters β₁, β₂ ∈ [0, 1) control the
+                    exponential decay rates of these moving averages.
+                  </blockquote>
+                  <div class="foot">
+                    <span>Aug 10</span><span>Edit</span><span>Add to literature note</span
+                    ><svg><use href="#i-target" /></svg>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <ol class="notes">
+            <li>
+              <b>Five control rows</b> (title, tabs, actions, search, page-search checkbox with
+              helper text, follow bar) before the first quote, which begins 330px down.
+            </li>
+            <li>
+              Every card repeats <b>“Owner:”</b> as a 10px link, even when it is the open source.
+            </li>
+            <li>
+              Quotes use the same small grey sans as everything else, so the reading voice is lost.
+            </li>
+          </ol>
+        </section>
+
+        <!-- ===================== PROPOSED ===================== -->
+        <section>
+          <div class="tag is-proposed">Proposed</div>
+          <div class="frame">
+            <div class="p panel" aria-label="Proposed Notes panel">
+              <div class="ptabs">
+                <nav class="tabs" role="tablist" aria-label="Notes">
+                  <span class="tab on" role="tab" aria-selected="true"
+                    >Annotations <span class="n">5</span></span
+                  >
+                  <span class="tab" role="tab">Source note</span>
+                  <span class="tab" role="tab">Citation</span>
+                </nav>
+                <button class="icon-btn" aria-label="Notes panel options">
+                  <svg><use href="#i-more" /></svg>
+                </button>
+              </div>
+              <div class="tools">
+                <div class="field" role="search">
+                  <svg><use href="#i-search" /></svg><span class="grow">Search annotations</span
+                  ><span class="kbd">/</span>
+                </div>
+                <button class="icon-btn badge" aria-label="Filter and order">
+                  <svg><use href="#i-sliders" /></svg>
+                </button>
+                <button class="icon-btn" aria-label="Add source comment or bookmark">
+                  <svg><use href="#i-plus" /></svg>
+                </button>
+              </div>
+              <div class="list">
+                <div class="group"><b>Abstract</b> p. 1</div>
+                <article class="ann" style="--ink: var(--ink-yellow)">
+                  <span class="bar"></span>
+                  <p class="q quote">
+                    We introduce Adam, an algorithm for first-order gradient-based optimization of
+                    stochastic objective functions, based on adaptive estimates of lower-order
+                    moments.
+                  </p>
+                  <p class="cm">
+                    The core claim: per-parameter step sizes from running moment estimates.
+                  </p>
+                  <div class="meta">9 Aug <span class="chip">optimisation</span></div>
+                </article>
+                <article class="ann hover" style="--ink: var(--ink-green)">
+                  <span class="bar"></span>
+                  <p class="q quote">
+                    The hyper-parameters have intuitive interpretations and typically require little
+                    tuning.
+                  </p>
+                  <p class="cm">Check against Wilson et al. (2017) on generalisation.</p>
+                  <div class="meta">9 Aug</div>
+                  <div class="acts" role="toolbar" aria-label="Annotation actions">
+                    <button class="icon-btn" aria-label="Comment">
+                      <svg><use href="#i-comment" /></svg>
+                    </button>
+                    <button class="icon-btn" aria-label="Insert into source note">
+                      <svg><use href="#i-insert" /></svg>
+                    </button>
+                    <button class="icon-btn" aria-label="More actions">
+                      <svg><use href="#i-more" /></svg>
+                    </button>
+                  </div>
+                </article>
+                <article class="ann plain">
+                  <div class="kindline">
+                    <svg><use href="#i-comment" /></svg>Source comment · 8 Aug
+                  </div>
+                  <p class="note">
+                    Compare with RMSProp and AdaGrad: Adam is roughly RMSProp with momentum plus
+                    bias correction.
+                  </p>
+                </article>
+                <div class="group"><b>2 Algorithm</b> p. 2</div>
+                <div class="here" role="status">
+                  <span
+                    ><svg><use href="#i-book" /></svg>You are reading here</span
+                  >
+                </div>
+                <article
+                  class="ann sel"
+                  style="--ink: var(--ink-blue); --hl: var(--hl-blue)"
+                  aria-current="true"
+                >
+                  <span class="bar"></span>
+                  <p class="q quote">
+                    The algorithm updates exponential moving averages of the gradient (mₜ) and the
+                    squared gradient (vₜ) where the hyper-parameters β₁, β₂ ∈ [0, 1) control the
+                    exponential decay rates of these moving averages.
+                  </p>
+                  <div class="meta">10 Aug</div>
+                </article>
+                <div class="group"><b>3 Initialization bias correction</b> p. 3</div>
+                <article class="ann plain">
+                  <div class="kindline">
+                    <svg><use href="#i-bookmark" /></svg>Bookmark · 10 Aug
+                  </div>
+                </article>
+              </div>
+            </div>
+          </div>
+          <ol class="notes">
+            <li>
+              <b>One control row</b>: search, one Filter menu (dot when active) and Add. The first
+              quote begins about 150px down.
+            </li>
+            <li>
+              Quotes in the <b>reading face</b>; the bar carries the highlight colour; the selected
+              card takes the passage’s tint.
+            </li>
+            <li>
+              Locations become <b>section headings</b> instead of repeating on every card. Actions
+              appear on hover, focus or selection.
+            </li>
+          </ol>
+        </section>
+
+        <!-- ===================== ON DEMAND ===================== -->
+        <section class="p">
+          <div class="tag is-proposed">Proposed · on demand</div>
+          <div class="stack">
+            <div class="demo">
+              <h3>Filter and order (one menu)</h3>
+              <div class="menu" role="menu" aria-label="Filter and order">
+                <div class="label">Show</div>
+                <div class="item on">
+                  <span class="radio on"></span>All annotations<span class="end">5</span>
+                </div>
+                <div class="item">
+                  <span class="radio"></span>Highlights<span class="end">3</span>
+                </div>
+                <div class="item">
+                  <span class="radio"></span>With comments<span class="end">3</span>
+                </div>
+                <div class="item">
+                  <span class="radio"></span>Source comments<span class="end">1</span>
+                </div>
+                <div class="item">
+                  <span class="radio"></span>Bookmarks<span class="end">1</span>
+                </div>
+                <div class="label">Colour</div>
+                <div class="swatches" aria-label="Highlight colour">
+                  <span class="on" style="background: var(--ink-yellow)"></span>
+                  <span style="background: var(--ink-green)"></span>
+                  <span style="background: var(--ink-blue)"></span>
+                  <span style="background: var(--ink-pink)"></span>
+                  <span style="background: var(--ink-purple)"></span>
+                </div>
+                <hr />
+                <div class="label">Order</div>
+                <div class="item"><span class="radio on"></span>Document order</div>
+                <div class="item"><span class="radio"></span>Newest first</div>
+                <hr />
+                <div class="item">Follow reading position<span class="switch on"></span></div>
+                <div class="item">Include in page search<span class="switch"></span></div>
+              </div>
+            </div>
+            <div class="demo">
+              <h3>Selected card, saved to another source</h3>
+              <div style="background: var(--bg-surface); border-radius: var(--r-lg); padding: 4px">
+                <article class="ann sel" style="--ink: var(--ink-yellow); --hl: var(--hl-yellow)">
+                  <span class="bar"></span>
+                  <p class="q quote">
+                    Adam is generally regarded as being fairly robust to the choice of
+                    hyperparameters, though the learning rate sometimes needs to be changed.
+                  </p>
+                  <div>
+                    <div class="acts-row">
+                      <button class="btn">
+                        <svg><use href="#i-comment" /></svg>Comment
+                      </button>
+                      <button class="btn">
+                        <svg><use href="#i-insert" /></svg>Insert into source note
+                      </button>
+                      <button class="btn quiet" aria-label="More actions">
+                        <svg><use href="#i-more" /></svg>
+                      </button>
+                    </div>
+                    <div class="owner">
+                      <span>Source: <a href="#">Ch. 8, Optimization for Training…</a></span>
+                      <button>Move…</button>
+                    </div>
+                  </div>
+                </article>
+              </div>
+            </div>
+            <div class="demo">
+              <h3>First annotation (empty state)</h3>
+              <div class="empty">
+                <div class="line">
+                  “…based on <mark>adaptive estimates</mark> of lower-order moments.”
+                </div>
+                <strong>Nothing marked yet</strong>
+                <p>
+                  Select a passage to highlight it, or press <span class="kbd">C</span> to comment
+                  on the whole source.
+                </p>
+              </div>
+            </div>
+          </div>
+        </section>
+      </div>
+    </main>
+    <script>
+      (() => {
+        const buttons = document.querySelectorAll("[data-set]");
+        const set = (theme) => {
+          document.documentElement.dataset.theme = theme;
+          buttons.forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.set === theme)));
+        };
+        const hash = location.hash.slice(1);
+        set(
+          hash === "dark" || hash === "light"
+            ? hash
+            : matchMedia("(prefers-color-scheme: dark)").matches
+              ? "dark"
+              : "light",
+        );
+        buttons.forEach((b) => b.addEventListener("click", () => set(b.dataset.set)));
+      })();
+    </script>
+  </body>
+</html>
