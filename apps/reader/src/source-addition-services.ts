@@ -11,7 +11,7 @@ import type { SourceAdditionServices } from "./source-addition-flow.js";
 export function readerSourceAdditionServices(
   input: Pick<
     SourceAdditionServices,
-    "workspace" | "onStatus" | "signal" | "importOptions" | "chapterGateway"
+    "workspace" | "onStatus" | "signal" | "importOptions" | "chapterGateway" | "onWriteStart"
   >,
 ): SourceAdditionServices {
   const signal = input.signal ? { signal: input.signal } : {};

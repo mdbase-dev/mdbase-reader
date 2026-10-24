@@ -437,6 +437,50 @@ describe("remote lookup boundaries for captured pages", () => {
   });
 });
 
+describe("cancellation before source writes", () => {
+  it("does not save a PDF when an extractor swallows an abort", async () => {
+    const controller = new AbortController();
+    const deps = services({
+      signal: controller.signal,
+      capture: vi.fn().mockResolvedValue({
+        kind: "pdf",
+        bytes: pdfBytes,
+        submittedUrl: "https://example.com/paper.pdf",
+        canonicalUrl: "https://example.com/paper.pdf",
+        retrievedAt: "2026-09-25T00:00:00Z",
+      }),
+      pdfIdentifiers: vi.fn(() => {
+        controller.abort(new Error("Cancelled"));
+        return Promise.reject(new Error("Cancelled"));
+      }),
+    });
+    await expect(addSourceFromInput("https://example.com/paper.pdf", deps)).rejects.toThrow(
+      "Cancelled",
+    );
+    expect(deps.workspace.importSourceFile).not.toHaveBeenCalled();
+    expect(deps.workspace.createSource).not.toHaveBeenCalled();
+  });
+
+  it("marks the write boundary before importing a PDF", async () => {
+    const onWriteStart = vi.fn();
+    const deps = services({
+      onWriteStart,
+      capture: vi.fn().mockResolvedValue({
+        kind: "pdf",
+        bytes: pdfBytes,
+        submittedUrl: "https://example.com/paper.pdf",
+        canonicalUrl: "https://example.com/paper.pdf",
+        retrievedAt: "2026-09-25T00:00:00Z",
+      }),
+    });
+    await addSourceFromInput("https://example.com/paper.pdf", deps);
+    expect(onWriteStart).toHaveBeenCalledOnce();
+    expect(onWriteStart.mock.invocationCallOrder[0]).toBeLessThan(
+      vi.mocked(deps.workspace.importSourceFile).mock.invocationCallOrder[0]!,
+    );
+  });
+});
+
 describe("adding social sources", () => {
   it.each([
     "https://x.com/home",

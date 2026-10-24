@@ -111,10 +111,10 @@ describe("chapter DOI confirmation", () => {
     await act(async () => {
       await h.controller().findChapterBook();
     });
-    expect(h.resolveCitation).toHaveBeenCalledExactlyOnceWith({
-      kind: "identifier",
-      value: "isbn:9780306406157",
-    });
+    expect(h.resolveCitation).toHaveBeenCalledExactlyOnceWith(
+      { kind: "identifier", value: "isbn:9780306406157" },
+      { signal: expect.any(AbortSignal) },
+    );
     expect(h.createSource).not.toHaveBeenCalled();
     expect(h.createSourcePart).not.toHaveBeenCalled();
     await act(async () => {
@@ -153,10 +153,10 @@ describe("chapter DOI confirmation", () => {
     await act(async () => {
       await h.controller().findChapterBook("9781861972712");
     });
-    expect(h.resolveCitation).toHaveBeenCalledExactlyOnceWith({
-      kind: "identifier",
-      value: "isbn:9781861972712",
-    });
+    expect(h.resolveCitation).toHaveBeenCalledExactlyOnceWith(
+      { kind: "identifier", value: "isbn:9781861972712" },
+      { signal: expect.any(AbortSignal) },
+    );
     expect(h.createSource).not.toHaveBeenCalled();
     h.close();
   });
@@ -177,4 +177,32 @@ describe("chapter DOI confirmation", () => {
     expect(h.createSource).not.toHaveBeenCalled();
     h.close();
   });
+});
+
+it("cancels a container ISBN lookup immediately and ignores its late result", async () => {
+  const h = await harness([]);
+  let resolve!: (candidate: CitationCandidate) => void;
+  h.resolveCitation.mockReturnValueOnce(
+    new Promise<CitationCandidate>((done) => {
+      resolve = done;
+    }),
+  );
+  await act(async () => h.controller().propose({ key: "reviewed", candidate, books: [] }));
+  let lookup!: Promise<void>;
+  await act(async () => {
+    lookup = h.controller().findChapterBook();
+  });
+  const signal = h.resolveCitation.mock.calls[0]?.[1].signal as AbortSignal;
+  expect(h.controller().canCancel).toBe(true);
+  await act(async () => h.controller().cancel());
+  expect(signal.aborted).toBe(true);
+  expect(h.controller().busy).toBe(false);
+  await act(async () => {
+    resolve(bookCandidate);
+    await lookup;
+  });
+  expect(h.controller().bookOffer).toBeNull();
+  expect(h.controller().error).toBeNull();
+  expect(h.createSource).not.toHaveBeenCalled();
+  h.close();
 });

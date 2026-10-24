@@ -1,5 +1,7 @@
 import { ReaderButton } from "@mdbase-reader/ui";
-import { useEffect, useRef, useState, type JSX } from "react";
+import { useRef, useState, type JSX } from "react";
+
+import { ModalDialog } from "./ModalDialog.js";
 
 import type { FileImportSuggestion } from "./file-import-suggestion.js";
 import type { SourceImportFlow } from "./use-source-import.js";
@@ -29,78 +31,69 @@ export function SourceImportDialog({
   const isFinalizing = importing && progress?.phase === "creating";
   const submit = (): void => onImport(title, useCitation && Boolean(suggestion?.citation));
 
-  useEffect(() => {
-    titleInput.current?.focus();
-    const close = (event: KeyboardEvent): void => {
-      if (event.key === "Escape" && !isFinalizing) {
-        onCancel();
-      }
-    };
-    window.addEventListener("keydown", close);
-    return () => window.removeEventListener("keydown", close);
-  }, [isFinalizing, onCancel]);
-
   return (
-    <div className="import-backdrop" role="presentation">
-      <section
-        className="import-dialog"
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby="reader-import-title"
-      >
-        <div className="import-dialog-heading">
-          <h2 id="reader-import-title">Add source</h2>
-          <p>The original file stays intact in your collection.</p>
-        </div>
-        <div className="import-file-summary">
-          <span className="import-format">{formatLabel(file)}</span>
-          <span>
-            <strong>{file.name}</strong>
-            <small>{formatBytes(file.size)}</small>
-          </span>
-        </div>
-        <label className="import-title-field">
-          <span>Title</span>
-          <input
-            className="mdbase-field"
-            ref={titleInput}
-            value={title}
-            disabled={importing}
-            onChange={(event) => setTypedTitle(event.target.value)}
-            onKeyDown={(event) => {
-              if (event.key === "Enter" && title.trim()) {
-                submit();
-              }
-            }}
-          />
-        </label>
-        <FoundCitation
-          suggestion={suggestion}
-          checked={useCitation}
+    <ModalDialog
+      className="import-dialog"
+      labelledBy="reader-import-title"
+      initialFocus={titleInput}
+      onDismiss={() => {
+        if (!isFinalizing) {
+          onCancel();
+        }
+      }}
+    >
+      <div className="import-dialog-heading">
+        <h2 id="reader-import-title">Add source</h2>
+        <p>The original file stays intact in your collection.</p>
+      </div>
+      <div className="import-file-summary">
+        <span className="import-format">{formatLabel(file)}</span>
+        <span>
+          <strong>{file.name}</strong>
+          <small>{formatBytes(file.size)}</small>
+        </span>
+      </div>
+      <label className="import-title-field">
+        <span>Title</span>
+        <input
+          className="mdbase-field"
+          ref={titleInput}
+          value={title}
           disabled={importing}
-          onChange={setUseCitation}
+          onChange={(event) => setTypedTitle(event.target.value)}
+          onKeyDown={(event) => {
+            if (event.key === "Enter" && title.trim()) {
+              submit();
+            }
+          }}
         />
-        {error ? (
-          <p className="import-error" role="alert">
-            {error}
-          </p>
-        ) : null}
-        {importing ? <ImportProgress progress={progress} /> : null}
-        <div className="import-dialog-actions">
-          <button
-            className="connection-secondary"
-            type="button"
-            onClick={onCancel}
-            disabled={isFinalizing}
-          >
-            {isFinalizing ? "Finishing…" : importing ? "Stop import" : "Cancel"}
-          </button>
-          <ReaderButton disabled={importing || !title.trim()} onClick={submit}>
-            {importing ? "Importing…" : "Add source"}
-          </ReaderButton>
-        </div>
-      </section>
-    </div>
+      </label>
+      <FoundCitation
+        suggestion={suggestion}
+        checked={useCitation}
+        disabled={importing}
+        onChange={setUseCitation}
+      />
+      {error ? (
+        <p className="import-error" role="alert">
+          {error}
+        </p>
+      ) : null}
+      {importing ? <ImportProgress progress={progress} /> : null}
+      <div className="import-dialog-actions">
+        <button
+          className="connection-secondary"
+          type="button"
+          onClick={onCancel}
+          disabled={isFinalizing}
+        >
+          {isFinalizing ? "Finishing…" : importing ? "Stop import" : "Cancel"}
+        </button>
+        <ReaderButton disabled={importing || !title.trim()} onClick={submit}>
+          {importing ? "Importing…" : "Add source"}
+        </ReaderButton>
+      </div>
+    </ModalDialog>
   );
 }
 

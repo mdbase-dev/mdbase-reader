@@ -618,14 +618,24 @@ button {
   height: 15px;
 }
 
-.import-backdrop {
+.reader-modal {
   position: fixed;
-  z-index: 100;
   inset: 0;
-  display: grid;
-  place-items: center;
-  padding: 24px;
+  margin: auto;
+  padding: 0;
+  max-width: calc(100vw - 48px);
+  max-height: calc(100dvh - 48px);
+  overflow: auto;
+  color: var(--ink);
+}
+
+.reader-modal::backdrop {
   background: var(--color-scrim);
+}
+
+.reader-modal.import-dialog {
+  position: fixed;
+  overflow: auto;
 }
 
 .import-dialog {
@@ -1857,11 +1867,6 @@ input:focus-visible {
 
 /* Overlays and entry screen */
 
-.import-backdrop,
-.library-save-dialog-backdrop {
-  background: var(--color-scrim);
-}
-
 .connection-secondary {
   min-height: 40px;
 }
@@ -2115,19 +2120,20 @@ input:focus-visible {
   white-space: nowrap;
 }
 
-.library-save-dialog-backdrop {
-  position: fixed;
-  z-index: 80;
-  inset: 0;
-  display: grid;
-  place-items: center;
-  padding: 20px;
+.library-save-modal {
+  width: 430px;
+  border: 0;
+  border-radius: var(--control-radius);
+  background: var(--paper);
+}
+
+.library-save-modal::backdrop {
   background: color-mix(in oklch, var(--color-scrim) 54%, transparent);
   backdrop-filter: blur(3px);
 }
 
 .library-save-dialog {
-  width: min(430px, 100%);
+  width: 100%;
   display: grid;
   gap: 14px;
   padding: 24px;

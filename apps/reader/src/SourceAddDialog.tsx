@@ -1,9 +1,10 @@
 import { ReaderButton } from "@mdbase-reader/ui";
-import { useEffect, useRef, useState, type JSX } from "react";
+import { useRef, useState, type JSX } from "react";
 
 import { chapterIsbns } from "./chapter-doi.js";
 import { citationDateText, citationNames, displayCslValue } from "./citation-form-model.js";
 import { CloseIcon, FileIcon } from "./icons.js";
+import { ModalDialog } from "./ModalDialog.js";
 import { chapterCitation } from "./source-part-creation.js";
 import { citationText } from "./use-chapter-doi.js";
 
@@ -61,96 +62,91 @@ function OpenSourceAddDialog({
 }: Omit<Parameters<typeof SourceAddDialog>[0], "open">): JSX.Element {
   const [url, setUrl] = useState("");
   const input = useRef<HTMLInputElement>(null);
-  useEffect(() => {
-    input.current?.focus();
-    const close = (event: KeyboardEvent): void => {
-      if (event.key === "Escape" && !busy) {
-        onClose();
-      }
-    };
-    window.addEventListener("keydown", close);
-    return () => window.removeEventListener("keydown", close);
-  }, [busy, onClose]);
+
   return (
-    <div
-      className="import-backdrop"
-      role="presentation"
-      onMouseDown={(event) => {
-        if (event.target === event.currentTarget && !busy) {
+    <ModalDialog
+      className="import-dialog source-add-dialog"
+      labelledBy="reader-add-source-title"
+      initialFocus={input}
+      onDismiss={() => {
+        if (!busy && !url.trim()) {
           onClose();
         }
       }}
     >
-      <section
-        className="import-dialog source-add-dialog"
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby="reader-add-source-title"
+      <button
+        className="icon-button source-add-close"
+        type="button"
+        aria-label="Close add source"
+        disabled={busy}
+        onClick={onClose}
       >
-        <button
-          className="icon-button source-add-close"
-          type="button"
-          aria-label="Close add source"
-          disabled={busy}
-          onClick={onClose}
-        >
-          <CloseIcon />
-        </button>
-        <div className="import-dialog-heading">
-          <h2 id="reader-add-source-title">Add a source</h2>
-          <p>
-            Save a web page or PDF link, look up a work by DOI, arXiv ID or ISBN, or add a file from
-            your device.
+        <CloseIcon />
+      </button>
+      <div className="import-dialog-heading">
+        <h2 id="reader-add-source-title">Add a source</h2>
+        <p>
+          Save a web page or PDF link, look up a work by DOI, arXiv ID or ISBN, or add a file from
+          your device.
+        </p>
+      </div>
+      <form
+        className="capture-form"
+        onSubmit={(event) => {
+          event.preventDefault();
+          if (url.trim() && !busy) {
+            onCapture(url.trim());
+          }
+        }}
+      >
+        <label className="capture-url-field">
+          <span>Link or identifier</span>
+          <span className="capture-url-row">
+            <input
+              className="mdbase-field"
+              ref={input}
+              type="text"
+              inputMode="url"
+              autoComplete="url"
+              spellCheck={false}
+              placeholder="https://…, DOI, arXiv ID or ISBN"
+              value={url}
+              disabled={busy}
+              onChange={(event) => {
+                setUrl(event.target.value);
+                onEdit();
+              }}
+            />
+            <ReaderButton disabled={busy || !url.trim()}>{busy ? "Adding…" : "Add"}</ReaderButton>
+          </span>
+        </label>
+        {busy ? (
+          <button
+            className="connection-secondary"
+            type="button"
+            disabled={!lookup.canCancel}
+            onClick={lookup.cancel}
+          >
+            {lookup.canCancel ? "Cancel" : "Finishing…"}
+          </button>
+        ) : null}
+        {busy && lookup.progress ? (
+          <p className="capture-progress" role="status">
+            {lookup.progress}
           </p>
-        </div>
-        <form
-          className="capture-form"
-          onSubmit={(event) => {
-            event.preventDefault();
-            if (url.trim() && !busy) {
-              onCapture(url.trim());
-            }
-          }}
-        >
-          <label className="capture-url-field">
-            <span>Link or identifier</span>
-            <span className="capture-url-row">
-              <input
-                className="mdbase-field"
-                ref={input}
-                type="text"
-                inputMode="url"
-                autoComplete="url"
-                spellCheck={false}
-                placeholder="https://…, DOI, arXiv ID or ISBN"
-                value={url}
-                disabled={busy}
-                onChange={(event) => {
-                  setUrl(event.target.value);
-                  onEdit();
-                }}
-              />
-              <ReaderButton disabled={busy || !url.trim()}>{busy ? "Adding…" : "Add"}</ReaderButton>
-            </span>
-          </label>
-          {busy && lookup.progress ? (
-            <p className="capture-progress" role="status">
-              {lookup.progress}
-            </p>
-          ) : null}
-          {error ? (
-            <p className="import-error capture-error" role="alert">
-              {error}
-            </p>
-          ) : null}
-          <LookupFollowUp busy={busy} lookup={lookup} />
-        </form>
-        <div className="source-add-divider">
-          <span>or</span>
-        </div>
-        <FileChoice disabled={busy || !canChooseFile} onChoose={onChooseFile} onDrop={onDropFile} />
-      </section>
-    </div>
+        ) : null}
+        {error ? (
+          <p className="import-error capture-error" role="alert">
+            {error}
+          </p>
+        ) : null}
+        <LookupFollowUp busy={busy} lookup={lookup} />
+      </form>
+      <div className="source-add-divider">
+        <span>or</span>
+      </div>
+      <FileChoice disabled={busy || !canChooseFile} onChoose={onChooseFile} onDrop={onDropFile} />
+    </ModalDialog>
   );
 }
 
