@@ -111,68 +111,68 @@ are unchanged. The table prioritises ambiguity and safety before polish.
 `{title}` denotes an existing runtime source title, not literal copy. Related
 occurrences share a row; these are representative replacements, not a migration checklist.
 
-| Current string | Proposed string | File:line |
-| --- | --- | --- |
-| Comment (selection action / tooltip) | Comment on highlight / Comment on highlight (C) | R/SelectionToolbar.tsx:194–195 |
-| Comment (source action) | Add source comment | R/AnnotationPanelActions.tsx:50 |
-| Comment (`note` type label) | Source comment | R/annotation-kind.ts:3 |
-| Comments on the source | Source comments | R/AnnotationList.tsx:295 |
-| Comments (type filter) | Source comments | R/LibraryAnnotationToolbar.tsx:225 |
-| With commentary | With comments | R/AnnotationList.tsx:292 |
-| New comment | New source comment | R/AnnotationPanelActions.tsx:119 |
-| Save comment | Save source comment | R/AnnotationPanelActions.tsx:143 |
-| Owner / Annotation owner | Save to source | R/AnnotationOwnerChooser.tsx:32–34 |
-| Owner: | Source: | R/AnnotationOwnerActions.tsx:54 |
-| Move annotation | Move annotation to source | R/AnnotationOwnerActions.tsx:62 |
-| Outside chapter range — still owned by this chapter | Outside chapter range — still belongs to this chapter | R/AnnotationOwnerActions.tsx:58 |
-| Move to the book | Move to {title} | R/AnnotationOwnerActions.tsx:92 |
-| Save annotation owned by “{title}”? | Save annotation to “{title}”? | R/use-annotation-owner.ts:165 |
-| Owner chosen explicitly. Existing note embeds will not move. | Source chosen. Existing note embeds will not move. | R/use-annotation-owner.ts:122 |
-| Your ownership setting keeps new annotations on the book. | Your annotation setting keeps new annotations on the book. | R/annotation-ownership.ts:54 |
-| Chapter ranges overlap; choose an owner explicitly. | Chapter ranges overlap; choose a source. | R/annotation-ownership.ts:75 |
-| The chosen owner no longer exists. Choose an owner again. | The chosen source no longer exists. Choose another source. | R/use-annotation-owner.ts:171 |
-| Delete? (confirmation) | Delete highlight | R/SelectionToolbar.tsx:294 |
-| Delete (confirmation) | Delete annotation | R/AnnotationEditor.tsx:253 |
-| annotation notes (removal warning) | annotations | R/SourceRemovalDialog.tsx:73 |
-| Confirm and create chapters | Create chapters | R/SourcePartCreation.tsx:117 |
-| Confirm and create chapter | Create chapter | R/SourceAddDialog.tsx:266 |
-| Literature note | Source note | R/InspectorPane.tsx:147,152,171; R/workspace-tab-display.ts:9; R/reader-command-list.ts:98 |
-| Open literature note | Open source note | R/reader-command-list.ts:217; R/WorkspacePaneSupport.tsx:74,121 |
-| Literature note / Open literature note beside | Source note / Open source note beside | R/DocumentContextualToolbar.tsx:114,121 |
-| Opening literature note… | Opening source note… | R/SourceNoteEditor.tsx:75,79,107 |
-| Source literature note | Source note | R/SourceNoteEditor.tsx:112 |
-| Add to literature note / In literature note | Insert into source note / In source note | R/AnnotationCard.tsx:240–241 |
-| Searches literature notes and annotation text, not PDF, EPUB or saved-page contents. | Searches source notes and annotation text, not PDF, EPUB or saved-page contents. | R/LibraryTextSearch.tsx:97 |
-| Library navigator | Sources sidebar | R/LibraryNavigator.tsx:69 |
-| Toggle left sidebar (label / tooltip / command) | Toggle Sources sidebar | R/ReaderHeader.tsx:116,118; R/reader-command-list.ts:137 |
-| Toggle right sidebar (label / tooltip / command) | Toggle Notes panel | R/ReaderHeader.tsx:161,164; R/reader-command-list.ts:144 |
-| Annotations, literature note and citation | Annotations, source note and citation | R/reader-command-list.ts:145 |
-| Search (header) | Search and commands | R/ReaderHeader.tsx:146 |
-| Duplicate in new pane right | Open beside | R/reader-command-list.ts:172 |
-| Duplicate in pane below | Open below | R/reader-command-list.ts:179 |
-| Only the page, with the chrome out of the way | Read the document with interface controls hidden | R/reader-command-list.ts:129 |
-| Chapter / Filter annotations by chapter | Source / Filter annotations by source | R/AnnotationList.tsx:166,168 |
-| All chapters and book | All sources | R/AnnotationList.tsx:172 |
-| This annotation has no supported passage anchor. Its text and original metadata are preserved. | This annotation has no supported link to a passage. Its text and original metadata are preserved. | R/annotation-navigation.ts:19 |
-| New area annotation / Save area | New area capture / Save area capture | R/AnnotationComposer.tsx:41,101 |
-| Area (`area` type label) | Area capture | R/annotation-kind.ts:3 |
-| Areas | Area captures | R/LibraryAnnotationToolbar.tsx:224 |
-| Add source (entry action) | Add source… | R/NavigatorSections.tsx:126; R/LibraryWorkspace.tsx:524–525 |
-| Add a source (dialog heading) | Add source | R/SourceAddDialog.tsx:100 |
-| Add (link submission) | Add source | R/SourceAddDialog.tsx:133 |
-| Importing… (single-file flow) | Adding… | R/SourceImportDialog.tsx:99 |
-| Stop import (single-file flow) | Stop adding | R/SourceImportDialog.tsx:96 |
-| Add chapters to {title}… | Add chapters as sources… — {title} | R/reader-app-commands.ts:104 |
-| Find book by container ISBN… | Find book by ISBN | R/SourceAddDialog.tsx:304 |
-| Citekey | Citation key | R/CitationStructuredEditor.tsx:68 |
-| Copy citekey | Copy citation key | R/LibraryRowMenu.tsx:98 |
-| Reader could not generate a citekey. | Reader could not generate a citation key. | R/use-citation-editor.ts:371 |
-| citekey collision | citation key conflict | R/use-bibliography-export.ts:90 |
-| Open citation data | Open citation details | R/reader-command-list.ts:225 |
-| Field sources | Field evidence | R/CitationProvenance.tsx:23 |
-| Edit metadata | Edit citation details | M/citation-card.ts:50 |
-| Edit citation | Edit citation Markdown | M/citation-card.ts:65 |
-| CSL JSON citation metadata | CSL-JSON citation details | R/CitationEditor.tsx:141 |
+| Current string                                                                                 | Proposed string                                                                                   | File:line                                                                                  |
+| ---------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------ |
+| Comment (selection action / tooltip)                                                           | Comment on highlight / Comment on highlight (C)                                                   | R/SelectionToolbar.tsx:194–195                                                             |
+| Comment (source action)                                                                        | Add source comment                                                                                | R/AnnotationPanelActions.tsx:50                                                            |
+| Comment (`note` type label)                                                                    | Source comment                                                                                    | R/annotation-kind.ts:3                                                                     |
+| Comments on the source                                                                         | Source comments                                                                                   | R/AnnotationList.tsx:295                                                                   |
+| Comments (type filter)                                                                         | Source comments                                                                                   | R/LibraryAnnotationToolbar.tsx:225                                                         |
+| With commentary                                                                                | With comments                                                                                     | R/AnnotationList.tsx:292                                                                   |
+| New comment                                                                                    | New source comment                                                                                | R/AnnotationPanelActions.tsx:119                                                           |
+| Save comment                                                                                   | Save source comment                                                                               | R/AnnotationPanelActions.tsx:143                                                           |
+| Owner / Annotation owner                                                                       | Save to source                                                                                    | R/AnnotationOwnerChooser.tsx:32–34                                                         |
+| Owner:                                                                                         | Source:                                                                                           | R/AnnotationOwnerActions.tsx:54                                                            |
+| Move annotation                                                                                | Move annotation to source                                                                         | R/AnnotationOwnerActions.tsx:62                                                            |
+| Outside chapter range — still owned by this chapter                                            | Outside chapter range — still belongs to this chapter                                             | R/AnnotationOwnerActions.tsx:58                                                            |
+| Move to the book                                                                               | Move to {title}                                                                                   | R/AnnotationOwnerActions.tsx:92                                                            |
+| Save annotation owned by “{title}”?                                                            | Save annotation to “{title}”?                                                                     | R/use-annotation-owner.ts:165                                                              |
+| Owner chosen explicitly. Existing note embeds will not move.                                   | Source chosen. Existing note embeds will not move.                                                | R/use-annotation-owner.ts:122                                                              |
+| Your ownership setting keeps new annotations on the book.                                      | Your annotation setting keeps new annotations on the book.                                        | R/annotation-ownership.ts:54                                                               |
+| Chapter ranges overlap; choose an owner explicitly.                                            | Chapter ranges overlap; choose a source.                                                          | R/annotation-ownership.ts:75                                                               |
+| The chosen owner no longer exists. Choose an owner again.                                      | The chosen source no longer exists. Choose another source.                                        | R/use-annotation-owner.ts:171                                                              |
+| Delete? (confirmation)                                                                         | Delete highlight                                                                                  | R/SelectionToolbar.tsx:294                                                                 |
+| Delete (confirmation)                                                                          | Delete annotation                                                                                 | R/AnnotationEditor.tsx:253                                                                 |
+| annotation notes (removal warning)                                                             | annotations                                                                                       | R/SourceRemovalDialog.tsx:73                                                               |
+| Confirm and create chapters                                                                    | Create chapters                                                                                   | R/SourcePartCreation.tsx:117                                                               |
+| Confirm and create chapter                                                                     | Create chapter                                                                                    | R/SourceAddDialog.tsx:266                                                                  |
+| Literature note                                                                                | Source note                                                                                       | R/InspectorPane.tsx:147,152,171; R/workspace-tab-display.ts:9; R/reader-command-list.ts:98 |
+| Open literature note                                                                           | Open source note                                                                                  | R/reader-command-list.ts:217; R/WorkspacePaneSupport.tsx:74,121                            |
+| Literature note / Open literature note beside                                                  | Source note / Open source note beside                                                             | R/DocumentContextualToolbar.tsx:114,121                                                    |
+| Opening literature note…                                                                       | Opening source note…                                                                              | R/SourceNoteEditor.tsx:75,79,107                                                           |
+| Source literature note                                                                         | Source note                                                                                       | R/SourceNoteEditor.tsx:112                                                                 |
+| Add to literature note / In literature note                                                    | Insert into source note / In source note                                                          | R/AnnotationCard.tsx:240–241                                                               |
+| Searches literature notes and annotation text, not PDF, EPUB or saved-page contents.           | Searches source notes and annotation text, not PDF, EPUB or saved-page contents.                  | R/LibraryTextSearch.tsx:97                                                                 |
+| Library navigator                                                                              | Sources sidebar                                                                                   | R/LibraryNavigator.tsx:69                                                                  |
+| Toggle left sidebar (label / tooltip / command)                                                | Toggle Sources sidebar                                                                            | R/ReaderHeader.tsx:116,118; R/reader-command-list.ts:137                                   |
+| Toggle right sidebar (label / tooltip / command)                                               | Toggle Notes panel                                                                                | R/ReaderHeader.tsx:161,164; R/reader-command-list.ts:144                                   |
+| Annotations, literature note and citation                                                      | Annotations, source note and citation                                                             | R/reader-command-list.ts:145                                                               |
+| Search (header)                                                                                | Search and commands                                                                               | R/ReaderHeader.tsx:146                                                                     |
+| Duplicate in new pane right                                                                    | Open beside                                                                                       | R/reader-command-list.ts:172                                                               |
+| Duplicate in pane below                                                                        | Open below                                                                                        | R/reader-command-list.ts:179                                                               |
+| Only the page, with the chrome out of the way                                                  | Read the document with interface controls hidden                                                  | R/reader-command-list.ts:129                                                               |
+| Chapter / Filter annotations by chapter                                                        | Source / Filter annotations by source                                                             | R/AnnotationList.tsx:166,168                                                               |
+| All chapters and book                                                                          | All sources                                                                                       | R/AnnotationList.tsx:172                                                                   |
+| This annotation has no supported passage anchor. Its text and original metadata are preserved. | This annotation has no supported link to a passage. Its text and original metadata are preserved. | R/annotation-navigation.ts:19                                                              |
+| New area annotation / Save area                                                                | New area capture / Save area capture                                                              | R/AnnotationComposer.tsx:41,101                                                            |
+| Area (`area` type label)                                                                       | Area capture                                                                                      | R/annotation-kind.ts:3                                                                     |
+| Areas                                                                                          | Area captures                                                                                     | R/LibraryAnnotationToolbar.tsx:224                                                         |
+| Add source (entry action)                                                                      | Add source…                                                                                       | R/NavigatorSections.tsx:126; R/LibraryWorkspace.tsx:524–525                                |
+| Add a source (dialog heading)                                                                  | Add source                                                                                        | R/SourceAddDialog.tsx:100                                                                  |
+| Add (link submission)                                                                          | Add source                                                                                        | R/SourceAddDialog.tsx:133                                                                  |
+| Importing… (single-file flow)                                                                  | Adding…                                                                                           | R/SourceImportDialog.tsx:99                                                                |
+| Stop import (single-file flow)                                                                 | Stop adding                                                                                       | R/SourceImportDialog.tsx:96                                                                |
+| Add chapters to {title}…                                                                       | Add chapters as sources… — {title}                                                                | R/reader-app-commands.ts:104                                                               |
+| Find book by container ISBN…                                                                   | Find book by ISBN                                                                                 | R/SourceAddDialog.tsx:304                                                                  |
+| Citekey                                                                                        | Citation key                                                                                      | R/CitationStructuredEditor.tsx:68                                                          |
+| Copy citekey                                                                                   | Copy citation key                                                                                 | R/LibraryRowMenu.tsx:98                                                                    |
+| Reader could not generate a citekey.                                                           | Reader could not generate a citation key.                                                         | R/use-citation-editor.ts:371                                                               |
+| citekey collision                                                                              | citation key conflict                                                                             | R/use-bibliography-export.ts:90                                                            |
+| Open citation data                                                                             | Open citation details                                                                             | R/reader-command-list.ts:225                                                               |
+| Field sources                                                                                  | Field evidence                                                                                    | R/CitationProvenance.tsx:23                                                                |
+| Edit metadata                                                                                  | Edit citation details                                                                             | M/citation-card.ts:50                                                                      |
+| Edit citation                                                                                  | Edit citation Markdown                                                                            | M/citation-card.ts:65                                                                      |
+| CSL JSON citation metadata                                                                     | CSL-JSON citation details                                                                         | R/CitationEditor.tsx:141                                                                   |
 
 **Product-owner confirmation requested:** adopt Source note despite Literature note’s UI
 prevalence; retain Notes as the broader panel name; retain Remove source despite
