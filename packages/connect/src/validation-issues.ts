@@ -43,27 +43,36 @@ function ownValue(values: Readonly<Record<string, string>>, key: string): string
   return Object.hasOwn(values, key) ? values[key] : undefined;
 }
 
-function issueField(issue: ConnectValidationIssue): string | undefined {
-  // Problem.issues uses SDK Issue, not RecordValidation's richer ValidationIssue.
-  // Some producers include location metadata in details (a CBOR Map). Missing
-  // required properties may only be named in the schema diagnostic's message.
-  const details = issue.details;
+function schemaField(details: ConnectValidationIssue["details"]): string | undefined {
+  // The server sends only the failing schema keyword's location, e.g.
+  // `/properties/csl/properties/DOI/pattern`; its property names are schema-defined.
   const location =
     details instanceof Map
-      ? [...details].find(([key]) => key === "field" || key === "location" || key === "path")?.[1]
+      ? [...details].find(([key]) => key === "schema_location")?.[1]
       : undefined;
+  if (typeof location !== "string") {
+    return undefined;
+  }
+  const names = [...location.matchAll(/\/properties\/([^/]+)/g)].map((match) => match[1]);
+  return names.length > 0 ? names.join(".") : undefined;
+}
+
+function issueField(issue: ConnectValidationIssue): string | undefined {
+  // Problem.issues uses SDK Issue, not RecordValidation's richer ValidationIssue.
+  // A missing required property is named only in the diagnostic's message.
   const required =
     issue.code === "schema_required"
       ? /^(?:required property `([^`]+)` is missing|["'`]([^"'`]+)["'`] is a required property|["'`]?([\w.[\]-]+)["'`]? is required)\.?$/.exec(
           issue.message,
         )
       : null;
-  const field = required?.[1] ?? required?.[2] ?? required?.[3] ?? location;
+  const parent = schemaField(issue.details);
+  const leaf = required?.[1] ?? required?.[2] ?? required?.[3];
+  const field = leaf && parent ? `${parent}.${leaf}` : (leaf ?? parent);
   if (typeof field !== "string") {
     return undefined;
   }
-  const key = field.replace(/^\//, "").replaceAll("/", ".");
-  return /^[a-zA-Z_][\w.[\]-]{0,79}$/.test(key) ? key : undefined;
+  return /^[a-zA-Z_][\w.[\]-]{0,79}$/.test(field) ? field : undefined;
 }
 
 /** Never render arbitrary diagnostic messages/details: schema errors can quote

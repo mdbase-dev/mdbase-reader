@@ -73,7 +73,7 @@ describe("record validation rejections", () => {
         severity: "error",
         message: secret,
         details: new Map([
-          ["field", "title"],
+          ["schema_location", "/properties/title/type"],
           ["record", secret],
         ]),
       },
@@ -92,11 +92,17 @@ describe("record validation rejections", () => {
           code: "format_invalid",
           severity: "error",
           message: "private value",
-          details: new Map([["location", "/csl/DOI"]]),
+          details: new Map([["schema_location", "/properties/csl/properties/DOI/pattern"]]),
         },
         required("custom_key"),
+        {
+          ...required("status"),
+          details: new Map([["schema_location", "/properties/reading/required"]]),
+        },
       ]),
-    ).toBe("DOI does not match the required format; custom_key is required");
+    ).toBe(
+      "DOI does not match the required format; custom_key is required; Reading status is required",
+    );
   });
 
   it.each([undefined, [], [{ ...required("saved_at"), severity: "warning" as const }]])(
