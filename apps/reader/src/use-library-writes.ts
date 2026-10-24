@@ -53,12 +53,22 @@ export function useLibraryWrites(
     [onSourceChanged, saveStatus],
   );
   const setFields = useCallback(
-    (sources: readonly SourceSummary[], key: string, text: string, progress: Progress) =>
-      eachSource(sources, progress, async (source) => {
-        if (saveFields) {
-          onSourceChanged?.(await saveFields(source.id, { [key]: fieldValue(source, key, text) }));
-        }
-      }),
+    async (sources: readonly SourceSummary[], key: string, text: string, progress: Progress) => {
+      let changed = 0;
+      await eachSource(
+        sources,
+        (value) => progress({ ...value, changed }),
+        async (source) => {
+          const previous = propertyValue(source, key) ?? null;
+          const next = fieldValue(source, key, text);
+          if (saveFields && JSON.stringify(previous) !== JSON.stringify(next)) {
+            const saved = await saveFields(source.id, { [key]: next });
+            changed += 1;
+            onSourceChanged?.(saved);
+          }
+        },
+      );
+    },
     [fieldValue, onSourceChanged, saveFields],
   );
   const saveField = useCallback(

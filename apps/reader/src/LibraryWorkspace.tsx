@@ -668,6 +668,7 @@ export function LibraryWorkspace({
           {...(writes.setStatuses ? { onSetStatus: writes.setStatuses } : {})}
           {...(writes.setFields ? { onSetField: writes.setFields } : {})}
           propertyKeys={propertyKeys}
+          properties={view.properties}
           onOpen={(chosen) => {
             for (const source of chosen) {
               onOpenSource(source.id);
