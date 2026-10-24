@@ -13,6 +13,7 @@ import { createPortal } from "react-dom";
 
 import { selectRow, type RowSelection } from "./library-row-selection.js";
 import { readingStatusChoices, readingStatusLabel } from "./LibraryCells.js";
+import { supportsChapterCreation } from "./source-parts-features.js";
 
 import type { ReadingStatus, SourceId, SourceSummary } from "@mdbase-reader/core";
 
@@ -28,6 +29,8 @@ export interface LibraryRowMenuActions {
   readonly onChangeStatus?: (id: SourceId, status: ReadingStatus) => void;
   readonly onRename?: (source: SourceSummary) => void;
   readonly onExport?: (sources: readonly SourceSummary[]) => void;
+  /** Opens chapter creation for a PDF or EPUB book; absent when chapter creation is off. */
+  readonly onCreateChapters?: (source: SourceSummary) => void;
   /** Opens the removal confirmation; nothing is deleted from the menu itself. */
   readonly onRemove?: (source: SourceSummary) => void;
 }
@@ -98,6 +101,15 @@ export function LibraryRowMenu({
       {actions.onExport ? (
         <button type="button" role="menuitem" onClick={run(() => actions.onExport?.([source]))}>
           Export citation
+        </button>
+      ) : null}
+      {actions.onCreateChapters && supportsChapterCreation(source) ? (
+        <button
+          type="button"
+          role="menuitem"
+          onClick={run(() => actions.onCreateChapters?.(source), true)}
+        >
+          Add chapters as sources…
         </button>
       ) : null}
       {actions.onChangeStatus ? (

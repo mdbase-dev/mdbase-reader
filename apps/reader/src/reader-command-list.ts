@@ -2,6 +2,7 @@ import {
   annotationCommands,
   chapterCommands,
   displayCommands,
+  libraryChapterCommands,
   libraryCommands,
 } from "./reader-app-commands.js";
 
@@ -89,7 +90,7 @@ function navigationCommands(input: ReaderCommandInput): readonly ReaderCommand[]
       run: () => input.workspace.open(source.id),
       alternate: { label: "Open beside", run: () => input.workspace.openBeside(source.id) },
     }));
-  return [...openTabs, ...sourceCommands(input), ...sources];
+  return [...openTabs, ...sourceCommands(input), ...sources, ...libraryChapterCommands(input)];
 }
 
 function viewLabel(view: string): string {

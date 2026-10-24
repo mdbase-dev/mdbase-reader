@@ -21,6 +21,7 @@ import { libraryPartKey } from "./library-source-parts.js";
 import { useLibraryRowMenu, type LibraryRowMenuActions } from "./LibraryRowMenu.js";
 import { LibraryTableHead } from "./LibraryTableHead.js";
 import { LibraryTableRow, isEditableColumn } from "./LibraryTableRow.js";
+import { useSourcePartCreation } from "./SourcePartCreation.js";
 import { useLibraryColumns } from "./use-library-columns.js";
 import { hasModifier, useLongPress } from "./use-long-press.js";
 
@@ -84,6 +85,7 @@ export function LibraryTable(props: LibraryTableProps): JSX.Element {
   const focusRow = useRowFocus(gridRef);
   const press = useLongPress();
   const [editing, setEditing] = useState<EditingCell | null>(null);
+  const createChapters = useSourcePartCreation();
   const rowMenu = useLibraryRowMenu({
     sources,
     selection,
@@ -91,7 +93,11 @@ export function LibraryTable(props: LibraryTableProps): JSX.Element {
     gridRef,
     onSelectionChange,
     onClosed: focusRow,
-    actions: rowMenuActions(props, (source) => setEditing({ id: source.id, column: "title" })),
+    actions: rowMenuActions(
+      props,
+      (source) => setEditing({ id: source.id, column: "title" }),
+      createChapters,
+    ),
   });
   const sizes = layout.columns.map(
     (column) => table.getColumn(column)?.getSize() ?? defaultColumnWidth(column),
@@ -242,8 +248,10 @@ function startCellEdit(
 function rowMenuActions(
   props: LibraryTableProps,
   rename: (source: SourceSummary) => void,
+  createChapters: ((source: SourceSummary) => void) | null,
 ): LibraryRowMenuActions {
   return {
+    ...(createChapters ? { onCreateChapters: createChapters } : {}),
     onOpen: props.onOpen,
     onOpenBeside: props.onOpenBeside,
     ...(props.onChangeStatus ? { onChangeStatus: props.onChangeStatus } : {}),

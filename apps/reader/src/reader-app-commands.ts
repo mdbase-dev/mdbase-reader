@@ -67,6 +67,9 @@ export function displayCommands(input: ReaderCommandInput): readonly ReaderComma
   ];
 }
 
+const chapterKeywords = "book chapter parts pdf epub table of contents";
+
+/** Chapter creation for the current source, when it is a PDF or EPUB. */
 export function chapterCommands(input: ReaderCommandInput): readonly ReaderCommand[] {
   const source = input.activeSource;
   const create = input.createSourceParts;
@@ -77,11 +80,33 @@ export function chapterCommands(input: ReaderCommandInput): readonly ReaderComma
           label: "Add chapters as sources…",
           detail: source.title,
           group: "Current source",
-          keywords: "book chapter parts pdf epub table of contents",
+          keywords: chapterKeywords,
           run: () => create(source),
         },
       ]
     : [];
+}
+
+/**
+ * Without a current PDF or EPUB (the Library is focused, or nothing has been opened yet), each
+ * book in the library offers chapter creation instead. They sit with the sources, which the
+ * palette lists only for a search, so browsing is not crowded.
+ */
+export function libraryChapterCommands(input: ReaderCommandInput): readonly ReaderCommand[] {
+  const create = input.createSourceParts;
+  if (!create || (input.activeSource && supportsChapterCreation(input.activeSource))) {
+    return [];
+  }
+  return input.sources
+    .filter((source) => !source.partOf && supportsChapterCreation(source))
+    .map((source) => ({
+      id: `add-chapters-as-sources:${source.id}`,
+      label: `Add chapters to ${source.title}…`,
+      detail: "Book chapters as sources",
+      group: "Sources",
+      keywords: chapterKeywords,
+      run: () => create(source),
+    }));
 }
 
 export function annotationCommands(input: ReaderCommandInput): readonly ReaderCommand[] {

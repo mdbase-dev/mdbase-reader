@@ -9,11 +9,12 @@ const book = partSource("book");
 function input(
   activeSource: SourceSummary | null,
   createSourceParts: ReaderCommandInput["createSourceParts"],
+  sources: readonly SourceSummary[] = [book],
 ): ReaderCommandInput {
   return {
     activeSource,
     createSourceParts,
-    sources: [book],
+    sources,
     workspace: {
       layout: { panes: [{ id: "primary", tabs: [] }], focusedPaneId: "primary" },
       openSourceIds: [],
@@ -57,7 +58,7 @@ describe("current-source chapter command", () => {
     expect(chapterCommand(input(book, undefined))).toBeUndefined();
   });
 
-  it("hides the command without a current source or without a PDF/EPUB", () => {
+  it("hides the current-source command without a current source or without a PDF/EPUB", () => {
     expect(chapterCommand(input(null, vi.fn()))).toBeUndefined();
     expect(chapterCommand(input({ ...book, documents: [] }, vi.fn()))).toBeUndefined();
     expect(
@@ -71,5 +72,34 @@ describe("current-source chapter command", () => {
         ),
       ),
     ).toBeUndefined();
+  });
+
+  it("offers each library book when no current PDF/EPUB is focused, findable by “chap”", () => {
+    const chapter = partSource("chapter", "book");
+    const web = {
+      ...partSource("web"),
+      documents: book.documents.map((document) => ({ ...document, mediaType: "text/html" })),
+    };
+    const create = vi.fn();
+    for (const active of [null, web]) {
+      const commands = readerCommands(input(active, create, [book, chapter, web])).filter(
+        ({ id }) => id.startsWith("add-chapters-as-sources"),
+      );
+      expect(commands.map(({ id }) => id)).toEqual(["add-chapters-as-sources:book"]);
+      expect(commands[0]).toMatchObject({ label: "Add chapters to book…", group: "Sources" });
+      expect(commands[0]!.label.toLocaleLowerCase()).toContain("chap");
+      commands[0]!.run();
+      expect(create).toHaveBeenLastCalledWith(book);
+    }
+    expect(
+      readerCommands(input(book, create, [book, chapter])).filter(({ id }) =>
+        id.startsWith("add-chapters-as-sources"),
+      ),
+    ).toHaveLength(1);
+    expect(
+      readerCommands(input(null, null, [book])).some(({ id }) =>
+        id.startsWith("add-chapters-as-sources"),
+      ),
+    ).toBe(false);
   });
 });
