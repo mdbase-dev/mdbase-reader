@@ -9,7 +9,9 @@ import {
   matchTextQuote,
   sourceLink,
   textQuoteAt,
+  highlightColorKeys,
   type Annotation,
+  type HighlightColorKey,
   type AnnotationDeletionPlan,
   type AnnotationId,
   type DocumentDescriptor,
@@ -44,8 +46,9 @@ import { rememberSavedUrls } from "./saved-url-index.js";
 import type { PageCapture, PdfCapture, SelectedWebCapture } from "./page-capture.js";
 import type { ReaderConnectedCollection } from "@mdbase-reader/connect";
 
-export const highlightColors = ["yellow", "green", "blue", "pink", "purple"] as const;
-export type HighlightColor = (typeof highlightColors)[number];
+/** The Reader's palette keys, in its order, so a colour saved here reads the same there. */
+export const highlightColors = highlightColorKeys;
+export type HighlightColor = HighlightColorKey;
 
 export interface CaptureDraft {
   readonly title: string;

@@ -99,6 +99,27 @@ function removePendingAnnotation(current: AnnotationState, pending: Annotation):
   };
 }
 
+function replaceAnnotation(
+  setAnnotations: Dispatch<SetStateAction<AnnotationState>>,
+  annotation: Annotation,
+  updated: Annotation,
+): void {
+  setAnnotations((current) => {
+    if (current?.sourceId !== annotation.sourceId || current.value.status !== "ready") {
+      return current;
+    }
+    return {
+      sourceId: annotation.sourceId,
+      value: {
+        status: "ready",
+        value: current.value.value.map((candidate) =>
+          candidate.id === updated.id ? updated : candidate,
+        ),
+      },
+    };
+  });
+}
+
 export function useAnnotationUpdate(
   gateway: ReaderWorkspaceGateway,
   setAnnotations: Dispatch<SetStateAction<AnnotationState>>,
@@ -107,24 +128,31 @@ export function useAnnotationUpdate(
     async (annotation, body) => {
       const updated = await gateway.updateAnnotation(annotation, body);
       publishSharedAnnotation(gateway, annotation, updated);
-      setAnnotations((current) => {
-        if (current?.sourceId !== annotation.sourceId || current.value.status !== "ready") {
-          return current;
-        }
-        return {
-          sourceId: annotation.sourceId,
-          value: {
-            status: "ready",
-            value: current.value.value.map((candidate) =>
-              candidate.id === updated.id ? updated : candidate,
-            ),
-          },
-        };
-      });
+      replaceAnnotation(setAnnotations, annotation, updated);
       return updated;
     },
     [gateway, setAnnotations],
   );
+}
+
+/** Changes a highlight's colour, or undefined when the collection cannot. */
+export function useAnnotationRecolor(
+  gateway: ReaderWorkspaceGateway,
+  setAnnotations: Dispatch<SetStateAction<AnnotationState>>,
+): ((annotation: Annotation, color: string) => Promise<Annotation>) | undefined {
+  const recolor = useCallback(
+    async (annotation: Annotation, color: string): Promise<Annotation> => {
+      if (!gateway.setAnnotationColor) {
+        throw new Error("This collection cannot change highlight colours.");
+      }
+      const updated = await gateway.setAnnotationColor(annotation, color);
+      publishSharedAnnotation(gateway, annotation, updated);
+      replaceAnnotation(setAnnotations, annotation, updated);
+      return updated;
+    },
+    [gateway, setAnnotations],
+  );
+  return gateway.setAnnotationColor ? recolor : undefined;
 }
 
 export function useAnnotationDeletion(

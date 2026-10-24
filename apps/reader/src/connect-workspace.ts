@@ -708,6 +708,25 @@ export class ConnectWorkspaceGateway implements ReaderWorkspaceGateway {
     return updated;
   }
 
+  async setAnnotationColor(annotation: Annotation, color: string): Promise<Annotation> {
+    if (!this.annotationsRepository.updateColor) {
+      throw new Error("This collection cannot change highlight colours.");
+    }
+    const updated = await this.annotationsRepository.updateColor({
+      annotation,
+      color,
+      modifiedAt: this.runtime.clock.now(),
+    });
+    this.#annotationCacheEpoch += 1;
+    const current = this.#annotationsBySource.get(annotation.sourceId) ?? [];
+    this.#annotationsBySource.set(
+      annotation.sourceId,
+      current.map((candidate) => (candidate.id === updated.id ? updated : candidate)),
+    );
+    this.#annotationsChanged();
+    return updated;
+  }
+
   planAnnotationDeletion(annotation: Annotation): Promise<AnnotationDeletionPlan> {
     return planAnnotationDeletion(this.annotationsRepository, annotation);
   }

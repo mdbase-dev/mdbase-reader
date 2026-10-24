@@ -1,8 +1,8 @@
 import { PdfAnnotationBorderStyle, PdfAnnotationSubtype } from "@embedpdf/models";
-import { annotationId, collectionId, dateTime } from "@mdbase-reader/core";
+import { annotationId, collectionId, dateTime, highlightPalette } from "@mdbase-reader/core";
 import { describe, expect, it } from "vitest";
 
-import { annotationToPdfDecoration } from "./pdf-decoration.js";
+import { annotationToPdfDecoration, annotationToPdfMarginDecoration } from "./pdf-decoration.js";
 
 const annotation = {
   collectionId: collectionId("reading"),
@@ -37,6 +37,36 @@ describe("PDF annotation decorations", () => {
       rect: { origin: { x: 10, y: 20 }, size: { width: 30, height: 8 } },
       segmentRects: [{ origin: { x: 10, y: 20 }, size: { width: 30, height: 8 } }],
       flags: ["locked", "lockedContents"],
+    });
+  });
+
+  it("draws each palette colour with its light wash and margin ink", () => {
+    for (const key of ["yellow", "green", "blue", "pink", "purple"] as const) {
+      const colored = { ...annotation, color: key };
+      expect(annotationToPdfDecoration(colored)).toMatchObject({
+        strokeColor: highlightPalette[key].light.wash,
+        opacity: 1,
+      });
+      expect(annotationToPdfMarginDecoration(colored)).toMatchObject({
+        color: highlightPalette[key].light.ink,
+      });
+    }
+  });
+
+  it("draws a missing or unknown colour as yellow and keeps a stored hex colour", () => {
+    const yellow = highlightPalette.yellow.light.wash;
+    const uncoloured = Object.fromEntries(
+      Object.entries(annotation).filter(([key]) => key !== "color"),
+    ) as unknown as typeof annotation;
+    expect(annotationToPdfDecoration(uncoloured)).toMatchObject({
+      strokeColor: yellow,
+    });
+    expect(annotationToPdfDecoration({ ...annotation, color: "orange" })).toMatchObject({
+      strokeColor: yellow,
+    });
+    expect(annotationToPdfDecoration({ ...annotation, color: "#FF8800" })).toMatchObject({
+      strokeColor: "#ff8800",
+      opacity: 0.38,
     });
   });
 

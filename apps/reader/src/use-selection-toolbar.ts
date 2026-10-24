@@ -24,6 +24,8 @@ export interface SelectionToolbarController {
   readonly showSelection: (selection: TextComposerSelection) => void;
   readonly showAnnotation: (annotation: Annotation) => void;
   readonly hide: () => void;
+  /** Hides the toolbar only while it shows this annotation's actions. */
+  readonly hideAnnotation: (id: Annotation["id"]) => void;
 }
 
 // Matches the workspace's phone layout, where selection actions sit in the bottom bar.
@@ -44,6 +46,15 @@ export function useSelectionToolbar(surface: ReadingSurface | null): SelectionTo
     readonly state: SelectionToolbarState;
   } | null>(null);
   const hide = useCallback(() => setCurrent(null), []);
+  const hideAnnotation = useCallback(
+    (id: Annotation["id"]) =>
+      setCurrent((value) =>
+        value?.state.target.kind === "annotation" && value.state.target.annotation.id === id
+          ? null
+          : value,
+      ),
+    [],
+  );
   useEffect(() => {
     if (!surface) {
       return undefined;
@@ -80,5 +91,6 @@ export function useSelectionToolbar(surface: ReadingSurface | null): SelectionTo
       }
     },
     hide,
+    hideAnnotation,
   };
 }

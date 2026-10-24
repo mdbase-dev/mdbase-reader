@@ -7,7 +7,12 @@ import {
   watchSettledSelection,
 } from "@mdbase-reader/reading-surface";
 
-import { clearCssHighlights, setCssHighlight, setCssHighlights } from "./html-css-highlights.js";
+import {
+  activeAnnotationHighlight,
+  clearCssHighlights,
+  setAnnotationHighlights,
+  setCssHighlight,
+} from "./html-css-highlights.js";
 import { htmlDocumentText } from "./html-document.js";
 import { followEmbedderPalette } from "./html-palette.js";
 import { HtmlTargetLocator, htmlLocator, htmlSelectionDraft } from "./html-range.js";
@@ -203,15 +208,16 @@ export class HtmlDocumentRuntime {
       const range = annotation.target ? this.#targets.locate(annotation.target) : null;
       return range ? [{ annotation, range }] : [];
     });
-    setCssHighlights(
+    setAnnotationHighlights(
       this.#view,
-      this.#annotationRanges.map(({ range }) => range),
+      this.#annotationRanges.map(({ annotation, range }) => ({ color: annotation.color, range })),
     );
     this.#markers.set(
       this.#annotationRanges.map(({ annotation, range }) => ({
         id: annotation.id,
         range,
         hasNote: hasWrittenNote(annotation.body),
+        color: annotation.color,
       })),
     );
   }
@@ -222,7 +228,7 @@ export class HtmlDocumentRuntime {
 
   public setActiveAnnotation(annotation: Annotation | null): void {
     const range = annotation?.target ? this.#targets.locate(annotation.target) : null;
-    setCssHighlight(this.#view, "reader-active-annotation", range ? [range] : []);
+    setCssHighlight(this.#view, activeAnnotationHighlight, range ? [range] : []);
     this.#markers.setActive(range && annotation ? annotation.id : null);
   }
 

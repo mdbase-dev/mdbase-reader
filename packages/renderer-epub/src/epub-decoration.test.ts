@@ -1,8 +1,14 @@
-import { annotationId, collectionId, dateTime, sourceId } from "@mdbase-reader/core";
+import {
+  annotationId,
+  collectionId,
+  dateTime,
+  highlightPalette,
+  sourceId,
+} from "@mdbase-reader/core";
 import { Manifest, Publication } from "@readium/shared";
 import { describe, expect, it } from "vitest";
 
-import { annotationToEpubDecoration } from "./epub-decoration.js";
+import { annotationToEpubDecoration, epubHighlightTint } from "./epub-decoration.js";
 
 const baseUrl = "https://reader.test/__mdbase-reader/epub/current-session/";
 const manifest = Manifest.deserialize({
@@ -45,7 +51,7 @@ describe("annotationToEpubDecoration", () => {
         href: `${baseUrl}OEBPS/chapter.xhtml`,
         locations: { fragments: ["epubcfi(/6/4!/4/2:8)"] },
       },
-      style: { type: "highlight", tint: "#f2cf63" },
+      style: { type: "highlight", tint: highlightPalette.yellow.light.wash },
     });
   });
 
@@ -90,6 +96,25 @@ describe("annotationToEpubDecoration", () => {
       true,
     );
 
-    expect(active?.style).toMatchObject({ type: "highlightUnderline", tint: "#f2cf63" });
+    expect(active?.style).toMatchObject({
+      type: "highlightUnderline",
+      tint: highlightPalette.yellow.light.ink,
+    });
+  });
+});
+
+describe("epubHighlightTint", () => {
+  it("draws the five palette colours with the shared light wash and ink", () => {
+    for (const key of ["yellow", "green", "blue", "pink", "purple"] as const) {
+      expect(epubHighlightTint(key)).toBe(highlightPalette[key].light.wash);
+      expect(epubHighlightTint(key, true)).toBe(highlightPalette[key].light.ink);
+    }
+  });
+
+  it("draws missing and unknown colours as yellow and keeps hex colours", () => {
+    expect(epubHighlightTint(undefined)).toBe(highlightPalette.yellow.light.wash);
+    expect(epubHighlightTint("Orange")).toBe(highlightPalette.yellow.light.wash);
+    expect(epubHighlightTint("BLUE")).toBe(highlightPalette.blue.light.wash);
+    expect(epubHighlightTint("#12AB34")).toBe("#12ab34");
   });
 });

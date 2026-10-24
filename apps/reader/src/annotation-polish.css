@@ -26,7 +26,7 @@
 }
 .selection-toolbar:has(.annotation-owner-control) {
   flex-wrap: wrap;
-  max-width: min(380px, 100%);
+  max-width: min(480px, 100%);
 }
 .selection-toolbar > .annotation-owner-control {
   flex-basis: 100%;

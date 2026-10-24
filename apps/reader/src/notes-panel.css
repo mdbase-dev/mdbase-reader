@@ -392,13 +392,13 @@
   left: var(--sp-2);
   width: 3px;
   border-radius: 3px;
-  background: var(--ink-yellow);
+  background: var(--hl-ink, var(--ink-yellow));
 }
 
 /* The selected card and its passage share the wash, so the eye can match them. */
 .annotation-list .annotation-card.is-selected,
 .annotation-list .annotation-card.is-selected:hover {
-  background: color-mix(in srgb, var(--hl-yellow) 45%, var(--bg-surface));
+  background: color-mix(in srgb, var(--hl, var(--hl-yellow)) 45%, var(--bg-surface));
 }
 
 /* On the wash, secondary text steps up from text-3 to keep AA contrast in dark theme. */
@@ -412,7 +412,7 @@
 .annotation-list .annotation-card.is-editing,
 .annotation-list .annotation-card.is-editing:hover {
   margin-block: var(--sp-2);
-  background: color-mix(in srgb, var(--hl-yellow) 18%, var(--bg-surface));
+  background: color-mix(in srgb, var(--hl, var(--hl-yellow)) 18%, var(--bg-surface));
   cursor: default;
 }
 
@@ -488,8 +488,17 @@
   white-space: nowrap;
 }
 
-.annotation-meta .annotation-kind {
+.annotation-meta .annotation-kind,
+.annotation-meta .annotation-meaning {
   color: var(--text-2);
+}
+
+/* Changing a highlight's colour from the card's More menu. */
+.annotation-card-colors {
+  display: grid;
+  gap: var(--sp-1);
+  color: var(--text-2);
+  font-size: var(--text-xs);
 }
 
 .annotation-meta .annotation-draft-badge {

@@ -167,6 +167,12 @@ export interface AnnotationRepository {
     readonly body: string;
     readonly modifiedAt: DateTime;
   }): Promise<Annotation>;
+  /** The highlight colour only: preserve owner, target, selector, body and embeds. */
+  updateColor?(input: {
+    readonly annotation: Annotation;
+    readonly color: string;
+    readonly modifiedAt: DateTime;
+  }): Promise<Annotation>;
   /** Ownership only: preserve target, selector, body and explicit embeds. */
   moveOwner?(input: {
     readonly annotation: Annotation;

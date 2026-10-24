@@ -12,7 +12,7 @@ import type { AnnotationFileReader } from "./AnnotationImage.js";
 import type { AnnotationComposerController } from "./use-annotation-composer.js";
 import type { ReaderSourceWorkspaceController } from "./use-reader-workspace.js";
 import type { ReaderWorkspaceGateway } from "./workspace-model.js";
-import type { SourceId, SourceSummary } from "@mdbase-reader/core";
+import type { Annotation, HighlightColorKey, SourceId, SourceSummary } from "@mdbase-reader/core";
 
 const CitationEditor = lazyFeature(
   async () => ({ default: (await import("./CitationEditor.js")).CitationEditor }),
@@ -243,6 +243,7 @@ function AnnotationsTab({
               : undefined
           }
           owners={view?.sources}
+          onRecolor={recolorAnnotation(workspace.recolorAnnotation)}
           onMoveOwner={
             gateway.moveAnnotationOwner
               ? async (annotation, owner) => {
@@ -283,4 +284,14 @@ function AnnotationsTab({
       </AnnotationEditingContext>
     </div>
   );
+}
+
+function recolorAnnotation(
+  recolor: ReaderSourceWorkspaceController["recolorAnnotation"],
+): ((annotation: Annotation, color: HighlightColorKey) => Promise<void>) | undefined {
+  return recolor
+    ? async (annotation, color) => {
+        await recolor(annotation, color);
+      }
+    : undefined;
 }

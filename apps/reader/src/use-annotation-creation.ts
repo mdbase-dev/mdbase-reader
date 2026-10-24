@@ -9,12 +9,14 @@ import { useCreationSaving } from "./use-creation-saving.js";
 import { useSelectionRouting } from "./use-selection-routing.js";
 
 import type { ComposerSelection } from "./annotation-composer-request.js";
+import type { HighlightSaveTracker } from "./use-highlight-undo.js";
 import type { SelectionToolbarController, TextComposerSelection } from "./use-selection-toolbar.js";
 import type { ReaderWorkspaceGateway } from "./workspace-model.js";
 import type {
   SourceSummary,
   Annotation,
   AnnotationCreationRequest,
+  HighlightColorKey,
   Source,
   SourceId,
 } from "@mdbase-reader/core";
@@ -45,8 +47,8 @@ export interface AnnotationCreationController {
   readonly setNote: (note: string) => void;
   readonly dismiss: () => void;
   readonly save: () => void;
-  /** Saves a selection as a highlight at once, without a comment. */
-  readonly highlight: (selection: TextComposerSelection) => void;
+  /** Saves a selection as a highlight at once, in `color` or the colour used last. */
+  readonly highlight: (selection: TextComposerSelection, color?: HighlightColorKey) => void;
   /** Opens the composer to comment on a selection. */
   readonly comment: (selection: TextComposerSelection) => void;
   readonly toggleAreaSelection: () => void;
@@ -61,6 +63,7 @@ export function useAnnotationCreation(
   onSelection: () => void,
   toolbar: SelectionToolbarController,
   onCreated: (annotation: Annotation) => void,
+  trackHighlight?: (value: TextComposerSelection, color: HighlightColorKey) => HighlightSaveTracker,
 ): AnnotationCreationController {
   const { sourceId, source, surface } = input;
   const key = creationKey(source, surface);
@@ -77,6 +80,7 @@ export function useAnnotationCreation(
     buffer,
     create: ownership.create,
     onCreated,
+    ...(trackHighlight ? { trackHighlight } : {}),
     beforeHighlight: toolbar.hide,
   });
   const { busy, setProblem } = saving;

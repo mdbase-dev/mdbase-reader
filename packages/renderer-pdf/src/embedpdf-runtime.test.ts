@@ -1,4 +1,4 @@
-import { annotationId, collectionId, dateTime } from "@mdbase-reader/core";
+import { annotationId, collectionId, dateTime, highlightPalette } from "@mdbase-reader/core";
 import { describe, expect, it, vi } from "vitest";
 
 import { extractPdfDocumentText, textSelectionToDraft } from "./embedpdf-runtime.js";
@@ -228,7 +228,7 @@ describe("EmbedPDF saved-decoration synchronization", () => {
     controller.setAnnotations([{ ...savedHighlight, color: "blue" }]);
     expect(fixture.syncAnnotationObject).toHaveBeenCalledWith(
       "mdbase-reader:ann-1",
-      expect.objectContaining({ strokeColor: "#7bb7e8" }),
+      expect.objectContaining({ strokeColor: highlightPalette.blue.light.wash }),
     );
 
     controller.setAnnotations([]);

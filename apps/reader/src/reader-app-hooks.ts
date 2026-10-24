@@ -254,5 +254,6 @@ export function useReaderAnnotationComposer(
     annotations: workspace.annotations.status === "ready" ? workspace.annotations.value : [],
     planDeletion: workspace.planAnnotationDeletion,
     deleteAnnotation: workspace.deleteAnnotation,
+    recolorAnnotation: workspace.recolorAnnotation,
   });
 }

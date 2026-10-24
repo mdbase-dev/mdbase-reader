@@ -1,10 +1,14 @@
+import { highlightColorKeys } from "@mdbase-reader/core";
 import { useId, useMemo, type JSX } from "react";
 
 import {
+  annotationMatchesColor,
   searchAnnotationIndex,
+  type AnnotationColorFilter,
   type AnnotationFilter,
   type indexAnnotations,
 } from "./annotation-list-order.js";
+import { highlightColorName, useHighlightMeanings } from "./highlight-colors.js";
 import { FilterIcon } from "./icons.js";
 import { Menu } from "./Menu.js";
 
@@ -18,19 +22,23 @@ export interface AnnotationView {
   readonly order: AnnotationOrder;
   /** A source id, or "" for every source in the panel. */
   readonly source: string;
+  /** A highlight colour, or "" for every colour. */
+  readonly color: AnnotationColorFilter;
 }
 
 export const defaultAnnotationView: AnnotationView = {
   filter: "all",
   order: "document",
   source: "",
+  color: "",
 };
 
 export function annotationViewIsDefault(view: AnnotationView): boolean {
   return (
     view.filter === defaultAnnotationView.filter &&
     view.order === defaultAnnotationView.order &&
-    view.source === defaultAnnotationView.source
+    view.source === defaultAnnotationView.source &&
+    view.color === defaultAnnotationView.color
   );
 }
 
@@ -103,6 +111,7 @@ export function AnnotationFilterMenu({
           value={view.filter}
           onChange={(filter) => onViewChange({ ...view, filter })}
         />
+        <ColorChoices view={view} onViewChange={onViewChange} scoped={scoped} />
         {owners && owners.length > 1 ? (
           <label className="annotation-filter-source">
             <span className="menu-label">Source</span>
@@ -148,6 +157,53 @@ export function AnnotationFilterMenu({
         />
       </div>
     </Menu>
+  );
+}
+
+/**
+ * The Colour choices, named by what each colour means to this reader. Counts follow the chosen
+ * type, so each colour shows what choosing it gives. Hidden while nothing has a colour.
+ */
+function ColorChoices({
+  view,
+  onViewChange,
+  scoped,
+}: {
+  readonly view: AnnotationView;
+  readonly onViewChange: (view: AnnotationView) => void;
+  readonly scoped: ReturnType<typeof indexAnnotations>;
+}): JSX.Element | null {
+  const meanings = useHighlightMeanings();
+  const counts = useMemo(() => {
+    const shown = searchAnnotationIndex(scoped, "", view.filter);
+    return new Map(
+      highlightColorKeys.map((color) => [
+        color,
+        shown.filter((annotation) => annotationMatchesColor(annotation, color)).length,
+      ]),
+    );
+  }, [scoped, view.filter]);
+  const any = [...counts.values()].reduce((total, count) => total + count, 0);
+  if (!any && !view.color) {
+    return null;
+  }
+  return (
+    <>
+      <hr />
+      <RadioChoices<AnnotationColorFilter>
+        label="Colour"
+        choices={[
+          { value: "", label: "Any colour" },
+          ...highlightColorKeys.map((color) => ({
+            value: color,
+            label: highlightColorName(color, meanings),
+            count: counts.get(color) ?? 0,
+          })),
+        ]}
+        value={view.color}
+        onChange={(color) => onViewChange({ ...view, color })}
+      />
+    </>
   );
 }
 

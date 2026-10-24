@@ -1,14 +1,16 @@
-import { sourceLink } from "@mdbase-reader/core";
+import {
+  defaultHighlightColor,
+  sourceLink,
+  type AnnotationCreationRequest,
+  type HighlightColorKey,
+  type Locator,
+  type PdfQuadPoints,
+  type ReadingPosition,
+  type Source,
+} from "@mdbase-reader/core";
 
 import { humanPassageLabel } from "./passage-labels.js";
 
-import type {
-  AnnotationCreationRequest,
-  Locator,
-  PdfQuadPoints,
-  ReadingPosition,
-  Source,
-} from "@mdbase-reader/core";
 import type {
   AreaSelectionDraft,
   ReaderLocator,
@@ -29,14 +31,16 @@ export function prepareAnnotationSelection(selection: ComposerSelection): void {
   }
 }
 
+/** A text selection saves as a highlight in `color`, a palette key; area captures have none. */
 export async function annotationRequest(
   source: Source,
   surface: ReadingSurface,
   selection: ComposerSelection,
   note: string,
+  color: HighlightColorKey = defaultHighlightColor,
 ): Promise<AnnotationCreationRequest> {
   if (selection.kind === "text") {
-    return textAnnotationRequest(source, surface, selection.value, note);
+    return textAnnotationRequest(source, surface, selection.value, note, color);
   }
   return areaAnnotationRequest(source, surface, selection.value, note);
 }
@@ -129,12 +133,13 @@ function textAnnotationRequest(
   surface: ReadingSurface,
   selection: TextSelectionDraft,
   note: string,
+  color: HighlightColorKey,
 ): AnnotationCreationRequest {
   return {
     ...annotationIdentity(source, surface),
     annotationType: "highlight",
     motivation: note.trim() ? "commenting" : "highlighting",
-    color: "yellow",
+    color,
     locator: locatorLabel(selection.locator),
     target: selection.target,
     tags: [],

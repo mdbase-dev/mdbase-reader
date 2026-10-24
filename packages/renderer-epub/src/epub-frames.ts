@@ -203,7 +203,14 @@ export class EpubFrameEnhancements {
         const quote = annotation.target?.epub ? annotation.target.quote : undefined;
         const range = quote ? locateTextQuote(document.body, quote) : null;
         return range
-          ? [{ id: annotation.id, range, hasNote: hasWrittenNote(annotation.body) }]
+          ? [
+              {
+                id: annotation.id,
+                range,
+                hasNote: hasWrittenNote(annotation.body),
+                color: annotation.color,
+              },
+            ]
           : [];
       }),
     );

@@ -12,6 +12,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { browseAnnotations } from "./annotation-list-order.js";
 import { AnnotationList } from "./AnnotationList.js";
+import { setHighlightMeaning } from "./highlight-colors.js";
 
 import type * as TanstackVirtual from "@tanstack/react-virtual";
 
@@ -279,36 +280,36 @@ function switchNamed(element: HTMLElement, name: string): HTMLButtonElement {
   )!;
 }
 
-describe("annotation Filter menu", () => {
-  const kinds: Annotation[] = [
-    { ...annotations[0]!, id: annotationId("highlight"), annotationType: "highlight" },
-    { ...annotations[1]!, id: annotationId("bookmark"), annotationType: "bookmark" },
-    { ...annotations[2]!, id: annotationId("comment"), annotationType: "note" },
-  ];
-  async function mount(element: JSX.Element): Promise<HTMLDivElement> {
-    host = document.createElement("div");
-    document.body.append(host);
-    root = createRoot(host);
-    await act(async () => {
-      root!.render(element);
-      await Promise.resolve();
-    });
-    return host;
-  }
-  const renderKinds = (): Promise<HTMLDivElement> =>
-    mount(
-      <AnnotationList
-        {...props}
-        annotations={{ status: "ready", value: kinds }}
-        addMenu={<button type="button">Add</button>}
-      />,
-    );
-  function choice(element: HTMLElement, label: string): HTMLButtonElement {
-    return [...element.querySelectorAll<HTMLButtonElement>(".annotation-filter-choice")].find(
-      (button) => button.textContent.startsWith(label),
-    )!;
-  }
+const kinds: Annotation[] = [
+  { ...annotations[0]!, id: annotationId("highlight"), annotationType: "highlight" },
+  { ...annotations[1]!, id: annotationId("bookmark"), annotationType: "bookmark" },
+  { ...annotations[2]!, id: annotationId("comment"), annotationType: "note" },
+];
+async function mount(element: JSX.Element): Promise<HTMLDivElement> {
+  host = document.createElement("div");
+  document.body.append(host);
+  root = createRoot(host);
+  await act(async () => {
+    root!.render(element);
+    await Promise.resolve();
+  });
+  return host;
+}
+const renderKinds = (): Promise<HTMLDivElement> =>
+  mount(
+    <AnnotationList
+      {...props}
+      annotations={{ status: "ready", value: kinds }}
+      addMenu={<button type="button">Add</button>}
+    />,
+  );
+function choice(element: HTMLElement, label: string): HTMLButtonElement {
+  return [...element.querySelectorAll<HTMLButtonElement>(".annotation-filter-choice")].find(
+    (button) => button.textContent.startsWith(label),
+  )!;
+}
 
+describe("annotation Filter menu", () => {
   it("puts search, one Filter menu and Add in a single control row", async () => {
     const element = await renderKinds();
     const row = element.querySelector(".annotation-tools")!;
@@ -323,7 +324,11 @@ describe("annotation Filter menu", () => {
   it("offers Show and Order as radio groups with arrow keys and one tab stop", async () => {
     const element = await renderKinds();
     const groups = [...element.querySelectorAll('[role="radiogroup"]')];
-    expect(groups.map((group) => group.textContent.startsWith("Show"))).toEqual([true, false]);
+    expect(groups.map((group) => group.querySelector(".menu-label")?.textContent)).toEqual([
+      "Show",
+      "Colour",
+      "Order",
+    ]);
     const all = choice(element, "All annotations");
     expect(all.getAttribute("role")).toBe("radio");
     expect(
@@ -364,6 +369,56 @@ describe("annotation Filter menu", () => {
     });
     expect(element.querySelectorAll("[data-annotation-id]")).toHaveLength(3);
     expect(trigger.classList.contains("is-changed")).toBe(false);
+  });
+});
+
+describe("annotation Filter menu colours and order", () => {
+  it("filters by colour, named by meaning, and clears back to any colour", async () => {
+    virtual.endIndex = 10;
+    setHighlightMeaning("green", "Evidence");
+    const element = await mount(
+      <AnnotationList
+        {...props}
+        annotations={{
+          status: "ready",
+          value: [
+            { ...kinds[0]!, id: annotationId("yellow") },
+            { ...kinds[0]!, id: annotationId("green"), color: "green" },
+            { ...kinds[0]!, id: annotationId("unknown"), color: "Orange" },
+            { ...kinds[0]!, id: annotationId("hex"), color: "#ff8800" },
+            kinds[1]!,
+          ],
+        }}
+      />,
+    );
+    expect(choice(element, "Yellow").textContent).toBe("Yellow2");
+    expect(choice(element, "Green — Evidence").textContent).toBe("Green — Evidence1");
+    await act(async () => {
+      choice(element, "Green — Evidence").click();
+      await Promise.resolve();
+    });
+    expect(
+      [...element.querySelectorAll("[data-annotation-id]")].map((card) =>
+        card.getAttribute("data-annotation-id"),
+      ),
+    ).toEqual(["green"]);
+    expect(element.querySelector('[role="status"]')?.textContent).toContain("1 of 5");
+    await act(async () => {
+      [...element.querySelectorAll<HTMLButtonElement>("button")]
+        .find((button) => button.textContent === "Clear")!
+        .click();
+      await Promise.resolve();
+    });
+    expect(element.querySelectorAll("[data-annotation-id]")).toHaveLength(5);
+    expect(choice(element, "Any colour").getAttribute("aria-checked")).toBe("true");
+    setHighlightMeaning("green", "");
+  });
+
+  it("hides the Colour choices when nothing has a colour", async () => {
+    const element = await mount(
+      <AnnotationList {...props} annotations={{ status: "ready", value: [kinds[1]!] }} />,
+    );
+    expect(element.textContent).not.toContain("Any colour");
   });
 
   it("changes order from the same menu and keeps it open while choosing", async () => {

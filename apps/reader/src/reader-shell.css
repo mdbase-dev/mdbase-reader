@@ -226,6 +226,40 @@
   font-weight: 600;
 }
 
+/* Naming what each highlight colour means. */
+.highlight-meaning {
+  clear: both;
+  display: grid;
+  grid-template-columns: 12px 4.5em minmax(0, 1fr);
+  align-items: center;
+  gap: 8px;
+  color: var(--text-2);
+  font-size: var(--ui-meta);
+}
+
+.highlight-meaning > i {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: var(--hl-ink);
+  box-shadow: inset 0 0 0 1px color-mix(in oklch, var(--text-1) 12%, transparent);
+}
+
+.highlight-meaning > input {
+  min-width: 0;
+  height: 26px;
+  padding: 0 8px;
+  border: 1px solid var(--line);
+  border-radius: var(--ui-radius);
+  background: var(--bg-sunken, transparent);
+  color: var(--text-1);
+  font: inherit;
+}
+
+.highlight-meaning > input::placeholder {
+  color: var(--text-3);
+}
+
 .segmented-control {
   clear: both;
   display: flex;
@@ -420,6 +454,10 @@
 
 .header-display-menu .reader-menu-panel {
   min-width: 280px;
+  /* The highlight colour fields make the panel taller than a laptop window. */
+  max-height: calc(100dvh - 64px);
+  overflow-y: auto;
+  overscroll-behavior: contain;
 }
 
 .reader-header .header-reading-mode svg {
@@ -1919,7 +1957,7 @@
 }
 
 [role="gridcell"].annotation-kind.is-highlight::before {
-  background: var(--ink-yellow);
+  background: var(--hl-ink, var(--ink-yellow));
 }
 
 [role="gridcell"].annotation-kind.is-note::before {
@@ -2270,6 +2308,27 @@
 }
 .mobile-source-views.is-selection .selection-toolbar-divider {
   display: none;
+}
+/* The colours float just above the bar, so the bar keeps its height and its labelled actions
+   keep their width; each swatch is a full touch target. */
+.mobile-source-views.is-selection .highlight-swatches {
+  position: absolute;
+  bottom: calc(100% + 8px);
+  left: 50%;
+  padding: 2px 4px;
+  border-radius: var(--r-full);
+  background: var(--bg-raised);
+  box-shadow: var(--e-2);
+  transform: translateX(-50%);
+}
+.mobile-source-views.is-selection .highlight-swatch {
+  width: 44px;
+  height: 44px;
+  border-radius: var(--r-full);
+}
+.mobile-source-views.is-selection .highlight-swatch > i {
+  width: 24px;
+  height: 24px;
 }
 .mobile-source-views.is-selection .selection-toolbar-status {
   position: absolute;
@@ -3504,13 +3563,203 @@
   align-items: center;
   gap: 2px;
   padding: 4px;
-  border-radius: 8px;
-  background: var(--paper);
-  box-shadow:
-    0 10px 28px -12px color-mix(in oklch, var(--ink) 40%, transparent),
-    0 0 0 1px var(--line);
+  border-radius: var(--r-lg);
+  background: var(--bg-raised);
+  box-shadow: var(--e-2);
+  color: var(--text-1);
   pointer-events: auto;
   white-space: nowrap;
+}
+
+/* Each highlight colour names its wash and ink for whatever carries it: a swatch, a card, the
+   sweep after saving. A colour from another app sets the two inline instead. */
+[data-highlight-color] {
+  --hl: var(--hl-yellow);
+  --hl-ink: var(--ink-yellow);
+}
+[data-highlight-color="green"] {
+  --hl: var(--hl-green);
+  --hl-ink: var(--ink-green);
+}
+[data-highlight-color="blue"] {
+  --hl: var(--hl-blue);
+  --hl-ink: var(--ink-blue);
+}
+[data-highlight-color="pink"] {
+  --hl: var(--hl-pink);
+  --hl-ink: var(--ink-pink);
+}
+[data-highlight-color="purple"] {
+  --hl: var(--hl-purple);
+  --hl-ink: var(--ink-purple);
+}
+
+.highlight-swatches {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.highlight-swatch {
+  display: inline-grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  border: 0;
+  border-radius: var(--r-md);
+  background: transparent;
+  cursor: pointer;
+}
+
+.highlight-swatch > i {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: var(--hl-ink);
+  /* The inner ring keeps the lightest inks visible on the raised surface. */
+  box-shadow: inset 0 0 0 1px color-mix(in oklch, var(--text-1) 12%, transparent);
+}
+
+.highlight-swatch.is-ringed > i {
+  box-shadow:
+    inset 0 0 0 1px color-mix(in oklch, var(--text-1) 12%, transparent),
+    0 0 0 2px var(--bg-raised),
+    0 0 0 3.5px var(--text-1);
+}
+
+.highlight-swatch:hover:not(:disabled),
+.highlight-swatch:focus-visible {
+  background: var(--bg-hover);
+}
+
+.highlight-swatch:disabled {
+  cursor: default;
+  opacity: 0.45;
+}
+
+@media (forced-colors: active) {
+  .highlight-swatch > i {
+    forced-color-adjust: none;
+    border: 1px solid CanvasText;
+  }
+  .highlight-swatch.is-ringed > i {
+    outline: 2px solid Highlight;
+    outline-offset: 2px;
+  }
+}
+
+/* The ink sweep and "Highlight saved · Undo" after a quick highlight. */
+.highlight-saved-layer {
+  position: absolute;
+  inset: 0;
+  z-index: 9;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  padding: 14px;
+  pointer-events: none;
+}
+
+.highlight-sweep {
+  position: absolute;
+  border-radius: 2px;
+  background: linear-gradient(var(--hl), var(--hl)) no-repeat 0 0 / 0% 100%;
+  mix-blend-mode: multiply;
+  animation:
+    highlight-sweep 260ms var(--ease-out, ease-out) forwards,
+    highlight-sweep-settle 420ms ease 260ms forwards;
+}
+
+:root[data-theme="dark"] .highlight-sweep {
+  mix-blend-mode: normal;
+  opacity: 0.85;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme]) .highlight-sweep {
+    mix-blend-mode: normal;
+    opacity: 0.85;
+  }
+}
+
+@keyframes highlight-sweep {
+  to {
+    background-size: 100% 100%;
+  }
+}
+
+@keyframes highlight-sweep-settle {
+  to {
+    opacity: 0;
+  }
+}
+
+.highlight-saved {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  height: 30px;
+  padding: 0 4px 0 8px;
+  border-radius: var(--r-full);
+  background: var(--bg-raised);
+  box-shadow: var(--e-2);
+  color: var(--text-2);
+  font-size: var(--text-xs);
+  pointer-events: auto;
+}
+
+.highlight-saved.is-anchored {
+  position: absolute;
+}
+
+.highlight-saved-message {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.highlight-saved-check {
+  display: inline-grid;
+  place-items: center;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: var(--success);
+  color: var(--bg-surface);
+}
+
+.highlight-saved-check svg {
+  width: 11px;
+  height: 11px;
+}
+
+.highlight-saved > button {
+  height: 24px;
+  padding: 0 10px;
+  border: 0;
+  border-radius: var(--r-full);
+  background: transparent;
+  color: var(--accent);
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.highlight-saved > button:hover:not(:disabled),
+.highlight-saved > button:focus-visible {
+  background: var(--bg-hover);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .highlight-saved {
+    animation: composer-appear 160ms var(--ease) both;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .highlight-sweep {
+    display: none;
+  }
 }
 
 .selection-toolbar-layer.is-anchored > .selection-toolbar {

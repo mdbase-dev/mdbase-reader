@@ -146,6 +146,8 @@ export interface ReaderWorkspaceGateway {
   ): Promise<Source>;
   createAnnotation(request: AnnotationCreationRequest): Promise<Annotation>;
   updateAnnotation(annotation: Annotation, body: string): Promise<Annotation>;
+  /** Changes a highlight's colour, guarded by its revision; body and target are untouched. */
+  setAnnotationColor?(annotation: Annotation, color: string): Promise<Annotation>;
   refreshAnnotation?(annotation: Annotation): Promise<Annotation | null>;
   planAnnotationDeletion(annotation: Annotation): Promise<AnnotationDeletionPlan>;
   deleteAnnotation(annotation: Annotation, plan: AnnotationDeletionPlan): Promise<void>;

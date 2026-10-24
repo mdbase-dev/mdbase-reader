@@ -232,6 +232,27 @@ export class ConnectAnnotationRepository implements AnnotationRepository {
     return this.#map(annotation.collectionId, result, annotation.sourceId);
   }
 
+  async updateColor(
+    input: Parameters<NonNullable<AnnotationRepository["updateColor"]>>[0],
+  ): Promise<Annotation> {
+    const { annotation, color, modifiedAt } = input;
+    if (!annotation.path || !annotation.recordRevision) {
+      throw new Error("An annotation path and revision are required for changing its colour.");
+    }
+    const result = outcomeValue(
+      await this.client.update({
+        path: annotation.path,
+        ifRevision: annotation.recordRevision,
+        patch: { color, modified_at: modifiedAt },
+        includeDocument: true,
+      }),
+      "change annotation colour",
+    );
+    this.#records.put(result);
+    // The revision check guarantees the source link is the one already resolved.
+    return this.#map(annotation.collectionId, result, annotation.sourceId);
+  }
+
   async moveOwner(
     input: Parameters<NonNullable<AnnotationRepository["moveOwner"]>>[0],
   ): Promise<Annotation> {

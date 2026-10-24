@@ -23,6 +23,7 @@ export * from "./domain/csl-provenance.js";
 export * from "./domain/citation-quality.js";
 export * from "./domain/document.js";
 export * from "./domain/errors.js";
+export * from "./domain/highlight-color.js";
 export * from "./domain/identity.js";
 export * from "./domain/revision.js";
 export type * from "./domain/search.js";

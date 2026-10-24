@@ -1,5 +1,7 @@
-import { useCallback, useState } from "react";
+import { signalMdbaseMark } from "@mdbase-dev/ui/mark-activity";
+import { useCallback, useMemo, useState } from "react";
 
+import { readerErrorMessage } from "./errors.js";
 import { useAnnotationActivations } from "./use-annotation-activations.js";
 import {
   useAnnotationCreation,
@@ -8,12 +10,18 @@ import {
 } from "./use-annotation-creation.js";
 import { useAnnotationNavigation } from "./use-annotation-navigation.js";
 import { useBookmarkAction } from "./use-bookmark-action.js";
+import { useHighlightUndo, type SavedHighlight } from "./use-highlight-undo.js";
 import { useReadingAnnotation } from "./use-reading-annotation.js";
 import { useSelectionAnchor } from "./use-selection-anchor.js";
 import { useSelectionToolbar, type SelectionToolbarState } from "./use-selection-toolbar.js";
 
 import type { QuoteCitation } from "./selection-copy.js";
-import type { Annotation, AnnotationDeletionPlan, AnnotationId } from "@mdbase-reader/core";
+import type {
+  Annotation,
+  AnnotationDeletionPlan,
+  AnnotationId,
+  HighlightColorKey,
+} from "@mdbase-reader/core";
 import type { ViewportRect } from "@mdbase-reader/reading-surface";
 export { saveSelection, subscribeToSelections } from "./annotation-selection.js";
 export type { ComposerSelection } from "./annotation-composer-request.js";
@@ -43,10 +51,18 @@ export interface AnnotationComposerController extends Omit<AnnotationCreationCon
   readonly canBookmark: boolean;
   readonly bookmarking: boolean;
   readonly bookmark: () => void;
+  /** The quick highlight just made, for its confirmation and Undo. */
+  readonly savedHighlight: SavedHighlight | null;
+  readonly undoSavedHighlight: () => void;
+  readonly dismissSavedHighlight: () => void;
+  /** Gives a highlight another colour; absent when the collection cannot. */
+  readonly recolor?: ((annotation: Annotation, color: HighlightColorKey) => void) | undefined;
 }
 export function useAnnotationComposer(
   input: AnnotationCreationInput & {
     readonly annotations: readonly Annotation[];
+    readonly recolorAnnotation?:
+      ((annotation: Annotation, color: string) => Promise<Annotation>) | undefined;
     readonly planDeletion: (annotation: Annotation) => Promise<AnnotationDeletionPlan>;
     readonly deleteAnnotation: (
       annotation: Annotation,
@@ -73,7 +89,29 @@ export function useAnnotationComposer(
     setEditingId(null);
   };
   const toolbar = useSelectionToolbar(surface);
-  const creation = useAnnotationCreation(input, resetSelection, toolbar, select);
+  const { planDeletion, deleteAnnotation } = input;
+  const hideToolbar = toolbar.hide;
+  const hideAnnotationToolbar = toolbar.hideAnnotation;
+  const remove = useCallback(
+    async (annotation: Annotation): Promise<readonly string[]> => {
+      const plan = await planDeletion(annotation);
+      if (plan.brokenLinkPaths.length > 0) {
+        return plan.brokenLinkPaths;
+      }
+      await deleteAnnotation(annotation, plan);
+      // The reader may have moved on to another highlight meanwhile; leave that one be.
+      hideAnnotationToolbar(annotation.id);
+      setActiveId((id) => (id === annotation.id ? null : id));
+      return [];
+    },
+    [planDeletion, deleteAnnotation, hideAnnotationToolbar],
+  );
+  const undoScope = useMemo(() => [sourceId, surface] as const, [sourceId, surface]);
+  const undo = useHighlightUndo({ annotations, scope: undoScope, remove });
+  const creation = useAnnotationCreation(input, resetSelection, toolbar, select, (value, color) =>
+    undo.trackHighlight(color, value.value.anchor ?? toolbar.state?.rect ?? null),
+  );
+  const recolor = useComposerRecolor(input.recolorAnnotation, hideToolbar);
   const bookmark = useBookmarkAction({
     ...input,
     create: creation.createOwned ?? input.create,
@@ -99,7 +137,7 @@ export function useAnnotationComposer(
   const selectionAnchor = anchor && creation.selection?.value === anchor.draft ? anchor.rect : null;
   return {
     ...creation,
-    error: navigation.error ?? creation.error ?? bookmark.problem,
+    error: navigation.error ?? creation.error ?? bookmark.problem ?? recolor.error,
     canOpenAnnotation: surface !== null,
     activeAnnotationId: currentId(activeId),
     readingAnnotationId,
@@ -112,16 +150,11 @@ export function useAnnotationComposer(
     quoteCitation: source
       ? { title: source.title, ...(source.citation?.id ? { citekey: source.citation.id } : {}) }
       : null,
-    remove: async (annotation) => {
-      const plan = await input.planDeletion(annotation);
-      if (plan.brokenLinkPaths.length > 0) {
-        return plan.brokenLinkPaths;
-      }
-      await input.deleteAnnotation(annotation, plan);
-      toolbar.hide();
-      setActiveId(null);
-      return [];
-    },
+    remove,
+    savedHighlight: undo.savedHighlight,
+    undoSavedHighlight: undo.undoSavedHighlight,
+    dismissSavedHighlight: undo.dismissSavedHighlight,
+    ...(recolor.recolor ? { recolor: recolor.recolor } : {}),
     open: (annotation) => {
       setActiveId(annotation.id);
       navigation.open(annotation);
@@ -138,6 +171,30 @@ export function useAnnotationComposer(
       ? () => {
           setEditingId(null);
           creation.resumeDraft?.();
+        }
+      : null,
+  };
+}
+
+/** Changing a clicked highlight's colour closes its toolbar; a failure is reported in place. */
+function useComposerRecolor(
+  recolorAnnotation: ((annotation: Annotation, color: string) => Promise<Annotation>) | undefined,
+  hideToolbar: () => void,
+): {
+  readonly recolor: ((annotation: Annotation, color: HighlightColorKey) => void) | null;
+  readonly error: string | null;
+} {
+  const [error, setError] = useState<string | null>(null);
+  return {
+    error,
+    recolor: recolorAnnotation
+      ? (annotation, color) => {
+          hideToolbar();
+          setError(null);
+          void recolorAnnotation(annotation, color).catch((reason: unknown) => {
+            signalMdbaseMark("error");
+            setError(readerErrorMessage(reason, "Reader could not change its colour."));
+          });
         }
       : null,
   };

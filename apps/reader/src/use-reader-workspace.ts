@@ -21,6 +21,7 @@ import { useSourceFields, type SourceFieldsController } from "./use-source-field
 import {
   useAnnotationCreation,
   useAnnotationDeletion,
+  useAnnotationRecolor,
   useAnnotationUpdate,
   useReadingPositionSave,
 } from "./use-workspace-mutations.js";
@@ -65,6 +66,9 @@ export interface ReaderSourceWorkspaceController {
   readonly saveDraft: () => void;
   readonly createAnnotation: (request: AnnotationCreationRequest) => Promise<Annotation>;
   readonly updateAnnotation: (annotation: Annotation, body: string) => Promise<Annotation>;
+  /** Changes a highlight's colour; absent when the collection cannot. */
+  readonly recolorAnnotation?:
+    ((annotation: Annotation, color: string) => Promise<Annotation>) | undefined;
   readonly planAnnotationDeletion: (annotation: Annotation) => Promise<AnnotationDeletionPlan>;
   readonly deleteAnnotation: (
     annotation: Annotation,
@@ -265,12 +269,17 @@ function useSelectedAnnotationMutations(
   setAnnotations: Dispatch<SetStateAction<AnnotationState>>,
 ): Pick<
   ReaderSourceWorkspaceController,
-  "createAnnotation" | "updateAnnotation" | "planAnnotationDeletion" | "deleteAnnotation"
+  | "createAnnotation"
+  | "updateAnnotation"
+  | "recolorAnnotation"
+  | "planAnnotationDeletion"
+  | "deleteAnnotation"
 > {
   const deletion = useAnnotationDeletion(gateway, setAnnotations);
   return {
     createAnnotation: useAnnotationCreation(gateway, setAnnotations),
     updateAnnotation: useAnnotationUpdate(gateway, setAnnotations),
+    recolorAnnotation: useAnnotationRecolor(gateway, setAnnotations),
     planAnnotationDeletion: deletion.plan,
     deleteAnnotation: deletion.remove,
   };
