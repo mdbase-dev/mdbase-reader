@@ -16,7 +16,7 @@ import {
   toggleTouchRow,
   type RowSelection,
 } from "./library-row-selection.js";
-import { ReadingStatus, formatLabel } from "./LibraryCells.js";
+import { ReadingStatus, shortFormatLabel } from "./LibraryCells.js";
 import { LibraryPartDisclosure } from "./LibraryPartDisclosure.js";
 import { useOffsetTop } from "./LibraryTable.js";
 import { sourceFormat } from "./mdbase-library-views.js";
@@ -169,7 +169,7 @@ function LibraryCard({
         }}
       />
       <div className={`library-card-bookplate is-${sourceFormat(source)}`}>
-        <span>{formatLabel(source)}</span>
+        <span>{shortFormatLabel(source)}</span>
         <strong aria-hidden="true">{source.title.trim().charAt(0).toLocaleUpperCase()}</strong>
       </div>
       <div className="library-card-copy">

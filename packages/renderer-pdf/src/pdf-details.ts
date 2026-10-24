@@ -108,10 +108,64 @@ export async function readPdfChapterOutline(
   }
 }
 
+export interface PdfPagePreview {
+  readonly image: Blob;
+  readonly pageCount: number;
+}
+
+/**
+ * Renders one page small, for a library thumbnail, without a viewer. The page is drawn at
+ * `width` device pixels wide; a missing page falls back to the first.
+ */
+export async function renderPdfPagePreview(
+  bytes: Uint8Array,
+  options: PdfDetailsOptions & { readonly pageIndex?: number; readonly width: number },
+): Promise<PdfPagePreview> {
+  const engine = await (options.engine ?? defaultEngine)();
+  options.signal?.throwIfAborted();
+  const document = await engine
+    .openDocumentBuffer({ id: `preview-${crypto.randomUUID()}`, content: wholeBuffer(bytes) })
+    .toPromise();
+  try {
+    const page = document.pages[options.pageIndex ?? 0] ?? document.pages[0];
+    if (!page) {
+      throw new Error("This PDF has no pages.");
+    }
+    options.signal?.throwIfAborted();
+    const image = await engine
+      .renderPage(document, page, {
+        scaleFactor: options.width / Math.max(1, page.size.width),
+        // Every browser encodes PNG; at thumbnail size it is only a few kilobytes.
+        imageType: "image/png",
+      })
+      .toPromise();
+    return { image, pageCount: document.pageCount };
+  } finally {
+    await engine
+      .closeDocument(document)
+      .toPromise()
+      .catch(() => false);
+  }
+}
+
+/**
+ * The bytes' own buffer when they span all of it, else a copy. The direct engine copies the
+ * content into PDFium's heap and never detaches it, so the caller's bytes stay usable.
+ */
+function wholeBuffer(bytes: Uint8Array): ArrayBuffer {
+  const { buffer } = bytes;
+  return buffer instanceof ArrayBuffer &&
+    bytes.byteOffset === 0 &&
+    bytes.byteLength === buffer.byteLength
+    ? buffer
+    : bytes.slice().buffer;
+}
+
 function defaultEngine(): Promise<PdfEngine> {
   sharedEngine ??= import("@embedpdf/engines/pdfium-direct-engine")
     .then(({ createPdfiumEngine }) =>
-      // No font fallback: only text extraction is needed, never rendering.
+      // No font fallback: text extraction needs none, and a thumbnail is too small for a
+      // substituted face to matter, so this engine never fetches fonts.
       createPdfiumEngine(PDFIUM_WASM_URL, { fontFallback: null }),
     )
     .catch((reason: unknown) => {

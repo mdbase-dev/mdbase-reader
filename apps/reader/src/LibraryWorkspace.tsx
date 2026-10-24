@@ -53,6 +53,7 @@ import { Menu } from "./Menu.js";
 import { useInspectedLibraryRow } from "./use-inspected-library-row.js";
 import { layoutOf, useLibraryLayoutDraft } from "./use-library-layout-draft.js";
 import { useLibraryWrites } from "./use-library-writes.js";
+import "./library.css";
 
 import type { BibliographyExportController } from "./use-bibliography-export.js";
 import type { MdbaseLibraryViewsController } from "./use-mdbase-library-views.js";
@@ -137,6 +138,8 @@ export function LibraryWorkspace({
   >(() => new Map());
   const [loading, setLoading] = useState(Boolean(view.path && !view.annotations));
   const [problem, setProblem] = useState<string | null>(null);
+  // Stable per gateway, so Continue reading's thumbnails do not reload on every render.
+  const readThumbnailFile = useMemo(() => gateway.readFile.bind(gateway), [gateway]);
   const saveStatus = gateway.saveReadingStatus?.bind(gateway);
   const changeStatus = saveStatus
     ? (id: SourceId, status: ReadingStatus): void => {
@@ -566,7 +569,11 @@ export function LibraryWorkspace({
         ) : (
           <>
             {searchScope === "sources" && !configuration.filter.query && !view.path ? (
-              <ContinueReading sources={allSources} onOpen={onOpenSource} />
+              <ContinueReading
+                sources={allSources}
+                onOpen={onOpenSource}
+                readFile={readThumbnailFile}
+              />
             ) : null}
             {searchScope !== "sources" ? (
               <LibraryTextSearch

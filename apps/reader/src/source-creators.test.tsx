@@ -71,6 +71,7 @@ describe("source creators", () => {
     const resume = renderToStaticMarkup(
       <ContinueReading sources={[book, chapter]} onOpen={() => undefined} />,
     );
-    expect(resume).toContain("Ada Author, Bea Author · 40%");
+    expect(resume).toContain('<span class="continue-reading-byline">Ada Author, Bea Author</span>');
+    expect(resume).toContain("<span>40%</span>");
   });
 });

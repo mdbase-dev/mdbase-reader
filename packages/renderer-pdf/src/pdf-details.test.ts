@@ -1,7 +1,7 @@
 import { PdfActionType, type PdfEngine } from "@embedpdf/models";
 import { describe, expect, it, vi } from "vitest";
 
-import { readPdfChapterOutline, readPdfDetails } from "./pdf-details.js";
+import { readPdfChapterOutline, readPdfDetails, renderPdfPagePreview } from "./pdf-details.js";
 
 function task<Value>(value: Value): { toPromise: () => Promise<Value> } {
   return { toPromise: () => Promise.resolve(value) };
@@ -86,5 +86,53 @@ describe("readPdfDetails", () => {
     });
     expect(extractText).toHaveBeenCalledWith(document, [0, 1]);
     expect(closeDocument).toHaveBeenCalledWith(document);
+  });
+});
+
+describe("renderPdfPagePreview", () => {
+  it("renders the requested page to the asked width and closes the document", async () => {
+    const pages = [
+      { index: 0, size: { width: 600, height: 800 } },
+      { index: 1, size: { width: 300, height: 400 } },
+    ];
+    const document = { id: "doc", pageCount: 2, pages };
+    const image = new Blob(["x"], { type: "image/png" });
+    const renderPage = vi.fn(() => task(image));
+    const closeDocument = vi.fn(() => task(true));
+    const engine = {
+      openDocumentBuffer: vi.fn(() => task(document)),
+      renderPage,
+      closeDocument,
+    } as unknown as PdfEngine;
+
+    const preview = await renderPdfPagePreview(new Uint8Array(), {
+      engine: () => Promise.resolve(engine),
+      pageIndex: 1,
+      width: 150,
+    });
+
+    expect(preview).toEqual({ image, pageCount: 2 });
+    expect(renderPage).toHaveBeenCalledWith(
+      document,
+      pages[1],
+      expect.objectContaining({ scaleFactor: 0.5 }),
+    );
+    expect(closeDocument).toHaveBeenCalledWith(document);
+  });
+
+  it("falls back to the first page when the asked page is missing", async () => {
+    const pages = [{ index: 0, size: { width: 100, height: 100 } }];
+    const renderPage = vi.fn(() => task(new Blob()));
+    const engine = {
+      openDocumentBuffer: () => task({ id: "doc", pageCount: 1, pages }),
+      renderPage,
+      closeDocument: () => task(true),
+    } as unknown as PdfEngine;
+    await renderPdfPagePreview(new Uint8Array(), {
+      engine: () => Promise.resolve(engine),
+      pageIndex: 9,
+      width: 100,
+    });
+    expect(renderPage).toHaveBeenCalledWith(expect.anything(), pages[0], expect.anything());
   });
 });

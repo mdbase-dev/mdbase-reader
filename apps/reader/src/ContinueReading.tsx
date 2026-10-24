@@ -1,7 +1,19 @@
-import { sourceCreatorsText, sourcesById } from "./source-creators.js";
+import { useRef, type JSX, type Ref } from "react";
 
+import { publicationDateLabel } from "./library-publication-date.js";
+import { shortFormatLabel } from "./LibraryCells.js";
+import { sourceFormat } from "./mdbase-library-views.js";
+import {
+  readingLocationLabel,
+  readingPassage,
+  readingProgressValue,
+  readingStatusOf,
+} from "./reading-progress.js";
+import { sourceCreatorsText, sourcesById } from "./source-creators.js";
+import { useSourceThumbnail } from "./use-source-thumbnail.js";
+
+import type { SourceThumbnail, ThumbnailFileReader } from "./source-thumbnail.js";
 import type { SourceId, SourceSummary } from "@mdbase-reader/core";
-import type { JSX } from "react";
 
 const continueLimit = 3;
 
@@ -17,11 +29,9 @@ export function continueReadingSources(
     .filter(
       (source) =>
         source.documents.length > 0 &&
-        !["finished", "archived", "abandoned"].includes(
-          source.reading?.status ?? source.readingStatus ?? "",
-        ) &&
-        (source.readingStatus === "reading" ||
-          source.reading?.status === "reading" ||
+        !["finished", "archived", "abandoned"].includes(readingStatusOf(source)) &&
+        (readingStatusOf(source) === "reading" ||
+          source.readingStatus === "reading" ||
           source.reading?.position !== undefined ||
           (readingProgressValue(source) ?? 0) > 0),
     )
@@ -35,30 +45,19 @@ export function continueReadingSource(sources: readonly SourceSummary[]): Source
   return continueReadingSources(sources, 1)[0] ?? null;
 }
 
-export function readingProgressValue(source: SourceSummary): number | null {
-  const reading = source.reading;
-  const position = reading?.position;
-  const progress =
-    reading?.progress ?? (position?.kind === "html" ? position.progression : undefined);
-  return progress === undefined ? null : Math.round(Math.max(0, Math.min(1, progress)) * 100);
-}
-
-export function readingLocationLabel(source: SourceSummary): string {
-  const position = source.reading?.position;
-  const progress = readingProgressValue(source);
-  const parts = [
-    position?.kind === "pdf" ? `Page ${String(position.pageIndex + 1)}` : null,
-    progress === null ? null : `${String(progress)}%`,
-  ].filter((part): part is string => part !== null);
-  return parts.join(" · ");
-}
-
+/**
+ * Up to three sources to pick up again, each shown as the object: a first-page render or
+ * cover when one can be read cheaply, else a typographic placeholder. `readFile` enables
+ * thumbnails; without it every card keeps its placeholder.
+ */
 export function ContinueReading({
   sources,
   onOpen,
+  readFile,
 }: {
   readonly sources: readonly SourceSummary[];
   readonly onOpen: (id: SourceId) => void;
+  readonly readFile?: ThumbnailFileReader;
 }): JSX.Element | null {
   const resumable = continueReadingSources(sources);
   if (resumable.length === 0) {
@@ -68,52 +67,92 @@ export function ContinueReading({
   return (
     <section className="continue-reading" aria-labelledby="continue-reading-heading">
       <h2 id="continue-reading-heading">Continue reading</h2>
-      <div className="continue-reading-list">
+      <ul className="continue-reading-list">
         {resumable.map((source) => (
-          <ContinueReadingRow
-            key={source.id}
-            source={source}
-            creators={sourceCreatorsText(source, library)}
-            onOpen={onOpen}
-          />
+          <li key={source.id}>
+            <ContinueReadingCard
+              source={source}
+              creators={sourceCreatorsText(source, library)}
+              readFile={readFile}
+              onOpen={onOpen}
+            />
+          </li>
         ))}
-      </div>
+      </ul>
     </section>
   );
 }
 
-function ContinueReadingRow({
+function ContinueReadingCard({
   source,
   creators,
+  readFile,
   onOpen,
 }: {
   readonly source: SourceSummary;
   readonly creators: string;
+  readonly readFile: ThumbnailFileReader | undefined;
   readonly onOpen: (id: SourceId) => void;
 }): JSX.Element {
+  const thumbnailRef = useRef<HTMLSpanElement>(null);
+  const thumbnail = useSourceThumbnail(source, readFile, thumbnailRef);
   const progress = readingProgressValue(source);
-  const location = readingLocationLabel(source);
+  const location = readingLocationLabel(source, thumbnail?.pageCount);
+  const passage = readingPassage(source);
+  const byline = [creators, publicationDateLabel(source.published)].filter(Boolean).join(" · ");
   return (
     <button
-      className="continue-reading-item"
+      className="continue-reading-card"
       type="button"
       aria-label={`Continue reading ${source.title}`}
       title={source.title}
       onClick={() => onOpen(source.id)}
     >
-      <span className="continue-reading-title">
-        <strong>{source.title}</strong>
-        {creators || location ? (
-          <small>{[creators, location].filter(Boolean).join(" · ")}</small>
-        ) : null}
-      </span>
-      {progress !== null && progress > 0 ? (
-        <span className="library-progress" aria-hidden="true">
-          <i style={{ width: `${String(progress)}%` }} />
+      <SourceThumbnailView ref={thumbnailRef} source={source} thumbnail={thumbnail} />
+      <span className="continue-reading-copy">
+        <span className="continue-reading-title">{source.title}</span>
+        {byline ? <span className="continue-reading-byline">{byline}</span> : null}
+        {passage ? <q className="continue-reading-passage">{passage}</q> : null}
+        <span className="continue-reading-progress">
+          {progress !== null && progress > 0 ? (
+            <span className="continue-reading-bar" aria-hidden="true">
+              <i style={{ width: `${String(progress)}%` }} />
+            </span>
+          ) : null}
+          <span>{location || "Just started"}</span>
         </span>
-      ) : !location ? (
-        <span className="continue-reading-state">Just started</span>
-      ) : null}
+      </span>
     </button>
+  );
+}
+
+/**
+ * The source as an object. A rendered page or cover when one has loaded; otherwise its title
+ * set like a title page, with its format underneath.
+ */
+export function SourceThumbnailView({
+  ref,
+  source,
+  thumbnail,
+}: {
+  readonly ref?: Ref<HTMLSpanElement>;
+  readonly source: SourceSummary;
+  readonly thumbnail: SourceThumbnail | null;
+}): JSX.Element {
+  return (
+    <span
+      ref={ref}
+      className={`source-thumbnail is-${sourceFormat(source)}${thumbnail ? " has-image" : ""}`}
+      aria-hidden="true"
+    >
+      {thumbnail ? (
+        <img src={thumbnail.url} alt="" decoding="async" draggable={false} />
+      ) : (
+        <>
+          <span className="source-thumbnail-title">{source.title}</span>
+          <span className="source-thumbnail-format">{shortFormatLabel(source)}</span>
+        </>
+      )}
+    </span>
   );
 }
