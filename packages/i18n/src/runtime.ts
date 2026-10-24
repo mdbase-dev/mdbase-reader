@@ -10,6 +10,7 @@ const loaders = {
   fr: () => import("../locales/fr/messages.json"),
   de: () => import("../locales/de/messages.json"),
   es: () => import("../locales/es/messages.json"),
+  it: () => import("../locales/it/messages.json"),
   ja: () => import("../locales/ja/messages.json"),
   ko: () => import("../locales/ko/messages.json"),
   pt: () => import("../locales/pt/messages.json"),
