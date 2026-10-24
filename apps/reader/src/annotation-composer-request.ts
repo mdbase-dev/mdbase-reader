@@ -1,5 +1,7 @@
 import { sourceLink } from "@mdbase-reader/core";
 
+import { humanPassageLabel } from "./passage-labels.js";
+
 import type {
   AnnotationCreationRequest,
   Locator,
@@ -119,7 +121,7 @@ function epubProgression(locator: Readonly<Record<string, unknown>>): number | u
 
 function epubTitle(locator: Readonly<Record<string, unknown>>): string | undefined {
   const title = locator["title"];
-  return typeof title === "string" && title.trim() ? title.trim() : undefined;
+  return humanPassageLabel(typeof title === "string" ? title : undefined);
 }
 
 function textAnnotationRequest(
@@ -216,7 +218,7 @@ function locatorLabel(locator: ReaderLocator): Locator {
   if (locator.kind === "pdf") {
     return { label: `p. ${String(locator.pageIndex + 1)}` };
   }
-  return { label: locator.kind === "epub" ? "EPUB location" : locator.href };
+  return { label: locator.kind === "epub" ? (epubTitle(locator.locator) ?? "EPUB") : "Web page" };
 }
 
 function quotationBody(quote: string, note: string): string {

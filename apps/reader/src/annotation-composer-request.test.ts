@@ -83,6 +83,29 @@ describe("annotationRequest", () => {
     });
   });
 
+  it.each([
+    { locator: { kind: "html" as const, href: "[[files/page.html]]" }, label: "Web page" },
+    {
+      locator: { kind: "epub" as const, locator: { href: "chapter.xhtml", title: "Chapter III" } },
+      label: "Chapter III",
+    },
+    { locator: { kind: "epub" as const, locator: { href: "chapter.xhtml" } }, label: "EPUB" },
+  ])(
+    "saves a readable non-PDF location ($label), not a file address",
+    async ({ locator, label }) => {
+      const request = await annotationRequest(
+        source,
+        surface,
+        {
+          kind: "text",
+          value: { locator, target: { quote: { exact: "A passage" } } },
+        },
+        "",
+      );
+      expect(request.locator).toEqual({ label });
+    },
+  );
+
   it("turns a PDF capture into exact geometry and a PNG attachment", async () => {
     const request = await annotationRequest(
       source,

@@ -1,5 +1,6 @@
 import { annotationKindLabel } from "./annotation-kind.js";
 import { relativeDay } from "./LibraryCells.js";
+import { annotationLocationLabel } from "./passage-labels.js";
 import { itemClick, type LongPress } from "./use-long-press.js";
 
 import type { AnnotationColumn } from "./annotation-columns.js";
@@ -116,7 +117,7 @@ const cells: Record<
     </span>
   ),
   tags: ({ annotation }) => <TextCell text={annotation.tags.join(", ")} />,
-  location: ({ annotation }) => <TextCell text={annotation.locator?.label ?? ""} />,
+  location: ({ annotation }) => <TextCell text={annotationLocationLabel(annotation) ?? ""} />,
   created: ({ annotation }) => (
     <span role="gridcell">
       <time dateTime={annotation.createdAt}>{relativeDay(annotation.createdAt)}</time>

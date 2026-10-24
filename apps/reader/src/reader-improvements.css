@@ -119,6 +119,31 @@
   line-height: 1.6;
   color: var(--muted);
 }
+.search-details summary {
+  cursor: pointer;
+  min-height: 36px;
+  display: list-item;
+  align-content: center;
+}
+.search-details button {
+  color: var(--ink);
+  background: transparent;
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  padding: 5px 9px;
+  min-height: 36px;
+  font: inherit;
+  cursor: pointer;
+}
+.search-details button:hover {
+  background: var(--hover);
+}
+@media (pointer: coarse) {
+  .search-details summary,
+  .search-details button {
+    min-height: 44px;
+  }
+}
 .search-passage-list {
   padding: 0;
   list-style: none;

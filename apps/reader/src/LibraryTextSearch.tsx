@@ -1,6 +1,7 @@
 import { useEffect, useId, useState, type JSX } from "react";
 
 import { readerErrorMessage } from "./errors.js";
+import { documentPassageLabel } from "./passage-labels.js";
 import { searchExcerpt, type SearchExcerpt } from "./search-passages.js";
 import { useIndexedDocumentSearch } from "./use-indexed-document-search.js";
 import { useOpenDocumentSearch } from "./use-open-document-search.js";
@@ -90,20 +91,25 @@ export function LibraryTextSearch({
     <section className="library-text-search" aria-label="Text search results">
       <p className="search-coverage" role="status">
         {scope === "documents"
-          ? `${indexed.status} ${documents.coverage}`
+          ? indexed.paused
+            ? "Saved-page indexing is paused. Open documents are still searched."
+            : "Searches saved web pages and open documents. PDFs and EPUBs must be open."
           : "Searches literature notes and annotation text, not PDF, EPUB or saved-page contents."}
       </p>
       {scope === "documents" ? (
-        <IndexPauseControl paused={indexed.paused} togglePause={indexed.togglePause} />
+        <details className="search-coverage search-details">
+          <summary>Search details</summary>
+          <p>
+            {indexed.status} {documents.coverage}
+          </p>
+          <p>
+            Results open at the matching passage. If it cannot be found, use Find in the document.
+          </p>
+          <IndexPauseControl paused={indexed.paused} togglePause={indexed.togglePause} />
+        </details>
       ) : null}
       {problem ? <p role="alert">{problem}</p> : null}
       <p role="status">{searchStatus(normalized, scope === "notes" && !current, visible.length)}</p>
-      {scope === "documents" ? (
-        <p className="search-coverage">
-          Open a result at its matching passage. If the passage cannot be verified, use the
-          document’s Find control.
-        </p>
-      ) : null}
       <ul className="search-passage-list">
         {visible.slice(0, limit).map((source) => (
           <SearchResult
@@ -153,7 +159,15 @@ function SearchResult({
       : passage?.kind === "annotation" || note?.kinds[0] === "annotation"
         ? "annotations"
         : "note";
-  const label = searchResultLabel(view, document?.file);
+  const descriptor = source.documents.find((file) =>
+    destination ? file.fileId === destination.document.fileId : file.file === document?.file,
+  );
+  const label =
+    view === "document"
+      ? documentPassageLabel(descriptor, destination, document?.file)
+      : view === "note"
+        ? "Literature note"
+        : "Annotation text";
   return (
     <li>
       <button
@@ -161,23 +175,11 @@ function SearchResult({
         onClick={() => onOpen(source.id, view, view === "document" ? destination : undefined)}
       >
         <strong>{source.title}</strong>
-        <small>
-          {source.creators.join(", ")} · {label}
-        </small>
+        <small>{[source.creators.join(", "), label].filter(Boolean).join(" · ")}</small>
         {excerpt ? <Excerpt value={excerpt} /> : null}
       </button>
     </li>
   );
-}
-
-function searchResultLabel(
-  view: "document" | "note" | "annotations",
-  file: string | undefined,
-): string {
-  if (view === "document") {
-    return `Open document · ${file ?? ""}`;
-  }
-  return view === "note" ? "Literature note" : "Annotation text";
 }
 
 function IndexPauseControl({
