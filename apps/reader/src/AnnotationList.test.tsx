@@ -212,7 +212,9 @@ describe("virtual annotation sidebar", () => {
     });
     expect(toggle.getAttribute("aria-checked")).toBe("true");
   });
+});
 
+describe("following the reading position", () => {
   it("highlights reading context but pauses automatic reveals on manual list interaction", async () => {
     const values = browseAnnotations(annotations, "", "all", "document");
     const element = await render(null, null, values[1]!.id);
@@ -237,6 +239,37 @@ describe("virtual annotation sidebar", () => {
     });
     expect(virtual.scrollToIndex).toHaveBeenCalledWith(800, { align: "auto" });
     expect(follow.getAttribute("aria-checked")).toBe("true");
+  });
+
+  it("offers Resume following when paused, without marking the Filter menu", async () => {
+    const values = browseAnnotations(annotations, "", "all", "document");
+    for (const readingId of [values[1]!.id, null]) {
+      const element = await render(null, null, readingId);
+      await act(async () => {
+        element
+          .querySelector(".annotation-list")!
+          .dispatchEvent(new Event("wheel", { bubbles: true }));
+        await Promise.resolve();
+      });
+      const trigger = element.querySelector(".annotation-filter-trigger")!;
+      expect(trigger.classList.contains("is-changed")).toBe(false);
+      const resume = [...element.querySelectorAll<HTMLButtonElement>("button")].find(
+        (button) => button.textContent === "Resume following",
+      )!;
+      expect(resume).toBeDefined();
+      virtual.scrollToIndex.mockClear();
+      await act(async () => {
+        resume.click();
+        await Promise.resolve();
+      });
+      if (readingId) {
+        expect(virtual.scrollToIndex).toHaveBeenCalledWith(1, { align: "auto" });
+      }
+      expect(element.textContent).not.toContain("Resume following");
+      expect(switchNamed(element, "Follow reading position").getAttribute("aria-checked")).toBe(
+        "true",
+      );
+    }
   });
 });
 
@@ -287,9 +320,30 @@ describe("annotation Filter menu", () => {
     expect(element.textContent).not.toContain("Pause following");
   });
 
+  it("offers Show and Order as radio groups with arrow keys and one tab stop", async () => {
+    const element = await renderKinds();
+    const groups = [...element.querySelectorAll('[role="radiogroup"]')];
+    expect(groups.map((group) => group.textContent.startsWith("Show"))).toEqual([true, false]);
+    const all = choice(element, "All annotations");
+    expect(all.getAttribute("role")).toBe("radio");
+    expect(
+      [...groups[0]!.querySelectorAll('[role="radio"]')].filter((radio) =>
+        radio.matches('[tabindex="0"]'),
+      ),
+    ).toEqual([all]);
+    await act(async () => {
+      all.dispatchEvent(new KeyboardEvent("keydown", { key: "ArrowDown", bubbles: true }));
+      await Promise.resolve();
+    });
+    expect(all.getAttribute("aria-checked")).toBe("false");
+    const next = groups[0]!.querySelector('[aria-checked="true"]');
+    expect(next).not.toBeNull();
+    expect(document.activeElement).toBe(next);
+  });
+
   it("filters by type with counts, marks the trigger, and clears back to all", async () => {
     const element = await renderKinds();
-    expect(choice(element, "All annotations").getAttribute("aria-pressed")).toBe("true");
+    expect(choice(element, "All annotations").getAttribute("aria-checked")).toBe("true");
     expect(choice(element, "Bookmarks").textContent).toBe("Bookmarks1");
     await act(async () => {
       choice(element, "Bookmarks").click();
@@ -297,7 +351,7 @@ describe("annotation Filter menu", () => {
     });
     expect(element.querySelectorAll("[data-annotation-id]")).toHaveLength(1);
     expect(element.querySelector('[data-annotation-id="bookmark"]')).not.toBeNull();
-    expect(choice(element, "Bookmarks").getAttribute("aria-pressed")).toBe("true");
+    expect(choice(element, "Bookmarks").getAttribute("aria-checked")).toBe("true");
     const trigger = element.querySelector(".annotation-filter-trigger")!;
     expect(trigger.classList.contains("is-changed")).toBe(true);
     expect(trigger.getAttribute("aria-label")).toBe("Filter annotations (changed)");
@@ -321,8 +375,8 @@ describe("annotation Filter menu", () => {
       await Promise.resolve();
     });
     expect(details.open).toBe(true);
-    expect(choice(element, "Newest first").getAttribute("aria-pressed")).toBe("true");
-    expect(choice(element, "Document order").getAttribute("aria-pressed")).toBe("false");
+    expect(choice(element, "Newest first").getAttribute("aria-checked")).toBe("true");
+    expect(choice(element, "Document order").getAttribute("aria-checked")).toBe("false");
     expect(
       element.querySelector(".annotation-filter-trigger")!.classList.contains("is-changed"),
     ).toBe(true);

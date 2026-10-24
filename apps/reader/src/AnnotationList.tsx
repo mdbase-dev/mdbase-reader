@@ -96,10 +96,7 @@ export function AnnotationList({
     setQuery("");
     setView((current) => ({ ...current, filter: "all", source: "" }));
   };
-  const hiddenActive =
-    ready &&
-    annotations.value.some(({ id }) => id === activeId) &&
-    !results.some(({ id }) => id === activeId);
+  const hiddenActive = activeIsHidden(annotations, results, activeId);
   return (
     <div className="annotation-browser" ref={browserRef}>
       <div className="annotation-tools">
@@ -113,10 +110,9 @@ export function AnnotationList({
             wholeBook={wholeBook}
             following={following}
             onFollowingChange={setFollowing}
-            canFollow={readingId !== null}
             renderAll={renderAll}
             onRenderAllChange={setRenderAll}
-            changed={filterMenuChanged(view, { following, readingId, renderAll, wholeBook })}
+            changed={filterMenuChanged(view, { renderAll, wholeBook })}
           />
         ) : null}
         {addMenu}
@@ -124,6 +120,8 @@ export function AnnotationList({
       <AnnotationFilterStatus
         filtered={query.trim() !== "" || view.filter !== "all" || view.source !== ""}
         hiddenActive={hiddenActive}
+        paused={!following}
+        onResume={() => setFollowing(true)}
         shown={results.length}
         total={total}
         onClear={clear}
@@ -153,7 +151,11 @@ export function AnnotationList({
               owners={owners}
               onMoveOwner={onMoveOwner}
               showLocation={!grouped}
-              showSource={!grouped && annotationFromOtherSource(annotation, currentSourceId)}
+              // Headings name another source per run; the selected card also names it itself.
+              showSource={
+                annotationFromOtherSource(annotation, currentSourceId) &&
+                (!grouped || activeId === annotation.id)
+              }
               editing={currentEditing === annotation.id}
               active={activeId === annotation.id}
               transclusion={transclusion}
@@ -171,6 +173,19 @@ export function AnnotationList({
         </VirtualAnnotationList>
       )}
     </div>
+  );
+}
+
+/** The selected annotation exists but the search or filters hide it. */
+function activeIsHidden(
+  annotations: AsyncResource<readonly Annotation[]>,
+  results: readonly Annotation[],
+  activeId: string | null,
+): boolean {
+  return (
+    annotations.status === "ready" &&
+    annotations.value.some(({ id }) => id === activeId) &&
+    !results.some(({ id }) => id === activeId)
   );
 }
 
@@ -210,22 +225,18 @@ function useAnnotationResults(
   return { scoped, results, headings };
 }
 
-/** The Filter menu's dot: anything that changes what or how the list shows is not at default. */
+/**
+ * The Filter menu's dot: type, source, order, whole-book scope or page search is not at its
+ * default. Paused following is not a filter; the status area offers Resume following instead.
+ */
 function filterMenuChanged(
   view: AnnotationView,
   state: {
-    readonly following: boolean;
-    readonly readingId: AnnotationId | null;
     readonly renderAll: boolean;
     readonly wholeBook: AnnotationListProps["wholeBook"];
   },
 ): boolean {
-  return (
-    !annotationViewIsDefault(view) ||
-    (state.readingId !== null && !state.following) ||
-    state.renderAll ||
-    Boolean(state.wholeBook?.value)
-  );
+  return !annotationViewIsDefault(view) || state.renderAll || Boolean(state.wholeBook?.value);
 }
 
 function AnnotationSearch({
@@ -252,17 +263,22 @@ function AnnotationSearch({
 function AnnotationFilterStatus({
   filtered,
   hiddenActive,
+  paused,
+  onResume,
   shown,
   total,
   onClear,
 }: {
   readonly filtered: boolean;
   readonly hiddenActive: boolean;
+  /** Following the reading position paused after the list was browsed by hand. */
+  readonly paused: boolean;
+  readonly onResume: () => void;
   readonly shown: number;
   readonly total: number;
   readonly onClear: () => void;
 }): JSX.Element | null {
-  if (!filtered && !hiddenActive) {
+  if (!filtered && !hiddenActive && !paused) {
     return null;
   }
   return (
@@ -278,6 +294,11 @@ function AnnotationFilterStatus({
       {hiddenActive ? (
         <button type="button" onClick={onClear}>
           Show selected annotation (clear filters)
+        </button>
+      ) : null}
+      {paused ? (
+        <button type="button" className="annotation-resume-following" onClick={onResume}>
+          Resume following
         </button>
       ) : null}
     </div>

@@ -1,5 +1,5 @@
 import { ReaderButton } from "@mdbase-reader/ui";
-import { useState, type JSX } from "react";
+import { useEffect, useRef, useState, type JSX, type MouseEvent } from "react";
 
 import { commentRequest } from "./annotation-composer-request.js";
 import { annotationEditorKeys, confirmAnnotationDiscard } from "./annotation-draft-actions.js";
@@ -30,6 +30,11 @@ export function useAnnotationPanelActions({
   readonly composer: AnnotationComposerController;
 }): { readonly addMenu: JSX.Element; readonly composerPanel: JSX.Element | null } {
   const [commenting, setCommenting] = useState(false);
+  // Choosing an item closes the menu and hides the focused button; focus then returns here.
+  const trigger = useRef<HTMLElement | null>(null);
+  const rememberTrigger = (event: MouseEvent<HTMLElement>): void => {
+    trigger.current = event.currentTarget.closest("details")?.querySelector("summary") ?? null;
+  };
   const source = workspace.sourceRecord.status === "ready" ? workspace.sourceRecord.value : null;
   const ownership = useAnnotationOwner({
     source,
@@ -46,7 +51,14 @@ export function useAnnotationPanelActions({
         label="Add source comment or bookmark"
         trigger={<PlusIcon />}
       >
-        <button type="button" disabled={!source} onClick={() => setCommenting(true)}>
+        <button
+          type="button"
+          disabled={!source}
+          onClick={(event) => {
+            rememberTrigger(event);
+            setCommenting(true);
+          }}
+        >
           <CommentIcon /> Add source comment
         </button>
         <button
@@ -57,7 +69,11 @@ export function useAnnotationPanelActions({
               ? "Bookmark the current reading position"
               : "Open the document to bookmark a position"
           }
-          onClick={composer.bookmark}
+          onClick={(event) => {
+            rememberTrigger(event);
+            composer.bookmark();
+            trigger.current?.focus();
+          }}
         >
           <BookmarkIcon /> {composer.bookmarking ? "Bookmarking…" : "Bookmark"}
         </button>
@@ -71,7 +87,10 @@ export function useAnnotationPanelActions({
           onSave={(comment) =>
             ownership.create(commentRequest(source, comment)).then(() => undefined)
           }
-          onClose={() => setCommenting(false)}
+          onClose={() => {
+            setCommenting(false);
+            trigger.current?.focus();
+          }}
         />
       ) : null,
   };
@@ -89,6 +108,16 @@ function SourceCommentComposer({
   const [comment, setComment] = useState("");
   const [saving, setSaving] = useState(false);
   const [problem, setProblem] = useState<string | null>(null);
+  const region = useRef<HTMLElement>(null);
+  useEffect(() => {
+    // The menu that opened this closes in the same click; focus the comment once that settles.
+    const frame = requestAnimationFrame(() => {
+      if (!region.current?.contains(document.activeElement)) {
+        region.current?.querySelector("textarea")?.focus({ preventScroll: true });
+      }
+    });
+    return () => cancelAnimationFrame(frame);
+  }, []);
   const dismiss = async (): Promise<void> => {
     if (
       saving ||
@@ -115,6 +144,7 @@ function SourceCommentComposer({
     // The region delegates keyboard shortcuts from its interactive children.
     // eslint-disable-next-line jsx-a11y/no-noninteractive-element-interactions
     <section
+      ref={region}
       className="annotation-composer is-comment"
       aria-labelledby="source-comment-title"
       onKeyDown={(event) => annotationEditorKeys(event, () => void dismiss(), save)}

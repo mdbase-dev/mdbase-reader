@@ -60,7 +60,6 @@ export function AnnotationFilterMenu({
   wholeBook,
   following,
   onFollowingChange,
-  canFollow,
   renderAll,
   onRenderAllChange,
   changed,
@@ -74,12 +73,10 @@ export function AnnotationFilterMenu({
     { readonly value: boolean; readonly onChange: (value: boolean) => void } | undefined;
   readonly following: boolean;
   readonly onFollowingChange: (following: boolean) => void;
-  readonly canFollow: boolean;
   readonly renderAll: boolean;
   readonly onRenderAllChange: (renderAll: boolean) => void;
   readonly changed: boolean;
 }): JSX.Element {
-  const id = useId();
   const counts = useMemo(
     () =>
       new Map(
@@ -97,23 +94,15 @@ export function AnnotationFilterMenu({
     >
       {/* Choices apply at once and leave the menu open, so several can be changed together. */}
       <div className="annotation-filter-panel" data-menu-keep-open>
-        <div role="group" aria-labelledby={`${id}-show`}>
-          <span className="menu-label" id={`${id}-show`}>
-            Show
-          </span>
-          {filterChoices.map((choice) => (
-            <button
-              key={choice.value}
-              type="button"
-              className="annotation-filter-choice"
-              aria-pressed={view.filter === choice.value}
-              onClick={() => onViewChange({ ...view, filter: choice.value })}
-            >
-              {choice.label}
-              <span className="annotation-filter-count">{counts.get(choice.value) ?? 0}</span>
-            </button>
-          ))}
-        </div>
+        <RadioChoices
+          label="Show"
+          choices={filterChoices.map((choice) => ({
+            ...choice,
+            count: counts.get(choice.value) ?? 0,
+          }))}
+          value={view.filter}
+          onChange={(filter) => onViewChange({ ...view, filter })}
+        />
         {owners && owners.length > 1 ? (
           <label className="annotation-filter-source">
             <span className="menu-label">Source</span>
@@ -132,22 +121,12 @@ export function AnnotationFilterMenu({
           </label>
         ) : null}
         <hr />
-        <div role="group" aria-labelledby={`${id}-order`}>
-          <span className="menu-label" id={`${id}-order`}>
-            Order
-          </span>
-          {orderChoices.map((choice) => (
-            <button
-              key={choice.value}
-              type="button"
-              className="annotation-filter-choice"
-              aria-pressed={view.order === choice.value}
-              onClick={() => onViewChange({ ...view, order: choice.value })}
-            >
-              {choice.label}
-            </button>
-          ))}
-        </div>
+        <RadioChoices
+          label="Order"
+          choices={orderChoices}
+          value={view.order}
+          onChange={(order) => onViewChange({ ...view, order })}
+        />
         <hr />
         {wholeBook ? (
           <SwitchItem
@@ -156,13 +135,11 @@ export function AnnotationFilterMenu({
             onChange={wholeBook.onChange}
           />
         ) : null}
-        {canFollow ? (
-          <SwitchItem
-            label="Follow reading position"
-            checked={following}
-            onChange={onFollowingChange}
-          />
-        ) : null}
+        <SwitchItem
+          label="Follow reading position"
+          checked={following}
+          onChange={onFollowingChange}
+        />
         <SwitchItem
           label="Include all annotations in page search"
           hint={renderAll ? "Slower with long lists" : "Search above covers all annotations"}
@@ -171,6 +148,71 @@ export function AnnotationFilterMenu({
         />
       </div>
     </Menu>
+  );
+}
+
+const radioKeys: Readonly<Record<string, number>> = {
+  ArrowDown: 1,
+  ArrowRight: 1,
+  ArrowUp: -1,
+  ArrowLeft: -1,
+};
+
+/** A radio group: one tab stop on the chosen item, arrow keys move and choose. */
+function RadioChoices<T extends string>({
+  label,
+  choices,
+  value,
+  onChange,
+}: {
+  readonly label: string;
+  readonly choices: readonly {
+    readonly value: T;
+    readonly label: string;
+    readonly count?: number;
+  }[];
+  readonly value: T;
+  readonly onChange: (value: T) => void;
+}): JSX.Element {
+  const id = useId();
+  return (
+    <div role="radiogroup" aria-labelledby={id}>
+      <span className="menu-label" id={id}>
+        {label}
+      </span>
+      {choices.map((choice) => (
+        <button
+          key={choice.value}
+          type="button"
+          role="radio"
+          className="annotation-filter-choice"
+          aria-checked={value === choice.value}
+          tabIndex={value === choice.value ? 0 : -1}
+          data-value={choice.value}
+          onClick={() => onChange(choice.value)}
+          onKeyDown={(event) => {
+            const step = radioKeys[event.key];
+            const index = choices.findIndex((item) => item.value === value);
+            const next =
+              step === undefined
+                ? undefined
+                : choices[(index + step + choices.length) % choices.length];
+            if (next) {
+              event.preventDefault();
+              onChange(next.value);
+              event.currentTarget.parentElement
+                ?.querySelector<HTMLElement>(`[data-value="${CSS.escape(next.value)}"]`)
+                ?.focus();
+            }
+          }}
+        >
+          {choice.label}
+          {choice.count === undefined ? null : (
+            <span className="annotation-filter-count">{choice.count}</span>
+          )}
+        </button>
+      ))}
+    </div>
   );
 }
 
@@ -185,19 +227,21 @@ function SwitchItem({
   readonly checked: boolean;
   readonly onChange: (checked: boolean) => void;
 }): JSX.Element {
-  const hintId = useId();
+  const id = useId();
+  // The name is the label alone; the hint is its description, read once.
   return (
     <button
       type="button"
       role="switch"
       className="annotation-filter-switch"
       aria-checked={checked}
-      aria-describedby={hint ? hintId : undefined}
+      aria-labelledby={`${id}-label`}
+      aria-describedby={hint ? `${id}-hint` : undefined}
       onClick={() => onChange(!checked)}
     >
       <span className="annotation-filter-switch-label">
-        {label}
-        {hint ? <small id={hintId}>{hint}</small> : null}
+        <span id={`${id}-label`}>{label}</span>
+        {hint ? <small id={`${id}-hint`}>{hint}</small> : null}
       </span>
       <span className="annotation-filter-switch-track" aria-hidden="true" />
     </button>

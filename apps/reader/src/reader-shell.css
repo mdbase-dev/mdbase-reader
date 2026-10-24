@@ -2018,6 +2018,46 @@
   color: var(--danger);
 }
 
+/* Annotation type with a swatch, as in the Library's Annotations Type column. Scoped to grid
+   cells: Notes panel cards name their kind in their metadata line (notes-panel.css). */
+
+[role="gridcell"].annotation-kind {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  color: var(--ink-soft);
+  font-size: var(--ui-meta);
+  font-weight: 600;
+}
+
+[role="gridcell"].annotation-kind::before {
+  content: "";
+  width: 8px;
+  height: 8px;
+  border-radius: 2px;
+  background: var(--line-strong);
+}
+
+[role="gridcell"].annotation-kind.is-highlight::before {
+  background: var(--ink-yellow);
+}
+
+[role="gridcell"].annotation-kind.is-note::before {
+  background: var(--accent);
+}
+
+[role="gridcell"].annotation-kind.is-bookmark::before {
+  width: 7px;
+  border-radius: 1px 1px 0 0;
+  background: var(--ink-soft);
+  clip-path: polygon(0 0, 100% 0, 100% 100%, 50% 72%, 0 100%);
+}
+
+[role="gridcell"].annotation-kind.is-area::before {
+  border: 1px dashed var(--accent);
+  background: transparent;
+}
+
 @media (pointer: coarse) {
   .inspector-tabs button {
     height: 44px;

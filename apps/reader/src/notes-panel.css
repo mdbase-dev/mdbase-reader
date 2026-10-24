@@ -205,11 +205,11 @@
   border-radius: 50%;
 }
 
-.annotation-filter-choice[aria-pressed="true"] {
+.annotation-filter-choice[aria-checked="true"] {
   font-weight: var(--weight-medium);
 }
 
-.annotation-filter-choice[aria-pressed="true"]::before {
+.annotation-filter-choice[aria-checked="true"]::before {
   border: 4px solid var(--accent);
 }
 
@@ -404,7 +404,8 @@
 /* On the wash, secondary text steps up from text-3 to keep AA contrast in dark theme. */
 .annotation-list .annotation-card.is-selected .annotation-meta,
 .annotation-list .annotation-card.is-selected .annotation-meta > * + *::before,
-.annotation-list .annotation-card.is-selected .annotation-source-line {
+.annotation-list .annotation-card.is-selected .annotation-source-line,
+.annotation-list .annotation-card.is-selected .annotation-move-status {
   color: var(--text-2);
 }
 
@@ -512,11 +513,12 @@
   font-size: inherit;
 }
 
-.annotation-source-line a {
+/* Scoped to the panel: the selection toolbar's owner control keeps its accent link. */
+.annotation-list .annotation-source-line a {
   color: var(--text-2);
 }
 
-.annotation-source-line a:hover {
+.annotation-list .annotation-source-line a:hover {
   color: var(--accent);
 }
 
@@ -613,33 +615,40 @@
   font-size: var(--text-sm);
 }
 
-/* With a fine pointer the actions float over the card's metadata row, as a small toolbar, so
-   they take no room at rest. They ignore the pointer while hidden but stay in the tab order;
-   focus reveals them. */
+/* With only a fine pointer the actions float over the end of the card's footer row, as a
+   small toolbar, so they take no room at rest. Anchored to the footer, they never cover the
+   source line or move status below it. Hover or focus reveals them before they can be used. */
 @media (hover: hover) and (pointer: fine) and (min-width: 681px) {
+  .annotation-list .annotation-card footer {
+    position: relative;
+  }
+
   .annotation-list .annotation-card-actions {
     position: absolute;
-    right: var(--sp-2);
-    bottom: 6px;
+    top: 50%;
+    right: calc(-1 * var(--sp-1));
     flex-wrap: nowrap;
     padding: 2px;
     border-radius: var(--r-md);
     background: var(--bg-raised);
     box-shadow: var(--e-2);
-    pointer-events: none;
-  }
-
-  .annotation-list .annotation-card:hover .annotation-card-actions,
-  .annotation-list .annotation-card:focus-within .annotation-card-actions,
-  .annotation-list .annotation-card.is-selected .annotation-card-actions,
-  .annotation-list [role="listitem"]:focus-visible .annotation-card-actions {
-    pointer-events: auto;
+    transform: translateY(-50%);
   }
 }
 
-/* No hover on touch: actions stay visible, and every target is at least 44px. */
-@media (hover: none), (max-width: 680px) {
-  .annotation-card-actions {
+/* No hover on touch, including touchscreen laptops with a mouse: actions stay visible and
+   in the footer's flow, so a tap never lands on a hidden control. Every target is 44px. */
+@media (hover: none), (any-pointer: coarse), (max-width: 680px) {
+  .annotation-list .annotation-card footer {
+    position: static;
+  }
+
+  .annotation-list .annotation-card-actions {
+    position: static;
+    padding: 0;
+    background: none;
+    box-shadow: none;
+    transform: none;
     opacity: 1;
   }
 }
@@ -678,7 +687,7 @@
     outline: 1px solid Highlight;
   }
 
-  .annotation-filter-choice[aria-pressed="true"]::before,
+  .annotation-filter-choice[aria-checked="true"]::before,
   .annotation-filter-switch[aria-checked="true"] .annotation-filter-switch-track {
     border-color: Highlight;
     background: Highlight;
