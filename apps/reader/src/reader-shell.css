@@ -454,6 +454,10 @@
 
 .header-display-menu .reader-menu-panel {
   min-width: 280px;
+  /* The highlight colour fields make the panel taller than a laptop window. */
+  max-height: calc(100dvh - 64px);
+  overflow-y: auto;
+  overscroll-behavior: contain;
 }
 
 .reader-header .header-reading-mode svg {
