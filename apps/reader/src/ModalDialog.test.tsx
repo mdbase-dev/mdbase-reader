@@ -84,6 +84,27 @@ describe("native modal dialogs", () => {
     expect(dismiss).toHaveBeenCalledTimes(2);
   });
 
+  it("reopens when the browser force-closes a refused dialog", async () => {
+    await act(async () => root.render(<Harness dismiss={vi.fn()} />));
+    const dialog = host.querySelector("dialog")!;
+    await act(async () => {
+      dialog.close();
+      dialog.dispatchEvent(new Event("close"));
+    });
+    expect(dialog.open).toBe(true);
+  });
+
+  it("keeps keys inside the modal from reaching app shortcuts", async () => {
+    const shortcut = vi.fn();
+    document.addEventListener("keydown", shortcut);
+    await act(async () => root.render(<Harness dismiss={vi.fn()} />));
+    host
+      .querySelector("input")
+      ?.dispatchEvent(new KeyboardEvent("keydown", { key: "k", ctrlKey: true, bubbles: true }));
+    document.removeEventListener("keydown", shortcut);
+    expect(shortcut).not.toHaveBeenCalled();
+  });
+
   it("does not restore focus to a removed opener", async () => {
     await act(async () => root.render(<Harness dismiss={vi.fn()} />));
     opener.remove();

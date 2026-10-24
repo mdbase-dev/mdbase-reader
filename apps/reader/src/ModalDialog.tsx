@@ -19,12 +19,15 @@ export function ModalDialog({
   readonly onDismiss: () => void;
 }): JSX.Element {
   const dialog = useRef<HTMLDialogElement>(null);
+  const mounted = useRef(false);
   useEffect(() => {
     const opener = document.activeElement;
     const element = dialog.current;
+    mounted.current = true;
     element?.showModal();
     initialFocus?.current?.focus();
     return () => {
+      mounted.current = false;
       element?.close();
       if (opener instanceof HTMLElement && opener.isConnected) {
         opener.focus();
@@ -39,6 +42,15 @@ export function ModalDialog({
       role={role}
       aria-labelledby={labelledBy}
       aria-describedby={describedBy}
+      // App shortcuts listen on the document; none should act behind the modal.
+      onKeyDown={(event) => event.stopPropagation()}
+      // Browsers may close a dialog whose cancel was refused (repeated Escape without
+      // user activation). The dialog is still open as far as React knows, so reopen it.
+      onClose={(event) => {
+        if (mounted.current && !event.currentTarget.open) {
+          event.currentTarget.showModal();
+        }
+      }}
       onCancel={(event) => {
         event.preventDefault();
         event.stopPropagation();
