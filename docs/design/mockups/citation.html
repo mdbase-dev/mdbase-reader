@@ -1,0 +1,1654 @@
+<!doctype html>
+<html lang="en" data-theme="light">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=1280" />
+    <title>Citation tab — current and proposed · mdbase Reader design mockup</title>
+    <style>
+      /* ==========================================================================
+   Proposed mdbase Reader tokens (see docs/design-direction.md).
+   Scoped to .p so the recreated "current" UI keeps its own values.
+   ========================================================================== */
+      :root {
+        --font-ui:
+          "Atkinson Hyperlegible Next Variable", "Atkinson Hyperlegible Next", system-ui,
+          -apple-system, "Segoe UI", sans-serif;
+        --font-read:
+          "Iowan Old Style", Charter, "Bitstream Charter", "Source Serif 4", "Noto Serif", Georgia,
+          serif;
+        --font-mono: "Azeret Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      }
+      .p {
+        /* Type: size / line-height pairs. */
+        --text-xs: 12px;
+        --lh-xs: 16px;
+        --text-sm: 13px;
+        --lh-sm: 18px;
+        --text-md: 14px;
+        --lh-md: 20px;
+        --text-lg: 16px;
+        --lh-lg: 24px;
+        --text-xl: 20px;
+        --lh-xl: 28px;
+        --text-2xl: 28px;
+        --lh-2xl: 34px;
+        --text-quote: 15px;
+        --lh-quote: 1.6;
+        --weight-regular: 400;
+        --weight-medium: 520;
+        --weight-strong: 650;
+
+        /* Space: 4px grid. */
+        --sp-0-5: 2px;
+        --sp-1: 4px;
+        --sp-2: 8px;
+        --sp-3: 12px;
+        --sp-4: 16px;
+        --sp-5: 20px;
+        --sp-6: 24px;
+        --sp-8: 32px;
+        --sp-12: 48px;
+
+        /* Radii. */
+        --r-xs: 4px;
+        --r-sm: 6px;
+        --r-md: 8px;
+        --r-lg: 12px;
+        --r-xl: 16px;
+        --r-full: 999px;
+
+        /* Controls. */
+        --control-h: 32px;
+        --control-h-sm: 28px;
+        --target-min: 24px;
+
+        /* Motion. */
+        --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+        --dur-fast: 120ms;
+        --dur-base: 180ms;
+        --dur-slow: 260ms;
+
+        color-scheme: light;
+        --bg-canvas: oklch(96.9% 0.006 80);
+        --bg-surface: oklch(99.1% 0.004 85);
+        --bg-raised: oklch(100% 0 0);
+        --bg-sunken: oklch(95.6% 0.007 80);
+        --bg-hover: oklch(95.2% 0.008 80);
+        --bg-paper: oklch(99.6% 0.004 90);
+        --text-1: oklch(24% 0.012 60);
+        --text-2: oklch(44% 0.012 60);
+        --text-3: oklch(52% 0.011 60);
+        --line: oklch(91.5% 0.007 75);
+        --line-strong: oklch(84% 0.009 75);
+        --line-control: oklch(64% 0.01 75);
+        --accent: oklch(47% 0.115 250);
+        --accent-strong: oklch(41% 0.115 250);
+        --accent-soft: oklch(94.6% 0.024 250);
+        --on-accent: oklch(99% 0.004 250);
+        --success: oklch(47% 0.09 150);
+        --warning-text: oklch(46% 0.085 65);
+        --warning-soft: oklch(96.2% 0.03 85);
+        --danger: oklch(50% 0.14 28);
+        --shadow-color: oklch(30% 0.02 60);
+        --e-1: 0 1px 2px color-mix(in oklch, var(--shadow-color) 8%, transparent);
+        --e-2:
+          0 0 0 1px color-mix(in oklch, var(--shadow-color) 7%, transparent),
+          0 6px 20px color-mix(in oklch, var(--shadow-color) 12%, transparent);
+        --e-3:
+          0 0 0 1px color-mix(in oklch, var(--shadow-color) 8%, transparent),
+          0 20px 56px color-mix(in oklch, var(--shadow-color) 20%, transparent);
+        --focus-ring: 0 0 0 2px var(--bg-surface), 0 0 0 4px var(--accent);
+
+        /* Highlights: wash (behind text) and ink (margin bars, swatches). */
+        --hl-yellow: oklch(92% 0.1 95);
+        --hl-green: oklch(91.5% 0.075 150);
+        --hl-blue: oklch(91% 0.055 235);
+        --hl-pink: oklch(91% 0.06 355);
+        --hl-purple: oklch(90.5% 0.055 300);
+        --ink-yellow: oklch(76% 0.15 82);
+        --ink-green: oklch(63% 0.13 150);
+        --ink-blue: oklch(60% 0.12 245);
+        --ink-pink: oklch(62% 0.15 355);
+        --ink-purple: oklch(56% 0.13 300);
+      }
+      [data-theme="dark"] .p {
+        color-scheme: dark;
+        --bg-canvas: oklch(16.5% 0.006 70);
+        --bg-surface: oklch(19.5% 0.006 70);
+        --bg-raised: oklch(25.5% 0.008 70);
+        --bg-sunken: oklch(16% 0.005 70);
+        --bg-hover: oklch(24.5% 0.007 70);
+        --bg-paper: oklch(21.5% 0.006 75);
+        --text-1: oklch(92.5% 0.008 80);
+        --text-2: oklch(76% 0.01 80);
+        --text-3: oklch(66% 0.01 80);
+        --line: oklch(29% 0.007 70);
+        --line-strong: oklch(37% 0.008 70);
+        --line-control: oklch(56% 0.01 70);
+        --accent: oklch(77% 0.1 245);
+        --accent-strong: oklch(83% 0.09 245);
+        --accent-soft: oklch(31% 0.05 250);
+        --on-accent: oklch(18% 0.02 250);
+        --success: oklch(74% 0.1 150);
+        --warning-text: oklch(82% 0.08 80);
+        --warning-soft: oklch(27% 0.03 80);
+        --danger: oklch(72% 0.13 28);
+        --shadow-color: oklch(5% 0.01 60);
+        --e-1: 0 1px 2px color-mix(in oklch, var(--shadow-color) 40%, transparent);
+        --e-2:
+          0 0 0 1px oklch(100% 0 0 / 0.06),
+          0 8px 24px color-mix(in oklch, var(--shadow-color) 55%, transparent);
+        --e-3:
+          0 0 0 1px oklch(100% 0 0 / 0.07),
+          0 24px 64px color-mix(in oklch, var(--shadow-color) 70%, transparent);
+        --hl-yellow: oklch(41% 0.075 88);
+        --hl-green: oklch(39% 0.06 150);
+        --hl-blue: oklch(39% 0.06 245);
+        --hl-pink: oklch(39% 0.07 355);
+        --hl-purple: oklch(38% 0.06 300);
+        --ink-yellow: oklch(83% 0.14 88);
+        --ink-green: oklch(75% 0.12 150);
+        --ink-blue: oklch(74% 0.11 245);
+        --ink-pink: oklch(75% 0.12 355);
+        --ink-purple: oklch(73% 0.11 300);
+      }
+      @media (prefers-reduced-motion: reduce) {
+        .p {
+          --dur-fast: 0ms;
+          --dur-base: 0ms;
+          --dur-slow: 0ms;
+        }
+      }
+      .p {
+        font-family: var(--font-ui);
+        font-size: var(--text-md);
+        line-height: var(--lh-md);
+        color: var(--text-1);
+        font-variant-numeric: tabular-nums;
+        -webkit-font-smoothing: antialiased;
+      }
+      .p button {
+        font: inherit;
+        color: inherit;
+      }
+      .p :focus-visible {
+        outline: none;
+        box-shadow: var(--focus-ring);
+      }
+
+      /* --- Proposed components -------------------------------------------------- */
+      .p .btn {
+        display: inline-flex;
+        align-items: center;
+        gap: var(--sp-2);
+        height: var(--control-h);
+        padding: 0 var(--sp-3);
+        border: 1px solid var(--line-strong);
+        border-radius: var(--r-md);
+        background: var(--bg-surface);
+        color: var(--text-1);
+        font-size: var(--text-sm);
+        font-weight: var(--weight-medium);
+        white-space: nowrap;
+        cursor: pointer;
+      }
+      .p .btn:hover {
+        background: var(--bg-hover);
+      }
+      .p .btn.primary {
+        border-color: transparent;
+        background: var(--accent);
+        color: var(--on-accent);
+      }
+      .p .btn.primary:hover {
+        background: var(--accent-strong);
+      }
+      .p .btn.quiet {
+        border-color: transparent;
+        background: transparent;
+        color: var(--text-2);
+      }
+      .p .btn.quiet:hover {
+        background: var(--bg-hover);
+        color: var(--text-1);
+      }
+      .p .icon-btn {
+        display: inline-grid;
+        place-items: center;
+        width: var(--control-h);
+        height: var(--control-h);
+        border: 0;
+        border-radius: var(--r-md);
+        background: transparent;
+        color: var(--text-2);
+        cursor: pointer;
+      }
+      .p .icon-btn:hover {
+        background: var(--bg-hover);
+        color: var(--text-1);
+      }
+      .p .icon-btn svg,
+      .p .btn svg {
+        width: 16px;
+        height: 16px;
+        flex: none;
+      }
+      .p .field {
+        display: flex;
+        align-items: center;
+        gap: var(--sp-2);
+        height: var(--control-h);
+        padding: 0 var(--sp-3);
+        border: 1px solid var(--line);
+        border-radius: var(--r-md);
+        background: var(--bg-sunken);
+        color: var(--text-3);
+        font-size: var(--text-sm);
+      }
+      .p .field svg {
+        width: 15px;
+        height: 15px;
+        flex: none;
+      }
+      .p .field .grow {
+        flex: 1;
+        min-width: 0;
+      }
+      .p .kbd {
+        padding: 0 5px;
+        border: 1px solid var(--line);
+        border-radius: var(--r-xs);
+        font-family: var(--font-mono);
+        font-size: 11px;
+        line-height: 16px;
+        color: var(--text-3);
+      }
+      .p .chip {
+        display: inline-flex;
+        align-items: center;
+        gap: var(--sp-1);
+        height: 22px;
+        padding: 0 var(--sp-2);
+        border-radius: var(--r-full);
+        background: var(--bg-sunken);
+        color: var(--text-2);
+        font-size: var(--text-xs);
+      }
+      .p .dot {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        flex: none;
+      }
+      .p .menu {
+        min-width: 220px;
+        padding: var(--sp-1);
+        border-radius: var(--r-lg);
+        background: var(--bg-raised);
+        box-shadow: var(--e-2);
+        font-size: var(--text-sm);
+      }
+      .p .menu .item {
+        display: flex;
+        align-items: center;
+        gap: var(--sp-2);
+        min-height: 32px;
+        padding: 0 var(--sp-2);
+        border-radius: var(--r-sm);
+        color: var(--text-1);
+      }
+      .p .menu .item.on {
+        background: var(--bg-hover);
+      }
+      .p .menu .item .end {
+        margin-left: auto;
+        color: var(--text-3);
+      }
+      .p .menu .label {
+        padding: var(--sp-2) var(--sp-2) var(--sp-1);
+        color: var(--text-3);
+        font-size: var(--text-xs);
+      }
+      .p .menu hr {
+        margin: var(--sp-1) 0;
+        border: 0;
+        border-top: 1px solid var(--line);
+      }
+      .p .tabs {
+        display: flex;
+        gap: var(--sp-4);
+        border-bottom: 1px solid var(--line);
+      }
+      .p .tab {
+        position: relative;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        height: 40px;
+        color: var(--text-2);
+        font-size: var(--text-sm);
+        font-weight: var(--weight-medium);
+      }
+      .p .tab.on {
+        color: var(--text-1);
+      }
+      .p .tab.on::after {
+        content: "";
+        position: absolute;
+        inset: auto 0 -1px;
+        height: 2px;
+        border-radius: 2px;
+        background: var(--accent);
+      }
+      .p .tab .n {
+        color: var(--text-3);
+        font-weight: var(--weight-regular);
+      }
+      .p .quote {
+        font-family: var(--font-read);
+        font-size: var(--text-quote);
+        line-height: var(--lh-quote);
+        color: var(--text-1);
+      }
+
+      /* --- Mockup board (not part of the proposal) ----------------------------- */
+      * {
+        box-sizing: border-box;
+      }
+      html,
+      body {
+        margin: 0;
+      }
+      body {
+        min-width: 1280px;
+        background: oklch(93% 0.004 80);
+        color: oklch(30% 0.01 60);
+        font-family:
+          "Atkinson Hyperlegible Next Variable", "Atkinson Hyperlegible Next", system-ui, sans-serif;
+        -webkit-font-smoothing: antialiased;
+      }
+      [data-theme="dark"] body {
+        background: oklch(12.5% 0.004 70);
+        color: oklch(82% 0.008 80);
+      }
+      .board {
+        width: 1280px;
+        margin: 0 auto;
+        padding: 32px 40px 56px;
+      }
+      .board-head {
+        display: flex;
+        align-items: flex-end;
+        justify-content: space-between;
+        gap: 24px;
+        margin-bottom: 24px;
+      }
+      .board-head h1 {
+        margin: 0 0 6px;
+        font-size: 22px;
+        line-height: 28px;
+        font-weight: 650;
+        letter-spacing: -0.01em;
+      }
+      .board-head p {
+        max-width: 760px;
+        margin: 0;
+        font-size: 14px;
+        line-height: 21px;
+        opacity: 0.78;
+      }
+      .theme-toggle {
+        display: inline-flex;
+        padding: 3px;
+        border-radius: 999px;
+        background: oklch(88% 0.005 80);
+      }
+      [data-theme="dark"] .theme-toggle {
+        background: oklch(22% 0.006 70);
+      }
+      .theme-toggle button {
+        height: 28px;
+        padding: 0 14px;
+        border: 0;
+        border-radius: 999px;
+        background: transparent;
+        color: inherit;
+        font: inherit;
+        font-size: 13px;
+        cursor: pointer;
+      }
+      .theme-toggle button[aria-pressed="true"] {
+        background: oklch(99% 0.003 80);
+        box-shadow: 0 1px 2px oklch(0% 0 0 / 0.12);
+      }
+      [data-theme="dark"] .theme-toggle button[aria-pressed="true"] {
+        background: oklch(32% 0.007 70);
+      }
+      .theme-toggle button:focus-visible {
+        outline: 2px solid oklch(55% 0.12 250);
+        outline-offset: 2px;
+      }
+      .tag {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        margin: 0 0 10px;
+        font-size: 12px;
+        font-weight: 650;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+        opacity: 0.7;
+      }
+      .tag::before {
+        content: "";
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background: oklch(62% 0.02 255);
+      }
+      .tag.is-proposed::before {
+        background: oklch(60% 0.13 250);
+      }
+      .frame {
+        overflow: hidden;
+        border-radius: 12px;
+        box-shadow:
+          0 0 0 1px oklch(0% 0 0 / 0.08),
+          0 12px 32px oklch(30% 0.02 60 / 0.12);
+      }
+      [data-theme="dark"] .frame {
+        box-shadow:
+          0 0 0 1px oklch(100% 0 0 / 0.08),
+          0 12px 32px oklch(0% 0 0 / 0.5);
+      }
+      .notes {
+        margin: 14px 0 0;
+        padding: 0 0 0 18px;
+        font-size: 13px;
+        line-height: 20px;
+        opacity: 0.85;
+      }
+      .notes li + li {
+        margin-top: 4px;
+      }
+      .notes b {
+        font-weight: 650;
+      }
+      .cols {
+        display: grid;
+        gap: 32px;
+        align-items: start;
+      }
+      .section-title {
+        margin: 40px 0 14px;
+        font-size: 15px;
+        font-weight: 650;
+      }
+
+      /* --- Recreated current UI (values from @mdbase-dev/ui tokens and
+   reader-shell.css; the UI face falls back because --sans names the
+   unloaded "Atkinson Hyperlegible"). -------------------------------------- */
+      .c {
+        --paper: oklch(99.5% 0.002 255);
+        --canvas: oklch(99.5% 0.002 255);
+        --hover: oklch(97.8% 0.003 255);
+        --ink: oklch(21% 0.018 255);
+        --soft: oklch(50% 0.014 255);
+        --muted: oklch(54% 0.01 255);
+        --faint: oklch(70% 0.009 255);
+        --line: oklch(92% 0.006 255);
+        --line-strong: oklch(82% 0.008 255);
+        --accent: oklch(47% 0.1 238);
+        --sel: color-mix(in srgb, oklch(86% 0.12 86) 20%, oklch(99.5% 0.002 255));
+        --hl: oklch(80% 0.11 86 / 0.52);
+        --hl-strong: oklch(80% 0.13 80 / 0.85);
+        --bar: oklch(66% 0.13 76);
+        --tool: oklch(96.2% 0.004 255);
+        color-scheme: light;
+        font-family: "Atkinson Hyperlegible", "Segoe UI", Arial, sans-serif;
+        font-size: 13px;
+        color: var(--ink);
+        background: var(--paper);
+      }
+      [data-theme="dark"] .c {
+        --paper: oklch(19.5% 0.012 255);
+        --canvas: oklch(17.5% 0.012 255);
+        --hover: oklch(22.5% 0.012 255);
+        --ink: oklch(92% 0.008 255);
+        --soft: oklch(70% 0.012 255);
+        --muted: oklch(62% 0.011 255);
+        --faint: oklch(56% 0.011 255);
+        --line: oklch(29% 0.012 255);
+        --line-strong: oklch(39% 0.012 255);
+        --accent: oklch(73% 0.105 238);
+        --sel: oklch(23.5% 0.012 255);
+        --hl: oklch(55% 0.1 86 / 0.45);
+        --hl-strong: oklch(62% 0.12 80 / 0.7);
+        --tool: oklch(17.5% 0.012 255);
+        color-scheme: dark;
+      }
+      .c button {
+        font: inherit;
+        color: inherit;
+      }
+      .c svg {
+        width: 14px;
+        height: 14px;
+        flex: none;
+      }
+
+      .cols {
+        grid-template-columns: repeat(3, 372px);
+        justify-content: space-between;
+      }
+
+      /* ---------- Current recreation ---------- */
+      .c.panel {
+        height: 800px;
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+        font-size: 13px;
+      }
+      .c .ph {
+        height: 36px;
+        padding: 0 8px;
+        display: flex;
+        align-items: center;
+        background: var(--canvas);
+        color: var(--soft);
+        font-size: 12px;
+        font-weight: 700;
+        border-bottom: 1px solid var(--line);
+      }
+      .c .tabs {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        height: 40px;
+        padding: 0 14px;
+        border-bottom: 1px solid var(--line);
+        color: var(--muted);
+      }
+      .c .tabs .on {
+        position: relative;
+        display: flex;
+        align-items: center;
+        gap: 5px;
+        height: 100%;
+        color: var(--ink);
+      }
+      .c .tabs .on::after {
+        content: "";
+        position: absolute;
+        inset: auto -2px 0;
+        height: 2px;
+        background: var(--accent);
+      }
+      .c .status {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        height: 44px;
+        padding: 0 12px;
+        border-bottom: 1px solid var(--line);
+      }
+      .c .status .ok {
+        color: oklch(45% 0.09 150);
+      }
+      .c .status .ok::before {
+        content: "● ";
+      }
+      .c .status .n {
+        padding: 0 5px;
+        border: 1px solid var(--line-strong);
+        border-radius: 8px;
+        font-size: 11px;
+      }
+      .c .status code {
+        padding: 2px 6px;
+        border-radius: 3px;
+        background: var(--hover);
+        color: var(--accent);
+        font-family: "Azeret Mono", monospace;
+        font-size: 10.5px;
+      }
+      .c .status .seg {
+        margin-left: auto;
+        display: flex;
+        gap: 14px;
+        color: var(--muted);
+      }
+      .c .status .seg b {
+        font-weight: 400;
+        color: var(--ink);
+        border-bottom: 2px solid var(--accent);
+        padding-bottom: 10px;
+        margin-bottom: -12px;
+      }
+      .c .prev {
+        padding: 12px 14px 14px;
+        border-left: 2px solid var(--line-strong);
+      }
+      .c .prev h4 {
+        margin: 0 0 6px;
+        font-size: 13px;
+        color: var(--soft);
+      }
+      .c .sel {
+        display: inline-flex;
+        gap: 6px;
+        align-items: center;
+        height: 24px;
+        padding: 0 6px;
+        margin-right: 8px;
+        border: 1px solid var(--line-strong);
+        border-radius: 4px;
+        font-size: 12px;
+      }
+      .c .lbl {
+        color: var(--muted);
+        font-size: 12px;
+        margin-right: 4px;
+      }
+      .c .ref {
+        margin-top: 14px;
+        font-family: Georgia, "Times New Roman", serif;
+        font-size: 12.5px;
+        line-height: 1.5;
+      }
+      .c .warn {
+        padding: 12px 16px;
+        background: var(--hover);
+        border-top: 1px solid var(--line);
+        border-bottom: 1px solid var(--line);
+        color: var(--soft);
+        line-height: 1.35;
+      }
+      .c .warn span {
+        display: inline-block;
+        margin-top: 8px;
+        padding: 5px 10px;
+        border: 1px solid var(--line);
+        border-radius: 4px;
+        background: var(--paper);
+        color: var(--ink);
+      }
+      .c .disc {
+        padding: 11px 16px;
+        border-bottom: 1px solid var(--line);
+        color: var(--soft);
+        font-size: 12px;
+      }
+      .c .find {
+        display: flex;
+        gap: 14px;
+        padding: 18px 16px;
+        border-bottom: 1px solid var(--line);
+      }
+      .c .find b {
+        display: block;
+      }
+      .c .find small {
+        color: var(--soft);
+        font-size: 12px;
+      }
+      .c .sec {
+        padding: 16px 16px 0;
+      }
+      .c .sec h4 {
+        margin: 0;
+        font-size: 13px;
+      }
+      .c .sec small {
+        display: block;
+        margin-bottom: 14px;
+        color: var(--soft);
+        font-size: 12px;
+      }
+      .c .in {
+        height: 34px;
+        margin: 4px 0 12px;
+        padding: 0 10px;
+        display: flex;
+        align-items: center;
+        border: 1px solid var(--line-strong);
+        border-radius: 4px;
+        white-space: nowrap;
+        overflow: hidden;
+      }
+      .c .l {
+        color: var(--soft);
+        font-size: 12px;
+      }
+      .c .foot {
+        margin-top: auto;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 10px 16px;
+        border-top: 1px solid var(--line);
+        color: var(--soft);
+        font-size: 12px;
+      }
+      .c .foot span:last-child {
+        padding: 7px 12px;
+        border: 1px solid var(--line);
+        border-radius: 6px;
+        background: var(--hover);
+        color: var(--soft);
+        font-size: 13px;
+        font-weight: 700;
+      }
+
+      /* ---------- Proposed ---------- */
+      .p.panel {
+        height: 800px;
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+        background: var(--bg-surface);
+      }
+      .p .ptabs {
+        padding: 0 var(--sp-4);
+        display: flex;
+        align-items: center;
+        border-bottom: 1px solid var(--line);
+      }
+      .p .ptabs .tabs {
+        flex: 1;
+        border: 0;
+      }
+      .p .scroll {
+        flex: 1;
+        overflow: hidden;
+        padding: var(--sp-4);
+      }
+      .p .cite {
+        padding: var(--sp-4) var(--sp-4) var(--sp-3);
+        border-radius: var(--r-lg);
+        background: var(--bg-raised);
+        box-shadow:
+          0 0 0 1px var(--line),
+          var(--e-1);
+      }
+      .p .cite .ref {
+        margin: 0;
+        padding-left: 1.4em;
+        text-indent: -1.4em;
+        font-family: var(--font-read);
+        font-size: var(--text-quote);
+        line-height: 1.55;
+      }
+      .p .cite .ref .miss {
+        padding: 0 3px;
+        border-radius: 3px;
+        background: var(--warning-soft);
+        color: var(--warning-text);
+        box-shadow: inset 0 -1px 0 color-mix(in oklch, var(--warning-text) 50%, transparent);
+      }
+      .p .cite .row {
+        display: flex;
+        align-items: center;
+        gap: var(--sp-1);
+        margin-top: var(--sp-3);
+        padding-top: var(--sp-3);
+        border-top: 1px solid var(--line);
+      }
+      .p .cite .row .sp {
+        flex: 1;
+      }
+      .p .quietsel {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        height: var(--control-h-sm);
+        padding: 0 var(--sp-2);
+        border-radius: var(--r-md);
+        color: var(--text-2);
+        font-size: var(--text-sm);
+      }
+      .p .quietsel svg {
+        width: 14px;
+        height: 14px;
+      }
+      .p .key {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        height: var(--control-h-sm);
+        padding: 0 var(--sp-2);
+        border-radius: var(--r-md);
+        background: var(--bg-sunken);
+        font-family: var(--font-mono);
+        font-size: 12px;
+        color: var(--text-2);
+      }
+      .p .key svg {
+        width: 13px;
+        height: 13px;
+        color: var(--text-3);
+      }
+      .p .cite .btn {
+        height: var(--control-h-sm);
+        font-size: var(--text-xs);
+      }
+      .p .health {
+        display: grid;
+        grid-template-columns: 1fr auto;
+        align-items: center;
+        gap: var(--sp-3);
+        margin-top: var(--sp-3);
+        padding: var(--sp-3) var(--sp-3) var(--sp-3) var(--sp-4);
+        border-radius: var(--r-lg);
+        background: var(--warning-soft);
+      }
+      .p .health b {
+        display: block;
+        color: var(--text-1);
+        font-size: var(--text-sm);
+        font-weight: var(--weight-strong);
+      }
+      .p .health span {
+        color: var(--text-2);
+        font-size: var(--text-xs);
+        line-height: var(--lh-xs);
+      }
+      .p dl {
+        display: grid;
+        grid-template-columns: 92px 1fr;
+        gap: var(--sp-2) var(--sp-3);
+        margin: var(--sp-5) 0 0;
+        padding: 0 var(--sp-1);
+        font-size: var(--text-sm);
+        line-height: var(--lh-sm);
+      }
+      .p dt {
+        color: var(--text-3);
+      }
+      .p dd {
+        margin: 0;
+        color: var(--text-1);
+      }
+      .p dd .warn-dot {
+        display: inline-block;
+        width: 6px;
+        height: 6px;
+        margin-left: 6px;
+        border-radius: 50%;
+        background: var(--warning-text);
+        vertical-align: 2px;
+      }
+      .p dd.empty {
+        color: var(--text-3);
+        font-style: italic;
+      }
+      .p .sec-h {
+        display: flex;
+        justify-content: space-between;
+        align-items: baseline;
+        margin-top: var(--sp-6);
+        padding: 0 var(--sp-1);
+        color: var(--text-2);
+        font-size: var(--text-sm);
+        font-weight: var(--weight-medium);
+      }
+      .p .sec-h a {
+        color: var(--accent);
+        font-weight: var(--weight-regular);
+        text-decoration: none;
+      }
+      .p .disc {
+        display: flex;
+        align-items: center;
+        gap: var(--sp-2);
+        min-height: 40px;
+        padding: 0 var(--sp-1);
+        border-top: 1px solid var(--line);
+        color: var(--text-2);
+        font-size: var(--text-sm);
+      }
+      .p .disc:first-of-type {
+        margin-top: var(--sp-5);
+      }
+      .p .disc svg {
+        width: 14px;
+        height: 14px;
+        color: var(--text-3);
+      }
+      .p .disc .end {
+        margin-left: auto;
+        color: var(--text-3);
+        font-size: var(--text-xs);
+      }
+
+      /* Fix details */
+      .p .fixhead {
+        display: flex;
+        align-items: center;
+        gap: var(--sp-2);
+        padding: var(--sp-3) var(--sp-3) var(--sp-3) var(--sp-2);
+        border-bottom: 1px solid var(--line);
+      }
+      .p .fixhead b {
+        font-size: var(--text-md);
+        font-weight: var(--weight-strong);
+      }
+      .p .fixhead span {
+        margin-left: auto;
+        color: var(--text-3);
+        font-size: var(--text-xs);
+      }
+      .p .issue {
+        padding: var(--sp-4);
+        border-radius: var(--r-lg);
+        background: var(--bg-raised);
+        box-shadow:
+          0 0 0 1px var(--line),
+          var(--e-1);
+      }
+      .p .issue + .issue {
+        margin-top: var(--sp-3);
+      }
+      .p .issue.done {
+        background: transparent;
+        box-shadow: 0 0 0 1px var(--line);
+      }
+      .p .issue h4 {
+        display: flex;
+        align-items: center;
+        gap: var(--sp-2);
+        margin: 0;
+        font-size: var(--text-sm);
+        font-weight: var(--weight-strong);
+      }
+      .p .issue h4 .ok {
+        display: inline-grid;
+        place-items: center;
+        width: 18px;
+        height: 18px;
+        border-radius: 50%;
+        background: var(--success);
+        color: var(--bg-surface);
+      }
+      .p .issue h4 .ok svg {
+        width: 12px;
+        height: 12px;
+      }
+      .p .issue p {
+        margin: 4px 0 var(--sp-3);
+        color: var(--text-2);
+        font-size: var(--text-xs);
+        line-height: var(--lh-xs);
+      }
+      .p .sugg {
+        display: grid;
+        gap: var(--sp-2);
+      }
+      .p .opt {
+        display: grid;
+        grid-template-columns: 16px 1fr;
+        gap: var(--sp-2);
+        align-items: start;
+        padding: var(--sp-2) var(--sp-3);
+        border-radius: var(--r-md);
+        box-shadow: 0 0 0 1px var(--line);
+        font-size: var(--text-sm);
+        line-height: var(--lh-sm);
+      }
+      .p .opt.on {
+        background: var(--accent-soft);
+        box-shadow: 0 0 0 1.5px var(--accent);
+      }
+      .p .opt small {
+        display: block;
+        color: var(--text-3);
+        font-size: var(--text-xs);
+      }
+      .p .opt .radio {
+        width: 14px;
+        height: 14px;
+        margin-top: 2px;
+        border-radius: 50%;
+        border: 1.5px solid var(--line-control);
+      }
+      .p .opt.on .radio {
+        border: 4px solid var(--accent);
+      }
+      .p .fixfoot {
+        margin-top: auto;
+        padding: var(--sp-3) var(--sp-4) var(--sp-4);
+        border-top: 1px solid var(--line);
+        background: var(--bg-surface);
+      }
+      .p .fixfoot .mini {
+        margin: 0 0 var(--sp-3);
+        padding-left: 1.4em;
+        text-indent: -1.4em;
+        font-family: var(--font-read);
+        font-size: 13px;
+        line-height: 1.5;
+        color: var(--text-2);
+      }
+      .p .fixfoot .mini ins {
+        text-decoration: none;
+        color: var(--text-1);
+        background: color-mix(in srgb, var(--accent-soft) 80%, transparent);
+        border-radius: 3px;
+        padding: 0 2px;
+      }
+      .p .fixfoot .acts {
+        display: flex;
+        justify-content: flex-end;
+        gap: var(--sp-2);
+      }
+    </style>
+  </head>
+  <body>
+    <svg width="0" height="0" style="position: absolute" aria-hidden="true">
+      <defs>
+        <symbol
+          id="i-search"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="1.8"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        >
+          <circle cx="11" cy="11" r="7" />
+          <path d="m20 20-3.5-3.5" />
+        </symbol>
+        <symbol
+          id="i-filter"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="1.8"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        >
+          <path d="M3 5h18l-7 8v6l-4 2v-8z" />
+        </symbol>
+        <symbol
+          id="i-sliders"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="1.8"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        >
+          <path d="M4 7h10M18 7h2M4 17h4M12 17h8" />
+          <circle cx="16" cy="7" r="2" />
+          <circle cx="10" cy="17" r="2" />
+        </symbol>
+        <symbol
+          id="i-plus"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="1.8"
+          stroke-linecap="round"
+        >
+          <path d="M12 5v14M5 12h14" />
+        </symbol>
+        <symbol id="i-more" viewBox="0 0 24 24" fill="currentColor">
+          <circle cx="5" cy="12" r="1.6" />
+          <circle cx="12" cy="12" r="1.6" />
+          <circle cx="19" cy="12" r="1.6" />
+        </symbol>
+        <symbol
+          id="i-chev"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="1.8"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        >
+          <path d="m6 9 6 6 6-6" />
+        </symbol>
+        <symbol
+          id="i-chev-r"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="1.8"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        >
+          <path d="m9 6 6 6-6 6" />
+        </symbol>
+        <symbol
+          id="i-comment"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="1.8"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        >
+          <path d="M21 12a8 8 0 0 1-11.8 7L4 20l1.2-4.4A8 8 0 1 1 21 12z" />
+        </symbol>
+        <symbol
+          id="i-bookmark"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="1.8"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        >
+          <path d="M6 3h12v18l-6-4-6 4z" />
+        </symbol>
+        <symbol
+          id="i-copy"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="1.8"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        >
+          <rect x="8" y="8" width="12" height="12" rx="2" />
+          <path d="M16 8V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h2" />
+        </symbol>
+        <symbol id="i-cite" viewBox="0 0 24 24" fill="currentColor">
+          <path
+            d="M4 18v-5.5C4 8.4 6 6 9.6 5.4l.6 1.6C8.2 7.7 7.3 9 7.2 11H10v7zm9 0v-5.5c0-4.1 2-6.5 5.6-7.1l.6 1.6c-2 .7-2.9 2-3 4H19v7z"
+          />
+        </symbol>
+        <symbol
+          id="i-trash"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="1.8"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        >
+          <path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3" />
+        </symbol>
+        <symbol
+          id="i-check"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2.2"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        >
+          <path d="m5 12.5 4.5 4.5L19 7.5" />
+        </symbol>
+        <symbol id="i-pause" viewBox="0 0 24 24" fill="currentColor">
+          <rect x="7" y="5" width="3.2" height="14" rx="1" />
+          <rect x="13.8" y="5" width="3.2" height="14" rx="1" />
+        </symbol>
+        <symbol
+          id="i-note"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="1.8"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        >
+          <path d="M5 3h10l4 4v14H5z" />
+          <path d="M14 3v5h5M8 12h8M8 16h6" />
+        </symbol>
+        <symbol
+          id="i-at"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="1.8"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        >
+          <circle cx="12" cy="12" r="4" />
+          <path d="M16 8v5a3 3 0 0 0 6 0v-1a10 10 0 1 0-4 8" />
+        </symbol>
+        <symbol
+          id="i-hl"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="1.8"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        >
+          <path d="m9 11-5 5v4h4l5-5M9 11l7-7 4 4-7 7M9 11l4 4" />
+        </symbol>
+        <symbol
+          id="i-x"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="1.8"
+          stroke-linecap="round"
+        >
+          <path d="M6 6l12 12M18 6 6 18" />
+        </symbol>
+        <symbol
+          id="i-sidebar"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="1.8"
+          stroke-linejoin="round"
+        >
+          <rect x="3" y="4" width="18" height="16" rx="2" />
+          <path d="M9 4v16" />
+        </symbol>
+        <symbol
+          id="i-panel"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="1.8"
+          stroke-linejoin="round"
+        >
+          <rect x="3" y="4" width="18" height="16" rx="2" />
+          <path d="M15 4v16" />
+        </symbol>
+        <symbol
+          id="i-book"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="1.8"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        >
+          <path d="M12 6c-2-1.5-5-2-8-2v14c3 0 6 .5 8 2 2-1.5 5-2 8-2V4c-3 0-6 .5-8 2zM12 6v14" />
+        </symbol>
+        <symbol
+          id="i-pen"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="1.8"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        >
+          <path d="M4 20h4L19 9l-4-4L4 16z" />
+        </symbol>
+        <symbol
+          id="i-insert"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="1.8"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        >
+          <path d="M5 3h10l4 4v14H5z" />
+          <path d="M12 10v6M9 13h6" />
+        </symbol>
+        <symbol
+          id="i-target"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="1.8"
+          stroke-linecap="round"
+        >
+          <circle cx="12" cy="12" r="7" />
+          <circle cx="12" cy="12" r="2.5" />
+        </symbol>
+        <symbol
+          id="i-sort"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="1.8"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        >
+          <path d="M7 4v16M3 16l4 4 4-4M17 20V4M13 8l4-4 4 4" />
+        </symbol>
+        <symbol
+          id="i-layout"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="1.8"
+          stroke-linejoin="round"
+        >
+          <rect x="3" y="4" width="18" height="16" rx="2" />
+          <path d="M3 10h18M10 10v10" />
+        </symbol>
+        <symbol
+          id="i-type"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="1.8"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        >
+          <path d="M4 7V5h16v2M12 5v14M9 19h6" />
+        </symbol>
+        <symbol
+          id="i-sparkle"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="1.8"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        >
+          <path d="M12 3v4M12 17v4M3 12h4M17 12h4" />
+        </symbol>
+        <symbol
+          id="i-wrench"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="1.8"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        >
+          <path d="M14.5 6.5a4 4 0 0 0 5 5L21 13l-8 8-3-3 8-8zM3 21l6-6" />
+        </symbol>
+        <symbol
+          id="i-pin"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="1.8"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        >
+          <path d="M9 4h6l-1 6 4 3v2H6v-2l4-3zM12 15v6" />
+        </symbol>
+      </defs>
+    </svg>
+
+    <main class="board">
+      <header class="board-head">
+        <div>
+          <h1>Notes panel · Citation</h1>
+          <p>
+            Lead with the formatted citation, the thing people come here for. One primary path,
+            <b>Fix details</b>, walks through what is missing with suggestions; field evidence,
+            CSL-JSON and lookup sit behind disclosures.
+          </p>
+        </div>
+        <div class="theme-toggle" role="group" aria-label="Theme">
+          <button type="button" data-set="light">Light</button>
+          <button type="button" data-set="dark">Dark</button>
+        </div>
+      </header>
+
+      <div class="cols">
+        <!-- ===================== CURRENT ===================== -->
+        <section>
+          <div class="tag">Current</div>
+          <div class="frame">
+            <div class="c panel" aria-label="Current citation tab (recreation)">
+              <div class="ph">Adam: A Method for Stochastic Optimization</div>
+              <div class="tabs">
+                <span
+                  ><svg><use href="#i-at" /></svg> 5</span
+                >
+                <svg><use href="#i-note" /></svg>
+                <span class="on"
+                  ><svg><use href="#i-at" /></svg> Citation</span
+                >
+                <span style="margin-left: auto"
+                  ><svg><use href="#i-panel" /></svg
+                ></span>
+              </div>
+              <div class="status">
+                <span class="ok">Ready</span><span class="n">2</span><code>@kingma2015a…</code>
+                <span class="seg"><b>Details</b><span>CSL-JSON</span></span>
+              </div>
+              <div class="prev">
+                <h4>Preview</h4>
+                <span class="lbl">Style</span
+                ><span class="sel"
+                  >APA <svg><use href="#i-chev" /></svg
+                ></span>
+                <span class="lbl">Locale</span
+                ><span class="sel"
+                  >English (US) <svg><use href="#i-chev" /></svg
+                ></span>
+                <div class="ref">
+                  Kingma, D. P., &amp; Ba, J. (n.d.). Adam: A method for stochastic optimization.
+                </div>
+              </div>
+              <div class="warn">
+                This citation is missing the date (2015), which the library records.<br /><span
+                  >Add to citation</span
+                >
+              </div>
+              <div class="disc">▸ Field sources</div>
+              <div class="find">
+                <svg><use href="#i-search" /></svg>
+                <div>
+                  <b>Find citation details</b
+                  ><small>Check for updates by DOI, ISBN, URL, or title</small>
+                </div>
+                <svg style="margin-left: auto"><use href="#i-plus" /></svg>
+              </div>
+              <div class="sec">
+                <h4>Citation details</h4>
+                <small>Title, work type, and citation key</small>
+                <div class="l">Title</div>
+                <div class="in">Adam: A Method for Stochastic Optimization</div>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px">
+                  <div>
+                    <div class="l">Type</div>
+                    <div class="in">Paper (conference) ▾</div>
+                  </div>
+                  <div>
+                    <div class="l">Citekey</div>
+                    <div class="in" style="color: var(--accent)">@ kingma2015adam</div>
+                  </div>
+                </div>
+                <div style="color: var(--accent); text-align: right; font-size: 12px">
+                  Regenerate
+                </div>
+                <h4 style="margin-top: 18px">Contributors</h4>
+                <small>Authors, editors, translators, and organisations</small>
+              </div>
+              <div class="foot"><span>▸ 2 quality suggestions</span><span>Save changes</span></div>
+            </div>
+          </div>
+          <ol class="notes">
+            <li>
+              The citation itself is 12.5px, one line among a dozen controls. Status, count, key,
+              two editors, style and locale come first.
+            </li>
+            <li>
+              Three competing paths (Add to citation, Find citation details, the form and Save
+              changes) and the evidence (<b>Field sources</b>) is always in view.
+            </li>
+          </ol>
+        </section>
+
+        <!-- ===================== PROPOSED ===================== -->
+        <section>
+          <div class="tag is-proposed">Proposed</div>
+          <div class="frame">
+            <div class="p panel" aria-label="Proposed citation tab">
+              <div class="ptabs">
+                <nav class="tabs" role="tablist" aria-label="Notes">
+                  <span class="tab" role="tab">Annotations <span class="n">5</span></span>
+                  <span class="tab" role="tab">Source note</span>
+                  <span class="tab on" role="tab" aria-selected="true">Citation</span>
+                </nav>
+                <button class="icon-btn" aria-label="Citation options">
+                  <svg><use href="#i-more" /></svg>
+                </button>
+              </div>
+              <div class="scroll">
+                <figure class="cite" style="margin: 0">
+                  <p class="ref">
+                    Kingma, D. P., &amp; Ba, J. (<span class="miss">n.d.</span>). Adam: A method for
+                    stochastic optimization. <span class="miss">[venue]</span>.
+                    https://arxiv.org/abs/1412.6980
+                  </p>
+                  <div class="row">
+                    <span class="quietsel"
+                      >APA 7th <svg><use href="#i-chev" /></svg
+                    ></span>
+                    <span class="sp"></span>
+                    <button class="btn">
+                      <svg><use href="#i-copy" /></svg>Copy
+                    </button>
+                    <button
+                      class="icon-btn"
+                      style="width: 28px; height: 28px"
+                      aria-label="More copy formats"
+                    >
+                      <svg><use href="#i-more" /></svg>
+                    </button>
+                  </div>
+                </figure>
+                <div class="health" role="status">
+                  <div>
+                    <b>2 details to check</b>
+                    <span>The date and venue are missing from this citation.</span>
+                  </div>
+                  <button class="btn primary">Fix details</button>
+                </div>
+                <div class="sec-h">Citation details <a href="#">Edit</a></div>
+                <dl>
+                  <dt>Type</dt>
+                  <dd>Paper in conference proceedings</dd>
+                  <dt>Authors</dt>
+                  <dd>Diederik P. Kingma, Jimmy Ba</dd>
+                  <dt>Published</dt>
+                  <dd class="empty">
+                    Not set<span class="warn-dot" aria-label="Needs checking"></span>
+                  </dd>
+                  <dt>Venue</dt>
+                  <dd class="empty">
+                    Not set<span class="warn-dot" aria-label="Needs checking"></span>
+                  </dd>
+                  <dt>Identifiers</dt>
+                  <dd>arXiv 1412.6980</dd>
+                  <dt>Citation key</dt>
+                  <dd>
+                    <span class="key"
+                      >@kingma2015adam<svg><use href="#i-copy" /></svg
+                    ></span>
+                  </dd>
+                </dl>
+                <div class="disc">
+                  <svg><use href="#i-chev-r" /></svg>Field evidence<span class="end"
+                    >arXiv · library</span
+                  >
+                </div>
+                <div class="disc">
+                  <svg><use href="#i-chev-r" /></svg>Look up by DOI, ISBN, URL or title
+                </div>
+                <div class="disc">
+                  <svg><use href="#i-chev-r" /></svg>CSL-JSON<span class="end">Advanced</span>
+                </div>
+              </div>
+            </div>
+          </div>
+          <ol class="notes">
+            <li>
+              The <b>formatted citation</b> leads, in the reading face at 15px, with missing parts
+              marked in place; Copy is right beside it.
+            </li>
+            <li>
+              One status line with the panel’s only filled button, <b>Fix details</b>. Details read
+              as a short list; editing is one click away.
+            </li>
+          </ol>
+        </section>
+
+        <!-- ===================== FIX DETAILS ===================== -->
+        <section>
+          <div class="tag is-proposed">Proposed · Fix details</div>
+          <div class="frame">
+            <div class="p panel" aria-label="Fix details flow">
+              <div class="fixhead">
+                <button class="icon-btn" aria-label="Back to citation">
+                  <svg style="transform: rotate(180deg)"><use href="#i-chev-r" /></svg>
+                </button>
+                <b>Fix details</b><span>1 of 2 resolved</span>
+              </div>
+              <div class="scroll">
+                <div class="issue done">
+                  <h4>
+                    <span class="ok"
+                      ><svg><use href="#i-check" /></svg></span
+                    >Published date
+                  </h4>
+                  <p style="margin-bottom: 0">Set to 2015, from your library record.</p>
+                </div>
+                <div class="issue">
+                  <h4>Venue</h4>
+                  <p>Where the paper appeared. Choose a suggestion or type your own.</p>
+                  <div class="sugg" role="radiogroup" aria-label="Venue suggestions">
+                    <div class="opt on" role="radio" aria-checked="true">
+                      <span class="radio"></span>
+                      <div>
+                        3rd International Conference on Learning Representations (ICLR 2015)<small
+                          >From DBLP · matches arXiv comment</small
+                        >
+                      </div>
+                    </div>
+                    <div class="opt" role="radio" aria-checked="false">
+                      <span class="radio"></span>
+                      <div>arXiv preprint arXiv:1412.6980<small>From arXiv</small></div>
+                    </div>
+                    <div class="field" style="background: var(--bg-surface)">
+                      <span class="grow">Other venue…</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="fixfoot">
+                <p class="mini">
+                  Kingma, D. P., &amp; Ba, J. (<ins>2015</ins>). Adam: A method for stochastic
+                  optimization.
+                  <ins>In 3rd International Conference on Learning Representations (ICLR 2015)</ins
+                  >.
+                </p>
+                <div class="acts">
+                  <button class="btn quiet">Cancel</button>
+                  <button class="btn primary">
+                    <svg><use href="#i-check" /></svg>Save details
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+          <ol class="notes">
+            <li>
+              Only the fields that need attention, each with sourced suggestions (Citoid, DBLP, the
+              library record); the evidence comes with the choice.
+            </li>
+            <li>The live preview shows exactly what changes before saving.</li>
+          </ol>
+        </section>
+      </div>
+    </main>
+    <script>
+      (() => {
+        const buttons = document.querySelectorAll("[data-set]");
+        const set = (theme) => {
+          document.documentElement.dataset.theme = theme;
+          buttons.forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.set === theme)));
+        };
+        const hash = location.hash.slice(1);
+        set(
+          hash === "dark" || hash === "light"
+            ? hash
+            : matchMedia("(prefers-color-scheme: dark)").matches
+              ? "dark"
+              : "light",
+        );
+        buttons.forEach((b) => b.addEventListener("click", () => set(b.dataset.set)));
+      })();
+    </script>
+  </body>
+</html>
