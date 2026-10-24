@@ -9,6 +9,8 @@ import type { SourceAdditionController } from "./use-source-addition.js";
 type Lookup = SourceAdditionController["lookup"];
 
 const idle: Lookup = {
+  canCancel: false,
+  cancel: () => undefined,
   progress: null,
   offer: null,
   notice: null,

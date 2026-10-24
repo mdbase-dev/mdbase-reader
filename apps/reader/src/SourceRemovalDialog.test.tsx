@@ -87,6 +87,36 @@ describe("removing a source", () => {
     expect(host.querySelector("[role=alertdialog]")).toBeNull();
   });
 
+  it("routes native dismissal through cancel and refuses it while removal is writing", async () => {
+    const opener = document.createElement("button");
+    document.body.append(opener);
+    opener.focus();
+    await act(async () => removal.request?.(source));
+    expect(host.querySelector("dialog")?.open).toBe(true);
+    await act(async () =>
+      host.querySelector("dialog")?.dispatchEvent(new Event("cancel", { cancelable: true })),
+    );
+    expect(host.querySelector("dialog")).toBeNull();
+    expect(document.activeElement).toBe(opener);
+    await act(async () => removal.request?.(source));
+    let finish!: () => void;
+    remove.mockReturnValueOnce(
+      new Promise<void>((resolve) => {
+        finish = resolve;
+      }),
+    );
+    await act(async () => button("Remove source")?.click());
+    await act(async () => {
+      const dialog = host.querySelector("dialog")!;
+      dialog.dispatchEvent(new Event("cancel", { cancelable: true }));
+      dialog.dispatchEvent(new MouseEvent("mousedown", { bubbles: true, clientX: -1 }));
+    });
+    expect(host.querySelector("dialog")?.open).toBe(true);
+    await act(async () => finish());
+    expect(host.querySelector("dialog")).toBeNull();
+    opener.remove();
+  });
+
   it("names linking sources by title and points a chapter's annotations to Move annotation", async () => {
     const chapter = { ...source, partOf: sourceId("book") };
     known = [

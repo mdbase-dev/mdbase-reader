@@ -48,6 +48,8 @@ export interface SourceAdditionServices extends PdfSearchServices {
   >;
   readonly importOptions?: SourceImportOptions;
   readonly onStatus: (message: string) => void;
+  /** After this boundary, writes and citation saving must finish without cancellation. */
+  readonly onWriteStart?: () => void;
 }
 
 /** A problem with an added source: a plain message, and the underlying error for its details. */
@@ -115,6 +117,7 @@ async function addFromUrl(
   const preview = await capturedPageCitation(page, services);
   const citation = preview?.citation ?? page.scholarly.citation;
   const fields = citation ? citationFields(citation) : undefined;
+  beginWrite(services);
   const source = await services.workspace.importSourceFile(
     {
       name: page.name,
@@ -237,7 +240,7 @@ export async function createWithoutDocument(
   url: string | undefined,
   services: Pick<
     SourceAdditionServices,
-    "workspace" | "importOptions" | "onStatus" | "chapterGateway" | "signal"
+    "workspace" | "importOptions" | "onStatus" | "chapterGateway" | "signal" | "onWriteStart"
   >,
 ): Promise<SourceAdditionOutcome> {
   const { createSource } = services.workspace;
@@ -251,6 +254,7 @@ export async function createWithoutDocument(
     services.signal,
   );
   services.onStatus("Saving the source…");
+  beginWrite(services);
   const source = await createSource(
     {
       title: fields.title ?? "Untitled source",
@@ -279,6 +283,7 @@ async function importPdf(
   const fields = citation ? citationFields(citation) : undefined;
   const title = fields?.title ?? pdfFileName(pdf.canonicalUrl, "Document").replace(/\.pdf$/iu, "");
   services.onStatus("Saving the PDF…");
+  beginWrite(services);
   const source = await services.workspace.importSourceFile(
     {
       name: pdfFileName(pdf.canonicalUrl, title),
@@ -379,6 +384,11 @@ function stringField(
 ): string | undefined {
   const value = citation[field];
   return typeof value === "string" && value.trim() ? value.trim() : undefined;
+}
+
+function beginWrite(services: Pick<SourceAdditionServices, "signal" | "onWriteStart">): void {
+  services.signal?.throwIfAborted();
+  services.onWriteStart?.();
 }
 
 function signalOf(services: { readonly signal?: AbortSignal }): { signal?: AbortSignal } {

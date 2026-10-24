@@ -16,6 +16,7 @@ import {
 import { readerErrorMessage } from "./errors.js";
 import { newCitationProvenance } from "./new-citation-provenance.js";
 import { chapterPlan, confirmChapterPlans } from "./source-part-creation.js";
+import { useCaptureTask } from "./use-capture-task.js";
 
 import type { ReaderWorkspaceController } from "./use-reader-workspace.js";
 import type { ReaderWorkspaceGateway } from "./workspace-model.js";
@@ -32,6 +33,8 @@ interface ChapterDoiController {
   readonly chapterOffer: ChapterDoiOffer | null;
   readonly bookOffer: CitationCandidate | null;
   readonly busy: boolean;
+  readonly canCancel: boolean;
+  readonly cancel: () => void;
   readonly error: string | null;
   readonly propose: (offer: ChapterDoiOffer | null) => void;
   readonly confirmChapter: (id: SourceId) => Promise<void>;
@@ -57,7 +60,8 @@ async function reviewedChapterParent(
 async function lookupChapterBook(
   gateway: ReaderWorkspaceGateway | undefined,
   offer: ChapterDoiOffer | null,
-  selectedIsbn?: string,
+  selectedIsbn: string | undefined,
+  signal: AbortSignal,
 ): Promise<CitationCandidate> {
   const isbns = chapterIsbns(offer?.candidate.citation["ISBN"]);
   const isbn =
@@ -71,7 +75,11 @@ async function lookupChapterBook(
       "Choose the correct container ISBN, or add the book by ISBN first and retry the chapter DOI.",
     );
   }
-  const candidate = await gateway.resolveCitation({ kind: "identifier", value: `isbn:${isbn}` });
+  const candidate = await gateway.resolveCitation(
+    { kind: "identifier", value: `isbn:${isbn}` },
+    { signal },
+  );
+  signal.throwIfAborted();
   if (
     candidate.citation.type !== "book" ||
     !chapterIsbns(candidate.citation["ISBN"]).includes(isbn)
@@ -79,6 +87,42 @@ async function lookupChapterBook(
     throw new Error("The catalogue result did not match the container ISBN. No book was created.");
   }
   return candidate;
+}
+
+function useChapterBookLookup(
+  gateway: ReaderWorkspaceGateway | undefined,
+  offer: ChapterDoiOffer | null,
+  onError: (message: string | null) => void,
+  onFound: (candidate: CitationCandidate) => void,
+): {
+  busy: boolean;
+  canCancel: boolean;
+  cancel: () => void;
+  find: (isbn?: string) => Promise<void>;
+} {
+  const task = useCaptureTask();
+  return {
+    busy: task.status === "capturing",
+    canCancel: task.canCancel,
+    cancel: task.cancel,
+    find: async (isbn) => {
+      const operation = task.begin();
+      if (!operation) {
+        return;
+      }
+      onError(null);
+      try {
+        const candidate = await lookupChapterBook(gateway, offer, isbn, operation.signal);
+        onFound(candidate);
+      } catch (reason) {
+        if (operation.isCurrent()) {
+          onError(readerErrorMessage(reason, "Could not find this book."));
+        }
+      } finally {
+        operation.finish();
+      }
+    },
+  };
 }
 
 export function useChapterDoi(
@@ -92,6 +136,10 @@ export function useChapterDoi(
   const [error, setError] = useState<string | null>(null);
   const bookIdentity = useRef<SourceId | null>(null);
   const pending = useRef(false);
+  const lookup = useChapterBookLookup(gateway, offer, setError, (candidate) => {
+    bookIdentity.current = sourceId(`src_${crypto.randomUUID()}`);
+    setBookOffer(candidate);
+  });
   const propose = useCallback((value: ChapterDoiOffer | null): void => {
     setOffer(value);
     setBookOffer(null);
@@ -99,7 +147,7 @@ export function useChapterDoi(
     setError(null);
   }, []);
   const run = async (work: () => Promise<void>): Promise<void> => {
-    if (pending.current) {
+    if (pending.current || lookup.busy) {
       return;
     }
     pending.current = true;
@@ -117,7 +165,9 @@ export function useChapterDoi(
   return {
     chapterOffer: offer,
     bookOffer,
-    busy,
+    busy: busy || lookup.busy,
+    canCancel: lookup.canCancel,
+    cancel: lookup.cancel,
     error,
     propose,
     confirmChapter: (bookId: SourceId) =>
@@ -141,12 +191,7 @@ export function useChapterDoi(
         propose(null);
         onImported(plan.sourceId);
       }),
-    findChapterBook: (selectedIsbn?: string) =>
-      run(async () => {
-        const candidate = await lookupChapterBook(gateway, offer, selectedIsbn);
-        bookIdentity.current = sourceId(`src_${crypto.randomUUID()}`);
-        setBookOffer(candidate);
-      }),
+    findChapterBook: lookup.find,
     saveChapterBook: () =>
       run(async () => {
         if (!bookOffer || !offer || !workspace.createSource || !bookIdentity.current || !gateway) {

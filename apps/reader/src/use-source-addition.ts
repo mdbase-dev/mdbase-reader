@@ -23,6 +23,8 @@ export interface SourceAdditionController {
   /** Adding by link or identifier: live progress, a citation-only offer, or a notice. */
   readonly lookup: Pick<
     WebCaptureFlow,
+    | "canCancel"
+    | "cancel"
     | "progress"
     | "offer"
     | "notice"
@@ -92,6 +94,8 @@ export function useSourceAddition(
       webCapture.clearError();
     },
     lookup: {
+      canCancel: webCapture.canCancel,
+      cancel: webCapture.cancel,
       progress: webCapture.progress,
       offer: webCapture.offer,
       notice: webCapture.notice,
