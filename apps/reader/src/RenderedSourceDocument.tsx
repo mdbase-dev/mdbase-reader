@@ -1,5 +1,6 @@
 import { useCallback, useEffect, type ReactNode } from "react";
 
+import { isHtml } from "./document-media.js";
 import { markPwaInstallEligible } from "./pwa-install.js";
 import { bindSurfaceReadingContext, sourceReadingContextKey } from "./source-reading-range.js";
 
@@ -50,8 +51,8 @@ export function RenderedSourceDocument({
 
 /** Only a saved web page keeps headings of its own that a renamed title can differ from. */
 function isSavedWebPage(source: SourceSummary): boolean {
-  const mediaType = source.documents[0]?.mediaType ?? "";
-  return mediaType === "text/html" || mediaType === "application/xhtml+xml";
+  const document = source.documents[0];
+  return document ? isHtml(document.mediaType, document.file) : false;
 }
 
 export function updateSurface(
