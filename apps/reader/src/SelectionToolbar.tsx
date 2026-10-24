@@ -48,6 +48,18 @@ function isTyping(target: EventTarget | null): boolean {
   return Boolean(element?.closest?.("input, textarea, select, [contenteditable='true']"));
 }
 
+const otherControls =
+  "button, a[href], summary, [role='button'], [role='link'], [role='menu'], [role='menuitem'], " +
+  "[role='menubar'], [role='tab'], [role='option'], [role='listbox'], [role='checkbox'], " +
+  "[role='radio'], [role='switch'], [role='slider'], [role='treeitem'], [role='gridcell']";
+
+/** Whether a key went to a control elsewhere in the app, such as a sidebar button. */
+function isOnOtherControl(target: EventTarget | null, toolbar: Node | null): boolean {
+  const element = target as { closest?: (selector: string) => Node | null } | null;
+  const control = element?.closest?.(otherControls);
+  return Boolean(control && !toolbar?.contains(control));
+}
+
 /**
  * Quick actions beside a fresh selection (highlight, comment, copy) or a clicked highlight
  * (comment, copy, delete). Nothing is saved until an action is chosen.
@@ -186,7 +198,7 @@ function SelectionToolbar({
       <button
         type="button"
         className="icon-button"
-        aria-label={copied === "text" ? "Copied" : "Copy"}
+        aria-label={copied === "text" ? "Copy: copied" : "Copy"}
         title={copied === "text" ? "Copied" : "Copy text"}
         disabled={!passage.text}
         onClick={() => copy("text")}
@@ -197,7 +209,9 @@ function SelectionToolbar({
       <button
         type="button"
         className="icon-button"
-        aria-label={copied === "citation" ? "Copied with citation" : "Copy with citation"}
+        aria-label={
+          copied === "citation" ? "Cite: copied with citation" : "Cite: copy with citation"
+        }
         title={
           composer.quoteCitation?.citekey
             ? `Copy as a quote citing @${composer.quoteCitation.citekey}`
@@ -266,7 +280,8 @@ function DeleteHighlightButton({
     <button
       type="button"
       className="is-danger"
-      aria-label="Confirm delete"
+      // The name starts with the visible words, so speech users can say what they see.
+      aria-label={state === "deleting" ? undefined : "Delete highlight?"}
       disabled={state === "deleting"}
       onClick={() => {
         onChange("deleting");
@@ -283,7 +298,8 @@ function DeleteHighlightButton({
 
 /**
  * Esc and a click outside dismiss the toolbar; H and C act on it. Keys pressed inside a document
- * frame arrive here too: renderers forward them while text is selected.
+ * frame arrive here too: renderers forward them while text is selected. H and C pressed on a
+ * control elsewhere, such as a sidebar button, belong to that control.
  */
 function useToolbarKeys(
   barRef: RefObject<HTMLDivElement | null>,
@@ -305,7 +321,8 @@ function useToolbarKeys(
         dismiss();
       } else if (
         (key === "h" || key === "c") &&
-        !(event.ctrlKey || event.metaKey || event.altKey || event.shiftKey)
+        !(event.ctrlKey || event.metaKey || event.altKey || event.shiftKey) &&
+        !isOnOtherControl(event.target, barRef.current)
       ) {
         const action = latest.current[key];
         if (action) {
