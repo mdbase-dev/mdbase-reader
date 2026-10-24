@@ -12,6 +12,7 @@ export * from "./next-reader-records.js";
 export * from "./portable-application-session.js";
 export * from "./record-session.js";
 export * from "./repositories.js";
+export type { ConnectValidationIssue } from "./validation-issues.js";
 export * from "./source-imports.js";
 export { sourcePartOfPatch, documentRangePatch } from "./source-frontmatter.js";
 export type { JsonObject, MdbaseAppManifest } from "@mdbase-dev/connect";
