@@ -28,6 +28,15 @@ describe("isSelectionShortcut", () => {
     expect(isSelectionShortcut(keyEvent("C"))).toBe(true);
   });
 
+  it("claims 1 to 5 for the highlight colours while text is selected", () => {
+    for (const key of ["1", "2", "3", "4", "5"]) {
+      expect(isSelectionShortcut(keyEvent(key))).toBe(true);
+    }
+    expect(isSelectionShortcut(keyEvent("6"))).toBe(false);
+    expect(isSelectionShortcut(keyEvent("1", { selected: false }))).toBe(false);
+    expect(isSelectionShortcut(keyEvent("2", { inField: true }))).toBe(false);
+  });
+
   it("leaves keys alone without a selection", () => {
     expect(isSelectionShortcut(keyEvent("h", { selected: false }))).toBe(false);
   });

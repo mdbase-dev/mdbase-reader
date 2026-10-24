@@ -1,8 +1,8 @@
+import { highlightColorSpec, type Annotation } from "@mdbase-reader/core";
 import { DecorationStyleType, type Decoration, type EpubNavigator } from "@readium/navigator";
 
 import { sessionReadiumLocatorForPublication } from "./epub-locator.js";
 
-import type { Annotation } from "@mdbase-reader/core";
 import type { Publication } from "@readium/shared";
 
 export function annotationToEpubDecoration(
@@ -38,25 +38,19 @@ export function annotationToEpubDecoration(
         locator,
         style: {
           type: active ? DecorationStyleType.HighlightUnderline : DecorationStyleType.Highlight,
-          tint: highlightTint(annotation.color),
+          tint: epubHighlightTint(annotation.color, active),
         },
       }
     : null;
 }
 
-function highlightTint(color: string | undefined): string {
-  switch (color?.toLowerCase()) {
-    case "blue":
-      return "#8ec5ff";
-    case "green":
-      return "#9de2b0";
-    case "pink":
-      return "#f3a6c8";
-    case "purple":
-      return "#c7a7f3";
-    default:
-      return "#f2cf63";
-  }
+/**
+ * EPUB pages keep Readium's light paper, so they take the light shades: the wash behind text,
+ * and for the active annotation the ink, which Readium draws as an underline over a faint tint.
+ */
+export function epubHighlightTint(color: string | undefined, active = false): string {
+  const shade = highlightColorSpec(color).light;
+  return active ? shade.ink : shade.wash;
 }
 
 /** Annotation highlights, as one Readium decoration group. */

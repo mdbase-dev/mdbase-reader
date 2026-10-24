@@ -5,8 +5,7 @@ import {
   type PdfSquareAnnoObject,
   type Rect,
 } from "@embedpdf/models";
-
-import type { Annotation, PdfQuadPoints } from "@mdbase-reader/core";
+import { highlightColorSpec, type Annotation, type PdfQuadPoints } from "@mdbase-reader/core";
 
 const supportedCoordinateProfile = "embedpdf-selection-page-points-v1";
 const supportedAreaCoordinateProfile = "embedpdf-capture-page-points-v1";
@@ -32,6 +31,7 @@ export function annotationToPdfDecoration(
   ) {
     return null;
   }
+  const color = highlightColorSpec(annotation.color);
   return {
     id: `mdbase-reader:${annotation.id}`,
     type: PdfAnnotationSubtype.HIGHLIGHT,
@@ -40,8 +40,10 @@ export function annotationToPdfDecoration(
     segmentRects,
     contents: annotation.body,
     flags: ["locked", "lockedContents"],
-    strokeColor: highlightColor(annotation.color),
-    opacity: 0.38,
+    // PDF pages keep their own paper in either theme, so they always take the light wash. The
+    // highlight multiplies onto the page, so an opaque wash leaves the text at full contrast.
+    strokeColor: color.light.wash,
+    opacity: color.washOpacity,
     ...(annotation.createdBy ? { author: annotation.createdBy } : {}),
     created: new Date(annotation.createdAt),
     modified: new Date(annotation.modifiedAt ?? annotation.createdAt),
@@ -93,13 +95,6 @@ function boundingRect(rects: readonly Rect[]): Rect {
   return { origin: { x: left, y: top }, size: { width: right - left, height: bottom - top } };
 }
 
-function highlightColor(color: string | undefined): string {
-  if (color?.startsWith("#")) {
-    return color;
-  }
-  return color === "blue" ? "#7bb7e8" : color === "green" ? "#8fcf9e" : "#f2ce63";
-}
-
 /**
  * A thin filled bar just left of a highlight's text, in page points, so highlights stay findable
  * in the margin. It carries the highlight's annotation id, so selecting it opens the same card.
@@ -125,7 +120,7 @@ export function annotationToPdfMarginDecoration(
     },
     contents: "",
     flags: ["locked", "lockedContents"],
-    color: noted ? "#9d6700" : "#d39f00",
+    color: highlightColorSpec(annotation.color).light.ink,
     strokeColor: "transparent",
     strokeWidth: 0,
     strokeStyle: PdfAnnotationBorderStyle.SOLID,

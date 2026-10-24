@@ -37,11 +37,14 @@ export function isApplicationShortcut(event: KeyboardEvent): boolean {
   return (event.ctrlKey || event.metaKey) && !["a", "c", "x", "v", "z", "y"].includes(key);
 }
 
-/** Single-letter selection actions: H highlights and C comments while text is selected. */
-export const selectionShortcutKeys = ["h", "c"] as const;
+/**
+ * Single-key selection actions while text is selected: H highlights in the last colour used, 1 to 5
+ * highlight in a palette colour, and C comments.
+ */
+export const selectionShortcutKeys = ["h", "c", "1", "2", "3", "4", "5"] as const;
 
 /**
- * Whether a key acts on the current text selection. Only unmodified H and C outside form fields,
+ * Whether a key acts on the current text selection. Only unmodified H, C and 1 to 5 outside fields,
  * and only while the event's document has a selection, so typing is never intercepted.
  */
 export function isSelectionShortcut(event: KeyboardEvent): boolean {
