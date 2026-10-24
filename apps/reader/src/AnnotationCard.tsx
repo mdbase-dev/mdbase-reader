@@ -8,6 +8,7 @@ import { AnnotationBodyEditor } from "./AnnotationEditor.js";
 import { AnnotationImage, type AnnotationFileReader } from "./AnnotationImage.js";
 import { AnnotationOwnerActions } from "./AnnotationOwnerActions.js";
 import { FocusIcon } from "./icons.js";
+import { annotationLocationLabel } from "./passage-labels.js";
 import { useAnnotationSession } from "./use-annotation-session.js";
 
 import type { AnnotationTransclusionController } from "./use-annotation-transclusion.js";
@@ -52,6 +53,7 @@ export function AnnotationCard({
     session.getSnapshot,
     session.getSnapshot,
   );
+  const location = annotationLocationLabel(annotation);
   const needsAttention =
     snapshot.status === "unsaved" || Boolean(snapshot.problem ?? snapshot.conflict);
   return (
@@ -73,16 +75,16 @@ export function AnnotationCard({
         <span className={`annotation-kind is-${annotation.annotationType}`}>
           {annotationKindLabel(annotation.annotationType)}
         </span>
-        {annotation.locator ? (
+        {location ? (
           <small
             className="annotation-locator"
             title={
               hasPassageAnchor(annotation.target)
-                ? annotation.locator.label
-                : `${annotation.locator.label} · saved without a link to the exact passage`
+                ? location
+                : `${location} · saved without a link to the exact passage`
             }
           >
-            {annotation.locator.label.replace(/^\[\[.*\]\]$/u, "Document passage")}
+            {location}
           </small>
         ) : null}
         {needsAttention && !editing ? (

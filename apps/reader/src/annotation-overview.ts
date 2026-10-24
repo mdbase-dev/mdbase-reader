@@ -1,5 +1,6 @@
 import { annotationBodyContent } from "./annotation-body-content.js";
 import { matchesCondition, type FieldCondition } from "./library-conditions.js";
+import { annotationLocationLabel } from "./passage-labels.js";
 
 import type { AnnotationSortDirection, AnnotationSortField } from "./annotation-columns.js";
 import type { Annotation, SourceSummary } from "@mdbase-reader/core";
@@ -130,7 +131,8 @@ export function annotationsToMarkdown(entries: readonly AnnotationEntry[]): stri
         if (note) {
           lines.push(...(quote ? [""] : []), note);
         }
-        const place = annotation.locator?.label ? ` (${annotation.locator.label})` : "";
+        const location = annotationLocationLabel(annotation);
+        const place = location ? ` (${location})` : "";
         const link = annotation.path ? `[[${annotation.path.replace(/\.md$/u, "")}|↗]]` : "";
         lines.push("", `${link}${place}`.trim());
         return lines.join("\n").trim();

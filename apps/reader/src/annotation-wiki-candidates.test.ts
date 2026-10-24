@@ -36,6 +36,17 @@ describe("annotationWikiCandidate", () => {
     });
   });
 
+  it("does not expose old file locators in bookmark suggestions", () => {
+    const candidate = annotationWikiCandidate({
+      ...annotation,
+      body: "",
+      locator: { label: "[[files/page.html]]" },
+      target: { html: { css: "p" } },
+    });
+    expect(candidate.label).toBe("Web page");
+    expect(candidate.detail).toBe("Web page");
+  });
+
   it("does not restore selector evidence when the blockquote is removed", () => {
     expect(annotationWikiCandidate({ ...annotation, body: "A considered note." })).toEqual({
       label: "A considered note.",

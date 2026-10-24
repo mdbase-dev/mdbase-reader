@@ -1,3 +1,5 @@
+import { snippetExcerpt } from "./snippet-text.js";
+
 export interface SearchExcerpt {
   readonly before: string;
   readonly match: string;
@@ -5,20 +7,24 @@ export interface SearchExcerpt {
 }
 
 export function searchExcerpt(text: string, query: string, context = 90): SearchExcerpt | null {
-  const clean = text.replace(/\s+/gu, " ");
   const needle = query.trim().replace(/\s+/gu, " ");
   if (!needle) {
     return null;
   }
-  const index = clean.toLocaleLowerCase().indexOf(needle.toLocaleLowerCase());
-  if (index < 0) {
+  // Match the original text, preserving line breaks until display cleanup. Quotation
+  // evidence is built separately from this same unmodified text by searchQuote.
+  const escaped = needle.replace(/[.*+?^${}()|[\]\\]/gu, "\\$&").replace(/ /gu, "\\s+");
+  const match = new RegExp(escaped, "iu").exec(text);
+  if (!match) {
     return null;
   }
+  const index = match.index;
+  const matchEnd = index + match[0].length;
   const start = Math.max(0, index - context);
-  const end = Math.min(clean.length, index + needle.length + context);
-  return {
-    before: `${start > 0 ? "…" : ""}${clean.slice(start, index)}`,
-    match: clean.slice(index, index + needle.length),
-    after: `${clean.slice(index + needle.length, end)}${end < clean.length ? "…" : ""}`,
-  };
+  const end = Math.min(text.length, matchEnd + context);
+  return snippetExcerpt({
+    before: `${start > 0 ? "…" : ""}${text.slice(start, index)}`,
+    match: match[0],
+    after: `${text.slice(matchEnd, end)}${end < text.length ? "…" : ""}`,
+  });
 }

@@ -1,6 +1,7 @@
 import { useId, type JSX, type ReactNode } from "react";
 
 import { annotationListKeyDown } from "./annotation-list-keyboard.js";
+import { annotationLocationLabel } from "./passage-labels.js";
 import { useAnnotationWindow } from "./use-annotation-window.js";
 
 import type { Annotation, AnnotationId } from "@mdbase-reader/core";
@@ -38,9 +39,7 @@ export function VirtualAnnotationList({
       {reading ? (
         <div className="annotation-reading-context">
           <span>
-            Near reading position:{" "}
-            {reading.locator?.label.replace(/^\[\[.*\]\]$/u, "Document passage") ??
-              "Document passage"}
+            Near reading position: {annotationLocationLabel(reading) ?? "Document passage"}
           </span>
           <button type="button" aria-pressed={following} onClick={toggleFollowing}>
             {following ? "Pause following" : "Follow reading"}

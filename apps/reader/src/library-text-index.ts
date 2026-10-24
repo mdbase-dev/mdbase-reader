@@ -1,6 +1,7 @@
 import { textQuoteAt } from "@mdbase-reader/core";
 
 import { libraryTextKey } from "./library-text-store.js";
+import { snippetExcerpt } from "./snippet-text.js";
 
 import type { LibraryTextEntry, LibraryTextStore } from "./library-text-store.js";
 import type { SearchExcerpt } from "./search-passages.js";
@@ -130,10 +131,10 @@ function foldedPassage(
   }
   return {
     quote: textQuoteAt(text, start, end),
-    excerpt: {
+    excerpt: snippetExcerpt({
       before: `${start > 90 ? "…" : ""}${text.slice(Math.max(0, start - 90), start)}`,
       match: text.slice(start, end),
       after: `${text.slice(end, end + 90)}${end + 90 < text.length ? "…" : ""}`,
-    },
+    }),
   };
 }

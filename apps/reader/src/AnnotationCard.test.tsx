@@ -56,6 +56,17 @@ it.each([undefined, { quote: { exact: "A quotation without coordinates" } }])(
     expect(html).toMatch(/<button[^>]*>Edit<\/button>/u);
   },
 );
+it("uses a human HTML location in the inspector card and its tooltip", () => {
+  const html = markup({
+    ...base,
+    locator: { label: "[[files/reader/src_19/page.html]]" },
+    target: { html: { css: "p" }, quote: { exact: "A passage" } },
+  });
+  expect(html).toContain("Web page");
+  expect(html).not.toContain("files/reader");
+  expect(html).toContain('class="annotation-locator" title="Web page">Web page');
+});
+
 it("offers navigation for a note with a verified PDF passage", () => {
   const html = markup({
     ...base,
