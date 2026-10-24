@@ -1,4 +1,7 @@
 @import "@mdbase-dev/ui/fonts.css";
+/* The reading face for quotations and citations; faces download only when text uses them. */
+@import "@fontsource-variable/source-serif-4/wght.css";
+@import "@fontsource-variable/source-serif-4/wght-italic.css";
 @import "@mdbase-dev/ui/tokens.css";
 @import "@mdbase-dev/ui/brand.css";
 @import "@mdbase-dev/ui/motion.css";
