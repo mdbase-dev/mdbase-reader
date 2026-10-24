@@ -14,6 +14,7 @@ import {
   type ChapterDoiOffer,
 } from "./chapter-doi.js";
 import { readerErrorMessage } from "./errors.js";
+import { newCitationProvenance } from "./new-citation-provenance.js";
 import { chapterPlan, confirmChapterPlans } from "./source-part-creation.js";
 
 import type { ReaderWorkspaceController } from "./use-reader-workspace.js";
@@ -181,7 +182,8 @@ export function useChapterDoi(
         const citation = Object.fromEntries(
           Object.entries(bookOffer.citation).filter(([key]) => key !== "id"),
         );
-        const book = await workspace.saveNewSourceCitation(parent, citation);
+        const provenance = await newCitationProvenance(bookOffer, gateway);
+        const book = await workspace.saveNewSourceCitation(parent, citation, provenance);
         workspace.reconcileSource(book);
         setOffer({ ...offer, books: [book] });
         setBookOffer(null);

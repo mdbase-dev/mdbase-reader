@@ -37,6 +37,7 @@ async function harness(librarySources: readonly Source[] = [book]): Promise<{
   createSourcePart: ReturnType<typeof vi.fn>;
   createSource: ReturnType<typeof vi.fn>;
   resolveCitation: ReturnType<typeof vi.fn>;
+  saveNewSourceCitation: ReturnType<typeof vi.fn>;
   close: () => void;
 }> {
   let controller: ReturnType<typeof useChapterDoi>;
@@ -72,6 +73,7 @@ async function harness(librarySources: readonly Source[] = [book]): Promise<{
     createSourcePart,
     createSource,
     resolveCitation,
+    saveNewSourceCitation: workspace.saveNewSourceCitation as ReturnType<typeof vi.fn>,
     close: () => {
       act(() => root.unmount());
     },
@@ -120,6 +122,11 @@ describe("chapter DOI confirmation", () => {
     });
     expect(h.createSource).toHaveBeenCalledWith(
       expect.objectContaining({ title: "Book", kind: "book", sourceId: expect.any(String) }),
+    );
+    expect(h.saveNewSourceCitation).toHaveBeenCalledWith(
+      book,
+      expect.not.objectContaining({ id: expect.anything() }),
+      expect.objectContaining({ title: { value: "Book", source: "registry:doi.org" } }),
     );
     expect(h.controller().chapterOffer?.books).toEqual([book]);
     expect(h.createSourcePart).not.toHaveBeenCalled();

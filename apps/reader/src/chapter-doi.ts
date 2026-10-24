@@ -1,7 +1,8 @@
 import { normalizedIsbn } from "@mdbase-reader/web-capture/source-identifiers";
 
+import { candidateClaims } from "./new-citation-provenance.js";
+
 import type { CitationCandidate, SourceSummary } from "@mdbase-reader/core";
-import type { Claim } from "@mdbase-reader/web-capture/citation-updates";
 
 /** Normalize ISBN-10 and ISBN-13 to the same edition identity, never title matching. */
 export function chapterIsbns(value: unknown): readonly string[] {
@@ -39,19 +40,7 @@ export function chapterBooks(
   );
 }
 
-export function chapterCandidateClaims(candidate: CitationCandidate): readonly Claim[] {
-  return Object.entries(candidate.citation)
-    .filter(([field]) => field !== "id")
-    .map(([field, value]) => ({
-      field,
-      value,
-      source:
-        candidate.provenance.provider === "doi.org"
-          ? { kind: "registry", name: "doi.org" }
-          : { kind: "generic-remote", name: candidate.provenance.provider },
-      observedAt: candidate.provenance.retrievedAt,
-    }));
-}
+export const chapterCandidateClaims = candidateClaims;
 
 export interface ChapterDoiOffer {
   readonly key: string;

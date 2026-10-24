@@ -166,6 +166,20 @@ afterEach(async () => {
 
 // eslint-disable-next-line max-lines-per-function
 describe("citation provenance and lookups", () => {
+  it("saves every field of a newly created manual citation as user provenance", async () => {
+    const { citation: stored, ...withoutCitation } = source;
+    expect(stored).toBe(citation);
+    await render({ ...withoutCitation, frontmatter: {} });
+    const draft = controller.assessment.value!;
+    await act(async () => controller.save());
+    expect(saveSourceCitation).toHaveBeenCalledOnce();
+    const saved = await saveSourceCitation.mock.results[0]!.value;
+    for (const [field, value] of Object.entries(draft)) {
+      expect(saved.cslProvenance?.[field]).toEqual({ value, source: "user" });
+    }
+    expect(container.textContent).toContain("edited manually");
+  });
+
   it("shows field status labels and agreed evidence without exposing stale alternatives", async () => {
     await render({
       ...explained,
