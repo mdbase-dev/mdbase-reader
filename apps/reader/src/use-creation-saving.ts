@@ -3,10 +3,17 @@ import { useRef, useState, type RefObject } from "react";
 
 import { saveAnnotationDraftToCollection } from "./annotation-draft-actions.js";
 import { saveSelection } from "./annotation-selection.js";
+import { lastHighlightColor, setLastHighlightColor } from "./highlight-colors.js";
 
 import type { AnnotationCreationBuffer } from "./annotation-creation-buffer.js";
+import type { HighlightSaveTracker } from "./use-highlight-undo.js";
 import type { TextComposerSelection } from "./use-selection-toolbar.js";
-import type { Annotation, AnnotationCreationRequest, Source } from "@mdbase-reader/core";
+import type {
+  Annotation,
+  AnnotationCreationRequest,
+  HighlightColorKey,
+  Source,
+} from "@mdbase-reader/core";
 import type { ReadingSurface } from "@mdbase-reader/reading-surface";
 
 type Problem = { readonly sourceId: string; readonly message: string } | null;
@@ -21,13 +28,19 @@ export function useCreationSaving(input: {
   readonly buffer: AnnotationCreationBuffer;
   readonly create: (request: AnnotationCreationRequest) => Promise<Annotation>;
   readonly onCreated: (annotation: Annotation) => void;
+  /** Follows a quick highlight's save, for its confirmation and Undo. */
+  readonly trackHighlight?: (
+    value: TextComposerSelection,
+    color: HighlightColorKey,
+  ) => HighlightSaveTracker;
   readonly beforeHighlight: () => void;
 }): {
   readonly busy: RefObject<boolean>;
   readonly saving: boolean;
   readonly problem: Problem;
   readonly setProblem: (problem: Problem) => void;
-  readonly highlight: (value: TextComposerSelection) => void;
+  /** Saves at once in `color`, or the colour used last, and remembers it. */
+  readonly highlight: (value: TextComposerSelection, color?: HighlightColorKey) => void;
   readonly save: () => void;
 } {
   const { source, surface, buffer, create } = input;
@@ -58,22 +71,26 @@ export function useCreationSaving(input: {
     saving,
     problem,
     setProblem,
-    highlight: (value) => {
+    highlight: (value, color = lastHighlightColor()) => {
       if (!source || !surface) {
         return;
       }
       // Highlights save independently of the composer's draft and of each other, so the next
       // selection gets its toolbar at once instead of waiting for this save's round trip.
+      const tracker = input.trackHighlight?.(value, color);
       input.beforeHighlight();
+      setLastHighlightColor(color);
       surface.capabilities.textSelection?.clearSelection();
       setProblem(null);
       void saveSelection(
         {
           source,
           surface,
+          color,
           create: (request) =>
             create(request).then((created) => {
               input.onCreated(created);
+              tracker?.saved(created);
               return created;
             }),
         },
@@ -81,7 +98,7 @@ export function useCreationSaving(input: {
         "",
         saved,
         failed,
-        () => undefined,
+        () => tracker?.settled(),
       );
     },
     save: () => {

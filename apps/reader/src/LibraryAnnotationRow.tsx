@@ -1,4 +1,5 @@
 import { annotationKindLabel } from "./annotation-kind.js";
+import { highlightColorProps } from "./highlight-colors.js";
 import { relativeDay } from "./LibraryCells.js";
 import { annotationLocationLabel } from "./passage-labels.js";
 import { itemClick, type LongPress } from "./use-long-press.js";
@@ -112,7 +113,11 @@ const cells: Record<
   ),
   creator: ({ source }) => <TextCell text={source?.creators.join(", ") ?? ""} />,
   type: ({ annotation }) => (
-    <span role="gridcell" className={`annotation-kind is-${annotation.annotationType}`}>
+    <span
+      role="gridcell"
+      className={`annotation-kind is-${annotation.annotationType}`}
+      {...(annotation.annotationType === "highlight" ? highlightColorProps(annotation.color) : {})}
+    >
       {annotationKindLabel(annotation.annotationType)}
     </span>
   ),

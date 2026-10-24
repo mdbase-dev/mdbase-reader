@@ -5,7 +5,11 @@ import {
   annotationGroupHeadings,
   type AnnotationGroupHeading,
 } from "./annotation-groups.js";
-import { indexAnnotations, searchAnnotationIndex } from "./annotation-list-order.js";
+import {
+  annotationMatchesColor,
+  indexAnnotations,
+  searchAnnotationIndex,
+} from "./annotation-list-order.js";
 import { AnnotationCard } from "./AnnotationCard.js";
 import {
   AnnotationFilterMenu,
@@ -25,6 +29,7 @@ import type {
   Annotation,
   AnnotationDeletionPlan,
   AnnotationId,
+  HighlightColorKey,
   SourceId,
   SourceSummary,
 } from "@mdbase-reader/core";
@@ -36,6 +41,8 @@ interface AnnotationListProps {
   readonly currentSourceId?: SourceId | undefined;
   readonly onMoveOwner?:
     ((annotation: Annotation, owner: SourceSummary) => Promise<void>) | undefined;
+  readonly onRecolor?:
+    ((annotation: Annotation, color: HighlightColorKey) => Promise<void>) | undefined;
   /** The Add menu (source comment, bookmark) that ends the control row. */
   readonly addMenu?: ReactNode;
   /** Shown between the control row and the cards, such as a new source comment. */
@@ -69,6 +76,7 @@ export function AnnotationList({
   owners,
   currentSourceId,
   onMoveOwner,
+  onRecolor,
   addMenu,
   beforeList,
   wholeBook,
@@ -85,16 +93,14 @@ export function AnnotationList({
   const [view, setView] = useState<AnnotationView>(defaultAnnotationView);
   const [following, setFollowing] = useState(true);
   const { renderAll, setRenderAll, browserRef } = useAnnotationBrowserFind();
-  const { scoped, results, headings } = useAnnotationResults(annotations, view, query, {
-    currentSourceId,
-    owners,
-  });
+  const context = { currentSourceId, owners };
+  const { scoped, results, headings } = useAnnotationResults(annotations, view, query, context);
   const grouped = view.order === "document";
+  const total = annotations.status === "ready" ? annotations.value.length : 0;
   const ready = annotations.status === "ready";
-  const total = ready ? annotations.value.length : 0;
   const clear = (): void => {
     setQuery("");
-    setView((current) => ({ ...current, filter: "all", source: "" }));
+    setView(clearedFilters);
   };
   const hiddenActive = activeIsHidden(annotations, results, activeId);
   return (
@@ -118,7 +124,7 @@ export function AnnotationList({
         {addMenu}
       </div>
       <AnnotationFilterStatus
-        filtered={query.trim() !== "" || view.filter !== "all" || view.source !== ""}
+        filtered={isFiltered(query, view)}
         hiddenActive={hiddenActive}
         paused={!following}
         onResume={() => setFollowing(true)}
@@ -150,6 +156,7 @@ export function AnnotationList({
               annotation={annotation}
               owners={owners}
               onMoveOwner={onMoveOwner}
+              onRecolor={onRecolor}
               showLocation={!grouped}
               // Headings name another source per run; the selected card also names it itself.
               showSource={
@@ -174,6 +181,15 @@ export function AnnotationList({
       )}
     </div>
   );
+}
+
+/** Search, type, source or colour hides some annotations; the order does not. */
+function isFiltered(query: string, view: AnnotationView): boolean {
+  return query.trim() !== "" || view.filter !== "all" || view.source !== "" || view.color !== "";
+}
+
+function clearedFilters(view: AnnotationView): AnnotationView {
+  return { ...view, filter: "all", source: "", color: "" };
 }
 
 /** The selected annotation exists but the search or filters hide it. */
@@ -213,8 +229,11 @@ function useAnnotationResults(
     [index, view.source],
   );
   const results = useMemo(
-    () => searchAnnotationIndex(scoped, query, view.filter),
-    [scoped, query, view.filter],
+    () =>
+      searchAnnotationIndex(scoped, query, view.filter).filter((annotation) =>
+        annotationMatchesColor(annotation, view.color),
+      ),
+    [scoped, query, view.filter, view.color],
   );
   const { currentSourceId, owners } = context;
   const headings = useMemo(

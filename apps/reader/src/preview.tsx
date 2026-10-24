@@ -524,6 +524,19 @@ export class PreviewGateway implements ReaderWorkspaceGateway {
     this.#annotationsChanged();
     return Promise.resolve(updated);
   }
+  setAnnotationColor(annotation: Annotation, color: string): Promise<Annotation> {
+    const updated = {
+      ...annotation,
+      color,
+      modifiedAt: dateTime(new Date().toISOString()),
+      recordRevision: recordRevision(`preview-color-${String(++this.#partRevision)}`),
+    };
+    this.#annotations = this.#annotations.map((candidate) =>
+      candidate.id === updated.id ? updated : candidate,
+    );
+    this.#annotationsChanged();
+    return Promise.resolve(updated);
+  }
   planAnnotationDeletion(annotation: Annotation): Promise<AnnotationDeletionPlan> {
     const source = this.#sources.find(({ id }) => id === annotation.sourceId);
     return Promise.resolve({

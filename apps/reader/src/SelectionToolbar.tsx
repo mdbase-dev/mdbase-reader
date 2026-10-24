@@ -1,3 +1,4 @@
+import { highlightColorKey, highlightColorKeys, type HighlightColorKey } from "@mdbase-reader/core";
 import {
   useEffect,
   useLayoutEffect,
@@ -11,7 +12,9 @@ import {
 import { annotationBodyContent } from "./annotation-body-content.js";
 import { AnnotationOwnerActions } from "./AnnotationOwnerActions.js";
 import { AnnotationOwnerChooser } from "./AnnotationOwnerChooser.js";
-import { CommentIcon, CopyIcon, HighlightIcon, QuoteIcon, TrashIcon } from "./icons.js";
+import { useHighlightMeanings, useLastHighlightColor } from "./highlight-colors.js";
+import { HighlightSwatches } from "./HighlightSwatches.js";
+import { CommentIcon, CopyIcon, QuoteIcon, TrashIcon } from "./icons.js";
 import { humanPassageLabel } from "./passage-labels.js";
 import { citableLocator, citedQuote, copyText } from "./selection-copy.js";
 import { selectionToolbarPlacement } from "./selection-toolbar-placement.js";
@@ -61,8 +64,9 @@ function isOnOtherControl(target: EventTarget | null, toolbar: Node | null): boo
 }
 
 /**
- * Quick actions beside a fresh selection (highlight, comment, copy) or a clicked highlight
- * (comment, copy, delete). Nothing is saved until an action is chosen.
+ * Quick actions beside a fresh selection (a colour to highlight it in, comment, copy) or a
+ * clicked highlight (its colour, comment, copy, delete). Nothing is saved until an action is
+ * chosen.
  */
 export function SelectionToolbarLayer({
   composer,
@@ -141,19 +145,14 @@ function SelectionToolbar({
   const [copied, setCopied] = useState<"text" | "citation" | "failed" | null>(null);
   const [deletion, setDeletion] = useState<"idle" | "confirming" | "deleting" | number>("idle");
   const passage = passageOf(target);
+  const lastColor = useLastHighlightColor();
+  const meanings = useHighlightMeanings();
   const comment = (): void =>
     target.kind === "selection"
       ? composer.comment(target.selection)
       : composer.edit(target.annotation);
-  const highlight = (): void => {
-    if (target.kind === "selection") {
-      composer.highlight(target.selection);
-    }
-  };
-  useToolbarKeys(barRef, composer.dismissToolbar, {
-    c: comment,
-    ...(target.kind === "selection" ? { h: highlight } : {}),
-  });
+  const swatches = toolbarSwatches(target, composer, lastColor);
+  useToolbarKeys(barRef, composer.dismissToolbar, { c: comment, ...colorKeys(swatches) });
   const copy = (kind: "text" | "citation"): void => {
     const citation = composer.quoteCitation;
     const text =
@@ -181,15 +180,17 @@ function SelectionToolbar({
           sources={composer.ownerControl?.sources}
         />
       )}
-      {target.kind === "selection" ? (
-        <button
-          disabled={composer.ownerControl?.pending}
-          type="button"
-          title="Highlight (H)"
-          onClick={highlight}
-        >
-          <HighlightIcon /> Highlight
-        </button>
+      {swatches ? (
+        <>
+          <HighlightSwatches
+            mode={swatches.mode}
+            ringed={swatches.ringed}
+            meanings={meanings}
+            disabled={swatches.disabled}
+            onChoose={swatches.choose}
+          />
+          <span className="selection-toolbar-divider" aria-hidden="true" />
+        </>
       ) : null}
       <button type="button" title="Comment on highlight (C)" onClick={comment}>
         <CommentIcon /> Comment on highlight
@@ -238,6 +239,61 @@ function SelectionToolbar({
       ) : null}
     </div>
   );
+}
+
+interface ToolbarSwatches {
+  readonly mode: "highlight" | "recolor";
+  readonly ringed: HighlightColorKey | null;
+  /** While the owner of a new highlight is being worked out, nothing can be saved yet. */
+  readonly disabled: boolean;
+  readonly choose: (color: HighlightColorKey) => void;
+}
+
+/**
+ * A selection's swatches save it in a colour; a highlight's change its colour, when the
+ * collection can. Other annotations, such as area captures, have no colour to choose.
+ */
+function toolbarSwatches(
+  target: SelectionToolbarTarget,
+  composer: AnnotationComposerController,
+  lastColor: HighlightColorKey,
+): ToolbarSwatches | null {
+  if (target.kind === "selection") {
+    return {
+      mode: "highlight",
+      ringed: lastColor,
+      disabled: Boolean(composer.ownerControl?.pending),
+      choose: (color) => composer.highlight(target.selection, color),
+    };
+  }
+  const { annotation } = target;
+  const recolor = composer.recolor;
+  if (!recolor || annotation.annotationType !== "highlight") {
+    return null;
+  }
+  return {
+    mode: "recolor",
+    ringed: highlightColorKey(annotation.color),
+    disabled: false,
+    choose: (color) => recolor(annotation, color),
+  };
+}
+
+/**
+ * 1–5 choose a colour by its place in the row; for a selection, H highlights in the colour
+ * used last. A highlight's colour changes only by number, since H means "highlight".
+ */
+function colorKeys(swatches: ToolbarSwatches | null): Partial<Record<ToolbarKey, () => void>> {
+  if (!swatches || swatches.disabled) {
+    return {};
+  }
+  const { choose, ringed } = swatches;
+  return {
+    ...Object.fromEntries(
+      highlightColorKeys.map((color, index) => [String(index + 1), () => choose(color)]),
+    ),
+    ...(swatches.mode === "highlight" && ringed ? { h: () => choose(ringed) } : {}),
+  };
 }
 
 /**
@@ -296,15 +352,18 @@ function DeleteHighlightButton({
   );
 }
 
+type ToolbarKey = "h" | "c" | "1" | "2" | "3" | "4" | "5";
+const toolbarKeys: ReadonlySet<string> = new Set<ToolbarKey>(["h", "c", "1", "2", "3", "4", "5"]);
+
 /**
- * Esc and a click outside dismiss the toolbar; H and C act on it. Keys pressed inside a document
- * frame arrive here too: renderers forward them while text is selected. H and C pressed on a
- * control elsewhere, such as a sidebar button, belong to that control.
+ * Esc and a click outside dismiss the toolbar; H, C and 1–5 act on it. Keys pressed inside a
+ * document frame arrive here too: renderers forward them while text is selected. These keys
+ * pressed on a control elsewhere, such as a sidebar button, belong to that control.
  */
 function useToolbarKeys(
   barRef: RefObject<HTMLDivElement | null>,
   dismiss: () => void,
-  actions: Readonly<Partial<Record<"h" | "c", () => void>>>,
+  actions: Readonly<Partial<Record<ToolbarKey, () => void>>>,
 ): void {
   const latest = useRef(actions);
   useEffect(() => {
@@ -320,11 +379,11 @@ function useToolbarKeys(
         event.preventDefault();
         dismiss();
       } else if (
-        (key === "h" || key === "c") &&
+        toolbarKeys.has(key) &&
         !(event.ctrlKey || event.metaKey || event.altKey || event.shiftKey) &&
         !isOnOtherControl(event.target, barRef.current)
       ) {
-        const action = latest.current[key];
+        const action = latest.current[key as ToolbarKey];
         if (action) {
           event.preventDefault();
           action();

@@ -1,4 +1,11 @@
-import { useEffect, useRef, useSyncExternalStore, type JSX, type RefObject } from "react";
+import {
+  highlightColorKey,
+  type Annotation,
+  type AnnotationDeletionPlan,
+  type HighlightColorKey,
+  type SourceSummary,
+} from "@mdbase-reader/core";
+import { useEffect, useRef, useState, useSyncExternalStore, type JSX, type RefObject } from "react";
 
 import { hasPassageAnchor } from "./annotation-anchor.js";
 import { annotationBodyContent } from "./annotation-body-content.js";
@@ -13,13 +20,19 @@ import {
   useAnnotationMove,
   type AnnotationMoveState,
 } from "./AnnotationOwnerActions.js";
+import {
+  highlightColorName,
+  highlightColorProps,
+  highlightMeaning,
+  useHighlightMeanings,
+} from "./highlight-colors.js";
+import { HighlightSwatches } from "./HighlightSwatches.js";
 import { FocusIcon, MoreIcon } from "./icons.js";
 import { Menu } from "./Menu.js";
 import { annotationLocationLabel } from "./passage-labels.js";
 import { useAnnotationSession } from "./use-annotation-session.js";
 
 import type { AnnotationTransclusionController } from "./use-annotation-transclusion.js";
-import type { Annotation, AnnotationDeletionPlan, SourceSummary } from "@mdbase-reader/core";
 const annotationDate = new Intl.DateTimeFormat(undefined, { month: "short", day: "numeric" });
 
 export function AnnotationCard({
@@ -36,6 +49,7 @@ export function AnnotationCard({
   readFile,
   owners,
   onMoveOwner,
+  onRecolor,
   showLocation = true,
   showSource = false,
 }: {
@@ -43,6 +57,9 @@ export function AnnotationCard({
   readonly owners?: readonly SourceSummary[] | undefined;
   readonly onMoveOwner?:
     ((annotation: Annotation, owner: SourceSummary) => Promise<void>) | undefined;
+  /** Changes a highlight's colour; absent when the collection cannot. */
+  readonly onRecolor?:
+    ((annotation: Annotation, color: HighlightColorKey) => Promise<void>) | undefined;
   readonly editing: boolean;
   readonly active: boolean;
   readonly transclusion: AnnotationTransclusionController;
@@ -76,6 +93,7 @@ export function AnnotationCard({
     <div
       ref={cardRef}
       className={cardClassName(annotation, { editing, active, linked })}
+      {...highlightColorProps(annotation.color)}
       data-annotation-id={annotation.id}
       role="group"
       aria-label={`${annotationKindLabel(annotation.annotationType)} annotation`}
@@ -120,6 +138,7 @@ export function AnnotationCard({
             owners={owners}
             move={onMoveOwner ? move : null}
             moveDisabled={cannotMoveOwner(editing, needsAttention, snapshot.editing)}
+            recolor={onRecolor && annotation.annotationType === "highlight" ? onRecolor : null}
           />
         </footer>
       ) : null}
@@ -166,8 +185,19 @@ function AnnotationMeta({
   readonly draft: string | null;
 }): JSX.Element {
   const location = showLocation ? annotationLocationLabel(annotation) : undefined;
+  const meanings = useHighlightMeanings();
+  const colored = hasHighlightColor(annotation);
+  const meaning = colored ? highlightMeaning(annotation.color, meanings) : null;
   return (
     <span className="annotation-meta">
+      {meaning ? (
+        <small
+          className="annotation-meaning"
+          title={highlightColorName(annotation.color, meanings)}
+        >
+          {meaning}
+        </small>
+      ) : null}
       {showKind ? (
         <span className={`annotation-kind is-${annotation.annotationType}`}>
           {annotationKindLabel(annotation.annotationType)}
@@ -189,8 +219,17 @@ function AnnotationMeta({
         </small>
       ) : null}
       {draft ? <small className="annotation-draft-badge">{draft}</small> : null}
+      {/* The bar's colour, in words, for anyone who cannot see it. */}
+      {colored && !meaning ? (
+        <span className="sr-only">{highlightColorName(annotation.color, meanings)}</span>
+      ) : null}
     </span>
   );
+}
+
+/** Highlights and other passages carry a colour; notes, bookmarks and areas do not. */
+function hasHighlightColor(annotation: Annotation): boolean {
+  return annotation.annotationType === "highlight" || Boolean(annotation.target?.quote);
 }
 
 /** A drag that selects part of the card, to copy its quote, ends in a click that must not open it. */
@@ -242,6 +281,38 @@ function AnnotationBody({
   );
 }
 
+/** The highlight's colour, changed in place; the card's bar follows once it is saved. */
+function AnnotationColorChoice({
+  annotation,
+  recolor,
+}: {
+  readonly annotation: Annotation;
+  readonly recolor: (annotation: Annotation, color: HighlightColorKey) => Promise<void>;
+}): JSX.Element {
+  const meanings = useHighlightMeanings();
+  const [state, setState] = useState<"idle" | "saving" | "failed">("idle");
+  return (
+    <div className="annotation-card-colors">
+      <span>Colour</span>
+      <HighlightSwatches
+        mode="recolor"
+        ringed={highlightColorKey(annotation.color)}
+        meanings={meanings}
+        shortcuts={false}
+        disabled={state === "saving" || !annotation.path || !annotation.recordRevision}
+        onChoose={(color) => {
+          setState("saving");
+          void recolor(annotation, color).then(
+            () => setState("idle"),
+            () => setState("failed"),
+          );
+        }}
+      />
+      {state === "failed" ? <small role="alert">Couldn’t change the colour.</small> : null}
+    </div>
+  );
+}
+
 function AnnotationCardActions({
   annotation,
   transclusion,
@@ -252,6 +323,7 @@ function AnnotationCardActions({
   owners,
   move,
   moveDisabled,
+  recolor,
 }: {
   readonly annotation: Annotation;
   readonly transclusion: AnnotationTransclusionController;
@@ -262,6 +334,7 @@ function AnnotationCardActions({
   readonly owners: readonly SourceSummary[] | undefined;
   readonly move: AnnotationMoveState | null;
   readonly moveDisabled: boolean;
+  readonly recolor: ((annotation: Annotation, color: HighlightColorKey) => Promise<void>) | null;
 }): JSX.Element {
   return (
     <div className="annotation-card-actions">
@@ -313,22 +386,51 @@ function AnnotationCardActions({
           <FocusIcon />
         </button>
       ) : null}
-      {move && owners && owners.length > 1 ? (
-        // The menu is a pointer-free island: clicks inside it never open the card's passage.
-        // eslint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions
-        <span className="annotation-card-more" onClick={(event) => event.stopPropagation()}>
-          <Menu label="More actions" trigger={<MoreIcon />}>
-            <div className="annotation-card-more-panel" data-menu-keep-open>
-              <AnnotationMoveSelect
-                annotation={annotation}
-                sources={owners}
-                disabled={moveDisabled}
-                state={move}
-              />
-            </div>
-          </Menu>
-        </span>
-      ) : null}
+      <AnnotationCardMore
+        annotation={annotation}
+        movable={move && owners && owners.length > 1 ? { move, owners } : null}
+        moveDisabled={moveDisabled}
+        recolor={recolor}
+      />
     </div>
+  );
+}
+
+/** The card's More menu: the highlight's colour and, with several sources, its owner. */
+function AnnotationCardMore({
+  annotation,
+  movable,
+  moveDisabled,
+  recolor,
+}: {
+  readonly annotation: Annotation;
+  readonly movable: {
+    readonly move: AnnotationMoveState;
+    readonly owners: readonly SourceSummary[];
+  } | null;
+  readonly moveDisabled: boolean;
+  readonly recolor: ((annotation: Annotation, color: HighlightColorKey) => Promise<void>) | null;
+}): JSX.Element | null {
+  if (!movable && !recolor) {
+    return null;
+  }
+  return (
+    // The menu is a pointer-free island: clicks inside it never open the card's passage.
+    // eslint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions
+    <span className="annotation-card-more" onClick={(event) => event.stopPropagation()}>
+      <Menu label="More actions" trigger={<MoreIcon />}>
+        <div className="annotation-card-more-panel" data-menu-keep-open>
+          {recolor ? <AnnotationColorChoice annotation={annotation} recolor={recolor} /> : null}
+          {movable ? (
+            <AnnotationMoveSelect
+              annotation={annotation}
+              sources={movable.owners}
+              disabled={moveDisabled}
+              state={movable.move}
+            />
+          ) : null}
+        </div>
+      </Menu>
+    </span>
   );
 }

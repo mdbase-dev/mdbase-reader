@@ -4,6 +4,7 @@ import { act } from "react";
 import { createRoot } from "react-dom/client";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
+import { setHighlightMeaning, setLastHighlightColor } from "./highlight-colors.js";
 import { SelectionToolbarLayer } from "./SelectionToolbar.js";
 
 import type { AnnotationComposerController } from "./use-annotation-composer.js";
@@ -17,51 +18,138 @@ const selection = {
   },
 } as unknown as TextComposerSelection;
 
+let host: HTMLDivElement;
+let sidebarButton: HTMLButtonElement;
+let root: ReturnType<typeof createRoot>;
+const highlight = vi.fn();
+const comment = vi.fn();
+
+beforeEach(async () => {
+  (globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
+  highlight.mockReset();
+  comment.mockReset();
+  localStorage.clear();
+  setLastHighlightColor("yellow");
+  setHighlightMeaning("green", "");
+  sidebarButton = document.createElement("button");
+  sidebarButton.textContent = "Sources";
+  host = document.createElement("div");
+  document.body.append(sidebarButton, host);
+  root = createRoot(host);
+  const composer = {
+    toolbar: { target: { kind: "selection", selection }, rect: null },
+    ownerControl: undefined,
+    quoteCitation: null,
+    highlight,
+    comment,
+    edit: vi.fn(),
+    remove: vi.fn(),
+    dismissToolbar: vi.fn(),
+  } as unknown as AnnotationComposerController;
+  await act(async () => root.render(<SelectionToolbarLayer composer={composer} />));
+});
+afterEach(async () => {
+  await act(async () => root.unmount());
+  host.remove();
+  sidebarButton.remove();
+});
+
+const press = (target: EventTarget, key: string): void => {
+  target.dispatchEvent(new KeyboardEvent("keydown", { key, bubbles: true, cancelable: true }));
+};
+
 describe("selection toolbar shortcuts", () => {
-  let host: HTMLDivElement;
-  let sidebarButton: HTMLButtonElement;
-  let root: ReturnType<typeof createRoot>;
-  const highlight = vi.fn();
-  const comment = vi.fn();
-
-  beforeEach(async () => {
-    (globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
-    highlight.mockReset();
-    comment.mockReset();
-    sidebarButton = document.createElement("button");
-    sidebarButton.textContent = "Sources";
-    host = document.createElement("div");
-    document.body.append(sidebarButton, host);
-    root = createRoot(host);
-    const composer = {
-      toolbar: { target: { kind: "selection", selection }, rect: null },
-      ownerControl: undefined,
-      quoteCitation: null,
-      highlight,
-      comment,
-      edit: vi.fn(),
-      remove: vi.fn(),
-      dismissToolbar: vi.fn(),
-    } as unknown as AnnotationComposerController;
-    await act(async () => root.render(<SelectionToolbarLayer composer={composer} />));
-  });
-  afterEach(async () => {
-    await act(async () => root.unmount());
-    host.remove();
-    sidebarButton.remove();
-  });
-
-  const press = (target: EventTarget, key: string): void => {
-    target.dispatchEvent(new KeyboardEvent("keydown", { key, bubbles: true, cancelable: true }));
-  };
-
   it("acts on keys forwarded from the document and keys pressed in the toolbar", () => {
     press(document, "h");
     const toolbarButton = host.querySelector<HTMLButtonElement>("[role='toolbar'] button");
     press(toolbarButton!, "c");
 
-    expect(highlight).toHaveBeenCalledWith(selection);
+    expect(highlight).toHaveBeenCalledWith(selection, "yellow");
     expect(comment).toHaveBeenCalledWith(selection);
+  });
+});
+
+describe("selection toolbar colours", () => {
+  it("leads with five named swatches that save in their colour", async () => {
+    const swatches = [...host.querySelectorAll<HTMLButtonElement>(".highlight-swatch")];
+    expect(swatches.map((swatch) => swatch.getAttribute("aria-label"))).toEqual([
+      "Highlight Yellow",
+      "Highlight Green",
+      "Highlight Blue",
+      "Highlight Pink",
+      "Highlight Purple",
+    ]);
+    expect(host.querySelector("[role='toolbar']")?.firstElementChild?.className).toBe(
+      "highlight-swatches",
+    );
+    expect(swatches[0]?.title).toBe("Highlight Yellow (H or 1)");
+    expect(swatches[2]?.title).toBe("Highlight Blue (3)");
+    await act(async () => swatches[2]?.click());
+    expect(highlight).toHaveBeenCalledWith(selection, "blue");
+  });
+
+  it("names swatches with their meanings", async () => {
+    setHighlightMeaning("green", "Evidence");
+    await act(async () => undefined);
+    const green = host.querySelector<HTMLButtonElement>("[data-highlight-color='green']");
+    expect(green?.getAttribute("aria-label")).toBe("Highlight Green — Evidence");
+  });
+
+  it("chooses colours with 1–5, and H uses the colour chosen last", async () => {
+    press(document, "4");
+    expect(highlight).toHaveBeenLastCalledWith(selection, "pink");
+    press(document, "6");
+    expect(highlight).toHaveBeenCalledTimes(1);
+    setLastHighlightColor("green");
+    await act(async () => undefined);
+    press(document, "h");
+    expect(highlight).toHaveBeenLastCalledWith(selection, "green");
+    expect(
+      host.querySelector(".highlight-swatch.is-ringed")?.getAttribute("data-highlight-color"),
+    ).toBe("green");
+  });
+
+  it("leaves digits pressed on another control or in a field alone", () => {
+    press(sidebarButton, "2");
+    const field = document.createElement("input");
+    document.body.append(field);
+    press(field, "3");
+    field.remove();
+    expect(highlight).not.toHaveBeenCalled();
+  });
+});
+
+describe("selection toolbar on a highlight", () => {
+  it("changes a clicked highlight's colour by swatch or number", async () => {
+    const annotation = {
+      id: "highlight",
+      annotationType: "highlight",
+      color: "blue",
+      body: "",
+      sourceId: "source",
+      source: "Source",
+      target: selection.value.target,
+    };
+    const recolor = vi.fn();
+    const composer = {
+      toolbar: { target: { kind: "annotation", annotation }, rect: null },
+      remove: vi.fn(),
+      edit: vi.fn(),
+      recolor,
+      dismissToolbar: vi.fn(),
+    } as unknown as AnnotationComposerController;
+    await act(async () => root.render(<SelectionToolbarLayer composer={composer} />));
+    const blue = host.querySelector<HTMLButtonElement>("[data-highlight-color='blue']");
+    expect(blue?.getAttribute("aria-pressed")).toBe("true");
+    expect(blue?.getAttribute("aria-label")).toBe("Blue");
+    await act(async () =>
+      host.querySelector<HTMLButtonElement>("[data-highlight-color='pink']")?.click(),
+    );
+    expect(recolor).toHaveBeenLastCalledWith(annotation, "pink");
+    press(document, "2");
+    expect(recolor).toHaveBeenLastCalledWith(annotation, "green");
+    press(document, "h");
+    expect(recolor).toHaveBeenCalledTimes(2);
   });
 
   it("leaves keys pressed on another control to that control", () => {

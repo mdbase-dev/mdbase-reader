@@ -101,9 +101,19 @@
   --warning-soft: oklch(96.2% 0.03 85);
   --danger-color: oklch(50% 0.14 28);
   --danger-soft: oklch(96.8% 0.02 28);
-  /* The default highlight colour (yellow): a wash behind text and an ink for bars. */
+  /* Highlights, yellow the default: a wash behind text and an ink for bars and swatches. The
+     renderers draw the same colours from @mdbase-reader/core (highlight-color.ts). Body text is
+     at least 12:1 on every light wash and 7:1 on every dark wash. */
   --hl-yellow: oklch(92% 0.1 95);
+  --hl-green: oklch(91.5% 0.075 150);
+  --hl-blue: oklch(91% 0.055 235);
+  --hl-pink: oklch(91% 0.06 355);
+  --hl-purple: oklch(90.5% 0.055 300);
   --ink-yellow: oklch(76% 0.15 82);
+  --ink-green: oklch(63% 0.13 150);
+  --ink-blue: oklch(60% 0.12 245);
+  --ink-pink: oklch(62% 0.15 355);
+  --ink-purple: oklch(56% 0.13 300);
   --shadow-color: oklch(30% 0.02 60);
   --e-1: 0 1px 2px color-mix(in oklch, var(--shadow-color) 8%, transparent);
   --e-2:
@@ -139,7 +149,15 @@
   --danger-color: oklch(72% 0.13 28);
   --danger-soft: oklch(26% 0.035 28);
   --hl-yellow: oklch(41% 0.075 88);
+  --hl-green: oklch(39% 0.06 150);
+  --hl-blue: oklch(39% 0.06 245);
+  --hl-pink: oklch(39% 0.07 355);
+  --hl-purple: oklch(38% 0.06 300);
   --ink-yellow: oklch(83% 0.14 88);
+  --ink-green: oklch(75% 0.12 150);
+  --ink-blue: oklch(74% 0.11 245);
+  --ink-pink: oklch(75% 0.12 355);
+  --ink-purple: oklch(73% 0.11 300);
   --shadow-color: oklch(5% 0.01 60);
   --e-1: 0 1px 2px color-mix(in oklch, var(--shadow-color) 40%, transparent);
   --e-2:
@@ -177,7 +195,15 @@
     --danger-color: oklch(72% 0.13 28);
     --danger-soft: oklch(26% 0.035 28);
     --hl-yellow: oklch(41% 0.075 88);
+    --hl-green: oklch(39% 0.06 150);
+    --hl-blue: oklch(39% 0.06 245);
+    --hl-pink: oklch(39% 0.07 355);
+    --hl-purple: oklch(38% 0.06 300);
     --ink-yellow: oklch(83% 0.14 88);
+    --ink-green: oklch(75% 0.12 150);
+    --ink-blue: oklch(74% 0.11 245);
+    --ink-pink: oklch(75% 0.12 355);
+    --ink-purple: oklch(73% 0.11 300);
     --shadow-color: oklch(5% 0.01 60);
     --e-1: 0 1px 2px color-mix(in oklch, var(--shadow-color) 40%, transparent);
     --e-2:

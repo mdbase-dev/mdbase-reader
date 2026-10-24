@@ -1,6 +1,6 @@
-import { annotationBodyContent } from "./annotation-body-content.js";
+import { highlightColorKey, type Annotation, type HighlightColorKey } from "@mdbase-reader/core";
 
-import type { Annotation } from "@mdbase-reader/core";
+import { annotationBodyContent } from "./annotation-body-content.js";
 export type AnnotationFilter = "all" | "comments" | "highlight" | "area" | "note" | "bookmark";
 export function browseAnnotations(
   annotations: readonly Annotation[],
@@ -53,6 +53,26 @@ export function searchAnnotationIndex(
         (!search || text.includes(search)),
     )
     .map(({ annotation }) => annotation);
+}
+
+/** A palette colour to list, or "" for any colour. */
+export type AnnotationColorFilter = "" | HighlightColorKey;
+
+/**
+ * Whether an annotation shows in a colour: highlights and other passages do, missing or unknown
+ * colours as yellow; a hex colour from another app matches no palette colour.
+ */
+export function annotationMatchesColor(
+  annotation: Annotation,
+  color: AnnotationColorFilter,
+): boolean {
+  if (!color) {
+    return true;
+  }
+  return (
+    (annotation.annotationType === "highlight" || Boolean(annotation.target?.quote)) &&
+    highlightColorKey(annotation.color) === color
+  );
 }
 function documentKey(annotation: Annotation): string {
   return `${annotation.document?.fileId ?? ""}@${annotation.document?.revision ?? ""}`;
