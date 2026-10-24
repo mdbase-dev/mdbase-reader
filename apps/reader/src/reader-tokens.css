@@ -1,0 +1,267 @@
+/* Reader tokens ---------------------------------------------------------------
+   The design-direction token layer (docs/design-direction.md). Reader runs warmer
+   than the shared @mdbase-dev/ui palette, so this file defines Reader's own roles
+   and maps the shared `--color-*` roles and the short aliases (`--paper`,
+   `--canvas`, `--ink`, `--muted`, `--line`, ...) onto them. Shared components and
+   older Reader rules therefore pick up the warm palette without edits.
+
+   Two planes: `--bg-canvas` is the chrome plane (header, Sources sidebar, tab
+   strips) and `--bg-surface` the content plane (panes, Notes panel, library).
+   `--bg-raised` is for popovers and menus, `--bg-sunken` for fields.
+
+   Theme: with no explicit choice the root carries no `data-theme` and the
+   palette follows `prefers-color-scheme`; an explicit Light or Dark choice sets
+   `data-theme` on the root. Contrast figures (OKLCH -> sRGB luminance): text-3
+   is 5.4:1 light / 5.9:1 dark on bg-surface and at least 4.9:1 on every neutral
+   background; the accent is at least 6:1 on surfaces in both themes. */
+
+:root {
+  /* Type. The UI face is Atkinson Hyperlegible Next; the reading face (quotations,
+     passages, formatted citations) is the bundled Source Serif 4. */
+  --font-ui:
+    "Atkinson Hyperlegible Next Variable", "Atkinson Hyperlegible Next", system-ui, -apple-system,
+    "Segoe UI", sans-serif;
+  --font-read:
+    "Source Serif 4 Variable", "Source Serif 4", "Iowan Old Style", Charter, Georgia, serif;
+  --sans: var(--font-ui);
+  --serif: var(--font-read);
+
+  --text-xs: 12px;
+  --lh-xs: 16px;
+  --text-sm: 13px;
+  --lh-sm: 18px;
+  --text-md: 14px;
+  --lh-md: 20px;
+  --text-lg: 16px;
+  --lh-lg: 24px;
+  --text-xl: 20px;
+  --lh-xl: 28px;
+  --text-2xl: 28px;
+  --lh-2xl: 34px;
+  --text-quote: 15px;
+  --lh-quote: 1.6;
+  --weight-regular: 400;
+  --weight-medium: 520;
+  --weight-strong: 650;
+
+  /* Space: a 4px grid. */
+  --sp-0-5: 2px;
+  --sp-1: 4px;
+  --sp-2: 8px;
+  --sp-3: 12px;
+  --sp-4: 16px;
+  --sp-5: 20px;
+  --sp-6: 24px;
+  --sp-8: 32px;
+  --sp-12: 48px;
+
+  /* Radii: keys and swatches, menu items, buttons and fields, cards and panes,
+     dialogs and sheets, chips. */
+  --r-xs: 4px;
+  --r-sm: 6px;
+  --r-md: 8px;
+  --r-lg: 12px;
+  --r-xl: 16px;
+  --r-full: 999px;
+
+  --control-h: 32px;
+  --control-h-sm: 28px;
+  --target-min: 24px;
+
+  /* Motion. */
+  --dur-fast: 120ms;
+  --dur-base: 180ms;
+  --dur-slow: 260ms;
+
+  /* Light palette. */
+  --bg-canvas: oklch(96.9% 0.006 80);
+  --bg-surface: oklch(99.1% 0.004 85);
+  --bg-raised: oklch(100% 0 0);
+  --bg-sunken: oklch(95.6% 0.007 80);
+  --bg-hover: oklch(95.2% 0.008 80);
+  --bg-paper: oklch(99.6% 0.004 90);
+  --bg-document: oklch(93.6% 0.008 78);
+  --text-1: oklch(24% 0.012 60);
+  --text-2: oklch(44% 0.012 60);
+  --text-3: oklch(52% 0.011 60);
+  --line-color: oklch(91.5% 0.007 75);
+  --line-strong-color: oklch(84% 0.009 75);
+  --line-control: oklch(64% 0.01 75);
+  --accent-color: oklch(47% 0.115 250);
+  --accent-strong: oklch(41% 0.115 250);
+  --accent-soft: oklch(94.6% 0.024 250);
+  --on-accent: oklch(99% 0.004 250);
+  --success: oklch(47% 0.09 150);
+  --warning-text: oklch(46% 0.085 65);
+  --warning-soft: oklch(96.2% 0.03 85);
+  --danger-color: oklch(50% 0.14 28);
+  --danger-soft: oklch(96.8% 0.02 28);
+  --shadow-color: oklch(30% 0.02 60);
+  --e-1: 0 1px 2px color-mix(in oklch, var(--shadow-color) 8%, transparent);
+  --e-2:
+    0 0 0 1px color-mix(in oklch, var(--shadow-color) 7%, transparent),
+    0 6px 20px color-mix(in oklch, var(--shadow-color) 12%, transparent);
+  --e-3:
+    0 0 0 1px color-mix(in oklch, var(--shadow-color) 8%, transparent),
+    0 20px 56px color-mix(in oklch, var(--shadow-color) 20%, transparent);
+  --scrim: oklch(24% 0.012 60 / 0.16);
+}
+
+:root[data-theme="dark"] {
+  --bg-canvas: oklch(16.5% 0.006 70);
+  --bg-surface: oklch(19.5% 0.006 70);
+  --bg-raised: oklch(25.5% 0.008 70);
+  --bg-sunken: oklch(16% 0.005 70);
+  --bg-hover: oklch(24.5% 0.007 70);
+  --bg-paper: oklch(21.5% 0.006 75);
+  --bg-document: oklch(14.5% 0.005 70);
+  --text-1: oklch(92.5% 0.008 80);
+  --text-2: oklch(76% 0.01 80);
+  --text-3: oklch(66% 0.01 80);
+  --line-color: oklch(29% 0.007 70);
+  --line-strong-color: oklch(37% 0.008 70);
+  --line-control: oklch(56% 0.01 70);
+  --accent-color: oklch(77% 0.1 245);
+  --accent-strong: oklch(83% 0.09 245);
+  --accent-soft: oklch(31% 0.05 250);
+  --on-accent: oklch(18% 0.02 250);
+  --success: oklch(74% 0.1 150);
+  --warning-text: oklch(82% 0.08 80);
+  --warning-soft: oklch(27% 0.03 80);
+  --danger-color: oklch(72% 0.13 28);
+  --danger-soft: oklch(26% 0.035 28);
+  --shadow-color: oklch(5% 0.01 60);
+  --e-1: 0 1px 2px color-mix(in oklch, var(--shadow-color) 40%, transparent);
+  --e-2:
+    0 0 0 1px oklch(100% 0 0 / 0.06),
+    0 8px 24px color-mix(in oklch, var(--shadow-color) 55%, transparent);
+  --e-3:
+    0 0 0 1px oklch(100% 0 0 / 0.07),
+    0 24px 64px color-mix(in oklch, var(--shadow-color) 70%, transparent);
+  --scrim: oklch(5% 0.01 60 / 0.46);
+}
+
+/* System theme: the same dark values, applied when no explicit choice is stored. */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme]) {
+    --bg-canvas: oklch(16.5% 0.006 70);
+    --bg-surface: oklch(19.5% 0.006 70);
+    --bg-raised: oklch(25.5% 0.008 70);
+    --bg-sunken: oklch(16% 0.005 70);
+    --bg-hover: oklch(24.5% 0.007 70);
+    --bg-paper: oklch(21.5% 0.006 75);
+    --bg-document: oklch(14.5% 0.005 70);
+    --text-1: oklch(92.5% 0.008 80);
+    --text-2: oklch(76% 0.01 80);
+    --text-3: oklch(66% 0.01 80);
+    --line-color: oklch(29% 0.007 70);
+    --line-strong-color: oklch(37% 0.008 70);
+    --line-control: oklch(56% 0.01 70);
+    --accent-color: oklch(77% 0.1 245);
+    --accent-strong: oklch(83% 0.09 245);
+    --accent-soft: oklch(31% 0.05 250);
+    --on-accent: oklch(18% 0.02 250);
+    --success: oklch(74% 0.1 150);
+    --warning-text: oklch(82% 0.08 80);
+    --warning-soft: oklch(27% 0.03 80);
+    --danger-color: oklch(72% 0.13 28);
+    --danger-soft: oklch(26% 0.035 28);
+    --shadow-color: oklch(5% 0.01 60);
+    --e-1: 0 1px 2px color-mix(in oklch, var(--shadow-color) 40%, transparent);
+    --e-2:
+      0 0 0 1px oklch(100% 0 0 / 0.06),
+      0 8px 24px color-mix(in oklch, var(--shadow-color) 55%, transparent);
+    --e-3:
+      0 0 0 1px oklch(100% 0 0 / 0.07),
+      0 24px 64px color-mix(in oklch, var(--shadow-color) 70%, transparent);
+    --scrim: oklch(5% 0.01 60 / 0.46);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --dur-fast: 0ms;
+    --dur-base: 0ms;
+    --dur-slow: 0ms;
+  }
+}
+
+/* Shared roles and short aliases. The selectors match the specificity of the
+   shared theme blocks so these mappings win in every theme state. */
+:root,
+:root[data-theme],
+:root:not([data-theme]) {
+  --color-canvas: var(--bg-canvas);
+  --color-surface: var(--bg-surface);
+  --color-surface-subtle: var(--bg-hover);
+  --color-selected: var(--accent-soft);
+  --color-text: var(--text-1);
+  --color-text-soft: var(--text-2);
+  --color-text-muted: var(--text-3);
+  --color-text-faint: var(--text-3);
+  --color-placeholder: var(--text-3);
+  --color-editor-text: var(--text-1);
+  --color-border: var(--line-color);
+  --color-border-strong: var(--line-strong-color);
+  --color-accent: var(--accent-color);
+  --color-accent-strong: var(--accent-strong);
+  --color-accent-soft: var(--accent-soft);
+  --color-on-accent: var(--on-accent);
+  --color-success: var(--success);
+  --color-danger: var(--danger-color);
+  --color-danger-soft: var(--danger-soft);
+  --color-warning-text: var(--warning-text);
+  --color-warning-surface: var(--warning-soft);
+  --color-shadow: color-mix(in oklch, var(--shadow-color) 12%, transparent);
+  --color-scrim: var(--scrim);
+
+  --radius-sm: var(--r-xs);
+  --radius-md: var(--r-md);
+  --radius-lg: var(--r-lg);
+  --elevation-low: var(--e-1);
+  --elevation-high: var(--e-2);
+  --font-weight-medium: var(--weight-medium);
+  --font-weight-semibold: var(--weight-strong);
+
+  /* Short aliases used throughout Reader CSS. */
+  --canvas: var(--bg-canvas);
+  --paper: var(--bg-surface);
+  --surface: var(--bg-surface);
+  --surface-raised: var(--bg-raised);
+  --hover: var(--bg-hover);
+  --selected: var(--accent-soft);
+  --ink: var(--text-1);
+  --ink-soft: var(--text-2);
+  --muted: var(--text-3);
+  --faint: var(--text-3);
+  --line: var(--line-color);
+  --line-strong: var(--line-strong-color);
+  --accent: var(--accent-color);
+  --action: var(--accent-strong);
+  --connected: var(--success);
+  --danger: var(--danger-color);
+
+  /* One focus treatment: a surface gap and a 2px accent ring. */
+  --focus-ring: 0 0 0 2px var(--bg-surface), 0 0 0 4px var(--accent-color);
+}
+
+/* Focus is always visible. The outline with a 2px offset renders the same gap
+   and ring as `--focus-ring` without colliding with components' own shadows.
+   Zero specificity: fields that ring their container still opt out locally. */
+:where(a, button, input, select, textarea, summary, [tabindex]):focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+@media (forced-colors: active) {
+  :where(a, button, input, select, textarea, summary, [tabindex]):focus-visible {
+    outline: 2px solid Highlight;
+  }
+}
+
+/* Selected rows sit on accent-soft, where text-3 falls to 4.2:1 in dark theme;
+   their secondary text lifts to text-2. */
+:is([aria-selected="true"], [aria-current="true"], [aria-current="page"], .is-selected) {
+  --muted: var(--text-2);
+  --faint: var(--text-2);
+}
