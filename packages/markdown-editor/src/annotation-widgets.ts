@@ -107,7 +107,7 @@ function embeddedDecorations(
               ? { title: candidate.label }
               : {
                   title:
-                    match[1] === "!"
+                    match[1] === "!" && path.startsWith("annotations/")
                       ? "Linked annotation is missing"
                       : `Linked record not found: ${path}`,
                 },

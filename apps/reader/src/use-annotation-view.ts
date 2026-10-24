@@ -73,8 +73,10 @@ export function useAnnotationViewExecution(
           setResult({ view, gateway, revision, execution: { paths, problem: null, ready: true } });
         }
       })
-      .catch(() => {
+      .catch((reason: unknown) => {
         if (!controller.signal.aborted) {
+          // eslint-disable-next-line no-console
+          console.warn("Annotation view fell back to Reader filtering", reason);
           setResult({
             view,
             gateway,

@@ -198,7 +198,7 @@ function SelectionToolbar({
       <button
         type="button"
         className="icon-button"
-        aria-label={copied === "text" ? "Copy: copied" : "Copy"}
+        aria-label="Copy"
         title={copied === "text" ? "Copied" : "Copy text"}
         disabled={!passage.text}
         onClick={() => copy("text")}
