@@ -1,6 +1,6 @@
 import { EditorView } from "@codemirror/view";
 
-export const uiFont = '"Atkinson Hyperlegible", "Segoe UI", sans-serif';
+export const uiFont = 'var(--sans, "Atkinson Hyperlegible Next Variable", "Segoe UI", sans-serif)';
 export const readingFont = 'Georgia, "Times New Roman", serif';
 
 export const readerEditorTheme = EditorView.theme({
