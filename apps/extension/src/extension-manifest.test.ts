@@ -155,9 +155,11 @@ describe("extension manifest details", () => {
   it("targets production without an environment label", () => {
     const environment = extensionEnvironment({ MDBASE_ENV: "production" });
     expect(environment.label).toBe("");
+    expect(environment.logUrl).toBe("https://log.mdbase.dev");
+    expect(environment.loopbackUrl).toBe("");
     expect(extensionManifest(environment)).toMatchObject({
       name: "mdbase Reader",
-      host_permissions: ["https://connect.mdbase.dev/*", "https://*/*"],
+      host_permissions: ["https://connect.mdbase.dev/*", "https://log.mdbase.dev/*", "https://*/*"],
     });
   });
 

@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 import { execFileSync } from "node:child_process";
-import { mkdtemp, mkdir, readFile, writeFile, rm, cp } from "node:fs/promises";
+import { mkdtemp, mkdir, readFile, writeFile, rm, cp, realpath } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { parse as parseYaml } from "yaml";
@@ -28,7 +28,11 @@ import {
 } from "../lib/reader-hosting-policy.mjs";
 import { assertArtifactMetadata, download } from "../lib/native-artifact.mjs";
 import { assertCurrentHead } from "../native-current-head.mjs";
-import { loadOriginals } from "../lib/native-originals.mjs";
+import {
+  loadOriginals,
+  originalMembers,
+  assertInstalledOriginals,
+} from "../lib/native-originals.mjs";
 import { approvedHashes } from "../lib/reader-approved-intake.mjs";
 import { inventoryDirectory } from "../lib/native-publish-bytes.mjs";
 import { offlineFixture } from "./reader-offline-fixture.mjs";
@@ -77,19 +81,48 @@ test("last current HEAD rejects moved branch even if source remains ancestor", a
   ])
     await assert.rejects(assertCurrentHead(env, async () => Response.json(value)));
 });
-test("ALL current eaa4 installed SDK/UI/protocol/peers: originals plus separately counted pnpm wrapper", async () => {
+test("ALL production eaa4 installed SDK/UI/protocol/peers match original packages", async () => {
+  const repoRoot = process.cwd();
   const installerEvidence = [];
-  const trust = await loadOriginals({
-    target: "staging",
-    repoRoot: process.cwd(),
-    hashes: approvedHashes,
-    installed: true,
-    installerEvidence,
-  });
-  assert.equal(trust.archives.sdk.members, 896);
-  assert.equal(trust.installerPolicy.originalYamlMembers, 233);
-  assert.equal(trust.archives.ui.members, 81);
-  assert.equal(trust.archives.protocol.members, 67);
+  const sdkMembers = originalMembers("packages/connect/vendor/sdk-eaa4e697-production-beta141.tgz");
+  const uiMembers = originalMembers("vendor/mdbase-dev-ui-dev-b2d7c464.tgz");
+  const protocolMembers = originalMembers(
+    "packages/connect/vendor/mdbase-dev-connect-protocol-0.1.0-beta.129-c280cd194ffd.tgz",
+  );
+  const sdkRoot = await realpath("apps/reader/node_modules/@mdbase-dev/sdk");
+  const options = { repoRoot, packageManager: "pnpm@10.7.0", installerEvidence };
+  for (const owner of ["apps/reader", "packages/connect"]) {
+    await assertInstalledOriginals(
+      await realpath(`${owner}/node_modules/@mdbase-dev/sdk`),
+      sdkMembers,
+      "installed SDK differs",
+      { ...options, sdk: true },
+    );
+  }
+  for (const owner of [
+    "apps/reader",
+    "apps/extension",
+    "packages/ui",
+    "packages/markdown-editor",
+  ]) {
+    const uiRoot = await realpath(`${owner}/node_modules/@mdbase-dev/ui`);
+    await assertInstalledOriginals(uiRoot, uiMembers, "installed UI differs");
+    await assertInstalledOriginals(
+      await realpath(join(uiRoot, "../sdk")),
+      sdkMembers,
+      "UI SDK peer differs",
+      { ...options, sdk: true },
+    );
+  }
+  await assertInstalledOriginals(
+    await realpath("node_modules/@mdbase-dev/connect-protocol"),
+    protocolMembers,
+    "installed protocol differs",
+    { ...options, protocol: true, originalSdkRoot: sdkRoot, originalSdkMembers: sdkMembers },
+  );
+  assert.equal(sdkMembers.length, 896);
+  assert.equal(uiMembers.length, 81);
+  assert.equal(protocolMembers.length, 67);
   assert.ok(installerEvidence.some((r) => r.package === "protocol"));
   assert.ok(installerEvidence.length > 0);
   for (const r of installerEvidence) {
@@ -101,7 +134,7 @@ test("ALL current eaa4 installed SDK/UI/protocol/peers: originals plus separatel
     assert.equal(r.path, "node_modules/.bin/yaml");
   }
   console.log(
-    "CURRENT eaa4 data-only installer proof (NOT product-build/admission)",
+    "Production eaa4 installed original-package comparison (NOT native admission)",
     JSON.stringify(installerEvidence),
   );
 });
@@ -122,7 +155,16 @@ test("native publisher scopes public staging key to target build, not default-LA
     /staging builds only/,
   );
   const build = job.steps.find((step) => step.id === "build");
-  assert.equal(build.env[keyName], "${{ needs.native-inputs.outputs.public-key }}");
+  assert.equal(
+    build.env[keyName],
+    "${{ inputs.target == 'staging' && needs.native-inputs.outputs.public-key || '' }}",
+  );
+  const hashes = workflow.jobs["native-inputs"].steps.find((step) => step.id === "hashes");
+  assert.equal(
+    hashes.env[keyName],
+    "${{ inputs.target == 'staging' && vars.MDBASE_EXTENSION_STAGING_PUBLIC_KEY || '' }}",
+  );
+  assert.ok(hashes.run.includes('if [[ "$TARGET" == staging ]]; then'));
 });
 test("successful checks restore only the known generated extension manifest before strict clean-source guard", async () => {
   const workflow = parseYaml(await readFile(".github/workflows/deploy-reader.yml", "utf8"));
@@ -196,8 +238,39 @@ async function intakeCopy() {
     await mkdir(join(root, p, ".."), { recursive: true });
     await cp(join(process.cwd(), p), join(root, p), { recursive: true });
   }
+  // Historical staging regressions use staging pins, not main's production SDK.
+  for (const path of [
+    "apps/reader/package.json",
+    "packages/connect/package.json",
+    "pnpm-lock.yaml",
+  ]) {
+    const bytes = await readFile(join(root, path), "utf8");
+    await writeFile(
+      join(root, path),
+      bytes
+        .replaceAll("sdk-eaa4e697-production-beta141.tgz", "sdk-dev-eaa4e697-staging.tgz")
+        .replaceAll(
+          "sha512-8N1ZcxMinDMyWaQdmxmmu+7/vp0+UdEF7EXw/swCqcS9gFcIQrtL9r2dwKhkdHrnrGJ5qTjS8+3LHVD8yA6CDg==",
+          "sha512-OZcexDhkjwROq0pSf/rSV1aU9H2AArhB5S2/UQU4ZTYMqJz7mpOhSFznZKSjDh6nb4EVROvBS926O3+HUePbjA==",
+        ),
+    );
+  }
   return root;
 }
+test("historical staging fixture still accepts its original SDK and packet", async () => {
+  const root = await intakeCopy();
+  try {
+    const trust = await loadOriginals({
+      target: "staging",
+      repoRoot: root,
+      hashes: approvedHashes,
+    });
+    assert.equal(trust.archives.sdk.members, 896);
+    assert.equal(trust.nativeAssets["runtime.wasm"].bytes, 3676583);
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});
 for (const [label, path] of Object.entries({
   SDK: "packages/connect/vendor/sdk-dev-eaa4e697-staging.tgz",
   legacy: "vendor/mdbase-dev-sdk-0.0.0-729b5391.tgz",

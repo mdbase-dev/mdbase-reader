@@ -5,18 +5,19 @@ import { assertValidReaderManifest } from "../../reader/scripts/validate-manifes
 
 import { stagingExtensionId, stagingManifestKey } from "./staging-public-key.mjs";
 
-/** The Chrome Web Store build's ID; its origin is what Connect registers for the extension. */
-export const storeExtensionId = "kimdfjefhbfgfecconmaiaaindjccidp";
+import { storeExtensionId } from "./extension-ids.mjs";
+
+export { storeExtensionId };
 
 /**
  * The SDK's log service for each environment, which the extension reaches from its
  * pages. Each value comes from the authenticated release trust bundled in that
- * environment's original SDK custody. Staging now has its own authenticated
- * archive; production still has no approved intake. Never reuse another target.
+ * environment's original SDK custody. Never reuse another target.
  */
 const sdkLogOrigins = Object.freeze({
   lab: "https://mdbase-next-log-lab-20261005.callumalpass.workers.dev",
   staging: "https://log-staging.mdbase.dev",
+  production: "https://log.mdbase.dev",
 });
 
 const chromeExtensionId = /^[a-p]{32}$/u;
@@ -59,7 +60,7 @@ export function extensionEnvironment(environment = process.env) {
     label: target === "production" ? "" : target.toUpperCase(),
     connectUrl: deployment.connectUrl,
     logUrl: sdkLogOrigins[target] ?? null,
-    loopbackUrl: target === "staging" ? "" : deployment.loopbackUrl,
+    loopbackUrl: target === "lab" ? deployment.loopbackUrl : "",
     readerOrigin: deployment.origin,
     extensionOrigins: extensionIds.map((id) => `chrome-extension://${id}`),
     ...(target === "staging" && stagingPublicKey ? { stagingPublicKey } : {}),
