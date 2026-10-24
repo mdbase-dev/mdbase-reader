@@ -1,6 +1,7 @@
 import {
   applyThemePreference,
   loadThemePreference,
+  observeTheme,
   saveThemePreference,
   type ThemePreference,
 } from "@mdbase-dev/ui/theme";
@@ -8,6 +9,7 @@ import { useEffect, useMemo, useState } from "react";
 
 import { applyLibraryLens } from "./library-lenses.js";
 import { sortLibrarySources } from "./library-view-state.js";
+import { applyReaderThemeColor } from "./reader-theme-color.js";
 import { startReaderStartupTiming } from "./startup-timing.js";
 import {
   useAnnotationComposer,
@@ -204,9 +206,16 @@ export function useLensFilteredSources(
 
 export function useThemePreference(): readonly [ThemePreference, (next: ThemePreference) => void] {
   const [theme, setTheme] = useState<ThemePreference>(() => loadThemePreference(localStorage));
-  useEffect(() => applyThemePreference(theme, document.documentElement), [theme]);
+  useEffect(() => {
+    const root = document.documentElement;
+    applyThemePreference(theme, root);
+    // The shared package writes its own chrome colour; Reader's canvas is warmer.
+    applyReaderThemeColor(root);
+    return observeTheme(() => applyReaderThemeColor(root), root);
+  }, [theme]);
   const change = (next: ThemePreference): void => {
     saveThemePreference(next, localStorage, document.documentElement);
+    applyReaderThemeColor(document.documentElement);
     setTheme(next);
   };
   return [theme, change];

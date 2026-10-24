@@ -5,6 +5,7 @@ import { createRoot } from "react-dom/client";
 import { afterEach, beforeEach, expect, it, vi } from "vitest";
 
 import { useThemePreference } from "./reader-app-hooks.js";
+import { readerThemeColors } from "./reader-theme-color.js";
 
 import type { ThemePreference } from "@mdbase-dev/ui/theme";
 
@@ -55,4 +56,17 @@ it("keeps an explicit light or dark choice", async () => {
   await act(async () => root.render(<Probe onState={report} />));
   expect(probe.current?.[0]).toBe("light");
   expect(document.documentElement.dataset["theme"]).toBe("light");
+});
+
+it("paints the browser chrome with Reader's warm canvas", async () => {
+  const meta = document.createElement("meta");
+  meta.name = "theme-color";
+  meta.content = "#fcfcfd";
+  document.head.append(meta);
+  localStorage.setItem("mdbase:theme", "dark");
+  await act(async () => root.render(<Probe onState={report} />));
+  expect(meta.content).toBe(readerThemeColors.dark);
+  await act(async () => probe.current?.[1]("light"));
+  expect(meta.content).toBe(readerThemeColors.light);
+  meta.remove();
 });
