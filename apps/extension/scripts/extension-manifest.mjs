@@ -5,8 +5,9 @@ import { assertValidReaderManifest } from "../../reader/scripts/validate-manifes
 
 import { stagingExtensionId, stagingManifestKey } from "./staging-public-key.mjs";
 
-/** The Chrome Web Store build's ID; its origin is what Connect registers for the extension. */
-export const storeExtensionId = "kimdfjefhbfgfecconmaiaaindjccidp";
+import { storeExtensionId } from "./extension-ids.mjs";
+
+export { storeExtensionId };
 
 /**
  * The SDK's log service for each environment, which the extension reaches from its
