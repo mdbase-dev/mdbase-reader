@@ -124,7 +124,13 @@ function CitationSuggestions({
                   <ins>{displayCslValue(suggestion.proposed)}</ins>
                 </span>
               </div>
-              <small>{citationSourceLabel(claimSourceLabel(suggestion.source))}</small>
+              <small>
+                {citationSourceLabel(
+                  [claimSourceLabel(suggestion.source), suggestion.evidence]
+                    .filter(Boolean)
+                    .join(" "),
+                )}
+              </small>
               <div className="citation-review-actions">
                 <button
                   type="button"

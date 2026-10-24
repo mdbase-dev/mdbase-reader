@@ -21,9 +21,17 @@ describe("citation provenance labels", () => {
     ["page:html", "page title"],
     ["site-adapter:stack-exchange/question", "From the web page"],
     ["site-adapter:translation-server/encyclopediaArticle", "Encyclopedia article"],
-    ["generic-remote:citoid", "From an online lookup"],
-    ["generic-remote:translation-server", "From an online lookup"],
+    // Embedded Metadata output for a page URL restates the page's own tags.
+    ["generic-remote:citoid", "From the web page"],
+    ["generic-remote:citoid Citoid webpage", "From the web page"],
+    ["generic-remote:citoid Citoid newspaperArticle", "From the web page"],
+    // A site translator's record, downgraded for uncertain identity, is not the page's tags.
+    ["generic-remote:citoid Citoid journalArticle", "From an online lookup"],
+    // Title, ISBN and PubMed lookups store a descriptive provider and no evidence.
     ["generic-remote:Citoid (Zotero translators via Wikimedia)", "From an online lookup"],
+    ["generic-remote:DOI registry (doi.org)", "From an online lookup"],
+    ["generic-remote:doi.org doi.org CSL", "From an online lookup"],
+    ["generic-remote:translation-server", "From an online lookup"],
     ["user", "edited manually"],
     ["unrecognised", "other source"],
   ])("formats %s", (label, expected) => expect(citationSourceLabel(label)).toBe(expected));

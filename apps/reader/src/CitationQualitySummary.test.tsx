@@ -25,9 +25,9 @@ it("names every kind of evidence in plain words", () => {
   for (const label of [
     "From the book",
     "Identifier registry",
-    "From the website",
+    "From the web page",
     "Page metadata",
-    "Online lookup",
+    "From an online lookup",
     "Edited manually",
     "No recorded source",
   ]) {
