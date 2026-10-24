@@ -5,7 +5,11 @@ import {
   annotationOwnerPreference,
   setAnnotationOwnerPreference,
 } from "./annotation-owner-preference.js";
-import { defaultAnnotationOwner } from "./annotation-ownership.js";
+import {
+  annotationOwnerChoices,
+  defaultAnnotationOwner,
+  type AnnotationOwnershipInput,
+} from "./annotation-ownership.js";
 import { PreviewGateway } from "./preview.js";
 import { sourceAnnotationFamily } from "./source-annotation-family.js";
 
@@ -19,10 +23,10 @@ beforeEach(async () => {
   family = sourceAnnotationFamily(book, (await gateway.library()).sources);
   setAnnotationOwnerPreference("chapter");
 });
-function decision(
-  overrides: Partial<Parameters<typeof defaultAnnotationOwner>[0]> = {},
-): ReturnType<typeof defaultAnnotationOwner> {
-  return defaultAnnotationOwner({
+function ownershipInput(
+  overrides: Partial<AnnotationOwnershipInput> = {},
+): AnnotationOwnershipInput {
+  return {
     source: book,
     sources: family,
     preference: annotationOwnerPreference(),
@@ -36,8 +40,54 @@ function decision(
           target.position.pageIndex <= range.end,
       ),
     ...overrides,
-  });
+  };
 }
+function decision(
+  overrides: Partial<AnnotationOwnershipInput> = {},
+): ReturnType<typeof defaultAnnotationOwner> {
+  return defaultAnnotationOwner(ownershipInput(overrides));
+}
+describe("annotation owner choices", () => {
+  it("offers no picker choice for a standalone source or a selection outside chapter ranges", async () => {
+    expect(await annotationOwnerChoices(ownershipInput({ sources: [book] }))).toEqual([book]);
+    expect(
+      await annotationOwnerChoices(
+        ownershipInput({ target: { position: { kind: "pdf", pageIndex: 25 } } }),
+      ),
+    ).toEqual([book]);
+  });
+
+  it("offers the book and only parts verified to contain the whole selection", async () => {
+    expect(await annotationOwnerChoices(ownershipInput())).toEqual([book, chapter]);
+    expect(
+      await annotationOwnerChoices(
+        ownershipInput({ sources: [...family, { ...chapter, id: sourceId("overlap") }] }),
+      ),
+    ).toEqual([book, chapter, { ...chapter, id: sourceId("overlap") }]);
+  });
+
+  it("offers a chapter and its resolved parent, not sibling chapters", async () => {
+    expect(await annotationOwnerChoices(ownershipInput({ source: chapter }))).toEqual([
+      chapter,
+      book,
+    ]);
+    expect(
+      await annotationOwnerChoices(ownershipInput({ source: chapter, sources: [chapter] })),
+    ).toEqual([chapter]);
+  });
+
+  it("does not offer parts with stale revisions or unknown/cross-boundary containment", async () => {
+    for (const overrides of [
+      { contains: () => Promise.resolve(null) },
+      { contains: () => Promise.resolve(false) },
+      { contains: undefined },
+      { document: { ...book.documents[0]!, revision: fileRevision(`sha256:${"b".repeat(64)}`) } },
+    ]) {
+      expect(await annotationOwnerChoices(ownershipInput(overrides))).toEqual([book]);
+    }
+  });
+});
+
 describe("annotation owner defaults", () => {
   it("uses the chapter session, or uniquely verified book range, without changing coordinates", async () => {
     expect((await decision({ source: chapter })).owner.id).toBe(chapter.id);

@@ -66,6 +66,25 @@ export async function defaultAnnotationOwner(
       };
 }
 
+/** Picker choices are distinct from the family used to display existing annotation owners. */
+export async function annotationOwnerChoices(
+  input: AnnotationOwnershipInput,
+): Promise<readonly SourceSummary[]> {
+  const { source, sources, document, target } = input;
+  if (source.partOf) {
+    const parent = sources.find(({ id }) => id === source.partOf && id !== source.id);
+    return parent ? [source, parent] : [source];
+  }
+  if (!document || !target) {
+    return sources;
+  }
+  const result = await matchingParts(input, document, target);
+  // Never advertise an unverified range as a valid owner of the whole selection.
+  return result.reason
+    ? [source]
+    : [...new Map([source, ...result.parts].map((part) => [part.id, part])).values()];
+}
+
 async function matchingParts(
   input: AnnotationOwnershipInput,
   opened: DocumentTarget,

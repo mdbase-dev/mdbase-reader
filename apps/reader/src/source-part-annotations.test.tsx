@@ -13,6 +13,7 @@ import { AnnotationList } from "./AnnotationList.js";
 import { AnnotationOwnerChooser } from "./AnnotationOwnerChooser.js";
 import { PreviewGateway } from "./preview.js";
 import { sourceAnnotationFamily } from "./source-annotation-family.js";
+import { useAnnotationOwner } from "./use-annotation-owner.js";
 import { useDocumentDecorations } from "./use-document-decorations.js";
 import { useSourceAnnotationView } from "./use-source-annotation-view.js";
 
@@ -136,6 +137,111 @@ it("guards preview moves and keeps note bodies, selectors and document targets u
   expect((await gateway.source(bookId))!.body).toBe(book.body);
   await expect(gateway.moveAnnotationOwner(annotation, book)).rejects.toThrow("changed elsewhere");
 });
+it.each([0, 1])("omits the owner picker and explanation with %i choices", async (count) => {
+  const gateway = new PreviewGateway();
+  const book = (await gateway.source(bookId))!;
+  await mount(
+    <AnnotationOwnerChooser
+      control={{
+        ownerId: bookId,
+        sources: [book],
+        choices: [book].slice(0, count),
+        pending: false,
+        reason: "Owned by this source.",
+        choose: vi.fn(),
+      }}
+    />,
+  );
+  expect(host.textContent).toBe("");
+  expect(host.querySelector("select")).toBeNull();
+});
+
+it("keeps the toolbar chooser compact with an accessible ownership explanation", async () => {
+  const gateway = new PreviewGateway();
+  const sources = (await gateway.library()).sources.filter(
+    (item) => item.id === bookId || item.id === chapterId,
+  );
+  await mount(
+    <AnnotationOwnerChooser
+      compact
+      control={{
+        ownerId: chapterId,
+        sources,
+        choices: sources,
+        pending: false,
+        reason: "Inside this chapter’s verified range on the exact file revision.",
+        choose: vi.fn(),
+      }}
+    />,
+  );
+  expect(host.querySelector("label")!.textContent).toContain("Owner");
+  expect(host.querySelector("label")!.textContent).not.toContain("Annotation owner");
+  expect(host.querySelector("select")!.getAttribute("aria-label")).toBe("Annotation owner");
+  expect(host.querySelector("select")!.title).toContain("verified range");
+  expect(host.querySelector('[role="status"]')!.className).toBe("sr-only");
+});
+
+it.each<SurfaceKind>(["pdf", "epub", "html"])(
+  "uses the surface containment capability for picker choices (%s)",
+  async (kind) => {
+    const gateway = new PreviewGateway();
+    const book = (await gateway.source(bookId))!;
+    const sources = sourceAnnotationFamily(book, (await gateway.library()).sources);
+    const contains = vi.fn().mockResolvedValue(true);
+    const surface: ReadingSurface = {
+      kind,
+      document: { document: book.documents[0]!, mediaType: "application/pdf", url: "blob:fixture" },
+      capabilities: { annotationRange: { contains } },
+      locations: createEventEmitter(),
+      currentLocation: () => null,
+      goTo: vi.fn(),
+      destroy: vi.fn(),
+    };
+    const selection = {
+      kind: "text" as const,
+      value: {
+        locator: { kind: "pdf" as const, pageIndex: 2 },
+        target: { position: { kind: "pdf" as const, pageIndex: 2 }, quote: { exact: "Passage" } },
+      },
+    };
+    const create = vi.fn();
+    function Harness({
+      current = selection,
+    }: {
+      readonly current?: typeof selection;
+    }): JSX.Element {
+      const ownership = useAnnotationOwner({
+        source: book,
+        surface,
+        sources,
+        selection: current,
+        create,
+      });
+      return <AnnotationOwnerChooser control={ownership.control} />;
+    }
+    await mount(<Harness />);
+    expect(contains).toHaveBeenCalledWith(expect.anything(), selection.value.target);
+    expect(host.querySelectorAll("option").length).toBeGreaterThan(1);
+    contains.mockResolvedValue(false);
+    // A new selection must invalidate the previous choices instead of flashing a stale picker.
+    const next = {
+      ...selection,
+      value: {
+        ...selection.value,
+        target: {
+          ...selection.value.target,
+          quote: { exact: "Outside the chapters" },
+        },
+      },
+    };
+    await act(async () => {
+      root!.render(<Harness current={next} />);
+      await Promise.resolve();
+    });
+    expect(host.querySelector("select")).toBeNull();
+  },
+);
+
 it("gives the owner chooser a native accessible name and keyboard-compatible change event", async () => {
   const gateway = new PreviewGateway();
   const sources = (await gateway.library()).sources.filter(
@@ -147,6 +253,7 @@ it("gives the owner chooser a native accessible name and keyboard-compatible cha
       control={{
         ownerId: chapterId,
         sources,
+        choices: sources,
         pending: false,
         reason: "Created in this chapter.",
         choose,

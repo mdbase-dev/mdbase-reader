@@ -3,6 +3,7 @@ import { useEffect, useMemo, useState } from "react";
 import { confirmAnnotationDiscard } from "./annotation-draft-actions.js";
 import { useAnnotationOwnerPreference } from "./annotation-owner-preference.js";
 import {
+  annotationOwnerChoices,
   annotationWithOwner,
   defaultAnnotationOwner,
   type AnnotationOwnerDecision,
@@ -23,6 +24,7 @@ import type { ReadingSurface } from "@mdbase-reader/reading-surface";
 export interface AnnotationOwnerControl {
   readonly ownerId: string;
   readonly sources: readonly SourceSummary[];
+  readonly choices: readonly SourceSummary[];
   readonly reason: string;
   readonly pending: boolean;
   readonly choose: (id: string) => void;
@@ -62,6 +64,7 @@ export function useAnnotationOwner(input: OwnerInput): {
   const [resolved, setResolved] = useState<{
     readonly key: string;
     readonly decision: AnnotationOwnerDecision;
+    readonly choices: readonly SourceSummary[];
   } | null>(null);
   const key = useMemo(
     () =>
@@ -81,16 +84,18 @@ export function useAnnotationOwner(input: OwnerInput): {
       return undefined;
     }
     let active = true;
-    void defaultAnnotationOwner(decisionInput(source, sources, preference, surface, target))
-      .then((decision) => {
+    const ownership = decisionInput(source, sources, preference, surface, target);
+    void Promise.all([defaultAnnotationOwner(ownership), annotationOwnerChoices(ownership)])
+      .then(([decision, choices]) => {
         if (active) {
-          setResolved({ key, decision });
+          setResolved({ key, decision, choices });
         }
       })
       .catch(() => {
         if (active) {
           setResolved({
             key,
+            choices: [source],
             decision: {
               owner: source,
               reason: "Chapter boundaries could not be verified; keeping the current owner.",
@@ -110,6 +115,7 @@ export function useAnnotationOwner(input: OwnerInput): {
       ? {
           ownerId: owner.id,
           sources,
+          choices: resolved?.key === key ? resolved.choices : [owner],
           pending: !decision,
           reason: explicit
             ? "Owner chosen explicitly. Existing note embeds will not move."

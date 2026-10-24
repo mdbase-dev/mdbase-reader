@@ -69,7 +69,7 @@ export function SelectionToolbarLayer({
           })
         : null,
     );
-  }, [state]);
+  }, [state, composer.ownerControl?.pending, composer.ownerControl?.choices.length]);
   if (!state) {
     return null;
   }
@@ -159,7 +159,7 @@ function SelectionToolbar({
       style={style}
     >
       {target.kind === "selection" ? (
-        <AnnotationOwnerChooser control={composer.ownerControl} />
+        <AnnotationOwnerChooser control={composer.ownerControl} compact />
       ) : (
         <AnnotationOwnerActions
           annotation={target.annotation}

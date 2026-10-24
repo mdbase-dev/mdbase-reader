@@ -37,8 +37,26 @@
 .selection-toolbar > .annotation-owner-control {
   flex-basis: 100%;
 }
-.selection-toolbar .annotation-owner-control small {
+.selection-toolbar .annotation-owner-control small:not(.sr-only) {
   white-space: normal;
+}
+.selection-toolbar > .annotation-owner-control.is-compact {
+  padding: 0 6px 2px;
+}
+.annotation-owner-control.is-compact label {
+  flex-wrap: nowrap;
+}
+.annotation-owner-control.is-compact select {
+  flex: 1;
+  width: 0;
+}
+.mobile-source-views.is-selection .selection-toolbar:has(.annotation-owner-control) {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-auto-flow: row;
+}
+.mobile-source-views.is-selection .annotation-owner-control {
+  grid-column: 1 / -1;
+  grid-row: 1;
 }
 .mobile-source-views.is-selection:has(.annotation-owner-control) {
   height: auto;
