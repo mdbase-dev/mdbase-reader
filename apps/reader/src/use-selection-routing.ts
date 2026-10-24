@@ -25,7 +25,7 @@ export function useSelectionRouting(input: {
   readonly showToolbar: (value: TextComposerSelection) => void;
 }): void {
   const { key, sourceId, surface } = input;
-  const route = (value: ComposerSelection): void => {
+  const route = async (value: ComposerSelection): Promise<void> => {
     const previous = input.buffer.get();
     const decision = selectionRoute({
       value,
@@ -40,7 +40,12 @@ export function useSelectionRouting(input: {
       input.compose(value);
     } else if (decision === "confirm-compose") {
       if (
-        confirmAnnotationDiscard("Discard the unfinished annotation comment and use this area?")
+        (await confirmAnnotationDiscard(
+          "Discard the unfinished annotation comment and use this area?",
+        )) &&
+        routeRef.current === route &&
+        input.buffer.get() === previous &&
+        !input.busy.current
       ) {
         input.compose(value);
       }
@@ -62,6 +67,6 @@ export function useSelectionRouting(input: {
     if (!key) {
       return undefined;
     }
-    return subscribeToSelections(sourceId, surface, ({ value }) => routeRef.current(value));
+    return subscribeToSelections(sourceId, surface, ({ value }) => void routeRef.current(value));
   }, [key, sourceId, surface]);
 }

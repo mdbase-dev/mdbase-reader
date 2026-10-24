@@ -11,6 +11,7 @@ import "@mdbase-dev/ui/feedback.css";
 import "./feedback-shell.css";
 
 import { readerBuildEnvironment } from "./build-environment.js";
+import { ConfirmProvider } from "./ConfirmProvider.js";
 import { EnvironmentBadge } from "./EnvironmentBadge.js";
 import { FeedbackRoot } from "./FeedbackRoot.js";
 import { forgetOfflineCopies } from "./forget-offline-copies.js";
@@ -73,25 +74,27 @@ const grantCallback = buildEnvironment !== null && completeAppGrantCallback(new 
 const startingReader = <OpeningScreen app="reader" title="Starting mdbase Reader…" />;
 createRoot(root).render(
   <StrictMode>
-    <FeedbackRoot>
-      <EnvironmentBadge />
-      <ReaderErrorBoundary>
-        {grantCallback ? (
-          <p className="reader-grant-callback">You can close this window.</p>
-        ) : migrationService ? (
-          <Suspense fallback={startingReader}>
-            <SdkReader service={migrationService} />
-          </Suspense>
-        ) : preview ? (
-          <Suspense fallback={null}>
-            <PreviewReader />
-          </Suspense>
-        ) : (
-          <Suspense fallback={startingReader}>
-            <SdkReader />
-          </Suspense>
-        )}
-      </ReaderErrorBoundary>
-    </FeedbackRoot>
+    <ConfirmProvider>
+      <FeedbackRoot>
+        <EnvironmentBadge />
+        <ReaderErrorBoundary>
+          {grantCallback ? (
+            <p className="reader-grant-callback">You can close this window.</p>
+          ) : migrationService ? (
+            <Suspense fallback={startingReader}>
+              <SdkReader service={migrationService} />
+            </Suspense>
+          ) : preview ? (
+            <Suspense fallback={null}>
+              <PreviewReader />
+            </Suspense>
+          ) : (
+            <Suspense fallback={startingReader}>
+              <SdkReader />
+            </Suspense>
+          )}
+        </ReaderErrorBoundary>
+      </FeedbackRoot>
+    </ConfirmProvider>
   </StrictMode>,
 );

@@ -38,7 +38,7 @@ export class ReaderDockWorkspace {
   private mobileRequested = false;
   private desktopMaximized = false;
   private changingMode = false;
-  private confirmDiscard: (tab: WorkspaceTab) => boolean = () => false;
+  private confirmDiscard: (tab: WorkspaceTab) => boolean | Promise<boolean> = () => false;
   constructor(
     collection: string,
     storage: WorkspaceStorage | null,
@@ -64,7 +64,7 @@ export class ReaderDockWorkspace {
       },
     });
   }
-  setCloseGuard(guard: (tab: WorkspaceTab) => boolean): void {
+  setCloseGuard(guard: (tab: WorkspaceTab) => boolean | Promise<boolean>): void {
     this.confirmDiscard = guard;
   }
   subscribe = (listener: () => void): (() => void) => this.state.subscribe(listener);
@@ -149,23 +149,30 @@ export class ReaderDockWorkspace {
   }
   close = (id: string): void => this.closeMany([id]);
   closeMany(ids: readonly string[]): void {
-    const panels = panelsForClose(this.api, ids, this.confirmDiscard);
-    if (!panels) {
+    void this.closeConfirmed(ids);
+  }
+  private async closeConfirmed(ids: readonly string[]): Promise<void> {
+    const api = this.api;
+    const panels = await panelsForClose(api, ids, this.confirmDiscard);
+    if (!panels || !api || this.api !== api) {
       return;
     }
     const onlySides = panels.every((panel) => !panelTab(panel));
     for (const panel of panels) {
+      if (api.getPanel(panel.id) !== panel) {
+        continue;
+      }
       const tab = panelTab(panel);
       if (tab) {
         this.state.navigation.close(tab);
       } else if (this.mobile || this.sides.hide(panel)) {
         continue;
       }
-      this.api?.removePanel(panel);
+      api.removePanel(panel);
     }
     // On a phone every panel shares one group, so closing a tab can leave Dockview showing the
     // neighbouring side panel; the workspace should come forward instead.
-    if (this.mobile && (onlySides || !panelTab(this.api?.activePanel))) {
+    if (this.mobile && (onlySides || !panelTab(api.activePanel))) {
       this.backToContent();
     }
     this.schedule();

@@ -36,7 +36,7 @@ interface ReaderHeaderProps {
   readonly density?: "comfortable" | "compact";
   readonly onChangeDensity?: (density: "comfortable" | "compact") => void;
   readonly collectionName: string;
-  readonly beforeCollectionSwitch?: () => boolean;
+  readonly beforeCollectionSwitch?: () => boolean | Promise<boolean>;
   readonly connectionState: ReaderConnectionState;
   readonly directAccess: ReaderDirectAccessState;
   readonly theme: ThemePreference;

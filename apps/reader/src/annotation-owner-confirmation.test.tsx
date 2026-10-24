@@ -16,11 +16,14 @@ import { act, type JSX } from "react";
 import { createRoot } from "react-dom/client";
 import { afterEach, beforeEach, expect, it, vi } from "vitest";
 
+import { commentRequest } from "./annotation-composer-request.js";
 import { setAnnotationOwnerPreference } from "./annotation-owner-preference.js";
 import { AnnotationSaveCancelled, isAnnotationSaveCancelled } from "./annotation-ownership.js";
 import { saveSelection } from "./annotation-selection.js";
+import { ConfirmProvider } from "./ConfirmProvider.js";
 import { PreviewGateway } from "./preview.js";
 import { sourceAnnotationFamily } from "./source-annotation-family.js";
+import { partSource } from "./source-parts.fixtures.js";
 import {
   useAnnotationComposer,
   type AnnotationComposerController,
@@ -49,7 +52,7 @@ async function mount(element: JSX.Element): Promise<void> {
   host = document.createElement("div");
   document.body.append(host);
   root = createRoot(host);
-  await settle(() => root!.render(element));
+  await settle(() => root!.render(<ConfirmProvider>{element}</ConfirmProvider>));
 }
 async function settle(action: () => void): Promise<void> {
   await act(async () => {
@@ -177,10 +180,21 @@ it("saves a selection highlight without an owner prompt even after its selection
   expect(create).toHaveBeenCalledWith(expect.objectContaining({ annotationType: "highlight" }));
 });
 
-it("treats declining a source-level owner confirmation as a choice, not a failure", async () => {
-  const { gateway, book, sources } = await family();
+it("saves bookmarks to the default chapter and source comments without a second disclosure", async () => {
+  const book = partSource("book");
+  const chapter = {
+    ...partSource("chapter", "book"),
+    documents: book.documents.map((document) => ({
+      ...document,
+      range: { kind: "pages" as const, start: 0, end: 4 },
+    })),
+  };
+  const sources = [book, chapter];
+  const gateway = { source: vi.fn().mockResolvedValue(chapter) } as unknown as PreviewGateway;
   const surface = pdfSurface(book);
-  const create = vi.fn();
+  const create = vi.fn((request: AnnotationCreationRequest) =>
+    Promise.resolve(request as unknown as Annotation),
+  );
   let ownedCreate: ((request: AnnotationCreationRequest) => Promise<Annotation>) | undefined;
   function Harness(): null {
     ownedCreate = useAnnotationOwner({
@@ -206,11 +220,82 @@ it("treats declining a source-level owner confirmation as a choice, not a failur
     tags: [],
     body: "",
   } as unknown as AnnotationCreationRequest;
-  const reason = await ownedCreate!(bookmark).catch((error: unknown) => error);
-  expect(confirm).toHaveBeenCalledOnce();
-  expect(isAnnotationSaveCancelled(reason)).toBe(true);
-  expect(create).not.toHaveBeenCalled();
+  await ownedCreate!(bookmark);
+  expect(create).toHaveBeenLastCalledWith(
+    expect.objectContaining({ sourceId: chapter.id, annotationType: "bookmark" }),
+  );
+  await ownedCreate!(commentRequest(book, "About this book"));
+  expect(create).toHaveBeenLastCalledWith(
+    expect.objectContaining({ sourceId: book.id, annotationType: "note" }),
+  );
+  expect(confirm).not.toHaveBeenCalled();
+  expect(host.querySelector("dialog")).toBeNull();
+});
 
+it("keeps the in-app warning for an explicitly chosen owner whose range is unverified", async () => {
+  const book = partSource("warning-book");
+  const chapter = {
+    ...partSource("warning-chapter", "warning-book"),
+    documents: book.documents.map((document) => ({
+      ...document,
+      range: { kind: "pages" as const, start: 5, end: 9 },
+    })),
+  };
+  const surface = pdfSurface(book);
+  const create = vi.fn();
+  const sources = [book, chapter];
+  const gateway = { source: vi.fn().mockResolvedValue(chapter) } as unknown as PreviewGateway;
+  let ownership!: ReturnType<typeof useAnnotationOwner>;
+  function Harness(): null {
+    ownership = useAnnotationOwner({
+      source: book,
+      surface,
+      sources,
+      selection: null,
+      gateway,
+      create,
+    });
+    return null;
+  }
+  await mount(<Harness />);
+  await settle(() => ownership.control!.choose(chapter.id));
+  vi.spyOn(surface.capabilities.annotationRange!, "contains").mockResolvedValue(false);
+  let pending!: Promise<unknown>;
+  const request = {
+    sourceRecord: book,
+    collectionId: book.collectionId,
+    sourceId: book.id,
+    source: "[[sources/warning-book]]",
+    document: book.documents[0]!,
+    annotationType: "highlight",
+    target: passage.target,
+    tags: [],
+    body: "",
+  } as AnnotationCreationRequest;
+  await settle(() => {
+    pending = ownership.create(request).catch((reason: unknown) => reason);
+  });
+  expect(host.querySelector("dialog")?.open).toBe(true);
+  expect(host.textContent).toContain("verified range");
+  expect(create).not.toHaveBeenCalled();
+  await settle(() =>
+    [...host.querySelectorAll("button")]
+      .find((button) => button.textContent === "Choose another owner")!
+      .click(),
+  );
+  expect(isAnnotationSaveCancelled(await pending)).toBe(true);
+  expect(create).not.toHaveBeenCalled();
+  // A bookmark ignores even a previous explicit owner and never asks for confirmation.
+  await ownership.create({ ...request, annotationType: "bookmark" });
+  expect(create).toHaveBeenCalledWith(
+    expect.objectContaining({ sourceId: book.id, annotationType: "bookmark" }),
+  );
+  expect(host.querySelector("dialog")).toBeNull();
+});
+
+it("treats a cancelled save as a choice, not a failure", async () => {
+  const { book } = await family();
+  const surface = pdfSurface(book);
   const problem = vi.fn();
   const failing = vi.fn(() => Promise.reject(new AnnotationSaveCancelled()));
   await saveSelection(

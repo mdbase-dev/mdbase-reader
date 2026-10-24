@@ -2,6 +2,7 @@ import { signalMdbaseMark } from "@mdbase-dev/ui/mark-activity";
 import { useEffect, useMemo, useState, useSyncExternalStore } from "react";
 
 import { confirmAnnotationDiscard } from "./annotation-draft-actions.js";
+import { requestConfirmation } from "./confirmation.js";
 import { useAnnotationDeletion } from "./use-annotation-deletion.js";
 import { useAnnotationSession } from "./use-annotation-session.js";
 
@@ -62,15 +63,19 @@ export function useAnnotationEdit(props: AnnotationEditProps): AnnotationEditCon
   const editingElsewhere = !session.ownsEditor(editorOwner);
   const locked = snapshot.locked;
   const deletion = useAnnotationDeletion(session, props, !locked && !editingElsewhere && ready);
-  const cancel = (): void => {
+  const cancel = async (): Promise<void> => {
     if (locked) {
       return;
     }
     if (
       session.getSnapshot().status !== "saved" &&
-      !confirmAnnotationDiscard(
-        "Close with unsaved changes? Saving may continue in this window, but reloading Reader before it finishes will lose them.",
-      )
+      !(await requestConfirmation({
+        title: "Close with unsaved changes?",
+        message:
+          "Saving may continue in this window, but reloading Reader before it finishes will lose these changes.",
+        confirmLabel: "Close anyway",
+        cancelLabel: "Keep editing",
+      }))
     ) {
       return;
     }
@@ -94,6 +99,22 @@ export function useAnnotationEdit(props: AnnotationEditProps): AnnotationEditCon
       }
     });
   };
+  const discard = async (): Promise<void> => {
+    if (
+      !locked &&
+      snapshot.status !== "saving" &&
+      session.ownsEditor(editorOwner) &&
+      (await confirmAnnotationDiscard(
+        "Discard this annotation's unsaved changes? The collection version will be kept.",
+      )) &&
+      session.ownsEditor(editorOwner) &&
+      session.getSnapshot().status !== "saving" &&
+      !session.getSnapshot().locked
+    ) {
+      session.discard();
+      onCancel();
+    }
+  };
   return {
     ...deletion,
     body,
@@ -112,24 +133,12 @@ export function useAnnotationEdit(props: AnnotationEditProps): AnnotationEditCon
       setText({ version: snapshot.textVersion, body: session.getText() });
     },
     save,
-    cancel,
+    cancel: () => void cancel(),
     editingElsewhere,
     claimEditor: () => {
       session.claimEditor(editorOwner, true);
     },
-    discard: () => {
-      if (
-        !locked &&
-        snapshot.status !== "saving" &&
-        session.ownsEditor(editorOwner) &&
-        confirmAnnotationDiscard(
-          "Discard this annotation's unsaved changes? The collection version will be kept.",
-        )
-      ) {
-        session.discard();
-        onCancel();
-      }
-    },
+    discard: () => void discard(),
     resolve: (choice) => {
       if (locked || !session.ownsEditor(editorOwner)) {
         return;

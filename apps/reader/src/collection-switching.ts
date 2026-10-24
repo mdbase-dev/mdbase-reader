@@ -1,4 +1,5 @@
 import { hasBlockingAnnotationDrafts } from "./annotation-drafts.js";
+import { requestConfirmation, type ConfirmationOptions } from "./confirmation.js";
 import { flushLocalDraftCheckpoints } from "./local-draft-checkpoint.js";
 import { hasUnsavedAnnotationEdits } from "./unsaved-annotation-edits.js";
 
@@ -12,13 +13,11 @@ export function collectionSwitchUrl(url: string): string {
   return next.href;
 }
 
-export function confirmCollectionSwitch(
+export async function confirmCollectionSwitch(
   layout: SourceWorkspaceLayout,
   sources: readonly Pick<Source, "collectionId" | "id">[],
-  // Native confirmation keeps session switching synchronous with the user's decision.
-  // eslint-disable-next-line no-alert
-  confirm: (message: string) => boolean = (message) => globalThis.confirm(message),
-): boolean {
+  confirm: (options: ConfirmationOptions) => boolean | Promise<boolean> = requestConfirmation,
+): Promise<boolean> {
   flushLocalDraftCheckpoints();
   const dirty =
     layout.panes.some((pane) => pane.tabs.some((tab) => tab.dirty)) ||
@@ -29,6 +28,12 @@ export function confirmCollectionSwitch(
     );
   return (
     !dirty ||
-    confirm("Switch collections with unsaved changes? Save your edits first to avoid losing work.")
+    confirm({
+      title: "Switch collections?",
+      message:
+        "Some edits have not reached the collection. Drafts are local to this device, not saved to the collection, and switching may interrupt pending saves. Finish your edits first to avoid losing work.",
+      confirmLabel: "Switch anyway",
+      cancelLabel: "Stay",
+    })
   );
 }
