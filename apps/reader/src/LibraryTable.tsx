@@ -29,8 +29,8 @@ import type { LibraryPartRow } from "./library-source-parts.js";
 import type { LibraryLayout } from "./use-library-layout-draft.js";
 import type { ReadingStatus, SourceId, SourceSummary } from "@mdbase-reader/core";
 
-export const libraryRowHeight = 52;
-const headerHeight = 34;
+export const libraryRowHeight = 56;
+const headerHeight = 32;
 
 export interface LibraryTableProps {
   readonly sources: readonly SourceSummary[];
@@ -109,12 +109,12 @@ export function LibraryTable(props: LibraryTableProps): JSX.Element {
     <div className="library-table-frame">
       <div
         ref={gridRef}
-        className={`library-table${layout.columns.includes("creator") ? " has-creator-column" : ""}`}
+        className={`library-table${layout.columns.includes("creator") ? " has-creator-column" : ""}${layout.columns.includes("format") ? " has-format-column" : ""}`}
         role={props.partRows ? "treegrid" : "grid"}
         tabIndex={-1}
         aria-label="Sources"
         aria-rowcount={sources.length + 1}
-        aria-colcount={layout.columns.length}
+        aria-colcount={layout.columns.length + 1}
         aria-multiselectable="true"
         style={{ minWidth: `${String(width)}px` }}
         onKeyDown={(event) => {

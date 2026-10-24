@@ -1,6 +1,7 @@
 import { isEditableSourceField } from "@mdbase-reader/core";
 import { useEffect, useRef } from "react";
 
+import { MoreIcon } from "./icons.js";
 import { columnFieldKey, type LibraryColumn } from "./library-columns.js";
 import { StatusPicker, TableValue } from "./LibraryCells.js";
 import { LibraryFieldCellEditor } from "./LibraryFieldCell.js";
@@ -160,6 +161,26 @@ export function LibraryTableRow({
           )}
         </span>
       ))}
+      <span role="gridcell" aria-colindex={layout.columns.length + 1} className="is-actions">
+        {/* Shown on hover, focus and selection; the grid's Shift+F10 and the context menu
+            open the same menu, so the button stays out of the tab order like other cells. */}
+        <button
+          type="button"
+          className="icon-button library-row-more"
+          tabIndex={-1}
+          aria-label={`More actions for ${source.title}`}
+          title="More actions"
+          aria-haspopup="menu"
+          onClick={(event) => {
+            event.stopPropagation();
+            const box = event.currentTarget.getBoundingClientRect();
+            onMenu(box.left, box.bottom);
+          }}
+          onDoubleClick={(event) => event.stopPropagation()}
+        >
+          <MoreIcon />
+        </button>
+      </span>
     </div>
   );
 }
