@@ -1,3 +1,5 @@
+import { supportsChapterCreation } from "./source-parts-features.js";
+
 import type { ReaderCommand, ReaderCommandInput } from "./reader-command-list.js";
 
 export function libraryCommands(input: ReaderCommandInput): readonly ReaderCommand[] {
@@ -63,6 +65,23 @@ export function displayCommands(input: ReaderCommandInput): readonly ReaderComma
       run: () => input.setDensity(density),
     },
   ];
+}
+
+export function chapterCommands(input: ReaderCommandInput): readonly ReaderCommand[] {
+  const source = input.activeSource;
+  const create = input.createSourceParts;
+  return source && create && supportsChapterCreation(source)
+    ? [
+        {
+          id: "add-chapters-as-sources",
+          label: "Add chapters as sources…",
+          detail: source.title,
+          group: "Current source",
+          keywords: "book chapter parts pdf epub table of contents",
+          run: () => create(source),
+        },
+      ]
+    : [];
 }
 
 export function annotationCommands(input: ReaderCommandInput): readonly ReaderCommand[] {

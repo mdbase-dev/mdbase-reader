@@ -13,6 +13,7 @@ import {
   TrashIcon,
 } from "./icons.js";
 import { Menu } from "./Menu.js";
+import { supportsChapterCreation } from "./source-parts-features.js";
 import { useSourcePartCreation } from "./SourcePartCreation.js";
 import { DocumentStatus } from "./WorkspacePaneSupport.js";
 
@@ -141,10 +142,7 @@ function CreatePartsItem({
   readonly source: SourceSummary;
   readonly createParts: ((source: SourceSummary) => void) | null;
 }): JSX.Element | null {
-  return createParts &&
-    source.documents.some(({ mediaType }) =>
-      ["application/pdf", "application/epub+zip"].includes(mediaType),
-    ) ? (
+  return createParts && supportsChapterCreation(source) ? (
     <button type="button" onClick={() => createParts(source)}>
       <ListIcon /> Add chapters as sources…
     </button>

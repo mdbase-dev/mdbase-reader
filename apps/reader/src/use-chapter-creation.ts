@@ -120,10 +120,31 @@ function manualChoice(outline: ChapterOutline): ChapterChoice {
     picked: true,
     authors: "",
     printed: "",
-    range: outline.pageCount
-      ? { kind: "pages", start: 0, end: 0 }
-      : { kind: "epub-spine", start: outline.spine?.[0] ?? "", end: outline.spine?.[0] ?? "" },
+    range:
+      outline.pageCount !== undefined
+        ? { kind: "pages", start: NaN, end: NaN }
+        : { kind: "epub-spine", start: outline.spine?.[0] ?? "", end: outline.spine?.[0] ?? "" },
   };
+}
+
+function updatedChoice(
+  choice: ChapterChoice,
+  patch: Partial<ChapterChoice>,
+  outline: ChapterOutline,
+): ChapterChoice {
+  const updated = { ...choice, ...patch };
+  if (patch.range) {
+    try {
+      validateChapterRange(patch.range, outline);
+      return { ...updated, problem: "" };
+    } catch (reason) {
+      return {
+        ...updated,
+        problem: readerErrorMessage(reason, "Check the chapter’s pages or sections."),
+      };
+    }
+  }
+  return updated;
 }
 
 export function useChapterCreation(
@@ -166,7 +187,7 @@ export function useChapterCreation(
         ? {
             ...previous,
             choices: previous.choices.map((choice) =>
-              choice.key === key ? { ...choice, ...patch } : choice,
+              choice.key === key ? updatedChoice(choice, patch, previous.outline) : choice,
             ),
           }
         : previous,
@@ -201,7 +222,7 @@ export function useChapterCreation(
         validateChapterRange(choice.range, result.outline);
       }
       if (selected.some(({ warning }) => warning) && !acknowledged) {
-        throw new Error("Review and acknowledge the boundary warnings first.");
+        throw new Error("Check where the chapters start and end, then tick the confirmation box.");
       }
       await confirmChapterPlans(
         gateway,

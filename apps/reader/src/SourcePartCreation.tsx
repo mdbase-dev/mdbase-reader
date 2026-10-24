@@ -8,12 +8,17 @@ import {
   type ReactNode,
 } from "react";
 
+import { ChapterPreview } from "./ChapterPreview.js";
 import { useChapterCreation, type ChapterChoice } from "./use-chapter-creation.js";
 import "./source-parts-library.css";
 
 import type { ChapterOutline } from "./chapter-outline.js";
 import type { ReaderWorkspaceGateway } from "./workspace-model.js";
 import type { DocumentRange, Source, SourceSummary } from "@mdbase-reader/core";
+
+function chapterCount(count: number): string {
+  return `${String(count)} ${count === 1 ? "chapter" : "chapters"}`;
+}
 
 const CreationContext = createContext<((source: SourceSummary) => void) | null>(null);
 export const useSourcePartCreation = (): ((source: SourceSummary) => void) | null =>
@@ -82,6 +87,7 @@ function ChapterCreationDialog({
       }}
     >
       <form
+        noValidate
         onSubmit={(event) => {
           event.preventDefault();
           void model.confirm();
@@ -90,14 +96,14 @@ function ChapterCreationDialog({
         <h2 id="chapter-create-title">Add chapters as sources</h2>
         <p>In {book.title}. Chapters share the existing file; no files or annotations are moved.</p>
         {!model.outline && !model.problem ? (
-          <p role="status">Reading this exact document’s outline…</p>
+          <p role="status">Reading the table of contents…</p>
         ) : null}
         {model.outline ? <ChapterChecklist model={model} outline={model.outline} /> : null}
         {model.problem ? <p role="alert">{model.problem}</p> : null}
         <p role="status">
           {model.completed
-            ? `${String(model.completed)} chapters completed; retries reuse the reviewed identities.`
-            : `${String(model.plans.length)} chapters selected. Nothing is created until confirmation.`}
+            ? `${chapterCount(model.completed)} created. You can retry without creating duplicates.`
+            : `${chapterCount(model.plans.length)} selected. Nothing is created until you confirm.`}
         </p>
         <div className="source-parts-actions">
           <button className="mdbase-button" type="button" disabled={model.busy} onClick={onClose}>
@@ -126,12 +132,12 @@ function ChapterChecklist({
   return (
     <>
       <p>
-        {outline.pageCount
-          ? `${String(outline.pageCount)} file pages. Indexes below are zero-based and inclusive; printed pagination is separate.`
-          : "Select whole EPUB spine resources. Fragment TOC boundaries need review; no CFIs are invented."}
+        {outline.pageCount !== undefined
+          ? `Use the page numbers in the PDF viewer, from 1 to ${String(outline.pageCount)}. Both the start and end pages are included. Printed page labels can be added separately.`
+          : "Choose sections in reading order. The first and last sections are included in full."}
       </p>
       <fieldset disabled={model.busy || model.completed > 0}>
-        <legend>Choose chapters and review boundaries</legend>
+        <legend>Choose chapters and check where they start and end</legend>
         {model.choices.map((choice, index) => (
           <ChapterChoiceFields
             key={choice.key}
@@ -142,7 +148,7 @@ function ChapterChecklist({
           />
         ))}
         <button className="mdbase-button" type="button" onClick={model.addManual}>
-          Add a chapter manually by range
+          Add a chapter manually
         </button>
         <label>
           <input
@@ -150,24 +156,19 @@ function ChapterChecklist({
             checked={model.acknowledged}
             onChange={(event) => model.setAcknowledged(event.target.checked)}
           />
-          I reviewed the boundaries and acknowledge any overlapping or whole-resource ranges.
+          {outline.pageCount !== undefined
+            ? "I checked the pages and want to include any pages shared by more than one chapter."
+            : "I checked the sections and want to include them in full, even if chapters share a section."}
         </label>
         <details>
-          <summary>Preview {String(model.plans.length)} chapter records and citations</summary>
-          {model.plans.map((plan) => (
-            <pre key={plan.sourceId}>
-              {JSON.stringify(
-                {
-                  title: plan.title,
-                  parent: plan.parent.title,
-                  document: plan.document,
-                  csl: plan.citation,
-                },
-                null,
-                2,
-              )}
-            </pre>
-          ))}
+          <summary>Preview {chapterCount(model.plans.length)} and citations</summary>
+          {model.plans.length ? (
+            model.plans.map((plan) => (
+              <ChapterPreview key={plan.sourceId} plan={plan} outline={outline} />
+            ))
+          ) : (
+            <p>Select a chapter to preview it.</p>
+          )}
         </details>
       </fieldset>
     </>
@@ -204,7 +205,11 @@ function ChapterChoiceFields({
         outline={outline}
         onChange={(range) => update({ range, problem: "" })}
       />
-      {choice.problem ? <p>{choice.problem}</p> : null}
+      {choice.problem ? (
+        <p id={`${choice.key}-range-problem`} role="alert">
+          {choice.problem}
+        </p>
+      ) : null}
       {choice.warning ? <p>{choice.warning}</p> : null}
       {choice.picked ? (
         <>
@@ -241,27 +246,33 @@ function ChapterRangeEditor({
   return (
     <div className="chapter-boundaries">
       {(["start", "end"] as const).map((endpoint) =>
-        outline.pageCount ? (
+        outline.pageCount !== undefined ? (
           <label key={endpoint}>
-            {endpoint === "start" ? "Start" : "End"} file-page index
+            {endpoint === "start" ? "Start page" : "End page"}
             <input
               type="number"
-              min={0}
-              max={outline.pageCount - 1}
-              value={range?.kind === "pages" ? range[endpoint] : ""}
+              min={1}
+              max={outline.pageCount}
+              step={1}
+              aria-invalid={Boolean(choice.problem)}
+              aria-describedby={choice.problem ? `${choice.key}-range-problem` : undefined}
+              value={
+                range?.kind === "pages" && Number.isFinite(range[endpoint])
+                  ? range[endpoint] + 1
+                  : ""
+              }
               onChange={(event) =>
                 onChange({
-                  kind: "pages",
-                  start: range?.kind === "pages" ? range.start : 0,
-                  end: range?.kind === "pages" ? range.end : 0,
-                  [endpoint]: event.target.value === "" ? NaN : Number(event.target.value),
+                  ...(range?.kind === "pages" ? range : { kind: "pages", start: NaN, end: NaN }),
+                  [endpoint]: event.target.valueAsNumber - 1,
                 })
               }
             />
+            <small>of {String(outline.pageCount)} pages</small>
           </label>
         ) : (
           <label key={endpoint}>
-            {endpoint === "start" ? "Start" : "End"} spine resource
+            {endpoint === "start" ? "Start section" : "End section"}
             <select
               value={range?.kind === "epub-spine" ? range[endpoint] : ""}
               onChange={(event) =>
@@ -273,10 +284,14 @@ function ChapterRangeEditor({
                 })
               }
             >
-              <option value="">Choose a spine resource</option>
-              {outline.spine?.map((href) => (
+              <option value="">Choose a section</option>
+              {outline.spine?.map((href, index) => (
                 <option key={href} value={href}>
-                  {href}
+                  {String(index + 1)}.{" "}
+                  {outline.proposals.find(
+                    (proposal) =>
+                      proposal.range?.kind === "epub-spine" && proposal.range.start === href,
+                  )?.title ?? href}
                 </option>
               ))}
             </select>
