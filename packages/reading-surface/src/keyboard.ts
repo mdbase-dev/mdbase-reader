@@ -3,7 +3,14 @@
  * reach the application. Forward the keys an application shortcut can use.
  */
 export function forwardApplicationShortcut(event: KeyboardEvent, host: Document): void {
-  if (!(isApplicationShortcut(event) || isSelectionShortcut(event)) || !host.defaultView) {
+  if (
+    !(
+      isApplicationShortcut(event) ||
+      isSelectionShortcut(event) ||
+      isClaimedShortcut(event, host)
+    ) ||
+    !host.defaultView
+  ) {
     return;
   }
   const forwarded = new host.defaultView.KeyboardEvent("keydown", {
@@ -20,6 +27,65 @@ export function forwardApplicationShortcut(event: KeyboardEvent, host: Document)
   if (!host.dispatchEvent(forwarded)) {
     event.preventDefault();
   }
+}
+
+/**
+ * Keys the application wants from the page for a while, beyond the usual shortcuts: Undo while a
+ * highlight just made can be undone, and 1 to 5 while a clicked highlight offers its colours.
+ */
+export type FrameShortcut = "undo" | "colors";
+
+const frameShortcutClaims = new WeakMap<Document, Map<FrameShortcut, number>>();
+
+/**
+ * Asks pages shown in `host` to forward a shortcut too, until the returned release is called.
+ * Claims add up, so two parts of the application can claim the same keys. Keys typed in the
+ * page's own fields are never forwarded.
+ */
+export function claimFrameShortcut(host: Document, shortcut: FrameShortcut): () => void {
+  const claims = frameShortcutClaims.get(host) ?? new Map<FrameShortcut, number>();
+  frameShortcutClaims.set(host, claims);
+  claims.set(shortcut, (claims.get(shortcut) ?? 0) + 1);
+  let released = false;
+  return () => {
+    if (released) {
+      return;
+    }
+    released = true;
+    const count = (claims.get(shortcut) ?? 1) - 1;
+    if (count > 0) {
+      claims.set(shortcut, count);
+    } else {
+      claims.delete(shortcut);
+    }
+  };
+}
+
+/** Whether a key claimed for `host` was pressed outside the page's fields. */
+export function isClaimedShortcut(event: KeyboardEvent, host: Document): boolean {
+  const claims = frameShortcutClaims.get(host);
+  if (!claims?.size || event.isComposing || event.altKey || isEditableTarget(event.target)) {
+    return false;
+  }
+  const key = event.key.toLocaleLowerCase();
+  if (claims.has("undo") && key === "z" && (event.ctrlKey || event.metaKey) && !event.shiftKey) {
+    return true;
+  }
+  return (
+    claims.has("colors") &&
+    !event.ctrlKey &&
+    !event.metaKey &&
+    !event.shiftKey &&
+    ["1", "2", "3", "4", "5"].includes(key)
+  );
+}
+
+function isEditableTarget(target: EventTarget | null): boolean {
+  // Frames have their own Element constructor, so test the shape rather than instanceof.
+  const element = target as { closest?: (selector: string) => unknown } | null;
+  return Boolean(
+    element?.closest?.("input, textarea, select, [contenteditable]:not([contenteditable='false'])"),
+  );
 }
 
 export function isApplicationShortcut(event: KeyboardEvent): boolean {
@@ -54,11 +120,7 @@ export function isSelectionShortcut(event: KeyboardEvent): boolean {
   if (!(selectionShortcutKeys as readonly string[]).includes(event.key.toLocaleLowerCase())) {
     return false;
   }
-  // Frames have their own Element constructor, so test the shape rather than instanceof.
-  const target = event.target as { closest?: (selector: string) => unknown } | null;
-  if (
-    target?.closest?.("input, textarea, select, [contenteditable]:not([contenteditable='false'])")
-  ) {
+  if (isEditableTarget(event.target)) {
     return false;
   }
   const selection = event.view?.getSelection();
