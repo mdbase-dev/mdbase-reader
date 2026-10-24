@@ -129,16 +129,7 @@ export const readerEditorTheme = EditorView.theme({
     fontSize: "13px",
     lineHeight: "1.5",
   },
-  ".cm-annotation-embed footer": { marginTop: "12px" },
-  ".cm-annotation-embed code": {
-    overflow: "hidden",
-    marginRight: "auto",
-    color: "var(--faint)",
-    fontFamily: "var(--mono)",
-    fontSize: "9px",
-    textOverflow: "ellipsis",
-    whiteSpace: "nowrap",
-  },
+  ".cm-annotation-embed footer": { justifyContent: "flex-end", marginTop: "12px" },
   ".cm-annotation-embed button": {
     flex: "0 0 auto",
     padding: "5px 8px",

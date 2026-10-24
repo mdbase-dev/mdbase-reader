@@ -105,7 +105,12 @@ function embeddedDecorations(
             class: candidate ? "cm-wikilink is-resolved" : "cm-wikilink is-unresolved",
             attributes: candidate
               ? { title: candidate.label }
-              : { title: `Linked record not found: ${path}` },
+              : {
+                  title:
+                    match[1] === "!"
+                      ? "Linked annotation is missing"
+                      : `Linked record not found: ${path}`,
+                },
           }).range(start, end),
         );
       }
@@ -167,12 +172,9 @@ class AnnotationEmbedWidget extends WidgetType {
 
   private footer(view: EditorView): HTMLElement {
     const footer = document.createElement("footer");
-    const path = document.createElement("code");
-    path.textContent = `![[${this.candidate.path}]]`;
-    footer.append(path);
     const edit = document.createElement("button");
     edit.type = "button";
-    edit.textContent = "Edit link";
+    edit.textContent = "Edit embed";
     edit.addEventListener("mousedown", (event) => event.preventDefault());
     edit.addEventListener("click", () => {
       view.dispatch({ selection: { anchor: this.start + 3 }, scrollIntoView: true });
@@ -182,7 +184,7 @@ class AnnotationEmbedWidget extends WidgetType {
     if (this.onEdit) {
       const editAnnotation = document.createElement("button");
       editAnnotation.type = "button";
-      editAnnotation.textContent = "Edit highlight";
+      editAnnotation.textContent = "Edit annotation";
       editAnnotation.addEventListener("mousedown", (event) => event.preventDefault());
       editAnnotation.addEventListener("click", () => this.onEdit?.(this.candidate.path));
       footer.append(editAnnotation);
