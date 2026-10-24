@@ -6,13 +6,19 @@ import {
 } from "@mdbase-reader/core";
 import { useEffect, useId, useRef, useState, type JSX } from "react";
 
-import { citationDetailRows, citationHealth } from "./citation-tab-model.js";
+import { citationDetailRows, citationHealth, uncoveredWarnings } from "./citation-tab-model.js";
 import { CitationLookup } from "./CitationLookup.js";
-import { CitationPreview, CitationPreviewLine, useCitationFormat } from "./CitationPreview.js";
+import {
+  CitationPreview,
+  CitationPreviewLine,
+  copyKeepingFocus,
+  useCitationFormat,
+} from "./CitationPreview.js";
 import { CitationProvenance } from "./CitationProvenance.js";
 import { CitationSaveConflict } from "./CitationSaveConflict.js";
 import { CitationGapFill, CitationSourceSync } from "./CitationSourceSync.js";
 import { CitationStructuredEditor } from "./CitationStructuredEditor.js";
+import { requestConfirmation } from "./confirmation.js";
 import { BackIcon, CheckIcon, ChevronRightIcon, CopyIcon } from "./icons.js";
 import { MultilineCodeEditor } from "./MultilineCodeEditor.js";
 import { useSessionDisclosure } from "./use-session-choice.js";
@@ -71,13 +77,15 @@ function ReadyCitationEditor({
     warnings: editor.warnings,
     gaps: Object.keys(gaps),
   });
-  const showFooter =
-    view.name === "fix" ||
-    editor.dirty ||
-    editor.suggested ||
-    editor.conflict !== null ||
-    editor.error !== null ||
-    editor.status === "saving";
+  const discard = (): void => {
+    void confirmCitationDiscard().then((accepted) => {
+      if (accepted) {
+        editor.discard();
+        setView({ name: "summary", returned: true });
+      }
+    });
+  };
+  const canDiscard = editor.dirty && editor.conflict === null && editor.status !== "saving";
   return (
     <div className="citation-editor" data-view={view.name}>
       {view.name === "summary" ? (
@@ -96,21 +104,53 @@ function ReadyCitationEditor({
           gaps={gaps}
           health={health}
           onBack={() => setView({ name: "summary", returned: true })}
+          onDiscard={canDiscard ? discard : undefined}
         />
       )}
-      {showFooter ? (
+      {footerVisible(view, editor) ? (
         <footer className="citation-editor-footer">
           {view.name === "fix" ? (
             <CitationPreviewLine citation={validCitation} format={format} />
           ) : null}
           <div className="citation-footer-row">
             <CitationFeedback editor={editor} showValidity={view.name === "fix"} />
+            {/* An unreadable draft offers Discard changes in the view itself. */}
+            {view.name === "fix" && canDiscard && editor.assessment.value ? (
+              <button type="button" className="citation-button" onClick={discard}>
+                Discard changes
+              </button>
+            ) : null}
             <SaveDetailsButton editor={editor} />
           </div>
         </footer>
       ) : null}
     </div>
   );
+}
+
+/**
+ * The summary view shows the footer only while there is something to save or say. It stays after
+ * a save, so the “Saved” notice is seen and focus stays on Save details rather than falling away.
+ */
+function footerVisible(view: CitationView, editor: CitationEditorController): boolean {
+  return (
+    view.name === "fix" ||
+    editor.dirty ||
+    editor.suggested ||
+    editor.conflict !== null ||
+    editor.error !== null ||
+    editor.status !== "idle"
+  );
+}
+
+function confirmCitationDiscard(): Promise<boolean> {
+  return requestConfirmation({
+    title: "Discard changes?",
+    message: "Your edits to these citation details will be lost.",
+    confirmLabel: "Discard changes",
+    cancelLabel: "Keep editing",
+    danger: true,
+  });
 }
 
 /** Fields the library records but the citation lacks, except those deliberately removed. */
@@ -183,13 +223,16 @@ function CitationFixView({
   gaps,
   health,
   onBack,
+  onDiscard,
 }: {
   readonly editor: CitationEditorController;
   readonly gaps: Gaps;
   readonly health: ReturnType<typeof citationHealth>;
   readonly onBack: () => void;
+  /** Absent when there is nothing to discard. */
+  readonly onDiscard: (() => void) | undefined;
 }): JSX.Element {
-  const citation = editor.assessment.value ?? {};
+  const citation = editor.assessment.value;
   const back = useRef<HTMLButtonElement>(null);
   useEffect(() => back.current?.focus(), []);
   return (
@@ -208,13 +251,39 @@ function CitationFixView({
         <h3>{health.tone === "complete" ? "Edit details" : "Fix details"}</h3>
         {health.tone !== "complete" ? <span>{health.title}</span> : null}
       </header>
+      {citation ? (
+        <CitationFixForm editor={editor} citation={citation} gaps={gaps} />
+      ) : (
+        <CitationJsonBlocked
+          message={editor.assessment.valid ? "" : editor.assessment.message}
+          onDiscard={onDiscard}
+        />
+      )}
+    </div>
+  );
+}
+
+function CitationFixForm({
+  editor,
+  citation,
+  gaps,
+}: {
+  readonly editor: CitationEditorController;
+  readonly citation: Readonly<Record<string, unknown>>;
+  readonly gaps: Gaps;
+}): JSX.Element {
+  const checks = editor.assessment.valid
+    ? uncoveredWarnings(editor.warnings, Object.keys(gaps))
+    : [];
+  return (
+    <>
       <CitationGapFill
         gaps={gaps}
         onApply={(fill) => editor.setCitation({ ...citation, ...fill })}
       />
-      {editor.assessment.valid && editor.warnings.length ? (
+      {checks.length ? (
         <ul className="citation-checks" aria-label="Details to check">
-          {editor.warnings.map((warning) => (
+          {checks.map((warning) => (
             <li key={warning}>{warning}</li>
           ))}
         </ul>
@@ -225,22 +294,50 @@ function CitationFixView({
         onChange={editor.setCitation}
         onRegenerateCitekey={editor.regenerateCitekey}
       />
+    </>
+  );
+}
+
+/**
+ * When the CSL-JSON draft cannot be read as an object, the form would start from nothing and
+ * its first edit would replace the whole draft. Ask for the JSON to be fixed or discarded instead.
+ */
+function CitationJsonBlocked({
+  message,
+  onDiscard,
+}: {
+  readonly message: string;
+  readonly onDiscard: (() => void) | undefined;
+}): JSX.Element {
+  return (
+    <div className="citation-json-blocked" role="alert">
+      <strong>CSL-JSON has errors — fix them or discard</strong>
+      <p>
+        {message} The form opens once the CSL-JSON can be read; edit it under CSL-JSON in the
+        citation view.
+      </p>
+      {onDiscard ? (
+        <button type="button" className="citation-button" onClick={onDiscard}>
+          Discard changes
+        </button>
+      ) : null}
     </div>
   );
 }
 
 function SaveDetailsButton({ editor }: { readonly editor: CitationEditorController }): JSX.Element {
+  // aria-disabled, not disabled: a disabled button drops focus to the page when a save finishes.
+  const unavailable =
+    !editor.assessment.valid ||
+    !editor.dirty ||
+    editor.status === "saving" ||
+    editor.conflict !== null;
   return (
     <button
       type="button"
       className="citation-button is-primary"
-      disabled={
-        !editor.assessment.valid ||
-        !editor.dirty ||
-        editor.status === "saving" ||
-        editor.conflict !== null
-      }
-      onClick={editor.save}
+      aria-disabled={unavailable}
+      onClick={unavailable ? undefined : editor.save}
     >
       <CheckIcon />
       {editor.status === "saving" ? "Saving…" : "Save details"}
@@ -293,7 +390,6 @@ function CitationDetails({
   readonly citation: Readonly<Record<string, unknown>>;
 }): JSX.Element {
   const citekey = textField(citation["id"]);
-  const [copied, setCopied] = useState(false);
   const heading = useId();
   return (
     <section className="citation-details" aria-labelledby={heading}>
@@ -316,22 +412,7 @@ function CitationDetails({
           <dt>Citation key</dt>
           <dd className={citekey ? undefined : "is-empty"}>
             {citekey ? (
-              <button
-                type="button"
-                className="citation-key"
-                aria-label={copied ? `Copied @${citekey}` : `Copy citation key @${citekey}`}
-                title="Copy citation key"
-                onClick={() =>
-                  void navigator.clipboard.writeText(`@${citekey}`).then(
-                    () => setCopied(true),
-                    () => undefined,
-                  )
-                }
-                onBlur={() => setCopied(false)}
-              >
-                <code>@{citekey}</code>
-                {copied ? <CheckIcon /> : <CopyIcon />}
-              </button>
+              <CitationKeyCopy citekey={citekey} />
             ) : (
               <>
                 Not set<span className="citation-needs-check">Needs checking</span>
@@ -341,6 +422,40 @@ function CitationDetails({
         </div>
       </dl>
     </section>
+  );
+}
+
+/** Copies `@key`, saying so beside the key and in a live region, for success and failure alike. */
+function CitationKeyCopy({ citekey }: { readonly citekey: string }): JSX.Element {
+  const [result, setResult] = useState<"copied" | "failed" | null>(null);
+  const timer = useRef<ReturnType<typeof setTimeout>>(undefined);
+  useEffect(() => () => clearTimeout(timer.current), []);
+  const copy = (): void => {
+    clearTimeout(timer.current);
+    void copyKeepingFocus(`@${citekey}`).then(
+      () => {
+        setResult("copied");
+        timer.current = setTimeout(() => setResult(null), 2400);
+      },
+      () => setResult("failed"),
+    );
+  };
+  return (
+    <>
+      <button
+        type="button"
+        className="citation-key"
+        aria-label={`Copy citation key @${citekey}`}
+        title="Copy citation key"
+        onClick={copy}
+      >
+        <code>@{citekey}</code>
+        {result === "copied" ? <CheckIcon /> : <CopyIcon />}
+      </button>
+      <span className="citation-key-status" role="status">
+        {result === "copied" ? "Copied" : result === "failed" ? "Copying is unavailable here." : ""}
+      </span>
+    </>
   );
 }
 

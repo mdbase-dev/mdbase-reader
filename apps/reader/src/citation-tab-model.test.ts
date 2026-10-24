@@ -1,3 +1,4 @@
+import { citationCompletenessWarnings } from "@mdbase-reader/core";
 import { describe, expect, it } from "vitest";
 
 import {
@@ -5,6 +6,8 @@ import {
   citationEvidenceSummary,
   citationHealth,
   citationIdentifiers,
+  uncoveredWarnings,
+  warningFields,
 } from "./citation-tab-model.js";
 
 describe("citation detail rows", () => {
@@ -80,6 +83,32 @@ describe("citation health", () => {
       title: "2 details to check",
       detail: "The library records the authors and URL; add them to the citation.",
     });
+  });
+
+  it("counts distinct items: a gap and an unrelated warning are two", () => {
+    expect(
+      citationHealth({
+        valid: true,
+        warnings: [
+          "No publication date is recorded.",
+          "A journal article normally needs a journal title.",
+        ],
+        gaps: ["issued", "URL"],
+      }),
+    ).toMatchObject({ title: "3 details to check" });
+    expect(
+      uncoveredWarnings(
+        ["No publication date is recorded.", "No author or editor is recorded."],
+        ["issued"],
+      ),
+    ).toEqual(["No author or editor is recorded."]);
+  });
+
+  it("keys the field warnings core actually emits", () => {
+    const warnings = citationCompletenessWarnings({ id: "k", type: "book", title: "T" });
+    for (const warning of Object.keys(warningFields)) {
+      expect(warnings).toContain(warning);
+    }
   });
 
   it("stays calm when nothing needs checking", () => {

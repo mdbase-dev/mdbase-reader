@@ -42,7 +42,7 @@
     background-color var(--dur-fast) ease-out,
     border-color var(--dur-fast) ease-out;
 }
-.citation-editor .citation-button:hover:not(:disabled) {
+.citation-editor .citation-button:hover:not(:disabled, [aria-disabled="true"]) {
   background: var(--bg-hover);
 }
 .citation-editor .citation-button.is-primary {
@@ -50,10 +50,12 @@
   color: var(--on-accent);
   background: var(--accent-color);
 }
-.citation-editor .citation-button.is-primary:hover:not(:disabled) {
+.citation-editor .citation-button.is-primary:hover:not(:disabled, [aria-disabled="true"]) {
   background: var(--accent-strong);
 }
-.citation-editor .citation-button:disabled {
+/* Save details stays focusable while unavailable, so focus survives a save. */
+.citation-editor .citation-button:disabled,
+.citation-editor .citation-button[aria-disabled="true"] {
   border-color: var(--line-color);
   color: var(--text-3);
   background: var(--bg-sunken);
@@ -155,14 +157,19 @@
   box-shadow: var(--focus-ring);
 }
 
-/* Announced, not shown: the Copy button itself reads “Copied”. */
-.citation-editor .citation-copy-status {
+/* Success is announced, not shown: the Copy button itself reads “Copied”. Failure is shown. */
+.citation-editor .citation-copy-status:not(.is-failed) {
   position: absolute;
   width: 1px;
   height: 1px;
   overflow: hidden;
   clip-path: inset(50%);
   white-space: nowrap;
+}
+.citation-editor .citation-copy-status.is-failed {
+  margin: var(--sp-2) 0 0;
+  color: var(--text-2);
+  font-size: var(--text-xs);
 }
 
 /* The status line ------------------------------------------------------------------------- */
@@ -293,6 +300,14 @@
   font: var(--text-xs) / var(--lh-xs) var(--mono);
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+.citation-editor .citation-key-status {
+  margin-left: var(--sp-2);
+  color: var(--text-2);
+  font-size: var(--text-xs);
+}
+.citation-editor .citation-key-status:empty {
+  display: none;
 }
 .citation-editor .citation-key svg {
   width: 13px;
@@ -440,6 +455,27 @@
   border: 0;
   border-radius: var(--r-lg);
   background: var(--warning-soft);
+}
+.citation-editor .citation-json-blocked {
+  display: grid;
+  gap: var(--sp-2);
+  margin: var(--sp-3) var(--sp-4) 0;
+  padding: var(--sp-3);
+  border: 1px solid var(--line-color);
+  border-radius: var(--r-md);
+  background: var(--bg-sunken);
+}
+.citation-editor .citation-json-blocked p {
+  margin: 0;
+  color: var(--text-2);
+  font-size: var(--text-sm);
+}
+.citation-editor .citation-json-blocked strong {
+  color: var(--text-1);
+  font-size: var(--text-sm);
+}
+.citation-editor .citation-json-blocked .citation-button {
+  justify-self: start;
 }
 .citation-editor .citation-checks {
   display: grid;

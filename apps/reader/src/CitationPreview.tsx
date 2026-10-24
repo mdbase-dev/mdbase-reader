@@ -10,6 +10,7 @@ import {
   type RenderedCitation,
 } from "./citation-renderer.js";
 import { CheckIcon, CopyIcon } from "./icons.js";
+import { copyText } from "./selection-copy.js";
 import { useSessionChoice } from "./use-session-choice.js";
 
 import type { CslItem } from "@mdbase-reader/core";
@@ -85,15 +86,19 @@ export function CitationPreview({
       return;
     }
     const label = citationStyleLabel(format.style);
-    void navigator.clipboard.writeText(formatted).then(
+    void copyKeepingFocus(formatted).then(
       () => {
         setCopied(`Copied as ${label}`);
         clearTimeout(timer.current);
         timer.current = setTimeout(() => setCopied(null), 2400);
       },
-      () => setCopied("Copying is unavailable here. Select the citation to copy it."),
+      () => {
+        clearTimeout(timer.current);
+        setCopied(copyFailedMessage);
+      },
     );
   };
+  const failed = copied === copyFailedMessage;
   return (
     <figure className="citation-reference" aria-label="Formatted citation">
       <p
@@ -124,11 +129,31 @@ export function CitationPreview({
           {copied?.startsWith("Copied") ? "Copied" : "Copy"}
         </button>
       </div>
-      <p className="citation-copy-status" role="status">
+      <p
+        className={failed ? "citation-copy-status is-failed" : "citation-copy-status"}
+        role="status"
+      >
         {copied ?? ""}
       </p>
     </figure>
   );
+}
+
+const copyFailedMessage = "Copying is unavailable here. Select the citation to copy it.";
+
+/**
+ * Copies text, falling back when the Clipboard API is missing or refused (see `copyText`). The
+ * fallback selects a hidden field, so focus returns to whatever had it, normally the button.
+ */
+export async function copyKeepingFocus(text: string): Promise<void> {
+  const active = document.activeElement;
+  try {
+    await copyText(text);
+  } finally {
+    if (active instanceof HTMLElement && document.activeElement !== active) {
+      active.focus();
+    }
+  }
 }
 
 /** The live preview under the Fix details form, in the chosen style. */
@@ -141,10 +166,8 @@ export function CitationPreviewLine({
 }): JSX.Element {
   const rendered = useRenderedCitation(citation, format.style, format.locale);
   return (
-    <p
-      className="citation-preview-line"
-      aria-label={`Preview in ${citationStyleLabel(format.style)}`}
-    >
+    <p className="citation-preview-line">
+      <span className="sr-only">Preview in {citationStyleLabel(format.style)}: </span>
       {!citation
         ? "The preview returns once the details can be saved."
         : rendered

@@ -1,6 +1,13 @@
 // @vitest-environment happy-dom
 /* eslint-disable @typescript-eslint/require-await -- async act flushes React's queued work */
-import { collectionId, recordRevision, sourceId, type Source } from "@mdbase-reader/core";
+import {
+  CitationChangedElsewhereError,
+  collectionId,
+  recordRevision,
+  sourceId,
+  type CslItem,
+  type Source,
+} from "@mdbase-reader/core";
 import { act } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
@@ -14,10 +21,24 @@ import type { ReaderWorkspaceGateway } from "./workspace-model.js";
 
 vi.mock("@mdbase-dev/ui/mark-activity", () => ({ signalMdbaseMark: vi.fn() }));
 vi.mock("./MultilineCodeEditor.js", () => ({
-  MultilineCodeEditor: ({ ariaLabel }: { readonly ariaLabel: string }) => (
-    <textarea aria-label={ariaLabel} />
+  MultilineCodeEditor: ({
+    ariaLabel,
+    value,
+    onChange,
+  }: {
+    readonly ariaLabel: string;
+    readonly value: string;
+    readonly onChange: (value: string) => void;
+  }) => (
+    <textarea
+      aria-label={ariaLabel}
+      value={value}
+      onChange={(event) => onChange(event.target.value)}
+    />
   ),
 }));
+const confirm = vi.hoisted(() => vi.fn<(request: { title: string }) => Promise<boolean>>());
+vi.mock("./confirmation.js", () => ({ requestConfirmation: confirm }));
 
 const citation = {
   id: "kingma2015adam",
@@ -82,12 +103,31 @@ function button(name: string | RegExp): HTMLButtonElement {
   return found;
 }
 
+function setNativeValue(field: HTMLInputElement | HTMLTextAreaElement, value: string): void {
+  const prototype = Object.getPrototypeOf(field) as object;
+  Object.getOwnPropertyDescriptor(prototype, "value")?.set?.call(field, value);
+}
+
+function titleInput(): HTMLInputElement {
+  return container.querySelector<HTMLInputElement>(".citation-field.is-wide input")!;
+}
+
+async function editTitle(value: string): Promise<void> {
+  const title = titleInput();
+  await act(async () => {
+    setNativeValue(title, value);
+    title.dispatchEvent(new Event("input", { bubbles: true }));
+  });
+}
+
 function referenceText(): string {
   return container.querySelector(".citation-reference-text")?.textContent ?? "";
 }
 
 beforeEach(() => {
   sessionStorage.clear();
+  confirm.mockReset().mockResolvedValue(false);
+  vi.mocked(gateway.saveSourceCitation).mockReset();
   writeText.mockReset().mockResolvedValue(undefined);
   Object.defineProperty(navigator, "clipboard", { configurable: true, value: { writeText } });
   container = document.createElement("div");
@@ -98,6 +138,7 @@ beforeEach(() => {
 afterEach(async () => {
   await act(async () => root.unmount());
   container.remove();
+  Reflect.deleteProperty(document, "execCommand");
 });
 
 describe("Citation tab", () => {
@@ -163,19 +204,135 @@ describe("Citation tab", () => {
     expect(container.querySelector(".citation-checks")?.textContent).toContain(
       "No publication date is recorded.",
     );
-    const title = container.querySelector<HTMLInputElement>(".citation-field.is-wide input")!;
-    await act(async () => {
-      const setter = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, "value")!.set!;
-      setter.call(title, "Adam, revised");
-      title.dispatchEvent(new Event("input", { bubbles: true }));
-    });
-    expect(button(/Save details/u).disabled).toBe(false);
+    expect(button(/Save details/u).getAttribute("aria-disabled")).toBe("true");
+    await editTitle("Adam, revised");
+    expect(button(/Save details/u).getAttribute("aria-disabled")).toBe("false");
 
     await act(async () => button("Back to citation").click());
     expect(document.activeElement?.textContent).toBe("Fix details");
     // Save details is now the filled button; Fix details steps back.
     expect(button("Fix details").className).not.toContain("is-primary");
-    expect(button(/Save details/u).disabled).toBe(false);
+    expect(button(/Save details/u).getAttribute("aria-disabled")).toBe("false");
     expect(container.textContent).toContain("Unsaved changes");
+  });
+
+  it("asks before Discard changes, then returns to the saved citation", async () => {
+    await render();
+    await act(async () => button("Fix details").click());
+    expect(() => button("Discard changes")).toThrow();
+    await editTitle("Adam, revised");
+    confirm.mockResolvedValueOnce(false);
+    await act(async () => button("Discard changes").click());
+    expect(confirm).toHaveBeenCalledWith(expect.objectContaining({ title: "Discard changes?" }));
+    expect(titleInput().value).toBe("Adam, revised");
+
+    confirm.mockResolvedValueOnce(true);
+    await act(async () => button("Discard changes").click());
+    expect(document.activeElement?.textContent).toBe("Fix details");
+    expect(container.querySelector(".citation-editor-footer")).toBeNull();
+    await act(async () => button("Fix details").click());
+    expect(titleInput().value).toBe(citation.title);
+  });
+
+  it("blocks the form while the CSL-JSON cannot be read, offering Discard changes", async () => {
+    writeSessionChoice("disclosure.citation.csl-json", "open");
+    await render();
+    const json = container.querySelector<HTMLTextAreaElement>(
+      '[aria-label="CSL-JSON citation details"]',
+    )!;
+    await act(async () => {
+      setNativeValue(json, '{"id": "kingma2015adam",');
+      json.dispatchEvent(new Event("input", { bubbles: true }));
+    });
+    await act(async () => button("Fix details").click());
+    const blocked = container.querySelector(".citation-json-blocked");
+    expect(blocked?.textContent).toContain("CSL-JSON has errors — fix them or discard");
+    expect(container.querySelector(".citation-field")).toBeNull();
+    expect(
+      [...container.querySelectorAll("button")].filter(
+        (item) => item.textContent === "Discard changes",
+      ),
+    ).toHaveLength(1);
+
+    confirm.mockResolvedValueOnce(true);
+    await act(async () => button("Discard changes").click());
+    expect(container.querySelector(".citation-health")?.textContent).toContain("1 detail to check");
+  });
+});
+
+describe("saving from the citation view", () => {
+  async function editThenReturn(): Promise<void> {
+    await render();
+    await act(async () => button("Fix details").click());
+    await editTitle("Adam, revised");
+    await act(async () => button("Back to citation").click());
+  }
+
+  async function saveFromSummary(): Promise<HTMLButtonElement> {
+    const save = button(/Save details/u);
+    save.focus();
+    await act(async () => save.click());
+    await settle(() => !container.textContent.includes("Saving…"));
+    return save;
+  }
+
+  it("keeps the footer and focus after a save, and says Saved", async () => {
+    vi.mocked(gateway.saveSourceCitation).mockImplementation(async (_source, csl, options) => ({
+      ...source,
+      recordRevision: recordRevision("rev-adam-2"),
+      frontmatter: { csl },
+      citation: csl as CslItem,
+      cslProvenance: options?.provenance ?? {},
+    }));
+    await editThenReturn();
+    const save = await saveFromSummary();
+    expect(container.querySelector(".citation-editor-footer")?.textContent).toContain("Saved");
+    expect(save.isConnected).toBe(true);
+    expect(document.activeElement).toBe(save);
+    expect(save.getAttribute("aria-disabled")).toBe("true");
+  });
+
+  it("shows a failed save beside Save details", async () => {
+    vi.mocked(gateway.saveSourceCitation).mockRejectedValue(new Error("The disk is full."));
+    await editThenReturn();
+    await saveFromSummary();
+    expect(container.querySelector('.citation-editor-footer [role="alert"]')?.textContent).toBe(
+      "The disk is full.",
+    );
+    expect(button(/Save details/u).getAttribute("aria-disabled")).toBe("false");
+  });
+
+  it("keeps the draft when the citation changed elsewhere", async () => {
+    vi.mocked(gateway.saveSourceCitation).mockRejectedValue(
+      new CitationChangedElsewhereError({ ...citation, title: "Theirs" }),
+    );
+    await editThenReturn();
+    await saveFromSummary();
+    expect(container.querySelector(".citation-editor-footer")?.textContent).toContain(
+      "Your draft is still here",
+    );
+    expect(button("Use their version")).toBeDefined();
+  });
+});
+
+describe("copying without a clipboard", () => {
+  it("falls back, then says plainly when copying the key fails", async () => {
+    Object.defineProperty(navigator, "clipboard", { configurable: true, value: undefined });
+    Object.defineProperty(document, "execCommand", { configurable: true, value: () => false });
+    await render();
+    const key = button("Copy citation key @kingma2015adam");
+    key.focus();
+    await act(async () => key.click());
+    const status = container.querySelector('.citation-key-status[role="status"]');
+    expect(status?.textContent).toBe("Copying is unavailable here.");
+    expect(document.activeElement).toBe(key);
+  });
+
+  it("announces a copied key in a live region", async () => {
+    await render();
+    await act(async () => button("Copy citation key @kingma2015adam").click());
+    expect(container.querySelector('.citation-key-status[role="status"]')?.textContent).toBe(
+      "Copied",
+    );
   });
 });

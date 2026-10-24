@@ -85,17 +85,37 @@ export function citationHealth(input: {
   const gapDetail = gapLabels.length
     ? `The library records the ${listPhrase(gapLabels)}; add ${gapLabels.length === 1 ? "it" : "them"} to the citation.`
     : undefined;
-  // A missing date the library records is usually also a completeness warning: count it once.
-  const count = Math.max(input.warnings.length, gapLabels.length);
+  const warnings = uncoveredWarnings(input.warnings, input.gaps);
+  const count = warnings.length + input.gaps.length;
   if (!count) {
     return { tone: "complete", title: "Citation details look complete" };
   }
-  const detail = gapDetail ?? input.warnings[0];
+  const detail = gapDetail ?? warnings[0];
   return {
     tone: "check",
     title: `${String(count)} ${count === 1 ? "detail" : "details"} to check`,
     ...(detail ? { detail } : {}),
   };
+}
+
+/**
+ * The completeness warnings (from `citationCompletenessWarnings` in core) that name a field are
+ * keyed by it, so a missing date the library records is one detail to check, not two.
+ */
+export const warningFields: Readonly<Record<string, string>> = {
+  "No author or editor is recorded.": "author",
+  "No publication date is recorded.": "issued",
+};
+
+/** Completeness warnings not already covered by a field the library can fill. */
+export function uncoveredWarnings(
+  warnings: readonly string[],
+  gaps: readonly string[],
+): readonly string[] {
+  return [...new Set(warnings)].filter((warning) => {
+    const field = warningFields[warning];
+    return field === undefined || !gaps.includes(field);
+  });
 }
 
 /** Distinct evidence labels in order of first use, e.g. “doi.org · page title”. */
