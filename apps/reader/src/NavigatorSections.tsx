@@ -1,4 +1,5 @@
 import { PlusIcon } from "./icons.js";
+import { sourceCreatorsText } from "./source-creators.js";
 
 import type { SourceId, SourceSummary } from "@mdbase-reader/core";
 import type { JSX } from "react";
@@ -8,6 +9,7 @@ const recentLimit = 8;
 export function NavigatorShortList({
   label,
   sources,
+  library,
   selectedSourceId,
   onPreviewSource,
   onOpenSource,
@@ -15,6 +17,8 @@ export function NavigatorShortList({
 }: {
   readonly label: string;
   readonly sources: readonly SourceSummary[];
+  /** Every loaded source, so a chapter can be shown with its book's creators. */
+  readonly library: ReadonlyMap<SourceId, SourceSummary>;
   readonly selectedSourceId: SourceId | null;
   readonly onPreviewSource: (id: SourceId) => void;
   readonly onOpenSource: (id: SourceId) => void;
@@ -46,7 +50,7 @@ export function NavigatorShortList({
               </span>
               <span>
                 <strong>{source.title}</strong>
-                <small>{sourceDetail(source)}</small>
+                <small>{sourceDetail(source, library)}</small>
               </span>
             </button>
           </li>
@@ -76,11 +80,14 @@ export function recentSources(
   return [...opened, ...reading].slice(0, recentLimit);
 }
 
-function sourceDetail(source: SourceSummary): string {
-  const creators = source.creators.join(", ") || "Unknown creator";
+function sourceDetail(
+  source: SourceSummary,
+  library: ReadonlyMap<SourceId, SourceSummary>,
+): string {
+  const creators = sourceCreatorsText(source, library, "Unknown creator");
   const progress = source.reading?.progress;
   return progress !== undefined && progress > 0 && progress < 1
-    ? `${creators} · ${String(Math.round(progress * 100))}%`
+    ? [creators, `${String(Math.round(progress * 100))}%`].filter(Boolean).join(" · ")
     : creators;
 }
 
