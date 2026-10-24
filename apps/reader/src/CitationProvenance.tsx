@@ -30,7 +30,7 @@ export function CitationProvenance({
               {status.kind === "explained" &&
               (status.provenance.agreed?.length || status.provenance.rejected?.length) ? (
                 <details>
-                  <summary aria-label={`Evidence for ${cslFieldLabel(field)}`}>
+                  <summary aria-label={`Evidence and alternatives for ${cslFieldLabel(field)}`}>
                     Evidence and alternatives
                   </summary>
                   {status.provenance.agreed?.length ? (
@@ -45,7 +45,7 @@ export function CitationProvenance({
                       <small>{citationEvidenceLabel(alternative.from)}</small>
                       <button
                         type="button"
-                        aria-label={`Use alternative ${String(index + 1)} for ${cslFieldLabel(field)}`}
+                        aria-label={`Use this value for ${cslFieldLabel(field)}: ${displayCslValue(alternative.value)}`}
                         onClick={() => onChange({ ...citation, [field]: alternative.value })}
                       >
                         Use this value

@@ -195,14 +195,14 @@ describe("citation provenance and lookups", () => {
     expect(container.textContent).toContain("page title");
     expect(container.textContent).toContain("edited manually");
     expect(container.textContent).toContain("removed");
-    expect(container.textContent).toContain("manual");
+    expect(container.textContent).toContain("no recorded source");
     expect(container.textContent).toContain("page metadata · name; h1");
     expect(container.textContent).not.toContain("https://rejected.example");
   });
 
   it("applies a rejected alternative as an ordinary unsaved manual edit", async () => {
     await render(explained);
-    await click("Use alternative 1 for Title");
+    await click("Use this value for Title: Other title");
     expect(controller.assessment.value?.["title"]).toBe("Other title");
     expect(controller.provenance["title"]).toEqual({ value: "Other title", source: "user" });
     expect(controller.dirty).toBe(true);

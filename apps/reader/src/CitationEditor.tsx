@@ -90,7 +90,7 @@ function ReadyCitationEditor({
             aria-current={mode === "raw" ? "page" : undefined}
             onClick={() => setMode("raw")}
           >
-            CSL
+            CSL-JSON
           </button>
         </nav>
       </header>
