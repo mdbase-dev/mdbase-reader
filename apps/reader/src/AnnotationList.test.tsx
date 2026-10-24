@@ -190,11 +190,15 @@ describe("virtual annotation sidebar", () => {
   it("can materialize all filtered cards for native browser Find and return to windowing", async () => {
     const element = await render();
     const toggle = element.querySelector<HTMLInputElement>('input[type="checkbox"]')!;
+    expect(toggle.closest("label")?.textContent).toContain(
+      "Include all annotations in page search",
+    );
     await act(async () => {
       toggle.click();
       await Promise.resolve();
     });
     expect(element.querySelectorAll('[role="listitem"]')).toHaveLength(1000);
+    expect(toggle.closest("label")?.textContent).toContain("Slower with long lists");
     await act(async () => {
       toggle.click();
       await Promise.resolve();

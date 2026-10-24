@@ -64,9 +64,9 @@ try {
   await expect(card(1499)).toHaveAttribute("aria-posinset", "1");
   await expect(card(1499)).toHaveAttribute("aria-setsize", "1");
   await inViewport(1499);
-  await page.getByRole("checkbox", { name: "Render all for browser Find" }).check();
+  await page.getByRole("checkbox", { name: "Include all annotations in page search" }).check();
   await expect(page.getByRole("listitem")).toHaveCount(1);
-  await page.getByRole("checkbox", { name: "Render all for browser Find" }).uncheck();
+  await page.getByRole("checkbox", { name: "Include all annotations in page search" }).uncheck();
   await search.fill("no-such-passage");
   await expect(page.getByText("No matching annotations", { exact: true })).toBeVisible();
   await page.getByRole("button", { name: "Clear filters", exact: true }).click();
@@ -88,7 +88,7 @@ try {
   );
   expect(prevented).toBe(false);
   await expect(page.getByRole("listitem")).toHaveCount(3000);
-  await page.getByRole("checkbox", { name: "Render all for browser Find" }).uncheck();
+  await page.getByRole("checkbox", { name: "Include all annotations in page search" }).uncheck();
   await expect.poll(() => page.getByRole("listitem").count()).toBeLessThan(25);
   await page.getByRole("button", { name: "Read middle" }).click();
   await page.getByRole("button", { name: "Follow reading", exact: true }).click();

@@ -109,8 +109,8 @@ export function AnnotationList({
           checked={renderAll}
           onChange={(event) => setRenderAll(event.target.checked)}
         />
-        Render all for browser Find
-        <span>{renderAll ? "Slower with large lists" : "Search above covers all annotations"}</span>
+        Include all annotations in page search
+        <span>{renderAll ? "Slower with long lists" : "Search above covers all annotations"}</span>
       </label>
       <VirtualAnnotationList
         results={results}

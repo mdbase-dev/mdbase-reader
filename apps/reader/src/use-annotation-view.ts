@@ -73,7 +73,7 @@ export function useAnnotationViewExecution(
           setResult({ view, gateway, revision, execution: { paths, problem: null, ready: true } });
         }
       })
-      .catch((reason: unknown) => {
+      .catch(() => {
         if (!controller.signal.aborted) {
           setResult({
             view,
@@ -82,7 +82,8 @@ export function useAnnotationViewExecution(
             execution: {
               paths: null,
               ready: true,
-              problem: `${readerErrorMessage(reason, "mdbase could not run this view.")} Reader is applying its filters itself.`,
+              problem:
+                "This view couldn’t be applied by mdbase, so Reader is filtering here instead.",
             },
           });
         }
