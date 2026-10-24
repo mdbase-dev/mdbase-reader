@@ -1,7 +1,7 @@
 import type { KeyboardEvent } from "react";
 
 const controlsSelector =
-  "button:not(:disabled), input:not(:disabled), textarea:not(:disabled), a[href]";
+  "button:not(:disabled), summary, input:not(:disabled), textarea:not(:disabled), a[href]";
 export function annotationItemControls(item: HTMLElement): HTMLElement[] {
   return [...item.querySelectorAll<HTMLElement>(controlsSelector)];
 }

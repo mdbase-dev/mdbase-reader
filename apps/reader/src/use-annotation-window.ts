@@ -20,6 +20,9 @@ interface AnnotationWindowOptions {
   readonly activeId: AnnotationId | null;
   readonly readingId: AnnotationId | null;
   readonly renderAll: boolean;
+  /** Following is owned by the list so its control can live in the Filter menu. */
+  readonly following: boolean;
+  readonly setFollowing: (following: boolean) => void;
 }
 interface WindowFocus {
   readonly focusedId: string | null;
@@ -29,10 +32,7 @@ interface WindowFocus {
 interface AnnotationWindow extends WindowFocus {
   readonly scrollRef: RefObject<HTMLDivElement | null>;
   readonly virtualizer: Virtualizer<HTMLDivElement, Element>;
-  readonly following: boolean;
   readonly pause: () => void;
-  readonly toggleFollowing: () => void;
-  readonly reading: Annotation | undefined;
 }
 export function useAnnotationWindow({
   results,
@@ -40,10 +40,11 @@ export function useAnnotationWindow({
   activeId,
   readingId,
   renderAll,
+  following,
+  setFollowing,
 }: AnnotationWindowOptions): AnnotationWindow {
   const scrollRef = useRef<HTMLDivElement>(null);
   const focus = useWindowFocus(results, scrollRef);
-  const [following, setFollowing] = useState(true);
   const editingIndex = results.findIndex(({ id }) => id === editingId);
   const focusedIndex = results.findIndex(({ id }) => id === focus.focusedId);
   const readingIndex = results.findIndex(({ id }) => id === readingId);
@@ -84,7 +85,8 @@ export function useAnnotationWindow({
     [renderAll, virtualizer],
   );
   const activeIndex = results.findIndex(({ id }) => id === activeId);
-  // Passive reading never steals an editor/focused card or a manually browsed list.
+  // Passive reading never steals an editor/focused card or a manually browsed list. Resuming
+  // following reveals the reading position through this effect too.
   useEffect(() => {
     if (following && !editingId && !focus.focusedId) {
       reveal(readingIndex);
@@ -97,7 +99,6 @@ export function useAnnotationWindow({
   return {
     scrollRef,
     virtualizer,
-    following,
     focusedId: focus.focusedId,
     setFocusedId: focus.setFocusedId,
     pause: (): void => setFollowing(false),
@@ -109,15 +110,6 @@ export function useAnnotationWindow({
       focus.focusItem(index, last);
       reveal(index);
     },
-    toggleFollowing: (): void => {
-      if (following) {
-        setFollowing(false);
-      } else {
-        setFollowing(true);
-        reveal(readingIndex);
-      }
-    },
-    reading: results[readingIndex],
   };
 }
 function useWindowFocus(

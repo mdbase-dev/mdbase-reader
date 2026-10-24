@@ -50,6 +50,7 @@ it("batch-loads the family, labels owners and filters chapters without new queri
       <AnnotationList
         annotations={annotations}
         owners={view.sources}
+        currentSourceId={bookId}
         transclusion={{
           busyId: null,
           problemId: null,
@@ -70,10 +71,12 @@ it("batch-loads the family, labels owners and filters chapters without new queri
   }
   await mount(<Harness />);
   // Native-Find mode deliberately renders every filtered card in happy-dom as in the product.
-  act(() => host.querySelector<HTMLInputElement>('input[type="checkbox"]')!.click());
+  act(() => pageSearchSwitch().click());
   expect(batch).toHaveBeenCalledTimes(1);
-  expect(host.textContent).toContain("Source: Chapter 1");
-  expect(host.textContent).toContain("Source: Chapter 2");
+  // In document order each chapter's run is headed once, naming the chapter, not every card.
+  expect(groupSources()).toEqual(expect.arrayContaining(["Chapter 1", "Chapter 2"]));
+  expect(host.textContent).not.toContain("Source:");
+  expect(groupSources()).not.toContain(book.title);
   const filter = host.querySelector<HTMLSelectElement>(
     '[aria-label="Filter annotations by source"]',
   )!;
@@ -82,10 +85,26 @@ it("batch-loads the family, labels owners and filters chapters without new queri
     filter.dispatchEvent(new Event("change", { bubbles: true }));
   });
   expect(host.querySelectorAll("[data-annotation-id]")).toHaveLength(1);
+  expect(groupSources()).toEqual(["Chapter 1"]);
+  // Newest first has no headings, so a card from another source names it itself.
+  act(() =>
+    [...host.querySelectorAll<HTMLButtonElement>(".annotation-filter-choice")]
+      .find((button) => button.textContent === "Newest first")!
+      .click(),
+  );
+  expect(host.querySelector(".annotation-group")).toBeNull();
   expect(host.textContent).toContain("Source: Chapter 1");
   expect(host.textContent).not.toContain("Source: Chapter 2");
   expect(batch).toHaveBeenCalledTimes(1);
 });
+function pageSearchSwitch(): HTMLButtonElement {
+  return [...host.querySelectorAll<HTMLButtonElement>('[role="switch"]')].find((item) =>
+    item.textContent.startsWith("Include all annotations in page search"),
+  )!;
+}
+function groupSources(): (string | null)[] {
+  return [...host.querySelectorAll(".annotation-group small")].map((item) => item.textContent);
+}
 it("shows only a chapter’s owned annotations until whole-book visibility is requested", async () => {
   const gateway = new PreviewGateway();
   const chapter = (await gateway.source(chapterId))!;

@@ -6,7 +6,7 @@ import {
   sourceId,
   type Annotation,
 } from "@mdbase-reader/core";
-import { act } from "react";
+import { act, type JSX } from "react";
 import { createRoot } from "react-dom/client";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
@@ -189,16 +189,15 @@ describe("virtual annotation sidebar", () => {
 
   it("can materialize all filtered cards for native browser Find and return to windowing", async () => {
     const element = await render();
-    const toggle = element.querySelector<HTMLInputElement>('input[type="checkbox"]')!;
-    expect(toggle.closest("label")?.textContent).toContain(
-      "Include all annotations in page search",
-    );
+    const toggle = switchNamed(element, "Include all annotations in page search");
+    expect(toggle.getAttribute("aria-checked")).toBe("false");
+    expect(toggle.textContent).toContain("Search above covers all annotations");
     await act(async () => {
       toggle.click();
       await Promise.resolve();
     });
     expect(element.querySelectorAll('[role="listitem"]')).toHaveLength(1000);
-    expect(toggle.closest("label")?.textContent).toContain("Slower with long lists");
+    expect(toggle.textContent).toContain("Slower with long lists");
     await act(async () => {
       toggle.click();
       await Promise.resolve();
@@ -211,7 +210,7 @@ describe("virtual annotation sidebar", () => {
       );
       await Promise.resolve();
     });
-    expect(toggle.checked).toBe(true);
+    expect(toggle.getAttribute("aria-checked")).toBe("true");
   });
 
   it("highlights reading context but pauses automatic reveals on manual list interaction", async () => {
@@ -230,13 +229,120 @@ describe("virtual annotation sidebar", () => {
     virtual.scrollToIndex.mockClear();
     await render(null, null, values[800]!.id);
     expect(virtual.scrollToIndex).not.toHaveBeenCalledWith(800, { align: "auto" });
-    const follow = [...element.querySelectorAll("button")].find(
-      (button) => button.textContent === "Follow reading",
-    )!;
+    const follow = switchNamed(element, "Follow reading position");
+    expect(follow.getAttribute("aria-checked")).toBe("false");
     await act(async () => {
       follow.click();
       await Promise.resolve();
     });
     expect(virtual.scrollToIndex).toHaveBeenCalledWith(800, { align: "auto" });
+    expect(follow.getAttribute("aria-checked")).toBe("true");
+  });
+});
+
+function switchNamed(element: HTMLElement, name: string): HTMLButtonElement {
+  return [...element.querySelectorAll<HTMLButtonElement>('[role="switch"]')].find((item) =>
+    item.textContent.startsWith(name),
+  )!;
+}
+
+describe("annotation Filter menu", () => {
+  const kinds: Annotation[] = [
+    { ...annotations[0]!, id: annotationId("highlight"), annotationType: "highlight" },
+    { ...annotations[1]!, id: annotationId("bookmark"), annotationType: "bookmark" },
+    { ...annotations[2]!, id: annotationId("comment"), annotationType: "note" },
+  ];
+  async function mount(element: JSX.Element): Promise<HTMLDivElement> {
+    host = document.createElement("div");
+    document.body.append(host);
+    root = createRoot(host);
+    await act(async () => {
+      root!.render(element);
+      await Promise.resolve();
+    });
+    return host;
+  }
+  const renderKinds = (): Promise<HTMLDivElement> =>
+    mount(
+      <AnnotationList
+        {...props}
+        annotations={{ status: "ready", value: kinds }}
+        addMenu={<button type="button">Add</button>}
+      />,
+    );
+  function choice(element: HTMLElement, label: string): HTMLButtonElement {
+    return [...element.querySelectorAll<HTMLButtonElement>(".annotation-filter-choice")].find(
+      (button) => button.textContent.startsWith(label),
+    )!;
+  }
+
+  it("puts search, one Filter menu and Add in a single control row", async () => {
+    const element = await renderKinds();
+    const row = element.querySelector(".annotation-tools")!;
+    expect(row.querySelector('input[type="search"]')).not.toBeNull();
+    expect(row.querySelector('summary[aria-label="Filter annotations"]')).not.toBeNull();
+    expect(row.lastElementChild?.textContent).toBe("Add");
+    // Nothing else sits between the control row and the cards.
+    expect(element.querySelector('input[type="checkbox"]')).toBeNull();
+    expect(element.textContent).not.toContain("Pause following");
+  });
+
+  it("filters by type with counts, marks the trigger, and clears back to all", async () => {
+    const element = await renderKinds();
+    expect(choice(element, "All annotations").getAttribute("aria-pressed")).toBe("true");
+    expect(choice(element, "Bookmarks").textContent).toBe("Bookmarks1");
+    await act(async () => {
+      choice(element, "Bookmarks").click();
+      await Promise.resolve();
+    });
+    expect(element.querySelectorAll("[data-annotation-id]")).toHaveLength(1);
+    expect(element.querySelector('[data-annotation-id="bookmark"]')).not.toBeNull();
+    expect(choice(element, "Bookmarks").getAttribute("aria-pressed")).toBe("true");
+    const trigger = element.querySelector(".annotation-filter-trigger")!;
+    expect(trigger.classList.contains("is-changed")).toBe(true);
+    expect(trigger.getAttribute("aria-label")).toBe("Filter annotations (changed)");
+    expect(element.querySelector('[role="status"]')?.textContent).toContain("1 of 3");
+    await act(async () => {
+      [...element.querySelectorAll<HTMLButtonElement>("button")]
+        .find((button) => button.textContent === "Clear")!
+        .click();
+      await Promise.resolve();
+    });
+    expect(element.querySelectorAll("[data-annotation-id]")).toHaveLength(3);
+    expect(trigger.classList.contains("is-changed")).toBe(false);
+  });
+
+  it("changes order from the same menu and keeps it open while choosing", async () => {
+    const element = await renderKinds();
+    const details = element.querySelector<HTMLDetailsElement>(".annotation-filter-menu")!;
+    details.open = true;
+    await act(async () => {
+      choice(element, "Newest first").click();
+      await Promise.resolve();
+    });
+    expect(details.open).toBe(true);
+    expect(choice(element, "Newest first").getAttribute("aria-pressed")).toBe("true");
+    expect(choice(element, "Document order").getAttribute("aria-pressed")).toBe("false");
+    expect(
+      element.querySelector(".annotation-filter-trigger")!.classList.contains("is-changed"),
+    ).toBe(true);
+  });
+
+  it("offers the whole-book switch in the menu even before there are annotations", async () => {
+    const onChange = vi.fn();
+    const element = await mount(
+      <AnnotationList
+        {...props}
+        annotations={{ status: "ready", value: [] }}
+        wholeBook={{ value: false, onChange }}
+      />,
+    );
+    expect(element.textContent).toContain("No annotations yet");
+    expect(element.querySelector('input[type="search"]')).toBeNull();
+    await act(async () => {
+      switchNamed(element, "Show the whole book’s annotations").click();
+      await Promise.resolve();
+    });
+    expect(onChange).toHaveBeenCalledWith(true);
   });
 });

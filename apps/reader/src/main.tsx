@@ -7,6 +7,7 @@ import "./reader.css";
 import "./reader-improvements.css";
 import "./annotation-polish.css";
 import "./reader-shell.css";
+import "./notes-panel.css";
 import "@mdbase-dev/ui/feedback.css";
 import "./feedback-shell.css";
 

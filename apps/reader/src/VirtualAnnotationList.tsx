@@ -1,7 +1,6 @@
 import { useId, type JSX, type ReactNode } from "react";
 
 import { annotationListKeyDown } from "./annotation-list-keyboard.js";
-import { annotationLocationLabel } from "./passage-labels.js";
 import { useAnnotationWindow } from "./use-annotation-window.js";
 
 import type { Annotation, AnnotationId } from "@mdbase-reader/core";
@@ -13,6 +12,9 @@ export function VirtualAnnotationList({
   activeId,
   readingId = null,
   renderAll = false,
+  following,
+  onFollowingChange,
+  renderHeading,
   renderCard,
   children,
 }: {
@@ -21,31 +23,24 @@ export function VirtualAnnotationList({
   readonly activeId: AnnotationId | null;
   readonly readingId?: AnnotationId | null;
   readonly renderAll?: boolean;
+  readonly following: boolean;
+  readonly onFollowingChange: (following: boolean) => void;
+  /** A group heading shown above the card at this index, if it starts a new group. */
+  readonly renderHeading?: (index: number) => ReactNode;
   readonly renderCard: (annotation: Annotation) => ReactNode;
   readonly children?: ReactNode;
 }): JSX.Element {
-  const {
-    scrollRef,
-    reading,
+  const { scrollRef, pause, focusItem, setFocusedId, virtualizer } = useAnnotationWindow({
+    results,
+    editingId,
+    activeId,
+    readingId,
+    renderAll,
     following,
-    toggleFollowing,
-    pause,
-    focusItem,
-    setFocusedId,
-    virtualizer,
-  } = useAnnotationWindow({ results, editingId, activeId, readingId, renderAll });
+    setFollowing: onFollowingChange,
+  });
   return (
     <>
-      {reading ? (
-        <div className="annotation-reading-context">
-          <span>
-            Near reading position: {annotationLocationLabel(reading) ?? "Document passage"}
-          </span>
-          <button type="button" aria-pressed={following} onClick={toggleFollowing}>
-            {following ? "Pause following" : "Follow reading"}
-          </button>
-        </div>
-      ) : null}
       {/* Delegated keyboard handling serves the focusable listitems, not an interactive listbox. */}
       {/* eslint-disable-next-line jsx-a11y/no-static-element-interactions */}
       <div
@@ -73,6 +68,7 @@ export function VirtualAnnotationList({
           readingId={readingId}
           renderAll={renderAll}
           virtualizer={virtualizer}
+          renderHeading={renderHeading}
           renderCard={renderCard}
         />
       </div>
@@ -84,12 +80,14 @@ function AnnotationWindowItems({
   readingId,
   renderAll,
   virtualizer,
+  renderHeading,
   renderCard,
 }: {
   readonly results: readonly Annotation[];
   readonly readingId: AnnotationId | null;
   readonly renderAll: boolean;
   readonly virtualizer: ReturnType<typeof useAnnotationWindow>["virtualizer"];
+  readonly renderHeading: ((index: number) => ReactNode) | undefined;
   readonly renderCard: (annotation: Annotation) => ReactNode;
 }): JSX.Element {
   const instructions = useId();
@@ -135,6 +133,7 @@ function AnnotationWindowItems({
                     }
               }
             >
+              {renderHeading?.(item.index)}
               {annotation.id === readingId ? (
                 <small className="annotation-reading-label">Near reading position</small>
               ) : null}

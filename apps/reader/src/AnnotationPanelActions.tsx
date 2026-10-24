@@ -7,7 +7,8 @@ import { isAnnotationSaveCancelled } from "./annotation-ownership.js";
 import { AnnotationOwnerChooser } from "./AnnotationOwnerChooser.js";
 import { AnnotationTextArea } from "./AnnotationTextArea.js";
 import { readerErrorMessage } from "./errors.js";
-import { BookmarkIcon, CloseIcon, CommentIcon } from "./icons.js";
+import { BookmarkIcon, CloseIcon, CommentIcon, PlusIcon } from "./icons.js";
+import { Menu } from "./Menu.js";
 import { useAnnotationOwner, type AnnotationOwnerControl } from "./use-annotation-owner.js";
 
 import type { AnnotationComposerController } from "./use-annotation-composer.js";
@@ -16,17 +17,18 @@ import type { ReaderWorkspaceGateway } from "./workspace-model.js";
 
 /**
  * Annotations that need no selection: a comment about the whole source, or a bookmark at the
- * current reading position. Highlights and areas still start from the document.
+ * current reading position. Highlights and areas still start from the document. The Add menu
+ * ends the Notes panel's control row; the comment composer opens below it.
  */
-export function AnnotationPanelActions({
+export function useAnnotationPanelActions({
   workspace,
   composer,
   gateway,
 }: {
-  readonly gateway?: ReaderWorkspaceGateway;
+  readonly gateway?: ReaderWorkspaceGateway | undefined;
   readonly workspace: ReaderSourceWorkspaceController;
   readonly composer: AnnotationComposerController;
-}): JSX.Element {
+}): { readonly addMenu: JSX.Element; readonly composerPanel: JSX.Element | null } {
   const [commenting, setCommenting] = useState(false);
   const source = workspace.sourceRecord.status === "ready" ? workspace.sourceRecord.value : null;
   const ownership = useAnnotationOwner({
@@ -37,16 +39,14 @@ export function AnnotationPanelActions({
     gateway,
     create: workspace.createAnnotation,
   });
-  return (
-    <>
-      <div className="annotation-panel-actions">
-        <button
-          type="button"
-          aria-expanded={commenting}
-          disabled={!source}
-          title="Add source comment"
-          onClick={() => setCommenting(true)}
-        >
+  return {
+    addMenu: (
+      <Menu
+        className="annotation-add-menu"
+        label="Add source comment or bookmark"
+        trigger={<PlusIcon />}
+      >
+        <button type="button" disabled={!source} onClick={() => setCommenting(true)}>
           <CommentIcon /> Add source comment
         </button>
         <button
@@ -61,8 +61,10 @@ export function AnnotationPanelActions({
         >
           <BookmarkIcon /> {composer.bookmarking ? "Bookmarking…" : "Bookmark"}
         </button>
-      </div>
-      {commenting && source ? (
+      </Menu>
+    ),
+    composerPanel:
+      commenting && source ? (
         <SourceCommentComposer
           key={source.id}
           ownerControl={ownership.control}
@@ -71,9 +73,8 @@ export function AnnotationPanelActions({
           }
           onClose={() => setCommenting(false)}
         />
-      ) : null}
-    </>
-  );
+      ) : null,
+  };
 }
 
 function SourceCommentComposer({

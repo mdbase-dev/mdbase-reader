@@ -27,9 +27,14 @@ const base: Annotation = {
   path: "notes/test.md",
   recordRevision: recordRevision("sha256:test"),
 };
-function card(annotation: Annotation, onOpen = vi.fn()): JSX.Element {
+function card(
+  annotation: Annotation,
+  onOpen = vi.fn(),
+  extra: Partial<Parameters<typeof AnnotationCard>[0]> = {},
+): JSX.Element {
   return (
     <AnnotationCard
+      {...extra}
       annotation={annotation}
       editing={false}
       active={false}
@@ -116,4 +121,28 @@ it("opens a linked card on click, but not when the click ends selecting its text
 
   await act(async () => root.unmount());
   host.remove();
+});
+
+it("names the source only when the list says it differs from the open one", () => {
+  const owners = [{ id: base.sourceId, title: "Chapter 2", documents: [] }] as never;
+  const render = (showSource: boolean): string =>
+    renderToStaticMarkup(card(base, vi.fn(), { owners, showSource }));
+  expect(render(false)).not.toContain("Source:");
+  expect(render(false)).not.toContain("Chapter 2");
+  expect(render(true)).toContain("Source: <a");
+  expect(render(true)).toContain("Chapter 2</a>");
+});
+
+it("leads with the quotation and leaves the location to a group heading", () => {
+  const highlight: Annotation = {
+    ...linked,
+    annotationType: "highlight",
+    locator: { label: "p. 20" },
+  };
+  const html = renderToStaticMarkup(card(highlight, vi.fn(), { showLocation: false }));
+  expect(html.indexOf("<blockquote>")).toBeLessThan(html.indexOf("<time"));
+  expect(html).not.toContain("annotation-locator");
+  // A highlight's kind is carried by its name and ink, not a label on every card.
+  expect(html).not.toContain('class="annotation-kind');
+  expect(html).toContain('aria-label="Highlight annotation"');
 });
