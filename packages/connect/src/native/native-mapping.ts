@@ -1,9 +1,9 @@
 import { connectFailure, connectProblem, connectSuccess } from "@mdbase-dev/connect/advanced";
 import { isMdbaseError, MdbaseError, toPlain } from "@mdbase-dev/sdk";
 
+import type { ReaderConnectProblem } from "../validation-issues.js";
 import type {
   ConnectOutcome,
-  ConnectProblem,
   ConnectProblemCode,
   JsonObject,
   QueryInput,
@@ -219,7 +219,7 @@ const PROBLEM_CODES: Readonly<Record<string, ConnectProblemCode>> = {
 };
 
 /** Map native SDK failures onto the Connect problem codes Reader already handles. */
-export function connectProblemFor(error: unknown): ConnectProblem {
+export function connectProblemFor(error: unknown): ReaderConnectProblem {
   if (error instanceof OutcomeUnknown) {
     return connectProblem("operation_outcome_unknown", error.message, {
       details: { request_id: error.mutationId },
@@ -243,5 +243,8 @@ export function connectProblemFor(error: unknown): ConnectProblem {
         ? "unsupported_operation"
         : "invalid_request"
       : (PROBLEM_CODES[error.code] ?? "operation_failed");
-  return connectProblem(code as "operation_failed", error.message);
+  return {
+    ...connectProblem(code as "operation_failed", error.message),
+    ...(error.issues ? { issues: error.issues } : {}),
+  };
 }

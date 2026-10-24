@@ -1,4 +1,9 @@
 import { readerDiagnostics } from "./diagnostics.js";
+import {
+  validationIssueSummary,
+  type ConnectValidationIssue,
+  type ReaderConnectProblem,
+} from "./validation-issues.js";
 
 import type {
   ConnectOutcome,
@@ -76,8 +81,12 @@ export class ConnectRepositoryError extends Error {
     detail?: string,
     /** The SDK problem, when the failure came from a Connect outcome. */
     readonly problem?: ConnectProblem,
+    readonly issues: readonly ConnectValidationIssue[] = [],
   ) {
-    super(`mdbase Connect could not ${operation}: ${detail ?? code}`);
+    const summary = validationIssueSummary(issues);
+    super(
+      `mdbase Connect could not ${operation}: ${detail ?? code}${summary ? `: ${summary}` : ""}`,
+    );
     this.name = "ConnectRepositoryError";
   }
 }
@@ -91,6 +100,7 @@ export function outcomeValue<Value>(outcome: ConnectOutcome<Value>, operation: s
     outcome.problem.code,
     outcome.problem.message,
     outcome.problem,
+    (outcome.problem as ReaderConnectProblem).issues,
   );
 }
 
