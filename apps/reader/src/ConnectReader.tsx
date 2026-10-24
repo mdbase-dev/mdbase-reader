@@ -8,9 +8,8 @@ import { collectionSwitchUrl } from "./collection-switching.js";
 import { CollectionSwitchingContext } from "./CollectionPicker.js";
 import { readerSession } from "./connect.js";
 import {
-  connectionProblemDetail,
+  connectionScreenProblem,
   connectionStatus,
-  describeConnectionProblem,
   requiresAccessReview,
   isLocalhost,
   requiresReconnect,
@@ -217,9 +216,7 @@ function ConnectionScreen({
     <ConnectLayout
       app="reader"
       title="Open mdbase Reader"
-      status={describeConnectionProblem(connectionStatus(session))}
-      error={describeConnectionProblem(error)}
-      detail={connectionProblemDetail(problem)}
+      {...connectionScreenProblem(session, error)}
     >
       {session.status === "setup_review_required" ? (
         <section className="connection-setup" aria-labelledby="reader-setup-title">

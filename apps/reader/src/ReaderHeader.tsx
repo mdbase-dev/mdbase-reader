@@ -3,6 +3,7 @@ import { CollectionSaveWarning } from "@mdbase-dev/ui/collections";
 import { shortcutLabel } from "@mdbase-dev/ui/command-palette";
 import { FeedbackButton } from "@mdbase-dev/ui/feedback";
 import { useMdbaseMarkBusy } from "@mdbase-dev/ui/mark-activity";
+import { useId } from "react";
 
 import { CollectionPicker } from "./CollectionPicker.js";
 import { DisplayMenu } from "./DisplayMenu.js";
@@ -146,21 +147,11 @@ function LibraryHeader({
           <kbd>{shortcutLabel("mod+k")}</kbd>
         </button>
         {onToggleReadingMode ? (
-          <button
-            className="icon-button header-reading-mode"
-            type="button"
-            aria-label="Reading mode"
-            aria-pressed={readingMode}
-            disabled={!readingModeAvailable && !readingMode}
-            title={
-              readingModeAvailable || readingMode
-                ? `${readingMode ? "Leave" : "Enter"} reading mode · ${shortcutLabel("mod+.")}`
-                : "Open a document to use reading mode"
-            }
-            onClick={onToggleReadingMode}
-          >
-            <ReadingModeIcon />
-          </button>
+          <ReadingModeButton
+            readingMode={readingMode}
+            available={readingModeAvailable || readingMode}
+            onToggle={onToggleReadingMode}
+          />
         ) : null}
         {display}
         <FeedbackButton />
@@ -177,6 +168,44 @@ function LibraryHeader({
         </button>
       </div>
     </header>
+  );
+}
+
+/** Stays focusable while unavailable, so keyboard and screen reader users hear why. */
+function ReadingModeButton({
+  readingMode,
+  available,
+  onToggle,
+}: {
+  readonly readingMode: boolean;
+  readonly available: boolean;
+  readonly onToggle: () => void;
+}): JSX.Element {
+  const descriptionId = useId();
+  return (
+    <>
+      <button
+        className="icon-button header-reading-mode"
+        type="button"
+        aria-label="Reading mode"
+        aria-pressed={readingMode}
+        aria-disabled={available ? undefined : true}
+        aria-describedby={available ? undefined : descriptionId}
+        title={
+          available
+            ? `${readingMode ? "Leave" : "Enter"} reading mode · ${shortcutLabel("mod+.")}`
+            : "Open a document to use reading mode"
+        }
+        onClick={available ? onToggle : undefined}
+      >
+        <ReadingModeIcon />
+      </button>
+      {available ? null : (
+        <span id={descriptionId} className="sr-only">
+          Open a document to use reading mode
+        </span>
+      )}
+    </>
   );
 }
 
@@ -216,6 +245,7 @@ function ConnectionState({
   readonly directAccess: ReaderDirectAccessState;
 }): JSX.Element {
   const { snapshot, working, problem, request } = directAccess;
+  const descriptionId = useId();
   useMdbaseMarkBusy(state === "syncing" && "stream");
   if (snapshot?.authority !== "connector" || state !== "connected") {
     return <PlainConnectionState state={state} />;
@@ -246,16 +276,22 @@ function ConnectionState({
     (denied
       ? "Local network access is blocked. Allow it in your browser’s site settings, then retry."
       : "Request local network access and connect directly to the mdbase relay on this computer.");
+  // The visible words name the button; the explanation is its description.
   return (
-    <button
-      className={`connection-state connection-direct-action${problem ? " has-problem" : ""}`}
-      type="button"
-      title={title}
-      aria-label={title}
-      onClick={request}
-    >
-      {denied ? "Retry local access" : "Connect directly"}
-    </button>
+    <>
+      <button
+        className={`connection-state connection-direct-action${problem ? " has-problem" : ""}`}
+        type="button"
+        title={title}
+        aria-describedby={descriptionId}
+        onClick={request}
+      >
+        {denied ? "Retry local access" : "Connect directly"}
+      </button>
+      <span id={descriptionId} className="sr-only">
+        {title}
+      </span>
+    </>
   );
 }
 

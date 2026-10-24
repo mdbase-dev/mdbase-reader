@@ -1,4 +1,8 @@
-import { requiresAccessReview, requiresReconnect } from "./connection-recovery.js";
+import {
+  requiresAccessReview,
+  requiresReconnect,
+  unavailableAction,
+} from "./connection-recovery.js";
 
 import type { ReaderConnectSnapshot } from "@mdbase-reader/connect";
 import type { JSX } from "react";
@@ -30,9 +34,18 @@ export function SelectedAuthorizationAction({
   readonly hasSelectedCollection: boolean;
   readonly onAuthorize: () => void;
 }): JSX.Element | null {
-  const reviewAccess = hasSelectedCollection && requiresAccessReview(error);
-  const reconnect = hasSelectedCollection && requiresReconnect(error);
-  if (session.status !== "authorization_required" && !reviewAccess && !reconnect) {
+  // An unavailable collection says which kind of approval brings it back.
+  const unavailable = session.status === "unavailable" ? unavailableAction(session.reason) : null;
+  const reviewAccess =
+    unavailable === "review" || (hasSelectedCollection && requiresAccessReview(error));
+  const reconnect =
+    unavailable === "reconnect" || (hasSelectedCollection && requiresReconnect(error));
+  if (
+    session.status !== "authorization_required" &&
+    unavailable !== "authorize" &&
+    !reviewAccess &&
+    !reconnect
+  ) {
     return null;
   }
   const label = reconnect

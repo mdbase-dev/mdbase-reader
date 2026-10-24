@@ -1,7 +1,12 @@
-import { OpeningScreen } from "@mdbase-dev/ui/screens";
+import { ConnectLayout, OpeningScreen } from "@mdbase-dev/ui/screens";
 import { sourceId } from "@mdbase-reader/core";
 import { useCallback, useEffect, useState, type JSX } from "react";
 
+import {
+  connectionProblemDetail,
+  describeConnectionProblem,
+  libraryLoadFallback,
+} from "./connection-recovery.js";
 import { navigatorPanelId } from "./dockview-workspace-state.js";
 import { LibraryDocumentIndex } from "./LibraryDocumentIndex.js";
 import {
@@ -58,14 +63,28 @@ export function ReaderApp({
   saveFile,
 }: ReaderAppProps): JSX.Element {
   const workspace = useReaderWorkspace(gateway, initialSourceId ? sourceId(initialSourceId) : null);
+  if (workspace.library.status === "error") {
+    // The load failure is usually Connect's own wording; it waits behind Details.
+    const { message } = workspace.library;
+    return (
+      <ConnectLayout
+        app="reader"
+        title="Open mdbase Reader"
+        error={describeConnectionProblem(message, libraryLoadFallback)}
+        detail={connectionProblemDetail(message, libraryLoadFallback)}
+      >
+        <button type="button" className="mdbase-button" onClick={workspace.retryLibrary}>
+          Try again
+        </button>
+      </ConnectLayout>
+    );
+  }
   if (workspace.library.status !== "ready") {
     return (
       <OpeningScreen
         app="reader"
         title="Opening your reading collection"
         detail="Loading the first sources; the rest of the library will load in the background"
-        error={workspace.library.status === "error" ? workspace.library.message : null}
-        onRetry={workspace.retryLibrary}
       />
     );
   }

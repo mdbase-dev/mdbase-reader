@@ -1,3 +1,4 @@
+import { OpeningScreen } from "@mdbase-dev/ui/screens";
 import { lazy, StrictMode, Suspense } from "react";
 import { createRoot } from "react-dom/client";
 
@@ -18,6 +19,7 @@ import { importService } from "./import-navigation.js";
 import { keepFocusedFieldInView } from "./keep-focused-field-in-view.js";
 import "./environment-badge.css";
 import { setupPwaInstall } from "./pwa-install.js";
+import { ReaderErrorBoundary } from "./ReaderErrorBoundary.js";
 
 import type { ImportService } from "./ImportPageView.js";
 import "./pwa-install.css";
@@ -67,25 +69,29 @@ const buildEnvironment =
 // The Private collection consent popup returns here. It hands the result to
 // the waiting reader tab and closes, without starting a second mdbase entry.
 const grantCallback = buildEnvironment !== null && completeAppGrantCallback(new URL(location.href));
+// Worded like the collection gate's first screen, so the SDK download is not a blank page.
+const startingReader = <OpeningScreen app="reader" title="Starting mdbase Reader…" />;
 createRoot(root).render(
   <StrictMode>
     <FeedbackRoot>
       <EnvironmentBadge />
-      {grantCallback ? (
-        <p className="reader-grant-callback">You can close this window.</p>
-      ) : migrationService ? (
-        <Suspense fallback={null}>
-          <SdkReader service={migrationService} />
-        </Suspense>
-      ) : preview ? (
-        <Suspense fallback={null}>
-          <PreviewReader />
-        </Suspense>
-      ) : (
-        <Suspense fallback={null}>
-          <SdkReader />
-        </Suspense>
-      )}
+      <ReaderErrorBoundary>
+        {grantCallback ? (
+          <p className="reader-grant-callback">You can close this window.</p>
+        ) : migrationService ? (
+          <Suspense fallback={startingReader}>
+            <SdkReader service={migrationService} />
+          </Suspense>
+        ) : preview ? (
+          <Suspense fallback={null}>
+            <PreviewReader />
+          </Suspense>
+        ) : (
+          <Suspense fallback={startingReader}>
+            <SdkReader />
+          </Suspense>
+        )}
+      </ReaderErrorBoundary>
     </FeedbackRoot>
   </StrictMode>,
 );
