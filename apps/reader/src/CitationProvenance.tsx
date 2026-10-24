@@ -2,6 +2,9 @@ import { cslFieldStatuses, type CslProvenance } from "@mdbase-reader/core";
 
 import { cslFieldLabel, displayCslValue } from "./citation-form-model.js";
 import { citationEvidenceLabel, citationStatusLabel } from "./citation-provenance.js";
+import { citationEvidenceSummary } from "./citation-tab-model.js";
+import { ChevronRightIcon } from "./icons.js";
+import { useSessionDisclosure } from "./use-session-choice.js";
 
 import type { JSX } from "react";
 
@@ -15,12 +18,17 @@ export function CitationProvenance({
   readonly onChange: (citation: Readonly<Record<string, unknown>>) => void;
 }): JSX.Element {
   // The citekey is chosen in the collection, never sourced.
+  const disclosure = useSessionDisclosure("citation.evidence");
   const statuses = Object.entries(cslFieldStatuses(citation, provenance)).filter(
     ([field]) => field !== "id",
   );
   return (
-    <details className="citation-provenance">
-      <summary>Field evidence</summary>
+    <details className="citation-provenance citation-disclosure" {...disclosure}>
+      <summary>
+        <ChevronRightIcon />
+        <span>Field evidence</span>
+        <small>{citationEvidenceSummary(citation, provenance)}</small>
+      </summary>
       <dl>
         {statuses.map(([field, status]) => (
           <div key={field}>

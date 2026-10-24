@@ -34,7 +34,7 @@ try {
   await page.keyboard.press("Escape");
   await page.getByRole("button", { name: "Toggle Notes panel", exact: true }).click();
   await page.getByRole("tab", { name: "Citation", exact: true }).click();
-  await page.getByRole("button", { name: "Save changes", exact: true }).waitFor();
+  await page.getByRole("button", { name: /^(?:Fix|Edit) details$/u }).waitFor();
   assert.deepEqual(errors, []);
   console.log(
     "Offline production shell reload, unvisited HTML renderer, display settings and citation editor passed; no page errors.",
