@@ -8,6 +8,17 @@ import type {
   SourceSummary,
 } from "@mdbase-reader/core";
 
+/** The person declined an owner confirmation: a choice, not a failure to report. */
+export class AnnotationSaveCancelled extends Error {
+  constructor() {
+    super("Annotation not saved.");
+    this.name = "AnnotationSaveCancelled";
+  }
+}
+export function isAnnotationSaveCancelled(reason: unknown): boolean {
+  return reason instanceof AnnotationSaveCancelled;
+}
+
 export interface AnnotationOwnerDecision {
   readonly owner: SourceSummary;
   readonly reason: string;

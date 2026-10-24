@@ -3,6 +3,7 @@ import { useEffect, useMemo, useState } from "react";
 import { confirmAnnotationDiscard } from "./annotation-draft-actions.js";
 import { useAnnotationOwnerPreference } from "./annotation-owner-preference.js";
 import {
+  AnnotationSaveCancelled,
   annotationOwnerChoices,
   annotationWithOwner,
   defaultAnnotationOwner,
@@ -155,14 +156,15 @@ async function saveOwnedAnnotation(
         document: request.document,
       })
     ).owner;
-  // Source-only comments/bookmarks have no selection chooser: announce before saving.
+  // Source-only comments/bookmarks have no selection chooser: announce before saving. Judge by
+  // the request, not the live selection, which is gone once a toolbar or popover is dismissed.
   if (
     (request.annotationType === "bookmark" ||
       request.annotationType === "note" ||
-      !input.selection) &&
+      !request.target) &&
     !confirmAnnotationDiscard(`Save annotation owned by “${proposed.title}”?`)
   ) {
-    throw new Error("Annotation not saved.");
+    throw new AnnotationSaveCancelled();
   }
   const fullOwner = proposed.id === source.id ? source : await gateway.source(proposed.id);
   if (!fullOwner) {
@@ -193,6 +195,6 @@ async function confirmExplicitOwner(
       "The chosen owner does not list this document or its verified range does not contain the selector. Save with this owner anyway? The document target remains unchanged.",
     )
   ) {
-    throw new Error("Annotation not saved.");
+    throw new AnnotationSaveCancelled();
   }
 }

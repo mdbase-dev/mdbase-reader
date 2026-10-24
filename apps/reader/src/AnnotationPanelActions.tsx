@@ -3,6 +3,7 @@ import { useState, type JSX } from "react";
 
 import { commentRequest } from "./annotation-composer-request.js";
 import { annotationEditorKeys, confirmAnnotationDiscard } from "./annotation-draft-actions.js";
+import { isAnnotationSaveCancelled } from "./annotation-ownership.js";
 import { AnnotationOwnerChooser } from "./AnnotationOwnerChooser.js";
 import { AnnotationTextArea } from "./AnnotationTextArea.js";
 import { readerErrorMessage } from "./errors.js";
@@ -100,7 +101,9 @@ function SourceCommentComposer({
     setSaving(true);
     setProblem(null);
     onSave(comment).then(onClose, (reason: unknown) => {
-      setProblem(readerErrorMessage(reason, "Reader could not save this comment."));
+      if (!isAnnotationSaveCancelled(reason)) {
+        setProblem(readerErrorMessage(reason, "Reader could not save this comment."));
+      }
       setSaving(false);
     });
   };

@@ -3,6 +3,7 @@ import {
   prepareAnnotationSelection,
   type ComposerSelection,
 } from "./annotation-composer-request.js";
+import { isAnnotationSaveCancelled } from "./annotation-ownership.js";
 import { readerErrorMessage } from "./errors.js";
 
 import type { Annotation, AnnotationCreationRequest, Source, SourceId } from "@mdbase-reader/core";
@@ -50,6 +51,10 @@ export async function saveSelection(
     await input.create(await annotationRequest(input.source, input.surface, selection, note));
     dismiss();
   } catch (reason) {
+    // Declining an owner confirmation keeps the selection without reporting a failure.
+    if (isAnnotationSaveCancelled(reason)) {
+      return;
+    }
     setProblem({
       sourceId: input.source.id,
       message: readerErrorMessage(reason, "Reader could not save this annotation."),
