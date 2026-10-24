@@ -80,6 +80,39 @@ the isolated lab connector at `http://127.0.0.1:28487`. Maintainers start that p
 private mdbase-cloud-ops checkout with `bin/mdbase-env lab desktop`, then sign in with a lab account. Staging remains an
 explicit release-rehearsal target and production remains on its protected deployment command.
 
+### Environment-specific SDK originals
+
+Install once from the committed lockfile, then deploy LAB without editing any dependency pins:
+
+```sh
+pnpm install --frozen-lockfile
+MDBASE_ENV=lab node apps/reader/scripts/deploy-pages.mjs
+```
+
+For a build without an upload, use `pnpm --filter @mdbase-reader/app build:lab`. The deploy script
+sets both the Reader manifest origin and Vite environment; setting only `MDBASE_ENV` on an arbitrary
+`vite build` is not a substitute for the complete deployment environment.
+
+Reader installs the original eaa4e697 SDK archives side by side: canonical `@mdbase-dev/sdk`
+(production beta141), `@mdbase-dev/sdk-lab`, and `@mdbase-dev/sdk-staging`. Vite aliases every public
+canonical SDK export to the selected original, including imports originating in Connect and UI;
+the separate legacy SDK alias is untouched. The offline-shell adapter comes from that same original.
+This selection applies to the Reader web build, not the extension or other shells. The native
+publisher's original-package authentication and admission gates remain separate and unchanged.
+
+`packages/connect/vendor/sdk-{lab,staging}-eaa4e697.json` record hashes and embedded producer provenance;
+production retains `sdk-production-beta141.json`. Before build hooks execute, verification checks
+the archive SHA-256 and length, every installed original member, and the SDK's actual packaged
+release environment and Connect origin against the deployment table. Missing archives/installations,
+unknown or conflicting selectors, changed bytes, and environment/origin mismatches fail closed.
+The deploy script also checks the emitted `.well-known/mdbase-reader-sdk.json` receipt before upload.
+No `package.json` or lockfile is rewritten at deployment time. Python 3 is required for the existing
+safe archive-inventory helper, alongside Node and pnpm.
+
+Staging/production continue to require committed build inputs unless the existing explicit
+`MDBASE_READER_ALLOW_DIRTY=1` development escape hatch is used. Archive identity and embedded
+provenance are not a new trust authentication or native release qualification claim.
+
 ## Production deployment
 
 The production site is <https://reader.mdbase.dev>, connected to

@@ -1,13 +1,18 @@
+import assert from "node:assert/strict";
 import { spawn } from "node:child_process";
 import { readFile, writeFile } from "node:fs/promises";
 import { resolve } from "node:path";
 import { assertReproducibleDeployment, readerDeploymentFor } from "./deployment-environment.mjs";
+import { readerSdkTarget, verifiedReaderSdk } from "./reader-sdk.mjs";
 
 const projectRoot = resolve(import.meta.dirname, "..");
 const projectName = "mdbase-reader";
 const { target: deploymentTarget, deployment } = readerDeploymentFor(process.env);
 const deploymentOrigin = deployment.origin;
 const connectUrl = deployment.connectUrl;
+// Refuse conflicting Vite selectors and check original archive/installed SDK BEFORE building.
+readerSdkTarget({ ...process.env, MDBASE_ENV: deploymentTarget });
+const sdk = await verifiedReaderSdk(deploymentTarget);
 const pnpm = process.platform === "win32" ? "pnpm.cmd" : "pnpm";
 const manifestTargets = [
   resolve(projectRoot, "public", ".well-known", "mdbase-app.json"),
@@ -58,6 +63,10 @@ async function verifyDeploymentArtifacts() {
   const manifest = JSON.parse(
     await readFile(resolve(wellKnownDirectory, "mdbase-app.json"), "utf8"),
   );
+  const sdkReceipt = JSON.parse(
+    await readFile(resolve(wellKnownDirectory, "mdbase-reader-sdk.json"), "utf8"),
+  );
+  assert.deepEqual(sdkReceipt, sdk.receipt, "Reader build used the wrong SDK");
   const homepage = `${deploymentOrigin}/`;
   if (
     manifest.homepage !== homepage ||
