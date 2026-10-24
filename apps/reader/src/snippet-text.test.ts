@@ -23,6 +23,8 @@ describe("snippet display text", () => {
       ),
     ).toBe("moments, moments, moments; lower-order; two- paragraphs; A- B");
     expect(snippetText("naïve 世界 한글 👩‍💻")).toContain("naïve 世界 한글");
+    // Joiners are spelling in Persian and hold emoji sequences together.
+    expect(snippetText("می‌خواهم 👩‍💻")).toBe("می‌خواهم 👩‍💻");
   });
 
   it("cleans context and highlights without rewriting navigation evidence", () => {

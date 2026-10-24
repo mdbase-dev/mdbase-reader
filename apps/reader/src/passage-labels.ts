@@ -5,10 +5,12 @@ import type { Annotation, DocumentDescriptor, SearchDestination } from "@mdbase-
 /** Stored locators may be old file links, URLs or renderer addresses, not human labels. */
 export function humanPassageLabel(value: string | undefined): string | undefined {
   const label = value?.replace(/\s+/gu, " ").trim();
-  if (
-    !label ||
-    /\[\[|\]\]|[\\/]|^[a-z][a-z\d+.-]*:|\.(?:pdf|epub|x?html?)(?:[?#|].*)?$/iu.test(label)
-  ) {
+  // Titles may contain colons and slashes ("Introduction: The Problem", "TCP/IP Illustrated");
+  // only links, addresses and single-token paths or file names (any "a/b" without spaces) are rejected.
+  const address = /^(?:https?|file|blob|data|epubcfi|urn):/iu.test(label ?? "");
+  const pathLike =
+    !/\s/u.test(label ?? "") && /[\\/]|\.(?:pdf|epub|x?html?)(?:[?#|].*)?$/iu.test(label ?? "");
+  if (!label || /\[\[|\]\]/u.test(label) || address || pathLike) {
     return undefined;
   }
   return label;

@@ -12,6 +12,7 @@ import { annotationBodyContent } from "./annotation-body-content.js";
 import { AnnotationOwnerActions } from "./AnnotationOwnerActions.js";
 import { AnnotationOwnerChooser } from "./AnnotationOwnerChooser.js";
 import { CommentIcon, CopyIcon, HighlightIcon, QuoteIcon, TrashIcon } from "./icons.js";
+import { humanPassageLabel } from "./passage-labels.js";
 import { citableLocator, citedQuote, copyText } from "./selection-copy.js";
 import { selectionToolbarPlacement } from "./selection-toolbar-placement.js";
 
@@ -33,7 +34,9 @@ function passageOf(target: SelectionToolbarTarget): {
   const annotation = target.annotation;
   const text =
     annotationBodyContent(annotation.body).quote ?? annotation.target?.quote?.exact ?? "";
-  return { text, ...(annotation.locator ? { locator: annotation.locator.label } : {}) };
+  // Older annotations stored file links as their locator; those never reach a citation.
+  const locator = humanPassageLabel(annotation.locator?.label);
+  return { text, ...(locator ? { locator } : {}) };
 }
 
 function pageLabel(locator: ReaderLocator): string | undefined {

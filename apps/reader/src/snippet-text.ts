@@ -16,7 +16,8 @@ export function snippetText(text: string): string {
   return (
     text
       .replace(/(\p{L})\u00ad[\t ]*\r?\n[\t ]*(?=\p{Ll})/gu, "$1")
-      .replace(/[\u00ad\p{Cf}\p{Co}]/gu, "")
+      // ZWJ/ZWNJ stay: they are spelling in Persian and Indic scripts and join emoji.
+      .replace(/[\u00ad\u200b\u2060\ufeff\u202a-\u202e\u2066-\u2069\p{Co}]/gu, "")
       // Keep ordinary compounds and paragraph boundaries; only join a lowercase word wrap.
       .replace(/(\p{Ll})[-\u2010][\t ]*\r?\n[\t ]*(?=\p{Ll})/gu, "$1")
       .replace(/[ﬀﬁﬂﬃﬄ]/gu, (character) => ligatures[character] ?? character)

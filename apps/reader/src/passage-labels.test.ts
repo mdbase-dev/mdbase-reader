@@ -29,6 +29,13 @@ describe("human passage locations", () => {
     expect(humanPassageLabel(label)).toBeUndefined();
   });
 
+  it.each(["Introduction: The Problem", "TCP/IP Illustrated", "Note: on method"])(
+    "keeps a title with colons or slashes: %s",
+    (label) => {
+      expect(humanPassageLabel(label)).toBe(label);
+    },
+  );
+
   it("keeps authored section labels and falls back for older HTML annotations", () => {
     expect(
       annotationLocationLabel(annotation({ locator: { label: "  Methods and results  " } })),
