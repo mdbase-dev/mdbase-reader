@@ -2,6 +2,7 @@ import { ConnectLayout, OpeningScreen } from "@mdbase-dev/ui/screens";
 import { sourceId } from "@mdbase-reader/core";
 import { useCallback, useEffect, useState, type JSX } from "react";
 
+import { requestConfirmation } from "./confirmation.js";
 import {
   connectionProblemDetail,
   describeConnectionProblem,
@@ -266,12 +267,15 @@ function useRestoredSourceWorkspace(
   });
 }
 
-function confirmCloseDirtyTab(): boolean {
-  // Native confirmation keeps tab and pane closing synchronous with the workspace action.
-  // eslint-disable-next-line no-alert
-  return globalThis.confirm(
-    "Close this tab with unsaved changes? Keep it open until saving finishes to avoid losing work.",
-  );
+function confirmCloseDirtyTab(): Promise<boolean> {
+  return requestConfirmation({
+    title: "Close this tab?",
+    message:
+      "This tab has unsaved changes. Keep it open until saving finishes to avoid losing work.",
+    confirmLabel: "Close anyway",
+    cancelLabel: "Keep open",
+    danger: true,
+  });
 }
 
 function focusLibrarySearch(): void {

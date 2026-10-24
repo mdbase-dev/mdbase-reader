@@ -23,7 +23,7 @@ export function ReaderCollectionSwitcher({
   beforeSwitch,
 }: {
   readonly mdbase: Mdbase;
-  readonly beforeSwitch?: (() => boolean) | undefined;
+  readonly beforeSwitch?: (() => boolean | Promise<boolean>) | undefined;
 }): JSX.Element {
   return (
     <CollectionSwitcher

@@ -20,7 +20,7 @@ export function CollectionPicker({
   beforeSwitch = () => true,
 }: {
   readonly name: string;
-  readonly beforeSwitch?: () => boolean;
+  readonly beforeSwitch?: () => boolean | Promise<boolean>;
 }): JSX.Element {
   const switching = useContext(CollectionSwitchingContext);
   const menuId = useId();
@@ -49,13 +49,13 @@ export function CollectionPicker({
       triggerRef.current?.focus();
     }
   };
-  const choose = (id: string): void => {
+  const choose = async (id: string): Promise<void> => {
     if (id === switching.collectionId) {
       close(true);
       return;
     }
     // Unsaved edits can keep Reader here; the menu stays open for another choice.
-    if (!beforeSwitch()) {
+    if (!(await beforeSwitch())) {
       return;
     }
     setError(null);
@@ -67,7 +67,7 @@ export function CollectionPicker({
     }
   };
   const connect = async (): Promise<void> => {
-    if (!beforeSwitch()) {
+    if (!(await beforeSwitch())) {
       return;
     }
     setBusy(true);
@@ -112,7 +112,7 @@ export function CollectionPicker({
           choices={switching.connections}
           busy={busy}
           error={error}
-          onChoose={choose}
+          onChoose={(id) => void choose(id)}
           onConnect={() => void connect()}
           onClose={close}
         />

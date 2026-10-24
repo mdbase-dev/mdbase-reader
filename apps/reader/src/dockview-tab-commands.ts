@@ -4,21 +4,22 @@ import type { WorkspaceTab, WorkspaceSplitDirection } from "./source-workspace-l
 import type { DockviewApi, DockviewGroupPanel, IDockviewPanel } from "dockview-react";
 
 /** Confirm the complete batch before removing anything. */
-export function panelsForClose(
+export async function panelsForClose(
   api: DockviewApi | null,
   ids: readonly string[],
-  confirm: (tab: WorkspaceTab) => boolean,
-): IDockviewPanel[] | null {
+  confirm: (tab: WorkspaceTab) => boolean | Promise<boolean>,
+): Promise<IDockviewPanel[] | null> {
   const panels = ids.flatMap((id) => {
     const panel = api?.getPanel(id);
     return panel ? [panel] : [];
   });
-  return panels.some((panel) => {
+  for (const panel of panels) {
     const tab = panelTab(panel);
-    return tab?.dirty && !confirm(tab);
-  })
-    ? null
-    : panels;
+    if (tab?.dirty && !(await confirm(tab))) {
+      return null;
+    }
+  }
+  return panels;
 }
 function defaultDockPosition(
   api: DockviewApi,

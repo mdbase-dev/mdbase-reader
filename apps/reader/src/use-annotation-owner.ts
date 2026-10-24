@@ -1,6 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
 
-import { confirmAnnotationDiscard } from "./annotation-draft-actions.js";
 import { useAnnotationOwnerPreference } from "./annotation-owner-preference.js";
 import {
   AnnotationSaveCancelled,
@@ -10,6 +9,7 @@ import {
   type AnnotationOwnerDecision,
   type AnnotationOwnershipInput,
 } from "./annotation-ownership.js";
+import { requestConfirmation } from "./confirmation.js";
 
 import type { ComposerSelection } from "./annotation-composer-request.js";
 import type { ReaderWorkspaceGateway } from "./workspace-model.js";
@@ -148,29 +148,22 @@ async function saveOwnedAnnotation(
   if (!source || !gateway || sources.length <= 1) {
     return input.create(request);
   }
+  // Bookmarks always use the location default, never a composer’s previous owner choice.
+  const chosen = request.annotationType === "bookmark" ? undefined : explicit;
   const proposed =
-    explicit ??
+    chosen ??
     (
       await defaultAnnotationOwner({
         ...decisionInput(source, sources, preference, surface, request.target),
         document: request.document,
       })
     ).owner;
-  // Source-only comments/bookmarks have no selection chooser: announce before saving. Judge by
-  // the request, not the live selection, which is gone once a toolbar or popover is dismissed.
-  if (
-    (request.annotationType === "bookmark" ||
-      request.annotationType === "note" ||
-      !request.target) &&
-    !confirmAnnotationDiscard(`Save annotation owned by “${proposed.title}”?`)
-  ) {
-    throw new AnnotationSaveCancelled();
-  }
+  // Comments and selection saves disclose ownership in AnnotationOwnerChooser.
   const fullOwner = proposed.id === source.id ? source : await gateway.source(proposed.id);
   if (!fullOwner) {
     throw new Error("The chosen owner no longer exists. Choose an owner again.");
   }
-  if (explicit) {
+  if (chosen) {
     await confirmExplicitOwner(request, fullOwner, surface);
   }
   return input.create(annotationWithOwner(request, fullOwner));
@@ -191,9 +184,13 @@ async function confirmExplicitOwner(
       : !document?.range;
   if (
     (!document || contains !== true) &&
-    !confirmAnnotationDiscard(
-      "The chosen owner does not list this document or its verified range does not contain the selector. Save with this owner anyway? The document target remains unchanged.",
-    )
+    !(await requestConfirmation({
+      title: "Save with this owner?",
+      message:
+        "The chosen owner does not list this document or its verified range does not contain the selector. The document target will remain unchanged.",
+      confirmLabel: "Save anyway",
+      cancelLabel: "Choose another owner",
+    }))
   ) {
     throw new AnnotationSaveCancelled();
   }

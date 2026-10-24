@@ -15,14 +15,14 @@ it("removes only the old source deep link", () => {
     collectionSwitchUrl("https://reader.example/?collection=old&source=old-source&other=keep"),
   ).toBe("https://reader.example/?collection=old&other=keep");
 });
-it("switches a clean workspace without prompting", () => {
+it("switches a clean workspace without prompting", async () => {
   const confirm = vi.fn(() => false);
-  expect(confirmCollectionSwitch(createSourceWorkspaceLayout(source.id), [source], confirm)).toBe(
-    true,
-  );
+  expect(
+    await confirmCollectionSwitch(createSourceWorkspaceLayout(source.id), [source], confirm),
+  ).toBe(true);
   expect(confirm).not.toHaveBeenCalled();
 });
-it("requires confirmation for dirty tabs and respects cancellation", () => {
+it("requires confirmation for dirty tabs and respects cancellation", async () => {
   const initial = createSourceWorkspaceLayout(source.id);
   const layout = {
     ...initial,
@@ -31,12 +31,12 @@ it("requires confirmation for dirty tabs and respects cancellation", () => {
       tabs: pane.tabs.map((tab) => ({ ...tab, dirty: true })),
     })),
   };
-  expect(confirmCollectionSwitch(layout, [source], () => false)).toBe(false);
-  expect(confirmCollectionSwitch(layout, [source], () => true)).toBe(true);
+  expect(await confirmCollectionSwitch(layout, [source], () => Promise.resolve(false))).toBe(false);
+  expect(await confirmCollectionSwitch(layout, [source], () => Promise.resolve(true))).toBe(true);
 });
-it("protects annotation edits even before tab dirty state has updated", () => {
+it("protects annotation edits even before tab dirty state has updated", async () => {
   trackAnnotationEdits(owner, { collectionId: source.collectionId, sourceId: source.id }, true);
-  expect(confirmCollectionSwitch(createSourceWorkspaceLayout(null), [source], () => false)).toBe(
-    false,
-  );
+  expect(
+    await confirmCollectionSwitch(createSourceWorkspaceLayout(null), [source], () => false),
+  ).toBe(false);
 });

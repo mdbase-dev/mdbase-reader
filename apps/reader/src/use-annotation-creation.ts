@@ -108,12 +108,16 @@ export function useAnnotationCreation(
     highlight: ownershipHighlight(input.ownershipSources, open, saving.highlight),
     showToolbar: toolbar.showSelection,
   });
-  const dismiss = (): void => {
+  const dismiss = async (): Promise<void> => {
+    const previous = buffer.get();
     if (
       busy.current ||
       (buffer.get()?.body.trim() &&
-        !confirmAnnotationDiscard("Discard this unfinished annotation comment?"))
+        !(await confirmAnnotationDiscard("Discard this unfinished annotation comment?")))
     ) {
+      return;
+    }
+    if (buffer.get() !== previous) {
       return;
     }
     buffer.replace(null);
@@ -122,6 +126,19 @@ export function useAnnotationCreation(
     setProblem(null);
     setSwitchTo(null);
     area.endAreaSelection();
+  };
+  const comment = async (value: TextComposerSelection): Promise<void> => {
+    const previous = buffer.get();
+    if (
+      !previous?.body.trim() ||
+      (await confirmAnnotationDiscard(
+        "Discard the unfinished annotation comment and comment on this?",
+      ))
+    ) {
+      if (!busy.current && buffer.get() === previous) {
+        open(value);
+      }
+    }
   };
   const pendingSwitch = pendingSelectionSwitch(switchTo, key, selection);
   return {
@@ -146,17 +163,10 @@ export function useAnnotationCreation(
         buffer.edit(body);
       }
     },
-    dismiss,
+    dismiss: () => void dismiss(),
     save: saving.save,
     highlight: saving.highlight,
-    comment: (value) => {
-      if (
-        !buffer.get()?.body.trim() ||
-        confirmAnnotationDiscard("Discard the unfinished annotation comment and comment on this?")
-      ) {
-        open(value);
-      }
-    },
+    comment: (value) => void comment(value),
     toggleAreaSelection: area.toggleAreaSelection,
   };
 }

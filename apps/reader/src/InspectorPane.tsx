@@ -1,9 +1,9 @@
 import { useCallback, type JSX } from "react";
 
-import { confirmAnnotationDiscard } from "./annotation-draft-actions.js";
 import { AnnotationEditingContext } from "./AnnotationEditingContext.js";
 import { AnnotationList } from "./AnnotationList.js";
 import { AnnotationPanelActions } from "./AnnotationPanelActions.js";
+import { requestConfirmation } from "./confirmation.js";
 import { CitationIcon, HighlightIcon, NoteIcon, PanelIcon } from "./icons.js";
 import { lazyFeature } from "./lazy-feature.js";
 import { publishSharedAnnotation } from "./shared-annotation-resource.js";
@@ -213,9 +213,13 @@ export function InspectorContent({
             gateway.moveAnnotationOwner
               ? async (annotation, owner) => {
                   if (
-                    !confirmAnnotationDiscard(
-                      `Move this annotation to “${owner.title}”? Its document target, selector, revision and note embeds will not change. The new owner may not include this passage in its range.`,
-                    )
+                    !(await requestConfirmation({
+                      title: `Move annotation to “${owner.title}”?`,
+                      message:
+                        "Its document target, selector, revision and note embeds will not change. The new owner may not include this passage in its range.",
+                      confirmLabel: "Move annotation",
+                      cancelLabel: "Keep owner",
+                    }))
                   ) {
                     return;
                   }

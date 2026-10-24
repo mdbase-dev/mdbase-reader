@@ -88,8 +88,11 @@ function SourceCommentComposer({
   const [comment, setComment] = useState("");
   const [saving, setSaving] = useState(false);
   const [problem, setProblem] = useState<string | null>(null);
-  const dismiss = (): void => {
-    if (saving || (comment.trim() && !confirmAnnotationDiscard("Discard this unsaved comment?"))) {
+  const dismiss = async (): Promise<void> => {
+    if (
+      saving ||
+      (comment.trim() && !(await confirmAnnotationDiscard("Discard this unsaved comment?")))
+    ) {
       return;
     }
     onClose();
@@ -113,7 +116,7 @@ function SourceCommentComposer({
     <section
       className="annotation-composer is-comment"
       aria-labelledby="source-comment-title"
-      onKeyDown={(event) => annotationEditorKeys(event, dismiss, save)}
+      onKeyDown={(event) => annotationEditorKeys(event, () => void dismiss(), save)}
     >
       <header>
         <strong id="source-comment-title">New comment</strong>
@@ -121,7 +124,7 @@ function SourceCommentComposer({
           type="button"
           className="icon-button"
           aria-label="Discard comment"
-          onClick={dismiss}
+          onClick={() => void dismiss()}
           disabled={saving}
         >
           <CloseIcon />
@@ -136,7 +139,7 @@ function SourceCommentComposer({
       />
       {problem ? <p role="alert">{problem}</p> : null}
       <footer>
-        <button type="button" onClick={dismiss} disabled={saving}>
+        <button type="button" onClick={() => void dismiss()} disabled={saving}>
           Cancel
         </button>
         <ReaderButton disabled={saving || !comment.trim()} onClick={save}>
