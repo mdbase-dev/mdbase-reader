@@ -59,6 +59,15 @@ const genericItemTypes = new Set([
   "forumPost",
 ]);
 
+/**
+ * Whether a Citoid claim's evidence (`Citoid webpage`) names a type that only the generic
+ * Embedded Metadata translator produces: the claim restates the page's own tags.
+ */
+export function isEmbeddedMetadataEvidence(evidence: string | undefined): boolean {
+  const match = /^Citoid (\S+)$/u.exec(evidence ?? "");
+  return match?.[1] !== undefined && genericItemTypes.has(match[1]);
+}
+
 /** Caller aborts are rethrown, just as in citationForPage; provider failures become outcomes. */
 export function doiClaims(doi: string, options: ProviderClaimsOptions = {}): Promise<ClaimBatch> {
   const timeoutMs = options.timeoutMs ?? DOI_RESOLUTION_TIMEOUT_MS;

@@ -53,6 +53,8 @@ export interface CitationEditorController extends ReturnType<typeof useCitationL
   readonly setCitation: (value: Readonly<Record<string, unknown>>) => void;
   readonly save: () => void;
   readonly useTheirVersion: () => void;
+  /** Abandons the draft, returning to the citation as last loaded or saved. */
+  readonly discard: () => void;
   readonly keepMine: () => void;
   readonly regenerateCitekey: () => void;
 }
@@ -349,6 +351,28 @@ export function useCitationEditor(input: {
     setErrorState(null);
     setStatusState(null);
   };
+  /** Abandons the draft for the citation as last loaded or saved. A conflict keeps its choices. */
+  const discard = (): void => {
+    if (!source || status === "saving" || conflict) {
+      return;
+    }
+    lookup.resetLookup();
+    setDraftState((previous) => {
+      if (previous?.source.id !== source.id || previous.source === active.latest) {
+        return null;
+      }
+      // A just-saved (or reloaded) baseline is newer than the parent's render: keep it.
+      const value = citationDraftForSource(previous.source);
+      return {
+        ...previous,
+        value,
+        provenance: provenanceFor(previous.source),
+        lastCitation: assessCitationDraft(value).value ?? {},
+      };
+    });
+    setErrorState(null);
+    setStatusState(null);
+  };
   const regenerateCitekey = (): void => {
     if (!source || !assessment.value) {
       return;
@@ -389,6 +413,7 @@ export function useCitationEditor(input: {
     setCitation,
     save,
     useTheirVersion,
+    discard,
     keepMine: () => conflict && persist(conflict.currentCitation, true),
     regenerateCitekey,
   };

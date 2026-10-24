@@ -13,6 +13,7 @@ export {
   type ParentCitationClaimsOptions,
 } from "./parent-claims.js";
 export { pageClaims } from "./page-claims.js";
+export { isEmbeddedMetadataEvidence } from "./provider-claims.js";
 export type { Claim, CitationSuggestion } from "./claims.js";
 
 export interface CitationUpdateRequest {

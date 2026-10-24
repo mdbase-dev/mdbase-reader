@@ -3,7 +3,8 @@ import { useLayoutEffect, useRef, useState, type JSX, type SyntheticEvent } from
 
 import { cslFieldLabel, displayCslValue } from "./citation-form-model.js";
 import { citationSourceLabel } from "./citation-provenance.js";
-import { SearchIcon } from "./icons.js";
+import { ChevronRightIcon } from "./icons.js";
+import { useSessionDisclosure } from "./use-session-choice.js";
 
 import type { CitationEditorController } from "./use-citation-editor.js";
 
@@ -15,18 +16,16 @@ export function CitationLookup({
   readonly editor: CitationEditorController;
 }): JSX.Element {
   const [query, setQuery] = useState(lookupSeed(citation));
+  const disclosure = useSessionDisclosure("citation.lookup");
   const submit = (event: SyntheticEvent<HTMLFormElement>): void => {
     event.preventDefault();
     editor.resolve(query);
   };
   return (
-    <details className="citation-lookup">
+    <details className="citation-lookup citation-disclosure" {...disclosure}>
       <summary>
-        <SearchIcon />
-        <span>
-          <strong>Find citation details</strong>
-          <small>Check for updates by DOI, ISBN, URL, or title</small>
-        </span>
+        <ChevronRightIcon />
+        <span>Look up by DOI, ISBN, URL or title</span>
       </summary>
       <form onSubmit={submit}>
         <input
@@ -47,11 +46,11 @@ export function CitationLookup({
       </form>
       <p className="citation-lookup-note">
         Lookup sends your search or source URL to metadata providers. Accepting changes only the
-        draft; Save changes writes them to your collection.
+        draft; Save details writes them to your collection.
       </p>
       {!editor.resolutionAvailable ? (
         <p className="citation-lookup-note">
-          Metadata lookup is unavailable here. You can still edit CSL locally.
+          Metadata lookup is unavailable here. You can still edit the citation details here.
         </p>
       ) : null}
       {editor.resolutionError ? (
@@ -125,7 +124,13 @@ function CitationSuggestions({
                   <ins>{displayCslValue(suggestion.proposed)}</ins>
                 </span>
               </div>
-              <small>{citationSourceLabel(claimSourceLabel(suggestion.source))}</small>
+              <small>
+                {citationSourceLabel(
+                  [claimSourceLabel(suggestion.source), suggestion.evidence]
+                    .filter(Boolean)
+                    .join(" "),
+                )}
+              </small>
               <div className="citation-review-actions">
                 <button
                   type="button"

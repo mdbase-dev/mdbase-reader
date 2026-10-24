@@ -1,16 +1,30 @@
 import type { CslItem } from "@mdbase-reader/core";
 
+/**
+ * The CSL styles bundled with @citation-js/plugin-csl, rendered by citeproc-js. Labels name the
+ * edition each bundled style implements, so a copied citation is honest about its rules.
+ */
 export const citationStyles = [
-  ["apa", "APA"],
-  ["harvard1", "Cite Them Right (Harvard)"],
+  ["apa", "APA 7th"],
+  ["harvard1", "Harvard (Cite Them Right 12th)"],
   ["vancouver", "Vancouver"],
 ] as const;
 
-export async function formatCitation(
+export function citationStyleLabel(style: string): string {
+  return citationStyles.find(([value]) => value === style)?.[1] ?? style;
+}
+
+export type RenderedCitation =
+  | { readonly kind: "formatted"; readonly text: string }
+  | { readonly kind: "empty" }
+  | { readonly kind: "failed" };
+
+/** The formatted bibliography entry as plain text, rendered by citeproc-js. */
+export async function renderCitation(
   citation: CslItem,
   template: string,
   lang: string,
-): Promise<string> {
+): Promise<RenderedCitation> {
   try {
     const [{ default: CSL }, { default: styles }, { default: locales }] = await Promise.all([
       import("citeproc"),
@@ -30,8 +44,29 @@ export async function formatCitation(
     engine.setOutputFormat("text");
     engine.updateItems([citation.id]);
     const bibliography = engine.makeBibliography();
-    return bibliography[1].join("").trim() || "Add more details to preview this citation.";
+    const text = bibliography[1].join("").trim();
+    return text ? { kind: "formatted", text } : { kind: "empty" };
   } catch {
-    return "This citation cannot be formatted yet. Check its title, contributors, and date.";
+    return { kind: "failed" };
   }
+}
+
+/** The rendered text, or a sentence explaining why there is none. */
+export function renderedCitationText(rendered: RenderedCitation): string {
+  switch (rendered.kind) {
+    case "formatted":
+      return rendered.text;
+    case "empty":
+      return "Add more details to preview this citation.";
+    case "failed":
+      return "This citation cannot be formatted yet. Check its title, contributors, and date.";
+  }
+}
+
+export async function formatCitation(
+  citation: CslItem,
+  template: string,
+  lang: string,
+): Promise<string> {
+  return renderedCitationText(await renderCitation(citation, template, lang));
 }

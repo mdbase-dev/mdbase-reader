@@ -7,6 +7,7 @@ import {
   citoidClaims,
   CITOID_TIMEOUT_MS,
   doiClaims,
+  isEmbeddedMetadataEvidence,
   zoteroItemClaims,
   type CitoidClaimsOptions,
 } from "./provider-claims.js";
@@ -93,12 +94,17 @@ describe("Zotero item claims", () => {
   it.each(["webpage", "newspaperArticle", "blogPost", "magazineArticle", "forumPost"])(
     "treats Embedded Metadata type %s as generic",
     (itemType) => {
-      expect(zoteroItemClaims({ itemType, title: "Example" }, observedAt)[0]?.source).toEqual({
-        kind: "generic-remote",
-        name: "citoid",
-      });
+      const [claim] = zoteroItemClaims({ itemType, title: "Example" }, observedAt);
+      expect(claim?.source).toEqual({ kind: "generic-remote", name: "citoid" });
+      expect(isEmbeddedMetadataEvidence(claim?.evidence)).toBe(true);
     },
   );
+
+  it("does not take a site translator's or registry's evidence for the page's own tags", () => {
+    for (const evidence of ["Citoid journalArticle", "doi.org CSL", "Citoid", undefined]) {
+      expect(isEmbeddedMetadataEvidence(evidence)).toBe(false);
+    }
+  });
 
   it.each([
     "encyclopediaArticle",

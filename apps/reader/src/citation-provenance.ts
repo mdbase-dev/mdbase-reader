@@ -4,9 +4,15 @@ import {
   type CslFieldStatus,
   type CslProvenance,
 } from "@mdbase-reader/core";
-import { parseClaimSourceLabel } from "@mdbase-reader/web-capture/citation-updates";
+import {
+  isEmbeddedMetadataEvidence,
+  parseClaimSourceLabel,
+} from "@mdbase-reader/web-capture/citation-updates";
 
-/** Stored labels remain machine-readable; only this presentation layer expands them. */
+/**
+ * Stored labels remain machine-readable; only this presentation layer expands them. Labels follow
+ * the evidence kind, not the provider that happened to deliver it.
+ */
 export function citationSourceLabel(label: string): string {
   const source = parseClaimSourceLabel(label) ?? parseClaimSourceLabel(label.split(" ")[0] ?? "");
   switch (source?.kind) {
@@ -15,11 +21,9 @@ export function citationSourceLabel(label: string): string {
     case "registry":
       return source.name;
     case "site-adapter":
-      return source.name.startsWith("citoid/")
-        ? citoidTypeLabel(source.name.slice(7))
-        : source.name;
+      return siteAdapterLabel(source.name);
     case "generic-remote":
-      return source.name.toLowerCase() === "citoid" ? "From the web page" : source.name;
+      return genericRemoteLabel(label);
     case "page":
       return source.signal === "html" ? "page title" : "page metadata";
     case "user":
@@ -70,7 +74,36 @@ export function editedCitationProvenance(
   return preserveCslDismissals(result, provenance);
 }
 
-/** The page's item type names the source only where it is distinctive; otherwise it is the page. */
-function citoidTypeLabel(type: string): string {
-  return type === "encyclopediaArticle" ? "Encyclopedia article" : "From the web page";
+/**
+ * Generic remote claims come from two methods, told apart by what the stored label records:
+ *
+ * - A page URL sent to Citoid (at capture, refresh, or a URL lookup) is stored under the provider
+ *   id `generic-remote:citoid` with the evidence `Citoid <itemType>`. When the item type is one
+ *   only Zotero's Embedded Metadata translator produces (`webpage`, `newspaperArticle`, …), the
+ *   values restate the page's own tags. Older labels without evidence came only from this path.
+ * - A title, ISBN or PubMed lookup stores the candidate's descriptive provider instead, e.g.
+ *   `generic-remote:Citoid (Zotero translators via Wikimedia)`, and records no evidence. So do
+ *   remote results downgraded for uncertain identity (`generic-remote:doi.org doi.org CSL`).
+ */
+function genericRemoteLabel(label: string): string {
+  const space = label.indexOf(" ");
+  const name = label.slice(label.indexOf(":") + 1, space === -1 ? undefined : space);
+  const evidence = space === -1 ? undefined : label.slice(space + 1);
+  return name === "citoid" && (evidence === undefined || isEmbeddedMetadataEvidence(evidence))
+    ? "From the web page"
+    : "From an online lookup";
+}
+
+/**
+ * A named site adapter (`Wikipedia`) names its site. One reached through a service records only
+ * `service/itemType`; the item type names it where distinctive, otherwise it is the page.
+ */
+function siteAdapterLabel(name: string): string {
+  const slash = name.indexOf("/");
+  if (slash === -1) {
+    return name;
+  }
+  return name.slice(slash + 1) === "encyclopediaArticle"
+    ? "Encyclopedia article"
+    : "From the web page";
 }
