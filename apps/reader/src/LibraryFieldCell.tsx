@@ -1,6 +1,6 @@
 import { useState, type JSX } from "react";
 
-import { propertyValue } from "./library-columns.js";
+import { columnLabel, propertyColumn, propertyValue } from "./library-columns.js";
 import { editableText } from "./library-field-edit.js";
 
 import type { SourceSummary } from "@mdbase-reader/core";
@@ -40,7 +40,7 @@ export function LibraryFieldCellEditor({
   return (
     <input
       className="library-field-editor"
-      aria-label={`Edit ${fieldKey}`}
+      aria-label={`Edit ${columnLabel(propertyColumn(fieldKey))}`}
       value={text}
       disabled={saving}
       // eslint-disable-next-line jsx-a11y/no-autofocus -- editing begins by asking for this input.

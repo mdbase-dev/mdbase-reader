@@ -3633,6 +3633,7 @@
 }
 
 .library-bulk-field {
+  min-width: 0;
   display: flex;
   flex-wrap: wrap;
   align-items: center;
@@ -3646,14 +3647,15 @@
   font: inherit;
 }
 
-.library-bulk-field input:first-child {
-  width: 110px;
+.library-bulk-field-key {
+  color: var(--muted);
   font-family: var(--mono);
   font-size: 11px;
 }
 
-.library-bulk-field button {
-  height: 28px;
+.library-bulk-field > button,
+.library-bulk-field-trigger {
+  min-height: 28px;
   padding: 0 10px;
   border: 1px solid var(--line);
   border-radius: 6px;
@@ -3661,6 +3663,31 @@
   background: var(--paper);
   font: inherit;
   cursor: pointer;
+}
+
+.library-bulk-field .reader-menu-panel {
+  top: auto;
+  bottom: calc(100% + 6px);
+  width: 260px;
+  max-width: calc(100vw - 48px);
+  max-height: min(420px, 50vh);
+  overflow-y: auto;
+}
+
+.library-bulk-field-trigger {
+  display: flex;
+  align-items: center;
+}
+
+@media (max-width: 680px) {
+  .library-bulk-field .reader-menu {
+    position: static;
+  }
+
+  .library-bulk-field .reader-menu.is-start > .reader-menu-panel {
+    left: 50%;
+    translate: -50% 0;
+  }
 }
 
 .library-bulk-field button[type="submit"]:not(:disabled) {
