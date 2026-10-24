@@ -14,12 +14,15 @@ export function CitationProvenance({
   readonly provenance: CslProvenance;
   readonly onChange: (citation: Readonly<Record<string, unknown>>) => void;
 }): JSX.Element {
-  const statuses = cslFieldStatuses(citation, provenance);
+  // The citekey is chosen in the collection, never sourced.
+  const statuses = Object.entries(cslFieldStatuses(citation, provenance)).filter(
+    ([field]) => field !== "id",
+  );
   return (
     <details className="citation-provenance">
       <summary>Field sources</summary>
       <dl>
-        {Object.entries(statuses).map(([field, status]) => (
+        {statuses.map(([field, status]) => (
           <div key={field}>
             <dt>{cslFieldLabel(field)}</dt>
             <dd>
