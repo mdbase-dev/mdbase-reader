@@ -43,14 +43,21 @@ export async function readEpubDetails(bytes: Uint8Array): Promise<EpubDetails> {
 const MAX_COVER_BYTES = 6 * 1024 * 1024;
 
 /** The EPUB's cover image, for a library thumbnail, or null when it names none. */
-export async function readEpubCover(bytes: Uint8Array): Promise<Blob | null> {
-  const archive = await EpubArchive.open(new Blob([bytes.slice().buffer]));
+export async function readEpubCover(
+  bytes: Uint8Array,
+  options: { readonly signal?: AbortSignal } = {},
+): Promise<Blob | null> {
+  options.signal?.throwIfAborted();
+  // A Blob copies its parts once, so the bytes need no copy of their own first.
+  const archive = await EpubArchive.open(new Blob([bytes as Uint8Array<ArrayBuffer>]));
   try {
+    options.signal?.throwIfAborted();
     const cover = await epubCoverImage(archive);
     const entry = cover && archive.entries.find(({ path }) => path === cover.path);
     if (!cover || !entry || entry.uncompressedSize > MAX_COVER_BYTES) {
       return null;
     }
+    options.signal?.throwIfAborted();
     return await archive.readBlob(cover.path, cover.mediaType);
   } finally {
     await archive.close();

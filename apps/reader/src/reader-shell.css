@@ -1579,11 +1579,6 @@
   border-color: var(--muted);
 }
 
-.library-status .library-progress {
-  grid-column: 1 / -1;
-  width: 72px;
-}
-
 /* Narrow panes: the table becomes a two-line list. */
 @container library (max-width: 620px) {
   .library-table-head {
@@ -1597,11 +1592,19 @@
 
   .library-table-row {
     /* Overrides the per-view column template set inline. */
-    grid-template-columns: minmax(0, 1fr) auto !important;
+    grid-template-columns: minmax(0, 1fr) auto auto !important;
   }
 
-  .library-table-row > span:not(.is-title, .is-status) {
+  .library-table-row > span:not(.is-title, .is-status, .is-actions) {
     display: none;
+  }
+
+  /* Without hover to reveal it, the row's More button stays; with hover, the menu is a
+     right-click away and the narrow row keeps its room. */
+  @media (hover: hover) {
+    .library-table-row > span.is-actions {
+      display: none;
+    }
   }
 
   .library-title-copy small {
@@ -3293,10 +3296,6 @@
   border-radius: 5px;
   color: inherit;
   font: inherit;
-}
-
-.library-status.is-editable .library-progress {
-  margin-top: -2px;
 }
 
 .annotation-composer .annotation-textarea {

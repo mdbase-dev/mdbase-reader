@@ -107,7 +107,10 @@ describe("Continue reading cards", () => {
         disconnect = vi.fn();
       },
     );
-    loadSourceThumbnail.mockResolvedValue({ url: "blob:page", pageCount: 11 });
+    const image = new Blob(["png"], { type: "image/png" });
+    loadSourceThumbnail.mockResolvedValue({ image, pageCount: 11 });
+    const createObjectURL = vi.spyOn(URL, "createObjectURL").mockReturnValue("blob:page");
+    const revokeObjectURL = vi.spyOn(URL, "revokeObjectURL").mockReturnValue(undefined);
     const readFile = vi.fn<() => Promise<never>>();
     render([paper], readFile);
     act(() => {
@@ -120,10 +123,47 @@ describe("Continue reading cards", () => {
       await Promise.resolve();
     });
     expect(loadSourceThumbnail).toHaveBeenCalledOnce();
+    expect(createObjectURL).toHaveBeenCalledExactlyOnceWith(image);
     expect(document.querySelector(".source-thumbnail img")?.getAttribute("src")).toBe("blob:page");
     expect(document.querySelector(".continue-reading-progress")?.textContent).toBe(
       "Page 7 of 11 · 68%",
     );
+
+    // A library refresh hands over a new source object for the same file: nothing reloads.
+    act(() =>
+      root!.render(
+        <ContinueReading sources={[{ ...paper }]} onOpen={vi.fn()} readFile={readFile} />,
+      ),
+    );
+    expect(loadSourceThumbnail).toHaveBeenCalledOnce();
+    expect(revokeObjectURL).not.toHaveBeenCalled();
+
+    // The card owns its URL and releases it when it goes.
+    act(() => root?.unmount());
+    root = undefined;
+    expect(revokeObjectURL).toHaveBeenCalledExactlyOnceWith("blob:page");
+    createObjectURL.mockRestore();
+    revokeObjectURL.mockRestore();
+  });
+
+  it("cancels a pending load when the card unmounts", () => {
+    let signal: AbortSignal | undefined;
+    // Without IntersectionObserver the card loads once the browser is idle.
+    vi.stubGlobal("IntersectionObserver", undefined);
+    loadSourceThumbnail.mockImplementation(
+      (_plan: unknown, _readFile: unknown, given: AbortSignal) => {
+        signal = given;
+        return new Promise(() => undefined);
+      },
+    );
+    render([paper], vi.fn<() => Promise<never>>());
+    act(() => {
+      vi.runAllTimers();
+    });
+    expect(signal?.aborted).toBe(false);
+    act(() => root?.unmount());
+    root = undefined;
+    expect(signal?.aborted).toBe(true);
   });
 
   it("leaves out finished sources and keeps three at most", () => {

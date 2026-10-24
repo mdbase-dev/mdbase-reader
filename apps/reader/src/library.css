@@ -226,11 +226,11 @@
 
 /* Table rows: the title leads, metadata is quieter, separators are hairlines. */
 
-.library-workspace .library-table:not(.library-annotation-table) .library-table-row {
+/* Source rows only: the annotation table keeps its own passage-led type and row heights. */
+.library-workspace
+  .library-table:not(.library-annotation-table)
+  .library-table-row:not(.is-header) {
   height: 56px;
-}
-
-.library-workspace .library-table-row {
   border-bottom-color: var(--line);
   color: var(--text-2);
   font-size: var(--ui-control);

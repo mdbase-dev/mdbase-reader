@@ -124,7 +124,7 @@ export async function renderPdfPagePreview(
   const engine = await (options.engine ?? defaultEngine)();
   options.signal?.throwIfAborted();
   const document = await engine
-    .openDocumentBuffer({ id: `preview-${crypto.randomUUID()}`, content: bytes.slice().buffer })
+    .openDocumentBuffer({ id: `preview-${crypto.randomUUID()}`, content: wholeBuffer(bytes) })
     .toPromise();
   try {
     const page = document.pages[options.pageIndex ?? 0] ?? document.pages[0];
@@ -146,6 +146,19 @@ export async function renderPdfPagePreview(
       .toPromise()
       .catch(() => false);
   }
+}
+
+/**
+ * The bytes' own buffer when they span all of it, else a copy. The direct engine copies the
+ * content into PDFium's heap and never detaches it, so the caller's bytes stay usable.
+ */
+function wholeBuffer(bytes: Uint8Array): ArrayBuffer {
+  const { buffer } = bytes;
+  return buffer instanceof ArrayBuffer &&
+    bytes.byteOffset === 0 &&
+    bytes.byteLength === buffer.byteLength
+    ? buffer
+    : bytes.slice().buffer;
 }
 
 function defaultEngine(): Promise<PdfEngine> {

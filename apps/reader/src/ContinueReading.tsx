@@ -1,7 +1,7 @@
 import { useRef, type JSX, type Ref } from "react";
 
 import { publicationDateLabel } from "./library-publication-date.js";
-import { formatLabel } from "./LibraryCells.js";
+import { shortFormatLabel } from "./LibraryCells.js";
 import { sourceFormat } from "./mdbase-library-views.js";
 import {
   readingLocationLabel,
@@ -150,7 +150,7 @@ export function SourceThumbnailView({
       ) : (
         <>
           <span className="source-thumbnail-title">{source.title}</span>
-          <span className="source-thumbnail-format">{formatLabel(source)}</span>
+          <span className="source-thumbnail-format">{shortFormatLabel(source)}</span>
         </>
       )}
     </span>

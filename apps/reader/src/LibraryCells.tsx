@@ -209,6 +209,18 @@ export function formatLabel(source: SourceSummary): string {
         : format.toLocaleUpperCase();
 }
 
+/** The format short enough for a card's bookplate or a thumbnail; a dash when there is no file. */
+export function shortFormatLabel(source: SourceSummary): string {
+  const format = sourceFormat(source);
+  return format === "web"
+    ? "Web"
+    : format === "note"
+      ? "—"
+      : format === "file"
+        ? "File"
+        : format.toLocaleUpperCase();
+}
+
 export function countLabel(count: number, noun: string): string {
   return `${count.toLocaleString()} ${count === 1 ? noun : `${noun}s`}`;
 }
