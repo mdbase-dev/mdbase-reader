@@ -161,7 +161,7 @@ describe("adding a source from pasted text", () => {
     });
     expect(await addSourceFromInput("isbn 9780140449136", deps)).toMatchObject({
       kind: "added",
-      notices: [expect.stringContaining("Citekey taken.")],
+      notices: [expect.objectContaining({ detail: expect.stringContaining("Citekey taken.") })],
     });
     await expect(addSourceFromInput("Crime and Punishment", deps)).rejects.toThrow(
       "Paste a web address",
