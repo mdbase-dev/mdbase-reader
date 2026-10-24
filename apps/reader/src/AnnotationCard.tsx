@@ -65,8 +65,12 @@ export function AnnotationCard({
       data-annotation-id={annotation.id}
       role="group"
       aria-label={`${annotationKindLabel(annotation.annotationType)} annotation`}
-      onClick={() => {
-        if (!editing && hasPassageAnchor(annotation.target)) {
+      onClick={(event) => {
+        if (
+          !editing &&
+          hasPassageAnchor(annotation.target) &&
+          !selectsTextIn(event.currentTarget)
+        ) {
           onOpen();
         }
       }}
@@ -131,6 +135,16 @@ export function AnnotationCard({
         </p>
       ) : null}
     </div>
+  );
+}
+
+/** A drag that selects part of the card, to copy its quote, ends in a click that must not open it. */
+function selectsTextIn(card: HTMLElement): boolean {
+  const selection = card.ownerDocument.getSelection();
+  return Boolean(
+    selection &&
+    !selection.isCollapsed &&
+    (card.contains(selection.anchorNode) || card.contains(selection.focusNode)),
   );
 }
 

@@ -1,3 +1,5 @@
+// @vitest-environment happy-dom
+/* eslint-disable @typescript-eslint/require-await -- async act flushes React's queued work */
 import {
   annotationId,
   collectionId,
@@ -6,6 +8,8 @@ import {
   sourceId,
   type Annotation,
 } from "@mdbase-reader/core";
+import { act, type JSX } from "react";
+import { createRoot } from "react-dom/client";
 import { renderToStaticMarkup } from "react-dom/server";
 import { expect, it, vi } from "vitest";
 
@@ -23,8 +27,8 @@ const base: Annotation = {
   path: "notes/test.md",
   recordRevision: recordRevision("sha256:test"),
 };
-function markup(annotation: Annotation): string {
-  return renderToStaticMarkup(
+function card(annotation: Annotation, onOpen = vi.fn()): JSX.Element {
+  return (
     <AnnotationCard
       annotation={annotation}
       editing={false}
@@ -41,10 +45,13 @@ function markup(annotation: Annotation): string {
       onSave={() => Promise.resolve(annotation)}
       onPlanDelete={() => Promise.reject(new Error("not used"))}
       onDelete={() => Promise.resolve()}
-      onOpen={vi.fn()}
+      onOpen={onOpen}
       readFile={() => Promise.reject(new Error("not used"))}
-    />,
+    />
   );
+}
+function markup(annotation: Annotation): string {
+  return renderToStaticMarkup(card(annotation));
 }
 it.each([undefined, { quote: { exact: "A quotation without coordinates" } }])(
   "omits navigation, without a warning, for notes without usable selectors",
@@ -67,23 +74,46 @@ it("uses a human HTML location in the inspector card and its tooltip", () => {
   expect(html).toContain('class="annotation-locator" title="Web page">Web page');
 });
 
-it("offers navigation for a note with a verified PDF passage", () => {
-  const html = markup({
-    ...base,
-    id: annotationId("anchored-note"),
-    target: {
-      quote: { exact: "Verified passage" },
-      pdf: {
-        pageIndex: 19,
-        coordinateSpace: {
-          profile: "embedpdf-selection-page-points-v1",
-          box: "crop",
-          origin: "top_left",
-        },
-        quadPoints: [[10, 20, 30, 20, 10, 40, 30, 40]],
+const linked: Annotation = {
+  ...base,
+  id: annotationId("anchored-note"),
+  target: {
+    quote: { exact: "Verified passage" },
+    pdf: {
+      pageIndex: 19,
+      coordinateSpace: {
+        profile: "embedpdf-selection-page-points-v1",
+        box: "crop",
+        origin: "top_left",
       },
+      quadPoints: [[10, 20, 30, 20, 10, 40, 30, 40]],
     },
-  });
+  },
+};
+
+it("offers navigation for a note with a verified PDF passage", () => {
+  const html = markup(linked);
   expect(html).toContain('aria-label="Show in document"');
   expect(html).toContain("is-linked");
+});
+
+it("opens a linked card on click, but not when the click ends selecting its text", async () => {
+  (globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
+  const onOpen = vi.fn();
+  const host = document.createElement("div");
+  document.body.append(host);
+  const root = createRoot(host);
+  await act(async () => root.render(card(linked, onOpen)));
+  const element = host.querySelector<HTMLElement>(".annotation-card")!;
+
+  document.getSelection()!.selectAllChildren(element);
+  element.click();
+  expect(onOpen).not.toHaveBeenCalled();
+
+  document.getSelection()!.removeAllRanges();
+  element.click();
+  expect(onOpen).toHaveBeenCalledTimes(1);
+
+  await act(async () => root.unmount());
+  host.remove();
 });
