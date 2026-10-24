@@ -101,6 +101,9 @@
   --warning-soft: oklch(96.2% 0.03 85);
   --danger-color: oklch(50% 0.14 28);
   --danger-soft: oklch(96.8% 0.02 28);
+  /* The default highlight colour (yellow): a wash behind text and an ink for bars. */
+  --hl-yellow: oklch(92% 0.1 95);
+  --ink-yellow: oklch(76% 0.15 82);
   --shadow-color: oklch(30% 0.02 60);
   --e-1: 0 1px 2px color-mix(in oklch, var(--shadow-color) 8%, transparent);
   --e-2:
@@ -135,6 +138,8 @@
   --warning-soft: oklch(27% 0.03 80);
   --danger-color: oklch(72% 0.13 28);
   --danger-soft: oklch(26% 0.035 28);
+  --hl-yellow: oklch(41% 0.075 88);
+  --ink-yellow: oklch(83% 0.14 88);
   --shadow-color: oklch(5% 0.01 60);
   --e-1: 0 1px 2px color-mix(in oklch, var(--shadow-color) 40%, transparent);
   --e-2:
@@ -171,6 +176,8 @@
     --warning-soft: oklch(27% 0.03 80);
     --danger-color: oklch(72% 0.13 28);
     --danger-soft: oklch(26% 0.035 28);
+    --hl-yellow: oklch(41% 0.075 88);
+    --ink-yellow: oklch(83% 0.14 88);
     --shadow-color: oklch(5% 0.01 60);
     --e-1: 0 1px 2px color-mix(in oklch, var(--shadow-color) 40%, transparent);
     --e-2:

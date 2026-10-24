@@ -1,14 +1,20 @@
-import { Select, type SelectItems } from "@mdbase-dev/ui/select";
-import { useMemo, useState, type JSX } from "react";
+import { useMemo, useState, type JSX, type ReactNode } from "react";
 
 import {
-  indexAnnotations,
-  searchAnnotationIndex,
-  type AnnotationFilter,
-} from "./annotation-list-order.js";
+  annotationFromOtherSource,
+  annotationGroupHeadings,
+  type AnnotationGroupHeading,
+} from "./annotation-groups.js";
+import { indexAnnotations, searchAnnotationIndex } from "./annotation-list-order.js";
 import { AnnotationCard } from "./AnnotationCard.js";
-import { FilterIcon, SearchIcon } from "./icons.js";
-import { Menu } from "./Menu.js";
+import {
+  AnnotationFilterMenu,
+  annotationViewIsDefault,
+  defaultAnnotationView,
+  type AnnotationView,
+} from "./AnnotationFilterMenu.js";
+import { annotationSourceHref } from "./AnnotationOwnerActions.js";
+import { SearchIcon } from "./icons.js";
 import { useAnnotationBrowserFind } from "./use-annotation-browser-find.js";
 import { VirtualAnnotationList } from "./VirtualAnnotationList.js";
 
@@ -19,14 +25,24 @@ import type {
   Annotation,
   AnnotationDeletionPlan,
   AnnotationId,
+  SourceId,
   SourceSummary,
 } from "@mdbase-reader/core";
 
 interface AnnotationListProps {
   readonly annotations: AsyncResource<readonly Annotation[]>;
   readonly owners?: readonly SourceSummary[] | undefined;
+  /** The open source; annotations saved to any other source say so. */
+  readonly currentSourceId?: SourceId | undefined;
   readonly onMoveOwner?:
     ((annotation: Annotation, owner: SourceSummary) => Promise<void>) | undefined;
+  /** The Add menu (source comment, bookmark) that ends the control row. */
+  readonly addMenu?: ReactNode;
+  /** Shown between the control row and the cards, such as a new source comment. */
+  readonly beforeList?: ReactNode;
+  /** For a chapter: whether the panel includes the whole book's annotations. */
+  readonly wholeBook?:
+    { readonly value: boolean; readonly onChange: (value: boolean) => void } | undefined;
   readonly transclusion: AnnotationTransclusionController;
   readonly onUpdate: (annotation: Annotation, body: string) => Promise<Annotation>;
   readonly onPlanDelete: (annotation: Annotation) => Promise<AnnotationDeletionPlan>;
@@ -51,7 +67,11 @@ export function AnnotationList({
   onCancelEdit,
   readFile,
   owners,
+  currentSourceId,
   onMoveOwner,
+  addMenu,
+  beforeList,
+  wholeBook,
 }: AnnotationListProps): JSX.Element {
   const [editing, setEditing] = useState({ external: editingId, id: editingId });
   const currentEditing = editing.external === editingId ? editing.id : editingId;
@@ -62,121 +82,262 @@ export function AnnotationList({
     }
   };
   const [query, setQuery] = useState("");
-  const [ownerFilter, setOwnerFilter] = useState("");
-  const [filter, setFilter] = useState<AnnotationFilter>("all");
-  const [order, setOrder] = useState<"document" | "newest">("document");
-  const index = useMemo(
-    () => (annotations.status === "ready" ? indexAnnotations(annotations.value, order) : []),
-    [annotations, order],
-  );
-  const results = useMemo(
-    () =>
-      searchAnnotationIndex(index, query, filter).filter(
-        (annotation) => !ownerFilter || annotation.sourceId === ownerFilter,
-      ),
-    [index, query, filter, ownerFilter],
-  );
+  const [view, setView] = useState<AnnotationView>(defaultAnnotationView);
+  const [following, setFollowing] = useState(true);
   const { renderAll, setRenderAll, browserRef } = useAnnotationBrowserFind();
-  if (annotations.status !== "ready" || !annotations.value.length) {
-    return <AnnotationListStatus annotations={annotations} />;
-  }
+  const { scoped, results, headings } = useAnnotationResults(annotations, view, query, {
+    currentSourceId,
+    owners,
+  });
+  const grouped = view.order === "document";
+  const ready = annotations.status === "ready";
+  const total = ready ? annotations.value.length : 0;
   const clear = (): void => {
     setQuery("");
-    setFilter("all");
-    setOwnerFilter("");
+    setView((current) => ({ ...current, filter: "all", source: "" }));
   };
-  const hiddenActive =
-    annotations.value.some(({ id }) => id === activeId) &&
-    !results.some(({ id }) => id === activeId);
+  const hiddenActive = activeIsHidden(annotations, results, activeId);
   return (
     <div className="annotation-browser" ref={browserRef}>
-      <ChapterAnnotationFilter owners={owners} value={ownerFilter} onChange={setOwnerFilter} />
-      <AnnotationBrowserControls
-        query={query}
-        filter={filter}
-        order={order}
-        total={annotations.value.length}
-        results={results.length}
+      <div className="annotation-tools">
+        {total > 0 ? <AnnotationSearch query={query} onQueryChange={setQuery} /> : null}
+        {total > 0 || wholeBook ? (
+          <AnnotationFilterMenu
+            view={view}
+            onViewChange={setView}
+            scoped={scoped}
+            owners={owners}
+            wholeBook={wholeBook}
+            following={following}
+            onFollowingChange={setFollowing}
+            renderAll={renderAll}
+            onRenderAllChange={setRenderAll}
+            changed={filterMenuChanged(view, { renderAll, wholeBook })}
+          />
+        ) : null}
+        {addMenu}
+      </div>
+      <AnnotationFilterStatus
+        filtered={query.trim() !== "" || view.filter !== "all" || view.source !== ""}
         hiddenActive={hiddenActive}
-        onQueryChange={setQuery}
-        onFilterChange={setFilter}
-        onOrderChange={setOrder}
+        paused={!following}
+        onResume={() => setFollowing(true)}
+        shown={results.length}
+        total={total}
         onClear={clear}
       />
-      <label className="annotation-find-mode">
-        <input
-          type="checkbox"
-          checked={renderAll}
-          onChange={(event) => setRenderAll(event.target.checked)}
-        />
-        Include all annotations in page search
-        <span>{renderAll ? "Slower with long lists" : "Search above covers all annotations"}</span>
-      </label>
-      <VirtualAnnotationList
-        results={results}
-        renderAll={renderAll}
-        readingId={readingId}
-        editingId={currentEditing}
-        activeId={activeId}
-        renderCard={(annotation) => (
-          <AnnotationCard
-            annotation={annotation}
-            owners={owners}
-            onMoveOwner={onMoveOwner}
-            editing={currentEditing === annotation.id}
-            active={activeId === annotation.id}
-            transclusion={transclusion}
-            onEdit={() => setEditing({ external: editingId, id: annotation.id })}
-            onCancel={closeEditor}
-            onSave={onUpdate}
-            onPlanDelete={onPlanDelete}
-            onDelete={onDelete}
-            onOpen={() => onOpen(annotation)}
-            readFile={readFile}
-          />
-        )}
-      >
-        {!results.length ? (
-          <div className="inspector-status">
-            <strong>No matching annotations</strong>
-            <button type="button" onClick={clear}>
-              Clear filters
-            </button>
-          </div>
-        ) : null}
-      </VirtualAnnotationList>
+      {beforeList}
+      {!ready || !total ? (
+        <AnnotationListStatus annotations={annotations} />
+      ) : (
+        <VirtualAnnotationList
+          results={results}
+          renderAll={renderAll}
+          readingId={readingId}
+          editingId={currentEditing}
+          activeId={activeId}
+          following={following}
+          onFollowingChange={setFollowing}
+          renderHeading={(position) => {
+            const heading = headings[position];
+            const annotation = results[position];
+            return heading && annotation ? (
+              <AnnotationGroupTitle heading={heading} annotation={annotation} />
+            ) : null;
+          }}
+          renderCard={(annotation) => (
+            <AnnotationCard
+              annotation={annotation}
+              owners={owners}
+              onMoveOwner={onMoveOwner}
+              showLocation={!grouped}
+              // Headings name another source per run; the selected card also names it itself.
+              showSource={
+                annotationFromOtherSource(annotation, currentSourceId) &&
+                (!grouped || activeId === annotation.id)
+              }
+              editing={currentEditing === annotation.id}
+              active={activeId === annotation.id}
+              transclusion={transclusion}
+              onEdit={() => setEditing({ external: editingId, id: annotation.id })}
+              onCancel={closeEditor}
+              onSave={onUpdate}
+              onPlanDelete={onPlanDelete}
+              onDelete={onDelete}
+              onOpen={() => onOpen(annotation)}
+              readFile={readFile}
+            />
+          )}
+        >
+          {!results.length ? <NoMatchingAnnotations onClear={clear} /> : null}
+        </VirtualAnnotationList>
+      )}
     </div>
   );
 }
 
-function ChapterAnnotationFilter({
-  owners,
-  value,
-  onChange,
+/** The selected annotation exists but the search or filters hide it. */
+function activeIsHidden(
+  annotations: AsyncResource<readonly Annotation[]>,
+  results: readonly Annotation[],
+  activeId: string | null,
+): boolean {
+  return (
+    annotations.status === "ready" &&
+    annotations.value.some(({ id }) => id === activeId) &&
+    !results.some(({ id }) => id === activeId)
+  );
+}
+
+function useAnnotationResults(
+  annotations: AsyncResource<readonly Annotation[]>,
+  view: AnnotationView,
+  query: string,
+  context: {
+    readonly currentSourceId: SourceId | undefined;
+    readonly owners: readonly SourceSummary[] | undefined;
+  },
+): {
+  readonly scoped: ReturnType<typeof indexAnnotations>;
+  readonly results: readonly Annotation[];
+  readonly headings: readonly (AnnotationGroupHeading | null)[];
+} {
+  const index = useMemo(
+    () => (annotations.status === "ready" ? indexAnnotations(annotations.value, view.order) : []),
+    [annotations, view.order],
+  );
+  // Counts follow the source choice but not the type, so each type shows what choosing it gives.
+  const scoped = useMemo(
+    () =>
+      view.source ? index.filter(({ annotation }) => annotation.sourceId === view.source) : index,
+    [index, view.source],
+  );
+  const results = useMemo(
+    () => searchAnnotationIndex(scoped, query, view.filter),
+    [scoped, query, view.filter],
+  );
+  const { currentSourceId, owners } = context;
+  const headings = useMemo(
+    () =>
+      view.order === "document" ? annotationGroupHeadings(results, currentSourceId, owners) : [],
+    [view.order, results, currentSourceId, owners],
+  );
+  return { scoped, results, headings };
+}
+
+/**
+ * The Filter menu's dot: type, source, order, whole-book scope or page search is not at its
+ * default. Paused following is not a filter; the status area offers Resume following instead.
+ */
+function filterMenuChanged(
+  view: AnnotationView,
+  state: {
+    readonly renderAll: boolean;
+    readonly wholeBook: AnnotationListProps["wholeBook"];
+  },
+): boolean {
+  return !annotationViewIsDefault(view) || state.renderAll || Boolean(state.wholeBook?.value);
+}
+
+function AnnotationSearch({
+  query,
+  onQueryChange,
 }: {
-  readonly owners?: readonly SourceSummary[] | undefined;
-  readonly value: string;
-  readonly onChange: (value: string) => void;
+  readonly query: string;
+  readonly onQueryChange: (query: string) => void;
+}): JSX.Element {
+  return (
+    <div className="annotation-search">
+      <SearchIcon />
+      <input
+        type="search"
+        aria-label="Search annotations"
+        placeholder="Search annotations"
+        value={query}
+        onChange={(event) => onQueryChange(event.target.value)}
+      />
+    </div>
+  );
+}
+
+function AnnotationFilterStatus({
+  filtered,
+  hiddenActive,
+  paused,
+  onResume,
+  shown,
+  total,
+  onClear,
+}: {
+  readonly filtered: boolean;
+  readonly hiddenActive: boolean;
+  /** Following the reading position paused after the list was browsed by hand. */
+  readonly paused: boolean;
+  readonly onResume: () => void;
+  readonly shown: number;
+  readonly total: number;
+  readonly onClear: () => void;
 }): JSX.Element | null {
-  if (!owners || owners.length < 2) {
+  if (!filtered && !hiddenActive && !paused) {
     return null;
   }
   return (
-    <label className="annotation-chapter-filter">
-      Source{" "}
-      <select
-        aria-label="Filter annotations by source"
-        value={value}
-        onChange={(event) => onChange(event.target.value)}
-      >
-        <option value="">All sources</option>
-        {owners.map((owner) => (
-          <option key={owner.id} value={owner.id}>
-            {owner.title}
-          </option>
-        ))}
-      </select>
-    </label>
+    <div className="annotation-filter-status">
+      {filtered ? (
+        <small role="status">
+          {shown} of {total}
+          <button type="button" onClick={onClear}>
+            Clear
+          </button>
+        </small>
+      ) : null}
+      {hiddenActive ? (
+        <button type="button" onClick={onClear}>
+          Show selected annotation (clear filters)
+        </button>
+      ) : null}
+      {paused ? (
+        <button type="button" className="annotation-resume-following" onClick={onResume}>
+          Resume following
+        </button>
+      ) : null}
+    </div>
+  );
+}
+
+function AnnotationGroupTitle({
+  heading,
+  annotation,
+}: {
+  readonly heading: AnnotationGroupHeading;
+  readonly annotation: Annotation;
+}): JSX.Element {
+  return (
+    <h3 className="annotation-group">
+      <span>{heading.label}</span>
+      {heading.source ? (
+        <small>
+          {heading.source.summary ? (
+            <a href={annotationSourceHref(annotation, heading.source.summary)}>
+              {heading.source.title}
+            </a>
+          ) : (
+            heading.source.title
+          )}
+        </small>
+      ) : null}
+    </h3>
+  );
+}
+
+function NoMatchingAnnotations({ onClear }: { readonly onClear: () => void }): JSX.Element {
+  return (
+    <div className="inspector-status">
+      <strong>No matching annotations</strong>
+      <button type="button" onClick={onClear}>
+        Clear filters
+      </button>
+    </div>
   );
 }
 
@@ -194,111 +355,12 @@ function AnnotationListStatus({
       <div className="inspector-status">Loading annotations…</div>
     );
   }
-  if (!annotations.value.length) {
-    return (
-      <div className="inspector-status annotation-empty">
-        <strong>No annotations yet</strong>
-        <span>
-          Select text or an area in the document, or add a source comment or bookmark above.
-        </span>
-      </div>
-    );
-  }
-  return <></>;
-}
-
-type AnnotationOrder = "document" | "newest";
-
-function AnnotationBrowserControls({
-  query,
-  filter,
-  order,
-  total,
-  results,
-  hiddenActive,
-  onQueryChange,
-  onFilterChange,
-  onOrderChange,
-  onClear,
-}: {
-  readonly query: string;
-  readonly filter: AnnotationFilter;
-  readonly order: AnnotationOrder;
-  readonly total: number;
-  readonly results: number;
-  readonly hiddenActive: boolean;
-  readonly onQueryChange: (query: string) => void;
-  readonly onFilterChange: (filter: AnnotationFilter) => void;
-  readonly onOrderChange: (order: AnnotationOrder) => void;
-  readonly onClear: () => void;
-}): JSX.Element {
-  const filtered = query.trim() !== "" || filter !== "all";
   return (
-    <div className="annotation-browser-controls">
-      <div className="annotation-search">
-        <SearchIcon />
-        <input
-          type="search"
-          aria-label="Search annotations"
-          placeholder="Search annotations"
-          value={query}
-          onChange={(event) => onQueryChange(event.target.value)}
-        />
-        <Menu
-          className="annotation-view-menu"
-          label={`Filter and sort annotations${filter === "all" ? "" : ", filtered"}`}
-          triggerClassName={`icon-button${filter === "all" ? "" : " is-active"}`}
-          trigger={<FilterIcon />}
-        >
-          <div className="library-options" data-menu-keep-open>
-            <label>
-              <span>Show</span>
-              <Select
-                aria-label="Filter annotations"
-                value={filter}
-                options={annotationFilterOptions}
-                onChange={onFilterChange}
-              />
-            </label>
-            <label>
-              <span>Order</span>
-              <Select
-                aria-label="Sort annotations"
-                value={order}
-                options={annotationOrderOptions}
-                onChange={onOrderChange}
-              />
-            </label>
-          </div>
-        </Menu>
-      </div>
-      {filtered ? (
-        <small role="status">
-          {results} of {total}
-          <button type="button" onClick={onClear}>
-            Clear
-          </button>
-        </small>
-      ) : null}
-      {hiddenActive ? (
-        <button type="button" onClick={onClear}>
-          Show selected annotation (clear filters)
-        </button>
-      ) : null}
+    <div className="inspector-status annotation-empty">
+      <strong>No annotations yet</strong>
+      <span>
+        Select text or an area in the document, or use Add above for a source comment or bookmark.
+      </span>
     </div>
   );
 }
-
-const annotationFilterOptions: SelectItems<AnnotationFilter> = [
-  { value: "all", label: "All" },
-  { value: "comments", label: "With comments" },
-  { value: "highlight", label: "Highlights" },
-  { value: "area", label: "Area captures" },
-  { value: "note", label: "Source comments" },
-  { value: "bookmark", label: "Bookmarks" },
-];
-
-const annotationOrderOptions: SelectItems<AnnotationOrder> = [
-  { value: "document", label: "Document order" },
-  { value: "newest", label: "Newest first" },
-];

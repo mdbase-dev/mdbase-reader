@@ -2,12 +2,13 @@ import { useCallback, type JSX } from "react";
 
 import { AnnotationEditingContext } from "./AnnotationEditingContext.js";
 import { AnnotationList } from "./AnnotationList.js";
-import { AnnotationPanelActions } from "./AnnotationPanelActions.js";
+import { useAnnotationPanelActions } from "./AnnotationPanelActions.js";
 import { requestConfirmation } from "./confirmation.js";
 import { CitationIcon, HighlightIcon, NoteIcon, PanelIcon } from "./icons.js";
 import { lazyFeature } from "./lazy-feature.js";
 import { publishSharedAnnotation } from "./shared-annotation-resource.js";
 
+import type { AnnotationFileReader } from "./AnnotationImage.js";
 import type { AnnotationComposerController } from "./use-annotation-composer.js";
 import type { ReaderSourceWorkspaceController } from "./use-reader-workspace.js";
 import type { ReaderWorkspaceGateway } from "./workspace-model.js";
@@ -187,28 +188,61 @@ export function InspectorContent({
     [gateway],
   );
   return tab === "annotations" ? (
+    <AnnotationsTab
+      workspace={workspace}
+      composer={composer}
+      gateway={gateway}
+      readFile={readFile}
+    />
+  ) : tab === "note" ? (
+    <div className="note-editor">
+      <SourceNoteEditor
+        workspace={workspace}
+        composer={composer}
+        gateway={gateway}
+        {...(onOpenSourceView ? { onOpenSourceView } : {})}
+      />
+    </div>
+  ) : (
+    <CitationEditor workspace={workspace} />
+  );
+}
+
+function AnnotationsTab({
+  workspace,
+  composer,
+  gateway,
+  readFile,
+}: Pick<InspectorPaneProps, "workspace" | "composer" | "gateway"> & {
+  readonly readFile: AnnotationFileReader;
+}): JSX.Element {
+  const actions = useAnnotationPanelActions({ workspace, composer, gateway });
+  const source = workspace.sourceRecord.status === "ready" ? workspace.sourceRecord.value : null;
+  const view = workspace.annotationView;
+  return (
     <div className="annotation-workspace">
-      <AnnotationPanelActions workspace={workspace} composer={composer} gateway={gateway} />
-      {workspace.sourceRecord.status === "ready" && workspace.sourceRecord.value.partOf ? (
-        <label>
-          <input
-            type="checkbox"
-            checked={workspace.annotationView?.wholeBook ?? false}
-            onChange={(event) => workspace.annotationView?.setWholeBook(event.target.checked)}
-          />
-          Show the whole book’s annotations
-        </label>
-      ) : null}
-      {workspace.annotationView?.problem ? (
-        <p role="status">{workspace.annotationView.problem}</p>
-      ) : null}
       <AnnotationEditingContext value={gateway}>
         <AnnotationList
-          key={
-            workspace.sourceRecord.status === "ready" ? workspace.sourceRecord.value.id : "loading"
-          }
+          key={source?.id ?? "loading"}
           annotations={workspace.annotations}
-          owners={workspace.annotationView?.sources}
+          currentSourceId={source?.id}
+          addMenu={actions.addMenu}
+          beforeList={
+            <>
+              {actions.composerPanel}
+              {view?.problem ? (
+                <p className="annotation-view-problem" role="status">
+                  {view.problem}
+                </p>
+              ) : null}
+            </>
+          }
+          wholeBook={
+            source?.partOf && view
+              ? { value: view.wholeBook, onChange: view.setWholeBook }
+              : undefined
+          }
+          owners={view?.sources}
           onMoveOwner={
             gateway.moveAnnotationOwner
               ? async (annotation, owner) => {
@@ -248,16 +282,5 @@ export function InspectorContent({
         />
       </AnnotationEditingContext>
     </div>
-  ) : tab === "note" ? (
-    <div className="note-editor">
-      <SourceNoteEditor
-        workspace={workspace}
-        composer={composer}
-        gateway={gateway}
-        {...(onOpenSourceView ? { onOpenSourceView } : {})}
-      />
-    </div>
-  ) : (
-    <CitationEditor workspace={workspace} />
   );
 }

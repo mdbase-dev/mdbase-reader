@@ -18,7 +18,7 @@ function outsideChapter(annotation: Annotation, owner: SourceSummary | undefined
   return range?.kind === "pages" && page !== undefined && (page < range.start || page > range.end);
 }
 
-function ownerHref(annotation: Annotation, owner: SourceSummary): string {
+export function annotationSourceHref(annotation: Annotation, owner: SourceSummary): string {
   const params = new URLSearchParams({
     collection: annotation.collectionId,
     source: owner.id,
@@ -30,6 +30,130 @@ function ownerHref(annotation: Annotation, owner: SourceSummary): string {
   return `?${params.toString()}`;
 }
 
+/** The annotation's source, when worth naming, and a warning when it lies outside a chapter. */
+export function AnnotationSourceLine({
+  annotation,
+  sources = [],
+  showSource = true,
+}: {
+  readonly annotation: Annotation;
+  readonly sources?: readonly SourceSummary[] | undefined;
+  readonly showSource?: boolean;
+}): JSX.Element | null {
+  const owner = sources.find(({ id }) => id === annotation.sourceId);
+  const outside = outsideChapter(annotation, owner);
+  if (!showSource && !outside) {
+    return null;
+  }
+  return (
+    <div
+      className="annotation-source-line"
+      onClick={(event) => event.stopPropagation()}
+      role="presentation"
+    >
+      {showSource ? (
+        <small>
+          Source:{" "}
+          {owner ? (
+            <a href={annotationSourceHref(annotation, owner)}>{owner.title}</a>
+          ) : (
+            annotation.source
+          )}
+        </small>
+      ) : null}
+      {outside ? <small>Outside chapter range — still belongs to this chapter</small> : null}
+    </div>
+  );
+}
+
+export interface AnnotationMoveState {
+  readonly busy: boolean;
+  readonly problem: string | null;
+  readonly move: (target: SourceSummary) => void;
+}
+
+/** Reassigns an annotation's source; progress and failures are shown by the caller. */
+export function useAnnotationMove(
+  annotation: Annotation,
+  onMove: ((annotation: Annotation, owner: SourceSummary) => Promise<void>) | undefined,
+): AnnotationMoveState {
+  const [busy, setBusy] = useState(false);
+  const [problem, setProblem] = useState<string | null>(null);
+  return {
+    busy,
+    problem,
+    move: (target) => {
+      if (!onMove) {
+        return;
+      }
+      setBusy(true);
+      setProblem(null);
+      void onMove(annotation, target)
+        .catch((reason: unknown) =>
+          setProblem(
+            readerErrorMessage(reason, "The annotation could not be moved. Refresh and try again."),
+          ),
+        )
+        .finally(() => setBusy(false));
+    },
+  };
+}
+
+export function AnnotationMoveSelect({
+  annotation,
+  sources,
+  disabled,
+  state,
+}: {
+  readonly annotation: Annotation;
+  readonly sources: readonly SourceSummary[];
+  readonly disabled: boolean;
+  readonly state: AnnotationMoveState;
+}): JSX.Element {
+  return (
+    <label className="annotation-move-select">
+      Move annotation to source
+      <select
+        aria-label="Move annotation to source"
+        value={annotation.sourceId}
+        disabled={disabled || state.busy || !annotation.recordRevision || !annotation.path}
+        onChange={(event) => {
+          const target = sources.find(({ id }) => id === event.target.value);
+          if (target) {
+            state.move(target);
+          }
+        }}
+      >
+        {sources.map((source) => (
+          <option key={source.id} value={source.id}>
+            {source.id === annotation.sourceId ? source.title : `Move to ${source.title}`}
+          </option>
+        ))}
+      </select>
+    </label>
+  );
+}
+
+export function AnnotationMoveStatus({
+  state,
+}: {
+  readonly state: AnnotationMoveState;
+}): JSX.Element | null {
+  if (state.busy) {
+    return (
+      <small className="annotation-move-status" role="status">
+        Moving annotation…
+      </small>
+    );
+  }
+  return state.problem ? (
+    <p className="annotation-card-problem" role="alert">
+      {state.problem}
+    </p>
+  ) : null;
+}
+
+/** Compact source details for a saved highlight, as shown in the selection toolbar. */
 export function AnnotationOwnerActions({
   annotation,
   sources = [],
@@ -41,58 +165,23 @@ export function AnnotationOwnerActions({
   readonly disabled?: boolean;
   readonly onMove?: ((annotation: Annotation, owner: SourceSummary) => Promise<void>) | undefined;
 }): JSX.Element {
-  const [busy, setBusy] = useState(false);
-  const [problem, setProblem] = useState<string | null>(null);
-  const owner = sources.find(({ id }) => id === annotation.sourceId);
+  const state = useAnnotationMove(annotation, onMove);
   return (
     <div
       className="annotation-owner-control"
       onClick={(event) => event.stopPropagation()}
       role="presentation"
     >
-      <small>
-        Source:{" "}
-        {owner ? <a href={ownerHref(annotation, owner)}>{owner.title}</a> : annotation.source}
-      </small>
-      {outsideChapter(annotation, owner) ? (
-        <small>Outside chapter range — still belongs to this chapter</small>
-      ) : null}
+      <AnnotationSourceLine annotation={annotation} sources={sources} />
       {onMove && sources.length > 1 ? (
-        <label>
-          Move annotation to source
-          <select
-            aria-label="Move annotation to source"
-            value={annotation.sourceId}
-            disabled={disabled || busy || !annotation.recordRevision || !annotation.path}
-            onChange={(event) => {
-              const target = sources.find(({ id }) => id === event.target.value);
-              if (!target) {
-                return;
-              }
-              setBusy(true);
-              setProblem(null);
-              void onMove(annotation, target)
-                .catch((reason: unknown) =>
-                  setProblem(
-                    readerErrorMessage(
-                      reason,
-                      "The annotation could not be moved. Refresh and try again.",
-                    ),
-                  ),
-                )
-                .finally(() => setBusy(false));
-            }}
-          >
-            {sources.map((source) => (
-              <option key={source.id} value={source.id}>
-                {source.id === annotation.sourceId ? source.title : `Move to ${source.title}`}
-              </option>
-            ))}
-          </select>
-        </label>
+        <AnnotationMoveSelect
+          annotation={annotation}
+          sources={sources}
+          disabled={disabled}
+          state={state}
+        />
       ) : null}
-      {busy ? <small role="status">Moving annotation…</small> : null}
-      {problem ? <p role="alert">{problem}</p> : null}
+      <AnnotationMoveStatus state={state} />
     </div>
   );
 }

@@ -2018,149 +2018,10 @@
   color: var(--danger);
 }
 
-/* Annotations that need no selection: whole-source comments and bookmarks. */
+/* Annotation type with a swatch, as in the Library's Annotations Type column. Scoped to grid
+   cells: Notes panel cards name their kind in their metadata line (notes-panel.css). */
 
-.annotation-panel-actions {
-  display: flex;
-  gap: 4px;
-  padding: 8px 12px 0;
-}
-
-.annotation-panel-actions > button {
-  min-height: 28px;
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 0 9px;
-  border: 1px solid var(--line);
-  border-radius: var(--ui-radius);
-  color: var(--ink-soft);
-  background: var(--paper);
-  font: inherit;
-  font-size: var(--ui-meta);
-  cursor: pointer;
-}
-
-.annotation-panel-actions > button:hover:not(:disabled) {
-  color: var(--ink);
-  background: var(--hover);
-}
-
-.annotation-panel-actions > button:disabled {
-  color: var(--faint);
-  cursor: default;
-}
-
-.annotation-panel-actions svg {
-  width: 14px;
-  height: 14px;
-}
-
-/* Annotation browsing: one row, with filter and order tucked into a menu. */
-
-.annotation-browser-controls {
-  display: grid;
-  gap: 6px;
-  padding: 10px 12px;
-  border-bottom: 1px solid var(--reader-hairline);
-}
-
-.annotation-search {
-  height: var(--ui-control-height);
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 0 2px 0 10px;
-  border: 1px solid var(--line);
-  border-radius: var(--ui-radius);
-  background: var(--paper);
-}
-
-.annotation-search:focus-within {
-  border-color: color-mix(in oklch, var(--accent) 60%, var(--line));
-}
-
-.annotation-search > svg {
-  width: 14px;
-  height: 14px;
-  flex: 0 0 auto;
-  color: var(--muted);
-}
-
-.annotation-search input {
-  min-width: 0;
-  flex: 1 1 auto;
-  padding: 0;
-  border: 0;
-  outline: 0;
-  color: var(--ink);
-  background: transparent;
-}
-
-.annotation-search .reader-menu > summary {
-  position: relative;
-  width: 26px;
-  height: 26px;
-  display: grid;
-  place-items: center;
-  border-radius: 4px;
-  color: var(--muted);
-}
-
-.annotation-search .reader-menu > summary.is-active {
-  color: var(--accent);
-  background: color-mix(in oklch, var(--accent) 12%, transparent);
-}
-
-.annotation-search .reader-menu > summary svg {
-  width: 15px;
-  height: 15px;
-}
-
-.annotation-browser-controls small {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  color: var(--muted);
-  font-size: var(--ui-meta);
-}
-
-.annotation-browser-controls small button,
-.annotation-browser-controls > button {
-  padding: 0;
-  border: 0;
-  color: var(--action);
-  background: transparent;
-  font: inherit;
-  font-size: var(--ui-meta);
-  cursor: pointer;
-}
-
-/* Annotation cards: readable labels instead of uppercase monospace. */
-
-.annotation-card header,
-.annotation-card footer {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 8px;
-  color: var(--muted);
-  font-size: var(--ui-meta);
-}
-
-.annotation-card footer {
-  margin-top: 10px;
-}
-
-.annotation-card header small {
-  overflow: hidden;
-  color: var(--muted);
-  font-size: var(--ui-meta);
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.annotation-kind {
+[role="gridcell"].annotation-kind {
   display: flex;
   align-items: center;
   gap: 7px;
@@ -2169,7 +2030,7 @@
   font-weight: 600;
 }
 
-.annotation-kind::before {
+[role="gridcell"].annotation-kind::before {
   content: "";
   width: 8px;
   height: 8px;
@@ -2177,81 +2038,24 @@
   background: var(--line-strong);
 }
 
-.annotation-kind.is-highlight::before {
-  background: oklch(80% 0.13 86);
+[role="gridcell"].annotation-kind.is-highlight::before {
+  background: var(--ink-yellow);
 }
 
-.annotation-kind.is-note::before {
+[role="gridcell"].annotation-kind.is-note::before {
   background: var(--accent);
 }
 
-.annotation-kind.is-bookmark::before {
+[role="gridcell"].annotation-kind.is-bookmark::before {
   width: 7px;
   border-radius: 1px 1px 0 0;
   background: var(--ink-soft);
   clip-path: polygon(0 0, 100% 0, 100% 100%, 50% 72%, 0 100%);
 }
 
-.annotation-kind.is-area::before {
+[role="gridcell"].annotation-kind.is-area::before {
   border: 1px dashed var(--accent);
   background: transparent;
-}
-
-.annotation-card-actions {
-  display: flex;
-  align-items: center;
-  gap: 2px;
-  opacity: 0;
-  transition: opacity var(--motion-quick) var(--ease-out);
-}
-
-.annotation-card:hover .annotation-card-actions,
-.annotation-card:focus-within .annotation-card-actions,
-.annotation-card.is-selected .annotation-card-actions {
-  opacity: 1;
-}
-
-.annotation-card-actions > button:not(.icon-button) {
-  min-height: 26px;
-  padding: 0 8px;
-  border: 0;
-  border-radius: 5px;
-  color: var(--muted);
-  background: transparent;
-  font: inherit;
-  font-size: var(--ui-meta);
-  cursor: pointer;
-}
-
-.annotation-card-actions > button:not(.icon-button):hover:not(:disabled) {
-  color: var(--ink);
-  background: var(--hover);
-}
-
-.annotation-card-actions > button:not(.icon-button):disabled {
-  color: var(--faint);
-  cursor: default;
-}
-
-.annotation-card-actions .icon-button {
-  width: 26px;
-  height: 26px;
-}
-
-.annotation-card-actions .icon-button svg {
-  width: 14px;
-  height: 14px;
-}
-
-@media (hover: none), (max-width: 680px) {
-  .annotation-card-actions {
-    opacity: 1;
-  }
-
-  .annotation-card-actions > button:not(.icon-button),
-  .annotation-card-actions .icon-button {
-    min-height: 40px;
-  }
 }
 
 @media (pointer: coarse) {

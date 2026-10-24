@@ -1,9 +1,16 @@
 import type { KeyboardEvent } from "react";
 
 const controlsSelector =
-  "button:not(:disabled), input:not(:disabled), textarea:not(:disabled), a[href]";
+  "button:not(:disabled), summary, input:not(:disabled), select:not(:disabled), textarea:not(:disabled), a[href]";
+/** Focusable controls in an item, leaving out the contents of closed menus (only their summary). */
 export function annotationItemControls(item: HTMLElement): HTMLElement[] {
-  return [...item.querySelectorAll<HTMLElement>(controlsSelector)];
+  return [...item.querySelectorAll<HTMLElement>(controlsSelector)].filter((control) => {
+    // A summary belongs to its own menu's trigger; only an enclosing menu can hide it.
+    const scope =
+      control.tagName === "SUMMARY" ? control.parentElement?.parentElement : control.parentElement;
+    const menu = scope?.closest("details");
+    return !menu || menu.open || !item.contains(menu);
+  });
 }
 
 /** Logical neighbors, not DOM neighbors: pinned cards may be thousands of rows apart. */
