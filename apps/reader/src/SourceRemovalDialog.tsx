@@ -72,9 +72,11 @@ function OpenSourceRemovalDialog({
             This removes the source from your library and deletes its source note. Saved files and
             annotation notes are kept in the collection, but links to this source will stop working,
             including from its annotations and from any chapters of it.
-            {inFamily
+            {source.partOf
               ? " To keep an annotation with the book or another chapter, cancel and use Move annotation on it first."
-              : null}{" "}
+              : inFamily
+                ? " To keep an annotation with one of its chapters, cancel and use Move annotation on it first."
+                : null}{" "}
             Reader cannot undo this.
           </p>
         </div>

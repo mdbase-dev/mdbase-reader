@@ -332,7 +332,7 @@ function CitationSummary({
     ["Title", citationText(citation, "title")],
     ["Authors", citationNames(citation, "author").map(displayCslValue).join(", ")],
     ["Published in", citationText(citation, "container-title")],
-    ["Year", citationDateText(citation, "issued").slice(0, 4)],
+    ["Year", /\d{4}/u.exec(citationDateText(citation, "issued"))?.[0] ?? ""],
     ["Pages", citationText(citation, "page")],
     ["DOI", citationText(citation, "DOI")],
   ];
