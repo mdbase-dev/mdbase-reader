@@ -403,7 +403,7 @@ export function ReaderWorkspaceView({
         addition={sourceAddition}
         canChooseFile={Boolean(model.pickSourceFile)}
       />
-      <SourceRemovalDialog removal={model.sourceRemoval} />
+      <SourceRemovalDialog removal={model.sourceRemoval} sources={library.sources} />
       <CommandPalette
         label="Reader commands"
         placeholder="Search sources and commands"

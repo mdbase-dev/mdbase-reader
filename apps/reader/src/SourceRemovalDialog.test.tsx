@@ -39,15 +39,17 @@ describe("removing a source", () => {
   const remove = vi.fn<(plan: SourceDeletionPlan) => Promise<void>>();
   const onRemoved = vi.fn<(id: SourceId) => void>();
 
+  let known: readonly SourceSummary[] = [];
   function Harness(): JSX.Element {
     removal = useSourceRemoval({ planSourceRemoval: planRemoval, removeSource: remove }, onRemoved);
-    return <SourceRemovalDialog removal={removal} />;
+    return <SourceRemovalDialog removal={removal} sources={known} />;
   }
   const button = (name: string): HTMLButtonElement | undefined =>
     [...host.querySelectorAll("button")].find((item) => item.textContent === name);
 
   beforeEach(async () => {
     (globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
+    known = [];
     planRemoval.mockReset().mockResolvedValue(plan);
     remove.mockReset().mockResolvedValue(undefined);
     onRemoved.mockReset();
@@ -66,9 +68,12 @@ describe("removing a source", () => {
     expect(host.textContent).toContain("Remove “Imported by mistake”?");
     expect(host.textContent).toContain("deletes its source note");
     expect(host.textContent).toContain("annotation notes are kept in the collection");
-    expect(host.textContent).toContain("Links to this source will stop working");
+    expect(host.textContent).toContain("links to this source will stop working");
     expect(host.textContent).not.toContain(source.path);
-    expect(host.textContent).toContain("annotations/a1.md");
+    // Linking notes are named, not listed by record path.
+    expect(host.textContent).not.toContain("annotations/a1.md");
+    expect(host.querySelector("li")?.textContent).toBe("a1");
+    expect(host.textContent).not.toContain("Move annotation");
     expect(document.activeElement).toBe(button("Cancel"));
 
     await act(async () => button("Cancel")?.click());
@@ -80,5 +85,17 @@ describe("removing a source", () => {
     expect(remove).toHaveBeenCalledExactlyOnceWith(plan);
     expect(onRemoved).toHaveBeenCalledExactlyOnceWith(source.id);
     expect(host.querySelector("[role=alertdialog]")).toBeNull();
+  });
+
+  it("names linking sources by title and points a chapter's annotations to Move annotation", async () => {
+    const chapter = { ...source, partOf: sourceId("book") };
+    known = [
+      { ...source, id: sourceId("src_2"), path: "annotations/a1.md", title: "Linking source" },
+    ];
+    await act(async () => root.render(<Harness />));
+    await act(async () => removal.request?.(chapter));
+    expect(host.querySelector("li")?.textContent).toBe("Linking source");
+    expect(host.querySelector("li")?.getAttribute("title")).toBe("annotations/a1.md");
+    expect(host.textContent).toContain("use Move annotation on it first");
   });
 });
