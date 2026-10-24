@@ -1,7 +1,12 @@
 import { XMLParser } from "fast-xml-parser";
 
 import { EpubArchive } from "./epub-archive.js";
-import { buildEpubManifest, packageDocumentPath, type EpubPackageReader } from "./epub-manifest.js";
+import {
+  buildEpubManifest,
+  epubCoverImage,
+  packageDocumentPath,
+  type EpubPackageReader,
+} from "./epub-manifest.js";
 
 /** The bibliographic part of an EPUB's package metadata (Dublin Core). */
 export interface EpubDetails {
@@ -29,6 +34,24 @@ export async function readEpubDetails(bytes: Uint8Array): Promise<EpubDetails> {
   const archive = await EpubArchive.open(new Blob([bytes.slice().buffer]));
   try {
     return await epubDetails(archive);
+  } finally {
+    await archive.close();
+  }
+}
+
+/** Covers above this size are skipped; a thumbnail never needs a print-resolution scan. */
+const MAX_COVER_BYTES = 6 * 1024 * 1024;
+
+/** The EPUB's cover image, for a library thumbnail, or null when it names none. */
+export async function readEpubCover(bytes: Uint8Array): Promise<Blob | null> {
+  const archive = await EpubArchive.open(new Blob([bytes.slice().buffer]));
+  try {
+    const cover = await epubCoverImage(archive);
+    const entry = cover && archive.entries.find(({ path }) => path === cover.path);
+    if (!cover || !entry || entry.uncompressedSize > MAX_COVER_BYTES) {
+      return null;
+    }
+    return await archive.readBlob(cover.path, cover.mediaType);
   } finally {
     await archive.close();
   }
