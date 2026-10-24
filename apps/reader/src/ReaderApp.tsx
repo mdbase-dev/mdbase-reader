@@ -69,7 +69,7 @@ export function ReaderApp({
     return (
       <ConnectLayout
         app="reader"
-        title="Open mdbase Reader"
+        title="Reader couldn’t load this collection"
         error={describeConnectionProblem(message, libraryLoadFallback)}
         detail={connectionProblemDetail(message, libraryLoadFallback)}
       >
