@@ -424,6 +424,13 @@
   background: color-mix(in oklch, var(--accent) 12%, transparent);
 }
 
+/* Unavailable without a document, but focusable so its description can be heard. */
+.reader-header .header-reading-mode[aria-disabled="true"] {
+  color: var(--faint);
+  background: transparent;
+  cursor: default;
+}
+
 .text-size-stepper {
   clear: both;
   display: grid;

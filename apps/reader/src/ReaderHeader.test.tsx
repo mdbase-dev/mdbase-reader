@@ -58,6 +58,63 @@ describe("ReaderHeader direct access", () => {
     expect(markup).toContain("Request local network access");
   });
 
+  it("names the direct-connect button by its words and describes it with the explanation", () => {
+    const problem = "Local network access failed: NotAllowedError";
+    const markup = renderHeader({
+      snapshot: { authority: "connector", route: "relay", status: "denied" },
+      working: false,
+      problem,
+      request: vi.fn(),
+    });
+    const button = /<button[^>]*connection-direct-action[^>]*>/u.exec(markup)?.[0] ?? "";
+
+    expect(button).not.toContain("aria-label");
+    expect(button).toContain(`title="${problem}"`);
+    const describedBy = /aria-describedby="([^"]+)"/u.exec(button)?.[1] ?? "";
+    expect(describedBy).toBeTruthy();
+    expect(markup).toContain(`<span id="${describedBy}" class="sr-only">${problem}</span>`);
+    expect(markup).toContain(">Retry local access</button>");
+  });
+});
+
+describe("ReaderHeader reading mode", () => {
+  function renderReadingMode(available: boolean): string {
+    return renderToStaticMarkup(
+      <ReaderHeader
+        collectionName="Local library"
+        connectionState="connected"
+        directAccess={{ snapshot: null, working: false, problem: null, request: vi.fn() }}
+        theme="system"
+        libraryOpen
+        inspectorOpen={false}
+        inspectorAvailable
+        readingModeAvailable={available}
+        onToggleReadingMode={vi.fn()}
+        {...actions}
+      />,
+    );
+  }
+
+  it("stays focusable and explains itself when no document is open", () => {
+    const markup = renderReadingMode(false);
+    const button = /<button[^>]*header-reading-mode[^>]*>/u.exec(markup)?.[0] ?? "";
+
+    expect(button).not.toMatch(/\sdisabled=""/u);
+    expect(button).toContain('aria-disabled="true"');
+    const describedBy = /aria-describedby="([^"]+)"/u.exec(button)?.[1] ?? "";
+    expect(markup).toContain(
+      `<span id="${describedBy}" class="sr-only">Open a document to use reading mode</span>`,
+    );
+  });
+
+  it("is an ordinary toggle when a document is open", () => {
+    const button =
+      /<button[^>]*header-reading-mode[^>]*>/u.exec(renderReadingMode(true))?.[0] ?? "";
+
+    expect(button).not.toContain("aria-disabled");
+    expect(button).not.toContain("aria-describedby");
+  });
+
   it("reports an active direct connection without retaining the action", () => {
     const markup = renderHeader({
       snapshot: { authority: "connector", route: "direct", status: "available" },
