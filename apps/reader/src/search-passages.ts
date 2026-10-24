@@ -1,4 +1,4 @@
-import { snippetExcerpt } from "./snippet-text.js";
+import { snippetExcerpt, withoutBlockMarkup } from "./snippet-text.js";
 
 export interface SearchExcerpt {
   readonly before: string;
@@ -6,7 +6,15 @@ export interface SearchExcerpt {
   readonly after: string;
 }
 
-export function searchExcerpt(text: string, query: string, context = 90): SearchExcerpt | null {
+/** `markdown` hides block markers in a note's or annotation's snippet; matching is unchanged. */
+export function searchExcerpt(
+  text: string,
+  query: string,
+  {
+    context = 90,
+    markdown = false,
+  }: { readonly context?: number; readonly markdown?: boolean } = {},
+): SearchExcerpt | null {
   const needle = query.trim().replace(/\s+/gu, " ");
   if (!needle) {
     return null;
@@ -22,9 +30,12 @@ export function searchExcerpt(text: string, query: string, context = 90): Search
   const matchEnd = index + match[0].length;
   const start = Math.max(0, index - context);
   const end = Math.min(text.length, matchEnd + context);
+  const display = (part: string, lineStart: boolean): string =>
+    markdown ? withoutBlockMarkup(part, lineStart) : part;
   return snippetExcerpt({
-    before: `${start > 0 ? "…" : ""}${text.slice(start, index)}`,
-    match: match[0],
-    after: `${text.slice(matchEnd, end)}${end < text.length ? "…" : ""}`,
+    before: `${start > 0 ? "…" : ""}${display(text.slice(start, index), start === 0 || text[start - 1] === "\n")}`,
+    // The match is what the reader typed, so only markers after a line break inside it go.
+    match: display(match[0], false),
+    after: `${display(text.slice(matchEnd, end), false)}${end < text.length ? "…" : ""}`,
   });
 }

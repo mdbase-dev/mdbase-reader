@@ -152,7 +152,11 @@ function SearchResult({
 }): JSX.Element {
   const passage = note?.passages?.[0];
   const excerpt =
-    scope === "documents" ? document?.excerpt : passage ? searchExcerpt(passage.text, query) : null;
+    scope === "documents"
+      ? document?.excerpt
+      : passage
+        ? searchExcerpt(passage.text, query, { markdown: true })
+        : null;
   const view =
     scope === "documents"
       ? "document"
