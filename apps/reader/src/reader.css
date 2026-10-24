@@ -5,7 +5,7 @@
   --reader-toolbar-height: 50px;
   --reader-library-width: 260px;
   --reader-inspector-width: 326px;
-  --reader-canvas: color-mix(in oklch, var(--canvas) 96%, var(--ink) 4%);
+  --reader-canvas: var(--paper);
   --reader-highlight: oklch(80% 0.11 86 / 0.52);
 }
 
@@ -152,7 +152,7 @@ button {
   border-bottom: 1px solid color-mix(in oklch, var(--accent) 32%, var(--line));
   color: var(--ink-soft);
   background: color-mix(in oklch, var(--accent) 8%, var(--paper));
-  font-size: 11px;
+  font-size: var(--text-xs);
 }
 
 .deployment-update button {
@@ -211,8 +211,9 @@ button {
 }
 
 .connection-direct-action:focus-visible {
-  outline: 2px solid var(--accent);
+  outline: 2px solid transparent;
   outline-offset: 2px;
+  box-shadow: var(--focus-ring);
 }
 
 .connection-direct-action.has-problem {
@@ -377,7 +378,7 @@ button {
 }
 
 .library-action strong {
-  font-size: 11px;
+  font-size: var(--text-xs);
 }
 
 .library-action small,
@@ -448,7 +449,7 @@ button {
 .library-search-progress {
   color: var(--accent);
   font-family: var(--mono);
-  font-size: 10px;
+  font-size: var(--text-xs);
   letter-spacing: 0.08em;
 }
 
@@ -523,7 +524,7 @@ button {
   border-top: 1px solid var(--accent);
   color: var(--muted);
   font-family: var(--mono);
-  font-size: 10px;
+  font-size: var(--text-xs);
   letter-spacing: 0.04em;
 }
 
@@ -542,7 +543,7 @@ button {
 .source-row small {
   margin-top: 2px;
   color: var(--muted);
-  font-size: 10.5px;
+  font-size: var(--text-xs);
 }
 
 .source-row-meta {
@@ -596,7 +597,7 @@ button {
 }
 
 .library-empty span {
-  font-size: 10px;
+  font-size: var(--text-xs);
   line-height: 1.45;
 }
 
@@ -855,7 +856,7 @@ button {
   padding: 24px;
   color: var(--muted);
   font-family: var(--mono);
-  font-size: 10px;
+  font-size: var(--text-xs);
   text-align: center;
 }
 
@@ -913,6 +914,12 @@ button {
   width: 100%;
   height: 100%;
   min-height: 0;
+}
+
+/* PDF pages sit on a deeper backdrop so their edges separate in both themes. The
+   viewer's shadow DOM paints its backdrop from the inherited --color-canvas. */
+.pdf-viewer {
+  --color-canvas: var(--bg-document);
 }
 
 .document-renderer-stage {
@@ -1078,7 +1085,7 @@ button {
   border-radius: 0 5px 5px 0;
   color: var(--ink-soft);
   background: color-mix(in oklch, var(--reader-highlight) 8%, transparent);
-  font-family: Georgia, "Times New Roman", serif;
+  font-family: var(--serif);
   font-size: 12.5px;
   line-height: 1.48;
 }
@@ -1132,7 +1139,7 @@ button {
 .annotation-composer p,
 .annotation-compose-error {
   color: var(--danger);
-  font-size: 10px;
+  font-size: var(--text-xs);
 }
 
 .annotation-composer > p {
@@ -1153,7 +1160,7 @@ button {
   align-items: center;
   justify-content: space-between;
   color: var(--muted);
-  font-size: 10px;
+  font-size: var(--text-xs);
 }
 
 .annotation-list-heading > span:last-child {
@@ -1161,7 +1168,7 @@ button {
   display: flex;
   align-items: center;
   color: var(--muted);
-  font-size: 10px;
+  font-size: var(--text-xs);
 }
 
 .annotation-card {
@@ -1182,23 +1189,19 @@ button {
   outline-offset: -2px;
 }
 
-button:focus-visible,
-summary:focus-visible,
-select:focus-visible,
-input:focus-visible {
-  outline: 2px solid color-mix(in oklch, var(--accent) 70%, white);
-  outline-offset: 2px;
-}
+/* Native controls take the shared focus ring from reader-tokens.css. */
 
 .annotation-card:first-of-type {
   border-top: 1px solid var(--line);
 }
 
+/* Quotations are content: the reading face, in body ink rather than grey. */
 .annotation-card blockquote {
   margin: 13px 0;
   padding-left: 12px;
   border-left: 1px solid oklch(70% 0.11 82);
-  color: var(--ink-soft);
+  color: var(--ink);
+  font-family: var(--serif);
   font-size: 12.5px;
   line-height: 1.5;
 }
@@ -1237,14 +1240,14 @@ input:focus-visible {
 .annotation-card p {
   margin: 11px 0;
   color: var(--ink-soft);
-  font-size: 11.5px;
+  font-size: var(--text-xs);
   line-height: 1.5;
 }
 
 .annotation-card-problem {
   margin-bottom: 0;
   color: var(--danger);
-  font-size: 10px;
+  font-size: var(--text-xs);
 }
 
 .annotation-body-editor {
@@ -1281,7 +1284,7 @@ input:focus-visible {
 .annotation-body-editor > p {
   margin: 0;
   color: var(--danger);
-  font-size: 10px;
+  font-size: var(--text-xs);
 }
 
 .annotation-editor-actions {
@@ -1320,14 +1323,14 @@ input:focus-visible {
 
 .annotation-delete-confirmation strong {
   color: var(--ink);
-  font-size: 11px;
+  font-size: var(--text-xs);
 }
 
 .annotation-delete-confirmation p,
 .annotation-delete-confirmation ul {
   margin: 0;
   color: var(--muted);
-  font-size: 10px;
+  font-size: var(--text-xs);
   line-height: 1.5;
 }
 
@@ -1352,7 +1355,7 @@ input:focus-visible {
 
 .inspector-workbench-owner strong {
   color: var(--ink-soft);
-  font-family: "Atkinson Hyperlegible", "Segoe UI", sans-serif;
+  font-family: var(--sans);
   font-size: 13px;
 }
 
@@ -1413,7 +1416,7 @@ input:focus-visible {
   border-radius: 3px;
   color: var(--muted);
   background: var(--paper);
-  font-size: 10px;
+  font-size: var(--text-xs);
 }
 
 .preview-notice span {
@@ -1674,15 +1677,16 @@ input:focus-visible {
   --reader-header-height: 50px;
   --reader-toolbar-height: 54px;
   --reader-tab-height: 40px;
-  --reader-hairline: color-mix(in oklch, var(--line) 76%, transparent);
-  --reader-rail: color-mix(in oklch, var(--paper) 97%, var(--canvas));
-  --reader-canvas: color-mix(in oklch, var(--canvas) 96.5%, var(--ink) 3.5%);
-  --reader-control: color-mix(in oklch, var(--paper) 66%, var(--canvas));
+  --reader-hairline: var(--line);
+  /* The Sources sidebar sits on the chrome plane; panes on the content plane. */
+  --reader-rail: var(--canvas);
+  --reader-canvas: var(--paper);
+  --reader-control: var(--bg-sunken);
 }
 
 .connection-state {
   gap: 8px;
-  font-size: 11px;
+  font-size: var(--text-xs);
 }
 
 .connection-state.is-direct {
@@ -1698,9 +1702,13 @@ input:focus-visible {
   border-radius: var(--control-radius);
 }
 
-.library-pane,
-.inspector-pane {
+.library-pane {
   background: var(--reader-rail);
+}
+
+/* The Notes panel is content, so it sits on the surface plane. */
+.inspector-pane {
+  background: var(--paper);
 }
 
 .library-pane {
@@ -1757,12 +1765,12 @@ input:focus-visible {
 
 .annotation-list-heading {
   height: 54px;
-  font-size: 11.5px;
+  font-size: var(--text-xs);
 }
 
 .annotation-list-heading > span:last-child {
   min-height: auto;
-  font-size: 10.5px;
+  font-size: var(--text-xs);
 }
 
 .annotation-card {
@@ -2090,7 +2098,7 @@ input:focus-visible {
 .library-card-copy > span {
   overflow: hidden;
   color: var(--muted);
-  font-size: 10px;
+  font-size: var(--text-xs);
   text-overflow: ellipsis;
   white-space: nowrap;
 }
@@ -2167,7 +2175,7 @@ input:focus-visible {
 
 .library-save-dialog > label span {
   color: var(--muted);
-  font-size: 10px;
+  font-size: var(--text-xs);
 }
 
 .library-save-dialog input {

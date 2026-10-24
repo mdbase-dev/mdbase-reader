@@ -120,6 +120,15 @@
 }
 .annotation-reading-context > button {
   min-height: 32px;
+  padding: 0 var(--sp-2);
+  border: 0;
+  border-radius: var(--r-md);
+  color: var(--accent);
+  background: transparent;
+  cursor: pointer;
+}
+.annotation-reading-context > button:hover {
+  background: var(--hover);
 }
 .annotation-list [role="listitem"]:focus-visible {
   outline: 2px solid var(--accent);
@@ -215,8 +224,9 @@
   line-height: 1.5;
 }
 .annotation-textarea:focus-visible {
-  outline: 2px solid var(--accent);
+  outline: 2px solid transparent;
   outline-offset: 2px;
+  box-shadow: var(--focus-ring);
 }
 /* Editing: the quotation reads as the card's blockquote, the comment as a quiet field below. */
 .annotation-body-editor .annotation-textarea:not(.is-quote) {
@@ -234,7 +244,8 @@
   border-left: 2px solid oklch(70% 0.11 82);
   border-radius: 0;
   background: transparent;
-  color: var(--ink-soft);
+  color: var(--ink);
+  font-family: var(--serif);
   font-size: 13.5px;
   line-height: 1.52;
 }
@@ -248,7 +259,7 @@
 .annotation-quote-field small {
   padding-left: 16px;
   color: var(--faint);
-  font-size: 11px;
+  font-size: var(--text-xs);
 }
 .annotation-quote-field small button,
 .annotation-editor-actions .annotation-discard {
@@ -263,13 +274,13 @@
 }
 .annotation-editor-actions .annotation-discard {
   min-height: 0;
-  font-size: 11px;
+  font-size: var(--text-xs);
 }
 .annotation-save-state {
   flex: 1;
   min-width: 0;
   color: var(--faint);
-  font-size: 11px;
+  font-size: var(--text-xs);
   text-align: right;
 }
 .annotation-save-state.is-failed {

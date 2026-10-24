@@ -52,7 +52,29 @@ describe("Reader title and library polish", () => {
     expect(renamed).toContain("<h1>[test] Newly renamed</h1>");
     expect(renamed).not.toContain(source.title);
     expect(renamed).toContain("<h1>Original saved heading</h1>");
-    expect(renamed).toContain("original headings below are unchanged");
+    expect(renamed).toContain("Saved web page · original headings below are unchanged");
+  });
+
+  it("does not describe a PDF as a saved page with original headings", () => {
+    const pdf: SourceSummary = {
+      ...source,
+      documents: source.documents.map((document) => ({
+        ...document,
+        file: "[[test.pdf]]",
+        mediaType: "application/pdf",
+      })),
+    };
+    const markup = renderToStaticMarkup(
+      <RenderedSourceDocument
+        source={pdf}
+        sessionId="test"
+        render={() => <div />}
+        onSurfaceChange={() => undefined}
+      />,
+    );
+    expect(markup).toContain(`<h1>${source.title}</h1>`);
+    expect(markup).not.toContain("original headings");
+    expect(markup).not.toContain("Saved");
   });
 
   it("shows zero progress once and exposes the full card title", () => {

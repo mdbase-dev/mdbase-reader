@@ -1,3 +1,5 @@
+@import "./reader-tokens.css";
+
 /* Reader shell ---------------------------------------------------------------
    The application chrome: header, menus, Sources sidebar, library tab, source
    tools header and annotation browsing, document chrome, empty states, command
@@ -5,19 +7,17 @@
    components were removed, so add new rules here rather than overriding them.
    Annotation card bodies, editors and the composer body remain in reader.css.
 
-   Type scale: 11px meta, 12px controls, 13px body/list, 15px headings.
-   Monospace is reserved for keyboard shortcuts and file-format tags. */
+   Colours, type, space, radii and elevation come from reader-tokens.css.
+   The shell's UI sizes follow the token type scale (nothing below 12px);
+   monospace is reserved for keyboard shortcuts and file-format tags. */
 
 :root {
-  --sans: "Atkinson Hyperlegible", "Segoe UI", sans-serif;
-  --serif: Georgia, "Times New Roman", serif;
-  --surface: var(--paper);
-  --ui-meta: 11px;
-  --ui-control: 12px;
-  --ui-body: 13px;
-  --ui-heading: 15px;
-  --ui-control-height: 30px;
-  --ui-radius: 6px;
+  --ui-meta: var(--text-xs);
+  --ui-control: var(--text-sm);
+  --ui-body: var(--text-md);
+  --ui-heading: var(--text-lg);
+  --ui-control-height: var(--control-h);
+  --ui-radius: var(--r-md);
   --mobile-source-control-height: 48px;
 }
 
@@ -28,12 +28,14 @@
   --control-font-size: var(--ui-control);
 }
 
-.reader-shell[data-density="comfortable"] {
-  --ui-meta: 12px;
-  --ui-control: 13px;
-  --ui-body: 14px;
-  --ui-heading: 16px;
-  --ui-control-height: 32px;
+/* Compact density tightens controls and body text but keeps the 12px floor. */
+.reader-shell[data-density="compact"] {
+  --ui-meta: var(--text-xs);
+  --ui-control: var(--text-xs);
+  --ui-body: var(--text-sm);
+  --ui-heading: 15px;
+  --ui-control-height: 30px;
+  --ui-radius: var(--r-sm);
 }
 
 /* Native controls do not inherit the page font on their own. */
@@ -52,16 +54,22 @@
   font-size: var(--ui-control);
 }
 
-/* Search fields show focus on their container, not on the bare input. */
+/* Search fields show the focus ring on their container, not on the bare input.
+   Bordered fields that are themselves the input take the same ring. */
 .reader-shell .navigator-search input:focus-visible,
 .reader-shell .library-search-field input:focus-visible,
-.reader-shell .annotation-search input:focus-visible,
+.reader-shell .annotation-search input:focus-visible {
+  outline: 0;
+  box-shadow: none;
+}
+
 .reader-shell .capture-url-field input:focus-visible,
 .reader-shell .import-title-field input:focus-visible,
 .navigator-search:focus-within,
 .library-workspace-search:focus-within,
 .annotation-search:focus-within {
-  box-shadow: 0 0 0 3px color-mix(in oklch, var(--accent) 16%, transparent);
+  outline: 0;
+  box-shadow: var(--focus-ring);
 }
 
 /* Menus ------------------------------------------------------------------- */
@@ -92,10 +100,10 @@
   display: grid;
   gap: 1px;
   padding: 6px;
-  border: 1px solid var(--line);
-  border-radius: 8px;
-  background: var(--paper);
-  box-shadow: 0 12px 32px -12px color-mix(in oklch, var(--ink) 28%, transparent);
+  border: 0;
+  border-radius: var(--r-lg);
+  background: var(--surface-raised);
+  box-shadow: var(--e-2);
   font-size: var(--ui-control);
 }
 
@@ -261,7 +269,7 @@
   gap: 12px;
   padding: 0 12px 0 10px;
   border-bottom: 1px solid var(--reader-hairline);
-  background: color-mix(in oklch, var(--paper) 98%, var(--canvas));
+  background: var(--canvas);
   transition: opacity var(--motion-quick) var(--ease-out);
 }
 
@@ -1388,7 +1396,7 @@
 
 .library-sort-indicator {
   color: var(--action);
-  font-size: 11px;
+  font-size: var(--text-xs);
 }
 
 .library-column-header[aria-sort="ascending"],
@@ -2513,7 +2521,7 @@
   border-radius: 8px;
   color: var(--muted);
   background: transparent;
-  font-size: 11px;
+  font-size: var(--text-xs);
   cursor: pointer;
 }
 .mobile-source-views button svg {
@@ -2563,7 +2571,7 @@
   padding: 0 4px;
   border-radius: 8px;
   color: var(--ink-soft);
-  font-size: 11px;
+  font-size: var(--text-xs);
 }
 .mobile-source-views.is-selection .selection-toolbar > button:first-child {
   color: var(--action);
@@ -2656,7 +2664,7 @@
   border-radius: 999px;
   color: var(--muted);
   background: var(--hover);
-  font-size: 11px;
+  font-size: var(--text-xs);
   text-align: center;
 }
 
@@ -2728,7 +2736,7 @@
   align-self: end;
   justify-self: end;
   color: color-mix(in oklch, var(--format-color) 45%, transparent);
-  font-family: Georgia, "Times New Roman", serif;
+  font-family: var(--serif);
   font-size: 40px;
   font-weight: 400;
   line-height: 1;
@@ -3650,7 +3658,7 @@
 .library-bulk-field-key {
   color: var(--muted);
   font-family: var(--mono);
-  font-size: 11px;
+  font-size: var(--text-xs);
 }
 
 .library-bulk-field > button,
@@ -3890,7 +3898,7 @@
 .selection-toolbar-status {
   padding: 0 8px 0 4px;
   color: var(--muted);
-  font-size: 11.5px;
+  font-size: var(--text-xs);
 }
 
 @media (prefers-reduced-motion: no-preference) {

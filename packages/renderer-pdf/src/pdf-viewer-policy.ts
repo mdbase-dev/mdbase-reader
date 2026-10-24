@@ -54,7 +54,7 @@ export function createReaderPdfViewerConfig(
     },
     fonts: {
       ui: {
-        family: '"Atkinson Hyperlegible", "Segoe UI", sans-serif',
+        family: '"Atkinson Hyperlegible Next Variable", "Segoe UI", sans-serif',
         stylesheetUrl: null,
       },
       signature: null,
