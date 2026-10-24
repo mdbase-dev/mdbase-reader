@@ -13,6 +13,7 @@ import {
 } from "@mdbase-reader/web-capture";
 
 import { chapterBooks, type ChapterDoiOffer } from "./chapter-doi.js";
+import { newCitationProvenance } from "./new-citation-provenance.js";
 import { findOpenAccessPdf, pdfFileName, type PdfSearchServices } from "./open-access-pdf.js";
 
 import type { ReaderWorkspaceController } from "./use-reader-workspace.js";
@@ -26,6 +27,7 @@ import type {
   SourceImportMetadata,
   SourceImportOptions,
 } from "@mdbase-reader/core";
+import type { Claim } from "@mdbase-reader/web-capture/citation-updates";
 
 export interface SourceAdditionServices extends PdfSearchServices {
   readonly chapterGateway?: ReaderWorkspaceGateway | undefined;
@@ -35,9 +37,11 @@ export interface SourceAdditionServices extends PdfSearchServices {
   ) => Promise<CaptureResult>;
   readonly lookUp: (request: CitationResolutionRequest) => Promise<CitationCandidate>;
   /** Identifiers printed in a downloaded PDF, for citing a PDF saved by its address. */
-  readonly pdfIdentifiers: (
-    file: CapturedPdfFile,
-  ) => Promise<{ readonly doi?: string; readonly arxiv?: string }>;
+  readonly pdfIdentifiers: (file: CapturedPdfFile) => Promise<{
+    readonly doi?: string;
+    readonly arxiv?: string;
+    readonly claims?: readonly Claim[];
+  }>;
   readonly workspace: Pick<
     ReaderWorkspaceController,
     "importSourceFile" | "createSource" | "saveNewSourceCitation"
@@ -98,9 +102,7 @@ async function addFromUrl(
     throw reason;
   }
   if (captured.kind === "pdf") {
-    const ids = await services.pdfIdentifiers(captured).catch(() => ({}));
-    const candidate = await lookUpWork(ids, services);
-    return importPdf(captured, candidate?.citation, captured.canonicalUrl, services);
+    return addCapturedPdf(captured, services);
   }
   const { page } = captured;
   services.onStatus("Looking up citation details…");
@@ -121,6 +123,23 @@ async function addFromUrl(
     services.importOptions,
   );
   return finish(source, citation, services, preview?.provenance);
+}
+
+async function addCapturedPdf(
+  captured: CapturedPdfFile,
+  services: SourceAdditionServices,
+): Promise<SourceAdditionOutcome> {
+  const ids: Awaited<ReturnType<SourceAdditionServices["pdfIdentifiers"]>> = await services
+    .pdfIdentifiers(captured)
+    .catch(() => ({ claims: [] }));
+  const candidate = await lookUpWork(ids, services);
+  return importPdf(
+    captured,
+    candidate ?? undefined,
+    captured.canonicalUrl,
+    services,
+    ids.claims ?? [],
+  );
 }
 
 function cannotOfferCitationOnly(
@@ -200,7 +219,7 @@ async function addFromIdentifier(
   );
   const url = doi ? `https://doi.org/${doi}` : stringField(candidate.citation, "URL");
   if (pdf) {
-    return importPdf(pdf, candidate.citation, url, services);
+    return importPdf(pdf, candidate, url, services);
   }
   // The new source opens on its empty document pane, which offers to attach a file.
   return createWithoutDocument(candidate, url, services);
@@ -210,13 +229,21 @@ async function addFromIdentifier(
 export async function createWithoutDocument(
   candidate: CitationCandidate,
   url: string | undefined,
-  services: Pick<SourceAdditionServices, "workspace" | "importOptions" | "onStatus">,
+  services: Pick<
+    SourceAdditionServices,
+    "workspace" | "importOptions" | "onStatus" | "chapterGateway" | "signal"
+  >,
 ): Promise<SourceAdditionOutcome> {
   const { createSource } = services.workspace;
   if (!createSource) {
     throw new Error("This collection cannot hold sources without a document.");
   }
   const fields = citationFields(candidate.citation);
+  const provenance = await newCitationProvenance(
+    candidate,
+    services.chapterGateway,
+    services.signal,
+  );
   services.onStatus("Saving the source…");
   const source = await createSource(
     {
@@ -227,15 +254,22 @@ export async function createWithoutDocument(
     },
     services.importOptions,
   );
-  return finish(source, candidate.citation, services);
+  return finish(source, candidate.citation, services, provenance);
 }
 
 async function importPdf(
   pdf: CapturedPdfFile,
-  citation: CitationDraft | undefined,
+  candidate: CitationCandidate | undefined,
   url: string | undefined,
   services: SourceAdditionServices,
+  embedded?: readonly Claim[],
 ): Promise<SourceAdditionOutcome> {
+  const citation = candidate?.citation;
+  const claims =
+    embedded ?? (await services.pdfIdentifiers(pdf).catch(() => ({ claims: [] }))).claims;
+  const provenance = candidate
+    ? await newCitationProvenance(candidate, services.chapterGateway, services.signal, claims)
+    : undefined;
   const fields = citation ? citationFields(citation) : undefined;
   const title = fields?.title ?? pdfFileName(pdf.canonicalUrl, "Document").replace(/\.pdf$/iu, "");
   services.onStatus("Saving the PDF…");
@@ -251,7 +285,7 @@ async function importPdf(
     },
     services.importOptions,
   );
-  return finish(source, citation, services);
+  return finish(source, citation, services, provenance);
 }
 
 async function finish(

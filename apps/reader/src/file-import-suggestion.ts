@@ -1,6 +1,7 @@
+import { candidateProvenance, documentClaims } from "./new-citation-provenance.js";
 import { citationFields } from "./source-addition-flow.js";
 
-import type { CitationCandidate, SourceImportMetadata } from "@mdbase-reader/core";
+import type { CitationCandidate, CslProvenance, SourceImportMetadata } from "@mdbase-reader/core";
 
 /** What Reader proposes for a chosen file before it is imported. */
 export interface FileImportSuggestion {
@@ -8,6 +9,7 @@ export interface FileImportSuggestion {
   readonly kind?: string;
   readonly metadata: SourceImportMetadata;
   readonly citation?: CitationCandidate;
+  readonly provenance?: CslProvenance;
 }
 
 /**
@@ -42,6 +44,15 @@ export async function suggestForFile(
     ...(title ? { title } : {}),
     ...(fields?.kind ? { kind: fields.kind } : {}),
     metadata: { ...details.metadata, ...fields?.metadata },
-    ...(citation ? { citation } : {}),
+    ...(citation
+      ? {
+          citation,
+          provenance: candidateProvenance(
+            citation,
+            undefined,
+            documentClaims(details, citation.provenance.retrievedAt),
+          ),
+        }
+      : {}),
   };
 }

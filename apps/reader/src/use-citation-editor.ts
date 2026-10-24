@@ -104,11 +104,15 @@ export function useCitationEditor(input: {
   const transaction = draftState?.source.id === sourceId ? draftState : null;
   const source = transaction?.source ?? active.latest;
   const draft = transaction?.value ?? (source ? citationDraftForSource(source) : "");
-  const provenance = transaction?.provenance ?? provenanceFor(source);
+  const assessment = assessCitationDraft(draft);
+  const provenance =
+    transaction?.provenance ??
+    (source?.frontmatter["csl"] === undefined && assessment.value
+      ? editedCitationProvenance({}, assessment.value, provenanceFor(source))
+      : provenanceFor(source));
   const status = statusState?.sourceId === sourceId ? (statusState?.value ?? "idle") : "idle";
   const error = errorState?.sourceId === sourceId ? (errorState?.value ?? null) : null;
   const conflict = conflictState?.sourceId === sourceId ? (conflictState?.value ?? null) : null;
-  const assessment = assessCitationDraft(draft);
   const dirty = Boolean(
     source &&
     (!cslValuesEqual(assessment.value, source.frontmatter["csl"]) ||

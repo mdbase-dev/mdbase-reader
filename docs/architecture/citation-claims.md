@@ -209,9 +209,12 @@ Each entry pins the value it explains. When Reader reads a record:
 Capture saves write the resolved citation and its matching field provenance together. Reader and
 extension generate a collection-unique `id` (citekey) locally, so capture provenance never
 includes `id`. Fields edited in the extension draft lose their captured provenance; untouched
-fields keep it. Absent or mismatched values are not given captured provenance. Lookups that
-return only a `CitationCandidate` (rather than field-level `CitationPreview` evidence) do not
-invent field provenance from the candidate's provider summary.
+fields keep it. Absent or mismatched values are not given captured provenance. New-source identifier and citation-only adds prefer gateway field claims where supported.
+Candidate-only providers are converted to claims using their provider and retrieval time:
+doi.org (including arXiv repository DOIs), ISBN and PubMed registries retain registry rank;
+other services remain generic remote evidence. PDF metadata claims accompany registry claims.
+The accepted candidate values and collection-generated citekeys are unchanged. Gateway identity
+rejections and uncertainty never regain registry strength through a candidate summary.
 
 Malformed provenance is ignored field by field. Deleting `csl-provenance` loses only the
 explanations. Entries keep the chosen source and at most two rejected values; full evidence is

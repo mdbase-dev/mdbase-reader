@@ -61,6 +61,9 @@ describe("adding a source from pasted text", () => {
     expect(deps.workspace.saveNewSourceCitation).toHaveBeenCalledWith(
       source(),
       expect.not.objectContaining({ id: expect.anything() }),
+      expect.objectContaining({
+        title: { value: dostoevsky.title, source: "generic-remote:test" },
+      }),
     );
     expect(outcome).toMatchObject({ kind: "added", notices: [] });
   });
