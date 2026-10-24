@@ -136,6 +136,9 @@ importers:
       '@citation-js/plugin-csl':
         specifier: 0.8.2
         version: 0.8.2(@citation-js/core@0.8.2)
+      '@fontsource-variable/source-serif-4':
+        specifier: ^5.3.1
+        version: 5.3.1
       '@mdbase-dev/sdk':
         specifier: file:../../packages/connect/vendor/sdk-eaa4e697-production-beta141.tgz
         version: file:packages/connect/vendor/sdk-eaa4e697-production-beta141.tgz
@@ -425,9 +428,6 @@ importers:
 
   packages/ui:
     dependencies:
-      '@fontsource-variable/source-serif-4':
-        specifier: ^5.3.1
-        version: 5.3.1
       '@fontsource/azeret-mono':
         specifier: ^5.3.0
         version: 5.3.0

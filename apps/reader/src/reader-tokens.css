@@ -1,3 +1,8 @@
+/* The reading face (SIL OFL), Reader only. Faces are subset by unicode-range and
+   download only when text uses them. */
+@import "@fontsource-variable/source-serif-4/wght.css";
+@import "@fontsource-variable/source-serif-4/wght-italic.css";
+
 /* Reader tokens ---------------------------------------------------------------
    The design-direction token layer (docs/design-direction.md). Reader runs warmer
    than the shared @mdbase-dev/ui palette, so this file defines Reader's own roles
