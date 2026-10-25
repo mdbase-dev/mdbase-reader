@@ -68,6 +68,13 @@ describe("selection toolbar shortcuts", () => {
     expect(highlight).toHaveBeenCalledWith(selection, "yellow");
     expect(comment).toHaveBeenCalledWith(selection);
   });
+
+  it("marks a toolbar with no place by the passage as docked, so the notices make way", () => {
+    // Docked at the foot of the pane, where the notices hide until it closes.
+    const layer = host.querySelector(".selection-toolbar-layer");
+    expect(layer?.classList.contains("is-docked")).toBe(true);
+    expect(layer?.classList.contains("is-anchored")).toBe(false);
+  });
 });
 
 describe("selection toolbar colours", () => {

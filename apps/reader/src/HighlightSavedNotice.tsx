@@ -20,6 +20,9 @@ function isTyping(target: EventTarget | null): boolean {
   return Boolean(element?.closest?.("input, textarea, select, [contenteditable='true']"));
 }
 
+/** A dialog or menu open over the reader, which Esc should close instead. */
+const openOverlays = "dialog[open], [aria-modal='true'], .library-row-menu";
+
 interface LayerBox {
   readonly x: number;
   readonly y: number;
@@ -59,21 +62,28 @@ export function HighlightSweep({ saved }: { readonly saved: SavedHighlight | nul
 /**
  * "Highlight saved · Undo" as a snackbar at the foot of the document, clear of the page's text.
  * It stays a few seconds, longer while pointed at or focused, and goes at once with × or Esc.
- * Ctrl+Z or ⌘Z outside a text field undoes the highlight while it is offered.
+ * Ctrl+Z or ⌘Z outside a text field undoes the highlight while it is offered. Once the highlight
+ * is being edited, Undo is withdrawn and the notice goes.
+ *
+ * `overlaid` says a selection toolbar or the composer is open: Esc is theirs to close, not the
+ * notice's, as it is while a dialog or menu is open.
  */
 export function HighlightSavedNotice({
-  saved,
+  saved: tracked,
+  overlaid = false,
   onUndo,
   onDismiss,
 }: {
   readonly saved: SavedHighlight | null;
+  readonly overlaid?: boolean;
   readonly onUndo: () => void;
   readonly onDismiss: () => void;
 }): JSX.Element | null {
+  const saved = tracked?.undoable ? tracked : null;
   // Held by its id, so a notice that goes while held does not leave the next one held.
   const [heldId, setHeldId] = useState<number | null>(null);
   const held = saved !== null && heldId === saved.id;
-  useNoticeLifetime(saved?.status, held, onUndo, onDismiss);
+  useNoticeLifetime(saved?.status, held, overlaid, onUndo, onDismiss);
   if (!saved) {
     return null;
   }
@@ -168,6 +178,7 @@ function SavedStatus({
 function useNoticeLifetime(
   status: SavedHighlight["status"] | undefined,
   held: boolean,
+  overlaid: boolean,
   onUndo: () => void,
   onDismiss: () => void,
 ): void {
@@ -179,18 +190,23 @@ function useNoticeLifetime(
     return () => clearTimeout(timer);
   }, [status, held, onDismiss]);
   useEffect(() => {
-    if (status === undefined || status === "saving") {
+    if (status === undefined || status === "saving" || overlaid) {
       return undefined;
     }
-    // Esc closes the notice unless something else, such as a toolbar or an editor, took it.
+    // Esc closes the notice only when nothing else is open to take it: one press, one thing.
     const onKeyDown = (event: KeyboardEvent): void => {
-      if (event.key === "Escape" && !event.defaultPrevented && !isTyping(event.target)) {
+      if (
+        event.key === "Escape" &&
+        !event.defaultPrevented &&
+        !isTyping(event.target) &&
+        !document.querySelector(openOverlays)
+      ) {
         onDismiss();
       }
     };
     document.addEventListener("keydown", onKeyDown);
     return () => document.removeEventListener("keydown", onKeyDown);
-  }, [status, onDismiss]);
+  }, [status, overlaid, onDismiss]);
   useEffect(() => {
     if (status !== "saved") {
       return undefined;

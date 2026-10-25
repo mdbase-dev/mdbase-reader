@@ -1,4 +1,4 @@
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useMemo, useRef, useState } from "react";
 
 import { readerErrorMessage } from "./errors.js";
 
@@ -20,6 +20,11 @@ export interface SavedHighlight {
   readonly status: "saving" | "saved" | "undoing" | "embedded" | "failed";
   readonly annotation: Annotation | null;
   readonly problem?: string | undefined;
+  /**
+   * False once the highlight is being edited or has been, such as a comment written on it: Undo
+   * would delete that work too, so it is no longer offered, though the sweep still plays.
+   */
+  readonly undoable: boolean;
 }
 
 /** Reports one quick highlight's save to the confirmation. */
@@ -38,6 +43,8 @@ export interface HighlightUndoController {
   /** Deletes the highlight just saved, as Delete highlight would. */
   readonly undoSavedHighlight: () => void;
   readonly dismissSavedHighlight: () => void;
+  /** Ends Undo for this annotation, which the reader has begun to edit. */
+  readonly withdrawUndo: (annotationId: Annotation["id"]) => void;
 }
 
 export interface HighlightUndoInput {
@@ -53,6 +60,21 @@ export interface HighlightUndoInput {
 }
 
 const undoFailed = "Reader could not delete this highlight.";
+
+/**
+ * Whether the annotation changed since it was saved in a way other than its colour, such as a
+ * comment, tags or another source. Undo would delete that change with it.
+ */
+function editedSince(created: Annotation, current: Annotation | undefined): boolean {
+  return (
+    current !== undefined &&
+    (current.body !== created.body ||
+      current.sourceId !== created.sourceId ||
+      current.annotationType !== created.annotationType ||
+      current.tags.join("\n") !== created.tags.join("\n") ||
+      JSON.stringify(current.target) !== JSON.stringify(created.target))
+  );
+}
 
 function sameScope(left: readonly unknown[], right: readonly unknown[]): boolean {
   return left.length === right.length && left.every((value, index) => value === right[index]);
@@ -75,7 +97,14 @@ export function useHighlightUndo({
   if (state && !sameScope(state.scope, scope)) {
     setState(null);
   }
-  const saved = state && sameScope(state.scope, scope) ? state.highlight : null;
+  const tracked = state && sameScope(state.scope, scope) ? state.highlight : null;
+  const created = tracked?.annotation;
+  const current = created ? annotations.find(({ id }) => id === created.id) : undefined;
+  const edited = Boolean(tracked?.undoable && created && editedSince(created, current));
+  const saved = useMemo(
+    () => (tracked && edited ? { ...tracked, undoable: false } : tracked),
+    [tracked, edited],
+  );
   const next = useRef(0);
   const update = useCallback(
     (id: number, change: (value: SavedHighlight) => SavedHighlight | null) =>
@@ -92,7 +121,10 @@ export function useHighlightUndo({
     (color: HighlightColorKey, rect: ViewportRect | null): HighlightSaveTracker => {
       next.current += 1;
       const id = next.current;
-      setState({ scope, highlight: { id, color, rect, status: "saving", annotation: null } });
+      setState({
+        scope,
+        highlight: { id, color, rect, status: "saving", annotation: null, undoable: true },
+      });
       return {
         saved: (annotation) => update(id, (value) => ({ ...value, status: "saved", annotation })),
         settled: () => update(id, (value) => (value.status === "saving" ? null : value)),
@@ -101,14 +133,13 @@ export function useHighlightUndo({
     [scope, update],
   );
   const undoSavedHighlight = useCallback(() => {
-    if (saved?.status !== "saved" || !saved.annotation) {
+    if (saved?.status !== "saved" || !saved.annotation || !saved.undoable) {
       return;
     }
-    const { id, annotation: created } = saved;
-    // A recolour or comment since saving made a newer revision; delete that one.
-    const current = annotations.find(({ id: annotationId }) => annotationId === created.id);
+    const { id, annotation: highlight } = saved;
+    // A recolour since saving made a newer revision; delete that one.
     update(id, (value) => ({ ...value, status: "undoing" }));
-    void remove(current ?? created).then(
+    void remove(current ?? highlight).then(
       (embeddedIn) =>
         update(id, (value) => (embeddedIn.length > 0 ? { ...value, status: "embedded" } : null)),
       (reason: unknown) =>
@@ -118,7 +149,22 @@ export function useHighlightUndo({
           problem: readerErrorMessage(reason, undoFailed),
         })),
     );
-  }, [annotations, remove, saved, update]);
+  }, [current, remove, saved, update]);
   const dismissSavedHighlight = useCallback(() => setState(null), []);
-  return { savedHighlight: saved, trackHighlight, undoSavedHighlight, dismissSavedHighlight };
+  const withdrawUndo = useCallback(
+    (annotationId: Annotation["id"]) =>
+      setState((latest) =>
+        latest?.highlight.annotation?.id === annotationId
+          ? { ...latest, highlight: { ...latest.highlight, undoable: false } }
+          : latest,
+      ),
+    [],
+  );
+  return {
+    savedHighlight: saved,
+    trackHighlight,
+    undoSavedHighlight,
+    dismissSavedHighlight,
+    withdrawUndo,
+  };
 }

@@ -94,7 +94,7 @@ export function SelectionToolbarLayer({
     return null;
   }
   return (
-    <div ref={layer} className={`selection-toolbar-layer${style ? " is-anchored" : ""}`}>
+    <div ref={layer} className={`selection-toolbar-layer${style ? " is-anchored" : " is-docked"}`}>
       <SelectionToolbar
         key={state.target.kind === "annotation" ? state.target.annotation.id : "selection"}
         barRef={bar}

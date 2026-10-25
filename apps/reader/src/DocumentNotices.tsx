@@ -20,6 +20,7 @@ export function DocumentNotices({
       <div className="document-notices">
         <HighlightSavedNotice
           saved={composer.savedHighlight}
+          overlaid={composing || composer.toolbar !== null}
           onUndo={composer.undoSavedHighlight}
           onDismiss={composer.dismissSavedHighlight}
         />

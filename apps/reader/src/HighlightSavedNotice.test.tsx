@@ -18,7 +18,14 @@ import {
 
 import type { Annotation } from "@mdbase-reader/core";
 
-const annotation = { id: "a1", annotationType: "highlight", color: "green" } as Annotation;
+const annotation = {
+  id: "a1",
+  sourceId: "source-a",
+  annotationType: "highlight",
+  color: "green",
+  body: "",
+  tags: [],
+} as unknown as Annotation;
 
 function stubReducedMotion(reduce: boolean): void {
   vi.stubGlobal("matchMedia", (query: string) => ({
@@ -33,21 +40,34 @@ let noticeHost: HTMLDivElement;
 let noticeRoot: ReturnType<typeof createRoot>;
 const onUndo = vi.fn();
 const onDismiss = vi.fn();
-const render = async (saved: SavedHighlight | null): Promise<void> =>
+const render = async (saved: SavedHighlight | null, overlaid = false): Promise<void> =>
   act(async () =>
     noticeRoot.render(
       <>
         <HighlightSweep saved={saved} />
-        <HighlightSavedNotice saved={saved} onUndo={onUndo} onDismiss={onDismiss} />
+        <HighlightSavedNotice
+          saved={saved}
+          overlaid={overlaid}
+          onUndo={onUndo}
+          onDismiss={onDismiss}
+        />
       </>,
     ),
   );
+const pressEscape = (target: EventTarget, prevented = false): void => {
+  const event = new KeyboardEvent("keydown", { key: "Escape", bubbles: true, cancelable: true });
+  if (prevented) {
+    event.preventDefault();
+  }
+  target.dispatchEvent(event);
+};
 const saved = (status: SavedHighlight["status"]): SavedHighlight => ({
   id: 1,
   color: "green",
   rect: { x: 40, y: 60, width: 120, height: 20 },
   status,
   annotation: status === "saving" ? null : annotation,
+  undoable: true,
 });
 
 /** Mounts the sweep and the notice into a fresh host for each test. */
@@ -179,25 +199,39 @@ describe("dismissing the highlight saved notice", () => {
 
   it("closes on Esc, unless something else took the key or the reader is typing", async () => {
     await render(saved("saved"));
-    const press = (target: EventTarget, prevented = false): void => {
-      const event = new KeyboardEvent("keydown", {
-        key: "Escape",
-        bubbles: true,
-        cancelable: true,
-      });
-      if (prevented) {
-        event.preventDefault();
-      }
-      target.dispatchEvent(event);
-    };
     const field = document.createElement("textarea");
     document.body.append(field);
-    press(field);
-    press(document, true);
+    pressEscape(field);
+    pressEscape(document, true);
     expect(onDismiss).not.toHaveBeenCalled();
-    press(document);
+    pressEscape(document);
     expect(onDismiss).toHaveBeenCalledOnce();
     field.remove();
+  });
+
+  it("leaves Esc to a toolbar, composer or dialog that is open, so one press closes one thing", async () => {
+    await render(saved("saved"), true);
+    pressEscape(document);
+    expect(onDismiss).not.toHaveBeenCalled();
+    await render(saved("saved"));
+    const dialog = document.createElement("div");
+    dialog.setAttribute("aria-modal", "true");
+    document.body.append(dialog);
+    pressEscape(document);
+    expect(onDismiss).not.toHaveBeenCalled();
+    dialog.remove();
+    pressEscape(document);
+    expect(onDismiss).toHaveBeenCalledOnce();
+  });
+
+  it("goes, and stops answering Ctrl+Z, once Undo is withdrawn, while the sweep plays on", async () => {
+    await render({ ...saved("saved"), undoable: false });
+    expect(noticeHost.querySelector(".highlight-saved")).toBeNull();
+    expect(noticeHost.querySelector(".highlight-sweep")).not.toBeNull();
+    document.dispatchEvent(
+      new KeyboardEvent("keydown", { key: "z", ctrlKey: true, bubbles: true, cancelable: true }),
+    );
+    expect(onUndo).not.toHaveBeenCalled();
   });
 
   it("waits while pointed at, then goes once the pointer leaves", async () => {
@@ -281,15 +315,41 @@ describe("useHighlightUndo", () => {
     expect(controller!.savedHighlight?.status).toBe("embedded");
   });
 
-  it("deletes the highlight as it is now, after a recolour or a comment", async () => {
+  it("deletes the highlight as it is now, after a recolour", async () => {
     const remove = vi.fn().mockResolvedValue([]);
     await mount(remove);
     const tracker = await act(async () => controller!.trackHighlight("green", null));
     await act(async () => tracker.saved(annotation));
-    const recoloured = { ...annotation, color: "pink", body: "Later" } as Annotation;
+    const recoloured = { ...annotation, color: "pink", recordRevision: "r2" } as Annotation;
     await mount(remove, { annotations: [recoloured] });
+    expect(controller!.savedHighlight?.undoable).toBe(true);
     await act(async () => controller!.undoSavedHighlight());
     expect(remove).toHaveBeenCalledExactlyOnceWith(recoloured);
+  });
+
+  it("never deletes a comment: Undo ends once one is written or saved", async () => {
+    const remove = vi.fn().mockResolvedValue([]);
+    await mount(remove);
+    const tracker = await act(async () => controller!.trackHighlight("green", null));
+    await act(async () => tracker.saved(annotation));
+    const commented = { ...annotation, body: "A thought", recordRevision: "r2" } as Annotation;
+    await mount(remove, { annotations: [commented] });
+    expect(controller!.savedHighlight?.undoable).toBe(false);
+    await act(async () => controller!.undoSavedHighlight());
+    expect(remove).not.toHaveBeenCalled();
+  });
+
+  it("withdraws Undo as editing begins, before anything is saved", async () => {
+    const remove = vi.fn().mockResolvedValue([]);
+    await mount(remove, { annotations: [annotation] });
+    const tracker = await act(async () => controller!.trackHighlight("green", null));
+    await act(async () => tracker.saved(annotation));
+    await act(async () => controller!.withdrawUndo("another" as Annotation["id"]));
+    expect(controller!.savedHighlight?.undoable).toBe(true);
+    await act(async () => controller!.withdrawUndo(annotation.id));
+    expect(controller!.savedHighlight).toMatchObject({ status: "saved", undoable: false });
+    await act(async () => controller!.undoSavedHighlight());
+    expect(remove).not.toHaveBeenCalled();
   });
 
   it("reports a failed deletion apart from an embedding note", async () => {
