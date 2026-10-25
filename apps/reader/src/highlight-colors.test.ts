@@ -7,14 +7,15 @@ import { highlightColorKeys, highlightPalette } from "@mdbase-reader/core";
 import { afterEach, describe, expect, it } from "vitest";
 
 import {
+  deviceHighlightMeanings,
+  forgetDeviceHighlightMeanings,
+  highlightChoices,
   highlightColorName,
   highlightMeaning,
-  highlightMeaningMaxLength,
-  highlightMeanings,
   lastHighlightColor,
-  setHighlightMeaning,
   setLastHighlightColor,
 } from "./highlight-colors.js";
+import { bindCollectionHighlights } from "./highlight-settings.fixtures.js";
 
 // A path rather than a URL: happy-dom replaces the global URL with one Node's fs refuses.
 const tokens = readFileSync(
@@ -23,6 +24,18 @@ const tokens = readFileSync(
 );
 
 afterEach(() => localStorage.clear());
+
+let stopBinding: (() => void) | undefined;
+afterEach(() => {
+  stopBinding?.();
+  stopBinding = undefined;
+});
+
+function bind(fields: Record<string, unknown> = {}): ReturnType<typeof bindCollectionHighlights> {
+  const bound = bindCollectionHighlights(fields);
+  stopBinding = bound.stop;
+  return bound;
+}
 
 describe("highlight colour preferences", () => {
   it("remembers the last colour used and starts at yellow", () => {
@@ -34,30 +47,71 @@ describe("highlight colour preferences", () => {
     expect(lastHighlightColor()).toBe("yellow");
   });
 
-  it("stores meanings per device, trimmed and bounded, and clears blank ones", () => {
-    expect(highlightMeanings()).toEqual({});
-    setHighlightMeaning("yellow", "  Key   idea ");
-    setHighlightMeaning("blue", "x".repeat(80));
-    expect(highlightMeanings()).toEqual({
-      yellow: "Key idea",
-      blue: "x".repeat(highlightMeaningMaxLength),
+  it("offers all five colours in today's order with no meanings by default", () => {
+    expect(highlightChoices()).toEqual({
+      colors: highlightColorKeys,
+      meanings: {},
+      meaningsFromDevice: false,
     });
-    expect(highlightMeanings()).toBe(highlightMeanings());
-    setHighlightMeaning("yellow", " ");
-    expect(highlightMeanings()).toEqual({ blue: "x".repeat(highlightMeaningMaxLength) });
-    expect(JSON.parse(localStorage.getItem("mdbase-reader:highlight-meanings") ?? "")).toEqual({
-      blue: "x".repeat(highlightMeaningMaxLength),
-    });
+    bind();
+    expect(highlightChoices().colors).toEqual(highlightColorKeys);
+    expect(highlightChoices().meanings).toEqual({});
+    expect(highlightChoices()).toBe(highlightChoices());
   });
 
-  it("ignores stored meanings it cannot read", () => {
-    localStorage.setItem("mdbase-reader:highlight-meanings", "{not json");
-    expect(highlightMeanings()).toEqual({});
+  it("follows the collection's colours, order and meanings, live", () => {
+    const bound = bind({
+      highlight_colors: ["blue", "yellow"],
+      highlight_meanings: { blue: "Term" },
+    });
+    expect(highlightChoices().colors).toEqual(["blue", "yellow"]);
+    expect(highlightChoices().meanings).toEqual({ blue: "Term" });
+    bound.set({
+      highlight_colors: ["pink", "orange", "pink"],
+      highlight_meanings: { pink: " Ask  ", orange: "Nope" },
+    });
+    // Unknown and repeated colours are skipped.
+    expect(highlightChoices().colors).toEqual(["pink"]);
+    expect(highlightChoices().meanings).toEqual({ pink: "Ask" });
+    bound.set({ highlight_colors: [] });
+    expect(highlightChoices().colors).toEqual(highlightColorKeys);
+    bound.stop();
+    expect(highlightChoices().colors).toEqual(highlightColorKeys);
+  });
+
+  it("uses the first offered colour while the one used last is hidden, keeping the preference", () => {
+    setLastHighlightColor("green");
+    const bound = bind({ highlight_colors: ["blue", "pink"] });
+    expect(lastHighlightColor()).toBe("blue");
+    expect(localStorage.getItem("mdbase-reader:highlight-color")).toBe("green");
+    bound.set({ highlight_colors: ["pink", "green"] });
+    expect(lastHighlightColor()).toBe("green");
+  });
+
+  it("shows this device's old meanings until the collection has its own", () => {
     localStorage.setItem(
       "mdbase-reader:highlight-meanings",
       JSON.stringify({ green: "Evidence", orange: "Nope", pink: 3 }),
     );
-    expect(highlightMeanings()).toEqual({ green: "Evidence" });
+    expect(deviceHighlightMeanings()).toEqual({ green: "Evidence" });
+    const bound = bind();
+    expect(highlightChoices()).toMatchObject({
+      meanings: { green: "Evidence" },
+      meaningsFromDevice: true,
+    });
+    bound.set({ highlight_meanings: { blue: "Definition" } });
+    expect(highlightChoices()).toMatchObject({
+      meanings: { blue: "Definition" },
+      meaningsFromDevice: false,
+    });
+    forgetDeviceHighlightMeanings();
+    expect(localStorage.getItem("mdbase-reader:highlight-meanings")).toBeNull();
+  });
+
+  it("ignores device meanings it cannot read", () => {
+    localStorage.setItem("mdbase-reader:highlight-meanings", "{not json");
+    expect(deviceHighlightMeanings()).toEqual({});
+    expect(highlightChoices().meaningsFromDevice).toBe(false);
   });
 
   it("names a colour with its meaning, in words", () => {

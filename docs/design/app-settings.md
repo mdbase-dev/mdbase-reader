@@ -1,8 +1,9 @@
 # App settings
 
-Status: implemented on `feat/app-settings-naming`. Reader's first collection-wide
-settings are its file name templates. This follows the "App settings records for
-mdbase" spec. The notes below cover what Reader does and where it departs from the spec.
+Status: implemented. Reader's collection-wide settings are its file name templates
+(`feat/app-settings-naming`) and its highlight colours (`feat/highlight-colour-settings`).
+This follows the "App settings records for mdbase" spec. The notes below cover what
+Reader does and where it departs from the spec.
 
 ## Record, type and contracts
 
@@ -16,20 +17,24 @@ scope: collection
 settings_version: 1
 source_name_template: "{{ year }}/{{ author }} - {{ title }}"
 annotation_name_template: "{{ words }}"
+highlight_colors: [pink, yellow, blue]
+highlight_meanings:
+  pink: Question
+  yellow: Key point
 ---
 ```
 
 The app id is Reader's manifest id, `dev.mdbase.reader`, which is also its contract
-namespace. A field that is absent takes Reader's default, and resetting a template in
+namespace. A field that is absent takes Reader's default, and resetting a setting in
 the UI removes its field.
 
-Reader's type pack (`apps/reader/mdbase/`, version 1.0.0-beta.6) ships the following,
+Reader's type pack (`apps/reader/mdbase/`, version 1.0.0-beta.7) ships the following,
 laid out as in mdbase-contracts so it can be lifted unchanged:
 
 | Resource                                                             | Mode    |
 | -------------------------------------------------------------------- | ------- |
 | `contracts/mdbase.app-settings/1.0.0.md` + schema                    | managed |
-| `contracts/dev.mdbase.reader.settings/1.0.0.md` + schema             | managed |
+| `contracts/dev.mdbase.reader.settings/1.1.0.md` + schema             | managed |
 | `types/reader-settings.md`, installed as `_types/reader-settings.md` | seed    |
 
 - **Reserved fields.** The generic contract fixes `app`, `scope` and
@@ -39,6 +44,23 @@ laid out as in mdbase-contracts so it can be lifted unchanged:
   `collection.unique: [{field: app, scope: type}]` and implements both contracts.
 - **Contract digests.** The pack's contract digests resolve the schema ref before
   hashing, as mdbase-contracts does.
+
+### Versions
+
+- **beta.6** added the settings: `dev.mdbase.reader.settings` 1.0.0, with the two
+  templates, and version 1 of the `reader-settings` starter.
+- **beta.7** adds the highlight fields. A contract's digest covers its schema, and
+  readiness treats a different digest at the same id and version as incompatible, so
+  the new fields need a new contract version: 1.1.0, a minor version because both are
+  optional. 1.0.0 leaves the pack, and the installer deletes an unedited copy on
+  upgrade. Version 2 of the starter references the 1.1.0 schema and implements 1.1.0;
+  its `upgrade_from` is the beta.6 starter (`baselines/1.0.0-beta.6/`), so an unedited
+  type is replaced and an edited one merged. `mdbase.app-settings` stays 1.0.0. The
+  upgrade is the usual one-time pack prompt, and an existing record needs no change.
+- **`settings_version` stays 1.** It exists to stop an older client writing settings it
+  does not understand. New optional fields don't need that: an older Reader patches
+  only its own fields and keeps the rest. Raising it would make every older Reader
+  read-only for no benefit.
 
 ## Client behaviour
 
@@ -112,10 +134,64 @@ unicode and long titles.
 - **Existing records.** Nothing is ever moved. A template affects only records created
   after it is saved.
 
+## Highlight colours
+
+Reader's five colours are fixed: `yellow`, `green`, `blue`, `pink` and `purple`. There
+are no custom colours. An annotation stores only its colour key.
+
+| Field                | Default                 | Means                                         |
+| -------------------- | ----------------------- | --------------------------------------------- |
+| `highlight_colors`   | all five, in that order | the colours offered, in order                 |
+| `highlight_meanings` | `{}`                    | a label of up to 40 characters for any colour |
+
+- **Reading.** Unknown colours are ignored, and duplicates are dropped. A list that names
+  no known colour, a value that isn't a list, or meanings that aren't an object take the
+  default with a warning. Meanings are trimmed, spaces are collapsed, and blank ones are
+  dropped. The schema is stricter: at least one colour, none twice, only the five, and
+  meanings of 1 to 40 characters.
+- **Hidden colours.** A colour left out of `highlight_colors` is only not offered when
+  making or recolouring a highlight. Its highlights keep their colour and meaning, show
+  in cards, and can be recoloured. The filter menu lists offered colours in order, then a
+  hidden colour while some highlight uses it or it is the active filter.
+- **Meanings relabel.** Since highlights store only the key, changing a meaning
+  relabels every highlight in that colour. The dialog says so.
+- **Default colour stays per device.** The colour of the next highlight is the last one
+  used on this device (localStorage `highlight-color`, and the extension's
+  `chrome.storage.local`), as before. It is a habit rather than a shared convention.
+  While it is hidden, new highlights use the first offered colour. The stored preference
+  is kept, so showing the colour again restores it, until a highlight records the colour
+  actually used.
+- **Import of device meanings.** Meanings used to be stored per device in localStorage
+  (`mdbase-reader:highlight-meanings`). Until the record holds `highlight_meanings`,
+  Reader shows the device's meanings, so nothing visibly changes on upgrade. The dialog
+  pre-fills them with a notice, and Save shares them. Nothing is written on read. Once
+  the record holds meanings, the device's are ignored. Any successful save from the
+  dialog forgets them on that device, so a later reset doesn't bring them back.
+- **Extension.** The panel's colour picker reads the same record. The SDK host's
+  `ReaderSettingsStore` follows the feed. The panel asks it for plain data
+  (`settings.highlightColors`, allow-listed in `sdk-rpc.ts`) when the collection
+  changes, on each new selection, and when the panel regains focus or visibility.
+
 ## UI
 
-The display menu has a section called "This collection". Its "File names…" button opens
-a dialog with one field per template.
+The display menu has a section called "This collection", with "Highlight colours…" and
+"File names…" buttons.
+
+"Highlight colours…" opens a dialog with one row per colour, in collection order. Each
+row has a show checkbox, a meaning field, and "Move up" and "Move down" buttons.
+
+- **Hiding.** The last shown colour can't be hidden.
+- **Moving.** Focus stays on the moved row's button, or moves to its other button at an
+  end. A live region announces the new position.
+- **Reset.** "Reset to default" removes both fields.
+- **States.** Read-only, conflict, live-follow and invalid-field handling match the File
+  names dialog. A conflict names the field that changed elsewhere.
+
+Reader binds the store to a module-level snapshot (`highlight-colors.ts`). Swatches, the
+selection toolbar (digits 1 to n follow the offered order), cards and the filter menu
+read it through `useSyncExternalStore`, so they all follow live edits.
+
+"File names…" opens a dialog with one field per template.
 
 - **Live preview.** Each field previews against up to three of the user's sources
   (open sources first) and annotations. While a draft is invalid, the last valid
@@ -137,8 +213,11 @@ The dialog loads lazily (`use-file-name-settings.tsx`).
   but lifting the type into the catalog needs that rule relaxed.
 - **Adding a setting.** The type pins contract versions in `implements` and points at a
   versioned schema file. Adding a setting means a new contract version, so the seed type
-  still needs updating. This falls short of the spec's "without touching user-owned
-  files". Pointing the ref at an unversioned "current" schema would fix it.
+  still needs updating. The highlight fields did exactly this (contract 1.1.0, starter
+  version 2). This falls short of the spec's "without touching user-owned files".
+  Pointing the ref at an unversioned "current" schema would fix it. An edited starter
+  is merged three-way. One whose lock predates recorded origins is kept, still pointing
+  at the deleted 1.0.0 schema, and needs a manual fix.
 - **The `type` field.** Reader passes it as the create's type rather than as a
   frontmatter field. The spec does not say which explicit type key a settings record
   should use.

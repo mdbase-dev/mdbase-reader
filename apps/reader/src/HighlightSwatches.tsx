@@ -1,26 +1,29 @@
-import { highlightColorKeys, type HighlightColorKey } from "@mdbase-reader/core";
-
 import { highlightColorName, type HighlightMeanings } from "./highlight-colors.js";
 
+import type { HighlightColorKey } from "@mdbase-reader/core";
 import type { JSX } from "react";
 
 /**
- * The five highlight colours as buttons. For a selection each one saves a highlight in that
- * colour, and the one H uses is ringed; for a highlight each one changes its colour, and its
- * current colour is ringed and pressed. Names carry the colour and its meaning, so nothing
- * depends on telling the inks apart.
+ * The colours the collection offers, in its order, as buttons. For a selection each one saves a
+ * highlight in that colour, and the one H uses is ringed; for a highlight each one changes its
+ * colour, and its current colour is ringed and pressed (a colour the collection hides is not
+ * offered, so a highlight in one has none pressed). Names carry the colour and its meaning, so
+ * nothing depends on telling the inks apart.
  */
 export function HighlightSwatches({
   mode,
+  colors,
   ringed,
   meanings,
   disabled = false,
   shortcuts = true,
   onChoose,
 }: {
-  /** Whether H and 1–5 choose these swatches, as in the selection toolbar. */
+  /** Whether H and the digits choose these swatches, as in the selection toolbar. */
   readonly shortcuts?: boolean;
   readonly mode: "highlight" | "recolor";
+  /** The colours offered, in order; 1, 2, 3… choose them by place. */
+  readonly colors: readonly HighlightColorKey[];
   /** The colour H uses, or the highlight's current colour. */
   readonly ringed: HighlightColorKey | null;
   readonly meanings: HighlightMeanings;
@@ -33,7 +36,7 @@ export function HighlightSwatches({
       role="group"
       aria-label={mode === "highlight" ? "Highlight in a colour" : "Highlight colour"}
     >
-      {highlightColorKeys.map((key, index) => {
+      {colors.map((key, index) => {
         const name = highlightColorName(key, meanings);
         const digit = String(index + 1);
         const keys = mode === "highlight" && key === ringed ? `H or ${digit}` : digit;

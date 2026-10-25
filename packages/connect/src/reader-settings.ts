@@ -1,9 +1,15 @@
 /**
  * Reader's collection-wide settings: the `reader-settings` record at
- * `_settings/dev.mdbase.reader.md` (`docs/design/app-settings.md`). Today it holds the two name
- * templates; the definition mirrors the managed schema
- * `dev.mdbase.reader.settings/1.0.0.schema.json` in Reader's type pack.
+ * `_settings/dev.mdbase.reader.md` (`docs/design/app-settings.md`): the two name templates, and
+ * which highlight colours Reader offers and what each means. The definition mirrors the managed
+ * schema `dev.mdbase.reader.settings/1.1.0.schema.json` in Reader's type pack.
  */
+import {
+  highlightColorKeys,
+  readHighlightColorList,
+  readHighlightMeanings,
+} from "@mdbase-reader/core";
+
 import { AppSettingsStore, type AppSettingsStoreOptions } from "./app-settings-store.js";
 import { maxNameTemplateLength, nameTemplateProblem } from "./name-template-engine.js";
 import {
@@ -17,15 +23,30 @@ import type { ReaderConnectClient } from "./repository-client.js";
 import type {
   AppSettingField,
   AppSettingsDefinition,
+  HighlightColorKey,
+  HighlightMeanings,
   ResolvedAppSettings,
 } from "@mdbase-reader/core";
 
 export interface ReaderSettingsValues {
   readonly source_name_template: string;
   readonly annotation_name_template: string;
+  /** The colours offered for new and recoloured highlights, in order. */
+  readonly highlight_colors: readonly HighlightColorKey[];
+  /** What each colour means; a colour without one is called by its name. */
+  readonly highlight_meanings: HighlightMeanings;
 }
 
 export type ReaderSettingKey = keyof ReaderSettingsValues;
+export type ReaderNameTemplateKey = "source_name_template" | "annotation_name_template";
+
+/** The collection's highlight colour settings, as plain data for any context. */
+export interface ReaderHighlightSettings {
+  readonly colors: readonly HighlightColorKey[];
+  readonly meanings: HighlightMeanings;
+  /** Whether the record holds meanings; until it does, a device may suggest its own. */
+  readonly meaningsStored: boolean;
+}
 
 function templateField(fallback: string): AppSettingField<string> {
   return {
@@ -45,6 +66,28 @@ function templateField(fallback: string): AppSettingField<string> {
   };
 }
 
+const highlightColorsField: AppSettingField<readonly HighlightColorKey[]> = {
+  default: highlightColorKeys,
+  problem: (value) => {
+    if (!Array.isArray(value)) {
+      return "The highlight colours are not a list, so all five are offered.";
+    }
+    return readHighlightColorList(value).length === 0
+      ? "The highlight colours name no colour Reader knows, so all five are offered."
+      : undefined;
+  },
+  read: readHighlightColorList,
+};
+
+const highlightMeaningsField: AppSettingField<HighlightMeanings> = {
+  default: {},
+  problem: (value) =>
+    typeof value === "object" && value !== null && !Array.isArray(value)
+      ? undefined
+      : "The highlight meanings are not a list of colours and names, so none are shown.",
+  read: readHighlightMeanings,
+};
+
 export const readerSettingsDefinition: AppSettingsDefinition<ReaderSettingsValues> = {
   app: "dev.mdbase.reader",
   type: "reader-settings",
@@ -52,8 +95,21 @@ export const readerSettingsDefinition: AppSettingsDefinition<ReaderSettingsValue
   fields: {
     source_name_template: templateField(defaultSourceNameTemplate),
     annotation_name_template: templateField(defaultAnnotationNameTemplate),
+    highlight_colors: highlightColorsField,
+    highlight_meanings: highlightMeaningsField,
   },
 };
+
+/** The highlight colour settings a snapshot's settings give. */
+export function readerHighlightSettings(
+  settings: ResolvedAppSettings<ReaderSettingsValues>,
+): ReaderHighlightSettings {
+  return {
+    colors: settings.values.highlight_colors,
+    meanings: settings.values.highlight_meanings,
+    meaningsStored: Object.hasOwn(settings.stored, "highlight_meanings"),
+  };
+}
 
 /** A stored template Knap cannot use takes its default, with a warning saying why. */
 export async function refineReaderSettings(
@@ -93,5 +149,13 @@ export class ReaderSettingsStore
   public async templates(): Promise<ReaderNameTemplates> {
     const { values } = (await this.current()).settings;
     return { source: values.source_name_template, annotation: values.annotation_name_template };
+  }
+
+  /**
+   * The highlight colour settings as now read, as plain data: what the extension's panel asks
+   * for over its channel, where the store itself cannot go.
+   */
+  public async highlightColors(): Promise<ReaderHighlightSettings> {
+    return readerHighlightSettings((await this.current()).settings);
   }
 }

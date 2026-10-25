@@ -1,4 +1,4 @@
-import { connect, mdbaseError, type MdbaseClient } from "@mdbase-dev/sdk";
+import { connect, mdbaseError, toValue, type MdbaseClient } from "@mdbase-dev/sdk";
 import { MemoryReplica } from "@mdbase-dev/sdk/testing";
 import { annotationId, dateTime, mutationId, sourceId } from "@mdbase-reader/core";
 import { afterEach, describe, expect, it, vi } from "vitest";
@@ -53,6 +53,8 @@ describe("ReaderSettingsStore reads", () => {
     expect(snapshot.settings.values).toEqual({
       source_name_template: "{{ title | slug }}",
       annotation_name_template: "{{ id }}",
+      highlight_colors: ["yellow", "green", "blue", "pink", "purple"],
+      highlight_meanings: {},
     });
     expect(await store.templates()).toEqual({
       source: "{{ title | slug }}",
@@ -87,6 +89,8 @@ describe("ReaderSettingsStore reads", () => {
     expect(snapshot.settings.values).toEqual({
       source_name_template: "{{ title | slug }}",
       annotation_name_template: "{{ id }}",
+      highlight_colors: ["yellow", "green", "blue", "pink", "purple"],
+      highlight_meanings: {},
     });
     expect(snapshot.settings.warnings.map((warning) => warning.field)).toEqual([
       "annotation_name_template",
@@ -109,6 +113,82 @@ describe("ReaderSettingsStore reads", () => {
     const saved = await store.save({ annotation_name_template: "{{ words }}" });
     expect(saved).toMatchObject({ ok: false, reason: "read_only" });
     expect((await stored(client))["annotation_name_template"]).toBeUndefined();
+  });
+});
+
+describe("ReaderSettingsStore highlight colours", () => {
+  it("offers all five colours in today's order, with no meanings, by default", async () => {
+    const { client } = await native();
+    expect(await new ReaderSettingsStore(client).highlightColors()).toEqual({
+      colors: ["yellow", "green", "blue", "pink", "purple"],
+      meanings: {},
+      meaningsStored: false,
+    });
+  });
+
+  it("reads the offered colours in order and the meanings, skipping what it does not know", async () => {
+    const { replica, client } = await native();
+    replica.seed({
+      path,
+      types: ["reader-settings"],
+      frontmatter: {
+        ...record,
+        highlight_colors: toValue(["blue", "orange", "yellow", "blue"]),
+        highlight_meanings: toValue({ blue: "  Term ", orange: "Nope", pink: "" }),
+      },
+    });
+    const store = new ReaderSettingsStore(client);
+    expect(await store.highlightColors()).toEqual({
+      colors: ["blue", "yellow"],
+      meanings: { blue: "Term" },
+      meaningsStored: true,
+    });
+    expect(store.getSnapshot().settings.warnings).toEqual([]);
+  });
+
+  it("falls back with a warning when no colour can be offered, without rewriting", async () => {
+    const { replica, client } = await native();
+    replica.seed({
+      path,
+      types: ["reader-settings"],
+      frontmatter: {
+        ...record,
+        highlight_colors: toValue(["orange"]),
+        highlight_meanings: "Key idea",
+      },
+    });
+    const update = vi.spyOn(client, "update");
+    const store = new ReaderSettingsStore(client);
+    expect((await store.highlightColors()).colors).toEqual([
+      "yellow",
+      "green",
+      "blue",
+      "pink",
+      "purple",
+    ]);
+    expect(store.getSnapshot().settings.warnings.map((warning) => warning.field)).toEqual([
+      "highlight_colors",
+      "highlight_meanings",
+    ]);
+    expect(update).not.toHaveBeenCalled();
+  });
+
+  it("saves colours and meanings as fields, keeping the templates and settings_version", async () => {
+    const { replica, client } = await native();
+    replica.seed({ path, types: ["reader-settings"], frontmatter: record });
+    const store = new ReaderSettingsStore(client);
+    await store.current();
+    const saved = await store.save({
+      highlight_colors: ["pink", "green"],
+      highlight_meanings: { pink: "Question" },
+    });
+    expect(saved.ok).toBe(true);
+    expect(await stored(client)).toEqual({
+      ...record,
+      highlight_colors: ["pink", "green"],
+      highlight_meanings: { pink: "Question" },
+    });
+    expect(await store.highlightColors()).toMatchObject({ colors: ["pink", "green"] });
   });
 });
 
@@ -288,6 +368,25 @@ describe("ReaderSettingsStore follows the change feed", () => {
       );
     });
     expect(changed).toHaveBeenCalled();
+  });
+
+  it("follows another device's highlight colours live", async () => {
+    const memory = await memoryConnection();
+    closers.push(memory.close);
+    const collection = nativeReaderCollection(memory.connection);
+    closers.push(() => collection.dispose());
+    const store = collection.settings!;
+    expect((await store.highlightColors()).colors).toHaveLength(5);
+
+    memory.replica.seed({
+      path,
+      types: ["reader-settings"],
+      frontmatter: { ...record, highlight_colors: toValue(["purple"]) },
+    });
+
+    await vi.waitFor(async () => {
+      expect((await store.highlightColors()).colors).toEqual(["purple"]);
+    });
   });
 
   it("follows the feed for names even when no screen is watching", async () => {

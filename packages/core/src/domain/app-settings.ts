@@ -12,6 +12,11 @@ export const appSettingsFolder = "_settings";
 export interface AppSettingField<Value> {
   readonly default: Value;
   readonly problem: (value: unknown) => string | undefined;
+  /**
+   * How a usable stored value is read, such as dropping entries this client does not know.
+   * Without it the value is used exactly as written.
+   */
+  readonly read?: (value: unknown) => Value;
 }
 
 export interface AppSettingsDefinition<Values extends object> {
@@ -80,8 +85,9 @@ export function resolveAppSettings<Values extends object>(
     if (problem) {
       warnings.push({ field: key, message: problem });
     } else {
-      values[key] = value;
-      stored[key] = value;
+      const read = field.read ? field.read(value) : value;
+      values[key] = read;
+      stored[key] = read;
     }
   }
   const readOnly = frontmatter ? readOnlyReason(definition, frontmatter) : undefined;

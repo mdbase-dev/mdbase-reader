@@ -1,4 +1,4 @@
-import { highlightColorKey, highlightColorKeys, type HighlightColorKey } from "@mdbase-reader/core";
+import { highlightColorKey, type HighlightColorKey } from "@mdbase-reader/core";
 import { claimFrameShortcut, type ReaderLocator } from "@mdbase-reader/reading-surface";
 import {
   useEffect,
@@ -13,7 +13,7 @@ import {
 import { annotationBodyContent } from "./annotation-body-content.js";
 import { AnnotationSourceLine } from "./AnnotationOwnerActions.js";
 import { AnnotationOwnerChooser } from "./AnnotationOwnerChooser.js";
-import { useHighlightMeanings, useLastHighlightColor } from "./highlight-colors.js";
+import { useHighlightChoices, useLastHighlightColor } from "./highlight-colors.js";
 import { HighlightSwatches } from "./HighlightSwatches.js";
 import { CommentIcon, CopyIcon, QuoteIcon, TrashIcon } from "./icons.js";
 import { humanPassageLabel } from "./passage-labels.js";
@@ -170,7 +170,7 @@ function SelectionToolbar({
   const [deletion, setDeletion] = useState<"idle" | "confirming" | "deleting" | number>("idle");
   const passage = passageOf(target);
   const lastColor = useLastHighlightColor();
-  const meanings = useHighlightMeanings();
+  const { colors, meanings } = useHighlightChoices();
   const comment = (): void =>
     target.kind === "selection"
       ? composer.comment(target.selection)
@@ -179,7 +179,7 @@ function SelectionToolbar({
   useToolbarKeys(
     barRef,
     composer.dismissToolbar,
-    { c: comment, ...colorKeys(swatches) },
+    { c: comment, ...colorKeys(swatches, colors) },
     // Escape on a clicked highlight lets it go; a click elsewhere only closes its actions.
     target.kind === "annotation"
       ? () => composer.releaseAnnotation(target.annotation.id)
@@ -209,6 +209,7 @@ function SelectionToolbar({
         <>
           <HighlightSwatches
             mode={swatches.mode}
+            colors={colors}
             ringed={swatches.ringed}
             meanings={meanings}
             disabled={swatches.disabled}
@@ -316,18 +317,20 @@ function toolbarSwatches(
 }
 
 /**
- * 1–5 choose a colour by its place in the row; for a selection, H highlights in the colour
- * used last. A highlight's colour changes only by number, since H means "highlight".
+ * 1–5 choose a colour by its place in the row of offered colours; for a selection, H highlights
+ * in the colour used last. A highlight's colour changes only by number, since H means
+ * "highlight".
  */
-function colorKeys(swatches: ToolbarSwatches | null): Partial<Record<ToolbarKey, () => void>> {
+function colorKeys(
+  swatches: ToolbarSwatches | null,
+  colors: readonly HighlightColorKey[],
+): Partial<Record<ToolbarKey, () => void>> {
   if (!swatches || swatches.disabled) {
     return {};
   }
   const { choose, ringed } = swatches;
   return {
-    ...Object.fromEntries(
-      highlightColorKeys.map((color, index) => [String(index + 1), () => choose(color)]),
-    ),
+    ...Object.fromEntries(colors.map((color, index) => [String(index + 1), () => choose(color)])),
     ...(swatches.mode === "highlight" && ringed ? { h: () => choose(ringed) } : {}),
   };
 }

@@ -24,6 +24,7 @@ import { SourceRemovalDialog } from "./SourceRemovalDialog.js";
 import { useAnnotationCounts } from "./use-annotation-counts.js";
 import { useFileDrop } from "./use-file-drop.js";
 import { useFileNameSettings } from "./use-file-name-settings.js";
+import { useHighlightColorSettings } from "./use-highlight-color-settings.js";
 import { useMediaQuery } from "./use-media-query.js";
 import { useReadingChrome } from "./use-reading-chrome.js";
 import { useSearchNavigation } from "./use-search-navigation.js";
@@ -157,6 +158,7 @@ export function ReaderWorkspaceView({
     model.gateway.createFollowThrough,
   );
   const fileNames = useFileNameSettings(model.gateway, library.sources, model.openSources);
+  const highlightColors = useHighlightColorSettings(model.gateway);
   const workbenchOwner = findWorkbenchOwner(
     sourceWorkspace.layout,
     inspectorSource?.id ?? null,
@@ -222,6 +224,7 @@ export function ReaderWorkspaceView({
       ) : null}
       {notices}
       {fileNames.dialog}
+      {highlightColors.dialog}
       {model.focusMode ? <div className="reading-chrome-reveal" aria-hidden="true" /> : null}
       <ReaderHeader
         {...reading}
@@ -243,6 +246,7 @@ export function ReaderWorkspaceView({
         onToggleInspector={() => dock.toggleSidebar("right")}
         sourceBar={mobileSourceBar(model)}
         onOpenFileNames={fileNames.open}
+        onOpenHighlightColors={highlightColors.open}
       />
       <main className="reader-main reader-dock-main">
         <SearchPassageStatus message={searchNavigation.message} />

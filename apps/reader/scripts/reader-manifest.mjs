@@ -13,7 +13,11 @@ import { readerDeployments } from "./deployment-environment.mjs";
 // beta.5 ships the same starters and lists every earlier starter as an upgrade baseline.
 // beta.6 adds collection settings: the mdbase.app-settings and dev.mdbase.reader.settings
 // contracts with their managed schemas, and a reader-settings starter that references them.
-export const READER_TYPE_PACK_VERSION = "1.0.0-beta.6";
+// beta.7 replaces dev.mdbase.reader.settings 1.0.0 with 1.1.0, which adds the optional
+// highlight_colors and highlight_meanings fields, and ships version 2 of the reader-settings
+// starter to reference it. The 1.0.0 contract and schema leave the pack, so an unedited copy
+// is removed on upgrade.
+export const READER_TYPE_PACK_VERSION = "1.0.0-beta.7";
 
 const projectRoot = resolve(import.meta.dirname, "..");
 // Reader saves library views as mdbase.view records; this is the published
@@ -81,14 +85,14 @@ const resources = [
   {
     kind: "schema",
     mode: "managed",
-    source: "schemas/dev.mdbase.reader.settings/1.0.0.schema.json",
-    target: "schemas/dev.mdbase.reader.settings/1.0.0.schema.json",
+    source: "schemas/dev.mdbase.reader.settings/1.1.0.schema.json",
+    target: "schemas/dev.mdbase.reader.settings/1.1.0.schema.json",
   },
   {
     kind: "contract",
     mode: "managed",
-    source: "contracts/dev.mdbase.reader.settings/1.0.0.md",
-    target: "_contracts/dev.mdbase.reader.settings/1.0.0.md",
+    source: "contracts/dev.mdbase.reader.settings/1.1.0.md",
+    target: "_contracts/dev.mdbase.reader.settings/1.1.0.md",
   },
   {
     // Nobody needs to customise a settings schema, so this starter references the managed
@@ -97,6 +101,7 @@ const resources = [
     mode: "seed",
     source: "types/reader-settings.md",
     target: "_types/reader-settings.md",
+    upgradeFrom: ["baselines/1.0.0-beta.6/types/reader-settings.md"],
   },
 ];
 

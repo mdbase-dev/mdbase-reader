@@ -25,6 +25,7 @@ import {
   highlightColorName,
   highlightColorProps,
   highlightMeaning,
+  useHighlightChoices,
   useHighlightMeanings,
 } from "./highlight-colors.js";
 import { HighlightSwatches } from "./HighlightSwatches.js";
@@ -302,13 +303,14 @@ function AnnotationColorChoice({
   readonly annotation: Annotation;
   readonly recolor: (annotation: Annotation, color: HighlightColorKey) => Promise<void>;
 }): JSX.Element {
-  const meanings = useHighlightMeanings();
+  const { colors, meanings } = useHighlightChoices();
   const [state, setState] = useState<"idle" | "saving" | "failed">("idle");
   return (
     <div className="annotation-card-colors">
       <span>Colour</span>
       <HighlightSwatches
         mode="recolor"
+        colors={colors}
         ringed={highlightColorKey(annotation.color)}
         meanings={meanings}
         shortcuts={false}

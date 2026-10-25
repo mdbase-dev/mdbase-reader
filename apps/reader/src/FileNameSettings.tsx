@@ -3,7 +3,7 @@ import {
   nameTemplateProblem,
   readerSettingsDefinition,
   type AppSettingsSnapshot,
-  type ReaderSettingKey,
+  type ReaderNameTemplateKey,
   type ReaderSettingsStore,
   type ReaderSettingsValues,
 } from "@mdbase-reader/connect";
@@ -26,10 +26,17 @@ import { ModalDialog } from "./ModalDialog.js";
 
 import type { Annotation, SourceSummary } from "@mdbase-reader/core";
 
-type Drafts = Record<ReaderSettingKey, string>;
+type Drafts = Record<ReaderNameTemplateKey, string>;
+
+function templateDrafts(values: ReaderSettingsValues): Drafts {
+  return {
+    source_name_template: values.source_name_template,
+    annotation_name_template: values.annotation_name_template,
+  };
+}
 
 interface TemplateField {
-  readonly key: ReaderSettingKey;
+  readonly key: ReaderNameTemplateKey;
   readonly label: string;
   readonly hint: string;
   readonly variables: string;
@@ -301,7 +308,7 @@ function usePreviews(
   sources: readonly SourceSummary[],
   library: readonly SourceSummary[],
   loadAnnotations: () => Promise<readonly Annotation[]>,
-): Record<ReaderSettingKey, PreviewSource> {
+): Record<ReaderNameTemplateKey, PreviewSource> {
   const annotations = useAnnotationSamples(loadAnnotations);
   const sourceRows = useCallback(
     (template: string) => sourcePreviewRows(template, sources, library),
@@ -328,7 +335,7 @@ type Editor = ReturnType<typeof useTemplateDrafts>;
 function useSave(
   settings: ReaderSettingsStore,
   editor: Editor,
-  changes: Partial<Record<ReaderSettingKey, string | null>>,
+  changes: Partial<Record<ReaderNameTemplateKey, string | null>>,
 ): {
   readonly saving: boolean;
   readonly message: { readonly text: string; readonly error: boolean } | null;
@@ -369,8 +376,8 @@ function useSave(
 function useTemplateDrafts(snapshot: AppSettingsSnapshot<ReaderSettingsValues>): {
   readonly drafts: Drafts;
   readonly base: AppSettingsSnapshot<ReaderSettingsValues>;
-  readonly set: (key: ReaderSettingKey, value: string) => void;
-  readonly changes: () => Partial<Record<ReaderSettingKey, string | null>>;
+  readonly set: (key: ReaderNameTemplateKey, value: string) => void;
+  readonly changes: () => Partial<Record<ReaderNameTemplateKey, string | null>>;
   readonly rebase: (next: AppSettingsSnapshot<ReaderSettingsValues>, keepDrafts?: boolean) => void;
 } {
   const [state, setState] = useState(() => ({
@@ -378,8 +385,8 @@ function useTemplateDrafts(snapshot: AppSettingsSnapshot<ReaderSettingsValues>):
     seen: snapshot,
     /** What the edits started from: a setting changed elsewhere since is a conflict. */
     base: snapshot,
-    drafts: { ...snapshot.settings.values },
-    edited: new Set<ReaderSettingKey>(),
+    drafts: templateDrafts(snapshot.settings.values),
+    edited: new Set<ReaderNameTemplateKey>(),
   }));
   if (snapshot !== state.seen) {
     // Fields not being edited follow the record live, such as an edit from another device.
@@ -406,7 +413,7 @@ function useTemplateDrafts(snapshot: AppSettingsSnapshot<ReaderSettingsValues>):
         edited: new Set([...current.edited, key]),
       })),
     changes: () => {
-      const changes: Partial<Record<ReaderSettingKey, string | null>> = {};
+      const changes: Partial<Record<ReaderNameTemplateKey, string | null>> = {};
       // Only what the user edited: a saved template Reader cannot use shows the default, but
       // stays as written until someone changes or resets it.
       for (const { key } of fields.filter((field) => state.edited.has(field.key))) {
@@ -427,15 +434,15 @@ function useTemplateDrafts(snapshot: AppSettingsSnapshot<ReaderSettingsValues>):
       setState((current) => ({
         seen: next,
         base: next,
-        drafts: keepDrafts ? current.drafts : { ...next.settings.values },
+        drafts: keepDrafts ? current.drafts : templateDrafts(next.settings.values),
         edited: keepDrafts ? current.edited : new Set(),
       })),
   };
 }
 
 /** Why each draft cannot be saved, checked as it is typed. */
-function useTemplateProblems(drafts: Drafts): Partial<Record<ReaderSettingKey, string>> {
-  const [problems, setProblems] = useState<Partial<Record<ReaderSettingKey, string>>>({});
+function useTemplateProblems(drafts: Drafts): Partial<Record<ReaderNameTemplateKey, string>> {
+  const [problems, setProblems] = useState<Partial<Record<ReaderNameTemplateKey, string>>>({});
   const source = drafts.source_name_template;
   const annotation = drafts.annotation_name_template;
   useEffect(() => {

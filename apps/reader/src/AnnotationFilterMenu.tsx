@@ -8,7 +8,7 @@ import {
   type AnnotationFilter,
   type indexAnnotations,
 } from "./annotation-list-order.js";
-import { highlightColorName, useHighlightMeanings } from "./highlight-colors.js";
+import { highlightColorName, useHighlightChoices } from "./highlight-colors.js";
 import { FilterIcon } from "./icons.js";
 import { Menu } from "./Menu.js";
 
@@ -161,8 +161,10 @@ export function AnnotationFilterMenu({
 }
 
 /**
- * The Colour choices, named by what each colour means to this reader. Counts follow the chosen
- * type, so each colour shows what choosing it gives. Hidden while nothing has a colour.
+ * The Colour choices, named by what each colour means in this collection. Counts follow the
+ * chosen type, so each colour shows what choosing it gives. Colours the collection offers come
+ * first, in its order; a hidden colour follows only while highlights have it. Hidden while
+ * nothing has a colour.
  */
 function ColorChoices({
   view,
@@ -173,7 +175,7 @@ function ColorChoices({
   readonly onViewChange: (view: AnnotationView) => void;
   readonly scoped: ReturnType<typeof indexAnnotations>;
 }): JSX.Element | null {
-  const meanings = useHighlightMeanings();
+  const { colors, meanings } = useHighlightChoices();
   const counts = useMemo(() => {
     const shown = searchAnnotationIndex(scoped, "", view.filter);
     return new Map(
@@ -187,6 +189,12 @@ function ColorChoices({
   if (!any && !view.color) {
     return null;
   }
+  const listed = [
+    ...colors,
+    ...highlightColorKeys.filter(
+      (color) => !colors.includes(color) && ((counts.get(color) ?? 0) > 0 || view.color === color),
+    ),
+  ];
   return (
     <>
       <hr />
@@ -194,7 +202,7 @@ function ColorChoices({
         label="Colour"
         choices={[
           { value: "", label: "Any colour" },
-          ...highlightColorKeys.map((color) => ({
+          ...listed.map((color) => ({
             value: color,
             label: highlightColorName(color, meanings),
             count: counts.get(color) ?? 0,

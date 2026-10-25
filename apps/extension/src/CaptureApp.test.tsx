@@ -67,6 +67,7 @@ function markup(changes: Partial<ExtensionCaptureController> = {}, tab?: PanelTa
     busy: false,
     annotations: [],
     setDraft: vi.fn(),
+    highlight: { colors: ["yellow", "green", "blue", "pink", "purple"], meanings: {} },
     knownTags: [],
     note: { status: "idle", session: null, problem: null, load: vi.fn(), saveDetails: vi.fn() },
     ...changes,
@@ -286,6 +287,36 @@ it("saves a live selection by choosing its colour, with the page's own save set 
   // Saving only the page stays available, but not as the main action.
   expect(html).toMatch(/<button class="secondary" type="button"[^>]*>Save page</u);
   expect(html).not.toContain("Save source and highlight");
+});
+it("offers only the collection's colours, in its order, with their meanings", () => {
+  const html = markup({
+    capture: {
+      kind: "html",
+      pageTitle: "[test] Article",
+      canonicalUrl: "https://example.com/",
+      selection: { exact: "a chosen passage" },
+    } as ExtensionCaptureController["capture"],
+    draft: {
+      title: "[test] Article",
+      tags: "",
+      note: "",
+      comment: "",
+      highlight: true,
+      color: "yellow",
+      highlightTags: "",
+    },
+    highlight: { colors: ["pink", "blue"], meanings: { pink: "Question" } },
+  });
+  expect(html).not.toContain("swatch-yellow");
+  expect(html).not.toContain("swatch-green");
+  // Yellow, the last colour, is hidden: the first offered colour takes Ctrl+Enter.
+  expect(html).toMatch(
+    /class="swatch swatch-pink is-last" aria-keyshortcuts="1" aria-label="pink, Question" title="Save in pink — Question \(1, or Ctrl\+Enter\)"/u,
+  );
+  expect(html).toMatch(
+    /class="swatch swatch-blue" aria-keyshortcuts="2" title="Save in blue \(2\)"/u,
+  );
+  expect(html.indexOf("swatch-pink")).toBeLessThan(html.indexOf("swatch-blue"));
 });
 it("shows where a new source's citation comes from", () => {
   const html = markup(

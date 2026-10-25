@@ -1,16 +1,9 @@
 import { themePreferences, type ThemePreference } from "@mdbase-dev/ui/theme";
-import { highlightColorKeys, highlightPalette } from "@mdbase-reader/core";
 
 import {
   setAnnotationOwnerPreference,
   useAnnotationOwnerPreference,
 } from "./annotation-owner-preference.js";
-import {
-  highlightMeaningMaxLength,
-  highlightMeaningSuggestions,
-  setHighlightMeaning,
-  useHighlightMeanings,
-} from "./highlight-colors.js";
 import { setHighlightOnSelect, useHighlightOnSelect } from "./highlight-preference.js";
 import { typographyScaleSteps } from "./workspace-shell-preferences.js";
 
@@ -28,6 +21,7 @@ export function DisplaySettings({
   sidebarWhileReading,
   onChangeSidebarWhileReading,
   onOpenFileNames,
+  onOpenHighlightColors,
 }: {
   readonly theme: ThemePreference;
   readonly onChangeTheme: (theme: ThemePreference) => void;
@@ -39,6 +33,8 @@ export function DisplaySettings({
   readonly onChangeSidebarWhileReading?: (value: "hide" | "keep") => void;
   /** Opens the collection's file name settings; absent when the collection has none. */
   readonly onOpenFileNames?: () => void;
+  /** Opens the collection's highlight colour settings; absent when the collection has none. */
+  readonly onOpenHighlightColors?: () => void;
 }): JSX.Element {
   const highlightOnSelect = useHighlightOnSelect();
   const annotationOwner = useAnnotationOwnerPreference();
@@ -93,56 +89,33 @@ export function DisplaySettings({
         ]}
         onChange={setHighlightOnSelect}
       />
-      <HighlightMeaningSettings />
-      {onOpenFileNames ? (
+      {onOpenFileNames || onOpenHighlightColors ? (
         <fieldset className="display-choice collection-settings">
           <legend>This collection</legend>
-          <button type="button" className="collection-settings-button" onClick={onOpenFileNames}>
-            File names…
-          </button>
+          <div className="collection-settings-buttons">
+            {onOpenHighlightColors ? (
+              <button
+                type="button"
+                className="collection-settings-button"
+                onClick={onOpenHighlightColors}
+              >
+                Highlight colours…
+              </button>
+            ) : null}
+            {onOpenFileNames ? (
+              <button
+                type="button"
+                className="collection-settings-button"
+                onClick={onOpenFileNames}
+              >
+                File names…
+              </button>
+            ) : null}
+          </div>
           <p className="display-note">Shared by everyone who uses this collection.</p>
         </fieldset>
       ) : null}
     </>
-  );
-}
-
-/**
- * What each highlight colour means to this reader, kept on this device. The names appear in the
- * selection toolbar's tooltips, on annotation cards and in the Colour filter.
- */
-export function HighlightMeaningSettings(): JSX.Element {
-  const meanings = useHighlightMeanings();
-  return (
-    <fieldset className="display-choice highlight-meanings" data-menu-keep-open>
-      <legend>Highlight colours</legend>
-      {highlightColorKeys.map((key) => {
-        const label = highlightPalette[key].label;
-        return (
-          <label key={key} className="highlight-meaning" data-highlight-color={key}>
-            <i aria-hidden="true" />
-            <span className="sr-only">{label} meaning</span>
-            <span aria-hidden="true">{label}</span>
-            <input
-              // Saved stored names replace the field; typing is kept until it is committed.
-              key={meanings[key] ?? ""}
-              type="text"
-              defaultValue={meanings[key] ?? ""}
-              placeholder={`e.g. ${highlightMeaningSuggestions[key]}`}
-              maxLength={highlightMeaningMaxLength}
-              autoComplete="off"
-              onBlur={(event) => setHighlightMeaning(key, event.currentTarget.value)}
-              onKeyDown={(event) => {
-                if (event.key === "Enter") {
-                  event.preventDefault();
-                  setHighlightMeaning(key, event.currentTarget.value);
-                }
-              }}
-            />
-          </label>
-        );
-      })}
-    </fieldset>
   );
 }
 

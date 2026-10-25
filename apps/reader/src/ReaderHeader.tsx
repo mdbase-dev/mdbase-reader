@@ -50,6 +50,8 @@ interface ReaderHeaderProps {
   readonly sourceBar?: ReaderHeaderSourceBar | undefined;
   /** Opens the collection's file name settings from the display menu. */
   readonly onOpenFileNames?: (() => void) | undefined;
+  /** Opens the collection's highlight colour settings from the display menu. */
+  readonly onOpenHighlightColors?: (() => void) | undefined;
 }
 
 /** Local builds point the app menu at local copies of the other apps. */
@@ -78,6 +80,7 @@ function HeaderDisplayMenu({
   theme,
   onChangeTheme,
   onOpenFileNames,
+  onOpenHighlightColors,
 }: ReaderHeaderProps): JSX.Element {
   return (
     <DisplayMenu
@@ -89,6 +92,7 @@ function HeaderDisplayMenu({
       {...(onChangeDensity ? { onChangeDensity } : {})}
       {...(onChangeSidebarWhileReading ? { onChangeSidebarWhileReading } : {})}
       {...(onOpenFileNames ? { onOpenFileNames } : {})}
+      {...(onOpenHighlightColors ? { onOpenHighlightColors } : {})}
     />
   );
 }
