@@ -77,11 +77,35 @@ export async function auditAnnotationSelection(page, { open, screenshot }) {
   await expect(highlightBar).toBeVisible();
   await screenshot("annotation-selection-document-after-pane");
 
-  // Clicking the same highlight again keeps it; clicking the other moves the selection.
+  // Clicking the same highlight again keeps it and offers its actions again, even after the
+  // reader's attention went to the pane in between.
   await clickLine(lines.second);
   await expectSelection("repeat click on B", [secondId]);
+  await expect(highlightBar).toBeVisible();
+  // Empty pane, below the cards, takes the reader's attention without choosing anything.
+  const paneBox = await tools.boundingBox();
+  const clickPane = async () => {
+    await page.mouse.click(paneBox.x + paneBox.width / 2, paneBox.y + paneBox.height - 40);
+    await expect(highlightBar).toHaveCount(0);
+  };
+  await clickPane();
+  await clickLine(lines.second);
+  await expectSelection("B again after a pane click", [secondId]);
+  await expect(highlightBar).toBeVisible();
+  // The toolbar sits over the line above; let it go before reaching for that line.
+  await clickPane();
   await clickLine(lines.first);
   await expectSelection("document A after B", [firstId]);
+
+  // The highlight a card showed answers a click on it in the document with its actions.
+  await page.keyboard.press("Escape");
+  await expectSelection("Escape after document A", []);
+  await first.locator("blockquote").click();
+  await expectSelection("card A again", [firstId]);
+  await expect(highlightBar).toHaveCount(0);
+  await clickLine(lines.first);
+  await expectSelection("document A on card A", [firstId]);
+  await expect(highlightBar).toBeVisible();
 
   // The pane can take the selection back, and the document follows it there.
   await second.locator("blockquote").click();
@@ -101,8 +125,16 @@ export async function auditAnnotationSelection(page, { open, screenshot }) {
   await page.mouse.click(empty.x, empty.y);
   await expectSelection("empty page click", []);
   await screenshot("annotation-selection-cleared");
+
+  // Escape lets a card's highlight go too, with no toolbar open to take it.
+  await first.locator("blockquote").click();
+  await expectSelection("card A before Escape", [firstId]);
+  await expect(highlightBar).toHaveCount(0);
+  await page.keyboard.press("Escape");
+  await expectSelection("Escape with no toolbar", []);
   return [
     "A highlight clicked in the PDF after a card was selected in the pane stays selected",
     "Repeat clicks, pane-to-document hand-offs, Escape and empty-page clicks keep one selection",
+    "A repeat click, or a click on the highlight a card showed, offers the highlight's actions",
   ];
 }
