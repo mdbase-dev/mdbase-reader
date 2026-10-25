@@ -2236,6 +2236,8 @@
    page does not move under the selection. */
 .mobile-source-views.is-selection {
   position: relative;
+  /* The colours float over the page above the bar, as the desktop toolbar does. */
+  z-index: 9;
   display: block;
 }
 .mobile-source-views.is-selection .selection-toolbar {
