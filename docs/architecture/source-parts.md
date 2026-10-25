@@ -196,9 +196,10 @@ The file remains freely navigable; never trap scrolling or change the active
 source automatically. Chapter reading adds no row of chrome: a compact chip in the
 document actions names the chapter and its progress, and its menu offers Go to
 chapter start, Continue in the book and the next part. Only once the reader leaves
-the chapter's pages does a single slim, dismissible hint appear above the document
+the chapter's pages does a single slim, dismissible hint float over the foot of the document
 (“You’ve left this chapter · Back to chapter · Continue in book”), announced
-politely; the chip then reads “Outside”. A selection crossing a boundary is not clipped or split;
+politely; the chip then reads “Outside”. It takes no row, since resizing the viewer
+makes the PDF renderer lose the reader’s place. A selection crossing a boundary is not clipped or split;
 show its proposed owner and let the user change it before creation.
 
 Retain Dockview's stable session identities, focus bridge, draft ownership and

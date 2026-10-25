@@ -48,6 +48,7 @@
   font-size: 0.82rem;
 }
 .source-part-reading {
+  position: relative;
   display: flex;
   flex-direction: column;
   height: 100%;
@@ -61,21 +62,39 @@
 .source-part-document:focus {
   outline: none;
 }
-/* Chapter reading stays quiet: one slim line, only once the reader has left the chapter. */
+/* Chapter reading stays quiet: one slim line, only once the reader has left the chapter. It
+   floats over the foot of the document rather than taking a row, because resizing the viewer
+   makes the PDF renderer lose the reader's place. */
+.source-reading-hint-region {
+  position: absolute;
+  z-index: 8;
+  right: var(--sp-4);
+  bottom: var(--sp-4);
+  left: var(--sp-4);
+  display: flex;
+  justify-content: center;
+  pointer-events: none;
+}
+/* Clear of the highlight-saved notice, which uses the same spot. */
+.document-canvas:has(.highlight-saved:not(.is-anchored)) .source-reading-hint-region {
+  bottom: calc(var(--sp-4) + 40px);
+}
 .source-reading-hint {
-  flex: 0 0 auto;
+  max-width: 100%;
   display: flex;
   align-items: center;
-  gap: var(--sp-1) var(--sp-3);
+  gap: var(--sp-1) var(--sp-2);
   min-height: var(--control-h);
   padding: 0 var(--sp-1) 0 var(--sp-3);
-  border-bottom: 1px solid var(--line);
-  background: var(--bg-sunken);
+  border-radius: var(--r-full);
+  background: var(--bg-raised);
+  box-shadow: var(--e-2);
   color: var(--ink-soft);
   font-size: var(--text-sm);
   line-height: var(--lh-sm);
   white-space: nowrap;
   overflow: hidden;
+  pointer-events: auto;
 }
 .source-reading-hint-text {
   min-width: 0;

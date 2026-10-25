@@ -332,6 +332,28 @@ it("keeps chapter reading quiet until the reader leaves, then offers a slim dism
   expect(surface.currentLocation()).toEqual({ kind: "pdf", pageIndex: 0 });
 });
 
+it("keeps the hint when the chapter's record refreshes after a position save", async () => {
+  const { gateway, sources } = await anthology();
+  const chapter = (await gateway.source(sourceId("src_anthology_chapter_1")))!;
+  const surface = pdf(chapter);
+  const render = (source: SourceSummary): void =>
+    root.render(
+      <SourceReadingBoundary source={source} sources={sources} surface={surface} open={vi.fn()} />,
+    );
+  await act(async () => {
+    render(chapter);
+    await Promise.resolve();
+  });
+  await act(async () => {
+    await surface.goTo({ kind: "pdf", pageIndex: 15 });
+  });
+  await act(async () => {
+    render({ ...chapter });
+    await Promise.resolve();
+  });
+  expect(host.querySelector('[aria-label="Chapter reading range"]')).not.toBeNull();
+});
+
 it("shows no hint when a chapter opens on the file's first page before its resume lands", async () => {
   const { chapter, sources } = await anthology();
   const surface = pdf(chapter);

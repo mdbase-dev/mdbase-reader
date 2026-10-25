@@ -36,6 +36,9 @@ interface ResolvedBoundary {
   readonly entered: boolean;
 }
 
+// Survives the source record refreshing after each position save, which re-resolves the range.
+const enteredChapters = new WeakMap<ReadingSurface, string>();
+
 /** The chapter range and the reader's place in it, or null for a whole document. */
 function useSourceReadingBoundary(
   source: SourceSummary,
@@ -53,11 +56,13 @@ function useSourceReadingBoundary(
       if (!active || !range) {
         return;
       }
-      let entered = false;
       const update = (): void => {
         const locator = surface.currentLocation();
         const location = range.valid && locator ? range.measure(locator) : null;
-        entered ||= location?.position === "inside";
+        if (location?.position === "inside") {
+          enteredChapters.set(surface, key);
+        }
+        const entered = enteredChapters.get(surface) === key;
         setState({ surface, key, range, location, entered });
       };
       update();
