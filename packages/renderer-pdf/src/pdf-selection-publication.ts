@@ -1,5 +1,11 @@
+import type { PdfPageRect } from "./pdf-viewport-rect.js";
 import type { FormattedSelection, SelectionCapability } from "@embedpdf/plugin-selection";
-import type { EventSource, TextSelectionDraft, Unsubscribe } from "@mdbase-reader/reading-surface";
+import type {
+  EventSource,
+  TextSelectionDraft,
+  Unsubscribe,
+  ViewportRect,
+} from "@mdbase-reader/reading-surface";
 
 export type PdfSelectionAdjustment = "start" | "end";
 
@@ -49,6 +55,8 @@ export function observePdfSelection(
   >,
   listener: (draft: TextSelectionDraft) => void,
   adjustments?: EventSource<PdfSelectionAdjustment>,
+  /** Where the selected lines sit on screen, so selection UI can keep clear of all of them. */
+  locate?: (rects: readonly PdfPageRect[]) => ViewportRect | null,
 ): Unsubscribe {
   let generation = 0;
   const publish = (): void => {
@@ -66,7 +74,8 @@ export function observePdfSelection(
         }
         const draft = textSelectionToDraft(parts, formatted);
         if (draft) {
-          listener(draft);
+          const anchor = locate?.(formatted.map(({ pageIndex, rect }) => ({ pageIndex, rect })));
+          listener(anchor ? { ...draft, anchor } : draft);
         }
       })
       .catch(() => {

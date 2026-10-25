@@ -63,7 +63,10 @@ export function PdfViewerSurface({
       clearRuntime();
       try {
         const adjustments = createEventEmitter<PdfSelectionAdjustment>();
-        const surface = new EmbedPdfSurface(document, createEmbedPdfRuntime(registry, adjustments));
+        const surface = new EmbedPdfSurface(
+          document,
+          createEmbedPdfRuntime(registry, adjustments, () => containerRef.current),
+        );
         surfaceRef.current = surface;
         onSurfaceReady(surface);
 
