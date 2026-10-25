@@ -53,10 +53,13 @@ i18n._ = (
   id: string | MessageDescriptor,
   values?: Record<string, unknown>,
   options?: MessageOptions,
-): string =>
-  typeof id === "string"
-    ? renderMessage(id, literalValues(values), options)
-    : renderMessage({ ...id, ...(id.values ? { values: literalValues(id.values) } : {}) });
+): string => {
+  if (typeof id === "string") {
+    return renderMessage(id, literalValues(values), options);
+  }
+  const literal = literalValues(id.values);
+  return renderMessage(literal ? { ...id, values: literal } : id);
+};
 i18n.t = i18n._.bind(i18n);
 
 function literalValues(
