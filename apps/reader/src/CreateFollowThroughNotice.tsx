@@ -3,6 +3,7 @@ import { useCallback, useState, useSyncExternalStore, type JSX } from "react";
 import { DeploymentUpdateNotice } from "./DeploymentUpdateNotice.js";
 
 import type {
+  CreateAttention,
   CreateFollowThroughSnapshot,
   ReaderCreateFollowThrough,
 } from "@mdbase-reader/connect";
@@ -37,7 +38,7 @@ export function useShellNotices(
     followThrough && shown !== "" && shown !== hidden ? (
       <CreateFollowThroughNotice
         followThrough={followThrough}
-        snapshot={creates}
+        attention={creates.attention}
         onHide={() => setHidden(shown)}
       />
     ) : null;
@@ -52,47 +53,83 @@ export function useShellNotices(
   );
 }
 
+/** What happened to one create, in words for the user. */
+export function createAttentionMessage(item: CreateAttention): string {
+  return item.reason === "names-taken"
+    ? `“${item.label}” could not be added to your collection: another record already uses each name Reader tried.`
+    : `Your collection did not accept “${item.label}”. ${item.problem}`;
+}
+
 /**
- * Says, without alarm, that something saved on this device has not reached the
- * collection yet and is kept here until it does.
+ * Says what was not added and why, that the content is kept on this device, and
+ * offers to try again or let it go. One create at a time, oldest first.
  */
 export function CreateFollowThroughNotice({
   followThrough,
-  snapshot,
+  attention,
   onHide,
 }: {
   readonly followThrough: ReaderCreateFollowThrough;
-  readonly snapshot: CreateFollowThroughSnapshot;
+  readonly attention: readonly CreateAttention[];
   readonly onHide: () => void;
 }): JSX.Element | null {
-  const [trying, setTrying] = useState(false);
-  const [first] = snapshot.attention;
+  const [busy, setBusy] = useState(false);
+  const [confirming, setConfirming] = useState<string | null>(null);
+  const [stillRefused, setStillRefused] = useState<string | null>(null);
+  const [first] = attention;
   if (!first) {
     return null;
   }
-  const count = snapshot.attention.length;
-  const what =
-    count === 1
-      ? `“${first.label}” is not in your collection yet.`
-      : `${String(count)} items are not in your collection yet.`;
+  const more = attention.length - 1;
+  const tryAgain = (): void => {
+    setBusy(true);
+    setStillRefused(null);
+    void followThrough
+      .reconcile({ retry: true })
+      .then(() => {
+        if (followThrough.getSnapshot().attention.some(({ key }) => key === first.key)) {
+          setStillRefused(first.key);
+        }
+      })
+      .finally(() => setBusy(false));
+  };
+  const discard = (): void => {
+    setBusy(true);
+    setConfirming(null);
+    void followThrough.discard(first.key).finally(() => setBusy(false));
+  };
   return (
-    <div className="deployment-update create-follow-through" role="status">
-      <span title={count === 1 ? first.problem : undefined}>
-        {what} {count === 1 ? "It is" : "They are"} kept safely on this device.
-      </span>
-      <button
-        type="button"
-        disabled={trying}
-        onClick={() => {
-          setTrying(true);
-          void followThrough.reconcile({ retry: true }).finally(() => setTrying(false));
-        }}
-      >
-        {trying ? "Trying…" : "Try again"}
-      </button>
-      <button type="button" onClick={onHide}>
-        Hide
-      </button>
+    <div className="create-follow-through">
+      <p role="status">
+        {createAttentionMessage(first)} Its content is kept on this device.
+        {more > 0
+          ? ` ${String(more)} more ${more === 1 ? "item needs" : "items need"} a look.`
+          : ""}
+        {stillRefused === first.key ? " Trying again did not help." : ""}
+      </p>
+      {confirming === first.key ? (
+        <div className="create-follow-through-actions">
+          <span>Remove “{first.label}” from this device for good?</span>
+          <button type="button" disabled={busy} onClick={discard}>
+            Discard
+          </button>
+          <button type="button" onClick={() => setConfirming(null)}>
+            Keep
+          </button>
+        </div>
+      ) : (
+        <div className="create-follow-through-actions">
+          <button type="button" disabled={busy} onClick={tryAgain}>
+            {busy ? "Trying…" : "Try again"}
+          </button>
+          <button type="button" disabled={busy} onClick={() => setConfirming(first.key)}>
+            Discard…
+          </button>
+          <button type="button" onClick={onHide}>
+            Hide
+          </button>
+        </div>
+      )}
     </div>
   );
 }
