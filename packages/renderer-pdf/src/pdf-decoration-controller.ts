@@ -39,7 +39,14 @@ export function createPdfDecorationController(
   const applying = (change: () => void): void =>
     activations ? activations.applying(change) : change();
   const stopActivations = activations?.subscribe((annotationId) => {
-    activeDecorationId = `${readerDecorationPrefix}${annotationId}`;
+    const clicked = `${readerDecorationPrefix}${annotationId}`;
+    if (desired.has(clicked)) {
+      activeDecorationId = clicked;
+    } else {
+      // Reader passes over a highlight it no longer lists, so the page shows its choice again,
+      // once EmbedPDF has finished handling the click.
+      queueMicrotask(() => applying(applyActiveDecoration));
+    }
   });
   const stopDismissals = activations?.subscribeDismissals(() => {
     activeDecorationId = null;

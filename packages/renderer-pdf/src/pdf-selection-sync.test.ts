@@ -3,6 +3,7 @@ import { describe, expect, it, vi } from "vitest";
 
 import { createEmbedPdfAnnotationActivations } from "./embedpdf-annotation-activation.js";
 import { createPdfDecorationController } from "./pdf-decoration-controller.js";
+import { annotationToPdfDecoration } from "./pdf-decoration.js";
 
 import type { PdfAnnotationObject } from "@embedpdf/models";
 import type { AnnotationEvent, AnnotationStateChangeEvent } from "@embedpdf/plugin-annotation";
@@ -10,7 +11,8 @@ import type { Annotation } from "@mdbase-reader/core";
 
 type Capability = Parameters<typeof createPdfDecorationController>[0];
 
-function highlight(id: string, pageIndex: number): Annotation {
+/** A highlight on one line of page 0, `top` points down the page. */
+function highlight(id: string, top: number): Annotation {
   return {
     collectionId: collectionId("reading"),
     id: annotationId(id),
@@ -21,13 +23,13 @@ function highlight(id: string, pageIndex: number): Annotation {
     target: {
       quote: { exact: `Passage ${id}` },
       pdf: {
-        pageIndex,
+        pageIndex: 0,
         coordinateSpace: {
           profile: "embedpdf-selection-page-points-v1",
           box: "crop",
           origin: "top_left",
         },
-        quadPoints: [[10, 20, 40, 20, 10, 28, 40, 28]],
+        quadPoints: [[10, top, 200, top, 10, top + 10, 200, top + 10]],
       },
     },
     tags: [],
@@ -36,21 +38,28 @@ function highlight(id: string, pageIndex: number): Annotation {
   };
 }
 
-/** EmbedPDF's annotation state, with one selection that Reader and the reader's clicks share. */
+/**
+ * EmbedPDF's annotation state, with one selection that Reader and the reader's clicks share. Like
+ * EmbedPDF, it reports a state only when it differs from the last one reported: selecting the
+ * annotation already selected reports nothing.
+ */
 function embedPdfFixture(): {
   readonly capability: Capability;
-  /** The reader clicks a decoration: EmbedPDF dispatches a fresh selection each time. */
-  click(decorationId: string): void;
-  /** The reader clicks empty page. */
-  clickEmptyPage(): void;
+  select(ids: string[]): void;
   selected(): readonly string[];
+  importStray(annotation: Annotation): void;
 } {
   const annotations = new Map<string, PdfAnnotationObject>();
   let selectedUids: string[] = [];
+  let reported = "[]";
   const stateListeners = new Set<(event: AnnotationStateChangeEvent) => void>();
   const annotationListeners = new Set<(event: AnnotationEvent) => void>();
   const setSelection = (ids: string[]): void => {
     selectedUids = ids;
+    if (JSON.stringify(ids) === reported) {
+      return;
+    }
+    reported = JSON.stringify(ids);
     const event = { documentId: "document", state: { selectedUids } };
     stateListeners.forEach((listener) => listener(event as unknown as AnnotationStateChangeEvent));
   };
@@ -83,30 +92,62 @@ function embedPdfFixture(): {
   } as unknown as Capability;
   return {
     capability,
-    click: (decorationId) => setSelection([decorationId]),
-    clickEmptyPage: () => setSelection([]),
+    select: setSelection,
     selected: () => selectedUids,
+    importStray: (annotation) => {
+      const decoration = annotationToPdfDecoration(annotation);
+      if (decoration) {
+        annotations.set(decoration.id, decoration);
+      }
+    },
   };
 }
 
-/** The runtime's wiring: activations first, so the decorations hear of a click before Reader. */
-function pdfSelection(): ReturnType<typeof embedPdfFixture> & {
+/** The runtime's wiring, with the page drawn one screen pixel to a point from the corner. */
+function pdfSelection(): {
   readonly controller: ReturnType<typeof createPdfDecorationController>;
   readonly activated: ReturnType<typeof vi.fn>;
   readonly dismissed: ReturnType<typeof vi.fn>;
+  /** The reader clicks a highlight: EmbedPDF selects it, then the click itself is judged. */
+  click(annotation: Annotation): void;
+  clickEmptyPage(): void;
+  selected(): readonly string[];
+  importStray(annotation: Annotation): void;
 } {
   const fixture = embedPdfFixture();
-  const activations = createEmbedPdfAnnotationActivations(fixture.capability);
+  const activations = createEmbedPdfAnnotationActivations(fixture.capability, (rects) => {
+    const rect = rects[0]?.rect;
+    return rect
+      ? { x: rect.origin.x, y: rect.origin.y, width: rect.size.width, height: rect.size.height }
+      : null;
+  });
+  // Activations first, so the decorations hear of a click before Reader does.
   const controller = createPdfDecorationController(fixture.capability, activations);
   const activated = vi.fn();
   const dismissed = vi.fn();
   activations.subscribe(activated);
   activations.subscribeDismissals(dismissed);
-  return { ...fixture, controller, activated, dismissed };
+  const press = (ids: string[], point: { x: number; y: number }): void => {
+    activations.pointerDown();
+    fixture.select(ids);
+    activations.pointerClicked(point);
+  };
+  return {
+    controller,
+    activated,
+    dismissed,
+    click: (annotation) => {
+      const top = annotation.target?.pdf?.quadPoints[0]?.[1] ?? 0;
+      press([`mdbase-reader:${annotation.id}`], { x: 100, y: top + 5 });
+    },
+    clickEmptyPage: () => press([], { x: 100, y: 700 }),
+    selected: fixture.selected,
+    importStray: fixture.importStray,
+  };
 }
 
-const first = highlight("ann-a", 0);
-const second = highlight("ann-b", 0);
+const first = highlight("ann-a", 20);
+const second = highlight("ann-b", 60);
 
 describe("PDF highlight selection shared by Reader and the reader", () => {
   it("keeps the highlight clicked in the page after Reader showed another", () => {
@@ -118,7 +159,7 @@ describe("PDF highlight selection shared by Reader and the reader", () => {
     // Showing it is Reader's doing, not a click to report back.
     expect(pdf.activated).not.toHaveBeenCalled();
 
-    pdf.click("mdbase-reader:ann-b");
+    pdf.click(second);
     expect(pdf.activated).toHaveBeenCalledExactlyOnceWith("ann-b");
 
     // Reader then refreshes the page's highlights before it hears of the new choice.
@@ -129,15 +170,25 @@ describe("PDF highlight selection shared by Reader and the reader", () => {
     expect(pdf.activated).toHaveBeenCalledOnce();
   });
 
-  it("reports a second click on the highlight already selected", () => {
+  it("reports a click on the highlight Reader showed for a card", () => {
     const pdf = pdfSelection();
     pdf.controller.setAnnotations([first, second]);
     pdf.controller.setActiveAnnotation(first);
 
-    pdf.click("mdbase-reader:ann-a");
-    pdf.click("mdbase-reader:ann-a");
+    pdf.click(first);
 
-    expect(pdf.activated.mock.calls).toEqual([["ann-a"], ["ann-a"]]);
+    expect(pdf.activated).toHaveBeenCalledExactlyOnceWith("ann-a");
+  });
+
+  it("reports every click on the highlight already selected, once each", () => {
+    const pdf = pdfSelection();
+    pdf.controller.setAnnotations([first, second]);
+
+    pdf.click(second);
+    pdf.click(second);
+    pdf.click(second);
+
+    expect(pdf.activated.mock.calls).toEqual([["ann-b"], ["ann-b"], ["ann-b"]]);
   });
 
   it("lets the highlight go on a click on empty page, and keeps it gone", () => {
@@ -156,5 +207,20 @@ describe("PDF highlight selection shared by Reader and the reader", () => {
     expect(pdf.selected()).toEqual([]);
     expect(pdf.dismissed).toHaveBeenCalledOnce();
     expect(pdf.activated).not.toHaveBeenCalled();
+  });
+
+  it("puts back Reader's choice after a click on a highlight Reader does not list", async () => {
+    const pdf = pdfSelection();
+    pdf.controller.setAnnotations([first, second]);
+    pdf.controller.setActiveAnnotation(first);
+    // A decoration still in the page, for a highlight Reader has stopped listing.
+    const stale = highlight("ann-stale", 100);
+    pdf.importStray(stale);
+
+    pdf.click(stale);
+    pdf.controller.setAnnotations([first, second]);
+    await Promise.resolve();
+
+    expect(pdf.selected()).toEqual(["mdbase-reader:ann-a"]);
   });
 });

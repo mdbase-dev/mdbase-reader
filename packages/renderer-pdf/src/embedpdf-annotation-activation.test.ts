@@ -8,7 +8,7 @@ import type { AnnotationPlugin } from "@embedpdf/plugin-annotation";
 type AnnotationCapability = ReturnType<AnnotationPlugin["provides"]>;
 
 describe("EmbedPDF annotation activations", () => {
-  it("publishes each click on a durable Reader annotation, not every state change", () => {
+  it("publishes a selection of a durable Reader annotation, not every state change", () => {
     let stateListener: ((event: { state: { selectedUids: string[] } }) => void) | undefined;
     const selected = { id: "mdbase-reader:ann-clicked" } as PdfAnnotationObject;
     const capability = {
@@ -26,14 +26,11 @@ describe("EmbedPDF annotation activations", () => {
 
     const clicked = { state: { selectedUids: ["mdbase-reader:ann-clicked"] } };
     stateListener?.(clicked);
-    // Other state changes keep the same selection list; only a fresh selection is a click.
+    // Other state changes keep the same selection list; only a selection makes a new one.
     stateListener?.(clicked);
 
     expect(listener).toHaveBeenCalledOnce();
     expect(listener).toHaveBeenCalledWith("ann-clicked");
-
-    stateListener?.({ state: { selectedUids: ["mdbase-reader:ann-clicked"] } });
-    expect(listener).toHaveBeenCalledTimes(2);
   });
 
   it("ignores selected annotations that do not belong to Reader", () => {

@@ -94,11 +94,14 @@ export interface AnnotationNavigationCapability {
 }
 
 export interface AnnotationActivationCapability {
-  /** The reader clicked a highlight in the document, including the one already active. */
+  /**
+   * The reader clicked a highlight in the document: once per click, including clicks on the
+   * highlight already active. Never Reader's own `setActiveAnnotation` coming back.
+   */
   readonly activations: EventSource<AnnotationId>;
   /**
-   * The reader let go of the active highlight in the document itself, as by clicking empty page,
-   * where the renderer's own selection shows which highlight is active.
+   * The reader let go of the active highlight in the document itself, as by clicking empty page.
+   * Only renderers whose own selection shows the active highlight report this (PDF does).
    */
   readonly dismissals?: EventSource<null>;
   /** Where the most recently activated highlight sits on screen, when the renderer knows. */

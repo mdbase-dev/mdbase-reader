@@ -12,6 +12,7 @@ import {
 
 import {
   createEmbedPdfAnnotationActivations,
+  observePagePresses,
   type EmbedPdfAnnotationActivations,
 } from "./embedpdf-annotation-activation.js";
 import { createPdfDecorationController } from "./pdf-decoration-controller.js";
@@ -104,13 +105,14 @@ export function createEmbedPdfRuntime(
   const viewport = registry.getPlugin<ViewportPlugin>(ViewportPlugin.id)?.provides() ?? null;
   const selection = selectionPlugin.provides();
   const annotationCapability = annotationPlugin.provides();
-  const annotationActivations = createEmbedPdfAnnotationActivations(annotationCapability);
-  // Subscribed first, so the decorations know of a click before Reader is told of it.
-  const decorations = createPdfDecorationController(annotationCapability, annotationActivations);
-  const subscriptions = new Set<Unsubscribe>();
   const locate = host
     ? createPdfViewportLocator(host, (page, rect) => scroll.getRectPositionForPage(page, rect))
     : undefined;
+  const annotationActivations = createEmbedPdfAnnotationActivations(annotationCapability, locate);
+  // Subscribed first, so the decorations know of a click before Reader is told of it.
+  const decorations = createPdfDecorationController(annotationCapability, annotationActivations);
+  const subscriptions = new Set<Unsubscribe>();
+  subscriptions.add(observePagePresses(host?.(), annotationActivations));
   const getDocument = (signal?: AbortSignal): Promise<PdfDocumentObject> =>
     registryPdfDocument(registry, signal);
   const navigation = createPdfPageNavigation(registry, scroll, getDocument);
