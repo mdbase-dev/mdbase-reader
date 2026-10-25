@@ -584,6 +584,9 @@ it("shows a saved source's citation ready to copy", () => {
   expect(html).toContain("<p>Watson</p><p>1953</p>");
   expect(html).toContain("<code>watson1953</code>");
   expect(html).toContain("10.1038/171737a0");
+  // The formatted reference follows once citeproc loads; until then its details show.
+  expect(html).toContain("Formatting…");
+  expect(html).toMatch(/<button[^>]*disabled=""[^>]*>Copy citation<\/button>/u);
   expect(html).toContain("Copy citekey");
   expect(html).toContain("Copy CSL-JSON");
 });

@@ -455,6 +455,78 @@ details.technical summary {
   min-height: var(--control-h-sm);
   margin: 0;
 }
+/* The stored citation, formatted as Reader formats it, then the ways to copy it. */
+.citation-reference {
+  color: var(--text-1);
+  font-family: var(--font-read);
+  font-size: var(--text-quote);
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+  text-wrap: pretty;
+}
+.citation .citation-key {
+  margin-top: var(--sp-3);
+  color: var(--text-3);
+  font-size: var(--text-xs);
+  overflow-wrap: anywhere;
+}
+.copy-actions {
+  display: flex;
+  gap: var(--sp-2);
+}
+.copy-actions .primary.compact {
+  flex: 1;
+  min-height: var(--control-h-sm);
+}
+.copy-menu {
+  position: relative;
+}
+.copy-menu summary {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: var(--control-h-sm);
+  height: 100%;
+  padding: 0;
+  list-style: none;
+  cursor: pointer;
+}
+.copy-menu summary::-webkit-details-marker {
+  display: none;
+}
+.copy-menu[open] summary {
+  background: var(--bg-hover);
+}
+.copy-menu-panel {
+  position: absolute;
+  z-index: 2;
+  top: calc(100% + var(--sp-1));
+  right: 0;
+  min-width: 160px;
+  padding: var(--sp-1);
+  border-radius: var(--r-md);
+  background: var(--bg-raised);
+  box-shadow:
+    0 0 0 1px var(--line),
+    var(--e-2);
+}
+.copy-menu-panel .text-button {
+  width: 100%;
+  min-height: var(--target-min);
+  margin: 0;
+  padding: var(--sp-1) var(--sp-2);
+  color: var(--text-1);
+}
+.copy-menu-panel .text-button:hover {
+  background: var(--bg-hover);
+  text-decoration: none;
+}
+.copy-status:empty {
+  display: none;
+}
+.copy-status {
+  margin: var(--sp-2) 0 0;
+}
 
 /* Saved highlights: Reader's cards. No box at rest, a tint on hover; the passage keeps its
    wash, as it is on the page. --------------------------------------------------------- */
