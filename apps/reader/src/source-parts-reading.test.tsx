@@ -271,6 +271,54 @@ it("restores a position saved elsewhere while the surface was inactive, instead 
   );
 });
 
+it("does not pull one pane to a position another pane of the same source wrote", async () => {
+  const { chapter } = await anthology();
+  const first = pdf(chapter);
+  const beside = pdf(chapter);
+  const save = vi.fn().mockResolvedValue(undefined);
+  const readingAt = (pageIndex: number): Source => ({
+    ...chapter,
+    reading: {
+      status: "reading",
+      documentFileId: chapter.documents[0]!.fileId,
+      position: { kind: "pdf", pageIndex },
+    },
+  });
+  function Harness({
+    source,
+    surface,
+  }: {
+    readonly source: Source | null;
+    readonly surface: ReadingSurface;
+  }): null {
+    useReadingResume({ source, surface, save });
+    return null;
+  }
+  const show = async (source: Source | null, surface: ReadingSurface): Promise<void> => {
+    await act(async () => {
+      root.render(<Harness source={source} surface={surface} />);
+      await vi.advanceTimersByTimeAsync(0);
+    });
+  };
+  await show(chapter, first);
+  await act(async () => {
+    await first.goTo({ kind: "pdf", pageIndex: 11 });
+    await vi.advanceTimersByTimeAsync(1200);
+  });
+  // Open beside: the second pane reads on, saving its own position.
+  await show(null, first);
+  await show(readingAt(11), beside);
+  await act(async () => {
+    await beside.goTo({ kind: "pdf", pageIndex: 16 });
+    await vi.advanceTimersByTimeAsync(1200);
+  });
+  // Refocusing the first pane keeps its place; the newer position is this app's own.
+  await show(null, beside);
+  await show(readingAt(16), first);
+  expect(first.currentLocation()).toEqual({ kind: "pdf", pageIndex: 11 });
+  expect(beside.currentLocation()).toEqual({ kind: "pdf", pageIndex: 16 });
+});
+
 it("does not restore or write a previous source while another shared-file session is hydrating", async () => {
   const { chapter, book } = await anthology();
   const surface = pdf(chapter);
