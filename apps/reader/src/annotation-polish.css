@@ -171,12 +171,11 @@
   padding: 14px;
   pointer-events: none;
 }
-/* A toolbar docked at the foot takes the place the notices use, so they wait out of sight (and
-   out of the pointer's way) until it closes. The live region keeps announcing them. */
-.document-canvas:has(> .selection-toolbar-layer.is-docked)
-  > .document-notices
-  > :not([role="status"]) {
-  visibility: hidden;
+/* A toolbar docked at the foot takes the place the notices use, so they stack above it, every
+   one still shown, reachable and announced: a save error is never hidden. The toolbar layer
+   reports its height on the canvas. */
+.document-canvas:has(> .selection-toolbar-layer.is-docked) > .document-notices {
+  padding-bottom: calc(14px + var(--docked-toolbar-height, 38px) + var(--sp-2));
 }
 .document-notices > .annotation-compose-error {
   width: min(404px, 100%);
