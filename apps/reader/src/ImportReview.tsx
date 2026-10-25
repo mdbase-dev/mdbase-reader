@@ -119,7 +119,7 @@ export function ImportConfirm({
         <Trans>Confirm</Trans>
       </h2>
       <button type="button" disabled={busy || !!boundTarget} onClick={controller.inspect}>
-        <Trans>Check destination: {opened.collectionName}</Trans>
+        {t`Check destination: ${opened.collectionName}`}
       </button>
       {ready ? (
         <>

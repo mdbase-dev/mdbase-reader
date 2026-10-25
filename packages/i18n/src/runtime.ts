@@ -1,4 +1,4 @@
-import { i18n } from "@lingui/core";
+import { I18n, i18n, type MessageDescriptor, type MessageOptions } from "@lingui/core";
 import { createI18nRuntime } from "@mdbase-dev/i18n";
 import { uiCatalogues } from "@mdbase-dev/ui/i18n";
 
@@ -43,6 +43,34 @@ let localeStorage = browserStorage;
 /** Set before mounting an extension page; keep exactly one owner of the singleton. */
 export function setReaderLocaleStorage(storage: LocaleStorage): void {
   localeStorage = storage;
+}
+
+// Lingui 6.9 decodes JavaScript escapes after interpolation, including in user text such as
+// `C:\x41dir`. Encode string-value backslashes for that single decoding pass; values passed in
+// are never mutated.
+const renderMessage = I18n.prototype._.bind(i18n);
+i18n._ = (
+  id: string | MessageDescriptor,
+  values?: Record<string, unknown>,
+  options?: MessageOptions,
+): string =>
+  typeof id === "string"
+    ? renderMessage(id, literalValues(values), options)
+    : renderMessage({ ...id, ...(id.values ? { values: literalValues(id.values) } : {}) });
+i18n.t = i18n._.bind(i18n);
+
+function literalValues(
+  values: Record<string, unknown> | undefined,
+): Record<string, unknown> | undefined {
+  return (
+    values &&
+    Object.fromEntries(
+      Object.entries(values).map(([key, value]) => [
+        key,
+        typeof value === "string" ? value.replaceAll("\\", "\\u005c") : value,
+      ]),
+    )
+  );
 }
 
 // English is immediately active, with no fetch or asynchronous startup gate.

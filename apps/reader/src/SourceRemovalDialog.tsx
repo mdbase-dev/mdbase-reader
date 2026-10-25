@@ -58,9 +58,7 @@ function OpenSourceRemovalDialog({ removal, pending }: OpenSourceRemovalDialogPr
         aria-describedby="reader-remove-source-description"
       >
         <div className="import-dialog-heading">
-          <h2 id="reader-remove-source-title">
-            <Trans>Remove “{source.title}”?</Trans>
-          </h2>
+          <h2 id="reader-remove-source-title">{t`Remove “${source.title}”?`}</h2>
           <p id="reader-remove-source-description">
             <Trans>
               This removes the source from your library and deletes its source note. Saved files and
