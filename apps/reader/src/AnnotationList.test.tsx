@@ -47,12 +47,24 @@ vi.mock("@tanstack/react-virtual", async (original) => {
     }),
   };
 });
+const cardEdit = vi.hoisted((): { current: (() => void) | undefined } => ({ current: undefined }));
 vi.mock("./AnnotationCard.js", () => ({
-  AnnotationCard: ({ annotation, editing }: { annotation: Annotation; editing: boolean }) => (
-    <div data-annotation-id={annotation.id}>
-      <button>{editing ? "Editing" : annotation.body}</button>
-    </div>
-  ),
+  AnnotationCard: ({
+    annotation,
+    editing,
+    onEdit,
+  }: {
+    annotation: Annotation;
+    editing: boolean;
+    onEdit: () => void;
+  }) => {
+    cardEdit.current = onEdit;
+    return (
+      <div data-annotation-id={annotation.id}>
+        <button>{editing ? "Editing" : annotation.body}</button>
+      </div>
+    );
+  },
 }));
 
 const annotations = Array.from({ length: 1_000 }, (_, index): Annotation => ({
@@ -372,6 +384,54 @@ describe("annotation Filter menu", () => {
   });
 });
 
+describe("annotation list editing", () => {
+  it("keeps the card being edited listed whatever the filters hide", async () => {
+    virtual.endIndex = 10;
+    const value = [
+      { ...kinds[0]!, id: annotationId("yellow") },
+      { ...kinds[0]!, id: annotationId("green"), color: "green" },
+    ];
+    const list = (editingId: ReturnType<typeof annotationId> | null): JSX.Element => (
+      <AnnotationList {...props} annotations={{ status: "ready", value }} editingId={editingId} />
+    );
+    const element = await mount(list(null));
+    await act(async () => {
+      choice(element, "Green").click();
+      await Promise.resolve();
+    });
+    const shown = (): (string | null)[] =>
+      [...element.querySelectorAll("[data-annotation-id]")].map((card) =>
+        card.getAttribute("data-annotation-id"),
+      );
+    expect(shown()).toEqual(["green"]);
+    await act(async () => {
+      root!.render(list(annotationId("yellow")));
+      await Promise.resolve();
+    });
+    expect(shown()).toEqual(expect.arrayContaining(["yellow", "green"]));
+    expect(shown()).toHaveLength(2);
+    expect(element.querySelector('[data-annotation-id="yellow"]')?.textContent).toBe("Editing");
+  });
+
+  it("tells the reader's composer when a card's own Edit begins, so Undo ends", async () => {
+    const onBeginEdit = vi.fn();
+    const element = await mount(
+      <AnnotationList
+        {...props}
+        annotations={{ status: "ready", value: [kinds[0]!] }}
+        onBeginEdit={onBeginEdit}
+      />,
+    );
+    expect(element.querySelector("[data-annotation-id]")).not.toBeNull();
+    await act(async () => {
+      cardEdit.current?.();
+      await Promise.resolve();
+    });
+    expect(onBeginEdit).toHaveBeenCalledExactlyOnceWith(kinds[0]);
+    expect(element.querySelector('[data-annotation-id="highlight"]')?.textContent).toBe("Editing");
+  });
+});
+
 describe("annotation Filter menu colours and order", () => {
   it("filters by colour, named by meaning, and clears back to any colour", async () => {
     virtual.endIndex = 10;
@@ -412,34 +472,6 @@ describe("annotation Filter menu colours and order", () => {
     expect(element.querySelectorAll("[data-annotation-id]")).toHaveLength(5);
     expect(choice(element, "Any colour").getAttribute("aria-checked")).toBe("true");
     setHighlightMeaning("green", "");
-  });
-
-  it("keeps the card being edited listed whatever the filters hide", async () => {
-    virtual.endIndex = 10;
-    const value = [
-      { ...kinds[0]!, id: annotationId("yellow") },
-      { ...kinds[0]!, id: annotationId("green"), color: "green" },
-    ];
-    const list = (editingId: ReturnType<typeof annotationId> | null): JSX.Element => (
-      <AnnotationList {...props} annotations={{ status: "ready", value }} editingId={editingId} />
-    );
-    const element = await mount(list(null));
-    await act(async () => {
-      choice(element, "Green").click();
-      await Promise.resolve();
-    });
-    const shown = (): (string | null)[] =>
-      [...element.querySelectorAll("[data-annotation-id]")].map((card) =>
-        card.getAttribute("data-annotation-id"),
-      );
-    expect(shown()).toEqual(["green"]);
-    await act(async () => {
-      root!.render(list(annotationId("yellow")));
-      await Promise.resolve();
-    });
-    expect(shown()).toEqual(expect.arrayContaining(["yellow", "green"]));
-    expect(shown()).toHaveLength(2);
-    expect(element.querySelector('[data-annotation-id="yellow"]')?.textContent).toBe("Editing");
   });
 
   it("hides the Colour choices when nothing has a colour", async () => {

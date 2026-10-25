@@ -259,6 +259,11 @@ export function useSourceToolsWorkspace(
     setDraft,
     saveDraft,
     ...annotationMutations,
+    // A comment revealed from another source goes from the list as soon as it is deleted.
+    deleteAnnotation: async (annotation, plan) => {
+      await annotationMutations.deleteAnnotation(annotation, plan);
+      aggregate.view.forget(annotation.id);
+    },
     saveReadingPosition,
     adoptSource: publishDraft,
   };

@@ -17,6 +17,8 @@ import { useAnnotationOwner } from "./use-annotation-owner.js";
 import { useDocumentDecorations } from "./use-document-decorations.js";
 import { useSourceAnnotationView } from "./use-source-annotation-view.js";
 
+import type { ReaderWorkspaceGateway } from "./workspace-model.js";
+
 (globalThis as typeof globalThis & { IS_REACT_ACT_ENVIRONMENT: boolean }).IS_REACT_ACT_ENVIRONMENT =
   true;
 let root: ReturnType<typeof createRoot> | undefined;
@@ -122,6 +124,46 @@ it("lists a comment saved to the whole book from a chapter, turning whole-book o
   act(() => reveal!());
   expect(output.textContent).toBe("listed");
   expect(output.getAttribute("data-whole-book")).toBe("true");
+});
+it("forgets a revealed comment once it is deleted, so no ghost card comes back", async () => {
+  let reload: (() => void) | undefined;
+  const gateway: ReaderWorkspaceGateway = Object.assign(new PreviewGateway(), {
+    subscribeLibrary: (listener: () => void) => {
+      reload = listener;
+      return () => undefined;
+    },
+  });
+  const chapter = (await gateway.source(chapterId))!;
+  const owned = { status: "ready" as const, value: await gateway.annotations(chapterId) };
+  const [template] = await gateway.annotations(bookId);
+  const created = { ...template!, id: annotationId("ann_saved_to_book"), sourceId: bookId };
+  let view: ReturnType<typeof useSourceAnnotationView>["view"] | undefined;
+  function Harness(): JSX.Element {
+    const result = useSourceAnnotationView(gateway, chapter, owned);
+    view = result.view;
+    const ids =
+      result.annotations.status === "ready" ? result.annotations.value.map(({ id }) => id) : [];
+    return <output>{ids.includes(created.id) ? "listed" : "missing"}</output>;
+  }
+  await mount(<Harness />);
+  const output = host.querySelector("output")!;
+  const settle = async (action: () => void): Promise<void> =>
+    act(async () => {
+      action();
+      await new Promise((resolve) => setTimeout(resolve, 30));
+    });
+
+  // Deleted from its card: it goes at once.
+  await settle(() => view!.reveal(created));
+  expect(output.textContent).toBe("listed");
+  await settle(() => view!.forget(created.id));
+  expect(output.textContent).toBe("missing");
+
+  // Deleted elsewhere: the family's next list, which lacks it, has the last word.
+  await settle(() => view!.reveal(created));
+  expect(output.textContent).toBe("listed");
+  await settle(() => reload!());
+  expect(output.textContent).toBe("missing");
 });
 function pageSearchSwitch(): HTMLButtonElement {
   return [...host.querySelectorAll<HTMLButtonElement>('[role="switch"]')].find((item) =>

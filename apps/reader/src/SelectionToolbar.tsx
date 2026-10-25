@@ -90,6 +90,7 @@ export function SelectionToolbarLayer({
         : null,
     );
   }, [state, composer.ownerControl?.pending, composer.ownerControl?.choices.length]);
+  useDockedHeight(layer, bar, state !== null && style === null);
   if (!state) {
     return null;
   }
@@ -104,6 +105,28 @@ export function SelectionToolbarLayer({
       />
     </div>
   );
+}
+
+/**
+ * While docked at the foot, tells the canvas how tall the toolbar is, so the document's notices
+ * can stack above it instead of covering it.
+ */
+function useDockedHeight(
+  layer: RefObject<HTMLDivElement | null>,
+  bar: RefObject<HTMLDivElement | null>,
+  docked: boolean,
+): void {
+  useLayoutEffect(() => {
+    const canvas = layer.current?.parentElement;
+    const toolbar = bar.current;
+    if (!docked || !canvas || !toolbar) {
+      return undefined;
+    }
+    canvas.style.setProperty("--docked-toolbar-height", `${String(toolbar.offsetHeight)}px`);
+    return () => {
+      canvas.style.removeProperty("--docked-toolbar-height");
+    };
+  });
 }
 
 /**

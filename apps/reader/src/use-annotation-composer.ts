@@ -67,6 +67,8 @@ export interface AnnotationComposerController extends AnnotationCreationControll
   readonly savedHighlight: SavedHighlight | null;
   readonly undoSavedHighlight: () => void;
   readonly dismissSavedHighlight: () => void;
+  /** Ends Undo for an annotation the reader has begun to edit, wherever they began. */
+  readonly withdrawUndo: (annotationId: AnnotationId) => void;
   /** Gives a highlight another colour; absent when the collection cannot. */
   readonly recolor?: ((annotation: Annotation, color: HighlightColorKey) => void) | undefined;
 }
@@ -179,6 +181,7 @@ export function useAnnotationComposer(
     savedHighlight: undo.savedHighlight,
     undoSavedHighlight: undo.undoSavedHighlight,
     dismissSavedHighlight: undo.dismissSavedHighlight,
+    withdrawUndo: undo.withdrawUndo,
     ...(recolor.recolor ? { recolor: recolor.recolor } : {}),
     open: (annotation) => {
       setActiveId(annotation.id);

@@ -279,6 +279,8 @@ function AnnotationsTab({
           onOpen={composer.open}
           editingId={composer.editingAnnotationId}
           onCancelEdit={composer.stopEditing}
+          // Undo would delete the comment about to be written.
+          onBeginEdit={(annotation) => composer.withdrawUndo(annotation.id)}
           readFile={readFile}
         />
       </AnnotationEditingContext>

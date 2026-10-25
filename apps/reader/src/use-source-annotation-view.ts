@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, useSyncExternalStore } from "react";
+import { useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
 
 import { readerErrorMessage } from "./errors.js";
 import { sourceAnnotationFamily } from "./source-annotation-family.js";
@@ -21,6 +21,8 @@ export interface SourceAnnotationView {
    * once, before the family's annotations load again.
    */
   readonly reveal: (annotation: Annotation) => void;
+  /** Drops an annotation from those revealed, such as one just deleted. */
+  readonly forget: (annotationId: Annotation["id"]) => void;
   readonly problem: string | null;
 }
 
@@ -44,10 +46,8 @@ export function useSourceAnnotationView(
     [gateway],
   );
   const [wholeFor, setWholeFor] = useState<string | null>(null);
-  const [revealed, setRevealed] = useState<{
-    readonly source: Source;
-    readonly annotations: readonly Annotation[];
-  } | null>(null);
+  const revealed = useRevealedAnnotations(source);
+  const { mark, settle } = revealed;
   const [loaded, setLoaded] = useState<{
     readonly source: Source;
     readonly sources: readonly SourceSummary[];
@@ -61,6 +61,7 @@ export function useSourceAnnotationView(
     }
     const controller = new AbortController();
     const options = { signal: controller.signal };
+    const revealedBefore = mark();
     void gateway
       .library(options)
       .then(async (library) => {
@@ -81,6 +82,9 @@ export function useSourceAnnotationView(
             ],
           });
           setProblem(null);
+          // The family's list now speaks for every annotation revealed before it was asked for:
+          // it lists those still there, and one it lacks has since been deleted.
+          settle(source, revealedBefore, new Set(annotations.map(({ id }) => id)));
         }
       })
       .catch((reason: unknown) => {
@@ -95,11 +99,11 @@ export function useSourceAnnotationView(
         }
       });
     return () => controller.abort();
-  }, [gateway, source, revision, libraryRevision]);
+  }, [gateway, source, revision, libraryRevision, mark, settle]);
   const current = loaded?.source === source ? loaded : null;
   const sources = useMemo(() => current?.sources ?? (source ? [source] : []), [current, source]);
   const wholeBook = !source?.partOf || wholeFor === source.id;
-  const extras = revealed?.source === source ? revealed.annotations : noAnnotations;
+  const { extras } = revealed;
   const annotations = useMemo(
     (): AsyncResource<readonly Annotation[]> =>
       withRevealed(familyAnnotations(current, owned, wholeBook), wholeBook ? extras : []),
@@ -112,23 +116,95 @@ export function useSourceAnnotationView(
       wholeBook,
       setWholeBook: (value) => setWholeFor(value ? (source?.id ?? null) : null),
       reveal: (annotation) => {
-        if (!source || annotation.sourceId === source.id) {
-          return;
+        if (source && annotation.sourceId !== source.id) {
+          setWholeFor(source.id);
+          revealed.reveal(source, annotation);
         }
-        setWholeFor(source.id);
-        setRevealed((latest) => ({
-          source,
-          annotations: [
-            ...(latest?.source === source ? latest.annotations : []).filter(
-              ({ id }) => id !== annotation.id,
-            ),
-            annotation,
-          ],
-        }));
       },
+      forget: revealed.forget,
       problem,
     },
   };
+}
+
+/**
+ * Annotations just saved elsewhere in the family, listed until a family load that could have seen
+ * them settles whether they are still there.
+ */
+function useRevealedAnnotations(source: Source | null): {
+  readonly extras: readonly Annotation[];
+  readonly reveal: (source: Source, annotation: Annotation) => void;
+  readonly forget: (annotationId: Annotation["id"]) => void;
+  /** Starts a family load: the reveals made so far, which its list will speak for. */
+  readonly mark: () => number;
+  readonly settle: (source: Source, before: number, listed: ReadonlySet<Annotation["id"]>) => void;
+} {
+  const [revealed, setRevealed] = useState<Revealed | null>(null);
+  // Counts reveals, so a family load can tell which it could have seen.
+  const reveals = useRef(0);
+  const actions = useMemo(
+    () => ({
+      reveal: (owner: Source, annotation: Annotation) => {
+        reveals.current += 1;
+        const entry = { annotation, seq: reveals.current };
+        setRevealed((latest) => ({
+          source: owner,
+          entries: [
+            ...(latest?.source === owner ? latest.entries : []).filter(
+              ({ annotation: { id } }) => id !== annotation.id,
+            ),
+            entry,
+          ],
+        }));
+      },
+      forget: (annotationId: Annotation["id"]) =>
+        setRevealed((latest) =>
+          latest?.entries.some(({ annotation }) => annotation.id === annotationId)
+            ? {
+                ...latest,
+                entries: latest.entries.filter(({ annotation }) => annotation.id !== annotationId),
+              }
+            : latest,
+        ),
+      mark: () => reveals.current,
+      settle: (owner: Source, before: number, listed: ReadonlySet<Annotation["id"]>) =>
+        setRevealed((latest) => settleRevealed(latest, owner, before, listed)),
+    }),
+    [],
+  );
+  const extras = useMemo(
+    () =>
+      revealed?.source === source
+        ? revealed.entries.map(({ annotation }) => annotation)
+        : noAnnotations,
+    [revealed, source],
+  );
+  return { extras, ...actions };
+}
+
+/** Annotations revealed for one source, each with the reveal that added it. */
+interface Revealed {
+  readonly source: Source;
+  readonly entries: readonly { readonly annotation: Annotation; readonly seq: number }[];
+}
+
+/**
+ * Keeps only the reveals the family's list does not yet speak for: those it lacks that were made
+ * after the load that produced it began.
+ */
+function settleRevealed(
+  latest: Revealed | null,
+  source: Source,
+  revealedBefore: number,
+  listed: ReadonlySet<Annotation["id"]>,
+): Revealed | null {
+  if (latest?.source !== source) {
+    return latest;
+  }
+  const entries = latest.entries.filter(
+    ({ annotation, seq }) => seq > revealedBefore && !listed.has(annotation.id),
+  );
+  return entries.length === latest.entries.length ? latest : { source, entries };
 }
 
 function familyAnnotations(

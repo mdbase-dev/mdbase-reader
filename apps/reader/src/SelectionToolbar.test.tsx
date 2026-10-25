@@ -70,10 +70,11 @@ describe("selection toolbar shortcuts", () => {
   });
 
   it("marks a toolbar with no place by the passage as docked, so the notices make way", () => {
-    // Docked at the foot of the pane, where the notices hide until it closes.
+    // Docked at the foot of the pane; the notices stack above it, at the height it reports.
     const layer = host.querySelector(".selection-toolbar-layer");
     expect(layer?.classList.contains("is-docked")).toBe(true);
     expect(layer?.classList.contains("is-anchored")).toBe(false);
+    expect(host.style.getPropertyValue("--docked-toolbar-height")).toMatch(/^\d+px$/);
   });
 });
 
