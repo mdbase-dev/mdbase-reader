@@ -97,6 +97,32 @@ it("batch-loads the family, labels owners and filters chapters without new queri
   expect(host.textContent).not.toContain("Source: Chapter 2");
   expect(batch).toHaveBeenCalledTimes(1);
 });
+it("lists a comment saved to the whole book from a chapter, turning whole-book on", async () => {
+  const gateway = new PreviewGateway();
+  const chapter = (await gateway.source(chapterId))!;
+  const owned = { status: "ready" as const, value: await gateway.annotations(chapterId) };
+  const [template] = await gateway.annotations(bookId);
+  // Saved to the book, but not yet in the family's loaded annotations.
+  const created = { ...template!, id: annotationId("ann_saved_to_book"), sourceId: bookId };
+  let reveal: (() => void) | undefined;
+  function Harness(): JSX.Element {
+    const { annotations, view } = useSourceAnnotationView(gateway, chapter, owned);
+    reveal = () => view.reveal(created);
+    const ids = annotations.status === "ready" ? annotations.value.map(({ id }) => id) : [];
+    return (
+      <output data-whole-book={String(view.wholeBook)}>
+        {ids.includes(created.id) ? "listed" : "missing"}
+      </output>
+    );
+  }
+  await mount(<Harness />);
+  const output = host.querySelector("output")!;
+  expect(output.textContent).toBe("missing");
+  expect(output.getAttribute("data-whole-book")).toBe("false");
+  act(() => reveal!());
+  expect(output.textContent).toBe("listed");
+  expect(output.getAttribute("data-whole-book")).toBe("true");
+});
 function pageSearchSwitch(): HTMLButtonElement {
   return [...host.querySelectorAll<HTMLButtonElement>('[role="switch"]')].find((item) =>
     item.textContent.startsWith("Include all annotations in page search"),
@@ -213,11 +239,16 @@ it("keeps the toolbar chooser compact with an accessible ownership explanation",
       }}
     />,
   );
-  expect(host.querySelector("label")!.textContent).toContain("Save to source");
-  expect(host.querySelector("label")!.textContent).not.toContain("Annotation owner");
-  expect(host.querySelector("select")!.getAttribute("aria-label")).toBe("Save to source");
-  expect(host.querySelector("select")!.title).toContain("verified range");
-  expect(host.querySelector('[role="status"]')!.className).toBe("sr-only");
+  // A quiet chip: "in <source> ▾", named Save to source, with the reason as its description.
+  const chip = host.querySelector("label.annotation-source-chip")!;
+  expect(chip.textContent).toMatch(/^in/);
+  expect(chip.textContent).not.toContain("Annotation owner");
+  expect(chip.getAttribute("title")).toContain("verified range");
+  const select = host.querySelector("select")!;
+  expect(select.getAttribute("aria-label")).toBe("Save to source");
+  const status = host.querySelector('[role="status"]')!;
+  expect(status.className).toBe("sr-only");
+  expect(select.getAttribute("aria-describedby")).toBe(status.id);
 });
 
 it.each<SurfaceKind>(["pdf", "epub", "html"])(

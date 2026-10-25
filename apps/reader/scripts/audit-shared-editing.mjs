@@ -159,7 +159,8 @@ export async function auditSharedEditing(page, { screenshot, blockWrites, measur
   await page.waitForTimeout(1200);
   await expect(offer).toBeVisible(); // selection alone is never autosaved as a new annotation
   await offer.getByRole("button", { name: "Comment on highlight", exact: true }).click();
-  const creator = page.getByRole("region", { name: "Comment on highlight" });
+  // The highlight saves at once; its comment is written in its card's editor.
+  const creator = page.getByRole("group", { name: "Edit annotation" });
   const creatingText = creator.getByRole("textbox", { name: "Comment" });
   await creatingText.fill("[test] Latest");
   await creatingText.pressSequentially(" characters saved immediately");

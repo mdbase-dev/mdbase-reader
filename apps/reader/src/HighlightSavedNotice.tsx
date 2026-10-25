@@ -1,7 +1,7 @@
 import { claimFrameShortcut, type ViewportRect } from "@mdbase-reader/reading-surface";
-import { useEffect, useLayoutEffect, useRef, useState, type CSSProperties, type JSX } from "react";
+import { useEffect, useLayoutEffect, useRef, useState, type JSX } from "react";
 
-import { CheckIcon } from "./icons.js";
+import { CheckIcon, CloseIcon } from "./icons.js";
 
 import type { SavedHighlight } from "./use-highlight-undo.js";
 
@@ -20,66 +20,102 @@ function isTyping(target: EventTarget | null): boolean {
   return Boolean(element?.closest?.("input, textarea, select, [contenteditable='true']"));
 }
 
+/** A dialog or menu open over the reader, which Esc should close instead. */
+const openOverlays = "dialog[open], [aria-modal='true'], .library-row-menu";
+
 interface LayerBox {
   readonly x: number;
   readonly y: number;
-  readonly height: number;
 }
 
 /**
- * Confirms a quick highlight: its ink sweeps across the passage, then "Highlight saved · Undo"
- * stays for a few seconds, longer while pointed at or focused. Ctrl+Z or ⌘Z outside a text
- * field undoes it too. With reduced motion there is no sweep, but Undo is the same.
+ * The new highlight's ink sweeping across its passage, the only confirmation drawn on the page.
+ * It tints the passage itself and covers nothing else. With reduced motion there is none.
+ */
+export function HighlightSweep({ saved }: { readonly saved: SavedHighlight | null }): JSX.Element {
+  const layer = useRef<HTMLDivElement>(null);
+  const [origin, setOrigin] = useState<LayerBox | null>(null);
+  const id = saved?.id;
+  useLayoutEffect(() => {
+    const bounds = id === undefined ? undefined : layer.current?.getBoundingClientRect();
+    setOrigin(bounds ? { x: bounds.left, y: bounds.top } : null);
+  }, [id]);
+  const rect = origin && saved?.rect ? relative(saved.rect, origin) : null;
+  return (
+    <div
+      ref={layer}
+      className="highlight-sweep-layer"
+      aria-hidden="true"
+      {...(saved ? { "data-highlight-color": saved.color } : {})}
+    >
+      {saved && rect && rect.height <= sweepMaxHeight && !reducedMotion() ? (
+        <span
+          key={saved.id}
+          className="highlight-sweep"
+          style={{ left: rect.x, top: rect.y, width: rect.width, height: rect.height }}
+        />
+      ) : null}
+    </div>
+  );
+}
+
+/**
+ * "Highlight saved · Undo" as a snackbar at the foot of the document, clear of the page's text.
+ * It stays a few seconds, longer while pointed at or focused, and goes at once with × or Esc.
+ * Ctrl+Z or ⌘Z outside a text field undoes the highlight while it is offered. Once the highlight
+ * is being edited, Undo is withdrawn and the notice goes.
+ *
+ * `overlaid` says a selection toolbar or the composer is open: Esc is theirs to close, not the
+ * notice's, as it is while a dialog or menu is open.
  */
 export function HighlightSavedNotice({
-  saved,
+  saved: tracked,
+  overlaid = false,
   onUndo,
   onDismiss,
 }: {
   readonly saved: SavedHighlight | null;
+  readonly overlaid?: boolean;
   readonly onUndo: () => void;
   readonly onDismiss: () => void;
 }): JSX.Element | null {
-  const layer = useRef<HTMLDivElement>(null);
-  const [origin, setOrigin] = useState<LayerBox | null>(null);
-  const [held, setHeld] = useState(false);
-  const id = saved?.id;
-  useLayoutEffect(() => {
-    const bounds = id === undefined ? undefined : layer.current?.getBoundingClientRect();
-    setOrigin(bounds ? { x: bounds.left, y: bounds.top, height: bounds.height } : null);
-  }, [id]);
-  useNoticeLifetime(saved?.status, held, onUndo, onDismiss);
+  const saved = tracked?.undoable ? tracked : null;
+  // Held by its id, so a notice that goes while held does not leave the next one held.
+  const [heldId, setHeldId] = useState<number | null>(null);
+  const held = saved !== null && heldId === saved.id;
+  useNoticeLifetime(saved?.status, held, overlaid, onUndo, onDismiss);
   if (!saved) {
     return null;
   }
-  const rect = origin && saved.rect ? relative(saved.rect, origin) : null;
   return (
-    <div ref={layer} className="highlight-saved-layer" data-highlight-color={saved.color}>
-      {rect && rect.height <= sweepMaxHeight && !reducedMotion() ? (
-        <span
-          key={saved.id}
-          className="highlight-sweep"
-          aria-hidden="true"
-          style={{ left: rect.x, top: rect.y, width: rect.width, height: rect.height }}
-        />
-      ) : null}
+    <>
       {/* Present, and empty, while saving, so the message that fills it is announced. */}
       <span role="status" className="sr-only">
         {savedMessage(saved)}
       </span>
       {saved.status === "saving" ? null : (
         <div
-          className={`highlight-saved${rect ? " is-anchored" : ""}`}
-          style={rect && origin ? noticePosition(rect, origin.height) : undefined}
-          onPointerEnter={() => setHeld(true)}
-          onPointerLeave={() => setHeld(false)}
-          onFocus={() => setHeld(true)}
-          onBlur={() => setHeld(false)}
+          className="highlight-saved"
+          data-highlight-color={saved.color}
+          onPointerEnter={() => setHeldId(saved.id)}
+          onPointerLeave={() => setHeldId(null)}
+          onFocus={() => setHeldId(saved.id)}
+          onBlur={() => setHeldId(null)}
         >
           <SavedStatus saved={saved} onUndo={onUndo} />
+          <button
+            type="button"
+            className="highlight-saved-dismiss"
+            aria-label="Dismiss"
+            aria-keyshortcuts="Escape"
+            title="Dismiss (Esc)"
+            onClick={onDismiss}
+          >
+            <CloseIcon />
+          </button>
         </div>
       )}
-    </div>
+    </>
   );
 }
 
@@ -106,13 +142,12 @@ function SavedStatus({
   readonly onUndo: () => void;
 }): JSX.Element {
   // The live region above speaks the message; this copy is for the eye.
-  const message = (
-    <span className="highlight-saved-message" aria-hidden="true">
-      {savedMessage(saved)}
-    </span>
-  );
   if (saved.status === "embedded" || saved.status === "failed") {
-    return message;
+    return (
+      <span className="highlight-saved-message" aria-hidden="true">
+        {savedMessage(saved)}
+      </span>
+    );
   }
   return (
     <>
@@ -124,6 +159,7 @@ function SavedStatus({
       </span>
       <button
         type="button"
+        className="highlight-saved-undo"
         disabled={saved.status === "undoing"}
         aria-keyshortcuts="Control+Z Meta+Z"
         title="Undo highlight (Ctrl+Z)"
@@ -135,10 +171,14 @@ function SavedStatus({
   );
 }
 
-/** The notice goes after a while unless held; Ctrl+Z or ⌘Z undoes while it is offered. */
+/**
+ * The notice goes after a while unless held, or at once on Esc; Ctrl+Z or ⌘Z undoes while it
+ * is offered.
+ */
 function useNoticeLifetime(
   status: SavedHighlight["status"] | undefined,
   held: boolean,
+  overlaid: boolean,
   onUndo: () => void,
   onDismiss: () => void,
 ): void {
@@ -149,6 +189,24 @@ function useNoticeLifetime(
     const timer = setTimeout(onDismiss, highlightUndoMilliseconds);
     return () => clearTimeout(timer);
   }, [status, held, onDismiss]);
+  useEffect(() => {
+    if (status === undefined || status === "saving" || overlaid) {
+      return undefined;
+    }
+    // Esc closes the notice only when nothing else is open to take it: one press, one thing.
+    const onKeyDown = (event: KeyboardEvent): void => {
+      if (
+        event.key === "Escape" &&
+        !event.defaultPrevented &&
+        !isTyping(event.target) &&
+        !document.querySelector(openOverlays)
+      ) {
+        onDismiss();
+      }
+    };
+    document.addEventListener("keydown", onKeyDown);
+    return () => document.removeEventListener("keydown", onKeyDown);
+  }, [status, overlaid, onDismiss]);
   useEffect(() => {
     if (status !== "saved") {
       return undefined;
@@ -176,13 +234,4 @@ function useNoticeLifetime(
 
 function relative(rect: ViewportRect, origin: LayerBox): ViewportRect {
   return { x: rect.x - origin.x, y: rect.y - origin.y, width: rect.width, height: rect.height };
-}
-
-/** Just below the passage, or above it when that would leave the document. */
-function noticePosition(rect: ViewportRect, layerHeight: number): CSSProperties {
-  const below = rect.y + rect.height + 8;
-  return {
-    left: Math.max(8, rect.x),
-    top: below + 40 > layerHeight ? Math.max(8, rect.y - 40) : below,
-  };
 }

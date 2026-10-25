@@ -116,4 +116,30 @@ describe("PDF selection publication", () => {
     expect(getSelectedText).not.toHaveBeenCalled();
     stop();
   });
+
+  it("anchors the draft around the selected lines when the viewer can measure them", async () => {
+    const f = fixture();
+    const listener = vi.fn();
+    const locate = vi.fn().mockReturnValue({ x: 5, y: 6, width: 7, height: 8 });
+    const stop = observePdfSelection(f.selection, listener, f.adjustments, locate);
+    f.end();
+    f.text.resolve(["text"]);
+    await Promise.resolve();
+    expect(locate).toHaveBeenCalledWith([
+      { pageIndex: 0, rect: { origin: { x: 10, y: 20 }, size: { width: 100, height: 12 } } },
+    ]);
+    expect(listener.mock.calls[0]?.[0].anchor).toEqual({ x: 5, y: 6, width: 7, height: 8 });
+    stop();
+  });
+
+  it("leaves the anchor out when the viewer cannot be measured", async () => {
+    const f = fixture();
+    const listener = vi.fn();
+    const stop = observePdfSelection(f.selection, listener, f.adjustments, () => null);
+    f.end();
+    f.text.resolve(["text"]);
+    await Promise.resolve();
+    expect(listener.mock.calls[0]?.[0]).not.toHaveProperty("anchor");
+    stop();
+  });
 });

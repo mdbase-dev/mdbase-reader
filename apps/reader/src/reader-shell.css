@@ -3649,15 +3649,12 @@
   }
 }
 
-/* The ink sweep and "Highlight saved · Undo" after a quick highlight. */
-.highlight-saved-layer {
+/* The ink sweep over a new highlight's passage; "Highlight saved · Undo" waits at the foot of
+   the document (.document-notices), clear of the text. */
+.highlight-sweep-layer {
   position: absolute;
   inset: 0;
   z-index: 9;
-  display: flex;
-  align-items: flex-end;
-  justify-content: center;
-  padding: 14px;
   pointer-events: none;
 }
 
@@ -3697,8 +3694,8 @@
 .highlight-saved {
   display: inline-flex;
   align-items: center;
-  gap: 8px;
-  height: 30px;
+  gap: 4px;
+  height: 32px;
   padding: 0 4px 0 8px;
   border-radius: var(--r-full);
   background: var(--bg-raised);
@@ -3708,14 +3705,11 @@
   pointer-events: auto;
 }
 
-.highlight-saved.is-anchored {
-  position: absolute;
-}
-
 .highlight-saved-message {
   display: inline-flex;
   align-items: center;
   gap: 6px;
+  margin-right: 4px;
 }
 
 .highlight-saved-check {
@@ -3745,9 +3739,39 @@
   cursor: pointer;
 }
 
+.highlight-saved > .highlight-saved-dismiss {
+  display: inline-grid;
+  place-items: center;
+  width: 24px;
+  padding: 0;
+  color: var(--text-3);
+}
+
+.highlight-saved-dismiss svg {
+  width: 13px;
+  height: 13px;
+}
+
 .highlight-saved > button:hover:not(:disabled),
 .highlight-saved > button:focus-visible {
   background: var(--bg-hover);
+}
+
+.highlight-saved > .highlight-saved-dismiss:hover,
+.highlight-saved > .highlight-saved-dismiss:focus-visible {
+  color: var(--text-1);
+}
+
+@media (pointer: coarse) {
+  .highlight-saved {
+    height: 44px;
+  }
+  .highlight-saved > button {
+    height: 40px;
+  }
+  .highlight-saved > .highlight-saved-dismiss {
+    width: 40px;
+  }
 }
 
 @media (prefers-reduced-motion: no-preference) {
@@ -3834,23 +3858,6 @@
   .selection-toolbar {
     animation: composer-appear 120ms var(--ease) both;
   }
-}
-
-.annotation-composer > p.annotation-new-selection {
-  margin: 8px 16px 0;
-  color: var(--muted);
-  font-size: 12px;
-}
-
-.annotation-new-selection button {
-  padding: 0;
-  border: 0;
-  background: transparent;
-  color: var(--accent);
-  font: inherit;
-  text-decoration: underline;
-  text-underline-offset: 2px;
-  cursor: pointer;
 }
 
 /* The consent popup's return window, shown while it closes. */

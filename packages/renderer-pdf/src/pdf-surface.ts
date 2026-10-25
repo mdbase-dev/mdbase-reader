@@ -127,7 +127,12 @@ export class EmbedPdfSurface implements ReadingSurface {
           return Promise.resolve();
         },
       },
-      annotationActivation: { activations: this.#annotationActivations },
+      annotationActivation: {
+        activations: this.#annotationActivations,
+        ...(runtime.activationRect
+          ? { activationRect: () => runtime.activationRect?.() ?? null }
+          : {}),
+      },
     };
   }
 

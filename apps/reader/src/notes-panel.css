@@ -702,3 +702,9 @@
     background: Highlight;
   }
 }
+
+/* Virtual rows are absolutely positioned and transformed, so each is its own stacking
+   context and later rows paint over earlier ones. Lift the row whose menu is open. */
+.annotation-list [role="listitem"]:has(details[open]) {
+  z-index: 2;
+}

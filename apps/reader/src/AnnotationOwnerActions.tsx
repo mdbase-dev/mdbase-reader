@@ -137,36 +137,3 @@ export function AnnotationMoveStatus({
     </p>
   ) : null;
 }
-
-/** Compact source details for a saved highlight, as shown in the selection toolbar. */
-export function AnnotationOwnerActions({
-  annotation,
-  sources = [],
-  disabled = false,
-  onMove,
-}: {
-  readonly annotation: Annotation;
-  readonly sources?: readonly SourceSummary[] | undefined;
-  readonly disabled?: boolean;
-  readonly onMove?: ((annotation: Annotation, owner: SourceSummary) => Promise<void>) | undefined;
-}): JSX.Element {
-  const state = useAnnotationMove(annotation, onMove);
-  return (
-    <div
-      className="annotation-owner-control"
-      onClick={(event) => event.stopPropagation()}
-      role="presentation"
-    >
-      <AnnotationSourceLine annotation={annotation} sources={sources} />
-      {onMove && sources.length > 1 ? (
-        <AnnotationMoveSelect
-          annotation={annotation}
-          sources={sources}
-          disabled={disabled}
-          state={state}
-        />
-      ) : null}
-      <AnnotationMoveStatus state={state} />
-    </div>
-  );
-}

@@ -23,9 +23,9 @@ export function AnnotationComposer({
   }));
   const note = comment.selection === composer.selection ? comment.body : composer.note;
   if (!composer.selection) {
-    return <AnnotationComposerNotices composer={composer} />;
+    return null;
   }
-  // Text reaches the composer only when the reader chose to comment; an area may be saved bare.
+  // Text arrives here only as a draft kept by an older version; an area may be saved bare.
   const commenting = composer.selection.kind === "text" || expanded || note !== "";
   return (
     // The region delegates keyboard shortcuts from its interactive children.
@@ -75,14 +75,6 @@ export function AnnotationComposer({
           Not saved yet — keep Reader open until you save this annotation.
         </small>
       ) : null}
-      {composer.newSelection ? (
-        <p className="annotation-new-selection" role="status">
-          You selected other text.{" "}
-          <button type="button" onClick={composer.useNewSelection}>
-            Use it for this comment
-          </button>
-        </p>
-      ) : null}
       {composer.error ? <p role="alert">{composer.error}</p> : null}
       <footer>
         {commenting ? null : (
@@ -128,30 +120,4 @@ function AreaPreview({ image }: { readonly image: Blob }): JSX.Element {
 
 function annotationSaveDisabled(composer: AnnotationComposerController): boolean {
   return composer.status === "saving" || Boolean(composer.ownerControl?.pending);
-}
-
-function AnnotationComposerNotices({
-  composer,
-}: {
-  readonly composer: AnnotationComposerController;
-}): JSX.Element {
-  return (
-    <>
-      {composer.error ? (
-        <div className="annotation-compose-error" role="alert">
-          {composer.error}
-        </div>
-      ) : null}
-      {composer.resumeDraft ? (
-        <button className="annotation-return" type="button" onClick={composer.resumeDraft}>
-          Resume unfinished annotation
-        </button>
-      ) : null}
-      {composer.returnToReading ? (
-        <button className="annotation-return" type="button" onClick={composer.returnToReading}>
-          Back to reading position
-        </button>
-      ) : null}
-    </>
-  );
 }

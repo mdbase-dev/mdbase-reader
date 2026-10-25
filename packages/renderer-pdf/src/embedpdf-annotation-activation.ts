@@ -1,5 +1,6 @@
 import { annotationId } from "@mdbase-reader/core";
 
+import type { PdfPageRect } from "./pdf-viewport-rect.js";
 import type { AnnotationPlugin } from "@embedpdf/plugin-annotation";
 import type { AnnotationId } from "@mdbase-reader/core";
 import type { Unsubscribe } from "@mdbase-reader/reading-surface";
@@ -8,6 +9,8 @@ type AnnotationCapability = ReturnType<AnnotationPlugin["provides"]>;
 
 export interface EmbedPdfAnnotationActivations {
   subscribe(listener: (annotationId: AnnotationId) => void): Unsubscribe;
+  /** The page rectangle of the highlight activated last, for placing its actions. */
+  activatedRect(): PdfPageRect | null;
   destroy(): void;
 }
 
@@ -16,12 +19,14 @@ export function createEmbedPdfAnnotationActivations(
 ): EmbedPdfAnnotationActivations {
   const listeners = new Set<(annotationId: AnnotationId) => void>();
   let selectedId: AnnotationId | null = null;
+  let selectedRect: PdfPageRect | null = null;
   const unsubscribe = capability.onStateChange(() => {
     const selected = capability
       .getSelectedAnnotations()
       .find(({ object }) => object.id.startsWith("mdbase-reader:"));
     const nextId = selected ? annotationId(readerAnnotationId(selected.object)) : null;
-    if (nextId && nextId !== selectedId) {
+    if (selected && nextId && nextId !== selectedId) {
+      selectedRect = { pageIndex: selected.object.pageIndex, rect: selected.object.rect };
       listeners.forEach((listener) => listener(nextId));
     }
     selectedId = nextId;
@@ -31,6 +36,7 @@ export function createEmbedPdfAnnotationActivations(
       listeners.add(listener);
       return () => listeners.delete(listener);
     },
+    activatedRect: () => selectedRect,
     destroy() {
       unsubscribe();
       listeners.clear();

@@ -117,35 +117,19 @@ export async function auditAnnotations(page, { screenshot, blockWrites }) {
   await page.keyboard.press("Escape");
   await select(1);
   await selectionBar.getByRole("button", { name: "Comment on highlight" }).click();
-  const composer = page.getByRole("region", { name: "Comment on highlight" });
-  await composer
-    .getByRole("textbox", { name: "Comment" })
-    .fill("[test] New selection draft survives switching sources.");
-  await expect(
-    composer.getByText("Not saved yet — keep Reader open until you save this annotation.", {
-      exact: true,
-    }),
-  ).toBeVisible();
-  page.removeAllListeners("dialog");
-  page.on("dialog", (dialog) => void dialog.dismiss());
-  await select(2);
-  await expect(composer.getByRole("textbox", { name: "Comment" })).toHaveValue(
-    /New selection draft survives/u,
-  );
-  await expect(composer.getByRole("button", { name: "Use it for this comment" })).toBeVisible();
-  await composer.getByRole("button", { name: "Discard selection", exact: true }).click();
-  await expect(composer).toBeVisible();
-  page.removeAllListeners("dialog");
-  page.on("dialog", (dialog) => void dialog.accept());
-  await open(1);
-  await open(0);
-  await expect(composer.getByRole("textbox", { name: "Comment" })).toHaveValue(
-    /New selection draft survives/u,
-  );
-  await composer.getByRole("textbox", { name: "Comment" }).press("Control+s");
-  await expect(composer).toHaveCount(0);
+  // The highlight saves at once and its card opens to take the comment; no composer, no draft.
+  const newComment = tools
+    .getByRole("group", { name: "Edit annotation" })
+    .getByRole("textbox", { name: "Comment" });
+  await expect(newComment).toBeFocused();
+  await newComment.fill("[test] Comment written on the new highlight's card.");
+  await expect(page.getByRole("region", { name: "Comment on highlight" })).toHaveCount(0);
+  await expect(page.getByRole("button", { name: "Resume unfinished annotation" })).toHaveCount(0);
+  await newComment.press("Control+s");
+  await expect(newComment).toHaveCount(0);
+  await expect(tools).toContainText("Comment written on the new highlight");
   completed.push(
-    "New source comments remain in memory across source switching; a new selection never replaces them, and discarding requires confirmation",
+    "Comment on highlight saves the highlight at once and takes its comment on the card; nothing is left to resume",
   );
 
   await tools.getByRole("searchbox", { name: "Search annotations" }).fill("recoverable");

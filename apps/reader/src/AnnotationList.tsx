@@ -94,7 +94,7 @@ export function AnnotationList({
   const [view, setView] = useState<AnnotationView>(defaultAnnotationView);
   const [following, setFollowing] = useState(true);
   const { renderAll, setRenderAll, browserRef } = useAnnotationBrowserFind();
-  const context = { currentSourceId, owners };
+  const context = { currentSourceId, owners, editingId: currentEditing };
   const { scoped, results, headings } = useAnnotationResults(annotations, view, query, context);
   const grouped = view.order === "document";
   const total = annotations.status === "ready" ? annotations.value.length : 0;
@@ -213,6 +213,8 @@ function useAnnotationResults(
   context: {
     readonly currentSourceId: SourceId | undefined;
     readonly owners: readonly SourceSummary[] | undefined;
+    /** The card being edited stays listed whatever the search or filters, so it can be. */
+    readonly editingId?: AnnotationId | null;
   },
 ): {
   readonly scoped: ReturnType<typeof indexAnnotations>;
@@ -229,13 +231,22 @@ function useAnnotationResults(
       view.source ? index.filter(({ annotation }) => annotation.sourceId === view.source) : index,
     [index, view.source],
   );
-  const results = useMemo(
-    () =>
-      searchAnnotationIndex(scoped, query, view.filter).filter((annotation) =>
-        annotationMatchesColor(annotation, view.color),
-      ),
-    [scoped, query, view.filter, view.color],
-  );
+  const { editingId = null } = context;
+  const results = useMemo(() => {
+    const matches = searchAnnotationIndex(scoped, query, view.filter).filter((annotation) =>
+      annotationMatchesColor(annotation, view.color),
+    );
+    if (editingId === null || matches.some(({ id }) => id === editingId)) {
+      return matches;
+    }
+    const matched = new Set(matches.map(({ id }) => id));
+    const pinned = index.some(({ annotation }) => annotation.id === editingId);
+    return pinned
+      ? index
+          .map(({ annotation }) => annotation)
+          .filter(({ id }) => matched.has(id) || id === editingId)
+      : matches;
+  }, [index, scoped, query, view.filter, view.color, editingId]);
   const { currentSourceId, owners } = context;
   const headings = useMemo(
     () =>
