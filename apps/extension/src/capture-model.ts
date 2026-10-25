@@ -1,5 +1,10 @@
 import { describeError } from "@mdbase-reader/connect/native";
-import { normalizedSourceUrl, sameSourceUrl, type SourceSummary } from "@mdbase-reader/core";
+import {
+  normalizedSourceUrl,
+  sameSourceUrl,
+  type Annotation,
+  type SourceSummary,
+} from "@mdbase-reader/core";
 
 import { environment } from "./environment.js";
 
@@ -9,6 +14,16 @@ export function readerSourceUrl(source: Pick<SourceSummary, "collectionId" | "id
   const url = new URL(`${environment.readerOrigin}/`);
   url.searchParams.set("collection", source.collectionId);
   url.searchParams.set("source", source.id);
+  return url.href;
+}
+
+/** The source in Reader with `annotation` revealed, named by record path where it has one. */
+export function readerAnnotationUrl(
+  source: Pick<SourceSummary, "collectionId" | "id">,
+  annotation: Pick<Annotation, "id" | "path">,
+): string {
+  const url = new URL(readerSourceUrl(source));
+  url.searchParams.set("annotation", annotation.path ?? annotation.id);
   return url.href;
 }
 

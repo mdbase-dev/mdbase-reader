@@ -1,6 +1,6 @@
 import { memo, useMemo, useState } from "react";
 
-import { problemMessage } from "./capture-model.js";
+import { problemMessage, readerAnnotationUrl } from "./capture-model.js";
 import { displayQuote, highlightComment } from "./highlight-body.js";
 import { TechnicalDetails } from "./TechnicalDetails.js";
 
@@ -19,7 +19,8 @@ export function SavedHighlights({
     () => ({ revealHighlight, updateHighlightComment, planHighlightDeletion, deleteHighlight }),
     [revealHighlight, updateHighlightComment, planHighlightDeletion, deleteHighlight],
   );
-  if (!c.source) {
+  const { source } = c;
+  if (!source) {
     return null;
   }
   const highlights = c.annotations.filter((annotation) => annotation.target?.quote);
@@ -53,6 +54,7 @@ export function SavedHighlights({
           <HighlightItem
             key={annotation.id}
             annotation={annotation}
+            readerUrl={readerAnnotationUrl(source, annotation)}
             outcome={c.projection?.outcomes.get(annotation.id) ?? null}
             busy={c.busy}
             navigated={c.navigated}
@@ -83,12 +85,15 @@ type HighlightActions = Pick<
 // Memoised: typing in the panel's drafts must not redraw every saved highlight.
 const HighlightItem = memo(function HighlightItem({
   annotation,
+  readerUrl,
   outcome,
   busy,
   navigated,
   actions: c,
 }: {
   readonly annotation: Annotation;
+  /** The source in Reader, opened at this passage. */
+  readonly readerUrl: string;
   readonly outcome: QuoteOutcome | null;
   readonly busy: boolean;
   readonly navigated: boolean;
@@ -166,6 +171,9 @@ const HighlightItem = memo(function HighlightItem({
           >
             Delete
           </button>
+          <a className="text-button" href={readerUrl} target="_blank" rel="noreferrer">
+            Open in Reader
+          </a>
         </div>
       ) : null}
       {problem ? (

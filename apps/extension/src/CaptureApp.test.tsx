@@ -212,7 +212,13 @@ it("lists saved highlights and says which ones the page could not show", () => {
   expect(html).toContain("still in the saved copy");
   expect(html).not.toContain("A note without a quote");
   expect(html).toContain("collection=c1&amp;source=s1");
-  expect(html).toMatch(/role="status"[^>]*><span>In your collection<\/span> · <a[^>]*>Open in Reader/u);
+  // Each highlight opens Reader at its own passage.
+  expect(html).toMatch(
+    /href="[^"]*collection=c1&amp;source=s1&amp;annotation=a2"[^>]*>Open in Reader/u,
+  );
+  expect(html).toMatch(
+    /role="status"[^>]*><span>In your collection<\/span> · <a[^>]*>Open in Reader/u,
+  );
   // The passage is tinted in its colour; there is no hint while saved highlights show.
   expect(html).toMatch(/swatch-green"><button[^>]*><span class="highlight-mark">shown passage/u);
   expect(html).not.toContain("Select text on the page");
