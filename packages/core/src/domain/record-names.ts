@@ -308,6 +308,79 @@ export function sourceNoteStems(input: {
   return finish([...candidates, ...withIdSuffixes(title, input.id, 4, 8)], input.id);
 }
 
+/** The most folders a preferred source note name may put it in, under `sources/`. */
+export const maxPreferredFolders = 3;
+
+/**
+ * A name someone chose, such as a rendered name template, made safe as one path segment: NFC;
+ * characters the engine refuses (Windows' `<>:"/\|?*`, controls, ignorables) become spaces;
+ * runs of white space become one space; no leading or trailing dot or space; at most
+ * {@link maxNameBytes}, cut where {@link nameClusters} allows. Case, spaces and punctuation
+ * otherwise stay as written. Empty when nothing usable is left or the result is a
+ * {@link isReservedName reserved name}.
+ */
+export function safeName(text: string): string {
+  let spaced = "";
+  for (const character of text.normalize("NFC")) {
+    if (inRanges(character, droppedRanges)) {
+      continue;
+    }
+    spaced +=
+      /[<>:"/\\|?*\p{Cc}]/u.test(character) || inRanges(character, ignorableRanges)
+        ? " "
+        : character;
+  }
+  const trimEnds = (value: string): string => value.replace(/^[. ]+|[. ]+$/gu, "");
+  const collapsed = trimEnds(spaced.replace(/\s+/gu, " "));
+  const name = trimEnds(truncate(collapsed, Number.MAX_SAFE_INTEGER, maxNameBytes)).normalize(
+    "NFC",
+  );
+  return isReservedName(name) ? "" : name;
+}
+
+/**
+ * Stems (relative to `sources/`, without `.md`) for a new source note whose preferred name is
+ * `preferred`, such as a rendered name template. `/` separates folders, at most
+ * {@link maxPreferredFolders} of them; each segment goes through {@link safeName}, and empty
+ * segments are dropped. The preferred leaf comes first, then the same fallbacks as
+ * {@link sourceNoteStems} built from it in the same folder (author and year, then 4 and 8
+ * characters of the ID), then the ID. A preferred name that is empty, unusable or nested too deep
+ * gives {@link sourceNoteStems} unchanged, and so does one equal to its first stem.
+ */
+export function preferredSourceNoteStems(
+  preferred: string,
+  input: Parameters<typeof sourceNoteStems>[0],
+): readonly string[] {
+  const defaults = sourceNoteStems(input);
+  const segments = preferred.split("/").map(safeName).filter(Boolean);
+  const leaf = segments.at(-1);
+  if (!leaf || segments.length > maxPreferredFolders + 1) {
+    return defaults;
+  }
+  const folder = segments.slice(0, -1).join("/");
+  if (!folder && leaf === defaults[0]) {
+    return defaults;
+  }
+  const family = input.authorYear ? slug(input.authorYear.family, authorFamilyCodePoints) : "";
+  const year = input.authorYear ? yearToken(input.authorYear.year) : "";
+  const leaves = unique([
+    leaf,
+    family && year ? nameWithSuffix(leaf, `-${family}-${year}`) : "",
+    ...withIdSuffixes(leaf, input.id, 4, 8),
+  ]).filter((name) => !isReservedName(name));
+  return unique([...leaves.map((name) => (folder ? `${folder}/${name}` : name)), input.id]);
+}
+
+/**
+ * Leaves for a new annotation whose preferred name is `preferred`: the name through
+ * {@link safeName} (so a `/` is a space: annotations take no folders), then with 4 and 8
+ * characters of the ID, then the ID. Empty or unusable gives the ID alone, Reader's default.
+ */
+export function preferredAnnotationLeaves(preferred: string, id: string): readonly string[] {
+  const leaf = safeName(preferred);
+  return leaf && leaf !== id ? finish([leaf, ...withIdSuffixes(leaf, id, 4, 8)], id) : [id];
+}
+
 /** `sources/<stem>.md` for each of {@link sourceNoteStems}. */
 export function sourceNotePaths(input: Parameters<typeof sourceNoteStems>[0]): readonly string[] {
   return sourceNoteStems(input).map((stem) => `sources/${stem}.md`);

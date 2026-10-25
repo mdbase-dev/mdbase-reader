@@ -15,6 +15,7 @@ export * from "./application/update-annotation-body.js";
 export type * from "./application/ports.js";
 export type * from "./application/source-lookups.js";
 export * from "./domain/annotation-body.js";
+export * from "./domain/app-settings.js";
 export * from "./domain/annotation.js";
 export * from "./domain/citation.js";
 export * from "./domain/citation-schema.js";
