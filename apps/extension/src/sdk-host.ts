@@ -6,7 +6,7 @@ import {
   isClientMessage,
   isCollectionCommand,
   serializeError,
-  withoutFunctions,
+  transferable,
   type CallTarget,
   type ClientMessage,
   type CollectionShape,
@@ -106,7 +106,7 @@ export function serveSdk(link: SdkLink, source: SdkHostSource, hostId: string): 
     post({
       kind: "snapshot",
       host: hostId,
-      snapshot: withoutFunctions(application.getSnapshot()),
+      snapshot: transferable(application.getSnapshot()),
       collection: current ? shapeOf(current.key, current.collection) : null,
     });
   };
@@ -140,7 +140,7 @@ export function serveSdk(link: SdkLink, source: SdkHostSource, hostId: string): 
         ...decodeArgs(message.args, controller.signal, onCallback),
       );
       try {
-        post({ ...reply, ok: true, value: withoutFunctions(value) });
+        post({ ...reply, ok: true, value: transferable(value) });
       } catch (reason) {
         // The SDK's answer cannot cross the channel (it holds functions).
         post({ ...reply, ok: false, value: serializeError(reason) });

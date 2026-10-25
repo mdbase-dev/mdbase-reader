@@ -265,6 +265,21 @@ export function withoutFunctions(value: unknown, depth = 0): unknown {
   return copy;
 }
 
+/**
+ * An application snapshot (or a call's result) as data pages can receive. A ready phase
+ * carries the SDK's live connection, which stays in the host: pages reach the collection
+ * through the host's collection shape instead.
+ */
+export function transferable(value: unknown): unknown {
+  const phase = isPlainObject(value) ? value["phase"] : undefined;
+  if (isPlainObject(value) && isPlainObject(phase) && "connection" in phase) {
+    const rest: Record<string, unknown> = { ...phase };
+    delete rest["connection"];
+    return withoutFunctions({ ...value, phase: rest });
+  }
+  return withoutFunctions(value);
+}
+
 type Callback = (...args: unknown[]) => void;
 
 /**

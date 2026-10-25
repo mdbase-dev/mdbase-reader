@@ -9,6 +9,7 @@ import {
   deserializeError,
   encodeArgs,
   serializeError,
+  transferable,
   withoutFunctions,
 } from "./sdk-rpc.js";
 import { memoryBus } from "./testing/memory-bus.js";
@@ -252,5 +253,17 @@ describe("withoutFunctions", () => {
       items: [{ name: "a" }],
       at: new Date(0),
     });
+  });
+});
+
+describe("transferable", () => {
+  it("keeps a ready phase's live connection in the host", () => {
+    const connection = { files: { client: { session: new Map() } }, close: () => undefined };
+    const copy = transferable({
+      status: "ready",
+      phase: { kind: "ready", collectionId: "c1", connection },
+    });
+    expect(() => structuredClone(copy)).not.toThrow();
+    expect(copy).toEqual({ status: "ready", phase: { kind: "ready", collectionId: "c1" } });
   });
 });
