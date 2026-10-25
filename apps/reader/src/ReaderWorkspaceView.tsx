@@ -2,7 +2,7 @@ import { CommandPalette } from "@mdbase-dev/ui/command-palette";
 import { useCallback, useEffect, useMemo, useRef, type JSX, type RefObject } from "react";
 
 import { confirmCollectionSwitch } from "./collection-switching.js";
-import { DeploymentUpdateNotice } from "./DeploymentUpdateNotice.js";
+import { useShellNotices } from "./CreateFollowThroughNotice.js";
 import { inspectorPanelId, navigatorPanelId } from "./dockview-workspace-state.js";
 import { DockviewWorkspace } from "./DockviewWorkspace.js";
 import { useReaderFeedbackContext } from "./FeedbackRoot.js";
@@ -151,6 +151,10 @@ export function ReaderWorkspaceView({
   const shellRef = useRef<HTMLDivElement>(null);
   useShellChrome(shellRef, model, mobile);
   const annotationCounts = useLibraryAnnotationCounts(model);
+  const notices = useShellNotices(
+    model.deploymentUpdateAvailable,
+    model.gateway.createFollowThrough,
+  );
   const workbenchOwner = findWorkbenchOwner(
     sourceWorkspace.layout,
     inspectorSource?.id ?? null,
@@ -203,7 +207,7 @@ export function ReaderWorkspaceView({
     <div
       data-density={shell.value.density}
       ref={shellRef}
-      className={`reader-shell${model.deploymentUpdateAvailable ? " has-update" : ""}`}
+      className={`reader-shell${notices ? " has-update" : ""}`}
       {...fileDrop.handlers}
     >
       {fileDrop.active ? (
@@ -214,7 +218,7 @@ export function ReaderWorkspaceView({
           </div>
         </div>
       ) : null}
-      {model.deploymentUpdateAvailable ? <DeploymentUpdateNotice /> : null}
+      {notices}
       {model.focusMode ? <div className="reading-chrome-reveal" aria-hidden="true" /> : null}
       <ReaderHeader
         {...reading}
