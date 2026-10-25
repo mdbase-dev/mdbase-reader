@@ -127,7 +127,8 @@ export function useReadingResume(input: {
     });
     return () => {
       lifecycle.active = false;
-      currentResumptions.delete(surface);
+      // Keep the resumption mark: the source record briefly unloads after each position save,
+      // and resuming again would pull a reader browsing outside a chapter back to its start.
       unsubscribe?.();
       clearTimeout(timer);
       if (latest) {

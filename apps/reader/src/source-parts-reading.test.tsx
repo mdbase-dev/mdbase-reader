@@ -191,6 +191,43 @@ it.each([undefined, 15, 23])(
   },
 );
 
+it("leaves a reader outside the chapter where they are when the source record reloads", async () => {
+  const { chapter } = await anthology();
+  const surface = pdf(chapter);
+  const save = vi.fn().mockResolvedValue(undefined);
+  function Harness({ source }: { readonly source: Source | null }): null {
+    useReadingResume({ source, surface, save });
+    return null;
+  }
+  await act(async () => {
+    root.render(<Harness source={chapter} />);
+    await Promise.resolve();
+  });
+  expect(surface.currentLocation()).toEqual({ kind: "pdf", pageIndex: 10 });
+  await act(async () => {
+    await surface.goTo({ kind: "pdf", pageIndex: 22 });
+    await vi.advanceTimersByTimeAsync(1200);
+  });
+  // Saving the position refreshes the source record, which briefly unloads it.
+  const saved: Source = {
+    ...chapter,
+    reading: {
+      status: "reading",
+      documentFileId: chapter.documents[0]!.fileId,
+      position: { kind: "pdf", pageIndex: 22 },
+    },
+  };
+  await act(async () => {
+    root.render(<Harness source={null} />);
+    await Promise.resolve();
+  });
+  await act(async () => {
+    root.render(<Harness source={saved} />);
+    await vi.advanceTimersByTimeAsync(100);
+  });
+  expect(surface.currentLocation()).toEqual({ kind: "pdf", pageIndex: 22 });
+});
+
 it("does not restore or write a previous source while another shared-file session is hydrating", async () => {
   const { chapter, book } = await anthology();
   const surface = pdf(chapter);
