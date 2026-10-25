@@ -2,7 +2,7 @@ import { useCallback, useRef, type JSX, type ReactNode } from "react";
 
 import { AnnotationComposerLayer } from "./AnnotationComposerLayer.js";
 import { DocumentContextualToolbar } from "./DocumentContextualToolbar.js";
-import { HighlightSavedNotice } from "./HighlightSavedNotice.js";
+import { DocumentNotices } from "./DocumentNotices.js";
 import { SelectionToolbarLayer } from "./SelectionToolbar.js";
 import { SourceReadingBoundary } from "./SourceReadingBoundary.js";
 import { useDocumentAnnotationDirty } from "./use-annotation-draft.js";
@@ -101,11 +101,7 @@ export function DocumentWorkspace({
             <AnnotationComposerLayer composer={props.annotationComposer} />
             {/* A phone shows selection actions in its bottom bar instead. */}
             {dock.mobile ? null : <SelectionToolbarLayer composer={props.annotationComposer} />}
-            <HighlightSavedNotice
-              saved={props.annotationComposer.savedHighlight}
-              onUndo={props.annotationComposer.undoSavedHighlight}
-              onDismiss={props.annotationComposer.dismissSavedHighlight}
-            />
+            <DocumentNotices composer={props.annotationComposer} />
           </>
         ) : null}
       </div>

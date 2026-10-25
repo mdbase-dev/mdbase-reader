@@ -1,4 +1,4 @@
-import { useEffect, useState, useSyncExternalStore } from "react";
+import { useEffect, useSyncExternalStore } from "react";
 
 import { annotationCreationBuffer } from "./annotation-creation-buffer.js";
 import { confirmAnnotationDiscard } from "./annotation-draft-actions.js";
@@ -39,18 +39,23 @@ export interface AnnotationCreationController {
   readonly error: string | null;
   readonly canSelectArea: boolean;
   readonly selectingArea: boolean;
-  readonly resumeDraft: (() => void) | null;
-  /** A selection made while a comment was being written; the comment keeps its passage. */
-  readonly newSelection: boolean;
-  readonly useNewSelection: () => void;
-  readonly pause: () => void;
+  /**
+   * Drops a capture nobody has written about yet, as when the reader turns to a highlight.
+   * A written comment stays open in the composer.
+   */
+  readonly setAside: () => void;
   readonly setNote: (note: string) => void;
   readonly dismiss: () => void;
   readonly save: () => void;
-  /** Saves a selection as a highlight at once, in `color` or the colour used last. */
-  readonly highlight: (selection: TextComposerSelection, color?: HighlightColorKey) => void;
-  /** Opens the composer to comment on a selection. */
-  readonly comment: (selection: TextComposerSelection) => void;
+  /**
+   * Saves a selection as a highlight at once, in `color` or the colour used last. `onSaved`
+   * follows the saved highlight, as when its comment is to be written next.
+   */
+  readonly highlight: (
+    selection: TextComposerSelection,
+    color?: HighlightColorKey,
+    onSaved?: (annotation: Annotation) => void,
+  ) => void;
   readonly toggleAreaSelection: () => void;
 }
 function creationKey(source: Source | null, surface: ReadingSurface | null): string {
@@ -84,18 +89,12 @@ export function useAnnotationCreation(
     beforeHighlight: toolbar.hide,
   });
   const { busy, setProblem } = saving;
-  const [pausedKey, setPausedKey] = useState<string | null>(null);
   const area = useAreaSelectionMode(surface);
-  const [switchTo, setSwitchTo] = useState<{
-    readonly key: string;
-    readonly value: ComposerSelection;
-  } | null>(null);
-  const selection = pausedKey === key ? null : (draft.value?.selection ?? null);
-  const open = (value: ComposerSelection, body = ""): void => {
-    buffer.replace({ body, selection: value });
+  // Only area captures (and drafts left by older versions) wait here; text saves as a highlight.
+  const selection = draft.value?.selection ?? null;
+  const open = (value: ComposerSelection): void => {
+    buffer.replace({ body: "", selection: value });
     toolbar.hide();
-    setSwitchTo(null);
-    setPausedKey(null);
     setProblem(null);
     area.endAreaSelection();
     onSelection();
@@ -105,11 +104,9 @@ export function useAnnotationCreation(
     sourceId,
     surface,
     buffer,
-    paused: pausedKey === key,
     busy,
-    offerSwitch: (value) => setSwitchTo({ key, value }),
-    compose: (value) => open(value),
-    highlight: ownershipHighlight(input.ownershipSources, open, saving.highlight),
+    compose: open,
+    highlight: ownershipHighlight(input.ownershipSources, toolbar.showSelection, saving.highlight),
     showToolbar: toolbar.showSelection,
   });
   const dismiss = async (): Promise<void> => {
@@ -128,23 +125,8 @@ export function useAnnotationCreation(
     surface?.capabilities.textSelection?.clearSelection();
     surface?.capabilities.areaSelection?.cancelAreaSelection();
     setProblem(null);
-    setSwitchTo(null);
     area.endAreaSelection();
   };
-  const comment = async (value: TextComposerSelection): Promise<void> => {
-    const previous = buffer.get();
-    if (
-      !previous?.body.trim() ||
-      (await confirmAnnotationDiscard(
-        "Discard the unfinished annotation comment and comment on this?",
-      ))
-    ) {
-      if (!busy.current && buffer.get() === previous) {
-        open(value);
-      }
-    }
-  };
-  const pendingSwitch = pendingSelectionSwitch(switchTo, key, selection);
   return {
     ownerControl: ownership.control,
     createOwned: ownership.create,
@@ -154,14 +136,12 @@ export function useAnnotationCreation(
     error: saving.problem?.sourceId === sourceId ? saving.problem.message : null,
     canSelectArea: area.canSelectArea,
     selectingArea: area.selectingArea,
-    resumeDraft: draft.value && !selection ? () => setPausedKey(null) : null,
-    newSelection: pendingSwitch !== null,
-    useNewSelection: () => {
-      if (pendingSwitch && !busy.current) {
-        open(pendingSwitch.value, buffer.get()?.body ?? "");
+    setAside: () => {
+      const value = buffer.get();
+      if (value && !value.body.trim() && !busy.current) {
+        buffer.replace(null);
       }
     },
-    pause: () => setPausedKey(key),
     setNote: (body) => {
       if (!busy.current) {
         buffer.edit(body);
@@ -170,17 +150,8 @@ export function useAnnotationCreation(
     dismiss: () => void dismiss(),
     save: saving.save,
     highlight: saving.highlight,
-    comment: (value) => void comment(value),
     toggleAreaSelection: area.toggleAreaSelection,
   };
-}
-
-function pendingSelectionSwitch<T extends { readonly key: string }>(
-  value: T | null,
-  key: string,
-  selection: ComposerSelection | null,
-): T | null {
-  return value?.key === key && selection ? value : null;
 }
 
 function useCreationOwner(
@@ -200,10 +171,14 @@ function useCreationOwner(
   });
 }
 
+/**
+ * With several sources to save to, an instant highlight still shows the toolbar first, so its
+ * source chip is seen before anything is saved.
+ */
 function ownershipHighlight(
   sources: readonly SourceSummary[] | undefined,
-  compose: (value: ComposerSelection) => void,
+  showToolbar: (value: TextComposerSelection) => void,
   highlight: (value: TextComposerSelection) => void,
 ): (value: TextComposerSelection) => void {
-  return sources && sources.length > 1 ? compose : highlight;
+  return sources && sources.length > 1 ? showToolbar : highlight;
 }

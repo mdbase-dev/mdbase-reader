@@ -213,11 +213,16 @@ it("keeps the toolbar chooser compact with an accessible ownership explanation",
       }}
     />,
   );
-  expect(host.querySelector("label")!.textContent).toContain("Save to source");
-  expect(host.querySelector("label")!.textContent).not.toContain("Annotation owner");
-  expect(host.querySelector("select")!.getAttribute("aria-label")).toBe("Save to source");
-  expect(host.querySelector("select")!.title).toContain("verified range");
-  expect(host.querySelector('[role="status"]')!.className).toBe("sr-only");
+  // A quiet chip: "in <source> ▾", named Save to source, with the reason as its description.
+  const chip = host.querySelector("label.annotation-source-chip")!;
+  expect(chip.textContent).toMatch(/^in/);
+  expect(chip.textContent).not.toContain("Annotation owner");
+  expect(chip.getAttribute("title")).toContain("verified range");
+  const select = host.querySelector("select")!;
+  expect(select.getAttribute("aria-label")).toBe("Save to source");
+  const status = host.querySelector('[role="status"]')!;
+  expect(status.className).toBe("sr-only");
+  expect(select.getAttribute("aria-describedby")).toBe(status.id);
 });
 
 it.each<SurfaceKind>(["pdf", "epub", "html"])(

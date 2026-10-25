@@ -231,3 +231,111 @@ describe("selection toolbar on a highlight", () => {
     expect(cite?.getAttribute("aria-label")).toBe("Cite: copy with citation");
   });
 });
+
+describe("selection toolbar source", () => {
+  const book = { id: "book", title: "[test] Book", documents: [] };
+  const chapter = { id: "chapter", title: "[test] Introduction", documents: [] };
+  const render = async (choices: readonly (typeof book)[]): Promise<void> => {
+    const composer = {
+      toolbar: { target: { kind: "selection", selection }, rect: null },
+      ownerControl: {
+        ownerId: chapter.id,
+        sources: [book, chapter],
+        choices,
+        pending: false,
+        reason: "Inside this chapter’s verified range on the exact file revision.",
+        choose: vi.fn(),
+      },
+      sourceId: "book",
+      quoteCitation: null,
+      highlight,
+      comment,
+      edit: vi.fn(),
+      remove: vi.fn(),
+      dismissToolbar: vi.fn(),
+    } as unknown as AnnotationComposerController;
+    await act(async () => root.render(<SelectionToolbarLayer composer={composer} />));
+  };
+
+  it("offers the source as a quiet chip after the actions when there is a choice", async () => {
+    await render([book, chapter]);
+    const toolbar = host.querySelector("[role='toolbar']")!;
+    const chip = toolbar.querySelector(".annotation-source-chip")!;
+    expect(chip).not.toBeNull();
+    // Swatches, then Comment on highlight, Copy and Cite, and only then the source.
+    const order = [...toolbar.children]
+      .filter((child) => !child.matches(".selection-toolbar-divider"))
+      .map((child) =>
+        child.matches(".highlight-swatches")
+          ? "swatches"
+          : child === chip
+            ? "source"
+            : (child.getAttribute("aria-label") ?? child.textContent.trim()),
+      );
+    expect(order).toEqual([
+      "swatches",
+      "Comment on highlight",
+      "Copy",
+      "Cite: copy with citation",
+      "source",
+    ]);
+    const select = chip.querySelector("select")!;
+    expect(select.getAttribute("aria-label")).toBe("Save to source");
+    expect(select.value).toBe("chapter");
+    expect(chip.textContent).toContain("in");
+    const description = document.getElementById(select.getAttribute("aria-describedby")!);
+    expect(description?.textContent).toContain("verified range");
+    expect(toolbar.querySelector(".annotation-owner-control")).toBeNull();
+  });
+
+  it("shows no source control when there is only one place to save", async () => {
+    await render([chapter]);
+    expect(host.querySelector(".annotation-source-chip")).toBeNull();
+    expect(host.querySelector("select")).toBeNull();
+  });
+
+  it("keeps 1–5 for the swatches while the chip is shown, but not while choosing a source", async () => {
+    await render([book, chapter]);
+    press(document, "2");
+    expect(highlight).toHaveBeenLastCalledWith(selection, "green");
+    press(host.querySelector("select")!, "3");
+    expect(highlight).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe("selection toolbar on a highlight's source", () => {
+  const book = { id: "book", title: "[test] Book", documents: [] };
+  const chapter = { id: "chapter", title: "[test] Introduction", documents: [] };
+  const render = async (annotationSource: string): Promise<void> => {
+    const annotation = {
+      id: "highlight",
+      annotationType: "highlight",
+      body: "",
+      sourceId: annotationSource,
+      source: "Source",
+      target: selection.value.target,
+    };
+    const composer = {
+      toolbar: { target: { kind: "annotation", annotation }, rect: null },
+      ownerControl: { sources: [book, chapter], choices: [book], ownerId: "book" },
+      sourceId: "chapter",
+      remove: vi.fn(),
+      edit: vi.fn(),
+      dismissToolbar: vi.fn(),
+    } as unknown as AnnotationComposerController;
+    await act(async () => root.render(<SelectionToolbarLayer composer={composer} />));
+  };
+
+  it("does not name the open source", async () => {
+    await render("chapter");
+    expect(host.querySelector("[role='toolbar']")?.textContent).not.toContain("Source:");
+    expect(host.querySelector(".annotation-source-line")).toBeNull();
+  });
+
+  it("names another source, after the actions", async () => {
+    await render("book");
+    const line = host.querySelector(".annotation-source-line");
+    expect(line?.textContent).toContain("Source: [test] Book");
+    expect(host.querySelector("[role='toolbar']")?.lastElementChild).toBe(line);
+  });
+});

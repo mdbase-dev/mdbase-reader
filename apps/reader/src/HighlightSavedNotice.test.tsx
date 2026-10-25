@@ -5,7 +5,11 @@ import { act, useEffect } from "react";
 import { createRoot } from "react-dom/client";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-import { HighlightSavedNotice, highlightUndoMilliseconds } from "./HighlightSavedNotice.js";
+import {
+  HighlightSavedNotice,
+  HighlightSweep,
+  highlightUndoMilliseconds,
+} from "./HighlightSavedNotice.js";
 import {
   useHighlightUndo,
   type HighlightUndoController,
@@ -25,50 +29,62 @@ function stubReducedMotion(reduce: boolean): void {
   }));
 }
 
-describe("highlight saved notice", () => {
-  let host: HTMLDivElement;
-  let root: ReturnType<typeof createRoot>;
-  const onUndo = vi.fn();
-  const onDismiss = vi.fn();
-  const render = async (saved: SavedHighlight | null): Promise<void> =>
-    act(async () =>
-      root.render(<HighlightSavedNotice saved={saved} onUndo={onUndo} onDismiss={onDismiss} />),
-    );
-  const saved = (status: SavedHighlight["status"]): SavedHighlight => ({
-    id: 1,
-    color: "green",
-    rect: { x: 40, y: 60, width: 120, height: 20 },
-    status,
-    annotation: status === "saving" ? null : annotation,
-  });
+let noticeHost: HTMLDivElement;
+let noticeRoot: ReturnType<typeof createRoot>;
+const onUndo = vi.fn();
+const onDismiss = vi.fn();
+const render = async (saved: SavedHighlight | null): Promise<void> =>
+  act(async () =>
+    noticeRoot.render(
+      <>
+        <HighlightSweep saved={saved} />
+        <HighlightSavedNotice saved={saved} onUndo={onUndo} onDismiss={onDismiss} />
+      </>,
+    ),
+  );
+const saved = (status: SavedHighlight["status"]): SavedHighlight => ({
+  id: 1,
+  color: "green",
+  rect: { x: 40, y: 60, width: 120, height: 20 },
+  status,
+  annotation: status === "saving" ? null : annotation,
+});
 
+/** Mounts the sweep and the notice into a fresh host for each test. */
+function mountNotices(): void {
   beforeEach(() => {
     (globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
     onUndo.mockReset();
     onDismiss.mockReset();
     stubReducedMotion(false);
-    host = document.createElement("div");
-    document.body.append(host);
-    root = createRoot(host);
+    noticeHost = document.createElement("div");
+    document.body.append(noticeHost);
+    noticeRoot = createRoot(noticeHost);
   });
   afterEach(async () => {
-    await act(async () => root.unmount());
-    host.remove();
+    await act(async () => noticeRoot.unmount());
+    noticeHost.remove();
     vi.unstubAllGlobals();
     vi.useRealTimers();
   });
+}
+
+describe("highlight saved notice", () => {
+  mountNotices();
 
   it("sweeps the ink at once and offers Undo once saved", async () => {
     await render(saved("saving"));
-    expect(host.querySelector(".highlight-sweep")).not.toBeNull();
-    expect(host.querySelector("button")).toBeNull();
+    expect(noticeHost.querySelector(".highlight-sweep")).not.toBeNull();
+    expect(noticeHost.querySelector("button")).toBeNull();
     // The live region is there, empty, before its message arrives, so the message is announced.
-    const status = host.querySelector("[role='status']");
+    const status = noticeHost.querySelector("[role='status']");
     expect(status?.textContent).toBe("");
     await render(saved("saved"));
-    expect(host.querySelector("[role='status']")).toBe(status);
-    expect(host.querySelector("[role='status']")?.textContent).toBe("Highlight saved");
-    await act(async () => host.querySelector("button")?.click());
+    expect(noticeHost.querySelector("[role='status']")).toBe(status);
+    expect(noticeHost.querySelector("[role='status']")?.textContent).toBe("Highlight saved");
+    await act(async () =>
+      noticeHost.querySelector<HTMLButtonElement>(".highlight-saved-undo")?.click(),
+    );
     expect(onUndo).toHaveBeenCalledOnce();
   });
 
@@ -103,13 +119,13 @@ describe("highlight saved notice", () => {
   it("skips the sweep with reduced motion but keeps Undo", async () => {
     stubReducedMotion(true);
     await render(saved("saved"));
-    expect(host.querySelector(".highlight-sweep")).toBeNull();
-    expect(host.querySelector("button")?.textContent).toBe("Undo");
+    expect(noticeHost.querySelector(".highlight-sweep")).toBeNull();
+    expect(noticeHost.querySelector(".highlight-saved-undo")?.textContent).toBe("Undo");
   });
 
   it("does not sweep across several lines", async () => {
     await render({ ...saved("saved"), rect: { x: 40, y: 60, width: 300, height: 90 } });
-    expect(host.querySelector(".highlight-sweep")).toBeNull();
+    expect(noticeHost.querySelector(".highlight-sweep")).toBeNull();
   });
 
   it("goes after a while unless pointed at", async () => {
@@ -123,18 +139,77 @@ describe("highlight saved notice", () => {
 
   it("says when a note already embeds the highlight", async () => {
     await render(saved("embedded"));
-    expect(host.querySelector("[role='status']")?.textContent).toBe(
+    expect(noticeHost.querySelector("[role='status']")?.textContent).toBe(
       "Couldn’t undo: a note embeds this highlight.",
     );
-    expect(host.querySelector("button")).toBeNull();
+    expect(noticeHost.querySelector(".highlight-saved-undo")).toBeNull();
+    expect(noticeHost.querySelector("button[aria-label='Dismiss']")).not.toBeNull();
   });
 
   it("gives a failed deletion its own message", async () => {
     await render({ ...saved("failed"), problem: "The collection is offline." });
-    expect(host.querySelector("[role='status']")?.textContent).toBe(
+    expect(noticeHost.querySelector("[role='status']")?.textContent).toBe(
       "Couldn’t undo: The collection is offline.",
     );
-    expect(host.querySelector("button")).toBeNull();
+    expect(noticeHost.querySelector(".highlight-saved-undo")).toBeNull();
+  });
+});
+
+describe("dismissing the highlight saved notice", () => {
+  mountNotices();
+
+  it("never sits over the page: the notice is not placed by the passage", async () => {
+    await render(saved("saved"));
+    const notice = noticeHost.querySelector<HTMLElement>(".highlight-saved");
+    expect(notice).not.toBeNull();
+    expect(notice?.classList.contains("is-anchored")).toBe(false);
+    expect(notice?.getAttribute("style")).toBeNull();
+    // Only the sweep, which tints the passage itself, is drawn at the passage.
+    expect(notice?.closest(".highlight-sweep-layer")).toBeNull();
+  });
+
+  it("closes with its dismiss button", async () => {
+    await render(saved("saved"));
+    const dismiss = noticeHost.querySelector<HTMLButtonElement>("button[aria-label='Dismiss']");
+    expect(dismiss?.title).toBe("Dismiss (Esc)");
+    await act(async () => dismiss?.click());
+    expect(onDismiss).toHaveBeenCalledOnce();
+    expect(onUndo).not.toHaveBeenCalled();
+  });
+
+  it("closes on Esc, unless something else took the key or the reader is typing", async () => {
+    await render(saved("saved"));
+    const press = (target: EventTarget, prevented = false): void => {
+      const event = new KeyboardEvent("keydown", {
+        key: "Escape",
+        bubbles: true,
+        cancelable: true,
+      });
+      if (prevented) {
+        event.preventDefault();
+      }
+      target.dispatchEvent(event);
+    };
+    const field = document.createElement("textarea");
+    document.body.append(field);
+    press(field);
+    press(document, true);
+    expect(onDismiss).not.toHaveBeenCalled();
+    press(document);
+    expect(onDismiss).toHaveBeenCalledOnce();
+    field.remove();
+  });
+
+  it("waits while pointed at, then goes once the pointer leaves", async () => {
+    vi.useFakeTimers();
+    await render(saved("saved"));
+    const notice = noticeHost.querySelector<HTMLElement>(".highlight-saved")!;
+    await act(async () => notice.dispatchEvent(new PointerEvent("pointerover", { bubbles: true })));
+    await act(async () => vi.advanceTimersByTime(highlightUndoMilliseconds * 2));
+    expect(onDismiss).not.toHaveBeenCalled();
+    await act(async () => notice.dispatchEvent(new PointerEvent("pointerout", { bubbles: true })));
+    await act(async () => vi.advanceTimersByTime(highlightUndoMilliseconds));
+    expect(onDismiss).toHaveBeenCalledOnce();
   });
 });
 

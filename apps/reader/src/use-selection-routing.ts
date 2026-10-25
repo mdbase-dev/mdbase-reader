@@ -17,9 +17,7 @@ export function useSelectionRouting(input: {
   readonly sourceId: SourceId | null;
   readonly surface: ReadingSurface | null;
   readonly buffer: AnnotationCreationBuffer;
-  readonly paused: boolean;
   readonly busy: RefObject<boolean>;
-  readonly offerSwitch: (value: ComposerSelection) => void;
   readonly compose: (value: ComposerSelection) => void;
   readonly highlight: (value: TextComposerSelection) => void;
   readonly showToolbar: (value: TextComposerSelection) => void;
@@ -30,13 +28,10 @@ export function useSelectionRouting(input: {
     const decision = selectionRoute({
       value,
       draft: previous,
-      paused: input.paused,
       busy: input.busy.current,
       instant: highlightOnSelect() === "instant",
     });
-    if (decision === "offer-switch") {
-      input.offerSwitch(value);
-    } else if (decision === "compose") {
+    if (decision === "compose") {
       input.compose(value);
     } else if (decision === "confirm-compose") {
       if (
@@ -51,7 +46,7 @@ export function useSelectionRouting(input: {
         input.compose(value);
       }
     } else if (value.kind === "text" && (decision === "highlight" || decision === "toolbar")) {
-      // An untouched comment gives way to the new selection; written words stay set aside.
+      // A capture nobody has written about gives way to new text; a written comment stays open.
       if (previous && !previous.body.trim()) {
         input.buffer.replace(null);
       }
