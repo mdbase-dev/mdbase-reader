@@ -27,6 +27,10 @@ describe("user text is rendered literally", () => {
     await readerI18n.selectLocale("it");
     const italian = t`Remove “${path}”?`;
     expect(italian).toContain(path);
+    // Encoding once is correct; a second app-side pass would show `\` as `\u005c`.
+    const single = t`Remove “${"a\\b"}”?`;
+    expect(single).toContain("a\\b");
+    expect(single).not.toContain("u005c");
   });
 
   const source: SourceSummary = {

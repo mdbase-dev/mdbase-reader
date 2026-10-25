@@ -23,13 +23,13 @@
     "test:a11y": "node scripts/audit-accessibility.mjs"
   },
   "dependencies": {
-    "@mdbase-dev/i18n": "file:../../vendor/mdbase-dev-i18n-0.1.0-beta.141-49bea0aa.tgz",
+    "@mdbase-dev/i18n": "file:../../vendor/mdbase-dev-i18n-0.1.0-beta.141-24e9f5d0.tgz",
     "@citation-js/plugin-csl": "0.8.2",
     "@lingui/core": "6.9.0",
     "@lingui/react": "6.9.0",
     "@mdbase-dev/sdk": "file:../../packages/connect/vendor/sdk-eaa4e697-production-beta141.tgz",
     "@mdbase-dev/sdk-legacy-729b5391": "file:../../vendor/mdbase-dev-sdk-0.0.0-729b5391.tgz",
-    "@mdbase-dev/ui": "file:../../vendor/mdbase-dev-ui-0.1.0-beta.141-49bea0aa.tgz",
+    "@mdbase-dev/ui": "file:../../vendor/mdbase-dev-ui-0.1.0-beta.141-24e9f5d0.tgz",
     "@mdbase-reader/connect": "workspace:*",
     "@mdbase-reader/core": "workspace:*",
     "@mdbase-reader/i18n": "workspace:*",

@@ -21,7 +21,7 @@ pnpm i18n:check
 
 During local authoring only, `check:code` runs the unchanged lint/typecheck/test suite and `build:code` builds every workspace without asserting catalogue completeness. Neither substitutes for the normal release gates. Run finite checks/builds via `rpnpm` on this machine.
 
-Kit commit `49bea0aa` includes the public-bin fix, nested plural/explicit-instance/class-field source-guard repairs, field-level tracking, rendered-state notice detection, compiled-catalogue composition checking and obsolete-message pruning. Scripts invoke its public `mdbase-i18n` bin directly; no adapter or source exclusions are needed. Its source guard passes all 487 modules without newly unmarked copy, so adoption adds no English message IDs.
+Kit commit `24e9f5d0` includes the public-bin fix, nested plural/explicit-instance/class-field source-guard repairs, field-level tracking, rendered-state notice detection, compiled-catalogue composition checking and obsolete-message pruning. Scripts invoke its public `mdbase-i18n` bin directly; no adapter or source exclusions are needed. Its source guard passes all 487 modules without newly unmarked copy, so adoption adds no English message IDs.
 
 While catalogues are being authored, `pnpm exec lingui compile --workers 1` permits development fallback; it is **not** evidence of translation completeness. Empty target PO entries must never be filled with English just to pass checks.
 
@@ -35,12 +35,14 @@ Electron's main process initializes synchronous English from copied compiler-own
 
 ## Shared kit dependency
 
-This branch vendors `@mdbase-dev/i18n` from Connect commit `49bea0aa`:
+This branch vendors `@mdbase-dev/i18n` from Connect commit `24e9f5d0`:
 
-- `vendor/mdbase-dev-i18n-0.1.0-beta.141-49bea0aa.tgz`
-- SHA256 `4b08df26d7474b26bd90492a1835716f938488b06a73cd3b55943414bc0cbd82`
+- `vendor/mdbase-dev-i18n-0.1.0-beta.141-24e9f5d0.tgz`
+- SHA256 `b65ce6066f9e096eea183209c93b42950f21f8e78a0d105838a15da9ca82ce46`
 
-Public UI integration uses `vendor/mdbase-dev-ui-0.1.0-beta.141-49bea0aa.tgz` (SHA256 `1230707f2ba9545a041f2a9325ab5e2d25ed001885ebc0369d836e00b19d30f0`). Its `uiCatalogues` source is composed by the shared runtime, so library strings remain library-owned and use the exact same Lingui singleton. Reader gives potentially colliding generic messages semantic contexts to prevent independent PO translations from conflicting. This is the coordinator's strict-complete shared UI pin: 197 active messages per locale, with obsolete `nzHlj8` pruned. Translation integration is complete; it is not publisher/release qualification. Reader’s protected publisher gate currently refuses it against the approved UI original. Historical approved tarballs, trust pins and verification tests have not been changed; normal authorized intake/release qualification is required before that gate can be green.
+Its `createI18nRuntime` encodes backslashes in interpolated string values once per Lingui instance, so user text such as `C:\x41dir` renders literally. Reader relies on it and has no wrapper of its own; a second encoding pass would display `\` as `\u005c`.
+
+Public UI integration uses `vendor/mdbase-dev-ui-0.1.0-beta.141-24e9f5d0.tgz` (SHA256 `1230707f2ba9545a041f2a9325ab5e2d25ed001885ebc0369d836e00b19d30f0`). Its `uiCatalogues` source is composed by the shared runtime, so library strings remain library-owned and use the exact same Lingui singleton. Reader gives potentially colliding generic messages semantic contexts to prevent independent PO translations from conflicting. This is the coordinator's strict-complete shared UI pin: 197 active messages per locale, with obsolete `nzHlj8` pruned. Translation integration is complete; it is not publisher/release qualification. Reader’s protected publisher gate currently refuses it against the approved UI original. Historical approved tarballs, trust pins and verification tests have not been changed; normal authorized intake/release qualification is required before that gate can be green.
 
 **Replace the file dependency with the published npm version at merge time**, after the next Connect release. No publication or deployment is authorized by this branch.
 
