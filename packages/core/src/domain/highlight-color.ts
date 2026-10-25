@@ -1,8 +1,8 @@
 /**
  * The five highlight colours, shared by every renderer, Reader and the extension. Each has a
  * wash, drawn behind text, and an ink, for margin bars and swatches, in a light and a dark
- * scheme. The values are the sRGB equivalents of the OKLCH tokens in Reader's
- * reader-tokens.css (docs/design-direction.md); a test keeps the two in step.
+ * scheme. The values are the sRGB equivalents of the OKLCH tokens in the shared
+ * packages/ui/src/tokens.css (docs/design-direction.md); a test keeps the two in step.
  *
  * Contrast (OKLCH -> sRGB luminance): body text keeps at least 12:1 against every light wash
  * and 7:1 against every dark wash. Light yellow ink is only 2.2:1 against a raised surface, so
