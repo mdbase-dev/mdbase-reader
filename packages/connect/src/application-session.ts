@@ -39,6 +39,7 @@ import {
 } from "./repositories.js";
 import { connectSourceImportRepository } from "./source-imports.js";
 
+import type { ReaderCreateFollowThrough } from "./create-follow-through.js";
 import type { MigrationTarget } from "@mdbase-reader/migration";
 
 export type ReaderConnectSnapshot = MdbaseApplicationSessionSnapshot;
@@ -83,6 +84,11 @@ export interface ReaderConnectedCollection {
   /** Connect loopback upgrade; absent for native SDK collections. */
   readonly directAccess?: ReaderDirectAccessController;
   readonly bodyRecovery: BodyUpdateRecovery;
+  /**
+   * Record creates kept on this device until the collection confirms them, and the ones
+   * that need the user. Absent when creates are decided before they return (Connect).
+   */
+  readonly createFollowThrough?: ReaderCreateFollowThrough;
 }
 
 export interface ReaderApplicationSessionOptions {

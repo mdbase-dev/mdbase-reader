@@ -4,6 +4,7 @@ import { collectionId } from "@mdbase-reader/core";
 import { ConnectAnnotationAssetRepository } from "../annotation-assets.js";
 import { ConnectBodyUpdateRecovery } from "../body-update-recovery.js";
 import { ConnectCollectionFileRepository } from "../collection-files.js";
+import { CreateFollowThrough } from "../create-follow-through.js";
 import { ConnectDocumentRepository } from "../documents.js";
 import {
   ConnectAnnotationRepository,
@@ -33,6 +34,7 @@ import type {
   MdbaseClient,
   QueryResult,
 } from "@mdbase-dev/sdk";
+import type { CreateJournal } from "@mdbase-reader/core";
 
 export interface NativeReaderCollection extends ReaderConnectedCollection {
   /** Retire this scope's adapters. The borrowed SDK client stays open for its owner. */
@@ -46,24 +48,45 @@ export interface NativeReaderCollection extends ReaderConnectedCollection {
  */
 export function nativeReaderCollection(
   connection: MdbaseApplicationConnection,
+  options: {
+    /**
+     * Where record creates are kept until the collection confirms them. Without one, a
+     * create the log refuses after it returned is lost from this device.
+     */
+    readonly creates?: CreateJournal;
+    /** How long a write waits for the log before it counts as saved on this device. */
+    readonly receiptWaitMs?: number;
+  } = {},
 ): NativeReaderCollection {
   let disposed = false;
   const current = (): boolean => !disposed && connection.isCurrent();
-  const client = nativeReaderClient(connection.records, current);
+  const client = nativeReaderClient(
+    connection.records,
+    current,
+    options.receiptWaitMs === undefined ? {} : { receiptWaitMs: options.receiptWaitMs },
+  );
   const files = nativeReaderFiles(connection.files, current);
+  const creates = new CreateFollowThrough(client, {
+    ...(options.creates ? { journal: options.creates } : {}),
+    collectionId: connection.id,
+  });
+  const stopFollowing = options.creates
+    ? followCreates(connection.records, creates, current)
+    : noop;
   return {
     collectionId: collectionId(connection.id),
     collectionName: connection.displayName,
-    sources: new ConnectSourceRepository(client),
-    sourceImports: new ConnectSourceImportRepository(client, files),
+    sources: new ConnectSourceRepository(client, creates),
+    sourceImports: new ConnectSourceImportRepository(client, files, creates),
     migration: new NativeMigrationTarget(connection.id, client, files),
-    annotations: new ConnectAnnotationRepository(client),
+    annotations: new ConnectAnnotationRepository(client, creates),
     annotationAssets: new ConnectAnnotationAssetRepository(files),
     documents: new ConnectDocumentRepository(files),
     contentSearch: new ConnectContentSearchRepository(client),
     files: new ConnectCollectionFileRepository(files),
     libraryViews: nativeLibraryViews(connection.records, client, current),
     bodyRecovery: new ConnectBodyUpdateRecovery(client),
+    ...(options.creates ? { createFollowThrough: creates } : {}),
     subscribeSourceChanges: (listener) => {
       const watch = connection.records.watchChanges(undefined, (batch) => {
         if (current() && (batch.reset || batch.changes.some(mayBeSource))) {
@@ -76,8 +99,60 @@ export function nativeReaderCollection(
     },
     dispose: () => {
       disposed = true;
+      stopFollowing();
       client.dispose();
     },
+  };
+}
+
+const noop = (): void => undefined;
+
+/**
+ * Reconcile kept creates now (startup), whenever the link opens again (reconnect), and
+ * whenever the SDK's write ledger changes. The ledger settles from receipt pushes and the
+ * replica's status push (`client.d.ts` `ledger`; `replica-client-api.md` §6: a `receipt`
+ * push "at every state change"), so a refusal at head is seen as it arrives.
+ */
+function followCreates(
+  sdk: MdbaseClient,
+  creates: CreateFollowThrough,
+  current: () => boolean,
+): () => void {
+  let scheduled = false;
+  const reconcile = (): void => {
+    if (scheduled || !current()) {
+      return;
+    }
+    // One pass for a burst of pushes.
+    scheduled = true;
+    queueMicrotask(() => {
+      scheduled = false;
+      if (current()) {
+        void creates.reconcile();
+      }
+    });
+  };
+  const stopLink = sdk.onLink((state) => {
+    if (state === "open") {
+      reconcile();
+    }
+  });
+  const stopLedger = sdk.ledger.subscribe(reconcile);
+  // Creates whose outcome is not known wait for the replica to catch up with head; go
+  // on when it has (`SyncStatus`: "confirmed through N", `client.d.ts` `onStatus`).
+  let caughtUp = false;
+  const stopStatus = sdk.onStatus((status) => {
+    const now = status.confirmedThrough >= status.headKnown;
+    if (now && !caughtUp) {
+      reconcile();
+    }
+    caughtUp = now;
+  });
+  reconcile();
+  return () => {
+    stopLink();
+    stopLedger();
+    stopStatus();
   };
 }
 

@@ -166,9 +166,60 @@ button {
   cursor: pointer;
 }
 
+.shell-notices {
+  z-index: 20;
+  min-width: 0;
+  overflow: hidden;
+}
+
 .deployment-update button:hover {
   border-color: var(--accent);
   color: var(--accent);
+}
+
+.create-follow-through {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 6px 14px;
+  padding: 7px 16px;
+  border-bottom: 1px solid var(--line);
+  color: var(--ink-soft);
+  background: var(--paper);
+  font-size: var(--text-xs);
+}
+
+.create-follow-through p {
+  margin: 0;
+  max-width: 72ch;
+}
+
+.create-follow-through-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.create-follow-through button {
+  min-height: 28px;
+  padding: 0 10px;
+  border: 1px solid var(--line-strong);
+  border-radius: 3px;
+  color: var(--ink);
+  background: var(--paper);
+  font: 600 10px/1 var(--mono);
+  cursor: pointer;
+}
+
+.create-follow-through button:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.create-follow-through button:disabled {
+  cursor: default;
+  opacity: 0.6;
 }
 
 .connection-state {

@@ -38,7 +38,11 @@ import type {
   ReaderLibrarySnapshot,
   ReaderWorkspaceGateway,
 } from "./workspace-model.js";
-import type { JsonObject, LibraryViewRepository } from "@mdbase-reader/connect";
+import type {
+  JsonObject,
+  LibraryViewRepository,
+  ReaderCreateFollowThrough,
+} from "@mdbase-reader/connect";
 import type {
   Annotation,
   AnnotationListOptions,
@@ -149,6 +153,8 @@ export class ConnectWorkspaceGateway implements ReaderWorkspaceGateway {
     private readonly libraryViewRepository?: LibraryViewRepository,
     private readonly bodyRecovery?: BodyUpdateRecovery,
     private readonly sourceChanges?: (listener: () => void) => () => void,
+    /** Creates kept on this device until the collection confirms them. */
+    readonly createFollowThrough?: ReaderCreateFollowThrough | undefined,
   ) {}
 
   /** Calls `listener` after another tab, app or device changed the library's

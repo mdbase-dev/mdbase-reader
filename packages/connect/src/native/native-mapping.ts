@@ -246,5 +246,6 @@ export function connectProblemFor(error: unknown): ReaderConnectProblem {
   return {
     ...connectProblem(code as "operation_failed", error.message),
     ...(error.issues ? { issues: error.issues } : {}),
+    native: { code: error.code, ...(error.reason === undefined ? {} : { reason: error.reason }) },
   };
 }

@@ -3,6 +3,7 @@ export * from "./annotation-assets.js";
 export * from "./body-update-recovery.js";
 export * from "./collection-files.js";
 export * from "./contracts.js";
+export * from "./create-follow-through.js";
 export * from "./documents.js";
 export { readerDiagnostics, ReaderDiagnostics } from "./diagnostics.js";
 export type { ReaderTiming } from "./diagnostics.js";

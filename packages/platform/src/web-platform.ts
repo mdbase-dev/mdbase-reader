@@ -1,8 +1,9 @@
 import { pickBrowserFile } from "./browser-file-picker.js";
 
-import type { KeyValueStorage, ReaderPlatform } from "./platform.js";
+import type { ListableStorage, ReaderPlatform } from "./platform.js";
 
-class BrowserStorage implements KeyValueStorage {
+/** `localStorage`, shared by every tab of this origin. */
+export class BrowserStorage implements ListableStorage {
   get(key: string): Promise<string | null> {
     return Promise.resolve(localStorage.getItem(key));
   }
@@ -15,6 +16,17 @@ class BrowserStorage implements KeyValueStorage {
   remove(key: string): Promise<void> {
     localStorage.removeItem(key);
     return Promise.resolve();
+  }
+
+  keys(prefix: string): Promise<readonly string[]> {
+    const keys: string[] = [];
+    for (let index = 0; index < localStorage.length; index += 1) {
+      const key = localStorage.key(index);
+      if (key?.startsWith(prefix)) {
+        keys.push(key);
+      }
+    }
+    return Promise.resolve(keys);
   }
 }
 

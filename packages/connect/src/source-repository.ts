@@ -42,13 +42,18 @@ import {
   writeSourcePartOf,
 } from "./source-parts.js";
 
+import type { CreateFollowThrough } from "./create-follow-through.js";
 import type { ReaderConnectClient } from "./repository-client.js";
 import type { DeletePreflightResult, QueryRecord } from "@mdbase-dev/connect";
 
 export class ConnectSourceRepository implements SourceRepository {
   readonly #deletePreflights = new Map<string, DeletePreflightResult>();
 
-  constructor(private readonly client: ReaderConnectClient) {}
+  constructor(
+    private readonly client: ReaderConnectClient,
+    /** Told of removals, so a create still waiting for the collection is let go of. */
+    private readonly creates?: Pick<CreateFollowThrough, "forget">,
+  ) {}
 
   async list(query: SourceQuery, options: ReaderRequestOptions = {}): Promise<Page<SourceSummary>> {
     const parsedOffset = Number.parseInt(query.cursor ?? "", 10);
@@ -302,6 +307,7 @@ export class ConnectSourceRepository implements SourceRepository {
       if (!result.deleted) {
         throw new Error(`mdbase Connect did not remove source ${plan.sourceId}.`);
       }
+      await this.creates?.forget(plan.sourceId);
     } finally {
       this.#deletePreflights.delete(key);
     }
