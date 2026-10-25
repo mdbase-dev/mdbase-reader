@@ -355,6 +355,24 @@ name and never rejects the create. Explicit paths instead rely on the candidate 
 rewrite the links that point at it. Revisit this if Reader ever controls type path
 policy for its own types and can derive paths without extra frontmatter fields.
 
+## Name templates
+
+A collection can choose its own names for new source notes and annotations through the
+templates in `_settings/dev.mdbase.reader.md` (see [App settings](app-settings.md)).
+
+- **How a name is built.** The rendered name is a preferred name, and the
+  `preferredSourceNoteStems` and `preferredAnnotationLeaves` helpers in
+  `record-names.ts` turn it into a candidate list.
+  - Each segment goes through `safeName`.
+  - The preferred name comes first, then the usual fallbacks, so §3 and §4 apply
+    unchanged.
+- **Defaults.** The default templates give exactly the candidates described in §3.
+- **Folders.** A source template may add up to three folders under `sources/`. Annotation
+  templates may not add folders.
+- **Grouping by source.** Annotations are not grouped by source yet. When they are,
+  that slice must decide whether a templated stem such as `2017/Vaswani - Attention` is
+  used as the folder as written, or slugged first.
+
 ## 5. Migration and Tidy
 
 - **New records** use the new layout from slice 2 on.
