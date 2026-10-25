@@ -496,10 +496,14 @@ it("shows Reader's three source tabs, opening on Highlights", () => {
   const html = markup();
   expect(html).toContain('role="tablist"');
   expect(html).toMatch(/aria-selected="true"[^>]*>.*Highlights/u);
-  expect(html).toMatch(/aria-selected="false"[^>]*>.*Note/u);
+  expect(html).toMatch(/aria-selected="false"[^>]*>.*Literature note/u);
   expect(html).toMatch(/aria-selected="false"[^>]*>.*Citation/u);
   // No count before the page is saved: there is nothing to count yet.
   expect(html).not.toContain("panel-tab-count");
+  // The page and its save action sit in the fixed head; the tabs scroll in the body below.
+  expect(html).toMatch(
+    /<div class="panel-head">.*class="page-card".*Save page.*<\/div><div class="panel-body">.*role="tablist"/u,
+  );
   expect(html).not.toContain('id="title"');
   expect(html).toContain('<div class="tab-hint"><p>Select text on the page to highlight it.</p>');
   expect(html).toContain("<kbd>Esc</kbd> clears it");
@@ -522,7 +526,7 @@ it("asks for a title from the save action when the draft has none", () => {
     },
   });
   expect(html).toMatch(/<button class="primary" type="button" disabled=""/u);
-  expect(html).toContain("Give the source a title under Note");
+  expect(html).toContain("Give the source a title under Literature note");
 });
 it("edits a saved source's title and tags and opens its note", () => {
   const html = markup(

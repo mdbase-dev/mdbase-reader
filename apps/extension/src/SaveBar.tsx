@@ -18,7 +18,7 @@ export function saveBlocker(c: ExtensionCaptureController): string | null {
   if (c.busy || c.navigated || c.snapshot.status !== "ready") {
     return null;
   }
-  return c.draft.title.trim() ? null : "Give the source a title under Note to save it.";
+  return c.draft.title.trim() ? null : "Give the source a title under Literature note to save it.";
 }
 
 /**

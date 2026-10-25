@@ -47,68 +47,72 @@ export function CaptureApp({
     : null;
   return (
     <main className="capture-shell">
-      <ExtensionHeader
-        collectionId={
-          controller.snapshot.status === "ready" ? controller.snapshot.collectionId : null
-        }
-        collection={
-          collection
-            ? {
-                name: collection,
-                expanded: collectionOpen,
-                onToggle: () => setCollectionOpen((open) => !open),
-              }
-            : null
-        }
-        onSettings={openSettings}
-      />
-      <ConnectionPanel
-        controller={controller}
-        compact
-        expanded={collectionOpen}
-        onDone={() => setCollectionOpen(false)}
-      />
-      {unreadable(controller) ? (
-        <>
+      {/* As in Reader's inspector, the page, its collection and its save action stay put
+          while the tabs below scroll. */}
+      <div className="panel-head">
+        <ExtensionHeader
+          collectionId={
+            controller.snapshot.status === "ready" ? controller.snapshot.collectionId : null
+          }
+          collection={
+            collection
+              ? {
+                  name: collection,
+                  expanded: collectionOpen,
+                  onToggle: () => setCollectionOpen((open) => !open),
+                }
+              : null
+          }
+          onSettings={openSettings}
+        />
+        {unreadable(controller) ? (
           <section className="page-card">
             <h1>Reader cannot read this page</h1>
             <p>Nothing to save here</p>
           </section>
-          <UnreadablePage controller={controller} />
-        </>
-      ) : (
-        <section className="page-card">
-          <h1>{pageTitle(controller)}</h1>
-          <p>
-            {controller.capture
-              ? `${new URL(controller.capture.canonicalUrl).hostname}${controller.capture.kind === "pdf" ? " · PDF" : ""}`
-              : "Waiting for the active tab"}
-          </p>
-          <PageStatus controller={controller} />
-          <SaveBar controller={controller} />
-          <PostPicker controller={controller} />
-        </section>
-      )}
-      <ConnectionProblem controller={controller} />
-      {controller.capture && !unreadable(controller) ? (
-        <>
-          <PanelTabs tab={tab} highlightCount={highlightCount} onChange={setTab} />
-          <PanelTabContent tab={tab}>
-            {tab === "highlights" ? (
-              <HighlightsPanel controller={controller} />
-            ) : tab === "note" ? (
-              <NotePanel controller={controller} />
-            ) : (
-              <CitationPanel controller={controller} />
-            )}
-          </PanelTabContent>
-        </>
-      ) : null}
-      {diagnostics ? (
-        <footer className="panel-footer">
-          <DiagnosticsPanel />
-        </footer>
-      ) : null}
+        ) : (
+          <section className="page-card">
+            <h1>{pageTitle(controller)}</h1>
+            <p>
+              {controller.capture
+                ? `${new URL(controller.capture.canonicalUrl).hostname}${controller.capture.kind === "pdf" ? " · PDF" : ""}`
+                : "Waiting for the active tab"}
+            </p>
+            <PageStatus controller={controller} />
+            <SaveBar controller={controller} />
+          </section>
+        )}
+      </div>
+      <div className="panel-body">
+        <ConnectionPanel
+          controller={controller}
+          compact
+          expanded={collectionOpen}
+          onDone={() => setCollectionOpen(false)}
+        />
+        {unreadable(controller) ? <UnreadablePage controller={controller} /> : null}
+        <PostPicker controller={controller} />
+        <ConnectionProblem controller={controller} />
+        {controller.capture && !unreadable(controller) ? (
+          <>
+            <PanelTabs tab={tab} highlightCount={highlightCount} onChange={setTab} />
+            <PanelTabContent tab={tab}>
+              {tab === "highlights" ? (
+                <HighlightsPanel controller={controller} />
+              ) : tab === "note" ? (
+                <NotePanel controller={controller} />
+              ) : (
+                <CitationPanel controller={controller} />
+              )}
+            </PanelTabContent>
+          </>
+        ) : null}
+        {diagnostics ? (
+          <footer className="panel-footer">
+            <DiagnosticsPanel />
+          </footer>
+        ) : null}
+      </div>
     </main>
   );
 }
@@ -148,7 +152,7 @@ function HighlightsPanel({ controller: c }: ControllerProps): React.JSX.Element 
   );
 }
 
-/** The title the source has, or will be saved with: the Note tab's title, not the tab's. */
+/** The title the source has, or will be saved with: the Literature note tab's title, not the browser tab's. */
 function pageTitle(c: ExtensionCaptureController): string {
   if (c.source) {
     return c.source.title;
