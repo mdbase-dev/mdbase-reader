@@ -3,7 +3,7 @@ import type {
   LibraryViewSaveRequest,
   MdbaseLibraryView,
 } from "./mdbase-library-views.js";
-import type { ReaderCreateFollowThrough } from "@mdbase-reader/connect";
+import type { ReaderCreateFollowThrough, ReaderSettingsStore } from "@mdbase-reader/connect";
 import type {
   Annotation,
   AnnotationListOptions,
@@ -55,6 +55,8 @@ export interface ReaderWorkspaceGateway {
   subscribeLibrary?: (listener: () => void) => () => void;
   /** Saves kept on this device until the collection confirms them, and any that need the user. */
   readonly createFollowThrough?: ReaderCreateFollowThrough | undefined;
+  /** The collection's Reader settings record, such as its file name templates. */
+  readonly settings?: ReaderSettingsStore | undefined;
   listLibraryViews(options?: ReaderRequestOptions): Promise<readonly MdbaseLibraryView[]>;
   executeLibraryView(
     view: MdbaseLibraryView,

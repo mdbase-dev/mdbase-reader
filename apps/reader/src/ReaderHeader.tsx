@@ -48,6 +48,8 @@ interface ReaderHeaderProps {
   readonly inspectorAvailable: boolean;
   readonly onToggleInspector: () => void;
   readonly sourceBar?: ReaderHeaderSourceBar | undefined;
+  /** Opens the collection's file name settings from the display menu. */
+  readonly onOpenFileNames?: (() => void) | undefined;
 }
 
 /** Local builds point the app menu at local copies of the other apps. */
@@ -75,6 +77,7 @@ function HeaderDisplayMenu({
   onChangeDensity,
   theme,
   onChangeTheme,
+  onOpenFileNames,
 }: ReaderHeaderProps): JSX.Element {
   return (
     <DisplayMenu
@@ -85,6 +88,7 @@ function HeaderDisplayMenu({
       {...(typography && onChangeTypography ? { typography, onChangeTypography } : {})}
       {...(onChangeDensity ? { onChangeDensity } : {})}
       {...(onChangeSidebarWhileReading ? { onChangeSidebarWhileReading } : {})}
+      {...(onOpenFileNames ? { onOpenFileNames } : {})}
     />
   );
 }
