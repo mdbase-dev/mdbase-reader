@@ -38,6 +38,21 @@ export function annotationColumnLabel(column: AnnotationColumn): string {
   return i18n._(labels[column]);
 }
 
+/** Labels written into saved mdbase view files: stable English, never the interface language. */
+const storedLabels: Record<AnnotationColumn, string> = {
+  passage: "Passage",
+  source: "Source",
+  creator: "Creator",
+  type: "Type",
+  tags: "Tags",
+  location: "Location",
+  created: "Created",
+};
+
+export function annotationColumnStoredLabel(column: AnnotationColumn): string {
+  return storedLabels[column];
+}
+
 const widths: Record<AnnotationColumn, number> = {
   passage: 420,
   source: 240,

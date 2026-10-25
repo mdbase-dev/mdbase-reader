@@ -3,6 +3,7 @@ import { readingStatuses, type ReadingStatus, type SourceSummary } from "@mdbase
 
 import {
   columnLabel,
+  columnStoredLabel,
   isLibraryColumn,
   isPropertyKey,
   maximumColumnWidth,
@@ -158,7 +159,7 @@ export function buildLibraryView(request: LibraryViewSaveRequest): JsonObject {
     properties: Object.fromEntries(
       storedColumns(configuration.columns).map((column) => [
         columnSelection(column),
-        { label: columnLabel(column) },
+        { label: columnStoredLabel(column) },
       ]),
     ),
     views: [

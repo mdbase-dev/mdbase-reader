@@ -2445,11 +2445,6 @@ msgctxt "reader command list"
 msgid "Document"
 msgstr "Dokument"
 
-#: apps/reader/src/source-addition-flow.ts
-msgctxt "source addition flow"
-msgid "Document"
-msgstr "Dokument"
-
 #: apps/reader/src/DocumentContextualToolbar.tsx
 msgctxt "DocumentContextualToolbar interface"
 msgid "Document actions"
@@ -8102,11 +8097,6 @@ msgstr "Nicht unterstützte Zotero-Paketversion."
 #: apps/reader/src/annotation-wiki-candidates.ts
 msgid "Untitled annotation"
 msgstr "Unbenannte Anmerkung"
-
-#: apps/reader/src/source-addition-flow.ts
-msgctxt "source addition flow"
-msgid "Untitled source"
-msgstr "Unbenannte Quelle"
 
 #: apps/reader/src/CitationSourceSync.tsx
 msgid "Update library details"

@@ -8,11 +8,23 @@ export function editableText(value: unknown): string {
     return "";
   }
   if (Array.isArray(value)) {
-    return value
-      .map((item) => (typeof item === "string" ? item : formatPropertyValue(item)))
-      .join(", ");
+    return value.map(editableItem).join(", ");
   }
-  return typeof value === "string" ? value : formatPropertyValue(value);
+  return editableItem(value);
+}
+
+/**
+ * Edit text is parsed back into data, so scalars avoid localized display text: numbers stay
+ * raw and booleans keep the legacy English words that parseFieldInput accepts.
+ */
+function editableItem(value: unknown): string {
+  if (typeof value === "string") {
+    return value;
+  }
+  if (typeof value === "boolean") {
+    return value ? "Yes" : "No";
+  }
+  return typeof value === "number" ? String(value) : formatPropertyValue(value);
 }
 
 /**
