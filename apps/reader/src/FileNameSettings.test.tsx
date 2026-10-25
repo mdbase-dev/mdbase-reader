@@ -5,7 +5,7 @@ import { memoryConnection } from "@mdbase-reader/connect/testing";
 import { annotationId, collectionId, dateTime, sourceId } from "@mdbase-reader/core";
 import { act } from "react";
 import { createRoot } from "react-dom/client";
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi, type Mock } from "vitest";
 
 import { FileNameSettings } from "./FileNameSettings.js";
 
@@ -60,7 +60,7 @@ async function open(seed?: Record<string, string | number>): Promise<{
   readonly settings: ReaderSettingsStore;
   readonly replica: Awaited<ReturnType<typeof memoryConnection>>["replica"];
   readonly connection: Awaited<ReturnType<typeof memoryConnection>>["connection"];
-  readonly onClose: () => void;
+  readonly onDirtyChange: Mock<(dirty: boolean) => void>;
 }> {
   const memory = await memoryConnection();
   closers.push(memory.close);
@@ -73,7 +73,7 @@ async function open(seed?: Record<string, string | number>): Promise<{
   if (!settings) {
     throw new Error("A native collection has settings.");
   }
-  const onClose = vi.fn();
+  const onDirtyChange = vi.fn<(dirty: boolean) => void>();
   await act(async () =>
     root.render(
       <FileNameSettings
@@ -81,12 +81,12 @@ async function open(seed?: Record<string, string | number>): Promise<{
         sources={[source]}
         library={[source]}
         loadAnnotations={() => Promise.resolve([annotation])}
-        onClose={onClose}
+        onDirtyChange={onDirtyChange}
       />,
     ),
   );
   await settle();
-  return { settings, replica: memory.replica, connection: memory.connection, onClose };
+  return { settings, replica: memory.replica, connection: memory.connection, onDirtyChange };
 }
 
 /** Let the store read and the async previews and checks finish. */
@@ -147,8 +147,10 @@ describe("FileNameSettings", () => {
   });
 
   it("previews a template as it is typed and saves it to the collection", async () => {
-    const { settings } = await open();
+    const { settings, onDirtyChange } = await open();
+    expect(onDirtyChange).toHaveBeenLastCalledWith(false);
     await type(input("Source notes"), "{{ year }}/{{ author }} - {{ title }}");
+    expect(onDirtyChange).toHaveBeenLastCalledWith(true);
     expect(previews("Source notes")).toEqual([
       "sources/2017/Vaswani - Attention Is All You Need.md",
     ]);
@@ -163,6 +165,7 @@ describe("FileNameSettings", () => {
       annotation_name_template: "{{ words }}",
     });
     expect(host.ownerDocument.body.textContent).toContain("Saved.");
+    expect(onDirtyChange).toHaveBeenLastCalledWith(false);
   });
 
   it("shows an invalid template's problem inline and will not save it", async () => {
@@ -217,7 +220,6 @@ describe("FileNameSettings", () => {
     ).toMatch(/Unknown filter "nope"/u);
     // Nothing is edited yet, so nothing is pending.
     expect(button("Save").disabled).toBe(true);
-    button("Close");
 
     await act(async () => button("Reset to default", template("Annotations")).click());
     await settle();

@@ -48,10 +48,8 @@ interface ReaderHeaderProps {
   readonly inspectorAvailable: boolean;
   readonly onToggleInspector: () => void;
   readonly sourceBar?: ReaderHeaderSourceBar | undefined;
-  /** Opens the collection's file name settings from the display menu. */
-  readonly onOpenFileNames?: (() => void) | undefined;
-  /** Opens the collection's highlight colour settings from the display menu. */
-  readonly onOpenHighlightColors?: (() => void) | undefined;
+  /** Opens the Settings page from the display menu. */
+  readonly onOpenSettings?: (() => void) | undefined;
 }
 
 /** Local builds point the app menu at local copies of the other apps. */
@@ -79,8 +77,7 @@ function HeaderDisplayMenu({
   onChangeDensity,
   theme,
   onChangeTheme,
-  onOpenFileNames,
-  onOpenHighlightColors,
+  onOpenSettings,
 }: ReaderHeaderProps): JSX.Element {
   return (
     <DisplayMenu
@@ -91,8 +88,7 @@ function HeaderDisplayMenu({
       {...(typography && onChangeTypography ? { typography, onChangeTypography } : {})}
       {...(onChangeDensity ? { onChangeDensity } : {})}
       {...(onChangeSidebarWhileReading ? { onChangeSidebarWhileReading } : {})}
-      {...(onOpenFileNames ? { onOpenFileNames } : {})}
-      {...(onOpenHighlightColors ? { onOpenHighlightColors } : {})}
+      {...(onOpenSettings ? { onOpenSettings } : {})}
     />
   );
 }
@@ -306,7 +302,7 @@ function ConnectionState({
 /** saved_on_device: the SDK keeps changes on this device until it can sync them. */
 export type ReaderConnectionState = "connected" | "offline" | "syncing" | "saved_on_device";
 
-const connectionLabels = {
+export const connectionLabels = {
   connected: "Connected",
   offline: "Offline",
   syncing: "Syncing…",
