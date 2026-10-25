@@ -4,6 +4,7 @@ import {
   dateTime,
   sourceId,
   slug,
+  sourceLink,
   sourceNotePaths,
   type Annotation,
 } from "@mdbase-reader/core";
@@ -92,6 +93,18 @@ describe("source note templates", () => {
     expect(paths.at(-1)).toBe("sources/src_0123456789abcdef.md");
   });
 
+  it("keeps names a wikilink can point at", async () => {
+    const paths = await sourceNotePathCandidates("{{ author }} - {{ title }}", {
+      ...source,
+      title: "C# in Depth [[2nd ed]] ^ref",
+    });
+    expect(paths[0]).toBe("sources/Vaswani - C in Depth 2nd ed ref.md");
+    for (const path of paths) {
+      expect(path).not.toMatch(/[#^[\]|]/u);
+      expect(() => sourceLink({ path, title: "C# in Depth" })).not.toThrow();
+    }
+  });
+
   it("uses the defaults when the template nests too deep", async () => {
     expect(await sourceNotePathCandidates("a/b/c/d/{{ title }}", source)).toEqual(
       sourceNotePaths(source),
@@ -176,6 +189,18 @@ describe("annotation templates", () => {
       "annotations/attention p3 the-dominant-sequence-transduction-44556677.md",
       "annotations/ann_0011223344556677.md",
     ]);
+  });
+
+  it("keeps quote names safe to transclude", async () => {
+    const quoted = annotation();
+    const paths = await annotationPathCandidates("{{ quote }}", {
+      ...quoted,
+      target: { ...quoted.target, quote: { exact: "C# uses [[links]] and ^blocks" } },
+    });
+    expect(paths[0]).toBe("annotations/C uses links and blocks.md");
+    for (const path of paths) {
+      expect(path).not.toMatch(/[#^[\]|]/u);
+    }
   });
 
   it("falls back to the ID when the template is unusable", async () => {

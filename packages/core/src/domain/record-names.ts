@@ -313,8 +313,8 @@ export const maxPreferredFolders = 3;
 
 /**
  * A name someone chose, such as a rendered name template, made safe as one path segment: NFC;
- * characters the engine refuses (Windows' `<>:"/\|?*`, controls, ignorables) become spaces;
- * runs of white space become one space; no leading or trailing dot or space; at most
+ * characters the engine refuses (Windows' `<>:"/\|?*`, controls, ignorables) and those that
+ * break a wikilink to the record (`#^[]`) become spaces; runs of white space become one space; no leading or trailing dot or space; at most
  * {@link maxNameBytes}, cut where {@link nameClusters} allows. Case, spaces and punctuation
  * otherwise stay as written. Empty when nothing usable is left or the result is a
  * {@link isReservedName reserved name}.
@@ -326,7 +326,7 @@ export function safeName(text: string): string {
       continue;
     }
     spaced +=
-      /[<>:"/\\|?*\p{Cc}]/u.test(character) || inRanges(character, ignorableRanges)
+      /[<>:"/\\|?*#^[\]\p{Cc}]/u.test(character) || inRanges(character, ignorableRanges)
         ? " "
         : character;
   }

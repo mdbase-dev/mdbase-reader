@@ -1103,6 +1103,11 @@ describe("safeName", () => {
     expect(safeName("soft­hyphen")).toBe("softhyphen");
   });
 
+  it("drops what would break a wikilink to the record", () => {
+    expect(safeName("Lovelace - C# in Depth")).toBe("Lovelace - C in Depth");
+    expect(safeName("[[Notes]] on ^block and [x]")).toBe("Notes on block and x");
+  });
+
   it.each(["", "   ", "...", "CON", "nul.txt", "node_modules", "git~1"])(
     "gives nothing usable for %j",
     (name) => {
