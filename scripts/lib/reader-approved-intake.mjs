@@ -8,9 +8,9 @@ export const approvedHashes = Object.freeze({
   NATIVE_PROTOCOL_SHA256: "cd1e15236ab7e25c511a4ba13af6a9df23f4b41715161479bba97b0445e1c138",
   NATIVE_TRUST_ASSET_SHA256: "67e117646c9c26927f0d5a44cbd26f057c318975032e9cd24f24b020150cdbc7",
 });
-// Unchanged production beta141 packet; staging remains a historical fixture.
+// Production beta141 packet with the #964 runtime; staging remains a historical fixture.
 export const approvedProductionHashes = Object.freeze({
   ...approvedHashes,
-  NATIVE_SDK_SHA256: "e64771a90bed2fb3837d4b65df8930fcd124d3059fcb0bcbaf9d64dbfb148205",
+  NATIVE_SDK_SHA256: "f05837e4571a7e528d289dea6a9d2ee2e5c2e3a1e4f8f70fe772a8138e32f970",
   NATIVE_TRUST_ASSET_SHA256: "7912e40838213e60b65848350d319a48019021317b112e3326429b250f0133d7",
 });
