@@ -257,38 +257,41 @@ function ChapterReadingHint({
       {visible ? (
         <div className="source-reading-hint" role="group" aria-label="Chapter reading range">
           <span className="source-reading-hint-text">{text}</span>
-          {range.valid ? (
-            <button
-              type="button"
-              onClick={() => {
-                remember();
-                void goToChapterStart(state);
-              }}
-            >
-              {kind === "problem" ? "Try again" : "Back to chapter"}
-            </button>
-          ) : (
-            <button type="button" onClick={dismiss}>
-              Read the whole file
-            </button>
-          )}
-          {next ? (
-            <SourceReadingLink
-              source={source}
-              id={next.id}
-              open={open}
-              label={`Next part: ${next.title}`}
-            />
-          ) : null}
-          {source.partOf ? (
-            <SourceReadingLink
-              source={source}
-              id={source.partOf}
-              open={open}
-              label="Continue in book"
-              title={parent ? `Continue in the book: ${parent.title}` : undefined}
-            />
-          ) : null}
+          <span className="source-reading-hint-actions">
+            {range.valid ? (
+              <button
+                type="button"
+                onClick={() => {
+                  remember();
+                  void goToChapterStart(state);
+                }}
+              >
+                {kind === "problem" ? "Try again" : "Back to chapter"}
+              </button>
+            ) : (
+              <button type="button" onClick={dismiss}>
+                Read the whole file
+              </button>
+            )}
+            {next ? (
+              <SourceReadingLink
+                source={source}
+                id={next.id}
+                open={open}
+                label={`Next part: ${next.title}`}
+                title={`Next part: ${next.title}`}
+              />
+            ) : null}
+            {source.partOf ? (
+              <SourceReadingLink
+                source={source}
+                id={source.partOf}
+                open={open}
+                label="Continue in book"
+                title={parent ? `Continue in the book: ${parent.title}` : undefined}
+              />
+            ) : null}
+          </span>
           {range.valid ? (
             <button
               type="button"

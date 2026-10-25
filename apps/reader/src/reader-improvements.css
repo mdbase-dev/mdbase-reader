@@ -74,6 +74,7 @@
   display: flex;
   justify-content: center;
   pointer-events: none;
+  container-type: inline-size;
 }
 /* Clear of the highlight-saved notice, which uses the same spot. */
 .document-canvas:has(.highlight-saved:not(.is-anchored)) .source-reading-hint-region {
@@ -93,13 +94,16 @@
   font-size: var(--text-sm);
   line-height: var(--lh-sm);
   white-space: nowrap;
-  overflow: hidden;
   pointer-events: auto;
 }
 .source-reading-hint-text {
+  flex: 0 0 auto;
+}
+.source-reading-hint-actions {
   min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  display: flex;
+  align-items: center;
+  gap: var(--sp-1);
 }
 .source-reading-hint :is(button, a) {
   display: inline-flex;
@@ -114,10 +118,44 @@
   text-decoration: none;
   cursor: pointer;
 }
+/* Long part titles truncate; the full name is in the link's tooltip. */
+.source-reading-hint-actions a {
+  display: block;
+  min-width: 0;
+  max-width: 16em;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  line-height: var(--control-h-sm);
+}
 .source-reading-hint :is(button, a):hover {
   background: var(--hover);
   text-decoration: underline;
   text-underline-offset: 3px;
+}
+/* On a narrow pane the message and Dismiss share the first line and the actions wrap below. */
+@container (max-width: 560px) {
+  .source-reading-hint {
+    flex-wrap: wrap;
+    padding: var(--sp-1) var(--sp-1) var(--sp-1) var(--sp-3);
+    border-radius: var(--r-lg);
+  }
+  .source-reading-hint-text {
+    flex: 1 1 0;
+    min-width: 0;
+    white-space: normal;
+  }
+  .source-reading-hint .source-reading-hint-dismiss {
+    order: 1;
+  }
+  .source-reading-hint-actions {
+    order: 2;
+    flex: 1 0 100%;
+    flex-wrap: wrap;
+    margin-left: calc(-1 * var(--sp-1));
+  }
+  .source-reading-hint-actions a {
+    max-width: 100%;
+  }
 }
 .source-reading-hint .source-reading-hint-dismiss {
   margin-left: auto;
