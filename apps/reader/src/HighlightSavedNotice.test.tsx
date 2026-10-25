@@ -334,6 +334,8 @@ describe("useHighlightUndo", () => {
     await act(async () => tracker.saved(annotation));
     const commented = { ...annotation, body: "A thought", recordRevision: "r2" } as Annotation;
     await mount(remove, { annotations: [commented] });
+    // For good: the book's annotations reloading, without it for a moment, brings no Undo back.
+    await mount(remove, { annotations: [] });
     expect(controller!.savedHighlight?.undoable).toBe(false);
     await act(async () => controller!.undoSavedHighlight());
     expect(remove).not.toHaveBeenCalled();

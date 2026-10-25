@@ -101,6 +101,11 @@ export function useHighlightUndo({
   const created = tracked?.annotation;
   const current = created ? annotations.find(({ id }) => id === created.id) : undefined;
   const edited = Boolean(tracked?.undoable && created && editedSince(created, current));
+  // Withdrawn for good: an edited highlight that drops out of the list for a moment, such as
+  // while the book's annotations reload, does not bring Undo back.
+  if (state && edited) {
+    setState({ ...state, highlight: { ...state.highlight, undoable: false } });
+  }
   const saved = useMemo(
     () => (tracked && edited ? { ...tracked, undoable: false } : tracked),
     [tracked, edited],

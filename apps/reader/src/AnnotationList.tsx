@@ -60,6 +60,8 @@ interface AnnotationListProps {
   readonly activeId: AnnotationId | null;
   readonly readingId?: AnnotationId | null;
   readonly onCancelEdit: () => void;
+  /** A card's own Edit began editing it, as the composer's edit would. */
+  readonly onBeginEdit?: ((annotation: Annotation) => void) | undefined;
   readonly readFile: AnnotationFileReader;
 }
 export function AnnotationList({
@@ -81,15 +83,13 @@ export function AnnotationList({
   addMenu,
   beforeList,
   wholeBook,
+  onBeginEdit,
 }: AnnotationListProps): JSX.Element {
-  const [editing, setEditing] = useState({ external: editingId, id: editingId });
-  const currentEditing = editing.external === editingId ? editing.id : editingId;
-  const closeEditor = (): void => {
-    setEditing({ external: editingId, id: null });
-    if (currentEditing === editingId) {
-      onCancelEdit();
-    }
-  };
+  const { currentEditing, closeEditor, beginEdit } = useListEditing(
+    editingId,
+    onCancelEdit,
+    onBeginEdit,
+  );
   const [query, setQuery] = useState("");
   const [view, setView] = useState<AnnotationView>(defaultAnnotationView);
   const [following, setFollowing] = useState(true);
@@ -167,7 +167,7 @@ export function AnnotationList({
               editing={currentEditing === annotation.id}
               active={activeId === annotation.id}
               transclusion={transclusion}
-              onEdit={() => setEditing({ external: editingId, id: annotation.id })}
+              onEdit={() => beginEdit(annotation)}
               onCancel={closeEditor}
               onSave={onUpdate}
               onPlanDelete={onPlanDelete}
@@ -182,6 +182,36 @@ export function AnnotationList({
       )}
     </div>
   );
+}
+
+/**
+ * The card being edited: the one the reader's composer names, or one whose own Edit was chosen
+ * since, which the composer hears of so it can withdraw that highlight's Undo.
+ */
+function useListEditing(
+  editingId: AnnotationId | null,
+  onCancelEdit: () => void,
+  onBeginEdit: ((annotation: Annotation) => void) | undefined,
+): {
+  readonly currentEditing: AnnotationId | null;
+  readonly closeEditor: () => void;
+  readonly beginEdit: (annotation: Annotation) => void;
+} {
+  const [editing, setEditing] = useState({ external: editingId, id: editingId });
+  const currentEditing = editing.external === editingId ? editing.id : editingId;
+  return {
+    currentEditing,
+    closeEditor: () => {
+      setEditing({ external: editingId, id: null });
+      if (currentEditing === editingId) {
+        onCancelEdit();
+      }
+    },
+    beginEdit: (annotation) => {
+      onBeginEdit?.(annotation);
+      setEditing({ external: editingId, id: annotation.id });
+    },
+  };
 }
 
 /** Search, type, source or colour hides some annotations; the order does not. */
