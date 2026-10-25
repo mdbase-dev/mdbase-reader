@@ -27,6 +27,7 @@ export function DisplaySettings({
   onChangeDensity,
   sidebarWhileReading,
   onChangeSidebarWhileReading,
+  onOpenFileNames,
 }: {
   readonly theme: ThemePreference;
   readonly onChangeTheme: (theme: ThemePreference) => void;
@@ -36,6 +37,8 @@ export function DisplaySettings({
   readonly onChangeDensity?: (density: "comfortable" | "compact") => void;
   readonly sidebarWhileReading: "hide" | "keep";
   readonly onChangeSidebarWhileReading?: (value: "hide" | "keep") => void;
+  /** Opens the collection's file name settings; absent when the collection has none. */
+  readonly onOpenFileNames?: () => void;
 }): JSX.Element {
   const highlightOnSelect = useHighlightOnSelect();
   const annotationOwner = useAnnotationOwnerPreference();
@@ -91,6 +94,15 @@ export function DisplaySettings({
         onChange={setHighlightOnSelect}
       />
       <HighlightMeaningSettings />
+      {onOpenFileNames ? (
+        <fieldset className="display-choice collection-settings">
+          <legend>This collection</legend>
+          <button type="button" className="collection-settings-button" onClick={onOpenFileNames}>
+            File names…
+          </button>
+          <p className="display-note">Shared by everyone who uses this collection.</p>
+        </fieldset>
+      ) : null}
     </>
   );
 }

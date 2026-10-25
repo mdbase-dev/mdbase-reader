@@ -28,6 +28,25 @@ const viewPack = application.provisions.type_packs.find(
   (pack) => pack.manifest.id === "mdbase.view",
 );
 const options = { installedBy: application.id };
+// What beta.6 added for collection settings. Earlier packs, and rebuilds of them, lack all of it.
+const settingsContracts = new Set(["mdbase.app-settings", "dev.mdbase.reader.settings"]);
+const settingsSources = new Set([
+  "schemas/mdbase.app-settings/1.0.0.schema.json",
+  "contracts/mdbase.app-settings/1.0.0.md",
+  "schemas/dev.mdbase.reader.settings/1.0.0.schema.json",
+  "contracts/dev.mdbase.reader.settings/1.0.0.md",
+  "types/reader-settings.md",
+]);
+const isSettings = ({ source }) => settingsSources.has(source);
+const settingsSchema = "schemas/dev.mdbase.reader.settings/1.0.0.schema.json";
+
+function withoutSettings(pack) {
+  const copy = structuredClone(pack);
+  copy.provides = copy.provides.filter(({ id }) => !settingsContracts.has(id));
+  copy.manifest.resources = copy.manifest.resources.filter((resource) => !isSettings(resource));
+  copy.resources = copy.resources.filter((resource) => !isSettings(resource));
+  return copy;
+}
 const provision = (pack) => ({ manifest: pack.manifest, resources: pack.resources });
 
 // Published identities must not change. Add a new version/digest instead of updating this pin.
@@ -37,6 +56,7 @@ const releasedDigests = {
   "1.0.0-beta.3": "sha256:712aa3d2ad5ca8719505b27c8c72f39fb9643660edbbeee3321e01ab53ef6938",
   "1.0.0-beta.4": "sha256:f66f0b5e96df834c2aeab9aaddb4dc6eb6533111892a121ccb2b89ec15660dac",
   "1.0.0-beta.5": "sha256:a8c684491b91ad290a8bd63a3709a949ea58679c69fc600aabba2422da95055b",
+  "1.0.0-beta.6": "sha256:82027c429b2e4c061f2e447f3af4004463c969633de2454653e8327a2bda2f54",
 };
 // The vendored mdbase-contracts view pack, pinned the same way. 1.0.1 ships the version-2
 // view starter (no pinned `type`, open top level) with `upgrade_from` the 1.0.0 starter;
@@ -74,7 +94,7 @@ function baseline(resource, version) {
 
 // beta.3 as released: the current manifest with each seed's beta.3 baseline as its document.
 function beta3() {
-  const pack = structuredClone(current);
+  const pack = withoutSettings(current);
   pack.manifest.version = "1.0.0-beta.3";
   for (const resource of pack.manifest.resources) {
     if (!resource.upgrade_from) continue;
@@ -88,7 +108,7 @@ function beta3() {
 
 // beta.4 as released: the current starters with the beta.3 starter as their single baseline.
 function beta4() {
-  const pack = structuredClone(current);
+  const pack = withoutSettings(current);
   pack.manifest.version = "1.0.0-beta.4";
   for (const resource of pack.manifest.resources) {
     if (!resource.upgrade_from) continue;
@@ -157,8 +177,17 @@ async function assertPreserved(contents) {
 }
 
 test("Reader's new pack release preserves contract identities and capability protocol", async (t) => {
-  assert.equal(current.manifest.version, "1.0.0-beta.5");
-  assert.deepEqual(current.provides, legacy.provides);
+  assert.equal(current.manifest.version, "1.0.0-beta.6");
+  assert.deepEqual(withoutSettings(current).provides, legacy.provides);
+  assert.deepEqual(
+    current.provides
+      .filter(({ id }) => settingsContracts.has(id))
+      .map(({ id, version }) => [id, version]),
+    [
+      ["mdbase.app-settings", "1.0.0"],
+      ["dev.mdbase.reader.settings", "1.0.0"],
+    ],
+  );
   assert.equal(application.requirements.capabilities.contract_version, 2);
   assert.equal(viewPack.manifest.version, "1.0.1");
   assert.deepEqual(
@@ -184,8 +213,12 @@ test("the released pack digest stays immutable and is independent of deployment 
 });
 
 test("seed upgrades list every earlier starter type, newest first, as exact bytes", async (t) => {
-  const seeds = current.manifest.resources.filter((resource) => resource.mode === "seed");
+  const seeds = current.manifest.resources.filter(
+    (resource) => resource.mode === "seed" && !isSettings(resource),
+  );
   assert.deepEqual(seeds.map((seed) => seed.source).sort(), Object.keys(earlierStarters).sort());
+  // The settings starter is new in beta.6, so it has nothing to upgrade from.
+  assert.equal(current.manifest.resources.find(isSettings).upgrade_from, undefined);
   const desired = new Map(current.resources.map(({ source, document }) => [source, document]));
   for (const seed of seeds) {
     assert.equal(seed.kind, "type");
@@ -244,7 +277,12 @@ for (const [version, pack] of Object.entries(earlierPacks)) {
     const installedDigests = new Map(
       installed.manifest.resources.map(({ source, digest }) => [source, digest]),
     );
-    for (const resource of upgrade.resources.filter(({ mode }) => mode === "seed")) {
+    for (const resource of upgrade.resources.filter(isSettings)) {
+      assert.equal(resource.action, "create", resource.source);
+    }
+    for (const resource of upgrade.resources.filter(
+      (resource) => resource.mode === "seed" && !isSettings(resource),
+    )) {
       assert.equal(resource.action, "update", resource.source);
       // Each seed is replaced from the starter its pack shipped, which may predate the pack.
       const starter = installedDigests.get(resource.source);
@@ -358,6 +396,10 @@ for (const edited of [false, true]) {
     assert.equal(upgrade.status, "upgrade");
     assert.equal(upgrade.applicable, true);
     for (const resource of upgrade.resources) {
+      if (isSettings(resource)) {
+        assert.equal(resource.action, "create", resource.source);
+        continue;
+      }
       assert.equal(resource.action, resource.mode === "seed" ? "update" : "unchanged");
       if (resource.mode === "seed") {
         assert.deepEqual(resource.upgrade_baseline, {
@@ -392,8 +434,10 @@ test("starter types neither declare nor require the type key", () => {
   const documents = new Map(current.resources.map(({ source, document }) => [source, document]));
   for (const resource of current.manifest.resources.filter(({ kind }) => kind === "type")) {
     const type = frontmatter(documents.get(resource.source));
-    assert.equal(type.version, 2, resource.source);
-    const schema = type.schema.value;
+    const schema = isSettings(resource)
+      ? JSON.parse(documents.get(settingsSchema))
+      : type.schema.value;
+    assert.equal(type.version, isSettings(resource) ? 1 : 2, resource.source);
     assert.equal(schema.additionalProperties, true, resource.source);
     for (const key of ["type", "types"]) {
       assert.equal(
@@ -496,6 +540,65 @@ for (const typeKeys of ["[type]", "[mdbase_type]"]) {
   });
 }
 
+for (const typeKeys of ["[type]", "[mdbase_type]"]) {
+  test(`the settings record validates against the managed schema where explicit_type_keys is ${typeKeys}`, async (t) => {
+    const root = await collection(t);
+    await apply(root, current, await assess(root, current));
+    await writeFile(
+      join(root, "mdbase.yaml"),
+      `spec_version: 0.3.0\nsettings:\n  explicit_type_keys: ${typeKeys}\n`,
+    );
+    const opened = await Collection.open(root);
+    assert.ok(opened.collection, opened.error?.message);
+    const operations = new V03Operations(opened.collection);
+    const settings = {
+      app: "dev.mdbase.reader",
+      scope: "collection",
+      settings_version: 1,
+      source_name_template: "{{ year }}/{{ title | slug }}",
+    };
+    try {
+      const created = await operations.create({
+        path: "_settings/dev.mdbase.reader.md",
+        type: "reader-settings",
+        frontmatter: settings,
+      });
+      assert.equal(created.valid, true, JSON.stringify(created.diagnostics));
+      for (const [contract, fields] of [
+        ["mdbase.app-settings", ["app", "scope", "settings_version"]],
+        ["dev.mdbase.reader.settings", ["app", "source_name_template"]],
+      ]) {
+        const view = await opened.collection.getContractView(
+          "_settings/dev.mdbase.reader.md",
+          contract,
+          "1.0.0",
+        );
+        assert.equal(view.valid, true, contract);
+        for (const field of fields) assert.equal(view.view[field], settings[field], field);
+      }
+      for (const [path, frontmatter, code] of [
+        [
+          "_settings/empty-template.md",
+          { ...settings, source_name_template: "" },
+          "schema_min_length",
+        ],
+        ["_settings/other-app.md", { ...settings, app: "tasknotes" }, "schema_const"],
+        // One collection-scope record per app.
+        ["_settings/second.md", settings, "duplicate_value"],
+      ]) {
+        const refused = await operations.create({ path, type: "reader-settings", frontmatter });
+        assert.equal(refused.valid, false, path);
+        assert.ok(
+          refused.diagnostics.some((diagnostic) => diagnostic.code === code),
+          JSON.stringify(refused.diagnostics),
+        );
+      }
+    } finally {
+      await opened.collection.close();
+    }
+  });
+}
+
 test("reproduces the immutable beta.1 digest conflict without touching installed files", async (t) => {
   const root = await collection(t);
   await apply(root, legacy, await assess(root, legacy));
@@ -525,7 +628,7 @@ for (const variant of ["original-beta.1", "changed-beta.1"]) {
   test(`upgrades ${variant} to the current pack preserving contracts, customized seed types and notes`, async (t) => {
     const root = await collection(t);
     const original = variant === "original-beta.1";
-    const installed = structuredClone(original ? legacy : current);
+    const installed = original ? structuredClone(legacy) : withoutSettings(current);
     installed.manifest.version = "1.0.0-beta.1";
     await apply(root, installed, await assess(root, installed));
     const contents = await preserveExamples(root, installed);
@@ -533,7 +636,7 @@ for (const variant of ["original-beta.1", "changed-beta.1"]) {
     if (original) {
       assert.equal(upgrade.status, "conflict");
       assert.equal(upgrade.applicable, false);
-      for (const resource of upgrade.resources) {
+      for (const resource of upgrade.resources.filter((resource) => !isSettings(resource))) {
         assert.equal(resource.action, resource.mode === "seed" ? "conflict" : "unchanged");
         if (resource.mode === "seed") assert.match(resource.reason, /top-level type setting/u);
       }
@@ -543,7 +646,8 @@ for (const variant of ["original-beta.1", "changed-beta.1"]) {
     assert.equal(upgrade.status, "upgrade");
     assert.equal(upgrade.applicable, true);
     for (const resource of upgrade.resources) {
-      assert.equal(resource.action, resource.mode === "seed" ? "preserve" : "unchanged");
+      const expected = resource.mode === "seed" ? "preserve" : "unchanged";
+      assert.equal(resource.action, isSettings(resource) ? "create" : expected, resource.source);
     }
     const applied = await apply(root, current, upgrade);
     assert.equal(applied.receipt.version, current.manifest.version);

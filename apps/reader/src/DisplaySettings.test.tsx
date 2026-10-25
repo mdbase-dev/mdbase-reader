@@ -2,9 +2,9 @@
 /* eslint-disable @typescript-eslint/require-await -- async act flushes React's queued work */
 import { act } from "react";
 import { createRoot } from "react-dom/client";
-import { afterEach, beforeEach, expect, it } from "vitest";
+import { afterEach, beforeEach, expect, it, vi } from "vitest";
 
-import { HighlightMeaningSettings } from "./DisplaySettings.js";
+import { DisplaySettings, HighlightMeaningSettings } from "./DisplaySettings.js";
 import { highlightMeanings, setHighlightMeaning } from "./highlight-colors.js";
 
 let host: HTMLDivElement;
@@ -57,4 +57,25 @@ it("saves a meaning when the field is left, and clears it when emptied", async (
     current.dispatchEvent(new FocusEvent("focusout", { bubbles: true }));
   });
   expect(highlightMeanings()).toEqual({});
+});
+
+it("opens the collection's file names when the collection has settings", async () => {
+  const onOpenFileNames = vi.fn();
+  const settings = (open?: () => void): React.JSX.Element => (
+    <DisplaySettings
+      theme="system"
+      onChangeTheme={() => undefined}
+      density="comfortable"
+      sidebarWhileReading="hide"
+      {...(open ? { onOpenFileNames: open } : {})}
+    />
+  );
+  await act(async () => root.render(settings()));
+  expect(host.textContent).not.toContain("File names…");
+  await act(async () => root.render(settings(onOpenFileNames)));
+  const button = [...host.querySelectorAll("button")].find(
+    (candidate) => candidate.textContent === "File names…",
+  );
+  await act(async () => button?.click());
+  expect(onOpenFileNames).toHaveBeenCalledOnce();
 });

@@ -23,6 +23,7 @@ import { useSourcePartCreation } from "./SourcePartCreation.js";
 import { SourceRemovalDialog } from "./SourceRemovalDialog.js";
 import { useAnnotationCounts } from "./use-annotation-counts.js";
 import { useFileDrop } from "./use-file-drop.js";
+import { useFileNameSettings } from "./use-file-name-settings.js";
 import { useMediaQuery } from "./use-media-query.js";
 import { useReadingChrome } from "./use-reading-chrome.js";
 import { useSearchNavigation } from "./use-search-navigation.js";
@@ -155,6 +156,7 @@ export function ReaderWorkspaceView({
     model.deploymentUpdateAvailable,
     model.gateway.createFollowThrough,
   );
+  const fileNames = useFileNameSettings(model.gateway, library.sources, model.openSources);
   const workbenchOwner = findWorkbenchOwner(
     sourceWorkspace.layout,
     inspectorSource?.id ?? null,
@@ -219,6 +221,7 @@ export function ReaderWorkspaceView({
         </div>
       ) : null}
       {notices}
+      {fileNames.dialog}
       {model.focusMode ? <div className="reading-chrome-reveal" aria-hidden="true" /> : null}
       <ReaderHeader
         {...reading}
@@ -239,6 +242,7 @@ export function ReaderWorkspaceView({
         inspectorAvailable={true}
         onToggleInspector={() => dock.toggleSidebar("right")}
         sourceBar={mobileSourceBar(model)}
+        onOpenFileNames={fileNames.open}
       />
       <main className="reader-main reader-dock-main">
         <SearchPassageStatus message={searchNavigation.message} />

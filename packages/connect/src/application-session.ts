@@ -31,6 +31,7 @@ import { connectCollectionFileRepository } from "./collection-files.js";
 import { connectDocumentRepository } from "./documents.js";
 import { connectLibraryViewRepository, type LibraryViewRepository } from "./library-views.js";
 import { ConnectMigrationTarget } from "./migration-target.js";
+import { ReaderSettingsStore } from "./reader-settings.js";
 import {
   ConnectAnnotationRepository,
   ConnectContentSearchRepository,
@@ -75,6 +76,11 @@ export interface ReaderConnectedCollection {
   readonly contentSearch: ContentSearchRepository;
   readonly files: CollectionFileRepository;
   readonly libraryViews: LibraryViewRepository;
+  /**
+   * Reader's collection-wide settings record, `_settings/dev.mdbase.reader.md`, whose name
+   * templates this collection's creates use. Absent in test doubles.
+   */
+  readonly settings?: ReaderSettingsStore;
   /**
    * Calls `listener` when the source list may have changed outside this
    * workspace's own writes: another tab, app or device added, edited or
@@ -177,15 +183,18 @@ export function connectedReaderCollection(
     return cached;
   }
   const client = connectClient(connection);
+  // No change feed here: the settings are read when first needed and after each save.
+  const settings = new ReaderSettingsStore(client);
   const collection: ReaderConnectedCollection = {
     collectionId: collectionId(connection.collectionId),
     get collectionName() {
       return connection.info()?.displayName ?? snapshot.info.displayName;
     },
     sources: new ConnectSourceRepository(client),
-    sourceImports: connectSourceImportRepository(connection, client),
+    sourceImports: connectSourceImportRepository(connection, client, settings),
     migration: new ConnectMigrationTarget(connection),
-    annotations: new ConnectAnnotationRepository(client),
+    annotations: new ConnectAnnotationRepository(client, undefined, settings),
+    settings,
     annotationAssets: connectAnnotationAssetRepository(connection),
     documents: connectDocumentRepository(connection),
     contentSearch: new ConnectContentSearchRepository(client),

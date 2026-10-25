@@ -6,6 +6,11 @@ import * as sources from "./annotation-source.js";
 import { CreateFollowThrough } from "./create-follow-through.js";
 import { annotationFromDocument, annotationFrontmatter } from "./mapping.js";
 import {
+  annotationPathCandidates,
+  currentNameTemplates,
+  type ReaderNaming,
+} from "./naming-templates.js";
+import {
   mapConcurrent,
   outcomeValue,
   readWithOptions,
@@ -39,14 +44,18 @@ export class ConnectAnnotationRepository implements AnnotationRepository {
 
   readonly #records: AnnotationRecordCache;
   readonly #creates: CreateFollowThrough;
+  readonly #naming: ReaderNaming | undefined;
 
   constructor(
     private readonly client: ReaderConnectClient,
     /** Keeps each create until the collection confirms it; one per client by default. */
     creates?: CreateFollowThrough,
+    /** The collection's name templates; Reader's default names without one. */
+    naming?: ReaderNaming,
   ) {
     this.#records = new AnnotationRecordCache(client);
     this.#creates = creates ?? new CreateFollowThrough(client);
+    this.#naming = naming;
   }
 
   invalidateRecord(path: string): void {
@@ -196,6 +205,8 @@ export class ConnectAnnotationRepository implements AnnotationRepository {
   }
 
   async create(annotation: Annotation, idempotencyKey: MutationId): Promise<Annotation> {
+    const templates = await currentNameTemplates(this.#naming);
+    const candidates = await annotationPathCandidates(templates.annotation, annotation);
     const result = outcomeValue(
       // A retried save keeps its mutation ID as its first intent, so it lands once
       // instead of colliding. The create is kept until the collection confirms it.
@@ -205,7 +216,7 @@ export class ConnectAnnotationRepository implements AnnotationRepository {
         kind: "annotation",
         recordId: annotation.id,
         label: annotationLabel(annotation),
-        candidates: [`annotations/${annotation.id}.md`],
+        candidates,
         linksTo: [annotation.sourceId],
         input: {
           type: "reader-annotation",

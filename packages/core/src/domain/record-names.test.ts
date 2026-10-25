@@ -12,7 +12,10 @@ import {
   nameClusters,
   nameWithSuffix,
   pathKey,
+  preferredAnnotationLeaves,
+  preferredSourceNoteStems,
   quoteWords,
+  safeName,
   slug,
   sourceFilePaths,
   sourceFolderNames,
@@ -1089,5 +1092,99 @@ describe("file names", () => {
         ?.replace(/\.pdf$/u, "") ?? "";
     expect(utf8Bytes(name)).toBeLessThanOrEqual(maxNameBytes);
     expect(name).toMatch(/^漢+-字+$/u);
+  });
+});
+
+describe("safeName", () => {
+  it("keeps case, spaces and punctuation, and makes the rest safe", () => {
+    expect(safeName("Kingma 2014 – Adam: A Method?")).toBe("Kingma 2014 – Adam A Method");
+    expect(safeName("  ..Notes on <things>.  ")).toBe("Notes on things");
+    expect(safeName("a\u0000b\tc​d")).toBe("a b c d");
+    expect(safeName("soft­hyphen")).toBe("softhyphen");
+  });
+
+  it("drops what would break a wikilink to the record", () => {
+    expect(safeName("Lovelace - C# in Depth")).toBe("Lovelace - C in Depth");
+    expect(safeName("[[Notes]] on ^block and [x]")).toBe("Notes on block and x");
+  });
+
+  it.each(["", "   ", "...", "CON", "nul.txt", "node_modules", "git~1"])(
+    "gives nothing usable for %j",
+    (name) => {
+      expect(safeName(name)).toBe("");
+    },
+  );
+
+  it("is always a name the engine accepts, within the byte cap", () => {
+    for (const input of samples(2_000)) {
+      const name = safeName(input);
+      expect(utf8Bytes(name)).toBeLessThanOrEqual(maxNameBytes);
+      expect(name).toBe(name.normalize("NFC"));
+      if (name) {
+        expectEngineAccepts(`${name}.md`);
+        expect(safeName(name)).toBe(name);
+      }
+    }
+  });
+});
+
+describe("preferredSourceNoteStems", () => {
+  const input = {
+    title: "Introduction",
+    id: sourceId,
+    authorYear: { family: "Smith", year: 2019 },
+  };
+
+  it("is the default list when the preferred name is the default's first", () => {
+    expect(preferredSourceNoteStems("introduction", input)).toEqual(sourceNoteStems(input));
+  });
+
+  it.each(["", " / ", "CON", "a/b/c/d/e"])("falls back to the default list for %j", (name) => {
+    expect(preferredSourceNoteStems(name, input)).toEqual(sourceNoteStems(input));
+  });
+
+  it("tries the preferred name, its author–year and ID fallbacks in its folder, then the ID", () => {
+    expect(preferredSourceNoteStems("2019/Smith – Introduction", input)).toEqual([
+      "2019/Smith – Introduction",
+      "2019/Smith – Introduction-smith-2019",
+      "2019/Smith – Introduction-5a6b",
+      "2019/Smith – Introduction-3e4f5a6b",
+      sourceId,
+    ]);
+  });
+
+  it("makes each folder safe and drops empty ones", () => {
+    expect(
+      preferredSourceNoteStems("../Books//<Fiction>/Dune", { title: "Dune", id: sourceId })[0],
+    ).toBe("Books/Fiction/Dune");
+  });
+
+  it("only ever gives paths the engine accepts", () => {
+    for (const sample of samples(600)) {
+      const stems = preferredSourceNoteStems(`${sample}/${sample}`, {
+        title: sample,
+        id: sourceId,
+      });
+      for (const stem of stems) {
+        expectEngineAccepts(`sources/${stem}.md`);
+      }
+    }
+  });
+});
+
+describe("preferredAnnotationLeaves", () => {
+  it("is the ID alone for the default name or anything unusable", () => {
+    for (const name of [annotationId, "", "???", "CON"]) {
+      expect(preferredAnnotationLeaves(name, annotationId)).toEqual([annotationId]);
+    }
+  });
+
+  it("tries the preferred name, then 4 and 8 ID characters, then the ID, with no folders", () => {
+    expect(preferredAnnotationLeaves("p6 We propose/Adam", annotationId)).toEqual([
+      "p6 We propose Adam",
+      "p6 We propose Adam-7c2e",
+      "p6 We propose Adam-9f417c2e",
+      annotationId,
+    ]);
   });
 });
