@@ -1,7 +1,8 @@
 # Collection file layout
 
-Status: proposal. Nothing here is implemented yet. Base: `feat/citation-claims` at
-`917da34`.
+Status: in progress on `feat/citation-claims`. Slice 1 (the naming module), the create
+follow-through from slice 5, and slice 2 (path allocation for source notes and chapters)
+are implemented. Annotations, files and Tidy are not. Proposed at `917da34`.
 
 ## Direction (agreed)
 
@@ -30,6 +31,10 @@ child is created (see [Slugs](#3-slugs)).
 | Web capture                 | `files/reader/<src_id>/<host>.readable.html` and `<host>.archive.html`               | `packages/web-capture/src/web-capture.ts:117-121`                                                                                   |
 | Area capture                | `files/annotation-<ann_id>.png`                                                      | `packages/core/src/application/create-annotation.ts:50-52`                                                                          |
 | Readwise and Zotero imports | `sources/imports/<id>.md`, `annotations/imports/<id>.md`, `files/reader/imports/...` | `packages/migration/src/readwise-*.ts`, `zotero-records.ts:44,129,155`, `zotero.ts:121`                                             |
+
+This table describes the writers when the proposal was made. Since slice 2, source notes
+and chapters both take the full `sourceNotePaths` candidate list (§3), and chapters no
+longer go in `sources/parts/`.
 
 The browser extension has no path code of its own. `apps/extension/src/save-capture.ts:185,275`
 calls core's `importSourceFile` and `createAnnotation`, so it writes the same paths and
@@ -96,11 +101,12 @@ spelled it.
 
 **No contract, type or query depends on these folders.**
 
-- The contracts (`apps/reader/mdbase/contracts/*.md`) and types
-  (`apps/reader/mdbase/types/*.md`) declare no `path_pattern`, no
+- Reader's contracts (`apps/reader/mdbase/contracts/*.md`) and types
+  (`apps/reader/mdbase/types/*.md`) declare no path settings: no `path_pattern`, no
   `collection.path.pattern`, no glob and no folder. The generated pack contains none
-  either (`apps/reader/src/generated/mdbase-app.json`). Type membership comes from the
-  `type:` field.
+  either (`apps/reader/src/generated/mdbase-app.json`). The engine supports type path
+  policy; Reader chooses not to use it (see [Explicit paths](#explicit-paths-not-type-path-policy)).
+  Type membership comes from the `type:` field.
 - Discovery works by type, ID and link, never by folder:
   - `recordPathById` uses `where id == …` (`packages/connect/src/repository-client.ts:151-186`);
   - annotations for a source use `types: ["reader-annotation"]` plus
@@ -284,9 +290,11 @@ table at 886-889):
 3. Nothing in Reader watches for that. The second annotation disappears without a
    message.
 
-Exposure today: annotations, none (UUID names). Chapters, none (random keys). **Source
-notes are already exposed**: two devices that save the same title offline lose the
-second record, and that device's annotations then link to the other device's source.
+Exposure when this was proposed: annotations, none (UUID names). Chapters, none (random
+keys). **Source notes were already exposed**: two devices that save the same title
+offline lose the second record, and that device's annotations then link to the other
+device's source. The create follow-through below now covers source notes, and since
+slice 2 it covers chapters too, which take readable names.
 Files are not exposed: `native-files.ts:62-111` waits for `write.confirmed`, so a
 taken file path fails while the import is still running, and the fallback can be tried
 then.
@@ -310,7 +318,8 @@ readable annotation names, because readable names are what make collisions possi
   in the journal, and checking for the `id` decides.
 - The same reconciler covers source notes, which fixes today's exposure.
 
-**Alternative, not recommended for now.** A `collection.path.pattern` on
+**Alternative, not recommended for now** (see also
+[Explicit paths](#explicit-paths-not-type-path-policy)). A `collection.path.pattern` on
 `reader-annotation` version 3 would let head choose the suffix, so a create is never
 rejected. The cost:
 
@@ -322,6 +331,25 @@ rejected. The cost:
   (`native-client.ts:286-288`).
 
 Revisit if follow-through proves fragile.
+
+## Explicit paths, not type path policy
+
+**Decision: Reader names every record it creates with an explicit path.** The engine
+also supports type path policy (`collection.path.pattern` on a type) and creates whose
+path is derived from it at head. Reader evaluated these and does not use them for now:
+
+- Reader links and embeds by path (`[[sources/…]]`, `![[annotations/…]]`,
+  `documents[].file`), so it needs the path when it writes the record and its
+  dependents, not after head has decided.
+- Patterns substitute only raw top-level fields. Readable names would need a slug field
+  in every record's frontmatter, which is clutter and against "paths are for people".
+- Files have no type, so they need explicit paths whatever records do.
+
+**Trade-off.** Derived paths would avoid `path_taken` refusals entirely: head picks a free
+name and never rejects the create. Explicit paths instead rely on the candidate lists
+(§3) and the create follow-through (§4) to move a refused create to its next name and
+rewrite the links that point at it. Revisit this if Reader ever controls type path
+policy for its own types and can derive paths without extra frontmatter fields.
 
 ## 5. Migration and Tidy
 
@@ -464,7 +492,10 @@ Each slice is one reviewable PR and keeps the tests green.
    No path a user can see changes, except names that used to break on combining marks.
 2. **Path allocation in Connect.** A shared `createAtFirstFree(candidates, …)` with an
    intent per candidate and ID read-back. Apply it to chapters (drops `sources/parts/`)
-   and source notes. Annotations stay on UUID names until slice 5 lands.
+   and source notes. Annotations stay on UUID names until slice 5 lands. Done: the
+   create follow-through (`packages/connect/src/create-follow-through.ts`) already is
+   that shared allocator, so source notes and chapters pass it the full
+   `sourceNotePaths` list. The legacy `<slug>-<8 hex of id prefix>` fallback is gone.
 3. **Files.** The per-source folder and source-named files. Web-capture names. Area
    captures move into the per-source folder. A fallback when a file path is taken. The
    journal records the chosen paths.
