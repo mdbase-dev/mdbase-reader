@@ -254,69 +254,61 @@ it("labels a non-production build and links to settings", () => {
   expect(html).toContain('title="Settings and shortcuts"');
   expect(html).toContain("Select text on the page to highlight it.");
 });
-it("saves a live selection by choosing its colour, with the page's own save set aside", () => {
-  const html = markup({
-    capture: {
-      kind: "html",
-      pageTitle: "[test] Article",
-      canonicalUrl: "https://example.com/",
-      selection: { exact: "a chosen passage" },
-    } as ExtensionCaptureController["capture"],
-    draft: {
-      title: "[test] Article",
-      tags: "",
-      note: "",
-      comment: "",
-      highlight: true,
-      color: "blue",
-      highlightTags: "",
-    },
-  });
+const selected = {
+  capture: {
+    kind: "html",
+    pageTitle: "[test] Article",
+    canonicalUrl: "https://example.com/",
+    selection: { exact: "a chosen passage" },
+  } as ExtensionCaptureController["capture"],
+  draft: {
+    title: "[test] Article",
+    tags: "",
+    note: "",
+    comment: "",
+    highlight: true,
+    color: "blue",
+    highlightTags: "",
+  },
+} satisfies Partial<ExtensionCaptureController>;
+it("saves a live selection with one Highlight action, its colour chosen beside it", () => {
+  const html = markup(selected);
   expect(html).toContain("a chosen passage");
-  expect(html).toContain("Save page and highlight");
-  // Each colour is a save action, not a toggle; the last-used one is only marked.
-  expect(html).not.toContain("aria-pressed");
+  // One primary action, in the device's colour; the colours only choose.
   expect(html).toMatch(
-    /class="swatch swatch-blue is-last" aria-keyshortcuts="3" title="Save in blue \(3, or Ctrl\+Enter\)"[^>]*>blue</u,
+    /<button type="button" class="primary highlight-button swatch-blue"[^>]*title="Highlight in blue \(Ctrl\+Enter\)"[^>]*>Highlight</u,
   );
-  expect(html).toMatch(/class="swatch swatch-yellow" aria-keyshortcuts="1"[^>]*>yellow</u);
+  expect(html).toContain('role="radiogroup" aria-label="Highlight colour"');
+  expect(html).toMatch(
+    /role="radio" data-color="blue" class="color-dot swatch-blue" aria-checked="true" aria-label="blue" aria-keyshortcuts="3" tabindex="0"/u,
+  );
+  expect(html).toMatch(/data-color="yellow"[^>]*aria-checked="false"[^>]*tabindex="-1"/u);
+  expect(html).toContain("Blue · Saves the page too");
   expect(html).toContain('aria-keyshortcuts="Escape"');
-  // Comment and tags wait behind one link, above the colours that save.
+  // Comment and tags wait behind one link, above the action.
   expect(html).not.toContain('id="highlight-tags"');
-  expect(html.indexOf("Add a comment or tags")).toBeLessThan(html.indexOf("swatch-yellow"));
+  expect(html.indexOf("Add a comment or tags")).toBeLessThan(html.indexOf("highlight-button"));
   // Saving only the page stays available, but not as the main action.
   expect(html).toMatch(/<button class="secondary" type="button"[^>]*>Save page</u);
-  expect(html).not.toContain("Save source and highlight");
+  expect(html).not.toContain("Save page and highlight");
 });
 it("offers only the collection's colours, in its order, with their meanings", () => {
   const html = markup({
-    capture: {
-      kind: "html",
-      pageTitle: "[test] Article",
-      canonicalUrl: "https://example.com/",
-      selection: { exact: "a chosen passage" },
-    } as ExtensionCaptureController["capture"],
-    draft: {
-      title: "[test] Article",
-      tags: "",
-      note: "",
-      comment: "",
-      highlight: true,
-      color: "yellow",
-      highlightTags: "",
-    },
+    ...selected,
+    draft: { ...selected.draft, color: "yellow" },
     highlight: { colors: ["pink", "blue"], meanings: { pink: "Question" } },
   });
-  expect(html).not.toContain("swatch-yellow");
-  expect(html).not.toContain("swatch-green");
-  // Yellow, the last colour, is hidden: the first offered colour takes Ctrl+Enter.
+  expect(html).not.toContain('data-color="yellow"');
+  expect(html).not.toContain('data-color="green"');
+  // Yellow, the device's colour, is hidden: the first offered colour is chosen instead.
   expect(html).toMatch(
-    /class="swatch swatch-pink is-last" aria-keyshortcuts="1" aria-label="pink, Question" title="Save in pink — Question \(1, or Ctrl\+Enter\)"/u,
+    /data-color="pink" class="color-dot swatch-pink" aria-checked="true" aria-label="pink, Question" aria-keyshortcuts="1"/u,
   );
   expect(html).toMatch(
-    /class="swatch swatch-blue" aria-keyshortcuts="2" title="Save in blue \(2\)"/u,
+    /data-color="blue" class="color-dot swatch-blue" aria-checked="false"[^>]*aria-keyshortcuts="2"/u,
   );
-  expect(html.indexOf("swatch-pink")).toBeLessThan(html.indexOf("swatch-blue"));
+  expect(html.indexOf('data-color="pink"')).toBeLessThan(html.indexOf('data-color="blue"'));
+  expect(html).toContain("Pink · Question");
 });
 it("shows where a new source's citation comes from", () => {
   const html = markup(
@@ -579,5 +571,5 @@ it("says why a selected passage cannot be saved yet", () => {
     } as ExtensionCaptureController["capture"],
   });
   expect(html).toContain("Sign in to mdbase before saving.");
-  expect(html).toMatch(/class="swatch swatch-yellow[^"]*"[^>]*disabled=""/u);
+  expect(html).toMatch(/class="primary highlight-button[^"]*" disabled=""/u);
 });

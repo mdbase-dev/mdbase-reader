@@ -129,7 +129,7 @@ function HighlightsPanel({ controller: c }: ControllerProps): React.JSX.Element 
           <HighlightFields controller={c} ready={saveReady(c)} />
         </fieldset>
       ) : saved ? null : (
-        <HighlightHint />
+        <HighlightHint colors={c.highlight.colors.length} />
       )}
       <SavedHighlights controller={c} />
     </>
@@ -153,14 +153,20 @@ function unreadable(c: ExtensionCaptureController): boolean {
 }
 
 /** Before the first highlight: how to make one, and the keys that make it quick. */
-function HighlightHint(): React.JSX.Element {
+function HighlightHint({ colors }: { readonly colors: number }): React.JSX.Element {
   const shortcut = useShortcuts()?.find((value) => value.name === "save-highlight")?.keys;
   return (
     <div className="tab-hint">
       <p>Select text on the page to highlight it.</p>
       <ul className="hint-keys">
         <li>
-          <kbd>1</kbd>–<kbd>5</kbd> save the selection in a colour; <kbd>Esc</kbd> clears it
+          <kbd>1</kbd>
+          {colors > 1 ? (
+            <>
+              –<kbd>{colors}</kbd>
+            </>
+          ) : null}{" "}
+          highlight the selection in that colour at once; <kbd>Esc</kbd> clears it
         </li>
         {shortcut ? (
           <li>

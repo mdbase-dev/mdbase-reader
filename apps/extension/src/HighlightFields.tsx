@@ -7,11 +7,12 @@ import { TagInput } from "./TagInput.js";
 
 import type { ExtensionCaptureController } from "./capture-controller.js";
 import type { CaptureDraft } from "./save-capture.js";
-import type { HighlightColorKey } from "@mdbase-reader/core";
+import type { HighlightColorKey, HighlightMeanings } from "@mdbase-reader/core";
 
 /**
  * The selected passage and how to save it; follows the page selection live. Top to bottom
- * in the order they are used: an optional comment and tags, then a colour, which saves.
+ * in the order they are used: an optional comment and tags, then one Highlight action with
+ * its colour chosen beside it.
  */
 export function HighlightFields({
   controller: c,
@@ -27,42 +28,15 @@ export function HighlightFields({
   const intent = c.invocation;
   const blocker = saveBlocker(c);
   const { save, clearSelection } = c;
-  const { colors } = c.highlight;
-  // The colour used last, or the first the collection offers while that one is hidden.
-  const last = offeredHighlightColor(c.draft.color, colors);
+  const { colors, meanings } = c.highlight;
+  // The device's colour (the one used last), or the first offered while that one is hidden.
+  const chosen = offeredHighlightColor(c.draft.color, colors);
   useEffect(() => {
     if (intent?.intent === "note" || openDetails) {
       comment.current?.focus();
     }
   }, [intent, openDetails]);
-  useEffect(() => {
-    if (!selection) {
-      return;
-    }
-    // 1, 2, 3… save in the colour at that place and Esc lets the passage go, unless the
-    // reader is typing.
-    const onKeyDown = (event: KeyboardEvent): void => {
-      if (event.defaultPrevented || event.altKey || event.ctrlKey || event.metaKey) {
-        return;
-      }
-      if (
-        event.target instanceof Element &&
-        event.target.closest("input, textarea, select, [contenteditable], [role='combobox']")
-      ) {
-        return;
-      }
-      const color = colors[Number(event.key) - 1];
-      if (color && ready) {
-        event.preventDefault();
-        void save({ highlight: true, color });
-      } else if (event.key === "Escape") {
-        event.preventDefault();
-        clearSelection();
-      }
-    };
-    document.addEventListener("keydown", onKeyDown);
-    return () => document.removeEventListener("keydown", onKeyDown);
-  }, [clearSelection, colors, ready, save, selection]);
+  useColorKeys(selection !== null, colors, ready, save, clearSelection);
   if (!selection) {
     return null;
   }
@@ -103,10 +77,29 @@ export function HighlightFields({
           Add a comment or tags
         </button>
       )}
-      <div className="passage-actions">
-        <span className="field-label" id="highlight-colors">
-          {c.source ? "Save highlight" : "Save page and highlight"}
-        </span>
+      <div className="highlight-action">
+        <button
+          type="button"
+          className={`primary highlight-button swatch-${chosen}`}
+          disabled={!ready}
+          aria-keyshortcuts="Control+Enter Meta+Enter"
+          title={`Highlight in ${colorName(chosen, meanings)} (${modifierKey()}+Enter)`}
+          onClick={() => void save({ highlight: true, color: chosen })}
+        >
+          {c.status === "saving" ? "Saving…" : "Highlight"}
+        </button>
+        <ColorChoice
+          colors={colors}
+          meanings={meanings}
+          value={chosen}
+          onChange={(color) => update({ color })}
+        />
+      </div>
+      <div className="passage-footer">
+        <p className="hint">
+          {colorName(chosen, meanings, true)}
+          {c.source ? "" : " · Saves the page too"}
+        </p>
         <button
           type="button"
           className="text-button"
@@ -117,43 +110,109 @@ export function HighlightFields({
           Clear
         </button>
       </div>
-      <ColorSwatches controller={c} last={last} ready={ready} />
       {blocker ? <p className="hint">{blocker}</p> : null}
     </section>
   );
 }
 
-/** The collection's colours, in its order: each saves the passage in that colour. */
-function ColorSwatches({
-  controller: c,
-  last,
-  ready,
+/**
+ * While a passage is selected, 1, 2, 3… save it in the colour at that place in one step and
+ * Esc lets it go, unless the reader is typing.
+ */
+function useColorKeys(
+  selected: boolean,
+  colors: readonly HighlightColorKey[],
+  ready: boolean,
+  save: ExtensionCaptureController["save"],
+  clearSelection: () => void,
+): void {
+  useEffect(() => {
+    if (!selected) {
+      return;
+    }
+    const onKeyDown = (event: KeyboardEvent): void => {
+      if (event.defaultPrevented || event.altKey || event.ctrlKey || event.metaKey) {
+        return;
+      }
+      if (
+        event.target instanceof Element &&
+        event.target.closest("input, textarea, select, [contenteditable], [role='combobox']")
+      ) {
+        return;
+      }
+      const color = colors[Number(event.key) - 1];
+      if (color && ready) {
+        event.preventDefault();
+        void save({ highlight: true, color });
+      } else if (event.key === "Escape") {
+        event.preventDefault();
+        clearSelection();
+      }
+    };
+    document.addEventListener("keydown", onKeyDown);
+    return () => document.removeEventListener("keydown", onKeyDown);
+  }, [clearSelection, colors, ready, save, selected]);
+}
+
+/** "blue, Key point" for names, or "Blue · Key point" for the caption under the action. */
+function colorName(color: HighlightColorKey, meanings: HighlightMeanings, caption = false): string {
+  const label = highlightPalette[color].label;
+  const meaning = meanings[color];
+  const name = caption ? label : label.toLowerCase();
+  return meaning ? `${name}${caption ? " · " : ", "}${meaning}` : name;
+}
+
+/**
+ * The colour the Highlight button uses: the collection's colours, in its order, as a radio
+ * group. Choosing one saves nothing; the number keys save in a colour in one step.
+ */
+function ColorChoice({
+  colors,
+  meanings,
+  value,
+  onChange,
 }: {
-  readonly controller: ExtensionCaptureController;
-  readonly last: HighlightColorKey;
-  readonly ready: boolean;
+  readonly colors: readonly HighlightColorKey[];
+  readonly meanings: HighlightMeanings;
+  readonly value: HighlightColorKey;
+  readonly onChange: (color: HighlightColorKey) => void;
 }): React.JSX.Element {
-  const { colors, meanings } = c.highlight;
+  const group = useRef<HTMLDivElement>(null);
+  // Arrow keys move the choice, and focus with it, as in a native radio group.
+  const onKeyDown = (event: React.KeyboardEvent): void => {
+    const step =
+      event.key === "ArrowRight" || event.key === "ArrowDown"
+        ? 1
+        : event.key === "ArrowLeft" || event.key === "ArrowUp"
+          ? -1
+          : 0;
+    const next = step
+      ? colors[(colors.indexOf(value) + step + colors.length) % colors.length]
+      : null;
+    if (next) {
+      event.preventDefault();
+      onChange(next);
+      group.current?.querySelector<HTMLElement>(`[data-color="${next}"]`)?.focus();
+    }
+  };
   return (
-    <div className="colors" role="group" aria-labelledby="highlight-colors">
-      {colors.map((color, index) => {
-        const meaning = meanings[color];
-        const name = highlightPalette[color].label.toLowerCase();
-        return (
-          <button
-            key={color}
-            type="button"
-            className={`swatch swatch-${color}${last === color ? " is-last" : ""}`}
-            aria-keyshortcuts={String(index + 1)}
-            {...(meaning ? { "aria-label": `${name}, ${meaning}` } : {})}
-            title={`Save in ${name}${meaning ? ` — ${meaning}` : ""} (${String(index + 1)}${last === color ? `, or ${modifierKey()}+Enter` : ""})`}
-            disabled={!ready}
-            onClick={() => void c.save({ highlight: true, color })}
-          >
-            {color}
-          </button>
-        );
-      })}
+    <div ref={group} className="color-choice" role="radiogroup" aria-label="Highlight colour">
+      {colors.map((color, index) => (
+        <button
+          key={color}
+          type="button"
+          role="radio"
+          data-color={color}
+          className={`color-dot swatch-${color}`}
+          aria-checked={color === value}
+          aria-label={colorName(color, meanings)}
+          aria-keyshortcuts={String(index + 1)}
+          tabIndex={color === value ? 0 : -1}
+          title={`${colorName(color, meanings, true)} (press ${String(index + 1)} to highlight in it at once)`}
+          onClick={() => onChange(color)}
+          onKeyDown={onKeyDown}
+        />
+      ))}
     </div>
   );
 }
