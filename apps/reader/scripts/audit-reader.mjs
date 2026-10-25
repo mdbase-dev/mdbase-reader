@@ -11,6 +11,7 @@ import { auditDockviewMigration } from "./audit-dockview-migration.mjs";
 import { annotationFixture } from "./audit-annotation-fixture.mjs";
 import { auditAnnotations } from "./audit-annotations.mjs";
 import { auditAnnotationFormats } from "./audit-annotation-formats.mjs";
+import { auditAnnotationSelection } from "./audit-annotation-selection.mjs";
 import { auditPdfTouchWorkspace } from "./audit-pdf-touch-workspace.mjs";
 import { installLocalPdfium } from "./audit-local-pdfium.mjs";
 import { auditSharedEditing } from "./audit-shared-editing.mjs";
@@ -24,6 +25,7 @@ const origin = process.env.READER_AUDIT_ORIGIN ?? "http://127.0.0.1:5193";
 const sharedEditingAudit = process.env.READER_AUDIT_SHARED_EDITING_ONLY === "1";
 const readingAudit = process.env.READER_AUDIT_READING_ONLY === "1";
 const formatsAudit = process.env.READER_AUDIT_FORMATS_ONLY === "1";
+const selectionAudit = process.env.READER_AUDIT_SELECTION_ONLY === "1";
 const pdfTouchAudit = process.env.READER_AUDIT_PDF_TOUCH_ONLY === "1";
 const responsiveAudit = process.env.READER_AUDIT_RESPONSIVE_ONLY === "1";
 const sidebarComparison = responsiveAudit || process.env.READER_AUDIT_SIDEBARS_ONLY === "1";
@@ -201,15 +203,16 @@ try {
   if (pdfTouchAudit) {
     completed.push(...(await auditPdfTouchWorkspace(page, { screenshot })));
   }
+  const openSource = async (number) => {
+    const title = `Research ${String(number).padStart(4, "0")}`;
+    await page.getByRole("textbox", { name: "Find a source by title, author or tag" }).fill(title);
+    await page.getByRole("option", { name: new RegExp(title) }).dblclick();
+  };
   if (formatsAudit) {
-    const open = async (number) => {
-      const title = `Research ${String(number).padStart(4, "0")}`;
-      await page
-        .getByRole("textbox", { name: "Find a source by title, author or tag" })
-        .fill(title);
-      await page.getByRole("option", { name: new RegExp(title) }).dblclick();
-    };
-    completed.push(...(await auditAnnotationFormats(page, { open, screenshot })));
+    completed.push(...(await auditAnnotationFormats(page, { open: openSource, screenshot })));
+  }
+  if (selectionAudit) {
+    completed.push(...(await auditAnnotationSelection(page, { open: openSource, screenshot })));
   }
   if (readingAudit) {
     await page.evaluate(() => sessionStorage.setItem("reader-audit-reading", "1"));
@@ -243,6 +246,7 @@ try {
   }
   if (
     !formatsAudit &&
+    !selectionAudit &&
     !pdfTouchAudit &&
     !readingAudit &&
     !sharedEditingAudit &&
@@ -500,6 +504,7 @@ try {
   }
   if (
     !formatsAudit &&
+    !selectionAudit &&
     !pdfTouchAudit &&
     !readingAudit &&
     !sharedEditingAudit &&
