@@ -44,9 +44,19 @@ it("shows a feed picker with the viewport post preselected, without offering to 
   expect(html.match(/checked=""/gu)).toHaveLength(1);
 });
 
+const ready = {
+  status: "ready",
+  collectionId: "c1",
+  collections: [{ collectionId: "c1", displayName: "[test] Papers" }],
+} as unknown as ExtensionCaptureController["snapshot"];
+const signedOut = {
+  status: "signed_out",
+  collections: [],
+} as unknown as ExtensionCaptureController["snapshot"];
+
 function markup(changes: Partial<ExtensionCaptureController> = {}, tab?: PanelTab): string {
   const controller = {
-    snapshot: { status: "signed_out", collections: [] },
+    snapshot: ready,
     capture: {
       kind: "html",
       pageTitle: "[test] Article",
@@ -76,17 +86,27 @@ function markup(changes: Partial<ExtensionCaptureController> = {}, tab?: PanelTa
     <CaptureApp controller={controller} {...(tab ? { initialTab: tab } : {})} />,
   );
 }
-it("asks a new user only to connect, with editable metadata and no status noise", () => {
-  const html = markup({}, "note");
+it("asks a new user only to connect, with no forms that cannot save yet", () => {
+  const html = markup({ snapshot: signedOut }, "note");
   expect(html).toContain("Connect a collection");
   expect(html).toContain("Connect to mdbase LAB");
   expect(html).not.toContain("Connect another collection");
   expect(html).not.toContain("Choose a collection");
+  expect(html).toContain(
+    "Connect a collection above to give this page a title, tags and a literature note.",
+  );
+  expect(html).not.toContain('id="title"');
+  expect(html).not.toContain('id="note"');
+  expect(html).not.toContain("Save page");
+  expect(html).not.toContain("disabled");
+  expect(html).not.toContain("Not saved yet.");
+});
+it("offers the new source's title, tags and note once connected", () => {
+  const html = markup({}, "note");
   expect(html).toContain('id="title"');
   expect(html).toContain('id="tags"');
   expect(html).toContain('id="note"');
-  expect(html).not.toContain("Not saved yet.");
-  expect(html).not.toContain("Saved to your collection.");
+  expect(html).toContain("Save page");
 });
 it("picks among connected collections with Reader's select", () => {
   const html = markup({
@@ -590,11 +610,12 @@ it("titles the page as it will be saved, not as the tab names it", () => {
   });
   expect(html).toContain("<h1>[test] Diphoton production</h1>");
 });
-it("says why a selected passage cannot be saved yet", () => {
+it("says what a selected passage needs before it can be saved, without a dead form", () => {
   const html = markup({
     snapshot: {
-      status: "signed_out",
-      collections: [],
+      status: "setup",
+      collectionId: "c1",
+      collections: [{ collectionId: "c1", displayName: "Papers" }],
     } as unknown as ExtensionCaptureController["snapshot"],
     capture: {
       kind: "html",
@@ -603,6 +624,8 @@ it("says why a selected passage cannot be saved yet", () => {
       selection: { exact: "a passage" },
     } as ExtensionCaptureController["capture"],
   });
-  expect(html).toContain("Sign in to mdbase before saving.");
-  expect(html).toMatch(/class="primary highlight-button[^"]*" disabled=""/u);
+  expect(html).toContain("Set up collection");
+  expect(html).toContain("Set up this collection above to highlight the selected passage.");
+  expect(html).not.toContain("highlight-button");
+  expect(html).not.toContain("Save page");
 });

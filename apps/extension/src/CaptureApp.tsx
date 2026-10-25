@@ -2,7 +2,12 @@ import { Fragment, useEffect, useState } from "react";
 
 import { readerSourceUrl } from "./capture-model.js";
 import { CitationPanel } from "./CitationPanel.js";
-import { collectionName, ConnectionPanel, ConnectionProblem } from "./ConnectionPanel.js";
+import {
+  collectionName,
+  ConnectFirst,
+  ConnectionPanel,
+  ConnectionProblem,
+} from "./ConnectionPanel.js";
 import { useDiagnosticsShown } from "./diagnostics-setting.js";
 import { DiagnosticsPanel } from "./DiagnosticsPanel.js";
 import { ExtensionHeader } from "./ExtensionHeader.js";
@@ -10,7 +15,7 @@ import { HighlightFields } from "./HighlightFields.js";
 import { NotePanel } from "./NotePanel.js";
 import { PanelTabContent, PanelTabs, usePanelTab, type PanelTab } from "./PanelTabs.js";
 import { PostPicker } from "./PostPicker.js";
-import { SaveBar, saveReady } from "./SaveBar.js";
+import { awaitingConnection, SaveBar, saveReady } from "./SaveBar.js";
 import { SavedHighlights } from "./SavedHighlights.js";
 import { openSettings, useShortcuts } from "./shortcuts.js";
 
@@ -122,6 +127,11 @@ function HighlightsPanel({ controller: c }: ControllerProps): React.JSX.Element 
           Chrome’s PDF viewer does not share selections, so PDFs are highlighted in Reader.
           {c.source ? " Highlights made there appear here." : " Save the PDF, then open it there."}
         </p>
+      ) : awaitingConnection(c) ? (
+        <ConnectFirst
+          controller={c}
+          purpose={selection ? "highlight the selected passage" : "highlight this page"}
+        />
       ) : selection ? (
         <fieldset
           className="tab-section"

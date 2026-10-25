@@ -228,6 +228,47 @@ function ConnectionControlsPanel({
 }
 
 /**
+ * In place of a form that cannot save yet: what it is for, and the step the connection
+ * controls above offer. Says nothing while mdbase is still opening.
+ */
+export function ConnectFirst({
+  controller: { snapshot },
+  purpose,
+}: {
+  readonly controller: Pick<ConnectionControls, "snapshot">;
+  /** What the form would do, completing "… to <purpose>." */
+  readonly purpose: string;
+}): React.JSX.Element | null {
+  if (snapshot.status === "opening" || snapshot.status === "ready") {
+    return null;
+  }
+  return (
+    <p className="tab-hint">
+      {connectStep(snapshot.status)} to {purpose}.
+    </p>
+  );
+}
+
+function connectStep(status: ConnectionView["status"]): string {
+  switch (status) {
+    case "waiting":
+      return "Finish signing in in the mdbase tab";
+    case "choosing":
+      return "Choose a collection above";
+    case "approval":
+      return "Approve access above";
+    case "setup":
+      return "Set up this collection above";
+    case "unchecked":
+      return "Check this collection above";
+    case "problem":
+      return "Sort out the problem above";
+    default:
+      return "Connect a collection above";
+  }
+}
+
+/**
  * The kind of problem to report, if any. A page the tab shows but Reader cannot read is not
  * a failure: the panel says so quietly instead (see CaptureApp's UnreadablePage).
  */

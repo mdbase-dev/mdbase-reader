@@ -1,6 +1,8 @@
 import { useEffect, useState, useSyncExternalStore } from "react";
 
 import { problemMessage, readerSourceUrl } from "./capture-model.js";
+import { ConnectFirst } from "./ConnectionPanel.js";
+import { awaitingConnection } from "./SaveBar.js";
 import { splitTags } from "./tag-suggestions.js";
 import { TagInput } from "./TagInput.js";
 import { TechnicalDetails } from "./TechnicalDetails.js";
@@ -23,6 +25,8 @@ export function NotePanel({
   }
   return c.source ? (
     <SavedSourceNote controller={c} source={c.source} />
+  ) : awaitingConnection(c) ? (
+    <ConnectFirst controller={c} purpose="give this page a title, tags and a literature note" />
   ) : (
     <NewSourceFields controller={c} />
   );
