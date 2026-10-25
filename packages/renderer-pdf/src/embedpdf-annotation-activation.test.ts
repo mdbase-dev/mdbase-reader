@@ -8,11 +8,11 @@ import type { AnnotationPlugin } from "@embedpdf/plugin-annotation";
 type AnnotationCapability = ReturnType<AnnotationPlugin["provides"]>;
 
 describe("EmbedPDF annotation activations", () => {
-  it("publishes selection of a durable Reader annotation once", () => {
-    let stateListener: (() => void) | undefined;
+  it("publishes a selection of a durable Reader annotation, not every state change", () => {
+    let stateListener: ((event: { state: { selectedUids: string[] } }) => void) | undefined;
     const selected = { id: "mdbase-reader:ann-clicked" } as PdfAnnotationObject;
     const capability = {
-      onStateChange: (listener: () => void) => {
+      onStateChange: (listener: typeof stateListener) => {
         stateListener = listener;
         return () => {
           stateListener = undefined;
@@ -24,17 +24,19 @@ describe("EmbedPDF annotation activations", () => {
     const listener = vi.fn();
     activations.subscribe(listener);
 
-    stateListener?.();
-    stateListener?.();
+    const clicked = { state: { selectedUids: ["mdbase-reader:ann-clicked"] } };
+    stateListener?.(clicked);
+    // Other state changes keep the same selection list; only a selection makes a new one.
+    stateListener?.(clicked);
 
     expect(listener).toHaveBeenCalledOnce();
     expect(listener).toHaveBeenCalledWith("ann-clicked");
   });
 
   it("ignores selected annotations that do not belong to Reader", () => {
-    let stateListener: (() => void) | undefined;
+    let stateListener: ((event: { state: { selectedUids: string[] } }) => void) | undefined;
     const capability = {
-      onStateChange: (listener: () => void) => {
+      onStateChange: (listener: typeof stateListener) => {
         stateListener = listener;
         return vi.fn();
       },
@@ -46,7 +48,7 @@ describe("EmbedPDF annotation activations", () => {
     const listener = vi.fn();
     activations.subscribe(listener);
 
-    stateListener?.();
+    stateListener?.({ state: { selectedUids: ["native-pdf-annotation"] } });
 
     expect(listener).not.toHaveBeenCalled();
   });

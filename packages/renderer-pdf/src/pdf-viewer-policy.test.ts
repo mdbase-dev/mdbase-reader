@@ -44,7 +44,6 @@ describe("Reader EmbedPDF policy", () => {
       expect.arrayContaining([
         "panel:toggle-sidebar",
         "panel:toggle-search",
-        "selection:copy",
         "zoom:fit-page",
         "zoom:fit-width",
       ]),
@@ -56,15 +55,19 @@ describe("Reader EmbedPDF policy", () => {
     ).toEqual([]);
   });
 
-  it("keeps only document navigation, search, and copy surfaces", () => {
+  it("leaves selection actions to Reader without a second floating menu", () => {
     const schema: UISchema = readerPdfUiSchema;
 
     expect(Object.keys(schema.toolbars)).toEqual(["main-toolbar"]);
     expect(Object.keys(schema.sidebars)).toEqual(["sidebar-panel", "search-panel"]);
     expect(Object.keys(schema.modals)).toEqual([]);
     expect(Object.keys(schema.overlays ?? {})).toEqual([]);
-    expect(Object.keys(schema.selectionMenus)).toEqual(["selection"]);
-    expect(commandIds(schema.selectionMenus)).toEqual(["selection:copy"]);
+    expect(schema.selectionMenus).toEqual({});
+    expect(commandIds(readerPdfUiSchema)).not.toContain("selection:copy");
+    // Hiding a UI surface must not disable the keyboard copy command or marquee capture.
+    expect(readerPdfDisabledCategories).not.toContain("selection");
+    expect(readerPdfDisabledCategories).not.toContain("selection-copy");
+    expect(readerPdfDisabledCategories).not.toContain("capture");
   });
 
   it("keeps zoom responsive without adding interaction-mode controls", () => {

@@ -9,6 +9,7 @@ import {
 import { renderToStaticMarkup } from "react-dom/server";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
+import { DisplaySettings } from "./DisplaySettings.js";
 import {
   readerCommands,
   type ReaderCommand,
@@ -115,6 +116,23 @@ describe("command palette", () => {
     expect(titled(closed.title)).toEqual(["Sources"]);
     const themes = commands.filter(({ id }) => id.startsWith("theme:")).map(({ id }) => id);
     expect(themes).toEqual(["theme:system", "theme:light"]);
+    const active = readerCommands({ ...input, activeSource: open });
+    expect(active.find(({ id }) => id === "note")?.label).toBe("Open source note");
+    expect(active.find(({ id }) => id === "citation")?.label).toBe("Open citation details");
+    expect(active.find(({ id }) => id === "split-right")?.label).toBe("Open beside");
+    expect(active.find(({ id }) => id === "split-below")?.label).toBe("Open below");
+    for (const [query, id] of [
+      ["literature note", "note"],
+      ["owner", "annotations"],
+      ["citekey", "citation"],
+      ["field sources", "citation"],
+      ["duplicate", "split-right"],
+      ["duplicate", "split-below"],
+      ["left sidebar", "toggle-library"],
+      ["right sidebar", "toggle-source-tools"],
+    ]) {
+      expect(matchingCommands(active, query!).map((command) => command.id)).toContain(id);
+    }
   });
 });
 
@@ -142,9 +160,23 @@ describe("header", () => {
     expect(render("offline")).toContain("<span>Offline</span>");
   });
 
-  it("offers explicit theme and density choices with the current one pressed", () => {
+  it("keeps the settings trigger immediate without rendering unopened settings", () => {
     const markup = render("connected");
     expect(markup).toContain('aria-label="Display settings"');
+    expect(markup).not.toContain(">Light</button>");
+    expect(markup).not.toContain(">Comfortable</button>");
+  });
+
+  it("loaded settings offer explicit theme and density choices with the current one pressed", () => {
+    const markup = renderToStaticMarkup(
+      <DisplaySettings
+        theme="light"
+        onChangeTheme={vi.fn()}
+        density="comfortable"
+        onChangeDensity={vi.fn()}
+        sidebarWhileReading="hide"
+      />,
+    );
     expect(markup).toContain('aria-pressed="true">Light</button>');
     expect(markup).toContain('aria-pressed="true">Comfortable</button>');
   });

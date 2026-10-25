@@ -1,10 +1,10 @@
-import { connect, type MdbaseClient } from "@mdbase-dev/sdk";
+import { connect, MdbaseError, type MdbaseClient } from "@mdbase-dev/sdk";
 import {
   MemoryReplica,
   type MemoryContract,
   type MemoryReplicaOptions,
 } from "@mdbase-dev/sdk/testing";
-import { afterEach, describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { sourceContract } from "../contracts.js";
 import { outcomeValue } from "../repository-client.js";
@@ -27,7 +27,7 @@ afterEach(() => {
 async function native(
   options: MemoryReplicaOptions = {},
   receiptWaitMs?: number,
-): Promise<{ replica: MemoryReplica; client: NativeReaderClient }> {
+): Promise<{ replica: MemoryReplica; client: NativeReaderClient; sdk: MdbaseClient }> {
   const replica = new MemoryReplica({ confirmDelayMs: 0, ...options });
   const sdk = await connect({
     connector: replica.connector(),
@@ -37,9 +37,41 @@ async function native(
   clients.push(sdk);
   return {
     replica,
+    sdk,
     client: nativeReaderClient(sdk, () => true, receiptWaitMs ? { receiptWaitMs } : {}),
   };
 }
+
+describe("native Reader validation failures", () => {
+  it.each(["create", "update"] as const)(
+    "carries a rejected %s through the native write adapter",
+    async (method) => {
+      const { replica, client, sdk } = await native();
+      const path = "sources/rejected.md";
+      replica.seed({ path, types: ["reader-source"], frontmatter: { id: "rejected" } });
+      const issues = [
+        {
+          code: "schema_required",
+          severity: "error" as const,
+          message: "required property `saved_at` is missing",
+        },
+      ];
+      vi.spyOn(sdk, method).mockRejectedValue(
+        new MdbaseError({
+          code: "invalid_record",
+          recovery: "fix_request",
+          message: `\`${path}\` would not be valid`,
+          issues,
+        }),
+      );
+      const result = await (method === "create"
+        ? client.create({ path, type: "reader-source", frontmatter: { id: "rejected" } })
+        : client.update({ path, patch: { title: "Changed" } }));
+      expect(() => outcomeValue(result, `${method} source`)).toThrow("Saved date is required");
+      expect(sdk[method]).toHaveBeenCalledOnce();
+    },
+  );
+});
 
 describe("native Reader client", () => {
   it("pages every matching record through native cursors as Reader query pages", async () => {

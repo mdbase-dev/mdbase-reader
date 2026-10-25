@@ -36,6 +36,7 @@ export function mobileSourceBar(
         {tab.view === "document" && source?.documents.length ? (
           <DocumentContextualToolbar
             source={source}
+            sources={model.library.sources}
             pane={pane}
             workspace={workspace}
             focusMode={model.focusMode}

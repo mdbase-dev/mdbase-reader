@@ -65,7 +65,7 @@ export function CitationStructuredEditor({
             <FieldProblem message={problem("type")} />
           </label>
           <label className="citation-field citation-citekey-field">
-            <span>Citekey</span>
+            <span>Citation key</span>
             <div>
               <b>@</b>
               <input

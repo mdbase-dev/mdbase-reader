@@ -5,6 +5,7 @@ import type { ProjectionReport, QuoteOutcome } from "./page-annotations.js";
 import type { PageCapture } from "./page-capture.js";
 import type { CaptureDraft } from "./save-capture.js";
 import type { ProblemKind } from "./use-action-lock.js";
+import type { PanelHighlightSettings } from "./use-highlight-settings.js";
 import type { SourceNoteController } from "./use-source-note.js";
 import type {
   Annotation,
@@ -75,6 +76,8 @@ export interface ExtensionCaptureController {
   readonly undoable: boolean;
   /** Deletes the highlight just saved; the page stays saved. */
   readonly undoHighlight: () => Promise<void>;
+  /** The collection's highlight colours, as Reader offers them, and their meanings. */
+  readonly highlight: PanelHighlightSettings;
   /** Known tags to suggest; loaded on first use by `loadTags`. */
   readonly knownTags: readonly string[];
   readonly loadTags: () => void;

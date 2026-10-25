@@ -1,0 +1,10 @@
+{
+  "url": "https://arxiv.org/abs/1706.03762",
+  "retrievedAt": "2026-10-23T06:15:03.862134+00:00",
+  "notes": [
+    "Original reduced reproduction of the captured HTML; article prose, descriptions, images, styles, tracking and executable scripts omitted. Citation metadata values are retained; JSON-LD keeps only citation-related properties.",
+    "Page HTTP status: 200. Final URL: https://arxiv.org/abs/1706.03762.",
+    "Cite the unversioned preprint with its initial submission date from citation_date (12 June 2017), not Citoid last revision 2 August 2023 or registry year-only date. No journal/container is asserted for a preprint; arXiv is its repository/publisher.",
+    "Baseline extractScholarlyMetadata at d0c7061: 6/7 expected fields match; wrong or missing fields: publisher. Cosmetic case/whitespace differences are ignored; absent expected fields are not scored."
+  ]
+}

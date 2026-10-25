@@ -72,11 +72,11 @@ export function SourceNoteEditor({
         {sourceRecord.message}
       </div>
     ) : (
-      <div className="editor-loading">Opening literature note…</div>
+      <div className="editor-loading">Opening source note…</div>
     );
   }
   if (!workspace.draftReady) {
-    return <div className="editor-loading">Opening literature note…</div>;
+    return <div className="editor-loading">Opening source note…</div>;
   }
   const citekey = sourceRecord.value.citation?.id;
   return (
@@ -104,12 +104,12 @@ export function SourceNoteEditor({
           : {})}
       />
       <DraftRecoveryNotice workspace={workspace} />
-      <Suspense fallback={<div className="editor-loading">Opening literature note…</div>}>
+      <Suspense fallback={<div className="editor-loading">Opening source note…</div>}>
         <MarkdownEditor
           className="source-note-editor-surface"
           value={workspace.draft}
           {...(workspace.draftDocument ? { sharedDocument: workspace.draftDocument } : {})}
-          ariaLabel="Source literature note"
+          ariaLabel="Source note"
           onChange={workspace.setDraft}
           onSave={workspace.saveDraft}
           insertion={insertion}

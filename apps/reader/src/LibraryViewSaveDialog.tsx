@@ -1,4 +1,6 @@
-import { useState, type JSX } from "react";
+import { useRef, useState, type JSX } from "react";
+
+import { ModalDialog } from "./ModalDialog.js";
 
 /** Names a new saved view. The caller saves it and closes the dialog. */
 export function LibraryViewSaveDialog({
@@ -15,18 +17,14 @@ export function LibraryViewSaveDialog({
   readonly onSave: (name: string) => void;
 }): JSX.Element {
   const [name, setName] = useState("");
+  const input = useRef<HTMLInputElement>(null);
   return (
-    <div
-      className="library-save-dialog-backdrop"
-      role="button"
-      tabIndex={-1}
-      onMouseDown={(event) => {
-        if (event.target === event.currentTarget) {
-          onCancel();
-        }
-      }}
-      onKeyDown={(event) => {
-        if (event.key === "Escape") {
+    <ModalDialog
+      className="library-save-modal"
+      labelledBy="reader-save-view-title"
+      initialFocus={input}
+      onDismiss={() => {
+        if (!saving) {
           onCancel();
         }
       }}
@@ -36,12 +34,12 @@ export function LibraryViewSaveDialog({
         aria-label="Save library view"
         onSubmit={(event) => {
           event.preventDefault();
-          if (name.trim()) {
+          if (name.trim() && !saving) {
             onSave(name.trim());
           }
         }}
       >
-        <h2>Save as a new view</h2>
+        <h2 id="reader-save-view-title">Save as a new view</h2>
         <p>{description}</p>
         <label>
           <span>Name</span>
@@ -49,13 +47,13 @@ export function LibraryViewSaveDialog({
             className="mdbase-field"
             value={name}
             placeholder={placeholder}
-            // eslint-disable-next-line jsx-a11y/no-autofocus -- the dialog exists only to take this name.
-            autoFocus
+            ref={input}
+            disabled={saving}
             onChange={(event) => setName(event.target.value)}
           />
         </label>
         <div>
-          <button type="button" onClick={onCancel}>
+          <button type="button" disabled={saving} onClick={onCancel}>
             Cancel
           </button>
           <button type="submit" disabled={!name.trim() || saving}>
@@ -63,6 +61,6 @@ export function LibraryViewSaveDialog({
           </button>
         </div>
       </form>
-    </div>
+    </ModalDialog>
   );
 }

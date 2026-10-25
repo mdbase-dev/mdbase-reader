@@ -38,16 +38,16 @@ export async function auditResponsiveWorkspace(page, { screenshot, blockWrites }
     .locator(`.dv-groupview:has(.reader-dock-tab[data-panel-id="${first}"]) .dock-pane-actions`)
     .getByLabel("More document actions", { exact: true })
     .click();
-  await page.getByRole("button", { name: "Literature note", exact: true }).click();
-  const note = await tab("Literature note — [test] Research 0000").getAttribute("data-panel-id");
-  const editor = page.getByRole("textbox", { name: "Source literature note" });
+  await page.getByRole("button", { name: "Source note", exact: true }).click();
+  const note = await tab("Source note — [test] Research 0000").getAttribute("data-panel-id");
+  const editor = page.getByRole("textbox", { name: "Source note" });
   blockWrites(true);
   await editor.fill("[test] Responsive draft stays in the same editor.");
   await expect(page.getByText("Saved locally", { exact: true })).toBeVisible();
   await editor.evaluate((element) => {
     element.dataset.responsiveSentinel = "original-editor";
   });
-  await tab("[test] Research 0000").filter({ hasNotText: "Literature note" }).click();
+  await tab("[test] Research 0000").filter({ hasNotText: "Source note" }).click();
   await page.waitForTimeout(350);
   const desktop = (await state()).layout;
   const groups = (node) => (node.type === "leaf" ? [node.data] : node.data.flatMap(groups));
@@ -155,18 +155,18 @@ export async function auditResponsiveWorkspace(page, { screenshot, blockWrites }
     "Mobile source opening and reload retain new tabs and recover drafts without replacing the saved desktop arrangement",
   );
   // Whole-workspace maximize is separate from the phone presentation.
-  await tab("Literature note — [test] Research 0000").click({ button: "right" });
+  await tab("Source note — [test] Research 0000").click({ button: "right" });
   await page.getByRole("menuitem", { name: "Maximize / restore pane", exact: true }).click();
   const notePane = page.locator(`[data-session-id="${note}"]`);
   await expect.poll(async () => (await notePane.boundingBox())?.width ?? 0).toBeGreaterThan(1400);
-  await expect(page.getByRole("complementary", { name: "Library navigator" })).toHaveCount(0);
+  await expect(page.getByRole("complementary", { name: "Sources sidebar" })).toHaveCount(0);
   await page.setViewportSize({ width: 390, height: 844 });
   await expect(editor).toBeVisible();
   await page.keyboard.press("Control+Shift+Backslash");
   await page.getByRole("button", { name: "Back to workspace", exact: true }).click();
   await page.setViewportSize({ width: 1440, height: 1000 });
   await expect.poll(async () => (await notePane.boundingBox())?.width ?? 0).toBeGreaterThan(1400);
-  await tab("Literature note — [test] Research 0000").click({ button: "right" });
+  await tab("Source note — [test] Research 0000").click({ button: "right" });
   await page.getByRole("menuitem", { name: "Maximize / restore pane", exact: true }).click();
   await expect.poll(sidebarWidths).toEqual(originalWidths);
   completed.push(
@@ -216,8 +216,8 @@ export async function auditResponsiveWorkspace(page, { screenshot, blockWrites }
   // With only the library left, its own view title is the heading and the switcher goes away.
   await expect(picker).toHaveCount(0);
   await expect(page.getByRole("grid", { name: "Sources" })).toBeVisible();
-  if (!(await page.getByRole("complementary", { name: "Library navigator" }).isVisible())) {
-    await page.getByRole("button", { name: "Toggle left sidebar" }).click();
+  if (!(await page.getByRole("complementary", { name: "Sources sidebar" }).isVisible())) {
+    await page.getByRole("button", { name: "Toggle Sources sidebar" }).click();
   }
   await page
     .getByRole("textbox", { name: "Find a source by title, author or tag" })

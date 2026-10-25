@@ -1,3 +1,4 @@
+import { offeredHighlightColor } from "@mdbase-reader/core";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import { prepareCitation, type CitationPreview } from "./capture-citation.js";
@@ -18,6 +19,7 @@ import { CaptureWriter, type CaptureDraft } from "./save-capture.js";
 import { scopePostQuotes } from "./social-quotes.js";
 import { rememberTags, splitTags } from "./tag-suggestions.js";
 import { useActionLock } from "./use-action-lock.js";
+import { useHighlightSettings } from "./use-highlight-settings.js";
 import { useKnownTags } from "./use-known-tags.js";
 import { usePageCapture } from "./use-page-capture.js";
 import { useQuickSave } from "./use-quick-save.js";
@@ -36,6 +38,7 @@ import type {
   Annotation,
   AnnotationDeletionPlan,
   AnnotationId,
+  HighlightColorKey,
   SourceImportProgress,
   SourceSummary,
   SocialPost,
@@ -86,9 +89,17 @@ export function useExtensionCapture(
   const [citationFor, setCitationFor] = useState<{
     readonly page: string;
     readonly preview: CitationPreview | null;
+    readonly pending: boolean;
+  } | null>(null);
+  // A save retains this page's object: navigation replaces it rather than changing its owner.
+  const latestCitation = useRef<{
+    page: string;
+    preview: CitationPreview | null;
+    draft: Pick<CaptureDraft, "title" | "titleEdited">;
   } | null>(null);
   const discovery = useRef(0);
   const extension = connection.extension;
+  const highlight = useHighlightSettings(extension, selectedText(capture));
   const writer = useMemo(
     () => (extension ? new CaptureWriter(extension.journalStorage) : null),
     [extension],
@@ -200,33 +211,80 @@ export function useExtensionCapture(
 
   const { setDraft } = stored;
   useEffect(() => {
-    if (!capture) {
+    if (!pageUrl || stored.loadedFor !== pageUrl) {
+      return;
+    }
+    if (latestCitation.current?.page === pageUrl) {
+      latestCitation.current.draft = stored.draft;
+    } else {
+      latestCitation.current = { page: pageUrl, preview: null, draft: stored.draft };
+    }
+  }, [pageUrl, stored.loadedFor, stored.draft]);
+  // Once edited, even a cleared or subsequently reverted title belongs to the user.
+  const editDraft: typeof setDraft = useCallback(
+    (action) => {
+      setDraft((draft) => {
+        const next = typeof action === "function" ? action(draft) : action;
+        return next.title !== draft.title ? { ...next, titleEdited: true } : next;
+      });
+    },
+    [setDraft],
+  );
+  useEffect(() => {
+    if (!capture || page.navigated || stored.loadedFor !== capture.canonicalUrl) {
       return;
     }
     const controller = new AbortController();
-    const page = capture.canonicalUrl;
-    void prepareCitation(capture, controller.signal)
-      .catch(() => null)
-      .then((preview) => {
-        if (controller.signal.aborted) {
-          return;
+    const url = capture.canonicalUrl;
+    const current = latestCitation.current;
+    if (current?.page !== url) {
+      return;
+    }
+    let updated = false;
+    const show = (preview: CitationPreview | null, pending = true): void => {
+      if (controller.signal.aborted) {
+        return;
+      }
+      current.preview = preview;
+      setCitationFor({ page: url, preview, pending });
+      const title = preview?.citation["title"];
+      if (typeof title === "string") {
+        setDraft((draft) => {
+          if (draft.titleEdited) {
+            return draft;
+          }
+          return { ...draft, title, automaticTitle: title };
+        });
+      }
+    };
+    void prepareCitation(capture, controller.signal, (preview) => {
+      updated = true;
+      show(preview);
+    }).then(
+      (preview) => {
+        // The final preview also carries provider outcomes when no citation field changed.
+        if (preview || !updated) {
+          show(preview, false);
+        } else if (!controller.signal.aborted) {
+          show(current.preview, false);
         }
-        setCitationFor({ page, preview });
-        const title = preview?.citation["title"];
-        if (typeof title === "string") {
-          // Replace only the untouched page title; never an edited one.
-          setDraft((draft) =>
-            draft.title === capture.pageTitle || !draft.title ? { ...draft, title } : draft,
-          );
+      },
+      () => {
+        if (!controller.signal.aborted) {
+          show(updated ? current.preview : null, false);
         }
-      });
+      },
+    );
     return () => controller.abort();
-    // Only a new page (not a new selection) changes its citation.
+    // Only a new page (not a new selection) changes its citation. Navigation cancels it early.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [pageUrl, capture?.kind]);
+  }, [pageUrl, capture?.kind, page.navigated, stored.loadedFor]);
 
-  const citation = citationFor && citationFor.page === pageUrl ? citationFor.preview : null;
-  const citationPending = Boolean(pageUrl) && citationFor?.page !== pageUrl;
+  const preview = citationFor && citationFor.page === pageUrl ? citationFor.preview : null;
+  const citation = capturedPost
+    ? preview
+    : citationWithDraftTitle(preview, stored.draft.title, Boolean(stored.draft.titleEdited));
+  const citationPending = pageCitationPending(pageUrl, citationFor);
 
   const save = (changes?: Partial<CaptureDraft>): Promise<void> => {
     if (socialCapture(capture)?.social?.mode === "multiple" && !changes?.highlight) {
@@ -241,9 +299,14 @@ export function useExtensionCapture(
       if (!capture) {
         throw new Error("The page is not ready. Reopen Reader on this page before saving.");
       }
-      const draft = { ...stored.draft, ...changes };
+      const draft = draftForSave(stored.draft, changes, highlight.colors);
+      const changedTitle = draft.title !== stored.draft.title;
+      const savingCitation =
+        latestCitation.current?.page === capture.canonicalUrl
+          ? latestCitation.current
+          : { preview, draft };
       if (changes) {
-        stored.setDraft((value) => ({ ...value, ...changes }));
+        editDraft((value) => ({ ...value, ...changes }));
       }
       discovery.current++;
       refreshEpoch.current++;
@@ -259,7 +322,17 @@ export function useExtensionCapture(
           known: source,
           // A lookup that finished for this page and collection need not run again.
           lookedUp: discovered === `${collection.collectionId} ${pageUrl ?? ""}`,
-          citation,
+          citation: capturedPost
+            ? citation
+            : citationWithDraftTitle(preview, draft.title, Boolean(draft.titleEdited)),
+          getCitation: () => {
+            const latest = { ...savingCitation.draft, ...changes };
+            return citationWithDraftTitle(
+              savingCitation.preview,
+              latest.title,
+              Boolean(latest.titleEdited) || changedTitle,
+            );
+          },
           pdfBytes: () => fetchPdf(tabId, capture.canonicalUrl),
           onProgress: setProgress,
           onSource: (saved, existing) => {
@@ -541,7 +614,7 @@ export function useExtensionCapture(
     capture,
     ...pickerProps(capture, pickerOpen, setPickerOpen, savePosts),
     draft: stored.draft,
-    setDraft: stored.setDraft,
+    setDraft: editDraft,
     draftRestored: stored.restored,
     status,
     problem: lock.problem ?? connectionLock.problem,
@@ -559,9 +632,57 @@ export function useExtensionCapture(
     siteAccess: page.siteAccess,
     invocation: page.invocation,
     undoable: undoable !== null,
+    highlight,
     knownTags: tags.knownTags,
     loadTags: tags.loadTags,
     note,
+  };
+}
+
+function draftForSave(
+  draft: CaptureDraft,
+  changes: Partial<CaptureDraft> | undefined,
+  offered: readonly HighlightColorKey[],
+): CaptureDraft {
+  const titleEdited =
+    Boolean(draft.titleEdited) || (changes?.title !== undefined && changes.title !== draft.title);
+  // Ctrl/⌘+Enter saves in the colour used last, or the first offered while it is hidden.
+  const color = changes?.color ?? offeredHighlightColor(draft.color, offered);
+  return { ...draft, ...changes, ...(changes?.highlight ? { color } : {}), titleEdited };
+}
+
+/** The passage selected on an article page, if any. */
+function selectedText(capture: PageCapture | null): string | null {
+  return capture?.kind === "html" ? (capture.selection?.exact ?? null) : null;
+}
+
+function pageCitationPending(
+  pageUrl: string | undefined,
+  state: { readonly page: string; readonly pending: boolean } | null,
+): boolean {
+  return Boolean(pageUrl) && (state?.page !== pageUrl || Boolean(state?.pending));
+}
+
+/**
+ * Only the title is editable here; preserve every other citation field and its evidence. A cleared
+ * title keeps the resolved one: a citation without a title is not a citation.
+ */
+function citationWithDraftTitle(
+  preview: CitationPreview | null,
+  draftTitle: string,
+  edited: boolean,
+): CitationPreview | null {
+  const title = draftTitle.trim();
+  if (!preview || !title || !edited) {
+    return preview;
+  }
+  return {
+    ...preview,
+    citation: { ...preview.citation, title },
+    // An edited draft is the user's value, not a captured claim.
+    provenance: Object.fromEntries(
+      Object.entries(preview.provenance).filter(([field]) => field !== "title"),
+    ),
   };
 }
 

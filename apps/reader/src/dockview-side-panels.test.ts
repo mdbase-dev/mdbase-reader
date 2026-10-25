@@ -73,7 +73,12 @@ describe("sidebar region toggles", () => {
     api.getEdgeGroup.mockReturnValue(undefined);
     sides.toggleRegion("right");
     expect(api.addPanel).toHaveBeenCalledWith(
-      expect.objectContaining({ id: inspectorPanelId, component: "inspector", inactive: true }),
+      expect.objectContaining({
+        id: inspectorPanelId,
+        component: "inspector",
+        title: "Notes",
+        inactive: true,
+      }),
     );
   });
 

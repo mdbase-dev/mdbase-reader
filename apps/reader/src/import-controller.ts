@@ -140,7 +140,7 @@ export class ImportController {
       signal.throwIfAborted();
       this.update({
         preview: { ...next, collectionId: target.collectionId },
-        message: "Destination checked. Confirm below to begin writing.",
+        message: "Destination checked. Start the import below to begin writing.",
       });
     });
   };

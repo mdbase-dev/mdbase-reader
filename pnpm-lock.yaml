@@ -136,12 +136,21 @@ importers:
       '@citation-js/plugin-csl':
         specifier: 0.8.2
         version: 0.8.2(@citation-js/core@0.8.2)
+      '@fontsource-variable/source-serif-4':
+        specifier: ^5.3.1
+        version: 5.3.1
       '@mdbase-dev/sdk':
         specifier: file:../../packages/connect/vendor/sdk-e55d99c0-production-beta141.tgz
         version: file:packages/connect/vendor/sdk-e55d99c0-production-beta141.tgz
+      '@mdbase-dev/sdk-lab':
+        specifier: file:../../packages/connect/vendor/sdk-dev-eaa4e697-lab.tgz
+        version: '@mdbase-dev/sdk@file:packages/connect/vendor/sdk-dev-eaa4e697-lab.tgz'
       '@mdbase-dev/sdk-legacy-729b5391':
         specifier: file:../../vendor/mdbase-dev-sdk-0.0.0-729b5391.tgz
         version: '@mdbase-dev/sdk@file:vendor/mdbase-dev-sdk-0.0.0-729b5391.tgz'
+      '@mdbase-dev/sdk-staging':
+        specifier: file:../../packages/connect/vendor/sdk-dev-eaa4e697-staging.tgz
+        version: '@mdbase-dev/sdk@file:packages/connect/vendor/sdk-dev-eaa4e697-staging.tgz'
       '@mdbase-dev/ui':
         specifier: file:../../vendor/mdbase-dev-ui-dev-b2d7c464.tgz
         version: file:vendor/mdbase-dev-ui-dev-b2d7c464.tgz(@codemirror/view@6.43.8)(@mdbase-dev/sdk@file:packages/connect/vendor/sdk-e55d99c0-production-beta141.tgz)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
@@ -203,8 +212,8 @@ importers:
         specifier: ^19.2.8
         version: 19.2.8(react@19.2.8)
       yaml:
-        specifier: ^2.9.0
-        version: 2.9.0
+        specifier: ^2.9.1
+        version: 2.9.1
     devDependencies:
       '@playwright/test':
         specifier: 1.61.1
@@ -217,7 +226,7 @@ importers:
         version: 19.2.4(@types/react@19.2.18)
       '@vitejs/plugin-react':
         specifier: latest
-        version: 6.1.2(vite@8.3.4(@types/node@24.13.3)(yaml@2.9.0))
+        version: 6.1.2(vite@8.3.4(@types/node@24.13.3)(yaml@2.9.1))
       axe-core:
         specifier: ^4.13.0
         version: 4.13.0
@@ -226,7 +235,7 @@ importers:
         version: 6.2.4
       vite:
         specifier: latest
-        version: 8.3.4(@types/node@24.13.3)(yaml@2.9.0)
+        version: 8.3.4(@types/node@24.13.3)(yaml@2.9.1)
 
   apps/zotero-exporter: {}
 
@@ -244,6 +253,9 @@ importers:
       '@mdbase-reader/migration':
         specifier: workspace:*
         version: link:../migration
+      knap:
+        specifier: 0.6.0
+        version: 0.6.0
       yaml:
         specifier: ^2.9.0
         version: 2.9.1
@@ -385,6 +397,9 @@ importers:
       '@embedpdf/plugin-capture':
         specifier: ^2.15.0
         version: 2.15.0(@embedpdf/core@2.15.0(preact@10.29.8)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(svelte@5.56.8(@typescript-eslint/types@8.66.0))(vue@3.5.41(typescript@5.9.3)))(@embedpdf/plugin-interaction-manager@2.15.0(@embedpdf/core@2.15.0(preact@10.29.8)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(svelte@5.56.8(@typescript-eslint/types@8.66.0))(vue@3.5.41(typescript@5.9.3)))(preact@10.29.8)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(svelte@5.56.8(@typescript-eslint/types@8.66.0))(vue@3.5.41(typescript@5.9.3)))(@embedpdf/plugin-render@2.15.0(@embedpdf/core@2.15.0(preact@10.29.8)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(svelte@5.56.8(@typescript-eslint/types@8.66.0))(vue@3.5.41(typescript@5.9.3)))(preact@10.29.8)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(svelte@5.56.8(@typescript-eslint/types@8.66.0))(vue@3.5.41(typescript@5.9.3)))(preact@10.29.8)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(svelte@5.56.8(@typescript-eslint/types@8.66.0))(vue@3.5.41(typescript@5.9.3))
+      '@embedpdf/plugin-search':
+        specifier: ^2.15.0
+        version: 2.15.0(@embedpdf/core@2.15.0(preact@10.29.8)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(svelte@5.56.8(@typescript-eslint/types@8.66.0))(vue@3.5.41(typescript@5.9.3)))(preact@10.29.8)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(svelte@5.56.8(@typescript-eslint/types@8.66.0))(vue@3.5.41(typescript@5.9.3))
       '@embedpdf/plugin-selection':
         specifier: ^2.15.0
         version: 2.15.0(@embedpdf/core@2.15.0(preact@10.29.8)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(svelte@5.56.8(@typescript-eslint/types@8.66.0))(vue@3.5.41(typescript@5.9.3)))(@embedpdf/plugin-interaction-manager@2.15.0(@embedpdf/core@2.15.0(preact@10.29.8)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(svelte@5.56.8(@typescript-eslint/types@8.66.0))(vue@3.5.41(typescript@5.9.3)))(preact@10.29.8)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(svelte@5.56.8(@typescript-eslint/types@8.66.0))(vue@3.5.41(typescript@5.9.3)))(preact@10.29.8)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(svelte@5.56.8(@typescript-eslint/types@8.66.0))(vue@3.5.41(typescript@5.9.3))
@@ -416,9 +431,6 @@ importers:
 
   packages/ui:
     dependencies:
-      '@fontsource/atkinson-hyperlegible':
-        specifier: ^5.3.0
-        version: 5.3.0
       '@fontsource/azeret-mono':
         specifier: ^5.3.0
         version: 5.3.0
@@ -1033,8 +1045,8 @@ packages:
   '@fontsource-variable/atkinson-hyperlegible-next@5.3.0':
     resolution: {integrity: sha512-UnLzNUy1RWoLDfydAatP4NaRm99X/WbQEph7q/PymJnCFIOOwKOx3pBmp5ys8trO0dM+CKGuJgeZP9fAR4mQpA==}
 
-  '@fontsource/atkinson-hyperlegible@5.3.0':
-    resolution: {integrity: sha512-Sp8Ve8+rQmENY2Lv02VH7sLpntzTTvnncnJMTbRE7DX6TLxGraN4ykZfzaUWIoCFmaomwkvNiqmlPkrKBuDoSA==}
+  '@fontsource-variable/source-serif-4@5.3.1':
+    resolution: {integrity: sha512-4Rtay22SC4lMvw11r/+9kxANB6P3M0X8s1NudBC2v0J1KU2y3DcMoNcT3lBoZ/CqLirzf+StlO6UlJilyrvaUg==}
 
   '@fontsource/azeret-mono@5.3.0':
     resolution: {integrity: sha512-Ag/+gN67fUry7i1yLlTnk16Rr1nnTQI2YefA/G7tYcCSr/+TC/ayMrE8Km7O0OKRgI/B5Mfel46Gq9IGY50Uaw==}
@@ -1156,6 +1168,20 @@ packages:
 
   '@mdbase-dev/connect@0.1.0-beta.125':
     resolution: {integrity: sha512-vEH4NQfu3dBQgMw0YQxG7LDtOOLxDyxET4DQhrWuHqtgr9qoch/H0QLzel9tFSqkyH+QWxuvW3Bet6ae1+qVyQ==}
+
+  '@mdbase-dev/sdk@file:packages/connect/vendor/sdk-dev-eaa4e697-lab.tgz':
+    resolution: {integrity: sha512-9z3vnOUNkKJHB0PGFNjoT7DJJmwcJs0k/GADCKESN/1YTcgEZJH5w0G746HTVBsC/RhX5h15ABkV9ifNDU9Hyw==, tarball: file:packages/connect/vendor/sdk-dev-eaa4e697-lab.tgz}
+    version: 0.0.0
+    engines: {node: '>=20'}
+    bundledDependencies:
+      - '@mdbase-dev/connect-protocol'
+
+  '@mdbase-dev/sdk@file:packages/connect/vendor/sdk-dev-eaa4e697-staging.tgz':
+    resolution: {integrity: sha512-OZcexDhkjwROq0pSf/rSV1aU9H2AArhB5S2/UQU4ZTYMqJz7mpOhSFznZKSjDh6nb4EVROvBS926O3+HUePbjA==, tarball: file:packages/connect/vendor/sdk-dev-eaa4e697-staging.tgz}
+    version: 0.0.0
+    engines: {node: '>=20'}
+    bundledDependencies:
+      - '@mdbase-dev/connect-protocol'
 
   '@mdbase-dev/sdk@file:packages/connect/vendor/sdk-e55d99c0-production-beta141.tgz':
     resolution: {integrity: sha512-0d4C1KnztaiGjKYhb1tZ7zhRZ8fNw5GdhqD6mng3iDYlQiyEuFySjEgf0yZE19mT/8McHoFpqo58Xh6TF/NfkQ==, tarball: file:packages/connect/vendor/sdk-e55d99c0-production-beta141.tgz}
@@ -1942,6 +1968,9 @@ packages:
     resolution: {integrity: sha512-BS8PfmtDGnrgYdOonGZQdLZslWIeCGFP9tpan0hi1Co2Zr2NKADsvGYA8XxuG/4UWgJ6Cjtv+YJnB6MM69QGlQ==}
     engines: {node: '>= 0.4'}
 
+  dayjs@1.11.23:
+    resolution: {integrity: sha512-QDTCU0M0MxR3hQfnlDJfwekQiaanm1ubOD231u73WBckQ/fsamwRLiE2GBz6D3a/xF1NgfiDLJjXBa1hYOYTtQ==}
+
   debug@4.4.3:
     resolution: {integrity: sha512-RGwwWnwQvkVfavKVt22FGLw+xYSdzARwm0ru6DhTVA3umU5hZc28V3kO4stgYryrTlLpuvgI9GiijltAjNbcqA==}
     engines: {node: '>=6.0'}
@@ -2623,6 +2652,11 @@ packages:
   kleur@4.1.5:
     resolution: {integrity: sha512-o+NO+8WrRiQEE4/7nwRJhN1HWpVmJm511pBHUxPLtp0BUISzlBplORYSmTclCnJvQq2tKu/sgl3xVpkc7ZWuQQ==}
     engines: {node: '>=6'}
+
+  knap@0.6.0:
+    resolution: {integrity: sha512-FpuNFQ67rrgbZu3prheLA05/ND0gdHchRBC43Abn5CmROwn8XdYdar5+fRcylN/jrDnSNKj3aFdg92qvQJbYZA==}
+    engines: {node: '>=20'}
+    hasBin: true
 
   language-subtag-registry@0.3.23:
     resolution: {integrity: sha512-0K65Lea881pHotoGEa5gDlMxt3pctLi2RplBb7Ezh4rRdLEOtgi7n4EwK9lamnUCkKBqaeKRVebTq6BAxSkpXQ==}
@@ -3506,6 +3540,7 @@ packages:
 
   zod@4.4.3:
     resolution: {integrity: sha512-ytENFjIJFl2UwYglde2jchW2Hwm4GJFLDiSXWdTrJQBIN9Fcyp7n4DhxJEiWNAJMV1/BqWfW/kkg71UDcHJyTQ==}
+
 snapshots:
 
   '@babel/code-frame@7.29.7':
@@ -4268,7 +4303,7 @@ snapshots:
 
   '@fontsource-variable/atkinson-hyperlegible-next@5.3.0': {}
 
-  '@fontsource/atkinson-hyperlegible@5.3.0': {}
+  '@fontsource-variable/source-serif-4@5.3.1': {}
 
   '@fontsource/azeret-mono@5.3.0': {}
 
@@ -4451,6 +4486,18 @@ snapshots:
   '@mdbase-dev/connect@0.1.0-beta.125':
     dependencies:
       '@mdbase-dev/connect-protocol': 0.1.0-beta.125
+
+  '@mdbase-dev/sdk@file:packages/connect/vendor/sdk-dev-eaa4e697-lab.tgz':
+    dependencies:
+      '@noble/ciphers': 2.4.0
+      '@noble/curves': 2.4.0
+      '@noble/hashes': 2.4.0
+
+  '@mdbase-dev/sdk@file:packages/connect/vendor/sdk-dev-eaa4e697-staging.tgz':
+    dependencies:
+      '@noble/ciphers': 2.4.0
+      '@noble/curves': 2.4.0
+      '@noble/hashes': 2.4.0
 
   '@mdbase-dev/sdk@file:packages/connect/vendor/sdk-e55d99c0-production-beta141.tgz':
     dependencies:
@@ -4840,11 +4887,6 @@ snapshots:
   '@unrs/resolver-binding-win32-x64-msvc@1.12.2':
     optional: true
 
-  '@vitejs/plugin-react@6.1.2(vite@8.3.4(@types/node@24.13.3)(yaml@2.9.0))':
-    dependencies:
-      '@rolldown/pluginutils': 1.0.1
-      vite: 8.3.4(@types/node@24.13.3)(yaml@2.9.0)
-
   '@vitejs/plugin-react@6.1.2(vite@8.3.4(@types/node@24.13.3)(yaml@2.9.1))':
     dependencies:
       '@rolldown/pluginutils': 1.0.1
@@ -5191,6 +5233,8 @@ snapshots:
       call-bound: 1.0.4
       es-errors: 1.3.0
       is-data-view: 1.0.2
+
+  dayjs@1.11.23: {}
 
   debug@4.4.3:
     dependencies:
@@ -5983,6 +6027,10 @@ snapshots:
 
   kleur@4.1.5: {}
 
+  knap@0.6.0:
+    dependencies:
+      dayjs: 1.11.23
+
   language-subtag-registry@0.3.23: {}
 
   language-tags@1.0.9:
@@ -6722,18 +6770,6 @@ snapshots:
       tinyglobby: 0.2.17
     optionalDependencies:
       '@types/node': 22.20.1
-      fsevents: 2.3.3
-      yaml: 2.9.0
-
-  vite@8.3.4(@types/node@24.13.3)(yaml@2.9.0):
-    dependencies:
-      lightningcss: 1.33.0
-      picomatch: 4.0.7
-      postcss: 8.5.29
-      rolldown: 1.2.13
-      tinyglobby: 0.2.17
-    optionalDependencies:
-      '@types/node': 24.13.3
       fsevents: 2.3.3
       yaml: 2.9.0
 

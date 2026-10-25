@@ -8,6 +8,7 @@ import { usePanelConnection } from "./panel-connection.js";
 import { fakeChrome } from "./testing/fake-chrome.js";
 import { useExtensionCapture } from "./use-extension-capture.js";
 
+import type { CitationPreview } from "./capture-citation.js";
 import type { ExtensionCaptureController } from "./capture-controller.js";
 
 const mocks = vi.hoisted(() => ({
@@ -63,7 +64,11 @@ const application = {
   },
 };
 // Like the real session: one adapter per READY connection.
-const ready = { collectionId: "test", annotations: { listForSource: mocks.list } };
+const ready: {
+  collectionId: string;
+  annotations: { listForSource: typeof mocks.list };
+  settings?: { highlightColors: () => Promise<unknown> };
+} = { collectionId: "test", annotations: { listForSource: mocks.list } };
 const extension = {
   application,
   connectedCollection: () => (current["status"] === "ready" ? ready : null),
@@ -387,6 +392,368 @@ it("replaces the untouched page title with the citation title", async () => {
   expect(controller.draft.title).toBe("Molecular structure of nucleic acids");
   expect(controller.citation?.origin).toBe("doi");
 });
+const initialCitation: CitationPreview = {
+  citation: { type: "webpage", title: "Page title", author: [{ family: "Page" }] },
+  origin: "page",
+  provenance: { title: { value: "Page title", source: "page:html" } },
+  outcomes: [],
+};
+const upgradedCitation: CitationPreview = {
+  citation: {
+    type: "entry-encyclopedia",
+    title: "Encyclopedia title",
+    author: [{ literal: "Contributors" }],
+    "container-title": "Encyclopedia",
+  },
+  origin: "citoid",
+  provenance: {
+    title: { value: "Encyclopedia title", source: "site-adapter:citoid/encyclopediaArticle" },
+    type: { value: "entry-encyclopedia", source: "site-adapter:citoid/encyclopediaArticle" },
+  },
+  outcomes: [{ provider: "citoid", result: "ok", elapsedMs: 10 }],
+};
+
+function pendingCitation(): {
+  update: (preview: CitationPreview) => void;
+  finish: (preview: CitationPreview | null) => void;
+  signal: () => AbortSignal;
+} {
+  let update!: (preview: CitationPreview) => void;
+  let finish!: (preview: CitationPreview | null) => void;
+  let signal!: AbortSignal;
+  mocks.prepareCitation.mockImplementationOnce(
+    (_capture: unknown, abort: AbortSignal, onUpdate: typeof update) => {
+      signal = abort;
+      update = onUpdate;
+      onUpdate(initialCitation);
+      return new Promise<CitationPreview | null>((resolve) => {
+        finish = resolve;
+      });
+    },
+  );
+  return {
+    update: (preview) => update(preview),
+    finish: (preview) => finish(preview),
+    signal: () => signal,
+  };
+}
+
+it("upgrades an untouched visible citation and title without resetting the rest of the draft", async () => {
+  const lookup = pendingCitation();
+  await mount();
+  expect(controller.citationPending).toBe(true);
+  expect(controller.draft.title).toBe("Page title");
+  await act(async () =>
+    controller.setDraft((draft) => ({
+      ...draft,
+      tags: "mine",
+      note: "My note",
+      comment: "My comment",
+      color: "green",
+    })),
+  );
+  await act(async () => lookup.update(upgradedCitation));
+  expect(controller.draft).toMatchObject({
+    title: "Encyclopedia title",
+    tags: "mine",
+    note: "My note",
+    comment: "My comment",
+    color: "green",
+  });
+  expect(controller.citation).toEqual(upgradedCitation);
+  await act(async () => lookup.finish(upgradedCitation));
+  expect(controller.citationPending).toBe(false);
+});
+
+it.each(["My title", "Page title", "Encyclopedia title"])(
+  "keeps an edited title (%s) while upgrading other untouched citation fields",
+  async (title) => {
+    const lookup = pendingCitation();
+    await mount();
+    await act(async () => controller.setDraft((draft) => ({ ...draft, title: "An edit" })));
+    await act(async () => controller.setDraft((draft) => ({ ...draft, title })));
+    await act(async () => lookup.update(upgradedCitation));
+    await act(async () => lookup.finish(upgradedCitation));
+    expect(controller.draft.title).toBe(title);
+    expect(controller.citation?.citation).toEqual({ ...upgradedCitation.citation, title });
+    expect(controller.citation?.provenance).not.toHaveProperty("title");
+    expect(controller.citation?.provenance["type"]).toEqual(upgradedCitation.provenance["type"]);
+    mocks.save.mockResolvedValueOnce({
+      source: existing,
+      annotation: null,
+      existing: false,
+      notices: [],
+    });
+    await act(async () => controller.save({ highlight: false }));
+    expect(mocks.save).toHaveBeenCalledWith(
+      expect.objectContaining({
+        citation: expect.objectContaining({
+          citation: { ...upgradedCitation.citation, title },
+          provenance: { type: upgradedCitation.provenance["type"] },
+        }),
+      }),
+    );
+  },
+);
+
+it.each(["", "   "])(
+  "keeps the resolved citation title when the draft title is cleared (%j)",
+  async (title) => {
+    const lookup = pendingCitation();
+    await mount();
+    await act(async () => controller.setDraft((draft) => ({ ...draft, title })));
+    await act(async () => lookup.update(upgradedCitation));
+    await act(async () => lookup.finish(upgradedCitation));
+    expect(controller.draft.title).toBe(title);
+    expect(controller.citation).toEqual(upgradedCitation);
+  },
+);
+
+it("drops captured title evidence for a draft edit supplied with the save itself", async () => {
+  const lookup = pendingCitation();
+  await mount();
+  await act(async () => lookup.finish(initialCitation));
+  mocks.save.mockResolvedValueOnce({
+    source: existing,
+    annotation: null,
+    existing: false,
+    notices: [],
+  });
+  await act(async () => controller.save({ title: "Edited while saving", highlight: false }));
+  expect(mocks.save).toHaveBeenCalledWith(
+    expect.objectContaining({
+      draft: expect.objectContaining({ title: "Edited while saving" }),
+      citation: expect.objectContaining({
+        citation: { ...initialCitation.citation, title: "Edited while saving" },
+        provenance: {},
+      }),
+    }),
+  );
+});
+
+it("keeps a restored title while later evidence upgrades the remaining citation", async () => {
+  chromeFake.session.set("draft:1:https://example.com", {
+    draft: {
+      title: "Earlier title",
+      tags: "",
+      note: "Earlier note",
+      comment: "",
+      highlight: false,
+    },
+    selection: null,
+  });
+  const lookup = pendingCitation();
+  await mount();
+  await act(async () => lookup.update(upgradedCitation));
+  await act(async () => lookup.finish(upgradedCitation));
+  expect(controller.draft.title).toBe("Earlier title");
+  expect(controller.draft.note).toBe("Earlier note");
+  expect(controller.citation?.citation).toEqual({
+    ...upgradedCitation.citation,
+    title: "Earlier title",
+  });
+});
+
+it("continues upgrading a restored automatically titled draft with captured provenance", async () => {
+  chromeFake.session.set("draft:1:https://example.com", {
+    draft: {
+      title: "Earlier automatic title",
+      automaticTitle: "Earlier automatic title",
+      tags: "",
+      note: "Kept note",
+      comment: "",
+      highlight: false,
+    },
+    selection: null,
+  });
+  const lookup = pendingCitation();
+  await mount();
+  await act(async () => lookup.update(upgradedCitation));
+  await act(async () => lookup.finish(upgradedCitation));
+  expect(controller.draft.title).toBe("Encyclopedia title");
+  expect(controller.draft.automaticTitle).toBe("Encyclopedia title");
+  expect(controller.draft.note).toBe("Kept note");
+  expect(controller.citation?.provenance["title"]).toEqual(upgradedCitation.provenance["title"]);
+  await vi.waitFor(() =>
+    expect(chromeFake.session.get("draft:1:https://example.com")).toMatchObject({
+      draft: {
+        title: "Encyclopedia title",
+        automaticTitle: "Encyclopedia title",
+        titleEdited: false,
+      },
+    }),
+  );
+});
+
+it("keeps a restored manual title even when it equals an earlier automatic title", async () => {
+  chromeFake.session.set("draft:1:https://example.com", {
+    draft: {
+      title: "Page title",
+      automaticTitle: "Page title",
+      titleEdited: true,
+      tags: "",
+      note: "Kept note",
+      comment: "",
+      highlight: false,
+    },
+    selection: null,
+  });
+  const lookup = pendingCitation();
+  await mount();
+  await act(async () => lookup.finish(upgradedCitation));
+  expect(controller.draft.title).toBe("Page title");
+  expect(controller.citation?.provenance).not.toHaveProperty("title");
+});
+
+it("retains automatic title identity when navigation restarts a lookup on the same page", async () => {
+  const first = pendingCitation();
+  await mount();
+  await act(async () => first.update(upgradedCitation));
+  await act(async () => chromeFake.emit("updated", 1, { status: "loading" }));
+  const second = pendingCitation();
+  await act(async () =>
+    chromeFake.emit("message", { type: "mdbase-reader/invoke", tabId: 1, intent: "capture" }, {}),
+  );
+  const next = {
+    ...upgradedCitation,
+    citation: { ...upgradedCitation.citation, title: "Latest automatic title" },
+    provenance: {
+      title: { value: "Latest automatic title", source: "site-adapter:citoid/encyclopediaArticle" },
+    },
+  };
+  await act(async () => second.finish(next));
+  expect(controller.draft.title).toBe("Latest automatic title");
+  expect(controller.citation?.provenance["title"]).toEqual(next.provenance.title);
+});
+
+it("reads a newly arrived preview when the writer starts importing during a pending save", async () => {
+  const lookup = pendingCitation();
+  await mount();
+  let getCitation!: () => CitationPreview | null;
+  let finishSave!: (result: unknown) => void;
+  mocks.save.mockImplementationOnce((input: { getCitation: typeof getCitation }) => {
+    getCitation = input.getCitation;
+    return new Promise((resolve) => {
+      finishSave = resolve;
+    });
+  });
+  let saving!: Promise<void>;
+  await act(async () => {
+    saving = controller.save({ highlight: false });
+  });
+  await act(async () => lookup.update(upgradedCitation));
+  expect(getCitation()).toEqual(upgradedCitation);
+  await act(async () => {
+    finishSave({ source: existing, annotation: null, existing: false, notices: [] });
+    await saving;
+  });
+  await act(async () => lookup.finish(upgradedCitation));
+});
+
+it.each([
+  { name: "automatic", title: undefined, saveTitle: undefined, nextEdited: true },
+  { name: "manual", title: "My saved-page title", saveTitle: undefined, nextEdited: false },
+  { name: "cleared", title: "", saveTitle: undefined, nextEdited: true },
+  { name: "save-time", title: undefined, saveTitle: "Title supplied on save", nextEdited: false },
+])(
+  "keeps a pending save's $name title and evidence when the next page restores its draft",
+  async ({ title, saveTitle, nextEdited }) => {
+    const lookup = pendingCitation();
+    await mount();
+    let getCitation!: () => CitationPreview | null;
+    let finishSave!: (result: unknown) => void;
+    mocks.save.mockImplementationOnce((input: { getCitation: typeof getCitation }) => {
+      getCitation = input.getCitation;
+      return new Promise((resolve) => {
+        finishSave = resolve;
+      });
+    });
+    let saving!: Promise<void>;
+    await act(async () => {
+      saving = controller.save({ highlight: false, ...(saveTitle ? { title: saveTitle } : {}) });
+    });
+    if (title !== undefined) {
+      await act(async () => controller.setDraft((draft) => ({ ...draft, title })));
+    }
+    // This newer preview must survive even after the next page has its own preview.
+    await act(async () => lookup.update(upgradedCitation));
+    const expectedTitle =
+      saveTitle ?? (title === "" ? "Encyclopedia title" : (title ?? "Encyclopedia title"));
+    const expected = {
+      ...upgradedCitation,
+      citation: { ...upgradedCitation.citation, title: expectedTitle },
+      provenance:
+        title || saveTitle
+          ? { type: upgradedCitation.provenance["type"] }
+          : upgradedCitation.provenance,
+    };
+    expect(getCitation()).toEqual(expected);
+
+    let updateNext!: (preview: CitationPreview) => void;
+    mocks.prepareCitation.mockImplementationOnce(
+      (_capture: unknown, _signal: AbortSignal, onUpdate: typeof updateNext) => {
+        updateNext = onUpdate;
+        return new Promise(() => undefined);
+      },
+    );
+    chromeFake.session.set("draft:1:https://example.com/next", {
+      draft: {
+        ...controller.draft,
+        title: "My next-page title",
+        automaticTitle: "My next-page title",
+        titleEdited: nextEdited,
+      },
+      selection: null,
+    });
+    mocks.captureTab.mockResolvedValue({
+      ...page,
+      pageTitle: "Next work",
+      canonicalUrl: "https://example.com/next",
+      submittedUrl: "https://example.com/next",
+    });
+    await act(async () => chromeFake.emit("updated", 1, { url: "https://example.com/next" }));
+    expect(controller.draft.title).toBe("My next-page title");
+    expect(getCitation()).toEqual(expected);
+    await act(async () => updateNext(initialCitation));
+    expect(getCitation()).toEqual(expected);
+    await act(async () => lookup.finish(initialCitation));
+    expect(getCitation()).toEqual(expected);
+    await act(async () => {
+      finishSave({ source: existing, annotation: null, existing: false, notices: [] });
+      await saving;
+    });
+  },
+);
+
+it("ignores late citation updates and completion as soon as navigation aborts a capture", async () => {
+  const lookup = pendingCitation();
+  await mount();
+  await act(async () => chromeFake.emit("updated", 1, { status: "loading" }));
+  expect(lookup.signal().aborted).toBe(true);
+  const before = controller.draft.title;
+  await act(async () => lookup.update(upgradedCitation));
+  await act(async () => lookup.finish(upgradedCitation));
+  expect(controller.draft.title).toBe(before);
+  expect(controller.citation?.origin).not.toBe("citoid");
+});
+
+it("ignores an old page's completion after another page has loaded", async () => {
+  const lookup = pendingCitation();
+  await mount();
+  mocks.captureTab.mockResolvedValue({
+    ...page,
+    pageTitle: "Next page",
+    canonicalUrl: "https://example.com/next",
+    submittedUrl: "https://example.com/next",
+  });
+  await act(async () => chromeFake.emit("updated", 1, { url: "https://example.com/next" }));
+  expect(controller.capture?.canonicalUrl).toBe("https://example.com/next");
+  await act(async () => lookup.update(upgradedCitation));
+  await act(async () => lookup.finish(upgradedCitation));
+  expect(controller.draft.title).toBe("Next page");
+  expect(controller.citation).toBeNull();
+});
+
 it("asks to be invoked again after the tab navigates, then reads the new page", async () => {
   await mount();
   await act(async () => {
@@ -460,6 +827,46 @@ it("saves in a chosen colour in one step and remembers it for the next highlight
   expect(controller.draft.color).toBe("green");
   expect(chromeFake.local.get("highlight-color")).toBe("green");
   expect(controller.notice).toBe("Highlight saved.");
+});
+it("offers the collection's colours and saves Ctrl+Enter in the first while the last is hidden", async () => {
+  const highlightColors = vi.fn().mockResolvedValue({
+    colors: ["pink", "blue"],
+    meanings: { pink: "Question" },
+    meaningsStored: true,
+  });
+  ready.settings = { highlightColors };
+  mocks.save.mockResolvedValue({ source: existing, annotation: {}, existing: true, notices: [] });
+  try {
+    await mount();
+    expect(highlightColors).toHaveBeenCalled();
+    expect(controller.highlight).toEqual({
+      colors: ["pink", "blue"],
+      meanings: { pink: "Question" },
+    });
+    // The device's last colour, yellow, is hidden in this collection.
+    expect(controller.draft.color).toBe("yellow");
+    await act(async () => {
+      await controller.save({ highlight: true });
+    });
+    expect(mocks.save).toHaveBeenCalledWith(
+      expect.objectContaining({ draft: expect.objectContaining({ color: "pink" }) }),
+    );
+    // Coming back to the panel asks again, so an edit made in Reader shows by the next highlight.
+    highlightColors.mockResolvedValue({ colors: ["green"], meanings: {}, meaningsStored: false });
+    await act(async () => {
+      globalThis.dispatchEvent(new Event("focus"));
+    });
+    await act(async () => {
+      await new Promise((resolve) => setTimeout(resolve, 0));
+    });
+    expect(controller.highlight.colors).toEqual(["green"]);
+  } finally {
+    delete ready.settings;
+  }
+});
+it("offers all five colours when the host has no settings", async () => {
+  await mount();
+  expect(controller.highlight.colors).toEqual(["yellow", "green", "blue", "pink", "purple"]);
 });
 it("saves the highlight at once when invoked with Save highlight", async () => {
   mocks.sourceForUrl.mockResolvedValue(existing);

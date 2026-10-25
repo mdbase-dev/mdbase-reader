@@ -1,10 +1,17 @@
 # Reader performance paths
 
+See [bundle boundaries and measurements](reader-bundle-splitting.md) for the
+production chunk graph, renderer preloading and offline lazy-code checks.
+
 - **Annotation sidebar:** variable-height cards are virtualized with a bounded initial window
   and four-card overscan. Screenshot reads start only when their cards mount. An open editor and
   keyboard-focused card remain mounted outside the viewport. Selecting an annotation scrolls
   its index into view without scrolling hidden workspace tabs. Annotation filtering and sorting
   are memoized separately from viewport updates.
+- **Library document text:** a collection-owned worker queries a persistent,
+  revision-safe HTML index; a serial idle queue reuses renderer text extraction
+  without opening hidden surfaces. See [limits, eviction and the 500-document
+  browser benchmark](library-text-index.md). PDF/EPUB still use resident text.
 - **Content search:** authority queries restrict matching records to `reader-source` and
   `reader-annotation`. Bodies are still requested to construct passage excerpts; server-side
   excerpt projection would require additional Connect API support.

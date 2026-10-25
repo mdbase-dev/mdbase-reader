@@ -79,6 +79,18 @@ describe("Zotero items as CSL", () => {
 });
 
 describe("citation lookup", () => {
+  it.each([
+    "https://router.local/admin",
+    "https://alice:secret@example.com/doc",
+    "https://example.com/doc.pdf",
+  ])("protects the legacy URL lookup boundary: %s", async (url) => {
+    const fetch = vi.fn<typeof globalThis.fetch>();
+    await expect(lookUpCitation({ kind: "url", value: url }, { fetch })).rejects.toThrow(
+      "cannot be disclosed",
+    );
+    expect(fetch).not.toHaveBeenCalled();
+  });
+
   it("sends DOIs, DOI URLs and arXiv identifiers to the DOI registry", async () => {
     const fetcher = vi.fn<typeof fetch>().mockImplementation(() =>
       Promise.resolve(

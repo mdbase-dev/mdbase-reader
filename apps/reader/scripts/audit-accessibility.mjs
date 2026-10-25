@@ -60,7 +60,7 @@ try {
     .getByRole("button", { name: /^Continue reading The Principles of Psychology/u })
     .click();
   await desktop.locator("iframe.html-viewer").waitFor();
-  await desktop.getByRole("button", { name: "Toggle right sidebar" }).click();
+  await desktop.getByRole("button", { name: "Toggle Notes panel" }).click();
   await desktop.getByRole("complementary", { name: "Source workspace" }).waitFor();
   await audit(desktop, "reading with notes");
   await desktop.getByRole("tab", { name: /Citation/u }).click();

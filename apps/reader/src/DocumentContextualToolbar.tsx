@@ -13,6 +13,9 @@ import {
   TrashIcon,
 } from "./icons.js";
 import { Menu } from "./Menu.js";
+import { supportsChapterCreation } from "./source-parts-features.js";
+import { useSourcePartCreation } from "./SourcePartCreation.js";
+import { ChapterReadingChip } from "./SourceReadingBoundary.js";
 import { DocumentStatus } from "./WorkspacePaneSupport.js";
 
 import type { SourceWorkspacePane } from "./source-workspace-layout.js";
@@ -25,6 +28,8 @@ import type { JSX } from "react";
 
 export interface DocumentContextualToolbarProps {
   readonly source: SourceSummary;
+  /** The library's sources, so a chapter can name its book and next part. */
+  readonly sources: readonly SourceSummary[];
   readonly pane: SourceWorkspacePane;
   readonly workspace: SourceWorkspaceController;
   readonly focusMode: boolean;
@@ -48,6 +53,7 @@ export interface DocumentContextualToolbarProps {
 
 export function DocumentContextualToolbar({
   source,
+  sources,
   pane,
   workspace,
   focusMode,
@@ -66,9 +72,19 @@ export function DocumentContextualToolbar({
   sessionId,
   compact = false,
 }: DocumentContextualToolbarProps): JSX.Element {
-  const contents = surfaces.get(sessionId)?.capabilities.contents;
+  const surface = surfaces.get(sessionId);
+  const contents = surface?.capabilities.contents;
+  const createParts = useSourcePartCreation();
   return (
     <div className="document-toolbar" aria-label="Document actions">
+      <ChapterReadingChip
+        key={`${source.id}\u0000${sessionId}`}
+        source={source}
+        sources={sources}
+        surface={surface}
+        open={workspace.open}
+        compact={compact}
+      />
       {canSelectArea ? (
         <button
           type="button"
@@ -108,14 +124,14 @@ export function DocumentContextualToolbar({
           <HighlightIcon /> Annotations
         </button>
         <button type="button" onClick={() => workspace.openView(source.id, "note", pane.id)}>
-          <NoteIcon /> Literature note
+          <NoteIcon /> Source note
         </button>
         <button type="button" onClick={() => workspace.openView(source.id, "citation", pane.id)}>
           <CitationIcon /> Citation
         </button>
         <hr />
         <button type="button" onClick={() => workspace.openBeside(source.id, "note")}>
-          <NoteIcon /> Open literature note beside
+          <NoteIcon /> Open source note beside
         </button>
         <button
           type="button"
@@ -124,11 +140,26 @@ export function DocumentContextualToolbar({
         >
           <ReadingModeIcon /> {focusMode ? "Leave reading mode" : "Reading mode"}
         </button>
+        <CreatePartsItem source={source} createParts={createParts} />
         <ExportItem sourceExport={sourceExport} />
         <RemoveItem source={source} onRemoveSource={onRemoveSource} />
       </Menu>
     </div>
   );
+}
+
+function CreatePartsItem({
+  source,
+  createParts,
+}: {
+  readonly source: SourceSummary;
+  readonly createParts: ((source: SourceSummary) => void) | null;
+}): JSX.Element | null {
+  return createParts && supportsChapterCreation(source) ? (
+    <button type="button" onClick={() => createParts(source)}>
+      <ListIcon /> Add chapters as sources…
+    </button>
+  ) : null;
 }
 
 function ExportItem({

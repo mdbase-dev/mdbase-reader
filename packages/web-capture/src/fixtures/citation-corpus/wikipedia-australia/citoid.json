@@ -1,0 +1,22 @@
+{
+  "status": 200,
+  "body": [
+    {
+      "key": "42D468VK",
+      "version": 0,
+      "itemType": "encyclopediaArticle",
+      "creators": [],
+      "tags": [],
+      "title": "Australia",
+      "rights": "Creative Commons Attribution-ShareAlike License",
+      "encyclopediaTitle": "Wikipedia",
+      "extra": "Page Version ID: 1381205859",
+      "url": "https://en.wikipedia.org/w/index.php?title=Australia&oldid=1381205859",
+      "language": "en",
+      "date": "2026-10-20",
+      "abstractNote": "Australia, officially the Commonwealth of Australia, is a country comprising the mainland of the Australian continent, the island of Tasmania and numerous smaller islands.",
+      "libraryCatalog": "Wikipedia",
+      "accessDate": "2026-10-23"
+    }
+  ]
+}

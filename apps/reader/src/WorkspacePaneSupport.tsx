@@ -22,7 +22,7 @@ export function DocumentStatus({
       </span>
     );
   }
-  // Saving and saved are routine; only a failure needs the reader's attention.
+  // Saving and saved are routine; only a failure needs the reader’s attention.
   if (reading.status !== "error") {
     return <span className="reading-position-status" />;
   }
@@ -57,14 +57,14 @@ export function DocumentEmpty({
         <NoteIcon />
         <h2>{drop.active ? "Drop to attach" : "No document attached"}</h2>
         <p>
-          This source has no file yet. Its literature note, annotations and citation are in the
-          Source panel.
+          This source has no file yet. Its source note, annotations and citation are in the Notes
+          panel.
           {target ? " Attach a PDF, EPUB or saved page, or drop one here." : ""}
         </p>
         {target ? (
           <AttachmentActions {...target} busy={busy} onOpenNote={onOpenNote} />
         ) : (
-          <ReaderButton onClick={onOpenNote}>Open literature note</ReaderButton>
+          <ReaderButton onClick={onOpenNote}>Open source note</ReaderButton>
         )}
         <AttachmentStatus state={state} />
       </div>
@@ -111,7 +111,7 @@ function AttachmentActions({
         </button>
       ) : null}
       <button className="connection-secondary" type="button" onClick={onOpenNote}>
-        Open literature note
+        Open source note
       </button>
     </div>
   );

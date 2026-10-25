@@ -45,7 +45,7 @@ export function useAnnotationDeletion(
       .then(async (locked) => {
         if (!locked) {
           throw new Error(
-            "Resolve the save problem or finish the other editor's deletion check first.",
+            "Resolve the save problem or finish the other editor’s deletion check first.",
           );
         }
         if (!owner.isMounted()) {

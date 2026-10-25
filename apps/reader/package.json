@@ -5,7 +5,8 @@
   "type": "module",
   "scripts": {
     "icons": "node scripts/write-pwa-icons.mjs",
-    "build": "node scripts/package-zotero.mjs && pnpm manifest && pnpm manifest:validate && vite build",
+    "build": "node scripts/package-zotero.mjs && pnpm manifest && pnpm manifest:validate && vite build && node scripts/check-bundle.mjs",
+    "build:report": "READER_BUNDLE_REPORT=1 pnpm build",
     "build:lab": "VITE_MDBASE_ENV=lab MDBASE_READER_ORIGIN=https://lab.mdbase-reader.pages.dev pnpm build",
     "deploy:dev": "node scripts/deploy-pages.mjs",
     "deploy:prod": "MDBASE_READER_DEPLOY_TARGET=production node scripts/deploy-pages.mjs",
@@ -24,7 +25,10 @@
   },
   "dependencies": {
     "@citation-js/plugin-csl": "0.8.2",
+    "@fontsource-variable/source-serif-4": "^5.3.1",
     "@mdbase-dev/sdk": "file:../../packages/connect/vendor/sdk-e55d99c0-production-beta141.tgz",
+    "@mdbase-dev/sdk-lab": "file:../../packages/connect/vendor/sdk-dev-eaa4e697-lab.tgz",
+    "@mdbase-dev/sdk-staging": "file:../../packages/connect/vendor/sdk-dev-eaa4e697-staging.tgz",
     "@mdbase-dev/sdk-legacy-729b5391": "file:../../vendor/mdbase-dev-sdk-0.0.0-729b5391.tgz",
     "@mdbase-dev/ui": "file:../../vendor/mdbase-dev-ui-dev-b2d7c464.tgz",
     "@mdbase-reader/connect": "workspace:*",
@@ -46,7 +50,7 @@
     "dockview-react": "8.3.1",
     "react": "^19.2.8",
     "react-dom": "^19.2.8",
-    "yaml": "^2.9.0"
+    "yaml": "^2.9.1"
   },
   "devDependencies": {
     "@playwright/test": "1.61.1",

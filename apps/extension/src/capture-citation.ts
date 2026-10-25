@@ -1,5 +1,9 @@
 import {
   citekeyForCitation,
+  cslValuesEqual,
+  type CslProvenance,
+  loadedCitation,
+  preserveCslDismissals,
   saveSourceCitation,
   type Source,
   type SourceSummary,
@@ -7,10 +11,13 @@ import {
 import {
   citationForPage,
   postCitation,
-  extractScholarlyMetadata,
+  pageClaims,
   type CitationDraft,
   type CitationPreview,
 } from "@mdbase-reader/web-capture";
+
+import { citoidEnabled } from "./citoid-setting.js";
+import { citoidCaptureUrl } from "./citoid-url.js";
 
 import type { PageCapture } from "./page-capture.js";
 import type { ReaderConnectedCollection } from "@mdbase-reader/connect";
@@ -18,21 +25,31 @@ import type { ReaderConnectedCollection } from "@mdbase-reader/connect";
 export type { CitationPreview } from "@mdbase-reader/web-capture";
 
 /** Resolves the citation for the page or PDF in the tab; see {@link citationForPage}. */
-export function prepareCitation(
+export async function prepareCitation(
   capture: PageCapture,
   signal?: AbortSignal,
+  onUpdate?: (preview: CitationPreview) => void,
 ): Promise<CitationPreview | null> {
+  signal?.throwIfAborted();
   if (capture.kind === "html" && capture.post) {
-    return Promise.resolve({ citation: postCitation(capture.post), origin: "page" });
+    return { citation: postCitation(capture.post), origin: "page", provenance: {}, outcomes: [] };
   }
   if (capture.kind === "html" && capture.social && !capture.post) {
-    return Promise.resolve(null);
+    return null;
   }
-  const embedded =
+  const claims =
     capture.kind === "html"
-      ? extractScholarlyMetadata(parsedCaptureHtml(capture.html), capture.canonicalUrl)
-      : {};
-  return citationForPage(embedded, capture.canonicalUrl, signal ? { signal } : {});
+      ? pageClaims(parsedCaptureHtml(capture.html), capture.canonicalUrl, capture.retrievedAt)
+      : null;
+  // PDF tabs have no page evidence to distinguish a work from a generic filename result.
+  const remoteUrl = capture.kind === "html" ? citoidCaptureUrl(capture.canonicalUrl) : undefined;
+  const enabled = remoteUrl ? await citoidEnabled() : false;
+  signal?.throwIfAborted();
+  return citationForPage(claims, remoteUrl ?? capture.canonicalUrl, {
+    ...(signal ? { signal } : {}),
+    citoid: enabled ? {} : false,
+    ...(onUpdate ? { onUpdate } : {}),
+  });
 }
 
 let parsedPage: { readonly html: string; readonly document: Document } | null = null;
@@ -65,10 +82,36 @@ export async function saveCaptureCitation(
   source: Source,
   citation: CitationDraft,
   neighbours: Promise<readonly SourceSummary[]> = citekeyNeighbours(collection, citation),
+  provenance?: CslProvenance,
 ): Promise<Source> {
   const library = await neighbours;
   const id = citekeyForCitation(citation, library, source.id);
-  return saveSourceCitation(collection.sources, source, library, { ...citation, id });
+  const expectedCitation = loadedCitation(source);
+  return saveSourceCitation(
+    collection.sources,
+    source,
+    library,
+    { ...citation, id },
+    {
+      ...(expectedCitation !== undefined ? { expectedCitation } : {}),
+      ...(provenance !== undefined
+        ? {
+            // The citekey is generated here, not captured. Keep evidence only for saved values.
+            provenance: preserveCslDismissals(
+              Object.fromEntries(
+                Object.entries(provenance).filter(
+                  ([field, entry]) =>
+                    field !== "id" &&
+                    citation[field] !== undefined &&
+                    cslValuesEqual(citation[field], entry.value),
+                ),
+              ),
+              provenance,
+            ),
+          }
+        : {}),
+    },
+  );
 }
 
 async function sourcesWithCitekeyPrefix(

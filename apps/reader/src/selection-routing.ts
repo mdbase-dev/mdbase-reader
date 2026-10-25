@@ -3,17 +3,14 @@ import type { AnnotationLocalDraft } from "./annotation-drafts.js";
 
 /**
  * What a new selection does. Selecting text offers actions (or highlights at once, when the
- * reader chose that); an area capture opens the composer; and a comment being written is never
- * replaced silently.
+ * reader chose that); an area capture opens the composer; and a comment written for another
+ * capture is never replaced without asking.
  */
-export type SelectionRoute =
-  "ignore" | "offer-switch" | "compose" | "confirm-compose" | "highlight" | "toolbar";
+export type SelectionRoute = "ignore" | "compose" | "confirm-compose" | "highlight" | "toolbar";
 
 export function selectionRoute(input: {
   readonly value: ComposerSelection;
   readonly draft: AnnotationLocalDraft | null;
-  /** The draft is set aside (e.g. while an annotation is edited), so its composer is hidden. */
-  readonly paused: boolean;
   /** The composer's draft is being saved. */
   readonly busy: boolean;
   readonly instant: boolean;
@@ -22,13 +19,11 @@ export function selectionRoute(input: {
   if (sameSelection(draft?.selection, value)) {
     return "ignore";
   }
-  // While the draft saves it is already leaving; a new text selection still gets its toolbar.
-  const written = Boolean(draft?.body.trim()) && !input.busy;
-  if (written && !input.paused) {
-    return "offer-switch";
-  }
   if (value.kind === "area") {
-    return input.busy ? "ignore" : written ? "confirm-compose" : "compose";
+    if (input.busy) {
+      return "ignore";
+    }
+    return draft?.body.trim() ? "confirm-compose" : "compose";
   }
   // Keyboard selections grow key by key and touch selections by their handles, so neither is
   // final when it is reported.

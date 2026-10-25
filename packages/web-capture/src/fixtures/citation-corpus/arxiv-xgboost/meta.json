@@ -1,0 +1,13 @@
+{
+  "url": "https://arxiv.org/abs/1603.02754",
+  "retrievedAt": "2026-10-23T10:35:43.426026+00:00",
+  "notes": [
+    "Original reduced reproduction of fetched public HTML; retained citation metadata order/duplicates, canonical, HTML language, citation-related JSON-LD and relevant title/byline/date wrappers. Omitted prose, descriptions, images, references, styles, tracking and executable scripts. Raw downloads stay in gitignored .scratch/corpus/expand; helpers outside download directories ran with python3 -I. No downloaded content was executed.",
+    "Page HTTP status: 200. Requested and final URL: https://arxiv.org/abs/1603.02754 -> https://arxiv.org/abs/1603.02754. Captured 2026-10-23T10:35:43.426026+00:00; original 43130 bytes, reduced HTML 1608 bytes before formatting.",
+    "Recorded citoid HTTP 200 at 2026-10-23T10:36:54.462928+00:00; request https://en.wikipedia.org/api/rest_v1/data/citation/zotero/https%3A%2F%2Farxiv.org%2Fabs%2F1603.02754. Raw response dialect retained; only long abstracts shortened to first sentence.",
+    "Recorded doi HTTP 200 at 2026-10-23T10:36:57.906717+00:00; request https://doi.org/10.1145/2939672.2939785. Raw response dialect retained; only long abstracts shortened to first sentence.",
+    "Ground truth: arXiv title/byline, Cite as and submission history at https://arxiv.org/abs/1603.02754; cite the unversioned preprint with initial submission 9 March 2016, not its later ACM conference version.",
+    "This listing has citation_doi=10.1145/2939672.2939785, explicitly labelled Related DOI in the visible page. The cited preprint has its own arXiv-issued DOI 10.48550/arXiv.1603.02754. Preserve the conflicting tag: the recorded DOI lookup really requests the related ACM work. That registry record has title XGBoost plus subtitle A Scalable Tree Boosting System and publication date 13 August 2016; do not replace preprint ground truth with it.",
+    "Claims/resolver replay at 9128f240fb905807949f035d7ee0aae77f6a07cf: page-only wrong fields: publisher; with recorded remotes: type, title, issued, publisher, DOI, URL. Pinned in citation-corpus-replay.test.ts; expected CSL was hand-catalogued independently before replay."
+  ]
+}

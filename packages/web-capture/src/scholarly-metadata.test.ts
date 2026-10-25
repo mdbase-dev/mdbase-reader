@@ -6,6 +6,46 @@ import { sanitizedCitation } from "./csl-values.js";
 import { arxivIdentifier, doiFromText, doiFromUrl, resolveDoiCitation } from "./doi.js";
 import { extractScholarlyMetadata } from "./scholarly-metadata.js";
 
+describe("registry bibliographic minimum", () => {
+  it.each([
+    {},
+    { type: "article" },
+    { DOI: "10.1234/work" },
+    { title: "  " },
+    { "container-title": "Journal" },
+    { title: 42 },
+    { "container-title": "Journal", author: [] },
+  ])("rejects records without meaningful work evidence: %j", async (record) => {
+    await expect(
+      resolveDoiCitation("10.1234/work", {
+        fetch: vi.fn<typeof fetch>().mockResolvedValue(Response.json(record)),
+      }),
+    ).rejects.toThrow("no bibliographic data");
+  });
+
+  it.each([
+    { title: "Work" },
+    { "container-title": "Journal", issued: { "date-parts": [[2026]] } },
+    { "container-title": "Journal", author: [{ family: "Example" }] },
+  ])("accepts a title or a container supported by other bibliography: %j", async (record) => {
+    await expect(
+      resolveDoiCitation("10.1234/work", {
+        fetch: vi.fn<typeof fetch>().mockResolvedValue(Response.json(record)),
+      }),
+    ).resolves.toMatchObject({ DOI: "10.1234/work" });
+  });
+
+  it.each([
+    ["https://doi.org/10.1234/known?token=secret#private", "10.1234/known"],
+    ["https://publisher.example/doi/10.1234%2Fknown%3Ftoken=secret", "10.1234/known"],
+    ["https://publisher.example/doi/10.1234/known%23private", "10.1234/known"],
+    ["https://publisher.example/doi/10.1234/bad%ZZ?token=secret", "10.1234/bad%ZZ"],
+    ["https://publisher.example/article?doi=10.1234/secret#10.1234/private", undefined],
+  ])("only decodes the DOI pathname: %s", (url, doi) => {
+    expect(doiFromUrl(url)).toBe(doi);
+  });
+});
+
 function page(head: string): Document {
   return new DOMParser().parseFromString(
     `<html><head>${head}</head><body></body></html>`,
@@ -47,9 +87,13 @@ describe("embedded scholarly metadata", () => {
     expect(validateCslItem({ id: "watsonmolecular1953", ...result.citation }).valid).toBe(true);
   });
 
-  it("uses Dublin Core only when it carries scholarly evidence", () => {
+  it("resolves Dublin Core pages with or without an identifier", () => {
     const plain = page('<meta name="DC.title" content="A blog post">');
-    expect(extractScholarlyMetadata(plain, "https://blog.example/post").citation).toBeUndefined();
+    expect(extractScholarlyMetadata(plain, "https://blog.example/post").citation).toEqual({
+      type: "webpage",
+      title: "A blog post",
+      URL: "https://blog.example/post",
+    });
     const identified = page(`
       <meta name="DC.title" content="Thesis title">
       <meta name="DC.creator" content="Ada Lovelace">
@@ -87,12 +131,14 @@ describe("embedded scholarly metadata", () => {
     expect(result.doi).toBe("10.48550/arXiv.0704.0001");
   });
 
-  it("leaves ordinary web pages alone", () => {
+  it("resolves ordinary web pages from their title evidence", () => {
     const result = extractScholarlyMetadata(
       page('<meta property="og:title" content="News">'),
       "https://news.example/story",
     );
-    expect(result).toEqual({});
+    expect(result).toEqual({
+      citation: { type: "webpage", title: "News", URL: "https://news.example/story" },
+    });
   });
 });
 

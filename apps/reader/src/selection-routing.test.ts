@@ -15,7 +15,7 @@ function text(exact: string, via?: "pointer" | "keyboard" | "touch"): ComposerSe
   };
 }
 const area = { kind: "area", value: { pageIndex: 0 } } as unknown as ComposerSelection;
-const base = { draft: null, paused: false, busy: false, instant: false };
+const base = { draft: null, busy: false, instant: false };
 
 describe("selectionRoute", () => {
   it("offers actions for a fresh text selection instead of starting a draft", () => {
@@ -39,14 +39,13 @@ describe("selectionRoute", () => {
     );
   });
 
-  it("keeps a comment being written and offers to move it instead", () => {
-    const draft = { body: "My words", selection: text("First") };
-    expect(selectionRoute({ ...base, draft, value: text("Second") })).toBe("offer-switch");
-  });
-
-  it("lets a set-aside comment wait while new text gets the toolbar", () => {
-    const draft = { body: "My words", selection: text("First") };
-    expect(selectionRoute({ ...base, draft, paused: true, value: text("Second") })).toBe("toolbar");
+  it("gives new text the toolbar while a written comment stays in the composer", () => {
+    // No more "Use it for this comment" or setting the comment aside: they live side by side.
+    const draft = { body: "My words", selection: area };
+    expect(selectionRoute({ ...base, draft, value: text("Second") })).toBe("toolbar");
+    expect(selectionRoute({ ...base, draft, instant: true, value: text("Third") })).toBe(
+      "highlight",
+    );
   });
 
   it("still offers actions while the composer's draft is saving", () => {
@@ -60,6 +59,11 @@ describe("selectionRoute", () => {
   it("opens the composer for an area, confirming before replacing written words", () => {
     expect(selectionRoute({ ...base, value: area })).toBe("compose");
     const draft = { body: "My words", selection: text("First") };
-    expect(selectionRoute({ ...base, draft, paused: true, value: area })).toBe("confirm-compose");
+    expect(selectionRoute({ ...base, draft, value: area })).toBe("confirm-compose");
+    const other = { kind: "area", value: { pageIndex: 1 } } as unknown as ComposerSelection;
+    expect(selectionRoute({ ...base, draft: { body: "  ", selection: area }, value: other })).toBe(
+      "compose",
+    );
+    expect(selectionRoute({ ...base, draft, busy: true, value: area })).toBe("ignore");
   });
 });

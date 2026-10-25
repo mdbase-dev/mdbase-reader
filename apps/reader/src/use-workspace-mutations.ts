@@ -1,6 +1,8 @@
 import { annotationId, dateTime } from "@mdbase-reader/core";
 import { useCallback, type Dispatch, type SetStateAction } from "react";
 
+import { publishSharedAnnotation, sharedAnnotationResource } from "./shared-annotation-resource.js";
+
 import type { SelectedValue } from "./selected-resource.js";
 import type { AsyncResource } from "./use-reader-workspace.js";
 import type { ReaderWorkspaceGateway } from "./workspace-model.js";
@@ -19,12 +21,13 @@ type SourceState = SelectedValue<AsyncResource<Source>> | null;
 
 export function useAnnotationCreation(
   gateway: ReaderWorkspaceGateway,
-  setAnnotations: Dispatch<SetStateAction<AnnotationState>>,
+  _setAnnotations: Dispatch<SetStateAction<AnnotationState>>,
 ): (request: AnnotationCreationRequest) => Promise<Annotation> {
   return useCallback(
     async (request: AnnotationCreationRequest): Promise<Annotation> => {
       const pending = pendingAnnotation(request);
-      setAnnotations((current) => {
+      const setOwnerAnnotations = sharedAnnotationResource(gateway, request.sourceId).set;
+      setOwnerAnnotations((current) => {
         const values =
           current?.sourceId === request.sourceId && current.value.status === "ready"
             ? current.value.value
@@ -36,14 +39,14 @@ export function useAnnotationCreation(
       });
       try {
         const created = await gateway.createAnnotation(request);
-        setAnnotations((current) => replacePendingAnnotation(current, pending, created));
+        setOwnerAnnotations((current) => replacePendingAnnotation(current, pending, created));
         return created;
       } catch (reason) {
-        setAnnotations((current) => removePendingAnnotation(current, pending));
+        setOwnerAnnotations((current) => removePendingAnnotation(current, pending));
         throw reason;
       }
     },
-    [gateway, setAnnotations],
+    [gateway],
   );
 }
 
@@ -96,6 +99,27 @@ function removePendingAnnotation(current: AnnotationState, pending: Annotation):
   };
 }
 
+function replaceAnnotation(
+  setAnnotations: Dispatch<SetStateAction<AnnotationState>>,
+  annotation: Annotation,
+  updated: Annotation,
+): void {
+  setAnnotations((current) => {
+    if (current?.sourceId !== annotation.sourceId || current.value.status !== "ready") {
+      return current;
+    }
+    return {
+      sourceId: annotation.sourceId,
+      value: {
+        status: "ready",
+        value: current.value.value.map((candidate) =>
+          candidate.id === updated.id ? updated : candidate,
+        ),
+      },
+    };
+  });
+}
+
 export function useAnnotationUpdate(
   gateway: ReaderWorkspaceGateway,
   setAnnotations: Dispatch<SetStateAction<AnnotationState>>,
@@ -103,24 +127,32 @@ export function useAnnotationUpdate(
   return useCallback(
     async (annotation, body) => {
       const updated = await gateway.updateAnnotation(annotation, body);
-      setAnnotations((current) => {
-        if (current?.sourceId !== annotation.sourceId || current.value.status !== "ready") {
-          return current;
-        }
-        return {
-          sourceId: annotation.sourceId,
-          value: {
-            status: "ready",
-            value: current.value.value.map((candidate) =>
-              candidate.id === updated.id ? updated : candidate,
-            ),
-          },
-        };
-      });
+      publishSharedAnnotation(gateway, annotation, updated);
+      replaceAnnotation(setAnnotations, annotation, updated);
       return updated;
     },
     [gateway, setAnnotations],
   );
+}
+
+/** Changes a highlight's colour, or undefined when the collection cannot. */
+export function useAnnotationRecolor(
+  gateway: ReaderWorkspaceGateway,
+  setAnnotations: Dispatch<SetStateAction<AnnotationState>>,
+): ((annotation: Annotation, color: string) => Promise<Annotation>) | undefined {
+  const recolor = useCallback(
+    async (annotation: Annotation, color: string): Promise<Annotation> => {
+      if (!gateway.setAnnotationColor) {
+        throw new Error("This collection cannot change highlight colours.");
+      }
+      const updated = await gateway.setAnnotationColor(annotation, color);
+      publishSharedAnnotation(gateway, annotation, updated);
+      replaceAnnotation(setAnnotations, annotation, updated);
+      return updated;
+    },
+    [gateway, setAnnotations],
+  );
+  return gateway.setAnnotationColor ? recolor : undefined;
 }
 
 export function useAnnotationDeletion(
@@ -137,6 +169,7 @@ export function useAnnotationDeletion(
   const remove = useCallback(
     async (annotation: Annotation, deletionPlan: AnnotationDeletionPlan): Promise<void> => {
       await gateway.deleteAnnotation(annotation, deletionPlan);
+      publishSharedAnnotation(gateway, annotation, null);
       setAnnotations((current) => {
         if (current?.sourceId !== annotation.sourceId || current.value.status !== "ready") {
           return current;
@@ -159,13 +192,23 @@ export function useReadingPositionSave(
   gateway: ReaderWorkspaceGateway,
   source: AsyncResource<Source>,
   setSource: (value: Exclude<SourceState, null>) => void,
-): (sourceId: SourceId, documentFileId: FileId, position: ReadingPosition) => Promise<void> {
+): (
+  sourceId: SourceId,
+  documentFileId: FileId,
+  position: ReadingPosition,
+  progress?: number | null,
+) => Promise<void> {
   return useCallback(
-    async (sourceId, documentFileId, position): Promise<void> => {
+    async (sourceId, documentFileId, position, progress): Promise<void> => {
       if (source.status !== "ready" || source.value.id !== sourceId) {
         return;
       }
-      const updated = await gateway.saveReadingPosition(source.value, documentFileId, position);
+      const updated = await gateway.saveReadingPosition(
+        source.value,
+        documentFileId,
+        position,
+        progress,
+      );
       setSource({ sourceId: updated.id, value: { status: "ready", value: updated } });
     },
     [gateway, setSource, source],

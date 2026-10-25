@@ -1,22 +1,41 @@
 import {
   MarginMarkers,
   forwardApplicationShortcut,
+  locateSearchQuote,
   scrollMotionTracker,
   selectionRangeKey,
   watchSettledSelection,
 } from "@mdbase-reader/reading-surface";
 
-import { clearCssHighlights, setCssHighlight, setCssHighlights } from "./html-css-highlights.js";
+import {
+  activeAnnotationHighlight,
+  clearCssHighlights,
+  setAnnotationHighlights,
+  setCssHighlight,
+} from "./html-css-highlights.js";
+import { htmlDocumentText } from "./html-document.js";
 import { followEmbedderPalette } from "./html-palette.js";
 import { HtmlTargetLocator, htmlLocator, htmlSelectionDraft } from "./html-range.js";
+import {
+  containsHtmlAnnotationRange,
+  htmlLocationTarget,
+  resolveHtmlReadingRange,
+} from "./html-reading-range.js";
 import { scrollHtmlElement } from "./html-scroll.js";
 import { applyHtmlTypography } from "./html-typography.js";
 
-import type { Annotation, AnnotationId } from "@mdbase-reader/core";
+import type {
+  Annotation,
+  AnnotationId,
+  AnnotationTarget,
+  DocumentRange,
+  QuoteSelector,
+} from "@mdbase-reader/core";
 import type {
   ContentsEntry,
   ReaderLocator,
   ReadingMotion,
+  ReadingRangeResolution,
   ReadingTypography,
   TextSelectionDraft,
   ViewportRect,
@@ -146,14 +165,30 @@ export class HtmlDocumentRuntime {
     return htmlLocator(this.#href, scrollProgression(this.#document));
   }
 
+  public containsAnnotationRange(range: DocumentRange, target: AnnotationTarget): boolean | null {
+    return this.#destroyed
+      ? null
+      : containsHtmlAnnotationRange(this.#document, this.#href, range, target);
+  }
+
+  public resolveReadingRange(range: DocumentRange): ReadingRangeResolution {
+    return resolveHtmlReadingRange(this.#document, this.#href, range);
+  }
+
   public goTo(locator: ReaderLocator): boolean {
-    if (locator.kind !== "html" || locator.href !== this.#href) {
+    const target = htmlLocationTarget(this.#document, this.#href, locator);
+    if (!target) {
       return false;
     }
-    const progression = locator.progression ?? 0;
-    const root = this.#document.scrollingElement ?? this.#document.documentElement;
     this.#motion.settle("jump");
-    this.#view.scrollTo({ top: progression * Math.max(0, root.scrollHeight - root.clientHeight) });
+    if (target.kind === "fragment") {
+      scrollHtmlElement(this.#view, target.element, "start");
+      return true;
+    }
+    const root = this.#document.scrollingElement ?? this.#document.documentElement;
+    this.#view.scrollTo({
+      top: target.progression * Math.max(0, root.scrollHeight - root.clientHeight),
+    });
     return true;
   }
 
@@ -173,22 +208,27 @@ export class HtmlDocumentRuntime {
       const range = annotation.target ? this.#targets.locate(annotation.target) : null;
       return range ? [{ annotation, range }] : [];
     });
-    setCssHighlights(
+    setAnnotationHighlights(
       this.#view,
-      this.#annotationRanges.map(({ range }) => range),
+      this.#annotationRanges.map(({ annotation, range }) => ({ color: annotation.color, range })),
     );
     this.#markers.set(
       this.#annotationRanges.map(({ annotation, range }) => ({
         id: annotation.id,
         range,
         hasNote: hasWrittenNote(annotation.body),
+        color: annotation.color,
       })),
     );
   }
 
+  public nearestAnnotation(): AnnotationId | null {
+    return this.#markers.nearest();
+  }
+
   public setActiveAnnotation(annotation: Annotation | null): void {
     const range = annotation?.target ? this.#targets.locate(annotation.target) : null;
-    setCssHighlight(this.#view, "reader-active-annotation", range ? [range] : []);
+    setCssHighlight(this.#view, activeAnnotationHighlight, range ? [range] : []);
     this.#markers.setActive(range && annotation ? annotation.id : null);
   }
 
@@ -203,8 +243,33 @@ export class HtmlDocumentRuntime {
     this.#reportedRange = null;
   }
 
+  public clearSearch(): void {
+    setCssHighlight(this.#view, "reader-search-passage", []);
+  }
+
+  public goToSearchQuote(quote: QuoteSelector): boolean {
+    this.clearSearch();
+    const range = locateSearchQuote(this.#document.body, quote);
+    if (!range) {
+      return false;
+    }
+    setCssHighlight(this.#view, "reader-search-passage", [range]);
+    const element = parentElement(range.startContainer);
+    if (!element) {
+      return false;
+    }
+    this.#motion.settle("jump");
+    const bounds = range.getBoundingClientRect();
+    this.#view.scrollTo({
+      top: Math.max(0, this.#view.scrollY + bounds.top - this.#view.innerHeight / 2),
+      behavior: "instant",
+    });
+    this.#frame.focus();
+    return true;
+  }
+
   public extractText(): string {
-    return this.#document.body.textContent;
+    return htmlDocumentText(this.#document);
   }
 
   public destroy(): void {
@@ -221,6 +286,7 @@ export class HtmlDocumentRuntime {
     this.#reflow?.disconnect();
     this.#markers.destroy();
     this.#targets.destroy();
+    this.clearSearch();
     clearCssHighlights(this.#view);
     this.#locationListeners.clear();
     this.#selectionListeners.clear();

@@ -1,7 +1,15 @@
+import { sourceLink } from "@mdbase-reader/core";
+
 import { annotationCandidatesForSource, annotationRecordsAt } from "./annotation-query.js";
 import { AnnotationRecordCache } from "./annotation-record-cache.js";
 import * as sources from "./annotation-source.js";
+import { CreateFollowThrough } from "./create-follow-through.js";
 import { annotationFromDocument, annotationFrontmatter } from "./mapping.js";
+import {
+  annotationPathCandidates,
+  currentNameTemplates,
+  type ReaderNaming,
+} from "./naming-templates.js";
 import {
   mapConcurrent,
   outcomeValue,
@@ -35,9 +43,19 @@ export class ConnectAnnotationRepository implements AnnotationRepository {
   readonly #deletePreflights = new Map<string, DeletePreflightResult>();
 
   readonly #records: AnnotationRecordCache;
+  readonly #creates: CreateFollowThrough;
+  readonly #naming: ReaderNaming | undefined;
 
-  constructor(private readonly client: ReaderConnectClient) {
+  constructor(
+    private readonly client: ReaderConnectClient,
+    /** Keeps each create until the collection confirms it; one per client by default. */
+    creates?: CreateFollowThrough,
+    /** The collection's name templates; Reader's default names without one. */
+    naming?: ReaderNaming,
+  ) {
     this.#records = new AnnotationRecordCache(client);
+    this.#creates = creates ?? new CreateFollowThrough(client);
+    this.#naming = naming;
   }
 
   invalidateRecord(path: string): void {
@@ -118,7 +136,13 @@ export class ConnectAnnotationRepository implements AnnotationRepository {
           }
         });
         options.signal?.throwIfAborted();
-        annotations.push(...batch.filter((annotation) => annotation !== null));
+        annotations.push(
+          ...batch.filter(
+            (annotation): annotation is Annotation =>
+              annotation !== null &&
+              (!options.sourceIds || options.sourceIds.has(annotation.sourceId)),
+          ),
+        );
         offset += batchSize;
         if (
           annotations.length <= 128 ||
@@ -181,18 +205,25 @@ export class ConnectAnnotationRepository implements AnnotationRepository {
   }
 
   async create(annotation: Annotation, idempotencyKey: MutationId): Promise<Annotation> {
+    const templates = await currentNameTemplates(this.#naming);
+    const candidates = await annotationPathCandidates(templates.annotation, annotation);
     const result = outcomeValue(
-      await this.client.create(
-        {
-          path: `annotations/${annotation.id}.md`,
+      // A retried save keeps its mutation ID as its first intent, so it lands once
+      // instead of colliding. The create is kept until the collection confirms it.
+      await this.#creates.create({
+        key: idempotencyKey,
+        collectionId: annotation.collectionId,
+        kind: "annotation",
+        recordId: annotation.id,
+        label: annotationLabel(annotation),
+        candidates,
+        linksTo: [annotation.sourceId],
+        input: {
           type: "reader-annotation",
           frontmatter: annotationFrontmatter(annotation),
           body: annotation.body,
-          includeDocument: true,
         },
-        // A retried save keeps its mutation ID, so it lands once instead of colliding.
-        { intent: idempotencyKey },
-      ),
+      }),
       "create annotation",
     );
     this.#records.put(result);
@@ -222,6 +253,51 @@ export class ConnectAnnotationRepository implements AnnotationRepository {
     this.#records.put(result);
     // The revision check guarantees the source link is the one already resolved.
     return this.#map(annotation.collectionId, result, annotation.sourceId);
+  }
+
+  async updateColor(
+    input: Parameters<NonNullable<AnnotationRepository["updateColor"]>>[0],
+  ): Promise<Annotation> {
+    const { annotation, color, modifiedAt } = input;
+    if (!annotation.path || !annotation.recordRevision) {
+      throw new Error("An annotation path and revision are required for changing its colour.");
+    }
+    const result = outcomeValue(
+      await this.client.update({
+        path: annotation.path,
+        ifRevision: annotation.recordRevision,
+        patch: { color, modified_at: modifiedAt },
+        includeDocument: true,
+      }),
+      "change annotation colour",
+    );
+    this.#records.put(result);
+    // The revision check guarantees the source link is the one already resolved.
+    return this.#map(annotation.collectionId, result, annotation.sourceId);
+  }
+
+  async moveOwner(
+    input: Parameters<NonNullable<AnnotationRepository["moveOwner"]>>[0],
+  ): Promise<Annotation> {
+    const { annotation, owner, modifiedAt } = input;
+    if (
+      !annotation.path ||
+      !annotation.recordRevision ||
+      owner.collectionId !== annotation.collectionId
+    ) {
+      throw new Error("Moving requires a saved annotation and an owner in the same collection.");
+    }
+    const result = outcomeValue(
+      await this.client.update({
+        path: annotation.path,
+        ifRevision: annotation.recordRevision,
+        patch: { source: sourceLink(owner), modified_at: modifiedAt },
+        includeDocument: true,
+      }),
+      "move annotation owner",
+    );
+    this.#records.put(result);
+    return this.#map(annotation.collectionId, result, owner.id);
   }
 
   async preflightDelete(annotation: Annotation): Promise<AnnotationDeletionPlan> {
@@ -258,6 +334,8 @@ export class ConnectAnnotationRepository implements AnnotationRepository {
         throw new Error(`mdbase Connect did not delete annotation ${annotation.id}.`);
       }
       this.#records.delete(path);
+      // A create still waiting for the collection must not bring it back.
+      await this.#creates.forget(annotation.id);
     } finally {
       this.#deletePreflights.delete(key);
     }
@@ -346,10 +424,9 @@ export class ConnectAnnotationRepository implements AnnotationRepository {
         ? this.client.queryPages({ ...input, output: "metadata", includeBody: false }, paging)
         : this.client.queryPages(input, paging);
       for await (const outcome of pages) {
-        yield outcomeValue<QueryPage | QueryMetadataPage>(
-          outcome,
-          "query annotations",
-        ).results.flatMap((record) => annotationSourceEntry(record, selected));
+        yield outcomeValue<QueryPage | QueryMetadataPage>(outcome, "query annotations")
+          .results.flatMap((record) => annotationSourceEntry(record, selected))
+          .filter((entry) => !options.sourceIds || options.sourceIds.has(entry.source));
       }
     }
   }
@@ -412,4 +489,16 @@ function uniquePaths(links: readonly { readonly path: string }[] | undefined): r
   return [...new Set(links?.map(({ path }) => path) ?? [])].sort((left, right) =>
     left.localeCompare(right),
   );
+}
+
+/** A few words that say which annotation a notice is about. */
+function annotationLabel(annotation: Annotation): string {
+  const text = (annotation.target?.quote?.exact ?? annotation.body)
+    .replace(/!\[\[[^\]]*\]\]/gu, "")
+    .replace(/\s+/gu, " ")
+    .trim();
+  if (!text) {
+    return annotation.annotationType === "area" ? "An area highlight" : "An annotation";
+  }
+  return text.length > 60 ? `${text.slice(0, 59).trimEnd()}…` : text;
 }

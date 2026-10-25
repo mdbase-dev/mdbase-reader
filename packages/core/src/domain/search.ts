@@ -1,4 +1,5 @@
 import type { SourceId } from "./identity.js";
+import type { SearchDestination } from "./search-destination.js";
 
 export type SourceTextMatchKind = "source-note" | "annotation" | "document";
 
@@ -9,5 +10,6 @@ export interface SourceTextSearchMatch {
     readonly kind: SourceTextMatchKind;
     readonly text: string;
     readonly path: string;
+    readonly destination?: SearchDestination;
   }[];
 }

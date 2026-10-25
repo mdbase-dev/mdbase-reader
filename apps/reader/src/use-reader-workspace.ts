@@ -12,11 +12,16 @@ import {
   useSelectedSourceResources,
   type AnnotationState,
 } from "./use-selected-source-resources.js";
+import {
+  useSourceAnnotationView,
+  type SourceAnnotationView,
+} from "./use-source-annotation-view.js";
 import { useSourceDraft } from "./use-source-draft.js";
 import { useSourceFields, type SourceFieldsController } from "./use-source-fields.js";
 import {
   useAnnotationCreation,
   useAnnotationDeletion,
+  useAnnotationRecolor,
   useAnnotationUpdate,
   useReadingPositionSave,
 } from "./use-workspace-mutations.js";
@@ -45,6 +50,7 @@ export type AsyncResource<Value> =
 export interface ReaderSourceWorkspaceController {
   readonly sourceRecord: AsyncResource<Source>;
   readonly annotations: AsyncResource<readonly Annotation[]>;
+  readonly annotationView?: SourceAnnotationView;
   readonly draft: string;
   readonly draftReady: boolean;
   readonly draftDocument?: SharedTextDocument;
@@ -60,6 +66,9 @@ export interface ReaderSourceWorkspaceController {
   readonly saveDraft: () => void;
   readonly createAnnotation: (request: AnnotationCreationRequest) => Promise<Annotation>;
   readonly updateAnnotation: (annotation: Annotation, body: string) => Promise<Annotation>;
+  /** Changes a highlight's colour; absent when the collection cannot. */
+  readonly recolorAnnotation?:
+    ((annotation: Annotation, color: string) => Promise<Annotation>) | undefined;
   readonly planAnnotationDeletion: (annotation: Annotation) => Promise<AnnotationDeletionPlan>;
   readonly deleteAnnotation: (
     annotation: Annotation,
@@ -69,6 +78,7 @@ export interface ReaderSourceWorkspaceController {
     sourceId: SourceId,
     documentFileId: FileId,
     position: ReadingPosition,
+    progress?: number | null,
   ) => Promise<void>;
   /** Takes a source written elsewhere (an attached file, a stored citation) as current. */
   readonly adoptSource: (source: Source) => void;
@@ -157,8 +167,8 @@ export function adoptingWrites(
       : {}),
     ...(saveNewSourceCitation
       ? {
-          saveNewSourceCitation: async (target, citation) => {
-            const updated = await saveNewSourceCitation(target, citation);
+          saveNewSourceCitation: async (target, citation, provenance) => {
+            const updated = await saveNewSourceCitation(target, citation, provenance);
             adoptSource(updated);
             return updated;
           },
@@ -178,6 +188,11 @@ export function useSourceToolsWorkspace(
   const { source, setSource, annotations, setAnnotations } = resources;
   const sourceRecord = selectedResource(selectedSourceId, source);
   const annotationResource = selectedResource(selectedSourceId, annotations);
+  const aggregate = useSourceAnnotationView(
+    gateway,
+    sourceRecord.status === "ready" ? sourceRecord.value : null,
+    annotationResource,
+  );
   const publishSource = useCallback(
     (value: SelectedValue<AsyncResource<Source>>): void => {
       setSource((current) => (current?.sourceId === value.sourceId ? value : current));
@@ -229,7 +244,8 @@ export function useSourceToolsWorkspace(
 
   return {
     sourceRecord,
-    annotations: annotationResource,
+    annotations: aggregate.annotations,
+    annotationView: aggregate.view,
     draft: draftValue,
     draftReady: session !== null,
     ...(session ? { draftDocument: session } : {}),
@@ -243,6 +259,11 @@ export function useSourceToolsWorkspace(
     setDraft,
     saveDraft,
     ...annotationMutations,
+    // A comment revealed from another source goes from the list as soon as it is deleted.
+    deleteAnnotation: async (annotation, plan) => {
+      await annotationMutations.deleteAnnotation(annotation, plan);
+      aggregate.view.forget(annotation.id);
+    },
     saveReadingPosition,
     adoptSource: publishDraft,
   };
@@ -253,12 +274,17 @@ function useSelectedAnnotationMutations(
   setAnnotations: Dispatch<SetStateAction<AnnotationState>>,
 ): Pick<
   ReaderSourceWorkspaceController,
-  "createAnnotation" | "updateAnnotation" | "planAnnotationDeletion" | "deleteAnnotation"
+  | "createAnnotation"
+  | "updateAnnotation"
+  | "recolorAnnotation"
+  | "planAnnotationDeletion"
+  | "deleteAnnotation"
 > {
   const deletion = useAnnotationDeletion(gateway, setAnnotations);
   return {
     createAnnotation: useAnnotationCreation(gateway, setAnnotations),
     updateAnnotation: useAnnotationUpdate(gateway, setAnnotations),
+    recolorAnnotation: useAnnotationRecolor(gateway, setAnnotations),
     planAnnotationDeletion: deletion.plan,
     deleteAnnotation: deletion.remove,
   };

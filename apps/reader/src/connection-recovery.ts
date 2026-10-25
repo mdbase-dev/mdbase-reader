@@ -1,23 +1,3 @@
-import type { ReaderConnectSnapshot } from "@mdbase-reader/connect";
-
-export function requiresAccessReview(message: string | null): boolean {
-  return Boolean(
-    message &&
-    /(?:exact application declaration|application declaration bound to this grant)/iu.test(message),
-  );
-}
-
-/**
- * The grant's private keys are gone from this browser, e.g. retired when another tab
- * reconnected, or removed with site data. Retrying cannot help; authorizing again can.
- */
-export function requiresReconnect(message: string | null): boolean {
-  return Boolean(
-    message &&
-    /(?:encrypted grant key|remote authority signing key) is unavailable/iu.test(message),
-  );
-}
-
 /** Technical failures and what a person should read instead; unknown messages pass through. */
 const plainProblems: readonly (readonly [RegExp, string])[] = [
   [
@@ -39,44 +19,33 @@ const plainProblems: readonly (readonly [RegExp, string])[] = [
   [/timed? ?out/iu, "mdbase Connect took too long to answer. Try again in a moment."],
 ];
 
-/** Connection failures as a person should read them. */
-export function describeConnectionProblem(message: string): string;
-export function describeConnectionProblem(message: string | null): string | null;
-export function describeConnectionProblem(message: string | null): string | null {
+/**
+ * Connection failures as a person should read them. Unknown messages pass through, unless
+ * the caller knows the text is technical and gives a `fallback` to say instead.
+ */
+export function describeConnectionProblem(message: string, fallback?: string | null): string;
+export function describeConnectionProblem(
+  message: string | null,
+  fallback?: string | null,
+): string | null;
+export function describeConnectionProblem(
+  message: string | null,
+  fallback?: string | null,
+): string | null {
   if (!message) {
     return message;
   }
-  return plainProblems.find(([pattern]) => pattern.test(message))?.[1] ?? message;
+  return plainProblems.find(([pattern]) => pattern.test(message))?.[1] ?? fallback ?? message;
 }
 
 /** The original text behind a plain description, for a Details disclosure; null if none. */
-export function connectionProblemDetail(message: string | null): string | null {
-  return message && describeConnectionProblem(message) !== message ? message : null;
+export function connectionProblemDetail(
+  message: string | null,
+  fallback?: string | null,
+): string | null {
+  return message && describeConnectionProblem(message, fallback) !== message ? message : null;
 }
 
-export function connectionStatus(
-  session: Exclude<ReaderConnectSnapshot, { status: "ready" }>,
-): string {
-  switch (session.status) {
-    case "starting":
-      return "Finding mdbase Connect…";
-    case "start_failed":
-      return session.problem.message;
-    case "authorization_required":
-      return `Reader needs your approval to open ${session.info.displayName}.`;
-    case "checking_setup":
-      return "Checking the collection’s Reader contracts…";
-    case "unavailable":
-      return `This collection is ${session.reason.replaceAll("_", " ")}.`;
-    case "blocked":
-      return session.problem.message;
-    case "setup_review_required":
-      return "Review the Reader definitions before they are installed.";
-    default:
-      return "Choose a collection to open in Reader.";
-  }
-}
-
-export function isLocalhost(current: Location): boolean {
-  return ["localhost", "127.0.0.1", "::1", "[::1]"].includes(current.hostname);
-}
+/** What to say instead of a library load failure that has no plain description. */
+export const libraryLoadFallback =
+  "Reader could not load the sources in this collection. Try again in a moment.";

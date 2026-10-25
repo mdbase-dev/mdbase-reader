@@ -52,6 +52,7 @@ describe("ConnectSourceImportRepository web capture provenance", () => {
           },
         }),
       }),
+      expect.anything(),
     );
   });
 
@@ -113,6 +114,7 @@ describe("ConnectSourceImportRepository web capture provenance", () => {
             ],
           }),
         }),
+        expect.anything(),
       );
     },
   );

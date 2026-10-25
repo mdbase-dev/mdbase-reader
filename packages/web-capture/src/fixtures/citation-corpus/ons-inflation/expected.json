@@ -1,0 +1,14 @@
+{
+  "type": "report",
+  "title": "Consumer price inflation, UK: January 2024",
+  "author": [
+    {
+      "literal": "Office for National Statistics"
+    }
+  ],
+  "issued": {
+    "date-parts": [[2024, 2, 14]]
+  },
+  "publisher": "Office for National Statistics",
+  "URL": "https://www.ons.gov.uk/economy/inflationandpriceindices/bulletins/consumerpriceinflation/january2024"
+}

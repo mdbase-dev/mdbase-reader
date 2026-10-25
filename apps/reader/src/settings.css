@@ -1,0 +1,379 @@
+/* Settings page ---------------------------------------------------------------
+   A page over the workspace, which stays laid out (and inert) behind it, so
+   opening and leaving Settings moves nothing in the workspace. */
+
+.settings-page {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  overflow: auto;
+  color: var(--ink);
+  background: var(--canvas);
+}
+
+.settings-page-header {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  height: var(--reader-header-height);
+  padding: 0 16px;
+  border-bottom: 1px solid var(--line);
+  background: var(--canvas);
+}
+
+.settings-page-back {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: var(--ui-control-height);
+  padding: 0 10px 0 6px;
+  border: 0;
+  border-radius: var(--ui-radius);
+  color: var(--ink-soft);
+  background: transparent;
+  font: inherit;
+  font-size: var(--ui-control);
+  cursor: pointer;
+}
+
+.settings-page-back:hover {
+  color: var(--ink);
+  background: var(--hover);
+}
+
+.settings-page-back svg {
+  width: 16px;
+  height: 16px;
+}
+
+.settings-page-main {
+  max-width: 680px;
+  margin: 0 auto;
+  padding: 32px 24px 80px;
+}
+
+.settings-page-main h1 {
+  margin: 0 0 8px;
+  font-size: 26px;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+}
+
+.settings-page-main h1:focus {
+  outline: none;
+}
+
+.settings-section {
+  display: grid;
+  gap: 16px;
+  padding: 24px 0;
+  border-top: 1px solid var(--line);
+}
+
+.settings-section:first-of-type {
+  margin-top: 16px;
+}
+
+.settings-section h2 {
+  margin: 0;
+  font-size: 17px;
+  font-weight: 600;
+}
+
+.settings-section-intro {
+  margin: 0;
+  color: var(--muted);
+  font-size: var(--ui-control);
+  line-height: 1.45;
+}
+
+/* The display menu's choices, laid out as a page section. */
+.settings-device {
+  display: grid;
+  max-width: 420px;
+}
+
+.settings-device .display-choice {
+  padding-left: 0;
+  padding-right: 0;
+}
+
+.settings-device .display-note {
+  margin-left: 0;
+  margin-right: 0;
+}
+
+.settings-connection {
+  display: grid;
+  grid-template-columns: max-content minmax(0, 1fr);
+  gap: 6px 16px;
+  margin: 0;
+  font-size: var(--ui-control);
+}
+
+.settings-connection dt {
+  color: var(--muted);
+}
+
+.settings-connection dd {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+
+/* One collection setting: its fields and its own Save. */
+
+.settings-form {
+  display: grid;
+  gap: 12px;
+  padding: 20px;
+  border: 1px solid var(--line);
+  border-radius: var(--control-radius);
+  background: var(--paper);
+}
+
+.settings-form h3,
+.settings-form h4,
+.settings-form p {
+  margin: 0;
+}
+
+.settings-form h3 {
+  font-size: var(--ui-heading);
+  font-weight: 650;
+}
+
+.settings-form p {
+  color: var(--muted);
+  font-size: var(--ui-control);
+  line-height: 1.45;
+}
+
+.settings-form input[type="text"],
+.settings-form input:not([type]) {
+  height: 34px;
+  padding: 0 10px;
+  font-size: var(--ui-body);
+}
+
+.settings-form button {
+  height: var(--ui-control-height);
+  padding: 0 12px;
+  border: 1px solid var(--line);
+  border-radius: var(--ui-radius);
+  color: var(--ink-soft);
+  background: transparent;
+  font-size: var(--ui-control);
+  cursor: pointer;
+}
+
+.settings-form button[type="submit"] {
+  border-color: var(--accent);
+  color: var(--paper);
+  background: var(--accent);
+}
+
+.settings-form button:disabled {
+  cursor: default;
+  opacity: 0.5;
+}
+
+.settings-form-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 7px;
+}
+
+.settings-form .file-name-settings-message.is-error,
+.settings-form .file-name-template-problem {
+  color: var(--danger);
+  font-size: var(--ui-meta);
+}
+
+.settings-form .file-name-template-warning,
+.settings-form .file-name-settings-notice {
+  padding: 6px 8px;
+  border-radius: var(--ui-radius);
+  color: var(--warning-text);
+  background: var(--warning-soft);
+}
+
+.settings-form .file-name-template-hint,
+.settings-form .file-name-preview-empty,
+.settings-form .file-name-template-warning {
+  font-size: var(--ui-meta);
+}
+
+/* File names: one template per field, with a preview. */
+
+.file-name-template {
+  display: grid;
+  gap: 6px;
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.file-name-template legend {
+  padding: 0 0 6px;
+  color: var(--ink);
+  font-size: var(--ui-control);
+  font-weight: 600;
+}
+
+.file-name-template-row {
+  display: flex;
+  gap: 7px;
+}
+
+.settings-form .file-name-template-row input {
+  flex: 1 1 auto;
+  min-width: 0;
+  font-family: var(--mono);
+  font-size: var(--ui-control);
+}
+
+.settings-form .file-name-template-row button {
+  flex: none;
+}
+
+.file-name-preview {
+  display: grid;
+  gap: 4px;
+  padding: 8px 10px;
+  border-radius: var(--ui-radius);
+  background: var(--bg-sunken, var(--hover));
+}
+
+.file-name-preview-label {
+  color: var(--faint);
+  font-size: var(--ui-meta);
+}
+
+.file-name-preview ul {
+  display: grid;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.file-name-preview li {
+  display: grid;
+  gap: 1px;
+  min-width: 0;
+}
+
+.file-name-preview-item,
+.file-name-preview-default {
+  overflow: hidden;
+  color: var(--muted);
+  font-size: var(--ui-meta);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.file-name-preview code {
+  overflow-wrap: anywhere;
+  color: var(--ink);
+  font: var(--ui-control) / 1.4 var(--mono);
+}
+
+.file-name-settings-help summary {
+  color: var(--muted);
+  font-size: var(--ui-meta);
+  cursor: pointer;
+}
+
+.settings-form .file-name-settings-help p {
+  margin-top: 6px;
+  font-size: var(--ui-meta);
+}
+
+/* Highlight colours: the offered ones in order, then the hidden ones. */
+
+.settings-form .highlight-color-settings-note {
+  font-size: var(--ui-meta);
+}
+
+.settings-form .highlight-color-group {
+  margin-top: 4px;
+  color: var(--muted);
+  font-size: var(--ui-meta);
+  font-weight: 600;
+}
+
+.highlight-color-rows {
+  display: grid;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.highlight-color-row {
+  display: grid;
+  grid-template-columns: 12px 5.5em minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 8px;
+}
+
+.highlight-color-row > i {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: var(--hl-ink);
+  box-shadow: inset 0 0 0 1px color-mix(in oklch, var(--text-1) 12%, transparent);
+}
+
+.highlight-color-row.is-hidden > i {
+  opacity: 0.35;
+}
+
+.highlight-color-name {
+  color: var(--ink);
+  font-size: var(--ui-control);
+}
+
+.highlight-color-row.is-hidden .highlight-color-name {
+  color: var(--muted);
+}
+
+.settings-form .highlight-color-row > input[type="text"] {
+  min-width: 0;
+  height: 30px;
+  font-size: var(--ui-control);
+}
+
+.highlight-color-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 2px;
+}
+
+.settings-form .highlight-color-move {
+  width: var(--ui-control-height);
+  padding: 0;
+}
+
+@media (max-width: 680px) {
+  .settings-page-main {
+    padding: 24px 16px 64px;
+  }
+
+  .settings-form {
+    padding: 16px;
+  }
+
+  /* The meaning goes under the name, beside the row's buttons. */
+  .highlight-color-row {
+    grid-template-columns: 12px minmax(0, 1fr) auto;
+  }
+
+  .highlight-color-row > input[type="text"] {
+    grid-column: 2 / -1;
+    grid-row: 2;
+  }
+}

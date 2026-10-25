@@ -2,6 +2,7 @@ import type { SourceLookups } from "./source-lookups.js";
 import type { Annotation, AnnotationDeletionPlan, AnnotationDraft } from "../domain/annotation.js";
 import type { CitationCandidate, CitationResolutionRequest } from "../domain/citation-metadata.js";
 import type { CslItem } from "../domain/citation.js";
+import type { CslProvenance } from "../domain/csl-provenance.js";
 import type { DocumentTarget } from "../domain/document.js";
 import type {
   AnnotationId,
@@ -13,6 +14,7 @@ import type {
 } from "../domain/identity.js";
 import type { FileRevision } from "../domain/revision.js";
 import type { SourceTextSearchMatch } from "../domain/search.js";
+import type { DocumentRange, SourcePartChain } from "../domain/source-parts.js";
 import type {
   Page,
   ReadingPosition,
@@ -42,6 +44,26 @@ export interface BodyUpdateRecovery {
 }
 
 export interface SourceRepository extends SourceLookups {
+  sourceParts?(
+    collectionId: CollectionId,
+    id: SourceId,
+    options?: ReaderRequestOptions,
+  ): Promise<readonly SourceSummary[]>;
+  validatePartOf?(collectionId: CollectionId, id: SourceId): Promise<SourcePartChain>;
+  setSourcePartOf?(input: {
+    readonly collectionId: CollectionId;
+    readonly sourceId: SourceId;
+    readonly expectedRevision: RecordRevision;
+    readonly parentId: SourceId | null;
+  }): Promise<Source>;
+  setDocumentRange?(input: {
+    readonly collectionId: CollectionId;
+    readonly sourceId: SourceId;
+    readonly expectedRevision: RecordRevision;
+    readonly documentFileId: FileId;
+    readonly expectedDocumentRevision: FileRevision;
+    readonly range: DocumentRange | null;
+  }): Promise<Source>;
   list(query: SourceQuery, options?: ReaderRequestOptions): Promise<Page<SourceSummary>>;
   /** Stream one stable query when the backing store supports pinned pagination. */
   listPages?(
@@ -67,6 +89,8 @@ export interface SourceRepository extends SourceLookups {
     readonly expectedFrontmatter?: Source["frontmatter"];
     readonly documentFileId: FileId;
     readonly position: ReadingPosition;
+    /** Range-relative progress; null clears an unavailable measurement. */
+    readonly progress?: number | null;
     readonly openedAt: DateTime;
   }): Promise<Source>;
   updateReadingStatus?(input: {
@@ -77,11 +101,17 @@ export interface SourceRepository extends SourceLookups {
   }): Promise<Source>;
   /** Sets frontmatter fields by dotted path; a null value removes the field. */
   updateFields?(input: SourceFieldChange): Promise<Source>;
-  /** Replaces only `csl`, so it needs no revision: no other field is at risk. */
+  /** Replaces `csl` and, when supplied, its sibling provenance. Empty provenance removes it. */
   updateCitation(input: {
     readonly collectionId: CollectionId;
     readonly sourceId: SourceId;
     readonly citation: CslItem;
+    readonly provenance?: CslProvenance;
+    /**
+     * The raw `csl` the editor loaded, `null` when the record had none; see `loadedCitation`.
+     * The save fails if `csl` changed since. Unrelated record changes do not block it.
+     */
+    readonly expectedCitation?: unknown;
   }): Promise<Source>;
   /** Checks removing a source record at its current revision and lists what links to it. */
   preflightDelete?(source: Source): Promise<SourceDeletionPlan>;
@@ -137,6 +167,18 @@ export interface AnnotationRepository {
     readonly body: string;
     readonly modifiedAt: DateTime;
   }): Promise<Annotation>;
+  /** The highlight colour only: preserve owner, target, selector, body and embeds. */
+  updateColor?(input: {
+    readonly annotation: Annotation;
+    readonly color: string;
+    readonly modifiedAt: DateTime;
+  }): Promise<Annotation>;
+  /** Ownership only: preserve target, selector, body and explicit embeds. */
+  moveOwner?(input: {
+    readonly annotation: Annotation;
+    readonly owner: Source;
+    readonly modifiedAt: DateTime;
+  }): Promise<Annotation>;
   preflightDelete(annotation: Annotation): Promise<AnnotationDeletionPlan>;
   delete(annotation: Annotation, plan: AnnotationDeletionPlan): Promise<void>;
   get(
@@ -149,6 +191,8 @@ export interface AnnotationRepository {
 /** A scoped annotation read. Progress snapshots are cumulative and may be incomplete. */
 export interface AnnotationListOptions extends ReaderRequestOptions {
   readonly paths?: ReadonlySet<string>;
+  /** Filter resolved owners before hydrating records, not one query per source. */
+  readonly sourceIds?: ReadonlySet<SourceId>;
   readonly onProgress?: (annotations: readonly Annotation[]) => void;
   /** Bypass short-lived record caches, e.g. for an explicit retry. */
   readonly refresh?: boolean;
@@ -184,12 +228,17 @@ export interface ExportedCollectionFile {
   readonly bytes: Uint8Array;
 }
 
+export interface CollectionFileReadOptions extends ReaderRequestOptions {
+  /** Refuse oversized files before download and before allocating their byte buffer. */
+  readonly maxBytes?: number;
+}
+
 export interface CollectionFileRepository {
   read(
     collectionId: CollectionId,
     file: string,
     expectedRevision?: FileRevision,
-    options?: ReaderRequestOptions,
+    options?: CollectionFileReadOptions,
   ): Promise<ExportedCollectionFile>;
 }
 
@@ -218,6 +267,81 @@ export interface MutationJournal {
   mark(id: MutationId, stage: MutationStage, problem?: string): Promise<void>;
 }
 
+/** The record creates Reader follows through until the collection confirms them. */
+export type PendingCreateKind = "source" | "source-part" | "annotation";
+
+/**
+ * - `submitting`: being written; the outcome of the current attempt is not known yet.
+ * - `pending`: on this device and waiting for the collection to confirm it.
+ * - `confirmed`: confirmed, but kept while a record it links to is still unconfirmed,
+ *   so the link can follow that record if it has to move.
+ * - `needs-attention`: the collection refused it, or every path was taken. The content
+ *   stays here until the user tries again or discards it.
+ */
+export type PendingCreateState = "submitting" | "pending" | "confirmed" | "needs-attention";
+
+/**
+ * Why a create needs the user: every name Reader tried was taken, or the collection
+ * refused it for another reason (trying again is unlikely to help).
+ */
+export type PendingCreateAttention = "names-taken" | "refused";
+
+/** A link that moved: `[[from…]]` in a record that links here now reads `[[to…]]`. */
+export interface PendingRelink {
+  readonly from: string;
+  readonly to: string;
+}
+
+/** One record create, with everything needed to write it again. JSON-serialisable. */
+export interface PendingCreate {
+  /** Stable for this create. Attempt `n` writes under intent `key` (n = 0) or `key:n`. */
+  readonly key: string;
+  readonly collectionId: string;
+  readonly kind: PendingCreateKind;
+  /** The record's Reader `id` field, used to recognise it at any path. */
+  readonly recordId: string;
+  /** What the user calls it, for notices: a title or a quote. */
+  readonly label: string;
+  /** Paths to try in order. */
+  readonly candidates: readonly string[];
+  /** Index into `candidates` of the current path. */
+  readonly attempt: number;
+  /** How many writes this create has made. Each new write uses a new intent. */
+  readonly submission: number;
+  readonly input: {
+    readonly type?: string;
+    readonly frontmatter: Readonly<Record<string, unknown>>;
+    readonly body?: string;
+  };
+  /** Keys of other pending creates this record links to. */
+  readonly dependsOn?: readonly string[];
+  readonly state: PendingCreateState;
+  /** The SDK mutation of the current write, once known. */
+  readonly mutationId?: string;
+  /**
+   * The replica record ID the current write creates. Reader mints it before the write is
+   * sent and keeps it with the intent, so a resend under the same intent names the same
+   * record (SDK `client.d.ts` `CreateInput.id`: "A record ID minted by the caller").
+   */
+  readonly replicaId?: string;
+  /** Why it needs attention, in words for the user. */
+  readonly problem?: string;
+  readonly attention?: PendingCreateAttention;
+  /** Links that moved and still have to be written to the record. */
+  readonly relink?: readonly PendingRelink[];
+  /** Failed attempts to write `relink`; the entry is let go after a few. */
+  readonly relinkTries?: number;
+  readonly startedAt: string;
+}
+
+/** Device storage for {@link PendingCreate}s. It survives reloads. */
+export interface CreateJournal {
+  get(collectionId: string, key: string): Promise<PendingCreate | null>;
+  put(entry: PendingCreate): Promise<void>;
+  list(collectionId: string): Promise<readonly PendingCreate[]>;
+  remove(collectionId: string, key: string): Promise<void>;
+}
+
 export interface Clock {
   now(): DateTime;
 }
@@ -234,6 +358,8 @@ export interface ContentHasher {
 
 export interface AnnotationCreationRequest extends AnnotationDraft {
   readonly sourceRecord: Source;
+  /** Reading context when the chosen owner does not list the opened representation. */
+  readonly documentSourceRecord?: Source;
   readonly attachment?: {
     readonly bytes: Uint8Array;
     readonly mediaType: "image/png";

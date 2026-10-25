@@ -70,6 +70,6 @@ export function connectLibraryViewRepository(connection: MdbaseConnection): Libr
 
 /** YAML is only needed when replacing a view, so it loads on demand. */
 async function viewDocument(frontmatter: JsonObject): Promise<string> {
-  const { stringify } = await import("yaml");
+  const { stringify } = await import("./yaml-writer.js");
   return `---\n${stringify(frontmatter).trimEnd()}\n---\n\n`;
 }

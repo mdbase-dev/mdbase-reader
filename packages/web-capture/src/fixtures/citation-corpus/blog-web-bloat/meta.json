@@ -1,0 +1,12 @@
+{
+  "url": "https://danluu.com/web-bloat/",
+  "retrievedAt": "2026-10-23T10:34:07.695667+00:00",
+  "notes": [
+    "Original reduced reproduction of fetched public HTML; retained citation metadata order/duplicates, canonical, HTML language, citation-related JSON-LD and relevant title/byline/date wrappers. Omitted prose, descriptions, images, references, styles, tracking and executable scripts. Raw downloads stay in gitignored .scratch/corpus/expand; helpers outside download directories ran with python3 -I. No downloaded content was executed.",
+    "Page HTTP status: 200. Requested and final URL: https://danluu.com/web-bloat/ -> https://danluu.com/web-bloat/. Captured 2026-10-23T10:34:07.695667+00:00; original 57565 bytes, reduced HTML 171 bytes before formatting.",
+    "Recorded citoid HTTP 200 at 2026-10-23T10:37:12.431976+00:00; request https://en.wikipedia.org/api/rest_v1/data/citation/zotero/https%3A%2F%2Fdanluu.com%2Fweb-bloat%2F. Raw response dialect retained; only long abstracts shortened to first sentence.",
+    "Ground truth: author own article title and archive at https://danluu.com/ (entry labelled 02/17). The article-linked feed https://danluu.com/atom.xml identifies this exact URL and pubDate Wed, 08 Feb 2017 00:00:00 +0000; use 8 February 2017, not a guessed modification date. Author identity Dan Luu is corroborated by the article-linked public profile https://mastodon.social/@danluu. Verification downloads remain private.",
+    "The actual article has a title element but no h1, citation meta, canonical or JSON-LD, and no byline/date wrapper. Its reading text, tables and navigation were omitted, not replaced with invented metadata. This deliberately tests a genuinely metadata-free personal blog.",
+    "Claims/resolver replay at 9128f240fb905807949f035d7ee0aae77f6a07cf: page-only wrong fields: type, author, issued; with recorded remotes: type, author, issued. Pinned in citation-corpus-replay.test.ts; expected CSL was hand-catalogued independently before replay."
+  ]
+}

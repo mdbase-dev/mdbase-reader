@@ -78,6 +78,8 @@ export const collectionCommands = {
   contentSearch: ["search"],
   files: ["read"],
   bodyRecovery: ["recoverSource", "recoverAnnotation"],
+  // Plain data only: the settings store itself follows the change feed in the host.
+  settings: ["highlightColors"],
 } as const satisfies Record<string, readonly string[]>;
 export type CollectionRepository = keyof typeof collectionCommands;
 

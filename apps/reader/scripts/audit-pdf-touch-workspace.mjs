@@ -6,7 +6,7 @@ export async function auditPdfTouchWorkspace(page, { screenshot }) {
   const open = async () => {
     const search = page.getByRole("textbox", { name: "Find a source by title, author or tag" });
     if (!(await search.isVisible()))
-      await page.getByRole("button", { name: "Toggle left sidebar" }).tap();
+      await page.getByRole("button", { name: "Toggle Sources sidebar" }).tap();
     await search.fill("Research 0020");
     await page.getByRole("option", { name: /Research 0020/ }).dblclick();
     await waitPdf();
@@ -94,7 +94,8 @@ export async function auditPdfTouchWorkspace(page, { screenshot }) {
   assert.equal(adjusted.text, "Patient attention");
   assert.equal(adjusted.range.end.index, desired.index);
   await screenshot("pdf-touch-workspace-adjusted");
-  await toolbar.getByRole("button", { name: "Highlight", exact: true }).tap();
+  // A selection saves as a highlight from its colour swatches; the ringed one is the default.
+  await toolbar.getByRole("button", { name: /^Highlight Yellow\b/ }).tap();
   await expect(toolbar).toHaveCount(0);
   const stored = () =>
     page.evaluate(async () => {
@@ -105,6 +106,7 @@ export async function auditPdfTouchWorkspace(page, { screenshot }) {
   await expect.poll(async () => (await stored()).length).toBe(1);
   const annotations = await stored();
   assert.equal(annotations[0].target.quote.exact, adjusted.text);
+  assert.equal(annotations[0].color, "yellow");
   assert.equal(annotations[0].target.pdf.pageIndex, 0);
   assert.deepEqual(
     annotations[0].target.pdf.quadPoints,

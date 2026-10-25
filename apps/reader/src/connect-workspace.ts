@@ -5,6 +5,7 @@ import {
   citekeyForCitation,
   createSourceRecord,
   importSourceFile,
+  loadedCitation,
   normalizedSourceUrl,
   sameSourceUrl,
   planAnnotationDeletion,
@@ -13,6 +14,7 @@ import {
   updateAnnotationBody,
 } from "@mdbase-reader/core";
 
+import { captureCitationProvenance } from "./capture-citation-provenance.js";
 import {
   annotationViewConfiguration,
   buildAnnotationView,
@@ -36,7 +38,12 @@ import type {
   ReaderLibrarySnapshot,
   ReaderWorkspaceGateway,
 } from "./workspace-model.js";
-import type { JsonObject, LibraryViewRepository } from "@mdbase-reader/connect";
+import type {
+  JsonObject,
+  LibraryViewRepository,
+  ReaderCreateFollowThrough,
+  ReaderSettingsStore,
+} from "@mdbase-reader/connect";
 import type {
   Annotation,
   AnnotationListOptions,
@@ -52,7 +59,10 @@ import type {
   CollectionId,
   ContentHasher,
   ContentSearchRepository,
+  CslProvenance,
   FileId,
+  FileRevision,
+  DocumentRange,
   MutationJournal,
   ReaderRequestOptions,
   ReadingPosition,
@@ -84,9 +94,30 @@ export class ConnectWorkspaceGateway implements ReaderWorkspaceGateway {
   readonly #sourceLoads = new SharedRequests<SourceId, Source | null>();
   readonly #sourcesById = new Map<SourceId, Source>();
   readonly #annotationsBySource = new Map<SourceId, readonly Annotation[]>();
+  readonly #citationListeners = new Set<() => void>();
+  readonly subscribeCitationChanges = (listener: () => void): (() => void) => {
+    this.#citationListeners.add(listener);
+    return () => {
+      this.#citationListeners.delete(listener);
+    };
+  };
+
   readonly #countListeners = new Set<() => void>();
   #countsRevision = 0;
   #annotationCacheEpoch = 0;
+  #annotationRevision = 0;
+  readonly #annotationListeners = new Set<() => void>();
+  readonly subscribeAnnotationChanges = (listener: () => void): (() => void) => {
+    this.#annotationListeners.add(listener);
+    return () => {
+      this.#annotationListeners.delete(listener);
+    };
+  };
+  readonly annotationChangesRevision = (): number => this.#annotationRevision;
+  #annotationsChanged(): void {
+    this.#annotationRevision += 1;
+    this.#annotationListeners.forEach((listener) => listener());
+  }
 
   readonly subscribeAnnotationCounts = (listener: () => void): (() => void) => {
     this.#countListeners.add(listener);
@@ -98,6 +129,7 @@ export class ConnectWorkspaceGateway implements ReaderWorkspaceGateway {
   readonly annotationCountsRevision = (): number => this.#countsRevision;
 
   #countsChanged(): void {
+    this.#annotationsChanged();
     this.#countsRevision += 1;
     for (const listener of this.#countListeners) {
       listener();
@@ -122,6 +154,10 @@ export class ConnectWorkspaceGateway implements ReaderWorkspaceGateway {
     private readonly libraryViewRepository?: LibraryViewRepository,
     private readonly bodyRecovery?: BodyUpdateRecovery,
     private readonly sourceChanges?: (listener: () => void) => () => void,
+    /** Creates kept on this device until the collection confirms them. */
+    readonly createFollowThrough?: ReaderCreateFollowThrough | undefined,
+    /** The collection's Reader settings record. */
+    readonly settings?: ReaderSettingsStore | undefined,
   ) {}
 
   /** Calls `listener` after another tab, app or device changed the library's
@@ -346,6 +382,36 @@ export class ConnectWorkspaceGateway implements ReaderWorkspaceGateway {
     return annotations;
   }
 
+  async annotationsForSources(
+    ids: ReadonlySet<SourceId>,
+    options: ReaderRequestOptions = {},
+  ): Promise<readonly Annotation[]> {
+    if (!this.annotationsRepository.listAll) {
+      throw new Error("This collection cannot batch-load chapter annotations.");
+    }
+    return this.annotationsRepository.listAll(this.collectionId, {
+      ...options,
+      sourceIds: ids,
+      refresh: true,
+    });
+  }
+
+  async moveAnnotationOwner(annotation: Annotation, owner: Source): Promise<Annotation> {
+    if (!this.annotationsRepository.moveOwner) {
+      throw new Error("This collection cannot move annotations between sources.");
+    }
+    const updated = await this.annotationsRepository.moveOwner({
+      annotation,
+      owner,
+      modifiedAt: this.runtime.clock.now(),
+    });
+    this.#annotationCacheEpoch += 1;
+    this.#annotationsBySource.delete(annotation.sourceId);
+    this.#annotationsBySource.delete(owner.id);
+    this.#countsChanged();
+    return updated;
+  }
+
   annotationSourceIds(options: ReaderRequestOptions = {}): Promise<readonly SourceId[]> {
     return (
       this.annotationsRepository.sourceIdsWithAnnotations?.(this.collectionId, options) ??
@@ -442,10 +508,32 @@ export class ConnectWorkspaceGateway implements ReaderWorkspaceGateway {
     return this.bodyRecovery;
   }
 
-  async saveSourceCitation(source: Source, citation: unknown): Promise<Source> {
-    const updated = await saveSourceCitation(this.sources, source, this.#library ?? [], citation);
+  async saveSourceCitation(
+    source: Source,
+    citation: unknown,
+    options: Parameters<ReaderWorkspaceGateway["saveSourceCitation"]>[2] = {},
+  ): Promise<Source> {
+    const expectedCitation = loadedCitation(source);
+    const updated = await saveSourceCitation(this.sources, source, this.#library ?? [], citation, {
+      ...(expectedCitation !== undefined ? { expectedCitation } : {}),
+      ...options,
+    });
     this.#replaceSource(updated);
+    for (const listener of this.#citationListeners) {
+      listener();
+    }
     return updated;
+  }
+
+  async citationClaims(
+    request: Parameters<NonNullable<ReaderWorkspaceGateway["citationClaims"]>>[0],
+    options: ReaderRequestOptions = {},
+  ): Promise<Awaited<ReturnType<NonNullable<ReaderWorkspaceGateway["citationClaims"]>>>> {
+    const { lookUpCitationClaims } = await import("@mdbase-reader/web-capture/citation-updates");
+    return lookUpCitationClaims(request, {
+      clientName: `mdbase-reader (${globalThis.location.origin})`,
+      ...(options.signal ? { signal: options.signal } : {}),
+    });
   }
 
   async resolveCitation(
@@ -470,7 +558,7 @@ export class ConnectWorkspaceGateway implements ReaderWorkspaceGateway {
   readFile(
     file: string,
     expectedRevision?: Parameters<ReaderWorkspaceGateway["readFile"]>[1],
-    options: ReaderRequestOptions = {},
+    options: NonNullable<Parameters<ReaderWorkspaceGateway["readFile"]>[2]> = {},
   ): ReturnType<ReaderWorkspaceGateway["readFile"]> {
     if (!this.files) {
       return Promise.reject(new Error("File export is unavailable for this connection."));
@@ -508,6 +596,25 @@ export class ConnectWorkspaceGateway implements ReaderWorkspaceGateway {
     return imported;
   }
 
+  async createSourcePart(
+    plan: Parameters<NonNullable<ReaderWorkspaceGateway["createSourcePart"]>>[0],
+    options: ReaderRequestOptions = {},
+  ): Promise<Source> {
+    if (!this.sourceImports.createPart || plan.collectionId !== this.collectionId) {
+      throw new Error("Chapter creation is unavailable.");
+    }
+    if (plan.document) {
+      const { readChapterOutline, validateChapterRange } = await import("./chapter-outline.js");
+      validateChapterRange(
+        plan.document.range,
+        await readChapterOutline(this, plan.document, options.signal),
+      );
+    }
+    const created = await this.sourceImports.createPart(plan, options);
+    this.#replaceSource(created, true);
+    return created;
+  }
+
   async createSource(
     request: Omit<SourceRecordCreationRequest, "collectionId">,
     options: SourceImportOptions = {},
@@ -537,12 +644,16 @@ export class ConnectWorkspaceGateway implements ReaderWorkspaceGateway {
   async saveNewSourceCitation(
     source: Source,
     citation: Readonly<Record<string, unknown>>,
+    provenance?: CslProvenance,
   ): Promise<Source> {
     const { sources } = await this.library();
-    return this.saveSourceCitation(source, {
-      ...citation,
-      id: citekeyForCitation(citation, sources, source.id),
-    });
+    return this.saveSourceCitation(
+      source,
+      { ...citation, id: citekeyForCitation(citation, sources, source.id) },
+      provenance !== undefined
+        ? { provenance: captureCitationProvenance(citation, provenance) }
+        : {},
+    );
   }
 
   async createAnnotation(request: AnnotationCreationRequest): Promise<Annotation> {
@@ -602,6 +713,26 @@ export class ConnectWorkspaceGateway implements ReaderWorkspaceGateway {
       annotation.sourceId,
       current.map((candidate) => (candidate.id === updated.id ? updated : candidate)),
     );
+    this.#annotationsChanged();
+    return updated;
+  }
+
+  async setAnnotationColor(annotation: Annotation, color: string): Promise<Annotation> {
+    if (!this.annotationsRepository.updateColor) {
+      throw new Error("This collection cannot change highlight colours.");
+    }
+    const updated = await this.annotationsRepository.updateColor({
+      annotation,
+      color,
+      modifiedAt: this.runtime.clock.now(),
+    });
+    this.#annotationCacheEpoch += 1;
+    const current = this.#annotationsBySource.get(annotation.sourceId) ?? [];
+    this.#annotationsBySource.set(
+      annotation.sourceId,
+      current.map((candidate) => (candidate.id === updated.id ? updated : candidate)),
+    );
+    this.#annotationsChanged();
     return updated;
   }
 
@@ -639,6 +770,7 @@ export class ConnectWorkspaceGateway implements ReaderWorkspaceGateway {
     source: Source,
     documentFileId: FileId,
     position: ReadingPosition,
+    progress?: number | null,
   ): Promise<Source> {
     // Callers may hold the source as it was when the document opened; each save replaces the
     // cached copy, so it carries the newest revision this session has seen.
@@ -650,6 +782,7 @@ export class ConnectWorkspaceGateway implements ReaderWorkspaceGateway {
       expectedFrontmatter: latest.frontmatter,
       documentFileId,
       position,
+      ...(progress !== undefined ? { progress } : {}),
       openedAt: this.runtime.clock.now(),
     });
     this.#replaceSource(updated);
@@ -667,6 +800,56 @@ export class ConnectWorkspaceGateway implements ReaderWorkspaceGateway {
       changedAt: this.runtime.clock.now(),
     });
     this.#replaceSource(updated);
+    return updated;
+  }
+
+  async sourceParts(
+    id: SourceId,
+    options: ReaderRequestOptions = {},
+  ): Promise<readonly SourceSummary[]> {
+    if (!this.sources.sourceParts) {
+      throw new Error("This collection cannot list source parts.");
+    }
+    return this.sources.sourceParts(this.collectionId, id, options);
+  }
+
+  async setSourcePartOf(source: Source, parentId: SourceId | null): Promise<Source> {
+    if (!this.sources.setSourcePartOf) {
+      throw new Error("This collection cannot set source parents.");
+    }
+    const updated = await this.sources.setSourcePartOf({
+      collectionId: this.collectionId,
+      sourceId: source.id,
+      expectedRevision: source.recordRevision,
+      parentId,
+    });
+    for (const listener of this.#citationListeners) {
+      listener();
+    }
+    this.#replaceSource(updated);
+    this.#annotationsChanged();
+    return updated;
+  }
+
+  async setDocumentRange(
+    source: Source,
+    documentFileId: FileId,
+    expectedDocumentRevision: FileRevision,
+    range: DocumentRange | null,
+  ): Promise<Source> {
+    if (!this.sources.setDocumentRange) {
+      throw new Error("This collection cannot set document ranges.");
+    }
+    const updated = await this.sources.setDocumentRange({
+      collectionId: this.collectionId,
+      sourceId: source.id,
+      expectedRevision: source.recordRevision,
+      documentFileId,
+      expectedDocumentRevision,
+      range,
+    });
+    this.#replaceSource(updated);
+    this.#annotationsChanged();
     return updated;
   }
 
@@ -707,6 +890,7 @@ export class ConnectWorkspaceGateway implements ReaderWorkspaceGateway {
     if (this.#library) {
       this.#library = this.#library.filter(({ id }) => id !== plan.sourceId);
     }
+    this.#countsChanged();
   }
 
   #replaceSource(source: Source, prepend = false): void {

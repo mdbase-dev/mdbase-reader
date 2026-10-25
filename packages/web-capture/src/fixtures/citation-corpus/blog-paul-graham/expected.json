@@ -1,0 +1,15 @@
+{
+  "type": "post-weblog",
+  "title": "Writes and Write-Nots",
+  "author": [
+    {
+      "family": "Graham",
+      "given": "Paul"
+    }
+  ],
+  "issued": {
+    "date-parts": [[2024, 10]]
+  },
+  "container-title": "Paul Graham",
+  "URL": "https://paulgraham.com/writes.html"
+}

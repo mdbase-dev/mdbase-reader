@@ -1,8 +1,10 @@
 import { DomainError } from "./errors.js";
 
 import type { CslItem, CslValidationProblem } from "./citation.js";
+import type { CslProvenance } from "./csl-provenance.js";
 import type { DocumentDescriptor } from "./document.js";
 import type { CollectionId, FileId, RecordRevision, SourceId } from "./identity.js";
+import type { SourceRelation } from "./source-parts.js";
 import type { DateTime } from "./time.js";
 
 export const readingStatuses = [
@@ -47,11 +49,23 @@ export interface SourceSummary {
   readonly citation?: CslItem;
   readonly citationProblems?: readonly CslValidationProblem[];
   readonly documents: readonly DocumentDescriptor[];
+  readonly relations?: readonly SourceRelation[];
+  /** Undefined when the parent link cannot be resolved by the collection. */
+  readonly partOf?: SourceId;
   /** The record's frontmatter as read, for views that show arbitrary fields. */
   readonly properties?: Readonly<Record<string, unknown>>;
 }
 
+/**
+ * The `csl` value as read, for guarding a save against outside edits: the raw value even when
+ * invalid, and `null` when the record had none. `undefined` when the record was not read whole.
+ */
+export function loadedCitation(source: SourceSummary): unknown {
+  return source.properties ? (source.properties["csl"] ?? null) : source.citation;
+}
+
 export interface Source extends SourceSummary {
+  readonly cslProvenance?: CslProvenance;
   readonly body: string;
   readonly recordRevision: RecordRevision;
   readonly frontmatter: Readonly<Record<string, unknown>>;

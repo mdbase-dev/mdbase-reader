@@ -7,7 +7,8 @@ import {
 } from "@mdbase-reader/core";
 import { describe, expect, it } from "vitest";
 
-import { continueReadingSource, readingLocationLabel } from "./ContinueReading.js";
+import { continueReadingSource } from "./ContinueReading.js";
+import { readingLocationLabel } from "./reading-progress.js";
 import { searchExcerpt } from "./search-passages.js";
 import {
   createPane,

@@ -1,0 +1,19 @@
+{
+  "status": 200,
+  "body": [
+    {
+      "key": "C4QL5GM3",
+      "version": 0,
+      "itemType": "webpage",
+      "creators": [],
+      "tags": [],
+      "title": "AR6 Synthesis Report: Climate Change 2023",
+      "abstractNote": "Intergovernmental Panel on Climate Change",
+      "url": "https://www.ipcc.ch/report/ar6/syr/",
+      "language": "en",
+      "accessDate": "2026-10-23",
+      "shortTitle": "AR6 Synthesis Report",
+      "websiteTitle": "www.ipcc.ch"
+    }
+  ]
+}

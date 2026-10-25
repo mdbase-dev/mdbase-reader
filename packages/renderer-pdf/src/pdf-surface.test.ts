@@ -30,6 +30,7 @@ function runtimeFixture(): {
   return {
     runtime: {
       currentPageIndex: () => 2,
+      pageCount: () => Promise.resolve(20),
       goToPage,
       beginAreaSelection: vi.fn(),
       cancelAreaSelection,
@@ -84,6 +85,76 @@ const document = {
   mediaType: "application/pdf",
   url: "https://files.example/document.pdf",
 } as const;
+
+it("verifies annotation containment against real page count, not approximate location", async () => {
+  const fixture = runtimeFixture();
+  const surface = new EmbedPdfSurface(document, {
+    ...fixture.runtime,
+    pageCount: () => Promise.resolve(20),
+  });
+  const contains = surface.capabilities.annotationRange!.contains;
+  await expect(
+    contains({ kind: "pages", start: 2, end: 9 }, { position: { kind: "pdf", pageIndex: 2 } }),
+  ).resolves.toBe(true);
+  await expect(
+    contains({ kind: "pages", start: 2, end: 9 }, { position: { kind: "pdf", pageIndex: 10 } }),
+  ).resolves.toBe(false);
+  await expect(
+    contains({ kind: "pages", start: 2, end: 22 }, { position: { kind: "pdf", pageIndex: 3 } }),
+  ).resolves.toBeNull();
+  await expect(
+    contains(
+      { kind: "pages", start: 2, end: 9 },
+      { quote: { exact: "cross-page selection without exact geometry" } },
+    ),
+  ).resolves.toBeNull();
+  await surface.destroy();
+});
+
+describe("PDF source-part ranges", () => {
+  it("validates inclusive absolute chapter pages and measures only the chapter", async () => {
+    const fixture = runtimeFixture();
+    const surface = new EmbedPdfSurface(document, fixture.runtime);
+    const range = await surface.resolveReadingRange({ kind: "pages", start: 10, end: 19 });
+    expect(range.valid).toBe(true);
+    if (!range.valid) {
+      throw new Error(range.message);
+    }
+    expect(range.start).toEqual({ kind: "pdf", pageIndex: 10 });
+    expect(range.measure({ kind: "pdf", pageIndex: 9 })).toMatchObject({
+      position: "before",
+      progress: 0,
+    });
+    expect(range.measure({ kind: "pdf", pageIndex: 15 })).toMatchObject({
+      position: "inside",
+      progress: 0.5,
+    });
+    expect(range.measure({ kind: "pdf", pageIndex: 19 })).toMatchObject({
+      atEnd: true,
+      progress: 0.9,
+    });
+    expect(range.measure({ kind: "pdf", pageIndex: 20 })).toBeNull();
+    expect(fixture.goToPage).not.toHaveBeenCalled();
+    await expect(
+      surface.resolveReadingRange({ kind: "pages", start: 0, end: 20 }),
+    ).resolves.toMatchObject({ valid: false });
+    await expect(
+      surface.resolveReadingRange({ kind: "pages", start: 3, end: 2 }),
+    ).resolves.toMatchObject({ valid: false });
+    const single = await surface.resolveReadingRange({ kind: "pages", start: 0, end: 0 });
+    if (!single.valid) {
+      throw new Error(single.message);
+    }
+    expect(single.measure({ kind: "pdf", pageIndex: 0 })).toMatchObject({
+      progress: 0,
+      atEnd: true,
+    });
+    expect(single.measure({ kind: "pdf", pageIndex: 1 })).toMatchObject({
+      position: "after",
+      progress: 1,
+    });
+  });
+});
 
 describe("EmbedPdfSurface", () => {
   it("publishes activated saved annotations", () => {

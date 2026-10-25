@@ -3,10 +3,11 @@ import { Directory, Filesystem } from "@capacitor/filesystem";
 import { Preferences } from "@capacitor/preferences";
 import { pickBrowserFile } from "@mdbase-reader/platform";
 
-import type { KeyValueStorage, ReaderPlatform } from "@mdbase-reader/platform";
+import type { ListableStorage, ReaderPlatform } from "@mdbase-reader/platform";
 
-const storage: KeyValueStorage = {
+const storage: ListableStorage = {
   get: async (key) => (await Preferences.get({ key })).value,
+  keys: async (prefix) => (await Preferences.keys()).keys.filter((key) => key.startsWith(prefix)),
   set: async (key, value) => Preferences.set({ key, value }),
   remove: async (key) => Preferences.remove({ key }),
 };

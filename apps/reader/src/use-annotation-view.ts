@@ -75,6 +75,8 @@ export function useAnnotationViewExecution(
       })
       .catch((reason: unknown) => {
         if (!controller.signal.aborted) {
+          // eslint-disable-next-line no-console
+          console.warn("Annotation view fell back to Reader filtering", reason);
           setResult({
             view,
             gateway,
@@ -82,7 +84,8 @@ export function useAnnotationViewExecution(
             execution: {
               paths: null,
               ready: true,
-              problem: `${readerErrorMessage(reason, "mdbase could not run this view.")} Reader is applying its filters itself.`,
+              problem:
+                "This view couldn’t be applied by mdbase, so Reader is filtering here instead.",
             },
           });
         }

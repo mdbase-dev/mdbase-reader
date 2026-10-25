@@ -37,10 +37,7 @@ export function dockTabMenu(
   }
   if (tab && ["document", "note", "annotations"].includes(tab.view)) {
     items.push({
-      label:
-        tab.view === "document"
-          ? "Duplicate document in pane right"
-          : "Open another editor in pane right",
+      label: "Open beside",
       action: () => {
         dock.activate(panel.id);
         dock.beside(tab, "horizontal");

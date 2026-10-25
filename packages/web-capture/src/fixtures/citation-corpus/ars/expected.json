@@ -1,0 +1,16 @@
+{
+  "type": "article-newspaper",
+  "title": "Switch 2 security takes a hit as hackers unlock homebrew access",
+  "author": [
+    {
+      "family": "Orland",
+      "given": "Kyle"
+    }
+  ],
+  "issued": {
+    "date-parts": [[2026, 10, 22]]
+  },
+  "container-title": "Ars Technica",
+  "publisher": "Ars Technica",
+  "URL": "https://arstechnica.com/gaming/2026/10/switch-2-jailbreak-gives-hackers-new-ways-to-run-homebrew-and-mod-games/"
+}

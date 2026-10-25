@@ -1,0 +1,76 @@
+{
+  "status": 200,
+  "body": [
+    {
+      "key": "XCM7P8B5",
+      "version": 0,
+      "itemType": "journalArticle",
+      "creators": [
+        {
+          "firstName": "Heather A.",
+          "lastName": "Piwowar",
+          "creatorType": "author"
+        },
+        {
+          "firstName": "Roger S.",
+          "lastName": "Day",
+          "creatorType": "author"
+        },
+        {
+          "firstName": "Douglas B.",
+          "lastName": "Fridsma",
+          "creatorType": "author"
+        }
+      ],
+      "tags": [
+        {
+          "tag": "Citation analysis",
+          "type": 1
+        },
+        {
+          "tag": "Microarrays",
+          "type": 1
+        },
+        {
+          "tag": "Open data",
+          "type": 1
+        },
+        {
+          "tag": "Bibliometrics",
+          "type": 1
+        },
+        {
+          "tag": "Scientific publishing",
+          "type": 1
+        },
+        {
+          "tag": "Clinical trials (cancer treatment)",
+          "type": 1
+        },
+        {
+          "tag": "Cancers and neoplasms",
+          "type": 1
+        },
+        {
+          "tag": "Linear regression analysis",
+          "type": 1
+        }
+      ],
+      "title": "Sharing Detailed Research Data Is Associated with Increased Citation Rate",
+      "DOI": "10.1371/journal.pone.0000308",
+      "url": "https://journals.plos.org/plosone/article?id=10.1371/journal.pone.0000308",
+      "abstractNote": "BackgroundSharing research data provides benefit to the general scientific community, but the benefit is less obvious for the investigator who makes his or her data available.Principal FindingsWe examined the citation history of 85 cancer microarray clinical trial publications with respect to the availability of their data.",
+      "date": "2007-03-21",
+      "publicationTitle": "PLOS ONE",
+      "journalAbbreviation": "PLOS ONE",
+      "volume": "2",
+      "issue": "3",
+      "publisher": "Public Library of Science",
+      "pages": "e308",
+      "ISSN": "1932-6203",
+      "language": "en",
+      "libraryCatalog": "PLoS Journals",
+      "accessDate": "2026-10-23"
+    }
+  ]
+}

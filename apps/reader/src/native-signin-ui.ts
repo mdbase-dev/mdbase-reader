@@ -28,7 +28,7 @@ export const signInCopy = Object.freeze({
   openSignIn: "Open sign-in",
   interrupted: "Sign-in was interrupted. Please try again.",
   signOut: "Sign out",
-  unavailable: "Opening collections isn't available in this build yet.",
+  unavailable: "Opening collections isn’t available in this build yet.",
 });
 /** UI portal only. Navigation URI comes from the SDK. */
 export const openSignInPortal = openConnectPopup;

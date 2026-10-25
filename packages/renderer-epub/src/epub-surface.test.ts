@@ -113,6 +113,44 @@ describe("ReadiumEpubSurface", () => {
     expect(listener).toHaveBeenCalledWith(selection);
   });
 
+  it("resolves ranges without navigation or changing the absolute current location", async () => {
+    const fixture = runtimeFixture();
+    const resolution = {
+      valid: true as const,
+      start: { kind: "epub" as const, locator: { href: "chapter-2.xhtml" } },
+      measure: () => ({ position: "inside" as const, atEnd: false }),
+    };
+    const resolveReadingRange = vi.fn().mockResolvedValue(resolution);
+    const goTo = vi.fn(fixture.runtime.goTo);
+    const surface = new ReadiumEpubSurface(document, {
+      ...fixture.runtime,
+      resolveReadingRange,
+      goTo,
+    });
+    const before = surface.currentLocation();
+    const range = { kind: "epub-spine", start: "chapter-2.xhtml", end: "chapter-2.xhtml" } as const;
+    expect(await surface.resolveReadingRange(range)).toBe(resolution);
+    expect(resolveReadingRange).toHaveBeenCalledWith(range);
+    expect(surface.currentLocation()).toEqual(before);
+    expect(goTo).not.toHaveBeenCalled();
+    // Ranges never restrict ordinary navigation outside their boundaries.
+    expect(await surface.goTo(before)).toBe(true);
+    await surface.destroy();
+    expect((await surface.resolveReadingRange(range)).valid).toBe(false);
+    expect(resolveReadingRange).toHaveBeenCalledTimes(1);
+  });
+
+  it("reports unsupported runtimes instead of silently treating a range as whole-file", async () => {
+    const surface = new ReadiumEpubSurface(document, runtimeFixture().runtime);
+    expect(
+      await surface.resolveReadingRange({
+        kind: "epub-spine",
+        start: "chapter-1.xhtml",
+        end: "chapter-2.xhtml",
+      }),
+    ).toEqual({ valid: false, message: expect.any(String) });
+  });
+
   it("rejects non-EPUB destinations", async () => {
     const fixture = runtimeFixture();
     const surface = new ReadiumEpubSurface(document, fixture.runtime);

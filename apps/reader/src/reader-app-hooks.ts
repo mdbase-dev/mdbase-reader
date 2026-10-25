@@ -1,6 +1,7 @@
 import {
   applyThemePreference,
   loadThemePreference,
+  observeTheme,
   saveThemePreference,
   type ThemePreference,
 } from "@mdbase-dev/ui/theme";
@@ -8,6 +9,7 @@ import { useEffect, useMemo, useState } from "react";
 
 import { applyLibraryLens } from "./library-lenses.js";
 import { sortLibrarySources } from "./library-view-state.js";
+import { applyReaderThemeColor } from "./reader-theme-color.js";
 import { startReaderStartupTiming } from "./startup-timing.js";
 import {
   useAnnotationComposer,
@@ -18,6 +20,7 @@ import { useReadingResume, type ReadingResumeState } from "./use-reading-resume.
 import type { LibraryLensId } from "./library-lenses.js";
 import type { LibrarySort } from "./library-view-state.js";
 import type { ReaderWorkspaceController } from "./use-reader-workspace.js";
+import type { ReaderWorkspaceGateway } from "./workspace-model.js";
 import type { SourceId, SourceSummary } from "@mdbase-reader/core";
 import type { ReadingSurface } from "@mdbase-reader/reading-surface";
 
@@ -203,9 +206,16 @@ export function useLensFilteredSources(
 
 export function useThemePreference(): readonly [ThemePreference, (next: ThemePreference) => void] {
   const [theme, setTheme] = useState<ThemePreference>(() => loadThemePreference(localStorage));
-  useEffect(() => applyThemePreference(theme, document.documentElement), [theme]);
+  useEffect(() => {
+    const root = document.documentElement;
+    applyThemePreference(theme, root);
+    // The shared package writes its own chrome colour; Reader's canvas is warmer.
+    applyReaderThemeColor(root);
+    return observeTheme(() => applyReaderThemeColor(root), root);
+  }, [theme]);
   const change = (next: ThemePreference): void => {
     saveThemePreference(next, localStorage, document.documentElement);
+    applyReaderThemeColor(document.documentElement);
     setTheme(next);
   };
   return [theme, change];
@@ -214,9 +224,14 @@ export function useThemePreference(): readonly [ThemePreference, (next: ThemePre
 export function useReaderReadingResume(
   workspace: ReaderWorkspaceController,
   surface: ReadingSurface | null,
+  activeSourceId: SourceId | null,
 ): ReadingResumeState {
   return useReadingResume({
-    source: workspace.sourceRecord.status === "ready" ? workspace.sourceRecord.value : null,
+    source:
+      workspace.sourceRecord.status === "ready" &&
+      workspace.sourceRecord.value.id === activeSourceId
+        ? workspace.sourceRecord.value
+        : null,
     surface,
     save: workspace.saveReadingPosition,
   });
@@ -226,6 +241,7 @@ export function useReaderAnnotationComposer(
   workspace: ReaderWorkspaceController,
   sourceId: SourceId | null,
   surface: ReadingSurface | null,
+  gateway?: ReaderWorkspaceGateway,
 ): AnnotationComposerController {
   const source = workspace.sourceRecord.status === "ready" ? workspace.sourceRecord.value : null;
   return useAnnotationComposer({
@@ -233,8 +249,16 @@ export function useReaderAnnotationComposer(
     source: source?.id === sourceId ? source : null,
     surface,
     create: workspace.createAnnotation,
+    ...(workspace.annotationView
+      ? {
+          ownershipSources: workspace.annotationView.sources,
+          revealAnnotation: workspace.annotationView.reveal,
+        }
+      : {}),
+    ...(gateway ? { ownerGateway: gateway } : {}),
     annotations: workspace.annotations.status === "ready" ? workspace.annotations.value : [],
     planDeletion: workspace.planAnnotationDeletion,
     deleteAnnotation: workspace.deleteAnnotation,
+    recolorAnnotation: workspace.recolorAnnotation,
   });
 }

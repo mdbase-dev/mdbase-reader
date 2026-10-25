@@ -6,6 +6,7 @@ import {
   type CslItem,
 } from "@mdbase-reader/core";
 
+import { citoidUrl } from "./citoid-url.js";
 import { arxivIdentifier, doiFromText, doiFromUrl, resolveDoiCitation } from "./doi.js";
 import { cslFromZoteroItem } from "./zotero-csl.js";
 
@@ -107,6 +108,13 @@ async function citoidItems(
   kind: CitationResolutionRequest["kind"],
   options: CitationLookupOptions,
 ): Promise<Readonly<Record<string, unknown>>[]> {
+  if (kind === "url" || /^https?:\/\//iu.test(query)) {
+    const safeUrl = citoidUrl(query);
+    if (!safeUrl) {
+      throw new Error("This URL cannot be disclosed to the citation service.");
+    }
+    query = safeUrl;
+  }
   const fetcher = options.fetch ?? globalThis.fetch.bind(globalThis);
   const response = await fetcher(
     `${options.citoidEndpoint ?? WIKIMEDIA_CITOID_ENDPOINT}${encodeURIComponent(query)}`,

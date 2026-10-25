@@ -1,0 +1,111 @@
+{
+  "status": 200,
+  "body": {
+    "indexed": {
+      "date-parts": [[2026, 10, 23]],
+      "date-time": "2026-10-23T03:16:12Z",
+      "timestamp": 1792725372534,
+      "version": "4.5.0"
+    },
+    "publisher-location": "Morristown, NJ, USA",
+    "reference-count": 0,
+    "publisher": "Association for Computational Linguistics",
+    "content-domain": {
+      "domain": [],
+      "crossmark-restriction": false
+    },
+    "published-print": {
+      "date-parts": [[2001]]
+    },
+    "DOI": "10.3115/1073083.1073135",
+    "type": "proceedings-article",
+    "created": {
+      "date-parts": [[2007, 5, 11]],
+      "date-time": "2007-05-11T11:06:22Z",
+      "timestamp": 1178881582000
+    },
+    "page": "311",
+    "source": "Crossref",
+    "is-referenced-by-count": 10316,
+    "title": "BLEU",
+    "prefix": "10.3115",
+    "author": [
+      {
+        "given": "Kishore",
+        "family": "Papineni",
+        "sequence": "first",
+        "affiliation": [],
+        "role": [
+          {
+            "vocabulary": "crossref",
+            "role": "author"
+          }
+        ]
+      },
+      {
+        "given": "Salim",
+        "family": "Roukos",
+        "sequence": "additional",
+        "affiliation": [],
+        "role": [
+          {
+            "vocabulary": "crossref",
+            "role": "author"
+          }
+        ]
+      },
+      {
+        "given": "Todd",
+        "family": "Ward",
+        "sequence": "additional",
+        "affiliation": [],
+        "role": [
+          {
+            "vocabulary": "crossref",
+            "role": "author"
+          }
+        ]
+      },
+      {
+        "given": "Wei-Jing",
+        "family": "Zhu",
+        "sequence": "additional",
+        "affiliation": [],
+        "role": [
+          {
+            "vocabulary": "crossref",
+            "role": "author"
+          }
+        ]
+      }
+    ],
+    "member": "1643",
+    "event": "the 40th Annual Meeting",
+    "container-title": "Proceedings of the 40th Annual Meeting on Association for Computational Linguistics  - ACL '02",
+    "original-title": [],
+    "deposited": {
+      "date-parts": [[2013, 12, 16]],
+      "date-time": "2013-12-16T18:08:32Z",
+      "timestamp": 1387217312000
+    },
+    "score": 1,
+    "resource": {
+      "primary": {
+        "URL": "http://portal.acm.org/citation.cfm?doid=1073083.1073135"
+      }
+    },
+    "subtitle": ["a method for automatic evaluation of machine translation"],
+    "proceedings-subject": "Association for Computational Linguistics",
+    "short-title": [],
+    "issued": {
+      "date-parts": [[2001]]
+    },
+    "references-count": 0,
+    "URL": "http://dx.doi.org/10.3115/1073083.1073135",
+    "relation": {},
+    "subject": [],
+    "published": {
+      "date-parts": [[2001]]
+    }
+  }
+}

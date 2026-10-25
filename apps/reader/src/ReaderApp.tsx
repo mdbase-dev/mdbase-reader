@@ -1,11 +1,18 @@
-import { OpeningScreen } from "@mdbase-dev/ui/screens";
+import { ConnectLayout, OpeningScreen } from "@mdbase-dev/ui/screens";
 import { sourceId } from "@mdbase-reader/core";
 import { useCallback, useEffect, useState, type JSX } from "react";
 
+import { requestConfirmation } from "./confirmation.js";
+import {
+  connectionProblemDetail,
+  describeConnectionProblem,
+  libraryLoadFallback,
+} from "./connection-recovery.js";
 import { navigatorPanelId } from "./dockview-workspace-state.js";
+import { LibraryDocumentIndex } from "./LibraryDocumentIndex.js";
 import {
   useDocumentSurfaceTiming,
-  useReaderAnnotationComposer,
+  useReaderAnnotationComposer as useComposer,
   useReaderReadingResume,
   useReaderShortcuts,
   useThemePreference,
@@ -13,8 +20,10 @@ import {
 import { ReaderWorkspaceView, type ReaderWorkspaceViewModel } from "./ReaderWorkspaceView.js";
 import { updateSurface } from "./RenderedSourceDocument.js";
 import { SessionReadingLocations } from "./session-reading-locations.js";
+import { sourcePartCreationEnabled } from "./source-parts-features.js";
 import { SourceDeepLink } from "./SourceDeepLink.js";
 import { SourceLibraryContext } from "./SourceLibraryContext.js";
+import { SourcePartCreation } from "./SourcePartCreation.js";
 import { useBibliographyExport } from "./use-bibliography-export.js";
 import { useDeploymentUpdate } from "./use-deployment-update.js";
 import { useDirectAccess } from "./use-direct-access.js";
@@ -55,32 +64,50 @@ export function ReaderApp({
   saveFile,
 }: ReaderAppProps): JSX.Element {
   const workspace = useReaderWorkspace(gateway, initialSourceId ? sourceId(initialSourceId) : null);
+  if (workspace.library.status === "error") {
+    // The load failure is usually Connect's own wording; it waits behind Details.
+    const { message } = workspace.library;
+    return (
+      <ConnectLayout
+        app="reader"
+        title="Reader couldn’t load this collection"
+        error={describeConnectionProblem(message, libraryLoadFallback)}
+        detail={connectionProblemDetail(message, libraryLoadFallback)}
+      >
+        <button type="button" className="mdbase-button" onClick={workspace.retryLibrary}>
+          Try again
+        </button>
+      </ConnectLayout>
+    );
+  }
   if (workspace.library.status !== "ready") {
     return (
       <OpeningScreen
         app="reader"
         title="Opening your reading collection"
         detail="Loading the first sources; the rest of the library will load in the background"
-        error={workspace.library.status === "error" ? workspace.library.message : null}
-        onRetry={workspace.retryLibrary}
       />
     );
   }
   return (
-    <OpenedReaderApp
-      gateway={gateway}
-      initialSourceId={initialSourceId}
-      initialAnnotation={initialAnnotation}
-      {...(directAccess ? { directAccess } : {})}
-      workspace={workspace}
-      library={workspace.library.value}
-      {...(renderDocument ? { renderDocument } : {})}
-      {...(pickSourceFile ? { pickSourceFile } : {})}
-      {...(saveFile ? { saveFile } : {})}
-    />
+    <LibraryDocumentIndex library={workspace.library.value} gateway={gateway}>
+      <OpenedReaderApp
+        gateway={gateway}
+        initialSourceId={initialSourceId}
+        initialAnnotation={initialAnnotation}
+        {...(directAccess ? { directAccess } : {})}
+        workspace={workspace}
+        library={workspace.library.value}
+        {...(renderDocument ? { renderDocument } : {})}
+        {...(pickSourceFile ? { pickSourceFile } : {})}
+        {...(saveFile ? { saveFile } : {})}
+      />
+    </LibraryDocumentIndex>
   );
 }
 
+// Workspace composition preserves the existing focused sessions and controller ownership.
+// eslint-disable-next-line max-lines-per-function
 function OpenedReaderApp({
   gateway,
   initialSourceId = null,
@@ -122,16 +149,21 @@ function OpenedReaderApp({
     },
     [sessionLocations],
   );
-  const composer = useReaderAnnotationComposer(workspace, sourceWorkspace.activeSourceId, surface);
-  const readingResume = useReaderReadingResume(workspace, surface);
+  const composer = useComposer(workspace, sourceWorkspace.activeSourceId, surface, gateway);
+  const readingResume = useReaderReadingResume(workspace, surface, sourceWorkspace.activeSourceId);
   const decorationProblem = useDocumentDecorations(
     surface,
     workspace.annotations,
     composer.activeAnnotationId,
   );
-  const sourceAddition = useSourceAddition(workspace, pickSourceFile, (sourceId) => {
-    sourceWorkspace.open(sourceId);
-  });
+  const sourceAddition = useSourceAddition(
+    workspace,
+    pickSourceFile,
+    (sourceId) => {
+      sourceWorkspace.open(sourceId);
+    },
+    sourcePartCreationEnabled ? gateway : undefined,
+  );
   const documentAttachment = useDocumentAttachment(workspace, pickSourceFile);
   const bibliographyExport = useBibliographyExport(library.sources, saveFile);
   const sourceExport = useSourceExport({
@@ -190,16 +222,25 @@ function OpenedReaderApp({
   } satisfies ReaderWorkspaceViewModel;
   return (
     <SourceLibraryContext value={library.sources}>
-      <SourceDeepLink
-        id={initialSourceId}
-        annotation={initialAnnotation}
-        library={library}
-        open={sourceWorkspace.open}
-        activeSourceId={sourceWorkspace.activeSourceId}
-        annotations={workspace.annotations}
-        openAnnotation={composer.open}
-      />
-      <ReaderWorkspaceView model={model} />
+      <SourcePartCreation
+        enabled={sourcePartCreationEnabled}
+        gateway={gateway}
+        onCreated={(source) => {
+          workspace.reconcileSource(source);
+          workspace.retryLibrary();
+        }}
+      >
+        <SourceDeepLink
+          id={initialSourceId}
+          annotation={initialAnnotation}
+          library={library}
+          open={sourceWorkspace.open}
+          activeSourceId={sourceWorkspace.activeSourceId}
+          annotations={workspace.annotations}
+          openAnnotation={composer.open}
+        />
+        <ReaderWorkspaceView model={model} />
+      </SourcePartCreation>
     </SourceLibraryContext>
   );
 }
@@ -226,12 +267,15 @@ function useRestoredSourceWorkspace(
   });
 }
 
-function confirmCloseDirtyTab(): boolean {
-  // Native confirmation keeps tab and pane closing synchronous with the workspace action.
-  // eslint-disable-next-line no-alert
-  return globalThis.confirm(
-    "Close this tab with unsaved changes? Keep it open until saving finishes to avoid losing work.",
-  );
+function confirmCloseDirtyTab(): Promise<boolean> {
+  return requestConfirmation({
+    title: "Close this tab?",
+    message:
+      "This tab has unsaved changes. Keep it open until saving finishes to avoid losing work.",
+    confirmLabel: "Close anyway",
+    cancelLabel: "Keep open",
+    danger: true,
+  });
 }
 
 function focusLibrarySearch(): void {

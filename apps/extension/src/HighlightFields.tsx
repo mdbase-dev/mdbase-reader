@@ -1,11 +1,13 @@
+import { highlightPalette, offeredHighlightColor } from "@mdbase-reader/core";
 import { useEffect, useRef, useState } from "react";
 
 import { displayQuote } from "./highlight-body.js";
-import { highlightColors, type CaptureDraft } from "./save-capture.js";
 import { modifierKey, saveBlocker } from "./SaveBar.js";
 import { TagInput } from "./TagInput.js";
 
 import type { ExtensionCaptureController } from "./capture-controller.js";
+import type { CaptureDraft } from "./save-capture.js";
+import type { HighlightColorKey } from "@mdbase-reader/core";
 
 /**
  * The selected passage and how to save it; follows the page selection live. Top to bottom
@@ -25,6 +27,9 @@ export function HighlightFields({
   const intent = c.invocation;
   const blocker = saveBlocker(c);
   const { save, clearSelection } = c;
+  const { colors } = c.highlight;
+  // The colour used last, or the first the collection offers while that one is hidden.
+  const last = offeredHighlightColor(c.draft.color, colors);
   useEffect(() => {
     if (intent?.intent === "note" || openDetails) {
       comment.current?.focus();
@@ -34,7 +39,8 @@ export function HighlightFields({
     if (!selection) {
       return;
     }
-    // 1–5 save in that colour and Esc lets the passage go, unless the reader is typing.
+    // 1, 2, 3… save in the colour at that place and Esc lets the passage go, unless the
+    // reader is typing.
     const onKeyDown = (event: KeyboardEvent): void => {
       if (event.defaultPrevented || event.altKey || event.ctrlKey || event.metaKey) {
         return;
@@ -45,7 +51,7 @@ export function HighlightFields({
       ) {
         return;
       }
-      const color = highlightColors[Number(event.key) - 1];
+      const color = colors[Number(event.key) - 1];
       if (color && ready) {
         event.preventDefault();
         void save({ highlight: true, color });
@@ -56,7 +62,7 @@ export function HighlightFields({
     };
     document.addEventListener("keydown", onKeyDown);
     return () => document.removeEventListener("keydown", onKeyDown);
-  }, [clearSelection, ready, save, selection]);
+  }, [clearSelection, colors, ready, save, selection]);
   if (!selection) {
     return null;
   }
@@ -111,22 +117,43 @@ export function HighlightFields({
           Clear
         </button>
       </div>
-      <div className="colors" role="group" aria-labelledby="highlight-colors">
-        {highlightColors.map((color, index) => (
+      <ColorSwatches controller={c} last={last} ready={ready} />
+      {blocker ? <p className="hint">{blocker}</p> : null}
+    </section>
+  );
+}
+
+/** The collection's colours, in its order: each saves the passage in that colour. */
+function ColorSwatches({
+  controller: c,
+  last,
+  ready,
+}: {
+  readonly controller: ExtensionCaptureController;
+  readonly last: HighlightColorKey;
+  readonly ready: boolean;
+}): React.JSX.Element {
+  const { colors, meanings } = c.highlight;
+  return (
+    <div className="colors" role="group" aria-labelledby="highlight-colors">
+      {colors.map((color, index) => {
+        const meaning = meanings[color];
+        const name = highlightPalette[color].label.toLowerCase();
+        return (
           <button
             key={color}
             type="button"
-            className={`swatch swatch-${color}${c.draft.color === color ? " is-last" : ""}`}
+            className={`swatch swatch-${color}${last === color ? " is-last" : ""}`}
             aria-keyshortcuts={String(index + 1)}
-            title={`Save in ${color} (${String(index + 1)}${c.draft.color === color ? `, or ${modifierKey()}+Enter` : ""})`}
+            {...(meaning ? { "aria-label": `${name}, ${meaning}` } : {})}
+            title={`Save in ${name}${meaning ? ` — ${meaning}` : ""} (${String(index + 1)}${last === color ? `, or ${modifierKey()}+Enter` : ""})`}
             disabled={!ready}
             onClick={() => void c.save({ highlight: true, color })}
           >
             {color}
           </button>
-        ))}
-      </div>
-      {blocker ? <p className="hint">{blocker}</p> : null}
-    </section>
+        );
+      })}
+    </div>
   );
 }

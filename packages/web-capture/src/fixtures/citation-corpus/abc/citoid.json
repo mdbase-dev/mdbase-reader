@@ -1,0 +1,57 @@
+{
+  "status": 200,
+  "body": [
+    {
+      "key": "D4Q8TD4S",
+      "version": 0,
+      "itemType": "newspaperArticle",
+      "creators": [],
+      "tags": [
+        {
+          "tag": "bega high school",
+          "type": 1
+        },
+        {
+          "tag": "tura beach",
+          "type": 1
+        },
+        {
+          "tag": "bega",
+          "type": 1
+        },
+        {
+          "tag": "ritchie faulkner",
+          "type": 1
+        },
+        {
+          "tag": "edward mccoid",
+          "type": 1
+        },
+        {
+          "tag": "edward james mccoid",
+          "type": 1
+        },
+        {
+          "tag": "drunk driving",
+          "type": 1
+        },
+        {
+          "tag": "fatal crash",
+          "type": 1
+        },
+        {
+          "tag": "merimbula",
+          "type": 1
+        }
+      ],
+      "title": "Court jails man for six years for killing friend in drunk driving crash",
+      "date": "2026-10-23",
+      "url": "https://www.abc.net.au/news/2026-10-23/edward-james-mccoid-drunk-driving-tura-beach/107302120",
+      "abstractNote": "The family of a former high school teacher who died from injuries sustained in a Tura Beach car crash last year have described him as \"a friend to everyone\".",
+      "language": "en-AU",
+      "libraryCatalog": "www.abc.net.au",
+      "accessDate": "2026-10-23",
+      "publicationTitle": "ABC News"
+    }
+  ]
+}

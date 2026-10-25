@@ -1,18 +1,30 @@
+import { documentRangePatch, sourcePartOfPatch } from "@mdbase-reader/connect";
 import {
   annotationId,
+  CitationChangedElsewhereError,
   citekeyForCitation,
   collectionId,
+  cslValuesEqual,
   dateTime,
   fileId,
   fileRevision,
+  loadedCitation,
+  parseCslProvenance,
   recordRevision,
   sourceId,
+  sourceLink,
+  parseSourceRelations,
+  validateSourcePartChain,
+  type DocumentRange,
+  type DocumentDescriptor,
+  type FileRevision,
   validateCslItem,
   type Annotation,
   type AnnotationCreationRequest,
   type AnnotationDeletionPlan,
   type CitationCandidate,
   type CitationResolutionRequest,
+  type CslProvenance,
   type FileId,
   type ReadingPosition,
   type ReadingStatus,
@@ -23,9 +35,11 @@ import {
   type SourceRecordCreationRequest,
   type SourceSummary,
 } from "@mdbase-reader/core";
-import { lazy, Suspense, useMemo, type JSX } from "react";
+import { Suspense, useMemo, type JSX } from "react";
 
+import { captureCitationProvenance } from "./capture-citation-provenance.js";
 import { CollectionSwitchingContext, type CollectionSwitching } from "./CollectionPicker.js";
+import { HtmlViewerSurface, PdfViewerSurface } from "./document-renderers.js";
 import {
   applyLibraryViewConfiguration,
   defaultLibraryView,
@@ -35,6 +49,7 @@ import {
   type MdbaseLibraryView,
 } from "./mdbase-library-views.js";
 import { ReaderApp } from "./ReaderApp.js";
+import { requestedAnnotation, requestedSourceId } from "./SourceDeepLink.js";
 
 import type { ReaderLibrarySnapshot, ReaderWorkspaceGateway } from "./workspace-model.js";
 import type { ReadingSurface, SurfaceDocument } from "@mdbase-reader/reading-surface";
@@ -60,6 +75,15 @@ const sources: readonly Source[] = [
     creators: ["William James"],
     tags: ["psychology", "attention"],
     citation: previewCitation,
+    cslProvenance: {
+      title: {
+        value: previewCitation.title,
+        source: "page:html",
+        agreed: ["page:json-ld name", "h1"],
+        rejected: [{ value: "Psychology", from: "page:json-ld headline" }],
+      },
+      language: { value: "en", source: "page:json-ld" },
+    },
     readingStatus: "reading",
     reading: {
       status: "reading",
@@ -136,6 +160,43 @@ const sources: readonly Source[] = [
   },
 ];
 
+function previewAnthology(): readonly Source[] {
+  const document = {
+    fileId: fileId("file_anthology_pdf"),
+    file: "[[files/anthology.pdf]]",
+    revision: fileRevision("sha256:aa0000"),
+    mediaType: "application/pdf",
+    role: "primary",
+  };
+  const book: Source = {
+    collectionId: collection,
+    id: sourceId("src_anthology"),
+    path: "sources/anthology.md",
+    title: "An anthology of attention",
+    creators: ["Various authors"],
+    tags: [],
+    documents: [document],
+    body: "A book shared by its chapters.",
+    recordRevision: recordRevision("preview-anthology"),
+    frontmatter: {},
+  };
+  return [
+    book,
+    ...[0, 1].map((index): Source => ({
+      ...book,
+      id: sourceId(`src_anthology_chapter_${String(index + 1)}`),
+      path: `sources/anthology-chapter-${String(index + 1)}.md`,
+      title: `Chapter ${String(index + 1)}`,
+      partOf: book.id,
+      relations: [{ relation: "part-of", target: sourceLink(book) }],
+      documents: [
+        { ...document, range: { kind: "pages", start: index * 10, end: index * 10 + 9 } },
+      ],
+      recordRevision: recordRevision(`preview-anthology-${String(index + 1)}`),
+    })),
+  ];
+}
+
 const annotations: readonly Annotation[] = [
   {
     collectionId: collection,
@@ -186,8 +247,38 @@ const annotations: readonly Annotation[] = [
 ];
 
 export class PreviewGateway implements ReaderWorkspaceGateway {
-  #sources = sources.map(withRecordFrontmatter);
-  #annotations = [...annotations];
+  #sources = [...sources, ...previewAnthology()].map(withRecordFrontmatter);
+  #partRevision = 0;
+  #annotations = [
+    ...annotations,
+    ...previewAnthology().map((source, index): Annotation => ({
+      collectionId: collection,
+      id: annotationId(`ann_anthology_${String(index)}`),
+      path: `annotations/ann_anthology_${String(index)}.md`,
+      recordRevision: recordRevision(`preview-ann-${String(index)}`),
+      sourceId: source.id,
+      source: sourceLink(source),
+      ...(source.documents[0] ? { document: source.documents[0] } : {}),
+      annotationType: "bookmark",
+      target: { position: { kind: "pdf", pageIndex: index === 2 ? 10 : 0 } },
+      tags: [],
+      body: `An annotation saved to ${source.title}.`,
+      createdAt: dateTime("2026-08-10T09:40:00+10:00"),
+    })),
+  ];
+  #annotationRevision = 0;
+  #annotationListeners = new Set<() => void>();
+  subscribeAnnotationCounts = (listener: () => void): (() => void) => {
+    this.#annotationListeners.add(listener);
+    return () => {
+      this.#annotationListeners.delete(listener);
+    };
+  };
+  annotationCountsRevision = (): number => this.#annotationRevision;
+  #annotationsChanged(): void {
+    this.#annotationRevision++;
+    this.#annotationListeners.forEach((listener) => listener());
+  }
   #views: MdbaseLibraryView[] = [
     defaultLibraryView,
     {
@@ -267,6 +358,31 @@ export class PreviewGateway implements ReaderWorkspaceGateway {
   annotations(id: SourceId): Promise<readonly Annotation[]> {
     return Promise.resolve(this.#annotations.filter(({ sourceId: source }) => source === id));
   }
+  annotationsForSources(ids: ReadonlySet<SourceId>): Promise<readonly Annotation[]> {
+    return Promise.resolve(this.#annotations.filter(({ sourceId }) => ids.has(sourceId)));
+  }
+  moveAnnotationOwner(annotation: Annotation, owner: Source): Promise<Annotation> {
+    const current = this.#annotations.find(({ id }) => id === annotation.id);
+    if (
+      !current ||
+      !annotation.recordRevision ||
+      current.recordRevision !== annotation.recordRevision
+    ) {
+      return Promise.reject(
+        new Error("The annotation changed elsewhere. Refresh before moving it."),
+      );
+    }
+    const updated = {
+      ...current,
+      sourceId: owner.id,
+      source: sourceLink(owner),
+      modifiedAt: dateTime(new Date().toISOString()),
+      recordRevision: recordRevision(`preview-move-${String(++this.#partRevision)}`),
+    };
+    this.#annotations = this.#annotations.map((item) => (item.id === updated.id ? updated : item));
+    this.#annotationsChanged();
+    return Promise.resolve(updated);
+  }
   allAnnotations(): Promise<readonly Annotation[]> {
     return Promise.resolve([...this.#annotations]);
   }
@@ -281,18 +397,44 @@ export class PreviewGateway implements ReaderWorkspaceGateway {
     this.#sources = this.#sources.map((item) => (item.id === source.id ? { ...item, body } : item));
     return Promise.resolve(this.#sources.find((item) => item.id === source.id) ?? source);
   }
-  saveSourceCitation(source: Source, citation: unknown): Promise<Source> {
+  saveSourceCitation(
+    source: Source,
+    citation: unknown,
+    options: Parameters<ReaderWorkspaceGateway["saveSourceCitation"]>[2] = {},
+  ): Promise<Source> {
+    const current = this.#sources.find((item) => item.id === source.id) ?? source;
+    if (
+      "expectedCitation" in options &&
+      !cslValuesEqual(loadedCitation(current) ?? null, options.expectedCitation ?? null)
+    ) {
+      return Promise.reject(
+        new CitationChangedElsewhereError(
+          loadedCitation(current),
+          current.cslProvenance ?? parseCslProvenance(current.frontmatter["csl-provenance"]),
+        ),
+      );
+    }
     const validation = validateCslItem(citation);
     if (!validation.valid) {
       return Promise.reject(new Error("The preview citation is invalid."));
     }
     const updated: Source = {
-      ...source,
+      ...current,
       citation: validation.item,
-      frontmatter: { ...source.frontmatter, csl: validation.item },
+      ...(options.provenance ? { cslProvenance: options.provenance } : {}),
+      frontmatter: {
+        ...current.frontmatter,
+        csl: validation.item,
+        ...(options.provenance ? { "csl-provenance": options.provenance } : {}),
+      },
     };
-    this.#sources = this.#sources.map((item) => (item.id === source.id ? updated : item));
-    return Promise.resolve(updated);
+    if (options.provenance !== undefined && Object.keys(options.provenance).length === 0) {
+      Reflect.deleteProperty(updated.frontmatter, "csl-provenance");
+      Reflect.deleteProperty(updated, "cslProvenance");
+    }
+    const saved: Source = { ...updated, properties: updated.frontmatter };
+    this.#sources = this.#sources.map((item) => (item.id === source.id ? saved : item));
+    return Promise.resolve(saved);
   }
   resolveCitation(request: CitationResolutionRequest): Promise<CitationCandidate> {
     return Promise.resolve({
@@ -321,7 +463,7 @@ export class PreviewGateway implements ReaderWorkspaceGateway {
     return Promise.reject(new Error("Preview files cannot be exported."));
   }
   importSourceFile(_request: Omit<SourceFileImportRequest, "collectionId">): Promise<Source> {
-    return Promise.reject(new Error("File import is unavailable in the interface preview."));
+    return Promise.reject(new Error("Adding a file is unavailable in the interface preview."));
   }
   /** Sources without a document need no file storage, so the preview can hold them. */
   createSource(request: Omit<SourceRecordCreationRequest, "collectionId">): Promise<Source> {
@@ -347,19 +489,27 @@ export class PreviewGateway implements ReaderWorkspaceGateway {
   saveNewSourceCitation(
     source: Source,
     citation: Readonly<Record<string, unknown>>,
+    provenance?: CslProvenance,
   ): Promise<Source> {
-    return this.saveSourceCitation(source, {
-      ...citation,
-      id: citekeyForCitation(citation, this.#sources, source.id),
-    });
+    return this.saveSourceCitation(
+      source,
+      { ...citation, id: citekeyForCitation(citation, this.#sources, source.id) },
+      provenance !== undefined
+        ? { provenance: captureCitationProvenance(citation, provenance) }
+        : {},
+    );
   }
   createAnnotation(request: AnnotationCreationRequest): Promise<Annotation> {
+    const id = annotationId(`preview-${String(this.#annotations.length + 1)}`);
     const annotation: Annotation = {
       ...request,
-      id: annotationId(`preview-${String(this.#annotations.length + 1)}`),
+      id,
+      path: `annotations/${id}.md`,
+      recordRevision: recordRevision(`preview-created-${id}`),
       createdAt: dateTime(new Date().toISOString()),
     };
     this.#annotations.unshift(annotation);
+    this.#annotationsChanged();
     return Promise.resolve(annotation);
   }
   updateAnnotation(annotation: Annotation, body: string): Promise<Annotation> {
@@ -371,6 +521,20 @@ export class PreviewGateway implements ReaderWorkspaceGateway {
     this.#annotations = this.#annotations.map((candidate) =>
       candidate.id === updated.id ? updated : candidate,
     );
+    this.#annotationsChanged();
+    return Promise.resolve(updated);
+  }
+  setAnnotationColor(annotation: Annotation, color: string): Promise<Annotation> {
+    const updated = {
+      ...annotation,
+      color,
+      modifiedAt: dateTime(new Date().toISOString()),
+      recordRevision: recordRevision(`preview-color-${String(++this.#partRevision)}`),
+    };
+    this.#annotations = this.#annotations.map((candidate) =>
+      candidate.id === updated.id ? updated : candidate,
+    );
+    this.#annotationsChanged();
     return Promise.resolve(updated);
   }
   planAnnotationDeletion(annotation: Annotation): Promise<AnnotationDeletionPlan> {
@@ -385,6 +549,7 @@ export class PreviewGateway implements ReaderWorkspaceGateway {
   }
   deleteAnnotation(annotation: Annotation): Promise<void> {
     this.#annotations = this.#annotations.filter((candidate) => candidate.id !== annotation.id);
+    this.#annotationsChanged();
     return Promise.resolve();
   }
   planSourceRemoval(id: SourceId): Promise<SourceDeletionPlan> {
@@ -403,6 +568,7 @@ export class PreviewGateway implements ReaderWorkspaceGateway {
   }
   removeSource(plan: SourceDeletionPlan): Promise<void> {
     this.#sources = this.#sources.filter((item) => item.id !== plan.sourceId);
+    this.#annotationsChanged();
     return Promise.resolve();
   }
   transcludeAnnotation(source: Source, annotation: Annotation): Promise<Source> {
@@ -411,10 +577,99 @@ export class PreviewGateway implements ReaderWorkspaceGateway {
   }
   saveReadingPosition(
     source: Source,
-    _documentFileId: FileId,
-    _position: ReadingPosition,
+    documentFileId: FileId,
+    position: ReadingPosition,
+    progress?: number | null,
   ): Promise<Source> {
-    return Promise.resolve(source);
+    const current = this.#sources.find((item) => item.id === source.id) ?? source;
+    const reading = {
+      ...current.reading,
+      status: current.reading?.status ?? "reading",
+      documentFileId,
+      position,
+    };
+    if (progress !== undefined) {
+      Reflect.deleteProperty(reading, "progress");
+    }
+    const updated: Source = {
+      ...current,
+      reading: {
+        ...reading,
+        ...(typeof progress === "number" ? { progress } : {}),
+      },
+    };
+    this.#sources = this.#sources.map((item) => (item.id === source.id ? updated : item));
+    return Promise.resolve(updated);
+  }
+  sourceParts(id: SourceId): Promise<readonly SourceSummary[]> {
+    return Promise.resolve(this.#sources.filter((source) => source.partOf === id));
+  }
+  async setSourcePartOf(source: Source, parentId: SourceId | null): Promise<Source> {
+    const current = await this.#guardPartWrite(source);
+    const parent = parentId ? await this.source(parentId) : null;
+    if (parentId && !parent) {
+      throw new Error("Parent source not found.");
+    }
+    const rest = { ...current };
+    Reflect.deleteProperty(rest, "partOf");
+    const proposed: Source = { ...rest, ...(parentId ? { partOf: parentId } : {}) };
+    const chain = validateSourcePartChain(
+      source.id,
+      new Map(this.#sources.map((item) => [item.id, item.id === source.id ? proposed : item])),
+    );
+    if (chain.problem) {
+      throw new Error(`Invalid part-of relation: ${chain.problem}.`);
+    }
+    const frontmatter = {
+      ...current.frontmatter,
+      ...sourcePartOfPatch(current.frontmatter, parent ? sourceLink(parent) : null),
+    };
+    if (frontmatter["relations"] === null) {
+      Reflect.deleteProperty(frontmatter, "relations");
+    }
+    return this.#savePartWrite({
+      ...proposed,
+      relations: parseSourceRelations(frontmatter["relations"]),
+      frontmatter,
+      properties: frontmatter,
+    });
+  }
+  async setDocumentRange(
+    source: Source,
+    id: FileId,
+    revision: FileRevision,
+    range: DocumentRange | null,
+  ): Promise<Source> {
+    const current = await this.#guardPartWrite(source);
+    const frontmatter = {
+      ...current.frontmatter,
+      ...documentRangePatch(current.frontmatter, id, revision, range),
+    };
+    const documents = current.documents.map((document) => {
+      if (document.fileId !== id) {
+        return document;
+      }
+      const rest = { ...document };
+      Reflect.deleteProperty(rest, "range");
+      return { ...rest, ...(range ? { range } : {}) };
+    });
+    return this.#savePartWrite({ ...current, documents, frontmatter, properties: frontmatter });
+  }
+  async #guardPartWrite(source: Source): Promise<Source> {
+    const current = await this.source(source.id);
+    if (current?.recordRevision !== source.recordRevision) {
+      throw new Error("Source revision changed.");
+    }
+    return current;
+  }
+  #savePartWrite(source: Source): Source {
+    const updated = {
+      ...source,
+      recordRevision: recordRevision(`preview-part-${String(++this.#partRevision)}`),
+    };
+    this.#sources = this.#sources.map((item) => (item.id === source.id ? updated : item));
+    this.#annotationsChanged();
+    return updated;
   }
   saveSourceFields(id: SourceId, fields: Readonly<Record<string, unknown>>): Promise<Source> {
     const source = this.#sources.find((item) => item.id === id);
@@ -465,11 +720,6 @@ export class PreviewGateway implements ReaderWorkspaceGateway {
   }
 }
 
-const HtmlViewerSurface = lazy(async () => {
-  const module = await import("@mdbase-reader/renderer-html");
-  return { default: module.HtmlViewerSurface };
-});
-
 const previewHtml = `<!doctype html><html lang="en"><head><title>The Principles of Psychology</title></head><body>
 <article>
 <h1>Chapter XI. Attention</h1>
@@ -493,6 +743,10 @@ function PreviewDocument({
     () => ({ document: previewDocument, mediaType: "text/html", url: previewUrl }),
     [],
   );
+  const descriptor = source.documents[0];
+  if (descriptor?.fileId === fileId("file_anthology_pdf")) {
+    return <PreviewAnthologyDocument descriptor={descriptor} onSurfaceChange={onSurfaceChange} />;
+  }
   if (source.id !== sourceId("src_james")) {
     return (
       <div className="preview-document">
@@ -521,12 +775,40 @@ function PreviewDocument({
   );
 }
 
+function PreviewAnthologyDocument({
+  descriptor,
+  onSurfaceChange,
+}: {
+  readonly descriptor: DocumentDescriptor;
+  readonly onSurfaceChange: (surface: ReadingSurface | null) => void;
+}): JSX.Element {
+  const document = useMemo<SurfaceDocument>(
+    () => ({
+      document: descriptor,
+      mediaType: "application/pdf",
+      url: "/fixtures/anthology.pdf",
+    }),
+    [descriptor],
+  );
+  return (
+    <Suspense fallback={<p>Preparing anthology…</p>}>
+      <PdfViewerSurface
+        className="pdf-viewer"
+        document={document}
+        onSurfaceReady={onSurfaceChange}
+      />
+    </Suspense>
+  );
+}
+
 export function PreviewReader(): JSX.Element {
   const gateway = useMemo(() => new PreviewGateway(), []);
   return (
     <CollectionSwitchingContext value={previewCollections}>
       <ReaderApp
         gateway={gateway}
+        initialSourceId={requestedSourceId(location.href, collection)}
+        initialAnnotation={requestedAnnotation(location.href, collection)}
         renderDocument={(source, onSurfaceChange) => (
           <PreviewDocument source={source} onSurfaceChange={onSurfaceChange} />
         )}
@@ -569,6 +851,15 @@ function withRecordFrontmatter(source: Source): Source {
     ...(source.creators.length ? { authors: source.creators } : {}),
     ...(source.published !== undefined ? { published: source.published } : {}),
     ...(source.url ? { url: source.url } : {}),
+    documents: source.documents.map((document) => ({
+      file_id: document.fileId,
+      file: document.file,
+      revision: document.revision,
+      role: document.role,
+      media_type: document.mediaType,
+      ...(document.range ? { range: document.range } : {}),
+    })),
+    ...(source.relations ? { relations: source.relations } : {}),
     ...source.properties,
     ...source.frontmatter,
   };

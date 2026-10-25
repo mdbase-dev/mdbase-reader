@@ -1,0 +1,12 @@
+{
+  "url": "https://ideas.repec.org/p/nbr/nberwo/11416.html",
+  "retrievedAt": "2026-10-23T10:32:39.527212+00:00",
+  "notes": [
+    "Original reduced reproduction of fetched public HTML; retained citation metadata order/duplicates, canonical, HTML language, citation-related JSON-LD and relevant title/byline/date wrappers. Omitted prose, descriptions, images, references, styles, tracking and executable scripts. Raw downloads stay in gitignored .scratch/corpus/expand; helpers outside download directories ran with python3 -I. No downloaded content was executed.",
+    "Page HTTP status: 200. Requested and final URL: https://ideas.repec.org/p/nbr/nberwo/11416.html -> https://ideas.repec.org/p/nbr/nberwo/11416.html. Captured 2026-10-23T10:32:39.527212+00:00; original 63570 bytes, reduced HTML 2250 bytes before formatting.",
+    "Recorded citoid HTTP 200 at 2026-10-23T10:37:05.737309+00:00; request https://en.wikipedia.org/api/rest_v1/data/citation/zotero/https%3A%2F%2Fideas.repec.org%2Fp%2Fnbr%2Fnberwo%2F11416.html. Raw response dialect retained; only long abstracts shortened to first sentence.",
+    "Ground truth independently checked against publisher citation https://www.nber.org/papers/w11416 and DOI 10.3386/w11416 (verification responses retained in .scratch/corpus/expand/repec-working-paper). Publisher displays Working Paper 11416, Issue Date June 2005 and David G. Blanchflower / Andrew J. Oswald. Cite the working paper, not its Australian Economic Review published version. Month precision follows the visible issue date and DOI record; the NBER head additionally specifies 20 June.",
+    "RePEc Suggested Citation agrees on title, authors, year and report number. Its citation_journal_title and ScholarlyArticle graph misleadingly describe a report as a journal article; its generic date 2005-02-02 disagrees with citation_publication_date 2005/06. Publisher name follows NBER own citation/DOI rather than RePEc legal suffix Inc. No discoverable DOI in captured page metadata: DOI verification is not replayed as a successful lookup.",
+    "Claims/resolver replay at 9128f240fb905807949f035d7ee0aae77f6a07cf: page-only wrong fields: type, author, issued, publisher, DOI, URL; with recorded remotes: type, publisher, DOI, URL. Pinned in citation-corpus-replay.test.ts; expected CSL was hand-catalogued independently before replay."
+  ]
+}

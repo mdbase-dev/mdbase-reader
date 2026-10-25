@@ -99,6 +99,31 @@ export async function buildEpubManifest(
   };
 }
 
+/**
+ * The package's cover image, named by EPUB 3's `cover-image` property or EPUB 2's
+ * `<meta name="cover">`, when it is an image. Reads only the container and package document.
+ */
+export async function epubCoverImage(
+  reader: EpubPackageReader,
+): Promise<{ readonly path: string; readonly mediaType: string } | null> {
+  const packagePath = await packageDocumentPath(reader);
+  const packageRoot = object(object(parser.parse(await reader.readText(packagePath)))?.["package"]);
+  const coverId = coverItemId(object(packageRoot?.["metadata"]));
+  const items = asArray(object(packageRoot?.["manifest"])?.["item"]).flatMap((value) => {
+    try {
+      return [packageItem(value, packagePath)];
+    } catch {
+      return [];
+    }
+  });
+  const cover =
+    items.find((item) => item.properties.includes("cover-image")) ??
+    items.find((item) => item.id === coverId);
+  return cover?.mediaType.startsWith("image/")
+    ? { path: cover.path, mediaType: cover.mediaType }
+    : null;
+}
+
 export async function packageDocumentPath(reader: EpubPackageReader): Promise<string> {
   const container = object(parser.parse(await reader.readText("META-INF/container.xml")));
   const roots = object(object(container?.["container"])?.["rootfiles"]);

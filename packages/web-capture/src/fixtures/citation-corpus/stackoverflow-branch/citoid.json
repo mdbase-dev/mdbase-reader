@@ -1,0 +1,14 @@
+{
+  "status": 200,
+  "body": [
+    {
+      "url": "https://stackoverflow.com/questions/2003505/how-do-i-delete-a-git-branch-locally-and-remotely",
+      "itemType": "webpage",
+      "websiteTitle": "Stack Overflow",
+      "title": "How do I delete a Git branch locally and remotely?",
+      "abstractNote": "Failed Attempts to Delete a Remote Branch:\n$ git branch -d remotes/origin/bugfix\nerror: branch 'remotes/origin/bugfix' not found.",
+      "language": "en",
+      "accessDate": "2026-10-23"
+    }
+  ]
+}

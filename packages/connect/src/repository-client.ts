@@ -1,4 +1,9 @@
 import { readerDiagnostics } from "./diagnostics.js";
+import {
+  validationIssueSummary,
+  type ConnectValidationIssue,
+  type ReaderConnectProblem,
+} from "./validation-issues.js";
 
 import type {
   ConnectOutcome,
@@ -25,12 +30,81 @@ import type { ReaderRequestOptions } from "@mdbase-reader/core";
 
 export const readerConnectBulkConcurrency = 4;
 
+/** How far a create had got when the client returned it. */
+export interface ReaderCreateReceipt {
+  readonly mutationId: string;
+  /**
+   * `confirmed`: at a log position. `pending`: kept on this device and not yet confirmed;
+   * the log can still refuse it (SDK `client.d.ts` `Write`, `replica-client-api.md` §6).
+   */
+  readonly state: "confirmed" | "pending";
+  /**
+   * The replica's ID for the created record: the caller's `replicaId`, or else the
+   * receipt's optimistic `records`, which a `pending` receipt may leave out.
+   */
+  readonly record?: string;
+}
+
 export interface ReaderCreateOptions {
   /**
    * A stable name for this one save, such as its client-minted mutation ID. A retry with the
    * same intent lands once natively; the legacy Connect client ignores it.
    */
   readonly intent?: string;
+  /**
+   * The record ID to create under natively, minted by the caller (SDK `client.d.ts`
+   * `CreateInput.id`). Keep it with `intent` and send it again on a retry: it is how the
+   * caller knows the record before any receipt names it, since a replica's `pending`
+   * receipt need not list the records it touched. The legacy Connect client ignores it.
+   */
+  readonly replicaId?: string;
+  /**
+   * Called before a native create resolves. The legacy Connect client never calls it: its
+   * creates are decided by the server before they return.
+   */
+  readonly onReceipt?: (receipt: ReaderCreateReceipt) => void;
+}
+
+/**
+ * A mutation's receipt (`replica-client-api.md` §6): `pending` until the log decides,
+ * then `confirmed` or `rejected` (with the problem), or `unknown` when it was possibly
+ * sent before the receipts horizon. `missing` is a receipt the replica no longer has, or
+ * never had: it keeps them for at least 24 hours after they leave `pending`.
+ */
+export type ReaderMutationState =
+  | { readonly state: "pending" | "confirmed" | "unknown" | "missing" }
+  | { readonly state: "rejected"; readonly problem: ReaderConnectProblem };
+
+/** The record at a path in the local view, as far as a create needs to know. */
+export interface ReaderCreatedRecord {
+  /** Its Reader `id` field. */
+  readonly id: unknown;
+  /** True once a log position has changed it, so its create is confirmed. */
+  readonly confirmed: boolean;
+}
+
+/** A record as this device sees it now, pending writes included. */
+export interface ReaderLocalRecord extends ReaderCreatedRecord {
+  readonly path: string;
+  readonly frontmatter: Readonly<Record<string, unknown>>;
+  readonly body?: string;
+}
+
+/** What a client that settles creates later offers to follow them through. Native only. */
+export interface ReaderCreateTracking {
+  receipt(mutationId: string, options?: ReaderRequestOptions): Promise<ReaderMutationState>;
+  recordAt(path: string, options?: ReaderRequestOptions): Promise<ReaderCreatedRecord | null>;
+  /** The record with this replica ID in the local view, or null when it is not there. */
+  local(replicaId: string, options?: ReaderRequestOptions): Promise<ReaderLocalRecord | null>;
+  /**
+   * Whether the local view can be trusted to show what the log holds: the ledger has
+   * reconciled the writes from before this session (`WriteLedgerSnapshot.restored`), and
+   * the replica has caught up with head (`SyncStatus.confirmedThrough >= headKnown`).
+   * Until then, a record missing here may simply not have arrived yet.
+   */
+  caughtUp(): boolean;
+  /** Forget a refused write once Reader has dealt with it (SDK `ledger.acknowledge`). */
+  acknowledge(mutationId: string): Promise<void>;
 }
 
 export interface ReaderQueryPagesOptions extends ReaderRequestOptions {
@@ -67,6 +141,8 @@ export interface ReaderConnectClient {
     input: DeleteInput,
     options?: DeleteProgressOptions,
   ): Promise<ConnectOutcome<DeleteResult>>;
+  /** Present when a create can return before the log has decided it. */
+  readonly createTracking?: ReaderCreateTracking;
 }
 
 export class ConnectRepositoryError extends Error {
@@ -76,8 +152,12 @@ export class ConnectRepositoryError extends Error {
     detail?: string,
     /** The SDK problem, when the failure came from a Connect outcome. */
     readonly problem?: ConnectProblem,
+    readonly issues: readonly ConnectValidationIssue[] = [],
   ) {
-    super(`mdbase Connect could not ${operation}: ${detail ?? code}`);
+    const summary = validationIssueSummary(issues);
+    super(
+      `mdbase Connect could not ${operation}: ${detail ?? code}${summary ? `: ${summary}` : ""}`,
+    );
     this.name = "ConnectRepositoryError";
   }
 }
@@ -91,6 +171,7 @@ export function outcomeValue<Value>(outcome: ConnectOutcome<Value>, operation: s
     outcome.problem.code,
     outcome.problem.message,
     outcome.problem,
+    (outcome.problem as ReaderConnectProblem).issues,
   );
 }
 

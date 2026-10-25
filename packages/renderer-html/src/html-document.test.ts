@@ -1,9 +1,16 @@
 // @vitest-environment happy-dom
 import { describe, expect, it } from "vitest";
 
-import { prepareHtmlDocument } from "./html-document.js";
+import { extractArchivedHtmlText, prepareHtmlDocument } from "./html-document.js";
 
 describe("prepareHtmlDocument", () => {
+  it("shares background index text with the rendered document, without executing markup", () => {
+    const source =
+      "<head><title>Not body text</title><style>secret style</style></head><body><form><p>CAFÉ 世界文学</p><button>definition</button></form><script>secret script</script><textarea>secret input</textarea></body>";
+    const rendered = new DOMParser().parseFromString(prepareHtmlDocument(source), "text/html");
+    expect(extractArchivedHtmlText(source)).toBe(rendered.body.textContent);
+    expect(extractArchivedHtmlText(source)).toBe("CAFÉ 世界文学definition");
+  });
   it("removes executable and network-bearing content while retaining readable markup", () => {
     const prepared = prepareHtmlDocument(`<!doctype html><html><head>
       <script>window.bad = true</script>

@@ -98,11 +98,11 @@ export async function auditDockview(page, { screenshot, blockWrites }) {
   // Focusing an iframe must select its source, not leave the inspector on the sibling.
   const firstBounds = await firstSession.locator("iframe.html-viewer").boundingBox();
   await page.mouse.click(firstBounds.x + 30, firstBounds.y + 80);
-  await page.getByRole("button", { name: "Toggle right sidebar" }).click();
+  await page.getByRole("button", { name: "Toggle Notes panel" }).click();
   await expect(page.getByRole("complementary", { name: "Source workspace" })).toContainText(
     "Research 0001",
   );
-  await page.getByRole("button", { name: "Toggle right sidebar" }).click();
+  await page.getByRole("button", { name: "Toggle Notes panel" }).click();
   completed.push("Clicking an embedded document changes the inspector source correctly");
 
   // Drag the first document over the second document's content (across an iframe).
@@ -119,7 +119,7 @@ export async function auditDockview(page, { screenshot, blockWrites }) {
   completed.push("Pointer drop over document content works without iframe reload");
 
   // Source tools are a real panel: move alongside / tab with a document, preserving context.
-  await page.getByRole("button", { name: "Toggle right sidebar" }).click();
+  await page.getByRole("button", { name: "Toggle Notes panel" }).click();
   await expect(page.getByRole("complementary", { name: "Source workspace" })).toContainText(
     "Research 0001",
   );
@@ -149,10 +149,10 @@ export async function auditDockview(page, { screenshot, blockWrites }) {
     .locator(`.dv-groupview:has(.reader-dock-tab[data-panel-id="${firstId}"]) .dock-pane-actions`)
     .getByLabel("More document actions", { exact: true })
     .click();
-  await page.getByRole("button", { name: "Literature note", exact: true }).click();
-  const noteTab = tab("Literature note — [test] Research 0001");
+  await page.getByRole("button", { name: "Source note", exact: true }).click();
+  const noteTab = tab("Source note — [test] Research 0001");
   const noteId = await noteTab.getAttribute("data-panel-id");
-  const editor = page.getByRole("textbox", { name: "Source literature note" });
+  const editor = page.getByRole("textbox", { name: "Source note" });
   blockWrites(true);
   await editor.fill("[test] Docking never discards this local draft.");
   await expect(page.getByText("Saved locally", { exact: true })).toBeVisible();
@@ -189,7 +189,7 @@ export async function auditDockview(page, { screenshot, blockWrites }) {
   await expect.poll(async () => (await navigator.boundingBox()).y).toBeGreaterThan(noteBounds.y);
   await expect(navigator).toBeVisible();
   await page.locator(`[data-panel-id="${noteId}"]`).click();
-  completed.push("Library navigator also docks to document edges");
+  completed.push("Sources sidebar also docks to document edges");
 
   // Native touch input exercises Dockview's pointer strategy, not DOM-dispatched fake drags.
   const touchSource = await sideTab("reader:navigator").boundingBox();
@@ -264,13 +264,13 @@ export async function auditDockview(page, { screenshot, blockWrites }) {
     await expect(action).toBeVisible();
     await action.focus();
     await page.keyboard.press("Enter");
-    await expect(page.getByRole("complementary", { name: "Library navigator" })).toHaveCount(
+    await expect(page.getByRole("complementary", { name: "Sources sidebar" })).toHaveCount(
       maximized ? 0 : 1,
     );
   }
   completed.push("Native pane-action popover works by keyboard above document overlays");
 
-  const libraryPanel = page.getByRole("complementary", { name: "Library navigator" });
+  const libraryPanel = page.getByRole("complementary", { name: "Sources sidebar" });
   const beforeResize = await libraryPanel.boundingBox();
   await page.mouse.move(
     beforeResize.x + beforeResize.width,

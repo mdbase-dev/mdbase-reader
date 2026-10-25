@@ -1,3 +1,7 @@
+import { highlightPalette } from "@mdbase-reader/core";
+
+import { annotationHighlightCss } from "./html-css-highlights.js";
+
 const blockedElements = [
   "script",
   "style",
@@ -21,12 +25,26 @@ const unwrappedElements = ["form", "button"] as const;
 
 const urlAttributes = ["href", "src", "poster", "action", "formaction", "xlink:href"] as const;
 
-export function prepareHtmlDocument(source: string): string {
-  // A parsed document is inert: nothing loads before its attributes are sanitized below.
+/** Shared with background indexing: omit exactly the renderer's blocked content. */
+export function extractArchivedHtmlText(source: string): string {
+  return htmlDocumentText(parseHtmlDocument(source));
+}
+
+export function htmlDocumentText(document: Document): string {
+  return document.body.textContent;
+}
+
+function parseHtmlDocument(source: string): Document {
   const parsed = new DOMParser().parseFromString(source, "text/html");
   for (const element of parsed.querySelectorAll(blockedElements.join(","))) {
     element.remove();
   }
+  return parsed;
+}
+
+export function prepareHtmlDocument(source: string): string {
+  // A parsed document is inert: nothing loads before its attributes are sanitized below.
+  const parsed = parseHtmlDocument(source);
   // Removing these would drop text the original page shows, such as a page wrapped in a form.
   for (const element of parsed.querySelectorAll(unwrappedElements.join(","))) {
     element.replaceWith(...element.childNodes);
@@ -94,14 +112,12 @@ function readerStyle(document: Document): HTMLStyleElement {
     blockquote { margin-inline: 0; padding-left: 1.4rem; border-left: 2px solid #3ba5d8; color: color-mix(in srgb, currentColor 72%, transparent); }
     pre { overflow: auto; padding: 1rem; background: rgba(0,0,0,.06); }
     ::selection { background: rgba(64, 174, 224, .28); }
-    ::highlight(reader-annotations) { background: rgba(247, 210, 78, .42); text-decoration: underline rgba(211, 159, 0, .38) 1px; }
-    ::highlight(reader-active-annotation) { background: rgba(247, 188, 48, .68); text-decoration: underline rgba(157, 103, 0, .86) 2px; }
-    mark[data-reader-annotation] { background: rgba(247, 210, 78, .42); color: inherit; }
-    /* The light wash turns olive over a dark page; a thinner, warmer amber stays legible. */
+    ::highlight(reader-search-passage) { background: Highlight; color: HighlightText; text-decoration: underline; }
+    /* One highlight per palette colour, with light and dark washes (html-css-highlights.ts). */
+    ${annotationHighlightCss()}
+    mark[data-reader-annotation] { background: ${highlightPalette.yellow.light.wash}; color: inherit; }
     :root[data-reader-scheme="dark"] pre { background: rgba(255,255,255,.06); }
-    :root[data-reader-scheme="dark"] ::highlight(reader-annotations) { background: rgba(255, 196, 64, .24); text-decoration: underline rgba(255, 204, 92, .5) 1px; }
-    :root[data-reader-scheme="dark"] ::highlight(reader-active-annotation) { background: rgba(255, 190, 48, .4); text-decoration: underline rgba(255, 210, 110, .9) 2px; }
-    :root[data-reader-scheme="dark"] mark[data-reader-annotation] { background: rgba(255, 196, 64, .24); }
+    :root[data-reader-scheme="dark"] mark[data-reader-annotation] { background: ${highlightPalette.yellow.dark.wash}; }
     @media (max-width: 640px) { body { padding: 3rem 1.5rem 7rem; font-size: 17px; } }
     @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
     @media (forced-colors: active) { blockquote { color: CanvasText; } }

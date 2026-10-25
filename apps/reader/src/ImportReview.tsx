@@ -82,7 +82,7 @@ export function ImportConfirm({
     (!boundTarget || boundTarget === opened.collectionId);
   return (
     <section className="import-step" aria-labelledby="import-confirm-title">
-      <h2 id="import-confirm-title">Confirm</h2>
+      <h2 id="import-confirm-title">Import into collection</h2>
       <button type="button" disabled={busy || !!boundTarget} onClick={controller.inspect}>
         Check destination: {opened.collectionName}
       </button>
@@ -140,7 +140,7 @@ export function ImportStatus({
       ) : null}
       {busy ? (
         <button type="button" onClick={controller.stop}>
-          Stop safely
+          Stop import
         </button>
       ) : null}
       {boundTarget ? (

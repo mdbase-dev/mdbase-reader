@@ -9,40 +9,63 @@ import {
   siteAdapters,
   type CitationDraft,
   type SourceIdentifier,
+  type WebCaptureImport,
 } from "@mdbase-reader/web-capture";
 
+import { chapterBooks, type ChapterDoiOffer } from "./chapter-doi.js";
+import { newCitationProvenance } from "./new-citation-provenance.js";
 import { findOpenAccessPdf, pdfFileName, type PdfSearchServices } from "./open-access-pdf.js";
 
 import type { ReaderWorkspaceController } from "./use-reader-workspace.js";
 import type { CapturedPdfFile, CaptureResult } from "./web-capture-client.js";
+import type { ReaderWorkspaceGateway } from "./workspace-model.js";
 import type {
   CitationCandidate,
   CitationResolutionRequest,
+  CslProvenance,
   Source,
   SourceImportMetadata,
   SourceImportOptions,
 } from "@mdbase-reader/core";
+import type { Claim } from "@mdbase-reader/web-capture/citation-updates";
 
 export interface SourceAdditionServices extends PdfSearchServices {
+  readonly chapterGateway?: ReaderWorkspaceGateway | undefined;
   readonly capture: (
     url: string,
     options: { readonly allowPdf: true; readonly signal?: AbortSignal },
   ) => Promise<CaptureResult>;
   readonly lookUp: (request: CitationResolutionRequest) => Promise<CitationCandidate>;
   /** Identifiers printed in a downloaded PDF, for citing a PDF saved by its address. */
-  readonly pdfIdentifiers: (
-    file: CapturedPdfFile,
-  ) => Promise<{ readonly doi?: string; readonly arxiv?: string }>;
+  readonly pdfIdentifiers: (file: CapturedPdfFile) => Promise<{
+    readonly doi?: string;
+    readonly arxiv?: string;
+    readonly claims?: readonly Claim[];
+  }>;
   readonly workspace: Pick<
     ReaderWorkspaceController,
     "importSourceFile" | "createSource" | "saveNewSourceCitation"
   >;
   readonly importOptions?: SourceImportOptions;
   readonly onStatus: (message: string) => void;
+  /** After this boundary, writes and citation saving must finish without cancellation. */
+  readonly onWriteStart?: () => void;
+}
+
+/** A problem with an added source: a plain message, and the underlying error for its details. */
+export interface SourceAdditionNotice {
+  readonly message: string;
+  readonly detail?: string;
 }
 
 export type SourceAdditionOutcome =
-  | { readonly kind: "added"; readonly source: Source; readonly notices: readonly string[] }
+  | { readonly kind: "chapter-offer"; readonly offer: ChapterDoiOffer }
+  | {
+      readonly kind: "added";
+      readonly source: Source;
+      readonly notices: readonly SourceAdditionNotice[];
+      readonly provenance?: CslProvenance;
+    }
   /** The workspace reported why nothing was written. */
   | { readonly kind: "not-added" }
   /** The page could not be fetched, but its citation was found and can be saved alone. */
@@ -76,7 +99,7 @@ async function addFromUrl(
     captured = await services.capture(url, { allowPdf: true, ...signalOf(services) });
   } catch (reason) {
     services.signal?.throwIfAborted();
-    if (socialAddress || messageOf(reason).includes("Feeds cannot be saved as sources")) {
+    if (cannotOfferCitationOnly(socialAddress, reason)) {
       throw reason;
     }
     services.onStatus("Looking up citation details instead…");
@@ -87,18 +110,14 @@ async function addFromUrl(
     throw reason;
   }
   if (captured.kind === "pdf") {
-    const ids = await services.pdfIdentifiers(captured).catch(() => ({}));
-    const candidate = await lookUpWork(ids, services);
-    return importPdf(captured, candidate?.citation, captured.canonicalUrl, services);
+    return addCapturedPdf(captured, services);
   }
   const { page } = captured;
   services.onStatus("Looking up citation details…");
-  const preview = await citationForPage(
-    page.scholarly,
-    page.capture.canonicalUrl,
-    signalOf(services),
-  );
-  const fields = preview ? citationFields(preview.citation) : undefined;
+  const preview = await capturedPageCitation(page, services);
+  const citation = preview?.citation ?? page.scholarly.citation;
+  const fields = citation ? citationFields(citation) : undefined;
+  beginWrite(services);
   const source = await services.workspace.importSourceFile(
     {
       name: page.name,
@@ -112,7 +131,44 @@ async function addFromUrl(
     },
     services.importOptions,
   );
-  return finish(source, preview?.citation, services);
+  return finish(source, citation, services, preview?.provenance);
+}
+
+async function addCapturedPdf(
+  captured: CapturedPdfFile,
+  services: SourceAdditionServices,
+): Promise<SourceAdditionOutcome> {
+  const ids: Awaited<ReturnType<SourceAdditionServices["pdfIdentifiers"]>> = await services
+    .pdfIdentifiers(captured)
+    .catch(() => ({ claims: [] }));
+  const candidate = await lookUpWork(ids, services);
+  return importPdf(
+    captured,
+    candidate ?? undefined,
+    captured.canonicalUrl,
+    services,
+    ids.claims ?? [],
+  );
+}
+
+function cannotOfferCitationOnly(
+  address: ReturnType<typeof postAddress>,
+  reason: unknown,
+): boolean {
+  return Boolean(address) || messageOf(reason).includes("Feeds cannot be saved as sources");
+}
+
+function capturedPageCitation(
+  page: WebCaptureImport,
+  services: SourceAdditionServices,
+): ReturnType<typeof citationForPage> {
+  return page.metadata.socialPost
+    ? Promise.resolve(null)
+    : citationForPage(page.claims, page.capture.canonicalUrl, {
+        ...signalOf(services),
+        deadlineMs: 6_000,
+        citoid: {},
+      });
 }
 
 function assertSocialInput(url: string): ReturnType<typeof postAddress> {
@@ -141,6 +197,24 @@ async function addFromIdentifier(
 ): Promise<SourceAdditionOutcome> {
   services.onStatus("Looking up citation details…");
   const candidate = await services.lookUp(identifierLookup(identifier));
+  if (
+    identifier.kind === "doi" &&
+    candidate.citation.type === "chapter" &&
+    services.chapterGateway?.createSourcePart
+  ) {
+    const library = await services.chapterGateway.library();
+    if (library.sourceIndex?.complete === false) {
+      throw new Error("The book index is partial. Finish loading before attaching a chapter.");
+    }
+    return {
+      kind: "chapter-offer",
+      offer: {
+        key: crypto.randomUUID(),
+        candidate,
+        books: chapterBooks(candidate, library.sources),
+      },
+    };
+  }
   const doi =
     stringField(candidate.citation, "DOI") ??
     (identifier.kind === "doi" ? identifier.value : undefined);
@@ -154,7 +228,7 @@ async function addFromIdentifier(
   );
   const url = doi ? `https://doi.org/${doi}` : stringField(candidate.citation, "URL");
   if (pdf) {
-    return importPdf(pdf, candidate.citation, url, services);
+    return importPdf(pdf, candidate, url, services);
   }
   // The new source opens on its empty document pane, which offers to attach a file.
   return createWithoutDocument(candidate, url, services);
@@ -164,14 +238,23 @@ async function addFromIdentifier(
 export async function createWithoutDocument(
   candidate: CitationCandidate,
   url: string | undefined,
-  services: Pick<SourceAdditionServices, "workspace" | "importOptions" | "onStatus">,
+  services: Pick<
+    SourceAdditionServices,
+    "workspace" | "importOptions" | "onStatus" | "chapterGateway" | "signal" | "onWriteStart"
+  >,
 ): Promise<SourceAdditionOutcome> {
   const { createSource } = services.workspace;
   if (!createSource) {
     throw new Error("This collection cannot hold sources without a document.");
   }
   const fields = citationFields(candidate.citation);
+  const provenance = await newCitationProvenance(
+    candidate,
+    services.chapterGateway,
+    services.signal,
+  );
   services.onStatus("Saving the source…");
+  beginWrite(services);
   const source = await createSource(
     {
       title: fields.title ?? "Untitled source",
@@ -181,18 +264,26 @@ export async function createWithoutDocument(
     },
     services.importOptions,
   );
-  return finish(source, candidate.citation, services);
+  return finish(source, candidate.citation, services, provenance);
 }
 
 async function importPdf(
   pdf: CapturedPdfFile,
-  citation: CitationDraft | undefined,
+  candidate: CitationCandidate | undefined,
   url: string | undefined,
   services: SourceAdditionServices,
+  embedded?: readonly Claim[],
 ): Promise<SourceAdditionOutcome> {
+  const citation = candidate?.citation;
+  const claims =
+    embedded ?? (await services.pdfIdentifiers(pdf).catch(() => ({ claims: [] }))).claims;
+  const provenance = candidate
+    ? await newCitationProvenance(candidate, services.chapterGateway, services.signal, claims)
+    : undefined;
   const fields = citation ? citationFields(citation) : undefined;
   const title = fields?.title ?? pdfFileName(pdf.canonicalUrl, "Document").replace(/\.pdf$/iu, "");
   services.onStatus("Saving the PDF…");
+  beginWrite(services);
   const source = await services.workspace.importSourceFile(
     {
       name: pdfFileName(pdf.canonicalUrl, title),
@@ -205,31 +296,39 @@ async function importPdf(
     },
     services.importOptions,
   );
-  return finish(source, citation, services);
+  return finish(source, citation, services, provenance);
 }
 
 async function finish(
   source: Source | null,
   citation: CitationDraft | Readonly<Record<string, unknown>> | undefined,
   services: Pick<SourceAdditionServices, "workspace">,
+  provenance?: CslProvenance,
 ): Promise<SourceAdditionOutcome> {
   if (!source) {
     return { kind: "not-added" };
   }
+  const evidence = provenance ? { provenance } : {};
   const save = services.workspace.saveNewSourceCitation;
   if (!citation || !save || source.citation) {
-    return { kind: "added", source, notices: [] };
+    return { kind: "added", source, notices: [], ...evidence };
   }
   // A candidate's placeholder citekey is replaced with one unique in the collection.
   const fields = Object.fromEntries(Object.entries(citation).filter(([key]) => key !== "id"));
   try {
-    return { kind: "added", source: await save(source, fields), notices: [] };
+    const saved = provenance ? await save(source, fields, provenance) : await save(source, fields);
+    return { kind: "added", source: saved, notices: [], ...evidence };
   } catch (reason) {
     return {
       kind: "added",
       source,
+      ...evidence,
       notices: [
-        `The citation was not stored: ${messageOf(reason)} Add it from the citation panel.`,
+        {
+          message:
+            "The source was saved without its citation. You can add one in its Citation tab.",
+          detail: messageOf(reason),
+        },
       ],
     };
   }
@@ -285,6 +384,11 @@ function stringField(
 ): string | undefined {
   const value = citation[field];
   return typeof value === "string" && value.trim() ? value.trim() : undefined;
+}
+
+function beginWrite(services: Pick<SourceAdditionServices, "signal" | "onWriteStart">): void {
+  services.signal?.throwIfAborted();
+  services.onWriteStart?.();
 }
 
 function signalOf(services: { readonly signal?: AbortSignal }): { signal?: AbortSignal } {

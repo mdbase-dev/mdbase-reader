@@ -8,7 +8,7 @@ export async function auditReadingWorkspace(page, { screenshot }) {
   const completed = [];
   await page.evaluate((key) => localStorage.removeItem(key), shellKey);
   await page.reload();
-  const navigator = page.getByRole("complementary", { name: "Library navigator" });
+  const navigator = page.getByRole("complementary", { name: "Sources sidebar" });
   await expect(navigator).toBeVisible();
 
   await navigator

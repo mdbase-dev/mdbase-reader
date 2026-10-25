@@ -49,6 +49,7 @@ export function saveDraft(tabId: number, url: string, value: StoredDraft): Promi
     !value.draft.note.trim() &&
     !value.draft.comment.trim() &&
     !value.draft.tags.trim() &&
+    !value.draft.titleEdited &&
     !value.selection;
   const write = empty
     ? chrome.storage.session.remove(key)

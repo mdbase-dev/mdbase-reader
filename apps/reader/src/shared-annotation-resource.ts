@@ -80,7 +80,7 @@ export class SharedAnnotationResource {
               status: "error",
               message: readerErrorMessage(
                 reason,
-                "Reader could not load this source's annotations.",
+                "Reader could not load this source’s annotations.",
               ),
             },
           });
@@ -113,6 +113,26 @@ export async function refreshSharedAnnotation(
   }
   return latest ?? null;
 }
+/** Publish a membership/body change to every already-open owner session. */
+export function publishSharedAnnotation(
+  gateway: ReaderWorkspaceGateway,
+  before: Annotation,
+  after: Annotation | null,
+): void {
+  for (const [sourceId, resource] of resources.get(gateway) ?? []) {
+    resource.set((current) => {
+      if (current?.value.status !== "ready") {
+        return current;
+      }
+      const records = current.value.value.filter(({ id }) => id !== before.id);
+      if (after?.sourceId === sourceId) {
+        records.push(after);
+      }
+      return { sourceId, value: { status: "ready", value: records } };
+    });
+  }
+}
+
 export function sharedAnnotationResource(
   gateway: ReaderWorkspaceGateway,
   id: SourceId,

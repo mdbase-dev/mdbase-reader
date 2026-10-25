@@ -1,3 +1,5 @@
+import { supportsChapterCreation } from "./source-parts-features.js";
+
 import type { ReaderCommand, ReaderCommandInput } from "./reader-command-list.js";
 
 export function libraryCommands(input: ReaderCommandInput): readonly ReaderCommand[] {
@@ -63,6 +65,48 @@ export function displayCommands(input: ReaderCommandInput): readonly ReaderComma
       run: () => input.setDensity(density),
     },
   ];
+}
+
+const chapterKeywords = "book chapter parts pdf epub table of contents";
+
+/** Chapter creation for the current source, when it is a PDF or EPUB. */
+export function chapterCommands(input: ReaderCommandInput): readonly ReaderCommand[] {
+  const source = input.activeSource;
+  const create = input.createSourceParts;
+  return source && create && supportsChapterCreation(source)
+    ? [
+        {
+          id: "add-chapters-as-sources",
+          label: "Add chapters as sources…",
+          detail: source.title,
+          group: "Current source",
+          keywords: chapterKeywords,
+          run: () => create(source),
+        },
+      ]
+    : [];
+}
+
+/**
+ * Without a current PDF or EPUB (the Library is focused, or nothing has been opened yet), each
+ * book in the library offers chapter creation instead. They sit with the sources, which the
+ * palette lists only for a search, so browsing is not crowded.
+ */
+export function libraryChapterCommands(input: ReaderCommandInput): readonly ReaderCommand[] {
+  const create = input.createSourceParts;
+  if (!create || (input.activeSource && supportsChapterCreation(input.activeSource))) {
+    return [];
+  }
+  return input.sources
+    .filter((source) => !source.partOf && supportsChapterCreation(source))
+    .map((source) => ({
+      id: `add-chapters-as-sources:${source.id}`,
+      label: `Add chapters as sources… — ${source.title}`,
+      detail: "Book chapters as sources",
+      group: "Sources",
+      keywords: chapterKeywords,
+      run: () => create(source),
+    }));
 }
 
 export function annotationCommands(input: ReaderCommandInput): readonly ReaderCommand[] {

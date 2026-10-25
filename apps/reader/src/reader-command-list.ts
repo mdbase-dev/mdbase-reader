@@ -1,4 +1,10 @@
-import { annotationCommands, displayCommands, libraryCommands } from "./reader-app-commands.js";
+import {
+  annotationCommands,
+  chapterCommands,
+  displayCommands,
+  libraryChapterCommands,
+  libraryCommands,
+} from "./reader-app-commands.js";
 
 import type { BibliographyExportController } from "./use-bibliography-export.js";
 import type { SourceExportController } from "./use-source-export.js";
@@ -21,6 +27,8 @@ export interface ReaderCommandInput {
   readonly sourceExport: SourceExportController;
   /** Asks to remove a source, which confirms first; null when the collection cannot. */
   readonly removeSource?: ((source: SourceSummary) => void) | null;
+  /** Null when chapter creation is disabled or unavailable for this collection. */
+  readonly createSourceParts?: ((source: SourceSummary) => void) | null;
   readonly bibliographyExport: BibliographyExportController;
   readonly focusMode: boolean;
   /** Bookmarks the focused document's current position; null without one. */
@@ -82,12 +90,12 @@ function navigationCommands(input: ReaderCommandInput): readonly ReaderCommand[]
       run: () => input.workspace.open(source.id),
       alternate: { label: "Open beside", run: () => input.workspace.openBeside(source.id) },
     }));
-  return [...openTabs, ...sourceCommands(input), ...sources];
+  return [...openTabs, ...sourceCommands(input), ...sources, ...libraryChapterCommands(input)];
 }
 
 function viewLabel(view: string): string {
   return view === "note"
-    ? "Literature note"
+    ? "Source note"
     : view === "annotations"
       ? "Annotations"
       : view === "citation"
@@ -118,7 +126,7 @@ function workspaceCommands(input: ReaderCommandInput): readonly ReaderCommand[] 
     {
       id: "toggle-focus",
       label: input.focusMode ? "Leave reading mode" : "Enter reading mode",
-      detail: "Only the page, with the chrome out of the way",
+      detail: "Read the document with interface controls hidden",
       group: "Workspace",
       keywords: "focus distraction",
       shortcut: "mod+.",
@@ -126,15 +134,17 @@ function workspaceCommands(input: ReaderCommandInput): readonly ReaderCommand[] 
     },
     {
       id: "toggle-library",
-      label: "Toggle left sidebar",
+      label: "Toggle Sources sidebar",
+      keywords: "left sidebar library navigator",
       group: "Workspace",
       shortcut: "mod+\\",
       run: input.toggleLibrary,
     },
     {
       id: "toggle-source-tools",
-      label: "Toggle right sidebar",
-      detail: "Annotations, literature note and citation",
+      label: "Toggle Notes panel",
+      keywords: "right sidebar literature note",
+      detail: "Annotations, source note and citation",
       group: "Workspace",
       shortcut: "mod+shift+\\",
       run: input.toggleInspector,
@@ -161,14 +171,16 @@ function workspaceCommands(input: ReaderCommandInput): readonly ReaderCommand[] 
       ? ([
           {
             id: "split-right",
-            label: "Duplicate in new pane right",
+            label: "Open beside",
+            keywords: "duplicate right split",
             detail: input.activeSource.title,
             group: "Workspace",
             run: () => input.workspace.openBeside(sourceId, "document", "horizontal"),
           },
           {
             id: "split-below",
-            label: "Duplicate in pane below",
+            label: "Open below",
+            keywords: "duplicate below split",
             detail: input.activeSource.title,
             group: "Workspace",
             run: () => input.workspace.openBeside(sourceId, "document", "vertical"),
@@ -193,9 +205,11 @@ function sourceCommands(input: ReaderCommandInput): readonly ReaderCommand[] {
       run: input.sourceExport.run,
     },
     ...annotationCommands(input),
+    ...chapterCommands(input),
     {
       id: "annotations",
       label: "Open annotations",
+      keywords: "owner ownership annotation source",
       group: "Current source",
       run: () => input.workspace.openView(sourceId, "annotations"),
       alternate: {
@@ -205,17 +219,17 @@ function sourceCommands(input: ReaderCommandInput): readonly ReaderCommand[] {
     },
     {
       id: "note",
-      label: "Open literature note",
+      label: "Open source note",
       group: "Current source",
-      keywords: "write notes source note",
+      keywords: "write notes source note literature note",
       run: () => input.workspace.openView(sourceId, "note"),
       alternate: { label: "Open beside", run: () => input.workspace.openBeside(sourceId, "note") },
     },
     {
       id: "citation",
-      label: "Open citation data",
+      label: "Open citation details",
       group: "Current source",
-      keywords: "bibliography csl metadata",
+      keywords: "bibliography csl metadata citekey citation key field sources field evidence",
       run: () => input.workspace.openView(sourceId, "citation"),
       alternate: {
         label: "Open beside",

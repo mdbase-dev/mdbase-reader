@@ -104,7 +104,7 @@ function AnnotationEditorActions({
         disabled={locked || status === "loading"}
         onClick={edit.requestDelete}
       >
-        {deleteStatus === "checking" ? "Checking…" : "Delete"}
+        {deleteStatus === "checking" ? "Checking…" : "Delete annotation"}
       </button>
       <AnnotationSaveState status={failed ? "failed" : shown} />
       {status === "unsaved" || status === "error" ? (
@@ -214,7 +214,12 @@ function AnnotationSaveState({ status }: { readonly status: string }): JSX.Eleme
   );
 }
 
-function AnnotationDeleteConfirmation({
+/** The plan names embedding notes by path; a note is known to the reader by its file name. */
+function noteTitle(path: string): string {
+  return (path.split("/").at(-1) ?? path).replace(/\.md$/iu, "");
+}
+
+export function AnnotationDeleteConfirmation({
   plan,
   deleting,
   onCancel,
@@ -230,10 +235,12 @@ function AnnotationDeleteConfirmation({
       <strong id="annotation-delete-title">Delete this annotation?</strong>
       {plan.brokenLinkPaths.length > 0 ? (
         <>
-          <p>These notes embed it and will show a broken embed:</p>
+          <p>These notes embed this annotation and will show it as missing:</p>
           <ul>
             {plan.brokenLinkPaths.map((path) => (
-              <li key={path}>{path}</li>
+              <li key={path} title={path}>
+                {noteTitle(path)}
+              </li>
             ))}
           </ul>
         </>
@@ -243,7 +250,7 @@ function AnnotationDeleteConfirmation({
           Cancel
         </button>
         <button className="is-danger" type="button" disabled={deleting} onClick={onConfirm}>
-          {deleting ? "Deleting…" : "Delete"}
+          {deleting ? "Deleting…" : "Delete annotation"}
         </button>
       </div>
     </section>

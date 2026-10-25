@@ -1,0 +1,501 @@
+/* Library ---------------------------------------------------------------------
+   Continue reading cards and the calmer source table (docs/design-direction.md,
+   docs/design/mockups/library.html). Rules are scoped under .library-workspace so
+   they win over the older library rules in reader.css and reader-shell.css
+   whatever order the stylesheets load in. Sizes follow the shell's --ui-* scale,
+   so compact density still applies and nothing drops below 12px. */
+
+/* Continue reading: up to three sources to pick up again, shown as objects. */
+
+.library-workspace .continue-reading {
+  margin: var(--sp-4) var(--sp-6) var(--sp-5);
+}
+
+.library-workspace .continue-reading h2 {
+  margin: 0 0 var(--sp-3);
+  color: var(--text-2);
+  font-size: var(--ui-control);
+  font-weight: var(--weight-medium);
+  line-height: var(--lh-sm);
+}
+
+.library-workspace .continue-reading-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: var(--sp-4);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.library-workspace .continue-reading-list > li {
+  min-width: 0;
+  display: flex;
+}
+
+.library-workspace .continue-reading-card {
+  min-width: 0;
+  flex: 1 1 auto;
+  display: grid;
+  grid-template-columns: 76px minmax(0, 1fr);
+  align-items: start;
+  gap: var(--sp-4);
+  padding: var(--sp-3);
+  border: 0;
+  border-radius: var(--r-lg);
+  color: var(--text-1);
+  background: var(--bg-raised);
+  box-shadow:
+    0 0 0 1px var(--line),
+    var(--e-1);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition:
+    box-shadow var(--dur-fast) ease-out,
+    transform var(--dur-fast) ease-out;
+}
+
+/* Lifts on hover: the card is an object to pick up. */
+.library-workspace .continue-reading-card:hover {
+  box-shadow:
+    0 0 0 1px var(--line-strong),
+    var(--e-2);
+  transform: translateY(-1px);
+}
+
+.library-workspace .continue-reading-card:focus-visible {
+  box-shadow: var(--focus-ring);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .library-workspace .continue-reading-card:hover {
+    transform: none;
+  }
+}
+
+.library-workspace .continue-reading-copy {
+  min-width: 0;
+  min-height: 100px;
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-0-5);
+}
+
+.library-workspace .continue-reading-title {
+  display: -webkit-box;
+  overflow: hidden;
+  color: var(--text-1);
+  font-size: var(--ui-body);
+  font-weight: var(--weight-strong);
+  line-height: var(--lh-md);
+  overflow-wrap: anywhere;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+
+.library-workspace .continue-reading-byline {
+  overflow: hidden;
+  color: var(--text-3);
+  font-size: var(--ui-meta);
+  line-height: var(--lh-xs);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* The last passage is set in the reading face, like the quotation it is. */
+.library-workspace .continue-reading-passage {
+  display: -webkit-box;
+  overflow: hidden;
+  margin-top: var(--sp-2);
+  color: var(--text-2);
+  font-family: var(--font-read);
+  font-size: var(--text-sm);
+  font-style: italic;
+  line-height: 19px;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+
+.library-workspace .continue-reading-progress {
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  margin-top: auto;
+  padding-top: var(--sp-2);
+  color: var(--text-3);
+  font-size: var(--ui-meta);
+  font-variant-numeric: tabular-nums;
+  line-height: var(--lh-xs);
+}
+
+.library-workspace .continue-reading-progress > span:last-child {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.library-workspace .continue-reading-bar {
+  min-width: 32px;
+  height: 4px;
+  flex: 1 1 40px;
+  overflow: hidden;
+  border-radius: var(--r-full);
+  background: var(--bg-sunken);
+  box-shadow: inset 0 0 0 1px var(--line);
+}
+
+.library-workspace .continue-reading-bar > i {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: var(--accent);
+}
+
+/* Thumbnails: a rendered page or cover, or the title set like a title page. */
+
+.source-thumbnail {
+  position: relative;
+  width: 76px;
+  height: 100px;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: var(--sp-1);
+  overflow: hidden;
+  padding: 10px 6px 6px;
+  border-radius: 3px;
+  background: var(--bg-paper);
+  /* A second sheet peeks out behind the first. */
+  box-shadow:
+    0 0 0 1px var(--line-strong),
+    2px 2px 0 -1px var(--bg-paper),
+    2px 2px 0 0 var(--line-strong),
+    var(--e-1);
+  text-align: center;
+}
+
+.source-thumbnail.has-image {
+  padding: 0;
+  background: var(--bg-raised);
+}
+
+.source-thumbnail img {
+  width: 100%;
+  height: 100%;
+  display: block;
+  object-fit: cover;
+  object-position: top center;
+}
+
+.source-thumbnail-title {
+  display: -webkit-box;
+  overflow: hidden;
+  color: var(--text-1);
+  font-family: var(--font-read);
+  font-size: var(--text-xs);
+  font-weight: var(--weight-medium);
+  line-height: 15px;
+  hyphens: auto;
+  overflow-wrap: anywhere;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 4;
+}
+
+.source-thumbnail-format {
+  color: var(--text-3);
+  font-size: var(--text-xs);
+  line-height: var(--lh-xs);
+}
+
+/* A book has a spine; a saved page has a browser's top edge. */
+.source-thumbnail.is-epub:not(.has-image)::before {
+  content: "";
+  position: absolute;
+  inset: 0 auto 0 5px;
+  width: 1px;
+  background: var(--line-strong);
+}
+
+.source-thumbnail.is-web:not(.has-image) {
+  border-top: 6px solid var(--bg-sunken);
+}
+
+/* Table rows: the title leads, metadata is quieter, separators are hairlines. */
+
+/* Source rows only: the annotation table keeps its own passage-led type and row heights. */
+.library-workspace
+  .library-table:not(.library-annotation-table)
+  .library-table-row:not(.is-header) {
+  height: 56px;
+  border-bottom-color: var(--line);
+  color: var(--text-2);
+  font-size: var(--ui-control);
+}
+
+.library-workspace .library-table-row.is-header {
+  height: 32px;
+  color: var(--text-3);
+  font-size: var(--ui-meta);
+  font-weight: var(--weight-regular);
+}
+
+.library-workspace .library-column-header[aria-sort="ascending"],
+.library-workspace .library-column-header[aria-sort="descending"] {
+  color: var(--text-1);
+}
+
+/* The title column header lines up with the titles, now that no badge precedes them. */
+.library-workspace .library-column-header.is-title {
+  padding-left: var(--sp-2);
+}
+
+.library-workspace .library-table-row:focus-visible {
+  outline: 2px solid transparent;
+  box-shadow: inset 0 0 0 2px var(--accent);
+}
+
+@media (forced-colors: active) {
+  .library-workspace .library-table-row:focus-visible {
+    outline-color: Highlight;
+  }
+}
+
+.library-workspace .library-title-copy {
+  gap: 0;
+}
+
+.library-workspace .library-title-copy strong {
+  color: var(--text-1);
+  font-size: var(--ui-body);
+  font-weight: var(--weight-medium);
+  line-height: var(--lh-md);
+}
+
+.library-workspace .library-title-copy small,
+.library-workspace .library-table.has-creator-column .library-title-copy small {
+  display: block;
+  overflow: hidden;
+  color: var(--muted);
+  font-size: var(--ui-meta);
+  line-height: var(--lh-xs);
+  text-overflow: ellipsis;
+}
+
+.library-title-creators + .library-title-format::before,
+.library-title-context::before {
+  content: " · ";
+}
+
+/* A creator or format column shows that value itself, so the title's line drops it. */
+.library-workspace .library-table.has-creator-column .library-title-creators,
+.library-workspace .library-table.has-format-column .library-title-format,
+.library-workspace
+  .library-table.has-creator-column.has-format-column
+  .library-table-row:not(.is-header)
+  .is-title
+  small:not(:has(.library-title-context)) {
+  display: none;
+}
+
+.library-workspace .library-table.has-creator-column .library-title-format::before,
+.library-workspace
+  .library-table.has-creator-column.has-format-column
+  .library-title-context::before {
+  content: none;
+}
+
+.library-workspace .library-count,
+.library-workspace .library-table-row time {
+  color: var(--text-2);
+}
+
+/* Status: a coloured word, with progress as a number. */
+
+.library-workspace .library-status {
+  width: auto;
+  min-width: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--text-2);
+  font-size: var(--ui-control);
+  white-space: nowrap;
+}
+
+.library-workspace .library-status-mark {
+  width: 8px;
+  height: 8px;
+  flex: 0 0 auto;
+  border: 1.5px solid currentColor;
+  border-style: solid;
+  background: transparent;
+  opacity: 1;
+}
+
+.library-workspace .library-status.is-queued .library-status-mark {
+  border-color: currentColor;
+}
+
+.library-workspace .library-status.is-reading {
+  color: var(--accent);
+}
+
+.library-workspace .library-status.is-finished {
+  color: var(--success);
+}
+
+.library-workspace .library-status.is-reading .library-status-mark,
+.library-workspace .library-status.is-finished .library-status-mark {
+  border-color: currentColor;
+  background: currentColor;
+}
+
+.library-workspace .library-status.is-inbox,
+.library-workspace .library-status.is-archived,
+.library-workspace .library-status.is-abandoned {
+  color: var(--muted);
+}
+
+.library-workspace .library-status.is-archived .library-status-mark {
+  border-color: currentColor;
+  background: currentColor;
+  opacity: 0.6;
+}
+
+.library-workspace .library-status.is-abandoned .library-status-mark {
+  border-style: dashed;
+  border-color: currentColor;
+}
+
+.library-status-progress {
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+}
+
+/* Row actions: shown on hover, focus and selection; always shown without hover. */
+
+.library-workspace .library-table-row > span.is-actions {
+  justify-content: flex-end;
+  padding-right: var(--sp-2);
+}
+
+.library-row-more {
+  width: var(--control-h-sm);
+  height: var(--control-h-sm);
+  flex: 0 0 auto;
+  color: var(--text-2);
+  opacity: 0;
+  transition: opacity var(--dur-fast) ease-out;
+}
+
+.library-row-more svg {
+  width: 16px;
+  height: 16px;
+}
+
+.library-table-row:hover .library-row-more,
+.library-table-row:focus-within .library-row-more,
+.library-table-row:focus-visible .library-row-more,
+.library-table-row.is-selected .library-row-more,
+.library-row-more:focus-visible {
+  opacity: 1;
+}
+
+@media (hover: none) {
+  .library-row-more {
+    opacity: 1;
+  }
+}
+
+/* The View options filter count. */
+.library-workspace .menu-badge {
+  top: 0;
+  right: -2px;
+  min-width: 16px;
+  height: 16px;
+  padding: 0 4px;
+  border-radius: var(--r-full);
+  color: var(--on-accent);
+  font-size: var(--text-xs);
+  font-weight: var(--weight-strong);
+  line-height: 16px;
+}
+
+/* The add-column menu's field paths. */
+.library-workspace .library-property-choice code {
+  font-size: var(--text-xs);
+  line-height: var(--lh-xs);
+}
+
+/* Cards layout: labels and metadata at the type scale, not 9-10px. */
+
+.library-workspace .library-card-bookplate span {
+  font: var(--weight-medium) var(--ui-meta) / var(--lh-xs) var(--font-ui);
+  letter-spacing: 0;
+  text-transform: none;
+}
+
+.library-workspace .library-card-copy > span,
+.library-workspace .library-card-copy small,
+.library-workspace .library-card-copy > div,
+.library-workspace .library-card-copy > div .library-status,
+.library-workspace .library-card-copy p {
+  font-size: var(--ui-meta);
+  line-height: var(--lh-xs);
+}
+
+.library-workspace .library-card-copy h3 {
+  font-weight: var(--weight-strong);
+}
+
+/* Narrow panes: the table is a two-line list and Continue reading swipes sideways. */
+@container library (max-width: 620px) {
+  .library-workspace .continue-reading {
+    margin-inline: var(--sp-3);
+  }
+
+  .library-workspace .continue-reading-list {
+    grid-template-columns: none;
+    grid-auto-columns: minmax(260px, 86%);
+    grid-auto-flow: column;
+    overflow-x: auto;
+    /* Room for the cards' ring and shadow, which the scroller would otherwise clip. */
+    margin: -4px;
+    padding: 4px 4px 8px;
+    scroll-snap-type: x mandatory;
+    scrollbar-width: none;
+  }
+
+  .library-workspace .continue-reading-list > li {
+    scroll-snap-align: start;
+  }
+
+  /* With the other columns hidden, the title's line carries people and format again. */
+  .library-workspace .library-table.has-creator-column .library-title-creators,
+  .library-workspace .library-table.has-format-column .library-title-format {
+    display: inline;
+  }
+
+  .library-workspace
+    .library-table.has-creator-column.has-format-column
+    .library-table-row:not(.is-header)
+    .is-title
+    small {
+    display: block;
+  }
+
+  .library-workspace .library-table.has-creator-column .library-title-format::before,
+  .library-workspace
+    .library-table.has-creator-column.has-format-column
+    .library-title-context::before {
+    content: " · ";
+  }
+
+  .library-workspace .library-table.has-creator-column .library-title-format:first-child::before {
+    content: none;
+  }
+}

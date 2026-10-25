@@ -18,6 +18,7 @@ export function plan(): PlannedSourceFileImport {
     kind: "document",
     savedAt: dateTime("2026-08-10T12:00:00.000Z"),
     recordPath: "sources/src_import.md",
+    recordPathCandidates: ["sources/src_import.md"],
     representations: [
       {
         transferId: mutationId("83dd2f80-c7da-44d7-9844-6ea755a05f40"),

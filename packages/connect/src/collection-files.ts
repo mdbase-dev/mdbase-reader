@@ -3,11 +3,11 @@ import { outcomeValue } from "./repository-client.js";
 
 import type { MdbaseConnection } from "@mdbase-dev/connect";
 import type {
+  CollectionFileReadOptions,
   CollectionFileRepository,
   CollectionId,
   ExportedCollectionFile,
   FileRevision,
-  ReaderRequestOptions,
 } from "@mdbase-reader/core";
 
 // A grid of screenshots must not fan out enough list/open/read requests to
@@ -24,7 +24,7 @@ export class ConnectCollectionFileRepository implements CollectionFileRepository
     _collectionId: CollectionId,
     file: string,
     expectedRevision?: FileRevision,
-    options: ReaderRequestOptions = {},
+    options: CollectionFileReadOptions = {},
   ): Promise<ExportedCollectionFile> {
     options.signal?.throwIfAborted();
     const pending = this.#acquireRead(options.signal).then(async () => {
@@ -75,7 +75,7 @@ export class ConnectCollectionFileRepository implements CollectionFileRepository
   async #read(
     file: string,
     expectedRevision: FileRevision | undefined,
-    options: ReaderRequestOptions,
+    options: CollectionFileReadOptions,
   ): Promise<ExportedCollectionFile> {
     const path = portableFilePath(file);
     const descriptor = outcomeValue(await this.files.stat({ path }, options), "find export file");
@@ -85,14 +85,24 @@ export class ConnectCollectionFileRepository implements CollectionFileRepository
     if (expectedRevision && descriptor.contentDigest !== expectedRevision) {
       throw new ConnectDocumentError("export file", "file_revision_changed");
     }
+    checkFileSize(descriptor.size, options.maxBytes);
+    options.signal?.throwIfAborted();
     const blob = options.signal
       ? await this.files.download(descriptor, options)
       : await this.files.download(descriptor);
+    options.signal?.throwIfAborted();
+    checkFileSize(blob.size, options.maxBytes);
     return {
       path: descriptor.path,
       mediaType: descriptor.mediaType ?? (blob.type || mediaTypeFromPath(descriptor.path)),
       bytes: new Uint8Array(await blob.arrayBuffer()),
     };
+  }
+}
+
+function checkFileSize(size: number, maximum?: number): void {
+  if (maximum !== undefined && (!Number.isFinite(size) || size < 0 || size > maximum)) {
+    throw new ConnectDocumentError("read file", "file_too_large");
   }
 }
 

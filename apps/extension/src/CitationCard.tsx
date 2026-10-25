@@ -13,22 +13,30 @@ export function CitationCard({
   if (c.source) {
     return null;
   }
-  if (c.citationPending) {
-    return <p className="hint citation">Looking for citation details…</p>;
-  }
   const preview = c.citation;
   if (!preview) {
-    return null;
+    return c.citationPending ? (
+      <p className="hint citation" role="status">
+        Looking for citation details…
+      </p>
+    ) : null;
   }
   return (
     <section className="citation" aria-label="Citation">
       <span className="eyebrow">CITATION</span>
       <CitationDetails citation={preview.citation} doi={preview.doi ?? null} />
+      {c.citationPending ? (
+        <p className="hint" role="status">
+          Still looking for citation details… You can save now.
+        </p>
+      ) : null}
       <p className="hint">
         {preview.origin === "doi"
           ? "From the DOI registry. Saved with the source; edit it later in Reader."
-          : "From the publisher’s page metadata. Saved with the source; edit it later in Reader."}
-        {preview.problem ? ` The DOI record was unavailable (${preview.problem}).` : ""}
+          : preview.origin === "citoid"
+            ? "Includes details from Wikimedia’s Citoid service. Saved with the source; edit it later in Reader."
+            : "From the page’s metadata. Saved with the source; edit it later in Reader."}
+        {preview.problem ? ` ${preview.problem}` : ""}
       </p>
     </section>
   );

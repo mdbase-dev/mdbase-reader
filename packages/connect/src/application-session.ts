@@ -31,6 +31,7 @@ import { connectCollectionFileRepository } from "./collection-files.js";
 import { connectDocumentRepository } from "./documents.js";
 import { connectLibraryViewRepository, type LibraryViewRepository } from "./library-views.js";
 import { ConnectMigrationTarget } from "./migration-target.js";
+import { ReaderSettingsStore } from "./reader-settings.js";
 import {
   ConnectAnnotationRepository,
   ConnectContentSearchRepository,
@@ -39,6 +40,7 @@ import {
 } from "./repositories.js";
 import { connectSourceImportRepository } from "./source-imports.js";
 
+import type { ReaderCreateFollowThrough } from "./create-follow-through.js";
 import type { MigrationTarget } from "@mdbase-reader/migration";
 
 export type ReaderConnectSnapshot = MdbaseApplicationSessionSnapshot;
@@ -75,6 +77,11 @@ export interface ReaderConnectedCollection {
   readonly files: CollectionFileRepository;
   readonly libraryViews: LibraryViewRepository;
   /**
+   * Reader's collection-wide settings record, `_settings/dev.mdbase.reader.md`, whose name
+   * templates this collection's creates use. Absent in test doubles.
+   */
+  readonly settings?: ReaderSettingsStore;
+  /**
    * Calls `listener` when the source list may have changed outside this
    * workspace's own writes: another tab, app or device added, edited or
    * removed a source, or the change feed reset. Absent for Connect collections.
@@ -83,6 +90,11 @@ export interface ReaderConnectedCollection {
   /** Connect loopback upgrade; absent for native SDK collections. */
   readonly directAccess?: ReaderDirectAccessController;
   readonly bodyRecovery: BodyUpdateRecovery;
+  /**
+   * Record creates kept on this device until the collection confirms them, and the ones
+   * that need the user. Absent when creates are decided before they return (Connect).
+   */
+  readonly createFollowThrough?: ReaderCreateFollowThrough;
 }
 
 export interface ReaderApplicationSessionOptions {
@@ -171,15 +183,18 @@ export function connectedReaderCollection(
     return cached;
   }
   const client = connectClient(connection);
+  // No change feed here: the settings are read when first needed and after each save.
+  const settings = new ReaderSettingsStore(client);
   const collection: ReaderConnectedCollection = {
     collectionId: collectionId(connection.collectionId),
     get collectionName() {
       return connection.info()?.displayName ?? snapshot.info.displayName;
     },
     sources: new ConnectSourceRepository(client),
-    sourceImports: connectSourceImportRepository(connection, client),
+    sourceImports: connectSourceImportRepository(connection, client, settings),
     migration: new ConnectMigrationTarget(connection),
-    annotations: new ConnectAnnotationRepository(client),
+    annotations: new ConnectAnnotationRepository(client, undefined, settings),
+    settings,
     annotationAssets: connectAnnotationAssetRepository(connection),
     documents: connectDocumentRepository(connection),
     contentSearch: new ConnectContentSearchRepository(client),

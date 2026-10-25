@@ -1,9 +1,11 @@
+import { parseDocumentRange, searchDestinationMatchesDocument } from "@mdbase-reader/core";
 import { createEventEmitter, scrollMotionTracker } from "@mdbase-reader/reading-surface";
 
 import type { EmbedPdfRuntime } from "./embedpdf-runtime.js";
-import type { AnnotationId } from "@mdbase-reader/core";
+import type { AnnotationId, DocumentRange } from "@mdbase-reader/core";
 import type {
   ReadingMotion,
+  ReadingRangeResolution,
   ReadingSurface,
   ReaderLocator,
   SurfaceDocument,
@@ -21,6 +23,7 @@ export class EmbedPdfSurface implements ReadingSurface {
   readonly #textSelections =
     createEventEmitter<Parameters<Parameters<EmbedPdfRuntime["onTextSelected"]>[0]>[0]>();
   readonly #annotationActivations = createEventEmitter<AnnotationId>();
+  readonly #annotationDismissals = createEventEmitter<null>();
   readonly #cleared = createEventEmitter<null>();
   readonly #motions = createEventEmitter<ReadingMotion>();
   /** Reader's own jumps move the page too; what follows is not the reader scrolling. */
@@ -31,6 +34,7 @@ export class EmbedPdfSurface implements ReadingSurface {
   readonly #unsubscribePage: () => void;
   readonly #unsubscribeText: () => void;
   readonly #unsubscribeAnnotationActivation: () => void;
+  readonly #unsubscribeAnnotationDismissal: () => void;
   #pageIndex: number;
   #destroyed = false;
 
@@ -53,6 +57,9 @@ export class EmbedPdfSurface implements ReadingSurface {
     this.#unsubscribeAnnotationActivation = runtime.onAnnotationActivated((annotationId) =>
       this.#annotationActivations.emit(annotationId),
     );
+    this.#unsubscribeAnnotationDismissal =
+      runtime.onAnnotationDismissed?.(() => this.#annotationDismissals.emit(null)) ??
+      (() => undefined);
     const motion = scrollMotionTracker((value) => this.#motions.emit(value));
     this.#settleMotion = () => motion.settle("jump");
     const stops = [
@@ -65,6 +72,27 @@ export class EmbedPdfSurface implements ReadingSurface {
       this.locations.emit({ kind: "pdf", pageIndex });
     });
     this.capabilities = {
+      annotationRange: {
+        contains: async (range, target) => {
+          if (range.kind !== "pages" || !runtime.pageCount) {
+            return null;
+          }
+          const count = await runtime.pageCount();
+          if (
+            !Number.isSafeInteger(range.start) ||
+            !Number.isSafeInteger(range.end) ||
+            range.start < 0 ||
+            range.end < range.start ||
+            range.end >= count
+          ) {
+            return null;
+          }
+          const page =
+            target.pdf?.pageIndex ??
+            (target.position?.kind === "pdf" ? target.position.pageIndex : undefined);
+          return page === undefined ? null : page >= range.start && page <= range.end;
+        },
+      },
       textSelection: {
         selections: this.#textSelections,
         cleared: this.#cleared,
@@ -78,6 +106,15 @@ export class EmbedPdfSurface implements ReadingSurface {
       },
       textExtraction: {
         extractText: (options) => runtime.extractText(options),
+        extractSearchSegments: (options) =>
+          runtime.extractSearchSegments?.(options) ?? Promise.resolve([]),
+      },
+      searchNavigation: {
+        goToDestination: (destination) =>
+          searchDestinationMatchesDocument(destination, this.document.document)
+            ? (runtime.goToSearchDestination?.(destination) ?? Promise.resolve(false))
+            : Promise.resolve(false),
+        clear: () => runtime.clearSearch?.(),
       },
       decorations: {
         setAnnotations: (annotations) => {
@@ -95,7 +132,56 @@ export class EmbedPdfSurface implements ReadingSurface {
           return Promise.resolve();
         },
       },
-      annotationActivation: { activations: this.#annotationActivations },
+      annotationActivation: {
+        activations: this.#annotationActivations,
+        dismissals: this.#annotationDismissals,
+        ...(runtime.activationRect
+          ? { activationRect: () => runtime.activationRect?.() ?? null }
+          : {}),
+      },
+    };
+  }
+
+  public async resolveReadingRange(range: DocumentRange): Promise<ReadingRangeResolution> {
+    const count = await this.#runtime.pageCount?.();
+    if (
+      !parseDocumentRange(range) ||
+      range.kind !== "pages" ||
+      count === undefined ||
+      range.end >= count
+    ) {
+      return {
+        valid: false,
+        message:
+          "The chapter page range is invalid for this PDF, or its page count is unavailable.",
+      };
+    }
+    return {
+      valid: true,
+      start: { kind: "pdf", pageIndex: range.start },
+      measure: (locator) => {
+        if (
+          locator.kind !== "pdf" ||
+          !Number.isSafeInteger(locator.pageIndex) ||
+          locator.pageIndex < 0 ||
+          locator.pageIndex >= count
+        ) {
+          return null;
+        }
+        return {
+          position:
+            locator.pageIndex < range.start
+              ? "before"
+              : locator.pageIndex > range.end
+                ? "after"
+                : "inside",
+          atEnd: locator.pageIndex >= range.end,
+          progress: Math.max(
+            0,
+            Math.min(1, (locator.pageIndex - range.start) / (range.end - range.start + 1)),
+          ),
+        };
+      },
     };
   }
 
@@ -103,12 +189,12 @@ export class EmbedPdfSurface implements ReadingSurface {
     return { kind: "pdf", pageIndex: this.#pageIndex };
   }
 
-  public goTo(locator: ReaderLocator): Promise<boolean> {
+  public async goTo(locator: ReaderLocator): Promise<boolean> {
     if (locator.kind !== "pdf" || locator.pageIndex < 0 || !Number.isInteger(locator.pageIndex)) {
       return Promise.resolve(false);
     }
     this.#settleMotion();
-    this.#runtime.goToPage(locator.pageIndex);
+    await this.#runtime.goToPage(locator.pageIndex);
     this.#pageIndex = locator.pageIndex;
     return Promise.resolve(true);
   }
@@ -121,11 +207,13 @@ export class EmbedPdfSurface implements ReadingSurface {
       this.#unsubscribeCleared();
       this.#unsubscribeMotion();
       this.#unsubscribeAnnotationActivation();
+      this.#unsubscribeAnnotationDismissal();
       this.#areaSelections.clear();
       this.#textSelections.clear();
       this.#cleared.clear();
       this.#motions.clear();
       this.#annotationActivations.clear();
+      this.#annotationDismissals.clear();
       this.locations.clear();
       this.#runtime.destroy();
       this.#destroyed = true;

@@ -10,6 +10,7 @@ import {
 } from "./library-columns.js";
 import { publicationDateLabel } from "./library-publication-date.js";
 import { sourceFormat } from "./mdbase-library-views.js";
+import { readingProgressValue, readingStatusOf } from "./reading-progress.js";
 
 import type {
   ReadingStatus as ReadingStatusValue,
@@ -22,21 +23,35 @@ const empty = <span className="library-empty-value">—</span>;
 
 type CellRenderer = (source: SourceSummary, annotations: number) => JSX.Element;
 
+/**
+ * The title leads; people, format and, for a part, its book follow on one quieter line. A
+ * creator or format column hides its part of that line (library.css) rather than repeat it.
+ */
+function TitleCell({
+  source,
+  context,
+}: {
+  readonly source: SourceSummary;
+  readonly context?: string | undefined;
+}): JSX.Element {
+  return (
+    <span className="library-title-copy">
+      <strong title={source.title}>{source.title}</strong>
+      <small>
+        {source.creators.length ? (
+          <span className="library-title-creators">{source.creators.join(", ")}</span>
+        ) : null}
+        <span className={`library-title-format is-${sourceFormat(source)}`}>
+          {formatLabel(source)}
+        </span>
+        {context ? <span className="library-title-context">{context}</span> : null}
+      </small>
+    </span>
+  );
+}
+
 const builtinCells: Record<BuiltinLibraryColumn, CellRenderer> = {
-  title: (source) => (
-    <>
-      <span
-        className={`source-format-tag is-${sourceFormat(source)}`}
-        title={source.documents.length === 0 ? "No file attached" : undefined}
-      >
-        {formatLabel(source)}
-      </span>
-      <span className="library-title-copy">
-        <strong title={source.title}>{source.title}</strong>
-        {source.creators.length ? <small>{source.creators.join(", ")}</small> : null}
-      </span>
-    </>
-  ),
+  title: (source) => <TitleCell source={source} />,
   creator: (source) => <>{source.creators.join(", ") || "—"}</>,
   published: (source) => <>{publicationDateLabel(source.published) ?? "—"}</>,
   status: (source) => <ReadingStatus source={source} />,
@@ -67,16 +82,22 @@ export function TableValue({
   column,
   annotations,
   selected,
+  context,
 }: {
   readonly source: SourceSummary;
   readonly column: LibraryColumn;
+  readonly context?: string | undefined;
   readonly annotations: number;
   /** Values a saved view selected for this source, keyed by field. */
   readonly selected?: Readonly<Record<string, unknown>> | undefined;
 }): JSX.Element {
   const key = propertyKey(column);
   if (key === null) {
-    return builtinCells[column as BuiltinLibraryColumn](source, annotations);
+    return column === "title" ? (
+      <TitleCell source={source} context={context} />
+    ) : (
+      builtinCells[column as BuiltinLibraryColumn](source, annotations)
+    );
   }
   const text = formatPropertyValue(propertyValue(source, key, selected));
   return text ? (
@@ -110,17 +131,22 @@ export function relativeDay(value: string, now = new Date()): string {
   });
 }
 
+/** A status reads as a coloured word, with progress as a number beside it: "Reading 42%". */
 export function ReadingStatus({ source }: { readonly source: SourceSummary }): JSX.Element {
   const progress = readingProgress(source);
   return (
     <span className={`library-status is-${readingStatusOf(source)}`}>
       <i className="library-status-mark" aria-hidden="true" />
-      <span>{statusLabel(source)}</span>
-      {progress !== null ? (
-        <span className="library-progress" aria-label={`${String(progress)}% read`}>
-          <i style={{ width: `${String(progress)}%` }} />
-        </span>
-      ) : null}
+      <span className="library-status-word">{statusLabel(source)}</span>
+      {progress !== null ? <ProgressNumber progress={progress} /> : null}
+    </span>
+  );
+}
+
+function ProgressNumber({ progress }: { readonly progress: number }): JSX.Element {
+  return (
+    <span className="library-status-progress" title={`${String(progress)}% read`}>
+      {progress}%
     </span>
   );
 }
@@ -157,34 +183,42 @@ export function StatusPicker({
         onKeyDown={(event) => event.stopPropagation()}
         onChange={(next) => onChange(source.id, next)}
       />
-      {progress !== null ? (
-        <span className="library-progress" aria-label={`${String(progress)}% read`}>
-          <i style={{ width: `${String(progress)}%` }} />
-        </span>
-      ) : null}
+      {progress !== null ? <ProgressNumber progress={progress} /> : null}
     </span>
   );
-}
-
-function readingStatusOf(source: SourceSummary): ReadingStatusValue {
-  return source.reading?.status ?? source.readingStatus ?? "inbox";
 }
 
 function statusLabel(source: SourceSummary): string {
   return readingStatusLabel(readingStatusOf(source));
 }
 
+/** Progress shows only while reading; a finished or queued source's old figure would mislead. */
 function readingProgress(source: SourceSummary): number | null {
-  const progress = source.reading?.progress;
-  if (progress === undefined || readingStatusOf(source) !== "reading") {
-    return null;
-  }
-  return Math.round(Math.max(0, Math.min(1, progress)) * 100);
+  return readingStatusOf(source) === "reading" ? readingProgressValue(source) : null;
 }
 
+/** The source's format as a word, as the format filter names it. */
 export function formatLabel(source: SourceSummary): string {
   const format = sourceFormat(source);
-  return format === "web" ? "Web" : format === "note" ? "—" : format.toLocaleUpperCase();
+  return format === "web"
+    ? "Web page"
+    : format === "note"
+      ? "No file attached"
+      : format === "file"
+        ? "File"
+        : format.toLocaleUpperCase();
+}
+
+/** The format short enough for a card's bookplate or a thumbnail; a dash when there is no file. */
+export function shortFormatLabel(source: SourceSummary): string {
+  const format = sourceFormat(source);
+  return format === "web"
+    ? "Web"
+    : format === "note"
+      ? "—"
+      : format === "file"
+        ? "File"
+        : format.toLocaleUpperCase();
 }
 
 export function countLabel(count: number, noun: string): string {

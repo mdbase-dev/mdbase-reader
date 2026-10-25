@@ -3,9 +3,17 @@ import {
   prepareAnnotationSelection,
   type ComposerSelection,
 } from "./annotation-composer-request.js";
+import { isAnnotationSaveCancelled } from "./annotation-ownership.js";
 import { readerErrorMessage } from "./errors.js";
+import { lastHighlightColor } from "./highlight-colors.js";
 
-import type { Annotation, AnnotationCreationRequest, Source, SourceId } from "@mdbase-reader/core";
+import type {
+  Annotation,
+  AnnotationCreationRequest,
+  HighlightColorKey,
+  Source,
+  SourceId,
+} from "@mdbase-reader/core";
 import type { ReadingSurface } from "@mdbase-reader/reading-surface";
 export interface SelectedDraft {
   readonly sourceId: SourceId;
@@ -39,6 +47,8 @@ export async function saveSelection(
     readonly source: Source;
     readonly surface: ReadingSurface;
     readonly create: (request: AnnotationCreationRequest) => Promise<Annotation>;
+    /** A text highlight's colour; the last one used when omitted. */
+    readonly color?: HighlightColorKey;
   },
   selection: ComposerSelection,
   note: string,
@@ -47,9 +57,21 @@ export async function saveSelection(
   setStatus: (value: "idle" | "saving") => void,
 ): Promise<void> {
   try {
-    await input.create(await annotationRequest(input.source, input.surface, selection, note));
+    await input.create(
+      await annotationRequest(
+        input.source,
+        input.surface,
+        selection,
+        note,
+        input.color ?? lastHighlightColor(),
+      ),
+    );
     dismiss();
   } catch (reason) {
+    // Declining an owner confirmation keeps the selection without reporting a failure.
+    if (isAnnotationSaveCancelled(reason)) {
+      return;
+    }
     setProblem({
       sourceId: input.source.id,
       message: readerErrorMessage(reason, "Reader could not save this annotation."),

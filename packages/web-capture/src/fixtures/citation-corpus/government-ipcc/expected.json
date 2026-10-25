@@ -1,0 +1,14 @@
+{
+  "type": "report",
+  "title": "Climate Change 2023: Synthesis Report",
+  "author": [
+    {
+      "literal": "Intergovernmental Panel on Climate Change"
+    }
+  ],
+  "issued": {
+    "date-parts": [[2023]]
+  },
+  "publisher": "Intergovernmental Panel on Climate Change",
+  "URL": "https://www.ipcc.ch/report/ar6/syr/"
+}

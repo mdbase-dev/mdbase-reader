@@ -17,14 +17,24 @@ import { createEpubAnnotationActivations } from "./epub-annotation-activation.js
 import { annotationToEpubDecoration, applyAnnotationDecorations } from "./epub-decoration.js";
 import { EpubFrameEnhancements, clearFrameSelections } from "./epub-frames.js";
 import { sessionReadiumLocatorForPublication, stableReadiumLocator } from "./epub-locator.js";
+import { containsEpubAnnotationRange, resolveEpubReadingRange } from "./epub-reading-range.js";
 import { safePublicationFetch } from "./epub-safe-fetch.js";
+import { createEpubSearch } from "./epub-search.js";
 import { extractPublicationText } from "./epub-text.js";
 import { selectedTextDraft } from "./readium-selection.js";
 
-import type { Annotation, AnnotationId } from "@mdbase-reader/core";
+import type {
+  Annotation,
+  AnnotationId,
+  AnnotationTarget,
+  DocumentRange,
+  SearchDestination,
+  SearchTextSegment,
+} from "@mdbase-reader/core";
 import type {
   ContentsEntry,
   EventSource,
+  ReadingSurface,
   ReadingMotion,
   ReadingTypography,
   TextSelectionDraft,
@@ -33,6 +43,8 @@ import type {
 import type { Link } from "@readium/shared";
 
 export interface ReadiumRuntime {
+  resolveReadingRange?: ReadingSurface["resolveReadingRange"];
+  containsAnnotationRange?(range: DocumentRange, target: AnnotationTarget): Promise<boolean | null>;
   currentLocator(): Readonly<Record<string, unknown>>;
   goTo(locator: Readonly<Record<string, unknown>>): Promise<boolean>;
   goPage?(direction: -1 | 1): Promise<boolean>;
@@ -40,11 +52,17 @@ export interface ReadiumRuntime {
   goToContents?(id: string): Promise<boolean>;
   clearSelection(): void;
   extractText(options?: { readonly signal?: AbortSignal }): Promise<string>;
+  extractSearchSegments?(options?: {
+    readonly signal?: AbortSignal;
+  }): Promise<readonly SearchTextSegment[]>;
+  goToSearchDestination?(destination: SearchDestination): Promise<boolean>;
+  clearSearch?(): void;
   onLocationChanged(listener: (locator: Readonly<Record<string, unknown>>) => void): Unsubscribe;
   onTextSelected(listener: (selection: TextSelectionDraft) => void): Unsubscribe;
   onSelectionCleared?(listener: () => void): Unsubscribe;
   onMotion?(listener: (motion: ReadingMotion) => void): Unsubscribe;
   onAnnotationActivated(listener: (annotationId: AnnotationId) => void): Unsubscribe;
+  nearestAnnotation?(): AnnotationId | null;
   setAnnotations(annotations: readonly Annotation[]): void;
   setActiveAnnotation(annotation: Annotation | null): void;
   setTypography(typography: ReadingTypography): Promise<void>;
@@ -52,6 +70,19 @@ export interface ReadiumRuntime {
 }
 
 export { readiumSelectionToDraft } from "./readium-selection.js";
+
+function publicationRanges(
+  publication: Publication,
+  baseUrl: string,
+  packagePath: string | undefined,
+): Pick<ReadiumRuntime, "resolveReadingRange" | "containsAnnotationRange"> {
+  return {
+    resolveReadingRange: (range) =>
+      resolveEpubReadingRange(publication, baseUrl, range, packagePath),
+    containsAnnotationRange: (range, target) =>
+      containsEpubAnnotationRange(publication, baseUrl, range, target, packagePath),
+  };
+}
 
 function objectValue(value: unknown, name: string): Readonly<Record<string, unknown>> {
   if (!value || typeof value !== "object" || Array.isArray(value)) {
@@ -75,10 +106,29 @@ const readerEpubDefaults = {
   optimalLineLength: 65,
 };
 
+/** The requested starting point, when it names a resource in the reading order. */
+function startingLocator(
+  input: {
+    readonly initialLocator?: Readonly<Record<string, unknown>>;
+    readonly publicationBaseUrl: string;
+  },
+  publication: Publication,
+): ReturnType<typeof sessionReadiumLocatorForPublication> {
+  const requested = input.initialLocator
+    ? sessionReadiumLocatorForPublication(
+        input.initialLocator,
+        publication,
+        input.publicationBaseUrl,
+      )
+    : null;
+  return requested && publication.readingOrder.findWithHref(requested.href) ? requested : null;
+}
+
 export async function createReadiumRuntime(input: {
   readonly container: HTMLElement;
   readonly manifest: unknown;
   readonly publicationBaseUrl: string;
+  readonly packagePath?: string;
   readonly initialLocator?: Readonly<Record<string, unknown>>;
 }): Promise<ReadiumRuntime> {
   const publication = readiumPublication(input.manifest);
@@ -92,17 +142,7 @@ export async function createReadiumRuntime(input: {
   if (positions.length === 0) {
     throw new Error("Readium cannot open an EPUB with an empty reading order.");
   }
-  const requestedLocator = input.initialLocator
-    ? sessionReadiumLocatorForPublication(
-        input.initialLocator,
-        publication,
-        input.publicationBaseUrl,
-      )
-    : null;
-  const initialLocator =
-    requestedLocator && publication.readingOrder.findWithHref(requestedLocator.href)
-      ? requestedLocator
-      : positions[0];
+  const initialLocator = startingLocator(input, publication) ?? positions[0];
 
   const listeners: EpubNavigatorListeners = {
     frameLoaded: () => undefined,
@@ -146,6 +186,7 @@ export async function createReadiumRuntime(input: {
   });
 
   return {
+    ...publicationRanges(publication, input.publicationBaseUrl, input.packagePath),
     currentLocator: () => stableReadiumLocator(navigator.currentLocator, input.publicationBaseUrl),
     goTo(locator) {
       const destination = sessionReadiumLocatorForPublication(
@@ -162,6 +203,7 @@ export async function createReadiumRuntime(input: {
     ...sectionNavigation(publication, navigator, motion.settle),
     clearSelection: () => clearFrameSelections(input.container),
     extractText: (options) => extractPublicationText(publication, options?.signal),
+    ...createEpubSearch(navigator, publication, input.publicationBaseUrl, motion.settle),
     onLocationChanged(listener) {
       locationListeners.add(listener);
       return () => locationListeners.delete(listener);
@@ -176,6 +218,7 @@ export async function createReadiumRuntime(input: {
       const stops = [annotationActivations.subscribe(listener), frames.onActivated(listener)];
       return () => stops.forEach((stop) => stop());
     },
+    nearestAnnotation: () => frames.nearestAnnotation(),
     setAnnotations(annotations) {
       applyAnnotationDecorations(navigator, annotations, publication, input.publicationBaseUrl);
       frames.setAnnotations(annotations);

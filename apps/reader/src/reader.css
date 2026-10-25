@@ -5,7 +5,7 @@
   --reader-toolbar-height: 50px;
   --reader-library-width: 260px;
   --reader-inspector-width: 326px;
-  --reader-canvas: color-mix(in oklch, var(--canvas) 96%, var(--ink) 4%);
+  --reader-canvas: var(--paper);
   --reader-highlight: oklch(80% 0.11 86 / 0.52);
 }
 
@@ -91,118 +91,6 @@ button {
   min-height: 42px;
 }
 
-.connection-others {
-  margin-top: 34px;
-}
-
-.connection-others h2 {
-  margin: 0 0 8px;
-  color: var(--faint);
-  font-size: 11px;
-  font-weight: 700;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-}
-
-.connection-others ul {
-  margin: 0;
-  padding: 0;
-  list-style: none;
-  border: 1px solid var(--line);
-  border-radius: var(--control-radius);
-  overflow: hidden;
-}
-
-.connection-others li + li {
-  border-top: 1px solid var(--line);
-}
-
-.connection-other {
-  width: 100%;
-  min-height: 44px;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 0 12px;
-  color: var(--ink);
-  background: var(--paper);
-  font: inherit;
-  font-size: 14px;
-  text-align: left;
-  cursor: pointer;
-}
-
-.connection-other span {
-  min-width: 0;
-  flex: 1;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.connection-other svg {
-  width: 16px;
-  height: 16px;
-  flex: none;
-  color: var(--muted);
-}
-
-.connection-other .connection-other-go {
-  width: 13px;
-  height: 13px;
-  color: var(--faint);
-  transition: transform var(--motion-quick, 120ms) ease;
-}
-
-.connection-other:hover:not(:disabled) {
-  background: var(--hover);
-}
-
-.connection-other:hover:not(:disabled) .connection-other-go {
-  color: var(--ink);
-  transform: translateX(2px);
-}
-
-.connection-other:focus-visible {
-  outline: 2px solid var(--accent);
-  outline-offset: -2px;
-}
-
-.connection-other:disabled {
-  cursor: default;
-  opacity: 0.55;
-}
-
-.connection-connect {
-  min-height: 36px;
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  margin: 18px 0 0 -10px;
-  padding: 0 10px;
-  border-radius: var(--control-radius);
-  color: var(--muted);
-  background: transparent;
-  font: inherit;
-  font-size: 14px;
-  cursor: pointer;
-}
-
-.connection-connect svg {
-  width: 14px;
-  height: 14px;
-}
-
-.connection-connect:hover:not(:disabled) {
-  color: var(--ink);
-  background: var(--hover);
-}
-
-.connection-connect:disabled {
-  cursor: default;
-  opacity: 0.55;
-}
-
 .connection-secondary {
   min-height: 36px;
   padding: 0 10px;
@@ -215,40 +103,6 @@ button {
 .connection-secondary:hover {
   color: var(--ink);
   background: var(--hover);
-}
-
-.connection-setup {
-  margin: 0 0 22px;
-  padding: 16px;
-  border-top: 1px solid var(--line);
-  border-bottom: 1px solid var(--line);
-  background: var(--hover);
-}
-
-.connection-setup h2 {
-  margin: 0 0 6px;
-  font-size: 15px;
-}
-
-.connection-setup ul {
-  margin: 14px 0;
-  padding-left: 20px;
-  color: var(--ink-soft);
-  font-family: var(--mono);
-  font-size: 9px;
-  line-height: 1.7;
-}
-
-.connection-local-note {
-  margin: 24px 0 0;
-  color: var(--faint);
-  font-size: 10px;
-  line-height: 1.45;
-}
-
-.connection-local-note code {
-  color: var(--muted);
-  font-family: var(--mono);
 }
 
 .reader-shell {
@@ -298,7 +152,7 @@ button {
   border-bottom: 1px solid color-mix(in oklch, var(--accent) 32%, var(--line));
   color: var(--ink-soft);
   background: color-mix(in oklch, var(--accent) 8%, var(--paper));
-  font-size: 11px;
+  font-size: var(--text-xs);
 }
 
 .deployment-update button {
@@ -312,9 +166,60 @@ button {
   cursor: pointer;
 }
 
+.shell-notices {
+  z-index: 20;
+  min-width: 0;
+  overflow: hidden;
+}
+
 .deployment-update button:hover {
   border-color: var(--accent);
   color: var(--accent);
+}
+
+.create-follow-through {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 6px 14px;
+  padding: 7px 16px;
+  border-bottom: 1px solid var(--line);
+  color: var(--ink-soft);
+  background: var(--paper);
+  font-size: var(--text-xs);
+}
+
+.create-follow-through p {
+  margin: 0;
+  max-width: 72ch;
+}
+
+.create-follow-through-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.create-follow-through button {
+  min-height: 28px;
+  padding: 0 10px;
+  border: 1px solid var(--line-strong);
+  border-radius: 3px;
+  color: var(--ink);
+  background: var(--paper);
+  font: 600 10px/1 var(--mono);
+  cursor: pointer;
+}
+
+.create-follow-through button:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.create-follow-through button:disabled {
+  cursor: default;
+  opacity: 0.6;
 }
 
 .connection-state {
@@ -357,8 +262,9 @@ button {
 }
 
 .connection-direct-action:focus-visible {
-  outline: 2px solid var(--accent);
+  outline: 2px solid transparent;
   outline-offset: 2px;
+  box-shadow: var(--focus-ring);
 }
 
 .connection-direct-action.has-problem {
@@ -523,7 +429,7 @@ button {
 }
 
 .library-action strong {
-  font-size: 11px;
+  font-size: var(--text-xs);
 }
 
 .library-action small,
@@ -594,7 +500,7 @@ button {
 .library-search-progress {
   color: var(--accent);
   font-family: var(--mono);
-  font-size: 10px;
+  font-size: var(--text-xs);
   letter-spacing: 0.08em;
 }
 
@@ -669,7 +575,7 @@ button {
   border-top: 1px solid var(--accent);
   color: var(--muted);
   font-family: var(--mono);
-  font-size: 10px;
+  font-size: var(--text-xs);
   letter-spacing: 0.04em;
 }
 
@@ -688,7 +594,7 @@ button {
 .source-row small {
   margin-top: 2px;
   color: var(--muted);
-  font-size: 10.5px;
+  font-size: var(--text-xs);
 }
 
 .source-row-meta {
@@ -742,7 +648,7 @@ button {
 }
 
 .library-empty span {
-  font-size: 10px;
+  font-size: var(--text-xs);
   line-height: 1.45;
 }
 
@@ -764,14 +670,24 @@ button {
   height: 15px;
 }
 
-.import-backdrop {
+.reader-modal {
   position: fixed;
-  z-index: 100;
   inset: 0;
-  display: grid;
-  place-items: center;
-  padding: 24px;
+  margin: auto;
+  padding: 0;
+  max-width: calc(100vw - 48px);
+  max-height: calc(100dvh - 48px);
+  overflow: auto;
+  color: var(--ink);
+}
+
+.reader-modal::backdrop {
   background: var(--color-scrim);
+}
+
+.reader-modal.import-dialog {
+  position: fixed;
+  overflow: auto;
 }
 
 .import-dialog {
@@ -991,7 +907,7 @@ button {
   padding: 24px;
   color: var(--muted);
   font-family: var(--mono);
-  font-size: 10px;
+  font-size: var(--text-xs);
   text-align: center;
 }
 
@@ -1051,6 +967,12 @@ button {
   min-height: 0;
 }
 
+/* PDF pages sit on a deeper backdrop so their edges separate in both themes. The
+   viewer's shadow DOM paints its backdrop from the inherited --color-canvas. */
+.pdf-viewer {
+  --color-canvas: var(--bg-document);
+}
+
 .document-renderer-stage {
   position: relative;
   overflow: hidden;
@@ -1059,6 +981,15 @@ button {
 .document-renderer-status {
   position: absolute;
   inset: 0;
+  background: var(--reader-canvas);
+}
+
+/* A chunk download failure must stay actionable above the preparing-page overlay. */
+.document-renderer-stage .lazy-feature-error {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  padding: 1rem;
   background: var(--reader-canvas);
 }
 
@@ -1205,7 +1136,7 @@ button {
   border-radius: 0 5px 5px 0;
   color: var(--ink-soft);
   background: color-mix(in oklch, var(--reader-highlight) 8%, transparent);
-  font-family: Georgia, "Times New Roman", serif;
+  font-family: var(--serif);
   font-size: 12.5px;
   line-height: 1.48;
 }
@@ -1259,7 +1190,7 @@ button {
 .annotation-composer p,
 .annotation-compose-error {
   color: var(--danger);
-  font-size: 10px;
+  font-size: var(--text-xs);
 }
 
 .annotation-composer > p {
@@ -1280,7 +1211,7 @@ button {
   align-items: center;
   justify-content: space-between;
   color: var(--muted);
-  font-size: 10px;
+  font-size: var(--text-xs);
 }
 
 .annotation-list-heading > span:last-child {
@@ -1288,7 +1219,7 @@ button {
   display: flex;
   align-items: center;
   color: var(--muted);
-  font-size: 10px;
+  font-size: var(--text-xs);
 }
 
 .annotation-card {
@@ -1309,23 +1240,19 @@ button {
   outline-offset: -2px;
 }
 
-button:focus-visible,
-summary:focus-visible,
-select:focus-visible,
-input:focus-visible {
-  outline: 2px solid color-mix(in oklch, var(--accent) 70%, white);
-  outline-offset: 2px;
-}
+/* Native controls take the shared focus ring from reader-tokens.css. */
 
 .annotation-card:first-of-type {
   border-top: 1px solid var(--line);
 }
 
+/* Quotations are content: the reading face, in body ink rather than grey. */
 .annotation-card blockquote {
   margin: 13px 0;
   padding-left: 12px;
   border-left: 1px solid oklch(70% 0.11 82);
-  color: var(--ink-soft);
+  color: var(--ink);
+  font-family: var(--serif);
   font-size: 12.5px;
   line-height: 1.5;
 }
@@ -1364,14 +1291,14 @@ input:focus-visible {
 .annotation-card p {
   margin: 11px 0;
   color: var(--ink-soft);
-  font-size: 11.5px;
+  font-size: var(--text-xs);
   line-height: 1.5;
 }
 
 .annotation-card-problem {
   margin-bottom: 0;
   color: var(--danger);
-  font-size: 10px;
+  font-size: var(--text-xs);
 }
 
 .annotation-body-editor {
@@ -1408,7 +1335,7 @@ input:focus-visible {
 .annotation-body-editor > p {
   margin: 0;
   color: var(--danger);
-  font-size: 10px;
+  font-size: var(--text-xs);
 }
 
 .annotation-editor-actions {
@@ -1447,14 +1374,14 @@ input:focus-visible {
 
 .annotation-delete-confirmation strong {
   color: var(--ink);
-  font-size: 11px;
+  font-size: var(--text-xs);
 }
 
 .annotation-delete-confirmation p,
 .annotation-delete-confirmation ul {
   margin: 0;
   color: var(--muted);
-  font-size: 10px;
+  font-size: var(--text-xs);
   line-height: 1.5;
 }
 
@@ -1479,7 +1406,7 @@ input:focus-visible {
 
 .inspector-workbench-owner strong {
   color: var(--ink-soft);
-  font-family: "Atkinson Hyperlegible", "Segoe UI", sans-serif;
+  font-family: var(--sans);
   font-size: 13px;
 }
 
@@ -1540,7 +1467,7 @@ input:focus-visible {
   border-radius: 3px;
   color: var(--muted);
   background: var(--paper);
-  font-size: 10px;
+  font-size: var(--text-xs);
 }
 
 .preview-notice span {
@@ -1801,15 +1728,16 @@ input:focus-visible {
   --reader-header-height: 50px;
   --reader-toolbar-height: 54px;
   --reader-tab-height: 40px;
-  --reader-hairline: color-mix(in oklch, var(--line) 76%, transparent);
-  --reader-rail: color-mix(in oklch, var(--paper) 97%, var(--canvas));
-  --reader-canvas: color-mix(in oklch, var(--canvas) 96.5%, var(--ink) 3.5%);
-  --reader-control: color-mix(in oklch, var(--paper) 66%, var(--canvas));
+  --reader-hairline: var(--line);
+  /* The Sources sidebar sits on the chrome plane; panes on the content plane. */
+  --reader-rail: var(--canvas);
+  --reader-canvas: var(--paper);
+  --reader-control: var(--bg-sunken);
 }
 
 .connection-state {
   gap: 8px;
-  font-size: 11px;
+  font-size: var(--text-xs);
 }
 
 .connection-state.is-direct {
@@ -1825,9 +1753,13 @@ input:focus-visible {
   border-radius: var(--control-radius);
 }
 
-.library-pane,
-.inspector-pane {
+.library-pane {
   background: var(--reader-rail);
+}
+
+/* The Notes panel is content, so it sits on the surface plane. */
+.inspector-pane {
+  background: var(--paper);
 }
 
 .library-pane {
@@ -1884,12 +1816,12 @@ input:focus-visible {
 
 .annotation-list-heading {
   height: 54px;
-  font-size: 11.5px;
+  font-size: var(--text-xs);
 }
 
 .annotation-list-heading > span:last-child {
   min-height: auto;
-  font-size: 10.5px;
+  font-size: var(--text-xs);
 }
 
 .annotation-card {
@@ -1993,11 +1925,6 @@ input:focus-visible {
 }
 
 /* Overlays and entry screen */
-
-.import-backdrop,
-.library-save-dialog-backdrop {
-  background: var(--color-scrim);
-}
 
 .connection-secondary {
   min-height: 40px;
@@ -2222,7 +2149,7 @@ input:focus-visible {
 .library-card-copy > span {
   overflow: hidden;
   color: var(--muted);
-  font-size: 10px;
+  font-size: var(--text-xs);
   text-overflow: ellipsis;
   white-space: nowrap;
 }
@@ -2252,19 +2179,20 @@ input:focus-visible {
   white-space: nowrap;
 }
 
-.library-save-dialog-backdrop {
-  position: fixed;
-  z-index: 80;
-  inset: 0;
-  display: grid;
-  place-items: center;
-  padding: 20px;
+.library-save-modal {
+  width: 430px;
+  border: 0;
+  border-radius: var(--control-radius);
+  background: var(--paper);
+}
+
+.library-save-modal::backdrop {
   background: color-mix(in oklch, var(--color-scrim) 54%, transparent);
   backdrop-filter: blur(3px);
 }
 
 .library-save-dialog {
-  width: min(430px, 100%);
+  width: 100%;
   display: grid;
   gap: 14px;
   padding: 24px;
@@ -2298,7 +2226,7 @@ input:focus-visible {
 
 .library-save-dialog > label span {
   color: var(--muted);
-  font-size: 10px;
+  font-size: var(--text-xs);
 }
 
 .library-save-dialog input {

@@ -2,6 +2,7 @@ import { ReaderButton } from "@mdbase-reader/ui";
 import { useEffect, useRef, useState } from "react";
 
 import { annotationEditorKeys } from "./annotation-draft-actions.js";
+import { AnnotationOwnerChooser } from "./AnnotationOwnerChooser.js";
 import { AnnotationTextArea } from "./AnnotationTextArea.js";
 import { CloseIcon } from "./icons.js";
 
@@ -22,9 +23,9 @@ export function AnnotationComposer({
   }));
   const note = comment.selection === composer.selection ? comment.body : composer.note;
   if (!composer.selection) {
-    return <AnnotationComposerNotices composer={composer} />;
+    return null;
   }
-  // Text reaches the composer only when the reader chose to comment; an area may be saved bare.
+  // Text arrives here only as a draft kept by an older version; an area may be saved bare.
   const commenting = composer.selection.kind === "text" || expanded || note !== "";
   return (
     // The region delegates keyboard shortcuts from its interactive children.
@@ -37,7 +38,7 @@ export function AnnotationComposer({
     >
       <header>
         <strong id="annotation-composer-title">
-          {composer.selection.kind === "area" ? "New area annotation" : "Comment on highlight"}
+          {composer.selection.kind === "area" ? "New area capture" : "Comment on highlight"}
         </strong>
         <button
           type="button"
@@ -49,6 +50,7 @@ export function AnnotationComposer({
           <CloseIcon />
         </button>
       </header>
+      <AnnotationOwnerChooser control={composer.ownerControl} />
       {composer.selection.kind === "text" ? (
         <blockquote>{composer.selection.value.target.quote.exact}</blockquote>
       ) : (
@@ -73,14 +75,6 @@ export function AnnotationComposer({
           Not saved yet — keep Reader open until you save this annotation.
         </small>
       ) : null}
-      {composer.newSelection ? (
-        <p className="annotation-new-selection" role="status">
-          You selected other text.{" "}
-          <button type="button" onClick={composer.useNewSelection}>
-            Use it for this comment
-          </button>
-        </p>
-      ) : null}
       {composer.error ? <p role="alert">{composer.error}</p> : null}
       <footer>
         {commenting ? null : (
@@ -92,11 +86,11 @@ export function AnnotationComposer({
             Add a comment
           </button>
         )}
-        <ReaderButton disabled={composer.status === "saving"} onClick={composer.save}>
+        <ReaderButton disabled={annotationSaveDisabled(composer)} onClick={composer.save}>
           {composer.status === "saving"
             ? "Saving…"
             : composer.selection.kind === "area"
-              ? "Save area"
+              ? "Save area capture"
               : "Save highlight"}
         </ReaderButton>
       </footer>
@@ -124,28 +118,6 @@ function AreaPreview({ image }: { readonly image: Blob }): JSX.Element {
   );
 }
 
-function AnnotationComposerNotices({
-  composer,
-}: {
-  readonly composer: AnnotationComposerController;
-}): JSX.Element {
-  return (
-    <>
-      {composer.error ? (
-        <div className="annotation-compose-error" role="alert">
-          {composer.error}
-        </div>
-      ) : null}
-      {composer.resumeDraft ? (
-        <button className="annotation-return" type="button" onClick={composer.resumeDraft}>
-          Resume unfinished annotation
-        </button>
-      ) : null}
-      {composer.returnToReading ? (
-        <button className="annotation-return" type="button" onClick={composer.returnToReading}>
-          Back to reading position
-        </button>
-      ) : null}
-    </>
-  );
+function annotationSaveDisabled(composer: AnnotationComposerController): boolean {
+  return composer.status === "saving" || Boolean(composer.ownerControl?.pending);
 }

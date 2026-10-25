@@ -40,10 +40,11 @@ const after: Source = {
 describe("writes made outside the source panel", () => {
   it("replace the open source record so a newly attached document can be annotated", async () => {
     const adoptSource = vi.fn();
+    const saveNewSourceCitation = vi.fn(() => Promise.resolve(after));
     const writes = adoptingWrites(
       {
         attachSourceFile: vi.fn(() => Promise.resolve(after)),
-        saveNewSourceCitation: vi.fn(() => Promise.resolve(after)),
+        saveNewSourceCitation,
       },
       adoptSource,
     );
@@ -53,7 +54,13 @@ describe("writes made outside the source panel", () => {
       name: "dostoevsky.pdf",
       bytes: new Uint8Array(),
     });
-    await writes.saveNewSourceCitation?.(before, { type: "book" });
+    const provenance = { type: { value: "book", source: "registry:isbn" } };
+    await writes.saveNewSourceCitation?.(before, { type: "book" }, provenance);
+    expect(saveNewSourceCitation).toHaveBeenCalledExactlyOnceWith(
+      before,
+      { type: "book" },
+      provenance,
+    );
 
     expect(adoptSource).toHaveBeenNthCalledWith(1, after);
     expect(adoptSource).toHaveBeenNthCalledWith(2, after);

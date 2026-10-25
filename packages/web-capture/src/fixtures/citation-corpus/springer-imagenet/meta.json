@@ -1,0 +1,10 @@
+{
+  "url": "https://link.springer.com/article/10.1007/s11263-015-0816-y",
+  "retrievedAt": "2026-10-23T06:17:25.791543+00:00",
+  "notes": [
+    "Original reduced reproduction of the captured HTML; article prose, descriptions, images, styles, tracking and executable scripts omitted. Citation metadata values are retained; JSON-LD keeps only citation-related properties.",
+    "Page HTTP status: 200. Final URL: https://link.springer.com/article/10.1007/s11263-015-0816-y?error=cookies_not_supported&code=4324b34b-1c67-4687-9cb3-79910c51a6a1.",
+    "Use the first online publication date (11 April 2015) displayed in the article header and corroborated by DOI/JSON-LD, rather than citation_publication_date December 2015 print issue. All 12 authors are retained; Li Fei-Fei has family name Fei-Fei as in the page comma-form metadata and registry. Publisher follows the page imprint. An earlier attempted Springer URL (10.1007/s11263-014-0745-7) was 404 and is excluded.",
+    "Baseline extractScholarlyMetadata at d0c7061: 7/8 expected fields match; wrong or missing fields: issued. Cosmetic case/whitespace differences are ignored; absent expected fields are not scored."
+  ]
+}

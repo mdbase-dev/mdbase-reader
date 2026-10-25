@@ -1,0 +1,39 @@
+{
+  "status": 200,
+  "body": [
+    {
+      "key": "XJBU5HQJ",
+      "version": 0,
+      "itemType": "preprint",
+      "creators": [
+        {
+          "firstName": "Diederik P.",
+          "lastName": "Kingma",
+          "creatorType": "author"
+        },
+        {
+          "firstName": "Jimmy",
+          "lastName": "Ba",
+          "creatorType": "author"
+        }
+      ],
+      "tags": [
+        {
+          "tag": "Computer Science - Machine Learning",
+          "type": 1
+        }
+      ],
+      "title": "Adam: A Method for Stochastic Optimization",
+      "date": "2017-01-30",
+      "abstractNote": "We introduce Adam, an algorithm for first-order gradient-based optimization of stochastic objective functions, based on adaptive estimates of lower-order moments.",
+      "url": "http://arxiv.org/abs/1412.6980",
+      "extra": "arXiv:1412.6980 [cs.LG]",
+      "repository": "arXiv",
+      "archiveID": "arXiv:1412.6980",
+      "DOI": "10.48550/arXiv.1412.6980",
+      "libraryCatalog": "arXiv.org",
+      "accessDate": "2026-10-23",
+      "shortTitle": "Adam"
+    }
+  ]
+}

@@ -1,9 +1,11 @@
 import { isEditableSourceField } from "@mdbase-reader/core";
 import { useEffect, useRef } from "react";
 
+import { MoreIcon } from "./icons.js";
 import { columnFieldKey, type LibraryColumn } from "./library-columns.js";
 import { StatusPicker, TableValue } from "./LibraryCells.js";
 import { LibraryFieldCellEditor } from "./LibraryFieldCell.js";
+import { LibraryPartDisclosure } from "./LibraryPartDisclosure.js";
 import { columnClass } from "./LibraryTableHeader.js";
 import { hasModifier, itemClick, type LongPress } from "./use-long-press.js";
 
@@ -14,6 +16,8 @@ import type { JSX, MouseEvent } from "react";
 /** Longer than a double-click, so a click meant to open never starts an edit. */
 const EDIT_CLICK_DELAY_MS = 500;
 
+// Column editing and the part disclosure share one virtual row without wrapping grid cells.
+// eslint-disable-next-line max-lines-per-function
 export function LibraryTableRow({
   source,
   index,
@@ -34,6 +38,8 @@ export function LibraryTableRow({
   editing,
   onEditCell,
   onEditDone,
+  partRows,
+  onTogglePart,
 }: LibraryTableProps & {
   readonly source: SourceSummary;
   readonly index: number;
@@ -49,6 +55,7 @@ export function LibraryTableRow({
   readonly onEditCell: (column: LibraryColumn) => void;
   readonly onEditDone: () => void;
 }): JSX.Element {
+  const part = partRows?.get(source.id);
   const selected = selection.ids.has(source.id);
   const pressHandlers = press.bind(onLongPress);
   const editable = (column: LibraryColumn): boolean =>
@@ -62,6 +69,8 @@ export function LibraryTableRow({
       className={`library-table-row${selected ? " is-selected" : ""}`}
       role="row"
       aria-rowindex={index + 2}
+      aria-level={part ? part.depth + 1 : undefined}
+      aria-expanded={part?.expandable ? part.expanded : undefined}
       aria-selected={selected}
       data-row-index={index}
       tabIndex={tabbable ? 0 : -1}
@@ -102,6 +111,9 @@ export function LibraryTableRow({
           tabIndex={-1}
           aria-colindex={columnIndex + 1}
           className={`is-${columnClass(column)}${editable(column) ? " is-editable" : ""}`}
+          style={
+            column === "title" && part ? { paddingInlineStart: 12 + part.depth * 20 } : undefined
+          }
           title={editable(column) ? "Click to edit · F2" : undefined}
           onClick={(event) => {
             // Like a spreadsheet: the first click selects the row, a click on its field edits it.
@@ -122,6 +134,13 @@ export function LibraryTableRow({
             }
           }}
         >
+          {column === "title" ? (
+            <LibraryPartDisclosure
+              source={source}
+              row={part}
+              onToggle={() => onTogglePart?.(source.id)}
+            />
+          ) : null}
           {editing === column && onEditField ? (
             <LibraryFieldCellEditor
               source={source}
@@ -137,10 +156,31 @@ export function LibraryTableRow({
               column={column}
               annotations={annotationCounts.get(source.id) ?? 0}
               selected={valuesByPath.get(source.path)}
+              context={part?.diagnostic ?? part?.context}
             />
           )}
         </span>
       ))}
+      <span role="gridcell" aria-colindex={layout.columns.length + 1} className="is-actions">
+        {/* Shown on hover, focus and selection; the grid's Shift+F10 and the context menu
+            open the same menu, so the button stays out of the tab order like other cells. */}
+        <button
+          type="button"
+          className="icon-button library-row-more"
+          tabIndex={-1}
+          aria-label={`More actions for ${source.title}`}
+          title="More actions"
+          aria-haspopup="menu"
+          onClick={(event) => {
+            event.stopPropagation();
+            const box = event.currentTarget.getBoundingClientRect();
+            onMenu(box.left, box.bottom);
+          }}
+          onDoubleClick={(event) => event.stopPropagation()}
+        >
+          <MoreIcon />
+        </button>
+      </span>
     </div>
   );
 }

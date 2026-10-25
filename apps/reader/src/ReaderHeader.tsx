@@ -3,6 +3,7 @@ import { CollectionSaveWarning } from "@mdbase-dev/ui/collections";
 import { shortcutLabel } from "@mdbase-dev/ui/command-palette";
 import { FeedbackButton } from "@mdbase-dev/ui/feedback";
 import { useMdbaseMarkBusy } from "@mdbase-dev/ui/mark-activity";
+import { useId } from "react";
 
 import { CollectionPicker } from "./CollectionPicker.js";
 import { DisplayMenu } from "./DisplayMenu.js";
@@ -35,7 +36,7 @@ interface ReaderHeaderProps {
   readonly density?: "comfortable" | "compact";
   readonly onChangeDensity?: (density: "comfortable" | "compact") => void;
   readonly collectionName: string;
-  readonly beforeCollectionSwitch?: () => boolean;
+  readonly beforeCollectionSwitch?: () => boolean | Promise<boolean>;
   readonly connectionState: ReaderConnectionState;
   readonly directAccess: ReaderDirectAccessState;
   readonly theme: ThemePreference;
@@ -47,6 +48,8 @@ interface ReaderHeaderProps {
   readonly inspectorAvailable: boolean;
   readonly onToggleInspector: () => void;
   readonly sourceBar?: ReaderHeaderSourceBar | undefined;
+  /** Opens the Settings page from the display menu. */
+  readonly onOpenSettings?: (() => void) | undefined;
 }
 
 /** Local builds point the app menu at local copies of the other apps. */
@@ -74,6 +77,7 @@ function HeaderDisplayMenu({
   onChangeDensity,
   theme,
   onChangeTheme,
+  onOpenSettings,
 }: ReaderHeaderProps): JSX.Element {
   return (
     <DisplayMenu
@@ -84,6 +88,7 @@ function HeaderDisplayMenu({
       {...(typography && onChangeTypography ? { typography, onChangeTypography } : {})}
       {...(onChangeDensity ? { onChangeDensity } : {})}
       {...(onChangeSidebarWhileReading ? { onChangeSidebarWhileReading } : {})}
+      {...(onOpenSettings ? { onOpenSettings } : {})}
     />
   );
 }
@@ -112,9 +117,9 @@ function LibraryHeader({
         <button
           type="button"
           className="icon-button header-pane-toggle is-library"
-          aria-label="Toggle left sidebar"
+          aria-label="Toggle Sources sidebar"
           aria-expanded={libraryOpen}
-          title={`Toggle left sidebar · ${shortcutLabel("mod+\\")}`}
+          title={`Toggle Sources sidebar · ${shortcutLabel("mod+\\")}`}
           onClick={onToggleLibrary}
         >
           <LeftPaneIcon />
@@ -142,41 +147,69 @@ function LibraryHeader({
           onClick={onOpenCommands}
         >
           <SearchIcon />
-          <span>Search</span>
+          <span>Search and commands</span>
           <kbd>{shortcutLabel("mod+k")}</kbd>
         </button>
         {onToggleReadingMode ? (
-          <button
-            className="icon-button header-reading-mode"
-            type="button"
-            aria-label="Reading mode"
-            aria-pressed={readingMode}
-            disabled={!readingModeAvailable && !readingMode}
-            title={
-              readingModeAvailable || readingMode
-                ? `${readingMode ? "Leave" : "Enter"} reading mode · ${shortcutLabel("mod+.")}`
-                : "Open a document to use reading mode"
-            }
-            onClick={onToggleReadingMode}
-          >
-            <ReadingModeIcon />
-          </button>
+          <ReadingModeButton
+            readingMode={readingMode}
+            available={readingModeAvailable || readingMode}
+            onToggle={onToggleReadingMode}
+          />
         ) : null}
         {display}
         <FeedbackButton />
         <button
           className="icon-button header-pane-toggle is-inspector"
           type="button"
-          aria-label="Toggle right sidebar"
+          aria-label="Toggle Notes panel"
           aria-pressed={inspectorOpen}
           disabled={!inspectorAvailable}
-          title={`Toggle right sidebar · ${shortcutLabel("mod+shift+\\")}`}
+          title={`Toggle Notes panel · ${shortcutLabel("mod+shift+\\")}`}
           onClick={onToggleInspector}
         >
           <RightPaneIcon />
         </button>
       </div>
     </header>
+  );
+}
+
+/** Stays focusable while unavailable, so keyboard and screen reader users hear why. */
+function ReadingModeButton({
+  readingMode,
+  available,
+  onToggle,
+}: {
+  readonly readingMode: boolean;
+  readonly available: boolean;
+  readonly onToggle: () => void;
+}): JSX.Element {
+  const descriptionId = useId();
+  return (
+    <>
+      <button
+        className="icon-button header-reading-mode"
+        type="button"
+        aria-label="Reading mode"
+        aria-pressed={readingMode}
+        aria-disabled={available ? undefined : true}
+        aria-describedby={available ? undefined : descriptionId}
+        title={
+          available
+            ? `${readingMode ? "Leave" : "Enter"} reading mode · ${shortcutLabel("mod+.")}`
+            : "Open a document to use reading mode"
+        }
+        onClick={available ? onToggle : undefined}
+      >
+        <ReadingModeIcon />
+      </button>
+      {available ? null : (
+        <span id={descriptionId} className="sr-only">
+          Open a document to use reading mode
+        </span>
+      )}
+    </>
   );
 }
 
@@ -216,6 +249,7 @@ function ConnectionState({
   readonly directAccess: ReaderDirectAccessState;
 }): JSX.Element {
   const { snapshot, working, problem, request } = directAccess;
+  const descriptionId = useId();
   useMdbaseMarkBusy(state === "syncing" && "stream");
   if (snapshot?.authority !== "connector" || state !== "connected") {
     return <PlainConnectionState state={state} />;
@@ -246,23 +280,29 @@ function ConnectionState({
     (denied
       ? "Local network access is blocked. Allow it in your browser’s site settings, then retry."
       : "Request local network access and connect directly to the mdbase relay on this computer.");
+  // The visible words name the button; the explanation is its description.
   return (
-    <button
-      className={`connection-state connection-direct-action${problem ? " has-problem" : ""}`}
-      type="button"
-      title={title}
-      aria-label={title}
-      onClick={request}
-    >
-      {denied ? "Retry local access" : "Connect directly"}
-    </button>
+    <>
+      <button
+        className={`connection-state connection-direct-action${problem ? " has-problem" : ""}`}
+        type="button"
+        title={title}
+        aria-describedby={descriptionId}
+        onClick={request}
+      >
+        {denied ? "Retry local access" : "Connect directly"}
+      </button>
+      <span id={descriptionId} className="sr-only">
+        {title}
+      </span>
+    </>
   );
 }
 
 /** saved_on_device: the SDK keeps changes on this device until it can sync them. */
 export type ReaderConnectionState = "connected" | "offline" | "syncing" | "saved_on_device";
 
-const connectionLabels = {
+export const connectionLabels = {
   connected: "Connected",
   offline: "Offline",
   syncing: "Syncing…",

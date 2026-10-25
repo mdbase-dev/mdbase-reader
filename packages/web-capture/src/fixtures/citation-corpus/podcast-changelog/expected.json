@@ -1,0 +1,21 @@
+{
+  "type": "broadcast",
+  "title": "The legacy of CSS-Tricks",
+  "author": [
+    {
+      "family": "Stacoviak",
+      "given": "Adam"
+    },
+    {
+      "family": "Santo",
+      "given": "Jerod"
+    }
+  ],
+  "issued": {
+    "date-parts": [[2022, 8, 5]]
+  },
+  "container-title": "Changelog Interviews",
+  "publisher": "Changelog Media LLC",
+  "number": "500",
+  "URL": "https://changelog.com/podcast/500"
+}

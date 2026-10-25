@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 
 import { markFraction, withMarkProgress } from "./mark-activity.js";
+import { candidateProvenance } from "./new-citation-provenance.js";
 
 import type { FileImportSuggestion } from "./file-import-suggestion.js";
 import type { ReaderWorkspaceController } from "./use-reader-workspace.js";
@@ -142,10 +143,13 @@ async function storeSuggestedCitation(
   imported: Source,
   found: FileImportSuggestion | null,
 ): Promise<void> {
-  const citation = found?.citation?.citation;
-  if (citation && workspace.saveNewSourceCitation) {
-    const fields = Object.fromEntries(Object.entries(citation).filter(([key]) => key !== "id"));
-    await workspace.saveNewSourceCitation(imported, fields).catch(() => undefined);
+  const candidate = found?.citation;
+  if (candidate && workspace.saveNewSourceCitation) {
+    const fields = Object.fromEntries(
+      Object.entries(candidate.citation).filter(([key]) => key !== "id"),
+    );
+    const provenance = found.provenance ?? candidateProvenance(candidate);
+    await workspace.saveNewSourceCitation(imported, fields, provenance).catch(() => undefined);
   }
 }
 

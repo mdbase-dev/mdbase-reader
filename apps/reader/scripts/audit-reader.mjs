@@ -11,6 +11,7 @@ import { auditDockviewMigration } from "./audit-dockview-migration.mjs";
 import { annotationFixture } from "./audit-annotation-fixture.mjs";
 import { auditAnnotations } from "./audit-annotations.mjs";
 import { auditAnnotationFormats } from "./audit-annotation-formats.mjs";
+import { auditAnnotationSelection } from "./audit-annotation-selection.mjs";
 import { auditPdfTouchWorkspace } from "./audit-pdf-touch-workspace.mjs";
 import { installLocalPdfium } from "./audit-local-pdfium.mjs";
 import { auditSharedEditing } from "./audit-shared-editing.mjs";
@@ -24,6 +25,7 @@ const origin = process.env.READER_AUDIT_ORIGIN ?? "http://127.0.0.1:5193";
 const sharedEditingAudit = process.env.READER_AUDIT_SHARED_EDITING_ONLY === "1";
 const readingAudit = process.env.READER_AUDIT_READING_ONLY === "1";
 const formatsAudit = process.env.READER_AUDIT_FORMATS_ONLY === "1";
+const selectionAudit = process.env.READER_AUDIT_SELECTION_ONLY === "1";
 const pdfTouchAudit = process.env.READER_AUDIT_PDF_TOUCH_ONLY === "1";
 const responsiveAudit = process.env.READER_AUDIT_RESPONSIVE_ONLY === "1";
 const sidebarComparison = responsiveAudit || process.env.READER_AUDIT_SIDEBARS_ONLY === "1";
@@ -191,7 +193,7 @@ await context.route(`${origin}/__reader-audit/**`, async (route) => {
 });
 const navigate = async () => {
   await page.goto(`${origin}/test-fixtures/audit-reader.html`);
-  await expect(page.getByRole("button", { name: "Toggle left sidebar" })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Toggle Sources sidebar" })).toBeVisible();
 };
 const screenshot = async (name) =>
   page.screenshot({ path: join(directory, `${name}.png`), animations: "disabled" });
@@ -201,15 +203,16 @@ try {
   if (pdfTouchAudit) {
     completed.push(...(await auditPdfTouchWorkspace(page, { screenshot })));
   }
+  const openSource = async (number) => {
+    const title = `Research ${String(number).padStart(4, "0")}`;
+    await page.getByRole("textbox", { name: "Find a source by title, author or tag" }).fill(title);
+    await page.getByRole("option", { name: new RegExp(title) }).dblclick();
+  };
   if (formatsAudit) {
-    const open = async (number) => {
-      const title = `Research ${String(number).padStart(4, "0")}`;
-      await page
-        .getByRole("textbox", { name: "Find a source by title, author or tag" })
-        .fill(title);
-      await page.getByRole("option", { name: new RegExp(title) }).dblclick();
-    };
-    completed.push(...(await auditAnnotationFormats(page, { open, screenshot })));
+    completed.push(...(await auditAnnotationFormats(page, { open: openSource, screenshot })));
+  }
+  if (selectionAudit) {
+    completed.push(...(await auditAnnotationSelection(page, { open: openSource, screenshot })));
   }
   if (readingAudit) {
     await page.evaluate(() => sessionStorage.setItem("reader-audit-reading", "1"));
@@ -243,6 +246,7 @@ try {
   }
   if (
     !formatsAudit &&
+    !selectionAudit &&
     !pdfTouchAudit &&
     !readingAudit &&
     !sharedEditingAudit &&
@@ -306,8 +310,8 @@ try {
     await page.getByRole("button", { name: "Continue reading", exact: false }).first().click();
     await expect(page.locator("iframe.html-viewer")).toBeVisible({ timeout: 30000 });
     await page.getByLabel("More document actions", { exact: true }).click();
-    await page.getByRole("button", { name: "Literature note", exact: true }).click();
-    const editor = page.getByRole("textbox", { name: "Source literature note" });
+    await page.getByRole("button", { name: "Source note", exact: true }).click();
+    const editor = page.getByRole("textbox", { name: "Source note" });
     await expect(editor).toBeVisible();
     writesBlocked = true;
     await editor.fill("[test] Unsaved draft survives a reload. Patient attention.");
@@ -325,15 +329,15 @@ try {
     records[0].body = "[test] A different application edited the collection version.";
     records[0].recordRevision = "external-revision";
     await page.reload();
-    await expect(page.getByRole("region", { name: "Literature note conflict" })).toBeVisible({
+    await expect(page.getByRole("region", { name: "Source note conflict" })).toBeVisible({
       timeout: 20000,
     });
     await page.getByText("Compare versions", { exact: true }).click();
-    await expect(page.getByRole("region", { name: "Literature note conflict" })).toContainText(
+    await expect(page.getByRole("region", { name: "Source note conflict" })).toContainText(
       "A different application",
     );
     expect(
-      (await page.getByRole("region", { name: "Literature note conflict" }).boundingBox()).height,
+      (await page.getByRole("region", { name: "Source note conflict" }).boundingBox()).height,
     ).toBeGreaterThan(180);
     await screenshot("draft-conflict");
     writesBlocked = false;
@@ -364,13 +368,13 @@ try {
     await chooseOption(page.getByRole("combobox", { name: "Search scope" }), "documents");
     await page.getByRole("textbox", { name: "Search this view" }).fill("patient attention");
     await expect(page.getByRole("region", { name: "Text search results" })).toContainText(
-      "Only loaded, supported documents",
+      "Saved HTML pages up to 256 KiB are indexed on this device",
     );
     await expect(
       page.getByRole("region", { name: "Text search results" }).locator("mark").first(),
     ).toHaveText("patient attention", { timeout: 20000 });
     completed.push(
-      "Notes and loaded-document search: snippets, highlighted matches, explicit coverage",
+      "Notes and library/loaded-document search: snippets, highlighted matches, explicit coverage",
     );
 
     const display = page.getByLabel("Display settings", { exact: true });
@@ -383,16 +387,16 @@ try {
     await page.getByRole("button", { name: "Comfortable", exact: true }).click();
     await page.keyboard.press("Escape");
     await page.setViewportSize({ width: 390, height: 844 });
-    await expect(page.getByRole("complementary", { name: "Library navigator" })).toHaveCount(0);
+    await expect(page.getByRole("complementary", { name: "Sources sidebar" })).toHaveCount(0);
     expect(
       await page.evaluate(
         () => globalThis.document.documentElement.scrollWidth <= globalThis.innerWidth,
       ),
     ).toBe(true);
     await screenshot("mobile-library");
-    await page.getByRole("button", { name: "Toggle left sidebar" }).click();
-    await expect(page.getByRole("complementary", { name: "Library navigator" })).toBeVisible();
-    await page.getByRole("button", { name: "Toggle left sidebar" }).click();
+    await page.getByRole("button", { name: "Toggle Sources sidebar" }).click();
+    await expect(page.getByRole("complementary", { name: "Sources sidebar" })).toBeVisible();
+    await page.getByRole("button", { name: "Toggle Sources sidebar" }).click();
     await page.keyboard.press("Control+Shift+f");
     await expect(
       page.getByRole("textbox", { name: "Find a source by title, author or tag" }),
@@ -500,6 +504,7 @@ try {
   }
   if (
     !formatsAudit &&
+    !selectionAudit &&
     !pdfTouchAudit &&
     !readingAudit &&
     !sharedEditingAudit &&

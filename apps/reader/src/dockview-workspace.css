@@ -1,9 +1,29 @@
 .reader-main.reader-dock-main {
-  display: block;
+  display: flex;
+  flex-direction: column;
   position: relative;
   min-width: 0;
   min-height: 0;
   overflow: hidden;
+}
+.reader-dock-main > .reader-dock {
+  flex: 1;
+}
+.search-passage-status {
+  flex: 0 0 auto;
+  max-height: 7rem;
+  overflow: auto;
+  margin: 0;
+  padding: 8px 16px;
+  border-bottom: 1px solid var(--line);
+  color: var(--ink);
+  background: var(--paper);
+  font-size: 13px;
+  line-height: 1.5;
+}
+.search-passage-status:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: -2px;
 }
 .reader-dock {
   display: flex;
@@ -26,16 +46,18 @@
   pointer-events: none;
 }
 .dockview-theme-reader {
+  /* Two planes: tab strips sit on the chrome canvas; the visible tab joins its
+     pane on the content surface. */
   --dv-background-color: var(--canvas);
   --dv-paneview-header-border-color: var(--line);
-  --dv-tabs-and-actions-container-background-color: var(--paper);
-  --dv-activegroup-visiblepanel-tab-background-color: var(--canvas);
-  --dv-activegroup-hiddenpanel-tab-background-color: var(--paper);
-  --dv-inactivegroup-visiblepanel-tab-background-color: var(--canvas);
-  --dv-inactivegroup-hiddenpanel-tab-background-color: var(--paper);
+  --dv-tabs-and-actions-container-background-color: var(--canvas);
+  --dv-activegroup-visiblepanel-tab-background-color: var(--paper);
+  --dv-activegroup-hiddenpanel-tab-background-color: var(--canvas);
+  --dv-inactivegroup-visiblepanel-tab-background-color: var(--paper);
+  --dv-inactivegroup-hiddenpanel-tab-background-color: var(--canvas);
   --dv-activegroup-visiblepanel-tab-color: var(--ink);
   --dv-activegroup-hiddenpanel-tab-color: var(--muted);
-  --dv-inactivegroup-visiblepanel-tab-color: var(--ink);
+  --dv-inactivegroup-visiblepanel-tab-color: var(--ink-soft);
   --dv-inactivegroup-hiddenpanel-tab-color: var(--muted);
   --dv-tab-divider-color: var(--line);
   --dv-separator-border: var(--line);
@@ -44,11 +66,11 @@
   --dv-drag-over-border-color: var(--accent);
   --dv-tabs-and-actions-container-height: 36px;
   --dv-font-family: inherit;
-  --dv-tab-font-size: 12px;
-  --dv-group-view-background-color: var(--canvas);
+  --dv-tab-font-size: var(--text-sm);
+  --dv-group-view-background-color: var(--paper);
   --dv-tab-close-icon: var(--muted);
-  --dv-icon-hover-background-color: color-mix(in oklch, var(--ink) 8%, transparent);
-  --dv-context-menu-background-color: var(--canvas);
+  --dv-icon-hover-background-color: var(--hover);
+  --dv-context-menu-background-color: var(--surface-raised);
   --dv-context-menu-color: var(--ink);
   --dv-context-menu-border-color: var(--line);
   color: var(--ink);
@@ -281,10 +303,10 @@
   margin: 0;
   width: 245px;
   padding: 5px;
-  border: 1px solid var(--line);
-  background: var(--canvas);
-  border-radius: 6px;
-  box-shadow: 0 8px 24px #0002;
+  border: 0;
+  background: var(--surface-raised);
+  border-radius: var(--r-lg);
+  box-shadow: var(--e-2);
 }
 .dock-pane-popover:popover-open {
   display: grid;
@@ -294,11 +316,11 @@
   color: var(--ink);
   background: transparent;
   padding: 8px;
-  border-radius: 4px;
+  border-radius: var(--r-sm);
   cursor: pointer;
 }
 .dock-pane-popover button:hover {
-  background: var(--paper);
+  background: var(--hover);
 }
 @media (max-width: 680px) {
   .reader-dock .dv-tab {

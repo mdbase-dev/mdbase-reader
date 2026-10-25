@@ -1,4 +1,6 @@
 // @vitest-environment happy-dom
+import { annotationId } from "@mdbase-reader/core";
+import { MarginMarkers } from "@mdbase-reader/reading-surface";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { EpubFrameEnhancements } from "./epub-frames.js";
@@ -25,7 +27,48 @@ function select(inner: Document, end: number): void {
 
 describe("EpubFrameEnhancements", () => {
   beforeEach(() => vi.useFakeTimers());
-  afterEach(() => vi.useRealTimers());
+  afterEach(() => {
+    vi.useRealTimers();
+    vi.restoreAllMocks();
+  });
+
+  it("takes reading context only from a visible frame, not a preloaded chapter", () => {
+    const container = document.createElement("div");
+    document.body.append(container);
+    frameDocument(container);
+    const frame = container.querySelector("iframe")!;
+    vi.spyOn(container, "getBoundingClientRect").mockReturnValue({
+      left: 0,
+      right: 600,
+      top: 0,
+      bottom: 800,
+    } as DOMRect);
+    const rect = vi.spyOn(frame, "getBoundingClientRect").mockReturnValue({
+      left: 800,
+      right: 1400,
+      top: 0,
+      bottom: 800,
+      width: 600,
+      height: 800,
+    } as DOMRect);
+    const nearest = vi
+      .spyOn(MarginMarkers.prototype, "nearest")
+      .mockReturnValue(annotationId("visible"));
+    const frames = new EpubFrameEnhancements(container);
+    expect(frames.nearestAnnotation()).toBeNull();
+    expect(nearest).not.toHaveBeenCalled();
+    rect.mockReturnValue({
+      left: 0,
+      right: 600,
+      top: 0,
+      bottom: 800,
+      width: 600,
+      height: 800,
+    } as DOMRect);
+    expect(frames.nearestAnnotation()).toBe("visible");
+    frames.destroy();
+    container.remove();
+  });
 
   it("reports a selection made without a pointer release once it settles", () => {
     const container = document.createElement("div");

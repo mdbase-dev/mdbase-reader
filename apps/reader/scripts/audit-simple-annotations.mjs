@@ -124,7 +124,7 @@ export async function auditSimpleAnnotations(
   await panes.nth(0).getByRole("button", { name: "Retry save", exact: true }).click();
   await expect(comments).toHaveCount(0);
   await panes.nth(0).getByRole("button", { name: "Edit", exact: true }).click();
-  await panes.nth(0).getByRole("button", { name: "Delete", exact: true }).click();
+  await panes.nth(0).getByRole("button", { name: "Delete annotation", exact: true }).click();
   await expect(panes.nth(0).getByRole("button", { name: "Cancel", exact: true })).toBeVisible();
   const before = await comments.inputValue();
   await comments.pressSequentially("MUST NOT APPLY");

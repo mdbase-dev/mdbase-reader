@@ -1,7 +1,13 @@
 // @vitest-environment happy-dom
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-import { capturePage, watchSelection, watchTabSelection } from "./page-capture.js";
+import {
+  capturePage,
+  fetchPdf,
+  pagePdfBytes,
+  watchSelection,
+  watchTabSelection,
+} from "./page-capture.js";
 
 import type { LiveWebCapture } from "@mdbase-reader/web-capture";
 
@@ -65,6 +71,42 @@ describe("extension page capture", () => {
       Object.defineProperty(document, "contentType", { value: "text/html", configurable: true });
     }
   });
+});
+
+describe("PDF capture downloads", () => {
+  afterEach(() => vi.unstubAllGlobals());
+
+  it.each([false, true])(
+    "downloads the saved page's PDF after tab navigation (fallback: %s)",
+    async (fallback) => {
+      const savedUrl = "https://example.com/saved.pdf";
+      window.location.href = "https://example.com/next.pdf";
+      const bytes = new Uint8Array([1, 2, 3]);
+      const fetch = vi.fn((url: string) =>
+        Promise.resolve(new Response(url === savedUrl ? bytes : new Uint8Array([9]))),
+      );
+      vi.stubGlobal("fetch", fetch);
+      const executeScript = vi.fn(
+        async ({ func, args }: { func: typeof pagePdfBytes; args: [string, number] }) => {
+          if (fallback) {
+            throw new Error("Cannot access this page");
+          }
+          return [{ result: await func(...args) }];
+        },
+      );
+      vi.stubGlobal("chrome", { scripting: { executeScript } });
+      expect(await fetchPdf(1, savedUrl)).toEqual(bytes);
+      expect(executeScript).toHaveBeenCalledWith({
+        target: { tabId: 1 },
+        func: pagePdfBytes,
+        args: [savedUrl, expect.any(Number)],
+      });
+      expect(fetch).toHaveBeenCalledExactlyOnceWith(
+        savedUrl,
+        ...(fallback ? [] : [{ credentials: "include" }]),
+      );
+    },
+  );
 });
 
 describe("selection watcher", () => {
