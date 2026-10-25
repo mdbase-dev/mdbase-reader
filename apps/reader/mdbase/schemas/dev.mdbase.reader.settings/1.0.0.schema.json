@@ -1,0 +1,37 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "dev.mdbase.reader.settings 1.0.0",
+  "description": "Collection-wide settings that every mdbase Reader client honours. Every field is optional and has a default, so a record with none of them behaves like no record at all.",
+  "type": "object",
+  "required": ["app", "scope", "settings_version"],
+  "properties": {
+    "app": {
+      "const": "dev.mdbase.reader",
+      "description": "Marks this record as mdbase Reader's settings."
+    },
+    "scope": {
+      "const": "collection",
+      "description": "These settings apply to everyone using Reader in this collection."
+    },
+    "settings_version": {
+      "type": "integer",
+      "minimum": 1,
+      "description": "The version of these settings that last wrote the record. Reader 1 writes 1."
+    },
+    "source_name_template": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 500,
+      "default": "{{ title | slug }}",
+      "description": "A Knap template for the file name of a new source note, chapters included, without .md. A / starts a folder under sources/. Only new sources use it; existing files are never renamed."
+    },
+    "annotation_name_template": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 500,
+      "default": "{{ id }}",
+      "description": "A Knap template for the file name of a new annotation under annotations/, without .md. Only new annotations use it; existing files are never renamed."
+    }
+  },
+  "additionalProperties": true
+}

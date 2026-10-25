@@ -1,6 +1,6 @@
 import { createHash } from "node:crypto";
 import { readFile } from "node:fs/promises";
-import { resolve } from "node:path";
+import { dirname, resolve } from "node:path";
 
 import { dataContractDigest } from "@callumalpass/mdbase";
 import { parse as parseYaml } from "yaml";
@@ -11,7 +11,9 @@ import { readerDeployments } from "./deployment-environment.mjs";
 // beta.2 was used historically; do not reuse it even though the contracts remain beta.1.
 // beta.4 ships version 2 of the starter types, which no longer pin or require `type`.
 // beta.5 ships the same starters and lists every earlier starter as an upgrade baseline.
-export const READER_TYPE_PACK_VERSION = "1.0.0-beta.5";
+// beta.6 adds collection settings: the mdbase.app-settings and dev.mdbase.reader.settings
+// contracts with their managed schemas, and a reader-settings starter that references them.
+export const READER_TYPE_PACK_VERSION = "1.0.0-beta.6";
 
 const projectRoot = resolve(import.meta.dirname, "..");
 // Reader saves library views as mdbase.view records; this is the published
@@ -61,6 +63,41 @@ const resources = [
       "baselines/1.0.0-beta.1/types/reader-annotation.md",
     ],
   },
+  // The settings contracts and schemas use the mdbase-contracts layout and targets
+  // (`contracts/<id>/<version>.md`, `schemas/<id>/<version>.schema.json`), so they can move
+  // there unchanged.
+  {
+    kind: "schema",
+    mode: "managed",
+    source: "schemas/mdbase.app-settings/1.0.0.schema.json",
+    target: "schemas/mdbase.app-settings/1.0.0.schema.json",
+  },
+  {
+    kind: "contract",
+    mode: "managed",
+    source: "contracts/mdbase.app-settings/1.0.0.md",
+    target: "_contracts/mdbase.app-settings/1.0.0.md",
+  },
+  {
+    kind: "schema",
+    mode: "managed",
+    source: "schemas/dev.mdbase.reader.settings/1.0.0.schema.json",
+    target: "schemas/dev.mdbase.reader.settings/1.0.0.schema.json",
+  },
+  {
+    kind: "contract",
+    mode: "managed",
+    source: "contracts/dev.mdbase.reader.settings/1.0.0.md",
+    target: "_contracts/dev.mdbase.reader.settings/1.0.0.md",
+  },
+  {
+    // Nobody needs to customise a settings schema, so this starter references the managed
+    // schema instead of carrying a snapshot of it (docs/design/app-settings.md).
+    kind: "type",
+    mode: "seed",
+    source: "types/reader-settings.md",
+    target: "_types/reader-settings.md",
+  },
 ];
 
 export async function buildReaderManifest({
@@ -88,7 +125,7 @@ export async function buildReaderManifest({
         document,
         ...(baselines.length === 0 ? {} : { upgrade_from: baselines }),
         ...(resource.kind === "contract"
-          ? { contractDigest: dataContractDigest(parseFrontmatter(document)) }
+          ? { contractDigest: await contractDigest(resource.source, document) }
           : {}),
       };
     }),
@@ -172,6 +209,22 @@ export function readerInstallationOrigins({ labOrigin } = {}) {
     }
   }
   return origins;
+}
+
+/**
+ * A contract's digest covers its schemas, not their wrappers: a `ref` is replaced by the schema
+ * it names, read from the pack, as mdbase-contracts does when it publishes a pack.
+ */
+async function contractDigest(source, document) {
+  const contract = parseFrontmatter(document);
+  for (const field of ["record_schema", "binding_schema"]) {
+    const wrapper = contract[field];
+    if (wrapper && typeof wrapper.ref === "string") {
+      const path = resolve(projectRoot, "mdbase", dirname(source), wrapper.ref);
+      contract[field] = { value: JSON.parse(await readFile(path, "utf8")) };
+    }
+  }
+  return dataContractDigest(contract);
 }
 
 function digest(document) {
