@@ -57,7 +57,7 @@ export async function auditAnnotationFormats(page, { open, screenshot }) {
   await page.mouse.move(pageImage.x + 300, pageImage.y + 78, { steps: 20 });
   await page.mouse.up();
   const pdfHighlight = page.getByRole("toolbar", { name: "Selected text" });
-  await pdfHighlight.getByRole("button", { name: "Highlight", exact: true }).click();
+  await pdfHighlight.getByRole("button", { name: /^Highlight Yellow\b/ }).click();
   await expect(pdfHighlight).toHaveCount(0);
   const storedPdfAnnotations = () =>
     page.evaluate(async () => {
@@ -115,7 +115,7 @@ export async function auditAnnotationFormats(page, { open, screenshot }) {
   const composer = page.getByRole("toolbar", { name: "Selected text" });
   await expect(composer).toBeVisible({ timeout: 15000 });
   await screenshot("annotation-epub-selection");
-  await composer.getByRole("button", { name: "Highlight", exact: true }).click();
+  await composer.getByRole("button", { name: /^Highlight Yellow\b/ }).click();
   await expect(composer).toHaveCount(0);
   const tools = page.getByRole("complementary", { name: "Source workspace" });
   // Desktop tool visibility survives mobile visits; do not accidentally close an already-open edge.
