@@ -326,15 +326,17 @@ class NativeRecords implements NativeReaderClient {
       if (input.ifRevision !== undefined) {
         throw unsupported("Conditional creates are not available natively.");
       }
-      const { intent } = options;
-      // With an intent the SDK derives the record ID, so a retry creates the same record;
+      const { intent, replicaId } = options;
+      // A caller-minted ID is sent as `CreateInput.id` and read back by it. Without one,
+      // an intent makes the SDK derive the record ID, so a retry creates the same record;
       // it is read back by its path.
       const record: NativeMutation["record"] | undefined =
-        intent === undefined
+        replicaId ??
+        (intent === undefined
           ? uuidv7()
           : input.path === undefined
             ? undefined
-            : { path: input.path };
+            : { path: input.path });
       if (record === undefined) {
         throw unsupported("A retryable create needs a path.");
       }
@@ -364,7 +366,14 @@ class NativeRecords implements NativeReaderClient {
               options.onReceipt?.({
                 mutationId: receipt.mutation,
                 state: receipt.state === "confirmed" ? "confirmed" : "pending",
-                ...(receipt.records?.[0] ? { record: receipt.records[0].id } : {}),
+                // A real replica's `pending` receipt carries no `records` (replica
+                // `submit.rs` `pending_receipt`; SDK `Write.records` falls back to
+                // `[]`), so the ID the caller minted is the one to trust.
+                ...(typeof record === "string"
+                  ? { record }
+                  : receipt.records?.[0]
+                    ? { record: receipt.records[0].id }
+                    : {}),
               })),
         ),
       );

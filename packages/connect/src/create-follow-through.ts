@@ -1,4 +1,5 @@
-import { connectSuccess } from "@mdbase-dev/connect/advanced";
+import { connectFailure, connectProblem, connectSuccess } from "@mdbase-dev/connect/advanced";
+import { uuidv7 } from "@mdbase-dev/sdk";
 
 import {
   recordPathById,
@@ -461,11 +462,17 @@ export class CreateFollowThrough implements ReaderCreateFollowThrough {
       ...NEW_WRITE,
       attempt: start.attempt,
       submission: start.submission,
+      // The same intent names the same record; a new intent gets a new one.
+      replicaId: start.replicaId ?? uuidv7(),
     });
     for (;;) {
       const path = entry.candidates[entry.attempt];
       if (path === undefined) {
         throw new Error("A record create has no path to try.");
+      }
+      if (this.#forgotten.has(entry.key)) {
+        // Deleted or discarded while this write waited its turn: never send it.
+        return { kind: "settled", outcome: connectFailure(forgottenProblem) };
       }
       const { created, receipt } = await this.#send(entry, path);
       if (created.ok) {
@@ -474,7 +481,7 @@ export class CreateFollowThrough implements ReaderCreateFollowThrough {
           await this.#update(entry, {
             state: "pending",
             mutationId: receipt.mutationId,
-            replicaId: receipt.record,
+            replicaId: receipt.record ?? entry.replicaId,
           });
           return { kind: "waiting", outcome: created };
         }
@@ -507,6 +514,7 @@ export class CreateFollowThrough implements ReaderCreateFollowThrough {
       },
       {
         intent: intentFor(entry),
+        ...(entry.replicaId === undefined ? {} : { replicaId: entry.replicaId }),
         onReceipt: (value) => {
           receipt = value;
         },
@@ -591,6 +599,7 @@ export class CreateFollowThrough implements ReaderCreateFollowThrough {
       ...NEW_WRITE,
       attempt,
       submission: entry.submission + 1,
+      replicaId: uuidv7(),
     });
     if (from !== undefined && to !== undefined && from !== to) {
       this.#moves.set(stem(from), stem(to));
@@ -872,6 +881,11 @@ export class CreateFollowThrough implements ReaderCreateFollowThrough {
   }
 }
 
+const forgottenProblem = connectProblem(
+  "operation_cancelled",
+  "This item was removed before it was saved.",
+);
+
 const exhaustedMessage =
   "Another record in the collection already uses each name Reader tried for it.";
 
@@ -881,7 +895,13 @@ function intentFor(entry: PendingCreate): string {
 
 /** The same create as a new write at `attempt`, under a new intent. */
 function fresh(entry: PendingCreate, attempt: number): PendingCreate {
-  return { ...entry, attempt, submission: entry.submission + 1, state: "submitting" };
+  return {
+    ...entry,
+    attempt,
+    submission: entry.submission + 1,
+    state: "submitting",
+    replicaId: uuidv7(),
+  };
 }
 
 /** `frontmatter` with every moved link pointed at its new place. */

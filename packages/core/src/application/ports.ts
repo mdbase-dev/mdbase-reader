@@ -318,7 +318,11 @@ export interface PendingCreate {
   readonly state: PendingCreateState;
   /** The SDK mutation of the current write, once known. */
   readonly mutationId?: string;
-  /** The replica's ID for the record of the current write, once known. */
+  /**
+   * The replica record ID the current write creates. Reader mints it before the write is
+   * sent and keeps it with the intent, so a resend under the same intent names the same
+   * record (SDK `client.d.ts` `CreateInput.id`: "A record ID minted by the caller").
+   */
   readonly replicaId?: string;
   /** Why it needs attention, in words for the user. */
   readonly problem?: string;

@@ -38,7 +38,10 @@ export interface ReaderCreateReceipt {
    * the log can still refuse it (SDK `client.d.ts` `Write`, `replica-client-api.md` §6).
    */
   readonly state: "confirmed" | "pending";
-  /** The replica's ID for the created record (the receipt's optimistic `records`). */
+  /**
+   * The replica's ID for the created record: the caller's `replicaId`, or else the
+   * receipt's optimistic `records`, which a `pending` receipt may leave out.
+   */
   readonly record?: string;
 }
 
@@ -48,6 +51,13 @@ export interface ReaderCreateOptions {
    * same intent lands once natively; the legacy Connect client ignores it.
    */
   readonly intent?: string;
+  /**
+   * The record ID to create under natively, minted by the caller (SDK `client.d.ts`
+   * `CreateInput.id`). Keep it with `intent` and send it again on a retry: it is how the
+   * caller knows the record before any receipt names it, since a replica's `pending`
+   * receipt need not list the records it touched. The legacy Connect client ignores it.
+   */
+  readonly replicaId?: string;
   /**
    * Called before a native create resolves. The legacy Connect client never calls it: its
    * creates are decided by the server before they return.
