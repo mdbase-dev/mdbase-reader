@@ -110,6 +110,7 @@ export function nativeReaderCollection(
     dispose: () => {
       disposed = true;
       stopFollowing();
+      settings.dispose();
       client.dispose();
     },
   };

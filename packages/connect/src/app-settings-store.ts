@@ -68,10 +68,18 @@ export class AppSettingsStore<Values extends object> {
   #snapshot: AppSettingsSnapshot<Values>;
   #loading: Promise<AppSettingsSnapshot<Values>> | undefined;
   #stopWatching: (() => void) | undefined;
-  /** Bumped by every read and write, so a slow read never replaces a newer result. */
+  /**
+   * Bumped by every read and write. A result is published only when it is newer than the last
+   * one published, so a slow read never replaces a newer result, yet the first to finish counts.
+   */
   #generation = 0;
+  #published = 0;
   /** Set when a write was refused for lack of access; it holds until the next session. */
   #refused: string | undefined;
+  #disposed = false;
+  /** A first save the log has not decided yet: head may still refuse it (`path_taken`). */
+  #pendingCreate:
+    { readonly mutationId: string; readonly changes: AppSettingsChanges<Values> } | undefined;
 
   public constructor(
     client: ReaderConnectClient,
@@ -87,26 +95,32 @@ export class AppSettingsStore<Values extends object> {
 
   public getSnapshot = (): AppSettingsSnapshot<Values> => this.#snapshot;
 
-  /** Follow the record. The first listener starts the read and the change feed. */
+  /** Follow the record. The first listener starts the read. */
   public subscribe = (listener: () => void): (() => void) => {
     this.#listeners.add(listener);
-    if (this.#listeners.size === 1) {
+    void this.current();
+    return () => {
+      this.#listeners.delete(listener);
+    };
+  };
+
+  /** Stop following the change feed. */
+  public dispose(): void {
+    this.#disposed = true;
+    this.#stopWatching?.();
+    this.#stopWatching = undefined;
+  }
+
+  /**
+   * The settings as last read, reading them first if they have not been read yet. The first
+   * call starts following the change feed, so later calls see edits from elsewhere.
+   */
+  public async current(): Promise<AppSettingsSnapshot<Values>> {
+    if (!this.#stopWatching && !this.#disposed) {
       this.#stopWatching = this.#options.watch?.(this.path, () => {
         void this.reload();
       });
     }
-    void this.current();
-    return () => {
-      this.#listeners.delete(listener);
-      if (this.#listeners.size === 0) {
-        this.#stopWatching?.();
-        this.#stopWatching = undefined;
-      }
-    };
-  };
-
-  /** The settings as last read, reading them first if they have not been read yet. */
-  public async current(): Promise<AppSettingsSnapshot<Values>> {
     if (this.#snapshot.status === "ready") {
       return this.#snapshot;
     }
@@ -120,10 +134,31 @@ export class AppSettingsStore<Values extends object> {
   public async reload(): Promise<AppSettingsSnapshot<Values>> {
     const generation = ++this.#generation;
     const read = await this.#read();
-    if (generation === this.#generation) {
-      this.#publish(read);
-    }
+    this.#publishNewer(generation, read);
+    await this.#replayRefusedCreate();
     return this.#snapshot;
+  }
+
+  /**
+   * A first save that returned pending and was then refused at head, because another device
+   * created the record first, saves its changes again: now as a patch to that record, with
+   * "no record" as the base, so a field both devices set is a conflict rather than overwritten.
+   */
+  async #replayRefusedCreate(): Promise<void> {
+    const pending = this.#pendingCreate;
+    const tracking = this.#client.createTracking;
+    if (!pending || !tracking) {
+      return;
+    }
+    const receipt = await tracking.receipt(pending.mutationId);
+    if (receipt.state === "pending" || this.#pendingCreate !== pending) {
+      return;
+    }
+    this.#pendingCreate = undefined;
+    if (receipt.state === "rejected") {
+      await tracking.acknowledge(pending.mutationId);
+      await this.save(pending.changes, { status: "ready", settings: this.#snapshot.settings });
+    }
   }
 
   /**
@@ -193,9 +228,7 @@ export class AppSettingsStore<Values extends object> {
       return { ok: true, snapshot: latest };
     }
     if (outcome.ok) {
-      if (generation === this.#generation) {
-        this.#publish(await this.#resolve(outcome.value));
-      }
+      this.#publishNewer(generation, await this.#resolve(outcome.value));
       return { ok: true, snapshot: this.#snapshot };
     }
     const { problem } = outcome;
@@ -260,11 +293,18 @@ export class AppSettingsStore<Values extends object> {
   }
 
   async #create(changes: AppSettingsChanges<Values>): Promise<ConnectOutcome<RecordDocument>> {
-    return this.#client.create({
-      path: this.path,
-      type: this.#definition.type,
-      frontmatter: newAppSettingsFrontmatter(this.#definition, changes),
-    });
+    return this.#client.create(
+      {
+        path: this.path,
+        type: this.#definition.type,
+        frontmatter: newAppSettingsFrontmatter(this.#definition, changes),
+      },
+      {
+        onReceipt: ({ mutationId, state }) => {
+          this.#pendingCreate = state === "pending" ? { mutationId, changes } : undefined;
+        },
+      },
+    );
   }
 
   async #patch(
@@ -295,6 +335,13 @@ export class AppSettingsStore<Values extends object> {
       ...(fields ? { fields } : {}),
       snapshot: this.#snapshot,
     };
+  }
+
+  #publishNewer(generation: number, snapshot: AppSettingsSnapshot<Values>): void {
+    if (generation > this.#published) {
+      this.#published = generation;
+      this.#publish(snapshot);
+    }
   }
 
   #publish(snapshot: AppSettingsSnapshot<Values>): void {

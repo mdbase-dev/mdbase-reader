@@ -1,4 +1,4 @@
-import { connect, type MdbaseClient } from "@mdbase-dev/sdk";
+import { connect, mdbaseError, type MdbaseClient } from "@mdbase-dev/sdk";
 import { MemoryReplica } from "@mdbase-dev/sdk/testing";
 import { annotationId, dateTime, mutationId, sourceId } from "@mdbase-reader/core";
 import { afterEach, describe, expect, it, vi } from "vitest";
@@ -288,5 +288,70 @@ describe("ReaderSettingsStore follows the change feed", () => {
       );
     });
     expect(changed).toHaveBeenCalled();
+  });
+
+  it("follows the feed for names even when no screen is watching", async () => {
+    const memory = await memoryConnection();
+    closers.push(memory.close);
+    const collection = nativeReaderCollection(memory.connection);
+    closers.push(() => collection.dispose());
+    const store = collection.settings!;
+    expect((await store.templates()).source).toBe("{{ title | slug }}");
+
+    memory.replica.seed({ path, types: ["reader-settings"], frontmatter: record });
+
+    await vi.waitFor(async () => {
+      expect((await store.templates()).source).toBe("{{ year }}/{{ title }}");
+    });
+  });
+
+  it("saves again over another device's record when head refuses a pending first save", async () => {
+    const replica = new MemoryReplica({ confirmDelayMs: null });
+    const sdk = await connect({
+      connector: replica.connector(),
+      app: { name: "reader-native-test", version: "test" },
+      reconnect: false,
+    });
+    closers.push(() => sdk.close());
+    const client = nativeReaderClient(sdk, () => true, { receiptWaitMs: 20 });
+    let mutation = "";
+    const create = client.create.bind(client);
+    vi.spyOn(client, "create").mockImplementation((input, options) =>
+      create(input, {
+        ...options,
+        onReceipt: (receipt) => {
+          mutation = receipt.mutationId;
+          options?.onReceipt?.(receipt);
+        },
+      }),
+    );
+    const store = new ReaderSettingsStore(client, {
+      watch: (watched, onChange) =>
+        sdk.watchChanges(undefined, (batch) => {
+          if (batch.reset || batch.changes.some((change) => change.path === watched)) {
+            onChange();
+          }
+        }),
+    });
+    closers.push(() => store.dispose());
+
+    // Saved on this device only; the log has not decided.
+    expect((await store.save({ annotation_name_template: "{{ words }}" })).ok).toBe(true);
+
+    // Another device created the record first, so head refuses ours.
+    replica.reject(
+      mutation,
+      mdbaseError("conflict", `path ${path} is taken`, "path_taken").toProblem(),
+    );
+    replica.seed({ path, types: ["reader-settings"], frontmatter: record });
+    replica.confirmAll();
+
+    await vi.waitFor(async () => {
+      replica.confirmAll();
+      expect(await stored(client)).toMatchObject({
+        source_name_template: "{{ year }}/{{ title }}",
+        annotation_name_template: "{{ words }}",
+      });
+    });
   });
 });
