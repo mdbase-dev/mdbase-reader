@@ -10,6 +10,7 @@ import {
 } from "@mdbase-reader/core";
 
 import { sourceContract } from "./contracts.js";
+import { CreateFollowThrough } from "./create-follow-through.js";
 import { sourceFromDocument } from "./mapping.js";
 import { outcomeValue, type ReaderConnectClient } from "./repository-client.js";
 import { checkSourcePartChain } from "./source-parts.js";
@@ -22,6 +23,7 @@ export async function createSourcePart(
   records: ReaderConnectClient,
   plan: PlannedSourcePart,
   options: ReaderRequestOptions = {},
+  creates: CreateFollowThrough = new CreateFollowThrough(records),
 ): Promise<Source> {
   options.signal?.throwIfAborted();
   const repository = new ConnectSourceRepository(records);
@@ -91,31 +93,26 @@ export async function createSourcePart(
         }
       : {}),
   };
-  const created = await records.create({
-    path: plan.recordPath,
-    type: "reader-source",
-    frontmatter,
-    body: `# ${plan.title}\n`,
-    includeDocument: true,
-  });
-  if (created.ok) {
-    return sourceFromDocument(plan.collectionId, created.value, parent.id);
-  }
   // Unknown outcomes and explicit retries reconcile the exact reviewed identity, never a title.
   // Each attempt stamps its own save time, so an earlier attempt's write differs only there.
-  const existing = await records.read(
-    { path: plan.recordPath, contract: sourceContract, includeDocument: true },
+  const created = await creates.create(
+    {
+      key: plan.sourceId,
+      collectionId: plan.collectionId,
+      kind: "source-part",
+      recordId: plan.sourceId,
+      label: plan.title,
+      candidates: [plan.recordPath],
+      input: { type: "reader-source", frontmatter, body: `# ${plan.title}\n` },
+      readBack: { contract: sourceContract, includeDocument: true },
+      isOurs: (existing) =>
+        Object.entries(frontmatter).every(
+          ([key, value]) =>
+            key === "saved_at" || cslValuesEqual(existing.effectiveFrontmatter[key], value),
+        ),
+    },
     options,
   );
-  if (
-    existing.ok &&
-    Object.entries(frontmatter).every(
-      ([key, value]) =>
-        key === "saved_at" || cslValuesEqual(existing.value.effectiveFrontmatter[key], value),
-    )
-  ) {
-    return sourceFromDocument(plan.collectionId, existing.value, parent.id);
-  }
   return sourceFromDocument(
     plan.collectionId,
     outcomeValue(created, "create chapter source"),

@@ -5,7 +5,22 @@ import type { Issue } from "@mdbase-dev/sdk";
 export type ConnectValidationIssue = Readonly<Issue>;
 export type ReaderConnectProblem = ConnectProblem & {
   readonly issues?: readonly ConnectValidationIssue[];
+  /**
+   * The native SDK's own code and reason. The Connect code alone cannot tell a taken
+   * path (`conflict` / `path_taken`) from a revision conflict (`conflict` / `revision`).
+   */
+  readonly native?: { readonly code: string; readonly reason?: string };
 };
+
+/**
+ * True when a create was refused because another record holds its path: `conflict` with
+ * reason `path_taken` (`replica-client-api.md` §9, error table row 4, and the mapping
+ * `path_conflict` → `conflict` / `path_taken`; `intent.md` §3.1 "Explicit path").
+ */
+export function isPathTaken(problem: ConnectProblem): boolean {
+  const native = (problem as ReaderConnectProblem).native;
+  return native?.code === "conflict" && native.reason === "path_taken";
+}
 
 const fieldLabels: Readonly<Record<string, string>> = {
   title: "Title",

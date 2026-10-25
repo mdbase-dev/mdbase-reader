@@ -3,6 +3,7 @@ import type {
   LibraryViewSaveRequest,
   MdbaseLibraryView,
 } from "./mdbase-library-views.js";
+import type { ReaderCreateFollowThrough } from "@mdbase-reader/connect";
 import type {
   Annotation,
   AnnotationListOptions,
@@ -52,6 +53,8 @@ export interface ReaderWorkspaceGateway {
   library(options?: ReaderLibraryRequestOptions): Promise<ReaderLibrarySnapshot>;
   /** Notifies when sources changed outside this workspace, so the library reloads. */
   subscribeLibrary?: (listener: () => void) => () => void;
+  /** Saves kept on this device until the collection confirms them, and any that need the user. */
+  readonly createFollowThrough?: ReaderCreateFollowThrough | undefined;
   listLibraryViews(options?: ReaderRequestOptions): Promise<readonly MdbaseLibraryView[]>;
   executeLibraryView(
     view: MdbaseLibraryView,

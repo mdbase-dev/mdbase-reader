@@ -65,6 +65,7 @@ describe("guarded reference-existing-file chapter create", () => {
           ],
         }),
       }),
+      expect.anything(),
     );
   });
   it("rejects changed parents and incomplete ancestor chains before any create", async () => {
@@ -91,7 +92,10 @@ describe("guarded reference-existing-file chapter create", () => {
       // An earlier attempt landed with its own save time.
       const frontmatter = { ...input.frontmatter, saved_at: "2026-01-01T00:00:00.000Z" };
       saved = { ...recordDocument(), frontmatter, effectiveFrontmatter: frontmatter };
-      return Promise.resolve({ ok: false, error: { code: "unknown", message: "Outcome unknown" } });
+      return Promise.resolve({
+        ok: false,
+        problem: { code: "unknown", message: "Outcome unknown" },
+      });
     });
     const read = vi.fn(() => Promise.resolve({ ok: true, value: saved }));
     const recovered = await createSourcePart(
@@ -100,6 +104,6 @@ describe("guarded reference-existing-file chapter create", () => {
     );
     expect(recovered.id).toBe(proposed.sourceId);
     expect(create).toHaveBeenCalledOnce();
-    expect(read).toHaveBeenCalledWith(expect.objectContaining({ path: proposed.recordPath }), {});
+    expect(read).toHaveBeenCalledWith(expect.objectContaining({ path: proposed.recordPath }));
   });
 });

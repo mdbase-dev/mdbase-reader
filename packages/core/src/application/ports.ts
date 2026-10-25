@@ -267,6 +267,60 @@ export interface MutationJournal {
   mark(id: MutationId, stage: MutationStage, problem?: string): Promise<void>;
 }
 
+/** The record creates Reader follows through until the collection confirms them. */
+export type PendingCreateKind = "source" | "source-part" | "annotation";
+
+/**
+ * - `submitting`: being written; the outcome of the current attempt is not known yet.
+ * - `pending`: on this device and waiting for the collection to confirm it.
+ * - `confirmed`: confirmed, but kept while a record it links to is still unconfirmed,
+ *   so the link can follow that record if it has to move.
+ * - `needs-attention`: the collection refused it, or every path was taken. The content
+ *   stays here until the user tries again.
+ */
+export type PendingCreateState = "submitting" | "pending" | "confirmed" | "needs-attention";
+
+/** One record create, with everything needed to write it again. JSON-serialisable. */
+export interface PendingCreate {
+  /** Stable for this create. Attempt `n` writes under intent `key` (n = 0) or `key:n`. */
+  readonly key: string;
+  readonly collectionId: string;
+  readonly kind: PendingCreateKind;
+  /** The record's Reader `id` field, used to recognise it at any path. */
+  readonly recordId: string;
+  /** What the user calls it, for notices: a title or a quote. */
+  readonly label: string;
+  /** Paths to try in order. */
+  readonly candidates: readonly string[];
+  /** Index into `candidates` of the current path. */
+  readonly attempt: number;
+  /** How many writes this create has made. Each new write uses a new intent. */
+  readonly submission: number;
+  readonly input: {
+    readonly type?: string;
+    readonly frontmatter: Readonly<Record<string, unknown>>;
+    readonly body?: string;
+  };
+  /** Keys of other pending creates this record links to. */
+  readonly dependsOn?: readonly string[];
+  readonly state: PendingCreateState;
+  /** The SDK mutation of the current write, once known. */
+  readonly mutationId?: string;
+  /** Why it needs attention, in words for the user. */
+  readonly problem?: string;
+  /** Top-level fields whose links moved and still have to be written to the record. */
+  readonly relink?: readonly string[];
+  readonly startedAt: string;
+}
+
+/** Device storage for {@link PendingCreate}s. It survives reloads. */
+export interface CreateJournal {
+  get(collectionId: string, key: string): Promise<PendingCreate | null>;
+  put(entry: PendingCreate): Promise<void>;
+  list(collectionId: string): Promise<readonly PendingCreate[]>;
+  remove(collectionId: string, key: string): Promise<void>;
+}
+
 export interface Clock {
   now(): DateTime;
 }

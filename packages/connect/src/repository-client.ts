@@ -30,12 +30,53 @@ import type { ReaderRequestOptions } from "@mdbase-reader/core";
 
 export const readerConnectBulkConcurrency = 4;
 
+/** How far a create had got when the client returned it. */
+export interface ReaderCreateReceipt {
+  readonly mutationId: string;
+  /**
+   * `confirmed`: at a log position. `pending`: kept on this device and not yet confirmed;
+   * the log can still refuse it (SDK `client.d.ts` `Write`, `replica-client-api.md` §6).
+   */
+  readonly state: "confirmed" | "pending";
+}
+
 export interface ReaderCreateOptions {
   /**
    * A stable name for this one save, such as its client-minted mutation ID. A retry with the
    * same intent lands once natively; the legacy Connect client ignores it.
    */
   readonly intent?: string;
+  /**
+   * Called before a native create resolves. The legacy Connect client never calls it: its
+   * creates are decided by the server before they return.
+   */
+  readonly onReceipt?: (receipt: ReaderCreateReceipt) => void;
+}
+
+/**
+ * A mutation's receipt (`replica-client-api.md` §6): `pending` until the log decides,
+ * then `confirmed` or `rejected` (with the problem), or `unknown` when it was possibly
+ * sent before the receipts horizon. `missing` is a receipt the replica no longer has, or
+ * never had: it keeps them for at least 24 hours after they leave `pending`.
+ */
+export type ReaderMutationState =
+  | { readonly state: "pending" | "confirmed" | "unknown" | "missing" }
+  | { readonly state: "rejected"; readonly problem: ReaderConnectProblem };
+
+/** The record at a path in the local view, as far as a create needs to know. */
+export interface ReaderCreatedRecord {
+  /** Its Reader `id` field. */
+  readonly id: unknown;
+  /** True once a log position has changed it, so its create is confirmed. */
+  readonly confirmed: boolean;
+}
+
+/** What a client that settles creates later offers to follow them through. Native only. */
+export interface ReaderCreateTracking {
+  receipt(mutationId: string, options?: ReaderRequestOptions): Promise<ReaderMutationState>;
+  recordAt(path: string, options?: ReaderRequestOptions): Promise<ReaderCreatedRecord | null>;
+  /** Forget a refused write once Reader has dealt with it (SDK `ledger.acknowledge`). */
+  acknowledge(mutationId: string): Promise<void>;
 }
 
 export interface ReaderQueryPagesOptions extends ReaderRequestOptions {
@@ -72,6 +113,8 @@ export interface ReaderConnectClient {
     input: DeleteInput,
     options?: DeleteProgressOptions,
   ): Promise<ConnectOutcome<DeleteResult>>;
+  /** Present when a create can return before the log has decided it. */
+  readonly createTracking?: ReaderCreateTracking;
 }
 
 export class ConnectRepositoryError extends Error {

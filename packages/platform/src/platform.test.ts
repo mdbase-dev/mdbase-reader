@@ -2,7 +2,13 @@ import { annotationId, collectionId, mutationId, sourceId } from "@mdbase-reader
 import { describe, expect, it } from "vitest";
 
 import { MemoryStorage } from "./platform.js";
-import { createReaderRuntimeServices, StorageMutationJournal } from "./reader-services.js";
+import {
+  createReaderRuntimeServices,
+  StorageCreateJournal,
+  StorageMutationJournal,
+} from "./reader-services.js";
+
+import type { PendingCreate } from "@mdbase-reader/core";
 
 describe("MemoryStorage", () => {
   it("implements the same asynchronous contract as native secure stores", async () => {
@@ -32,6 +38,38 @@ describe("StorageMutationJournal", () => {
     );
     await journal.mark(id, "complete");
     await expect(storage.get("mdbase-reader:mutation:mutation-1")).resolves.toBeNull();
+  });
+});
+
+describe("StorageCreateJournal", () => {
+  const create = (key: string, collection: string, startedAt: string): PendingCreate => ({
+    key,
+    collectionId: collection,
+    kind: "source",
+    recordId: `src_${key}`,
+    label: "Adam",
+    candidates: ["sources/adam.md", "sources/adam-1.md"],
+    attempt: 0,
+    submission: 0,
+    input: { type: "reader-source", frontmatter: { id: `src_${key}` }, body: "# Adam\n" },
+    state: "pending",
+    mutationId: "0199a1b2-0000-7000-8000-000000000001",
+    startedAt,
+  });
+
+  it("keeps each create under its own key and lists a collection's oldest first", async () => {
+    const storage = new MemoryStorage();
+    const journal = new StorageCreateJournal(storage);
+    await journal.put(create("b", "reading", "2026-10-25T12:00:02.000Z"));
+    await journal.put(create("a", "reading", "2026-10-25T12:00:01.000Z"));
+    await journal.put(create("c", "other", "2026-10-25T12:00:00.000Z"));
+    await storage.set("mdbase-reader:create:reading:broken", "{not json");
+
+    expect((await journal.list("reading")).map(({ key }) => key)).toEqual(["a", "b"]);
+    await expect(journal.get("reading", "a")).resolves.toMatchObject({ state: "pending" });
+    await journal.remove("reading", "a");
+    await expect(journal.get("reading", "a")).resolves.toBeNull();
+    expect(await storage.keys("mdbase-reader:create:")).toHaveLength(3);
   });
 });
 

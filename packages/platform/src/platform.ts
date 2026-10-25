@@ -13,15 +13,20 @@ export interface KeyValueStorage {
   remove(key: string): Promise<void>;
 }
 
+/** Storage that can also list its keys, for journals that must find every entry. */
+export interface ListableStorage extends KeyValueStorage {
+  keys(prefix: string): Promise<readonly string[]>;
+}
+
 export interface ReaderPlatform {
   readonly kind: PlatformKind;
-  readonly storage: KeyValueStorage;
+  readonly storage: ListableStorage;
   pickFile(accept: readonly string[]): Promise<PickedFile | null>;
   saveFile(name: string, blob: Blob): Promise<void>;
   openExternal(url: URL): Promise<void>;
 }
 
-export class MemoryStorage implements KeyValueStorage {
+export class MemoryStorage implements ListableStorage {
   readonly #values = new Map<string, string>();
 
   get(key: string): Promise<string | null> {
@@ -36,5 +41,9 @@ export class MemoryStorage implements KeyValueStorage {
   remove(key: string): Promise<void> {
     this.#values.delete(key);
     return Promise.resolve();
+  }
+
+  keys(prefix: string): Promise<readonly string[]> {
+    return Promise.resolve([...this.#values.keys()].filter((key) => key.startsWith(prefix)));
   }
 }

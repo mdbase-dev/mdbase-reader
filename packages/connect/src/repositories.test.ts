@@ -198,7 +198,7 @@ describe("ConnectAnnotationRepository", () => {
         type: "reader-annotation",
         body: "> Selected text",
       }),
-      { intent: "mutation-1" },
+      expect.objectContaining({ intent: "mutation-1" }),
     );
     expect(create).not.toHaveBeenCalledWith(
       expect.objectContaining({ contract: annotationContract }),

@@ -5,13 +5,15 @@ import {
   sourceId,
   type Clock,
   type ContentHasher,
+  type CreateJournal,
   type MutationId,
   type MutationJournal,
   type MutationStage,
+  type PendingCreate,
   type ReaderIdGenerator,
 } from "@mdbase-reader/core";
 
-import type { KeyValueStorage } from "./platform.js";
+import type { KeyValueStorage, ListableStorage } from "./platform.js";
 
 interface JournalEntry {
   readonly operation: "create-annotation";
@@ -52,6 +54,61 @@ export class StorageMutationJournal implements MutationJournal {
 
   private async write(id: MutationId, entry: JournalEntry): Promise<void> {
     await this.storage.set(key(id), JSON.stringify(entry));
+  }
+}
+
+/**
+ * Record creates kept on this device until the collection confirms them. One key per
+ * create, so two tabs never overwrite each other's entries.
+ */
+export class StorageCreateJournal implements CreateJournal {
+  public constructor(private readonly storage: ListableStorage) {}
+
+  public async get(collectionId: string, key: string): Promise<PendingCreate | null> {
+    const value = await this.storage.get(createKey(collectionId, key));
+    return value === null ? null : parseCreate(value);
+  }
+
+  public async put(entry: PendingCreate): Promise<void> {
+    await this.storage.set(createKey(entry.collectionId, entry.key), JSON.stringify(entry));
+  }
+
+  public async list(collectionId: string): Promise<readonly PendingCreate[]> {
+    const entries: PendingCreate[] = [];
+    for (const key of await this.storage.keys(createKey(collectionId, ""))) {
+      const value = await this.storage.get(key);
+      const entry = value === null ? null : parseCreate(value);
+      if (entry?.collectionId === collectionId) {
+        entries.push(entry);
+      }
+    }
+    // Oldest first: a record is written before the records that link to it.
+    return entries.sort((left, right) => left.startedAt.localeCompare(right.startedAt));
+  }
+
+  public async remove(collectionId: string, key: string): Promise<void> {
+    await this.storage.remove(createKey(collectionId, key));
+  }
+}
+
+function createKey(collectionId: string, key: string): string {
+  return `mdbase-reader:create:${encodeURIComponent(collectionId)}:${key}`;
+}
+
+function parseCreate(value: string): PendingCreate | null {
+  try {
+    const entry = JSON.parse(value) as Partial<PendingCreate> | null;
+    return entry !== null &&
+      typeof entry.key === "string" &&
+      typeof entry.collectionId === "string" &&
+      typeof entry.recordId === "string" &&
+      Array.isArray(entry.candidates) &&
+      typeof entry.attempt === "number" &&
+      typeof entry.input === "object"
+      ? (entry as PendingCreate)
+      : null;
+  } catch {
+    return null;
   }
 }
 

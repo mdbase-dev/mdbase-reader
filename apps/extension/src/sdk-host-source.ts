@@ -5,8 +5,17 @@ import {
   type MdbaseApplicationSnapshot,
   type NativeReaderCollection,
 } from "@mdbase-reader/connect/native";
+import { BrowserStorage, StorageCreateJournal } from "@mdbase-reader/platform";
 
 import type { SdkHostSource } from "./sdk-host.js";
+
+/**
+ * Captures' record creates, kept until the collection confirms them. The host is the one
+ * long-lived SDK owner, so it reconciles them; its document shares the extension's origin
+ * storage. Absent where there is no `localStorage` (tests in Node).
+ */
+const createJournal =
+  typeof localStorage === "undefined" ? undefined : new StorageCreateJournal(new BrowserStorage());
 
 function readyEvidence(snapshot: MdbaseApplicationSnapshot): boolean {
   const { readiness } = snapshot;
@@ -48,7 +57,16 @@ export function sdkHostSource(sdk: MdbaseApplicationEntry, hostId: string): SdkH
       const key = connection ? `${hostId}:${connection.id}:${connection.generation}` : null;
       if (opened?.key !== key) {
         opened?.collection.dispose();
-        opened = connection && key ? { key, collection: nativeReaderCollection(connection) } : null;
+        opened =
+          connection && key
+            ? {
+                key,
+                collection: nativeReaderCollection(
+                  connection,
+                  createJournal ? { creates: createJournal } : {},
+                ),
+              }
+            : null;
       }
       return opened;
     },

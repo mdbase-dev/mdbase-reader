@@ -60,30 +60,33 @@ describe("ConnectSourceImportRepository", () => {
       throw new Error("The import did not upload a Blob.");
     }
     expect(new Uint8Array(await uploadedBlob.arrayBuffer())).toEqual(new Uint8Array([1, 2, 3]));
-    expect(create).toHaveBeenCalledWith({
-      path: "sources/src_import.md",
-      type: "reader-source",
-      frontmatter: {
-        id: "src_import",
-        title: "Manuscript",
-        kind: "document",
-        saved_at: "2026-08-10T12:00:00.000Z",
-        documents: [
-          {
-            file_id: "file-import",
-            file: "[[files/reader/src_import/manuscript.pdf]]",
-            role: "primary",
-            format: "pdf",
-            media_type: "application/pdf",
-            revision: digest,
-            label: "manuscript.pdf",
-          },
-        ],
-        reading: { status: "inbox" },
+    expect(create).toHaveBeenCalledWith(
+      {
+        path: "sources/src_import.md",
+        type: "reader-source",
+        frontmatter: {
+          id: "src_import",
+          title: "Manuscript",
+          kind: "document",
+          saved_at: "2026-08-10T12:00:00.000Z",
+          documents: [
+            {
+              file_id: "file-import",
+              file: "[[files/reader/src_import/manuscript.pdf]]",
+              role: "primary",
+              format: "pdf",
+              media_type: "application/pdf",
+              revision: digest,
+              label: "manuscript.pdf",
+            },
+          ],
+          reading: { status: "inbox" },
+        },
+        body: "# Manuscript\n",
+        includeDocument: true,
       },
-      body: "# Manuscript\n",
-      includeDocument: true,
-    });
+      expect.anything(),
+    );
     expect(source.documents[0]).toMatchObject({
       fileId: "file-import",
       revision: digest,
@@ -105,6 +108,7 @@ describe("ConnectSourceImportRepository capture and recovery", () => {
         body: "An **authored** note.\n",
         frontmatter: expect.objectContaining({ tags: ["research"] }),
       }),
+      expect.anything(),
     );
   });
 
@@ -202,6 +206,7 @@ describe("ConnectSourceImportRepository recovery", () => {
           ],
         }),
       }),
+      expect.anything(),
     );
   });
 

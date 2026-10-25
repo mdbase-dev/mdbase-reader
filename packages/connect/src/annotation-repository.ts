@@ -3,6 +3,7 @@ import { sourceLink } from "@mdbase-reader/core";
 import { annotationCandidatesForSource, annotationRecordsAt } from "./annotation-query.js";
 import { AnnotationRecordCache } from "./annotation-record-cache.js";
 import * as sources from "./annotation-source.js";
+import { CreateFollowThrough } from "./create-follow-through.js";
 import { annotationFromDocument, annotationFrontmatter } from "./mapping.js";
 import {
   mapConcurrent,
@@ -37,9 +38,15 @@ export class ConnectAnnotationRepository implements AnnotationRepository {
   readonly #deletePreflights = new Map<string, DeletePreflightResult>();
 
   readonly #records: AnnotationRecordCache;
+  readonly #creates: CreateFollowThrough;
 
-  constructor(private readonly client: ReaderConnectClient) {
+  constructor(
+    private readonly client: ReaderConnectClient,
+    /** Keeps each create until the collection confirms it; one per client by default. */
+    creates?: CreateFollowThrough,
+  ) {
     this.#records = new AnnotationRecordCache(client);
+    this.#creates = creates ?? new CreateFollowThrough(client);
   }
 
   invalidateRecord(path: string): void {
@@ -190,17 +197,21 @@ export class ConnectAnnotationRepository implements AnnotationRepository {
 
   async create(annotation: Annotation, idempotencyKey: MutationId): Promise<Annotation> {
     const result = outcomeValue(
-      await this.client.create(
-        {
-          path: `annotations/${annotation.id}.md`,
+      // A retried save keeps its mutation ID as its first intent, so it lands once
+      // instead of colliding. The create is kept until the collection confirms it.
+      await this.#creates.create({
+        key: idempotencyKey,
+        collectionId: annotation.collectionId,
+        kind: "annotation",
+        recordId: annotation.id,
+        label: annotationLabel(annotation),
+        candidates: [`annotations/${annotation.id}.md`],
+        input: {
           type: "reader-annotation",
           frontmatter: annotationFrontmatter(annotation),
           body: annotation.body,
-          includeDocument: true,
         },
-        // A retried save keeps its mutation ID, so it lands once instead of colliding.
-        { intent: idempotencyKey },
-      ),
+      }),
       "create annotation",
     );
     this.#records.put(result);
@@ -464,4 +475,16 @@ function uniquePaths(links: readonly { readonly path: string }[] | undefined): r
   return [...new Set(links?.map(({ path }) => path) ?? [])].sort((left, right) =>
     left.localeCompare(right),
   );
+}
+
+/** A few words that say which annotation a notice is about. */
+function annotationLabel(annotation: Annotation): string {
+  const text = (annotation.target?.quote?.exact ?? annotation.body)
+    .replace(/!\[\[[^\]]*\]\]/gu, "")
+    .replace(/\s+/gu, " ")
+    .trim();
+  if (!text) {
+    return annotation.annotationType === "area" ? "An area highlight" : "An annotation";
+  }
+  return text.length > 60 ? `${text.slice(0, 59).trimEnd()}…` : text;
 }

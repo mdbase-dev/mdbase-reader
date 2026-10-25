@@ -1,0 +1,738 @@
+import { connectSuccess } from "@mdbase-dev/connect/advanced";
+
+import {
+  recordPathById,
+  type ReaderConnectClient,
+  type ReaderCreateReceipt,
+} from "./repository-client.js";
+import { isPathTaken, type ReaderConnectProblem } from "./validation-issues.js";
+
+import type { ConnectOutcome, ReadInput, RecordDocument } from "@mdbase-dev/connect";
+import type {
+  CreateJournal,
+  PendingCreate,
+  PendingCreateKind,
+  ReaderRequestOptions,
+} from "@mdbase-reader/core";
+
+/*
+ * Create follow-through (docs/design/file-layout.md §4, slice 5).
+ *
+ * A native create can return while the log has not decided it: the adapter waits a few
+ * seconds for the receipt, then reports the optimistic record as saved on this device.
+ * The log can still refuse it when it reaches head. An explicit path that another record
+ * took first is `conflict` / `path_taken` (`intent.md` §3.1, "decided at head"), the
+ * receipt moves `pending → rejected`, and "the local view drops the mutation"
+ * (`replica-client-api.md` §6). Records have no create-if-absent, so two devices that
+ * save the same name offline lose the second record unless someone looks.
+ *
+ * This keeps every create in a device journal until it is confirmed, and reconciles the
+ * journal on startup, on reconnect and when receipts arrive:
+ *
+ *   submitting ──► pending ──► confirmed ──► (removed)
+ *        │            │             ▲  └─ kept while a record it links to is unconfirmed
+ *        │            ├── rejected path_taken ─► next candidate (new intent) ─► submitting
+ *        │            └── rejected otherwise, or out of candidates ─► needs-attention
+ *        └── outcome unknown ─► pending (settled later by receipt or by its `id`)
+ *
+ * A retry under the same intent resends the first attempt's mutation, and "the first
+ * attempt's content wins" (SDK `client.d.ts` `WriteOptions.intent`), so each new write
+ * uses its own intent: the key for the first, then `key:n`.
+ */
+
+/** One record create to follow through. */
+export interface FollowedCreate {
+  readonly key: string;
+  readonly collectionId: string;
+  readonly kind: PendingCreateKind;
+  /** The record's Reader `id` field. */
+  readonly recordId: string;
+  readonly label: string;
+  /** Paths to try in order; later ones are used when earlier ones are taken. */
+  readonly candidates: readonly string[];
+  readonly input: PendingCreate["input"];
+  /** How a record already at a candidate path is read to see whether it is this one. */
+  readonly readBack?: Omit<ReadInput, "path">;
+  /** Whether a record read back is an earlier attempt of this create (default: same `id`). */
+  readonly isOurs?: (document: RecordDocument) => boolean;
+}
+
+/** A create the user has to look at. Its content is still kept on this device. */
+export interface CreateAttention {
+  readonly key: string;
+  readonly kind: PendingCreateKind;
+  readonly label: string;
+  readonly problem: string;
+}
+
+export interface CreateFollowThroughSnapshot {
+  /** Creates waiting for the collection to confirm them. */
+  readonly waiting: number;
+  readonly attention: readonly CreateAttention[];
+}
+
+/** What the app shows: creates that need the user, and a way to try them again. */
+export interface ReaderCreateFollowThrough {
+  getSnapshot(): CreateFollowThroughSnapshot;
+  subscribe(listener: () => void): () => void;
+  /** Settle what can be settled now. With `retry`, also write again what needs attention. */
+  reconcile(options?: { readonly retry?: boolean }): Promise<void>;
+}
+
+type Submitted =
+  | { readonly kind: "settled" | "waiting"; readonly outcome: ConnectOutcome<RecordDocument> }
+  | {
+      readonly kind: "refused";
+      readonly outcome: Extract<ConnectOutcome<RecordDocument>, { readonly ok: false }>;
+      readonly entry: PendingCreate;
+      readonly exhausted: boolean;
+    };
+
+const EMPTY: CreateFollowThroughSnapshot = { waiting: 0, attention: [] };
+
+/** Native codes that mean "not now" rather than "no" (`replica-client-api.md` §9). */
+const TRANSIENT_NATIVE = new Set(["unavailable", "rate_limited", "cancelled", "unauthenticated"]);
+const TRANSIENT_CONNECT = new Set([
+  "temporarily_unavailable",
+  "timeout",
+  "operation_cancelled",
+  "rate_limited",
+  "reconnect_required",
+  "connector_offline",
+  "relay_unavailable",
+]);
+
+export class CreateFollowThrough implements ReaderCreateFollowThrough {
+  readonly #records: ReaderConnectClient;
+  readonly #journal: CreateJournal | null;
+  readonly #collectionId: string | null;
+  readonly #now: () => string;
+  /** Creates this instance is writing right now; the reconciler leaves them alone. */
+  readonly #active = new Set<string>();
+  /** Old path stem → new stem, for links made from a stale copy of a moved record. */
+  readonly #moves = new Map<string, string>();
+  readonly #listeners = new Set<() => void>();
+  #snapshot: CreateFollowThroughSnapshot = EMPTY;
+  #running: Promise<void> | null = null;
+  #again = false;
+  #retry = false;
+
+  constructor(
+    records: ReaderConnectClient,
+    options: {
+      /** Absent: creates are still tried at each candidate, but nothing is kept. */
+      readonly journal?: CreateJournal;
+      /** The collection whose journal entries `reconcile` settles. */
+      readonly collectionId?: string;
+      readonly now?: () => string;
+    } = {},
+  ) {
+    this.#records = records;
+    this.#journal = options.journal ?? null;
+    this.#collectionId = options.collectionId ?? null;
+    this.#now = options.now ?? (() => new Date().toISOString());
+  }
+
+  getSnapshot(): CreateFollowThroughSnapshot {
+    return this.#snapshot;
+  }
+
+  subscribe(listener: () => void): () => void {
+    this.#listeners.add(listener);
+    return () => {
+      this.#listeners.delete(listener);
+    };
+  }
+
+  /**
+   * Create at the first free candidate. The entry stays in the journal until the
+   * collection confirms it; a create refused right away is returned as a failure for
+   * the caller to show, and is not kept.
+   */
+  async create(
+    request: FollowedCreate,
+    options: ReaderRequestOptions = {},
+  ): Promise<ConnectOutcome<RecordDocument>> {
+    this.#active.add(request.key);
+    try {
+      const frontmatter = this.#followMoves(request.input.frontmatter);
+      const dependsOn = await this.#parentsOf(request.collectionId, request.key, frontmatter);
+      const entry: PendingCreate = {
+        key: request.key,
+        collectionId: request.collectionId,
+        kind: request.kind,
+        recordId: request.recordId,
+        label: request.label,
+        candidates: [...new Set(request.candidates)],
+        attempt: 0,
+        submission: 0,
+        input: { ...request.input, frontmatter },
+        ...(dependsOn.length > 0 ? { dependsOn } : {}),
+        state: "submitting",
+        startedAt: this.#now(),
+      };
+      const submitted = await this.#submit(entry, request, options);
+      if (submitted.kind === "refused") {
+        await this.#remove(submitted.entry);
+      }
+      return submitted.outcome;
+    } finally {
+      this.#active.delete(request.key);
+      await this.#refresh();
+    }
+  }
+
+  reconcile(options: { readonly retry?: boolean } = {}): Promise<void> {
+    if (options.retry) {
+      this.#retry = true;
+    }
+    if (this.#running) {
+      this.#again = true;
+      return this.#running;
+    }
+    this.#running = (async () => {
+      do {
+        this.#again = false;
+        const retry = this.#retry;
+        this.#retry = false;
+        await this.#pass(retry);
+        // `#pass` may set it again while it runs.
+        // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
+      } while (this.#again);
+    })().finally(() => {
+      this.#running = null;
+    });
+    return this.#running;
+  }
+
+  async #pass(retry: boolean): Promise<void> {
+    const journal = this.#journal;
+    const collectionId = this.#collectionId;
+    if (!journal || collectionId === null) {
+      return;
+    }
+    try {
+      for (const listed of await journal.list(collectionId)) {
+        if (this.#active.has(listed.key)) {
+          continue;
+        }
+        // An earlier step of this pass may have changed it (a moved link, for one).
+        const entry = await journal.get(collectionId, listed.key);
+        if (!entry || (entry.state === "needs-attention" && !retry)) {
+          continue;
+        }
+        this.#active.add(entry.key);
+        try {
+          await this.#settle(entry);
+        } catch {
+          // Offline, or the scope closed: the entry is left for the next pass.
+        } finally {
+          this.#active.delete(entry.key);
+        }
+      }
+      await this.#sweep(collectionId);
+    } catch {
+      // The journal itself could not be read; the next trigger tries again.
+    }
+    await this.#refresh();
+  }
+
+  async #settle(entry: PendingCreate): Promise<void> {
+    if (entry.relink?.length) {
+      entry = await this.#pushLinks(entry);
+    }
+    if (entry.state === "confirmed") {
+      return;
+    }
+    if (entry.state === "needs-attention") {
+      // The user asked to try again: a new write, at the same path.
+      await this.#resubmit(fresh(entry, entry.attempt));
+      return;
+    }
+    if (await this.#settleByReceipt(entry)) {
+      return;
+    }
+    // No receipt, or it is `unknown` or `missing`: decide from the records themselves.
+    const path = entry.candidates[entry.attempt];
+    if (path === undefined) {
+      await this.#attention(entry, exhaustedMessage);
+      return;
+    }
+    const here = await this.#recordAt(path, entry);
+    if (here?.ours) {
+      if (here.confirmed) {
+        await this.#confirmed(entry);
+      }
+      // Ours and still pending here: the replica is still sending it.
+      return;
+    }
+    if (await recordPathById(this.#records, entry.recordId)) {
+      // Confirmed, and renamed since.
+      await this.#confirmed(entry);
+      return;
+    }
+    // Nothing carries its `id`: it was never captured, or a refusal dropped it. A write
+    // whose outcome was never seen is resent under its own intent, so a captured one
+    // lands once; any other write is new and needs a new intent.
+    const unseen = entry.state === "submitting" && entry.mutationId === undefined;
+    await this.#resubmit(unseen ? entry : fresh(entry, entry.attempt));
+  }
+
+  /** Settle `entry` from its receipt; false when the receipt does not decide it. */
+  async #settleByReceipt(entry: PendingCreate): Promise<boolean> {
+    const tracking = this.#records.createTracking;
+    if (entry.mutationId === undefined || !tracking) {
+      return false;
+    }
+    const receipt = await tracking.receipt(entry.mutationId);
+    switch (receipt.state) {
+      case "pending":
+        return true;
+      case "confirmed":
+        await this.#confirmed(entry);
+        return true;
+      case "rejected":
+        // Reader has dealt with it, so the SDK's ledger need not keep showing it refused.
+        await tracking.acknowledge(entry.mutationId).catch(() => undefined);
+        await this.#refused(entry, receipt.problem);
+        return true;
+      default:
+        return false;
+    }
+  }
+
+  async #refused(entry: PendingCreate, problem: ReaderConnectProblem): Promise<void> {
+    if (!isPathTaken(problem)) {
+      await this.#attention(entry, problem.message);
+      return;
+    }
+    if (entry.attempt + 1 >= entry.candidates.length) {
+      await this.#attention(entry, exhaustedMessage);
+      return;
+    }
+    await this.#resubmit(await this.#move(entry, entry.attempt + 1));
+  }
+
+  async #resubmit(entry: PendingCreate): Promise<void> {
+    const submitted = await this.#submit(entry, {}, {});
+    if (submitted.kind !== "refused") {
+      return;
+    }
+    if (transient(submitted.outcome.problem)) {
+      // Not a decision: keep it as it was and try again on the next trigger.
+      await this.#put(submitted.entry);
+      return;
+    }
+    await this.#attention(
+      submitted.entry,
+      submitted.exhausted ? exhaustedMessage : submitted.outcome.problem.message,
+    );
+  }
+
+  /** Write `entry` at its current candidate, moving on while candidates are taken. */
+  async #submit(
+    start: PendingCreate,
+    how: Pick<FollowedCreate, "readBack" | "isOurs">,
+    options: ReaderRequestOptions,
+  ): Promise<Submitted> {
+    let entry = start;
+    for (;;) {
+      const path = entry.candidates[entry.attempt];
+      if (path === undefined) {
+        throw new Error("A record create has no path to try.");
+      }
+      entry = { ...without(entry, "mutationId", "problem"), state: "submitting" };
+      await this.#put(entry);
+      const { created, receipt } = await this.#send(entry, path);
+      if (created.ok) {
+        // No receipt means a client whose creates are decided before they return.
+        if (receipt?.state === "pending") {
+          await this.#put({ ...entry, state: "pending", mutationId: receipt.mutationId });
+          return { kind: "waiting", outcome: created };
+        }
+        await this.#confirmed(entry);
+        return { kind: "settled", outcome: created };
+      }
+      const failed = await this.#failed(entry, path, created, how, options);
+      if (failed) {
+        return failed;
+      }
+      entry = await this.#move(entry, entry.attempt + 1);
+    }
+  }
+
+  async #send(
+    entry: PendingCreate,
+    path: string,
+  ): Promise<{
+    readonly created: ConnectOutcome<RecordDocument>;
+    readonly receipt: ReaderCreateReceipt | undefined;
+  }> {
+    let receipt: ReaderCreateReceipt | undefined;
+    const created = await this.#records.create(
+      {
+        path,
+        ...(entry.input.type === undefined ? {} : { type: entry.input.type }),
+        frontmatter: entry.input.frontmatter,
+        ...(entry.input.body === undefined ? {} : { body: entry.input.body }),
+        includeDocument: true,
+      },
+      {
+        intent: intentFor(entry),
+        onReceipt: (value) => {
+          receipt = value;
+        },
+      },
+    );
+    return { created, receipt };
+  }
+
+  /** What a failed create means, or null when its path is taken and another remains. */
+  async #failed(
+    entry: PendingCreate,
+    path: string,
+    created: Extract<ConnectOutcome<RecordDocument>, { readonly ok: false }>,
+    how: Pick<FollowedCreate, "readBack" | "isOurs">,
+    options: ReaderRequestOptions,
+  ): Promise<Submitted | null> {
+    const problem = created.problem as ReaderConnectProblem;
+    if (problem.code === "operation_outcome_unknown") {
+      // Possibly captured: never write it again elsewhere until its receipt is known.
+      const mutationId = requestId(problem);
+      await this.#put({
+        ...entry,
+        state: "pending",
+        ...(mutationId === undefined ? {} : { mutationId }),
+      });
+      return { kind: "waiting", outcome: created };
+    }
+    const existing = await this.#readBack(path, how, options);
+    if (existing && (how.isOurs ?? ((document) => idOf(document) === entry.recordId))(existing)) {
+      // This create, or an earlier attempt of it, already holds the path.
+      await this.#put({ ...entry, state: "pending" });
+      return { kind: "waiting", outcome: connectSuccess(existing) };
+    }
+    if (transient(problem)) {
+      return { kind: "refused", outcome: created, entry, exhausted: false };
+    }
+    // Native clients name a taken path. The legacy client does not, so there any
+    // failure that is not ours moves on to the next name, as it always has.
+    const taken = problem.native ? isPathTaken(problem) : true;
+    if (taken && entry.attempt + 1 < entry.candidates.length) {
+      return null;
+    }
+    return {
+      kind: "refused",
+      outcome: created,
+      entry,
+      exhausted: problem.native ? taken : existing !== null,
+    };
+  }
+
+  async #readBack(
+    path: string,
+    how: Pick<FollowedCreate, "readBack">,
+    options: ReaderRequestOptions,
+  ): Promise<RecordDocument | null> {
+    const read = await this.#records.read(
+      { path, ...(how.readBack ?? { includeDocument: true }) },
+      ...(options.signal ? [{ signal: options.signal }] : []),
+    );
+    return read.ok ? read.value : null;
+  }
+
+  async #recordAt(
+    path: string,
+    entry: PendingCreate,
+  ): Promise<{ readonly ours: boolean; readonly confirmed: boolean } | null> {
+    const tracking = this.#records.createTracking;
+    if (tracking) {
+      const record = await tracking.recordAt(path);
+      return record ? { ours: record.id === entry.recordId, confirmed: record.confirmed } : null;
+    }
+    // Without tracking, a create that returned was decided by the server.
+    const read = await this.#records.read({ path });
+    return read.ok ? { ours: idOf(read.value) === entry.recordId, confirmed: true } : null;
+  }
+
+  /** Move to another candidate under a new intent, and point records that link here at it. */
+  async #move(entry: PendingCreate, attempt: number): Promise<PendingCreate> {
+    const from = entry.candidates[entry.attempt];
+    const to = entry.candidates[attempt];
+    const moved = fresh(entry, attempt);
+    await this.#put(moved);
+    if (from !== undefined && to !== undefined && from !== to) {
+      this.#moves.set(stem(from), stem(to));
+      await this.#relink(entry, stem(from), stem(to));
+    }
+    return moved;
+  }
+
+  async #relink(parent: PendingCreate, from: string, to: string): Promise<void> {
+    const journal = this.#journal;
+    if (!journal) {
+      return;
+    }
+    for (const dependent of await journal.list(parent.collectionId)) {
+      if (!dependent.dependsOn?.includes(parent.key)) {
+        continue;
+      }
+      const frontmatter = rewriteLinks(dependent.input.frontmatter, from, to) as Record<
+        string,
+        unknown
+      >;
+      const changed = Object.keys(frontmatter).filter(
+        (field) =>
+          JSON.stringify(frontmatter[field]) !== JSON.stringify(dependent.input.frontmatter[field]),
+      );
+      if (changed.length === 0) {
+        continue;
+      }
+      const written = dependent.state === "pending" || dependent.state === "confirmed";
+      const updated: PendingCreate = {
+        ...dependent,
+        input: { ...dependent.input, frontmatter },
+        // A record that exists has to be changed too; one not written yet uses the new links.
+        ...(written ? { relink: [...new Set([...(dependent.relink ?? []), ...changed])] } : {}),
+      };
+      await this.#put(updated);
+      if (written && !this.#active.has(updated.key)) {
+        await this.#pushLinks(updated).catch(() => undefined);
+      }
+    }
+  }
+
+  /** Write moved links to a dependent record that already exists. */
+  async #pushLinks(entry: PendingCreate): Promise<PendingCreate> {
+    const fields = entry.relink ?? [];
+    const path = entry.candidates[entry.attempt];
+    if (fields.length === 0 || path === undefined) {
+      return entry;
+    }
+    const patch = Object.fromEntries(
+      fields.map((field) => [field, entry.input.frontmatter[field]]),
+    );
+    const result = await this.#records.update({ path, patch });
+    if (!result.ok) {
+      // Kept in `relink`; the next pass tries again.
+      return entry;
+    }
+    const done = without(entry, "relink");
+    await this.#put(done);
+    return done;
+  }
+
+  async #confirmed(entry: PendingCreate): Promise<void> {
+    const journal = this.#journal;
+    if (!journal) {
+      return;
+    }
+    const parents = await this.#unsettled(entry);
+    if (parents) {
+      await this.#put({ ...without(entry, "mutationId", "problem"), state: "confirmed" });
+      return;
+    }
+    await this.#remove(entry);
+  }
+
+  /** Whether a record this one links to is still in the journal and not confirmed. */
+  async #unsettled(entry: PendingCreate): Promise<boolean> {
+    const journal = this.#journal;
+    if (!journal || !entry.dependsOn?.length) {
+      return false;
+    }
+    for (const key of entry.dependsOn) {
+      const parent = await journal.get(entry.collectionId, key);
+      if (parent && parent.state !== "confirmed") {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  /** Drop confirmed entries whose parents have settled. */
+  async #sweep(collectionId: string): Promise<void> {
+    const journal = this.#journal;
+    if (!journal) {
+      return;
+    }
+    for (const entry of await journal.list(collectionId)) {
+      if (
+        entry.state === "confirmed" &&
+        !entry.relink?.length &&
+        !this.#active.has(entry.key) &&
+        !(await this.#unsettled(entry))
+      ) {
+        await journal.remove(collectionId, entry.key);
+      }
+    }
+  }
+
+  async #attention(entry: PendingCreate, problem: string): Promise<void> {
+    await this.#put({ ...without(entry, "mutationId"), state: "needs-attention", problem });
+  }
+
+  async #parentsOf(
+    collectionId: string,
+    key: string,
+    frontmatter: Readonly<Record<string, unknown>>,
+  ): Promise<string[]> {
+    const journal = this.#journal;
+    if (!journal) {
+      return [];
+    }
+    const targets = linkTargets(frontmatter);
+    if (targets.size === 0) {
+      return [];
+    }
+    return (await journal.list(collectionId))
+      .filter((entry) => {
+        const path = entry.candidates[entry.attempt];
+        return (
+          entry.key !== key &&
+          entry.kind !== "annotation" &&
+          entry.state !== "confirmed" &&
+          path !== undefined &&
+          targets.has(stem(path))
+        );
+      })
+      .map((entry) => entry.key);
+  }
+
+  #followMoves(frontmatter: Readonly<Record<string, unknown>>): Readonly<Record<string, unknown>> {
+    let current = frontmatter;
+    for (const [from, to] of this.#moves) {
+      current = rewriteLinks(current, from, to) as Readonly<Record<string, unknown>>;
+    }
+    return current;
+  }
+
+  async #put(entry: PendingCreate): Promise<void> {
+    await this.#journal?.put(entry);
+  }
+
+  async #remove(entry: PendingCreate): Promise<void> {
+    await this.#journal?.remove(entry.collectionId, entry.key);
+  }
+
+  async #refresh(): Promise<void> {
+    const journal = this.#journal;
+    const collectionId = this.#collectionId;
+    if (!journal || collectionId === null) {
+      return;
+    }
+    let entries: readonly PendingCreate[];
+    try {
+      entries = await journal.list(collectionId);
+    } catch {
+      return;
+    }
+    const attention = entries
+      .filter((entry) => entry.state === "needs-attention")
+      .map((entry) => ({
+        key: entry.key,
+        kind: entry.kind,
+        label: entry.label,
+        problem: entry.problem ?? "The collection did not accept it.",
+      }));
+    const waiting = entries.filter(
+      (entry) => entry.state === "pending" || entry.state === "submitting",
+    ).length;
+    const previous = this.#snapshot;
+    if (
+      previous.waiting === waiting &&
+      JSON.stringify(previous.attention) === JSON.stringify(attention)
+    ) {
+      return;
+    }
+    this.#snapshot = waiting === 0 && attention.length === 0 ? EMPTY : { waiting, attention };
+    for (const listener of this.#listeners) {
+      listener();
+    }
+  }
+}
+
+const exhaustedMessage =
+  "Another record in the collection already uses each name Reader tried for it.";
+
+function intentFor(entry: PendingCreate): string {
+  return entry.submission === 0 ? entry.key : `${entry.key}:${String(entry.submission)}`;
+}
+
+/** The same create as a new write at `attempt`, under a new intent. */
+function fresh(entry: PendingCreate, attempt: number): PendingCreate {
+  return {
+    ...without(entry, "mutationId", "problem"),
+    attempt,
+    submission: entry.submission + 1,
+    state: "submitting",
+  };
+}
+
+function without<Key extends keyof PendingCreate>(
+  entry: PendingCreate,
+  ...keys: Key[]
+): Omit<PendingCreate, Key> {
+  const dropped = new Set<string>(keys);
+  return Object.fromEntries(Object.entries(entry).filter(([key]) => !dropped.has(key))) as Omit<
+    PendingCreate,
+    Key
+  >;
+}
+
+function transient(problem: ReaderConnectProblem): boolean {
+  return problem.native
+    ? TRANSIENT_NATIVE.has(problem.native.code)
+    : TRANSIENT_CONNECT.has(problem.code);
+}
+
+function requestId(problem: ReaderConnectProblem): string | undefined {
+  const details = (problem as { readonly details?: unknown }).details;
+  const id =
+    typeof details === "object" && details !== null
+      ? (details as Record<string, unknown>)["request_id"]
+      : undefined;
+  return typeof id === "string" ? id : undefined;
+}
+
+function idOf(document: RecordDocument): unknown {
+  return document.effectiveFrontmatter["id"];
+}
+
+function stem(path: string): string {
+  return path.trim().replace(/\.md$/u, "");
+}
+
+const WIKILINK = /\[\[([^\]|#]+)(?=[\]|#])/gu;
+
+/** The record stems that `[[…]]` links anywhere in `value` point at. */
+export function linkTargets(value: unknown, into = new Set<string>()): Set<string> {
+  if (typeof value === "string") {
+    for (const match of value.matchAll(WIKILINK)) {
+      into.add(stem(match[1] ?? ""));
+    }
+  } else if (Array.isArray(value)) {
+    value.forEach((item) => linkTargets(item, into));
+  } else if (typeof value === "object" && value !== null) {
+    Object.values(value).forEach((item) => linkTargets(item, into));
+  }
+  return into;
+}
+
+/** `value` with every `[[from…]]` link pointed at `to`; alias and anchor are kept. */
+export function rewriteLinks(value: unknown, from: string, to: string): unknown {
+  if (typeof value === "string") {
+    return value.replace(WIKILINK, (link, target: string) =>
+      stem(target) === from ? `[[${to}` : link,
+    );
+  }
+  if (Array.isArray(value)) {
+    return value.map((item) => rewriteLinks(item, from, to));
+  }
+  if (typeof value === "object" && value !== null) {
+    return Object.fromEntries(
+      Object.entries(value).map(([key, item]) => [key, rewriteLinks(item, from, to)]),
+    );
+  }
+  return value;
+}

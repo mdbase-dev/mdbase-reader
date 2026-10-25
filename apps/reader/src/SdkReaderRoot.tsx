@@ -7,6 +7,7 @@ import {
   type MdbaseApplicationConnection,
   type NativeReaderCollection,
 } from "@mdbase-reader/connect/native";
+import { BrowserStorage, StorageCreateJournal } from "@mdbase-reader/platform";
 import { useEffect, useState, type JSX, type ReactNode } from "react";
 
 import { lazyFeature } from "./lazy-feature.js";
@@ -20,6 +21,9 @@ const ReaderWorkspace = lazyFeature(
 );
 
 export type ReaderSdk = Mdbase;
+
+/** Record creates kept in this browser until the collection confirms them. */
+const createJournal = new StorageCreateJournal(new BrowserStorage());
 
 export interface ReaderNativeScope {
   readonly mdbase: Mdbase;
@@ -89,7 +93,7 @@ function NativeScopeView({
     }
   }, [renderNative]);
   useEffect(() => {
-    const opened = nativeReaderCollection(original);
+    const opened = nativeReaderCollection(original, { creates: createJournal });
     let active = true;
     queueMicrotask(() => {
       if (active) {

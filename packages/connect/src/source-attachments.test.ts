@@ -39,20 +39,23 @@ describe("sources without documents", () => {
     });
 
     expect(upload).not.toHaveBeenCalled();
-    expect(create).toHaveBeenCalledWith({
-      path: "sources/src_import.md",
-      type: "reader-source",
-      frontmatter: {
-        id: "src_import",
-        title: "Manuscript",
-        kind: "book",
-        saved_at: "2026-08-10T12:00:00.000Z",
-        url: "https://doi.org/10.4324/9780203168455",
-        reading: { status: "inbox" },
+    expect(create).toHaveBeenCalledWith(
+      {
+        path: "sources/src_import.md",
+        type: "reader-source",
+        frontmatter: {
+          id: "src_import",
+          title: "Manuscript",
+          kind: "book",
+          saved_at: "2026-08-10T12:00:00.000Z",
+          url: "https://doi.org/10.4324/9780203168455",
+          reading: { status: "inbox" },
+        },
+        body: "# Manuscript\n",
+        includeDocument: true,
       },
-      body: "# Manuscript\n",
-      includeDocument: true,
-    });
+      expect.anything(),
+    );
   });
 });
 

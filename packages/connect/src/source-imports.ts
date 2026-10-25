@@ -1,4 +1,5 @@
 import { sourceContract } from "./contracts.js";
+import { CreateFollowThrough } from "./create-follow-through.js";
 import { createSourcePart } from "./create-source-part.js";
 import { sourceFromDocument, sourceSummaryFromQuery } from "./mapping.js";
 import { ConnectRepositoryError, outcomeValue } from "./repository-client.js";
@@ -9,7 +10,6 @@ import { sourceFrontmatter } from "./source-frontmatter.js";
 import type { ReaderConnectClient } from "./repository-client.js";
 import type {
   CollectionFileDescriptor,
-  ConnectOutcome,
   MdbaseConnection,
   RecordDocument,
 } from "@mdbase-dev/connect";
@@ -26,10 +26,16 @@ import type {
 } from "@mdbase-reader/core";
 
 export class ConnectSourceImportRepository implements SourceImportRepository {
+  readonly #creates: CreateFollowThrough;
+
   public constructor(
     private readonly records: ReaderConnectClient,
     private readonly files: ReaderSourceFileClient,
-  ) {}
+    /** Keeps each create until the collection confirms it; one per client by default. */
+    creates?: CreateFollowThrough,
+  ) {
+    this.#creates = creates ?? new CreateFollowThrough(records);
+  }
 
   public async findExactDuplicate(
     collectionId: CollectionId,
@@ -66,7 +72,7 @@ export class ConnectSourceImportRepository implements SourceImportRepository {
     plan: Parameters<NonNullable<SourceImportRepository["createPart"]>>[0],
     options: ReaderRequestOptions = {},
   ): Promise<Source> {
-    return createSourcePart(this.records, plan, options);
+    return createSourcePart(this.records, plan, options, this.#creates);
   }
 
   public async commitFile(
@@ -173,50 +179,35 @@ export class ConnectSourceImportRepository implements SourceImportRepository {
     return byDigest;
   }
 
-  /** Creates the source note at its readable path, or at the fallback when that path is taken. */
+  /**
+   * Creates the source note at its readable path, or at the fallback when that path is taken.
+   * The files are uploaded first and are confirmed by then (`native-files.ts` waits for
+   * `write.confirmed`), so only the record can still be refused later; the follow-through
+   * keeps it until the collection confirms it.
+   */
   private async createRecord(
     plan: PlannedSourceFileImport,
     descriptors: ReadonlyMap<PlannedSourceRepresentation["role"], CollectionFileDescriptor>,
   ): Promise<RecordDocument> {
-    const paths = [plan.recordPath, plan.fallbackRecordPath ?? plan.recordPath];
-    for (const [index, path] of paths.entries()) {
-      const created = await this.records.create({
-        path,
-        type: "reader-source",
-        frontmatter: sourceFrontmatter(plan, descriptors),
-        body: plan.body ?? `# ${plan.title}\n`,
-        includeDocument: true,
-      });
-      const document = created.ok
-        ? created.value
-        : await this.recoverCreatedSource(plan, path, created, index === paths.length - 1);
-      if (document) {
-        return document;
-      }
-    }
-    throw new Error("A source record could not be created.");
-  }
-
-  /**
-   * After a failed create: the record a retried import already wrote, or null when another record
-   * holds the path and the next path should be tried. Any other failure is thrown.
-   */
-  private async recoverCreatedSource(
-    plan: PlannedSourceFileImport,
-    path: string,
-    failure: Exclude<ConnectOutcome<RecordDocument>, { readonly ok: true }>,
-    lastPath: boolean,
-  ): Promise<RecordDocument | null> {
-    const existing = await this.records.read({
-      path,
-      contract: sourceContract,
-      includeDocument: true,
-    });
-    if (existing.ok && existing.value.effectiveFrontmatter["id"] === plan.sourceId) {
-      return existing.value;
-    }
-    // Something else holds the path, or the source contract cannot read what does.
-    return lastPath ? outcomeValue(failure, "create imported source") : null;
+    return outcomeValue(
+      await this.#creates.create({
+        key: plan.sourceId,
+        collectionId: plan.collectionId,
+        kind: "source",
+        recordId: plan.sourceId,
+        label: plan.title,
+        candidates: [plan.recordPath, plan.fallbackRecordPath ?? plan.recordPath],
+        input: {
+          type: "reader-source",
+          frontmatter: sourceFrontmatter(plan, descriptors),
+          body: plan.body ?? `# ${plan.title}\n`,
+        },
+        // A retried import wrote the record already when the source contract reads our ID.
+        readBack: { contract: sourceContract, includeDocument: true },
+        isOurs: (document) => document.effectiveFrontmatter["id"] === plan.sourceId,
+      }),
+      "create imported source",
+    );
   }
 }
 
