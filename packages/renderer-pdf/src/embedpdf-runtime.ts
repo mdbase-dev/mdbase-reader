@@ -52,6 +52,8 @@ export interface EmbedPdfRuntime {
   onTextSelected(listener: (selection: TextSelectionDraft) => void): Unsubscribe;
   onSelectionCleared?(listener: () => void): Unsubscribe;
   onAnnotationActivated(listener: (annotationId: AnnotationId) => void): Unsubscribe;
+  /** The reader let go of the selected highlight in the page, as by clicking empty page. */
+  onAnnotationDismissed?(listener: () => void): Unsubscribe;
   /** Where the highlight activated last sits on screen, when the viewer can say. */
   activationRect?(): ViewportRect | null;
   clearTextSelection(): void;
@@ -102,8 +104,9 @@ export function createEmbedPdfRuntime(
   const viewport = registry.getPlugin<ViewportPlugin>(ViewportPlugin.id)?.provides() ?? null;
   const selection = selectionPlugin.provides();
   const annotationCapability = annotationPlugin.provides();
-  const decorations = createPdfDecorationController(annotationCapability);
   const annotationActivations = createEmbedPdfAnnotationActivations(annotationCapability);
+  // Subscribed first, so the decorations know of a click before Reader is told of it.
+  const decorations = createPdfDecorationController(annotationCapability, annotationActivations);
   const subscriptions = new Set<Unsubscribe>();
   const locate = host
     ? createPdfViewportLocator(host, (page, rect) => scroll.getRectPositionForPage(page, rect))
@@ -180,6 +183,9 @@ export function createEmbedPdfRuntime(
     },
     onAnnotationActivated(listener) {
       return annotationActivations.subscribe(listener);
+    },
+    onAnnotationDismissed(listener) {
+      return annotationActivations.subscribeDismissals(listener);
     },
     ...activationRect(annotationActivations, locate),
     clearTextSelection: () => selection.clear(),

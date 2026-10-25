@@ -94,7 +94,13 @@ export interface AnnotationNavigationCapability {
 }
 
 export interface AnnotationActivationCapability {
+  /** The reader clicked a highlight in the document, including the one already active. */
   readonly activations: EventSource<AnnotationId>;
+  /**
+   * The reader let go of the active highlight in the document itself, as by clicking empty page,
+   * where the renderer's own selection shows which highlight is active.
+   */
+  readonly dismissals?: EventSource<null>;
   /** Where the most recently activated highlight sits on screen, when the renderer knows. */
   activationRect?(): ViewportRect | null;
 }

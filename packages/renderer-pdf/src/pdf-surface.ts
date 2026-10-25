@@ -23,6 +23,7 @@ export class EmbedPdfSurface implements ReadingSurface {
   readonly #textSelections =
     createEventEmitter<Parameters<Parameters<EmbedPdfRuntime["onTextSelected"]>[0]>[0]>();
   readonly #annotationActivations = createEventEmitter<AnnotationId>();
+  readonly #annotationDismissals = createEventEmitter<null>();
   readonly #cleared = createEventEmitter<null>();
   readonly #motions = createEventEmitter<ReadingMotion>();
   /** Reader's own jumps move the page too; what follows is not the reader scrolling. */
@@ -33,6 +34,7 @@ export class EmbedPdfSurface implements ReadingSurface {
   readonly #unsubscribePage: () => void;
   readonly #unsubscribeText: () => void;
   readonly #unsubscribeAnnotationActivation: () => void;
+  readonly #unsubscribeAnnotationDismissal: () => void;
   #pageIndex: number;
   #destroyed = false;
 
@@ -55,6 +57,9 @@ export class EmbedPdfSurface implements ReadingSurface {
     this.#unsubscribeAnnotationActivation = runtime.onAnnotationActivated((annotationId) =>
       this.#annotationActivations.emit(annotationId),
     );
+    this.#unsubscribeAnnotationDismissal =
+      runtime.onAnnotationDismissed?.(() => this.#annotationDismissals.emit(null)) ??
+      (() => undefined);
     const motion = scrollMotionTracker((value) => this.#motions.emit(value));
     this.#settleMotion = () => motion.settle("jump");
     const stops = [
@@ -129,6 +134,7 @@ export class EmbedPdfSurface implements ReadingSurface {
       },
       annotationActivation: {
         activations: this.#annotationActivations,
+        dismissals: this.#annotationDismissals,
         ...(runtime.activationRect
           ? { activationRect: () => runtime.activationRect?.() ?? null }
           : {}),
@@ -201,11 +207,13 @@ export class EmbedPdfSurface implements ReadingSurface {
       this.#unsubscribeCleared();
       this.#unsubscribeMotion();
       this.#unsubscribeAnnotationActivation();
+      this.#unsubscribeAnnotationDismissal();
       this.#areaSelections.clear();
       this.#textSelections.clear();
       this.#cleared.clear();
       this.#motions.clear();
       this.#annotationActivations.clear();
+      this.#annotationDismissals.clear();
       this.locations.clear();
       this.#runtime.destroy();
       this.#destroyed = true;
