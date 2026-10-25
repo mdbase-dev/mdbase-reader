@@ -80,10 +80,7 @@ export function useReadingResume(input: {
       if (report) {
         setState({ status: "saving" });
       }
-      const mark = currentResumptions.get(surface);
-      if (mark?.key === contextKey) {
-        rememberWrite(mark, locator);
-      }
+      rememberWrite(writesKey(contextKey, surface), locator);
       queue.current = queue.current
         .then(() => saveForSource(sourceId, surface.document.document.fileId, locator, value))
         .then(() => {
@@ -145,23 +142,37 @@ export function useReadingResume(input: {
 }
 
 /**
- * What a surface last resumed for a source context: the saved position it saw then and the
- * positions it has written since. A reload that shows one of these is the surface's own state; any
- * other saved position was written elsewhere (another tab or device) and is restored.
+ * What a surface last resumed for a source context, and the saved position it saw then. A reload
+ * that shows that position, or one this app wrote, is local state; any other saved position was
+ * written elsewhere (another tab or device) and is restored.
  */
 interface ResumeMark {
   readonly key: string;
-  seen: string | undefined;
-  readonly written: string[];
+  readonly seen: string | undefined;
 }
 
+/**
+ * Positions this app has written, per source context and file, across all its surfaces: a second
+ * pane on the same source ("Open beside") must not count the first pane's reading as foreign.
+ */
+const appWrites = new Map<string, string[]>();
 const rememberedWrites = 20;
 
-function rememberWrite(mark: ResumeMark, locator: ReaderLocator): void {
-  mark.written.push(locatorKey(locator));
-  if (mark.written.length > rememberedWrites) {
-    mark.written.shift();
+function writesKey(contextKey: string, surface: ReadingSurface): string {
+  return `${contextKey}\u0000${surface.document.document.fileId}`;
+}
+
+function rememberWrite(key: string, locator: ReaderLocator): void {
+  const written = appWrites.get(key) ?? [];
+  written.push(locatorKey(locator));
+  if (written.length > rememberedWrites) {
+    written.shift();
   }
+  appWrites.set(key, written);
+}
+
+function writtenByThisApp(key: string, storedKey: string): boolean {
+  return appWrites.get(key)?.includes(storedKey) ?? false;
 }
 
 /** Compares locators by value, whatever order a store returns their fields in. */
@@ -182,8 +193,10 @@ function resumeLocation(
   key: string,
 ): { readonly saved: ReaderLocator | undefined } | null {
   if (mark?.key === key) {
-    // Only a position saved elsewhere while this surface was inactive is newer than its own.
-    return !storedKey || storedKey === mark.seen || mark.written.includes(storedKey)
+    // Only a position saved elsewhere (not by any pane here) while it was inactive is newer.
+    return !storedKey ||
+      storedKey === mark.seen ||
+      writtenByThisApp(writesKey(key, surface), storedKey)
       ? null
       : { saved: stored };
   }
@@ -208,7 +221,7 @@ async function resumeSourcePosition(
   const { saved } = target;
   const within = saved && (!range || positionWithinReadingRange(range, saved));
   const start = within ? saved : range?.valid ? range.start : undefined;
-  resumed.set(surface, { key, seen: storedKey, written: [] });
+  resumed.set(surface, { key, seen: storedKey });
   if (start && !(await restoreReadingLocation(surface, start))) {
     throw new Error("The saved reading position could not be opened.");
   }

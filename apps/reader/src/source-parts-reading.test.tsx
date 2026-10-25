@@ -271,6 +271,54 @@ it("restores a position saved elsewhere while the surface was inactive, instead 
   );
 });
 
+it("does not pull one pane to a position another pane of the same source wrote", async () => {
+  const { chapter } = await anthology();
+  const first = pdf(chapter);
+  const beside = pdf(chapter);
+  const save = vi.fn().mockResolvedValue(undefined);
+  const readingAt = (pageIndex: number): Source => ({
+    ...chapter,
+    reading: {
+      status: "reading",
+      documentFileId: chapter.documents[0]!.fileId,
+      position: { kind: "pdf", pageIndex },
+    },
+  });
+  function Harness({
+    source,
+    surface,
+  }: {
+    readonly source: Source | null;
+    readonly surface: ReadingSurface;
+  }): null {
+    useReadingResume({ source, surface, save });
+    return null;
+  }
+  const show = async (source: Source | null, surface: ReadingSurface): Promise<void> => {
+    await act(async () => {
+      root.render(<Harness source={source} surface={surface} />);
+      await vi.advanceTimersByTimeAsync(0);
+    });
+  };
+  await show(chapter, first);
+  await act(async () => {
+    await first.goTo({ kind: "pdf", pageIndex: 11 });
+    await vi.advanceTimersByTimeAsync(1200);
+  });
+  // Open beside: the second pane reads on, saving its own position.
+  await show(null, first);
+  await show(readingAt(11), beside);
+  await act(async () => {
+    await beside.goTo({ kind: "pdf", pageIndex: 16 });
+    await vi.advanceTimersByTimeAsync(1200);
+  });
+  // Refocusing the first pane keeps its place; the newer position is this app's own.
+  await show(null, beside);
+  await show(readingAt(16), first);
+  expect(first.currentLocation()).toEqual({ kind: "pdf", pageIndex: 11 });
+  expect(beside.currentLocation()).toEqual({ kind: "pdf", pageIndex: 16 });
+});
+
 it("does not restore or write a previous source while another shared-file session is hydrating", async () => {
   const { chapter, book } = await anthology();
   const surface = pdf(chapter);
@@ -380,6 +428,48 @@ it("keeps chapter reading quiet until the reader leaves, then offers a slim dism
     await Promise.resolve();
   });
   expect(surface.currentLocation()).toEqual({ kind: "pdf", pageIndex: 0 });
+});
+
+it("keeps a dismissal while the tab is hidden, until the reader returns to the chapter", async () => {
+  const { gateway, sources } = await anthology();
+  const chapter = (await gateway.source(sourceId("src_anthology_chapter_1")))!;
+  const surface = pdf(chapter);
+  const hint = (): Element | null => host.querySelector('[aria-label="Chapter reading range"]');
+  const show = async (visible: boolean): Promise<void> => {
+    await act(async () => {
+      root.render(
+        visible ? (
+          <SourceReadingBoundary
+            source={chapter}
+            sources={sources}
+            surface={surface}
+            open={vi.fn()}
+          />
+        ) : null,
+      );
+      await Promise.resolve();
+    });
+  };
+  await show(true);
+  await act(async () => {
+    await surface.goTo({ kind: "pdf", pageIndex: 12 });
+  });
+  act(() => hint()!.querySelector<HTMLButtonElement>('button[aria-label="Dismiss"]')!.click());
+  expect(hint()).toBeNull();
+  // Switching tabs unmounts the hint; coming back must not show it again.
+  await show(false);
+  await show(true);
+  expect(hint()).toBeNull();
+  // Re-entering the chapter clears the dismissal, so a later exit shows the hint again.
+  await act(async () => {
+    await surface.goTo({ kind: "pdf", pageIndex: 3 });
+  });
+  await show(false);
+  await act(async () => {
+    await surface.goTo({ kind: "pdf", pageIndex: 12 });
+  });
+  await show(true);
+  expect(hint()).not.toBeNull();
 });
 
 it("keeps the hint when the chapter's record refreshes after a position save", async () => {
