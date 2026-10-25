@@ -17,7 +17,7 @@ export interface AppSettingField<Value> {
 export interface AppSettingsDefinition<Values extends object> {
   /** The app id, `^[a-z0-9]+([.-][a-z0-9]+)*$`. */
   readonly app: string;
-  /** The app's settings type, written as the record's `type`. */
+  /** The app's settings type, which the record is created as. */
   readonly type: string;
   /** The newest settings version this client understands, and the one it writes. */
   readonly settingsVersion: number;
@@ -122,7 +122,10 @@ export function appSettingsPatch<Values extends object>(
   return patch;
 }
 
-/** The frontmatter of a new settings record holding `changes`. */
+/**
+ * The frontmatter of a new settings record holding `changes`. The record's type is not a field
+ * here: create it as {@link AppSettingsDefinition.type}, and the collection writes its type key.
+ */
 export function newAppSettingsFrontmatter<Values extends object>(
   definition: AppSettingsDefinition<Values>,
   changes: AppSettingsChanges<Values>,
@@ -134,7 +137,6 @@ export function newAppSettingsFrontmatter<Values extends object>(
     ),
   );
   return {
-    type: definition.type,
     app: definition.app,
     scope: "collection",
     settings_version: definition.settingsVersion,

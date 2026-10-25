@@ -17,6 +17,7 @@
     "@mdbase-dev/sdk": "file:vendor/sdk-eaa4e697-production-beta141.tgz",
     "@mdbase-reader/core": "workspace:*",
     "@mdbase-reader/migration": "workspace:*",
+    "knap": "0.6.0",
     "yaml": "^2.9.0"
   }
 }

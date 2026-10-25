@@ -1,7 +1,14 @@
+import { authorYearFromMetadata } from "@mdbase-reader/core";
+
 import { sourceContract } from "./contracts.js";
 import { CreateFollowThrough } from "./create-follow-through.js";
 import { createSourcePart } from "./create-source-part.js";
 import { sourceFromDocument, sourceSummaryFromQuery } from "./mapping.js";
+import {
+  currentNameTemplates,
+  sourceNotePathCandidates,
+  type ReaderNaming,
+} from "./naming-templates.js";
 import { ConnectRepositoryError, outcomeValue } from "./repository-client.js";
 import { attachRepresentation } from "./source-attachments.js";
 import { uploadWithRecovery, type ReaderSourceFileClient } from "./source-files.js";
@@ -27,14 +34,18 @@ import type {
 
 export class ConnectSourceImportRepository implements SourceImportRepository {
   readonly #creates: CreateFollowThrough;
+  readonly #naming: ReaderNaming | undefined;
 
   public constructor(
     private readonly records: ReaderConnectClient,
     private readonly files: ReaderSourceFileClient,
     /** Keeps each create until the collection confirms it; one per client by default. */
     creates?: CreateFollowThrough,
+    /** The collection's name templates; Reader's default names without one. */
+    naming?: ReaderNaming,
   ) {
     this.#creates = creates ?? new CreateFollowThrough(records);
+    this.#naming = naming;
   }
 
   public async findExactDuplicate(
@@ -72,7 +83,7 @@ export class ConnectSourceImportRepository implements SourceImportRepository {
     plan: Parameters<NonNullable<SourceImportRepository["createPart"]>>[0],
     options: ReaderRequestOptions = {},
   ): Promise<Source> {
-    return createSourcePart(this.records, plan, options, this.#creates);
+    return createSourcePart(this.records, plan, options, this.#creates, this.#naming);
   }
 
   public async commitFile(
@@ -189,6 +200,22 @@ export class ConnectSourceImportRepository implements SourceImportRepository {
     plan: PlannedSourceFileImport,
     descriptors: ReadonlyMap<PlannedSourceRepresentation["role"], CollectionFileDescriptor>,
   ): Promise<RecordDocument> {
+    const templates = await currentNameTemplates(this.#naming);
+    const candidates = await sourceNotePathCandidates(
+      templates.source,
+      {
+        id: plan.sourceId,
+        title: plan.title,
+        creators: plan.metadata?.authors ?? [],
+        authorYear: authorYearFromMetadata(plan.metadata),
+        kind: plan.kind,
+        published: plan.metadata?.published,
+        site: plan.metadata?.site,
+        savedAt: plan.savedAt,
+      },
+      undefined,
+      plan.recordPathCandidates,
+    );
     return outcomeValue(
       await this.#creates.create({
         key: plan.sourceId,
@@ -196,7 +223,7 @@ export class ConnectSourceImportRepository implements SourceImportRepository {
         kind: "source",
         recordId: plan.sourceId,
         label: plan.title,
-        candidates: plan.recordPathCandidates,
+        candidates,
         input: {
           type: "reader-source",
           frontmatter: sourceFrontmatter(plan, descriptors),
@@ -221,8 +248,9 @@ function takeMatchingFile(
 export function connectSourceImportRepository(
   connection: MdbaseConnection,
   records: ReaderConnectClient,
+  naming?: ReaderNaming,
 ): ConnectSourceImportRepository {
-  return new ConnectSourceImportRepository(records, connection.files);
+  return new ConnectSourceImportRepository(records, connection.files, undefined, naming);
 }
 
 export type { ReaderSourceFileClient } from "./source-files.js";

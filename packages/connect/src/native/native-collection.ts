@@ -6,6 +6,7 @@ import { ConnectBodyUpdateRecovery } from "../body-update-recovery.js";
 import { ConnectCollectionFileRepository } from "../collection-files.js";
 import { CreateFollowThrough } from "../create-follow-through.js";
 import { ConnectDocumentRepository } from "../documents.js";
+import { ReaderSettingsStore } from "../reader-settings.js";
 import {
   ConnectAnnotationRepository,
   ConnectContentSearchRepository,
@@ -73,13 +74,22 @@ export function nativeReaderCollection(
   const stopFollowing = options.creates
     ? followCreates(connection.records, creates, current)
     : noop;
+  const settings = new ReaderSettingsStore(client, {
+    watch: (path, onChange) =>
+      connection.records.watchChanges(undefined, (batch) => {
+        if (current() && (batch.reset || batch.changes.some((change) => change.path === path))) {
+          onChange();
+        }
+      }),
+  });
   return {
     collectionId: collectionId(connection.id),
     collectionName: connection.displayName,
     sources: new ConnectSourceRepository(client, creates),
-    sourceImports: new ConnectSourceImportRepository(client, files, creates),
+    sourceImports: new ConnectSourceImportRepository(client, files, creates, settings),
     migration: new NativeMigrationTarget(connection.id, client, files),
-    annotations: new ConnectAnnotationRepository(client, creates),
+    annotations: new ConnectAnnotationRepository(client, creates, settings),
+    settings,
     annotationAssets: new ConnectAnnotationAssetRepository(files),
     documents: new ConnectDocumentRepository(files),
     contentSearch: new ConnectContentSearchRepository(client),

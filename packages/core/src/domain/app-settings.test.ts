@@ -113,7 +113,6 @@ describe("appSettingsPatch", () => {
 describe("new records and conflicts", () => {
   it("creates a record with the reserved fields and the changed settings only", () => {
     expect(newAppSettingsFrontmatter(definition, { greeting: "hey", limit: null })).toEqual({
-      type: "example-settings",
       app: "example.app",
       scope: "collection",
       settings_version: 2,

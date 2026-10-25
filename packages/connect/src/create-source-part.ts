@@ -1,4 +1,5 @@
 import {
+  authorYearFromCsl,
   cslValuesEqual,
   parseDocumentRange,
   sourceFieldsFromCitation,
@@ -12,6 +13,11 @@ import {
 import { sourceContract } from "./contracts.js";
 import { CreateFollowThrough } from "./create-follow-through.js";
 import { sourceFromDocument } from "./mapping.js";
+import {
+  currentNameTemplates,
+  sourceNotePathCandidates,
+  type ReaderNaming,
+} from "./naming-templates.js";
 import { outcomeValue, type ReaderConnectClient } from "./repository-client.js";
 import { checkSourcePartChain } from "./source-parts.js";
 import { ConnectSourceRepository } from "./source-repository.js";
@@ -24,6 +30,7 @@ export async function createSourcePart(
   plan: PlannedSourcePart,
   options: ReaderRequestOptions = {},
   creates: CreateFollowThrough = new CreateFollowThrough(records),
+  naming?: ReaderNaming,
 ): Promise<Source> {
   options.signal?.throwIfAborted();
   const repository = new ConnectSourceRepository(records);
@@ -93,6 +100,26 @@ export async function createSourcePart(
         }
       : {}),
   };
+  const templates = await currentNameTemplates(naming);
+  const candidates = await sourceNotePathCandidates(
+    templates.source,
+    {
+      id: plan.sourceId,
+      title: plan.title,
+      authorYear: authorYearFromCsl(plan.citation),
+      citation: plan.citation,
+      kind: "document",
+      savedAt: frontmatter.saved_at,
+    },
+    {
+      title: parent.title,
+      path: parent.path,
+      creators: parent.creators,
+      published: parent.published,
+      citation: parent.citation,
+    },
+    plan.recordPathCandidates,
+  );
   // Unknown outcomes and explicit retries reconcile the exact reviewed identity, never a title.
   // Each attempt stamps its own save time, so an earlier attempt's write differs only there.
   const created = await creates.create(
@@ -102,7 +129,7 @@ export async function createSourcePart(
       kind: "source-part",
       recordId: plan.sourceId,
       label: plan.title,
-      candidates: plan.recordPathCandidates,
+      candidates,
       input: { type: "reader-source", frontmatter, body: `# ${plan.title}\n` },
       readBack: { contract: sourceContract, includeDocument: true },
       linksTo: [parent.id],
