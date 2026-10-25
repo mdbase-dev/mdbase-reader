@@ -5,7 +5,8 @@ import { act } from "react";
 import { createRoot } from "react-dom/client";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-import { setHighlightMeaning, setLastHighlightColor } from "./highlight-colors.js";
+import { setLastHighlightColor } from "./highlight-colors.js";
+import { bindCollectionHighlights } from "./highlight-settings.fixtures.js";
 import { SelectionToolbarLayer } from "./SelectionToolbar.js";
 
 import type { AnnotationComposerController } from "./use-annotation-composer.js";
@@ -31,7 +32,6 @@ beforeEach(async () => {
   comment.mockReset();
   localStorage.clear();
   setLastHighlightColor("yellow");
-  setHighlightMeaning("green", "");
   sidebarButton = document.createElement("button");
   sidebarButton.textContent = "Sources";
   host = document.createElement("div");
@@ -98,10 +98,32 @@ describe("selection toolbar colours", () => {
   });
 
   it("names swatches with their meanings", async () => {
-    setHighlightMeaning("green", "Evidence");
+    const collection = bindCollectionHighlights({ highlight_meanings: { green: "Evidence" } });
     await act(async () => undefined);
     const green = host.querySelector<HTMLButtonElement>("[data-highlight-color='green']");
     expect(green?.getAttribute("aria-label")).toBe("Highlight Green — Evidence");
+    // Another device renames it: the toolbar follows at once.
+    await act(async () => collection.set({ highlight_meanings: { green: "Support" } }));
+    expect(green?.getAttribute("aria-label")).toBe("Highlight Green — Support");
+    await act(async () => collection.stop());
+  });
+
+  it("offers only the collection's colours, in its order, and numbers them by place", async () => {
+    const collection = bindCollectionHighlights({ highlight_colors: ["pink", "blue"] });
+    await act(async () => undefined);
+    const swatches = [...host.querySelectorAll<HTMLButtonElement>(".highlight-swatch")];
+    expect(swatches.map((swatch) => swatch.dataset["highlightColor"])).toEqual(["pink", "blue"]);
+    // Yellow, used last, is hidden: H and the ring go to the first colour offered.
+    expect(swatches[0]?.title).toBe("Highlight Pink (H or 1)");
+    expect(swatches[1]?.title).toBe("Highlight Blue (2)");
+    press(document, "2");
+    expect(highlight).toHaveBeenLastCalledWith(selection, "blue");
+    press(document, "3");
+    expect(highlight).toHaveBeenCalledTimes(1);
+    press(document, "h");
+    expect(highlight).toHaveBeenLastCalledWith(selection, "pink");
+    await act(async () => collection.stop());
+    expect(host.querySelectorAll(".highlight-swatch")).toHaveLength(5);
   });
 
   it("chooses colours with 1–5, and H uses the colour chosen last", async () => {
@@ -186,6 +208,19 @@ describe("selection toolbar on a highlight", () => {
     expect(recolor).toHaveBeenLastCalledWith(annotation, "green");
     press(document, "h");
     expect(recolor).toHaveBeenCalledTimes(2);
+  });
+
+  it("recolours a highlight in a hidden colour into an offered one", async () => {
+    const collection = bindCollectionHighlights({ highlight_colors: ["green", "pink"] });
+    const recolor = vi.fn();
+    await showHighlight(savedHighlight, recolor);
+    const swatches = [...host.querySelectorAll<HTMLButtonElement>(".highlight-swatch")];
+    // Blue is hidden: it is not offered, so nothing is pressed, but the highlight can move.
+    expect(swatches.map((swatch) => swatch.dataset["highlightColor"])).toEqual(["green", "pink"]);
+    expect(swatches.some((swatch) => swatch.getAttribute("aria-pressed") === "true")).toBe(false);
+    press(document, "2");
+    expect(recolor).toHaveBeenLastCalledWith(savedHighlight, "pink");
+    await act(async () => collection.stop());
   });
 
   it("leaves keys pressed on another control to that control", () => {

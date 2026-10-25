@@ -14,7 +14,7 @@ import { renderToStaticMarkup } from "react-dom/server";
 import { expect, it, vi } from "vitest";
 
 import { AnnotationCard } from "./AnnotationCard.js";
-import { setHighlightMeaning } from "./highlight-colors.js";
+import { bindCollectionHighlights } from "./highlight-settings.fixtures.js";
 
 const base: Annotation = {
   id: annotationId("unanchored-note"),
@@ -173,7 +173,7 @@ it("takes the highlight's colour for its bar and says it in words", async () => 
   // Without a meaning the colour is named for screen readers only.
   expect(markup(highlight)).toContain('<span class="sr-only">Green</span>');
 
-  setHighlightMeaning("green", "Evidence");
+  const collection = bindCollectionHighlights({ highlight_meanings: { green: "Evidence" } });
   const host = document.createElement("div");
   document.body.append(host);
   const root = createRoot(host);
@@ -183,7 +183,7 @@ it("takes the highlight's colour for its bar and says it in words", async () => 
   expect(meaning?.getAttribute("title")).toBe("Green — Evidence");
   await act(async () => root.unmount());
   host.remove();
-  setHighlightMeaning("green", "");
+  collection.stop();
 });
 
 it("changes a highlight's colour from the More menu, even with one owner", async () => {
@@ -206,4 +206,26 @@ it("changes a highlight's colour from the More menu, even with one owner", async
   // Notes have no colour to change, and without a way to recolour there is nothing to offer.
   expect(markup(base)).not.toContain("annotation-card-colors");
   expect(markup(highlight)).not.toContain("More actions");
+});
+
+it("keeps a hidden colour's highlight in its colour, with its meaning", async () => {
+  const collection = bindCollectionHighlights({
+    highlight_colors: ["green", "pink"],
+    highlight_meanings: { blue: "Definition" },
+  });
+  const highlight: Annotation = { ...linked, annotationType: "highlight", color: "blue" };
+  const host = document.createElement("div");
+  document.body.append(host);
+  const root = createRoot(host);
+  await act(async () => root.render(card(highlight, vi.fn(), { onRecolor: vi.fn() })));
+  const element = host.querySelector(`[data-annotation-id="${highlight.id}"]`);
+  expect(element?.getAttribute("data-highlight-color")).toBe("blue");
+  expect(host.querySelector(".annotation-meaning")?.textContent).toBe("Definition");
+  const offered = [
+    ...host.querySelectorAll<HTMLElement>(".annotation-card-colors .highlight-swatch"),
+  ];
+  expect(offered.map((swatch) => swatch.dataset["highlightColor"])).toEqual(["green", "pink"]);
+  await act(async () => root.unmount());
+  host.remove();
+  collection.stop();
 });

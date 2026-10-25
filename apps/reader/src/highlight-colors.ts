@@ -1,25 +1,37 @@
 import {
+  readerHighlightSettings,
+  type AppSettingsSnapshot,
+  type ReaderHighlightSettings,
+  type ReaderSettingsValues,
+} from "@mdbase-reader/connect";
+import {
   defaultHighlightColor,
   highlightColorKey,
   highlightColorKeys,
   highlightPalette,
   isHighlightColorKey,
   normalizeHighlightColor,
+  offeredHighlightColor,
+  readHighlightMeanings,
   type HighlightColorKey,
+  type HighlightMeanings,
 } from "@mdbase-reader/core";
 import { useSyncExternalStore, type CSSProperties } from "react";
 
-/**
- * Per-device highlight preferences: the colour used last, which H and the composer save in, and
- * what each colour means to this reader ("Key idea", "Question"). Neither is part of the
- * collection: a meaning is a private reading habit, and annotation records keep only the colour.
- */
-export type HighlightMeanings = Readonly<Partial<Record<HighlightColorKey, string>>>;
+export { highlightMeaningMaxLength, type HighlightMeanings } from "@mdbase-reader/core";
 
+/**
+ * Highlight colours in Reader. Which colours are offered, in what order, and what each means
+ * belong to the collection's settings record (`docs/design/app-settings.md`), so every device
+ * and the extension agree; annotation records keep only the colour, so a new meaning relabels
+ * every highlight of that colour. The colour used last, which H and the composer save in, is
+ * this device's own.
+ *
+ * Meanings used to be kept on each device. Until the collection holds meanings, a device that
+ * has its own keeps showing them, and the Highlight colours dialog offers to share them.
+ */
 const colorKey = "mdbase-reader:highlight-color";
-const meaningsKey = "mdbase-reader:highlight-meanings";
-/** Longer meanings would not fit a tooltip or a card's meta line. */
-export const highlightMeaningMaxLength = 40;
+const deviceMeaningsKey = "mdbase-reader:highlight-meanings";
 /** Placeholders only: nothing is assigned until the reader writes it. */
 export const highlightMeaningSuggestions: Readonly<Record<HighlightColorKey, string>> = {
   yellow: "Key idea",
@@ -29,9 +41,34 @@ export const highlightMeaningSuggestions: Readonly<Record<HighlightColorKey, str
   purple: "To follow up",
 };
 
+export interface HighlightChoices {
+  /** The colours offered when making or recolouring a highlight, in order. At least one. */
+  readonly colors: readonly HighlightColorKey[];
+  readonly meanings: HighlightMeanings;
+  /** The meanings are this device's own, from before they were collection settings. */
+  readonly meaningsFromDevice: boolean;
+}
+
+/** Where the open collection's settings come from: its settings store. */
+export interface HighlightSettingsSource {
+  readonly subscribe: (listener: () => void) => () => void;
+  readonly getSnapshot: () => AppSettingsSnapshot<ReaderSettingsValues>;
+}
+
+const defaultSettings: ReaderHighlightSettings = {
+  colors: highlightColorKeys,
+  meanings: {},
+  meaningsStored: false,
+};
+
 const listeners = new Set<() => void>();
 // Private windows may refuse storage; choices then last until the page reloads.
-const unstored = new Map<string, string>();
+const unstored = new Map<string, string | null>();
+let collection: ReaderHighlightSettings = defaultSettings;
+
+function notify(): void {
+  listeners.forEach((listener) => listener());
+}
 
 function read(key: string): string | null {
   const local = unstored.get(key);
@@ -45,20 +82,24 @@ function read(key: string): string | null {
   }
 }
 
-function write(key: string, value: string): void {
+function write(key: string, value: string | null): void {
   try {
-    globalThis.localStorage.setItem(key, value);
+    if (value === null) {
+      globalThis.localStorage.removeItem(key);
+    } else {
+      globalThis.localStorage.setItem(key, value);
+    }
     unstored.delete(key);
   } catch {
     unstored.set(key, value);
   }
-  listeners.forEach((listener) => listener());
+  notify();
 }
 
 function subscribe(listener: () => void): () => void {
   listeners.add(listener);
   const onStorage = (event: StorageEvent): void => {
-    if (event.key === colorKey || event.key === meaningsKey) {
+    if (event.key === colorKey || event.key === deviceMeaningsKey || event.key === null) {
       listener();
     }
   };
@@ -69,13 +110,111 @@ function subscribe(listener: () => void): () => void {
   };
 }
 
-export function lastHighlightColor(): HighlightColorKey {
+/**
+ * Follow the open collection's settings: its colours and meanings apply everywhere at once,
+ * including edits from other devices as the store hears of them. Returns the way to stop, which
+ * goes back to Reader's defaults.
+ */
+export function bindHighlightSettings(source: HighlightSettingsSource): () => void {
+  const take = (): void => {
+    const next = readerHighlightSettings(source.getSnapshot().settings);
+    if (JSON.stringify(next) !== JSON.stringify(collection)) {
+      collection = next;
+      notify();
+    }
+  };
+  take();
+  const unsubscribe = source.subscribe(take);
+  return () => {
+    unsubscribe();
+    if (collection !== defaultSettings) {
+      collection = defaultSettings;
+      notify();
+    }
+  };
+}
+
+let parsedDevice: { readonly raw: string | null; readonly value: HighlightMeanings } = {
+  raw: null,
+  value: {},
+};
+
+/** The meanings this device kept before they were collection settings; usually none. */
+export function deviceHighlightMeanings(): HighlightMeanings {
+  const raw = read(deviceMeaningsKey);
+  if (raw !== parsedDevice.raw) {
+    let value: unknown = {};
+    try {
+      value = raw ? JSON.parse(raw) : {};
+    } catch {
+      value = {};
+    }
+    parsedDevice = { raw, value: readHighlightMeanings(value) };
+  }
+  return parsedDevice.value;
+}
+
+/** Once the collection holds meanings, this device's old ones are no longer needed. */
+export function forgetDeviceHighlightMeanings(): void {
+  if (read(deviceMeaningsKey) !== null) {
+    write(deviceMeaningsKey, null);
+  }
+}
+
+let cachedChoices: {
+  readonly collection: ReaderHighlightSettings;
+  readonly device: HighlightMeanings;
+  readonly value: HighlightChoices;
+} | null = null;
+
+/** The colours offered and what they mean, for the open collection. The object is stable. */
+export function highlightChoices(): HighlightChoices {
+  const device = deviceHighlightMeanings();
+  if (cachedChoices?.collection !== collection || cachedChoices.device !== device) {
+    const fromDevice = !collection.meaningsStored && Object.keys(device).length > 0;
+    cachedChoices = {
+      collection,
+      device,
+      value: {
+        colors: collection.colors,
+        meanings: fromDevice ? device : collection.meanings,
+        meaningsFromDevice: fromDevice,
+      },
+    };
+  }
+  return cachedChoices.value;
+}
+
+const defaultChoices: HighlightChoices = {
+  colors: highlightColorKeys,
+  meanings: {},
+  meaningsFromDevice: false,
+};
+
+export function useHighlightChoices(): HighlightChoices {
+  return useSyncExternalStore(subscribe, highlightChoices, () => defaultChoices);
+}
+
+/** Each colour's meaning; a colour without one is absent. */
+export function useHighlightMeanings(): HighlightMeanings {
+  return useHighlightChoices().meanings;
+}
+
+function preferredHighlightColor(): HighlightColorKey {
   const value = read(colorKey);
   return isHighlightColorKey(value) ? value : defaultHighlightColor;
 }
 
+/**
+ * The colour a new highlight takes: the one used last on this device, or the first colour the
+ * collection offers while that one is hidden.
+ */
+export function lastHighlightColor(): HighlightColorKey {
+  return offeredHighlightColor(preferredHighlightColor(), highlightChoices().colors);
+}
+
 export function setLastHighlightColor(color: HighlightColorKey): void {
-  if (color !== lastHighlightColor()) {
+  if (color !== preferredHighlightColor()) {
     write(colorKey, color);
   }
 }
@@ -83,61 +222,6 @@ export function setLastHighlightColor(color: HighlightColorKey): void {
 export function useLastHighlightColor(): HighlightColorKey {
   return useSyncExternalStore(subscribe, lastHighlightColor, () => defaultHighlightColor);
 }
-
-let parsed: { readonly raw: string | null; readonly value: HighlightMeanings } = {
-  raw: null,
-  value: {},
-};
-
-/** Each colour's meaning; blank and unknown entries are dropped. The object is stable. */
-export function highlightMeanings(): HighlightMeanings {
-  const raw = read(meaningsKey);
-  if (raw !== parsed.raw) {
-    parsed = { raw, value: parseMeanings(raw) };
-  }
-  return parsed.value;
-}
-
-function parseMeanings(raw: string | null): HighlightMeanings {
-  let value: unknown;
-  try {
-    value = raw ? JSON.parse(raw) : {};
-  } catch {
-    return {};
-  }
-  if (typeof value !== "object" || value === null) {
-    return {};
-  }
-  const meanings: Partial<Record<HighlightColorKey, string>> = {};
-  for (const key of highlightColorKeys) {
-    const meaning = cleanMeaning((value as Record<string, unknown>)[key]);
-    if (meaning) {
-      meanings[key] = meaning;
-    }
-  }
-  return meanings;
-}
-
-function cleanMeaning(value: unknown): string {
-  return typeof value === "string"
-    ? value.replace(/\s+/gu, " ").trim().slice(0, highlightMeaningMaxLength)
-    : "";
-}
-
-/** Renames a colour's meaning; an empty name clears it. */
-export function setHighlightMeaning(color: HighlightColorKey, meaning: string): void {
-  const next: HighlightMeanings = { ...highlightMeanings(), [color]: cleanMeaning(meaning) };
-  const kept = highlightColorKeys.flatMap((key) => {
-    const value = next[key];
-    return value ? [[key, value] as const] : [];
-  });
-  write(meaningsKey, JSON.stringify(Object.fromEntries(kept)));
-}
-
-export function useHighlightMeanings(): HighlightMeanings {
-  return useSyncExternalStore(subscribe, highlightMeanings, () => emptyMeanings);
-}
-const emptyMeanings: HighlightMeanings = {};
 
 /**
  * What to call a stored colour, in words: "Yellow — Key idea", "Green", or for a hex colour

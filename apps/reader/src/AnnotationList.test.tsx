@@ -12,7 +12,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { browseAnnotations } from "./annotation-list-order.js";
 import { AnnotationList } from "./AnnotationList.js";
-import { setHighlightMeaning } from "./highlight-colors.js";
+import { bindCollectionHighlights } from "./highlight-settings.fixtures.js";
 
 import type * as TanstackVirtual from "@tanstack/react-virtual";
 
@@ -435,7 +435,9 @@ describe("annotation list editing", () => {
 describe("annotation Filter menu colours and order", () => {
   it("filters by colour, named by meaning, and clears back to any colour", async () => {
     virtual.endIndex = 10;
-    setHighlightMeaning("green", "Evidence");
+    const collection = bindCollectionHighlights({
+      highlight_meanings: { green: "Evidence" },
+    });
     const element = await mount(
       <AnnotationList
         {...props}
@@ -471,7 +473,36 @@ describe("annotation Filter menu colours and order", () => {
     });
     expect(element.querySelectorAll("[data-annotation-id]")).toHaveLength(5);
     expect(choice(element, "Any colour").getAttribute("aria-checked")).toBe("true");
-    setHighlightMeaning("green", "");
+    collection.stop();
+  });
+
+  it("lists offered colours in the collection's order, and hidden ones only while used", async () => {
+    virtual.endIndex = 10;
+    const collection = bindCollectionHighlights({ highlight_colors: ["pink", "green"] });
+    const element = await mount(
+      <AnnotationList
+        {...props}
+        annotations={{
+          status: "ready",
+          value: [
+            { ...kinds[0]!, id: annotationId("yellow") },
+            { ...kinds[0]!, id: annotationId("green"), color: "green" },
+            kinds[1]!,
+          ],
+        }}
+      />,
+    );
+    const colours = [...element.querySelectorAll('[role="radiogroup"]')]
+      .find((group) => group.textContent.includes("Any colour"))!
+      .querySelectorAll('[role="radio"]');
+    expect([...colours].map((radio) => radio.textContent)).toEqual([
+      "Any colour",
+      "Pink0",
+      "Green1",
+      // Yellow is hidden, but highlights still have it, so it can still be found.
+      "Yellow1",
+    ]);
+    collection.stop();
   });
 
   it("hides the Colour choices when nothing has a colour", async () => {
