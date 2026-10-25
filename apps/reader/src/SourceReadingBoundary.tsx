@@ -196,8 +196,10 @@ function progressPhrase(progress: string): string {
 }
 
 /**
- * A single slim, dismissible line above the document, shown only when the reader has left the
- * chapter's pages or the chapter cannot be used as a range. A polite status announces it.
+ * A single slim, dismissible line in the document's notice stack, shown only when the reader has
+ * left the chapter's pages or the chapter cannot be used as a range. A polite status announces
+ * it; both are direct children of the stack, which hides all but live regions while a selection
+ * toolbar is docked at the foot.
  */
 export function SourceReadingBoundary(props: BoundaryProps): JSX.Element | null {
   const state = useSourceReadingBoundary(props.source, props.surface);
@@ -221,6 +223,7 @@ function ChapterReadingHint({
   const kind = chapterHintKind({ range, location, entered, problem });
   const [dismissed, setDismissed] = useState<ChapterHintKind | null>(null);
   const hint = useRef<HTMLDivElement>(null);
+  const announcer = useRef<HTMLSpanElement>(null);
   const settled = nextChapterHintDismissal(dismissed, kind);
   if (settled !== dismissed) {
     setDismissed(settled);
@@ -231,8 +234,8 @@ function ChapterReadingHint({
   useEffect(() => {
     if (!visible && keepFocus.current) {
       keepFocus.current = false;
-      const region = hint.current?.closest(".source-part-reading");
-      region?.querySelector<HTMLElement>(".source-part-document")?.focus();
+      const canvas = announcer.current?.closest(".document-canvas");
+      canvas?.querySelector<HTMLElement>(".source-part-document")?.focus();
     }
   }, [visible]);
   const remember = (): void => {
@@ -250,12 +253,17 @@ function ChapterReadingHint({
   const next = kind === "after" ? nextKnownPart(source, sources, surface) : undefined;
   const text = visible ? chapterHintText(kind, range, problem) : "";
   return (
-    <div className="source-reading-hint-region" ref={hint}>
-      <span className="sr-only" role="status" aria-live="polite" aria-atomic="true">
+    <>
+      <span ref={announcer} className="sr-only" role="status" aria-live="polite" aria-atomic="true">
         {visible ? (kind === "before" || kind === "after" ? `${text}: ${source.title}` : text) : ""}
       </span>
       {visible ? (
-        <div className="source-reading-hint" role="group" aria-label="Chapter reading range">
+        <div
+          ref={hint}
+          className="source-reading-hint"
+          role="group"
+          aria-label="Chapter reading range"
+        >
           <span className="source-reading-hint-text">{text}</span>
           <span className="source-reading-hint-actions">
             {range.valid ? (
@@ -305,7 +313,7 @@ function ChapterReadingHint({
           ) : null}
         </div>
       ) : null}
-    </div>
+    </>
   );
 }
 

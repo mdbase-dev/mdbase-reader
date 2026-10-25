@@ -96,16 +96,46 @@ export function DocumentWorkspace({
             {resident ? sessionContent(props, tab, paneId, focused, visible) : null}
           </div>
         </div>
-        {document && focused && visible ? (
-          <>
-            <AnnotationComposerLayer composer={props.annotationComposer} />
-            {/* A phone shows selection actions in its bottom bar instead. */}
-            {dock.mobile ? null : <SelectionToolbarLayer composer={props.annotationComposer} />}
-            <DocumentNotices composer={props.annotationComposer} />
-          </>
+        {document && visible ? (
+          <DocumentOverlays props={props} tab={tab} source={source} focused={focused} />
         ) : null}
       </div>
     </section>
+  );
+}
+
+/** The composer and selection toolbar of the focused document, and the notices at its foot. */
+function DocumentOverlays({
+  props,
+  tab,
+  source,
+  focused,
+}: {
+  readonly props: DocumentWorkspaceProps;
+  readonly tab: WorkspaceTab;
+  readonly source: SourceSummary | null | undefined;
+  readonly focused: boolean;
+}): JSX.Element {
+  const composer = focused ? props.annotationComposer : null;
+  return (
+    <>
+      {composer ? <AnnotationComposerLayer composer={composer} /> : null}
+      {/* A phone shows selection actions in its bottom bar instead. */}
+      {composer && !props.sourceWorkspace.dock.mobile ? (
+        <SelectionToolbarLayer composer={composer} />
+      ) : null}
+      <DocumentNotices composer={composer}>
+        {source?.documents.length ? (
+          <SourceReadingBoundary
+            key={source.id}
+            source={source}
+            sources={props.sources}
+            surface={props.surfaces.get(tab.id) ?? null}
+            open={props.sourceWorkspace.open}
+          />
+        ) : null}
+      </DocumentNotices>
+    </>
   );
 }
 
@@ -188,13 +218,6 @@ function sessionContent(
   }
   return (
     <div className="source-part-reading">
-      <SourceReadingBoundary
-        key={source.id}
-        source={source}
-        sources={props.sources}
-        surface={props.surfaces.get(tab.id) ?? null}
-        open={props.sourceWorkspace.open}
-      />
       <div className="source-part-document" tabIndex={-1}>
         {props.renderDocument(source, paneId, tab.id) ?? <DocumentEmpty onOpenNote={openNote} />}
       </div>

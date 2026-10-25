@@ -48,7 +48,6 @@
   font-size: 0.82rem;
 }
 .source-part-reading {
-  position: relative;
   display: flex;
   flex-direction: column;
   height: 100%;
@@ -63,22 +62,10 @@
   outline: none;
 }
 /* Chapter reading stays quiet: one slim line, only once the reader has left the chapter. It
-   floats over the foot of the document rather than taking a row, because resizing the viewer
-   makes the PDF renderer lose the reader's place. */
-.source-reading-hint-region {
-  position: absolute;
-  z-index: 8;
-  right: var(--sp-4);
-  bottom: var(--sp-4);
-  left: var(--sp-4);
-  display: flex;
-  justify-content: center;
-  pointer-events: none;
-  container-type: inline-size;
-}
-/* Clear of the highlight-saved notice, which uses the same spot. */
-.document-canvas:has(.highlight-saved:not(.is-anchored)) .source-reading-hint-region {
-  bottom: calc(var(--sp-4) + 40px);
+   joins the document's notice stack rather than taking a row, because resizing the viewer makes
+   the PDF renderer lose the reader's place. On a narrow stack its actions wrap below. */
+.document-notices {
+  container: document-notices / inline-size;
 }
 .source-reading-hint {
   max-width: 100%;
@@ -133,7 +120,7 @@
   text-underline-offset: 3px;
 }
 /* On a narrow pane the message and Dismiss share the first line and the actions wrap below. */
-@container (max-width: 560px) {
+@container document-notices (max-width: 560px) {
   .source-reading-hint {
     flex-wrap: wrap;
     padding: var(--sp-1) var(--sp-1) var(--sp-1) var(--sp-3);

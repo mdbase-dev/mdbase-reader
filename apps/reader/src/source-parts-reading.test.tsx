@@ -296,10 +296,14 @@ it("keeps chapter reading quiet until the reader leaves, then offers a slim dism
   const open = vi.fn();
   await act(async () => {
     root.render(
-      <div className="source-part-reading">
+      <div className="document-canvas">
         <ChapterReadingChip source={chapter} sources={sources} surface={surface} open={open} />
-        <SourceReadingBoundary source={chapter} sources={sources} surface={surface} open={open} />
-        <div className="source-part-document" tabIndex={-1} />
+        <div className="source-part-reading">
+          <div className="source-part-document" tabIndex={-1} />
+        </div>
+        <div className="document-notices">
+          <SourceReadingBoundary source={chapter} sources={sources} surface={surface} open={open} />
+        </div>
       </div>,
     );
     await Promise.resolve();
@@ -323,6 +327,9 @@ it("keeps chapter reading quiet until the reader leaves, then offers a slim dism
   expect(chip.textContent).toBe("Ch. Chapter 1· Outside");
   expect(status.textContent).toBe("You’ve left this chapter: Chapter 1");
   expect(hint()?.textContent).toContain("You’ve left this chapter");
+  // Both sit directly in the notice stack, so a docked toolbar hides the hint but not its status.
+  expect(hint()?.parentElement?.className).toBe("document-notices");
+  expect(status.parentElement?.className).toBe("document-notices");
   const links = [...hint()!.querySelectorAll("a")];
   expect(links.map((link) => link.textContent)).toEqual([
     "Next part: Chapter 2",
