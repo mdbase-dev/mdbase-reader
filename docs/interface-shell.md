@@ -79,7 +79,9 @@ action, and one stylesheet section for each redesigned component.
 - **Text settings.** The `typography` surface capability (`ReadingTypography`: scale, measure,
   face) is implemented by the HTML renderer (an injected stylesheet) and the EPUB renderer
   (Readium preferences). PDFs keep their layout. The Display menu sets text size, line length
-  and typeface, stored with the other shell preferences.
+  and typeface, stored with the other shell preferences. Its "Settings…" item opens the
+  Settings page, which repeats this device's choices and holds the collection's settings
+  (`docs/design/app-settings.md`).
 - **Highlights and cards.** Saved pages and EPUBs draw a margin marker beside each highlight,
   darker when it carries a note; clicking one selects its card. Both use `MarginMarkers`
   (`reading-surface`), which locates the quotation with `locateTextQuote`, places the bar beside
