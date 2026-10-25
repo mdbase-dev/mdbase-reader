@@ -4,14 +4,17 @@ import {
   recordPathById,
   type ReaderConnectClient,
   type ReaderCreateReceipt,
+  type ReaderCreateTracking,
 } from "./repository-client.js";
-import { isPathTaken, type ReaderConnectProblem } from "./validation-issues.js";
+import { isIdExists, isPathTaken, type ReaderConnectProblem } from "./validation-issues.js";
 
 import type { ConnectOutcome, ReadInput, RecordDocument } from "@mdbase-dev/connect";
 import type {
   CreateJournal,
   PendingCreate,
+  PendingCreateAttention,
   PendingCreateKind,
+  PendingRelink,
   ReaderRequestOptions,
 } from "@mdbase-reader/core";
 
@@ -23,21 +26,30 @@ import type {
  * The log can still refuse it when it reaches head. An explicit path that another record
  * took first is `conflict` / `path_taken` (`intent.md` §3.1, "decided at head"), the
  * receipt moves `pending → rejected`, and "the local view drops the mutation"
- * (`replica-client-api.md` §6). Records have no create-if-absent, so two devices that
- * save the same name offline lose the second record unless someone looks.
+ * (`replica-client-api.md` §6). Writes made to the record while it was pending (edits,
+ * a delete) are refused with it, since they name a record the log never had. Records
+ * have no create-if-absent, so two devices that save the same name offline lose the
+ * second record unless someone looks.
  *
  * This keeps every create in a device journal until it is confirmed, and reconciles the
- * journal on startup, on reconnect and when receipts arrive:
+ * journal on startup, on reconnect, when the replica catches up and when receipts arrive:
  *
  *   submitting ──► pending ──► confirmed ──► (removed)
- *        │            │             ▲  └─ kept while a record it links to is unconfirmed
+ *        │            │  │          ▲  └─ kept while a record it links to is unconfirmed
+ *        │            │  └─ gone from the local view: deleted here ─► (removed)
  *        │            ├── rejected path_taken ─► next candidate (new intent) ─► submitting
  *        │            └── rejected otherwise, or out of candidates ─► needs-attention
  *        └── outcome unknown ─► pending (settled later by receipt or by its `id`)
  *
+ * While pending, each pass copies the record's current content from the local view into
+ * the entry, so a create written again after a refusal carries the user's later edits.
+ *
  * A retry under the same intent resends the first attempt's mutation, and "the first
- * attempt's content wins" (SDK `client.d.ts` `WriteOptions.intent`), so each new write
- * uses its own intent: the key for the first, then `key:n`.
+ * attempt's content wins" (SDK `client.d.ts` `WriteOptions.intent`); the log keeps the
+ * mutation's identity, so a resend of a write it already took lands once. Every state
+ * that is not definite (no receipt, `unknown`, `missing`) is therefore resent under its
+ * own intent. Only a refusal of that exact mutation starts a new write under a new
+ * intent: the key for the first, then `key:n`.
  */
 
 /** One record create to follow through. */
@@ -62,6 +74,7 @@ export interface CreateAttention {
   readonly key: string;
   readonly kind: PendingCreateKind;
   readonly label: string;
+  readonly reason: PendingCreateAttention;
   readonly problem: string;
 }
 
@@ -71,12 +84,14 @@ export interface CreateFollowThroughSnapshot {
   readonly attention: readonly CreateAttention[];
 }
 
-/** What the app shows: creates that need the user, and a way to try them again. */
+/** What the app shows: creates that need the user, and what the user can do about them. */
 export interface ReaderCreateFollowThrough {
   getSnapshot(): CreateFollowThroughSnapshot;
   subscribe(listener: () => void): () => void;
   /** Settle what can be settled now. With `retry`, also write again what needs attention. */
   reconcile(options?: { readonly retry?: boolean }): Promise<void>;
+  /** Let go of a create that needs the user. Its content is removed from this device. */
+  discard(key: string): Promise<void>;
 }
 
 type Submitted =
@@ -88,7 +103,13 @@ type Submitted =
       readonly exhausted: boolean;
     };
 
+/** Changes to an entry. `undefined` removes a field. */
+type EntryChange = { -readonly [Key in keyof PendingCreate]?: PendingCreate[Key] | undefined };
+
 const EMPTY: CreateFollowThroughSnapshot = { waiting: 0, attention: [] };
+
+/** How often a moved link may fail to reach a dependent record before it is let go. */
+const MAX_RELINK_TRIES = 5;
 
 /** Native codes that mean "not now" rather than "no" (`replica-client-api.md` §9). */
 const TRANSIENT_NATIVE = new Set(["unavailable", "rate_limited", "cancelled", "unauthenticated"]);
@@ -102,6 +123,15 @@ const TRANSIENT_CONNECT = new Set([
   "relay_unavailable",
 ]);
 
+/** The fields that make a new write: a new intent, with nothing known about it yet. */
+const NEW_WRITE: EntryChange = {
+  state: "submitting",
+  mutationId: undefined,
+  replicaId: undefined,
+  problem: undefined,
+  attention: undefined,
+};
+
 export class CreateFollowThrough implements ReaderCreateFollowThrough {
   readonly #records: ReaderConnectClient;
   readonly #journal: CreateJournal | null;
@@ -109,6 +139,8 @@ export class CreateFollowThrough implements ReaderCreateFollowThrough {
   readonly #now: () => string;
   /** Creates this instance is writing right now; the reconciler leaves them alone. */
   readonly #active = new Set<string>();
+  /** Creates let go of (deleted or discarded); a write still in flight never brings them back. */
+  readonly #forgotten = new Set<string>();
   /** Old path stem → new stem, for links made from a stale copy of a moved record. */
   readonly #moves = new Map<string, string>();
   readonly #listeners = new Set<() => void>();
@@ -147,13 +179,15 @@ export class CreateFollowThrough implements ReaderCreateFollowThrough {
   /**
    * Create at the first free candidate. The entry stays in the journal until the
    * collection confirms it; a create refused right away is returned as a failure for
-   * the caller to show, and is not kept.
+   * the caller to show, and is not kept. When the journal cannot be written (storage
+   * full, say), the create is still made, untracked.
    */
   async create(
     request: FollowedCreate,
     options: ReaderRequestOptions = {},
   ): Promise<ConnectOutcome<RecordDocument>> {
     this.#active.add(request.key);
+    this.#forgotten.delete(request.key);
     try {
       const frontmatter = this.#followMoves(request.input.frontmatter);
       const dependsOn = await this.#parentsOf(request.collectionId, request.key, frontmatter);
@@ -171,6 +205,8 @@ export class CreateFollowThrough implements ReaderCreateFollowThrough {
         state: "submitting",
         startedAt: this.#now(),
       };
+      // This create's content wins over anything an earlier save under the key left.
+      await this.#put(entry);
       const submitted = await this.#submit(entry, request, options);
       if (submitted.kind === "refused") {
         await this.#remove(submitted.entry);
@@ -178,6 +214,44 @@ export class CreateFollowThrough implements ReaderCreateFollowThrough {
       return submitted.outcome;
     } finally {
       this.#active.delete(request.key);
+      await this.#refresh();
+    }
+  }
+
+  /**
+   * The user deleted the record with Reader `id` `recordId`: keep nothing that would
+   * write it again. Call after a delete succeeds; the delete may be refused at head
+   * along with a pending create, and the create must not come back.
+   */
+  async forget(recordId: string): Promise<void> {
+    const journal = this.#journal;
+    const collectionId = this.#collectionId;
+    if (!journal || collectionId === null) {
+      return;
+    }
+    try {
+      for (const entry of await journal.list(collectionId)) {
+        if (entry.recordId === recordId) {
+          this.#forgotten.add(entry.key);
+          await this.#remove(entry);
+        }
+      }
+    } catch {
+      // The journal could not be read. A pending create is still let go of when the
+      // reconciler sees it gone from the local view.
+    }
+    await this.#refresh();
+  }
+
+  async discard(key: string): Promise<void> {
+    const collectionId = this.#collectionId;
+    if (collectionId === null) {
+      return;
+    }
+    this.#forgotten.add(key);
+    try {
+      await this.#journal?.remove(collectionId, key);
+    } finally {
       await this.#refresh();
     }
   }
@@ -245,17 +319,24 @@ export class CreateFollowThrough implements ReaderCreateFollowThrough {
       return;
     }
     if (entry.state === "needs-attention") {
-      // The user asked to try again: a new write, at the same path.
+      // The user asked to try again after a refusal: a new write, at the same path.
       await this.#resubmit(fresh(entry, entry.attempt));
       return;
     }
-    if (await this.#settleByReceipt(entry)) {
+    const tracking = this.#records.createTracking;
+    if (tracking && (await this.#settleByReceipt(entry, tracking))) {
       return;
     }
-    // No receipt, or it is `unknown` or `missing`: decide from the records themselves.
+    // No receipt, or it is `unknown` or `missing`: not a decision. Decide from the
+    // records themselves.
+    // A record missing from a replica that has not caught up (after a reload, or after
+    // sign-out cleared this device) may just not have arrived yet.
+    if (tracking && !tracking.caughtUp()) {
+      return;
+    }
     const path = entry.candidates[entry.attempt];
     if (path === undefined) {
-      await this.#attention(entry, exhaustedMessage);
+      await this.#attention(entry, "names-taken", exhaustedMessage);
       return;
     }
     const here = await this.#recordAt(path, entry);
@@ -271,28 +352,26 @@ export class CreateFollowThrough implements ReaderCreateFollowThrough {
       await this.#confirmed(entry);
       return;
     }
-    // Nothing carries its `id`: it was never captured, or a refusal dropped it. A write
-    // whose outcome was never seen is resent under its own intent, so a captured one
-    // lands once; any other write is new and needs a new intent.
-    const unseen = entry.state === "submitting" && entry.mutationId === undefined;
-    await this.#resubmit(unseen ? entry : fresh(entry, entry.attempt));
+    // Nothing carries its `id`, and no refusal of this write is known. Send the same
+    // write again under its own intent: if the log took it before, it lands once.
+    await this.#resubmit(entry);
   }
 
   /** Settle `entry` from its receipt; false when the receipt does not decide it. */
-  async #settleByReceipt(entry: PendingCreate): Promise<boolean> {
-    const tracking = this.#records.createTracking;
-    if (entry.mutationId === undefined || !tracking) {
+  async #settleByReceipt(entry: PendingCreate, tracking: ReaderCreateTracking): Promise<boolean> {
+    if (entry.mutationId === undefined) {
       return false;
     }
     const receipt = await tracking.receipt(entry.mutationId);
     switch (receipt.state) {
       case "pending":
+        await this.#follow(entry, tracking);
         return true;
       case "confirmed":
         await this.#confirmed(entry);
         return true;
       case "rejected":
-        // Reader has dealt with it, so the SDK's ledger need not keep showing it refused.
+        // Reader deals with it here, so the SDK's ledger need not keep showing it refused.
         await tracking.acknowledge(entry.mutationId).catch(() => undefined);
         await this.#refused(entry, receipt.problem);
         return true;
@@ -301,13 +380,54 @@ export class CreateFollowThrough implements ReaderCreateFollowThrough {
     }
   }
 
+  /**
+   * A pending create's record as the user has it now. Gone from the local view while
+   * its create is pending means the user deleted it on this device; otherwise its
+   * content is what a create written again after a refusal has to carry.
+   */
+  async #follow(entry: PendingCreate, tracking: ReaderCreateTracking): Promise<void> {
+    if (entry.replicaId === undefined) {
+      return;
+    }
+    const local = await tracking.local(entry.replicaId);
+    if (!local) {
+      this.#forgotten.add(entry.key);
+      await this.#remove(entry);
+      return;
+    }
+    const input: PendingCreate["input"] = {
+      ...entry.input,
+      frontmatter: relinked(local.frontmatter, entry.relink),
+      ...(local.body === undefined ? {} : { body: local.body }),
+    };
+    if (JSON.stringify(input) !== JSON.stringify(entry.input)) {
+      await this.#update(entry, { input });
+    }
+  }
+
   async #refused(entry: PendingCreate, problem: ReaderConnectProblem): Promise<void> {
+    if (isIdExists(problem)) {
+      // This create landed before (the record may have been deleted since): never again.
+      await this.#confirmed(entry);
+      return;
+    }
     if (!isPathTaken(problem)) {
-      await this.#attention(entry, problem.message);
+      await this.#attention(entry, "refused", problem.message);
+      return;
+    }
+    const path = entry.candidates[entry.attempt];
+    const holder = path === undefined ? null : await this.#recordAt(path, entry);
+    if (holder?.ours) {
+      // An earlier write of this same create holds the path: nothing to move.
+      if (holder.confirmed) {
+        await this.#confirmed(entry);
+      } else {
+        await this.#update(entry, { state: "pending", mutationId: undefined });
+      }
       return;
     }
     if (entry.attempt + 1 >= entry.candidates.length) {
-      await this.#attention(entry, exhaustedMessage);
+      await this.#attention(entry, "names-taken", exhaustedMessage);
       return;
     }
     await this.#resubmit(await this.#move(entry, entry.attempt + 1));
@@ -320,34 +440,42 @@ export class CreateFollowThrough implements ReaderCreateFollowThrough {
     }
     if (transient(submitted.outcome.problem)) {
       // Not a decision: keep it as it was and try again on the next trigger.
-      await this.#put(submitted.entry);
       return;
     }
     await this.#attention(
       submitted.entry,
+      submitted.exhausted ? "names-taken" : "refused",
       submitted.exhausted ? exhaustedMessage : submitted.outcome.problem.message,
     );
   }
 
-  /** Write `entry` at its current candidate, moving on while candidates are taken. */
+  /** Write `start` at its current candidate, moving on while candidates are taken. */
   async #submit(
     start: PendingCreate,
     how: Pick<FollowedCreate, "readBack" | "isOurs">,
     options: ReaderRequestOptions,
   ): Promise<Submitted> {
-    let entry = start;
+    // Which write this is comes from `start`; its content comes from the journal, where
+    // the reconciler may have moved its links since `start` was read.
+    let entry = await this.#update(start, {
+      ...NEW_WRITE,
+      attempt: start.attempt,
+      submission: start.submission,
+    });
     for (;;) {
       const path = entry.candidates[entry.attempt];
       if (path === undefined) {
         throw new Error("A record create has no path to try.");
       }
-      entry = { ...without(entry, "mutationId", "problem"), state: "submitting" };
-      await this.#put(entry);
       const { created, receipt } = await this.#send(entry, path);
       if (created.ok) {
         // No receipt means a client whose creates are decided before they return.
         if (receipt?.state === "pending") {
-          await this.#put({ ...entry, state: "pending", mutationId: receipt.mutationId });
+          await this.#update(entry, {
+            state: "pending",
+            mutationId: receipt.mutationId,
+            replicaId: receipt.record,
+          });
           return { kind: "waiting", outcome: created };
         }
         await this.#confirmed(entry);
@@ -398,19 +526,19 @@ export class CreateFollowThrough implements ReaderCreateFollowThrough {
     const problem = created.problem as ReaderConnectProblem;
     if (problem.code === "operation_outcome_unknown") {
       // Possibly captured: never write it again elsewhere until its receipt is known.
-      const mutationId = requestId(problem);
-      await this.#put({
-        ...entry,
-        state: "pending",
-        ...(mutationId === undefined ? {} : { mutationId }),
-      });
+      await this.#update(entry, { state: "pending", mutationId: requestId(problem) });
       return { kind: "waiting", outcome: created };
     }
     const existing = await this.#readBack(path, how, options);
     if (existing && (how.isOurs ?? ((document) => idOf(document) === entry.recordId))(existing)) {
       // This create, or an earlier attempt of it, already holds the path.
-      await this.#put({ ...entry, state: "pending" });
+      await this.#update(entry, { state: "pending" });
       return { kind: "waiting", outcome: connectSuccess(existing) };
+    }
+    if (isIdExists(problem)) {
+      // This create landed before, and is not at this path any more: never write it again.
+      await this.#confirmed(entry);
+      return { kind: "settled", outcome: created };
     }
     if (transient(problem)) {
       return { kind: "refused", outcome: created, entry, exhausted: false };
@@ -459,16 +587,19 @@ export class CreateFollowThrough implements ReaderCreateFollowThrough {
   async #move(entry: PendingCreate, attempt: number): Promise<PendingCreate> {
     const from = entry.candidates[entry.attempt];
     const to = entry.candidates[attempt];
-    const moved = fresh(entry, attempt);
-    await this.#put(moved);
+    const moved = await this.#update(entry, {
+      ...NEW_WRITE,
+      attempt,
+      submission: entry.submission + 1,
+    });
     if (from !== undefined && to !== undefined && from !== to) {
       this.#moves.set(stem(from), stem(to));
-      await this.#relink(entry, stem(from), stem(to));
+      await this.#relink(entry, { from: stem(from), to: stem(to) });
     }
     return moved;
   }
 
-  async #relink(parent: PendingCreate, from: string, to: string): Promise<void> {
+  async #relink(parent: PendingCreate, move: PendingRelink): Promise<void> {
     const journal = this.#journal;
     if (!journal) {
       return;
@@ -477,59 +608,101 @@ export class CreateFollowThrough implements ReaderCreateFollowThrough {
       if (!dependent.dependsOn?.includes(parent.key)) {
         continue;
       }
-      const frontmatter = rewriteLinks(dependent.input.frontmatter, from, to) as Record<
-        string,
-        unknown
-      >;
-      const changed = Object.keys(frontmatter).filter(
-        (field) =>
-          JSON.stringify(frontmatter[field]) !== JSON.stringify(dependent.input.frontmatter[field]),
-      );
-      if (changed.length === 0) {
+      const frontmatter = relinked(dependent.input.frontmatter, [move]);
+      if (JSON.stringify(frontmatter) === JSON.stringify(dependent.input.frontmatter)) {
         continue;
       }
-      const written = dependent.state === "pending" || dependent.state === "confirmed";
-      const updated: PendingCreate = {
-        ...dependent,
+      // A dependent being written right now may already be captured with the old link,
+      // so the move is always kept for the record too; a write still to come uses the
+      // new link from the journal.
+      const updated = await this.#update(dependent, {
         input: { ...dependent.input, frontmatter },
-        // A record that exists has to be changed too; one not written yet uses the new links.
-        ...(written ? { relink: [...new Set([...(dependent.relink ?? []), ...changed])] } : {}),
-      };
-      await this.#put(updated);
-      if (written && !this.#active.has(updated.key)) {
+        relink: [...(dependent.relink ?? []), move],
+      });
+      if (!this.#active.has(updated.key)) {
         await this.#pushLinks(updated).catch(() => undefined);
       }
     }
   }
 
-  /** Write moved links to a dependent record that already exists. */
+  /**
+   * Write moved links to a dependent record that exists. Only the link text changes:
+   * the patch is made from the record's current fields, so later edits are kept.
+   */
   async #pushLinks(entry: PendingCreate): Promise<PendingCreate> {
-    const fields = entry.relink ?? [];
-    const path = entry.candidates[entry.attempt];
-    if (fields.length === 0 || path === undefined) {
+    const moves = entry.relink ?? [];
+    if (moves.length === 0) {
       return entry;
     }
+    let current: { readonly path: string; readonly frontmatter: Record<string, unknown> } | null;
+    try {
+      current = await this.#current(entry);
+    } catch {
+      return this.#relinkFailed(entry);
+    }
+    if (!current) {
+      // Not written yet (its write will carry the new links), or deleted since.
+      return entry.state === "submitting"
+        ? this.#relinkFailed(entry)
+        : this.#update(entry, { relink: undefined, relinkTries: undefined });
+    }
+    const fields = current.frontmatter;
     const patch = Object.fromEntries(
-      fields.map((field) => [field, entry.input.frontmatter[field]]),
+      Object.keys(fields).flatMap((field) => {
+        const value = relinked({ [field]: fields[field] }, moves)[field];
+        return JSON.stringify(value) === JSON.stringify(fields[field]) ? [] : [[field, value]];
+      }),
     );
-    const result = await this.#records.update({ path, patch });
-    if (!result.ok) {
-      // Kept in `relink`; the next pass tries again.
-      return entry;
+    if (Object.keys(patch).length > 0) {
+      const result = await this.#records.update({ path: current.path, patch }).catch(() => null);
+      if (!result?.ok) {
+        return this.#relinkFailed(entry);
+      }
     }
-    const done = without(entry, "relink");
-    await this.#put(done);
-    return done;
+    return this.#update(entry, { relink: undefined, relinkTries: undefined });
+  }
+
+  /** Count a failed link push; after a few, the moved links are let go. */
+  #relinkFailed(entry: PendingCreate): Promise<PendingCreate> {
+    const tries = (entry.relinkTries ?? 0) + 1;
+    return this.#update(
+      entry,
+      tries >= MAX_RELINK_TRIES
+        ? { relink: undefined, relinkTries: undefined }
+        : { relinkTries: tries },
+    );
+  }
+
+  /** A record's current path and fields as written, or null when it is not there. */
+  async #current(
+    entry: PendingCreate,
+  ): Promise<{ readonly path: string; readonly frontmatter: Record<string, unknown> } | null> {
+    const tracking = this.#records.createTracking;
+    if (tracking && entry.replicaId !== undefined) {
+      const local = await tracking.local(entry.replicaId);
+      return local ? { path: local.path, frontmatter: { ...local.frontmatter } } : null;
+    }
+    const path = entry.candidates[entry.attempt];
+    if (path === undefined) {
+      return null;
+    }
+    const read = await this.#records.read({ path });
+    return read.ok && idOf(read.value) === entry.recordId
+      ? { path: read.value.path, frontmatter: { ...read.value.frontmatter } }
+      : null;
   }
 
   async #confirmed(entry: PendingCreate): Promise<void> {
-    const journal = this.#journal;
-    if (!journal) {
+    if (!this.#journal) {
       return;
     }
-    const parents = await this.#unsettled(entry);
-    if (parents) {
-      await this.#put({ ...without(entry, "mutationId", "problem"), state: "confirmed" });
+    if (await this.#unsettled(entry)) {
+      await this.#update(entry, {
+        state: "confirmed",
+        mutationId: undefined,
+        problem: undefined,
+        attention: undefined,
+      });
       return;
     }
     await this.#remove(entry);
@@ -563,13 +736,23 @@ export class CreateFollowThrough implements ReaderCreateFollowThrough {
         !this.#active.has(entry.key) &&
         !(await this.#unsettled(entry))
       ) {
-        await journal.remove(collectionId, entry.key);
+        await this.#remove(entry);
       }
     }
   }
 
-  async #attention(entry: PendingCreate, problem: string): Promise<void> {
-    await this.#put({ ...without(entry, "mutationId"), state: "needs-attention", problem });
+  async #attention(
+    entry: PendingCreate,
+    reason: PendingCreateAttention,
+    problem: string,
+  ): Promise<void> {
+    await this.#update(entry, {
+      state: "needs-attention",
+      mutationId: undefined,
+      replicaId: undefined,
+      attention: reason,
+      problem,
+    });
   }
 
   async #parentsOf(
@@ -585,7 +768,13 @@ export class CreateFollowThrough implements ReaderCreateFollowThrough {
     if (targets.size === 0) {
       return [];
     }
-    return (await journal.list(collectionId))
+    let entries: readonly PendingCreate[];
+    try {
+      entries = await journal.list(collectionId);
+    } catch {
+      return [];
+    }
+    return entries
       .filter((entry) => {
         const path = entry.candidates[entry.attempt];
         return (
@@ -607,12 +796,42 @@ export class CreateFollowThrough implements ReaderCreateFollowThrough {
     return current;
   }
 
+  /**
+   * Apply `change` to the entry as the journal has it now, so a change made meanwhile
+   * (a moved link written by the reconciler) is kept, and write it back. A create let
+   * go of is not written again.
+   */
+  async #update(entry: PendingCreate, change: EntryChange): Promise<PendingCreate> {
+    let latest = entry;
+    try {
+      latest = (await this.#journal?.get(entry.collectionId, entry.key)) ?? entry;
+    } catch {
+      // Unreadable: build on the copy this caller has.
+    }
+    const next = Object.fromEntries(
+      Object.entries({ ...latest, ...change }).filter(([, value]) => value !== undefined),
+    ) as unknown as PendingCreate;
+    if (!this.#forgotten.has(entry.key)) {
+      await this.#put(next);
+    }
+    return next;
+  }
+
+  /** Keep `entry`. A journal that cannot be written never stops the create itself. */
   async #put(entry: PendingCreate): Promise<void> {
-    await this.#journal?.put(entry);
+    try {
+      await this.#journal?.put(entry);
+    } catch {
+      // Storage full, say (a large captured body). The create goes ahead untracked.
+    }
   }
 
   async #remove(entry: PendingCreate): Promise<void> {
-    await this.#journal?.remove(entry.collectionId, entry.key);
+    try {
+      await this.#journal?.remove(entry.collectionId, entry.key);
+    } catch {
+      // Left for the next pass.
+    }
   }
 
   async #refresh(): Promise<void> {
@@ -633,6 +852,7 @@ export class CreateFollowThrough implements ReaderCreateFollowThrough {
         key: entry.key,
         kind: entry.kind,
         label: entry.label,
+        reason: entry.attention ?? "refused",
         problem: entry.problem ?? "The collection did not accept it.",
       }));
     const waiting = entries.filter(
@@ -661,23 +881,19 @@ function intentFor(entry: PendingCreate): string {
 
 /** The same create as a new write at `attempt`, under a new intent. */
 function fresh(entry: PendingCreate, attempt: number): PendingCreate {
-  return {
-    ...without(entry, "mutationId", "problem"),
-    attempt,
-    submission: entry.submission + 1,
-    state: "submitting",
-  };
+  return { ...entry, attempt, submission: entry.submission + 1, state: "submitting" };
 }
 
-function without<Key extends keyof PendingCreate>(
-  entry: PendingCreate,
-  ...keys: Key[]
-): Omit<PendingCreate, Key> {
-  const dropped = new Set<string>(keys);
-  return Object.fromEntries(Object.entries(entry).filter(([key]) => !dropped.has(key))) as Omit<
-    PendingCreate,
-    Key
-  >;
+/** `frontmatter` with every moved link pointed at its new place. */
+function relinked(
+  frontmatter: Readonly<Record<string, unknown>>,
+  moves: readonly PendingRelink[] | undefined,
+): Record<string, unknown> {
+  let current: Record<string, unknown> = { ...frontmatter };
+  for (const { from, to } of moves ?? []) {
+    current = rewriteLinks(current, from, to) as Record<string, unknown>;
+  }
+  return current;
 }
 
 function transient(problem: ReaderConnectProblem): boolean {

@@ -22,6 +22,7 @@ import {
 import type {
   ReaderConnectClient,
   ReaderCreatedRecord,
+  ReaderLocalRecord,
   ReaderCreateOptions,
   ReaderCreateTracking,
   ReaderMutationState,
@@ -161,6 +162,18 @@ class NativeRecords implements NativeReaderClient {
       const record = await this.client.find({ path }, { effective: true }, signal);
       this.#check(signal);
       return record ? createdRecord(record) : null;
+    },
+    local: async (replicaId, options = {}) => {
+      const signal = this.#scope(options.signal);
+      const record = await this.client.find(replicaId, { effective: true, body: true }, signal);
+      this.#check(signal);
+      return record ? localRecord(record) : null;
+    },
+    caughtUp: () => {
+      const status = this.client.status;
+      return (
+        this.client.ledger.getSnapshot().restored && status.confirmedThrough >= status.headKnown
+      );
     },
     acknowledge: async (mutationId) => {
       await this.client.ledger.acknowledge(mutationId);
@@ -351,6 +364,7 @@ class NativeRecords implements NativeReaderClient {
               options.onReceipt?.({
                 mutationId: receipt.mutation,
                 state: receipt.state === "confirmed" ? "confirmed" : "pending",
+                ...(receipt.records?.[0] ? { record: receipt.records[0].id } : {}),
               })),
         ),
       );
@@ -768,6 +782,16 @@ function createdRecord(record: RecordView): ReaderCreatedRecord {
   return {
     id: fields["id"],
     confirmed: record.state.state === "confirmed" || record.state.confirmedSeq > 0,
+  };
+}
+
+function localRecord(record: RecordView): ReaderLocalRecord {
+  return {
+    ...createdRecord(record),
+    path: record.path,
+    // As written: what a create has to write again, without derived defaults.
+    frontmatter: plain(record.frontmatter),
+    ...(record.body === undefined ? {} : { body: record.body }),
   };
 }
 

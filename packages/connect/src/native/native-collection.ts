@@ -76,7 +76,7 @@ export function nativeReaderCollection(
   return {
     collectionId: collectionId(connection.id),
     collectionName: connection.displayName,
-    sources: new ConnectSourceRepository(client),
+    sources: new ConnectSourceRepository(client, creates),
     sourceImports: new ConnectSourceImportRepository(client, files, creates),
     migration: new NativeMigrationTarget(connection.id, client, files),
     annotations: new ConnectAnnotationRepository(client, creates),
@@ -138,10 +138,21 @@ function followCreates(
     }
   });
   const stopLedger = sdk.ledger.subscribe(reconcile);
+  // Creates whose outcome is not known wait for the replica to catch up with head; go
+  // on when it has (`SyncStatus`: "confirmed through N", `client.d.ts` `onStatus`).
+  let caughtUp = false;
+  const stopStatus = sdk.onStatus((status) => {
+    const now = status.confirmedThrough >= status.headKnown;
+    if (now && !caughtUp) {
+      reconcile();
+    }
+    caughtUp = now;
+  });
   reconcile();
   return () => {
     stopLink();
     stopLedger();
+    stopStatus();
   };
 }
 

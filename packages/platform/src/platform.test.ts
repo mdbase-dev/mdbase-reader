@@ -59,17 +59,34 @@ describe("StorageCreateJournal", () => {
 
   it("keeps each create under its own key and lists a collection's oldest first", async () => {
     const storage = new MemoryStorage();
-    const journal = new StorageCreateJournal(storage);
+    const journal = new StorageCreateJournal(storage, "acct-1");
     await journal.put(create("b", "reading", "2026-10-25T12:00:02.000Z"));
     await journal.put(create("a", "reading", "2026-10-25T12:00:01.000Z"));
     await journal.put(create("c", "other", "2026-10-25T12:00:00.000Z"));
-    await storage.set("mdbase-reader:create:reading:broken", "{not json");
+    await storage.set("mdbase-reader:create:acct-1:reading:broken", "{not json");
 
     expect((await journal.list("reading")).map(({ key }) => key)).toEqual(["a", "b"]);
     await expect(journal.get("reading", "a")).resolves.toMatchObject({ state: "pending" });
     await journal.remove("reading", "a");
     await expect(journal.get("reading", "a")).resolves.toBeNull();
     expect(await storage.keys("mdbase-reader:create:")).toHaveLength(3);
+  });
+
+  it("keeps each account's creates apart and clears them on sign-out", async () => {
+    const storage = new MemoryStorage();
+    const mine = new StorageCreateJournal(storage, "acct-1");
+    const theirs = new StorageCreateJournal(storage, "acct-2");
+    await mine.put(create("a", "reading", "2026-10-25T12:00:01.000Z"));
+    await theirs.put(create("b", "reading", "2026-10-25T12:00:02.000Z"));
+
+    // Another account opening the same collection never sees, or replays, these.
+    expect((await theirs.list("reading")).map(({ key }) => key)).toEqual(["b"]);
+
+    await StorageCreateJournal.clearAccount(storage, "acct-1");
+    await expect(mine.list("reading")).resolves.toEqual([]);
+    expect(await theirs.list("reading")).toHaveLength(1);
+    await StorageCreateJournal.clearAll(storage);
+    await expect(theirs.list("reading")).resolves.toEqual([]);
   });
 });
 

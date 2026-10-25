@@ -38,6 +38,8 @@ export interface ReaderCreateReceipt {
    * the log can still refuse it (SDK `client.d.ts` `Write`, `replica-client-api.md` §6).
    */
   readonly state: "confirmed" | "pending";
+  /** The replica's ID for the created record (the receipt's optimistic `records`). */
+  readonly record?: string;
 }
 
 export interface ReaderCreateOptions {
@@ -71,10 +73,26 @@ export interface ReaderCreatedRecord {
   readonly confirmed: boolean;
 }
 
+/** A record as this device sees it now, pending writes included. */
+export interface ReaderLocalRecord extends ReaderCreatedRecord {
+  readonly path: string;
+  readonly frontmatter: Readonly<Record<string, unknown>>;
+  readonly body?: string;
+}
+
 /** What a client that settles creates later offers to follow them through. Native only. */
 export interface ReaderCreateTracking {
   receipt(mutationId: string, options?: ReaderRequestOptions): Promise<ReaderMutationState>;
   recordAt(path: string, options?: ReaderRequestOptions): Promise<ReaderCreatedRecord | null>;
+  /** The record with this replica ID in the local view, or null when it is not there. */
+  local(replicaId: string, options?: ReaderRequestOptions): Promise<ReaderLocalRecord | null>;
+  /**
+   * Whether the local view can be trusted to show what the log holds: the ledger has
+   * reconciled the writes from before this session (`WriteLedgerSnapshot.restored`), and
+   * the replica has caught up with head (`SyncStatus.confirmedThrough >= headKnown`).
+   * Until then, a record missing here may simply not have arrived yet.
+   */
+  caughtUp(): boolean;
   /** Forget a refused write once Reader has dealt with it (SDK `ledger.acknowledge`). */
   acknowledge(mutationId: string): Promise<void>;
 }

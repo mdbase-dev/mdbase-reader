@@ -57,25 +57,47 @@ export class StorageMutationJournal implements MutationJournal {
   }
 }
 
+const CREATE_PREFIX = "mdbase-reader:create:";
+
 /**
  * Record creates kept on this device until the collection confirms them. One key per
- * create, so two tabs never overwrite each other's entries.
+ * create, so two tabs never overwrite each other's entries. Entries belong to the
+ * account that made them: another account opening the same collection on this device
+ * never sees or replays them, and signing out clears them ({@link clearAccount}).
  */
 export class StorageCreateJournal implements CreateJournal {
-  public constructor(private readonly storage: ListableStorage) {}
+  readonly #prefix: string;
+
+  /** @param account The signed-in account's ID (the SDK connection's `scope.account`). */
+  public constructor(
+    private readonly storage: ListableStorage,
+    account: string,
+  ) {
+    this.#prefix = accountPrefix(account);
+  }
+
+  /** Forget every create `account` kept on this device, as when it signs out. */
+  public static async clearAccount(storage: ListableStorage, account: string): Promise<void> {
+    await clearKeys(storage, accountPrefix(account));
+  }
+
+  /** Forget every create kept on this device, for every account. */
+  public static async clearAll(storage: ListableStorage): Promise<void> {
+    await clearKeys(storage, CREATE_PREFIX);
+  }
 
   public async get(collectionId: string, key: string): Promise<PendingCreate | null> {
-    const value = await this.storage.get(createKey(collectionId, key));
+    const value = await this.storage.get(this.#key(collectionId, key));
     return value === null ? null : parseCreate(value);
   }
 
   public async put(entry: PendingCreate): Promise<void> {
-    await this.storage.set(createKey(entry.collectionId, entry.key), JSON.stringify(entry));
+    await this.storage.set(this.#key(entry.collectionId, entry.key), JSON.stringify(entry));
   }
 
   public async list(collectionId: string): Promise<readonly PendingCreate[]> {
     const entries: PendingCreate[] = [];
-    for (const key of await this.storage.keys(createKey(collectionId, ""))) {
+    for (const key of await this.storage.keys(this.#key(collectionId, ""))) {
       const value = await this.storage.get(key);
       const entry = value === null ? null : parseCreate(value);
       if (entry?.collectionId === collectionId) {
@@ -87,12 +109,22 @@ export class StorageCreateJournal implements CreateJournal {
   }
 
   public async remove(collectionId: string, key: string): Promise<void> {
-    await this.storage.remove(createKey(collectionId, key));
+    await this.storage.remove(this.#key(collectionId, key));
+  }
+
+  #key(collectionId: string, key: string): string {
+    return `${this.#prefix}${encodeURIComponent(collectionId)}:${key}`;
   }
 }
 
-function createKey(collectionId: string, key: string): string {
-  return `mdbase-reader:create:${encodeURIComponent(collectionId)}:${key}`;
+function accountPrefix(account: string): string {
+  return `${CREATE_PREFIX}${encodeURIComponent(account)}:`;
+}
+
+async function clearKeys(storage: ListableStorage, prefix: string): Promise<void> {
+  for (const key of await storage.keys(prefix)) {
+    await storage.remove(key);
+  }
 }
 
 function parseCreate(value: string): PendingCreate | null {

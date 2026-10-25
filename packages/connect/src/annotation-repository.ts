@@ -322,6 +322,8 @@ export class ConnectAnnotationRepository implements AnnotationRepository {
         throw new Error(`mdbase Connect did not delete annotation ${annotation.id}.`);
       }
       this.#records.delete(path);
+      // A create still waiting for the collection must not bring it back.
+      await this.#creates.forget(annotation.id);
     } finally {
       this.#deletePreflights.delete(key);
     }

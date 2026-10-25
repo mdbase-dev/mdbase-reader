@@ -22,6 +22,16 @@ export function isPathTaken(problem: ConnectProblem): boolean {
   return native?.code === "conflict" && native.reason === "path_taken";
 }
 
+/**
+ * True when a create was refused because its record ID was used before, even by a record
+ * deleted since (engine `plan/records.rs` `create`: `id_exists` for a live record or a
+ * tombstone). A create under an intent derives its record ID from the intent (SDK
+ * `client.d.ts` `WriteOptions.intent`), so this means the same create landed before.
+ */
+export function isIdExists(problem: ConnectProblem): boolean {
+  return (problem as ReaderConnectProblem).native?.reason === "id_exists";
+}
+
 const fieldLabels: Readonly<Record<string, string>> = {
   title: "Title",
   authors: "Authors",

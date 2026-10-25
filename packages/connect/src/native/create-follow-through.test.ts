@@ -61,6 +61,15 @@ const pathTaken = mdbaseError(
   "path_taken",
 ).toProblem();
 
+/** The one query the follow-through makes: a record by its Reader `id`. */
+function whereId(
+  expression: string,
+  record: { readonly frontmatter: Map<string, unknown> },
+): boolean {
+  const match = /^id == (".*")$/u.exec(expression);
+  return match?.[1] !== undefined && record.frontmatter.get("id") === JSON.parse(match[1]);
+}
+
 let clock = 0;
 const now = (): string => new Date(Date.UTC(2026, 9, 25, 12, 0, clock++)).toISOString();
 
@@ -80,7 +89,7 @@ async function offlineDevice(): Promise<{
   collection: NativeReaderCollection;
 }> {
   // Nothing confirms until the test says so: the device is saving offline.
-  const memory = await memoryConnection({ confirmDelayMs: null });
+  const memory = await memoryConnection({ confirmDelayMs: null, where: whereId });
   cleanup.push(memory.close);
   const journal = new MemoryJournal();
   return { ...memory, journal, collection: open(memory.connection, journal) };
@@ -217,7 +226,7 @@ describe("create follow-through", () => {
   });
 
   it("settles a pending create kept from before a restart", async () => {
-    const replica = new MemoryReplica({ confirmDelayMs: null });
+    const replica = new MemoryReplica({ confirmDelayMs: null, where: whereId });
     const journal = new MemoryJournal();
     const session = async (): Promise<MdbaseApplicationConnection> => {
       const client = await connect({
@@ -247,7 +256,7 @@ describe("create follow-through", () => {
   });
 
   it("reconciles when the link opens again after a refusal it missed", async () => {
-    const replica = new MemoryReplica({ confirmDelayMs: null });
+    const replica = new MemoryReplica({ confirmDelayMs: null, where: whereId });
     const client = await connect({
       connector: replica.connector(),
       app: { name: "reader-native-test", version: "test" },
@@ -274,6 +283,166 @@ describe("create follow-through", () => {
     });
     expect(entry(journal, "src_adam")).toMatchObject({ attempt: 1, submission: 1 });
     expect(recordAt(replica, "sources/adam-src_adam.md")).toMatchObject({ id: "src_adam" });
+  });
+});
+
+describe("create follow-through and the user's own changes", () => {
+  it("lets go of a pending source the user removes, when head refuses both", async () => {
+    const { replica, journal, collection } = await offlineDevice();
+    const source = await collection.sourceImports.commitFile(sourcePlan(replica.collection));
+    const first = sourceMutation(journal);
+    const plan = await collection.sources.preflightDelete?.(source);
+    if (!plan) {
+      throw new Error("The native source repository removes sources.");
+    }
+    await collection.sources.delete?.(plan);
+    expect(journal.entries.has("src_adam")).toBe(false);
+
+    // Another device saved "Adam" first: head refuses the create, and the delete with it.
+    replica.reject(first, pathTaken);
+    replica.seed({ path: "sources/adam.md", types: ["reader-source"], frontmatter: { id: "a" } });
+    await collection.createFollowThrough?.reconcile();
+
+    expect(recordAt(replica, "sources/adam-src_adam.md")).toBeUndefined();
+    expect(journal.entries.size).toBe(0);
+  });
+
+  it("lets go of a pending record deleted on this device outside Reader", async () => {
+    const { replica, connection, journal, collection } = await offlineDevice();
+    await collection.sourceImports.commitFile(sourcePlan(replica.collection));
+    const first = sourceMutation(journal);
+    await connection.records.delete(await connection.records.get({ path: "sources/adam.md" }));
+    // Seen gone from the local view while its create is pending: deleted here.
+    await collection.createFollowThrough?.reconcile();
+    expect(journal.entries.has("src_adam")).toBe(false);
+
+    replica.reject(first, pathTaken);
+    replica.seed({ path: "sources/adam.md", types: ["reader-source"], frontmatter: { id: "a" } });
+    await collection.createFollowThrough?.reconcile();
+    expect(recordAt(replica, "sources/adam-src_adam.md")).toBeUndefined();
+  });
+
+  it("writes the user's edits again when a pending source moves to its fallback", async () => {
+    const { replica, connection, journal, collection } = await offlineDevice();
+    await collection.sourceImports.commitFile(sourcePlan(replica.collection));
+    const first = sourceMutation(journal);
+    await connection.records.update(await connection.records.get({ path: "sources/adam.md" }), {
+      patch: { title: "Adam, revised" },
+      body: "# Adam\n\nMy reading notes.\n",
+    });
+    await collection.createFollowThrough?.reconcile();
+
+    // The edit names a record the log never had, so it is refused with the create.
+    replica.reject(first, pathTaken);
+    replica.seed({ path: "sources/adam.md", types: ["reader-source"], frontmatter: { id: "a" } });
+    await collection.createFollowThrough?.reconcile();
+
+    expect(recordAt(replica, "sources/adam-src_adam.md")).toMatchObject({
+      id: "src_adam",
+      title: "Adam, revised",
+    });
+    expect(
+      replica.allRecords.find(({ path }) => path === "sources/adam-src_adam.md")?.body,
+    ).toContain("My reading notes.");
+  });
+
+  it("resends a create whose outcome is not known under its own intent", async () => {
+    const { replica, journal, collection } = await offlineDevice();
+    // As after sign-out cleared this device: the journal kept the create, the replica has
+    // no receipt for its mutation and no record carrying its `id`.
+    await journal.put({
+      key: "src_adam",
+      collectionId: replica.collection,
+      kind: "source",
+      recordId: "src_adam",
+      label: "Adam",
+      candidates: ["sources/adam.md", "sources/adam-src_adam.md"],
+      attempt: 0,
+      submission: 0,
+      input: { type: "reader-source", frontmatter: { id: "src_adam", title: "Adam" } },
+      state: "pending",
+      mutationId: "0199a1b2-0000-7000-8000-00000000dead",
+      startedAt: now(),
+    });
+    await collection.createFollowThrough?.reconcile();
+
+    // The same write, not a new one: a create the log took before lands once.
+    expect(entry(journal, "src_adam")).toMatchObject({ submission: 0, attempt: 0 });
+    expect(recordAt(replica, "sources/adam.md")).toMatchObject({ id: "src_adam" });
+    expect(replica.allRecords.filter(({ path }) => path.startsWith("sources/"))).toHaveLength(1);
+  });
+
+  it("treats a refused path that its own record holds as saved", async () => {
+    const { replica, journal, collection } = await offlineDevice();
+    await collection.sourceImports.commitFile(sourcePlan(replica.collection));
+    // An earlier write of this create already holds the name.
+    replica.reject(sourceMutation(journal), pathTaken);
+    replica.seed({
+      path: "sources/adam.md",
+      types: ["reader-source"],
+      frontmatter: { id: "src_adam", title: "Adam" },
+    });
+    await collection.createFollowThrough?.reconcile();
+
+    expect(recordAt(replica, "sources/adam-src_adam.md")).toBeUndefined();
+    expect(journal.entries.size).toBe(0);
+    expect(collection.createFollowThrough?.getSnapshot().attention).toEqual([]);
+  });
+});
+
+describe("create follow-through bookkeeping", () => {
+  it("keeps a moved link for an annotation that was being saved when its source moved", async () => {
+    const { replica, journal, collection } = await offlineDevice();
+    const reading = replica.collection;
+    await collection.sourceImports.commitFile(sourcePlan(reading));
+    const first = sourceMutation(journal);
+    // The annotation's save is in flight (waiting for its receipt) while the source moves.
+    const saving = collection.annotations.create(
+      note(reading, "[[sources/adam|Adam]]"),
+      mutationId("0199a1b2-0000-7000-8000-000000000002"),
+    );
+    await until(() => journal.entries.has("0199a1b2-0000-7000-8000-000000000002"));
+    replica.reject(first, pathTaken);
+    replica.seed({ path: "sources/adam.md", types: ["reader-source"], frontmatter: { id: "a" } });
+    await collection.createFollowThrough?.reconcile();
+    await saving;
+    await collection.createFollowThrough?.reconcile();
+
+    expect(entry(journal, "0199a1b2-0000-7000-8000-000000000002").input.frontmatter).toMatchObject({
+      source: "[[sources/adam-src_adam|Adam]]",
+    });
+    expect(recordAt(replica, "annotations/ann_note.md")).toMatchObject({
+      source: "[[sources/adam-src_adam|Adam]]",
+    });
+  });
+
+  it("still creates the record when the journal cannot be written", async () => {
+    const memory = await memoryConnection({ confirmDelayMs: null });
+    cleanup.push(memory.close);
+    const full = new MemoryJournal();
+    full.put = () => Promise.reject(new DOMException("Storage is full.", "QuotaExceededError"));
+    const collection = open(memory.connection, full);
+
+    const source = await collection.sourceImports.commitFile(sourcePlan(memory.replica.collection));
+    expect(source.path).toBe("sources/adam.md");
+    expect(recordAt(memory.replica, "sources/adam.md")).toMatchObject({ id: "src_adam" });
+  });
+
+  it("discards a create that needs the user, and does not bring it back", async () => {
+    const { replica, journal, collection } = await offlineDevice();
+    await collection.sourceImports.commitFile(sourcePlan(replica.collection));
+    replica.reject(sourceMutation(journal), pathTaken);
+    replica.seed({ path: "sources/adam.md", types: ["reader-source"], frontmatter: { id: "a" } });
+    replica.seed({ path: "sources/adam-src_adam.md", types: ["note"], frontmatter: { id: "b" } });
+    await collection.createFollowThrough?.reconcile();
+    expect(collection.createFollowThrough?.getSnapshot().attention).toEqual([
+      expect.objectContaining({ key: "src_adam", reason: "names-taken" }),
+    ]);
+
+    await collection.createFollowThrough?.discard("src_adam");
+    await collection.createFollowThrough?.reconcile({ retry: true });
+    expect(journal.entries.size).toBe(0);
+    expect(collection.createFollowThrough?.getSnapshot()).toEqual({ waiting: 0, attention: [] });
   });
 });
 

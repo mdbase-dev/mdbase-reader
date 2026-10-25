@@ -276,9 +276,21 @@ export type PendingCreateKind = "source" | "source-part" | "annotation";
  * - `confirmed`: confirmed, but kept while a record it links to is still unconfirmed,
  *   so the link can follow that record if it has to move.
  * - `needs-attention`: the collection refused it, or every path was taken. The content
- *   stays here until the user tries again.
+ *   stays here until the user tries again or discards it.
  */
 export type PendingCreateState = "submitting" | "pending" | "confirmed" | "needs-attention";
+
+/**
+ * Why a create needs the user: every name Reader tried was taken, or the collection
+ * refused it for another reason (trying again is unlikely to help).
+ */
+export type PendingCreateAttention = "names-taken" | "refused";
+
+/** A link that moved: `[[from…]]` in a record that links here now reads `[[to…]]`. */
+export interface PendingRelink {
+  readonly from: string;
+  readonly to: string;
+}
 
 /** One record create, with everything needed to write it again. JSON-serialisable. */
 export interface PendingCreate {
@@ -306,10 +318,15 @@ export interface PendingCreate {
   readonly state: PendingCreateState;
   /** The SDK mutation of the current write, once known. */
   readonly mutationId?: string;
+  /** The replica's ID for the record of the current write, once known. */
+  readonly replicaId?: string;
   /** Why it needs attention, in words for the user. */
   readonly problem?: string;
-  /** Top-level fields whose links moved and still have to be written to the record. */
-  readonly relink?: readonly string[];
+  readonly attention?: PendingCreateAttention;
+  /** Links that moved and still have to be written to the record. */
+  readonly relink?: readonly PendingRelink[];
+  /** Failed attempts to write `relink`; the entry is let go after a few. */
+  readonly relinkTries?: number;
   readonly startedAt: string;
 }
 
