@@ -25,8 +25,8 @@ export function SavedHighlights({
   }
   const highlights = c.annotations.filter((annotation) => annotation.target?.quote);
   const hidden = c.projection ? c.projection.report.total - c.projection.report.shown : 0;
-  // A PDF keeps the list, and its Refresh, for highlights made in Reader meanwhile.
-  if (!highlights.length && !hidden && c.capture?.kind !== "pdf") {
+  // Highlights made in Reader meanwhile, as on a PDF, are read when the panel is shown again.
+  if (!highlights.length && !hidden) {
     return null;
   }
   return (
@@ -34,14 +34,6 @@ export function SavedHighlights({
       <div className="list-header">
         {/* The Highlights tab already counts them. */}
         <h2 id="saved-highlights-heading">Saved highlights</h2>
-        <button
-          type="button"
-          className="text-button"
-          disabled={c.busy || c.refreshing}
-          onClick={() => void c.refreshHighlights()}
-        >
-          {c.refreshing ? "Updating…" : "Refresh"}
-        </button>
       </div>
       {hidden ? (
         <p className="hint">

@@ -51,7 +51,6 @@ export interface ExtensionCaptureController {
   readonly progress: SourceImportProgress | null;
   readonly busy: boolean;
   readonly refreshing: boolean;
-  readonly refreshHighlights: () => Promise<void>;
   readonly saveAttempted: boolean;
   readonly navigated: boolean;
   /** The tab navigated and the panel is reading the new page by itself. */

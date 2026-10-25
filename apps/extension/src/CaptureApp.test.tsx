@@ -281,7 +281,8 @@ it("does not display stale write progress after a successful save", () => {
     progress: { phase: "creating", completedBytes: 1, totalBytes: 1, fileIndex: 1, fileCount: 1 },
   });
   expect(html).toMatch(/<span>Saved<\/span> · <a[^>]*>Open in Reader/u);
-  expect(html).toContain("Updating…");
+  // Highlights are read again on return to the panel; there is no Refresh to press.
+  expect(html).not.toContain("Refresh");
   expect(html).not.toContain("Saving source record");
 });
 it("says a highlight saved once, in the status line with its way back", () => {

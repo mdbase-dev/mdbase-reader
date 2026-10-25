@@ -581,15 +581,6 @@ details.technical summary {
   font-size: var(--text-md);
   font-weight: var(--weight-strong);
 }
-.list-header h2 span {
-  margin-left: var(--sp-1);
-  color: var(--text-3);
-  font-size: var(--text-xs);
-  font-weight: var(--weight-regular);
-}
-.list-header .text-button {
-  margin: 0;
-}
 .saved-highlights ul {
   margin: 0;
   padding: 0;

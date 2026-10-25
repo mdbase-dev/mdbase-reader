@@ -364,10 +364,17 @@ it("releases Save and clears write progress before a slow refresh finishes", asy
   });
   expect(controller.refreshing).toBe(false);
   const writes = mocks.save.mock.calls.length;
+  const reads = mocks.list.mock.calls.length;
+  // Coming back to the panel a while later reads the highlights again, and only reads.
+  const later = Date.now() + 6000;
+  vi.spyOn(Date, "now").mockReturnValue(later);
   await act(async () => {
-    await controller.refreshHighlights();
+    window.dispatchEvent(new Event("focus"));
+    document.dispatchEvent(new Event("visibilitychange"));
   });
+  expect(mocks.list).toHaveBeenCalledTimes(reads + 1);
   expect(mocks.save).toHaveBeenCalledTimes(writes);
+  vi.restoreAllMocks();
 });
 it("follows new selections from its own tab without re-reading the page", async () => {
   await mount();

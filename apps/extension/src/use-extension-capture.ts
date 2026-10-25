@@ -46,6 +46,9 @@ import type {
 
 export type { ExtensionCaptureController } from "./capture-controller.js";
 
+/** A saved page's highlights are read again on return to the panel, at most this often. */
+const returnRefreshMs = 5000;
+
 // The controller coordinates one panel's explicit actions; I/O lives in the composed hooks
 // and CaptureWriter.
 // eslint-disable-next-line max-lines-per-function
@@ -475,9 +478,9 @@ export function useExtensionCapture(
     }
   }
 
+  /** Highlights made or changed in Reader meanwhile, read when the panel is shown again. */
   const refreshHighlights = async (): Promise<void> => {
     if (source && !refreshing && !busy) {
-      setNotice(null);
       await refreshAnnotations(source, true);
     }
   };
@@ -593,7 +596,7 @@ export function useExtensionCapture(
     save,
   });
 
-  const actions = useStableActions({
+  const { refreshHighlights: refreshOnReturn, ...actions } = useStableActions({
     refreshHighlights,
     connect: connection.connect,
     retry: connection.retry,
@@ -613,6 +616,27 @@ export function useExtensionCapture(
     undoHighlight,
     allowAllSites,
   });
+
+  const sourceId = source?.id;
+  useEffect(() => {
+    if (!sourceId) {
+      return;
+    }
+    // Focus and visibility arrive together, and a quick return need not read again.
+    let last = Date.now();
+    const again = (): void => {
+      if (document.visibilityState === "visible" && Date.now() - last > returnRefreshMs) {
+        last = Date.now();
+        void refreshOnReturn();
+      }
+    };
+    window.addEventListener("focus", again);
+    document.addEventListener("visibilitychange", again);
+    return () => {
+      window.removeEventListener("focus", again);
+      document.removeEventListener("visibilitychange", again);
+    };
+  }, [refreshOnReturn, sourceId]);
 
   return {
     ...actions,
