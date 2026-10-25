@@ -128,6 +128,11 @@ export interface PlannedSourceFileImport {
   readonly recordPath: string;
   /** Used instead of `recordPath` when another record already has that path. */
   readonly fallbackRecordPath?: string;
+  /**
+   * Every path to try for the note, in order (`domain/record-names.ts`). Starts with
+   * `recordPath`; not yet used when creating the record.
+   */
+  readonly recordPathCandidates?: readonly string[];
   /** Empty for a source created without a document. */
   readonly representations: readonly PlannedSourceRepresentation[];
   readonly body?: string;

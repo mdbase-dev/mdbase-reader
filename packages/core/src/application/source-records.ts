@@ -2,6 +2,7 @@ import { DomainError } from "../domain/errors.js";
 
 import { authoredImportFields, planRepresentation } from "./import-source-file.js";
 import {
+  authorYearFromMetadata,
   normalizeOptionalText,
   normalizeTitle,
   sourceRecordPaths,
@@ -35,7 +36,7 @@ export async function createSourceRecord(
       title,
       kind: normalizeOptionalText(request.kind, 100) ?? "document",
       savedAt: dependencies.clock.now(),
-      ...sourceRecordPaths(title, sourceId),
+      ...sourceRecordPaths(title, sourceId, authorYearFromMetadata(request.metadata)),
       representations: [],
       ...authoredImportFields(request),
     },
