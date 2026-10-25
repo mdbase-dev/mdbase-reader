@@ -12,7 +12,7 @@ import { useDiagnosticsShown } from "./diagnostics-setting.js";
 import { DiagnosticsPanel } from "./DiagnosticsPanel.js";
 import { ExtensionHeader } from "./ExtensionHeader.js";
 import { HighlightFields } from "./HighlightFields.js";
-import { NotePanel } from "./NotePanel.js";
+import { NotePanel, useNoteAttention } from "./NotePanel.js";
 import { PanelTabContent, PanelTabs, usePanelTab, type PanelTab } from "./PanelTabs.js";
 import { PostPicker } from "./PostPicker.js";
 import { awaitingConnection, SaveBar, saveReady } from "./SaveBar.js";
@@ -42,6 +42,7 @@ export function CaptureApp({
     window.addEventListener("beforeunload", warn);
     return () => window.removeEventListener("beforeunload", warn);
   }, [controller.busy]);
+  const noteAttention = useNoteAttention(controller.note.session);
   const highlightCount = controller.source
     ? controller.annotations.filter((annotation) => annotation.target?.quote).length
     : null;
@@ -95,7 +96,12 @@ export function CaptureApp({
         <ConnectionProblem controller={controller} />
         {controller.capture && !unreadable(controller) ? (
           <>
-            <PanelTabs tab={tab} highlightCount={highlightCount} onChange={setTab} />
+            <PanelTabs
+              tab={tab}
+              highlightCount={highlightCount}
+              noteAttention={noteAttention}
+              onChange={setTab}
+            />
             <PanelTabContent tab={tab}>
               {tab === "highlights" ? (
                 <HighlightsPanel controller={controller} />

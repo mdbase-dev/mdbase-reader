@@ -79,7 +79,7 @@ function markup(changes: Partial<ExtensionCaptureController> = {}, tab?: PanelTa
     setDraft: vi.fn(),
     highlight: { colors: ["yellow", "green", "blue", "pink", "purple"], meanings: {} },
     knownTags: [],
-    note: { status: "idle", session: null, problem: null, load: vi.fn(), saveDetails: vi.fn() },
+    note: { status: "idle", session: null, problem: null, load: vi.fn() },
     ...changes,
   } as unknown as ExtensionCaptureController;
   return renderToStaticMarkup(
@@ -528,7 +528,7 @@ it("asks for a title from the save action when the draft has none", () => {
   expect(html).toMatch(/<button class="primary" type="button" disabled=""/u);
   expect(html).toContain("Give the source a title under Literature note");
 });
-it("edits a saved source's title and tags and opens its note", () => {
+it("opens a saved source's title, tags and note together", () => {
   const html = markup(
     {
       source: { ...savedSource, tags: ["ml", "vision"] } as ExtensionCaptureController["source"],
@@ -537,14 +537,12 @@ it("edits a saved source's title and tags and opens its note", () => {
         session: null,
         problem: null,
         load: vi.fn(),
-        saveDetails: vi.fn(),
       },
     },
     "note",
   );
-  expect(html).toMatch(/id="saved-title"[^>]*value="\[test\] Saved"/u);
-  expect(html).toMatch(/id="saved-tags"[^>]*value="ml, vision"/u);
-  // Nothing changed yet, so there is nothing to save.
+  // They autosave through one session, so none is editable until it opens.
+  expect(html).not.toContain('id="saved-title"');
   expect(html).not.toContain("Save title and tags");
   expect(html).toContain("Opening the literature note…");
   expect(html).toContain("Edit in Reader");
@@ -558,7 +556,6 @@ it("offers to retry when the saved note cannot be opened", () => {
         session: null,
         problem: "Request timed out",
         load: vi.fn(),
-        saveDetails: vi.fn(),
       },
     },
     "note",

@@ -22,11 +22,14 @@ const tabs: readonly {
 export function PanelTabs({
   tab,
   highlightCount,
+  noteAttention = false,
   onChange,
 }: {
   readonly tab: PanelTab;
   /** Saved highlights on this page's source, counted once there are any. */
   readonly highlightCount: number | null;
+  /** The literature note waits on the reader, as in a conflict. */
+  readonly noteAttention?: boolean;
   readonly onChange: (tab: PanelTab) => void;
 }): React.JSX.Element {
   const list = useRef<HTMLDivElement>(null);
@@ -69,6 +72,11 @@ export function PanelTabs({
           <span className="panel-tab-label">{label}</span>
           {id === "highlights" && highlightCount ? (
             <span className="panel-tab-count">{highlightCount}</span>
+          ) : null}
+          {id === "note" && noteAttention ? (
+            <span className="panel-tab-alert">
+              <span className="visually-hidden">, needs your attention</span>
+            </span>
           ) : null}
         </button>
       ))}

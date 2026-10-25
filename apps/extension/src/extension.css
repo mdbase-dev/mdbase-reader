@@ -357,6 +357,14 @@ details.technical summary {
   height: 15px;
   flex: none;
 }
+/* The literature note waits on a decision. */
+.panel-tab-alert {
+  width: 7px;
+  height: 7px;
+  flex: none;
+  border-radius: 50%;
+  background: var(--danger);
+}
 .panel-tab-count {
   color: var(--text-3);
   font-size: var(--text-xs);
@@ -382,23 +390,12 @@ details.technical summary {
   font-size: var(--text-md);
   line-height: 1.55;
 }
-.details-form {
-  margin-bottom: var(--sp-5);
-  padding-bottom: var(--sp-1);
-  border-bottom: 1px solid var(--line);
-}
-.details-form .item-actions {
-  margin: calc(-1 * var(--sp-1)) 0 var(--sp-4);
-}
-.note-heading {
-  display: flex;
-  align-items: baseline;
-  justify-content: space-between;
-  gap: var(--sp-3);
-}
+/* One save state for the title, tags and note, level with the first label. */
 .note-state {
+  float: right;
   color: var(--text-3);
   font-size: var(--text-xs);
+  line-height: var(--lh-sm);
 }
 .note-state.is-conflict,
 .note-state.is-error,
@@ -408,8 +405,30 @@ details.technical summary {
 .saved-note .problem {
   margin: 0 0 var(--sp-3);
 }
-.saved-note textarea[readonly] {
+.saved-note .problem.conflict {
+  clear: both;
+}
+.saved-note textarea[readonly],
+.saved-note input[readonly] {
   opacity: 0.7;
+}
+.other-version {
+  margin: var(--sp-2) 0 0;
+}
+.other-version dt {
+  margin-top: var(--sp-2);
+  color: var(--text-3);
+}
+.other-version dd {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+.other-version pre {
+  max-height: 12em;
+  margin: 0;
+  overflow: auto;
+  font-family: var(--font-read);
+  white-space: pre-wrap;
 }
 
 /* Citation: the reference leads, in the reading face, on a raised card as in Reader's
@@ -1225,6 +1244,10 @@ blockquote {
     border-color: ButtonText;
     color: ButtonText;
     background: ButtonFace;
+  }
+  .panel-tab-alert {
+    background: Mark;
+    forced-color-adjust: none;
   }
   .problem,
   blockquote,
