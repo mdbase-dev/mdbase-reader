@@ -206,6 +206,7 @@ export class ConnectAnnotationRepository implements AnnotationRepository {
         recordId: annotation.id,
         label: annotationLabel(annotation),
         candidates: [`annotations/${annotation.id}.md`],
+        linksTo: [annotation.sourceId],
         input: {
           type: "reader-annotation",
           frontmatter: annotationFrontmatter(annotation),

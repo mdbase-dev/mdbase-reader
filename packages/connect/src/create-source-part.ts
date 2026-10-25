@@ -105,6 +105,7 @@ export async function createSourcePart(
       candidates: plan.recordPathCandidates,
       input: { type: "reader-source", frontmatter, body: `# ${plan.title}\n` },
       readBack: { contract: sourceContract, includeDocument: true },
+      linksTo: [parent.id],
       isOurs: (existing) =>
         Object.entries(frontmatter).every(
           ([key, value]) =>

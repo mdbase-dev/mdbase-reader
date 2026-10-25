@@ -68,6 +68,12 @@ export interface FollowedCreate {
   readonly readBack?: Omit<ReadInput, "path">;
   /** Whether a record read back is an earlier attempt of this create (default: same `id`). */
   readonly isOurs?: (document: RecordDocument) => boolean;
+  /**
+   * Reader `id`s of the records this create links to. A link to one of them made from a
+   * stale copy of its path is pointed at where it moved. Links to anything else are
+   * never rewritten, even when their text names a path some create moved away from.
+   */
+  readonly linksTo?: readonly string[];
 }
 
 /** A create the user has to look at. Its content is still kept on this device. */
@@ -142,8 +148,11 @@ export class CreateFollowThrough implements ReaderCreateFollowThrough {
   readonly #active = new Set<string>();
   /** Creates let go of (deleted or discarded); a write still in flight never brings them back. */
   readonly #forgotten = new Set<string>();
-  /** Old path stem → new stem, for links made from a stale copy of a moved record. */
-  readonly #moves = new Map<string, string>();
+  /**
+   * Records seen at one path and moved to another after the log refused them, for links
+   * made from a stale copy of the old path. Only creates that link to `recordId` follow them.
+   */
+  readonly #moves: { readonly from: string; readonly to: string; readonly recordId: string }[] = [];
   readonly #listeners = new Set<() => void>();
   #snapshot: CreateFollowThroughSnapshot = EMPTY;
   #running: Promise<void> | null = null;
@@ -190,7 +199,7 @@ export class CreateFollowThrough implements ReaderCreateFollowThrough {
     this.#active.add(request.key);
     this.#forgotten.delete(request.key);
     try {
-      const frontmatter = this.#followMoves(request.input.frontmatter);
+      const frontmatter = this.#followMoves(request.input.frontmatter, request.linksTo ?? []);
       const dependsOn = await this.#parentsOf(request.collectionId, request.key, frontmatter);
       const entry: PendingCreate = {
         key: request.key,
@@ -208,7 +217,8 @@ export class CreateFollowThrough implements ReaderCreateFollowThrough {
       };
       // This create's content wins over anything an earlier save under the key left.
       await this.#put(entry);
-      const submitted = await this.#submit(entry, request, options);
+      // Nobody has seen this record at any path yet.
+      const submitted = await this.#submit(entry, request, options, false);
       if (submitted.kind === "refused") {
         await this.#remove(submitted.entry);
       }
@@ -431,11 +441,12 @@ export class CreateFollowThrough implements ReaderCreateFollowThrough {
       await this.#attention(entry, "names-taken", exhaustedMessage);
       return;
     }
-    await this.#resubmit(await this.#move(entry, entry.attempt + 1));
+    await this.#resubmit(await this.#move(entry, entry.attempt + 1, true));
   }
 
   async #resubmit(entry: PendingCreate): Promise<void> {
-    const submitted = await this.#submit(entry, {}, {});
+    // The record was saved at its path before the log refused it, so links may name it.
+    const submitted = await this.#submit(entry, {}, {}, true);
     if (submitted.kind !== "refused") {
       return;
     }
@@ -450,11 +461,16 @@ export class CreateFollowThrough implements ReaderCreateFollowThrough {
     );
   }
 
-  /** Write `start` at its current candidate, moving on while candidates are taken. */
+  /**
+   * Write `start` at its current candidate, moving on while candidates are taken. `seen`
+   * says whether anyone may already link to the record at its current path: true after
+   * the log refused a saved record, false for a create whose caller has no path yet.
+   */
   async #submit(
     start: PendingCreate,
     how: Pick<FollowedCreate, "readBack" | "isOurs">,
     options: ReaderRequestOptions,
+    seen: boolean,
   ): Promise<Submitted> {
     // Which write this is comes from `start`; its content comes from the journal, where
     // the reconciler may have moved its links since `start` was read.
@@ -492,7 +508,7 @@ export class CreateFollowThrough implements ReaderCreateFollowThrough {
       if (failed) {
         return failed;
       }
-      entry = await this.#move(entry, entry.attempt + 1);
+      entry = await this.#move(entry, entry.attempt + 1, seen);
     }
   }
 
@@ -543,6 +559,11 @@ export class CreateFollowThrough implements ReaderCreateFollowThrough {
       await this.#update(entry, { state: "pending" });
       return { kind: "waiting", outcome: connectSuccess(existing) };
     }
+    if (existing && idOf(existing) === entry.recordId) {
+      // Our Reader id with other content: never write a second record with this id
+      // at another name. The caller, or the user, decides.
+      return { kind: "refused", outcome: created, entry, exhausted: false };
+    }
     if (isIdExists(problem)) {
       // This create landed before, and is not at this path any more: never write it again.
       await this.#confirmed(entry);
@@ -591,8 +612,11 @@ export class CreateFollowThrough implements ReaderCreateFollowThrough {
     return read.ok ? { ours: idOf(read.value) === entry.recordId, confirmed: true } : null;
   }
 
-  /** Move to another candidate under a new intent, and point records that link here at it. */
-  async #move(entry: PendingCreate, attempt: number): Promise<PendingCreate> {
+  /**
+   * Move to another candidate under a new intent. With `relink`, the record may have been
+   * seen at its old path, so point records that link to it there at the new one.
+   */
+  async #move(entry: PendingCreate, attempt: number, relink: boolean): Promise<PendingCreate> {
     const from = entry.candidates[entry.attempt];
     const to = entry.candidates[attempt];
     const moved = await this.#update(entry, {
@@ -601,8 +625,8 @@ export class CreateFollowThrough implements ReaderCreateFollowThrough {
       submission: entry.submission + 1,
       replicaId: uuidv7(),
     });
-    if (from !== undefined && to !== undefined && from !== to) {
-      this.#moves.set(stem(from), stem(to));
+    if (relink && from !== undefined && to !== undefined && from !== to) {
+      this.#moves.push({ from: stem(from), to: stem(to), recordId: entry.recordId });
       await this.#relink(entry, { from: stem(from), to: stem(to) });
     }
     return moved;
@@ -797,10 +821,15 @@ export class CreateFollowThrough implements ReaderCreateFollowThrough {
       .map((entry) => entry.key);
   }
 
-  #followMoves(frontmatter: Readonly<Record<string, unknown>>): Readonly<Record<string, unknown>> {
+  #followMoves(
+    frontmatter: Readonly<Record<string, unknown>>,
+    linksTo: readonly string[],
+  ): Readonly<Record<string, unknown>> {
     let current = frontmatter;
-    for (const [from, to] of this.#moves) {
-      current = rewriteLinks(current, from, to) as Readonly<Record<string, unknown>>;
+    for (const { from, to, recordId } of this.#moves) {
+      if (linksTo.includes(recordId)) {
+        current = rewriteLinks(current, from, to) as Readonly<Record<string, unknown>>;
+      }
     }
     return current;
   }

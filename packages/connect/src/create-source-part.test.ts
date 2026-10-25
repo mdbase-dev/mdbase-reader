@@ -107,6 +107,31 @@ describe("guarded reference-existing-file chapter create", () => {
     expect(create).toHaveBeenCalledOnce();
     expect(read).toHaveBeenCalledWith(expect.objectContaining({ path: proposed.recordPath }));
   });
+});
+
+describe("chapter names", () => {
+  it("never writes a second record with the chapter's id when its name holds different fields", async () => {
+    const proposed = plan();
+    vi.spyOn(ConnectSourceRepository.prototype, "get").mockResolvedValue(proposed.parent);
+    const create = vi.fn(() =>
+      Promise.resolve({ ok: false, problem: { code: "path_conflict", message: "Path taken" } }),
+    );
+    // An earlier attempt of this chapter, edited since.
+    const earlier = recordDocument();
+    const read = vi.fn(() =>
+      Promise.resolve({
+        ok: true,
+        value: {
+          ...earlier,
+          effectiveFrontmatter: { id: proposed.sourceId, title: "Chapter, edited" },
+        },
+      }),
+    );
+    await expect(
+      createSourcePart({ create, read } as unknown as ReaderConnectClient, proposed),
+    ).rejects.toThrow();
+    expect(create).toHaveBeenCalledOnce();
+  });
   it("moves to the next name when another source already has the chapter's", async () => {
     const proposed = plan();
     vi.spyOn(ConnectSourceRepository.prototype, "get").mockResolvedValue(proposed.parent);
