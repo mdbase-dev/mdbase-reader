@@ -239,6 +239,32 @@ function isPlainObject(value: unknown): value is Record<string, unknown> {
   );
 }
 
+/**
+ * A copy that can cross the channel: drops function members (such as a handle's `close()`)
+ * from plain objects and arrays. Snapshots and results are data; their handles stay with
+ * the host.
+ */
+export function withoutFunctions(value: unknown, depth = 0): unknown {
+  if (depth > 32) {
+    return value;
+  }
+  if (Array.isArray(value)) {
+    return value.map((item) =>
+      typeof item === "function" ? undefined : withoutFunctions(item, depth + 1),
+    );
+  }
+  if (!isPlainObject(value)) {
+    return value;
+  }
+  const copy: Record<string, unknown> = {};
+  for (const [key, item] of Object.entries(value)) {
+    if (typeof item !== "function") {
+      copy[key] = withoutFunctions(item, depth + 1);
+    }
+  }
+  return copy;
+}
+
 type Callback = (...args: unknown[]) => void;
 
 /**
