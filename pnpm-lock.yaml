@@ -93,6 +93,15 @@ importers:
       '@fontsource-variable/source-serif-4':
         specifier: ^5.3.1
         version: 5.3.1
+      '@mdbase-dev/sdk':
+        specifier: file:../../packages/connect/vendor/sdk-e55d99c0-production-beta141.tgz
+        version: file:packages/connect/vendor/sdk-e55d99c0-production-beta141.tgz
+      '@mdbase-dev/sdk-lab':
+        specifier: file:../../packages/connect/vendor/sdk-dev-eaa4e697-lab.tgz
+        version: '@mdbase-dev/sdk@file:packages/connect/vendor/sdk-dev-eaa4e697-lab.tgz'
+      '@mdbase-dev/sdk-staging':
+        specifier: file:../../packages/connect/vendor/sdk-dev-eaa4e697-staging.tgz
+        version: '@mdbase-dev/sdk@file:packages/connect/vendor/sdk-dev-eaa4e697-staging.tgz'
       '@mdbase-dev/ui':
         specifier: file:../../vendor/mdbase-dev-ui-dev-b2d7c464.tgz
         version: file:vendor/mdbase-dev-ui-dev-b2d7c464.tgz(@codemirror/view@6.43.8)(@mdbase-dev/sdk@file:packages/connect/vendor/sdk-e55d99c0-production-beta141.tgz)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)

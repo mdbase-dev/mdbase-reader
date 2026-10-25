@@ -9,6 +9,7 @@ export function readerSdkTarget(environment: Record<string, string | undefined>)
 export function verifiedReaderSdk(
   target: ReaderSdkTarget,
   repoRoot?: string,
+  app?: "apps/reader" | "apps/extension",
 ): Promise<{
   aliases: { find: RegExp; replacement: string }[];
   offlineShellUrl: string;

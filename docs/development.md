@@ -97,7 +97,9 @@ Reader installs the original eaa4e697 SDK archives side by side: canonical `@mdb
 (production beta141), `@mdbase-dev/sdk-lab`, and `@mdbase-dev/sdk-staging`. Vite aliases every public
 canonical SDK export to the selected original, including imports originating in Connect and UI;
 the separate legacy SDK alias is untouched. The offline-shell adapter comes from that same original.
-This selection applies to the Reader web build, not the extension or other shells. The native
+The browser extension installs the same three originals and selects and verifies one the same way
+for its `MDBASE_ENV` (LAB by default), since each original accepts only its own environment's
+packaged trust; other shells are unaffected. The native
 publisher's original-package authentication and admission gates remain separate and unchanged.
 
 `packages/connect/vendor/sdk-{lab,staging}-eaa4e697.json` record hashes and embedded producer provenance;
