@@ -9,11 +9,18 @@ import type { Annotation, Source, SourceSummary } from "@mdbase-reader/core";
 
 const noop = (): (() => void) => () => undefined;
 const zero = (): number => 0;
+const noAnnotations: readonly Annotation[] = [];
 
 export interface SourceAnnotationView {
   readonly sources: readonly SourceSummary[];
   readonly wholeBook: boolean;
   readonly setWholeBook: (value: boolean) => void;
+  /**
+   * Shows an annotation just saved to another source of the family, such as the whole book from
+   * one of its chapters, so its card can open: it turns on whole-book and lists the annotation at
+   * once, before the family's annotations load again.
+   */
+  readonly reveal: (annotation: Annotation) => void;
   readonly problem: string | null;
 }
 
@@ -37,6 +44,10 @@ export function useSourceAnnotationView(
     [gateway],
   );
   const [wholeFor, setWholeFor] = useState<string | null>(null);
+  const [revealed, setRevealed] = useState<{
+    readonly source: Source;
+    readonly annotations: readonly Annotation[];
+  } | null>(null);
   const [loaded, setLoaded] = useState<{
     readonly source: Source;
     readonly sources: readonly SourceSummary[];
@@ -88,26 +99,70 @@ export function useSourceAnnotationView(
   const current = loaded?.source === source ? loaded : null;
   const sources = useMemo(() => current?.sources ?? (source ? [source] : []), [current, source]);
   const wholeBook = !source?.partOf || wholeFor === source.id;
-  const annotations = useMemo((): AsyncResource<readonly Annotation[]> => {
-    if (!current || current.sources.length <= 1 || !wholeBook) {
-      return owned;
-    }
-    // Prefer local pending/just-saved owned records without copying them into another note.
-    const records = new Map(current.annotations.map((item) => [item.id, item]));
-    if (owned.status === "ready") {
-      for (const item of owned.value) {
-        records.set(item.id, item);
-      }
-    }
-    return { status: "ready", value: [...records.values()] };
-  }, [current, owned, wholeBook]);
+  const extras = revealed?.source === source ? revealed.annotations : noAnnotations;
+  const annotations = useMemo(
+    (): AsyncResource<readonly Annotation[]> =>
+      withRevealed(familyAnnotations(current, owned, wholeBook), wholeBook ? extras : []),
+    [current, owned, wholeBook, extras],
+  );
   return {
     annotations,
     view: {
       sources,
       wholeBook,
       setWholeBook: (value) => setWholeFor(value ? (source?.id ?? null) : null),
+      reveal: (annotation) => {
+        if (!source || annotation.sourceId === source.id) {
+          return;
+        }
+        setWholeFor(source.id);
+        setRevealed((latest) => ({
+          source,
+          annotations: [
+            ...(latest?.source === source ? latest.annotations : []).filter(
+              ({ id }) => id !== annotation.id,
+            ),
+            annotation,
+          ],
+        }));
+      },
       problem,
     },
   };
+}
+
+function familyAnnotations(
+  current: {
+    readonly sources: readonly SourceSummary[];
+    readonly annotations: readonly Annotation[];
+  } | null,
+  owned: AsyncResource<readonly Annotation[]>,
+  wholeBook: boolean,
+): AsyncResource<readonly Annotation[]> {
+  if (!current || current.sources.length <= 1 || !wholeBook) {
+    return owned;
+  }
+  // Prefer local pending/just-saved owned records without copying them into another note.
+  const records = new Map(current.annotations.map((item) => [item.id, item]));
+  if (owned.status === "ready") {
+    for (const item of owned.value) {
+      records.set(item.id, item);
+    }
+  }
+  return { status: "ready", value: [...records.values()] };
+}
+
+/** Adds annotations just revealed until the family's own list has them. */
+function withRevealed(
+  annotations: AsyncResource<readonly Annotation[]>,
+  revealed: readonly Annotation[],
+): AsyncResource<readonly Annotation[]> {
+  if (annotations.status !== "ready" || revealed.length === 0) {
+    return annotations;
+  }
+  const listed = new Set(annotations.value.map(({ id }) => id));
+  const missing = revealed.filter(({ id }) => !listed.has(id));
+  return missing.length > 0
+    ? { status: "ready", value: [...annotations.value, ...missing] }
+    : annotations;
 }

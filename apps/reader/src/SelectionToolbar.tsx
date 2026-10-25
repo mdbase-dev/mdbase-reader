@@ -11,7 +11,7 @@ import {
 } from "react";
 
 import { annotationBodyContent } from "./annotation-body-content.js";
-import { AnnotationOwnerActions } from "./AnnotationOwnerActions.js";
+import { AnnotationSourceLine } from "./AnnotationOwnerActions.js";
 import { AnnotationOwnerChooser } from "./AnnotationOwnerChooser.js";
 import { useHighlightMeanings, useLastHighlightColor } from "./highlight-colors.js";
 import { HighlightSwatches } from "./HighlightSwatches.js";
@@ -66,7 +66,8 @@ function isOnOtherControl(target: EventTarget | null, toolbar: Node | null): boo
 /**
  * Quick actions beside a fresh selection (a colour to highlight it in, comment, copy) or a
  * clicked highlight (its colour, comment, copy, delete). Nothing is saved until an action is
- * chosen.
+ * chosen. The source a selection saves to follows the actions as a quiet chip, and only when
+ * there is a choice; a highlight names its source only when that is not the open one.
  */
 export function SelectionToolbarLayer({
   composer,
@@ -93,7 +94,7 @@ export function SelectionToolbarLayer({
     return null;
   }
   return (
-    <div ref={layer} className={`selection-toolbar-layer${style ? " is-anchored" : ""}`}>
+    <div ref={layer} className={`selection-toolbar-layer${style ? " is-anchored" : " is-docked"}`}>
       <SelectionToolbar
         key={state.target.kind === "annotation" ? state.target.annotation.id : "selection"}
         barRef={bar}
@@ -173,14 +174,6 @@ function SelectionToolbar({
       aria-label={target.kind === "selection" ? "Selected text" : "Highlight"}
       style={style}
     >
-      {target.kind === "selection" ? (
-        <AnnotationOwnerChooser control={composer.ownerControl} compact />
-      ) : (
-        <AnnotationOwnerActions
-          annotation={target.annotation}
-          sources={composer.ownerControl?.sources}
-        />
-      )}
       {swatches ? (
         <>
           <HighlightSwatches
@@ -238,6 +231,16 @@ function SelectionToolbar({
           {copied === "failed" ? "Couldn’t copy" : "Copied"}
         </span>
       ) : null}
+      {target.kind === "selection" ? (
+        <AnnotationOwnerChooser control={composer.ownerControl} compact />
+      ) : (
+        // The open source goes without saying; name another, or a passage outside its chapter.
+        <AnnotationSourceLine
+          annotation={target.annotation}
+          sources={composer.ownerControl?.sources}
+          showSource={target.annotation.sourceId !== composer.sourceId}
+        />
+      )}
     </div>
   );
 }

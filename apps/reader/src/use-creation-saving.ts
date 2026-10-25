@@ -39,8 +39,15 @@ export function useCreationSaving(input: {
   readonly saving: boolean;
   readonly problem: Problem;
   readonly setProblem: (problem: Problem) => void;
-  /** Saves at once in `color`, or the colour used last, and remembers it. */
-  readonly highlight: (value: TextComposerSelection, color?: HighlightColorKey) => void;
+  /**
+   * Saves at once in `color`, or the colour used last, and remembers it. `onSaved` follows the
+   * saved highlight.
+   */
+  readonly highlight: (
+    value: TextComposerSelection,
+    color?: HighlightColorKey,
+    onSaved?: (annotation: Annotation) => void,
+  ) => void;
   readonly save: () => void;
 } {
   const { source, surface, buffer, create } = input;
@@ -71,7 +78,7 @@ export function useCreationSaving(input: {
     saving,
     problem,
     setProblem,
-    highlight: (value, color = lastHighlightColor()) => {
+    highlight: (value, color = lastHighlightColor(), onSaved) => {
       if (!source || !surface) {
         return;
       }
@@ -91,6 +98,7 @@ export function useCreationSaving(input: {
             create(request).then((created) => {
               input.onCreated(created);
               tracker?.saved(created);
+              onSaved?.(created);
               return created;
             }),
         },

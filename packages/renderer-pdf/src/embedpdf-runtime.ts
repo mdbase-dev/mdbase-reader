@@ -6,14 +6,19 @@ import {
   DocumentManagerPlugin,
   ScrollPlugin,
   ViewportPlugin,
+  type EmbedPdfContainer,
   type PluginRegistry,
 } from "@embedpdf/react-pdf-viewer";
 
-import { createEmbedPdfAnnotationActivations } from "./embedpdf-annotation-activation.js";
+import {
+  createEmbedPdfAnnotationActivations,
+  type EmbedPdfAnnotationActivations,
+} from "./embedpdf-annotation-activation.js";
 import { createPdfDecorationController } from "./pdf-decoration-controller.js";
 import { createPdfPageNavigation } from "./pdf-page-navigation.js";
 import { createPdfSearch } from "./pdf-search.js";
 import { observePdfSelection, type PdfSelectionAdjustment } from "./pdf-selection-publication.js";
+import { createPdfViewportLocator, type PdfPageRect } from "./pdf-viewport-rect.js";
 
 import type { PdfDocumentObject, PdfEngine } from "@embedpdf/models";
 import type { CaptureAreaEvent } from "@embedpdf/plugin-capture";
@@ -28,6 +33,7 @@ import type {
   EventSource,
   TextSelectionDraft,
   Unsubscribe,
+  ViewportRect,
 } from "@mdbase-reader/reading-surface";
 
 export { textSelectionToDraft } from "./pdf-selection-publication.js";
@@ -46,6 +52,8 @@ export interface EmbedPdfRuntime {
   onTextSelected(listener: (selection: TextSelectionDraft) => void): Unsubscribe;
   onSelectionCleared?(listener: () => void): Unsubscribe;
   onAnnotationActivated(listener: (annotationId: AnnotationId) => void): Unsubscribe;
+  /** Where the highlight activated last sits on screen, when the viewer can say. */
+  activationRect?(): ViewportRect | null;
   clearTextSelection(): void;
   extractText(options?: { readonly signal?: AbortSignal }): Promise<string>;
   extractSearchSegments?(options?: {
@@ -78,6 +86,8 @@ export function captureEventToAreaSelection(event: CaptureAreaEvent): AreaSelect
 export function createEmbedPdfRuntime(
   registry: PluginRegistry,
   adjustments?: EventSource<PdfSelectionAdjustment>,
+  /** The viewer element, for measuring selections and highlights on screen. */
+  host?: () => EmbedPdfContainer | null,
 ): EmbedPdfRuntime {
   const capturePlugin = registry.getPlugin<CapturePlugin>(CapturePlugin.id);
   const scrollPlugin = registry.getPlugin<ScrollPlugin>(ScrollPlugin.id);
@@ -95,6 +105,9 @@ export function createEmbedPdfRuntime(
   const decorations = createPdfDecorationController(annotationCapability);
   const annotationActivations = createEmbedPdfAnnotationActivations(annotationCapability);
   const subscriptions = new Set<Unsubscribe>();
+  const locate = host
+    ? createPdfViewportLocator(host, (page, rect) => scroll.getRectPositionForPage(page, rect))
+    : undefined;
   const getDocument = (signal?: AbortSignal): Promise<PdfDocumentObject> =>
     registryPdfDocument(registry, signal);
   const navigation = createPdfPageNavigation(registry, scroll, getDocument);
@@ -120,24 +133,16 @@ export function createEmbedPdfRuntime(
     },
     ...(viewport
       ? {
-          onScrolled(listener: (scrollTop: number) => void) {
-            const unsubscribe = viewport.onScrollChange((event) =>
-              listener(event.scrollMetrics.scrollTop),
-            );
-            subscriptions.add(unsubscribe);
-            return () => {
-              subscriptions.delete(unsubscribe);
-              unsubscribe();
-            };
-          },
-          onViewportResized(listener: () => void) {
-            const unsubscribe = viewport.onViewportResize(() => listener());
-            subscriptions.add(unsubscribe);
-            return () => {
-              subscriptions.delete(unsubscribe);
-              unsubscribe();
-            };
-          },
+          onScrolled: (listener: (scrollTop: number) => void) =>
+            trackSubscription(
+              subscriptions,
+              viewport.onScrollChange((event) => listener(event.scrollMetrics.scrollTop)),
+            ),
+          onViewportResized: (listener: () => void) =>
+            trackSubscription(
+              subscriptions,
+              viewport.onViewportResize(() => listener()),
+            ),
         }
       : {}),
     onAreaSelected(listener) {
@@ -146,14 +151,11 @@ export function createEmbedPdfRuntime(
         capture.onCaptureArea((event) => listener(captureEventToAreaSelection(event))),
       );
     },
-    onTextSelected(listener) {
-      const unsubscribe = observePdfSelection(selection, listener, adjustments);
-      subscriptions.add(unsubscribe);
-      return () => {
-        subscriptions.delete(unsubscribe);
-        unsubscribe();
-      };
-    },
+    onTextSelected: (listener) =>
+      trackSubscription(
+        subscriptions,
+        observePdfSelection(selection, listener, adjustments, locate),
+      ),
     onSelectionCleared(listener) {
       const stopSelection = selection.onSelectionChange((event) => {
         if (event.selection === null) {
@@ -179,6 +181,7 @@ export function createEmbedPdfRuntime(
     onAnnotationActivated(listener) {
       return annotationActivations.subscribe(listener);
     },
+    ...activationRect(annotationActivations, locate),
     clearTextSelection: () => selection.clear(),
     async extractText(options) {
       const document = await getDocument(options?.signal);
@@ -298,4 +301,20 @@ function abortError(): DOMException {
 
 function abortReason(signal?: AbortSignal): Error {
   return signal?.reason instanceof Error ? signal.reason : abortError();
+}
+
+/** Measures the highlight activated last, when the viewer can be measured at all. */
+function activationRect(
+  activations: EmbedPdfAnnotationActivations,
+  locate: ((rects: readonly PdfPageRect[]) => ViewportRect | null) | undefined,
+): Pick<EmbedPdfRuntime, "activationRect"> {
+  if (!locate) {
+    return {};
+  }
+  return {
+    activationRect: () => {
+      const activated = activations.activatedRect();
+      return activated ? locate([activated]) : null;
+    },
+  };
 }

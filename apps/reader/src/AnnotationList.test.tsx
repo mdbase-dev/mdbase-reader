@@ -414,6 +414,34 @@ describe("annotation Filter menu colours and order", () => {
     setHighlightMeaning("green", "");
   });
 
+  it("keeps the card being edited listed whatever the filters hide", async () => {
+    virtual.endIndex = 10;
+    const value = [
+      { ...kinds[0]!, id: annotationId("yellow") },
+      { ...kinds[0]!, id: annotationId("green"), color: "green" },
+    ];
+    const list = (editingId: ReturnType<typeof annotationId> | null): JSX.Element => (
+      <AnnotationList {...props} annotations={{ status: "ready", value }} editingId={editingId} />
+    );
+    const element = await mount(list(null));
+    await act(async () => {
+      choice(element, "Green").click();
+      await Promise.resolve();
+    });
+    const shown = (): (string | null)[] =>
+      [...element.querySelectorAll("[data-annotation-id]")].map((card) =>
+        card.getAttribute("data-annotation-id"),
+      );
+    expect(shown()).toEqual(["green"]);
+    await act(async () => {
+      root!.render(list(annotationId("yellow")));
+      await Promise.resolve();
+    });
+    expect(shown()).toEqual(expect.arrayContaining(["yellow", "green"]));
+    expect(shown()).toHaveLength(2);
+    expect(element.querySelector('[data-annotation-id="yellow"]')?.textContent).toBe("Editing");
+  });
+
   it("hides the Colour choices when nothing has a colour", async () => {
     const element = await mount(
       <AnnotationList {...props} annotations={{ status: "ready", value: [kinds[1]!] }} />,
