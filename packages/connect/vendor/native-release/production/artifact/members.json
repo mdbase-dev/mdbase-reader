@@ -876,13 +876,13 @@
   },
   {
     "path": "dist/browser/mdbase-sdk.js",
-    "bytes": 2118663,
-    "sha256": "1677b89aa1420a849aa31aa3697a6cb6d4d1df2a58311dd263c397edecf650eb"
+    "bytes": 2118694,
+    "sha256": "a3a424dada474528f5f04d60620f2d1fd8d7b7c9051d2e9a9e841fbe79d4f278"
   },
   {
     "path": "dist/browser/mdbase-sdk.min.js",
-    "bytes": 1090488,
-    "sha256": "25f723a42b2c05c0aedb2f0dd717f4614df60ff5a495b8fa565db6d72a19c287"
+    "bytes": 1090517,
+    "sha256": "ea494fb8e73130bca370715ae03023b4dea5864b01294c1425c9d05c2d224cec"
   },
   {
     "path": "dist/testing/memory-contracts.js",
@@ -1606,8 +1606,8 @@
   },
   {
     "path": "dist/app-host/timer-port.js",
-    "bytes": 27158,
-    "sha256": "56e0445d24deaddc6599117034ae3695e651be5a08ba86834034e2e2d4c4d837"
+    "bytes": 27195,
+    "sha256": "ea35909ae2146e138c4e2a4496f26d4afe5a2abb43121dca5694580106efd519"
   },
   {
     "path": "dist/timers.js",
@@ -1806,8 +1806,8 @@
   },
   {
     "path": "dist/application/worker.js",
-    "bytes": 1406171,
-    "sha256": "9762ac8c6111fc5f561111afdce6a6e798a9369f7a2e2efd8bc97e7a239df31f"
+    "bytes": 1406200,
+    "sha256": "eb9dba1befdfa1a03c62b7a28c6f4a6d9caae02c9c14a9d1781cc84d505ac15c"
   },
   {
     "path": "dist/write-ledger.js",
@@ -1872,7 +1872,7 @@
   {
     "path": "dist/application/asset-pins.json",
     "bytes": 631,
-    "sha256": "b585f7e0b82dc522b5580e0f0f0b24ae74205bba315d181949919b1871710ee9"
+    "sha256": "c9c88a7678e895c14b950cb7d880b332dd91bfc8963cf7feca8e28dc4d5208f8"
   },
   {
     "path": "node_modules/@mdbase-dev/connect-protocol/schemas/catalog.json",
@@ -2012,7 +2012,7 @@
   {
     "path": "dist/native/provenance.json",
     "bytes": 2411,
-    "sha256": "b41ea130e0bc957661c0c585f7c463bba872046e15e41e27bb6b676ecfbf2cf7"
+    "sha256": "096abbfcc116ef904ef64a9925c49ba5d5343c4c89af5dec2aa757275b4af7fe"
   },
   {
     "path": "node_modules/@mdbase-dev/connect-protocol/schemas/sync.v1.schema.json",
@@ -2786,8 +2786,8 @@
   },
   {
     "path": "dist/app-host/timer-port.js.map",
-    "bytes": 27497,
-    "sha256": "68507b4064bde9769a0b8693c5291af1d66d3d8bb0a43c694132e72df7e0e906"
+    "bytes": 27529,
+    "sha256": "90abd91c8d1f29eb03d458057ae478a892cd716cc8bc8dac1c0b58ddd1d4e980"
   },
   {
     "path": "dist/timers.js.map",
@@ -4471,8 +4471,8 @@
   },
   {
     "path": "dist/native/runtime.wasm",
-    "bytes": 3676583,
-    "sha256": "6984f87d98e29d9f99c6b07f7728f716d1f7b2e3585a74bcc2046ba259a8afab"
+    "bytes": 3682463,
+    "sha256": "bd52c7b44360991b6e89c7f80e3ed4902e2b7e9def827ae4a63825ca98f8a8d1"
   },
   {
     "path": "dist/native/sqlite3.wasm",
