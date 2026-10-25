@@ -22,13 +22,6 @@ export function DocumentStatus({
       </span>
     );
   }
-  if (reading.notice) {
-    return (
-      <span className="reading-position-status" role="status">
-        {reading.notice}
-      </span>
-    );
-  }
   // Saving and saved are routine; only a failure needs the reader’s attention.
   if (reading.status !== "error") {
     return <span className="reading-position-status" />;

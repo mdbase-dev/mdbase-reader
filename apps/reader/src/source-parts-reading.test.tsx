@@ -12,7 +12,7 @@ import {
   positionWithinReadingRange,
   resolveSourceReadingRange,
 } from "./source-reading-range.js";
-import { SourceReadingBoundary } from "./SourceReadingBoundary.js";
+import { ChapterReadingChip, SourceReadingBoundary } from "./SourceReadingBoundary.js";
 import { useReadingResume } from "./use-reading-resume.js";
 
 import type { Source, SourceSummary } from "@mdbase-reader/core";
@@ -169,16 +169,15 @@ it.each([undefined, 15, 23])(
     const save = vi.fn().mockResolvedValue(undefined);
     function Harness(): JSX.Element {
       const state = useReadingResume({ source, surface, save });
-      return <output>{state.notice}</output>;
+      return <output>{state.status}</output>;
     }
     await act(async () => {
       root.render(<Harness />);
       await Promise.resolve();
     });
     expect(surface.currentLocation()).toEqual({ kind: "pdf", pageIndex: saved === 15 ? 15 : 10 });
-    if (saved === 23) {
-      expect(host.textContent).toContain("outside this chapter");
-    }
+    // A saved position outside the chapter quietly starts at the chapter start.
+    expect(host.textContent).not.toContain("outside");
     await act(async () => {
       await vi.advanceTimersByTimeAsync(1200);
     });
@@ -210,40 +209,103 @@ it("does not restore or write a previous source while another shared-file sessio
   expect(save).not.toHaveBeenCalled();
 });
 
-it("shows a polite boundary, keeps free navigation, and offers book and next-part links", async () => {
+it("keeps chapter reading quiet until the reader leaves, then offers a slim dismissible hint", async () => {
   const { gateway, sources } = await anthology();
   const chapter = (await gateway.source(sourceId("src_anthology_chapter_1")))!;
   const surface = pdf(chapter);
   const open = vi.fn();
   await act(async () => {
     root.render(
-      <SourceReadingBoundary source={chapter} sources={sources} surface={surface} open={open} />,
+      <div className="source-part-reading">
+        <ChapterReadingChip source={chapter} sources={sources} surface={surface} open={open} />
+        <SourceReadingBoundary source={chapter} sources={sources} surface={surface} open={open} />
+        <div className="source-part-document" tabIndex={-1} />
+      </div>,
     );
     await Promise.resolve();
   });
-  const start = host.querySelector("button")!;
-  start.focus();
-  await act(async () => {
-    await surface.goTo({ kind: "pdf", pageIndex: 10 });
-    surface.locations.emit(surface.currentLocation());
-  });
-  expect(host.querySelector('[role="status"]')?.textContent).toContain(
-    "End of “Chapter 1” — outside chapter",
-  );
-  expect(host.querySelector('[role="status"]')?.getAttribute("aria-live")).toBe("polite");
-  expect(document.activeElement).toBe(start);
-  const links = [...host.querySelectorAll("a")];
-  expect(links.map((link) => link.textContent)).toEqual([
+  const status = host.querySelector('[role="status"]')!;
+  const hint = (): Element | null => host.querySelector('[aria-label="Chapter reading range"]');
+  const chip = host.querySelector<HTMLElement>(".chapter-reading-chip summary")!;
+  expect(status.getAttribute("aria-live")).toBe("polite");
+  // Inside the chapter there is no bar, only the chip in the document actions.
+  expect(hint()).toBeNull();
+  expect(chip.textContent).toBe("Ch. Chapter 1· 0%");
+  expect(chip.getAttribute("aria-label")).toBe("Chapter: Chapter 1, 0% read");
+  const menuLinks = [...host.querySelectorAll(".chapter-reading-chip a")];
+  expect(menuLinks.map((link) => link.textContent)).toEqual([
     "Continue in the book: An anthology of attention",
     "Next part: Chapter 2",
   ]);
-  act(() => links[1]!.click());
-  expect(open).toHaveBeenCalledWith(sourceId("src_anthology_chapter_2"));
   await act(async () => {
-    start.click();
+    await surface.goTo({ kind: "pdf", pageIndex: 10 });
+  });
+  expect(chip.textContent).toBe("Ch. Chapter 1· Outside");
+  expect(status.textContent).toBe("You’ve left this chapter: Chapter 1");
+  expect(hint()?.textContent).toContain("You’ve left this chapter");
+  const links = [...hint()!.querySelectorAll("a")];
+  expect(links.map((link) => link.textContent)).toEqual([
+    "Next part: Chapter 2",
+    "Continue in book",
+  ]);
+  act(() => links[0]!.click());
+  expect(open).toHaveBeenCalledWith(sourceId("src_anthology_chapter_2"));
+  // Dismissing hides the hint until the reader returns to the chapter and leaves again.
+  const dismiss = hint()!.querySelector<HTMLButtonElement>('button[aria-label="Dismiss"]')!;
+  dismiss.focus();
+  act(() => dismiss.click());
+  expect(hint()).toBeNull();
+  expect(status.textContent).toBe("");
+  expect(document.activeElement).toBe(host.querySelector(".source-part-document"));
+  await act(async () => {
+    await surface.goTo({ kind: "pdf", pageIndex: 12 });
+  });
+  expect(hint()).toBeNull();
+  await act(async () => {
+    await surface.goTo({ kind: "pdf", pageIndex: 0 });
+  });
+  expect(chip.textContent).toBe("Ch. Chapter 1· 0%");
+  await act(async () => {
+    await surface.goTo({ kind: "pdf", pageIndex: 11 });
+  });
+  const back = [...hint()!.querySelectorAll("button")].find(
+    (button) => button.textContent === "Back to chapter",
+  )!;
+  back.focus();
+  await act(async () => {
+    back.click();
+    await Promise.resolve();
     await Promise.resolve();
   });
   expect(surface.currentLocation()).toEqual({ kind: "pdf", pageIndex: 0 });
+  expect(hint()).toBeNull();
+  expect(document.activeElement).toBe(host.querySelector(".source-part-document"));
+  // The chip's menu returns to the chapter start too.
+  await act(async () => {
+    await surface.goTo({ kind: "pdf", pageIndex: 5 });
+  });
+  const start = [...host.querySelectorAll<HTMLButtonElement>(".chapter-reading-chip button")].find(
+    (button) => button.textContent === "Go to chapter start",
+  )!;
+  await act(async () => {
+    start.click();
+    await Promise.resolve();
+    await Promise.resolve();
+  });
+  expect(surface.currentLocation()).toEqual({ kind: "pdf", pageIndex: 0 });
+});
+
+it("shows no hint when a chapter opens on the file's first page before its resume lands", async () => {
+  const { chapter, sources } = await anthology();
+  const surface = pdf(chapter);
+  await act(async () => {
+    root.render(
+      <SourceReadingBoundary source={chapter} sources={sources} surface={surface} open={vi.fn()} />,
+    );
+    await Promise.resolve();
+  });
+  // Chapter two starts on page index 10; the surface still reports page 0.
+  expect(host.querySelector('[aria-label="Chapter reading range"]')).toBeNull();
 });
 
 it("refuses old-revision and malformed/out-of-document ranges without jumping or saving", async () => {

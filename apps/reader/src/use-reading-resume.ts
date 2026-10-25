@@ -23,7 +23,6 @@ import type {
 export interface ReadingResumeState {
   readonly status: "idle" | "saving" | "saved" | "error";
   readonly message?: string;
-  readonly notice?: string;
 }
 
 export function useReadingResume(input: {
@@ -73,20 +72,19 @@ export function useReadingResume(input: {
     let latest: ReaderLocator | null = null;
     let progress: number | null | undefined;
     const saveForSource = saveRef.current;
-    let notice: string | undefined;
     const persist = (
       locator: ReaderLocator,
       value: number | null | undefined,
       report = true,
     ): void => {
       if (report) {
-        setState({ status: "saving", ...(notice ? { notice } : {}) });
+        setState({ status: "saving" });
       }
       queue.current = queue.current
         .then(() => saveForSource(sourceId, surface.document.document.fileId, locator, value))
         .then(() => {
           if (report && lifecycle.active) {
-            setState({ status: "saved", ...(notice ? { notice } : {}) });
+            setState({ status: "saved" });
           }
         })
         .catch((reason: unknown) => {
@@ -94,7 +92,6 @@ export function useReadingResume(input: {
             setState({
               status: "error",
               message: readerErrorMessage(reason, "Reader could not save your reading position."),
-              ...(notice ? { notice } : {}),
             });
           }
         });
@@ -104,11 +101,11 @@ export function useReadingResume(input: {
       if (!isActive() || (range && !range.valid)) {
         return;
       }
-      notice = await resumeSourcePosition(current, surface, range, contextKey, currentResumptions);
+      await resumeSourcePosition(current, surface, range, contextKey, currentResumptions);
       if (!isActive()) {
         return;
       }
-      setState({ status: "idle", ...(notice ? { notice } : {}) });
+      setState({ status: "idle" });
       const update = (locator: ReaderLocator): void => {
         latest = locator;
         progress = range?.valid ? (range.measure(locator)?.progress ?? null) : undefined;
@@ -148,22 +145,17 @@ async function resumeSourcePosition(
   range: ReadingRangeResolution | null,
   key: string,
   resumed: WeakMap<ReadingSurface, string>,
-): Promise<string | undefined> {
+): Promise<void> {
   if (resumed.get(surface) === key || hasExplicitReadingNavigation(surface)) {
-    return undefined;
+    return;
   }
   const saved = restoredSessionLocation(surface) ?? savedSourcePosition(source, surface);
   const within = saved && (!range || positionWithinReadingRange(range, saved));
-  const notice =
-    saved && range && !within
-      ? "Saved position is outside this chapter or could not be verified. Started at the chapter start."
-      : undefined;
   const start = within ? saved : range?.valid ? range.start : undefined;
   resumed.set(surface, key);
   if (start && !(await restoreReadingLocation(surface, start))) {
     throw new Error("The saved reading position could not be opened.");
   }
-  return notice;
 }
 
 function savedSourcePosition(source: Source, surface: ReadingSurface): ReaderLocator | undefined {

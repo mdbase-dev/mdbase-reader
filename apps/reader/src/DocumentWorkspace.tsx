@@ -135,6 +135,7 @@ export function DocumentToolbar({
   return (
     <DocumentContextualToolbar
       source={source}
+      sources={props.sources}
       pane={pane}
       workspace={props.sourceWorkspace}
       focusMode={props.focusMode}
@@ -198,7 +199,7 @@ function sessionContent(
         surface={props.surfaces.get(tab.id) ?? null}
         open={props.sourceWorkspace.open}
       />
-      <div className="source-part-document">
+      <div className="source-part-document" tabIndex={-1}>
         {props.renderDocument(source, paneId, tab.id) ?? <DocumentEmpty onOpenNote={openNote} />}
       </div>
     </div>
