@@ -430,6 +430,48 @@ it("keeps chapter reading quiet until the reader leaves, then offers a slim dism
   expect(surface.currentLocation()).toEqual({ kind: "pdf", pageIndex: 0 });
 });
 
+it("keeps a dismissal while the tab is hidden, until the reader returns to the chapter", async () => {
+  const { gateway, sources } = await anthology();
+  const chapter = (await gateway.source(sourceId("src_anthology_chapter_1")))!;
+  const surface = pdf(chapter);
+  const hint = (): Element | null => host.querySelector('[aria-label="Chapter reading range"]');
+  const show = async (visible: boolean): Promise<void> => {
+    await act(async () => {
+      root.render(
+        visible ? (
+          <SourceReadingBoundary
+            source={chapter}
+            sources={sources}
+            surface={surface}
+            open={vi.fn()}
+          />
+        ) : null,
+      );
+      await Promise.resolve();
+    });
+  };
+  await show(true);
+  await act(async () => {
+    await surface.goTo({ kind: "pdf", pageIndex: 12 });
+  });
+  act(() => hint()!.querySelector<HTMLButtonElement>('button[aria-label="Dismiss"]')!.click());
+  expect(hint()).toBeNull();
+  // Switching tabs unmounts the hint; coming back must not show it again.
+  await show(false);
+  await show(true);
+  expect(hint()).toBeNull();
+  // Re-entering the chapter clears the dismissal, so a later exit shows the hint again.
+  await act(async () => {
+    await surface.goTo({ kind: "pdf", pageIndex: 3 });
+  });
+  await show(false);
+  await act(async () => {
+    await surface.goTo({ kind: "pdf", pageIndex: 12 });
+  });
+  await show(true);
+  expect(hint()).not.toBeNull();
+});
+
 it("keeps the hint when the chapter's record refreshes after a position save", async () => {
   const { gateway, sources } = await anthology();
   const chapter = (await gateway.source(sourceId("src_anthology_chapter_1")))!;

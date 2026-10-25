@@ -209,6 +209,36 @@ export function SourceReadingBoundary(props: BoundaryProps): JSX.Element | null 
   ) : null;
 }
 
+// A dismissal outlives the hint, which unmounts while its tab is hidden, until the reader returns
+// to the chapter.
+const dismissals = new WeakMap<
+  ReadingSurface,
+  { readonly key: string; readonly kind: ChapterHintKind }
+>();
+
+function useChapterDismissal(
+  surface: ReadingSurface,
+  key: string,
+  kind: ChapterHintKind | null,
+): [ChapterHintKind | null, (kind: ChapterHintKind | null) => void] {
+  const [dismissed, setDismissed] = useState<ChapterHintKind | null>(() => {
+    const kept = dismissals.get(surface);
+    return kept?.key === key ? kept.kind : null;
+  });
+  const settled = nextChapterHintDismissal(dismissed, kind);
+  if (settled !== dismissed) {
+    setDismissed(settled);
+  }
+  useEffect(() => {
+    if (settled) {
+      dismissals.set(surface, { key, kind: settled });
+    } else {
+      dismissals.delete(surface);
+    }
+  }, [key, settled, surface]);
+  return [settled, setDismissed];
+}
+
 function ChapterReadingHint({
   source,
   sources,
@@ -221,13 +251,9 @@ function ChapterReadingHint({
 }): JSX.Element {
   const { range, location, entered, surface } = state;
   const kind = chapterHintKind({ range, location, entered, problem });
-  const [dismissed, setDismissed] = useState<ChapterHintKind | null>(null);
+  const [dismissed, setDismissed] = useChapterDismissal(surface, state.key, kind);
   const hint = useRef<HTMLDivElement>(null);
   const announcer = useRef<HTMLSpanElement>(null);
-  const settled = nextChapterHintDismissal(dismissed, kind);
-  if (settled !== dismissed) {
-    setDismissed(settled);
-  }
   const visible = chapterHintVisible(kind, dismissed);
   // Hiding the hint must not strand keyboard focus on a removed control.
   const keepFocus = useRef(false);
