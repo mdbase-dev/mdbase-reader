@@ -62,7 +62,7 @@ export async function auditReadingWorkspace(page, { screenshot }) {
     doc.dispatchEvent(new doc.defaultView.PointerEvent("pointerup", { bubbles: true }));
   });
   const composer = page.getByRole("toolbar", { name: "Selected text" });
-  await composer.getByRole("button", { name: "Highlight", exact: true }).click();
+  await composer.getByRole("button", { name: /^Highlight Yellow\b/ }).click();
   await expect(composer).toHaveCount(0);
   const marker = frame.locator("[data-mdbase-reader='margin'] > span");
   await expect(marker).toHaveCount(1);

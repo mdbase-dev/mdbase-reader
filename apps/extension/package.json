@@ -12,6 +12,10 @@
     "typecheck": "tsc -p tsconfig.json"
   },
   "dependencies": {
+    "@fontsource-variable/source-serif-4": "^5.3.1",
+    "@mdbase-dev/sdk": "file:../../packages/connect/vendor/sdk-e55d99c0-production-beta141.tgz",
+    "@mdbase-dev/sdk-lab": "file:../../packages/connect/vendor/sdk-dev-eaa4e697-lab.tgz",
+    "@mdbase-dev/sdk-staging": "file:../../packages/connect/vendor/sdk-dev-eaa4e697-staging.tgz",
     "@mdbase-dev/ui": "file:../../vendor/mdbase-dev-ui-dev-b2d7c464.tgz",
     "@mdbase-reader/connect": "workspace:*",
     "@mdbase-reader/core": "workspace:*",

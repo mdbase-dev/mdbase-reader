@@ -1,9 +1,14 @@
 import { describe, expect, it, vi } from "vitest";
 
-import { problemMessage, readerSourceUrl, sourceForUrl } from "./capture-model.js";
+import {
+  problemMessage,
+  readerAnnotationUrl,
+  readerSourceUrl,
+  sourceForUrl,
+} from "./capture-model.js";
 
 import type { ReaderConnectedCollection } from "@mdbase-reader/connect";
-import type { SourceSummary } from "@mdbase-reader/core";
+import type { AnnotationId, SourceSummary } from "@mdbase-reader/core";
 
 describe("extension capture model", () => {
   it("asks the store for the page and its submitted URL instead of scanning the library", async () => {
@@ -90,6 +95,17 @@ describe("extension capture model", () => {
     expect(url.origin).toBe("https://lab.mdbase-reader.pages.dev");
     expect(url.searchParams.get("collection")).toBe("test collection");
     expect(url.searchParams.get("source")).toBe("source & id");
+  });
+
+  it("opens Reader at a highlight by its record path, or its id without one", () => {
+    const source = { collectionId: "c1", id: "s1" } as SourceSummary;
+    const byPath = new URL(
+      readerAnnotationUrl(source, { id: "a1" as AnnotationId, path: "annotations/a 1.md" }),
+    );
+    expect(byPath.searchParams.get("source")).toBe("s1");
+    expect(byPath.searchParams.get("annotation")).toBe("annotations/a 1.md");
+    const byId = new URL(readerAnnotationUrl(source, { id: "a1" as AnnotationId }));
+    expect(byId.searchParams.get("annotation")).toBe("a1");
   });
 
   it("retains nested SDK causes in user-facing diagnostics", () => {

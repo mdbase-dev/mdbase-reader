@@ -2,7 +2,7 @@ import type { CitationPreview } from "./capture-citation.js";
 import type { ConnectionView } from "./connection-view.js";
 import type { CaptureIntent } from "./messages.js";
 import type { ProjectionReport, QuoteOutcome } from "./page-annotations.js";
-import type { PageCapture } from "./page-capture.js";
+import type { PageCapture, PageKeys } from "./page-capture.js";
 import type { CaptureDraft } from "./save-capture.js";
 import type { ProblemKind } from "./use-action-lock.js";
 import type { PanelHighlightSettings } from "./use-highlight-settings.js";
@@ -40,6 +40,8 @@ export interface ExtensionCaptureController {
   readonly status: CaptureStatus;
   readonly problem: string | null;
   readonly problemKind: ProblemKind | null;
+  /** The problem in plain words, when the panel worded it; else it is summarised by kind. */
+  readonly problemSummary?: string | null;
   readonly notice: string | null;
   readonly source: SourceSummary | null;
   readonly annotations: readonly Annotation[];
@@ -49,11 +51,12 @@ export interface ExtensionCaptureController {
   readonly progress: SourceImportProgress | null;
   readonly busy: boolean;
   readonly refreshing: boolean;
-  readonly refreshHighlights: () => Promise<void>;
   readonly saveAttempted: boolean;
   readonly navigated: boolean;
   /** The tab navigated and the panel is reading the new page by itself. */
   readonly following: boolean;
+  /** The tab shows one of Reader's own pages, so there is nothing to save. */
+  readonly readerPage: boolean;
   /** False when the reader has limited Reader's site access in Chrome; null until known. */
   readonly siteAccess: boolean | null;
   /** Asks Chrome for access to every HTTPS site again; call straight from a click. */
@@ -66,6 +69,11 @@ export interface ExtensionCaptureController {
   /** Saves the draft; `changes` (such as a clicked colour) apply to it first. */
   readonly save: (changes?: Partial<CaptureDraft>) => Promise<void>;
   readonly clearSelection: () => void;
+  /**
+   * Has the page forward the highlight keys `keys` arms, so they work while focus is in the
+   * page; returns a function that disarms them.
+   */
+  readonly followPageKeys: (keys: PageKeys, onKey: (key: string) => void) => () => void;
   /** Scrolls the page to a saved highlight and marks it briefly. */
   readonly revealHighlight: (id: AnnotationId) => Promise<void>;
   /** These throw on failure, for the highlight list to report beside the highlight. */

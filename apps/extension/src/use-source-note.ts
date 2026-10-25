@@ -6,19 +6,12 @@ import { SourceNoteSession } from "./source-note-session.js";
 import type { ReaderConnectedCollection } from "@mdbase-reader/connect";
 import type { Source, SourceSummary } from "@mdbase-reader/core";
 
-export interface SourceDetailsChange {
-  readonly title: string;
-  readonly tags: readonly string[];
-}
-
 export interface SourceNoteController {
   readonly status: "idle" | "loading" | "ready" | "failed";
   readonly session: SourceNoteSession | null;
   readonly problem: string | null;
   /** Reads the saved source once, when its note is first shown. */
   readonly load: () => void;
-  /** Throws on failure, for the details form to report beside its fields. */
-  readonly saveDetails: (change: SourceDetailsChange) => Promise<void>;
 }
 
 type Loaded =
@@ -40,6 +33,11 @@ export function useSourceNote(
   const sourceId = source?.id ?? null;
   const current = loaded?.sourceId === sourceId ? loaded : null;
   const session = current?.status === "ready" ? current.session : null;
+  // A session kept for an earlier page goes on saving; only the shown source is published.
+  const shown = useRef({ sourceId, onSaved });
+  useEffect(() => {
+    shown.current = { sourceId, onSaved };
+  }, [sourceId, onSaved]);
 
   const load = useCallback(() => {
     const connected = collection();
@@ -57,7 +55,11 @@ export function useSourceNote(
         if (!full) {
           throw new Error("This source is no longer in the collection.");
         }
-        const created = new SourceNoteSession(full, connected);
+        const created = new SourceNoteSession(full, connected, undefined, (saved) => {
+          if (shown.current.sourceId === saved.id) {
+            shown.current.onSaved(saved);
+          }
+        });
         sessions.current.set(sourceId, created);
         void created.start();
         setLoaded({ sourceId, status: "ready", session: created });
@@ -91,28 +93,10 @@ export function useSourceNote(
     };
   }, [session]);
 
-  const saveDetails = async (change: SourceDetailsChange): Promise<void> => {
-    const connected = collection();
-    if (!connected || !sourceId) {
-      throw new Error("Reconnect the collection to save these details.");
-    }
-    if (!connected.sources.updateFields) {
-      throw new Error("This collection cannot edit source details from the extension.");
-    }
-    const saved = await connected.sources.updateFields({
-      collectionId: connected.collectionId,
-      sourceId,
-      fields: { title: change.title, tags: [...change.tags] },
-    });
-    session?.accept(saved);
-    onSaved(saved);
-  };
-
   return {
     status: current?.status ?? "idle",
     session,
     problem: current?.status === "failed" ? current.problem : null,
     load,
-    saveDetails,
   };
 }

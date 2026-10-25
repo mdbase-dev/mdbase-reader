@@ -239,6 +239,47 @@ function isPlainObject(value: unknown): value is Record<string, unknown> {
   );
 }
 
+/**
+ * A copy that can cross the channel: drops function members (such as a handle's `close()`)
+ * from plain objects and arrays. Snapshots and results are data; their handles stay with
+ * the host.
+ */
+export function withoutFunctions(value: unknown, depth = 0): unknown {
+  if (depth > 32) {
+    return value;
+  }
+  if (Array.isArray(value)) {
+    return value.map((item) =>
+      typeof item === "function" ? undefined : withoutFunctions(item, depth + 1),
+    );
+  }
+  if (!isPlainObject(value)) {
+    return value;
+  }
+  const copy: Record<string, unknown> = {};
+  for (const [key, item] of Object.entries(value)) {
+    if (typeof item !== "function") {
+      copy[key] = withoutFunctions(item, depth + 1);
+    }
+  }
+  return copy;
+}
+
+/**
+ * An application snapshot (or a call's result) as data pages can receive. A ready phase
+ * carries the SDK's live connection, which stays in the host: pages reach the collection
+ * through the host's collection shape instead.
+ */
+export function transferable(value: unknown): unknown {
+  const phase = isPlainObject(value) ? value["phase"] : undefined;
+  if (isPlainObject(value) && isPlainObject(phase) && "connection" in phase) {
+    const rest: Record<string, unknown> = { ...phase };
+    delete rest["connection"];
+    return withoutFunctions({ ...value, phase: rest });
+  }
+  return withoutFunctions(value);
+}
+
 type Callback = (...args: unknown[]) => void;
 
 /**

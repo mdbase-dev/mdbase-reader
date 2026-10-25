@@ -7,14 +7,16 @@ export function TagInput({
   known,
   onChange,
   onFocus,
+  readOnly = false,
 }: {
   readonly id: string;
   readonly value: string;
   readonly known: readonly string[];
   readonly onChange: (value: string) => void;
   readonly onFocus: () => void;
+  readonly readOnly?: boolean;
 }): React.JSX.Element {
-  const suggestions = tagSuggestions(value, known);
+  const suggestions = readOnly ? [] : tagSuggestions(value, known);
   const choose = (tag: string): void => {
     onChange(acceptTag(value, tag));
     document.getElementById(id)?.focus();
@@ -26,6 +28,7 @@ export function TagInput({
         id={id}
         value={value}
         autoComplete="off"
+        readOnly={readOnly}
         aria-describedby={suggestions.length ? `${id}-suggestions` : undefined}
         onFocus={onFocus}
         onChange={(event) => onChange(event.target.value)}

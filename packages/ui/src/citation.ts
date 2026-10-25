@@ -1,4 +1,12 @@
-import type { CslItem } from "@mdbase-reader/core";
+// Apps compile this source directly, so it brings the untyped modules' declarations along.
+// eslint-disable-next-line @typescript-eslint/triple-slash-reference -- see above
+/// <reference path="./citation-js.d.ts" />
+
+/**
+ * A CSL-JSON item, as `CslItem` in @mdbase-reader/core describes it; only its id is read
+ * here, so this package need not depend on core.
+ */
+export type CitationItem = Readonly<Record<string, unknown>> & { readonly id: string };
 
 /**
  * The CSL styles bundled with @citation-js/plugin-csl, rendered by citeproc-js. Labels name the
@@ -21,7 +29,7 @@ export type RenderedCitation =
 
 /** The formatted bibliography entry as plain text, rendered by citeproc-js. */
 export async function renderCitation(
-  citation: CslItem,
+  citation: CitationItem,
   template: string,
   lang: string,
 ): Promise<RenderedCitation> {
@@ -64,7 +72,7 @@ export function renderedCitationText(rendered: RenderedCitation): string {
 }
 
 export async function formatCitation(
-  citation: CslItem,
+  citation: CitationItem,
   template: string,
   lang: string,
 ): Promise<string> {

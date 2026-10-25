@@ -1,10 +1,10 @@
 // @vitest-environment happy-dom
 /* eslint-disable @typescript-eslint/require-await -- async act flushes queued React effects */
+import { formatCitation } from "@mdbase-reader/ui/citation";
 import { act, type JSX } from "react";
 import { createRoot } from "react-dom/client";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-import { formatCitation } from "./citation-renderer.js";
 import { partSource } from "./source-parts.fixtures.js";
 import { SourcePartCreation, useSourcePartCreation } from "./SourcePartCreation.js";
 
@@ -17,7 +17,7 @@ vi.mock("./chapter-outline.js", async (original) => ({
   ...(await original<typeof ChapterOutlineModule>()),
   readChapterOutline: readOutline,
 }));
-vi.mock("./citation-renderer.js", () => ({
+vi.mock("@mdbase-reader/ui/citation", () => ({
   formatCitation: vi
     .fn()
     .mockResolvedValue("Bea Writer. Outline chapter. In book (pp. 41–67). Book press."),

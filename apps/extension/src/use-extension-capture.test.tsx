@@ -2,7 +2,7 @@
 /* eslint-disable @typescript-eslint/require-await -- async act flushes React's queued work */
 import { act, useEffect } from "react";
 import { createRoot, type Root } from "react-dom/client";
-import { afterEach, beforeEach, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, expect, it, vi, type Mock } from "vitest";
 
 import { usePanelConnection } from "./panel-connection.js";
 import { fakeChrome } from "./testing/fake-chrome.js";
@@ -10,6 +10,7 @@ import { useExtensionCapture } from "./use-extension-capture.js";
 
 import type { CitationPreview } from "./capture-citation.js";
 import type { ExtensionCaptureController } from "./capture-controller.js";
+import type * as CaptureModel from "./capture-model.js";
 
 const mocks = vi.hoisted(() => ({
   start: vi.fn(),
@@ -25,6 +26,7 @@ const mocks = vi.hoisted(() => ({
   sourceForUrl: vi.fn(),
   captureTab: vi.fn(),
   readSelection: vi.fn(),
+  clearPageSelection: vi.fn(),
   prepareCitation: vi.fn(),
   rememberCollection: vi.fn(),
   authorize: vi.fn(),
@@ -84,10 +86,15 @@ vi.mock("./connect-session.js", () => ({
   createExtensionSession: mocks.createSession,
   rememberCollection: mocks.rememberCollection,
 }));
-vi.mock("./capture-model.js", () => ({
-  problemMessage: (reason: Error) => reason.message,
-  sourceForUrl: mocks.sourceForUrl,
-}));
+vi.mock("./capture-model.js", async (importOriginal) => {
+  const { PlainError, plainMessage } = await importOriginal<typeof CaptureModel>();
+  return {
+    PlainError,
+    plainMessage,
+    problemMessage: (reason: Error) => reason.message,
+    sourceForUrl: mocks.sourceForUrl,
+  };
+});
 vi.mock("./capture-citation.js", () => ({ prepareCitation: mocks.prepareCitation }));
 vi.mock("./save-capture.js", () => ({
   CaptureWriter: class {
@@ -100,8 +107,10 @@ vi.mock("./save-capture.js", () => ({
 vi.mock("./page-capture.js", () => ({
   captureTab: mocks.captureTab,
   readSelection: mocks.readSelection,
+  clearPageSelection: mocks.clearPageSelection,
   watchTabSelection: () => Promise.resolve(),
   unwatchTabSelection: () => undefined,
+  followPageKeys: () => () => undefined,
   fetchPdf: vi.fn(),
   renderAnnotations: mocks.render,
   revealAnnotation: mocks.reveal,
@@ -153,6 +162,7 @@ beforeEach(() => {
   mocks.list.mockResolvedValue([]);
   mocks.captureTab.mockResolvedValue(page);
   mocks.readSelection.mockResolvedValue(null);
+  mocks.clearPageSelection.mockResolvedValue(undefined);
   mocks.prepareCitation.mockResolvedValue(null);
   mocks.render.mockImplementation((_tab: number, quotes: readonly unknown[]) =>
     Promise.resolve({
@@ -321,7 +331,7 @@ it("reports a source as saved even if refreshing its annotations fails", async (
   expect(controller.source?.title).toBe("[test] Saved");
   expect(controller.status).toBe("existing");
   expect(controller.problem).toBeNull();
-  expect(controller.notice).toContain("Saved safely");
+  expect(controller.notice).toContain("there is no need to save again");
 });
 it("releases Save and clears write progress before a slow refresh finishes", async () => {
   await mount();
@@ -358,10 +368,17 @@ it("releases Save and clears write progress before a slow refresh finishes", asy
   });
   expect(controller.refreshing).toBe(false);
   const writes = mocks.save.mock.calls.length;
+  const reads = mocks.list.mock.calls.length;
+  // Coming back to the panel a while later reads the highlights again, and only reads.
+  const later = Date.now() + 6000;
+  vi.spyOn(Date, "now").mockReturnValue(later);
   await act(async () => {
-    await controller.refreshHighlights();
+    window.dispatchEvent(new Event("focus"));
+    document.dispatchEvent(new Event("visibilitychange"));
   });
+  expect(mocks.list).toHaveBeenCalledTimes(reads + 1);
   expect(mocks.save).toHaveBeenCalledTimes(writes);
+  vi.restoreAllMocks();
 });
 it("follows new selections from its own tab without re-reading the page", async () => {
   await mount();
@@ -1037,13 +1054,13 @@ it("keeps a highlight that other notes link to when undo is pressed", async () =
     await controller.undoHighlight();
   });
   expect(mocks.deleteAnnotation).not.toHaveBeenCalled();
-  expect(controller.problem).toContain("Other notes already link to this highlight");
+  expect(controller.problem).toContain("Other notes link to this highlight, so it was kept");
   expect(controller.undoable).toBe(false);
 });
 it("drops the previous page's lookup notice when the tab moves to another page", async () => {
   mocks.sourceForUrl.mockRejectedValueOnce(new Error("lookup unavailable"));
   await mount();
-  expect(controller.notice).toContain("Could not check existing sources");
+  expect(controller.notice).toContain("We couldn’t check whether this page is already saved");
   mocks.captureTab.mockResolvedValue({
     ...page,
     canonicalUrl: "https://example.com/next",
@@ -1060,4 +1077,61 @@ it("drops the previous page's lookup notice when the tab moves to another page",
   });
   expect(controller.capture?.canonicalUrl).toBe("https://example.com/next");
   expect(controller.notice).toBeNull();
+});
+it("looks the page up again once the connection settles, clearing the failed lookup's notice", async () => {
+  mocks.sourceForUrl.mockRejectedValueOnce(new Error("host restarted"));
+  mocks.sourceForUrl.mockResolvedValueOnce(existing);
+  await mount();
+  expect(controller.notice).toContain("We couldn’t check whether this page is already saved");
+  await act(async () => {
+    publish(readySnapshot("test"));
+  });
+  await act(async () => {
+    await new Promise((resolve) => setTimeout(resolve, 0));
+  });
+  expect(mocks.sourceForUrl).toHaveBeenCalledTimes(2);
+  expect(controller.notice).toBeNull();
+  expect(controller.source).toEqual(existing);
+});
+it("lets go of a saved selection, even one a slower selection read brings back", async () => {
+  mocks.save.mockResolvedValueOnce({
+    source: existing,
+    annotation: {},
+    existing: true,
+    notices: [],
+  });
+  await mount();
+  let finish!: (value: unknown) => void;
+  mocks.readSelection.mockReturnValueOnce(new Promise((resolve) => (finish = resolve)));
+  await act(async () => {
+    chromeFake.emit("message", { type: "mdbase-reader/selection" }, { tab: { id: 1 } });
+  });
+  await act(async () => {
+    await controller.save({ highlight: true });
+  });
+  expect(controller.capture?.selection).toBeNull();
+  expect(mocks.clearPageSelection).toHaveBeenCalledWith(1);
+  await act(async () => finish({ exact: "quotation" }));
+  expect(controller.capture?.selection).toBeNull();
+});
+it("offers nothing to save on Reader's own pages", async () => {
+  mocks.captureTab.mockResolvedValue({
+    ...page,
+    canonicalUrl: "https://lab.mdbase-reader.pages.dev/?collection=test",
+    submittedUrl: "https://lab.mdbase-reader.pages.dev/?collection=test",
+  });
+  await mount();
+  expect(controller.readerPage).toBe(true);
+  expect(controller.capture).toBeNull();
+  expect(controller.problem).toBeNull();
+  expect(mocks.sourceForUrl).not.toHaveBeenCalled();
+});
+it("recognises the extension's own pages, which cannot be read", async () => {
+  mocks.captureTab.mockRejectedValue(new Error("Cannot access a chrome-extension:// URL"));
+  (chromeFake.chrome.tabs.get as unknown as Mock).mockResolvedValue({
+    url: "chrome-extension://kimdfjefhbfgfecconmaiaaindjccidp/options.html",
+  });
+  await mount();
+  expect(controller.readerPage).toBe(true);
+  expect(controller.problem).toBeNull();
 });

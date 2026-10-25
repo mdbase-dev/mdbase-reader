@@ -36,8 +36,10 @@ export function readerSdkTarget(environment) {
 }
 
 /** Verify archive identity AND every installed original before importing any SDK build code.
- * The standard native publisher retains its separate, stronger authentication/admission gates. */
-export async function verifiedReaderSdk(target, repoRoot = root) {
+ * `app` is the consuming workspace (Reader or its browser extension), which installs all three
+ * originals side by side. The standard native publisher retains its separate, stronger
+ * authentication/admission gates. */
+export async function verifiedReaderSdk(target, repoRoot = root, app = "apps/reader") {
   assert.ok(Object.hasOwn(pins, target), "Unsupported Reader SDK environment: " + target);
   const [name, manifest] = pins[target];
   const pin = JSON.parse(await readFile(join(repoRoot, vendor, manifest), "utf8"));
@@ -45,7 +47,7 @@ export async function verifiedReaderSdk(target, repoRoot = root) {
   const bytes = await readFile(archive);
   assert.equal(bytes.length, pin.bytes, "Reader SDK archive length mismatch");
   assert.equal(hash(bytes), pin.sha256, "Reader SDK archive hash mismatch");
-  const sdkRoot = await realpath(join(repoRoot, "apps/reader/node_modules", name));
+  const sdkRoot = await realpath(join(repoRoot, app, "node_modules", name));
   // This reader uses only regular, original SDK files, not consumer-side patches.
   for (const member of originalMembers(archive)) {
     const path = join(sdkRoot, member.path);

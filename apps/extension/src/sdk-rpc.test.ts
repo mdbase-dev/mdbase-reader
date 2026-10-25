@@ -4,7 +4,14 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { createSdkClient, hostRestartedMessage, type SdkClient } from "./sdk-client.js";
 import { serveSdk, type SdkHost, type SdkHostSource } from "./sdk-host.js";
-import { decodeArgs, deserializeError, encodeArgs, serializeError } from "./sdk-rpc.js";
+import {
+  decodeArgs,
+  deserializeError,
+  encodeArgs,
+  serializeError,
+  transferable,
+  withoutFunctions,
+} from "./sdk-rpc.js";
 import { memoryBus } from "./testing/memory-bus.js";
 import { applicationFixture } from "./testing/sdk-fixture.js";
 
@@ -227,5 +234,36 @@ describe("SDK RPC arguments and errors", () => {
     const crossed = deserializeError(structuredClone(serializeError(original)));
     expect(crossed.name).toBe(original.name);
     expect(describeError(crossed)?.title).toBe(describeError(original)?.title);
+  });
+});
+
+describe("withoutFunctions", () => {
+  it("drops handles a snapshot holds so it can cross a BroadcastChannel", () => {
+    const snapshot = {
+      phase: { kind: "ready" },
+      selection: { usable: { id: "c1", close: () => undefined } },
+      items: [{ name: "a", close: () => undefined }],
+      at: new Date(0),
+    };
+    const copy = withoutFunctions(snapshot);
+    expect(() => structuredClone(copy)).not.toThrow();
+    expect(copy).toEqual({
+      phase: { kind: "ready" },
+      selection: { usable: { id: "c1" } },
+      items: [{ name: "a" }],
+      at: new Date(0),
+    });
+  });
+});
+
+describe("transferable", () => {
+  it("keeps a ready phase's live connection in the host", () => {
+    const connection = { files: { client: { session: new Map() } }, close: () => undefined };
+    const copy = transferable({
+      status: "ready",
+      phase: { kind: "ready", collectionId: "c1", connection },
+    });
+    expect(() => structuredClone(copy)).not.toThrow();
+    expect(copy).toEqual({ status: "ready", phase: { kind: "ready", collectionId: "c1" } });
   });
 });

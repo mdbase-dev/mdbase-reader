@@ -1240,7 +1240,7 @@ button {
   outline-offset: -2px;
 }
 
-/* Native controls take the shared focus ring from reader-tokens.css. */
+/* Native controls take the shared focus ring from @mdbase-reader/ui/tokens.css. */
 
 .annotation-card:first-of-type {
   border-top: 1px solid var(--line);

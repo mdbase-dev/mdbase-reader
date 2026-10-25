@@ -168,7 +168,8 @@ are no custom colours. An annotation stores only its colour key.
   colours pre-fills them with a notice, and Save shares them. Nothing is written on read. Once
   the record holds meanings, the device's are ignored. Any successful save of highlight
   colours forgets them on that device, so a later reset doesn't bring them back.
-- **Extension.** The panel's colour picker reads the same record. The SDK host's
+- **Extension.** The panel's colour choice beside its Highlight action offers the record's
+  colours, in order, named with their meanings. The SDK host's
   `ReaderSettingsStore` follows the feed. The panel asks it for plain data
   (`settings.highlightColors`, allow-listed in `sdk-rpc.ts`) when the collection
   changes, on each new selection, and when the panel regains focus or visibility.

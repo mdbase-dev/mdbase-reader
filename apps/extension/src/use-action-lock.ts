@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 
-import { problemMessage } from "./capture-model.js";
+import { plainMessage, problemMessage } from "./capture-model.js";
 
 /** What failed, so the panel can offer the matching recovery. */
 export type ProblemKind = "connection" | "save" | "page";
@@ -9,6 +9,8 @@ export interface ActionLock {
   readonly busy: boolean;
   readonly problem: string | null;
   readonly problemKind: ProblemKind | null;
+  /** The problem in the panel's own plain words, when it has them (see PlainError). */
+  readonly problemSummary: string | null;
   readonly notice: string | null;
   readonly setProblem: (problem: string | null, kind?: ProblemKind) => void;
   readonly setNotice: (notice: string | null) => void;
@@ -28,6 +30,7 @@ export function useActionLock(onSettled?: () => void): ActionLock {
   const [failure, setFailure] = useState<{
     readonly problem: string;
     readonly kind: ProblemKind;
+    readonly summary?: string | null;
   } | null>(null);
   const setProblem = useCallback(
     (problem: string | null, kind: ProblemKind = "connection"): void =>
@@ -51,7 +54,7 @@ export function useActionLock(onSettled?: () => void): ActionLock {
       try {
         await action();
       } catch (reason) {
-        setFailure({ problem: problemMessage(reason), kind });
+        setFailure({ problem: problemMessage(reason), kind, summary: plainMessage(reason) });
       } finally {
         lock.current = false;
         setBusy(false);
@@ -69,6 +72,7 @@ export function useActionLock(onSettled?: () => void): ActionLock {
     busy,
     problem: failure?.problem ?? null,
     problemKind: failure?.kind ?? null,
+    problemSummary: failure?.summary ?? null,
     notice,
     setProblem,
     setNotice,

@@ -1,8 +1,8 @@
 import { validateCslItem } from "@mdbase-reader/core";
+import { formatCitation } from "@mdbase-reader/ui/citation";
 import { useEffect, useState, type JSX } from "react";
 
 import { citationNames } from "./citation-form-model.js";
-import { formatCitation } from "./citation-renderer.js";
 
 import type { ChapterOutline } from "./chapter-outline.js";
 import type { DocumentRange, PlannedSourcePart } from "@mdbase-reader/core";

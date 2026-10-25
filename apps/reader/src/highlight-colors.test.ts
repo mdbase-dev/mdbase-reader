@@ -1,7 +1,6 @@
 // @vitest-environment happy-dom
 import { readFileSync } from "node:fs";
-import { dirname, join } from "node:path";
-import { fileURLToPath } from "node:url";
+import { createRequire } from "node:module";
 
 import { highlightColorKeys, highlightPalette } from "@mdbase-reader/core";
 import { afterEach, describe, expect, it } from "vitest";
@@ -19,7 +18,7 @@ import { bindCollectionHighlights } from "./highlight-settings.fixtures.js";
 
 // A path rather than a URL: happy-dom replaces the global URL with one Node's fs refuses.
 const tokens = readFileSync(
-  join(dirname(fileURLToPath(import.meta.url)), "reader-tokens.css"),
+  createRequire(import.meta.url).resolve("@mdbase-reader/ui/tokens.css"),
   "utf8",
 );
 

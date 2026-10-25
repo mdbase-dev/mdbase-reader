@@ -90,6 +90,18 @@ importers:
 
   apps/extension:
     dependencies:
+      '@fontsource-variable/source-serif-4':
+        specifier: ^5.3.1
+        version: 5.3.1
+      '@mdbase-dev/sdk':
+        specifier: file:../../packages/connect/vendor/sdk-e55d99c0-production-beta141.tgz
+        version: file:packages/connect/vendor/sdk-e55d99c0-production-beta141.tgz
+      '@mdbase-dev/sdk-lab':
+        specifier: file:../../packages/connect/vendor/sdk-dev-eaa4e697-lab.tgz
+        version: '@mdbase-dev/sdk@file:packages/connect/vendor/sdk-dev-eaa4e697-lab.tgz'
+      '@mdbase-dev/sdk-staging':
+        specifier: file:../../packages/connect/vendor/sdk-dev-eaa4e697-staging.tgz
+        version: '@mdbase-dev/sdk@file:packages/connect/vendor/sdk-dev-eaa4e697-staging.tgz'
       '@mdbase-dev/ui':
         specifier: file:../../vendor/mdbase-dev-ui-dev-b2d7c464.tgz
         version: file:vendor/mdbase-dev-ui-dev-b2d7c464.tgz(@codemirror/view@6.43.8)(@mdbase-dev/sdk@file:packages/connect/vendor/sdk-e55d99c0-production-beta141.tgz)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
@@ -133,9 +145,6 @@ importers:
 
   apps/reader:
     dependencies:
-      '@citation-js/plugin-csl':
-        specifier: 0.8.2
-        version: 0.8.2(@citation-js/core@0.8.2)
       '@fontsource-variable/source-serif-4':
         specifier: ^5.3.1
         version: 5.3.1
@@ -199,9 +208,6 @@ importers:
       '@zip.js/zip.js':
         specifier: ^2.8.36
         version: 2.8.36
-      citeproc:
-        specifier: 2.4.63
-        version: 2.4.63
       dockview-react:
         specifier: 8.3.1
         version: 8.3.1(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
@@ -431,6 +437,9 @@ importers:
 
   packages/ui:
     dependencies:
+      '@citation-js/plugin-csl':
+        specifier: 0.8.2
+        version: 0.8.2(@citation-js/core@0.8.2)
       '@fontsource/azeret-mono':
         specifier: ^5.3.0
         version: 5.3.0
@@ -440,6 +449,9 @@ importers:
       '@phosphor-icons/react':
         specifier: ^2.1.10
         version: 2.1.10(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
+      citeproc:
+        specifier: 2.4.63
+        version: 2.4.63
       react:
         specifier: ^19.2.8
         version: 19.2.8

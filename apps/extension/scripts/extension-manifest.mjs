@@ -1,6 +1,9 @@
 import { readFileSync } from "node:fs";
 
-import { readerDeploymentFor } from "../../reader/scripts/deployment-environment.mjs";
+import {
+  readerDeploymentFor,
+  readerDeployments,
+} from "../../reader/scripts/deployment-environment.mjs";
 import { assertValidReaderManifest } from "../../reader/scripts/validate-manifest.mjs";
 
 import { stagingExtensionId, stagingManifestKey } from "./staging-public-key.mjs";
@@ -62,6 +65,8 @@ export function extensionEnvironment(environment = process.env) {
     logUrl: sdkLogOrigins[target] ?? null,
     loopbackUrl: target === "lab" ? deployment.loopbackUrl : "",
     readerOrigin: deployment.origin,
+    // Reader's own pages in every environment: the panel never offers to save Reader itself.
+    readerOrigins: Object.values(readerDeployments).map(({ origin }) => origin),
     extensionOrigins: extensionIds.map((id) => `chrome-extension://${id}`),
     ...(target === "staging" && stagingPublicKey ? { stagingPublicKey } : {}),
   };

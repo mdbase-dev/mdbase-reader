@@ -11,22 +11,25 @@ const tabs: readonly {
   readonly Icon: typeof NoteIcon;
 }[] = [
   { id: "highlights", label: "Highlights", Icon: HighlightIcon },
-  { id: "note", label: "Note", Icon: NoteIcon },
+  { id: "note", label: "Literature note", Icon: NoteIcon },
   { id: "citation", label: "Citation", Icon: CitationIcon },
 ];
 
 /**
- * The same three views of a source as Reader's inspector, drawn the same way. "Note" is
- * Reader's "Literature note", shortened so all three names fit a side panel.
+ * The same three views of a source as Reader's inspector, drawn the same way. A narrow
+ * panel names only the open tab (see extension.css).
  */
 export function PanelTabs({
   tab,
   highlightCount,
+  noteAttention = false,
   onChange,
 }: {
   readonly tab: PanelTab;
-  /** Saved highlights on this page's source; null before the page is saved. */
+  /** Saved highlights on this page's source, counted once there are any. */
   readonly highlightCount: number | null;
+  /** The literature note waits on the reader, as in a conflict. */
+  readonly noteAttention?: boolean;
   readonly onChange: (tab: PanelTab) => void;
 }): React.JSX.Element {
   const list = useRef<HTMLDivElement>(null);
@@ -67,8 +70,13 @@ export function PanelTabs({
         >
           <Icon />
           <span className="panel-tab-label">{label}</span>
-          {id === "highlights" && highlightCount !== null ? (
+          {id === "highlights" && highlightCount ? (
             <span className="panel-tab-count">{highlightCount}</span>
+          ) : null}
+          {id === "note" && noteAttention ? (
+            <span className="panel-tab-alert">
+              <span className="visually-hidden">, needs your attention</span>
+            </span>
           ) : null}
         </button>
       ))}
