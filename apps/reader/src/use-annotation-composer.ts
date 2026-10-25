@@ -10,6 +10,7 @@ import {
 } from "./use-annotation-creation.js";
 import { useAnnotationNavigation } from "./use-annotation-navigation.js";
 import { useBookmarkAction } from "./use-bookmark-action.js";
+import { useHighlightRelease } from "./use-highlight-release.js";
 import { useHighlightUndo, type SavedHighlight } from "./use-highlight-undo.js";
 import { useReadingAnnotation } from "./use-reading-annotation.js";
 import { useSelectionAnchor } from "./use-selection-anchor.js";
@@ -45,6 +46,8 @@ export interface AnnotationComposerController extends AnnotationCreationControll
   /** Quick actions for the live selection or a clicked highlight. */
   readonly toolbar: SelectionToolbarState | null;
   readonly dismissToolbar: () => void;
+  /** Lets a highlight go, as Escape does: its actions close and it is no longer active. */
+  readonly releaseAnnotation: (annotationId: AnnotationId) => void;
   /**
    * Comments on a selection: saves it as a highlight in the colour used last, then opens that
    * highlight's card to write the comment, where it saves like any other edit.
@@ -154,6 +157,7 @@ export function useAnnotationComposer(
     navigation.clearError();
     toolbar.showAnnotation(annotation);
   });
+  const selection = { activeId, editingId, setActiveId, noticeOpen: undo.savedHighlight !== null };
   const anchor = useSelectionAnchor(surface);
   const selectionAnchor = anchor && creation.selection?.value === anchor.draft ? anchor.rect : null;
   return {
@@ -169,6 +173,7 @@ export function useAnnotationComposer(
     selectionAnchor,
     toolbar: toolbar.state,
     dismissToolbar: toolbar.hide,
+    releaseAnnotation: useHighlightRelease(surface, annotations, toolbar, selection),
     comment: (selection) =>
       creation.highlight(selection, undefined, (created) => {
         input.revealAnnotation?.(created);

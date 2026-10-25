@@ -1,5 +1,6 @@
 import { annotationToPdfDecoration, annotationToPdfMarginDecoration } from "./pdf-decoration.js";
 
+import type { EmbedPdfAnnotationActivations } from "./embedpdf-annotation-activation.js";
 import type { PdfAnnotationObject } from "@embedpdf/models";
 import type { AnnotationPlugin } from "@embedpdf/plugin-annotation";
 import type { Annotation } from "@mdbase-reader/core";
@@ -19,13 +20,37 @@ const readerDecorationPrefix = "mdbase-reader:";
  * `importAnnotations` is deliberately used instead of `createAnnotation`: EmbedPDF queues imports
  * until its asynchronous native-annotation load has completed, while direct creates can be erased
  * when that load replaces the annotation state.
+ *
+ * EmbedPDF's one selection both shows the active highlight and takes the reader's clicks. A click
+ * is the newest word on which highlight is active, so the controller takes it up at once instead
+ * of restoring the one it was last told about: Reader hears of the click only afterwards, and the
+ * old highlight, reselected meanwhile, would read as the reader's next click and win.
  */
 export function createPdfDecorationController(
   capability: EmbedPdfAnnotationCapability,
+  activations?: Pick<
+    EmbedPdfAnnotationActivations,
+    "applying" | "subscribe" | "subscribeDismissals"
+  >,
 ): PdfDecorationController {
   let desired = new Map<string, PdfAnnotationObject>();
   const requested = new Map<string, string>();
   let activeDecorationId: string | null = null;
+  const applying = (change: () => void): void =>
+    activations ? activations.applying(change) : change();
+  const stopActivations = activations?.subscribe((annotationId) => {
+    const clicked = `${readerDecorationPrefix}${annotationId}`;
+    if (desired.has(clicked)) {
+      activeDecorationId = clicked;
+    } else {
+      // Reader passes over a highlight it no longer lists, so the page shows its choice again,
+      // once EmbedPDF has finished handling the click.
+      queueMicrotask(() => applying(applyActiveDecoration));
+    }
+  });
+  const stopDismissals = activations?.subscribeDismissals(() => {
+    activeDecorationId = null;
+  });
 
   const requestImport = (decoration: PdfAnnotationObject): void => {
     const fingerprint = decorationFingerprint(decoration);
@@ -47,7 +72,9 @@ export function createPdfDecorationController(
     capability.deselectAnnotation();
   };
 
-  const reconcile = (): void => {
+  const reconcile = (): void => applying(reconcileDecorations);
+
+  const reconcileDecorations = (): void => {
     const current = capability
       .getAnnotations()
       .map(({ object }) => object)
@@ -114,9 +141,13 @@ export function createPdfDecorationController(
     },
     setActiveAnnotation(annotation) {
       activeDecorationId = annotation ? (annotationToPdfDecoration(annotation)?.id ?? null) : null;
-      applyActiveDecoration();
+      applying(applyActiveDecoration);
     },
-    destroy: unsubscribeLoaded,
+    destroy() {
+      unsubscribeLoaded();
+      stopActivations?.();
+      stopDismissals?.();
+    },
   };
 }
 

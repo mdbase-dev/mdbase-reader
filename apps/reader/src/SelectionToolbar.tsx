@@ -176,7 +176,15 @@ function SelectionToolbar({
       ? composer.comment(target.selection)
       : composer.edit(target.annotation);
   const swatches = toolbarSwatches(target, composer, lastColor);
-  useToolbarKeys(barRef, composer.dismissToolbar, { c: comment, ...colorKeys(swatches) });
+  useToolbarKeys(
+    barRef,
+    composer.dismissToolbar,
+    { c: comment, ...colorKeys(swatches) },
+    // Escape on a clicked highlight lets it go; a click elsewhere only closes its actions.
+    target.kind === "annotation"
+      ? () => composer.releaseAnnotation(target.annotation.id)
+      : composer.dismissToolbar,
+  );
   useFrameColorKeys(swatches?.mode === "recolor" && !swatches.disabled);
   const copy = (kind: "text" | "citation"): void => {
     const citation = composer.quoteCitation;
@@ -392,18 +400,21 @@ type ToolbarKey = "h" | "c" | "1" | "2" | "3" | "4" | "5";
 const toolbarKeys: ReadonlySet<string> = new Set<ToolbarKey>(["h", "c", "1", "2", "3", "4", "5"]);
 
 /**
- * Esc and a click outside dismiss the toolbar; H, C and 1–5 act on it. Keys pressed inside a
- * document frame arrive here too: renderers forward them while text is selected. These keys
- * pressed on a control elsewhere, such as a sidebar button, belong to that control.
+ * A click outside dismisses the toolbar and Esc runs `escape`; H, C and 1–5 act on it. Keys
+ * pressed inside a document frame arrive here too: renderers forward them while text is selected.
+ * These keys pressed on a control elsewhere, such as a sidebar button, belong to that control.
  */
 function useToolbarKeys(
   barRef: RefObject<HTMLDivElement | null>,
   dismiss: () => void,
   actions: Readonly<Partial<Record<ToolbarKey, () => void>>>,
+  escape: () => void,
 ): void {
   const latest = useRef(actions);
+  const latestEscape = useRef(escape);
   useEffect(() => {
     latest.current = actions;
+    latestEscape.current = escape;
   });
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent): void => {
@@ -413,7 +424,7 @@ function useToolbarKeys(
       const key = event.key.toLocaleLowerCase();
       if (event.key === "Escape") {
         event.preventDefault();
-        dismiss();
+        latestEscape.current();
       } else if (
         toolbarKeys.has(key) &&
         !(event.ctrlKey || event.metaKey || event.altKey || event.shiftKey) &&
