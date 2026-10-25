@@ -49,6 +49,39 @@ describe("sourceRecordPaths", () => {
     expect(recordPath.length).toBeLessThanOrEqual("sources/.md".length + 60);
   });
 
+  it("keeps every existing ASCII fallback path, which an interrupted import is resumed by", () => {
+    // The fallback as it was written before the naming module.
+    const before = (title: string): string => {
+      const slug = title
+        .normalize("NFKC")
+        .toLowerCase()
+        .replace(/['’]/gu, "")
+        .replace(/[^\p{Letter}\p{Number}]+/gu, "-")
+        .replace(/^-+|-+$/gu, "");
+      const stem = Array.from(slug).slice(0, 60).join("").replace(/-+$/u, "");
+      return stem ? `sources/${stem}-3f2a9c1e.md` : `sources/${id}.md`;
+    };
+    const alphabet = "abcXYZ019 -_.,:;!?'’()[]&";
+    let seed = 7;
+    for (let index = 0; index < 2_000; index += 1) {
+      let title = "";
+      const length = index % 140;
+      for (let position = 0; position < length; position += 1) {
+        seed = (seed * 1_103_515_245 + 12_345) % 2_147_483_648;
+        title += alphabet[seed % alphabet.length] ?? "";
+      }
+      expect(sourceRecordPaths(title, id).fallbackRecordPath).toBe(before(title));
+    }
+  });
+
+  it("cuts a fallback that would pass the byte cap with its suffix", () => {
+    const { fallbackRecordPath } = sourceRecordPaths("漢".repeat(100), id);
+    expect(fallbackRecordPath).toBe(`sources/${"漢".repeat(37)}-3f2a9c1e.md`);
+    expect(sourceRecordPaths("漢".repeat(36), id).fallbackRecordPath).toBe(
+      `sources/${"漢".repeat(36)}-3f2a9c1e.md`,
+    );
+  });
+
   it("skips a reserved device name", () => {
     expect(sourceRecordPaths("CON", id).recordPath).toBe("sources/con-5a6b.md");
   });

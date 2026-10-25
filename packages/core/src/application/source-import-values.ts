@@ -1,5 +1,5 @@
 import { DomainError } from "../domain/errors.js";
-import { slug, sourceNotePaths } from "../domain/record-names.js";
+import { nameWithSuffix, slug, sourceNotePaths } from "../domain/record-names.js";
 
 import type { SourceFileImportRequest, SourceImportMetadata } from "./ports.js";
 import type { SourceId } from "../domain/identity.js";
@@ -118,10 +118,12 @@ export function sourceRecordPaths(
 } {
   const recordPathCandidates = sourceNotePaths({ title, id, authorYear });
   const recordPath = recordPathCandidates[0] ?? `sources/${id}.md`;
-  const stem = slug(title, 60);
   const legacySuffix = id.replace(/^src_/u, "").replace(/-/gu, "").slice(0, 8);
-  const fallbackRecordPath =
-    stem && legacySuffix ? `sources/${stem}-${legacySuffix}.md` : `sources/${id}.md`;
+  // Names that already fit are left exactly as before (every ASCII one does: at most 69 bytes),
+  // because an interrupted import is resumed by reading its record back at this path. Only a
+  // title whose slug overshoots the byte cap with the suffix is cut further.
+  const legacyStem = legacySuffix ? nameWithSuffix(slug(title, 60), `-${legacySuffix}`) : "";
+  const fallbackRecordPath = legacyStem ? `sources/${legacyStem}.md` : `sources/${id}.md`;
   return { recordPath, fallbackRecordPath, recordPathCandidates };
 }
 
