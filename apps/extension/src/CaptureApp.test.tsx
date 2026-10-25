@@ -640,3 +640,10 @@ it("says what a selected passage needs before it can be saved, without a dead fo
   expect(html).not.toContain("highlight-button");
   expect(html).not.toContain("Save page");
 });
+it("says a Reader page is Reader itself, with nothing to save", () => {
+  const html = markup({ capture: null, readerPage: true });
+  expect(html).toContain("<h1>This is mdbase Reader</h1>");
+  expect(html).toContain("Nothing to save here");
+  expect(html).not.toContain("Save page");
+  expect(html).not.toContain("Reader cannot read this page");
+});

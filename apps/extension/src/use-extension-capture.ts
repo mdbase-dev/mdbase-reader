@@ -48,6 +48,10 @@ export type { ExtensionCaptureController } from "./capture-controller.js";
 
 /** A saved page's highlights are read again on return to the panel, at most this often. */
 const returnRefreshMs = 5000;
+/** A failed lookup of the page's existing source is tried once more after this long. */
+const lookupRetryMs = 2000;
+const lookupFailedNotice =
+  "We couldn’t check whether this page is already saved. Saving checks again.";
 
 // The controller coordinates one panel's explicit actions; I/O lives in the composed hooks
 // and CaptureWriter.
@@ -131,6 +135,11 @@ export function useExtensionCapture(
     connection.snapshot,
     capture,
   );
+  const {
+    round: lookupRound,
+    failed: lookupFailed,
+    cancel: cancelLookupRetry,
+  } = useLookupRetry(discoveryKey, busy, connection.snapshot);
 
   const picking = isPostPickerPage(capture);
   const display = useCallback(
@@ -147,6 +156,7 @@ export function useExtensionCapture(
     if (!collection || !pageUrl || collection.collectionId !== collectionId) {
       return;
     }
+    const key = `${collection.collectionId} ${pageUrl}`;
     void (async () => {
       const existing = picking
         ? null
@@ -158,19 +168,26 @@ export function useExtensionCapture(
       if (epoch !== discovery.current) {
         return;
       }
+      cancelLookupRetry();
       setSource(existing);
       setUndoable(null);
       setAnnotations([]);
       setProjection(null);
       setStatus(existing ? "existing" : "ready");
-      setDiscovered(`${collection.collectionId} ${pageUrl}`);
+      setDiscovered(key);
       if (!existing) {
         return;
       }
-      const values = await collection.annotations.listForSource(
-        collection.collectionId,
-        existing.id,
-      );
+      let values: readonly Annotation[];
+      try {
+        values = await collection.annotations.listForSource(collection.collectionId, existing.id);
+      } catch (reason) {
+        // The page is known to be saved; only its highlights are missing.
+        if (epoch === discovery.current) {
+          setNotice(`Your highlights couldn’t be loaded. ${problemMessage(reason)}`);
+        }
+        return;
+      }
       if (epoch !== discovery.current) {
         return;
       }
@@ -192,7 +209,8 @@ export function useExtensionCapture(
     })().catch(() => {
       if (epoch === discovery.current) {
         // Saving still checks for the page first, so nothing is saved twice.
-        setNotice("We couldn’t check whether this page is already saved. Saving checks again.");
+        setNotice(lookupFailedNotice);
+        lookupFailed(key);
       }
     });
     return () => {
@@ -211,6 +229,9 @@ export function useExtensionCapture(
     tabId,
     capturedPost,
     picking,
+    lookupRound,
+    lookupFailed,
+    cancelLookupRetry,
   ]);
 
   const { setDraft } = stored;
@@ -316,6 +337,8 @@ export function useExtensionCapture(
       }
       discovery.current++;
       refreshEpoch.current++;
+      // Saving looks the page up itself.
+      cancelLookupRetry();
       setRefreshing(false);
       setUndoable(null);
       setAttemptedFor(attemptKey);
@@ -349,7 +372,7 @@ export function useExtensionCapture(
         });
         if (result.annotation) {
           stored.setDraft((value) => ({ ...value, comment: "" }));
-          page.setSelection(null);
+          page.consumeSelection();
           rememberColor(draft.color);
         }
         const used = [
@@ -660,6 +683,7 @@ export function useExtensionCapture(
     saveAttempted: attemptedFor === attemptKey,
     navigated: page.navigated,
     following: page.following,
+    readerPage: page.readerPage,
     siteAccess: page.siteAccess,
     invocation: page.invocation,
     undoable: undoable !== null,
@@ -668,6 +692,63 @@ export function useExtensionCapture(
     loadTags: tags.loadTags,
     note,
   };
+}
+
+/**
+ * A lookup can fail while the connection is still settling (or its host restarts), and the
+ * page and collection then stay the same. It is looked up again when the connection next
+ * changes, or once after a moment; a save or another page cancels this. `round` changes for
+ * each new attempt.
+ */
+function useLookupRetry(
+  key: string | null,
+  busy: boolean,
+  snapshot: ExtensionCaptureController["snapshot"],
+): {
+  readonly round: number;
+  readonly failed: (key: string) => void;
+  readonly cancel: () => void;
+} {
+  const [round, setRound] = useState(0);
+  // The page and collection whose lookup failed, and the connection state it failed in.
+  const [failure, setFailure] = useState<{
+    readonly key: string;
+    readonly snapshot: ExtensionCaptureController["snapshot"];
+  } | null>(null);
+  const timedRetryFor = useRef<string | null>(null);
+  const snapshotNow = useRef(snapshot);
+  useEffect(() => {
+    snapshotNow.current = snapshot;
+  }, [snapshot]);
+  const failed = useCallback(
+    (failedKey: string) => setFailure({ key: failedKey, snapshot: snapshotNow.current }),
+    [],
+  );
+  const cancel = useCallback(() => setFailure(null), []);
+  useEffect(() => {
+    if (failure?.key !== key || busy) {
+      return;
+    }
+    const again = (): void => {
+      setFailure(null);
+      setRound((value) => value + 1);
+    };
+    if (snapshot !== failure.snapshot) {
+      if (snapshot.status === "ready") {
+        again();
+      }
+      return;
+    }
+    if (timedRetryFor.current === failure.key) {
+      return;
+    }
+    const timer = setTimeout(() => {
+      timedRetryFor.current = failure.key;
+      again();
+    }, lookupRetryMs);
+    return () => clearTimeout(timer);
+  }, [busy, failure, key, snapshot]);
+  return { round, failed, cancel };
 }
 
 function draftForSave(

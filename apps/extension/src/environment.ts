@@ -7,6 +7,8 @@ export interface ExtensionEnvironment {
   readonly logUrl: string | null;
   readonly loopbackUrl: string;
   readonly readerOrigin: string;
+  /** Reader's origins in every environment (LAB, staging, production). */
+  readonly readerOrigins: readonly string[];
   /** The extension origins this build declares to mdbase for its exact environment. */
   readonly extensionOrigins: readonly string[];
   /** PUBLIC SPKI only, supplied at staging packaging time; never a private key. */

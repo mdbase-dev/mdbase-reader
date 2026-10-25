@@ -9,7 +9,7 @@ interface PageEvents {
   readonly capture: PageCapture | null;
   readonly navigated: boolean;
   readonly following: boolean;
-  readonly readPage: () => Promise<PageCapture>;
+  readonly readPage: () => Promise<PageCapture | null>;
   readonly followSelection: () => Promise<void>;
   readonly setNavigated: (value: boolean) => void;
   readonly setFollowing: (value: boolean) => void;

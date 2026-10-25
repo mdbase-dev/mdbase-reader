@@ -22,6 +22,11 @@ describe("per-environment extension manifest", () => {
       label: "LAB",
       connectUrl: "https://connect-lab.mdbase.dev",
       readerOrigin: "https://lab.mdbase-reader.pages.dev",
+      readerOrigins: [
+        "https://lab.mdbase-reader.pages.dev",
+        "https://staging.mdbase-reader.pages.dev",
+        "https://reader.mdbase.dev",
+      ],
     });
     // The SDK runs in the extension's pages: it reaches the CP and LAB's log service.
     expect(manifest["host_permissions"]).toEqual([

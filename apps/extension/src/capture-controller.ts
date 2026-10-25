@@ -55,6 +55,8 @@ export interface ExtensionCaptureController {
   readonly navigated: boolean;
   /** The tab navigated and the panel is reading the new page by itself. */
   readonly following: boolean;
+  /** The tab shows one of Reader's own pages, so there is nothing to save. */
+  readonly readerPage: boolean;
   /** False when the reader has limited Reader's site access in Chrome; null until known. */
   readonly siteAccess: boolean | null;
   /** Asks Chrome for access to every HTTPS site again; call straight from a click. */

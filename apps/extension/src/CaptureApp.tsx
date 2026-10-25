@@ -66,7 +66,12 @@ export function CaptureApp({
           }
           onSettings={openSettings}
         />
-        {unreadable(controller) ? (
+        {controller.readerPage ? (
+          <section className="page-card">
+            <h1>This is mdbase Reader</h1>
+            <p>Nothing to save here</p>
+          </section>
+        ) : unreadable(controller) ? (
           <section className="page-card">
             <h1>Reader cannot read this page</h1>
             <p>Nothing to save here</p>

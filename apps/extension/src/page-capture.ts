@@ -87,6 +87,14 @@ export async function readSelection(tabId: number): Promise<QuoteSelector | null
   return (await injectPageText(tabId, { action: "selection" })).selection ?? null;
 }
 
+/** Lets go of the page's selection once it has been saved, so the page does not offer it again. */
+export async function clearPageSelection(tabId: number): Promise<void> {
+  await chrome.scripting.executeScript({
+    target: { tabId },
+    func: () => document.getSelection()?.removeAllRanges(),
+  });
+}
+
 /** Tells the panel when the reader selects text, so no extra clicks are needed per highlight. */
 export async function watchTabSelection(tabId: number): Promise<void> {
   await chrome.scripting.executeScript({
