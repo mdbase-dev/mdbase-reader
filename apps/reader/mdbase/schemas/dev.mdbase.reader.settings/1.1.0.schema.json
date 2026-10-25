@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "title": "dev.mdbase.reader.settings 1.0.0",
+  "title": "dev.mdbase.reader.settings 1.1.0",
   "description": "Collection-wide settings that every mdbase Reader client honours. Every field is optional and has a default, so a record with none of them behaves like no record at all.",
   "type": "object",
   "required": ["app", "scope", "settings_version"],
@@ -31,6 +31,27 @@
       "maxLength": 500,
       "default": "{{ id }}",
       "description": "A Knap template for the file name of a new annotation under annotations/, without .md. Only new annotations use it; existing files are never renamed."
+    },
+    "highlight_colors": {
+      "type": "array",
+      "items": { "enum": ["yellow", "green", "blue", "pink", "purple"] },
+      "minItems": 1,
+      "uniqueItems": true,
+      "default": ["yellow", "green", "blue", "pink", "purple"],
+      "description": "The highlight colours Reader offers for new highlights and for recolouring, in order. A colour left out still draws in its colour, shows in filters and can be recoloured; Reader only stops offering it."
+    },
+    "highlight_meanings": {
+      "type": "object",
+      "properties": {
+        "yellow": { "type": "string", "minLength": 1, "maxLength": 40 },
+        "green": { "type": "string", "minLength": 1, "maxLength": 40 },
+        "blue": { "type": "string", "minLength": 1, "maxLength": 40 },
+        "pink": { "type": "string", "minLength": 1, "maxLength": 40 },
+        "purple": { "type": "string", "minLength": 1, "maxLength": 40 }
+      },
+      "additionalProperties": false,
+      "default": {},
+      "description": "What each highlight colour means in this collection, such as Question for pink. Highlights store only their colour, so changing a colour's meaning relabels every highlight already in that colour."
     }
   },
   "additionalProperties": true
