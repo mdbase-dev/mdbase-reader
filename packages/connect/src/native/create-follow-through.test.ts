@@ -124,16 +124,16 @@ function sourcePlan(collection: string): PlannedSourceFileImport {
     title: "Adam",
     savedAt: dateTime(now()),
     recordPath: "sources/adam.md",
-    fallbackRecordPath: "sources/adam-src_adam.md",
+    recordPathCandidates: ["sources/adam.md", "sources/adam-src_adam.md"],
     representations: [],
   };
 }
 
-function note(collection: string, source: string): Annotation {
+function note(collection: string, source: string, owner = "src_adam", id = "ann_note"): Annotation {
   return {
-    id: annotationId("ann_note"),
+    id: annotationId(id),
     collectionId: collectionId(collection),
-    sourceId: sourceId("src_adam"),
+    sourceId: sourceId(owner),
     source,
     annotationType: "note",
     tags: [],
@@ -428,6 +428,59 @@ describe.each([
     expect(
       replica.allRecords.find(({ path }) => path === "sources/adam-src_adam.md")?.body,
     ).toContain("My reading notes.");
+  });
+});
+
+describe("create follow-through and links to other records", () => {
+  it("leaves links to another source alone when a create moves past its taken name", async () => {
+    const { replica, collection } = await offlineDevice();
+    const reading = replica.collection;
+    replica.seed({
+      path: "sources/adam.md",
+      types: ["reader-source"],
+      frontmatter: { id: "src_other", title: "Adam" },
+    });
+    const source = await collection.sourceImports.commitFile(sourcePlan(reading));
+    expect(source.path).toBe("sources/adam-src_adam.md");
+
+    // A highlight on the other source, which really is at sources/adam.md.
+    await collection.annotations.create(
+      note(reading, "[[sources/adam|Adam]]", "src_other"),
+      mutationId("0199a1b2-0000-7000-8000-000000000003"),
+    );
+    expect(recordAt(replica, "annotations/ann_note.md")).toMatchObject({
+      source: "[[sources/adam|Adam]]",
+    });
+  });
+
+  it("follows a refused source's move only for records that link to that source", async () => {
+    const { replica, journal, collection } = await offlineDevice();
+    const reading = replica.collection;
+    await collection.sourceImports.commitFile(sourcePlan(reading));
+    replica.reject(sourceMutation(journal), pathTaken);
+    replica.seed({
+      path: "sources/adam.md",
+      types: ["reader-source"],
+      frontmatter: { id: "src_other", title: "Adam" },
+    });
+    await collection.createFollowThrough?.reconcile();
+    expect(recordAt(replica, "sources/adam-src_adam.md")).toMatchObject({ id: "src_adam" });
+
+    // A pane still showing our source at its old path, and one showing the other source.
+    await collection.annotations.create(
+      note(reading, "[[sources/adam|Adam]]", "src_adam", "ann_stale"),
+      mutationId("0199a1b2-0000-7000-8000-000000000004"),
+    );
+    await collection.annotations.create(
+      note(reading, "[[sources/adam|Adam]]", "src_other", "ann_other"),
+      mutationId("0199a1b2-0000-7000-8000-000000000005"),
+    );
+    expect(recordAt(replica, "annotations/ann_stale.md")).toMatchObject({
+      source: "[[sources/adam-src_adam|Adam]]",
+    });
+    expect(recordAt(replica, "annotations/ann_other.md")).toMatchObject({
+      source: "[[sources/adam|Adam]]",
+    });
   });
 });
 

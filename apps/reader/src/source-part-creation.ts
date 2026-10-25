@@ -1,5 +1,7 @@
 import {
+  authorYearFromCsl,
   sourceId,
+  sourceNotePaths,
   validateCslItem,
   type DocumentDescriptor,
   type DocumentRange,
@@ -165,11 +167,20 @@ export function chapterPlan(
 ): PlannedSourcePart {
   const id = sourceId(`src_${proposal.key}`);
   const resolution = chapterCitation(parent, proposal.title, claims);
+  const title = proposal.title.trim();
+  // A chapter is named like any other source; its author and year tell apart the many
+  // chapters called "Introduction".
+  const recordPathCandidates = sourceNotePaths({
+    title,
+    id,
+    authorYear: authorYearFromCsl(resolution.citation ?? {}),
+  });
   return {
     collectionId: parent.collectionId,
     sourceId: id,
-    recordPath: `sources/parts/${id}.md`,
-    title: proposal.title.trim(),
+    recordPath: recordPathCandidates[0] ?? `sources/${id}.md`,
+    recordPathCandidates,
+    title,
     parent,
     ...(document && proposal.range
       ? { document: { ...document, role: "primary", range: proposal.range } }

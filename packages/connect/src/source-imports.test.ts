@@ -284,7 +284,7 @@ describe("ConnectSourceImportRepository record paths", () => {
     const source = await repository.commitFile({
       ...plan(),
       recordPath: "sources/manuscript.md",
-      fallbackRecordPath: "sources/manuscript-import.md",
+      recordPathCandidates: ["sources/manuscript.md", "sources/manuscript-import.md"],
     });
 
     expect(source.id).toBe("src_import");

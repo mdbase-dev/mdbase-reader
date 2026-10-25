@@ -1,5 +1,5 @@
 import { DomainError } from "../domain/errors.js";
-import { nameWithSuffix, slug, sourceNotePaths } from "../domain/record-names.js";
+import { sourceNotePaths } from "../domain/record-names.js";
 
 import type { SourceFileImportRequest, SourceImportMetadata } from "./ports.js";
 import type { SourceId } from "../domain/identity.js";
@@ -100,12 +100,8 @@ export function safeFileStem(name: string): string {
 }
 
 /**
- * Where a new source note goes, from the naming rules in `domain/record-names.ts`.
- *
- * `recordPathCandidates` is the full ordered list, including the author–year name. Until record
- * creation tries every candidate, `recordPath` and `fallbackRecordPath` keep today's pair: the
- * first usable candidate, and the title with the first 8 characters of the ID, which is unique.
- * The ID alone is used when the title yields no name.
+ * Where a new source note goes, from the naming rules in `domain/record-names.ts`: every path to
+ * try, in order, and the first of them. The record is created at the first one that is free.
  */
 export function sourceRecordPaths(
   title: string,
@@ -113,18 +109,13 @@ export function sourceRecordPaths(
   authorYear?: AuthorYear,
 ): {
   readonly recordPath: string;
-  readonly fallbackRecordPath: string;
   readonly recordPathCandidates: readonly string[];
 } {
   const recordPathCandidates = sourceNotePaths({ title, id, authorYear });
-  const recordPath = recordPathCandidates[0] ?? `sources/${id}.md`;
-  const legacySuffix = id.replace(/^src_/u, "").replace(/-/gu, "").slice(0, 8);
-  // Names that already fit are left exactly as before (every ASCII one does: at most 69 bytes),
-  // because an interrupted import is resumed by reading its record back at this path. Only a
-  // title whose slug overshoots the byte cap with the suffix is cut further.
-  const legacyStem = legacySuffix ? nameWithSuffix(slug(title, 60), `-${legacySuffix}`) : "";
-  const fallbackRecordPath = legacyStem ? `sources/${legacyStem}.md` : `sources/${id}.md`;
-  return { recordPath, fallbackRecordPath, recordPathCandidates };
+  return {
+    recordPath: recordPathCandidates[0] ?? `sources/${id}.md`,
+    recordPathCandidates,
+  };
 }
 
 /**

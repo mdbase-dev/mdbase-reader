@@ -130,6 +130,30 @@ describe("reviewed chapter creation", () => {
     expect(createSourcePart).toHaveBeenCalledExactlyOnceWith(plan);
     expect(chapterPlan(book, proposal, document).sourceId).toBe(plan.sourceId);
   });
+  it("names a chapter like any other source, with the same name on every retry", () => {
+    const plan = chapterPlan(book, { ...proposal, title: " Introduction " }, document, [
+      {
+        field: "issued",
+        value: { "date-parts": [[2019]] },
+        source: { kind: "user" },
+        observedAt: "2026-01-01T00:00:00Z",
+      },
+      {
+        field: "author",
+        value: [{ family: "Smith", given: "Ann" }],
+        source: { kind: "user" },
+        observedAt: "2026-01-01T00:00:00Z",
+      },
+    ]);
+    expect(plan.recordPath).toBe("sources/introduction.md");
+    expect(plan.recordPathCandidates).toEqual([
+      "sources/introduction.md",
+      "sources/introduction-smith-2019.md",
+      "sources/introduction-dkey.md",
+      "sources/introduction-iewedkey.md",
+      "sources/src_reviewed-key.md",
+    ]);
+  });
   it("blocks duplicate ranges and partial indexes, and requires acknowledgement for overlaps", async () => {
     const plan = chapterPlan(book, proposal, document);
     const existing = {
