@@ -84,7 +84,7 @@ test("last current HEAD rejects moved branch even if source remains ancestor", a
 test("ALL production eaa4 installed SDK/UI/protocol/peers match original packages", async () => {
   const repoRoot = process.cwd();
   const installerEvidence = [];
-  const sdkMembers = originalMembers("packages/connect/vendor/sdk-eaa4e697-production-beta141.tgz");
+  const sdkMembers = originalMembers("packages/connect/vendor/sdk-e55d99c0-production-beta141.tgz");
   const uiMembers = originalMembers("vendor/mdbase-dev-ui-dev-b2d7c464.tgz");
   const protocolMembers = originalMembers(
     "packages/connect/vendor/mdbase-dev-connect-protocol-0.1.0-beta.129-c280cd194ffd.tgz",
@@ -248,9 +248,9 @@ async function intakeCopy() {
     await writeFile(
       join(root, path),
       bytes
-        .replaceAll("sdk-eaa4e697-production-beta141.tgz", "sdk-dev-eaa4e697-staging.tgz")
+        .replaceAll("sdk-e55d99c0-production-beta141.tgz", "sdk-dev-eaa4e697-staging.tgz")
         .replaceAll(
-          "sha512-8N1ZcxMinDMyWaQdmxmmu+7/vp0+UdEF7EXw/swCqcS9gFcIQrtL9r2dwKhkdHrnrGJ5qTjS8+3LHVD8yA6CDg==",
+          "sha512-0d4C1KnztaiGjKYhb1tZ7zhRZ8fNw5GdhqD6mng3iDYlQiyEuFySjEgf0yZE19mT/8McHoFpqo58Xh6TF/NfkQ==",
           "sha512-OZcexDhkjwROq0pSf/rSV1aU9H2AArhB5S2/UQU4ZTYMqJz7mpOhSFznZKSjDh6nb4EVROvBS926O3+HUePbjA==",
         ),
     );

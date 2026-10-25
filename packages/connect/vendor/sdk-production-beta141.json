@@ -1,11 +1,11 @@
 {
   "schema": "tnapp/production-sdk-original/1",
-  "source": "eaa4e697fc1198f32fc3714f377342a24c56d985",
-  "sourceTree": "71ddecbca5dd54b5153d6bcd500cc89ce189474e",
-  "archive": "sdk-eaa4e697-production-beta141.tgz",
-  "bytes": 4461602,
-  "sha256": "e64771a90bed2fb3837d4b65df8930fcd124d3059fcb0bcbaf9d64dbfb148205",
-  "sri": "sha512-8N1ZcxMinDMyWaQdmxmmu+7/vp0+UdEF7EXw/swCqcS9gFcIQrtL9r2dwKhkdHrnrGJ5qTjS8+3LHVD8yA6CDg==",
+  "source": "e55d99c0d986e5c17e0dabea0e43305d946190e9",
+  "sourceTree": "6fed01b5dabb1bbb884f92e027401c6bdc50e8f0",
+  "archive": "sdk-e55d99c0-production-beta141.tgz",
+  "bytes": 4463916,
+  "sha256": "f05837e4571a7e528d289dea6a9d2ee2e5c2e3a1e4f8f70fe772a8138e32f970",
+  "sri": "sha512-0d4C1KnztaiGjKYhb1tZ7zhRZ8fNw5GdhqD6mng3iDYlQiyEuFySjEgf0yZE19mT/8McHoFpqo58Xh6TF/NfkQ==",
   "members": 896,
   "environment": "production",
   "trust": {
@@ -46,9 +46,9 @@
     "sha256": "4c72bcc8c2ee9c95663ad4e2edfcf7a52aa2743ed7308b5031570a35982af6e4",
     "clockOverride": false
   },
-  "nativeSource": "725d72b2e43b2b744062e055e43feaeb41838399",
-  "nativeSha256": "6984f87d98e29d9f99c6b07f7728f716d1f7b2e3585a74bcc2046ba259a8afab",
-  "nativeBytes": 3676583,
+  "nativeSource": "b2264a626522413e090b3a480b6f49860fe1df46",
+  "nativeSha256": "bd52c7b44360991b6e89c7f80e3ed4902e2b7e9def827ae4a63825ca98f8a8d1",
+  "nativeBytes": 3682463,
   "packagedTrustModuleSha256": "cf9690968d68b3c1eed2356ccfa2c72198b2f8cf07b9b24b1bb7be499b05bffb",
   "dependencies": [
     {
@@ -68,10 +68,10 @@
     "newOpsAuthentication": false
   },
   "receiptPurpose": "Unsigned context+verifier binding only; not SDK/native authentication",
-  "newNativeOrHelperBuild": false,
+  "newNativeOrHelperBuild": true,
   "clockOverride": false,
   "registryPublication": false,
-  "sourceCommit": "eaa4e697fc1198f32fc3714f377342a24c56d985",
-  "artifact": "sdk-eaa4e697-production-beta141.tgz",
+  "sourceCommit": "e55d99c0d986e5c17e0dabea0e43305d946190e9",
+  "artifact": "sdk-e55d99c0-production-beta141.tgz",
   "version": "0.0.0"
 }

@@ -72,7 +72,7 @@ test("archive tampering refuses before any SDK import", async (t) => {
 
 test("a rehashed production archive cannot masquerade as LAB", async (t) => {
   const { root, path, pin } = await fixture(t, "@mdbase-dev/sdk");
-  const production = "sdk-eaa4e697-production-beta141.tgz";
+  const production = "sdk-e55d99c0-production-beta141.tgz";
   const bytes = await readFile(join(repo, vendor, production));
   await cp(join(repo, vendor, production), join(root, vendor, production));
   await writeFile(
