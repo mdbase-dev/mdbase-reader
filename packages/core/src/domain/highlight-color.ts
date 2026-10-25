@@ -104,3 +104,66 @@ export function highlightColorSpec(value: string | null | undefined): HighlightC
   const shade = { wash: color, ink: color };
   return { key: null, label: color, light: shade, dark: shade, washOpacity: 0.38 };
 }
+
+/**
+ * What each colour means in a collection ("Key idea", "Question"). Annotations store only the
+ * colour key, so a meaning names every highlight of its colour, old and new.
+ */
+export type HighlightMeanings = Readonly<Partial<Record<HighlightColorKey, string>>>;
+
+/** Longer meanings would not fit a tooltip or a card's meta line. */
+export const highlightMeaningMaxLength = 40;
+
+/** A meaning as stored: spaces collapsed, trimmed and clipped; "" when there is none. */
+export function cleanHighlightMeaning(value: unknown): string {
+  return typeof value === "string"
+    ? value.replace(/\s+/gu, " ").trim().slice(0, highlightMeaningMaxLength)
+    : "";
+}
+
+/**
+ * The meanings a stored object gives, in palette order. Unknown colours and blank or non-text
+ * meanings are dropped; anything but an object gives none.
+ */
+export function readHighlightMeanings(value: unknown): HighlightMeanings {
+  if (typeof value !== "object" || value === null || Array.isArray(value)) {
+    return {};
+  }
+  const meanings: Partial<Record<HighlightColorKey, string>> = {};
+  for (const key of highlightColorKeys) {
+    const meaning = cleanHighlightMeaning((value as Record<string, unknown>)[key]);
+    if (meaning) {
+      meanings[key] = meaning;
+    }
+  }
+  return meanings;
+}
+
+/**
+ * The colours a stored list offers, in its order: palette keys only, each once. Unknown entries,
+ * such as a colour from a newer Reader, are skipped. May be empty.
+ */
+export function readHighlightColorList(value: unknown): readonly HighlightColorKey[] {
+  if (!Array.isArray(value)) {
+    return [];
+  }
+  const colors: HighlightColorKey[] = [];
+  for (const entry of value) {
+    if (isHighlightColorKey(entry) && !colors.includes(entry)) {
+      colors.push(entry);
+    }
+  }
+  return colors;
+}
+
+/**
+ * The colour a new highlight takes: the preferred one while it is offered, else the first
+ * colour offered. The preference itself is kept until a highlight is made, so showing its
+ * colour again before then brings it back.
+ */
+export function offeredHighlightColor(
+  preferred: HighlightColorKey,
+  offered: readonly HighlightColorKey[],
+): HighlightColorKey {
+  return offered.includes(preferred) ? preferred : (offered[0] ?? preferred);
+}

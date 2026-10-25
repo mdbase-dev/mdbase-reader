@@ -4,8 +4,12 @@ import {
   highlightColorKey,
   highlightColorKeys,
   highlightColorSpec,
+  highlightMeaningMaxLength,
   highlightPalette,
   normalizeHighlightColor,
+  offeredHighlightColor,
+  readHighlightColorList,
+  readHighlightMeanings,
 } from "./highlight-color.js";
 
 describe("highlight colours", () => {
@@ -57,5 +61,35 @@ describe("highlight colours", () => {
         expect(value).toMatch(/^#[0-9a-f]{6}$/u);
       }
     }
+  });
+});
+
+describe("collection highlight settings", () => {
+  it("reads an offered colour list in its order, skipping unknown and repeated colours", () => {
+    expect(readHighlightColorList(["pink", "orange", "yellow", "pink"])).toEqual([
+      "pink",
+      "yellow",
+    ]);
+    expect(readHighlightColorList(["Pink"])).toEqual([]);
+    expect(readHighlightColorList("pink")).toEqual([]);
+  });
+
+  it("reads meanings for palette colours only, cleaned and bounded", () => {
+    expect(
+      readHighlightMeanings({
+        blue: "x".repeat(80),
+        yellow: "  Key   idea ",
+        orange: "No",
+        pink: 3,
+      }),
+    ).toEqual({ yellow: "Key idea", blue: "x".repeat(highlightMeaningMaxLength) });
+    expect(readHighlightMeanings(["yellow"])).toEqual({});
+    expect(readHighlightMeanings(null)).toEqual({});
+  });
+
+  it("takes the preferred colour while it is offered, else the first offered", () => {
+    expect(offeredHighlightColor("green", highlightColorKeys)).toBe("green");
+    expect(offeredHighlightColor("green", ["blue", "pink"])).toBe("blue");
+    expect(offeredHighlightColor("green", [])).toBe("green");
   });
 });

@@ -83,6 +83,24 @@ describe("resolveAppSettings", () => {
   });
 });
 
+describe("reading a field", () => {
+  it("reads a usable value through the field's reader, such as dropping unknown entries", () => {
+    const listed: AppSettingsDefinition<{ readonly tags: readonly string[] }> = {
+      ...definition,
+      fields: {
+        tags: {
+          default: [],
+          problem: (value) => (Array.isArray(value) ? undefined : "Needs a list."),
+          read: (value) => (value as unknown[]).filter((tag) => typeof tag === "string"),
+        },
+      },
+    };
+    const resolved = resolveAppSettings(listed, { ...record, tags: ["a", 3, "b"] });
+    expect(resolved.values.tags).toEqual(["a", "b"]);
+    expect(resolved.stored).toEqual({ tags: ["a", "b"] });
+  });
+});
+
 describe("appSettingsPatch", () => {
   it("patches only the settings that change", () => {
     expect(appSettingsPatch(definition, record, { greeting: "hi", limit: 5 })).toEqual({
