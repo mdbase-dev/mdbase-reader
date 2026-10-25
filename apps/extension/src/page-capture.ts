@@ -48,7 +48,8 @@ export async function captureSocialTab(
   const [execution] = await chrome.scripting.executeScript({
     target: { tabId },
     func: async (postId?: string) => globalThis.mdbaseReaderSocialPage?.capture(postId) ?? null,
-    args: [id],
+    // Chrome refuses `undefined` as an injection argument.
+    args: id === undefined ? [] : [id],
   });
   return execution?.result ?? null;
 }
