@@ -51,12 +51,17 @@ template checks.
   is not a string, is empty or is over 500 characters takes its default with a warning.
   A template Knap can't parse also takes its default with a warning. The record is never
   rewritten on read.
-- **Live edits.** On native collections the store follows the change feed. It reloads
-  on a reset, or on a change to its own path. Legacy Connect collections have no feed,
+- **Live edits.** On native collections the store follows the change feed from its
+  first read until the collection is disposed, whether or not a screen is open. It
+  reloads on a reset, or on a change to its own path. Legacy Connect collections have no feed,
   so their settings load once per session.
 - **Save.**
   - The first save creates the record at the fixed path. If another client created it
-    first, the store re-reads it and updates.
+    first, the store re-reads it and updates. A native first save can return pending
+    and then be refused at head (`path_taken`). The store remembers it, and on the next
+    reload it saves the same changes again as a patch, with "no record" as the base.
+    So a field that both devices set becomes a conflict, and the other device's value
+    stays.
   - Later saves patch only the changed fields, using `ifRevision`. `null` removes a
     field. Unknown keys and the body are kept.
   - On a revision conflict, the store re-reads and retries once. If the same field
@@ -97,6 +102,8 @@ unicode and long titles.
   - Annotations: `id`, `short_id`, `type`, `quote`, `words`, `page`, `color`, `date`
     and `source_stem`.
 - **Safety.** The rendered name goes through core `safeName`, segment by segment.
+  - `safeName` turns `#`, `^`, `[` and `]` into spaces, as well as the characters file
+    systems refuse, so a wikilink or transclusion to the record still resolves.
   - Only source templates may contain `/`, with at most `maxPreferredFolders` (3)
     folders under `sources/`. In an annotation name, `/` becomes a space.
   - The rendered name is the first candidate. The usual fallbacks follow: author and
