@@ -158,6 +158,61 @@ the page-status badge were not exercised end to end.
   Reader's own theme setting is separate, since it lives on another origin.
 - **PDFs.** After saving a PDF, _Open in Reader to highlight_ is the panel's main action.
 
+## Panel layout, highlighting and the literature note (2026-10-25)
+
+This pass supersedes the colour buttons, status line and saved-page list described above.
+
+- **Layout.** As in Reader's inspector, the header and page card (title, host, one status line
+  and the save action) are a fixed head; connection steps, problems and the **Highlights**,
+  **Literature note** and **Citation** tabs scroll beneath it, the tab strip pinned at the top. A
+  new selection switches to Highlights unless a field is being typed in. Under 350 px the strip
+  names only the open tab.
+- **One Highlight action.** A selected passage has one primary **Highlight** button in the
+  chosen colour, with the collection's offered colours beside it as a radio group, in order, named
+  with their meanings. The choice starts at this device's last colour (or the first offered).
+  `1`–`n` still highlight in that colour at once and `Esc` clears the selection; Ctrl/⌘+Enter
+  presses Highlight.
+- **One status line.** It sits under the page title: progress, a notice, or _Saved_ /
+  _In your collection_, with **Open in Reader** and **Undo** beside it. The separate status band,
+  the Save bar's saved line and the list's count are gone; the Highlights tab counts saved
+  highlights once there are any.
+- **Plain problems.** Problems say what happened and what to do, in sentence case, with one action
+  (_Check again_ after an unconfirmed save, which looks for what the last attempt saved before
+  creating anything). The underlying message sits under _Technical details_.
+- **Nothing unusable before connecting.** Until a collection is connected, the Save button and the
+  Highlights and Literature note forms give way to one line naming the step in the connection
+  controls that unlocks them. The Citation tab still previews what was found.
+- **Citations.** A saved source's citation is formatted as Reader formats it (APA 7th, citeproc
+  and the CSL styles bundled with `@citation-js/plugin-csl`, now shared as
+  `@mdbase-reader/ui/citation`), with one **Copy citation** action; the citekey and CSL-JSON are
+  in a small menu beside it. citeproc loads on first use and needs no `eval`, so the extension's
+  CSP is unchanged.
+- **Highlights in Reader.** Each saved highlight has **Open in Reader**, which opens its source
+  with `annotation=<record path or id>`, the deep link Reader already reveals.
+- **Literature note.** A saved source's title, tags and note autosave through one SDK record
+  session (`source-note-session.ts`) with field-level conflicts: a field changed elsewhere and not
+  here is taken in; one changed in both places stops for _Keep mine_ or _Use theirs_, with the
+  other version under a disclosure and the tab flagged. Unsaved edits, title and tags included,
+  are kept in `chrome.storage.session` and restored when the panel opens again; a write whose
+  outcome is unknown is recovered exactly before anything new is sent. Each saved or refreshed
+  copy updates the page title. A cleared title is never saved.
+- **Following changes.** There is no Refresh button: the note, its source and the page's
+  highlights are read again when the panel regains focus or visibility (highlights at most every
+  five seconds), and the highlight colours on each new selection as well.
+
+Limits accepted in this pass:
+
+- The record session lives in the panel, not the SDK host: a session object cannot cross the
+  allow-listed RPC, so the panel's session wraps the allow-listed `sources.get`, `updateFields`
+  and `updateBody` calls, as before.
+- `sources.updateFields` takes no revision. The session checks the revision just before writing
+  the title or tags, so a change to those two fields made elsewhere in that moment is
+  overwritten. When the title or tags and the note change together they are two writes; if the
+  second fails, the first is kept and the next save finishes the rest.
+- An interrupted title or tag write is not exactly recoverable (body recovery covers the note
+  only); it surfaces as a failed save to try again.
+- Changes are picked up on focus and visibility, not by watching the collection's change feed.
+
 ## Remaining boundaries
 
 Selection capture targets the top-level page, not cross-origin embedded frames or text inside
