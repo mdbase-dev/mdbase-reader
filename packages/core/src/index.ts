@@ -25,6 +25,7 @@ export * from "./domain/document.js";
 export * from "./domain/errors.js";
 export * from "./domain/highlight-color.js";
 export * from "./domain/identity.js";
+export * from "./domain/record-names.js";
 export * from "./domain/revision.js";
 export type * from "./domain/search.js";
 export * from "./domain/search-destination.js";

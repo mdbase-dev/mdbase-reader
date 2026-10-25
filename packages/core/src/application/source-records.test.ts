@@ -55,6 +55,12 @@ describe("createSourceRecord", () => {
       savedAt: "2026-09-25T00:00:00.000Z",
       recordPath: "sources/crime-and-punishment.md",
       fallbackRecordPath: "sources/crime-and-punishment-new.md",
+      recordPathCandidates: [
+        "sources/crime-and-punishment.md",
+        "sources/crime-and-punishment-dostoevsky-2002.md",
+        "sources/crime-and-punishment-new.md",
+        "sources/src_new.md",
+      ],
       representations: [],
       metadata: { authors: ["Fyodor Dostoevsky"], published: "2002" },
       url: "https://doi.org/10.4324/9780203168455",

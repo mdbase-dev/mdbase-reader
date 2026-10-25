@@ -1,7 +1,9 @@
 import { DomainError } from "../domain/errors.js";
+import { nameWithSuffix, slug, sourceNotePaths } from "../domain/record-names.js";
 
 import type { SourceFileImportRequest, SourceImportMetadata } from "./ports.js";
 import type { SourceId } from "../domain/identity.js";
+import type { AuthorYear } from "../domain/record-names.js";
 
 export function webUrl(value: string): string {
   let url: URL;
@@ -98,28 +100,50 @@ export function safeFileStem(name: string): string {
 }
 
 /**
- * Where a new source note goes: a readable name from its title, and a fallback made unique by the
- * source ID for when that name is taken. The ID alone is used when the title yields no name.
+ * Where a new source note goes, from the naming rules in `domain/record-names.ts`.
+ *
+ * `recordPathCandidates` is the full ordered list, including the author–year name. Until record
+ * creation tries every candidate, `recordPath` and `fallbackRecordPath` keep today's pair: the
+ * first usable candidate, and the title with the first 8 characters of the ID, which is unique.
+ * The ID alone is used when the title yields no name.
  */
 export function sourceRecordPaths(
   title: string,
   id: SourceId,
-): { readonly recordPath: string; readonly fallbackRecordPath: string } {
-  const slug = title
-    .normalize("NFKC")
-    .toLocaleLowerCase()
-    .replace(/['\u2019]/gu, "")
-    .replace(/[^\p{Letter}\p{Number}]+/gu, "-")
-    .replace(/^-+|-+$/gu, "");
-  const stem = Array.from(slug).slice(0, 60).join("").replace(/-+$/u, "");
-  if (!stem) {
-    return { recordPath: `sources/${id}.md`, fallbackRecordPath: `sources/${id}.md` };
+  authorYear?: AuthorYear,
+): {
+  readonly recordPath: string;
+  readonly fallbackRecordPath: string;
+  readonly recordPathCandidates: readonly string[];
+} {
+  const recordPathCandidates = sourceNotePaths({ title, id, authorYear });
+  const recordPath = recordPathCandidates[0] ?? `sources/${id}.md`;
+  const legacySuffix = id.replace(/^src_/u, "").replace(/-/gu, "").slice(0, 8);
+  // Names that already fit are left exactly as before (every ASCII one does: at most 69 bytes),
+  // because an interrupted import is resumed by reading its record back at this path. Only a
+  // title whose slug overshoots the byte cap with the suffix is cut further.
+  const legacyStem = legacySuffix ? nameWithSuffix(slug(title, 60), `-${legacySuffix}`) : "";
+  const fallbackRecordPath = legacyStem ? `sources/${legacyStem}.md` : `sources/${id}.md`;
+  return { recordPath, fallbackRecordPath, recordPathCandidates };
+}
+
+/**
+ * The first author's family name and the publication year from import metadata, when both are
+ * present. An author written `Family, Given` gives the part before the comma; otherwise the last
+ * word is taken as the family name.
+ */
+export function authorYearFromMetadata(
+  metadata: SourceImportMetadata | undefined,
+): AuthorYear | undefined {
+  const author = metadata?.authors?.[0]?.trim();
+  const year = /(?<!\d)\d{4}(?!\d)/u.exec(metadata?.published ?? "")?.[0];
+  if (!author || !year) {
+    return undefined;
   }
-  const suffix = id.replace(/^src_/u, "").replace(/-/gu, "").slice(0, 8);
-  return {
-    recordPath: `sources/${stem}.md`,
-    fallbackRecordPath: `sources/${stem}-${suffix}.md`,
-  };
+  const family = author.includes(",")
+    ? author.slice(0, author.indexOf(","))
+    : (author.split(/\s+/u).at(-1) ?? author);
+  return family.trim() ? { family: family.trim(), year } : undefined;
 }
 
 export function titleFromFileName(name: string): string {

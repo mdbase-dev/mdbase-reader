@@ -152,13 +152,19 @@ and extends `sourceRecordPaths` (`source-import-values.ts:104-123`) and
 
 1. Apply `NFKC`, then lowercase with `toLowerCase()`. Not `toLocaleLowerCase()`: that
    gives different output on Turkish locales.
-2. Drop `'` and `’`.
+2. Drop `'` and `’`, and the characters the engine refuses as ignorable that sit
+   inside a word (Hangul fillers, variation selectors, ZWJ, the soft hyphen, the word
+   joiner, tags). The other ignorables (zero-width space, ZWNJ, bidi controls) are
+   separators.
 3. Replace each run of characters other than `\p{L}`, `\p{M}` and `\p{N}` with `-`.
    Adding `\p{M}` is a fix: today's regex breaks Devanagari, Thai and other scripts
-   with combining marks.
+   with combining marks. A mark is kept only after a kept letter or digit.
 4. Trim `-` from both ends.
-5. Truncate at a grapheme boundary (`Intl.Segmenter`) to `maxCodePoints`, and to at
-   most **120 UTF-8 bytes**. Then trim a trailing `-`. The byte cap keeps names under
+5. Truncate to `maxCodePoints`, and to at most **120 UTF-8 bytes**, by a fixed
+   code-point rule rather than `Intl.Segmenter`, whose grapheme rules change between
+   ICU versions. Never cut before a mark, a variation selector, a skin tone, ZWJ or
+   ZWNJ; after a virama or ZWJ before a letter or pictograph; or inside a flag or a
+   Hangul jamo syllable. Then trim a trailing `-`. The byte cap keeps names under
    eCryptfs's 143-byte limit and well under 255.
 6. Emit NFC.
 
@@ -167,18 +173,23 @@ name. The allowed characters already exclude everything Windows forbids
 (`<>:"/\|?*`, control characters, a trailing dot or space), and a name can never start
 with `.`.
 
-**Reserved names.** A slug whose first dot-segment is `con`, `prn`, `aux`, `nul`,
-`com0`-`com9`, `lpt0`-`lpt9`, or one of these with a superscript digit, counts as taken
-and moves to the next candidate. The engine refuses these anyway (`crates/core/src/paths.rs`
-tests 477-487). An empty slug also moves to the next candidate.
+**Reserved names.** A name the engine's `check_path` would refuse as a path segment
+counts as taken and moves to the next candidate (`crates/core/src/paths.rs:689-839`).
+For slugs that means a first dot-segment of `con`, `prn`, `aux`, `nul`, `conin$`,
+`conout$`, `clock$`, `com0`-`com9`, `lpt0`-`lpt9`, or one of the last two with a
+superscript digit. `isReservedName` also applies the engine's other segment rules
+(ignorable and control characters, `~1` short names, `node_modules`, hidden names),
+and a test checks generated names against a port of `check_path`. An empty slug also
+moves to the next candidate.
 
 **Case and normalization.** Output is lowercase NFC, so Reader never writes two names
 that differ only in case. The engine compares path keys,
 `NFC(casefold_full(NFC(path)))` (`crates/core/src/paths.rs:18-20`,
 `unicode/mod.rs:47-61`). That catches collisions with user-made files such as `Adam.md`,
 or `ß` against `ss`, on every replica, so macOS and Windows behave the same. Tidy's
-planner keeps an approximate key (`NFC` + `toLowerCase`) to avoid proposing two
-targets in one plan. The engine stays authoritative.
+planner keeps an approximate key (`NFC`, then each code point upper- and lowercased,
+with `ı` and `ẞ` fixed up to match full case folding) to avoid proposing two targets
+in one plan. The engine stays authoritative.
 
 **Collision suffix.** `-<4 hex>` taken from the **end** of the record's own ID (the
 random part, which also holds for UUIDv7). Examples: `p6-we-propose-adam-7c2e.md`,
@@ -198,9 +209,13 @@ Candidate 2 is not special to chapters. It is what keeps the many `Introduction`
 chapters readable.
 
 **Annotation** `annotations/<source-stem>/<leaf>.md`. `<source-stem>` is the current
-stem of the owning source's note: the chapter for a chapter annotation. A stem that is
-not slug-shaped, such as a note the user renamed `Adam (Kingma 2014)`, goes through
-`slug(…, 60)`. The leaf is at most 64 code points before the suffix:
+stem of the owning source's note: the chapter for a chapter annotation. A stem the
+generator wrote (or the source's ID) is the folder as written, however long. A stem
+the user renamed, such as `Adam (Kingma 2014)`, goes through `slug(…, 60)`. Folders
+are not records, so the engine never refuses two sources one folder:
+`sourceFolderNames` follows the folder with `-<4 hex>`, `-<8 hex>` of the source ID
+and the ID, and the caller takes the first that no other source uses. The leaf is at
+most 64 code points before the suffix:
 
 | Kind                      | Leaf                                                           | Example                          |
 | ------------------------- | -------------------------------------------------------------- | -------------------------------- |
@@ -216,7 +231,7 @@ not slug-shaped, such as a note the user renamed `Adam (Kingma 2014)`, goes thro
 
 - `<words>` comes from `quote.exact` (or the body for notes). Take whole words until 6
   words or 40 code points, whichever comes first. Text without spaces (CJK, Thai) gets
-  the first 16 graphemes.
+  the first 16 characters with their marks (the same cutting rule as step 5).
 - EPUB and HTML highlights get no locator token. Chapter titles are long, and percentages
   mean little in a file name. The source folder plus the quote is enough.
 - Page numbers are not zero-padded. Finder, Explorer and Obsidian sort numbers naturally.
