@@ -10,6 +10,7 @@ import { useExtensionCapture } from "./use-extension-capture.js";
 
 import type { CitationPreview } from "./capture-citation.js";
 import type { ExtensionCaptureController } from "./capture-controller.js";
+import type * as CaptureModel from "./capture-model.js";
 
 const mocks = vi.hoisted(() => ({
   start: vi.fn(),
@@ -84,10 +85,15 @@ vi.mock("./connect-session.js", () => ({
   createExtensionSession: mocks.createSession,
   rememberCollection: mocks.rememberCollection,
 }));
-vi.mock("./capture-model.js", () => ({
-  problemMessage: (reason: Error) => reason.message,
-  sourceForUrl: mocks.sourceForUrl,
-}));
+vi.mock("./capture-model.js", async (importOriginal) => {
+  const { PlainError, plainMessage } = await importOriginal<typeof CaptureModel>();
+  return {
+    PlainError,
+    plainMessage,
+    problemMessage: (reason: Error) => reason.message,
+    sourceForUrl: mocks.sourceForUrl,
+  };
+});
 vi.mock("./capture-citation.js", () => ({ prepareCitation: mocks.prepareCitation }));
 vi.mock("./save-capture.js", () => ({
   CaptureWriter: class {
@@ -321,7 +327,7 @@ it("reports a source as saved even if refreshing its annotations fails", async (
   expect(controller.source?.title).toBe("[test] Saved");
   expect(controller.status).toBe("existing");
   expect(controller.problem).toBeNull();
-  expect(controller.notice).toContain("Saved safely");
+  expect(controller.notice).toContain("there is no need to save again");
 });
 it("releases Save and clears write progress before a slow refresh finishes", async () => {
   await mount();
@@ -1037,13 +1043,13 @@ it("keeps a highlight that other notes link to when undo is pressed", async () =
     await controller.undoHighlight();
   });
   expect(mocks.deleteAnnotation).not.toHaveBeenCalled();
-  expect(controller.problem).toContain("Other notes already link to this highlight");
+  expect(controller.problem).toContain("Other notes link to this highlight, so it was kept");
   expect(controller.undoable).toBe(false);
 });
 it("drops the previous page's lookup notice when the tab moves to another page", async () => {
   mocks.sourceForUrl.mockRejectedValueOnce(new Error("lookup unavailable"));
   await mount();
-  expect(controller.notice).toContain("Could not check existing sources");
+  expect(controller.notice).toContain("We couldn’t check whether this page is already saved");
   mocks.captureTab.mockResolvedValue({
     ...page,
     canonicalUrl: "https://example.com/next",

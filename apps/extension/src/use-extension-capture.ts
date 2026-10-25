@@ -2,7 +2,7 @@ import { offeredHighlightColor } from "@mdbase-reader/core";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import { prepareCitation, type CitationPreview } from "./capture-citation.js";
-import { problemMessage, sourceForUrl } from "./capture-model.js";
+import { PlainError, problemMessage, sourceForUrl } from "./capture-model.js";
 import { connectionUnavailableMessage } from "./connection-view.js";
 import { rememberColor } from "./drafts.js";
 import { annotationQuotes } from "./page-annotations.js";
@@ -180,15 +180,16 @@ export function useExtensionCapture(
           }
         } catch (reason) {
           if (epoch === discovery.current) {
-            setNotice(`Could not show your highlights on this page: ${problemMessage(reason)}`);
+            setNotice(`Your highlights couldn’t be shown on this page. ${problemMessage(reason)}`);
           }
         }
       } else {
         void markSavedPage(tabId, 0).catch(() => undefined);
       }
-    })().catch((reason: unknown) => {
+    })().catch(() => {
       if (epoch === discovery.current) {
-        setNotice(`Could not check existing sources: ${problemMessage(reason)}`);
+        // Saving still checks for the page first, so nothing is saved twice.
+        setNotice("We couldn’t check whether this page is already saved. Saving checks again.");
       }
     });
     return () => {
@@ -294,10 +295,12 @@ export function useExtensionCapture(
     return lock.run(async () => {
       const collection = extension?.connectedCollection();
       if (!collection || !writer) {
-        throw new Error(connectionUnavailableMessage(connection.snapshot));
+        throw new PlainError(connectionUnavailableMessage(connection.snapshot));
       }
       if (!capture) {
-        throw new Error("The page is not ready. Reopen Reader on this page before saving.");
+        throw new PlainError(
+          "The page isn’t ready yet. Press the toolbar button on this page again, then save.",
+        );
       }
       const draft = draftForSave(stored.draft, changes, highlight.colors);
       const changedTitle = draft.title !== stored.draft.title;
@@ -370,7 +373,7 @@ export function useExtensionCapture(
     lock.run(async () => {
       const collection = extension?.connectedCollection();
       if (!collection || !writer) {
-        throw new Error(connectionUnavailableMessage(connection.snapshot));
+        throw new PlainError(connectionUnavailableMessage(connection.snapshot));
       }
       setStatus("saving");
       let count = 0;
@@ -378,7 +381,9 @@ export function useExtensionCapture(
         for (const id of ids) {
           const post = await captureSocialTab(tabId, id);
           if (!post?.post) {
-            throw new Error("The chosen post is not loaded anymore.");
+            throw new PlainError(
+              "That post isn’t loaded on the page anymore. Scroll to it and try again.",
+            );
           }
           const result = await writer.save({
             collection,
@@ -406,8 +411,9 @@ export function useExtensionCapture(
           .sendMessage({ type: "mdbase-reader/posts-refresh", tabId })
           .catch(() => undefined);
       } catch (reason) {
-        throw new Error(
-          `${String(count)} posts confirmed before the failure. Retry checks each post for duplicates. ${problemMessage(reason)}`,
+        throw new PlainError(
+          `${String(count)} of ${String(ids.length)} posts saved before something went wrong. Try again: posts already saved won’t be saved twice.`,
+          { cause: reason },
         );
       } finally {
         setStatus("ready");
@@ -456,10 +462,10 @@ export function useExtensionCapture(
           () => undefined,
         );
       }
-    } catch (reason) {
+    } catch {
       if (epoch === refreshEpoch.current) {
         setNotice(
-          `Saved safely. Could not refresh highlights on this page: ${problemMessage(reason)}. Retry refreshing highlights; do not save again.`,
+          "Saved. The highlights on this page couldn’t be updated; there is no need to save again.",
         );
       }
     } finally {
@@ -516,7 +522,7 @@ export function useExtensionCapture(
   const editing = (): { collection: ReaderConnectedCollection; writer: CaptureWriter } => {
     const collection = extension?.connectedCollection();
     if (!collection || !writer) {
-      throw new Error(connectionUnavailableMessage(connection.snapshot));
+      throw new PlainError(connectionUnavailableMessage(connection.snapshot));
     }
     return { collection, writer };
   };
@@ -549,8 +555,8 @@ export function useExtensionCapture(
       const plan = await writer.planDeletion(collection, annotation);
       if (plan.brokenLinkPaths.length) {
         setUndoable(null);
-        throw new Error(
-          "Other notes already link to this highlight. Delete it from Saved highlights to review them first.",
+        throw new PlainError(
+          "Other notes link to this highlight, so it was kept. Delete it from the list below to see which.",
         );
       }
       await writer.delete(collection, annotation, plan);
@@ -619,6 +625,7 @@ export function useExtensionCapture(
     status,
     problem: lock.problem ?? connectionLock.problem,
     problemKind: lock.problem ? lock.problemKind : connectionLock.problemKind,
+    problemSummary: lock.problem ? lock.problemSummary : connectionLock.problemSummary,
     notice: lock.notice ?? connectionLock.notice,
     ...visibleSourceState(pageUrl, source, annotations, projection),
     citation,

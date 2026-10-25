@@ -65,6 +65,17 @@ export async function sourceForUrl(
   return null;
 }
 
+/**
+ * A failure the panel words itself, plainly enough to show as it is. Any other failure is
+ * summarised by the panel, with its own message kept under Technical details.
+ */
+export class PlainError extends Error {}
+
+/** The plain summary of a failure, when it has one. */
+export function plainMessage(reason: unknown): string | null {
+  return reason instanceof PlainError ? reason.message : null;
+}
+
 export function problemMessage(reason: unknown): string {
   if (!(reason instanceof Error)) {
     return String(reason);

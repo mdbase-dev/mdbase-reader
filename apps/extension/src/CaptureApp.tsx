@@ -260,10 +260,10 @@ function statusMessage(c: ExtensionCaptureController): string | null {
     return c.notice;
   }
   if (c.status === "saved") {
-    return "Source saved in mdbase.";
+    return "Saved to your collection.";
   }
   if (c.saveAttempted && !c.source && !c.busy) {
-    return "Save not confirmed. Retry to check its outcome.";
+    return "We couldn’t confirm this saved. Saving again checks first, so nothing is saved twice.";
   }
   return c.draftRestored ? "Restored your unsaved note from earlier." : null;
 }
@@ -271,13 +271,13 @@ function statusMessage(c: ExtensionCaptureController): string | null {
 function importProgressMessage(p: ExtensionCaptureController["progress"]): string | null {
   switch (p?.phase) {
     case "uploading":
-      return `Uploading file ${String(p.fileIndex)} of ${String(p.fileCount)} · ${String(p.totalBytes ? Math.round((p.completedBytes / p.totalBytes) * 100) : 0)}%`;
+      return `Uploading ${p.fileCount > 1 ? `file ${String(p.fileIndex)} of ${String(p.fileCount)}` : "the page"} · ${String(p.totalBytes ? Math.round((p.completedBytes / p.totalBytes) * 100) : 0)}%`;
     case "recovering":
-      return "Checking files from the previous save attempt…";
+      return "Checking what the last attempt saved…";
     case "creating":
-      return "Saving source record…";
+      return "Saving the page…";
     case "checking":
-      return "Checking for duplicates…";
+      return "Checking whether it’s already saved…";
     default:
       return null;
   }

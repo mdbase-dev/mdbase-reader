@@ -1,6 +1,7 @@
 import { Select } from "@mdbase-dev/ui/select";
 
 import { environment } from "./environment.js";
+import { TechnicalDetails } from "./TechnicalDetails.js";
 
 import type { ExtensionCaptureController } from "./capture-controller.js";
 import type { ConnectionView } from "./connection-view.js";
@@ -235,6 +236,10 @@ function shownProblemKind(c: ExtensionCaptureController): ProblemKind | null {
   return !c.problem || (kind === "page" && !c.capture) ? null : kind;
 }
 
+/**
+ * A problem said plainly: what happened, what to do, and the one action that does it. The
+ * underlying message, which may name codes and internals, waits under Technical details.
+ */
 export function ConnectionProblem({
   controller: c,
 }: {
@@ -245,34 +250,21 @@ export function ConnectionProblem({
     return null;
   }
   const originDenied = /origin.*not allowed|origin_denied/iu.test(c.problem);
+  const summary = c.problemSummary ?? null;
   return (
     <section className="problem" role="alert">
       <strong>{problemTitle(c, kind)}</strong>
-      {c.saveAttempted && !c.source ? (
-        <p>Retry Save to check for an existing source before creating anything else.</p>
-      ) : null}
-      <p>{c.problem}</p>
-      {originDenied ? (
-        <details className="technical">
-          <summary>Technical details</summary>
+      <p>{summary ?? problemAdvice(c, kind)}</p>
+      <ProblemActions controller={c} kind={kind} />
+      <TechnicalDetails detail={summary === c.problem ? null : c.problem}>
+        {originDenied ? (
           <p>
             Connect rejected this extension’s origin. Reload the current extension build and retry.
             If it persists, check the {environment.label || "mdbase"} Connect configuration; Reader
             will not bypass the origin check.
           </p>
-        </details>
-      ) : null}
-      {kind === "page" ? (
-        <p>
-          Reload the page, then press the mdbase Reader toolbar button again. Some pages, such as
-          the Chrome Web Store and browser settings, cannot be read by extensions.
-        </p>
-      ) : (
-        <p>
-          Your selection and note are kept for this browser session, even if you close the panel.
-        </p>
-      )}
-      <ProblemActions controller={c} kind={kind} />
+        ) : null}
+      </TechnicalDetails>
     </section>
   );
 }
@@ -289,8 +281,9 @@ function ProblemActions({
   return (
     <div className="problem-actions">
       {kind === "save" ? (
+        // Saving again looks for what the last attempt saved before creating anything.
         <button type="button" disabled={c.busy} onClick={() => void c.save()}>
-          Retry save
+          {c.saveAttempted && !c.source ? "Check again" : "Try again"}
         </button>
       ) : null}
       {kind === "page" ? null : sdkProblem?.action && sdkProblem.actionLabel ? (
@@ -303,7 +296,7 @@ function ProblemActions({
         </button>
       ) : kind === "connection" ? (
         <button type="button" disabled={c.busy} onClick={() => void c.retry()}>
-          Retry connection
+          Try again
         </button>
       ) : null}
       {kind !== "page" && !sdkProblem ? (
@@ -321,11 +314,27 @@ function problemTitle(
 ): string {
   if (c.source) {
     return kind === "page"
-      ? "Saved. This page could not be updated."
-      : "Source saved. This action did not finish.";
+      ? "Saved, but this page couldn’t be updated"
+      : "Saved, but the last change didn’t finish";
   }
   if (c.saveAttempted) {
-    return "Save not confirmed";
+    return "We couldn’t confirm this saved";
   }
-  return kind === "page" ? "Reader cannot read this page" : "Not connected";
+  return kind === "page" ? "Reader can’t read this page" : "We couldn’t reach your collection";
+}
+
+/** What to do next, in plain words, when the problem itself is not worded for people. */
+function problemAdvice(
+  c: ExtensionCaptureController,
+  kind: NonNullable<ExtensionCaptureController["problemKind"]>,
+): string {
+  if (kind === "page") {
+    return "Reload the page, then press the mdbase Reader toolbar button again. Browser pages and the Chrome Web Store can’t be read by extensions.";
+  }
+  if (c.saveAttempted && !c.source) {
+    return "It may have saved. Check again: nothing is saved twice. Your selection and note are kept, even if you close the panel.";
+  }
+  return c.source
+    ? "Try it again. Everything already saved is safe."
+    : "Try again in a moment. Your selection and note are kept, even if you close the panel.";
 }

@@ -40,6 +40,8 @@ export interface ExtensionCaptureController {
   readonly status: CaptureStatus;
   readonly problem: string | null;
   readonly problemKind: ProblemKind | null;
+  /** The problem in plain words, when the panel worded it; else it is summarised by kind. */
+  readonly problemSummary?: string | null;
   readonly notice: string | null;
   readonly source: SourceSummary | null;
   readonly annotations: readonly Annotation[];

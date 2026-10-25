@@ -86,7 +86,7 @@ it("asks a new user only to connect, with editable metadata and no status noise"
   expect(html).toContain('id="tags"');
   expect(html).toContain('id="note"');
   expect(html).not.toContain("Not saved yet.");
-  expect(html).not.toContain("Source saved in mdbase.");
+  expect(html).not.toContain("Saved to your collection.");
 });
 it("picks among connected collections with Reader's select", () => {
   const html = markup({
@@ -115,23 +115,42 @@ it("links the brand to the Reader library on the selected collection", () => {
 });
 it("offers recovery even when initial registration fails", () => {
   const html = markup({ problem: "The request origin is not allowed." });
-  expect(html).toContain("Not connected");
-  expect(html).toContain("Retry connection");
+  expect(html).toContain("We couldn’t reach your collection");
+  expect(html).toContain("Try again in a moment.");
+  expect(html).toContain(">Try again<");
   expect(html).toContain("Review access");
+  // The underlying message waits behind a disclosure.
+  expect(html).toMatch(
+    /<details class="technical"><summary>Technical details<\/summary><p>The request origin is not allowed.<\/p>/u,
+  );
   expect(html).toContain("will not bypass the origin check");
 });
-it("does not claim an unknown write failed to persist", () => {
+it("says plainly that an unknown write may have saved, with jargon behind a disclosure", () => {
   const html = markup({ problem: "Outcome unknown", problemKind: "save", saveAttempted: true });
-  expect(html).toContain("Save not confirmed");
-  expect(html).toContain("check for an existing source");
-  expect(html).toContain("Retry save");
+  expect(html).toContain("We couldn’t confirm this saved");
+  expect(html).toContain("It may have saved. Check again: nothing is saved twice.");
+  expect(html).toContain(">Check again<");
+  expect(html).not.toMatch(/<strong>[^<]*Outcome unknown/u);
+  expect(html).toMatch(/Technical details<\/summary><p>Outcome unknown<\/p>/u);
+  expect(html).not.toContain("Save not confirmed");
   expect(html).not.toContain("Retry connection");
+});
+it("shows a problem the panel worded itself as it is", () => {
+  const plain = "Sign in to mdbase before saving.";
+  const html = markup({
+    problem: plain,
+    problemSummary: plain,
+    problemKind: "save",
+    saveAttempted: true,
+  });
+  expect(html).toContain(`<p>${plain}</p>`);
+  expect(html).not.toContain("Technical details");
 });
 it("does not offer Connect recovery when the page itself cannot be read", () => {
   const html = markup({ problem: "Cannot access this page", problemKind: "page" });
-  expect(html).toContain("Reader cannot read this page");
+  expect(html).toContain("Reader can’t read this page");
   expect(html).toContain("Reload the page");
-  expect(html).not.toContain("Retry connection");
+  expect(html).not.toContain("Try again");
   expect(html).not.toContain("Review access");
 });
 const savedSource = {
@@ -235,7 +254,7 @@ it("does not display stale write progress after a successful save", () => {
     refreshing: true,
     progress: { phase: "creating", completedBytes: 1, totalBytes: 1, fileIndex: 1, fileCount: 1 },
   });
-  expect(html).toContain("Source saved in mdbase.");
+  expect(html).toContain("Saved to your collection.");
   expect(html).toContain("Updating…");
   expect(html).toContain("Saved · ");
   expect(html).not.toContain("Saving source record");
@@ -245,8 +264,8 @@ it("labels recovery scans separately from duplicate checks", () => {
     busy: true,
     progress: { phase: "recovering", completedBytes: 0, totalBytes: 1, fileIndex: 0, fileCount: 1 },
   });
-  expect(html).toContain("Checking files from the previous save attempt");
-  expect(html).not.toContain("Checking for duplicates");
+  expect(html).toContain("Checking what the last attempt saved");
+  expect(html).not.toContain("already saved…");
 });
 it("labels a non-production build and links to settings", () => {
   const html = markup();
@@ -500,7 +519,7 @@ it("offers to retry when the saved note cannot be opened", () => {
     },
     "note",
   );
-  expect(html).toContain("Could not open the literature note.");
+  expect(html).toContain("We couldn’t open the literature note");
   expect(html).toContain("Request timed out");
   expect(html).toContain("Try again");
 });

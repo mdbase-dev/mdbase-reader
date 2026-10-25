@@ -2,6 +2,7 @@ import { memo, useMemo, useState } from "react";
 
 import { problemMessage } from "./capture-model.js";
 import { displayQuote, highlightComment } from "./highlight-body.js";
+import { TechnicalDetails } from "./TechnicalDetails.js";
 
 import type { ExtensionCaptureController } from "./capture-controller.js";
 import type { QuoteOutcome } from "./page-annotations.js";
@@ -169,9 +170,10 @@ const HighlightItem = memo(function HighlightItem({
         </div>
       ) : null}
       {problem ? (
-        <p className="item-problem" role="alert">
-          {problem}
-        </p>
+        <div className="item-problem" role="alert">
+          <p>That didn’t finish. Try again; your highlight is as it was.</p>
+          <TechnicalDetails detail={problem} />
+        </div>
       ) : null}
     </li>
   );

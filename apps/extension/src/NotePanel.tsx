@@ -3,6 +3,7 @@ import { useEffect, useState, useSyncExternalStore } from "react";
 import { problemMessage, readerSourceUrl } from "./capture-model.js";
 import { splitTags } from "./tag-suggestions.js";
 import { TagInput } from "./TagInput.js";
+import { TechnicalDetails } from "./TechnicalDetails.js";
 
 import type { ExtensionCaptureController } from "./capture-controller.js";
 import type { SourceNoteSession, SourceNoteSnapshot } from "./source-note-session.js";
@@ -94,13 +95,14 @@ function SavedSourceNote({
         <SourceNoteEditor session={session} />
       ) : status === "failed" ? (
         <div className="problem" role="alert">
-          <strong>Could not open the literature note.</strong>
-          <p>{problem}</p>
+          <strong>We couldn’t open the literature note</strong>
+          <p>Try again in a moment, or edit it in Reader.</p>
           <div className="problem-actions">
             <button type="button" onClick={load}>
               Try again
             </button>
           </div>
+          <TechnicalDetails detail={problem} />
         </div>
       ) : (
         <p className="hint">Opening the literature note…</p>
@@ -226,8 +228,8 @@ function SourceNoteEditor({ session }: { readonly session: SourceNoteSession }):
       />
       {conflict ? (
         <div className="problem" role="alert">
-          <strong>This note changed elsewhere while you were writing.</strong>
-          <p>Keep mine to replace it with your text, or use theirs to discard your text.</p>
+          <strong>This note changed somewhere else while you were writing</strong>
+          <p>Keep yours to save your text over it, or use theirs and drop your text.</p>
           <div className="problem-actions">
             <button type="button" onClick={() => session.resolve("mine")}>
               Keep mine
@@ -239,15 +241,24 @@ function SourceNoteEditor({ session }: { readonly session: SourceNoteSession }):
         </div>
       ) : note.state === "error" || note.state === "deleted" ? (
         <div className="problem" role="alert">
-          <strong>{note.state === "deleted" ? "Source removed." : "Not saved."}</strong>
-          <p>{note.problem ?? "The collection did not accept the note. Your text is kept."}</p>
+          <strong>
+            {note.state === "deleted"
+              ? "This source was removed from your collection"
+              : "Your latest changes aren’t saved yet"}
+          </strong>
+          <p>
+            {note.state === "deleted"
+              ? "Your text is kept in this panel. Copy it somewhere safe."
+              : "Your text is kept in this panel. Try saving again."}
+          </p>
           {note.state === "error" ? (
             <div className="problem-actions">
               <button type="button" onClick={() => session.save()}>
-                Retry save
+                Try again
               </button>
             </div>
           ) : null}
+          {note.state === "error" ? <TechnicalDetails detail={note.problem} /> : null}
         </div>
       ) : null}
       {note.restored ? <p className="hint">Restored your unsaved text from earlier.</p> : null}

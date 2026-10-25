@@ -612,6 +612,12 @@ details.technical summary {
   color: var(--danger);
   font-size: var(--text-xs);
 }
+.item-problem p {
+  margin: 0;
+}
+.item-problem details.technical {
+  color: var(--text-2);
+}
 .panel-footer {
   margin-top: auto;
   padding: 10px var(--gutter);
