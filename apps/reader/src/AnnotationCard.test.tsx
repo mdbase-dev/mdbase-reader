@@ -134,6 +134,23 @@ it("names the source only when the list says it differs from the open one", () =
   expect(render(true)).toContain("Chapter 2</a>");
 });
 
+it("marks a card outside its chapter's pages only when no heading groups it", () => {
+  const document = { fileId: "file", revision: "rev" } as never;
+  const owners = [
+    {
+      id: base.sourceId,
+      title: "Chapter 2",
+      documents: [{ ...(document as object), range: { kind: "pages", start: 0, end: 9 } }],
+    },
+  ] as never;
+  const outside: Annotation = { ...linked, document };
+  const render = (showLocation: boolean): string =>
+    renderToStaticMarkup(card(outside, vi.fn(), { owners, showLocation }));
+  expect(render(true)).toContain(">Outside chapter</small>");
+  expect(render(false)).not.toContain("Outside chapter");
+  expect(render(true)).not.toContain("still belongs to this chapter<");
+});
+
 it("leads with the quotation and leaves the location to a group heading", () => {
   const highlight: Annotation = {
     ...linked,

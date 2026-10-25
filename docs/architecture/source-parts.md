@@ -181,8 +181,8 @@ parts or shared-file references. Keep these indexes out of frontmatter.
 Opening a chapter creates/focuses a source-bound workspace session and opens the
 shared file at the range start, unless that chapter has a compatible saved
 position. Positions and selectors remain **absolute document coordinates**.
-A saved position outside the range can be resumed with an “Outside chapter”
-status; an explicit Start chapter command returns to its start.
+A saved position outside the range is not resumed: the chapter quietly opens at
+its start. The chapter chip's Go to chapter start command returns there.
 
 Measure progress only within the validated interval: normalize the renderer's
 position between its start and end boundaries and clamp to `[0, 1]`. PDF uses
@@ -192,10 +192,14 @@ reliably, show location/range without a percentage. Keep completion status an
 explicit reading-state decision, not a side effect of opening a one-page part.
 Book and chapter progress do not update each other.
 
-The file remains freely navigable. At the boundary show “End of Ways of Reading”
-and actions for the next part or the whole book; never trap scrolling or change
-the active source automatically. Beyond it, keep the chapter context and a visible
-outside-range status. A selection crossing a boundary is not clipped or split;
+The file remains freely navigable; never trap scrolling or change the active
+source automatically. Chapter reading adds no row of chrome: a compact chip in the
+document actions names the chapter and its progress, and its menu offers Go to
+chapter start, Continue in the book and the next part. Only once the reader leaves
+the chapter's pages does a single slim, dismissible hint join the notices at the foot of the document
+(“You’ve left this chapter · Back to chapter · Continue in book”), announced
+politely; the chip then reads “Outside”. It takes no row, since resizing the viewer
+makes the PDF renderer lose the reader’s place. A selection crossing a boundary is not clipped or split;
 show its proposed owner and let the user change it before creation.
 
 Retain Dockview's stable session identities, focus bridge, draft ownership and

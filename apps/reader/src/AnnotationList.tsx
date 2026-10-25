@@ -3,6 +3,7 @@ import { useMemo, useState, type JSX, type ReactNode } from "react";
 import {
   annotationFromOtherSource,
   annotationGroupHeadings,
+  outsideChapterGroupNote,
   type AnnotationGroupHeading,
 } from "./annotation-groups.js";
 import {
@@ -345,6 +346,7 @@ function AnnotationGroupTitle({
   return (
     <h3 className="annotation-group">
       <span>{heading.label}</span>
+      {heading.outsideChapter ? <small>{outsideChapterGroupNote}</small> : null}
       {heading.source ? (
         <small>
           {heading.source.summary ? (

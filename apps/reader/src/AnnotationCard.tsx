@@ -10,6 +10,7 @@ import { useEffect, useRef, useState, useSyncExternalStore, type JSX, type RefOb
 import { hasPassageAnchor } from "./annotation-anchor.js";
 import { annotationBodyContent } from "./annotation-body-content.js";
 import { scrollAnnotationCard } from "./annotation-card-scroll.js";
+import { annotationOutsideChapter } from "./annotation-groups.js";
 import { annotationKindLabel } from "./annotation-kind.js";
 import { AnnotationBodyEditor } from "./AnnotationEditor.js";
 import { AnnotationImage, type AnnotationFileReader } from "./AnnotationImage.js";
@@ -126,6 +127,8 @@ export function AnnotationCard({
             annotation={annotation}
             showKind={annotation.annotationType !== "highlight"}
             showLocation={showLocation}
+            // Without group headings, a card outside its chapter's pages says so itself.
+            outsideChapter={showLocation && annotationOutsideChapter(annotation, owners ?? [])}
             draft={needsAttention ? draftLabel(Boolean(snapshot.conflict)) : null}
           />
           <AnnotationCardActions
@@ -177,11 +180,13 @@ function AnnotationMeta({
   annotation,
   showKind,
   showLocation,
+  outsideChapter,
   draft,
 }: {
   readonly annotation: Annotation;
   readonly showKind: boolean;
   readonly showLocation: boolean;
+  readonly outsideChapter: boolean;
   readonly draft: string | null;
 }): JSX.Element {
   const location = showLocation ? annotationLocationLabel(annotation) : undefined;
@@ -216,6 +221,14 @@ function AnnotationMeta({
           }
         >
           {location}
+        </small>
+      ) : null}
+      {outsideChapter ? (
+        <small
+          className="annotation-locator is-outside-chapter"
+          title="Outside the chapter’s pages; it still belongs to this chapter"
+        >
+          Outside chapter
         </small>
       ) : null}
       {draft ? <small className="annotation-draft-badge">{draft}</small> : null}

@@ -58,41 +58,165 @@
   flex: 1;
   min-height: 0;
 }
-.source-reading-boundary {
-  flex: 0 0 auto;
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 8px 16px;
-  padding: 8px 14px;
-  border-bottom: 1px solid var(--line);
-  background: var(--paper);
-  color: var(--ink);
-  font-size: var(--ui-meta);
-  overflow-wrap: anywhere;
+.source-part-document:focus {
+  outline: none;
 }
-.source-reading-boundary button,
-.source-reading-boundary a {
+/* Chapter reading stays quiet: one slim line, only once the reader has left the chapter. It
+   joins the document's notice stack rather than taking a row, because resizing the viewer makes
+   the PDF renderer lose the reader's place. On a narrow stack its actions wrap below. */
+.document-notices {
+  container: document-notices / inline-size;
+}
+.source-reading-hint {
+  max-width: 100%;
+  display: flex;
+  align-items: center;
+  gap: var(--sp-1) var(--sp-2);
+  min-height: var(--control-h);
+  padding: 0 var(--sp-1) 0 var(--sp-3);
+  border-radius: var(--r-full);
+  background: var(--bg-raised);
+  box-shadow: var(--e-2);
+  color: var(--ink-soft);
+  font-size: var(--text-sm);
+  line-height: var(--lh-sm);
+  white-space: nowrap;
+  pointer-events: auto;
+}
+.source-reading-hint-text {
+  flex: 0 0 auto;
+}
+.source-reading-hint-actions {
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: var(--sp-1);
+}
+.source-reading-hint :is(button, a) {
   display: inline-flex;
   align-items: center;
-  min-height: 36px;
-  padding: 4px 8px;
-  color: var(--ink);
-  background: var(--paper);
-  border: 1px solid var(--line);
-  border-radius: 4px;
-  text-decoration: underline;
-  text-underline-offset: 3px;
+  min-height: var(--control-h-sm);
+  padding: 0 var(--sp-1);
+  border: 0;
+  border-radius: var(--r-xs);
+  color: var(--action);
+  background: transparent;
+  font: inherit;
+  text-decoration: none;
   cursor: pointer;
 }
-.source-reading-boundary button:hover,
-.source-reading-boundary a:hover {
-  background: var(--canvas);
+/* Long part titles truncate; the full name is in the link's tooltip. */
+.source-reading-hint-actions a {
+  display: block;
+  min-width: 0;
+  max-width: 16em;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  line-height: var(--control-h-sm);
+}
+.source-reading-hint :is(button, a):hover {
+  background: var(--hover);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+/* On a narrow pane the message and Dismiss share the first line and the actions wrap below. */
+@container document-notices (max-width: 560px) {
+  .source-reading-hint {
+    flex-wrap: wrap;
+    padding: var(--sp-1) var(--sp-1) var(--sp-1) var(--sp-3);
+    border-radius: var(--r-lg);
+  }
+  .source-reading-hint-text {
+    flex: 1 1 0;
+    min-width: 0;
+    white-space: normal;
+  }
+  .source-reading-hint .source-reading-hint-dismiss {
+    order: 1;
+  }
+  .source-reading-hint-actions {
+    order: 2;
+    flex: 1 0 100%;
+    flex-wrap: wrap;
+    margin-left: calc(-1 * var(--sp-1));
+  }
+  .source-reading-hint-actions a {
+    max-width: 100%;
+  }
+}
+.source-reading-hint .source-reading-hint-dismiss {
+  margin-left: auto;
+  width: var(--control-h-sm);
+  justify-content: center;
+  padding: 0;
+  color: var(--muted);
+}
+.source-reading-hint-dismiss svg {
+  width: 14px;
+  height: 14px;
 }
 @media (pointer: coarse) {
-  .source-reading-boundary button,
-  .source-reading-boundary a {
+  .source-reading-hint :is(button, a) {
     min-height: 44px;
+  }
+  .source-reading-hint .source-reading-hint-dismiss {
+    width: 44px;
+  }
+}
+/* The chapter's name and progress share the document actions, adding no row of their own. */
+:is(.reader-dock .dock-pane-actions, .reader-header, .reader-shell)
+  .document-toolbar
+  .reader-menu.chapter-reading-chip
+  > summary.chapter-reading-chip-trigger {
+  width: auto;
+  max-width: 220px;
+  height: var(--control-h-sm);
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-1);
+  padding: 0 var(--sp-2);
+  border-radius: var(--r-full);
+  color: var(--ink-soft);
+  background: transparent;
+  font-size: var(--text-xs);
+  line-height: var(--lh-xs);
+  white-space: nowrap;
+  cursor: pointer;
+  list-style: none;
+}
+:is(.reader-dock .dock-pane-actions, .reader-header, .reader-shell)
+  .document-toolbar
+  .reader-menu.chapter-reading-chip
+  > summary.chapter-reading-chip-trigger::-webkit-details-marker {
+  display: none;
+}
+:is(.reader-dock .dock-pane-actions, .reader-header, .reader-shell)
+  .document-toolbar
+  .reader-menu.chapter-reading-chip
+  > summary.chapter-reading-chip-trigger:hover,
+:is(.reader-dock .dock-pane-actions, .reader-header, .reader-shell)
+  .document-toolbar
+  .reader-menu.chapter-reading-chip[open]
+  > summary.chapter-reading-chip-trigger {
+  color: var(--ink);
+  background: var(--hover);
+}
+.chapter-reading-chip-title {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.chapter-reading-chip-progress {
+  flex: 0 0 auto;
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+}
+@media (pointer: coarse) {
+  :is(.reader-dock .dock-pane-actions, .reader-header, .reader-shell)
+    .document-toolbar
+    .reader-menu.chapter-reading-chip
+    > summary.chapter-reading-chip-trigger {
+    height: 44px;
   }
 }
 .connected-document-content {

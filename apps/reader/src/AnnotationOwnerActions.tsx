@@ -4,20 +4,6 @@ import { readerErrorMessage } from "./errors.js";
 
 import type { Annotation, SourceSummary } from "@mdbase-reader/core";
 
-function outsideChapter(annotation: Annotation, owner: SourceSummary | undefined): boolean {
-  const range = owner?.documents.find(
-    (document) =>
-      document.fileId === annotation.document?.fileId &&
-      document.revision === annotation.document.revision,
-  )?.range;
-  const page =
-    annotation.target?.pdf?.pageIndex ??
-    (annotation.target?.position?.kind === "pdf"
-      ? annotation.target.position.pageIndex
-      : undefined);
-  return range?.kind === "pages" && page !== undefined && (page < range.start || page > range.end);
-}
-
 export function annotationSourceHref(annotation: Annotation, owner: SourceSummary): string {
   const params = new URLSearchParams({
     collection: annotation.collectionId,
@@ -30,7 +16,10 @@ export function annotationSourceHref(annotation: Annotation, owner: SourceSummar
   return `?${params.toString()}`;
 }
 
-/** The annotation's source, when worth naming, and a warning when it lies outside a chapter. */
+/**
+ * The annotation's source, when worth naming. Lying outside a chapter's pages is noted once on the
+ * Notes panel's group heading instead of on each card.
+ */
 export function AnnotationSourceLine({
   annotation,
   sources = [],
@@ -41,8 +30,7 @@ export function AnnotationSourceLine({
   readonly showSource?: boolean;
 }): JSX.Element | null {
   const owner = sources.find(({ id }) => id === annotation.sourceId);
-  const outside = outsideChapter(annotation, owner);
-  if (!showSource && !outside) {
+  if (!showSource) {
     return null;
   }
   return (
@@ -51,17 +39,14 @@ export function AnnotationSourceLine({
       onClick={(event) => event.stopPropagation()}
       role="presentation"
     >
-      {showSource ? (
-        <small>
-          Source:{" "}
-          {owner ? (
-            <a href={annotationSourceHref(annotation, owner)}>{owner.title}</a>
-          ) : (
-            annotation.source
-          )}
-        </small>
-      ) : null}
-      {outside ? <small>Outside chapter range — still belongs to this chapter</small> : null}
+      <small>
+        Source:{" "}
+        {owner ? (
+          <a href={annotationSourceHref(annotation, owner)}>{owner.title}</a>
+        ) : (
+          annotation.source
+        )}
+      </small>
     </div>
   );
 }

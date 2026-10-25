@@ -42,7 +42,7 @@ function onPage(id: string, pageIndex: number, owner = book): Annotation {
   };
 }
 const comment: Annotation = { ...base, id: annotationId("comment"), annotationType: "note" };
-const sources = [{ id: chapter, title: "Chapter 2" }] as unknown as SourceSummary[];
+const sources = [{ id: chapter, title: "Chapter 2", documents: [] }] as unknown as SourceSummary[];
 
 it("names a source only when it differs from the open one", () => {
   expect(annotationFromOtherSource(onPage("a", 0), book)).toBe(false);
@@ -83,4 +83,38 @@ it("adds no headings when nothing has a usable location", () => {
     target: { html: { css: "p" }, quote: { exact: "A passage" } },
   };
   expect(annotationGroupHeadings([page, { ...comment }], book)).toEqual([null, null]);
+});
+
+it("notes a run of cards outside their chapter's pages once, on its first heading", () => {
+  const document = { fileId: "file", revision: "rev" } as unknown as NonNullable<
+    Annotation["document"]
+  >;
+  const owners = [
+    {
+      id: chapter,
+      title: "Chapter 2",
+      documents: [{ ...document, range: { kind: "pages", start: 10, end: 19 } }],
+    },
+  ] as unknown as SourceSummary[];
+  const inChapter = (id: string, pageIndex: number): Annotation => ({
+    ...onPage(id, pageIndex, chapter),
+    document,
+  });
+  const headings = annotationGroupHeadings(
+    [inChapter("a", 12), inChapter("b", 21), inChapter("c", 21), inChapter("d", 22)],
+    chapter,
+    owners,
+  );
+  expect(headings.map((heading) => heading?.label ?? null)).toEqual([
+    "p. 13",
+    "p. 22",
+    null,
+    "p. 23",
+  ]);
+  expect(headings.map((heading) => heading?.outsideChapter ?? false)).toEqual([
+    false,
+    true,
+    false,
+    false,
+  ]);
 });

@@ -21,10 +21,12 @@ try {
   page.on("pageerror", (error) => errors.push(error.message));
   await page.goto(`${origin}/?preview`);
   await page.getByText("Chapter 2", { exact: true }).first().dblclick();
-  const boundary = page.getByRole("complementary", { name: "Chapter reading range" });
-  await expect(boundary).toBeVisible({ timeout: 30000 });
-  await expect(boundary).toContainText("Reading “Chapter 2”");
-  await expect(boundary).toContainText("0% of chapter");
+  // Chapter reading adds no row: a chip in the document actions carries name and progress.
+  const chip = page.locator(".chapter-reading-chip-trigger").first();
+  const hint = page.getByRole("group", { name: "Chapter reading range" });
+  await expect(chip).toBeVisible({ timeout: 30000 });
+  await expect(chip).toHaveAccessibleName("Chapter: Chapter 2, 0% read");
+  await expect(hint).toHaveCount(0);
   await page.screenshot({ path: join(directory, "chapter-two-start.png") });
   // EmbedPDF's page field remains absolute and unrestricted.
   const pageNumber = page.locator(
@@ -46,26 +48,26 @@ try {
     .toBeCloseTo(10 / 24, 1);
   await pageNumber.fill("21");
   await pageNumber.press("Enter");
-  await expect(boundary).toContainText("End of “Chapter 2” — outside chapter");
-  await expect(boundary).toContainText("100% of chapter");
-  await expect(boundary.getByRole("status")).toHaveAttribute("aria-live", "polite");
-  await boundary.getByRole("button", { name: "Start chapter" }).click();
+  await expect(hint).toContainText("You’ve left this chapter");
+  await expect(chip).toContainText("Outside");
+  await hint.getByRole("button", { name: "Back to chapter" }).click();
   await expect(pageNumber).toHaveValue("11");
-  await expect(boundary).toContainText("0% of chapter");
-  await expect(boundary.getByRole("link", { name: /Continue in the book/u })).toBeVisible();
+  await expect(hint).toHaveCount(0);
+  await expect(chip).toContainText("0%");
   await page.screenshot({ path: join(directory, "chapter-two-desktop.png") });
   await pageNumber.fill("16");
   await pageNumber.press("Enter");
-  await expect(boundary).toContainText("50% of chapter");
+  await expect(chip).toContainText("50%");
   await page.waitForTimeout(1300); // The existing position writer intentionally debounces 1200ms.
-  await boundary.getByRole("link", { name: /Continue in the book/u }).click();
-  await expect(boundary).toHaveCount(0);
+  await chip.click();
+  await page.getByRole("link", { name: /Continue in the book/u }).click();
+  await expect(page.locator(".chapter-reading-chip-trigger")).toHaveCount(0);
   await expect(pageNumber).toHaveValue("1");
   await page.getByRole("tab", { name: /Chapter 2/u }).click();
   await expect(pageNumber).toHaveValue("16");
-  await expect(boundary).toContainText("50% of chapter");
+  await expect(chip).toContainText("50%");
   await page.setViewportSize({ width: 390, height: 844 });
-  await expect(boundary).toBeVisible();
+  await expect(page.locator(".chapter-reading-chip-trigger:visible")).toHaveCount(1);
   await page.screenshot({ path: join(directory, "chapter-two-mobile.png") });
   expect(errors).toEqual([]);
   console.log(`Source-part preview audit passed. Screenshots: ${directory}`);
