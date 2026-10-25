@@ -22,7 +22,6 @@ import {
   sourcePreviewRows,
   type FileNamePreviewRow,
 } from "./file-name-preview.js";
-import { ModalDialog } from "./ModalDialog.js";
 
 import type { Annotation, SourceSummary } from "@mdbase-reader/core";
 
@@ -73,7 +72,7 @@ export function FileNameSettings({
   sources,
   library,
   loadAnnotations,
-  onClose,
+  onDirtyChange,
 }: {
   readonly settings: ReaderSettingsStore;
   /** A few of the user's sources to preview with. */
@@ -81,104 +80,91 @@ export function FileNameSettings({
   /** The whole library, for a chapter's book. */
   readonly library: readonly SourceSummary[];
   readonly loadAnnotations: () => Promise<readonly Annotation[]>;
-  readonly onClose: () => void;
+  /** Whether there are unsaved edits, for leaving the page. */
+  readonly onDirtyChange?: (dirty: boolean) => void;
 }): JSX.Element {
   const id = useId();
   const snapshot = useSyncExternalStore(settings.subscribe, settings.getSnapshot);
   const editor = useTemplateDrafts(snapshot);
   const changes = editor.changes();
+  const dirty = Object.keys(changes).length > 0;
   const { saving, message, save } = useSave(settings, editor, changes);
-  const first = useRef<HTMLInputElement>(null);
   const problems = useTemplateProblems(editor.drafts);
   const previews = usePreviews(sources, library, loadAnnotations);
   const readOnly = snapshot.settings.readOnly;
   const loading = snapshot.status === "loading";
   const invalid = fields.some(({ key }) => problems[key]);
+  useEffect(() => {
+    onDirtyChange?.(dirty);
+  }, [dirty, onDirtyChange]);
   return (
-    <ModalDialog
-      className="library-save-modal file-name-settings-modal"
-      labelledBy={`${id}-title`}
-      describedBy={`${id}-description`}
-      initialFocus={first}
-      onDismiss={() => {
-        if (!saving) {
-          onClose();
+    <form
+      className="settings-form file-name-settings"
+      aria-labelledby={`${id}-title`}
+      aria-describedby={`${id}-description`}
+      onSubmit={(event) => {
+        event.preventDefault();
+        if (!saving && !invalid && !readOnly && dirty) {
+          void save();
         }
       }}
     >
-      <form
-        className="library-save-dialog file-name-settings"
-        aria-label="File names"
-        onSubmit={(event) => {
-          event.preventDefault();
-          if (!saving && !invalid && !readOnly && Object.keys(changes).length > 0) {
-            void save();
-          }
-        }}
-      >
-        <h2 id={`${id}-title`}>File names</h2>
-        <p id={`${id}-description`}>
-          How Reader names new source notes and annotations in this collection, on every device.
-          Changes only affect new items: existing files keep their names.
+      <h3 id={`${id}-title`}>File names</h3>
+      <p id={`${id}-description`}>
+        How Reader names new source notes and annotations in this collection. Changes only affect
+        new items: existing files keep their names.
+      </p>
+      {readOnly ? (
+        <p className="file-name-settings-notice" role="status">
+          {readOnly}
         </p>
-        {readOnly ? (
-          <p className="file-name-settings-notice" role="status">
-            {readOnly}
-          </p>
-        ) : null}
-        {fields.map((field, index) => (
-          <TemplateInput
-            key={field.key}
-            id={`${id}-${field.key}`}
-            field={field}
-            value={editor.drafts[field.key]}
-            problem={problems[field.key]}
-            warning={
-              snapshot.settings.warnings.find((warning) => warning.field === field.key)?.message
-            }
-            disabled={Boolean(readOnly) || loading || saving}
-            inputRef={index === 0 ? first : undefined}
-            onChange={(value) => editor.set(field.key, value)}
-            preview={
-              <TemplatePreview
-                template={editor.drafts[field.key]}
-                invalid={Boolean(problems[field.key])}
-                {...previews[field.key]}
-              />
-            }
-          />
-        ))}
-        <details className="file-name-settings-help">
-          <summary>Filters</summary>
-          <p>
-            Write {"{{ variable }}"} and add filters with |, such as {"{{ title | slug:40 }}"}. The
-            filters are {nameTemplateFilters.join(", ")}. Reader removes characters files cannot
-            have and adds a short suffix when a name is taken.
-          </p>
-        </details>
-        {message ? (
-          <p
-            className={`file-name-settings-message${message.error ? " is-error" : ""}`}
-            role={message.error ? "alert" : "status"}
-          >
-            {message.text}
-          </p>
-        ) : null}
-        <div>
-          <button type="button" disabled={saving} onClick={onClose}>
-            {Object.keys(changes).length > 0 ? "Cancel" : "Close"}
-          </button>
-          <button
-            type="submit"
-            disabled={
-              saving || loading || invalid || Boolean(readOnly) || Object.keys(changes).length === 0
-            }
-          >
-            {saving ? "Saving…" : "Save"}
-          </button>
-        </div>
-      </form>
-    </ModalDialog>
+      ) : null}
+      {fields.map((field) => (
+        <TemplateInput
+          key={field.key}
+          id={`${id}-${field.key}`}
+          field={field}
+          value={editor.drafts[field.key]}
+          problem={problems[field.key]}
+          warning={
+            snapshot.settings.warnings.find((warning) => warning.field === field.key)?.message
+          }
+          disabled={Boolean(readOnly) || loading || saving}
+          onChange={(value) => editor.set(field.key, value)}
+          preview={
+            <TemplatePreview
+              template={editor.drafts[field.key]}
+              invalid={Boolean(problems[field.key])}
+              {...previews[field.key]}
+            />
+          }
+        />
+      ))}
+      <details className="file-name-settings-help">
+        <summary>Filters</summary>
+        <p>
+          Write {"{{ variable }}"} and add filters with |, such as {"{{ title | slug:40 }}"}. The
+          filters are {nameTemplateFilters.join(", ")}. Reader removes characters files cannot have
+          and adds a short suffix when a name is taken.
+        </p>
+      </details>
+      {message ? (
+        <p
+          className={`file-name-settings-message${message.error ? " is-error" : ""}`}
+          role={message.error ? "alert" : "status"}
+        >
+          {message.text}
+        </p>
+      ) : null}
+      <div className="settings-form-actions">
+        <button
+          type="submit"
+          disabled={saving || loading || invalid || Boolean(readOnly) || !dirty}
+        >
+          {saving ? "Saving…" : "Save"}
+        </button>
+      </div>
+    </form>
   );
 }
 
@@ -189,7 +175,6 @@ function TemplateInput({
   problem,
   warning,
   disabled,
-  inputRef,
   onChange,
   preview,
 }: {
@@ -199,7 +184,6 @@ function TemplateInput({
   readonly problem: string | undefined;
   readonly warning: string | undefined;
   readonly disabled: boolean;
-  readonly inputRef: React.RefObject<HTMLInputElement | null> | undefined;
   readonly onChange: (value: string) => void;
   readonly preview: JSX.Element;
 }): JSX.Element {
@@ -213,7 +197,6 @@ function TemplateInput({
       <div className="file-name-template-row">
         <input
           id={id}
-          ref={inputRef}
           className="mdbase-field"
           aria-label={`${field.label} template`}
           aria-invalid={problem ? true : undefined}

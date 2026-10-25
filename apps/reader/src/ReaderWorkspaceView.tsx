@@ -6,6 +6,7 @@ import { useShellNotices } from "./CreateFollowThroughNotice.js";
 import { inspectorPanelId, navigatorPanelId } from "./dockview-workspace-state.js";
 import { DockviewWorkspace } from "./DockviewWorkspace.js";
 import { useReaderFeedbackContext } from "./FeedbackRoot.js";
+import { bindHighlightSettings } from "./highlight-colors.js";
 import { importHref } from "./import-navigation.js";
 import { inspectorSourceForTab } from "./inspector-source.js";
 import { InspectorPane, type InspectorTab } from "./InspectorPane.js";
@@ -18,13 +19,12 @@ import { ReaderHeader } from "./ReaderHeader.js";
 import { RenderedSourceDocument } from "./RenderedSourceDocument.js";
 import { useSdkConnectionState } from "./sdk-connection-state.js";
 import { SearchPassageStatus } from "./SearchPassageStatus.js";
+import { SettingsPage, useSettingsPage } from "./SettingsPage.js";
 import { SourceAdditionOverlays } from "./SourceAdditionOverlays.js";
 import { useSourcePartCreation } from "./SourcePartCreation.js";
 import { SourceRemovalDialog } from "./SourceRemovalDialog.js";
 import { useAnnotationCounts } from "./use-annotation-counts.js";
 import { useFileDrop } from "./use-file-drop.js";
-import { useFileNameSettings } from "./use-file-name-settings.js";
-import { useHighlightColorSettings } from "./use-highlight-color-settings.js";
 import { useMediaQuery } from "./use-media-query.js";
 import { useReadingChrome } from "./use-reading-chrome.js";
 import { useSearchNavigation } from "./use-search-navigation.js";
@@ -157,8 +157,15 @@ export function ReaderWorkspaceView({
     model.deploymentUpdateAvailable,
     model.gateway.createFollowThrough,
   );
-  const fileNames = useFileNameSettings(model.gateway, library.sources, model.openSources);
-  const highlightColors = useHighlightColorSettings(model.gateway);
+  const collectionSettings = model.gateway.settings;
+  // Every swatch, card and filter follows the collection's highlight colours, live.
+  useEffect(
+    () => (collectionSettings ? bindHighlightSettings(collectionSettings) : undefined),
+    [collectionSettings],
+  );
+  const settingsPage = useSettingsPage();
+  const beforeCollectionSwitch = (): Promise<boolean> =>
+    confirmCollectionSwitch(sourceWorkspace.layout, library.sources);
   const workbenchOwner = findWorkbenchOwner(
     sourceWorkspace.layout,
     inspectorSource?.id ?? null,
@@ -207,11 +214,12 @@ export function ReaderWorkspaceView({
       pendingAnnotationRef.current = null;
     }
   }, [composer, sourceWorkspace.activeTab, sourceWorkspace.layout.focusedPaneId]);
-  return (
+  const workspaceShell = (
     <div
       data-density={shell.value.density}
       ref={shellRef}
       className={`reader-shell${notices ? " has-update" : ""}`}
+      inert={settingsPage.open}
       {...fileDrop.handlers}
     >
       {fileDrop.active ? (
@@ -223,17 +231,13 @@ export function ReaderWorkspaceView({
         </div>
       ) : null}
       {notices}
-      {fileNames.dialog}
-      {highlightColors.dialog}
       {model.focusMode ? <div className="reading-chrome-reveal" aria-hidden="true" /> : null}
       <ReaderHeader
         {...reading}
         density={shell.value.density}
         onChangeDensity={(density) => shell.update({ density })}
         collectionName={library.collectionName}
-        beforeCollectionSwitch={() =>
-          confirmCollectionSwitch(sourceWorkspace.layout, library.sources)
-        }
+        beforeCollectionSwitch={beforeCollectionSwitch}
         connectionState={connectionState}
         directAccess={model.directAccess}
         theme={model.theme}
@@ -245,8 +249,7 @@ export function ReaderWorkspaceView({
         inspectorAvailable={true}
         onToggleInspector={() => dock.toggleSidebar("right")}
         sourceBar={mobileSourceBar(model)}
-        onOpenFileNames={fileNames.open}
-        onOpenHighlightColors={highlightColors.open}
+        onOpenSettings={settingsPage.show}
       />
       <main className="reader-main reader-dock-main">
         <SearchPassageStatus message={searchNavigation.message} />
@@ -425,6 +428,33 @@ export function ReaderWorkspaceView({
         onClose={() => model.setCommandsOpen(false)}
       />
     </div>
+  );
+  return (
+    <>
+      {workspaceShell}
+      {settingsPage.open ? (
+        <SettingsPage
+          density={shell.value.density}
+          display={{
+            theme: model.theme,
+            onChangeTheme: model.changeTheme,
+            typography: shell.value.typography,
+            onChangeTypography: (typography) => shell.update({ typography }),
+            density: shell.value.density,
+            onChangeDensity: (density) => shell.update({ density }),
+            sidebarWhileReading: shell.value.sidebarWhileReading,
+            onChangeSidebarWhileReading: (value) => shell.update({ sidebarWhileReading: value }),
+          }}
+          gateway={model.gateway}
+          library={library.sources}
+          openSources={model.openSources}
+          collectionName={library.collectionName}
+          connectionState={connectionState}
+          beforeCollectionSwitch={beforeCollectionSwitch}
+          onClose={settingsPage.hide}
+        />
+      ) : null}
+    </>
   );
 }
 

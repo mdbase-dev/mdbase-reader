@@ -10,7 +10,10 @@ import { typographyScaleSteps } from "./workspace-shell-preferences.js";
 import type { ReadingTypography } from "@mdbase-reader/reading-surface";
 import type { JSX } from "react";
 
-/** Text, theme and layout choices behind the header's "Aa" button. */
+/**
+ * Text, theme and layout choices for this device: behind the header's "Aa" button, and in the
+ * Settings page's "This device" section.
+ */
 export function DisplaySettings({
   theme,
   onChangeTheme,
@@ -20,8 +23,7 @@ export function DisplaySettings({
   onChangeDensity,
   sidebarWhileReading,
   onChangeSidebarWhileReading,
-  onOpenFileNames,
-  onOpenHighlightColors,
+  onOpenSettings,
 }: {
   readonly theme: ThemePreference;
   readonly onChangeTheme: (theme: ThemePreference) => void;
@@ -31,10 +33,8 @@ export function DisplaySettings({
   readonly onChangeDensity?: (density: "comfortable" | "compact") => void;
   readonly sidebarWhileReading: "hide" | "keep";
   readonly onChangeSidebarWhileReading?: (value: "hide" | "keep") => void;
-  /** Opens the collection's file name settings; absent when the collection has none. */
-  readonly onOpenFileNames?: () => void;
-  /** Opens the collection's highlight colour settings; absent when the collection has none. */
-  readonly onOpenHighlightColors?: () => void;
+  /** Opens the Settings page; absent on that page itself. */
+  readonly onOpenSettings?: () => void;
 }): JSX.Element {
   const highlightOnSelect = useHighlightOnSelect();
   const annotationOwner = useAnnotationOwnerPreference();
@@ -89,37 +89,19 @@ export function DisplaySettings({
         ]}
         onChange={setHighlightOnSelect}
       />
-      {onOpenFileNames || onOpenHighlightColors ? (
-        <fieldset className="display-choice collection-settings">
-          <legend>This collection</legend>
-          <div className="collection-settings-buttons">
-            {onOpenHighlightColors ? (
-              <button
-                type="button"
-                className="collection-settings-button"
-                onClick={onOpenHighlightColors}
-              >
-                Highlight colours…
-              </button>
-            ) : null}
-            {onOpenFileNames ? (
-              <button
-                type="button"
-                className="collection-settings-button"
-                onClick={onOpenFileNames}
-              >
-                File names…
-              </button>
-            ) : null}
-          </div>
-          <p className="display-note">Shared by everyone who uses this collection.</p>
-        </fieldset>
+      {onOpenSettings ? (
+        <>
+          <hr />
+          <button type="button" onClick={onOpenSettings}>
+            Settings…
+          </button>
+        </>
       ) : null}
     </>
   );
 }
 
-function DisplayChoice<T extends string>({
+export function DisplayChoice<T extends string>({
   legend,
   value,
   options,

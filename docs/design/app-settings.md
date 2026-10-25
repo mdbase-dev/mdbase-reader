@@ -154,19 +154,20 @@ are no custom colours. An annotation stores only its colour key.
   in cards, and can be recoloured. The filter menu lists offered colours in order, then a
   hidden colour while some highlight uses it or it is the active filter.
 - **Meanings relabel.** Since highlights store only the key, changing a meaning
-  relabels every highlight in that colour. The dialog says so.
+  relabels every highlight in that colour. The settings say so.
 - **Default colour stays per device.** The colour of the next highlight is the last one
-  used on this device (localStorage `highlight-color`, and the extension's
+  used on this device (localStorage `mdbase-reader:highlight-color`, and the extension's
   `chrome.storage.local`), as before. It is a habit rather than a shared convention.
+  The Settings page's "This device" section can also set it.
   While it is hidden, new highlights use the first offered colour. The stored preference
   is kept, so showing the colour again restores it, until a highlight records the colour
   actually used.
 - **Import of device meanings.** Meanings used to be stored per device in localStorage
   (`mdbase-reader:highlight-meanings`). Until the record holds `highlight_meanings`,
-  Reader shows the device's meanings, so nothing visibly changes on upgrade. The dialog
-  pre-fills them with a notice, and Save shares them. Nothing is written on read. Once
-  the record holds meanings, the device's are ignored. Any successful save from the
-  dialog forgets them on that device, so a later reset doesn't bring them back.
+  Reader shows the device's meanings, so nothing visibly changes on upgrade. Highlight
+  colours pre-fills them with a notice, and Save shares them. Nothing is written on read. Once
+  the record holds meanings, the device's are ignored. Any successful save of highlight
+  colours forgets them on that device, so a later reset doesn't bring them back.
 - **Extension.** The panel's colour picker reads the same record. The SDK host's
   `ReaderSettingsStore` follows the feed. The panel asks it for plain data
   (`settings.highlightColors`, allow-listed in `sdk-rpc.ts`) when the collection
@@ -174,24 +175,47 @@ are no custom colours. An annotation stores only its colour key.
 
 ## UI
 
-The display menu has a section called "This collection", with "Highlight colours…" and
-"File names…" buttons.
+Collection settings are edited on the Settings page (`SettingsPage.tsx`), opened from
+"Settings…" at the foot of the display menu. The menu keeps its quick reading choices.
 
-"Highlight colours…" opens a dialog with one row per colour, in collection order. Each
-row has a show checkbox, a meaning field, and "Move up" and "Move down" buttons.
+- **The page.** It opens over the workspace, which stays mounted and inert behind it, so
+  open documents aren't reloaded and nothing behind it moves. Its sections
+  (`SettingsSections.tsx`) load on demand, with a loading line inside the page. Focus
+  goes to the "Settings" heading, and Back returns it to the display menu's trigger.
+  Workspace shortcuts don't act while the page is open.
+- **Sections.** "This device" has the display menu's choices and the default highlight
+  colour. "This collection" has Highlight colours and File names, each with its own
+  Save. When the collection has no settings support (no settings store), the section
+  says so instead. "Connection" names the open collection and its state, and offers the
+  shared collection menu, which switches collections, manages access and signs out.
+- **Leaving.** Back with unsaved collection edits asks first, with Reader's usual
+  confirm ("Discard changes" or "Keep editing"). So does switching collection from the
+  page. This device's old meanings, shown but not yet saved, don't count as an edit.
+
+Before this page, both settings were dialogs behind "Highlight colours…" and "File
+names…" in the menu. Their lazy-load fallback, a "Loading …" line, rendered as a child
+of the shell's grid while the chunk downloaded. It took the header's row and pushed the
+header and dock down, so the workspace jumped and re-laid out as each dialog opened.
+
+Highlight colours lists the offered colours in order, then a "Hidden" group. Each row
+has a meaning field. An offered row has "Move up", "Move down" and "Hide". A hidden row
+has only "Show", because `highlight_colors` lists only offered colours and keeps no place
+for a hidden one; Show adds it at the end.
 
 - **Hiding.** The last shown colour can't be hidden.
-- **Moving.** Focus stays on the moved row's button, or moves to its other button at an
-  end. A live region announces the new position.
+- **Focus.** Moving keeps focus on the moved row's button, or its other button at an end.
+  Hide and Show move focus to the colour's button in its new group. A live region
+  announces each change.
 - **Reset.** "Reset to default" removes both fields.
-- **States.** Read-only, conflict, live-follow and invalid-field handling match the File
-  names dialog. A conflict names the field that changed elsewhere.
+- **States.** Read-only, conflict, live-follow and invalid-field handling match File
+  names. A conflict names the field that changed elsewhere.
 
-Reader binds the store to a module-level snapshot (`highlight-colors.ts`). Swatches, the
-selection toolbar (digits 1 to n follow the offered order), cards and the filter menu
-read it through `useSyncExternalStore`, so they all follow live edits.
+Reader binds the store to a module-level snapshot (`highlight-colors.ts`) while the
+workspace is open. Swatches, the selection toolbar (digits 1 to n follow the offered
+order), cards and the filter menu read it through `useSyncExternalStore`, so they all
+follow live edits.
 
-"File names…" opens a dialog with one field per template.
+File names has one field per template.
 
 - **Live preview.** Each field previews against up to three of the user's sources
   (open sources first) and annotations. While a draft is invalid, the last valid
@@ -199,12 +223,10 @@ read it through `useSyncExternalStore`, so they all follow live edits.
 - **Errors and warnings.** Knap errors show inline, and Save stays disabled until they
   are fixed. A saved template that Reader can't use shows a warning.
 - **Reset.** Each field has its own "Reset to default".
-- **Explanation.** The dialog says changes are shared across devices and only affect
+- **Explanation.** The section says changes are shared across devices and only affect
   new items.
 - **Live updates.** Fields the user hasn't edited follow edits from other devices as
   they arrive.
-
-The dialog loads lazily (`use-file-name-settings.tsx`).
 
 ## Departures from the spec and open points
 

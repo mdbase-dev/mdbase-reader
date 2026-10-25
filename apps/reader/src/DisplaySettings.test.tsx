@@ -21,16 +21,14 @@ afterEach(async () => {
   host.remove();
 });
 
-function settings(
-  open: { onOpenFileNames?: () => void; onOpenHighlightColors?: () => void } = {},
-): React.JSX.Element {
+function settings(onOpenSettings?: () => void): React.JSX.Element {
   return (
     <DisplaySettings
       theme="system"
       onChangeTheme={() => undefined}
       density="comfortable"
       sidebarWhileReading="hide"
-      {...open}
+      {...(onOpenSettings ? { onOpenSettings } : {})}
     />
   );
 }
@@ -39,19 +37,18 @@ function button(name: string): HTMLButtonElement | undefined {
   return [...host.querySelectorAll("button")].find((candidate) => candidate.textContent === name);
 }
 
-it("keeps highlight meanings out of this device's display settings", async () => {
+it("keeps highlight meanings and collection settings out of the display menu", async () => {
   await act(async () => root.render(settings()));
   expect(host.querySelector("input[type='text']")).toBeNull();
   expect(host.textContent).not.toContain("This collection");
+  expect(button("Settings…")).toBeUndefined();
 });
 
-it("opens the collection's highlight colours and file names when the collection has settings", async () => {
-  const onOpenFileNames = vi.fn();
-  const onOpenHighlightColors = vi.fn();
-  await act(async () => root.render(settings({ onOpenFileNames, onOpenHighlightColors })));
-  expect(host.textContent).toContain("This collection");
-  await act(async () => button("Highlight colours…")?.click());
-  expect(onOpenHighlightColors).toHaveBeenCalledOnce();
-  await act(async () => button("File names…")?.click());
-  expect(onOpenFileNames).toHaveBeenCalledOnce();
+it("opens the Settings page from the display menu", async () => {
+  const onOpenSettings = vi.fn();
+  await act(async () => root.render(settings(onOpenSettings)));
+  expect(button("Highlight colours…")).toBeUndefined();
+  expect(button("File names…")).toBeUndefined();
+  await act(async () => button("Settings…")?.click());
+  expect(onOpenSettings).toHaveBeenCalledOnce();
 });

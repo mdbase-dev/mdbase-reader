@@ -5,7 +5,7 @@ import { nativeReaderCollection } from "@mdbase-reader/connect/native";
 import { memoryConnection } from "@mdbase-reader/connect/testing";
 import { act } from "react";
 import { createRoot } from "react-dom/client";
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
 import { bindHighlightSettings, highlightChoices } from "./highlight-colors.js";
 import { HighlightColorSettings } from "./HighlightColorSettings.js";
@@ -64,9 +64,7 @@ async function open(seed?: Record<string, unknown>): Promise<{
   }
   // As the workspace does: everything else follows the same store.
   closers.push(bindHighlightSettings(settings));
-  await act(async () =>
-    root.render(<HighlightColorSettings settings={settings} onClose={vi.fn()} />),
-  );
+  await act(async () => root.render(<HighlightColorSettings settings={settings} />));
   await settle();
   return { settings, replica: memory.replica, connection: memory.connection };
 }
@@ -88,10 +86,6 @@ function rows(): string[] {
 
 function meaning(label: string): HTMLInputElement {
   return doc().querySelector<HTMLInputElement>(`input[aria-label="${label} meaning"]`)!;
-}
-
-function shown(label: string): HTMLInputElement {
-  return meaning(label).closest("li")!.querySelector<HTMLInputElement>("input[type='checkbox']")!;
 }
 
 function button(name: string): HTMLButtonElement {
@@ -129,13 +123,12 @@ describe("HighlightColorSettings", () => {
 
   it("hides, reorders and renames colours, and saves them to the collection", async () => {
     const { settings } = await open();
-    await click(shown("Green"));
+    await click(button("Hide Green"));
     await click(button("Move Blue up"));
-    await click(button("Move Blue up"));
-    expect(rows()).toEqual(["blue", "yellow", "green (hidden)", "pink", "purple"]);
+    expect(rows()).toEqual(["blue", "yellow", "pink", "purple", "green (hidden)"]);
     // Focus stays with the row that moved, so it can keep moving by keyboard.
     expect(doc().activeElement).toBe(button("Move Blue down"));
-    expect(doc().body.textContent).toContain("Blue moved to position 1 of 5.");
+    expect(doc().body.textContent).toContain("Blue moved to position 1 of 4.");
     await type(meaning("Blue"), "  Definition  ");
     await click(button("Save"));
     expect(settings.getSnapshot().frontmatter).toMatchObject({
@@ -150,9 +143,8 @@ describe("HighlightColorSettings", () => {
   it("keeps at least one colour offered", async () => {
     await open({ highlight_colors: ["pink"] });
     expect(rows()[0]).toBe("pink");
-    expect(shown("Pink").checked).toBe(true);
-    expect(shown("Pink").disabled).toBe(true);
-    expect(shown("Yellow").checked).toBe(false);
+    expect(button("Hide Pink").disabled).toBe(true);
+    expect(button("Show Yellow").disabled).toBe(false);
   });
 
   it("resets to the default by removing both fields", async () => {
@@ -241,5 +233,67 @@ describe("HighlightColorSettings", () => {
       /colours offered cannot be used/u,
     );
     expect(button("Reset to default").disabled).toBe(false);
+  });
+});
+
+describe("HighlightColorSettings on the Settings page", () => {
+  it("lists hidden colours apart, without a place to move, and shows one at the end", async () => {
+    const { settings } = await open({ highlight_colors: ["pink", "blue"] });
+    const hiddenGroup = doc().querySelector("ul.highlight-color-rows")!;
+    expect(hiddenGroup.getAttribute("aria-labelledby")).toBe(
+      doc().querySelector("h4")?.getAttribute("id"),
+    );
+    expect(doc().querySelector("h4")?.textContent).toBe("Hidden");
+    expect(
+      [...hiddenGroup.querySelectorAll<HTMLElement>("li")].map(
+        (row) => row.dataset["highlightColor"],
+      ),
+    ).toEqual(["yellow", "green", "purple"]);
+    expect(hiddenGroup.querySelector("button[aria-label^='Move']")).toBeNull();
+
+    await click(button("Show Green"));
+    expect(rows()).toEqual(["pink", "blue", "green", "yellow (hidden)", "purple (hidden)"]);
+    // Focus follows the colour into the offered list, and the change is announced.
+    expect(doc().activeElement).toBe(button("Hide Green"));
+    expect(doc().body.textContent).toContain("Green shown, at position 3 of 3.");
+    await click(button("Save"));
+    expect(settings.getSnapshot().frontmatter).toMatchObject({
+      highlight_colors: ["pink", "blue", "green"],
+    });
+
+    await click(button("Hide Pink"));
+    expect(rows()).toEqual([
+      "blue",
+      "green",
+      "yellow (hidden)",
+      "pink (hidden)",
+      "purple (hidden)",
+    ]);
+    expect(doc().activeElement).toBe(button("Show Pink"));
+    expect(doc().body.textContent).toContain("Pink hidden.");
+  });
+
+  it("reports unsaved edits, but not this device's old meanings alone", async () => {
+    localStorage.setItem(deviceMeaningsKey, JSON.stringify({ green: "Evidence" }));
+    const memory = await memoryConnection();
+    closers.push(memory.close);
+    const collection = nativeReaderCollection(memory.connection);
+    closers.push(() => collection.dispose());
+    const dirty: boolean[] = [];
+    await act(async () =>
+      root.render(
+        <HighlightColorSettings
+          settings={collection.settings!}
+          onDirtyChange={(value) => dirty.push(value)}
+        />,
+      ),
+    );
+    await settle();
+    expect(button("Save").disabled).toBe(false);
+    expect(dirty.at(-1)).toBe(false);
+    await click(button("Move Green up"));
+    expect(dirty.at(-1)).toBe(true);
+    await click(button("Save"));
+    expect(dirty.at(-1)).toBe(false);
   });
 });
