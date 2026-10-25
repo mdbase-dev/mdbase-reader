@@ -2,7 +2,7 @@ import type { CitationPreview } from "./capture-citation.js";
 import type { ConnectionView } from "./connection-view.js";
 import type { CaptureIntent } from "./messages.js";
 import type { ProjectionReport, QuoteOutcome } from "./page-annotations.js";
-import type { PageCapture } from "./page-capture.js";
+import type { PageCapture, PageKeys } from "./page-capture.js";
 import type { CaptureDraft } from "./save-capture.js";
 import type { ProblemKind } from "./use-action-lock.js";
 import type { PanelHighlightSettings } from "./use-highlight-settings.js";
@@ -69,6 +69,11 @@ export interface ExtensionCaptureController {
   /** Saves the draft; `changes` (such as a clicked colour) apply to it first. */
   readonly save: (changes?: Partial<CaptureDraft>) => Promise<void>;
   readonly clearSelection: () => void;
+  /**
+   * Has the page forward the highlight keys `keys` arms, so they work while focus is in the
+   * page; returns a function that disarms them.
+   */
+  readonly followPageKeys: (keys: PageKeys, onKey: (key: string) => void) => () => void;
   /** Scrolls the page to a saved highlight and marks it briefly. */
   readonly revealHighlight: (id: AnnotationId) => Promise<void>;
   /** These throw on failure, for the highlight list to report beside the highlight. */

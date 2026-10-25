@@ -110,6 +110,7 @@ vi.mock("./page-capture.js", () => ({
   clearPageSelection: mocks.clearPageSelection,
   watchTabSelection: () => Promise.resolve(),
   unwatchTabSelection: () => undefined,
+  followPageKeys: () => () => undefined,
   fetchPdf: vi.fn(),
   renderAnnotations: mocks.render,
   revealAnnotation: mocks.reveal,

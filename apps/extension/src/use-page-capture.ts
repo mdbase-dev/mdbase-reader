@@ -4,10 +4,12 @@ import { intentKey, type CaptureIntent } from "./messages.js";
 import {
   captureTab,
   clearPageSelection,
+  followPageKeys,
   readSelection,
   unwatchTabSelection,
   watchTabSelection,
   type PageCapture,
+  type PageKeys,
 } from "./page-capture.js";
 import { pageStatusEnabled, pageStatusOrigins } from "./page-status.js";
 import { isReaderPage } from "./reader-pages.js";
@@ -38,6 +40,8 @@ export interface PageLink {
   readonly setSelection: (selection: QuoteSelector | null, postId?: string) => void;
   /** The selection was saved: the panel and the page both let it go. */
   readonly consumeSelection: () => void;
+  /** Has the page forward the highlight keys `keys` arms; returns a function that disarms them. */
+  readonly followKeys: (keys: PageKeys, onKey: (key: string) => void) => () => void;
 }
 
 /**
@@ -82,6 +86,10 @@ export function usePageCapture(tabId: number, onProblem: (message: string) => vo
     // Drawing the saved highlight changes the page's selection, which would report it again.
     void clearPageSelection(tabId).catch(() => undefined);
   }, [setSelection, tabId]);
+  const followKeys = useCallback(
+    (keys: PageKeys, onKey: (key: string) => void) => followPageKeys(tabId, keys, onKey),
+    [tabId],
+  );
   const readPage = useCallback(async (): Promise<PageCapture | null> => {
     const epoch = ++readingEpoch.current;
     const settle = (value: PageCapture | null): void => {
@@ -161,6 +169,7 @@ export function usePageCapture(tabId: number, onProblem: (message: string) => vo
     allowAllSites,
     setSelection,
     consumeSelection,
+    followKeys,
   };
 }
 

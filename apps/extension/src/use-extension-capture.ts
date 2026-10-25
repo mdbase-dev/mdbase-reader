@@ -691,6 +691,7 @@ export function useExtensionCapture(
     knownTags: tags.knownTags,
     loadTags: tags.loadTags,
     note,
+    followPageKeys: page.followKeys,
   };
 }
 

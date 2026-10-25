@@ -2,6 +2,7 @@ import { highlightPalette, offeredHighlightColor } from "@mdbase-reader/core";
 import { useEffect, useRef, useState } from "react";
 
 import { displayQuote } from "./highlight-body.js";
+import { highlightKeyAction, type HighlightKeyAction } from "./highlight-keys.js";
 import { modifierKey, saveBlocker } from "./SaveBar.js";
 import { TagInput } from "./TagInput.js";
 
@@ -27,7 +28,7 @@ export function HighlightFields({
   const selection = c.capture?.kind === "html" ? c.capture.selection : null;
   const intent = c.invocation;
   const blocker = saveBlocker(c);
-  const { save, clearSelection } = c;
+  const { save, clearSelection, followPageKeys } = c;
   const { colors, meanings } = c.highlight;
   // The device's colour (the one used last), or the first offered while that one is hidden.
   const chosen = offeredHighlightColor(c.draft.color, colors);
@@ -36,7 +37,7 @@ export function HighlightFields({
       comment.current?.focus();
     }
   }, [intent, openDetails]);
-  useColorKeys(selection !== null, colors, ready, save, clearSelection);
+  useColorKeys(selection !== null, colors, ready, save, clearSelection, followPageKeys);
   if (!selection) {
     return null;
   }
@@ -117,7 +118,8 @@ export function HighlightFields({
 
 /**
  * While a passage is selected, 1, 2, 3… save it in the colour at that place in one step and
- * Esc lets it go, unless the reader is typing.
+ * Esc lets it go, unless the reader is typing. The page forwards the same keys while focus is
+ * in it, so they work straight after selecting there.
  */
 function useColorKeys(
   selected: boolean,
@@ -125,11 +127,19 @@ function useColorKeys(
   ready: boolean,
   save: ExtensionCaptureController["save"],
   clearSelection: () => void,
+  followPageKeys: ExtensionCaptureController["followPageKeys"],
 ): void {
   useEffect(() => {
     if (!selected) {
       return;
     }
+    const act = (action: HighlightKeyAction): void => {
+      if (action?.kind === "save") {
+        void save({ highlight: true, color: action.color });
+      } else if (action?.kind === "clear") {
+        clearSelection();
+      }
+    };
     const onKeyDown = (event: KeyboardEvent): void => {
       if (event.defaultPrevented || event.altKey || event.ctrlKey || event.metaKey) {
         return;
@@ -140,18 +150,21 @@ function useColorKeys(
       ) {
         return;
       }
-      const color = colors[Number(event.key) - 1];
-      if (color && ready) {
+      const action = highlightKeyAction(event.key, colors, ready);
+      if (action) {
         event.preventDefault();
-        void save({ highlight: true, color });
-      } else if (event.key === "Escape") {
-        event.preventDefault();
-        clearSelection();
+        act(action);
       }
     };
     document.addEventListener("keydown", onKeyDown);
-    return () => document.removeEventListener("keydown", onKeyDown);
-  }, [clearSelection, colors, ready, save, selected]);
+    const disarm = followPageKeys({ colors: ready ? colors.length : 0, clear: true }, (key) =>
+      act(highlightKeyAction(key, colors, ready)),
+    );
+    return () => {
+      document.removeEventListener("keydown", onKeyDown);
+      disarm();
+    };
+  }, [clearSelection, colors, followPageKeys, ready, save, selected]);
 }
 
 /** "blue, Key point" for names, or "Blue · Key point" for the caption under the action. */
