@@ -237,18 +237,10 @@ details.technical summary {
   clip-path: inset(50%);
   white-space: nowrap;
 }
-.save-status:not(:empty) {
-  padding: var(--sp-3) var(--gutter);
-  border-bottom: 1px solid var(--line);
-  color: var(--text-3);
-  background: var(--bg-canvas);
-  font-size: var(--text-xs);
-}
-.save-status p {
-  margin: 0;
-}
-.save-status p + p {
-  margin-top: var(--sp-1);
+/* The page's one status line, under its title. */
+.page-card .page-status:not(:empty) {
+  margin-top: 6px;
+  color: var(--text-2);
 }
 /* Save action ---------------------------------------------------------------------- */
 .save-bar {
@@ -259,9 +251,6 @@ details.technical summary {
 }
 .save-bar .hint {
   margin: 6px 0 0;
-}
-.page-card .saved-line {
-  margin-top: 6px;
 }
 /* A page Reader cannot read: an ordinary state, said without alarm. */
 .page-note {

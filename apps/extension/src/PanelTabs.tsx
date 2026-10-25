@@ -25,7 +25,7 @@ export function PanelTabs({
   onChange,
 }: {
   readonly tab: PanelTab;
-  /** Saved highlights on this page's source; null before the page is saved. */
+  /** Saved highlights on this page's source, counted once there are any. */
   readonly highlightCount: number | null;
   readonly onChange: (tab: PanelTab) => void;
 }): React.JSX.Element {
@@ -67,7 +67,7 @@ export function PanelTabs({
         >
           <Icon />
           <span className="panel-tab-label">{label}</span>
-          {id === "highlights" && highlightCount !== null ? (
+          {id === "highlights" && highlightCount ? (
             <span className="panel-tab-count">{highlightCount}</span>
           ) : null}
         </button>

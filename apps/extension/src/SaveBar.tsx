@@ -70,7 +70,8 @@ export function SaveBar({
   }
   const pdf = c.capture.kind === "pdf";
   if (source) {
-    // A PDF's highlighting happens in Reader, so that is the next step, not an aside.
+    // A PDF's highlighting happens in Reader, so that is the next step, not an aside. A
+    // saved page's link sits in the status line instead.
     return pdf ? (
       <a
         className="primary reader-link save-bar"
@@ -80,14 +81,7 @@ export function SaveBar({
       >
         Open in Reader to highlight
       </a>
-    ) : (
-      <p className="saved-line">
-        {c.status === "existing" ? "In this collection" : "Saved"} ·{" "}
-        <a href={readerSourceUrl(source)} target="_blank" rel="noreferrer">
-          Open in Reader
-        </a>
-      </p>
-    );
+    ) : null;
   }
   return (
     <div className="save-bar">

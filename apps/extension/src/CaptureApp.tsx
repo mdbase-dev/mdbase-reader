@@ -1,5 +1,6 @@
-import { useEffect, useState } from "react";
+import { Fragment, useEffect, useState } from "react";
 
+import { readerSourceUrl } from "./capture-model.js";
 import { CitationPanel } from "./CitationPanel.js";
 import { collectionName, ConnectionPanel, ConnectionProblem } from "./ConnectionPanel.js";
 import { useDiagnosticsShown } from "./diagnostics-setting.js";
@@ -78,11 +79,12 @@ export function CaptureApp({
               ? `${new URL(controller.capture.canonicalUrl).hostname}${controller.capture.kind === "pdf" ? " · PDF" : ""}`
               : "Waiting for the active tab"}
           </p>
+          <PageStatus controller={controller} />
           <SaveBar controller={controller} />
           <PostPicker controller={controller} />
         </section>
       )}
-      <PanelStatus controller={controller} />
+      <ConnectionProblem controller={controller} />
       {controller.capture && !unreadable(controller) ? (
         <>
           <PanelTabs tab={tab} highlightCount={highlightCount} onChange={setTab} />
@@ -213,35 +215,43 @@ function UnreadablePage({ controller: c }: ControllerProps): React.JSX.Element {
 }
 
 /**
- * One place for what is happening: a problem with its recovery, or else the single most
- * relevant status line. Says nothing while the panel is simply waiting.
+ * The page's one status line, under its title: what is happening, or else whether it is
+ * saved, with the way into Reader and Undo for a highlight just made. A problem says what
+ * happened itself, below the card, so the line then keeps only its actions. Says nothing
+ * while the panel is simply waiting.
  */
-function PanelStatus({ controller: c }: ControllerProps): React.JSX.Element {
+function PageStatus({ controller: c }: ControllerProps): React.JSX.Element {
   const message = c.problem ? null : statusMessage(c);
+  // A saved PDF's next step is the Save bar's own Open in Reader to highlight.
+  const link = c.source && c.capture?.kind !== "pdf" ? readerSourceUrl(c.source) : null;
+  const parts = [
+    message ? <span key="message">{message}</span> : null,
+    link ? (
+      <a key="link" href={link} target="_blank" rel="noreferrer">
+        Open in Reader
+      </a>
+    ) : null,
+    c.undoable && !c.busy ? (
+      <button
+        key="undo"
+        type="button"
+        className="inline-link"
+        onClick={() => void c.undoHighlight()}
+      >
+        Undo
+      </button>
+    ) : null,
+  ].filter((part) => part !== null);
   return (
-    <>
-      <ConnectionProblem controller={c} />
-      {/* The live region stays mounted so screen readers announce what appears in it. */}
-      <div className="save-status" role="status" aria-live="polite">
-        {message ? (
-          <p>
-            {message}
-            {c.undoable && !c.busy ? (
-              <>
-                {" "}
-                <button
-                  type="button"
-                  className="inline-link"
-                  onClick={() => void c.undoHighlight()}
-                >
-                  Undo
-                </button>
-              </>
-            ) : null}
-          </p>
-        ) : null}
-      </div>
-    </>
+    // The live region stays mounted so screen readers announce what appears in it.
+    <p className="page-status" role="status" aria-live="polite">
+      {parts.map((part, index) => (
+        <Fragment key={part.key}>
+          {index ? " · " : null}
+          {part}
+        </Fragment>
+      ))}
+    </p>
   );
 }
 
@@ -259,10 +269,10 @@ function statusMessage(c: ExtensionCaptureController): string | null {
   if (c.notice) {
     return c.notice;
   }
-  if (c.status === "saved") {
-    return "Saved to your collection.";
+  if (c.source) {
+    return c.status === "saved" ? "Saved" : "In your collection";
   }
-  if (c.saveAttempted && !c.source && !c.busy) {
+  if (c.saveAttempted && !c.busy) {
     return "We couldn’t confirm this saved. Saving again checks first, so nothing is saved twice.";
   }
   return c.draftRestored ? "Restored your unsaved note from earlier." : null;

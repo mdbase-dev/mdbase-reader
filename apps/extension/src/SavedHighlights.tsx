@@ -31,9 +31,8 @@ export function SavedHighlights({
   return (
     <section className="saved-highlights" aria-labelledby="saved-highlights-heading">
       <div className="list-header">
-        <h2 id="saved-highlights-heading">
-          Saved highlights {highlights.length ? <span>{highlights.length}</span> : null}
-        </h2>
+        {/* The Highlights tab already counts them. */}
+        <h2 id="saved-highlights-heading">Saved highlights</h2>
         <button
           type="button"
           className="text-button"

@@ -180,7 +180,7 @@ it("lists saved highlights and says which ones the page could not show", () => {
       ]),
     } as unknown as ExtensionCaptureController["projection"],
   });
-  expect(html).toMatch(/Saved highlights <span>3<\/span>/u);
+  expect(html).toContain(">Saved highlights</h2>");
   expect(html).toMatch(/Highlights<\/span><span class="panel-tab-count">3<\/span>/u);
   expect(html).toContain("shown passage");
   expect(html).toContain("My comment");
@@ -192,7 +192,7 @@ it("lists saved highlights and says which ones the page could not show", () => {
   expect(html).toContain("still in the saved copy");
   expect(html).not.toContain("A note without a quote");
   expect(html).toContain("collection=c1&amp;source=s1");
-  expect(html).toMatch(/Saved · <a[^>]*>Open in Reader/u);
+  expect(html).toMatch(/role="status"[^>]*><span>In your collection<\/span> · <a[^>]*>Open in Reader/u);
   // The passage is tinted in its colour; there is no hint while saved highlights show.
   expect(html).toMatch(/swatch-green"><button[^>]*><span class="highlight-mark">shown passage/u);
   expect(html).not.toContain("Select text on the page");
@@ -254,10 +254,24 @@ it("does not display stale write progress after a successful save", () => {
     refreshing: true,
     progress: { phase: "creating", completedBytes: 1, totalBytes: 1, fileIndex: 1, fileCount: 1 },
   });
-  expect(html).toContain("Saved to your collection.");
+  expect(html).toMatch(/<span>Saved<\/span> · <a[^>]*>Open in Reader/u);
   expect(html).toContain("Updating…");
-  expect(html).toContain("Saved · ");
   expect(html).not.toContain("Saving source record");
+});
+it("says a highlight saved once, in the status line with its way back", () => {
+  const html = markup({
+    status: "saved",
+    source: savedSource,
+    notice: "Highlight saved.",
+    undoable: { id: "a1" } as unknown as ExtensionCaptureController["undoable"],
+  });
+  expect(html).toMatch(
+    /<p class="page-status" role="status"[^>]*><span>Highlight saved.<\/span> · <a[^>]*>Open in Reader<\/a> · <button[^>]*>Undo<\/button><\/p>/u,
+  );
+  expect(html.match(/Open in Reader/gu)).toHaveLength(1);
+  expect(html).not.toContain("Saved to your collection");
+  // No count on the tab before there is anything to count.
+  expect(html).not.toContain("panel-tab-count");
 });
 it("labels recovery scans separately from duplicate checks", () => {
   const html = markup({
