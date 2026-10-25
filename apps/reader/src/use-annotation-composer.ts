@@ -76,6 +76,11 @@ export function useAnnotationComposer(
     readonly recolorAnnotation?:
       ((annotation: Annotation, color: string) => Promise<Annotation>) | undefined;
     readonly planDeletion: (annotation: Annotation) => Promise<AnnotationDeletionPlan>;
+    /**
+     * Makes an annotation just saved elsewhere in the source's family listed, so its card can
+     * open even where the chapter's list would leave it out.
+     */
+    readonly revealAnnotation?: ((annotation: Annotation) => void) | undefined;
     readonly deleteAnnotation: (
       annotation: Annotation,
       plan: AnnotationDeletionPlan,
@@ -132,6 +137,8 @@ export function useAnnotationComposer(
   const currentId = (id: AnnotationId | null): AnnotationId | null =>
     annotations.some((annotation) => annotation.id === id) ? id : null;
   const edit = (annotation: Annotation): void => {
+    // Undo would delete what is written here, so it ends as editing begins.
+    undo.withdrawUndo(annotation.id);
     toolbar.hide();
     setEditingId(annotation.id);
     setActiveId(annotation.id);
@@ -160,7 +167,11 @@ export function useAnnotationComposer(
     selectionAnchor,
     toolbar: toolbar.state,
     dismissToolbar: toolbar.hide,
-    comment: (selection) => creation.highlight(selection, undefined, edit),
+    comment: (selection) =>
+      creation.highlight(selection, undefined, (created) => {
+        input.revealAnnotation?.(created);
+        edit(created);
+      }),
     quoteCitation: source
       ? { title: source.title, ...(source.citation?.id ? { citekey: source.citation.id } : {}) }
       : null,

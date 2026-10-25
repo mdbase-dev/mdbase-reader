@@ -103,6 +103,10 @@ async function mount(
   surface: ReadingSurface,
   create: (request: unknown) => Promise<Annotation>,
   annotations: () => readonly Annotation[],
+  options: {
+    readonly revealAnnotation?: (annotation: Annotation) => void;
+    readonly deleteAnnotation?: () => Promise<void>;
+  } = {},
 ): Promise<() => Promise<void>> {
   function Harness(): null {
     composer = useAnnotationComposer({
@@ -112,7 +116,8 @@ async function mount(
       create,
       annotations: annotations(),
       planDeletion: vi.fn().mockResolvedValue({ brokenLinkPaths: [] }),
-      deleteAnnotation: vi.fn(),
+      deleteAnnotation: options.deleteAnnotation ?? vi.fn(),
+      revealAnnotation: options.revealAnnotation,
     });
     return null;
   }
@@ -145,7 +150,12 @@ it("comments on a selection by saving the highlight and opening its card, with n
     saved = [created];
     return Promise.resolve(created);
   });
-  const rerender = await mount(source, surface, create, () => saved);
+  const revealAnnotation = vi.fn();
+  const deleteAnnotation = vi.fn(() => Promise.resolve());
+  const rerender = await mount(source, surface, create, () => saved, {
+    revealAnnotation,
+    deleteAnnotation,
+  });
   await settle(() => text.emit(passage));
   const target = composer?.toolbar?.target;
   expect(target?.kind).toBe("selection");
@@ -163,7 +173,27 @@ it("comments on a selection by saving the highlight and opening its card, with n
   expect(composer?.selection).toBeNull();
   expect(composer?.toolbar).toBeNull();
   expect(composer).not.toHaveProperty("resumeDraft");
-  expect(composer?.savedHighlight?.status).toBe("saved");
+  // Its card is listed even when the chapter's list would leave it out.
+  expect(revealAnnotation).toHaveBeenCalledExactlyOnceWith(created);
+  // Undo would take the comment being written with it, so it is not offered here.
+  expect(composer?.savedHighlight).toMatchObject({ status: "saved", undoable: false });
+  await settle(() => composer!.undoSavedHighlight());
+  expect(deleteAnnotation).not.toHaveBeenCalled();
+});
+
+it("says so where it can be seen when commenting could not save the highlight", async () => {
+  const source = await book();
+  const { surface, text } = surfaceFor(source, 3);
+  const create = vi.fn(() => Promise.reject(new Error("The collection is offline.")));
+  const revealAnnotation = vi.fn();
+  await mount(source, surface, create, () => [], { revealAnnotation });
+  await settle(() => text.emit(passage));
+  const target = composer?.toolbar?.target as { readonly selection: TextComposerSelection };
+  await settle(() => composer!.comment(target.selection));
+  expect(composer?.error).toContain("The collection is offline.");
+  expect(composer?.editingAnnotationId).toBeNull();
+  expect(composer?.selection).toBeNull();
+  expect(revealAnnotation).not.toHaveBeenCalled();
 });
 
 it("drops a bare area capture when the reader turns to a highlight, but keeps a written one", async () => {

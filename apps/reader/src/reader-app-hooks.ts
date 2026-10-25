@@ -249,7 +249,12 @@ export function useReaderAnnotationComposer(
     source: source?.id === sourceId ? source : null,
     surface,
     create: workspace.createAnnotation,
-    ...(workspace.annotationView ? { ownershipSources: workspace.annotationView.sources } : {}),
+    ...(workspace.annotationView
+      ? {
+          ownershipSources: workspace.annotationView.sources,
+          revealAnnotation: workspace.annotationView.reveal,
+        }
+      : {}),
     ...(gateway ? { ownerGateway: gateway } : {}),
     annotations: workspace.annotations.status === "ready" ? workspace.annotations.value : [],
     planDeletion: workspace.planAnnotationDeletion,
