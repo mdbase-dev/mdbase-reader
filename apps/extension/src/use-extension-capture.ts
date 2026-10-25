@@ -1,3 +1,4 @@
+import { offeredHighlightColor } from "@mdbase-reader/core";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import { prepareCitation, type CitationPreview } from "./capture-citation.js";
@@ -18,6 +19,7 @@ import { CaptureWriter, type CaptureDraft } from "./save-capture.js";
 import { scopePostQuotes } from "./social-quotes.js";
 import { rememberTags, splitTags } from "./tag-suggestions.js";
 import { useActionLock } from "./use-action-lock.js";
+import { useHighlightSettings } from "./use-highlight-settings.js";
 import { useKnownTags } from "./use-known-tags.js";
 import { usePageCapture } from "./use-page-capture.js";
 import { useQuickSave } from "./use-quick-save.js";
@@ -36,6 +38,7 @@ import type {
   Annotation,
   AnnotationDeletionPlan,
   AnnotationId,
+  HighlightColorKey,
   SourceImportProgress,
   SourceSummary,
   SocialPost,
@@ -96,6 +99,7 @@ export function useExtensionCapture(
   } | null>(null);
   const discovery = useRef(0);
   const extension = connection.extension;
+  const highlight = useHighlightSettings(extension, selectedText(capture));
   const writer = useMemo(
     () => (extension ? new CaptureWriter(extension.journalStorage) : null),
     [extension],
@@ -295,7 +299,7 @@ export function useExtensionCapture(
       if (!capture) {
         throw new Error("The page is not ready. Reopen Reader on this page before saving.");
       }
-      const draft = draftForSave(stored.draft, changes);
+      const draft = draftForSave(stored.draft, changes, highlight.colors);
       const changedTitle = draft.title !== stored.draft.title;
       const savingCitation =
         latestCitation.current?.page === capture.canonicalUrl
@@ -628,16 +632,28 @@ export function useExtensionCapture(
     siteAccess: page.siteAccess,
     invocation: page.invocation,
     undoable: undoable !== null,
+    highlight,
     knownTags: tags.knownTags,
     loadTags: tags.loadTags,
     note,
   };
 }
 
-function draftForSave(draft: CaptureDraft, changes?: Partial<CaptureDraft>): CaptureDraft {
+function draftForSave(
+  draft: CaptureDraft,
+  changes: Partial<CaptureDraft> | undefined,
+  offered: readonly HighlightColorKey[],
+): CaptureDraft {
   const titleEdited =
     Boolean(draft.titleEdited) || (changes?.title !== undefined && changes.title !== draft.title);
-  return { ...draft, ...changes, titleEdited };
+  // Ctrl/⌘+Enter saves in the colour used last, or the first offered while it is hidden.
+  const color = changes?.color ?? offeredHighlightColor(draft.color, offered);
+  return { ...draft, ...changes, ...(changes?.highlight ? { color } : {}), titleEdited };
+}
+
+/** The passage selected on an article page, if any. */
+function selectedText(capture: PageCapture | null): string | null {
+  return capture?.kind === "html" ? (capture.selection?.exact ?? null) : null;
 }
 
 function pageCitationPending(

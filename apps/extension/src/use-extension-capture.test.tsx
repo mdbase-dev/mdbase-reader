@@ -64,7 +64,11 @@ const application = {
   },
 };
 // Like the real session: one adapter per READY connection.
-const ready = { collectionId: "test", annotations: { listForSource: mocks.list } };
+const ready: {
+  collectionId: string;
+  annotations: { listForSource: typeof mocks.list };
+  settings?: { highlightColors: () => Promise<unknown> };
+} = { collectionId: "test", annotations: { listForSource: mocks.list } };
 const extension = {
   application,
   connectedCollection: () => (current["status"] === "ready" ? ready : null),
@@ -823,6 +827,46 @@ it("saves in a chosen colour in one step and remembers it for the next highlight
   expect(controller.draft.color).toBe("green");
   expect(chromeFake.local.get("highlight-color")).toBe("green");
   expect(controller.notice).toBe("Highlight saved.");
+});
+it("offers the collection's colours and saves Ctrl+Enter in the first while the last is hidden", async () => {
+  const highlightColors = vi.fn().mockResolvedValue({
+    colors: ["pink", "blue"],
+    meanings: { pink: "Question" },
+    meaningsStored: true,
+  });
+  ready.settings = { highlightColors };
+  mocks.save.mockResolvedValue({ source: existing, annotation: {}, existing: true, notices: [] });
+  try {
+    await mount();
+    expect(highlightColors).toHaveBeenCalled();
+    expect(controller.highlight).toEqual({
+      colors: ["pink", "blue"],
+      meanings: { pink: "Question" },
+    });
+    // The device's last colour, yellow, is hidden in this collection.
+    expect(controller.draft.color).toBe("yellow");
+    await act(async () => {
+      await controller.save({ highlight: true });
+    });
+    expect(mocks.save).toHaveBeenCalledWith(
+      expect.objectContaining({ draft: expect.objectContaining({ color: "pink" }) }),
+    );
+    // Coming back to the panel asks again, so an edit made in Reader shows by the next highlight.
+    highlightColors.mockResolvedValue({ colors: ["green"], meanings: {}, meaningsStored: false });
+    await act(async () => {
+      globalThis.dispatchEvent(new Event("focus"));
+    });
+    await act(async () => {
+      await new Promise((resolve) => setTimeout(resolve, 0));
+    });
+    expect(controller.highlight.colors).toEqual(["green"]);
+  } finally {
+    delete ready.settings;
+  }
+});
+it("offers all five colours when the host has no settings", async () => {
+  await mount();
+  expect(controller.highlight.colors).toEqual(["yellow", "green", "blue", "pink", "purple"]);
 });
 it("saves the highlight at once when invoked with Save highlight", async () => {
   mocks.sourceForUrl.mockResolvedValue(existing);
