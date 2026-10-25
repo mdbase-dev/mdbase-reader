@@ -1,5 +1,12 @@
 import { signalMdbaseMark } from "@mdbase-dev/ui/mark-activity";
-import { useCallback, useMemo, useState } from "react";
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useState,
+  type Dispatch,
+  type SetStateAction,
+} from "react";
 
 import { readerErrorMessage } from "./errors.js";
 import { useAnnotationActivations } from "./use-annotation-activations.js";
@@ -27,7 +34,7 @@ import type {
   HighlightColorKey,
   SourceId,
 } from "@mdbase-reader/core";
-import type { ViewportRect } from "@mdbase-reader/reading-surface";
+import type { ReadingSurface, ViewportRect } from "@mdbase-reader/reading-surface";
 export { saveSelection, subscribeToSelections } from "./annotation-selection.js";
 export type { ComposerSelection } from "./annotation-composer-request.js";
 
@@ -45,6 +52,8 @@ export interface AnnotationComposerController extends AnnotationCreationControll
   /** Quick actions for the live selection or a clicked highlight. */
   readonly toolbar: SelectionToolbarState | null;
   readonly dismissToolbar: () => void;
+  /** Lets a highlight go, as Escape does: its actions close and it is no longer active. */
+  readonly releaseAnnotation: (annotationId: AnnotationId) => void;
   /**
    * Comments on a selection: saves it as a highlight in the colour used last, then opens that
    * highlight's card to write the comment, where it saves like any other edit.
@@ -154,6 +163,7 @@ export function useAnnotationComposer(
     navigation.clearError();
     toolbar.showAnnotation(annotation);
   });
+  const release = useHighlightRelease(surface, activeId, hideAnnotationToolbar, setActiveId);
   const anchor = useSelectionAnchor(surface);
   const selectionAnchor = anchor && creation.selection?.value === anchor.draft ? anchor.rect : null;
   return {
@@ -169,6 +179,7 @@ export function useAnnotationComposer(
     selectionAnchor,
     toolbar: toolbar.state,
     dismissToolbar: toolbar.hide,
+    releaseAnnotation: release,
     comment: (selection) =>
       creation.highlight(selection, undefined, (created) => {
         input.revealAnnotation?.(created);
@@ -196,6 +207,35 @@ export function useAnnotationComposer(
     bookmarking: bookmark.bookmarking,
     bookmark: bookmark.bookmark,
   };
+}
+
+/**
+ * Letting a highlight go closes its actions and leaves no highlight active, in the panel as in
+ * the document: by Escape, or where the document reports it let go, as on a click on empty page.
+ */
+function useHighlightRelease(
+  surface: ReadingSurface | null,
+  activeId: AnnotationId | null,
+  hideAnnotationToolbar: (annotationId: AnnotationId) => void,
+  setActiveId: Dispatch<SetStateAction<AnnotationId | null>>,
+): (annotationId: AnnotationId) => void {
+  const release = useCallback(
+    (annotationId: AnnotationId): void => {
+      hideAnnotationToolbar(annotationId);
+      setActiveId((id) => (id === annotationId ? null : id));
+    },
+    [hideAnnotationToolbar, setActiveId],
+  );
+  useEffect(
+    () =>
+      surface?.capabilities.annotationActivation?.dismissals?.subscribe(() => {
+        if (activeId) {
+          release(activeId);
+        }
+      }),
+    [activeId, release, surface],
+  );
+  return release;
 }
 
 /** Changing a clicked highlight's colour closes its toolbar; a failure is reported in place. */
