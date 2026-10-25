@@ -59,6 +59,7 @@ const annotation: Annotation = {
 async function open(seed?: Record<string, string | number>): Promise<{
   readonly settings: ReaderSettingsStore;
   readonly replica: Awaited<ReturnType<typeof memoryConnection>>["replica"];
+  readonly connection: Awaited<ReturnType<typeof memoryConnection>>["connection"];
   readonly onClose: () => void;
 }> {
   const memory = await memoryConnection();
@@ -85,7 +86,7 @@ async function open(seed?: Record<string, string | number>): Promise<{
     ),
   );
   await settle();
-  return { settings, replica: memory.replica, onClose };
+  return { settings, replica: memory.replica, connection: memory.connection, onClose };
 }
 
 /** Let the store read and the async previews and checks finish. */
@@ -204,7 +205,7 @@ describe("FileNameSettings", () => {
   });
 
   it("warns about a saved template it cannot use", async () => {
-    await open({
+    const { settings } = await open({
       app: "dev.mdbase.reader",
       scope: "collection",
       settings_version: 1,
@@ -214,5 +215,37 @@ describe("FileNameSettings", () => {
     expect(
       template("Annotations").querySelector(".file-name-template-warning")?.textContent,
     ).toMatch(/Unknown filter "nope"/u);
+    // Nothing is edited yet, so nothing is pending.
+    expect(button("Save").disabled).toBe(true);
+    button("Close");
+
+    await act(async () => button("Reset to default", template("Annotations")).click());
+    await settle();
+    expect(button("Save").disabled).toBe(false);
+    await act(async () => button("Save").click());
+    await settle();
+    expect(settings.getSnapshot().frontmatter).not.toHaveProperty("annotation_name_template");
+  });
+
+  it("names the template another device changed", async () => {
+    const { connection } = await open({
+      app: "dev.mdbase.reader",
+      scope: "collection",
+      settings_version: 1,
+      source_name_template: "{{ title }}",
+    });
+    await type(input("Source notes"), "{{ year }} {{ title }}");
+    // Another device edits the same field while this one is being edited.
+    const elsewhere = nativeReaderCollection(connection);
+    closers.push(() => elsewhere.dispose());
+    await act(async () => {
+      await elsewhere.settings?.save({ source_name_template: "{{ author }} {{ title }}" });
+    });
+    await settle();
+    await act(async () => button("Save").click());
+    await settle();
+    expect(host.ownerDocument.body.textContent).toContain(
+      "The source notes template changed somewhere else.",
+    );
   });
 });

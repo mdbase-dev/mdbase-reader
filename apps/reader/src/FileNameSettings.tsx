@@ -219,7 +219,7 @@ function TemplateInput({
         />
         <button
           type="button"
-          disabled={disabled || isDefault}
+          disabled={disabled || (isDefault && !warning)}
           onClick={() => onChange(defaults[field.key])}
         >
           Reset to default
@@ -229,7 +229,7 @@ function TemplateInput({
         {field.hint} Variables: {field.variables}.
       </p>
       {problem ? (
-        <p id={`${id}-problem`} className="file-name-template-problem" role="alert">
+        <p id={`${id}-problem`} className="file-name-template-problem">
           {problem}
         </p>
       ) : null}
@@ -279,7 +279,7 @@ function TemplatePreview({
     return <p className="file-name-preview-empty">{empty}</p>;
   }
   return (
-    <div className="file-name-preview" aria-live="polite">
+    <div className="file-name-preview">
       <span className="file-name-preview-label">{invalid ? "Last valid preview" : "Preview"}</span>
       <ul aria-label="Preview">
         {shown.map((row) => (
@@ -349,6 +349,16 @@ function useSave(
     if (result.reason === "conflict") {
       // Show what is there now; saving again replaces it knowingly.
       editor.rebase(result.snapshot, true);
+      const names = fields
+        .filter(({ key }) => result.fields?.includes(key))
+        .map(({ label }) => `${label.toLowerCase()} template`);
+      if (names.length > 0) {
+        setMessage({
+          text: `The ${names.join(" and ")} changed somewhere else. Review and save again.`,
+          error: true,
+        });
+        return;
+      }
     }
     setMessage({ text: result.message, error: true });
   };
@@ -397,7 +407,9 @@ function useTemplateDrafts(snapshot: AppSettingsSnapshot<ReaderSettingsValues>):
       })),
     changes: () => {
       const changes: Partial<Record<ReaderSettingKey, string | null>> = {};
-      for (const { key } of fields) {
+      // Only what the user edited: a saved template Reader cannot use shows the default, but
+      // stays as written until someone changes or resets it.
+      for (const { key } of fields.filter((field) => state.edited.has(field.key))) {
         const draft = state.drafts[key];
         const written = state.base.frontmatter?.[key];
         if (draft === defaults[key]) {
