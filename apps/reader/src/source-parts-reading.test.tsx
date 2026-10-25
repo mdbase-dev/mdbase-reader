@@ -228,6 +228,49 @@ it("leaves a reader outside the chapter where they are when the source record re
   expect(surface.currentLocation()).toEqual({ kind: "pdf", pageIndex: 22 });
 });
 
+it("restores a position saved elsewhere while the surface was inactive, instead of overwriting it", async () => {
+  const { chapter } = await anthology();
+  const surface = pdf(chapter);
+  const save = vi.fn().mockResolvedValue(undefined);
+  function Harness({ source }: { readonly source: Source | null }): null {
+    useReadingResume({ source, surface, save });
+    return null;
+  }
+  await act(async () => {
+    root.render(<Harness source={chapter} />);
+    await Promise.resolve();
+  });
+  await act(async () => {
+    await surface.goTo({ kind: "pdf", pageIndex: 12 });
+    await vi.advanceTimersByTimeAsync(1200);
+  });
+  // Another tab moves on to page index 17 while this surface is inactive.
+  await act(async () => {
+    root.render(<Harness source={null} />);
+    await Promise.resolve();
+  });
+  save.mockClear();
+  const elsewhere: Source = {
+    ...chapter,
+    reading: {
+      status: "reading",
+      documentFileId: chapter.documents[0]!.fileId,
+      position: { pageIndex: 17, kind: "pdf" },
+    },
+  };
+  await act(async () => {
+    root.render(<Harness source={elsewhere} />);
+    await vi.advanceTimersByTimeAsync(1200);
+  });
+  expect(surface.currentLocation()).toEqual({ kind: "pdf", pageIndex: 17 });
+  expect(save).not.toHaveBeenCalledWith(
+    chapter.id,
+    chapter.documents[0]!.fileId,
+    { kind: "pdf", pageIndex: 12 },
+    expect.anything(),
+  );
+});
+
 it("does not restore or write a previous source while another shared-file session is hydrating", async () => {
   const { chapter, book } = await anthology();
   const surface = pdf(chapter);

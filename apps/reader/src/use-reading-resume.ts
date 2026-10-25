@@ -36,7 +36,7 @@ export function useReadingResume(input: {
   ) => Promise<void>;
 }): ReadingResumeState {
   const [state, setState] = useState<ReadingResumeState>({ status: "idle" });
-  const resumed = useRef(new WeakMap<ReadingSurface, string>());
+  const resumed = useRef(new WeakMap<ReadingSurface, ResumeMark>());
   const sourceRef = useRef(input.source);
   const saveRef = useRef(input.save);
   const queue = useRef(Promise.resolve());
@@ -79,6 +79,10 @@ export function useReadingResume(input: {
     ): void => {
       if (report) {
         setState({ status: "saving" });
+      }
+      const mark = currentResumptions.get(surface);
+      if (mark?.key === contextKey) {
+        rememberWrite(mark, locator);
       }
       queue.current = queue.current
         .then(() => saveForSource(sourceId, surface.document.document.fileId, locator, value))
@@ -127,8 +131,8 @@ export function useReadingResume(input: {
     });
     return () => {
       lifecycle.active = false;
-      // Keep the resumption mark: the source record briefly unloads after each position save,
-      // and resuming again would pull a reader browsing outside a chapter back to its start.
+      // Keep the resumption mark: the source record briefly unloads after each position save, and
+      // resuming from our own write would pull a reader browsing outside a chapter to its start.
       unsubscribe?.();
       clearTimeout(timer);
       if (latest) {
@@ -140,20 +144,71 @@ export function useReadingResume(input: {
   return state;
 }
 
+/**
+ * What a surface last resumed for a source context: the saved position it saw then and the
+ * positions it has written since. A reload that shows one of these is the surface's own state; any
+ * other saved position was written elsewhere (another tab or device) and is restored.
+ */
+interface ResumeMark {
+  readonly key: string;
+  seen: string | undefined;
+  readonly written: string[];
+}
+
+const rememberedWrites = 20;
+
+function rememberWrite(mark: ResumeMark, locator: ReaderLocator): void {
+  mark.written.push(locatorKey(locator));
+  if (mark.written.length > rememberedWrites) {
+    mark.written.shift();
+  }
+}
+
+/** Compares locators by value, whatever order a store returns their fields in. */
+function locatorKey(locator: ReaderLocator): string {
+  return JSON.stringify(locator, (_key, value: unknown) =>
+    value && typeof value === "object" && !Array.isArray(value)
+      ? Object.fromEntries(Object.entries(value).sort(([a], [b]) => a.localeCompare(b)))
+      : value,
+  );
+}
+
+/** Where to resume, or null when this surface should stay where it is. */
+function resumeLocation(
+  stored: ReaderLocator | undefined,
+  storedKey: string | undefined,
+  surface: ReadingSurface,
+  mark: ResumeMark | undefined,
+  key: string,
+): { readonly saved: ReaderLocator | undefined } | null {
+  if (mark?.key === key) {
+    // Only a position saved elsewhere while this surface was inactive is newer than its own.
+    return !storedKey || storedKey === mark.seen || mark.written.includes(storedKey)
+      ? null
+      : { saved: stored };
+  }
+  return hasExplicitReadingNavigation(surface)
+    ? null
+    : { saved: restoredSessionLocation(surface) ?? stored };
+}
+
 async function resumeSourcePosition(
   source: Source,
   surface: ReadingSurface,
   range: ReadingRangeResolution | null,
   key: string,
-  resumed: WeakMap<ReadingSurface, string>,
+  resumed: WeakMap<ReadingSurface, ResumeMark>,
 ): Promise<void> {
-  if (resumed.get(surface) === key || hasExplicitReadingNavigation(surface)) {
+  const stored = savedSourcePosition(source, surface);
+  const storedKey = stored ? locatorKey(stored) : undefined;
+  const target = resumeLocation(stored, storedKey, surface, resumed.get(surface), key);
+  if (!target) {
     return;
   }
-  const saved = restoredSessionLocation(surface) ?? savedSourcePosition(source, surface);
+  const { saved } = target;
   const within = saved && (!range || positionWithinReadingRange(range, saved));
   const start = within ? saved : range?.valid ? range.start : undefined;
-  resumed.set(surface, key);
+  resumed.set(surface, { key, seen: storedKey, written: [] });
   if (start && !(await restoreReadingLocation(surface, start))) {
     throw new Error("The saved reading position could not be opened.");
   }
