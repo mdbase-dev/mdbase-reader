@@ -180,7 +180,7 @@ export class ConnectSourceImportRepository implements SourceImportRepository {
   }
 
   /**
-   * Creates the source note at its readable path, or at the fallback when that path is taken.
+   * Creates the source note at the first of its candidate paths that no other record has.
    * The files are uploaded first and are confirmed by then (`native-files.ts` waits for
    * `write.confirmed`), so only the record can still be refused later; the follow-through
    * keeps it until the collection confirms it.
@@ -196,7 +196,7 @@ export class ConnectSourceImportRepository implements SourceImportRepository {
         kind: "source",
         recordId: plan.sourceId,
         label: plan.title,
-        candidates: [plan.recordPath, plan.fallbackRecordPath ?? plan.recordPath],
+        candidates: plan.recordPathCandidates,
         input: {
           type: "reader-source",
           frontmatter: sourceFrontmatter(plan, descriptors),

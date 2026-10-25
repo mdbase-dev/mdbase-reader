@@ -124,7 +124,7 @@ function sourcePlan(collection: string): PlannedSourceFileImport {
     title: "Adam",
     savedAt: dateTime(now()),
     recordPath: "sources/adam.md",
-    fallbackRecordPath: "sources/adam-src_adam.md",
+    recordPathCandidates: ["sources/adam.md", "sources/adam-src_adam.md"],
     representations: [],
   };
 }

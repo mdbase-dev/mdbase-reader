@@ -23,7 +23,10 @@ export interface SourceImportRepository {
 export interface PlannedSourcePart {
   readonly collectionId: CollectionId;
   readonly sourceId: SourceId;
+  /** The first of {@link recordPathCandidates}. */
   readonly recordPath: string;
+  /** Every path to try for the part's note, in order, named as any other source is. */
+  readonly recordPathCandidates: readonly string[];
   readonly title: string;
   readonly parent: Source;
   readonly document?: DocumentDescriptor;
@@ -125,14 +128,13 @@ export interface PlannedSourceFileImport {
   readonly title: string;
   readonly kind: string;
   readonly savedAt: DateTime;
+  /** The first of {@link recordPathCandidates}. */
   readonly recordPath: string;
-  /** Used instead of `recordPath` when another record already has that path. */
-  readonly fallbackRecordPath?: string;
   /**
-   * Every path to try for the note, in order (`domain/record-names.ts`). Starts with
-   * `recordPath`; not yet used when creating the record.
+   * Every path to try for the note, in order (`domain/record-names.ts`). The record is created
+   * at the first one no other record has.
    */
-  readonly recordPathCandidates?: readonly string[];
+  readonly recordPathCandidates: readonly string[];
   /** Empty for a source created without a document. */
   readonly representations: readonly PlannedSourceRepresentation[];
   readonly body?: string;

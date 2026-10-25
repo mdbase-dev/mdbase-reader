@@ -17,7 +17,8 @@ function plan(): PlannedSourcePart {
   return {
     collectionId: parent.collectionId,
     sourceId: sourceId("chapter"),
-    recordPath: "sources/parts/chapter.md",
+    recordPath: "sources/chapter.md",
+    recordPathCandidates: ["sources/chapter.md", "sources/chapter-smith-2019.md"],
     title: "Chapter",
     parent,
     document: { ...document, range: { kind: "pages", start: 2, end: 5 } },
@@ -105,5 +106,35 @@ describe("guarded reference-existing-file chapter create", () => {
     expect(recovered.id).toBe(proposed.sourceId);
     expect(create).toHaveBeenCalledOnce();
     expect(read).toHaveBeenCalledWith(expect.objectContaining({ path: proposed.recordPath }));
+  });
+  it("moves to the next name when another source already has the chapter's", async () => {
+    const proposed = plan();
+    vi.spyOn(ConnectSourceRepository.prototype, "get").mockResolvedValue(proposed.parent);
+    const create = vi.fn((input: Parameters<ReaderConnectClient["create"]>[0]) =>
+      Promise.resolve(
+        input.path === "sources/chapter.md"
+          ? { ok: false, problem: { code: "path_conflict", message: "Path taken" } }
+          : {
+              ok: true,
+              value: {
+                ...recordDocument(),
+                path: input.path,
+                frontmatter: input.frontmatter,
+                effectiveFrontmatter: input.frontmatter,
+              },
+            },
+      ),
+    );
+    // Another book's chapter of the same name.
+    const read = vi.fn(() => Promise.resolve({ ok: true, value: recordDocument() }));
+    const created = await createSourcePart(
+      { create, read } as unknown as ReaderConnectClient,
+      proposed,
+    );
+    expect(create.mock.calls.map(([input]) => input.path)).toEqual([
+      "sources/chapter.md",
+      "sources/chapter-smith-2019.md",
+    ]);
+    expect(created.path).toBe("sources/chapter-smith-2019.md");
   });
 });
