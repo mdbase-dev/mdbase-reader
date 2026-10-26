@@ -4,7 +4,7 @@
 import { createHash } from "node:crypto";
 import { cp, mkdir, mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
-import { join } from "node:path";
+import { join, relative, resolve } from "node:path";
 
 export const approvedUiArchive = "vendor/mdbase-dev-ui-dev-b2d7c464.tgz";
 const sri = (bytes) => `sha512-${createHash("sha512").update(bytes).digest("base64")}`;
@@ -12,7 +12,11 @@ const sri = (bytes) => `sha512-${createHash("sha512").update(bytes).digest("base
 export async function intakeCopy(target = "staging") {
   const root = await mkdtemp(join(tmpdir(), "reader-intake-data-"));
   try {
-    const ui = JSON.parse(await readFile("vendor/mdbase-ui-i18n.json", "utf8"));
+    const app = JSON.parse(await readFile("apps/reader/package.json", "utf8"));
+    const uiArchive = relative(
+      process.cwd(),
+      resolve("apps/reader", app.dependencies["@mdbase-dev/ui"].slice("file:".length)),
+    );
     const sdk = JSON.parse(
       await readFile("packages/connect/vendor/sdk-production-beta141.json", "utf8"),
     );
@@ -36,11 +40,10 @@ export async function intakeCopy(target = "staging") {
       await mkdir(join(root, path, ".."), { recursive: true });
       await cp(path, join(root, path), { recursive: true });
     }
-    const replacements = [[`vendor/${ui.artifact}`, approvedUiArchive]];
-    replacements.push([
-      sri(await readFile(`vendor/${ui.artifact}`)),
-      sri(await readFile(approvedUiArchive)),
-    ]);
+    const replacements = [
+      [uiArchive, approvedUiArchive],
+      [sri(await readFile(uiArchive)), sri(await readFile(approvedUiArchive))],
+    ];
     if (target === "staging") {
       replacements.push(
         [productionSdk.split("/").at(-1), stagingSdk.split("/").at(-1)],
