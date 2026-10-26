@@ -2,6 +2,7 @@ import { t as translate } from "@lingui/core/macro";
 import { useLingui as useLocale } from "@lingui/react";
 import { Trans } from "@lingui/react/macro";
 import { themePreferences, type ThemePreference } from "@mdbase-dev/ui/theme";
+import { ReaderLanguageSetting } from "@mdbase-reader/i18n/react";
 
 import {
   setAnnotationOwnerPreference,
@@ -44,6 +45,7 @@ export function DisplaySettings({
   const annotationOwner = useAnnotationOwnerPreference();
   return (
     <>
+      <ReaderLanguageSetting />
       {typography && onChangeTypography ? (
         <TypographyControls value={typography} onChange={onChangeTypography} />
       ) : null}

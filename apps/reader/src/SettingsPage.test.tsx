@@ -2,6 +2,7 @@
 /* eslint-disable @typescript-eslint/require-await -- async act flushes React's queued work */
 import { nativeReaderCollection } from "@mdbase-reader/connect/native";
 import { memoryConnection } from "@mdbase-reader/connect/testing";
+import { readerI18n } from "@mdbase-reader/i18n";
 import { act } from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
@@ -41,6 +42,7 @@ afterEach(async () => {
   for (const close of closers.splice(0)) {
     close();
   }
+  await readerI18n.selectLocale("en");
   vi.restoreAllMocks();
 });
 
@@ -153,6 +155,27 @@ async function type(field: HTMLInputElement, value: string): Promise<void> {
 }
 
 describe("SettingsPage", () => {
+  it("changes the actual settings page language from its This device picker", async () => {
+    await render(undefined);
+    await openSettings();
+    const picker = document.querySelector<HTMLSelectElement>(
+      '.settings-device select:has(option[value="it"])',
+    );
+    expect(picker).not.toBeNull();
+    expect(picker?.options).toHaveLength(10);
+    expect(document.querySelector("h1")?.textContent).toBe("Settings");
+    await act(async () => {
+      picker!.value = "it";
+      picker!.dispatchEvent(new Event("change", { bubbles: true }));
+      await vi.waitFor(() => expect(readerI18n.i18n.locale).toBe("it"));
+    });
+    expect(document.querySelector("h1")?.textContent).toBe("Impostazioni");
+    expect(document.documentElement.lang).toBe("it");
+    expect(picker?.value).toBe("it");
+    expect(localStorage.getItem("mdbase-reader:locale")).toBe("it");
+    expect(document.querySelector(".settings-device")?.textContent).toContain("Lingua");
+  });
+
   it("opens as a page with its heading focused, and returns focus to the menu on Back", async () => {
     await render(await collectionSettings());
     await openSettings();
