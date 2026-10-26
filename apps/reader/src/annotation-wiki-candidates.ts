@@ -1,3 +1,5 @@
+import { t } from "@lingui/core/macro";
+
 import { annotationBodyContent } from "./annotation-body-content.js";
 import { annotationKindLabel } from "./annotation-kind.js";
 import { annotationLocationLabel } from "./passage-labels.js";
@@ -11,10 +13,14 @@ export function annotationWikiCandidate(annotation: Annotation): WikiLinkCandida
   return {
     // A bookmark may have no words of its own; its place names it instead.
     label:
-      label.length > 0 ? label : (annotationLocationLabel(annotation) ?? "Untitled annotation"),
+      label.length > 0
+        ? label
+        : (annotationLocationLabel(annotation) ?? t({ message: "Untitled annotation" })),
     path: annotationWikiPath(annotation),
     kind: annotationKindLabel(annotation.annotationType).toLocaleLowerCase(),
-    detail: annotationLocationLabel(annotation) ?? "Whole source",
+    detail:
+      annotationLocationLabel(annotation) ??
+      t({ message: "Whole source", context: "annotation wiki candidates" }),
     ...(quote ? { quote } : {}),
     ...(note ? { note } : {}),
     embed: true,

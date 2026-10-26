@@ -1,3 +1,4 @@
+import { t as translate } from "@lingui/core/macro";
 import {
   readerHighlightSettings,
   type AppSettingsSnapshot,
@@ -34,11 +35,21 @@ const colorKey = "mdbase-reader:highlight-color";
 const deviceMeaningsKey = "mdbase-reader:highlight-meanings";
 /** Placeholders only: nothing is assigned until the reader writes it. */
 export const highlightMeaningSuggestions: Readonly<Record<HighlightColorKey, string>> = {
-  yellow: "Key idea",
-  green: "Evidence",
-  blue: "Definition",
-  pink: "Question",
-  purple: "To follow up",
+  get yellow() {
+    return translate`Key idea`;
+  },
+  get green() {
+    return translate`Evidence`;
+  },
+  get blue() {
+    return translate`Definition`;
+  },
+  get pink() {
+    return translate`Question`;
+  },
+  get purple() {
+    return translate`To follow up`;
+  },
 };
 
 export interface HighlightChoices {
@@ -230,7 +241,7 @@ export function useLastHighlightColor(): HighlightColorKey {
 export function highlightColorName(color: string | undefined, meanings: HighlightMeanings): string {
   const key = highlightColorKey(color);
   if (!key) {
-    return "Custom colour";
+    return translate({ message: "Custom colour" });
   }
   const meaning = meanings[key];
   return meaning ? `${highlightPalette[key].label} — ${meaning}` : highlightPalette[key].label;

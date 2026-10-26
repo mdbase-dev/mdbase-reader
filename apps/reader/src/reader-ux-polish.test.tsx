@@ -5,12 +5,12 @@ import {
   sourceId,
   type SourceSummary,
 } from "@mdbase-reader/core";
-import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
 
 import { ContinueReading } from "./ContinueReading.js";
 import { ReadingStatus, TableValue } from "./LibraryCells.js";
 import { RenderedSourceDocument } from "./RenderedSourceDocument.js";
+import { renderToStaticMarkup } from "./testing/i18n.js";
 
 const source: SourceSummary = {
   collectionId: collectionId("test"),

@@ -1,3 +1,5 @@
+import { t as translate } from "@lingui/core/macro";
+import { Trans, useLingui } from "@lingui/react/macro";
 import { ConnectLayout, OpeningScreen } from "@mdbase-dev/ui/screens";
 import { sourceId } from "@mdbase-reader/core";
 import { useCallback, useEffect, useState, type JSX } from "react";
@@ -63,6 +65,7 @@ export function ReaderApp({
   pickSourceFile,
   saveFile,
 }: ReaderAppProps): JSX.Element {
+  const { t } = useLingui();
   const workspace = useReaderWorkspace(gateway, initialSourceId ? sourceId(initialSourceId) : null);
   if (workspace.library.status === "error") {
     // The load failure is usually Connect's own wording; it waits behind Details.
@@ -70,12 +73,12 @@ export function ReaderApp({
     return (
       <ConnectLayout
         app="reader"
-        title="Reader couldn’t load this collection"
-        error={describeConnectionProblem(message, libraryLoadFallback)}
-        detail={connectionProblemDetail(message, libraryLoadFallback)}
+        title={translate({ message: "Reader couldn’t load this collection" })}
+        error={describeConnectionProblem(message, libraryLoadFallback())}
+        detail={connectionProblemDetail(message, libraryLoadFallback())}
       >
         <button type="button" className="mdbase-button" onClick={workspace.retryLibrary}>
-          Try again
+          <Trans context="Reader interface">Try again</Trans>
         </button>
       </ConnectLayout>
     );
@@ -84,8 +87,10 @@ export function ReaderApp({
     return (
       <OpeningScreen
         app="reader"
-        title="Opening your reading collection"
-        detail="Loading the first sources; the rest of the library will load in the background"
+        title={t({ message: "Opening your reading collection" })}
+        detail={t({
+          message: "Loading the first sources; the rest of the library will load in the background",
+        })}
       />
     );
   }
@@ -269,11 +274,13 @@ function useRestoredSourceWorkspace(
 
 function confirmCloseDirtyTab(): Promise<boolean> {
   return requestConfirmation({
-    title: "Close this tab?",
-    message:
-      "This tab has unsaved changes. Keep it open until saving finishes to avoid losing work.",
-    confirmLabel: "Close anyway",
-    cancelLabel: "Keep open",
+    title: translate({ message: "Close this tab?" }),
+    message: translate({
+      message:
+        "This tab has unsaved changes. Keep it open until saving finishes to avoid losing work.",
+    }),
+    confirmLabel: translate({ message: "Close anyway" }),
+    cancelLabel: translate({ message: "Keep open" }),
     danger: true,
   });
 }

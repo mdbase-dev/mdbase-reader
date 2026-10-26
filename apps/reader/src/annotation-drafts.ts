@@ -1,3 +1,5 @@
+import { t } from "@lingui/core/macro";
+
 // Legacy device-recovery format. New annotation editors only read/remove old entries;
 // non-null writes below remain for compatibility fixtures, never the typing path.
 import { LocalDraftCheckpoint, flushLocalDraftCheckpoints } from "./local-draft-checkpoint.js";
@@ -58,8 +60,10 @@ function db(): Promise<IDBDatabase> {
     const request = indexedDB.open("mdbase-reader-annotation-drafts", 1);
     request.onupgradeneeded = () => request.result.createObjectStore("drafts");
     request.onsuccess = () => resolve(request.result);
-    request.onerror = () => reject(request.error ?? new Error("Draft storage could not open."));
-    request.onblocked = () => reject(new Error("Draft storage is blocked by another window."));
+    request.onerror = () =>
+      reject(request.error ?? new Error(t({ message: "Draft storage could not open." })));
+    request.onblocked = () =>
+      reject(new Error(t({ message: "Draft storage is blocked by another window." })));
   });
   return database;
 }
@@ -73,7 +77,8 @@ export async function loadAnnotationDraft(key: string): Promise<void> {
     const value = await new Promise<AnnotationLocalDraft | undefined>((resolve, reject) => {
       const request = database.transaction("drafts").objectStore("drafts").get(key);
       request.onsuccess = () => resolve(request.result as AnnotationLocalDraft | undefined);
-      request.onerror = () => reject(request.error ?? new Error("Draft storage read failed."));
+      request.onerror = () =>
+        reject(request.error ?? new Error(t({ message: "Draft storage read failed." })));
     });
     if (annotationDraftSnapshot(key) !== empty) {
       return;
@@ -89,7 +94,9 @@ export async function loadAnnotationDraft(key: string): Promise<void> {
       publish(key, {
         ...empty,
         ready: true,
-        problem: "Local draft storage is unavailable. Keep this window open until you save.",
+        problem: t({
+          message: "Local draft storage is unavailable. Keep this window open until you save.",
+        }),
       });
     }
   }
@@ -136,7 +143,7 @@ function writeAnnotationDraft(key: string): void {
           }
           transaction.oncomplete = () => resolve();
           transaction.onabort = transaction.onerror = () =>
-            reject(transaction.error ?? new Error("Draft storage write failed."));
+            reject(transaction.error ?? new Error(t({ message: "Draft storage write failed." })));
         }),
     )
     .then(() => {
@@ -148,8 +155,10 @@ function writeAnnotationDraft(key: string): void {
       if (annotationDraftSnapshot(key) === snapshot) {
         publish(key, {
           ...snapshot,
-          problem:
-            "Could not save this draft locally. Keep this window open and retry saving to the collection.",
+          problem: t({
+            message:
+              "Could not save this draft locally. Keep this window open and retry saving to the collection.",
+          }),
         });
       }
     });

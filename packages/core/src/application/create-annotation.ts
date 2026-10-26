@@ -1,3 +1,5 @@
+import { t } from "@lingui/core/macro";
+
 import { annotationEmbed, validateAnnotationDraft, type Annotation } from "../domain/annotation.js";
 import { DomainError } from "../domain/errors.js";
 
@@ -92,7 +94,7 @@ function assertCurrentDocument(
   if (!current) {
     throw new DomainError(
       "document-not-found",
-      "The selected document does not belong to this source.",
+      t({ message: "The selected document does not belong to this source." }),
     );
   }
   // The source note can still name an older digest after its file changes.
@@ -106,7 +108,10 @@ export async function createAnnotation(
   validateAnnotationDraft(request);
   const source = request.sourceRecord;
   if (source.collectionId !== request.collectionId || source.id !== request.sourceId) {
-    throw new DomainError("source-not-found", "The loaded annotation source no longer matches.");
+    throw new DomainError(
+      "source-not-found",
+      t({ message: "The loaded annotation source no longer matches." }),
+    );
   }
   if (
     request.documentSourceRecord &&
@@ -144,7 +149,7 @@ export async function createAnnotation(
       if (!assets) {
         throw new DomainError(
           "annotation-assets-unavailable",
-          "This Reader connection cannot store annotation images.",
+          t({ message: "This Reader connection cannot store annotation images." }),
         );
       }
       await timed(dependencies, "asset-upload", () =>
@@ -188,7 +193,10 @@ export async function createAnnotation(
       transcluded: Boolean(transclude),
     };
   } catch (error) {
-    const problem = error instanceof Error ? error.message : "Unknown annotation creation failure";
+    const problem =
+      error instanceof Error
+        ? error.message
+        : t({ message: "Unknown annotation creation failure" });
     await timed(dependencies, "journal-mark", () =>
       dependencies.journal.mark(mutationId, "failed", problem),
     );

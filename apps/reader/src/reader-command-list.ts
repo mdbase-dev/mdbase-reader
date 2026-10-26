@@ -1,3 +1,5 @@
+import { t as translate } from "@lingui/core/macro";
+
 import {
   annotationCommands,
   chapterCommands,
@@ -16,6 +18,19 @@ import type { SourceSummary } from "@mdbase-reader/core";
 /** The palette's groups, in the order Reader shows them. */
 export type ReaderCommandGroup =
   "Open tabs" | "Current source" | "Sources" | "Library" | "Workspace" | "Display";
+/** Group identity is stable, independently of its displayed language. */
+export function readerCommandGroupLabel(group: string): string {
+  const labels: Record<ReaderCommandGroup, string> = {
+    "Open tabs": translate`Open tabs`,
+    "Current source": translate`Current source`,
+    Sources: translate`Sources`,
+    Library: translate`Library`,
+    Workspace: translate`Workspace`,
+    Display: translate`Display`,
+  };
+  return Object.hasOwn(labels, group) ? labels[group as ReaderCommandGroup] : group;
+}
+
 export interface ReaderCommand extends Command {
   readonly group: ReaderCommandGroup;
 }
@@ -65,7 +80,7 @@ function navigationCommands(input: ReaderCommandInput): readonly ReaderCommand[]
       if (!source) {
         return [];
       }
-      const place = panes.length > 1 ? ` · pane ${String(panes.indexOf(pane) + 1)}` : "";
+      const place = panes.length > 1 ? translate` · pane ${String(panes.indexOf(pane) + 1)}` : "";
       return [
         {
           id: `switch:${pane.id}:${tab.id}`,
@@ -84,23 +99,28 @@ function navigationCommands(input: ReaderCommandInput): readonly ReaderCommand[]
     .map((source): ReaderCommand => ({
       id: `open:${source.id}`,
       label: source.title,
-      detail: source.creators.join(", ") || "Unknown creator",
+      detail:
+        source.creators.join(", ") ||
+        translate({ message: "Unknown creator", context: "reader command list" }),
       group: "Sources",
       keywords: `open source ${source.readingStatus ?? "inbox"} ${source.tags.join(" ")}`,
       run: () => input.workspace.open(source.id),
-      alternate: { label: "Open beside", run: () => input.workspace.openBeside(source.id) },
+      alternate: {
+        label: translate({ message: "Open beside", context: "reader command list" }),
+        run: () => input.workspace.openBeside(source.id),
+      },
     }));
   return [...openTabs, ...sourceCommands(input), ...sources, ...libraryChapterCommands(input)];
 }
 
 function viewLabel(view: string): string {
   return view === "note"
-    ? "Source note"
+    ? translate({ message: "Source note" })
     : view === "annotations"
-      ? "Annotations"
+      ? translate({ message: "Annotations", context: "reader command list" })
       : view === "citation"
-        ? "Citation"
-        : "Document";
+        ? translate({ message: "Citation", context: "reader command list" })
+        : translate({ message: "Document", context: "reader command list" });
 }
 
 function workspaceCommands(input: ReaderCommandInput): readonly ReaderCommand[] {
@@ -118,15 +138,17 @@ function workspaceCommands(input: ReaderCommandInput): readonly ReaderCommand[] 
   return [
     {
       id: "reset-panes",
-      label: "Reset pane arrangement",
-      detail: "Keeps all tabs open",
+      label: translate({ message: "Reset pane arrangement" }),
+      detail: translate({ message: "Keeps all tabs open" }),
       group: "Workspace",
       run: () => input.workspace.dock.reset(),
     },
     {
       id: "toggle-focus",
-      label: input.focusMode ? "Leave reading mode" : "Enter reading mode",
-      detail: "Read the document with interface controls hidden",
+      label: input.focusMode
+        ? translate({ message: "Leave reading mode" })
+        : translate({ message: "Enter reading mode" }),
+      detail: translate({ message: "Read the document with interface controls hidden" }),
       group: "Workspace",
       keywords: "focus distraction",
       shortcut: "mod+.",
@@ -134,7 +156,7 @@ function workspaceCommands(input: ReaderCommandInput): readonly ReaderCommand[] 
     },
     {
       id: "toggle-library",
-      label: "Toggle Sources sidebar",
+      label: translate({ message: "Toggle Sources sidebar" }),
       keywords: "left sidebar library navigator",
       group: "Workspace",
       shortcut: "mod+\\",
@@ -142,16 +164,16 @@ function workspaceCommands(input: ReaderCommandInput): readonly ReaderCommand[] 
     },
     {
       id: "toggle-source-tools",
-      label: "Toggle Notes panel",
+      label: translate({ message: "Toggle Notes panel" }),
       keywords: "right sidebar literature note",
-      detail: "Annotations, source note and citation",
+      detail: translate({ message: "Annotations, source note and citation" }),
       group: "Workspace",
       shortcut: "mod+shift+\\",
       run: input.toggleInspector,
     },
     {
       id: "reopen",
-      label: "Reopen closed tab",
+      label: translate({ message: "Reopen closed tab", context: "reader command list" }),
       group: "Workspace",
       shortcut: "mod+shift+t",
       run: input.workspace.reopenClosed,
@@ -161,7 +183,7 @@ function workspaceCommands(input: ReaderCommandInput): readonly ReaderCommand[] 
       ? ([
           {
             id: "close-active-tab",
-            label: "Close active tab",
+            label: translate({ message: "Close active tab", context: "reader command list" }),
             group: "Workspace",
             run: () => input.workspace.closeTab(activeTab.id, input.workspace.layout.focusedPaneId),
           },
@@ -171,7 +193,7 @@ function workspaceCommands(input: ReaderCommandInput): readonly ReaderCommand[] 
       ? ([
           {
             id: "split-right",
-            label: "Open beside",
+            label: translate({ message: "Open beside", context: "reader command list" }),
             keywords: "duplicate right split",
             detail: input.activeSource.title,
             group: "Workspace",
@@ -179,7 +201,7 @@ function workspaceCommands(input: ReaderCommandInput): readonly ReaderCommand[] 
           },
           {
             id: "split-below",
-            label: "Open below",
+            label: translate({ message: "Open below" }),
             keywords: "duplicate below split",
             detail: input.activeSource.title,
             group: "Workspace",
@@ -200,7 +222,7 @@ function sourceCommands(input: ReaderCommandInput): readonly ReaderCommand[] {
   return [
     {
       id: "export-source",
-      label: "Export current source",
+      label: translate({ message: "Export current source" }),
       group: "Current source",
       run: input.sourceExport.run,
     },
@@ -208,31 +230,34 @@ function sourceCommands(input: ReaderCommandInput): readonly ReaderCommand[] {
     ...chapterCommands(input),
     {
       id: "annotations",
-      label: "Open annotations",
+      label: translate({ message: "Open annotations", context: "reader command list" }),
       keywords: "owner ownership annotation source",
       group: "Current source",
       run: () => input.workspace.openView(sourceId, "annotations"),
       alternate: {
-        label: "Open beside",
+        label: translate({ message: "Open beside", context: "reader command list" }),
         run: () => input.workspace.openBeside(sourceId, "annotations"),
       },
     },
     {
       id: "note",
-      label: "Open source note",
+      label: translate({ message: "Open source note" }),
       group: "Current source",
       keywords: "write notes source note literature note",
       run: () => input.workspace.openView(sourceId, "note"),
-      alternate: { label: "Open beside", run: () => input.workspace.openBeside(sourceId, "note") },
+      alternate: {
+        label: translate({ message: "Open beside", context: "reader command list" }),
+        run: () => input.workspace.openBeside(sourceId, "note"),
+      },
     },
     {
       id: "citation",
-      label: "Open citation details",
+      label: translate({ message: "Open citation details" }),
       group: "Current source",
       keywords: "bibliography csl metadata citekey citation key field sources field evidence",
       run: () => input.workspace.openView(sourceId, "citation"),
       alternate: {
-        label: "Open beside",
+        label: translate({ message: "Open beside", context: "reader command list" }),
         run: () => input.workspace.openBeside(sourceId, "citation"),
       },
     },
@@ -240,7 +265,7 @@ function sourceCommands(input: ReaderCommandInput): readonly ReaderCommand[] {
       ? [
           {
             id: "remove-source",
-            label: "Remove current source…",
+            label: translate({ message: "Remove current source…" }),
             detail: activeSource.title,
             group: "Current source" as const,
             keywords: "delete trash discard mistaken import",
@@ -261,8 +286,8 @@ function paneCommands(
   return [
     {
       id: "focus-next-pane",
-      label: "Focus next pane",
-      detail: `Pane ${paneLabel} is focused`,
+      label: translate({ message: "Focus next pane", context: "reader command list" }),
+      detail: translate`Pane ${paneLabel} is focused`,
       group: "Workspace",
       shortcut: "F6",
       run: input.workspace.focusNextPane,
@@ -271,7 +296,7 @@ function paneCommands(
       ? [
           {
             id: "move-active-tab-other-pane",
-            label: `Move active tab to pane ${otherPaneLabel}`,
+            label: translate`Move active tab to pane ${otherPaneLabel}`,
             group: "Workspace" as const,
             run: () =>
               input.workspace.moveTab(
@@ -284,20 +309,20 @@ function paneCommands(
       : []),
     {
       id: "arrange-side-by-side",
-      label: "Arrange panes side by side",
+      label: translate({ message: "Arrange panes side by side" }),
       group: "Workspace",
       run: () => input.workspace.setSplitDirection("horizontal"),
     },
     {
       id: "arrange-top-bottom",
-      label: "Stack panes top and bottom",
+      label: translate({ message: "Stack panes top and bottom" }),
       group: "Workspace",
       run: () => input.workspace.setSplitDirection("vertical"),
     },
     {
       id: "close-focused-pane",
-      label: "Close focused pane and keep its tabs",
-      detail: `Pane ${paneLabel}`,
+      label: translate({ message: "Close focused pane and keep its tabs" }),
+      detail: translate`Pane ${paneLabel}`,
       group: "Workspace",
       run: () => input.workspace.closePane(input.workspace.layout.focusedPaneId),
     },

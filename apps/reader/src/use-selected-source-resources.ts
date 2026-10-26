@@ -1,3 +1,4 @@
+import { t } from "@lingui/core/macro";
 import {
   useEffect,
   useState,
@@ -61,7 +62,10 @@ export function useSelectedSourceResources(
             sourceId,
             value: value
               ? { status: "ready", value }
-              : { status: "error", message: "This source record no longer exists." },
+              : {
+                  status: "error",
+                  message: t({ message: "This source record no longer exists." }),
+                },
           });
         }
       })
@@ -72,7 +76,10 @@ export function useSelectedSourceResources(
             sourceId,
             value: {
               status: "error",
-              message: readerErrorMessage(reason, "Reader could not open the source note."),
+              message: readerErrorMessage(
+                reason,
+                t({ message: "Reader could not open the source note." }),
+              ),
             },
           });
         }

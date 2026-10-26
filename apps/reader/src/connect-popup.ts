@@ -1,8 +1,10 @@
+import { t } from "@lingui/core/macro";
+
 import type { AppWebSignInPortal } from "@mdbase-dev/sdk-legacy-729b5391/app-host";
 
 export class ConnectPopupBlocked extends Error {
   constructor() {
-    super("Your browser blocked the sign-in tab.");
+    super(t({ message: "Your browser blocked the sign-in tab." }));
   }
 }
 
@@ -48,7 +50,7 @@ export function openConnectPopup(name = "mdbase-connect-authorization"): Connect
     },
     navigate(uri: string): void {
       if (closed || original.closed) {
-        throw new Error("Sign-in window closed.");
+        throw new Error(t({ message: "Sign-in window closed." }));
       }
       original.location.href = uri;
     },

@@ -1,3 +1,5 @@
+import { t as translate } from "@lingui/core/macro";
+import { Trans, useLingui } from "@lingui/react/macro";
 import { useEffect } from "react";
 
 import { readerSourceUrl } from "./capture-model.js";
@@ -18,7 +20,9 @@ export function saveBlocker(c: ExtensionCaptureController): string | null {
   if (c.busy || c.navigated || c.snapshot.status !== "ready") {
     return null;
   }
-  return c.draft.title.trim() ? null : "Give the source a title under Literature note to save it.";
+  return c.draft.title.trim()
+    ? null
+    : translate({ message: "Give the source a title under Literature note to save it." });
 }
 
 /**
@@ -38,6 +42,7 @@ export function SaveBar({
 }: {
   readonly controller: ExtensionCaptureController;
 }): React.JSX.Element | null {
+  const { t } = useLingui();
   const ready = saveReady(c);
   const blocker = saveBlocker(c);
   const selection = c.capture?.kind === "html" ? c.capture.selection : null;
@@ -83,7 +88,7 @@ export function SaveBar({
         target="_blank"
         rel="noreferrer"
       >
-        Open in Reader to highlight
+        <Trans>Open in Reader to highlight</Trans>
       </a>
     ) : null;
   }
@@ -95,7 +100,7 @@ export function SaveBar({
         type="button"
         disabled={!ready}
         aria-keyshortcuts={selection ? undefined : "Control+Enter Meta+Enter"}
-        title={selection ? undefined : `Save (${modifierKey()}+Enter)`}
+        title={selection ? undefined : t`Save (${modifierKey()}+Enter)`}
         onClick={() => void save({ highlight: false })}
       >
         {submitLabel(c)}
@@ -114,13 +119,13 @@ export function modifierKey(): string {
 
 function submitLabel(c: ExtensionCaptureController): string {
   if (c.busy) {
-    return c.status === "saving" || c.progress ? "Saving…" : "Please wait…";
+    return c.status === "saving" || c.progress ? translate`Saving…` : translate`Please wait…`;
   }
   return c.capture?.kind === "pdf"
-    ? "Save PDF"
+    ? translate`Save PDF`
     : c.postPicker
-      ? "Choose posts to save"
+      ? translate`Choose posts to save`
       : c.capture?.kind === "html" && c.capture.post
-        ? "Save post"
-        : "Save page";
+        ? translate`Save post`
+        : translate`Save page`;
 }

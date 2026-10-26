@@ -60,6 +60,15 @@ kbd {
   white-space: nowrap;
 }
 
+.reader-language-setting {
+  display: grid;
+  gap: 6px;
+  margin-block-start: 16px;
+}
+.reader-language-picker {
+  max-width: 100%;
+}
+
 /* Header -------------------------------------------------------------------- */
 .extension-header {
   height: 48px;

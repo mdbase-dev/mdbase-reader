@@ -1,7 +1,8 @@
+import { plural } from "@lingui/core/macro";
+import { Plural, Trans, useLingui } from "@lingui/react/macro";
 import { useState, type JSX } from "react";
 
 import { annotationsToMarkdown, type AnnotationEntry } from "./annotation-overview.js";
-import { countLabel } from "./LibraryCells.js";
 
 import type { AnnotationsLoad } from "./use-library-annotations.js";
 
@@ -13,33 +14,55 @@ export function AnnotationSelectionBar({
   readonly selected: readonly AnnotationEntry[];
   readonly onClear: () => void;
 }): JSX.Element {
-  const [copied, setCopied] = useState<string | null>(null);
+  const { t } = useLingui();
+  const [copied, setCopied] = useState<{ message: string; success: boolean } | null>(null);
   const copy = (): void => {
     void globalThis.navigator.clipboard
       .writeText(annotationsToMarkdown(selected))
-      .then(() => setCopied(`Copied ${countLabel(selected.length, "annotation")} as Markdown.`))
-      .catch(() => setCopied("Copying needs clipboard permission."));
+      .then(() =>
+        setCopied({
+          success: true,
+          message: t({
+            message: plural(selected.length, {
+              one: "Copied # annotation as Markdown.",
+              other: "Copied # annotations as Markdown.",
+            }),
+          }),
+        }),
+      )
+      .catch(() => setCopied({ success: false, message: t`Copying needs clipboard permission.` }));
   };
   return (
-    <div className="library-bulk-bar" role="toolbar" aria-label="Selected annotations">
-      <strong aria-live="polite">{countLabel(selected.length, "annotation")} selected</strong>
+    <div
+      className="library-bulk-bar"
+      role="toolbar"
+      aria-label={t({
+        message: "Selected annotations",
+        context: "LibraryAnnotationBars interface",
+      })}
+    >
+      <strong aria-live="polite">
+        <Plural
+          value={selected.length}
+          one="# annotation selected"
+          other="# annotations selected"
+        />
+      </strong>
       <button type="button" onClick={copy}>
-        Copy as Markdown
+        <Trans>Copy as Markdown</Trans>
       </button>
       {copied ? (
         <span
           className={
-            copied.startsWith("Copied")
-              ? "library-bulk-progress mdbase-settle"
-              : "library-bulk-progress"
+            copied.success ? "library-bulk-progress mdbase-settle" : "library-bulk-progress"
           }
           role="status"
         >
-          {copied}
+          {copied.message}
         </span>
       ) : null}
       <button type="button" onClick={onClear}>
-        Clear
+        <Trans>Clear</Trans>
       </button>
     </div>
   );
@@ -60,7 +83,7 @@ export function AnnotationProblem({
       <div className="library-view-problem" role="alert">
         {load.message}{" "}
         <button type="button" onClick={onRetry}>
-          Try again
+          <Trans context="Reader action">Try again</Trans>
         </button>
       </div>
     );
@@ -74,7 +97,7 @@ export function AnnotationProblem({
       ) : null}
       {load.status === "loading" || load.loading ? (
         <div className="inspector-status" role="status">
-          Loading annotations…
+          <Trans>Loading annotations…</Trans>
         </div>
       ) : null}
     </>

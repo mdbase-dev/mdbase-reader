@@ -13,6 +13,7 @@ import { readerTooltipTheme } from "./editor-tooltip-theme.js";
 import { minimalTextChange } from "./external-change.js";
 import { markdownCommand } from "./markdown-commands.js";
 import { textInsertionAtCursor } from "./text-insertion.js";
+import { useEditorPhrases } from "./use-editor-phrases.js";
 
 import type { CodeEditorProps } from "./markdown-editor.js";
 
@@ -40,6 +41,7 @@ export function useCodeEditor(props: CodeEditorProps): RefObject<HTMLDivElement 
     onOpenCitation,
     onEditCitation,
   } = props;
+  const phrases = useEditorPhrases();
   const resolvedProfile = profile ?? (language === "json" ? "code" : "compact");
   const canSave = onSave !== undefined;
   const hostRef = useRef<HTMLDivElement>(null);
@@ -54,6 +56,7 @@ export function useCodeEditor(props: CodeEditorProps): RefObject<HTMLDivElement 
   const editCitationRef = useRef(onEditCitation);
   const saveCommand = useCallback(() => saveRef.current?.(), []);
   const initialConfigurationRef = useRef({
+    phrases,
     ariaLabel,
     language,
     profile: resolvedProfile,
@@ -95,6 +98,7 @@ export function useCodeEditor(props: CodeEditorProps): RefObject<HTMLDivElement 
     dispatchPreservingFocus(view, {
       effects: configurationCompartmentRef.current.reconfigure(
         editorConfiguration({
+          phrases,
           ariaLabel,
           language,
           profile: resolvedProfile,
@@ -104,7 +108,7 @@ export function useCodeEditor(props: CodeEditorProps): RefObject<HTMLDivElement 
         }),
       ),
     });
-  }, [ariaLabel, canSave, language, placeholder, readOnly, resolvedProfile, saveCommand]);
+  }, [ariaLabel, canSave, language, phrases, placeholder, readOnly, resolvedProfile, saveCommand]);
 
   useEffect(() => {
     const view = viewRef.current;
@@ -125,7 +129,7 @@ export function useCodeEditor(props: CodeEditorProps): RefObject<HTMLDivElement 
           : [],
       ),
     });
-  }, [citations, wikiLinks]);
+  }, [citations, phrases, wikiLinks]);
 
   useEffect(() => {
     if (focusOnMount && viewRef.current) {

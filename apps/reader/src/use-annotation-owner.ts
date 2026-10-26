@@ -1,3 +1,4 @@
+import { t as translate } from "@lingui/core/macro";
 import { useEffect, useMemo, useState } from "react";
 
 import { useAnnotationOwnerPreference } from "./annotation-owner-preference.js";
@@ -161,7 +162,9 @@ async function saveOwnedAnnotation(
   // Comments and selection saves disclose ownership in AnnotationOwnerChooser.
   const fullOwner = proposed.id === source.id ? source : await gateway.source(proposed.id);
   if (!fullOwner) {
-    throw new Error("The chosen source no longer exists. Choose another source.");
+    throw new Error(
+      translate({ message: "The chosen source no longer exists. Choose another source." }),
+    );
   }
   if (chosen) {
     await confirmExplicitOwner(request, fullOwner, surface);
@@ -185,11 +188,13 @@ async function confirmExplicitOwner(
   if (
     (!document || contains !== true) &&
     !(await requestConfirmation({
-      title: `Save annotation to “${owner.title}”?`,
-      message:
-        "The chosen source does not list this document or its verified range does not contain the selector. The document target will remain unchanged.",
-      confirmLabel: "Save annotation",
-      cancelLabel: "Choose another source",
+      title: translate`Save annotation to “${owner.title}”?`,
+      message: translate({
+        message:
+          "The chosen source does not list this document or its verified range does not contain the selector. The document target will remain unchanged.",
+      }),
+      confirmLabel: translate({ message: "Save annotation" }),
+      cancelLabel: translate({ message: "Choose another source" }),
     }))
   ) {
     throw new AnnotationSaveCancelled();

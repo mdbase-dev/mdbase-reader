@@ -1,3 +1,5 @@
+import { t as translate } from "@lingui/core/macro";
+import { Trans, useLingui } from "@lingui/react/macro";
 import { Select } from "@mdbase-dev/ui/select";
 import { connectProblemMessage, type ReaderConnectSnapshot } from "@mdbase-reader/connect";
 
@@ -13,6 +15,7 @@ export function ImportDestination({
   disabled: boolean;
   onError: (message: string) => void;
 }): JSX.Element {
+  const { t } = useLingui();
   const choose = async (): Promise<void> => {
     try {
       const result = await readerSession.authorize("choose", true);
@@ -21,23 +24,29 @@ export function ImportDestination({
         onError(message);
       }
     } catch {
-      onError("Could not open mdbase approval. Allow popups and try again.");
+      onError(
+        translate({ message: "Could not open mdbase approval. Allow popups and try again." }),
+      );
     }
   };
   return (
     <section className="import-step" aria-labelledby="import-destination-title">
-      <h2 id="import-destination-title">Choose a destination</h2>
+      <h2 id="import-destination-title">
+        <Trans>Choose a destination</Trans>
+      </h2>
       <p>
-        Choose an existing collection, or create a fresh hosted collection in mdbase’s secure
-        approval window.
+        <Trans>
+          Choose an existing collection, or create a fresh hosted collection in mdbase’s secure
+          approval window.
+        </Trans>
       </p>
       <label>
-        Collection
+        {t({ message: "Collection" })}
         <Select
-          aria-label="Collection"
+          aria-label={t({ message: "Collection", context: "ImportDestination interface" })}
           disabled={disabled}
           value={"collectionId" in session ? session.collectionId : ""}
-          placeholder="Select a collection"
+          placeholder={t({ message: "Select a collection" })}
           options={session.connections.map((c) => ({
             value: c.collectionId,
             label: c.displayName,
@@ -51,13 +60,15 @@ export function ImportDestination({
         />
       </label>
       <button type="button" disabled={disabled} onClick={() => void choose()}>
-        Create or connect a collection…
+        <Trans>Create or connect a collection…</Trans>
       </button>
       {session.status === "setup_review_required" ? (
         <div>
           <p>
-            This collection needs Reader’s source and annotation types. No library content will be
-            imported until you confirm below.
+            <Trans>
+              This collection needs Reader’s source and annotation types. No library content will be
+              imported until you confirm below.
+            </Trans>
           </p>
           <button
             type="button"
@@ -71,10 +82,10 @@ export function ImportDestination({
                     onError(message);
                   }
                 })
-                .catch(() => onError("Collection setup failed."));
+                .catch(() => onError(translate({ message: "Collection setup failed." })));
             }}
           >
-            Apply Reader collection setup
+            <Trans>Apply Reader collection setup</Trans>
           </button>
         </div>
       ) : null}
@@ -91,10 +102,10 @@ export function ImportDestination({
                   onError(message);
                 }
               })
-              .catch(() => onError("Collection authorization failed."));
+              .catch(() => onError(translate({ message: "Collection authorization failed." })));
           }}
         >
-          Review collection access
+          <Trans>Review collection access</Trans>
         </button>
       ) : null}
       {session.status !== "ready" ? <p role="status">{destinationStatus(session.status)}</p> : null}
@@ -105,18 +116,20 @@ export function ImportDestination({
 function destinationStatus(status: ReaderConnectSnapshot["status"]): string {
   switch (status) {
     case "authorization_required":
-      return "Reader needs your approval to write to this collection.";
+      return translate({ message: "Reader needs your approval to write to this collection." });
     case "setup_review_required":
-      return "This collection needs Reader’s setup before importing.";
+      return translate({ message: "This collection needs Reader’s setup before importing." });
     case "not_started":
     case "starting":
     case "checking_setup":
-      return "Connecting to mdbase…";
+      return translate({ message: "Connecting to mdbase…" });
     case "start_failed":
     case "unavailable":
     case "blocked":
-      return "mdbase isn’t reachable right now. Check your connection and try again.";
+      return translate({
+        message: "mdbase isn’t reachable right now. Check your connection and try again.",
+      });
     default:
-      return "Choose a collection to import into.";
+      return translate({ message: "Choose a collection to import into." });
   }
 }

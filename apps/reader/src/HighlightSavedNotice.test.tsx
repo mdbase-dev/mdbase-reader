@@ -2,7 +2,6 @@
 /* eslint-disable @typescript-eslint/require-await -- async act flushes React's queued work */
 import { isClaimedShortcut } from "@mdbase-reader/reading-surface";
 import { act, useEffect } from "react";
-import { createRoot } from "react-dom/client";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import {
@@ -10,6 +9,7 @@ import {
   HighlightSweep,
   highlightUndoMilliseconds,
 } from "./HighlightSavedNotice.js";
+import { createRoot } from "./testing/i18n.js";
 import {
   useHighlightUndo,
   type HighlightUndoController,

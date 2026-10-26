@@ -1,3 +1,5 @@
+import { t as translate } from "@lingui/core/macro";
+import { Trans, useLingui } from "@lingui/react/macro";
 import { ReaderButton } from "@mdbase-reader/ui";
 import { useEffect, useRef, useState } from "react";
 
@@ -16,6 +18,7 @@ export function AnnotationComposer({
   readonly composer: AnnotationComposerController;
   readonly style?: CSSProperties;
 }): JSX.Element | null {
+  const { t } = useLingui();
   const [expanded, setExpanded] = useState(false);
   const [comment, setComment] = useState(() => ({
     selection: composer.selection,
@@ -38,12 +41,14 @@ export function AnnotationComposer({
     >
       <header>
         <strong id="annotation-composer-title">
-          {composer.selection.kind === "area" ? "New area capture" : "Comment on highlight"}
+          {composer.selection.kind === "area"
+            ? translate({ message: "New area capture" })
+            : t({ message: "Comment on highlight" })}
         </strong>
         <button
           type="button"
           className="icon-button"
-          aria-label="Discard selection"
+          aria-label={t({ message: "Discard selection", context: "AnnotationComposer interface" })}
           onClick={composer.dismiss}
           disabled={composer.status === "saving"}
         >
@@ -60,7 +65,7 @@ export function AnnotationComposer({
         <AnnotationTextArea
           value={note}
           readOnly={composer.status === "saving"}
-          placeholder="Why does this matter?"
+          placeholder={t({ message: "Why does this matter?" })}
           rows={3}
           autoSize
           onChange={(body) => {
@@ -72,7 +77,7 @@ export function AnnotationComposer({
       ) : null}
       {note ? (
         <small className="annotation-draft-status" role="status">
-          Not saved yet — keep Reader open until you save this annotation.
+          <Trans>Not saved yet — keep Reader open until you save this annotation.</Trans>
         </small>
       ) : null}
       {composer.error ? <p role="alert">{composer.error}</p> : null}
@@ -83,15 +88,15 @@ export function AnnotationComposer({
             type="button"
             onClick={() => setExpanded(true)}
           >
-            Add a comment
+            <Trans>Add a comment</Trans>
           </button>
         )}
         <ReaderButton disabled={annotationSaveDisabled(composer)} onClick={composer.save}>
           {composer.status === "saving"
-            ? "Saving…"
+            ? t({ message: "Saving…", context: "AnnotationComposer interface" })
             : composer.selection.kind === "area"
-              ? "Save area capture"
-              : "Save highlight"}
+              ? translate({ message: "Save area capture" })
+              : t({ message: "Save highlight", context: "AnnotationComposer interface" })}
         </ReaderButton>
       </footer>
     </section>
@@ -99,6 +104,7 @@ export function AnnotationComposer({
 }
 
 function AreaPreview({ image }: { readonly image: Blob }): JSX.Element {
+  const { t } = useLingui();
   const preview = useRef<HTMLImageElement>(null);
   useEffect(() => {
     const url = URL.createObjectURL(image);
@@ -113,7 +119,7 @@ function AreaPreview({ image }: { readonly image: Blob }): JSX.Element {
   }, [image]);
   return (
     <div className="annotation-area-preview">
-      <img ref={preview} alt="Selected PDF area" />
+      <img ref={preview} alt={t({ message: "Selected PDF area" })} />
     </div>
   );
 }

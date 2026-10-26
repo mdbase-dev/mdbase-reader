@@ -1,3 +1,4 @@
+import { t } from "@lingui/core/macro";
 import { useRef, useState } from "react";
 
 import { bookmarkRequest } from "./annotation-composer-request.js";
@@ -48,7 +49,10 @@ export function useBookmarkAction(input: {
           if (!isAnnotationSaveCancelled(reason)) {
             setProblem({
               sourceId: source.id,
-              message: readerErrorMessage(reason, "Reader could not save this bookmark."),
+              message: readerErrorMessage(
+                reason,
+                t({ message: "Reader could not save this bookmark." }),
+              ),
             });
           }
         })

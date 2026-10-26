@@ -1,3 +1,4 @@
+import { t as translate } from "@lingui/core/macro";
 import { useCallback, useMemo, useRef, useState } from "react";
 
 import { readerErrorMessage } from "./errors.js";
@@ -59,7 +60,9 @@ export interface HighlightUndoInput {
   readonly remove: (annotation: Annotation) => Promise<readonly string[]>;
 }
 
-const undoFailed = "Reader could not delete this highlight.";
+function undoFailed(): string {
+  return translate({ message: "Reader could not delete this highlight." });
+}
 
 /**
  * Whether the annotation changed since it was saved in a way other than its colour, such as a
@@ -151,7 +154,7 @@ export function useHighlightUndo({
         update(id, (value) => ({
           ...value,
           status: "failed",
-          problem: readerErrorMessage(reason, undoFailed),
+          problem: readerErrorMessage(reason, undoFailed()),
         })),
     );
   }, [current, remove, saved, update]);

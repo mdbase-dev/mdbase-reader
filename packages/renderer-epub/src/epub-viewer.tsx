@@ -1,3 +1,4 @@
+import { t } from "@lingui/core/macro";
 import { useEffect, useRef, useState } from "react";
 
 import { EpubPageNavigation } from "./epub-page-navigation.js";
@@ -37,7 +38,7 @@ export function EpubViewerSurface({
       try {
         const response = await fetch(document.url, { signal: lifetime.signal });
         if (!response.ok) {
-          throw new Error(`EPUB download failed with HTTP ${String(response.status)}.`);
+          throw new Error(t`EPUB download failed with HTTP ${String(response.status)}.`);
         }
         publication = await prepareEpubPublication(await response.blob());
         if (isAborted(lifetime.signal)) {

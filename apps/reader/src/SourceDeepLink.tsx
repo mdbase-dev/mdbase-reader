@@ -1,3 +1,4 @@
+import { Trans } from "@lingui/react/macro";
 import { useEffect, useRef } from "react";
 
 import type { AsyncResource } from "./use-reader-workspace.js";
@@ -84,16 +85,20 @@ export function SourceDeepLink({
   if (id && !source && library.sourceIndex?.complete !== false) {
     return (
       <p role="alert">
-        The linked source is not available in this collection. It may have been removed or your
-        access may have changed.
+        <Trans>
+          The linked source is not available in this collection. It may have been removed or your
+          access may have changed.
+        </Trans>
       </p>
     );
   }
   if (annotationMissing) {
     return (
       <p role="alert">
-        The linked annotation is not in this source. It may have been removed or moved to another
-        source.
+        <Trans>
+          The linked annotation is not in this source. It may have been removed or moved to another
+          source.
+        </Trans>
       </p>
     );
   }

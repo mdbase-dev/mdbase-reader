@@ -1,3 +1,6 @@
+import { t as translate } from "@lingui/core/macro";
+import { useLingui as useLocale } from "@lingui/react";
+import { Trans, useLingui } from "@lingui/react/macro";
 import { Select, type SelectItems } from "@mdbase-dev/ui/select";
 import {
   citationStyleLabel,
@@ -21,6 +24,7 @@ const localeOptions = [
   { value: "en-GB", label: "English (UK)" },
   { value: "de-DE", label: "Deutsch" },
   { value: "fr-FR", label: "Français" },
+  { value: "it-IT", label: "Italiano" },
 ] as const satisfies SelectItems;
 const localeValues = localeOptions.map(({ value }) => value);
 
@@ -71,15 +75,16 @@ export function CitationPreview({
   readonly citation: CslItem | null;
   readonly format: ReturnType<typeof useCitationFormat>;
 }): JSX.Element {
+  const { t } = useLingui();
   const rendered = useRenderedCitation(citation, format.style, format.locale);
-  const [copied, setCopied] = useState<string | null>(null);
+  const [copied, setCopied] = useState<CitationCopyState>(null);
   const timer = useRef<ReturnType<typeof setTimeout>>(undefined);
   useEffect(() => () => clearTimeout(timer.current), []);
   const text = !citation
-    ? "This citation can’t be formatted until its details are fixed."
+    ? translate`This citation can’t be formatted until its details are fixed.`
     : rendered
       ? renderedCitationText(rendered)
-      : "Preparing citation…";
+      : translate`Preparing citation…`;
   const formatted = rendered?.kind === "formatted" ? rendered.text : null;
   const copy = (): void => {
     if (!formatted) {
@@ -88,23 +93,27 @@ export function CitationPreview({
     const label = citationStyleLabel(format.style);
     void copyKeepingFocus(formatted).then(
       () => {
-        setCopied(`Copied as ${label}`);
+        setCopied({ kind: "copied", label });
         clearTimeout(timer.current);
         timer.current = setTimeout(() => setCopied(null), 2400);
       },
       () => {
         clearTimeout(timer.current);
-        setCopied(copyFailedMessage);
+        setCopied({ kind: "failed" });
       },
     );
   };
-  const failed = copied === copyFailedMessage;
+  const failed = copied?.kind === "failed";
+  const copyMessage = citationCopyMessage(copied);
   return (
-    <figure className="citation-reference" aria-label="Formatted citation">
+    <figure
+      className="citation-reference"
+      aria-label={translate({ message: "Formatted citation" })}
+    >
       <p
         className={formatted ? "citation-reference-text" : "citation-reference-text is-pending"}
         draggable={citation !== null}
-        title={citation ? "Drag to insert this citation" : undefined}
+        title={citation ? translate({ message: "Drag to insert this citation" }) : undefined}
         onDragStart={(event) => citation && writeCitationDrag(event.dataTransfer, citation)}
       >
         {text}
@@ -112,34 +121,47 @@ export function CitationPreview({
       <div className="citation-reference-actions">
         <Select
           className="citation-quiet-select"
-          aria-label="Citation style"
+          aria-label={t({ message: "Citation style", context: "CitationPreview interface" })}
           value={format.style}
           options={citationStyles.map(([value, label]) => ({ value, label }))}
           onChange={format.setStyle}
         />
         <Select
           className="citation-quiet-select"
-          aria-label="Citation locale"
+          aria-label={t({ message: "Citation locale", context: "CitationPreview interface" })}
           value={format.locale}
           options={localeOptions}
           onChange={format.setLocale}
         />
         <button type="button" className="citation-button" disabled={!formatted} onClick={copy}>
-          {copied?.startsWith("Copied") ? <CheckIcon /> : <CopyIcon />}
-          {copied?.startsWith("Copied") ? "Copied" : "Copy"}
+          {copied?.kind === "copied" ? <CheckIcon /> : <CopyIcon />}
+          {copied?.kind === "copied"
+            ? translate({ message: "Copied" })
+            : translate({ message: "Copy" })}
         </button>
       </div>
       <p
         className={failed ? "citation-copy-status is-failed" : "citation-copy-status"}
         role="status"
       >
-        {copied ?? ""}
+        {copyMessage}
       </p>
     </figure>
   );
 }
 
-const copyFailedMessage = "Copying is unavailable here. Select the citation to copy it.";
+type CitationCopyState =
+  { readonly kind: "copied"; readonly label: string } | { readonly kind: "failed" } | null;
+
+function citationCopyMessage(state: CitationCopyState): string {
+  if (!state) {
+    return "";
+  }
+  if (state.kind === "failed") {
+    return translate`Copying is unavailable here. Select the citation to copy it.`;
+  }
+  return translate`Copied as ${state.label}`;
+}
 
 /**
  * Copies text, falling back when the Clipboard API is missing or refused (see `copyText`). The
@@ -164,15 +186,22 @@ export function CitationPreviewLine({
   readonly citation: CslItem | null;
   readonly format: ReturnType<typeof useCitationFormat>;
 }): JSX.Element {
+  useLocale();
   const rendered = useRenderedCitation(citation, format.style, format.locale);
   return (
     <p className="citation-preview-line">
-      <span className="sr-only">Preview in {citationStyleLabel(format.style)}: </span>
+      <span className="sr-only">
+        <Trans>Preview in </Trans>
+        {citationStyleLabel(format.style)}:{" "}
+      </span>
       {!citation
-        ? "The preview returns once the details can be saved."
+        ? translate({ message: "The preview returns once the details can be saved." })
         : rendered
           ? renderedCitationText(rendered)
-          : "Preparing citation…"}
+          : translate({
+              message: "Preparing citation…",
+              context: "CitationPreview status or action",
+            })}
     </p>
   );
 }

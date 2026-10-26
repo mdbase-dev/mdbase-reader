@@ -9,6 +9,7 @@ import {
   type EmbedPdfContainer,
   type PluginRegistry,
 } from "@embedpdf/react-pdf-viewer";
+import { t } from "@lingui/core/macro";
 
 import {
   createEmbedPdfAnnotationActivations,
@@ -97,7 +98,7 @@ export function createEmbedPdfRuntime(
   const selectionPlugin = registry.getPlugin<SelectionPlugin>(SelectionPlugin.id);
   const annotationPlugin = registry.getPlugin<AnnotationPlugin>(AnnotationPlugin.id);
   if (!capturePlugin || !scrollPlugin || !selectionPlugin || !annotationPlugin) {
-    throw new Error("EmbedPDF did not initialize the required Reader plugins.");
+    throw new Error(t({ message: "EmbedPDF did not initialize the required Reader plugins." }));
   }
 
   const capture = capturePlugin.provides();
@@ -304,7 +305,7 @@ function yieldToBrowser(signal?: AbortSignal): Promise<void> {
 }
 
 function abortError(): DOMException {
-  return new DOMException("PDF text extraction was cancelled.", "AbortError");
+  return new DOMException(t({ message: "PDF text extraction was cancelled." }), "AbortError");
 }
 
 function abortReason(signal?: AbortSignal): Error {

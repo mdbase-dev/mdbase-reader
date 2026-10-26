@@ -1,3 +1,6 @@
+import { t as translate } from "@lingui/core/macro";
+import { useLingui as useLocale } from "@lingui/react";
+import { Trans } from "@lingui/react/macro";
 import { highlightPalette } from "@mdbase-reader/core";
 import { useCallback, useId, useState, type JSX } from "react";
 
@@ -43,6 +46,7 @@ export function SettingsSections({
   beforeLeave,
   onDirtyChange,
 }: SettingsSectionsProps): JSX.Element {
+  useLocale();
   const id = useId();
   const settings = gateway.settings;
   const colorsDirty = useCallback(
@@ -56,20 +60,24 @@ export function SettingsSections({
   return (
     <>
       <section className="settings-section" aria-labelledby={`${id}-device`}>
-        <h2 id={`${id}-device`}>This device</h2>
-        <p className="settings-section-intro">These apply only to Reader in this browser.</p>
+        <h2 id={`${id}-device`}>
+          <Trans>This device</Trans>
+        </h2>
+        <p className="settings-section-intro">
+          <Trans>These apply only to Reader in this browser.</Trans>
+        </p>
         <div className="settings-device">
           <DisplaySettings {...display} />
           <DefaultHighlightColor />
         </div>
       </section>
       <section className="settings-section" aria-labelledby={`${id}-collection`}>
-        <h2 id={`${id}-collection`}>This collection</h2>
+        <h2 id={`${id}-collection`}>
+          <Trans>This collection</Trans>
+        </h2>
         {settings ? (
           <>
-            <p className="settings-section-intro">
-              Shared by everyone who uses {collectionName}, on every device.
-            </p>
+            <p className="settings-section-intro">{translate`Shared by everyone who uses ${collectionName}, on every device.`}</p>
             <HighlightColorSettings settings={settings} onDirtyChange={colorsDirty} />
             <CollectionFileNames
               settings={settings}
@@ -80,14 +88,13 @@ export function SettingsSections({
             />
           </>
         ) : (
-          <p className="settings-section-intro">
-            {collectionName} can’t hold shared settings, so Reader uses its default highlight
-            colours and file names here.
-          </p>
+          <p className="settings-section-intro">{translate`${collectionName} can’t hold shared settings, so Reader uses its default highlight colours and file names here.`}</p>
         )}
       </section>
       <section className="settings-section" aria-labelledby={`${id}-connection`}>
-        <h2 id={`${id}-connection`}>Connection</h2>
+        <h2 id={`${id}-connection`}>
+          <Trans>Connection</Trans>
+        </h2>
         <Connection
           collectionName={collectionName}
           state={connectionState}
@@ -100,17 +107,20 @@ export function SettingsSections({
 
 /** The colour the next highlight takes; using another colour changes it, as it always has. */
 function DefaultHighlightColor(): JSX.Element {
+  useLocale();
   const { colors } = useHighlightChoices();
   const color = useLastHighlightColor();
   return (
     <>
       <DisplayChoice
-        legend="Default highlight colour"
+        legend={translate({ message: "Default highlight colour" })}
         value={color}
         options={colors.map((key) => ({ value: key, label: highlightPalette[key].label }))}
         onChange={setLastHighlightColor}
       />
-      <p className="display-note">Highlighting in another colour makes that one the default.</p>
+      <p className="display-note">
+        <Trans>Highlighting in another colour makes that one the default.</Trans>
+      </p>
     </>
   );
 }
@@ -171,15 +181,19 @@ function Connection({
   return (
     <>
       <dl className="settings-connection">
-        <dt>Collection</dt>
+        <dt>
+          <Trans>Collection</Trans>
+        </dt>
         <dd>{collectionName}</dd>
-        <dt>Status</dt>
+        <dt>
+          <Trans>Status</Trans>
+        </dt>
         <dd>{connectionLabels[state]}</dd>
       </dl>
       {mdbase ? (
         <>
           <p className="settings-section-intro">
-            Switch collections, manage access or sign out from the collection menu.
+            <Trans>Switch collections, manage access or sign out from the collection menu.</Trans>
           </p>
           <ReaderCollectionSwitcher mdbase={mdbase} beforeSwitch={beforeSwitch} />
         </>

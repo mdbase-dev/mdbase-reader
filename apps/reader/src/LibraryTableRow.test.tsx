@@ -1,12 +1,12 @@
 // @vitest-environment happy-dom
 import { act, type JSX } from "react";
-import { createRoot } from "react-dom/client";
 import { afterEach, expect, it, vi } from "vitest";
 
 import { emptyRowSelection } from "./library-row-selection.js";
 import { LibraryTableRow } from "./LibraryTableRow.js";
 import { defaultLibraryView } from "./mdbase-library-views.js";
 import { partSource } from "./source-parts.fixtures.js";
+import { createRoot } from "./testing/i18n.js";
 import { layoutOf } from "./use-library-layout-draft.js";
 import { useLongPress } from "./use-long-press.js";
 

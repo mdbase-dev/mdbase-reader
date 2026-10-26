@@ -1,3 +1,6 @@
+import { t } from "@lingui/core/macro";
+import { useLingui as useLocale } from "@lingui/react";
+import { Trans } from "@lingui/react/macro";
 import { useId, type JSX, type ReactNode } from "react";
 
 import { annotationListKeyDown } from "./annotation-list-keyboard.js";
@@ -90,6 +93,7 @@ function AnnotationWindowItems({
   readonly renderHeading: ((index: number) => ReactNode) | undefined;
   readonly renderCard: (annotation: Annotation) => ReactNode;
 }): JSX.Element {
+  useLocale();
   const instructions = useId();
   const items = renderAll
     ? results.map((annotation, index) => ({ key: annotation.id, index, start: 0 }))
@@ -97,12 +101,14 @@ function AnnotationWindowItems({
   return (
     <>
       <span className="sr-only" id={instructions}>
-        Use Up and Down to move between annotations, Home and End for the first and last. Tab moves
-        through card actions.
+        <Trans>
+          Use Up and Down to move between annotations, Home and End for the first and last. Tab
+          moves through card actions.
+        </Trans>
       </span>
       <div
         role="list"
-        aria-label="Annotations"
+        aria-label={t({ message: "Annotations", context: "VirtualAnnotationList interface" })}
         aria-describedby={instructions}
         style={renderAll ? undefined : { height: virtualizer.getTotalSize(), position: "relative" }}
       >
@@ -135,7 +141,9 @@ function AnnotationWindowItems({
             >
               {renderHeading?.(item.index)}
               {annotation.id === readingId ? (
-                <small className="annotation-reading-label">Near reading position</small>
+                <small className="annotation-reading-label">
+                  <Trans>Near reading position</Trans>
+                </small>
               ) : null}
               {renderCard(annotation)}
             </div>

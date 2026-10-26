@@ -1,3 +1,4 @@
+import { t as translate } from "@lingui/core/macro";
 import { useEffect, useRef, useState } from "react";
 
 import {
@@ -88,7 +89,7 @@ function useChapterOutline(
         signal: controller.signal,
       });
       if (!parent) {
-        throw new Error("The book is no longer available.");
+        throw new Error(translate({ message: "The book is no longer available." }));
       }
       const document = parent.documents.find(
         (entry) =>
@@ -96,7 +97,7 @@ function useChapterOutline(
           ["application/pdf", "application/epub+zip"].includes(entry.mediaType),
       );
       if (!document) {
-        throw new Error("Attach a PDF or EPUB to the book first.");
+        throw new Error(translate({ message: "Attach a PDF or EPUB to the book first." }));
       }
       const outline = await readChapterOutline(gateway, document, controller.signal);
       if (!controller.signal.aborted) {
@@ -104,7 +105,9 @@ function useChapterOutline(
       }
     })().catch((reason: unknown) => {
       if (!controller.signal.aborted) {
-        setError(readerErrorMessage(reason, "Could not read the book outline."));
+        setError(
+          readerErrorMessage(reason, translate({ message: "Could not read the book outline." })),
+        );
       }
     });
     return () => controller.abort();
@@ -147,7 +150,10 @@ function updatedChoice(
     } catch (reason) {
       return {
         ...updated,
-        problem: readerErrorMessage(reason, "Check the chapter’s pages or sections."),
+        problem: readerErrorMessage(
+          reason,
+          translate({ message: "Check the chapter’s pages or sections." }),
+        ),
       };
     }
   }
@@ -167,7 +173,10 @@ function withRangeProblems(
     } catch (reason) {
       problems.set(
         choice.key,
-        readerErrorMessage(reason, "Check the chapter’s pages or sections."),
+        readerErrorMessage(
+          reason,
+          translate({ message: "Check the chapter’s pages or sections." }),
+        ),
       );
     }
   }
@@ -259,7 +268,11 @@ export function useChapterCreation(
         validateChapterRange(choice.range, result.outline);
       }
       if (selected.some(({ warning }) => warning) && !acknowledged) {
-        throw new Error("Check where the chapters start and end, then tick the confirmation box.");
+        throw new Error(
+          translate({
+            message: "Check where the chapters start and end, then tick the confirmation box.",
+          }),
+        );
       }
       await confirmChapterPlans(
         gateway,
@@ -273,7 +286,7 @@ export function useChapterCreation(
       );
       onClose();
     } catch (reason) {
-      setProblem(readerErrorMessage(reason, "Chapter creation failed."));
+      setProblem(readerErrorMessage(reason, translate({ message: "Chapter creation failed." })));
     } finally {
       pending.current = false;
       setBusy(false);

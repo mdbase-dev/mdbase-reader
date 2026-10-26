@@ -1,11 +1,11 @@
 // @vitest-environment happy-dom
 /* eslint-disable @typescript-eslint/require-await -- async act flushes React work */
 import { act, useEffect } from "react";
-import { createRoot } from "react-dom/client";
 import { afterEach, beforeEach, expect, it, vi } from "vitest";
 
 import { useThemePreference } from "./reader-app-hooks.js";
 import { readerThemeColors } from "./reader-theme-color.js";
+import { createRoot } from "./testing/i18n.js";
 
 import type { ThemePreference } from "@mdbase-dev/ui/theme";
 

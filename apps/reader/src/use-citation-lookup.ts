@@ -1,3 +1,4 @@
+import { t as translate } from "@lingui/core/macro";
 import { cslValuesEqual, type CslProvenance, type Source } from "@mdbase-reader/core";
 import {
   resolveCitation,
@@ -85,7 +86,10 @@ export function useCitationLookup(input: {
           setState({
             scope,
             status: "idle",
-            error: readerErrorMessage(reason, "Reader could not find citation metadata."),
+            error: readerErrorMessage(
+              reason,
+              translate({ message: "Reader could not find citation metadata." }),
+            ),
             claims: [],
             dismissed: new Set(),
           });

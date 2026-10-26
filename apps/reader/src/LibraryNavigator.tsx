@@ -1,3 +1,5 @@
+import { t as translate } from "@lingui/core/macro";
+import { Trans, useLingui } from "@lingui/react/macro";
 import { shortcutLabel } from "@mdbase-dev/ui/command-palette";
 import { filterSources } from "@mdbase-reader/core";
 import { useMemo, useState, type CSSProperties, type JSX, type KeyboardEvent } from "react";
@@ -54,6 +56,7 @@ export function LibraryNavigator({
   onOpenBeside,
   onAddSource,
 }: LibraryNavigatorProps): JSX.Element {
+  const { t } = useLingui();
   const [query, setQuery] = useState("");
   const visibleSources = useMemo(() => filterSources(sources, query), [query, sources]);
   // The open list is rebuilt on every workspace render; its identities are what matter.
@@ -66,17 +69,17 @@ export function LibraryNavigator({
     <aside
       id="reader-library-navigator"
       className="library-pane library-navigator"
-      aria-label="Sources sidebar"
+      aria-label={translate({ message: "Sources sidebar" })}
       aria-hidden={!open}
       inert={!open}
     >
       <label className="navigator-search">
         <SearchIcon />
-        <span className="sr-only">Find a source by title, author or tag</span>
+        <span className="sr-only">{t({ message: "Find a source by title, author or tag" })}</span>
         <input
           id="reader-library-search"
           value={query}
-          placeholder="Find a source"
+          placeholder={t({ message: "Find a source" })}
           onChange={(event) => setQuery(event.target.value)}
           onKeyDown={(event) => {
             if (event.key === "Escape" && query) {
@@ -88,36 +91,29 @@ export function LibraryNavigator({
         <kbd>{shortcutLabel("mod+shift+f")}</kbd>
       </label>
 
-      <nav className="navigator-sections" aria-label="Library views and sources">
+      <nav className="navigator-sections" aria-label={t({ message: "Library views and sources" })}>
         {query ? null : (
-          <section className="navigator-view-section">
-            <header>
-              <span>Views</span>
-              {viewsLoading ? <small>Loading…</small> : null}
-            </header>
-            <div>
-              {views.map((view) => (
-                <button key={view.key} type="button" onClick={() => onOpenView(view)}>
-                  <ViewGlyph presentation={view.configuration.presentation} />
-                  <span>{view.name}</span>
-                </button>
-              ))}
-            </div>
-            {problem ? <p role="alert">{problem}</p> : null}
-          </section>
+          <NavigatorViews
+            views={views}
+            viewsLoading={viewsLoading}
+            problem={problem}
+            onOpenView={onOpenView}
+          />
         )}
 
         {query ? (
           <section className="navigator-source-section">
             <header>
-              <span>Matches</span>
+              <span>
+                <Trans>Matches</Trans>
+              </span>
               <small>{String(visibleSources.length)}</small>
             </header>
             {visibleSources.length === 0 ? (
               <p className="navigator-empty">
                 {indexLoading
-                  ? "No matches in the sources loaded so far. Loading more…"
-                  : "No sources match."}
+                  ? t({ message: "No matches in the sources loaded so far. Loading more…" })
+                  : t({ message: "No sources match." })}
               </p>
             ) : (
               <NavigatorSourceList
@@ -134,10 +130,18 @@ export function LibraryNavigator({
         ) : (
           <>
             {openSources.length > 0 ? (
-              <NavigatorShortList label="Open" sources={openSources} {...rowProps} />
+              <NavigatorShortList
+                label={t({ message: "Open", context: "LibraryNavigator interface" })}
+                sources={openSources}
+                {...rowProps}
+              />
             ) : null}
             {recent.length > 0 && !hideRecent ? (
-              <NavigatorShortList label="Recent" sources={recent} {...rowProps} />
+              <NavigatorShortList
+                label={t({ message: "Recent", context: "LibraryNavigator interface" })}
+                sources={recent}
+                {...rowProps}
+              />
             ) : null}
             <NavigatorEmptySources
               sources={sources}
@@ -149,6 +153,37 @@ export function LibraryNavigator({
       </nav>
       <NavigatorFooter addingSource={addingSource} onAddSource={onAddSource} />
     </aside>
+  );
+}
+
+function NavigatorViews({
+  views,
+  viewsLoading,
+  problem,
+  onOpenView,
+}: Pick<LibraryNavigatorProps, "views" | "viewsLoading" | "problem" | "onOpenView">): JSX.Element {
+  return (
+    <section className="navigator-view-section">
+      <header>
+        <span>
+          <Trans>Views</Trans>
+        </span>
+        {viewsLoading ? (
+          <small>
+            <Trans>Loading…</Trans>
+          </small>
+        ) : null}
+      </header>
+      <div>
+        {views.map((view) => (
+          <button key={view.key} type="button" onClick={() => onOpenView(view)}>
+            <ViewGlyph presentation={view.configuration.presentation} />
+            <span>{view.name}</span>
+          </button>
+        ))}
+      </div>
+      {problem ? <p role="alert">{problem}</p> : null}
+    </section>
   );
 }
 
@@ -165,15 +200,15 @@ function NavigatorEmptySources({
   if (loading) {
     return (
       <p className="navigator-empty" role="status">
-        Loading sources…
+        <Trans>Loading sources…</Trans>
       </p>
     );
   }
   return (
     <p className="navigator-empty">
-      No sources yet.{" "}
+      <Trans>No sources yet.</Trans>{" "}
       <button type="button" className="navigator-inline-action" onClick={onAddSource}>
-        Add one
+        <Trans>Add one</Trans>
       </button>
     </p>
   );
@@ -196,6 +231,7 @@ function NavigatorSourceList({
   readonly onOpenSource: (id: SourceId) => void;
   readonly onOpenBeside: (id: SourceId) => void;
 }): JSX.Element {
+  const { t } = useLingui();
   const { containerRef, range, measure, focusIndex } = useVirtualSourceWindow(
     sources.length,
     resetKey,
@@ -234,7 +270,7 @@ function NavigatorSourceList({
       ref={containerRef}
       className="navigator-source-list"
       role="listbox"
-      aria-label="Sources"
+      aria-label={t({ message: "Sources", context: "LibraryNavigator interface" })}
       onScroll={measure}
     >
       <div className="navigator-source-spacer" style={spacerStyle}>
@@ -261,7 +297,13 @@ function NavigatorSourceList({
                 </span>
                 <span>
                   <strong>{source.title}</strong>
-                  <small>{sourceCreatorsText(source, library, "Unknown creator")}</small>
+                  <small>
+                    {sourceCreatorsText(
+                      source,
+                      library,
+                      t({ message: "Unknown creator", context: "LibraryNavigator interface" }),
+                    )}
+                  </small>
                 </span>
               </button>
             );

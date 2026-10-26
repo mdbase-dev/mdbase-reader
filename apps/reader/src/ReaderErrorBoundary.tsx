@@ -1,3 +1,5 @@
+import { t as translate } from "@lingui/core/macro";
+import { Trans } from "@lingui/react/macro";
 import { FeedbackButton } from "@mdbase-dev/ui/feedback";
 import { ConnectLayout } from "@mdbase-dev/ui/screens";
 import { Component } from "react";
@@ -33,13 +35,15 @@ export class ReaderErrorBoundary extends Component<
     return (
       <ConnectLayout
         app="reader"
-        title="Reader hit a problem and stopped"
-        error="Reload to keep reading. If it happens again, send feedback so it can be fixed."
+        title={translate({ message: "Reader hit a problem and stopped" })}
+        error={translate({
+          message: "Reload to keep reading. If it happens again, send feedback so it can be fixed.",
+        })}
         detail={errorDetail(error)}
       >
         <div className="connection-actions">
           <button type="button" className="mdbase-button" onClick={reload}>
-            Reload
+            <Trans>Reload</Trans>
           </button>
         </div>
         <FeedbackButton />

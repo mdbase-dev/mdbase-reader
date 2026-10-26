@@ -1,3 +1,5 @@
+import { t } from "@lingui/core/macro";
+
 import { DomainError } from "./errors.js";
 
 import type { CslItem, CslValidationProblem } from "./citation.js";
@@ -103,7 +105,10 @@ export interface Page<Item> {
 export function sourceLink(source: Pick<SourceSummary, "path" | "title">): string {
   const path = source.path.trim().replace(/\.md$/u, "");
   if (path.length === 0 || /\[\[|\]\]|\|/u.test(path)) {
-    throw new DomainError("invalid-annotation", "A source path is not safe to link.");
+    throw new DomainError(
+      "invalid-annotation",
+      t({ message: "A source path is not safe to link." }),
+    );
   }
   const alias = source.title
     .replace(/[[\]|]/gu, "")

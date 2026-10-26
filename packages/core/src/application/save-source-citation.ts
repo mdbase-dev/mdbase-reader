@@ -1,3 +1,5 @@
+import { t } from "@lingui/core/macro";
+
 import { cslProblemSummary, validateCslItem } from "../domain/citation.js";
 import { DomainError } from "../domain/errors.js";
 
@@ -43,7 +45,7 @@ function assertUniqueCitekey(
   if (collision) {
     throw new DomainError(
       "duplicate-citekey",
-      `The citekey @${citation.id} is already used by “${collision.title}”.`,
+      t`The citekey @${citation.id} is already used by “${collision.title}”.`,
     );
   }
 }

@@ -1,3 +1,5 @@
+import { t, t as translate } from "@lingui/core/macro";
+import { useLingui as useLocale } from "@lingui/react";
 import { isEditableSourceField } from "@mdbase-reader/core";
 import { useEffect, useRef } from "react";
 
@@ -55,6 +57,7 @@ export function LibraryTableRow({
   readonly onEditCell: (column: LibraryColumn) => void;
   readonly onEditDone: () => void;
 }): JSX.Element {
+  useLocale();
   const part = partRows?.get(source.id);
   const selected = selection.ids.has(source.id);
   const pressHandlers = press.bind(onLongPress);
@@ -74,7 +77,7 @@ export function LibraryTableRow({
       aria-selected={selected}
       data-row-index={index}
       tabIndex={tabbable ? 0 : -1}
-      title="Double-click or press Enter to open"
+      title={t({ message: "Double-click or press Enter to open" })}
       style={{ gridTemplateColumns, transform: `translateY(${String(top)}px)` }}
       {...pressHandlers}
       onContextMenu={(event) => {
@@ -114,7 +117,7 @@ export function LibraryTableRow({
           style={
             column === "title" && part ? { paddingInlineStart: 12 + part.depth * 20 } : undefined
           }
-          title={editable(column) ? "Click to edit · F2" : undefined}
+          title={editable(column) ? t({ message: "Click to edit · F2" }) : undefined}
           onClick={(event) => {
             // Like a spreadsheet: the first click selects the row, a click on its field edits it.
             // A finger's tap opens the source instead; renaming is in the row's menu.
@@ -168,8 +171,8 @@ export function LibraryTableRow({
           type="button"
           className="icon-button library-row-more"
           tabIndex={-1}
-          aria-label={`More actions for ${source.title}`}
-          title="More actions"
+          aria-label={translate`More actions for ${source.title}`}
+          title={translate({ message: "More actions" })}
           aria-haspopup="menu"
           onClick={(event) => {
             event.stopPropagation();

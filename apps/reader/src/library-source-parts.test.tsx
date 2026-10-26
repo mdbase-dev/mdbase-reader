@@ -1,12 +1,12 @@
 // @vitest-environment happy-dom
 import { act, type JSX } from "react";
-import { createRoot } from "react-dom/client";
 import { describe, expect, it, vi } from "vitest";
 
 import { libraryPartKey, librarySourceParts } from "./library-source-parts.js";
 import { LibraryPartDisclosure } from "./LibraryPartDisclosure.js";
 import { applyLibraryViewConfiguration, defaultLibraryView } from "./mdbase-library-views.js";
 import { partSource } from "./source-parts.fixtures.js";
+import { createRoot } from "./testing/i18n.js";
 
 const book = partSource("Book");
 const chapter = partSource("Chapter", "Book");

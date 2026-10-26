@@ -1,3 +1,5 @@
+import { t } from "@lingui/core/macro";
+
 import { annotationBodyContent } from "./annotation-body-content.js";
 import { matchesCondition, type FieldCondition } from "./library-conditions.js";
 import { annotationLocationLabel } from "./passage-labels.js";
@@ -122,7 +124,7 @@ export function annotationsToMarkdown(entries: readonly AnnotationEntry[]): stri
       const source = group[0]?.source;
       const heading = source
         ? `## ${source.title}${source.creators.length ? ` — ${source.creators.join(", ")}` : ""}`
-        : "## Unknown source";
+        : `## ${t`Unknown source`}`;
       const items = group.map(({ annotation, quote, note }) => {
         const lines: string[] = [];
         if (quote) {

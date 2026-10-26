@@ -1,3 +1,4 @@
+import { t as translate } from "@lingui/core/macro";
 import { signalMdbaseMark } from "@mdbase-dev/ui/mark-activity";
 import { useCallback, useMemo, useState } from "react";
 
@@ -220,7 +221,12 @@ function useComposerRecolor(
           setError(null);
           void recolorAnnotation(annotation, color).catch((reason: unknown) => {
             signalMdbaseMark("error");
-            setError(readerErrorMessage(reason, "Reader could not change its colour."));
+            setError(
+              readerErrorMessage(
+                reason,
+                translate({ message: "Reader could not change its colour." }),
+              ),
+            );
           });
         }
       : null,

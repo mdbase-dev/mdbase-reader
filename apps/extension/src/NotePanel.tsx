@@ -1,3 +1,6 @@
+import { t, t as translate } from "@lingui/core/macro";
+import { useLingui as useLocale } from "@lingui/react";
+import { Trans } from "@lingui/react/macro";
 import { useEffect, useState, useSyncExternalStore } from "react";
 
 import { readerSourceUrl } from "./capture-model.js";
@@ -24,13 +27,17 @@ export function NotePanel({
 }: {
   readonly controller: ExtensionCaptureController;
 }): React.JSX.Element | null {
+  useLocale();
   if (!c.capture) {
     return null;
   }
   return c.source ? (
     <SavedSourceNote controller={c} source={c.source} />
   ) : awaitingConnection(c) ? (
-    <ConnectFirst controller={c} purpose="give this page a title, tags and a literature note" />
+    <ConnectFirst
+      controller={c}
+      purpose={translate({ message: "give this page a title, tags and a literature note" })}
+    />
   ) : (
     <NewSourceFields controller={c} />
   );
@@ -49,7 +56,9 @@ function NewSourceFields({
       data-capture-draft
       disabled={c.status === "saving" || c.navigated}
     >
-      <label htmlFor="title">Title</label>
+      <label htmlFor="title">
+        <Trans>Title</Trans>
+      </label>
       <input
         className="mdbase-field"
         id="title"
@@ -59,7 +68,9 @@ function NewSourceFields({
         onChange={(event) => update("title", event.target.value)}
       />
       <label htmlFor="tags">
-        Tags <span>(comma-separated, optional)</span>
+        <Trans>
+          Tags <span>(comma-separated, optional)</span>
+        </Trans>
       </label>
       <TagInput
         id="tags"
@@ -69,7 +80,9 @@ function NewSourceFields({
         onChange={(value) => update("tags", value)}
       />
       <label htmlFor="note">
-        Literature note <span>(optional)</span>
+        <Trans>
+          Literature note <span>(optional)</span>
+        </Trans>
       </label>
       <textarea
         id="note"
@@ -78,7 +91,9 @@ function NewSourceFields({
         rows={8}
         onChange={(event) => update("note", event.target.value)}
       />
-      <p className="hint">Saved with the source. Keep writing here after saving, or in Reader.</p>
+      <p className="hint">
+        <Trans>Saved with the source. Keep writing here after saving, or in Reader.</Trans>
+      </p>
     </fieldset>
   );
 }
@@ -107,20 +122,26 @@ function SavedSourceNote({
         />
       ) : status === "failed" ? (
         <div className="problem" role="alert">
-          <strong>We couldn’t open the literature note</strong>
-          <p>Try again in a moment, or edit it in Reader.</p>
+          <strong>
+            <Trans>We couldn’t open the literature note</Trans>
+          </strong>
+          <p>
+            <Trans>Try again in a moment, or edit it in Reader.</Trans>
+          </p>
           <div className="problem-actions">
             <button type="button" onClick={load}>
-              Try again
+              <Trans context="Reader action">Try again</Trans>
             </button>
           </div>
           <TechnicalDetails detail={problem} />
         </div>
       ) : (
-        <p className="hint">Opening the literature note…</p>
+        <p className="hint">
+          <Trans>Opening the literature note…</Trans>
+        </p>
       )}
       <a className="text-button" href={readerSourceUrl(source)} target="_blank" rel="noreferrer">
-        Edit in Reader
+        <Trans>Edit in Reader</Trans>
       </a>
     </div>
   );
@@ -140,6 +161,7 @@ function SourceNoteEditor({
   readonly knownTags: ExtensionCaptureController["knownTags"];
   readonly loadTags: ExtensionCaptureController["loadTags"];
 }): React.JSX.Element {
+  useLocale();
   const note = useSyncExternalStore(session.subscribe, session.getSnapshot);
   const conflict = note.state === "conflict";
   return (
@@ -155,7 +177,9 @@ function SourceNoteEditor({
         loadTags={loadTags}
         onChange={(details) => session.editDetails(details)}
       />
-      <label htmlFor="saved-note">Literature note</label>
+      <label htmlFor="saved-note">
+        <Trans>Literature note</Trans>
+      </label>
       <textarea
         id="saved-note"
         className="mdbase-field note-text"
@@ -175,25 +199,29 @@ function SourceNoteEditor({
         <div className="problem" role="alert">
           <strong>
             {note.state === "deleted"
-              ? "This source was removed from your collection"
-              : "Your latest changes aren’t saved yet"}
+              ? translate({ message: "This source was removed from your collection" })
+              : translate({ message: "Your latest changes aren’t saved yet" })}
           </strong>
           <p>
             {note.state === "deleted"
-              ? "Your text is kept in this panel. Copy it somewhere safe."
-              : "Your text is kept in this panel. Try saving again."}
+              ? translate({ message: "Your text is kept in this panel. Copy it somewhere safe." })
+              : translate({ message: "Your text is kept in this panel. Try saving again." })}
           </p>
           {note.state === "error" ? (
             <div className="problem-actions">
               <button type="button" onClick={() => session.save()}>
-                Try again
+                <Trans context="Reader interface">Try again</Trans>
               </button>
             </div>
           ) : null}
           {note.state === "error" ? <TechnicalDetails detail={note.problem} /> : null}
         </div>
       ) : null}
-      {note.restored ? <p className="hint">Restored your unsaved changes from earlier.</p> : null}
+      {note.restored ? (
+        <p className="hint">
+          <Trans>Restored your unsaved changes from earlier.</Trans>
+        </p>
+      ) : null}
       {note.localProblem ? (
         <p className="item-problem" role="alert">
           {note.localProblem}
@@ -220,6 +248,7 @@ function SourceDetailsFields({
   readonly loadTags: ExtensionCaptureController["loadTags"];
   readonly onChange: (details: Partial<SourceDetails>) => void;
 }): React.JSX.Element {
+  useLocale();
   const [title, setTitle] = useState(details.title);
   const [tags, setTags] = useState(details.tags.join(", "));
   const [seen, setSeen] = useState(details);
@@ -234,7 +263,9 @@ function SourceDetailsFields({
   }
   return (
     <>
-      <label htmlFor="saved-title">Title</label>
+      <label htmlFor="saved-title">
+        <Trans>Title</Trans>
+      </label>
       <input
         className="mdbase-field"
         id="saved-title"
@@ -249,12 +280,16 @@ function SourceDetailsFields({
         }}
       />
       {title.trim() ? null : (
-        <p className="hint" id="saved-title-hint">
-          A source needs a title. Until it has a new one, “{details.title}” is kept.
-        </p>
+        <p
+          className="hint"
+          id="saved-title-hint"
+        >{translate`A source needs a title. Until it has a new one, “${details.title}” is kept.`}</p>
       )}
       <label htmlFor="saved-tags">
-        Tags <span>(comma-separated)</span>
+        <Trans>Tags </Trans>
+        <span>
+          <Trans>(comma-separated)</Trans>
+        </span>
       </label>
       <TagInput
         id="saved-tags"
@@ -282,33 +317,46 @@ function ConflictBanner({
   readonly note: SourceNoteSnapshot;
   readonly session: SourceNoteSession;
 }): React.JSX.Element {
+  useLocale();
   const remote = note.remote;
   return (
     <div className="problem conflict" role="alert">
-      <strong>This changed somewhere else while you were editing</strong>
+      <strong>
+        <Trans>This changed somewhere else while you were editing</Trans>
+      </strong>
       <p>
-        Keep yours to save your changes over it, or use theirs and drop your changes. Nothing is
-        saved until you choose.
+        <Trans>
+          Keep yours to save your changes over it, or use theirs and drop your changes. Nothing is
+          saved until you choose.
+        </Trans>
       </p>
       <div className="problem-actions">
         <button type="button" onClick={() => session.resolve("mine")}>
-          Keep mine
+          <Trans>Keep mine</Trans>
         </button>
         <button type="button" onClick={() => session.resolve("theirs")}>
-          Use theirs
+          <Trans>Use theirs</Trans>
         </button>
       </div>
       {remote ? (
         <details className="technical">
-          <summary>See their version</summary>
+          <summary>
+            <Trans>See their version</Trans>
+          </summary>
           <dl className="other-version">
-            <dt>Title</dt>
+            <dt>
+              <Trans>Title</Trans>
+            </dt>
             <dd>{remote.title}</dd>
-            <dt>Tags</dt>
-            <dd>{remote.tags.length ? remote.tags.join(", ") : "None"}</dd>
-            <dt>Literature note</dt>
+            <dt>
+              <Trans>Tags</Trans>
+            </dt>
+            <dd>{remote.tags.length ? remote.tags.join(", ") : translate({ message: "None" })}</dd>
+            <dt>
+              <Trans>Literature note</Trans>
+            </dt>
             <dd>
-              <pre>{remote.body || "Empty"}</pre>
+              <pre>{remote.body || translate({ message: "Empty" })}</pre>
             </dd>
           </dl>
         </details>
@@ -332,19 +380,19 @@ export function useNoteAttention(session: SourceNoteSession | null): boolean {
 function noteStateLabel(state: SourceNoteSnapshot["state"]): string {
   switch (state) {
     case "saved":
-      return "Saved";
+      return t({ message: "Saved", context: "Reader save status" });
     case "unsaved":
-      return "Unsaved changes";
+      return t`Unsaved changes`;
     case "saving":
-      return "Saving…";
+      return t`Saving…`;
     case "recovery":
-      return "Checking the last save…";
+      return t`Checking the last save…`;
     case "conflict":
-      return "Changed elsewhere";
+      return t`Changed elsewhere`;
     case "error":
-      return "Not saved";
+      return t`Not saved`;
     case "deleted":
-      return "Source removed";
+      return t`Source removed`;
   }
 }
 

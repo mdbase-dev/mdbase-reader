@@ -1,10 +1,10 @@
 // @vitest-environment happy-dom
 import { collectionId, fileId, fileRevision, sourceId } from "@mdbase-reader/core";
 import { act } from "react";
-import { createRoot } from "react-dom/client";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { LibraryDocumentIndex, useLibraryDocumentIndex } from "./LibraryDocumentIndex.js";
+import { createRoot } from "./testing/i18n.js";
 
 import type { ReaderLibrarySnapshot, ReaderWorkspaceGateway } from "./workspace-model.js";
 

@@ -2,11 +2,11 @@
 import { createTestApp, type TestApp } from "@mdbase-reader/connect/testing";
 import * as migration from "@mdbase-reader/migration";
 import { act, StrictMode } from "react";
-import { createRoot } from "react-dom/client";
 import { afterEach, beforeEach, expect, it, vi } from "vitest";
 
 import manifest from "./generated/mdbase-app.json";
 import { NativeImportPage } from "./NativeImportPage.js";
+import { createRoot } from "./testing/i18n.js";
 
 vi.mock("./connect.js", () => {
   throw new Error("Native imports must not load the legacy Reader session");

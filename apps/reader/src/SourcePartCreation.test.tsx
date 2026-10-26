@@ -2,11 +2,11 @@
 /* eslint-disable @typescript-eslint/require-await -- async act flushes queued React effects */
 import { formatCitation } from "@mdbase-reader/ui/citation";
 import { act, type JSX } from "react";
-import { createRoot } from "react-dom/client";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { partSource } from "./source-parts.fixtures.js";
 import { SourcePartCreation, useSourcePartCreation } from "./SourcePartCreation.js";
+import { createRoot } from "./testing/i18n.js";
 
 import type * as ChapterOutlineModule from "./chapter-outline.js";
 import type { ChapterOutline } from "./chapter-outline.js";

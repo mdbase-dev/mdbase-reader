@@ -1,3 +1,5 @@
+import { t as translate } from "@lingui/core/macro";
+import { useLingui as useLocale } from "@lingui/react";
 import { useState, type JSX } from "react";
 
 import { columnLabel, propertyColumn, propertyValue } from "./library-columns.js";
@@ -20,6 +22,7 @@ export function LibraryFieldCellEditor({
   readonly onSave: (text: string) => Promise<void>;
   readonly onDone: () => void;
 }): JSX.Element {
+  useLocale();
   const initial = editableText(propertyValue(source, fieldKey));
   const [text, setText] = useState(initial);
   const [saving, setSaving] = useState(false);
@@ -40,7 +43,7 @@ export function LibraryFieldCellEditor({
   return (
     <input
       className="library-field-editor"
-      aria-label={`Edit ${columnLabel(propertyColumn(fieldKey))}`}
+      aria-label={translate`Edit ${columnLabel(propertyColumn(fieldKey))}`}
       value={text}
       disabled={saving}
       // eslint-disable-next-line jsx-a11y/no-autofocus -- editing begins by asking for this input.

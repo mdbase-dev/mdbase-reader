@@ -1,3 +1,6 @@
+import { t as translate } from "@lingui/core/macro";
+import { useLingui as useLocale } from "@lingui/react";
+import { Trans } from "@lingui/react/macro";
 import { useCallback, useEffect, useId, useRef, useState, type JSX } from "react";
 
 import { requestConfirmation } from "./confirmation.js";
@@ -57,6 +60,7 @@ export function SettingsPage({
   readonly density: "comfortable" | "compact";
   readonly onClose: () => void;
 }): JSX.Element {
+  useLocale();
   const headingId = useId();
   const page = useRef<HTMLDivElement>(null);
   const heading = useRef<HTMLHeadingElement>(null);
@@ -74,13 +78,22 @@ export function SettingsPage({
   }, []);
   const beforeLeave = useCallback(async (): Promise<boolean> => {
     const unsaved = [...dirty.current].filter(([, value]) => value).map(([name]) => name);
+    const joined = unsaved
+      .map((name) =>
+        name === "highlight colours"
+          ? translate`highlight colours`
+          : name === "file names"
+            ? translate`file names`
+            : name,
+      )
+      .join(translate` and `);
     return (
       unsaved.length === 0 ||
       requestConfirmation({
-        title: "Leave without saving?",
-        message: `Your changes to ${unsaved.join(" and ")} have not been saved.`,
-        confirmLabel: "Discard changes",
-        cancelLabel: "Keep editing",
+        title: translate({ message: "Leave without saving?" }),
+        message: translate`Your changes to ${joined} have not been saved.`,
+        confirmLabel: translate({ message: "Discard changes" }),
+        cancelLabel: translate({ message: "Keep editing" }),
         danger: true,
       })
     );
@@ -100,12 +113,12 @@ export function SettingsPage({
           }}
         >
           <BackIcon />
-          Back
+          <Trans>Back</Trans>
         </button>
       </header>
       <main className="settings-page-main" aria-labelledby={headingId}>
         <h1 id={headingId} ref={heading} tabIndex={-1}>
-          Settings
+          <Trans>Settings</Trans>
         </h1>
         <SettingsSections {...sections} onDirtyChange={onDirtyChange} beforeLeave={beforeLeave} />
       </main>

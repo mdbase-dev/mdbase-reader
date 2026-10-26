@@ -1,3 +1,4 @@
+import { useLingui } from "@lingui/react/macro";
 import { CollectionGate } from "@mdbase-dev/ui/collections";
 import { FeedbackButton } from "@mdbase-dev/ui/feedback";
 import { OpeningScreen } from "@mdbase-dev/ui/screens";
@@ -87,6 +88,7 @@ function NativeScopeView({
   readonly connection: MdbaseApplicationConnection;
   readonly renderNative: SdkReaderRootProps["renderNative"];
 }): ReactNode {
+  const { t } = useLingui();
   // The parent keys by SDK collection ID and generation. A later snapshot may hand
   // back a new facade for the same scope; it must not retire these adapters.
   const [original] = useState(connection);
@@ -114,7 +116,7 @@ function NativeScopeView({
     };
   }, [original]);
   if (!collection) {
-    return <OpeningScreen app="reader" title={`Opening ${original.displayName}`} />;
+    return <OpeningScreen app="reader" title={t`Opening ${original.displayName}`} />;
   }
   return renderNative ? (
     renderNative({ mdbase, connection: original, collection })

@@ -1,11 +1,12 @@
+import { lingui } from "@lingui/vite-plugin";
 import react from "@vitejs/plugin-react";
-import { defineConfig, loadEnv } from "vite";
+import { loadEnv } from "vite";
+import { defineConfig, type UserConfig, type Plugin } from "vite";
 
 import { bundleReport } from "./scripts/bundle-report.js";
 import { readerSdkTarget, verifiedReaderSdk } from "./scripts/reader-sdk.mjs";
 
 import type * as SdkOfflineShell from "@mdbase-dev/sdk/offline-shell/build";
-import type { Plugin, UserConfig } from "vite";
 
 const buildId = (process.env["MDBASE_READER_BUILD_ID"] ?? "local").replaceAll(
   /[^a-zA-Z0-9_-]/g,
@@ -25,6 +26,7 @@ export default defineConfig(async ({ mode }): Promise<UserConfig> => {
   return {
     plugins: [
       react(),
+      lingui({ macroTransform: true }),
       deploymentRevision(buildId),
       {
         name: "mdbase-reader-sdk-receipt",
@@ -57,6 +59,7 @@ export default defineConfig(async ({ mode }): Promise<UserConfig> => {
         "@codemirror/view",
       ],
     },
+    ...{ test: { setupFiles: [new URL("../../scripts/test-i18n.mjs", import.meta.url).pathname] } },
     // The SDK starts its own module Worker from a module-relative URL; keep it out of
     // dev pre-bundling so that URL still names the SDK's files, and emit ES workers.
     optimizeDeps: { exclude: ["@mdbase-dev/sdk"] },

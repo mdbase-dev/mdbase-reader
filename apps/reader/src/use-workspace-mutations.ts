@@ -1,3 +1,4 @@
+import { t as translate } from "@lingui/core/macro";
 import { annotationId, dateTime } from "@mdbase-reader/core";
 import { useCallback, type Dispatch, type SetStateAction } from "react";
 
@@ -143,7 +144,7 @@ export function useAnnotationRecolor(
   const recolor = useCallback(
     async (annotation: Annotation, color: string): Promise<Annotation> => {
       if (!gateway.setAnnotationColor) {
-        throw new Error("This collection cannot change highlight colours.");
+        throw new Error(translate({ message: "This collection cannot change highlight colours." }));
       }
       const updated = await gateway.setAnnotationColor(annotation, color);
       publishSharedAnnotation(gateway, annotation, updated);

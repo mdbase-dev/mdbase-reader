@@ -1,3 +1,5 @@
+import { i18n } from "@lingui/core";
+import { t as translate, msg } from "@lingui/core/macro";
 import {
   MdbaseRecordSession,
   recordChanged,
@@ -42,8 +44,7 @@ export interface NoteDraftStore {
 }
 
 const browserSession: NoteDraftStore = { load: loadNoteDraft, save: saveNoteDraft };
-const localProblem =
-  "Your browser could not keep a copy of this note. Keep the panel open until it is saved.";
+const localProblem = msg`Your browser could not keep a copy of this note. Keep the panel open until it is saved.`;
 /** Typing is copied to browser storage after this pause, so closing the panel loses little. */
 const storeDelayMs = 250;
 
@@ -96,10 +97,14 @@ export class SourceNoteSession {
                 return recordMissing();
               }
               if (current.recordRevision !== expected.recordRevision) {
-                return recordChanged("The source changed before saving.");
+                return recordChanged(translate({ message: "The source changed before saving." }));
               }
               if (!sources.updateFields) {
-                throw new Error("This collection can’t edit a source’s title and tags here.");
+                throw new Error(
+                  translate({
+                    message: "This collection can’t edit a source’s title and tags here.",
+                  }),
+                );
               }
               target = await sources.updateFields({
                 collectionId,
@@ -139,7 +144,7 @@ export class SourceNoteSession {
     try {
       draft = await this.store.load(this.#collectionId, this.#sourceId);
     } catch {
-      this.#update({ localProblem });
+      this.#update({ localProblem: i18n._(localProblem) });
       return;
     }
     // Typing that began while the copy loaded is newer than the copy.
@@ -260,7 +265,7 @@ export class SourceNoteSession {
       remote: record.remote,
       problem:
         record.state === "deleted"
-          ? "This source is no longer in the collection. Your text is kept in this panel."
+          ? translate`This source is no longer in the collection. Your text is kept in this panel.`
           : (record.problem?.message ?? null),
       restored: this.#restored,
       localProblem: this.#localProblem,
@@ -293,7 +298,7 @@ export class SourceNoteSession {
     };
     this.store.save(this.#collectionId, this.#sourceId, draft).then(
       () => this.#update({ localProblem: null }),
-      () => this.#update({ localProblem }),
+      () => this.#update({ localProblem: i18n._(localProblem) }),
     );
   }
 

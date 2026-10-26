@@ -1,7 +1,7 @@
-import { renderToStaticMarkup } from "react-dom/server";
 import { expect, it, vi } from "vitest";
 
 import { CaptureApp } from "./CaptureApp.js";
+import { renderWithI18n as renderToStaticMarkup } from "./testing/i18n.js";
 
 import type { ExtensionCaptureController } from "./capture-controller.js";
 import type { PanelTab } from "./PanelTabs.js";
@@ -232,7 +232,7 @@ it("names the connected collection in the header, with its controls behind it", 
     } as unknown as ExtensionCaptureController["snapshot"],
   });
   expect(html).toMatch(
-    /class="header-collection" aria-expanded="false"[^>]*>.*Saving to .*\[test\] Papers/u,
+    /class="header-collection" aria-expanded="false"[^>]*aria-label="Saving to \[test\] Papers\. Change collection"[^>]*>/u,
   );
   expect(html).toContain('aria-label="Settings and shortcuts"');
   expect(html).not.toContain('role="combobox"');

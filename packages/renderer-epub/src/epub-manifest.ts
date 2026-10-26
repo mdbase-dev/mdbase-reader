@@ -1,3 +1,4 @@
+import { t } from "@lingui/core/macro";
 import { XMLParser } from "fast-xml-parser";
 
 import { epubResourceUrl, resolveEpubPath, safeEpubPath } from "./epub-path.js";
@@ -45,7 +46,7 @@ export async function buildEpubManifest(
   const packageDocument = object(parser.parse(await reader.readText(packagePath)));
   const packageRoot = object(packageDocument?.["package"]);
   if (!packageRoot) {
-    throw new Error("EPUB package document is missing its package element.");
+    throw new Error(t({ message: "EPUB package document is missing its package element." }));
   }
   const metadata = object(packageRoot["metadata"]);
   const itemValues = asArray(object(packageRoot["manifest"])?.["item"]);
@@ -53,15 +54,15 @@ export async function buildEpubManifest(
   const itemsById = new Map(items.map((item) => [item.id, item]));
   const spine = object(packageRoot["spine"]);
   const readingOrder = asArray(spine?.["itemref"]).map((value) => {
-    const reference = requiredAttribute(value, "idref", "EPUB spine item");
+    const reference = requiredAttribute(value, "idref", t`EPUB spine item`);
     const item = itemsById.get(reference);
     if (!item) {
-      throw new Error(`EPUB spine references an unknown manifest item: ${reference}`);
+      throw new Error(t`EPUB spine references an unknown manifest item: ${reference}`);
     }
     return publicationLink(item, baseUrl);
   });
   if (readingOrder.length === 0) {
-    throw new Error("EPUB package has no reading order.");
+    throw new Error(t({ message: "EPUB package has no reading order." }));
   }
   const readingPaths = new Set(readingOrder.map((link) => link.path));
   const navigation = items.find((item) => item.properties.includes("nav"));
@@ -132,18 +133,18 @@ export async function packageDocumentPath(reader: EpubPackageReader): Promise<st
     .find((value) => text(value?.["@full-path"]));
   const path = text(rootfile?.["@full-path"]);
   if (!path) {
-    throw new Error("EPUB container does not identify a package document.");
+    throw new Error(t({ message: "EPUB container does not identify a package document." }));
   }
   return safeEpubPath(path);
 }
 
 function packageItem(value: unknown, packagePath: string): PackageItem {
-  const id = requiredAttribute(value, "id", "EPUB manifest item");
-  const href = requiredAttribute(value, "href", `EPUB manifest item ${id}`);
+  const id = requiredAttribute(value, "id", t`EPUB manifest item`);
+  const href = requiredAttribute(value, "href", t`EPUB manifest item ${id}`);
   return {
     id,
     path: resolveEpubPath(packagePath, href),
-    mediaType: requiredAttribute(value, "media-type", `EPUB manifest item ${id}`),
+    mediaType: requiredAttribute(value, "media-type", t`EPUB manifest item ${id}`),
     properties: tokens(object(value)?.["@properties"]),
   };
 }
@@ -163,7 +164,7 @@ function publicationMetadata(
 ): Readonly<Record<string, unknown>> {
   const titles = nodeTexts(metadata?.["title"]);
   if (!titles[0]) {
-    throw new Error("EPUB package metadata has no title.");
+    throw new Error(t({ message: "EPUB package metadata has no title." }));
   }
   const identifiers = nodeTexts(metadata?.["identifier"]);
   const languages = nodeTexts(metadata?.["language"]);
@@ -213,7 +214,7 @@ function metaProperty(
 function requiredAttribute(value: unknown, attribute: string, context: string): string {
   const result = text(object(value)?.[`@${attribute}`]);
   if (!result) {
-    throw new Error(`${context} is missing ${attribute}.`);
+    throw new Error(t`${context} is missing ${attribute}.`);
   }
   return result;
 }

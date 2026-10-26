@@ -9,15 +9,16 @@ import {
   type Source,
 } from "@mdbase-reader/core";
 import { act } from "react";
-import { createRoot, type Root } from "react-dom/client";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { CitationEditor } from "./CitationEditor.js";
+import { createRoot } from "./testing/i18n.js";
 import { useCitationEditor } from "./use-citation-editor.js";
 import { writeSessionChoice } from "./use-session-choice.js";
 
 import type { ReaderSourceWorkspaceController } from "./use-reader-workspace.js";
 import type { ReaderWorkspaceGateway } from "./workspace-model.js";
+import type { Root } from "react-dom/client";
 
 vi.mock("@mdbase-dev/ui/mark-activity", () => ({ signalMdbaseMark: vi.fn() }));
 vi.mock("./MultilineCodeEditor.js", () => ({

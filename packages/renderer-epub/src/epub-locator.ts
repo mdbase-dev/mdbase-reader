@@ -1,3 +1,4 @@
+import { t } from "@lingui/core/macro";
 import { Locator, type Publication } from "@readium/shared";
 
 import { epubResourceUrl, safeEpubPath } from "./epub-path.js";
@@ -74,7 +75,7 @@ export function readingOrderIndexFromCfi(cfi: string): number | null {
 export function stableEpubHref(href: string, publicationBaseUrl: string): string {
   const trimmed = href.trim();
   if (!trimmed) {
-    throw new Error("Readium returned an empty EPUB resource location.");
+    throw new Error(t({ message: "Readium returned an empty EPUB resource location." }));
   }
   if (!absoluteUrl(trimmed)) {
     return decodedEpubPath(trimmed);
@@ -90,7 +91,9 @@ export function stableEpubHref(href: string, publicationBaseUrl: string): string
     const resourcePath = afterPrefix.split("/").slice(1).join("/");
     return decodedEpubPath(resourcePath);
   }
-  throw new Error("Readium returned an EPUB location outside the prepared publication.");
+  throw new Error(
+    t({ message: "Readium returned an EPUB location outside the prepared publication." }),
+  );
 }
 
 function decodedEpubPath(value: string): string {
@@ -103,7 +106,7 @@ function decodedEpubPath(value: string): string {
         .join("/"),
     );
   } catch {
-    throw new Error(`Readium returned an invalid EPUB resource location: ${value}`);
+    throw new Error(t`Readium returned an invalid EPUB resource location: ${value}`);
   }
 }
 

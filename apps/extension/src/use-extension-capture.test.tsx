@@ -1,16 +1,17 @@
 // @vitest-environment happy-dom
 /* eslint-disable @typescript-eslint/require-await -- async act flushes React's queued work */
 import { act, useEffect } from "react";
-import { createRoot, type Root } from "react-dom/client";
 import { afterEach, beforeEach, expect, it, vi, type Mock } from "vitest";
 
 import { usePanelConnection } from "./panel-connection.js";
 import { fakeChrome } from "./testing/fake-chrome.js";
+import { createRoot, withI18n } from "./testing/i18n.js";
 import { useExtensionCapture } from "./use-extension-capture.js";
 
 import type { CitationPreview } from "./capture-citation.js";
 import type { ExtensionCaptureController } from "./capture-controller.js";
 import type * as CaptureModel from "./capture-model.js";
+import type { Root } from "react-dom/client";
 
 const mocks = vi.hoisted(() => ({
   start: vi.fn(),
@@ -139,7 +140,7 @@ async function mount(): Promise<void> {
   document.body.append(host);
   root = createRoot(host);
   await act(async () => {
-    root.render(<Harness />);
+    root.render(withI18n(<Harness />));
   });
   await act(async () => {
     await new Promise((resolve) => setTimeout(resolve, 0));

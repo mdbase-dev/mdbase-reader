@@ -1,3 +1,6 @@
+import { t as translate } from "@lingui/core/macro";
+import { useLingui as useLocale } from "@lingui/react";
+import { Trans, useLingui } from "@lingui/react/macro";
 import { AppSwitcher } from "@mdbase-dev/ui/app-switcher";
 import { CollectionSaveWarning } from "@mdbase-dev/ui/collections";
 import { shortcutLabel } from "@mdbase-dev/ui/command-palette";
@@ -110,6 +113,7 @@ function LibraryHeader({
   onToggleInspector,
   display,
 }: ReaderHeaderProps & { readonly display: ReactNode }): JSX.Element {
+  const { t } = useLingui();
   const mdbase = useReaderMdbase();
   return (
     <header className="reader-header">
@@ -117,9 +121,9 @@ function LibraryHeader({
         <button
           type="button"
           className="icon-button header-pane-toggle is-library"
-          aria-label="Toggle Sources sidebar"
+          aria-label={translate({ message: "Toggle Sources sidebar" })}
           aria-expanded={libraryOpen}
-          title={`Toggle Sources sidebar · ${shortcutLabel("mod+\\")}`}
+          title={translate`Toggle Sources sidebar · ${shortcutLabel("mod+\\")}`}
           onClick={onToggleLibrary}
         >
           <LeftPaneIcon />
@@ -142,12 +146,14 @@ function LibraryHeader({
         <button
           className="header-command-button"
           type="button"
-          aria-label="Search and commands"
-          title={`Search sources and run commands · ${shortcutLabel("mod+k")}`}
+          aria-label={t({ message: "Search and commands" })}
+          title={t`Search sources and run commands · ${shortcutLabel("mod+k")}`}
           onClick={onOpenCommands}
         >
           <SearchIcon />
-          <span>Search and commands</span>
+          <span>
+            <Trans>Search and commands</Trans>
+          </span>
           <kbd>{shortcutLabel("mod+k")}</kbd>
         </button>
         {onToggleReadingMode ? (
@@ -162,10 +168,10 @@ function LibraryHeader({
         <button
           className="icon-button header-pane-toggle is-inspector"
           type="button"
-          aria-label="Toggle Notes panel"
+          aria-label={translate({ message: "Toggle Notes panel" })}
           aria-pressed={inspectorOpen}
           disabled={!inspectorAvailable}
-          title={`Toggle Notes panel · ${shortcutLabel("mod+shift+\\")}`}
+          title={translate`Toggle Notes panel · ${shortcutLabel("mod+shift+\\")}`}
           onClick={onToggleInspector}
         >
           <RightPaneIcon />
@@ -185,20 +191,23 @@ function ReadingModeButton({
   readonly available: boolean;
   readonly onToggle: () => void;
 }): JSX.Element {
+  useLocale();
   const descriptionId = useId();
   return (
     <>
       <button
         className="icon-button header-reading-mode"
         type="button"
-        aria-label="Reading mode"
+        aria-label={translate({ message: "Reading mode" })}
         aria-pressed={readingMode}
         aria-disabled={available ? undefined : true}
         aria-describedby={available ? undefined : descriptionId}
         title={
           available
-            ? `${readingMode ? "Leave" : "Enter"} reading mode · ${shortcutLabel("mod+.")}`
-            : "Open a document to use reading mode"
+            ? readingMode
+              ? translate`Leave reading mode · ${shortcutLabel("mod+.")}`
+              : translate`Enter reading mode · ${shortcutLabel("mod+.")}`
+            : translate({ message: "Open a document to use reading mode" })
         }
         onClick={available ? onToggle : undefined}
       >
@@ -206,7 +215,7 @@ function ReadingModeButton({
       </button>
       {available ? null : (
         <span id={descriptionId} className="sr-only">
-          Open a document to use reading mode
+          <Trans>Open a document to use reading mode</Trans>
         </span>
       )}
     </>
@@ -220,13 +229,14 @@ function SourceBarHeader({
   readonly bar: ReaderHeaderSourceBar;
   readonly display: ReactNode;
 }): JSX.Element {
+  const { t } = useLingui();
   return (
     <header className="reader-header is-source-bar">
       <button
         type="button"
         className="icon-button header-back"
-        aria-label="Back to library"
-        title="Back to library"
+        aria-label={t({ message: "Back to library" })}
+        title={t({ message: "Back to library" })}
         onClick={bar.onBack}
       >
         <BackIcon />
@@ -248,6 +258,7 @@ function ConnectionState({
   readonly state: ReaderConnectionState;
   readonly directAccess: ReaderDirectAccessState;
 }): JSX.Element {
+  const { t } = useLingui();
   const { snapshot, working, problem, request } = directAccess;
   const descriptionId = useId();
   useMdbaseMarkBusy(state === "syncing" && "stream");
@@ -258,16 +269,18 @@ function ConnectionState({
     return (
       <span
         className="connection-state is-connected is-direct"
-        title="Connected directly to this computer"
+        title={t({ message: "Connected directly to this computer" })}
       >
-        <span className="sr-only">Direct connection</span>
+        <span className="sr-only">
+          <Trans>Direct connection</Trans>
+        </span>
       </span>
     );
   }
   if (working || snapshot.status === "checking") {
     return (
       <span className="connection-state is-connected is-checking" aria-live="polite">
-        Connecting…
+        <Trans>Connecting…</Trans>
       </span>
     );
   }
@@ -278,8 +291,14 @@ function ConnectionState({
   const title =
     problem ??
     (denied
-      ? "Local network access is blocked. Allow it in your browser’s site settings, then retry."
-      : "Request local network access and connect directly to the mdbase relay on this computer.");
+      ? translate({
+          message:
+            "Local network access is blocked. Allow it in your browser’s site settings, then retry.",
+        })
+      : translate({
+          message:
+            "Request local network access and connect directly to the mdbase relay on this computer.",
+        }));
   // The visible words name the button; the explanation is its description.
   return (
     <>
@@ -290,7 +309,9 @@ function ConnectionState({
         aria-describedby={descriptionId}
         onClick={request}
       >
-        {denied ? "Retry local access" : "Connect directly"}
+        {denied
+          ? t({ message: "Retry local access" })
+          : t({ message: "Connect directly", context: "ReaderHeader interface" })}
       </button>
       <span id={descriptionId} className="sr-only">
         {title}
@@ -310,6 +331,13 @@ export const connectionLabels = {
 } as const;
 
 function PlainConnectionState({ state }: { readonly state: ReaderConnectionState }): JSX.Element {
+  const { t } = useLingui();
+  const connectionLabels = {
+    connected: t`Connected`,
+    offline: t`Offline`,
+    syncing: t`Syncing…`,
+    saved_on_device: t`Saved on this device; waiting for sync`,
+  };
   // Connected is the normal state: a quiet dot, with the words kept for assistive technology.
   return (
     <span className={`connection-state is-${state}`} title={connectionLabels[state]}>

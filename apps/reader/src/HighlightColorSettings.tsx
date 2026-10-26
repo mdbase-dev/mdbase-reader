@@ -1,3 +1,6 @@
+import { t as translate } from "@lingui/core/macro";
+import { useLingui as useLocale } from "@lingui/react";
+import { Trans } from "@lingui/react/macro";
 import {
   cleanHighlightMeaning,
   highlightColorKeys,
@@ -38,8 +41,12 @@ interface Message {
 }
 
 const fieldNames: Readonly<Record<Field, string>> = {
-  highlight_colors: "colours offered",
-  highlight_meanings: "meanings",
+  get highlight_colors() {
+    return translate({ message: "colours offered" });
+  },
+  get highlight_meanings() {
+    return translate({ message: "meanings" });
+  },
 };
 
 function draftsFrom(colors: readonly HighlightColorKey[], meanings: HighlightMeanings): Drafts {
@@ -83,6 +90,7 @@ export function HighlightColorSettings({
   /** Whether there are edits the user made and has not saved, for leaving the page. */
   readonly onDirtyChange?: (dirty: boolean) => void;
 }): JSX.Element {
+  useLocale();
   const id = useId();
   const snapshot = useSyncExternalStore(settings.subscribe, settings.getSnapshot);
   const editor = useDrafts(snapshot);
@@ -125,14 +133,7 @@ export function HighlightColorSettings({
         }
       }}
     >
-      <h3 id={`${id}-title`}>Highlight colours</h3>
-      <p id={`${id}-description`}>
-        Which colours Reader offers when you highlight, in this order, and what each means.
-      </p>
-      <p className="highlight-color-settings-note">
-        Changing a colour’s meaning also relabels the highlights already in that colour. Hiding a
-        colour only stops Reader offering it: highlights already in it keep their colour.
-      </p>
+      <HighlightSettingsIntro id={id} />
       {readOnly ? (
         <p className="file-name-settings-notice" role="status">
           {readOnly}
@@ -140,22 +141,29 @@ export function HighlightColorSettings({
       ) : null}
       {editor.fromDevice && !readOnly ? (
         <p className="file-name-settings-notice" role="status">
-          These meanings were set on this device only. Save to share them with this collection, or
-          clear them.
+          <Trans>
+            These meanings were set on this device only. Save to share them with this collection, or
+            clear them.
+          </Trans>
         </p>
       ) : null}
       {warnings.map((warning) => (
         <p key={warning.field} className="file-name-template-warning">
-          The saved {fieldNames[warning.field as Field]} cannot be used: {warning.message}
+          <Trans>The saved </Trans>
+          {fieldNames[warning.field as Field]} <Trans>cannot be used: </Trans>
+          {warning.message}
         </p>
       ))}
-      <ol className="highlight-color-rows" aria-label="Offered colours, in order">
+      <ol
+        className="highlight-color-rows"
+        aria-label={translate({ message: "Offered colours, in order" })}
+      >
         {drafts.offered.map(row)}
       </ol>
       {hiddenColors.length > 0 ? (
         <>
           <h4 id={`${id}-hidden`} className="highlight-color-group">
-            Hidden
+            <Trans>Hidden</Trans>
           </h4>
           <ul className="highlight-color-rows" aria-labelledby={`${id}-hidden`}>
             {hiddenColors.map(row)}
@@ -163,8 +171,10 @@ export function HighlightColorSettings({
         </>
       ) : null}
       <p id={`${id}-one`} className="file-name-template-hint">
-        At least one colour stays offered. The colour new highlights use is this device’s own: the
-        one used last, or the first offered while that one is hidden.
+        <Trans>
+          At least one colour stays offered. The colour new highlights use is this device’s own: the
+          one used last, or the first offered while that one is hidden.
+        </Trans>
       </p>
       <p className="sr-only" role="status">
         {rowActions.announcement}
@@ -183,13 +193,34 @@ export function HighlightColorSettings({
           disabled={disabled || (isDefault && warnings.length === 0)}
           onClick={() => editor.reset()}
         >
-          Reset to default
+          <Trans>Reset to default</Trans>
         </button>
         <button type="submit" disabled={disabled || !pending}>
-          {saving ? "Saving…" : "Save"}
+          {saving ? translate({ message: "Saving…" }) : translate({ message: "Save" })}
         </button>
       </div>
     </form>
+  );
+}
+
+function HighlightSettingsIntro({ id }: { readonly id: string }): JSX.Element {
+  return (
+    <>
+      <h3 id={`${id}-title`}>
+        <Trans>Highlight colours</Trans>
+      </h3>
+      <p id={`${id}-description`}>
+        <Trans>
+          Which colours Reader offers when you highlight, in this order, and what each means.
+        </Trans>
+      </p>
+      <p className="highlight-color-settings-note">
+        <Trans>
+          Changing a colour’s meaning also relabels the highlights already in that colour. Hiding a
+          colour only stops Reader offering it: highlights already in it keep their colour.
+        </Trans>
+      </p>
+    </>
   );
 }
 
@@ -214,6 +245,7 @@ function ColorRow({
   readonly onChange: (field: Field, drafts: Drafts) => void;
   readonly actions: RowActions;
 }): JSX.Element {
+  useLocale();
   const label = highlightPalette[color].label;
   const shown = drafts.offered.includes(color);
   const lastShown = shown && drafts.offered.length === 1;
@@ -224,9 +256,9 @@ function ColorRow({
       <input
         type="text"
         className="mdbase-field"
-        aria-label={`${label} meaning`}
+        aria-label={translate`${label} meaning`}
         value={drafts.meanings[color]}
-        placeholder={`e.g. ${highlightMeaningSuggestions[color]}`}
+        placeholder={translate`e.g. ${highlightMeaningSuggestions[color]}`}
         maxLength={highlightMeaningMaxLength}
         autoComplete="off"
         disabled={disabled}
@@ -244,8 +276,8 @@ function ColorRow({
               type="button"
               id={`${id}-${color}-up`}
               className="highlight-color-move"
-              aria-label={`Move ${label} up`}
-              title="Move up"
+              aria-label={translate`Move ${label} up`}
+              title={translate({ message: "Move up" })}
               disabled={disabled || index === 0}
               onClick={() => actions.move(color, -1)}
             >
@@ -255,8 +287,8 @@ function ColorRow({
               type="button"
               id={`${id}-${color}-down`}
               className="highlight-color-move"
-              aria-label={`Move ${label} down`}
-              title="Move down"
+              aria-label={translate`Move ${label} down`}
+              title={translate({ message: "Move down" })}
               disabled={disabled || index === drafts.offered.length - 1}
               onClick={() => actions.move(color, 1)}
             >
@@ -265,23 +297,23 @@ function ColorRow({
             <button
               type="button"
               id={`${id}-${color}-hide`}
-              aria-label={`Hide ${label}`}
+              aria-label={translate`Hide ${label}`}
               aria-describedby={lastShown ? `${id}-one` : undefined}
               disabled={disabled || lastShown}
               onClick={() => actions.hide(color)}
             >
-              Hide
+              <Trans>Hide</Trans>
             </button>
           </>
         ) : (
           <button
             type="button"
             id={`${id}-${color}-show`}
-            aria-label={`Show ${label}`}
+            aria-label={translate`Show ${label}`}
             disabled={disabled}
             onClick={() => actions.show(color)}
           >
-            Show
+            <Trans>Show</Trans>
           </button>
         )}
       </span>
@@ -316,7 +348,10 @@ function useSave(
       // This device's old meanings are now either the collection's or deliberately cleared.
       forgetDeviceHighlightMeanings();
       editor.rebase(result.snapshot);
-      setMessage({ text: "Saved for everyone using this collection.", error: false });
+      setMessage({
+        text: translate({ message: "Saved for everyone using this collection." }),
+        error: false,
+      });
       return;
     }
     if (result.reason === "conflict") {
@@ -325,8 +360,9 @@ function useSave(
         .filter((field) => result.fields?.includes(field))
         .map((field) => fieldNames[field]);
       if (names.length > 0) {
+        const joined = names.join(translate({ message: " and " }));
         setMessage({
-          text: `The ${names.join(" and ")} changed somewhere else. Review and save again.`,
+          text: translate`The ${joined} changed somewhere else. Review and save again.`,
           error: true,
         });
         return;
@@ -382,21 +418,21 @@ function useRowActions(id: string, editor: DraftEditor): RowActions {
       change(
         offered,
         `${key}-${(by === -1) !== atEnd ? "up" : "down"}`,
-        `${highlightPalette[key].label} moved to position ${String(to + 1)} of ${String(offered.length)}.`,
+        translate`${highlightPalette[key].label} moved to position ${String(to + 1)} of ${String(offered.length)}.`,
       );
     },
     hide: (key) =>
       change(
         drafts.offered.filter((color) => color !== key),
         `${key}-show`,
-        `${highlightPalette[key].label} hidden.`,
+        translate`${highlightPalette[key].label} hidden.`,
       ),
     show: (key) => {
       const offered = [...drafts.offered, key];
       change(
         offered,
         `${key}-hide`,
-        `${highlightPalette[key].label} shown, at position ${String(offered.length)} of ${String(offered.length)}.`,
+        translate`${highlightPalette[key].label} shown, at position ${String(offered.length)} of ${String(offered.length)}.`,
       );
     },
   };

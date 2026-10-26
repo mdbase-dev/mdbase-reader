@@ -1,8 +1,8 @@
 import { collectionId, sourceId, type SourceSummary } from "@mdbase-reader/core";
-import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
 
 import { SourceAddDialog } from "./SourceAddDialog.js";
+import { renderToStaticMarkup } from "./testing/i18n.js";
 
 import type { SourceAdditionController } from "./use-source-addition.js";
 

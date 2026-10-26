@@ -1,3 +1,6 @@
+import { plural, t as translate } from "@lingui/core/macro";
+import { useLingui as useLocale } from "@lingui/react";
+import { Trans, useLingui } from "@lingui/react/macro";
 import { useEffect, useId, useState, type JSX } from "react";
 
 import { readerErrorMessage } from "./errors.js";
@@ -39,6 +42,7 @@ export function LibraryTextSearch({
   surfaces,
   onOpen,
 }: LibraryTextSearchProps): JSX.Element {
+  const { t } = useLingui();
   const normalized = query.trim();
   const family = `reader-text-search:${useId()}`;
   const [result, setResult] = useState<{
@@ -88,22 +92,34 @@ export function LibraryTextSearch({
         );
   const problem = scope === "documents" ? documents.problem : current?.problem;
   return (
-    <section className="library-text-search" aria-label="Text search results">
+    <section className="library-text-search" aria-label={t({ message: "Text search results" })}>
       <p className="search-coverage" role="status">
         {scope === "documents"
           ? indexed.paused
-            ? "Saved-page indexing is paused. Open documents are still searched."
-            : "Searches saved web pages and open documents. PDFs and EPUBs must be open."
-          : "Searches source notes and annotation text, not PDF, EPUB or saved-page contents."}
+            ? translate({
+                message: "Saved-page indexing is paused. Open documents are still searched.",
+              })
+            : translate({
+                message:
+                  "Searches saved web pages and open documents. PDFs and EPUBs must be open.",
+              })
+          : translate({
+              message:
+                "Searches source notes and annotation text, not PDF, EPUB or saved-page contents.",
+            })}
       </p>
       {scope === "documents" ? (
         <details className="search-coverage search-details">
-          <summary>Search details</summary>
+          <summary>
+            <Trans>Search details</Trans>
+          </summary>
           <p>
             {indexed.status} {documents.coverage}
           </p>
           <p>
-            Results open at the matching passage. If it cannot be found, use Find in the document.
+            <Trans>
+              Results open at the matching passage. If it cannot be found, use Find in the document.
+            </Trans>
           </p>
           <IndexPauseControl paused={indexed.paused} togglePause={indexed.togglePause} />
         </details>
@@ -126,7 +142,7 @@ export function LibraryTextSearch({
       </ul>
       {visible.length > limit ? (
         <button type="button" onClick={() => setLimit((value) => value + 100)}>
-          Show more results
+          <Trans>Show more results</Trans>
         </button>
       ) : null}
     </section>
@@ -150,6 +166,7 @@ function SearchResult({
   readonly destination: SearchDestination | undefined;
   readonly onOpen: LibraryTextSearchProps["onOpen"];
 }): JSX.Element {
+  useLocale();
   const passage = note?.passages?.[0];
   const excerpt =
     scope === "documents"
@@ -170,8 +187,8 @@ function SearchResult({
     view === "document"
       ? documentPassageLabel(descriptor, destination, document?.file)
       : view === "note"
-        ? "Source note"
-        : "Annotation text";
+        ? translate({ message: "Source note" })
+        : translate({ message: "Annotation text" });
   return (
     <li>
       <button
@@ -193,12 +210,15 @@ function IndexPauseControl({
   readonly paused: boolean;
   readonly togglePause: (() => void) | undefined;
 }): JSX.Element | null {
+  useLocale();
   if (!togglePause) {
     return null;
   }
   return (
     <button type="button" onClick={togglePause} aria-pressed={paused}>
-      {paused ? "Resume library indexing" : "Pause library indexing"}
+      {paused
+        ? translate({ message: "Resume library indexing" })
+        : translate({ message: "Pause library indexing" })}
     </button>
   );
 }
@@ -210,7 +230,10 @@ function failedSearch(
   return {
     query,
     matches: [],
-    problem: readerErrorMessage(reason, "Text search failed. Change the query to retry."),
+    problem: readerErrorMessage(
+      reason,
+      translate({ message: "Text search failed. Change the query to retry." }),
+    ),
   };
 }
 
@@ -226,10 +249,10 @@ function Excerpt({ value }: { readonly value: SearchExcerpt }): JSX.Element {
 
 function searchStatus(query: string, searching: boolean, count: number): string {
   if (query.length < 2) {
-    return "Enter at least two characters.";
+    return translate({ message: "Enter at least two characters." });
   }
   if (searching) {
-    return "Searching notes and annotations…";
+    return translate({ message: "Searching notes and annotations…" });
   }
-  return `${String(count)} matching ${count === 1 ? "source" : "sources"}`;
+  return plural(count, { one: "# matching source", other: "# matching sources" });
 }

@@ -1,3 +1,6 @@
+import { t as translate } from "@lingui/core/macro";
+import { useLingui as useLocale } from "@lingui/react";
+import { Trans } from "@lingui/react/macro";
 import {
   nameTemplateFilters,
   nameTemplateProblem,
@@ -44,15 +47,23 @@ interface TemplateField {
 const fields: readonly TemplateField[] = [
   {
     key: "source_name_template",
-    label: "Source notes",
-    hint: "Chapters too. Use / to put notes in folders under sources/.",
+    get label() {
+      return translate({ message: "Source notes" });
+    },
+    get hint() {
+      return translate({ message: "Chapters too. Use / to put notes in folders under sources/." });
+    },
     variables:
       "title, authors, author, year, type, publisher, site, id, short_id, date; for chapters parent_title, parent_author, parent_year, parent_stem",
   },
   {
     key: "annotation_name_template",
-    label: "Annotations",
-    hint: "Always directly under annotations/.",
+    get label() {
+      return translate({ message: "Annotations" });
+    },
+    get hint() {
+      return translate({ message: "Always directly under annotations/." });
+    },
     variables: "id, short_id, type, quote, words, page, color, date, source_stem",
   },
 ];
@@ -83,6 +94,7 @@ export function FileNameSettings({
   /** Whether there are unsaved edits, for leaving the page. */
   readonly onDirtyChange?: (dirty: boolean) => void;
 }): JSX.Element {
+  useLocale();
   const id = useId();
   const snapshot = useSyncExternalStore(settings.subscribe, settings.getSnapshot);
   const editor = useTemplateDrafts(snapshot);
@@ -109,10 +121,14 @@ export function FileNameSettings({
         }
       }}
     >
-      <h3 id={`${id}-title`}>File names</h3>
+      <h3 id={`${id}-title`}>
+        <Trans>File names</Trans>
+      </h3>
       <p id={`${id}-description`}>
-        How Reader names new source notes and annotations in this collection. Changes only affect
-        new items: existing files keep their names.
+        <Trans>
+          How Reader names new source notes and annotations in this collection. Changes only affect
+          new items: existing files keep their names.
+        </Trans>
       </p>
       {readOnly ? (
         <p className="file-name-settings-notice" role="status">
@@ -141,11 +157,11 @@ export function FileNameSettings({
         />
       ))}
       <details className="file-name-settings-help">
-        <summary>Filters</summary>
+        <summary>
+          <Trans>Filters</Trans>
+        </summary>
         <p>
-          Write {"{{ variable }}"} and add filters with |, such as {"{{ title | slug:40 }}"}. The
-          filters are {nameTemplateFilters.join(", ")}. Reader removes characters files cannot have
-          and adds a short suffix when a name is taken.
+          {translate`Write ${"{{ variable }}"} and add filters with |, such as ${"{{ title | slug:40 }}"}. The filters are ${nameTemplateFilters.join(", ")}. Reader removes characters files cannot have and adds a short suffix when a name is taken.`}
         </p>
       </details>
       {message ? (
@@ -161,7 +177,7 @@ export function FileNameSettings({
           type="submit"
           disabled={saving || loading || invalid || Boolean(readOnly) || !dirty}
         >
-          {saving ? "Saving…" : "Save"}
+          {saving ? translate({ message: "Saving…" }) : translate({ message: "Save" })}
         </button>
       </div>
     </form>
@@ -187,6 +203,7 @@ function TemplateInput({
   readonly onChange: (value: string) => void;
   readonly preview: JSX.Element;
 }): JSX.Element {
+  useLocale();
   const isDefault = value === defaults[field.key];
   const described = [`${id}-hint`, problem ? `${id}-problem` : "", warning ? `${id}-warning` : ""]
     .filter(Boolean)
@@ -198,7 +215,7 @@ function TemplateInput({
         <input
           id={id}
           className="mdbase-field"
-          aria-label={`${field.label} template`}
+          aria-label={translate`${field.label} template`}
           aria-invalid={problem ? true : undefined}
           aria-describedby={described}
           value={value}
@@ -212,21 +229,23 @@ function TemplateInput({
           disabled={disabled || (isDefault && !warning)}
           onClick={() => onChange(defaults[field.key])}
         >
-          Reset to default
+          <Trans>Reset to default</Trans>
         </button>
       </div>
-      <p id={`${id}-hint`} className="file-name-template-hint">
-        {field.hint} Variables: {field.variables}.
-      </p>
+      <p
+        id={`${id}-hint`}
+        className="file-name-template-hint"
+      >{translate`${field.hint} Variables: ${field.variables}.`}</p>
       {problem ? (
         <p id={`${id}-problem`} className="file-name-template-problem">
           {problem}
         </p>
       ) : null}
       {warning ? (
-        <p id={`${id}-warning`} className="file-name-template-warning">
-          The saved template cannot be used: {warning}
-        </p>
+        <p
+          id={`${id}-warning`}
+          className="file-name-template-warning"
+        >{translate`The saved template cannot be used: ${warning}`}</p>
       ) : null}
       {preview}
     </fieldset>
@@ -247,6 +266,7 @@ function TemplatePreview({
   readonly template: string;
   readonly invalid: boolean;
 }): JSX.Element {
+  useLocale();
   const [shown, setShown] = useState<readonly FileNamePreviewRow[] | null>(null);
   useEffect(() => {
     if (invalid) {
@@ -263,21 +283,29 @@ function TemplatePreview({
     };
   }, [template, invalid, rows]);
   if (shown === null) {
-    return <p className="file-name-preview-empty">Preparing a preview…</p>;
+    return (
+      <p className="file-name-preview-empty">
+        <Trans>Preparing a preview…</Trans>
+      </p>
+    );
   }
   if (shown.length === 0) {
     return <p className="file-name-preview-empty">{empty}</p>;
   }
   return (
     <div className="file-name-preview">
-      <span className="file-name-preview-label">{invalid ? "Last valid preview" : "Preview"}</span>
-      <ul aria-label="Preview">
+      <span className="file-name-preview-label">
+        {invalid ? translate({ message: "Last valid preview" }) : translate({ message: "Preview" })}
+      </span>
+      <ul aria-label={translate({ message: "Preview" })}>
         {shown.map((row) => (
           <li key={row.key}>
             <span className="file-name-preview-item">{row.label}</span>
             <code>{row.path}</code>
             {row.usedDefault ? (
-              <span className="file-name-preview-default">Nothing usable, so Reader’s name</span>
+              <span className="file-name-preview-default">
+                <Trans>Nothing usable, so Reader’s name</Trans>
+              </span>
             ) : null}
           </li>
         ))}
@@ -302,13 +330,16 @@ function usePreviews(
     [annotations],
   );
   return {
-    source_name_template: { rows: sourceRows, empty: "Add a source to preview its name." },
+    source_name_template: {
+      rows: sourceRows,
+      empty: translate({ message: "Add a source to preview its name." }),
+    },
     annotation_name_template: {
       rows: annotationRows,
       empty:
         annotations === undefined
-          ? "Loading annotations…"
-          : "Make an annotation to preview its name.",
+          ? translate({ message: "Loading annotations…" })
+          : translate({ message: "Make an annotation to preview its name." }),
     },
   };
 }
@@ -333,7 +364,10 @@ function useSave(
     setSaving(false);
     if (result.ok) {
       editor.rebase(result.snapshot);
-      setMessage({ text: "Saved. New items in this collection use these names.", error: false });
+      setMessage({
+        text: translate({ message: "Saved. New items in this collection use these names." }),
+        error: false,
+      });
       return;
     }
     if (result.reason === "conflict") {
@@ -341,10 +375,11 @@ function useSave(
       editor.rebase(result.snapshot, true);
       const names = fields
         .filter(({ key }) => result.fields?.includes(key))
-        .map(({ label }) => `${label.toLowerCase()} template`);
+        .map(({ label }) => translate`${label.toLowerCase()} template`);
       if (names.length > 0) {
+        const joined = names.join(translate({ message: " and " }));
         setMessage({
-          text: `The ${names.join(" and ")} changed somewhere else. Review and save again.`,
+          text: translate`The ${joined} changed somewhere else. Review and save again.`,
           error: true,
         });
         return;

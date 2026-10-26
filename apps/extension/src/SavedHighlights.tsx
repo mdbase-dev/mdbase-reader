@@ -1,3 +1,6 @@
+import { msg } from "@lingui/core/macro";
+import { useLingui as useLocale } from "@lingui/react";
+import { Plural, Trans, useLingui } from "@lingui/react/macro";
 import { memo, useMemo, useState } from "react";
 
 import { problemMessage, readerAnnotationUrl } from "./capture-model.js";
@@ -6,6 +9,7 @@ import { TechnicalDetails } from "./TechnicalDetails.js";
 
 import type { ExtensionCaptureController } from "./capture-controller.js";
 import type { QuoteOutcome } from "./page-annotations.js";
+import type { MessageDescriptor } from "@lingui/core";
 import type { Annotation, AnnotationDeletionPlan } from "@mdbase-reader/core";
 
 /** The saved page's highlights: show one on the page, change its comment, or delete it. */
@@ -14,6 +18,7 @@ export function SavedHighlights({
 }: {
   readonly controller: ExtensionCaptureController;
 }): React.JSX.Element | null {
+  useLocale();
   const { revealHighlight, updateHighlightComment, planHighlightDeletion, deleteHighlight } = c;
   const actions = useMemo(
     () => ({ revealHighlight, updateHighlightComment, planHighlightDeletion, deleteHighlight }),
@@ -33,12 +38,16 @@ export function SavedHighlights({
     <section className="saved-highlights" aria-labelledby="saved-highlights-heading">
       <div className="list-header">
         {/* The Highlights tab already counts them. */}
-        <h2 id="saved-highlights-heading">Saved highlights</h2>
+        <h2 id="saved-highlights-heading">
+          <Trans>Saved highlights</Trans>
+        </h2>
       </div>
       {hidden ? (
         <p className="hint">
-          {hidden} not shown on this page, which may have changed since it was saved. They are still
-          in the saved copy.
+          <Trans>
+            {hidden} not shown on this page, which may have changed since it was saved. They are
+            still in the saved copy.
+          </Trans>
         </p>
       ) : null}
       <ul>
@@ -63,9 +72,9 @@ type Mode =
   | { readonly kind: "edit"; readonly comment: string }
   | { readonly kind: "delete"; readonly plan: AnnotationDeletionPlan };
 
-const outcomeLabels: Record<Exclude<QuoteOutcome, "shown">, string> = {
-  missing: "Not found on this page",
-  ambiguous: "Matches several places on this page",
+const outcomeLabels: Record<Exclude<QuoteOutcome, "shown">, MessageDescriptor> = {
+  missing: msg`Not found on this page`,
+  ambiguous: msg`Matches several places on this page`,
 };
 
 /** The controller's actions an item uses; they keep their identity across renders. */
@@ -91,6 +100,7 @@ const HighlightItem = memo(function HighlightItem({
   readonly navigated: boolean;
   readonly actions: HighlightActions;
 }): React.JSX.Element {
+  const { t } = useLingui();
   const [mode, setMode] = useState<Mode>({ kind: "view" });
   const [working, setWorking] = useState(false);
   const [problem, setProblem] = useState<string | null>(null);
@@ -149,7 +159,7 @@ const HighlightItem = memo(function HighlightItem({
             disabled={locked}
             onClick={() => setMode({ kind: "edit", comment })}
           >
-            {comment ? "Edit comment" : "Add comment"}
+            {comment ? t`Edit comment` : t`Add comment`}
           </button>
           <button
             type="button"
@@ -161,16 +171,18 @@ const HighlightItem = memo(function HighlightItem({
               )
             }
           >
-            Delete
+            <Trans>Delete</Trans>
           </button>
           <a className="text-button" href={readerUrl} target="_blank" rel="noreferrer">
-            Open in Reader
+            <Trans>Open in Reader</Trans>
           </a>
         </div>
       ) : null}
       {problem ? (
         <div className="item-problem" role="alert">
-          <p>That didn’t finish. Try again; your highlight is as it was.</p>
+          <p>
+            <Trans>That didn’t finish. Try again; your highlight is as it was.</Trans>
+          </p>
           <TechnicalDetails detail={problem} />
         </div>
       ) : null}
@@ -190,6 +202,8 @@ function QuoteButton({
   readonly disabled: boolean;
   readonly onReveal: () => void;
 }): React.JSX.Element {
+  const { t } = useLingui();
+  const { i18n } = useLingui();
   const shown = outcome === "shown";
   return (
     <>
@@ -197,14 +211,14 @@ function QuoteButton({
         type="button"
         className="highlight-quote"
         disabled={disabled || !shown}
-        title={shown ? "Show on the page" : undefined}
+        title={shown ? t`Show on the page` : undefined}
         onClick={onReveal}
       >
         <span className="highlight-mark">
           {displayQuote(annotation.target?.quote?.exact ?? "")}
         </span>
       </button>
-      {outcome && !shown ? <p className="hint">{outcomeLabels[outcome]}</p> : null}
+      {outcome && !shown ? <p className="hint">{i18n._(outcomeLabels[outcome])}</p> : null}
     </>
   );
 }
@@ -226,6 +240,7 @@ function CommentEditor({
   readonly onCancel: () => void;
   readonly onSave: (value: string) => void;
 }): React.JSX.Element {
+  const { t } = useLingui();
   return (
     <form
       className="comment-editor"
@@ -235,7 +250,7 @@ function CommentEditor({
       }}
     >
       <label htmlFor={id} className="visually-hidden">
-        Comment
+        <Trans>Comment</Trans>
       </label>
       <textarea
         className="mdbase-field"
@@ -258,10 +273,10 @@ function CommentEditor({
       />
       <div className="item-actions">
         <button type="submit" className="secondary" disabled={locked}>
-          {working ? "Saving…" : "Save comment"}
+          {working ? t`Saving…` : t`Save comment`}
         </button>
         <button type="button" className="text-button" onClick={onCancel}>
-          Cancel
+          <Trans context="Reader action">Cancel</Trans>
         </button>
       </div>
     </form>
@@ -281,21 +296,30 @@ function DeleteConfirm({
   readonly onCancel: () => void;
   readonly onDelete: () => void;
 }): React.JSX.Element {
+  const { t } = useLingui();
   const links = plan.brokenLinkPaths.length;
   return (
-    <div className="delete-confirm" role="alertdialog" aria-label="Delete highlight">
+    <div className="delete-confirm" role="alertdialog" aria-label={t`Delete highlight`}>
       <p>
-        Delete this highlight from your collection?
-        {links
-          ? ` ${String(links)} ${links === 1 ? "note links" : "notes link"} to it; those links will break.`
-          : ""}
+        <Trans>
+          Delete this highlight from your collection?
+          {links ? (
+            <Plural
+              value={links}
+              one=" # note links to it; those links will break."
+              other=" # notes link to it; those links will break."
+            />
+          ) : (
+            ""
+          )}
+        </Trans>
       </p>
       <div className="item-actions">
         <button type="button" className="danger" disabled={locked} onClick={onDelete}>
-          {working ? "Deleting…" : "Delete"}
+          {working ? t`Deleting…` : t`Delete`}
         </button>
         <button type="button" className="text-button" onClick={onCancel}>
-          Cancel
+          <Trans context="Reader action">Cancel</Trans>
         </button>
       </div>
     </div>

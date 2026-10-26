@@ -3,6 +3,7 @@ import { contextBridge, ipcRenderer } from "electron";
 import { electronChannels } from "./channels.js";
 
 export interface ElectronReaderBridge {
+  setLocale(locale: string): Promise<void>;
   openExternal(url: string): Promise<void>;
   pickFile(
     accept: readonly string[],
@@ -11,6 +12,7 @@ export interface ElectronReaderBridge {
 }
 
 const bridge: ElectronReaderBridge = {
+  setLocale: (locale) => ipcRenderer.invoke(electronChannels.setLocale, locale) as Promise<void>,
   openExternal: (url) => ipcRenderer.invoke(electronChannels.openExternal, url) as Promise<void>,
   pickFile: (accept) =>
     ipcRenderer.invoke(electronChannels.pickFile, accept) as ReturnType<

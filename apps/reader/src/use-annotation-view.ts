@@ -1,3 +1,4 @@
+import { t as translate } from "@lingui/core/macro";
 import { useEffect, useMemo, useState } from "react";
 
 import { readerErrorMessage } from "./errors.js";
@@ -84,8 +85,10 @@ export function useAnnotationViewExecution(
             execution: {
               paths: null,
               ready: true,
-              problem:
-                "This view couldn’t be applied by mdbase, so Reader is filtering here instead.",
+              problem: translate({
+                message:
+                  "This view couldn’t be applied by mdbase, so Reader is filtering here instead.",
+              }),
             },
           });
         }
@@ -126,12 +129,14 @@ export function useSourceAnnotationsView(
         .then(({ path, created }) =>
           setMessage(
             created
-              ? `Added ${path}. Run it with a source as its context in any mdbase tool.`
-              : `Your collection already has it: ${path}.`,
+              ? translate`Added ${path}. Run it with a source as its context in any mdbase tool.`
+              : translate`Your collection already has it: ${path}.`,
           ),
         )
         .catch((reason: unknown) =>
-          setMessage(readerErrorMessage(reason, "Reader could not add the view.")),
+          setMessage(
+            readerErrorMessage(reason, translate({ message: "Reader could not add the view." })),
+          ),
         )
         .finally(() => setBusy(false));
     },

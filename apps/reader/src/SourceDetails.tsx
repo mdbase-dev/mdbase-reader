@@ -1,3 +1,6 @@
+import { t as translate } from "@lingui/core/macro";
+import { useLingui as useLocale } from "@lingui/react";
+import { Trans } from "@lingui/react/macro";
 import { sourceCitationDifferences, type Source } from "@mdbase-reader/core";
 import { useId, useState, type JSX } from "react";
 
@@ -5,18 +8,33 @@ import type { SourceFieldsController } from "./use-source-fields.js";
 
 type DetailField = "title" | "authors" | "published" | "url" | "description";
 
-const fields: readonly {
+function fields(): readonly {
   readonly key: DetailField;
   readonly label: string;
   readonly multiline?: boolean;
   readonly placeholder?: string;
-}[] = [
-  { key: "title", label: "Title" },
-  { key: "authors", label: "Authors", multiline: true, placeholder: "One per line" },
-  { key: "published", label: "Published", placeholder: "2002, 2002-03 or 2002-03-01" },
-  { key: "url", label: "URL", placeholder: "https://" },
-  { key: "description", label: "Description", multiline: true },
-];
+}[] {
+  return [
+    { key: "title", label: translate({ message: "Title", context: "SourceDetails fields" }) },
+    {
+      key: "authors",
+      label: translate({ message: "Authors", context: "SourceDetails fields" }),
+      multiline: true,
+      placeholder: translate({ message: "One per line", context: "SourceDetails fields" }),
+    },
+    {
+      key: "published",
+      label: translate({ message: "Published", context: "SourceDetails fields" }),
+      placeholder: translate({ message: "2002, 2002-03 or 2002-03-01" }),
+    },
+    { key: "url", label: "URL", placeholder: "https://" },
+    {
+      key: "description",
+      label: translate({ message: "Description", context: "SourceDetails fields" }),
+      multiline: true,
+    },
+  ];
+}
 
 /**
  * The source record's friendly frontmatter, shown above its note the way the file stores it.
@@ -31,17 +49,20 @@ export function SourceDetails({
   readonly controller: SourceFieldsController;
   readonly onOpenCitation?: () => void;
 }): JSX.Element {
+  useLocale();
   const differs =
     source.citation !== undefined &&
     sourceCitationDifferences(source.frontmatter, source.citation).length > 0;
   return (
     <details className="source-details">
       <summary>
-        <strong>Details</strong>
+        <strong>
+          <Trans context="Source metadata section">Details</Trans>
+        </strong>
         <span>{detailSummary(source)}</span>
       </summary>
       <div className="source-details-fields">
-        {fields.map((field) => (
+        {fields().map((field) => (
           <DetailInput
             // Remount when the stored value changes, e.g. after a save elsewhere.
             key={`${source.id}:${field.key}:${JSON.stringify(source.frontmatter[field.key])}`}
@@ -56,13 +77,15 @@ export function SourceDetails({
             {controller.error}
           </p>
         ) : !controller.available ? (
-          <p className="source-details-note">This collection cannot edit source details.</p>
+          <p className="source-details-note">
+            <Trans>This collection cannot edit source details.</Trans>
+          </p>
         ) : differs ? (
           <p className="source-details-note">
-            The citation has different details.{" "}
+            <Trans>The citation has different details.</Trans>{" "}
             {onOpenCitation ? (
               <button type="button" onClick={onOpenCitation}>
-                Review citation
+                <Trans>Review citation</Trans>
               </button>
             ) : null}
           </p>
@@ -78,7 +101,7 @@ function DetailInput({
   disabled,
   onSave,
 }: {
-  readonly field: (typeof fields)[number];
+  readonly field: ReturnType<typeof fields>[number];
   readonly value: unknown;
   readonly disabled: boolean;
   readonly onSave: (value: unknown) => Promise<void>;

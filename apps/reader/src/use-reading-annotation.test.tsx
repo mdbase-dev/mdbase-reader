@@ -14,9 +14,9 @@ import {
   type ReadingSurface,
 } from "@mdbase-reader/reading-surface";
 import { act, type JSX } from "react";
-import { createRoot } from "react-dom/client";
 import { afterEach, expect, it, vi } from "vitest";
 
+import { createRoot } from "./testing/i18n.js";
 import { nearestPositionAnnotation, useReadingAnnotation } from "./use-reading-annotation.js";
 
 (globalThis as typeof globalThis & { IS_REACT_ACT_ENVIRONMENT: boolean }).IS_REACT_ACT_ENVIRONMENT =

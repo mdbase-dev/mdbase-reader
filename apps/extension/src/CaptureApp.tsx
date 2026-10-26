@@ -1,3 +1,6 @@
+import { t, t as translate } from "@lingui/core/macro";
+import { useLingui as useLocale } from "@lingui/react";
+import { Trans, useLingui } from "@lingui/react/macro";
 import { Fragment, useEffect, useState } from "react";
 
 import { readerSourceUrl } from "./capture-model.js";
@@ -25,13 +28,16 @@ export function CaptureApp({
   controller,
   initialTab,
 }: ControllerProps & { readonly initialTab?: PanelTab }): React.JSX.Element {
+  const { t } = useLingui();
   const [diagnostics] = useDiagnosticsShown();
   const [tab, setTab] = usePanelTab(controller, initialTab);
   const [collectionOpen, setCollectionOpen] = useState(false);
   const collection = collectionName(controller);
   useEffect(() => {
-    document.title = `mdbase Reader — ${controller.source ? "source saved" : "capture"}`;
-  }, [controller.source]);
+    document.title = controller.source
+      ? t`mdbase Reader — source saved`
+      : t`mdbase Reader — capture`;
+  }, [controller.source, t]);
   useEffect(() => {
     // Drafts survive closing the panel; an in-flight save's outcome would not be shown.
     const warn = (event: BeforeUnloadEvent): void => {
@@ -68,21 +74,29 @@ export function CaptureApp({
         />
         {controller.readerPage ? (
           <section className="page-card">
-            <h1>This is mdbase Reader</h1>
-            <p>Nothing to save here</p>
+            <h1>
+              <Trans>This is mdbase Reader</Trans>
+            </h1>
+            <p>
+              <Trans>Nothing to save here</Trans>
+            </p>
           </section>
         ) : unreadable(controller) ? (
           <section className="page-card">
-            <h1>Reader cannot read this page</h1>
-            <p>Nothing to save here</p>
+            <h1>
+              <Trans>Reader cannot read this page</Trans>
+            </h1>
+            <p>
+              <Trans>Nothing to save here</Trans>
+            </p>
           </section>
         ) : (
           <section className="page-card">
             <h1>{pageTitle(controller)}</h1>
             <p>
               {controller.capture
-                ? `${new URL(controller.capture.canonicalUrl).hostname}${controller.capture.kind === "pdf" ? " · PDF" : ""}`
-                : "Waiting for the active tab"}
+                ? `${new URL(controller.capture.canonicalUrl).hostname}${controller.capture.kind === "pdf" ? translate({ message: " · PDF" }) : ""}`
+                : translate({ message: "Waiting for the active tab" })}
             </p>
             <PageStatus controller={controller} />
             <SaveBar controller={controller} />
@@ -133,19 +147,30 @@ export function CaptureApp({
  * one quiet line says how to make one, and only while there is nothing saved to show.
  */
 function HighlightsPanel({ controller: c }: ControllerProps): React.JSX.Element {
+  useLocale();
   const selection = c.capture?.kind === "html" ? c.capture.selection : null;
   const saved = c.annotations.some((annotation) => annotation.target?.quote);
   return (
     <>
       {c.capture?.kind === "pdf" ? (
         <p className="tab-hint">
-          Chrome’s PDF viewer does not share selections, so PDFs are highlighted in Reader.
-          {c.source ? " Highlights made there appear here." : " Save the PDF, then open it there."}
+          <Trans>
+            Chrome’s PDF viewer does not share selections, so PDFs are highlighted in Reader.
+          </Trans>{" "}
+          {c.source ? (
+            <Trans>Highlights made there appear here.</Trans>
+          ) : (
+            <Trans>Save the PDF, then open it there.</Trans>
+          )}
         </p>
       ) : awaitingConnection(c) ? (
         <ConnectFirst
           controller={c}
-          purpose={selection ? "highlight the selected passage" : "highlight this page"}
+          purpose={
+            selection
+              ? translate({ message: "highlight the selected passage" })
+              : translate({ message: "highlight this page" })
+          }
         />
       ) : selection ? (
         <fieldset
@@ -168,7 +193,7 @@ function pageTitle(c: ExtensionCaptureController): string {
   if (c.source) {
     return c.source.title;
   }
-  return c.capture ? c.draft.title.trim() || c.capture.pageTitle : "Reading the page…";
+  return c.capture ? c.draft.title.trim() || c.capture.pageTitle : t`Reading the page…`;
 }
 
 /**
@@ -184,7 +209,9 @@ function HighlightHint({ colors }: { readonly colors: number }): React.JSX.Eleme
   const shortcut = useShortcuts()?.find((value) => value.name === "save-highlight")?.keys;
   return (
     <div className="tab-hint">
-      <p>Select text on the page to highlight it.</p>
+      <p>
+        <Trans>Select text on the page to highlight it.</Trans>
+      </p>
       <ul className="hint-keys">
         <li>
           <kbd>1</kbd>
@@ -193,14 +220,22 @@ function HighlightHint({ colors }: { readonly colors: number }): React.JSX.Eleme
               –<kbd>{colors}</kbd>
             </>
           ) : null}{" "}
-          highlight the selection in that colour at once; <kbd>Esc</kbd> clears it
+          <Trans>highlight the selection in that colour at once; </Trans>
+          <kbd>
+            <Trans context="Reader interface">Esc</Trans>
+          </kbd>{" "}
+          <Trans>clears it</Trans>
         </li>
         {shortcut ? (
           <li>
-            <kbd>{shortcut}</kbd> highlights the selection from the page
+            <Trans>
+              <kbd>{shortcut}</kbd> highlights the selection from the page
+            </Trans>
           </li>
         ) : null}
-        <li>Right-click a selection to highlight it with a comment</li>
+        <li>
+          <Trans>Right-click a selection to highlight it with a comment</Trans>
+        </li>
       </ul>
     </div>
   );
@@ -217,21 +252,27 @@ function UnreadablePage({ controller: c }: ControllerProps): React.JSX.Element {
   return (
     <section className="page-note" role="status">
       <p>
-        Press the mdbase Reader toolbar button (Alt+Shift+S) to use Reader on this page. Browser
-        pages and the Chrome Web Store cannot be read by extensions.
+        <Trans>
+          Press the mdbase Reader toolbar button (Alt+Shift+S) to use Reader on this page. Browser
+          pages and the Chrome Web Store cannot be read by extensions.
+        </Trans>
       </p>
       {moved ? (
-        <p>Your unsaved text for the previous page is kept for this browser session.</p>
+        <p>
+          <Trans>Your unsaved text for the previous page is kept for this browser session.</Trans>
+        </p>
       ) : null}
       {c.siteAccess === false ? (
         <>
-          <p>Site access is limited in Chrome, so Reader cannot follow your tabs.</p>
+          <p>
+            <Trans>Site access is limited in Chrome, so Reader cannot follow your tabs.</Trans>
+          </p>
           <button
             type="button"
             className="secondary compact"
             onClick={() => void c.allowAllSites()}
           >
-            Allow on all sites
+            <Trans>Allow on all sites</Trans>
           </button>
         </>
       ) : null}
@@ -253,7 +294,7 @@ function PageStatus({ controller: c }: ControllerProps): React.JSX.Element {
     message ? <span key="message">{message}</span> : null,
     link ? (
       <a key="link" href={link} target="_blank" rel="noreferrer">
-        Open in Reader
+        <Trans>Open in Reader</Trans>
       </a>
     ) : null,
     c.undoable && !c.busy ? (
@@ -263,7 +304,7 @@ function PageStatus({ controller: c }: ControllerProps): React.JSX.Element {
         className="inline-link"
         onClick={() => void c.undoHighlight()}
       >
-        Undo
+        <Trans context="Reader interface">Undo</Trans>
       </button>
     ) : null,
   ].filter((part) => part !== null);
@@ -282,37 +323,46 @@ function PageStatus({ controller: c }: ControllerProps): React.JSX.Element {
 
 function statusMessage(c: ExtensionCaptureController): string | null {
   if (c.navigated && c.following) {
-    return "Opening the new page…";
+    return t`Opening the new page…`;
   }
   const progress = importProgressMessage(c.busy ? c.progress : null);
   if (progress) {
     return progress;
   }
   if (c.status === "saving") {
-    return "Saving…";
+    return t`Saving…`;
   }
   if (c.notice) {
     return c.notice;
   }
   if (c.source) {
-    return c.status === "saved" ? "Saved" : "In your collection";
+    return c.status === "saved" ? "Saved" : translate({ message: "In your collection" });
   }
   if (c.saveAttempted && !c.busy) {
-    return "We couldn’t confirm this saved. Saving again checks first, so nothing is saved twice.";
+    return translate({
+      message:
+        "We couldn’t confirm this saved. Saving again checks first, so nothing is saved twice.",
+    });
   }
-  return c.draftRestored ? "Restored your unsaved note from earlier." : null;
+  return c.draftRestored ? t`Restored your unsaved note from earlier.` : null;
 }
 
 function importProgressMessage(p: ExtensionCaptureController["progress"]): string | null {
   switch (p?.phase) {
-    case "uploading":
-      return `Uploading ${p.fileCount > 1 ? `file ${String(p.fileIndex)} of ${String(p.fileCount)}` : "the page"} · ${String(p.totalBytes ? Math.round((p.completedBytes / p.totalBytes) * 100) : 0)}%`;
+    case "uploading": {
+      const percent = String(
+        p.totalBytes ? Math.round((p.completedBytes / p.totalBytes) * 100) : 0,
+      );
+      return p.fileCount > 1
+        ? translate`Uploading file ${p.fileIndex} of ${p.fileCount} · ${percent}%`
+        : translate`Uploading the page · ${percent}%`;
+    }
     case "recovering":
-      return "Checking what the last attempt saved…";
+      return translate({ message: "Checking what the last attempt saved…" });
     case "creating":
-      return "Saving the page…";
+      return translate({ message: "Saving the page…" });
     case "checking":
-      return "Checking whether it’s already saved…";
+      return translate({ message: "Checking whether it’s already saved…" });
     default:
       return null;
   }

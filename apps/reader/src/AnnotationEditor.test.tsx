@@ -1,8 +1,8 @@
 import { annotationId, recordRevision } from "@mdbase-reader/core";
-import { renderToStaticMarkup } from "react-dom/server";
 import { expect, it, vi } from "vitest";
 
 import { AnnotationDeleteConfirmation } from "./AnnotationEditor.js";
+import { renderToStaticMarkup } from "./testing/i18n.js";
 
 it("names the notes that embed an annotation by title before deleting it", () => {
   const html = renderToStaticMarkup(

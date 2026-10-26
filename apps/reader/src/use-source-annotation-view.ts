@@ -1,3 +1,4 @@
+import { t as translate } from "@lingui/core/macro";
 import { useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
 
 import { readerErrorMessage } from "./errors.js";
@@ -67,7 +68,10 @@ export function useSourceAnnotationView(
       .then(async (library) => {
         if (library.sourceIndex?.complete === false) {
           throw new Error(
-            "Chapter index is incomplete; only annotations saved to this source are shown.",
+            translate({
+              message:
+                "Chapter index is incomplete; only annotations saved to this source are shown.",
+            }),
           );
         }
         const sources = sourceAnnotationFamily(source, library.sources);
@@ -93,7 +97,10 @@ export function useSourceAnnotationView(
           setProblem(
             readerErrorMessage(
               reason,
-              "Chapter annotations could not be loaded; only annotations saved to this source are shown.",
+              translate({
+                message:
+                  "Chapter annotations could not be loaded; only annotations saved to this source are shown.",
+              }),
             ),
           );
         }

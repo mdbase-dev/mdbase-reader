@@ -1,3 +1,4 @@
+import { Trans } from "@lingui/react/macro";
 import { useCallback, useEffect, type ReactNode } from "react";
 
 import { isHtml } from "./document-media.js";
@@ -41,7 +42,9 @@ export function RenderedSourceDocument({
       <header className="source-document-heading">
         <h1>{source.title}</h1>
         {isSavedWebPage(source) ? (
-          <small>Saved web page · original headings below are unchanged</small>
+          <small>
+            <Trans>Saved web page · original headings below are unchanged</Trans>
+          </small>
         ) : null}
       </header>
       <div className="source-document-surface">{render(source, update)}</div>

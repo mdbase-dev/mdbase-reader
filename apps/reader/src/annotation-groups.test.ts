@@ -74,7 +74,7 @@ it("names another source in its run's heading and starts a new group when the so
 
 it("gives cards without a passage their own heading once others have headings", () => {
   const headings = annotationGroupHeadings([onPage("a", 0), comment], book);
-  expect(headings[1]?.label).toBe(unlocatedGroupLabel);
+  expect(headings[1]?.label).toBe(unlocatedGroupLabel());
 });
 
 it("adds no headings when nothing has a usable location", () => {

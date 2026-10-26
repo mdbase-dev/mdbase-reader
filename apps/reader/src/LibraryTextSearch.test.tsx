@@ -1,8 +1,8 @@
 import { collectionId, fileId, fileRevision, sourceId } from "@mdbase-reader/core";
-import { renderToStaticMarkup } from "react-dom/server";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { LibraryTextSearch } from "./LibraryTextSearch.js";
+import { renderToStaticMarkup } from "./testing/i18n.js";
 
 import type { DocumentSearchHit } from "./use-indexed-document-search.js";
 import type { ReaderWorkspaceGateway } from "./workspace-model.js";

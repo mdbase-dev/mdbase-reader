@@ -1,3 +1,5 @@
+import { t } from "@lingui/core/macro";
+
 import { DomainError } from "../domain/errors.js";
 
 import { authoredImportFields, planRepresentation } from "./import-source-file.js";
@@ -59,7 +61,7 @@ export async function attachSourceFile(
   if (!dependencies.imports.attachFile) {
     throw new DomainError(
       "unsupported-source-attachment",
-      "This collection cannot attach files to existing sources.",
+      t({ message: "This collection cannot attach files to existing sources." }),
     );
   }
   const representation = await planRepresentation(dependencies, source.id, {
@@ -69,7 +71,10 @@ export async function attachSourceFile(
     role: source.documents.length === 0 ? "primary" : "alternative",
   });
   if (source.documents.some(({ revision }) => revision === representation.contentDigest)) {
-    throw new DomainError("duplicate-source-import", "This file is already attached here.");
+    throw new DomainError(
+      "duplicate-source-import",
+      t({ message: "This file is already attached here." }),
+    );
   }
   const duplicate = await dependencies.imports.findExactDuplicate(
     source.collectionId,
@@ -80,7 +85,7 @@ export async function attachSourceFile(
   if (duplicate) {
     throw new DomainError(
       "duplicate-source-import",
-      `These exact bytes are already stored in “${duplicate.title}”.`,
+      t`These exact bytes are already stored in “${duplicate.title}”.`,
     );
   }
   return dependencies.imports.attachFile(

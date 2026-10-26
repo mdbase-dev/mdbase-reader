@@ -1,12 +1,13 @@
 // @vitest-environment happy-dom
 /* eslint-disable @typescript-eslint/require-await -- async act flushes React's queued work */
 import { act } from "react";
-import { createRoot, type Root } from "react-dom/client";
 import { afterEach, beforeEach, expect, it, vi } from "vitest";
 
 import { CitationPanel } from "./CitationPanel.js";
+import { createRoot } from "./testing/i18n.js";
 
 import type { ExtensionCaptureController } from "./capture-controller.js";
+import type { Root } from "react-dom/client";
 
 let host: HTMLDivElement;
 let root: Root;

@@ -1,3 +1,5 @@
+import { t as translate } from "@lingui/core/macro";
+import { Trans, useLingui } from "@lingui/react/macro";
 import { describeError, type NativeReaderCollection } from "@mdbase-reader/connect/native";
 import { useEffect, useRef, useState, useSyncExternalStore, type JSX } from "react";
 
@@ -75,7 +77,9 @@ export function NativeImportPage({
       destination={
         service === "home" ? null : (
           <section className="import-step" aria-labelledby="import-destination-title">
-            <h2 id="import-destination-title">Choose a destination</h2>
+            <h2 id="import-destination-title">
+              <Trans>Choose a destination</Trans>
+            </h2>
             <SdkReaderRoot
               sdk={sdk}
               embedded
@@ -95,6 +99,7 @@ function NativeImportDestination({
   readonly scope: ReaderNativeScope;
   readonly flow: NativeImportFlow;
 }): JSX.Element {
+  const { t } = useLingui();
   const { mdbase, connection, collection } = scope;
   const { controller } = flow;
   const state = useSyncExternalStore(
@@ -127,7 +132,8 @@ function NativeImportDestination({
       if (!aborted(control)) {
         controller.update({
           error:
-            describeError(error)?.message ?? "Could not change the collection. Please try again.",
+            describeError(error)?.message ??
+            translate({ message: "Could not change the collection. Please try again." }),
         });
       }
     } finally {
@@ -139,13 +145,13 @@ function NativeImportDestination({
   };
   return (
     <div className="import-step">
-      <p>Collection: {collection.collectionName}</p>
+      <p>{t`Collection: ${collection.collectionName}`}</p>
       <button
         type="button"
         disabled={working || state.busy || !!state.boundTarget}
         onClick={() => void choose()}
       >
-        Choose another collection
+        <Trans>Choose another collection</Trans>
       </button>
     </div>
   );

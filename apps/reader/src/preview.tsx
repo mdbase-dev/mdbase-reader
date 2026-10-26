@@ -1,3 +1,5 @@
+import { t as translate } from "@lingui/core/macro";
+import { Trans, useLingui } from "@lingui/react/macro";
 import { documentRangePatch, sourcePartOfPatch } from "@mdbase-reader/connect";
 import {
   annotationId,
@@ -416,7 +418,7 @@ export class PreviewGateway implements ReaderWorkspaceGateway {
     }
     const validation = validateCslItem(citation);
     if (!validation.valid) {
-      return Promise.reject(new Error("The preview citation is invalid."));
+      return Promise.reject(new Error(translate({ message: "The preview citation is invalid." })));
     }
     const updated: Source = {
       ...current,
@@ -460,10 +462,12 @@ export class PreviewGateway implements ReaderWorkspaceGateway {
     return Promise.resolve([]);
   }
   readFile(): Promise<never> {
-    return Promise.reject(new Error("Preview files cannot be exported."));
+    return Promise.reject(new Error(translate({ message: "Preview files cannot be exported." })));
   }
   importSourceFile(_request: Omit<SourceFileImportRequest, "collectionId">): Promise<Source> {
-    return Promise.reject(new Error("Adding a file is unavailable in the interface preview."));
+    return Promise.reject(
+      new Error(translate({ message: "Adding a file is unavailable in the interface preview." })),
+    );
   }
   /** Sources without a document need no file storage, so the preview can hold them. */
   createSource(request: Omit<SourceRecordCreationRequest, "collectionId">): Promise<Source> {
@@ -555,7 +559,9 @@ export class PreviewGateway implements ReaderWorkspaceGateway {
   planSourceRemoval(id: SourceId): Promise<SourceDeletionPlan> {
     const source = this.#sources.find((item) => item.id === id);
     if (!source) {
-      return Promise.reject(new Error("This source is no longer in the collection."));
+      return Promise.reject(
+        new Error(translate({ message: "This source is no longer in the collection." })),
+      );
     }
     return Promise.resolve({
       sourceId: id,
@@ -608,7 +614,7 @@ export class PreviewGateway implements ReaderWorkspaceGateway {
     const current = await this.#guardPartWrite(source);
     const parent = parentId ? await this.source(parentId) : null;
     if (parentId && !parent) {
-      throw new Error("Parent source not found.");
+      throw new Error(translate({ message: "Parent source not found." }));
     }
     const rest = { ...current };
     Reflect.deleteProperty(rest, "partOf");
@@ -618,7 +624,7 @@ export class PreviewGateway implements ReaderWorkspaceGateway {
       new Map(this.#sources.map((item) => [item.id, item.id === source.id ? proposed : item])),
     );
     if (chain.problem) {
-      throw new Error(`Invalid part-of relation: ${chain.problem}.`);
+      throw new Error(translate`Invalid part-of relation: ${chain.problem}.`);
     }
     const frontmatter = {
       ...current.frontmatter,
@@ -658,7 +664,7 @@ export class PreviewGateway implements ReaderWorkspaceGateway {
   async #guardPartWrite(source: Source): Promise<Source> {
     const current = await this.source(source.id);
     if (current?.recordRevision !== source.recordRevision) {
-      throw new Error("Source revision changed.");
+      throw new Error(translate({ message: "Source revision changed." }));
     }
     return current;
   }
@@ -674,7 +680,9 @@ export class PreviewGateway implements ReaderWorkspaceGateway {
   saveSourceFields(id: SourceId, fields: Readonly<Record<string, unknown>>): Promise<Source> {
     const source = this.#sources.find((item) => item.id === id);
     if (!source) {
-      return Promise.reject(new Error("The preview source no longer exists."));
+      return Promise.reject(
+        new Error(translate({ message: "The preview source no longer exists." })),
+      );
     }
     const frontmatter: Record<string, unknown> = { ...source.frontmatter };
     for (const [key, value] of Object.entries(fields)) {
@@ -708,7 +716,9 @@ export class PreviewGateway implements ReaderWorkspaceGateway {
   saveReadingStatus(id: SourceId, status: ReadingStatus): Promise<Source> {
     const source = this.#sources.find((item) => item.id === id);
     if (!source) {
-      return Promise.reject(new Error("The preview source no longer exists."));
+      return Promise.reject(
+        new Error(translate({ message: "The preview source no longer exists." })),
+      );
     }
     const updated: Source = {
       ...source,
@@ -739,6 +749,7 @@ function PreviewDocument({
   readonly source: SourceSummary;
   readonly onSurfaceChange: (surface: ReadingSurface | null) => void;
 }): JSX.Element {
+  const { t } = useLingui();
   const document = useMemo<SurfaceDocument>(
     () => ({ document: previewDocument, mediaType: "text/html", url: previewUrl }),
     [],
@@ -753,14 +764,19 @@ function PreviewDocument({
         <div className="document-message">
           <strong>{source.title}</strong>
           <span>
-            The interface preview includes one sample document: The Principles of Psychology.
+            <Trans>
+              The interface preview includes one sample document: The Principles of Psychology.
+            </Trans>
           </span>
         </div>
       </div>
     );
   }
   return (
-    <div className="preview-document is-rendered" aria-label="Interface preview document">
+    <div
+      className="preview-document is-rendered"
+      aria-label={t({ message: "Interface preview document" })}
+    >
       <Suspense fallback={null}>
         <HtmlViewerSurface
           className="html-viewer"
@@ -769,7 +785,10 @@ function PreviewDocument({
         />
       </Suspense>
       <div className="preview-notice">
-        <span>Interface preview</span> No collection records or files are created.
+        <Trans>
+          <span>Interface preview</span>
+          No collection records or files are created.
+        </Trans>
       </div>
     </div>
   );
@@ -791,7 +810,13 @@ function PreviewAnthologyDocument({
     [descriptor],
   );
   return (
-    <Suspense fallback={<p>Preparing anthology…</p>}>
+    <Suspense
+      fallback={
+        <p>
+          <Trans>Preparing anthology…</Trans>
+        </p>
+      }
+    >
       <PdfViewerSurface
         className="pdf-viewer"
         document={document}
@@ -836,11 +861,19 @@ const previewCollections: CollectionSwitching = {
   ],
   select: () => {
     throw new Error(
-      "The preview has one sample collection. Connect mdbase to switch between yours.",
+      translate({
+        message: "The preview has one sample collection. Connect mdbase to switch between yours.",
+      }),
     );
   },
   connect: () =>
-    Promise.reject(new Error("Connecting a collection needs mdbase Connect, outside the preview.")),
+    Promise.reject(
+      new Error(
+        translate({
+          message: "Connecting a collection needs mdbase Connect, outside the preview.",
+        }),
+      ),
+    ),
 };
 
 /** Preview records list friendly fields on the summary; a real record stores them as frontmatter. */

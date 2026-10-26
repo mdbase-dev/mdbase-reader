@@ -6,6 +6,8 @@
  * A CSL-JSON item, as `CslItem` in @mdbase-reader/core describes it; only its id is read
  * here, so this package need not depend on core.
  */
+import { t } from "@lingui/core/macro";
+
 export type CitationItem = Readonly<Record<string, unknown>> & { readonly id: string };
 
 /**
@@ -34,16 +36,22 @@ export async function renderCitation(
   lang: string,
 ): Promise<RenderedCitation> {
   try {
-    const [{ default: CSL }, { default: styles }, { default: locales }] = await Promise.all([
-      import("citeproc"),
-      import("@citation-js/plugin-csl/lib-mjs/styles.json"),
-      import("@citation-js/plugin-csl/lib-mjs/locales.json"),
-    ]);
+    const [{ default: CSL }, { default: styles }, { default: locales }, italian] =
+      await Promise.all([
+        import("citeproc"),
+        import("@citation-js/plugin-csl/lib-mjs/styles.json"),
+        import("@citation-js/plugin-csl/lib-mjs/locales.json"),
+        lang === "it-IT" ? import("./locales/csl-it-IT.xml?raw") : Promise.resolve(null),
+      ]);
     const engine = new CSL.Engine(
       {
         retrieveItem: () => citation,
         retrieveLocale: (locale) =>
-          locales[locale] ?? locales[locale.replace("-", "_")] ?? locales["en-US"] ?? "",
+          (locale === "it-IT" ? italian?.default : undefined) ??
+          locales[locale] ??
+          locales[locale.replace("-", "_")] ??
+          locales["en-US"] ??
+          "",
       },
       styles[template] ?? styles["apa"] ?? "",
       lang,
@@ -65,9 +73,9 @@ export function renderedCitationText(rendered: RenderedCitation): string {
     case "formatted":
       return rendered.text;
     case "empty":
-      return "Add more details to preview this citation.";
+      return t`Add more details to preview this citation.`;
     case "failed":
-      return "This citation cannot be formatted yet. Check its title, contributors, and date.";
+      return t`This citation cannot be formatted yet. Check its title, contributors, and date.`;
   }
 }
 

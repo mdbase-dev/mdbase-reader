@@ -1,3 +1,6 @@
+import { t } from "@lingui/core/macro";
+
+import { localizedCaptureError } from "./capture-errors.js";
 import {
   drawPageQuotes,
   injectPageText,
@@ -70,11 +73,11 @@ export async function captureTab(tabId: number): Promise<PageCapture> {
     if (tab.url && /\.pdf$/iu.test(new URL(tab.url).pathname)) {
       return pdfCapture(tab.url, tab.title ?? "");
     }
-    throw reason;
+    throw localizedCaptureError(reason);
   }
   if (!snapshot) {
     throw new Error(
-      "Reader could not inspect this page. Open an ordinary HTTPS page and try again.",
+      t`Reader could not inspect this page. Open an ordinary HTTPS page and try again.`,
     );
   }
   if ("pdf" in snapshot) {
@@ -182,27 +185,30 @@ const pageKeys = new Map<
 
 export async function fetchPdf(tabId: number, url: string): Promise<Uint8Array> {
   // Fetch from the page itself so the reader's own access (institutional login) applies.
+  let result: Awaited<ReturnType<typeof pagePdfBytes>> | undefined;
   try {
     const [execution] = await chrome.scripting.executeScript({
       target: { tabId },
       func: pagePdfBytes,
       args: [url, maximumPdfBytes],
     });
-    const result = execution?.result;
-    if (result && "base64" in result) {
-      return Uint8Array.from(atob(result.base64), (character) => character.charCodeAt(0));
-    }
-    if (result) {
-      throw new Error(result.error);
-    }
-  } catch (reason) {
-    if (reason instanceof Error && reason.message.includes("larger than")) {
-      throw reason;
-    }
+    result = execution?.result;
+  } catch {
+    // Browser pages may forbid injection; the ordinary fetch below remains available.
+  }
+  if (result && "base64" in result) {
+    return Uint8Array.from(atob(result.base64), (character) => character.charCodeAt(0));
+  }
+  if (result?.error === "too-large") {
+    const maximumMb = Math.round(maximumPdfBytes / 1024 / 1024);
+    throw new Error(
+      t`This PDF is larger than ${maximumMb} MB. Download it and import the file in Reader.`,
+    );
   }
   const response = await fetch(url);
   if (!response.ok) {
-    throw new Error(`Could not download this PDF (HTTP ${String(response.status)}).`);
+    const status = response.status;
+    throw new Error(t`Could not download this PDF (HTTP ${status}).`);
   }
   return new Uint8Array(await response.arrayBuffer());
 }
@@ -210,7 +216,7 @@ export async function fetchPdf(tabId: number, url: string): Promise<Uint8Array> 
 function pdfCapture(url: string, title: string): PdfCapture {
   const clean = new URL(url);
   if (clean.protocol !== "https:" || clean.username || clean.password) {
-    throw new Error("Reader can capture ordinary HTTPS pages only.");
+    throw new Error(t`Reader can capture ordinary HTTPS pages only.`);
   }
   clean.hash = "";
   const name = decodeURIComponent(clean.pathname.split("/").at(-1) ?? "").replace(/\.pdf$/iu, "");
@@ -228,7 +234,7 @@ function pdfCapture(url: string, title: string): PdfCapture {
 export function capturePage(): PageSnapshot {
   const url = new URL(document.location.href);
   if (url.protocol !== "https:" || url.username || url.password) {
-    throw new Error("Reader can capture ordinary HTTPS pages only.");
+    throw new Error("reader/https-only");
   }
   url.hash = "";
   if (document.contentType === "application/pdf") {
@@ -420,13 +426,11 @@ export async function pagePdfBytes(
 ): Promise<{ readonly base64: string } | { readonly error: string }> {
   const response = await fetch(url, { credentials: "include" });
   if (!response.ok) {
-    return { error: `Could not download this PDF (HTTP ${String(response.status)}).` };
+    return { error: "http" };
   }
   const bytes = new Uint8Array(await response.arrayBuffer());
   if (bytes.byteLength > maximumBytes) {
-    return {
-      error: `This PDF is larger than ${String(Math.round(maximumBytes / 1024 / 1024))} MB. Download it and import the file in Reader.`,
-    };
+    return { error: "too-large" };
   }
   let binary = "";
   for (let index = 0; index < bytes.length; index += 0x8000) {

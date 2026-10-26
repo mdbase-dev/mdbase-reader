@@ -1,3 +1,6 @@
+import { t as translate } from "@lingui/core/macro";
+import { useLingui as useLocale } from "@lingui/react";
+import { Trans, useLingui } from "@lingui/react/macro";
 import { highlightPalette, offeredHighlightColor } from "@mdbase-reader/core";
 import { useEffect, useRef, useState } from "react";
 
@@ -23,6 +26,7 @@ export function HighlightFields({
   /** Whether a save may start now (connected, titled, not busy). */
   readonly ready: boolean;
 }): React.JSX.Element | null {
+  const { t } = useLingui();
   const comment = useRef<HTMLTextAreaElement>(null);
   const [openDetails, setOpenDetails] = useState(false);
   const selection = c.capture?.kind === "html" ? c.capture.selection : null;
@@ -47,12 +51,14 @@ export function HighlightFields({
   const detailsOpen =
     openDetails || intent?.intent === "note" || Boolean(c.draft.comment || c.draft.highlightTags);
   return (
-    <section aria-label="Selected passage" className="highlight-fields">
+    <section aria-label={t`Selected passage`} className="highlight-fields">
       <blockquote>{displayQuote(selection.exact)}</blockquote>
       {detailsOpen ? (
         <>
           <label htmlFor="comment">
-            Comment <span>(optional)</span>
+            <Trans>
+              Comment <span>(optional)</span>
+            </Trans>
           </label>
           <textarea
             className="mdbase-field"
@@ -63,7 +69,9 @@ export function HighlightFields({
             onChange={(event) => update({ comment: event.target.value })}
           />
           <label htmlFor="highlight-tags">
-            Tags <span>(comma-separated, optional)</span>
+            <Trans>
+              Tags <span>(comma-separated, optional)</span>
+            </Trans>
           </label>
           <TagInput
             id="highlight-tags"
@@ -75,7 +83,7 @@ export function HighlightFields({
         </>
       ) : (
         <button type="button" className="text-button" onClick={() => setOpenDetails(true)}>
-          Add a comment or tags
+          <Trans>Add a comment or tags</Trans>
         </button>
       )}
       <div className="highlight-action">
@@ -84,10 +92,12 @@ export function HighlightFields({
           className={`primary highlight-button swatch-${chosen}`}
           disabled={!ready}
           aria-keyshortcuts="Control+Enter Meta+Enter"
-          title={`Highlight in ${colorName(chosen, meanings)} (${modifierKey()}+Enter)`}
+          title={translate`Highlight in ${colorName(chosen, meanings)} (${modifierKey()}+Enter)`}
           onClick={() => void save({ highlight: true, color: chosen })}
         >
-          {c.status === "saving" ? "Saving…" : "Highlight"}
+          {c.status === "saving"
+            ? translate({ message: "Saving…" })
+            : translate({ message: "Highlight", context: "Reader interface" })}
         </button>
         <ColorChoice
           colors={colors}
@@ -99,16 +109,16 @@ export function HighlightFields({
       <div className="passage-footer">
         <p className="hint">
           {colorName(chosen, meanings, true)}
-          {c.source ? "" : " · Saves the page too"}
+          {c.source ? "" : translate({ message: " · Saves the page too" })}
         </p>
         <button
           type="button"
           className="text-button"
           aria-keyshortcuts="Escape"
-          title="Clear the selection (Esc)"
+          title={t`Clear the selection (Esc)`}
           onClick={c.clearSelection}
         >
-          Clear
+          <Trans context="Clear the selected passage">Clear</Trans>
         </button>
       </div>
       {blocker ? <p className="hint">{blocker}</p> : null}
@@ -190,6 +200,7 @@ function ColorChoice({
   readonly value: HighlightColorKey;
   readonly onChange: (color: HighlightColorKey) => void;
 }): React.JSX.Element {
+  useLocale();
   const group = useRef<HTMLDivElement>(null);
   // Arrow keys move the choice, and focus with it, as in a native radio group.
   const onKeyDown = (event: React.KeyboardEvent): void => {
@@ -209,7 +220,12 @@ function ColorChoice({
     }
   };
   return (
-    <div ref={group} className="color-choice" role="radiogroup" aria-label="Highlight colour">
+    <div
+      ref={group}
+      className="color-choice"
+      role="radiogroup"
+      aria-label={translate({ message: "Highlight colour" })}
+    >
       {colors.map((color, index) => (
         <button
           key={color}
@@ -221,7 +237,7 @@ function ColorChoice({
           aria-label={colorName(color, meanings)}
           aria-keyshortcuts={String(index + 1)}
           tabIndex={color === value ? 0 : -1}
-          title={`${colorName(color, meanings, true)} (press ${String(index + 1)} to highlight in it at once)`}
+          title={translate`${colorName(color, meanings, true)} (press ${String(index + 1)} to highlight in it at once)`}
           onClick={() => onChange(color)}
           onKeyDown={onKeyDown}
         />

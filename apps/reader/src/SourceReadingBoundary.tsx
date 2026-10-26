@@ -1,3 +1,6 @@
+import { t as translate } from "@lingui/core/macro";
+import { useLingui as useLocale } from "@lingui/react";
+import { Trans } from "@lingui/react/macro";
 import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 
 import {
@@ -114,7 +117,9 @@ function goToChapterStart(state: ResolvedBoundary): Promise<boolean> {
   const failed = (): false => {
     setChapterProblem(
       surface,
-      "The chapter start could not be opened. You can still read the whole file.",
+      translate({
+        message: "The chapter start could not be opened. You can still read the whole file.",
+      }),
     );
     return false;
   };
@@ -132,6 +137,7 @@ export function ChapterReadingChip({
   compact = false,
   ...props
 }: BoundaryProps & { readonly compact?: boolean }): JSX.Element | null {
+  useLocale();
   const { source, sources, surface, open } = props;
   const state = useSourceReadingBoundary(source, surface);
   if (!state) {
@@ -142,7 +148,7 @@ export function ChapterReadingChip({
   const parent = sources.find((item) => item.id === source.partOf);
   const next = nextKnownPart(source, sources, state.surface);
   const pages = readingRangeLabel(source, state.surface);
-  const label = `Chapter: ${source.title}${progress ? `, ${progressPhrase(progress)}` : ""}`;
+  const label = translate`Chapter: ${source.title}${progress ? `, ${progressPhrase(progress)}` : ""}`;
   return (
     <Menu
       className="chapter-reading-chip"
@@ -153,7 +159,8 @@ export function ChapterReadingChip({
       trigger={
         <>
           <span className="chapter-reading-chip-title">
-            Ch.{compact ? null : ` ${source.title}`}
+            <Trans>Ch.</Trans>
+            {compact ? null : ` ${source.title}`}
           </span>
           {progress ? <span className="chapter-reading-chip-progress">· {progress}</span> : null}
         </>
@@ -163,7 +170,7 @@ export function ChapterReadingChip({
       {pages ? <p className="menu-note">{pages}</p> : null}
       {range.valid ? (
         <button type="button" onClick={() => void goToChapterStart(state)}>
-          Go to chapter start
+          <Trans>Go to chapter start</Trans>
         </button>
       ) : (
         <p className="menu-note">{range.message}</p>
@@ -173,7 +180,11 @@ export function ChapterReadingChip({
           source={source}
           id={source.partOf}
           open={open}
-          label={parent ? `Continue in the book: ${parent.title}` : "Continue in the book"}
+          label={
+            parent
+              ? translate`Continue in the book: ${parent.title}`
+              : translate({ message: "Continue in the book" })
+          }
         />
       ) : null}
       {next ? (
@@ -181,7 +192,7 @@ export function ChapterReadingChip({
           source={source}
           id={next.id}
           open={open}
-          label={`Next part: ${next.title}`}
+          label={translate`Next part: ${next.title}`}
         />
       ) : null}
     </Menu>
@@ -190,9 +201,9 @@ export function ChapterReadingChip({
 
 function progressPhrase(progress: string): string {
   if (progress === "Outside") {
-    return "outside the chapter’s pages";
+    return translate({ message: "outside the chapter’s pages" });
   }
-  return progress.endsWith("%") ? `${progress} read` : progress.toLowerCase();
+  return progress.endsWith("%") ? translate`${progress} read` : progress.toLowerCase();
 }
 
 /**
@@ -249,6 +260,7 @@ function ChapterReadingHint({
   readonly state: ResolvedBoundary;
   readonly problem: string | null;
 }): JSX.Element {
+  useLocale();
   const { range, location, entered, surface } = state;
   const kind = chapterHintKind({ range, location, entered, problem });
   const [dismissed, setDismissed] = useChapterDismissal(surface, state.key, kind);
@@ -288,7 +300,7 @@ function ChapterReadingHint({
           ref={hint}
           className="source-reading-hint"
           role="group"
-          aria-label="Chapter reading range"
+          aria-label={translate({ message: "Chapter reading range" })}
         >
           <span className="source-reading-hint-text">{text}</span>
           <span className="source-reading-hint-actions">
@@ -300,11 +312,13 @@ function ChapterReadingHint({
                   void goToChapterStart(state);
                 }}
               >
-                {kind === "problem" ? "Try again" : "Back to chapter"}
+                {kind === "problem"
+                  ? translate({ message: "Try again", context: "Reader interface" })
+                  : translate({ message: "Back to chapter" })}
               </button>
             ) : (
               <button type="button" onClick={dismiss}>
-                Read the whole file
+                <Trans>Read the whole file</Trans>
               </button>
             )}
             {next ? (
@@ -312,8 +326,8 @@ function ChapterReadingHint({
                 source={source}
                 id={next.id}
                 open={open}
-                label={`Next part: ${next.title}`}
-                title={`Next part: ${next.title}`}
+                label={translate`Next part: ${next.title}`}
+                title={translate`Next part: ${next.title}`}
               />
             ) : null}
             {source.partOf ? (
@@ -321,8 +335,8 @@ function ChapterReadingHint({
                 source={source}
                 id={source.partOf}
                 open={open}
-                label="Continue in book"
-                title={parent ? `Continue in the book: ${parent.title}` : undefined}
+                label={translate({ message: "Continue in book" })}
+                title={parent ? translate`Continue in the book: ${parent.title}` : undefined}
               />
             ) : null}
           </span>
@@ -330,8 +344,8 @@ function ChapterReadingHint({
             <button
               type="button"
               className="source-reading-hint-dismiss"
-              aria-label="Dismiss"
-              title="Dismiss"
+              aria-label={translate({ message: "Dismiss" })}
+              title={translate({ message: "Dismiss" })}
               onClick={dismiss}
             >
               <CloseIcon />
@@ -349,13 +363,13 @@ function readingRangeLabel(source: SourceSummary, surface: ReadingSurface): stri
   )?.range;
   switch (range?.kind) {
     case "pages":
-      return `File pages ${String(range.start + 1)}–${String(range.end + 1)}`;
+      return translate`File pages ${String(range.start + 1)}–${String(range.end + 1)}`;
     case "epub-spine":
-      return `Spine: ${range.start} – ${range.end}`;
+      return translate`Spine: ${range.start} – ${range.end}`;
     case "fragment":
       return range.end
-        ? `Fragments: ${range.start} to before ${range.end}`
-        : `Section: ${range.start}`;
+        ? translate`Fragments: ${range.start} to before ${range.end}`
+        : translate`Section: ${range.start}`;
     default:
       return undefined;
   }

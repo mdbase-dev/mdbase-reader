@@ -1,3 +1,5 @@
+import { t } from "@lingui/core/macro";
+
 export type Json = null | boolean | number | string | Json[] | { [key: string]: Json };
 export type Fields = Record<string, Json>;
 export interface MigrationFile {
@@ -43,13 +45,13 @@ export interface MigrationPlan {
 export type Progress = (message: string) => void;
 export function object(value: unknown, label = "object"): Fields {
   if (!value || typeof value !== "object" || Array.isArray(value)) {
-    throw new Error(`Invalid ${label}.`);
+    throw new Error(t`Invalid ${label}.`);
   }
   return value as Fields;
 }
 export function array(value: unknown, label = "array"): Json[] {
   if (!Array.isArray(value)) {
-    throw new Error(`Invalid ${label}.`);
+    throw new Error(t`Invalid ${label}.`);
   }
   return value as Json[];
 }
@@ -71,7 +73,7 @@ export function safePath(path: string): string {
           Array.from(s).some((c) => c.charCodeAt(0) < 32 || c.charCodeAt(0) === 127),
       )
   ) {
-    throw new Error("Unsafe import path.");
+    throw new Error(t`Unsafe import path.`);
   }
   return path;
 }

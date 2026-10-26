@@ -1,3 +1,4 @@
+import { useLingui } from "@lingui/react/macro";
 import { FeedbackButton, useFeedback } from "@mdbase-dev/ui/feedback";
 import { useEffect, type JSX, type ReactNode } from "react";
 
@@ -15,6 +16,7 @@ export function RendererStage({
   readonly errorName: string;
   readonly children: ReactNode;
 }): JSX.Element {
+  const { t } = useLingui();
   const { reportError } = useFeedback();
   useEffect(() => {
     if (state.status === "error") {
@@ -32,7 +34,7 @@ export function RendererStage({
       {state.status === "error" ? (
         <div className="document-renderer-status">
           <DocumentMessage
-            label={`${errorName} could not render this file: ${state.message}`}
+            label={t`${errorName} could not render this file: ${state.message}`}
             tone="error"
           />
         </div>

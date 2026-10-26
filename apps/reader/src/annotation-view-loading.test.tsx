@@ -1,9 +1,9 @@
 import { annotationId, collectionId, dateTime, sourceId } from "@mdbase-reader/core";
-import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
 
 import { emptyAnnotationFilter, type AnnotationEntry } from "./annotation-overview.js";
 import { AnnotationProblem } from "./LibraryAnnotationBars.js";
+import { renderToStaticMarkup } from "./testing/i18n.js";
 import { sameAnnotationSelection, useVisibleEntries } from "./use-library-annotations.js";
 
 function entry(id: string): AnnotationEntry {

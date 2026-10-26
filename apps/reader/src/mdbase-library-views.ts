@@ -1,7 +1,9 @@
+import { t } from "@lingui/core/macro";
 import { readingStatuses, type ReadingStatus, type SourceSummary } from "@mdbase-reader/core";
 
 import {
   columnLabel,
+  columnStoredLabel,
   isLibraryColumn,
   isPropertyKey,
   maximumColumnWidth,
@@ -94,7 +96,9 @@ export const defaultLibraryView: MdbaseLibraryView = {
   path: null,
   revision: null,
   viewId: "all-sources",
-  name: "All sources",
+  get name(): string {
+    return t`All sources`;
+  },
   writable: false,
   owned: false,
   properties: [],
@@ -155,7 +159,7 @@ export function buildLibraryView(request: LibraryViewSaveRequest): JsonObject {
     properties: Object.fromEntries(
       storedColumns(configuration.columns).map((column) => [
         columnSelection(column),
-        { label: columnLabel(column) },
+        { label: columnStoredLabel(column) },
       ]),
     ),
     views: [

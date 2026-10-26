@@ -1,3 +1,5 @@
+import { t as translate } from "@lingui/core/macro";
+
 import { hasBlockingAnnotationDrafts } from "./annotation-drafts.js";
 import { requestConfirmation, type ConfirmationOptions } from "./confirmation.js";
 import { flushLocalDraftCheckpoints } from "./local-draft-checkpoint.js";
@@ -29,10 +31,12 @@ export async function confirmCollectionSwitch(
   return (
     !dirty ||
     confirm({
-      title: "Switch collections?",
-      message:
-        "Some edits have not reached the collection. Drafts are local to this device, not saved to the collection, and switching may interrupt pending saves. Finish your edits first to avoid losing work.",
-      confirmLabel: "Switch anyway",
+      title: translate({ message: "Switch collections?" }),
+      message: translate({
+        message:
+          "Some edits have not reached the collection. Drafts are local to this device, not saved to the collection, and switching may interrupt pending saves. Finish your edits first to avoid losing work.",
+      }),
+      confirmLabel: translate({ message: "Switch anyway" }),
       cancelLabel: "Stay",
     })
   );

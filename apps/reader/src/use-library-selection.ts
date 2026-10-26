@@ -1,3 +1,4 @@
+import { t as translate } from "@lingui/core/macro";
 import {
   useCallback,
   useEffect,
@@ -126,7 +127,10 @@ export function useLibrarySelection(
           if (!controller.signal.aborted) {
             setLibrary({
               status: "error",
-              message: readerErrorMessage(reason, "Reader could not load this collection."),
+              message: readerErrorMessage(
+                reason,
+                translate({ message: "Reader could not load this collection." }),
+              ),
             });
           }
         });
@@ -203,12 +207,15 @@ function sourceWrites(
     importSourceFile: (request, options) =>
       writeSource(
         () => gateway.importSourceFile(request, options),
-        "Reader could not add this document.",
+        translate({ message: "Reader could not add this document." }),
       ),
     ...(createSource
       ? {
           createSource: (request, options) =>
-            writeSource(() => createSource(request, options), "Reader could not add this source."),
+            writeSource(
+              () => createSource(request, options),
+              translate({ message: "Reader could not add this source." }),
+            ),
         }
       : {}),
     ...(attachSourceFile
@@ -243,7 +250,7 @@ function useSourceRemovalWrites(
   const removeSource = useCallback(
     async (plan: SourceDeletionPlan): Promise<void> => {
       if (!gateway.removeSource) {
-        throw new Error("This collection cannot remove sources.");
+        throw new Error(translate({ message: "This collection cannot remove sources." }));
       }
       await gateway.removeSource(plan);
       setLibrary((current) => removeLibrarySource(current, plan.sourceId));

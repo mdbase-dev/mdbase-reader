@@ -11,17 +11,18 @@ import {
   type Source,
 } from "@mdbase-reader/core";
 import { act, useEffect } from "react";
-import { createRoot, type Root } from "react-dom/client";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { archivedCitationClaims, MAX_CITATION_ARCHIVE_BYTES } from "./archived-citation-claims.js";
 import { CitationLookup } from "./CitationLookup.js";
 import { CitationProvenance } from "./CitationProvenance.js";
 import { CitationSaveConflict } from "./CitationSaveConflict.js";
+import { createRoot } from "./testing/i18n.js";
 import { useCitationEditor, type CitationEditorController } from "./use-citation-editor.js";
 
 import type { ReaderWorkspaceGateway } from "./workspace-model.js";
 import type { Claim } from "@mdbase-reader/web-capture/citation-updates";
+import type { Root } from "react-dom/client";
 
 vi.mock("@mdbase-dev/ui/mark-activity", () => ({ signalMdbaseMark: vi.fn() }));
 

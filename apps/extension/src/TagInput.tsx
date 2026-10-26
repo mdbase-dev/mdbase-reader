@@ -1,3 +1,5 @@
+import { useLingui } from "@lingui/react/macro";
+
 import { acceptTag, tagSuggestions } from "./tag-suggestions.js";
 
 /** A comma-separated tag field that offers the collection's existing spellings. */
@@ -16,6 +18,7 @@ export function TagInput({
   readonly onFocus: () => void;
   readonly readOnly?: boolean;
 }): React.JSX.Element {
+  const { t } = useLingui();
   const suggestions = readOnly ? [] : tagSuggestions(value, known);
   const choose = (tag: string): void => {
     onChange(acceptTag(value, tag));
@@ -42,11 +45,11 @@ export function TagInput({
         }}
       />
       {suggestions.length ? (
-        <div className="tag-suggestions" id={`${id}-suggestions`} aria-label="Existing tags">
+        <div className="tag-suggestions" id={`${id}-suggestions`} aria-label={t`Existing tags`}>
           {suggestions.map((tag, index) => (
             <button key={tag} type="button" className="tag-chip" onClick={() => choose(tag)}>
               {tag}
-              {index === 0 ? <kbd>Tab</kbd> : null}
+              {index === 0 ? <kbd>{t({ message: "Tab", context: "Keyboard key" })}</kbd> : null}
             </button>
           ))}
         </div>

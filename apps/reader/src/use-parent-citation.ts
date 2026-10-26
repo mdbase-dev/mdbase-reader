@@ -1,3 +1,4 @@
+import { t as translate } from "@lingui/core/macro";
 import {
   cslValuesEqual,
   type CslProvenance,
@@ -72,7 +73,10 @@ async function checkReviewedParent(
     )
   ) {
     throw new Error(
-      "The book or parent relation changed. Review the latest From the book suggestions before saving.",
+      translate({
+        message:
+          "The book or parent relation changed. Review the latest From the book suggestions before saving.",
+      }),
     );
   }
 }

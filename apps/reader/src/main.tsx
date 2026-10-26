@@ -1,3 +1,6 @@
+import { t as translate } from "@lingui/core/macro";
+import { useLingui as useLocale } from "@lingui/react";
+import { Trans } from "@lingui/react/macro";
 import { OpeningScreen } from "@mdbase-dev/ui/screens";
 import { lazy, StrictMode, Suspense } from "react";
 import { createRoot } from "react-dom/client";
@@ -17,6 +20,7 @@ import { EnvironmentBadge } from "./EnvironmentBadge.js";
 import { FeedbackRoot } from "./FeedbackRoot.js";
 import { forgetOfflineCopies } from "./forget-offline-copies.js";
 import { completeAppGrantCallback } from "./grant-callback.js";
+import { ReaderI18nProvider } from "./i18n.js";
 import { importService } from "./import-navigation.js";
 import { keepFocusedFieldInView } from "./keep-focused-field-in-view.js";
 import "./environment-badge.css";
@@ -72,30 +76,37 @@ const buildEnvironment =
 // the waiting reader tab and closes, without starting a second mdbase entry.
 const grantCallback = buildEnvironment !== null && completeAppGrantCallback(new URL(location.href));
 // Worded like the collection gate's first screen, so the SDK download is not a blank page.
-const startingReader = <OpeningScreen app="reader" title="Starting mdbase Reader…" />;
+function StartingReader(): React.JSX.Element {
+  useLocale();
+  return <OpeningScreen app="reader" title={translate({ message: "Starting mdbase Reader…" })} />;
+}
 createRoot(root).render(
   <StrictMode>
-    <ConfirmProvider>
-      <FeedbackRoot>
-        <EnvironmentBadge />
-        <ReaderErrorBoundary>
-          {grantCallback ? (
-            <p className="reader-grant-callback">You can close this window.</p>
-          ) : migrationService ? (
-            <Suspense fallback={startingReader}>
-              <SdkReader service={migrationService} />
-            </Suspense>
-          ) : preview ? (
-            <Suspense fallback={null}>
-              <PreviewReader />
-            </Suspense>
-          ) : (
-            <Suspense fallback={startingReader}>
-              <SdkReader />
-            </Suspense>
-          )}
-        </ReaderErrorBoundary>
-      </FeedbackRoot>
-    </ConfirmProvider>
+    <ReaderI18nProvider>
+      <ConfirmProvider>
+        <FeedbackRoot>
+          <EnvironmentBadge />
+          <ReaderErrorBoundary>
+            {grantCallback ? (
+              <p className="reader-grant-callback">
+                <Trans>You can close this window.</Trans>
+              </p>
+            ) : migrationService ? (
+              <Suspense fallback={<StartingReader />}>
+                <SdkReader service={migrationService} />
+              </Suspense>
+            ) : preview ? (
+              <Suspense fallback={null}>
+                <PreviewReader />
+              </Suspense>
+            ) : (
+              <Suspense fallback={<StartingReader />}>
+                <SdkReader />
+              </Suspense>
+            )}
+          </ReaderErrorBoundary>
+        </FeedbackRoot>
+      </ConfirmProvider>
+    </ReaderI18nProvider>
   </StrictMode>,
 );

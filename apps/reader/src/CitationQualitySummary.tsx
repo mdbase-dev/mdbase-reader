@@ -1,3 +1,6 @@
+import { t as translate } from "@lingui/core/macro";
+import { useLingui as useLocale } from "@lingui/react";
+import { Trans } from "@lingui/react/macro";
 import {
   citationSourceKinds,
   summariseCitationQuality,
@@ -12,6 +15,7 @@ export function CitationQualitySummary({
   readonly sources: readonly SourceSummary[];
   readonly loading: boolean;
 }): JSX.Element {
+  useLocale();
   const summary = useMemo(
     () =>
       summariseCitationQuality(
@@ -27,19 +31,32 @@ export function CitationQualitySummary({
   );
   return (
     <details className="citation-quality-summary" data-menu-keep-open>
-      <summary>Citation quality · local only</summary>
+      <summary>
+        <Trans>Citation quality · local only</Trans>
+      </summary>
       <p className="menu-note">
-        {summary.sources} indexed sources{loading ? " · library still loading" : ""}. Counts are
-        computed on this device; nothing is sent or retained.
+        {summary.sources} <Trans>indexed sources</Trans>
+        {loading ? translate({ message: " · library still loading" }) : ""}
+        <Trans>. Counts are computed on this device; nothing is sent or retained.</Trans>
       </p>
       <table>
-        <caption className="sr-only">Local citation field counts</caption>
+        <caption className="sr-only">
+          <Trans>Local citation field counts</Trans>
+        </caption>
         <thead>
           <tr>
-            <th scope="col">Evidence</th>
-            <th scope="col">Fields</th>
-            <th scope="col">Edited</th>
-            <th scope="col">Removed</th>
+            <th scope="col">
+              <Trans>Evidence</Trans>
+            </th>
+            <th scope="col">
+              <Trans>Fields</Trans>
+            </th>
+            <th scope="col">
+              <Trans>Edited</Trans>
+            </th>
+            <th scope="col">
+              <Trans>Removed</Trans>
+            </th>
           </tr>
         </thead>
         <tbody>
@@ -53,11 +70,7 @@ export function CitationQualitySummary({
           ))}
         </tbody>
       </table>
-      <p className="menu-note">
-        {summary.removedFields} removed fields. Edited counts compare current values with their
-        recorded evidence, not a history of changes. Online lookups include web pages read through
-        an online service.
-      </p>
+      <p className="menu-note">{translate`${summary.removedFields} removed fields. Edited counts compare current values with their recorded evidence, not a history of changes. Online lookups include web pages read through an online service.`}</p>
     </details>
   );
 }
@@ -68,12 +81,28 @@ export function CitationQualitySummary({
  * page”) count under online lookups; the note under the table says so.
  */
 const kindLabels = {
-  parent: "From the book",
-  registry: "Identifier registry",
-  "site-adapter": "From the web page",
-  page: "Page metadata",
-  "generic-remote": "From an online lookup",
-  user: "Edited manually",
-  unknown: "Other",
-  unexplained: "No recorded source",
+  get parent() {
+    return translate({ message: "From the book" });
+  },
+  get registry() {
+    return translate({ message: "Identifier registry" });
+  },
+  get "site-adapter"() {
+    return translate({ message: "From the web page" });
+  },
+  get page() {
+    return translate({ message: "Page metadata" });
+  },
+  get "generic-remote"() {
+    return translate({ message: "From an online lookup" });
+  },
+  get user() {
+    return translate({ message: "Edited manually" });
+  },
+  get unknown() {
+    return translate({ message: "Other" });
+  },
+  get unexplained() {
+    return translate({ message: "No recorded source" });
+  },
 };

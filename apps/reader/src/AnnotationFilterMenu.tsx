@@ -1,3 +1,6 @@
+import { t as translate } from "@lingui/core/macro";
+import { useLingui as useLocale } from "@lingui/react";
+import { Trans } from "@lingui/react/macro";
 import { highlightColorKeys } from "@mdbase-reader/core";
 import { useId, useMemo, type JSX } from "react";
 
@@ -43,17 +46,57 @@ export function annotationViewIsDefault(view: AnnotationView): boolean {
 }
 
 const filterChoices: readonly { readonly value: AnnotationFilter; readonly label: string }[] = [
-  { value: "all", label: "All annotations" },
-  { value: "highlight", label: "Highlights" },
-  { value: "comments", label: "With comments" },
-  { value: "area", label: "Area captures" },
-  { value: "note", label: "Source comments" },
-  { value: "bookmark", label: "Bookmarks" },
+  {
+    value: "all",
+    get label() {
+      return translate({ message: "All annotations" });
+    },
+  },
+  {
+    value: "highlight",
+    get label() {
+      return translate({ message: "Highlights" });
+    },
+  },
+  {
+    value: "comments",
+    get label() {
+      return translate({ message: "With comments" });
+    },
+  },
+  {
+    value: "area",
+    get label() {
+      return translate({ message: "Area captures" });
+    },
+  },
+  {
+    value: "note",
+    get label() {
+      return translate({ message: "Source comments" });
+    },
+  },
+  {
+    value: "bookmark",
+    get label() {
+      return translate({ message: "Bookmarks" });
+    },
+  },
 ];
 
 const orderChoices: readonly { readonly value: AnnotationOrder; readonly label: string }[] = [
-  { value: "document", label: "Document order" },
-  { value: "newest", label: "Newest first" },
+  {
+    value: "document",
+    get label() {
+      return translate({ message: "Document order" });
+    },
+  },
+  {
+    value: "newest",
+    get label() {
+      return translate({ message: "Newest first" });
+    },
+  },
 ];
 
 /**
@@ -85,6 +128,7 @@ export function AnnotationFilterMenu({
   readonly onRenderAllChange: (renderAll: boolean) => void;
   readonly changed: boolean;
 }): JSX.Element {
+  useLocale();
   const counts = useMemo(
     () =>
       new Map(
@@ -95,15 +139,19 @@ export function AnnotationFilterMenu({
   return (
     <Menu
       className="annotation-filter-menu"
-      label={changed ? "Filter annotations (changed)" : "Filter annotations"}
-      title="Filter annotations"
+      label={
+        changed
+          ? translate({ message: "Filter annotations (changed)" })
+          : translate({ message: "Filter annotations" })
+      }
+      title={translate({ message: "Filter annotations" })}
       triggerClassName={`icon-button annotation-filter-trigger${changed ? " is-changed" : ""}`}
       trigger={<FilterIcon />}
     >
       {/* Choices apply at once and leave the menu open, so several can be changed together. */}
       <div className="annotation-filter-panel" data-menu-keep-open>
         <RadioChoices
-          label="Show"
+          label={translate({ message: "Show" })}
           choices={filterChoices.map((choice) => ({
             ...choice,
             count: counts.get(choice.value) ?? 0,
@@ -114,13 +162,17 @@ export function AnnotationFilterMenu({
         <ColorChoices view={view} onViewChange={onViewChange} scoped={scoped} />
         {owners && owners.length > 1 ? (
           <label className="annotation-filter-source">
-            <span className="menu-label">Source</span>
+            <span className="menu-label">
+              <Trans>Source</Trans>
+            </span>
             <select
-              aria-label="Filter annotations by source"
+              aria-label={translate({ message: "Filter annotations by source" })}
               value={view.source}
               onChange={(event) => onViewChange({ ...view, source: event.target.value })}
             >
-              <option value="">All sources</option>
+              <option value="">
+                <Trans>All sources</Trans>
+              </option>
               {owners.map((owner) => (
                 <option key={owner.id} value={owner.id}>
                   {owner.title}
@@ -131,7 +183,7 @@ export function AnnotationFilterMenu({
         ) : null}
         <hr />
         <RadioChoices
-          label="Order"
+          label={translate({ message: "Order" })}
           choices={orderChoices}
           value={view.order}
           onChange={(order) => onViewChange({ ...view, order })}
@@ -139,19 +191,23 @@ export function AnnotationFilterMenu({
         <hr />
         {wholeBook ? (
           <SwitchItem
-            label="Show the whole book’s annotations"
+            label={translate({ message: "Show the whole book’s annotations" })}
             checked={wholeBook.value}
             onChange={wholeBook.onChange}
           />
         ) : null}
         <SwitchItem
-          label="Follow reading position"
+          label={translate({ message: "Follow reading position" })}
           checked={following}
           onChange={onFollowingChange}
         />
         <SwitchItem
-          label="Include all annotations in page search"
-          hint={renderAll ? "Slower with long lists" : "Search above covers all annotations"}
+          label={translate({ message: "Include all annotations in page search" })}
+          hint={
+            renderAll
+              ? translate({ message: "Slower with long lists" })
+              : translate({ message: "Search above covers all annotations" })
+          }
           checked={renderAll}
           onChange={onRenderAllChange}
         />
@@ -175,6 +231,7 @@ function ColorChoices({
   readonly onViewChange: (view: AnnotationView) => void;
   readonly scoped: ReturnType<typeof indexAnnotations>;
 }): JSX.Element | null {
+  useLocale();
   const { colors, meanings } = useHighlightChoices();
   const counts = useMemo(() => {
     const shown = searchAnnotationIndex(scoped, "", view.filter);
@@ -199,9 +256,9 @@ function ColorChoices({
     <>
       <hr />
       <RadioChoices<AnnotationColorFilter>
-        label="Colour"
+        label={translate({ message: "Colour" })}
         choices={[
-          { value: "", label: "Any colour" },
+          { value: "", label: translate({ message: "Any colour" }) },
           ...listed.map((color) => ({
             value: color,
             label: highlightColorName(color, meanings),

@@ -1,3 +1,5 @@
+import { t as translate } from "@lingui/core/macro";
+
 import { readerErrorMessage } from "./errors.js";
 
 import type { AnnotationState } from "./use-selected-source-resources.js";
@@ -80,7 +82,7 @@ export class SharedAnnotationResource {
               status: "error",
               message: readerErrorMessage(
                 reason,
-                "Reader could not load this source’s annotations.",
+                translate({ message: "Reader could not load this source’s annotations." }),
               ),
             },
           });

@@ -1,10 +1,12 @@
 import { resolve } from "node:path";
 
+import { lingui } from "@lingui/vite-plugin";
 import react from "@vitejs/plugin-react";
 import { build, defineConfig, type Plugin, type UserConfig } from "vite";
 
 import { extensionEnvironment, extensionManifest } from "./scripts/extension-manifest.mjs";
 import { extensionSdk } from "./scripts/extension-sdk.mjs";
+import { chromeLocales, chromeMessages, shellCatalogue } from "./scripts/localized-shell.mjs";
 
 const environment = extensionEnvironment();
 
@@ -14,6 +16,18 @@ function manifest(): Plugin {
   return {
     name: "mdbase-reader-extension-manifest",
     generateBundle() {
+      for (const [locale, chromeLocale] of Object.entries(chromeLocales)) {
+        this.emitFile({
+          type: "asset",
+          fileName: `_locales/${chromeLocale}/messages.json`,
+          source: JSON.stringify(chromeMessages(locale)),
+        });
+        this.emitFile({
+          type: "asset",
+          fileName: `locales/${locale}.json`,
+          source: shellCatalogue(locale),
+        });
+      }
       this.emitFile({
         type: "asset",
         fileName: "manifest.json",
@@ -42,6 +56,7 @@ function serviceWorker(alias: SdkAliases): Plugin {
       for (const [name, entry] of Object.entries(scripts)) {
         await build({
           configFile: false,
+          plugins: [lingui({ macroTransform: true })],
           root: import.meta.dirname,
           logLevel: "warn",
           resolve: { alias },
@@ -84,7 +99,8 @@ export default defineConfig(async (): Promise<UserConfig> => {
   // Connect and UI, resolves to this environment's original.
   const sdk = await extensionSdk();
   return {
-    plugins: [react(), manifest(), serviceWorker(sdk.aliases)],
+    plugins: [react(), lingui({ macroTransform: true }), manifest(), serviceWorker(sdk.aliases)],
+    ...{ test: { setupFiles: [resolve(import.meta.dirname, "../../scripts/test-i18n.mjs")] } },
     resolve: { alias: sdk.aliases },
     // The SDK starts its own module Worker from a module-relative URL; keep it out of
     // dev pre-bundling so that URL still names the SDK's files, and emit ES workers.

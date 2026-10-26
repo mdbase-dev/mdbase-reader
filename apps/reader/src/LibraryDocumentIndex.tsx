@@ -1,3 +1,4 @@
+import { t as translate } from "@lingui/core/macro";
 import { createContext, useContext, useEffect, useState, type JSX, type ReactNode } from "react";
 
 import { archivedHtmlTextExtractor } from "./document-text-extraction.js";
@@ -24,7 +25,9 @@ interface IndexSession {
 const initialState: LibraryIndexState = {
   client: null,
   version: 0,
-  status: "Library index unavailable; searching loaded documents only.",
+  get status() {
+    return translate({ message: "Library index unavailable; searching loaded documents only." });
+  },
   paused: false,
   togglePause: undefined,
 };
@@ -146,11 +149,12 @@ export function LibraryDocumentIndex({
 }
 
 function indexStatus(progress: LibraryIndexProgress | null, paused: boolean): string {
-  let activity = "Library text index waiting for idle time.";
+  let activity = translate({ message: "Library text index waiting for idle time." });
   if (paused) {
-    activity = "Library indexing paused.";
+    activity = translate({ message: "Library indexing paused." });
   } else if (progress) {
-    activity = `Library text: ${String(progress.checked)} of ${String(progress.total)} saved pages checked${progress.skipped ? `; ${String(progress.skipped)} skipped or evicted` : ""}.`;
+    const skipped = progress.skipped ? translate`; ${progress.skipped} skipped or evicted` : "";
+    activity = translate`Library text: ${progress.checked} of ${progress.total} saved pages checked${skipped}.`;
   }
-  return `${activity} Saved HTML pages up to 256 KiB are indexed on this device; PDF/EPUB and larger pages use loaded-document search. Index storage is limited to 32 MiB.`;
+  return translate`${activity} Saved HTML pages up to 256 KiB are indexed on this device; PDF/EPUB and larger pages use loaded-document search. Index storage is limited to 32 MiB.`;
 }

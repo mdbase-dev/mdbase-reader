@@ -1,3 +1,5 @@
+import { t as translate } from "@lingui/core/macro";
+import { Plural, Trans, useLingui } from "@lingui/react/macro";
 import { useRef, type JSX } from "react";
 
 import { ModalDialog } from "./ModalDialog.js";
@@ -32,6 +34,7 @@ function OpenSourceRemovalDialog({
   readonly pending: NonNullable<SourceRemovalController["pending"]>;
   readonly sources: readonly SourceSummary[];
 }): JSX.Element {
+  const { t } = useLingui();
   const { source, status, plan, problem } = pending;
   const removing = status === "removing";
   const cancelRef = useRef<HTMLButtonElement>(null);
@@ -53,27 +56,40 @@ function OpenSourceRemovalDialog({
       }}
     >
       <div className="import-dialog-heading">
-        <h2 id="reader-remove-source-title">Remove “{source.title}”?</h2>
+        <h2 id="reader-remove-source-title">{translate`Remove “${source.title}”?`}</h2>
         <p id="reader-remove-source-description">
-          This removes the source from your library and deletes its source note. Saved files and
-          annotations are kept in the collection, but links to this source will stop working,
-          including from its annotations and from any chapters of it.
+          <Trans>
+            This removes the source from your library and deletes its source note. Saved files and
+            annotations are kept in the collection, but links to this source will stop working,
+            including from its annotations and from any chapters of it.
+          </Trans>
           {source.partOf
-            ? " To keep an annotation with the book or another chapter, cancel and use Move annotation to source on it first."
+            ? translate({
+                message:
+                  " To keep an annotation with the book or another chapter, cancel and use Move annotation to source on it first.",
+              })
             : inFamily
-              ? " To keep an annotation with one of its chapters, cancel and use Move annotation to source on it first."
+              ? translate({
+                  message:
+                    " To keep an annotation with one of its chapters, cancel and use Move annotation to source on it first.",
+                })
               : null}{" "}
-          Reader cannot undo this.
+          <Trans>Reader cannot undo this.</Trans>
         </p>
       </div>
       <div className="source-removal-details">
         {status === "checking" ? (
-          <p role="status">Checking what links to this source…</p>
+          <p role="status">
+            <Trans>Checking what links to this source…</Trans>
+          </p>
         ) : links.length > 0 ? (
           <>
             <p>
-              {links.length === 1 ? "This note links" : `These ${String(links.length)} notes link`}{" "}
-              to it and will show a broken link:
+              <Plural
+                value={links.length}
+                one="# note links to it and will show a broken link:"
+                other="These # notes link to it and will show a broken link:"
+              />
             </p>
             <ul>
               {links.slice(0, shownLinks).map((path) => (
@@ -82,7 +98,9 @@ function OpenSourceRemovalDialog({
                 </li>
               ))}
               {links.length > shownLinks ? (
-                <li>and {String(links.length - shownLinks)} more</li>
+                <li>
+                  <Plural value={links.length - shownLinks} one="and # more" other="and # more" />
+                </li>
               ) : null}
             </ul>
           </>
@@ -101,7 +119,7 @@ function OpenSourceRemovalDialog({
           disabled={removing}
           onClick={cancel}
         >
-          Cancel
+          <Trans context="Reader interface">Cancel</Trans>
         </button>
         {problem && !plan ? (
           <button
@@ -109,7 +127,7 @@ function OpenSourceRemovalDialog({
             type="button"
             onClick={() => removal.request?.(source)}
           >
-            Check again
+            <Trans>Check again</Trans>
           </button>
         ) : null}
         <button
@@ -118,7 +136,9 @@ function OpenSourceRemovalDialog({
           disabled={status !== "confirming" || !plan}
           onClick={removal.confirm}
         >
-          {removing ? "Removing…" : "Remove source"}
+          {removing
+            ? t({ message: "Removing…", context: "SourceRemovalDialog interface" })
+            : t({ message: "Remove source", context: "SourceRemovalDialog interface" })}
         </button>
       </div>
     </ModalDialog>

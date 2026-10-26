@@ -1,3 +1,6 @@
+import { t, t as translate } from "@lingui/core/macro";
+import { useLingui as useLocale } from "@lingui/react";
+import { Trans, useLingui } from "@lingui/react/macro";
 import { Select } from "@mdbase-dev/ui/select";
 
 import { environment } from "./environment.js";
@@ -43,7 +46,7 @@ export function ConnectionPanel({
             aria-expanded="true"
             onClick={onDone}
           >
-            Done
+            <Trans>Done</Trans>
           </button>
         ) : null
       }
@@ -65,7 +68,7 @@ export function collectionName(controller: ConnectionControls): string | null {
   }
   return (
     snapshot.collections.find((collection) => collection.collectionId === snapshot.collectionId)
-      ?.displayName ?? "your collection"
+      ?.displayName ?? t`your collection`
   );
 }
 
@@ -77,6 +80,7 @@ function CollectionChoice({
   readonly controller: ConnectionControls;
   readonly label: string;
 }): React.JSX.Element {
+  const { t } = useLingui();
   const { snapshot, busy } = c;
   return (
     <>
@@ -87,7 +91,7 @@ function CollectionChoice({
         className="collection-select"
         aria-labelledby="collection-label"
         value={snapshot.collectionId ?? ""}
-        placeholder="Choose a collection"
+        placeholder={t`Choose a collection`}
         disabled={busy}
         options={snapshot.collections.map((collection) => ({
           value: collection.collectionId,
@@ -101,7 +105,7 @@ function CollectionChoice({
         disabled={busy}
         onClick={() => void c.connect(true)}
       >
-        Connect another collection
+        <Trans>Connect another collection</Trans>
       </button>
     </>
   );
@@ -115,6 +119,7 @@ function StateScreen({
   readonly controller: ConnectionControls;
   readonly intro: string;
 }): React.JSX.Element | null {
+  const { t } = useLingui();
   const { snapshot, busy } = c;
   const target = environment.label ? ` ${environment.label}` : "";
   const primary = (label: string, run: () => Promise<void>): React.JSX.Element => (
@@ -124,55 +129,71 @@ function StateScreen({
   );
   switch (snapshot.status) {
     case "opening":
-      return <p role="status">Opening mdbase…</p>;
+      return (
+        <p role="status">
+          <Trans>Opening mdbase…</Trans>
+        </p>
+      );
     case "signed_out":
     case "closed":
       return (
         <>
-          <h2>Connect a collection</h2>
-          <p>{snapshot.status === "closed" ? "Reader has signed out." : intro}</p>
-          {primary(busy ? "Connecting…" : `Connect to mdbase${target}`, () => c.connect())}
+          <h2>
+            <Trans>Connect a collection</Trans>
+          </h2>
+          <p>{snapshot.status === "closed" ? t`Reader has signed out.` : intro}</p>
+          {primary(busy ? t`Connecting…` : t`Connect to mdbase${target}`, () => c.connect())}
         </>
       );
     case "waiting":
       return (
         <>
           <p role="status" className="device-code">
-            Approve mdbase Reader in the mdbase tab, then return here.
+            <Trans>Approve mdbase Reader in the mdbase tab, then return here.</Trans>
           </p>
           <button className="primary" type="button" onClick={() => void c.connect()}>
-            Sign in
+            <Trans>Sign in</Trans>
           </button>
         </>
       );
     case "choosing":
       return snapshot.collections.length ? null : (
         <>
-          <h2>Choose a collection</h2>
+          <h2>
+            <Trans>Choose a collection</Trans>
+          </h2>
           <p>{intro}</p>
-          {primary("Choose a collection", () => c.connect(true))}
+          {primary(t`Choose a collection`, () => c.connect(true))}
         </>
       );
     case "approval":
       return (
         <>
-          <p>This collection needs you to approve mdbase Reader for it.</p>
-          {primary("Approve access", () => c.connect())}
+          <p>
+            <Trans>This collection needs you to approve mdbase Reader for it.</Trans>
+          </p>
+          {primary(t`Approve access`, () => c.connect())}
         </>
       );
     case "setup":
       return (
         <>
-          <h2>Prepare this collection</h2>
-          <p>Reader needs its source and annotation definitions in this collection.</p>
-          {primary("Set up collection", c.applySetup)}
+          <h2>
+            <Trans>Prepare this collection</Trans>
+          </h2>
+          <p>
+            <Trans>Reader needs its source and annotation definitions in this collection.</Trans>
+          </p>
+          {primary(t`Set up collection`, c.applySetup)}
         </>
       );
     case "unchecked":
       return (
         <>
-          <p>This collection hasn’t been checked yet. Check it before saving.</p>
-          {primary("Check again", c.retry)}
+          <p>
+            <Trans>This collection hasn’t been checked yet. Check it before saving.</Trans>
+          </p>
+          {primary(t`Check again`, c.retry)}
         </>
       );
     case "problem":
@@ -189,9 +210,10 @@ function ProblemScreen({
   readonly problem: ConnectionView["problem"];
   readonly controller: ConnectionControls;
 }): React.JSX.Element {
+  const { t } = useLingui();
   return (
     <div role="alert">
-      <h2>{problem?.title ?? "This collection can’t be used right now"}</h2>
+      <h2>{problem?.title ?? t`This collection can’t be used right now`}</h2>
       <p>{problem?.message}</p>
       {problem?.action && problem.actionLabel ? (
         <button
@@ -210,16 +232,17 @@ function ProblemScreen({
 
 function ConnectionControlsPanel({
   controller: c,
-  label = "Save to collection",
-  intro = "Choose the mdbase collection to save into. Nothing is saved until you press Save.",
+  label = t`Save to collection`,
+  intro = t`Choose the mdbase collection to save into. Nothing is saved until you press Save.`,
   done,
 }: ConnectionPanelProps & { readonly done?: React.ReactNode }): React.JSX.Element {
+  const { t } = useLingui();
   const { snapshot } = c;
   const choose =
     snapshot.collections.length > 0 &&
     !["opening", "waiting", "signed_out", "closed"].includes(snapshot.status);
   return (
-    <section className="action-panel" aria-label="Collection">
+    <section className="action-panel" aria-label={t`Collection`}>
       {done}
       {choose ? <CollectionChoice controller={c} label={label} /> : null}
       <StateScreen controller={c} intro={intro} />
@@ -242,29 +265,25 @@ export function ConnectFirst({
   if (snapshot.status === "opening" || snapshot.status === "ready") {
     return null;
   }
-  return (
-    <p className="tab-hint">
-      {connectStep(snapshot.status)} to {purpose}.
-    </p>
-  );
+  return <p className="tab-hint">{translate`${connectStep(snapshot.status)} to ${purpose}.`}</p>;
 }
 
 function connectStep(status: ConnectionView["status"]): string {
   switch (status) {
     case "waiting":
-      return "Finish signing in in the mdbase tab";
+      return translate({ message: "Finish signing in in the mdbase tab" });
     case "choosing":
-      return "Choose a collection above";
+      return translate({ message: "Choose a collection above" });
     case "approval":
-      return "Approve access above";
+      return translate({ message: "Approve access above" });
     case "setup":
-      return "Set up this collection above";
+      return translate({ message: "Set up this collection above" });
     case "unchecked":
-      return "Check this collection above";
+      return translate({ message: "Check this collection above" });
     case "problem":
-      return "Sort out the problem above";
+      return translate({ message: "Sort out the problem above" });
     default:
-      return "Connect a collection above";
+      return translate({ message: "Connect a collection above" });
   }
 }
 
@@ -300,9 +319,11 @@ export function ConnectionProblem({
       <TechnicalDetails detail={summary === c.problem ? null : c.problem}>
         {originDenied ? (
           <p>
-            Connect rejected this extension’s origin. Reload the current extension build and retry.
-            If it persists, check the {environment.label || "mdbase"} Connect configuration; Reader
-            will not bypass the origin check.
+            <Trans>
+              Connect rejected this extension’s origin. Reload the current extension build and
+              retry. If it persists, check the {environment.label || "mdbase"} Connect
+              configuration; Reader will not bypass the origin check.
+            </Trans>
           </p>
         ) : null}
       </TechnicalDetails>
@@ -317,6 +338,7 @@ function ProblemActions({
   readonly controller: ExtensionCaptureController;
   readonly kind: NonNullable<ExtensionCaptureController["problemKind"]>;
 }): React.JSX.Element {
+  useLocale();
   // The SDK's own problem names its one way out; Review access would not help.
   const sdkProblem = c.snapshot.status === "problem" ? c.snapshot.problem : null;
   return (
@@ -324,7 +346,9 @@ function ProblemActions({
       {kind === "save" ? (
         // Saving again looks for what the last attempt saved before creating anything.
         <button type="button" disabled={c.busy} onClick={() => void c.save()}>
-          {c.saveAttempted && !c.source ? "Check again" : "Try again"}
+          {c.saveAttempted && !c.source
+            ? translate({ message: "Check again" })
+            : translate({ message: "Try again", context: "Reader interface" })}
         </button>
       ) : null}
       {kind === "page" ? null : sdkProblem?.action && sdkProblem.actionLabel ? (
@@ -337,12 +361,12 @@ function ProblemActions({
         </button>
       ) : kind === "connection" ? (
         <button type="button" disabled={c.busy} onClick={() => void c.retry()}>
-          Try again
+          <Trans context="Reader interface">Try again</Trans>
         </button>
       ) : null}
       {kind !== "page" && !sdkProblem ? (
         <button type="button" disabled={c.busy} onClick={() => void c.connect()}>
-          Review access
+          <Trans>Review access</Trans>
         </button>
       ) : null}
     </div>
@@ -355,13 +379,15 @@ function problemTitle(
 ): string {
   if (c.source) {
     return kind === "page"
-      ? "Saved, but this page couldn’t be updated"
-      : "Saved, but the last change didn’t finish";
+      ? translate({ message: "Saved, but this page couldn’t be updated" })
+      : translate({ message: "Saved, but the last change didn’t finish" });
   }
   if (c.saveAttempted) {
-    return "We couldn’t confirm this saved";
+    return translate({ message: "We couldn’t confirm this saved" });
   }
-  return kind === "page" ? "Reader can’t read this page" : "We couldn’t reach your collection";
+  return kind === "page"
+    ? translate({ message: "Reader can’t read this page" })
+    : translate({ message: "We couldn’t reach your collection" });
 }
 
 /** What to do next, in plain words, when the problem itself is not worded for people. */
@@ -370,12 +396,21 @@ function problemAdvice(
   kind: NonNullable<ExtensionCaptureController["problemKind"]>,
 ): string {
   if (kind === "page") {
-    return "Reload the page, then press the mdbase Reader toolbar button again. Browser pages and the Chrome Web Store can’t be read by extensions.";
+    return translate({
+      message:
+        "Reload the page, then press the mdbase Reader toolbar button again. Browser pages and the Chrome Web Store can’t be read by extensions.",
+    });
   }
   if (c.saveAttempted && !c.source) {
-    return "It may have saved. Check again: nothing is saved twice. Your selection and note are kept, even if you close the panel.";
+    return translate({
+      message:
+        "It may have saved. Check again: nothing is saved twice. Your selection and note are kept, even if you close the panel.",
+    });
   }
   return c.source
-    ? "Try it again. Everything already saved is safe."
-    : "Try again in a moment. Your selection and note are kept, even if you close the panel.";
+    ? translate({ message: "Try it again. Everything already saved is safe." })
+    : translate({
+        message:
+          "Try again in a moment. Your selection and note are kept, even if you close the panel.",
+      });
 }

@@ -1,3 +1,5 @@
+import { t as translate } from "@lingui/core/macro";
+
 import type { ReadingRangeLocation, ReadingRangeResolution } from "@mdbase-reader/reading-surface";
 
 /**
@@ -57,12 +59,14 @@ export function chapterHintText(
 ): string {
   switch (kind) {
     case "problem":
-      return problem ?? "The chapter start could not be opened.";
+      return problem ?? translate({ message: "The chapter start could not be opened." });
     case "invalid":
-      return range.valid ? "This chapter’s pages could not be found." : range.message;
+      return range.valid
+        ? translate({ message: "This chapter’s pages could not be found." })
+        : range.message;
     case "before":
     case "after":
-      return "You’ve left this chapter";
+      return translate({ message: "You’ve left this chapter" });
   }
 }
 
@@ -72,7 +76,7 @@ export function chapterProgressLabel(
   location: ReadingRangeLocation | null,
 ): string | undefined {
   if (!range.valid) {
-    return "Range unavailable";
+    return translate({ message: "Range unavailable" });
   }
   if (location && location.position !== "inside") {
     return "Outside";

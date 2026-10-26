@@ -1,3 +1,5 @@
+import { i18n } from "@lingui/core";
+import { plural, t as translate } from "@lingui/core/macro";
 import { cslFieldStatuses, type CslProvenance } from "@mdbase-reader/core";
 
 import {
@@ -77,23 +79,25 @@ export function citationHealth(input: {
   if (!input.valid) {
     return {
       tone: "invalid",
-      title: "Fix before saving",
+      title: translate({ message: "Fix before saving" }),
       ...(input.message ? { detail: input.message } : {}),
     };
   }
   const gapLabels = input.gaps.map((field) => gapFieldLabels[field] ?? cslFieldLabel(field));
   const gapDetail = gapLabels.length
-    ? `The library records the ${listPhrase(gapLabels)}; add ${gapLabels.length === 1 ? "it" : "them"} to the citation.`
+    ? gapLabels.length === 1
+      ? translate`The library records the ${listPhrase(gapLabels)}; add it to the citation.`
+      : translate`The library records the ${listPhrase(gapLabels)}; add them to the citation.`
     : undefined;
   const warnings = uncoveredWarnings(input.warnings, input.gaps);
   const count = warnings.length + input.gaps.length;
   if (!count) {
-    return { tone: "complete", title: "Citation details look complete" };
+    return { tone: "complete", title: translate({ message: "Citation details look complete" }) };
   }
   const detail = gapDetail ?? warnings[0];
   return {
     tone: "check",
-    title: `${String(count)} ${count === 1 ? "detail" : "details"} to check`,
+    title: plural(count, { one: "# detail to check", other: "# details to check" }),
     ...(detail ? { detail } : {}),
   };
 }
@@ -129,26 +133,38 @@ export function citationEvidenceSummary(citation: Citation, provenance: CslProve
     : distinct.join(" · ");
 }
 
-const gapFieldLabels: Record<string, string> = { author: "authors", issued: "date", URL: "URL" };
+const gapFieldLabels: Record<string, string> = {
+  get author() {
+    return translate`authors`;
+  },
+  get issued() {
+    return translate`date`;
+  },
+  URL: "URL",
+};
 
 function typeLabel(type: string): string {
   return (
-    [...commonCslTypes, ...specialistCslTypes].find(([value]) => value === type)?.[1] ??
-    cslFieldLabel(type)
+    (() => {
+      const label = [...commonCslTypes, ...specialistCslTypes].find(
+        ([value]) => value === type,
+      )?.[1];
+      return label ? i18n._(label) : undefined;
+    })() ?? cslFieldLabel(type)
   );
 }
 
 function containerLabel(type: string | null): string {
   switch (type) {
     case "article-journal":
-      return "Journal";
+      return translate`Journal`;
     case "chapter":
-      return "Book";
+      return translate`Book`;
     case "webpage":
     case "post-weblog":
-      return "Site";
+      return translate`Site`;
     default:
-      return "Published in";
+      return translate({ message: "Published in" });
   }
 }
 
@@ -161,7 +177,7 @@ function names(value: unknown): string | null {
 function listPhrase(items: readonly string[]): string {
   return items.length < 2
     ? (items[0] ?? "")
-    : `${items.slice(0, -1).join(", ")} and ${items.at(-1) ?? ""}`;
+    : translate`${items.slice(0, -1).join(", ")} and ${items.at(-1) ?? ""}`;
 }
 
 function text(value: unknown): string | null {

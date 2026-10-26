@@ -1,3 +1,5 @@
+import { t as translate } from "@lingui/core/macro";
+
 import type { ReadingStatus, SourceSummary } from "@mdbase-reader/core";
 
 /**
@@ -33,11 +35,9 @@ export function readingLocationLabel(source: SourceSummary, pageCount?: number):
   const progress = readingProgressValue(source);
   const page =
     position?.kind === "pdf"
-      ? `Page ${String(position.pageIndex + 1)}${
-          pageCount !== undefined && pageCount > position.pageIndex
-            ? ` of ${String(pageCount)}`
-            : ""
-        }`
+      ? pageCount !== undefined && pageCount > position.pageIndex
+        ? translate`Page ${position.pageIndex + 1} of ${pageCount}`
+        : translate`Page ${position.pageIndex + 1}`
       : null;
   const chapter =
     position?.kind === "epub" ? textAt(position.locator, "title")?.slice(0, 80) : undefined;

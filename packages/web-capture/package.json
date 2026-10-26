@@ -10,7 +10,7 @@
     "./source-identifiers": "./src/source-identifiers.ts"
   },
   "scripts": {
-    "test": "vitest run --passWithNoTests",
+    "test": "vitest run --passWithNoTests --config ../../vitest.config.mjs",
     "typecheck": "tsc -p tsconfig.json"
   },
   "dependencies": {

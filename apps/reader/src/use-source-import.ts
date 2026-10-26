@@ -1,3 +1,4 @@
+import { t } from "@lingui/core/macro";
 import { useCallback, useEffect, useRef, useState } from "react";
 
 import { markFraction, withMarkProgress } from "./mark-activity.js";
@@ -44,7 +45,9 @@ export function useSourceImport(
       setFile(selected);
     } catch (reason) {
       setPickError(
-        reason instanceof Error ? reason.message : "Reader could not open the file picker.",
+        reason instanceof Error
+          ? reason.message
+          : t({ message: "Reader could not open the file picker." }),
       );
     }
   }, [pickSourceFile]);

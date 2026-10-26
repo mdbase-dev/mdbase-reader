@@ -1,3 +1,4 @@
+import { t } from "@lingui/core/macro";
 import {
   createAnnotation,
   deleteAnnotation,
@@ -206,7 +207,7 @@ export class CaptureWriter {
         );
       } catch (reason) {
         notices.push(
-          `The citation was not stored: ${reason instanceof Error ? reason.message : String(reason)}. Add it from the source's citation panel in Reader.`,
+          t`The citation was not stored: ${reason instanceof Error ? reason.message : String(reason)}. Add it from the source's citation panel in Reader.`,
         );
       }
     }
@@ -228,7 +229,7 @@ export class CaptureWriter {
         : await collection.sources.get(collection.collectionId, saved.id);
     if (!source) {
       throw new Error(
-        "The saved source is no longer available. Your highlight has not been saved.",
+        t`The saved source is no longer available. Your highlight has not been saved.`,
       );
     }
     const comment = draft.comment;
@@ -256,7 +257,7 @@ export class CaptureWriter {
           recovered.collectionId !== collection.collectionId
         ) {
           throw new Error(
-            "The recovered highlight belongs to a different source. Review it before retrying; no duplicate was created.",
+            t`The recovered highlight belongs to a different source. Review it before retrying; no duplicate was created.`,
           );
         }
         await this.journalStorage.remove(recoveryKey);
@@ -349,19 +350,21 @@ export class CaptureWriter {
       (item) => ["primary", "readable"].includes(item.role) && item.mediaType === "text/html",
     );
     if (!document) {
-      throw new Error("This source has no saved HTML reading copy. Open it in Reader to annotate.");
+      throw new Error(
+        t`This source has no saved HTML reading copy. Open it in Reader to annotate.`,
+      );
     }
     const savedText = await this.#savedText(collection, source, document, uploaded);
     const text = postId ? savedText.parts.get(postId) : savedText.text;
     if (text === undefined) {
       throw new Error(
-        "This thread part is absent from the saved copy. Open that copy in Reader; no highlight was created.",
+        t`This thread part is absent from the saved copy. Open that copy in Reader; no highlight was created.`,
       );
     }
     const match = matchTextQuote(text, selection);
     if (!match || match.ambiguous) {
       throw new Error(
-        "This passage is missing or ambiguous in the saved copy. The source is saved, but the highlight is not. Open the saved copy in Reader to select it there.",
+        t`This passage is missing or ambiguous in the saved copy. The source is saved, but the highlight is not. Open the saved copy in Reader to select it there.`,
       );
     }
     // Stored as the saved copy reads, which is where Reader anchors it.
@@ -427,7 +430,7 @@ export class CaptureWriter {
     );
     if ((await this.#runtime.hasher.sha256(saved.bytes)) !== document.revision) {
       throw new Error(
-        "The saved document changed. Open the saved copy in Reader; no highlight was created.",
+        t`The saved document changed. Open the saved copy in Reader; no highlight was created.`,
       );
     }
     return saved.bytes;
@@ -447,7 +450,7 @@ function captureCitation(input: SaveCaptureInput): CitationPreview | null {
 
 function assertPostCapture(capture: PageCapture): void {
   if (capture.kind === "html" && capture.social && !capture.post) {
-    throw new Error("Choose individual posts; feeds cannot be saved.");
+    throw new Error(t`Choose individual posts; feeds cannot be saved.`);
   }
 }
 
@@ -475,7 +478,7 @@ async function readHighlightIdentity(
     !value.mutation
   ) {
     throw new Error(
-      "The saved highlight recovery identity is invalid. No duplicate highlight was created.",
+      t`The saved highlight recovery identity is invalid. No duplicate highlight was created.`,
     );
   }
   return { id: annotationId(value.id), mutation: mutationId(value.mutation) };
@@ -501,7 +504,7 @@ async function htmlRequest(capture: SelectedWebCapture): Promise<ImportParts> {
 async function pdfRequest(capture: PdfCapture, input: SaveCaptureInput): Promise<ImportParts> {
   if (!input.pdfBytes) {
     throw new Error(
-      "Reader cannot download this PDF from here. Download it and import the file in Reader.",
+      t`Reader cannot download this PDF from here. Download it and import the file in Reader.`,
     );
   }
   const bytes = await input.pdfBytes();

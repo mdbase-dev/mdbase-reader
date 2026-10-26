@@ -1,3 +1,5 @@
+import { t as translate } from "@lingui/core/macro";
+import { Trans, useLingui } from "@lingui/react/macro";
 import { useFeedback } from "@mdbase-dev/ui/feedback";
 import { Suspense, useCallback, useEffect, useMemo, useState, type JSX } from "react";
 
@@ -34,9 +36,12 @@ export function ConnectedDocument({
   source,
   onSurfaceChange,
 }: ConnectedDocumentProps): JSX.Element {
+  const { t } = useLingui();
   const descriptor = source.documents[0];
   if (!descriptor) {
-    return <DocumentMessage label="This source has no readable representation." />;
+    return (
+      <DocumentMessage label={t({ message: "This source has no readable representation." })} />
+    );
   }
   return (
     <OpenConnectedDocument
@@ -55,6 +60,7 @@ function OpenConnectedDocument({
   source,
   onSurfaceChange,
 }: ConnectedDocumentProps & { readonly descriptor: DocumentDescriptor }): JSX.Element {
+  const { t } = useLingui();
   const { reportError } = useFeedback();
   const [state, setState] = useState<OpenDocumentState>({ status: "opening" });
   const [attempt, setAttempt] = useState(0);
@@ -119,7 +125,11 @@ function OpenConnectedDocument({
   );
 
   if (state.status === "opening") {
-    return <DocumentMessage label="Opening document…" />;
+    return (
+      <DocumentMessage
+        label={t({ message: "Opening document…", context: "ConnectedDocument interface" })}
+      />
+    );
   }
   if (state.status === "error") {
     return (
@@ -127,7 +137,7 @@ function OpenConnectedDocument({
         label={state.message}
         tone="error"
         action={{
-          label: "Try this tab again",
+          label: t({ message: "Try this tab again" }),
           run: () => {
             setState({ status: "opening" });
             setAttempt((value) => value + 1);
@@ -140,7 +150,7 @@ function OpenConnectedDocument({
     <div className="connected-document-frame">
       {state.handle.revision !== stableDescriptor.revision ? (
         <p className="document-change-notice" role="status">
-          This file has changed. Some saved annotation positions may need checking.
+          <Trans>This file has changed. Some saved annotation positions may need checking.</Trans>
         </p>
       ) : null}
       <div className="connected-document-content">
@@ -163,6 +173,7 @@ function OpenedDocumentRenderer({
   readonly handle: DocumentHandle;
   readonly onSurfaceChange: ConnectedDocumentProps["onSurfaceChange"];
 }): JSX.Element {
+  const { t } = useLingui();
   const document = useMemo<SurfaceDocument>(
     () => ({ document: descriptor, mediaType: handle.mediaType, url: handle.url }),
     [descriptor, handle],
@@ -176,7 +187,7 @@ function OpenedDocumentRenderer({
   if (isHtml(document.mediaType, descriptor.file)) {
     return <HtmlStage document={document} onSurfaceChange={onSurfaceChange} />;
   }
-  return <DocumentMessage label={`No renderer is registered for ${document.mediaType}.`} />;
+  return <DocumentMessage label={t`No renderer is registered for ${document.mediaType}.`} />;
 }
 
 function PdfStage({
@@ -186,12 +197,17 @@ function PdfStage({
   readonly document: SurfaceDocument;
   readonly onSurfaceChange: ConnectedDocumentProps["onSurfaceChange"];
 }): JSX.Element {
+  const { t } = useLingui();
   const [state, setState] = useState<RendererState>({ status: "opening" });
   const ready = useCallback(() => setState({ status: "ready" }), []);
   const failed = useCallback((message: string) => setState({ status: "error", message }), []);
   return (
-    <RendererStage state={state} openingLabel="Preparing PDF pages…" errorName="EmbedPDF">
-      <Suspense fallback={<DocumentMessage label="Loading the PDF renderer…" />}>
+    <RendererStage
+      state={state}
+      openingLabel={translate({ message: "Preparing PDF pages…" })}
+      errorName="EmbedPDF"
+    >
+      <Suspense fallback={<DocumentMessage label={t({ message: "Loading the PDF renderer…" })} />}>
         <PdfViewerSurface
           className="pdf-viewer"
           document={document}
@@ -211,12 +227,20 @@ function EpubStage({
   readonly document: SurfaceDocument;
   readonly onSurfaceChange: ConnectedDocumentProps["onSurfaceChange"];
 }): JSX.Element {
+  const { t } = useLingui();
   const [state, setState] = useState<RendererState>({ status: "opening" });
   const ready = useCallback(() => setState({ status: "ready" }), []);
   const failed = useCallback((message: string) => setState({ status: "error", message }), []);
   return (
-    <RendererStage state={state} openingLabel="Preparing publication…" errorName="Readium">
-      <Suspense fallback={<DocumentMessage label="Loading the EPUB renderer…" />}>
+    <RendererStage
+      state={state}
+      openingLabel={translate({
+        message: "Preparing publication…",
+        context: "ConnectedDocument status or action",
+      })}
+      errorName="Readium"
+    >
+      <Suspense fallback={<DocumentMessage label={t({ message: "Loading the EPUB renderer…" })} />}>
         <EpubViewerSurface
           className="epub-viewer"
           document={document}
@@ -236,12 +260,17 @@ function HtmlStage({
   readonly document: SurfaceDocument;
   readonly onSurfaceChange: ConnectedDocumentProps["onSurfaceChange"];
 }): JSX.Element {
+  const { t } = useLingui();
   const [state, setState] = useState<RendererState>({ status: "opening" });
   const ready = useCallback(() => setState({ status: "ready" }), []);
   const failed = useCallback((message: string) => setState({ status: "error", message }), []);
   return (
-    <RendererStage state={state} openingLabel="Preparing saved page…" errorName="HTML reader">
-      <Suspense fallback={<DocumentMessage label="Loading the HTML renderer…" />}>
+    <RendererStage
+      state={state}
+      openingLabel={translate({ message: "Preparing saved page…" })}
+      errorName="HTML reader"
+    >
+      <Suspense fallback={<DocumentMessage label={t({ message: "Loading the HTML renderer…" })} />}>
         <HtmlViewerSurface
           className="html-viewer"
           document={document}

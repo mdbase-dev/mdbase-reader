@@ -1,3 +1,5 @@
+import { t } from "@lingui/core/macro";
+
 import type { Position, Rect } from "@embedpdf/models";
 
 export type Endpoint = "start" | "end";
@@ -114,8 +116,14 @@ export class TouchSelectionView {
     handle.button.style.top = `${String(knob.y)}px`;
     handle.button.hidden = false;
     handle.button.dataset["readerPdfHandle"] = end;
-    handle.button.setAttribute("aria-label", `Adjust selection ${end}`);
-    handle.button.title = `Drag to adjust selection ${end}; arrow keys move one character`;
+    handle.button.setAttribute(
+      "aria-label",
+      end === "start" ? t`Adjust selection start` : t`Adjust selection end`,
+    );
+    handle.button.title =
+      end === "start"
+        ? t`Drag to adjust selection start; arrow keys move one character`
+        : t`Drag to adjust selection end; arrow keys move one character`;
     handle.stem.style.display = "";
     for (const [key, value] of Object.entries({
       x1: top.x,

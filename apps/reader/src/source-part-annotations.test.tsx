@@ -6,13 +6,13 @@ import {
   type SurfaceKind,
 } from "@mdbase-reader/reading-surface";
 import { act, type JSX } from "react";
-import { createRoot } from "react-dom/client";
 import { afterEach, expect, it, vi } from "vitest";
 
 import { AnnotationList } from "./AnnotationList.js";
 import { AnnotationOwnerChooser } from "./AnnotationOwnerChooser.js";
 import { PreviewGateway } from "./preview.js";
 import { sourceAnnotationFamily } from "./source-annotation-family.js";
+import { createRoot } from "./testing/i18n.js";
 import { useAnnotationOwner } from "./use-annotation-owner.js";
 import { useDocumentDecorations } from "./use-document-decorations.js";
 import { useSourceAnnotationView } from "./use-source-annotation-view.js";

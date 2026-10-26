@@ -1,3 +1,5 @@
+import { Trans } from "@lingui/react/macro";
+
 import type { CitationEditorController } from "./use-citation-editor.js";
 import type { JSX } from "react";
 
@@ -8,10 +10,14 @@ export function CitationSaveConflict({
 }): JSX.Element {
   return (
     <div className="citation-feedback citation-conflict" role="alert">
-      <strong>This citation changed elsewhere.</strong>
+      <strong>
+        <Trans>This citation changed elsewhere.</Trans>
+      </strong>
       <span>
-        Your draft is still here. Use their version to reload their citation and field evidence.
-        Keep mine replaces both with your draft, including any removed fields.
+        <Trans>
+          Your draft is still here. Use their version to reload their citation and field evidence.
+          Keep mine replaces both with your draft, including any removed fields.
+        </Trans>
       </span>
       <div className="citation-review-actions">
         <button
@@ -19,14 +25,14 @@ export function CitationSaveConflict({
           disabled={editor.status === "saving"}
           onClick={editor.useTheirVersion}
         >
-          Use their version
+          <Trans>Use their version</Trans>
         </button>
         <button
           type="button"
           disabled={editor.status === "saving" || !editor.assessment.valid}
           onClick={editor.keepMine}
         >
-          Keep mine
+          <Trans>Keep mine</Trans>
         </button>
       </div>
       {editor.error ? <span className="is-error">{editor.error}</span> : null}

@@ -1,5 +1,9 @@
+import { t as translate } from "@lingui/core/macro";
+import { useLingui as useLocale } from "@lingui/react";
+import { Trans } from "@lingui/react/macro";
 import { useId, type JSX } from "react";
 
+import { annotationOwnerReasonText } from "./annotation-owner-copy.js";
 import { ChevronDownIcon } from "./icons.js";
 
 import type { AnnotationOwnerControl } from "./use-annotation-owner.js";
@@ -21,6 +25,7 @@ export function AnnotationOwnerChooser({
   readonly control?: AnnotationOwnerControl | undefined;
   readonly compact?: boolean;
 }): JSX.Element | null {
+  useLocale();
   if (!control) {
     return null;
   }
@@ -31,16 +36,16 @@ export function AnnotationOwnerChooser({
     // No choice to offer, but a chapter fallback still explains where the annotation goes.
     return routineReasons.has(control.reason) || control.pending ? null : (
       <div className="annotation-owner-control">
-        <small role="status">{control.reason}</small>
+        <small role="status">{annotationOwnerReasonText(control.reason)}</small>
       </div>
     );
   }
   return (
     <div className="annotation-owner-control">
       <label>
-        Save to source{" "}
+        <Trans>Save to source</Trans>{" "}
         <select
-          aria-label="Save to source"
+          aria-label={translate({ message: "Save to source" })}
           value={control.ownerId}
           disabled={control.pending}
           onChange={(event) => control.choose(event.target.value)}
@@ -52,7 +57,7 @@ export function AnnotationOwnerChooser({
           ))}
         </select>
       </label>
-      <small role="status">{control.reason}</small>
+      <small role="status">{annotationOwnerReasonText(control.reason)}</small>
     </div>
   );
 }
@@ -67,15 +72,18 @@ function AnnotationSourceChip({
 }: {
   readonly control: AnnotationOwnerControl;
 }): JSX.Element | null {
+  useLocale();
   const reason = useId();
   if (control.choices.length <= 1) {
     return null;
   }
   return (
-    <label className="annotation-source-chip" title={control.reason}>
-      <span aria-hidden="true">in</span>
+    <label className="annotation-source-chip" title={annotationOwnerReasonText(control.reason)}>
+      <span aria-hidden="true">
+        <Trans>in</Trans>
+      </span>
       <select
-        aria-label="Save to source"
+        aria-label={translate({ message: "Save to source" })}
         aria-describedby={reason}
         value={control.ownerId}
         disabled={control.pending}
@@ -89,7 +97,7 @@ function AnnotationSourceChip({
       </select>
       <ChevronDownIcon />
       <small id={reason} className="sr-only" role="status">
-        {control.reason}
+        {annotationOwnerReasonText(control.reason)}
       </small>
     </label>
   );

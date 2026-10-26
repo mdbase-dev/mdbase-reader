@@ -1,3 +1,4 @@
+import { useLingui } from "@lingui/react/macro";
 import { useVirtualizer } from "@tanstack/react-virtual";
 import {
   useEffect,
@@ -65,6 +66,7 @@ interface EditingCell {
 // Keep the virtualized grid, existing editing, and disclosure keyboard handling in one owner.
 // eslint-disable-next-line max-lines-per-function
 export function LibraryTable(props: LibraryTableProps): JSX.Element {
+  const { t } = useLingui();
   const { sources, layout, selection, onSelectionChange, scrollRef } = props;
   const gridRef = useRef<HTMLDivElement>(null);
   const table = useLibraryColumns(props);
@@ -79,9 +81,9 @@ export function LibraryTable(props: LibraryTableProps): JSX.Element {
     getItemKey: (index) => sources[index]?.id ?? index,
     overscan: 10,
     scrollPaddingStart: headerHeight,
-    // Rows are measured from the top of the scroller; content above the table offsets them.
     scrollMargin: offset + headerHeight,
   });
+  const margin = offset + headerHeight;
   const focusRow = useRowFocus(gridRef);
   const press = useLongPress();
   const [editing, setEditing] = useState<EditingCell | null>(null);
@@ -104,7 +106,6 @@ export function LibraryTable(props: LibraryTableProps): JSX.Element {
   );
   const gridTemplateColumns = `${sizes.map((size) => `${String(size)}px`).join(" ")} minmax(44px, 1fr)`;
   const width = sizes.reduce((total, size) => total + size, 0) + 60;
-  const margin = offset + headerHeight;
   return (
     <div className="library-table-frame">
       <div
@@ -112,7 +113,7 @@ export function LibraryTable(props: LibraryTableProps): JSX.Element {
         className={`library-table${layout.columns.includes("creator") ? " has-creator-column" : ""}${layout.columns.includes("format") ? " has-format-column" : ""}`}
         role={props.partRows ? "treegrid" : "grid"}
         tabIndex={-1}
-        aria-label="Sources"
+        aria-label={t({ message: "Sources", context: "LibraryTable interface" })}
         aria-rowcount={sources.length + 1}
         aria-colcount={layout.columns.length + 1}
         aria-multiselectable="true"

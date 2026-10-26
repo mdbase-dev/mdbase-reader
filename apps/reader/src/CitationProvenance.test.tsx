@@ -1,7 +1,7 @@
-import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
 
 import { CitationProvenance } from "./CitationProvenance.js";
+import { renderToStaticMarkup } from "./testing/i18n.js";
 
 describe("CitationProvenance", () => {
   it("lists sourced fields but not the citekey", () => {

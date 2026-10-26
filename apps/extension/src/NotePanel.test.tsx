@@ -1,16 +1,17 @@
 // @vitest-environment happy-dom
 /* eslint-disable @typescript-eslint/require-await -- async act flushes React's queued work */
 import { act } from "react";
-import { createRoot, type Root } from "react-dom/client";
 import { afterEach, beforeEach, expect, it, vi } from "vitest";
 
 import { CaptureApp } from "./CaptureApp.js";
 import { SourceNoteSession, type NoteDraftStore } from "./source-note-session.js";
 import { fakeChrome } from "./testing/fake-chrome.js";
+import { createRoot } from "./testing/i18n.js";
 
 import type { ExtensionCaptureController } from "./capture-controller.js";
 import type { ReaderConnectedCollection } from "@mdbase-reader/connect";
 import type { Source } from "@mdbase-reader/core";
+import type { Root } from "react-dom/client";
 
 let host: HTMLDivElement;
 let root: Root;

@@ -1,4 +1,6 @@
 /* eslint-disable complexity, max-lines-per-function */
+import { t as translate } from "@lingui/core/macro";
+import { Trans, useLingui } from "@lingui/react/macro";
 import { Select, type SelectItems, type SelectOption } from "@mdbase-dev/ui/select";
 import {
   useCallback,
@@ -116,6 +118,7 @@ export function LibraryWorkspace({
   readonly onInspectSource?: (sourceId: SourceId) => void;
   readonly onAddSource: () => void;
 }): JSX.Element {
+  const { t } = useLingui();
   const collectionKey = allSources[0]?.collectionId ?? "library";
   const [layout, setLayout] = useLibraryLayoutDraft(collectionKey, view);
   const [filter, setFilter] = useState(view.configuration.filter);
@@ -147,7 +150,12 @@ export function LibraryWorkspace({
         void saveStatus(id, status)
           .then((updated) => onSourceChanged?.(updated))
           .catch((reason: unknown) =>
-            setProblem(readerErrorMessage(reason, "Reader could not change the reading status.")),
+            setProblem(
+              readerErrorMessage(
+                reason,
+                translate({ message: "Reader could not change the reading status." }),
+              ),
+            ),
           );
       }
     : undefined;
@@ -173,7 +181,12 @@ export function LibraryWorkspace({
       })
       .catch((reason: unknown) => {
         if (!controller.signal.aborted) {
-          setProblem(readerErrorMessage(reason, "Reader could not execute this mdbase view."));
+          setProblem(
+            readerErrorMessage(
+              reason,
+              translate({ message: "Reader could not execute this mdbase view." }),
+            ),
+          );
           setExecutedSources(allSources);
         }
       })
@@ -306,11 +319,11 @@ export function LibraryWorkspace({
   };
 
   return (
-    <section className="library-workspace" aria-label={`${view.name} library view`}>
+    <section className="library-workspace" aria-label={t`${view.name} library view`}>
       <header className="library-workspace-header">
         <label className="library-view-identity">
           <Select
-            aria-label="Library view"
+            aria-label={t({ message: "Library view", context: "LibraryWorkspace interface" })}
             className="is-quiet"
             value={view.key}
             options={availableViews.map(({ key, name }) => ({ value: key, label: name }))}
@@ -322,7 +335,11 @@ export function LibraryWorkspace({
             }}
           />
         </label>
-        <div className="segmented-control library-mode" role="group" aria-label="Show">
+        <div
+          className="segmented-control library-mode"
+          role="group"
+          aria-label={t({ message: "Show", context: "LibraryWorkspace interface" })}
+        >
           {(["sources", "annotations"] as const).map((value) => (
             <button
               key={value}
@@ -330,7 +347,9 @@ export function LibraryWorkspace({
               aria-pressed={mode === value}
               onClick={() => setMode(value)}
             >
-              {value === "sources" ? "Sources" : "Annotations"}
+              {value === "sources"
+                ? t({ message: "Sources", context: "LibraryWorkspace interface" })
+                : t({ message: "Annotations", context: "LibraryWorkspace interface" })}
             </button>
           ))}
         </div>
@@ -339,15 +358,15 @@ export function LibraryWorkspace({
             <div className="library-workspace-search">
               <SearchIcon />
               <label className="library-search-field">
-                <span className="sr-only">Search this view</span>
+                <span className="sr-only">{t({ message: "Search this view" })}</span>
                 <input
                   value={searchScope === "sources" ? configuration.filter.query : contentQuery}
                   placeholder={
                     searchScope === "sources"
-                      ? "Title, author or tag"
+                      ? t({ message: "Title, author or tag" })
                       : searchScope === "notes"
-                        ? "Search notes and annotations"
-                        : "Search open documents"
+                        ? t({ message: "Search notes and annotations" })
+                        : t({ message: "Search open documents" })
                   }
                   onChange={(event) =>
                     searchScope === "sources"
@@ -357,13 +376,13 @@ export function LibraryWorkspace({
                 />
               </label>
               <span className="library-search-scope-label" aria-hidden="true">
-                in
+                <Trans>in</Trans>
               </span>
               <Select
-                aria-label="Search scope"
+                aria-label={t({ message: "Search scope", context: "LibraryWorkspace interface" })}
                 className="library-search-scope is-quiet"
                 value={searchScope}
-                options={searchScopeOptions}
+                options={searchScopeOptions()}
                 onChange={setSearchScope}
               />
             </div>
@@ -371,8 +390,8 @@ export function LibraryWorkspace({
               {searchScope === "sources" ? (
                 <span className="library-result-count" role="status">
                   {loading
-                    ? "Loading…"
-                    : `${countLabel(matches.length, "source")}${indexLoading && !view.path ? " · Loading more…" : ""}`}
+                    ? t({ message: "Loading…", context: "LibraryWorkspace interface" })
+                    : `${countLabel(matches.length, "source")}${indexLoading && !view.path ? t({ message: " · Loading more…" }) : ""}`}
                 </span>
               ) : null}
               {dirty && view.owned && view.writable && !view.annotations ? (
@@ -382,13 +401,13 @@ export function LibraryWorkspace({
                   disabled={controller.saving}
                   onClick={() => void save(view.name, true)}
                 >
-                  Save view
+                  <Trans>Save view</Trans>
                 </button>
               ) : null}
               <Menu
                 className="library-workspace-more"
-                label={`View options${filterCount ? `, ${String(filterCount)} active filters` : ""}`}
-                title="View options"
+                label={t`View options${filterCount ? `, ${String(filterCount)} active filters` : ""}`}
+                title={t({ message: "View options", context: "LibraryWorkspace interface" })}
                 trigger={
                   <>
                     <FilterIcon />
@@ -397,31 +416,33 @@ export function LibraryWorkspace({
                 }
               >
                 <div className="library-options" data-menu-keep-open>
-                  <span className="menu-label">Filter</span>
+                  <span className="menu-label">
+                    <Trans>Filter</Trans>
+                  </span>
                   <label>
-                    <span>Status</span>
+                    <span>{t({ message: "Status" })}</span>
                     <Select
-                      aria-label="Status"
+                      aria-label={t({ message: "Status", context: "LibraryWorkspace interface" })}
                       value={configuration.filter.status}
-                      options={statusFilterOptions}
+                      options={statusFilterOptions()}
                       onChange={(status) => updateFilter({ status })}
                     />
                   </label>
                   <label>
-                    <span>Format</span>
+                    <span>{t({ message: "Format" })}</span>
                     <Select
-                      aria-label="Format"
+                      aria-label={t({ message: "Format", context: "LibraryWorkspace interface" })}
                       value={configuration.filter.format}
-                      options={formatFilterOptions}
+                      options={formatFilterOptions()}
                       onChange={(format) => updateFilter({ format })}
                     />
                   </label>
                   <label>
-                    <span>Tag</span>
+                    <span>{t({ message: "Tag" })}</span>
                     <input
                       className="mdbase-field"
                       value={configuration.filter.tag}
-                      placeholder="Any tag"
+                      placeholder={t({ message: "Any tag", context: "LibraryWorkspace interface" })}
                       onChange={(event) => updateFilter({ tag: event.target.value })}
                     />
                   </label>
@@ -439,21 +460,34 @@ export function LibraryWorkspace({
                         updateFilter({ status: "all", format: "all", tag: "", conditions: [] })
                       }
                     >
-                      Clear filters
+                      <Trans>Clear filters</Trans>
                     </button>
                   ) : null}
-                  <span className="menu-label">Sort</span>
+                  <span className="menu-label">
+                    <Trans>Sort</Trans>
+                  </span>
                   <div className="library-sort-control">
                     <Select
-                      aria-label="Sort field"
+                      aria-label={t({
+                        message: "Sort field",
+                        context: "LibraryWorkspace interface",
+                      })}
                       value={configuration.sortField}
                       options={sortOptionsFor(configuration.sortField, view.properties)}
                       onChange={(sortField) => update({ sortField })}
                     />
                     <button
                       type="button"
-                      aria-label={`Sort ${configuration.sortDirection === "asc" ? "descending" : "ascending"}`}
-                      title={configuration.sortDirection === "asc" ? "Ascending" : "Descending"}
+                      aria-label={
+                        configuration.sortDirection === "asc"
+                          ? t`Sort descending`
+                          : t`Sort ascending`
+                      }
+                      title={
+                        configuration.sortDirection === "asc"
+                          ? t({ message: "Ascending", context: "LibraryWorkspace interface" })
+                          : t({ message: "Descending", context: "LibraryWorkspace interface" })
+                      }
                       onClick={() =>
                         update({
                           sortDirection: configuration.sortDirection === "asc" ? "desc" : "asc",
@@ -463,8 +497,16 @@ export function LibraryWorkspace({
                       {configuration.sortDirection === "asc" ? "↑" : "↓"}
                     </button>
                   </div>
-                  <span className="menu-label">Layout</span>
-                  <div className="segmented-control" aria-label="Library presentation">
+                  <span className="menu-label">
+                    <Trans>Layout</Trans>
+                  </span>
+                  <div
+                    className="segmented-control"
+                    aria-label={t({
+                      message: "Library presentation",
+                      context: "LibraryWorkspace interface",
+                    })}
+                  >
                     {(["table", "cards"] as const).map((presentation) => (
                       <button
                         key={presentation}
@@ -472,7 +514,9 @@ export function LibraryWorkspace({
                         aria-pressed={configuration.presentation === presentation}
                         onClick={() => update({ presentation })}
                       >
-                        {presentation === "table" ? "Table" : "Cards"}
+                        {presentation === "table"
+                          ? t({ message: "Table", context: "LibraryWorkspace interface" })
+                          : t({ message: "Cards", context: "LibraryWorkspace interface" })}
                       </button>
                     ))}
                   </div>
@@ -486,10 +530,10 @@ export function LibraryWorkspace({
                     setLayoutResets((count) => count + 1);
                   }}
                 >
-                  Reset columns and layout
+                  <Trans>Reset columns and layout</Trans>
                 </button>
                 <button type="button" onClick={() => setSaving(true)}>
-                  Save as new view…
+                  <Trans>Save as new view…</Trans>
                 </button>
                 <button
                   type="button"
@@ -498,20 +542,25 @@ export function LibraryWorkspace({
                 >
                   <DownloadIcon />
                   {bibliographyExport.status === "exporting"
-                    ? "Preparing bibliography…"
-                    : "Export bibliography"}
+                    ? t({
+                        message: "Preparing bibliography…",
+                        context: "LibraryWorkspace interface",
+                      })
+                    : t({ message: "Export bibliography", context: "LibraryWorkspace interface" })}
                 </button>
                 <button
                   type="button"
                   aria-pressed={flatParts}
                   onClick={() => setFlatParts(!flatParts)}
                 >
-                  {flatParts ? "Nest parts under books" : "Show parts as a flat list"}
+                  {flatParts
+                    ? translate({ message: "Nest parts under books" })
+                    : translate({ message: "Show parts as a flat list" })}
                 </button>
                 <CitationQualitySummary sources={allSources} loading={indexLoading} />
                 <a href={importHref()} target="_blank" rel="noopener noreferrer">
                   <ImportIcon />
-                  Import a library…
+                  <Trans>Import a library…</Trans>
                 </a>
                 {bibliographyExport.message ? (
                   <p
@@ -524,8 +573,8 @@ export function LibraryWorkspace({
               <button
                 className="icon-button library-add-button"
                 type="button"
-                aria-label="Add source…"
-                title="Add source…"
+                aria-label={translate({ message: "Add source…" })}
+                title={translate({ message: "Add source…" })}
                 onClick={onAddSource}
               >
                 <PlusIcon />
@@ -543,7 +592,7 @@ export function LibraryWorkspace({
 
       {indexLoading ? (
         <p className="menu-note" role="status">
-          Source index is partial; more parts and shared-file references may exist.
+          <Trans>Source index is partial; more parts and shared-file references may exist.</Trans>
         </p>
       ) : null}
       <div
@@ -592,16 +641,24 @@ export function LibraryWorkspace({
                 <LibraryIcon />
                 {allSources.length === 0 ? (
                   <>
-                    <strong>Your library is empty</strong>
-                    <span>Add a PDF, EPUB or web page to start reading.</span>
+                    <strong>
+                      <Trans>Your library is empty</Trans>
+                    </strong>
+                    <span>
+                      <Trans>Add a PDF, EPUB or web page to start reading.</Trans>
+                    </span>
                     <button type="button" onClick={onAddSource}>
-                      Add source…
+                      <Trans>Add source…</Trans>
                     </button>
                   </>
                 ) : (
                   <>
-                    <strong>No sources match</strong>
-                    <span>Try a different search, or clear the filters.</span>
+                    <strong>
+                      <Trans>No sources match</Trans>
+                    </strong>
+                    <span>
+                      <Trans>Try a different search, or clear the filters.</Trans>
+                    </span>
                     {filterCount > 0 || configuration.filter.query ? (
                       <button
                         type="button"
@@ -615,7 +672,7 @@ export function LibraryWorkspace({
                           })
                         }
                       >
-                        Clear search and filters
+                        <Trans>Clear search and filters</Trans>
                       </button>
                     ) : null}
                   </>
@@ -646,7 +703,7 @@ export function LibraryWorkspace({
                   ? {
                       onEditField: (source: SourceSummary, key: string, text: string) =>
                         writes.saveField?.(source, key, text).catch((reason: unknown) => {
-                          setProblem(readerErrorMessage(reason, `Reader could not save ${key}.`));
+                          setProblem(readerErrorMessage(reason, t`Reader could not save ${key}.`));
                           throw reason;
                         }) ?? Promise.resolve(),
                     }
@@ -686,8 +743,10 @@ export function LibraryWorkspace({
       ) : null}
       {saving ? (
         <LibraryViewSaveDialog
-          description="The filters, sort, columns and layout are saved in your collection."
-          placeholder="e.g. Reading this month"
+          description={t({
+            message: "The filters, sort, columns and layout are saved in your collection.",
+          })}
+          placeholder={t({ message: "e.g. Reading this month" })}
           saving={controller.saving}
           onCancel={() => setSaving(false)}
           onSave={(name) => void save(name, false)}
@@ -699,24 +758,69 @@ export function LibraryWorkspace({
 
 const noCounts: ReadonlyMap<SourceId, number> = new Map();
 
-const searchScopeOptions: SelectItems<LibrarySearchScope> = [
-  { value: "sources", label: "Library" },
-  { value: "notes", label: "Notes & annotations" },
-  { value: "documents", label: "Open documents" },
-];
+function searchScopeOptions(): SelectItems<LibrarySearchScope> {
+  return [
+    {
+      value: "sources",
+      label: translate({ message: "Library", context: "LibraryWorkspace searchScopeOptions" }),
+    },
+    {
+      value: "notes",
+      label: translate({
+        message: "Notes & annotations",
+        context: "LibraryWorkspace searchScopeOptions",
+      }),
+    },
+    {
+      value: "documents",
+      label: translate({
+        message: "Open documents",
+        context: "LibraryWorkspace searchScopeOptions",
+      }),
+    },
+  ];
+}
 
-const statusFilterOptions: SelectItems<LibraryViewConfiguration["filter"]["status"]> = [
-  { value: "all", label: "Any status" },
-  ...readingStatusChoices.map((status) => ({ value: status, label: readingStatusLabel(status) })),
-];
+function statusFilterOptions(): SelectItems<LibraryViewConfiguration["filter"]["status"]> {
+  return [
+    {
+      value: "all",
+      label: translate({ message: "Any status", context: "LibraryWorkspace statusFilterOptions" }),
+    },
+    ...readingStatusChoices.map((status) => ({ value: status, label: readingStatusLabel(status) })),
+  ];
+}
 
-const formatFilterOptions: SelectItems<LibraryViewConfiguration["filter"]["format"]> = [
-  { value: "all", label: "Any format" },
-  { value: "pdf", label: "PDF" },
-  { value: "epub", label: "EPUB" },
-  { value: "web", label: "Saved web page" },
-  { value: "note", label: "No file attached" },
-];
+function formatFilterOptions(): SelectItems<LibraryViewConfiguration["filter"]["format"]> {
+  return [
+    {
+      value: "all",
+      label: translate({ message: "Any format", context: "LibraryWorkspace formatFilterOptions" }),
+    },
+    {
+      value: "pdf",
+      label: translate({ message: "PDF", context: "LibraryWorkspace formatFilterOptions" }),
+    },
+    {
+      value: "epub",
+      label: translate({ message: "EPUB", context: "LibraryWorkspace formatFilterOptions" }),
+    },
+    {
+      value: "web",
+      label: translate({
+        message: "Saved web page",
+        context: "LibraryWorkspace formatFilterOptions",
+      }),
+    },
+    {
+      value: "note",
+      label: translate({
+        message: "No file attached",
+        context: "LibraryWorkspace formatFilterOptions",
+      }),
+    },
+  ];
+}
 
 /** The fixed sort fields, plus a property column when the view is sorted by one. */
 function sortOptionsFor(
@@ -725,21 +829,44 @@ function sortOptionsFor(
 ): SelectItems<LibraryViewConfiguration["sortField"]> {
   const key = propertyKey(current);
   return key === null
-    ? sortFieldOptions
+    ? sortFieldOptions()
     : [
-        ...sortFieldOptions,
+        ...sortFieldOptions(),
         { value: current, label: columnLabel(propertyColumn(key), properties) },
       ];
 }
 
-const sortFieldOptions: readonly SelectOption<LibraryViewConfiguration["sortField"]>[] = [
-  { value: "saved", label: "Recently saved" },
-  { value: "opened", label: "Recently opened" },
-  { value: "title", label: "Title" },
-  { value: "creator", label: "Creator" },
-  { value: "published", label: "Published" },
-  { value: "status", label: "Status" },
-];
+function sortFieldOptions(): readonly SelectOption<LibraryViewConfiguration["sortField"]>[] {
+  return [
+    {
+      value: "saved",
+      label: translate({ message: "Recently saved", context: "LibraryWorkspace sortFieldOptions" }),
+    },
+    {
+      value: "opened",
+      label: translate({
+        message: "Recently opened",
+        context: "LibraryWorkspace sortFieldOptions",
+      }),
+    },
+    {
+      value: "title",
+      label: translate({ message: "Title", context: "LibraryWorkspace sortFieldOptions" }),
+    },
+    {
+      value: "creator",
+      label: translate({ message: "Creator", context: "LibraryWorkspace sortFieldOptions" }),
+    },
+    {
+      value: "published",
+      label: translate({ message: "Published", context: "LibraryWorkspace sortFieldOptions" }),
+    },
+    {
+      value: "status",
+      label: translate({ message: "Status", context: "LibraryWorkspace sortFieldOptions" }),
+    },
+  ];
+}
 // Scroll positions outlive a tab's renderer, so a view keeps its place across tab switches.
 const scrollPositions = new Map<string, number>();
 

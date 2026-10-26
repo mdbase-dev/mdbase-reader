@@ -2,12 +2,12 @@
 /* eslint-disable @typescript-eslint/require-await -- async act flushes React's queued work */
 import { isClaimedShortcut } from "@mdbase-reader/reading-surface";
 import { act } from "react";
-import { createRoot } from "react-dom/client";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { setLastHighlightColor } from "./highlight-colors.js";
 import { bindCollectionHighlights } from "./highlight-settings.fixtures.js";
 import { SelectionToolbarLayer } from "./SelectionToolbar.js";
+import { createRoot } from "./testing/i18n.js";
 
 import type { AnnotationComposerController } from "./use-annotation-composer.js";
 import type { TextComposerSelection } from "./use-selection-toolbar.js";

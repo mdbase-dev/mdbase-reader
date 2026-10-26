@@ -1,3 +1,4 @@
+import { t as translate } from "@lingui/core/macro";
 import { signalMdbaseMark } from "@mdbase-dev/ui/mark-activity";
 import { useEffect, useMemo, useState, useSyncExternalStore } from "react";
 
@@ -70,11 +71,13 @@ export function useAnnotationEdit(props: AnnotationEditProps): AnnotationEditCon
     if (
       session.getSnapshot().status !== "saved" &&
       !(await requestConfirmation({
-        title: "Close with unsaved changes?",
-        message:
-          "Saving may continue in this window, but reloading Reader before it finishes will lose these changes.",
-        confirmLabel: "Close anyway",
-        cancelLabel: "Keep editing",
+        title: translate({ message: "Close with unsaved changes?" }),
+        message: translate({
+          message:
+            "Saving may continue in this window, but reloading Reader before it finishes will lose these changes.",
+        }),
+        confirmLabel: translate({ message: "Close anyway" }),
+        cancelLabel: translate({ message: "Keep editing" }),
       }))
     ) {
       return;
@@ -105,7 +108,10 @@ export function useAnnotationEdit(props: AnnotationEditProps): AnnotationEditCon
       snapshot.status !== "saving" &&
       session.ownsEditor(editorOwner) &&
       (await confirmAnnotationDiscard(
-        "Discard this annotation’s unsaved changes? The collection version will be kept.",
+        translate({
+          message:
+            "Discard this annotation’s unsaved changes? The collection version will be kept.",
+        }),
       )) &&
       session.ownsEditor(editorOwner) &&
       session.getSnapshot().status !== "saving" &&

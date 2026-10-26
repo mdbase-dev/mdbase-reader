@@ -1,3 +1,4 @@
+import { t as translate } from "@lingui/core/macro";
 import { useEffect, useRef, useState } from "react";
 
 import { readerErrorMessage } from "./errors.js";
@@ -92,7 +93,10 @@ export function useReadingResume(input: {
           if (report && lifecycle.active) {
             setState({
               status: "error",
-              message: readerErrorMessage(reason, "Reader could not save your reading position."),
+              message: readerErrorMessage(
+                reason,
+                translate({ message: "Reader could not save your reading position." }),
+              ),
             });
           }
         });
@@ -122,7 +126,10 @@ export function useReadingResume(input: {
       if (lifecycle.active) {
         setState({
           status: "error",
-          message: readerErrorMessage(reason, "Could not restore the saved reading position."),
+          message: readerErrorMessage(
+            reason,
+            translate({ message: "Could not restore the saved reading position." }),
+          ),
         });
       }
     });
@@ -223,7 +230,7 @@ async function resumeSourcePosition(
   const start = within ? saved : range?.valid ? range.start : undefined;
   resumed.set(surface, { key, seen: storedKey });
   if (start && !(await restoreReadingLocation(surface, start))) {
-    throw new Error("The saved reading position could not be opened.");
+    throw new Error(translate({ message: "The saved reading position could not be opened." }));
   }
 }
 

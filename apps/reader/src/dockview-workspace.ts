@@ -1,3 +1,5 @@
+import { t } from "@lingui/core/macro";
+
 import {
   moveDockPanel,
   resetContentGroups,
@@ -121,7 +123,11 @@ export class ReaderDockWorkspace {
     }
     this.schedule();
   }
-  openLibrary(view = "all-sources", title = "Library", paneId?: string): void {
+  openLibrary(
+    view = "all-sources",
+    title = t({ message: "Library", context: "dockview workspace" }),
+    paneId?: string,
+  ): void {
     if (this.api) {
       openDockTab(this.api, createLibraryWorkspaceTab(view, title), this.group(paneId));
     }

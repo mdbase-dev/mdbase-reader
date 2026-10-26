@@ -1,3 +1,6 @@
+import { t as translate } from "@lingui/core/macro";
+import { useLingui as useLocale } from "@lingui/react";
+import { Trans } from "@lingui/react/macro";
 import { Component, lazy, Suspense, useMemo, useState } from "react";
 
 import type { ComponentType, JSX, ReactNode } from "react";
@@ -16,6 +19,7 @@ export function lazyFeature<Props extends object>(
     return pending;
   };
   function Feature(props: Props): JSX.Element {
+    useLocale();
     const [attempt, retry] = useState(0);
     const Surface = useMemo(() => {
       // React.lazy remembers rejections; a retry needs a fresh lazy identity.
@@ -24,7 +28,7 @@ export function lazyFeature<Props extends object>(
     }, [attempt]);
     return (
       <FeatureBoundary key={attempt} label={label} retry={() => retry((value) => value + 1)}>
-        <Suspense fallback={<p role="status">Loading {label}…</p>}>
+        <Suspense fallback={<p role="status">{translate`Loading ${label}…`}</p>}>
           <Surface {...props} />
         </Suspense>
       </FeatureBoundary>
@@ -51,9 +55,9 @@ class FeatureBoundary extends Component<
   override render(): ReactNode {
     return this.state.failed ? (
       <div className="lazy-feature-error" role="alert">
-        <p>Reader could not load {this.props.label}.</p>
+        <p>{translate`Reader could not load ${this.props.label}.`}</p>
         <button type="button" onClick={this.props.retry}>
-          Try again
+          <Trans context="Reader interface">Try again</Trans>
         </button>
       </div>
     ) : (

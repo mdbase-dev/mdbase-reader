@@ -1,3 +1,4 @@
+import { t as translate } from "@lingui/core/macro";
 import { searchDestinationMatchesDocument } from "@mdbase-reader/core";
 import { useCallback, useEffect, useRef, useState } from "react";
 
@@ -8,8 +9,12 @@ import type { SourceWorkspaceController } from "./use-source-workspace.js";
 import type { SearchDestination, SourceId } from "@mdbase-reader/core";
 import type { ReadingSurface } from "@mdbase-reader/reading-surface";
 
-export const searchPassageFallback =
-  "The matching passage could not be verified (the file or text may have changed, or the match is ambiguous). The document is open at its usual position. Use its Find control to locate the passage.";
+export function searchPassageFallback(): string {
+  return translate({
+    message:
+      "The matching passage could not be verified (the file or text may have changed, or the match is ambiguous). The document is open at its usual position. Use its Find control to locate the passage.",
+  });
+}
 
 export async function navigateToSearchDestination(
   surface: ReadingSurface,
@@ -80,7 +85,7 @@ export function useSearchNavigation(
         workspace.openView(id, view);
       }
       if (view === "document" && !destination) {
-        setMessage(searchPassageFallback);
+        setMessage(searchPassageFallback());
       }
     },
     [workspace],
@@ -112,8 +117,8 @@ export function useSearchNavigation(
         highlighted.current = found ? surface : null;
         setMessage(
           found
-            ? `Matching passage: “${request.destination.quote.exact}”. Temporarily highlighted in the document.`
-            : searchPassageFallback,
+            ? translate`Matching passage: “${request.destination.quote.exact}”. Temporarily highlighted in the document.`
+            : searchPassageFallback(),
         );
         setRequest(null);
       });

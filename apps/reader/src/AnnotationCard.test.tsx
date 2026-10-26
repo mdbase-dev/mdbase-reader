@@ -9,12 +9,11 @@ import {
   type Annotation,
 } from "@mdbase-reader/core";
 import { act, type JSX } from "react";
-import { createRoot } from "react-dom/client";
-import { renderToStaticMarkup } from "react-dom/server";
 import { expect, it, vi } from "vitest";
 
 import { AnnotationCard } from "./AnnotationCard.js";
 import { bindCollectionHighlights } from "./highlight-settings.fixtures.js";
+import { createRoot, renderToStaticMarkup } from "./testing/i18n.js";
 
 const base: Annotation = {
   id: annotationId("unanchored-note"),

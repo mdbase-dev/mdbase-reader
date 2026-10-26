@@ -1,3 +1,4 @@
+import { t } from "@lingui/core/macro";
 /**
  * The isolated page cannot inherit the app's colours, so it copies the frame element's
  * text and background and the app's colour scheme, and copies them again when the app
@@ -8,7 +9,7 @@ export function followEmbedderPalette(frame: HTMLIFrameElement): () => void {
   const embedder = frame.ownerDocument;
   const view = embedder.defaultView;
   if (!document || !view) {
-    throw new Error("The isolated HTML document is unavailable.");
+    throw new Error(t({ message: "The isolated HTML document is unavailable." }));
   }
   const apply = (): void =>
     applyHtmlPalette(

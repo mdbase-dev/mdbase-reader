@@ -1,3 +1,4 @@
+import { t as translate } from "@lingui/core/macro";
 import {
   authorYearFromCsl,
   sourceId,
@@ -56,13 +57,17 @@ export function pdfChapterProposals(
       ...(valid
         ? { range: { kind: "pages" as const, start, end } }
         : {
-            problem:
-              "The table of contents does not give clear start and end pages. Enter them below.",
+            problem: translate({
+              message:
+                "The table of contents does not give clear start and end pages. Enter them below.",
+            }),
           }),
       ...((entries[index + 1]?.level ?? -1) > entry.level
         ? {
-            warning:
-              "Includes nested sections. Selecting those too means the chapters will share pages.",
+            warning: translate({
+              message:
+                "Includes nested sections. Selecting those too means the chapters will share pages.",
+            }),
           }
         : {}),
     };
@@ -93,13 +98,17 @@ export function epubChapterProposals(
       ...(start >= 0 && end >= start && endHref
         ? { range: { kind: "epub-spine" as const, start: entry.href, end: endHref } }
         : {
-            problem:
-              "The table of contents does not give clear start and end sections. Choose them below.",
+            problem: translate({
+              message:
+                "The table of contents does not give clear start and end sections. Choose them below.",
+            }),
           }),
       ...(entry.fragment || peer?.fragment
         ? {
-            warning:
-              "A heading starts partway through a section. The whole section will be included; check the start and end sections.",
+            warning: translate({
+              message:
+                "A heading starts partway through a section. The whole section will be included; check the start and end sections.",
+            }),
           }
         : {}),
     };
@@ -204,7 +213,7 @@ export function partConflicts(
       typeof doi === "string" &&
       source.citation?.["DOI"]?.toString().toLowerCase() === doi.toLowerCase()
     ) {
-      return [`Duplicate DOI: ${source.title}`];
+      return [translate`Duplicate DOI: ${source.title}`];
     }
     if (source.partOf !== plan.parent.id || !plan.document?.range) {
       return [];
@@ -222,9 +231,9 @@ export function partConflicts(
       }
       const comparison = comparePartRanges(a, b, spine);
       return comparison === "duplicate"
-        ? [`Duplicate range: ${source.title}`]
+        ? [translate`Duplicate range: ${source.title}`]
         : comparison === "overlap"
-          ? [`Overlaps ${source.title}`]
+          ? [translate`Overlaps ${source.title}`]
           : [];
     });
   });
@@ -270,23 +279,30 @@ export async function confirmChapterPlans(
   spine: readonly string[] = [],
 ): Promise<void> {
   if (!gateway.createSourcePart) {
-    throw new Error("Chapter creation is unavailable.");
+    throw new Error(translate({ message: "Chapter creation is unavailable." }));
   }
   const library = await gateway.library();
   if (library.sourceIndex?.complete === false) {
     throw new Error(
-      "The library is still loading. Wait for it to finish so duplicate chapters can be checked.",
+      translate({
+        message:
+          "The library is still loading. Wait for it to finish so duplicate chapters can be checked.",
+      }),
     );
   }
   const previous: SourceSummary[] = [...library.sources];
   const warnings: string[] = [];
   for (const plan of plans) {
     if (!plan.title.trim()) {
-      throw new Error("Enter a chapter title.");
+      throw new Error(translate({ message: "Enter a chapter title." }));
     }
     const citation = validateCslItem(plan.citation);
     if (!citation.valid) {
-      throw new Error("Invalid chapter citation. Review its fields before creating sources.");
+      throw new Error(
+        translate({
+          message: "Invalid chapter citation. Review its fields before creating sources.",
+        }),
+      );
     }
     const conflicts = partConflicts(plan, previous, spine);
     if (conflicts.some((message) => message.startsWith("Duplicate"))) {
@@ -304,7 +320,7 @@ export async function confirmChapterPlans(
   }
   if (warnings.length && !acknowledged) {
     throw new Error(
-      `${warnings.join("; ")}. Check the shared pages or sections, then tick the confirmation box to continue.`,
+      translate`${warnings.join("; ")}. Check the shared pages or sections, then tick the confirmation box to continue.`,
     );
   }
   for (const [index, plan] of plans.entries()) {
@@ -312,7 +328,7 @@ export async function confirmChapterPlans(
       onCreated(await gateway.createSourcePart(plan));
     } catch (error) {
       throw new Error(
-        `${String(index)} of ${String(plans.length)} chapters created. You can retry without creating duplicates. ${error instanceof Error ? error.message : "Could not create the chapter."}`,
+        `${String(index)} of ${String(plans.length)} chapters created. You can retry without creating duplicates. ${error instanceof Error ? error.message : translate({ message: "Could not create the chapter." })}`,
       );
     }
   }

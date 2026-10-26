@@ -1,3 +1,6 @@
+import { t as translate } from "@lingui/core/macro";
+import { useLingui as useLocale } from "@lingui/react";
+import { Trans } from "@lingui/react/macro";
 import { cslFieldStatuses, type CslProvenance } from "@mdbase-reader/core";
 
 import { cslFieldLabel, displayCslValue } from "./citation-form-model.js";
@@ -17,6 +20,7 @@ export function CitationProvenance({
   readonly provenance: CslProvenance;
   readonly onChange: (citation: Readonly<Record<string, unknown>>) => void;
 }): JSX.Element {
+  useLocale();
   // The citekey is chosen in the collection, never sourced.
   const disclosure = useSessionDisclosure("citation.evidence");
   const statuses = Object.entries(cslFieldStatuses(citation, provenance)).filter(
@@ -26,7 +30,9 @@ export function CitationProvenance({
     <details className="citation-provenance citation-disclosure" {...disclosure}>
       <summary>
         <ChevronRightIcon />
-        <span>Field evidence</span>
+        <span>
+          <Trans>Field evidence</Trans>
+        </span>
         <small>{citationEvidenceSummary(citation, provenance)}</small>
       </summary>
       <dl>
@@ -38,12 +44,14 @@ export function CitationProvenance({
               {status.kind === "explained" &&
               (status.provenance.agreed?.length || status.provenance.rejected?.length) ? (
                 <details>
-                  <summary aria-label={`Evidence and alternatives for ${cslFieldLabel(field)}`}>
-                    Evidence and alternatives
+                  <summary
+                    aria-label={translate`Evidence and alternatives for ${cslFieldLabel(field)}`}
+                  >
+                    <Trans>Evidence and alternatives</Trans>
                   </summary>
                   {status.provenance.agreed?.length ? (
                     <p>
-                      Also supported by{" "}
+                      <Trans>Also supported by</Trans>{" "}
                       {status.provenance.agreed.map(citationEvidenceLabel).join("; ")}.
                     </p>
                   ) : null}
@@ -53,10 +61,10 @@ export function CitationProvenance({
                       <small>{citationEvidenceLabel(alternative.from)}</small>
                       <button
                         type="button"
-                        aria-label={`Use this value for ${cslFieldLabel(field)}: ${displayCslValue(alternative.value)}`}
+                        aria-label={translate`Use this value for ${cslFieldLabel(field)}: ${displayCslValue(alternative.value)}`}
                         onClick={() => onChange({ ...citation, [field]: alternative.value })}
                       >
-                        Use this value
+                        <Trans>Use this value</Trans>
                       </button>
                     </div>
                   ))}

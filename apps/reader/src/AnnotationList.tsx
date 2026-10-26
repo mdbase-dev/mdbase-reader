@@ -1,3 +1,6 @@
+import { t } from "@lingui/core/macro";
+import { useLingui as useLocale } from "@lingui/react";
+import { Trans } from "@lingui/react/macro";
 import { useMemo, useState, type JSX, type ReactNode } from "react";
 
 import {
@@ -307,13 +310,14 @@ function AnnotationSearch({
   readonly query: string;
   readonly onQueryChange: (query: string) => void;
 }): JSX.Element {
+  useLocale();
   return (
     <div className="annotation-search">
       <SearchIcon />
       <input
         type="search"
-        aria-label="Search annotations"
-        placeholder="Search annotations"
+        aria-label={t({ message: "Search annotations", context: "AnnotationList interface" })}
+        placeholder={t({ message: "Search annotations", context: "AnnotationList interface" })}
         value={query}
         onChange={(event) => onQueryChange(event.target.value)}
       />
@@ -346,20 +350,21 @@ function AnnotationFilterStatus({
     <div className="annotation-filter-status">
       {filtered ? (
         <small role="status">
-          {shown} of {total}
+          {shown} <Trans>of </Trans>
+          {total}
           <button type="button" onClick={onClear}>
-            Clear
+            <Trans>Clear</Trans>
           </button>
         </small>
       ) : null}
       {hiddenActive ? (
         <button type="button" onClick={onClear}>
-          Show selected annotation (clear filters)
+          <Trans>Show selected annotation (clear filters)</Trans>
         </button>
       ) : null}
       {paused ? (
         <button type="button" className="annotation-resume-following" onClick={onResume}>
-          Resume following
+          <Trans>Resume following</Trans>
         </button>
       ) : null}
     </div>
@@ -376,7 +381,7 @@ function AnnotationGroupTitle({
   return (
     <h3 className="annotation-group">
       <span>{heading.label}</span>
-      {heading.outsideChapter ? <small>{outsideChapterGroupNote}</small> : null}
+      {heading.outsideChapter ? <small>{outsideChapterGroupNote()}</small> : null}
       {heading.source ? (
         <small>
           {heading.source.summary ? (
@@ -395,9 +400,11 @@ function AnnotationGroupTitle({
 function NoMatchingAnnotations({ onClear }: { readonly onClear: () => void }): JSX.Element {
   return (
     <div className="inspector-status">
-      <strong>No matching annotations</strong>
+      <strong>
+        <Trans>No matching annotations</Trans>
+      </strong>
       <button type="button" onClick={onClear}>
-        Clear filters
+        <Trans>Clear filters</Trans>
       </button>
     </div>
   );
@@ -414,14 +421,20 @@ function AnnotationListStatus({
         {annotations.message}
       </div>
     ) : (
-      <div className="inspector-status">Loading annotations…</div>
+      <div className="inspector-status">
+        <Trans>Loading annotations…</Trans>
+      </div>
     );
   }
   return (
     <div className="inspector-status annotation-empty">
-      <strong>No annotations yet</strong>
+      <strong>
+        <Trans>No annotations yet</Trans>
+      </strong>
       <span>
-        Select text or an area in the document, or use Add above for a source comment or bookmark.
+        <Trans>
+          Select text or an area in the document, or use Add above for a source comment or bookmark.
+        </Trans>
       </span>
     </div>
   );

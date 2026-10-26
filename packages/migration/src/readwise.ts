@@ -1,3 +1,5 @@
+import { t } from "@lingui/core/macro";
+
 import {
   identity,
   jsonFile,
@@ -23,10 +25,10 @@ export async function scanReadwise(
   progress: Progress,
 ): Promise<MigrationPlan> {
   const namespace = "readwise:reader";
-  progress("Scanning Readwise metadata and saved HTML; no collection writes…");
+  progress(t({ message: "Scanning Readwise metadata and saved HTML; no collection writes…" }));
   const rows = await readerRows(client, includeFeed, signal, progress);
   const books = await client.all("/api/v2/export/", {}, signal, (message) =>
-    progress(`Readwise highlights export: ${message}`),
+    progress(t`Readwise highlights export: ${message}`),
   );
   const plan: MigrationPlan = {
     service: "readwise",
@@ -41,7 +43,7 @@ export async function scanReadwise(
   if (!includeFeed) {
     const feed = await client.page({ location: "feed", limit: "1" }, signal);
     skipped.add(
-      "Unsaved Feed items excluded (choose “Include unsaved Feed items” to import)",
+      t({ message: "Unsaved Feed items excluded (choose “Include unsaved Feed items” to import)" }),
       feed.count,
     );
   }
@@ -67,14 +69,23 @@ export async function scanReadwise(
   );
   plan.warnings.push(...skipped.warnings());
   plan.warnings.push(
-    "Exact PDF geometry and EPUB positions are not supplied by this import. Highlights retain quotes and native location evidence, without claiming exact positioning.",
+    t({
+      message:
+        "Exact PDF geometry and EPUB positions are not supplied by this import. Highlights retain quotes and native location evidence, without claiming exact positioning.",
+    }),
   );
   plan.warnings.push(
-    "Saved HTML can reference external images. Those assets are not downloaded. Keep this tab open; reconnect and rescan to resume after closing it.",
+    t({
+      message:
+        "Saved HTML can reference external images. Those assets are not downloaded. Keep this tab open; reconnect and rescan to resume after closing it.",
+    }),
   );
   if (plan.sources.some((s) => s.key.startsWith("v2-book:"))) {
     plan.warnings.push(
-      "Books from Kindle, Apple Books, Instapaper, podcasts and other classic Readwise sources are imported as metadata and highlights only; Readwise does not provide their text or files. Their locations are Readwise's labels (such as Kindle locations), not positions Reader can open.",
+      t({
+        message:
+          "Books from Kindle, Apple Books, Instapaper, podcasts and other classic Readwise sources are imported as metadata and highlights only; Readwise does not provide their text or files. Their locations are Readwise's labels (such as Kindle locations), not positions Reader can open.",
+      }),
     );
   }
   plan.summary.sources = plan.sources.length;
@@ -109,7 +120,7 @@ async function readerRows(
   const rows = new Map<string, Fields>();
   for (const [label, params] of queries) {
     const page = await client.all(LIST, params, signal, (message) =>
-      progress(`${label}: ${message}`),
+      progress(t`${label}: ${message}`),
     );
     validateIds(page);
     // Location and category listings can overlap; the first copy of each ID wins.
@@ -127,7 +138,9 @@ function validateIds(rows: Fields[]): void {
   for (const row of rows) {
     const id = text(row["id"]);
     if (!id || keys.has(id)) {
-      throw new Error("Readwise returned missing or duplicate identities. Scan again.");
+      throw new Error(
+        t({ message: "Readwise returned missing or duplicate identities. Scan again." }),
+      );
     }
     keys.add(id);
   }
@@ -139,23 +152,23 @@ function relevantRows(rows: Fields[], sources: Set<string>): Fields[] {
   ]);
   return rows.filter((r) => keys.has(text(r["id"])) || keys.has(text(r["parent_id"])));
 }
-const readerLabels: Record<string, string> = {
-  article: "Reader articles",
-  email: "Reader emails",
-  rss: "Reader RSS items",
-  pdf: "Reader PDFs",
-  epub: "Reader EPUBs",
-  tweet: "Reader tweets",
-  video: "Reader videos",
-};
-const classicLabels: Record<string, string> = {
-  books: "Readwise books (Kindle, Apple Books…)",
-  articles: "Readwise articles (Instapaper, Pocket…)",
-  tweets: "Readwise tweets",
-  podcasts: "Readwise podcasts",
-  supplementals: "Readwise supplementals",
-};
 function categories(plan: MigrationPlan): NonNullable<MigrationPlan["summary"]["categories"]> {
+  const readerLabels: Record<string, string> = {
+    article: t`Reader articles`,
+    email: t`Reader emails`,
+    rss: t`Reader RSS items`,
+    pdf: t`Reader PDFs`,
+    epub: t`Reader EPUBs`,
+    tweet: t`Reader tweets`,
+    video: t`Reader videos`,
+  };
+  const classicLabels: Record<string, string> = {
+    books: t`Readwise books (Kindle, Apple Books…)`,
+    articles: t`Readwise articles (Instapaper, Pocket…)`,
+    tweets: t`Readwise tweets`,
+    podcasts: t`Readwise podcasts`,
+    supplementals: t`Readwise supplementals`,
+  };
   const byLabel = new Map<string, { label: string; sources: number; annotations: number }>();
   const labelOf = new Map<string, string>();
   for (const source of plan.sources) {
@@ -163,7 +176,7 @@ function categories(plan: MigrationPlan): NonNullable<MigrationPlan["summary"]["
     const classic = source.key.startsWith("v2-book:");
     const label =
       (classic ? classicLabels[category] : readerLabels[category]) ??
-      `${classic ? "Readwise" : "Reader"} ${category || "other"}`;
+      (classic ? t`Other Readwise sources` : t`Other Reader sources`);
     labelOf.set(source.key, label);
     const entry = byLabel.get(label) ?? { label, sources: 0, annotations: 0 };
     entry.sources++;

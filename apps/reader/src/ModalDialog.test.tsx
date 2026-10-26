@@ -1,12 +1,12 @@
 // @vitest-environment happy-dom
 /* eslint-disable @typescript-eslint/require-await -- async act flushes queued React effects */
 import { act, useRef, type JSX } from "react";
-import { createRoot } from "react-dom/client";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { LibraryViewSaveDialog } from "./LibraryViewSaveDialog.js";
 import { ModalDialog } from "./ModalDialog.js";
 import { SourceImportDialog } from "./SourceImportDialog.js";
+import { createRoot } from "./testing/i18n.js";
 
 let host: HTMLDivElement;
 let root: ReturnType<typeof createRoot>;

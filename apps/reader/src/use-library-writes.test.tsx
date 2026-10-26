@@ -1,9 +1,9 @@
 // @vitest-environment happy-dom
 import { act } from "react";
-import { createRoot } from "react-dom/client";
 import { afterEach, expect, it, vi } from "vitest";
 
 import { partSource } from "./source-parts.fixtures.js";
+import { createRoot } from "./testing/i18n.js";
 import { useLibraryWrites } from "./use-library-writes.js";
 
 import type { BulkStatusProgress } from "./LibraryBulkBar.js";

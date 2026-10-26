@@ -4,10 +4,10 @@ import { nativeReaderCollection } from "@mdbase-reader/connect/native";
 import { memoryConnection } from "@mdbase-reader/connect/testing";
 import { annotationId, collectionId, dateTime, sourceId } from "@mdbase-reader/core";
 import { act } from "react";
-import { createRoot } from "react-dom/client";
 import { afterEach, beforeEach, describe, expect, it, vi, type Mock } from "vitest";
 
 import { FileNameSettings } from "./FileNameSettings.js";
+import { createRoot } from "./testing/i18n.js";
 
 import type { ReaderSettingsStore } from "@mdbase-reader/connect";
 import type { Annotation, SourceSummary } from "@mdbase-reader/core";

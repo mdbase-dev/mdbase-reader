@@ -1,10 +1,10 @@
 // @vitest-environment happy-dom
 import { act } from "react";
-import { createRoot } from "react-dom/client";
 import { afterEach, expect, it, vi } from "vitest";
 
 import { LibraryFieldCellEditor } from "./LibraryFieldCell.js";
 import { partSource } from "./source-parts.fixtures.js";
+import { createRoot } from "./testing/i18n.js";
 
 (globalThis as typeof globalThis & { IS_REACT_ACT_ENVIRONMENT: boolean }).IS_REACT_ACT_ENVIRONMENT =
   true;

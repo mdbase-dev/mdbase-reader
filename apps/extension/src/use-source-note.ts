@@ -1,3 +1,4 @@
+import { t } from "@lingui/core/macro";
 import { useCallback, useEffect, useRef, useState } from "react";
 
 import { problemMessage } from "./capture-model.js";
@@ -53,7 +54,7 @@ export function useSourceNote(
     void connected.sources.get(connected.collectionId, sourceId).then(
       (full) => {
         if (!full) {
-          throw new Error("This source is no longer in the collection.");
+          throw new Error(t`This source is no longer in the collection.`);
         }
         const created = new SourceNoteSession(full, connected, undefined, (saved) => {
           if (shown.current.sourceId === saved.id) {

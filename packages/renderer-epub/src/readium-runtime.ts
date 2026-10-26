@@ -1,3 +1,4 @@
+import { t } from "@lingui/core/macro";
 import {
   createEventEmitter,
   pageMotionTracker,
@@ -86,7 +87,7 @@ function publicationRanges(
 
 function objectValue(value: unknown, name: string): Readonly<Record<string, unknown>> {
   if (!value || typeof value !== "object" || Array.isArray(value)) {
-    throw new Error(`Readium returned an invalid ${name}.`);
+    throw new Error(t`Readium returned an invalid ${name}.`);
   }
   return value as Readonly<Record<string, unknown>>;
 }
@@ -140,7 +141,7 @@ export async function createReadiumRuntime(input: {
   const motion = pageMotionReporter(input.container);
   const positions = publicationPositions(publication);
   if (positions.length === 0) {
-    throw new Error("Readium cannot open an EPUB with an empty reading order.");
+    throw new Error(t({ message: "Readium cannot open an EPUB with an empty reading order." }));
   }
   const initialLocator = startingLocator(input, publication) ?? positions[0];
 
@@ -352,7 +353,7 @@ function epubPreferences(typography: ReadingTypography): EpubPreferences {
 function readiumPublication(value: unknown): Publication {
   const manifest = Manifest.deserialize(value);
   if (!manifest) {
-    throw new Error("Readium could not parse the publication manifest.");
+    throw new Error(t({ message: "Readium could not parse the publication manifest." }));
   }
   return new Publication({ manifest, fetcher: new HttpFetcher(safePublicationFetch) });
 }

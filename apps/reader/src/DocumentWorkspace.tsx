@@ -1,3 +1,4 @@
+import { Trans, useLingui } from "@lingui/react/macro";
 import { useCallback, useRef, type JSX, type ReactNode } from "react";
 
 import { AnnotationComposerLayer } from "./AnnotationComposerLayer.js";
@@ -68,6 +69,7 @@ export function DocumentWorkspace({
   readonly visible: boolean;
   readonly hydrated: ReadonlySet<string>;
 }): JSX.Element {
+  const { t } = useLingui();
   const host = useRef<HTMLElement>(null);
   const dock = props.sourceWorkspace.dock;
   const activate = useCallback(() => {
@@ -86,7 +88,9 @@ export function DocumentWorkspace({
       ref={host}
       className={`workspace-pane${focused ? " is-focused" : ""} ${surfaceClass}-pane`}
       data-session-id={tab.id}
-      aria-label={source?.title ?? "Library workspace"}
+      aria-label={
+        source?.title ?? t({ message: "Library workspace", context: "DocumentWorkspace interface" })
+      }
       aria-hidden={!visible}
       inert={!visible}
     >
@@ -201,7 +205,11 @@ function sessionContent(
   }
   const source = props.sources.find(({ id }) => id === tab.sourceId);
   if (!source) {
-    return <p className="inspector-status">This source is no longer available.</p>;
+    return (
+      <p className="inspector-status">
+        <Trans>This source is no longer available.</Trans>
+      </p>
+    );
   }
   if (tab.view !== "document") {
     return props.renderTool(tab, paneId, focused);

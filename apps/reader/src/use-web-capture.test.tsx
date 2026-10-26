@@ -1,11 +1,11 @@
 // @vitest-environment happy-dom
 /* eslint-disable @typescript-eslint/require-await -- async act flushes queued React effects */
 import { act, useEffect, type JSX } from "react";
-import { createRoot } from "react-dom/client";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { partSource } from "./source-parts.fixtures.js";
 import { SourceAddDialog } from "./SourceAddDialog.js";
+import { createRoot } from "./testing/i18n.js";
 import { useWebCapture, type WebCaptureFlow } from "./use-web-capture.js";
 
 import type { SourceAdditionServices } from "./source-addition-flow.js";

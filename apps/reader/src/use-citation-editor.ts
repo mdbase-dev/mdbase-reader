@@ -1,3 +1,4 @@
+import { t as translate } from "@lingui/core/macro";
 import { signalMdbaseMark } from "@mdbase-dev/ui/mark-activity";
 import {
   CitationChangedElsewhereError,
@@ -305,7 +306,10 @@ export function useCitationEditor(input: {
           } else {
             setErrorState({
               sourceId: source.id,
-              value: readerErrorMessage(reason, "Reader could not save this citation."),
+              value: readerErrorMessage(
+                reason,
+                translate({ message: "Reader could not save this citation." }),
+              ),
             });
           }
         })
@@ -392,7 +396,10 @@ export function useCitationEditor(input: {
         if (mounted.current && selection.current.token === active.token) {
           setErrorState({
             sourceId: source.id,
-            value: readerErrorMessage(reason, "Reader could not generate a citation key."),
+            value: readerErrorMessage(
+              reason,
+              translate({ message: "Reader could not generate a citation key." }),
+            ),
           });
         }
       });

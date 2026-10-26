@@ -1,3 +1,6 @@
+import { t as translate } from "@lingui/core/macro";
+import { useLingui as useLocale } from "@lingui/react";
+import { Trans } from "@lingui/react/macro";
 import { claimFrameShortcut, type ViewportRect } from "@mdbase-reader/reading-surface";
 import { useEffect, useLayoutEffect, useRef, useState, type JSX } from "react";
 
@@ -79,6 +82,7 @@ export function HighlightSavedNotice({
   readonly onUndo: () => void;
   readonly onDismiss: () => void;
 }): JSX.Element | null {
+  useLocale();
   const saved = tracked?.undoable ? tracked : null;
   // Held by its id, so a notice that goes while held does not leave the next one held.
   const [heldId, setHeldId] = useState<number | null>(null);
@@ -106,9 +110,9 @@ export function HighlightSavedNotice({
           <button
             type="button"
             className="highlight-saved-dismiss"
-            aria-label="Dismiss"
+            aria-label={translate({ message: "Dismiss" })}
             aria-keyshortcuts="Escape"
-            title="Dismiss (Esc)"
+            title={translate({ message: "Dismiss (Esc)" })}
             onClick={onDismiss}
           >
             <CloseIcon />
@@ -124,13 +128,13 @@ function savedMessage(saved: SavedHighlight): string {
     case "saving":
       return "";
     case "saved":
-      return "Highlight saved";
+      return translate({ message: "Highlight saved" });
     case "undoing":
       return "Removing…";
     case "embedded":
-      return "Couldn’t undo: a note embeds this highlight.";
+      return translate({ message: "Couldn’t undo: a note embeds this highlight." });
     case "failed":
-      return `Couldn’t undo: ${saved.problem ?? "Reader could not delete this highlight."}`;
+      return `Couldn’t undo: ${saved.problem ?? translate({ message: "Reader could not delete this highlight." })}`;
   }
 }
 
@@ -141,6 +145,7 @@ function SavedStatus({
   readonly saved: SavedHighlight;
   readonly onUndo: () => void;
 }): JSX.Element {
+  useLocale();
   // The live region above speaks the message; this copy is for the eye.
   if (saved.status === "embedded" || saved.status === "failed") {
     return (
@@ -162,10 +167,10 @@ function SavedStatus({
         className="highlight-saved-undo"
         disabled={saved.status === "undoing"}
         aria-keyshortcuts="Control+Z Meta+Z"
-        title="Undo highlight (Ctrl+Z)"
+        title={translate({ message: "Undo highlight (Ctrl+Z)" })}
         onClick={onUndo}
       >
-        Undo
+        <Trans context="Reader interface">Undo</Trans>
       </button>
     </>
   );

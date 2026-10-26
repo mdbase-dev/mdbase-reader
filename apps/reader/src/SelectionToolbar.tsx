@@ -1,3 +1,5 @@
+import { t as translate } from "@lingui/core/macro";
+import { Plural, Trans, useLingui } from "@lingui/react/macro";
 import { highlightColorKey, type HighlightColorKey } from "@mdbase-reader/core";
 import { claimFrameShortcut, type ReaderLocator } from "@mdbase-reader/reading-surface";
 import {
@@ -43,7 +45,7 @@ function passageOf(target: SelectionToolbarTarget): {
 }
 
 function pageLabel(locator: ReaderLocator): string | undefined {
-  return locator.kind === "pdf" ? `p. ${String(locator.pageIndex + 1)}` : undefined;
+  return locator.kind === "pdf" ? translate`p. ${String(locator.pageIndex + 1)}` : undefined;
 }
 
 function isTyping(target: EventTarget | null): boolean {
@@ -155,17 +157,15 @@ export function SelectionActionBar({
   );
 }
 
-function SelectionToolbar({
-  barRef,
-  target,
-  composer,
-  style,
-}: {
+interface SelectionToolbarProps {
   readonly barRef: RefObject<HTMLDivElement | null>;
   readonly target: SelectionToolbarTarget;
   readonly composer: AnnotationComposerController;
   readonly style?: CSSProperties;
-}): JSX.Element {
+}
+
+function SelectionToolbar({ barRef, target, composer, style }: SelectionToolbarProps): JSX.Element {
+  const { t } = useLingui();
   const [copied, setCopied] = useState<"text" | "citation" | "failed" | null>(null);
   const [deletion, setDeletion] = useState<"idle" | "confirming" | "deleting" | number>("idle");
   const passage = passageOf(target);
@@ -202,7 +202,11 @@ function SelectionToolbar({
       ref={barRef}
       className="selection-toolbar"
       role="toolbar"
-      aria-label={target.kind === "selection" ? "Selected text" : "Highlight"}
+      aria-label={
+        target.kind === "selection"
+          ? t({ message: "Selected text", context: "SelectionToolbar interface" })
+          : t({ message: "Highlight", context: "SelectionToolbar interface" })
+      }
       style={style}
     >
       {swatches ? (
@@ -218,38 +222,20 @@ function SelectionToolbar({
           <span className="selection-toolbar-divider" aria-hidden="true" />
         </>
       ) : null}
-      <button type="button" title="Comment on highlight (C)" onClick={comment}>
-        <CommentIcon /> Comment on highlight
+      <button
+        type="button"
+        title={translate({ message: "Comment on highlight (C)" })}
+        onClick={comment}
+      >
+        <CommentIcon /> <Trans>Comment on highlight</Trans>
       </button>
       <span className="selection-toolbar-divider" aria-hidden="true" />
-      <button
-        type="button"
-        className="icon-button"
-        aria-label="Copy"
-        title={copied === "text" ? "Copied" : "Copy text"}
-        disabled={!passage.text}
-        onClick={() => copy("text")}
-      >
-        <CopyIcon />
-        <span className="selection-toolbar-label">Copy</span>
-      </button>
-      <button
-        type="button"
-        className="icon-button"
-        aria-label={
-          copied === "citation" ? "Cite: copied with citation" : "Cite: copy with citation"
-        }
-        title={
-          composer.quoteCitation?.citekey
-            ? `Copy as a quote citing @${composer.quoteCitation.citekey}`
-            : "Copy as a quote citing the source’s title"
-        }
-        disabled={!passage.text}
-        onClick={() => copy("citation")}
-      >
-        <QuoteIcon />
-        <span className="selection-toolbar-label">Cite</span>
-      </button>
+      <SelectionCopyActions
+        copied={copied}
+        text={passage.text}
+        citekey={composer.quoteCitation?.citekey}
+        copy={copy}
+      />
       {target.kind === "annotation" ? (
         <DeleteHighlightButton
           state={deletion}
@@ -260,7 +246,9 @@ function SelectionToolbar({
       ) : null}
       {copied ? (
         <span className="selection-toolbar-status" role="status">
-          {copied === "failed" ? "Couldn’t copy" : "Copied"}
+          {copied === "failed"
+            ? t({ message: "Couldn’t copy", context: "SelectionToolbar interface" })
+            : t({ message: "Copied", context: "SelectionToolbar interface" })}
         </span>
       ) : null}
       {target.kind === "selection" ? (
@@ -274,6 +262,62 @@ function SelectionToolbar({
         />
       )}
     </div>
+  );
+}
+
+function SelectionCopyActions({
+  copied,
+  text,
+  citekey,
+  copy,
+}: {
+  readonly copied: "text" | "citation" | "failed" | null;
+  readonly text: string;
+  readonly citekey: string | undefined;
+  readonly copy: (kind: "text" | "citation") => void;
+}): JSX.Element {
+  const { t } = useLingui();
+  return (
+    <>
+      <button
+        type="button"
+        className="icon-button"
+        aria-label={t({ message: "Copy", context: "SelectionToolbar interface" })}
+        title={
+          copied === "text"
+            ? t({ message: "Copied", context: "SelectionToolbar interface" })
+            : t({ message: "Copy text", context: "SelectionToolbar interface" })
+        }
+        disabled={!text}
+        onClick={() => copy("text")}
+      >
+        <CopyIcon />
+        <span className="selection-toolbar-label">
+          <Trans>Copy</Trans>
+        </span>
+      </button>
+      <button
+        type="button"
+        className="icon-button"
+        aria-label={
+          copied === "citation"
+            ? translate({ message: "Cite: copied with citation" })
+            : translate({ message: "Cite: copy with citation" })
+        }
+        title={
+          citekey
+            ? t`Copy as a quote citing @${citekey}`
+            : translate({ message: "Copy as a quote citing the source’s title" })
+        }
+        disabled={!text}
+        onClick={() => copy("citation")}
+      >
+        <QuoteIcon />
+        <span className="selection-toolbar-label">
+          <Trans>Cite</Trans>
+        </span>
+      </button>
+    </>
   );
 }
 
@@ -358,10 +402,11 @@ function DeleteHighlightButton({
   readonly onDelete: () => Promise<readonly string[]>;
   readonly onReview: () => void;
 }): JSX.Element {
+  const { t } = useLingui();
   if (typeof state === "number") {
     return (
       <button type="button" className="is-review" onClick={onReview}>
-        In {state} {state === 1 ? "note" : "notes"} · Review
+        <Plural value={state} one="In # note · Review" other="In # notes · Review" />
       </button>
     );
   }
@@ -370,12 +415,14 @@ function DeleteHighlightButton({
       <button
         type="button"
         className="icon-button"
-        aria-label="Delete highlight"
-        title="Delete highlight"
+        aria-label={t({ message: "Delete highlight", context: "SelectionToolbar interface" })}
+        title={t({ message: "Delete highlight", context: "SelectionToolbar interface" })}
         onClick={() => onChange("confirming")}
       >
         <TrashIcon />
-        <span className="selection-toolbar-label">Delete highlight</span>
+        <span className="selection-toolbar-label">
+          <Trans>Delete highlight</Trans>
+        </span>
       </button>
     );
   }
@@ -384,7 +431,11 @@ function DeleteHighlightButton({
       type="button"
       className="is-danger"
       // The name starts with the visible words, so speech users can say what they see.
-      aria-label={state === "deleting" ? undefined : "Delete highlight"}
+      aria-label={
+        state === "deleting"
+          ? undefined
+          : t({ message: "Delete highlight", context: "SelectionToolbar interface" })
+      }
       disabled={state === "deleting"}
       onClick={() => {
         onChange("deleting");
@@ -394,7 +445,9 @@ function DeleteHighlightButton({
         );
       }}
     >
-      {state === "deleting" ? "Deleting…" : "Delete highlight"}
+      {state === "deleting"
+        ? t({ message: "Deleting…", context: "SelectionToolbar interface" })
+        : t({ message: "Delete highlight", context: "SelectionToolbar interface" })}
     </button>
   );
 }

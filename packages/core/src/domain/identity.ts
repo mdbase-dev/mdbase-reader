@@ -1,3 +1,5 @@
+import { t } from "@lingui/core/macro";
+
 import { DomainError } from "./errors.js";
 
 declare const identityBrand: unique symbol;
@@ -17,7 +19,7 @@ function identity<Name extends string>(value: string, name: Name): Identity<Name
     (character) => character.charCodeAt(0) <= 31,
   );
   if (normalized.length === 0 || containsControlCharacter) {
-    throw new DomainError("invalid-identifier", `${name} must be a non-empty printable value.`);
+    throw new DomainError("invalid-identifier", t`${name} must be a non-empty printable value.`);
   }
   return normalized as Identity<Name>;
 }

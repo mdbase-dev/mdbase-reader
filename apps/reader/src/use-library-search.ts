@@ -1,3 +1,4 @@
+import { t } from "@lingui/core/macro";
 import { filterSources } from "@mdbase-reader/core";
 import { useEffect, useMemo, useState } from "react";
 
@@ -59,7 +60,10 @@ export function useLibrarySearch(
               query: normalized,
               status: "error",
               matches: [],
-              problem: readerErrorMessage(reason, "Reader could not search note text."),
+              problem: readerErrorMessage(
+                reason,
+                t({ message: "Reader could not search note text." }),
+              ),
             });
           }
         });

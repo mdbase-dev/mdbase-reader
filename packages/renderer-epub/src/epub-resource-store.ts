@@ -1,3 +1,5 @@
+import { t } from "@lingui/core/macro";
+
 import { EpubArchive } from "./epub-archive.js";
 import { buildEpubManifest } from "./epub-manifest.js";
 import { epubResourceUrl } from "./epub-path.js";
@@ -58,7 +60,9 @@ export async function prepareEpubPublication(blob: Blob): Promise<PreparedEpubPu
 
 async function ensurePublicationWorker(): Promise<void> {
   if (!("serviceWorker" in navigator) || !("caches" in globalThis)) {
-    throw new Error("This browser cannot provide the isolated EPUB resource layer.");
+    throw new Error(
+      t({ message: "This browser cannot provide the isolated EPUB resource layer." }),
+    );
   }
   const registration = await navigator.serviceWorker.register(WORKER_PATH, { scope: "/" });
   await navigator.serviceWorker.ready;
@@ -68,7 +72,11 @@ async function ensurePublicationWorker(): Promise<void> {
   await new Promise<void>((resolve, reject) => {
     const timeout = window.setTimeout(() => {
       navigator.serviceWorker.removeEventListener("controllerchange", onController);
-      reject(new Error("The EPUB resource layer could not take control of this Reader tab."));
+      reject(
+        new Error(
+          t({ message: "The EPUB resource layer could not take control of this Reader tab." }),
+        ),
+      );
     }, 8_000);
     function onController(): void {
       window.clearTimeout(timeout);

@@ -1,3 +1,6 @@
+import { t as translate } from "@lingui/core/macro";
+import { useLingui as useLocale } from "@lingui/react";
+import { Trans } from "@lingui/react/macro";
 import { useState, type JSX } from "react";
 
 import { readerErrorMessage } from "./errors.js";
@@ -40,7 +43,7 @@ export function AnnotationSourceLine({
       role="presentation"
     >
       <small>
-        Source:{" "}
+        <Trans>Source:</Trans>{" "}
         {owner ? (
           <a href={annotationSourceHref(annotation, owner)}>{owner.title}</a>
         ) : (
@@ -76,7 +79,10 @@ export function useAnnotationMove(
       void onMove(annotation, target)
         .catch((reason: unknown) =>
           setProblem(
-            readerErrorMessage(reason, "The annotation could not be moved. Refresh and try again."),
+            readerErrorMessage(
+              reason,
+              translate({ message: "The annotation could not be moved. Refresh and try again." }),
+            ),
           ),
         )
         .finally(() => setBusy(false));
@@ -95,11 +101,12 @@ export function AnnotationMoveSelect({
   readonly disabled: boolean;
   readonly state: AnnotationMoveState;
 }): JSX.Element {
+  useLocale();
   return (
     <label className="annotation-move-select">
-      Move annotation to source
+      <Trans>Move annotation to source</Trans>
       <select
-        aria-label="Move annotation to source"
+        aria-label={translate({ message: "Move annotation to source" })}
         value={annotation.sourceId}
         disabled={disabled || state.busy || !annotation.recordRevision || !annotation.path}
         onChange={(event) => {
@@ -111,7 +118,7 @@ export function AnnotationMoveSelect({
       >
         {sources.map((source) => (
           <option key={source.id} value={source.id}>
-            {source.id === annotation.sourceId ? source.title : `Move to ${source.title}`}
+            {source.id === annotation.sourceId ? source.title : translate`Move to ${source.title}`}
           </option>
         ))}
       </select>
@@ -127,7 +134,7 @@ export function AnnotationMoveStatus({
   if (state.busy) {
     return (
       <small className="annotation-move-status" role="status">
-        Moving annotation…
+        <Trans>Moving annotation…</Trans>
       </small>
     );
   }

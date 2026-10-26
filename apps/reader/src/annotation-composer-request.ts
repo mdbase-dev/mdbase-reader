@@ -1,3 +1,4 @@
+import { t as translate } from "@lingui/core/macro";
 import {
   defaultHighlightColor,
   sourceLink,
@@ -111,7 +112,9 @@ function positionLabel(position: ReadingPosition): Locator {
       : progression < 0.01
         ? "Start"
         : `${String(Math.round(progression * 100))}% through`;
-  return { label: [title, place].filter(Boolean).join(" · ") || "Saved position" };
+  return {
+    label: [title, place].filter(Boolean).join(" · ") || translate({ message: "Saved position" }),
+  };
 }
 
 function epubProgression(locator: Readonly<Record<string, unknown>>): number | undefined {
@@ -154,7 +157,9 @@ async function areaAnnotationRequest(
   note: string,
 ): Promise<AnnotationCreationRequest> {
   if (selection.imageType !== "image/png") {
-    throw new Error(`Reader cannot persist an area capture of type ${selection.imageType}.`);
+    throw new Error(
+      translate`Reader cannot persist an area capture of type ${selection.imageType}.`,
+    );
   }
   return {
     ...annotationIdentity(source, surface),
@@ -223,7 +228,12 @@ function locatorLabel(locator: ReaderLocator): Locator {
   if (locator.kind === "pdf") {
     return { label: `p. ${String(locator.pageIndex + 1)}` };
   }
-  return { label: locator.kind === "epub" ? (epubTitle(locator.locator) ?? "EPUB") : "Web page" };
+  return {
+    label:
+      locator.kind === "epub"
+        ? (epubTitle(locator.locator) ?? "EPUB")
+        : translate({ message: "Web page" }),
+  };
 }
 
 function quotationBody(quote: string, note: string): string {

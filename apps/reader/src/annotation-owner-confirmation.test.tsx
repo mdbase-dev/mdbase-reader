@@ -13,7 +13,6 @@ import {
   type TextSelectionDraft,
 } from "@mdbase-reader/reading-surface";
 import { act, type JSX } from "react";
-import { createRoot } from "react-dom/client";
 import { afterEach, beforeEach, expect, it, vi } from "vitest";
 
 import { commentRequest } from "./annotation-composer-request.js";
@@ -24,6 +23,7 @@ import { ConfirmProvider } from "./ConfirmProvider.js";
 import { PreviewGateway } from "./preview.js";
 import { sourceAnnotationFamily } from "./source-annotation-family.js";
 import { partSource } from "./source-parts.fixtures.js";
+import { createRoot } from "./testing/i18n.js";
 import {
   useAnnotationComposer,
   type AnnotationComposerController,

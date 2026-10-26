@@ -1,3 +1,5 @@
+import { i18n, type MessageDescriptor } from "@lingui/core";
+import { msg } from "@lingui/core/macro";
 /** Columns the annotations view can show. */
 export const annotationColumns = [
   "passage",
@@ -22,7 +24,22 @@ export function isAnnotationSortField(value: unknown): value is AnnotationSortFi
   return value === "created" || value === "source" || value === "type";
 }
 
-const labels: Record<AnnotationColumn, string> = {
+const labels: Record<AnnotationColumn, MessageDescriptor> = {
+  passage: msg({ message: "Passage", context: "Annotation table column" }),
+  source: msg({ message: "Source", context: "Annotation table column" }),
+  creator: msg({ message: "Creator", context: "Annotation table column" }),
+  type: msg({ message: "Type", context: "Annotation table column" }),
+  tags: msg({ message: "Tags", context: "Annotation table column" }),
+  location: msg({ message: "Location", context: "Annotation table column" }),
+  created: msg({ message: "Created", context: "Annotation table column" }),
+};
+
+export function annotationColumnLabel(column: AnnotationColumn): string {
+  return i18n._(labels[column]);
+}
+
+/** Labels written into saved mdbase view files: stable English, never the interface language. */
+const storedLabels: Record<AnnotationColumn, string> = {
   passage: "Passage",
   source: "Source",
   creator: "Creator",
@@ -32,8 +49,8 @@ const labels: Record<AnnotationColumn, string> = {
   created: "Created",
 };
 
-export function annotationColumnLabel(column: AnnotationColumn): string {
-  return labels[column];
+export function annotationColumnStoredLabel(column: AnnotationColumn): string {
+  return storedLabels[column];
 }
 
 const widths: Record<AnnotationColumn, number> = {

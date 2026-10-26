@@ -3,11 +3,11 @@
 import { nativeReaderCollection } from "@mdbase-reader/connect/native";
 import { memoryConnection } from "@mdbase-reader/connect/testing";
 import { act } from "react";
-import { createRoot } from "react-dom/client";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { ConfirmProvider } from "./ConfirmProvider.js";
 import { SettingsPage, useSettingsPage } from "./SettingsPage.js";
+import { createRoot } from "./testing/i18n.js";
 
 import type { ReaderWorkspaceGateway } from "./workspace-model.js";
 import type { ReaderSettingsStore } from "@mdbase-reader/connect";

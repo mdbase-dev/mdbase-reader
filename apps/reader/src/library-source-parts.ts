@@ -1,3 +1,4 @@
+import { t as translate } from "@lingui/core/macro";
 import { validateSourcePartChain, type SourceId, type SourceSummary } from "@mdbase-reader/core";
 
 export function libraryPartKey(
@@ -45,20 +46,20 @@ export function librarySourceParts(
     const relations = source.relations?.filter(({ relation }) => relation === "part-of") ?? [];
     const ambiguous = new Set(relations.map(({ target }) => target)).size > 1;
     const diagnostic = ambiguous
-      ? `Multiple parents: ${relations.map(({ target }) => target).join("; ")}`
+      ? translate`Multiple parents: ${relations.map(({ target }) => target).join("; ")}`
       : chain.problem
-        ? `Parent relation: ${chain.problem}`
+        ? translate`Parent relation: ${chain.problem}`
         : chain.missing
           ? complete
-            ? "Missing parent — repair the part-of link"
-            : "Parent not indexed — coverage is partial"
+            ? translate({ message: "Missing parent — repair the part-of link" })
+            : translate({ message: "Parent not indexed — coverage is partial" })
           : relations.length && !source.partOf
-            ? `Unresolved parent: ${relations.map(({ target }) => target).join("; ")}`
+            ? translate`Unresolved parent: ${relations.map(({ target }) => target).join("; ")}`
             : undefined;
     const parent = source.partOf && byId.get(source.partOf);
     rows.set(source.id, {
       depth: 0,
-      ...(parent ? { context: `in ${parent.title}` } : {}),
+      ...(parent ? { context: translate`in ${parent.title}` } : {}),
       ...(diagnostic ? { diagnostic } : {}),
       expandable: false,
       expanded: false,

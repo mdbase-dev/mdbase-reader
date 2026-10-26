@@ -1,3 +1,5 @@
+import { t } from "@lingui/core/macro";
+
 import { annotationEmbed, type Annotation } from "../domain/annotation.js";
 import { DomainError } from "../domain/errors.js";
 
@@ -14,7 +16,7 @@ export async function transcludeAnnotation(
   if (annotation.collectionId !== source.collectionId || annotation.sourceId !== source.id) {
     throw new DomainError(
       "invalid-annotation",
-      "An annotation can only be inserted into its originating source note.",
+      t({ message: "An annotation can only be inserted into its originating source note." }),
     );
   }
   const path = annotation.path ?? `annotations/${annotation.id}.md`;
@@ -30,7 +32,7 @@ export async function transcludeAnnotation(
   if (!updated) {
     throw new DomainError(
       "source-not-found",
-      "The source note disappeared after its annotation was inserted.",
+      t({ message: "The source note disappeared after its annotation was inserted." }),
     );
   }
   return updated;

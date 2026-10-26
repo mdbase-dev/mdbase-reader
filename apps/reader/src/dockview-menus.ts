@@ -1,3 +1,5 @@
+import { t as translate } from "@lingui/core/macro";
+
 import { panelTab } from "./dockview-workspace-state.js";
 
 import type { ReaderDockWorkspace } from "./dockview-workspace.js";
@@ -10,19 +12,22 @@ export function dockTabMenu(
 ): ReactContextMenuItemConfig[] {
   const tab = panelTab(panel);
   const items: ReactContextMenuItemConfig[] = [
-    { label: "Close", action: () => dock.close(panel.id) },
     {
-      label: "Move to new pane right",
+      label: translate({ message: "Close", context: "Close workspace tab" }),
+      action: () => dock.close(panel.id),
+    },
+    {
+      label: translate({ message: "Move to new pane right" }),
       disabled: panel.group.panels.length < 2,
       action: () => dock.split(panel.id, "horizontal"),
     },
     {
-      label: "Move to new pane below",
+      label: translate({ message: "Move to new pane below" }),
       disabled: panel.group.panels.length < 2,
       action: () => dock.split(panel.id, "vertical"),
     },
     {
-      label: "Maximize / restore pane",
+      label: translate({ message: "Maximize / restore pane" }),
       disabled: panel.group.api.location.type !== "grid",
       action: () => (panel.api.isMaximized() ? panel.api.exitMaximized() : panel.api.maximize()),
     },
@@ -30,14 +35,14 @@ export function dockTabMenu(
   for (const group of dock.api?.groups ?? []) {
     if (group.id !== panel.group.id) {
       items.push({
-        label: `Move to ${group.activePanel?.title ?? (group.api.location.type === "edge" ? `${group.api.location.position} sidebar` : "pane")}`,
+        label: moveToGroupLabel(group),
         action: () => dock.move(panel.id, group.id),
       });
     }
   }
   if (tab && ["document", "note", "annotations"].includes(tab.view)) {
     items.push({
-      label: "Open beside",
+      label: translate({ message: "Open beside" }),
       action: () => {
         dock.activate(panel.id);
         dock.beside(tab, "horizontal");
@@ -47,11 +52,13 @@ export function dockTabMenu(
   if (tab) {
     items.push(
       {
-        label: tab.pinned ? "Unpin tab" : "Pin tab",
+        label: tab.pinned
+          ? translate({ message: "Unpin tab", context: "dockview menus" })
+          : translate({ message: "Pin tab", context: "dockview menus" }),
         action: () => dock.patch(panel.id, { pinned: !tab.pinned }),
       },
       {
-        label: "Close unpinned tabs to the right",
+        label: translate({ message: "Close unpinned tabs to the right" }),
         action: () =>
           dock.closeMany(
             panel.group.panels
@@ -61,7 +68,7 @@ export function dockTabMenu(
           ),
       },
       {
-        label: "Close other unpinned tabs",
+        label: translate({ message: "Close other unpinned tabs" }),
         action: () =>
           dock.closeMany(
             panel.group.panels
@@ -71,6 +78,29 @@ export function dockTabMenu(
       },
     );
   }
-  items.push({ label: "Reset pane arrangement (keep tabs)", action: () => dock.reset() });
+  items.push({
+    label: translate({ message: "Reset pane arrangement (keep tabs)" }),
+    action: () => dock.reset(),
+  });
   return items;
+}
+
+function moveToGroupLabel(group: IDockviewPanel["group"]): string {
+  const title = group.activePanel?.title;
+  if (title) {
+    return translate`Move to ${title}`;
+  }
+  if (group.api.location.type !== "edge") {
+    return translate({ message: "Move to pane", context: "Workspace tab destination" });
+  }
+  switch (group.api.location.position) {
+    case "left":
+      return translate({ message: "Move to left sidebar", context: "Workspace tab destination" });
+    case "right":
+      return translate({ message: "Move to right sidebar", context: "Workspace tab destination" });
+    case "top":
+      return translate({ message: "Move to top sidebar", context: "Workspace tab destination" });
+    case "bottom":
+      return translate({ message: "Move to bottom sidebar", context: "Workspace tab destination" });
+  }
 }

@@ -1,3 +1,4 @@
+import { useLingui } from "@lingui/react/macro";
 import { useMemo, useState, type JSX, type RefObject } from "react";
 
 import { annotationEntries, annotationTags, type AnnotationFilter } from "./annotation-overview.js";
@@ -28,6 +29,19 @@ import type { ReaderWorkspaceGateway } from "./workspace-model.js";
 import type { Annotation, AnnotationId, SourceSummary } from "@mdbase-reader/core";
 
 /** Every annotation in the collection, filterable by its own fields and by its source's. */
+interface LibraryAnnotationsProps {
+  readonly gateway: ReaderWorkspaceGateway;
+  readonly view: MdbaseLibraryView;
+  readonly controller: MdbaseLibraryViewsController;
+  readonly collectionKey: string;
+  readonly sources: readonly SourceSummary[];
+  readonly propertyKeys: readonly string[];
+  readonly focused: boolean;
+  readonly scrollRef: RefObject<HTMLDivElement | null>;
+  readonly onOpenAnnotation: (annotation: Annotation, beside: boolean) => void;
+  readonly onOpenView: (view: MdbaseLibraryView) => void;
+}
+
 export function LibraryAnnotations({
   gateway,
   view,
@@ -39,18 +53,8 @@ export function LibraryAnnotations({
   scrollRef,
   onOpenAnnotation,
   onOpenView,
-}: {
-  readonly gateway: ReaderWorkspaceGateway;
-  readonly view: MdbaseLibraryView;
-  readonly controller: MdbaseLibraryViewsController;
-  readonly collectionKey: string;
-  readonly sources: readonly SourceSummary[];
-  readonly propertyKeys: readonly string[];
-  readonly focused: boolean;
-  readonly scrollRef: RefObject<HTMLDivElement | null>;
-  readonly onOpenAnnotation: (annotation: Annotation, beside: boolean) => void;
-  readonly onOpenView: (view: MdbaseLibraryView) => void;
-}): JSX.Element {
+}: LibraryAnnotationsProps): JSX.Element {
+  const { t } = useLingui();
   const saved = savedAnnotationConfiguration(view);
   const [filter, setFilter] = useState<AnnotationFilter>(saved.filter);
   const [layout, setLayout] = useAnnotationLayoutDraft(collectionKey, view);
@@ -106,11 +110,15 @@ export function LibraryAnnotations({
       <AnnotationProblem load={load} executionProblem={execution.problem} onRetry={retry} />
       {load.status === "ready" && !load.loading && entries.length === 0 ? (
         <div className="library-workspace-empty">
-          <strong>{all.length === 0 ? "No annotations yet" : "No annotations match"}</strong>
+          <strong>
+            {all.length === 0
+              ? t({ message: "No annotations yet" })
+              : t({ message: "No annotations match" })}
+          </strong>
           <span>
             {all.length === 0
-              ? "Highlights and notes you make while reading appear here."
-              : "Try a different search, or clear the filters."}
+              ? t({ message: "Highlights and notes you make while reading appear here." })
+              : t({ message: "Try a different search, or clear the filters." })}
           </span>
         </div>
       ) : (
@@ -135,8 +143,11 @@ export function LibraryAnnotations({
       ) : null}
       {saving.naming ? (
         <LibraryViewSaveDialog
-          description="The filters, sort and columns are saved in your collection as an mdbase view of annotations."
-          placeholder="e.g. Quotes for chapter 2"
+          description={t({
+            message:
+              "The filters, sort and columns are saved in your collection as an mdbase view of annotations.",
+          })}
+          placeholder={t({ message: "e.g. Quotes for chapter 2" })}
           saving={controller.saving}
           onCancel={saving.stopNaming}
           onSave={saving.saveAs}

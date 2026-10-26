@@ -1,3 +1,5 @@
+import { t as translate } from "@lingui/core/macro";
+
 import { hasPassageAnchor } from "./annotation-anchor.js";
 import { annotationLocationLabel } from "./passage-labels.js";
 
@@ -6,8 +8,12 @@ import type { Annotation, SourceId, SourceSummary } from "@mdbase-reader/core";
 /** Format names say which document, not where in it, so they do not make useful headings. */
 const documentLabels = new Set(["PDF", "EPUB", "Web page"]);
 
-export const unlocatedGroupLabel = "Not linked to a passage";
-export const outsideChapterGroupNote = "Outside the chapter’s pages";
+export function unlocatedGroupLabel(): string {
+  return translate({ message: "Not linked to a passage" });
+}
+export function outsideChapterGroupNote(): string {
+  return translate({ message: "Outside the chapter’s pages" });
+}
 
 export interface AnnotationGroupHeading {
   /** The section, chapter or page shared by the cards below. */
@@ -49,7 +55,7 @@ export function annotationFromOtherSource(
 }
 
 function groupLocation(annotation: Annotation): string | undefined {
-  const label = annotationLocationLabel(annotation);
+  const label = annotationLocationLabel(annotation, false);
   return label && !documentLabels.has(label) ? label : undefined;
 }
 
@@ -108,7 +114,7 @@ function annotationGroup(
     key: `${other ? annotation.sourceId : ""}\u0000${place}${outside ? "\u0000outside" : ""}`,
     label:
       location ??
-      (linked ? (annotationLocationLabel(annotation) ?? "Document") : unlocatedGroupLabel),
+      (linked ? (annotationLocationLabel(annotation) ?? "Document") : unlocatedGroupLabel()),
     located: location !== undefined,
     other,
   };

@@ -1,3 +1,4 @@
+import { t } from "@lingui/core/macro";
 import { annotationBodyText } from "@mdbase-reader/core";
 
 export interface AnnotationImageEmbed {
@@ -24,7 +25,7 @@ export function annotationBodyContent(body: string): AnnotationBodyContent {
         return embed;
       }
       const alt = rawAlt?.trim();
-      images.push({ path, alt: alt?.length ? alt : "Screenshot highlight" });
+      images.push({ path, alt: alt?.length ? alt : t({ message: "Screenshot highlight" }) });
       return "";
     },
   );

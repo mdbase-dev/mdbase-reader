@@ -1,3 +1,4 @@
+import { t } from "@lingui/core/macro";
 import { useCallback, useMemo, useState } from "react";
 
 import { readerErrorMessage } from "./errors.js";
@@ -49,7 +50,7 @@ export function useDocumentAttachment(
           sourceId: source.id,
           busy: false,
           message: null,
-          error: readerErrorMessage(reason, "Reader could not attach a document."),
+          error: readerErrorMessage(reason, t({ message: "Reader could not attach a document." })),
         });
       }
     },
@@ -58,9 +59,11 @@ export function useDocumentAttachment(
 
   const attachFile = useCallback(
     (source: SourceSummary, file: PickedFile): Promise<void> =>
-      run(source, `Attaching ${file.name}…`, async () => {
+      run(source, t`Attaching ${file.name}…`, async () => {
         if (!attach) {
-          throw new Error("This collection cannot attach files to existing sources.");
+          throw new Error(
+            t({ message: "This collection cannot attach files to existing sources." }),
+          );
         }
         await attach({
           source,
@@ -89,7 +92,7 @@ export function useDocumentAttachment(
             sourceId: source.id,
             busy: false,
             message: null,
-            error: `${file.name} isn’t a PDF, EPUB or saved web page.`,
+            error: t`${file.name} isn’t a PDF, EPUB or saved web page.`,
           });
           return;
         }
@@ -101,10 +104,12 @@ export function useDocumentAttachment(
       },
       canFindPdf: (source) => Boolean(pdfSearchFor(source)),
       findPdf: (source) => {
-        void run(source, "Looking for an open-access PDF…", async (report) => {
+        void run(source, t({ message: "Looking for an open-access PDF…" }), async (report) => {
           const work = pdfSearchFor(source);
           if (!work) {
-            throw new Error("This source has no DOI, arXiv ID or web address to search with.");
+            throw new Error(
+              t({ message: "This source has no DOI, arXiv ID or web address to search with." }),
+            );
           }
           const [{ findOpenAccessPdf, pdfFileName }, { fetchCapture }] = await Promise.all([
             import("./open-access-pdf.js"),
@@ -113,10 +118,13 @@ export function useDocumentAttachment(
           const pdf = await findOpenAccessPdf(work, { capture: fetchCapture });
           if (!pdf) {
             throw new Error(
-              "No open-access PDF was found. Attach a copy you have, or save it from the publisher with the browser extension.",
+              t({
+                message:
+                  "No open-access PDF was found. Attach a copy you have, or save it from the publisher with the browser extension.",
+              }),
             );
           }
-          report("Attaching the PDF…");
+          report(t({ message: "Attaching the PDF…" }));
           await attach({
             source,
             name: pdfFileName(pdf.canonicalUrl, source.title),

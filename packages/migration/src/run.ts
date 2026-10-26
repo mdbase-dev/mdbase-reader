@@ -1,3 +1,5 @@
+import { t } from "@lingui/core/macro";
+
 import {
   array,
   object,
@@ -66,7 +68,9 @@ export async function previewMigration(
 function checkIdentity(old: Fields, plan: MigrationPlan, record: MigrationRecord): void {
   const raw = object(old["import"], "existing import provenance");
   if (raw["namespace"] !== plan.namespace || raw["key"] !== record.key) {
-    throw new Error("Import identity collision. Existing records will not be overwritten.");
+    throw new Error(
+      t({ message: "Import identity collision. Existing records will not be overwritten." }),
+    );
   }
 }
 export async function runMigration(
@@ -124,11 +128,11 @@ export async function runMigration(
   for (const annotation of plan.annotations) {
     const sourceId = sourceIds.get(annotation.sourceKey);
     if (!sourceId) {
-      throw new Error("Annotation has no source.");
+      throw new Error(t({ message: "Annotation has no source." }));
     }
     const document = annotation.fileKey ? descriptors.get(annotation.fileKey) : null;
     if (annotation.fileKey && !document) {
-      throw new Error("Annotation file was not committed.");
+      throw new Error(t({ message: "Annotation file was not committed." }));
     }
     await commit(
       annotation,
@@ -155,7 +159,7 @@ export async function runMigration(
   for (const r of [...plan.sources, ...plan.annotations]) {
     const record = confirmed.get(r.id);
     if (!record) {
-      throw new Error("Import verification failed: a record is missing.");
+      throw new Error(t({ message: "Import verification failed: a record is missing." }));
     }
     verifyImportedRecord(record, r, plan, descriptors);
     state.verified++;
@@ -179,7 +183,7 @@ function sourceDocuments(
     const file = files.get(d.fileKey);
     const specification = plan.files.find((f) => f.key === d.fileKey);
     if (!file || !specification) {
-      throw new Error("Source file was not committed.");
+      throw new Error(t({ message: "Source file was not committed." }));
     }
     return {
       file_id: file.fileId,
@@ -212,7 +216,7 @@ function verifyImportedRecord(
       document["file_id"] !== file.fileId ||
       document["revision"] !== file.contentDigest
     ) {
-      throw new Error("Annotation target verification failed.");
+      throw new Error(t({ message: "Annotation target verification failed." }));
     }
   }
 }
@@ -228,7 +232,10 @@ function checkExistingDocuments(existing: Fields, expected: Fields[]): void {
       )
     ) {
       throw new Error(
-        "An existing source has different representations. Import into a new collection or review it explicitly; existing sources are never silently rewritten.",
+        t({
+          message:
+            "An existing source has different representations. Import into a new collection or review it explicitly; existing sources are never silently rewritten.",
+        }),
       );
     }
   }

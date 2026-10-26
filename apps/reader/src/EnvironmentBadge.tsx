@@ -1,3 +1,5 @@
+import { useLingui } from "@lingui/react/macro";
+
 import type { JSX } from "react";
 
 export type VisibleEnvironment = "lab" | "staging" | "local";
@@ -10,6 +12,7 @@ export function visibleEnvironment(value: string | undefined): VisibleEnvironmen
 }
 
 export function EnvironmentBadge(): JSX.Element | null {
+  const { t } = useLingui();
   const environment = visibleEnvironment(import.meta.env.VITE_MDBASE_ENV);
   if (!environment) {
     return null;
@@ -18,7 +21,7 @@ export function EnvironmentBadge(): JSX.Element | null {
     <div
       className={`environment-badge is-${environment}`}
       role="status"
-      aria-label={`${environment} environment`}
+      aria-label={t`${environment} environment`}
     >
       {environment}
     </div>

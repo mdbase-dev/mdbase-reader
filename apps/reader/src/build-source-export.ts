@@ -1,3 +1,4 @@
+import { t } from "@lingui/core/macro";
 import {
   materializeSource,
   serializeCslBibliography,
@@ -70,7 +71,10 @@ export async function buildSourceExport(input: {
     } catch (reason) {
       fileProblems.push({
         path: portableFilePath(target.file),
-        message: reason instanceof Error ? reason.message : "Reader could not export this file.",
+        message:
+          reason instanceof Error
+            ? reason.message
+            : t({ message: "Reader could not export this file." }),
       });
     }
   }
@@ -199,9 +203,11 @@ function exportReport(
   files: readonly SourceExportProblem[],
 ): string {
   const lines = [
-    "# Reader export report",
+    `# ${t`Reader export report`}`,
     "",
-    "The canonical records were preserved. Review these incomplete derived outputs:",
+    t({
+      message: "The canonical records were preserved. Review these incomplete derived outputs:",
+    }),
     "",
     ...materialization.map((problem) => `- ${problem.message}`),
     ...files.map((problem) => `- ${problem.path}: ${problem.message}`),

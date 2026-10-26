@@ -2,10 +2,10 @@
 /* eslint-disable @typescript-eslint/require-await -- async act flushes React work */
 import { feedbackApplication, FeedbackProvider } from "@mdbase-dev/ui/feedback";
 import { act } from "react";
-import { createRoot } from "react-dom/client";
 import { afterEach, beforeEach, expect, it, vi } from "vitest";
 
 import { ReaderErrorBoundary } from "./ReaderErrorBoundary.js";
+import { createRoot } from "./testing/i18n.js";
 
 let root: ReturnType<typeof createRoot>;
 let host: HTMLDivElement;

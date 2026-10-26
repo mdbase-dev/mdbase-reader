@@ -2,7 +2,6 @@
 import { fileRevision, sourceId } from "@mdbase-reader/core";
 import { createEventEmitter } from "@mdbase-reader/reading-surface";
 import { act } from "react";
-import { createRoot } from "react-dom/client";
 import { afterEach, beforeEach, expect, it, vi } from "vitest";
 
 import { PreviewGateway } from "./preview.js";
@@ -13,6 +12,7 @@ import {
   resolveSourceReadingRange,
 } from "./source-reading-range.js";
 import { ChapterReadingChip, SourceReadingBoundary } from "./SourceReadingBoundary.js";
+import { createRoot } from "./testing/i18n.js";
 import { useReadingResume } from "./use-reading-resume.js";
 
 import type { Source, SourceSummary } from "@mdbase-reader/core";

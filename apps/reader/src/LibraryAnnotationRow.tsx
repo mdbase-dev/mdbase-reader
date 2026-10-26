@@ -1,3 +1,6 @@
+import { t as translate } from "@lingui/core/macro";
+import { useLingui } from "@lingui/react/macro";
+
 import { annotationKindLabel } from "./annotation-kind.js";
 import { highlightColorProps } from "./highlight-colors.js";
 import { relativeDay } from "./LibraryCells.js";
@@ -38,6 +41,7 @@ export function AnnotationRow({
   /** Reports the row's rendered height, so short passages do not leave tall empty rows. */
   readonly measure?: (element: HTMLElement | null) => void;
 }): JSX.Element {
+  const { t } = useLingui();
   return (
     // Rows take keyboard input through the grid's roving focus; see handleGridKey.
     // eslint-disable-next-line jsx-a11y/click-events-have-key-events
@@ -50,7 +54,7 @@ export function AnnotationRow({
       aria-selected={selected}
       data-row-index={index}
       tabIndex={tabbable ? 0 : -1}
-      title="Double-click or press Enter to open in its document"
+      title={t({ message: "Double-click or press Enter to open in its document" })}
       style={{ gridTemplateColumns, transform: `translateY(${String(top)}px)` }}
       {...press.bind(onLongPress)}
       onClick={(event) => {
@@ -106,7 +110,10 @@ const cells: Record<
   source: ({ source }, creatorBeneath) => (
     <span role="gridcell">
       <span className="library-title-copy">
-        <strong>{source?.title ?? "Unknown source"}</strong>
+        <strong>
+          {source?.title ??
+            translate({ message: "Unknown source", context: "LibraryAnnotationRow interface" })}
+        </strong>
         {creatorBeneath ? <small>{source?.creators.join(", ") ?? ""}</small> : null}
       </span>
     </span>

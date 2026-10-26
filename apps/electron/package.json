@@ -4,11 +4,13 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "build": "tsc -p tsconfig.build.json",
-    "test": "vitest run --passWithNoTests",
+    "build": "tsc -p tsconfig.build.json && node ../../scripts/compile-native-macros.mjs dist && node ../../scripts/copy-native-locales.mjs dist",
+    "test": "vitest run --passWithNoTests --config ../../vitest.config.mjs",
     "typecheck": "tsc -p tsconfig.json"
   },
   "dependencies": {
+    "@lingui/core": "6.9.0",
+    "@mdbase-dev/i18n": "file:../../vendor/mdbase-dev-i18n-0.1.0-beta.141-24e9f5d0.tgz",
     "@mdbase-reader/platform": "workspace:*",
     "electron": "latest"
   }

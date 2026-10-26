@@ -1,3 +1,4 @@
+import { t as translate } from "@lingui/core/macro";
 import { useEffect, useState } from "react";
 
 import { useLibraryDocumentIndex } from "./LibraryDocumentIndex.js";
@@ -42,7 +43,10 @@ export function mergeLibraryDocumentMatches(
       const { destination, ...excerpt } = loaded;
       matches.set(source.id, {
         excerpt,
-        file: destination?.document.file ?? source.documents[0]?.file ?? "Loaded document",
+        file:
+          destination?.document.file ??
+          source.documents[0]?.file ??
+          translate({ message: "Loaded document" }),
         ...(destination ? { destination } : {}),
       });
     }

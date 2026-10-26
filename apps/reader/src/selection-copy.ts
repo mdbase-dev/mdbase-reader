@@ -1,3 +1,4 @@
+import { t } from "@lingui/core/macro";
 import { appendAnnotationQuoteFooter } from "@mdbase-reader/core";
 
 /** Where copied text came from, for its citation line. */
@@ -51,7 +52,7 @@ export async function copyText(text: string): Promise<void> {
   try {
     // eslint-disable-next-line @typescript-eslint/no-deprecated -- the only fallback without the Clipboard API
     if (!document.execCommand("copy")) {
-      throw new Error("The browser refused to copy.");
+      throw new Error(t({ message: "The browser refused to copy." }));
     }
   } finally {
     field.remove();

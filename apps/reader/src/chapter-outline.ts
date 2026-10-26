@@ -1,3 +1,5 @@
+import { t as translate } from "@lingui/core/macro";
+
 import {
   epubChapterProposals,
   pdfChapterProposals,
@@ -40,23 +42,27 @@ export async function readChapterOutline(
       proposals: epubChapterProposals(outline.entries, outline.spine),
     };
   }
-  throw new Error("Chapter ranges require a PDF or EPUB.");
+  throw new Error(translate({ message: "Chapter ranges require a PDF or EPUB." }));
 }
 
 function validatePageRange(range: DocumentRange | undefined, pageCount: number): void {
   if (range?.kind !== "pages") {
-    throw new Error("Enter a start page and an end page.");
+    throw new Error(translate({ message: "Enter a start page and an end page." }));
   }
   for (const endpoint of ["start", "end"] as const) {
     const page = range[endpoint];
     if (!Number.isSafeInteger(page) || page < 0 || page >= pageCount) {
       throw new Error(
-        `${endpoint === "start" ? "Start page" : "End page"} must be a whole number from 1 to ${String(pageCount)}.`,
+        endpoint === "start"
+          ? translate`Start page must be a whole number from 1 to ${pageCount}.`
+          : translate`End page must be a whole number from 1 to ${pageCount}.`,
       );
     }
   }
   if (range.end < range.start) {
-    throw new Error("End page must be the same as or after the start page.");
+    throw new Error(
+      translate({ message: "End page must be the same as or after the start page." }),
+    );
   }
 }
 
@@ -75,5 +81,9 @@ export function validateChapterRange(
       return;
     }
   }
-  throw new Error("Choose a start section and an end section in reading order from this book.");
+  throw new Error(
+    translate({
+      message: "Choose a start section and an end section in reading order from this book.",
+    }),
+  );
 }

@@ -1,3 +1,4 @@
+import { Trans, useLingui } from "@lingui/react/macro";
 import { Select } from "@mdbase-dev/ui/select";
 import { useId, useMemo, type JSX } from "react";
 
@@ -42,7 +43,9 @@ export function LibraryConditionsEditor({
     );
   return (
     <fieldset className="library-conditions" data-menu-keep-open>
-      <legend className="menu-label">Fields</legend>
+      <legend className="menu-label">
+        <Trans>Fields</Trans>
+      </legend>
       <datalist id={fieldListId}>
         {fields.map((field) => (
           <option key={field} value={field} />
@@ -64,11 +67,12 @@ export function LibraryConditionsEditor({
         className="library-condition-add"
         onClick={() => onChange([...conditions, { key: "", operator: "is", value: "" }])}
       >
-        <PlusIcon /> Add a field condition
+        <PlusIcon />
+        <Trans> Add a field condition</Trans>
       </button>
       {conditions.length > 0 ? (
         <p className="menu-note">
-          Numbers stored as text compare as text, as in saved mdbase views.
+          <Trans>Numbers stored as text compare as text, as in saved mdbase views.</Trans>
         </p>
       ) : null}
     </fieldset>
@@ -88,24 +92,29 @@ function ConditionRow({
   readonly onChange: (patch: Partial<FieldCondition>) => void;
   readonly onRemove: () => void;
 }): JSX.Element {
+  const { t } = useLingui();
   const valueListId = useId();
   const suggestions = useMemo(
     () => fieldValueSuggestions(sources, condition.key.trim()),
     [condition.key, sources],
   );
   return (
-    <div className="library-condition" role="group" aria-label="Field condition">
+    <div
+      className="library-condition"
+      role="group"
+      aria-label={t({ message: "Field condition", context: "LibraryConditionsEditor interface" })}
+    >
       <input
-        aria-label="Field"
+        aria-label={t({ message: "Field", context: "LibraryConditionsEditor interface" })}
         className="mdbase-field library-condition-field"
         list={fieldListId}
         value={condition.key}
-        placeholder="field"
+        placeholder={t({ message: "field", context: "LibraryConditionsEditor interface" })}
         spellCheck={false}
         onChange={(event) => onChange({ key: event.target.value.trim() })}
       />
       <Select
-        aria-label="Comparison"
+        aria-label={t({ message: "Comparison", context: "LibraryConditionsEditor interface" })}
         className="library-condition-operator"
         value={condition.operator}
         options={conditionOperators.map((operator) => ({
@@ -117,11 +126,11 @@ function ConditionRow({
       {operatorNeedsValue(condition.operator) ? (
         <>
           <input
-            aria-label="Value"
+            aria-label={t({ message: "Value", context: "LibraryConditionsEditor interface" })}
             className="mdbase-field library-condition-value"
             list={valueListId}
             value={condition.value}
-            placeholder="value"
+            placeholder={t({ message: "value", context: "LibraryConditionsEditor interface" })}
             onChange={(event) => onChange({ value: event.target.value })}
           />
           <datalist id={valueListId}>
@@ -136,8 +145,11 @@ function ConditionRow({
       <button
         type="button"
         className="icon-button"
-        aria-label="Remove condition"
-        title="Remove condition"
+        aria-label={t({
+          message: "Remove condition",
+          context: "LibraryConditionsEditor interface",
+        })}
+        title={t({ message: "Remove condition", context: "LibraryConditionsEditor interface" })}
         onClick={onRemove}
       >
         <CloseIcon />

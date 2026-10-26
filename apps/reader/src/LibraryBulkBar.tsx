@@ -1,3 +1,6 @@
+import { plural, t as translate } from "@lingui/core/macro";
+import { useLingui as useLocale } from "@lingui/react";
+import { Plural, Trans, useLingui } from "@lingui/react/macro";
 import { Select } from "@mdbase-dev/ui/select";
 import { isEditableSourceField, isRequiredSourceField } from "@mdbase-reader/core";
 import { useState, type JSX } from "react";
@@ -48,20 +51,27 @@ export function LibraryBulkBar({
   readonly onOpen: (sources: readonly SourceSummary[]) => void;
   readonly onExport: (sources: readonly SourceSummary[]) => void;
 }): JSX.Element {
+  const { t } = useLingui();
   const [progress, setProgress] = useState<BulkStatusProgress | null>(null);
   const busy = progress !== null && progress.done < progress.total;
   const [fieldForm, setFieldForm] = useState<boolean>(false);
   return (
-    <div className="library-bulk-bar" role="toolbar" aria-label="Selected sources">
-      <strong aria-live="polite">{countLabel(selected.length, "source")} selected</strong>
+    <div
+      className="library-bulk-bar"
+      role="toolbar"
+      aria-label={t({ message: "Selected sources", context: "LibraryBulkBar interface" })}
+    >
+      <strong aria-live="polite">
+        <Plural value={selected.length} one="# source selected" other="# sources selected" />
+      </strong>
       {onSetStatus ? (
         <label className="library-bulk-status">
           <Select
-            aria-label="Set reading status of the selected sources"
+            aria-label={t({ message: "Set reading status of the selected sources" })}
             value=""
-            placeholder="Set status…"
+            placeholder={t({ message: "Set status…", context: "LibraryBulkBar interface" })}
             disabled={busy}
-            options={readingStatusOptions}
+            options={readingStatusOptions()}
             onChange={(status) => {
               setProgress({ done: 0, total: selected.length, failed: 0 });
               void onSetStatus(selected, status, setProgress);
@@ -74,19 +84,19 @@ export function LibraryBulkBar({
         disabled={selected.length > bulkOpenLimit}
         title={
           selected.length > bulkOpenLimit
-            ? `Select ${String(bulkOpenLimit)} or fewer to open them together`
-            : "Open each in its own tab"
+            ? t`Select ${String(bulkOpenLimit)} or fewer to open them together`
+            : t({ message: "Open each in its own tab" })
         }
         onClick={() => onOpen(selected)}
       >
-        Open
+        <Trans context="LibraryBulkBar interface">Open</Trans>
       </button>
       <button type="button" onClick={() => onExport(selected)}>
-        Export citations
+        <Trans>Export citations</Trans>
       </button>
       {onSetField && !fieldForm ? (
         <button type="button" disabled={busy} onClick={() => setFieldForm(true)}>
-          Set field…
+          <Trans>Set field…</Trans>
         </button>
       ) : null}
       {onSetField && fieldForm && !busy ? (
@@ -106,25 +116,34 @@ export function LibraryBulkBar({
       {progress ? (
         <span className="library-bulk-progress" role="status">
           {busy
-            ? `Updating ${String(progress.done)} of ${String(progress.total)}…`
-            : `${countLabel(progress.changed ?? progress.done - progress.failed, "source")} updated${
-                progress.failed > 0
-                  ? `; ${countLabel(progress.failed, "source")} could not be updated`
-                  : ""
-              }`}
+            ? t`Updating ${String(progress.done)} of ${String(progress.total)}…`
+            : bulkProgressMessage(progress)}
         </span>
       ) : null}
       <button
         type="button"
         className="icon-button library-bulk-clear"
-        aria-label="Clear selection"
-        title="Clear selection · Esc"
+        aria-label={t({ message: "Clear selection", context: "LibraryBulkBar interface" })}
+        title={t({ message: "Clear selection · Esc" })}
         onClick={onClear}
       >
         <CloseIcon />
       </button>
     </div>
   );
+}
+
+function bulkProgressMessage(progress: BulkStatusProgress): string {
+  const changed = progress.changed ?? progress.done - progress.failed;
+  const updated = plural(changed, { one: "# source updated", other: "# sources updated" });
+  if (!progress.failed) {
+    return updated;
+  }
+  const failed = plural(progress.failed, {
+    one: "# source could not be updated",
+    other: "# sources could not be updated",
+  });
+  return translate`${updated}; ${failed}`;
 }
 
 /** Sets a value, or clears a field only after an explicit second step. */
@@ -141,6 +160,7 @@ function BulkFieldForm({
   readonly onApply: (key: string, value: string) => void;
   readonly onCancel: () => void;
 }): JSX.Element {
+  const { t } = useLingui();
   const [key, setKey] = useState("");
   const [value, setValue] = useState("");
   const [custom, setCustom] = useState(false);
@@ -155,7 +175,7 @@ function BulkFieldForm({
     // eslint-disable-next-line jsx-a11y/no-noninteractive-element-interactions -- Escape cancels from any control in the form.
     <form
       className="library-bulk-field"
-      aria-label="Set a field on the selected sources"
+      aria-label={t({ message: "Set a field on the selected sources" })}
       onSubmit={(event) => {
         event.preventDefault();
         if (valid && value.trim() && !confirmClear) {
@@ -174,7 +194,7 @@ function BulkFieldForm({
       }}
     >
       <BulkFieldPicker
-        label={key ? label : "Choose field…"}
+        label={key ? label : translate({ message: "Choose field…" })}
         propertyKeys={propertyKeys}
         properties={properties}
         onChoose={(field, isCustom) => {
@@ -185,9 +205,9 @@ function BulkFieldForm({
       {custom ? (
         <input
           className="mdbase-field"
-          aria-label="Custom field key"
+          aria-label={translate({ message: "Custom field key" })}
           value={key}
-          placeholder="e.g. csl.volume"
+          placeholder={translate({ message: "e.g. csl.volume" })}
           spellCheck={false}
           // eslint-disable-next-line jsx-a11y/no-autofocus -- custom entry was explicitly requested.
           autoFocus
@@ -199,43 +219,43 @@ function BulkFieldForm({
       {confirmClear ? (
         <>
           <span role="status">
-            Clear {label} from {countLabel(count, "source")}?
+            <Trans>Clear </Trans>
+            {label} <Trans>from </Trans>
+            {countLabel(count, "source")}?
           </span>
           <button
             type="button"
             // eslint-disable-next-line jsx-a11y/no-autofocus -- keep keyboard focus in the explicit confirmation step.
             autoFocus
             onClick={() => onApply(key, "")}
-          >
-            Clear {label}
-          </button>
+          >{translate`Clear ${label}`}</button>
           <button type="button" onClick={() => setConfirmClear(false)}>
-            Keep field
+            <Trans>Keep field</Trans>
           </button>
         </>
       ) : (
         <>
           <input
             className="mdbase-field"
-            aria-label="Value"
+            aria-label={translate({ message: "Value" })}
             value={value}
-            placeholder="New value"
+            placeholder={translate({ message: "New value" })}
             onChange={(event) => setValue(event.target.value)}
           />
           <button type="submit" disabled={!valid || !value.trim()}>
-            Apply
+            <Trans>Apply</Trans>
           </button>
           <button
             type="button"
             disabled={!valid || isRequiredSourceField(key)}
             onClick={() => setConfirmClear(true)}
           >
-            Clear field…
+            <Trans>Clear field…</Trans>
           </button>
         </>
       )}
       <button type="button" onClick={onCancel}>
-        Cancel
+        <Trans context="Reader action">Cancel</Trans>
       </button>
     </form>
   );
@@ -252,9 +272,10 @@ function BulkFieldPicker({
   readonly properties: readonly { readonly key: string; readonly label?: string }[];
   readonly onChoose: (key: string, custom: boolean) => void;
 }): JSX.Element {
+  useLocale();
   return (
     <Menu
-      label="Choose field"
+      label={translate({ message: "Choose field" })}
       trigger={label}
       triggerClassName="library-bulk-field-trigger"
       align="start"
@@ -271,7 +292,7 @@ function BulkFieldPicker({
         </button>
       ))}
       <button type="button" onClick={() => onChoose("", true)}>
-        Custom field…
+        <Trans>Custom field…</Trans>
       </button>
     </Menu>
   );

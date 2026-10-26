@@ -1,3 +1,5 @@
+import { t as translate } from "@lingui/core/macro";
+import { Trans, useLingui } from "@lingui/react/macro";
 import { createContext, useContext, useId, useRef, useState, type JSX } from "react";
 
 import { CollectionMenu } from "./CollectionMenu.js";
@@ -22,6 +24,7 @@ export function CollectionPicker({
   readonly name: string;
   readonly beforeSwitch?: () => boolean | Promise<boolean>;
 }): JSX.Element {
+  const { t } = useLingui();
   const switching = useContext(CollectionSwitchingContext);
   const menuId = useId();
   const triggerRef = useRef<HTMLButtonElement>(null);
@@ -31,13 +34,15 @@ export function CollectionPicker({
   const label = (
     <>
       <CollectionIcon />
-      <span className="sr-only">Collection: </span>
+      <span className="sr-only">
+        <Trans>Collection: </Trans>
+      </span>
       <span className="collection-context-name">{name}</span>
     </>
   );
   if (!switching) {
     return (
-      <span className="collection-context" title={`Collection: ${name}`}>
+      <span className="collection-context" title={t`Collection: ${name}`}>
         {label}
       </span>
     );
@@ -63,7 +68,9 @@ export function CollectionPicker({
       switching.select(id);
       close(false);
     } catch (reason) {
-      setError(readerErrorMessage(reason, "Reader could not switch collections."));
+      setError(
+        readerErrorMessage(reason, translate({ message: "Reader could not switch collections." })),
+      );
     }
   };
   const connect = async (): Promise<void> => {
@@ -76,7 +83,12 @@ export function CollectionPicker({
       await switching.connect();
       close(false);
     } catch (reason) {
-      setError(readerErrorMessage(reason, "Reader could not connect another collection."));
+      setError(
+        readerErrorMessage(
+          reason,
+          translate({ message: "Reader could not connect another collection." }),
+        ),
+      );
     } finally {
       setBusy(false);
     }
@@ -87,11 +99,11 @@ export function CollectionPicker({
         ref={triggerRef}
         type="button"
         className="collection-context collection-picker-trigger"
-        aria-label={`Switch collection: ${name}`}
+        aria-label={t`Switch collection: ${name}`}
         aria-haspopup="menu"
         aria-expanded={open}
         aria-controls={open ? menuId : undefined}
-        title="Switch collection"
+        title={t({ message: "Switch collection", context: "CollectionPicker interface" })}
         onClick={() => (open ? close(false) : setOpen(true))}
         onKeyDown={(event) => {
           if (!open && (event.key === "ArrowDown" || event.key === "ArrowUp")) {

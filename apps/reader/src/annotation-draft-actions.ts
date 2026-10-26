@@ -1,3 +1,5 @@
+import { t as translate } from "@lingui/core/macro";
+
 import { saveSelection } from "./annotation-selection.js";
 import { requestConfirmation } from "./confirmation.js";
 
@@ -31,10 +33,10 @@ export function annotationEditorKeys(
 
 export function confirmAnnotationDiscard(message: string): Promise<boolean> {
   return requestConfirmation({
-    title: "Discard draft?",
+    title: translate({ message: "Discard draft?" }),
     message,
-    confirmLabel: "Discard draft",
-    cancelLabel: "Keep editing",
+    confirmLabel: translate({ message: "Discard draft" }),
+    cancelLabel: translate({ message: "Keep editing" }),
     danger: true,
   });
 }

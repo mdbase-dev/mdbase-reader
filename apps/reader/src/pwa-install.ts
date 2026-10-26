@@ -1,3 +1,5 @@
+import { i18n } from "@lingui/core";
+import { t } from "@lingui/core/macro";
 // Installation is offered only after Reader has been used, never during first sign-in.
 interface InstallEvent extends Event {
   prompt(): Promise<void>;
@@ -42,6 +44,15 @@ function waitForReaderUse(ready: () => void): () => void {
   };
 }
 
+function recentlyDismissed(): boolean {
+  try {
+    const timestamp = Number(localStorage.getItem(STORAGE_KEY));
+    return timestamp > 0 && Date.now() - timestamp < COOLDOWN;
+  } catch {
+    return false;
+  }
+}
+
 /** Installation is optional; no service worker or private-data cache is introduced. */
 export function setupPwaInstall(appName: string): () => void {
   const standalone = matchMedia("(display-mode: standalone)");
@@ -53,13 +64,7 @@ export function setupPwaInstall(appName: string): () => void {
     (navigator.userAgent.includes("Macintosh") && navigator.maxTouchPoints > 1);
   const safari =
     navigator.userAgent.includes("Safari") && !/CriOS|FxiOS|EdgiOS|OPiOS/.test(navigator.userAgent);
-  let dismissed = false;
-  try {
-    const timestamp = Number(localStorage.getItem(STORAGE_KEY));
-    dismissed = timestamp > 0 && Date.now() - timestamp < COOLDOWN;
-  } catch {
-    /* Installation remains optional when storage is unavailable. */
-  }
+  let dismissed = recentlyDismissed();
   let pending: InstallEvent | null = null;
   let ready = false;
   let banner: HTMLElement | null = null;
@@ -91,16 +96,16 @@ export function setupPwaInstall(appName: string): () => void {
     }
     banner = document.createElement("section");
     banner.className = "pwa-install";
-    banner.setAttribute("aria-label", `Install ${appName}`);
+    banner.setAttribute("aria-label", t`Install ${appName}`);
     const message = document.createElement("p");
     message.textContent = pending
-      ? `Install ${appName} for quick access in its own window.`
-      : `Add ${appName} to your Home Screen: tap Share, then Add to Home Screen.`;
+      ? t`Install ${appName} for quick access in its own window.`
+      : t`Add ${appName} to your Home Screen: tap Share, then Add to Home Screen.`;
     banner.append(message);
     if (pending) {
       const install = document.createElement("button");
       install.type = "button";
-      install.textContent = "Install";
+      install.textContent = t({ message: "Install", context: "pwa install" });
       const installApp = async (): Promise<void> => {
         const event = pending;
         if (!event) {
@@ -127,7 +132,7 @@ export function setupPwaInstall(appName: string): () => void {
     }
     const later = document.createElement("button");
     later.type = "button";
-    later.textContent = "Not now";
+    later.textContent = t({ message: "Not now", context: "pwa install" });
     later.addEventListener("click", dismiss);
     banner.append(later);
     document.body.append(banner);
@@ -151,6 +156,10 @@ export function setupPwaInstall(appName: string): () => void {
       installed();
     }
   };
+  const stopLanguage = i18n.on("change", () => {
+    remove();
+    show();
+  });
   window.addEventListener("beforeinstallprompt", beforeInstall);
   window.addEventListener("appinstalled", installed);
   standalone.addEventListener("change", modeChanged);
@@ -161,6 +170,7 @@ export function setupPwaInstall(appName: string): () => void {
   return () => {
     disposed = true;
     stopWaiting();
+    stopLanguage();
     window.removeEventListener("beforeinstallprompt", beforeInstall);
     window.removeEventListener("appinstalled", installed);
     standalone.removeEventListener("change", modeChanged);

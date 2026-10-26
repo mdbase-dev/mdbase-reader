@@ -1,3 +1,6 @@
+import { t as translate } from "@lingui/core/macro";
+import { useLingui as useLocale } from "@lingui/react";
+import { Trans, useLingui } from "@lingui/react/macro";
 import { shortcutLabel } from "@mdbase-dev/ui/command-palette";
 import { SaveNotice, type SaveTone } from "@mdbase-dev/ui/save-notice";
 import { lazy, Suspense, useContext, useMemo, useState, type JSX, type ReactNode } from "react";
@@ -30,16 +33,19 @@ const MarkdownEditor = lazy(async () => {
 });
 
 // Source notes coordinate formatting, reference discovery, and autosave status.
-export function SourceNoteEditor({
-  workspace,
-  composer,
-  onOpenSourceView,
-}: {
+interface SourceNoteEditorProps {
   readonly workspace: ReaderSourceWorkspaceController;
   readonly composer: AnnotationComposerController;
   readonly gateway: ReaderWorkspaceGateway;
   readonly onOpenSourceView?: (sourceId: SourceId, view: "document" | "citation") => void;
-}): JSX.Element {
+}
+
+export function SourceNoteEditor({
+  workspace,
+  composer,
+  onOpenSourceView,
+}: SourceNoteEditorProps): JSX.Element {
+  useLocale();
   const [insertion, setInsertion] = useState<TextInsertionRequest | null>(null);
   const [formatting, setFormatting] = useState<MarkdownCommandRequest | null>(null);
   const librarySources = useContext(SourceLibraryContext);
@@ -72,11 +78,17 @@ export function SourceNoteEditor({
         {sourceRecord.message}
       </div>
     ) : (
-      <div className="editor-loading">Opening source note…</div>
+      <div className="editor-loading">
+        <Trans>Opening source note…</Trans>
+      </div>
     );
   }
   if (!workspace.draftReady) {
-    return <div className="editor-loading">Opening source note…</div>;
+    return (
+      <div className="editor-loading">
+        <Trans>Opening source note…</Trans>
+      </div>
+    );
   }
   const citekey = sourceRecord.value.citation?.id;
   return (
@@ -104,12 +116,18 @@ export function SourceNoteEditor({
           : {})}
       />
       <DraftRecoveryNotice workspace={workspace} />
-      <Suspense fallback={<div className="editor-loading">Opening source note…</div>}>
+      <Suspense
+        fallback={
+          <div className="editor-loading">
+            <Trans>Opening source note…</Trans>
+          </div>
+        }
+      >
         <MarkdownEditor
           className="source-note-editor-surface"
           value={workspace.draft}
           {...(workspace.draftDocument ? { sharedDocument: workspace.draftDocument } : {})}
-          ariaLabel="Source note"
+          ariaLabel={translate({ message: "Source note" })}
           onChange={workspace.setDraft}
           onSave={workspace.saveDraft}
           insertion={insertion}
@@ -134,7 +152,7 @@ export function SourceNoteEditor({
             disabled={Boolean(workspace.draftRecovery?.conflict)}
             onClick={workspace.saveDraft}
           >
-            Retry save
+            <Trans>Retry save</Trans>
           </button>
         </div>
       ) : null}
@@ -177,21 +195,41 @@ function SaveStatus({
   readonly locallySaved: boolean;
   readonly conflict: boolean;
 }): JSX.Element {
+  useLocale();
   // Autosaves usually finish at once; until one runs long, keep showing the unsaved state.
   const slowSave = useSustained(status === "saving", SLOW_SAVE_MS);
   const [tone, label, detail]: readonly [SaveTone, string, string | undefined] = conflict
     ? [
         "attention",
-        "Conflict",
-        "The collection changed while you were editing. Review the conflict to continue.",
+        translate({ message: "Conflict", context: "SourceNoteEditor status or action" }),
+        translate({
+          message:
+            "The collection changed while you were editing. Review the conflict to continue.",
+        }),
       ]
     : slowSave
-      ? ["saving", "Saving…", undefined]
+      ? [
+          "saving",
+          translate({ message: "Saving…", context: "SourceNoteEditor status or action" }),
+          undefined,
+        ]
       : status === "saved"
-        ? ["saved", "Saved", "Saved to your collection"]
+        ? [
+            "saved",
+            translate({ message: "Saved", context: "SourceNoteEditor status or action" }),
+            translate({ message: "Saved to your collection" }),
+          ]
         : locallySaved
-          ? ["pending", "Saved locally", "Kept on this device until the collection can be reached"]
-          : ["attention", "Not saved", undefined];
+          ? [
+              "pending",
+              translate({ message: "Saved locally", context: "SourceNoteEditor status or action" }),
+              translate({ message: "Kept on this device until the collection can be reached" }),
+            ]
+          : [
+              "attention",
+              translate({ message: "Not saved", context: "SourceNoteEditor status or action" }),
+              undefined,
+            ];
   return (
     <span className="source-note-save-state" title={detail}>
       <SaveNotice tone={tone} label={label} />
@@ -199,29 +237,71 @@ function SaveStatus({
   );
 }
 
-const formatActions: readonly {
+function formatActions(): readonly {
   readonly name: MarkdownCommandName;
   readonly label: string;
   readonly symbol: ReactNode;
   readonly shortcut: string;
-}[] = [
-  { name: "strong", label: "Bold", symbol: <b>B</b>, shortcut: "mod+b" },
-  { name: "emphasis", label: "Italic", symbol: <em>I</em>, shortcut: "mod+i" },
-  { name: "heading", label: "Heading", symbol: <b>H</b>, shortcut: "mod+alt+2" },
-  { name: "link", label: "Link", symbol: <LinkIcon />, shortcut: "mod+k" },
-  { name: "quote", label: "Quote", symbol: <QuoteIcon />, shortcut: "mod+shift+." },
-  { name: "bullet-list", label: "Bullet list", symbol: <ListIcon />, shortcut: "mod+shift+8" },
-  { name: "inline-code", label: "Inline code", symbol: <CodeIcon />, shortcut: "mod+`" },
-];
+}[] {
+  return [
+    {
+      name: "strong",
+      label: translate({ message: "Bold", context: "SourceNoteEditor formatActions" }),
+      symbol: <b>B</b>,
+      shortcut: "mod+b",
+    },
+    {
+      name: "emphasis",
+      label: translate({ message: "Italic", context: "SourceNoteEditor formatActions" }),
+      symbol: <em>I</em>,
+      shortcut: "mod+i",
+    },
+    {
+      name: "heading",
+      label: translate({ message: "Heading", context: "SourceNoteEditor formatActions" }),
+      symbol: <b>H</b>,
+      shortcut: "mod+alt+2",
+    },
+    {
+      name: "link",
+      label: translate({ message: "Link", context: "SourceNoteEditor formatActions" }),
+      symbol: <LinkIcon />,
+      shortcut: "mod+k",
+    },
+    {
+      name: "quote",
+      label: translate({ message: "Quote", context: "SourceNoteEditor formatActions" }),
+      symbol: <QuoteIcon />,
+      shortcut: "mod+shift+.",
+    },
+    {
+      name: "bullet-list",
+      label: translate({ message: "Bullet list", context: "SourceNoteEditor formatActions" }),
+      symbol: <ListIcon />,
+      shortcut: "mod+shift+8",
+    },
+    {
+      name: "inline-code",
+      label: translate({ message: "Inline code", context: "SourceNoteEditor formatActions" }),
+      symbol: <CodeIcon />,
+      shortcut: "mod+`",
+    },
+  ];
+}
 
 function MarkdownFormatToolbar({
   onFormat,
 }: {
   readonly onFormat: (name: MarkdownCommandName) => void;
 }): JSX.Element {
+  const { t } = useLingui();
   return (
-    <div className="source-note-formatting" role="toolbar" aria-label="Format Markdown">
-      {formatActions.map((action) => (
+    <div
+      className="source-note-formatting"
+      role="toolbar"
+      aria-label={t({ message: "Format Markdown", context: "SourceNoteEditor interface" })}
+    >
+      {formatActions().map((action) => (
         <button
           key={action.name}
           type="button"

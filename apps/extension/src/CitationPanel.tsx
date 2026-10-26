@@ -1,3 +1,6 @@
+import { t as translate } from "@lingui/core/macro";
+import { useLingui as useLocale } from "@lingui/react";
+import { Trans, useLingui } from "@lingui/react/macro";
 import { ChevronDownIcon } from "@mdbase-reader/ui";
 import {
   citationStyleLabel,
@@ -36,7 +39,9 @@ export function CitationPanel({
         <CitationCard controller={c} />
         {c.citationPending || c.citation ? null : (
           <p className="hint">
-            No citation details were found on this page. Save the source, then add them in Reader.
+            <Trans>
+              No citation details were found on this page. Save the source, then add them in Reader.
+            </Trans>
           </p>
         )}
       </div>
@@ -46,6 +51,7 @@ export function CitationPanel({
 }
 
 function SavedCitation({ source }: { readonly source: SourceSummary }): React.JSX.Element {
+  const { t } = useLingui();
   const stored = source.citation;
   const citation: CslItem | null = stored
     ? { ...stored, title: text(stored["title"]) ?? source.title }
@@ -54,13 +60,15 @@ function SavedCitation({ source }: { readonly source: SourceSummary }): React.JS
   const [copied, setCopied] = useState<string | null>(null);
   const edit = (
     <a className="text-button" href={readerSourceUrl(source)} target="_blank" rel="noreferrer">
-      {citation ? "Edit in Reader" : "Add a citation in Reader"}
+      {citation ? t`Edit in Reader` : t`Add a citation in Reader`}
     </a>
   );
   if (!citation) {
     return (
       <div className="tab-section">
-        <p className="hint">This source has no citation yet.</p>
+        <p className="hint">
+          <Trans>This source has no citation yet.</Trans>
+        </p>
         {edit}
       </div>
     );
@@ -70,12 +78,13 @@ function SavedCitation({ source }: { readonly source: SourceSummary }): React.JS
   const copy = (value: string, done: string): void => {
     void navigator.clipboard.writeText(value).then(
       () => setCopied(done),
-      () => setCopied("Couldn’t copy. Select the text and copy it instead."),
+      () =>
+        setCopied(translate({ message: "Couldn’t copy. Select the text and copy it instead." })),
     );
   };
   return (
     <div className="tab-section">
-      <section className="citation" aria-label="Stored citation">
+      <section className="citation" aria-label={translate({ message: "Stored citation" })}>
         <span className="eyebrow">{label.toUpperCase()}</span>
         {formatted ? (
           <p className="citation-reference">{formatted}</p>
@@ -86,7 +95,9 @@ function SavedCitation({ source }: { readonly source: SourceSummary }): React.JS
               doi={text(citation["DOI"])}
               citekey={citation.id}
             />
-            <p className="hint">{rendered ? renderedCitationText(rendered) : "Formatting…"}</p>
+            <p className="hint">
+              {rendered ? renderedCitationText(rendered) : translate({ message: "Formatting…" })}
+            </p>
           </>
         )}
         {formatted ? <p className="citation-key">@{citation.id}</p> : null}
@@ -96,14 +107,22 @@ function SavedCitation({ source }: { readonly source: SourceSummary }): React.JS
           type="button"
           className="primary compact"
           disabled={!formatted}
-          onClick={() => formatted && copy(formatted, `Copied as ${label}`)}
+          onClick={() => formatted && copy(formatted, translate`Copied as ${label}`)}
         >
-          Copy citation
+          <Trans>Copy citation</Trans>
         </button>
         <CopyMenu
           items={[
-            ["Copy citekey", `@${citation.id}`, "Copied the citekey"],
-            ["Copy CSL-JSON", JSON.stringify(stored, null, 2), "Copied the CSL-JSON"],
+            [
+              translate({ message: "Copy citekey" }),
+              `@${citation.id}`,
+              translate({ message: "Copied the citekey" }),
+            ],
+            [
+              translate({ message: "Copy CSL-JSON" }),
+              JSON.stringify(stored, null, 2),
+              translate({ message: "Copied the CSL-JSON" }),
+            ],
           ]}
           onCopy={copy}
         />
@@ -149,6 +168,7 @@ function CopyMenu({
   readonly items: readonly (readonly [string, string, string])[];
   readonly onCopy: (value: string, done: string) => void;
 }): React.JSX.Element {
+  useLocale();
   const ref = useRef<HTMLDetailsElement>(null);
   useEffect(() => {
     const details = ref.current;
@@ -178,8 +198,8 @@ function CopyMenu({
     <details className="copy-menu" ref={ref}>
       <summary
         className="secondary compact"
-        aria-label="More ways to copy"
-        title="More ways to copy"
+        aria-label={translate({ message: "More ways to copy" })}
+        title={translate({ message: "More ways to copy" })}
       >
         <ChevronDownIcon />
       </summary>

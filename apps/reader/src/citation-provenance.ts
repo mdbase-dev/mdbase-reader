@@ -1,3 +1,4 @@
+import { t as translate } from "@lingui/core/macro";
 import {
   cslValuesEqual,
   preserveCslDismissals,
@@ -17,7 +18,7 @@ export function citationSourceLabel(label: string): string {
   const source = parseClaimSourceLabel(label) ?? parseClaimSourceLabel(label.split(" ")[0] ?? "");
   switch (source?.kind) {
     case "parent":
-      return "From the book";
+      return translate({ message: "From the book" });
     case "registry":
       return source.name;
     case "site-adapter":
@@ -25,11 +26,13 @@ export function citationSourceLabel(label: string): string {
     case "generic-remote":
       return genericRemoteLabel(label);
     case "page":
-      return source.signal === "html" ? "page title" : "page metadata";
+      return source.signal === "html"
+        ? translate({ message: "page title" })
+        : translate({ message: "page metadata" });
     case "user":
-      return "edited manually";
+      return translate({ message: "edited manually" });
     default:
-      return "other source";
+      return translate({ message: "other source" });
   }
 }
 
@@ -38,11 +41,11 @@ export function citationStatusLabel(status: CslFieldStatus): string {
     case "explained":
       return citationSourceLabel(status.provenance.source);
     case "edited":
-      return "edited manually";
+      return translate({ message: "edited manually" });
     case "removed":
       return "removed";
     case "unexplained":
-      return "no recorded source";
+      return translate({ message: "no recorded source" });
   }
 }
 
@@ -90,8 +93,8 @@ function genericRemoteLabel(label: string): string {
   const name = label.slice(label.indexOf(":") + 1, space === -1 ? undefined : space);
   const evidence = space === -1 ? undefined : label.slice(space + 1);
   return name === "citoid" && (evidence === undefined || isEmbeddedMetadataEvidence(evidence))
-    ? "From the web page"
-    : "From an online lookup";
+    ? translate({ message: "From the web page" })
+    : translate({ message: "From an online lookup" });
 }
 
 /**
@@ -104,6 +107,6 @@ function siteAdapterLabel(name: string): string {
     return name;
   }
   return name.slice(slash + 1) === "encyclopediaArticle"
-    ? "Encyclopedia article"
-    : "From the web page";
+    ? translate({ message: "Encyclopedia article" })
+    : translate({ message: "From the web page" });
 }

@@ -1,11 +1,11 @@
 // @vitest-environment happy-dom
 /* eslint-disable @typescript-eslint/require-await -- async act flushes React effects */
 import { act, useEffect } from "react";
-import { createRoot } from "react-dom/client";
 import { expect, it, vi } from "vitest";
 
 import { candidateProvenance } from "./new-citation-provenance.js";
 import { partSource } from "./source-parts.fixtures.js";
+import { createRoot } from "./testing/i18n.js";
 import { useSourceImport } from "./use-source-import.js";
 
 import type { ReaderWorkspaceController } from "./use-reader-workspace.js";

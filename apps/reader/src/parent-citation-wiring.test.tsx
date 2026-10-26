@@ -1,15 +1,16 @@
 // @vitest-environment happy-dom
 /* eslint-disable @typescript-eslint/require-await -- async act flushes effects and promise work */
 import { act, useEffect, type JSX } from "react";
-import { createRoot, type Root } from "react-dom/client";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { citationSourceLabel } from "./citation-provenance.js";
 import { partSource } from "./source-parts.fixtures.js";
+import { createRoot } from "./testing/i18n.js";
 import { useCitationEditor, type CitationEditorController } from "./use-citation-editor.js";
 
 import type { ReaderWorkspaceGateway } from "./workspace-model.js";
 import type { Source } from "@mdbase-reader/core";
+import type { Root } from "react-dom/client";
 
 vi.mock("@mdbase-dev/ui/mark-activity", () => ({ signalMdbaseMark: vi.fn() }));
 let host: HTMLDivElement;

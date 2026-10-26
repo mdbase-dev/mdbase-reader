@@ -1,3 +1,5 @@
+import { t as translate } from "@lingui/core/macro";
+
 import {
   collectionCommands,
   decodeArgs,
@@ -84,7 +86,10 @@ function resolveTarget(source: SdkHostSource, target: CallTarget, method: string
   }
   const current = source.currentCollection();
   if (current?.key !== target.key) {
-    throw refused("The collection connection changed. Try again.", "connection_retired");
+    throw refused(
+      translate({ message: "The collection connection changed. Try again." }),
+      "connection_retired",
+    );
   }
   const repository = (current.collection as unknown as Record<string, unknown>)[target.repository];
   const bound = member(repository, method);

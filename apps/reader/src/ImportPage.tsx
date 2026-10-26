@@ -1,3 +1,5 @@
+import { t as translate } from "@lingui/core/macro";
+import { useLingui as useLocale } from "@lingui/react";
 import { connectProblemMessage, type ReaderConnectSnapshot } from "@mdbase-reader/connect";
 import { useEffect, useMemo, useState, useSyncExternalStore, type JSX } from "react";
 
@@ -11,6 +13,7 @@ const snapshot = (): ReaderConnectSnapshot => readerSession.getSnapshot();
 
 /** Existing production import session; the LAB native route never loads this module. */
 export function ImportPage({ service }: { service: ImportService }): JSX.Element {
+  useLocale();
   const session = useSyncExternalStore(subscribe, snapshot, snapshot);
   const [controller] = useState(() => new ImportController(readerSession));
   const state = useSyncExternalStore(
@@ -32,7 +35,9 @@ export function ImportPage({ service }: { service: ImportService }): JSX.Element
           controller.update({ error });
         }
       })
-      .catch(() => controller.update({ error: "Could not connect to mdbase." }));
+      .catch(() =>
+        controller.update({ error: translate({ message: "Could not connect to mdbase." }) }),
+      );
     const warn = (event: BeforeUnloadEvent): void => {
       if (controller.getSnapshot().busy) {
         event.preventDefault();

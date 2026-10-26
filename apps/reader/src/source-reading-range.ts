@@ -1,3 +1,4 @@
+import { t as translate } from "@lingui/core/macro";
 import { parseDocumentRange } from "@mdbase-reader/core";
 
 import type { DocumentDescriptor, SourceSummary } from "@mdbase-reader/core";
@@ -89,23 +90,33 @@ async function resolve(
   if (entry.revision !== surface.document.document.revision) {
     return {
       valid: false,
-      message:
-        "This file has changed. The chapter range belongs to an older revision and cannot be applied to these bytes.",
+      message: translate({
+        message:
+          "This file has changed. The chapter range belongs to an older revision and cannot be applied to these bytes.",
+      }),
     };
   }
   const range = parseDocumentRange(raw);
   if (!range) {
-    return { valid: false, message: "This chapter has an invalid or unsupported document range." };
+    return {
+      valid: false,
+      message: translate({ message: "This chapter has an invalid or unsupported document range." }),
+    };
   }
   if (!surface.resolveReadingRange) {
-    return { valid: false, message: "The chapter range cannot be verified by this renderer." };
+    return {
+      valid: false,
+      message: translate({ message: "The chapter range cannot be verified by this renderer." }),
+    };
   }
   try {
     return await surface.resolveReadingRange(range);
   } catch {
     return {
       valid: false,
-      message: "The chapter range could not be verified against this document.",
+      message: translate({
+        message: "The chapter range could not be verified against this document.",
+      }),
     };
   }
 }

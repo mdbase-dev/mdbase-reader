@@ -1,10 +1,10 @@
 // @vitest-environment happy-dom
 import { act } from "react";
-import { createRoot } from "react-dom/client";
 import { afterEach, expect, it, vi } from "vitest";
 
 import { LibraryBulkBar } from "./LibraryBulkBar.js";
 import { partSource } from "./source-parts.fixtures.js";
+import { createRoot } from "./testing/i18n.js";
 
 import type { BulkStatusProgress } from "./LibraryBulkBar.js";
 import type { SourceSummary } from "@mdbase-reader/core";

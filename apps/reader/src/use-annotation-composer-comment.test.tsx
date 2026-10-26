@@ -7,10 +7,10 @@ import {
   type TextSelectionDraft,
 } from "@mdbase-reader/reading-surface";
 import { act } from "react";
-import { createRoot } from "react-dom/client";
 import { afterEach, beforeEach, expect, it, vi } from "vitest";
 
 import { PreviewGateway } from "./preview.js";
+import { createRoot } from "./testing/i18n.js";
 import {
   useAnnotationComposer,
   type AnnotationComposerController,

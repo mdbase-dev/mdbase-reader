@@ -1,3 +1,4 @@
+import { t } from "@lingui/core/macro";
 import { useEffect, useRef, type RefObject } from "react";
 
 import { confirmAnnotationDiscard } from "./annotation-draft-actions.js";
@@ -36,7 +37,7 @@ export function useSelectionRouting(input: {
     } else if (decision === "confirm-compose") {
       if (
         (await confirmAnnotationDiscard(
-          "Discard the unfinished annotation comment and use this area?",
+          t({ message: "Discard the unfinished annotation comment and use this area?" }),
         )) &&
         // The route function is recreated every render; only a change of document matters.
         target.current === `${key}|${String(sourceId)}` &&

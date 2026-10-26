@@ -4,11 +4,11 @@ import { fileRevision, sourceId } from "@mdbase-reader/core";
 // eslint-disable-next-line no-restricted-imports
 import { HtmlDocumentRuntime, HtmlReadingSurface } from "@mdbase-reader/renderer-html";
 import { act, useMemo } from "react";
-import { createRoot } from "react-dom/client";
 import { expect, it, vi } from "vitest";
 
 import { setAnnotationOwnerPreference } from "./annotation-owner-preference.js";
 import { PreviewGateway } from "./preview.js";
+import { createRoot } from "./testing/i18n.js";
 import { useAnnotationOwner } from "./use-annotation-owner.js";
 
 import type { ComposerSelection } from "./annotation-composer-request.js";

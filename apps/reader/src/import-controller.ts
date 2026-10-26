@@ -1,3 +1,4 @@
+import { t as translate, plural } from "@lingui/core/macro";
 import {
   planZotero,
   previewMigration,
@@ -24,20 +25,25 @@ export interface ImportState {
   boundTarget: string | null;
 }
 export class ImportController {
-  private state: ImportState = {
-    plan: null,
-    message: "Choose a service to bring your library into mdbase Reader.",
-    error: "",
-    busy: false,
-    preview: null,
-    progress: null,
-    result: null,
-    boundTarget: null,
-  };
+  private state: ImportState;
+  private initialState(): ImportState {
+    return {
+      plan: null,
+      message: translate({ message: "Choose a service to bring your library into mdbase Reader." }),
+      error: "",
+      busy: false,
+      preview: null,
+      progress: null,
+      result: null,
+      boundTarget: null,
+    };
+  }
   private listeners = new Set<() => void>();
   private active: AbortController | null = null;
   private client: ReadwiseClient | null = null;
-  constructor(private session: ReaderCollectionProvider) {}
+  constructor(private session: ReaderCollectionProvider) {
+    this.state = this.initialState();
+  }
   getSnapshot = (): ImportState => this.state;
   subscribe = (fn: () => void): (() => void) => {
     this.listeners.add(fn);
@@ -69,11 +75,16 @@ export class ImportController {
       const cancelled = control.signal.aborted;
       this.update({
         error: cancelled
-          ? "Stopped. Already committed data is kept. Resume with the same input and destination; existing records will not be overwritten."
+          ? translate({
+              message:
+                "Stopped. Already committed data is kept. Resume with the same input and destination; existing records will not be overwritten.",
+            })
           : reason instanceof Error
             ? reason.message
-            : "Import operation failed.",
-        message: cancelled ? "Stopped" : "Not complete — review the error before resuming",
+            : translate({ message: "Import operation failed." }),
+        message: cancelled
+          ? translate`Stopped`
+          : translate({ message: "Not complete — review the error before resuming" }),
       });
     } finally {
       this.active = null;
@@ -90,7 +101,9 @@ export class ImportController {
       for (const file of files) {
         const relative = file.webkitRelativePath.split("/").slice(1).join("/");
         if (!relative || input.has(relative)) {
-          throw new Error("Select one complete bundle folder with unique file paths.");
+          throw new Error(
+            translate({ message: "Select one complete bundle folder with unique file paths." }),
+          );
         }
         input.set(relative, file);
       }
@@ -103,7 +116,9 @@ export class ImportController {
       signal.throwIfAborted();
       this.update({
         plan,
-        message: "Bundle verified. Review the contents and choose a destination.",
+        message: translate({
+          message: "Bundle verified. Review the contents and choose a destination.",
+        }),
       });
     });
   }
@@ -123,7 +138,9 @@ export class ImportController {
       signal.throwIfAborted();
       this.update({
         plan,
-        message: "Library scanned. Review the contents and choose a destination.",
+        message: translate({
+          message: "Library scanned. Review the contents and choose a destination.",
+        }),
       });
     });
   }
@@ -135,12 +152,14 @@ export class ImportController {
     }
     const target = opened.migration;
     void this.task(async (signal) => {
-      this.update({ message: "Checking existing import identities…" });
+      this.update({ message: translate({ message: "Checking existing import identities…" }) });
       const next = await previewMigration(plan, target, signal);
       signal.throwIfAborted();
       this.update({
         preview: { ...next, collectionId: target.collectionId },
-        message: "Destination checked. Start the import below to begin writing.",
+        message: translate({
+          message: "Destination checked. Start the import below to begin writing.",
+        }),
       });
     });
   };
@@ -168,7 +187,10 @@ export class ImportController {
               return;
             }
             mark(markFraction(progress.completed, progress.total));
-            this.update({ progress, message: `${progress.phase} — ${name}` });
+            this.update({
+              progress,
+              message: translate`${migrationPhaseLabel(progress.phase)} — ${name}`,
+            });
             saveProgress(plan.service, progress);
           }),
         undefined,
@@ -178,11 +200,35 @@ export class ImportController {
       this.client?.forget();
       this.update({
         result,
-        message: `Import complete into ${name}. ${result.verified.toLocaleString()} records verified.`,
+        message: translate({
+          message: `Import complete into ${name}. ${plural(result.verified, { one: "# record verified", other: "# records verified" })}.`,
+        }),
       });
     });
   };
 }
+/** Migration currently reports source phase tokens; do not store translated phases. */
+function migrationPhaseLabel(phase: string): string {
+  switch (phase) {
+    case "Preparing":
+      return translate`Preparing`;
+    case "Creating sources":
+      return translate`Creating sources`;
+    case "Creating annotations and notes":
+      return translate`Creating annotations and notes`;
+    case "Verifying imported records":
+      return translate`Verifying imported records`;
+    case "Complete":
+      return translate({ message: "Complete", context: "Import completed" });
+    default: {
+      const files = /^Files: (\d+) of (\d+)$/u.exec(phase);
+      const completed = files?.[1] ?? "";
+      const total = files?.[2] ?? "";
+      return files ? translate`Files: ${completed} of ${total}` : phase;
+    }
+  }
+}
+
 function saveProgress(service: string, progress: MigrationProgress): void {
   try {
     localStorage.setItem(

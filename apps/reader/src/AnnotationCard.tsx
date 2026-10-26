@@ -1,3 +1,6 @@
+import { t, t as translate } from "@lingui/core/macro";
+import { useLingui as useLocale } from "@lingui/react";
+import { Trans, useLingui } from "@lingui/react/macro";
 import {
   highlightColorKey,
   type Annotation,
@@ -77,6 +80,7 @@ export function AnnotationCard({
   /** True when the annotation belongs to a source other than the open one. */
   readonly showSource?: boolean;
 }): JSX.Element {
+  useLocale();
   // The list reveals explicit selection once; remounting a windowed selected card must not jump.
   const cardRef = useScrollToEditing(editing);
   const session = useAnnotationSession(annotation, onSave);
@@ -98,7 +102,7 @@ export function AnnotationCard({
       {...highlightColorProps(annotation.color)}
       data-annotation-id={annotation.id}
       role="group"
-      aria-label={`${annotationKindLabel(annotation.annotationType)} annotation`}
+      aria-label={t`${annotationKindLabel(annotation.annotationType)} annotation`}
       onClick={(event) => {
         if (!editing && linked && !selectsTextIn(event.currentTarget)) {
           onOpen();
@@ -173,7 +177,9 @@ function cardClassName(
 }
 
 function draftLabel(conflict: boolean): string {
-  return conflict ? "Changes need review" : "Unsaved changes";
+  return conflict
+    ? translate({ message: "Changes need review" })
+    : translate({ message: "Unsaved changes" });
 }
 
 /** Quiet secondary details: kind (except for highlights), date, location and draft state. */
@@ -190,6 +196,7 @@ function AnnotationMeta({
   readonly outsideChapter: boolean;
   readonly draft: string | null;
 }): JSX.Element {
+  useLocale();
   const location = showLocation ? annotationLocationLabel(annotation) : undefined;
   const meanings = useHighlightMeanings();
   const colored = hasHighlightColor(annotation);
@@ -218,7 +225,7 @@ function AnnotationMeta({
           title={
             hasPassageAnchor(annotation.target)
               ? location
-              : `${location} · saved without a link to the exact passage`
+              : translate`${location} · saved without a link to the exact passage`
           }
         >
           {location}
@@ -227,9 +234,11 @@ function AnnotationMeta({
       {outsideChapter ? (
         <small
           className="annotation-locator is-outside-chapter"
-          title="Outside the chapter’s pages; it still belongs to this chapter"
+          title={translate({
+            message: "Outside the chapter’s pages; it still belongs to this chapter",
+          })}
         >
-          Outside chapter
+          <Trans>Outside chapter</Trans>
         </small>
       ) : null}
       {draft ? <small className="annotation-draft-badge">{draft}</small> : null}
@@ -307,7 +316,9 @@ function AnnotationColorChoice({
   const [state, setState] = useState<"idle" | "saving" | "failed">("idle");
   return (
     <div className="annotation-card-colors">
-      <span>Colour</span>
+      <span>
+        <Trans>Colour</Trans>
+      </span>
       <HighlightSwatches
         mode="recolor"
         colors={colors}
@@ -323,7 +334,11 @@ function AnnotationColorChoice({
           );
         }}
       />
-      {state === "failed" ? <small role="alert">Couldn’t change the colour.</small> : null}
+      {state === "failed" ? (
+        <small role="alert">
+          <Trans>Couldn’t change the colour.</Trans>
+        </small>
+      ) : null}
     </div>
   );
 }
@@ -351,6 +366,7 @@ function AnnotationCardActions({
   readonly moveDisabled: boolean;
   readonly recolor: ((annotation: Annotation, color: HighlightColorKey) => Promise<void>) | null;
 }): JSX.Element {
+  const { t } = useLingui();
   return (
     <div className="annotation-card-actions">
       <button
@@ -358,7 +374,7 @@ function AnnotationCardActions({
         disabled={!annotation.path || !annotation.recordRevision}
         title={
           !annotation.path || !annotation.recordRevision
-            ? "Editing requires a saved annotation"
+            ? t({ message: "Editing requires a saved annotation" })
             : undefined
         }
         onClick={(event) => {
@@ -366,15 +382,19 @@ function AnnotationCardActions({
           onEdit();
         }}
       >
-        {editingElsewhere ? "Edit here" : resume ? "Resume edits" : "Edit"}
+        {editingElsewhere
+          ? t({ message: "Edit here", context: "AnnotationCard interface" })
+          : resume
+            ? t({ message: "Resume edits", context: "AnnotationCard interface" })
+            : t({ message: "Edit", context: "AnnotationCard interface" })}
       </button>
       <button
         type="button"
         disabled={transclusion.busyId !== null || transclusion.isEmbedded(annotation)}
         title={
           transclusion.isEmbedded(annotation)
-            ? "Already included in the source note"
-            : "Insert this annotation in the source note"
+            ? translate({ message: "Already included in the source note" })
+            : translate({ message: "Insert this annotation in the source note" })
         }
         onClick={(event) => {
           event.stopPropagation();
@@ -382,17 +402,17 @@ function AnnotationCardActions({
         }}
       >
         {transclusion.busyId === annotation.id
-          ? "Inserting…"
+          ? t({ message: "Inserting…", context: "AnnotationCard interface" })
           : transclusion.isEmbedded(annotation)
-            ? "In source note"
-            : "Insert into source note"}
+            ? translate({ message: "In source note" })
+            : translate({ message: "Insert into source note" })}
       </button>
       {hasPassageAnchor(annotation.target) ? (
         <button
           className="icon-button"
           type="button"
-          aria-label="Show in document"
-          title="Show in document"
+          aria-label={t({ message: "Show in document" })}
+          title={t({ message: "Show in document" })}
           onClick={(event) => {
             event.stopPropagation();
             onOpen();
@@ -426,6 +446,7 @@ function AnnotationCardMore({
   readonly moveDisabled: boolean;
   readonly recolor: ((annotation: Annotation, color: HighlightColorKey) => Promise<void>) | null;
 }): JSX.Element | null {
+  useLocale();
   if (!movable && !recolor) {
     return null;
   }
@@ -433,7 +454,7 @@ function AnnotationCardMore({
     // The menu is a pointer-free island: clicks inside it never open the card's passage.
     // eslint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions
     <span className="annotation-card-more" onClick={(event) => event.stopPropagation()}>
-      <Menu label="More actions" trigger={<MoreIcon />}>
+      <Menu label={translate({ message: "More actions" })} trigger={<MoreIcon />}>
         <div className="annotation-card-more-panel" data-menu-keep-open>
           {recolor ? <AnnotationColorChoice annotation={annotation} recolor={recolor} /> : null}
           {movable ? (

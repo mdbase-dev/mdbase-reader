@@ -32,10 +32,10 @@ describe("connection recovery", () => {
 
   it("replaces unrecognised technical text with a fallback and keeps it as detail", () => {
     const raw = "mdbase Connect could not query sources: query_failed";
-    expect(describeConnectionProblem(raw, libraryLoadFallback)).toBe(libraryLoadFallback);
-    expect(connectionProblemDetail(raw, libraryLoadFallback)).toBe(raw);
+    expect(describeConnectionProblem(raw, libraryLoadFallback())).toBe(libraryLoadFallback());
+    expect(connectionProblemDetail(raw, libraryLoadFallback())).toBe(raw);
     // A recognised problem keeps its own plain wording.
-    expect(describeConnectionProblem("TypeError: Failed to fetch", libraryLoadFallback)).toMatch(
+    expect(describeConnectionProblem("TypeError: Failed to fetch", libraryLoadFallback())).toMatch(
       /could not reach/u,
     );
   });

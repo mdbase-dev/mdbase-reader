@@ -1,3 +1,5 @@
+import { t as translate } from "@lingui/core/macro";
+import { Trans } from "@lingui/react/macro";
 import {
   annotationId,
   collectionId,
@@ -60,26 +62,26 @@ function Fixture(): JSX.Element {
   const [readingId, setReadingId] = useState<Annotation["id"] | null>(null);
   return (
     <main style={{ padding: 24 }}>
-      <h1>Annotation scale fixture</h1>
-      <p>
-        Disposable, in-memory source with {count} variable-height annotations. No Connect access.
-      </p>
+      <h1>
+        <Trans>Annotation scale fixture</Trans>
+      </h1>
+      <p>{translate`Disposable, in-memory source with ${count} variable-height annotations. No Connect access.`}</p>
       <button
         onClick={() => {
           metrics.renderMs.length = 0;
           setMounted(true);
         }}
       >
-        Mount annotations
+        <Trans>Mount annotations</Trans>
       </button>{" "}
       <button onClick={() => setActiveId(annotations[count - 1]?.id ?? null)}>
-        Select last annotation
+        <Trans>Select last annotation</Trans>
       </button>
       <button onClick={() => setReadingId(annotations[Math.floor(count / 2)]?.id ?? null)}>
-        Read middle
+        <Trans>Read middle</Trans>
       </button>{" "}
       <button onClick={() => setReadingId(annotations[Math.floor(count / 3)]?.id ?? null)}>
-        Read earlier
+        <Trans>Read earlier</Trans>
       </button>
       <Profiler
         id="annotations"

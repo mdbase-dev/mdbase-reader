@@ -1,3 +1,4 @@
+import { t as translate, plural } from "@lingui/core/macro";
 import { searchQuote } from "@mdbase-reader/core";
 import { useEffect, useMemo, useState } from "react";
 
@@ -137,7 +138,9 @@ export function useOpenDocumentSearch(
           setPending(false);
           setProblem(
             failures
-              ? `${String(failures)} loaded document(s) could not be indexed. Reopen document search to retry.`
+              ? translate({
+                  message: `${plural(failures, { one: "# loaded document could not be indexed", other: "# loaded documents could not be indexed" })}. Reopen document search to retry.`,
+                })
               : null,
           );
         }
@@ -166,9 +169,13 @@ export function useOpenDocumentSearch(
     }
   }
   const readable = sources.filter((source) => source.documents.length > 0).length;
+  const state = pending ? translate`indexing` : translate`searched`;
+  const limit = currentTexts.some((entry) => entry.truncated)
+    ? translate` Loaded documents are limited to their first 1,000,000 characters.`
+    : "";
   return {
     matches,
     problem,
-    coverage: `Loaded-document fallback: ${pending ? "indexing" : "searched"} ${String(currentTexts.length)} of ${String(readable)} readable sources. Suspended/unopened PDF/EPUB files are not included.${currentTexts.some((entry) => entry.truncated) ? " Loaded documents are limited to their first 1,000,000 characters." : ""}`,
+    coverage: translate`Loaded-document fallback: ${state} ${currentTexts.length} of ${readable} readable sources. Suspended/unopened PDF/EPUB files are not included.${limit}`,
   };
 }

@@ -1,3 +1,6 @@
+import { t as translate } from "@lingui/core/macro";
+import { useLingui as useLocale } from "@lingui/react";
+import { Trans, useLingui } from "@lingui/react/macro";
 import { useCallback, type JSX } from "react";
 
 import { AnnotationEditingContext } from "./AnnotationEditingContext.js";
@@ -56,18 +59,19 @@ export function InspectorPane({
   onPromote,
   onOpenSourceView,
 }: InspectorPaneProps): JSX.Element {
+  const { t } = useLingui();
   return (
     <aside
       id="reader-source-tools"
       className={open ? "inspector-pane" : "inspector-pane is-mobile-closed"}
-      aria-label="Source workspace"
+      aria-label={t({ message: "Source workspace", context: "InspectorPane interface" })}
       aria-hidden={!open}
       inert={!open}
     >
       {/* The dock tab above names the source; this row only switches its tools. */}
       <div className="inspector-context">
         <span className="sr-only">
-          {paneLabel}: {source?.title ?? "No source in this pane"}
+          {paneLabel}: {source?.title ?? t({ message: "No source in this pane" })}
         </span>
         <InspectorTabs
           tab={tab}
@@ -81,8 +85,8 @@ export function InspectorPane({
           type="button"
           className="icon-button inspector-promote"
           disabled={!source}
-          aria-label={`Open ${tab} in workbench`}
-          title="Keep open as a workbench tab"
+          aria-label={t`Open ${tab} in workbench`}
+          title={t({ message: "Keep open as a workbench tab" })}
           onClick={() => onPromote(tab)}
         >
           <PanelIcon />
@@ -91,11 +95,17 @@ export function InspectorPane({
       {source && workbenchOwner?.tab === tab ? (
         <div className="inspector-status inspector-workbench-owner">
           <strong>
-            {tabLabel(tab)} is open in {workbenchOwner.paneLabel}
+            <Trans>
+              {tabLabel(tab)}
+              is open in
+              {workbenchOwner.paneLabel}
+            </Trans>
           </strong>
-          <span>Reader keeps one writable editor for each source record.</span>
+          <span>
+            <Trans>Reader keeps one writable editor for each source record.</Trans>
+          </span>
           <button type="button" onClick={workbenchOwner.onOpen}>
-            Go to workbench
+            <Trans>Go to workbench</Trans>
           </button>
         </div>
       ) : source ? (
@@ -108,8 +118,14 @@ export function InspectorPane({
         />
       ) : (
         <div className="inspector-status inspector-context-empty">
-          <strong>Notes follow the active pane</strong>
-          <span>Focus a document, note, annotation, or citation tab to inspect its source.</span>
+          <strong>
+            <Trans>Notes follow the active pane</Trans>
+          </strong>
+          <span>
+            <Trans>
+              Focus a document, note, annotation, or citation tab to inspect its source.
+            </Trans>
+          </span>
         </div>
       )}
     </aside>
@@ -127,6 +143,7 @@ function InspectorTabs({
   readonly annotationCount: number | null;
   readonly onChange: (tab: InspectorTab) => void;
 }): JSX.Element {
+  const { t } = useLingui();
   return (
     <div className="inspector-tabs" role="tablist">
       <button
@@ -134,10 +151,13 @@ function InspectorTabs({
         role="tab"
         disabled={!enabled}
         aria-selected={tab === "annotations"}
-        title="Annotations"
+        title={t({ message: "Annotations", context: "InspectorPane interface" })}
         onClick={() => onChange("annotations")}
       >
-        <HighlightIcon /> <span className="inspector-tab-label">Annotations</span>{" "}
+        <HighlightIcon />{" "}
+        <span className="inspector-tab-label">
+          <Trans>Annotations</Trans>
+        </span>{" "}
         <span className="inspector-tab-count">{annotationCount ?? "—"}</span>
       </button>
       <button
@@ -145,31 +165,41 @@ function InspectorTabs({
         role="tab"
         disabled={!enabled}
         aria-selected={tab === "note"}
-        title="Source note"
+        title={translate({ message: "Source note" })}
         onPointerEnter={SourceNoteEditor.preload}
         onFocus={SourceNoteEditor.preload}
         onClick={() => onChange("note")}
       >
-        <NoteIcon /> <span className="inspector-tab-label">Source note</span>
+        <NoteIcon />{" "}
+        <span className="inspector-tab-label">
+          <Trans>Source note</Trans>
+        </span>
       </button>
       <button
         type="button"
         role="tab"
         disabled={!enabled}
         aria-selected={tab === "citation"}
-        title="Citation"
+        title={translate({ message: "Citation", context: "InspectorPane status or action" })}
         onPointerEnter={CitationEditor.preload}
         onFocus={CitationEditor.preload}
         onClick={() => onChange("citation")}
       >
-        <CitationIcon /> <span className="inspector-tab-label">Citation</span>
+        <CitationIcon />{" "}
+        <span className="inspector-tab-label">
+          <Trans>Citation</Trans>
+        </span>
       </button>
     </div>
   );
 }
 
 function tabLabel(tab: InspectorTab): string {
-  return tab === "note" ? "Source note" : tab === "citation" ? "Citation" : "Annotations";
+  return tab === "note"
+    ? translate({ message: "Source note" })
+    : tab === "citation"
+      ? translate({ message: "Citation", context: "InspectorPane status or action" })
+      : translate({ message: "Annotations", context: "InspectorPane status or action" });
 }
 
 export function InspectorContent({
@@ -216,6 +246,7 @@ function AnnotationsTab({
 }: Pick<InspectorPaneProps, "workspace" | "composer" | "gateway"> & {
   readonly readFile: AnnotationFileReader;
 }): JSX.Element {
+  useLocale();
   const actions = useAnnotationPanelActions({ workspace, composer, gateway });
   const source = workspace.sourceRecord.status === "ready" ? workspace.sourceRecord.value : null;
   const view = workspace.annotationView;
@@ -249,21 +280,25 @@ function AnnotationsTab({
               ? async (annotation, owner) => {
                   if (
                     !(await requestConfirmation({
-                      title: `Move annotation to “${owner.title}”?`,
+                      title: translate`Move annotation to “${owner.title}”?`,
                       message:
                         "Its document target, selector, revision and note embeds will not change. The new source may not include this passage in its range.",
-                      confirmLabel: "Move annotation to source",
-                      cancelLabel: "Keep source",
+                      confirmLabel: translate({ message: "Move annotation to source" }),
+                      cancelLabel: translate({ message: "Keep source" }),
                     }))
                   ) {
                     return;
                   }
                   const fullOwner = await gateway.source(owner.id);
                   if (!fullOwner) {
-                    throw new Error("The chosen source no longer exists. Choose another source.");
+                    throw new Error(
+                      translate({
+                        message: "The chosen source no longer exists. Choose another source.",
+                      }),
+                    );
                   }
                   if (!gateway.moveAnnotationOwner) {
-                    throw new Error("Moving annotations is unavailable.");
+                    throw new Error(translate({ message: "Moving annotations is unavailable." }));
                   }
                   const updated = await gateway.moveAnnotationOwner(annotation, fullOwner);
                   publishSharedAnnotation(gateway, annotation, updated);

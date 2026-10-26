@@ -1,3 +1,6 @@
+import { t as translate } from "@lingui/core/macro";
+import { useLingui as useLocale } from "@lingui/react";
+import { Trans } from "@lingui/react/macro";
 import { useEffect, useState, type JSX } from "react";
 
 import { readerErrorMessage } from "./errors.js";
@@ -22,6 +25,7 @@ export function AnnotationImage({
   readonly image: AnnotationImageEmbed;
   readonly readFile: AnnotationFileReader;
 }): JSX.Element {
+  useLocale();
   const [state, setState] = useState<ImageState>({ status: "loading" });
   useEffect(() => {
     const request = new AbortController();
@@ -32,7 +36,7 @@ export function AnnotationImage({
           return;
         }
         if (!file.mediaType.startsWith("image/")) {
-          throw new Error("The embedded annotation asset is not an image.");
+          throw new Error(translate({ message: "The embedded annotation asset is not an image." }));
         }
         objectUrl = URL.createObjectURL(
           new Blob([file.bytes.slice().buffer], { type: file.mediaType }),
@@ -43,7 +47,10 @@ export function AnnotationImage({
         if (!request.signal.aborted) {
           setState({
             status: "error",
-            message: readerErrorMessage(reason, "Reader could not display this screenshot."),
+            message: readerErrorMessage(
+              reason,
+              translate({ message: "Reader could not display this screenshot." }),
+            ),
           });
         }
       });
@@ -64,7 +71,7 @@ export function AnnotationImage({
     </p>
   ) : (
     <div className="annotation-card-asset-status" role="status">
-      Loading screenshot…
+      <Trans>Loading screenshot…</Trans>
     </div>
   );
 }

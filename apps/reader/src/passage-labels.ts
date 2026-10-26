@@ -1,3 +1,5 @@
+import { t as translate } from "@lingui/core/macro";
+
 import { isEpub, isHtml, isPdf } from "./document-media.js";
 
 import type { Annotation, DocumentDescriptor, SearchDestination } from "@mdbase-reader/core";
@@ -16,32 +18,41 @@ export function humanPassageLabel(value: string | undefined): string | undefined
   return label;
 }
 
-export function annotationLocationLabel(annotation: Annotation): string | undefined {
+export function annotationLocationLabel(
+  annotation: Annotation,
+  includeFormat = true,
+): string | undefined {
   const label = humanPassageLabel(annotation.locator?.label);
   if (label && label !== "EPUB location") {
     return label;
   }
   const position = annotation.target?.position;
-  if (position?.kind === "epub") {
-    const title = position.locator["title"];
-    const chapter = humanPassageLabel(typeof title === "string" ? title : undefined);
-    if (chapter) {
-      return chapter;
-    }
+  const chapter = epubChapterTitle(annotation);
+  if (chapter) {
+    return chapter;
   }
   const pageIndex =
     annotation.target?.pdf?.pageIndex ??
     (position?.kind === "pdf" ? position.pageIndex : undefined);
   if (pageIndex !== undefined) {
-    return `p. ${String(pageIndex + 1)}`;
+    return translate`p. ${String(pageIndex + 1)}`;
   }
-  return annotationDocumentLabel(annotation);
+  return includeFormat ? annotationDocumentLabel(annotation) : undefined;
+}
+
+function epubChapterTitle(annotation: Annotation): string | undefined {
+  const position = annotation.target?.position;
+  if (position?.kind !== "epub") {
+    return undefined;
+  }
+  const title = position.locator["title"];
+  return humanPassageLabel(typeof title === "string" ? title : undefined);
 }
 
 function annotationDocumentLabel(annotation: Annotation): string | undefined {
   const position = annotation.target?.position;
   if (annotation.target?.html || position?.kind === "html") {
-    return "Web page";
+    return translate({ message: "Web page" });
   }
   if (
     annotation.locator?.label === "EPUB location" ||
@@ -60,7 +71,7 @@ function documentFormatLabel(mediaType: string, file: string): string | undefine
   if (isEpub(mediaType, file)) {
     return "EPUB";
   }
-  return isHtml(mediaType, file) ? "Web page" : undefined;
+  return isHtml(mediaType, file) ? translate({ message: "Web page" }) : undefined;
 }
 
 export function documentPassageLabel(
@@ -70,9 +81,9 @@ export function documentPassageLabel(
 ): string {
   const path = file ?? document?.file ?? "";
   const mediaType = document?.mediaType ?? "";
-  const format = documentFormatLabel(mediaType, path) ?? "Document";
+  const format = documentFormatLabel(mediaType, path) ?? translate`Document`;
   const title = humanPassageLabel(document?.title) ?? format;
   return destination?.location.kind === "pdf"
-    ? `${title} · p. ${String(destination.location.pageIndex + 1)}`
+    ? translate`${title} · p. ${String(destination.location.pageIndex + 1)}`
     : title;
 }

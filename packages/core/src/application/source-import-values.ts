@@ -1,3 +1,5 @@
+import { t } from "@lingui/core/macro";
+
 import { DomainError } from "../domain/errors.js";
 import { sourceNotePaths } from "../domain/record-names.js";
 
@@ -10,10 +12,13 @@ export function webUrl(value: string): string {
   try {
     url = new URL(value);
   } catch {
-    throw new DomainError("invalid-source-import", "The source URL is invalid.");
+    throw new DomainError("invalid-source-import", t({ message: "The source URL is invalid." }));
   }
   if ((url.protocol !== "https:" && url.protocol !== "http:") || url.username || url.password) {
-    throw new DomainError("invalid-source-import", "The source URL must be a public web address.");
+    throw new DomainError(
+      "invalid-source-import",
+      t({ message: "The source URL must be a public web address." }),
+    );
   }
   return url.href;
 }
@@ -65,13 +70,13 @@ export function httpsUrl(value: string): string {
   } catch {
     throw new DomainError(
       "invalid-source-import",
-      "Web capture provenance contains an invalid URL.",
+      t({ message: "Web capture provenance contains an invalid URL." }),
     );
   }
   if (url.protocol !== "https:" || url.username || url.password) {
     throw new DomainError(
       "invalid-source-import",
-      "Web capture provenance must use public HTTPS URLs.",
+      t({ message: "Web capture provenance must use public HTTPS URLs." }),
     );
   }
   url.hash = "";
@@ -84,7 +89,10 @@ export function safeFileName(value: string): string {
     .filter((character) => character.charCodeAt(0) > 31 && character !== "\u007f")
     .join("");
   if (!clean || clean === "." || clean === "..") {
-    throw new DomainError("invalid-source-import", "The selected file needs a valid filename.");
+    throw new DomainError(
+      "invalid-source-import",
+      t({ message: "The selected file needs a valid filename." }),
+    );
   }
   return clean;
 }
@@ -144,7 +152,7 @@ export function titleFromFileName(name: string): string {
 export function normalizeTitle(value: string): string {
   const title = value.trim().replace(/\s+/gu, " ");
   if (!title) {
-    throw new DomainError("invalid-source-import", "The source needs a title.");
+    throw new DomainError("invalid-source-import", t({ message: "The source needs a title." }));
   }
   return title;
 }

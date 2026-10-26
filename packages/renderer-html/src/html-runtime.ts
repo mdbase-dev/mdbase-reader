@@ -1,3 +1,4 @@
+import { t } from "@lingui/core/macro";
 import {
   MarginMarkers,
   forwardApplicationShortcut,
@@ -86,7 +87,7 @@ export class HtmlDocumentRuntime {
     const document = frame.contentDocument;
     const view = frame.contentWindow;
     if (!document || !view) {
-      throw new Error("The isolated HTML document is unavailable.");
+      throw new Error(t({ message: "The isolated HTML document is unavailable." }));
     }
     this.#frame = frame;
     this.#document = document;

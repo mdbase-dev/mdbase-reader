@@ -2,11 +2,11 @@
 import { collectionId, fileId, fileRevision, sourceId } from "@mdbase-reader/core";
 import { createEventEmitter } from "@mdbase-reader/reading-surface";
 import { act, useRef } from "react";
-import { createRoot } from "react-dom/client";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { LibraryTextSearch } from "./LibraryTextSearch.js";
 import { SearchPassageStatus } from "./SearchPassageStatus.js";
+import { createRoot } from "./testing/i18n.js";
 import {
   navigateToSearchDestination,
   searchPassageFallback,
@@ -178,7 +178,7 @@ describe("document search UI", () => {
       expect(status.textContent).toBe(
         found
           ? "Matching passage: “Matching passage”. Temporarily highlighted in the document."
-          : searchPassageFallback,
+          : searchPassageFallback(),
       );
       expect(document.activeElement).toBe(status);
       if (stale) {

@@ -1,3 +1,6 @@
+import { t as translate } from "@lingui/core/macro";
+import { useLingui as useLocale } from "@lingui/react";
+
 import { highlightColorName, type HighlightMeanings } from "./highlight-colors.js";
 
 import type { HighlightColorKey } from "@mdbase-reader/core";
@@ -30,11 +33,16 @@ export function HighlightSwatches({
   readonly disabled?: boolean | undefined;
   readonly onChoose: (color: HighlightColorKey) => void;
 }): JSX.Element {
+  useLocale();
   return (
     <div
       className="highlight-swatches"
       role="group"
-      aria-label={mode === "highlight" ? "Highlight in a colour" : "Highlight colour"}
+      aria-label={
+        mode === "highlight"
+          ? translate({ message: "Highlight in a colour" })
+          : translate({ message: "Highlight colour" })
+      }
     >
       {colors.map((key, index) => {
         const name = highlightColorName(key, meanings);
@@ -47,10 +55,10 @@ export function HighlightSwatches({
             className={`highlight-swatch${key === ringed ? " is-ringed" : ""}`}
             data-highlight-color={key}
             disabled={disabled}
-            aria-label={mode === "highlight" ? `Highlight ${name}` : name}
+            aria-label={mode === "highlight" ? translate`Highlight ${name}` : name}
             {...(mode === "recolor" ? { "aria-pressed": key === ringed } : {})}
             {...(shortcuts ? { "aria-keyshortcuts": keys.replace(" or ", " ") } : {})}
-            title={`${mode === "highlight" ? "Highlight " : ""}${name}${shortcuts ? ` (${keys})` : ""}`}
+            title={`${mode === "highlight" ? translate({ message: "Highlight " }) : ""}${name}${shortcuts ? ` (${keys})` : ""}`}
             onClick={() => onChoose(key)}
           >
             <i aria-hidden="true" />

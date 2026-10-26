@@ -2,7 +2,6 @@
 /* eslint-disable @typescript-eslint/require-await -- async act flushes React updates */
 import { collectionId, sourceId } from "@mdbase-reader/core";
 import { act, StrictMode } from "react";
-import { createRoot } from "react-dom/client";
 import { afterEach, beforeEach, expect, it, vi } from "vitest";
 
 import { confirmAnnotationDiscard } from "./annotation-draft-actions.js";
@@ -10,6 +9,7 @@ import { confirmCollectionSwitch } from "./collection-switching.js";
 import { createConfirmationService, requestConfirmation } from "./confirmation.js";
 import { ConfirmProvider, useConfirm } from "./ConfirmProvider.js";
 import { createSourceWorkspaceLayout } from "./source-workspace-layout.js";
+import { createRoot } from "./testing/i18n.js";
 
 (globalThis as typeof globalThis & { IS_REACT_ACT_ENVIRONMENT: boolean }).IS_REACT_ACT_ENVIRONMENT =
   true;

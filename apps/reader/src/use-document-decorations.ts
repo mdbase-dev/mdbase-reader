@@ -1,3 +1,4 @@
+import { t } from "@lingui/core/macro";
 import { useEffect, useState } from "react";
 
 import { readerErrorMessage } from "./errors.js";
@@ -41,7 +42,10 @@ export function useDocumentDecorations(
         if (active) {
           setProblem({
             surface,
-            message: readerErrorMessage(reason, "Reader could not display saved highlights."),
+            message: readerErrorMessage(
+              reason,
+              t({ message: "Reader could not display saved highlights." }),
+            ),
           });
         }
       });

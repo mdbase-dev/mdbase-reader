@@ -1,3 +1,4 @@
+import { t as translate } from "@lingui/core/macro";
 import {
   cslValuesEqual,
   sourceId,
@@ -51,7 +52,10 @@ async function reviewedChapterParent(
   const preview = offer.books.find(({ id }) => id === bookId);
   if (!parent || !cslValuesEqual(parent.citation, preview?.citation)) {
     throw new Error(
-      "The book citation changed. Look up the chapter DOI again to review the new container details.",
+      translate({
+        message:
+          "The book citation changed. Look up the chapter DOI again to review the new container details.",
+      }),
     );
   }
   return parent;
@@ -72,7 +76,10 @@ async function lookupChapterBook(
         : undefined;
   if (!isbn || !gateway?.resolveCitation) {
     throw new Error(
-      "Choose the correct container ISBN, or add the book by ISBN first and retry the chapter DOI.",
+      translate({
+        message:
+          "Choose the correct container ISBN, or add the book by ISBN first and retry the chapter DOI.",
+      }),
     );
   }
   const candidate = await gateway.resolveCitation(
@@ -84,7 +91,11 @@ async function lookupChapterBook(
     candidate.citation.type !== "book" ||
     !chapterIsbns(candidate.citation["ISBN"]).includes(isbn)
   ) {
-    throw new Error("The catalogue result did not match the container ISBN. No book was created.");
+    throw new Error(
+      translate({
+        message: "The catalogue result did not match the container ISBN. No book was created.",
+      }),
+    );
   }
   return candidate;
 }
@@ -116,7 +127,7 @@ function useChapterBookLookup(
         onFound(candidate);
       } catch (reason) {
         if (operation.isCurrent()) {
-          onError(readerErrorMessage(reason, "Could not find this book."));
+          onError(readerErrorMessage(reason, translate({ message: "Could not find this book." })));
         }
       } finally {
         operation.finish();
@@ -156,7 +167,9 @@ export function useChapterDoi(
     try {
       await work();
     } catch (reason) {
-      setError(readerErrorMessage(reason, "Could not create this chapter."));
+      setError(
+        readerErrorMessage(reason, translate({ message: "Could not create this chapter." })),
+      );
     } finally {
       pending.current = false;
       setBusy(false);
@@ -199,7 +212,11 @@ export function useChapterDoi(
         }
         const library = await gateway.library();
         if (library.sourceIndex?.complete === false) {
-          throw new Error("The book index is partial. Finish loading before creating a book.");
+          throw new Error(
+            translate({
+              message: "The book index is partial. Finish loading before creating a book.",
+            }),
+          );
         }
         const matches = chapterBooks(bookOffer, library.sources);
         if (matches.length) {
@@ -221,7 +238,10 @@ export function useChapterDoi(
         );
         if (!parent || !workspace.saveNewSourceCitation) {
           throw new Error(
-            "The book record was created but citation saving is unavailable. Repair its citation before retrying the chapter.",
+            translate({
+              message:
+                "The book record was created but citation saving is unavailable. Repair its citation before retrying the chapter.",
+            }),
           );
         }
         const citation = Object.fromEntries(

@@ -1,3 +1,4 @@
+import { Trans, useLingui } from "@lingui/react/macro";
 import { useState, type DragEvent, type JSX, type KeyboardEvent } from "react";
 
 import { ChevronDownIcon, PlusIcon } from "./icons.js";
@@ -57,6 +58,7 @@ export interface HeaderCellProps {
 }
 
 export function HeaderCell(props: HeaderCellProps): JSX.Element {
+  const { t } = useLingui();
   const { column, index, count, label, sortable, sort } = props;
   const next: LibrarySortDirection =
     sort === null ? props.firstDirection : sort === "asc" ? "desc" : "asc";
@@ -81,7 +83,7 @@ export function HeaderCell(props: HeaderCellProps): JSX.Element {
         <button
           type="button"
           className="library-column-sort"
-          title={`Sort by ${label.toLocaleLowerCase()} · Drag to move`}
+          title={t`Sort by ${label.toLocaleLowerCase()} · Drag to move`}
           onClick={() => props.onSort(next)}
           {...dragSource(column, props.onDragStart)}
         >
@@ -95,7 +97,7 @@ export function HeaderCell(props: HeaderCellProps): JSX.Element {
       ) : (
         <span
           className="library-column-label"
-          title="Drag to move"
+          title={t({ message: "Drag to move" })}
           {...dragSource(column, props.onDragStart)}
         >
           {label}
@@ -103,40 +105,40 @@ export function HeaderCell(props: HeaderCellProps): JSX.Element {
       )}
       <Menu
         className="library-column-menu"
-        label={`${label} column options`}
-        title="Column options"
+        label={t`${label} column options`}
+        title={t({ message: "Column options", context: "LibraryTableHeader interface" })}
         align={index === 0 ? "start" : "end"}
         trigger={<ChevronDownIcon />}
       >
         {sortable ? (
           <>
             <button type="button" onClick={() => props.onSort("asc")}>
-              Sort ascending
+              <Trans>Sort ascending</Trans>
             </button>
             <button type="button" onClick={() => props.onSort("desc")}>
-              Sort descending
+              <Trans>Sort descending</Trans>
             </button>
             <hr />
           </>
         ) : null}
         <button type="button" disabled={index === 0} onClick={() => props.onMove(index - 1)}>
-          Move left
+          <Trans>Move left</Trans>
         </button>
         <button
           type="button"
           disabled={index === count - 1}
           onClick={() => props.onMove(index + 1)}
         >
-          Move right
+          <Trans>Move right</Trans>
         </button>
         <button type="button" onClick={props.onResetWidth}>
-          Reset width
+          <Trans>Reset width</Trans>
         </button>
         {props.hideable ? (
           <>
             <hr />
             <button type="button" onClick={props.onHide}>
-              Hide column
+              <Trans>Hide column</Trans>
             </button>
           </>
         ) : null}
@@ -149,8 +151,8 @@ export function HeaderCell(props: HeaderCellProps): JSX.Element {
         aria-valuemin={minimumColumnWidth}
         aria-valuemax={maximumColumnWidth}
         aria-orientation="vertical"
-        aria-label={`Resize ${label} column`}
-        title="Drag to resize · Double-click to reset"
+        aria-label={t`Resize ${label} column`}
+        title={t({ message: "Drag to resize · Double-click to reset" })}
         tabIndex={0}
         className="library-column-resizer"
         onMouseDown={(event) => {
@@ -213,6 +215,7 @@ export function AddColumnCell({
   readonly propertyKeys: readonly string[];
   readonly onAdd: (column: LibraryColumn) => void;
 }): JSX.Element {
+  const { t } = useLingui();
   const [custom, setCustom] = useState("");
   const shown = new Set(columns);
   const fields = builtinLibraryColumns.filter((column) => !shown.has(column));
@@ -223,18 +226,26 @@ export function AddColumnCell({
     <div role="columnheader" tabIndex={-1} className="library-column-header is-add">
       <Menu
         className="library-add-column"
-        label="Add column"
-        title="Add column"
+        label={t({ message: "Add column", context: "LibraryTableHeader interface" })}
+        title={t({ message: "Add column", context: "LibraryTableHeader interface" })}
         triggerClassName="icon-button library-add-column-trigger"
         trigger={<PlusIcon />}
       >
-        {fields.length > 0 ? <span className="menu-label">Reader fields</span> : null}
+        {fields.length > 0 ? (
+          <span className="menu-label">
+            <Trans>Reader fields</Trans>
+          </span>
+        ) : null}
         {fields.map((column) => (
           <button key={column} type="button" onClick={() => onAdd(column)}>
             {columnLabel(column)}
           </button>
         ))}
-        {available.length > 0 ? <span className="menu-label">Properties</span> : null}
+        {available.length > 0 ? (
+          <span className="menu-label">
+            <Trans>Properties</Trans>
+          </span>
+        ) : null}
         {available.map((property) => (
           <button
             key={property}
@@ -258,17 +269,17 @@ export function AddColumnCell({
           }}
         >
           <label>
-            <span className="menu-label">Any field</span>
+            <span className="menu-label">{t({ message: "Any field" })}</span>
             <input
               className="mdbase-field"
               value={custom}
-              placeholder="e.g. course or csl.volume"
+              placeholder={t({ message: "e.g. course or csl.volume" })}
               spellCheck={false}
               onChange={(event) => setCustom(event.target.value)}
             />
           </label>
           <button type="submit" disabled={!valid}>
-            Add
+            <Trans context="LibraryTableHeader interface">Add</Trans>
           </button>
         </form>
       </Menu>

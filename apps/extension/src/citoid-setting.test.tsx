@@ -1,11 +1,13 @@
 // @vitest-environment happy-dom
 /* eslint-disable @typescript-eslint/require-await -- async act flushes React's queued work */
 import { act, useEffect } from "react";
-import { createRoot, type Root } from "react-dom/client";
 import { afterEach, beforeEach, expect, it, vi } from "vitest";
 
 import { citoidEnabled, useCitoidEnabled } from "./citoid-setting.js";
 import { fakeChrome } from "./testing/fake-chrome.js";
+import { createRoot } from "./testing/i18n.js";
+
+import type { Root } from "react-dom/client";
 
 let fake: ReturnType<typeof fakeChrome>;
 let root: Root | undefined;

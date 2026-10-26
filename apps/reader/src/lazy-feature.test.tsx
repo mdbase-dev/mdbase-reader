@@ -1,11 +1,11 @@
 // @vitest-environment happy-dom
 /* eslint-disable @typescript-eslint/require-await -- async act flushes React work */
 import { act } from "react";
-import { createRoot } from "react-dom/client";
 import { afterEach, beforeEach, expect, it, vi } from "vitest";
 
 import { lazyFeature } from "./lazy-feature.js";
 import { Menu } from "./Menu.js";
+import { createRoot } from "./testing/i18n.js";
 
 let root: ReturnType<typeof createRoot>;
 let host: HTMLDivElement;

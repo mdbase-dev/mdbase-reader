@@ -1,3 +1,6 @@
+import { t, t as translate } from "@lingui/core/macro";
+import { useLingui as useLocale } from "@lingui/react";
+import { Trans } from "@lingui/react/macro";
 import { useRef, type JSX, type Ref } from "react";
 
 import { publicationDateLabel } from "./library-publication-date.js";
@@ -66,7 +69,9 @@ export function ContinueReading({
   const library = sourcesById(sources);
   return (
     <section className="continue-reading" aria-labelledby="continue-reading-heading">
-      <h2 id="continue-reading-heading">Continue reading</h2>
+      <h2 id="continue-reading-heading">
+        <Trans>Continue reading</Trans>
+      </h2>
       <ul className="continue-reading-list">
         {resumable.map((source) => (
           <li key={source.id}>
@@ -94,6 +99,7 @@ function ContinueReadingCard({
   readonly readFile: ThumbnailFileReader | undefined;
   readonly onOpen: (id: SourceId) => void;
 }): JSX.Element {
+  useLocale();
   const thumbnailRef = useRef<HTMLSpanElement>(null);
   const thumbnail = useSourceThumbnail(source, readFile, thumbnailRef);
   const progress = readingProgressValue(source);
@@ -104,7 +110,7 @@ function ContinueReadingCard({
     <button
       className="continue-reading-card"
       type="button"
-      aria-label={`Continue reading ${source.title}`}
+      aria-label={t`Continue reading ${source.title}`}
       title={source.title}
       onClick={() => onOpen(source.id)}
     >
@@ -119,7 +125,7 @@ function ContinueReadingCard({
               <i style={{ width: `${String(progress)}%` }} />
             </span>
           ) : null}
-          <span>{location || "Just started"}</span>
+          <span>{location || translate({ message: "Just started" })}</span>
         </span>
       </span>
     </button>

@@ -1,3 +1,6 @@
+import { plural, t as translate } from "@lingui/core/macro";
+import { useLingui as useLocale } from "@lingui/react";
+import { Trans } from "@lingui/react/macro";
 import { useCallback, useState, useSyncExternalStore, type JSX } from "react";
 
 import { DeploymentUpdateNotice } from "./DeploymentUpdateNotice.js";
@@ -56,8 +59,8 @@ export function useShellNotices(
 /** What happened to one create, in words for the user. */
 export function createAttentionMessage(item: CreateAttention): string {
   return item.reason === "names-taken"
-    ? `“${item.label}” could not be added to your collection: another record already uses each name Reader tried.`
-    : `Your collection did not accept “${item.label}”. ${item.problem}`;
+    ? translate`“${item.label}” could not be added to your collection: another record already uses each name Reader tried.`
+    : translate`Your collection did not accept “${item.label}”. ${item.problem}`;
 }
 
 /**
@@ -73,6 +76,7 @@ export function CreateFollowThroughNotice({
   readonly attention: readonly CreateAttention[];
   readonly onHide: () => void;
 }): JSX.Element | null {
+  useLocale();
   const [busy, setBusy] = useState(false);
   const [confirming, setConfirming] = useState<string | null>(null);
   const [stillRefused, setStillRefused] = useState<string | null>(null);
@@ -101,32 +105,34 @@ export function CreateFollowThroughNotice({
   return (
     <div className="create-follow-through">
       <p role="status">
-        {createAttentionMessage(first)} Its content is kept on this device.
+        {createAttentionMessage(first)} <Trans>Its content is kept on this device.</Trans>
         {more > 0
-          ? ` ${String(more)} more ${more === 1 ? "item needs" : "items need"} a look.`
+          ? plural(more, { one: " # more item needs a look.", other: " # more items need a look." })
           : ""}
-        {stillRefused === first.key ? " Trying again did not help." : ""}
+        {stillRefused === first.key ? translate({ message: " Trying again did not help." }) : ""}
       </p>
       {confirming === first.key ? (
         <div className="create-follow-through-actions">
-          <span>Remove “{first.label}” from this device for good?</span>
+          <span>{translate`Remove “${first.label}” from this device for good?`}</span>
           <button type="button" disabled={busy} onClick={discard}>
-            Discard
+            <Trans>Discard</Trans>
           </button>
           <button type="button" onClick={() => setConfirming(null)}>
-            Keep
+            <Trans>Keep</Trans>
           </button>
         </div>
       ) : (
         <div className="create-follow-through-actions">
           <button type="button" disabled={busy} onClick={tryAgain}>
-            {busy ? "Trying…" : "Try again"}
+            {busy
+              ? translate({ message: "Trying…" })
+              : translate({ message: "Try again", context: "Reader interface" })}
           </button>
           <button type="button" disabled={busy} onClick={() => setConfirming(first.key)}>
-            Discard…
+            <Trans>Discard…</Trans>
           </button>
           <button type="button" onClick={onHide}>
-            Hide
+            <Trans>Hide</Trans>
           </button>
         </div>
       )}

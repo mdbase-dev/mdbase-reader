@@ -1,3 +1,5 @@
+import { t as translate } from "@lingui/core/macro";
+import { Trans, useLingui } from "@lingui/react/macro";
 import { ReaderButton } from "@mdbase-reader/ui";
 import { useState } from "react";
 
@@ -15,21 +17,28 @@ import type { AnnotationDeletionPlan } from "@mdbase-reader/core";
 import type { JSX } from "react";
 
 export function AnnotationBodyEditor(props: AnnotationEditProps): JSX.Element {
+  const { t } = useLingui();
   const edit = useAnnotationEdit(props);
   const { locked, status, conflict, deletePlan, deleteStatus } = edit;
   const busy = locked || status === "saving";
   const failed = status === "error" && !conflict;
   if (edit.editingElsewhere) {
     return (
-      <div className="annotation-body-editor" role="group" aria-label="Edit annotation">
-        <p>Being edited in another pane.</p>
+      <div
+        className="annotation-body-editor"
+        role="group"
+        aria-label={t({ message: "Edit annotation", context: "AnnotationEditor interface" })}
+      >
+        <p>
+          <Trans>Being edited in another pane.</Trans>
+        </p>
         <div className="annotation-editor-actions">
           <span />
           <button type="button" onClick={edit.cancel}>
-            Close
+            <Trans context="AnnotationEditor interface">Close</Trans>
           </button>
           <button type="button" disabled={locked} onClick={edit.claimEditor}>
-            Edit here
+            <Trans>Edit here</Trans>
           </button>
         </div>
       </div>
@@ -41,7 +50,7 @@ export function AnnotationBodyEditor(props: AnnotationEditProps): JSX.Element {
     <div
       className="annotation-body-editor"
       role="group"
-      aria-label="Edit annotation"
+      aria-label={t({ message: "Edit annotation", context: "AnnotationEditor interface" })}
       onKeyDown={(event) => annotationEditorKeys(event, edit.cancel, edit.save)}
     >
       {status !== "loading" ? (
@@ -52,20 +61,26 @@ export function AnnotationBodyEditor(props: AnnotationEditProps): JSX.Element {
           onChange={edit.setBody}
         />
       ) : (
-        <p role="status">Loading…</p>
+        <p role="status">
+          <Trans>Loading…</Trans>
+        </p>
       )}
       {conflict ? (
         <section role="alert">
-          <p>This annotation changed elsewhere. Your version is kept until you choose.</p>
+          <p>
+            <Trans>This annotation changed elsewhere. Your version is kept until you choose.</Trans>
+          </p>
           <details>
-            <summary>Compare collection version</summary>
+            <summary>
+              <Trans>Compare collection version</Trans>
+            </summary>
             <pre>{conflict.body}</pre>
           </details>
           <button type="button" disabled={busy} onClick={() => edit.resolve("local")}>
-            Keep mine
+            <Trans>Keep mine</Trans>
           </button>
           <button type="button" disabled={busy} onClick={() => edit.resolve("remote")}>
-            Use theirs
+            <Trans>Use theirs</Trans>
           </button>
         </section>
       ) : null}
@@ -91,6 +106,7 @@ function AnnotationEditorActions({
   readonly edit: ReturnType<typeof useAnnotationEdit>;
   readonly failed: boolean;
 }): JSX.Element {
+  const { t } = useLingui();
   const { locked, status, deleteStatus } = edit;
   const busy = locked || status === "saving";
   // Autosaves usually finish at once; until one runs long, it still reads as unsaved.
@@ -104,16 +120,22 @@ function AnnotationEditorActions({
         disabled={locked || status === "loading"}
         onClick={edit.requestDelete}
       >
-        {deleteStatus === "checking" ? "Checking…" : "Delete annotation"}
+        {deleteStatus === "checking"
+          ? t({ message: "Checking…", context: "AnnotationEditor interface" })
+          : translate({ message: "Delete annotation" })}
       </button>
       <AnnotationSaveState status={failed ? "failed" : shown} />
       {status === "unsaved" || status === "error" ? (
         <button type="button" className="annotation-discard" disabled={busy} onClick={edit.discard}>
-          Discard changes
+          <Trans>Discard changes</Trans>
         </button>
       ) : null}
       <ReaderButton disabled={!edit.canSave} onClick={edit.save}>
-        {slowSave ? "Saving…" : failed ? "Retry save" : "Done"}
+        {slowSave
+          ? t({ message: "Saving…", context: "AnnotationEditor interface" })
+          : failed
+            ? t({ message: "Retry save", context: "AnnotationEditor interface" })
+            : t({ message: "Done", context: "AnnotationEditor interface" })}
       </ReaderButton>
     </div>
   );
@@ -134,6 +156,7 @@ function AnnotationFieldsEditor({
   readonly readOnly: boolean;
   readonly onChange: (body: string) => void;
 }): JSX.Element {
+  const { t } = useLingui();
   const [state, setState] = useState(() => ({
     body,
     fields: annotationBodyFields(body, selectedText),
@@ -153,7 +176,7 @@ function AnnotationFieldsEditor({
       <AnnotationTextArea
         value={fields.comment}
         readOnly={readOnly}
-        label="Annotation Markdown"
+        label={t({ message: "Annotation Markdown", context: "AnnotationEditor interface" })}
         onChange={(comment) => change({ quote: null, comment })}
       />
     );
@@ -167,7 +190,7 @@ function AnnotationFieldsEditor({
             className="is-quote"
             value={quote}
             readOnly={readOnly}
-            label="Quoted passage"
+            label={t({ message: "Quoted passage", context: "AnnotationEditor interface" })}
             rows={1}
             focusOnMount={false}
             autoSize
@@ -175,13 +198,13 @@ function AnnotationFieldsEditor({
           />
           {selectedText !== undefined && quote !== selectedText ? (
             <small>
-              Edited from the document text.{" "}
+              <Trans>Edited from the document text.</Trans>{" "}
               <button
                 type="button"
                 disabled={readOnly}
                 onClick={() => change({ quote: selectedText, comment: fields.comment })}
               >
-                Restore
+                <Trans>Restore</Trans>
               </button>
             </small>
           ) : null}
@@ -190,7 +213,7 @@ function AnnotationFieldsEditor({
       <AnnotationTextArea
         value={fields.comment}
         readOnly={readOnly}
-        placeholder="Add a comment…"
+        placeholder={t({ message: "Add a comment…" })}
         rows={3}
         autoSize
         onChange={(comment) => change({ quote, comment })}
@@ -199,14 +222,14 @@ function AnnotationFieldsEditor({
   );
 }
 
-const saveStateLabels: Readonly<Record<string, string>> = {
-  failed: "Not saved",
-  saved: "Saved",
-  saving: "Saving…",
-  unsaved: "Unsaved",
-};
-
 function AnnotationSaveState({ status }: { readonly status: string }): JSX.Element {
+  const { t } = useLingui();
+  const saveStateLabels: Readonly<Record<string, string>> = {
+    failed: t`Not saved`,
+    saved: t({ message: "Saved", context: "Reader save status" }),
+    saving: t`Saving…`,
+    unsaved: t({ message: "Unsaved", context: "Reader save status" }),
+  };
   return (
     <small className={`annotation-save-state is-${status}`} role="status">
       {saveStateLabels[status] ?? ""}
@@ -230,12 +253,17 @@ export function AnnotationDeleteConfirmation({
   readonly onCancel: () => void;
   readonly onConfirm: () => void;
 }): JSX.Element {
+  const { t } = useLingui();
   return (
     <section className="annotation-delete-confirmation" aria-labelledby="annotation-delete-title">
-      <strong id="annotation-delete-title">Delete this annotation?</strong>
+      <strong id="annotation-delete-title">
+        <Trans>Delete this annotation?</Trans>
+      </strong>
       {plan.brokenLinkPaths.length > 0 ? (
         <>
-          <p>These notes embed this annotation and will show it as missing:</p>
+          <p>
+            <Trans>These notes embed this annotation and will show it as missing:</Trans>
+          </p>
           <ul>
             {plan.brokenLinkPaths.map((path) => (
               <li key={path} title={path}>
@@ -247,10 +275,12 @@ export function AnnotationDeleteConfirmation({
       ) : null}
       <div>
         <button type="button" disabled={deleting} onClick={onCancel}>
-          Cancel
+          <Trans context="Reader action">Cancel</Trans>
         </button>
         <button className="is-danger" type="button" disabled={deleting} onClick={onConfirm}>
-          {deleting ? "Deleting…" : "Delete annotation"}
+          {deleting
+            ? t({ message: "Deleting…", context: "AnnotationEditor interface" })
+            : translate({ message: "Delete annotation" })}
         </button>
       </div>
     </section>

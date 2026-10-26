@@ -1,7 +1,7 @@
-import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
 
 import { CitationQualitySummary } from "./CitationQualitySummary.js";
+import { renderToStaticMarkup } from "./testing/i18n.js";
 
 import type { SourceSummary } from "@mdbase-reader/core";
 

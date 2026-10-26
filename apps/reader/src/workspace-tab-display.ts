@@ -1,21 +1,31 @@
+import { t as translate } from "@lingui/core/macro";
+
 import type { WorkspacePaneId, WorkspaceTab } from "./source-workspace-layout.js";
 import type { SourceSummary } from "@mdbase-reader/core";
 
 export function workspaceTabLabel(tab: WorkspaceTab, source: SourceSummary | null): string {
   if (tab.kind === "library") {
-    return "Library";
+    return translate({ message: "Library", context: "workspace tab display" });
   }
   if (tab.view === "note") {
-    return "Source note";
+    return translate({ message: "Source note" });
   }
   if (tab.view === "annotations") {
-    return "Annotations";
+    return translate({ message: "Annotations", context: "workspace tab display" });
   }
-  return tab.view === "citation" ? "Citation" : source ? sourceFormat(source) : "Source";
+  return tab.view === "citation"
+    ? translate({ message: "Citation", context: "workspace tab display" })
+    : source
+      ? sourceFormat(source)
+      : translate({ message: "Source", context: "workspace tab display" });
 }
 
 export function workspaceTabTitle(tab: WorkspaceTab, source: SourceSummary | null): string {
-  return tab.kind === "library" ? tab.title : (source?.title ?? "Unavailable source");
+  if (tab.kind === "library") {
+    // Only the unsaved built-in view has a translated title; saved view names are user data.
+    return tab.libraryViewId === "all-sources" ? workspaceTabLabel(tab, source) : tab.title;
+  }
+  return source?.title ?? translate({ message: "Unavailable source" });
 }
 
 export function workspaceTabAccessibleTitle(
@@ -42,7 +52,9 @@ export function sourceFormat(source: SourceSummary): string {
     return "EPUB";
   }
   if (mediaType.includes("html")) {
-    return "WEB";
+    return translate({ message: "WEB", context: "Source format badge for saved web pages" });
   }
-  return source.documents[0] ? "FILE" : "NO FILE";
+  return source.documents[0]
+    ? translate({ message: "FILE", context: "workspace tab display" })
+    : translate({ message: "NO FILE", context: "workspace tab display" });
 }

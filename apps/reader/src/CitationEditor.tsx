@@ -1,3 +1,6 @@
+import { t, t as translate } from "@lingui/core/macro";
+import { useLingui as useLocale } from "@lingui/react";
+import { Trans } from "@lingui/react/macro";
 import { SaveNotice } from "@mdbase-dev/ui/save-notice";
 import {
   citationGapsFromSource,
@@ -117,7 +120,7 @@ function ReadyCitationEditor({
             {/* An unreadable draft offers Discard changes in the view itself. */}
             {view.name === "fix" && canDiscard && editor.assessment.value ? (
               <button type="button" className="citation-button" onClick={discard}>
-                Discard changes
+                <Trans>Discard changes</Trans>
               </button>
             ) : null}
             <SaveDetailsButton editor={editor} />
@@ -145,10 +148,10 @@ function footerVisible(view: CitationView, editor: CitationEditorController): bo
 
 function confirmCitationDiscard(): Promise<boolean> {
   return requestConfirmation({
-    title: "Discard changes?",
-    message: "Your edits to these citation details will be lost.",
-    confirmLabel: "Discard changes",
-    cancelLabel: "Keep editing",
+    title: translate({ message: "Discard changes?" }),
+    message: translate({ message: "Your edits to these citation details will be lost." }),
+    confirmLabel: translate({ message: "Discard changes" }),
+    cancelLabel: translate({ message: "Keep editing" }),
     danger: true,
   });
 }
@@ -232,6 +235,7 @@ function CitationFixView({
   /** Absent when there is nothing to discard. */
   readonly onDiscard: (() => void) | undefined;
 }): JSX.Element {
+  useLocale();
   const citation = editor.assessment.value;
   const back = useRef<HTMLButtonElement>(null);
   useEffect(() => back.current?.focus(), []);
@@ -242,13 +246,17 @@ function CitationFixView({
           ref={back}
           type="button"
           className="citation-icon-button"
-          aria-label="Back to citation"
-          title="Back to citation"
+          aria-label={translate({ message: "Back to citation" })}
+          title={translate({ message: "Back to citation" })}
           onClick={onBack}
         >
           <BackIcon />
         </button>
-        <h3>{health.tone === "complete" ? "Edit details" : "Fix details"}</h3>
+        <h3>
+          {health.tone === "complete"
+            ? translate({ message: "Edit details" })
+            : translate({ message: "Fix details" })}
+        </h3>
         {health.tone !== "complete" ? <span>{health.title}</span> : null}
       </header>
       {citation ? (
@@ -272,6 +280,7 @@ function CitationFixForm({
   readonly citation: Readonly<Record<string, unknown>>;
   readonly gaps: Gaps;
 }): JSX.Element {
+  useLocale();
   const checks = editor.assessment.valid
     ? uncoveredWarnings(editor.warnings, Object.keys(gaps))
     : [];
@@ -282,7 +291,7 @@ function CitationFixForm({
         onApply={(fill) => editor.setCitation({ ...citation, ...fill })}
       />
       {checks.length ? (
-        <ul className="citation-checks" aria-label="Details to check">
+        <ul className="citation-checks" aria-label={translate({ message: "Details to check" })}>
           {checks.map((warning) => (
             <li key={warning}>{warning}</li>
           ))}
@@ -309,16 +318,16 @@ function CitationJsonBlocked({
   readonly message: string;
   readonly onDiscard: (() => void) | undefined;
 }): JSX.Element {
+  useLocale();
   return (
     <div className="citation-json-blocked" role="alert">
-      <strong>CSL-JSON has errors — fix them or discard</strong>
-      <p>
-        {message} The form opens once the CSL-JSON can be read; edit it under CSL-JSON in the
-        citation view.
-      </p>
+      <strong>
+        <Trans>CSL-JSON has errors — fix them or discard</Trans>
+      </strong>
+      <p>{translate`${message} The form opens once the CSL-JSON can be read; edit it under CSL-JSON in the citation view.`}</p>
       {onDiscard ? (
         <button type="button" className="citation-button" onClick={onDiscard}>
-          Discard changes
+          <Trans>Discard changes</Trans>
         </button>
       ) : null}
     </div>
@@ -326,6 +335,7 @@ function CitationJsonBlocked({
 }
 
 function SaveDetailsButton({ editor }: { readonly editor: CitationEditorController }): JSX.Element {
+  useLocale();
   // aria-disabled, not disabled: a disabled button drops focus to the page when a save finishes.
   const unavailable =
     !editor.assessment.valid ||
@@ -340,7 +350,9 @@ function SaveDetailsButton({ editor }: { readonly editor: CitationEditorControll
       onClick={unavailable ? undefined : editor.save}
     >
       <CheckIcon />
-      {editor.status === "saving" ? "Saving…" : "Save details"}
+      {editor.status === "saving"
+        ? translate({ message: "Saving…" })
+        : translate({ message: "Save details" })}
     </button>
   );
 }
@@ -357,6 +369,7 @@ function CitationHealthLine({
   readonly focusOnMount: boolean;
   readonly onFix: () => void;
 }): JSX.Element {
+  useLocale();
   const needsFix = health.tone !== "complete";
   const button = useRef<HTMLButtonElement>(null);
   // Only on arrival: later renders must not pull focus back.
@@ -378,7 +391,7 @@ function CitationHealthLine({
         className={`citation-button${needsFix && primary ? " is-primary" : ""}`}
         onClick={onFix}
       >
-        {needsFix ? "Fix details" : "Edit details"}
+        {needsFix ? translate({ message: "Fix details" }) : translate({ message: "Edit details" })}
       </button>
     </div>
   );
@@ -393,7 +406,9 @@ function CitationDetails({
   const heading = useId();
   return (
     <section className="citation-details" aria-labelledby={heading}>
-      <h3 id={heading}>Citation details</h3>
+      <h3 id={heading}>
+        <Trans>Citation details</Trans>
+      </h3>
       <dl>
         {citationDetailRows(citation).map((row) => (
           <div key={row.label}>
@@ -401,21 +416,30 @@ function CitationDetails({
             <dd className={row.value ? undefined : "is-empty"}>
               {row.value ?? (
                 <>
-                  Not set
-                  {row.needed ? <span className="citation-needs-check">Needs checking</span> : null}
+                  <Trans>Not set</Trans>
+                  {row.needed ? (
+                    <span className="citation-needs-check">
+                      <Trans>Needs checking</Trans>
+                    </span>
+                  ) : null}
                 </>
               )}
             </dd>
           </div>
         ))}
         <div>
-          <dt>Citation key</dt>
+          <dt>
+            <Trans>Citation key</Trans>
+          </dt>
           <dd className={citekey ? undefined : "is-empty"}>
             {citekey ? (
               <CitationKeyCopy citekey={citekey} />
             ) : (
               <>
-                Not set<span className="citation-needs-check">Needs checking</span>
+                <Trans>Not set</Trans>
+                <span className="citation-needs-check">
+                  <Trans>Needs checking</Trans>
+                </span>
               </>
             )}
           </dd>
@@ -427,6 +451,7 @@ function CitationDetails({
 
 /** Copies `@key`, saying so beside the key and in a live region, for success and failure alike. */
 function CitationKeyCopy({ citekey }: { readonly citekey: string }): JSX.Element {
+  useLocale();
   const [result, setResult] = useState<"copied" | "failed" | null>(null);
   const timer = useRef<ReturnType<typeof setTimeout>>(undefined);
   useEffect(() => () => clearTimeout(timer.current), []);
@@ -445,36 +470,45 @@ function CitationKeyCopy({ citekey }: { readonly citekey: string }): JSX.Element
       <button
         type="button"
         className="citation-key"
-        aria-label={`Copy citation key @${citekey}`}
-        title="Copy citation key"
+        aria-label={translate`Copy citation key @${citekey}`}
+        title={translate({ message: "Copy citation key" })}
         onClick={copy}
       >
         <code>@{citekey}</code>
         {result === "copied" ? <CheckIcon /> : <CopyIcon />}
       </button>
       <span className="citation-key-status" role="status">
-        {result === "copied" ? "Copied" : result === "failed" ? "Copying is unavailable here." : ""}
+        {result === "copied"
+          ? translate({ message: "Copied" })
+          : result === "failed"
+            ? translate({ message: "Copying is unavailable here." })
+            : ""}
       </span>
     </>
   );
 }
 
 function CitationJson({ editor }: { readonly editor: CitationEditorController }): JSX.Element {
+  useLocale();
   const disclosure = useSessionDisclosure("citation.csl-json");
   return (
     <details className="citation-disclosure citation-raw-editor" {...disclosure}>
       <summary>
         <ChevronRightIcon />
         <span>CSL-JSON</span>
-        <small>Advanced</small>
+        <small>
+          <Trans>Advanced</Trans>
+        </small>
       </summary>
       <p className="citation-disclosure-note">
-        Citation Style Language in JSON format. Every field is preserved exactly as entered.
+        <Trans>
+          Citation Style Language in JSON format. Every field is preserved exactly as entered.
+        </Trans>
       </p>
       {disclosure.open ? (
         <MultilineCodeEditor
           className="citation-json"
-          ariaLabel="CSL-JSON citation details"
+          ariaLabel={translate({ message: "CSL-JSON citation details" })}
           language="json"
           value={editor.draft}
           onChange={editor.setDraft}
@@ -495,7 +529,9 @@ function CitationLoadStatus({
       {resource.message}
     </div>
   ) : (
-    <div className="inspector-status">Opening citation details…</div>
+    <div className="inspector-status">
+      <Trans>Opening citation details…</Trans>
+    </div>
   );
 }
 
@@ -507,6 +543,7 @@ function CitationFeedback({
   /** The summary view states validity in its status line; only Fix details repeats it here. */
   readonly showValidity: boolean;
 }): JSX.Element {
+  useLocale();
   if (editor.conflict) {
     return <CitationSaveConflict editor={editor} />;
   }
@@ -522,7 +559,9 @@ function CitationFeedback({
   if (!editor.assessment.valid && showValidity) {
     return (
       <div className="citation-feedback" aria-live="polite">
-        <strong>Fix before saving</strong>
+        <strong>
+          <Trans>Fix before saving</Trans>
+        </strong>
         <span className="is-error">{editor.assessment.message}</span>
       </div>
     );
@@ -530,11 +569,16 @@ function CitationFeedback({
   return (
     <div className="citation-feedback mdbase-settle-host" aria-live="polite">
       {editor.suggested && editor.status !== "saved" ? (
-        <span>Review the suggested details before saving.</span>
+        <span>
+          <Trans>Review the suggested details before saving.</Trans>
+        </span>
       ) : !editor.dirty ? (
         <SaveNotice tone="saved" />
       ) : (
-        <SaveNotice tone="pending" label="Unsaved changes" />
+        <SaveNotice
+          tone="pending"
+          label={t({ message: "Unsaved changes", context: "CitationEditor interface" })}
+        />
       )}
     </div>
   );

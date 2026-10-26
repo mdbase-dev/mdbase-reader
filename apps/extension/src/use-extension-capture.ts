@@ -1,3 +1,4 @@
+import { t as translate, plural } from "@lingui/core/macro";
 import { offeredHighlightColor } from "@mdbase-reader/core";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
@@ -50,8 +51,11 @@ export type { ExtensionCaptureController } from "./capture-controller.js";
 const returnRefreshMs = 5000;
 /** A failed lookup of the page's existing source is tried once more after this long. */
 const lookupRetryMs = 2000;
-const lookupFailedNotice =
-  "We couldn’t check whether this page is already saved. Saving checks again.";
+function lookupFailedNotice(): string {
+  return translate({
+    message: "We couldn’t check whether this page is already saved. Saving checks again.",
+  });
+}
 
 // The controller coordinates one panel's explicit actions; I/O lives in the composed hooks
 // and CaptureWriter.
@@ -184,7 +188,7 @@ export function useExtensionCapture(
       } catch (reason) {
         // The page is known to be saved; only its highlights are missing.
         if (epoch === discovery.current) {
-          setNotice(`Your highlights couldn’t be loaded. ${problemMessage(reason)}`);
+          setNotice(translate`Your highlights couldn’t be loaded. ${problemMessage(reason)}`);
         }
         return;
       }
@@ -200,7 +204,9 @@ export function useExtensionCapture(
           }
         } catch (reason) {
           if (epoch === discovery.current) {
-            setNotice(`Your highlights couldn’t be shown on this page. ${problemMessage(reason)}`);
+            setNotice(
+              translate`Your highlights couldn’t be shown on this page. ${problemMessage(reason)}`,
+            );
           }
         }
       } else {
@@ -209,7 +215,7 @@ export function useExtensionCapture(
     })().catch(() => {
       if (epoch === discovery.current) {
         // Saving still checks for the page first, so nothing is saved twice.
-        setNotice(lookupFailedNotice);
+        setNotice(lookupFailedNotice());
         lookupFailed(key);
       }
     });
@@ -323,7 +329,10 @@ export function useExtensionCapture(
       }
       if (!capture) {
         throw new PlainError(
-          "The page isn’t ready yet. Press the toolbar button on this page again, then save.",
+          translate({
+            message:
+              "The page isn’t ready yet. Press the toolbar button on this page again, then save.",
+          }),
         );
       }
       const draft = draftForSave(stored.draft, changes, highlight.colors);
@@ -381,7 +390,7 @@ export function useExtensionCapture(
         ];
         void rememberTags(collection.collectionId, used).catch(() => undefined);
         setNotice(
-          [result.annotation ? "Highlight saved." : null, ...result.notices]
+          [result.annotation ? translate`Highlight saved.` : null, ...result.notices]
             .filter(Boolean)
             .join(" ") || null,
         );
@@ -408,7 +417,9 @@ export function useExtensionCapture(
           const post = await captureSocialTab(tabId, id);
           if (!post?.post) {
             throw new PlainError(
-              "That post isn’t loaded on the page anymore. Scroll to it and try again.",
+              translate({
+                message: "That post isn’t loaded on the page anymore. Scroll to it and try again.",
+              }),
             );
           }
           const result = await writer.save({
@@ -431,14 +442,19 @@ export function useExtensionCapture(
           }
         }
         setPickerOpen(false);
-        setNotice(`${String(count)} post${count === 1 ? "" : "s"} saved. Feeds are never saved.`);
+        setNotice(
+          plural(count, {
+            one: "# post saved. Feeds are never saved.",
+            other: "# posts saved. Feeds are never saved.",
+          }),
+        );
         await page.readPage();
         void chrome.runtime
           .sendMessage({ type: "mdbase-reader/posts-refresh", tabId })
           .catch(() => undefined);
       } catch (reason) {
         throw new PlainError(
-          `${String(count)} of ${String(ids.length)} posts saved before something went wrong. Try again: posts already saved won’t be saved twice.`,
+          translate`${String(count)} of ${String(ids.length)} posts saved before something went wrong. Try again: posts already saved won’t be saved twice.`,
           { cause: reason },
         );
       } finally {
@@ -491,7 +507,10 @@ export function useExtensionCapture(
     } catch {
       if (epoch === refreshEpoch.current) {
         setNotice(
-          "Saved. The highlights on this page couldn’t be updated; there is no need to save again.",
+          translate({
+            message:
+              "Saved. The highlights on this page couldn’t be updated; there is no need to save again.",
+          }),
         );
       }
     } finally {
@@ -582,13 +601,16 @@ export function useExtensionCapture(
       if (plan.brokenLinkPaths.length) {
         setUndoable(null);
         throw new PlainError(
-          "Other notes link to this highlight, so it was kept. Delete it from the list below to see which.",
+          translate({
+            message:
+              "Other notes link to this highlight, so it was kept. Delete it from the list below to see which.",
+          }),
         );
       }
       await writer.delete(collection, annotation, plan);
       setUndoable(null);
       afterEdit(annotations.filter((value) => value.id !== annotation.id));
-      setNotice("Highlight removed. The page stays saved.");
+      setNotice(translate`Highlight removed. The page stays saved.`);
     }, "save");
 
   const allowAllSites = (): Promise<void> =>
@@ -597,7 +619,7 @@ export function useExtensionCapture(
       .allowAllSites()
       .then((granted) => {
         if (!granted) {
-          setNotice("Reader was not given site access.");
+          setNotice(translate`Reader was not given site access.`);
         }
       })
       .catch((reason: unknown) => setProblem(problemMessage(reason), "page"));

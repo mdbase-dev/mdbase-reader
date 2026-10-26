@@ -1,3 +1,5 @@
+import { Trans } from "@lingui/react/macro";
+
 import { HighlightSavedNotice, HighlightSweep } from "./HighlightSavedNotice.js";
 
 import type { AnnotationComposerController } from "./use-annotation-composer.js";
@@ -48,7 +50,7 @@ function ComposerNotices({
       ) : null}
       {!composing && composer.returnToReading ? (
         <button className="annotation-return" type="button" onClick={composer.returnToReading}>
-          Back to reading position
+          <Trans>Back to reading position</Trans>
         </button>
       ) : null}
     </>

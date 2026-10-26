@@ -1,3 +1,4 @@
+import { Trans, useLingui } from "@lingui/react/macro";
 import { useRef, useState, type JSX } from "react";
 
 import { ModalDialog } from "./ModalDialog.js";
@@ -16,6 +17,7 @@ export function LibraryViewSaveDialog({
   readonly onCancel: () => void;
   readonly onSave: (name: string) => void;
 }): JSX.Element {
+  const { t } = useLingui();
   const [name, setName] = useState("");
   const input = useRef<HTMLInputElement>(null);
   return (
@@ -31,7 +33,7 @@ export function LibraryViewSaveDialog({
     >
       <form
         className="library-save-dialog"
-        aria-label="Save library view"
+        aria-label={t({ message: "Save library view" })}
         onSubmit={(event) => {
           event.preventDefault();
           if (name.trim() && !saving) {
@@ -39,10 +41,12 @@ export function LibraryViewSaveDialog({
           }
         }}
       >
-        <h2 id="reader-save-view-title">Save as a new view</h2>
+        <h2 id="reader-save-view-title">
+          <Trans>Save as a new view</Trans>
+        </h2>
         <p>{description}</p>
         <label>
-          <span>Name</span>
+          <span>{t({ message: "Name", context: "LibraryViewSaveDialog interface" })}</span>
           <input
             className="mdbase-field"
             value={name}
@@ -54,10 +58,12 @@ export function LibraryViewSaveDialog({
         </label>
         <div>
           <button type="button" disabled={saving} onClick={onCancel}>
-            Cancel
+            <Trans context="Reader interface">Cancel</Trans>
           </button>
           <button type="submit" disabled={!name.trim() || saving}>
-            {saving ? "Saving…" : "Save view"}
+            {saving
+              ? t({ message: "Saving…", context: "LibraryViewSaveDialog interface" })
+              : t({ message: "Save view", context: "LibraryViewSaveDialog interface" })}
           </button>
         </div>
       </form>

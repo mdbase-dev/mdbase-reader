@@ -1,3 +1,6 @@
+import { t as translate } from "@lingui/core/macro";
+import { useLingui as useLocale } from "@lingui/react";
+import { Trans, useLingui } from "@lingui/react/macro";
 import { moveMenuFocus, useMenuPopover } from "@mdbase-dev/ui/popover";
 import { useRef, useState, type CSSProperties, type JSX, type RefObject } from "react";
 
@@ -41,6 +44,7 @@ export function CollectionMenu({
   readonly onConnect: () => void;
   readonly onClose: (refocus: boolean) => void;
 }): JSX.Element {
+  const { t } = useLingui();
   const menuRef = useRef<HTMLDivElement>(null);
   const [query, setQuery] = useState("");
   useMenuPopover(menuRef, triggerRef, onClose, { width: 320, busy });
@@ -57,24 +61,28 @@ export function CollectionMenu({
       className="collection-menu"
       popover="manual"
       role="menu"
-      aria-label="Switch collection"
+      aria-label={t({ message: "Switch collection", context: "CollectionMenu interface" })}
       tabIndex={-1}
       onKeyDown={(event) => moveMenuFocus(event, menuRef.current)}
     >
       <div className="collection-menu-heading" role="presentation">
-        Collections
+        <Trans>Collections</Trans>
       </div>
       {ordered.length >= filterThreshold ? (
         <input
           className="collection-menu-filter"
           type="search"
-          aria-label="Filter collections"
-          placeholder="Filter collections"
+          aria-label={t({ message: "Filter collections", context: "CollectionMenu interface" })}
+          placeholder={t({ message: "Filter collections", context: "CollectionMenu interface" })}
           value={query}
           onChange={(event) => setQuery(event.target.value)}
         />
       ) : null}
-      <div className="collection-menu-list" role="group" aria-label="Connected collections">
+      <div
+        className="collection-menu-list"
+        role="group"
+        aria-label={t({ message: "Connected collections", context: "CollectionMenu interface" })}
+      >
         {visible.map((choice) => (
           <CollectionItem
             key={choice.collectionId}
@@ -85,7 +93,7 @@ export function CollectionMenu({
           />
         ))}
         {visible.length === 0 ? (
-          <p className="collection-menu-empty">No collections match “{query.trim()}”.</p>
+          <p className="collection-menu-empty">{t`No collections match “${query.trim()}”.`}</p>
         ) : null}
       </div>
       {error ? (
@@ -102,7 +110,11 @@ export function CollectionMenu({
         onClick={onConnect}
       >
         <PlusIcon />
-        <span>{busy ? "Opening mdbase…" : "Connect another collection…"}</span>
+        <span>
+          {busy
+            ? t({ message: "Opening mdbase…", context: "CollectionMenu interface" })
+            : t({ message: "Connect another collection…" })}
+        </span>
       </button>
     </div>
   );
@@ -119,6 +131,7 @@ function CollectionItem({
   readonly disabled: boolean;
   readonly onChoose: (collectionId: string) => void;
 }): JSX.Element {
+  useLocale();
   const place = locationLabel(choice);
   return (
     <button
@@ -139,7 +152,16 @@ function CollectionItem({
       <span className="collection-menu-copy">
         <strong>{choice.displayName}</strong>
         {place || current ? (
-          <small>{[current ? "Open now" : null, place].filter(Boolean).join(" · ")}</small>
+          <small>
+            {[
+              current
+                ? translate({ message: "Open now", context: "CollectionMenu status or action" })
+                : null,
+              place,
+            ]
+              .filter(Boolean)
+              .join(" · ")}
+          </small>
         ) : null}
       </span>
       {current ? <CheckIcon className="collection-menu-check" aria-hidden="true" /> : null}

@@ -1,3 +1,6 @@
+import { t as translate } from "@lingui/core/macro";
+import { Trans, useLingui } from "@lingui/react/macro";
+
 import type { ExtensionCaptureController } from "./capture-controller.js";
 import type { CitationDraft } from "@mdbase-reader/web-capture";
 
@@ -10,6 +13,7 @@ export function CitationCard({
 }: {
   readonly controller: ExtensionCaptureController;
 }): React.JSX.Element | null {
+  const { t } = useLingui();
   if (c.source) {
     return null;
   }
@@ -17,25 +21,35 @@ export function CitationCard({
   if (!preview) {
     return c.citationPending ? (
       <p className="hint citation" role="status">
-        Looking for citation details…
+        <Trans>Looking for citation details…</Trans>
       </p>
     ) : null;
   }
   return (
-    <section className="citation" aria-label="Citation">
-      <span className="eyebrow">CITATION</span>
+    <section className="citation" aria-label={t`Citation`}>
+      <span className="eyebrow">
+        <Trans>CITATION</Trans>
+      </span>
       <CitationDetails citation={preview.citation} doi={preview.doi ?? null} />
       {c.citationPending ? (
         <p className="hint" role="status">
-          Still looking for citation details… You can save now.
+          <Trans>Still looking for citation details… You can save now.</Trans>
         </p>
       ) : null}
       <p className="hint">
         {preview.origin === "doi"
-          ? "From the DOI registry. Saved with the source; edit it later in Reader."
+          ? translate({
+              message: "From the DOI registry. Saved with the source; edit it later in Reader.",
+            })
           : preview.origin === "citoid"
-            ? "Includes details from Wikimedia’s Citoid service. Saved with the source; edit it later in Reader."
-            : "From the page’s metadata. Saved with the source; edit it later in Reader."}
+            ? translate({
+                message:
+                  "Includes details from Wikimedia’s Citoid service. Saved with the source; edit it later in Reader.",
+              })
+            : translate({
+                message:
+                  "From the page’s metadata. Saved with the source; edit it later in Reader.",
+              })}
         {preview.problem ? ` ${preview.problem}` : ""}
       </p>
     </section>
@@ -64,7 +78,11 @@ export function CitationDetails({
       {people ? <p>{people}</p> : null}
       {year || venue ? <p>{[venue, year].filter(Boolean).join(", ")}</p> : null}
       <CitationFields type={type} doi={doi} citekey={citekey ?? null} />
-      {title || people || year || venue ? null : <p>Citation details found.</p>}
+      {title || people || year || venue ? null : (
+        <p>
+          <Trans>Citation details found.</Trans>
+        </p>
+      )}
     </>
   );
 }
@@ -86,7 +104,9 @@ function CitationFields({
     <dl className="citation-fields">
       {citekey ? (
         <div>
-          <dt>Citekey</dt>
+          <dt>
+            <Trans>Citekey</Trans>
+          </dt>
           <dd>
             <code>{citekey}</code>
           </dd>
@@ -94,13 +114,17 @@ function CitationFields({
       ) : null}
       {type ? (
         <div>
-          <dt>Type</dt>
+          <dt>
+            <Trans context="Citation item type">Type</Trans>
+          </dt>
           <dd>{type.replaceAll("-", " ")}</dd>
         </div>
       ) : null}
       {doi ? (
         <div>
-          <dt>DOI</dt>
+          <dt>
+            <Trans>DOI</Trans>
+          </dt>
           <dd>
             <code>{doi}</code>
           </dd>

@@ -1,7 +1,7 @@
-import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it, vi } from "vitest";
 
 import { AnnotationComposer } from "./AnnotationComposer.js";
+import { renderToStaticMarkup } from "./testing/i18n.js";
 
 import type { AnnotationComposerController } from "./use-annotation-composer.js";
 

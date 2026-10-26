@@ -1,3 +1,6 @@
+import { plural, t as translate } from "@lingui/core/macro";
+import { useLingui as useLocale } from "@lingui/react";
+import { Trans } from "@lingui/react/macro";
 import {
   createContext,
   useContext,
@@ -17,7 +20,7 @@ import type { ReaderWorkspaceGateway } from "./workspace-model.js";
 import type { DocumentRange, Source, SourceSummary } from "@mdbase-reader/core";
 
 function chapterCount(count: number): string {
-  return `${String(count)} ${count === 1 ? "chapter" : "chapters"}`;
+  return plural(count, { one: "# chapter", other: "# chapters" });
 }
 
 const CreationContext = createContext<((source: SourceSummary) => void) | null>(null);
@@ -63,6 +66,7 @@ function ChapterCreationDialog({
   readonly onCreated: (source: Source) => void;
   readonly onClose: () => void;
 }): JSX.Element {
+  useLocale();
   const dialog = useRef<HTMLDialogElement>(null);
   const model = useChapterCreation(gateway, book, onCreated, onClose);
   useEffect(() => {
@@ -93,28 +97,34 @@ function ChapterCreationDialog({
           void model.confirm();
         }}
       >
-        <h2 id="chapter-create-title">Add chapters as sources</h2>
-        <p>In {book.title}. Chapters share the existing file; no files or annotations are moved.</p>
+        <h2 id="chapter-create-title">
+          <Trans>Add chapters as sources</Trans>
+        </h2>
+        <p>{translate`In ${book.title}. Chapters share the existing file; no files or annotations are moved.`}</p>
         {!model.outline && !model.problem ? (
-          <p role="status">Reading the table of contents…</p>
+          <p role="status">
+            <Trans>Reading the table of contents…</Trans>
+          </p>
         ) : null}
         {model.outline ? <ChapterChecklist model={model} outline={model.outline} /> : null}
         {model.problem ? <p role="alert">{model.problem}</p> : null}
         <p role="status">
           {model.completed
-            ? `${chapterCount(model.completed)} created. You can retry without creating duplicates.`
-            : `${chapterCount(model.plans.length)} selected. Nothing is created until you confirm.`}
+            ? translate`${chapterCount(model.completed)} created. You can retry without creating duplicates.`
+            : translate`${chapterCount(model.plans.length)} selected. Nothing is created until you confirm.`}
         </p>
         <div className="source-parts-actions">
           <button className="mdbase-button" type="button" disabled={model.busy} onClick={onClose}>
-            Cancel
+            <Trans context="Reader interface">Cancel</Trans>
           </button>
           <button
             className="mdbase-button"
             type="submit"
             disabled={model.busy || !model.plans.length}
           >
-            {model.busy ? "Creating…" : "Create chapters"}
+            {model.busy
+              ? translate({ message: "Creating…" })
+              : translate({ message: "Create chapters" })}
           </button>
         </div>
       </form>
@@ -129,15 +139,21 @@ function ChapterChecklist({
   readonly model: ReturnType<typeof useChapterCreation>;
   readonly outline: ChapterOutline;
 }): JSX.Element {
+  useLocale();
   return (
     <>
       <p>
         {outline.pageCount !== undefined
-          ? `Use the page numbers in the PDF viewer, from 1 to ${String(outline.pageCount)}. Both the start and end pages are included. Printed page labels can be added separately.`
-          : "Choose sections in reading order. The first and last sections are included in full."}
+          ? translate`Use the page numbers in the PDF viewer, from 1 to ${String(outline.pageCount)}. Both the start and end pages are included. Printed page labels can be added separately.`
+          : translate({
+              message:
+                "Choose sections in reading order. The first and last sections are included in full.",
+            })}
       </p>
       <fieldset disabled={model.busy || model.completed > 0}>
-        <legend>Choose chapters and check where they start and end</legend>
+        <legend>
+          <Trans>Choose chapters and check where they start and end</Trans>
+        </legend>
         {model.choices.map((choice, index) => (
           <ChapterChoiceFields
             key={choice.key}
@@ -148,7 +164,7 @@ function ChapterChecklist({
           />
         ))}
         <button className="mdbase-button" type="button" onClick={model.addManual}>
-          Add a chapter manually
+          <Trans>Add a chapter manually</Trans>
         </button>
         <label>
           <input
@@ -157,20 +173,31 @@ function ChapterChecklist({
             onChange={(event) => model.setAcknowledged(event.target.checked)}
           />
           {outline.pageCount !== undefined
-            ? "I checked the pages and want to include any pages shared by more than one chapter."
-            : "I checked the sections and want to include them in full, even if chapters share a section."}
+            ? translate({
+                message:
+                  "I checked the pages and want to include any pages shared by more than one chapter.",
+              })
+            : translate({
+                message:
+                  "I checked the sections and want to include them in full, even if chapters share a section.",
+              })}
         </label>
         <details>
           <summary>
-            Preview {chapterCount(model.plans.length)} and{" "}
-            {model.plans.length === 1 ? "its citation" : "their citations"}
+            <Trans>Preview </Trans>
+            {chapterCount(model.plans.length)} <Trans>and</Trans>{" "}
+            {model.plans.length === 1
+              ? translate({ message: "its citation" })
+              : translate({ message: "their citations" })}
           </summary>
           {model.plans.length ? (
             model.plans.map((plan) => (
               <ChapterPreview key={plan.sourceId} plan={plan} outline={outline} />
             ))
           ) : (
-            <p>Select a chapter to preview it.</p>
+            <p>
+              <Trans>Select a chapter to preview it.</Trans>
+            </p>
           )}
         </details>
       </fieldset>
@@ -189,6 +216,7 @@ function ChapterChoiceFields({
   readonly outline: ChapterOutline;
   readonly update: (patch: Partial<ChapterChoice>) => void;
 }): JSX.Element {
+  useLocale();
   return (
     <div className="chapter-choice" style={{ paddingInlineStart: Math.min(choice.level, 6) * 16 }}>
       <label>
@@ -197,10 +225,11 @@ function ChapterChoiceFields({
           checked={choice.picked}
           onChange={(event) => update({ picked: event.target.checked })}
         />
-        Entry {String(index + 1)}: {choice.title || "Untitled chapter"}
+        <Trans>Entry </Trans>
+        {String(index + 1)}: {choice.title || translate({ message: "Untitled chapter" })}
       </label>
       <label>
-        Chapter title
+        <Trans>Chapter title</Trans>
         <input value={choice.title} onChange={(event) => update({ title: event.target.value })} />
       </label>
       <ChapterRangeEditor
@@ -217,14 +246,14 @@ function ChapterChoiceFields({
       {choice.picked ? (
         <>
           <label>
-            Chapter authors (separate with semicolons)
+            <Trans>Chapter authors (separate with semicolons)</Trans>
             <input
               value={choice.authors}
               onChange={(event) => update({ authors: event.target.value })}
             />
           </label>
           <label>
-            Printed page labels (optional, e.g. 41–67)
+            <Trans>Printed page labels (optional, e.g. 41–67)</Trans>
             <input
               value={choice.printed}
               onChange={(event) => update({ printed: event.target.value })}
@@ -245,13 +274,16 @@ function ChapterRangeEditor({
   readonly outline: ChapterOutline;
   readonly onChange: (range: DocumentRange) => void;
 }): JSX.Element {
+  useLocale();
   const range = choice.range;
   return (
     <div className="chapter-boundaries">
       {(["start", "end"] as const).map((endpoint) =>
         outline.pageCount !== undefined ? (
           <label key={endpoint}>
-            {endpoint === "start" ? "Start page" : "End page"}
+            {endpoint === "start"
+              ? translate({ message: "Start page" })
+              : translate({ message: "End page" })}
             <input
               type="number"
               min={1}
@@ -271,11 +303,16 @@ function ChapterRangeEditor({
                 })
               }
             />
-            <small>of {String(outline.pageCount)} pages</small>
+            <small>
+              <Trans>of </Trans>
+              {String(outline.pageCount)} <Trans>pages</Trans>
+            </small>
           </label>
         ) : (
           <label key={endpoint}>
-            {endpoint === "start" ? "Start section" : "End section"}
+            {endpoint === "start"
+              ? translate({ message: "Start section" })
+              : translate({ message: "End section" })}
             <select
               value={range?.kind === "epub-spine" ? range[endpoint] : ""}
               onChange={(event) =>
@@ -287,14 +324,16 @@ function ChapterRangeEditor({
                 })
               }
             >
-              <option value="">Choose a section</option>
+              <option value="">
+                <Trans>Choose a section</Trans>
+              </option>
               {outline.spine?.map((href, index) => (
                 <option key={href} value={href} title={href}>
                   {String(index + 1)}.{" "}
                   {outline.proposals.find(
                     (proposal) =>
                       proposal.range?.kind === "epub-spine" && proposal.range.start === href,
-                  )?.title ?? `Section ${String(index + 1)}`}
+                  )?.title ?? translate`Section ${String(index + 1)}`}
                 </option>
               ))}
             </select>
