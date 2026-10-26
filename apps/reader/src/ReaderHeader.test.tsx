@@ -1,3 +1,5 @@
+import { shortcutLabel } from "@mdbase-dev/ui/command-palette";
+import { readerI18n } from "@mdbase-reader/i18n";
 import { describe, expect, it, vi } from "vitest";
 
 import { ReaderHeader } from "./ReaderHeader.js";
@@ -78,7 +80,7 @@ describe("ReaderHeader direct access", () => {
 });
 
 describe("ReaderHeader reading mode", () => {
-  function renderReadingMode(available: boolean): string {
+  function renderReadingMode(available: boolean, readingMode = false): string {
     return renderToStaticMarkup(
       <ReaderHeader
         collectionName="Local library"
@@ -89,6 +91,7 @@ describe("ReaderHeader reading mode", () => {
         inspectorOpen={false}
         inspectorAvailable
         readingModeAvailable={available}
+        readingMode={readingMode}
         onToggleReadingMode={vi.fn()}
         {...actions}
       />,
@@ -114,6 +117,34 @@ describe("ReaderHeader reading mode", () => {
     expect(button).not.toContain("aria-disabled");
     expect(button).not.toContain("aria-describedby");
   });
+
+  it.each([
+    ["de", "Lesemodus aktivieren", "Lesemodus verlassen"],
+    ["es", "Entrar en modo lectura", "Salir del modo lectura"],
+    ["fr", "Passer en mode lecture", "Quitter le mode lecture"],
+    ["it", "Attiva la modalità di lettura", "Esci dalla modalità di lettura"],
+    ["ja", "読書モードに切り替え", "読書モードを終了"],
+    ["ko", "읽기 모드 시작", "읽기 모드 종료"],
+    ["pt", "Entrar no modo de leitura", "Sair do modo de leitura"],
+    ["ru", "Перейти в режим чтения", "Выйти из режима чтения"],
+    ["zh", "进入阅读模式", "退出阅读模式"],
+  ] as const)(
+    "translates both complete reading-mode tooltips in %s",
+    async (locale, enter, leave) => {
+      try {
+        await readerI18n.selectLocale(locale);
+        for (const active of [false, true]) {
+          const button =
+            /<button[^>]*header-reading-mode[^>]*>/u.exec(renderReadingMode(true, active))?.[0] ??
+            "";
+          expect(button).toContain(`title="${active ? leave : enter} · ${shortcutLabel("mod+.")}"`);
+          expect(button).toContain(`aria-pressed="${String(active)}"`);
+        }
+      } finally {
+        await readerI18n.selectLocale("en");
+      }
+    },
+  );
 
   it("reports an active direct connection without retaining the action", () => {
     const markup = renderHeader({

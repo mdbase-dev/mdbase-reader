@@ -132,6 +132,11 @@ msgstr "{0, plural, other {인용 키 충돌 #건}}"
 msgid "{0, plural, one {# invalid record} other {# invalid records}}"
 msgstr "{0, plural, other {잘못된 레코드 #개}}"
 
+#. placeholder {0}: links.length
+#: apps/reader/src/SourceRemovalDialog.tsx
+msgid "{0, plural, one {# note links to it and will show a broken link:} other {These # notes link to it and will show a broken link:}}"
+msgstr "{0, plural, other {이 자료를 가리키는 노트 #개에 깨진 링크가 표시됩니다:}}"
+
 #. placeholder {0}: progress.failed
 #: apps/reader/src/LibraryBulkBar.tsx
 msgid "{0, plural, one {# source could not be updated} other {# sources could not be updated}}"
@@ -166,11 +171,6 @@ msgstr "{0, plural, other {주석 #개를 Markdown으로 복사했습니다.}}"
 #: apps/reader/src/ImportReview.tsx
 msgid "{0, plural, one {Import # source into {collectionName}} other {Import # sources into {collectionName}}}"
 msgstr "{0, plural, other {{collectionName}에 자료 #개 가져오기}}"
-
-#. placeholder {0}: links.length
-#: apps/reader/src/SourceRemovalDialog.tsx
-msgid "{0, plural, one {This note links to it and will show a broken link:} other {These # notes link to it and will show a broken link:}}"
-msgstr "{0, plural, other {이 항목을 참조하는 노트 #개에 끊어진 링크가 표시됩니다:}}"
 
 #. placeholder {0}: migrationPhaseLabel(progress.phase)
 #: apps/reader/src/import-controller.ts
@@ -243,12 +243,6 @@ msgstr "열린 탭 {0}개"
 #: apps/reader/src/LibraryPartDisclosure.tsx
 msgid "{0} parts of {1}"
 msgstr "{1}의 부분 항목 {0}"
-
-#. placeholder {0}: readingMode ? "Leave" : "Enter"
-#. placeholder {1}: shortcutLabel("mod+.")
-#: apps/reader/src/ReaderHeader.tsx
-msgid "{0} reading mode · {1}"
-msgstr "읽기 모드 {0} · {1}"
 
 #. placeholder {0}: summary.removedFields
 #: apps/reader/src/CitationQualitySummary.tsx
@@ -3354,6 +3348,11 @@ msgstr "문서 비밀번호 입력"
 msgid "Enter reading mode"
 msgstr "읽기 모드 시작"
 
+#. placeholder {0}: shortcutLabel("mod+.")
+#: apps/reader/src/ReaderHeader.tsx
+msgid "Enter reading mode · {0}"
+msgstr "읽기 모드 시작 · {0}"
+
 #: apps/reader/src/CitationTypedFieldEditors.tsx
 msgid "Enter valid JSON to apply this value."
 msgstr "이 값을 적용하려면 올바른 JSON을 입력해 주세요."
@@ -4613,6 +4612,11 @@ msgstr "레이아웃"
 #: apps/reader/src/reader-command-list.ts
 msgid "Leave reading mode"
 msgstr "읽기 모드 종료"
+
+#. placeholder {0}: shortcutLabel("mod+.")
+#: apps/reader/src/ReaderHeader.tsx
+msgid "Leave reading mode · {0}"
+msgstr "읽기 모드 종료 · {0}"
 
 #: apps/reader/src/SettingsPage.tsx
 msgid "Leave without saving?"

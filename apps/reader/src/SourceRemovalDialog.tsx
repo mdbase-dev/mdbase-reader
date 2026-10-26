@@ -87,7 +87,7 @@ function OpenSourceRemovalDialog({
             <p>
               <Plural
                 value={links.length}
-                one="This note links to it and will show a broken link:"
+                one="# note links to it and will show a broken link:"
                 other="These # notes link to it and will show a broken link:"
               />
             </p>

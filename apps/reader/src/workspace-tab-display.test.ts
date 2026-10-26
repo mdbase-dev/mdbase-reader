@@ -30,8 +30,7 @@ describe("workspace tab display", () => {
       await readerI18n.selectLocale("de");
       expect(workspaceTabAccessibleTitle(library, null)).toBe("Bibliothek");
       expect(sidePanelTitle(navigatorPanelId)).toBe("Quellen");
-      // Main renamed this tool Notes; its new translation is pending extraction review.
-      expect(sidePanelTitle(inspectorPanelId)).toBe("Notes");
+      expect(sidePanelTitle(inspectorPanelId)).toBe("Notizen");
       await readerI18n.selectLocale("ja");
       expect(workspaceTabAccessibleTitle(library, null)).toBe("ライブラリ");
       expect(sidePanelTitle(navigatorPanelId)).toBe("資料");

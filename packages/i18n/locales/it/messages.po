@@ -131,6 +131,11 @@ msgstr "{0, plural, one {# conflitto tra chiavi di citazione} other {# conflitti
 msgid "{0, plural, one {# invalid record} other {# invalid records}}"
 msgstr "{0, plural, one {# record non valido} other {# record non validi}}"
 
+#. placeholder {0}: links.length
+#: apps/reader/src/SourceRemovalDialog.tsx
+msgid "{0, plural, one {# note links to it and will show a broken link:} other {These # notes link to it and will show a broken link:}}"
+msgstr "{0, plural, one {# nota contiene un collegamento a questa fonte che non funzionerà più:} other {# note contengono collegamenti a questa fonte che non funzioneranno più:}}"
+
 #. placeholder {0}: progress.failed
 #: apps/reader/src/LibraryBulkBar.tsx
 msgid "{0, plural, one {# source could not be updated} other {# sources could not be updated}}"
@@ -165,11 +170,6 @@ msgstr "{0, plural, one {# annotazione copiata come Markdown.} other {# annotazi
 #: apps/reader/src/ImportReview.tsx
 msgid "{0, plural, one {Import # source into {collectionName}} other {Import # sources into {collectionName}}}"
 msgstr "{0, plural, one {Importa # fonte in {collectionName}} other {Importa # fonti in {collectionName}}}"
-
-#. placeholder {0}: links.length
-#: apps/reader/src/SourceRemovalDialog.tsx
-msgid "{0, plural, one {This note links to it and will show a broken link:} other {These # notes link to it and will show a broken link:}}"
-msgstr "{0, plural, one {Questa nota contiene un collegamento alla fonte che non funzionerà più:} other {Queste # note contengono collegamenti alla fonte che non funzioneranno più:}}"
 
 #. placeholder {0}: migrationPhaseLabel(progress.phase)
 #: apps/reader/src/import-controller.ts
@@ -242,12 +242,6 @@ msgstr "{0} schede aperte"
 #: apps/reader/src/LibraryPartDisclosure.tsx
 msgid "{0} parts of {1}"
 msgstr "{0} parti su {1}"
-
-#. placeholder {0}: readingMode ? "Leave" : "Enter"
-#. placeholder {1}: shortcutLabel("mod+.")
-#: apps/reader/src/ReaderHeader.tsx
-msgid "{0} reading mode · {1}"
-msgstr "{0} modalità di lettura · {1}"
 
 #. placeholder {0}: summary.removedFields
 #: apps/reader/src/CitationQualitySummary.tsx
@@ -3353,6 +3347,11 @@ msgstr "Inserisci la password del documento"
 msgid "Enter reading mode"
 msgstr "Attiva la modalità di lettura"
 
+#. placeholder {0}: shortcutLabel("mod+.")
+#: apps/reader/src/ReaderHeader.tsx
+msgid "Enter reading mode · {0}"
+msgstr "Attiva la modalità di lettura · {0}"
+
 #: apps/reader/src/CitationTypedFieldEditors.tsx
 msgid "Enter valid JSON to apply this value."
 msgstr "Inserisci un JSON valido per applicare questo valore."
@@ -4612,6 +4611,11 @@ msgstr "Disposizione"
 #: apps/reader/src/reader-command-list.ts
 msgid "Leave reading mode"
 msgstr "Esci dalla modalità di lettura"
+
+#. placeholder {0}: shortcutLabel("mod+.")
+#: apps/reader/src/ReaderHeader.tsx
+msgid "Leave reading mode · {0}"
+msgstr "Esci dalla modalità di lettura · {0}"
 
 #: apps/reader/src/SettingsPage.tsx
 msgid "Leave without saving?"

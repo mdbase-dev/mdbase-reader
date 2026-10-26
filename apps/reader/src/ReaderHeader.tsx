@@ -204,7 +204,9 @@ function ReadingModeButton({
         aria-describedby={available ? undefined : descriptionId}
         title={
           available
-            ? translate`${readingMode ? "Leave" : "Enter"} reading mode · ${shortcutLabel("mod+.")}`
+            ? readingMode
+              ? translate`Leave reading mode · ${shortcutLabel("mod+.")}`
+              : translate`Enter reading mode · ${shortcutLabel("mod+.")}`
             : translate({ message: "Open a document to use reading mode" })
         }
         onClick={available ? onToggle : undefined}

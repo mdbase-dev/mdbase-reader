@@ -132,6 +132,11 @@ msgstr "{0, plural, one {# citation key conflict} other {# citation key conflict
 msgid "{0, plural, one {# invalid record} other {# invalid records}}"
 msgstr "{0, plural, one {# invalid record} other {# invalid records}}"
 
+#. placeholder {0}: links.length
+#: apps/reader/src/SourceRemovalDialog.tsx
+msgid "{0, plural, one {# note links to it and will show a broken link:} other {These # notes link to it and will show a broken link:}}"
+msgstr "{0, plural, one {# note links to it and will show a broken link:} other {These # notes link to it and will show a broken link:}}"
+
 #. placeholder {0}: progress.failed
 #: apps/reader/src/LibraryBulkBar.tsx
 msgid "{0, plural, one {# source could not be updated} other {# sources could not be updated}}"
@@ -166,11 +171,6 @@ msgstr "{0, plural, one {Copied # annotation as Markdown.} other {Copied # annot
 #: apps/reader/src/ImportReview.tsx
 msgid "{0, plural, one {Import # source into {collectionName}} other {Import # sources into {collectionName}}}"
 msgstr "{0, plural, one {Import # source into {collectionName}} other {Import # sources into {collectionName}}}"
-
-#. placeholder {0}: links.length
-#: apps/reader/src/SourceRemovalDialog.tsx
-msgid "{0, plural, one {This note links to it and will show a broken link:} other {These # notes link to it and will show a broken link:}}"
-msgstr "{0, plural, one {This note links to it and will show a broken link:} other {These # notes link to it and will show a broken link:}}"
 
 #. placeholder {0}: migrationPhaseLabel(progress.phase)
 #: apps/reader/src/import-controller.ts
@@ -243,12 +243,6 @@ msgstr "{0} open tabs"
 #: apps/reader/src/LibraryPartDisclosure.tsx
 msgid "{0} parts of {1}"
 msgstr "{0} parts of {1}"
-
-#. placeholder {0}: readingMode ? "Leave" : "Enter"
-#. placeholder {1}: shortcutLabel("mod+.")
-#: apps/reader/src/ReaderHeader.tsx
-msgid "{0} reading mode · {1}"
-msgstr "{0} reading mode · {1}"
 
 #. placeholder {0}: summary.removedFields
 #: apps/reader/src/CitationQualitySummary.tsx
@@ -3354,6 +3348,11 @@ msgstr "Enter document password"
 msgid "Enter reading mode"
 msgstr "Enter reading mode"
 
+#. placeholder {0}: shortcutLabel("mod+.")
+#: apps/reader/src/ReaderHeader.tsx
+msgid "Enter reading mode · {0}"
+msgstr "Enter reading mode · {0}"
+
 #: apps/reader/src/CitationTypedFieldEditors.tsx
 msgid "Enter valid JSON to apply this value."
 msgstr "Enter valid JSON to apply this value."
@@ -4613,6 +4612,11 @@ msgstr "Layout"
 #: apps/reader/src/reader-command-list.ts
 msgid "Leave reading mode"
 msgstr "Leave reading mode"
+
+#. placeholder {0}: shortcutLabel("mod+.")
+#: apps/reader/src/ReaderHeader.tsx
+msgid "Leave reading mode · {0}"
+msgstr "Leave reading mode · {0}"
 
 #: apps/reader/src/SettingsPage.tsx
 msgid "Leave without saving?"
