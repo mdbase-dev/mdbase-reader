@@ -169,12 +169,11 @@ function LookupFollowUp({
   readonly busy: boolean;
   readonly lookup: SourceAdditionController["lookup"];
 }): JSX.Element | null {
+  const { t } = useLingui();
   if (lookup.notice) {
     return (
       <div className="capture-follow-up" role="status">
-        <p>
-          <Trans>Added. {lookup.notice.message}</Trans>
-        </p>
+        <p>{t`Added. ${lookup.notice.message}`}</p>
         <ReaderButton onClick={lookup.openNoticed}>
           <Trans>Open source</Trans>
         </ReaderButton>
@@ -185,10 +184,7 @@ function LookupFollowUp({
     return (
       <div className="capture-follow-up">
         <p>
-          <Trans>
-            Reader couldn’t fetch that page ({lookup.offer.reason}), but it found the citation for “
-            {lookup.offer.title}”. You can save the citation now and attach the page or file later.
-          </Trans>
+          {t`Reader couldn’t fetch that page (${lookup.offer.reason}), but it found the citation for “${lookup.offer.title}”. You can save the citation now and attach the page or file later.`}
         </p>
         <button
           className="connection-secondary"

@@ -94,9 +94,7 @@ export function LibraryRowMenu({
           role="menuitem"
           onClick={run(() => void navigator.clipboard.writeText(`@${citekey}`))}
         >
-          <Trans>
-            Copy citekey <kbd>@{citekey}</kbd>
-          </Trans>
+          <CopyCitekeyLabel value={citekey} />
         </button>
       ) : null}
       {actions.onExport ? (
@@ -258,4 +256,14 @@ function useDismiss(
       window.removeEventListener("resize", dismiss);
     };
   }, [ref, onClose]);
+}
+
+/** The citekey is passed as an element so Trans never parses its characters (`<`, `>`) as markup. */
+function CopyCitekeyLabel({ value }: { readonly value: string }): JSX.Element {
+  const citekey = <>{value}</>;
+  return (
+    <Trans>
+      Copy citekey <kbd>@{citekey}</kbd>
+    </Trans>
+  );
 }

@@ -68,6 +68,24 @@ const builtinLabels: Record<BuiltinLibraryColumn, MessageDescriptor> = {
   opened: msg({ message: "Last opened", context: "Library table column" }),
 };
 
+/** Labels written into saved mdbase view files: stable English, never the interface language. */
+const storedBuiltinLabels: Record<BuiltinLibraryColumn, string> = {
+  title: "Title",
+  creator: "Creator",
+  published: "Published",
+  status: "Status",
+  format: "Format",
+  tags: "Tags",
+  annotations: "Annotations",
+  opened: "Last opened",
+};
+
+export function columnStoredLabel(column: LibraryColumn): string {
+  return propertyKey(column) === null
+    ? storedBuiltinLabels[column as BuiltinLibraryColumn]
+    : columnLabel(column);
+}
+
 /** "reading.started_at" → "Started at"; a view's own label wins when it has one. */
 export function columnLabel(
   column: LibraryColumn,

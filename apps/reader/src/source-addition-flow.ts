@@ -180,7 +180,8 @@ export async function createWithoutDocument(
   services.onStatus(t({ message: "Saving the source…" }));
   const source = await createSource(
     {
-      title: fields.title ?? t({ message: "Untitled source", context: "source addition flow" }),
+      // Stored titles are data: keep the stable English seed, whatever the interface language.
+      title: fields.title ?? "Untitled source",
       metadata: { ...fields.metadata, ...authorsOf(fields) },
       ...(fields.kind ? { kind: fields.kind } : {}),
       ...(url ? { url } : {}),
@@ -197,12 +198,8 @@ async function importPdf(
   services: SourceAdditionServices,
 ): Promise<SourceAdditionOutcome> {
   const fields = citation ? citationFields(citation) : undefined;
-  const title =
-    fields?.title ??
-    pdfFileName(
-      pdf.canonicalUrl,
-      t({ message: "Document", context: "source addition flow" }),
-    ).replace(/\.pdf$/iu, "");
+  // The fallback becomes the stored title and filename, so it is not translated.
+  const title = fields?.title ?? pdfFileName(pdf.canonicalUrl, "Document").replace(/\.pdf$/iu, "");
   services.onStatus(t({ message: "Saving the PDF…", context: "source addition flow" }));
   const source = await services.workspace.importSourceFile(
     {

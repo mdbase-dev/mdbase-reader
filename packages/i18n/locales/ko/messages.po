@@ -2445,11 +2445,6 @@ msgctxt "reader command list"
 msgid "Document"
 msgstr "문서"
 
-#: apps/reader/src/source-addition-flow.ts
-msgctxt "source addition flow"
-msgid "Document"
-msgstr "문서"
-
 #: apps/reader/src/DocumentContextualToolbar.tsx
 msgctxt "DocumentContextualToolbar interface"
 msgid "Document actions"
@@ -8102,11 +8097,6 @@ msgstr "지원되지 않는 Zotero 번들 버전입니다."
 #: apps/reader/src/annotation-wiki-candidates.ts
 msgid "Untitled annotation"
 msgstr "제목 없는 주석"
-
-#: apps/reader/src/source-addition-flow.ts
-msgctxt "source addition flow"
-msgid "Untitled source"
-msgstr "제목 없는 출처"
 
 #: apps/reader/src/CitationSourceSync.tsx
 msgid "Update library details"

@@ -16,6 +16,7 @@ export const chromeLocales = {
   fr: "fr",
   de: "de",
   es: "es",
+  it: "it",
   ja: "ja",
   ko: "ko",
   pt: "pt_BR",

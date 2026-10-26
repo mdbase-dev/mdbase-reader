@@ -2445,11 +2445,6 @@ msgctxt "reader command list"
 msgid "Document"
 msgstr "文書"
 
-#: apps/reader/src/source-addition-flow.ts
-msgctxt "source addition flow"
-msgid "Document"
-msgstr "文書"
-
 #: apps/reader/src/DocumentContextualToolbar.tsx
 msgctxt "DocumentContextualToolbar interface"
 msgid "Document actions"
@@ -8102,11 +8097,6 @@ msgstr "対応していないZoteroバンドルのバージョンです。"
 #: apps/reader/src/annotation-wiki-candidates.ts
 msgid "Untitled annotation"
 msgstr "無題の注釈"
-
-#: apps/reader/src/source-addition-flow.ts
-msgctxt "source addition flow"
-msgid "Untitled source"
-msgstr "無題の資料"
 
 #: apps/reader/src/CitationSourceSync.tsx
 msgid "Update library details"

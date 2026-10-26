@@ -2445,11 +2445,6 @@ msgctxt "reader command list"
 msgid "Document"
 msgstr "Documento"
 
-#: apps/reader/src/source-addition-flow.ts
-msgctxt "source addition flow"
-msgid "Document"
-msgstr "Documento"
-
 #: apps/reader/src/DocumentContextualToolbar.tsx
 msgctxt "DocumentContextualToolbar interface"
 msgid "Document actions"
@@ -8102,11 +8097,6 @@ msgstr "Versión del paquete de Zotero no admitida."
 #: apps/reader/src/annotation-wiki-candidates.ts
 msgid "Untitled annotation"
 msgstr "Anotación sin título"
-
-#: apps/reader/src/source-addition-flow.ts
-msgctxt "source addition flow"
-msgid "Untitled source"
-msgstr "Fuente sin título"
 
 #: apps/reader/src/CitationSourceSync.tsx
 msgid "Update library details"

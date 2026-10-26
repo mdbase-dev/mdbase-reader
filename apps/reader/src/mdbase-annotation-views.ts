@@ -1,5 +1,5 @@
 import {
-  annotationColumnLabel,
+  annotationColumnStoredLabel,
   isAnnotationColumn,
   isAnnotationSortField,
   type AnnotationColumn,
@@ -140,7 +140,7 @@ export function buildAnnotationView(request: AnnotationViewSaveRequest): JsonObj
       ),
     },
     properties: Object.fromEntries(
-      selected.map(({ column, field }) => [field, { label: annotationColumnLabel(column) }]),
+      selected.map(({ column, field }) => [field, { label: annotationColumnStoredLabel(column) }]),
     ),
     views: [
       {

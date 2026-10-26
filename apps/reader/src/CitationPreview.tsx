@@ -63,4 +63,5 @@ const localeOptions: SelectItems = [
   { value: "en-GB", label: "English (UK)" },
   { value: "de-DE", label: "Deutsch" },
   { value: "fr-FR", label: "Français" },
+  { value: "it-IT", label: "Italiano" },
 ];

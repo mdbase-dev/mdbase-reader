@@ -92,9 +92,7 @@ export function CollectionMenu({
           />
         ))}
         {visible.length === 0 ? (
-          <p className="collection-menu-empty">
-            <Trans>No collections match “{query.trim()}”.</Trans>
-          </p>
+          <p className="collection-menu-empty">{t`No collections match “${query.trim()}”.`}</p>
         ) : null}
       </div>
       {error ? (

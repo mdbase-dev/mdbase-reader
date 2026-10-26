@@ -1,5 +1,7 @@
+import { msg } from "@lingui/core/macro";
 import { createI18nRuntime } from "@mdbase-dev/i18n";
 import english from "@mdbase-reader/i18n/english";
+import italian from "@mdbase-reader/i18n/locales/it";
 import { afterEach, expect, it, vi } from "vitest";
 
 import { extensionLocaleStorage, followExtensionLocale } from "./extension-locale.js";
@@ -13,7 +15,7 @@ it("shares successful language choices across pages and the worker without write
   const makeRuntime = (): ReturnType<typeof createI18nRuntime> =>
     createI18nRuntime({
       english,
-      loadLocale: () => Promise.resolve({ messages: { greeting: "Bonjour" } }),
+      loadLocale: () => Promise.resolve(italian),
       storage: extensionLocaleStorage,
       preferences: [],
     });
@@ -23,13 +25,13 @@ it("shares successful language choices across pages and the worker without write
   try {
     expect(page.i18n.locale).toBe("en");
     await Promise.all([page.initialize(), worker.initialize()]);
-    await page.selectLocale("fr");
-    await vi.waitFor(() => expect(worker.i18n.locale).toBe("fr"));
-    expect(worker.i18n._("greeting")).toBe("Bonjour");
-    expect(fake.local.get("mdbase-reader:locale")).toBe("fr");
+    await page.selectLocale("it");
+    await vi.waitFor(() => expect(worker.i18n.locale).toBe("it"));
+    expect(worker.i18n._(msg`Save to mdbase Reader`)).toBe("Salva in mdbase Reader");
+    expect(fake.local.get("mdbase-reader:locale")).toBe("it");
     expect(fake.chrome.storage.local.set).toHaveBeenCalledTimes(2);
     fake.emit("storage", { "mdbase-reader:locale": { newValue: "unsupported" } }, "local");
-    expect(worker.i18n.locale).toBe("fr");
+    expect(worker.i18n.locale).toBe("it");
   } finally {
     stop();
   }

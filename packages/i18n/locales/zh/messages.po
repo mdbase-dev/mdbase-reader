@@ -2445,11 +2445,6 @@ msgctxt "reader command list"
 msgid "Document"
 msgstr "文档"
 
-#: apps/reader/src/source-addition-flow.ts
-msgctxt "source addition flow"
-msgid "Document"
-msgstr "文档"
-
 #: apps/reader/src/DocumentContextualToolbar.tsx
 msgctxt "DocumentContextualToolbar interface"
 msgid "Document actions"
@@ -8102,11 +8097,6 @@ msgstr "不支持的 Zotero 数据包版本。"
 #: apps/reader/src/annotation-wiki-candidates.ts
 msgid "Untitled annotation"
 msgstr "无标题注释"
-
-#: apps/reader/src/source-addition-flow.ts
-msgctxt "source addition flow"
-msgid "Untitled source"
-msgstr "无标题来源"
 
 #: apps/reader/src/CitationSourceSync.tsx
 msgid "Update library details"

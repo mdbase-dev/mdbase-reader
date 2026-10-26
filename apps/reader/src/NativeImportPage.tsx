@@ -1,5 +1,5 @@
 import { t as translate } from "@lingui/core/macro";
-import { Trans } from "@lingui/react/macro";
+import { Trans, useLingui } from "@lingui/react/macro";
 import { describeError, type NativeReaderCollection } from "@mdbase-reader/connect/native";
 import { useEffect, useRef, useState, useSyncExternalStore, type JSX } from "react";
 
@@ -99,6 +99,7 @@ function NativeImportDestination({
   readonly scope: ReaderNativeScope;
   readonly flow: NativeImportFlow;
 }): JSX.Element {
+  const { t } = useLingui();
   const { mdbase, connection, collection } = scope;
   const { controller } = flow;
   const state = useSyncExternalStore(
@@ -144,9 +145,7 @@ function NativeImportDestination({
   };
   return (
     <div className="import-step">
-      <p>
-        <Trans>Collection: {collection.collectionName}</Trans>
-      </p>
+      <p>{t`Collection: ${collection.collectionName}`}</p>
       <button
         type="button"
         disabled={working || state.busy || !!state.boundTarget}

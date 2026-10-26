@@ -10,6 +10,7 @@ const loaders = {
   fr: () => import("../locales/fr/messages.json"),
   de: () => import("../locales/de/messages.json"),
   es: () => import("../locales/es/messages.json"),
+  it: () => import("../locales/it/messages.json"),
   ja: () => import("../locales/ja/messages.json"),
   ko: () => import("../locales/ko/messages.json"),
   pt: () => import("../locales/pt/messages.json"),
@@ -44,7 +45,9 @@ export function setReaderLocaleStorage(storage: LocaleStorage): void {
   localeStorage = storage;
 }
 
-// English is immediately active, with no fetch or asynchronous startup gate.
+// English is immediately active, with no fetch or asynchronous startup gate. The kit runtime also
+// encodes backslashes in interpolated string values once, so user text such as `C:\x41dir` renders
+// literally; do not add a second wrapper here.
 export const readerI18n = createI18nRuntime({
   i18n,
   english,

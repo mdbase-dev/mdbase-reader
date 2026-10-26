@@ -27,6 +27,20 @@ test("Chrome manifest names its default catalogue and all localized shell keys r
     const key = /__MSG_(\w+)__/.exec(value)?.[1];
     assert.ok(key && key in english, `Unresolved Chrome message: ${value}`);
   }
+  assert.deepEqual(Object.keys(chromeLocales).sort(), [
+    "de",
+    "en",
+    "es",
+    "fr",
+    "it",
+    "ja",
+    "ko",
+    "pt",
+    "ru",
+    "zh",
+  ]);
+  assert.equal(chromeLocales.it, "it");
+  assert.equal(chromeMessages("it").actionTitle.message, "Salva in mdbase Reader");
   assert.equal(chromeLocales.pt, "pt_BR");
   assert.equal(chromeLocales.zh, "zh_CN");
   for (const locale of Object.keys(chromeLocales)) {
