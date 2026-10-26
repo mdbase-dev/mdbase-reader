@@ -1,4 +1,5 @@
 // Isolated, synthetic, dev-only fixture. No Connect account or library data involved.
+import { ReaderI18nProvider } from "@mdbase-reader/i18n/react";
 import {
   annotationId,
   collectionId,
@@ -129,5 +130,9 @@ function Fixture(): React.JSX.Element {
 
 const root = window.document.getElementById("root");
 if (root) {
-  createRoot(root).render(<Fixture />);
+  createRoot(root).render(
+    <ReaderI18nProvider>
+      <Fixture />
+    </ReaderI18nProvider>,
+  );
 }

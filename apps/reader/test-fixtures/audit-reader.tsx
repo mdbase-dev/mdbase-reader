@@ -1,4 +1,5 @@
 // Dev-only entry point. All API traffic is intercepted by scripts/audit-reader.mjs.
+import { ReaderI18nProvider } from "@mdbase-reader/i18n/react";
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 
@@ -174,16 +175,18 @@ if (!root) {
 }
 createRoot(root).render(
   <StrictMode>
-    <ReaderApp
-      gateway={gateway}
-      renderDocument={(source, onSurfaceChange) => (
-        <ConnectedDocument
-          repository={repository}
-          source={source}
-          onSurfaceChange={onSurfaceChange}
-        />
-      )}
-      saveFile={() => Promise.resolve()}
-    />
+    <ReaderI18nProvider>
+      <ReaderApp
+        gateway={gateway}
+        renderDocument={(source, onSurfaceChange) => (
+          <ConnectedDocument
+            repository={repository}
+            source={source}
+            onSurfaceChange={onSurfaceChange}
+          />
+        )}
+        saveFile={() => Promise.resolve()}
+      />
+    </ReaderI18nProvider>
   </StrictMode>,
 );
